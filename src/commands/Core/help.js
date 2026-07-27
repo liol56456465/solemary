@@ -18,6 +18,7 @@ const __dirname = path.dirname(__filename);
 
 const CATEGORY_SELECT_ID = "help-category-select";
 const ALL_COMMANDS_ID = "help-all-commands";
+const BUG_REPORT_BUTTON_ID = "help-bug-report";
 const HELP_MENU_TIMEOUT_MS = 5 * 60 * 1000;
 
 const CATEGORY_ICONS = {
@@ -84,8 +85,9 @@ export async function createInitialHelpMenu(client) {
             {
                 name: '🚀 Getting Started',
                 value: [
-                    '**/configwizard` to configure prefix, mod role, and logs.',
-                    '**/commands dashboard` to turn categories on or off.',                    '**3. Browse commands** — Use the menu below to view categories and commands.',
+                    '1. **/configwizard** to configure prefix, mod role, and logs.',
+                    '2. **/commands dashboard** to turn categories on or off.',
+                    '3. **Browse commands** — Use the menu below to view categories and commands.',
                 ].join('\n'),
                 inline: false,
             },
