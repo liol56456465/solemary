@@ -1,7 +1,7 @@
 // errorHandler.js — the single entry point for all error handling.
 //
 // Rules:
-// 1. Commands/handlers: throw MeowistError (via createError) or let errors propagate;
+// 1. Commands/handlers: throw TitanBotError (via createError) or let errors propagate;
 //    interactionCreate routes them through handleInteractionError. For expected user-facing
 //    failures (validation, cooldowns), use replyUserError.
 //    Do NOT wrap a command's execute() body in a try/catch whose only purpose is to call
@@ -38,10 +38,10 @@ export const ErrorTypes = {
     UNKNOWN: 'unknown'
 };
 
-export class MeowistError extends Error {
+export class TitanBotError extends Error {
     constructor(message, type = ErrorTypes.UNKNOWN, userMessage = null, context = {}) {
         super(message);
-        this.name = 'MeowistError';
+        this.name = 'TitanBotError';
         this.type = type;
         this.userMessage = userMessage;
         this.context = context;
@@ -68,7 +68,7 @@ const DATABASE_ERROR_CODES = new Set([
 ]);
 
 export function categorizeError(error) {
-    if (error instanceof MeowistError) {
+    if (error instanceof TitanBotError) {
         return error.type;
     }
 
@@ -449,12 +449,12 @@ export function createError(message, type = ErrorTypes.UNKNOWN, userMessage = nu
         errorCode: context?.errorCode || getDefaultErrorCodeByType(type)
     };
 
-    return new MeowistError(message, type, userMessage, normalizedContext);
+    return new TitanBotError(message, type, userMessage, normalizedContext);
 }
 
 export default {
     ErrorTypes,
-    MeowistError,
+    TitanBotError,
     categorizeError,
     getUserMessage,
     replyUserError,
