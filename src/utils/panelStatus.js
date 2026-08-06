@@ -19,24 +19,6 @@ export function messageHasButtonCustomId(message, buttonCustomId) {
     return walk(rows);
 }
 
-export function messageHasButtonUrl(message, buttonUrl) {
-    if (!message?.components?.length || !buttonUrl) return false;
-
-    const walk = (components) => {
-        for (const component of components) {
-            const json = typeof component.toJSON === 'function' ? component.toJSON() : component;
-            if (!json) continue;
-            // type 2 is Button
-            if (json.type === 2 && json.url === buttonUrl) return true;
-            if (Array.isArray(json.components) && walk(json.components)) return true;
-        }
-        return false;
-    };
-
-    const rows = [...(message.components.values?.() || message.components)];
-    return walk(rows);
-}
-
 export function messageHasSelectMenuCustomId(message, selectCustomId) {
     if (!message?.components?.length || !selectCustomId) return false;
 
@@ -54,9 +36,8 @@ export function messageHasSelectMenuCustomId(message, selectCustomId) {
     return walk(rows);
 }
 
-export function messageHasPanelMarker(message, { buttonCustomId, selectCustomId, buttonUrl } = {}) {
+export function messageHasPanelMarker(message, { buttonCustomId, selectCustomId } = {}) {
     if (buttonCustomId && messageHasButtonCustomId(message, buttonCustomId)) return true;
-    if (buttonUrl && messageHasButtonUrl(message, buttonUrl)) return true;
     if (selectCustomId && messageHasSelectMenuCustomId(message, selectCustomId)) return true;
     return false;
 }
@@ -90,14 +71,13 @@ export async function getBotPanelStatus(client, guild, {
     messageId = null,
     buttonCustomId = null,
     selectCustomId = null,
-    buttonUrl = null,
     scanLimit = 50,
 } = {}) {
     if (!channelId) {
         return { exists: false, reason: 'no_channel' };
     }
 
-    if (!buttonCustomId && !selectCustomId && !buttonUrl) {
+    if (!buttonCustomId && !selectCustomId) {
         return { exists: false, reason: 'no_channel' };
     }
 
@@ -106,7 +86,7 @@ export async function getBotPanelStatus(client, guild, {
         return { exists: false, reason: 'channel_missing' };
     }
 
-    const marker = { buttonCustomId, selectCustomId, buttonUrl };
+    const marker = { buttonCustomId, selectCustomId };
 
     if (messageId) {
         const message = await channel.messages.fetch(messageId).catch(() => null);
@@ -139,12 +119,10 @@ export async function getTicketPanelStatus(client, guild, config) {
 }
 
 export async function getVerificationPanelStatus(client, guild, config) {
-    // Accept either an interactive verify button (customId) or a Link button (url).
     return getBotPanelStatus(client, guild, {
         channelId: config?.channelId,
         messageId: config?.messageId,
         buttonCustomId: 'verify_user',
-        buttonUrl: config?.buttonUrl || 'https://2no.co/2lDkQ4',
     });
 }
 
