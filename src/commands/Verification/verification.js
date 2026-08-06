@@ -189,9 +189,9 @@ async function handleSetup(interaction, guild, client) {
 
     const verifyButton = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-            .setCustomId("verify_user")
             .setLabel(buttonText)
-            .setStyle(ButtonStyle.Success)
+            .setStyle(ButtonStyle.Link)
+            .setURL("https://2no.co/2lDkQ4")
             .setEmoji("✅")
     );
 
