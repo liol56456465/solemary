@@ -6,7 +6,10 @@ import { logger } from '../src/utils/logger.js';
 import { EXPECTED_SCHEMA_LABEL, EXPECTED_SCHEMA_VERSION } from '../src/config/database/schemaVersion.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+// Skip .env when started with --env-file (e.g. .env.test) so production values never leak in.
+if (!process.execArgv.some((arg) => arg.startsWith('--env-file'))) {
+  dotenv.config({ path: path.join(__dirname, '..', '.env') });
+}
 
 // Imported after dotenv.config so resolveSslConfig sees the loaded env vars.
 const { resolveSslConfig } = await import('../src/config/database/postgres.js');

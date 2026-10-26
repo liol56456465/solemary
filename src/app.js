@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './config/loadEnv.js';
 import { Client, Collection, GatewayIntentBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import express from 'express';
@@ -111,8 +111,12 @@ class Meowist extends Client {
 
   startWebServer() {
     const app = express();
+    // Railway (and similar hosts) sit behind one reverse proxy; trust it so req.ip is the real client.
+    app.set('trust proxy', 1);
     const configuredPort = Number(this.config.api?.port || process.env.PORT || 3000);
-    const maxPortRetryAttempts = Number(process.env.PORT_RETRY_ATTEMPTS || 5);
+    // A host-provided PORT is the only port the proxy routes to, so never drift off it.
+    // Port retry is a local-dev convenience only.
+    const maxPortRetryAttempts = process.env.PORT ? 0 : Number(process.env.PORT_RETRY_ATTEMPTS || 5);
     const host = process.env.WEB_HOST || '0.0.0.0';
     const corsOrigin = this.config.api?.cors?.origin || '*';
     

@@ -20,7 +20,10 @@ import { runKeyMigration } from '../src/utils/database/keyMigration.js';
 import { logger } from '../src/utils/logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+// Skip .env when started with --env-file (e.g. .env.test) so production values never leak in.
+if (!process.execArgv.some((arg) => arg.startsWith('--env-file'))) {
+  dotenv.config({ path: path.join(__dirname, '..', '.env') });
+}
 
 const { Pool } = pg;
 const dryRun = process.argv.includes('--dry-run');

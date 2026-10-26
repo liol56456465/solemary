@@ -13,7 +13,9 @@
     "migrate:keys:dry": "node scripts/migrate-keys.js --dry-run",
     "backup:db": "node scripts/backup.js",
     "restore:db": "node scripts/restore.js",
-    "backup:drill": "node scripts/restore-drill.js"
+    "backup:drill": "node scripts/restore-drill.js",
+    "start:test": "node --env-file=.env.test src/app.js",
+    "migrate:test": "node --env-file=.env.test scripts/migrate.js apply"
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.1",
