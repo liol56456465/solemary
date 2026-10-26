@@ -1,5 +1,5 @@
 import { getColor, getDefaultApplicationQuestions } from '../../config/bot.js';
-import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } from 'discord.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError, withErrorHandling, createError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
@@ -118,7 +118,12 @@ export async function handleApplicationModal(interaction) {
     
     const customId = interaction.customId;
     if (!customId.startsWith('app_modal_')) return;
-    
+
+    // Several DB reads + the submission run before the first reply; acknowledge
+    // within Discord's 3 s window so the modal does not show "interaction failed".
+    const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    if (!deferred) return;
+
     const roleId = customId.split('_')[2];
     
     const applicationRoles = await getApplicationRoles(interaction.client, interaction.guild.id);

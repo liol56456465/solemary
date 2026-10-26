@@ -125,7 +125,15 @@ function buildButtonRow(settings, guildId, disabled = false) {
     );
 }
 
-async function refreshDashboard(rootInteraction, settings, roles, guildId, client) {
+async function refreshDashboard(rootInteraction, settings, roles, guildId, client, selectedRoleId = null) {
+    // Role dashboards must re-render the role view: its collectors only listen for
+    // app_cfg_<roleId>, so swapping in the global menu leaves dead components.
+    const selectedRole = selectedRoleId ? roles.find(r => r.roleId === selectedRoleId) : null;
+    if (selectedRole) {
+        await showApplicationDashboard(rootInteraction, selectedRole, settings, roles, guildId, client, false).catch(() => {});
+        return;
+    }
+
     const selectMenu = buildSelectMenu(guildId);
     await InteractionHelper.safeEditReply(rootInteraction, {
         embeds: [await buildDashboardEmbed(settings, roles, rootInteraction.guild, client)],
@@ -249,7 +257,7 @@ async function showApplicationSelector(interaction, roles, settings, guildId, cl
     });
 }
 
-async function showGlobalDashboard(interaction, settings, roles, guildId, client) {
+async function showGlobalDashboard(interaction, settings, roles, guildId, client, attachCollectors = true) {
     const selectMenu = buildSelectMenu(guildId);
 
     await InteractionHelper.safeEditReply(interaction, {
@@ -260,10 +268,12 @@ async function showGlobalDashboard(interaction, settings, roles, guildId, client
         ],
     });
 
-    setupCollectors(interaction, settings, roles, guildId, client, null);
+    if (attachCollectors) {
+        setupCollectors(interaction, settings, roles, guildId, client, null);
+    }
 }
 
-async function showApplicationDashboard(rootInteraction, selectedRole, settings, roles, guildId, client) {
+async function showApplicationDashboard(rootInteraction, selectedRole, settings, roles, guildId, client, attachCollectors = true) {
     const roleObj = rootInteraction.guild.roles.cache.get(selectedRole.roleId);
 
     const guildConfig = await getGuildConfig(client, guildId);
@@ -345,7 +355,9 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
         components: [menuRow, controlButtons],
     });
 
-    setupCollectors(rootInteraction, settings, roles, guildId, client, selectedRole.roleId);
+    if (attachCollectors) {
+        setupCollectors(rootInteraction, settings, roles, guildId, client, selectedRole.roleId);
+    }
 }
 
 function setupCollectors(interaction, settings, roles, guildId, client, selectedRoleId) {
@@ -446,7 +458,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 
                 const updatedSettings = await getApplicationSettings(interaction.client, guildId);
                 const updatedRoles = await getApplicationRoles(interaction.client, guildId);
-                await showGlobalDashboard(interaction, updatedSettings, updatedRoles, guildId, interaction.client);
+                await showGlobalDashboard(interaction, updatedSettings, updatedRoles, guildId, interaction.client, false);
 
                 await toggleInteraction.followUp({
                     embeds: [successEmbed(
@@ -606,7 +618,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 
                 const updatedRole = roles[roleIndex];
                 const updatedSettings = await getApplicationSettings(interaction.client, guildId);
-                await showApplicationDashboard(interaction, updatedRole, updatedSettings, roles, guildId, interaction.client);
+                await showApplicationDashboard(interaction, updatedRole, updatedSettings, roles, guildId, interaction.client, false);
 
                 await toggleInteraction.followUp({
                     embeds: [successEmbed(
@@ -725,9 +737,9 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
             flags: MessageFlags.Ephemeral,
         });
 
-        await refreshDashboard(rootInteraction, settings, roles, guildId, client);
+        await refreshDashboard(rootInteraction, settings, roles, guildId, client, selectedRoleId);
     } catch (error) {
-        if (error.code === 'INTERACTION_TIMEOUT') return;
+        if (error.code === 'InteractionCollectorError' || error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in log channel modal:', error);
         await replyUserError(selectInteraction, {
             type: ErrorTypes.UNKNOWN,
@@ -736,7 +748,7 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
     }
 }
 
-async function handleManagerRole(selectInteraction, rootInteraction, settings, roles, guildId, client) {
+async function handleManagerRole(selectInteraction, rootInteraction, settings, roles, guildId, client, selectedRoleId = null) {
     const modal = new ModalBuilder()
         .setCustomId(`app_cfg_manager_role_modal_${guildId}`)
         .setTitle('Configure Manager Roles');
@@ -786,9 +798,9 @@ async function handleManagerRole(selectInteraction, rootInteraction, settings, r
             flags: MessageFlags.Ephemeral,
         });
 
-        await refreshDashboard(rootInteraction, settings, roles, guildId, client);
+        await refreshDashboard(rootInteraction, settings, roles, guildId, client, selectedRoleId);
     } catch (error) {
-        if (error.code === 'INTERACTION_TIMEOUT') return;
+        if (error.code === 'InteractionCollectorError' || error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in manager role modal:', error);
         await replyUserError(selectInteraction, {
             type: ErrorTypes.UNKNOWN,
@@ -899,7 +911,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
         flags: MessageFlags.Ephemeral,
     });
 
-    await refreshDashboard(rootInteraction, settings, roles, guildId, client);
+    await refreshDashboard(rootInteraction, settings, roles, guildId, client, selectedRoleId);
 }
 
 async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles, guildId, client) {
@@ -959,7 +971,7 @@ async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles
 
         await refreshDashboard(rootInteraction, settings, roles, guildId, client);
     } catch (error) {
-        if (error.code === 'INTERACTION_TIMEOUT') return;
+        if (error.code === 'InteractionCollectorError' || error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in role add modal:', error);
         await replyUserError(selectInteraction, {
             type: ErrorTypes.UNKNOWN,
@@ -1021,7 +1033,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
 
         await refreshDashboard(rootInteraction, settings, roles, guildId, client);
     } catch (error) {
-        if (error.code === 'INTERACTION_TIMEOUT') return;
+        if (error.code === 'InteractionCollectorError' || error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in role remove modal:', error);
         await replyUserError(selectInteraction, {
             type: ErrorTypes.UNKNOWN,
@@ -1030,7 +1042,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
     }
 }
 
-async function handleRetention(selectInteraction, rootInteraction, settings, roles, guildId, client) {
+async function handleRetention(selectInteraction, rootInteraction, settings, roles, guildId, client, selectedRoleId = null) {
     const modal = new ModalBuilder()
         .setCustomId('app_cfg_retention')
         .setTitle('Application Retention Periods');
@@ -1109,7 +1121,7 @@ async function handleRetention(selectInteraction, rootInteraction, settings, rol
         flags: MessageFlags.Ephemeral,
     });
 
-    await refreshDashboard(rootInteraction, settings, roles, guildId, client);
+    await refreshDashboard(rootInteraction, settings, roles, guildId, client, selectedRoleId);
 }
 
 async function handleDeleteApplication(confirmSubmit, selectedRoleId, guildId, roles, client) {

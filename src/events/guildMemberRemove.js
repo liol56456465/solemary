@@ -20,14 +20,13 @@ export default {
         
         const goodbyeChannelId = welcomeConfig?.goodbyeChannelId;
 
-        if (welcomeConfig?.goodbyeEnabled && goodbyeChannelId) {
+        // Skip only the goodbye message on missing permissions / send failure; the
+        // logging, counters and data cleanup below must still run.
+        if (welcomeConfig?.goodbyeEnabled && goodbyeChannelId) try {
             const channel = guild.channels.cache.get(goodbyeChannelId);
-            if (channel?.isTextBased?.()) {
-                const me = guild.members.me;
-                const permissions = me ? channel.permissionsFor(me) : null;
-                if (!permissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
-                    return;
-                }
+            const me = guild.members.me;
+            const permissions = channel?.isTextBased?.() && me ? channel.permissionsFor(me) : null;
+            if (permissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
 
                 const formatData = { user, guild, member };
                 const goodbyeMessage = formatWelcomeMessage(
@@ -76,6 +75,8 @@ export default {
                     });
                 }
             }
+        } catch (error) {
+            logger.warn(`Could not send goodbye message in guild ${guild.id}: ${error.message}`);
         }
 
         try {

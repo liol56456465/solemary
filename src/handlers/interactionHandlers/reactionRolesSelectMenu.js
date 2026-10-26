@@ -81,7 +81,8 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
                 continue;
             }
 
-            const roleHasDangerousPermissions = role.permissions.has([
+            // any(): a role with even one of these must be blocked (has() requires all).
+            const roleHasDangerousPermissions = role.permissions.any([
                 'Administrator',
                 'ManageGuild',
                 'ManageRoles',

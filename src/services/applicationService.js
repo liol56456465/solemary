@@ -94,8 +94,11 @@ class ApplicationService {
             );
         }
 
-        applicationCooldowns.set(cooldownKey, now);
         return true;
+    }
+
+    static recordApplicationCooldown(userId) {
+        applicationCooldowns.set(`submit_${userId}`, Date.now());
     }
 
     static async checkManagerPermission(client, guildId, member) {
@@ -156,6 +159,9 @@ class ApplicationService {
             };
 
             const application = await createApplication(client, sanitizedData);
+            // Only start the cooldown once the application actually exists; a failed
+            // submission must not lock the user out for the whole cooldown window.
+            this.recordApplicationCooldown(data.userId);
 
             logger.info('Application submitted', {
                 applicationId: application.id,

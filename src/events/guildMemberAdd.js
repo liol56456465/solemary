@@ -32,7 +32,9 @@ export default {
         
         const welcomeChannelId = welcomeConfig?.channelId;
 
-        if (welcomeConfig?.enabled && welcomeChannelId) {
+        // A failed welcome send (bad image URL, perms changed mid-send, ...) must not
+        // abort auto-role and the rest of the join pipeline below.
+        if (welcomeConfig?.enabled && welcomeChannelId) try {
             const channel = guild.channels.cache.get(welcomeChannelId);
             const me = guild.members.me;
             const permissions = channel?.isTextBased?.() && me ? channel.permissionsFor(me) : null;
@@ -59,7 +61,7 @@ export default {
 
                 if (!canEmbed) {
                     await channel.send({
-                        content: messageContent || welcomeMessage
+                        content: messageContent ? `${messageContent} ${welcomeMessage}` : welcomeMessage
                     });
                 } else {
                     const embed = new EmbedBuilder()
@@ -86,6 +88,8 @@ export default {
                     });
                 }
             }
+        } catch (error) {
+            logger.warn(`Could not send welcome message in guild ${guild.id}: ${error.message}`);
         }
         
         if (welcomeConfig?.roleIds && welcomeConfig.roleIds.length > 0) {

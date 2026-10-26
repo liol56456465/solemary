@@ -28,8 +28,8 @@ export function validateBirthday(month, day) {
     };
   }
 
-  const currentYear = new Date().getFullYear();
-  const date = new Date(currentYear, month - 1, day);
+  // Validate against a leap year so Feb 29 birthdays are accepted every year.
+  const date = new Date(2000, month - 1, day);
   
   if (isNaN(date.getTime()) || date.getMonth() !== month - 1 || date.getDate() !== day) {
     return {
@@ -204,8 +204,10 @@ export async function getUpcomingBirthdays(client, guildId, limit = 5) {
       return [];
     }
 
-    const today = new Date();
-    const currentYear = today.getFullYear();
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    // Compare against midnight so a birthday today counts as "Today!" rather than next year.
+    const today = new Date(currentYear, now.getMonth(), now.getDate());
     
     const upcomingBirthdays = [];
     
@@ -216,7 +218,7 @@ export async function getUpcomingBirthdays(client, guildId, limit = 5) {
         nextBirthday = new Date(currentYear + 1, userData.month - 1, userData.day);
       }
       
-      const daysUntil = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
+      const daysUntil = Math.round((nextBirthday - today) / (1000 * 60 * 60 * 24));
       
       upcomingBirthdays.push({
         userId,

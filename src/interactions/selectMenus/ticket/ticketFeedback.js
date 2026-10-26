@@ -20,7 +20,8 @@ export default {
         const [guildId, channelId] = args;
 
         if (!guildId || !channelId) {
-            await interaction.editReply({
+            // Not yet acknowledged here, so editReply would throw; update the survey message instead.
+            await interaction.update({
                 embeds: [
                     new EmbedBuilder()
                         .setTitle('⚠️ Invalid Feedback Link')
