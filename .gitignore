@@ -148,3 +148,6 @@ backups/
 
 # Local AI working notes (repo is public)
 claude/
+
+# Remote log viewer settings (holds LOG_STREAM_TOKEN)
+.logviewer.env
