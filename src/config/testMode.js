@@ -204,7 +204,7 @@ export async function verifyTestResources(client) {
         if (!found) {
             problems.push(`${name} (${id}) is not a ${kind} in ${guildVar} (${guild.name})`);
         } else if (kind === 'category' && found.type !== 4) {
-            problems.push(`${name} (${id}) is a channel, not a category`);
+            problems.push(`${name} (${id}) is the channel #${found.name}, not a category. Right-click the category header → Copy Channel ID.`);
         }
     }
 
