@@ -49,7 +49,7 @@ export default {
         try {
           const member = await interaction.guild.members.fetch(user.userId).catch(() => null);
           const userMention = member?.user.toString() || `<@${user.userId}>`;
-          const xpForNextLevel = getXpForLevel(user.level + 1);
+          const xpForNextLevel = getXpForLevel(user.level);
 
           let rankPrefix = `${index + 1}.`;
           if (index === 0) rankPrefix = '🥇';

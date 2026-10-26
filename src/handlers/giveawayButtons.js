@@ -116,6 +116,11 @@ export const giveawayEndHandler = {
                 return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the \'Manage Server\' permission to end a giveaway.' });
             }
 
+            // Saving, editing the giveaway message and logging can exceed Discord's 3s window.
+            if (!(await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral }))) {
+                return;
+            }
+
             const guildGiveaways = await getGuildGiveaways(client, interaction.guildId);
             const giveaway = guildGiveaways.find(g => g.messageId === interaction.message.id);
 
@@ -230,6 +235,11 @@ export const giveawayRerollHandler = {
 
             if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
                 return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the \'Manage Server\' permission to reroll a giveaway.' });
+            }
+
+            // Saving, editing the giveaway message and logging can exceed Discord's 3s window.
+            if (!(await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral }))) {
+                return;
             }
 
             const guildGiveaways = await getGuildGiveaways(client, interaction.guildId);

@@ -115,20 +115,16 @@ async function updateConfigFile(currencySymbol, currencyName) {
         const configPath = path.join(__dirname, '../../../config/bot.js');
         let configContent = await fs.readFile(configPath, 'utf-8');
 
-        configContent = configContent.replace(
-            /symbol:\s*"[^"]*"/,
-            `symbol: "${currencySymbol}"`
+        // Only touch the keys inside the economy `currency: { ... }` block; the
+        // comments sit on the line above each key, so match on the key itself.
+        const setCurrencyKey = (content, key, value) => content.replace(
+            new RegExp(`(currency:\\s*\\{[^}]*?\\b${key}:\\s*)"[^"]*"`),
+            (_match, prefix) => `${prefix}${JSON.stringify(value)}`
         );
 
-        configContent = configContent.replace(
-            /name:\s*"[^"]*",\s*\/\/\s*Currency display name/,
-            `name: "${currencyName}", // Currency display name`
-        );
-
-        configContent = configContent.replace(
-            /namePlural:\s*"[^"]*",\s*\/\/\s*Plural display name/,
-            `namePlural: "${currencyName}s", // Plural display name`
-        );
+        configContent = setCurrencyKey(configContent, 'symbol', currencySymbol);
+        configContent = setCurrencyKey(configContent, 'name', currencyName);
+        configContent = setCurrencyKey(configContent, 'namePlural', `${currencyName}s`);
         
         await fs.writeFile(configPath, configContent, 'utf-8');
         logger.info('Config file updated successfully');
@@ -301,7 +297,21 @@ async function handleAddCurrency(selectInteraction, rootInteraction, guild, clie
         return;
     }
 
-    const { newBalance } = await addMoney(client, guild.id, userId, amount, type);
+    let newBalance;
+    try {
+        ({ newBalance } = await addMoney(client, guild.id, userId, amount, type));
+    } catch (error) {
+        // The select interaction was already answered with the modal, so the error
+        // has to go to the modal submission or Discord shows "interaction failed".
+        logger.debug(`Economy dashboard add currency failed: ${error.message}`);
+        await replyUserError(submitted, {
+            type: ErrorTypes.VALIDATION,
+            message: error instanceof TitanBotError && error.userMessage
+                ? error.userMessage
+                : 'Could not update the balance. Please try again.',
+        });
+        return;
+    }
 
     const currencySymbol = BotConfig.economy.currency.symbol;
 
@@ -398,7 +408,21 @@ async function handleRemoveCurrency(selectInteraction, rootInteraction, guild, c
         return;
     }
 
-    const { newBalance } = await removeMoney(client, guild.id, userId, amount, type);
+    let newBalance;
+    try {
+        ({ newBalance } = await removeMoney(client, guild.id, userId, amount, type));
+    } catch (error) {
+        // The select interaction was already answered with the modal, so the error
+        // has to go to the modal submission or Discord shows "interaction failed".
+        logger.debug(`Economy dashboard remove currency failed: ${error.message}`);
+        await replyUserError(submitted, {
+            type: ErrorTypes.VALIDATION,
+            message: error instanceof TitanBotError && error.userMessage
+                ? error.userMessage
+                : 'Could not update the balance. Please try again.',
+        });
+        return;
+    }
 
     const currencySymbol = BotConfig.economy.currency.symbol;
 

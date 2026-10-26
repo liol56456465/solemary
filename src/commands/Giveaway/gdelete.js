@@ -21,6 +21,9 @@ export default {
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     async execute(interaction) {
+        // Defer up front: message lookups, edits and logging can exceed the 3s window
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+
         if (!interaction.inGuild()) {
             throw new TitanBotError(
                 'Giveaway command used outside guild',

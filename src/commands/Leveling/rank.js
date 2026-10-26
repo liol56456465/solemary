@@ -54,7 +54,8 @@ export default {
       totalXp: userData?.totalXp ?? 0
     };
 
-    const xpNeeded = getXpForLevel(safeUserData.level + 1);
+    // addXp levels a user up once xp reaches getXpForLevel(currentLevel).
+    const xpNeeded = getXpForLevel(safeUserData.level);
     const progress = xpNeeded > 0 ? Math.floor((safeUserData.xp / xpNeeded) * 100) : 0;
     const progressBar = createProgressBar(progress, 20);
 

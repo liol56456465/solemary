@@ -26,6 +26,10 @@ export default {
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     async execute(interaction) {
+        // Defer up front: channel/message fetches, edits, the winner ping and logging
+        // routinely take longer than Discord's 3-second window.
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+
         if (!interaction.inGuild()) {
             throw new TitanBotError(
                 'Giveaway command used outside guild',

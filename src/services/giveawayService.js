@@ -380,6 +380,10 @@ export async function checkGiveaways(client) {
         giveaway.isEnded = true;
         giveaway.winnerIds = winners;
         giveaway.endedAt = new Date().toISOString();
+        // The key-value fallback of markGiveawayEnded needs guildId on the record;
+        // without it the giveaway is never marked ended and gets re-ended every tick.
+        giveaway.guildId = giveaway.guildId || guildId;
+        giveaway.messageId = giveaway.messageId || messageId;
 
         const markedSuccess = await markGiveawayEnded(client, giveawayId, giveaway);
         if (!markedSuccess) {
