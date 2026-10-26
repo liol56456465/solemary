@@ -1,0 +1,1 @@
+- [Discord command limit](discord-command-limit.md) — keep the bot within Discord’s 100 global slash-command roots.
