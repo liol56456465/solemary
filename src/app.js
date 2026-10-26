@@ -5,14 +5,12 @@ import { Client, Collection, Events, GatewayIntentBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import express from 'express';
 import cron from 'node-cron';
-import crypto from 'crypto';
 
 import config from './config/application.js';
 import { initializeDatabase } from './utils/database.js';
 import { getGuildConfig } from './services/config/guildConfig.js';
 import { getServerCounters, saveServerCounters, updateCounter } from './services/serverstatsService.js';
 import { logger, startupLog, shutdownLog } from './utils/logger.js';
-import { getRecentLogLines, subscribeToLogs } from './utils/logStream.js';
 import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
 import { runEnforcementExpiry } from './services/enforcement/expiryService.js';
@@ -227,81 +225,6 @@ class Meowist extends Client {
         metrics,
       });
     });
-
-    // Remote log viewer (scripts/watch-logs.js). Exists only when LOG_STREAM_TOKEN is
-    // set; requires "Authorization: Bearer <token>". Server-Sent Events, one JSON log
-    // line per event, starting with the last 100 lines.
-    const logStreamToken = (process.env.LOG_STREAM_TOKEN || '').trim();
-    if (logStreamToken.length >= 32) {
-      const expected = crypto.createHash('sha256').update(logStreamToken).digest();
-      const MAX_VIEWERS = 3;
-      const viewers = [];
-
-      // Failed token attempts per client IP; an IP over the limit is refused, even
-      // with the right token, until its window ends.
-      const MAX_FAILED_ATTEMPTS = 10;
-      const FAILED_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
-      const failedAttempts = new Map();
-
-      app.get('/admin/logs/stream', (req, res) => {
-        const now = Date.now();
-        const clientIp = req.ip || 'unknown';
-        let attempts = failedAttempts.get(clientIp);
-        if (attempts && attempts.resetAt <= now) {
-          failedAttempts.delete(clientIp);
-          attempts = null;
-        }
-        if (attempts && attempts.count >= MAX_FAILED_ATTEMPTS) {
-          res.set('Retry-After', String(Math.ceil((attempts.resetAt - now) / 1000)));
-          return res.status(429).end();
-        }
-
-        const header = String(req.headers.authorization || '');
-        const given = crypto.createHash('sha256').update(header.replace(/^Bearer\s+/i, '')).digest();
-        if (!header.startsWith('Bearer ') || !crypto.timingSafeEqual(given, expected)) {
-          if (failedAttempts.size >= 10000) {
-            for (const [ip, entry] of failedAttempts) {
-              if (entry.resetAt <= now) failedAttempts.delete(ip);
-            }
-          }
-          if (attempts) {
-            attempts.count += 1;
-          } else if (failedAttempts.size < 10000) {
-            failedAttempts.set(clientIp, { count: 1, resetAt: now + FAILED_ATTEMPT_WINDOW_MS });
-          }
-          if (attempts?.count === MAX_FAILED_ATTEMPTS) {
-            logger.warn(`Log stream: ${MAX_FAILED_ATTEMPTS} failed token attempts from ${clientIp}; blocked for 15 minutes`);
-          }
-          return res.status(404).end();
-        }
-        // Replit's proxy can keep a connection open after the viewer has gone, so a
-        // full house is more likely stale than real: make room by closing the oldest.
-        while (viewers.length >= MAX_VIEWERS) {
-          viewers.shift().end();
-        }
-
-        res.writeHead(200, {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache, no-transform',
-          Connection: 'keep-alive',
-          'X-Accel-Buffering': 'no',
-        });
-        const send = (line) => res.write(`data: ${line}\n\n`);
-        getRecentLogLines(100).forEach(send);
-        const unsubscribe = subscribeToLogs(send);
-        const keepAlive = setInterval(() => res.write(': ping\n\n'), 25000);
-        viewers.push(res);
-        res.on('close', () => {
-          clearInterval(keepAlive);
-          unsubscribe();
-          const index = viewers.indexOf(res);
-          if (index !== -1) viewers.splice(index, 1);
-        });
-      });
-      startupLog('Remote log stream enabled at /admin/logs/stream');
-    } else if (logStreamToken) {
-      logger.warn('LOG_STREAM_TOKEN is shorter than 32 characters; remote log stream disabled');
-    }
 
     app.get('/', (req, res) => {
       res.status(200).json({ 
