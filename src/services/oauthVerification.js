@@ -4,8 +4,9 @@
 // `state` is signed (HMAC with the client secret), names the guild and the user who
 // pressed the button, and expires after 10 minutes. Discord sends the user back to
 // GET /oauth/callback; the bot exchanges the code, checks the authorizing account is
-// the one that pressed Verify, gives the verified role, and stores the OAuth tokens
-// encrypted (AES-256-GCM with OAUTH_TOKEN_KEY) so guilds.join can be used later.
+// the one that pressed Verify, gives the verified role, stores the OAuth tokens
+// encrypted (AES-256-GCM with OAUTH_TOKEN_KEY) so guilds.join can be used later, and
+// sends the browser on to the Meowist invite (VERIFY_SUCCESS_REDIRECT).
 //
 // Enabled when DISCORD_CLIENT_SECRET and PUBLIC_URL are set; otherwise the button
 // verifies directly as before. The redirect URL <PUBLIC_URL>/oauth/callback must be
@@ -19,8 +20,9 @@ import { verifyUser } from './verificationService.js';
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
 const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
 const ME_URL = 'https://discord.com/api/v10/users/@me';
-// messages.read is RPC-only and Discord rejects it for bots, so it is not requested.
-const SCOPES = ['identify', 'email', 'guilds', 'guilds.join', 'gdm.join'];
+const SCOPES = ['identify', 'guilds.join'];
+// Where the browser goes after a successful verification: the main Meowist server's invite.
+const DEFAULT_SUCCESS_REDIRECT = 'https://discord.gg/WyceK9YENP';
 const STATE_TTL_MS = 10 * 60 * 1000;
 const HTTP_TIMEOUT_MS = 10000;
 
@@ -147,11 +149,10 @@ async function storeTokens(userId, token) {
     });
 }
 
-function page(title, message, ok) {
-    const color = ok ? '#3ba55d' : '#ed4245';
+function errorPage(title, message) {
     return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1e1f22;color:#f2f3f5;font:16px/1.5 system-ui,sans-serif}
-main{max-width:420px;padding:32px 24px;text-align:center}h1{color:${color};font-size:22px;margin:0 0 8px}p{margin:0;color:#b5bac1}</style></head>
+main{max-width:420px;padding:32px 24px;text-align:center}h1{color:#ed4245;font-size:22px;margin:0 0 8px}p{margin:0;color:#b5bac1}</style></head>
 <body><main><h1>${title}</h1><p>${message}</p></main></body></html>`;
 }
 
@@ -164,7 +165,7 @@ export function registerOAuthRoutes(app, client) {
 
     app.get('/oauth/callback', async (req, res) => {
         res.set('Cache-Control', 'no-store');
-        const send = (status, title, message, ok = false) => res.status(status).type('html').send(page(title, message, ok));
+        const send = (status, title, message) => res.status(status).type('html').send(errorPage(title, message));
 
         if (req.query.error) {
             return send(400, 'Verification cancelled', 'You did not authorize the bot. Go back to Discord and press Verify again if you want to verify.');
@@ -183,10 +184,8 @@ export function registerOAuthRoutes(app, client) {
 
             await storeTokens(me.id, token).catch((error) => logger.error(`Could not store OAuth tokens for ${me.id}: ${error.message}`));
 
-            const result = await verifyUser(client, state.guildId, me.id, { source: 'oauth', moderatorId: null });
-            const already = result.status === 'already_verified';
-            return send(200, already ? 'Already verified' : 'You are verified!',
-                `${already ? 'You already have' : 'You now have'} the <b>${result.roleName.replace(/[<>&"]/g, '')}</b> role. You can close this tab and go back to Discord.`, true);
+            await verifyUser(client, state.guildId, me.id, { source: 'oauth', moderatorId: null });
+            return res.redirect(303, (process.env.VERIFY_SUCCESS_REDIRECT || '').trim() || DEFAULT_SUCCESS_REDIRECT);
         } catch (error) {
             logger.error(`OAuth verification failed for state user ${state.userId}: ${error.message}`);
             const message = (error.userMessage || 'Something went wrong. Go back to Discord and press Verify again.').replace(/[<>&"]/g, '');
