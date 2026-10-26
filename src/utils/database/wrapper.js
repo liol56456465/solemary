@@ -3,6 +3,13 @@ import { MemoryStorage } from '../memoryStorage.js';
 import { logger } from '../logger.js';
 import { validateGuildConfigOrThrow } from '../schemas.js';
 
+// Production (NODE_ENV=production, or any Replit deployment) must not silently run on
+// in-memory storage; ALLOW_MEMORY_DB=true is the explicit opt-out.
+function memoryFallbackAllowed() {
+    const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.REPLIT_DEPLOYMENT);
+    return !isProduction || process.env.ALLOW_MEMORY_DB === 'true';
+}
+
 class DatabaseWrapper {
     constructor() {
         this.initialized = false;
@@ -44,6 +51,15 @@ class DatabaseWrapper {
             if (error.code === 'SCHEMA_VERSION_MISMATCH') {
                 throw error;
             }
+        }
+
+        if (!memoryFallbackAllowed()) {
+            const requiredError = new Error(
+                'PostgreSQL is unavailable and in-memory storage is not allowed in production ' +
+                '(data would be lost on restart). Fix DATABASE_URL, or set ALLOW_MEMORY_DB=true to accept that.',
+            );
+            requiredError.code = 'DATABASE_REQUIRED';
+            throw requiredError;
         }
 
         this.db = new MemoryStorage();
@@ -155,7 +171,7 @@ export async function initializeDatabase() {
     } catch (error) {
         logger.error('❌ Database Initialization Error:', error);
 
-        if (error.code === 'SCHEMA_VERSION_MISMATCH') {
+        if (error.code === 'SCHEMA_VERSION_MISMATCH' || error.code === 'DATABASE_REQUIRED') {
             throw error;
         }
 
