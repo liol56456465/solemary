@@ -162,6 +162,15 @@ class Meowist extends Client {
       next();
     });
 
+    // Drop idle IPs so the map can't grow without bound on an internet-facing port.
+    const requestSweep = setInterval(() => {
+      const windowStart = Date.now() - windowMs;
+      for (const [ip, times] of requestCounts) {
+        if (!times.some((t) => t > windowStart)) requestCounts.delete(ip);
+      }
+    }, windowMs);
+    requestSweep.unref();
+
     app.get('/health', (req, res) => {
       const dbStatus = this.db?.getStatus?.() || { isDegraded: 'unknown' };
       const status = {
@@ -254,10 +263,34 @@ class Meowist extends Client {
   }
 
   setupCronJobs() {
-    cron.schedule('0 6 * * *', runSafeTask('birthday_check', () => checkBirthdays(this)));
-    cron.schedule('* * * * *', runSafeTask('giveaway_check', () => checkGiveaways(this)));
-    cron.schedule('*/15 * * * *', runSafeTask('counter_update', () => this.updateAllCounters()));
-    cron.schedule('* * * * *', runSafeTask('enforcement_expiry', () => runEnforcementExpiry(this)));
+    // A tick is skipped while the previous run of the same job is still going, so a
+    // slow run (e.g. ending many giveaways) can never overlap and act twice.
+    const running = new Set();
+    const exclusive = (name, fn) => runSafeTask(name, async () => {
+      if (running.has(name)) {
+        logger.warn(`Cron job ${name} is still running; skipping this tick`);
+        return;
+      }
+      running.add(name);
+      try {
+        await fn();
+      } finally {
+        running.delete(name);
+      }
+    });
+
+    cron.schedule('0 6 * * *', exclusive('birthday_check', () => checkBirthdays(this)));
+    cron.schedule('* * * * *', exclusive('giveaway_check', () => checkGiveaways(this)));
+    cron.schedule('*/15 * * * *', exclusive('counter_update', () => this.updateAllCounters()));
+    cron.schedule('* * * * *', exclusive('enforcement_expiry', () => runEnforcementExpiry(this)));
+
+    // Expired per-user command cooldowns are dead weight; sweep them every 10 minutes.
+    cron.schedule('*/10 * * * *', runSafeTask('cooldown_sweep', () => {
+      const now = Date.now();
+      for (const [key, expiresAt] of this.cooldowns) {
+        if (expiresAt <= now) this.cooldowns.delete(key);
+      }
+    }));
 
     // Catch up on bans/mutes that expired while the bot was offline, then import
     // legacy KV warnings (idempotent) once the gateway is ready.

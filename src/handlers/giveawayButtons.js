@@ -8,6 +8,7 @@ import {
     isGiveawayEnded 
 } from '../utils/giveaways.js';
 import { Mutex } from '../utils/mutex.js';
+import { InteractionHelper } from '../utils/interactionHelper.js';
 import { 
     selectWinners,
     isUserRateLimited,
@@ -27,6 +28,12 @@ export const giveawayJoinHandler = {
             }
 
             await recordUserInteraction(interaction.user.id, interaction.message.id);
+
+            // Joins are serialized per giveaway; during a rush the queue can outlast
+            // Discord's 3-second window, so acknowledge before waiting on the lock.
+            if (!(await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral }))) {
+                return;
+            }
 
             const lockKey = `giveaway:${interaction.message.id}`;
             await Mutex.runExclusive(lockKey, async () => {
@@ -71,14 +78,13 @@ export const giveawayJoinHandler = {
                     components: [updatedRow]
                 });
 
-                await interaction.reply({
+                await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         successEmbed(
                             'Success! You have entered the giveaway! 🎉',
                             `Good luck! There are now ${participants.length} entry/entries.`
                         )
                     ],
-                    flags: MessageFlags.Ephemeral
                 });
             });
         } catch (error) {

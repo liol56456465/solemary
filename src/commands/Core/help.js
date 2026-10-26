@@ -5,6 +5,7 @@ import {
     ButtonStyle,
 } from "discord.js";
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { logger } from '../../utils/logger.js';
 import { isCommandAvailableInGuild } from '../../utils/commandGate.js';
 import { createEmbed } from "../../utils/embeds.js";
 import {

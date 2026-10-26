@@ -141,9 +141,24 @@ export function createEmbed({
   }
 
   if (Array.isArray(fields) && fields.length > 0) {
-    const validFields = fields.filter(f => f && f.name && f.value);
+    // Discord rejects the whole message if any field breaks a limit, so clamp
+    // each field (name 256, value 1024) and stop before the 6000-char total.
+    const clamp = (text, max) => {
+      const value = String(text);
+      return value.length > max ? `${value.slice(0, max - 1)}…` : value;
+    };
+    const textOf = (part) => (typeof part === 'string' ? part : part?.text || part?.name || '');
+    let budget = 6000 - (embed.data.title?.length || 0) - (embed.data.description?.length || 0)
+      - Math.min(textOf(footer).length, 2048) - Math.min(textOf(author).length, 256);
+    const validFields = [];
+    for (const f of fields.filter(f => f && f.name && f.value).slice(0, 25)) {
+      const field = { ...f, name: clamp(f.name, 256), value: clamp(f.value, 1024) };
+      budget -= field.name.length + field.value.length;
+      if (budget < 0) break;
+      validFields.push(field);
+    }
     if (validFields.length > 0) {
-      embed.addFields(validFields.slice(0, 25)); 
+      embed.addFields(validFields);
     }
   }
 
