@@ -1,9 +1,23 @@
-import { MessageFlags } from 'discord.js';
-import { successEmbed } from '../utils/embeds.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
+import { infoEmbed, successEmbed } from '../utils/embeds.js';
 import { verifyUser } from '../services/verificationService.js';
+import { buildVerifyUrl, isOAuthVerificationEnabled } from '../services/oauthVerification.js';
 import { handleInteractionError, replyUserError, ErrorTypes } from '../utils/errorHandler.js';
 import { logger } from '../utils/logger.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
+
+/** The private reply with the "Verify with Discord" link (OAuth verification). */
+export function buildOAuthVerifyReply(guildId, userId) {
+    return {
+        embeds: [infoEmbed(
+            'Verify with Discord',
+            'Press the button below and authorize the bot with your Discord account. You get the role as soon as you have authorized.\n\n-# The link only works for you and expires in 10 minutes.'
+        )],
+        components: [new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Verify with Discord').setURL(buildVerifyUrl(guildId, userId)),
+        )],
+    };
+}
 
 export async function handleVerificationButton(interaction, client) {
     try {
@@ -21,6 +35,10 @@ export async function handleVerificationButton(interaction, client) {
             userId,
             userTag: interaction.user.tag
         });
+
+        if (isOAuthVerificationEnabled()) {
+            return await InteractionHelper.safeEditReply(interaction, buildOAuthVerifyReply(guild.id, userId));
+        }
 
         const result = await verifyUser(client, guild.id, userId, {
             source: 'button_click',

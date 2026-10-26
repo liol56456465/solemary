@@ -17,6 +17,7 @@ import { runEnforcementExpiry } from './services/enforcement/expiryService.js';
 import { importLegacyWarnings } from './services/enforcement/warnImportService.js';
 import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
+import { registerOAuthRoutes } from './services/oauthVerification.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import { initializeMusic } from './services/music/riffySetup.js';
 import { shutdownMusic } from './services/music/playerHandler.js';
@@ -225,6 +226,8 @@ class Meowist extends Client {
         metrics,
       });
     });
+
+    registerOAuthRoutes(app, this);
 
     app.get('/', (req, res) => {
       res.status(200).json({ 
