@@ -96,6 +96,27 @@ class PostgreSQLDatabase {
                             migrationCheck.reason === 'MISSING_MIGRATION_VERSION'
                             && pgConfig.features.autoMigrate;
 
+                        // Every schema statement is additive (CREATE … IF NOT EXISTS) and was
+                        // just applied above, so an older ledger can be moved forward safely.
+                        const shouldUpgradeSchema =
+                            migrationCheck.reason === 'SCHEMA_VERSION_MISMATCH'
+                            && pgConfig.features.autoMigrate
+                            && pgConfig.features.autoCreateTables
+                            && this.lastSchemaFailures === 0
+                            && migrationCheck.currentVersion < migrationCheck.expectedVersion;
+
+                        if (shouldUpgradeSchema) {
+                            await this.setSchemaVersion(
+                                pgConfig.migration.expectedVersion,
+                                pgConfig.migration.expectedLabel
+                            );
+                            logger.warn(
+                                `Schema ledger upgraded from v${migrationCheck.currentVersion} to v${pgConfig.migration.expectedVersion} (${pgConfig.migration.expectedLabel}).`
+                            );
+                            await this.runStartupKeyMigration();
+                            return true;
+                        }
+
                         if (shouldBootstrapSchema) {
                             await this.setSchemaVersion(
                                 pgConfig.migration.expectedVersion,
@@ -254,30 +275,37 @@ class PostgreSQLDatabase {
     }
 
     async createTables() {
+        let failures = 0;
         for (const table of tableStatements) {
             try {
                 await this.pool.query(table);
             } catch (error) {
+                failures += 1;
                 logger.error('Error creating table:', error);
             }
         }
         
         logger.info('Database tables created/verified');
         
-        await this.createIndexes();
+        failures += await this.createIndexes();
         await this.createAuditTriggers();
+        this.lastSchemaFailures = failures;
+        return failures;
     }
 
     async createIndexes() {
+        let failures = 0;
         for (const index of indexStatements) {
             try {
                 await this.pool.query(index);
             } catch (error) {
+                failures += 1;
                 logger.warn('Error creating index:', error.message);
             }
         }
         
         logger.info('Performance indexes created/verified');
+        return failures;
     }
 
     async createAuditTriggers() {

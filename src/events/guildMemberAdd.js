@@ -7,6 +7,8 @@ import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { getServerCounters, updateCounter } from '../services/serverstatsService.js';
 import { setBirthday as dbSetBirthday } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
+import { reapplyMuteOnJoin } from '../services/enforcement/enforcementService.js';
+import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 
 export default {
   name: Events.GuildMemberAdd,
@@ -15,6 +17,14 @@ export default {
   async execute(member) {
     try {
         const { guild, user } = member;
+
+        // Leaving and rejoining must not shake off an active mute; runs first so
+        // nothing later in the join pipeline can skip it.
+        if (isEnforcementDbAvailable()) {
+            await reapplyMuteOnJoin(member).catch((error) => {
+                logger.warn(`Could not check mute state for ${member.id}: ${error.message}`);
+            });
+        }
         
         const config = await getGuildConfig(member.client, guild.id);
         

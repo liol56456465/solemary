@@ -173,6 +173,73 @@ export const tableStatements = [
         expires_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
+    // ── Enforcement (schema v2) ────────────────────────────────────────────
+    // One row per ban / kick / mute / warn. case_code is globally unique.
+    `CREATE TABLE IF NOT EXISTS ${t.mod_cases} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        case_code VARCHAR(7) NOT NULL UNIQUE,
+        target_user_id VARCHAR(20) NOT NULL,
+        target_username VARCHAR(100) NOT NULL,
+        moderator_id VARCHAR(20) NOT NULL,
+        moderator_username VARCHAR(100) NOT NULL,
+        type VARCHAR(10) NOT NULL CHECK (type IN ('ban', 'kick', 'mute', 'warn')),
+        name VARCHAR(100) NOT NULL,
+        reason TEXT NOT NULL,
+        prebuilt_or_custom VARCHAR(10) NOT NULL CHECK (prebuilt_or_custom IN ('prebuilt', 'custom')),
+        reason_key VARCHAR(50),
+        duration_ms BIGINT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ,
+        unappealable BOOLEAN NOT NULL DEFAULT FALSE,
+        appeal_deadline TIMESTAMPTZ,
+        ladder_level_after SMALLINT NOT NULL DEFAULT 0,
+        counts_toward_level SMALLINT,
+        is_auto BOOLEAN NOT NULL DEFAULT FALSE,
+        is_imported BOOLEAN NOT NULL DEFAULT FALSE,
+        import_key VARCHAR(120) UNIQUE,
+        dm_delivered BOOLEAN NOT NULL DEFAULT FALSE,
+        status VARCHAR(20) NOT NULL DEFAULT 'active'
+            CHECK (status IN ('active', 'expired', 'revoked', 'appeal_pending')),
+        revoked_by VARCHAR(20),
+        revoked_at TIMESTAMPTZ,
+        revoke_reason TEXT
+    )`,
+
+    // Warn ladder. Never reset; lowered by one only by an accepted ladder-ban appeal.
+    `CREATE TABLE IF NOT EXISTS ${t.mod_ladder} (
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        level SMALLINT NOT NULL DEFAULT 0,
+        warns_since_level INTEGER NOT NULL DEFAULT 0,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (guild_id, user_id)
+    )`,
+
+    // Appeals and staff reports filed from the support server.
+    `CREATE TABLE IF NOT EXISTS ${t.mod_appeals} (
+        id BIGSERIAL PRIMARY KEY,
+        kind VARCHAR(10) NOT NULL CHECK (kind IN ('appeal', 'report')),
+        case_code VARCHAR(7) REFERENCES ${t.mod_cases}(case_code),
+        user_id VARCHAR(20) NOT NULL,
+        username VARCHAR(100) NOT NULL,
+        guild_id VARCHAR(20) NOT NULL,
+        channel_id VARCHAR(20),
+        body JSONB NOT NULL DEFAULT '{}',
+        status VARCHAR(10) NOT NULL DEFAULT 'pending'
+            CHECK (status IN ('pending', 'accepted', 'denied', 'closed')),
+        decided_by VARCHAR(20),
+        decided_by_username VARCHAR(100),
+        decided_at TIMESTAMPTZ,
+        note TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS ${t.enforcement_settings} (
+        guild_id VARCHAR(20) PRIMARY KEY,
+        muted_role_id VARCHAR(20),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
 ];
 
 export const indexStatements = [
@@ -194,6 +261,11 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_verification_audit_created_at ON ${t.verification_audit}(created_at)`,
     `CREATE INDEX IF NOT EXISTS idx_temp_data_expires_at ON ${t.temp_data}(expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_cache_data_expires_at ON ${t.cache_data}(expires_at)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_mod_cases_guild_name ON ${t.mod_cases}(guild_id, lower(name))`,
+    `CREATE INDEX IF NOT EXISTS idx_mod_cases_target ON ${t.mod_cases}(guild_id, target_user_id, created_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_mod_cases_expiry ON ${t.mod_cases}(expires_at) WHERE status IN ('active', 'appeal_pending') AND expires_at IS NOT NULL`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_mod_appeals_one_pending ON ${t.mod_appeals}(case_code) WHERE status = 'pending' AND kind = 'appeal'`,
+    `CREATE INDEX IF NOT EXISTS idx_mod_appeals_case ON ${t.mod_appeals}(case_code, decided_at DESC)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

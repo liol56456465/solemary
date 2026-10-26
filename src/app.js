@@ -1,5 +1,5 @@
 import './config/loadEnv.js';
-import { Client, Collection, GatewayIntentBits } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import express from 'express';
 import cron from 'node-cron';
@@ -11,6 +11,8 @@ import { getServerCounters, saveServerCounters, updateCounter } from './services
 import { logger, startupLog, shutdownLog } from './utils/logger.js';
 import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
+import { runEnforcementExpiry } from './services/enforcement/expiryService.js';
+import { importLegacyWarnings } from './services/enforcement/warnImportService.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import { initializeMusic } from './services/music/riffySetup.js';
@@ -255,6 +257,19 @@ class Meowist extends Client {
     cron.schedule('0 6 * * *', runSafeTask('birthday_check', () => checkBirthdays(this)));
     cron.schedule('* * * * *', runSafeTask('giveaway_check', () => checkGiveaways(this)));
     cron.schedule('*/15 * * * *', runSafeTask('counter_update', () => this.updateAllCounters()));
+    cron.schedule('* * * * *', runSafeTask('enforcement_expiry', () => runEnforcementExpiry(this)));
+
+    // Catch up on bans/mutes that expired while the bot was offline, then import
+    // legacy KV warnings (idempotent) once the gateway is ready.
+    const startupEnforcement = runSafeTask('enforcement_startup', async () => {
+      await runEnforcementExpiry(this);
+      await importLegacyWarnings(this);
+    });
+    if (this.isReady()) {
+      startupEnforcement();
+    } else {
+      this.once(Events.ClientReady, () => startupEnforcement());
+    }
   }
 
   async updateAllCounters() {

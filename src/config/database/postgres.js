@@ -18,6 +18,10 @@ const configuredTables = {
     verification_audit: 'verification_audit',
     temp_data: 'temp_data',
     cache_data: 'cache_data',
+    mod_cases: 'mod_cases',
+    mod_ladder: 'mod_ladder',
+    mod_appeals: 'mod_appeals',
+    enforcement_settings: 'enforcement_settings',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -37,6 +41,10 @@ const allowedTableIdentifiers = new Set([
     'verification_audit',
     'temp_data',
     'cache_data',
+    'mod_cases',
+    'mod_ladder',
+    'mod_appeals',
+    'enforcement_settings',
 ]);
 
 const validatedTables = Object.fromEntries(
