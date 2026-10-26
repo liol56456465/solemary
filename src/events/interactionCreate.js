@@ -30,6 +30,29 @@ const COMMAND_ERROR_SUBTYPES = {
   greroll: 'giveaway_failed',
 };
 
+// Components without a registered handler are answered by message collectors. Those
+// live in memory for at most 15 minutes and die with the process, so a press on a
+// message that has been idle longer (or predates this process) reaches nobody and
+// Discord shows "This interaction failed". Answer those presses instead.
+const PROCESS_STARTED_AT = Date.now();
+const MAX_COLLECTOR_LIFETIME_MS = 15 * 60 * 1000;
+const EXPIRED_COMPONENT_MESSAGE = 'This menu has expired. Run the command again to get a fresh one.';
+
+function isExpiredCollectorMessage(message) {
+  if (!message) return false;
+  const lastActivity = Math.max(message.createdTimestamp || 0, message.editedTimestamp || 0);
+  if (!lastActivity) return false;
+  return lastActivity < PROCESS_STARTED_AT || Date.now() - lastActivity > MAX_COLLECTOR_LIFETIME_MS;
+}
+
+async function replyExpiredComponent(interaction) {
+  if (!isExpiredCollectorMessage(interaction.message)) return;
+  await InteractionHelper.safeReply(interaction, {
+    content: EXPIRED_COMPONENT_MESSAGE,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
 function withTraceContext(context = {}, traceContext = {}) {
   return {
     traceId: traceContext.traceId,
@@ -359,6 +382,7 @@ export default {
 
           if (!button) {
             if (!interaction.customId.includes(':') || isCollectorManagedComponent(customId)) {
+              await replyExpiredComponent(interaction);
               return;
             }
 
@@ -385,6 +409,7 @@ export default {
 
           if (!selectMenu) {
             if (!interaction.customId.includes(':') || isCollectorManagedComponent(customId)) {
+              await replyExpiredComponent(interaction);
               return;
             }
 
@@ -404,6 +429,9 @@ export default {
               customId: interaction.customId
             }, interactionTraceContext));
           }
+        } else if (interaction.isAnySelectMenu?.()) {
+          // User/role/channel select menus only ever belong to collectors.
+          await replyExpiredComponent(interaction);
         } else if (interaction.isModalSubmit()) {
           if (interaction.customId.startsWith('app_modal_')) {
             try {

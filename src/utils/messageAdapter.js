@@ -86,6 +86,11 @@ export function createMockInteraction(message, commandData, args) {
           return cachedMember.user;
         }
 
+        const cachedUser = message.mentions?.users?.get(id) ?? message.client?.users?.cache?.get(id);
+        if (cachedUser) {
+          return cachedUser;
+        }
+
         return {
           id,
           username: 'Unknown',
@@ -109,7 +114,9 @@ export function createMockInteraction(message, commandData, args) {
         const mentionMatch = channelId.match(/<#(\d+)>/);
         const id = mentionMatch ? mentionMatch[1] : channelId;
 
-        return message.guild.channels.fetch(id).catch(() => null);
+        // Must be synchronous like the slash resolver (callers read .type/.send
+        // directly); guild channels are always cached with the Guilds intent.
+        return message.guild.channels.cache.get(id) ?? null;
       },
       getRole: (name) => {
         const roleId = options.getString(name);
@@ -118,9 +125,15 @@ export function createMockInteraction(message, commandData, args) {
         const mentionMatch = roleId.match(/<@&(\d+)>/);
         const id = mentionMatch ? mentionMatch[1] : roleId;
 
-        return message.guild.roles.fetch(id).catch(() => null);
+        return message.guild.roles.cache.get(id) ?? null;
       },
       getInteger: (name) => options.getInteger(name),
+      getNumber: (name) => {
+        const raw = options.getString(name);
+        if (raw == null) return null;
+        const value = Number(raw);
+        return Number.isFinite(value) ? value : null;
+      },
       getBoolean: (name) => options.getBoolean(name),
       getSubcommand: () => options.getSubcommand(),
       getSubcommandGroup: () => options.getSubcommandGroup(),

@@ -26,6 +26,19 @@ function sanitizeEditReplyOptions(options = {}) {
     return rest;
 }
 
+/**
+ * True when a component (or modal-from-message) interaction was acknowledged with
+ * update()/deferUpdate(). Its "reply" is then the message the component sits on, so
+ * editReply() would overwrite that panel; new content must go out as a follow-up.
+ * discord.js only sets `ephemeral` (to a boolean) on reply()/deferReply().
+ */
+export function isAcknowledgedViaMessageUpdate(interaction) {
+    if (!interaction || interaction._isPrefixCommand) {
+        return false;
+    }
+    return Boolean(interaction.deferred || interaction.replied) && interaction.ephemeral === null;
+}
+
 export class InteractionHelper {
     static getCoordinator(interaction) {
         return interaction?._responseCoordinator || null;
@@ -57,7 +70,7 @@ export class InteractionHelper {
                 return await originalReply(options);
             }
 
-            if (interaction.deferred && !interaction.replied) {
+            if (interaction.deferred && !interaction.replied && !isAcknowledgedViaMessageUpdate(interaction)) {
                 if (coordinator && interaction._isPrefixCommand) {
                     return coordinator.edit(sanitizeEditReplyOptions(options));
                 }

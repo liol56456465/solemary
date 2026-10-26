@@ -4,7 +4,8 @@ import { z } from 'zod';
 import { createError, ErrorTypes } from './errorHandler.js';
 
 const OptionValueSchema = z.union([
-  z.string().max(2000),
+  // Discord allows string options up to 6000 characters.
+  z.string().max(6000),
   z.number().finite(),
   z.boolean(),
   z.null()
