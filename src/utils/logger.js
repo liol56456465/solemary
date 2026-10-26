@@ -199,7 +199,8 @@ const logger = createLogger({
 });
 
 // Feeds /admin/logs/stream (remote log viewer); same JSON lines as the log files.
-logger.add(new transports.Stream({ stream: logStreamSink }));
+// Capped at info whatever LOG_LEVEL says: debug lines can carry message content.
+logger.add(new transports.Stream({ stream: logStreamSink, level: 'info' }));
 
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new transports.Console({
