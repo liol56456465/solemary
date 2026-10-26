@@ -19,6 +19,7 @@ import { resolveSlashAccessKey } from '../utils/messageAdapter.js';
 import { isCollectorManagedComponent } from '../utils/collectorComponents.js';
 import { ResponseCoordinator } from '../utils/responseCoordinator.js';
 import { enforceDefaultCommandPermissions } from '../utils/permissionGuard.js';
+import { checkCommandAccess } from '../utils/commandGate.js';
 
 const COMMAND_ERROR_SUBTYPES = {
   ticket: 'ticket_failed',
@@ -75,6 +76,21 @@ export default {
                 'Sorry, that command does not exist.',
                 withTraceContext({ commandName: interaction.commandName }, interactionTraceContext)
               );
+            }
+
+            const access = checkCommandAccess({
+              command,
+              guild: interaction.guild,
+              userId: interaction.user.id,
+              permissions: interaction.memberPermissions,
+            });
+            if (!access.allowed) {
+              await InteractionHelper.safeReply(interaction, {
+                content: access.message,
+                flags: MessageFlags.Ephemeral,
+                allowedMentions: { parse: [] },
+              });
+              return;
             }
 
             if (isMaintenanceMode() && !isBotOwner(interaction.user.id)) {
@@ -163,6 +179,17 @@ export default {
           }
         } else if (interaction.isAutocomplete()) {
           const autocompleteCommand = client.commands.get(interaction.commandName);
+          const autocompleteAccess = checkCommandAccess({
+            command: autocompleteCommand,
+            guild: interaction.guild,
+            userId: interaction.user.id,
+            permissions: interaction.memberPermissions,
+          });
+          if (!autocompleteAccess.allowed) {
+            await interaction.respond([]).catch(() => {});
+            return;
+          }
+
           if (autocompleteCommand?.autocomplete) {
             try {
               await autocompleteCommand.autocomplete(interaction, client);

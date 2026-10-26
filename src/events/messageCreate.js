@@ -12,6 +12,7 @@ import { getCommandPrefix, getBotMessage, isBotOwner, isCommandCategoryEnabled, 
 import { enforceAbuseProtection, formatCooldownDuration } from '../utils/abuseProtection.js';
 import { createEmbed } from '../utils/embeds.js';
 import { isCommandEnabled } from '../services/commandAccessService.js';
+import { checkCommandAccess } from '../utils/commandGate.js';
 import {
   getCountingGameConfig,
   saveCountingGameConfig,
@@ -71,6 +72,17 @@ async function handlePrefixCommand(message, client) {
     if (!command) {
       logger.warn(`Command not found: ${resolvedCommandName}`);
       return; 
+    }
+
+    const access = checkCommandAccess({
+      command,
+      guild: message.guild,
+      userId: message.author.id,
+      permissions: message.member?.permissions,
+    });
+    if (!access.allowed) {
+      await message.reply({ content: access.message, allowedMentions: { parse: [], repliedUser: false } }).catch(() => {});
+      return;
     }
 
     if (isMaintenanceMode() && !isBotOwner(message.author.id)) {

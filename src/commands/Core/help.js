@@ -5,6 +5,7 @@ import {
     ButtonStyle,
 } from "discord.js";
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { isCommandAvailableInGuild } from '../../utils/commandGate.js';
 import { createEmbed } from "../../utils/embeds.js";
 import {
     createSelectMenu,
@@ -39,6 +40,7 @@ const CATEGORY_ICONS = {
     Birthday: "🎂",
     "Join To Create": "🔌",
     Verification: "✅",
+    Enforcement: "⚖️",
 };
 
 function formatCategoryName(rawCategory) {
@@ -48,13 +50,20 @@ function formatCategoryName(rawCategory) {
         .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export async function createInitialHelpMenu(client) {
+export async function createInitialHelpMenu(client, guildId = null) {
     const commandsPath = path.join(__dirname, "../../commands");
+    // Only list categories that have at least one command usable in this server.
+    const availableCategories = new Set(
+        [...(client?.commands?.values?.() ?? [])]
+            .filter((command) => isCommandAvailableInGuild(command, guildId))
+            .map((command) => command.category)
+    );
     const categoryDirs = (
         await fs.readdir(commandsPath, { withFileTypes: true })
     )
         .filter((dirent) => dirent.isDirectory())
         .map((dirent) => dirent.name)
+        .filter((category) => availableCategories.size === 0 || availableCategories.has(category))
         .sort();
 
     const options = [
@@ -87,6 +96,15 @@ export async function createInitialHelpMenu(client) {
                     '1. **/configwizard** to configure prefix, mod role, and logs.',
                     '2. **/commands dashboard** to turn categories on or off.',
                     '3. **Browse commands** — Use the menu below to view categories and commands.',
+                ].join('\n'),
+                inline: false,
+            },
+            {
+                name: '🔒 Access',
+                value: [
+                    '• Every command needs the **Administrator** permission.',
+                    '• **/enforcements** and **/background** work in the main server only.',
+                    '• **/appeals** and **/appeals-panel** work in the support server only.',
                 ].join('\n'),
                 inline: false,
             },
@@ -144,7 +162,7 @@ export default {
         const { MessageFlags } = await import('discord.js');
         await InteractionHelper.safeDefer(interaction);
         
-        const { embeds, components } = await createInitialHelpMenu(client);
+        const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId);
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds,

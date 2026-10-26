@@ -1,9 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { Collection } from 'discord.js';
+import { ApplicationIntegrationType, Collection, InteractionContextType, Routes } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import botConfig from '../../config/bot.js';
+import { enforcementConfig } from '../../config/enforcement.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -120,8 +121,14 @@ export async function loadCommands(client) {
     return client.commands;
 }
 
+/**
+ * Splits loaded commands into the global set and per-scope guild sets.
+ * Commands stay visible to everyone (default_member_permissions = null); access
+ * is enforced at dispatch by utils/commandGate.js. contexts = [Guild] keeps them
+ * out of DMs.
+ */
 function collectCommandPayloads(client) {
-    const commands = [];
+    const sets = { global: [], main: [], support: [] };
     let totalSubcommands = 0;
     const registeredNames = new Set();
 
@@ -140,16 +147,29 @@ function collectCommandPayloads(client) {
         }
 
         registeredNames.add(commandName);
-        const commandJson = command.data.toJSON();
-        commands.push(commandJson);
+        const commandJson = {
+            ...command.data.toJSON(),
+            default_member_permissions: null,
+            contexts: [InteractionContextType.Guild],
+            integration_types: [ApplicationIntegrationType.GuildInstall],
+        };
+        delete commandJson.dm_permission;
+
+        const scope = command.scope || 'global';
+        if (!sets[scope]) {
+            logger.warn(`Command ${commandName} has unknown scope "${scope}"; registering it globally`);
+            sets.global.push(commandJson);
+        } else {
+            sets[scope].push(commandJson);
+        }
         totalSubcommands += getSubcommandInfo(commandJson).length;
 
         if (process.env.NODE_ENV !== 'production') {
-            logger.debug(`Registering command: ${commandName}`);
+            logger.debug(`Registering command: ${commandName} (${scope})`);
         }
     }
 
-    return { commands, totalSubcommands };
+    return { sets, totalSubcommands };
 }
 
 function validateCommands(commands) {
@@ -236,44 +256,67 @@ function prepareCommandsForRegistration(commands) {
     return truncated;
 }
 
-async function registerGlobalCommands(client, clientId, commands, totalSubcommands) {
+async function putCommands(rest, route, commands, label) {
+    logger.info(`Registering ${commands.length} ${label} commands...`);
+    await rest.put(route, { body: commands });
+    logger.info(`Successfully registered ${commands.length} ${label} commands`);
+}
+
+/**
+ * Registers the global set and the main/support guild sets. Each PUT replaces the
+ * whole set, so commands deleted from the codebase disappear from Discord.
+ */
+export async function registerCommandSets(rest, clientId, sets, totalSubcommands = 0) {
     if (!clientId) {
         throw new Error('CLIENT_ID is required for slash command registration');
     }
-
-    if (!client.rest) {
+    if (!rest) {
         throw new Error('Discord REST client is not available for slash command registration');
     }
 
-    logger.info(`Preparing to register ${totalSubcommands + commands.length} commands globally`);
+    const all = [...sets.global, ...sets.main, ...sets.support];
+    logger.info(`Preparing to register ${totalSubcommands + all.length} commands (${sets.global.length} global, ${sets.main.length} main, ${sets.support.length} support)`);
     logger.info('Validating commands before registration...');
-    validateCommands(commands);
+    validateCommands(all);
     logger.info('Command validation passed');
 
-    const commandsToRegister = prepareCommandsForRegistration(commands);
+    const globalCommands = prepareCommandsForRegistration(sets.global);
 
     if (botConfig.commands?.deleteCommands) {
         logger.info('Clearing existing global commands before registration...');
-        await client.rest.put(`/applications/${clientId}/commands`, { body: [] });
+        await rest.put(Routes.applicationCommands(clientId), { body: [] });
     }
 
-    logger.info(`Registering ${commandsToRegister.length} global commands...`);
-    await client.rest.put(`/applications/${clientId}/commands`, { body: commandsToRegister });
-    logger.info(`Successfully registered ${commandsToRegister.length} global commands`);
+    await putCommands(rest, Routes.applicationCommands(clientId), globalCommands, 'global');
     logger.info('Global commands may take up to an hour to appear in all servers on first deploy');
+
+    for (const [scope, guildId] of [['main', enforcementConfig.mainGuildId], ['support', enforcementConfig.supportGuildId]]) {
+        if (!guildId) {
+            logger.warn(`${scope === 'main' ? 'MAIN_GUILD_ID' : 'SUPPORT_GUILD_ID'} is not set; skipping its ${sets[scope].length} guild command(s)`);
+            continue;
+        }
+        try {
+            await putCommands(rest, Routes.applicationGuildCommands(clientId, guildId), sets[scope], `${scope}-guild`);
+        } catch (error) {
+            // 50001 Missing Access: the bot is not in that guild (or lacks applications.commands).
+            logger.error(`Could not register ${scope}-guild commands in ${guildId}: ${error.message}`);
+        }
+    }
 }
 
 export async function registerCommands(client, options = {}) {
     const { clientId = null } = options;
 
     try {
-        const { commands, totalSubcommands } = collectCommandPayloads(client);
-        await registerGlobalCommands(client, clientId, commands, totalSubcommands);
+        const { sets, totalSubcommands } = collectCommandPayloads(client);
+        await registerCommandSets(client.rest, clientId, sets, totalSubcommands);
     } catch (error) {
         logger.error('Error registering commands:', error);
         throw error;
     }
 }
+
+export { collectCommandPayloads };
 
 export async function reloadCommand(client, commandName) {
     const command = client.commands.get(commandName);

@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Collection, ActionRowBuilder, MessageFlags } from 'discord.js';
+import { isCommandAvailableInGuild } from '../../utils/commandGate.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
 
@@ -120,7 +121,7 @@ function normalizeCommandData(command) {
     };
 }
 
-async function createCategoryCommandsMenu(category, client) {
+async function createCategoryCommandsMenu(category, client, guildId = null) {
     const categoryName = formatCategoryName(category);
     const icon = CATEGORY_ICONS[categoryName] || "🔍";
 
@@ -144,6 +145,7 @@ async function createCategoryCommandsMenu(category, client) {
                     commandData.name === "commandlist"
                 )
                     continue;
+                if (!isCommandAvailableInGuild(command, guildId)) continue;
 
                 categoryCommands.push(...buildHelpEntries(command, categoryName));
             }
@@ -238,7 +240,7 @@ async function createCategoryCommandsMenu(category, client) {
     };
 }
 
-export async function createAllCommandsMenu(page = 1, client) {
+export async function createAllCommandsMenu(page = 1, client, guildId = null) {
     const commandsPerPage = 45;
     const allCommands = [];
 
@@ -273,6 +275,7 @@ export async function createAllCommandsMenu(page = 1, client) {
                         commandData.name === "commandlist"
                     )
                         continue;
+                    if (!isCommandAvailableInGuild(command, guildId)) continue;
 
                     const categoryName = formatCategoryName(category);
 
@@ -382,13 +385,13 @@ export const helpCategorySelectMenu = {
             const selectedCategory = interaction.values[0];
 
             if (selectedCategory === ALL_COMMANDS_ID) {
-                const { embeds, components } = await createAllCommandsMenu(1, client);
+                const { embeds, components } = await createAllCommandsMenu(1, client, interaction.guildId);
                 await interaction.editReply({
                     embeds,
                     components,
                 });
             } else {
-                const { embeds, components } = await createCategoryCommandsMenu(selectedCategory, client);
+                const { embeds, components } = await createCategoryCommandsMenu(selectedCategory, client, interaction.guildId);
                 await interaction.editReply({
                     embeds,
                     components,
