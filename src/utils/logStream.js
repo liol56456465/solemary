@@ -35,7 +35,3 @@ export function subscribeToLogs(send) {
     subscribers.add(send);
     return () => subscribers.delete(send);
 }
-
-export function getLogSubscriberCount() {
-    return subscribers.size;
-}

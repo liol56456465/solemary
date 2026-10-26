@@ -10,7 +10,7 @@ import { initializeDatabase } from './utils/database.js';
 import { getGuildConfig } from './services/config/guildConfig.js';
 import { getServerCounters, saveServerCounters, updateCounter } from './services/serverstatsService.js';
 import { logger, startupLog, shutdownLog } from './utils/logger.js';
-import { getLogSubscriberCount, getRecentLogLines, subscribeToLogs } from './utils/logStream.js';
+import { getRecentLogLines, subscribeToLogs } from './utils/logStream.js';
 import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
@@ -211,6 +211,7 @@ class Meowist extends Client {
     if (logStreamToken.length >= 32) {
       const expected = crypto.createHash('sha256').update(logStreamToken).digest();
       const MAX_VIEWERS = 3;
+      const viewers = [];
 
       app.get('/admin/logs/stream', (req, res) => {
         const header = String(req.headers.authorization || '');
@@ -218,8 +219,10 @@ class Meowist extends Client {
         if (!header.startsWith('Bearer ') || !crypto.timingSafeEqual(given, expected)) {
           return res.status(404).end();
         }
-        if (getLogSubscriberCount() >= MAX_VIEWERS) {
-          return res.status(429).json({ error: 'Too many log viewers connected' });
+        // Replit's proxy can keep a connection open after the viewer has gone, so a
+        // full house is more likely stale than real: make room by closing the oldest.
+        while (viewers.length >= MAX_VIEWERS) {
+          viewers.shift().end();
         }
 
         res.writeHead(200, {
@@ -232,9 +235,12 @@ class Meowist extends Client {
         getRecentLogLines(100).forEach(send);
         const unsubscribe = subscribeToLogs(send);
         const keepAlive = setInterval(() => res.write(': ping\n\n'), 25000);
-        req.on('close', () => {
+        viewers.push(res);
+        res.on('close', () => {
           clearInterval(keepAlive);
           unsubscribe();
+          const index = viewers.indexOf(res);
+          if (index !== -1) viewers.splice(index, 1);
         });
       });
       startupLog('Remote log stream enabled at /admin/logs/stream');
