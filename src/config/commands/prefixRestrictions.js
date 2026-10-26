@@ -12,7 +12,7 @@ export const SLASH_ONLY_COMMANDS = new Set([
   'enforcements',
   'background',
   'appeals',
-  'appeals-panel',
+  'setappeal',
 ]);
 
 /** Subcommands blocked for every command when invoked via prefix. */

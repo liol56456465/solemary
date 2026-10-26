@@ -8,8 +8,8 @@ import { decideAppeal } from '../../services/enforcement/appealService.js';
 import { normalizeCaseCode } from '../../services/enforcement/format.js';
 
 export default {
-    // Registered as a guild command in SUPPORT_GUILD_ID only.
-    scope: 'support',
+    // Registered as a guild command in MAIN_GUILD_ID only.
+    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('appeals')
         .setDescription('Accept or deny a pending appeal')
@@ -30,9 +30,9 @@ export default {
             .setMaxLength(500)),
 
     async execute(interaction, config, client) {
-        if (interaction.guildId !== enforcementConfig.supportGuildId) {
+        if (interaction.guildId !== enforcementConfig.mainGuildId) {
             throw new TitanBotError('Wrong guild for /appeals', ErrorTypes.PERMISSION,
-                'This command only works in the support server.', { expected: true });
+                'This command only works in the main server.', { expected: true });
         }
         if (!isAdministrator(interaction.member)) {
             throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION,
@@ -51,7 +51,6 @@ export default {
         const decision = interaction.options.getString('decision');
         const result = await decideAppeal({
             client,
-            supportGuild: interaction.guild,
             admin: interaction.user,
             caseCode,
             decision,

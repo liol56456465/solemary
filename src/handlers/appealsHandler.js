@@ -1,13 +1,15 @@
-// appealsHandler.js — the public Appeal / Report staff panel in the support server.
+// appealsHandler.js — the public Appeal / Report staff panels posted by /setappeal.
 //
 // These components are deliberately open to everyone (no Administrator check):
-//   appeal:open | appeal:report            buttons on the panel
+//   appeal:open | appeal:report            buttons on the panels
 //   appealmodal:submit | appealmodal:report modals they open
+// The Appeal button works in both servers; Report staff only in the support server.
 
 import {
     LabelBuilder,
     MessageFlags,
     ModalBuilder,
+    StringSelectMenuBuilder,
     TextInputBuilder,
     TextInputStyle,
 } from 'discord.js';
@@ -28,18 +30,35 @@ function appealModal() {
         .setCustomId('appealmodal:submit')
         .setTitle('Appeal a punishment')
         .addLabelComponents(
-            textLabel('Case code', new TextInputBuilder()
+            textLabel('Why did you get punished?', new TextInputBuilder()
+                .setCustomId('punished')
+                .setStyle(TextInputStyle.Paragraph)
+                .setMinLength(10)
+                .setMaxLength(1000)
+                .setRequired(true), 'What happened that got you banned, muted or warned?'),
+            textLabel('Why should it be lifted?', new TextInputBuilder()
+                .setCustomId('reason')
+                .setStyle(TextInputStyle.Paragraph)
+                .setMinLength(20)
+                .setMaxLength(1000)
+                .setRequired(true)),
+            new LabelBuilder()
+                .setLabel('Did you do it?')
+                .setDescription('Be honest — honest appeals are reviewed more favourably.')
+                .setStringSelectMenuComponent(new StringSelectMenuBuilder()
+                    .setCustomId('didit')
+                    .setRequired(true)
+                    .addOptions(
+                        { label: 'Yes, I did it', value: 'yes' },
+                        { label: 'Partly', value: 'partly' },
+                        { label: "No, I didn't do it", value: 'no' },
+                    )),
+            textLabel('Case code (optional)', new TextInputBuilder()
                 .setCustomId('code')
                 .setStyle(TextInputStyle.Short)
                 .setMinLength(5)
                 .setMaxLength(7)
-                .setRequired(true), 'The code from the DM you received, e.g. k7m2qx'),
-            textLabel('Why should this be lifted?', new TextInputBuilder()
-                .setCustomId('reason')
-                .setStyle(TextInputStyle.Paragraph)
-                .setMinLength(20)
-                .setMaxLength(1500)
-                .setRequired(true)),
+                .setRequired(false), 'From your DM, e.g. k7m2qx. Leave empty to appeal your latest punishment.'),
         );
 }
 
@@ -67,47 +86,64 @@ function reportModal() {
         );
 }
 
-function inSupportGuild(interaction) {
-    return interaction.inGuild() && interaction.guildId === enforcementConfig.supportGuildId;
+/** 'main' | 'support' | null for any other place. */
+function panelServer(interaction) {
+    if (!interaction.inGuild()) return null;
+    if (interaction.guildId === enforcementConfig.mainGuildId) return 'main';
+    if (interaction.guildId === enforcementConfig.supportGuildId) return 'support';
+    return null;
 }
 
+const WRONG_PLACE = 'Appeals are handled in the Meowist servers.';
+
 export async function handleAppealButton(interaction, client, args) {
-    if (!inSupportGuild(interaction)) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Appeals are handled in the Meowist Support server.' });
-    }
+    const server = panelServer(interaction);
     const [step] = args;
+    if (!server || (step === 'report' && server !== 'support')) {
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: WRONG_PLACE });
+    }
     if (step === 'open') return InteractionHelper.safeShowModal(interaction, appealModal());
     if (step === 'report') return InteractionHelper.safeShowModal(interaction, reportModal());
 }
 
 export async function handleAppealModal(interaction, client, args) {
-    if (!inSupportGuild(interaction)) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Appeals are handled in the Meowist Support server.' });
+    const server = panelServer(interaction);
+    if (!server) {
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: WRONG_PLACE });
     }
 
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
     const [step] = args;
 
     if (step === 'submit') {
-        const caseCode = normalizeCaseCode(interaction.fields.getTextInputValue('code'));
-        if (!caseCode) {
+        const rawCode = interaction.fields.getTextInputValue('code')?.trim() || '';
+        const caseCode = rawCode ? normalizeCaseCode(rawCode) : null;
+        if (rawCode && !caseCode) {
             return replyUserError(interaction, {
                 type: ErrorTypes.USER_INPUT,
-                message: 'That is not a valid case code. It is 5–7 letters and digits, from the DM you received.',
+                message: 'That is not a valid case code. It is 5–7 letters and digits, from the DM you received. Or leave it empty.',
             });
         }
-        await submitAppeal({
-            guild: interaction.guild,
+        const { channel } = await submitAppeal({
+            client,
             user: interaction.user,
             caseCode,
-            reason: interaction.fields.getTextInputValue('reason').trim(),
+            from: server,
+            answers: {
+                punished: interaction.fields.getTextInputValue('punished').trim(),
+                reason: interaction.fields.getTextInputValue('reason').trim(),
+                didIt: interaction.fields.getStringSelectValues('didit')[0],
+            },
         });
+        const where = channel.permissionOverwrites.cache.has(interaction.user.id)
+            ? `Your appeal channel: <#${channel.id}>. `
+            : '';
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed('Appeal submitted', "Your appeal was submitted. You'll get a DM with the decision.")],
+            embeds: [successEmbed('Appeal submitted', `${where}You'll get a DM with the decision.`)],
         });
     }
 
-    if (step === 'report') {
+    if (step === 'report' && server === 'support') {
         await submitStaffReport({
             guild: interaction.guild,
             user: interaction.user,
