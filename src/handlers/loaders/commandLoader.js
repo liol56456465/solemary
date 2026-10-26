@@ -3,7 +3,6 @@ import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { ApplicationIntegrationType, Collection, InteractionContextType, Routes } from 'discord.js';
 import { logger } from '../../utils/logger.js';
-import botConfig from '../../config/bot.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { testMode } from '../../config/testMode.js';
 
@@ -244,7 +243,7 @@ function validateCommands(commands) {
 
 function prepareCommandsForRegistration(commands) {
     if (commands.length >= COMMAND_COUNT_WARN_THRESHOLD) {
-        logger.warn(`Command count (${commands.length}) is near Discord's ${MAX_COMMANDS} global command limit`);
+        logger.warn(`Command count (${commands.length}) is near Discord's ${MAX_COMMANDS}-command limit per server`);
     }
 
     if (commands.length <= MAX_COMMANDS) {
@@ -264,8 +263,9 @@ async function putCommands(rest, route, commands, label) {
 }
 
 /**
- * Registers the global set and the main/support guild sets. Each PUT replaces the
- * whole set, so commands deleted from the codebase disappear from Discord.
+ * Every command lives in the main server only: the full set is registered there as
+ * guild commands, and the global and support-server lists are emptied. Each PUT
+ * replaces the whole list, so commands deleted from the codebase disappear too.
  */
 export async function registerCommandSets(rest, clientId, sets, totalSubcommands = 0) {
     if (!clientId) {
@@ -276,19 +276,17 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
     }
 
     const all = [...sets.global, ...sets.main, ...sets.support];
-    logger.info(`Preparing to register ${totalSubcommands + all.length} commands (${sets.global.length} global, ${sets.main.length} main, ${sets.support.length} support)`);
+    logger.info(`Preparing to register ${totalSubcommands + all.length} commands (${all.length} top-level) in the main server`);
     logger.info('Validating commands before registration...');
     validateCommands(all);
     logger.info('Command validation passed');
 
+    const mainCommands = prepareCommandsForRegistration(all);
+
     if (testMode.enabled) {
-        // Test mode never touches global commands: every set is registered per test guild.
+        // Test mode never touches global commands; the test main guild plays the main server.
         for (const guildId of testMode.guildIds) {
-            const body = [
-                ...sets.global,
-                ...(guildId === enforcementConfig.mainGuildId ? sets.main : []),
-                ...(guildId === enforcementConfig.supportGuildId ? sets.support : []),
-            ];
+            const body = guildId === enforcementConfig.mainGuildId ? mainCommands : [];
             try {
                 await putCommands(rest, Routes.applicationGuildCommands(clientId, guildId), body, `test-guild ${guildId}`);
             } catch (error) {
@@ -299,26 +297,20 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
         return;
     }
 
-    const globalCommands = prepareCommandsForRegistration(sets.global);
-
-    if (botConfig.commands?.deleteCommands) {
-        logger.info('Clearing existing global commands before registration...');
-        await rest.put(Routes.applicationCommands(clientId), { body: [] });
+    if (!enforcementConfig.mainGuildId) {
+        logger.error('MAIN_GUILD_ID is not set; no commands were registered (and the existing ones were left as they are)');
+        return;
     }
 
-    await putCommands(rest, Routes.applicationCommands(clientId), globalCommands, 'global');
-    logger.info('Global commands may take up to an hour to appear in all servers on first deploy');
+    await putCommands(rest, Routes.applicationGuildCommands(clientId, enforcementConfig.mainGuildId), mainCommands, 'main-guild');
+    await putCommands(rest, Routes.applicationCommands(clientId), [], 'global');
 
-    for (const [scope, guildId] of [['main', enforcementConfig.mainGuildId], ['support', enforcementConfig.supportGuildId]]) {
-        if (!guildId) {
-            logger.warn(`${scope === 'main' ? 'MAIN_GUILD_ID' : 'SUPPORT_GUILD_ID'} is not set; skipping its ${sets[scope].length} guild command(s)`);
-            continue;
-        }
+    if (enforcementConfig.supportGuildId) {
         try {
-            await putCommands(rest, Routes.applicationGuildCommands(clientId, guildId), sets[scope], `${scope}-guild`);
+            await putCommands(rest, Routes.applicationGuildCommands(clientId, enforcementConfig.supportGuildId), [], 'support-guild');
         } catch (error) {
             // 50001 Missing Access: the bot is not in that guild (or lacks applications.commands).
-            logger.error(`Could not register ${scope}-guild commands in ${guildId}: ${error.message}`);
+            logger.error(`Could not clear support-guild commands in ${enforcementConfig.supportGuildId}: ${error.message}`);
         }
     }
 }
