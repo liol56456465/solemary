@@ -144,3 +144,9 @@ dist
 # Database backup artifacts
 backups/
 *.dump
+
+# Local AI working notes (repo is public)
+claude/
+
+# Remote log viewer settings (holds LOG_STREAM_TOKEN)
+.logviewer.env

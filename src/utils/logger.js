@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { AsyncLocalStorage } from 'async_hooks';
 import crypto from 'crypto';
+import { logStreamSink } from './logStream.js';
 
 const traceStorage = new AsyncLocalStorage();
 
@@ -196,6 +197,9 @@ const logger = createLogger({
     }),
   ],
 });
+
+// Feeds /admin/logs/stream (remote log viewer); same JSON lines as the log files.
+logger.add(new transports.Stream({ stream: logStreamSink }));
 
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new transports.Console({

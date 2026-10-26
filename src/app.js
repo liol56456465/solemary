@@ -3,12 +3,14 @@ import { Client, Collection, GatewayIntentBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import express from 'express';
 import cron from 'node-cron';
+import crypto from 'crypto';
 
 import config from './config/application.js';
 import { initializeDatabase } from './utils/database.js';
 import { getGuildConfig } from './services/config/guildConfig.js';
 import { getServerCounters, saveServerCounters, updateCounter } from './services/serverstatsService.js';
 import { logger, startupLog, shutdownLog } from './utils/logger.js';
+import { getLogSubscriberCount, getRecentLogLines, subscribeToLogs } from './utils/logStream.js';
 import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
@@ -201,6 +203,44 @@ class Meowist extends Client {
         metrics,
       });
     });
+
+    // Remote log viewer (scripts/watch-logs.js). Exists only when LOG_STREAM_TOKEN is
+    // set; requires "Authorization: Bearer <token>". Server-Sent Events, one JSON log
+    // line per event, starting with the last 100 lines.
+    const logStreamToken = (process.env.LOG_STREAM_TOKEN || '').trim();
+    if (logStreamToken.length >= 32) {
+      const expected = crypto.createHash('sha256').update(logStreamToken).digest();
+      const MAX_VIEWERS = 3;
+
+      app.get('/admin/logs/stream', (req, res) => {
+        const header = String(req.headers.authorization || '');
+        const given = crypto.createHash('sha256').update(header.replace(/^Bearer\s+/i, '')).digest();
+        if (!header.startsWith('Bearer ') || !crypto.timingSafeEqual(given, expected)) {
+          return res.status(404).end();
+        }
+        if (getLogSubscriberCount() >= MAX_VIEWERS) {
+          return res.status(429).json({ error: 'Too many log viewers connected' });
+        }
+
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache, no-transform',
+          Connection: 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        });
+        const send = (line) => res.write(`data: ${line}\n\n`);
+        getRecentLogLines(100).forEach(send);
+        const unsubscribe = subscribeToLogs(send);
+        const keepAlive = setInterval(() => res.write(': ping\n\n'), 25000);
+        req.on('close', () => {
+          clearInterval(keepAlive);
+          unsubscribe();
+        });
+      });
+      startupLog('Remote log stream enabled at /admin/logs/stream');
+    } else if (logStreamToken) {
+      logger.warn('LOG_STREAM_TOKEN is shorter than 32 characters; remote log stream disabled');
+    }
 
     app.get('/', (req, res) => {
       res.status(200).json({ 
