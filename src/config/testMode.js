@@ -33,6 +33,18 @@ export const testMode = {
     },
 };
 
+const DISCORD_EPOCH = 1420070400000n;
+function snowflakeTime(id) {
+    return Number((BigInt(id) >> 22n) + DISCORD_EPOCH);
+}
+
+// Settings that must live inside a specific test guild.
+const GUILD_RESOURCES = [
+    { name: 'APPEALS_CATEGORY_ID', guild: 'SUPPORT_GUILD_ID', kind: 'category' },
+    { name: 'ADMIN_REQUEST_CHANNEL_ID', guild: 'MAIN_GUILD_ID', kind: 'channel' },
+    { name: 'MUTED_ROLE_ID', guild: 'MAIN_GUILD_ID', kind: 'role' },
+];
+
 export function isGuildAllowed(guildId) {
     return !testMode.enabled || (Boolean(guildId) && testMode.guildIds.has(String(guildId)));
 }
@@ -83,6 +95,15 @@ export function validateTestMode() {
             errors.push(`${name} is the real ${PRODUCTION_GUILD_IDS.get(value)} server (${value}). Use your test server.`);
         } else if (value && !testMode.guildIds.has(value)) {
             errors.push(`${name} is not in TEST_GUILD_IDS — it would point the panel at a non-test server.`);
+        }
+    }
+
+    // A channel/role is always newer than its guild; an older ID belongs to another server.
+    for (const { name, guild } of GUILD_RESOURCES) {
+        const value = (process.env[name] || '').trim();
+        const guildId = (process.env[guild] || '').trim();
+        if (SNOWFLAKE.test(value) && SNOWFLAKE.test(guildId) && snowflakeTime(value) < snowflakeTime(guildId)) {
+            errors.push(`${name} (${value}) is older than ${guild}, so it belongs to a different server.`);
         }
     }
 
@@ -159,6 +180,45 @@ export function installGuildAllowlist(client) {
         }
         return originalFetch(options);
     };
+}
+
+/**
+ * After login: confirms the configured category, channel, role and support invite
+ * really belong to the test guilds. Returns a list of problems (empty = OK).
+ */
+export async function verifyTestResources(client) {
+    if (!testMode.enabled) return [];
+    const problems = [];
+
+    for (const { name, guild: guildVar, kind } of GUILD_RESOURCES) {
+        const id = (process.env[name] || '').trim();
+        if (!id) continue;
+        const guild = client.guilds.cache.get((process.env[guildVar] || '').trim());
+        if (!guild) {
+            problems.push(`${guildVar} is not available to the bot (is the bot in that test server?)`);
+            continue;
+        }
+        const found = kind === 'role'
+            ? await guild.roles.fetch(id).catch(() => null)
+            : await guild.channels.fetch(id).catch(() => null);
+        if (!found) {
+            problems.push(`${name} (${id}) is not a ${kind} in ${guildVar} (${guild.name})`);
+        } else if (kind === 'category' && found.type !== 4) {
+            problems.push(`${name} (${id}) is a channel, not a category`);
+        }
+    }
+
+    const invite = (process.env.SUPPORT_SERVER_INVITE || '').trim();
+    if (invite) {
+        const resolved = await client.fetchInvite(invite).catch(() => null);
+        if (!resolved) {
+            problems.push('SUPPORT_SERVER_INVITE could not be resolved (expired or invalid)');
+        } else if (resolved.guild?.id !== (process.env.SUPPORT_GUILD_ID || '').trim()) {
+            problems.push(`SUPPORT_SERVER_INVITE points to ${resolved.guild?.name || 'another server'} (${resolved.guild?.id}), not SUPPORT_GUILD_ID`);
+        }
+    }
+
+    return problems;
 }
 
 const testModeErrors = validateTestMode();

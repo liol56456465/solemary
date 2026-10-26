@@ -1,7 +1,7 @@
 import { Events } from "discord.js";
 import { logger, startupLog } from "../utils/logger.js";
 import config from "../config/application.js";
-import { testMode } from "../config/testMode.js";
+import { testMode, verifyTestResources } from "../config/testMode.js";
 import { reconcileReactionRoleMessages } from "../services/reactionRoleService.js";
 import { reconcileTicketPanels, reconcileVerificationPanels, reconcileReactionRolePanelHealth } from "../services/panelHealthService.js";
 import { reconcileLevelRoles } from "../services/leveling/levelRoleSyncService.js";
@@ -14,6 +14,16 @@ export default {
   async execute(client) {
     try {
       client.user.setPresence(testMode.enabled ? testMode.presence : config.bot.presence);
+
+      if (testMode.enabled) {
+        const problems = await verifyTestResources(client);
+        if (problems.length > 0) {
+          logger.error("Test mode: configured resources are not in the test servers — shutting down:\n" + problems.map((p) => `  - ${p}`).join("\n"));
+          client.destroy();
+          process.exit(1);
+        }
+        startupLog("Test mode: category, channel, role and support invite verified in the test servers");
+      }
 
       startupLog(`Ready! Logged in as ${client.user.tag}`);
       startupLog(`Serving ${client.guilds.cache.size} guild(s)`);
