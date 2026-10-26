@@ -12,6 +12,13 @@
 import { logger } from '../utils/logger.js';
 
 const SNOWFLAKE = /^\d{17,20}$/;
+
+// The real Meowist servers. Test mode refuses to start if any of these appears in
+// TEST_GUILD_IDS, MAIN_GUILD_ID or SUPPORT_GUILD_ID, whatever else is configured.
+export const PRODUCTION_GUILD_IDS = new Map([
+    ['1527697154926182492', 'Meowist (main)'],
+    ['1564312871976829009', 'Meowist Support'],
+]);
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 
 const usedEnvFile = process.execArgv.find((arg) => arg.startsWith('--env-file')) || '';
@@ -64,9 +71,17 @@ export function validateTestMode() {
         if (!SNOWFLAKE.test(id)) errors.push(`TEST_GUILD_IDS contains "${id}", which is not a Discord ID.`);
     }
 
+    for (const id of testMode.guildIds) {
+        if (PRODUCTION_GUILD_IDS.has(id)) {
+            errors.push(`TEST_GUILD_IDS contains the real ${PRODUCTION_GUILD_IDS.get(id)} server (${id}). Use your test servers.`);
+        }
+    }
+
     for (const name of ['MAIN_GUILD_ID', 'SUPPORT_GUILD_ID']) {
         const value = (process.env[name] || '').trim();
-        if (value && !testMode.guildIds.has(value)) {
+        if (PRODUCTION_GUILD_IDS.has(value)) {
+            errors.push(`${name} is the real ${PRODUCTION_GUILD_IDS.get(value)} server (${value}). Use your test server.`);
+        } else if (value && !testMode.guildIds.has(value)) {
             errors.push(`${name} is not in TEST_GUILD_IDS — it would point the panel at a non-test server.`);
         }
     }
