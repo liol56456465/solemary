@@ -213,10 +213,41 @@ class Meowist extends Client {
       const MAX_VIEWERS = 3;
       const viewers = [];
 
+      // Failed token attempts per client IP; an IP over the limit is refused, even
+      // with the right token, until its window ends.
+      const MAX_FAILED_ATTEMPTS = 10;
+      const FAILED_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
+      const failedAttempts = new Map();
+
       app.get('/admin/logs/stream', (req, res) => {
+        const now = Date.now();
+        const clientIp = req.ip || 'unknown';
+        let attempts = failedAttempts.get(clientIp);
+        if (attempts && attempts.resetAt <= now) {
+          failedAttempts.delete(clientIp);
+          attempts = null;
+        }
+        if (attempts && attempts.count >= MAX_FAILED_ATTEMPTS) {
+          res.set('Retry-After', String(Math.ceil((attempts.resetAt - now) / 1000)));
+          return res.status(429).end();
+        }
+
         const header = String(req.headers.authorization || '');
         const given = crypto.createHash('sha256').update(header.replace(/^Bearer\s+/i, '')).digest();
         if (!header.startsWith('Bearer ') || !crypto.timingSafeEqual(given, expected)) {
+          if (failedAttempts.size >= 10000) {
+            for (const [ip, entry] of failedAttempts) {
+              if (entry.resetAt <= now) failedAttempts.delete(ip);
+            }
+          }
+          if (attempts) {
+            attempts.count += 1;
+          } else if (failedAttempts.size < 10000) {
+            failedAttempts.set(clientIp, { count: 1, resetAt: now + FAILED_ATTEMPT_WINDOW_MS });
+          }
+          if (attempts?.count === MAX_FAILED_ATTEMPTS) {
+            logger.warn(`Log stream: ${MAX_FAILED_ATTEMPTS} failed token attempts from ${clientIp}; blocked for 15 minutes`);
+          }
           return res.status(404).end();
         }
         // Replit's proxy can keep a connection open after the viewer has gone, so a
