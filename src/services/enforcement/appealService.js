@@ -18,6 +18,7 @@ import { getCaseByCode, listCasesForUser, OPEN_STATUSES } from './caseService.js
 import { getGuildConfig } from '../config/guildConfig.js';
 import { createRejoinInvite, revokeWarn, sendDm } from './enforcementService.js';
 import { removeMutedRole } from './muteService.js';
+import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { appealAcceptedDm, appealDeniedDm } from './dmTemplates.js';
 import { dateStamp, formatDuration, stamp, truncate } from './format.js';
 
@@ -400,6 +401,7 @@ async function liftForAcceptedAppeal(client, record, admin) {
             );
         }
     });
+    if (record.type === 'ban') await syncBannedRoleQuietly(client, record.target_user_id);
 }
 
 async function closeAppealChannel(guild, channelId, decisionLabel) {

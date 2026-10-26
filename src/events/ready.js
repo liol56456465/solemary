@@ -5,6 +5,7 @@ import { testMode, verifyTestResources } from "../config/testMode.js";
 import { reconcileReactionRoleMessages } from "../services/reactionRoleService.js";
 import { reconcileTicketPanels, reconcileVerificationPanels, reconcileReactionRolePanelHealth } from "../services/panelHealthService.js";
 import { reconcileLevelRoles } from "../services/leveling/levelRoleSyncService.js";
+import { reconcileBannedRoles } from "../services/enforcement/bannedRoleService.js";
 import { initRiffyAfterReady } from "../services/music/riffySetup.js";
 
 export default {
@@ -52,6 +53,16 @@ export default {
       startupLog(
         `Reaction role panel health: scanned ${reactionRolePanelSummary.scannedPanels} panels, healthy ${reactionRolePanelSummary.healthyPanels}, deleted ${reactionRolePanelSummary.deletedPanels}, missing channel ${reactionRolePanelSummary.missingChannels}, recovered ${reactionRolePanelSummary.recoveredIds}, errors ${reactionRolePanelSummary.errors}`
       );
+
+      const bannedRoleSummary = await reconcileBannedRoles(client).catch((error) => ({ skipped: error.message }));
+      if (bannedRoleSummary.skipped) {
+        const log = bannedRoleSummary.skipped === 'BANNED_ROLE_ID is not set' ? startupLog : (message) => logger.error(message);
+        log(`Banned role sync skipped: ${bannedRoleSummary.skipped}`);
+      } else {
+        startupLog(
+          `Banned role sync: scanned ${bannedRoleSummary.scanned} support members, added ${bannedRoleSummary.added}, removed ${bannedRoleSummary.removed}, errors ${bannedRoleSummary.errors}`
+        );
+      }
 
       const levelRoleSummary = await reconcileLevelRoles(client);
       startupLog(

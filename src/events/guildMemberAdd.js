@@ -8,6 +8,8 @@ import { getServerCounters, updateCounter } from '../services/serverstatsService
 import { setBirthday as dbSetBirthday } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { reapplyMuteOnJoin } from '../services/enforcement/enforcementService.js';
+import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService.js';
+import { enforcementConfig } from '../config/enforcement.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 
 export default {
@@ -24,6 +26,10 @@ export default {
             await reapplyMuteOnJoin(member).catch((error) => {
                 logger.warn(`Could not check mute state for ${member.id}: ${error.message}`);
             });
+            // Someone banned from the main server who joins the support server gets the banned role.
+            if (guild.id === enforcementConfig.supportGuildId) {
+                await syncBannedRoleQuietly(member.client, member.id);
+            }
         }
         
         const config = await getGuildConfig(member.client, guild.id);

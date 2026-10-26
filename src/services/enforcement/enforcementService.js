@@ -14,6 +14,7 @@ import { insertCase, setDmDelivered, getActiveCase, nextDefaultName, OPEN_STATUS
 import { ensureMutedRole, addMutedRole, removeMutedRole, findMutedRole } from './muteService.js';
 import { banDm, kickDm, muteDm, warnDm } from './dmTemplates.js';
 import { addMonths, formatDuration, dateStamp } from './format.js';
+import { syncBannedRoleQuietly } from './bannedRoleService.js';
 
 export const REQUIRED_BOT_PERMISSIONS = [
     ['BanMembers', 'Ban Members'],
@@ -219,6 +220,7 @@ async function banWithRecord({ guild, targetUser, record, auditReason }) {
             `Discord refused the ban: ${error.message}`, { expected: true });
     }
     await setDmDelivered(record.id, dmDelivered);
+    await syncBannedRoleQuietly(guild.client, targetUser.id);
     return { ...record, dm_delivered: dmDelivered };
 }
 
@@ -472,6 +474,7 @@ async function doUnban({ guild, moderator, targetUser, flow }) {
     }
     await guild.members.unban(targetUser.id, `${flow.reason} (by ${moderator.user.username})`.slice(0, 512));
     const revoked = await revokeOpenCases(guild.id, targetUser.id, 'ban', moderator.id, flow.reason);
+    await syncBannedRoleQuietly(guild.client, targetUser.id);
     await logEnforcement(guild.client, guild.id, 'unban', {
         target: targetUser, moderatorLabel: moderatorLabel(moderator),
         extra: [

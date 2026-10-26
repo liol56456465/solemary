@@ -9,6 +9,7 @@ import { query, T, isEnforcementDbAvailable } from './db.js';
 import { OPEN_STATUSES } from './caseService.js';
 import { removeMutedRole } from './muteService.js';
 import { logEnforcement } from './enforcementService.js';
+import { syncBannedRoleQuietly } from './bannedRoleService.js';
 
 const BATCH_SIZE = 50;
 const UNKNOWN_BAN = 10026;
@@ -34,6 +35,7 @@ async function liftExpired(client, guild, row) {
             // Already unbanned by hand — just close the record.
         }
         await expireCase(row);
+        await syncBannedRoleQuietly(client, row.target_user_id);
         await logEnforcement(client, guild.id, 'unban', {
             target, moderatorLabel: `${client.user.username} (automatic)`,
             extra: [{ name: 'Reason', value: `Temporary ban \`${row.case_code}\` expired` }],

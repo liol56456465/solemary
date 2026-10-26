@@ -19,6 +19,8 @@ export const enforcementConfig = {
     // Optional: closed appeal/report channels move here. Without it they stay in place, renamed closed-….
     appealsArchiveCategoryId: readId('APPEALS_ARCHIVE_CATEGORY_ID'),
     mutedRoleId: readId('MUTED_ROLE_ID'),
+    // Optional: a role in the support server that members with an active main-server ban get.
+    bannedRoleId: readId('BANNED_ROLE_ID'),
 
     serverName: 'Meowist',
     mutedRoleName: 'Muted',
@@ -79,7 +81,7 @@ export function validateEnforcementConfig() {
         }
     }
 
-    for (const name of ['ADMIN_REQUEST_CHANNEL_ID', 'MUTED_ROLE_ID', 'APPEALS_ARCHIVE_CATEGORY_ID']) {
+    for (const name of ['ADMIN_REQUEST_CHANNEL_ID', 'MUTED_ROLE_ID', 'APPEALS_ARCHIVE_CATEGORY_ID', 'BANNED_ROLE_ID']) {
         const value = readId(name);
         if (value && !SNOWFLAKE.test(value)) {
             errors.push(`${name} must be a Discord ID (17–20 digits), got "${value}"`);
