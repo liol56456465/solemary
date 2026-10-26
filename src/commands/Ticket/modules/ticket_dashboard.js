@@ -50,7 +50,7 @@ function buildButtonRow(guildConfig, guildId, disabled = false, panelStatus = nu
     buttons.push(
         new ButtonBuilder()
             .setCustomId(`ticket_cfg_dm_toggle_${guildId}`)
-            .setLabel('DM on Close')
+            .setLabel('Closure DM')
             .setStyle(dmEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
             .setEmoji(dmEnabled ? '📬' : '📭')
             .setDisabled(disabled),
@@ -162,7 +162,7 @@ function buildDashboardEmbed(config, guild, panelStatus = null, ticketStats = nu
             { name: 'Panel Message', value: panelMsg, inline: false },
             { name: 'Button Label', value: btnLabel, inline: true },
             { name: 'Max Tickets/User', value: String(config.maxTicketsPerUser || 3), inline: true },
-            { name: 'DM on Close', value: config.dmOnClose !== false ? 'Enabled' : 'Disabled', inline: true },
+            { name: 'Closure DM Notice', value: config.dmOnClose !== false ? 'Enabled' : 'Disabled', inline: true },
             { name: 'Ticket Logs Channel', value: ticketLogsChannel, inline: true },
             { name: 'Transcript Channel', value: transcriptChannel, inline: true },
             { name: '\u200B', value: '\u200B', inline: true },
@@ -695,8 +695,8 @@ async function handleDmOnClose(btnInteraction, rootInteraction, guildConfig, gui
     await btnInteraction.followUp({
         embeds: [
             successEmbed(
-                'DM on Close Updated',
-                `Users will **${newState ? 'now' : 'no longer'}** receive a DM when their ticket is closed.`,
+                'Closure DM Updated',
+                `Users will **${newState ? 'now' : 'no longer'}** receive a separate closure notice by DM. Feedback surveys and transcript delivery are handled independently.`,
             ),
         ],
         flags: MessageFlags.Ephemeral,
@@ -770,7 +770,7 @@ async function handleTranscriptChannel(selectInteraction, rootInteraction, guild
         embeds: [
             new EmbedBuilder()
                 .setTitle('📜 Select Transcript Channel')
-                .setDescription('Choose where auto-generated transcripts will be sent when tickets are deleted.')
+                .setDescription('Choose where transcripts are sent when tickets close. If delivery fails, the bot retries before ticket deletion.')
                 .setColor(getColor('info'))
         ],
         components: [new ActionRowBuilder().addComponents(channelSelect)],

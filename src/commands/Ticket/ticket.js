@@ -82,7 +82,7 @@ export default {
                 .addBooleanOption((option) =>
                     option
                         .setName("dm_on_close")
-                        .setDescription("Send DM to user when their ticket is closed (default: true)")
+                        .setDescription("Send closure notice by DM; transcript and feedback DMs are separate (default: true)")
                         .setRequired(false),
                 ),
         )
@@ -199,7 +199,7 @@ description: panelMessage,
                     successMessage += `**${staffRole.name}** role will have access to tickets.`;
                 }
                 
-                successMessage += `\n\n**Max Tickets Per User:** ${maxTicketsPerUser}\n**DM on Close:** ${dmOnClose ? 'Enabled' : 'Disabled'}`;
+                successMessage += `\n\n**Max Tickets Per User:** ${maxTicketsPerUser}\n**Closure DM Notice:** ${dmOnClose ? 'Enabled' : 'Disabled'}\n**Transcript and Feedback DMs:** Attempted on ticket close`;
 
                 await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
@@ -261,7 +261,7 @@ description: panelMessage,
                             inline: true,
                         },
                         {
-                            name: "DM on Close",
+                            name: "Closure DM Notice",
                             value: dmOnClose ? 'Enabled' : 'Disabled',
                             inline: true,
                         },

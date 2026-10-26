@@ -86,7 +86,7 @@ const feedbackHandler = {
             return;
         }
 
-        const rating = parseInt(ratingStr, 10);
+        const rating = Number(ratingStr);
         if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [

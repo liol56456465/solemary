@@ -55,14 +55,13 @@ export default {
         }
 
         if (interaction.user.id !== ticketData.userId) {
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setTitle('❌ Not Allowed')
                         .setDescription('Only the ticket creator can submit feedback for this ticket.')
                         .setColor(getColor('error')),
                 ],
-                ephemeral: true,
             });
             return;
         }

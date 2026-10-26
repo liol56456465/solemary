@@ -239,6 +239,14 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
 export async function closeTicket(channel, closer, reason = 'No reason provided') {
   try {
     const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel);
+    if (ticketData.status === 'closed') {
+      ticketUserError(
+        'Ticket is already closed',
+        'This ticket has already been closed.',
+        ErrorTypes.VALIDATION,
+        { channelId: channel.id, operation: 'closeTicket' }
+      );
+    }
     
     const config = await getGuildConfig(channel.client, channel.guild.id);
     const dmOnClose = config.dmOnClose !== false;
@@ -270,6 +278,7 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
     
     let ticketCreator = null;
     let closeNotificationSent = false;
+    let feedbackSurveySent = false;
     try {
       ticketCreator = await channel.client.users.fetch(ticketData.userId).catch(() => null);
     } catch (dmError) {
@@ -324,6 +333,7 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
           embeds: [feedbackEmbed],
           components: [starsRow, declineRow],
         });
+        feedbackSurveySent = true;
       } catch (feedbackError) {
         logger.warn(`Could not send feedback survey to ticket creator ${ticketData.userId}: ${feedbackError.message}`);
       }
@@ -414,14 +424,24 @@ components: []
         executorId: closer.id,
         reason: reason,
         metadata: {
-          dmSent: dmOnClose,
+          dmSent: closeNotificationSent,
+          feedbackSurveySent,
           closedAt: ticketData.closedAt,
           movedToClosedCategory
         }
       }
     });
 
-    await deliverTicketTranscript(channel, ticketData, closer, { persist: true });
+    try {
+      await deliverTicketTranscript(channel, ticketData, closer, { persist: true });
+    } catch (transcriptError) {
+      logger.error('Ticket closed, but transcript delivery failed', {
+        guildId: channel.guild.id,
+        channelId: channel.id,
+        ticketNumber: ticketData.id,
+        error: transcriptError.message,
+      });
+    }
     
     return ticketData;
     
@@ -632,6 +652,15 @@ function escapeHtml(text) {
     .replace(/'/g, '&#039;');
 }
 
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) ? escapeHtml(url.toString()) : '';
+  } catch {
+    return '';
+  }
+}
+
 async function generateTranscript(channel) {
   try {
     logger.debug('Generating transcript for channel', {
@@ -651,18 +680,39 @@ async function generateTranscript(channel) {
 
     messages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
 
-    const escape = (str) =>
-      String(str ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-
     const rows = messages.map((msg) => {
       const ts = new Date(msg.createdTimestamp).toISOString().replace('T', ' ').slice(0, 19);
-      const author = escape(msg.author?.tag ?? msg.author?.username ?? 'Unknown');
-      const content = escape(msg.content || (msg.embeds.length ? '[embed]' : '[attachment]'));
-      return `<tr><td class="ts">${ts}</td><td class="author">${author}</td><td class="msg">${content}</td></tr>`;
+      const author = escapeHtml(msg.author?.tag ?? msg.author?.username ?? 'Unknown');
+      const avatar = safeExternalUrl(msg.author?.displayAvatarURL?.({ size: 64 }) || '');
+      const avatarHtml = avatar
+        ? `<img class="avatar" src="${avatar}" alt="">`
+        : '';
+      const content = msg.content
+        ? `<div class="content">${escapeHtml(msg.content)}</div>`
+        : '';
+      const embeds = msg.embeds.map((embed) => {
+        const parts = [
+          embed.title ? `<strong>${escapeHtml(embed.title)}</strong>` : '',
+          embed.description ? `<div>${escapeHtml(embed.description)}</div>` : '',
+          ...(embed.fields || []).map((field) =>
+            `<div><strong>${escapeHtml(field.name)}</strong><br>${escapeHtml(field.value)}</div>`),
+          safeExternalUrl(embed.url)
+            ? `<div><a href="${safeExternalUrl(embed.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(embed.url)}</a></div>`
+            : '',
+        ].filter(Boolean);
+        return `<div class="embed">${parts.join('')}</div>`;
+      }).join('');
+      const attachments = [...msg.attachments.values()].map((attachment) => {
+        const url = safeExternalUrl(attachment.url);
+        const name = escapeHtml(attachment.name || 'attachment');
+        return url
+          ? `<div class="attachment"><a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a></div>`
+          : `<div class="attachment">${name} (unsafe link omitted)</div>`;
+      }).join('');
+      const messageBody = content || embeds || attachments
+        ? `${content}${embeds}${attachments}`
+        : '<span class="muted">[No text content]</span>';
+      return `<tr><td class="ts">${ts}</td><td class="author">${avatarHtml}${author}</td><td class="msg">${messageBody}</td></tr>`;
     }).join('\n');
 
     const html = `<!DOCTYPE html>
@@ -670,7 +720,7 @@ async function generateTranscript(channel) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Transcript – #${escape(channel.name)}</title>
+<title>Transcript – #${escapeHtml(channel.name)}</title>
 <style>
 body{font-family:sans-serif;background:#36393f;color:#dcddde;margin:0;padding:16px}
 h1{color:#fff;font-size:1.2rem;margin-bottom:8px}
@@ -678,12 +728,18 @@ table{width:100%;border-collapse:collapse;font-size:0.85rem}
 th{background:#2f3136;color:#8e9297;padding:6px 8px;text-align:left;border-bottom:2px solid #202225}
 td{padding:4px 8px;border-bottom:1px solid #40444b;vertical-align:top}
 .ts{color:#72767d;white-space:nowrap;width:160px}
-.author{color:#7289da;white-space:nowrap;width:160px}
-.msg{word-break:break-word}
+.author{color:#7289da;white-space:nowrap;width:180px}
+.msg{word-break:break-word;white-space:normal}
+.content{white-space:pre-wrap}
+.avatar{width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px}
+.embed{border-left:4px solid #5865f2;background:#2f3136;padding:8px;margin:6px 0;display:grid;gap:6px}
+.attachment{margin-top:5px}
+.muted{color:#8e9297}
+a{color:#00aff4}
 </style>
 </head>
 <body>
-<h1>📜 Transcript – #${escape(channel.name)}</h1>
+<h1>📜 Transcript – #${escapeHtml(channel.name)}</h1>
 <p style="color:#72767d">${messages.length} message(s) exported on ${new Date().toUTCString()}</p>
 <table>
 <thead><tr><th>Timestamp (UTC)</th><th>Author</th><th>Message</th></tr></thead>
@@ -731,7 +787,16 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
     return { generated: false, channelSent: false, dmSent: false };
   }
 
-  const config = await getGuildConfig(channel.client, channel.guild.id);
+  let config = {};
+  try {
+    config = await getGuildConfig(channel.client, channel.guild.id);
+  } catch (error) {
+    logger.warn('Could not load ticket transcript channel configuration; continuing with DM delivery', {
+      guildId: channel.guild.id,
+      ticketId: ticketData.id,
+      error: error.message,
+    });
+  }
   let channelSent = false;
   let dmSent = false;
 
@@ -781,7 +846,7 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
       });
     }
   } else {
-    logger.warn('No transcript channel configured; transcript will only be delivered by DM when enabled', {
+    logger.warn('No transcript channel configured; transcript will only be delivered by DM when allowed', {
       guildId: channel.guild.id,
       ticketNumber: ticketData.id,
     });

@@ -18,6 +18,11 @@ const ACTIONS = [
     { name: 'Timeout readiness', value: 'timeout' },
     { name: 'Warn readiness', value: 'warn' },
     { name: 'Unban readiness', value: 'unban' },
+    { name: 'Massban readiness', value: 'massban' },
+    { name: 'Masskick readiness', value: 'masskick' },
+    { name: 'Purge readiness', value: 'purge' },
+    { name: 'Lock readiness', value: 'lock' },
+    { name: 'Unlock readiness', value: 'unlock' },
     { name: 'Verification setup', value: 'verification' },
     { name: 'Ticket setup', value: 'ticket' },
     { name: 'Feedback logging', value: 'feedback' },
@@ -108,16 +113,21 @@ async function runModerationCheck(interaction, action) {
 
     if (action === 'unban') {
         let isBanned = false;
+        let lookupError = null;
         try {
             await interaction.guild.bans.fetch(target.id);
             isBanned = true;
-        } catch {
-            // A missing ban is a useful diagnostic result, not a command failure.
+        } catch (error) {
+            if (error.code !== 10026) {
+                lookupError = error;
+            }
         }
         fields.push(checkField(
             'Ban status',
-            !isBanned,
-            isBanned
+            Boolean(isBanned),
+            lookupError
+                ? `Could not confirm ban status (Discord error ${lookupError.code || 'unknown'}).`
+                : isBanned
                 ? `**${target.tag}** is banned. A real unban would be possible if permissions are correct.`
                 : `**${target.tag}** is not currently banned.`,
         ));
@@ -178,6 +188,44 @@ async function runModerationCheck(interaction, action) {
     return fields;
 }
 
+function runChannelModerationCheck(interaction, action) {
+    const channel = interaction.options.getChannel('channel') || interaction.channel;
+    const botMember = getBotMember(interaction.guild);
+    const requiredPermission = {
+        massban: PermissionFlagsBits.BanMembers,
+        masskick: PermissionFlagsBits.KickMembers,
+        purge: PermissionFlagsBits.ManageMessages,
+        lock: PermissionFlagsBits.ManageChannels,
+        unlock: PermissionFlagsBits.ManageChannels,
+    }[action];
+    const permissionName = {
+        massban: 'Ban Members',
+        masskick: 'Kick Members',
+        purge: 'Manage Messages',
+        lock: 'Manage Channels',
+        unlock: 'Manage Channels',
+    }[action];
+    const channelPermissions = channel?.permissionsFor(botMember);
+    const permissionAvailable = action === 'massban' || action === 'masskick'
+        ? Boolean(botMember?.permissions.has(requiredPermission))
+        : Boolean(channelPermissions?.has(requiredPermission));
+
+    return [
+        checkField(
+            `${permissionName} permission`,
+            permissionAvailable,
+            action === 'massban' || action === 'masskick'
+                ? `The bot needs **${permissionName}** in this server.`
+                : `The bot needs **${permissionName}** in ${channel || 'the selected channel'}.`,
+        ),
+        checkField(
+            'No action performed',
+            true,
+            `This is only a readiness check for **${action}**; no member or channel was changed.`,
+        ),
+    ];
+}
+
 async function runSystemCheck(interaction, action) {
     const config = await getGuildConfig(interaction.client, interaction.guildId);
     const botMember = getBotMember(interaction.guild);
@@ -196,6 +244,11 @@ async function runSystemCheck(interaction, action) {
             checkField('Verification channel', Boolean(channel), channel ? `Verification panel channel: ${channel}.` : 'Run `/verification setup` to choose a channel.'),
             checkField('Verified role', Boolean(role), role ? `Verified role: ${role}.` : 'Run `/verification setup` to choose a role.'),
             checkField('Manage Roles permission', Boolean(botMember?.permissions.has(PermissionFlagsBits.ManageRoles)), 'The bot needs Manage Roles.'),
+            checkField(
+                'Verified role hierarchy',
+                Boolean(role && botMember && botMember.roles.highest.position > role.position),
+                role ? 'The bot role must be above the verified role.' : 'Configure a verified role first.',
+            ),
         );
         return fields;
     }
@@ -206,23 +259,51 @@ async function runSystemCheck(interaction, action) {
     const transcriptChannel = selectedChannel || (config.ticketTranscriptChannelId
         ? interaction.guild.channels.cache.get(config.ticketTranscriptChannelId)
         : null);
+    const channelPermissions = (channel, required) => {
+        if (!channel || !botMember) return false;
+        const permissions = channel.permissionsFor(botMember);
+        return Boolean(permissions?.has(required));
+    };
 
     if (action === 'ticket') {
+        const panelChannel = config.ticketPanelChannelId
+            ? interaction.guild.channels.cache.get(config.ticketPanelChannelId)
+            : null;
+        const dbStatus = interaction.client.db?.getStatus?.();
         fields.push(
-            checkField('Ticket panel', Boolean(config.ticketPanelChannelId), config.ticketPanelChannelId ? 'Ticket panel is configured.' : 'Run `/ticket setup` first.'),
+            checkField('Ticket panel', Boolean(panelChannel), panelChannel ? `Ticket panel channel: ${panelChannel}.` : 'Run `/ticket setup` first or repair its configured channel.'),
             checkField('Manage Channels permission', Boolean(botMember?.permissions.has(PermissionFlagsBits.ManageChannels)), 'The bot needs Manage Channels to create and close tickets.'),
             checkField('Send Messages permission', Boolean(botMember?.permissions.has(PermissionFlagsBits.SendMessages)), 'The bot needs Send Messages in ticket channels.'),
+            checkField('Database', Boolean(dbStatus && !dbStatus.isDegraded), dbStatus?.isDegraded ? 'Ticket data is not persistent while the database is degraded.' : 'Ticket data storage is available.'),
         );
     } else if (action === 'feedback') {
+        const dbStatus = interaction.client.db?.getStatus?.();
         fields.push(
             checkField('Feedback log channel', Boolean(logsChannel), logsChannel ? `Feedback log channel: ${logsChannel}.` : 'Configure a ticket logs channel in `/ticket dashboard`.'),
-            checkField('Feedback channel sendability', Boolean(logsChannel?.isSendable?.()), 'The bot must be able to send feedback logs there.'),
+            checkField(
+                'Feedback channel permissions',
+                channelPermissions(logsChannel, [PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks]),
+                'The bot needs Send Messages and Embed Links in the feedback log channel.',
+            ),
+            checkField('Database', Boolean(dbStatus && !dbStatus.isDegraded), dbStatus?.isDegraded ? 'Feedback cannot be saved persistently while the database is degraded.' : 'Feedback storage is available.'),
         );
     } else {
         fields.push(
             checkField('Transcript channel', Boolean(transcriptChannel), transcriptChannel ? `Transcript channel: ${transcriptChannel}.` : 'Configure a transcript channel in `/ticket dashboard`.'),
-            checkField('Transcript channel sendability', Boolean(transcriptChannel?.isSendable?.()), 'The bot must be able to send transcript files there.'),
-            checkField('DM transcript delivery', config.dmOnClose !== false, 'DM transcript delivery is enabled by the ticket configuration.'),
+            checkField(
+                'Transcript channel permissions',
+                channelPermissions(transcriptChannel, [
+                    PermissionFlagsBits.SendMessages,
+                    PermissionFlagsBits.EmbedLinks,
+                    PermissionFlagsBits.AttachFiles,
+                ]),
+                'The bot needs Send Messages, Embed Links, and Attach Files in the transcript channel.',
+            ),
+            checkField(
+                'DM transcript delivery',
+                true,
+                'The bot attempts to DM the transcript after closing; each user must allow DMs from server members.',
+            ),
         );
     }
 
@@ -233,7 +314,7 @@ export default {
     data: new SlashCommandBuilder()
         .setName('test')
         .setDescription('Owner-only safe diagnostics; never performs moderation actions')
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .setDefaultMemberPermissions(null)
         .addStringOption(option =>
             option
                 .setName('action')
@@ -284,13 +365,21 @@ export default {
 
         const action = interaction.options.getString('action');
         let fields = [];
+        const memberActions = ['ban', 'kick', 'timeout', 'warn', 'unban'];
+        const channelActions = ['massban', 'masskick', 'purge', 'lock', 'unlock'];
 
-        if (['all', 'ban', 'kick', 'timeout', 'warn', 'unban'].includes(action)) {
+        if ([...memberActions, ...channelActions, 'all'].includes(action)) {
             if (action === 'all') {
-                for (const moderationAction of ['ban', 'kick', 'timeout', 'warn', 'unban']) {
+                for (const moderationAction of memberActions) {
                     fields.push(
                         { name: `── ${moderationAction.toUpperCase()} ──`, value: '\u200b', inline: false },
                         ...(await runModerationCheck(interaction, moderationAction)),
+                    );
+                }
+                for (const moderationAction of channelActions) {
+                    fields.push(
+                        { name: `── ${moderationAction.toUpperCase()} ──`, value: '\u200b', inline: false },
+                        ...runChannelModerationCheck(interaction, moderationAction),
                     );
                 }
                 fields.push(
@@ -300,23 +389,28 @@ export default {
                     ...(await runSystemCheck(interaction, 'transcript')),
                     ...(await runSystemCheck(interaction, 'verification')),
                 );
-            } else {
+            } else if (memberActions.includes(action)) {
                 fields = await runModerationCheck(interaction, action);
+            } else {
+                fields = runChannelModerationCheck(interaction, action);
             }
         } else {
             fields = await runSystemCheck(interaction, action);
         }
 
-        await InteractionHelper.safeEditReply(interaction, {
-            embeds: [
+        const embedChunks = [];
+        for (let i = 0; i < fields.length; i += 25) {
+            embedChunks.push(fields.slice(i, i + 25));
+        }
+        const embeds = embedChunks.map((embedFields, index) =>
                 createEmbed({
-                    title: `🧪 Safe Test: ${action}`,
-                    description: 'Diagnostics only. No ban, kick, timeout, warning, ticket, or configuration change was performed.',
+                    title: `🧪 Safe Test: ${action}${embedChunks.length > 1 ? ` (${index + 1}/${embedChunks.length})` : ''}`,
+                    description: 'Diagnostics only. No moderation action, ticket action, or configuration change was performed.',
                     color: 0x5865f2,
-                    fields: fields.slice(0, 25),
+                    fields: embedFields,
                     footer: { text: 'Choose a different target user to test moderation readiness.' },
                 }),
-            ],
-        });
+            );
+        await InteractionHelper.safeEditReply(interaction, { embeds });
     },
 };
