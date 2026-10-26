@@ -268,57 +268,67 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
       }
     }
     
-    if (dmOnClose) {
+    let ticketCreator = null;
+    let closeNotificationSent = false;
+    try {
+      ticketCreator = await channel.client.users.fetch(ticketData.userId).catch(() => null);
+    } catch (dmError) {
+      logger.warn(`Could not fetch ticket creator ${ticketData.userId}: ${dmError.message}`);
+    }
+
+    if (dmOnClose && ticketCreator) {
+      const dmEmbed = createEmbed({
+        title: '🎫 Your Ticket Has Been Closed',
+        description: `Your ticket **${channel.name}** has been closed.\n\n**Reason:** ${reason}\n**Closed by:** ${closer.tag}\n**Closed at:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nThank you for using our support system! If you have any further questions, feel free to create a new ticket.`,
+        color: '#e74c3c',
+        footer: { text: `Ticket ID: ${ticketData.id}` }
+      });
+
       try {
-        const ticketCreator = await channel.client.users.fetch(ticketData.userId).catch(() => null);
-        if (ticketCreator) {
-          const dmEmbed = createEmbed({
-            title: '🎫 Your Ticket Has Been Closed',
-            description: `Your ticket **${channel.name}** has been closed.\n\n**Reason:** ${reason}\n**Closed by:** ${closer.tag}\n**Closed at:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nThank you for using our support system! If you have any further questions, feel free to create a new ticket.`,
-            color: '#e74c3c',
-            footer: { text: `Ticket ID: ${ticketData.id}` }
-          });
-
-          await ticketCreator.send({ embeds: [dmEmbed] });
-
-          try {
-            const feedbackEmbed = createEmbed({
-              title: '⭐ How was your support experience?',
-              description: `We'd love to know how we did with **${channel.name}**.\nSelect a rating below — it only takes a second!`,
-              color: '#F1C40F',
-              footer: { text: 'Your feedback helps us improve.' },
-            });
-
-            const base = `ticket_feedback:${channel.guild.id}:${channel.id}`;
-            const starsRow = new ActionRowBuilder().addComponents(
-              new ButtonBuilder().setCustomId(`${base}:1`).setLabel('⭐ 1').setStyle(ButtonStyle.Secondary),
-              new ButtonBuilder().setCustomId(`${base}:2`).setLabel('⭐ 2').setStyle(ButtonStyle.Secondary),
-              new ButtonBuilder().setCustomId(`${base}:3`).setLabel('⭐ 3').setStyle(ButtonStyle.Secondary),
-              new ButtonBuilder().setCustomId(`${base}:4`).setLabel('⭐ 4').setStyle(ButtonStyle.Secondary),
-              new ButtonBuilder().setCustomId(`${base}:5`).setLabel('⭐ 5').setStyle(ButtonStyle.Primary),
-            );
-            const declineRow = new ActionRowBuilder().addComponents(
-              new ButtonBuilder()
-                .setCustomId(`ticket_feedback_comment:${channel.guild.id}:${channel.id}`)
-                .setLabel('✍️ Add Comment')
-                .setStyle(ButtonStyle.Secondary),
-              new ButtonBuilder()
-                .setCustomId(`ticket_feedback_decline:${channel.guild.id}:${channel.id}`)
-                .setLabel('❌ No thanks')
-                .setStyle(ButtonStyle.Secondary),
-            );
-
-            await ticketCreator.send({
-              embeds: [feedbackEmbed],
-              components: [starsRow, declineRow],
-            });
-          } catch (feedbackError) {
-            logger.warn(`Could not send feedback survey to ticket creator ${ticketData.userId}: ${feedbackError.message}`);
-          }
-        }
+        await ticketCreator.send({ embeds: [dmEmbed] });
+        closeNotificationSent = true;
       } catch (dmError) {
-          logger.warn(`Could not send DM to ticket creator ${ticketData.userId}: ${dmError.message}`);
+        logger.warn(`Could not send ticket closure DM to ${ticketData.userId}: ${dmError.message}`);
       }
+    }
+
+    if (ticketCreator) {
+      try {
+        const feedbackEmbed = createEmbed({
+          title: '⭐ How was your support experience?',
+          description: `We'd love to know how we did with **${channel.name}**.\nSelect a rating below — it only takes a second!`,
+          color: '#F1C40F',
+          footer: { text: 'Your feedback helps us improve.' },
+        });
+
+        const base = `ticket_feedback:${channel.guild.id}:${channel.id}`;
+        const starsRow = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId(`${base}:1`).setLabel('⭐ 1').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`${base}:2`).setLabel('⭐ 2').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`${base}:3`).setLabel('⭐ 3').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`${base}:4`).setLabel('⭐ 4').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`${base}:5`).setLabel('⭐ 5').setStyle(ButtonStyle.Primary),
+        );
+        const declineRow = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`ticket_feedback_comment:${channel.guild.id}:${channel.id}`)
+            .setLabel('✍️ Add Comment')
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId(`ticket_feedback_decline:${channel.guild.id}:${channel.id}`)
+            .setLabel('❌ No thanks')
+            .setStyle(ButtonStyle.Secondary),
+        );
+
+        await ticketCreator.send({
+          embeds: [feedbackEmbed],
+          components: [starsRow, declineRow],
+        });
+      } catch (feedbackError) {
+        logger.warn(`Could not send feedback survey to ticket creator ${ticketData.userId}: ${feedbackError.message}`);
+      }
+    } else {
+      logger.warn(`Could not deliver feedback survey; ticket creator ${ticketData.userId} could not be fetched`);
     }
     
     try {
@@ -373,7 +383,7 @@ components: []
     
     const closeEmbed = createEmbed({
       title: 'Ticket Closed',
-      description: `This ticket has been closed by ${closer}.\n**Reason:** ${reason}${dmOnClose ? '\n\n📩 A DM has been sent to the ticket creator.' : ''}`,
+      description: `This ticket has been closed by ${closer}.\n**Reason:** ${reason}${closeNotificationSent ? '\n\n📩 A DM has been sent to the ticket creator.' : dmOnClose ? '\n\n⚠️ The closure DM could not be delivered.' : ''}`,
       color: '#e74c3c',
       footer: { text: `Ticket ID: ${ticketData.id}` }
     });
@@ -410,6 +420,8 @@ components: []
         }
       }
     });
+
+    await deliverTicketTranscript(channel, ticketData, closer, { persist: true });
     
     return ticketData;
     
@@ -683,7 +695,7 @@ ${rows}
 </html>`;
 
     const buffer = Buffer.from(html, 'utf8');
-    const attachment = new AttachmentBuilder(buffer, { name: `ticket-${channel.id}.html` });
+    const fileName = `ticket-${channel.id}.html`;
 
     logger.info('✅ Successfully generated transcript', {
       channelId: channel.id,
@@ -692,7 +704,11 @@ ${rows}
       size: buffer.length
     });
 
-    return attachment;
+    return {
+      buffer,
+      fileName,
+      messageCount: messages.length,
+    };
   } catch (error) {
     logger.error('❌ Failed to generate transcript:', {
       channelId: channel.id,
@@ -703,6 +719,127 @@ ${rows}
     });
     return null;
   }
+}
+
+function buildTranscriptAttachment(transcript) {
+  return new AttachmentBuilder(transcript.buffer, { name: transcript.fileName });
+}
+
+async function deliverTicketTranscript(channel, ticketData, executor, { persist = false } = {}) {
+  const transcript = await generateTranscript(channel);
+  if (!transcript) {
+    return { generated: false, channelSent: false, dmSent: false };
+  }
+
+  const config = await getGuildConfig(channel.client, channel.guild.id);
+  let channelSent = false;
+  let dmSent = false;
+
+  if (config.ticketTranscriptChannelId) {
+    try {
+      const transcriptChannel = await channel.client.channels
+        .fetch(config.ticketTranscriptChannelId)
+        .catch(() => null);
+
+      if (!transcriptChannel) {
+        logger.warn('Could not fetch configured transcript channel', {
+          guildId: channel.guild.id,
+          transcriptChannelId: config.ticketTranscriptChannelId,
+        });
+      } else if (!transcriptChannel.isSendable()) {
+        logger.warn('Configured transcript channel is not sendable', {
+          guildId: channel.guild.id,
+          transcriptChannelId: transcriptChannel.id,
+        });
+      } else {
+        const transcriptEmbed = buildStandardLogEmbed({
+          color: 0x3498db,
+          title: 'Ticket Transcript',
+          description: [
+            formatLogLine('Ticket', `#${ticketData.id}`),
+            formatLogLine('Channel', `#${channel.name}`),
+            formatLogLine('Generated', `<t:${Math.floor(Date.now() / 1000)}:F>`),
+          ].join('\n'),
+          footer: executor?.username
+            ? { text: `Generated by ${executor.username}`, iconURL: executor.displayAvatarURL?.() }
+            : undefined,
+          timestamp: true,
+        });
+
+        await transcriptChannel.send({
+          embeds: [transcriptEmbed],
+          files: [buildTranscriptAttachment(transcript)],
+        });
+        channelSent = true;
+      }
+    } catch (error) {
+      logger.error('Failed to send transcript to configured channel', {
+        guildId: channel.guild.id,
+        channelId: channel.id,
+        transcriptChannelId: config.ticketTranscriptChannelId,
+        error: error.message,
+      });
+    }
+  } else {
+    logger.warn('No transcript channel configured; transcript will only be delivered by DM when enabled', {
+      guildId: channel.guild.id,
+      ticketNumber: ticketData.id,
+    });
+  }
+
+    try {
+      const ticketCreator = await channel.client.users.fetch(ticketData.userId).catch(() => null);
+      if (ticketCreator) {
+        await ticketCreator.send({
+          embeds: [
+            createEmbed({
+              title: '📜 Your Ticket Transcript',
+              description: `Here is the transcript for **${channel.name}**. Keep it for your records.`,
+              color: '#3498db',
+              footer: { text: `Ticket ID: ${ticketData.id}` },
+            }),
+          ],
+          files: [buildTranscriptAttachment(transcript)],
+        });
+        dmSent = true;
+      }
+    } catch (error) {
+      logger.warn('Could not DM ticket transcript to creator', {
+        guildId: channel.guild.id,
+        ticketId: ticketData.id,
+        userId: ticketData.userId,
+        error: error.message,
+      });
+    }
+
+  if (persist && (channelSent || dmSent)) {
+    ticketData.transcriptSentAt = new Date().toISOString();
+    ticketData.transcriptMessageCount = transcript.messageCount;
+    ticketData.transcriptDelivery = { channel: channelSent, dm: dmSent };
+    await saveTicketData(channel.guild.id, channel.id, ticketData).catch((error) => {
+      logger.warn('Transcript was delivered but ticket metadata could not be saved', {
+        guildId: channel.guild.id,
+        ticketId: ticketData.id,
+        error: error.message,
+      });
+    });
+  }
+
+  logger.info('Ticket transcript delivery complete', {
+    guildId: channel.guild.id,
+    channelId: channel.id,
+    ticketNumber: ticketData.id,
+    messageCount: transcript.messageCount,
+    channelSent,
+    dmSent,
+  });
+
+  return {
+    generated: true,
+    channelSent,
+    dmSent,
+    messageCount: transcript.messageCount,
+  };
 }
 
 export async function deleteTicket(channel, deleter) {
@@ -740,82 +877,14 @@ export async function deleteTicket(channel, deleter) {
           ticketId: ticketData.id
         });
 
-        let attachment = null;
-        try {
-          attachment = await generateTranscript(channel);
-          if (attachment) {
-            logger.info('Transcript generated successfully, attempting to send', {
-              channelId: channel.id,
-              ticketNumber: ticketData.id
-            });
-          } else {
-            logger.warn('Transcript generation returned null', {
-              channelId: channel.id,
-              ticketNumber: ticketData.id
-            });
-          }
-        } catch (transcriptError) {
-          logger.error('Error during transcript generation', {
-            channelId: channel.id,
-            ticketNumber: ticketData.id,
-            error: transcriptError.message
-          });
-        }
-
-        if (attachment) {
+        if (!ticketData.transcriptSentAt) {
           try {
-            const guildConfig = await getGuildConfig(channel.client, channel.guild.id);
-            if (!guildConfig.ticketTranscriptChannelId) {
-              logger.warn('No transcript channel configured, skipping transcript send', {
-                channelId: channel.id,
-                ticketNumber: ticketData.id
-              });
-            } else {
-              const transcriptChannel = await channel.client.channels.fetch(guildConfig.ticketTranscriptChannelId).catch(() => null);
-              
-              if (!transcriptChannel) {
-                logger.error('Could not fetch transcript channel', {
-                  channelId: channel.id,
-                  transcriptChannelId: guildConfig.ticketTranscriptChannelId
-                });
-              } else if (!transcriptChannel.isSendable()) {
-                logger.error('Transcript channel exists but is not sendable', {
-                  channelId: channel.id,
-                  transcriptChannelId: transcriptChannel.id
-                });
-              } else {
-                
-                const transcriptEmbed = buildStandardLogEmbed({
-                  color: 0x3498db,
-                  title: 'Ticket Transcript',
-                  description: [
-                    formatLogLine('Ticket', `#${ticketData.id}`),
-                    formatLogLine('Channel', `#${channel.name}`),
-                    formatLogLine('Generated', `<t:${Math.floor(Date.now() / 1000)}:F>`),
-                  ].join('\n'),
-                  footer: deleter?.username
-                    ? { text: `Deleted by ${deleter.username}`, iconURL: deleter.displayAvatarURL?.() }
-                    : undefined,
-                  timestamp: true,
-                });
-
-                await transcriptChannel.send({
-                  embeds: [transcriptEmbed],
-                  files: [attachment]
-                });
-
-                logger.info('✅ Transcript sent successfully', {
-                  channelId: channel.id,
-                  ticketNumber: ticketData.id,
-                  transcriptChannelId: transcriptChannel.id
-                });
-              }
-            }
-          } catch (sendError) {
-            logger.error('Failed to send transcript to channel:', {
+            await deliverTicketTranscript(channel, ticketData, deleter, { persist: true });
+          } catch (transcriptError) {
+            logger.error('Error during fallback transcript delivery', {
               channelId: channel.id,
               ticketNumber: ticketData.id,
-              error: sendError.message
+              error: transcriptError.message
             });
           }
         }

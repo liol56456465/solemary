@@ -87,16 +87,40 @@ const feedbackHandler = {
         }
 
         const rating = parseInt(ratingStr, 10);
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle('⚠️ Invalid Rating')
+                        .setDescription('Please choose a rating from 1 to 5 stars.')
+                        .setColor(getColor('error')),
+                ],
+                components: [],
+            });
+            return;
+        }
+
         const ratingLabel = STAR_LABELS[String(rating)] ?? `${rating} stars`;
 
         try {
             ticketData.feedback = {
+                ...ticketData.feedback,
                 rating,
                 submittedAt: new Date().toISOString(),
             };
             await saveTicketData(guildId, channelId, ticketData);
         } catch (err) {
             logger.error('ticketFeedback: failed to save feedback', { guildId, channelId, rating, error: err.message });
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle('⚠️ Feedback Not Saved')
+                        .setDescription('Your feedback could not be saved right now. Please try again later.')
+                        .setColor(getColor('error')),
+                ],
+                components: [],
+            });
+            return;
         }
 
         try {

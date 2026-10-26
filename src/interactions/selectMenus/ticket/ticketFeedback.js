@@ -20,7 +20,7 @@ export default {
         const [guildId, channelId] = args;
 
         if (!guildId || !channelId) {
-            await interaction.update({
+            await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setTitle('⚠️ Invalid Feedback Link')
@@ -32,6 +32,8 @@ export default {
             return;
         }
 
+        await interaction.deferUpdate();
+
         let ticketData;
         try {
             ticketData = await getTicketData(guildId, channelId);
@@ -40,7 +42,7 @@ export default {
         }
 
         if (!ticketData) {
-            await interaction.update({
+            await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setTitle('⚠️ Ticket Not Found')
@@ -66,7 +68,7 @@ export default {
         }
 
         if (ticketData.feedback?.rating) {
-            await interaction.update({
+            await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setTitle('✅ Already Submitted')
@@ -79,16 +81,40 @@ export default {
         }
 
         const rating = parseInt(interaction.values[0], 10);
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            await interaction.editReply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle('⚠️ Invalid Rating')
+                        .setDescription('Please choose a rating from 1 to 5 stars.')
+                        .setColor(getColor('error')),
+                ],
+                components: [],
+            });
+            return;
+        }
+
         const ratingLabel = STAR_LABELS[String(rating)] ?? `${rating} stars`;
 
         try {
             ticketData.feedback = {
+                ...ticketData.feedback,
                 rating,
                 submittedAt: new Date().toISOString(),
             };
             await saveTicketData(guildId, channelId, ticketData);
         } catch (err) {
             logger.error('ticketFeedback: failed to save feedback', { guildId, channelId, rating, error: err.message });
+            await interaction.editReply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle('⚠️ Feedback Not Saved')
+                        .setDescription('Your feedback could not be saved right now. Please try again later.')
+                        .setColor(getColor('error')),
+                ],
+                components: [],
+            });
+            return;
         }
 
         try {
@@ -111,7 +137,7 @@ export default {
             .setFooter({ text: 'Thank you for using our support system.' })
             .setTimestamp();
 
-        await interaction.update({
+        await interaction.editReply({
             embeds: [thankYouEmbed],
             components: [],
         });
