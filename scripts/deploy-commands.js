@@ -1,13 +1,14 @@
 // deploy-commands.js — registers slash commands without starting the bot.
 //
 //   npm run deploy:commands        uses .env
-//   npm run deploy:commands:test   uses .env.test
+//   npm run deploy:commands:test   uses .env.test (test mode: test guilds only, global untouched)
 //
 // Global commands go to the application; /enforcements and /background go to
 // MAIN_GUILD_ID, /appeals and /appeals-panel to SUPPORT_GUILD_ID. Each set is
 // replaced in full, so deleted commands are removed from Discord.
 
 import '../src/config/loadEnv.js';
+import '../src/config/testMode.js';
 import { REST } from '@discordjs/rest';
 
 const { loadCommands, collectCommandPayloads, registerCommandSets } = await import('../src/handlers/loaders/commandLoader.js');

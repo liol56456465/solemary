@@ -5,6 +5,7 @@ import { ApplicationIntegrationType, Collection, InteractionContextType, Routes 
 import { logger } from '../../utils/logger.js';
 import botConfig from '../../config/bot.js';
 import { enforcementConfig } from '../../config/enforcement.js';
+import { testMode } from '../../config/testMode.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -279,6 +280,24 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
     logger.info('Validating commands before registration...');
     validateCommands(all);
     logger.info('Command validation passed');
+
+    if (testMode.enabled) {
+        // Test mode never touches global commands: every set is registered per test guild.
+        for (const guildId of testMode.guildIds) {
+            const body = [
+                ...sets.global,
+                ...(guildId === enforcementConfig.mainGuildId ? sets.main : []),
+                ...(guildId === enforcementConfig.supportGuildId ? sets.support : []),
+            ];
+            try {
+                await putCommands(rest, Routes.applicationGuildCommands(clientId, guildId), body, `test-guild ${guildId}`);
+            } catch (error) {
+                logger.error(`Could not register test commands in ${guildId}: ${error.message}`);
+            }
+        }
+        logger.info('Test mode: global commands were not changed');
+        return;
+    }
 
     const globalCommands = prepareCommandsForRegistration(sets.global);
 

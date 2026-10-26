@@ -1,4 +1,6 @@
 import './config/loadEnv.js';
+// Second on purpose: exits before anything else runs if test-mode safety checks fail.
+import { testMode, installGuildAllowlist, describeTestMode } from './config/testMode.js';
 import { Client, Collection, Events, GatewayIntentBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import express from 'express';
@@ -48,11 +50,15 @@ class Meowist extends Client {
     this.cooldowns = new Collection();
     this.db = null;
     this.rest = new REST({ version: '10' }).setToken(config.bot.token);
+    installGuildAllowlist(this);
   }
 
   async start() {
     try {
       startupLog('Starting Meowist...');
+      if (testMode.enabled) {
+        startupLog(`TEST MODE — effective config: ${JSON.stringify(describeTestMode())}`);
+      }
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       startupLog('Initializing database...');
@@ -92,7 +98,7 @@ class Meowist extends Client {
       await this.login(this.config.bot.token);
       startupLog('Discord login successful');
       
-      startupLog('Registering slash commands globally...');
+      startupLog(testMode.enabled ? 'Registering slash commands in test guilds only...' : 'Registering slash commands...');
       await this.registerCommands();
       startupLog('Slash commands registration complete');
       
@@ -263,6 +269,14 @@ class Meowist extends Client {
   }
 
   setupCronJobs() {
+    if (testMode.enabled && !testMode.cronEnabled) {
+      startupLog('Test mode: cron jobs disabled (set TEST_ENABLE_CRON=true to enable)');
+      // Legacy warn import only touches the local test database.
+      const importOnly = runSafeTask('enforcement_import', () => importLegacyWarnings(this));
+      if (this.isReady()) importOnly(); else this.once(Events.ClientReady, () => importOnly());
+      return;
+    }
+
     // A tick is skipped while the previous run of the same job is still going, so a
     // slow run (e.g. ending many giveaways) can never overlap and act twice.
     const running = new Set();

@@ -17,7 +17,8 @@
     "start:test": "node --env-file=.env.test src/app.js",
     "migrate:test": "node --env-file=.env.test scripts/migrate.js apply",
     "deploy:commands": "node scripts/deploy-commands.js",
-    "deploy:commands:test": "node --env-file=.env.test scripts/deploy-commands.js"
+    "deploy:commands:test": "node --env-file=.env.test scripts/deploy-commands.js",
+    "test:config": "node --env-file=.env.test scripts/test-config.js"
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.1",
