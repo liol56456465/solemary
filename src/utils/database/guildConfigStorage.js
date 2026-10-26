@@ -27,14 +27,8 @@ export async function readGuildConfig(client, guildId, context = {}) {
             return normalizeGuildConfig({}, GUILD_CONFIG_DEFAULTS);
         }
 
-        if (typeof client.db.isAvailable === 'function' && !client.db.isAvailable()) {
-            logger.warn(`PostgreSQL unavailable for readGuildConfig in guild ${guildId}`, {
-                traceId: context.traceId,
-                guildId,
-            });
-            return normalizeGuildConfig({}, GUILD_CONFIG_DEFAULTS);
-        }
-
+        // In the in-memory fallback, writes land in memory too, so read from there as
+        // well; returning defaults here made every saved setting look unsaved.
         const rawConfig = await client.db.get(getGuildConfigKey(guildId), null);
 
         if (rawConfig === null) {
