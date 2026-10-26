@@ -33,6 +33,28 @@ import {
 
 const LOGGING_CATEGORIES = [...new Set(Object.values(EVENT_TYPES).map((eventType) => eventType.split('.')[0]))];
 
+// awaitModalSubmit rejects with InteractionCollectorError when the user closes the
+// modal or never submits it; that is not an error worth reporting.
+function isModalTimeout(error) {
+  return error?.code === 'InteractionCollectorError' || error?.code === 'INTERACTION_TIMEOUT';
+}
+
+// Refresh the (ephemeral) dashboard through the modal submission, then confirm.
+async function confirmAndRefresh(interaction, modalSubmission, successPayload, shouldRefresh = true) {
+  const updated = shouldRefresh
+    ? await refreshDashboardMessage(interaction, interaction.client, modalSubmission).catch((error) => {
+      logger.warn('Could not refresh logging dashboard', { error: error.message });
+      return false;
+    })
+    : false;
+
+  if (updated || modalSubmission.replied || modalSubmission.deferred) {
+    await modalSubmission.followUp(successPayload);
+  } else {
+    await modalSubmission.reply(successPayload);
+  }
+}
+
 const DESTINATION_LABELS = {
   audit: 'Audit Log',
   applications: 'Applications',
@@ -202,18 +224,16 @@ async function handleAddFilterModal(interaction) {
       });
     }
 
-    await updateIgnoreList(interaction.client, interaction.guildId, { action: 'add', type: filterType, id });
+    if (!(await updateIgnoreList(interaction.client, interaction.guildId, { action: 'add', type: filterType, id }))) {
+      return replyUserError(modalSubmission, { type: ErrorTypes.DATABASE, message: 'Could not save the filter. Please try again.' });
+    }
 
-    await modalSubmission.reply({
+    await confirmAndRefresh(interaction, modalSubmission, {
       embeds: [successEmbed('Filter Added', `${filterType === 'user' ? 'User' : 'Channel'} \`${id}\` will be ignored in audit logs.`)],
       flags: MessageFlags.Ephemeral,
-    });
-
-    if (isFilterView(interaction)) {
-      await refreshDashboardMessage(interaction, interaction.client);
-    }
+    }, isFilterView(interaction));
   } catch (error) {
-    if (error.code === 'INTERACTION_TIMEOUT') {
+    if (isModalTimeout(error)) {
       return;
     }
     logger.error('Error in add filter modal:', error);
@@ -286,18 +306,16 @@ async function handleRemoveFilterModal(interaction) {
     }
 
     const [type, id] = entry.split(':');
-    await updateIgnoreList(interaction.client, interaction.guildId, { action: 'remove', type, id });
+    if (!(await updateIgnoreList(interaction.client, interaction.guildId, { action: 'remove', type, id }))) {
+      return replyUserError(modalSubmission, { type: ErrorTypes.DATABASE, message: 'Could not remove the filter. Please try again.' });
+    }
 
-    await modalSubmission.reply({
+    await confirmAndRefresh(interaction, modalSubmission, {
       embeds: [successEmbed('Filter Removed', `Removed ${type} \`${id}\` from the ignore list.`)],
       flags: MessageFlags.Ephemeral,
-    });
-
-    if (isFilterView(interaction)) {
-      await refreshDashboardMessage(interaction, interaction.client);
-    }
+    }, isFilterView(interaction));
   } catch (error) {
-    if (error.code === 'INTERACTION_TIMEOUT') {
+    if (isModalTimeout(error)) {
       return;
     }
     logger.error('Error in remove filter modal:', error);
@@ -353,16 +371,16 @@ async function showChannelModal(interaction, destination) {
       });
     }
 
-    await setLogChannel(interaction.client, interaction.guildId, destination, channel.id);
+    if (!(await setLogChannel(interaction.client, interaction.guildId, destination, channel.id))) {
+      return replyUserError(modalSubmission, { type: ErrorTypes.DATABASE, message: 'Could not save the log channel. Please try again.' });
+    }
 
-    await modalSubmission.reply({
+    await confirmAndRefresh(interaction, modalSubmission, {
       embeds: [successEmbed('Channel Updated', `**${label}** logs will be sent to ${channel}.`)],
       flags: MessageFlags.Ephemeral,
     });
-
-    await refreshDashboardMessage(interaction, interaction.client);
   } catch (error) {
-    if (error.code === 'INTERACTION_TIMEOUT') {
+    if (isModalTimeout(error)) {
       return;
     }
     await handleInteractionError(interaction, error, {

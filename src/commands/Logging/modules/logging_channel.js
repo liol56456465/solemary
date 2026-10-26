@@ -1,4 +1,4 @@
-import { PermissionsBitField, ChannelType } from 'discord.js';
+import { PermissionsBitField, ChannelType, MessageFlags } from 'discord.js';
 import { setLogChannel } from '../../../services/loggingService.js';
 import { successEmbed } from '../../../utils/embeds.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
@@ -19,14 +19,16 @@ export default {
         return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need **Manage Server** permissions to configure logging channels.' });
       }
 
-      await InteractionHelper.safeDefer(interaction, { ephemeral: true });
+      await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
       const destination = interaction.options.getString('destination');
       const channel = interaction.options.getChannel('channel');
       const disable = interaction.options.getBoolean('disable') ?? false;
 
       if (disable) {
-        await setLogChannel(client, interaction.guildId, destination, null);
+        if (!(await setLogChannel(client, interaction.guildId, destination, null))) {
+          return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: 'Could not clear the log channel. Please try again.' });
+        }
         return InteractionHelper.safeEditReply(interaction, {
           embeds: [successEmbed(
             'Channel Cleared',
@@ -44,7 +46,9 @@ export default {
         return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: `I need **View Channel**, **Send Messages**, and **Embed Links** in ${channel}.` });
       }
 
-      await setLogChannel(client, interaction.guildId, destination, channel.id);
+      if (!(await setLogChannel(client, interaction.guildId, destination, channel.id))) {
+        return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: 'Could not save the log channel. Please try again.' });
+      }
 
       return InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(

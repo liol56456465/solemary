@@ -18,8 +18,6 @@ const ACTIONS = [
     { name: 'Timeout readiness', value: 'timeout' },
     { name: 'Warn readiness', value: 'warn' },
     { name: 'Unban readiness', value: 'unban' },
-    { name: 'Massban readiness', value: 'massban' },
-    { name: 'Masskick readiness', value: 'masskick' },
     { name: 'Purge readiness', value: 'purge' },
     { name: 'Lock readiness', value: 'lock' },
     { name: 'Unlock readiness', value: 'unlock' },
@@ -366,7 +364,7 @@ export default {
         const action = interaction.options.getString('action');
         let fields = [];
         const memberActions = ['ban', 'kick', 'timeout', 'warn', 'unban'];
-        const channelActions = ['massban', 'masskick', 'purge', 'lock', 'unlock'];
+        const channelActions = ['purge', 'lock', 'unlock'];
 
         if ([...memberActions, ...channelActions, 'all'].includes(action)) {
             if (action === 'all') {

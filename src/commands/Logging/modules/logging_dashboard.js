@@ -158,7 +158,13 @@ export function isFilterView(interaction) {
   return interaction.message?.embeds?.[0]?.title === '🔇 Log Ignore Filters';
 }
 
-export async function refreshDashboardMessage(interaction, client) {
+/**
+ * Re-render the dashboard the component sits on. The dashboard is ephemeral, and
+ * ephemeral messages cannot be edited with message.edit(); when the caller has a
+ * modal submission that came from the dashboard, update the message through it.
+ * Returns true when `responder` was used to acknowledge (follow up afterwards).
+ */
+export async function refreshDashboardMessage(interaction, client, responder = null) {
   let view;
   if (isCategoriesView(interaction)) {
     view = await buildLoggingCategoriesView(interaction, client);
@@ -168,11 +174,19 @@ export async function refreshDashboardMessage(interaction, client) {
     view = await buildLoggingDashboardView(interaction, client);
   }
 
-  await interaction.message.edit({
+  const payload = {
     embeds: [view.embed],
     components: view.components,
     content: null,
-  }).catch(() => {});
+  };
+
+  if (responder?.isFromMessage?.() && !responder.deferred && !responder.replied) {
+    await responder.update(payload);
+    return true;
+  }
+
+  await interaction.message.edit(payload).catch(() => {});
+  return false;
 }
 
 export default {
