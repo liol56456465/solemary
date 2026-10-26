@@ -145,3 +145,6 @@ dist
 # Database backup artifacts
 backups/
 *.dump
+
+# Local AI working notes (repo is public)
+claude/
