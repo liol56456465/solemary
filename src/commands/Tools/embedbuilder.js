@@ -72,15 +72,18 @@ function buildPreviewEmbed(state) {
         embed.setAuthor(obj);
     }
 
+    // utils/embeds.js globally patches setFooter (drops "unimportant" footers) and
+    // makes setTimestamp a no-op. This builder outputs user-authored content, so
+    // write footer/timestamp onto the embed data directly.
     if (state.footer?.text) {
-        const obj = { text: state.footer.text.substring(0, 2048) };
-        if (state.footer.iconUrl && isValidUrl(state.footer.iconUrl)) obj.iconURL = state.footer.iconUrl;
-        embed.setFooter(obj);
+        const footer = { text: state.footer.text.substring(0, 2048) };
+        if (state.footer.iconUrl && isValidUrl(state.footer.iconUrl)) footer.icon_url = state.footer.iconUrl;
+        embed.data.footer = footer;
     }
 
     if (state.thumbnail && isValidUrl(state.thumbnail)) embed.setThumbnail(state.thumbnail);
     if (state.image     && isValidUrl(state.image))     embed.setImage(state.image);
-    if (state.timestamp) embed.setTimestamp();
+    if (state.timestamp) embed.data.timestamp = new Date().toISOString();
 
     if (state.fields.length > 0) embed.addFields(state.fields.slice(0, 25));
 
@@ -268,13 +271,15 @@ async function handleSetColor(selectInteraction, rootInteraction, state) {
         .setCustomId('eb_color_pick')
         .setPlaceholder('Choose a color...')
         .addOptions(
-            COLOR_PRESETS.map(c =>
-                new StringSelectMenuOptionBuilder()
+            COLOR_PRESETS.map(c => {
+                const option = new StringSelectMenuOptionBuilder()
                     .setLabel(c.label)
                     .setValue(c.value)
-                    .setEmoji(c.emoji)
-                    .setDescription(c.value !== '__custom__' ? c.value : 'Enter your own #RRGGBB value'),
-            ),
+                    .setDescription(c.value !== '__custom__' ? c.value : 'Enter your own #RRGGBB value');
+                // setEmoji('') throws ("Expected the value to not be null"), so only set real emojis.
+                if (c.emoji) option.setEmoji(c.emoji);
+                return option;
+            }),
         );
 
     await selectInteraction.followUp({

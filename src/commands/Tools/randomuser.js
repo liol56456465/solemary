@@ -49,6 +49,12 @@ export default {
         const onlineOnly = interaction.options.getBoolean('online') || false;
         const shouldMention = interaction.options.getBoolean('mention') || false;
 
+        // The member cache only holds members seen since startup; fetch the full list
+        // (requires the GuildMembers intent) and fall back to the cache on failure.
+        await interaction.guild.members.fetch().catch((error) => {
+            logger.debug('randomuser: member fetch failed, using cache', { error: error?.message });
+        });
+
         let members = interaction.guild.members.cache.filter(member => {
             if (member.user.bot && !includeBots) return false;
 
@@ -98,7 +104,7 @@ export default {
             { name: 'Bot', value: user.bot ? 'Yes' : 'No', inline: true },
             { name: `Roles (${roles.length})`, value: roles.length > 0 ? roles.slice(0, 5).join('') + (roles.length > 5 ? `+${roles.length - 5} more` : '') : 'No roles', inline: false }
         )
-        .setColor('primary');
+        .setColor(getColor('primary'));
 
         const row = new ActionRowBuilder()
             .addComponents(

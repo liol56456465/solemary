@@ -22,7 +22,15 @@ const MAX_TRACKED_COOLDOWNS = 10000;
 export default {
     name: 'voiceStateUpdate',
     async execute(oldState, newState, client) {
-        if (newState.member.user.bot) return;
+        // Music auto-pause/resume must run for every voice change, independent of
+        // join-to-create being configured (the JTC path below returns early).
+        if (client.config?.features?.music) {
+            handleMusicVoiceState(client, oldState, newState).catch((error) => {
+                logger.error('Music voice state handler error:', error);
+            });
+        }
+
+        if (!newState.member || newState.member.user.bot) return;
 
         const guildId = newState.guild.id;
         const userId = newState.member.id;
@@ -160,7 +168,11 @@ if (now - lastCreation < VOICE_CREATE_COOLDOWN_MS) {
                 const nameTemplate = channelOptions.nameTemplate || config.channelNameTemplate || "{username}'s Room";
                 
                 let userLimit = channelOptions.userLimit ?? config.userLimit ?? 0;
-                const bitrate = clampVoiceBitrate(channelOptions.bitrate ?? config.bitrate ?? DEFAULT_VOICE_BITRATE);
+                // Channel creation fails outright if bitrate exceeds the guild's boost-tier cap.
+                const bitrate = Math.min(
+                    clampVoiceBitrate(channelOptions.bitrate ?? config.bitrate ?? DEFAULT_VOICE_BITRATE),
+                    guild.maximumBitrate || DEFAULT_VOICE_BITRATE,
+                );
 
                 userLimit = Math.max(0, Math.min(99, userLimit || 0));
 
@@ -173,10 +185,7 @@ if (now - lastCreation < VOICE_CREATE_COOLDOWN_MS) {
 
                 let finalName;
 
-                if (
-                    nameTemplate.includes('{username}') ||
-                    nameTemplate.includes('{displayName}')
-                ) {
+                if (/\{(username|user_tag|display_name|displayName|guild_name|channel_name)\}/.test(nameTemplate)) {
                     finalName = formatChannelName(nameTemplate, {
                         username: member.user.username,
                         userTag: member.user.tag,
@@ -265,7 +274,7 @@ userLimit: userLimit === 0 ? undefined : userLimit,
                 const newOwner = await channel.guild.members.fetch(newOwnerId);
                 if (newOwner) {
                     const channelOptions = config.channelOptions?.[tempChannelInfo.triggerChannelId] || {};
-                    const nameTemplate = channelOptions.nameTemplate || config.channelNameTemplate;
+                    const nameTemplate = channelOptions.nameTemplate || config.channelNameTemplate || "{username}'s Room";
                     
                     const newChannelName = sanitizeVoiceChannelName(formatChannelName(nameTemplate, {
                         username: newOwner.user.username,
@@ -283,12 +292,6 @@ userLimit: userLimit === 0 ? undefined : userLimit,
             } catch (error) {
                 logger.error(`Failed to transfer ownership of channel ${channel.id}:`, error);
             }
-        }
-
-        if (client.config?.features?.music) {
-            handleMusicVoiceState(client, oldState, newState).catch((error) => {
-                logger.error('Music voice state handler error:', error);
-            });
         }
     }
 };

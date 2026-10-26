@@ -11,7 +11,9 @@ import {
     removeTriggerChannel,
     hasManageGuildPermission,
     logConfigurationChange,
-    getConfiguration
+    getConfiguration,
+    validateBitrate,
+    validateUserLimit
 } from '../../services/joinToCreateService.js';
 
 export default {
@@ -165,6 +167,10 @@ async function handleSetupSubcommand(interaction, client) {
                 );
             }
         }
+
+        // Validate before creating the trigger channel so bad input doesn't leave an orphaned channel.
+        validateUserLimit(userLimit);
+        validateBitrate(bitrate);
 
         logger.debug('Creating Join to Create trigger channel...');
         let triggerChannel = await interaction.guild.channels.create({
@@ -365,6 +371,7 @@ async function handleConfigSubcommand(interaction, client) {
 }
 
 async function handleNameTemplateModal(interaction, triggerChannel, currentConfig, client) {
+    let modalSubmission = null;
     try {
         const TEMPLATE_OPTIONS = [
             { label: "{username}'s Room (Default)", value: "{username}'s Room" },
@@ -405,7 +412,7 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
 
         await interaction.showModal(modal);
 
-        const modalSubmission = await interaction.awaitModalSubmit({
+        modalSubmission = await interaction.awaitModalSubmit({
             filter: (i) => i.customId === `jtc_name_modal_${triggerChannel.id}` && i.user.id === interaction.user.id,
             time: 60000
         });
@@ -438,6 +445,18 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
         if (error.code === 'INTERACTION_COLLECTOR_ERROR') {
             return;
         }
+        // The button interaction was already used for showModal(), so the caller
+        // cannot reply to it; answer the modal submission instead.
+        if (modalSubmission && !modalSubmission.replied && !modalSubmission.deferred) {
+            if (!(error instanceof TitanBotError)) {
+                logger.error('Unexpected error in Join to Create modal:', error);
+            }
+            await modalSubmission.reply({
+                content: `❌ ${error instanceof TitanBotError && error.userMessage ? error.userMessage : 'An error occurred while updating the settings.'}`,
+                flags: MessageFlags.Ephemeral
+            }).catch(() => {});
+            return;
+        }
         if (error instanceof TitanBotError) {
             throw error;
         }
@@ -451,6 +470,7 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
 }
 
 async function handleUserLimitModal(interaction, triggerChannel, currentConfig, client) {
+    let modalSubmission = null;
     try {
         const currentLimit = currentConfig.channelConfig?.userLimit ?? currentConfig.userLimit ?? 0;
 
@@ -473,7 +493,7 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
 
         await interaction.showModal(modal);
 
-        const modalSubmission = await interaction.awaitModalSubmit({
+        modalSubmission = await interaction.awaitModalSubmit({
             filter: (i) => i.customId === `jtc_limit_modal_${triggerChannel.id}` && i.user.id === interaction.user.id,
             time: 60000
         });
@@ -506,6 +526,18 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
         if (error.code === 'INTERACTION_COLLECTOR_ERROR') {
             return;
         }
+        // The button interaction was already used for showModal(), so the caller
+        // cannot reply to it; answer the modal submission instead.
+        if (modalSubmission && !modalSubmission.replied && !modalSubmission.deferred) {
+            if (!(error instanceof TitanBotError)) {
+                logger.error('Unexpected error in Join to Create modal:', error);
+            }
+            await modalSubmission.reply({
+                content: `❌ ${error instanceof TitanBotError && error.userMessage ? error.userMessage : 'An error occurred while updating the settings.'}`,
+                flags: MessageFlags.Ephemeral
+            }).catch(() => {});
+            return;
+        }
         if (error instanceof TitanBotError) {
             throw error;
         }
@@ -519,6 +551,7 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
 }
 
 async function handleBitrateModal(interaction, triggerChannel, currentConfig, client) {
+    let modalSubmission = null;
     try {
         const currentBitrate = ((currentConfig.channelConfig.bitrate ?? currentConfig.bitrate ?? 64000) / 1000);
 
@@ -541,7 +574,7 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
 
         await interaction.showModal(modal);
 
-        const modalSubmission = await interaction.awaitModalSubmit({
+        modalSubmission = await interaction.awaitModalSubmit({
             filter: (i) => i.customId === `jtc_bitrate_modal_${triggerChannel.id}` && i.user.id === interaction.user.id,
             time: 60000
         });
@@ -572,6 +605,18 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
 
     } catch (error) {
         if (error.code === 'INTERACTION_COLLECTOR_ERROR') {
+            return;
+        }
+        // The button interaction was already used for showModal(), so the caller
+        // cannot reply to it; answer the modal submission instead.
+        if (modalSubmission && !modalSubmission.replied && !modalSubmission.deferred) {
+            if (!(error instanceof TitanBotError)) {
+                logger.error('Unexpected error in Join to Create modal:', error);
+            }
+            await modalSubmission.reply({
+                content: `❌ ${error instanceof TitanBotError && error.userMessage ? error.userMessage : 'An error occurred while updating the settings.'}`,
+                flags: MessageFlags.Ephemeral
+            }).catch(() => {});
             return;
         }
         if (error instanceof TitanBotError) {

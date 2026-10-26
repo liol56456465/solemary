@@ -102,8 +102,10 @@ function cleanupCountdown(countdownId, activeCountdowns) {
 async function countdownButtonHandler(interaction, client, args) {
     try {
         const { activeCountdowns } = await import('../commands/Tools/countdown.js');
-        const action = args[0];
-        const countdownId = args[1];
+        // customId is `countdown_<action>:<countdownId>`; the router strips the
+        // prefix before ':' and passes the remainder as args.
+        const action = interaction.customId.split(':')[0].replace('countdown_', '');
+        const countdownId = args.join(':');
 
         const countdownData = activeCountdowns.get(countdownId);
         if (!countdownData) {

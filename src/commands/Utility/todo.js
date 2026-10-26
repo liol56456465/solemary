@@ -265,11 +265,11 @@ export default {
                         return await InteractionHelper.safeEditReply(interaction, {
                                 embeds: [
                                     successEmbed(
+                                        `Shared List (ID: \`${listId}\`)`,
                                         `📋 **${listData.name}**\n\n` +
                                         `👑 **Owner:** ${ownerName}\n` +
                                         `👥 **Members:** ${memberList}\n\n` +
-                                        `*This list is currently empty. Use the "Add Task" button to add tasks!*`,
-                                        `Shared List (ID: \`${listId}\`)`
+                                        `*This list is currently empty. Use the "Add Task" button to add tasks!*`
                                     )
                                 ],
                                 components: [
@@ -436,14 +436,14 @@ export default {
             case 'list': {
                 if (userData.tasks.length === 0) {
                     return await InteractionHelper.safeEditReply(interaction, {
-                        embeds: [successEmbed('Your to-do list is empty!', "Your To-Do List")],
+                        embeds: [successEmbed("Your To-Do List", 'Your to-do list is empty!')],
                     });
                 }
 
                 const taskList = userData.tasks
                     .map(task => 
                         `${task.completed ? '✅' : '📝'} #${task.id} ${task.text}` +
-                        `\`[${new Date(task.createdAt).toLocaleDateString()}\``
+                        `\`[${new Date(task.createdAt).toLocaleDateString()}]\``
                     )
                     .join('\n');
 

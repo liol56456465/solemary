@@ -17,8 +17,9 @@ const wipedataConfirmHandler = {
   name: 'wipedata_yes',
   async execute(interaction, client) {
     try {
-      const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
-      if (!deferSuccess) return;
+      // deferUpdate so the result replaces the confirmation prompt (and its buttons)
+      // instead of leaving a live "Confirm" button behind a second reply.
+      await interaction.deferUpdate();
 
       const userId = interaction.user.id;
       const guildId = interaction.guildId;

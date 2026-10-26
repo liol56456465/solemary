@@ -20,11 +20,11 @@ function buildSharedTodoViewPayload(listData, listId, guild) {
     return {
       embeds: [
         successEmbed(
+          `Shared List (ID: \`${listId}\`)`,
           `📋 **${listData.name}**\n\n` +
           `👑 **Owner:** ${ownerName}\n` +
           `👥 **Members:** ${memberList}\n\n` +
-          '*This list is currently empty. Use the "Add Task" button to add tasks!*',
-          `Shared List (ID: \`${listId}\`)`
+          '*This list is currently empty. Use the "Add Task" button to add tasks!*'
         )
       ],
       components: [
@@ -57,11 +57,11 @@ function buildSharedTodoViewPayload(listData, listId, guild) {
   return {
     embeds: [
       successEmbed(
+        `Shared List (ID: \`${listId}\`)`,
         `📋 **${listData.name}**\n\n` +
         `👑 **Owner:** ${ownerName}\n` +
         `👥 **Members:** ${memberList}\n\n` +
-        `**Tasks:**\n${taskList}`,
-        `Shared List (ID: \`${listId}\`)`
+        `**Tasks:**\n${taskList}`
       )
     ],
     components: [

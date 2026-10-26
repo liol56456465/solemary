@@ -222,8 +222,8 @@ export default {
                             expression,
                             formattedResult,
                             operator,
-                            messageId: interaction.message?.id,
-                            channelId: interaction.channelId,
+                            messageId: i.message?.id,
+                            channelId: i.channelId,
                             userId: i.user.id
                         });
 
@@ -237,7 +237,7 @@ export default {
                                         {
                                             type: 4,
                                             customId: `operand:${contextKey}`,
-                                            label: `Number to ${operator} with ${formattedResult}`,
+                                            label: `Number to ${operator} with ${formattedResult}`.slice(0, 45),
                                             placeholder: "Enter a number...",
                                             style: 1,
                                             required: true,
@@ -261,7 +261,7 @@ export default {
                 } catch (error) {
                     logger.error("Button interaction error:", error);
                     if (!i.deferred && !i.replied) {
-                        await i.followUp({
+                        await i.reply({
                             content: "An error occurred while processing your request.",
                             flags: ["Ephemeral"],
                         }).catch(console.error);

@@ -137,11 +137,13 @@ async function handleMusicButton(interaction, client) {
                 break;
         }
     } catch (error) {
-        await handleInteractionError(interaction, error, {
-            type: 'button',
-            customId: interaction.customId,
-            handler: 'music',
-        });
+        // The interaction was acknowledged with deferUpdate(), so an editReply-based
+        // error response would overwrite the shared player panel. Follow up privately.
+        logger.warn('Music button action failed', { customId, error: error?.message });
+        await interaction.followUp({
+            content: error?.userMessage || 'That music control failed. Please try again.',
+            flags: MessageFlags.Ephemeral,
+        }).catch(() => null);
     }
 }
 

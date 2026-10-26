@@ -18,29 +18,16 @@ export default {
                 return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Please enter a term with at least 2 characters.' });
             }
 
-            let deferTimer = null;
-            const clearDeferTimer = () => {
-                if (deferTimer) {
-                    clearTimeout(deferTimer);
-                    deferTimer = null;
-                }
-            };
-
-            deferTimer = setTimeout(() => {
-                InteractionHelper.safeDefer(interaction).catch((deferError) => {
-                    logger.debug('Urban command defer fallback failed', {
-                        error: deferError?.message,
-                        interactionId: interaction.id,
-                        commandName: 'urban'
-                    });
-                });
-            }, 1500);
+            // Defer up front: a delayed defer racing the reply caused double-acknowledge errors.
+            const deferred = await InteractionHelper.safeDefer(interaction);
+            if (!deferred) {
+                return;
+            }
 
             const response = await axios.get(
                 `https://api.urbandictionary.com/v0/define?term=${encodeURIComponent(term)}`,
                 { timeout: 5000 }
             );
-            clearDeferTimer();
 
             if (!response.data?.list?.length) {
                 return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `No definitions found for "${term}" on Urban Dictionary.` });
@@ -48,7 +35,7 @@ export default {
 
             const definition = response.data.list[0];
             const cleanDefinition = definition.definition.replace(/\[|\]/g, '');
-            const cleanExample = definition.example.replace(/\[|\]/g, '');
+            const cleanExample = (definition.example || '').replace(/\[|\]/g, '');
 
             const formattedDefinition = cleanDefinition
                 .replace(/\n\s*\n/g, '\n\n')

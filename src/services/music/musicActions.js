@@ -26,6 +26,33 @@ export function assertRiffyAvailable(client) {
             'Music is unavailable — Lavalink is not configured.',
         );
     }
+    // Riffy throws a bare "No nodes are available" from createConnection/resolve
+    // when every public Lavalink node is down; surface a clear message instead.
+    if (!client.riffy.initiated || client.riffy.leastUsedNodes.length === 0) {
+        throw new TitanBotError(
+            'No Lavalink node connected',
+            ErrorTypes.CONFIGURATION,
+            'Music is temporarily unavailable — no music server (Lavalink node) is connected. Please try again later.',
+        );
+    }
+}
+
+const RESOLVE_TIMEOUT_MS = 15000;
+
+async function resolveWithTimeout(client, options) {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new TitanBotError(
+            'Lavalink resolve timed out',
+            ErrorTypes.NETWORK,
+            'The music server took too long to respond. Please try again later.',
+        )), RESOLVE_TIMEOUT_MS);
+    });
+    try {
+        return await Promise.race([client.riffy.resolve(options), timeout]);
+    } finally {
+        clearTimeout(timer);
+    }
 }
 
 export function assertInVoice(member) {
@@ -128,7 +155,7 @@ export async function playQuery(client, interaction, query) {
 
     const { player, guildData } = await ensurePlayer(client, interaction);
 
-    const result = await client.riffy.resolve({
+    const result = await resolveWithTimeout(client, {
         query,
         requester: interaction.user,
     });
