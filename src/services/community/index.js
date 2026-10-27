@@ -4,11 +4,13 @@ import { logger } from '../../utils/logger.js';
 import { loadStickies } from './stickyService.js';
 import { loadTags } from './tagService.js';
 import { loadCommunitySettings } from './settingsService.js';
+import { loadStarboardPosts } from './starboardService.js';
 
 const LOADERS = [
     ['settings', loadCommunitySettings],
     ['stickies', loadStickies],
     ['tags', loadTags],
+    ['starboard posts', loadStarboardPosts],
 ];
 
 /** Loads every community cache; one failing loader does not stop the others. Returns a summary line. */

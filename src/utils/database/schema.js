@@ -429,6 +429,19 @@ export const tableStatements = [
         voted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         PRIMARY KEY (suggestion_id, user_id)
     )`,
+
+    // Starboard (/community starboard): one starboard post per starred message.
+    // Held in memory; written when a post is created, its count changes or it is removed.
+    `CREATE TABLE IF NOT EXISTS ${t.starboard_posts} (
+        source_message_id VARCHAR(20) PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        source_channel_id VARCHAR(20) NOT NULL,
+        star_channel_id VARCHAR(20) NOT NULL,
+        star_message_id VARCHAR(20) NOT NULL,
+        count INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
 ];
 
 export const indexStatements = [
@@ -466,6 +479,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_reason ON ${t.mod_cases}(guild_id, reason_key, created_at DESC)`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_no_contact_one_open ON ${t.no_contact_orders}(guild_id, user_a, user_b) WHERE ended_at IS NULL`,
     `CREATE INDEX IF NOT EXISTS idx_suggestions_guild ON ${t.suggestions}(guild_id, id DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_starboard_posts_star ON ${t.starboard_posts}(star_message_id)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

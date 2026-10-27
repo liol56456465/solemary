@@ -3,6 +3,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { listStickies, removeSticky, setSticky, STICKY_MAX_LENGTH } from '../../services/community/stickyService.js';
 import { updateCommunitySettings } from '../../services/community/settingsService.js';
+import { starboardSettingsPatch, STARBOARD_MAX_THRESHOLD } from '../../services/community/starboardService.js';
 
 const TEXT_CHANNELS = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
 
@@ -59,6 +60,28 @@ async function handleSuggestions(interaction, sub) {
     }
 }
 
+/** /community starboard set | off */
+async function handleStarboard(interaction, sub) {
+    if (sub === 'set') {
+        const channel = interaction.options.getChannel('channel', true);
+        const settings = await updateCommunitySettings(interaction.guildId, starboardSettingsPatch({
+            channelId: channel.id,
+            emoji: interaction.options.getString('emoji'),
+            threshold: interaction.options.getInteger('threshold'),
+        }), interaction.user.id);
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [successEmbed('Starboard on', [
+                `Messages with **${settings.starboardThreshold}** ${settings.starboardEmoji} reactions are copied to ${channel}.`,
+                "The author's own reaction and bots don't count; bot messages are never starred.",
+            ].join('\n'))],
+        });
+    }
+    if (sub === 'off') {
+        await updateCommunitySettings(interaction.guildId, { starboardChannelId: null }, interaction.user.id);
+        return InteractionHelper.safeEditReply(interaction, { content: 'Starboard turned off. Existing starboard posts stay where they are.' });
+    }
+}
+
 export default {
     // Admin-only (not in commandAccess.js): community feature setup.
     scope: 'main',
@@ -66,7 +89,7 @@ export default {
     category: 'Community',
     data: new SlashCommandBuilder()
         .setName('community')
-        .setDescription('Set up sticky messages, suggestions and other community features')
+        .setDescription('Set up sticky messages, suggestions, the starboard and feeds')
         .addSubcommandGroup((group) => group.setName('sticky').setDescription('Messages kept at the bottom of a channel')
             .addSubcommand((sub) => sub.setName('set').setDescription('Set (or replace) the sticky message of a channel')
                 .addChannelOption((option) => option.setName('channel').setDescription('Channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS))
@@ -78,6 +101,13 @@ export default {
         .addSubcommandGroup((group) => group.setName('suggestions').setDescription('Member suggestions (/suggest)')
             .addSubcommand((sub) => sub.setName('channel').setDescription('Set the suggestions channel (leave empty to turn suggestions off)')
                 .addChannelOption((option) => option.setName('channel').setDescription('Channel').addChannelTypes(...TEXT_CHANNELS))))
+        .addSubcommandGroup((group) => group.setName('starboard').setDescription('Copy popular messages to a starboard channel')
+            .addSubcommand((sub) => sub.setName('set').setDescription('Turn the starboard on or change it')
+                .addChannelOption((option) => option.setName('channel').setDescription('Starboard channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS))
+                .addStringOption((option) => option.setName('emoji').setDescription('Reaction that counts (default ⭐)').setMaxLength(64))
+                .addIntegerOption((option) => option.setName('threshold').setDescription('Reactions needed (default 3)')
+                    .setMinValue(1).setMaxValue(STARBOARD_MAX_THRESHOLD)))
+            .addSubcommand((sub) => sub.setName('off').setDescription('Turn the starboard off')))
         .setDMPermission(false),
 
     async execute(interaction) {
@@ -87,5 +117,6 @@ export default {
         const sub = interaction.options.getSubcommand();
         if (group === 'sticky') return handleSticky(interaction, sub);
         if (group === 'suggestions') return handleSuggestions(interaction, sub);
+        if (group === 'starboard') return handleStarboard(interaction, sub);
     },
 };

@@ -54,7 +54,8 @@ class Meowist extends Client {
         GatewayIntentBits.AutoModerationExecution,
       ],
       // DM channels aren't cached; without this partial, DMs (modmail) never arrive.
-      partials: [Partials.Channel],
+      // Message + Reaction: reactions, edits and deletes of uncached (older) messages (starboard).
+      partials: [Partials.Channel, Partials.Message, Partials.Reaction],
       // No message may ping @everyone/@here unless it opts in: user text (track
       // titles, prizes, reports) ends up in bot messages.
       allowedMentions: { parse: ['users', 'roles'], repliedUser: true },

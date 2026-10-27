@@ -13,6 +13,7 @@ export const CT = {
     settings: pgConfig.tables.community_settings,
     suggestions: pgConfig.tables.suggestions,
     suggestionVotes: pgConfig.tables.suggestion_votes,
+    starboard: pgConfig.tables.starboard_posts,
 };
 
 /** An expected, user-facing error (shown as-is by the command error handler). */

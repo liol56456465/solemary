@@ -36,6 +36,7 @@ const configuredTables = {
     community_settings: 'community_settings',
     suggestions: 'suggestions',
     suggestion_votes: 'suggestion_votes',
+    starboard_posts: 'starboard_posts',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -72,6 +73,7 @@ const allowedTableIdentifiers = new Set([
     'community_settings',
     'suggestions',
     'suggestion_votes',
+    'starboard_posts',
 ]);
 
 const validatedTables = Object.fromEntries(

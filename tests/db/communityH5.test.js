@@ -47,6 +47,7 @@ after(async () => {
     await pgDb.pool.query('DELETE FROM tags WHERE guild_id = $1', [guildId]).catch(() => {});
     await pgDb.pool.query('DELETE FROM suggestions WHERE guild_id = $1', [guildId]).catch(() => {});
     await pgDb.pool.query('DELETE FROM community_settings WHERE guild_id = $1', [guildId]).catch(() => {});
+    await pgDb.pool.query('DELETE FROM starboard_posts WHERE guild_id = $1', [guildId]).catch(() => {});
     await pgDb.disconnect();
 });
 
@@ -171,4 +172,84 @@ test('suggestions: post, votes (one per member, changeable, withdraw), status cl
     assert.ok(channel.edited.components[0].components.every((button) => button.data.disabled));
     assert.equal(await suggestions.setSuggestionStatus({ guildId: 'other', suggestionId: Number(row.id), status: 'denied', decidedBy: id(90) }), null);
     await assert.rejects(suggestions.setSuggestionStatus({ guildId, suggestionId: Number(row.id), status: 'bogus', decidedBy: id(90) }), /Status/);
+});
+
+test('starboard: threshold, self-stars, count updates, edits, deletes', { skip }, async () => {
+    const starboard = await import('../../src/services/community/starboardService.js');
+    const { updateCommunitySettings } = await import('../../src/services/community/settingsService.js');
+    const board = fakeChannel(id(50));
+    const posted = new Map();
+    board.isTextBased = () => true;
+    const origSend = board.send;
+    board.send = async (payload) => {
+        const message = await origSend(payload);
+        message.edit = async (next) => { message.payload = next; };
+        message.delete = async () => { posted.delete(message.id); board.deleted.push(message.id); };
+        posted.set(message.id, message);
+        return message;
+    };
+    board.messages.fetch = async (messageId) => {
+        if (!posted.has(messageId)) throw Object.assign(new Error('Unknown Message'), { code: 10008 });
+        return posted.get(messageId);
+    };
+    const guild = { id: guildId, channels: { cache: new Map([[board.id, board]]) } };
+    await updateCommunitySettings(guildId, starboard.starboardSettingsPatch({ channelId: board.id, emoji: '⭐', threshold: 2 }), id(90));
+
+    const author = { id: id(60), username: 'author' };
+    const source = {
+        id: id(61), channelId: id(62), guild, author, partial: false, content: 'cute cat',
+        url: 'https://discord.com/channels/x', attachments: new Map(), embeds: [], channel: { nsfw: false }, createdAt: new Date(),
+    };
+    const reactors = [];
+    const reaction = () => ({
+        emoji: { name: '⭐', id: null }, partial: false, count: reactors.length, message: source,
+        users: { fetch: async () => new Map(reactors.map((u) => [u.id, u])) },
+    });
+    const react = async (user) => { reactors.push(user); await starboard.handleStarReaction(reaction(), user); };
+    const unreact = async (user) => { reactors.splice(reactors.findIndex((u) => u.id === user.id), 1); await starboard.handleStarReaction(reaction(), user); };
+
+    await react(author); // self-star
+    await react({ id: id(63) });
+    assert.equal(board.sent.length, 0, 'self-star does not count');
+    await react({ id: id(64) });
+    assert.equal(board.sent.length, 1);
+    let post = starboard.getStarboardPost(source.id);
+    assert.equal(post.count, 2);
+    assert.match(board.sent[0].payload.content, /\*\*2\*\*/);
+
+    await react({ id: id(65), bot: true }); // bot reaction event ignored entirely
+    await react({ id: id(66) });
+    assert.equal(starboard.getStarboardPost(source.id).count, 3);
+    assert.match(posted.get(post.starMessageId).payload.content, /\*\*3\*\*/);
+    const { rows: [row] } = await pgDb.pool.query('SELECT * FROM starboard_posts WHERE source_message_id = $1', [source.id]);
+    assert.equal(row.count, 3);
+
+    source.content = 'cute cat (edited)';
+    await starboard.handleStarSourceEdit(source);
+    assert.match(posted.get(post.starMessageId).payload.embeds[0].data.description, /edited/);
+
+    // Reload from the database keeps the post.
+    starboard.setStarboardPostsForTests([]);
+    await starboard.loadStarboardPosts();
+    assert.equal(starboard.getStarboardPost(source.id).count, 3);
+
+    await unreact({ id: id(66) });
+    await unreact({ id: id(64) });
+    assert.equal(starboard.getStarboardPost(source.id), null, 'below the threshold the post is removed');
+    assert.equal(posted.size, 0);
+
+    await react({ id: id(67) });
+    post = starboard.getStarboardPost(source.id);
+    assert.ok(post);
+    await starboard.handleStarMessageDelete(source);
+    assert.equal(starboard.getStarboardPost(source.id), null);
+    assert.equal(posted.size, 0);
+    const { rowCount } = await pgDb.pool.query('SELECT 1 FROM starboard_posts WHERE source_message_id = $1', [source.id]);
+    assert.equal(rowCount, 0);
+
+    // Bot messages are never starred.
+    const botMessage = { ...source, id: id(70), author: { id: id(71), bot: true } };
+    const botReaction = { ...reaction(), count: 5, message: botMessage };
+    await starboard.handleStarReaction(botReaction, { id: id(72) });
+    assert.equal(starboard.getStarboardPost(botMessage.id), null);
 });
