@@ -134,3 +134,32 @@ test('my standing: only own counted warns at the current level, active punishmen
     assert.deepEqual(nobody.ladder, { level: 0, warns_since_level: 0 });
     assert.equal(nobody.warns.length, 0);
 });
+
+test('precedent: aggregate by type and duration, excludes test/voided/old/other reasons, counts accepted appeals; cached', { skip }, async () => {
+    const { loadPrecedent, precedentHint, clearPrecedentCache } = await import('../../src/services/enforcement/precedentService.js');
+    const key = `h1_${runId}`;
+    const recent = new Date(Date.now() - 24 * 3600000);
+    const m1 = await insertCase({ reason_key: key, type: 'mute', duration_ms: 3600000, created_at: recent });
+    await insertCase({ reason_key: key, type: 'mute', duration_ms: 3600000, created_at: recent });
+    await insertCase({ reason_key: key, type: 'warn', created_at: recent });
+    await insertCase({ reason_key: key, type: 'warn', created_at: recent, is_test: true });
+    await insertCase({ reason_key: key, type: 'warn', created_at: recent, voided_at: new Date(), status: 'revoked' });
+    await insertCase({ reason_key: key, type: 'warn', created_at: new Date(Date.now() - 200 * 24 * 3600000) });
+    await insertCase({ reason_key: `${key}x`, type: 'ban', created_at: recent });
+    await insertAppeal(m1.case_code, user(1), 'accepted');
+    await insertAppeal(m1.case_code, user(1), 'denied', { createdAt: new Date(Date.now() - 3600000) });
+
+    const rows = (await loadPrecedent(guildId, key)).sort((a, b) => a.type.localeCompare(b.type));
+    assert.deepEqual(rows, [
+        { type: 'mute', duration_ms: 3600000, count: 2, overturned: 1 },
+        { type: 'warn', duration_ms: null, count: 1, overturned: 0 },
+    ]);
+
+    clearPrecedentCache();
+    const hint = await precedentHint(guildId, key, 'Test reason');
+    assert.equal(hint, 'Similar cases (reason "Test reason", last 180 days): 3 — usually Mute 1 hour (2), Warn (1); 1 overturned on appeal.');
+    await insertCase({ reason_key: key, type: 'warn', created_at: recent });
+    assert.equal(await precedentHint(guildId, key, 'Test reason'), hint, 'served from the cache');
+    clearPrecedentCache();
+    assert.match(await precedentHint(guildId, key, 'Test reason'), /: 4 —/);
+});

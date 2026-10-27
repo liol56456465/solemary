@@ -46,6 +46,7 @@ import {
     addEvidence, captureLinks, MAX_LINKS_PER_FORM, messageExcerpt, parseEvidenceUrls,
 } from '../services/enforcement/evidenceService.js';
 import { dateStamp, formatDuration, parseDuration, stamp, truncate } from '../services/enforcement/format.js';
+import { precedentHint } from '../services/enforcement/precedentService.js';
 
 const ACTION_LABELS = {
     ban: 'Ban',
@@ -334,6 +335,9 @@ function confirmationPayload(flow, moderatorId, nonce) {
         }
         if (flow.type === 'ban' || flow.type === 'kick') {
             lines.push('The user is DMed before the action runs.');
+        }
+        if (flow.precedent) {
+            lines.push(`-# ${flow.precedent}`);
         }
     } else {
         if (flow.type === 'removewarn') {
@@ -653,7 +657,11 @@ export async function handleEnforcementModal(interaction, client, args) {
 
     // Excerpts are captured now, so the evidence survives the message being deleted
     // before Confirm.
-    patch.evidence = await captureLinks(guild, evidenceEntries, { prefetched: flow.prefetchedExcerpts });
+    // The precedent hint waits briefly at most and is left out on any problem.
+    [patch.evidence, patch.precedent] = await Promise.all([
+        captureLinks(guild, evidenceEntries, { prefetched: flow.prefetchedExcerpts }),
+        precedentHint(guild.id, flow.reasonKey, getReason(flow.reasonKey)?.label || flow.reasonKey),
+    ]);
 
     updateFlow(nonce, patch);
     return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce));
