@@ -132,6 +132,9 @@ export const automodConfig = {
     // relaxing and second chances don't apply. Every card for them says so.
     probationMs: 7 * DAY,
     probationRecentBanMs: 30 * DAY,
+    // Second opinion: this share of kept full cards gets a "confirm or undo?" request
+    // for a different admin (services/automod/secondOpinion.js).
+    secondOpinionRate: 0.05,
     // Self-tuning (run with the daily digest): a rule whose decisions moderators undid
     // or changed this often, over at least this many actions in the window, gets a
     // "switch to monitor?" suggestion in the alerts channel, at most once per cooldown.

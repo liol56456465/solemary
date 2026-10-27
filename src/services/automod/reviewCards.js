@@ -9,6 +9,7 @@
 //   amreview:delete:<channelId>:<msgId>  delete a reported message
 //   amreview:dismiss                     close the card without acting
 //   amreview:tune:<rule>                 (alerts) switch a rule to monitor (automodTuning.js)
+//   amreview:2nd:<confirm|undo>:<keeperId>:<codes>  second opinion on a kept card (secondOpinion.js)
 //
 // Cards go to the review channel (AUTOMOD_REVIEW_CHANNEL_ID, falls back to the mod log).
 // Low-severity hits are one compact line with an Undo button. Repeated hits of the same
@@ -31,6 +32,7 @@ import {
 } from './reviewFormat.js';
 import { burstKey, findOpenBurst, markClosed, recordHit, registerCard } from './reviewRegistry.js';
 import { switchRuleToMonitor } from './automodTuning.js';
+import { canGiveSecondOpinion, secondOpinionPayload, shouldAskSecondOpinion } from './secondOpinion.js';
 
 export { describeStep };
 
@@ -260,6 +262,34 @@ async function recordsFor(codesArg) {
     return records;
 }
 
+/** Reverses automod cases and DMs the members: { notes, dm } (dm: "delivered", "2 of 3 delivered"…). */
+async function undoRecords(client, records, admin) {
+    const notes = [];
+    let delivered = 0;
+    for (const record of records) {
+        const result = await reverse(client, record, admin, 'reversed');
+        notes.push(...result.notes);
+        if (await dmReversal(client, record, result.invite)) delivered += 1;
+    }
+    const dm = records.length === 1 ? (delivered ? 'delivered' : 'not delivered') : `${delivered} of ${records.length} delivered`;
+    return { notes, dm };
+}
+
+/**
+ * For about secondOpinionRate of kept full cards: a reply in the review channel
+ * asking a different admin to confirm or undo. Mentions nobody (the keeper is shown
+ * but not pinged); the buttons refuse the admin who kept it.
+ */
+async function maybeAskSecondOpinion(message, keeper, records) {
+    if (!message.embeds?.length || !shouldAskSecondOpinion()) return null;
+    const codes = records.map((record) => record.case_code);
+    const payload = secondOpinionPayload(keeper.id, codes, message.url);
+    return message.reply({ ...payload, allowedMentions: { parse: [], repliedUser: false } }).catch((error) => {
+        logger.warn(`Second-opinion request failed: ${error.message}`);
+        return null;
+    });
+}
+
 const codeList = (records) => records.map((record) => `\`${record.case_code}\``).join(', ');
 
 /**
@@ -276,6 +306,31 @@ export async function handleReviewAction(interaction, args) {
     if (action === 'dismiss') {
         await closeCard(message, `Dismissed by ${by}`, { status: 'dismissed', by });
         return 'Dismissed.';
+    }
+
+    if (action === '2nd') {
+        // Second opinion on a kept card: [confirm|undo, keeperId, codes].
+        const [choice, keeperId, codes] = rest;
+        if (!canGiveSecondOpinion(admin.id, keeperId)) {
+            throw userError('You kept this one; a different administrator has to give the second opinion.');
+        }
+        const records = await recordsFor(codes);
+        const original = message.reference?.messageId
+            ? await message.channel.messages.fetch(message.reference.messageId).catch(() => null)
+            : null;
+        if (choice === 'confirm') {
+            await closeCard(message, `Confirmed by ${by}: ${codeList(records)}`, { status: 'kept', by, verb: 'Confirmed' });
+            if (original) await closeCard(original, `Second opinion: confirmed by ${by}.`);
+            return `Confirmed ${codeList(records)}.`;
+        }
+        if (choice === 'undo') {
+            const { notes, dm } = await undoRecords(client, records, admin);
+            const outcome = `Reversed ${codeList(records)} by ${by} on a second opinion. ${notes.join(' ')} DM: ${dm}.`;
+            await closeCard(message, outcome, { status: 'undone', by, verb: 'Undone on second opinion' });
+            if (original) await closeCard(original, outcome, { status: 'undone', by, verb: 'Undone on second opinion' });
+            return `Reversed ${codeList(records)}. ${notes.join(' ')}`;
+        }
+        throw userError('Unknown second-opinion action.');
     }
 
     if (action === 'tune') {
@@ -301,18 +356,12 @@ export async function handleReviewAction(interaction, args) {
 
         if (action === 'keep') {
             await closeCard(message, `Kept by ${by}: ${codeList(records)}`, { status: 'kept', by });
+            await maybeAskSecondOpinion(message, admin, records);
             return `Kept ${codeList(records)}.`;
         }
 
         if (action === 'undo') {
-            const notes = [];
-            let delivered = 0;
-            for (const record of records) {
-                const result = await reverse(client, record, admin, 'reversed');
-                notes.push(...result.notes);
-                if (await dmReversal(client, record, result.invite)) delivered += 1;
-            }
-            const dm = records.length === 1 ? (delivered ? 'delivered' : 'not delivered') : `${delivered} of ${records.length} delivered`;
+            const { notes, dm } = await undoRecords(client, records, admin);
             await closeCard(message, `Reversed ${codeList(records)} by ${by}. ${notes.join(' ')} DM: ${dm}.`, { status: 'undone', by });
             return `Reversed ${codeList(records)}. ${notes.join(' ')}`;
         }
