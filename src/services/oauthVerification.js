@@ -6,7 +6,9 @@
 // GET /oauth/callback; the bot exchanges the code, checks the authorizing account is
 // the one that pressed Verify, gives the verified role, stores the OAuth tokens
 // encrypted (AES-256-GCM with OAUTH_TOKEN_KEY) so guilds.join can be used later, and
-// sends the browser on to the Meowist invite (VERIFY_SUCCESS_REDIRECT).
+// sends the browser on to the Meowist invite (VERIFY_SUCCESS_REDIRECT). Accounts under
+// 7 days old and likely ban-evasion alts are held for staff approval instead
+// (see verificationGuard.js).
 //
 // Enabled when DISCORD_CLIENT_SECRET and PUBLIC_URL are set; otherwise the button
 // verifies directly as before. The redirect URL <PUBLIC_URL>/oauth/callback must be
@@ -14,8 +16,11 @@
 
 import crypto from 'crypto';
 import { logger } from '../utils/logger.js';
-import { setInDb } from '../utils/database.js';
+import { Routes } from 'discord.js';
+import { getFromDb, setInDb, deleteFromDb, db } from '../utils/database.js';
 import { verifyUser } from './verificationService.js';
+import { assessVerification, postVerificationHold } from './verificationGuard.js';
+import { getGuildConfig } from './config/guildConfig.js';
 
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
 const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
@@ -130,6 +135,13 @@ function encrypt(text, key) {
     return [iv, cipher.getAuthTag(), data].map((part) => part.toString('base64')).join('.');
 }
 
+function decrypt(payload, key) {
+    const [iv, tag, data] = String(payload).split('.').map((part) => Buffer.from(part, 'base64'));
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(data), decipher.final()]).toString('utf8');
+}
+
 let warnedNoTokenKey = false;
 
 async function storeTokens(userId, token) {
@@ -149,11 +161,32 @@ async function storeTokens(userId, token) {
     });
 }
 
-function errorPage(title, message) {
+function errorPage(title, message, accent = '#ed4245') {
     return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1e1f22;color:#f2f3f5;font:16px/1.5 system-ui,sans-serif}
-main{max-width:420px;padding:32px 24px;text-align:center}h1{color:#ed4245;font-size:22px;margin:0 0 8px}p{margin:0;color:#b5bac1}</style></head>
+main{max-width:420px;padding:32px 24px;text-align:center}h1{color:${accent};font-size:22px;margin:0 0 8px}p{margin:0;color:#b5bac1}</style></head>
 <body><main><h1>${title}</h1><p>${message}</p></main></body></html>`;
+}
+
+async function isAlreadyVerified(client, guildId, userId) {
+    const guild = client.guilds.cache.get(guildId);
+    const config = guild ? await getGuildConfig(client, guildId).catch(() => null) : null;
+    const roleId = config?.verification?.roleId;
+    const member = roleId ? await guild.members.fetch(userId).catch(() => null) : null;
+    return Boolean(member?.roles.cache.has(roleId));
+}
+
+// A held verification posts one staff card per user per hour, however often they retry.
+const HOLD_CARD_INTERVAL_MS = 60 * 60 * 1000;
+const recentHolds = new Map();
+
+async function holdForStaff(client, guildId, userId, reasons) {
+    const key = `${guildId}:${userId}`;
+    if (Date.now() - (recentHolds.get(key) || 0) < HOLD_CARD_INTERVAL_MS) return;
+    recentHolds.set(key, Date.now());
+    const user = await client.users.fetch(userId);
+    await postVerificationHold(client, guildId, user, reasons);
+    logger.info(`Verification of ${userId} in ${guildId} held for staff: ${reasons.join('; ')}`);
 }
 
 /** Adds GET /oauth/callback to the bot's web server. */
@@ -165,7 +198,7 @@ export function registerOAuthRoutes(app, client) {
 
     app.get('/oauth/callback', async (req, res) => {
         res.set('Cache-Control', 'no-store');
-        const send = (status, title, message) => res.status(status).type('html').send(errorPage(title, message));
+        const send = (status, title, message, accent) => res.status(status).type('html').send(errorPage(title, message, accent));
 
         if (req.query.error) {
             return send(400, 'Verification cancelled', 'You did not authorize the bot. Go back to Discord and press Verify again if you want to verify.');
@@ -184,6 +217,15 @@ export function registerOAuthRoutes(app, client) {
 
             await storeTokens(me.id, token).catch((error) => logger.error(`Could not store OAuth tokens for ${me.id}: ${error.message}`));
 
+            if (!(await isAlreadyVerified(client, state.guildId, me.id))) {
+                const assessment = await assessVerification(me.id, req.ip);
+                if (assessment.hold) {
+                    await holdForStaff(client, state.guildId, me.id, assessment.reasons);
+                    return send(202, 'Waiting for approval',
+                        'Thanks! A staff member needs to approve your verification first. You will get a DM when it is done.', '#fee75c');
+                }
+            }
+
             await verifyUser(client, state.guildId, me.id, { source: 'oauth', moderatorId: null });
             return res.redirect(303, (process.env.VERIFY_SUCCESS_REDIRECT || '').trim() || DEFAULT_SUCCESS_REDIRECT);
         } catch (error) {
@@ -193,4 +235,74 @@ export function registerOAuthRoutes(app, client) {
         }
     });
     logger.info('OAuth verification enabled at /oauth/callback');
+}
+
+// ── Member backup (guilds.join) ───────────────────────────────────────────
+
+const TOKEN_KEY_PREFIX = 'oauth:tokens:';
+const REFRESH_MARGIN_MS = 60 * 1000;
+
+/** User ids with stored OAuth tokens. */
+export async function listStoredTokenUsers() {
+    const keys = await db.list(TOKEN_KEY_PREFIX).catch(() => []);
+    return keys.map((key) => key.slice(TOKEN_KEY_PREFIX.length)).filter((id) => /^\d{17,20}$/.test(id));
+}
+
+function refreshToken(refresh) {
+    const { clientId, clientSecret } = settings();
+    return discordFetch(TOKEN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            grant_type: 'refresh_token',
+            refresh_token: refresh,
+        }),
+    });
+}
+
+/**
+ * A usable access token for this user (refreshed and re-stored when it has expired),
+ * or null when none is stored, it lacks guilds.join, or the user revoked access
+ * (then the stored record is deleted).
+ */
+export async function getUsableAccessToken(userId) {
+    const { tokenKey } = settings();
+    const record = await getFromDb(`${TOKEN_KEY_PREFIX}${userId}`, null);
+    if (!tokenKey || !record?.tokens || !String(record.scope || '').includes('guilds.join')) return null;
+
+    let tokens;
+    try {
+        tokens = JSON.parse(decrypt(record.tokens, tokenKey));
+    } catch {
+        logger.warn(`Stored OAuth tokens for ${userId} could not be decrypted (OAUTH_TOKEN_KEY changed?)`);
+        return null;
+    }
+    if (Number(record.expiresAt) > Date.now() + REFRESH_MARGIN_MS) return tokens.access;
+
+    try {
+        const fresh = await refreshToken(tokens.refresh);
+        await storeTokens(userId, fresh);
+        return fresh.access_token;
+    } catch (error) {
+        if (error.status === 400 || error.status === 401) {
+            // invalid_grant: the user removed the app's access; the tokens are useless now.
+            await deleteFromDb(`${TOKEN_KEY_PREFIX}${userId}`);
+            return null;
+        }
+        throw error;
+    }
+}
+
+/**
+ * Adds a user to a guild with their stored authorization. The bot must be in that
+ * guild with Create Invite. Returns 'added' | 'already' | 'no_token'.
+ */
+export async function addMemberWithStoredToken(client, guildId, userId) {
+    const accessToken = await getUsableAccessToken(userId);
+    if (!accessToken) return 'no_token';
+    // discord.js REST waits out rate limits on its own. 201 = added, 204 = already a member.
+    const result = await client.rest.put(Routes.guildMember(guildId, userId), { body: { access_token: accessToken } });
+    return result ? 'added' : 'already';
 }
