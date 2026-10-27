@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger.js';
 import { getGuildConfig, setGuildConfig } from '../config/guildConfig.js';
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { addXp } from './xpSystem.js';
-import { getUserLevelKey } from '../../utils/database/keys.js';
+import { getUserLevelKey, getUserLevelPrefix } from '../../utils/database/keys.js';
 
 const BASE_XP = 100;
 const XP_MULTIPLIER = 1.5;
@@ -56,7 +56,43 @@ export function calculateTotalXp(level, currentXp = 0) {
   return total;
 }
 
-export async function getLeaderboard(client, guildId, limit = 10) {
+/** Orders level rows the way the leaderboard shows them and cuts out one page. */
+export function rankLevelRows(rows, limit = 10, offset = 0) {
+  return rows
+    .filter(row => row && (row.totalXp > 0 || row.level > 0))
+    .sort((a, b) =>
+      (b.level - a.level) ||
+      (b.totalXp - a.totalXp) ||
+      (b.xp - a.xp) ||
+      String(a.userId).localeCompare(String(b.userId))
+    )
+    .slice(offset, offset + limit)
+    .map((row, index) => ({ ...row, rank: offset + index + 1 }));
+}
+
+// Memory-store fallback: no SQL there, so read every level key for the guild.
+async function readAllLevelRows(client, guildId) {
+  const prefix = getUserLevelPrefix(guildId);
+  const keys = await client.db.list(prefix);
+  const rows = await Promise.all(keys.map(async key => {
+    const data = await client.db.get(key);
+    if (!data) return null;
+    return {
+      userId: key.slice(prefix.length),
+      xp: data.xp || 0,
+      level: data.level || 0,
+      totalXp: data.totalXp || 0
+    };
+  }));
+  return rows.filter(Boolean);
+}
+
+/**
+ * One page of the guild leaderboard. On Postgres this is a single query against
+ * user_levels; only the members on the page are looked up (cache first, then one
+ * fetch for the rest). Users who left the guild keep their rank and show by ID.
+ */
+export async function getLeaderboard(client, guildId, limit = 10, offset = 0) {
   try {
     
     if (!guildId || typeof guildId !== 'string') {
@@ -68,7 +104,10 @@ export async function getLeaderboard(client, guildId, limit = 10) {
     }
 
     if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
-      limit = Math.min(Math.max(limit, 1), 100);
+      limit = Math.min(Math.max(Number.parseInt(limit, 10) || 10, 1), 100);
+    }
+    if (!Number.isInteger(offset) || offset < 0) {
+      offset = 0;
     }
 
     const guild = client.guilds.cache.get(guildId);
@@ -76,35 +115,27 @@ export async function getLeaderboard(client, guildId, limit = 10) {
       logger.warn(`Guild ${guildId} not found in cache`);
       return [];
     }
-    
-    const members = await guild.members.fetch().catch(error => {
-      logger.error(`Failed to fetch members for guild ${guildId}:`, error);
-      return new Map();
-    });
 
-    const leaderboard = [];
-    
-    for (const [userId, member] of members) {
-      if (member.user.bot) continue;
-      
-      const data = await getUserLevelData(client, guildId, userId);
-      if (data && (data.totalXp > 0 || data.level > 0)) {
-        leaderboard.push({
-          userId,
-          username: member.user.username,
-          discriminator: member.user.discriminator,
-          ...data
-        });
-      }
+    const pg = client.db.rows?.();
+    const page = typeof pg?.topUserLevels === 'function'
+      ? (await pg.topUserLevels(guildId, limit, offset)).map((row, index) => ({ ...row, rank: offset + index + 1 }))
+      : rankLevelRows(await readAllLevelRows(client, guildId), limit, offset);
+
+    const missing = page.map(entry => entry.userId).filter(id => !guild.members.cache.has(id));
+    if (missing.length > 0) {
+      await guild.members.fetch({ user: missing }).catch(error => {
+        logger.warn(`Failed to fetch leaderboard members for guild ${guildId}:`, error);
+      });
     }
-    
-    leaderboard.sort((a, b) => b.totalXp - a.totalXp);
-    
-    leaderboard.forEach((entry, index) => {
-      entry.rank = index + 1;
+
+    return page.map(entry => {
+      const user = guild.members.cache.get(entry.userId)?.user ?? client.users.cache.get(entry.userId);
+      return {
+        ...entry,
+        username: user?.username ?? `Unknown user (${entry.userId})`,
+        discriminator: user?.discriminator
+      };
     });
-    
-    return leaderboard.slice(0, limit);
     
   } catch (error) {
     logger.error('Error getting leaderboard:', error);

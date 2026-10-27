@@ -23,6 +23,9 @@ import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorHandler.js';
 import { getWelcomeConfig, saveWelcomeConfig } from '../../../utils/database.js';
 import { botHasPermission } from '../../../utils/permissionGuard.js';
+import { getGuildConfig } from '../../../services/config/guildConfig.js';
+import { resolveLogChannel } from '../../../services/loggingService.js';
+import { storeWelcomeImage } from '../../../utils/welcomeImageStore.js';
 
 async function deferComponent(interaction) {
     if (interaction.deferred || interaction.replied) {
@@ -462,6 +465,33 @@ async function handleWelcomeMessage(selectInteraction, rootInteraction, cfg, gui
     await refreshDashboard(rootInteraction, cfg, guildId);
 }
 
+// Uploaded files get a signed CDN URL that expires in about a day, so they are
+// re-posted to a storage channel (audit log channel, else the dashboard's channel)
+// and that message is saved; see utils/welcomeImageStore.js. Returns the stored
+// reference (or null) and a note for the admin.
+async function storeUploadedGreetImage(submitted, rootInteraction, client, guildId, attachment, label) {
+    const guildConfig = await getGuildConfig(client, guildId);
+    const ref = await storeWelcomeImage(
+        submitted.guild,
+        attachment,
+        [resolveLogChannel(guildConfig, 'audit'), rootInteraction.channelId],
+        label,
+    );
+    const note = ref
+        ? `\nA copy is kept in <#${ref.channelId}>. Don't delete that message, the ${label} message loads the image from it.`
+        : `\nI couldn't keep a copy (I need View Channel, Send Messages and Attach Files in the audit log channel or here), so this image will stop showing in about a day.`;
+    return { ref, note };
+}
+
+async function sendImageResult(submitted, title, description) {
+    const embeds = [successEmbed(title, description)];
+    if (submitted.deferred) {
+        await submitted.editReply({ embeds });
+    } else {
+        await submitted.reply({ embeds, flags: MessageFlags.Ephemeral });
+    }
+}
+
 async function handleWelcomeImage(selectInteraction, rootInteraction, cfg, guildId, client) {
     const modal = new ModalBuilder()
         .setCustomId('greet_cfg_welcome_image')
@@ -510,7 +540,8 @@ async function handleWelcomeImage(selectInteraction, rootInteraction, cfg, guild
     if (!submitted) return;
 
     const uploadedFiles = submitted.fields.getUploadedFiles('image_upload');
-    let imageUrl = uploadedFiles?.at(0)?.url ?? submitted.fields.getTextInputValue('image_input').trim();
+    const uploaded = uploadedFiles?.at(0) ?? null;
+    let imageUrl = uploaded?.url ?? submitted.fields.getTextInputValue('image_input').trim();
 
     if (imageUrl) {
         try {
@@ -525,13 +556,21 @@ async function handleWelcomeImage(selectInteraction, rootInteraction, cfg, guild
         }
     }
 
+    let storeNote = '';
+    // Re-submitting the pre-filled URL keeps the stored copy.
+    let imageRef = cfg.welcomeImageRef?.url && cfg.welcomeImageRef.url === imageUrl ? cfg.welcomeImageRef : null;
+    if (uploaded) {
+        // Re-uploading can take longer than the 3s reply window.
+        await submitted.deferReply({ flags: MessageFlags.Ephemeral });
+        ({ ref: imageRef, note: storeNote } = await storeUploadedGreetImage(submitted, rootInteraction, client, guildId, uploaded, 'welcome'));
+        if (imageRef) imageUrl = imageRef.url;
+    }
+
     cfg.welcomeImage = imageUrl || null;
+    cfg.welcomeImageRef = imageRef;
     await saveWelcomeConfig(client, guildId, cfg);
 
-    await submitted.reply({
-        embeds: [successEmbed('Welcome Image Updated', `Image ${imageUrl ? 'updated' : 'removed'} successfully.`)],
-        flags: MessageFlags.Ephemeral,
-    });
+    await sendImageResult(submitted, 'Welcome Image Updated', `Image ${imageUrl ? 'updated' : 'removed'} successfully.${storeNote}`);
 
     await refreshDashboard(rootInteraction, cfg, guildId);
 }
@@ -717,7 +756,8 @@ async function handleGoodbyeImage(selectInteraction, rootInteraction, cfg, guild
     if (!submitted) return;
 
     const uploadedFiles = submitted.fields.getUploadedFiles('image_upload');
-    let imageUrl = uploadedFiles?.at(0)?.url ?? submitted.fields.getTextInputValue('image_input').trim();
+    const uploaded = uploadedFiles?.at(0) ?? null;
+    let imageUrl = uploaded?.url ?? submitted.fields.getTextInputValue('image_input').trim();
 
     if (imageUrl) {
         try {
@@ -732,6 +772,16 @@ async function handleGoodbyeImage(selectInteraction, rootInteraction, cfg, guild
         }
     }
 
+    let storeNote = '';
+    // Re-submitting the pre-filled URL keeps the stored copy.
+    let imageRef = cfg.goodbyeImageRef?.url && cfg.goodbyeImageRef.url === imageUrl ? cfg.goodbyeImageRef : null;
+    if (uploaded) {
+        // Re-uploading can take longer than the 3s reply window.
+        await submitted.deferReply({ flags: MessageFlags.Ephemeral });
+        ({ ref: imageRef, note: storeNote } = await storeUploadedGreetImage(submitted, rootInteraction, client, guildId, uploaded, 'goodbye'));
+        if (imageRef) imageUrl = imageRef.url;
+    }
+
     const nextLeaveEmbed = { ...(cfg.leaveEmbed || {}) };
     if (imageUrl) {
         nextLeaveEmbed.image = imageUrl;
@@ -740,12 +790,10 @@ async function handleGoodbyeImage(selectInteraction, rootInteraction, cfg, guild
     }
 
     cfg.leaveEmbed = nextLeaveEmbed;
+    cfg.goodbyeImageRef = imageRef;
     await saveWelcomeConfig(client, guildId, cfg);
 
-    await submitted.reply({
-        embeds: [successEmbed('Goodbye Image Updated', `Image ${imageUrl ? 'updated' : 'removed'} successfully.`)],
-        flags: MessageFlags.Ephemeral,
-    });
+    await sendImageResult(submitted, 'Goodbye Image Updated', `Image ${imageUrl ? 'updated' : 'removed'} successfully.${storeNote}`);
 
     await refreshDashboard(rootInteraction, cfg, guildId);
 }

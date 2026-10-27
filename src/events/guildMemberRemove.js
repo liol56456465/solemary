@@ -2,6 +2,7 @@ import { Events, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { getColor, botConfig } from '../config/bot.js';
 import { getWelcomeConfig, getUserApplications, deleteApplication } from '../utils/database.js';
 import { formatWelcomeMessage } from '../utils/welcome.js';
+import { resolveWelcomeImageUrl } from '../utils/welcomeImageStore.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { getServerCounters, updateCounter } from '../services/serverstatsService.js';
 import { getGuildBirthdays, deleteBirthday } from '../utils/database.js';
@@ -63,7 +64,7 @@ export default {
                         .setFooter({ text: embedFooter });
 
                     if (typeof welcomeConfig.leaveEmbed?.image === 'string') {
-                        embed.setImage(welcomeConfig.leaveEmbed.image);
+                        embed.setImage(await resolveWelcomeImageUrl(member.client, welcomeConfig.leaveEmbed.image, welcomeConfig.goodbyeImageRef, { guildId: guild.id, label: 'goodbye' }));
                     } else if (welcomeConfig.leaveEmbed?.image?.url) {
                         embed.setImage(welcomeConfig.leaveEmbed.image.url);
                     }

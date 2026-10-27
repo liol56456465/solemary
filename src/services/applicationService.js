@@ -16,6 +16,7 @@ import {
     saveApplicationRoles
 } from '../utils/database.js';
 import botConfig from '../config/bot.js';
+import { normalizeApplicationQuestion, DEFAULT_MIN_ANSWER_LENGTH } from '../utils/applicationQuestions.js';
 
 const applicationCooldowns = new Map();
 const APPLICATION_SUBMIT_COOLDOWN = (botConfig.applications?.applicationCooldown ?? 24) * 60 * 60 * 1000;
@@ -66,12 +67,16 @@ class ApplicationService {
                 );
             }
 
-            if (sanitizedAnswer.trim().length < 10) {
+            // Per-question minimum (see utils/applicationQuestions.js); older callers send none.
+            const minLength = Number.isInteger(answer.minLength) && answer.minLength > 0
+                ? answer.minLength
+                : DEFAULT_MIN_ANSWER_LENGTH;
+            if (sanitizedAnswer.trim().length < minLength) {
                 throw createError(
                     'Answer too short',
                     ErrorTypes.VALIDATION,
-                    'Please provide meaningful answers (at least 10 characters).',
-                    { length: sanitizedAnswer.length }
+                    `Your answer to "${sanitizedQuestion}" must be at least ${minLength} characters.`,
+                    { length: sanitizedAnswer.length, minLength }
                 );
             }
         }
@@ -303,9 +308,11 @@ class ApplicationService {
                     );
                 }
 
-                updates.questions = updates.questions.map(q => 
-                    typeof q === 'string' ? q.trim().substring(0, 100) : q
-                );
+                updates.questions = updates.questions.map(q => {
+                    const normalized = normalizeApplicationQuestion(q);
+                    if (!normalized) return null;
+                    return normalized.minLength > DEFAULT_MIN_ANSWER_LENGTH ? normalized : normalized.question;
+                }).filter(Boolean);
             }
 
             await saveApplicationSettings(client, guildId, updates);

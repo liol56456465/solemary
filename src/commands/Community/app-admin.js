@@ -4,6 +4,7 @@ import { getColor, getApplicationStatusColor } from '../../config/bot.js';
 import { logger } from '../../utils/logger.js';
 import { withErrorHandling, createError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
 import ApplicationService from '../../services/applicationService.js';
+import { parseApplicationQuestionInput } from '../../utils/applicationQuestions.js';
 import { 
     getApplicationSettings, 
     saveApplicationSettings, 
@@ -169,7 +170,7 @@ async function handleSetup(interaction) {
         .setCustomId('app_question_1')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('Why do you want this role?')
-        .setMaxLength(100)
+        .setMaxLength(112)
         .setMinLength(1)
         .setRequired(true);
 
@@ -181,7 +182,7 @@ async function handleSetup(interaction) {
         .setCustomId('app_question_2')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('What experience do you have?')
-        .setMaxLength(100)
+        .setMaxLength(112)
         .setRequired(false);
 
     const q2Label = new LabelBuilder()
@@ -191,7 +192,7 @@ async function handleSetup(interaction) {
     const q3Input = new TextInputBuilder()
         .setCustomId('app_question_3')
         .setStyle(TextInputStyle.Short)
-        .setMaxLength(100)
+        .setMaxLength(112)
         .setRequired(false);
 
     const q3Label = new LabelBuilder()
@@ -223,11 +224,12 @@ async function handleSetup(interaction) {
         return;
     }
 
+    // A trailing "[min:N]" sets that question's minimum answer length.
     const questions = [
-        submitted.fields.getTextInputValue('app_question_1').trim(),
-        submitted.fields.getTextInputValue('app_question_2').trim(),
-        submitted.fields.getTextInputValue('app_question_3').trim(),
-    ].filter(q => q.length > 0);
+        submitted.fields.getTextInputValue('app_question_1'),
+        submitted.fields.getTextInputValue('app_question_2'),
+        submitted.fields.getTextInputValue('app_question_3'),
+    ].map(parseApplicationQuestionInput).filter(Boolean);
 
     const role = await interaction.guild.roles.fetch(roleId).catch(() => null);
     if (!role) {
