@@ -64,6 +64,7 @@ async function statusEmbed(guildId) {
             `**Exempt channels:** ${exempt.length ? exempt.map((id) => `<#${id}>`).join(', ') : 'none'}`,
             `**Channel exceptions:** ${channelExceptions(settings)}`,
             `**Trusted members** (skip ${relaxedRuleLabels()}): ${trustedText(settings.trusted)}`,
+            `**Second chance** (first small offence: a notice, no warning): ${settings.secondChance ? 'on' : 'off'}`,
             '',
             '**Punishments** (1st → 2nd → 3rd+ offence within 30 days). A mode in **bold** is set for that rule with `/automod rule`; the others follow the global mode:',
             ...rules,
@@ -107,6 +108,8 @@ export default {
             .addRoleOption((option) => option.setName('role').setDescription('Trusted role'))
             .addIntegerOption((option) => option.setName('min_level').setDescription('Or at least this leveling level (0 = no level criterion)').setMinValue(0).setMaxValue(1000))
             .addBooleanOption((option) => option.setName('clear').setDescription('Remove the trusted role and level')))
+        .addSubcommand((sub) => sub.setName('secondchance').setDescription('First small offence in 30 days: a notice instead of a warning')
+            .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
         .addSubcommand((sub) => sub.setName('exempt').setDescription('Add or remove a channel automod ignores completely (all rules)')
             .addChannelOption((option) => option.setName('channel').setDescription('Channel or category').setRequired(true)
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildCategory)))
@@ -210,6 +213,12 @@ export default {
             note = clear || (!saved.trusted.roleId && !saved.trusted.minLevel)
                 ? 'No trusted members: everyone is held to every rule.'
                 : `Trusted: ${trustedText(saved.trusted)}. They skip ${relaxedRuleLabels()}.`;
+        } else if (sub === 'secondchance') {
+            const enabled = interaction.options.getBoolean('enabled');
+            await updateAutomodSettings(guildId, { secondChance: enabled });
+            note = enabled
+                ? 'Second chance is **on**: a member\'s first offence in 30 days on caps, characters, English only or mild language (no slurs) gets a short notice instead of a warning.'
+                : 'Second chance is **off**: every offence gets the usual punishment.';
         } else if (sub === 'exempt') {
             const channel = interaction.options.getChannel('channel');
             const settings = await getAutomodSettings(guildId);

@@ -94,6 +94,41 @@ export function relaxForTrusted(hits, trusted, cfg = automodConfig) {
     return trusted ? hits.filter((hit) => !isRelaxableRule(hit.rule, cfg)) : hits;
 }
 
+// ── Second chance ─────────────────────────────────────────────────────────────
+
+/** Whether a rule can give a second chance at all (severity, or the allowlist without a slur). */
+export function isSecondChanceRule(hit, cfg = automodConfig) {
+    const rule = AUTOMOD_RULES[hit?.rule];
+    if (!rule) return false;
+    if (rule.severity <= cfg.secondChanceMaxSeverity) return true;
+    return cfg.secondChanceRules.includes(hit.rule) && !hit.slur;
+}
+
+/**
+ * A notice instead of a warning: second chance is on, the rule qualifies, it is the
+ * member's first offence in the rule group within the repeat window (`offences` = 0),
+ * they have not had a second chance for this rule in the window, they are not on
+ * probation, and the hit does not jump straight to the last step (ad bots).
+ */
+export function secondChanceEligible({ hit, enabled, offences, alreadyUsed, probation = false }, cfg = automodConfig) {
+    if (!enabled || probation || alreadyUsed || offences > 0 || hit?.forceLastStep) return false;
+    return isSecondChanceRule(hit, cfg);
+}
+
+const SECOND_CHANCE_TEXT = {
+    caps: 'without all the caps',
+    characters: 'without the special characters or fancy fonts',
+    english: 'in English',
+    language: 'without the bad language',
+};
+
+/** "<@1> Please repost without all the caps — no warning this time." */
+export function secondChanceNotice(ruleKey, userId, deleted) {
+    const what = SECOND_CHANCE_TEXT[ruleKey] || `without breaking the rule (${AUTOMOD_RULES[ruleKey]?.label || ruleKey})`;
+    const verb = deleted ? 'repost' : 'edit your message';
+    return `<@${userId}> Please ${verb} ${what} — no warning this time.`;
+}
+
 // ── Self-tuning ───────────────────────────────────────────────────────────────
 
 /**

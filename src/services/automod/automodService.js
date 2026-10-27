@@ -19,7 +19,10 @@ import { executeSystemAction, isAdministrator } from '../enforcement/enforcement
 import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
 import { isRaidJoiner } from './raidService.js';
 import { getUserLevelData } from '../leveling/leveling.js';
-import { isTrustedMember, hasTrustedRole, relaxForTrusted, resolveRuleMode, trustMatters } from './policy.js';
+import {
+    hasTrustedRole, isTrustedMember, relaxForTrusted, resolveRuleMode, secondChanceEligible, secondChanceNotice, trustMatters,
+} from './policy.js';
+import { getFromDb, setInDb } from '../../utils/database.js';
 import { noteRepeatHit, postReviewCard } from './reviewCards.js';
 import * as reasons from './reasons.js';
 import {
@@ -159,7 +162,7 @@ export async function evaluateMessage(message, member, now = Date.now()) {
     if (personal) hits.push({ rule: 'privacy', evidence: reasons.privacyReason(personal), detail: `contains ${personal}` });
 
     const blocked = findBlockedWord(text);
-    if (blocked) hits.push({ rule: 'language', evidence: reasons.blockedWordReason(), detail: `blocked word "${blocked}"` });
+    if (blocked) hits.push({ rule: 'language', evidence: reasons.blockedWordReason(), detail: `blocked word "${blocked}"`, slur: true });
 
     const sexual = findSexualWord(text);
     const insult = findInsult(text);
@@ -263,6 +266,42 @@ async function deleteQuietly(message) {
     });
 }
 
+const secondChanceKey = (guildId, userId, rule) => `automod:secondchance:${guildId}:${userId}:${rule}`;
+
+/**
+ * Second chance (policy.secondChanceEligible): instead of the first step, a short notice
+ * in the channel (deleted after secondChanceNoticeMs, pinging only the member) and a
+ * compact line in the review channel. Deleting rules have already removed the message.
+ * Recorded per guild + user + rule for secondChanceWindowMs, so the next hit acts
+ * normally. A failed read or write of that record means no second chance.
+ * Returns true when the second chance was given.
+ */
+async function giveSecondChance(message, hit, { settings, offences, card, probation = null }) {
+    const base = { hit, enabled: settings.secondChance, offences, alreadyUsed: false, probation: Boolean(probation) };
+    if (!secondChanceEligible(base)) return false;
+    const { guild, author } = message;
+    const key = secondChanceKey(guild.id, author.id, hit.rule);
+    const now = Date.now();
+    try {
+        const used = await getFromDb(key, null);
+        if (!secondChanceEligible({ ...base, alreadyUsed: Boolean(used && Number(used.until) > now) })) return false;
+        await setInDb(key, { at: now, until: now + automodConfig.secondChanceWindowMs, channelId: message.channelId },
+            Math.ceil(automodConfig.secondChanceWindowMs / 1000));
+    } catch (error) {
+        logger.warn(`Automod second chance for ${author.id} skipped (${error.message}); acting normally`);
+        return false;
+    }
+
+    const deleted = Boolean(AUTOMOD_RULES[hit.rule]?.deleteMessage);
+    const notice = await message.channel.send({
+        content: secondChanceNotice(hit.rule, author.id, deleted),
+        allowedMentions: { users: [author.id] },
+    }).catch(() => null);
+    if (notice) setTimeout(() => notice.delete().catch(() => {}), automodConfig.secondChanceNoticeMs).unref?.();
+    await postReviewCard({ ...card, note: { emoji: '💬', title: 'Second chance' }, deleted });
+    return true;
+}
+
 /**
  * Acts on one hit. `hit.mode` is the rule's effective mode ('on' | 'monitor'; 'off'
  * hits never get here).
@@ -305,6 +344,7 @@ async function actOn(message, member, hit, settings) {
     }
 
     const offences = await countOffences(guild.id, targetUser.id, group);
+    if (await giveSecondChance(message, hit, { settings, offences, card })) return rule.deleteMessage;
     const step = rule.steps[hit.forceLastStep ? rule.steps.length - 1 : Math.min(offences, rule.steps.length - 1)];
     const result = await applyStep({ guild, targetUser, step, rule: hit.rule, reason: `Automod: ${rule.label}` })
         .catch((error) => ({ error }));

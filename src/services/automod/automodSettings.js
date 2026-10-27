@@ -18,6 +18,8 @@ const DEFAULT_SETTINGS = Object.freeze({
     // Trusted members skip the low-severity rules (/automod trusted): a role and/or a
     // minimum leveling level (0 = no level criterion).
     trusted: { roleId: null, minLevel: 0 },
+    // First small offence: a notice instead of a warning (/automod secondchance).
+    secondChance: true,
 });
 
 /** Stored settings (any shape, or null) → a complete settings object. */
@@ -30,6 +32,7 @@ export function normalizeSettings(stored) {
         : {};
     const trusted = value.trusted && typeof value.trusted === 'object' ? value.trusted : {};
     value.trusted = { roleId: trusted.roleId || null, minLevel: Math.max(0, Number(trusted.minLevel) || 0) };
+    value.secondChance = value.secondChance !== false;
     return value;
 }
 

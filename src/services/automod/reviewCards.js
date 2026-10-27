@@ -59,7 +59,7 @@ function actionFrom(p) {
 
 /** Card parameters (see postReviewCard) → the card's state. */
 export function entryFrom(p, now = Date.now()) {
-    const kind = p.report ? 'report' : p.monitor ? 'monitor' : 'action';
+    const kind = p.report ? 'report' : p.note ? 'note' : p.monitor ? 'monitor' : 'action';
     const rule = AUTOMOD_RULES[p.rule];
     const deleted = p.deleted ?? (kind === 'report' ? Boolean(p.report.removed) : kind === 'action' && Boolean(rule?.deleteMessage));
     const entry = {
@@ -82,6 +82,8 @@ export function entryFrom(p, now = Date.now()) {
         open: true,
         noGroup: Boolean(p.raid || p.noGroup),
         tier: p.tier || null,
+        note: p.note || null,
+        ruleLabel: p.ruleLabel || null,
     };
     entry.key = burstKey(entry);
     entry.tier = cardTier(entry);
@@ -123,7 +125,8 @@ function logHit(p) {
 /**
  * Posts a card, or updates the open card of the same burst. p: { guild, rule, evidence,
  * targetUser, channelId, messageUrl, content, step?, result?, offence?, monitor?, suggested?,
- * raid?, report?: { reporter, messageId, removed }, deleted?, detail?, tier?, noGroup? }.
+ * raid?, report?: { reporter, messageId, removed }, deleted?, detail?, tier?, noGroup?,
+ * note?: { emoji, title } (an information-only compact line), ruleLabel? }.
  * `evidence` is a plain-English phrase (reasons.js); `detail` goes to the log only.
  * Returns the card message, or null.
  */

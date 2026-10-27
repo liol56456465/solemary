@@ -5,7 +5,9 @@
 // rule broken by the same member, possibly several times within a few minutes.
 //
 //   entry = {
-//     rule, kind: 'action' | 'monitor' | 'report', userId, username, channelId,
+//     rule, kind: 'action' | 'monitor' | 'report' | 'note', userId, username, channelId,
+//     ruleLabel,             // label for rules outside AUTOMOD_RULES (native AutoMod)
+//     note: { emoji, title }, // kind 'note': an information-only compact line (second chance…)
 //     evidence,              // plain-English verb phrase (reasons.js)
 //     offence, raid, count, firstAt, lastAt,
 //     latest: { content, messageUrl, deleted },
@@ -108,6 +110,7 @@ export function isLightAction(ruleKey, step, cfg = automodConfig) {
  */
 export function cardTier(p, cfg = automodConfig) {
     if (p.tier === 'full' || p.tier === 'compact') return p.tier;
+    if (p.kind === 'note') return 'compact';
     if (p.kind !== 'action' || p.raid) return 'full';
     const actions = p.actions || [];
     if (!actions.length) return 'full';
@@ -141,7 +144,7 @@ export function closedTitle(title, status, byName, verb = null) {
 }
 
 function ruleLabel(entry) {
-    return AUTOMOD_RULES[entry.rule]?.label || 'Member report';
+    return entry.ruleLabel || AUTOMOD_RULES[entry.rule]?.label || 'Member report';
 }
 
 function latestAction(entry) {
@@ -227,6 +230,16 @@ export function cardFields(entry) {
 
 /** "🟡 **Excessive caps** · <@1> · warned · case `k3f9a` · <#2> · 3 messages" */
 export function compactLine(entry) {
+    if (entry.kind === 'note') {
+        // "💬 Second chance · <@1> · Excessive caps · <#2>"
+        return [
+            `${entry.note?.emoji || 'ℹ️'} ${entry.note?.title || 'Note'}`,
+            `<@${entry.userId}>`,
+            ruleLabel(entry),
+            entry.channelId ? `<#${entry.channelId}>` : null,
+            (entry.count || 1) > 1 ? `${entry.count} messages` : null,
+        ].filter(Boolean).join(' · ');
+    }
     const action = latestAction(entry);
     const codes = caseCodes(entry);
     const parts = [
@@ -262,6 +275,7 @@ const dismissButton = () => new ButtonBuilder().setCustomId('amreview:dismiss').
 export function cardComponents(entry, tier = cardTier(entry)) {
     const codes = buttonCodes(entry);
     if (tier === 'compact') {
+        if (!codes) return [];
         return [new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId(`amreview:undo:${codes}`).setLabel('Undo').setStyle(ButtonStyle.Secondary),
         )];
