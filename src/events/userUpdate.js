@@ -1,6 +1,8 @@
 import { Events } from 'discord.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { logger } from '../utils/logger.js';
+import { enforcementConfig } from '../config/enforcement.js';
+import { checkImpersonation } from '../services/automod/memberChecks.js';
 
 export default {
   name: Events.UserUpdate,
@@ -9,6 +11,12 @@ export default {
   async execute(oldUser, newUser) {
     try {
       if (oldUser.bot) return;
+
+      if (oldUser.username !== newUser.username || oldUser.globalName !== newUser.globalName) {
+        const mainGuild = newUser.client.guilds.cache.get(enforcementConfig.mainGuildId);
+        const member = mainGuild && await mainGuild.members.fetch(newUser.id).catch(() => null);
+        if (member) await checkImpersonation(member);
+      }
 
       const usernameChanged = oldUser.username !== newUser.username;
       const discriminatorChanged = oldUser.discriminator !== newUser.discriminator;

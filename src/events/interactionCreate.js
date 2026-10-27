@@ -206,6 +206,33 @@ export default {
               subtype: COMMAND_ERROR_SUBTYPES[interaction.commandName] || error?.context?.subtype,
             }, interactionTraceContext));
           }
+        } else if (interaction.isContextMenuCommand()) {
+          // Right-click commands ("Report message"): same access rules, no options to validate.
+          const command = client.commands.get(interaction.commandName);
+          try {
+            if (!command) {
+              throw createError(`No context menu command ${interaction.commandName}`, ErrorTypes.CONFIGURATION,
+                'Sorry, that command does not exist.', withTraceContext({ commandName: interaction.commandName }, interactionTraceContext));
+            }
+            const access = checkCommandAccess({
+              command,
+              guild: interaction.guild,
+              userId: interaction.user.id,
+              permissions: interaction.memberPermissions,
+            });
+            if (!access.allowed) {
+              await InteractionHelper.safeReply(interaction, { content: access.message, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+              return;
+            }
+            if (await skipIfArrivedTooLate(interaction)) return;
+            dispatched = true;
+            await command.execute(interaction, null, client);
+          } catch (error) {
+            await handleInteractionError(interaction, error, withTraceContext({
+              type: 'context_menu',
+              commandName: interaction.commandName,
+            }, interactionTraceContext));
+          }
         } else if (interaction.isAutocomplete()) {
           const autocompleteCommand = client.commands.get(interaction.commandName);
           const autocompleteAccess = checkCommandAccess({

@@ -22,6 +22,8 @@ const configuredTables = {
     mod_ladder: 'mod_ladder',
     mod_appeals: 'mod_appeals',
     enforcement_settings: 'enforcement_settings',
+    staff_warnings: 'staff_warnings',
+    verification_ips: 'verification_ips',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -45,6 +47,8 @@ const allowedTableIdentifiers = new Set([
     'mod_ladder',
     'mod_appeals',
     'enforcement_settings',
+    'staff_warnings',
+    'verification_ips',
 ]);
 
 const validatedTables = Object.fromEntries(

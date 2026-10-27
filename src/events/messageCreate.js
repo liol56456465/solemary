@@ -1,5 +1,6 @@
 import { Events } from 'discord.js';
 import { logger } from '../utils/logger.js';
+import { moderateMessage } from '../services/automod/automodService.js';
 import { getLevelingConfig, getUserLevelData } from '../services/leveling/leveling.js';
 import { addXp } from '../services/leveling/xpSystem.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
@@ -28,6 +29,9 @@ export default {
   async execute(message, client) {
     try {
       if (message.author.bot || !message.guild) return;
+
+      // Automod runs first; a removed message gets no commands, counting or XP.
+      if (await moderateMessage(message)) return;
 
       logger.debug(`Message received from ${message.author.tag}: ${message.content}`);
 

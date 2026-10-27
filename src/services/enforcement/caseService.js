@@ -177,7 +177,9 @@ export async function getLatestAppealStatuses(userId) {
 /** A short status for history lists: lifted by appeal, appeal pending, expired, … */
 export function caseStatusLabel(row, appealStatus = null) {
     if (row.status === 'revoked') {
-        return row.revoke_reason?.startsWith('Appeal accepted') ? 'lifted by appeal' : 'lifted';
+        if (row.revoke_reason?.startsWith('Appeal accepted')) return 'lifted by appeal';
+        if (row.revoke_reason?.startsWith('Automod decision')) return 'reversed by a moderator';
+        return 'lifted';
     }
     if (row.status === 'appeal_pending') return 'appeal pending';
     if (row.status === 'active' && row.expires_at && new Date(row.expires_at) <= new Date()) return 'expired';

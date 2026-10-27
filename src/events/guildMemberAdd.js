@@ -10,6 +10,8 @@ import { logger } from '../utils/logger.js';
 import { reapplyMuteOnJoin } from '../services/enforcement/enforcementService.js';
 import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService.js';
 import { syncWarnRolesQuietly } from '../services/enforcement/warnRoleService.js';
+import { recordJoin } from '../services/automod/raidService.js';
+import { checkImpersonation } from '../services/automod/memberChecks.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 
@@ -34,6 +36,8 @@ export default {
             // Rejoining the main server (e.g. after a temporary ban) restores the warning role.
             if (guild.id === enforcementConfig.mainGuildId) {
                 await syncWarnRolesQuietly(guild, member.id);
+                await recordJoin(member).catch((error) => logger.warn(`Raid tracking failed for ${member.id}: ${error.message}`));
+                await checkImpersonation(member);
             }
         }
         

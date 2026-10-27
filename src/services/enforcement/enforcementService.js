@@ -133,10 +133,12 @@ const MOD_LOG_TITLES = {
     unmute: ['Unmute', 'success'],
     removewarn: ['Warning removed', 'success'],
     appeal: ['Appeal decided', 'primary'],
+    raid: ['Join raid', 'error'],
+    staff: ['Staff guard', 'error'],
 };
 
 /** Posts one enforcement event in the moderation log channel (MOD_LOG_CHANNEL_ID). */
-export async function postModLog(client, action, fields, { title = null } = {}) {
+export async function postModLog(client, action, fields, { title = null, files = [] } = {}) {
     const channelId = enforcementConfig.modLogChannelId;
     if (!channelId) return;
     const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
@@ -148,6 +150,7 @@ export async function postModLog(client, action, fields, { title = null } = {}) 
     const [defaultTitle, color] = MOD_LOG_TITLES[action] || [action, 'primary'];
     await channel.send({
         embeds: [createEmbed({ title: title || defaultTitle, fields, color, timestamp: true })],
+        files,
         allowedMentions: { parse: [] },
     }).catch((error) => logger.warn(`Mod log post failed: ${error.message}`));
 }
@@ -205,7 +208,21 @@ export async function executeAction({ guild, moderator, targetUser, flow }) {
     if (!isAdministrator(moderator)) {
         throw userError('You need the Administrator permission to use this panel.', ErrorTypes.PERMISSION);
     }
+    return runAction({ guild, moderator, targetUser, flow });
+}
 
+/**
+ * The same actions taken by the bot itself (automod, staff-applied automod flags):
+ * the bot is the moderator, so there is no Administrator check, but the lock,
+ * hierarchy checks, DMs, cases and logs are identical.
+ */
+export async function executeSystemAction({ guild, targetUser, flow }) {
+    assertBotPermissions(guild);
+    const moderator = guild.members.me || await guild.members.fetchMe();
+    return runAction({ guild, moderator, targetUser, flow });
+}
+
+async function runAction({ guild, moderator, targetUser, flow }) {
     return lockFor(guild.id, targetUser.id, async () => {
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         assertCanTarget(guild, moderator, targetUser.id, targetMember, flow.type);

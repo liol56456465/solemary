@@ -7,6 +7,7 @@ import { reconcileTicketPanels, reconcileVerificationPanels, reconcileReactionRo
 import { reconcileLevelRoles } from "../services/leveling/levelRoleSyncService.js";
 import { reconcileBannedRoles } from "../services/enforcement/bannedRoleService.js";
 import { initRiffyAfterReady } from "../services/music/riffySetup.js";
+import { describeAutomodReadiness } from "../services/automod/automodService.js";
 
 export default {
   name: Events.ClientReady,
@@ -29,6 +30,7 @@ export default {
       startupLog(`Ready! Logged in as ${client.user.tag}`);
       startupLog(`Serving ${client.guilds.cache.size} guild(s)`);
       startupLog(`Loaded ${client.commands.size} commands`);
+      startupLog(`Automod: ${await describeAutomodReadiness(client).catch((error) => `check failed: ${error.message}`)}`);
 
       if (client.config?.features?.music) {
         initRiffyAfterReady(client);

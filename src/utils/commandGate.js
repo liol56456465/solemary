@@ -3,8 +3,8 @@
 //
 // 1. Commands run in the main server and the support server. Commands with
 //    scope 'main' (enforcement, appeals, /background, /test) run in the main server only.
-// 2. Everything requires Administrator (the server owner counts). OWNER_IDS is an
-//    emergency override for rule 2 only.
+// 2. Everything requires Administrator (the server owner counts), except commands
+//    marked `public`. OWNER_IDS is an emergency override for rule 2 only.
 // Commands stay visible to everyone (no default_member_permissions), so
 // non-admins see this message instead of an empty command list.
 //
@@ -52,7 +52,8 @@ export function checkCommandAccess({ command, guild, userId, permissions }) {
                 : 'Commands only work in the Meowist servers.',
         };
     }
-    if (isBotOwner(userId) || hasAdministrator({ guild, userId, permissions })) {
+    // Commands marked public (the "Report message" context menu) are for every member.
+    if (command?.public || isBotOwner(userId) || hasAdministrator({ guild, userId, permissions })) {
         return { allowed: true };
     }
     return { allowed: false, message: getAdminRequiredMessage() };

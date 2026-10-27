@@ -30,6 +30,9 @@ export function banDm(record) {
         duration,
         `Case code: ${record.case_code}`,
     ];
+    if (record.is_auto && !record.unappealable) {
+        lines.push('Appealing this code also removes the warning that caused this ban.');
+    }
     if (record.ladder_level_after === 3 && record.is_auto && record.appeal_deadline && !record.unappealable) {
         lines.push(`You can appeal until ${dateStamp(record.appeal_deadline)}.`);
     }

@@ -661,7 +661,7 @@ function safeExternalUrl(value) {
   }
 }
 
-async function generateTranscript(channel) {
+export async function generateTranscript(channel) {
   try {
     logger.debug('Generating transcript for channel', {
       channelId: channel.id,

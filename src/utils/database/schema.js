@@ -240,6 +240,30 @@ export const tableStatements = [
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
 
+    // Warnings the owner gives staff (/staff warn). They expire; enough active ones
+    // remove the member's staff roles.
+    `CREATE TABLE IF NOT EXISTS ${t.staff_warnings} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        username VARCHAR(100) NOT NULL,
+        reason TEXT NOT NULL,
+        given_by VARCHAR(20) NOT NULL,
+        given_by_username VARCHAR(100) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL
+    )`,
+
+    // One-way hashes of the IP addresses members verified from, to spot ban evasion.
+    // The IP itself is never stored; rows older than 60 days are deleted unless the
+    // member has an active ban.
+    `CREATE TABLE IF NOT EXISTS ${t.verification_ips} (
+        user_id VARCHAR(20) NOT NULL,
+        ip_hash VARCHAR(64) NOT NULL,
+        seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (user_id, ip_hash)
+    )`,
+
     `CREATE TABLE IF NOT EXISTS ${t.enforcement_settings} (
         guild_id VARCHAR(20) PRIMARY KEY,
         muted_role_id VARCHAR(20),
@@ -270,6 +294,8 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_target ON ${t.mod_cases}(guild_id, target_user_id, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_expiry ON ${t.mod_cases}(expires_at) WHERE status IN ('active', 'appeal_pending') AND expires_at IS NOT NULL`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_mod_appeals_one_pending ON ${t.mod_appeals}(case_code) WHERE status = 'pending' AND kind = 'appeal'`,
+    `CREATE INDEX IF NOT EXISTS idx_staff_warnings_user ON ${t.staff_warnings}(guild_id, user_id, expires_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_verification_ips_hash ON ${t.verification_ips}(ip_hash)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_appeals_case ON ${t.mod_appeals}(case_code, decided_at DESC)`,
 ];
 

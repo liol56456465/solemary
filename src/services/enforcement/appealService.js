@@ -5,7 +5,7 @@
 // (the one set in /ticket; MAIN_APPEALS_CATEGORY_ID when none is set), visible to
 // administrators only. The user is never added; they get the decision by DM.
 
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits } from 'discord.js';
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -19,6 +19,7 @@ import {
     createRejoinInvite, getLadder, liftLadderBanForWarn, logEnforcement, postModLog, revokeWarn, sendDm,
 } from './enforcementService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
+import { generateTranscript } from '../ticket.js';
 import { removeMutedRole } from './muteService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { appealAcceptedDm, appealDeniedDm } from './dmTemplates.js';
@@ -471,12 +472,13 @@ export async function submitStaffReport({ client, user, staffMember, details, pr
 // ── Decisions ──────────────────────────────────────────────────────────────
 
 /**
- * Lifts what an accepted appeal is about and logs it like the matching manual action
- * (unban, unmute, warning removed). Returns notes for the decision message.
+ * Lifts a case and logs it like the matching manual action (unban, unmute, warning
+ * removed): used for accepted appeals and for automod decisions a moderator reverses.
+ * `reason` is stored as the revoke reason; `via` is shown next to the moderator in
+ * the logs. Returns notes for the decision message.
  */
-async function liftForAcceptedAppeal(client, record, admin) {
+export async function liftCase(client, record, admin, { reason, via }) {
     const mainGuild = client.guilds.cache.get(record.guild_id);
-    const reason = `Appeal accepted by ${admin.username}`;
     const notes = [];
 
     if (record.is_test) {
@@ -490,7 +492,7 @@ async function liftForAcceptedAppeal(client, record, admin) {
     }
 
     const target = { id: record.target_user_id, username: record.target_username };
-    const moderatorLabel = `${admin.username} (${admin.id}), appeal \`${record.case_code}\``;
+    const moderatorLabel = `${admin.username} (${admin.id}), ${via}`;
     const liftedBan = record.type === 'ban' && isStillInEffect(record);
     const liftedMute = record.type === 'mute' && isStillInEffect(record);
     let ladderBan = null;
@@ -513,23 +515,44 @@ async function liftForAcceptedAppeal(client, record, admin) {
         }
     }
 
-    await withTransaction(async (db) => {
+    const triggerWarn = await withTransaction(async (db) => {
         await db.query(
             `UPDATE ${T.cases} SET status = 'revoked', revoked_by = $2, revoked_at = NOW(), revoke_reason = $3
              WHERE id = $1 AND status <> 'revoked'`,
             [record.id, admin.id, reason]
         );
-        if (record.type === 'ban' && record.is_auto) {
-            // An accepted ladder ban steps the ladder back by one.
-            await db.query(
-                `UPDATE ${T.ladder} SET level = GREATEST(0, level - 1), warns_since_level = 0, updated_at = NOW()
-                 WHERE guild_id = $1 AND user_id = $2`,
-                [record.guild_id, record.target_user_id]
-            );
-        }
+        if (!(record.type === 'ban' && record.is_auto)) return null;
+
+        // The ladder ban's code also covers the warn that triggered it: that warn is
+        // removed and the ladder steps back one level, keeping the level's other warns.
+        const previousLevel = Math.max(0, record.ladder_level_after - 1);
+        const { rows: [warn] } = await db.query(
+            `UPDATE ${T.cases} SET status = 'revoked', revoked_by = $1, revoked_at = NOW(), revoke_reason = $2
+             WHERE id = (
+                 SELECT id FROM ${T.cases}
+                 WHERE guild_id = $3 AND target_user_id = $4 AND type = 'warn' AND status = ANY($5)
+                   AND is_test = FALSE AND ladder_level_after = $6 AND counts_toward_level = $7 AND created_at <= $8
+                 ORDER BY created_at DESC LIMIT 1
+             )
+             RETURNING *`,
+            [admin.id, `${reason} (ban ${record.case_code})`, record.guild_id, record.target_user_id,
+                OPEN_STATUSES, record.ladder_level_after, previousLevel, record.created_at]
+        );
+        const { rows: [counted] } = await db.query(
+            `SELECT COUNT(*)::int AS count FROM ${T.cases}
+             WHERE guild_id = $1 AND target_user_id = $2 AND type = 'warn' AND status = ANY($3)
+               AND is_imported = FALSE AND is_test = FALSE AND counts_toward_level = $4`,
+            [record.guild_id, record.target_user_id, OPEN_STATUSES, previousLevel]
+        );
+        await db.query(
+            `UPDATE ${T.ladder} SET level = $3, warns_since_level = $4, updated_at = NOW()
+             WHERE guild_id = $1 AND user_id = $2`,
+            [record.guild_id, record.target_user_id, previousLevel, counted?.count || 0]
+        );
+        return warn || null;
     });
     if (record.type === 'ban') await syncBannedRoleQuietly(client, record.target_user_id);
-    if (record.type === 'warn' && mainGuild) await syncWarnRolesQuietly(mainGuild, record.target_user_id);
+    if ((record.type === 'warn' || triggerWarn) && mainGuild) await syncWarnRolesQuietly(mainGuild, record.target_user_id);
 
     const extra = [{ name: 'Reason', value: reason }];
     if (liftedBan) {
@@ -551,6 +574,16 @@ async function liftForAcceptedAppeal(client, record, admin) {
             ],
         });
         notes.push('The warning was removed.');
+    }
+    if (triggerWarn) {
+        await logEnforcement(client, record.guild_id, 'removewarn', {
+            target, moderatorLabel,
+            extra: [
+                { name: 'Warning', value: `\`${triggerWarn.case_code}\` — ${triggerWarn.name}` },
+                { name: 'Reason', value: `${reason} (it triggered the automatic ban \`${record.case_code}\`)` },
+            ],
+        });
+        notes.push(`The warning that triggered this automatic ban (\`${triggerWarn.case_code}\`) was removed too.`);
     }
     if (ladderBan) {
         await logEnforcement(client, record.guild_id, 'unban', {
@@ -595,7 +628,10 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
         let notes = [];
 
         if (decision === 'accept') {
-            notes = await liftForAcceptedAppeal(client, record, admin);
+            notes = await liftCase(client, record, admin, {
+                reason: `Appeal accepted by ${admin.username}`,
+                via: `appeal \`${record.case_code}\``,
+            });
             const invite = mainGuild ? await createRejoinInvite(mainGuild, `Appeal accepted for ${caseCode}`) : null;
             if (appellant) dmDelivered = await sendDm(appellant, appealAcceptedDm(admin.username, invite));
         } else {
@@ -638,6 +674,8 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
         }).catch(() => {});
         if (channel) await disableDecisionButtons(channel, caseCode);
 
+        // The channel is deleted shortly; keep what was said in it.
+        const transcript = channel ? await generateTranscript(channel).catch(() => null) : null;
         const logFields = [
             { name: `Appeal ${label}`, value: `\`${record.case_code}\` — ${record.name}` },
             { name: 'User', value: `${record.target_username} (${record.target_user_id})` },
@@ -650,7 +688,12 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
             eventType: EVENT_TYPES.MODERATION_APPEAL,
             data: { userId: record.target_user_id, fields: logFields },
         }).catch(() => {});
-        if (!record.is_test) await postModLog(client, 'appeal', logFields, { title: `Appeal ${label}` });
+        if (!record.is_test || transcript) {
+            await postModLog(client, 'appeal', logFields, {
+                title: `Appeal ${label}${record.is_test ? ' (test case)' : ''}`,
+                files: transcript ? [new AttachmentBuilder(transcript.buffer, { name: `appeal-${record.case_code}.html` })] : [],
+            });
+        }
 
         if (channel) scheduleAppealChannelDelete(channel, label);
         return { record, dmDelivered, label, notes };

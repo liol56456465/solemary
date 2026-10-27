@@ -1,0 +1,97 @@
+import { ChannelType, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { createEmbed, successEmbed } from '../../utils/embeds.js';
+import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
+import { enforcementConfig } from '../../config/enforcement.js';
+import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
+import { isAdministrator } from '../../services/enforcement/enforcementService.js';
+import { getAutomodSettings, updateAutomodSettings } from '../../services/automod/automodSettings.js';
+import { endLockdown, getLockdownState } from '../../services/automod/raidService.js';
+import { describeStep } from '../../services/automod/reviewCards.js';
+
+function userError(message) {
+    return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
+}
+
+async function statusEmbed(guildId) {
+    const settings = await getAutomodSettings(guildId);
+    const lockdown = await getLockdownState(guildId);
+    const exempt = [...new Set([...automodConfig.exemptChannelIds, ...settings.exemptChannelIds])];
+    const rules = Object.values(AUTOMOD_RULES)
+        .sort((a, b) => b.severity - a.severity)
+        .map((rule) => `**${rule.label}:** ${rule.steps.map(describeStep).join(' → ')}`);
+    return createEmbed({
+        title: 'Automod',
+        description: [
+            `**Status:** ${settings.enabled ? 'on' : 'off'}`,
+            `**Mode:** ${settings.mode === 'monitor' ? 'monitor (cards only, nothing is done)' : 'enforce (acts, then posts a review card)'}`,
+            `**Lockdown:** ${lockdown?.active ? `active since <t:${Math.floor(new Date(lockdown.startedAt).getTime() / 1000)}:R>, ${lockdown.joinerIds.length} raid joiner(s)` : 'off'}`,
+            `**Exempt channels:** ${exempt.length ? exempt.map((id) => `<#${id}>`).join(', ') : 'none'}`,
+            '',
+            '**Punishments** (1st → 2nd → 3rd+ offence within 30 days):',
+            ...rules,
+        ].join('\n'),
+        color: settings.enabled ? 'primary' : 'secondary',
+    });
+}
+
+export default {
+    // Registered as a guild command in MAIN_GUILD_ID only.
+    scope: 'main',
+    data: new SlashCommandBuilder()
+        .setName('automod')
+        .setDescription('Automatic moderation: status, on/off, mode, exempt channels, raid lockdown')
+        .addSubcommand((sub) => sub.setName('status').setDescription('Show the automod settings and punishments'))
+        .addSubcommand((sub) => sub.setName('enable').setDescription('Turn automod on or off')
+            .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
+        .addSubcommand((sub) => sub.setName('mode').setDescription('Enforce (act automatically) or monitor (only review cards)')
+            .addStringOption((option) => option.setName('mode').setDescription('Mode').setRequired(true)
+                .addChoices({ name: 'enforce', value: 'enforce' }, { name: 'monitor', value: 'monitor' })))
+        .addSubcommand((sub) => sub.setName('exempt').setDescription('Add or remove a channel automod ignores')
+            .addChannelOption((option) => option.setName('channel').setDescription('Channel or category').setRequired(true)
+                .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildCategory)))
+        .addSubcommand((sub) => sub.setName('lockdown-end').setDescription('End a join-raid lockdown and restore the verification level')),
+
+    async execute(interaction) {
+        if (interaction.guildId !== enforcementConfig.mainGuildId) {
+            throw new TitanBotError('Wrong guild for /automod', ErrorTypes.PERMISSION, 'This command only works in the main server.', { expected: true });
+        }
+        if (!isAdministrator(interaction.member)) {
+            throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION, 'You need the Administrator permission to manage automod.', { expected: true });
+        }
+        const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+        if (!deferred) return;
+
+        const guildId = interaction.guildId;
+        const sub = interaction.options.getSubcommand();
+        let note = null;
+
+        if (sub === 'enable') {
+            const enabled = interaction.options.getBoolean('enabled');
+            await updateAutomodSettings(guildId, { enabled });
+            note = `Automod is now **${enabled ? 'on' : 'off'}**.`;
+        } else if (sub === 'mode') {
+            const mode = interaction.options.getString('mode');
+            await updateAutomodSettings(guildId, { mode });
+            note = mode === 'monitor'
+                ? 'Monitor mode: automod only posts review cards; nothing is deleted or punished until you apply it.'
+                : 'Enforce mode: automod deletes and punishes automatically and posts a review card for every decision.';
+        } else if (sub === 'exempt') {
+            const channel = interaction.options.getChannel('channel');
+            const settings = await getAutomodSettings(guildId);
+            const ids = new Set(settings.exemptChannelIds);
+            const adding = !ids.has(channel.id);
+            if (adding) ids.add(channel.id); else ids.delete(channel.id);
+            await updateAutomodSettings(guildId, { exemptChannelIds: [...ids] });
+            note = adding ? `Automod now ignores <#${channel.id}>.` : `Automod checks <#${channel.id}> again.`;
+        } else if (sub === 'lockdown-end') {
+            const ended = await endLockdown(interaction.guild, interaction.user);
+            if (!ended) throw userError('There is no lockdown right now.');
+            note = 'Lockdown ended. The verification level is back to what it was.';
+        }
+
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: note ? [successEmbed('Automod updated', note), await statusEmbed(guildId)] : [await statusEmbed(guildId)],
+        });
+    },
+};
