@@ -13,7 +13,7 @@ export default {
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('background')
-        .setDescription("Show a user's enforcement records")
+        .setDescription("Show a user's enforcement records and staff notes")
         .addUserOption((option) => option
             .setName('user')
             .setDescription('The user to look up'))

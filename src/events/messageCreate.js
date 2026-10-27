@@ -8,7 +8,7 @@ import { addXp } from '../services/leveling/xpSystem.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { parsePrefixCommand } from '../utils/prefixParser.js';
 import { supportsPrefixExecution, executePrefixCommand, resolvePrefixAccessKey } from '../utils/messageAdapter.js';
-import { resolveCommandAlias, resolveSubcommandAlias } from '../config/commands/commandAliases.js';
+import { resolveCommandAliasWithArgs, resolveSubcommandAlias } from '../config/commands/commandAliases.js';
 import { getPrefixRestriction } from '../config/commands/prefixRestrictions.js';
 import { getGuildConfig } from '../services/config/guildConfig.js';
 import { getCommandPrefix, getBotMessage, isBotOwner, isCommandCategoryEnabled, isMaintenanceMode } from '../config/bot.js';
@@ -82,11 +82,13 @@ async function handlePrefixCommand(message, client) {
       return; 
     }
 
-    const { commandName, args } = parsed;
+    const { commandName } = parsed;
+    // An alias may name a subcommand of a merged command ("!flip" → /fun flip).
+    const { commandName: resolvedCommandName, subcommandArgs } = resolveCommandAliasWithArgs(commandName);
+    const args = [...subcommandArgs, ...parsed.args];
 
     logger.info(`Prefix command detected: ${commandName}, args: ${args.join(', ')}`);
 
-    const resolvedCommandName = resolveCommandAlias(commandName);
     logger.info(`Resolved command name: ${resolvedCommandName}`);
     const command = client.commands.get(resolvedCommandName);
 

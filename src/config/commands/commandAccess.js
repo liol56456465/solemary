@@ -22,7 +22,7 @@ export const EVERYONE_COMMANDS = new Set([
   'birthday set', 'birthday info', 'birthday list', 'birthday remove', 'birthday next',
 
   // Fun
-  'fight', 'flip', 'roll', 'count status', 'count leaderboard',
+  'fun fight', 'fun flip', 'fun roll', 'count status', 'count leaderboard',
 
   // Leveling
   'leaderboard', 'rank',
@@ -34,8 +34,8 @@ export const EVERYONE_COMMANDS = new Set([
   // Ticket (the commands check staff / opener themselves)
   'claim', 'close', 'priority', 'modmail close',
 
-  // Tools (shorten stays admin: it hides link targets from automod)
-  'baseconvert', 'calculate', 'generatepassword', 'hexcolor', 'time', 'unixtime',
+  // Tools (randomuser and shorten stay admin: shorten hides link targets from automod)
+  'tools baseconvert', 'tools calculate', 'tools generatepassword', 'tools hexcolor', 'tools time', 'tools unixtime',
 
   // Utility
   'avatar', 'firstmsg', 'serverinfo', 'userinfo', 'weather', 'report file',
@@ -48,6 +48,22 @@ export const EVERYONE_COMMANDS = new Set([
   // Context menus
   'Report message',
 ]);
+
+/**
+ * Commands registered in the support server (everything else exists only in the
+ * main server). The appeal panels there are buttons and need no command.
+ */
+export const SUPPORT_SERVER_COMMANDS = new Set([
+  'help', 'ping', 'uptime',
+  'ticket', 'claim', 'close', 'priority',
+  'purge', 'lock', 'unlock',
+  'userinfo', 'serverinfo', 'avatar',
+  'logging', 'welcome', 'goodbye', 'autorole', 'reactroles',
+]);
+
+export function isSupportServerCommand(commandName) {
+  return SUPPORT_SERVER_COMMANDS.has(commandName);
+}
 
 /** True when every member may run this access key. */
 export function isEveryoneCommand(accessKey) {

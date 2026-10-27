@@ -16,17 +16,17 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { isBotOwner } from '../config/bot.js';
 import { enforcementConfig } from '../config/enforcement.js';
-import { isEveryoneCommand } from '../config/commands/commandAccess.js';
+import { isEveryoneCommand, isSupportServerCommand } from '../config/commands/commandAccess.js';
 
 export function getAdminRequiredMessage() {
     return `You need the Administrator role to use this command. Request a mod/admin role here: <#${enforcementConfig.adminRequestChannelId}>`;
 }
 
-/** True when the command exists in this guild: all commands in the main server, all but scope 'main' in the support server. */
+/** True when the command exists in this guild: all commands in the main server, the support list in the support server. */
 export function isCommandAvailableInGuild(command, guildId) {
     if (!guildId) return false;
     if (guildId === enforcementConfig.mainGuildId) return true;
-    return guildId === enforcementConfig.supportGuildId && command?.scope !== 'main';
+    return guildId === enforcementConfig.supportGuildId && command?.scope !== 'main' && isSupportServerCommand(command?.data?.name);
 }
 
 export function hasAdministrator({ guild, userId, permissions }) {
