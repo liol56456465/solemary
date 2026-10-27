@@ -10,6 +10,7 @@ export const GUILD_CONFIG_DEFAULTS = {
     prefix: getCommandPrefix(),
     welcomeMessage: BotConfig.welcome?.defaultWelcomeMessage || 'Welcome {user} to {server}!',
     dmOnClose: true,
+    birthdayTimezone: 'UTC',
     disabledCommands: {},
     disabledCategories: {},
 };

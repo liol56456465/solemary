@@ -10,6 +10,7 @@ import nextBirthdays from './modules/next_birthdays.js';
 import birthdaySetchannel from './modules/birthday_setchannel.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { searchTimeZones } from '../../utils/timezone.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('birthday')
@@ -72,7 +73,20 @@ export default {
                         .addChannelTypes(ChannelType.GuildText)
                         .setRequired(false)
                 )
+                .addStringOption(option =>
+                    option
+                        .setName('timezone')
+                        .setDescription('Server time zone for birthdays, e.g. Europe/London (default UTC)')
+                        .setAutocomplete(true)
+                        .setRequired(false)
+                )
         ),
+
+    async autocomplete(interaction) {
+        const focused = interaction.options.getFocused(true);
+        if (focused.name !== 'timezone') return interaction.respond([]);
+        return interaction.respond(searchTimeZones(focused.value).map(zone => ({ name: zone, value: zone })));
+    },
 
     async execute(interaction, config, client) {
         const subcommand = interaction.options.getSubcommand();

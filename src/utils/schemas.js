@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { createError, ErrorTypes } from './errorHandler.js';
+import { isValidTimeZone } from './timezone.js';
 
 export const LogIgnoreSchema = z
   .object({
@@ -69,6 +70,8 @@ export const GuildConfigSchema = z
     dmOnClose: z.boolean().optional(),
     reportChannelId: z.string().nullable().optional(),
     birthdayChannelId: z.string().nullable().optional(),
+    // IANA zone whose local date decides whose birthday it is (default UTC).
+    birthdayTimezone: z.string().refine(isValidTimeZone, 'Unknown IANA time zone').optional(),
     premiumRoleId: z.string().nullable().optional(),
     logIgnore: LogIgnoreSchema.optional(),
     disabledCommands: z.record(z.string(), z.boolean()).optional(),
