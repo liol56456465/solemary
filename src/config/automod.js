@@ -112,6 +112,11 @@ export const automodConfig = {
     lowSeverityMax: 40,
     compactMuteSeverityMax: 20,
     compactMaxMuteMs: DAY,
+    // Trusted members (/automod trusted: a role, or at least a leveling level) are not
+    // held to the rules at or below this severity: caps, characters, English only.
+    trustedRelaxMaxSeverity: 20,
+    // A member's level is read at most this often (only when a relaxable rule was hit).
+    trustedLevelCacheMs: 5 * 60 * 1000,
     // Hits of the same rule by the same user within this window update the open card
     // instead of posting another (in memory: a restart starts fresh).
     burstWindowMs: 5 * 60 * 1000,

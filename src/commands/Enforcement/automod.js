@@ -10,7 +10,9 @@ import { endLockdown, getLockdownState } from '../../services/automod/raidServic
 import { describeStep } from '../../services/automod/reviewCards.js';
 import { automodStats, formatAutomodStats } from '../../services/automod/automodReport.js';
 import { collectOpenReviews, formatQueue } from '../../services/automod/reviewQueue.js';
-import { CHANNEL_RULE_MODES, RULE_MODES, hasRuleOverride, ruleMode, withChannelRule } from '../../services/automod/policy.js';
+import {
+    CHANNEL_RULE_MODES, RULE_MODES, hasRuleOverride, isRelaxableRule, ruleMode, withChannelRule,
+} from '../../services/automod/policy.js';
 
 const RULE_CHOICES = Object.entries(AUTOMOD_RULES)
     .sort(([, a], [, b]) => b.severity - a.severity)
@@ -29,6 +31,17 @@ function channelExceptions(settings) {
         return list.length ? `<#${channelId}>: ${list.join(', ')}` : null;
     }).filter(Boolean);
     return parts.length ? parts.join('; ') : 'none';
+}
+
+function relaxedRuleLabels() {
+    return Object.keys(AUTOMOD_RULES).filter((key) => isRelaxableRule(key)).map((key) => AUTOMOD_RULES[key].label).join(', ');
+}
+
+function trustedText(trusted) {
+    const parts = [];
+    if (trusted?.roleId) parts.push(`<@&${trusted.roleId}>`);
+    if (trusted?.minLevel > 0) parts.push(`level ${trusted.minLevel}+`);
+    return parts.length ? parts.join(' or ') : 'not set';
 }
 
 async function statusEmbed(guildId) {
@@ -50,6 +63,7 @@ async function statusEmbed(guildId) {
             `**Lockdown:** ${lockdown?.active ? `active since <t:${Math.floor(new Date(lockdown.startedAt).getTime() / 1000)}:R>, ${lockdown.joinerIds.length} raid joiner(s)` : 'off'}`,
             `**Exempt channels:** ${exempt.length ? exempt.map((id) => `<#${id}>`).join(', ') : 'none'}`,
             `**Channel exceptions:** ${channelExceptions(settings)}`,
+            `**Trusted members** (skip ${relaxedRuleLabels()}): ${trustedText(settings.trusted)}`,
             '',
             '**Punishments** (1st → 2nd → 3rd+ offence within 30 days). A mode in **bold** is set for that rule with `/automod rule`; the others follow the global mode:',
             ...rules,
@@ -89,6 +103,10 @@ export default {
                     { name: 'monitor (card only here)', value: 'monitor' },
                     { name: 'default (remove the exception)', value: 'default' },
                 )))
+        .addSubcommand((sub) => sub.setName('trusted').setDescription('Members with this role or level skip the low-severity rules (caps, characters, English only)')
+            .addRoleOption((option) => option.setName('role').setDescription('Trusted role'))
+            .addIntegerOption((option) => option.setName('min_level').setDescription('Or at least this leveling level (0 = no level criterion)').setMinValue(0).setMaxValue(1000))
+            .addBooleanOption((option) => option.setName('clear').setDescription('Remove the trusted role and level')))
         .addSubcommand((sub) => sub.setName('exempt').setDescription('Add or remove a channel automod ignores completely (all rules)')
             .addChannelOption((option) => option.setName('channel').setDescription('Channel or category').setRequired(true)
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildCategory)))
@@ -177,6 +195,21 @@ export default {
             note = mode === 'default'
                 ? `**${label}** in <#${channel.id}> follows the rule's normal mode again.`
                 : `**${label}** is **${mode}** in <#${channel.id}>${channel.type === ChannelType.GuildCategory ? ' and the channels in it' : ''} (threads included).`;
+        } else if (sub === 'trusted') {
+            const role = interaction.options.getRole('role');
+            const minLevel = interaction.options.getInteger('min_level');
+            const clear = interaction.options.getBoolean('clear');
+            if (!clear && !role && minLevel === null) throw userError('Give a role, a minimum level, or clear: true.');
+            if (role && (role.id === interaction.guildId || role.managed)) throw userError('Pick a normal role (not @everyone or a bot role).');
+            const saved = await updateAutomodSettings(guildId, (current) => ({
+                ...current,
+                trusted: clear
+                    ? { roleId: null, minLevel: 0 }
+                    : { roleId: role ? role.id : current.trusted.roleId, minLevel: minLevel ?? current.trusted.minLevel },
+            }));
+            note = clear || (!saved.trusted.roleId && !saved.trusted.minLevel)
+                ? 'No trusted members: everyone is held to every rule.'
+                : `Trusted: ${trustedText(saved.trusted)}. They skip ${relaxedRuleLabels()}.`;
         } else if (sub === 'exempt') {
             const channel = interaction.options.getChannel('channel');
             const settings = await getAutomodSettings(guildId);

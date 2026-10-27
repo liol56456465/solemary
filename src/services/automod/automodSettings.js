@@ -15,6 +15,9 @@ const DEFAULT_SETTINGS = Object.freeze({
     ruleModes: {},
     // channel or category id → { rule key → 'off' | 'monitor' } (/automod channel).
     channelRules: {},
+    // Trusted members skip the low-severity rules (/automod trusted): a role and/or a
+    // minimum leveling level (0 = no level criterion).
+    trusted: { roleId: null, minLevel: 0 },
 });
 
 /** Stored settings (any shape, or null) → a complete settings object. */
@@ -25,6 +28,8 @@ export function normalizeSettings(stored) {
     value.channelRules = value.channelRules && typeof value.channelRules === 'object'
         ? Object.fromEntries(Object.entries(value.channelRules).map(([id, rules]) => [id, { ...rules }]))
         : {};
+    const trusted = value.trusted && typeof value.trusted === 'object' ? value.trusted : {};
+    value.trusted = { roleId: trusted.roleId || null, minLevel: Math.max(0, Number(trusted.minLevel) || 0) };
     return value;
 }
 

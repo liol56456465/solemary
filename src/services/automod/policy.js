@@ -59,6 +59,41 @@ export function resolveRuleMode(settings, ruleKey, channel = null) {
     return channelRuleOverride(settings, ruleKey, channel)?.mode || ruleMode(settings, ruleKey);
 }
 
+// ── Trusted members ───────────────────────────────────────────────────────────
+
+/** Rules trusted members are not held to: severity at or below trustedRelaxMaxSeverity. */
+export function isRelaxableRule(ruleKey, cfg = automodConfig) {
+    const rule = AUTOMOD_RULES[ruleKey];
+    return Boolean(rule) && rule.severity <= cfg.trustedRelaxMaxSeverity;
+}
+
+/** Whether the trusted role alone decides (no level needed). */
+export function hasTrustedRole(roleIds, trusted) {
+    return Boolean(trusted?.roleId && roleIds?.has?.(trusted.roleId));
+}
+
+/**
+ * Trusted: has the trusted role, or a leveling level of at least trusted.minLevel
+ * (when set). `level` is null when it was not read or could not be read.
+ */
+export function isTrustedMember({ roleIds, level = null }, trusted) {
+    if (!trusted) return false;
+    if (hasTrustedRole(roleIds, trusted)) return true;
+    const minLevel = Number(trusted.minLevel) || 0;
+    return minLevel > 0 && Number.isFinite(level) && level >= minLevel;
+}
+
+/** Whether checking trust is worth anything: a relaxable hit and some trust criterion set. */
+export function trustMatters(hits, trusted, cfg = automodConfig) {
+    if (!trusted?.roleId && !(Number(trusted?.minLevel) > 0)) return false;
+    return hits.some((hit) => isRelaxableRule(hit.rule, cfg));
+}
+
+/** Hits left once a trusted member's relaxable hits are dropped. */
+export function relaxForTrusted(hits, trusted, cfg = automodConfig) {
+    return trusted ? hits.filter((hit) => !isRelaxableRule(hit.rule, cfg)) : hits;
+}
+
 /** settings.channelRules with one exception set ('off' | 'monitor') or removed ('default'). */
 export function withChannelRule(channelRules, channelId, ruleKey, mode) {
     const next = { ...(channelRules || {}) };

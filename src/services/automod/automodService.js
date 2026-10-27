@@ -18,7 +18,8 @@ import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction, isAdministrator } from '../enforcement/enforcementService.js';
 import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
 import { isRaidJoiner } from './raidService.js';
-import { resolveRuleMode } from './policy.js';
+import { getUserLevelData } from '../leveling/leveling.js';
+import { isTrustedMember, hasTrustedRole, relaxForTrusted, resolveRuleMode, trustMatters } from './policy.js';
 import { noteRepeatHit, postReviewCard } from './reviewCards.js';
 import * as reasons from './reasons.js';
 import {
@@ -44,6 +45,7 @@ const harassment = new Map();     // guildId:authorId:targetId → [at]
 const lastPost = new Map();       // guildId:userId → at (new-member slowmode)
 const inviteGuilds = new Map();   // invite code → guild id | null
 const handledMessages = new Set(); // message ids already acted on (edits re-run the checks)
+const levelCache = new Map();     // guildId:userId → { level, expiresAt } (trusted members)
 
 const STAFF_PERMISSIONS = [
     PermissionFlagsBits.Administrator,
@@ -79,6 +81,7 @@ function pruneMaps(now) {
     for (const [key, at] of lastPost) if (now - at > automodConfig.newMemberSlowmodeMs) lastPost.delete(key);
     if (handledMessages.size > 5000) handledMessages.clear();
     if (inviteGuilds.size > 1000) inviteGuilds.clear();
+    for (const [key, entry] of levelCache) if (entry.expiresAt <= now) levelCache.delete(key);
 }
 
 let lastPrune = 0;
@@ -349,6 +352,31 @@ export function applyRuleModes(hits, settings, channel = null) {
         .filter((hit) => hit.mode !== 'off');
 }
 
+/**
+ * Trusted member check (/automod trusted). Only called when a relaxable rule was hit,
+ * so the level is read on such hits only, and cached for trustedLevelCacheMs. A failed
+ * level read counts as not trusted: the rule then applies as usual.
+ */
+async function isTrusted(member, trusted) {
+    const roleIds = member.roles?.cache;
+    if (hasTrustedRole(roleIds, trusted)) return true;
+    if (!(Number(trusted?.minLevel) > 0)) return false;
+    const key = `${member.guild.id}:${member.id}`;
+    const now = Date.now();
+    let cached = levelCache.get(key);
+    if (!cached || cached.expiresAt <= now) {
+        const level = await getUserLevelData(member.client, member.guild.id, member.id)
+            .then((data) => data.level)
+            .catch((error) => {
+                logger.warn(`Automod could not read the level of ${member.id}: ${error.message}`);
+                return null;
+            });
+        cached = { level, expiresAt: now + (level === null ? 60 * 1000 : automodConfig.trustedLevelCacheMs) };
+        levelCache.set(key, cached);
+    }
+    return isTrustedMember({ roleIds, level: cached.level }, trusted);
+}
+
 export function worstHit(hits) {
     return hits.reduce((a, b) => (AUTOMOD_RULES[b.rule].severity > AUTOMOD_RULES[a.rule].severity ? b : a));
 }
@@ -377,7 +405,10 @@ export async function moderateMessage(message, { edited = false } = {}) {
         }
 
         const detected = await evaluateMessage(message, member, now);
-        const hits = applyRuleModes(detected, settings, message.channel);
+        let hits = applyRuleModes(detected, settings, message.channel);
+        if (trustMatters(hits, settings.trusted) && await isTrusted(member, settings.trusted)) {
+            hits = relaxForTrusted(hits, true);
+        }
         if (hits.length) {
             handledMessages.add(message.id);
             return await actOn(message, member, worstHit(hits), settings);
@@ -392,7 +423,7 @@ export async function moderateMessage(message, { edited = false } = {}) {
 
 /** Test hook: forget all in-memory state. */
 export function resetAutomodState() {
-    for (const map of [history, cooldowns, harassment, lastPost, inviteGuilds]) map.clear();
+    for (const map of [history, cooldowns, harassment, lastPost, inviteGuilds, levelCache]) map.clear();
     handledMessages.clear();
 }
 
