@@ -5,6 +5,22 @@ import { getGuildBirthdays, setBirthday as dbSetBirthday, deleteBirthday as dbDe
 import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
 
+function isLeapYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+// Feb 29 birthdays are celebrated on Feb 28 in non-leap years.
+function celebratedDay(year, month, day) {
+  return month === 2 && day === 29 && !isLeapYear(year) ? 28 : day;
+}
+
+/** True when a stored birthday falls on the given UTC date. */
+export function isBirthdayOn(birthday, date) {
+  const year = date.getUTCFullYear();
+  return birthday.month === date.getUTCMonth() + 1
+    && celebratedDay(year, birthday.month, birthday.day) === date.getUTCDate();
+}
+
 export function validateBirthday(month, day) {
   
   if (typeof month !== 'number' || typeof day !== 'number') {
@@ -212,10 +228,10 @@ export async function getUpcomingBirthdays(client, guildId, limit = 5) {
     const upcomingBirthdays = [];
     
     for (const [userId, userData] of Object.entries(birthdays)) {
-      let nextBirthday = new Date(currentYear, userData.month - 1, userData.day);
+      let nextBirthday = new Date(currentYear, userData.month - 1, celebratedDay(currentYear, userData.month, userData.day));
 
       if (nextBirthday < today) {
-        nextBirthday = new Date(currentYear + 1, userData.month - 1, userData.day);
+        nextBirthday = new Date(currentYear + 1, userData.month - 1, celebratedDay(currentYear + 1, userData.month, userData.day));
       }
       
       const daysUntil = Math.round((nextBirthday - today) / (1000 * 60 * 60 * 24));
@@ -247,13 +263,11 @@ export async function getTodaysBirthdays(client, guildId) {
   try {
     const birthdays = await getGuildBirthdays(client, guildId);
     const today = new Date();
-    const currentMonth = today.getUTCMonth() + 1;
-    const currentDay = today.getUTCDate();
 
     const todaysBirthdays = [];
 
     for (const [userId, userData] of Object.entries(birthdays)) {
-      if (userData.month === currentMonth && userData.day === currentDay) {
+      if (isBirthdayOn(userData, today)) {
         todaysBirthdays.push({
           userId,
           month: userData.month,
@@ -324,7 +338,7 @@ export async function checkBirthdays(client) {
       const birthdays = (await getGuildBirthdays(client, guildId)) || {};
       const birthdayMembers = [];
       for (const [userId, userData] of Object.entries(birthdays)) {
-        if (userData.month === currentMonth && userData.day === currentDay) {
+        if (isBirthdayOn(userData, today)) {
           const member = await guild.members.fetch(userId).catch(() => null);
           if (member) {
             birthdayMembers.push(member);

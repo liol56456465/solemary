@@ -345,7 +345,10 @@ export async function reloadCommand(client, commandName) {
         moduleUrl.searchParams.set('t', Date.now().toString());
 
         const newCommand = (await import(moduleUrl.href)).default;
-        
+        // Keep what the loader added, or the next reload has no filePath.
+        newCommand.category = command.category;
+        newCommand.filePath = command.filePath;
+
         client.commands.set(commandName, newCommand);
         
         logger.info(`Reloaded command: ${commandName}`);
