@@ -336,6 +336,8 @@ const AUTOMOD_PERMISSIONS = [
     ['ManageNicknames', 'Manage Nicknames (reset impersonating nicknames)'],
     ['ViewAuditLog', 'View Audit Log (staff guard)'],
     ['ManageGuild', 'Manage Server (raid lockdown verification level)'],
+    ['ManageChannels', 'Manage Channels (auto slowmode, server snapshots)'],
+    ['ManageWebhooks', 'Manage Webhooks (anti-nuke webhook cleanup)'],
 ];
 
 /** One startup line: what automod can't do with the bot's current permissions. */

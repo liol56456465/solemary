@@ -1,6 +1,8 @@
 import { Events } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { moderateMessage } from '../services/automod/automodService.js';
+import { noteStaffMessage } from '../services/staffActivityService.js';
+import { trackChannelActivity } from '../services/automod/autoSlowmode.js';
 import { getLevelingConfig, getUserLevelData } from '../services/leveling/leveling.js';
 import { addXp } from '../services/leveling/xpSystem.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
@@ -32,6 +34,8 @@ export default {
 
       // Automod runs first; a removed message gets no commands, counting or XP.
       if (await moderateMessage(message)) return;
+      noteStaffMessage(message);
+      trackChannelActivity(message).catch((error) => logger.warn(`Auto slowmode tracking failed: ${error.message}`));
 
       logger.debug(`Message received from ${message.author.tag}: ${message.content}`);
 

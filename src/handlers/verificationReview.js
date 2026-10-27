@@ -8,6 +8,7 @@ import { InteractionHelper } from '../utils/interactionHelper.js';
 import { isAdministrator, sendDm } from '../services/enforcement/enforcementService.js';
 import { verifyUser } from '../services/verificationService.js';
 import { closeCard } from '../services/automod/reviewCards.js';
+import { noteStaffReview } from '../services/staffActivityService.js';
 
 export async function handleVerificationReview(interaction, client, args) {
     const [decision, guildId, userId] = args;
@@ -20,6 +21,7 @@ export async function handleVerificationReview(interaction, client, args) {
     const user = await client.users.fetch(userId).catch(() => null);
     const guild = client.guilds.cache.get(guildId);
     const admin = interaction.user;
+    await noteStaffReview(interaction.guildId, admin.id);
 
     if (decision === 'approve') {
         const result = await verifyUser(client, guildId, userId, { source: 'staff_approval', moderatorId: admin.id });

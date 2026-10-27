@@ -15,6 +15,11 @@ import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
 import { runEnforcementExpiry } from './services/enforcement/expiryService.js';
 import { importLegacyWarnings } from './services/enforcement/warnImportService.js';
+import { flushStaffMessages, postWeeklyStaffReport } from './services/staffActivityService.js';
+import { snapshotMainServer } from './services/structureBackupService.js';
+import { runTicketReminders } from './services/ticketReminderService.js';
+import { postWeeklyAutomodReport } from './services/automod/automodReport.js';
+import { liftCalmSlowmodes } from './services/automod/autoSlowmode.js';
 import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { registerOAuthRoutes } from './services/oauthVerification.js';
@@ -303,6 +308,15 @@ class Meowist extends Client {
     cron.schedule('* * * * *', exclusive('giveaway_check', () => checkGiveaways(this)));
     cron.schedule('*/15 * * * *', exclusive('counter_update', () => this.updateAllCounters()));
     cron.schedule('* * * * *', exclusive('enforcement_expiry', () => runEnforcementExpiry(this)));
+    cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
+    cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));
+    cron.schedule('*/5 * * * *', exclusive('ticket_reminders', () => runTicketReminders(this)));
+    // Times are UTC: a daily structure snapshot, and the weekly reports on Monday morning.
+    cron.schedule('0 4 * * *', exclusive('structure_snapshot', () => snapshotMainServer(this)), { timezone: 'UTC' });
+    cron.schedule('0 9 * * 1', exclusive('weekly_reports', async () => {
+      await postWeeklyStaffReport(this);
+      await postWeeklyAutomodReport(this);
+    }), { timezone: 'UTC' });
 
     // Expired per-user command cooldowns are dead weight; sweep them every 10 minutes.
     cron.schedule('*/10 * * * *', runSafeTask('cooldown_sweep', () => {

@@ -11,6 +11,7 @@ import {
     listStaffWarnings,
     restoreStaffRoles,
 } from '../../services/automod/staffGuardService.js';
+import { formatActivityLine, staffActivityForWeek, weekStart } from '../../services/staffActivityService.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -25,12 +26,15 @@ export default {
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('staff')
-        .setDescription('Owner only: staff warnings and restoring removed staff roles')
+        .setDescription('Owner only: staff warnings, activity, and restoring removed staff roles')
         .addSubcommand((sub) => sub.setName('warn').setDescription('Give a staff member a warning (3 active remove their staff roles)')
             .addUserOption((option) => option.setName('user').setDescription('Staff member').setRequired(true))
             .addStringOption((option) => option.setName('reason').setDescription('Which admin rule they broke').setRequired(true).setMaxLength(500)))
         .addSubcommand((sub) => sub.setName('warnings').setDescription("Show a staff member's warnings")
             .addUserOption((option) => option.setName('user').setDescription('Staff member').setRequired(true)))
+        .addSubcommand((sub) => sub.setName('activity').setDescription('What each staff member did this week or last week')
+            .addStringOption((option) => option.setName('week').setDescription('Which week')
+                .addChoices({ name: 'this week', value: 'this' }, { name: 'last week', value: 'last' })))
         .addSubcommand((sub) => sub.setName('restore').setDescription('Give back staff roles removed by the staff guard or by warnings')
             .addUserOption((option) => option.setName('user').setDescription('Staff member').setRequired(true))),
 
@@ -46,6 +50,21 @@ export default {
 
         const sub = interaction.options.getSubcommand();
         const user = interaction.options.getUser('user');
+
+        if (sub === 'activity') {
+            const date = new Date();
+            if (interaction.options.getString('week') === 'last') date.setUTCDate(date.getUTCDate() - 7);
+            const start = weekStart(date);
+            await interaction.guild.members.fetch().catch(() => null);
+            const rows = await staffActivityForWeek(interaction.guild, start);
+            return InteractionHelper.safeEditReply(interaction, {
+                embeds: [createEmbed({
+                    title: `Staff activity, week of ${start}`,
+                    description: truncate(rows.length ? `${rows.map(formatActivityLine).join('\n')}\n\n-# ⚠️ = no moderation work and under 20 messages. Actions are cases they created; reviews are automod and verification cards.` : 'No staff found.', 4096),
+                    color: 'primary',
+                })],
+            });
+        }
 
         if (sub === 'warn') {
             if (user.id === interaction.guild.ownerId || user.bot) throw userError('You cannot warn the owner or a bot.');

@@ -135,6 +135,7 @@ const MOD_LOG_TITLES = {
     appeal: ['Appeal decided', 'primary'],
     raid: ['Join raid', 'error'],
     staff: ['Staff guard', 'error'],
+    automod: ['Automod', 'primary'],
 };
 
 /** Posts one enforcement event in the moderation log channel (MOD_LOG_CHANNEL_ID). */

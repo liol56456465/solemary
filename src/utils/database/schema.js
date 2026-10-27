@@ -264,6 +264,27 @@ export const tableStatements = [
         PRIMARY KEY (user_id, ip_hash)
     )`,
 
+    // Weekly staff activity counters (messages, review decisions, tickets claimed);
+    // moderation actions are counted from mod_cases instead.
+    `CREATE TABLE IF NOT EXISTS ${t.staff_activity} (
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        week_start DATE NOT NULL,
+        messages INTEGER NOT NULL DEFAULT 0,
+        reviews INTEGER NOT NULL DEFAULT 0,
+        tickets INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (guild_id, user_id, week_start)
+    )`,
+
+    // Daily snapshots of a server's roles and channels, for /backup rebuild.
+    `CREATE TABLE IF NOT EXISTS ${t.server_snapshots} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        summary TEXT NOT NULL,
+        data JSONB NOT NULL
+    )`,
+
     `CREATE TABLE IF NOT EXISTS ${t.enforcement_settings} (
         guild_id VARCHAR(20) PRIMARY KEY,
         muted_role_id VARCHAR(20),
@@ -296,6 +317,7 @@ export const indexStatements = [
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_mod_appeals_one_pending ON ${t.mod_appeals}(case_code) WHERE status = 'pending' AND kind = 'appeal'`,
     `CREATE INDEX IF NOT EXISTS idx_staff_warnings_user ON ${t.staff_warnings}(guild_id, user_id, expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_verification_ips_hash ON ${t.verification_ips}(ip_hash)`,
+    `CREATE INDEX IF NOT EXISTS idx_server_snapshots_guild ON ${t.server_snapshots}(guild_id, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_appeals_case ON ${t.mod_appeals}(case_code, decided_at DESC)`,
 ];
 

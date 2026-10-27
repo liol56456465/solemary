@@ -8,6 +8,7 @@ import { isAdministrator } from '../../services/enforcement/enforcementService.j
 import { getAutomodSettings, updateAutomodSettings } from '../../services/automod/automodSettings.js';
 import { endLockdown, getLockdownState } from '../../services/automod/raidService.js';
 import { describeStep } from '../../services/automod/reviewCards.js';
+import { automodStats, formatAutomodStats } from '../../services/automod/automodReport.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -50,6 +51,8 @@ export default {
         .addSubcommand((sub) => sub.setName('exempt').setDescription('Add or remove a channel automod ignores')
             .addChannelOption((option) => option.setName('channel').setDescription('Channel or category').setRequired(true)
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildCategory)))
+        .addSubcommand((sub) => sub.setName('stats').setDescription('Automod actions, undos and top offenders')
+            .addIntegerOption((option) => option.setName('days').setDescription('How far back (default 7)').setMinValue(1).setMaxValue(90)))
         .addSubcommand((sub) => sub.setName('lockdown-end').setDescription('End a join-raid lockdown and restore the verification level')),
 
     async execute(interaction) {
@@ -65,6 +68,22 @@ export default {
         const guildId = interaction.guildId;
         const sub = interaction.options.getSubcommand();
         let note = null;
+
+        if (sub === 'stats') {
+            const stats = await automodStats(guildId, interaction.options.getInteger('days') || 7);
+            const text = formatAutomodStats(stats);
+            return InteractionHelper.safeEditReply(interaction, {
+                embeds: [createEmbed({
+                    title: `Automod, last ${stats.days} day(s): ${stats.total} action(s)`,
+                    fields: [
+                        { name: 'Per rule', value: text.rules.slice(0, 1024) },
+                        { name: 'Most actions against', value: text.offenders.slice(0, 1024) },
+                    ],
+                    footer: { text: text.footer },
+                    color: 'primary',
+                })],
+            });
+        }
 
         if (sub === 'enable') {
             const enabled = interaction.options.getBoolean('enabled');

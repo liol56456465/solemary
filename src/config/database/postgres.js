@@ -24,6 +24,8 @@ const configuredTables = {
     enforcement_settings: 'enforcement_settings',
     staff_warnings: 'staff_warnings',
     verification_ips: 'verification_ips',
+    staff_activity: 'staff_activity',
+    server_snapshots: 'server_snapshots',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -49,6 +51,8 @@ const allowedTableIdentifiers = new Set([
     'enforcement_settings',
     'staff_warnings',
     'verification_ips',
+    'staff_activity',
+    'server_snapshots',
 ]);
 
 const validatedTables = Object.fromEntries(

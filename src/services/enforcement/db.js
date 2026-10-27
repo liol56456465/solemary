@@ -15,6 +15,9 @@ export const T = {
     settings: pgConfig.tables.enforcement_settings,
     staffWarnings: pgConfig.tables.staff_warnings,
     verificationIps: pgConfig.tables.verification_ips,
+    staffActivity: pgConfig.tables.staff_activity,
+    serverSnapshots: pgConfig.tables.server_snapshots,
+    tickets: pgConfig.tables.tickets,
 };
 
 export function isEnforcementDbAvailable() {

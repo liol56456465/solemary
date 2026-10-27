@@ -9,6 +9,7 @@ import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { handleReviewAction } from '../services/automod/reviewCards.js';
+import { noteStaffReview } from '../services/staffActivityService.js';
 
 export async function handleAutomodReview(interaction, client, args) {
     if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)) {
@@ -19,5 +20,6 @@ export async function handleAutomodReview(interaction, client, args) {
     }
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
     const outcome = await handleReviewAction(interaction, args);
+    await noteStaffReview(interaction.guildId, interaction.user.id);
     return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Review saved', outcome)] });
 }

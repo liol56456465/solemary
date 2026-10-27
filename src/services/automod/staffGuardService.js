@@ -5,6 +5,11 @@
 // once. The owner is alerted by DM and in the mod log and can restore the roles with
 // /staff restore. The server owner and the bot are never affected.
 //
+// Anti-nuke (same exemptions): a bot added by anyone but the owner is kicked; 3+
+// webhooks created by one member within the window are deleted and that member is
+// demoted; dangerous permissions granted to @everyone, or Administrator granted to
+// any role, are reverted and the member who did it is demoted. The owner is alerted.
+//
 // Staff warnings: /staff warn (owner only) records a warning that expires after
 // staffWarnExpiryMs; at staffWarnLimit active warnings the staff roles are removed
 // the same way.
@@ -35,6 +40,19 @@ const WATCHED = {
     [AuditLogEvent.ChannelDelete]: 'delete',
     [AuditLogEvent.RoleDelete]: 'delete',
 };
+
+// Permissions that must never reach @everyone (and Administrator must reach no role) without the owner.
+const DANGEROUS_PERMISSIONS = [
+    PermissionFlagsBits.Administrator,
+    PermissionFlagsBits.ManageGuild,
+    PermissionFlagsBits.ManageRoles,
+    PermissionFlagsBits.ManageChannels,
+    PermissionFlagsBits.ManageWebhooks,
+    PermissionFlagsBits.BanMembers,
+    PermissionFlagsBits.KickMembers,
+    PermissionFlagsBits.MentionEveryone,
+];
+const WEBHOOK_LIMIT = 3;
 
 const activity = new Map(); // guildId:executorId:kind → [at]
 const backupKey = (guildId, userId) => `staffguard:removed:${guildId}:${userId}`;
@@ -103,12 +121,94 @@ async function demote(guild, member, why) {
     logger.warn(`Staff guard removed roles from ${member.id}: ${why}`);
 }
 
+async function alertNuke(guild, title, fields) {
+    await postModLog(guild.client, 'staff', fields, { title });
+    await alertOwner(guild, `**${title} in ${guild.name}**\n${fields.map((f) => `**${f.name}:** ${f.value}`).join('\n')}`);
+}
+
+function grantedBits(entry) {
+    const change = entry.changes?.find((c) => c.key === 'permissions');
+    if (!change) return 0n;
+    const before = BigInt(change.old ?? 0);
+    const after = BigInt(change.new ?? 0);
+    return after & ~before;
+}
+
+async function demoteExecutor(guild, executorId, why) {
+    const member = await guild.members.fetch(executorId).catch(() => null);
+    if (member) await demote(guild, member, why).catch((error) => logger.error(`Staff guard could not demote ${executorId}: ${error.message}`));
+}
+
+/** Anti-nuke checks for one audit log entry. Returns true when it handled the entry. */
+async function handleNukeEntry(entry, guild) {
+    const executorId = entry.executorId;
+    const executor = `<@${executorId}> (\`${executorId}\`)`;
+
+    if (entry.action === AuditLogEvent.BotAdd) {
+        const botId = entry.targetId;
+        const kicked = await guild.members.kick(botId, 'Anti-nuke: bot added without the owner').then(() => true).catch(() => false);
+        await alertNuke(guild, 'Unapproved bot removed', [
+            { name: 'Bot', value: `<@${botId}> (\`${botId}\`)` },
+            { name: 'Added by', value: executor },
+            { name: 'Result', value: kicked ? 'Kicked. The owner can add it again if it is wanted.' : 'Could not kick it (it may be above my role). Remove it by hand.' },
+        ]);
+        return true;
+    }
+
+    if (entry.action === AuditLogEvent.WebhookCreate) {
+        const now = Date.now();
+        const key = `${guild.id}:${executorId}:webhook`;
+        const times = (activity.get(key) || []).filter((at) => now - at <= automodConfig.guardWindowMs);
+        times.push(now);
+        activity.set(key, times);
+        if (times.length < WEBHOOK_LIMIT) return true;
+        activity.delete(key);
+
+        const webhooks = await guild.fetchWebhooks().catch(() => null);
+        const theirs = webhooks ? [...webhooks.values()].filter((hook) => hook.owner?.id === executorId) : [];
+        for (const hook of theirs) await hook.delete('Anti-nuke: webhook spam').catch(() => {});
+        await alertNuke(guild, 'Webhook spam stopped', [
+            { name: 'Created by', value: executor },
+            { name: 'Webhooks deleted', value: String(theirs.length) },
+        ]);
+        await demoteExecutor(guild, executorId, `${times.length} webhooks created within ${automodConfig.guardWindowMs / 60000} minutes`);
+        return true;
+    }
+
+    if (entry.action === AuditLogEvent.RoleUpdate || entry.action === AuditLogEvent.RoleCreate) {
+        const granted = grantedBits(entry);
+        if (!granted) return false;
+        const role = guild.roles.cache.get(entry.targetId) || await guild.roles.fetch(entry.targetId).catch(() => null);
+        if (!role) return false;
+        const isEveryone = role.id === guild.id;
+        const dangerous = DANGEROUS_PERMISSIONS.filter((flag) => (granted & flag) === flag);
+        const flagged = isEveryone ? dangerous : dangerous.filter((flag) => flag === PermissionFlagsBits.Administrator);
+        if (!flagged.length) return false;
+
+        const reverted = flagged.reduce((bits, flag) => bits & ~flag, role.permissions.bitfield);
+        const ok = await role.setPermissions(reverted, 'Anti-nuke: dangerous permission granted without the owner').then(() => true).catch(() => false);
+        const names = flagged.map((flag) => Object.entries(PermissionFlagsBits).find(([, bit]) => bit === flag)?.[0]).join(', ');
+        await alertNuke(guild, 'Dangerous permission reverted', [
+            { name: 'Role', value: isEveryone ? '@everyone' : `${role.name} (\`${role.id}\`)` },
+            { name: 'Granted', value: names },
+            { name: 'By', value: executor },
+            { name: 'Result', value: ok ? 'Reverted.' : 'Could not revert (the role may be above mine). Fix it by hand.' },
+        ]);
+        await demoteExecutor(guild, executorId, `gave ${names} to ${isEveryone ? '@everyone' : role.name}`);
+        return true;
+    }
+    return false;
+}
+
 /** Call for every audit log entry in the main server. */
 export async function handleAuditLogEntry(entry, guild) {
     if (guild.id !== enforcementConfig.mainGuildId) return;
-    const kind = WATCHED[entry.action];
     const executorId = entry.executorId;
-    if (!kind || !executorId || executorId === guild.ownerId || executorId === guild.client.user.id) return;
+    if (!executorId || executorId === guild.ownerId || executorId === guild.client.user.id) return;
+    if (await handleNukeEntry(entry, guild)) return;
+
+    const kind = WATCHED[entry.action];
+    if (!kind) return;
 
     const now = Date.now();
     const key = `${guild.id}:${executorId}:${kind}`;
