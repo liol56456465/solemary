@@ -82,13 +82,7 @@ async function handlePrefixCommand(message, client) {
       return; 
     }
 
-    let { commandName, args } = parsed;
-    const musicPrefixShortcut = commandName.toLowerCase();
-    const MUSIC_PREFIX_SHORTCUTS = new Set(['leave', 'pause', 'resume', 'skip', 'stop', 'volume']);
-    if (MUSIC_PREFIX_SHORTCUTS.has(musicPrefixShortcut)) {
-      commandName = 'music';
-      args = [musicPrefixShortcut, ...args];
-    }
+    const { commandName, args } = parsed;
 
     logger.info(`Prefix command detected: ${commandName}, args: ${args.join(', ')}`);
 

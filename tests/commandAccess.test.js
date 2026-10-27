@@ -42,7 +42,7 @@ test('every everyone-key names a real command or subcommand', async () => {
 });
 
 test('owner decisions stay admin-only', () => {
-    for (const key of ['wipedata', 'randomuser', 'poll', 'countdown', 'embedbuilder', 'shorten', 'music 247', 'birthday setchannel']) {
+    for (const key of ['wipedata', 'randomuser', 'poll', 'countdown', 'embedbuilder', 'shorten', 'birthday setchannel']) {
         assert.equal(EVERYONE_COMMANDS.has(key), false, key);
     }
 });
@@ -54,9 +54,9 @@ test('gate: listed keys pass for members, everything else needs Administrator', 
     const run = (accessKey, permissions, userId = 'member') =>
         checkCommandAccess({ command: {}, accessKey, guild, userId, permissions }).allowed;
 
-    assert.equal(run('music skip', member), true);
-    assert.equal(run('music 247', member), false);
-    assert.equal(run('music', member), false); // no subcommand resolved
+    assert.equal(run('birthday set', member), true);
+    assert.equal(run('birthday setchannel', member), false);
+    assert.equal(run('birthday', member), false); // no subcommand resolved
     assert.equal(run(null, member), false);
     assert.equal(run('wipedata', member), false);
     assert.equal(run('wipedata', admin), true);
