@@ -20,6 +20,7 @@ import { isCollectorManagedComponent } from '../utils/collectorComponents.js';
 import { ResponseCoordinator } from '../utils/responseCoordinator.js';
 import { enforceDefaultCommandPermissions } from '../utils/permissionGuard.js';
 import { checkCommandAccess } from '../utils/commandGate.js';
+import { skipIfArrivedTooLate, noticeIfHandlerMissedDeadline } from '../utils/lateInteractionNotice.js';
 
 const COMMAND_ERROR_SUBTYPES = {
   ticket: 'ticket_failed',
@@ -71,6 +72,9 @@ export default {
     interaction.traceId = interactionTraceContext.traceId;
 
     return runWithTraceContext(interactionTraceContext, async () => {
+      // Set once a registered handler runs, so the late check below skips
+      // collector-managed and inline-awaited interactions.
+      let dispatched = false;
       try {
         InteractionHelper.patchInteractionResponses(interaction);
         ResponseCoordinator.attach(interaction);
@@ -192,6 +196,8 @@ export default {
               return;
             }
 
+            if (await skipIfArrivedTooLate(interaction)) return;
+            dispatched = true;
             await command.execute(interaction, guildConfig, client);
           } catch (error) {
             await handleInteractionError(interaction, error, withTraceContext({
@@ -358,6 +364,8 @@ export default {
 
             if (button) {
               try {
+                if (await skipIfArrivedTooLate(interaction)) return;
+                dispatched = true;
                 await button.execute(interaction, client, [listId]);
               } catch (error) {
                 await handleInteractionError(interaction, error, withTraceContext({
@@ -395,6 +403,8 @@ export default {
           }
 
           try {
+            if (await skipIfArrivedTooLate(interaction)) return;
+            dispatched = true;
             await button.execute(interaction, client, args);
           } catch (error) {
             await handleInteractionError(interaction, error, withTraceContext({
@@ -422,6 +432,8 @@ export default {
           }
 
           try {
+            if (await skipIfArrivedTooLate(interaction)) return;
+            dispatched = true;
             await selectMenu.execute(interaction, client, args);
           } catch (error) {
             await handleInteractionError(interaction, error, withTraceContext({
@@ -435,6 +447,8 @@ export default {
         } else if (interaction.isModalSubmit()) {
           if (interaction.customId.startsWith('app_modal_')) {
             try {
+              if (await skipIfArrivedTooLate(interaction)) return;
+              dispatched = true;
               await handleApplicationModal(interaction);
             } catch (error) {
               await handleInteractionError(interaction, error, withTraceContext({
@@ -478,6 +492,8 @@ export default {
           }
 
           try {
+            if (await skipIfArrivedTooLate(interaction)) return;
+            dispatched = true;
             await modal.execute(interaction, client, args);
           } catch (error) {
             await handleInteractionError(interaction, error, withTraceContext({
@@ -512,6 +528,10 @@ export default {
             error: replyError,
             traceId: interactionTraceContext.traceId
           });
+        }
+      } finally {
+        if (dispatched) {
+          await noticeIfHandlerMissedDeadline(interaction).catch(() => {});
         }
       }
     });
