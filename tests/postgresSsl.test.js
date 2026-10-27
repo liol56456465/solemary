@@ -37,3 +37,21 @@ test('TLS parameters are stripped from the URL so pg cannot override them', () =
     assert.equal(cleaned.includes('sslmode'), false);
     assert.equal(cleaned.includes('channel_binding=require'), true);
 });
+
+test('a CA certificate from the environment is used for remote hosts (Supabase)', () => {
+    const saved = { cert: process.env.POSTGRES_CA_CERT, ssl: process.env.POSTGRES_SSL };
+    try {
+        delete process.env.POSTGRES_SSL;
+        process.env.POSTGRES_CA_CERT = '-----BEGIN CERTIFICATE-----\\nAAAA\\n-----END CERTIFICATE-----';
+        const ssl = resolveSslConfig('postgresql://postgres.ref:pw@aws-0-us-east-1.pooler.supabase.com:5432/postgres');
+        assert.equal(ssl.rejectUnauthorized, true);
+        assert.equal(ssl.ca, '-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----', 'escaped newlines restored');
+        process.env.POSTGRES_SSL = 'no-verify';
+        assert.throws(() => resolveSslConfig('postgresql://u:p@db.example.com/x'), /both set/);
+    } finally {
+        for (const [key, name] of [['cert', 'POSTGRES_CA_CERT'], ['ssl', 'POSTGRES_SSL']]) {
+            if (saved[key] === undefined) delete process.env[name];
+            else process.env[name] = saved[key];
+        }
+    }
+});
