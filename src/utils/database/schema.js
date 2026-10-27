@@ -312,6 +312,19 @@ export const tableStatements = [
         muted_role_id VARCHAR(20),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+
+    // Native Discord AutoMod bridge: what the bot does when a native rule blocks a
+    // message (ignore, log a line, or warn through the enforcement path). Rules without
+    // a row are logged.
+    `CREATE TABLE IF NOT EXISTS ${t.automod_native_rules} (
+        guild_id VARCHAR(20) NOT NULL,
+        rule_id VARCHAR(20) NOT NULL,
+        policy VARCHAR(10) NOT NULL DEFAULT 'log' CHECK (policy IN ('ignore', 'log', 'warn')),
+        dedupe_minutes INTEGER NOT NULL DEFAULT 10 CHECK (dedupe_minutes >= 0 AND dedupe_minutes <= 1440),
+        updated_by VARCHAR(20),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (guild_id, rule_id)
+    )`,
 ];
 
 export const indexStatements = [

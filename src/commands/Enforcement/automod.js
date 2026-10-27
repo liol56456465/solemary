@@ -1,4 +1,4 @@
-import { ChannelType, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { AutoModerationActionType, ChannelType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
@@ -11,6 +11,7 @@ import { describeStep } from '../../services/automod/reviewCards.js';
 import { automodStats, formatAutomodStats } from '../../services/automod/automodReport.js';
 import { collectOpenReviews, formatQueue } from '../../services/automod/reviewQueue.js';
 import { endProbation, getProbation } from '../../services/automod/probationService.js';
+import { loadNativePolicies, policyFor, setNativePolicy, triggerLabel } from '../../services/automod/nativeBridge.js';
 import {
     CHANNEL_RULE_MODES, RULE_MODES, hasRuleOverride, isRelaxableRule, ruleMode, withChannelRule,
 } from '../../services/automod/policy.js';
@@ -74,6 +75,57 @@ async function statusEmbed(guildId) {
     });
 }
 
+const POLICY_TEXT = {
+    ignore: 'ignore',
+    log: 'log (a line in the review channel)',
+    warn: 'warn (a warning and a review card)',
+};
+
+/** One native rule's line: name, trigger, policy, dedupe, and a note on native timeouts. */
+function nativeRuleLine(rule, policies) {
+    const { policy, dedupeMinutes } = policyFor(policies, rule.id);
+    const stored = policies.has(rule.id) ? '' : ' (default)';
+    const blocks = rule.actions.some((action) => action.type === AutoModerationActionType.BlockMessage);
+    const timeout = rule.actions.some((action) => action.type === AutoModerationActionType.Timeout);
+    const notes = [
+        rule.enabled ? null : 'disabled',
+        blocks ? null : 'does not block messages, so the bot never sees it',
+        timeout ? '⚠️ has a native timeout; the bot mutes with the Muted role, consider removing it' : null,
+    ].filter(Boolean);
+    return `**${rule.name}** · ${triggerLabel(rule.triggerType)} · \`${rule.id}\`\n`
+        + `→ ${POLICY_TEXT[policy]}${stored}, once per ${dedupeMinutes} min per member${notes.length ? `\n-# ${notes.join(' · ')}` : ''}`;
+}
+
+async function handleNative(interaction, sub) {
+    const guild = interaction.guild;
+    if (sub === 'list') {
+        const [rules, policies] = await Promise.all([
+            guild.autoModerationRules.fetch(),
+            loadNativePolicies(guild.id),
+        ]);
+        const lines = [...rules.values()].map((rule) => nativeRuleLine(rule, policies));
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [createEmbed({
+                title: `Native AutoMod rules: ${rules.size}`,
+                description: (lines.join('\n\n') || 'This server has no native AutoMod rules.').slice(0, 4000),
+                footer: { text: 'Change one with /automod native set. The bot needs Manage Server to receive these events.' },
+                color: 'primary',
+            })],
+        });
+    }
+    const ruleId = interaction.options.getString('rule');
+    const policy = interaction.options.getString('policy');
+    const dedupeMinutes = interaction.options.getInteger('dedupe_minutes');
+    if (!/^\d{17,20}$/.test(ruleId || '')) throw userError('Pick a native AutoMod rule from the list.');
+    const rule = await guild.autoModerationRules.fetch(ruleId).catch(() => null);
+    if (!rule) throw userError('That native AutoMod rule no longer exists.');
+    await setNativePolicy(guild.id, ruleId, policy, dedupeMinutes, interaction.user.id);
+    const policies = await loadNativePolicies(guild.id);
+    return InteractionHelper.safeEditReply(interaction, {
+        embeds: [successEmbed('Native AutoMod rule updated', nativeRuleLine(rule, policies))],
+    });
+}
+
 export default {
     // Registered as a guild command in MAIN_GUILD_ID only.
     scope: 'main',
@@ -120,7 +172,30 @@ export default {
         .addSubcommand((sub) => sub.setName('stats').setDescription('Automod actions, undos and top offenders')
             .addIntegerOption((option) => option.setName('days').setDescription('How far back (default 7)').setMinValue(1).setMaxValue(90)))
         .addSubcommand((sub) => sub.setName('queue').setDescription('Review cards still waiting for a decision, newest first'))
-        .addSubcommand((sub) => sub.setName('lockdown-end').setDescription('End a join-raid lockdown and restore the verification level')),
+        .addSubcommand((sub) => sub.setName('lockdown-end').setDescription('End a join-raid lockdown and restore the verification level'))
+        .addSubcommandGroup((group) => group.setName('native').setDescription('Discord\'s own AutoMod rules: what the bot does when one blocks a message')
+            .addSubcommand((sub) => sub.setName('list').setDescription('List the server\'s native AutoMod rules and their policy'))
+            .addSubcommand((sub) => sub.setName('set').setDescription('Ignore, log or warn when a native AutoMod rule blocks a message')
+                .addStringOption((option) => option.setName('rule').setDescription('Native AutoMod rule').setRequired(true).setAutocomplete(true))
+                .addStringOption((option) => option.setName('policy').setDescription('What the bot does').setRequired(true)
+                    .addChoices(
+                        { name: 'ignore', value: 'ignore' },
+                        { name: 'log (a line in the review channel)', value: 'log' },
+                        { name: 'warn (a warning and a review card)', value: 'warn' },
+                    ))
+                .addIntegerOption((option) => option.setName('dedupe_minutes').setDescription('At most one action per member and rule in this many minutes (default 10)')
+                    .setMinValue(0).setMaxValue(1440)))),
+
+    async autocomplete(interaction) {
+        if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)) return interaction.respond([]);
+        const focused = String(interaction.options.getFocused() || '').toLowerCase();
+        const rules = await interaction.guild.autoModerationRules.fetch().catch(() => null);
+        const choices = [...(rules?.values() || [])]
+            .filter((rule) => !focused || rule.name.toLowerCase().includes(focused) || rule.id.includes(focused))
+            .slice(0, 25)
+            .map((rule) => ({ name: `${rule.name} (${triggerLabel(rule.triggerType)})`.slice(0, 100), value: rule.id }));
+        return interaction.respond(choices).catch(() => {});
+    },
 
     async execute(interaction) {
         if (interaction.guildId !== enforcementConfig.mainGuildId) {
@@ -162,6 +237,10 @@ export default {
                     color: items.length ? 'warning' : 'success',
                 })],
             });
+        }
+
+        if (interaction.options.getSubcommandGroup(false) === 'native') {
+            return handleNative(interaction, sub);
         }
 
         if (sub === 'probation') {

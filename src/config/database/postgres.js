@@ -28,6 +28,7 @@ const configuredTables = {
     verification_ips: 'verification_ips',
     staff_activity: 'staff_activity',
     server_snapshots: 'server_snapshots',
+    automod_native_rules: 'automod_native_rules',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -56,6 +57,7 @@ const allowedTableIdentifiers = new Set([
     'verification_ips',
     'staff_activity',
     'server_snapshots',
+    'automod_native_rules',
 ]);
 
 const validatedTables = Object.fromEntries(

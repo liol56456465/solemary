@@ -47,6 +47,10 @@ class Meowist extends Client {
         GatewayIntentBits.GuildVoiceStates,             
 
         GatewayIntentBits.GuildBans,                    
+
+        // Native Discord AutoMod executions (services/automod/nativeBridge.js); the
+        // events only arrive while the bot has Manage Server.
+        GatewayIntentBits.AutoModerationExecution,
       ],
       // DM channels aren't cached; without this partial, DMs (modmail) never arrive.
       partials: [Partials.Channel],

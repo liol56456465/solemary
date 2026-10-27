@@ -485,7 +485,7 @@ const AUTOMOD_PERMISSIONS = [
     ['BanMembers', 'Ban Members'],
     ['ManageNicknames', 'Manage Nicknames (reset impersonating nicknames)'],
     ['ViewAuditLog', 'View Audit Log (staff guard)'],
-    ['ManageGuild', 'Manage Server (raid lockdown verification level)'],
+    ['ManageGuild', 'Manage Server (raid lockdown verification level; native AutoMod events for /automod native)'],
     ['ManageChannels', 'Manage Channels (auto slowmode, server snapshots)'],
     ['ManageWebhooks', 'Manage Webhooks (anti-nuke webhook cleanup)'],
 ];

@@ -19,6 +19,7 @@ export const T = {
     staffActivity: pgConfig.tables.staff_activity,
     serverSnapshots: pgConfig.tables.server_snapshots,
     tickets: pgConfig.tables.tickets,
+    nativeRules: pgConfig.tables.automod_native_rules,
 };
 
 export function isEnforcementDbAvailable() {
