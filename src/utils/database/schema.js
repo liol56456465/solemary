@@ -357,6 +357,8 @@ export const tableStatements = [
         released_at TIMESTAMPTZ,
         released_by VARCHAR(20),
         release_result JSONB
+    )`,
+
     // No-contact orders (/case nocontact): two members may not mention or reply to
     // each other until `until`. user_a < user_b (numerically), so a pair is stored
     // one way. ended_at is set when staff end it early or once it has expired.
