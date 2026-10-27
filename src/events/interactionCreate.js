@@ -107,6 +107,7 @@ export default {
 
             const access = checkCommandAccess({
               command,
+              accessKey: resolveSlashAccessKey(interaction),
               guild: interaction.guild,
               userId: interaction.user.id,
               permissions: interaction.memberPermissions,
@@ -216,6 +217,7 @@ export default {
             }
             const access = checkCommandAccess({
               command,
+              accessKey: interaction.commandName,
               guild: interaction.guild,
               userId: interaction.user.id,
               permissions: interaction.memberPermissions,

@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Collection, ActionRowBuilder, MessageFlags } from 'discord.js';
 import { isCommandAvailableInGuild } from '../../utils/commandGate.js';
+import { isEveryoneCommand } from '../../config/commands/commandAccess.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
 
@@ -45,6 +46,11 @@ function formatCategoryName(rawCategory) {
         .replace(/_/g, ' ')
         .replace(/([a-z])([A-Z])/g, '$1 $2')
         .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+// 🔒 marks admin-only entries; displayName is the command's access key.
+function lockFor(entry) {
+    return isEveryoneCommand(entry.displayName) ? '' : '🔒 ';
 }
 
 function buildHelpEntries(command, category) {
@@ -182,9 +188,9 @@ async function createCategoryCommandsMenu(category, client, guildId = null) {
             .map((cmd) => {
                 const registeredCmd = registeredCommands.get(cmd.baseName);
                 if (registeredCmd && registeredCmd.id) {
-                    return `</${cmd.displayName}:${registeredCmd.id}> · ${cmd.description}`;
+                    return `${lockFor(cmd)}</${cmd.displayName}:${registeredCmd.id}> · ${cmd.description}`;
                 }
-                return `\`/${cmd.displayName}\` · ${cmd.description}`;
+                return `${lockFor(cmd)}\`/${cmd.displayName}\` · ${cmd.description}`;
             })
             .join("\n");
 
@@ -320,9 +326,9 @@ export async function createAllCommandsMenu(page = 1, client, guildId = null) {
         const commandMentions = pageCommands.map((cmd) => {
             const registeredCmd = registeredCommands.get(cmd.baseName);
             if (registeredCmd && registeredCmd.id) {
-                return `</${cmd.displayName}:${registeredCmd.id}> · ${cmd.category}`;
+                return `${lockFor(cmd)}</${cmd.displayName}:${registeredCmd.id}> · ${cmd.category}`;
             }
-            return `\`/${cmd.displayName}\` · ${cmd.category}`;
+            return `${lockFor(cmd)}\`/${cmd.displayName}\` · ${cmd.category}`;
         });
 
         const columnCount = pageCommands.length > 20 ? 3 : (pageCommands.length > 10 ? 2 : 1);

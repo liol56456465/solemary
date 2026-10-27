@@ -3,8 +3,9 @@
 //
 // 1. Commands run in the main server and the support server. Commands with
 //    scope 'main' (enforcement, appeals, /background, /test) run in the main server only.
-// 2. Everything requires Administrator (the server owner counts), except commands
-//    marked `public`. OWNER_IDS is an emergency override for rule 2 only.
+// 2. Everything requires Administrator (the server owner counts), except the
+//    access keys listed in config/commands/commandAccess.js. OWNER_IDS is an
+//    emergency override for rule 2 only.
 // Commands stay visible to everyone (no default_member_permissions), so
 // non-admins see this message instead of an empty command list.
 //
@@ -15,9 +16,10 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { isBotOwner } from '../config/bot.js';
 import { enforcementConfig } from '../config/enforcement.js';
+import { isEveryoneCommand } from '../config/commands/commandAccess.js';
 
 export function getAdminRequiredMessage() {
-    return `You need the Administrator role to use this bot. Request a mod/admin role here: <#${enforcementConfig.adminRequestChannelId}>`;
+    return `You need the Administrator role to use this command. Request a mod/admin role here: <#${enforcementConfig.adminRequestChannelId}>`;
 }
 
 /** True when the command exists in this guild: all commands in the main server, all but scope 'main' in the support server. */
@@ -27,7 +29,7 @@ export function isCommandAvailableInGuild(command, guildId) {
     return guildId === enforcementConfig.supportGuildId && command?.scope !== 'main';
 }
 
-function hasAdministrator({ guild, userId, permissions }) {
+export function hasAdministrator({ guild, userId, permissions }) {
     if (guild?.ownerId && guild.ownerId === userId) return true;
     return Boolean(permissions?.has?.(PermissionFlagsBits.Administrator));
 }
@@ -35,12 +37,13 @@ function hasAdministrator({ guild, userId, permissions }) {
 /**
  * @param {object} p
  * @param {object} p.command      loaded command module
+ * @param {string|null} p.accessKey  "command" or "command subcommand" (see commandAccess.js)
  * @param {object|null} p.guild
  * @param {string} p.userId
  * @param {object|null} p.permissions  PermissionsBitField of the member in this guild
  * @returns {{ allowed: true } | { allowed: false, message: string }}
  */
-export function checkCommandAccess({ command, guild, userId, permissions }) {
+export function checkCommandAccess({ command, accessKey, guild, userId, permissions }) {
     if (!guild) {
         return { allowed: false, message: 'This bot only works in servers.' };
     }
@@ -52,8 +55,7 @@ export function checkCommandAccess({ command, guild, userId, permissions }) {
                 : 'Commands only work in the Meowist servers.',
         };
     }
-    // Commands marked public (the "Report message" context menu) are for every member.
-    if (command?.public || isBotOwner(userId) || hasAdministrator({ guild, userId, permissions })) {
+    if (isEveryoneCommand(accessKey) || isBotOwner(userId) || hasAdministrator({ guild, userId, permissions })) {
         return { allowed: true };
     }
     return { allowed: false, message: getAdminRequiredMessage() };

@@ -82,8 +82,15 @@ async function handlePrefixCommand(message, client) {
       return; 
     }
 
+    let accessKey = null;
+    try {
+      accessKey = resolvePrefixAccessKey(command.data, args);
+    } catch {
+      // Unparseable arguments: no key, so only admins pass the gate.
+    }
     const access = checkCommandAccess({
       command,
+      accessKey,
       guild: message.guild,
       userId: message.author.id,
       permissions: message.member?.permissions,

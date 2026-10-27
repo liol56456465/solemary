@@ -10,7 +10,6 @@ const recentReports = new Map(); // reporterId → at
 export default {
     // Registered as a guild command in MAIN_GUILD_ID only. Open to every member.
     scope: 'main',
-    public: true,
     data: new ContextMenuCommandBuilder()
         .setName('Report message')
         .setType(ApplicationCommandType.Message),

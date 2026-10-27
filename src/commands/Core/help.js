@@ -102,8 +102,9 @@ export async function createInitialHelpMenu(client, guildId = null) {
             {
                 name: '🔒 Access',
                 value: [
-                    '• Every command needs the **Administrator** permission.',
-                    '• Commands only work in the main Meowist server.',
+                    '• Commands marked 🔒 need the **Administrator** permission; the rest are for everyone.',
+                    '• Music controls work for members in the bot\'s voice channel.',
+                    '• Commands only work in the Meowist servers.',
                     '• **/setappeal** posts the appeal panels; **/appeals** lists, shows and decides appeals.',
                 ].join('\n'),
                 inline: false,
