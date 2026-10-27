@@ -32,6 +32,7 @@ const configuredTables = {
     automod_native_rules: 'automod_native_rules',
     no_contact_orders: 'no_contact_orders',
     sticky_messages: 'sticky_messages',
+    tags: 'tags',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -64,6 +65,7 @@ const allowedTableIdentifiers = new Set([
     'automod_native_rules',
     'no_contact_orders',
     'sticky_messages',
+    'tags',
 ]);
 
 const validatedTables = Object.fromEntries(

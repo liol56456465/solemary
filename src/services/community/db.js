@@ -9,6 +9,7 @@ export { query, withTransaction, isUniqueViolation, isEnforcementDbAvailable as 
 
 export const CT = {
     sticky: pgConfig.tables.sticky_messages,
+    tags: pgConfig.tables.tags,
 };
 
 /** An expected, user-facing error (shown as-is by the command error handler). */

@@ -2,9 +2,11 @@
 
 import { logger } from '../../utils/logger.js';
 import { loadStickies } from './stickyService.js';
+import { loadTags } from './tagService.js';
 
 const LOADERS = [
     ['stickies', loadStickies],
+    ['tags', loadTags],
 ];
 
 /** Loads every community cache; one failing loader does not stop the others. Returns a summary line. */

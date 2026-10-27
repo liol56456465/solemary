@@ -20,6 +20,7 @@ import { handleModmailDm, handleModmailStaffMessage, isModmailStaff, modmailUser
 import { enforcementConfig } from '../config/enforcement.js';
 import { enforceNoContact } from '../services/enforcement/noContactService.js';
 import { noteStickyActivity } from '../services/community/stickyService.js';
+import { respondToTags } from '../services/community/tagService.js';
 import {
   getCountingGameConfig,
   resetCountingGame,
@@ -56,7 +57,8 @@ export default {
         return;
       }
 
-      await handlePrefixCommand(message, client);
+      // Tag auto-responses only for messages that are not prefix commands.
+      if (await handlePrefixCommand(message, client) === false) await respondToTags(message);
 
       await handleLeveling(message, client);
     } catch (error) {
@@ -84,7 +86,7 @@ async function handlePrefixCommand(message, client) {
     const parsed = parsePrefixCommand(message.content, prefix);
     
     if (!parsed) {
-      return; 
+      return false; // not a command (any other return means it was one)
     }
 
     const { commandName } = parsed;

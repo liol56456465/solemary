@@ -371,6 +371,26 @@ export const tableStatements = [
         updated_by VARCHAR(20),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+
+    // Tags (/tag): saved texts shown with /tag show, optionally posted automatically
+    // when a message contains a word/phrase or matches a regex. Names are stored
+    // lowercase. Held in memory per guild; uses is bumped when a tag is shown.
+    `CREATE TABLE IF NOT EXISTS ${t.tags} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        name VARCHAR(32) NOT NULL,
+        content TEXT NOT NULL,
+        trigger_kind VARCHAR(10) NOT NULL DEFAULT 'none' CHECK (trigger_kind IN ('none', 'word', 'regex')),
+        trigger TEXT,
+        allow_channels TEXT[] NOT NULL DEFAULT '{}',
+        deny_channels TEXT[] NOT NULL DEFAULT '{}',
+        cooldown_s INTEGER NOT NULL DEFAULT 60 CHECK (cooldown_s >= 0 AND cooldown_s <= 86400),
+        created_by VARCHAR(20) NOT NULL,
+        uses INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (guild_id, name)
+    )`,
 ];
 
 export const indexStatements = [
