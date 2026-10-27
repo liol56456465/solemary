@@ -263,9 +263,9 @@ async function putCommands(rest, route, commands, label) {
 }
 
 /**
- * Every command lives in the main server only: the full set is registered there as
- * guild commands, and the global and support-server lists are emptied. Each PUT
- * replaces the whole list, so commands deleted from the codebase disappear too.
+ * Commands are guild commands: the full set in the main server, and everything except
+ * scope 'main' in the support server. The global list is emptied. Each PUT replaces
+ * the whole list, so commands deleted from the codebase disappear too.
  */
 export async function registerCommandSets(rest, clientId, sets, totalSubcommands = 0) {
     if (!clientId) {
@@ -282,11 +282,14 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
     logger.info('Command validation passed');
 
     const mainCommands = prepareCommandsForRegistration(all);
+    const supportCommands = prepareCommandsForRegistration([...sets.global, ...sets.support]);
 
     if (testMode.enabled) {
         // Test mode never touches global commands; the test main guild plays the main server.
         for (const guildId of testMode.guildIds) {
-            const body = guildId === enforcementConfig.mainGuildId ? mainCommands : [];
+            const body = guildId === enforcementConfig.mainGuildId ? mainCommands
+                : guildId === enforcementConfig.supportGuildId ? supportCommands
+                    : [];
             try {
                 await putCommands(rest, Routes.applicationGuildCommands(clientId, guildId), body, `test-guild ${guildId}`);
             } catch (error) {
@@ -307,10 +310,10 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
 
     if (enforcementConfig.supportGuildId) {
         try {
-            await putCommands(rest, Routes.applicationGuildCommands(clientId, enforcementConfig.supportGuildId), [], 'support-guild');
+            await putCommands(rest, Routes.applicationGuildCommands(clientId, enforcementConfig.supportGuildId), supportCommands, 'support-guild');
         } catch (error) {
             // 50001 Missing Access: the bot is not in that guild (or lacks applications.commands).
-            logger.error(`Could not clear support-guild commands in ${enforcementConfig.supportGuildId}: ${error.message}`);
+            logger.error(`Could not register support-guild commands in ${enforcementConfig.supportGuildId}: ${error.message}`);
         }
     }
 }

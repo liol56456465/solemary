@@ -1,8 +1,8 @@
 // commandGate.js — who may run a command, checked centrally for slash and prefix
 // commands alike.
 //
-// 1. Every command only runs in the main server (the support server only has the
-//    appeal panel's buttons).
+// 1. Commands run in the main server and the support server. Commands with
+//    scope 'main' (enforcement, appeals, /background, /test) run in the main server only.
 // 2. Everything requires Administrator (the server owner counts). OWNER_IDS is an
 //    emergency override for rule 2 only.
 // Commands stay visible to everyone (no default_member_permissions), so
@@ -20,9 +20,11 @@ export function getAdminRequiredMessage() {
     return `You need the Administrator role to use this bot. Request a mod/admin role here: <#${enforcementConfig.adminRequestChannelId}>`;
 }
 
-/** True when the command exists in this guild: every command lives in the main server only. */
+/** True when the command exists in this guild: all commands in the main server, all but scope 'main' in the support server. */
 export function isCommandAvailableInGuild(command, guildId) {
-    return Boolean(guildId) && guildId === enforcementConfig.mainGuildId;
+    if (!guildId) return false;
+    if (guildId === enforcementConfig.mainGuildId) return true;
+    return guildId === enforcementConfig.supportGuildId && command?.scope !== 'main';
 }
 
 function hasAdministrator({ guild, userId, permissions }) {
@@ -43,7 +45,12 @@ export function checkCommandAccess({ command, guild, userId, permissions }) {
         return { allowed: false, message: 'This bot only works in servers.' };
     }
     if (!isCommandAvailableInGuild(command, guild.id)) {
-        return { allowed: false, message: 'Commands only work in the main Meowist server.' };
+        return {
+            allowed: false,
+            message: guild.id === enforcementConfig.supportGuildId
+                ? 'This command only works in the main Meowist server.'
+                : 'Commands only work in the Meowist servers.',
+        };
     }
     if (isBotOwner(userId) || hasAdministrator({ guild, userId, permissions })) {
         return { allowed: true };
