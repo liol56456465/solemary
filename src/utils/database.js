@@ -314,14 +314,23 @@ export async function markGiveawayEnded(client, giveawayId, endedData) {
         if (isPostgresSqlReady(wrapper)) {
             const { pgConfig } = await import('../config/database/postgres.js');
 
-            await wrapper.db.pool.query(
-                `UPDATE ${pgConfig.tables.giveaways} 
-                 SET data = $1, updated_at = NOW() 
-                 WHERE id = $2`,
-                [endedData, giveawayId],
-            );
+            // Match on (guild_id, message_id) when known: it is the stable key,
+            // and a row-count check keeps a missed update from reporting success.
+            const result = endedData?.guildId && endedData?.messageId
+                ? await wrapper.db.pool.query(
+                    `UPDATE ${pgConfig.tables.giveaways} 
+                     SET data = $1, updated_at = NOW() 
+                     WHERE guild_id = $2 AND message_id = $3`,
+                    [endedData, endedData.guildId, String(endedData.messageId)],
+                )
+                : await wrapper.db.pool.query(
+                    `UPDATE ${pgConfig.tables.giveaways} 
+                     SET data = $1, updated_at = NOW() 
+                     WHERE id = $2`,
+                    [endedData, giveawayId],
+                );
 
-            return true;
+            return result.rowCount > 0;
         }
 
         const guildId = endedData?.guildId;
@@ -1168,27 +1177,6 @@ export async function getTemporaryChannelInfo(client, guildId, channelId) {
         logger.error(`Error getting temporary channel info for guild ${guildId}:`, error);
         return null;
     }
-}
-
-export function formatChannelName(template, variables) {
-    let formatted = template;
-    
-    const replacements = {
-        '{username}': variables.username || 'User',
-        '{user_tag}': variables.userTag || 'User#0000',
-        '{display_name}': variables.displayName || 'User',
-        '{guild_name}': variables.guildName || 'Server',
-        '{channel_name}': variables.channelName || 'Voice Channel'
-    };
-    
-    for (const [placeholder, value] of Object.entries(replacements)) {
-        formatted = formatted.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), value);
-    }
-    
-    formatted = formatted.replace(/[^\w\s-]/g, '').trim();
-formatted = formatted.substring(0, 100);
-    
-    return formatted || 'Voice Channel';
 }
 
 function generateCaseId() {

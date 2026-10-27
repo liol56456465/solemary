@@ -776,21 +776,36 @@ class PostgreSQLDatabase {
                         [parsedKey.guildId]
                     );
                     
-                    await this.pool.query(`DELETE FROM ${pgConfig.tables.giveaways} WHERE guild_id = $1`, [parsedKey.guildId]);
-
-                    const giveaways = Array.isArray(value)
+                    const giveaways = (Array.isArray(value)
                         ? value
-                        : (value && typeof value === 'object' ? Object.values(value) : []);
+                        : (value && typeof value === 'object' ? Object.values(value) : [])
+                    ).filter(giveaway => giveaway?.messageId);
 
-                    for (const giveaway of giveaways) {
-                        if (!giveaway?.messageId) {
-                            continue;
+                    // Upsert by (guild_id, message_id) so row ids stay stable for the
+                    // giveaway scheduler, and run it in one transaction so a failure
+                    // midway cannot wipe the guild's giveaways.
+                    const giveawayClient = await this.pool.connect();
+                    try {
+                        await giveawayClient.query('BEGIN');
+                        for (const giveaway of giveaways) {
+                            await giveawayClient.query(
+                                `INSERT INTO ${pgConfig.tables.giveaways} (guild_id, message_id, data, ends_at) 
+                                 VALUES ($1, $2, $3, $4)
+                                 ON CONFLICT (guild_id, message_id) DO UPDATE SET data = $3, ends_at = $4, updated_at = CURRENT_TIMESTAMP`,
+                                [parsedKey.guildId, giveaway.messageId, giveaway, giveaway.endsAt ? new Date(giveaway.endsAt) : null]
+                            );
                         }
-                        await this.pool.query(
-                            `INSERT INTO ${pgConfig.tables.giveaways} (guild_id, message_id, data, ends_at) 
-                             VALUES ($1, $2, $3, $4)`,
-                            [parsedKey.guildId, giveaway.messageId, giveaway, giveaway.endsAt ? new Date(giveaway.endsAt) : null]
+                        await giveawayClient.query(
+                            `DELETE FROM ${pgConfig.tables.giveaways} 
+                             WHERE guild_id = $1 AND NOT (message_id = ANY($2::varchar[]))`,
+                            [parsedKey.guildId, giveaways.map(giveaway => String(giveaway.messageId))]
                         );
+                        await giveawayClient.query('COMMIT');
+                    } catch (error) {
+                        await giveawayClient.query('ROLLBACK').catch(() => {});
+                        throw error;
+                    } finally {
+                        giveawayClient.release();
                     }
                     return true;
                 

@@ -3,9 +3,9 @@ import {
     getJoinToCreateConfig, 
     registerTemporaryChannel, 
     unregisterTemporaryChannel,
-    getTemporaryChannelInfo,
-    formatChannelName
+    getTemporaryChannelInfo
 } from '../utils/database.js';
+import { formatChannelName } from '../services/joinToCreateService.js';
 import { sanitizeInput } from '../utils/validation.js';
 import { logger } from '../utils/logger.js';
 import { handleMusicVoiceState } from '../services/music/musicVoiceState.js';
@@ -185,14 +185,19 @@ if (now - lastCreation < VOICE_CREATE_COOLDOWN_MS) {
 
                 let finalName;
 
-                if (/\{(username|user_tag|display_name|displayName|guild_name|channel_name)\}/.test(nameTemplate)) {
-                    finalName = formatChannelName(nameTemplate, {
-                        username: member.user.username,
-                        userTag: member.user.tag,
-                        displayName: member.displayName,
-                        guildName: guild.name,
-                        channelName: triggerChannel.name
-                    });
+                if (/\{(username|user_tag|display_name|displayName|guild_name|guildName|channel_name|channelName)\}/.test(nameTemplate)) {
+                    try {
+                        finalName = formatChannelName(nameTemplate, {
+                            username: member.user.username,
+                            userTag: member.user.tag,
+                            displayName: member.displayName,
+                            guildName: guild.name,
+                            channelName: triggerChannel.name
+                        });
+                    } catch {
+                        // An invalid stored template must not block channel creation.
+                        finalName = `${triggerChannel.name} ${existingChannels + 1}`;
+                    }
                 } else {
                     finalName = `${triggerChannel.name} ${existingChannels + 1}`;
                 }
@@ -276,15 +281,22 @@ userLimit: userLimit === 0 ? undefined : userLimit,
                     const channelOptions = config.channelOptions?.[tempChannelInfo.triggerChannelId] || {};
                     const nameTemplate = channelOptions.nameTemplate || config.channelNameTemplate || "{username}'s Room";
                     
-                    const newChannelName = sanitizeVoiceChannelName(formatChannelName(nameTemplate, {
-                        username: newOwner.user.username,
-                        userTag: newOwner.user.tag,
-                        displayName: newOwner.displayName,
-                        guildName: channel.guild.name,
-                        channelName: channel.guild.channels.cache.get(tempChannelInfo.triggerChannelId)?.name || 'Voice Channel'
-                    }));
+                    let formattedName = null;
+                    try {
+                        formattedName = formatChannelName(nameTemplate, {
+                            username: newOwner.user.username,
+                            userTag: newOwner.user.tag,
+                            displayName: newOwner.displayName,
+                            guildName: channel.guild.name,
+                            channelName: channel.guild.channels.cache.get(tempChannelInfo.triggerChannelId)?.name || 'Voice Channel'
+                        });
+                    } catch {
+                        // Keep the current name if the stored template is invalid.
+                    }
 
-                    await channel.setName(newChannelName);
+                    if (formattedName) {
+                        await channel.setName(sanitizeVoiceChannelName(formattedName));
+                    }
                 }
 
                 logger.info(`Transferred ownership of temporary channel ${channel.id} to user ${newOwnerId}`);
