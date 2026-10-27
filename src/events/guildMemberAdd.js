@@ -13,6 +13,7 @@ import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService
 import { syncWarnRolesQuietly } from '../services/enforcement/warnRoleService.js';
 import { recordJoin } from '../services/automod/raidService.js';
 import { checkImpersonation } from '../services/automod/memberChecks.js';
+import { startProbationOnJoin } from '../services/automod/probationService.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 
@@ -39,6 +40,8 @@ export default {
                 await syncWarnRolesQuietly(guild, member.id);
                 await recordJoin(member).catch((error) => logger.warn(`Raid tracking failed for ${member.id}: ${error.message}`));
                 await checkImpersonation(member);
+                // Back after a ban that ended recently: automod probation.
+                await startProbationOnJoin(member).catch((error) => logger.warn(`Probation check failed for ${member.id}: ${error.message}`));
             }
         }
         

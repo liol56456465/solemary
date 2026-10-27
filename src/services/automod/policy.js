@@ -94,6 +94,35 @@ export function relaxForTrusted(hits, trusted, cfg = automodConfig) {
     return trusted ? hits.filter((hit) => !isRelaxableRule(hit.rule, cfg)) : hits;
 }
 
+// ── Ladder and probation ──────────────────────────────────────────────────────
+
+/**
+ * Which step of a rule's ladder applies. `offences` = earlier automod cases in the
+ * group within the repeat window. Probation moves one step up (capped at the last
+ * step); forceLastStep (ad bots) always takes the last step.
+ */
+export function ladderIndex({ offences, stepCount, forceLastStep = false, probation = false }) {
+    const last = Math.max(0, stepCount - 1);
+    if (forceLastStep) return last;
+    return Math.min(Math.max(0, offences) + (probation ? 1 : 0), last);
+}
+
+/** Whether a stored probation record is still running. */
+export function isProbationActive(record, now = Date.now()) {
+    return Boolean(record && Number(record.until) > now);
+}
+
+/**
+ * Probation on rejoin: a ban that ended within `recentMs` (endedAt = when it expired
+ * or was lifted/voided), no ban still active, and no probation already running.
+ * `endedBan`: { endedAt } or null.
+ */
+export function shouldStartProbation({ endedBan, hasActiveBan, existing, now = Date.now(), recentMs = automodConfig.probationRecentBanMs }) {
+    if (!endedBan || hasActiveBan || isProbationActive(existing, now)) return false;
+    const endedAt = new Date(endedBan.endedAt).getTime();
+    return Number.isFinite(endedAt) && endedAt <= now && now - endedAt <= recentMs;
+}
+
 // ── Second chance ─────────────────────────────────────────────────────────────
 
 /** Whether a rule can give a second chance at all (severity, or the allowlist without a slur). */

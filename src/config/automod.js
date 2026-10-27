@@ -126,6 +126,12 @@ export const automodConfig = {
     secondChanceRules: ['language'],
     secondChanceWindowMs: 30 * DAY,
     secondChanceNoticeMs: 15 * 1000,
+    // Probation: a member who rejoins within probationRecentBanMs of a ban ending
+    // (expired, lifted on appeal, voided) is on probation for probationMs. Automod then
+    // uses the next step of the ladder (1st offence → 2nd step, …), and trusted-member
+    // relaxing and second chances don't apply. Every card for them says so.
+    probationMs: 7 * DAY,
+    probationRecentBanMs: 30 * DAY,
     // Self-tuning (run with the daily digest): a rule whose decisions moderators undid
     // or changed this often, over at least this many actions in the window, gets a
     // "switch to monitor?" suggestion in the alerts channel, at most once per cooldown.

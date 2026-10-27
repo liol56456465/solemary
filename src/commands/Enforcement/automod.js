@@ -10,6 +10,7 @@ import { endLockdown, getLockdownState } from '../../services/automod/raidServic
 import { describeStep } from '../../services/automod/reviewCards.js';
 import { automodStats, formatAutomodStats } from '../../services/automod/automodReport.js';
 import { collectOpenReviews, formatQueue } from '../../services/automod/reviewQueue.js';
+import { endProbation, getProbation } from '../../services/automod/probationService.js';
 import {
     CHANNEL_RULE_MODES, RULE_MODES, hasRuleOverride, isRelaxableRule, ruleMode, withChannelRule,
 } from '../../services/automod/policy.js';
@@ -110,6 +111,9 @@ export default {
             .addBooleanOption((option) => option.setName('clear').setDescription('Remove the trusted role and level')))
         .addSubcommand((sub) => sub.setName('secondchance').setDescription('First small offence in 30 days: a notice instead of a warning')
             .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
+        .addSubcommand((sub) => sub.setName('probation').setDescription('Show or end a member\'s probation (rejoined after a ban)')
+            .addUserOption((option) => option.setName('user').setDescription('Member').setRequired(true))
+            .addBooleanOption((option) => option.setName('end').setDescription('End the probation now')))
         .addSubcommand((sub) => sub.setName('exempt').setDescription('Add or remove a channel automod ignores completely (all rules)')
             .addChannelOption((option) => option.setName('channel').setDescription('Channel or category').setRequired(true)
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildCategory)))
@@ -157,6 +161,20 @@ export default {
                     footer: { text: 'Cards posted since the bot started, plus the review channel\'s last 50 messages that still have buttons. Low-severity lines are not listed.' },
                     color: items.length ? 'warning' : 'success',
                 })],
+            });
+        }
+
+        if (sub === 'probation') {
+            const user = interaction.options.getUser('user');
+            const end = interaction.options.getBoolean('end');
+            const record = end ? await endProbation(guildId, user.id) : await getProbation(guildId, user.id);
+            const until = record ? `<t:${Math.floor(Number(record.until) / 1000)}:F>` : null;
+            let text;
+            if (end) text = record ? `Probation for <@${user.id}> ended early (it ran until ${until}).` : `<@${user.id}> was not on probation.`;
+            else if (record) text = `<@${user.id}> is on probation until ${until}${record.caseCode ? ` (ban \`${record.caseCode}\` ${record.how || 'ended'})` : ''}. Automod uses the next step of the ladder for them. End it with \`end: true\`.`;
+            else text = `<@${user.id}> is not on probation.`;
+            return InteractionHelper.safeEditReply(interaction, {
+                embeds: [end && record ? successEmbed('Probation ended', text) : createEmbed({ title: 'Probation', description: text, color: record ? 'warning' : 'primary' })],
             });
         }
 

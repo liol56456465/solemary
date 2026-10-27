@@ -15,6 +15,7 @@
 //     suggested,                                             // kind 'monitor'
 //     report: { reporter, messageId, removed },              // kind 'report'
 //     tier: 'compact' | 'full' (once full, stays full)
+//     probationUntil,        // epoch ms: the member is on probation (probationService.js)
 //   }
 //
 // Tiers: a low-severity rule with a light action is one compact line with an Undo
@@ -183,8 +184,17 @@ function whereText(entry) {
     return entry.channelId ? ` in <#${entry.channelId}>` : '';
 }
 
+/** "⚠️ on probation (rejoined after ban, until <t:…:D>)" or null. */
+export function probationText(entry) {
+    return entry.probationUntil
+        ? `⚠️ on probation (rejoined after ban, until <t:${Math.floor(entry.probationUntil / 1000)}:D>)`
+        : null;
+}
+
 export function cardDescription(entry) {
     const lines = [`<@${entry.userId}> ${entry.evidence || 'broke a rule'}${whereText(entry)}.`];
+    const probation = probationText(entry);
+    if (probation) lines.push(`${probation}: the ladder starts one step higher for them.`);
     const label = ruleLabel(entry);
 
     if (entry.kind === 'report') {
@@ -238,6 +248,7 @@ export function compactLine(entry) {
             ruleLabel(entry),
             entry.channelId ? `<#${entry.channelId}>` : null,
             (entry.count || 1) > 1 ? `${entry.count} messages` : null,
+            probationText(entry),
         ].filter(Boolean).join(' · ');
     }
     const action = latestAction(entry);
@@ -249,6 +260,7 @@ export function compactLine(entry) {
         codes.length ? `case${codes.length > 1 ? 's' : ''} ${codes.map((c) => `\`${c}\``).join(' ')}` : null,
         entry.channelId ? `<#${entry.channelId}>` : null,
         (entry.count || 1) > 1 ? `${entry.count} messages` : null,
+        probationText(entry),
     ];
     return parts.filter(Boolean).join(' · ');
 }

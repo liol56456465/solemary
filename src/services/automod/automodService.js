@@ -18,9 +18,10 @@ import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction, isAdministrator } from '../enforcement/enforcementService.js';
 import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
 import { isRaidJoiner } from './raidService.js';
+import { getProbation } from './probationService.js';
 import { getUserLevelData } from '../leveling/leveling.js';
 import {
-    hasTrustedRole, isTrustedMember, relaxForTrusted, resolveRuleMode, secondChanceEligible, secondChanceNotice, trustMatters,
+    hasTrustedRole, isTrustedMember, ladderIndex, relaxForTrusted, resolveRuleMode, secondChanceEligible, secondChanceNotice, trustMatters,
 } from './policy.js';
 import { getFromDb, setInDb } from '../../utils/database.js';
 import { noteRepeatHit, postReviewCard } from './reviewCards.js';
@@ -304,9 +305,9 @@ async function giveSecondChance(message, hit, { settings, offences, card, probat
 
 /**
  * Acts on one hit. `hit.mode` is the rule's effective mode ('on' | 'monitor'; 'off'
- * hits never get here).
+ * hits never get here). `probation`: the member's running probation record or null.
  */
-async function actOn(message, member, hit, settings) {
+async function actOn(message, member, hit, settings, probation = null) {
     const rule = AUTOMOD_RULES[hit.rule];
     const { guild } = message;
     const targetUser = message.author;
@@ -314,13 +315,15 @@ async function actOn(message, member, hit, settings) {
     const cooldownKey = `${guild.id}:${targetUser.id}:${group}`;
     const card = {
         guild, rule: hit.rule, evidence: hit.evidence, detail: hit.detail, targetUser,
-        channelId: message.channelId, messageUrl: message.url, content: excerpt(message),
+        channelId: message.channelId, messageUrl: message.url, content: excerpt(message), probation,
     };
+    const stepFor = (offences) => rule.steps[ladderIndex({
+        offences, stepCount: rule.steps.length, forceLastStep: hit.forceLastStep, probation: Boolean(probation),
+    })];
 
     if (hit.mode === 'monitor') {
         const offences = await countOffences(guild.id, targetUser.id, group);
-        const step = rule.steps[hit.forceLastStep ? rule.steps.length - 1 : Math.min(offences, rule.steps.length - 1)];
-        await postReviewCard({ ...card, monitor: true, suggested: step, offence: offences + 1, deleted: false });
+        await postReviewCard({ ...card, monitor: true, suggested: stepFor(offences), offence: offences + 1, deleted: false });
         return false;
     }
 
@@ -344,8 +347,8 @@ async function actOn(message, member, hit, settings) {
     }
 
     const offences = await countOffences(guild.id, targetUser.id, group);
-    if (await giveSecondChance(message, hit, { settings, offences, card })) return rule.deleteMessage;
-    const step = rule.steps[hit.forceLastStep ? rule.steps.length - 1 : Math.min(offences, rule.steps.length - 1)];
+    if (await giveSecondChance(message, hit, { settings, offences, card, probation })) return rule.deleteMessage;
+    const step = stepFor(offences);
     const result = await applyStep({ guild, targetUser, step, rule: hit.rule, reason: `Automod: ${rule.label}` })
         .catch((error) => ({ error }));
     if (result.error) {
@@ -446,12 +449,20 @@ export async function moderateMessage(message, { edited = false } = {}) {
 
         const detected = await evaluateMessage(message, member, now);
         let hits = applyRuleModes(detected, settings, message.channel);
-        if (trustMatters(hits, settings.trusted) && await isTrusted(member, settings.trusted)) {
+        // Probation is read only when a rule was hit (cached briefly). Read-only decision:
+        // on a database error treat them as not on probation.
+        const probation = hits.length
+            ? await getProbation(message.guild.id, message.author.id).catch((error) => {
+                logger.warn(`Automod could not read probation for ${message.author.id}: ${error.message}`);
+                return null;
+            })
+            : null;
+        if (!probation && trustMatters(hits, settings.trusted) && await isTrusted(member, settings.trusted)) {
             hits = relaxForTrusted(hits, true);
         }
         if (hits.length) {
             handledMessages.add(message.id);
-            return await actOn(message, member, worstHit(hits), settings);
+            return await actOn(message, member, worstHit(hits), settings, probation);
         }
         if (edited || isStaff(member)) return false;
         return await applyNewMemberLimits(message, member, now);

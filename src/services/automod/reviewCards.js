@@ -83,6 +83,7 @@ export function entryFrom(p, now = Date.now()) {
         noGroup: Boolean(p.raid || p.noGroup),
         tier: p.tier || null,
         note: p.note || null,
+        probationUntil: p.probation?.until ? Number(p.probation.until) : null,
         ruleLabel: p.ruleLabel || null,
     };
     entry.key = burstKey(entry);
@@ -100,6 +101,7 @@ export function mergeHit(entry, p, now = Date.now()) {
     entry.channelId = next.channelId || entry.channelId;
     if (next.offence) entry.offence = next.offence;
     if (next.suggested) entry.suggested = next.suggested;
+    if (next.probationUntil) entry.probationUntil = next.probationUntil;
     if (next.actions.length) entry.actions.push(...next.actions);
     // Once a card is full it stays full; a compact line becomes a card when a serious action joins.
     const tier = cardTier({ ...entry, tier: null });
@@ -126,7 +128,8 @@ function logHit(p) {
  * Posts a card, or updates the open card of the same burst. p: { guild, rule, evidence,
  * targetUser, channelId, messageUrl, content, step?, result?, offence?, monitor?, suggested?,
  * raid?, report?: { reporter, messageId, removed }, deleted?, detail?, tier?, noGroup?,
- * note?: { emoji, title } (an information-only compact line), ruleLabel? }.
+ * note?: { emoji, title } (an information-only compact line), ruleLabel?,
+ * probation?: { until } (the member's running probation: shown on the card) }.
  * `evidence` is a plain-English phrase (reasons.js); `detail` goes to the log only.
  * Returns the card message, or null.
  */
