@@ -103,3 +103,34 @@ test('case search: filters, status rules, text, dates and paging', { skip }, asy
     assert.deepEqual(keys.map((row) => row.reason_key), ['spam', 'raiding']);
     assert.equal(keys[0].count, 4);
 });
+
+test('my standing: only own counted warns at the current level, active punishments, own appeals', { skip }, async () => {
+    const { getMemberStanding } = await import('../../src/services/enforcement/standingService.js');
+    const me = user(10);
+    const someoneElse = user(11);
+    await pgDb.pool.query(
+        `INSERT INTO mod_ladder (guild_id, user_id, level, warns_since_level) VALUES ($1, $2, 1, 0)`,
+        [guildId, me]
+    );
+    await insertCase({ target_user_id: me, type: 'warn', counts_toward_level: 0 }); // before the ladder ban: no longer counts
+    const counted = await insertCase({ target_user_id: me, type: 'warn', counts_toward_level: 1 });
+    await insertCase({ target_user_id: me, type: 'warn', counts_toward_level: 1, status: 'revoked' });
+    await insertCase({ target_user_id: me, type: 'warn', counts_toward_level: 1, is_test: true });
+    await insertCase({ target_user_id: someoneElse, type: 'warn', counts_toward_level: 1 });
+    const mute = await insertCase({ target_user_id: me, type: 'mute', duration_ms: 3600000, expires_at: new Date(Date.now() + 3600000) });
+    await insertCase({ target_user_id: me, type: 'mute', duration_ms: 3600000, expires_at: new Date(Date.now() - 1000) });
+    await insertAppeal(mute.case_code, me, 'pending');
+    const othersCase = await insertCase({ target_user_id: someoneElse, type: 'kick' });
+    await insertAppeal(othersCase.case_code, someoneElse, 'denied');
+
+    const standing = await getMemberStanding(guildId, me);
+    assert.deepEqual(standing.ladder, { level: 1, warns_since_level: 0 });
+    assert.deepEqual(standing.warns.map((row) => row.case_code), [counted.case_code]);
+    assert.equal(standing.activeMute.case_code, mute.case_code);
+    assert.equal(standing.activeBan, null);
+    assert.deepEqual(standing.appeals.map((row) => row.case_code), [mute.case_code]);
+
+    const nobody = await getMemberStanding(guildId, user(12));
+    assert.deepEqual(nobody.ladder, { level: 0, warns_since_level: 0 });
+    assert.equal(nobody.warns.length, 0);
+});

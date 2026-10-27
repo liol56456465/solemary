@@ -27,19 +27,24 @@ function mainPanel() {
                 '2. Your case code, from the DM you got',
                 '3. More info, if you want to add anything',
                 '',
-                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand.',
+                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My standing** to see your warnings and what a next warning would do.',
                 '',
                 '-# Banned? Appeal in the Meowist Support server instead — the link is in your ban DM.',
             ].join('\n'),
             color: 'primary',
         })],
-        components: [new ActionRowBuilder().addComponents(appealButton(), myAppealsButton())],
+        components: [new ActionRowBuilder().addComponents(appealButton(), myAppealsButton(), myStandingButton())],
     };
 }
 
 // Shows the member their own appeals and decisions, privately.
 function myAppealsButton() {
     return new ButtonBuilder().setCustomId('appeal:status').setLabel('My appeals').setStyle(ButtonStyle.Secondary);
+}
+
+// Shows the member their own warnings, ladder level and next step, privately.
+function myStandingButton() {
+    return new ButtonBuilder().setCustomId('appeal:standing').setLabel('My standing').setStyle(ButtonStyle.Secondary);
 }
 
 function supportPanel() {
@@ -52,7 +57,7 @@ function supportPanel() {
                 '2. Your case code, from the DM you got',
                 '3. More info, if you want to add anything',
                 '',
-                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand.',
+                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My standing** to see your warnings and what a next warning would do.',
                 '',
                 '**Report staff** — report a staff member who broke the rules. Only administrators can see reports.',
                 '',
@@ -63,6 +68,7 @@ function supportPanel() {
         components: [new ActionRowBuilder().addComponents(
             appealButton(),
             myAppealsButton(),
+            myStandingButton(),
             new ButtonBuilder().setCustomId('appeal:report').setLabel('Report staff').setStyle(ButtonStyle.Danger),
         )],
     };
