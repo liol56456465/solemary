@@ -342,6 +342,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_server_snapshots_guild ON ${t.server_snapshots}(guild_id, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_appeals_case ON ${t.mod_appeals}(case_code, decided_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_case_edits_case ON ${t.mod_case_edits}(case_code, edited_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_mod_cases_moderator ON ${t.mod_cases}(guild_id, moderator_id, created_at)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

@@ -244,3 +244,51 @@ test('case autocomplete matches code, name and username in this guild only', { s
     assert.ok((await searchCases(guildId, `zz${runId}`)).some((r) => r.case_code === row.case_code));
     assert.equal((await searchCases(`${guildId.slice(0, -1)}9`, row.case_code)).length, 0);
 });
+
+// --- I36: /staff stats -------------------------------------------------------------
+
+test('staff stats: actions by type per moderator, voided apart, appeals on their cases, bot and test cases left out', { skip }, async () => {
+    const { staffModerationStats } = await import('../../src/services/staffActivityService.js');
+    const modA = user(80);
+    const modB = user(81);
+    const t = user(30);
+    const by = (id, name) => ({ moderator_id: id, moderator_username: name, target_user_id: t });
+    await insertCase({ type: 'ban', ...by(modA, 'aaa') });
+    const appealed = await insertCase({ type: 'warn', ...by(modA, 'aaa') });
+    const denied = await insertCase({ type: 'warn', ...by(modA, 'aaa') });
+    await insertCase({ type: 'mute', ...by(modA, 'aaa'), status: 'revoked', voided_at: new Date() });
+    await insertCase({ type: 'kick', ...by(modA, 'aaa'), is_test: true });
+    await insertCase({ type: 'kick', ...by(modA, 'aaa'), created_at: new Date(Date.now() - 40 * 86400000) });
+    await insertCase({ type: 'ban', ...by(BOT_ID, 'bot') });
+    await insertCase({ type: 'kick', ...by(modB, 'bbb') });
+    await pgDb.pool.query(`INSERT INTO mod_appeals (kind, case_code, user_id, username, guild_id, status, decided_at) VALUES
+        ('appeal', $1, $3, 't', $4, 'accepted', NOW()), ('appeal', $2, $3, 't', $4, 'denied', NOW())`,
+    [appealed.case_code, denied.case_code, t, guildId]);
+
+    // Earlier tests in this guild used other moderators; look at these two only.
+    const all30 = await staffModerationStats(guildId, BOT_ID, { period: '30d' });
+    assert.ok(!all30.some((r) => r.moderatorId === BOT_ID), 'the bot is left out');
+    const rows = all30.filter((r) => r.moderatorId === modA || r.moderatorId === modB);
+    assert.deepEqual(rows.map((r) => r.moderatorId), [modA, modB], 'sorted by actions');
+    const a = rows[0];
+    assert.deepEqual(a.actions, { ban: 1, kick: 0, mute: 0, warn: 2 });
+    assert.equal(a.total, 3);
+    assert.equal(a.voided, 1);
+    assert.equal(a.appealsAccepted, 1);
+    assert.equal(a.appealsDenied, 1);
+
+    const all = await staffModerationStats(guildId, BOT_ID, { period: 'all', moderatorId: modA });
+    assert.equal(all.length, 1);
+    assert.equal(all[0].actions.kick, 1, 'the 40-day-old kick counts for all time');
+});
+
+test('staff activity: voided cases are not counted as actions', { skip }, async () => {
+    const { staffActivityForWeek, weekStart } = await import('../../src/services/staffActivityService.js');
+    const mod = user(82);
+    await insertCase({ type: 'warn', moderator_id: mod, moderator_username: 'ccc' });
+    await insertCase({ type: 'warn', moderator_id: mod, moderator_username: 'ccc', status: 'revoked', voided_at: new Date() });
+    const guild = { id: guildId, ownerId: mod, client: { user: { id: BOT_ID } }, members: { cache: new Map() } };
+    guild.members.cache.set(mod, { id: mod, guild, user: { bot: false, username: 'ccc' }, permissions: { has: () => true } });
+    const rows = await staffActivityForWeek(guild, weekStart());
+    assert.equal(rows.find((r) => r.userId === mod).actions, 1);
+});
