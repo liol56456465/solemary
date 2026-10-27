@@ -94,6 +94,63 @@ export function relaxForTrusted(hits, trusted, cfg = automodConfig) {
     return trusted ? hits.filter((hit) => !isRelaxableRule(hit.rule, cfg)) : hits;
 }
 
+// ── Self-tuning ───────────────────────────────────────────────────────────────
+
+/**
+ * The rule an automod case belongs to. Cases carry reason_key "automod:<group>" and
+ * reason "Automod: <rule label>…" (a changed decision appends " (changed by …)").
+ * A group with one rule needs no label; otherwise the longest matching label wins.
+ * Null for member reports, native AutoMod and anything unrecognised.
+ */
+export function ruleForCase(reasonKey, reason) {
+    const group = String(reasonKey || '').startsWith('automod:') ? reasonKey.slice('automod:'.length) : null;
+    if (!group) return null;
+    const candidates = Object.entries(AUTOMOD_RULES).filter(([, rule]) => rule.group === group);
+    if (candidates.length === 1) return candidates[0][0];
+    const text = String(reason || '');
+    const matches = candidates.filter(([, rule]) => text.startsWith(`Automod: ${rule.label}`));
+    if (!matches.length) return null;
+    return matches.sort(([, a], [, b]) => b.label.length - a.label.length)[0][0];
+}
+
+/** Case-log rows [{ reasonKey, reason, actions, undone, changed }] → rule → totals. */
+export function aggregateRuleStats(rows) {
+    const byRule = {};
+    for (const row of rows || []) {
+        const rule = ruleForCase(row.reasonKey, row.reason);
+        if (!rule) continue;
+        const totals = byRule[rule] || (byRule[rule] = { actions: 0, undone: 0, changed: 0 });
+        totals.actions += Number(row.actions) || 0;
+        totals.undone += Number(row.undone) || 0;
+        totals.changed += Number(row.changed) || 0;
+    }
+    return byRule;
+}
+
+/**
+ * Rules worth a "switch to monitor?" suggestion: enforced (mode on), at least
+ * tuningMinActions actions, undone or changed at least tuningUndoRate of the time, and
+ * not suggested within tuningCooldownMs. Worst rate first.
+ */
+export function tuningSuggestions(byRule, { settings, lastSuggested = {}, now = Date.now(), cfg = automodConfig } = {}) {
+    const out = [];
+    for (const [rule, totals] of Object.entries(byRule || {})) {
+        if (!AUTOMOD_RULES[rule] || ruleMode(settings, rule) !== 'on') continue;
+        const corrected = totals.undone + totals.changed;
+        if (totals.actions < cfg.tuningMinActions || corrected / totals.actions < cfg.tuningUndoRate) continue;
+        const last = Number(lastSuggested?.[rule]) || 0;
+        if (now - last < cfg.tuningCooldownMs) continue;
+        out.push({ rule, ...totals, corrected, rate: corrected / totals.actions });
+    }
+    return out.sort((a, b) => b.rate - a.rate);
+}
+
+/** "Excessive caps: 9 of 20 undone in 14 days — switch to monitor?" */
+export function formatTuningSuggestion(s, days = automodConfig.tuningWindowDays) {
+    const what = s.changed ? (s.undone ? 'undone or changed' : 'changed') : 'undone';
+    return `${AUTOMOD_RULES[s.rule]?.label || s.rule}: ${s.corrected} of ${s.actions} ${what} in ${days} days — switch to monitor?`;
+}
+
 /** settings.channelRules with one exception set ('off' | 'monitor') or removed ('default'). */
 export function withChannelRule(channelRules, channelId, ruleKey, mode) {
     const next = { ...(channelRules || {}) };

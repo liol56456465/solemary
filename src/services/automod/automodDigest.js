@@ -13,6 +13,8 @@ import { enforcementConfig } from '../../config/enforcement.js';
 import { isEnforcementDbAvailable } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
 import { automodStats } from './automodReport.js';
+import { postTuningSuggestions } from './automodTuning.js';
+import { logger } from '../../utils/logger.js';
 import { eventsSince, hitsSince, openCards, startedAt as registryStartedAt } from './reviewRegistry.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -70,9 +72,20 @@ export function buildDigest({ stats, hits = [], openCount = 0, raids = 0, starte
     return { fields, footer, empty: !totalActions && !hits.length && !openCount && !raids };
 }
 
-/** Posts yesterday's digest in the alerts channel; skipped on a day with nothing to say. */
+/**
+ * Posts yesterday's digest in the alerts channel (skipped on a day with nothing to
+ * say), then any self-tuning suggestions (automodTuning.js).
+ */
 export async function postDailyAutomodDigest(client) {
     if (!isEnforcementDbAvailable() || !client.guilds.cache.has(enforcementConfig.mainGuildId)) return;
+    try {
+        await postDigest(client);
+    } finally {
+        await postTuningSuggestions(client).catch((error) => logger.warn(`Automod tuning suggestions failed: ${error.message}`));
+    }
+}
+
+async function postDigest(client) {
     const now = Date.now();
     const since = now - DAY_MS;
     const stats = await automodStats(enforcementConfig.mainGuildId, 1);

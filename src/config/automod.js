@@ -117,6 +117,13 @@ export const automodConfig = {
     trustedRelaxMaxSeverity: 20,
     // A member's level is read at most this often (only when a relaxable rule was hit).
     trustedLevelCacheMs: 5 * 60 * 1000,
+    // Self-tuning (run with the daily digest): a rule whose decisions moderators undid
+    // or changed this often, over at least this many actions in the window, gets a
+    // "switch to monitor?" suggestion in the alerts channel, at most once per cooldown.
+    tuningWindowDays: 14,
+    tuningMinActions: 10,
+    tuningUndoRate: 0.3,
+    tuningCooldownMs: 7 * DAY,
     // Hits of the same rule by the same user within this window update the open card
     // instead of posting another (in memory: a restart starts fresh).
     burstWindowMs: 5 * 60 * 1000,

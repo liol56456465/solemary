@@ -8,6 +8,7 @@
 //   amreview:apply:<rule>:<userId>       (select) apply a punishment (monitor mode, reports, failed actions)
 //   amreview:delete:<channelId>:<msgId>  delete a reported message
 //   amreview:dismiss                     close the card without acting
+//   amreview:tune:<rule>                 (alerts) switch a rule to monitor (automodTuning.js)
 //
 // Cards go to the review channel (AUTOMOD_REVIEW_CHANNEL_ID, falls back to the mod log).
 // Low-severity hits are one compact line with an Undo button. Repeated hits of the same
@@ -29,6 +30,7 @@ import {
     CLOSE_STATUS, REPORT_RULE, buildCardPayload, cardTier, closedTitle, describeStep, stripLeadingEmoji,
 } from './reviewFormat.js';
 import { burstKey, findOpenBurst, markClosed, recordHit, registerCard } from './reviewRegistry.js';
+import { switchRuleToMonitor } from './automodTuning.js';
 
 export { describeStep };
 
@@ -268,6 +270,15 @@ export async function handleReviewAction(interaction, args) {
     if (action === 'dismiss') {
         await closeCard(message, `Dismissed by ${by}`, { status: 'dismissed', by });
         return 'Dismissed.';
+    }
+
+    if (action === 'tune') {
+        // Self-tuning suggestion (automodTuning.js); the caller re-checked admin rights on click.
+        const [rule] = rest;
+        const result = await switchRuleToMonitor(guild.id, rule);
+        await closeCard(message, result.changed ? `${result.text} Switched by ${by}; undo with \`/automod rule\`.` : result.text,
+            result.changed ? { status: 'applied', by, verb: 'Switched to monitor' } : { status: 'dismissed', by, verb: 'Closed' });
+        return result.text;
     }
 
     if (action === 'delete') {
