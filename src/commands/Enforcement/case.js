@@ -2,7 +2,7 @@ import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
-import { enforcementConfig } from '../../config/enforcement.js';
+import { enforcementConfig, getReason } from '../../config/enforcement.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
 import { getCaseByCode } from '../../services/enforcement/caseService.js';
 import { isEnforcementDbAvailable } from '../../services/enforcement/db.js';
@@ -14,6 +14,10 @@ import {
     addEvidence, addImageEvidence, captureLinks, evidenceDisplay, evidenceLines, fitLines, listEvidence, NOTE_MAX,
     parseEvidenceUrls, removeEvidence, resolveImageUrls,
 } from '../../services/enforcement/evidenceService.js';
+import {
+    listReasonKeys, normalizeSearchFilters, SEARCH_STATUSES, SEARCH_TEXT_MAX, SEARCH_TYPES,
+} from '../../services/enforcement/caseSearchService.js';
+import { buildSearchView } from '../../handlers/caseSearchView.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -118,7 +122,22 @@ export default {
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('case')
-        .setDescription('Edit, void, add evidence to or show the history of an enforcement case')
+        .setDescription('Search, edit, void, add evidence to or show the history of enforcement cases')
+        .addSubcommand((sub) => sub.setName('search').setDescription('Find cases by member, moderator, type, reason, status, date or text')
+            .addUserOption((option) => option.setName('member').setDescription('Cases given to this member'))
+            .addUserOption((option) => option.setName('moderator').setDescription('Cases given by this moderator'))
+            .addStringOption((option) => option.setName('type').setDescription('Case type')
+                .addChoices(...SEARCH_TYPES.map((type) => ({ name: type, value: type }))))
+            .addStringOption((option) => option.setName('reason_key').setDescription('Prebuilt reason (or custom)')
+                .setAutocomplete(true).setMaxLength(50))
+            .addStringOption((option) => option.setName('status').setDescription('active, ended, revoked (lifted early) or voided')
+                .addChoices(...SEARCH_STATUSES.map((status) => ({ name: status, value: status }))))
+            .addStringOption((option) => option.setName('from').setDescription('Given on or after (YYYY-MM-DD, UTC)')
+                .setMinLength(10).setMaxLength(10))
+            .addStringOption((option) => option.setName('to').setDescription('Given on or before (YYYY-MM-DD, UTC)')
+                .setMinLength(10).setMaxLength(10))
+            .addStringOption((option) => option.setName('text').setDescription('Text in the case name or reason')
+                .setMaxLength(SEARCH_TEXT_MAX)))
         .addSubcommand((sub) => sub.setName('edit').setDescription("Change a case's reason or duration (history is kept)")
             .addStringOption(codeOption)
             .addStringOption((option) => option.setName('reason').setDescription('New reason').setMaxLength(500))
@@ -158,6 +177,21 @@ export default {
 
         const group = interaction.options.getSubcommandGroup(false);
         const sub = interaction.options.getSubcommand();
+
+        if (!group && sub === 'search') {
+            const filters = normalizeSearchFilters({
+                memberId: interaction.options.getUser('member')?.id,
+                moderatorId: interaction.options.getUser('moderator')?.id,
+                type: interaction.options.getString('type'),
+                reasonKey: interaction.options.getString('reason_key'),
+                status: interaction.options.getString('status'),
+                from: interaction.options.getString('from'),
+                to: interaction.options.getString('to'),
+                text: interaction.options.getString('text'),
+            });
+            return InteractionHelper.safeEditReply(interaction, await buildSearchView(interaction.guildId, interaction.user.id, filters, 0));
+        }
+
         const code = readCode(interaction);
         const admin = interaction.user;
 
@@ -236,6 +270,13 @@ export default {
             return interaction.respond([]);
         }
         const focused = interaction.options.getFocused(true);
+        if (focused.name === 'reason_key') {
+            const keys = await listReasonKeys(interaction.guildId, focused.value);
+            return interaction.respond(keys.map((row) => ({
+                name: truncate(`${getReason(row.reason_key)?.label || row.reason_key} (${row.reason_key}) — ${row.count} case${row.count === 1 ? '' : 's'}`, 100),
+                value: row.reason_key,
+            })));
+        }
         if (focused.name !== 'code') return interaction.respond([]);
         const rows = await searchCases(interaction.guildId, focused.value);
         await interaction.respond(rows.map((row) => ({

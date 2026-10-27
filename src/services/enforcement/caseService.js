@@ -193,6 +193,17 @@ export async function getLatestAppealStatuses(userId) {
     return new Map(rows.map((row) => [row.case_code, row.status]));
 }
 
+/** Latest appeal status per case for a list of case codes: Map(case_code → status). */
+export async function getLatestAppealStatusesForCases(caseCodes) {
+    if (!caseCodes.length) return new Map();
+    const { rows } = await query(
+        `SELECT DISTINCT ON (case_code) case_code, status FROM ${T.appeals}
+         WHERE case_code = ANY($1::varchar[]) AND kind = 'appeal' ORDER BY case_code, created_at DESC`,
+        [caseCodes]
+    );
+    return new Map(rows.map((row) => [row.case_code, row.status]));
+}
+
 /** A short status for history lists: lifted by appeal, appeal pending, expired, … */
 export function caseStatusLabel(row, appealStatus = null) {
     if (row.voided_at) return 'voided';

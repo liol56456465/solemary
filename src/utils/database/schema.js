@@ -375,6 +375,9 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_mod_case_edits_case ON ${t.mod_case_edits}(case_code, edited_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_case_evidence_case ON ${t.mod_case_evidence}(case_code, added_at)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_moderator ON ${t.mod_cases}(guild_id, moderator_id, created_at)`,
+    // /case search (newest first, by reason key) and the panel's precedent hint.
+    `CREATE INDEX IF NOT EXISTS idx_mod_cases_guild_created ON ${t.mod_cases}(guild_id, created_at DESC, id DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_mod_cases_reason ON ${t.mod_cases}(guild_id, reason_key, created_at DESC)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `
