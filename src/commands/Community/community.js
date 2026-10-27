@@ -2,6 +2,7 @@ import { SlashCommandBuilder, MessageFlags, ChannelType } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { listStickies, removeSticky, setSticky, STICKY_MAX_LENGTH } from '../../services/community/stickyService.js';
+import { updateCommunitySettings } from '../../services/community/settingsService.js';
 
 const TEXT_CHANNELS = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
 
@@ -45,6 +46,19 @@ async function handleSticky(interaction, sub) {
     }
 }
 
+/** /community suggestions channel [channel] */
+async function handleSuggestions(interaction, sub) {
+    if (sub === 'channel') {
+        const channel = interaction.options.getChannel('channel');
+        await updateCommunitySettings(interaction.guildId, { suggestionsChannelId: channel?.id ?? null }, interaction.user.id);
+        return InteractionHelper.safeEditReply(interaction, {
+            content: channel
+                ? `Suggestions from \`/suggest new\` now go to ${channel}. Make sure I can send messages and embeds there.`
+                : 'Suggestions are turned off (no channel).',
+        });
+    }
+}
+
 export default {
     // Admin-only (not in commandAccess.js): community feature setup.
     scope: 'main',
@@ -52,7 +66,7 @@ export default {
     category: 'Community',
     data: new SlashCommandBuilder()
         .setName('community')
-        .setDescription('Set up sticky messages and other community features')
+        .setDescription('Set up sticky messages, suggestions and other community features')
         .addSubcommandGroup((group) => group.setName('sticky').setDescription('Messages kept at the bottom of a channel')
             .addSubcommand((sub) => sub.setName('set').setDescription('Set (or replace) the sticky message of a channel')
                 .addChannelOption((option) => option.setName('channel').setDescription('Channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS))
@@ -61,6 +75,9 @@ export default {
             .addSubcommand((sub) => sub.setName('remove').setDescription('Remove the sticky message of a channel')
                 .addChannelOption((option) => option.setName('channel').setDescription('Channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS)))
             .addSubcommand((sub) => sub.setName('list').setDescription('List sticky messages')))
+        .addSubcommandGroup((group) => group.setName('suggestions').setDescription('Member suggestions (/suggest)')
+            .addSubcommand((sub) => sub.setName('channel').setDescription('Set the suggestions channel (leave empty to turn suggestions off)')
+                .addChannelOption((option) => option.setName('channel').setDescription('Channel').addChannelTypes(...TEXT_CHANNELS))))
         .setDMPermission(false),
 
     async execute(interaction) {
@@ -69,5 +86,6 @@ export default {
         const group = interaction.options.getSubcommandGroup(false);
         const sub = interaction.options.getSubcommand();
         if (group === 'sticky') return handleSticky(interaction, sub);
+        if (group === 'suggestions') return handleSuggestions(interaction, sub);
     },
 };

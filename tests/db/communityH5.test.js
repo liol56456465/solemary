@@ -45,6 +45,8 @@ after(async () => {
     if (skip) return;
     await pgDb.pool.query('DELETE FROM sticky_messages WHERE guild_id = $1', [guildId]).catch(() => {});
     await pgDb.pool.query('DELETE FROM tags WHERE guild_id = $1', [guildId]).catch(() => {});
+    await pgDb.pool.query('DELETE FROM suggestions WHERE guild_id = $1', [guildId]).catch(() => {});
+    await pgDb.pool.query('DELETE FROM community_settings WHERE guild_id = $1', [guildId]).catch(() => {});
     await pgDb.disconnect();
 });
 
@@ -108,4 +110,65 @@ test('tags: create, unique names, edit fields, triggers from the cache, uses, de
     assert.equal(await tags.deleteTag(guildId, 'ip'), true);
     assert.equal(await tags.deleteTag(guildId, 'ip'), false);
     assert.equal(tags.getTag(guildId, 'ip'), null);
+});
+
+test('settings: upsert keeps other columns and updates the cache', { skip }, async () => {
+    const settings = await import('../../src/services/community/settingsService.js');
+    const first = await settings.updateCommunitySettings(guildId, { suggestionsChannelId: id(10) }, id(90));
+    assert.equal(first.suggestionsChannelId, id(10));
+    assert.equal(first.starboardEmoji, '⭐');
+    assert.equal(first.starboardThreshold, 3);
+    const second = await settings.updateCommunitySettings(guildId, { starboardChannelId: id(11), starboardThreshold: 5 }, id(90));
+    assert.equal(second.suggestionsChannelId, id(10));
+    assert.equal(second.starboardThreshold, 5);
+    settings.setCommunitySettingsForTests(guildId, null);
+    await settings.loadCommunitySettings();
+    assert.equal(settings.getCommunitySettings(guildId).starboardChannelId, id(11));
+});
+
+test('suggestions: post, votes (one per member, changeable, withdraw), status closes voting', { skip }, async () => {
+    const suggestions = await import('../../src/services/community/suggestionService.js');
+    const { updateCommunitySettings } = await import('../../src/services/community/settingsService.js');
+    suggestions.resetSuggestionCooldownsForTests();
+    const channel = fakeChannel(id(12));
+    channel.messages.fetch = async () => ({ edit: async (payload) => { channel.edited = payload; } });
+    const guild = { id: guildId, channels: { cache: new Map([[channel.id, channel]]) } };
+    const author = { id: id(20), username: 'author' };
+
+    await updateCommunitySettings(guildId, { suggestionsChannelId: null }, id(90));
+    await assert.rejects(suggestions.createSuggestion({ guild, user: author, content: 'x' }), /not set up/);
+    await updateCommunitySettings(guildId, { suggestionsChannelId: channel.id }, id(90));
+
+    const { row } = await suggestions.createSuggestion({ guild, user: author, content: 'Add a cat channel' });
+    assert.equal(row.message_id, channel.sent[0].id);
+    await assert.rejects(suggestions.createSuggestion({ guild, user: author, content: 'again' }), /another suggestion/);
+
+    const vote = (userId, clicked) => suggestions.castVote({ suggestionId: Number(row.id), guildId, userId, clicked });
+    let result = await vote(id(21), 1);
+    assert.deepEqual([result.vote, result.row.upvotes, result.row.downvotes], [1, 1, 0]);
+    result = await vote(id(22), 1);
+    result = await vote(id(23), -1);
+    assert.deepEqual([result.row.upvotes, result.row.downvotes], [2, 1]);
+    result = await vote(id(21), -1); // change
+    assert.deepEqual([result.vote, result.row.upvotes, result.row.downvotes], [-1, 1, 2]);
+    result = await vote(id(21), -1); // withdraw
+    assert.deepEqual([result.vote, result.row.upvotes, result.row.downvotes], [0, 1, 1]);
+    // Concurrent clicks by different members all count.
+    await Promise.all([30, 31, 32, 33].map((n) => vote(id(n), 1)));
+    result = await vote(id(34), -1);
+    assert.deepEqual([result.row.upvotes, result.row.downvotes], [5, 2]);
+    assert.equal(await suggestions.castVote({ suggestionId: Number(row.id), guildId: 'other', userId: id(21), clicked: 1 }), null);
+
+    const decided = await suggestions.setSuggestionStatus({ guildId, suggestionId: Number(row.id), status: 'approved', reason: 'Great idea', decidedBy: id(90) });
+    assert.equal(decided.status, 'approved');
+    assert.equal(decided.status_reason, 'Great idea');
+    await assert.rejects(vote(id(40), 1), /closed/);
+    const client = {
+        channels: { cache: new Map([[channel.id, channel]]) },
+        users: { fetch: async () => author },
+    };
+    assert.equal(await suggestions.refreshSuggestionMessage(client, decided), true);
+    assert.ok(channel.edited.components[0].components.every((button) => button.data.disabled));
+    assert.equal(await suggestions.setSuggestionStatus({ guildId: 'other', suggestionId: Number(row.id), status: 'denied', decidedBy: id(90) }), null);
+    await assert.rejects(suggestions.setSuggestionStatus({ guildId, suggestionId: Number(row.id), status: 'bogus', decidedBy: id(90) }), /Status/);
 });

@@ -3,8 +3,10 @@
 import { logger } from '../../utils/logger.js';
 import { loadStickies } from './stickyService.js';
 import { loadTags } from './tagService.js';
+import { loadCommunitySettings } from './settingsService.js';
 
 const LOADERS = [
+    ['settings', loadCommunitySettings],
     ['stickies', loadStickies],
     ['tags', loadTags],
 ];

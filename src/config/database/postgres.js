@@ -33,6 +33,9 @@ const configuredTables = {
     no_contact_orders: 'no_contact_orders',
     sticky_messages: 'sticky_messages',
     tags: 'tags',
+    community_settings: 'community_settings',
+    suggestions: 'suggestions',
+    suggestion_votes: 'suggestion_votes',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -66,6 +69,9 @@ const allowedTableIdentifiers = new Set([
     'no_contact_orders',
     'sticky_messages',
     'tags',
+    'community_settings',
+    'suggestions',
+    'suggestion_votes',
 ]);
 
 const validatedTables = Object.fromEntries(

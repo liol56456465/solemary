@@ -391,6 +391,44 @@ export const tableStatements = [
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         UNIQUE (guild_id, name)
     )`,
+
+    // Per-guild settings of the community features (/community suggestions and
+    // /community starboard). Held in memory; written only when an admin changes them.
+    `CREATE TABLE IF NOT EXISTS ${t.community_settings} (
+        guild_id VARCHAR(20) PRIMARY KEY,
+        suggestions_channel_id VARCHAR(20),
+        starboard_channel_id VARCHAR(20),
+        starboard_emoji VARCHAR(100) NOT NULL DEFAULT '⭐',
+        starboard_threshold INTEGER NOT NULL DEFAULT 3 CHECK (starboard_threshold >= 1 AND starboard_threshold <= 100),
+        updated_by VARCHAR(20),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    // Suggestions (/suggest): posted in the suggestions channel with vote buttons.
+    // upvotes/downvotes mirror suggestion_votes and are recounted on every vote.
+    `CREATE TABLE IF NOT EXISTS ${t.suggestions} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        content TEXT NOT NULL,
+        channel_id VARCHAR(20),
+        message_id VARCHAR(20),
+        status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'denied', 'considering')),
+        status_reason TEXT,
+        decided_by VARCHAR(20),
+        decided_at TIMESTAMPTZ,
+        upvotes INTEGER NOT NULL DEFAULT 0,
+        downvotes INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS ${t.suggestion_votes} (
+        suggestion_id BIGINT NOT NULL REFERENCES ${t.suggestions}(id) ON DELETE CASCADE,
+        user_id VARCHAR(20) NOT NULL,
+        vote SMALLINT NOT NULL CHECK (vote IN (-1, 1)),
+        voted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (suggestion_id, user_id)
+    )`,
 ];
 
 export const indexStatements = [
@@ -427,6 +465,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_guild_created ON ${t.mod_cases}(guild_id, created_at DESC, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_reason ON ${t.mod_cases}(guild_id, reason_key, created_at DESC)`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_no_contact_one_open ON ${t.no_contact_orders}(guild_id, user_a, user_b) WHERE ended_at IS NULL`,
+    `CREATE INDEX IF NOT EXISTS idx_suggestions_guild ON ${t.suggestions}(guild_id, id DESC)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `
