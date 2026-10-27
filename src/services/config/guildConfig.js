@@ -1,7 +1,7 @@
 // guildConfig.js — the only module that should read/write guild configuration.
 
 import { GUILD_CONFIG_DEFAULTS } from '../../config/guild/guildConfigDefaults.js';
-import { readGuildConfig, writeGuildConfig } from '../../utils/database/guildConfigStorage.js';
+import { readGuildConfig, writeGuildConfig, updateGuildConfigAtomic } from '../../utils/database/guildConfigStorage.js';
 import { normalizeGuildConfig, validateGuildConfigOrThrow } from '../../utils/schemas.js';
 import { createError, ErrorTypes, wrapServiceBoundary } from '../../utils/errorHandler.js';
 
@@ -28,10 +28,7 @@ export const setGuildConfig = wrapServiceBoundary(async function setGuildConfig(
 });
 
 export const updateGuildConfig = wrapServiceBoundary(async function updateGuildConfig(client, guildId, updates, context = {}) {
-    const currentConfig = await readGuildConfig(client, guildId, context);
-    const merged = { ...currentConfig, ...updates };
-    const normalized = normalizeGuildConfig(merged, GUILD_CONFIG_DEFAULTS);
-    return await writeGuildConfig(client, guildId, normalized, context);
+    return await updateGuildConfigAtomic(client, guildId, (current) => ({ ...current, ...updates }), context);
 }, {
     service: 'guildConfigService',
     operation: 'updateGuildConfig',
@@ -71,11 +68,7 @@ export const patchGuildConfig = wrapServiceBoundary(async function patchGuildCon
         );
     }
 
-    const currentConfig = await readGuildConfig(client, guildId, context);
-    const merged = deepMergeGuildConfig(currentConfig, patch);
-    const normalized = normalizeGuildConfig(merged, GUILD_CONFIG_DEFAULTS);
-    validateGuildConfigOrThrow(normalized, { guildId, ...context });
-    return await writeGuildConfig(client, guildId, normalized, context);
+    return await updateGuildConfigAtomic(client, guildId, (current) => deepMergeGuildConfig(current, patch), context);
 }, {
     service: 'guildConfigService',
     operation: 'patchGuildConfig',

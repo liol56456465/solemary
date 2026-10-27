@@ -19,7 +19,8 @@
     "deploy:commands": "node scripts/deploy-commands.js",
     "deploy:commands:test": "node --env-file=.env.test scripts/deploy-commands.js",
     "test:config": "node --env-file=.env.test scripts/test-config.js",
-    "test": "node --test tests/"
+    "test": "node --test tests/",
+    "test:db": "node --env-file=.env.test --test --test-concurrency=1 tests/db/"
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.1",

@@ -12,7 +12,7 @@ if (!process.execArgv.some((arg) => arg.startsWith('--env-file'))) {
 }
 
 // Imported after dotenv.config so resolveSslConfig sees the loaded env vars.
-const { resolveSslConfig } = await import('../src/config/database/postgres.js');
+const { resolveSslConfig, sanitizeConnectionString } = await import('../src/config/database/postgres.js');
 // The schema is the single source of truth shared with the runtime auto-create
 // path (src/utils/postgresDatabase.js), so this script can never diverge from it.
 const {
@@ -25,9 +25,10 @@ const { assertAllowlistedIdentifier, quoteIdentifier } = await import('../src/ut
 
 const { Pool } = pg;
 
+const databaseUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL,
-  ssl: resolveSslConfig(),
+  connectionString: sanitizeConnectionString(databaseUrl),
+  ssl: resolveSslConfig(databaseUrl),
 });
 
 const migrationTable = process.env.POSTGRES_MIGRATION_TABLE || 'schema_migrations';

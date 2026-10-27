@@ -20,7 +20,7 @@ import { handleModmailDm, handleModmailStaffMessage, isModmailStaff, modmailUser
 import { enforcementConfig } from '../config/enforcement.js';
 import {
   getCountingGameConfig,
-  saveCountingGameConfig,
+  resetCountingGame,
   isValidCountingMessage,
   recordCorrectCount,
 } from '../services/countingGameService.js';
@@ -205,12 +205,7 @@ async function handleCountingGame(message, client) {
 
     if (invalidAttempt) {
       await message.delete().catch(() => {});
-      await saveCountingGameConfig(client, message.guild.id, {
-        ...config,
-        nextNumber: 1,
-        lastUserId: null,
-        currentStreak: 0,
-      });
+      await resetCountingGame(client, message.guild.id, 1);
 
       const failureMessage = await message.channel.send(`❌ Count broken by <@${message.author.id}>. The sequence has been reset to **1**.`);
       setTimeout(() => {
@@ -220,7 +215,7 @@ async function handleCountingGame(message, client) {
       return true;
     }
 
-    await recordCorrectCount(client, message.guild.id, message.author.id);
+    await recordCorrectCount(client, message.guild.id, message.author.id, config.nextNumber || 1);
     return true;
   } catch (error) {
     logger.error('Error handling counting game:', error);

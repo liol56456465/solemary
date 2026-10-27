@@ -116,9 +116,8 @@ export default {
             const birthdays = await getGuildBirthdays(member.client, guild.id);
             if (birthdays[user.id]) {
                 const backupKey = `guild:${guild.id}:birthdays:left`;
-                const backup = (await member.client.db.get(backupKey)) || {};
-                backup[user.id] = birthdays[user.id];
-                await member.client.db.set(backupKey, backup);
+                // Locked: a raid's mass kicks would otherwise overwrite each other's entries.
+                await member.client.db.update(backupKey, (backup) => ({ ...backup, [user.id]: birthdays[user.id] }), {});
                 await deleteBirthday(member.client, guild.id, user.id);
                 logger.debug(`Birthday backed up and removed for user ${user.id} in guild ${guild.id}`);
             }

@@ -172,8 +172,11 @@ export default {
             if (backup[user.id]) {
                 const { month, day } = backup[user.id];
                 await dbSetBirthday(member.client, guild.id, user.id, month, day);
-                delete backup[user.id];
-                await member.client.db.set(backupKey, backup);
+                await member.client.db.update(backupKey, (current) => {
+                    const next = { ...current };
+                    delete next[user.id];
+                    return next;
+                }, {});
                 logger.debug(`Birthday restored for user ${user.id} in guild ${guild.id}`);
             }
         } catch (error) {

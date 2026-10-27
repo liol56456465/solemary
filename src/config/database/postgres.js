@@ -64,48 +64,75 @@ const validatedTables = Object.fromEntries(
 
 const DEFAULT_POSTGRES_URL = 'postgresql://localhost:5432/titanbot';
 
-export function resolveSslConfig() {
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '']);
+// pg lets these URL parameters override the ssl option; they are stripped so the
+// code below is the only thing deciding (sslmode=require used to mean "verify"
+// and becomes "don't verify" in pg v9).
+const SSL_URL_PARAMS = ['sslmode', 'ssl', 'sslrootcert', 'sslcert', 'sslkey', 'uselibpqcompat'];
+
+function databaseUrl() {
+    return (process.env.POSTGRES_URL || process.env.DATABASE_URL || '').trim();
+}
+
+function hostOf(url) {
+    try {
+        return new URL(url).hostname.replace(/^\[|\]$/g, '');
+    } catch {
+        return '';
+    }
+}
+
+/**
+ * TLS settings for a database URL. Remote hosts (Neon) always get TLS with
+ * certificate and hostname verification, whatever the URL says. Only a local
+ * database may run without TLS. POSTGRES_SSL=no-verify is the explicit escape
+ * hatch for a provider with a self-signed certificate.
+ */
+export function resolveSslConfig(url = databaseUrl()) {
+    const host = hostOf(url) || process.env.POSTGRES_HOST || 'localhost';
     const sslEnv = process.env.POSTGRES_SSL?.toLowerCase();
-    if (sslEnv === 'false' || sslEnv === '0') {
-        return false;
+    if (LOCAL_HOSTS.has(host)) {
+        return sslEnv === 'true' || sslEnv === '1' ? { rejectUnauthorized: true } : false;
     }
-    if (sslEnv === 'true' || sslEnv === '1') {
+    if (sslEnv === 'no-verify') {
         return { rejectUnauthorized: false };
     }
+    return { rejectUnauthorized: true };
+}
 
-    const url = process.env.POSTGRES_URL || process.env.DATABASE_URL || '';
-    if (/sslmode=(require|verify-ca|verify-full|prefer)/i.test(url)) {
-        return { rejectUnauthorized: false };
+/** The URL without TLS parameters, so pg can't override resolveSslConfig(). */
+export function sanitizeConnectionString(url) {
+    try {
+        const parsed = new URL(url);
+        for (const param of SSL_URL_PARAMS) parsed.searchParams.delete(param);
+        return parsed.toString();
+    } catch {
+        return url;
     }
+}
 
-    if (process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID) {
-        return { rejectUnauthorized: false };
-    }
-
-    if (process.env.NODE_ENV === 'production') {
-        return { rejectUnauthorized: false };
-    }
-
-    return false;
+function intFromEnv(name, fallback) {
+    const value = Number.parseInt(process.env[name], 10);
+    return Number.isFinite(value) ? value : fallback;
 }
 
 export function resolvePostgresPoolConfig() {
-    const ssl = resolveSslConfig();
-    const url = (process.env.POSTGRES_URL || process.env.DATABASE_URL || '').trim();
+    const url = databaseUrl();
     const sharedOptions = {
-        max: parseInt(process.env.POSTGRES_MAX_CONNECTIONS) || 20,
-        min: parseInt(process.env.POSTGRES_MIN_CONNECTIONS) || 2,
-        idleTimeoutMillis: parseInt(process.env.POSTGRES_IDLE_TIMEOUT) || 30000,
-        connectionTimeoutMillis: parseInt(process.env.POSTGRES_CONNECTION_TIMEOUT) || 10000,
+        max: intFromEnv('POSTGRES_MAX_CONNECTIONS', 20),
+        // 0 lets idle connections close; Neon drops them anyway when it scales to zero.
+        min: intFromEnv('POSTGRES_MIN_CONNECTIONS', 0),
+        idleTimeoutMillis: intFromEnv('POSTGRES_IDLE_TIMEOUT', 30000),
+        connectionTimeoutMillis: intFromEnv('POSTGRES_CONNECTION_TIMEOUT', 10000),
         application_name: 'titanbot',
         statement_timeout: process.env.NODE_ENV === 'production' ? 30000 : 0,
-        keepalives: 1,
-        keepalives_idle: 30,
-        ssl,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 30000,
+        ssl: resolveSslConfig(url),
     };
 
     if (url && url !== DEFAULT_POSTGRES_URL) {
-        return { connectionString: url, ...sharedOptions };
+        return { connectionString: sanitizeConnectionString(url), ...sharedOptions };
     }
 
     return {
@@ -130,8 +157,8 @@ export const pgConfig = {
         password: (process.env.POSTGRES_PASSWORD || '').toString(),
         ssl: resolveSslConfig(),
 
-        max: parseInt(process.env.POSTGRES_MAX_CONNECTIONS) || 20,
-        min: parseInt(process.env.POSTGRES_MIN_CONNECTIONS) || 2,
+        max: intFromEnv('POSTGRES_MAX_CONNECTIONS', 20),
+        min: intFromEnv('POSTGRES_MIN_CONNECTIONS', 0),
         idleTimeoutMillis: parseInt(process.env.POSTGRES_IDLE_TIMEOUT) || 30000,
         connectionTimeoutMillis: parseInt(process.env.POSTGRES_CONNECTION_TIMEOUT) || 10000,
 

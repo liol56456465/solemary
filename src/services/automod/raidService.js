@@ -21,7 +21,9 @@ const MAX_TRACKED_JOINERS = 1000;
 
 async function loadLockdown(guildId) {
     if (!lockdownCache.has(guildId)) {
-        lockdownCache.set(guildId, await getLockdown(guildId).catch(() => null));
+        // Only a successful read is cached; a failure throws and is retried next time,
+        // so a database blip can't hide an active lockdown.
+        lockdownCache.set(guildId, await getLockdown(guildId));
     }
     return lockdownCache.get(guildId);
 }

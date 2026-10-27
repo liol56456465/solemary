@@ -204,7 +204,7 @@ export async function getCountingGameConfig(client, guildId) {
     return normalizeCountingGame(rawState);
   } catch (error) {
     logger.error('Failed to load counting game config:', { guildId, error });
-    return normalizeCountingGame();
+    throw error;
   }
 }
 
@@ -214,36 +214,43 @@ export async function saveCountingGameConfig(client, guildId, state) {
   return normalized;
 }
 
+/** Locked read-modify-write of the counting state: change(config) returns the new state. */
+export async function updateCountingGameConfig(client, guildId, change) {
+  return client.db.update(getStorageKey(guildId),
+    async (raw) => normalizeCountingGame(await change(normalizeCountingGame(raw))), null);
+}
+
 export async function disableCountingGame(client, guildId) {
-  const config = await getCountingGameConfig(client, guildId);
-  return saveCountingGameConfig(client, guildId, { ...config, enabled: false });
+  return updateCountingGameConfig(client, guildId, (config) => ({ ...config, enabled: false }));
 }
 
 export async function resetCountingGame(client, guildId, startNumber = 1) {
-  const config = await getCountingGameConfig(client, guildId);
-  return saveCountingGameConfig(client, guildId, {
+  return updateCountingGameConfig(client, guildId, (config) => ({
     ...config,
     nextNumber: startNumber,
     lastUserId: null,
     currentStreak: 0,
-  });
+  }));
 }
 
-export async function recordCorrectCount(client, guildId, userId) {
-  const config = await getCountingGameConfig(client, guildId);
-  const leaderboard = { ...config.leaderboard };
-  leaderboard[userId] = (leaderboard[userId] || 0) + 1;
-
-  const updatedConfig = {
-    ...config,
-    leaderboard,
-    lastUserId: userId,
-    currentStreak: (config.currentStreak || 0) + 1,
-    bestStreak: Math.max(config.bestStreak || 0, (config.currentStreak || 0) + 1),
-    nextNumber: (config.nextNumber || 1) + 1,
-  };
-
-  return saveCountingGameConfig(client, guildId, updatedConfig);
+/**
+ * Counts one correct number. expectedNumber is the number the message was checked
+ * against; if someone else counted it first, nothing changes.
+ */
+export async function recordCorrectCount(client, guildId, userId, expectedNumber = null) {
+  return updateCountingGameConfig(client, guildId, (config) => {
+    if (expectedNumber !== null && (config.nextNumber || 1) !== expectedNumber) return config;
+    const leaderboard = { ...config.leaderboard };
+    leaderboard[userId] = (leaderboard[userId] || 0) + 1;
+    return {
+      ...config,
+      leaderboard,
+      lastUserId: userId,
+      currentStreak: (config.currentStreak || 0) + 1,
+      bestStreak: Math.max(config.bestStreak || 0, (config.currentStreak || 0) + 1),
+      nextNumber: (config.nextNumber || 1) + 1,
+    };
+  });
 }
 
 export function getCountingSystemChoices() {
