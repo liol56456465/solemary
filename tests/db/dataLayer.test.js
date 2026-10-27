@@ -211,3 +211,39 @@ test('outage: a failed health check makes everything throw until the database is
     assert.equal((await getGuildConfig(client, guildA)).prefix, '!');
     assert.equal(pgDb.isAvailable(), true);
 });
+
+// --- mass-action guard -------------------------------------------------------------
+
+test('mass-action guard: the ban after the limit is refused, the moderator blocked, owners alerted', { skip }, async () => {
+    const { enforceMassActionGuard, getMassActionBlock, clearMassActionBlock } = await import('../../src/services/enforcement/massActionGuard.js');
+    const { enforcementConfig } = await import('../../src/config/enforcement.js');
+    const moderatorId = user(900);
+    const dms = [];
+    const fakeClient = {
+        guilds: { cache: new Map() },
+        users: { fetch: async (id) => ({ send: async (msg) => dms.push({ id, msg }) }) },
+    };
+    const guild = { id: guildA, name: 'Test guild', client: fakeClient };
+    const moderator = { id: moderatorId, user: { username: 'rogue' } };
+    try {
+        for (let i = 0; i < enforcementConfig.massActionLimit; i++) {
+            await pgDb.pool.query(
+                `INSERT INTO mod_cases (guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username, type, name, reason, prebuilt_or_custom)
+                 VALUES ($1, $2, $3, 'x', $4, 'rogue', $5, $2, 'r', 'custom')`,
+                [guildA, `T${runId.slice(-4)}${i}`.slice(0, 7), user(800 + i), moderatorId, i % 2 ? 'kick' : 'ban']
+            );
+        }
+        await enforceMassActionGuard(guild, moderator, 'warn'); // warns don't count and aren't blocked yet
+        await assert.rejects(enforceMassActionGuard(guild, moderator, 'ban'), (error) => error.type === 'permission');
+        assert.ok(await getMassActionBlock(guildA, moderatorId), 'block stored');
+        assert.equal(dms.length, (process.env.OWNER_IDS || '').split(',').filter(Boolean).length, 'every OWNER_IDS account got a DM');
+        await assert.rejects(enforceMassActionGuard(guild, moderator, 'warn'), (error) => error.type === 'permission', 'blocked from every action');
+        // Owners are never blocked.
+        const ownerId = (process.env.OWNER_IDS || '').split(',')[0]?.trim();
+        if (ownerId) await enforceMassActionGuard(guild, { id: ownerId, user: { username: 'owner' } }, 'ban');
+        await clearMassActionBlock(guildA, moderatorId);
+        assert.equal(await getMassActionBlock(guildA, moderatorId), null);
+    } finally {
+        await pgDb.pool.query('DELETE FROM mod_cases WHERE guild_id = $1 AND moderator_id = $2', [guildA, moderatorId]);
+    }
+});

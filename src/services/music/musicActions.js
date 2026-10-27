@@ -11,8 +11,8 @@ import {
     getQueuePageSize,
 } from './musicEmbeds.js';
 import { refreshPlayerMessage } from './playerHandler.js';
+import { assertAllowedPlayQuery } from './queryPolicy.js';
 
-const YOUTUBE_URL_PATTERN = /(?:youtube\.com|youtu\.be)/i;
 const MAX_PLAYLIST_TRACKS = 100;
 
 export function getPlayer(client, guildId) {
@@ -153,13 +153,7 @@ export async function joinVoiceChannel(client, interaction) {
 }
 
 export async function playQuery(client, interaction, query) {
-    if (YOUTUBE_URL_PATTERN.test(query)) {
-        throw new TitanBotError(
-            'YouTube URL blocked',
-            ErrorTypes.USER_INPUT,
-            'YouTube links are not supported. Try a song name instead.',
-        );
-    }
+    assertAllowedPlayQuery(query);
 
     const { player, guildData } = await ensurePlayer(client, interaction);
 

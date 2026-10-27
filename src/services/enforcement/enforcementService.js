@@ -16,6 +16,7 @@ import { banDm, kickDm, muteDm, warnDm } from './dmTemplates.js';
 import { addMonths, formatDuration, dateStamp } from './format.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
+import { enforceMassActionGuard } from './massActionGuard.js';
 import { createEmbed } from '../../utils/embeds.js';
 
 export const REQUIRED_BOT_PERMISSIONS = [
@@ -209,7 +210,12 @@ export async function executeAction({ guild, moderator, targetUser, flow }) {
     if (!isAdministrator(moderator)) {
         throw userError('You need the Administrator permission to use this panel.', ErrorTypes.PERMISSION);
     }
-    return runAction({ guild, moderator, targetUser, flow });
+    // One action at a time per moderator, so the mass-action count can't be raced
+    // by clicking several panels at once.
+    return Mutex.runExclusive(`panel-mod:${guild.id}:${moderator.id}`, async () => {
+        await enforceMassActionGuard(guild, moderator, flow.type);
+        return runAction({ guild, moderator, targetUser, flow });
+    });
 }
 
 /**

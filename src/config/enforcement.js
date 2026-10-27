@@ -15,6 +15,11 @@ function prodDefault(value) {
     return IS_TEST ? null : value;
 }
 
+function readPositiveInt(name, fallback) {
+    const value = Number.parseInt(process.env[name], 10);
+    return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
 function readIdList(name) {
     const raw = (process.env[name] || '').trim();
     return raw ? raw.split(',').map((id) => id.trim()).filter(Boolean) : null;
@@ -59,6 +64,13 @@ export const enforcementConfig = {
 
     panelTtlMs: 15 * 60 * 1000,
     panelMaxEntries: 500,
+
+    // Panel mass-action guard: a moderator who has already banned/kicked this many
+    // members within the window is blocked from the panel on the next ban/kick,
+    // and OWNER_IDS get a DM. OWNER_IDS themselves are never blocked.
+    massActionLimit: readPositiveInt('MASS_ACTION_LIMIT', 5),
+    massActionWindowMs: readPositiveInt('MASS_ACTION_WINDOW_MINUTES', 10) * 60 * 1000,
+    massActionBlockMs: readPositiveInt('MASS_ACTION_BLOCK_MINUTES', 60) * 60 * 1000,
 };
 
 /**

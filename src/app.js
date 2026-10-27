@@ -135,6 +135,17 @@ class Meowist extends Client {
     const app = express();
     // Railway (and similar hosts) sit behind one reverse proxy; trust it so req.ip is the real client.
     app.set('trust proxy', 1);
+
+    // TEMPORARY (first deploy only, remove in the next one): shows how many proxies
+    // Replit puts in front of the app, to set 'trust proxy' to the real hop count.
+    let loggedProxyHops = false;
+    app.use((req, res, next) => {
+      if (!loggedProxyHops) {
+        loggedProxyHops = true;
+        startupLog(`Proxy check (first HTTP request): req.ip=${req.ip} req.ips=${JSON.stringify(req.ips)} X-Forwarded-For=${req.get('x-forwarded-for') || '(none)'}`);
+      }
+      next();
+    });
     const configuredPort = Number(this.config.api?.port || process.env.PORT || 3000);
     // A host-provided PORT is the only port the proxy routes to, so never drift off it.
     // Port retry is a local-dev convenience only.

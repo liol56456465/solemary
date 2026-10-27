@@ -1,4 +1,5 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { clearMassActionBlock, getMassActionBlock } from '../../services/enforcement/massActionGuard.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
@@ -35,7 +36,7 @@ export default {
         .addSubcommand((sub) => sub.setName('activity').setDescription('What each staff member did this week or last week')
             .addStringOption((option) => option.setName('week').setDescription('Which week')
                 .addChoices({ name: 'this week', value: 'this' }, { name: 'last week', value: 'last' })))
-        .addSubcommand((sub) => sub.setName('restore').setDescription('Give back staff roles removed by the staff guard or by warnings')
+        .addSubcommand((sub) => sub.setName('restore').setDescription('Give back removed staff roles and lift a mass-action panel block')
             .addUserOption((option) => option.setName('user').setDescription('Staff member').setRequired(true))),
 
     async execute(interaction) {
@@ -94,10 +95,17 @@ export default {
         }
 
         if (sub === 'restore') {
+            // Also lifts a mass-action guard block on the panel.
+            const block = await getMassActionBlock(interaction.guild.id, user.id);
+            if (block) await clearMassActionBlock(interaction.guild.id, user.id);
             const roles = await restoreStaffRoles(interaction.guild, user.id, interaction.user);
-            if (!roles) throw userError(`No removed staff roles are saved for ${user.username} (or they are not in the server).`);
+            if (!roles && !block) throw userError(`No removed staff roles are saved for ${user.username} (or they are not in the server), and they are not blocked from the panel.`);
+            const lines = [
+                roles ? (roles.length ? `Roles: ${roles.map((role) => role.name).join(', ')}` : 'None of the saved roles could be given back (deleted or above my role).') : null,
+                block ? 'Their enforcement panel block was lifted.' : null,
+            ].filter(Boolean);
             return InteractionHelper.safeEditReply(interaction, {
-                embeds: [successEmbed('Staff roles restored', roles.length ? roles.map((role) => role.name).join(', ') : 'None of the saved roles could be given back (deleted or above my role).')],
+                embeds: [successEmbed('Staff access restored', lines.join('\n'))],
             });
         }
     },
