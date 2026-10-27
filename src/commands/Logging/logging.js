@@ -4,6 +4,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 
 import dashboard from './modules/logging_dashboard.js';
 import channel from './modules/logging_channel.js';
+import ignore from './modules/logging_ignore.js';
 
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 export default {
@@ -45,11 +46,41 @@ export default {
                         .setDescription('Set to True to clear this log channel.')
                         .setRequired(false),
                 ),
+        )
+        .addSubcommandGroup((group) =>
+            group
+                .setName('ignore')
+                .setDescription('Skip logs for a channel (with its threads / a category) or members with a role.')
+                .addSubcommand((subcommand) =>
+                    subcommand
+                        .setName('channel')
+                        .setDescription('Ignore a channel or category, or log it again (toggles).')
+                        .addChannelOption((option) =>
+                            option
+                                .setName('channel')
+                                .setDescription('Channel or category')
+                                .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildVoice, ChannelType.GuildStageVoice, ChannelType.GuildForum, ChannelType.GuildCategory)
+                                .setRequired(true),
+                        ),
+                )
+                .addSubcommand((subcommand) =>
+                    subcommand
+                        .setName('role')
+                        .setDescription('Ignore members with a role, or log them again (toggles).')
+                        .addRoleOption((option) => option.setName('role').setDescription('Role').setRequired(true)),
+                )
+                .addSubcommand((subcommand) =>
+                    subcommand.setName('list').setDescription('Show the ignored channels, roles and users.'),
+                ),
         ),
 
     async execute(interaction, config, client) {
         try {
             const subcommand = interaction.options.getSubcommand();
+
+            if (interaction.options.getSubcommandGroup(false) === 'ignore') {
+                return await ignore.execute(interaction, config, client);
+            }
 
             if (subcommand === 'dashboard') {
                 return await dashboard.execute(interaction, config, client);

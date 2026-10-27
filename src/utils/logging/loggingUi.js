@@ -29,6 +29,8 @@ export const DASHBOARD_CATEGORIES = [
   'counter',
   'application',
   'report',
+  'channel',
+  'server',
 ];
 
 const DASHBOARD_CATEGORY_EMOJIS = {
@@ -42,6 +44,8 @@ const DASHBOARD_CATEGORY_EMOJIS = {
   counter: '📊',
   application: '📝',
   report: '🚨',
+  channel: '#️⃣',
+  server: '🛠️',
 };
 
 export const DASHBOARD_CATEGORY_LABELS = {
@@ -55,6 +59,8 @@ export const DASHBOARD_CATEGORY_LABELS = {
   counter: 'Counters',
   application: 'Applications',
   report: 'Reports',
+  channel: 'Channels & Threads',
+  server: 'Emoji, Events, Webhooks, Invites, AutoMod',
 };
 
 function createBackButton() {
@@ -128,7 +134,7 @@ export function createLoggingMainMenuSelect() {
           .setEmoji('📋'),
         new StringSelectMenuOptionBuilder()
           .setLabel('Manage Ignore Filters')
-          .setDescription('Skip logs from specific users or channels')
+          .setDescription('Skip logs from specific users, channels or roles')
           .setValue('view:filters')
           .setEmoji('🔇'),
       ),
@@ -184,6 +190,10 @@ export function createLoggingFilterComponents() {
       new ButtonBuilder()
         .setCustomId('log_dash_add_filter:channel')
         .setLabel('Add Channel Filter')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId('log_dash_add_filter:role')
+        .setLabel('Add Role Filter')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId('log_dash_remove_filter')

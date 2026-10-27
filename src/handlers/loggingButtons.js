@@ -5,6 +5,7 @@ import {
   LabelBuilder,
   MessageFlags,
   ModalBuilder,
+  RoleSelectMenuBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   UserSelectMenuBuilder,
@@ -160,7 +161,7 @@ async function handleToggle(interaction) {
 
 async function handleAddFilterModal(interaction) {
   const filterType = interaction.customId.replace('log_dash_add_filter:', '');
-  if (filterType !== 'user' && filterType !== 'channel') {
+  if (!['user', 'channel', 'role'].includes(filterType)) {
     return interaction.reply({ content: '❌ Invalid filter type.', ephemeral: true });
   }
 
@@ -183,17 +184,33 @@ async function handleAddFilterModal(interaction) {
       .setCustomId(modalCustomId)
       .setTitle('Add User Filter')
       .addLabelComponents(userLabel);
+  } else if (filterType === 'role') {
+    const roleSelect = new RoleSelectMenuBuilder()
+      .setCustomId('ignore_role')
+      .setPlaceholder('Select a role to ignore…')
+      .setMinValues(1)
+      .setMaxValues(1);
+
+    const roleLabel = new LabelBuilder()
+      .setLabel('Role to Ignore')
+      .setDescription('Members with this role are not logged')
+      .setRoleSelectMenuComponent(roleSelect);
+
+    modal = new ModalBuilder()
+      .setCustomId(modalCustomId)
+      .setTitle('Add Role Filter')
+      .addLabelComponents(roleLabel);
   } else {
     const channelSelect = new ChannelSelectMenuBuilder()
       .setCustomId('ignore_channel')
       .setPlaceholder('Select a channel to ignore…')
       .setMinValues(1)
       .setMaxValues(1)
-      .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildVoice);
+      .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildVoice, ChannelType.GuildForum, ChannelType.GuildCategory);
 
     const channelLabel = new LabelBuilder()
       .setLabel('Channel to Ignore')
-      .setDescription('Choose a channel whose events should not be logged')
+      .setDescription('Its threads (and a category\'s channels) are skipped too')
       .setChannelSelectMenuComponent(channelSelect);
 
     modal = new ModalBuilder()
@@ -213,6 +230,8 @@ async function handleAddFilterModal(interaction) {
     let id;
     if (filterType === 'user') {
       id = modalSubmission.fields.getField('ignore_user')?.values?.[0];
+    } else if (filterType === 'role') {
+      id = modalSubmission.fields.getField('ignore_role')?.values?.[0];
     } else {
       id = modalSubmission.fields.getField('ignore_channel')?.values?.[0];
     }
@@ -229,7 +248,7 @@ async function handleAddFilterModal(interaction) {
     }
 
     await confirmAndRefresh(interaction, modalSubmission, {
-      embeds: [successEmbed('Filter Added', `${filterType === 'user' ? 'User' : 'Channel'} \`${id}\` will be ignored in audit logs.`)],
+      embeds: [successEmbed('Filter Added', `${{ user: 'User', channel: 'Channel', role: 'Role' }[filterType]} \`${id}\` will be ignored in audit logs.`)],
       flags: MessageFlags.Ephemeral,
     }, isFilterView(interaction));
   } catch (error) {
@@ -255,11 +274,22 @@ async function handleRemoveFilterModal(interaction) {
   }
 
   for (const channelId of ignore.channels || []) {
+    const channel = interaction.guild?.channels.cache.get(channelId);
     options.push(
       new StringSelectMenuOptionBuilder()
-        .setLabel(`Channel ${channelId}`)
+        .setLabel(channel ? `#${channel.name}`.slice(0, 100) : `Channel ${channelId}`)
         .setDescription('Remove this channel from the ignore list')
         .setValue(`channel:${channelId}`),
+    );
+  }
+
+  for (const roleId of ignore.roles || []) {
+    const role = interaction.guild?.roles.cache.get(roleId);
+    options.push(
+      new StringSelectMenuOptionBuilder()
+        .setLabel(role ? `@${role.name}`.slice(0, 100) : `Role ${roleId}`)
+        .setDescription('Remove this role from the ignore list')
+        .setValue(`role:${roleId}`),
     );
   }
 
@@ -281,7 +311,7 @@ async function handleRemoveFilterModal(interaction) {
 
   const filterLabel = new LabelBuilder()
     .setLabel('Filter to Remove')
-    .setDescription('Choose a user or channel to un-ignore')
+    .setDescription('Choose a user, channel or role to un-ignore')
     .setStringSelectMenuComponent(filterSelect);
 
   const modal = new ModalBuilder()

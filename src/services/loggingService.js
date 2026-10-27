@@ -2,6 +2,7 @@
 
 import { ChannelType } from 'discord.js';
 import { getGuildConfig, updateGuildConfig } from './config/guildConfig.js';
+import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
 import { logger } from '../utils/logger.js';
 import {
   appendContentSection,
@@ -64,6 +65,32 @@ const EVENT_TYPES = {
   APPLICATION_REVIEW: 'application.review',
 
   REPORT_FILE: 'report.file',
+
+  CHANNEL_CREATE: 'channel.create',
+  CHANNEL_DELETE: 'channel.delete',
+  CHANNEL_UPDATE: 'channel.update',
+  THREAD_CREATE: 'channel.threadcreate',
+  THREAD_DELETE: 'channel.threaddelete',
+  THREAD_UPDATE: 'channel.threadupdate',
+
+  // From audit log entries (services/auditLogLogging.js): no extra gateway intents.
+  EMOJI_CREATE: 'server.emojicreate',
+  EMOJI_DELETE: 'server.emojidelete',
+  EMOJI_UPDATE: 'server.emojiupdate',
+  STICKER_CREATE: 'server.stickercreate',
+  STICKER_DELETE: 'server.stickerdelete',
+  STICKER_UPDATE: 'server.stickerupdate',
+  EVENT_CREATE: 'server.eventcreate',
+  EVENT_DELETE: 'server.eventdelete',
+  EVENT_UPDATE: 'server.eventupdate',
+  WEBHOOK_CREATE: 'server.webhookcreate',
+  WEBHOOK_DELETE: 'server.webhookdelete',
+  WEBHOOK_UPDATE: 'server.webhookupdate',
+  INVITE_CREATE: 'server.invitecreate',
+  INVITE_DELETE: 'server.invitedelete',
+  AUTOMOD_RULE_CREATE: 'server.automodcreate',
+  AUTOMOD_RULE_DELETE: 'server.automoddelete',
+  AUTOMOD_RULE_UPDATE: 'server.automodupdate',
 };
 
 const EVENT_COLORS = {
@@ -108,6 +135,29 @@ const EVENT_COLORS = {
   'application.submit': 0x5865F2,
   'application.review': 0x57F287,
   'report.file': 0xED4245,
+  'channel.create': 0x2ecc71,
+  'channel.delete': 0xe74c3c,
+  'channel.update': 0x3498db,
+  'channel.threadcreate': 0x2ecc71,
+  'channel.threaddelete': 0xe74c3c,
+  'channel.threadupdate': 0x3498db,
+  'server.emojicreate': 0x2ecc71,
+  'server.emojidelete': 0xe74c3c,
+  'server.emojiupdate': 0x3498db,
+  'server.stickercreate': 0x2ecc71,
+  'server.stickerdelete': 0xe74c3c,
+  'server.stickerupdate': 0x3498db,
+  'server.eventcreate': 0x2ecc71,
+  'server.eventdelete': 0xe74c3c,
+  'server.eventupdate': 0x3498db,
+  'server.webhookcreate': 0xE67E22,
+  'server.webhookdelete': 0xe74c3c,
+  'server.webhookupdate': 0x3498db,
+  'server.invitecreate': 0x2ecc71,
+  'server.invitedelete': 0xe74c3c,
+  'server.automodcreate': 0x5865F2,
+  'server.automoddelete': 0xe74c3c,
+  'server.automodupdate': 0x5865F2,
 };
 
 const EVENT_ICONS = {
@@ -152,6 +202,29 @@ const EVENT_ICONS = {
   'application.submit': '📝',
   'application.review': '📋',
   'report.file': '🚨',
+  'channel.create': '➕',
+  'channel.delete': '➖',
+  'channel.update': '🔄',
+  'channel.threadcreate': '🧵',
+  'channel.threaddelete': '🧵',
+  'channel.threadupdate': '🧵',
+  'server.emojicreate': '😀',
+  'server.emojidelete': '😀',
+  'server.emojiupdate': '😀',
+  'server.stickercreate': '🏷️',
+  'server.stickerdelete': '🏷️',
+  'server.stickerupdate': '🏷️',
+  'server.eventcreate': '📅',
+  'server.eventdelete': '📅',
+  'server.eventupdate': '📅',
+  'server.webhookcreate': '🪝',
+  'server.webhookdelete': '🪝',
+  'server.webhookupdate': '🪝',
+  'server.invitecreate': '✉️',
+  'server.invitedelete': '✉️',
+  'server.automodcreate': '🛡️',
+  'server.automoddelete': '🛡️',
+  'server.automodupdate': '🛡️',
 };
 
 const CATEGORY_DESTINATION = {
@@ -171,7 +244,37 @@ export function resolveLogChannel(config, destination) {
 }
 
 export function getIgnoreList(config) {
-  return config?.logging?.ignore ?? config?.logIgnore ?? { users: [], channels: [] };
+  const ignore = config?.logging?.ignore ?? config?.logIgnore ?? {};
+  return { users: ignore.users || [], channels: ignore.channels || [], roles: ignore.roles || [] };
+}
+
+/**
+ * True when a log entry is on the ignore lists: its user, its channel or any parent
+ * of it (thread → channel → category), or one of the user's roles. Pure.
+ */
+export function isIgnoredLog(ignore, { userId = null, channelIds = [], roleIds = [] } = {}) {
+  if (userId && ignore.users?.includes(userId)) return true;
+  if (channelIds.some((id) => id && ignore.channels?.includes(id))) return true;
+  if (roleIds.some((id) => ignore.roles?.includes(id))) return true;
+  return false;
+}
+
+/** The channel and its parents (thread → channel → category), from the cache. */
+export function channelAncestry(guild, channelId) {
+  const ids = [];
+  let channel = channelId ? guild.channels.cache.get(channelId) : null;
+  if (channelId && !channel) ids.push(channelId);
+  for (let depth = 0; channel && depth < 3; depth += 1) {
+    ids.push(channel.id);
+    channel = channel.parentId ? guild.channels.cache.get(channel.parentId) : null;
+  }
+  return ids;
+}
+
+async function memberRoleIds(guild, userId, ignore) {
+  if (!userId || !ignore.roles?.length) return [];
+  const member = guild.members.cache.get(userId) || await guild.members.fetch(userId).catch(() => null);
+  return member ? [...member.roles.cache.keys()] : [];
 }
 
 export function isEventEnabled(config, eventType) {
@@ -228,10 +331,12 @@ export async function logEvent({
     const config = await getGuildConfig(client, guildId);
     const ignore = getIgnoreList(config);
 
-    if (data?.userId && ignore.users?.includes(data.userId)) {
-      return null;
-    }
-    if (data?.channelId && ignore.channels?.includes(data.channelId)) {
+    const ignored = isIgnoredLog(ignore, {
+      userId: data?.userId,
+      channelIds: data?.channelId ? channelAncestry(guild, data.channelId) : [],
+      roleIds: await memberRoleIds(guild, data?.userId, ignore),
+    });
+    if (ignored) {
       return null;
     }
 
@@ -445,26 +550,26 @@ export async function setLoggingEnabled(client, guildId, enabled) {
   }
 }
 
-export async function updateIgnoreList(client, guildId, { action, type, id }) {
+const IGNORE_LIST_KEYS = { user: 'users', channel: 'channels', role: 'roles' };
+
+/**
+ * Adds to, removes from or toggles an ignore list (type: user | channel | role),
+ * under the guild config's row lock. Returns true, or false on a failure (logged).
+ * With action 'toggle', `result.added` tells which way it went.
+ */
+export async function updateIgnoreList(client, guildId, { action, type, id }, result = {}) {
   try {
-    const config = await getGuildConfig(client, guildId);
-    const ignore = { ...getIgnoreList(config) };
-    const listKey = type === 'user' ? 'users' : 'channels';
-    const current = [...(ignore[listKey] || [])];
-
-    if (action === 'add' && !current.includes(id)) {
-      current.push(id);
-    } else if (action === 'remove') {
-      const index = current.indexOf(id);
-      if (index !== -1) {
-        current.splice(index, 1);
-      }
-    }
-
-    ignore[listKey] = current;
-
-    const logging = { ...config.logging, ignore };
-    await updateGuildConfig(client, guildId, { logging });
+    const listKey = IGNORE_LIST_KEYS[type];
+    if (!listKey) throw new Error(`Unknown ignore list type: ${type}`);
+    await updateGuildConfigAtomic(client, guildId, (config) => {
+      const ignore = getIgnoreList(config);
+      const current = [...ignore[listKey]];
+      const has = current.includes(id);
+      const add = action === 'add' || (action === 'toggle' && !has);
+      result.added = add;
+      const next = add ? (has ? current : [...current, id]) : current.filter((entry) => entry !== id);
+      return { ...config, logging: { ...config.logging, ignore: { ...ignore, [listKey]: next } } };
+    });
     return true;
   } catch (error) {
     logger.error('Error updating ignore list:', error);

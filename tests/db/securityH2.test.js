@@ -56,6 +56,7 @@ after(async () => {
     await pgDb.pool.query('DELETE FROM server_snapshots WHERE guild_id = $1', [guildId]);
     await db.delete(`automod:settings:${guildId}`).catch(() => {});
     await db.delete(`automod:joingate:flag:${guildId}:${user(3)}`).catch(() => {});
+    await db.delete(`guild:${guildId}:config`).catch(() => {});
     await pgDb.disconnect();
 });
 
@@ -122,6 +123,30 @@ test('automod settings: panic and join gate saved under the row lock', { skip },
     assert.equal(stored.joinGate.age, 'flag');
     assert.equal(stored.joinGate.ageDays, 3);
     assert.ok(await getAutomodSettings(guildId));
+});
+
+test('logging ignore lists: concurrent toggles of channels and roles are all kept', { skip }, async () => {
+    const { updateIgnoreList, getIgnoreList } = await import('../../src/services/loggingService.js');
+    const { getGuildConfig } = await import('../../src/services/config/guildConfig.js');
+    const client = { db };
+    const results = [{}, {}, {}];
+    const oks = await Promise.all([
+        updateIgnoreList(client, guildId, { action: 'toggle', type: 'channel', id: '111' }, results[0]),
+        updateIgnoreList(client, guildId, { action: 'toggle', type: 'role', id: '222' }, results[1]),
+        updateIgnoreList(client, guildId, { action: 'add', type: 'role', id: '333' }, results[2]),
+    ]);
+    assert.deepEqual(oks, [true, true, true]);
+    assert.equal(results[0].added, true);
+    let ignore = getIgnoreList(await getGuildConfig(client, guildId));
+    assert.deepEqual(ignore.channels, ['111']);
+    assert.deepEqual([...ignore.roles].sort(), ['222', '333']);
+
+    const again = {};
+    await updateIgnoreList(client, guildId, { action: 'toggle', type: 'role', id: '222' }, again);
+    assert.equal(again.added, false);
+    ignore = getIgnoreList(await getGuildConfig(client, guildId));
+    assert.deepEqual(ignore.roles, ['333']);
+    assert.equal(await updateIgnoreList(client, guildId, { action: 'add', type: 'bogus', id: '1' }), false);
 });
 
 test('join gate flags: stored with a TTL and cleared', { skip }, async () => {
