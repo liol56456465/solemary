@@ -4,9 +4,11 @@
 // grouped per member and rule during a burst).
 //
 // Order for one message: skip (bots, exempt channels, administrators) → filters →
-// the most severe hit is acted on: raid joiners during a lockdown are kicked,
-// everyone else gets the next step of that rule's ladder (or, in monitor mode,
-// nothing but the card) → new-member limits for messages that broke no rule.
+// each hit gets its rule's mode (policy.js: on / monitor / off; off hits are dropped) →
+// the most severe remaining hit is acted on: raid joiners during a lockdown are kicked,
+// everyone else gets the next step of that rule's ladder (or, when the rule is in
+// monitor mode, nothing but the card) → new-member limits for messages that broke no
+// rule that is on or monitored.
 
 import { PermissionFlagsBits } from 'discord.js';
 import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
@@ -16,6 +18,7 @@ import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction, isAdministrator } from '../enforcement/enforcementService.js';
 import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
 import { isRaidJoiner } from './raidService.js';
+import { resolveRuleMode } from './policy.js';
 import { noteRepeatHit, postReviewCard } from './reviewCards.js';
 import * as reasons from './reasons.js';
 import {
@@ -257,6 +260,10 @@ async function deleteQuietly(message) {
     });
 }
 
+/**
+ * Acts on one hit. `hit.mode` is the rule's effective mode ('on' | 'monitor'; 'off'
+ * hits never get here).
+ */
 async function actOn(message, member, hit, settings) {
     const rule = AUTOMOD_RULES[hit.rule];
     const { guild } = message;
@@ -268,7 +275,7 @@ async function actOn(message, member, hit, settings) {
         channelId: message.channelId, messageUrl: message.url, content: excerpt(message),
     };
 
-    if (settings.mode === 'monitor') {
+    if (hit.mode === 'monitor') {
         const offences = await countOffences(guild.id, targetUser.id, group);
         const step = rule.steps[hit.forceLastStep ? rule.steps.length - 1 : Math.min(offences, rule.steps.length - 1)];
         await postReviewCard({ ...card, monitor: true, suggested: step, offence: offences + 1, deleted: false });
@@ -332,6 +339,21 @@ async function applyNewMemberLimits(message, member, now) {
 }
 
 /**
+ * Each hit with its effective mode (policy.js); hits of rules that are off are dropped.
+ * When one message breaks several rules, the most severe remaining one decides
+ * (worstHit), including whether it is enforced or only monitored.
+ */
+export function applyRuleModes(hits, settings, channel = null) {
+    return hits
+        .map((hit) => ({ ...hit, mode: resolveRuleMode(settings, hit.rule, channel) }))
+        .filter((hit) => hit.mode !== 'off');
+}
+
+export function worstHit(hits) {
+    return hits.reduce((a, b) => (AUTOMOD_RULES[b.rule].severity > AUTOMOD_RULES[a.rule].severity ? b : a));
+}
+
+/**
  * Runs automod on a new or edited message. Returns true when the message was
  * removed, so callers skip the rest of their processing (commands, XP).
  */
@@ -354,11 +376,11 @@ export async function moderateMessage(message, { edited = false } = {}) {
             lastPrune = now;
         }
 
-        const hits = await evaluateMessage(message, member, now);
+        const detected = await evaluateMessage(message, member, now);
+        const hits = applyRuleModes(detected, settings, message.channel);
         if (hits.length) {
             handledMessages.add(message.id);
-            const worst = hits.reduce((a, b) => (AUTOMOD_RULES[b.rule].severity > AUTOMOD_RULES[a.rule].severity ? b : a));
-            return await actOn(message, member, worst, settings);
+            return await actOn(message, member, worstHit(hits), settings);
         }
         if (edited || isStaff(member)) return false;
         return await applyNewMemberLimits(message, member, now);
