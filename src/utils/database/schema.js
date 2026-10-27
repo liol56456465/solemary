@@ -203,8 +203,13 @@ export const tableStatements = [
             CHECK (status IN ('active', 'expired', 'revoked', 'appeal_pending')),
         revoked_by VARCHAR(20),
         revoked_at TIMESTAMPTZ,
-        revoke_reason TEXT
+        revoke_reason TEXT,
+        is_test BOOLEAN NOT NULL DEFAULT FALSE
     )`,
+
+    // Cases created by /test: real rows (appealable, shown in /appeals) that the bot
+    // never acts on: no bans, unbans, roles or ladder changes.
+    `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE`,
 
     // Warn ladder. Never reset; lowered by one only by an accepted ladder-ban appeal.
     `CREATE TABLE IF NOT EXISTS ${t.mod_ladder} (

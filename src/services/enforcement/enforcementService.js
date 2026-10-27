@@ -440,7 +440,7 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
 async function nextAutoBanName(client, guildId, targetUser) {
     const { rows } = await client.query(
         `SELECT COUNT(*)::int AS count FROM ${T.cases}
-         WHERE guild_id = $1 AND target_user_id = $2 AND type = 'ban' AND is_imported = FALSE`,
+         WHERE guild_id = $1 AND target_user_id = $2 AND type = 'ban' AND is_imported = FALSE AND is_test = FALSE`,
         [guildId, targetUser.id]
     );
     let n = (rows[0]?.count || 0) + 1;
@@ -461,7 +461,7 @@ async function revokeOpenCases(guildId, userId, type, revokedBy, reason) {
     const { rows } = await query(
         `UPDATE ${T.cases}
          SET status = 'revoked', revoked_by = $4, revoked_at = NOW(), revoke_reason = $5
-         WHERE guild_id = $1 AND target_user_id = $2 AND type = $3 AND status = ANY($6)
+         WHERE guild_id = $1 AND target_user_id = $2 AND type = $3 AND status = ANY($6) AND is_test = FALSE
          RETURNING *`,
         [guildId, userId, type, revokedBy, reason, OPEN_STATUSES]
     );
@@ -509,7 +509,7 @@ async function doUnmute({ guild, moderator, targetUser, flow }) {
 export async function revokeWarn(guildId, caseCode, revokedBy, reason) {
     return withTransaction(async (client) => {
         const { rows } = await client.query(
-            `SELECT * FROM ${T.cases} WHERE case_code = $1 AND guild_id = $2 AND type = 'warn' FOR UPDATE`,
+            `SELECT * FROM ${T.cases} WHERE case_code = $1 AND guild_id = $2 AND type = 'warn' AND is_test = FALSE FOR UPDATE`,
             [caseCode, guildId]
         );
         const warn = rows[0];

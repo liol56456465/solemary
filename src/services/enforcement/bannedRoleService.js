@@ -84,7 +84,7 @@ export async function reconcileBannedRoles(client) {
 
     const { rows } = await query(
         `SELECT DISTINCT target_user_id FROM ${T.cases}
-         WHERE guild_id = $1 AND type = 'ban' AND status = ANY($2)
+         WHERE guild_id = $1 AND type = 'ban' AND status = ANY($2) AND is_test = FALSE
            AND (expires_at IS NULL OR expires_at > NOW())`,
         [enforcementConfig.mainGuildId, OPEN_STATUSES]
     );

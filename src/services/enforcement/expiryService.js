@@ -25,6 +25,12 @@ async function expireCase(row, status = 'expired') {
 async function liftExpired(client, guild, row) {
     const target = { id: row.target_user_id, username: row.target_username };
 
+    if (row.is_test) {
+        // /test cases were never executed, so there is nothing to lift.
+        await expireCase(row);
+        return;
+    }
+
     if (row.type === 'ban') {
         try {
             await guild.members.unban(row.target_user_id, `Temporary ban ${row.case_code} expired`);

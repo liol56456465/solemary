@@ -22,8 +22,8 @@ export async function insertCase(db, record) {
                     guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username,
                     type, name, reason, prebuilt_or_custom, reason_key, duration_ms, created_at, expires_at,
                     unappealable, appeal_deadline, ladder_level_after, counts_toward_level, is_auto,
-                    is_imported, import_key, dm_delivered, status
-                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,COALESCE($13, NOW()),$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+                    is_imported, import_key, dm_delivered, status, is_test
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,COALESCE($13, NOW()),$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
                 RETURNING *`,
                 [
                     record.guildId,
@@ -49,6 +49,7 @@ export async function insertCase(db, record) {
                     record.importKey || null,
                     Boolean(record.dmDelivered),
                     record.status || 'active',
+                    Boolean(record.isTest),
                 ]
             );
             return rows[0];
@@ -118,7 +119,7 @@ export async function getActiveCase(guildId, userId, type) {
     const { rows } = await query(
         `SELECT * FROM ${T.cases}
          WHERE guild_id = $1 AND target_user_id = $2 AND type = $3 AND status = ANY($4)
-           AND (expires_at IS NULL OR expires_at > NOW())
+           AND (expires_at IS NULL OR expires_at > NOW()) AND is_test = FALSE
          ORDER BY created_at DESC LIMIT 1`,
         [guildId, userId, type, OPEN_STATUSES]
     );
@@ -129,7 +130,7 @@ export async function getActiveCase(guildId, userId, type) {
 export async function getCountedWarns(guildId, userId, level) {
     const { rows } = await query(
         `SELECT * FROM ${T.cases}
-         WHERE guild_id = $1 AND target_user_id = $2 AND type = 'warn' AND is_imported = FALSE
+         WHERE guild_id = $1 AND target_user_id = $2 AND type = 'warn' AND is_imported = FALSE AND is_test = FALSE
            AND status = ANY($3) AND counts_toward_level = $4
          ORDER BY created_at DESC LIMIT 25`,
         [guildId, userId, OPEN_STATUSES, level]
@@ -141,7 +142,7 @@ export async function getCountedWarns(guildId, userId, level) {
 export async function nextDefaultName(guildId, userId, username, type) {
     const { rows } = await query(
         `SELECT COUNT(*)::int AS count FROM ${T.cases}
-         WHERE guild_id = $1 AND target_user_id = $2 AND type = $3 AND is_imported = FALSE`,
+         WHERE guild_id = $1 AND target_user_id = $2 AND type = $3 AND is_imported = FALSE AND is_test = FALSE`,
         [guildId, userId, type]
     );
     let n = (rows[0]?.count || 0) + 1;

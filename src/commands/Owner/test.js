@@ -1,11 +1,12 @@
-// test.js — /test: preview the DM an enforcement action would send, without doing it.
+// test.js — /test: send the DM an enforcement action would send, without doing it.
 //
-// Nothing is executed: no ban/kick/role change, no case row, no ladder change, no log
-// entry. The DM is exactly what the real action sends: the same dmTemplates functions,
-// fed a record shaped like a real mod_cases row (a freshly generated case code that is
-// not saved, the target's current ladder level), and for kicks and accepted appeals a
-// real one-time invite, created the same way. It goes to the person running the
-// command, never to the target.
+// Nothing is executed: no ban/kick/role change, no ladder change, no log entry. The
+// case IS saved, marked is_test, with a real case code, so the whole flow can be
+// tested: appeal it with that code, see it in /appeals, accept or deny it. The bot
+// never acts on test cases (no unban, role, ladder or banned-role changes; expiry
+// only closes the record). The DM comes from the same dmTemplates functions as the
+// real action, and kicks and accepted appeals get a real one-time invite. It goes to
+// the person running the command, never to the target.
 
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
@@ -15,82 +16,93 @@ import { logger } from '../../utils/logger.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { createRejoinInvite, getLadder, isAdministrator, previewWarn, sendDm } from '../../services/enforcement/enforcementService.js';
 import { isEnforcementDbAvailable } from '../../services/enforcement/db.js';
+import { insertCase, setDmDelivered } from '../../services/enforcement/caseService.js';
 import { appealAcceptedDm, appealDeniedDm, banDm, kickDm, muteDm, warnDm } from '../../services/enforcement/dmTemplates.js';
-import { addMonths, generateCaseCode, parseDuration } from '../../services/enforcement/format.js';
+import { addMonths, parseDuration } from '../../services/enforcement/format.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
 }
 
-/** A record with the columns dmTemplates reads, as insertCase would return it. */
-function fakeRecord({ invoker, target, type, reason, durationMs, unappealable, ladderLevel = 0, extra = {} }) {
+/** Saves a test case shaped like the real action's, and returns the mod_cases row. */
+function saveTestCase({ moderator, target, type, reason, durationMs = null, unappealable = false, ladderLevel = 0, extra = {} }) {
     const now = new Date();
-    return {
-        case_code: generateCaseCode(),
-        guild_id: enforcementConfig.mainGuildId,
-        target_user_id: target.id,
-        target_username: target.username,
-        moderator_id: invoker.id,
-        moderator_username: invoker.username,
+    return insertCase(null, {
+        guildId: enforcementConfig.mainGuildId,
+        targetUserId: target.id,
+        targetUsername: target.username,
+        moderatorId: moderator.id,
+        moderatorUsername: moderator.username,
         type,
+        // Unique per server; kept out of the real "<username> <type> <n>" numbering.
+        name: `${target.username} test ${type} ${now.getTime().toString(36)}`,
         reason,
-        duration_ms: durationMs ?? null,
-        created_at: now,
-        expires_at: durationMs ? new Date(now.getTime() + durationMs) : null,
-        unappealable: Boolean(unappealable),
-        appeal_deadline: null,
-        ladder_level_after: ladderLevel,
-        is_auto: false,
+        reasonSource: 'custom',
+        durationMs,
+        expiresAt: durationMs ? new Date(now.getTime() + durationMs) : null,
+        unappealable,
+        ladderLevelAfter: ladderLevel,
+        isTest: true,
         ...extra,
-    };
-}
-
-async function currentLadder(userId) {
-    return isEnforcementDbAvailable()
-        ? getLadder(enforcementConfig.mainGuildId, userId)
-        : { level: 0, warns_since_level: 0 };
+    });
 }
 
 /** The warn DM, or — when this warn would hit the ladder limit — the automatic ban DM that replaces it. */
 async function warnPreview({ invoker, target, reason, ladder }) {
     const step = previewWarn(ladder);
+    const warn = await saveTestCase({
+        moderator: invoker, target, type: 'warn', reason, ladderLevel: step.nextLevel,
+    });
     if (!step.escalates) {
-        return { content: warnDm(fakeRecord({ invoker, target, type: 'warn', reason, ladderLevel: ladder.level }), step.warnNumber), note: `warn ${step.warnNumber} of ${step.threshold}` };
+        return { content: warnDm(warn, step.warnNumber), record: warn, note: `warn ${step.warnNumber} of ${step.threshold}` };
     }
-    const now = new Date();
-    const banRecord = fakeRecord({
-        invoker: { id: invoker.client.user.id, username: invoker.client.user.username },
+    const ban = await saveTestCase({
+        moderator: { id: invoker.client.user.id, username: invoker.client.user.username },
         target,
         type: 'ban',
         reason: enforcementConfig.ladderReason,
         durationMs: step.banDurationMs,
+        ladderLevel: step.nextLevel,
         extra: {
-            is_auto: true,
-            ladder_level_after: step.nextLevel,
-            appeal_deadline: step.nextLevel === 3 ? addMonths(now, enforcementConfig.level3AppealMonths) : null,
+            isAuto: true,
+            appealDeadline: step.nextLevel === 3 ? addMonths(new Date(), enforcementConfig.level3AppealMonths) : null,
         },
     });
-    return { content: banDm(banRecord), note: `this warn reaches the limit, so they'd get the automatic ladder-level-${step.nextLevel} ban DM instead` };
+    return {
+        content: banDm(ban),
+        record: ban,
+        note: `this warn reaches the limit, so they'd get the automatic ladder-level-${step.nextLevel} ban DM instead (warn \`${warn.case_code}\` was saved too)`,
+    };
 }
 
 async function buildPreview({ action, guild, invoker, target, reason, durationMs, unappealable }) {
-    const ladder = await currentLadder(target.id);
-    const record = (type, extra = {}) => fakeRecord({ invoker, target, type, reason, durationMs, unappealable, ladderLevel: ladder.level, ...extra });
+    if (!action.startsWith('appeal-') && !isEnforcementDbAvailable()) {
+        throw userError('The database is unavailable, so no test case can be saved. Try again later.');
+    }
+    const ladder = isEnforcementDbAvailable()
+        ? await getLadder(enforcementConfig.mainGuildId, target.id)
+        : { level: 0, warns_since_level: 0 };
+    const save = (type, options = {}) => saveTestCase({ moderator: invoker, target, type, reason, ladderLevel: ladder.level, ...options });
+
     switch (action) {
-        case 'ban':
-            return { content: banDm(record('ban')) };
-        case 'kick': {
-            const kickRecord = record('kick', { durationMs: null, unappealable: false });
-            const invite = await createRejoinInvite(guild, `/test preview of kick ${kickRecord.case_code}`);
-            return { content: kickDm(kickRecord, invite), invite };
+        case 'ban': {
+            const record = await save('ban', { durationMs, unappealable });
+            return { content: banDm(record), record };
         }
-        case 'mute':
+        case 'kick': {
+            const record = await save('kick');
+            const invite = await createRejoinInvite(guild, `Rejoin invite for kick ${record.case_code} (/test)`);
+            return { content: kickDm(record, invite), record, invite };
+        }
+        case 'mute': {
             if (!durationMs) throw userError('A mute needs a duration, e.g. `duration:1h`.');
-            return { content: muteDm(record('mute', { unappealable: false })) };
+            const record = await save('mute', { durationMs });
+            return { content: muteDm(record), record };
+        }
         case 'warn':
             return warnPreview({ invoker, target, reason, ladder });
         case 'appeal-accepted': {
-            const invite = await createRejoinInvite(guild, '/test preview of an accepted appeal');
+            const invite = await createRejoinInvite(guild, 'Appeal accepted (/test)');
             return { content: appealAcceptedDm(invoker.username, invite), invite };
         }
         case 'appeal-denied':
@@ -105,7 +117,7 @@ export default {
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('test')
-        .setDescription('Preview the DM an enforcement action would send — sent to you, nothing is executed')
+        .setDescription('Send yourself the DM an action would send and save a test case. Nothing is executed')
         .addStringOption((option) => option
             .setName('action')
             .setDescription('Which DM to preview')
@@ -155,7 +167,7 @@ export default {
             throw userError('That duration is not valid. Use e.g. `30m`, `12h`, `7d`, `2w` or `1mo` (at least 1 minute).');
         }
 
-        const { content, note, invite } = await buildPreview({
+        const { content, note, invite, record } = await buildPreview({
             action,
             guild: interaction.guild,
             invoker: interaction.user,
@@ -166,6 +178,7 @@ export default {
         });
 
         const delivered = await sendDm(interaction.user, content);
+        if (record) await setDmDelivered(record.id, delivered);
         logger.info(`/test preview of ${action} DM for ${target.id} sent to ${interaction.user.id}: ${delivered ? 'delivered' : 'not delivered'}`);
         if (!delivered) {
             throw userError('I could not DM you. Allow direct messages from server members in this server and try again.');
@@ -174,9 +187,13 @@ export default {
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [successEmbed('Preview DM sent to you.', [
                 `The exact **${action}** DM ${target.username} would get.${note ? ` Note: ${note}.` : ''}`,
-                action.startsWith('appeal-')
-                    ? 'Nothing was executed.'
-                    : 'Nothing was executed. The case code in it was not saved, so it cannot be appealed.',
+                'Nothing was executed.',
+                record
+                    ? `Test case \`${record.case_code}\` was saved, so it can be appealed and decided with /appeals like a real one. `
+                        + (target.id === interaction.user.id
+                            ? 'Appeal it from the support server with that code.'
+                            : `Only ${target.username} can appeal it; run /test on yourself to try the appeal flow.`)
+                    : null,
                 invite ? 'The invite in it is a real one-time invite to this server.' : null,
             ].filter(Boolean).join('\n'))],
         });
