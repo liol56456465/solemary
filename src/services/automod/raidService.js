@@ -5,7 +5,8 @@
 // and everyone who joined in the raid window or during the lockdown is remembered.
 // Nobody is kicked for joining; a raid joiner who then breaks a rule is kicked
 // (see automodService). An administrator ends the lockdown with /automod lockdown-end,
-// which restores the previous verification level.
+// which restores the previous verification level and posts an incident report
+// (raidIncidentService.js) with a "Release non-offenders" button.
 //
 // Panic mode (/automod panic, on by default): the lockdown also pauses invites and
 // DMs with Discord's incident actions for a few hours (default 2, at most 24); the
@@ -20,6 +21,8 @@ import { Mutex } from '../../utils/mutex.js';
 import { postModLog } from '../enforcement/enforcementService.js';
 import { getAutomodSettings, getLockdown, setLockdown } from './automodSettings.js';
 import { describePanic, pauseInvitesAndDms, resumeInvitesAndDms } from './incidentActions.js';
+import { postAlert } from './alertPost.js';
+import { buildIncidentReport, casesAgainst, recordIncident, releaseRow } from './raidIncidentService.js';
 import { recordEvent } from './reviewRegistry.js';
 
 const recentJoins = new Map(); // guildId → [{ at, userId }]
@@ -139,9 +142,40 @@ async function recordJoinLocked(member) {
     return null;
 }
 
-/** Ends the lockdown and restores the verification level. Returns false if none was active. */
+/**
+ * Ends the lockdown, restores the verification level, resumes invites and DMs, and
+ * posts the incident report (raidIncidentService.js). Returns false if none was active.
+ */
 export async function endLockdown(guild, admin) {
-    return Mutex.runExclusive(`raid:${guild.id}`, () => endLockdownLocked(guild, admin));
+    const ended = await Mutex.runExclusive(`raid:${guild.id}`, () => endLockdownLocked(guild, admin));
+    if (!ended) return false;
+    await postIncidentReport(guild, admin, ended).catch((error) => logger.warn(`Raid incident report failed: ${error.message}`));
+    return true;
+}
+
+async function postIncidentReport(guild, admin, { state, resumed }) {
+    const joinerIds = state.joinerIds || [];
+    const actions = {
+        raisedVerification: Boolean(state.raisedVerification),
+        incidentActions: state.incidentActions || null,
+        resumed: Boolean(resumed),
+        gateKicks: state.gateKicks || [],
+    };
+    const incident = await recordIncident({ guildId: guild.id, startedAt: state.startedAt, endedBy: admin.id, joinerIds, actions });
+    const cases = await casesAgainst(guild.id, joinerIds, state.startedAt).catch((error) => {
+        logger.warn(`Raid report: could not read cases of raid joiners: ${error.message}`);
+        return [];
+    });
+    const report = buildIncidentReport(
+        incident || { started_at: state.startedAt, ended_at: new Date(), joiner_ids: joinerIds, actions },
+        cases,
+        { endedByLabel: `${admin.username} (\`${admin.id}\`)` },
+    );
+    await postAlert(guild.client, 'raid', {
+        ...report,
+        color: 'success',
+        components: incident && joinerIds.length ? [releaseRow(incident.id)] : [],
+    });
 }
 
 async function endLockdownLocked(guild, admin) {
@@ -154,13 +188,7 @@ async function endLockdownLocked(guild, admin) {
     }
     const resumed = state.incidentActions?.applied ? await resumeInvitesAndDms(guild) : null;
     await saveLockdown(guild.id, null);
-    await postModLog(guild.client, 'raid', [
-        { name: 'Ended by', value: `${admin.username} (${admin.id})` },
-        { name: 'Raid joiners tracked', value: String(state.joinerIds?.length || 0) },
-        ...(state.raisedVerification ? [{ name: 'Verification level', value: 'Restored' }] : []),
-        ...(resumed === null ? [] : [{ name: 'Invites and DMs', value: resumed ? 'Resumed' : '⚠️ Could not resume them: lift the pause in Server Settings → Safety Setup' }]),
-    ], { title: '✅ Lockdown ended' });
-    return true;
+    return { state, resumed };
 }
 
 /** Remembers a join-gate kick on the running lockdown (for the incident report). */

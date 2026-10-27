@@ -30,6 +30,7 @@ const configuredTables = {
     staff_activity: 'staff_activity',
     server_snapshots: 'server_snapshots',
     automod_native_rules: 'automod_native_rules',
+    automod_raid_incidents: 'automod_raid_incidents',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -60,6 +61,7 @@ const allowedTableIdentifiers = new Set([
     'staff_activity',
     'server_snapshots',
     'automod_native_rules',
+    'automod_raid_incidents',
 ]);
 
 const validatedTables = Object.fromEntries(
