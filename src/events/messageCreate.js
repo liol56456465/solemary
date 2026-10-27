@@ -18,6 +18,7 @@ import { isCommandEnabled } from '../services/commandAccessService.js';
 import { checkCommandAccess } from '../utils/commandGate.js';
 import { handleModmailDm, handleModmailStaffMessage, isModmailStaff, modmailUserId } from '../services/modmailService.js';
 import { enforcementConfig } from '../config/enforcement.js';
+import { enforceNoContact } from '../services/enforcement/noContactService.js';
 import {
   getCountingGameConfig,
   resetCountingGame,
@@ -40,6 +41,8 @@ export default {
 
       // Automod runs first; a removed message gets no commands, counting or XP.
       if (await moderateMessage(message)) return;
+      // No-contact orders: in-memory check; a removed message goes no further.
+      if (await enforceNoContact(message)) return;
       await relayModmailStaffMessage(message, client);
       noteStaffMessage(message);
       trackChannelActivity(message).catch((error) => logger.warn(`Auto slowmode tracking failed: ${error.message}`));

@@ -116,3 +116,23 @@ export function caseVoidedDm(record, reason, inviteUrl = null) {
         inviteUrl ? `You were unbanned. Rejoin: ${inviteUrl}` : null,
     ].filter(Boolean).join('\n');
 }
+
+/** Sent to both members when staff start a no-contact order. `other` is the other member (or null). */
+export function noContactStartedDm(order, other) {
+    const otherName = other ? `**${other.username}**` : 'another member';
+    return [
+        `**No-contact order in ${serverName}**`,
+        `Staff have asked you and ${otherName} not to contact each other until ${stamp(order.until)}.`,
+        'Until then, do not mention or reply to them in the server: those messages are removed.',
+        `Reason: ${order.reason}`,
+        'This is not a punishment and does not count as a warning.',
+    ].join('\n');
+}
+
+/** Sent to both members when a no-contact order ends (early by staff, or it expired). */
+export function noContactEndedDm(order, other, { early = false } = {}) {
+    return [
+        `**Your no-contact order in ${serverName} has ended**`,
+        `${early ? 'Staff ended it early.' : 'It expired.'} You may contact ${other ? `**${other.username}**` : 'the other member'} again.`,
+    ].join('\n');
+}

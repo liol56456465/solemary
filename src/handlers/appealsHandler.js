@@ -2,6 +2,7 @@
 //
 // The panel components are deliberately open to everyone (no Administrator check):
 //   appeal:open | appeal:report            buttons on the panels
+//   appeal:status | appeal:standing        the member's own appeals / standing (private)
 //   appealmodal:submit | appealmodal:report modals they open
 // The Appeal button works in both servers; Report staff only in the support server.
 // The Accept / Deny buttons on appeal messages (at the bottom) are admin-only.
@@ -22,6 +23,7 @@ import { normalizeCaseCode } from '../services/enforcement/format.js';
 import { listUserAppeals } from '../services/enforcement/caseService.js';
 import { decideAppeal, submitAppeal, submitStaffReport } from '../services/enforcement/appealService.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
+import { getMemberStanding, standingFields } from '../services/enforcement/standingService.js';
 
 function textLabel(label, input, description = null) {
     const builder = new LabelBuilder().setLabel(label).setTextInputComponent(input);
@@ -96,6 +98,26 @@ export async function handleAppealButton(interaction, client, args) {
     if (step === 'open') return InteractionHelper.safeShowModal(interaction, appealModal());
     if (step === 'report') return InteractionHelper.safeShowModal(interaction, reportModal());
     if (step === 'status') return showMyAppeals(interaction);
+    if (step === 'standing') return showMyStanding(interaction);
+}
+
+/**
+ * The clicking member's own standing in the main server: counted warnings, ladder
+ * level and what the next warning would do, active punishments, appeals. Private,
+ * and only ever about interaction.user.
+ */
+async function showMyStanding(interaction) {
+    const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    if (!deferred) return;
+    const standing = await getMemberStanding(enforcementConfig.mainGuildId, interaction.user.id);
+    return InteractionHelper.safeEditReply(interaction, {
+        embeds: [createEmbed({
+            title: `My standing in ${enforcementConfig.serverName}`,
+            description: 'Only you can see this.',
+            fields: standingFields(standing),
+            color: standing.activeBan || standing.activeMute ? 'warning' : 'primary',
+        })],
+    });
 }
 
 const MY_APPEAL_STATUS = {

@@ -18,7 +18,7 @@ export const ALERT_KINDS = new Set([
 ]);
 
 /** Enforcement actions: posted in the mod log as one line. */
-export const ACTION_KINDS = new Set(['ban', 'kick', 'mute', 'warn', 'unban', 'unmute', 'removewarn']);
+export const ACTION_KINDS = new Set(['ban', 'kick', 'mute', 'warn', 'unban', 'unmute', 'removewarn', 'nocontact']);
 
 /** 'alerts' | 'modlog' for a postModLog kind. Unknown kinds stay in the mod log. */
 export function channelPurposeFor(kind) {
@@ -58,6 +58,7 @@ const ACTION_LINE = {
     unban: ['✅', 'Unban'],
     unmute: ['🔊', 'Unmute'],
     removewarn: ['🧹', 'Warning removed'],
+    nocontact: ['🚧', 'No-contact'],
 };
 
 const oneLine = (text) => String(text ?? '').replace(/\s*\n+\s*/g, ' ').trim();
@@ -78,6 +79,7 @@ export function formatModLogLine(kind, fields = []) {
             case 'Case': parts.push(value.replace(' — ', ' ')); break;
             case 'Reason': parts.push(`“${value}”`); break;
             case 'Duration': parts.push(value); break;
+            case 'Note': parts.push(value); break;
             default: parts.push(`${field.name}: ${value}`);
         }
     }

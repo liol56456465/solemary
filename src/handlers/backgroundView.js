@@ -17,6 +17,7 @@ import { caseStatusLabel, getAppealHistory, getLatestAppealStatuses, listCasesFo
 import { countCaseEdits } from '../services/enforcement/caseEditService.js';
 import { evidenceDisplay } from '../services/enforcement/evidenceService.js';
 import { dateStamp, formatDuration, stamp, truncate } from '../services/enforcement/format.js';
+import { getActiveOrdersFor, noContactLines } from '../services/enforcement/noContactService.js';
 
 const PAGE_SIZE = 6;
 const NOTES_SHOWN = 5;
@@ -133,12 +134,17 @@ export async function buildRecordList(guildId, viewerId, targetUser, page) {
         ].filter(Boolean).join('\n'), 1024),
     }));
 
+    const noContact = getActiveOrdersFor(guildId, targetUser.id);
+    const noContactField = noContact.length
+        ? [{ name: 'Active no-contact orders', value: truncate(noContactLines(noContact).join('\n'), 1024) }]
+        : [];
+
     const embed = createEmbed({
         title: truncate(`Background — ${targetUser.username}`, 256),
         description: total
             ? `${total} record(s), newest first. Use \`name:\` to open one in full.`
             : 'No records for this user.',
-        fields: [...fields, notesField(notes)],
+        fields: [...noContactField, ...fields, notesField(notes)],
         footer: { text: `Page ${Math.min(page + 1, pages)} of ${pages}` },
         color: 'primary',
     });
