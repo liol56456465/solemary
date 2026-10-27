@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { assertAllowlistedIdentifier } from '../../utils/sqlIdentifiers.js';
 import { EXPECTED_SCHEMA_LABEL, EXPECTED_SCHEMA_VERSION } from './schemaVersion.js';
 
@@ -94,10 +95,26 @@ export function resolveSslConfig(url = databaseUrl()) {
     if (LOCAL_HOSTS.has(host)) {
         return sslEnv === 'true' || sslEnv === '1' ? { rejectUnauthorized: true } : false;
     }
+    const ca = caFromEnv();
     if (sslEnv === 'no-verify') {
+        if (ca) throw new Error('POSTGRES_SSL=no-verify and a CA certificate are both set; remove one (verification stays on with the CA)');
         return { rejectUnauthorized: false };
     }
-    return { rejectUnauthorized: true };
+    // With a CA (Supabase signs with its own root), only that CA is trusted.
+    return ca ? { rejectUnauthorized: true, ca } : { rejectUnauthorized: true };
+}
+
+/**
+ * The database's CA certificate, for providers whose root is not publicly
+ * trusted (Supabase: "Supabase Root 2021 CA", prod-ca-2021.crt). POSTGRES_CA_CERT
+ * holds the PEM text (a secret can store "\n" for line breaks); POSTGRES_CA_FILE
+ * is a path to it.
+ */
+function caFromEnv() {
+    const pem = process.env.POSTGRES_CA_CERT?.trim();
+    if (pem) return pem.replace(/\\n/g, '\n');
+    const file = process.env.POSTGRES_CA_FILE?.trim();
+    return file ? fs.readFileSync(file, 'utf8') : undefined;
 }
 
 /** The URL without TLS parameters, so pg can't override resolveSslConfig(). */

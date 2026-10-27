@@ -103,6 +103,11 @@ async function run() {
     dropSchema
   });
 
+  // Supabase owns grants and defaults on schema public; dropping it breaks them.
+  if (dropSchema && /\.supabase\.(co|com)/i.test(redactUrl(targetUrl))) {
+    throw new Error('--drop-schema is not allowed on Supabase; restore without it (pg_restore --clean replaces the tables).');
+  }
+
   if (dropSchema) {
     runCommand('psql', [
       '--dbname',

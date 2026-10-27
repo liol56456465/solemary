@@ -108,6 +108,16 @@ class PostgreSQLDatabase {
                 // An idle client failed (Neon scaling to zero, network drop, restart).
                 this.pool.on('error', (error) => this.markUnhealthy(error));
 
+                // Poolers (Supabase Supavisor) drop the statement_timeout startup
+                // parameter, so set it on each new connection as well.
+                const statementTimeout = resolvePostgresPoolConfig().statement_timeout;
+                if (statementTimeout > 0) {
+                    this.pool.on('connect', (client) => {
+                        client.query(`SET statement_timeout = ${Number(statementTimeout)}`)
+                            .catch((error) => logger.warn(`Could not set statement_timeout: ${error.message}`));
+                    });
+                }
+
                 const client = await this.pool.connect();
                 await client.query('SELECT NOW()');
                 client.release();
