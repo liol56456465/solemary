@@ -1,15 +1,15 @@
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from 'discord.js';
-import { errorEmbed, successEmbed } from '../../utils/embeds.js';
-import { logger } from '../../utils/logger.js';
-import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
-import { getGuildGiveaways, saveGiveaway } from '../../utils/giveaways.js';
+import { errorEmbed, successEmbed } from '../../../utils/embeds.js';
+import { logger } from '../../../utils/logger.js';
+import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
+import { getGuildGiveaways, saveGiveaway } from '../../../utils/giveaways.js';
 import { 
     selectWinners,
     createGiveawayEmbed, 
     createGiveawayButtons 
-} from '../../services/giveawayService.js';
-import { logEvent, EVENT_TYPES } from '../../services/loggingService.js';
-import { InteractionHelper } from '../../utils/interactionHelper.js';
+} from '../../../services/giveawayService.js';
+import { logEvent, EVENT_TYPES } from '../../../services/loggingService.js';
+import { InteractionHelper } from '../../../utils/interactionHelper.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -78,7 +78,7 @@ export default {
             throw new TitanBotError(
                 `Giveaway still active: ${messageId}`,
                 ErrorTypes.VALIDATION,
-                "This giveaway is still active. Please use `/gend` to end it first.",
+                "This giveaway is still active. Please use `/giveaway end` to end it first.",
                 { messageId, status: 'active' }
             );
         }

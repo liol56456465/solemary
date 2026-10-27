@@ -34,6 +34,12 @@ export function hasAdministrator({ guild, userId, permissions }) {
     return Boolean(permissions?.has?.(PermissionFlagsBits.Administrator));
 }
 
+/** True when this user sees admin-only commands in /help (admins, the owner, OWNER_IDS). */
+export function canSeeAdminCommands(interaction) {
+    return isBotOwner(interaction.user.id)
+        || hasAdministrator({ guild: interaction.guild, userId: interaction.user.id, permissions: interaction.memberPermissions });
+}
+
 /**
  * @param {object} p
  * @param {object} p.command      loaded command module

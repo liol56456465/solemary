@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Collection, ActionRowBuilder, MessageFlags } from 'discord.js';
-import { isCommandAvailableInGuild } from '../../utils/commandGate.js';
+import { isCommandAvailableInGuild, canSeeAdminCommands } from '../../utils/commandGate.js';
 import { isEveryoneCommand } from '../../config/commands/commandAccess.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
@@ -50,6 +50,11 @@ function formatCategoryName(rawCategory) {
 // 🔒 marks admin-only entries; displayName is the command's access key.
 function lockFor(entry) {
     return isEveryoneCommand(entry.displayName) ? '' : '🔒 ';
+}
+
+/** Members only see what they can run; admins see everything, admin-only marked 🔒. */
+function visibleEntries(entries, showAdmin) {
+    return showAdmin ? entries : entries.filter((entry) => isEveryoneCommand(entry.displayName));
 }
 
 function buildHelpEntries(command, category) {
@@ -125,7 +130,7 @@ function normalizeCommandData(command) {
     };
 }
 
-async function createCategoryCommandsMenu(category, client, guildId = null) {
+async function createCategoryCommandsMenu(category, client, guildId = null, showAdmin = true) {
     const categoryName = formatCategoryName(category);
     const icon = CATEGORY_ICONS[categoryName] || "🔍";
 
@@ -151,7 +156,7 @@ async function createCategoryCommandsMenu(category, client, guildId = null) {
                     continue;
                 if (!isCommandAvailableInGuild(command, guildId)) continue;
 
-                categoryCommands.push(...buildHelpEntries(command, categoryName));
+                categoryCommands.push(...visibleEntries(buildHelpEntries(command, categoryName), showAdmin));
             }
         }
     } catch (error) {
@@ -244,7 +249,7 @@ async function createCategoryCommandsMenu(category, client, guildId = null) {
     };
 }
 
-export async function createAllCommandsMenu(page = 1, client, guildId = null) {
+export async function createAllCommandsMenu(page = 1, client, guildId = null, showAdmin = true) {
     const commandsPerPage = 45;
     const allCommands = [];
 
@@ -283,7 +288,7 @@ export async function createAllCommandsMenu(page = 1, client, guildId = null) {
 
                     const categoryName = formatCategoryName(category);
 
-                    allCommands.push(...buildHelpEntries(command, categoryName));
+                    allCommands.push(...visibleEntries(buildHelpEntries(command, categoryName), showAdmin));
                 }
             }
         } catch (error) {
@@ -389,13 +394,13 @@ export const helpCategorySelectMenu = {
             const selectedCategory = interaction.values[0];
 
             if (selectedCategory === ALL_COMMANDS_ID) {
-                const { embeds, components } = await createAllCommandsMenu(1, client, interaction.guildId);
+                const { embeds, components } = await createAllCommandsMenu(1, client, interaction.guildId, canSeeAdminCommands(interaction));
                 await interaction.editReply({
                     embeds,
                     components,
                 });
             } else {
-                const { embeds, components } = await createCategoryCommandsMenu(selectedCategory, client, interaction.guildId);
+                const { embeds, components } = await createCategoryCommandsMenu(selectedCategory, client, interaction.guildId, canSeeAdminCommands(interaction));
                 await interaction.editReply({
                     embeds,
                     components,

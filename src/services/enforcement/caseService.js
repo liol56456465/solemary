@@ -164,6 +164,18 @@ export async function getAppealHistory(caseCode) {
     return rows;
 }
 
+/** One user's own appeals, newest first, with the case they were about. */
+export async function listUserAppeals(userId, limit = 10) {
+    const { rows } = await query(
+        `SELECT a.case_code, a.status, a.created_at, a.decided_at, c.type, c.name
+         FROM ${T.appeals} a JOIN ${T.cases} c ON c.case_code = a.case_code
+         WHERE a.user_id = $1 AND a.kind = 'appeal' AND NOT c.is_test
+         ORDER BY a.created_at DESC LIMIT $2`,
+        [userId, limit]
+    );
+    return rows;
+}
+
 /** Latest appeal status per case for one user: Map(case_code → 'pending' | 'accepted' | 'denied' | 'closed'). */
 export async function getLatestAppealStatuses(userId) {
     const { rows } = await query(

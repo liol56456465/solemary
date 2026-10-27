@@ -139,8 +139,8 @@ export const botConfig = {
       },
     },
     footer: {
-      // Default footer text used in bot embeds.
-      text: "Meowist",
+      // Default footer text for bot embeds; null = none (embeds set their own when needed).
+      text: null,
       // Footer icon URL (null = no icon).
       icon: null,
     },
