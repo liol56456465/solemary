@@ -163,6 +163,16 @@ async function endLockdownLocked(guild, admin) {
     return true;
 }
 
+/** Remembers a join-gate kick on the running lockdown (for the incident report). */
+export async function noteGateKick(guildId, userId) {
+    await Mutex.runExclusive(`raid:${guildId}`, async () => {
+        const state = await loadLockdown(guildId);
+        if (!state?.active) return;
+        const gateKicks = [...new Set([...(state.gateKicks || []), userId])].slice(0, MAX_TRACKED_JOINERS);
+        await saveLockdown(guildId, { ...state, gateKicks });
+    });
+}
+
 export async function getLockdownState(guildId) {
     return loadLockdown(guildId);
 }

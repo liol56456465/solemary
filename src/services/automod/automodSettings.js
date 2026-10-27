@@ -26,6 +26,9 @@ const DEFAULT_SETTINGS = Object.freeze({
     // Raid panic mode: when a lockdown starts, also pause invites and DMs with
     // Discord's incident actions for this many hours (1–24) (/automod panic).
     panic: { enabled: true, hours: 2 },
+    // Join gate: check → 'off' | 'flag' | 'kick', plus ageDays (/automod joingate;
+    // normalized by joinGate.js).
+    joinGate: {},
 });
 
 /** Stored settings (any shape, or null) → a complete settings object. */
@@ -42,6 +45,7 @@ export function normalizeSettings(stored) {
     value.moodAlerts = value.moodAlerts !== false;
     const panic = value.panic && typeof value.panic === 'object' ? value.panic : {};
     value.panic = { enabled: panic.enabled !== false, hours: clampPanicHours(panic.hours ?? DEFAULT_PANIC_HOURS) };
+    value.joinGate = value.joinGate && typeof value.joinGate === 'object' ? { ...value.joinGate } : {};
     return value;
 }
 
