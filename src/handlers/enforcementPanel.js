@@ -43,7 +43,7 @@ import {
 } from '../services/enforcement/caseService.js';
 import { createFlow, getFlow, takeFlow, updateFlow, PANEL_EXPIRED_MESSAGE } from '../services/enforcement/panelState.js';
 import {
-    addEvidence, captureLinks, MAX_LINKS_PER_FORM, parseEvidenceUrls,
+    addEvidence, captureLinks, MAX_LINKS_PER_FORM, messageExcerpt, parseEvidenceUrls,
 } from '../services/enforcement/evidenceService.js';
 import { dateStamp, formatDuration, parseDuration, stamp, truncate } from '../services/enforcement/format.js';
 
@@ -409,9 +409,34 @@ export async function attachFlowEvidence(flow, record, moderatorUser) {
 /** Step 1 of a record action (ban/kick/mute/warn): the reason select. */
 function reasonStepPayload(flow, moderatorId, nonce) {
     return {
-        embeds: [stepEmbed(flow, 'Step 1: choose a reason.')],
+        embeds: [stepEmbed(flow, flow.sourceMessageUrl
+            ? `**Message:** ${flow.sourceMessageUrl} (attached as evidence)\nStep 1: choose a reason.`
+            : 'Step 1: choose a reason.')],
         components: [reasonSelect(moderatorId, nonce, flow.type), cancelRow(moderatorId, nonce)],
     };
+}
+
+/**
+ * "Warn for this message" (message context menu): starts the panel's warn flow in
+ * the command's ephemeral reply, with the message link prefilled as evidence and
+ * its excerpt captured now (so it survives deletion). The interaction must already
+ * be deferred ephemerally; the following steps are ordinary panel components.
+ */
+export async function startWarnFromMessage(interaction, message, targetUser) {
+    const moderatorId = interaction.user.id;
+    const url = `https://discord.com/channels/${message.guildId}/${message.channelId}/${message.id}`;
+    const flow = {
+        type: 'warn',
+        moderatorId,
+        targetId: targetUser.id,
+        targetUsername: targetUser.username,
+        nameIsDefault: true,
+        sourceMessageUrl: url,
+        evidenceInput: url,
+        prefetchedExcerpts: new Map([[url, messageExcerpt(message)]]),
+    };
+    const nonce = createFlow(flow);
+    return InteractionHelper.safeEditReply(interaction, reasonStepPayload(flow, moderatorId, nonce));
 }
 
 async function startAction(interaction, moderatorId, targetId, action) {
