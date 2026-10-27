@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { globalRuleMode, hasRuleOverride, resolveRuleMode, ruleMode } from '../../src/services/automod/policy.js';
+import {
+    channelCandidates, channelRuleOverride, globalRuleMode, hasRuleOverride, resolveRuleMode, ruleMode, withChannelRule,
+} from '../../src/services/automod/policy.js';
 import { applyRuleModes, worstHit } from '../../src/services/automod/automodService.js';
 import { normalizeSettings } from '../../src/services/automod/automodSettings.js';
 
@@ -33,4 +35,36 @@ test('settings normalize: defaults filled, nested objects copied', () => {
     value.ruleModes.caps = 'on';
     assert.equal(stored.ruleModes.caps, 'off');
     assert.deepEqual(normalizeSettings(null).ruleModes, {});
+});
+
+test('channel exceptions: most specific wins, threads and categories inherit', () => {
+    const settings = {
+        mode: 'enforce',
+        ruleModes: { caps: 'monitor' },
+        channelRules: { intl: { english: 'off' }, cat: { english: 'monitor', caps: 'off' } },
+    };
+    const intl = { id: 'intl', parentId: 'cat' };
+    const thread = { id: 't1', parentId: 'intl', parent: { parentId: 'cat' } };
+    const other = { id: 'gen', parentId: 'cat' };
+    const outside = { id: 'x', parentId: null };
+    assert.deepEqual(channelCandidates(thread), ['t1', 'intl', 'cat']);
+    assert.equal(resolveRuleMode(settings, 'english', intl), 'off');
+    assert.equal(resolveRuleMode(settings, 'english', thread), 'off');
+    assert.equal(resolveRuleMode(settings, 'english', other), 'monitor');
+    assert.equal(resolveRuleMode(settings, 'english', outside), 'on');
+    assert.equal(resolveRuleMode(settings, 'caps', other), 'off');
+    assert.equal(resolveRuleMode(settings, 'caps', outside), 'monitor');
+    assert.deepEqual(channelRuleOverride(settings, 'english', thread), { mode: 'off', channelId: 'intl' });
+    assert.equal(channelRuleOverride(settings, 'scam', thread), null);
+
+    let rules = withChannelRule({}, 'intl', 'english', 'off');
+    assert.deepEqual(rules, { intl: { english: 'off' } });
+    rules = withChannelRule(rules, 'intl', 'caps', 'monitor');
+    assert.deepEqual(rules, { intl: { english: 'off', caps: 'monitor' } });
+    rules = withChannelRule(rules, 'intl', 'english', 'default');
+    rules = withChannelRule(rules, 'intl', 'caps', 'default');
+    assert.deepEqual(rules, {});
+    // Applied before acting: the hit is dropped in that channel only.
+    assert.deepEqual(applyRuleModes([{ rule: 'english' }], normalizeSettings(settings), intl), []);
+    assert.equal(applyRuleModes([{ rule: 'english' }], normalizeSettings(settings), outside).length, 1);
 });

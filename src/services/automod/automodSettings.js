@@ -13,6 +13,8 @@ const DEFAULT_SETTINGS = Object.freeze({
     exemptChannelIds: [],
     // rule key → 'on' | 'monitor' | 'off' (/automod rule).
     ruleModes: {},
+    // channel or category id → { rule key → 'off' | 'monitor' } (/automod channel).
+    channelRules: {},
 });
 
 /** Stored settings (any shape, or null) → a complete settings object. */
@@ -20,6 +22,9 @@ export function normalizeSettings(stored) {
     const value = { ...DEFAULT_SETTINGS, ...(stored && typeof stored === 'object' ? stored : {}) };
     value.exemptChannelIds = Array.isArray(value.exemptChannelIds) ? [...value.exemptChannelIds] : [];
     value.ruleModes = value.ruleModes && typeof value.ruleModes === 'object' ? { ...value.ruleModes } : {};
+    value.channelRules = value.channelRules && typeof value.channelRules === 'object'
+        ? Object.fromEntries(Object.entries(value.channelRules).map(([id, rules]) => [id, { ...rules }]))
+        : {};
     return value;
 }
 

@@ -10,7 +10,7 @@ import { endLockdown, getLockdownState } from '../../services/automod/raidServic
 import { describeStep } from '../../services/automod/reviewCards.js';
 import { automodStats, formatAutomodStats } from '../../services/automod/automodReport.js';
 import { collectOpenReviews, formatQueue } from '../../services/automod/reviewQueue.js';
-import { RULE_MODES, hasRuleOverride, ruleMode } from '../../services/automod/policy.js';
+import { CHANNEL_RULE_MODES, RULE_MODES, hasRuleOverride, ruleMode, withChannelRule } from '../../services/automod/policy.js';
 
 const RULE_CHOICES = Object.entries(AUTOMOD_RULES)
     .sort(([, a], [, b]) => b.severity - a.severity)
@@ -20,6 +20,15 @@ const MODE_LABELS = { on: 'on', monitor: '👀 monitor', off: '⛔ off' };
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
+}
+
+/** "<#1>: English only off, Excessive caps monitor; <#2>: …" */
+function channelExceptions(settings) {
+    const parts = Object.entries(settings.channelRules || {}).map(([channelId, rules]) => {
+        const list = Object.entries(rules).map(([rule, mode]) => `${AUTOMOD_RULES[rule]?.label || rule} ${mode}`);
+        return list.length ? `<#${channelId}>: ${list.join(', ')}` : null;
+    }).filter(Boolean);
+    return parts.length ? parts.join('; ') : 'none';
 }
 
 async function statusEmbed(guildId) {
@@ -40,6 +49,7 @@ async function statusEmbed(guildId) {
             `**Mode:** ${settings.mode === 'monitor' ? 'monitor (cards only, nothing is done)' : 'enforce (acts, then posts a review card)'}`,
             `**Lockdown:** ${lockdown?.active ? `active since <t:${Math.floor(new Date(lockdown.startedAt).getTime() / 1000)}:R>, ${lockdown.joinerIds.length} raid joiner(s)` : 'off'}`,
             `**Exempt channels:** ${exempt.length ? exempt.map((id) => `<#${id}>`).join(', ') : 'none'}`,
+            `**Channel exceptions:** ${channelExceptions(settings)}`,
             '',
             '**Punishments** (1st → 2nd → 3rd+ offence within 30 days). A mode in **bold** is set for that rule with `/automod rule`; the others follow the global mode:',
             ...rules,
@@ -69,7 +79,17 @@ export default {
                     { name: 'off (ignore this rule)', value: 'off' },
                     { name: 'default (follow the global mode)', value: 'default' },
                 )))
-        .addSubcommand((sub) => sub.setName('exempt').setDescription('Add or remove a channel automod ignores')
+        .addSubcommand((sub) => sub.setName('channel').setDescription('Turn one rule off or to monitor in one channel or category (e.g. English only in #international)')
+            .addChannelOption((option) => option.setName('channel').setDescription('Channel or category').setRequired(true)
+                .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildCategory, ChannelType.GuildVoice))
+            .addStringOption((option) => option.setName('rule').setDescription('Rule').setRequired(true).addChoices(...RULE_CHOICES))
+            .addStringOption((option) => option.setName('mode').setDescription('Mode in this channel').setRequired(true)
+                .addChoices(
+                    { name: 'off (ignore this rule here)', value: 'off' },
+                    { name: 'monitor (card only here)', value: 'monitor' },
+                    { name: 'default (remove the exception)', value: 'default' },
+                )))
+        .addSubcommand((sub) => sub.setName('exempt').setDescription('Add or remove a channel automod ignores completely (all rules)')
             .addChannelOption((option) => option.setName('channel').setDescription('Channel or category').setRequired(true)
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildCategory)))
         .addSubcommand((sub) => sub.setName('stats').setDescription('Automod actions, undos and top offenders')
@@ -143,6 +163,20 @@ export default {
             note = mode === 'default'
                 ? `**${label}** follows the global mode again.`
                 : `**${label}** is now **${mode}**${mode === 'monitor' ? ': cards only, nothing is done until you apply it' : mode === 'off' ? ': automod ignores it' : ''}.`;
+        } else if (sub === 'channel') {
+            const channel = interaction.options.getChannel('channel');
+            const rule = interaction.options.getString('rule');
+            const mode = interaction.options.getString('mode');
+            if (!AUTOMOD_RULES[rule]) throw userError('Unknown rule.');
+            if (mode !== 'default' && !CHANNEL_RULE_MODES.includes(mode)) throw userError('Unknown mode.');
+            await updateAutomodSettings(guildId, (current) => ({
+                ...current,
+                channelRules: withChannelRule(current.channelRules, channel.id, rule, mode),
+            }));
+            const label = AUTOMOD_RULES[rule].label;
+            note = mode === 'default'
+                ? `**${label}** in <#${channel.id}> follows the rule's normal mode again.`
+                : `**${label}** is **${mode}** in <#${channel.id}>${channel.type === ChannelType.GuildCategory ? ' and the channels in it' : ''} (threads included).`;
         } else if (sub === 'exempt') {
             const channel = interaction.options.getChannel('channel');
             const settings = await getAutomodSettings(guildId);
