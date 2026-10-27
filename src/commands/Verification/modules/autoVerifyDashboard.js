@@ -18,7 +18,8 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { successEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorHandler.js';
-import { getGuildConfig, setGuildConfig } from '../../../services/config/guildConfig.js';
+import { getGuildConfig } from '../../../services/config/guildConfig.js';
+import { updateVerificationSettings } from '../../../services/verificationSettingsService.js';
 import { getWelcomeConfig } from '../../../utils/database.js';
 import { validateAutoVerifyCriteria } from '../../../services/verificationService.js';
 import { botHasPermission } from '../../../utils/permissionGuard.js';
@@ -258,7 +259,9 @@ export default {
                     } else if (btnInteraction.customId === `autoverify_cfg_toggle_${guildId}`) {
                         await btnInteraction.deferUpdate().catch(() => null);
                         guildConfig.verification.autoVerify.enabled = !guildConfig.verification.autoVerify.enabled;
-                        await setGuildConfig(client, guildId, guildConfig);
+                        await updateVerificationSettings(client, guildId, {
+                            autoVerify: { enabled: guildConfig.verification.autoVerify.enabled },
+                        });
                         
                         await btnInteraction.followUp({
                             embeds: [
@@ -358,7 +361,12 @@ async function handleCriteria(selectInteraction, rootInteraction, guildConfig, g
             guildConfig.verification.autoVerify.accountAgeDays = defaultAccountAgeDays;
         }
 
-        await setGuildConfig(client, guildId, guildConfig);
+        await updateVerificationSettings(client, guildId, {
+            autoVerify: {
+                criteria: newCriteria,
+                accountAgeDays: guildConfig.verification.autoVerify.accountAgeDays ?? null,
+            },
+        });
 
         let criteriaDisplay = '';
         switch (newCriteria) {
@@ -426,7 +434,7 @@ async function handleRole(selectInteraction, rootInteraction, guildConfig, guild
         }
 
         guildConfig.verification.autoVerify.roleId = role.id;
-        await setGuildConfig(client, guildId, guildConfig);
+        await updateVerificationSettings(client, guildId, { autoVerify: { roleId: role.id } });
 
         await roleInteraction.followUp({
             embeds: [successEmbed('Role Updated', `Auto-verification role set to ${role}.`)],
@@ -483,7 +491,7 @@ async function handleAccountAge(selectInteraction, rootInteraction, guildConfig,
     }
 
     guildConfig.verification.autoVerify.accountAgeDays = days;
-    await setGuildConfig(client, guildId, guildConfig);
+    await updateVerificationSettings(client, guildId, { autoVerify: { accountAgeDays: days } });
 
     await submitted.reply({
         embeds: [successEmbed('Account Age Updated', `Minimum account age requirement set to **${days} days**.`)],

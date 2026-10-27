@@ -20,8 +20,15 @@ export const ALERT_KINDS = new Set([
 /** Enforcement actions: posted in the mod log as one line. */
 export const ACTION_KINDS = new Set(['ban', 'kick', 'mute', 'warn', 'unban', 'unmute', 'removewarn', 'nocontact']);
 
+/**
+ * Records that always go to the mod log: case edits/voids, appeal decisions and
+ * settings changed from the web dashboard (one line per change, who and old → new).
+ */
+export const MODLOG_KINDS = new Set(['caseedit', 'casevoid', 'appeal', 'dashboard']);
+
 /** 'alerts' | 'modlog' for a postModLog kind. Unknown kinds stay in the mod log. */
 export function channelPurposeFor(kind) {
+    if (MODLOG_KINDS.has(kind)) return 'modlog';
     return ALERT_KINDS.has(kind) ? 'alerts' : 'modlog';
 }
 

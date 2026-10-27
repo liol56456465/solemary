@@ -20,7 +20,8 @@ import {
 } from 'discord.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { getCommandPrefix } from '../config/bot.js';
-import { getGuildConfig, updateGuildConfig } from './config/guildConfig.js';
+import { getGuildConfig } from './config/guildConfig.js';
+import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
 import { generateTranscript } from './ticket.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
@@ -56,12 +57,14 @@ export async function isModmailBlocked(client, guildId, userId) {
     return Array.isArray(config.modmailBlocked) && config.modmailBlocked.includes(userId);
 }
 
+/** Blocks or unblocks a member from modmail, under the guild config's row lock. */
 export async function setModmailBlocked(client, guildId, userId, blocked) {
-    const config = await getGuildConfig(client, guildId);
-    const current = new Set(Array.isArray(config.modmailBlocked) ? config.modmailBlocked : []);
-    if (blocked) current.add(userId);
-    else current.delete(userId);
-    await updateGuildConfig(client, guildId, { modmailBlocked: [...current] });
+    await updateGuildConfigAtomic(client, guildId, (config) => {
+        const current = new Set(Array.isArray(config.modmailBlocked) ? config.modmailBlocked : []);
+        if (blocked) current.add(userId);
+        else current.delete(userId);
+        return { ...config, modmailBlocked: [...current] };
+    }, { operation: 'setModmailBlocked' });
 }
 
 /** Staff = Administrator, Manage Channels, or the ticket staff role. */

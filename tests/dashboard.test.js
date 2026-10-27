@@ -78,7 +78,8 @@ test('pages have no inline styles or scripts and link the one stylesheet', () =>
     assert.ok(page.includes('<link rel="stylesheet" href="/dashboard/static/dashboard.css">'));
     assert.ok(!/<style|style=|<script/i.test(page));
     assert.ok(page.includes('href="/dashboard/overview"'), 'sidebar');
-    assert.ok(page.includes('Phase 2'), 'unbuilt modules are marked');
+    assert.ok(!page.includes('Phase 2'), 'no placeholders left (Phase 2 built the module pages)');
+    assert.ok(page.includes('href="/dashboard/enforcement"'), 'settings pages in the sidebar');
     const audit = auditPage({ session: { username: 'a', csrf: 't' }, rows: [{ created_at: new Date(0), username: '<u>', user_id: ADMIN, module: 'logging', key: 'modLogChannelId', old: null, new: '123' }] });
     assert.ok(audit.includes('&lt;u&gt;'));
     assert.ok(!/<style|style=|<script/i.test(audit));
@@ -536,17 +537,17 @@ test('case detail: invalid or other-guild codes are 404; evidence images use fre
     assert.match(res.body, /&lt;a&gt;/);
 });
 
-test('Phase 2 module pages are placeholders; unknown modules fall through', async () => {
+test('module pages render the module; unknown modules fall through', async () => {
     const { d } = makeDashboard();
     const { cookie } = await login(d);
-    const res = await runProtected(d, d.moduleStub, { method: 'GET', headers: { cookie }, params: { module: 'logging' } });
+    const res = await runProtected(d, d.modulePage, { method: 'GET', headers: { cookie }, params: { module: 'support' } });
     assert.equal(res.statusCode, 200);
-    assert.match(res.body, /arrive in Phase 2/);
-    assert.match(res.body, /modLogChannelId/, 'current registry values shown read-only');
+    assert.match(res.body, /Support server/);
+    assert.match(res.body, /Read-only: editing from the dashboard is turned off/, 'DASHBOARD_EDIT_ENABLED is not set in ENV');
     let next = false;
     const req = { method: 'GET', headers: { cookie }, params: { module: 'nope' } };
     await d.requireUser(req, fakeRes(), () => {});
-    await d.moduleStub(req, fakeRes(), () => { next = true; });
+    await d.modulePage(req, fakeRes(), () => { next = true; });
     assert.equal(next, true);
 });
 

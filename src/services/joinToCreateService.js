@@ -4,7 +4,8 @@ import {
     getJoinToCreateConfig,
     saveJoinToCreateConfig,
     updateJoinToCreateConfig,
-    getTemporaryChannelInfo
+    getTemporaryChannelInfo,
+    mutateJoinToCreateConfig
 } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
@@ -279,16 +280,6 @@ export async function updateChannelConfig(client, guildId, channelId, updates) {
             );
         }
 
-        const config = await getJoinToCreateConfig(client, guildId);
-
-        if (!config.triggerChannels.includes(channelId)) {
-            throw new TitanBotError(
-                'Channel is not configured as a Join to Create trigger',
-                ErrorTypes.VALIDATION,
-                'This channel is not set up as a Join to Create trigger.'
-            );
-        }
-
         if (updates.nameTemplate) {
             validateChannelNameTemplate(updates.nameTemplate);
         }
@@ -299,23 +290,32 @@ export async function updateChannelConfig(client, guildId, channelId, updates) {
             validateUserLimit(updates.userLimit);
         }
 
-        if (!config.channelOptions) {
-            config.channelOptions = {};
+        // Locked read-modify-write (the web dashboard edits the same config).
+        let saved = null;
+        const found = await mutateJoinToCreateConfig(client, guildId, (config) => {
+            if (!config.triggerChannels.includes(channelId)) return false;
+            if (!config.channelOptions) config.channelOptions = {};
+            config.channelOptions[channelId] = {
+                ...config.channelOptions[channelId],
+                ...updates,
+                updatedAt: Date.now()
+            };
+            saved = config.channelOptions[channelId];
+            return true;
+        });
+        if (!found) {
+            throw new TitanBotError(
+                'Channel is not configured as a Join to Create trigger',
+                ErrorTypes.VALIDATION,
+                'This channel is not set up as a Join to Create trigger.'
+            );
         }
-
-        config.channelOptions[channelId] = {
-            ...config.channelOptions[channelId],
-            ...updates,
-            updatedAt: Date.now()
-        };
-
-        await saveJoinToCreateConfig(client, guildId, config);
 
         logger.info(`Updated Join to Create config for channel ${channelId} in guild ${guildId}`, {
             updates: Object.keys(updates)
         });
 
-        return config.channelOptions[channelId];
+        return saved;
 
     } catch (error) {
         if (error instanceof TitanBotError) {
@@ -339,33 +339,31 @@ export async function removeTriggerChannel(client, guildId, channelId) {
             );
         }
 
-        const config = await getJoinToCreateConfig(client, guildId);
-
-        const index = config.triggerChannels.indexOf(channelId);
-        if (index === -1) {
+        // Locked read-modify-write (the web dashboard edits the same config).
+        const found = await mutateJoinToCreateConfig(client, guildId, (config) => {
+            const index = config.triggerChannels.indexOf(channelId);
+            if (index === -1) return false;
+            config.triggerChannels.splice(index, 1);
+            config.enabled = config.triggerChannels.length > 0;
+            if (config.channelOptions && config.channelOptions[channelId]) {
+                delete config.channelOptions[channelId];
+            }
+            if (config.temporaryChannels) {
+                for (const [tempChannelId, tempInfo] of Object.entries(config.temporaryChannels)) {
+                    if (tempInfo.triggerChannelId === channelId) {
+                        delete config.temporaryChannels[tempChannelId];
+                    }
+                }
+            }
+            return true;
+        });
+        if (!found) {
             throw new TitanBotError(
                 'Channel not found in Join to Create triggers',
                 ErrorTypes.VALIDATION,
                 'This channel is not configured as a Join to Create trigger.'
             );
         }
-
-        config.triggerChannels.splice(index, 1);
-        config.enabled = config.triggerChannels.length > 0;
-
-        if (config.channelOptions && config.channelOptions[channelId]) {
-            delete config.channelOptions[channelId];
-        }
-
-        if (config.temporaryChannels) {
-            for (const [tempChannelId, tempInfo] of Object.entries(config.temporaryChannels)) {
-                if (tempInfo.triggerChannelId === channelId) {
-                    delete config.temporaryChannels[tempChannelId];
-                }
-            }
-        }
-
-        await saveJoinToCreateConfig(client, guildId, config);
 
         logger.info(`Removed Join to Create trigger channel ${channelId} from guild ${guildId}`);
 

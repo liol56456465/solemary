@@ -1,7 +1,8 @@
 import { botConfig, getColor } from '../../config/bot.js';
 import { SlashCommandBuilder, PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { createEmbed, infoEmbed, successEmbed } from '../../utils/embeds.js';
-import { getGuildConfig, setGuildConfig } from '../../services/config/guildConfig.js';
+import { getGuildConfig } from '../../services/config/guildConfig.js';
+import { setVerificationSettings } from '../../services/verificationSettingsService.js';
 import { withErrorHandling, createError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
 import { removeVerification, verifyUser } from '../../services/verificationService.js';
 import { logger } from '../../utils/logger.js';
@@ -212,16 +213,14 @@ async function handleSetup(interaction, guild, client) {
         components: [verifyButton]
     });
 
-    guildConfig.verification = {
+    await setVerificationSettings(client, guild.id, {
         enabled: true,
         channelId: verificationChannel.id,
         messageId: verifyMessage.id,
         roleId: verifiedRole.id,
         message: message,
         buttonText: buttonText
-    };
-
-    await setGuildConfig(client, guild.id, guildConfig);
+    });
 
     await InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(

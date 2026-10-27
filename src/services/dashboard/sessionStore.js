@@ -8,7 +8,9 @@
 //
 // createMemorySessionStore: same async interface, in memory, for tests.
 //
-// A session: { id, idHash, userId, username, avatar, csrf, createdAt, expiresAt }.
+// A session: { id, idHash, userId, username, avatar, csrf, flash, createdAt, expiresAt }.
+// `flash` is a one-shot message shown on the next page after a saved form
+// (setFlash(id, text); setFlash(id, null) clears it).
 
 import crypto from 'crypto';
 import { SESSION_TTL_MS } from './security.js';
@@ -37,6 +39,7 @@ function toSession(id, row) {
         username: row.username || row.user_id,
         avatar: row.avatar || null,
         csrf: row.csrf,
+        flash: row.flash || null,
         createdAt: new Date(row.created_at).getTime(),
         expiresAt: new Date(row.expires_at).getTime(),
         lastSeen: new Date(row.last_seen).getTime(),
@@ -89,7 +92,14 @@ export function createPgSessionStore({ query, table = 'dashboard_sessions', ttlM
         return create(user, now);
     }
 
-    return { create, get, destroy, rotate, cleanup };
+    /** Stores (or with null clears) the one-shot message of a session. */
+    async function setFlash(id, text) {
+        if (!id) return false;
+        const { rowCount } = await query(`UPDATE ${table} SET flash = $2 WHERE id_hash = $1`, [hashSessionId(id), clip(text, 1000)]);
+        return rowCount > 0;
+    }
+
+    return { create, get, destroy, rotate, cleanup, setFlash };
 }
 
 export function createMemorySessionStore({ ttlMs = SESSION_TTL_MS } = {}) {
@@ -131,5 +141,12 @@ export function createMemorySessionStore({ ttlMs = SESSION_TTL_MS } = {}) {
         return removed;
     }
 
-    return { create, get, destroy, rotate, cleanup, size: () => rows.size, hashes: () => [...rows.keys()] };
+    async function setFlash(id, text) {
+        const row = id ? rows.get(hashSessionId(id)) : null;
+        if (!row) return false;
+        row.flash = clip(text, 1000);
+        return true;
+    }
+
+    return { create, get, destroy, rotate, cleanup, setFlash, size: () => rows.size, hashes: () => [...rows.keys()] };
 }

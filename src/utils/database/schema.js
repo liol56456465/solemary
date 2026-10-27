@@ -495,6 +495,8 @@ export const tableStatements = [
         expires_at TIMESTAMPTZ NOT NULL,
         last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+    // One-shot message shown after a dashboard form was saved (POST → 303 → GET).
+    `ALTER TABLE ${t.dashboard_sessions} ADD COLUMN IF NOT EXISTS flash TEXT`,
 
     // Who changed which dashboard setting (old → new), one row per key.
     `CREATE TABLE IF NOT EXISTS ${t.dashboard_audit} (
@@ -550,6 +552,8 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_dashboard_sessions_expires ON ${t.dashboard_sessions}(expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_sessions_user ON ${t.dashboard_sessions}(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_guild ON ${t.dashboard_audit}(guild_id, created_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_module ON ${t.dashboard_audit}(guild_id, module, id DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_user ON ${t.dashboard_audit}(guild_id, user_id, id DESC)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

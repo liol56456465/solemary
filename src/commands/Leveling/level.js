@@ -1,7 +1,7 @@
 import { getColor } from '../../config/bot.js';
 import { SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
-import { getLevelingConfig, saveLevelingConfig } from '../../services/leveling/leveling.js';
+import { getLevelingConfig, updateLevelingConfig } from '../../services/leveling/leveling.js';
 import { botHasPermission } from '../../utils/permissionGuard.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
@@ -125,8 +125,7 @@ export default {
                 return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `The leveling system is already set up on this server (level-up notifications go to <#${existingConfig.levelUpChannel}>).\n\nUse \`/level dashboard\` to adjust any settings.` });
             }
 
-            const newConfig = {
-                ...existingConfig,
+            const setupPatch = {
                 configured: true,
                 enabled: true,
                 levelUpChannel: channel.id,
@@ -136,7 +135,7 @@ export default {
                 announceLevelUp: true,
             };
 
-            await saveLevelingConfig(client, interaction.guildId, newConfig);
+            await updateLevelingConfig(client, interaction.guildId, setupPatch);
 
             logger.info(`Leveling system set up in guild ${interaction.guildId}`, {
                 channelId: channel.id,

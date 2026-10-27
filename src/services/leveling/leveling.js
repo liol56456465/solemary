@@ -2,7 +2,8 @@
 
 import { EmbedBuilder } from 'discord.js';
 import { logger } from '../../utils/logger.js';
-import { getGuildConfig, setGuildConfig } from '../config/guildConfig.js';
+import { getGuildConfig } from '../config/guildConfig.js';
+import { updateGuildConfigAtomic } from '../../utils/database/guildConfigStorage.js';
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { addXp } from './xpSystem.js';
 import { getUserLevelKey, getUserLevelPrefix } from '../../utils/database/keys.js';
@@ -178,22 +179,27 @@ export function createLeaderboardEmbed(leaderboard, guild) {
   return embed;
 }
 
+// Leveling config as used when a guild has none saved yet.
+function defaultLevelingConfig() {
+  return {
+    enabled: true,
+    xpPerMessage: { min: 15, max: 25 },
+    xpCooldown: 20,
+    levelUpMessage: '{user} has leveled up to level {level}!',
+    levelUpChannel: null,
+    ignoredChannels: [],
+    ignoredRoles: [],
+    blacklistedUsers: [],
+    roleRewards: {},
+    announceLevelUp: true,
+    xpMultiplier: 1
+  };
+}
+
 export async function getLevelingConfig(client, guildId) {
   try {
     const guildConfig = await getGuildConfig(client, guildId);
-    return guildConfig.leveling || {
-      enabled: true,
-      xpPerMessage: { min: 15, max: 25 },
-      xpCooldown: 20,
-      levelUpMessage: '{user} has leveled up to level {level}!',
-      levelUpChannel: null,
-      ignoredChannels: [],
-      ignoredRoles: [],
-      blacklistedUsers: [],
-      roleRewards: {},
-      announceLevelUp: true,
-      xpMultiplier: 1
-    };
+    return guildConfig.leveling || defaultLevelingConfig();
   } catch (error) {
     logger.error(`Error getting leveling config for guild ${guildId}:`, error);
     throw error;
@@ -277,6 +283,79 @@ export async function saveUserLevelData(client, guildId, userId, data) {
   }
 }
 
+function validationError(message, userMessage) {
+  return new TitanBotError(message, ErrorTypes.VALIDATION, userMessage);
+}
+
+function assertLevelingConfigValid(config) {
+  if (!config || typeof config !== 'object' || Array.isArray(config)) {
+    throw validationError('Leveling config must be an object', 'Invalid leveling configuration.');
+  }
+
+  if (config.xpCooldown !== undefined && config.xpCooldown !== null) {
+    if (typeof config.xpCooldown !== 'number' || !Number.isFinite(config.xpCooldown) || config.xpCooldown < 0 || config.xpCooldown > 3600) {
+      throw validationError(
+        'XP cooldown must be between 0 and 3600 seconds',
+        'Cooldown must be between 0 and 3600 seconds.'
+      );
+    }
+  }
+
+  for (const field of ['xpRange', 'xpPerMessage']) {
+    const range = config[field];
+    if (range === undefined || range === null) continue;
+    // Older stored configs may hold a plain number here; only ranges are checked.
+    if (field === 'xpPerMessage' && typeof range !== 'object') continue;
+    const ok = typeof range === 'object'
+      && Number.isFinite(range.min) && Number.isFinite(range.max)
+      && range.min >= 1 && range.max >= 1 && range.min <= range.max;
+    if (!ok) {
+      throw validationError(
+        `Invalid XP range configuration (${field})`,
+        'Minimum XP must be less than maximum XP, and both must be positive.'
+      );
+    }
+  }
+}
+
+function wrapSaveError(error, guildId) {
+  logger.error(`Error saving leveling config for guild ${guildId}:`, error);
+  if (error instanceof TitanBotError) return error;
+  return new TitanBotError(
+    `Failed to save config: ${error.message}`,
+    ErrorTypes.DATABASE,
+    'Could not save configuration at this time.'
+  );
+}
+
+function cloneConfig(value) {
+  return value === undefined ? undefined : structuredClone(value);
+}
+
+/**
+ * Locked change of the stored leveling config: change(current) returns the new
+ * leveling object. Runs inside the guild-config row lock so concurrent writers
+ * (commands, web dashboard) can't overwrite each other's fields.
+ */
+async function mutateLevelingConfig(client, guildId, change) {
+  let before;
+  let after;
+  await updateGuildConfigAtomic(client, guildId, async (current) => {
+    const stored = current.leveling && typeof current.leveling === 'object'
+      ? current.leveling
+      : defaultLevelingConfig();
+    before = cloneConfig(stored);
+    const next = await change(cloneConfig(stored));
+    after = cloneConfig(next);
+    return { ...current, leveling: next };
+  }, { operation: 'updateLevelingConfig' });
+  return { before, after };
+}
+
+/**
+ * Replaces the stored leveling config (kept for compatibility). Atomic: only the
+ * leveling key is written, under the guild-config lock.
+ */
 export async function saveLevelingConfig(client, guildId, config) {
   try {
     if (!guildId || !config) {
@@ -285,37 +364,57 @@ export async function saveLevelingConfig(client, guildId, config) {
         ErrorTypes.VALIDATION
       );
     }
-
-    const guildConfig = await getGuildConfig(client, guildId);
-
-    if (config.xpCooldown && (config.xpCooldown < 0 || config.xpCooldown > 3600)) {
-      throw new TitanBotError(
-        'XP cooldown must be between 0 and 3600 seconds',
-        ErrorTypes.VALIDATION,
-        'Cooldown must be between 0 and 3600 seconds.'
-      );
-    }
-
-    if (config.xpRange && (config.xpRange.min < 1 || config.xpRange.max < 1 || config.xpRange.min > config.xpRange.max)) {
-      throw new TitanBotError(
-        'Invalid XP range configuration',
-        ErrorTypes.VALIDATION,
-        'Minimum XP must be less than maximum XP, and both must be positive.'
-      );
-    }
-
-    guildConfig.leveling = config;
-    await setGuildConfig(client, guildId, guildConfig);
-    
+    assertLevelingConfigValid(config);
+    await mutateLevelingConfig(client, guildId, () => ({ ...config }));
     logger.info(`Leveling config updated for guild ${guildId}`);
   } catch (error) {
-    logger.error(`Error saving leveling config for guild ${guildId}:`, error);
-    if (error instanceof TitanBotError) throw error;
-    throw new TitanBotError(
-      `Failed to save config: ${error.message}`,
-      ErrorTypes.DATABASE,
-      'Could not save configuration at this time.'
-    );
+    throw wrapSaveError(error, guildId);
+  }
+}
+
+/**
+ * Atomically merges `patch` into the stored leveling config (defaults when none
+ * is stored). `roleRewards` in a patch replaces the whole map; use
+ * setLevelRoleReward to change one level. Returns { before, after }.
+ */
+export async function updateLevelingConfig(client, guildId, patch) {
+  try {
+    if (!guildId || !patch || typeof patch !== 'object' || Array.isArray(patch)) {
+      throw validationError('Guild ID and patch object are required', 'Invalid leveling configuration update.');
+    }
+    assertLevelingConfigValid(patch);
+    const result = await mutateLevelingConfig(client, guildId, (current) => ({ ...current, ...cloneConfig(patch) }));
+    logger.info(`Leveling config updated for guild ${guildId}`, { fields: Object.keys(patch) });
+    return result;
+  } catch (error) {
+    throw wrapSaveError(error, guildId);
+  }
+}
+
+/**
+ * Atomically sets (roleId) or removes (roleId === null) the role reward for one
+ * level, leaving the other rewards as stored. Returns { before, after }.
+ */
+export async function setLevelRoleReward(client, guildId, level, roleId) {
+  try {
+    const lvl = Number(level);
+    if (!guildId || !Number.isInteger(lvl) || lvl < 1 || lvl > MAX_LEVEL) {
+      throw validationError(`Invalid reward level: ${level}`, `Level must be a whole number between 1 and ${MAX_LEVEL}.`);
+    }
+    if (roleId !== null && !(typeof roleId === 'string' && /^\d{17,20}$/.test(roleId))) {
+      throw validationError(`Invalid reward role id: ${roleId}`, 'The reward role is not a valid role.');
+    }
+    return await mutateLevelingConfig(client, guildId, (current) => {
+      const roleRewards = { ...(current.roleRewards || {}) };
+      if (roleId === null) {
+        delete roleRewards[lvl];
+      } else {
+        roleRewards[lvl] = roleId;
+      }
+      return { ...current, roleRewards };
+    });
+  } catch (error) {
+    throw wrapSaveError(error, guildId);
   }
 }
 

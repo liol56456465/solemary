@@ -1,5 +1,5 @@
 import { logger } from '../../utils/logger.js';
-import { getLevelingConfig, getUserLevelData, saveLevelingConfig } from './leveling.js';
+import { getLevelingConfig, getUserLevelData, setLevelRoleReward } from './leveling.js';
 
 import { getUserLevelPrefix } from '../../utils/database/keys.js';
 
@@ -55,24 +55,18 @@ export async function reconcileLevelRoles(client, guildId = null) {
             const rewards = { ...(cfg.roleRewards || {}) };
             if (Object.keys(rewards).length === 0) continue;
 
-            let configChanged = false;
 
             for (const [level, roleId] of Object.entries(rewards)) {
                 const role =
                     guild.roles.cache.get(roleId) || (await guild.roles.fetch(roleId).catch(() => null));
                 if (!role) {
                     delete rewards[level];
-                    configChanged = true;
+                    await setLevelRoleReward(client, guild.id, level, null);
                     summary.prunedRewardEntries += 1;
                     logger.warn(
                         `Removed missing level ${level} reward role ${roleId} from config in guild ${guild.id}`,
                     );
                 }
-            }
-
-            if (configChanged) {
-                cfg.roleRewards = rewards;
-                await saveLevelingConfig(client, guild.id, cfg);
             }
 
             if (Object.keys(rewards).length === 0) continue;

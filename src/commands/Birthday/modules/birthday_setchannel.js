@@ -1,5 +1,5 @@
 import { PermissionsBitField, EmbedBuilder, MessageFlags } from 'discord.js';
-import { updateGuildConfig } from '../../../services/config/guildConfig.js';
+import { updateBirthdaySettings } from '../../../services/birthdayService.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { logger } from '../../../utils/logger.js';
 import { canonicalTimeZone, localDateKey } from '../../../utils/timezone.js';
@@ -42,9 +42,9 @@ export default {
                 : '';
 
             if (channel) {
-                await updateGuildConfig(client, guildId, {
-                    birthdayChannelId: channel.id,
-                    ...(timezone && { birthdayTimezone: timezone }),
+                await updateBirthdaySettings(client, guildId, {
+                    channelId: channel.id,
+                    ...(timezone && { timezone }),
                 });
                 const embed = new EmbedBuilder()
                     .setColor(0x00FF00)
@@ -56,7 +56,7 @@ export default {
                 });
             } else if (timezone) {
                 // Only a time zone given: keep the current channel.
-                await updateGuildConfig(client, guildId, { birthdayTimezone: timezone });
+                await updateBirthdaySettings(client, guildId, { timezone });
                 const embed = new EmbedBuilder()
                     .setColor(0x00FF00)
                     .setTitle('Birthday Time Zone Updated')
@@ -66,7 +66,7 @@ export default {
                     flags: MessageFlags.Ephemeral,
                 });
             } else {
-                await updateGuildConfig(client, guildId, { birthdayChannelId: null });
+                await updateBirthdaySettings(client, guildId, { channelId: null });
                 const embed = new EmbedBuilder()
                     .setColor(0xFFFF00)
                     .setTitle('Birthday Announcements Disabled')

@@ -65,7 +65,6 @@ import { db, getFromDb, setInDb } from './database/wrapper.js';
 import {
     getGuildConfigKey,
     getGuildBirthdaysKey,
-    getLevelingKey,
     getUserLevelKey,
     getApplicationRolesKey,
     getApplicationSettingsKey,
@@ -355,7 +354,7 @@ export async function markGiveawayEnded(client, giveawayId, endedData) {
     }
 }
 
-function normalizeWelcomeConfig(raw = {}) {
+export function normalizeWelcomeConfig(raw = {}) {
     const base = typeof raw === "object" && raw !== null ? raw : {};
 
     const channelId = base.channelId ?? null;
@@ -452,38 +451,7 @@ export async function updateWelcomeConfig(client, guildId, updates) {
     }
 }
 
-export async function getLevelingConfig(client, guildId) {
-    const key = getLevelingKey(guildId);
-    try {
-        const config = await getFromDb(key, {
-            enabled: false,
-            xpPerMessage: 10,
-            xpPerMinute: 60,
-            cooldownEnabled: true,
-            messageLengthMultiplier: true,
-            levelUpMessages: true,
-            levelUpChannel: null,
-            roles: {},
-            milestones: {}
-        });
-        
-        return config;
-    } catch (error) {
-        logger.error('Error getting leveling config:', error);
-        throw error;
-    }
-}
-
-export async function saveLevelingConfig(client, guildId, config) {
-    const key = getLevelingKey(guildId);
-    try {
-        await setInDb(key, config);
-        return true;
-    } catch (error) {
-        logger.error(`Error saving leveling config for guild ${guildId}:`, error);
-        throw error;
-    }
-}
+// Leveling config lives in guild config (services/leveling/leveling.js), not under the leveling_configs key.
 
 export async function getUserLevelData(client, guildId, userId) {
     const key = getUserLevelKey(guildId, userId);
@@ -1023,7 +991,7 @@ export async function getJoinToCreateConfig(client, guildId) {
  * config in place; it may return false to skip the write. Resolves with what
  * mutate returned (true when it returned nothing).
  */
-async function mutateJoinToCreateConfig(client, guildId, mutate) {
+export async function mutateJoinToCreateConfig(client, guildId, mutate) {
     if (!client.db) {
         throw databaseUnavailable('Database not available for Join to Create');
     }

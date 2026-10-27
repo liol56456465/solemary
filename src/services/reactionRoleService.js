@@ -1,6 +1,8 @@
 // reactionRoleService.js
 
+import { ActionRowBuilder, EmbedBuilder, StringSelectMenuBuilder } from 'discord.js';
 import { logger } from '../utils/logger.js';
+import { logEvent, EVENT_TYPES } from './loggingService.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { getReactionRoleKey, getReactionRolesPrefix } from '../utils/database/keys.js';
 import { getDangerousPermissions, hasDangerousPermissions } from '../utils/roleSafety.js';
@@ -477,4 +479,215 @@ export async function reconcileReactionRoleMessages(client, guildId = null) {
         summary.errors += 1;
         return summary;
     }
+}
+
+// ── Panel editing ─────────────────────────────────────────────────────────────
+// Shared by /reactroles dashboard and the web dashboard. Panel data changes are
+// locked read-modify-writes (client.db.update on the panel's key), so concurrent
+// edits can't drop each other's roles.
+
+/** { type, message } for the first reason the role can't go on the panel, or null. */
+function panelRoleCheck(guild, role, panel) {
+    const roles = Array.isArray(panel?.roles) ? panel.roles : [];
+    if (roles.length >= MAX_ROLES_PER_MESSAGE) {
+        return { type: ErrorTypes.VALIDATION, message: `This panel already has the maximum of ${MAX_ROLES_PER_MESSAGE} roles.` };
+    }
+    if (!role) return null;
+    if (roles.includes(role.id)) {
+        return { type: ErrorTypes.VALIDATION, message: `${role} is already in this panel.` };
+    }
+    if (role.id === guild?.id) {
+        return { type: ErrorTypes.VALIDATION, message: 'You cannot use @everyone.' };
+    }
+    if (role.managed) {
+        return { type: ErrorTypes.VALIDATION, message: 'Managed/bot roles cannot be used.' };
+    }
+    if (hasDangerousPermissions(role)) {
+        return { type: ErrorTypes.PERMISSION, message: 'That role has sensitive permissions (Administrator, Manage Server, etc.) and cannot be used.' };
+    }
+    const botHighest = guild?.members?.me?.roles?.highest;
+    if (!botHighest || role.position >= botHighest.position) {
+        return { type: ErrorTypes.PERMISSION, message: 'That role is above my highest role in the hierarchy. Move my role above it first.' };
+    }
+    return null;
+}
+
+/**
+ * Why `role` can't be added to `panel` (a user-facing sentence), or null when it
+ * can. With role = null only the panel itself is checked (the 25-role limit).
+ */
+export function getPanelRoleProblem(guild, role, panel) {
+    return panelRoleCheck(guild, role, panel)?.message ?? null;
+}
+
+function panelNotFound(guildId, messageId) {
+    return createError(
+        `Reaction role panel not found: ${messageId}`,
+        ErrorTypes.VALIDATION,
+        'That reaction role panel no longer exists.',
+        { guildId, messageId, expected: true },
+    );
+}
+
+async function resolveGuild(client, guildId) {
+    const guild = client.guilds?.cache?.get(guildId) || await client.guilds?.fetch?.(guildId).catch(() => null);
+    if (!guild) {
+        throw createError(`Guild not found: ${guildId}`, ErrorTypes.VALIDATION, 'Server not found.', { guildId, expected: true });
+    }
+    return guild;
+}
+
+async function fetchPanelMessage(guild, panel) {
+    try {
+        const channel = guild.channels.cache.get(panel.channelId);
+        if (!channel) return { channel: null, message: null };
+        const message = await channel.messages.fetch(panel.messageId).catch(() => null);
+        return { channel, message };
+    } catch {
+        return { channel: null, message: null };
+    }
+}
+
+/** Rewrites the live panel message's role list and select menu from panel.roles. Never throws. */
+export async function rebuildLivePanelMessage(guild, panel) {
+    try {
+        const channel = guild.channels.cache.get(panel.channelId);
+        if (!channel) return;
+        const msg = await channel.messages.fetch(panel.messageId).catch(() => null);
+        if (!msg || !msg.embeds[0]) return;
+
+        const roleObjects = panel.roles
+            .map(id => guild.roles.cache.get(id))
+            .filter(Boolean);
+
+        if (roleObjects.length === 0) return;
+
+        const currentEmbed = msg.embeds[0];
+        const updatedEmbed = EmbedBuilder.from(currentEmbed);
+        const fields = currentEmbed.fields.map(f => ({ name: f.name, value: f.value, inline: f.inline }));
+        const roleFieldIdx = fields.findIndex(f => f.name === 'Available Roles');
+        const newRoleValue = roleObjects.map(r => `• ${r}`).join('\n');
+        if (roleFieldIdx !== -1) {
+            fields[roleFieldIdx] = { name: 'Available Roles', value: newRoleValue, inline: false };
+        } else {
+            fields.push({ name: 'Available Roles', value: newRoleValue, inline: false });
+        }
+        updatedEmbed.setFields(fields);
+
+        const selectRow = new ActionRowBuilder().addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId('reaction_roles')
+                .setPlaceholder('Select your roles')
+                .setMinValues(0)
+                .setMaxValues(roleObjects.length)
+                .addOptions(
+                    roleObjects.map(r => ({
+                        label: r.name.substring(0, 100),
+                        description: `Add/remove the ${r.name} role`.substring(0, 100),
+                        value: r.id,
+                        emoji: '🎭',
+                    })),
+                ),
+        );
+
+        await msg.edit({ embeds: [updatedEmbed], components: [selectRow] });
+    } catch (error) {
+        logger.warn('Could not rebuild live reaction role panel:', error.message);
+    }
+}
+
+/**
+ * Adds a role to a panel (checked with getPanelRoleProblem against the panel as
+ * stored, under the lock) and rebuilds the live message. Resolves { panel }.
+ * Throws a TitanBotError with a userMessage when refused or the panel is gone.
+ */
+export async function addPanelRole(client, guildId, messageId, roleId) {
+    validateGuildId(guildId);
+    validateMessageId(messageId);
+    validateRoleId(roleId);
+    const guild = await resolveGuild(client, guildId);
+    const role = guild.roles.cache.get(roleId) || await guild.roles.fetch(roleId).catch(() => null);
+    if (!role) {
+        throw createError(`Role not found: ${roleId}`, ErrorTypes.VALIDATION, 'That role no longer exists.', { guildId, roleId, expected: true });
+    }
+
+    const panel = await client.db.update(getReactionRoleKey(guildId, messageId), (current) => {
+        if (!current || !Array.isArray(current.roles)) throw panelNotFound(guildId, messageId);
+        const problem = panelRoleCheck(guild, role, current);
+        if (problem) {
+            throw createError(`Reaction role refused: ${problem.message}`, problem.type, problem.message, { guildId, messageId, roleId, expected: true });
+        }
+        return { ...current, roles: [...current.roles, roleId] };
+    }, null);
+
+    await rebuildLivePanelMessage(guild, panel);
+    logger.info(`Added role ${roleId} to reaction role panel ${messageId} in guild ${guildId}`);
+    return { panel };
+}
+
+/**
+ * Removes a role from a panel and rebuilds the live message. When it was the last
+ * role, the panel message and its data are deleted. Resolves { panel, deletedPanel }.
+ * Throws a TitanBotError (userMessage) when the panel is gone.
+ */
+export async function removePanelRole(client, guildId, messageId, roleId) {
+    validateGuildId(guildId);
+    validateMessageId(messageId);
+    validateRoleId(roleId);
+    const guild = await resolveGuild(client, guildId);
+
+    const panel = await client.db.update(getReactionRoleKey(guildId, messageId), (current) => {
+        if (!current || !Array.isArray(current.roles)) throw panelNotFound(guildId, messageId);
+        return { ...current, roles: current.roles.filter(id => id !== roleId) };
+    }, null);
+
+    if (panel.roles.length === 0) {
+        const { message } = await fetchPanelMessage(guild, panel);
+        if (message) await message.delete().catch(() => {});
+        await deleteReactionRoleMessage(client, guildId, messageId);
+        return { panel, deletedPanel: true };
+    }
+
+    await rebuildLivePanelMessage(guild, panel);
+    return { panel, deletedPanel: false };
+}
+
+/**
+ * Deletes a panel: its Discord message (when found), its data, and logs a
+ * REACTION_ROLE_DELETE event. Resolves { deleted, panel, title }; deleted is false
+ * (and panel null) when there was no such panel.
+ */
+export async function deletePanel(client, guildId, messageId, { actorId = null, actorTag = null } = {}) {
+    validateGuildId(guildId);
+    validateMessageId(messageId);
+    const panel = await getReactionRoleMessage(client, guildId, messageId);
+    if (!panel) return { deleted: false, panel: null, title: null };
+
+    const guild = await resolveGuild(client, guildId);
+    const { channel, message } = await fetchPanelMessage(guild, panel);
+    const title = message?.embeds?.[0]?.title ?? 'this panel';
+
+    if (message) await message.delete().catch(() => {});
+    await deleteReactionRoleMessage(client, guildId, messageId);
+
+    try {
+        await logEvent({
+            client,
+            guildId,
+            eventType: EVENT_TYPES.REACTION_ROLE_DELETE,
+            data: {
+                description: `Reaction role panel deleted${actorTag ? ` by ${actorTag}` : ''}`,
+                userId: actorId,
+                channelId: panel.channelId,
+                fields: [
+                    { name: 'Panel', value: title, inline: true },
+                    { name: 'Channel', value: channel ? channel.toString() : 'Unknown', inline: true },
+                ],
+            },
+        });
+    } catch (logErr) {
+        logger.warn('Failed to log reaction role deletion:', logErr);
+    }
+
+    return { deleted: true, panel, title };
 }

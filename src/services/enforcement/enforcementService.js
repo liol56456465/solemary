@@ -178,6 +178,7 @@ const MOD_LOG_TITLES = {
     digest: ['📊 Daily automod digest', 'primary'],
     system: ['⚙️ Bot problem', 'error'],
     revert: ['♻️ Server structure reverted', 'success'],
+    dashboard: ['Dashboard change', 'secondary'],
 };
 
 /**

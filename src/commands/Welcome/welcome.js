@@ -1,6 +1,7 @@
 import { getColor } from '../../config/bot.js';
 import { SlashCommandBuilder, PermissionFlagsBits, ChannelType, EmbedBuilder, MessageFlags } from 'discord.js';
-import { getWelcomeConfig, updateWelcomeConfig } from '../../utils/database.js';
+import { getWelcomeConfig } from '../../utils/database.js';
+import { updateWelcomeSettings } from '../../services/welcomeService.js';
 import { formatWelcomeMessage, truncateForEmbedField } from '../../utils/welcome.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
@@ -84,7 +85,7 @@ export default {
             }
 
             try {
-                await updateWelcomeConfig(client, guild.id, {
+                await updateWelcomeSettings(client, guild.id, {
                     enabled: true,
                     channelId: channel.id,
                     welcomeMessage: message,
@@ -116,6 +117,9 @@ export default {
 
                 await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
             } catch (error) {
+                if (error?.type === ErrorTypes.VALIDATION && error.userMessage) {
+                    return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: error.userMessage });
+                }
                 logger.error(`[Welcome] Failed to setup welcome system for guild ${guild.id}:`, error);
                 await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while configuring the welcome system. Please try again.' });
             }

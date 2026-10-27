@@ -5,7 +5,10 @@ import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
-import { getAutomodSettings, updateAutomodSettings } from '../../services/automod/automodSettings.js';
+import {
+    getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode,
+    setExemptChannel, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
+} from '../../services/automod/automodSettings.js';
 import { endLockdown, getLockdownState } from '../../services/automod/raidService.js';
 import { describeStep } from '../../services/automod/reviewCards.js';
 import { automodStats, formatAutomodStats } from '../../services/automod/automodReport.js';
@@ -13,9 +16,7 @@ import { collectOpenReviews, formatQueue } from '../../services/automod/reviewQu
 import { endProbation, getProbation } from '../../services/automod/probationService.js';
 import { DEFAULT_GATE_DAYS, JOIN_GATE_CHECKS, describeJoinGate, normalizeJoinGate } from '../../services/automod/joinGate.js';
 import { loadNativePolicies, policyFor, setNativePolicy, triggerLabel } from '../../services/automod/nativeBridge.js';
-import {
-    CHANNEL_RULE_MODES, RULE_MODES, hasRuleOverride, isRelaxableRule, ruleMode, withChannelRule,
-} from '../../services/automod/policy.js';
+import { hasRuleOverride, isRelaxableRule, ruleMode } from '../../services/automod/policy.js';
 
 const RULE_CHOICES = Object.entries(AUTOMOD_RULES)
     .sort(([, a], [, b]) => b.severity - a.severity)
@@ -278,24 +279,18 @@ export default {
 
         if (sub === 'enable') {
             const enabled = interaction.options.getBoolean('enabled');
-            await updateAutomodSettings(guildId, { enabled });
+            await setAutomodEnabled(guildId, enabled);
             note = `Automod is now **${enabled ? 'on' : 'off'}**.`;
         } else if (sub === 'mode') {
             const mode = interaction.options.getString('mode');
-            await updateAutomodSettings(guildId, { mode });
+            await setAutomodMode(guildId, mode);
             note = mode === 'monitor'
                 ? 'Monitor mode: automod only posts review cards; nothing is deleted or punished until you apply it. Rules with their own mode (`/automod rule`) keep it.'
                 : 'Enforce mode: automod deletes and punishes automatically and posts a review card for every decision. Rules with their own mode (`/automod rule`) keep it.';
         } else if (sub === 'rule') {
             const rule = interaction.options.getString('rule');
             const mode = interaction.options.getString('mode');
-            if (!AUTOMOD_RULES[rule]) throw userError('Unknown rule.');
-            if (mode !== 'default' && !RULE_MODES.includes(mode)) throw userError('Unknown mode.');
-            await updateAutomodSettings(guildId, (current) => {
-                const ruleModes = { ...current.ruleModes };
-                if (mode === 'default') delete ruleModes[rule]; else ruleModes[rule] = mode;
-                return { ...current, ruleModes };
-            });
+            await setRuleMode(guildId, rule, mode);
             const label = AUTOMOD_RULES[rule].label;
             note = mode === 'default'
                 ? `**${label}** follows the global mode again.`
@@ -304,12 +299,7 @@ export default {
             const channel = interaction.options.getChannel('channel');
             const rule = interaction.options.getString('rule');
             const mode = interaction.options.getString('mode');
-            if (!AUTOMOD_RULES[rule]) throw userError('Unknown rule.');
-            if (mode !== 'default' && !CHANNEL_RULE_MODES.includes(mode)) throw userError('Unknown mode.');
-            await updateAutomodSettings(guildId, (current) => ({
-                ...current,
-                channelRules: withChannelRule(current.channelRules, channel.id, rule, mode),
-            }));
+            await setChannelRuleMode(guildId, channel.id, rule, mode);
             const label = AUTOMOD_RULES[rule].label;
             note = mode === 'default'
                 ? `**${label}** in <#${channel.id}> follows the rule's normal mode again.`
@@ -319,25 +309,25 @@ export default {
             const minLevel = interaction.options.getInteger('min_level');
             const clear = interaction.options.getBoolean('clear');
             if (!clear && !role && minLevel === null) throw userError('Give a role, a minimum level, or clear: true.');
-            if (role && (role.id === interaction.guildId || role.managed)) throw userError('Pick a normal role (not @everyone or a bot role).');
-            const saved = await updateAutomodSettings(guildId, (current) => ({
-                ...current,
-                trusted: clear
-                    ? { roleId: null, minLevel: 0 }
-                    : { roleId: role ? role.id : current.trusted.roleId, minLevel: minLevel ?? current.trusted.minLevel },
-            }));
+            const roleProblem = role ? getTrustedRoleProblem(interaction.guild, role) : null;
+            if (roleProblem) throw userError(roleProblem);
+            const saved = await setTrusted(guildId, {
+                roleId: role ? role.id : undefined,
+                minLevel: minLevel ?? undefined,
+                clear: Boolean(clear),
+            });
             note = clear || (!saved.trusted.roleId && !saved.trusted.minLevel)
                 ? 'No trusted members: everyone is held to every rule.'
                 : `Trusted: ${trustedText(saved.trusted)}. They skip ${relaxedRuleLabels()}.`;
         } else if (sub === 'secondchance') {
             const enabled = interaction.options.getBoolean('enabled');
-            await updateAutomodSettings(guildId, { secondChance: enabled });
+            await setSecondChance(guildId, enabled);
             note = enabled
                 ? 'Second chance is **on**: a member\'s first offence in 30 days on caps, characters, English only or mild language (no slurs) gets a short notice instead of a warning.'
                 : 'Second chance is **off**: every offence gets the usual punishment.';
         } else if (sub === 'mood') {
             const enabled = interaction.options.getBoolean('enabled');
-            await updateAutomodSettings(guildId, { moodAlerts: enabled });
+            await setMoodAlerts(guildId, enabled);
             note = enabled
                 ? 'Mood alerts are **on**: when insults or caps floods from 3+ members pile up in a channel, the bot posts one calm-down note, turns on slowmode for a few minutes and tells the alerts channel.'
                 : 'Mood alerts are **off**.';
@@ -345,12 +335,7 @@ export default {
             const check = interaction.options.getString('check');
             const action = interaction.options.getString('action');
             const days = interaction.options.getInteger('days');
-            if (!JOIN_GATE_CHECKS[check]) throw userError('Unknown check.');
-            if (!['off', 'flag', 'kick'].includes(action)) throw userError('Unknown action.');
-            const saved = await updateAutomodSettings(guildId, (current) => {
-                const gate = normalizeJoinGate(current.joinGate);
-                return { ...current, joinGate: { ...gate, [check]: action, ...(days ? { ageDays: days } : {}) } };
-            });
+            const saved = await setJoinGateCheck(guildId, check, action, days);
             const gate = normalizeJoinGate(saved.joinGate);
             const ageNote = check === 'age' && action !== 'off'
                 ? `\nAccounts younger than **${gate.ageDays} day(s)**. "Verify with Discord" already holds accounts younger than ${DEFAULT_GATE_DAYS} days for approval; members who verified that way are never gated.`
@@ -359,21 +344,14 @@ export default {
         } else if (sub === 'panic') {
             const enabled = interaction.options.getBoolean('enabled');
             const hours = interaction.options.getInteger('hours');
-            const saved = await updateAutomodSettings(guildId, (current) => ({
-                ...current,
-                panic: { enabled, hours: hours ?? current.panic.hours },
-            }));
+            const saved = await setPanic(guildId, { enabled, hours });
             const canPause = interaction.guild.members.me?.permissions.has(PermissionFlagsBits.ManageGuild);
             note = enabled
                 ? `Raid panic mode is **on**: when a join raid starts a lockdown, invites and DMs are paused for **${saved.panic.hours} h** (lifted again by \`/automod lockdown-end\`).${canPause ? '' : '\n⚠️ I don\'t have **Manage Server**, so the pause will fail until I get it.'}`
                 : 'Raid panic mode is **off**: a lockdown only raises the verification level.';
         } else if (sub === 'exempt') {
             const channel = interaction.options.getChannel('channel');
-            const settings = await getAutomodSettings(guildId);
-            const ids = new Set(settings.exemptChannelIds);
-            const adding = !ids.has(channel.id);
-            if (adding) ids.add(channel.id); else ids.delete(channel.id);
-            await updateAutomodSettings(guildId, { exemptChannelIds: [...ids] });
+            const { exempt: adding } = await setExemptChannel(guildId, channel.id, 'toggle');
             note = adding ? `Automod now ignores <#${channel.id}>.` : `Automod checks <#${channel.id}> again.`;
         } else if (sub === 'lockdown-end') {
             const ended = await endLockdown(interaction.guild, interaction.user);

@@ -1,6 +1,8 @@
 // commandAccessService.js
 
-import { getGuildConfig, updateGuildConfig } from './config/guildConfig.js';
+import { getGuildConfig } from './config/guildConfig.js';
+import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
+import { wrapServiceBoundary } from '../utils/errorHandler.js';
 import {
   normalizeCategoryKey,
   formatCategoryName,
@@ -200,9 +202,19 @@ export function getCommandAccessSnapshot(client, config) {
   };
 }
 
-async function persistAccessConfig(client, guildId, updates, context = {}) {
-  return updateGuildConfig(client, guildId, updates, context);
-}
+/**
+ * Locked read-modify-write of the access lists: change(config) returns the fields to
+ * merge ({ disabledCommands } and/or { disabledCategories }), computed from the
+ * config as it is under the row lock, so concurrent edits (web + command) all land.
+ */
+const persistAccessConfig = wrapServiceBoundary(async function persistAccessConfig(client, guildId, change, context = {}) {
+  return updateGuildConfigAtomic(client, guildId, (current) => ({ ...current, ...change(current) }), context);
+}, {
+  service: 'guildConfigService',
+  operation: 'updateGuildConfig',
+  message: 'Failed to update guild configuration',
+  userMessage: 'Failed to update server configuration. Please try again.',
+});
 
 export function resolveCommandTarget(client, commandName) {
   const normalizedName = String(commandName || '').toLowerCase().trim();
@@ -230,11 +242,11 @@ export async function disableCommand(client, guildId, commandName, context = {})
     throw new Error(`The \`${normalizedName}\` command cannot be disabled.`);
   }
 
-  const config = await getGuildConfig(client, guildId, context);
-  const disabledCommands = normalizeToggleRecord(config?.disabledCommands);
-  disabledCommands[normalizedName] = true;
-
-  await persistAccessConfig(client, guildId, { disabledCommands }, context);
+  await persistAccessConfig(client, guildId, (config) => {
+    const disabledCommands = normalizeToggleRecord(config?.disabledCommands);
+    disabledCommands[normalizedName] = true;
+    return { disabledCommands };
+  }, context);
   return { commandName: normalizedName, enabled: false };
 }
 
@@ -246,11 +258,11 @@ export async function enableCommand(client, guildId, commandName, context = {}) 
     throw new Error(`Unknown command: \`${normalizedName}\`.`);
   }
 
-  const config = await getGuildConfig(client, guildId, context);
-  const disabledCommands = normalizeToggleRecord(config?.disabledCommands);
-  delete disabledCommands[normalizedName];
-
-  await persistAccessConfig(client, guildId, { disabledCommands }, context);
+  await persistAccessConfig(client, guildId, (config) => {
+    const disabledCommands = normalizeToggleRecord(config?.disabledCommands);
+    delete disabledCommands[normalizedName];
+    return { disabledCommands };
+  }, context);
   return { commandName: normalizedName, enabled: true };
 }
 
@@ -262,11 +274,11 @@ export async function disableCategory(client, guildId, categoryKey, context = {}
     throw new Error(`Unknown category: \`${categoryKey}\`.`);
   }
 
-  const config = await getGuildConfig(client, guildId, context);
-  const disabledCategories = normalizeToggleRecord(config?.disabledCategories);
-  disabledCategories[normalizedKey] = true;
-
-  await persistAccessConfig(client, guildId, { disabledCategories }, context);
+  await persistAccessConfig(client, guildId, (config) => {
+    const disabledCategories = normalizeToggleRecord(config?.disabledCategories);
+    disabledCategories[normalizedKey] = true;
+    return { disabledCategories };
+  }, context);
   return { categoryKey: normalizedKey, displayName: category.displayName, enabled: false };
 }
 
@@ -278,11 +290,11 @@ export async function enableCategory(client, guildId, categoryKey, context = {})
     throw new Error(`Unknown category: \`${categoryKey}\`.`);
   }
 
-  const config = await getGuildConfig(client, guildId, context);
-  const disabledCategories = normalizeToggleRecord(config?.disabledCategories);
-  delete disabledCategories[normalizedKey];
-
-  await persistAccessConfig(client, guildId, { disabledCategories }, context);
+  await persistAccessConfig(client, guildId, (config) => {
+    const disabledCategories = normalizeToggleRecord(config?.disabledCategories);
+    delete disabledCategories[normalizedKey];
+    return { disabledCategories };
+  }, context);
   return { categoryKey: normalizedKey, displayName: category.displayName, enabled: true };
 }
 
@@ -294,14 +306,13 @@ export async function resetCategoryCommands(client, guildId, categoryKey, contex
     throw new Error(`Unknown category: \`${categoryKey}\`.`);
   }
 
-  const config = await getGuildConfig(client, guildId, context);
-  const disabledCommands = normalizeToggleRecord(config?.disabledCommands);
-
-  for (const command of category.commands) {
-    delete disabledCommands[command.name.toLowerCase()];
-  }
-
-  await persistAccessConfig(client, guildId, { disabledCommands }, context);
+  await persistAccessConfig(client, guildId, (config) => {
+    const disabledCommands = normalizeToggleRecord(config?.disabledCommands);
+    for (const command of category.commands) {
+      delete disabledCommands[command.name.toLowerCase()];
+    }
+    return { disabledCommands };
+  }, context);
   return { categoryKey: normalizedKey, displayName: category.displayName };
 }
 

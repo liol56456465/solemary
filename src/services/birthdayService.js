@@ -1,10 +1,10 @@
 // birthdayService.js
 
-import { getGuildConfig } from './config/guildConfig.js';
+import { getGuildConfig, updateGuildConfig } from './config/guildConfig.js';
 import { getGuildBirthdays, setBirthday as dbSetBirthday, deleteBirthday as dbDeleteBirthday, getMonthName, getBirthdayTrackingKey } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
-import { DEFAULT_TIMEZONE, localDateParts, localDateKey } from '../utils/timezone.js';
+import { DEFAULT_TIMEZONE, canonicalTimeZone, localDateParts, localDateKey } from '../utils/timezone.js';
 
 function isLeapYear(year) {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
@@ -411,4 +411,39 @@ export async function checkBirthdays(client) {
       logger.error(`Error processing birthdays for guild ${guildId}:`, error);
     }
   }
+}
+
+const BIRTHDAY_SETTING_KEYS = { channelId: 'birthdayChannelId', timezone: 'birthdayTimezone', roleId: 'birthdayRoleId' };
+
+/**
+ * Changes the birthday settings of a guild (atomic top-level merge of the guild
+ * config). patch: { channelId?: id|null, timezone?: IANA name, roleId?: id|null };
+ * keys left undefined are not touched. The time zone is canonicalized; an unknown one
+ * throws a VALIDATION error. Returns { before, after } with the three settings.
+ */
+export async function updateBirthdaySettings(client, guildId, patch = {}) {
+  const updates = {};
+  for (const [key, field] of Object.entries(BIRTHDAY_SETTING_KEYS)) {
+    if (patch[key] === undefined) continue;
+    let value = patch[key];
+    if (key === 'timezone') {
+      value = canonicalTimeZone(value);
+      if (!value) {
+        throw new TitanBotError(`Unknown time zone: ${patch[key]}`, ErrorTypes.VALIDATION,
+          `${patch[key]} is not a known time zone. Use an IANA name such as Europe/London, America/New_York or UTC.`);
+      }
+    } else if (value !== null && !/^\d{17,20}$/.test(String(value))) {
+      throw new TitanBotError(`Invalid ${field}`, ErrorTypes.VALIDATION, `The birthday ${key === 'roleId' ? 'role' : 'channel'} is not valid.`);
+    }
+    updates[field] = value;
+  }
+  const pick = (config) => ({
+    birthdayChannelId: config.birthdayChannelId ?? null,
+    birthdayTimezone: config.birthdayTimezone ?? DEFAULT_TIMEZONE,
+    birthdayRoleId: config.birthdayRoleId ?? null,
+  });
+  const before = pick(await getGuildConfig(client, guildId));
+  if (!Object.keys(updates).length) return { before, after: before };
+  const saved = await updateGuildConfig(client, guildId, updates);
+  return { before, after: pick(saved || await getGuildConfig(client, guildId)) };
 }

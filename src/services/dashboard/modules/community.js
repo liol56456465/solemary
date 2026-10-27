@@ -1,0 +1,142 @@
+// community.js — Community: suggestions channel, starboard, sticky messages, tags and
+// YouTube feeds. Writes go through the community services (settingsService,
+// starboardSettingsPatch, stickyService, tagService, feedService), as /community and
+// /tag do; their validators produce the error messages.
+
+import { STARBOARD_MAX_THRESHOLD } from '../../community/starboardService.js';
+import { STICKY_MAX_LENGTH } from '../../community/stickyService.js';
+import { TAG_CONTENT_MAX, TRIGGER_KINDS } from '../../community/tagService.js';
+import { FEED_TEMPLATE_MAX } from '../../community/feedService.js';
+import { html } from '../html.js';
+import {
+    InputError, PERMS, buttonForm, channelField, channelName, channelPicker, intField, multiline, numberInput, postForm,
+    selectInput, text, textArea, textInput,
+} from '../forms.js';
+import { diffSnapshots } from '../audit.js';
+import { section, table } from './common.js';
+
+const clip = (value, max = 120) => {
+    const t = String(value ?? '').replace(/\s+/g, ' ');
+    return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+};
+
+async function updateSettings(ctx, patch, message) {
+    const before = ctx.services.getCommunitySettings(ctx.guildId);
+    const after = await ctx.services.updateCommunitySettings(ctx.guildId, patch, ctx.actor.userId);
+    const changes = diffSnapshots(before, after, Object.keys(patch), 'community.');
+    return { changes, message: changes.length ? message : 'Nothing changed.' };
+}
+
+export default {
+    key: 'community',
+    label: 'Community',
+    help: 'Suggestions, starboard, sticky messages, tags (saved replies, optionally triggered by a word or pattern) and YouTube feeds.',
+
+    async load(ctx) {
+        return {
+            settings: ctx.services.getCommunitySettings(ctx.guildId),
+            stickies: ctx.services.listStickies(ctx.guildId),
+            tags: ctx.services.listTags(ctx.guildId),
+            feeds: ctx.services.listFeeds(ctx.guildId),
+        };
+    },
+
+    render(ctx, { settings: s, stickies, tags, feeds }) {
+        const g = ctx.guild;
+        const suggestions = postForm(ctx, 'community', 'suggestions', channelPicker(g, 'channelId', s.suggestionsChannelId, { label: 'Suggestions channel', perms: PERMS.post, noneLabel: 'off' }), { inline: true });
+        const starboard = html`${postForm(ctx, 'community', 'starboard', html`<div class="grid">
+${channelPicker(g, 'channelId', s.starboardChannelId, { label: 'Starboard channel', perms: PERMS.post, optional: false })}
+${textInput('emoji', s.starboardEmoji, { label: 'Emoji', max: 64 })}
+${numberInput('threshold', s.starboardThreshold, { label: 'Reactions needed', min: 1, max: STARBOARD_MAX_THRESHOLD })}</div>`, { submit: s.starboardChannelId ? 'Save' : 'Turn on' })}
+${s.starboardChannelId ? buttonForm(ctx, 'community', 'starboard-off', 'Turn starboard off') : html`<p class="muted">Starboard is off.</p>`}`;
+        const stickyRows = stickies.map((st) => [channelName(g, st.channelId), clip(st.content), buttonForm(ctx, 'community', 'sticky-remove', 'Remove', { channelId: st.channelId })]);
+        const sticky = html`${table(['Channel', 'Message', ''], stickyRows, 'No sticky messages.')}
+${postForm(ctx, 'community', 'sticky-set', html`<div class="grid">${channelPicker(g, 'channelId', null, { label: 'Channel', perms: [...PERMS.post, 'ManageMessages'], optional: false })}
+${textArea('content', '', { label: 'Sticky message (replaces the channel\'s current one)', max: STICKY_MAX_LENGTH, rows: 3 })}</div>`, { submit: 'Set sticky' })}`;
+        const tagRows = tags.map((t) => [html`<code>${t.name}</code>`, clip(t.content), t.triggerKind === 'none' ? '—' : `${t.triggerKind}: ${clip(t.trigger, 40)}`,
+            buttonForm(ctx, 'community', 'tag-delete', 'Delete', { name: t.name })]);
+        const tagForms = html`${table(['Name', 'Content', 'Trigger', ''], tagRows, 'No tags.')}
+${postForm(ctx, 'community', 'tag-create', html`<div class="grid">${textInput('name', '', { label: 'Name (a-z, 0-9, - _)', max: 32 })}
+${selectInput('triggerKind', 'none', TRIGGER_KINDS.map((k) => [k, k]), { label: 'Trigger' })}
+${textInput('trigger', '', { label: 'Trigger word or pattern', max: 200 })}
+${numberInput('cooldownS', '', { label: 'Cooldown (seconds, empty = default)', min: 0, max: 86400 })}
+${textArea('content', '', { label: 'Content', max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: 'Create tag' })}
+<p class="muted">Edit an existing tag (channel lists, …) with /tag edit in Discord.</p>`;
+        const feedRows = feeds.map((f) => [`#${f.id}`, html`<code>${f.sourceId}</code>`, channelName(g, f.channelId), clip(f.template || 'default message', 60),
+            buttonForm(ctx, 'community', 'feed-remove', 'Remove', { id: f.id })]);
+        const feedForms = html`${table(['Feed', 'YouTube channel', 'Posts in', 'Message', ''], feedRows, 'No feeds.')}
+${postForm(ctx, 'community', 'feed-add', html`<div class="grid">${textInput('source', '', { label: 'YouTube channel ID or URL (UC…)', max: 200 })}
+${channelPicker(g, 'channelId', null, { label: 'Post in', perms: PERMS.post, optional: false })}
+${textArea('template', '', { label: 'Message (empty = default; {author} {title} {url})', max: FEED_TEMPLATE_MAX, rows: 2 })}</div>`, { submit: 'Add feed' })}`;
+        return html`${section('Suggestions', suggestions, '/suggest new posts there; staff decide with the buttons.')}
+${section('Starboard', starboard)}${section('Sticky messages', sticky)}${section('Tags', tagForms)}${section('YouTube feeds', feedForms, 'Checked every 15 minutes.')}`;
+    },
+
+    actions: {
+        async suggestions(ctx, form) {
+            const channelId = channelField(ctx.guild, form, 'channelId', { label: 'Suggestions channel' });
+            return updateSettings(ctx, { suggestionsChannelId: channelId }, channelId ? 'Suggestions channel saved.' : 'Suggestions are off.');
+        },
+        async starboard(ctx, form) {
+            const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: 'Starboard channel' });
+            const threshold = intField(form, 'threshold', { min: 1, max: STARBOARD_MAX_THRESHOLD, label: 'Reactions needed' });
+            const patch = ctx.services.starboardSettingsPatch({ channelId, emoji: text(form, 'emoji', 64) || null, threshold });
+            return updateSettings(ctx, patch, 'Starboard saved.');
+        },
+        async 'starboard-off'(ctx) {
+            return updateSettings(ctx, { starboardChannelId: null }, 'Starboard is off. Existing starboard posts stay.');
+        },
+        async 'sticky-set'(ctx, form) {
+            const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: 'Channel' });
+            const content = multiline(form, 'content', STICKY_MAX_LENGTH + 1);
+            const before = ctx.services.listStickies(ctx.guildId).find((st) => st.channelId === channelId)?.content ?? null;
+            const { posted } = await ctx.services.setSticky({ guildId: ctx.guildId, channel: ctx.guild.channels.cache.get(channelId), content, updatedBy: ctx.actor.userId });
+            const result = { changes: before === content.trim() ? [] : [{ key: `sticky.${channelId}`, old: before, new: content.trim() }], message: 'Sticky message saved.' };
+            if (!posted) result.warnings = ['It could not be posted right now (check my permissions there); it will be posted after the next message.'];
+            return result;
+        },
+        async 'sticky-remove'(ctx, form) {
+            const channelId = text(form, 'channelId', 25);
+            const before = ctx.services.listStickies(ctx.guildId).find((st) => st.channelId === channelId);
+            if (!before) throw new InputError('That channel has no sticky message.');
+            await ctx.services.removeSticky({ channelId, channel: ctx.guild?.channels?.cache?.get(channelId) || null });
+            return { changes: [{ key: `sticky.${channelId}`, old: before.content, new: null }], message: 'Sticky message removed.' };
+        },
+        async 'tag-create'(ctx, form) {
+            const triggerKind = text(form, 'triggerKind', 10) || 'none';
+            const tag = await ctx.services.createTag({
+                guildId: ctx.guildId,
+                name: text(form, 'name', 40),
+                content: multiline(form, 'content', TAG_CONTENT_MAX + 1),
+                triggerKind,
+                trigger: triggerKind === 'none' ? null : text(form, 'trigger', 200),
+                cooldownS: intField(form, 'cooldownS', { min: 0, max: 86400, label: 'Cooldown', fallback: null }),
+                createdBy: ctx.actor.userId,
+            });
+            return { changes: [{ key: `tag.${tag?.name}`, old: null, new: tag?.content ?? null }], message: `Tag "${tag?.name}" created.` };
+        },
+        async 'tag-delete'(ctx, form) {
+            const name = text(form, 'name', 40).toLowerCase();
+            const before = ctx.services.listTags(ctx.guildId).find((t) => t.name === name);
+            const removed = await ctx.services.deleteTag(ctx.guildId, name);
+            if (!removed) throw new InputError('There is no such tag.');
+            return { changes: [{ key: `tag.${name}`, old: before?.content ?? null, new: null }], message: `Tag "${name}" deleted.` };
+        },
+        async 'feed-add'(ctx, form) {
+            const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: 'Post in' });
+            const { feed } = await ctx.services.addFeed({
+                guildId: ctx.guildId, sourceInput: text(form, 'source', 200), channelId,
+                template: multiline(form, 'template', FEED_TEMPLATE_MAX + 1) || null, createdBy: ctx.actor.userId,
+            });
+            return { changes: [{ key: `feed.${feed.id}`, old: null, new: { source: feed.sourceId, channelId } }], message: `Feed #${feed.id} added.` };
+        },
+        async 'feed-remove'(ctx, form) {
+            const id = intField(form, 'id', { min: 1, max: 2147483647, label: 'Feed' });
+            const before = ctx.services.listFeeds(ctx.guildId).find((f) => f.id === id);
+            const removed = await ctx.services.removeFeed(ctx.guildId, id);
+            if (!removed) throw new InputError(`There is no feed #${id}.`);
+            return { changes: [{ key: `feed.${id}`, old: before ? { source: before.sourceId, channelId: before.channelId } : null, new: null }], message: `Feed #${id} removed.` };
+        },
+    },
+};
+

@@ -21,7 +21,8 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { successEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorHandler.js';
-import { getWelcomeConfig, saveWelcomeConfig } from '../../../utils/database.js';
+import { getWelcomeConfig } from '../../../utils/database.js';
+import { updateWelcomeSettings } from '../../../services/welcomeService.js';
 import { botHasPermission } from '../../../utils/permissionGuard.js';
 import { getGuildConfig } from '../../../services/config/guildConfig.js';
 import { resolveLogChannel } from '../../../services/loggingService.js';
@@ -276,7 +277,7 @@ export default {
 
                     if (customId === `greet_cfg_toggle_welcome_${guildId}`) {
                         cfg.enabled = !cfg.enabled;
-                        await saveWelcomeConfig(client, guildId, cfg);
+                        await updateWelcomeSettings(client, guildId, { enabled: cfg.enabled });
                         await sendEphemeralFollowUp(btnInteraction, {
                             embeds: [
                                 successEmbed(
@@ -287,7 +288,7 @@ export default {
                         });
                     } else if (customId === `greet_cfg_toggle_goodbye_${guildId}`) {
                         cfg.goodbyeEnabled = !cfg.goodbyeEnabled;
-                        await saveWelcomeConfig(client, guildId, cfg);
+                        await updateWelcomeSettings(client, guildId, { goodbyeEnabled: cfg.goodbyeEnabled });
                         await sendEphemeralFollowUp(btnInteraction, {
                             embeds: [
                                 successEmbed(
@@ -298,7 +299,7 @@ export default {
                         });
                     } else if (customId === `greet_cfg_ping_welcome_${guildId}`) {
                         cfg.welcomePing = !cfg.welcomePing;
-                        await saveWelcomeConfig(client, guildId, cfg);
+                        await updateWelcomeSettings(client, guildId, { welcomePing: cfg.welcomePing });
                         await sendEphemeralFollowUp(btnInteraction, {
                             embeds: [
                                 successEmbed(
@@ -309,7 +310,7 @@ export default {
                         });
                     } else if (customId === `greet_cfg_ping_goodbye_${guildId}`) {
                         cfg.goodbyePing = !cfg.goodbyePing;
-                        await saveWelcomeConfig(client, guildId, cfg);
+                        await updateWelcomeSettings(client, guildId, { goodbyePing: cfg.goodbyePing });
                         await sendEphemeralFollowUp(btnInteraction, {
                             embeds: [
                                 successEmbed(
@@ -402,7 +403,7 @@ async function handleWelcomeChannel(selectInteraction, rootInteraction, cfg, gui
         }
 
         cfg.channelId = channel.id;
-        await saveWelcomeConfig(client, guildId, cfg);
+        await updateWelcomeSettings(client, guildId, { channelId: cfg.channelId });
 
         await sendEphemeralFollowUp(chanInteraction, {
             embeds: [successEmbed('Channel Updated', `Welcome messages will now be sent in ${channel}.`)],
@@ -455,7 +456,7 @@ async function handleWelcomeMessage(selectInteraction, rootInteraction, cfg, gui
     if (!submitted) return;
 
     cfg.welcomeMessage = submitted.fields.getTextInputValue('message_input').trim();
-    await saveWelcomeConfig(client, guildId, cfg);
+    await updateWelcomeSettings(client, guildId, { welcomeMessage: cfg.welcomeMessage });
 
     await submitted.reply({
         embeds: [successEmbed('Welcome Message Updated', 'The welcome message has been saved.')],
@@ -568,7 +569,7 @@ async function handleWelcomeImage(selectInteraction, rootInteraction, cfg, guild
 
     cfg.welcomeImage = imageUrl || null;
     cfg.welcomeImageRef = imageRef;
-    await saveWelcomeConfig(client, guildId, cfg);
+    await updateWelcomeSettings(client, guildId, { welcomeImage: cfg.welcomeImage, welcomeImageRef: cfg.welcomeImageRef });
 
     await sendImageResult(submitted, 'Welcome Image Updated', `Image ${imageUrl ? 'updated' : 'removed'} successfully.${storeNote}`);
 
@@ -581,7 +582,7 @@ async function handleWelcomePing(selectInteraction, rootInteraction, cfg, guildI
     }
 
     cfg.welcomePing = !cfg.welcomePing;
-    await saveWelcomeConfig(client, guildId, cfg);
+    await updateWelcomeSettings(client, guildId, { welcomePing: cfg.welcomePing });
 
     await sendEphemeralFollowUp(selectInteraction, {
         embeds: [
@@ -641,7 +642,7 @@ async function handleGoodbyeChannel(selectInteraction, rootInteraction, cfg, gui
         }
 
         cfg.goodbyeChannelId = channel.id;
-        await saveWelcomeConfig(client, guildId, cfg);
+        await updateWelcomeSettings(client, guildId, { goodbyeChannelId: cfg.goodbyeChannelId });
 
         await sendEphemeralFollowUp(chanInteraction, {
             embeds: [successEmbed('Channel Updated', `Goodbye messages will now be sent in ${channel}.`)],
@@ -694,7 +695,7 @@ async function handleGoodbyeMessage(selectInteraction, rootInteraction, cfg, gui
     if (!submitted) return;
 
     cfg.leaveMessage = submitted.fields.getTextInputValue('message_input').trim();
-    await saveWelcomeConfig(client, guildId, cfg);
+    await updateWelcomeSettings(client, guildId, { leaveMessage: cfg.leaveMessage });
 
     await submitted.reply({
         embeds: [successEmbed('Goodbye Message Updated', 'The goodbye message has been saved.')],
@@ -791,7 +792,7 @@ async function handleGoodbyeImage(selectInteraction, rootInteraction, cfg, guild
 
     cfg.leaveEmbed = nextLeaveEmbed;
     cfg.goodbyeImageRef = imageRef;
-    await saveWelcomeConfig(client, guildId, cfg);
+    await updateWelcomeSettings(client, guildId, { leaveEmbed: cfg.leaveEmbed, goodbyeImageRef: cfg.goodbyeImageRef });
 
     await sendImageResult(submitted, 'Goodbye Image Updated', `Image ${imageUrl ? 'updated' : 'removed'} successfully.${storeNote}`);
 
@@ -804,7 +805,7 @@ async function handleGoodbyePing(selectInteraction, rootInteraction, cfg, guildI
     }
 
     cfg.goodbyePing = !cfg.goodbyePing;
-    await saveWelcomeConfig(client, guildId, cfg);
+    await updateWelcomeSettings(client, guildId, { goodbyePing: cfg.goodbyePing });
 
     await sendEphemeralFollowUp(selectInteraction, {
         embeds: [

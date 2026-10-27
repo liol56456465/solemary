@@ -1,7 +1,6 @@
-// pages.js — the dashboard's records pages (read-only in Phase 1). Pure: data in, HTML string out. Every value
+// pages.js — the dashboard's records pages, the audit page and the module page frame. Pure: data in, HTML string out. Every value
 // goes through the escaping `html` template (html.js).
 
-import { AUTOMOD_RULES } from '../../config/automod.js';
 import { formatDuration } from '../enforcement/format.js';
 import { SEARCH_STATUSES, SEARCH_TYPES } from '../enforcement/caseSearchService.js';
 import { STATS_PERIODS } from '../staffActivityService.js';
@@ -47,7 +46,7 @@ function option(value, label, selected) {
     return html`<option value="${value}"${selected ? raw(' selected') : ''}>${label}</option>`;
 }
 
-// ── Settings (read-only in Phase 1) ───────────────────────────────────────
+// ── Settings (read-only table of registry values) ─────────────────────────
 
 const SOURCE_LABEL = { database: 'saved', env: 'from env (seed)', default: 'built-in default' };
 
@@ -60,7 +59,7 @@ export function settingsSection(rows = [], title = 'Settings') {
     return html`<h2>${title}</h2>
 <div class="scroll"><table><thead><tr><th>Setting</th><th>Value</th><th>Source</th></tr></thead><tbody>
 ${rows.map((row) => html`<tr><td>${row.label} <span class="muted"><code>${row.key}</code></span></td><td>${row.display}</td><td class="muted">${SOURCE_LABEL[row.source] || row.source}</td></tr>`)}
-</tbody></table></div><p class="muted">Read-only for now; editing arrives in Phase 2.</p>`;
+</tbody></table></div>`;
 }
 
 // ── Cases ─────────────────────────────────────────────────────────────────
@@ -168,32 +167,6 @@ ${appeals.map((a) => {
     return layout({ title: 'Appeals', active: 'appeals', session, access, moduleStates, body: html`${body}${settingsSection(settingsRows)}` });
 }
 
-// ── Automod ───────────────────────────────────────────────────────────────
-
-const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : 0);
-
-/** input: { session, byRule (automodRuleStats), stats (automodStats, 7 days) }. */
-export function automodPage({ session, access = null, moduleStates = {}, settingsRows = [], byRule = {}, stats = { total: 0, byGroup: [] }, days = 7 }) {
-    const rules = Object.entries(byRule).sort((a, b) => b[1].actions - a[1].actions);
-    const body = html`<h1>Automod · last ${days} days</h1>
-<p>${stats.total} automatic action${stats.total === 1 ? '' : 's'}. <span class="muted">Undo rate = moderators reversed or changed the decision; 30% or more suggests the rule is too strict.</span></p>
-<h2>By rule</h2>
-${rules.length ? html`<div class="scroll"><table><thead><tr><th>Rule</th><th>Actions</th><th>Undone</th><th>Changed</th><th>Undo rate</th></tr></thead><tbody>
-${rules.map(([rule, t]) => {
-        const rate = pct(t.undone + t.changed, t.actions);
-        return html`<tr><td>${AUTOMOD_RULES[rule]?.label || rule}</td><td>${t.actions}</td><td>${t.undone}</td><td>${t.changed}</td><td class="${rate >= 30 ? 'bad' : ''}">${rate}%</td></tr>`;
-    })}
-</tbody></table></div>` : html`<p class="muted">No automod actions.</p>`}
-<h2>By group (with accepted appeals)</h2>
-${stats.byGroup.length ? html`<div class="scroll"><table><thead><tr><th>Group</th><th>Actions</th><th>Undone</th><th>Changed</th><th>Appeals accepted</th><th>Undo rate</th></tr></thead><tbody>
-${stats.byGroup.map((g) => {
-        const rate = pct(g.undone + g.changed, g.actions);
-        return html`<tr><td>${g.label}</td><td>${g.actions}</td><td>${g.undone}</td><td>${g.changed}</td><td>${g.appealed}</td><td class="${rate >= 30 ? 'bad' : ''}">${rate}%</td></tr>`;
-    })}
-</tbody></table></div>` : html`<p class="muted">None.</p>`}`;
-    return layout({ title: 'Automod', active: 'automod', session, access, moduleStates, body: html`${body}${settingsSection(settingsRows)}` });
-}
-
 // ── Staff stats ───────────────────────────────────────────────────────────
 
 /** input: { session, period, rows (staffModerationStats) }. */
@@ -212,24 +185,42 @@ ${rows.map((r) => html`<tr><td><a href="/dashboard/cases${queryString({ moderato
 
 const auditValue = (value) => (value === null || value === undefined ? '—' : typeof value === 'string' ? value : JSON.stringify(value));
 
-/** input: { session, rows (dashboard_audit, newest first) }. */
-export function auditPage({ session, access = null, moduleStates = {}, rows = [] }) {
+/**
+ * input: { rows (dashboard_audit, newest first), total, page, pageSize, filters: { user, module },
+ * users: [{ user_id, username }], modules: [{ key, label }] }.
+ */
+export function auditPage({ session, access = null, moduleStates = {}, rows = [], total = rows.length, page = 0, pageSize = 50, filters = {}, users = [], modules = [] }) {
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    const keep = { user: filters.user, module: filters.module };
+    const pager = html`<div class="pager">
+${page > 0 ? html`<a href="/dashboard/audit${queryString({ ...keep, page: page - 1 })}">← Newer</a>` : ''}
+<span class="muted">Page ${page + 1} of ${pages} · ${total} change${total === 1 ? '' : 's'}</span>
+${page + 1 < pages ? html`<a href="/dashboard/audit${queryString({ ...keep, page: page + 1 })}">Older →</a>` : ''}
+</div>`;
     const body = html`<h1>Audit log</h1>
-<p class="muted">Every settings change made from the dashboard: who, when, old value → new value.</p>
+<p class="muted">Every change made from the dashboard: who, when, old value → new value. Each saved form is also posted to the mod log.</p>
+<form class="filters" method="get" action="/dashboard/audit">
+<label>Who<select name="user">${option('', 'anyone', !filters.user)}${users.map((u) => option(u.user_id, `${u.username || u.user_id} (${u.user_id})`, filters.user === u.user_id))}</select></label>
+<label>Module<select name="module">${option('', 'any', !filters.module)}${modules.map((m) => option(m.key, m.label, filters.module === m.key))}</select></label>
+<button class="primary" type="submit">Filter</button> <a href="/dashboard/audit">Clear</a>
+</form>
 ${rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Module</th><th>Setting</th><th>Old</th><th>New</th></tr></thead><tbody>
-${rows.map((r) => html`<tr><td>${formatDate(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${r.module}</td><td><code>${r.key}</code></td><td>${auditValue(r.old)}</td><td>${auditValue(r.new)}</td></tr>`)}
-</tbody></table></div>` : html`<p class="muted">No changes yet.</p>`}`;
+${rows.map((r) => html`<tr><td>${formatDate(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${r.module}</td><td><code>${r.key}</code></td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
+</tbody></table></div>${pager}` : html`<p class="muted">No changes${filters.user || filters.module ? ' match' : ' yet'}.</p>`}`;
     return layout({ title: 'Audit', active: 'audit', session, access, moduleStates, body });
 }
 
-// ── Modules not built yet ─────────────────────────────────────────────────
+// ── Module (settings) pages ───────────────────────────────────────────────
 
-/** A Phase 2 module page: what it will hold, plus its current values (read-only). */
-export function modulePage({ session, access = null, moduleStates = {}, item, enabled = null, settingsRows = [], note = '' }) {
-    const body = html`<h1>${item.label}</h1>
-${enabled === null ? '' : html`<p>Status: <span class="state ${enabled ? 'state-on' : 'state-off'}">${enabled ? 'on' : 'off'}</span></p>`}
-<p>Settings for this module arrive in Phase 2. Until then, configure it with the bot's slash commands.</p>
-${note ? html`<p class="muted">${note}</p>` : ''}
-${settingsSection(settingsRows, 'Current settings')}`;
-    return layout({ title: item.label, active: item.key, session, access, moduleStates, body });
+/**
+ * The frame of a module page: title, help line, read-only / Administrator notices, the
+ * flash message after a save, the error of a refused form, then the module's body.
+ */
+export function moduleSettingsPage({ session, access = null, moduleStates = {}, module, body, flash = null, error = null, warnings = [], editEnabled = false }) {
+    const notices = html`${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true). Use the bot's commands, or ask the owner to turn it on.</p>` : ''}
+${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
+${error ? html`<p class="error" role="alert">${error}</p>` : ''}
+${warnings.length ? html`<ul class="warnings">${warnings.map((w) => html`<li>${w}</li>`)}</ul>` : ''}`;
+    const page = html`<h1>${module.label}</h1>${module.help ? html`<p class="muted help">${module.help}</p>` : ''}${notices}${body}`;
+    return layout({ title: module.label, active: module.key, session, access, moduleStates, body: page });
 }

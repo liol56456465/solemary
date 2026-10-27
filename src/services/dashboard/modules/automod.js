@@ -1,0 +1,243 @@
+// automod.js — Automod: global on/off and mode, per-rule modes, channel exceptions,
+// trusted members, second chance, mood alerts, panic mode, join gate, native AutoMod
+// policies, review/alerts channels — plus the 7-day stats. Every change goes through
+// services/automod/automodSettings.js (row-locked), the same helpers /automod uses.
+
+import { AUTOMOD_RULES } from '../../../config/automod.js';
+import { CHANNEL_RULE_MODES, RULE_MODES } from '../../automod/policy.js';
+import { JOIN_GATE_ACTIONS, JOIN_GATE_CHECKS, normalizeJoinGate } from '../../automod/joinGate.js';
+import { NATIVE_POLICIES, policyFor } from '../../automod/nativeBridge.js';
+import { html } from '../html.js';
+import {
+    InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, checkboxInput, choiceField,
+    intField, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, toggleForm,
+} from '../forms.js';
+import { diffSnapshots } from '../audit.js';
+import { NOTHING, changedOnly, registryValue, saveRegistry, section, table } from './common.js';
+
+const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : 0);
+const STATS_DAYS = 7;
+
+/** before/after snapshot diff of the automod settings, as audit changes. */
+function settingsChanges(before, after, keys) {
+    return diffSnapshots(before, after, keys);
+}
+
+async function change(ctx, keys, run, message) {
+    const before = await ctx.services.getAutomodSettings(ctx.guildId);
+    const result = await run();
+    const after = result?.settings || result;
+    const changes = settingsChanges(before, after, keys);
+    return { changes, message: changes.length ? message : 'Nothing changed.' };
+}
+
+function nativeRows(ctx, rules, policies) {
+    return rules.map((rule) => {
+        const policy = policyFor(policies, rule.id);
+        return [rule.name, policy.policy, `${policy.dedupeMinutes} min`];
+    });
+}
+
+export default {
+    key: 'automod',
+    label: 'Automod',
+    state: 'automod',
+    help: 'Automatic moderation in the main server. Same settings as /automod.',
+
+    async load(ctx) {
+        const settings = await ctx.services.getAutomodSettings(ctx.guildId);
+        let nativeRules = null;
+        let policies = new Map();
+        try {
+            const fetched = await ctx.guild?.autoModerationRules?.fetch?.();
+            nativeRules = fetched ? [...fetched.values()].map((r) => ({ id: r.id, name: r.name })) : [];
+            policies = await ctx.services.loadNativePolicies(ctx.guildId);
+        } catch {
+            nativeRules = null;
+        }
+        const [byRule, stats] = await Promise.all([
+            ctx.services.automodRuleStats(ctx.guildId, STATS_DAYS).catch(() => ({})),
+            ctx.services.automodStats(ctx.guildId, STATS_DAYS).catch(() => ({ total: 0, byGroup: [] })),
+        ]);
+        return {
+            settings, nativeRules, policies, byRule, stats,
+            registry: {
+                reviewChannelId: registryValue(ctx, 'reviewChannelId'),
+                alertsChannelId: registryValue(ctx, 'alertsChannelId'),
+                extraBlockedWords: registryValue(ctx, 'extraBlockedWords'),
+                exemptChannelIds: registryValue(ctx, 'exemptChannelIds'),
+            },
+        };
+    },
+
+    render(ctx, data) {
+        const g = ctx.guild;
+        const s = data.settings;
+        const gate = normalizeJoinGate(s.joinGate);
+        const ruleKeys = Object.keys(AUTOMOD_RULES);
+        const top = html`${toggleForm(ctx, 'automod', 'enabled', s.enabled, { label: 'Automod' })}
+${postForm(ctx, 'automod', 'mode', selectInput('mode', s.mode, [['enforce', 'Enforce: act and post a review card'], ['monitor', 'Monitor: only post cards (Apply button)']], { label: 'Global mode' }), { inline: true })}`;
+        const rules = postForm(ctx, 'automod', 'rules', table(['Rule', 'Mode'], ruleKeys.map((key) => [
+            AUTOMOD_RULES[key].label,
+            selectInput(`rule:${key}`, s.ruleModes[key] || 'default', [['default', `default (${s.mode === 'monitor' ? 'monitor' : 'on'})`], ...RULE_MODES.map((m) => [m, m])], { label: '' }),
+        ])), { submit: 'Save rule modes' });
+        const exceptionRows = [];
+        for (const [channelId, overrides] of Object.entries(s.channelRules)) {
+            for (const [rule, mode] of Object.entries(overrides)) {
+                exceptionRows.push([channelName(g, channelId), AUTOMOD_RULES[rule]?.label || rule, mode,
+                    buttonForm(ctx, 'automod', 'channel-remove', 'Remove', { channel: channelId, rule })]);
+            }
+        }
+        const exceptions = html`${table(['Channel or category', 'Rule', 'Mode', ''], exceptionRows, 'No per-channel rule exceptions.')}
+${postForm(ctx, 'automod', 'channel-add', html`<div class="grid">${channelPicker(g, 'channel', null, { label: 'Channel or category', kinds: ['text', 'category'], perms: PERMS.read, optional: false })}
+${selectInput('rule', ruleKeys[0], ruleKeys.map((k) => [k, AUTOMOD_RULES[k].label]), { label: 'Rule' })}
+${selectInput('mode', 'off', CHANNEL_RULE_MODES.map((m) => [m, m]), { label: 'Mode there' })}</div>`, { submit: 'Add exception' })}`;
+        const exempt = html`${table(['Channel', ''], s.exemptChannelIds.map((id) => [channelName(g, id), buttonForm(ctx, 'automod', 'exempt-remove', 'Remove', { channel: id })]), 'Automod checks every channel.')}
+${postForm(ctx, 'automod', 'exempt-add', channelPicker(g, 'channel', null, { label: 'Ignore this channel', kinds: ['text', 'category'], perms: PERMS.read, optional: false }), { submit: 'Add', inline: true })}
+${data.registry.exemptChannelIds.length ? html`<p class="muted">Also ignored (seeded from AUTOMOD_EXEMPT_CHANNEL_IDS): ${data.registry.exemptChannelIds.map((id, i) => html`${i ? ', ' : ''}${channelName(g, id)}`)}</p>` : ''}`;
+        const trusted = postForm(ctx, 'automod', 'trusted', html`<div class="grid">
+${rolePicker(g, 'roleId', s.trusted.roleId, { label: 'Trusted role', assign: false, noneLabel: 'none' })}
+${numberInput('minLevel', s.trusted.minLevel, { label: 'Or minimum level (0 = none)', min: 0, max: 1000 })}</div>`);
+        const behaviour = html`${toggleForm(ctx, 'automod', 'second-chance', s.secondChance, { label: 'Second chance (first small offence: a notice instead of a warning)' })}
+${toggleForm(ctx, 'automod', 'mood', s.moodAlerts, { label: 'Mood alerts (calm-down note + short slowmode when a channel heats up)' })}
+${postForm(ctx, 'automod', 'panic', html`<div class="grid">${checkboxInput('enabled', s.panic.enabled, { label: 'Panic mode: pause invites and DMs when a raid lockdown starts' })}
+${numberInput('hours', s.panic.hours, { label: 'Pause for (hours)', min: 1, max: 24 })}</div>`)}`;
+        const joinGate = postForm(ctx, 'automod', 'join-gate', html`<div class="grid">
+${Object.entries(JOIN_GATE_CHECKS).map(([check, { label }]) => selectInput(`gate:${check}`, gate[check], JOIN_GATE_ACTIONS.map((a) => [a, a]), { label }))}
+${numberInput('ageDays', gate.ageDays, { label: 'New account: younger than (days)', min: 1, max: 365 })}</div>`);
+        const native = data.nativeRules === null
+            ? html`<p class="warn">Could not read the native AutoMod rules (the bot needs Manage Server).</p>`
+            : html`${table(['Native rule', 'Policy', 'Once per member per'], nativeRows(ctx, data.nativeRules, data.policies), 'This server has no native AutoMod rules.')}
+${data.nativeRules.length ? postForm(ctx, 'automod', 'native', html`<div class="grid">${selectInput('ruleId', data.nativeRules[0].id, data.nativeRules.map((r) => [r.id, r.name]), { label: 'Rule' })}
+${selectInput('policy', 'log', NATIVE_POLICIES.map((p) => [p, p]), { label: 'Policy' })}
+${numberInput('dedupeMinutes', '', { label: 'Dedupe minutes (empty keeps)', min: 1, max: 1440 })}</div>`, { submit: 'Set policy' }) : ''}`;
+        const channels = postForm(ctx, 'automod', 'channels', html`<div class="grid">
+${channelPicker(g, 'reviewChannelId', data.registry.reviewChannelId, { label: 'Review channel', help: 'Automod cards, reports, held verifications. Falls back to the mod log.' })}
+${channelPicker(g, 'alertsChannelId', data.registry.alertsChannelId, { label: 'Alerts channel', help: 'Raids, guards, digests. Falls back to the mod log.' })}
+${textArea('extraBlockedWords', data.registry.extraBlockedWords.join('\n'), { label: 'Extra blocked words (one per line; applied after a restart)', rows: 4, max: 20000 })}</div>`);
+        const rulesStats = Object.entries(data.byRule).sort((a, b) => b[1].actions - a[1].actions);
+        const stats = html`<p>${data.stats.total} automatic action${data.stats.total === 1 ? '' : 's'} in ${STATS_DAYS} days. <span class="muted">Undo rate 30% or more suggests a rule is too strict.</span></p>
+${table(['Rule', 'Actions', 'Undone', 'Changed', 'Undo rate'], rulesStats.map(([rule, t]) => {
+        const rate = pct(t.undone + t.changed, t.actions);
+        return [AUTOMOD_RULES[rule]?.label || rule, t.actions, t.undone, t.changed, html`<span class="${rate >= 30 ? 'bad' : ''}">${rate}%</span>`];
+    }), 'No automod actions.')}`;
+        return html`${section('Status', top)}${section('Rule modes', rules, 'default follows the global mode; monitor only posts cards; off ignores the rule.')}
+${section('Channel exceptions', exceptions)}${section('Ignored channels', exempt)}
+${section('Trusted members', trusted, 'Trusted members (the role, or this leveling level) skip the low-severity rules. Pick none and level 0 to clear.')}
+${section('Behaviour', behaviour)}${section('Join gate', joinGate, 'off / flag (review line with Kick/Dismiss) / kick (DM with how to come back).')}
+${section('Native AutoMod', native)}${section('Channels and words', channels)}${section(`Last ${STATS_DAYS} days`, stats)}`;
+    },
+
+    actions: {
+        async enabled(ctx, form) {
+            const enabled = boolField(form, 'enabled', 'Automod');
+            return change(ctx, ['enabled'], () => ctx.services.setAutomodEnabled(ctx.guildId, enabled), `Automod is now ${enabled ? 'on' : 'off'}.`);
+        },
+        async mode(ctx, form) {
+            const mode = choiceField(form, 'mode', ['enforce', 'monitor'], 'Mode');
+            return change(ctx, ['mode'], () => ctx.services.setAutomodMode(ctx.guildId, mode), `Global mode: ${mode}.`);
+        },
+        async rules(ctx, form) {
+            const before = await ctx.services.getAutomodSettings(ctx.guildId);
+            const wanted = {};
+            for (const key of Object.keys(AUTOMOD_RULES)) {
+                const value = text(form, `rule:${key}`, 20) || 'default';
+                if (value !== 'default' && !RULE_MODES.includes(value)) throw new InputError(`${AUTOMOD_RULES[key].label}: unknown mode.`);
+                if ((before.ruleModes[key] || 'default') !== value) wanted[key] = value;
+            }
+            let after = before;
+            for (const [key, mode] of Object.entries(wanted)) after = await ctx.services.setRuleMode(ctx.guildId, key, mode);
+            const changes = diffSnapshots(before.ruleModes, after.ruleModes, null, 'ruleModes.');
+            return { changes, message: changes.length ? 'Rule modes saved.' : 'Nothing changed.' };
+        },
+        async 'channel-add'(ctx, form) {
+            const channelId = channelField(ctx.guild, form, 'channel', { kinds: ['text', 'category'], optional: false, label: 'Channel' });
+            const rule = choiceField(form, 'rule', Object.keys(AUTOMOD_RULES), 'Rule');
+            const mode = choiceField(form, 'mode', CHANNEL_RULE_MODES, 'Mode');
+            return change(ctx, ['channelRules'], () => ctx.services.setChannelRuleMode(ctx.guildId, channelId, rule, mode), 'Channel exception saved.');
+        },
+        async 'channel-remove'(ctx, form) {
+            const channelId = text(form, 'channel', 25);
+            const rule = choiceField(form, 'rule', Object.keys(AUTOMOD_RULES), 'Rule');
+            if (!/^\d{17,20}$/.test(channelId)) throw new InputError('Channel: not a channel ID.');
+            return change(ctx, ['channelRules'], () => ctx.services.setChannelRuleMode(ctx.guildId, channelId, rule, 'default'), 'Channel exception removed.');
+        },
+        async 'exempt-add'(ctx, form) {
+            const channelId = channelField(ctx.guild, form, 'channel', { kinds: ['text', 'category'], optional: false, label: 'Channel' });
+            return change(ctx, ['exemptChannelIds'], () => ctx.services.setExemptChannel(ctx.guildId, channelId, true), 'Automod now ignores that channel.');
+        },
+        async 'exempt-remove'(ctx, form) {
+            const channelId = text(form, 'channel', 25);
+            if (!/^\d{17,20}$/.test(channelId)) throw new InputError('Channel: not a channel ID.');
+            return change(ctx, ['exemptChannelIds'], () => ctx.services.setExemptChannel(ctx.guildId, channelId, false), 'Automod checks that channel again.');
+        },
+        async trusted(ctx, form) {
+            const roleId = roleField(ctx.guild, form, 'roleId', { label: 'Trusted role' });
+            if (roleId) {
+                const problem = ctx.services.getTrustedRoleProblem(ctx.guild, ctx.guild.roles.cache.get(roleId));
+                if (problem) throw new InputError(plainText(problem));
+            }
+            const minLevel = intField(form, 'minLevel', { min: 0, max: 1000, label: 'Minimum level', fallback: 0 });
+            const clear = !roleId && minLevel === 0;
+            return change(ctx, ['trusted'], () => ctx.services.setTrusted(ctx.guildId, clear ? { clear: true } : { roleId, minLevel }), 'Trusted members saved.');
+        },
+        async 'second-chance'(ctx, form) {
+            const enabled = boolField(form, 'enabled', 'Second chance');
+            return change(ctx, ['secondChance'], () => ctx.services.setSecondChance(ctx.guildId, enabled), `Second chance is ${enabled ? 'on' : 'off'}.`);
+        },
+        async mood(ctx, form) {
+            const enabled = boolField(form, 'enabled', 'Mood alerts');
+            return change(ctx, ['moodAlerts'], () => ctx.services.setMoodAlerts(ctx.guildId, enabled), `Mood alerts are ${enabled ? 'on' : 'off'}.`);
+        },
+        async panic(ctx, form) {
+            const enabled = checkbox(form, 'enabled');
+            const hours = intField(form, 'hours', { min: 1, max: 24, label: 'Hours' });
+            const result = await change(ctx, ['panic'], () => ctx.services.setPanic(ctx.guildId, { enabled, hours }), `Panic mode is ${enabled ? 'on' : 'off'}.`);
+            const canPause = ctx.guild?.members?.me?.permissions?.has?.('ManageGuild');
+            if (enabled && canPause === false) result.warnings = ['I don\'t have Manage Server, so pausing invites and DMs will fail until I get it.'];
+            return result;
+        },
+        async 'join-gate'(ctx, form) {
+            const before = await ctx.services.getAutomodSettings(ctx.guildId);
+            const gate = normalizeJoinGate(before.joinGate);
+            const ageDays = intField(form, 'ageDays', { min: 1, max: 365, label: 'Account age days' });
+            let after = before;
+            for (const check of Object.keys(JOIN_GATE_CHECKS)) {
+                const action = choiceField(form, `gate:${check}`, JOIN_GATE_ACTIONS, JOIN_GATE_CHECKS[check].label);
+                const days = check === 'age' && ageDays !== gate.ageDays ? ageDays : null;
+                if (action !== gate[check] || days) after = await ctx.services.setJoinGateCheck(ctx.guildId, check, action, days);
+            }
+            const changes = diffSnapshots(normalizeJoinGate(before.joinGate), normalizeJoinGate(after.joinGate), null, 'joinGate.');
+            return { changes, message: changes.length ? 'Join gate saved.' : 'Nothing changed.' };
+        },
+        async native(ctx, form) {
+            const ruleId = text(form, 'ruleId', 25);
+            if (!/^\d{17,20}$/.test(ruleId)) throw new InputError('Pick a native AutoMod rule from the list.');
+            const policy = choiceField(form, 'policy', NATIVE_POLICIES, 'Policy');
+            const dedupeMinutes = intField(form, 'dedupeMinutes', { min: 1, max: 1440, label: 'Dedupe minutes', fallback: null });
+            const rule = await ctx.guild?.autoModerationRules?.fetch?.(ruleId).catch(() => null);
+            if (!rule) throw new InputError('That native AutoMod rule no longer exists.');
+            const before = policyFor(await ctx.services.loadNativePolicies(ctx.guildId), ruleId);
+            await ctx.services.setNativePolicy(ctx.guildId, ruleId, policy, dedupeMinutes, ctx.actor.userId);
+            const after = policyFor(await ctx.services.loadNativePolicies(ctx.guildId), ruleId);
+            const changes = diffSnapshots(before, after, null, `native.${ruleId}.`);
+            return { changes, message: changes.length ? `Native rule "${rule.name}" updated.` : 'Nothing changed.' };
+        },
+        async channels(ctx, form) {
+            const g = ctx.guild;
+            const words = [...new Set(String(form?.extraBlockedWords ?? '').split(/[\n,]/).map((w) => w.trim().toLowerCase()).filter(Boolean))];
+            const patch = changedOnly({
+                reviewChannelId: channelField(g, form, 'reviewChannelId', { label: 'Review channel' }),
+                alertsChannelId: channelField(g, form, 'alertsChannelId', { label: 'Alerts channel' }),
+                extraBlockedWords: typeof form?.extraBlockedWords === 'string' ? words : registryValue(ctx, 'extraBlockedWords'),
+            }, {
+                reviewChannelId: registryValue(ctx, 'reviewChannelId'),
+                alertsChannelId: registryValue(ctx, 'alertsChannelId'),
+                extraBlockedWords: registryValue(ctx, 'extraBlockedWords'),
+            });
+            if (!Object.keys(patch).length) return NOTHING;
+            return saveRegistry(ctx, patch, 'automod');
+        },
+    },
+};
+

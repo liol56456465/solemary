@@ -1,6 +1,7 @@
 // serverstatsService.js
 
 import { logger } from '../utils/logger.js';
+import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
 import { formatLogLine } from '../utils/logging/logEmbeds.js';
 import { getServerCountersKey } from '../utils/database/keys.js';
@@ -277,4 +278,85 @@ export async function saveServerCounters(client, guildId, counters) {
     logger.error("Error saving server counters:", error);
     throw error;
   }
+}
+/**
+ * Locked read-modify-write of a guild's counters: change(counters) returns the new list
+ * (or throws to abort). Resolves the saved (sanitized) list.
+ */
+export async function mutateServerCounters(client, guildId, change) {
+  if (!client?.db?.update) {
+    throw new Error('Database not available for mutateServerCounters');
+  }
+  let saved = [];
+  await client.db.update(getServerCountersKey(guildId), async (raw) => {
+    const current = sanitizeCounters(Array.isArray(raw) ? raw : (raw && Array.isArray(raw.value) ? raw.value : []), guildId);
+    saved = sanitizeCounters(await change(current), guildId);
+    return saved;
+  }, []);
+  return saved;
+}
+
+/**
+ * Removes a counter from the list (atomic) and deletes its channel. Returns
+ * { counter, channel, channelDeleted }. Throws a USER_INPUT error when there is no such counter.
+ */
+export async function removeServerCounter(client, guild, counterId) {
+  let removed = null;
+  await mutateServerCounters(client, guild.id, (counters) => {
+    removed = counters.find((c) => c.id === counterId) || null;
+    if (!removed) {
+      throw createError('Counter not found', ErrorTypes.USER_INPUT, `Counter with ID \`${counterId}\` was not found.`,
+        { guildId: guild.id, counterId, operation: 'removeServerCounter' });
+    }
+    return counters.filter((c) => c.id !== counterId);
+  });
+  const channel = guild.channels.cache.get(removed.channelId) || null;
+  let channelDeleted = false;
+  if (channel) {
+    try {
+      await channel.delete(`Counter deleted - removing channel: ${removed.id}`);
+      channelDeleted = true;
+    } catch (error) {
+      logger.error('Error deleting channel:', error);
+    }
+  }
+  return { counter: removed, channel, channelDeleted };
+}
+
+/**
+ * Changes a counter's type (atomic; one counter per type) and renames its channel.
+ * Returns { counter, oldType, renamed }. Throws USER_INPUT errors with the /serverstats messages.
+ */
+export async function changeCounterType(client, guild, counterId, newType) {
+  if (!COUNTER_TYPE_CONFIG[newType]) {
+    throw createError('Unknown counter type', ErrorTypes.USER_INPUT, 'Unknown counter type.', { newType });
+  }
+  let oldType = null;
+  let updated = null;
+  await mutateServerCounters(client, guild.id, (counters) => {
+    const counter = counters.find((c) => c.id === counterId);
+    if (!counter) {
+      throw createError('Counter not found', ErrorTypes.USER_INPUT,
+        `Counter with ID \`${counterId}\` not found. Use \`/serverstats list\` to see all counters.`, { counterId });
+    }
+    if (!guild.channels.cache.get(counter.channelId)) {
+      throw createError('Counter channel missing', ErrorTypes.USER_INPUT,
+        'The channel for this counter no longer exists. You cannot update a counter for a deleted channel.', { counterId });
+    }
+    if (newType !== counter.type) {
+      const existing = counters.find((c) => c.type === newType && c.id !== counter.id);
+      if (existing) {
+        const existingChannel = guild.channels.cache.get(existing.channelId);
+        throw createError('Counter type in use', ErrorTypes.USER_INPUT,
+          `A **${getCounterTypeLabel(newType)}** counter already exists for this server${existingChannel ? ` in ${existingChannel}` : ''}. Delete it first before reusing that type.`, { counterId });
+      }
+    }
+    oldType = counter.type;
+    counter.type = newType;
+    counter.updatedAt = new Date().toISOString();
+    updated = { ...counter };
+    return counters;
+  });
+  const renamed = await updateCounter(client, guild, updated);
+  return { counter: updated, oldType, renamed };
 }

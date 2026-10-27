@@ -19,7 +19,8 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { successEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorHandler.js';
-import { getGuildConfig, setGuildConfig } from '../../../services/config/guildConfig.js';
+import { getGuildConfig } from '../../../services/config/guildConfig.js';
+import { updateVerificationSettings } from '../../../services/verificationSettingsService.js';
 import { getWelcomeConfig } from '../../../utils/database.js';
 import { botHasPermission } from '../../../utils/permissionGuard.js';
 import { getRoleAssignmentProblem } from '../../../utils/roleSafety.js';
@@ -184,9 +185,7 @@ async function refreshDashboard(rootInteraction, cfg, guildId, client) {
             panelStatus = await getVerificationPanelStatus(client, rootInteraction.guild, cfg);
             if (panelStatus.recoveredId) {
                 cfg.messageId = panelStatus.recoveredId;
-                const latestConfig = await getGuildConfig(client, guildId);
-                latestConfig.verification = cfg;
-                await setGuildConfig(client, guildId, latestConfig);
+                await updateVerificationSettings(client, guildId, { messageId: cfg.messageId });
             }
         }
         
@@ -252,8 +251,7 @@ export default {
                 panelStatus = await getVerificationPanelStatus(client, interaction.guild, cfg);
                 if (panelStatus.recoveredId) {
                     cfg.messageId = panelStatus.recoveredId;
-                    guildConfig.verification = cfg;
-                    await setGuildConfig(client, guildId, guildConfig);
+                    await updateVerificationSettings(client, guildId, { messageId: cfg.messageId });
                 }
             }
             
@@ -312,9 +310,7 @@ export default {
                         await btnInteraction.deferUpdate();
                         const newMsg = await repostVerificationPanel(interaction.guild, cfg);
                         cfg.messageId = newMsg.id;
-                        const latestConfig = await getGuildConfig(client, guildId);
-                        latestConfig.verification = cfg;
-                        await setGuildConfig(client, guildId, latestConfig);
+                        await updateVerificationSettings(client, guildId, { messageId: cfg.messageId });
                         await btnInteraction.followUp({
                             embeds: [successEmbed('Panel Reposted', `Verification panel restored in ${newMsg.channel}.`)],
                             flags: MessageFlags.Ephemeral,
@@ -355,9 +351,7 @@ export default {
                         }
                     }
 
-                    const latestConfig = await getGuildConfig(client, guildId);
-                    latestConfig.verification = cfg;
-                    await setGuildConfig(client, guildId, latestConfig);
+                    await updateVerificationSettings(client, guildId, { enabled: cfg.enabled, messageId: cfg.messageId });
 
                     await btnInteraction.followUp({
                         embeds: [
@@ -473,9 +467,7 @@ async function handleChannel(selectInteraction, rootInteraction, cfg, guildId, c
         }
 
         cfg.channelId = newChannel.id;
-        const latestConfig = await getGuildConfig(client, guildId);
-        latestConfig.verification = cfg;
-        await setGuildConfig(client, guildId, latestConfig);
+        await updateVerificationSettings(client, guildId, { channelId: cfg.channelId, messageId: cfg.messageId });
 
         await chanInteraction.followUp({
             embeds: [successEmbed('Channel Updated', `Verification panel moved to ${newChannel}.`)],
@@ -538,9 +530,7 @@ async function handleRole(selectInteraction, rootInteraction, cfg, guildId, clie
         }
 
         cfg.roleId = role.id;
-        const latestConfig = await getGuildConfig(client, guildId);
-        latestConfig.verification = cfg;
-        await setGuildConfig(client, guildId, latestConfig);
+        await updateVerificationSettings(client, guildId, { roleId: cfg.roleId });
 
         await roleInteraction.followUp({
             embeds: [successEmbed('Role Updated', `Verified role set to ${role}.`)],
@@ -592,9 +582,7 @@ async function handleMessage(selectInteraction, rootInteraction, cfg, guildId, c
 
         cfg.message = submitted.fields.getTextInputValue('message_input').trim();
 
-        const latestConfig = await getGuildConfig(client, guildId);
-        latestConfig.verification = cfg;
-        await setGuildConfig(client, guildId, latestConfig);
+        await updateVerificationSettings(client, guildId, { message: cfg.message });
 
         await updateLivePanel(rootInteraction.guild, cfg);
 
@@ -642,9 +630,7 @@ async function handleButtonText(selectInteraction, rootInteraction, cfg, guildId
 
         cfg.buttonText = submitted.fields.getTextInputValue('button_text_input').trim();
 
-        const latestConfig = await getGuildConfig(client, guildId);
-        latestConfig.verification = cfg;
-        await setGuildConfig(client, guildId, latestConfig);
+        await updateVerificationSettings(client, guildId, { buttonText: cfg.buttonText });
 
         await updateLivePanel(rootInteraction.guild, cfg);
 

@@ -78,6 +78,36 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .checklist li:last-child { border-bottom: 0; }
 .checklist .mark { width: 4.5em; flex: none; font-size: 12px; font-weight: 600; }
 
+/* Settings pages (Phase 2) */
+.help { margin-top: -8px; }
+.card { background: var(--card); border: 1px solid var(--line); padding: 12px 14px; margin: 0 0 14px; }
+.card h2 { margin-top: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px 14px; align-items: start; }
+.settings-form { margin: 8px 0; }
+.settings-form fieldset, .inline-form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.settings-form button[type="submit"] { margin-top: 10px; }
+.inline-form { display: inline-block; margin: 2px 6px 2px 0; vertical-align: bottom; }
+.inline-form fieldset { display: flex; gap: 6px; align-items: flex-end; flex-wrap: wrap; }
+fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea { background: var(--bg); color: var(--muted); }
+fieldset.events { border: 1px solid var(--line); padding: 6px 10px; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+fieldset.events legend { padding: 0 4px; font-weight: 600; }
+label.wide { grid-column: 1 / -1; }
+label.check { flex-direction: row; align-items: center; gap: 6px; font-size: 14px; color: var(--fg); }
+label.check input { padding: 0; }
+textarea { font: inherit; padding: 5px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--card); color: var(--fg); width: 100%; resize: vertical; }
+label input, label select { width: 100%; }
+label.check input { width: auto; }
+.hint { font-size: 12px; color: var(--muted); }
+.field-warn { font-size: 12px; color: var(--warn); }
+button.danger { border-color: var(--bad); color: var(--bad); }
+.toggle-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 4px 0; }
+.notice, .flash, .error { padding: 8px 12px; border: 1px solid var(--line); background: var(--card); }
+.notice { border-left: 3px solid var(--warn); }
+.flash { border-left: 3px solid var(--ok); }
+.error { border-left: 3px solid var(--bad); color: var(--bad); }
+.warnings { color: var(--warn); }
+td.value { overflow-wrap: anywhere; max-width: 320px; }
+
 /* Phones: the sidebar becomes a menu toggled by a checkbox (no scripts). */
 @media (max-width: 760px) {
     .shell { display: block; }

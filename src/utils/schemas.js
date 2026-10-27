@@ -59,6 +59,30 @@ const VerificationConfigSchema = z
   })
   .optional();
 
+// Leveling settings (services/leveling/leveling.js). Lenient on purpose: every
+// field optional and unknown keys kept, so stored configs always parse; tight
+// bounds live in the leveling service.
+const XpRangeSchema = z.looseObject({
+    min: z.number().optional(),
+    max: z.number().optional()
+});
+
+const LevelingConfigSchema = z.looseObject({
+    configured: z.boolean().optional(),
+    enabled: z.boolean().optional(),
+    xpPerMessage: z.union([z.number(), XpRangeSchema]).nullable().optional(),
+    xpRange: XpRangeSchema.nullable().optional(),
+    xpCooldown: z.number().nullable().optional(),
+    levelUpMessage: z.string().nullable().optional(),
+    levelUpChannel: z.string().nullable().optional(),
+    ignoredChannels: z.array(z.string()).nullable().optional(),
+    ignoredRoles: z.array(z.string()).nullable().optional(),
+    blacklistedUsers: z.array(z.string()).nullable().optional(),
+    roleRewards: z.record(z.string(), z.string()).nullable().optional(),
+    announceLevelUp: z.boolean().optional(),
+    xpMultiplier: z.number().nullable().optional()
+});
+
 export const GuildConfigSchema = z
   .object({
     prefix: z.string().optional(),
@@ -73,6 +97,8 @@ export const GuildConfigSchema = z
     birthdayChannelId: z.string().nullable().optional(),
     // IANA zone whose local date decides whose birthday it is (default UTC).
     birthdayTimezone: z.string().refine(isValidTimeZone, 'Unknown IANA time zone').optional(),
+    // Role given on the member's birthday (services/birthdayService.js); set from the web dashboard.
+    birthdayRoleId: z.string().nullable().optional(),
     premiumRoleId: z.string().nullable().optional(),
     logIgnore: LogIgnoreSchema.optional(),
     disabledCommands: z.record(z.string(), z.boolean()).optional(),
@@ -80,7 +106,19 @@ export const GuildConfigSchema = z
     logging: LoggingConfigSchema.optional(),
     ticketLogging: TicketLoggingSchema.optional(),
     enableLogging: z.boolean().optional(),
-    verification: VerificationConfigSchema
+    verification: VerificationConfigSchema,
+    // Ticket settings (services/ticketSettingsService.js); tight checks live there.
+    ticketPanelChannelId: z.string().nullable().optional(),
+    ticketPanelMessageId: z.string().nullable().optional(),
+    ticketStaffRoleId: z.string().nullable().optional(),
+    ticketCategoryId: z.string().nullable().optional(),
+    ticketClosedCategoryId: z.string().nullable().optional(),
+    ticketLogsChannelId: z.string().nullable().optional(),
+    ticketTranscriptChannelId: z.string().nullable().optional(),
+    ticketPanelMessage: z.string().nullable().optional(),
+    ticketButtonLabel: z.string().nullable().optional(),
+    maxTicketsPerUser: z.number().nullable().optional(),
+    leveling: LevelingConfigSchema.nullable().optional()
   })
   .passthrough();
 

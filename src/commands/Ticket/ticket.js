@@ -1,7 +1,8 @@
 import { getColor } from '../../config/bot.js';
 import { SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { createEmbed, successEmbed, infoEmbed, warningEmbed } from '../../utils/embeds.js';
-import { getGuildConfig, setGuildConfig } from '../../services/config/guildConfig.js';
+import { getGuildConfig } from '../../services/config/guildConfig.js';
+import { updateTicketSettings, validateTicketSettingsPatch } from '../../services/ticketSettingsService.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError, replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -136,6 +137,18 @@ const panelMessage = interaction.options.getString("panel_message") || "Click th
             const maxTicketsPerUser = interaction.options.getInteger("max_tickets_per_user") || 3;
 const dmOnClose = interaction.options.getBoolean("dm_on_close") !== false;
 
+            // Checked before the panel is posted so bad input leaves nothing behind.
+            const ticketSettingsPatch = validateTicketSettingsPatch({
+                ticketCategoryId: categoryChannel ? categoryChannel.id : null,
+                ticketClosedCategoryId: closedCategoryChannel ? closedCategoryChannel.id : null,
+                ticketStaffRoleId: staffRole ? staffRole.id : null,
+                ticketPanelChannelId: panelChannel.id,
+                ticketPanelMessage: panelMessage,
+                ticketButtonLabel: buttonLabel,
+                maxTicketsPerUser,
+                dmOnClose,
+            }, interaction.guildId);
+
             const setupEmbed = createEmbed({ 
                 title: "Support Tickets", 
 description: panelMessage,
@@ -157,18 +170,10 @@ description: panelMessage,
                 });
 
                 if (client.db && interaction.guildId) {
-                    const currentConfig = existingConfig;
-                    currentConfig.ticketCategoryId = categoryChannel ? categoryChannel.id : null;
-                    currentConfig.ticketClosedCategoryId = closedCategoryChannel ? closedCategoryChannel.id : null;
-                    currentConfig.ticketStaffRoleId = staffRole ? staffRole.id : null;
-                    currentConfig.ticketPanelChannelId = panelChannel.id;
-                    currentConfig.ticketPanelMessageId = sentPanel?.id || null;
-                    currentConfig.ticketPanelMessage = panelMessage;
-                    currentConfig.ticketButtonLabel = buttonLabel;
-                    currentConfig.maxTicketsPerUser = maxTicketsPerUser;
-                    currentConfig.dmOnClose = dmOnClose;
-
-                    await setGuildConfig(client, interaction.guildId, currentConfig);
+                    await updateTicketSettings(client, interaction.guildId, {
+                        ...ticketSettingsPatch,
+                        ticketPanelMessageId: sentPanel?.id || null,
+                    });
                     logger.info('Ticket configuration saved', {
                         guildId: interaction.guildId,
                         categoryId: categoryChannel?.id,

@@ -1,6 +1,7 @@
 import { getColor } from '../../config/bot.js';
 import { SlashCommandBuilder, PermissionFlagsBits, ChannelType, EmbedBuilder, MessageFlags } from 'discord.js';
-import { getWelcomeConfig, updateWelcomeConfig } from '../../utils/database.js';
+import { getWelcomeConfig } from '../../utils/database.js';
+import { addAutoRole, removeAutoRole, updateWelcomeSettings } from '../../services/welcomeService.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { getGuildConfig } from '../../services/config/guildConfig.js';
@@ -77,18 +78,14 @@ export default {
             }
 
             try {
-                const config = await getWelcomeConfig(client, guild.id);
-                const existingRoles = config.roleIds || [];
-                const currentRoleId = existingRoles[0] || null;
+                // Only one auto-role is allowed: adding replaces the current one (atomically).
+                const { before, changed } = await addAutoRole(client, guild.id, role.id);
+                const currentRoleId = before.roleIds?.[0] || null;
 
-                if (currentRoleId === role.id) {
+                if (!changed) {
                     logger.info(`[Autorole] User ${interaction.user.tag} tried to add duplicate role ${role.name} (${role.id}) in ${guild.name}`);
                     return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `The role ${role} is already set to be auto-assigned.` });
                 }
-
-                await updateWelcomeConfig(client, guild.id, {
-                    roleIds: [role.id]
-                });
 
                 logger.info(`[Autorole] Set single auto-role to ${role.name} (${role.id}) in ${guild.name} by ${interaction.user.tag}`);
                 await InteractionHelper.safeEditReply(interaction, {
@@ -109,19 +106,12 @@ export default {
             const role = options.getRole('role');
 
             try {
-                const config = await getWelcomeConfig(client, guild.id);
-                const existingRoles = config.roleIds || [];
-                
-                if (!existingRoles.includes(role.id)) {
+                const { changed } = await removeAutoRole(client, guild.id, role.id);
+
+                if (!changed) {
                     logger.info(`[Autorole] User ${interaction.user.tag} tried to remove non-existent role ${role.name} (${role.id}) in ${guild.name}`);
                     return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `The role ${role} is not set to be auto-assigned.` });
                 }
-
-                const updatedRoles = existingRoles.filter(id => id !== role.id);
-                
-                await updateWelcomeConfig(client, guild.id, {
-                    roleIds: updatedRoles
-                });
 
                 logger.info(`[Autorole] Removed role ${role.name} (${role.id}) from auto-assign in ${guild.name} by ${interaction.user.tag}`);
                 await InteractionHelper.safeEditReply(interaction, {
@@ -149,7 +139,7 @@ export default {
 
                 const singleRoleIds = autoRoles.length > 1 ? [autoRoles[0]] : autoRoles;
                 if (singleRoleIds.length !== autoRoles.length) {
-                    await updateWelcomeConfig(client, guild.id, {
+                    await updateWelcomeSettings(client, guild.id, {
                         roleIds: singleRoleIds
                     });
                     logger.info(`[Autorole] Trimmed auto-role list to one role in ${interaction.guild.name}`);
@@ -177,10 +167,9 @@ export default {
 
                 if (invalidRoleIds.length > 0) {
                     logger.info(`[Autorole] Cleaning up ${invalidRoleIds.length} invalid role(s) from guild ${interaction.guild.name}`);
-                    const updatedRoles = singleRoleIds.filter(id => !invalidRoleIds.includes(id));
-                    await updateWelcomeConfig(client, guild.id, {
-                        roleIds: updatedRoles
-                    });
+                    for (const invalidRoleId of invalidRoleIds) {
+                        await removeAutoRole(client, guild.id, invalidRoleId);
+                    }
                 }
 
                 if (validRoles.length === 0) {

@@ -118,7 +118,7 @@ test('dashboard pages render real data', { skip }, async () => {
     assert.match(appeals.body, new RegExp(warn.case_code));
     assert.match(appeals.body, /2 d|4\d h/);
 
-    const automod = await run(d.automod, {});
+    const automod = await run(d.modulePage, { params: { module: 'automod' } });
     assert.equal(automod.statusCode, 200);
     assert.match(automod.body, /Spam/);
     assert.match(automod.body, /50%/);
@@ -157,4 +157,39 @@ test('Postgres session store: create, read, rotate, expire, logout, lazy cleanup
     assert.ok(removed >= 1);
     const { rows: left } = await pgDb.pool.query('SELECT 1 FROM dashboard_sessions WHERE id_hash = $1', [store.hashSessionId(old.id)]);
     assert.equal(left.length, 0, 'expired rows deleted');
+});
+
+test('Postgres session store: one-shot flash message', { skip }, async () => {
+    const query = (text, params) => pgDb.pool.query(text, params);
+    const sessions = store.createPgSessionStore({ query });
+    const s = await sessions.create({ userId: admin, username: 'admin' });
+    assert.equal((await sessions.get(s.id)).flash, null);
+    assert.equal(await sessions.setFlash(s.id, 'Saved <b>.'), true);
+    assert.equal((await sessions.get(s.id)).flash, 'Saved <b>.');
+    await sessions.setFlash(s.id, null);
+    assert.equal((await sessions.get(s.id)).flash, null);
+    await sessions.destroy(s.id);
+});
+
+test('dashboard audit store: rows, filters by user and module, paging, users list', { skip }, async () => {
+    const { createAuditStore } = await import('../../src/services/dashboard/audit.js');
+    const query = (text, params) => pgDb.pool.query(text, params);
+    const audits = createAuditStore({ query, table: 'dashboard_audit' });
+    const other = `6${runId}00000013`;
+    await audits.writeRows(guildId, { userId: admin, username: 'admin' }, 'tickets', [{ key: 'maxTicketsPerUser', old: 3, new: 5 }, { key: 'dmOnClose', old: true, new: false }]);
+    await audits.writeRows(guildId, { userId: other, username: 'other' }, 'logging', [{ key: 'logging.enabled', old: false, new: true }]);
+    const all = await audits.list(guildId, { pageSize: 2 });
+    assert.equal(all.total, 3);
+    assert.equal(all.rows.length, 2);
+    assert.equal(all.rows[0].key, 'logging.enabled', 'newest first');
+    const page2 = await audits.list(guildId, { pageSize: 2, page: 1 });
+    assert.equal(page2.rows.length, 1);
+    const byUser = await audits.list(guildId, { userId: admin });
+    assert.deepEqual(byUser.rows.map((r) => r.key).sort(), ['dmOnClose', 'maxTicketsPerUser']);
+    assert.deepEqual(byUser.rows.find((r) => r.key === 'maxTicketsPerUser').new, 5);
+    const byModule = await audits.list(guildId, { module: 'logging' });
+    assert.equal(byModule.total, 1);
+    const users = await audits.users(guildId);
+    assert.deepEqual(users.map((u) => u.user_id).sort(), [admin, other].sort());
+    await pgDb.pool.query('DELETE FROM dashboard_audit WHERE guild_id = $1', [guildId]);
 });

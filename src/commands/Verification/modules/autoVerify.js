@@ -1,7 +1,8 @@
 import { botConfig, getColor } from '../../../config/bot.js';
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from 'discord.js';
 import { createEmbed, errorEmbed, successEmbed, infoEmbed } from '../../../utils/embeds.js';
-import { getGuildConfig, setGuildConfig } from '../../../services/config/guildConfig.js';
+import { getGuildConfig } from '../../../services/config/guildConfig.js';
+import { updateVerificationSettings } from '../../../services/verificationSettingsService.js';
 import { withErrorHandling, createError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { validateAutoVerifyCriteria } from '../../../services/verificationService.js';
 import { logger } from '../../../utils/logger.js';
@@ -139,19 +140,15 @@ async function handleSetup(interaction, guild, client) {
 
         validateAutoVerifyCriteria(criteria, criteria === 'account_age' ? accountAgeDays : 1);
         
-        if (!guildConfig.verification) {
-            guildConfig.verification = {};
-        }
-
-        guildConfig.verification.autoVerify = {
-            enabled: true,
-            criteria: criteria,
-            accountAgeDays: criteria === "account_age" ? accountAgeDays : null,
-            roleId: targetRole.id,
-            configuredVia: 'setup'
-        };
-
-        await setGuildConfig(client, guild.id, guildConfig);
+        await updateVerificationSettings(client, guild.id, {
+            autoVerify: {
+                enabled: true,
+                criteria: criteria,
+                accountAgeDays: criteria === "account_age" ? accountAgeDays : null,
+                roleId: targetRole.id,
+                configuredVia: 'setup'
+            }
+        });
 
         let criteriaDescription = "";
         switch (criteria) {

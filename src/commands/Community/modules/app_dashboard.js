@@ -1,3 +1,4 @@
+import { updateApplicationSettings } from '../../../services/applicationSettingsService.js';
 import { getColor, getDefaultApplicationQuestions, botConfig } from '../../../config/bot.js';
 import {
     normalizeApplicationQuestions,
@@ -32,7 +33,6 @@ import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorH
 import { safeDeferInteraction } from '../../../utils/interactionValidator.js';
 import {
     getApplicationSettings,
-    saveApplicationSettings,
     getApplicationRoles,
     saveApplicationRoles,
     getApplicationRoleSettings,
@@ -463,7 +463,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
                 const wasEnabled = settings.enabled === true;
                 settings.enabled = !wasEnabled;
 
-                await saveApplicationSettings(interaction.client, guildId, settings);
+                await updateApplicationSettings(interaction.client, guildId, { enabled: settings.enabled });
 
                 const updatedSettings = await getApplicationSettings(interaction.client, guildId);
                 const updatedRoles = await getApplicationRoles(interaction.client, guildId);
@@ -738,7 +738,7 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
         } else {
             await setLogChannel(client, guildId, 'applications', channelId);
             settings.logChannelId = channelId;
-            await saveApplicationSettings(client, guildId, settings);
+            await updateApplicationSettings(client, guildId, { logChannelId: channelId });
         }
 
         await modalSubmission.reply({
@@ -796,7 +796,7 @@ async function handleManagerRole(selectInteraction, rootInteraction, settings, r
         }
 
         settings.managerRoles = Array.from(roleSet);
-        await saveApplicationSettings(client, guildId, settings);
+        await updateApplicationSettings(client, guildId, { managerRoles: settings.managerRoles });
 
         const finalList = settings.managerRoles.length > 0
             ? settings.managerRoles.map(id => `<@&${id}>`).join(',')
@@ -916,7 +916,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
     } else {
         
         settings.questions = newQuestions;
-        await saveApplicationSettings(client, guildId, settings);
+        await updateApplicationSettings(client, guildId, { questions: newQuestions });
     }
 
     await submitted.reply({
@@ -1127,7 +1127,10 @@ async function handleRetention(selectInteraction, rootInteraction, settings, rol
 
     settings.pendingApplicationRetentionDays = pendingDays;
     settings.reviewedApplicationRetentionDays = reviewedDays;
-    await saveApplicationSettings(client, guildId, settings);
+    await updateApplicationSettings(client, guildId, {
+        pendingApplicationRetentionDays: pendingDays,
+        reviewedApplicationRetentionDays: reviewedDays,
+    });
 
     await submitted.reply({
         embeds: [

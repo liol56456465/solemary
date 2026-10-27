@@ -145,11 +145,24 @@ export function clearCookie(name, { secure = false, path = BASE_PATH } = {}) {
 
 /**
  * True when a state-changing request comes from this dashboard: the Origin header
- * (or, without one, Sec-Fetch-Site) must be ours. The CSRF token is checked separately.
+ * must be our PUBLIC_URL origin; without an Origin, the Referer's origin must be; with
+ * neither, Sec-Fetch-Site must say same-origin. A request with none of them is refused
+ * (every current browser sends Origin on a form POST; the pages use Referrer-Policy
+ * same-origin, so "no-referrer" never turns the Origin into "null"). The CSRF token is
+ * checked separately.
  */
 export function isSameOrigin(req, publicOrigin) {
-    const origin = req.headers?.origin;
+    if (!publicOrigin) return false;
+    const headers = req.headers || {};
+    const origin = headers.origin;
     if (origin) return origin === publicOrigin;
-    const site = req.headers?.['sec-fetch-site'];
-    return !site || site === 'same-origin';
+    const referer = headers.referer || headers.referrer;
+    if (referer) {
+        try {
+            return new URL(String(referer)).origin === publicOrigin;
+        } catch {
+            return false;
+        }
+    }
+    return headers['sec-fetch-site'] === 'same-origin';
 }

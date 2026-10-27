@@ -71,31 +71,35 @@ export function path(suffix = '') {
 }
 
 /**
- * The sidebar. `built` pages work now; the others are Phase 2 placeholders (shown
- * muted, still clickable: they list the current values read-only). `state` names the
- * on/off indicator from moduleStates, where the module has an on/off setting.
+ * The sidebar. `state` names the on/off indicator from moduleStates, where the module
+ * has an on/off setting. Every entry is a working page (Phase 2: settings pages).
  */
 export const NAV = [
-    { key: 'overview', label: 'Overview', built: true },
+    { key: 'overview', label: 'Overview' },
     { group: 'Records', items: [
-        { key: 'cases', label: 'Cases', built: true },
-        { key: 'appeals', label: 'Appeals', built: true },
+        { key: 'cases', label: 'Cases' },
+        { key: 'appeals', label: 'Appeals' },
+        { key: 'staff', label: 'Staff stats' },
     ] },
-    { key: 'automod', label: 'Automod', built: true },
-    { key: 'logging', label: 'Logging', state: 'logging' },
-    { key: 'welcome', label: 'Welcome', state: 'welcome' },
-    { key: 'tickets', label: 'Tickets', state: 'tickets' },
-    { key: 'leveling', label: 'Leveling', state: 'leveling' },
-    { key: 'verification', label: 'Verification', state: 'verification' },
-    { key: 'reaction-roles', label: 'Reaction roles' },
-    { key: 'giveaways', label: 'Giveaways' },
-    { key: 'birthdays', label: 'Birthdays', state: 'birthdays' },
-    { key: 'counters', label: 'Counters' },
-    { key: 'community', label: 'Community' },
-    { key: 'commands', label: 'Commands' },
-    { key: 'staff', label: 'Staff', built: true },
-    { key: 'support', label: 'Support server' },
-    { key: 'audit', label: 'Audit', built: true },
+    { group: 'Settings', items: [
+        { key: 'enforcement', label: 'Enforcement & appeals' },
+        { key: 'automod', label: 'Automod', state: 'automod' },
+        { key: 'logging', label: 'Logging', state: 'logging' },
+        { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome' },
+        { key: 'tickets', label: 'Tickets', state: 'tickets' },
+        { key: 'leveling', label: 'Leveling', state: 'leveling' },
+        { key: 'verification', label: 'Verification', state: 'verification' },
+        { key: 'reaction-roles', label: 'Reaction roles' },
+        { key: 'giveaways', label: 'Giveaways' },
+        { key: 'birthdays', label: 'Birthdays', state: 'birthdays' },
+        { key: 'counters', label: 'Counters' },
+        { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate' },
+        { key: 'applications', label: 'Applications', state: 'applications' },
+        { key: 'community', label: 'Community' },
+        { key: 'commands', label: 'Commands' },
+        { key: 'support', label: 'Support server' },
+    ] },
+    { key: 'audit', label: 'Audit log' },
 ];
 
 /** Every sidebar entry, flattened. */
@@ -105,9 +109,9 @@ export function navItems() {
 
 function navLink(item, active, moduleStates) {
     const state = item.state && Object.hasOwn(moduleStates, item.state) ? moduleStates[item.state] : null;
-    const classes = [item.key === active ? 'on' : '', item.built ? '' : 'later'].filter(Boolean).join(' ');
+    const classes = item.key === active ? 'on' : '';
     return html`<li><a href="${path(`/${item.key}`)}"${classes ? raw(` class="${classes}"`) : ''}${item.key === active ? raw(' aria-current="page"') : ''}>
-<span>${item.label}</span>${state === null ? '' : html`<span class="state ${state ? 'state-on' : 'state-off'}">${state ? 'on' : 'off'}</span>`}${item.built ? '' : html`<span class="tag">Phase 2</span>`}</a></li>`;
+<span>${item.label}</span>${state === null ? '' : html`<span class="state ${state ? 'state-on' : 'state-off'}">${state ? 'on' : 'off'}</span>`}</a></li>`;
 }
 
 function sidebar(active, moduleStates) {
@@ -125,7 +129,7 @@ export function layout({ title, active = null, session = null, access = null, mo
     const user = session ? html`<div class="user"><span>${session.username}</span>${access && !access.canAct ? html` <span class="tag">view and settings</span>` : ''}
 <form method="post" action="${path('/logout')}" class="inline"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit">Log out</button></form></div>` : '';
     return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="referrer" content="no-referrer"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"></head>
+<meta name="referrer" content="same-origin"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"></head>
 <body><header class="top"><a class="brand" href="${path('/overview')}">Meowist dashboard</a>${user}</header>
 <div class="${session ? 'shell' : 'shell bare'}">${session ? sidebar(active, moduleStates) : ''}<main>${body}</main></div></body></html>`.text;
 }

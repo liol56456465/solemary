@@ -45,34 +45,40 @@ async function attempt(fn) {
     }
 }
 
-/** On/off per sidebar module, from the guild config and the welcome config. */
-export function moduleStatesFrom(config, welcome) {
+/**
+ * On/off per sidebar module, from the guild config, the welcome config and (optional)
+ * the automod settings, join-to-create config and application settings.
+ */
+export function moduleStatesFrom(config, welcome, extra = {}) {
     const states = {};
     if (config) {
         states.logging = Boolean(config.logging?.enabled);
         states.tickets = Boolean(config.ticketCategoryId);
         // No saved leveling config means the defaults, which are on (services/leveling/leveling.js).
         states.leveling = config.leveling ? config.leveling.enabled !== false : true;
-        states.verification = Boolean(config.verification?.enabled);
+        states.verification = Boolean(config.verification?.enabled || config.verification?.autoVerify?.enabled);
         states.birthdays = Boolean(config.birthdayChannelId);
     }
     if (welcome) states.welcome = Boolean(welcome.enabled && welcome.channelId);
+    if (extra.automod) states.automod = extra.automod.enabled !== false;
+    if (extra.joinToCreate) states.joinToCreate = Boolean(extra.joinToCreate.enabled);
+    if (extra.applications) states.applications = extra.applications.enabled === true;
     return states;
 }
 
 /** The checklist of things not set up yet: [{ label, done, href, hint }]. */
 export function gettingStarted({ config, welcome, settings, mutedRole }) {
     const items = [
-        { label: 'Mod log channel', done: Boolean(settings.modLogChannelId), href: path('/logging'), hint: 'every enforcement action is recorded there; review and alerts fall back to it' },
+        { label: 'Mod log channel', done: Boolean(settings.modLogChannelId), href: path('/enforcement'), hint: 'every enforcement action is recorded there; review and alerts fall back to it' },
         { label: 'Automod review channel', done: Boolean(settings.reviewChannelId), href: path('/automod'), hint: settings.modLogChannelId ? 'uses the mod log until set' : 'automod cards have nowhere to go' },
         { label: 'Alerts channel', done: Boolean(settings.alertsChannelId), href: path('/automod'), hint: settings.modLogChannelId ? 'uses the mod log until set' : 'raid and guard alerts have nowhere to go' },
-        { label: 'Muted role', done: Boolean(settings.mutedRoleId || mutedRole), href: path('/staff'), hint: 'created automatically on the first mute' },
-        { label: 'Appeals category', done: Boolean(settings.appealsCategoryId || config?.ticketCategoryId), href: path('/appeals'), hint: 'appeal and report channels are opened there' },
-        { label: 'Ticket category', done: Boolean(config?.ticketCategoryId), href: path('/tickets'), hint: '/ticket setup' },
+        { label: 'Muted role', done: Boolean(settings.mutedRoleId || mutedRole), href: path('/enforcement'), hint: 'created automatically on the first mute' },
+        { label: 'Appeals category', done: Boolean(settings.appealsCategoryId || config?.ticketCategoryId), href: path('/enforcement'), hint: 'appeal and report channels are opened there' },
+        { label: 'Ticket category', done: Boolean(config?.ticketCategoryId), href: path('/tickets'), hint: '/ticket setup in Discord' },
         { label: 'Ticket staff role', done: Boolean(config?.ticketStaffRoleId), href: path('/tickets'), hint: '/ticket setup' },
-        { label: 'Welcome channel', done: Boolean(welcome?.enabled && welcome?.channelId), href: path('/welcome'), hint: '/greet' },
-        { label: 'Verification', done: Boolean(config?.verification?.enabled), href: path('/verification'), hint: '/verification' },
-        { label: 'Birthday channel', done: Boolean(config?.birthdayChannelId), href: path('/birthdays'), hint: '/birthday setup' },
+        { label: 'Welcome channel', done: Boolean(welcome?.enabled && welcome?.channelId), href: path('/welcome'), hint: 'Welcome & goodbye' },
+        { label: 'Verification', done: Boolean(config?.verification?.enabled), href: path('/verification'), hint: '/verification setup in Discord' },
+        { label: 'Birthday channel', done: Boolean(config?.birthdayChannelId), href: path('/birthdays'), hint: 'Birthdays' },
         { label: 'Banned role in the support server', done: Boolean(settings.bannedRoleId), href: path('/support'), hint: 'members banned here get it there' },
     ];
     return items;

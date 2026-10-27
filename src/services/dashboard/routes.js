@@ -1,5 +1,5 @@
-// routes.js — the web dashboard on the bot's Express server (Phase 1: login,
-// overview, read-only records and settings).
+// routes.js — the web dashboard on the bot's Express server (Phase 1: login, overview,
+// records; Phase 2: module settings pages with editing).
 //
 //   GET  /dashboard                 → Overview when logged in, else Discord login
 //   GET  /dashboard/oauth/callback  Discord OAuth2 (scope identify only) comes back here
@@ -7,10 +7,14 @@
 //   GET  /dashboard/cases           case search (the /case search filters), paged
 //   GET  /dashboard/cases/:code     one case: details, edit history, evidence, appeals
 //   GET  /dashboard/appeals         pending appeals of the main server with their age
-//   GET  /dashboard/automod         automod actions per rule over 7 days, undo rates
 //   GET  /dashboard/staff           staff moderation stats (/staff stats)
-//   GET  /dashboard/audit           dashboard settings changes (old → new)
-//   GET  /dashboard/<module>        Phase 2 modules: placeholder with the current values
+//   GET  /dashboard/audit           dashboard changes (old → new), filter by user/module, paged
+//   GET  /dashboard/<module>        a settings page (modules/*.js): current values + forms
+//   POST /dashboard/<module>/<act>  a settings form: CSRF + same origin + edit switch +
+//                                   access, 30 POSTs/min per session, validated by the
+//                                   module through the SAME services the commands use;
+//                                   success → audit rows + mod log line + flash + 303;
+//                                   invalid input → 400 with the page and the message
 //   GET  /dashboard/static/dashboard.css   the only stylesheet (CSP style-src 'self')
 //   POST /dashboard/logout          CSRF token + same-origin check
 //   /staff, /staff/*                → 301 /dashboard (the old read-only staff dashboard)
@@ -25,6 +29,10 @@
 //
 // Rate limits (owner decision 7): /dashboard is exempt from the app-wide per-IP limiter;
 // instead 300 requests/min per session, and 30/min per IP for the login routes.
+//
+// Editing: only with DASHBOARD_EDIT_ENABLED=true (default off → every page read-only
+// with a notice). Administrators and OWNER_IDS may change settings (owner decision 4);
+// actions marked admin (member levels, giveaways) need Administrator (canAct).
 //
 // Off unless DASHBOARD_ENABLED=true (STAFF_DASHBOARD_ENABLED=true still works); refuses
 // to start without SESSION_SECRET (≥ 32 characters), CLIENT_ID, DISCORD_CLIENT_SECRET,
@@ -43,16 +51,18 @@ import {
 import { getCaseEdits } from '../enforcement/caseEditService.js';
 import { listEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
 import { listPendingAppeals } from '../enforcement/appealService.js';
-import { automodStats } from '../automod/automodReport.js';
-import { automodRuleStats } from '../automod/automodTuning.js';
 import { STATS_PERIODS, staffModerationStats } from '../staffActivityService.js';
 import { listSettingsAudit } from '../settings/guildSettings.js';
 import { createAccessChecker } from './access.js';
-import { BASE, CSS_PATH, messagePage, navItems, path } from './html.js';
+import { BASE, messagePage, path } from './html.js';
 import {
-    appealsPage, auditPage, automodPage, caseDetailPage, casesPage, modulePage, statsPage,
+    appealsPage, auditPage, caseDetailPage, casesPage, moduleSettingsPage, statsPage,
 } from './pages.js';
-import { collectOverview, defaultOverviewData, moduleStatesFrom, overviewPage, settingsRowsFor } from './overview.js';
+import { collectOverview, defaultOverviewData, moduleStatesFrom, overviewPage } from './overview.js';
+import { MODULES, getAction, getModule } from './modules/index.js';
+import { defaultServices } from './services.js';
+import { AUDIT_PAGE_SIZE, createAuditStore, recordDashboardChange } from './audit.js';
+import { InputError, plainText } from './forms.js';
 import { createPgSessionStore } from './sessionStore.js';
 import { query } from '../enforcement/db.js';
 import { pgConfig } from '../../config/database/postgres.js';
@@ -68,7 +78,6 @@ const ME_URL = 'https://discord.com/api/v10/users/@me';
 const HTTP_TIMEOUT_MS = 10000;
 const CASES_PAGE_SIZE = 25;
 const MAX_PAGE = 10000;
-const AUTOMOD_DAYS = 7;
 const MODULE_STATES_TTL_MS = 60 * 1000;
 const CSS_FILE = new URL('./static/dashboard.css', import.meta.url);
 
@@ -76,6 +85,7 @@ export const DEFAULT_LIMITS = {
     session: { limit: 300, windowMs: 60 * 1000 },
     ip: { limit: 30, windowMs: 60 * 1000 },
     static: { limit: 300, windowMs: 60 * 1000 },
+    post: { limit: 30, windowMs: 60 * 1000 },
 };
 
 export const SECURITY_HEADERS = {
@@ -83,15 +93,10 @@ export const SECURITY_HEADERS = {
         + "form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
-    'Referrer-Policy': 'no-referrer',
+    // same-origin (not no-referrer): with no-referrer, browsers send "Origin: null" on
+    // form POSTs, which the same-origin check would refuse.
+    'Referrer-Policy': 'same-origin',
     'Cache-Control': 'no-store',
-};
-
-/** Phase 2 modules: which registry module's settings their placeholder shows, and a note. */
-const MODULE_SETTINGS = {
-    logging: { registry: 'logging' },
-    verification: { registry: 'verification' },
-    support: { registry: 'support', note: 'The support server is where banned members appeal. Its banned role is set per server.' },
 };
 
 const truthy = (value) => String(value || '').trim().toLowerCase() === 'true';
@@ -102,6 +107,7 @@ export function dashboardSettings(env = process.env) {
     const publicUrl = String(env.PUBLIC_URL || '').trim().replace(/\/+$/, '');
     const settings = {
         requested,
+        editEnabled: truthy(env.DASHBOARD_EDIT_ENABLED),
         clientId: String(env.CLIENT_ID || '').trim(),
         clientSecret: String(env.DISCORD_CLIENT_SECRET || '').trim(),
         sessionSecret: String(env.SESSION_SECRET || ''),
@@ -134,7 +140,7 @@ function str(value, max = 200) {
 
 const defaultData = {
     searchCaseRecords, getCaseByCode, getCaseEdits, listEvidence, resolveImageUrls, getAppealHistory,
-    listPendingAppeals, automodRuleStats, automodStats, staffModerationStats, getLatestAppealStatusesForCases,
+    listPendingAppeals, staffModerationStats, getLatestAppealStatusesForCases,
     listSettingsAudit, overview: defaultOverviewData,
 };
 
@@ -161,12 +167,17 @@ function clientIp(req) {
 export function createDashboard({
     client, settings, sessions, access = createAccessChecker(client, { guildId: settings.mainGuildId }), data = defaultData,
     fetchImpl = globalThis.fetch, states = createStateStore(), limits = DEFAULT_LIMITS,
+    services = defaultServices, auditStore = null, modules = MODULES, env = process.env,
 }) {
     const secret = settings.sessionSecret;
     const guildId = settings.mainGuildId;
     const sessionLimiter = createRateLimiter(limits.session);
     const ipLimiter = createRateLimiter(limits.ip);
     const staticLimiter = createRateLimiter(limits.static);
+    const postLimiter = createRateLimiter(limits.post || DEFAULT_LIMITS.post);
+    const audits = auditStore || createAuditStore();
+    const moduleList = modules;
+    const findModule = (key) => (modules === MODULES ? getModule(key) : modules.find((m) => m.key === key) || null);
     const cookieOptions = { secure: settings.secure, path: BASE };
     let moduleStatesCache = { at: 0, value: {} };
 
@@ -192,11 +203,14 @@ export function createDashboard({
         const now = Date.now();
         if (now - moduleStatesCache.at < MODULE_STATES_TTL_MS) return moduleStatesCache.value;
         const overviewData = data.overview || defaultOverviewData;
-        const [config, welcome] = await Promise.all([
+        const [config, welcome, automodSettings, joinToCreate, applications] = await Promise.all([
             overviewData.getGuildConfig(client, guildId).catch(() => null),
             overviewData.getWelcomeConfig(client, guildId).catch(() => null),
+            Promise.resolve().then(() => services.getAutomodSettings(guildId)).catch(() => null),
+            Promise.resolve().then(() => services.getJoinToCreateConfiguration(client, guildId)).catch(() => null),
+            Promise.resolve().then(() => services.getApplicationSettings(client, guildId)).catch(() => null),
         ]);
-        moduleStatesCache = { at: now, value: moduleStatesFrom(config, welcome) };
+        moduleStatesCache = { at: now, value: moduleStatesFrom(config, welcome, { automod: automodSettings, joinToCreate, applications }) };
         return moduleStatesCache.value;
     }
 
@@ -308,7 +322,12 @@ export function createDashboard({
             res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
             return fail(res, 403, 'No access', 'You are no longer an administrator of the main server.');
         }
-        req.dashboard = { session, access: decision, moduleStates: await moduleStates().catch(() => ({})) };
+        req.dashboard = { session, access: decision, moduleStates: await moduleStates().catch(() => ({})), flash: null };
+        if (req.method === 'GET' && session.flash) {
+            // One-shot message from the last saved form (POST → 303 → this GET).
+            req.dashboard.flash = session.flash;
+            await sessions.setFlash?.(session.id, null)?.catch?.(() => {});
+        }
         return next();
     }
 
@@ -370,42 +389,114 @@ export function createDashboard({
 
     async function appeals(req, res) {
         const rows = await data.listPendingAppeals(100, guildId);
-        return sendHtml(res, 200, appealsPage({ ...shellOf(req), appeals: rows, settingsRows: settingsRowsFor(client, 'appeals') }));
-    }
-
-    async function automod(req, res) {
-        const [byRule, stats] = await Promise.all([
-            data.automodRuleStats(guildId, AUTOMOD_DAYS),
-            data.automodStats(guildId, AUTOMOD_DAYS),
-        ]);
-        return sendHtml(res, 200, automodPage({ ...shellOf(req), byRule, stats, days: AUTOMOD_DAYS, settingsRows: settingsRowsFor(client, 'automod') }));
+        return sendHtml(res, 200, appealsPage({ ...shellOf(req), appeals: rows }));
     }
 
     async function staff(req, res) {
         const requested = str(req.query?.period, 5);
         const period = Object.hasOwn(STATS_PERIODS, requested) ? requested : '30d';
         const rows = await data.staffModerationStats(guildId, client.user?.id || '0', { period });
-        return sendHtml(res, 200, statsPage({ ...shellOf(req), period, rows, settingsRows: settingsRowsFor(client, 'enforcement') }));
+        return sendHtml(res, 200, statsPage({ ...shellOf(req), period, rows }));
     }
 
     async function audit(req, res) {
-        const rows = await data.listSettingsAudit(guildId, 100);
-        return sendHtml(res, 200, auditPage({ ...shellOf(req), rows }));
+        const userFilter = str(req.query?.user, 20);
+        const moduleFilter = str(req.query?.module, 40);
+        const filters = {
+            user: isSnowflake(userFilter) ? userFilter : '',
+            module: /^[a-z-]{1,40}$/.test(moduleFilter) ? moduleFilter : '',
+        };
+        const page = Math.min(MAX_PAGE, Math.max(0, Number.parseInt(str(req.query?.page, 6), 10) || 0));
+        const [{ rows, total }, users] = await Promise.all([
+            audits.list(guildId, { userId: filters.user || null, module: filters.module || null, page, pageSize: AUDIT_PAGE_SIZE }),
+            audits.users(guildId).catch(() => []),
+        ]);
+        const moduleChoices = [...moduleList.map((m) => ({ key: m.key, label: m.label })), { key: 'appeals', label: 'Appeals (registry)' }, { key: 'logging', label: 'Logging' }]
+            .filter((m, i, all) => all.findIndex((x) => x.key === m.key) === i);
+        return sendHtml(res, 200, auditPage({ ...shellOf(req), rows, total, page, pageSize: AUDIT_PAGE_SIZE, filters, users, modules: moduleChoices }));
     }
 
-    const placeholders = new Map(navItems().filter((item) => !item.built).map((item) => [item.key, item]));
+    /** What a module page / action sees: the guild, the services, who acts and what they may do. */
+    function contextFor(req) {
+        const { session, access: decision } = req.dashboard;
+        return {
+            client, guildId, env, services,
+            guild: client.guilds?.cache?.get(guildId) || null,
+            session, access: decision, csrf: session.csrf,
+            actor: { userId: session.userId, username: session.username },
+            editEnabled: settings.editEnabled,
+            canEdit: Boolean(settings.editEnabled && decision.canView),
+            canAct: Boolean(decision.canAct),
+        };
+    }
 
-    async function moduleStub(req, res, next) {
-        const item = placeholders.get(str(req.params?.module, 40));
-        if (!item) return next();
-        const extra = MODULE_SETTINGS[item.key] || {};
-        const states = req.dashboard.moduleStates || {};
-        return sendHtml(res, 200, modulePage({
-            ...shellOf(req), item,
-            enabled: item.state && Object.hasOwn(states, item.state) ? states[item.state] : null,
-            settingsRows: extra.registry ? settingsRowsFor(client, extra.registry) : [],
-            note: extra.note || '',
+    async function renderModule(req, res, module, status = 200, { error = null, warnings = [] } = {}) {
+        const ctx = contextFor(req);
+        const data = await module.load(ctx);
+        return sendHtml(res, status, moduleSettingsPage({
+            ...shellOf(req), module, body: module.render(ctx, data),
+            flash: req.dashboard.flash, error, warnings, editEnabled: settings.editEnabled,
         }));
+    }
+
+    async function modulePage(req, res, next) {
+        const module = findModule(str(req.params?.module, 40));
+        if (!module) return next();
+        return renderModule(req, res, module);
+    }
+
+    /** True for errors whose message is meant for the person who filled in the form. */
+    function isInputError(error) {
+        return error instanceof InputError
+            || ['validation', 'user_input', 'permission', 'configuration'].includes(error?.type)
+            || Array.isArray(error?.problems);
+    }
+
+    /**
+     * POST /dashboard/<module>/<action>. Order: rate limit → same origin + CSRF → edit
+     * switch → module/action → Administrator for admin actions → run → audit + mod log →
+     * flash → 303. Every refusal changes nothing.
+     */
+    async function moduleAction(req, res) {
+        const session = req.dashboard.session;
+        if (!postLimiter.allow(session.idHash)) {
+            res.set('Retry-After', '60');
+            return fail(res, 429, 'Slow down', 'Too many changes in the last minute. Wait a moment and try again.', req);
+        }
+        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
+        if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
+        const module = findModule(str(req.params?.module, 40));
+        const action = module ? getAction(module, str(req.params?.action, 40)) : null;
+        if (!module || !action) return fail(res, 404, 'Not found', 'There is no such form.', req);
+        const decision = req.dashboard.access;
+        if (!decision.canView || (action.admin && !decision.canAct)) {
+            return fail(res, 403, 'Not allowed', 'This needs Administrator in the main server.', req);
+        }
+        const ctx = contextFor(req);
+        if (!ctx.guild) return fail(res, 503, 'Server unavailable', 'The bot cannot see the main server right now. Try again in a moment.', req);
+        let result;
+        try {
+            result = await action.run(ctx, req.body || {});
+        } catch (error) {
+            if (isInputError(error)) {
+                const message = plainText(error.userMessage || error.message);
+                logger.info(`Dashboard ${module.key}/${req.params.action} refused for ${session.userId}: ${message}`);
+                return renderModule(req, res, module, error.status === 403 ? 403 : 400, { error: message });
+            }
+            throw error;
+        }
+        const changes = result?.changes || [];
+        await recordDashboardChange({
+            store: audits, postModLog: services.postModLog, client, guildId, actor: ctx.actor,
+            module: module.key, moduleLabel: module.label, changes, audited: Boolean(result?.audited),
+        });
+        if (changes.length) {
+            moduleStatesCache = { at: 0, value: {} };
+            logger.info(`Dashboard change by ${session.userId} in ${module.key}: ${changes.map((c) => c.key).join(', ')}`);
+        }
+        const message = [result?.message || (changes.length ? 'Saved.' : 'Nothing changed.'), ...(result?.warnings || [])].map(plainText).join(' ');
+        await sessions.setFlash?.(session.id, message);
+        return res.redirect(303, path(`/${module.key}`));
     }
 
     async function logout(req, res) {
@@ -421,7 +512,7 @@ export function createDashboard({
 
     return {
         securityHeaders, limitByIp, stylesheet, index, callback, requireUser, checkPost,
-        overview, cases, caseDetail, appeals, automod, staff, audit, moduleStub, logout, notFound,
+        overview, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound,
         sessions, states,
     };
 }
@@ -455,18 +546,19 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.get('/', d.limitByIp, safe(d.index));
     router.get('/oauth/callback', d.limitByIp, safe(d.callback));
     router.post('/logout', express.urlencoded({ extended: false, limit: '2kb' }), user, safe(d.logout));
+    // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
+    router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleAction));
     router.get('/overview', user, safe(d.overview));
     router.get('/cases', user, safe(d.cases));
     router.get('/cases/:code', user, safe(d.caseDetail));
     router.get('/appeals', user, safe(d.appeals));
-    router.get('/automod', user, safe(d.automod));
     router.get('/staff', user, safe(d.staff));
     router.get('/audit', user, safe(d.audit));
-    router.get('/:module', user, safe(d.moduleStub));
+    router.get('/:module', user, safe(d.modulePage));
     router.use(user, d.notFound);
     app.use(BASE, router);
     // The old read-only staff dashboard lived at /staff.
     app.use('/staff', (req, res) => res.redirect(301, BASE));
-    logger.info(`Dashboard enabled at ${BASE} (OAuth redirect ${settings.redirectUri}; stylesheet ${CSS_PATH})`);
+    logger.info(`Dashboard enabled at ${BASE} (OAuth redirect ${settings.redirectUri}; editing ${settings.editEnabled ? 'ON' : 'off (DASHBOARD_EDIT_ENABLED)'})`);
     return true;
 }

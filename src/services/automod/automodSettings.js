@@ -2,8 +2,10 @@
 // store, with a short in-memory cache because messageCreate reads them constantly.
 
 import { db, getFromDb, setInDb } from '../../utils/database.js';
-import { automodConfig } from '../../config/automod.js';
-import { clampPanicHours, DEFAULT_PANIC_HOURS } from './incidentActions.js';
+import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
+import { createError, ErrorTypes } from '../../utils/errorHandler.js';
+import { clampPanicHours, DEFAULT_PANIC_HOURS, MAX_PANIC_HOURS } from './incidentActions.js';
+import { CHANNEL_RULE_MODES, RULE_MODES, withChannelRule } from './policy.js';
 
 const CACHE_TTL_MS = 30 * 1000;
 const DEFAULT_SETTINGS = Object.freeze({
@@ -93,4 +95,165 @@ export async function getLockdown(guildId) {
 
 export async function setLockdown(guildId, state) {
     await setInDb(lockdownKey(guildId), state);
+}
+
+// ── Setting helpers ───────────────────────────────────────────────────────────
+// Used by /automod and the web dashboard, so both validate and write the same way.
+// Every write is a locked read-modify-write (updateAutomodSettings). Each resolves
+// the saved (normalized) settings; invalid input throws a TitanBotError whose
+// userMessage can be shown as is.
+
+export const TRUSTED_MIN_LEVEL_MAX = 1000;
+export const JOIN_GATE_DAYS_MIN = 1;
+export const JOIN_GATE_DAYS_MAX = 365;
+const SNOWFLAKE = /^\d{17,20}$/;
+const AUTOMOD_MODES = ['enforce', 'monitor'];
+
+function userError(message) {
+    return createError(message, ErrorTypes.USER_INPUT, message, { expected: true });
+}
+
+function requireBoolean(value, what) {
+    if (typeof value !== 'boolean') throw userError(`${what} must be on or off.`);
+    return value;
+}
+
+function requireSnowflake(id, what) {
+    if (typeof id !== 'string' || !SNOWFLAKE.test(id)) throw userError(`Pick a valid ${what}.`);
+    return id;
+}
+
+function requireIntegerInRange(value, min, max, message) {
+    if (!Number.isInteger(value) || value < min || value > max) throw userError(message);
+    return value;
+}
+
+function requireRule(ruleKey) {
+    if (typeof ruleKey !== 'string' || !Object.hasOwn(AUTOMOD_RULES, ruleKey)) throw userError('Unknown rule.');
+    return ruleKey;
+}
+
+export async function setAutomodEnabled(guildId, enabled) {
+    requireBoolean(enabled, 'Automod');
+    return updateAutomodSettings(guildId, { enabled });
+}
+
+/** mode: 'enforce' | 'monitor'. */
+export async function setAutomodMode(guildId, mode) {
+    if (!AUTOMOD_MODES.includes(mode)) throw userError('Unknown mode.');
+    return updateAutomodSettings(guildId, { mode });
+}
+
+/** mode: 'default' (remove the override, follow the global mode) or one of RULE_MODES. */
+export async function setRuleMode(guildId, ruleKey, mode) {
+    requireRule(ruleKey);
+    if (mode !== 'default' && !RULE_MODES.includes(mode)) throw userError('Unknown mode.');
+    return updateAutomodSettings(guildId, (current) => {
+        const ruleModes = { ...current.ruleModes };
+        if (mode === 'default') delete ruleModes[ruleKey]; else ruleModes[ruleKey] = mode;
+        return { ...current, ruleModes };
+    });
+}
+
+/** mode: 'default' (remove the exception) or one of CHANNEL_RULE_MODES. */
+export async function setChannelRuleMode(guildId, channelId, ruleKey, mode) {
+    requireSnowflake(channelId, 'channel');
+    requireRule(ruleKey);
+    if (mode !== 'default' && !CHANNEL_RULE_MODES.includes(mode)) throw userError('Unknown mode.');
+    return updateAutomodSettings(guildId, (current) => ({
+        ...current,
+        channelRules: withChannelRule(current.channelRules, channelId, ruleKey, mode),
+    }));
+}
+
+/** Why a role can't be the trusted role (a user-facing sentence), or null when it can. */
+export function getTrustedRoleProblem(guild, role) {
+    if (!role) return 'Pick a role.';
+    const guildId = guild?.id ?? role.guild?.id;
+    if (role.id === guildId || role.managed) return 'Pick a normal role (not @everyone or a bot role).';
+    return null;
+}
+
+/**
+ * Trusted members. undefined keeps the current value; roleId null removes the role;
+ * minLevel 0 removes the level criterion; clear: true removes both. Check the role
+ * with getTrustedRoleProblem first (it needs the guild).
+ */
+export async function setTrusted(guildId, { roleId = undefined, minLevel = undefined, clear = false } = {}) {
+    const keepLevel = minLevel === undefined || minLevel === null;
+    if (!clear && roleId === undefined && keepLevel) {
+        throw userError('Give a role, a minimum level, or clear: true.');
+    }
+    if (roleId !== undefined && roleId !== null) requireSnowflake(roleId, 'role');
+    if (!keepLevel) {
+        requireIntegerInRange(minLevel, 0, TRUSTED_MIN_LEVEL_MAX, `The minimum level must be a whole number from 0 to ${TRUSTED_MIN_LEVEL_MAX}.`);
+    }
+    return updateAutomodSettings(guildId, (current) => ({
+        ...current,
+        trusted: clear
+            ? { roleId: null, minLevel: 0 }
+            : {
+                roleId: roleId === undefined ? current.trusted.roleId : roleId,
+                minLevel: keepLevel ? current.trusted.minLevel : minLevel,
+            },
+    }));
+}
+
+export async function setSecondChance(guildId, enabled) {
+    requireBoolean(enabled, 'Second chance');
+    return updateAutomodSettings(guildId, { secondChance: enabled });
+}
+
+export async function setMoodAlerts(guildId, enabled) {
+    requireBoolean(enabled, 'Mood alerts');
+    return updateAutomodSettings(guildId, { moodAlerts: enabled });
+}
+
+/**
+ * One join gate check: check ∈ JOIN_GATE_CHECKS, action ∈ JOIN_GATE_ACTIONS; days
+ * (1–365) sets the new-account age, null keeps it.
+ */
+export async function setJoinGateCheck(guildId, check, action, days = null) {
+    // Imported lazily: joinGate.js imports this module.
+    const { JOIN_GATE_ACTIONS, JOIN_GATE_CHECKS, normalizeJoinGate } = await import('./joinGate.js');
+    if (typeof check !== 'string' || !Object.hasOwn(JOIN_GATE_CHECKS, check)) throw userError('Unknown check.');
+    if (!JOIN_GATE_ACTIONS.includes(action)) throw userError('Unknown action.');
+    const keepDays = days === null || days === undefined;
+    if (!keepDays) {
+        requireIntegerInRange(days, JOIN_GATE_DAYS_MIN, JOIN_GATE_DAYS_MAX, `Days must be a whole number from ${JOIN_GATE_DAYS_MIN} to ${JOIN_GATE_DAYS_MAX}.`);
+    }
+    return updateAutomodSettings(guildId, (current) => {
+        const gate = normalizeJoinGate(current.joinGate);
+        return { ...current, joinGate: { ...gate, [check]: action, ...(keepDays ? {} : { ageDays: days }) } };
+    });
+}
+
+/** Raid panic mode. hours (1–24) sets the pause length, null keeps it. */
+export async function setPanic(guildId, { enabled, hours = null } = {}) {
+    requireBoolean(enabled, 'Raid panic mode');
+    const keepHours = hours === null || hours === undefined;
+    if (!keepHours) {
+        requireIntegerInRange(hours, 1, MAX_PANIC_HOURS, `Hours must be a whole number from 1 to ${MAX_PANIC_HOURS}.`);
+    }
+    return updateAutomodSettings(guildId, (current) => ({
+        ...current,
+        panic: { enabled, hours: keepHours ? current.panic.hours : hours },
+    }));
+}
+
+/**
+ * Adds (true), removes (false) or toggles ('toggle') a channel automod ignores,
+ * decided under the lock. Resolves { settings, exempt } (exempt = the new state).
+ */
+export async function setExemptChannel(guildId, channelId, exempt) {
+    requireSnowflake(channelId, 'channel');
+    if (exempt !== true && exempt !== false && exempt !== 'toggle') throw userError('Unknown exempt value.');
+    let nowExempt = false;
+    const settings = await updateAutomodSettings(guildId, (current) => {
+        const ids = new Set(current.exemptChannelIds);
+        nowExempt = exempt === 'toggle' ? !ids.has(channelId) : exempt;
+        if (nowExempt) ids.add(channelId); else ids.delete(channelId);
+        return { ...current, exemptChannelIds: [...ids] };
+    });
+    return { settings, exempt: nowExempt };
 }
