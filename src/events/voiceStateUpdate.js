@@ -8,7 +8,6 @@ import {
 import { formatChannelName } from '../services/joinToCreateService.js';
 import { sanitizeInput } from '../utils/validation.js';
 import { logger } from '../utils/logger.js';
-import { handleMusicVoiceState } from '../services/music/musicVoiceState.js';
 
 const channelCreationCooldown = new Map();
 const VOICE_CREATE_COOLDOWN_MS = 2000;
@@ -22,14 +21,6 @@ const MAX_TRACKED_COOLDOWNS = 10000;
 export default {
     name: 'voiceStateUpdate',
     async execute(oldState, newState, client) {
-        // Music auto-pause/resume must run for every voice change, independent of
-        // join-to-create being configured (the JTC path below returns early).
-        if (client.config?.features?.music) {
-            handleMusicVoiceState(client, oldState, newState).catch((error) => {
-                logger.error('Music voice state handler error:', error);
-            });
-        }
-
         if (!newState.member || newState.member.user.bot) return;
 
         const guildId = newState.guild.id;

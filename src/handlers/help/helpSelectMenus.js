@@ -23,7 +23,6 @@ const SUBCOMMAND_GROUP_TYPE = 2;
 const CATEGORY_ICONS = {
     Core: "ℹ️",
     Moderation: "🛡️",
-    Music: "🎵",
     Fun: "🎮",
     Leveling: "📊",
     Utility: "🔧",

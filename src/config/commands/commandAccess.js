@@ -7,7 +7,6 @@
  * is listed here. Everything not listed requires Administrator.
  *
  * Some everyone-commands narrow access further inside the command:
- * - music controls: only members in the bot's voice channel (admins always)
  * - /claim, /priority, /modmail close: ticket staff; /close: ticket staff or the ticket opener
  * - /rank on another member: admins only
  */
@@ -28,10 +27,6 @@ export const EVERYONE_COMMANDS = new Set([
   // Leveling
   'leaderboard', 'rank',
 
-  // Music (247 stays admin)
-  'play', 'join', 'queue', 'nowplaying',
-  'music pause', 'music resume', 'music skip', 'music stop', 'music shuffle', 'music loop',
-  'music volume', 'music seek', 'music remove', 'music move', 'music clear', 'music leave',
 
   // Search
   'search define', 'search google',

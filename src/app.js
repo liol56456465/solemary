@@ -24,8 +24,6 @@ import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { registerOAuthRoutes } from './services/oauthVerification.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
-import { initializeMusic } from './services/music/riffySetup.js';
-import { shutdownMusic } from './services/music/playerHandler.js';
 import pkg from '../package.json' with { type: 'json' };
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
 
@@ -104,8 +102,6 @@ class Meowist extends Client {
       await this.loadHandlers();
       startupLog('Handlers loaded');
 
-      initializeMusic(this);
-      
       startupLog('Logging into Discord...');
       await this.login(this.config.bot.token);
       startupLog('Discord login successful');
@@ -443,10 +439,6 @@ class Meowist extends Client {
       logger.info('Stopping cron jobs...');
       cron.getTasks().forEach(task => task.stop());
       logger.info('✅ Cron jobs stopped');
-
-      logger.info('Stopping music players...');
-      await shutdownMusic(this);
-      logger.info('✅ Music players stopped');
 
       if (this.webServer) {
         logger.info('Closing web server...');

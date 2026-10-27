@@ -25,7 +25,6 @@ const HELP_MENU_TIMEOUT_MS = 5 * 60 * 1000;
 const CATEGORY_ICONS = {
     Core: "ℹ️",
     Moderation: "🛡️",
-    Music: "🎵",
     Fun: "🎮",
     Leveling: "📊",
     Utility: "🔧",
@@ -103,7 +102,6 @@ export async function createInitialHelpMenu(client, guildId = null) {
                 name: '🔒 Access',
                 value: [
                     '• Commands marked 🔒 need the **Administrator** permission; the rest are for everyone.',
-                    '• Music controls work for members in the bot\'s voice channel.',
                     '• Commands only work in the Meowist servers.',
                     '• **/setappeal** posts the appeal panels; **/appeals** lists, shows and decides appeals.',
                 ].join('\n'),
