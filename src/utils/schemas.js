@@ -7,9 +7,10 @@ import { isValidTimeZone } from './timezone.js';
 export const LogIgnoreSchema = z
   .object({
     users: z.array(z.string()).default([]),
-    channels: z.array(z.string()).default([])
+    channels: z.array(z.string()).default([]),
+    roles: z.array(z.string()).default([])
   })
-  .default({ users: [], channels: [] });
+  .default({ users: [], channels: [], roles: [] });
 
 export const LoggingChannelsSchema = z
   .object({
@@ -86,7 +87,7 @@ export const GuildConfigSchema = z
 const DEFAULT_LOGGING = {
   enabled: false,
   channels: { audit: null, applications: null, reports: null },
-  ignore: { users: [], channels: [] },
+  ignore: { users: [], channels: [], roles: [] },
   enabledEvents: {},
 };
 
@@ -115,6 +116,7 @@ function migrateLoggingConfig(raw = {}, legacy = {}) {
   const ignore = {
     users: base.ignore?.users ?? logIgnore?.users ?? [],
     channels: base.ignore?.channels ?? logIgnore?.channels ?? [],
+    roles: base.ignore?.roles ?? [],
   };
 
   let enabled = base.enabled ?? false;

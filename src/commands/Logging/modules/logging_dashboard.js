@@ -49,7 +49,7 @@ export async function buildLoggingDashboardView(interaction, client) {
   const lifecycleChannel = await formatChannelMention(interaction.guild, guildConfig.ticketLogsChannelId);
   const transcriptChannel = await formatChannelMention(interaction.guild, guildConfig.ticketTranscriptChannelId);
 
-  const ignore = loggingStatus.ignore || { users: [], channels: [] };
+  const ignore = loggingStatus.ignore || { users: [], channels: [], roles: [] };
   const { enabled: enabledCount, total } = countEnabledCategories(loggingStatus.enabledEvents, auditEnabled);
 
   const embed = new EmbedBuilder()
@@ -69,7 +69,7 @@ export async function buildLoggingDashboardView(interaction, client) {
       },
       {
         name: 'Ignore Filters',
-        value: `${ignore.users?.length || 0} users · ${ignore.channels?.length || 0} channels`,
+        value: `${ignore.users?.length || 0} users · ${ignore.channels?.length || 0} channels · ${ignore.roles?.length || 0} roles`,
         inline: true,
       },
       {
@@ -132,16 +132,21 @@ export async function buildLoggingFilterView(interaction, client) {
     : '*No ignored users*';
 
   const channelLines = (ignore.channels || []).length
-    ? ignore.channels.map((id) => `• Channel \`${id}\``).join('\n')
+    ? ignore.channels.map((id) => `• <#${id}> (\`${id}\`)`).join('\n')
     : '*No ignored channels*';
+
+  const roleLines = (ignore.roles || []).length
+    ? ignore.roles.map((id) => `• <@&${id}> (\`${id}\`)`).join('\n')
+    : '*No ignored roles*';
 
   const embed = new EmbedBuilder()
     .setTitle('🔇 Log Ignore Filters')
-    .setDescription('Users and channels on this list will be skipped when sending audit logs.')
+    .setDescription('Logs about these users, channels (with their threads; a category with its channels) and members with these roles are skipped. Also `/logging ignore`.')
     .setColor(getColor('info'))
     .addFields(
       { name: 'Ignored Users', value: userLines.slice(0, 1024), inline: false },
       { name: 'Ignored Channels', value: channelLines.slice(0, 1024), inline: false },
+      { name: 'Ignored Roles', value: roleLines.slice(0, 1024), inline: false },
     )
     .setFooter({ text: 'Use the buttons below to add or remove filters' })
     .setTimestamp();

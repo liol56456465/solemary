@@ -22,6 +22,7 @@ import { getFromDb, setInDb, deleteFromDb } from '../../utils/database.js';
 import { query, T } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
 import { dateStamp } from '../enforcement/format.js';
+import { postAlert, showDiffRow } from './alertPost.js';
 
 const STAFF_ROLE_PERMISSIONS = [
     PermissionFlagsBits.Administrator,
@@ -101,7 +102,8 @@ export async function restoreStaffRoles(guild, userId, restoredBy) {
     return roles;
 }
 
-async function demote(guild, member, why) {
+/** `nuke`: the alert gets a "Show diff" button (snapshot vs now, for /backup revert). */
+async function demote(guild, member, why, { nuke = false } = {}) {
     const { removed, kept } = await stripStaffRoles(member, `Staff guard: ${why}`);
     const summary = [
         `**Staff member:** ${member.user.username} (\`${member.id}\`)`,
@@ -110,19 +112,21 @@ async function demote(guild, member, why) {
         kept.length ? `**Could not remove (above my role):** ${kept.map((role) => role.name).join(', ')}` : null,
         'Restore with `/staff restore`.',
     ].filter(Boolean).join('\n');
-    await postModLog(guild.client, 'staff', [
+    const fields = [
         { name: 'Staff member', value: `<@${member.id}> ${member.user.username} (\`${member.id}\`)` },
         { name: 'Why', value: why },
         { name: 'Removed roles', value: removed.map((role) => role.name).join(', ') || 'none' },
         ...(kept.length ? [{ name: 'Could not remove (above my role)', value: kept.map((role) => role.name).join(', ') }] : []),
-        { name: 'Restore', value: '`/staff restore`' },
-    ], { title: 'Staff roles removed' });
+        { name: 'Restore', value: nuke ? '`/staff restore` · damage: **Show diff**, then `/backup revert`' : '`/staff restore`' },
+    ];
+    if (nuke) await postAlert(guild.client, 'staff', { title: 'Staff roles removed', fields, components: [showDiffRow()] });
+    else await postModLog(guild.client, 'staff', fields, { title: 'Staff roles removed' });
     await alertOwner(guild, `**Staff guard in ${guild.name}**\n${summary}`);
     logger.warn(`Staff guard removed roles from ${member.id}: ${why}`);
 }
 
 async function alertNuke(guild, title, fields) {
-    await postModLog(guild.client, 'staff', fields, { title });
+    await postAlert(guild.client, 'staff', { title, fields, components: [showDiffRow()] });
     await alertOwner(guild, `**${title} in ${guild.name}**\n${fields.map((f) => `**${f.name}:** ${f.value}`).join('\n')}`);
 }
 
@@ -136,7 +140,7 @@ function grantedBits(entry) {
 
 async function demoteExecutor(guild, executorId, why) {
     const member = await guild.members.fetch(executorId).catch(() => null);
-    if (member) await demote(guild, member, why).catch((error) => logger.error(`Staff guard could not demote ${executorId}: ${error.message}`));
+    if (member) await demote(guild, member, why, { nuke: true }).catch((error) => logger.error(`Staff guard could not demote ${executorId}: ${error.message}`));
 }
 
 /** Anti-nuke checks for one audit log entry. Returns true when it handled the entry. */
@@ -226,7 +230,7 @@ export async function handleAuditLogEntry(entry, guild) {
     const why = kind === 'banKick'
         ? `${times.length} bans/kicks within ${minutes} minutes`
         : `${times.length} channel/role deletions within ${minutes} minutes`;
-    await demote(guild, member, why).catch((error) => logger.error(`Staff guard could not demote ${executorId}: ${error.message}`));
+    await demote(guild, member, why, { nuke: kind === 'delete' }).catch((error) => logger.error(`Staff guard could not demote ${executorId}: ${error.message}`));
 }
 
 export async function listStaffWarnings(guildId, userId) {

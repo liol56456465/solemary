@@ -11,7 +11,8 @@ import { logger } from '../utils/logger.js';
 import { reapplyMuteOnJoin } from '../services/enforcement/enforcementService.js';
 import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService.js';
 import { syncWarnRolesQuietly } from '../services/enforcement/warnRoleService.js';
-import { recordJoin } from '../services/automod/raidService.js';
+import { noteGateKick, recordJoin } from '../services/automod/raidService.js';
+import { checkJoinGate } from '../services/automod/joinGate.js';
 import { checkImpersonation } from '../services/automod/memberChecks.js';
 import { startProbationOnJoin } from '../services/automod/probationService.js';
 import { enforcementConfig } from '../config/enforcement.js';
@@ -39,6 +40,11 @@ export default {
             if (guild.id === enforcementConfig.mainGuildId) {
                 await syncWarnRolesQuietly(guild, member.id);
                 await recordJoin(member).catch((error) => logger.warn(`Raid tracking failed for ${member.id}: ${error.message}`));
+                // Join gate (/automod joingate): a kicked member skips the rest of the pipeline.
+                const gate = await checkJoinGate(member, {
+                    onKick: (userId) => noteGateKick(guild.id, userId).catch((error) => logger.warn(`Could not note join gate kick: ${error.message}`)),
+                });
+                if (gate === 'kicked') return;
                 await checkImpersonation(member);
                 // Back after a ban that ended recently: automod probation.
                 await startProbationOnJoin(member).catch((error) => logger.warn(`Probation check failed for ${member.id}: ${error.message}`));

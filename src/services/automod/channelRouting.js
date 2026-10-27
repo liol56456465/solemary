@@ -14,7 +14,7 @@ import { enforcementConfig } from '../../config/enforcement.js';
 
 /** postModLog kinds that are alerts rather than a record of an enforcement action. */
 export const ALERT_KINDS = new Set([
-    'raid', 'staff', 'massguard', 'automod', 'automod-report', 'slowmode', 'digest', 'system',
+    'raid', 'staff', 'massguard', 'automod', 'automod-report', 'slowmode', 'digest', 'system', 'revert',
 ]);
 
 /** Enforcement actions: posted in the mod log as one line. */

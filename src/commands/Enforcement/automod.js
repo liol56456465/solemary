@@ -1,4 +1,4 @@
-import { AutoModerationActionType, ChannelType, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { AutoModerationActionType, ChannelType, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
@@ -11,6 +11,7 @@ import { describeStep } from '../../services/automod/reviewCards.js';
 import { automodStats, formatAutomodStats } from '../../services/automod/automodReport.js';
 import { collectOpenReviews, formatQueue } from '../../services/automod/reviewQueue.js';
 import { endProbation, getProbation } from '../../services/automod/probationService.js';
+import { DEFAULT_GATE_DAYS, JOIN_GATE_CHECKS, describeJoinGate, normalizeJoinGate } from '../../services/automod/joinGate.js';
 import { loadNativePolicies, policyFor, setNativePolicy, triggerLabel } from '../../services/automod/nativeBridge.js';
 import {
     CHANNEL_RULE_MODES, RULE_MODES, hasRuleOverride, isRelaxableRule, ruleMode, withChannelRule,
@@ -68,6 +69,8 @@ async function statusEmbed(guildId) {
             `**Trusted members** (skip ${relaxedRuleLabels()}): ${trustedText(settings.trusted)}`,
             `**Second chance** (first small offence: a notice, no warning): ${settings.secondChance ? 'on' : 'off'}`,
             `**Mood alerts** (calm-down note + slowmode in heated channels): ${settings.moodAlerts ? 'on' : 'off'}`,
+            `**Join gate** (new members): ${describeJoinGate(settings.joinGate)}`,
+            `**Raid panic mode** (lockdown also pauses invites and DMs): ${settings.panic.enabled ? `on, for ${settings.panic.hours} h` : 'off'}`,
             '',
             '**Punishments** (1st → 2nd → 3rd+ offence within 30 days). A mode in **bold** is set for that rule with `/automod rule`; the others follow the global mode:',
             ...rules,
@@ -175,7 +178,20 @@ export default {
         .addSubcommand((sub) => sub.setName('stats').setDescription('Automod actions, undos and top offenders')
             .addIntegerOption((option) => option.setName('days').setDescription('How far back (default 7)').setMinValue(1).setMaxValue(90)))
         .addSubcommand((sub) => sub.setName('queue').setDescription('Review cards still waiting for a decision, newest first'))
-        .addSubcommand((sub) => sub.setName('lockdown-end').setDescription('End a join-raid lockdown and restore the verification level'))
+        .addSubcommand((sub) => sub.setName('joingate').setDescription('Checks on new members: flag them for staff or kick them (with a DM)')
+            .addStringOption((option) => option.setName('check').setDescription('Which check').setRequired(true)
+                .addChoices(...Object.entries(JOIN_GATE_CHECKS).map(([value, { label }]) => ({ name: label, value }))))
+            .addStringOption((option) => option.setName('action').setDescription('What to do when it hits').setRequired(true)
+                .addChoices(
+                    { name: 'off', value: 'off' },
+                    { name: 'flag (a line in the review channel)', value: 'flag' },
+                    { name: 'kick (with a DM saying how to come back)', value: 'kick' },
+                ))
+            .addIntegerOption((option) => option.setName('days').setDescription(`New account check: younger than this many days (default ${DEFAULT_GATE_DAYS})`).setMinValue(1).setMaxValue(365)))
+        .addSubcommand((sub) => sub.setName('panic').setDescription('Raid panic mode: a lockdown also pauses invites and DMs (Discord incident actions)')
+            .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true))
+            .addIntegerOption((option) => option.setName('hours').setDescription('How long the pause lasts (default 2, max 24)').setMinValue(1).setMaxValue(24)))
+        .addSubcommand((sub) => sub.setName('lockdown-end').setDescription('End a join-raid lockdown: restore the verification level, resume invites and DMs'))
         .addSubcommandGroup((group) => group.setName('native').setDescription('Discord\'s own AutoMod rules: what the bot does when one blocks a message')
             .addSubcommand((sub) => sub.setName('list').setDescription('List the server\'s native AutoMod rules and their policy'))
             .addSubcommand((sub) => sub.setName('set').setDescription('Ignore, log or warn when a native AutoMod rule blocks a message')
@@ -325,6 +341,32 @@ export default {
             note = enabled
                 ? 'Mood alerts are **on**: when insults or caps floods from 3+ members pile up in a channel, the bot posts one calm-down note, turns on slowmode for a few minutes and tells the alerts channel.'
                 : 'Mood alerts are **off**.';
+        } else if (sub === 'joingate') {
+            const check = interaction.options.getString('check');
+            const action = interaction.options.getString('action');
+            const days = interaction.options.getInteger('days');
+            if (!JOIN_GATE_CHECKS[check]) throw userError('Unknown check.');
+            if (!['off', 'flag', 'kick'].includes(action)) throw userError('Unknown action.');
+            const saved = await updateAutomodSettings(guildId, (current) => {
+                const gate = normalizeJoinGate(current.joinGate);
+                return { ...current, joinGate: { ...gate, [check]: action, ...(days ? { ageDays: days } : {}) } };
+            });
+            const gate = normalizeJoinGate(saved.joinGate);
+            const ageNote = check === 'age' && action !== 'off'
+                ? `\nAccounts younger than **${gate.ageDays} day(s)**. "Verify with Discord" already holds accounts younger than ${DEFAULT_GATE_DAYS} days for approval; members who verified that way are never gated.`
+                : '';
+            note = `Join gate: **${JOIN_GATE_CHECKS[check].label}** → **${action}**.${ageNote}\n${describeJoinGate(gate)}`;
+        } else if (sub === 'panic') {
+            const enabled = interaction.options.getBoolean('enabled');
+            const hours = interaction.options.getInteger('hours');
+            const saved = await updateAutomodSettings(guildId, (current) => ({
+                ...current,
+                panic: { enabled, hours: hours ?? current.panic.hours },
+            }));
+            const canPause = interaction.guild.members.me?.permissions.has(PermissionFlagsBits.ManageGuild);
+            note = enabled
+                ? `Raid panic mode is **on**: when a join raid starts a lockdown, invites and DMs are paused for **${saved.panic.hours} h** (lifted again by \`/automod lockdown-end\`).${canPause ? '' : '\n⚠️ I don\'t have **Manage Server**, so the pause will fail until I get it.'}`
+                : 'Raid panic mode is **off**: a lockdown only raises the verification level.';
         } else if (sub === 'exempt') {
             const channel = interaction.options.getChannel('channel');
             const settings = await getAutomodSettings(guildId);
@@ -336,7 +378,7 @@ export default {
         } else if (sub === 'lockdown-end') {
             const ended = await endLockdown(interaction.guild, interaction.user);
             if (!ended) throw userError('There is no lockdown right now.');
-            note = 'Lockdown ended. The verification level is back to what it was.';
+            note = 'Lockdown ended. The verification level is back to what it was, and paused invites and DMs are resumed.';
         }
 
         await InteractionHelper.safeEditReply(interaction, {

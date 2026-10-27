@@ -21,6 +21,7 @@ export const T = {
     serverSnapshots: pgConfig.tables.server_snapshots,
     tickets: pgConfig.tables.tickets,
     nativeRules: pgConfig.tables.automod_native_rules,
+    raidIncidents: pgConfig.tables.automod_raid_incidents,
     noContact: pgConfig.tables.no_contact_orders,
 };
 

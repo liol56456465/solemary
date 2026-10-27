@@ -344,6 +344,21 @@ export const tableStatements = [
         PRIMARY KEY (guild_id, rule_id)
     )`,
 
+    // One row per ended join-raid lockdown: the incident report and its
+    // "Release non-offenders" button (services/automod/raidIncidentService.js).
+    `CREATE TABLE IF NOT EXISTS ${t.automod_raid_incidents} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        started_at TIMESTAMPTZ NOT NULL,
+        ended_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        ended_by VARCHAR(20),
+        joiner_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+        actions JSONB NOT NULL DEFAULT '{}'::jsonb,
+        released_at TIMESTAMPTZ,
+        released_by VARCHAR(20),
+        release_result JSONB
+    )`,
+
     // No-contact orders (/case nocontact): two members may not mention or reply to
     // each other until `until`. user_a < user_b (numerically), so a pair is stored
     // one way. ended_at is set when staff end it early or once it has expired.
@@ -489,6 +504,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_mod_case_edits_case ON ${t.mod_case_edits}(case_code, edited_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_case_evidence_case ON ${t.mod_case_evidence}(case_code, added_at)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_moderator ON ${t.mod_cases}(guild_id, moderator_id, created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_raid_incidents_guild ON ${t.automod_raid_incidents}(guild_id, ended_at DESC)`,
     // /case search (newest first, by reason key) and the panel's precedent hint.
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_guild_created ON ${t.mod_cases}(guild_id, created_at DESC, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_reason ON ${t.mod_cases}(guild_id, reason_key, created_at DESC)`,
