@@ -7,7 +7,7 @@
  * is listed here. Everything not listed requires Administrator.
  *
  * Some everyone-commands narrow access further inside the command:
- * - /claim, /priority, /modmail close: ticket staff; /close: ticket staff or the ticket opener
+ * - /claim, /priority, /modmail close, /canned send|list: ticket staff; /close: ticket staff or the ticket opener
  * - /rank on another member: admins only
  */
 
@@ -32,7 +32,7 @@ export const EVERYONE_COMMANDS = new Set([
   'search define', 'search google',
 
   // Ticket (the commands check staff / opener themselves)
-  'claim', 'close', 'priority', 'modmail close',
+  'claim', 'close', 'priority', 'modmail close', 'canned send', 'canned list',
 
   // Tools (randomuser and shorten stay admin: shorten hides link targets from automod)
   'tools baseconvert', 'tools calculate', 'tools generatepassword', 'tools hexcolor', 'tools time', 'tools unixtime',

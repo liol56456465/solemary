@@ -18,6 +18,7 @@ import { importLegacyWarnings } from './services/enforcement/warnImportService.j
 import { flushStaffMessages, postWeeklyStaffReport } from './services/staffActivityService.js';
 import { snapshotMainServer } from './services/structureBackupService.js';
 import { runTicketReminders } from './services/ticketReminderService.js';
+import { tidyStaleAppealChannels } from './services/enforcement/staleAppealService.js';
 import { postWeeklyAutomodReport } from './services/automod/automodReport.js';
 import { liftCalmSlowmodes } from './services/automod/autoSlowmode.js';
 import { startAdminConsole } from './console/adminConsole.js';
@@ -322,7 +323,10 @@ class Meowist extends Client {
     cron.schedule('* * * * *', exclusive('enforcement_expiry', () => runEnforcementExpiry(this)));
     cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));
-    cron.schedule('*/5 * * * *', exclusive('ticket_reminders', () => runTicketReminders(this)));
+    cron.schedule('*/5 * * * *', exclusive('ticket_reminders', async () => {
+      await runTicketReminders(this);
+      await tidyStaleAppealChannels(this);
+    }));
     // Times are UTC: a daily structure snapshot, and the weekly reports on Monday morning.
     cron.schedule('0 4 * * *', exclusive('structure_snapshot', () => snapshotMainServer(this)), { timezone: 'UTC' });
     cron.schedule('0 9 * * 1', exclusive('weekly_reports', async () => {
