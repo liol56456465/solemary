@@ -19,7 +19,8 @@
 //   with a confirm step, staff notes), case edit/void/evidence on /cases/:code,
 //   /appeals/:code (dossier, accept/deny with a confirm step), /nocontact, coverage
 //   heatmap and mass-action blocks on /staff. Same POST checks + Administrator (canAct).
-//   GET  /dashboard/static/dashboard.css   the only stylesheet (CSP style-src 'self')
+//   GET  /dashboard/static/<file>  dashboard.css (CSP style-src 'self') and dashboard.js (script-src 'self', optional)
+//   POST /dashboard/cases/:code/evidence/upload  an evidence image (multipart, 8 MB, magic-byte check)
 //   POST /dashboard/logout          CSRF token + same-origin check
 //   /staff, /staff/*                → 301 /dashboard (the old read-only staff dashboard)
 //
@@ -70,6 +71,7 @@ import { defaultEnforcement } from './enforcementData.js';
 import { createEnforcementHandlers } from './enforcementRoutes.js';
 import { createConfirmStore } from './confirmTokens.js';
 import { InputError, plainText } from './forms.js';
+import { MAX_UPLOAD_BYTES, MultipartError, parseMultipart } from './multipart.js';
 import { createPgSessionStore } from './sessionStore.js';
 import { query } from '../enforcement/db.js';
 import { pgConfig } from '../../config/database/postgres.js';
@@ -86,7 +88,11 @@ const HTTP_TIMEOUT_MS = 10000;
 const CASES_PAGE_SIZE = 25;
 const MAX_PAGE = 10000;
 const MODULE_STATES_TTL_MS = 60 * 1000;
-const CSS_FILE = new URL('./static/dashboard.css', import.meta.url);
+/** The only files under /dashboard/static, with their Content-Type. */
+export const STATIC_FILES = {
+    'dashboard.css': 'text/css',
+    'dashboard.js': 'text/javascript',
+};
 
 export const DEFAULT_LIMITS = {
     session: { limit: 300, windowMs: 60 * 1000 },
@@ -96,7 +102,7 @@ export const DEFAULT_LIMITS = {
 };
 
 export const SECURITY_HEADERS = {
-    'Content-Security-Policy': "default-src 'none'; style-src 'self'; img-src 'self' https://cdn.discordapp.com https://media.discordapp.net; "
+    'Content-Security-Policy': "default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' https://cdn.discordapp.com https://media.discordapp.net; "
         + "form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
@@ -246,19 +252,42 @@ export function createDashboard({
         return next();
     }
 
-    const css = (() => {
+    // The static files (read once): the stylesheet, the one script (progressive
+    // enhancement, CSP script-src 'self') and the icon sprite. Nothing else is served.
+    const staticFiles = new Map(Object.entries(STATIC_FILES).map(([name, type]) => {
         try {
-            return fs.readFileSync(CSS_FILE, 'utf8');
+            return [name, { type, body: fs.readFileSync(new URL(`./static/${name}`, import.meta.url), 'utf8') }];
         } catch (error) {
-            logger.error(`Dashboard stylesheet missing: ${error.message}`);
-            return '';
+            logger.error(`Dashboard static file missing (${name}): ${error.message}`);
+            return [name, { type, body: '' }];
         }
-    })();
+    }));
 
-    function stylesheet(req, res) {
+    function serveStatic(name, req, res) {
         if (!staticLimiter.allow(clientIp(req))) return res.status(429).type('text/plain').send('Too many requests');
+        const file = staticFiles.get(name);
+        if (!file) return res.status(404).type('text/plain').send('Not found');
         res.set('Cache-Control', 'public, max-age=3600');
-        return res.status(200).type('text/css').send(css);
+        return res.status(200).type(file.type).send(file.body);
+    }
+
+    const stylesheet = (req, res) => serveStatic('dashboard.css', req, res);
+    const staticFile = (req, res) => serveStatic(typeof req.params?.file === 'string' ? req.params.file : '', req, res);
+
+    /**
+     * After requireUser on the upload route: the size-capped raw body (express.raw) →
+     * fields in req.body (so the CSRF check works as usual) and the file in req.upload.
+     */
+    function parseUpload(req, res, next) {
+        try {
+            const { fields, file } = parseMultipart(Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0), req.headers?.['content-type']);
+            req.body = fields;
+            req.upload = { file };
+        } catch (error) {
+            if (!(error instanceof MultipartError)) throw error;
+            return fail(res, error.status, error.status === 413 ? 'Too large' : 'Upload refused', error.userMessage, req);
+        }
+        return next();
     }
 
     function startLogin(req, res) {
@@ -552,7 +581,7 @@ export function createDashboard({
     }
 
     return {
-        securityHeaders, limitByIp, stylesheet, index, callback, requireUser, checkPost,
+        securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, index, callback, requireUser, checkPost,
         overview, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound,
         sessions, states, confirms, enforcement: enforcementHandlers,
     };
@@ -571,6 +600,20 @@ function safe(handler) {
     };
 }
 
+/**
+ * express.raw for multipart bodies with a hard limit; a body that is too large (or
+ * broken) becomes a plain error page instead of Express's default error output.
+ */
+export function uploadBody(limitBytes) {
+    const raw = express.raw({ type: 'multipart/form-data', limit: limitBytes });
+    return (req, res, next) => raw(req, res, (error) => {
+        if (!error) return next();
+        const tooLarge = error.status === 413 || error.type === 'entity.too.large';
+        return res.status(tooLarge ? 413 : 400).type('html')
+            .send(messagePage(tooLarge ? 'Too large' : 'Upload refused', tooLarge ? 'The image is larger than 8 MB.' : 'The upload could not be read.'));
+    });
+}
+
 /** Adds the /dashboard routes (and the /staff redirect) when enabled. Returns true when registered. */
 export function registerDashboard(app, client, env = process.env, { sessions = null } = {}) {
     const settings = dashboardSettings(env);
@@ -583,7 +626,7 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     const router = express.Router();
     const user = safe(d.requireUser);
     router.use(d.securityHeaders);
-    router.get('/static/dashboard.css', d.stylesheet);
+    router.get('/static/:file', d.staticFile);
     router.get('/', d.limitByIp, safe(d.index));
     router.get('/oauth/callback', d.limitByIp, safe(d.callback));
     router.post('/logout', express.urlencoded({ extended: false, limit: '2kb' }), user, safe(d.logout));
@@ -597,6 +640,8 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.post('/cases/:code/edit', form, user, safe(en.caseEdit));
     router.post('/cases/:code/void', form, user, safe(en.caseVoid));
     router.post('/cases/:code/evidence/add', form, user, safe(en.evidenceAdd));
+    // Image upload: raw body capped at 8 MB + 64 kB of form overhead, parsed only after login.
+    router.post('/cases/:code/evidence/upload', uploadBody(MAX_UPLOAD_BYTES + 64 * 1024), user, safe(d.parseUpload), safe(en.evidenceUpload));
     router.post('/cases/:code/evidence/remove', form, user, safe(en.evidenceRemove));
     router.post('/appeals/:code/preview', form, user, safe(en.appealPreview));
     router.post('/appeals/:code/decide', form, user, safe(en.appealDecide));

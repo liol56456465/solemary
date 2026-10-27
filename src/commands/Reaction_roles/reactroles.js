@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger.js';
 import { createError, TitanBotError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import {
-    createReactionRoleMessage, hasDangerousPermissions, getAllReactionRoleMessages,
+    createReactionRolePanel, hasDangerousPermissions, getAllReactionRoleMessages,
     getPanelRoleProblem, addPanelRole, removePanelRole, deletePanel,
 } from '../../services/reactionRoleService.js';
 import { logEvent, EVENT_TYPES } from '../../services/loggingService.js';
@@ -151,203 +151,25 @@ export default {
 async function handleSetup(interaction) {
     const deferSuccess = await InteractionHelper.safeDefer(interaction);
     if (!deferSuccess) return;
-    
+
     logger.info(`Reaction role setup initiated by ${interaction.user.tag} in guild ${interaction.guild.name}`);
-    
+
     const channel = interaction.options.getChannel('channel');
     const title = interaction.options.getString('title');
     const description = interaction.options.getString('description');
+    const roleIds = [1, 2, 3, 4, 5].map((i) => interaction.options.getRole(`role${i}`)?.id).filter(Boolean);
 
-    if (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement) {
-        throw createError(
-            `Invalid channel type: ${channel.type}`,
-            ErrorTypes.VALIDATION,
-            'Please select a text or announcement channel.',
-            { channelType: channel.type }
-        );
-    }
-
-    if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles)) {
-        throw createError(
-            'Bot missing ManageRoles permission',
-            ErrorTypes.PERMISSION,
-            'I need the "Manage Roles" permission to set up reaction roles.',
-            { permission: 'ManageRoles' }
-        );
-    }
-    
-    if (!channel.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.SendMessages)) {
-        throw createError(
-            `Bot cannot send messages in ${channel.name}`,
-            ErrorTypes.PERMISSION,
-            `I don't have permission to send messages in ${channel}.`,
-            { channelId: channel.id }
-        );
-    }
-
-    const existingPanels = await getAllReactionRoleMessages(interaction.client, interaction.guildId);
-    if (existingPanels && existingPanels.length >= 5) {
-        throw createError(
-            'Panel limit reached',
-            ErrorTypes.VALIDATION,
-            'Your guild has reached the maximum of 5 reaction role panels. Delete an existing panel to create a new one.',
-            { maxPanels: 5, currentPanels: existingPanels.length }
-        );
-    }
-
-    const roles = [];
-    const roleValidationErrors = [];
-    const seenRoleIds = new Set();
-    
-    for (let i = 1; i <= 5; i++) {
-        const role = interaction.options.getRole(`role${i}`);
-        if (role) {
-            if (seenRoleIds.has(role.id)) {
-                roleValidationErrors.push(`**${role.name}** - This role was selected more than once`);
-                continue;
-            }
-
-            if (role.position >= interaction.guild.members.me.roles.highest.position) {
-                roleValidationErrors.push(`**${role.name}** - My bot's role is positioned lower than this role in your server's role hierarchy and cannot assign it`);
-                continue;
-            }
-            
-            if (hasDangerousPermissions(role)) {
-                roleValidationErrors.push(`**${role.name}** - This role has dangerous permissions (Administrator, Manage Server, etc.)`);
-                continue;
-            }
-            
-            if (role.managed) {
-                roleValidationErrors.push(`**${role.name}** - This is a managed role (integration/bot role)`);
-                continue;
-            }
-            
-            if (role.id === interaction.guild.id) {
-                roleValidationErrors.push(`**${role.name}** - Cannot use the @everyone role`);
-                continue;
-            }
-            
-            seenRoleIds.add(role.id);
-            roles.push(role);
-        }
-    }
-    
-    if (roleValidationErrors.length > 0) {
-        const errorMsg = `The following roles cannot be added:\n${roleValidationErrors.join('\n')}`;
-        
-        if (roles.length === 0) {
-            throw createError(
-                'No valid roles provided',
-                ErrorTypes.VALIDATION,
-                errorMsg,
-                { errors: roleValidationErrors }
-            );
-        }
-        
-        await interaction.followUp({
-            embeds: [warningEmbed('Role Validation Warning', errorMsg)],
-            flags: MessageFlags.Ephemeral
-        });
-    }
-
-    if (roles.length < 1) {
-        throw createError(
-            'No roles provided',
-            ErrorTypes.VALIDATION,
-            'You must provide at least one valid role.',
-            {}
-        );
-    }
-
-    const row = new ActionRowBuilder().addComponents(
-        new StringSelectMenuBuilder()
-            .setCustomId('reaction_roles')
-            .setPlaceholder('Select your roles')
-            .setMinValues(0)
-            .setMaxValues(roles.length)
-            .addOptions(
-                roles.map(role => ({
-                    label: truncateText(role.name, SELECT_OPTION_LABEL_LIMIT),
-                    description: truncateText(`Add/remove the ${role.name} role`, SELECT_OPTION_DESCRIPTION_LIMIT),
-                    value: role.id,
-                    emoji: '🎭'
-                }))
-            )
-    );
-
-    const panelEmbed = new EmbedBuilder()
-        .setTitle(title)
-        .setDescription(description)
-        .setColor(getColor('info'))
-        .addFields({
-            name: 'Available Roles',
-            value: roles.map(role => `• ${role}`).join('\n')
-        })
-        .setFooter({ text: 'Select roles from the dropdown menu below' });
-
-    const message = await channel.send({
-        embeds: [panelEmbed],
-        components: [row]
+    // Every check (channel, bot permissions, panel limit, role safety), posting, saving
+    // and logging: services/reactionRoleService.js (shared with the web dashboard).
+    const { message, rejected } = await createReactionRolePanel(interaction.client, interaction.guild, {
+        channel, title, description, roleIds, actorId: interaction.user.id, actorTag: interaction.user.tag,
     });
 
-    const roleIds = roles.map(role => role.id);
-    try {
-        await createReactionRoleMessage(
-            interaction.client,
-            interaction.guildId,
-            channel.id,
-            message.id,
-            roleIds
-        );
-    } catch (saveError) {
-        // The panel is already posted but its data failed to persist, so the dropdown
-        // would not work. Remove the orphaned message before surfacing the error.
-        await message.delete().catch(() => {});
-        throw saveError;
-    }
-
-    logger.info(`Reaction role message created: ${message.id} with ${roles.length} roles by ${interaction.user.tag}`);
-
-    try {
-        await logEvent({
-            client: interaction.client,
-            guildId: interaction.guildId,
-            eventType: EVENT_TYPES.REACTION_ROLE_CREATE,
-            data: {
-                description: `Reaction role panel created by ${interaction.user.tag}`,
-                userId: interaction.user.id,
-                channelId: channel.id,
-                fields: [
-                    {
-                        name: 'Title',
-                        value: title,
-                        inline: false
-                    },
-                    {
-                        name: 'Channel',
-                        value: channel.toString(),
-                        inline: true
-                    },
-                    {
-                        name: 'Roles',
-                        value: `${roles.length} roles`,
-                        inline: true
-                    },
-                    {
-                        name: 'Role List',
-                        value: roles.map(r => r.toString()).join(','),
-                        inline: false
-                    },
-                    {
-                        name: 'Message Link',
-                        value: message.url,
-                        inline: false
-                    }
-                ]
-            }
+    if (rejected.length > 0) {
+        await interaction.followUp({
+            embeds: [warningEmbed('Role Validation Warning', `The following roles cannot be added:\n${rejected.join('\n')}`)],
+            flags: MessageFlags.Ephemeral
         });
-    } catch (logError) {
-        logger.warn('Failed to log reaction role creation:', logError);
     }
 
     await InteractionHelper.safeEditReply(interaction, {

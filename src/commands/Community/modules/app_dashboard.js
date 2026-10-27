@@ -42,6 +42,7 @@ import {
     deleteApplication,
 } from '../../../utils/database.js';
 import { getGuildConfig } from '../../../services/config/guildConfig.js';
+import { createApplicationRole, deleteApplicationRole, updateApplicationRole } from '../../../services/applicationRoleService.js';
 import { setLogChannel, resolveApplicationLogChannel, resolveLogChannel } from '../../../services/loggingService.js';
 
 async function buildDashboardEmbed(settings, roles, guild, client) {
@@ -623,7 +624,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
                 const wasEnabled = roles[roleIndex].enabled !== false;
                 roles[roleIndex].enabled = !wasEnabled;
 
-                await saveApplicationRoles(interaction.client, guildId, roles);
+                await updateApplicationRole(interaction.client, guildId, selectedRoleId, { enabled: !wasEnabled });
 
                 const updatedRole = roles[roleIndex];
                 const updatedSettings = await getApplicationSettings(interaction.client, guildId);
@@ -910,9 +911,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
 
     if (selectedRoleId) {
         
-        const roleSettings = await getApplicationRoleSettings(client, guildId, selectedRoleId);
-        roleSettings.questions = newQuestions;
-        await saveApplicationRoleSettings(client, guildId, selectedRoleId, roleSettings);
+        await updateApplicationRole(client, guildId, selectedRoleId, { questions: newQuestions });
     } else {
         
         settings.questions = newQuestions;
@@ -976,11 +975,8 @@ async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles
             return;
         }
 
-        roles.push({ roleId, name: customName });
-        await saveApplicationRoles(client, guildId, roles);
-        await saveApplicationRoleSettings(client, guildId, roleId, {
-            questions: getDefaultApplicationQuestions(),
-        });
+        const { role: added } = await createApplicationRole(client, guildId, { roleId, name: customName.slice(0, 50) });
+        roles.push(added);
 
         await modalSubmission.reply({
             embeds: [successEmbed('Role Added', `${role ?? roleId} added as **${customName}**.`)],
@@ -1042,7 +1038,8 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
         }
 
         roles.splice(index, 1);
-        await saveApplicationRoles(client, guildId, roles);
+        // Removes the role from the list (its submitted applications are kept).
+        await deleteApplicationRole(client, guildId, roleId, { deleteApplications: false });
 
         await modalSubmission.reply({
             embeds: [successEmbed('Role Removed', `<@&${roleId}> has been removed from the application roles.`)],
@@ -1158,23 +1155,15 @@ async function handleDeleteApplication(confirmSubmit, selectedRoleId, guildId, r
 
         roles.splice(roleIndex, 1);
 
-        await saveApplicationRoles(client, guildId, roles);
-
-        await deleteApplicationRoleSettings(client, guildId, selectedRoleId);
-
-        const allApplications = await getApplications(client, guildId);
-        const applicationsToDelete = allApplications.filter(app => app.roleId === selectedRoleId);
-
-        for (const app of applicationsToDelete) {
-            await deleteApplication(client, guildId, app.id, app.userId);
-        }
+        // Role, its settings and every application for it (shared with the web dashboard).
+        const { deletedApplications } = await deleteApplicationRole(client, guildId, selectedRoleId);
 
         await confirmSubmit.reply({
             embeds: [
                 successEmbed(
                     '🗑️ Application Deleted',
                     `The application for <@&${selectedRoleId}> (**${deletedRole.name}**) has been permanently deleted.\n\n` +
-                    `Deleted: **${applicationsToDelete.length}** application${applicationsToDelete.length !== 1 ? 's' : ''}`,
+                    `Deleted: **${deletedApplications}** application${deletedApplications !== 1 ? 's' : ''}`,
                 ),
             ],
             flags: MessageFlags.Ephemeral,

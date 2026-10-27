@@ -5,7 +5,7 @@
 import { CANNED_MAX_LENGTH, CANNED_NAME } from '../../cannedService.js';
 import { html } from '../html.js';
 import {
-    InputError, PERMS, buttonForm, channelField, channelName, channelPicker, checkbox, checkboxInput, intField,
+    InputError, PERMS, buttonForm, channelField, channelName, channelPicker, channelWarnings, checkbox, checkboxInput, intField,
     multiline, numberInput, postForm, roleField, rolePicker, text, textArea, textInput, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -15,7 +15,7 @@ export default {
     key: 'tickets',
     label: 'Tickets',
     state: 'tickets',
-    help: 'Support tickets, modmail and saved answers. Creating the ticket panel stays in Discord (/ticket setup); panel text changes show after "Repost Panel" in /ticket dashboard.',
+    help: 'Support tickets, modmail and saved answers. Set up and post the ticket panel here or with /ticket setup in Discord.',
 
     async load(ctx) {
         const [settings, config, canned] = await Promise.all([
@@ -38,9 +38,20 @@ ${channelPicker(g, 'ticketLogsChannelId', t.ticketLogsChannelId, { label: 'Ticke
 ${channelPicker(g, 'ticketTranscriptChannelId', t.ticketTranscriptChannelId, { label: 'Transcript channel', perms: PERMS.postFiles })}
 ${textInput('ticketButtonLabel', t.ticketButtonLabel || 'Create Ticket', { label: 'Panel button label', max: 80 })}
 ${textArea('ticketPanelMessage', t.ticketPanelMessage || '', { label: 'Panel message', max: 2000 })}</div>`);
+        const canPost = ctx.canEdit && ctx.canAct;
         const panel = t.ticketPanelChannelId
-            ? html`<p>Panel in ${channelName(g, t.ticketPanelChannelId)}.</p>`
-            : html`<p class="warn">No ticket panel yet: run /ticket setup in Discord.</p>`;
+            ? html`<div class="panel-row"><p>Panel in ${channelName(g, t.ticketPanelChannelId)}${channelWarnings(g, t.ticketPanelChannelId, PERMS.post).map((w) => html` <span class="field-warn">${w}</span>`)}.</p>
+${buttonForm(ctx, 'tickets', 'panel-publish', 'Update or re-post the panel', {}, { danger: false, canEdit: canPost })}</div>
+<p class="muted">Saving the panel text below does not change the message in Discord until you update the panel.</p>`
+            : html`<p class="warn">No ticket panel yet.</p>${postForm(ctx, 'tickets', 'setup', html`<div class="grid">
+${channelPicker(g, 'panelChannelId', null, { label: 'Post the panel in', perms: PERMS.post, optional: false })}
+${textInput('buttonLabel', 'Create Ticket', { label: 'Button label', max: 80 })}
+${channelPicker(g, 'categoryId', null, { label: 'Open tickets category', kinds: ['category'], perms: PERMS.category, noneLabel: 'a new "Tickets" category' })}
+${channelPicker(g, 'closedCategoryId', null, { label: 'Closed tickets category', kinds: ['category'], perms: PERMS.category })}
+${rolePicker(g, 'staffRoleId', null, { label: 'Ticket staff role', assign: false })}
+${numberInput('maxTicketsPerUser', 3, { label: 'Open tickets per member (1–10)', min: 1, max: 10 })}
+${checkboxInput('dmOnClose', true, { label: 'DM the member when a ticket closes' })}
+${textArea('panelMessage', 'Click the button below to create a support ticket.', { label: 'Panel message', max: 2000 })}</div>`, { submit: 'Set up and post the panel', canEdit: canPost })}`;
         const blockedRows = blocked.map((id) => [html`<code>${id}</code>`, buttonForm(ctx, 'tickets', 'unblock', 'Unblock', { userId: id }, { danger: false })]);
         const cannedRows = Object.entries(canned).sort((a, b) => a[0].localeCompare(b[0])).map(([name, body]) => [
             html`<code>${name}</code>${ctx.services.isBuiltInCanned(name) ? html` <span class="muted">(built-in)</span>` : ''}`,
@@ -50,12 +61,45 @@ ${textArea('ticketPanelMessage', t.ticketPanelMessage || '', { label: 'Panel mes
         const cannedAdd = postForm(ctx, 'tickets', 'canned-add', html`<div class="grid">
 ${textInput('name', '', { label: 'Name (a-z, 0-9, -)', max: 32 })}
 ${textArea('text', '', { label: 'Answer', max: CANNED_MAX_LENGTH, rows: 3 })}</div>`, { submit: 'Save answer' });
-        return html`${section('Ticket settings', html`${panel}${form}`)}
+        return html`${section('Ticket panel', panel, ctx.canAct ? '' : 'Posting the panel needs Administrator in the main server.')}
+${section('Ticket settings', form)}
 ${section('Modmail blocked members', table(['User ID', ''], blockedRows, 'Nobody is blocked from modmail.'), 'Block members with /modmail block in Discord.')}
 ${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${cannedAdd}`, 'Staff post them with /canned send. Built-in answers can be replaced (same name) but not deleted.')}`;
     },
 
     actions: {
+        setup: {
+            admin: true,
+            async run(ctx, form) {
+                const g = ctx.guild;
+                const panelChannelId = channelField(g, form, 'panelChannelId', { optional: false, label: 'Panel channel' });
+                const { message, settings } = await ctx.services.setupTicketSystem(ctx.client, g, {
+                    panelChannel: g.channels.cache.get(panelChannelId),
+                    panelMessage: multiline(form, 'panelMessage', 2000),
+                    buttonLabel: text(form, 'buttonLabel', 80),
+                    categoryId: channelField(g, form, 'categoryId', { kinds: ['category'], label: 'Open tickets category' }),
+                    closedCategoryId: channelField(g, form, 'closedCategoryId', { kinds: ['category'], label: 'Closed tickets category' }),
+                    staffRoleId: roleField(g, form, 'staffRoleId', { label: 'Ticket staff role' }),
+                    maxTicketsPerUser: intField(form, 'maxTicketsPerUser', { min: 1, max: 10, label: 'Open tickets per member' }),
+                    dmOnClose: checkbox(form, 'dmOnClose'),
+                });
+                return {
+                    changes: [{ key: 'ticketPanel', old: null, new: { channelId: panelChannelId, messageId: message?.id || null } },
+                        ...Object.entries(settings || {}).filter(([k]) => k !== 'ticketPanelMessageId' && k !== 'ticketPanelChannelId').map(([key, value]) => ({ key, old: null, new: value }))],
+                    message: 'Ticket system set up: the panel is posted.',
+                };
+            },
+        },
+        'panel-publish': {
+            admin: true,
+            async run(ctx) {
+                const { action, message } = await ctx.services.publishTicketPanel(ctx.client, ctx.guild);
+                return {
+                    changes: [{ key: 'ticketPanel', old: null, new: action === 'posted' ? { posted: message?.id || true } : { updated: true } }],
+                    message: action === 'posted' ? 'The panel was missing: a new one is posted.' : 'The live panel now shows the saved text.',
+                };
+            },
+        },
         async settings(ctx, form) {
             const g = ctx.guild;
             const current = await ctx.services.getTicketSettings(ctx.client, ctx.guildId);

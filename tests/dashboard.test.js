@@ -12,6 +12,8 @@ import { createAccessChecker, decideAccess } from '../src/services/dashboard/acc
 import { auditPage, caseDetailPage, casesPage, isAllowedImageUrl, isSafeLink } from '../src/services/dashboard/pages.js';
 import { SECURITY_HEADERS, createDashboard, dashboardSettings, registerDashboard } from '../src/services/dashboard/routes.js';
 
+// The only script on any page: the static enhancement file (CSP script-src 'self').
+const ALLOWED_SCRIPT = '<script src="/dashboard/static/dashboard.js" defer></script>';
 const SECRET = 'x'.repeat(64);
 const GUILD = '100000000000000001';
 const ADMIN = '200000000000000002';
@@ -76,13 +78,14 @@ test('pages escape user-provided case fields', () => {
 test('pages have no inline styles or scripts and link the one stylesheet', () => {
     const page = casesPage({ session: { username: 'a', csrf: 't' }, rows: [], total: 0 });
     assert.ok(page.includes('<link rel="stylesheet" href="/dashboard/static/dashboard.css">'));
-    assert.ok(!/<style|style=|<script/i.test(page));
+    assert.ok(page.includes(ALLOWED_SCRIPT), 'the one external script (progressive enhancement)');
+    assert.ok(!/<style|style=|<script/i.test(page.replace(ALLOWED_SCRIPT, '')));
     assert.ok(page.includes('href="/dashboard/overview"'), 'sidebar');
     assert.ok(!page.includes('Phase 2'), 'no placeholders left (Phase 2 built the module pages)');
     assert.ok(page.includes('href="/dashboard/enforcement"'), 'settings pages in the sidebar');
     const audit = auditPage({ session: { username: 'a', csrf: 't' }, rows: [{ created_at: new Date(0), username: '<u>', user_id: ADMIN, module: 'logging', key: 'modLogChannelId', old: null, new: '123' }] });
     assert.ok(audit.includes('&lt;u&gt;'));
-    assert.ok(!/<style|style=|<script/i.test(audit));
+    assert.ok(!/<style|style=|<script/i.test(audit.replace(ALLOWED_SCRIPT, '')));
     const css = readFileSync(new URL('../src/services/dashboard/static/dashboard.css', import.meta.url), 'utf8');
     assert.ok(!/gradient/i.test(css), 'plain design: no gradients');
 });
@@ -424,6 +427,26 @@ test('stylesheet is served as text/css', async () => {
     assert.equal(res.statusCode, 200);
     assert.equal(res.contentType, 'text/css');
     assert.match(res.body, /--accent/);
+});
+
+test('static files: the script is served as text/javascript; nothing else is served; CSP allows only self scripts', async () => {
+    const { d } = makeDashboard();
+    const js = fakeRes();
+    d.staticFile({ ip: '1.2.3.4', params: { file: 'dashboard.js' } }, js);
+    assert.equal(js.statusCode, 200);
+    assert.equal(js.contentType, 'text/javascript');
+    assert.match(js.body, /data-confirm/);
+    for (const file of ['../routes.js', 'routes.js', '.env', '', 'dashboard.css.map']) {
+        const res = fakeRes();
+        d.staticFile({ ip: '1.2.3.4', params: { file } }, res);
+        assert.equal(res.statusCode, 404, file);
+    }
+    const csp = SECURITY_HEADERS['Content-Security-Policy'];
+    assert.match(csp, /script-src 'self'/);
+    assert.ok(!/unsafe-inline|unsafe-eval/.test(csp));
+    // The script never talks to the network and never evaluates strings.
+    const source = readFileSync(new URL('../src/services/dashboard/static/dashboard.js', import.meta.url), 'utf8');
+    assert.ok(!/\bfetch\(|XMLHttpRequest|eval\(|new Function|innerHTML|document\.write/.test(source));
 });
 
 test('overview: status, counts, checklist and recent actions; read-only', async () => {

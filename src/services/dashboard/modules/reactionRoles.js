@@ -1,11 +1,15 @@
-// reactionRoles.js — Reaction role panels: list, add/remove a role, delete a panel.
-// Writes go through services/reactionRoleService.js (row-locked, rebuilds the live
-// panel message), the same functions /reactroles dashboard uses. Creating a new panel
-// stays in Discord (/reactroles setup): the bot has to post the panel message.
+// reactionRoles.js — Reaction role panels: create a panel (posted by the bot), add or
+// remove a role, delete a panel. Everything goes through services/reactionRoleService.js
+// (role safety, bot permissions, row-locked panel data, rebuilds the live message), the
+// same functions /reactroles setup and /reactroles dashboard use.
 
 import { html } from '../html.js';
-import { InputError, buttonForm, channelName, isSnowflake, postForm, rolePicker, roleName, roleWarnings, text } from '../forms.js';
+import {
+    InputError, PERMS, buttonForm, channelField, channelName, channelPicker, isSnowflake, list, postForm, rolePicker, roleName,
+    roleWarnings, text, textArea, textInput,
+} from '../forms.js';
 import { section, table } from './common.js';
+import { MAX_PANELS_PER_GUILD, PANEL_DESCRIPTION_MAX, PANEL_TITLE_MAX } from '../../reactionRoleService.js';
 
 function messageIdField(form) {
     const id = text(form, 'messageId', 25);
@@ -16,7 +20,7 @@ function messageIdField(form) {
 export default {
     key: 'reaction-roles',
     label: 'Reaction roles',
-    help: 'Self-assign role panels. Create a new panel with /reactroles setup in Discord; manage existing panels here.',
+    help: 'Self-assign role panels: members pick roles from a menu under the panel message. Unsafe roles (staff permissions, above my highest role, managed) are refused.',
 
     async load(ctx) {
         return { panels: await ctx.services.getAllReactionRoleMessages(ctx.client, ctx.guildId) };
@@ -24,20 +28,49 @@ export default {
 
     render(ctx, { panels }) {
         const g = ctx.guild;
-        if (!panels.length) return section('Panels', html`<p class="muted">No reaction role panels. Create one with /reactroles setup in Discord.</p>`);
-        return html`${panels.map((panel) => {
+        const canPost = ctx.canEdit && ctx.canAct;
+        const create = panels.length >= MAX_PANELS_PER_GUILD
+            ? html`<p class="muted">This server has the maximum of ${MAX_PANELS_PER_GUILD} panels. Delete one to create another.</p>`
+            : postForm(ctx, 'reaction-roles', 'panel-create', html`<div class="grid">
+${channelPicker(g, 'channelId', null, { label: 'Post in', perms: PERMS.post, optional: false })}
+${textInput('title', '', { label: 'Title', max: PANEL_TITLE_MAX })}
+${textArea('description', '', { label: 'Description', max: PANEL_DESCRIPTION_MAX, rows: 3 })}
+${rolePicker(g, 'roleIds', [], { label: 'Roles (choose up to 25; Ctrl/Cmd-click for several)', autoAssign: true, multiple: true })}</div>`,
+            { submit: 'Create and post the panel', canEdit: canPost });
+        const existing = panels.map((panel) => {
             const roles = Array.isArray(panel.roles) ? panel.roles : Object.values(panel.roles || {});
             const rows = roles.map((roleId) => [roleName(g, roleId), roleWarnings(g, roleId, { autoAssign: true }).join('; ') || html`<span class="ok">ok</span>`,
                 buttonForm(ctx, 'reaction-roles', 'role-remove', 'Remove', { messageId: panel.messageId, roleId })]);
             const body = html`<p>In ${channelName(g, panel.channelId)} · message <code>${panel.messageId}</code> · ${roles.length}/25 roles</p>
 ${table(['Role', 'Problems', ''], rows, 'No roles.')}
-${postForm(ctx, 'reaction-roles', 'role-add', rolePicker(g, 'roleId', null, { label: 'Add role', optional: false, autoAssign: true }), { submit: 'Add', inline: true, hidden: { messageId: panel.messageId } })}
-${buttonForm(ctx, 'reaction-roles', 'panel-delete', 'Delete panel', { messageId: panel.messageId })}`;
+<div class="row-actions">${postForm(ctx, 'reaction-roles', 'role-add', rolePicker(g, 'roleId', null, { label: 'Add role', optional: false, autoAssign: true }), { submit: 'Add', inline: true, hidden: { messageId: panel.messageId } })}
+${buttonForm(ctx, 'reaction-roles', 'panel-delete', 'Delete panel', { messageId: panel.messageId }, { confirm: 'Delete this panel and its message in Discord?' })}</div>`;
             return section(`Panel ${panel.messageId}`, body);
-        })}`;
+        });
+        return html`${section('New panel', create, `Same as /reactroles setup.${ctx.canAct ? '' : ' Posting needs Administrator in the main server.'}`, { open: panels.length === 0 })}
+${existing.length ? existing : section('Panels', html`<p class="muted">No reaction role panels yet.</p>`)}`;
     },
 
     actions: {
+        'panel-create': {
+            admin: true,
+            async run(ctx, form) {
+                const g = ctx.guild;
+                const channelId = channelField(g, form, 'channelId', { optional: false, label: 'Post in' });
+                const roleIds = list(form, 'roleIds', { max: 25 }).filter(isSnowflake);
+                if (!roleIds.length) throw new InputError('Choose at least one role.');
+                const { message, roles, rejected } = await ctx.services.createReactionRolePanel(ctx.client, g, {
+                    channel: g.channels.cache.get(channelId), title: text(form, 'title', PANEL_TITLE_MAX + 1),
+                    description: text(form, 'description', PANEL_DESCRIPTION_MAX + 1), roleIds,
+                    actorId: ctx.actor.userId, actorTag: `${ctx.actor.username} (dashboard)`,
+                });
+                return {
+                    changes: [{ key: `panel.${message.id}`, old: null, new: { channelId, roles: roles.map((r) => r.id) } }],
+                    message: `Panel posted with ${roles.length} role(s).`,
+                    warnings: rejected.length ? [`Skipped: ${rejected.join('; ')}`] : [],
+                };
+            },
+        },
         async 'role-add'(ctx, form) {
             const messageId = messageIdField(form);
             const roleId = text(form, 'roleId', 25);

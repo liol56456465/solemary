@@ -1,6 +1,7 @@
 // reactionRoleService.js
 
-import { ActionRowBuilder, EmbedBuilder, StringSelectMenuBuilder } from 'discord.js';
+import { ActionRowBuilder, ChannelType, EmbedBuilder, PermissionFlagsBits, StringSelectMenuBuilder } from 'discord.js';
+import { getColor } from '../config/bot.js';
 import { logger } from '../utils/logger.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
@@ -650,6 +651,138 @@ export async function removePanelRole(client, guildId, messageId, roleId) {
 
     await rebuildLivePanelMessage(guild, panel);
     return { panel, deletedPanel: false };
+}
+
+export const MAX_PANELS_PER_GUILD = 5;
+export const PANEL_TITLE_MAX = 256;
+export const PANEL_DESCRIPTION_MAX = 4000;
+
+/** Why `role` can't be on a new panel (a line for the "cannot be added" list), or null. */
+function newPanelRoleProblem(guild, role, seen) {
+    if (seen.has(role.id)) return `**${role.name}** - This role was selected more than once`;
+    if (role.position >= (guild.members.me?.roles?.highest?.position ?? 0)) {
+        return `**${role.name}** - My bot's role is positioned lower than this role in your server's role hierarchy and cannot assign it`;
+    }
+    if (hasDangerousPermissions(role)) return `**${role.name}** - This role has dangerous permissions (Administrator, Manage Server, etc.)`;
+    if (role.managed) return `**${role.name}** - This is a managed role (integration/bot role)`;
+    if (role.id === guild.id) return `**${role.name}** - Cannot use the @everyone role`;
+    return null;
+}
+
+/** The panel message (embed + select menu) for a title, description and roles. */
+export function buildReactionRolePanelPayload(title, description, roles) {
+    const select = new StringSelectMenuBuilder()
+        .setCustomId('reaction_roles')
+        .setPlaceholder('Select your roles')
+        .setMinValues(0)
+        .setMaxValues(roles.length)
+        .addOptions(roles.map((role) => ({
+            label: String(role.name).substring(0, 100),
+            description: `Add/remove the ${role.name} role`.substring(0, 100),
+            value: role.id,
+            emoji: '🎭',
+        })));
+    const embed = new EmbedBuilder()
+        .setTitle(title)
+        .setDescription(description)
+        .setColor(getColor('info'))
+        .addFields({ name: 'Available Roles', value: roles.map((role) => `• ${role}`).join('\n') })
+        .setFooter({ text: 'Select roles from the dropdown menu below' });
+    return { embeds: [embed], components: [new ActionRowBuilder().addComponents(select)] };
+}
+
+/**
+ * Creates a reaction role panel (shared by /reactroles setup and the web dashboard):
+ * text/announcement channel, Manage Roles, Send Messages there, at most 5 panels, then
+ * every role checked (duplicates, hierarchy, dangerous permissions, managed, @everyone).
+ * Refused roles are skipped and listed; with no valid role at all it throws. Posts the
+ * panel, saves it (deleting the message again when saving fails) and logs
+ * REACTION_ROLE_CREATE. Resolves { message, panel, roles, rejected }.
+ */
+export async function createReactionRolePanel(client, guild, { channel, title, description, roleIds, actorId = null, actorTag = null }) {
+    const cleanTitle = String(title ?? '').trim();
+    const cleanDescription = String(description ?? '').trim();
+    if (!cleanTitle || cleanTitle.length > PANEL_TITLE_MAX) {
+        throw createError('Bad panel title', ErrorTypes.VALIDATION, `The title must be 1–${PANEL_TITLE_MAX} characters.`, { expected: true });
+    }
+    if (!cleanDescription || cleanDescription.length > PANEL_DESCRIPTION_MAX) {
+        throw createError('Bad panel description', ErrorTypes.VALIDATION, `The description must be 1–${PANEL_DESCRIPTION_MAX} characters.`, { expected: true });
+    }
+    if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
+        throw createError(`Invalid channel type: ${channel?.type}`, ErrorTypes.VALIDATION, 'Please select a text or announcement channel.', { channelType: channel?.type, expected: true });
+    }
+    const me = guild.members.me;
+    if (!me?.permissions?.has?.(PermissionFlagsBits.ManageRoles)) {
+        throw createError('Bot missing ManageRoles permission', ErrorTypes.PERMISSION, 'I need the "Manage Roles" permission to set up reaction roles.', { permission: 'ManageRoles', expected: true });
+    }
+    if (!channel.permissionsFor(me)?.has?.([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks])) {
+        throw createError(`Bot cannot send messages in ${channel.name}`, ErrorTypes.PERMISSION, `I don't have permission to send messages (with embeds) in <#${channel.id}>.`, { channelId: channel.id, expected: true });
+    }
+    const existing = await getAllReactionRoleMessages(client, guild.id);
+    if (existing && existing.length >= MAX_PANELS_PER_GUILD) {
+        throw createError('Panel limit reached', ErrorTypes.VALIDATION,
+            `Your guild has reached the maximum of ${MAX_PANELS_PER_GUILD} reaction role panels. Delete an existing panel to create a new one.`,
+            { maxPanels: MAX_PANELS_PER_GUILD, currentPanels: existing.length, expected: true });
+    }
+
+    const roles = [];
+    const rejected = [];
+    const seen = new Set();
+    for (const roleId of (roleIds || []).slice(0, MAX_ROLES_PER_MESSAGE)) {
+        const role = guild.roles.cache.get(roleId);
+        if (!role) {
+            rejected.push(`\`${roleId}\` - This role no longer exists`);
+            continue;
+        }
+        const problem = newPanelRoleProblem(guild, role, seen);
+        if (problem) {
+            rejected.push(problem);
+            continue;
+        }
+        seen.add(role.id);
+        roles.push(role);
+    }
+    if (roles.length === 0) {
+        const message = rejected.length
+            ? `The following roles cannot be added:\n${rejected.join('\n')}`
+            : 'You must provide at least one valid role.';
+        throw createError('No valid roles provided', ErrorTypes.VALIDATION, message, { errors: rejected, expected: true });
+    }
+
+    const message = await channel.send(buildReactionRolePanelPayload(cleanTitle, cleanDescription, roles));
+    let panel;
+    try {
+        panel = await createReactionRoleMessage(client, guild.id, channel.id, message.id, roles.map((role) => role.id));
+    } catch (saveError) {
+        // The panel is posted but its data failed to persist, so the dropdown would not
+        // work. Remove the orphaned message before surfacing the error.
+        await message.delete().catch(() => {});
+        throw saveError;
+    }
+
+    logger.info(`Reaction role message created: ${message.id} with ${roles.length} roles by ${actorTag || actorId}`);
+    try {
+        await logEvent({
+            client,
+            guildId: guild.id,
+            eventType: EVENT_TYPES.REACTION_ROLE_CREATE,
+            data: {
+                description: `Reaction role panel created${actorTag ? ` by ${actorTag}` : ''}`,
+                userId: actorId,
+                channelId: channel.id,
+                fields: [
+                    { name: 'Title', value: cleanTitle, inline: false },
+                    { name: 'Channel', value: `<#${channel.id}>`, inline: true },
+                    { name: 'Roles', value: `${roles.length} roles`, inline: true },
+                    { name: 'Role List', value: roles.map((r) => r.toString()).join(','), inline: false },
+                    { name: 'Message Link', value: message.url || message.id, inline: false },
+                ],
+            },
+        });
+    } catch (logError) {
+        logger.warn('Failed to log reaction role creation:', logError);
+    }
+    return { message, panel, roles, rejected };
 }
 
 /**

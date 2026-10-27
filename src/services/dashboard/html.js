@@ -52,6 +52,14 @@ export function formatDate(value) {
     return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
 
+/** A <time> showing formatDate; the static script turns it into "5 min ago" (UTC stays in the tooltip). */
+export function timeTag(value) {
+    if (!value) return '—';
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return html`<time datetime="${date.toISOString()}" data-relative>${formatDate(date)}</time>`;
+}
+
 /** "3 d", "5 h", "12 min" since `value`. */
 export function formatAge(value, now = Date.now()) {
     const ms = Math.max(0, now - new Date(value).getTime());
@@ -64,6 +72,7 @@ export function formatAge(value, now = Date.now()) {
 
 export const BASE = '/dashboard';
 export const CSS_PATH = `${BASE}/static/dashboard.css`;
+export const JS_PATH = `${BASE}/static/dashboard.js`;
 
 /** A dashboard URL: path('/cases') → '/dashboard/cases'. */
 export function path(suffix = '') {
@@ -131,7 +140,7 @@ export function layout({ title, active = null, session = null, access = null, mo
     const user = session ? html`<div class="user"><span>${session.username}</span>${access && !access.canAct ? html` <span class="tag">view and settings</span>` : ''}
 <form method="post" action="${path('/logout')}" class="inline"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit">Log out</button></form></div>` : '';
     return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="referrer" content="same-origin"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"></head>
+<meta name="referrer" content="same-origin"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body><header class="top"><a class="brand" href="${path('/overview')}">Meowist dashboard</a>${user}</header>
 <div class="${session ? 'shell' : 'shell bare'}">${session ? sidebar(active, moduleStates) : ''}<main>${body}</main></div></body></html>`.text;
 }

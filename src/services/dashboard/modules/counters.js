@@ -1,7 +1,7 @@
 // counters.js — Server stats counters (list, change type, delete) and the counting
 // game (channel, number system, reset, off). Writes go through serverstatsService
 // (row-locked list) and countingGameService, the functions /serverstats and /count use.
-// New counters are created in Discord (/serverstats create): the bot creates the channel.
+// New counters: createServerCounter (the bot creates the channel; Administrators only).
 
 import { COUNTER_TYPE_CONFIG, getCounterTypeLabel } from '../../serverstatsService.js';
 import { getCountingSystemChoices, getCountingSystemLabel } from '../../countingGameService.js';
@@ -20,7 +20,7 @@ function counterIdField(form) {
 export default {
     key: 'counters',
     label: 'Counters',
-    help: 'Channel-name counters (members, bots) updated every 15 minutes, and the counting game. Create a new counter with /serverstats create in Discord.',
+    help: 'Channel-name counters (members, bots) updated every 15 minutes, and the counting game.',
 
     async load(ctx) {
         const [counters, counting] = await Promise.all([
@@ -34,18 +34,41 @@ export default {
         const g = ctx.guild;
         const rows = counters.map((c) => [html`<code>${c.id}</code>`, channelName(g, c.channelId),
             postForm(ctx, 'counters', 'counter-type', selectInput('type', c.type, TYPES.map((t) => [t, getCounterTypeLabel(t)]), { label: '' }), { inline: true, submit: 'Change', hidden: { counterId: c.id } }),
-            buttonForm(ctx, 'counters', 'counter-delete', 'Delete (and its channel)', { counterId: c.id })]);
+            buttonForm(ctx, 'counters', 'counter-delete', 'Delete (and its channel)', { counterId: c.id }, { confirm: 'Delete this counter and its channel?' })]);
         const systems = getCountingSystemChoices().map((c) => [c.value, c.name]);
         const countingBody = html`<p>Counting game: <span class="state ${counting.enabled ? 'state-on' : 'state-off'}">${counting.enabled ? 'on' : 'off'}</span>
 ${counting.enabled ? html` in ${channelName(g, counting.channelId)} · ${getCountingSystemLabel(counting.system)} · next number ${counting.nextNumber || 1} · best streak ${counting.bestStreak || 0}` : ''}</p>
 ${postForm(ctx, 'counters', 'counting-setup', html`<div class="grid">${channelPicker(g, 'channelId', counting.channelId || null, { label: 'Counting channel', perms: [...PERMS.post, 'ReadMessageHistory'], optional: false })}
 ${selectInput('system', counting.system || 'decimal', systems, { label: 'Number system' })}</div>`, { submit: counting.enabled ? 'Restart in this channel (resets the count)' : 'Turn on' })}
-${counting.enabled ? html`${buttonForm(ctx, 'counters', 'counting-reset', 'Reset the count to 1')} ${buttonForm(ctx, 'counters', 'counting-off', 'Turn off')}` : ''}`;
-        return html`${section('Server stats counters', table(['ID', 'Channel', 'Type', ''], rows, 'No counters. Create one with /serverstats create.'))}
+${counting.enabled ? html`${buttonForm(ctx, 'counters', 'counting-reset', 'Reset the count to 1', {}, { confirm: 'Reset the counting game to 1?' })} ${buttonForm(ctx, 'counters', 'counting-off', 'Turn off')}` : ''}`;
+        const free = TYPES.filter((t) => !counters.some((c) => c.type === t));
+        const create = free.length
+            ? postForm(ctx, 'counters', 'counter-create', html`<div class="grid">
+${selectInput('type', free[0], free.map((t) => [t, getCounterTypeLabel(t)]), { label: 'Counts' })}
+${selectInput('channelType', 'voice', [['voice', 'Voice channel (read-only name)'], ['text', 'Text channel']], { label: 'Channel kind' })}
+${channelPicker(g, 'categoryId', null, { label: 'In category', kinds: ['category'], perms: PERMS.category, optional: false })}</div>`,
+            { submit: 'Create counter', canEdit: ctx.canEdit && ctx.canAct })
+            : html`<p class="muted">Every counter type is in use (one counter per type).</p>`;
+        return html`${section('Server stats counters', html`${table(['ID', 'Channel', 'Type', ''], rows, 'No counters yet.')}
+<h3>New counter</h3>${create}`, `Same as /serverstats create: the bot creates the channel.${ctx.canAct ? '' : ' Creating channels needs Administrator in the main server.'}`)}
 ${section('Counting game', countingBody, 'Same as /count setup: (re)starting resets the count and the leaderboard.')}`;
     },
 
     actions: {
+        'counter-create': {
+            admin: true,
+            async run(ctx, form) {
+                const type = choiceField(form, 'type', TYPES, 'Counts');
+                const channelType = choiceField(form, 'channelType', ['voice', 'text'], 'Channel kind');
+                const categoryId = channelField(ctx.guild, form, 'categoryId', { kinds: ['category'], optional: false, label: 'Category' });
+                const { counter, channel, renamed } = await ctx.services.createServerCounter(ctx.client, ctx.guild, {
+                    type, channelType, category: ctx.guild.channels.cache.get(categoryId), actorTag: `${ctx.actor.username} (dashboard)`,
+                });
+                const result = { changes: [{ key: `counter.${counter.id}`, old: null, new: { type, channelId: channel.id } }], message: `Counter created: #${channel.name}.` };
+                if (!renamed) result.warnings = ['The channel name updates on the next scheduled run.'];
+                return result;
+            },
+        },
         async 'counter-type'(ctx, form) {
             const counterId = counterIdField(form);
             const type = choiceField(form, 'type', TYPES, 'Type');

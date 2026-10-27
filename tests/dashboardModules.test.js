@@ -17,6 +17,7 @@ import { diffSnapshots, recordDashboardChange, changeSummary } from '../src/serv
 import { channelPurposeFor } from '../src/services/automod/channelRouting.js';
 import { NAV } from '../src/services/dashboard/html.js';
 
+const ALLOWED_SCRIPT = '<script src="/dashboard/static/dashboard.js" defer></script>';
 const SECRET = 'x'.repeat(64);
 const GUILD = '100000000000000001';
 const SUPPORT = '100000000000000002';
@@ -109,7 +110,9 @@ function makeServices() {
         stickies: [{ channelId: TEXT, content: 'Read the rules' }],
         tags: [{ name: 'rules', content: 'Be nice', triggerKind: 'none', trigger: null }],
         feeds: [{ id: 1, sourceId: 'UCabcdefghijklmnopqrstuv', channelId: TEXT, template: null }],
+        appRoles: [{ roleId: ROLE_OK, name: 'Helper <b>', enabled: true, questions: ['Why?', { question: 'Age?', minLength: 2 }], logChannelId: null }],
     };
+    const userErr = (message, type) => Object.assign(new Error(message), { type, userMessage: message });
     const clone = (v) => structuredClone(v);
     const merge = (target, patch) => {
         const before = clone(s[target]);
@@ -244,6 +247,98 @@ function makeServices() {
         enableCategory: async (c, g, key) => { record('enableCategory', [key]); delete s.config.disabledCategories[key]; },
         disableCategory: async (c, g, key) => { record('disableCategory', [key]); s.config.disabledCategories[key] = true; },
         postModLog: async (client, kind, fields, options) => { record('postModLog', [kind, options]); },
+        // Posting panels and creating things in Discord (Part 1 of the "everything from the web" work).
+        setupTicketSystem: async (c, guild, opts) => {
+            record('setupTicketSystem', [opts.panelChannel?.id]);
+            if (s.tickets.ticketPanelChannelId) throw userErr('This server already has a ticket system set up.', 'configuration');
+            Object.assign(s.tickets, { ticketPanelChannelId: opts.panelChannel.id, ticketPanelMessage: opts.panelMessage, ticketButtonLabel: opts.buttonLabel });
+            return { message: { id: '710000000000000001' }, settings: clone(s.tickets) };
+        },
+        publishTicketPanel: async () => {
+            record('publishTicketPanel', []);
+            if (!s.tickets.ticketPanelChannelId) throw userErr('The ticket system is not set up yet: set it up first.', 'configuration');
+            return { action: 'updated' };
+        },
+        setupVerification: async (c, guild, { channel, role, message, buttonText }) => {
+            record('setupVerification', [channel.id, role.id]);
+            Object.assign(s.verification, { enabled: true, channelId: channel.id, roleId: role.id, message, buttonText });
+            return { message: { id: '710000000000000002' }, settings: clone(s.verification) };
+        },
+        publishVerificationPanel: async () => {
+            record('publishVerificationPanel', []);
+            if (!s.verification.channelId) throw userErr('The verification panel is not set up yet.', 'configuration');
+            return { action: 'posted', message: { id: '710000000000000003' } };
+        },
+        postAppealPanels: async (c, guild, channel) => {
+            record('postAppealPanels', [channel.id]);
+            if (s.noAppealsCategory) throw userErr('There is no ticket category to open appeals in.', 'configuration');
+            return { mainChannel: { id: channel.id, name: channel.name }, supportChannel: { id: '710000000000000004', name: 'appeals' }, created: false };
+        },
+        createReactionRolePanel: async (c, guild, { channel, roleIds, title }) => {
+            record('createReactionRolePanel', [channel.id, roleIds, title]);
+            const roles = roleIds.filter((id) => id !== ROLE_DANGER).map((id) => ({ id }));
+            if (!roles.length) throw userErr('The following roles cannot be added: Mods - This role has dangerous permissions', 'validation');
+            s.panels.push({ messageId: '710000000000000005', channelId: channel.id, roles: roles.map((r) => r.id) });
+            return { message: { id: '710000000000000005' }, roles, rejected: roleIds.length > roles.length ? ['Mods - dangerous'] : [] };
+        },
+        createGiveaway: async (c, guild, { channel, duration, winnerCount, prize }) => {
+            record('createGiveaway', [channel.id, duration, winnerCount, prize]);
+            if (!/^\d+[smhd]$/.test(duration)) throw userErr('Invalid duration format. Use: 1h, 30m, 5d, 10s (min: 10s, max: 30d)', 'validation');
+            if (!prize) throw userErr('Prize must be between 1 and 256 characters.', 'validation');
+            const giveaway = { messageId: '710000000000000006', channelId: channel.id, prize, winnerCount, endTime: Date.now() + 3600000, participants: [], ended: false };
+            s.giveaways.push(giveaway);
+            return { giveaway: clone(giveaway) };
+        },
+        deleteGiveawayNow: async (c, guild, messageId) => {
+            record('deleteGiveawayNow', [messageId]);
+            const giveaway = s.giveaways.find((x) => x.messageId === messageId);
+            if (!giveaway) throw userErr('No giveaway was found with that message ID in the database.', 'validation');
+            s.giveaways = s.giveaways.filter((x) => x !== giveaway);
+            return { giveaway, deletedMessage: true, channelName: 'general' };
+        },
+        createServerCounter: async (c, guild, { type, channelType, category }) => {
+            record('createServerCounter', [type, channelType, category.id]);
+            if (s.counters.some((k) => k.type === type)) throw userErr('A **Members + Bots** counter already exists for this server.', 'user_input');
+            const counter = { id: 'c2', type, channelId: '710000000000000007' };
+            s.counters.push(counter);
+            return { counter, channel: { id: counter.channelId, name: 'Members: 5' }, renamed: true };
+        },
+        setupJoinToCreate: async (c, guild, opts) => {
+            record('setupJoinToCreate', [opts]);
+            if (s.jtc.triggerChannels.length) throw userErr('This server already has a Join to Create channel set up.', 'validation');
+            s.jtc.triggerChannels.push('710000000000000008');
+            return { channel: { id: '710000000000000008', name: 'Join to Create' }, config: clone(s.jtc) };
+        },
+        editTag: async ({ guildId, name, ...changes }) => {
+            record('editTag', [name, changes]);
+            if (changes.triggerKind === 'regex' && /\(\?/.test(changes.trigger || '')) throw userErr('That pattern is not allowed.', 'user_input');
+            const tag = s.tags.find((t) => t.name === name);
+            if (!tag) return null;
+            Object.assign(tag, changes);
+            return clone(tag);
+        },
+        listApplicationRoles: async () => clone(s.appRoles),
+        createApplicationRole: async (c, g, { roleId, name, questions }) => {
+            record('createApplicationRole', [roleId, name, questions]);
+            if (s.appRoles.some((r) => r.roleId === roleId)) throw userErr('This role is already configured as an application.', 'validation');
+            const role = { roleId, name, enabled: true, questions: questions ? questions.split('\n') : null, logChannelId: null };
+            s.appRoles.push(role);
+            return { role, settings: { questions: role.questions || ['default'] } };
+        },
+        updateApplicationRole: async (c, g, roleId, patch) => {
+            record('updateApplicationRole', [roleId, patch]);
+            const role = s.appRoles.find((r) => r.roleId === roleId);
+            const before = clone(role);
+            Object.assign(role, patch);
+            return { before, after: clone(role) };
+        },
+        deleteApplicationRole: async (c, g, roleId) => {
+            record('deleteApplicationRole', [roleId]);
+            const role = s.appRoles.find((r) => r.roleId === roleId);
+            if (!role) throw userErr('That application role no longer exists.', 'validation');
+            s.appRoles = s.appRoles.filter((r) => r !== role);
+            return { role, deletedApplications: 2 };
+        },
     };
     // Automod helpers: same shape as automodSettings.js (resolve the saved settings).
     const automodSet = (name, fn) => async (...args) => { record(name, args.slice(1)); fn(...args.slice(1)); return clone(s.automod); };
@@ -336,6 +431,8 @@ function get(h, module) {
 // Valid form, the service it must reach, and an invalid form with the expected message.
 const CASES = {
     enforcement: {
+        'appeal-panels': { form: { channelId: TEXT }, service: 'postAppealPanels', admin: true,
+            bad: { form: { channelId: VOICE }, message: /must be a text channel/ } },
         channels: { form: { modLogChannelId: TEXT, evidenceChannelId: '', adminRequestChannelId: '', appealsCategoryId: CAT, supportServerInvite: 'https://discord.gg/abc' }, service: 'updateSettings',
             bad: { form: { modLogChannelId: MISSING }, message: /not in the server/ } },
         roles: { form: { mutedRoleId: ROLE_OK, warnRole1: ROLE_OK2 }, service: 'updateSettings', bad: { form: { mutedRoleId: GUILD }, message: /@everyone/ } },
@@ -379,6 +476,10 @@ const CASES = {
         logs: { form: { joinLogsEnabled: '1', joinLogsChannelId: TEXT, leaveLogsChannelId: '' }, service: 'updateWelcomeSettings', bad: { form: { joinLogsChannelId: VOICE }, message: /must be a text channel/ } },
     },
     tickets: {
+        setup: { seed: (s) => { s.tickets.ticketPanelChannelId = null; }, form: { panelChannelId: TEXT, panelMessage: 'Open one', buttonLabel: 'Help', categoryId: CAT, closedCategoryId: '', staffRoleId: ROLE_OK, maxTicketsPerUser: '3', dmOnClose: '1' },
+            service: 'setupTicketSystem', admin: true, bad: { form: { panelChannelId: CAT, maxTicketsPerUser: '3' }, message: /must be a text channel/ } },
+        'panel-publish': { form: {}, service: 'publishTicketPanel', admin: true,
+            bad: { seed: (s) => { s.tickets.ticketPanelChannelId = null; }, form: {}, message: /not set up yet/ } },
         settings: { form: { ticketCategoryId: CAT, ticketClosedCategoryId: '', ticketStaffRoleId: ROLE_OK, maxTicketsPerUser: '3', dmOnClose: '1', ticketLogsChannelId: '', ticketTranscriptChannelId: '', ticketButtonLabel: 'Help', ticketPanelMessage: 'Open a ticket' },
             service: 'updateTicketSettings', bad: { form: { ticketCategoryId: TEXT, maxTicketsPerUser: '3' }, message: /must be a category/ } },
         unblock: { form: { userId: MEMBER }, service: 'setModmailBlocked', bad: { form: { userId: 'me' }, message: /Discord user ID/ } },
@@ -396,6 +497,10 @@ const CASES = {
         member: { form: { userId: MEMBER, op: 'add', levels: '2' }, service: 'addLevels', bad: { form: { userId: STRANGER, op: 'add', levels: '2' }, message: /not in the server/ }, admin: true },
     },
     verification: {
+        setup: { seed: (s) => { s.verification.channelId = null; }, form: { channelId: TEXT, roleId: ROLE_OK2, buttonText: 'Go', message: 'Press it' }, service: 'setupVerification', admin: true,
+            bad: { form: { channelId: TEXT, roleId: ROLE_OK2 }, message: /already set up/ } },
+        'panel-publish': { form: {}, service: 'publishVerificationPanel', admin: true,
+            bad: { seed: (s) => { s.verification.channelId = null; }, form: {}, message: /not set up yet/ } },
         enabled: { form: { enabled: 'true' }, service: 'updateVerificationSettings', bad: { seed: (s) => { s.verification.autoVerify.enabled = true; }, form: { enabled: 'true' }, message: /Auto-verify is on/ } },
         settings: { form: { roleId: ROLE_OK2, buttonText: 'Go', message: 'Press it' }, service: 'updateVerificationSettings', bad: { form: { roleId: ROLE_DANGER, buttonText: 'Go', message: 'x' }, message: /staff permissions/ } },
         'auto-enabled': { seed: (s) => { s.welcome.roleIds = []; }, form: { enabled: 'true' }, service: 'updateVerificationSettings', bad: { form: { enabled: 'true' }, message: /auto roles are configured/ } },
@@ -403,11 +508,16 @@ const CASES = {
         redirect: { form: { verifySuccessRedirect: 'https://example.com/ok' }, service: 'updateSettings', bad: { form: { verifySuccessRedirect: 'javascript:alert(1)' }, message: /https/ } },
     },
     'reaction-roles': {
+        'panel-create': { form: { channelId: TEXT, title: 'Pick roles', description: 'Colours', roleIds: [ROLE_OK, ROLE_OK2] }, service: 'createReactionRolePanel', admin: true,
+            bad: { form: { channelId: TEXT, title: 'x', description: 'y', roleIds: [] }, message: /Choose at least one role/ } },
         'role-add': { form: { messageId: PANEL, roleId: ROLE_DANGER }, service: 'addPanelRole', bad: { form: { messageId: PANEL, roleId: MISSING }, message: /not in the server/ } },
         'role-remove': { form: { messageId: PANEL, roleId: ROLE_OK }, service: 'removePanelRole', bad: { form: { messageId: 'x', roleId: ROLE_OK }, message: /Unknown panel/ } },
         'panel-delete': { form: { messageId: PANEL }, service: 'deletePanel', bad: { form: { messageId: MISSING }, message: /no longer exists/ } },
     },
     giveaways: {
+        create: { form: { channelId: TEXT, prize: 'Nitro <b>', duration: '2h', winners: '2' }, service: 'createGiveaway', admin: true,
+            bad: { form: { channelId: TEXT, prize: 'x', duration: 'soon', winners: '1' }, message: /Invalid duration format/ } },
+        delete: { form: { messageId: GA_ENDED }, service: 'deleteGiveawayNow', admin: true, bad: { form: { messageId: MISSING }, message: /No giveaway was found/ } },
         end: { form: { messageId: GA_ACTIVE }, service: 'endGiveawayNow', bad: { form: { messageId: '12' }, message: /Unknown giveaway/ }, admin: true },
         reroll: { form: { messageId: GA_ENDED }, service: 'rerollGiveaway', bad: { form: { messageId: '' }, message: /Unknown giveaway/ }, admin: true },
     },
@@ -416,6 +526,8 @@ const CASES = {
         off: { seed: (s) => { s.config.birthdayChannelId = TEXT; }, form: {}, service: 'updateBirthdaySettings' },
     },
     counters: {
+        'counter-create': { form: { type: 'bots', channelType: 'voice', categoryId: CAT }, service: 'createServerCounter', admin: true,
+            bad: { form: { type: 'bots', channelType: 'voice', categoryId: TEXT }, message: /must be a category/ } },
         'counter-type': { form: { counterId: 'c1', type: 'bots' }, service: 'changeCounterType', bad: { form: { counterId: 'c1', type: 'cats' }, message: /unknown choice/ } },
         'counter-delete': { form: { counterId: 'c1' }, service: 'removeServerCounter', bad: { form: { counterId: '' }, message: /Unknown counter/ } },
         'counting-setup': { form: { channelId: TEXT, system: 'decimal' }, service: 'activateCountingGame', bad: { form: { channelId: '', system: 'decimal' }, message: /pick a channel/ } },
@@ -423,11 +535,18 @@ const CASES = {
         'counting-off': { seed: (s) => { s.counting.enabled = true; }, form: {}, service: 'disableCountingGame' },
     },
     'join-to-create': {
+        'trigger-add': { seed: (s) => { s.jtc.triggerChannels = []; }, form: { categoryId: CAT, nameTemplate: '{username} room', userLimit: '0', bitrateKbps: '64' }, service: 'setupJoinToCreate', admin: true,
+            bad: { form: { categoryId: CAT, nameTemplate: '{username}', userLimit: '0', bitrateKbps: '64' }, message: /already has a Join to Create/ } },
         trigger: { form: { channelId: VOICE, nameTemplate: '{username} room', userLimit: '5', bitrateKbps: '64' }, service: 'updateChannelConfig',
             bad: { form: { channelId: VOICE, nameTemplate: 'x', userLimit: '500', bitrateKbps: '64' }, message: /between 0 and 99/ } },
         'trigger-remove': { form: { channelId: VOICE }, service: 'removeTriggerChannel', bad: { form: { channelId: 'nope' }, message: /Unknown trigger/ } },
     },
     applications: {
+        'role-create': { form: { roleId: ROLE_OK2, name: 'Moderator', questions: 'Why?\nAge? [min:2]' }, service: 'createApplicationRole',
+            bad: { form: { roleId: ROLE_OK, name: 'Again' }, message: /already configured/ } },
+        'role-update': { form: { roleId: ROLE_OK, name: 'Helpers', enabled: '1', logChannelId: TEXT, questions: 'Why join? [min:10]' }, service: 'updateApplicationRole',
+            bad: { form: { roleId: ROLE_OK, name: 'Helpers', questions: 'a\nb\nc\nd\ne\nf' }, message: /At most 5 questions/ } },
+        'role-delete': { form: { roleId: ROLE_OK, confirm: '1' }, service: 'deleteApplicationRole', bad: { form: { roleId: ROLE_OK }, message: /Tick the box/ } },
         enabled: { form: { enabled: 'true' }, service: 'updateApplicationSettings', bad: { form: { enabled: 'yes please' }, message: /on or off/ } },
         settings: { form: { logChannelId: TEXT, pendingDays: '30', reviewedDays: '14' }, service: 'updateApplicationSettings', bad: { form: { logChannelId: '', pendingDays: '0', reviewedDays: '14' }, message: /between 1 and 3650/ } },
         questions: { form: { questions: 'Why do you want to join?\nAge? [min:2]' }, service: 'updateApplicationSettings', bad: { form: { questions: 'a\nb\nc\nd\ne\nf' }, message: /At most 5 questions/ } },
@@ -441,6 +560,8 @@ const CASES = {
         'sticky-set': { form: { channelId: TEXT2, content: 'Hello' }, service: 'setSticky', bad: { form: { channelId: TEXT2, content: '   ' }, message: /cannot be empty/ } },
         'sticky-remove': { form: { channelId: TEXT }, service: 'removeSticky', bad: { form: { channelId: TEXT2 }, message: /no sticky/ } },
         'tag-create': { form: { name: 'faq', content: 'Read the FAQ', triggerKind: 'none' }, service: 'createTag', bad: { form: { name: 'Bad Name!', content: 'x' }, message: /Tag names/ } },
+        'tag-edit': { form: { name: 'rules', content: 'Be kind', triggerKind: 'word', trigger: 'rules', cooldownS: '30', allowChannels: [TEXT], denyChannels: '' }, service: 'editTag',
+            bad: { form: { name: 'rules', content: 'x', triggerKind: 'none', allowChannels: [VOICE] }, message: /must be a text channel or category/ } },
         'tag-delete': { form: { name: 'rules' }, service: 'deleteTag', bad: { form: { name: 'nope' }, message: /no such tag/ } },
         'feed-add': { form: { source: 'UCabcdefghijklmnopqrstu2', channelId: TEXT }, service: 'addFeed', bad: { form: { source: 'nope', channelId: TEXT }, message: /YouTube channel id/ } },
         'feed-remove': { form: { id: '1' }, service: 'removeFeed', bad: { form: { id: '9' }, message: /no feed #9/ } },
@@ -526,7 +647,9 @@ test('every POST action with invalid input: 400, the message on the page, no wri
             assert.equal(res.statusCode, 400, `${module.key}/${action} invalid → 400 (got ${res.statusCode})`);
             assert.match(res.body, c.bad.message, `${module.key}/${action} message`);
             assert.match(res.body, /class="error" role="alert"/);
-            const writes = h.calls.filter((call) => call.name !== 'postModLog' && !['createTag', 'addFeed', 'setSticky', 'updateBirthdaySettings', 'updateSettings', 'removeCanned', 'deleteTag', 'removeFeed', 'deletePanel'].includes(call.name));
+            const writes = h.calls.filter((call) => call.name !== 'postModLog' && !['createTag', 'addFeed', 'setSticky', 'updateBirthdaySettings', 'updateSettings', 'removeCanned', 'deleteTag', 'removeFeed', 'deletePanel',
+                // These services refuse by themselves (nothing written when they throw).
+                'publishTicketPanel', 'publishVerificationPanel', 'createGiveaway', 'deleteGiveawayNow', 'setupJoinToCreate', 'createApplicationRole', 'editTag'].includes(call.name));
             assert.deepEqual(writes.map((w) => w.name), [], `${module.key}/${action}: no write on invalid input`);
             assert.equal(h.auditRows.length, 0, `${module.key}/${action}: no audit row`);
             assert.ok(!h.calls.some((call) => call.name === 'postModLog'), `${module.key}/${action}: no mod log`);
@@ -613,7 +736,7 @@ test('every module page renders: 200, escaped values, no inline styles or script
         const h = await setup();
         const res = await get(h, module.key);
         assert.equal(res.statusCode, 200, module.key);
-        assert.ok(!/<style|style=|<script|\son[a-z]+=/i.test(res.body.replace(/&lt;[^]*?&gt;/g, '')), `${module.key}: no inline style/script/handlers`);
+        assert.ok(!/<style|style=|<script|\son[a-z]+=/i.test(res.body.replace(ALLOWED_SCRIPT, '').replace(/&lt;[^]*?&gt;/g, '')), `${module.key}: no inline style/script/handlers`);
         assert.ok(!res.body.includes('<script>x</script>'), `${module.key}: channel names escaped`);
         assert.ok(!res.body.includes('<img src=x'), `${module.key}: values escaped`);
         assert.ok(!res.body.includes('admin<b>'), 'username escaped');
@@ -734,4 +857,87 @@ test('dashboardSettings: DASHBOARD_EDIT_ENABLED defaults to off', () => {
     assert.equal(dashboardSettings({ ...ENV, DASHBOARD_EDIT_ENABLED: undefined }).editEnabled, false);
     assert.equal(dashboardSettings({ ...ENV, DASHBOARD_EDIT_ENABLED: 'yes' }).editEnabled, false);
     assert.equal(dashboardSettings(ENV).editEnabled, true);
+});
+
+// ── Part 1: actions that used to need Discord ─────────────────────────────
+
+test('tickets / verification: setup form while there is no panel, "update or re-post" once there is one', async () => {
+    const h = await setup();
+    let page = await get(h, 'tickets');
+    assert.match(page.body, /action="\/dashboard\/tickets\/panel-publish"/);
+    assert.ok(!page.body.includes('action="/dashboard/tickets/setup"'));
+    h.state.tickets.ticketPanelChannelId = null;
+    page = await get(h, 'tickets');
+    assert.match(page.body, /action="\/dashboard\/tickets\/setup"/);
+    h.state.verification.channelId = null;
+    page = await get(h, 'verification');
+    assert.match(page.body, /action="\/dashboard\/verification\/setup"/);
+    // Owners without Administrator see the forms disabled (posting needs Administrator).
+    const owner = await setup({ userId: OWNER });
+    owner.state.tickets.ticketPanelChannelId = null;
+    const ownerPage = await get(owner, 'tickets');
+    assert.match(ownerPage.body, /Posting the panel needs Administrator/);
+    assert.match(ownerPage.body, /action="\/dashboard\/tickets\/setup"[^>]*>[^]*?<fieldset disabled>/);
+});
+
+test('reaction roles: refused roles are skipped and named in the flash; the role list is a multi-select', async () => {
+    const h = await setup();
+    const page = await get(h, 'reaction-roles');
+    assert.match(page.body, /<select name="roleIds" multiple size="\d+">/);
+    const res = await post(h, 'reaction-roles', 'panel-create', { channelId: TEXT, title: 'Roles', description: 'Pick', roleIds: [ROLE_OK, ROLE_DANGER] });
+    assert.equal(res.statusCode, 303);
+    const call = h.calls.find((c) => c.name === 'createReactionRolePanel');
+    assert.deepEqual(call.args[1], [ROLE_OK, ROLE_DANGER]);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Panel posted with 1 role\(s\)\. Skipped: Mods - dangerous/);
+    // Junk values never reach the service.
+    const junk = await setup();
+    await post(junk, 'reaction-roles', 'panel-create', { channelId: TEXT, title: 'R', description: 'P', roleIds: ['x', ROLE_OK, ROLE_OK] });
+    assert.deepEqual(junk.calls.find((c) => c.name === 'createReactionRolePanel').args[1], [ROLE_OK]);
+});
+
+test('tag edit: only changed fields are sent; a trigger change always carries its kind; channel lists validated', async () => {
+    const h = await setup();
+    h.state.tags[0] = { name: 'rules', content: 'Be nice', triggerKind: 'word', trigger: 'rules', cooldownS: 60, allowChannels: [], denyChannels: [] };
+    let res = await post(h, 'community', 'tag-edit', { name: 'rules', content: 'Be nice', triggerKind: 'word', trigger: 'rules', cooldownS: '60', denyChannels: [TEXT2] });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'editTag').args[1], { denyChannels: [TEXT2] });
+    res = await post(h, 'community', 'tag-edit', { name: 'rules', content: 'Be nice', triggerKind: 'word', trigger: 'rule', cooldownS: '60', denyChannels: [TEXT2] });
+    assert.deepEqual(h.calls.filter((c) => c.name === 'editTag')[1].args[1], { trigger: 'rule', triggerKind: 'word' });
+    res = await post(h, 'community', 'tag-edit', { name: 'nope', content: 'x', triggerKind: 'none' });
+    assert.equal(res.statusCode, 400);
+    assert.match(res.body, /no such tag/);
+    const page = await get(h, 'community');
+    assert.match(page.body, /<details class="sub" data-key="tag-rules">/);
+});
+
+test('applications: roles listed (escaped) with their questions; [min:N] kept; delete needs the confirm box', async () => {
+    const h = await setup();
+    const page = await get(h, 'applications');
+    assert.ok(page.body.includes('Helper &lt;b&gt;'));
+    assert.ok(!page.body.includes('Helper <b>'));
+    assert.match(page.body, /Why\?\nAge\? \[min:2\]<\/textarea>/);
+    const res = await post(h, 'applications', 'role-update', { roleId: ROLE_OK, name: 'Helper <b>', enabled: '1', logChannelId: '', questions: 'Why? [min:5]' });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'updateApplicationRole').args[1], { questions: [{ question: 'Why?', minLength: 5 }] });
+    const unknown = await post(h, 'applications', 'role-update', { roleId: ROLE_OK2, name: 'x' });
+    assert.equal(unknown.statusCode, 400);
+    assert.match(unknown.body, /no longer exists/);
+});
+
+test('giveaways: start form, times as <time> for the relative display, delete asks first', async () => {
+    const h = await setup();
+    h.state.giveaways[0].endTime = Date.now() + 3600000;
+    const page = await get(h, 'giveaways');
+    assert.match(page.body, /action="\/dashboard\/giveaways\/create"/);
+    assert.match(page.body, /<time datetime="[^"]+" data-relative>/);
+    assert.match(page.body, /data-confirm="Delete the &quot;Nitro&quot; giveaway and its message\?"/);
+});
+
+test('destructive buttons carry data-confirm; toggles are switches with role="switch"', async () => {
+    const h = await setup();
+    const page = await get(h, 'applications');
+    assert.match(page.body, /<form method="post" action="\/dashboard\/applications\/enabled" class="toggle-row" data-toggle>/);
+    assert.match(page.body, /role="switch" aria-checked="false"/);
+    const counters = await get(h, 'counters');
+    assert.match(counters.body, /data-confirm="Delete this counter and its channel\?"/);
 });

@@ -1,10 +1,10 @@
 // joinToCreate.js — Join to create: per trigger channel, the name template, user
 // limit and bitrate of the temporary voice channels; remove a trigger. Writes go
 // through joinToCreateService (validators + row-locked config), as /jointocreate does.
-// New triggers are created in Discord (/jointocreate setup creates the voice channel).
+// New triggers: setupJoinToCreate (creates the voice channel; Administrators only).
 
 import { html } from '../html.js';
-import { InputError, PERMS, buttonForm, channelName, channelWarnings, intField, isSnowflake, numberInput, postForm, text, textInput } from '../forms.js';
+import { InputError, PERMS, buttonForm, channelField, channelName, channelPicker, channelWarnings, intField, isSnowflake, numberInput, postForm, text, textInput } from '../forms.js';
 import { section, table } from './common.js';
 
 function triggerField(form) {
@@ -17,7 +17,7 @@ export default {
     key: 'join-to-create',
     label: 'Join to create',
     state: 'joinToCreate',
-    help: 'Joining a trigger voice channel creates a temporary voice channel for the member. Create a trigger with /jointocreate setup in Discord. Name placeholders: {username}, {displayName}, {guildName}, {channelName}.',
+    help: 'Joining a trigger voice channel creates a temporary voice channel for the member. Name placeholders: {username}, {displayName}, {guildName}, {channelName}.',
 
     async load(ctx) {
         return { config: await ctx.services.getJoinToCreateConfiguration(ctx.client, ctx.guildId) };
@@ -35,13 +35,36 @@ export default {
 ${textInput('nameTemplate', o.nameTemplate || config.channelNameTemplate || "{username}'s Room", { label: 'Name template', max: 100 })}
 ${numberInput('userLimit', o.userLimit ?? config.userLimit ?? 0, { label: 'User limit (0 = none)', min: 0, max: 99 })}
 ${numberInput('bitrateKbps', Math.round((o.bitrate ?? config.bitrate ?? 64000) / 1000), { label: 'Bitrate (kbps)', min: 8, max: 384 })}</div>`, { hidden: { channelId: id } }),
-                buttonForm(ctx, 'join-to-create', 'trigger-remove', 'Remove trigger', { channelId: id })];
+                buttonForm(ctx, 'join-to-create', 'trigger-remove', 'Remove trigger', { channelId: id }, { confirm: 'Stop using this channel as a trigger? The channel itself is kept.' })];
         });
+        const add = triggers.length
+            ? html`<p class="muted">One trigger per server: remove the current one to create a new one.</p>`
+            : postForm(ctx, 'join-to-create', 'trigger-add', html`<div class="grid">
+${channelPicker(g, 'categoryId', null, { label: 'Category', kinds: ['category'], perms: PERMS.category, noneLabel: 'no category' })}
+${textInput('nameTemplate', "{username}'s Room", { label: 'Name template', max: 100 })}
+${numberInput('userLimit', 0, { label: 'User limit (0 = none)', min: 0, max: 99 })}
+${numberInput('bitrateKbps', 64, { label: 'Bitrate (kbps)', min: 8, max: 384 })}</div>`, { submit: 'Create trigger channel', canEdit: ctx.canEdit && ctx.canAct });
         return html`${section('Status', html`<p>Join to create is <span class="state ${config.enabled ? 'state-on' : 'state-off'}">${config.enabled ? 'on' : 'off'}</span> (on while at least one trigger exists).</p>`)}
-${section('Triggers', table(['Trigger channel', 'Temporary channels', ''], rows, 'No triggers. Create one with /jointocreate setup.'))}`;
+${section('Triggers', table(['Trigger channel', 'Temporary channels', ''], rows, 'No triggers yet.'))}
+${section('New trigger', add, `Same as /jointocreate setup: the bot creates a "Join to Create" voice channel.${ctx.canAct ? '' : ' Needs Administrator in the main server.'}`, { open: triggers.length === 0 })}`;
     },
 
     actions: {
+        'trigger-add': {
+            admin: true,
+            async run(ctx, form) {
+                const categoryId = channelField(ctx.guild, form, 'categoryId', { kinds: ['category'], label: 'Category' });
+                const nameTemplate = text(form, 'nameTemplate', 100);
+                if (!nameTemplate) throw new InputError('Name template cannot be empty.');
+                const userLimit = intField(form, 'userLimit', { min: 0, max: 99, label: 'User limit' });
+                const bitrateKbps = intField(form, 'bitrateKbps', { min: 8, max: 384, label: 'Bitrate' });
+                const { channel } = await ctx.services.setupJoinToCreate(ctx.client, ctx.guild, { categoryId, nameTemplate, userLimit, bitrateKbps, actorId: ctx.actor.userId });
+                return {
+                    changes: [{ key: `trigger.${channel.id}`, old: null, new: { nameTemplate, userLimit, bitrate: bitrateKbps * 1000, categoryId } }],
+                    message: `Trigger channel "${channel.name}" created.`,
+                };
+            },
+        },
         async trigger(ctx, form) {
             const channelId = triggerField(form);
             const nameTemplate = text(form, 'nameTemplate', 100);

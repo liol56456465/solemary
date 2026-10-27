@@ -55,6 +55,18 @@ import {
 } from '../commandAccessService.js';
 // Mod log
 import { postModLog } from '../enforcement/enforcementService.js';
+// Posting panels and creating things in Discord (shared with the commands)
+import { publishTicketPanel, setupTicketSystem } from '../ticketPanelService.js';
+import { publishVerificationPanel, setupVerification } from '../verificationPanelService.js';
+import { postAppealPanels } from '../enforcement/appealPanelService.js';
+import { createReactionRolePanel } from '../reactionRoleService.js';
+import { createGiveaway, deleteGiveawayNow } from '../giveawayService.js';
+import { createServerCounter } from '../serverstatsService.js';
+import { setupJoinToCreate } from '../joinToCreateService.js';
+import { editTag } from '../community/tagService.js';
+import {
+    createApplicationRole, deleteApplicationRole, listApplicationRoles, updateApplicationRole,
+} from '../applicationRoleService.js';
 
 export const defaultServices = {
     getGuildConfig, updateGuildConfig, getSetting, updateSettings,
@@ -76,4 +88,7 @@ export const defaultServices = {
     createTag, deleteTag, listTags, addFeed, listFeeds, removeFeed,
     disableCategory, disableCommand, enableCategory, enableCommand, getCommandAccessSnapshot, resolveCommandTarget, getCategoryRegistry,
     postModLog,
+    publishTicketPanel, setupTicketSystem, publishVerificationPanel, setupVerification, postAppealPanels,
+    createReactionRolePanel, createGiveaway, deleteGiveawayNow, createServerCounter, setupJoinToCreate, editTag,
+    createApplicationRole, deleteApplicationRole, listApplicationRoles, updateApplicationRole,
 };

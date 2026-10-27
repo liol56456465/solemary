@@ -762,7 +762,7 @@ export async function saveApplicationSettings(client, guildId, settings) {
     }
 }
 
-function getApplicationRoleSettingsKey(guildId, roleId) {
+export function getApplicationRoleSettingsKey(guildId, roleId) {
     return `guild:${guildId}:applications:role:${roleId}:settings`;
 }
 

@@ -20,6 +20,7 @@ import { createError, ErrorTypes } from '../src/utils/errorHandler.js';
 import { plainText } from '../src/services/dashboard/forms.js';
 import { buildCoverageReport, intensityLevel } from '../src/services/staffCoverageService.js';
 
+const ALLOWED_SCRIPT = '<script src="/dashboard/static/dashboard.js" defer></script>';
 const SECRET = 'y'.repeat(64);
 const GUILD = '100000000000000001';
 const ADMIN = '200000000000000002';
@@ -108,6 +109,7 @@ function makeEnforcement(overrides = {}) {
         editCase: rec('editCase', async (client, { reason }) => ({ after: { ...record, reason }, changes: [{ field: 'reason', oldValue: 'old reason', newValue: reason }] })),
         voidCase: rec('voidCase', async () => ({ record: { ...record, voided_at: new Date() }, notes: ['The user was unbanned.'], dmDelivered: true })),
         addEvidence: rec('addEvidence', async () => ({ id: 11 })),
+        addImageEvidence: rec('addImageEvidence', async () => ({ id: 12 })),
         removeEvidence: rec('removeEvidence', async (code, id) => (id === 11 ? { id: 11, kind: 'link', url: 'https://x.example' } : null)),
         captureLinks: rec('captureLinks', async (guild, entries) => entries.map(({ url }) => ({ url, sourceMessageUrl: null, excerpt: null }))),
         listEvidence: rec('listEvidence', async () => []),
@@ -545,7 +547,7 @@ test('member page: standing, no-contact, notes, cases, actions; everything escap
         assert.ok(res.body.includes(text), text);
     }
     assert.ok(!res.body.includes('<img src=x>') && !res.body.includes('<i>') && !res.body.includes('<script>'));
-    assert.ok(!/style=/.test(res.body) && !/<script/.test(res.body));
+    assert.ok(!/style=/.test(res.body) && !/<script/.test(res.body.replace(ALLOWED_SCRIPT, '')));
     assert.equal((await get(h, h.d.enforcement.userPage, { params: { id: 'abc' } })).statusCode, 404);
     assert.equal((await get(h, h.d.enforcement.userPage, { params: { id: '123456789012345678' } })).statusCode, 404);
 
@@ -613,4 +615,131 @@ test('result message and plain text: case code, DM, notes; Discord markdown remo
     assert.match(text, /Warn done for bob\. Case k7m2qxa \(bob warn 3\)\. The DM could not be delivered/);
     assert.match(text, /Warning: Evidence x was not saved: full/);
     assert.equal(plainText('<@123> in <#456>'), '@123 in #456');
+});
+
+// ── evidence image upload (multipart, no dependency) ──────────────────────
+
+const BOUNDARY = '----meowistTestBoundary7';
+const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64, 1)]);
+
+function multipartBody(fields, file = null) {
+    const parts = Object.entries(fields).map(([name, value]) => Buffer.from(`--${BOUNDARY}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`));
+    if (file) {
+        parts.push(Buffer.from(`--${BOUNDARY}\r\nContent-Disposition: form-data; name="image"; filename="${file.name}"\r\nContent-Type: ${file.type}\r\n\r\n`), file.data, Buffer.from('\r\n'));
+    }
+    parts.push(Buffer.from(`--${BOUNDARY}--\r\n`));
+    return Buffer.concat(parts);
+}
+
+async function upload(h, { fields = {}, file = { name: 'shot.png', type: 'image/png', data: PNG }, origin = ORIGIN, csrf = h.session.csrf } = {}) {
+    const res = fakeRes();
+    const req = {
+        method: 'POST', params: { code: CODE }, query: {}, path: '/x',
+        headers: { cookie: h.cookie, ...(origin ? { origin } : {}), 'content-type': `multipart/form-data; boundary=${BOUNDARY}` },
+        body: multipartBody({ ...(csrf === null ? {} : { csrf }), ...fields }, file),
+    };
+    let passed = false;
+    await h.d.requireUser(req, res, () => { passed = true; });
+    if (!passed) return res;
+    let parsed = false;
+    await h.d.parseUpload(req, res, () => { parsed = true; });
+    if (parsed) await h.d.enforcement.evidenceUpload(req, res);
+    return res;
+}
+
+test('POST evidence upload: CSRF, Origin, edit switch, access; nothing stored when refused', async () => {
+    let h = await setup();
+    assert.equal((await upload(h, { csrf: null })).statusCode, 403, 'no CSRF');
+    assert.equal((await upload(h, { csrf: 'wrong' })).statusCode, 403, 'wrong CSRF');
+    assert.equal((await upload(h, { origin: 'https://evil.example' })).statusCode, 403, 'bad Origin');
+    h = await setup({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } });
+    const off = await upload(h);
+    assert.equal(off.statusCode, 403);
+    assert.match(off.body, /Editing is off/);
+    h = await setup({ userId: OWNER });
+    assert.equal((await upload(h)).statusCode, 403, 'OWNER_IDS without Administrator');
+    assert.equal(serviceCalls(h, ['addImageEvidence']).length, 0);
+});
+
+test('POST evidence upload: only real images (magic bytes), size cap, one file; valid → re-hosted, audited, 303', async () => {
+    let h = await setup();
+    const fake = await upload(h, { file: { name: 'evil.png', type: 'image/png', data: Buffer.from('<script>alert(1)</script>') } });
+    assert.equal(fake.statusCode, 400);
+    assert.match(fake.body, /not a PNG, JPEG, GIF or WebP/);
+    const none = await upload(h, { file: null });
+    assert.equal(none.statusCode, 400);
+    assert.match(none.body, /Choose an image/);
+    const big = await upload(h, { file: { name: 'big.png', type: 'image/png', data: Buffer.concat([PNG, Buffer.alloc(8 * 1024 * 1024)]) } });
+    assert.equal(big.statusCode, 413);
+    assert.equal(serviceCalls(h, ['addImageEvidence']).length, 0);
+    assert.equal(h.auditRows.length, 0);
+
+    h = await setup();
+    const ok = await upload(h, { fields: { note: 'screenshot <b>' } });
+    assert.equal(ok.statusCode, 303, ok.body);
+    assert.equal(ok.redirectedTo, `/dashboard/cases/${CODE}`);
+    const [call] = serviceCalls(h, ['addImageEvidence']);
+    assert.equal(call.args[1], CODE);
+    assert.ok(Buffer.isBuffer(call.args[2].data));
+    assert.equal(call.args[2].name, `evidence-${CODE}.png`, 'the file name is ours, not the uploaded one');
+    assert.equal(call.args[2].contentType, 'image/png');
+    assert.equal(call.args[3].note, 'screenshot <b>');
+    assert.equal(call.args[3].addedBy.id, ADMIN);
+    assert.equal(h.auditRows[0].module, 'cases');
+    assert.equal(h.modLog.length, 1);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Image evidence #12 added/);
+});
+
+test('multipart parser and image sniffing', async () => {
+    const { parseMultipart, sniffImage, boundaryOf, MultipartError } = await import('../src/services/dashboard/multipart.js');
+    const type = `multipart/form-data; boundary=${BOUNDARY}`;
+    assert.equal(boundaryOf(type), BOUNDARY);
+    assert.equal(boundaryOf('multipart/form-data; boundary="q u"'), 'q u');
+    assert.equal(boundaryOf('application/json'), null);
+    const parsed = parseMultipart(multipartBody({ csrf: 't', note: 'n' }, { name: 'a.png', type: 'image/png', data: PNG }), type);
+    assert.deepEqual(parsed.fields, { csrf: 't', note: 'n' });
+    assert.equal(parsed.file.data.length, PNG.length);
+    assert.throws(() => parseMultipart(Buffer.from('garbage'), type), MultipartError);
+    assert.throws(() => parseMultipart(multipartBody({ a: '1' }).subarray(0, 30), type), /truncated|Malformed/);
+    const many = multipartBody(Object.fromEntries(Array.from({ length: 9 }, (_, i) => [`f${i}`, 'x'])));
+    assert.throws(() => parseMultipart(many, type), /Too many fields/);
+    const two = Buffer.concat([multipartBody({}, { name: 'a.png', type: 'image/png', data: PNG }).subarray(0, -(BOUNDARY.length + 6)),
+        multipartBody({}, { name: 'b.png', type: 'image/png', data: PNG })]);
+    assert.throws(() => parseMultipart(two, type), /one image at a time/);
+    assert.throws(() => parseMultipart(multipartBody({}), 'text/plain'), /multipart\/form-data/);
+    assert.deepEqual(sniffImage(PNG), { type: 'image/png', ext: 'png' });
+    assert.equal(sniffImage(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0])).type, 'image/jpeg');
+    assert.equal(sniffImage(Buffer.from('GIF89a......')).type, 'image/gif');
+    assert.equal(sniffImage(Buffer.from('RIFF\0\0\0\0WEBPVP8 ')).type, 'image/webp');
+    assert.equal(sniffImage(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>')), null, 'SVG is refused (scripts)');
+    assert.equal(sniffImage(Buffer.from('%PDF-1.7')), null);
+});
+
+test('uploadBody: a body over the limit is a plain 413 page (real Express, no stack trace)', async () => {
+    const express = (await import('express')).default;
+    const { uploadBody } = await import('../src/services/dashboard/routes.js');
+    const app = express();
+    app.post('/u', uploadBody(1000), (req, res) => res.status(200).send(`ok ${req.body.length}`));
+    const server = await new Promise((resolve) => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
+    try {
+        const url = `http://127.0.0.1:${server.address().port}/u`;
+        const headers = { 'content-type': `multipart/form-data; boundary=${BOUNDARY}` };
+        const small = await fetch(url, { method: 'POST', headers, body: multipartBody({ a: '1' }) });
+        assert.equal(small.status, 200);
+        const big = await fetch(url, { method: 'POST', headers, body: Buffer.alloc(5000, 65) });
+        assert.equal(big.status, 413);
+        const text = await big.text();
+        assert.match(text, /larger than 8 MB/);
+        assert.ok(!/at .*\.js:\d+/.test(text), 'no stack trace');
+    } finally {
+        server.close();
+    }
+});
+
+test('case page: the image upload form is multipart with the CSRF token (administrators)', async () => {
+    const h = await setup();
+    const res = await get(h, h.d.caseDetail, { params: { code: CODE } });
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, new RegExp(`<form method="post" action="/dashboard/cases/${CODE}/evidence/upload" class="settings-form" enctype="multipart/form-data"><input type="hidden" name="csrf" value="${h.session.csrf}">`));
+    assert.match(res.body, /accept="image\/png,image\/jpeg,image\/gif,image\/webp"/);
 });

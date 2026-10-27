@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import {
-    initializeJoinToCreate,
+    setupJoinToCreate,
     getChannelConfiguration,
     updateChannelConfig,
     removeTriggerChannel,
@@ -124,86 +124,18 @@ async function handleSetupSubcommand(interaction, client) {
         const nameTemplate = interaction.options.getString('channel_name') || "{username}'s Room";
         const userLimit = interaction.options.getInteger('user_limit') || 0;
         const bitrate = interaction.options.getInteger('bitrate') || 64;
-        const guildId = interaction.guild.id;
 
-        logger.debug(`Setting up Join to Create in guild ${guildId} with template: ${nameTemplate}`);
+        logger.debug(`Setting up Join to Create in guild ${interaction.guild.id} with template: ${nameTemplate}`);
 
-        const existingConfig = await getConfiguration(client, guildId);
-        
-        if (Array.isArray(existingConfig.triggerChannels) && existingConfig.triggerChannels.length > 0) {
-            const activeTriggerChannels = [];
-            const staleTriggerChannelIds = [];
-
-            for (const existingChannelId of existingConfig.triggerChannels) {
-                const existingChannel = await interaction.guild.channels.fetch(existingChannelId).catch(() => null);
-                if (existingChannel) {
-                    activeTriggerChannels.push(existingChannel);
-                } else {
-                    staleTriggerChannelIds.push(existingChannelId);
-                }
-            }
-
-            if (staleTriggerChannelIds.length > 0) {
-                for (const staleChannelId of staleTriggerChannelIds) {
-                    logger.info(`Cleaning up stale JTC trigger ${staleChannelId} from guild ${guildId}`);
-                    await removeTriggerChannel(client, guildId, staleChannelId);
-                }
-            }
-
-            if (activeTriggerChannels.length > 0) {
-                const primaryTrigger = activeTriggerChannels[0];
-                const errorMessage = `This server already has a Join to Create channel set up: ${primaryTrigger}\n\nUse \`/jointocreate dashboard\` to modify it, or remove it first before creating a new one.`;
-
-                throw new TitanBotError(
-                    'Guild already has a Join to Create channel',
-                    ErrorTypes.VALIDATION,
-                    errorMessage,
-                    {
-                        guildId,
-                        activeTriggerCount: activeTriggerChannels.length,
-                        expected: true,
-                        suppressErrorLog: true
-                    }
-                );
-            }
-        }
-
-        // Validate before creating the trigger channel so bad input doesn't leave an orphaned channel.
-        validateUserLimit(userLimit);
-        validateBitrate(bitrate);
-
-        logger.debug('Creating Join to Create trigger channel...');
-        let triggerChannel = await interaction.guild.channels.create({
-            name: 'Join to Create',
-            type: ChannelType.GuildVoice,
-            parent: category?.id,
-            userLimit: 0,
-            bitrate: 64000,
-            permissionOverwrites: [
-                {
-                    id: interaction.guild.id,
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],
-                },
-            ],
-        });
-
-        logger.debug(`Created trigger channel ${triggerChannel.id}, initializing config...`);
-
-        const config = await initializeJoinToCreate(client, guildId, triggerChannel.id, {
-            nameTemplate: nameTemplate,
-            userLimit: userLimit,
-            bitrate: bitrate * 1000,
-            categoryId: category?.id
-        });
-
-        await logConfigurationChange(client, guildId, interaction.user.id, 'Initialized Join to Create', {
-            channelId: triggerChannel.id,
+        // One trigger per server, validation before the channel is created, save and
+        // log: services/joinToCreateService.js (shared with the web dashboard).
+        const { channel: triggerChannel } = await setupJoinToCreate(client, interaction.guild, {
+            categoryId: category?.id || null,
             nameTemplate,
             userLimit,
-            bitrate
+            bitrateKbps: bitrate,
+            actorId: interaction.user.id,
         });
-
-        logger.info(`Successfully created Join to Create system in guild ${guildId}`);
 
         const responseEmbed = successEmbed(
             '✅ Setup Complete',

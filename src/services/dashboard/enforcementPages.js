@@ -36,9 +36,10 @@ ${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is
  * A POST form to any dashboard path, with the CSRF token; disabled when `enabled` is
  * false. `submit: null` leaves the button out (the fields bring their own).
  */
-export function actionForm(csrf, actionPath, fields, { submit = 'Save', hidden = {}, danger = false, inline = false, enabled = true, className = '' } = {}) {
+export function actionForm(csrf, actionPath, fields, { submit = 'Save', hidden = {}, danger = false, inline = false, enabled = true, className = '', multipart = false, confirm = '' } = {}) {
     const classes = [inline ? 'inline-form' : 'settings-form', className].filter(Boolean).join(' ');
-    return html`<form method="post" action="${path(actionPath)}" class="${classes}"><input type="hidden" name="csrf" value="${csrf}">
+    const attrs = html`${multipart ? raw(' enctype="multipart/form-data"') : ''}${confirm ? html` data-confirm="${confirm}"` : ''}`;
+    return html`<form method="post" action="${path(actionPath)}" class="${classes}"${attrs}><input type="hidden" name="csrf" value="${csrf}">
 ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}
 <fieldset${enabled ? '' : raw(' disabled')}>${fields}${enabled && submit !== null ? html`<button type="submit" class="${danger ? 'danger' : 'primary'}">${submit}</button>` : ''}</fieldset></form>`;
 }
@@ -152,7 +153,7 @@ function actionBlock(view, type, csrf, values = {}) {
 ${type === 'ban' || type === 'mute' ? durationField(type, values.duration || '') : ''}
 ${type === 'ban' ? html`<label>Appealable<select name="unappealable">${option('default', 'default (severe reasons: no)', !values.unappealable || values.unappealable === 'default')}${option('no', 'yes, appealable', values.unappealable === 'no')}${option('yes', 'no, unappealable', values.unappealable === 'yes')}</select></label>` : ''}
 <label>Name (optional)<input name="name" maxlength="100" value="${values.name || ''}"><span class="hint">Default: ${view.user.username} ${type} &lt;n&gt;</span></label>
-<label class="wide">Evidence (message links, optional)<textarea name="evidence" rows="2" maxlength="1000">${values.evidence || ''}</textarea><span class="hint">Up to ${MAX_LINKS_PER_FORM} links, one per line. Their text is saved now. Add images in Discord with /case evidence add.</span></label></div>`;
+<label class="wide">Evidence (message links, optional)<textarea name="evidence" rows="2" maxlength="1000">${values.evidence || ''}</textarea><span class="hint">Up to ${MAX_LINKS_PER_FORM} links, one per line. Their text is saved now. Images can be uploaded on the case page afterwards.</span></label></div>`;
     } else {
         fields = html`<div class="grid">${type === 'removewarn' ? html`<label>Warning<select name="warn" required>${(view.countedWarns || []).map((w) => option(w.case_code, `${w.case_code} · ${w.name} · ${w.reason}`, values.warn === w.case_code))}</select></label>` : ''}
 <label class="wide">Reason (optional)<input name="reason" maxlength="500" value="${values.reason || ''}"></label></div>`;
@@ -223,8 +224,10 @@ ${actionForm(csrf, `/cases/${code}/void`, html`<label class="wide">Reason (shown
 <div class="card"><h3>Evidence</h3>
 ${actionForm(csrf, `/cases/${code}/evidence/add`, html`<div class="grid"><label class="wide">Link (e.g. a Discord message link: its text is saved)<input name="link" maxlength="500" required></label>
 <label class="wide">Note (optional)<input name="note" maxlength="${EVIDENCE_NOTE_MAX}"></label></div>`, { submit: 'Add evidence' })}
-<p class="muted">Images: add them in Discord with /case evidence add (they are re-hosted in the evidence channel).</p>
-${evidence.length ? html`<p>${evidence.map(({ row }) => actionForm(csrf, `/cases/${code}/evidence/remove`, '', { submit: `Remove #${row.id}`, hidden: { id: String(row.id) }, inline: true, danger: true }))}</p>` : ''}</div>`;
+${actionForm(csrf, `/cases/${code}/evidence/upload`, html`<div class="grid"><label class="wide">Image (PNG, JPEG, GIF or WebP, up to 8 MB)<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required></label>
+<label class="wide">Note (optional)<input name="note" maxlength="${EVIDENCE_NOTE_MAX}"></label></div>`, { submit: 'Upload image', multipart: true })}
+<p class="muted">Images are re-hosted in the evidence channel, as with /case evidence add.</p>
+${evidence.length ? html`<p>${evidence.map(({ row }) => actionForm(csrf, `/cases/${code}/evidence/remove`, '', { submit: `Remove #${row.id}`, hidden: { id: String(row.id) }, inline: true, danger: true, confirm: `Remove evidence #${row.id}?` }))}</p>` : ''}</div>`;
     return { top, bottom };
 }
 
@@ -238,7 +241,7 @@ export function appealDetailPage({ session, access = null, moduleStates = {}, da
     const { record: r, appeal, answers = [], history = [], others = [], othersTotal = 0, ladder = null, evidence = [] } = data;
     const pending = appeal?.status === 'pending';
     const body = html`<p><a href="${path('/appeals')}">← Appeals</a></p>
-<h1>Appeal · <code>${r.case_code}</code> · ${r.type}${r.is_test ? ' (test case)' : ''}</h1>
+<h1>Appeal · <code data-copy="${r.case_code}">${r.case_code}</code> · ${r.type}${r.is_test ? ' (test case)' : ''}</h1>
 ${notices({ flash, error, editEnabled, canAct, actLabel: 'decide appeals' })}
 ${r.is_test ? html`<p class="notice">Test case created with /test: nothing was executed, accepting it changes nothing.</p>` : ''}
 <dl>

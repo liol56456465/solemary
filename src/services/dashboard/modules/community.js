@@ -9,7 +9,7 @@ import { TAG_CONTENT_MAX, TRIGGER_KINDS } from '../../community/tagService.js';
 import { FEED_TEMPLATE_MAX } from '../../community/feedService.js';
 import { html } from '../html.js';
 import {
-    InputError, PERMS, buttonForm, channelField, channelName, channelPicker, intField, multiline, numberInput, postForm,
+    InputError, PERMS, buttonForm, channelField, channelListField, channelName, channelPicker, choiceField, intField, multiline, numberInput, postForm,
     selectInput, text, textArea, textInput,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -49,21 +49,32 @@ ${channelPicker(g, 'channelId', s.starboardChannelId, { label: 'Starboard channe
 ${textInput('emoji', s.starboardEmoji, { label: 'Emoji', max: 64 })}
 ${numberInput('threshold', s.starboardThreshold, { label: 'Reactions needed', min: 1, max: STARBOARD_MAX_THRESHOLD })}</div>`, { submit: s.starboardChannelId ? 'Save' : 'Turn on' })}
 ${s.starboardChannelId ? buttonForm(ctx, 'community', 'starboard-off', 'Turn starboard off') : html`<p class="muted">Starboard is off.</p>`}`;
-        const stickyRows = stickies.map((st) => [channelName(g, st.channelId), clip(st.content), buttonForm(ctx, 'community', 'sticky-remove', 'Remove', { channelId: st.channelId })]);
-        const sticky = html`${table(['Channel', 'Message', ''], stickyRows, 'No sticky messages.')}
+        const stickyRows = stickies.map((st) => [channelName(g, st.channelId), clip(st.content), buttonForm(ctx, 'community', 'sticky-remove', 'Remove', { channelId: st.channelId }, { confirm: 'Remove this sticky message?' })]);
+        const stickyEdits = stickies.map((st) => html`<details class="sub" data-key="sticky-${st.channelId}"><summary>Edit the sticky in ${channelName(g, st.channelId)}</summary>
+${postForm(ctx, 'community', 'sticky-set', textArea('content', st.content, { label: 'Sticky message', max: STICKY_MAX_LENGTH, rows: 3 }), { submit: 'Save sticky', hidden: { channelId: st.channelId } })}</details>`);
+        const sticky = html`${table(['Channel', 'Message', ''], stickyRows, 'No sticky messages.')}${stickyEdits}
+<h3>New sticky</h3>
 ${postForm(ctx, 'community', 'sticky-set', html`<div class="grid">${channelPicker(g, 'channelId', null, { label: 'Channel', perms: [...PERMS.post, 'ManageMessages'], optional: false })}
 ${textArea('content', '', { label: 'Sticky message (replaces the channel\'s current one)', max: STICKY_MAX_LENGTH, rows: 3 })}</div>`, { submit: 'Set sticky' })}`;
         const tagRows = tags.map((t) => [html`<code>${t.name}</code>`, clip(t.content), t.triggerKind === 'none' ? '—' : `${t.triggerKind}: ${clip(t.trigger, 40)}`,
-            buttonForm(ctx, 'community', 'tag-delete', 'Delete', { name: t.name })]);
-        const tagForms = html`${table(['Name', 'Content', 'Trigger', ''], tagRows, 'No tags.')}
+            buttonForm(ctx, 'community', 'tag-delete', 'Delete', { name: t.name }, { confirm: `Delete the tag "${t.name}"?` })]);
+        const tagEdits = tags.map((t) => html`<details class="sub" data-key="tag-${t.name}"><summary>Edit <code>${t.name}</code></summary>
+${postForm(ctx, 'community', 'tag-edit', html`<div class="grid">
+${selectInput('triggerKind', t.triggerKind || 'none', TRIGGER_KINDS.map((k) => [k, k]), { label: 'Trigger' })}
+${textInput('trigger', t.trigger || '', { label: 'Trigger word or pattern', max: 200 })}
+${numberInput('cooldownS', t.cooldownS ?? '', { label: 'Cooldown (seconds)', min: 0, max: 86400 })}
+${channelPicker(g, 'allowChannels', t.allowChannels || [], { label: 'Only in these channels (none = everywhere)', kinds: ['text', 'category'], perms: PERMS.post, multiple: true })}
+${channelPicker(g, 'denyChannels', t.denyChannels || [], { label: 'Never in these channels', kinds: ['text', 'category'], perms: [], multiple: true })}
+${textArea('content', t.content, { label: 'Content', max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: 'Save tag', hidden: { name: t.name } })}</details>`);
+        const tagForms = html`${table(['Name', 'Content', 'Trigger', ''], tagRows, 'No tags.')}${tagEdits}
+<h3>New tag</h3>
 ${postForm(ctx, 'community', 'tag-create', html`<div class="grid">${textInput('name', '', { label: 'Name (a-z, 0-9, - _)', max: 32 })}
 ${selectInput('triggerKind', 'none', TRIGGER_KINDS.map((k) => [k, k]), { label: 'Trigger' })}
 ${textInput('trigger', '', { label: 'Trigger word or pattern', max: 200 })}
 ${numberInput('cooldownS', '', { label: 'Cooldown (seconds, empty = default)', min: 0, max: 86400 })}
-${textArea('content', '', { label: 'Content', max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: 'Create tag' })}
-<p class="muted">Edit an existing tag (channel lists, …) with /tag edit in Discord.</p>`;
+${textArea('content', '', { label: 'Content', max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: 'Create tag' })}`;
         const feedRows = feeds.map((f) => [`#${f.id}`, html`<code>${f.sourceId}</code>`, channelName(g, f.channelId), clip(f.template || 'default message', 60),
-            buttonForm(ctx, 'community', 'feed-remove', 'Remove', { id: f.id })]);
+            buttonForm(ctx, 'community', 'feed-remove', 'Remove', { id: f.id }, { confirm: 'Remove this feed?' })]);
         const feedForms = html`${table(['Feed', 'YouTube channel', 'Posts in', 'Message', ''], feedRows, 'No feeds.')}
 ${postForm(ctx, 'community', 'feed-add', html`<div class="grid">${textInput('source', '', { label: 'YouTube channel ID or URL (UC…)', max: 200 })}
 ${channelPicker(g, 'channelId', null, { label: 'Post in', perms: PERMS.post, optional: false })}
@@ -114,6 +125,33 @@ ${section('Starboard', starboard)}${section('Sticky messages', sticky)}${section
                 createdBy: ctx.actor.userId,
             });
             return { changes: [{ key: `tag.${tag?.name}`, old: null, new: tag?.content ?? null }], message: `Tag "${tag?.name}" created.` };
+        },
+        async 'tag-edit'(ctx, form) {
+            const name = text(form, 'name', 40).toLowerCase();
+            const before = ctx.services.listTags(ctx.guildId).find((t) => t.name === name);
+            if (!before) throw new InputError('There is no such tag.');
+            const triggerKind = choiceField(form, 'triggerKind', TRIGGER_KINDS, 'Trigger');
+            const content = multiline(form, 'content', TAG_CONTENT_MAX + 1);
+            if (!content) throw new InputError('The tag content cannot be empty.');
+            const next = {
+                content,
+                triggerKind,
+                trigger: triggerKind === 'none' ? null : text(form, 'trigger', 200),
+                cooldownS: intField(form, 'cooldownS', { min: 0, max: 86400, label: 'Cooldown', fallback: before.cooldownS ?? null }),
+                allowChannels: channelListField(ctx.guild, form, 'allowChannels', { label: 'Allowed channel' }),
+                denyChannels: channelListField(ctx.guild, form, 'denyChannels', { label: 'Blocked channel' }),
+            };
+            const current = { content: before.content, triggerKind: before.triggerKind || 'none', trigger: before.trigger ?? null, cooldownS: before.cooldownS ?? null, allowChannels: before.allowChannels || [], denyChannels: before.denyChannels || [] };
+            const changed = Object.fromEntries(Object.entries(next).filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(current[k])));
+            if (!Object.keys(changed).length) return { changes: [], message: 'Nothing changed.' };
+            // A trigger change always sends the kind with it (the service validates the pair).
+            if (Object.hasOwn(changed, 'trigger') || Object.hasOwn(changed, 'triggerKind')) Object.assign(changed, { triggerKind, trigger: next.trigger });
+            const tag = await ctx.services.editTag({ guildId: ctx.guildId, name, ...changed });
+            if (!tag) throw new InputError('There is no such tag.');
+            return {
+                changes: Object.keys(changed).map((key) => ({ key: `tag.${name}.${key}`, old: current[key] ?? null, new: next[key] ?? null })),
+                message: `Tag "${name}" saved.`,
+            };
         },
         async 'tag-delete'(ctx, form) {
             const name = text(form, 'name', 40).toLowerCase();

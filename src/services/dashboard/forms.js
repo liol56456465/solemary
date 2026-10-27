@@ -39,6 +39,21 @@ export function text(form, name, max = 2000) {
     return typeof value === 'string' ? value.trim().slice(0, max) : '';
 }
 
+/**
+ * A repeated field (multi-select, several checkboxes): its string values, trimmed,
+ * de-duplicated, at most `max` of them. A single value is a one-item list.
+ */
+export function list(form, name, { max = 25, maxLength = 25 } = {}) {
+    const value = form?.[name];
+    const values = Array.isArray(value) ? value : value === undefined ? [] : [value];
+    return [...new Set(values.filter((v) => typeof v === 'string').map((v) => v.trim().slice(0, maxLength)).filter(Boolean))].slice(0, max);
+}
+
+/** Several channel ids (multi-select), each checked like channelField. */
+export function channelListField(guild, form, name, { kinds = ['text', 'category'], label = name, max = 25 } = {}) {
+    return list(form, name, { max }).map((id, i) => channelField(guild, { [name]: id }, name, { kinds, optional: false, label: `${label} ${i + 1}` }));
+}
+
 /** A posted textarea, keeping inner line breaks (\r\n → \n). */
 export function multiline(form, name, max = 4000) {
     const value = form?.[name];
@@ -231,25 +246,36 @@ function warningList(warnings) {
     return warnings.length ? html`<span class="field-warn">${warnings.map((w, i) => html`${i ? '; ' : ''}${w}`)}</span>` : '';
 }
 
-/** A labelled channel select. options: { label, kinds, perms, optional, help, noneLabel }. */
-export function channelPicker(guild, name, value, { label, kinds = ['text'], perms = PERMS.post, optional = true, help = '', noneLabel = 'not set' } = {}) {
-    const groups = channelGroups(guild, kinds);
-    const known = value && guild?.channels?.cache?.get(value);
-    const prefix = kinds.includes('category') && kinds.length === 1 ? '' : kinds.includes('text') ? '#' : '';
-    return html`<label>${label}<select name="${name}">
-${optional ? html`<option value=""${selected(!value)}>— ${noneLabel} —</option>` : ''}${value && !known ? html`<option value="${value}" selected>${value} (missing)</option>` : ''}
-${groups.map((g) => html`<optgroup label="${g.group}">${g.channels.map((c) => html`<option value="${c.id}"${selected(c.id === value)}>${prefix}${c.name}</option>`)}</optgroup>`)}
-</select>${help ? html`<span class="hint">${help}</span>` : ''}${warningList(channelWarnings(guild, value, perms))}</label>`;
+/** Long lists get data-search: the static script adds a filter box above them (progressive enhancement). */
+function selectAttrs(name, count, multiple) {
+    return html`name="${name}"${multiple ? raw(` multiple size="${Math.min(8, Math.max(4, count))}"`) : ''}${count > 12 ? raw(' data-search') : ''}`;
 }
 
-/** A labelled role select. options: { label, optional, autoAssign, assign, help }. */
-export function rolePicker(guild, name, value, { label, optional = true, autoAssign = false, assign = true, help = '', noneLabel = 'not set', includeManaged = false } = {}) {
+/**
+ * A labelled channel select. options: { label, kinds, perms, optional, help, noneLabel,
+ * multiple } — with multiple, `value` is an array and several can be chosen.
+ */
+export function channelPicker(guild, name, value, { label, kinds = ['text'], perms = PERMS.post, optional = true, help = '', noneLabel = 'not set', multiple = false } = {}) {
+    const groups = channelGroups(guild, kinds);
+    const values = multiple ? (Array.isArray(value) ? value : []) : [value].filter(Boolean);
+    const missing = values.filter((id) => !guild?.channels?.cache?.get(id));
+    const prefix = kinds.includes('category') && kinds.length === 1 ? '' : kinds.includes('text') ? '#' : '';
+    const count = groups.reduce((n, g) => n + g.channels.length, 0);
+    return html`<label>${label}<select ${selectAttrs(name, count, multiple)}>
+${optional && !multiple ? html`<option value=""${selected(!value)}>— ${noneLabel} —</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${id} (missing)</option>`)}
+${groups.map((g) => html`<optgroup label="${g.group}">${g.channels.map((c) => html`<option value="${c.id}"${selected(values.includes(c.id))}>${prefix}${c.name}</option>`)}</optgroup>`)}
+</select>${help ? html`<span class="hint">${help}</span>` : ''}${warningList(values.flatMap((id) => channelWarnings(guild, id, perms)))}</label>`;
+}
+
+/** A labelled role select. options: { label, optional, autoAssign, assign, help, multiple }. */
+export function rolePicker(guild, name, value, { label, optional = true, autoAssign = false, assign = true, help = '', noneLabel = 'not set', includeManaged = false, multiple = false } = {}) {
     const roles = roleList(guild, { includeManaged });
-    const known = value && guild?.roles?.cache?.get(value);
-    return html`<label>${label}<select name="${name}">
-${optional ? html`<option value=""${selected(!value)}>— ${noneLabel} —</option>` : ''}${value && !known ? html`<option value="${value}" selected>${value} (missing)</option>` : ''}
-${roles.map((r) => html`<option value="${r.id}"${selected(r.id === value)}>@${r.name}</option>`)}
-</select>${help ? html`<span class="hint">${help}</span>` : ''}${warningList(roleWarnings(guild, value, { autoAssign, assign }))}</label>`;
+    const values = multiple ? (Array.isArray(value) ? value : []) : [value].filter(Boolean);
+    const missing = values.filter((id) => !guild?.roles?.cache?.get(id));
+    return html`<label>${label}<select ${selectAttrs(name, roles.length, multiple)}>
+${optional && !multiple ? html`<option value=""${selected(!value)}>— ${noneLabel} —</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${id} (missing)</option>`)}
+${roles.map((r) => html`<option value="${r.id}"${selected(values.includes(r.id))}>@${r.name}</option>`)}
+</select>${help ? html`<span class="hint">${help}</span>` : ''}${warningList(values.flatMap((id) => roleWarnings(guild, id, { autoAssign, assign })))}</label>`;
 }
 
 export function textInput(name, value, { label, max = 200, help = '', placeholder = '', type = 'text' } = {}) {
@@ -280,22 +306,40 @@ export function selectInput(name, value, choices, { label, help = '' } = {}) {
  * the fields are disabled and there is no submit button.
  * options: { submit, hidden: {name: value}, danger, inline, canEdit, className }
  */
-export function postForm(ctx, module, action, fields, { submit = 'Save', hidden = {}, danger = false, inline = false, canEdit = ctx.canEdit, className = '' } = {}) {
+export function postForm(ctx, module, action, fields, {
+    submit = 'Save', hidden = {}, danger = false, inline = false, canEdit = ctx.canEdit, className = '', confirm = '', secondary = false,
+} = {}) {
     const classes = [inline ? 'inline-form' : 'settings-form', className].filter(Boolean).join(' ');
-    return html`<form method="post" action="${path(`/${module}/${action}`)}" class="${classes}"><input type="hidden" name="csrf" value="${ctx.csrf}">
+    // data-confirm: the static script asks before submitting (destructive actions).
+    // data-dirty: it warns before leaving the page with unsaved changes.
+    const attrs = html`${confirm ? html` data-confirm="${confirm}"` : ''}${inline ? '' : raw(' data-dirty')}`;
+    const buttonClass = danger ? 'danger' : secondary ? 'secondary' : 'primary';
+    return html`<form method="post" action="${path(`/${module}/${action}`)}" class="${classes}"${attrs}><input type="hidden" name="csrf" value="${ctx.csrf}">
 ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}
-<fieldset${canEdit ? '' : raw(' disabled')}>${fields}${canEdit ? html`<button type="submit" class="${danger ? 'danger' : 'primary'}">${submit}</button>` : ''}</fieldset></form>`;
+<fieldset${canEdit ? '' : raw(' disabled')}>${fields}${canEdit ? html`<div class="form-actions"><button type="submit" class="${buttonClass}">${submit}</button></div>` : ''}</fieldset></form>`;
 }
 
-/** An on/off button form (value posted as enabled=true|false). */
-export function toggleForm(ctx, module, action, enabled, { label = 'Module', canEdit = ctx.canEdit, hidden = {} } = {}) {
-    return html`<div class="toggle-row"><span>${label}: <span class="state ${enabled ? 'state-on' : 'state-off'}">${enabled ? 'on' : 'off'}</span></span>
-${postForm(ctx, module, action, '', { submit: enabled ? 'Turn off' : 'Turn on', hidden: { ...hidden, enabled: enabled ? 'false' : 'true' }, inline: true, danger: enabled, canEdit })}</div>`;
+/**
+ * An on/off switch form (value posted as enabled=true|false). Without JS it is a
+ * button ("Turn on" / "Turn off"); the static script turns the row into a switch that
+ * submits on click (with a confirm when turning off, if `confirmOff` is set).
+ */
+export function toggleForm(ctx, module, action, enabled, { label = 'Module', canEdit = ctx.canEdit, hidden = {}, confirmOff = '' } = {}) {
+    const confirm = enabled && confirmOff ? html` data-confirm="${confirmOff}"` : '';
+    return html`<form method="post" action="${path(`/${module}/${action}`)}" class="toggle-row" data-toggle${confirm}><input type="hidden" name="csrf" value="${ctx.csrf}">
+${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}<input type="hidden" name="enabled" value="${enabled ? 'false' : 'true'}">
+<span class="toggle-label">${label}</span>${pill(enabled)}
+<fieldset${canEdit ? '' : raw(' disabled')}>${canEdit ? html`<button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${label}: turn ${enabled ? 'off' : 'on'}"><span class="switch-text">${enabled ? 'Turn off' : 'Turn on'}</span></button>` : ''}</fieldset></form>`;
 }
 
-/** A small one-button form (remove, end now, …). */
-export function buttonForm(ctx, module, action, label, hidden = {}, { danger = true, canEdit = ctx.canEdit } = {}) {
-    return postForm(ctx, module, action, '', { submit: label, hidden, inline: true, danger, canEdit });
+/** A status pill: green "on", grey "off" (or custom text / tone: on, off, warn, bad). */
+export function pill(on, text = on ? 'on' : 'off', tone = on ? 'on' : 'off') {
+    return html`<span class="state state-${tone}">${text}</span>`;
+}
+
+/** A small one-button form (remove, end now, …). `confirm` asks first (with JS). */
+export function buttonForm(ctx, module, action, label, hidden = {}, { danger = true, canEdit = ctx.canEdit, confirm = '' } = {}) {
+    return postForm(ctx, module, action, '', { submit: label, hidden, inline: true, danger, secondary: !danger, canEdit, confirm });
 }
 
 /** Channel name for display: "#name" or the id marked missing. */

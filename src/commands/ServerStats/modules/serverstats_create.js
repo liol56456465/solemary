@@ -1,6 +1,8 @@
 import { PermissionFlagsBits, ChannelType } from 'discord.js';
-import { createEmbed, successEmbed } from '../../../utils/embeds.js';
-import { getServerCounters, saveServerCounters, updateCounter, getCounterBaseName, getCounterTypeLabel } from '../../../services/serverstatsService.js';
+import { successEmbed } from '../../../utils/embeds.js';
+// Validation, channel creation, the atomic save and the first rename live in the
+// service (shared with the web dashboard).
+import { createServerCounter, getCounterTypeLabel } from '../../../services/serverstatsService.js';
 import { logger } from '../../../utils/logger.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
@@ -24,57 +26,18 @@ export async function handleCreate(interaction, client) {
     }
 
     try {
-        if (!category || category.type !== ChannelType.GuildCategory) {
-            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Please select a valid category for the counter channel.' }).catch(logger.error);
-            return;
+        let result;
+        try {
+            result = await createServerCounter(client, guild, { type, channelType, category, actorTag: interaction.user.tag });
+        } catch (error) {
+            if (error.userMessage && error.type === ErrorTypes.USER_INPUT) {
+                await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: error.userMessage }).catch(logger.error);
+                return;
+            }
+            throw error;
         }
-
-        const targetChannelType = channelType === 'voice' ? ChannelType.GuildVoice : ChannelType.GuildText;
-        const baseChannelName = getCounterBaseName(type);
-
-        const counters = await getServerCounters(client, guild.id);
-
-        const duplicateType = counters.find(counter => counter.type === type);
-
-        if (duplicateType) {
-            const duplicateChannel = guild.channels.cache.get(duplicateType.channelId);
-            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `A **${getCounterTypeLabel(type)}** counter already exists for this server${duplicateChannel ? ` in ${duplicateChannel}` : ''}. Delete it first before creating another.` }).catch(logger.error);
-            return;
-        }
-
-        const targetChannel = await guild.channels.create({
-            name: baseChannelName,
-            type: targetChannelType,
-            parent: category.id,
-            reason: `Counter channel created by ${interaction.user.tag}`
-        });
-
-        const existingCounter = counters.find(c => c.channelId === targetChannel.id);
-        if (existingCounter) {
-            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `A counter already exists for channel **${targetChannel.name}**. Please delete it first or choose a different type.` }).catch(logger.error);
-            return;
-        }
-
-        const newCounter = {
-            id: Date.now().toString(),
-            type: type,
-            channelId: targetChannel.id,
-            guildId: guild.id,
-            createdAt: new Date().toISOString(),
-            enabled: true
-        };
-
-        counters.push(newCounter);
-
-        const saved = await saveServerCounters(client, guild.id, counters);
-        if (!saved) {
-            await targetChannel.delete('Counter creation failed during save').catch(() => null);
-            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Failed to save counter data. Please try again.' }).catch(logger.error);
-            return;
-        }
-
-        const updated = await updateCounter(client, guild, newCounter);
-        if (!updated) {
+        const { counter: newCounter, channel: targetChannel, renamed } = result;
+        if (!renamed) {
             await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Counter created but failed to update channel name. The counter will update on the next scheduled run.' }).catch(logger.error);
             return;
         }

@@ -74,10 +74,10 @@ export function gettingStarted({ config, welcome, settings, mutedRole }) {
         { label: 'Alerts channel', done: Boolean(settings.alertsChannelId), href: path('/automod'), hint: settings.modLogChannelId ? 'uses the mod log until set' : 'raid and guard alerts have nowhere to go' },
         { label: 'Muted role', done: Boolean(settings.mutedRoleId || mutedRole), href: path('/enforcement'), hint: 'created automatically on the first mute' },
         { label: 'Appeals category', done: Boolean(settings.appealsCategoryId || config?.ticketCategoryId), href: path('/enforcement'), hint: 'appeal and report channels are opened there' },
-        { label: 'Ticket category', done: Boolean(config?.ticketCategoryId), href: path('/tickets'), hint: '/ticket setup in Discord' },
-        { label: 'Ticket staff role', done: Boolean(config?.ticketStaffRoleId), href: path('/tickets'), hint: '/ticket setup' },
+        { label: 'Ticket category', done: Boolean(config?.ticketCategoryId), href: path('/tickets'), hint: 'set up the ticket panel' },
+        { label: 'Ticket staff role', done: Boolean(config?.ticketStaffRoleId), href: path('/tickets'), hint: 'ticket settings' },
         { label: 'Welcome channel', done: Boolean(welcome?.enabled && welcome?.channelId), href: path('/welcome'), hint: 'Welcome & goodbye' },
-        { label: 'Verification', done: Boolean(config?.verification?.enabled), href: path('/verification'), hint: '/verification setup in Discord' },
+        { label: 'Verification', done: Boolean(config?.verification?.enabled), href: path('/verification'), hint: 'set up the verification panel' },
         { label: 'Birthday channel', done: Boolean(config?.birthdayChannelId), href: path('/birthdays'), hint: 'Birthdays' },
         { label: 'Banned role in the support server', done: Boolean(settings.bannedRoleId), href: path('/support'), hint: 'members banned here get it there' },
     ];

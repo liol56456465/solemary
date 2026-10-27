@@ -8,7 +8,7 @@ import {
     getAppealHistory, getCaseByCode, getCountedWarns, getLatestAppealStatuses, listCasesForUser,
 } from '../enforcement/caseService.js';
 import { editCase, voidCase } from '../enforcement/caseEditService.js';
-import { addEvidence, captureLinks, listEvidence, removeEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
+import { addEvidence, addImageEvidence, captureLinks, listEvidence, removeEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
 import { decideAppeal } from '../enforcement/appealService.js';
 import { precedentHint } from '../enforcement/precedentService.js';
 import {
@@ -28,7 +28,7 @@ export const defaultEnforcement = {
     // actions (same flow builder and executeAction as the panel)
     completeFlowDetails, executeAction, attachFlowEvidence, getMassActionBlock,
     // cases
-    getCaseByCode, getAppealHistory, editCase, voidCase, addEvidence, removeEvidence, captureLinks, listEvidence, resolveImageUrls,
+    getCaseByCode, getAppealHistory, editCase, voidCase, addEvidence, addImageEvidence, removeEvidence, captureLinks, listEvidence, resolveImageUrls,
     // appeals
     decideAppeal,
     // no-contact orders

@@ -5,7 +5,7 @@ import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
 import { getColor, botConfig } from '../config/bot.js';
 import { getEndedGiveaways, markGiveawayEnded } from '../utils/database.js';
-import { getGuildGiveaways, saveGiveaway } from '../utils/giveaways.js';
+import { deleteGiveaway, getGuildGiveaways, saveGiveaway } from '../utils/giveaways.js';
 import { Mutex } from '../utils/mutex.js';
 import { checkRateLimit, getRateLimitStatus } from '../utils/rateLimiter.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
@@ -694,5 +694,163 @@ export async function rerollGiveaway(client, guildId, messageId, rerolledBy) {
     }
 
     return result(channel.id, Boolean(message));
+  });
+}
+
+// ── Create / delete ───────────────────────────────────────────────────────────
+// Shared by /giveaway create, /giveaway delete and the web dashboard.
+
+const GIVEAWAY_CHANNEL_PERMISSIONS = ['ViewChannel', 'SendMessages', 'EmbedLinks'];
+
+/**
+ * Starts a giveaway: validates the duration ("1h", "30m", …), prize and winner count,
+ * checks the bot can post in the channel, posts the giveaway message, saves it and
+ * logs GIVEAWAY_CREATE. Resolves { giveaway, message, durationMs, saved }.
+ * Throws TitanBotError (userMessage) for bad input or a channel the bot can't use.
+ */
+export async function createGiveaway(client, guild, { channel, duration, winnerCount, prize, hostId }) {
+  const durationMs = parseDuration(duration);
+  validateWinnerCount(winnerCount);
+  const prizeName = validatePrize(prize);
+
+  if (!channel || typeof channel.isTextBased !== 'function' || !channel.isTextBased()) {
+    throw new TitanBotError(
+      'Target channel is not text-based',
+      ErrorTypes.VALIDATION,
+      'The channel must be a text channel.',
+      { channelId: channel?.id, channelType: channel?.type }
+    );
+  }
+  const me = guild?.members?.me;
+  const granted = me && typeof channel.permissionsFor === 'function' ? channel.permissionsFor(me) : null;
+  if (granted && !granted.has(GIVEAWAY_CHANNEL_PERMISSIONS)) {
+    throw new TitanBotError(
+      `Missing permissions in ${channel.id}`,
+      ErrorTypes.PERMISSION,
+      `I need View Channel, Send Messages and Embed Links in <#${channel.id}> to post the giveaway.`,
+      { channelId: channel.id, expected: true }
+    );
+  }
+
+  const endTime = Date.now() + durationMs;
+  const giveaway = {
+    messageId: 'placeholder',
+    channelId: channel.id,
+    guildId: guild.id,
+    prize: prizeName,
+    hostId,
+    endTime,
+    endsAt: endTime,
+    winnerCount,
+    participants: [],
+    isEnded: false,
+    ended: false,
+    createdAt: new Date().toISOString(),
+  };
+
+  const message = await channel.send({
+    content: '🎉 **NEW GIVEAWAY** 🎉',
+    embeds: [createGiveawayEmbed(giveaway, 'active')],
+    components: [createGiveawayButtons(false)],
+  });
+
+  giveaway.messageId = message.id;
+  const saved = await saveGiveaway(client, guild.id, giveaway);
+  if (!saved) logger.warn(`Failed to save giveaway to database: ${message.id}`);
+
+  try {
+    await logEvent({
+      client,
+      guildId: guild.id,
+      eventType: EVENT_TYPES.GIVEAWAY_CREATE,
+      data: {
+        description: `Giveaway created: ${prizeName}`,
+        channelId: channel.id,
+        userId: hostId,
+        fields: [
+          { name: 'Prize', value: prizeName, inline: true },
+          { name: 'Winners', value: String(winnerCount), inline: true },
+          { name: 'Duration', value: String(duration), inline: true },
+          { name: 'Channel', value: `<#${channel.id}>`, inline: true },
+        ],
+      },
+    });
+  } catch (logError) {
+    logger.debug('Error logging giveaway creation event:', logError);
+  }
+
+  logger.info(`Giveaway created: ${message.id} in ${channel.name}`);
+  return { giveaway, message, durationMs, saved: Boolean(saved) };
+}
+
+/**
+ * Deletes a giveaway: its message (in its channel, else searched in the guild's text
+ * channels), its database entry, and logs GIVEAWAY_DELETE. Resolves
+ * { giveaway, deletedMessage, channelName }. Throws TitanBotError (userMessage) for a
+ * bad id, an unknown giveaway or a failed database delete.
+ */
+export async function deleteGiveawayNow(client, guild, messageId, deletedBy) {
+  validateGiveawayMessageId(messageId);
+  const guildId = guild.id;
+
+  return Mutex.runExclusive(`giveaway:${messageId}`, async () => {
+    const giveaway = await findGiveaway(client, guildId, messageId);
+    let deletedMessage = false;
+    let channelName = 'Unknown Channel';
+
+    const tryDeleteFromChannel = async (channel) => {
+      if (!channel || !channel.isTextBased?.() || !channel.messages?.fetch) return false;
+      const message = await channel.messages.fetch(messageId).catch(() => null);
+      if (!message) return false;
+      await message.delete();
+      channelName = channel.name || 'unknown-channel';
+      deletedMessage = true;
+      return true;
+    };
+
+    try {
+      const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
+      if (!(await tryDeleteFromChannel(channel)) && guild.channels?.cache) {
+        const others = guild.channels.cache.filter((ch) => ch.id !== giveaway.channelId && ch.isTextBased?.() && ch.messages?.fetch);
+        for (const [, other] of others) {
+          if (await tryDeleteFromChannel(other).catch(() => false)) break;
+        }
+      }
+    } catch (error) {
+      logger.warn(`Could not delete giveaway message: ${error.message}`);
+    }
+
+    const removed = await deleteGiveaway(client, guildId, messageId);
+    const stillThere = (await getGuildGiveaways(client, guildId)).some((g) => g.messageId === messageId);
+    if (!removed || stillThere) {
+      throw new TitanBotError(
+        `Failed to delete giveaway from database: ${messageId}`,
+        ErrorTypes.UNKNOWN,
+        'The giveaway could not be removed from the database. Please try again.',
+        { messageId, guildId }
+      );
+    }
+
+    try {
+      await logEvent({
+        client,
+        guildId,
+        eventType: EVENT_TYPES.GIVEAWAY_DELETE,
+        data: {
+          description: `Giveaway deleted: ${giveaway.prize}`,
+          channelId: giveaway.channelId,
+          userId: deletedBy,
+          fields: [
+            { name: 'Prize', value: giveaway.prize || 'Unknown', inline: true },
+            { name: 'Entries', value: String(giveaway.participants?.length || 0), inline: true },
+          ],
+        },
+      });
+    } catch (logError) {
+      logger.debug('Error logging giveaway deletion:', logError);
+    }
+
+    logger.info(`Giveaway deleted: ${messageId} in ${channelName}`);
+    return { giveaway, deletedMessage, channelName };
   });
 }

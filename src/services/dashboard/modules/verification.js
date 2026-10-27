@@ -1,12 +1,12 @@
 // verification.js — Verification (button panel) and auto-verify. Writes go through
 // services/verificationSettingsService.js (row-locked), shared with /verification.
-// Posting or moving the panel stays in Discord (/verification setup, /verification
-// dashboard → Repost Panel): the panel is a Discord message the bot must send.
+// Setting up and (re)posting the panel go through services/verificationPanelService.js,
+// as /verification setup and /verification dashboard do (Administrators only).
 
 import { botConfig } from '../../../config/bot.js';
 import { html } from '../html.js';
 import {
-    InputError, PERMS, autoRoleField, boolField, channelName, choiceField, intField, numberInput, postForm, rolePicker,
+    InputError, PERMS, autoRoleField, boolField, buttonForm, channelField, channelName, channelPicker, choiceField, intField, numberInput, postForm, rolePicker,
     selectInput, text, textArea, textInput, toggleForm, channelWarnings,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -48,15 +48,21 @@ export default {
     render(ctx, { v, redirect }) {
         const g = ctx.guild;
         const auto = v.autoVerify || {};
+        const canPost = ctx.canEdit && ctx.canAct;
         const panel = v.channelId
-            ? html`<p>Panel in ${channelName(g, v.channelId)}${channelWarnings(g, v.channelId, PERMS.post).map((w) => html` <span class="field-warn">${w}</span>`)}. Move or repost it with /verification dashboard in Discord.</p>`
-            : html`<p class="warn">No verification panel yet: run /verification setup in Discord.</p>`;
+            ? html`<div class="panel-row"><p>Panel in ${channelName(g, v.channelId)}${channelWarnings(g, v.channelId, PERMS.post).map((w) => html` <span class="field-warn">${w}</span>`)}.</p>
+${buttonForm(ctx, 'verification', 'panel-publish', 'Update or re-post the panel', {}, { danger: false, canEdit: canPost })}</div>`
+            : html`<p class="warn">No verification panel yet.</p>${postForm(ctx, 'verification', 'setup', html`<div class="grid">
+${channelPicker(g, 'channelId', null, { label: 'Post the panel in', perms: PERMS.post, optional: false })}
+${rolePicker(g, 'roleId', null, { label: 'Verified role', autoAssign: true, optional: false })}
+${textInput('buttonText', botConfig.verification?.defaultButtonText || 'Verify', { label: 'Button text', max: 80 })}
+${textArea('message', botConfig.verification?.defaultMessage || '', { label: 'Panel message', max: 2000 })}</div>`, { submit: 'Set up and post the panel', canEdit: canPost })}`;
         const manual = html`${toggleForm(ctx, 'verification', 'enabled', v.enabled === true, { label: 'Verification' })}${panel}
 ${postForm(ctx, 'verification', 'settings', html`<div class="grid">
 ${rolePicker(g, 'roleId', v.roleId || null, { label: 'Verified role', autoAssign: true, optional: false })}
 ${textInput('buttonText', v.buttonText || botConfig.verification?.defaultButtonText || 'Verify', { label: 'Button text', max: 80 })}
 ${textArea('message', v.message || botConfig.verification?.defaultMessage || '', { label: 'Panel message', max: 2000 })}</div>`)}
-<p class="muted">Panel text changes show on the live panel after "Repost Panel" in /verification dashboard.</p>`;
+<p class="muted">Saved text shows on the live panel after "Update or re-post the panel".</p>`;
         const autoForm = html`${toggleForm(ctx, 'verification', 'auto-enabled', auto.enabled === true, { label: 'Auto-verify' })}
 ${postForm(ctx, 'verification', 'auto', html`<div class="grid">
 ${selectInput('criteria', auto.criteria || 'none', CRITERIA, { label: 'Who is auto-verified' })}
@@ -67,13 +73,41 @@ ${rolePicker(g, 'autoRoleId', auto.roleId || null, { label: 'Role given', autoAs
     },
 
     actions: {
+        setup: {
+            admin: true,
+            async run(ctx, form) {
+                const g = ctx.guild;
+                const channelId = channelField(g, form, 'channelId', { optional: false, label: 'Panel channel' });
+                const roleId = autoRoleField(g, form, 'roleId', { optional: false, label: 'Verified role' });
+                const before = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
+                if (before.channelId) throw new InputError('The verification panel is already set up: use "Update or re-post the panel".');
+                const { settings } = await ctx.services.setupVerification(ctx.client, g, {
+                    channel: g.channels.cache.get(channelId), role: g.roles.cache.get(roleId),
+                    message: text(form, 'message', 2000), buttonText: text(form, 'buttonText', 80),
+                });
+                return {
+                    changes: ['enabled', 'channelId', 'roleId', 'message', 'buttonText'].map((key) => ({ key: `verification.${key}`, old: before[key] ?? null, new: settings[key] ?? null })),
+                    message: 'Verification set up: the panel is posted and verification is on.',
+                };
+            },
+        },
+        'panel-publish': {
+            admin: true,
+            async run(ctx) {
+                const { action, message } = await ctx.services.publishVerificationPanel(ctx.client, ctx.guild);
+                return {
+                    changes: [{ key: 'verification.panel', old: null, new: action === 'posted' ? { posted: message?.id || true } : { updated: true } }],
+                    message: action === 'posted' ? 'The panel was missing: a new one is posted.' : 'The live panel now shows the saved text.',
+                };
+            },
+        },
         async enabled(ctx, form) {
             const enabled = boolField(form, 'enabled', 'Verification');
             const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
             if (enabled && v.autoVerify?.enabled) throw new InputError('Auto-verify is on. Turn auto-verify off before turning the verification panel on.');
-            if (enabled && !v.channelId) throw new InputError('The verification panel is not set up yet: run /verification setup in Discord.');
+            if (enabled && !v.channelId) throw new InputError('The verification panel is not set up yet: set it up first.');
             const result = await update(ctx, { enabled }, `Verification is now ${enabled ? 'on' : 'off'}.`);
-            result.warnings = ['The panel message in Discord is not posted or removed from the web: use /verification dashboard → Repost Panel when needed.'];
+            result.warnings = ['Turning it on or off does not post or remove the panel message: use "Update or re-post the panel" when needed.'];
             return result;
         },
         async settings(ctx, form) {

@@ -4,7 +4,7 @@
 import { formatDuration } from '../enforcement/format.js';
 import { SEARCH_STATUSES, SEARCH_TYPES } from '../enforcement/caseSearchService.js';
 import { STATS_PERIODS } from '../staffActivityService.js';
-import { formatAge, formatDate, html, layout, queryString, raw } from './html.js';
+import { formatAge, formatDate, html, layout, queryString, raw, timeTag } from './html.js';
 
 const IMAGE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
 
@@ -93,7 +93,7 @@ ${rows.map((row) => {
         const label = statusLabel(row);
         return html`<tr><td>${caseLink(row.case_code)}</td><td>${row.type}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td>
 <td>${row.target_username} <span class="muted">${row.target_user_id}</span></td><td>${row.moderator_username}</td>
-<td>${row.reason}</td><td>${formatDate(row.created_at)}</td><td class="${statusClass(label)}">${label}</td></tr>`;
+<td>${row.reason}</td><td>${timeTag(row.created_at)}</td><td class="${statusClass(label)}">${label}</td></tr>`;
     })}
 </tbody></table></div>${pager}` : html`<p class="muted">No cases match.</p>`}`;
     return layout({ title: 'Cases', active: 'cases', session, access, moduleStates, body });
@@ -123,7 +123,7 @@ function evidenceItem({ row, freshUrl }) {
 export function caseDetailPage({ session, access = null, moduleStates = {}, record, statusLabel, edits = [], evidence = [], appeals = [], top = '', bottom = '' }) {
     const r = record;
     const body = html`<p><a href="/dashboard/cases">← Cases</a></p>
-<h1>Case <code>${r.case_code}</code> · ${r.type}${r.is_test ? ' (test)' : ''}</h1>
+<h1>Case <code data-copy="${r.case_code}">${r.case_code}</code> · ${r.type}${r.is_test ? ' (test)' : ''}</h1>
 ${top}
 <dl>
 <dt>Name</dt><dd>${r.name}</dd>
@@ -212,7 +212,7 @@ ${page + 1 < pages ? html`<a href="/dashboard/audit${queryString({ ...keep, page
 <button class="primary" type="submit">Filter</button> <a href="/dashboard/audit">Clear</a>
 </form>
 ${rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Module</th><th>Setting</th><th>Old</th><th>New</th></tr></thead><tbody>
-${rows.map((r) => html`<tr><td>${formatDate(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${r.module}</td><td><code>${r.key}</code></td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
+${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${r.module}</td><td><code>${r.key}</code></td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
 </tbody></table></div>${pager}` : html`<p class="muted">No changes${filters.user || filters.module ? ' match' : ' yet'}.</p>`}`;
     return layout({ title: 'Audit', active: 'audit', session, access, moduleStates, body });
 }

@@ -18,6 +18,7 @@ import {
 } from '../../utils/database.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import appDashboard from './modules/app_dashboard.js';
+import { createApplicationRole } from '../../services/applicationRoleService.js';
 
 function getApplicationStatusPresentation(statusValue) {
     const normalized = typeof statusValue === 'string' ? statusValue.trim().toLowerCase() : 'unknown';
@@ -237,26 +238,17 @@ async function handleSetup(interaction) {
         return;
     }
 
-    const existingRoles = await getApplicationRoles(interaction.client, interaction.guild.id);
-    if (existingRoles.some(r => r.roleId === roleId)) {
-        await replyUserError(submitted, { type: ErrorTypes.CONFIGURATION, message: `The role ${role} is already configured as an application.` });
+    // Duplicate check, atomic save, the role's questions and turning the system on:
+    // services/applicationRoleService.js (shared with the web dashboard).
+    try {
+        await createApplicationRole(interaction.client, interaction.guild.id, {
+            roleId, name: appName, questions, enabled: true, enableSystem: true,
+        });
+    } catch (error) {
+        if (!error.userMessage || error.type !== ErrorTypes.VALIDATION) throw error;
+        await replyUserError(submitted, { type: ErrorTypes.CONFIGURATION, message: error.userMessage.replace('This role', `The role ${role}`) });
         return;
     }
-
-    existingRoles.push({
-        roleId: roleId,
-        name: appName,
-        enabled: true,  
-    });
-
-    await saveApplicationRoles(interaction.client, interaction.guild.id, existingRoles);
-
-    const settings = await getApplicationSettings(interaction.client, interaction.guild.id);
-    if (!settings.enabled) {
-        await ApplicationService.updateSettings(interaction.client, interaction.guild.id, { enabled: true });
-    }
-
-    await saveApplicationRoleSettings(interaction.client, interaction.guild.id, roleId, { questions });
 
     await submitted.reply({
         embeds: [successEmbed(

@@ -476,6 +476,78 @@ export async function logConfigurationChange(client, guildId, userId, action, de
     }
 }
 
+/**
+ * Sets up Join to Create (shared by /jointocreate setup and the web dashboard): one
+ * trigger per server (stale triggers whose channel is gone are cleaned up first), the
+ * options validated BEFORE the "Join to Create" voice channel is created, then the
+ * config saved and the change logged. bitrateKbps is in kbps. Resolves
+ * { channel, config }. Throws TitanBotError (userMessage) when refused.
+ */
+export async function setupJoinToCreate(client, guild, {
+    categoryId = null, nameTemplate = "{username}'s Room", userLimit = 0, bitrateKbps = 64, actorId = null,
+} = {}) {
+    const guildId = guild.id;
+    const existing = await getConfiguration(client, guildId);
+    if (Array.isArray(existing.triggerChannels) && existing.triggerChannels.length > 0) {
+        const active = [];
+        for (const id of existing.triggerChannels) {
+            const channel = await guild.channels.fetch(id).catch(() => null);
+            if (channel) active.push(channel);
+            else {
+                logger.info(`Cleaning up stale JTC trigger ${id} from guild ${guildId}`);
+                await removeTriggerChannel(client, guildId, id);
+            }
+        }
+        if (active.length > 0) {
+            throw new TitanBotError(
+                'Guild already has a Join to Create channel',
+                ErrorTypes.VALIDATION,
+                `This server already has a Join to Create channel set up: ${active[0]}\n\nChange or remove it first before creating a new one.`,
+                { guildId, activeTriggerCount: active.length, expected: true, suppressErrorLog: true }
+            );
+        }
+    }
+
+    // Validate before creating the trigger channel so bad input doesn't leave an orphaned channel.
+    validateChannelNameTemplate(nameTemplate);
+    validateUserLimit(userLimit);
+    validateBitrate(bitrateKbps);
+    const category = categoryId ? guild.channels.cache.get(categoryId) : null;
+    if (categoryId && (!category || category.type !== ChannelType.GuildCategory)) {
+        throw new TitanBotError('Not a category', ErrorTypes.VALIDATION, 'The category must be a category in this server.', { expected: true });
+    }
+
+    const channel = await guild.channels.create({
+        name: 'Join to Create',
+        type: ChannelType.GuildVoice,
+        parent: category?.id,
+        userLimit: 0,
+        bitrate: 64000,
+        permissionOverwrites: [
+            { id: guild.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect] },
+        ],
+    });
+
+    let config;
+    try {
+        config = await initializeJoinToCreate(client, guildId, channel.id, {
+            nameTemplate,
+            userLimit,
+            bitrate: bitrateKbps * 1000,
+            categoryId: category?.id,
+        });
+    } catch (error) {
+        await channel.delete('Join to Create setup failed').catch(() => null);
+        throw error;
+    }
+
+    await logConfigurationChange(client, guildId, actorId, 'Initialized Join to Create', {
+        channelId: channel.id, nameTemplate, userLimit, bitrate: bitrateKbps,
+    });
+    logger.info(`Created Join to Create system in guild ${guildId}`);
+    return { channel, config };
+}
+
 export async function createTemporaryChannel(guild, member, options = {}) {
     try {
         if (!guild || !member) {

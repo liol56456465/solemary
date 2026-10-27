@@ -1,5 +1,6 @@
 // serverstatsService.js
 
+import { ChannelType } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
@@ -294,6 +295,59 @@ export async function mutateServerCounters(client, guildId, change) {
     return saved;
   }, []);
   return saved;
+}
+
+/**
+ * Creates a counter (shared by /serverstats create and the web dashboard): one counter
+ * per type, a new voice or text channel in `category`, saved under the row lock, then
+ * named with the current count. Returns { counter, channel, renamed }. Throws USER_INPUT
+ * errors with the /serverstats messages (unknown type, not a category, type in use);
+ * when saving fails the new channel is deleted again.
+ */
+export async function createServerCounter(client, guild, { type, channelType = 'voice', category, actorTag = 'dashboard' }) {
+  if (!COUNTER_TYPE_CONFIG[type]) {
+    throw createError('Unknown counter type', ErrorTypes.USER_INPUT, 'Unknown counter type.', { type });
+  }
+  if (!category || category.type !== ChannelType.GuildCategory) {
+    throw createError('Not a category', ErrorTypes.USER_INPUT, 'Please select a valid category for the counter channel.', { type });
+  }
+  const existing = (await getServerCounters(client, guild.id)).find((c) => c.type === type);
+  if (existing) {
+    const channel = guild.channels.cache.get(existing.channelId);
+    throw createError('Counter type in use', ErrorTypes.USER_INPUT,
+      `A **${getCounterTypeLabel(type)}** counter already exists for this server${channel ? ` in ${channel}` : ''}. Delete it first before creating another.`, { type });
+  }
+
+  const channel = await guild.channels.create({
+    name: getCounterBaseName(type),
+    type: channelType === 'text' ? ChannelType.GuildText : ChannelType.GuildVoice,
+    parent: category.id,
+    reason: `Counter channel created by ${actorTag}`,
+  });
+
+  const counter = {
+    id: Date.now().toString(),
+    type,
+    channelId: channel.id,
+    guildId: guild.id,
+    createdAt: new Date().toISOString(),
+    enabled: true,
+  };
+  try {
+    await mutateServerCounters(client, guild.id, (counters) => {
+      if (counters.some((c) => c.type === type)) {
+        throw createError('Counter type in use', ErrorTypes.USER_INPUT,
+          `A **${getCounterTypeLabel(type)}** counter already exists for this server. Delete it first before creating another.`, { type });
+      }
+      return [...counters, counter];
+    });
+  } catch (error) {
+    await channel.delete('Counter creation failed during save').catch(() => null);
+    if (error.type === ErrorTypes.USER_INPUT) throw error;
+    throw createError('Counter save failed', ErrorTypes.USER_INPUT, 'Failed to save counter data. Please try again.', { type, cause: error.message });
+  }
+  const renamed = await updateCounter(client, guild, counter);
+  return { counter, channel, renamed };
 }
 
 /**

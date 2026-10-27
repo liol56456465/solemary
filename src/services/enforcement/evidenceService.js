@@ -227,7 +227,8 @@ export async function addImageEvidence(client, caseCode, attachment, { note = nu
     try {
         stored = await channel.send({
             content: truncate(`Evidence for case \`${caseCode}\`, added by ${addedBy.username} (\`${addedBy.id}\`)${note ? `: ${note}` : ''}`, 2000),
-            files: [{ attachment: attachment.url, name: attachment.name || 'evidence.png' }],
+            // A Discord attachment (url) or, from the web dashboard, the checked image bytes (data).
+            files: [{ attachment: attachment.data ?? attachment.url, name: attachment.name || 'evidence.png' }],
             allowedMentions: { parse: [] },
         });
     } catch (error) {
@@ -238,7 +239,7 @@ export async function addImageEvidence(client, caseCode, attachment, { note = nu
     try {
         return await addEvidence(caseCode, {
             kind: 'image',
-            url: stored.attachments.first()?.url || attachment.url,
+            url: stored.attachments?.first?.()?.url || attachment.url || null,
             storeChannelId: channel.id,
             storeMessageId: stored.id,
             note,

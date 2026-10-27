@@ -7,7 +7,7 @@
 //   POST /dashboard/users/:id/action/execute     single-use token → executeAction → flash + 303
 //   POST /dashboard/users/:id/notes/add|remove   staff notes
 //   POST /dashboard/cases/:code/edit|void        caseEditService
-//   POST /dashboard/cases/:code/evidence/add|remove   links only (images stay in Discord)
+//   POST /dashboard/cases/:code/evidence/add|upload|remove   links, or an uploaded image (re-hosted)
 //   GET  /dashboard/appeals/:code                appeal dossier
 //   POST /dashboard/appeals/:code/preview|decide confirm step → decideAppeal
 //   GET  /dashboard/nocontact, POST /dashboard/nocontact/add|end
@@ -36,6 +36,7 @@ import { InputError, multiline, plainText, text } from './forms.js';
 import { html, path } from './html.js';
 import { isSnowflake } from './security.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
+import { evidenceFileName, sniffImage } from './multipart.js';
 import {
     actionConfirmPage, appealConfirmPage, appealDetailPage, blocksSection, coverageSection, noContactPage, userPage, userSearchPage,
 } from './enforcementPages.js';
@@ -404,6 +405,25 @@ export function createEnforcementHandlers(core) {
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase });
 
+    // An evidence image from the web: the multipart body was size-capped (express.raw)
+    // and parsed by multipart.js before this runs (req.upload); only PNG / JPEG / GIF /
+    // WebP recognised by their first bytes are accepted, then re-hosted in the evidence
+    // channel by addImageEvidence (the same function /case evidence add uses).
+    const evidenceUpload = guardedPost(async (req, res) => {
+        const record = await caseOf(req);
+        const file = req.upload?.file || null;
+        if (!file) throw new InputError('Choose an image to upload.');
+        const image = sniffImage(file.data);
+        if (!image) throw new InputError('That file is not a PNG, JPEG, GIF or WebP image.');
+        const note = text(req.body, 'note', 300) || null;
+        const row = await e.addImageEvidence(client, record.case_code, {
+            data: file.data, name: evidenceFileName(record.case_code, image.ext), contentType: image.type,
+        }, { note, addedBy: { id: req.dashboard.session.userId, username: req.dashboard.session.username } });
+        await audit(req, 'cases', [{ key: `${record.case_code}.evidence`, old: null, new: `image #${row.id} (${image.type}, ${file.data.length} bytes)` }], { modLog: true, label: `Case ${record.case_code} evidence` });
+        await flash(req, `Image evidence #${row.id} added (re-hosted in the evidence channel).`);
+        return res.redirect(303, path(`/cases/${record.case_code}`));
+    }, { rerender: rerenderCase });
+
     const evidenceRemove = guardedPost(async (req, res) => {
         const record = await caseOf(req);
         const id = text(req.body, 'id', 12);
@@ -565,7 +585,7 @@ export function createEnforcementHandlers(core) {
 
     return {
         users, userPage: userPageHandler, actionPreview, actionExecute, noteAdd, noteRemove,
-        caseEdit, caseVoid, evidenceAdd, evidenceRemove, caseActionForms: (args) => caseActionForms(args),
+        caseEdit, caseVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd,
         staffSections, blockLift, canWrite,

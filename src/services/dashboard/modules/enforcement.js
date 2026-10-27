@@ -65,7 +65,11 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
         const ladder = table(['Level', 'Warn ladder ban'], Object.entries(enforcementConfig.ladderBans).map(([level, ms]) => [level, ms ? formatDuration(ms) : 'permanent']));
         const reasons = table(['Key', 'Reason', 'Severe'], ENFORCEMENT_REASONS.map((r) => [html`<code>${r.key}</code>`, r.label, r.severe ? 'yes' : 'no']));
         const steps = table(['Rule', 'Steps (1st, 2nd, 3rd+ offence)'], Object.values(AUTOMOD_RULES).map((r) => [r.label, r.steps.map(stepText).join(' → ')]));
-        return html`${section('Channels', channels)}${section('Roles', roles, 'Warning roles are given for 1, 2 and 3+ active warnings.')}
+        const appealPanels = postForm(ctx, 'enforcement', 'appeal-panels',
+            channelPicker(g, 'channelId', null, { label: 'Main-server panel channel', perms: PERMS.post, optional: false, help: 'The support server panel goes to its #appeals channel (created when missing).' }),
+            { submit: 'Post the appeal panels', canEdit: ctx.canEdit && ctx.canAct, confirm: 'Post the appeal panels now? Earlier appeal panels in these channels are replaced.' });
+        return html`${section('Appeal panels', appealPanels, `Same as /setappeal: posts (or replaces) the appeal panel here and in the support server.${ctx.canAct ? '' : ' Needs Administrator in the main server.'}`)}
+${section('Channels', channels)}${section('Roles', roles, 'Warning roles are given for 1, 2 and 3+ active warnings.')}
 ${section('Appeals and reports', timings)}${section('Mass-action guard', mass, 'A moderator who bans or kicks this many members within the window is blocked from the panel; bot owners get a DM.')}
 ${section('Warn ladder', html`<p class="muted">${enforcementConfig.warnsPerLevel} warnings at level 0 ban; at level 1 and above the first warning bans. Read-only for now.</p>${ladder}`)}
 ${section('Reasons', reasons, 'Read-only for now (the keys are stored with each case).')}
@@ -73,6 +77,17 @@ ${section('Automod steps', steps, 'Read-only for now.')}`;
     },
 
     actions: {
+        'appeal-panels': {
+            admin: true,
+            async run(ctx, form) {
+                const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: 'Main-server panel channel' });
+                const { mainChannel, supportChannel, created } = await ctx.services.postAppealPanels(ctx.client, ctx.guild, ctx.guild.channels.cache.get(channelId), { reason: `dashboard: ${ctx.actor.username}` });
+                return {
+                    changes: [{ key: 'appealPanels', old: null, new: { main: mainChannel.id, support: supportChannel.id } }],
+                    message: `Appeal panels posted in #${mainChannel.name} and in #${supportChannel.name} of the support server${created ? ' (created)' : ''}.`,
+                };
+            },
+        },
         async channels(ctx, form) {
             const g = ctx.guild;
             const invite = text(form, 'supportServerInvite', 100);

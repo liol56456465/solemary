@@ -22,6 +22,7 @@ import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorHandler.js';
 import { getGuildConfig } from '../../../services/config/guildConfig.js';
 import { updateTicketSettings, clearTicketSettings } from '../../../services/ticketSettingsService.js';
+import { refreshTicketPanel, repostTicketPanel as repostTicketPanelService } from '../../../services/ticketPanelService.js';
 import { getGuildTicketStats } from '../../../utils/database/tickets.js';
 import { getUserTicketCount } from '../../../services/ticket.js';
 import {
@@ -80,40 +81,10 @@ async function persistPanelMessageId(client, guildId, guildConfig, messageId) {
     }
 }
 
-function buildPanelEmbed(config) {
-    return new EmbedBuilder()
-        .setTitle('Support Tickets')
-        .setDescription(config.ticketPanelMessage || 'Click the button below to create a support ticket.')
-        .setColor(getColor('info'));
-}
-
-function buildPanelButtonRow(config) {
-    return new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-            .setCustomId('create_ticket')
-            .setLabel(config.ticketButtonLabel || 'Create Ticket')
-            .setStyle(ButtonStyle.Primary)
-            .setEmoji('📩'),
-    );
-}
-
-async function repostTicketPanel(client, guild, guildConfig, guildId) {
-    const channel = await guild.channels.fetch(guildConfig.ticketPanelChannelId).catch(() => null);
-    if (!channel) {
-        throw new TitanBotError(
-            'Panel channel missing',
-            ErrorTypes.CONFIGURATION,
-            'The configured ticket panel channel no longer exists. Set a new panel channel from the dashboard.',
-        );
-    }
-
-    const sentPanel = await channel.send({
-        embeds: [buildPanelEmbed(guildConfig)],
-        components: [buildPanelButtonRow(guildConfig)],
-    });
-
-    await persistPanelMessageId(client, guildId, guildConfig, sentPanel.id);
-    return sentPanel;
+// The panel message itself (build, repost, refresh) lives in
+// services/ticketPanelService.js, shared with /ticket setup and the web dashboard.
+async function repostTicketPanel(client, guild, guildConfig) {
+    return repostTicketPanelService(client, guild, guildConfig);
 }
 
 function formatCloseDuration(ms) {
@@ -236,24 +207,8 @@ async function refreshDashboard(rootInteraction, guildConfig, guildId, client) {
     }).catch(() => {});
 }
 
-async function updateLivePanel(client, guild, config, guildId) {
-    if (!config.ticketPanelChannelId) return false;
-    try {
-        const panelStatus = await getTicketPanelStatus(client, guild, config);
-        if (panelStatus.recoveredId) {
-            await persistPanelMessageId(client, guildId, config, panelStatus.recoveredId);
-        }
-        if (!panelStatus.exists || !panelStatus.message) return false;
-
-        await panelStatus.message.edit({
-            embeds: [buildPanelEmbed(config)],
-            components: [buildPanelButtonRow(config)],
-        });
-        return true;
-    } catch (error) {
-        logger.warn('Failed to update live ticket panel:', error.message);
-        return false;
-    }
+async function updateLivePanel(client, guild, config) {
+    return refreshTicketPanel(client, guild, config);
 }
 
 export default {
