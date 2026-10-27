@@ -25,6 +25,7 @@ import { tidyStaleAppealChannels } from './services/enforcement/staleAppealServi
 import { postWeeklyAutomodReport } from './services/automod/automodReport.js';
 import { postDailyAutomodDigest } from './services/automod/automodDigest.js';
 import { liftCalmSlowmodes } from './services/automod/autoSlowmode.js';
+import { pollFeeds } from './services/community/feedService.js';
 import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { registerOAuthRoutes } from './services/oauthVerification.js';
@@ -329,6 +330,7 @@ class Meowist extends Client {
     cron.schedule('0 6 * * *', exclusive('birthday_check', () => checkBirthdays(this)));
     cron.schedule('* * * * *', exclusive('giveaway_check', () => checkGiveaways(this)));
     cron.schedule('*/15 * * * *', exclusive('counter_update', () => this.updateAllCounters()));
+    cron.schedule('*/15 * * * *', exclusive('youtube_feeds', () => pollFeeds(this)));
     cron.schedule('* * * * *', exclusive('enforcement_expiry', () => runEnforcementExpiry(this)));
     cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
     cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));

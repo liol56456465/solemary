@@ -14,6 +14,7 @@ export const CT = {
     suggestions: pgConfig.tables.suggestions,
     suggestionVotes: pgConfig.tables.suggestion_votes,
     starboard: pgConfig.tables.starboard_posts,
+    feeds: pgConfig.tables.feeds,
 };
 
 /** An expected, user-facing error (shown as-is by the command error handler). */

@@ -37,6 +37,7 @@ const configuredTables = {
     suggestions: 'suggestions',
     suggestion_votes: 'suggestion_votes',
     starboard_posts: 'starboard_posts',
+    feeds: 'feeds',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -74,6 +75,7 @@ const allowedTableIdentifiers = new Set([
     'suggestions',
     'suggestion_votes',
     'starboard_posts',
+    'feeds',
 ]);
 
 const validatedTables = Object.fromEntries(

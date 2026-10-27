@@ -48,6 +48,7 @@ after(async () => {
     await pgDb.pool.query('DELETE FROM suggestions WHERE guild_id = $1', [guildId]).catch(() => {});
     await pgDb.pool.query('DELETE FROM community_settings WHERE guild_id = $1', [guildId]).catch(() => {});
     await pgDb.pool.query('DELETE FROM starboard_posts WHERE guild_id = $1', [guildId]).catch(() => {});
+    await pgDb.pool.query('DELETE FROM feeds WHERE guild_id = $1', [guildId]).catch(() => {});
     await pgDb.disconnect();
 });
 
@@ -252,4 +253,54 @@ test('starboard: threshold, self-stars, count updates, edits, deletes', { skip }
     const botReaction = { ...reaction(), count: 5, message: botMessage };
     await starboard.handleStarReaction(botReaction, { id: id(72) });
     assert.equal(starboard.getStarboardPost(botMessage.id), null);
+});
+
+test('feeds: add records the newest video, polls post only new videos once per source, remove', { skip }, async () => {
+    const feedsSvc = await import('../../src/services/community/feedService.js');
+    const ytChannel = `UC${runId}abcdefghijklm`;
+    assert.equal(ytChannel.length, 24);
+    let videos = ['vid_0000002', 'vid_0000001'];
+    let fetches = 0;
+    const xml = () => `<feed><author><name>Cats</name></author>${videos.map((v) => `<entry><yt:videoId>${v}</yt:videoId><title>T ${v}</title><link rel="alternate" href="https://www.youtube.com/watch?v=${v}"/></entry>`).join('')}</feed>`;
+    const fakeFetch = async (url) => {
+        fetches += 1;
+        if (!url.includes(ytChannel)) return { ok: false, status: 404, text: async () => '' };
+        return { ok: true, status: 200, text: async () => xml() };
+    };
+    const a = fakeChannel(id(80));
+    const b = fakeChannel(id(81));
+    a.isTextBased = () => true;
+    b.isTextBased = () => true;
+    const client = { channels: { cache: new Map([[a.id, a], [b.id, b]]) } };
+
+    await feedsSvc.loadFeeds();
+    await assert.rejects(feedsSvc.addFeed({ guildId, sourceInput: `UC${'x'.repeat(22)}`, channelId: a.id, createdBy: id(90) }, fakeFetch), /no channel/);
+    const { feed, latest } = await feedsSvc.addFeed({ guildId, sourceInput: ytChannel, channelId: a.id, createdBy: id(90) }, fakeFetch);
+    assert.equal(feed.lastItemId, 'vid_0000002');
+    assert.equal(latest.author, 'Cats');
+    await feedsSvc.addFeed({ guildId, sourceInput: ytChannel, channelId: b.id, template: '<@&123456789012345678> {title}', createdBy: id(90) }, fakeFetch);
+    await assert.rejects(feedsSvc.addFeed({ guildId, sourceInput: ytChannel, channelId: b.id, createdBy: id(90) }, fakeFetch), /already/);
+
+    // Only this test's feeds take part in the poll.
+    feedsSvc.setFeedsForTests((await pgDb.pool.query('SELECT * FROM feeds WHERE guild_id = $1', [guildId])).rows);
+    fetches = 0;
+    let result = await feedsSvc.pollFeeds(client, fakeFetch);
+    assert.deepEqual(result, { sources: 1, posted: 0 });
+    assert.equal(fetches, 1, 'one fetch per YouTube channel');
+
+    videos = ['vid_0000004', 'vid_0000003', ...videos];
+    result = await feedsSvc.pollFeeds(client, fakeFetch);
+    assert.equal(result.posted, 4);
+    assert.deepEqual(a.sent.map((m) => m.payload.content.match(/vid_\d+/)[0]), ['vid_0000003', 'vid_0000004']);
+    assert.deepEqual(b.sent[0].payload.allowedMentions, { parse: [], roles: ['123456789012345678'] });
+    const { rows } = await pgDb.pool.query('SELECT last_item_id FROM feeds WHERE guild_id = $1', [guildId]);
+    assert.ok(rows.every((row) => row.last_item_id === 'vid_0000004'));
+
+    result = await feedsSvc.pollFeeds(client, fakeFetch);
+    assert.equal(result.posted, 0, 'no reposts');
+    assert.equal(feedsSvc.listFeeds(guildId).length, 2);
+
+    assert.equal(await feedsSvc.removeFeed(guildId, feed.id), true);
+    assert.equal(await feedsSvc.removeFeed(guildId, feed.id), false);
+    assert.equal(feedsSvc.listFeeds(guildId).length, 1);
 });

@@ -442,6 +442,21 @@ export const tableStatements = [
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+
+    // Feeds (/community feed): new YouTube videos posted to a channel. Polled every
+    // 15 minutes from memory; last_item_id is written only when a new video is posted.
+    `CREATE TABLE IF NOT EXISTS ${t.feeds} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        kind VARCHAR(16) NOT NULL DEFAULT 'youtube' CHECK (kind IN ('youtube')),
+        source_id VARCHAR(64) NOT NULL,
+        channel_id VARCHAR(20) NOT NULL,
+        message_template TEXT,
+        last_item_id VARCHAR(64),
+        created_by VARCHAR(20),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (guild_id, kind, source_id, channel_id)
+    )`,
 ];
 
 export const indexStatements = [
