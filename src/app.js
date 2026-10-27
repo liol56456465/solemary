@@ -28,6 +28,7 @@ import { liftCalmSlowmodes } from './services/automod/autoSlowmode.js';
 import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { registerOAuthRoutes } from './services/oauthVerification.js';
+import { registerStaffDashboard } from './services/staffDashboard/routes.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import pkg from '../package.json' with { type: 'json' };
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
@@ -254,6 +255,7 @@ class Meowist extends Client {
     });
 
     registerOAuthRoutes(app, this);
+    registerStaffDashboard(app, this);
 
     app.get('/', (req, res) => {
       res.status(200).json({ 
