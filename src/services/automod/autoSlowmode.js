@@ -52,22 +52,10 @@ export async function trackChannelActivity(message) {
     const settings = await getAutomodSettings(message.guildId);
     if (!settings.enabled || await isChannelExempt(message.guildId, channel)) return;
 
-    const state = await loadActive();
-    const existing = state.get(channel.id);
-    if (existing) {
-        existing.lastBusy = now;
-        return;
-    }
-    if (channel.rateLimitPerUser > 0) return; // a moderator already set slowmode; leave it alone
-
+    const started = await startSlowmode(channel, { reason: 'Automod: channel flooded' });
+    if (started === 'extended') return;
     recent.delete(channel.id);
-    const ok = await channel.setRateLimitPerUser(SLOWMODE_SECONDS, 'Automod: channel flooded').then(() => true).catch((error) => {
-        logger.warn(`Auto slowmode in ${channel.id} failed: ${error.message}`);
-        return false;
-    });
-    if (!ok) return;
-    state.set(channel.id, { guildId: channel.guild.id, since: now, lastBusy: now });
-    await saveActive();
+    if (started !== 'started') return;
     await channel.send({ content: `Slowmode is on for a few minutes because this channel got very busy (${SLOWMODE_SECONDS}s between messages).` }).catch(() => {});
     await postModLog(message.client, 'slowmode', [
         { name: 'Channel', value: `<#${channel.id}>` },
@@ -75,6 +63,37 @@ export async function trackChannelActivity(message) {
         { name: 'Ends', value: `after ${CALM_MS / 60000} quiet minutes` },
     ], { title: '🐢 Auto slowmode on' });
 }
+
+/**
+ * Turns the bot's slowmode on in a channel (or keeps it on). Returns 'started' when it
+ * was just set, 'extended' when the bot's slowmode was already on (the calm timer
+ * restarts), or null when nothing was done (a thread, a moderator's own slowmode, or
+ * Discord refused). `reason` goes to the audit log and the stored state. Lifted by
+ * liftCalmSlowmodes after CALM_MS without another call.
+ */
+export async function startSlowmode(channel, { reason = 'Automod: channel flooded' } = {}) {
+    if (typeof channel?.setRateLimitPerUser !== 'function' || channel.isThread?.()) return null;
+    const now = Date.now();
+    const state = await loadActive();
+    const existing = state.get(channel.id);
+    if (existing) {
+        existing.lastBusy = now;
+        return 'extended';
+    }
+    if (channel.rateLimitPerUser > 0) return null; // a moderator already set slowmode; leave it alone
+
+    const ok = await channel.setRateLimitPerUser(SLOWMODE_SECONDS, reason).then(() => true).catch((error) => {
+        logger.warn(`Auto slowmode in ${channel.id} failed: ${error.message}`);
+        return false;
+    });
+    if (!ok) return null;
+    state.set(channel.id, { guildId: channel.guild.id, since: now, lastBusy: now, reason });
+    await saveActive();
+    return 'started';
+}
+
+export const AUTO_SLOWMODE_SECONDS = SLOWMODE_SECONDS;
+export const AUTO_SLOWMODE_CALM_MS = CALM_MS;
 
 /** Lifts slowmode the bot set once the channel has been calm; run every minute. */
 export async function liftCalmSlowmodes(client) {

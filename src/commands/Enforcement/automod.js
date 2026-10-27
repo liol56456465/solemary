@@ -67,6 +67,7 @@ async function statusEmbed(guildId) {
             `**Channel exceptions:** ${channelExceptions(settings)}`,
             `**Trusted members** (skip ${relaxedRuleLabels()}): ${trustedText(settings.trusted)}`,
             `**Second chance** (first small offence: a notice, no warning): ${settings.secondChance ? 'on' : 'off'}`,
+            `**Mood alerts** (calm-down note + slowmode in heated channels): ${settings.moodAlerts ? 'on' : 'off'}`,
             '',
             '**Punishments** (1st → 2nd → 3rd+ offence within 30 days). A mode in **bold** is set for that rule with `/automod rule`; the others follow the global mode:',
             ...rules,
@@ -162,6 +163,8 @@ export default {
             .addIntegerOption((option) => option.setName('min_level').setDescription('Or at least this leveling level (0 = no level criterion)').setMinValue(0).setMaxValue(1000))
             .addBooleanOption((option) => option.setName('clear').setDescription('Remove the trusted role and level')))
         .addSubcommand((sub) => sub.setName('secondchance').setDescription('First small offence in 30 days: a notice instead of a warning')
+            .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
+        .addSubcommand((sub) => sub.setName('mood').setDescription('Calm-down note and brief slowmode when a channel heats up')
             .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
         .addSubcommand((sub) => sub.setName('probation').setDescription('Show or end a member\'s probation (rejoined after a ban)')
             .addUserOption((option) => option.setName('user').setDescription('Member').setRequired(true))
@@ -316,6 +319,12 @@ export default {
             note = enabled
                 ? 'Second chance is **on**: a member\'s first offence in 30 days on caps, characters, English only or mild language (no slurs) gets a short notice instead of a warning.'
                 : 'Second chance is **off**: every offence gets the usual punishment.';
+        } else if (sub === 'mood') {
+            const enabled = interaction.options.getBoolean('enabled');
+            await updateAutomodSettings(guildId, { moodAlerts: enabled });
+            note = enabled
+                ? 'Mood alerts are **on**: when insults or caps floods from 3+ members pile up in a channel, the bot posts one calm-down note, turns on slowmode for a few minutes and tells the alerts channel.'
+                : 'Mood alerts are **off**.';
         } else if (sub === 'exempt') {
             const channel = interaction.options.getChannel('channel');
             const settings = await getAutomodSettings(guildId);

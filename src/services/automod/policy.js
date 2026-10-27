@@ -158,6 +158,28 @@ export function secondChanceNotice(ruleKey, userId, deleted) {
     return `<@${userId}> Please ${verb} ${what} — no warning this time.`;
 }
 
+// ── Mood (channel heat) ───────────────────────────────────────────────────────
+
+/** One message's heat: the weight of its heaviest mood signal (0 for none). */
+export function messageHeat(hits, cfg = automodConfig) {
+    return (hits || []).reduce((max, hit) => Math.max(max, cfg.moodWeights[hit.rule] || 0), 0);
+}
+
+/** Channel heat over the window: { score, members } from [{ at, userId, weight }]. */
+export function computeHeat(events, now = Date.now(), cfg = automodConfig) {
+    const recent = (events || []).filter((event) => now - event.at <= cfg.moodWindowMs);
+    return {
+        score: recent.reduce((sum, event) => sum + event.weight, 0),
+        members: new Set(recent.map((event) => event.userId)).size,
+    };
+}
+
+/** Calm-down time: hot enough, enough different people, and not within the cooldown. */
+export function shouldCalmChannel({ score, members }, { lastCalmAt = 0, now = Date.now() } = {}, cfg = automodConfig) {
+    if (score < cfg.moodThreshold || members < cfg.moodMinMembers) return false;
+    return now - lastCalmAt >= cfg.moodCooldownMs;
+}
+
 // ── Self-tuning ───────────────────────────────────────────────────────────────
 
 /**

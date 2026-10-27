@@ -20,6 +20,8 @@ const DEFAULT_SETTINGS = Object.freeze({
     trusted: { roleId: null, minLevel: 0 },
     // First small offence: a notice instead of a warning (/automod secondchance).
     secondChance: true,
+    // Calm-down note + slowmode when a channel heats up (/automod mood).
+    moodAlerts: true,
 });
 
 /** Stored settings (any shape, or null) → a complete settings object. */
@@ -33,6 +35,7 @@ export function normalizeSettings(stored) {
     const trusted = value.trusted && typeof value.trusted === 'object' ? value.trusted : {};
     value.trusted = { roleId: trusted.roleId || null, minLevel: Math.max(0, Number(trusted.minLevel) || 0) };
     value.secondChance = value.secondChance !== false;
+    value.moodAlerts = value.moodAlerts !== false;
     return value;
 }
 

@@ -19,6 +19,7 @@ import { executeSystemAction, isAdministrator } from '../enforcement/enforcement
 import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
 import { isRaidJoiner } from './raidService.js';
 import { getProbation } from './probationService.js';
+import { noteMoodSignals } from './moodService.js';
 import { getUserLevelData } from '../leveling/leveling.js';
 import {
     hasTrustedRole, isTrustedMember, ladderIndex, relaxForTrusted, resolveRuleMode, secondChanceEligible, secondChanceNotice, trustMatters,
@@ -449,6 +450,10 @@ export async function moderateMessage(message, { edited = false } = {}) {
 
         const detected = await evaluateMessage(message, member, now);
         let hits = applyRuleModes(detected, settings, message.channel);
+        // Channel mood from the same hits (in memory, no extra reads); runs alongside.
+        if (!edited && hits.length) {
+            noteMoodSignals(message, hits, settings).catch((error) => logger.warn(`Mood tracking failed: ${error.message}`));
+        }
         // Probation is read only when a rule was hit (cached briefly). Read-only decision:
         // on a database error treat them as not on probation.
         const probation = hits.length

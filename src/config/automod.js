@@ -135,6 +135,15 @@ export const automodConfig = {
     // Second opinion: this share of kept full cards gets a "confirm or undo?" request
     // for a different admin (services/automod/secondOpinion.js).
     secondOpinionRate: 0.05,
+    // Mood alerts (/automod mood): per-channel heat from automod hits within
+    // moodWindowMs (each message counts its heaviest signal). At moodThreshold heat
+    // from at least moodMinMembers different members, the bot posts one calm-down note,
+    // turns on its auto slowmode and posts an alert; then waits moodCooldownMs there.
+    moodWindowMs: 3 * 60 * 1000,
+    moodWeights: { harassment: 3, sexual: 3, disrespect: 2, caps: 1 },
+    moodThreshold: 6,
+    moodMinMembers: 3,
+    moodCooldownMs: 30 * 60 * 1000,
     // Self-tuning (run with the daily digest): a rule whose decisions moderators undid
     // or changed this often, over at least this many actions in the window, gets a
     // "switch to monitor?" suggestion in the alerts channel, at most once per cooldown.
