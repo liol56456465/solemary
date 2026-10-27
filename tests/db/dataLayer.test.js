@@ -247,3 +247,23 @@ test('mass-action guard: the ban after the limit is refused, the moderator block
         await pgDb.pool.query('DELETE FROM mod_cases WHERE guild_id = $1 AND moderator_id = $2', [guildA, moderatorId]);
     }
 });
+
+// --- leaderboard ----------------------------------------------------------------------
+
+test('leaderboard: one ordered page from user_levels, absolute ranks', { skip }, async () => {
+    const { getUserLevelKey } = await import('../../src/utils/database/keys.js');
+    const { getLeaderboard } = await import('../../src/services/leveling/leveling.js');
+    const levels = [[1, 3, 500], [2, 7, 2000], [3, 3, 650], [4, 0, 0], [5, 1, 120]];
+    for (const [n, level, totalXp] of levels) {
+        await db.set(getUserLevelKey(guildB, user(n)), { xp: 10, level, totalXp, lastMessage: 0, rank: 0 });
+    }
+    const members = new Map();
+    const guild = { id: guildB, members: { cache: members, fetch: async () => members } };
+    const fakeClient = { db, guilds: { cache: new Map([[guildB, guild]]) }, users: { cache: new Map() } };
+
+    const first = await getLeaderboard(fakeClient, guildB, 2, 0);
+    assert.deepEqual(first.map(e => [e.userId, e.rank]), [[user(2), 1], [user(3), 2]]);
+    const second = await getLeaderboard(fakeClient, guildB, 2, 2);
+    assert.deepEqual(second.map(e => [e.userId, e.rank]), [[user(1), 3], [user(5), 4]]);
+    assert.equal((await getLeaderboard(fakeClient, guildB, 2, 4)).length, 0, 'zero-XP rows are not ranked');
+});

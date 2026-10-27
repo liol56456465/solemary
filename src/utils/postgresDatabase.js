@@ -838,6 +838,25 @@ class PostgreSQLDatabase {
         return result.rowCount > 0;
     }
 
+    // --- Row-level reads ------------------------------------------------------------
+
+    /** One page of a guild's level leaderboard, highest level first. */
+    async topUserLevels(guildId, limit = 10, offset = 0) {
+        const result = await this._query(
+            `SELECT user_id, xp, level, total_xp FROM ${pgConfig.tables.user_levels}
+             WHERE guild_id = $1 AND (total_xp > 0 OR level > 0)
+             ORDER BY level DESC, total_xp DESC, xp DESC, user_id
+             LIMIT $2 OFFSET $3`,
+            [guildId, limit, offset],
+        );
+        return result.rows.map((row) => ({
+            userId: row.user_id,
+            xp: Number(row.xp) || 0,
+            level: Number(row.level) || 0,
+            totalXp: Number(row.total_xp) || 0,
+        }));
+    }
+
     // --- Structured tables ---------------------------------------------------------
 
     async getStructuredData(parsedKey, defaultValue) {
