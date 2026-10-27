@@ -77,6 +77,13 @@ export async function setDmDelivered(caseId, delivered) {
     await query(`UPDATE ${T.cases} SET dm_delivered = $2 WHERE id = $1`, [caseId, delivered]);
 }
 
+/** Records whether the "your ban/mute has ended" DM reached the user (once; never retried). */
+export async function setEndDmDelivered(caseIds, delivered) {
+    if (!caseIds.length) return true;
+    await query(`UPDATE ${T.cases} SET end_dm_delivered = $2 WHERE id = ANY($1::bigint[])`, [caseIds, delivered]);
+    return true;
+}
+
 export async function getCaseByCode(caseCode) {
     const { rows } = await query(`SELECT * FROM ${T.cases} WHERE case_code = $1`, [caseCode]);
     return rows[0] || null;

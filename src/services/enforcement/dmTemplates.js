@@ -80,3 +80,39 @@ export function appealAcceptedDm(adminUsername, inviteUrl) {
 export function appealDeniedDm() {
     return `**Appeal denied.** If you think this is a mistake, appeal again here:\n${supportServerInvite}`;
 }
+
+/**
+ * Sent when a ban ends: on expiry, or early when a moderator unbans.
+ * `inviteUrl` is a one-time invite back to the server (null when none could be made).
+ */
+export function banEndedDm(record, inviteUrl, { early = false } = {}) {
+    return [
+        `**Your ban from ${serverName} has ended**`,
+        early ? 'A moderator lifted it early.' : 'It expired.',
+        record?.case_code ? `Case code: ${record.case_code}` : null,
+        `Rejoin: ${inviteUrl || `ask for an invite in the support server: ${supportServerInvite}`}`,
+    ].filter(Boolean).join('\n');
+}
+
+/** Sent when a mute ends: on expiry, or early when a moderator unmutes. */
+export function muteEndedDm(record, { early = false } = {}) {
+    return [
+        `**Your mute in ${serverName} has ended**`,
+        early ? 'A moderator lifted it early. You can talk again.' : 'It expired. You can talk again.',
+        record?.case_code ? `Case code: ${record.case_code}` : null,
+    ].filter(Boolean).join('\n');
+}
+
+/**
+ * Sent when an admin voids a case (/case void): the record no longer counts against
+ * the user. `inviteUrl` is set when the void lifted a ban.
+ */
+export function caseVoidedDm(record, reason, inviteUrl = null) {
+    return [
+        `**A ${record.type} on your record in ${serverName} was voided**`,
+        `Case code: ${record.case_code}`,
+        `Reason: ${reason}`,
+        'It no longer counts against you.',
+        inviteUrl ? `You were unbanned. Rejoin: ${inviteUrl}` : null,
+    ].filter(Boolean).join('\n');
+}

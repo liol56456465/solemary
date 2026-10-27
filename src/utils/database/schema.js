@@ -211,6 +211,10 @@ export const tableStatements = [
     // never acts on: no bans, unbans, roles or ladder changes.
     `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE`,
 
+    // "Your ban/mute has ended" DM: NULL = not sent (yet), TRUE/FALSE = delivered or not.
+    // Sent once when the ban or mute ends (expiry or an early lift); never retried.
+    `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS end_dm_delivered BOOLEAN`,
+
     // Warn ladder. Never reset; lowered by one only by an accepted ladder-ban appeal.
     `CREATE TABLE IF NOT EXISTS ${t.mod_ladder} (
         guild_id VARCHAR(20) NOT NULL,
