@@ -1,8 +1,13 @@
 // backgroundView.js — /background record views and their pagination buttons.
 //
 // custom_id: bg:page:<viewerId>:<targetId>:<page> — stateless, so it survives restarts.
+// Staff notes (formerly /usernotes) are shown on the list and edited with the
+// Add note / Remove note buttons: bg:noteadd|notedel:<viewerId>:<targetId>, whose
+// forms submit as bgnote:add|del:<targetId>. Notes stay in the usernotes key.
 
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { db } from '../utils/database/wrapper.js';
+import { getUserNotesKey } from '../utils/database/keys.js';
 import { createEmbed } from '../utils/embeds.js';
 import { createError, ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
@@ -12,6 +17,21 @@ import { caseStatusLabel, getAppealHistory, getLatestAppealStatuses, listCasesFo
 import { dateStamp, formatDuration, stamp, truncate } from '../services/enforcement/format.js';
 
 const PAGE_SIZE = 6;
+const NOTES_SHOWN = 5;
+const NOTE_TYPE_EMOJI = { warning: '⚠️', positive: '✅', neutral: '📝', alert: '🚨' };
+
+async function loadNotes(guildId, userId) {
+    const notes = await db.get(getUserNotesKey(guildId, userId), []);
+    return Array.isArray(notes) ? notes : [];
+}
+
+function notesField(notes) {
+    if (notes.length === 0) return { name: 'Staff notes', value: 'None. Use **Add note** to write one.' };
+    const lines = notes.map((note, index) => ({ note, number: index + 1 })).slice(-NOTES_SHOWN).reverse().map(({ note, number }) =>
+        truncate(`**${number}.** ${NOTE_TYPE_EMOJI[note.type] ?? '📝'} ${note.content} — ${note.author ?? 'unknown'}, ${note.timestamp ? stamp(note.timestamp) : '?'}`, 200));
+    const more = notes.length > NOTES_SHOWN ? `\n…and ${notes.length - NOTES_SHOWN} older` : '';
+    return { name: `Staff notes (${notes.length})`, value: truncate(lines.join('\n') + more, 1024) };
+}
 
 function userError(message) {
     return createError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -82,9 +102,10 @@ export async function buildRecordEmbed(row) {
 }
 
 export async function buildRecordList(guildId, viewerId, targetUser, page) {
-    const [{ rows, total }, appealStatuses] = await Promise.all([
+    const [{ rows, total }, appealStatuses, notes] = await Promise.all([
         listCasesForUser(guildId, targetUser.id, { limit: PAGE_SIZE, offset: page * PAGE_SIZE }),
         getLatestAppealStatuses(targetUser.id),
+        loadNotes(guildId, targetUser.id),
     ]);
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -102,11 +123,16 @@ export async function buildRecordList(guildId, viewerId, targetUser, page) {
         description: total
             ? `${total} record(s), newest first. Use \`name:\` to open one in full.`
             : 'No records for this user.',
-        fields,
+        fields: [...fields, notesField(notes)],
         footer: { text: `Page ${Math.min(page + 1, pages)} of ${pages}` },
         color: 'primary',
     });
 
+    const noteRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`bg:noteadd:${viewerId}:${targetUser.id}`).setLabel('Add note').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`bg:notedel:${viewerId}:${targetUser.id}`).setLabel('Remove note').setStyle(ButtonStyle.Secondary)
+            .setDisabled(notes.length === 0),
+    );
     const components = pages > 1 ? [new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`bg:page:${viewerId}:${targetUser.id}:${page - 1}`)
@@ -119,24 +145,84 @@ export async function buildRecordList(guildId, viewerId, targetUser, page) {
             .setStyle(ButtonStyle.Secondary)
             .setDisabled(page + 1 >= pages),
     )] : [];
+    components.push(noteRow);
 
     return { embeds: [embed], components };
 }
 
+function noteModal(step, targetId) {
+    const input = step === 'add'
+        ? new TextInputBuilder().setCustomId('note').setStyle(TextInputStyle.Paragraph).setMaxLength(1000).setRequired(true)
+        : new TextInputBuilder().setCustomId('number').setStyle(TextInputStyle.Short).setMaxLength(4).setRequired(true).setPlaceholder('e.g. 3');
+    return new ModalBuilder()
+        .setCustomId(`bgnote:${step}:${targetId}`)
+        .setTitle(step === 'add' ? 'Add a staff note' : 'Remove a staff note')
+        .addLabelComponents(new LabelBuilder()
+            .setLabel(step === 'add' ? 'Note (only staff can see it)' : 'Number of the note to remove')
+            .setTextInputComponent(input));
+}
+
+function staffOnly(interaction) {
+    return isAdministrator(interaction.member) && interaction.guildId === enforcementConfig.mainGuildId;
+}
+
 export async function handleBackgroundButton(interaction, client, args) {
     const [step, viewerId, targetId, rawPage] = args;
-    if (step !== 'page') return;
+    if (!['page', 'noteadd', 'notedel'].includes(step)) return;
 
-    if (interaction.user.id !== viewerId || !isAdministrator(interaction.member)
-        || interaction.guildId !== enforcementConfig.mainGuildId) {
+    if (interaction.user.id !== viewerId || !staffOnly(interaction)) {
         return replyUserError(interaction, {
             type: ErrorTypes.PERMISSION,
             message: 'Run /background yourself to browse records.',
         });
     }
+    if (step === 'noteadd') return InteractionHelper.safeShowModal(interaction, noteModal('add', targetId));
+    if (step === 'notedel') return InteractionHelper.safeShowModal(interaction, noteModal('del', targetId));
 
     await interaction.deferUpdate();
     const targetUser = await client.users.fetch(targetId);
     const page = Math.max(0, Number.parseInt(rawPage, 10) || 0);
     await InteractionHelper.safeEditReply(interaction, await buildRecordList(interaction.guildId, viewerId, targetUser, page));
+}
+
+/** Saves a staff note added or removed from the /background view, then refreshes the view. */
+export async function handleBackgroundNoteModal(interaction, client, args) {
+    const [step, targetId] = args;
+    if (!staffOnly(interaction) || !/^\d{17,20}$/.test(targetId ?? '')) {
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Only administrators can edit staff notes.' });
+    }
+    const key = getUserNotesKey(interaction.guildId, targetId);
+
+    if (step === 'add') {
+        const content = interaction.fields.getTextInputValue('note').trim();
+        if (!content) return replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'The note is empty.' });
+        await db.update(key, (notes) => [...(Array.isArray(notes) ? notes : []), {
+            id: Date.now(),
+            content,
+            type: 'neutral',
+            author: interaction.user.tag,
+            authorId: interaction.user.id,
+            timestamp: new Date().toISOString(),
+        }], []);
+    } else if (step === 'del') {
+        const number = Number.parseInt(interaction.fields.getTextInputValue('number'), 10);
+        let removed = false;
+        await db.update(key, (notes) => {
+            const list = Array.isArray(notes) ? [...notes] : [];
+            if (Number.isInteger(number) && number >= 1 && number <= list.length) {
+                list.splice(number - 1, 1);
+                removed = true;
+            }
+            return list;
+        }, []);
+        if (!removed) return replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: `There is no note number ${interaction.fields.getTextInputValue('number')}.` });
+    } else {
+        return;
+    }
+
+    const targetUser = await client.users.fetch(targetId);
+    const view = await buildRecordList(interaction.guildId, interaction.user.id, targetUser, 0);
+    // The form was opened from the /background message: update it in place.
+    if (interaction.isFromMessage?.()) return interaction.update(view);
+    return InteractionHelper.safeReply(interaction, { ...view, flags: MessageFlags.Ephemeral });
 }

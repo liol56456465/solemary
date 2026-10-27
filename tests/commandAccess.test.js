@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 process.env.MAIN_GUILD_ID ??= '100000000000000001';
 process.env.SUPPORT_GUILD_ID ??= '100000000000000002';
 
-const { EVERYONE_COMMANDS } = await import('../src/config/commands/commandAccess.js');
+const { EVERYONE_COMMANDS, SUPPORT_SERVER_COMMANDS } = await import('../src/config/commands/commandAccess.js');
 const { checkCommandAccess } = await import('../src/utils/commandGate.js');
 const { enforcementConfig } = await import('../src/config/enforcement.js');
 
@@ -41,8 +41,13 @@ test('every everyone-key names a real command or subcommand', async () => {
     assert.deepEqual(unknown, []);
 });
 
+test('every support-server command exists', async () => {
+    const names = new Set([...(await allAccessKeys())].map((key) => key.split(' ')[0]));
+    assert.deepEqual([...SUPPORT_SERVER_COMMANDS].filter((name) => !names.has(name)), []);
+});
+
 test('owner decisions stay admin-only', () => {
-    for (const key of ['wipedata', 'randomuser', 'poll', 'countdown', 'embedbuilder', 'shorten', 'birthday setchannel']) {
+    for (const key of ['wipedata', 'tools randomuser', 'poll', 'countdown', 'embedbuilder', 'shorten', 'birthday setchannel']) {
         assert.equal(EVERYONE_COMMANDS.has(key), false, key);
     }
 });

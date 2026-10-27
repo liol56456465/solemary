@@ -7,9 +7,14 @@ import { TitanBotError, ErrorTypes, replyUserError } from '../../utils/errorHand
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
 import levelDashboard from './modules/level_dashboard.js';
+import levelAdd from './modules/level_add.js';
+import levelRemove from './modules/level_remove.js';
+import levelSet from './modules/level_set.js';
+import { mergeSubcommands } from '../../utils/mergedCommand.js';
 
-export default {
-    data: new SlashCommandBuilder()
+// /level add|remove|set replace /leveladd, /levelremove and /levelset (same options).
+const levelCommand = mergeSubcommands(
+    new SlashCommandBuilder()
         .setName('level')
         .setDescription('Manage the leveling system')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
@@ -64,9 +69,20 @@ export default {
                 .setName('dashboard')
                 .setDescription('Open the interactive leveling configuration dashboard'),
         ),
+    {
+        add: { module: levelAdd, description: 'Add levels to a member' },
+        remove: { module: levelRemove, description: 'Remove levels from a member' },
+        set: { module: levelSet, description: "Set a member's level" },
+    },
+);
+
+export default {
+    data: levelCommand.data,
     category: 'Leveling',
 
     async execute(interaction, config, client) {
+        if (await levelCommand.run(interaction, config, client)) return;
+
         const deferred = await InteractionHelper.safeDefer(interaction, {
             flags: MessageFlags.Ephemeral,
         });

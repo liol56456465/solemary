@@ -8,9 +8,12 @@ import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { getWelcomeConfig } from '../../utils/database.js';
 import verificationDashboard from './modules/verification_dashboard.js';
+import autoVerify from './modules/autoVerify.js';
+import { mergeSubcommands } from '../../utils/mergedCommand.js';
 
-export default {
-    data: new SlashCommandBuilder()
+// /verification auto setup|dashboard replaces the separate /autoverify command.
+const verificationCommand = mergeSubcommands(
+    new SlashCommandBuilder()
         .setName("verification")
         .setDescription("Manage the server verification system")
         .addSubcommand(subcommand =>
@@ -61,8 +64,17 @@ export default {
                 .setName("dashboard")
                 .setDescription("Open the verification system configuration dashboard")
         ),
+    {
+        auto: { module: autoVerify, description: 'Automatic verification (verify members on join by rules)' },
+    },
+);
+
+export default {
+    data: verificationCommand.data,
 
     async execute(interaction, config, client) {
+        if (await verificationCommand.run(interaction, config, client)) return;
+
         const wrappedExecute = withErrorHandling(async () => {
             const subcommand = interaction.options.getSubcommand();
             const guild = interaction.guild;

@@ -1,10 +1,10 @@
 import { webcrypto as crypto } from 'node:crypto';
-import { getColor } from '../../config/bot.js';
+import { getColor } from '../../../config/bot.js';
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
-import { createEmbed, successEmbed, infoEmbed, warningEmbed } from '../../utils/embeds.js';
-import { logger } from '../../utils/logger.js';
-import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
-import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { createEmbed, successEmbed, infoEmbed, warningEmbed } from '../../../utils/embeds.js';
+import { logger } from '../../../utils/logger.js';
+import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
+import { InteractionHelper } from '../../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('generatepassword')

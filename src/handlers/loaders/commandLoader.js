@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import { isSupportServerCommand } from '../../config/commands/commandAccess.js';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { ApplicationIntegrationType, Collection, InteractionContextType, Routes } from 'discord.js';
@@ -263,8 +264,8 @@ async function putCommands(rest, route, commands, label) {
 }
 
 /**
- * Commands are guild commands: the full set in the main server, and everything except
- * scope 'main' in the support server. The global list is emptied. Each PUT replaces
+ * Commands are guild commands: the full set in the main server, and the commands in
+ * SUPPORT_SERVER_COMMANDS (config/commands/commandAccess.js) in the support server. The global list is emptied. Each PUT replaces
  * the whole list, so commands deleted from the codebase disappear too.
  */
 export async function registerCommandSets(rest, clientId, sets, totalSubcommands = 0) {
@@ -282,7 +283,8 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
     logger.info('Command validation passed');
 
     const mainCommands = prepareCommandsForRegistration(all);
-    const supportCommands = prepareCommandsForRegistration([...sets.global, ...sets.support]);
+    const supportCommands = prepareCommandsForRegistration(
+        [...sets.global, ...sets.support].filter((command) => isSupportServerCommand(command.name)));
 
     if (testMode.enabled) {
         // Test mode never touches global commands; the test main guild plays the main server.
