@@ -3,6 +3,7 @@ import { getColor, botConfig } from '../config/bot.js';
 import { getGuildConfig } from '../services/config/guildConfig.js';
 import { getWelcomeConfig } from '../utils/database.js';
 import { formatWelcomeMessage } from '../utils/welcome.js';
+import { resolveWelcomeImageUrl } from '../utils/welcomeImageStore.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { getServerCounters, updateCounter } from '../services/serverstatsService.js';
 import { setBirthday as dbSetBirthday } from '../utils/database.js';
@@ -92,7 +93,7 @@ export default {
                         .setFooter({ text: embedFooter });
                     
                     if (welcomeConfig.welcomeImage) {
-                        embed.setImage(welcomeConfig.welcomeImage);
+                        embed.setImage(await resolveWelcomeImageUrl(member.client, welcomeConfig.welcomeImage, welcomeConfig.welcomeImageRef, { guildId: guild.id, label: 'welcome' }));
                     } else if (welcomeConfig.welcomeEmbed?.image?.url) {
                         embed.setImage(welcomeConfig.welcomeEmbed.image.url);
                     }
