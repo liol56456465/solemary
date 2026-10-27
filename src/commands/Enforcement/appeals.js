@@ -11,7 +11,7 @@ import { dateStamp, normalizeCaseCode, truncate } from '../../services/enforceme
 async function showPending(interaction) {
     const pending = await listPendingAppeals();
     const lines = pending.map((row) =>
-        `\`${row.case_code}\` **${row.type}** ${row.username} (\`${row.user_id}\`), filed ${dateStamp(row.created_at)}`
+        `\`${row.case_code}\` **${row.type}**${row.is_test ? ' (test)' : ''} ${row.username} (\`${row.user_id}\`), filed ${dateStamp(row.created_at)}`
         + `${row.channel_id ? ` in <#${row.channel_id}>` : ''}`);
     await InteractionHelper.safeEditReply(interaction, {
         embeds: [createEmbed({

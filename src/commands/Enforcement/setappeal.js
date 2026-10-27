@@ -117,7 +117,7 @@ export default {
 
         const appealsCategory = await getAppealsCategory(interaction.guild);
         if (!appealsCategory) {
-            throw configError(`The appeals category (${enforcementConfig.appealsCategoryId}) is not a category in this server. Every appeal and staff report opens there.`);
+            throw configError(`There is no ticket category to open appeals in. Set one in the ticket dashboard (/ticket), or make sure ${enforcementConfig.appealsCategoryId} is a category in this server.`);
         }
         const botPermissions = appealsCategory.permissionsFor(interaction.guild.members.me);
         if (!botPermissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels])) {

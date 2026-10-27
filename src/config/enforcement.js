@@ -15,7 +15,7 @@ export const enforcementConfig = {
     // Defaults are the production Meowist values; .env.test overrides them for the test servers.
     adminRequestChannelId: readId('ADMIN_REQUEST_CHANNEL_ID') || '1527697155643408442',
     supportServerInvite: (process.env.SUPPORT_SERVER_INVITE || '').trim() || 'https://discord.gg/7Ckv9Bt577',
-    // Main-server category where every appeal and staff report opens, visible to administrators only.
+    // Fallback main-server category for appeals and staff reports when /ticket has no ticket category set.
     // (Renamed from APPEALS_CATEGORY_ID, which was a support-server category; that variable is ignored.)
     appealsCategoryId: readId('MAIN_APPEALS_CATEGORY_ID') || '1531365877755285606',
     // Optional: a main-server category closed appeal/report channels move to. Without it they stay in place, renamed closed-….
