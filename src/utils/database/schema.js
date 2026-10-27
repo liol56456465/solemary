@@ -211,6 +211,28 @@ export const tableStatements = [
     // never acts on: no bans, unbans, roles or ladder changes.
     `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE`,
 
+    // "Your ban/mute has ended" DM: NULL = not sent (yet), TRUE/FALSE = delivered or not.
+    // Sent once when the ban or mute ends (expiry or an early lift); never retried.
+    `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS end_dm_delivered BOOLEAN`,
+
+    // /case void: the case was a mistake. It stays on record (status 'revoked') but
+    // no longer counts anywhere: ladder, offences, warn roles, staff stats.
+    `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS voided_at TIMESTAMPTZ`,
+    `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS voided_by VARCHAR(20)`,
+    `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS void_reason TEXT`,
+
+    // /case edit history: one row per changed field.
+    `CREATE TABLE IF NOT EXISTS ${t.mod_case_edits} (
+        id BIGSERIAL PRIMARY KEY,
+        case_code VARCHAR(7) NOT NULL REFERENCES ${t.mod_cases}(case_code) ON DELETE CASCADE,
+        edited_by VARCHAR(20) NOT NULL,
+        edited_by_username VARCHAR(100) NOT NULL,
+        edited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        field VARCHAR(20) NOT NULL,
+        old_value TEXT,
+        new_value TEXT
+    )`,
+
     // Warn ladder. Never reset; lowered by one only by an accepted ladder-ban appeal.
     `CREATE TABLE IF NOT EXISTS ${t.mod_ladder} (
         guild_id VARCHAR(20) NOT NULL,
@@ -319,6 +341,8 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_verification_ips_hash ON ${t.verification_ips}(ip_hash)`,
     `CREATE INDEX IF NOT EXISTS idx_server_snapshots_guild ON ${t.server_snapshots}(guild_id, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_appeals_case ON ${t.mod_appeals}(case_code, decided_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_mod_case_edits_case ON ${t.mod_case_edits}(case_code, edited_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_mod_cases_moderator ON ${t.mod_cases}(guild_id, moderator_id, created_at)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

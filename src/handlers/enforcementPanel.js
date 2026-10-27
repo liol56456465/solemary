@@ -118,46 +118,68 @@ export function availableActions(state) {
     return actions;
 }
 
-export async function buildPanel(guild, moderatorId, targetUser) {
-    const state = await getTargetState(guild, targetUser.id);
-    const [{ rows: recent }, appealStatuses] = await Promise.all([
-        listCasesForUser(guild.id, targetUser.id, { limit: 5 }),
-        getLatestAppealStatuses(targetUser.id),
-    ]);
+function relative(date) {
+    return `<t:${Math.floor(new Date(date).getTime() / 1000)}:R>`;
+}
 
+/**
+ * The member summary at the top of the panel, so a moderator sees the history
+ * before acting: account age, time in server, roles, warns and ladder, any active
+ * punishment, pending appeals. (No message counts: member messages are not stored.)
+ */
+export function panelSummaryLines(targetUser, state, appealStatuses = new Map()) {
+    const member = state.member;
+    const roleCount = member ? Math.max(0, (member.roles?.cache?.size ?? 1) - 1) : null; // minus @everyone
     const lines = [
-        `**User:** ${targetUser.username} (<@${targetUser.id}>)`,
-        `**ID:** \`${targetUser.id}\``,
-        `**Account created:** ${dateStamp(targetUser.createdAt)} (<t:${Math.floor(targetUser.createdTimestamp / 1000)}:R>)`,
-        `**In server:** ${state.member ? 'Yes' : 'No'}`,
-        `**Counted warns:** ${state.ladder.warns_since_level}${state.ladder.level === 0 ? ` of ${enforcementConfig.warnsPerLevel}` : ' (next warn bans)'}`,
-        `**Ladder level:** ${state.ladder.level}`,
+        `**User:** ${targetUser.username} (<@${targetUser.id}>) · \`${targetUser.id}\``,
+        `**Account created:** ${dateStamp(targetUser.createdAt)} (${relative(targetUser.createdAt)})`,
+        member
+            ? `**In server:** yes, joined ${member.joinedAt ? `${dateStamp(member.joinedAt)} (${relative(member.joinedAt)})` : 'at an unknown time'} · ${roleCount} role${roleCount === 1 ? '' : 's'}`
+            : '**In server:** no',
+        `**Counted warns:** ${state.ladder.warns_since_level}${state.ladder.level === 0 ? ` of ${enforcementConfig.warnsPerLevel}` : ' (next warn bans)'} · **Ladder level:** ${state.ladder.level}`,
     ];
 
+    const active = [];
     if (state.activeBan) {
-        lines.push(`**Active ban:** \`${state.activeBan.case_code}\` — ${state.activeBan.expires_at ? `ends ${stamp(state.activeBan.expires_at)}` : 'permanent'}`);
+        active.push(`ban \`${state.activeBan.case_code}\` — ${state.activeBan.expires_at ? `ends ${stamp(state.activeBan.expires_at)}` : 'permanent'}`);
     } else if (state.banned) {
-        lines.push('**Active ban:** yes (no record — banned outside the panel)');
+        active.push('banned (no record — banned outside the panel)');
     }
     if (state.activeMute) {
-        lines.push(`**Active mute:** \`${state.activeMute.case_code}\` — ends ${stamp(state.activeMute.expires_at)}`);
+        active.push(`mute \`${state.activeMute.case_code}\` — ends ${stamp(state.activeMute.expires_at)}`);
     } else if (state.muted) {
-        lines.push('**Active mute:** has the muted role (no record)');
+        active.push('has the muted role (no record)');
     }
+    lines.push(`**Active punishment:** ${active.length ? active.join('; ') : 'none'}`);
 
     const pendingAppeals = [...appealStatuses].filter(([, status]) => status === 'pending').map(([code]) => `\`${code}\``);
     if (pendingAppeals.length) {
         lines.push(`**Pending appeal:** ${pendingAppeals.join(', ')} (decide in the appeal channel or with /appeals)`);
     }
+    return lines;
+}
 
-    const recentText = recent.length
-        ? recent.map((row) => `\`${row.case_code}\` ${row.type}${row.is_test ? ' (test)' : ''} · ${caseStatusLabel(row, appealStatuses.get(row.case_code))}${row.is_imported ? ' · imported' : ''}`).join('\n')
-        : 'None';
+/** "Last cases" field: type, name, date and status of the newest few. */
+export function recentCasesText(rows, total, appealStatuses = new Map()) {
+    if (!rows.length) return 'None';
+    const lines = rows.map((row) => `\`${row.case_code}\` **${row.type}**${row.is_test ? ' (test)' : ''} · ${truncate(row.name, 60)} · <t:${Math.floor(new Date(row.created_at).getTime() / 1000)}:d> · ${caseStatusLabel(row, appealStatuses.get(row.case_code))}${row.is_imported ? ' · imported' : ''}`);
+    if (total > rows.length) lines.push(`-# ${total - rows.length} older — see /background`);
+    return lines.join('\n');
+}
+
+const RECENT_CASES_SHOWN = 3;
+
+export async function buildPanel(guild, moderatorId, targetUser) {
+    const state = await getTargetState(guild, targetUser.id);
+    const [{ rows: recent, total }, appealStatuses] = await Promise.all([
+        listCasesForUser(guild.id, targetUser.id, { limit: RECENT_CASES_SHOWN }),
+        getLatestAppealStatuses(targetUser.id),
+    ]);
 
     const embed = createEmbed({
         title: `Enforcements — ${truncate(targetUser.username, 200)}`,
-        description: truncate(lines.join('\n'), 4096),
-        fields: [{ name: 'Recent cases', value: truncate(recentText, 1024) }],
+        description: truncate(panelSummaryLines(targetUser, state, appealStatuses).join('\n'), 4096),
+        fields: [{ name: `Last cases${total ? ` (${Math.min(total, RECENT_CASES_SHOWN)} of ${total})` : ''}`, value: truncate(recentCasesText(recent, total, appealStatuses), 1024) }],
         thumbnail: targetUser.displayAvatarURL(),
         color: 'primary',
     });

@@ -8,21 +8,23 @@ import { Mutex } from '../../utils/mutex.js';
 import { query, T, isEnforcementDbAvailable } from './db.js';
 import { OPEN_STATUSES } from './caseService.js';
 import { removeMutedRole } from './muteService.js';
-import { logEnforcement } from './enforcementService.js';
+import { logEnforcement, notifyPunishmentEnded } from './enforcementService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 
 const BATCH_SIZE = 50;
 const UNKNOWN_BAN = 10026;
 let running = false;
 
+/** Closes the case; true when this call closed it (false: someone else already did). */
 async function expireCase(row, status = 'expired') {
-    await query(
+    const { rowCount } = await query(
         `UPDATE ${T.cases} SET status = $2 WHERE id = $1 AND status = ANY($3)`,
         [row.id, status, OPEN_STATUSES]
     );
+    return rowCount > 0;
 }
 
-async function liftExpired(client, guild, row) {
+export async function liftExpired(client, guild, row) {
     const target = { id: row.target_user_id, username: row.target_username };
 
     if (row.is_test) {
@@ -40,22 +42,25 @@ async function liftExpired(client, guild, row) {
             }
             // Already unbanned by hand — just close the record.
         }
-        await expireCase(row);
+        const closed = await expireCase(row);
         await syncBannedRoleQuietly(client, row.target_user_id);
         await logEnforcement(client, guild.id, 'unban', {
             target, moderatorLabel: `${client.user.username} (automatic)`,
             extra: [{ name: 'Reason', value: `Temporary ban \`${row.case_code}\` expired` }],
         });
+        // The case is closed now, so a failed DM is recorded and never retried.
+        if (closed) await notifyPunishmentEnded(client, guild, { type: 'ban', userId: row.target_user_id, records: [row] });
         return;
     }
 
     if (row.type === 'mute') {
         await removeMutedRole(guild, row.target_user_id, `Mute ${row.case_code} expired`);
-        await expireCase(row);
+        const closed = await expireCase(row);
         await logEnforcement(client, guild.id, 'unmute', {
             target, moderatorLabel: `${client.user.username} (automatic)`,
             extra: [{ name: 'Reason', value: `Mute \`${row.case_code}\` expired` }],
         });
+        if (closed) await notifyPunishmentEnded(client, guild, { type: 'mute', userId: row.target_user_id, records: [row] });
     }
 }
 

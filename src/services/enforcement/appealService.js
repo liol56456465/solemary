@@ -13,7 +13,7 @@ import { logger } from '../../utils/logger.js';
 import { Mutex } from '../../utils/mutex.js';
 import { logEvent, EVENT_TYPES } from '../loggingService.js';
 import { query, withTransaction, T, isUniqueViolation } from './db.js';
-import { getCaseByCode, listCasesForUser, OPEN_STATUSES } from './caseService.js';
+import { getCaseByCode, listCasesForUser, setEndDmDelivered, OPEN_STATUSES } from './caseService.js';
 import { getGuildConfig } from '../config/guildConfig.js';
 import {
     createRejoinInvite, getLadder, liftLadderBanForWarn, logEnforcement, postModLog, revokeWarn, sendDm,
@@ -651,6 +651,11 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
             });
             const invite = mainGuild ? await createRejoinInvite(mainGuild, `Appeal accepted for ${caseCode}`) : null;
             if (appellant) dmDelivered = await sendDm(appellant, appealAcceptedDm(admin.username, invite));
+            // The acceptance DM is also the "ban/mute ended" notice: no second DM.
+            if (!record.is_test && (record.type === 'ban' || record.type === 'mute') && isStillInEffect(record)) {
+                await setEndDmDelivered([record.id], dmDelivered).catch((error) =>
+                    logger.warn(`Could not record end DM for ${caseCode}: ${error.message}`));
+            }
         } else {
             await withTransaction(async (db) => {
                 await db.query(`UPDATE ${T.cases} SET status = 'active' WHERE id = $1 AND status = 'appeal_pending'`, [record.id]);

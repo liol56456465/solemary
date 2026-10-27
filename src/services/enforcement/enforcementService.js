@@ -10,9 +10,9 @@ import { Mutex } from '../../utils/mutex.js';
 import { logger } from '../../utils/logger.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { query, withTransaction, T } from './db.js';
-import { insertCase, setDmDelivered, getActiveCase, nextDefaultName, OPEN_STATUSES } from './caseService.js';
+import { insertCase, setDmDelivered, setEndDmDelivered, getActiveCase, nextDefaultName, OPEN_STATUSES } from './caseService.js';
 import { ensureMutedRole, addMutedRole, removeMutedRole, findMutedRole } from './muteService.js';
-import { banDm, kickDm, muteDm, warnDm } from './dmTemplates.js';
+import { banDm, banEndedDm, kickDm, muteDm, muteEndedDm, warnDm } from './dmTemplates.js';
 import { addMonths, formatDuration, dateStamp } from './format.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
@@ -74,7 +74,8 @@ export function assertCanTarget(guild, moderator, targetUserId, targetMember, ac
     }
 }
 
-async function lockFor(guildId, userId, task) {
+/** Serializes every enforcement change to one user in one guild (panel, expiry, appeals, /case). */
+export async function lockFor(guildId, userId, task) {
     return Mutex.runExclusive(`enforcement:${guildId}:${userId}`, task);
 }
 
@@ -112,6 +113,36 @@ export async function createRejoinInvite(guild, reason) {
     } catch (error) {
         logger.warn(`Could not create rejoin invite in guild ${guild.id}: ${error.message}`);
         return null;
+    }
+}
+
+/**
+ * DMs "your ban/mute has ended" once and records the outcome on the given cases
+ * (end_dm_delivered). A banned user often shares no server with the bot, so the DM
+ * may fail: that is logged and recorded, never retried. Never throws.
+ * `type` is 'ban' or 'mute'; `early` means a moderator lifted it before it expired.
+ */
+export async function notifyPunishmentEnded(client, guild, { type, userId, records = [], early = false }) {
+    try {
+        const record = records[0] || null;
+        const user = await client.users.fetch(userId).catch(() => null);
+        let delivered = false;
+        if (user) {
+            if (type === 'ban') {
+                const invite = guild ? await createRejoinInvite(guild, `Ban ended${record ? ` (${record.case_code})` : ''}`) : null;
+                delivered = await sendDm(user, banEndedDm(record, invite, { early }));
+            } else {
+                delivered = await sendDm(user, muteEndedDm(record, { early }));
+            }
+        }
+        if (!delivered) {
+            logger.info(`"${type} ended" DM to ${userId} not delivered${record ? ` (${record.case_code})` : ''}; not retrying`);
+        }
+        await setEndDmDelivered(records.map((row) => row.id), delivered);
+        return delivered;
+    } catch (error) {
+        logger.warn(`"${type} ended" DM for ${userId} failed: ${error.message}`);
+        return false;
     }
 }
 
@@ -534,6 +565,7 @@ async function doUnban({ guild, moderator, targetUser, flow }) {
     await guild.members.unban(targetUser.id, `${flow.reason} (by ${moderator.user.username})`.slice(0, 512));
     const revoked = await revokeOpenCases(guild.id, targetUser.id, 'ban', moderator.id, flow.reason);
     await syncBannedRoleQuietly(guild.client, targetUser.id);
+    const endDm = await notifyPunishmentEnded(guild.client, guild, { type: 'ban', userId: targetUser.id, records: revoked, early: true });
     await logEnforcement(guild.client, guild.id, 'unban', {
         target: targetUser, moderatorLabel: moderatorLabel(moderator),
         extra: [
@@ -541,7 +573,9 @@ async function doUnban({ guild, moderator, targetUser, flow }) {
             ...(revoked.length ? [{ name: 'Lifted cases', value: revoked.map((r) => `\`${r.case_code}\``).join(', ') }] : []),
         ],
     });
-    return { record: null, dmDelivered: null, notes: revoked.length ? [`Lifted: ${revoked.map((r) => `\`${r.case_code}\``).join(', ')}`] : [] };
+    const notes = revoked.length ? [`Lifted: ${revoked.map((r) => `\`${r.case_code}\``).join(', ')}`] : [];
+    notes.push(endDm ? 'The user was told by DM, with an invite back.' : 'The "ban ended" DM could not be delivered.');
+    return { record: null, dmDelivered: null, notes };
 }
 
 async function doUnmute({ guild, moderator, targetUser, flow }) {
@@ -550,6 +584,7 @@ async function doUnmute({ guild, moderator, targetUser, flow }) {
     if (!removed && revoked.length === 0) {
         throw userError(`**${targetUser.username}** is not muted.`);
     }
+    const endDm = await notifyPunishmentEnded(guild.client, guild, { type: 'mute', userId: targetUser.id, records: revoked, early: true });
     await logEnforcement(guild.client, guild.id, 'unmute', {
         target: targetUser, moderatorLabel: moderatorLabel(moderator),
         extra: [
@@ -558,6 +593,7 @@ async function doUnmute({ guild, moderator, targetUser, flow }) {
         ],
     });
     const notes = removed ? [] : ['The user was not in the server or no longer had the role; the record was still lifted.'];
+    if (!endDm) notes.push('The "mute ended" DM could not be delivered.');
     return { record: null, dmDelivered: null, notes };
 }
 

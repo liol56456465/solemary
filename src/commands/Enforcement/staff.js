@@ -12,7 +12,10 @@ import {
     listStaffWarnings,
     restoreStaffRoles,
 } from '../../services/automod/staffGuardService.js';
-import { formatActivityLine, staffActivityForWeek, weekStart } from '../../services/staffActivityService.js';
+import {
+    formatActivityLine, formatStatsLine, staffActivityForWeek, staffModerationStats, STATS_PERIODS, weekStart,
+} from '../../services/staffActivityService.js';
+import { isAdministrator } from '../../services/enforcement/enforcementService.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -27,7 +30,7 @@ export default {
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('staff')
-        .setDescription('Owner only: staff warnings, activity, and restoring removed staff roles')
+        .setDescription('Staff warnings, activity, stats and restoring roles (owner only; stats: admins)')
         .addSubcommand((sub) => sub.setName('warn').setDescription('Give a staff member a warning (3 active remove their staff roles)')
             .addUserOption((option) => option.setName('user').setDescription('Staff member').setRequired(true))
             .addStringOption((option) => option.setName('reason').setDescription('Which admin rule they broke').setRequired(true).setMaxLength(500)))
@@ -36,6 +39,10 @@ export default {
         .addSubcommand((sub) => sub.setName('activity').setDescription('What each staff member did this week or last week')
             .addStringOption((option) => option.setName('week').setDescription('Which week')
                 .addChoices({ name: 'this week', value: 'this' }, { name: 'last week', value: 'last' })))
+        .addSubcommand((sub) => sub.setName('stats').setDescription('Admins: moderation stats per moderator (actions, appeals, voided cases)')
+            .addUserOption((option) => option.setName('moderator').setDescription('Only this moderator'))
+            .addStringOption((option) => option.setName('period').setDescription('Time period (default: 30 days)')
+                .addChoices(...Object.entries(STATS_PERIODS).map(([value, { label }]) => ({ name: label, value })))))
         .addSubcommand((sub) => sub.setName('restore').setDescription('Give back removed staff roles and lift a mass-action panel block')
             .addUserOption((option) => option.setName('user').setDescription('Staff member').setRequired(true))),
 
@@ -43,13 +50,31 @@ export default {
         if (interaction.guildId !== enforcementConfig.mainGuildId) {
             throw new TitanBotError('Wrong guild for /staff', ErrorTypes.PERMISSION, 'This command only works in the main server.', { expected: true });
         }
-        if (!isOwner(interaction)) {
-            throw new TitanBotError('Not the owner', ErrorTypes.PERMISSION, 'Only the server owner can use /staff.', { expected: true });
+        const sub = interaction.options.getSubcommand();
+        // /staff stats is open to administrators; everything else is the owner's.
+        if (sub === 'stats' ? !(isOwner(interaction) || isAdministrator(interaction.member)) : !isOwner(interaction)) {
+            throw new TitanBotError('Not the owner', ErrorTypes.PERMISSION,
+                sub === 'stats' ? 'You need the Administrator permission to see staff stats.' : 'Only the server owner can use /staff.', { expected: true });
         }
         const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         if (!deferred) return;
 
-        const sub = interaction.options.getSubcommand();
+        if (sub === 'stats') {
+            const period = interaction.options.getString('period') || '30d';
+            const moderator = interaction.options.getUser('moderator');
+            const rows = await staffModerationStats(interaction.guildId, interaction.client.user.id, { period, moderatorId: moderator?.id || null });
+            const label = STATS_PERIODS[period]?.label || period;
+            const empty = moderator ? `${moderator.username} has no moderation cases in this period.` : 'No moderation cases in this period.';
+            return InteractionHelper.safeEditReply(interaction, {
+                embeds: [createEmbed({
+                    title: truncate(`Moderation stats${moderator ? ` — ${moderator.username}` : ''}, ${label}`, 256),
+                    description: truncate(rows.length
+                        ? `${rows.map(formatStatsLine).join('\n')}\n\n-# Cases they created (test and automatic cases left out; voided cases are not in the totals). Appeals: decided in this period on their cases.`
+                        : empty, 4096),
+                    color: 'primary',
+                })],
+            });
+        }
         const user = interaction.options.getUser('user');
 
         if (sub === 'activity') {
