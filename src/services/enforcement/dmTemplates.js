@@ -4,12 +4,14 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { dateStamp, formatDuration, stamp } from './format.js';
 
-const { serverName, supportServerInvite } = enforcementConfig;
+const { serverName } = enforcementConfig;
+// Read on every use: a per-server setting that can change at runtime.
+const invite = () => enforcementConfig.supportServerInvite;
 
 function appealLine(record) {
     return record.unappealable
         ? 'This ban cannot be appealed.'
-        : `**Appeal here:** ${supportServerInvite}`;
+        : `**Appeal here:** ${invite()}`;
 }
 
 function common(record) {
@@ -42,7 +44,7 @@ export function banDm(record) {
 
 export function kickDm(record, inviteUrl) {
     return [
-        `**Appeal here:** ${supportServerInvite}`,
+        `**Appeal here:** ${invite()}`,
         `**Kicked from ${serverName}**`,
         ...common(record),
         `Case code: ${record.case_code}`,
@@ -52,7 +54,7 @@ export function kickDm(record, inviteUrl) {
 
 export function muteDm(record) {
     return [
-        `**Appeal here:** ${supportServerInvite}`,
+        `**Appeal here:** ${invite()}`,
         `**Muted in ${serverName}**`,
         ...common(record),
         `Duration: ${formatDuration(Number(record.duration_ms))} — ends ${stamp(record.expires_at)}`,
@@ -62,7 +64,7 @@ export function muteDm(record) {
 
 export function warnDm(record, warnNumber) {
     return [
-        `**Appeal here:** ${supportServerInvite}`,
+        `**Appeal here:** ${invite()}`,
         `**Warning ${warnNumber} of ${enforcementConfig.warnsPerLevel} in ${serverName}**`,
         ...common(record),
         `Case code: ${record.case_code}`,
@@ -79,7 +81,7 @@ export function appealAcceptedDm(adminUsername, inviteUrl) {
 }
 
 export function appealDeniedDm() {
-    return `**Appeal denied.** If you think this is a mistake, appeal again here:\n${supportServerInvite}`;
+    return `**Appeal denied.** If you think this is a mistake, appeal again here:\n${invite()}`;
 }
 
 /**
@@ -91,7 +93,7 @@ export function banEndedDm(record, inviteUrl, { early = false } = {}) {
         `**Your ban from ${serverName} has ended**`,
         early ? 'A moderator lifted it early.' : 'It expired.',
         record?.case_code ? `Case code: ${record.case_code}` : null,
-        `Rejoin: ${inviteUrl || `ask for an invite in the support server: ${supportServerInvite}`}`,
+        `Rejoin: ${inviteUrl || `ask for an invite in the support server: ${invite()}`}`,
     ].filter(Boolean).join('\n');
 }
 

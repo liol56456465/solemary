@@ -21,6 +21,7 @@ import { getFromDb, setInDb, deleteFromDb, db } from '../utils/database.js';
 import { verifyUser } from './verificationService.js';
 import { assessVerification, postVerificationHold } from './verificationGuard.js';
 import { getGuildConfig } from './config/guildConfig.js';
+import { getConfiguredSetting } from './settings/guildSettings.js';
 
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
 const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
@@ -228,7 +229,7 @@ export function registerOAuthRoutes(app, client) {
             }
 
             await verifyUser(client, state.guildId, me.id, { source: 'oauth', moderatorId: null });
-            return res.redirect(303, (process.env.VERIFY_SUCCESS_REDIRECT || '').trim() || DEFAULT_SUCCESS_REDIRECT);
+            return res.redirect(303, getConfiguredSetting('verifySuccessRedirect') || DEFAULT_SUCCESS_REDIRECT);
         } catch (error) {
             logger.error(`OAuth verification failed for state user ${state.userId}: ${error.message}`);
             const message = (error.userMessage || 'Something went wrong. Go back to Discord and press Verify again.').replace(/[<>&"]/g, '');

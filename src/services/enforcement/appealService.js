@@ -323,14 +323,14 @@ async function disableDecisionButtons(channel, caseCode) {
     }
 }
 
-/** Pending appeals, oldest first, with their case. */
-export async function listPendingAppeals(limit = 20) {
+/** Pending appeals of one server's cases (the main server by default), oldest first, with their case. */
+export async function listPendingAppeals(limit = 20, guildId = enforcementConfig.mainGuildId) {
     const { rows } = await query(
         `SELECT a.case_code, a.username, a.user_id, a.channel_id, a.created_at, c.type, c.name, c.is_test
          FROM ${T.appeals} a JOIN ${T.cases} c ON c.case_code = a.case_code
-         WHERE a.kind = 'appeal' AND a.status = 'pending'
+         WHERE a.kind = 'appeal' AND a.status = 'pending' AND c.guild_id = $2
          ORDER BY a.created_at ASC LIMIT $1`,
-        [limit]
+        [limit, guildId]
     );
     return rows;
 }

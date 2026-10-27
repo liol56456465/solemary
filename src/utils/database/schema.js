@@ -472,6 +472,42 @@ export const tableStatements = [
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         UNIQUE (guild_id, kind, source_id, channel_id)
     )`,
+
+    // Per-server settings edited from the dashboard (services/settings/guildSettings.js,
+    // keys in settingsRegistry.js). Held in memory; env values seed missing keys once.
+    `CREATE TABLE IF NOT EXISTS ${t.guild_settings} (
+        guild_id VARCHAR(20) PRIMARY KEY,
+        data JSONB NOT NULL DEFAULT '{}',
+        seeded_from_env BOOLEAN NOT NULL DEFAULT FALSE,
+        updated_by VARCHAR(20),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    // Dashboard logins (services/dashboard/sessionStore.js). Only a SHA-256 hash of the
+    // session id is stored; the browser holds the id (HMAC-signed cookie).
+    `CREATE TABLE IF NOT EXISTS ${t.dashboard_sessions} (
+        id_hash CHAR(64) PRIMARY KEY,
+        user_id VARCHAR(20) NOT NULL,
+        username VARCHAR(100),
+        avatar VARCHAR(100),
+        csrf VARCHAR(64) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL,
+        last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    // Who changed which dashboard setting (old → new), one row per key.
+    `CREATE TABLE IF NOT EXISTS ${t.dashboard_audit} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20),
+        username VARCHAR(100),
+        module VARCHAR(40) NOT NULL,
+        key VARCHAR(80) NOT NULL,
+        old JSONB,
+        new JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
 ];
 
 export const indexStatements = [
@@ -511,6 +547,9 @@ export const indexStatements = [
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_no_contact_one_open ON ${t.no_contact_orders}(guild_id, user_a, user_b) WHERE ended_at IS NULL`,
     `CREATE INDEX IF NOT EXISTS idx_suggestions_guild ON ${t.suggestions}(guild_id, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_starboard_posts_star ON ${t.starboard_posts}(star_message_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_dashboard_sessions_expires ON ${t.dashboard_sessions}(expires_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_dashboard_sessions_user ON ${t.dashboard_sessions}(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_guild ON ${t.dashboard_audit}(guild_id, created_at DESC)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

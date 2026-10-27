@@ -1,13 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { escapeHtml, formatAge, html, queryString, raw } from '../src/services/staffDashboard/html.js';
+import { escapeHtml, formatAge, html, queryString, raw } from '../src/services/dashboard/html.js';
 import {
-    SESSION_COOKIE, STATE_COOKIE, allowRequest, createSessionStore, createState, createStateStore,
+    SESSION_COOKIE, STATE_COOKIE, createRateLimiter, createState, createStateStore, isGlobalRateLimitExempt,
     isSnowflake, parseCookies, serializeCookie, signValue, verifySignedValue,
-} from '../src/services/staffDashboard/security.js';
-import { createAccessChecker, decideAccess } from '../src/services/staffDashboard/access.js';
-import { caseDetailPage, casesPage, isAllowedImageUrl, isSafeLink } from '../src/services/staffDashboard/pages.js';
-import { SECURITY_HEADERS, createDashboard, dashboardSettings } from '../src/services/staffDashboard/routes.js';
+} from '../src/services/dashboard/security.js';
+import { createMemorySessionStore, hashSessionId } from '../src/services/dashboard/sessionStore.js';
+import { gettingStarted, moduleStatesFrom, overviewPage, collectOverview } from '../src/services/dashboard/overview.js';
+import { readFileSync } from 'node:fs';
+import { createAccessChecker, decideAccess } from '../src/services/dashboard/access.js';
+import { auditPage, caseDetailPage, casesPage, isAllowedImageUrl, isSafeLink } from '../src/services/dashboard/pages.js';
+import { SECURITY_HEADERS, createDashboard, dashboardSettings, registerDashboard } from '../src/services/dashboard/routes.js';
 
 const SECRET = 'x'.repeat(64);
 const GUILD = '100000000000000001';
@@ -70,6 +73,19 @@ test('pages escape user-provided case fields', () => {
     assert.ok(detail.includes('&lt;b&gt;n&lt;/b&gt;'));
 });
 
+test('pages have no inline styles or scripts and link the one stylesheet', () => {
+    const page = casesPage({ session: { username: 'a', csrf: 't' }, rows: [], total: 0 });
+    assert.ok(page.includes('<link rel="stylesheet" href="/dashboard/static/dashboard.css">'));
+    assert.ok(!/<style|style=|<script/i.test(page));
+    assert.ok(page.includes('href="/dashboard/overview"'), 'sidebar');
+    assert.ok(page.includes('Phase 2'), 'unbuilt modules are marked');
+    const audit = auditPage({ session: { username: 'a', csrf: 't' }, rows: [{ created_at: new Date(0), username: '<u>', user_id: ADMIN, module: 'logging', key: 'modLogChannelId', old: null, new: '123' }] });
+    assert.ok(audit.includes('&lt;u&gt;'));
+    assert.ok(!/<style|style=|<script/i.test(audit));
+    const css = readFileSync(new URL('../src/services/dashboard/static/dashboard.css', import.meta.url), 'utf8');
+    assert.ok(!/gradient/i.test(css), 'plain design: no gradients');
+});
+
 // ── signing, state, sessions ──────────────────────────────────────────────
 
 test('signed values verify only with the right secret and untouched value', () => {
@@ -95,29 +111,46 @@ test('OAuth state: signed, bound to the cookie nonce, single use, expiring', () 
     assert.equal(store.consume('garbage.sig', 'n', SECRET, now), false);
 });
 
-test('sessions expire after their TTL and can be destroyed', () => {
-    const store = createSessionStore({ ttlMs: 1000 });
-    const session = store.create({ userId: ADMIN, username: 'a' }, 0);
+test('session store (fake): hashed ids, expiry, rotation, destroy', async () => {
+    const store = createMemorySessionStore({ ttlMs: 1000 });
+    const session = await store.create({ userId: ADMIN, username: 'a' }, 0);
     assert.match(session.id, /^[A-Za-z0-9_-]{40,}$/);
     assert.ok(session.csrf);
-    assert.equal(store.get(session.id, 500), session);
-    assert.equal(store.get(session.id, 1000), null);
-    const other = store.create({ userId: ADMIN }, 0);
-    store.destroy(other.id);
-    assert.equal(store.get(other.id, 1), null);
+    assert.deepEqual(store.hashes(), [hashSessionId(session.id)], 'only the hash is kept');
+    assert.ok(!store.hashes().includes(session.id));
+    assert.equal((await store.get(session.id, 500)).userId, ADMIN);
+    assert.equal(await store.get(session.id, 1000), null, 'expired');
+    const first = await store.create({ userId: ADMIN }, 0);
+    const second = await store.rotate(first.id, { userId: ADMIN }, 1);
+    assert.notEqual(second.id, first.id);
+    assert.equal(await store.get(first.id, 2), null, 'old id dropped on rotation');
+    assert.ok(await store.get(second.id, 2));
+    await store.destroy(second.id);
+    assert.equal(await store.get(second.id, 3), null);
 });
 
-test('rate limit per session: sliding window', () => {
-    const session = {};
-    for (let i = 0; i < 3; i += 1) assert.equal(allowRequest(session, { limit: 3, windowMs: 1000 }, i), true);
-    assert.equal(allowRequest(session, { limit: 3, windowMs: 1000 }, 10), false);
-    assert.equal(allowRequest(session, { limit: 3, windowMs: 1000 }, 1500), true);
+test('rate limiter: sliding window per key', () => {
+    const limiter = createRateLimiter({ limit: 3, windowMs: 1000 });
+    for (let i = 0; i < 3; i += 1) assert.equal(limiter.allow('a', i), true);
+    assert.equal(limiter.allow('a', 10), false);
+    assert.equal(limiter.allow('b', 10), true, 'keys are separate');
+    assert.equal(limiter.allow('a', 1500), true);
 });
 
-test('cookies: parse and serialize with the security flags', () => {
+test('the global per-IP limiter skips /dashboard only', () => {
+    assert.equal(isGlobalRateLimitExempt({ path: '/dashboard' }), true);
+    assert.equal(isGlobalRateLimitExempt({ path: '/dashboard/cases/abc' }), true);
+    assert.equal(isGlobalRateLimitExempt({ path: '/dashboardx' }), false);
+    assert.equal(isGlobalRateLimitExempt({ path: '/oauth/callback' }), false);
+    assert.equal(isGlobalRateLimitExempt({ path: '/staff' }), false);
+    assert.equal(isGlobalRateLimitExempt({}), false);
+});
+
+test('cookies: parse and serialize with the security flags and the dashboard path', () => {
     assert.deepEqual(parseCookies('a=1; b=x%20y; a=2; bad'), { a: '1', b: 'x y' });
     const cookie = serializeCookie('n', 'v', { maxAgeMs: 60000, secure: true });
-    assert.equal(cookie, 'n=v; Path=/staff; HttpOnly; SameSite=Lax; Max-Age=60; Secure');
+    assert.equal(cookie, 'n=v; Path=/dashboard; HttpOnly; SameSite=Lax; Max-Age=60; Secure');
+    assert.equal(serializeCookie('n', 'v', { path: '/x' }), 'n=v; Path=/x; HttpOnly; SameSite=Lax');
     assert.ok(!serializeCookie('n', 'v').includes('Secure'));
     assert.equal(isSnowflake('123456789012345678'), true);
     assert.equal(isSnowflake('12345'), false);
@@ -126,13 +159,28 @@ test('cookies: parse and serialize with the security flags', () => {
 
 // ── access ────────────────────────────────────────────────────────────────
 
-test('access: main-server administrators and ticket staff only', () => {
-    assert.equal(decideAccess({ inGuild: false, isAdmin: true }).allowed, false);
-    assert.equal(decideAccess({ inGuild: true, isAdmin: true }).role, 'admin');
-    assert.equal(decideAccess({ inGuild: true, isOwner: true }).role, 'admin');
-    assert.equal(decideAccess({ inGuild: true, roleIds: ['5'], staffRoleId: '5' }).role, 'staff');
-    assert.equal(decideAccess({ inGuild: true, roleIds: ['5'], staffRoleId: null }).allowed, false);
-    assert.equal(decideAccess({ inGuild: true, roleIds: ['6'], staffRoleId: '5' }).allowed, false);
+test('access: current main-server administrators act; OWNER_IDS view only; staff role no longer enough', () => {
+    const admin = decideAccess({ inGuild: true, isAdmin: true });
+    assert.deepEqual([admin.allowed, admin.canView, admin.canAct, admin.role], [true, true, true, 'admin']);
+    const owner = decideAccess({ inGuild: false, isOwnerId: true });
+    assert.deepEqual([owner.allowed, owner.canView, owner.canAct, owner.role], [true, true, false, 'owner']);
+    const ownerMember = decideAccess({ inGuild: true, isAdmin: false, isOwnerId: true });
+    assert.equal(ownerMember.canAct, false, 'owner without Administrator cannot act');
+    assert.equal(decideAccess({ inGuild: true, isAdmin: true, isOwnerId: true }).canAct, true);
+    assert.equal(decideAccess({ inGuild: false, isAdmin: true }).allowed, false, 'admin elsewhere does not count');
+    // The old rule let the ticket staff role in: those facts are ignored now.
+    assert.equal(decideAccess({ inGuild: true, roleIds: ['5'], staffRoleId: '5' }).allowed, false);
+    assert.equal(decideAccess({}).allowed, false);
+});
+
+test('access facts: Administrator in MAIN_GUILD_ID only, OWNER_IDS from config', async () => {
+    const { memberFacts } = await import('../src/services/dashboard/access.js');
+    const member = (admin) => ({ permissions: { has: () => admin } });
+    const guild = { members: { fetch: async ({ user }) => (user === ADMIN ? member(true) : user === STRANGER ? member(false) : null) } };
+    const client = { guilds: { cache: new Map([[GUILD, guild]]) } };
+    assert.deepEqual(await memberFacts(client, ADMIN, GUILD, []), { inGuild: true, isAdmin: true, isOwnerId: false });
+    assert.deepEqual(await memberFacts(client, STRANGER, GUILD, [STRANGER]), { inGuild: true, isAdmin: false, isOwnerId: true });
+    assert.deepEqual(await memberFacts(client, ADMIN, '999999999999999999', []), { inGuild: false, isAdmin: false, isOwnerId: false }, 'other guilds are never consulted');
 });
 
 test('access checks are cached for 60 seconds', async () => {
@@ -152,24 +200,36 @@ test('access checks are cached for 60 seconds', async () => {
 // ── settings ──────────────────────────────────────────────────────────────
 
 const ENV = {
-    STAFF_DASHBOARD_ENABLED: 'true', SESSION_SECRET: SECRET, CLIENT_ID: '400000000000000004',
+    DASHBOARD_ENABLED: 'true', SESSION_SECRET: SECRET, CLIENT_ID: '400000000000000004',
     DISCORD_CLIENT_SECRET: 'cs', PUBLIC_URL: 'https://bot.example/', MAIN_GUILD_ID: GUILD, NODE_ENV: 'test',
 };
 
-test('settings: off by default; refuses to enable without a long SESSION_SECRET', () => {
+test('settings: off by default; DASHBOARD_ENABLED or the old STAFF_DASHBOARD_ENABLED; needs a long SESSION_SECRET', () => {
     assert.equal(dashboardSettings({}).enabled, false);
     assert.equal(dashboardSettings({}).requested, false);
     const ok = dashboardSettings(ENV);
     assert.equal(ok.enabled, true);
-    assert.equal(ok.redirectUri, 'https://bot.example/staff/oauth/callback');
+    assert.equal(ok.redirectUri, 'https://bot.example/dashboard/oauth/callback');
     assert.equal(ok.secure, true, 'https public URL → Secure cookies');
     assert.equal(ok.publicOrigin, 'https://bot.example');
+    assert.equal(dashboardSettings({ ...ENV, DASHBOARD_ENABLED: undefined, STAFF_DASHBOARD_ENABLED: 'true' }).enabled, true, 'old flag is an alias');
     const short = dashboardSettings({ ...ENV, SESSION_SECRET: 'short' });
     assert.equal(short.enabled, false);
     assert.match(short.problems.join(), /SESSION_SECRET/);
     assert.equal(dashboardSettings({ ...ENV, SESSION_SECRET: undefined }).enabled, false);
     assert.equal(dashboardSettings({ ...ENV, DISCORD_CLIENT_SECRET: '' }).enabled, false);
+    assert.equal(dashboardSettings({ ...ENV, MAIN_GUILD_ID: '' }).enabled, false);
     assert.equal(dashboardSettings({ ...ENV, PUBLIC_URL: 'http://127.0.0.1:3100', NODE_ENV: 'development' }).secure, false);
+});
+
+test('registerDashboard: not mounted when off or misconfigured; mounted with the /staff redirect when on', () => {
+    const mounted = [];
+    const app = { use: (p) => mounted.push(p) };
+    assert.equal(registerDashboard(app, {}, {}), false);
+    assert.equal(registerDashboard(app, {}, { ...ENV, SESSION_SECRET: 'short' }), false);
+    assert.deepEqual(mounted, []);
+    assert.equal(registerDashboard(app, {}, ENV, { sessions: createMemorySessionStore() }), true);
+    assert.deepEqual(mounted, ['/dashboard', '/staff']);
 });
 
 // ── route handlers with fake req/res ──────────────────────────────────────
@@ -196,8 +256,18 @@ const cookieValue = (res, name) => {
     return line ? decodeURIComponent(line.split(';')[0].slice(name.length + 1)) : null;
 };
 
-function makeDashboard({ me = { id: ADMIN, username: 'admin' }, data = {} } = {}) {
-    const allowed = new Set([ADMIN]);
+const OVERVIEW_DATA = {
+    getGuildConfig: async () => ({ logging: { enabled: true }, verification: { enabled: false } }),
+    getWelcomeConfig: async () => ({ enabled: false, channelId: null }),
+    countOpenTickets: async () => 2,
+    listPendingAppeals: async () => [{}, {}, {}],
+    searchCaseRecords: async () => ({ rows: [], total: 0 }),
+    openCards: () => [{ guildId: GUILD }, { guildId: 'other' }],
+    getLockdownState: async () => ({ active: false }),
+    findMutedRole: async () => null,
+};
+
+function makeDashboard({ me = { id: ADMIN, username: 'admin' }, data = {}, sessions = createMemorySessionStore(), limits, allowed = new Set([ADMIN]), owners = new Set() } = {}) {
     const settings = dashboardSettings(ENV);
     const fetchCalls = [];
     const fetchImpl = async (url, options) => {
@@ -205,38 +275,40 @@ function makeDashboard({ me = { id: ADMIN, username: 'admin' }, data = {} } = {}
         const body = url.includes('/token') ? { access_token: 'tok', token_type: 'Bearer' } : me;
         return { ok: true, status: 200, json: async () => body };
     };
-    const access = createAccessChecker({}, { facts: async (client, userId) => ({ inGuild: true, isAdmin: allowed.has(userId) }) });
+    const access = createAccessChecker({}, { facts: async (client, userId) => ({ inGuild: true, isAdmin: allowed.has(userId), isOwnerId: owners.has(userId) }) });
     const d = createDashboard({
-        client: { user: { id: '999999999999999999' } }, settings, access, fetchImpl,
+        client: { user: { id: '999999999999999999' }, guilds: { cache: new Map() }, isReady: () => true, ws: { ping: 42 } },
+        settings, access, fetchImpl, sessions, ...(limits ? { limits } : {}),
         data: {
             searchCaseRecords: async () => ({ rows: [], total: 0 }),
             getLatestAppealStatusesForCases: async () => new Map(),
             getCaseByCode: async () => null,
+            overview: OVERVIEW_DATA,
             ...data,
         },
     });
-    return { d, fetchCalls };
+    return { d, fetchCalls, sessions };
 }
 
-async function login(d) {
+async function login(d, { cookie = '' } = {}) {
     const start = fakeRes();
-    await d.index({ headers: {} }, start);
+    await d.index({ headers: {}, ip: '1.1.1.1' }, start);
     const authorize = new URL(start.redirectedTo);
     const nonce = cookieValue(start, STATE_COOKIE);
     const res = fakeRes();
-    await d.callback({ headers: { cookie: `${STATE_COOKIE}=${encodeURIComponent(nonce)}` }, query: { code: 'c', state: authorize.searchParams.get('state') } }, res);
+    await d.callback({ headers: { cookie: `${STATE_COOKIE}=${encodeURIComponent(nonce)}${cookie ? `; ${cookie}` : ''}` }, query: { code: 'c', state: authorize.searchParams.get('state') } }, res);
     return { start, authorize, res, cookie: `${SESSION_COOKIE}=${encodeURIComponent(cookieValue(res, SESSION_COOKIE) || '')}` };
 }
 
 async function runProtected(d, handler, req) {
     const res = fakeRes();
     let passed = false;
-    await d.requireStaff(req, res, () => { passed = true; });
+    await d.requireUser(req, res, () => { passed = true; });
     if (passed) await handler(req, res);
     return res;
 }
 
-test('/staff without a session redirects to Discord with scope identify and a state cookie', async () => {
+test('/dashboard without a session redirects to Discord with scope identify and a state cookie', async () => {
     const { d } = makeDashboard();
     const res = fakeRes();
     await d.index({ headers: {} }, res);
@@ -244,29 +316,35 @@ test('/staff without a session redirects to Discord with scope identify and a st
     const url = new URL(res.redirectedTo);
     assert.equal(url.origin, 'https://discord.com');
     assert.equal(url.searchParams.get('scope'), 'identify');
-    assert.equal(url.searchParams.get('redirect_uri'), 'https://bot.example/staff/oauth/callback');
+    assert.equal(url.searchParams.get('redirect_uri'), 'https://bot.example/dashboard/oauth/callback');
     assert.ok(url.searchParams.get('state'));
     const stateCookie = res.cookies.find((c) => c.startsWith(`${STATE_COOKIE}=`));
-    assert.match(stateCookie, /HttpOnly; SameSite=Lax; Max-Age=600; Secure/);
+    assert.match(stateCookie, /Path=\/dashboard; HttpOnly; SameSite=Lax; Max-Age=600; Secure/);
 });
 
 test('OAuth callback logs an admin in with a signed session cookie; no token reaches the browser', async () => {
-    const { d, fetchCalls } = makeDashboard();
+    const { d, fetchCalls, sessions } = makeDashboard();
     const { res, cookie } = await login(d);
     assert.equal(res.statusCode, 303);
-    assert.equal(res.redirectedTo, '/staff/cases');
+    assert.equal(res.redirectedTo, '/dashboard/overview');
     const sessionCookie = res.cookies.find((c) => c.startsWith(`${SESSION_COOKIE}=`));
-    assert.match(sessionCookie, /HttpOnly; SameSite=Lax; Max-Age=43200; Secure/);
+    assert.match(sessionCookie, /Path=\/dashboard; HttpOnly; SameSite=Lax; Max-Age=43200; Secure/);
     assert.ok(!res.cookies.join().includes('tok'), 'access token never set as cookie');
     assert.equal(fetchCalls.length, 2);
-    assert.equal(fetchCalls[0].options.body.get('redirect_uri'), 'https://bot.example/staff/oauth/callback');
-    // Logged in: /staff goes to the cases page.
+    assert.equal(fetchCalls[0].options.body.get('redirect_uri'), 'https://bot.example/dashboard/oauth/callback');
+    assert.equal(sessions.size(), 1);
     const again = fakeRes();
     await d.index({ headers: { cookie } }, again);
-    assert.equal(again.redirectedTo, '/staff/cases');
+    assert.equal(again.redirectedTo, '/dashboard/overview');
+    // Logging in again from the same browser rotates the id: the old session is gone.
+    const second = await login(d, { cookie });
+    assert.notEqual(second.cookie, cookie);
+    assert.equal(sessions.size(), 1, 'old session deleted on rotation');
+    const old = await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });
+    assert.equal(old.redirectedTo, '/dashboard');
 });
 
-test('OAuth callback refuses replayed or cookie-less states and non-staff users', async () => {
+test('OAuth callback refuses replayed or cookie-less states and users without access', async () => {
     const { d } = makeDashboard();
     const start = fakeRes();
     await d.index({ headers: {} }, start);
@@ -285,35 +363,124 @@ test('OAuth callback refuses replayed or cookie-less states and non-staff users'
     assert.equal(cancelled.statusCode, 400);
 });
 
-test('protected pages: redirect without a session, 403 once access is lost, 429 over the limit', async () => {
-    const { d } = makeDashboard();
+test('OWNER_IDS without Administrator get in with view-only access', async () => {
+    const { d } = makeDashboard({ me: { id: STRANGER, username: 'owner' }, allowed: new Set(), owners: new Set([STRANGER]) });
+    const { res, cookie } = await login(d);
+    assert.equal(res.statusCode, 303);
+    const req = { method: 'GET', headers: { cookie }, query: {} };
+    const page = await runProtected(d, d.overview, req);
+    assert.equal(page.statusCode, 200);
+    assert.equal(req.dashboard.access.canAct, false);
+    assert.equal(req.dashboard.access.canView, true);
+    assert.match(page.body, /view and settings/);
+});
+
+test('protected pages: redirect without a session, 403 once access is lost, 429 over the per-session limit', async () => {
+    const { d } = makeDashboard({ limits: { session: { limit: 5, windowMs: 60000 }, ip: { limit: 30, windowMs: 60000 }, static: { limit: 30, windowMs: 60000 } } });
     const anon = await runProtected(d, d.cases, { method: 'GET', headers: {}, query: {} });
-    assert.equal(anon.redirectedTo, '/staff');
+    assert.equal(anon.redirectedTo, '/dashboard');
 
     const forged = await runProtected(d, d.cases, { method: 'GET', headers: { cookie: `${SESSION_COOKIE}=abc.def` }, query: {} });
-    assert.equal(forged.redirectedTo, '/staff');
+    assert.equal(forged.redirectedTo, '/dashboard');
 
     const { cookie } = await login(d);
     const ok = await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });
     assert.equal(ok.statusCode, 200);
     assert.match(ok.body, /No cases match/);
 
-    for (let i = 0; i < 70; i += 1) await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });
+    for (let i = 0; i < 5; i += 1) await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });
     const limited = await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });
     assert.equal(limited.statusCode, 429);
 
-    // Access lost (role removed): a checker that now says no, sharing the session store.
+    // Access lost (Administrator removed): a checker that now says no, sharing the session store.
     const second = makeDashboard();
     const login2 = await login(second.d);
     const res = fakeRes();
     const checker = createAccessChecker({}, { facts: async () => ({ inGuild: true, isAdmin: false }) });
-    const d3 = createDashboard({ client: {}, settings: dashboardSettings(ENV), access: checker, sessions: second.d.sessions });
+    const d3 = createDashboard({ client: {}, settings: dashboardSettings(ENV), access: checker, sessions: second.sessions });
     let passed = false;
-    await d3.requireStaff({ method: 'GET', headers: { cookie: login2.cookie } }, res, () => { passed = true; });
+    await d3.requireUser({ method: 'GET', headers: { cookie: login2.cookie } }, res, () => { passed = true; });
     assert.equal(passed, false);
     assert.equal(res.statusCode, 403);
     assert.ok(res.cookies.some((c) => c.startsWith(`${SESSION_COOKIE}=;`)), 'session cookie cleared');
-    assert.equal(second.d.sessions.size(), 0, 'session destroyed');
+    assert.equal(second.sessions.size(), 0, 'session destroyed');
+});
+
+test('login routes have a per-IP limit', async () => {
+    const { d } = makeDashboard({ limits: { session: { limit: 300, windowMs: 60000 }, ip: { limit: 2, windowMs: 60000 }, static: { limit: 30, windowMs: 60000 } } });
+    const run = () => { const res = fakeRes(); let passed = false; d.limitByIp({ ip: '9.9.9.9', headers: {} }, res, () => { passed = true; }); return { res, passed }; };
+    assert.equal(run().passed, true);
+    assert.equal(run().passed, true);
+    const blocked = run();
+    assert.equal(blocked.passed, false);
+    assert.equal(blocked.res.statusCode, 429);
+});
+
+test('stylesheet is served as text/css', async () => {
+    const { d } = makeDashboard();
+    const res = fakeRes();
+    d.stylesheet({ ip: '1.2.3.4' }, res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.contentType, 'text/css');
+    assert.match(res.body, /--accent/);
+});
+
+test('overview: status, counts, checklist and recent actions; read-only', async () => {
+    const { d } = makeDashboard({
+        data: {
+            overview: {
+                ...OVERVIEW_DATA,
+                searchCaseRecords: async (guildId, filters, opts) => {
+                    assert.deepEqual(opts, { page: 0, pageSize: 10 });
+                    return { rows: [{ case_code: 'abcde', type: 'ban', target_username: '<t>', target_user_id: STRANGER, moderator_username: 'm', reason: 'r', created_at: new Date(0) }], total: 1 };
+                },
+                listPendingAppeals: async (limit, guildId) => { assert.equal(guildId, GUILD); return [{}, {}, {}]; },
+            },
+        },
+    });
+    const { cookie } = await login(d);
+    const res = await runProtected(d, d.overview, { method: 'GET', headers: { cookie }, query: {} });
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, /online/);
+    assert.match(res.body, /42 ms ping/);
+    assert.match(res.body, /Open tickets<\/span><span class="value">2</);
+    assert.match(res.body, />3<\/a>/, 'pending appeals of the main guild');
+    assert.match(res.body, /Open automod review cards<\/span><span class="value">1</, 'cards of other guilds are not counted');
+    assert.match(res.body, /Getting started/);
+    assert.match(res.body, /Mod log channel/);
+    assert.match(res.body, /&lt;t&gt;/);
+    assert.ok(!/<form(?![^>]*logout)/.test(res.body), 'no forms besides logout');
+});
+
+test('overview survives failing sources (shows unavailable)', async () => {
+    const boom = async () => { throw new Error('db down'); };
+    const o = await collectOverview({
+        client: { guilds: { cache: new Map() }, isReady: () => false },
+        guildId: GUILD,
+        data: { ...OVERVIEW_DATA, countOpenTickets: boom, listPendingAppeals: boom, searchCaseRecords: boom, getLockdownState: boom, getGuildConfig: boom, openCards: () => { throw new Error('x'); } },
+    });
+    assert.equal(o.openTickets, undefined);
+    assert.equal(o.recent, undefined);
+    const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
+    assert.match(page, /unavailable/);
+    assert.match(page, /offline/);
+});
+
+test('getting started lists what is not configured; module states for the sidebar', () => {
+    const items = gettingStarted({
+        config: { ticketCategoryId: '1', verification: { enabled: true } },
+        welcome: { enabled: true, channelId: '2' },
+        settings: { modLogChannelId: null },
+        mutedRole: { id: '3' },
+    });
+    const todo = items.filter((i) => !i.done).map((i) => i.label);
+    assert.ok(todo.includes('Mod log channel'));
+    assert.ok(todo.includes('Ticket staff role'));
+    assert.ok(!todo.includes('Muted role'));
+    assert.ok(!todo.includes('Appeals category'), 'ticket category covers appeals');
+    assert.ok(items.every((i) => i.href.startsWith('/dashboard/')));
+    assert.deepEqual(moduleStatesFrom({ logging: { enabled: true }, verification: {} }, { enabled: true, channelId: '1' }),
+        { logging: true, tickets: false, leveling: true, verification: false, birthdays: false, welcome: true });
 });
 
 test('cases page validates filters (snowflakes, dates) and pages through the search service', async () => {
@@ -339,7 +506,7 @@ test('cases page validates filters (snowflakes, dates) and pages through the sea
     assert.deepEqual(seen.filters, { memberId: STRANGER, type: 'ban' }, 'array query values are ignored');
     assert.deepEqual(seen.opts, { page: 1, pageSize: 25 });
     assert.match(res.body, /Page 2 of 3/);
-    assert.match(res.body, /href="\/staff\/cases\/abcde"/);
+    assert.match(res.body, /href="\/dashboard\/cases\/abcde"/);
 });
 
 test('case detail: invalid or other-guild codes are 404; evidence images use fresh URLs', async () => {
@@ -369,30 +536,50 @@ test('case detail: invalid or other-guild codes are 404; evidence images use fre
     assert.match(res.body, /&lt;a&gt;/);
 });
 
+test('Phase 2 module pages are placeholders; unknown modules fall through', async () => {
+    const { d } = makeDashboard();
+    const { cookie } = await login(d);
+    const res = await runProtected(d, d.moduleStub, { method: 'GET', headers: { cookie }, params: { module: 'logging' } });
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, /arrive in Phase 2/);
+    assert.match(res.body, /modLogChannelId/, 'current registry values shown read-only');
+    let next = false;
+    const req = { method: 'GET', headers: { cookie }, params: { module: 'nope' } };
+    await d.requireUser(req, fakeRes(), () => {});
+    await d.moduleStub(req, fakeRes(), () => { next = true; });
+    assert.equal(next, true);
+});
+
 test('logout needs the CSRF token and a same-origin request', async () => {
     const { d } = makeDashboard();
     const { cookie } = await login(d);
     const noToken = await runProtected(d, d.logout, { method: 'POST', headers: { cookie }, body: {} });
     assert.equal(noToken.statusCode, 403);
-    // Find the csrf token through a rendered page.
     const page = await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });
     const csrf = /name="csrf" value="([^"]+)"/.exec(page.body)[1];
     const crossSite = await runProtected(d, d.logout, { method: 'POST', headers: { cookie, origin: 'https://evil.example' }, body: { csrf } });
     assert.equal(crossSite.statusCode, 403);
+    const crossFetch = await runProtected(d, d.logout, { method: 'POST', headers: { cookie, 'sec-fetch-site': 'cross-site' }, body: { csrf } });
+    assert.equal(crossFetch.statusCode, 403);
     const ok = await runProtected(d, d.logout, { method: 'POST', headers: { cookie, origin: 'https://bot.example' }, body: { csrf } });
     assert.equal(ok.statusCode, 200);
     assert.match(ok.body, /logged out/);
     const after = await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });
-    assert.equal(after.redirectedTo, '/staff', 'session destroyed server-side');
+    assert.equal(after.redirectedTo, '/dashboard', 'session destroyed server-side');
 });
 
-test('security headers: CSP, frame denial, no referrer, no caching', () => {
+test('security headers: CSP without unsafe-inline, frame denial, no referrer, no caching', () => {
     const { d } = makeDashboard();
     const res = fakeRes();
     let called = false;
     d.securityHeaders({}, res, () => { called = true; });
     assert.equal(called, true);
     assert.deepEqual(res.headers, SECURITY_HEADERS);
-    assert.match(SECURITY_HEADERS['Content-Security-Policy'], /^default-src 'self'; img-src 'self' https:\/\/cdn\.discordapp\.com https:\/\/media\.discordapp\.net; style-src 'self' 'unsafe-inline'/);
+    const csp = SECURITY_HEADERS['Content-Security-Policy'];
+    assert.ok(!csp.includes('unsafe-inline'));
+    assert.ok(!csp.includes('unsafe-eval'));
+    assert.match(csp, /style-src 'self'/);
+    assert.match(csp, /default-src 'none'/);
+    assert.match(csp, /frame-ancestors 'none'/);
     assert.equal(SECURITY_HEADERS['X-Frame-Options'], 'DENY');
 });

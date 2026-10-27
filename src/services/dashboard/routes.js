@@ -1,0 +1,472 @@
+// routes.js — the web dashboard on the bot's Express server (Phase 1: login,
+// overview, read-only records and settings).
+//
+//   GET  /dashboard                 → Overview when logged in, else Discord login
+//   GET  /dashboard/oauth/callback  Discord OAuth2 (scope identify only) comes back here
+//   GET  /dashboard/overview        bot / database / server status, Getting started checklist
+//   GET  /dashboard/cases           case search (the /case search filters), paged
+//   GET  /dashboard/cases/:code     one case: details, edit history, evidence, appeals
+//   GET  /dashboard/appeals         pending appeals of the main server with their age
+//   GET  /dashboard/automod         automod actions per rule over 7 days, undo rates
+//   GET  /dashboard/staff           staff moderation stats (/staff stats)
+//   GET  /dashboard/audit           dashboard settings changes (old → new)
+//   GET  /dashboard/<module>        Phase 2 modules: placeholder with the current values
+//   GET  /dashboard/static/dashboard.css   the only stylesheet (CSP style-src 'self')
+//   POST /dashboard/logout          CSRF token + same-origin check
+//   /staff, /staff/*                → 301 /dashboard (the old read-only staff dashboard)
+//
+// Access: CURRENT Administrators of the main server (canAct) and OWNER_IDS (view and
+// settings only), re-checked on every request (cached 60 s, access.js). The login
+// state is HMAC-signed, expires after 10 minutes, is single use and bound to the
+// browser by a nonce cookie. Sessions are in Postgres (sessionStore.js: hashed ids,
+// rotated on login, 12 h); the browser only gets a signed random id in an HttpOnly,
+// SameSite=Lax cookie (Secure in production / https). The Discord access token is used
+// once to read the user and then dropped.
+//
+// Rate limits (owner decision 7): /dashboard is exempt from the app-wide per-IP limiter;
+// instead 300 requests/min per session, and 30/min per IP for the login routes.
+//
+// Off unless DASHBOARD_ENABLED=true (STAFF_DASHBOARD_ENABLED=true still works); refuses
+// to start without SESSION_SECRET (≥ 32 characters), CLIENT_ID, DISCORD_CLIENT_SECRET,
+// PUBLIC_URL and MAIN_GUILD_ID. Add <PUBLIC_URL>/dashboard/oauth/callback under OAuth2 →
+// Redirects in the Discord Developer Portal.
+
+import fs from 'node:fs';
+import express from 'express';
+import { enforcementConfig } from '../../config/enforcement.js';
+import { logger } from '../../utils/logger.js';
+import { normalizeCaseCode } from '../enforcement/format.js';
+import { normalizeSearchFilters, searchCaseRecords } from '../enforcement/caseSearchService.js';
+import {
+    caseStatusLabel, getAppealHistory, getCaseByCode, getLatestAppealStatusesForCases,
+} from '../enforcement/caseService.js';
+import { getCaseEdits } from '../enforcement/caseEditService.js';
+import { listEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
+import { listPendingAppeals } from '../enforcement/appealService.js';
+import { automodStats } from '../automod/automodReport.js';
+import { automodRuleStats } from '../automod/automodTuning.js';
+import { STATS_PERIODS, staffModerationStats } from '../staffActivityService.js';
+import { listSettingsAudit } from '../settings/guildSettings.js';
+import { createAccessChecker } from './access.js';
+import { BASE, CSS_PATH, messagePage, navItems, path } from './html.js';
+import {
+    appealsPage, auditPage, automodPage, caseDetailPage, casesPage, modulePage, statsPage,
+} from './pages.js';
+import { collectOverview, defaultOverviewData, moduleStatesFrom, overviewPage, settingsRowsFor } from './overview.js';
+import { createPgSessionStore } from './sessionStore.js';
+import { query } from '../enforcement/db.js';
+import { pgConfig } from '../../config/database/postgres.js';
+import {
+    MIN_SECRET_LENGTH, SESSION_COOKIE, SESSION_TTL_MS, STATE_COOKIE, STATE_TTL_MS,
+    clearCookie, createRateLimiter, createState, createStateStore,
+    isSameOrigin, isSnowflake, parseCookies, safeEqual, serializeCookie, signValue, verifySignedValue,
+} from './security.js';
+
+const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
+const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
+const ME_URL = 'https://discord.com/api/v10/users/@me';
+const HTTP_TIMEOUT_MS = 10000;
+const CASES_PAGE_SIZE = 25;
+const MAX_PAGE = 10000;
+const AUTOMOD_DAYS = 7;
+const MODULE_STATES_TTL_MS = 60 * 1000;
+const CSS_FILE = new URL('./static/dashboard.css', import.meta.url);
+
+export const DEFAULT_LIMITS = {
+    session: { limit: 300, windowMs: 60 * 1000 },
+    ip: { limit: 30, windowMs: 60 * 1000 },
+    static: { limit: 300, windowMs: 60 * 1000 },
+};
+
+export const SECURITY_HEADERS = {
+    'Content-Security-Policy': "default-src 'none'; style-src 'self'; img-src 'self' https://cdn.discordapp.com https://media.discordapp.net; "
+        + "form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+    'X-Frame-Options': 'DENY',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+    'Cache-Control': 'no-store',
+};
+
+/** Phase 2 modules: which registry module's settings their placeholder shows, and a note. */
+const MODULE_SETTINGS = {
+    logging: { registry: 'logging' },
+    verification: { registry: 'verification' },
+    support: { registry: 'support', note: 'The support server is where banned members appeal. Its banned role is set per server.' },
+};
+
+const truthy = (value) => String(value || '').trim().toLowerCase() === 'true';
+
+/** The dashboard's configuration from the environment: { enabled, requested, problems, … }. */
+export function dashboardSettings(env = process.env) {
+    const requested = truthy(env.DASHBOARD_ENABLED) || truthy(env.STAFF_DASHBOARD_ENABLED);
+    const publicUrl = String(env.PUBLIC_URL || '').trim().replace(/\/+$/, '');
+    const settings = {
+        requested,
+        clientId: String(env.CLIENT_ID || '').trim(),
+        clientSecret: String(env.DISCORD_CLIENT_SECRET || '').trim(),
+        sessionSecret: String(env.SESSION_SECRET || ''),
+        redirectUri: publicUrl ? `${publicUrl}${BASE}/oauth/callback` : '',
+        publicOrigin: null,
+        secure: env.NODE_ENV === 'production' || publicUrl.startsWith('https://'),
+        mainGuildId: env.MAIN_GUILD_ID !== undefined ? String(env.MAIN_GUILD_ID).trim() : enforcementConfig.mainGuildId,
+        problems: [],
+    };
+    try {
+        if (publicUrl) settings.publicOrigin = new URL(publicUrl).origin;
+    } catch {
+        settings.problems.push('PUBLIC_URL is not a valid URL');
+    }
+    if (requested) {
+        if (settings.sessionSecret.length < MIN_SECRET_LENGTH) settings.problems.push(`SESSION_SECRET must be at least ${MIN_SECRET_LENGTH} characters`);
+        if (!settings.clientId) settings.problems.push('CLIENT_ID is not set');
+        if (!settings.clientSecret) settings.problems.push('DISCORD_CLIENT_SECRET is not set');
+        if (!publicUrl) settings.problems.push('PUBLIC_URL is not set');
+        if (!isSnowflake(settings.mainGuildId || '')) settings.problems.push('MAIN_GUILD_ID is not set');
+    }
+    settings.enabled = requested && settings.problems.length === 0;
+    return settings;
+}
+
+/** Express 5 may hand over arrays for repeated keys: keep strings only. */
+function str(value, max = 200) {
+    return typeof value === 'string' ? value.trim().slice(0, max) : '';
+}
+
+const defaultData = {
+    searchCaseRecords, getCaseByCode, getCaseEdits, listEvidence, resolveImageUrls, getAppealHistory,
+    listPendingAppeals, automodRuleStats, automodStats, staffModerationStats, getLatestAppealStatusesForCases,
+    listSettingsAudit, overview: defaultOverviewData,
+};
+
+async function discordFetch(fetchImpl, url, options) {
+    const response = await fetchImpl(url, { ...options, signal: AbortSignal.timeout(HTTP_TIMEOUT_MS) });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        const error = new Error(`Discord answered ${response.status}: ${body.error_description || body.error || body.message || 'unknown error'}`);
+        error.status = response.status;
+        throw error;
+    }
+    return body;
+}
+
+function clientIp(req) {
+    return String(req.ip || req.socket?.remoteAddress || 'unknown');
+}
+
+/**
+ * The dashboard's handlers, with everything injectable for tests:
+ * { client, settings, sessions, access, data, fetchImpl, states, limits }.
+ * `sessions` is required (createPgSessionStore in production, a memory store in tests).
+ */
+export function createDashboard({
+    client, settings, sessions, access = createAccessChecker(client, { guildId: settings.mainGuildId }), data = defaultData,
+    fetchImpl = globalThis.fetch, states = createStateStore(), limits = DEFAULT_LIMITS,
+}) {
+    const secret = settings.sessionSecret;
+    const guildId = settings.mainGuildId;
+    const sessionLimiter = createRateLimiter(limits.session);
+    const ipLimiter = createRateLimiter(limits.ip);
+    const staticLimiter = createRateLimiter(limits.static);
+    const cookieOptions = { secure: settings.secure, path: BASE };
+    let moduleStatesCache = { at: 0, value: {} };
+
+    const sendHtml = (res, status, page) => res.status(status).type('html').send(page);
+    const fail = (res, status, title, message, req = null) => sendHtml(res, status, messagePage(title, message, req?.dashboard?.session || null, shellOf(req)));
+
+    function shellOf(req) {
+        const ctx = req?.dashboard;
+        return ctx ? { session: ctx.session, access: ctx.access, moduleStates: ctx.moduleStates || {} } : {};
+    }
+
+    function cookieSessionId(req) {
+        const cookies = parseCookies(req.headers?.cookie);
+        return verifySignedValue(cookies[SESSION_COOKIE], secret);
+    }
+
+    async function readSession(req) {
+        const id = cookieSessionId(req);
+        return id ? sessions.get(id) : null;
+    }
+
+    async function moduleStates() {
+        const now = Date.now();
+        if (now - moduleStatesCache.at < MODULE_STATES_TTL_MS) return moduleStatesCache.value;
+        const overviewData = data.overview || defaultOverviewData;
+        const [config, welcome] = await Promise.all([
+            overviewData.getGuildConfig(client, guildId).catch(() => null),
+            overviewData.getWelcomeConfig(client, guildId).catch(() => null),
+        ]);
+        moduleStatesCache = { at: now, value: moduleStatesFrom(config, welcome) };
+        return moduleStatesCache.value;
+    }
+
+    function securityHeaders(req, res, next) {
+        res.set(SECURITY_HEADERS);
+        next();
+    }
+
+    /** Per-IP limit for the routes reachable without a session (login, callback). */
+    function limitByIp(req, res, next) {
+        if (!ipLimiter.allow(clientIp(req))) {
+            res.set('Retry-After', '60');
+            return fail(res, 429, 'Slow down', 'Too many login attempts from your address. Wait a minute and try again.');
+        }
+        return next();
+    }
+
+    const css = (() => {
+        try {
+            return fs.readFileSync(CSS_FILE, 'utf8');
+        } catch (error) {
+            logger.error(`Dashboard stylesheet missing: ${error.message}`);
+            return '';
+        }
+    })();
+
+    function stylesheet(req, res) {
+        if (!staticLimiter.allow(clientIp(req))) return res.status(429).type('text/plain').send('Too many requests');
+        res.set('Cache-Control', 'public, max-age=3600');
+        return res.status(200).type('text/css').send(css);
+    }
+
+    function startLogin(req, res) {
+        const { state, nonce } = createState(secret);
+        res.append('Set-Cookie', serializeCookie(STATE_COOKIE, nonce, { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
+        const params = new URLSearchParams({
+            client_id: settings.clientId,
+            response_type: 'code',
+            redirect_uri: settings.redirectUri,
+            scope: 'identify',
+            state,
+        });
+        return res.redirect(302, `${AUTHORIZE_URL}?${params}`);
+    }
+
+    async function index(req, res) {
+        if (await readSession(req)) return res.redirect(302, path('/overview'));
+        return startLogin(req, res);
+    }
+
+    async function callback(req, res) {
+        const cookies = parseCookies(req.headers?.cookie);
+        res.append('Set-Cookie', clearCookie(STATE_COOKIE, cookieOptions));
+        if (req.query?.error) return fail(res, 400, 'Login cancelled', `You did not authorize. Open ${BASE} again to log in.`);
+        const code = str(req.query?.code, 200);
+        if (!code || !states.consume(str(req.query?.state, 1000), cookies[STATE_COOKIE], secret)) {
+            return fail(res, 400, 'Login expired', `This login link is invalid, expired or already used. Open ${BASE} again.`);
+        }
+        let me;
+        try {
+            const token = await discordFetch(fetchImpl, TOKEN_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    client_id: settings.clientId,
+                    client_secret: settings.clientSecret,
+                    grant_type: 'authorization_code',
+                    code,
+                    redirect_uri: settings.redirectUri,
+                }),
+            });
+            me = await discordFetch(fetchImpl, ME_URL, { headers: { Authorization: `Bearer ${token.access_token}` } });
+        } catch (error) {
+            logger.warn(`Dashboard login failed: ${error.message}`);
+            return fail(res, 502, 'Login failed', 'Discord did not confirm the login. Try again.');
+        }
+        if (!isSnowflake(String(me?.id || ''))) return fail(res, 502, 'Login failed', 'Discord did not return a user.');
+        access.forget?.(me.id);
+        const decision = await access.check(me.id);
+        if (!decision.allowed) {
+            logger.info(`Dashboard login refused for ${me.id}: ${decision.reason}`);
+            return fail(res, 403, 'No access', 'The dashboard is for administrators of the main server and the bot owners.');
+        }
+        // Rotation: whatever session this browser had is dropped; a fresh id is issued.
+        const session = await sessions.rotate(cookieSessionId(req), {
+            userId: me.id,
+            username: me.global_name || me.username || me.id,
+            avatar: typeof me.avatar === 'string' ? me.avatar : null,
+        });
+        res.append('Set-Cookie', serializeCookie(SESSION_COOKIE, signValue(session.id, secret), { ...cookieOptions, maxAgeMs: SESSION_TTL_MS }));
+        logger.info(`Dashboard login: ${me.id} (${decision.reason})`);
+        return res.redirect(303, path('/overview'));
+    }
+
+    /** Session + rate limit + live permission check for every page. */
+    async function requireUser(req, res, next) {
+        const session = await readSession(req);
+        if (!session) {
+            if (req.method === 'GET') return res.redirect(302, BASE);
+            return fail(res, 401, 'Logged out', `Your session has ended. Open ${BASE} to log in again.`);
+        }
+        if (!sessionLimiter.allow(session.idHash)) {
+            res.set('Retry-After', '60');
+            return fail(res, 429, 'Slow down', 'Too many requests in the last minute. Wait a moment and reload.');
+        }
+        const decision = await access.check(session.userId);
+        if (!decision.allowed) {
+            await sessions.destroy(session.id);
+            res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
+            return fail(res, 403, 'No access', 'You are no longer an administrator of the main server.');
+        }
+        req.dashboard = { session, access: decision, moduleStates: await moduleStates().catch(() => ({})) };
+        return next();
+    }
+
+    /** CSRF token + same origin, for every POST. */
+    function checkPost(req) {
+        const session = req.dashboard.session;
+        return isSameOrigin(req, settings.publicOrigin) && safeEqual(str(req.body?.csrf, 100), session.csrf);
+    }
+
+    async function overview(req, res) {
+        const result = await collectOverview({ client, guildId, data: data.overview || defaultOverviewData });
+        req.dashboard.moduleStates = result.moduleStates;
+        return sendHtml(res, 200, overviewPage({ ...shellOf(req), overview: result }));
+    }
+
+    async function cases(req, res) {
+        const query = {
+            member: str(req.query?.member, 20), moderator: str(req.query?.moderator, 20), type: str(req.query?.type, 10),
+            status: str(req.query?.status, 10), text: str(req.query?.text, 100), from: str(req.query?.from, 10), to: str(req.query?.to, 10),
+        };
+        const page = Math.min(MAX_PAGE, Math.max(0, Number.parseInt(str(req.query?.page, 6), 10) || 0));
+        let filters;
+        try {
+            filters = normalizeSearchFilters({
+                memberId: query.member, moderatorId: query.moderator, type: query.type, status: query.status,
+                text: query.text, from: query.from, to: query.to,
+            });
+        } catch (error) {
+            return sendHtml(res, 400, casesPage({ ...shellOf(req), query, error: error.userMessage || 'Invalid filter.' }));
+        }
+        const { rows, total } = await data.searchCaseRecords(guildId, filters, { page, pageSize: CASES_PAGE_SIZE });
+        const appealStatuses = await data.getLatestAppealStatusesForCases(rows.map((row) => row.case_code));
+        return sendHtml(res, 200, casesPage({
+            ...shellOf(req), query, rows, total, page, pageSize: CASES_PAGE_SIZE,
+            statusLabel: (row) => caseStatusLabel(row, appealStatuses.get(row.case_code)),
+        }));
+    }
+
+    async function caseDetail(req, res) {
+        const code = normalizeCaseCode(str(req.params?.code, 10));
+        const record = code ? await data.getCaseByCode(code) : null;
+        if (!record || record.guild_id !== guildId) return fail(res, 404, 'Case not found', 'There is no case with that code.', req);
+        const [edits, evidenceRows, appeals] = await Promise.all([
+            data.getCaseEdits(code, 50),
+            data.listEvidence(code),
+            data.getAppealHistory(code),
+        ]);
+        // Image URLs expire: fetch fresh ones from the stored evidence messages, server-side.
+        const fresh = await data.resolveImageUrls(client, evidenceRows);
+        return sendHtml(res, 200, caseDetailPage({
+            ...shellOf(req),
+            record,
+            statusLabel: caseStatusLabel(record, appeals[0]?.status || null),
+            edits,
+            evidence: evidenceRows.map((row) => ({ row, freshUrl: fresh.get(String(row.id)) || null })),
+            appeals,
+        }));
+    }
+
+    async function appeals(req, res) {
+        const rows = await data.listPendingAppeals(100, guildId);
+        return sendHtml(res, 200, appealsPage({ ...shellOf(req), appeals: rows, settingsRows: settingsRowsFor(client, 'appeals') }));
+    }
+
+    async function automod(req, res) {
+        const [byRule, stats] = await Promise.all([
+            data.automodRuleStats(guildId, AUTOMOD_DAYS),
+            data.automodStats(guildId, AUTOMOD_DAYS),
+        ]);
+        return sendHtml(res, 200, automodPage({ ...shellOf(req), byRule, stats, days: AUTOMOD_DAYS, settingsRows: settingsRowsFor(client, 'automod') }));
+    }
+
+    async function staff(req, res) {
+        const requested = str(req.query?.period, 5);
+        const period = Object.hasOwn(STATS_PERIODS, requested) ? requested : '30d';
+        const rows = await data.staffModerationStats(guildId, client.user?.id || '0', { period });
+        return sendHtml(res, 200, statsPage({ ...shellOf(req), period, rows, settingsRows: settingsRowsFor(client, 'enforcement') }));
+    }
+
+    async function audit(req, res) {
+        const rows = await data.listSettingsAudit(guildId, 100);
+        return sendHtml(res, 200, auditPage({ ...shellOf(req), rows }));
+    }
+
+    const placeholders = new Map(navItems().filter((item) => !item.built).map((item) => [item.key, item]));
+
+    async function moduleStub(req, res, next) {
+        const item = placeholders.get(str(req.params?.module, 40));
+        if (!item) return next();
+        const extra = MODULE_SETTINGS[item.key] || {};
+        const states = req.dashboard.moduleStates || {};
+        return sendHtml(res, 200, modulePage({
+            ...shellOf(req), item,
+            enabled: item.state && Object.hasOwn(states, item.state) ? states[item.state] : null,
+            settingsRows: extra.registry ? settingsRowsFor(client, extra.registry) : [],
+            note: extra.note || '',
+        }));
+    }
+
+    async function logout(req, res) {
+        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'The logout request did not come from this dashboard.', req);
+        await sessions.destroy(req.dashboard.session.id);
+        res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
+        return fail(res, 200, 'Logged out', `You are logged out. Open ${BASE} to log in again.`);
+    }
+
+    function notFound(req, res) {
+        return fail(res, 404, 'Not found', 'There is no such page.', req);
+    }
+
+    return {
+        securityHeaders, limitByIp, stylesheet, index, callback, requireUser, checkPost,
+        overview, cases, caseDetail, appeals, automod, staff, audit, moduleStub, logout, notFound,
+        sessions, states,
+    };
+}
+
+/** Wraps an async handler so a thrown error becomes a plain 500 page (and a log line). */
+function safe(handler) {
+    return async (req, res, next) => {
+        try {
+            return await handler(req, res, next);
+        } catch (error) {
+            logger.error(`Dashboard ${req.method} ${req.path} failed: ${error.message}`);
+            if (res.headersSent) return undefined;
+            return res.status(500).type('html').send(messagePage('Something went wrong', 'The page could not be loaded. Try again in a moment.'));
+        }
+    };
+}
+
+/** Adds the /dashboard routes (and the /staff redirect) when enabled. Returns true when registered. */
+export function registerDashboard(app, client, env = process.env, { sessions = null } = {}) {
+    const settings = dashboardSettings(env);
+    if (!settings.requested) return false;
+    if (!settings.enabled) {
+        logger.error(`Dashboard NOT enabled: ${settings.problems.join('; ')}`);
+        return false;
+    }
+    const d = createDashboard({ client, settings, sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.dashboard_sessions }) });
+    const router = express.Router();
+    const user = safe(d.requireUser);
+    router.use(d.securityHeaders);
+    router.get('/static/dashboard.css', d.stylesheet);
+    router.get('/', d.limitByIp, safe(d.index));
+    router.get('/oauth/callback', d.limitByIp, safe(d.callback));
+    router.post('/logout', express.urlencoded({ extended: false, limit: '2kb' }), user, safe(d.logout));
+    router.get('/overview', user, safe(d.overview));
+    router.get('/cases', user, safe(d.cases));
+    router.get('/cases/:code', user, safe(d.caseDetail));
+    router.get('/appeals', user, safe(d.appeals));
+    router.get('/automod', user, safe(d.automod));
+    router.get('/staff', user, safe(d.staff));
+    router.get('/audit', user, safe(d.audit));
+    router.get('/:module', user, safe(d.moduleStub));
+    router.use(user, d.notFound);
+    app.use(BASE, router);
+    // The old read-only staff dashboard lived at /staff.
+    app.use('/staff', (req, res) => res.redirect(301, BASE));
+    logger.info(`Dashboard enabled at ${BASE} (OAuth redirect ${settings.redirectUri}; stylesheet ${CSS_PATH})`);
+    return true;
+}

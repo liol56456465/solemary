@@ -1,5 +1,6 @@
-// Staff dashboard pages against the local test database: the real case search,
-// case detail, appeals, automod and stats services behind the route handlers.
+// Dashboard against the local test database: the real case search, case detail,
+// appeals, automod and stats services behind the route handlers, and the Postgres
+// session store (create, read, rotate, expire, logout).
 // Skipped unless POSTGRES_URL points at localhost.
 
 import { test, before, after } from 'node:test';
@@ -9,7 +10,7 @@ const url = process.env.POSTGRES_URL || '';
 const isLocal = /@(localhost|127\.0\.0\.1)(:\d+)?\//.test(url) || /^postgres(ql)?:\/\/(localhost|127\.0\.0\.1)/.test(url);
 const skip = isLocal ? false : 'needs POSTGRES_URL on localhost (npm run test:db)';
 
-let pgDb, db, routes, security, access;
+let pgDb, db, routes, security, access, store;
 const runId = String(Date.now()).slice(-9);
 const guildId = `8${runId}00000003`;
 const target = `6${runId}00000011`;
@@ -40,15 +41,17 @@ before(async () => {
     ({ pgDb } = await import('../../src/utils/postgresDatabase.js'));
     ({ db } = await import('../../src/utils/database/wrapper.js'));
     await db.initialize();
-    routes = await import('../../src/services/staffDashboard/routes.js');
-    security = await import('../../src/services/staffDashboard/security.js');
-    access = await import('../../src/services/staffDashboard/access.js');
+    routes = await import('../../src/services/dashboard/routes.js');
+    security = await import('../../src/services/dashboard/security.js');
+    access = await import('../../src/services/dashboard/access.js');
+    store = await import('../../src/services/dashboard/sessionStore.js');
 });
 
 after(async () => {
     if (skip) return;
     await pgDb.pool.query('DELETE FROM mod_appeals WHERE case_code = ANY($1)', [codes]);
     await pgDb.pool.query('DELETE FROM mod_cases WHERE case_code = ANY($1)', [codes]);
+    await pgDb.pool.query('DELETE FROM dashboard_sessions WHERE user_id = $1', [admin]);
     await pgDb.disconnect();
 });
 
@@ -70,20 +73,22 @@ test('dashboard pages render real data', { skip }, async () => {
     );
 
     const settings = routes.dashboardSettings({
-        STAFF_DASHBOARD_ENABLED: 'true', SESSION_SECRET: 's'.repeat(40), CLIENT_ID: '1', DISCORD_CLIENT_SECRET: 'x',
+        DASHBOARD_ENABLED: 'true', SESSION_SECRET: 's'.repeat(40), CLIENT_ID: '1', DISCORD_CLIENT_SECRET: 'x',
         PUBLIC_URL: 'http://127.0.0.1:3100', MAIN_GUILD_ID: guildId,
     });
     assert.equal(settings.enabled, true);
-    const sessions = security.createSessionStore();
-    const session = sessions.create({ userId: admin, username: 'admin' });
+    const { query } = await import('../../src/services/enforcement/db.js');
+    const sessions = store.createPgSessionStore({ query });
+    const session = await sessions.create({ userId: admin, username: 'admin' });
     const checker = access.createAccessChecker({}, { facts: async () => ({ inGuild: true, isAdmin: true }) });
     const d = routes.createDashboard({ client: { user: { id: '1' }, channels: { cache: new Map() } }, settings, access: checker, sessions });
     const cookie = `${security.SESSION_COOKIE}=${encodeURIComponent(security.signValue(session.id, settings.sessionSecret))}`;
     const run = async (handler, req) => {
         const res = fakeRes();
         let ok = false;
-        await d.requireStaff({ method: 'GET', headers: { cookie }, query: {}, params: {}, ...req }, res, () => { ok = true; });
-        if (ok) await handler({ method: 'GET', headers: { cookie }, query: {}, params: {}, staffSession: session, ...req }, res);
+        const full = { method: 'GET', headers: { cookie }, query: {}, params: {}, ...req };
+        await d.requireUser(full, res, () => { ok = true; });
+        if (ok) await handler(full, res);
         return res;
     };
 
@@ -100,7 +105,15 @@ test('dashboard pages render real data', { skip }, async () => {
     assert.equal(detail.statusCode, 200);
     assert.match(detail.body, /Appeals \(1\)/);
 
+    // An appeal on another server's case is not listed (listPendingAppeals filters by guild).
+    const otherGuild = `8${runId}00000099`;
+    const foreign = await insertCase({ guild_id: otherGuild });
+    await pgDb.pool.query(
+        `INSERT INTO mod_appeals (kind, case_code, user_id, username, guild_id) VALUES ('appeal', $1, $2, 'target', $3)`,
+        [foreign.case_code, target, otherGuild],
+    );
     const appeals = await run(d.appeals, {});
+    assert.ok(!appeals.body.includes(foreign.case_code), 'other guild appeal hidden');
     assert.equal(appeals.statusCode, 200);
     assert.match(appeals.body, new RegExp(warn.case_code));
     assert.match(appeals.body, /2 d|4\d h/);
@@ -110,7 +123,38 @@ test('dashboard pages render real data', { skip }, async () => {
     assert.match(automod.body, /Spam/);
     assert.match(automod.body, /50%/);
 
-    const stats = await run(d.stats, { query: { period: '7d' } });
+    const stats = await run(d.staff, { query: { period: '7d' } });
     assert.equal(stats.statusCode, 200);
     assert.match(stats.body, /mod/);
+});
+
+test('Postgres session store: create, read, rotate, expire, logout, lazy cleanup', { skip }, async () => {
+    const { query } = await import('../../src/services/enforcement/db.js');
+    const sessions = store.createPgSessionStore({ query, ttlMs: 60 * 60 * 1000 });
+    const now = Date.now();
+    const s1 = await sessions.create({ userId: admin, username: 'admin', avatar: 'abc' }, now);
+    const { rows } = await pgDb.pool.query('SELECT * FROM dashboard_sessions WHERE user_id = $1', [admin]);
+    assert.ok(rows.some((r) => r.id_hash === store.hashSessionId(s1.id)));
+    assert.ok(!rows.some((r) => r.id_hash === s1.id), 'raw id never stored');
+    const read = await sessions.get(s1.id, now + 1000);
+    assert.equal(read.userId, admin);
+    assert.equal(read.csrf, s1.csrf);
+    assert.equal(read.avatar, 'abc');
+    assert.equal(await sessions.get('not-a-session', now), null);
+
+    const s2 = await sessions.rotate(s1.id, { userId: admin, username: 'admin' }, now + 2000);
+    assert.notEqual(s2.id, s1.id);
+    assert.equal(await sessions.get(s1.id, now + 3000), null, 'rotated away');
+    assert.ok(await sessions.get(s2.id, now + 3000));
+
+    assert.equal(await sessions.get(s2.id, now + 2000 + 60 * 60 * 1000 + 1), null, 'expired after the TTL');
+
+    assert.equal(await sessions.destroy(s2.id), true, 'logout');
+    assert.equal(await sessions.get(s2.id, now + 4000), null);
+
+    const old = await sessions.create({ userId: admin, username: 'admin' }, now - 2 * 60 * 60 * 1000);
+    const removed = await sessions.cleanup(now, true);
+    assert.ok(removed >= 1);
+    const { rows: left } = await pgDb.pool.query('SELECT 1 FROM dashboard_sessions WHERE id_hash = $1', [store.hashSessionId(old.id)]);
+    assert.equal(left.length, 0, 'expired rows deleted');
 });

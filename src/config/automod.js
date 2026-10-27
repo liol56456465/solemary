@@ -6,6 +6,8 @@
 // Repeats are counted per group over repeatWindowMs: the Nth offence uses step N of
 // the ladder (the last step repeats).
 
+import { bindSettingGetters } from '../services/settings/guildSettings.js';
+
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
@@ -48,10 +50,6 @@ export const REVIEW_ACTIONS = {
     ban30d: { label: 'Ban 30 days', step: ban(30 * DAY) },
     permban: { label: 'Permanent ban', step: permBan },
 };
-
-function readIdList(name) {
-    return (process.env[name] || '').split(',').map((id) => id.trim()).filter(Boolean);
-}
 
 export const automodConfig = {
     repeatWindowMs: 30 * DAY,
@@ -102,8 +100,8 @@ export const automodConfig = {
     //   mod log — a one-line record of every enforcement action (MOD_LOG_CHANNEL_ID, config/enforcement.js).
     //   alerts  — raids, staff guard, mass-action guard, auto slowmode, digests and reports, system problems.
     // Review and alerts fall back to the mod log channel when unset, so one channel is enough.
-    reviewChannelId: (process.env.AUTOMOD_REVIEW_CHANNEL_ID || '').trim() || null,
-    alertsChannelId: (process.env.BOT_ALERTS_CHANNEL_ID || '').trim() || null,
+    // reviewChannelId (AUTOMOD_REVIEW_CHANNEL_ID) and alertsChannelId (BOT_ALERTS_CHANNEL_ID)
+    // are per-server settings: see the bindSettingGetters call below.
 
     // Review cards. Low-severity rules (severity at or below lowSeverityMax: mass mentions,
     // spam, caps, characters, English only) post one compact line instead of a full card
@@ -156,10 +154,9 @@ export const automodConfig = {
     burstWindowMs: 5 * 60 * 1000,
     // Message text shown on a card, behind a spoiler.
     cardExcerptChars: 300,
-    // Channels automod ignores entirely, in addition to the ones set with /automod exempt.
-    exemptChannelIds: readIdList('AUTOMOD_EXEMPT_CHANNEL_IDS'),
-    // Extra words for the language filter (AUTOMOD_EXTRA_WORDS=word1,word2).
-    extraBlockedWords: (process.env.AUTOMOD_EXTRA_WORDS || '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean),
+    // exemptChannelIds (AUTOMOD_EXEMPT_CHANNEL_IDS: ignored entirely, in addition to
+    // /automod exempt) and extraBlockedWords (AUTOMOD_EXTRA_WORDS, for the language filter;
+    // compiled once at startup) are per-server settings: see below.
 
     // Staff guard: an admin doing this much within the window loses their staff roles.
     guardWindowMs: 10 * 60 * 1000,
@@ -168,5 +165,9 @@ export const automodConfig = {
     staffWarnLimit: 3,
     staffWarnExpiryMs: 90 * DAY,
 };
+
+// Per-server settings (guild_settings via services/settings/guildSettings.js): read
+// through getters so callers keep using automodConfig.<key>; env vars only seed them.
+bindSettingGetters(automodConfig, ['reviewChannelId', 'alertsChannelId', 'exemptChannelIds', 'extraBlockedWords']);
 
 export default automodConfig;

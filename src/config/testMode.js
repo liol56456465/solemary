@@ -10,6 +10,7 @@
 // Any violation stops the process before it logs in.
 
 import { logger } from '../utils/logger.js';
+import { getConfiguredSetting, guildIdFor, settingSource } from '../services/settings/guildSettings.js';
 
 const SNOWFLAKE = /^\d{17,20}$/;
 
@@ -38,15 +39,18 @@ function snowflakeTime(id) {
     return Number((BigInt(id) >> 22n) + DISCORD_EPOCH);
 }
 
-// Settings that must live inside a specific test guild.
+// Settings that must live inside a specific test guild. `name` is the env var (checked
+// at startup, before the database is up); `setting` is the guild_settings key whose
+// effective value (database, else env) is checked after login.
 const GUILD_RESOURCES = [
-    { name: 'MAIN_APPEALS_CATEGORY_ID', guild: 'MAIN_GUILD_ID', kind: 'category' },
-    { name: 'ADMIN_REQUEST_CHANNEL_ID', guild: 'MAIN_GUILD_ID', kind: 'channel' },
-    { name: 'MUTED_ROLE_ID', guild: 'MAIN_GUILD_ID', kind: 'role' },
-    { name: 'BANNED_ROLE_ID', guild: 'SUPPORT_GUILD_ID', kind: 'role' },
-    { name: 'MOD_LOG_CHANNEL_ID', guild: 'MAIN_GUILD_ID', kind: 'channel' },
-    { name: 'EVIDENCE_CHANNEL_ID', guild: 'MAIN_GUILD_ID', kind: 'channel' },
-    { name: 'AUTOMOD_REVIEW_CHANNEL_ID', guild: 'MAIN_GUILD_ID', kind: 'channel' },
+    { name: 'MAIN_APPEALS_CATEGORY_ID', setting: 'appealsCategoryId', guild: 'MAIN_GUILD_ID', kind: 'category' },
+    { name: 'ADMIN_REQUEST_CHANNEL_ID', setting: 'adminRequestChannelId', guild: 'MAIN_GUILD_ID', kind: 'channel' },
+    { name: 'MUTED_ROLE_ID', setting: 'mutedRoleId', guild: 'MAIN_GUILD_ID', kind: 'role' },
+    { name: 'BANNED_ROLE_ID', setting: 'bannedRoleId', guild: 'SUPPORT_GUILD_ID', kind: 'role' },
+    { name: 'MOD_LOG_CHANNEL_ID', setting: 'modLogChannelId', guild: 'MAIN_GUILD_ID', kind: 'channel' },
+    { name: 'EVIDENCE_CHANNEL_ID', setting: 'evidenceChannelId', guild: 'MAIN_GUILD_ID', kind: 'channel' },
+    { name: 'AUTOMOD_REVIEW_CHANNEL_ID', setting: 'reviewChannelId', guild: 'MAIN_GUILD_ID', kind: 'channel' },
+    { name: 'BOT_ALERTS_CHANNEL_ID', setting: 'alertsChannelId', guild: 'MAIN_GUILD_ID', kind: 'channel' },
 ];
 
 export function isGuildAllowed(guildId) {
@@ -204,8 +208,9 @@ export async function verifyTestResources(client) {
     if (!testMode.enabled) return [];
     const problems = [];
 
-    for (const { name, guild: guildVar, kind } of GUILD_RESOURCES) {
-        const id = (process.env[name] || '').trim();
+    for (const { name, setting, guild: guildVar, kind } of GUILD_RESOURCES) {
+        // The effective value: a value stored in guild_settings wins over the env var.
+        const id = String(getConfiguredSetting(setting) || '').trim();
         if (!id) continue;
         const guild = client.guilds.cache.get((process.env[guildVar] || '').trim());
         if (!guild) {
@@ -222,7 +227,9 @@ export async function verifyTestResources(client) {
         }
     }
 
-    const invite = (process.env.SUPPORT_SERVER_INVITE || '').trim();
+    // Checked when set in the env or stored in guild_settings (not the built-in default).
+    const invite = settingSource(guildIdFor('main'), 'supportServerInvite') === 'default'
+        ? '' : String(getConfiguredSetting('supportServerInvite') || '').trim();
     if (invite) {
         const resolved = await client.fetchInvite(invite).catch(() => null);
         if (!resolved) {

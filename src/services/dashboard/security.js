@@ -1,17 +1,17 @@
-// security.js — signing, OAuth state, sessions, cookies and rate limits for the
-// staff dashboard. Pure apart from crypto randomness and the in-memory maps.
+// security.js — signing, OAuth state, cookies and rate limits for the web dashboard.
+// Pure apart from crypto randomness and the in-memory maps.
 //
-// Sessions live only in this process (a restart logs everyone out). The browser gets
-// an opaque random id plus its HMAC (SESSION_SECRET); no tokens or user data.
+// The browser gets an opaque random session id plus its HMAC (SESSION_SECRET); no
+// tokens or user data. Sessions themselves are in Postgres (sessionStore.js).
 
 import crypto from 'crypto';
 
+export const BASE_PATH = '/dashboard';
 export const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 export const STATE_TTL_MS = 10 * 60 * 1000;
-export const SESSION_COOKIE = 'meowist_staff';
-export const STATE_COOKIE = 'meowist_staff_state';
+export const SESSION_COOKIE = 'meowist_dash';
+export const STATE_COOKIE = 'meowist_dash_state';
 export const MIN_SECRET_LENGTH = 32;
-const MAX_SESSIONS = 500;
 const SNOWFLAKE = /^\d{17,20}$/;
 
 export function isSnowflake(value) {
@@ -22,7 +22,7 @@ export function hmac(value, secret) {
     return crypto.createHmac('sha256', secret).update(String(value)).digest('base64url');
 }
 
-function safeEqual(a, b) {
+export function safeEqual(a, b) {
     const x = Buffer.from(String(a));
     const y = Buffer.from(String(b));
     return x.length === y.length && crypto.timingSafeEqual(x, y);
@@ -77,53 +77,39 @@ export function createStateStore() {
     };
 }
 
-// ── Sessions ──────────────────────────────────────────────────────────────
+// ── Rate limits ───────────────────────────────────────────────────────────
 
-export function createSessionStore({ ttlMs = SESSION_TTL_MS, max = MAX_SESSIONS } = {}) {
-    const sessions = new Map(); // id → { id, userId, username, csrf, createdAt, expiresAt, hits }
-
-    const prune = (now) => {
-        for (const [id, session] of sessions) if (session.expiresAt <= now) sessions.delete(id);
-        while (sessions.size > max) sessions.delete(sessions.keys().next().value);
-    };
-
+/**
+ * Sliding-window limiter keyed by any string (session hash, IP). allow(key) is true
+ * when this request is allowed. Idle keys are dropped so the map stays bounded.
+ */
+export function createRateLimiter({ limit, windowMs = 60 * 1000, maxKeys = 10000 } = {}) {
+    const hits = new Map(); // key → timestamps
+    let lastSweep = 0;
     return {
-        create({ userId, username }, now = Date.now()) {
-            prune(now);
-            const session = {
-                id: crypto.randomBytes(32).toString('base64url'),
-                userId,
-                username: String(username || '').slice(0, 100),
-                csrf: crypto.randomBytes(16).toString('base64url'),
-                createdAt: now,
-                expiresAt: now + ttlMs,
-                hits: [],
-            };
-            sessions.set(session.id, session);
-            return session;
-        },
-        get(id, now = Date.now()) {
-            const session = sessions.get(id);
-            if (!session) return null;
-            if (session.expiresAt <= now) {
-                sessions.delete(id);
-                return null;
+        allow(key, now = Date.now()) {
+            if (now - lastSweep > windowMs || hits.size > maxKeys) {
+                lastSweep = now;
+                for (const [k, times] of hits) if (!times.some((at) => now - at < windowMs)) hits.delete(k);
+                while (hits.size > maxKeys) hits.delete(hits.keys().next().value);
             }
-            return session;
+            const times = (hits.get(key) || []).filter((at) => now - at < windowMs);
+            if (times.length >= limit) {
+                hits.set(key, times);
+                return false;
+            }
+            times.push(now);
+            hits.set(key, times);
+            return true;
         },
-        destroy(id) {
-            return sessions.delete(id);
-        },
-        size: () => sessions.size,
+        size: () => hits.size,
     };
 }
 
-/** Sliding-window rate limit kept on the session: true when this request is allowed. */
-export function allowRequest(session, { limit = 60, windowMs = 60 * 1000 } = {}, now = Date.now()) {
-    session.hits = (session.hits || []).filter((at) => now - at < windowMs);
-    if (session.hits.length >= limit) return false;
-    session.hits.push(now);
-    return true;
+/** Paths the app-wide per-IP limiter skips: the dashboard has its own limits (owner decision 7). */
+export function isGlobalRateLimitExempt(req) {
+    const path = String(req?.path || '');
+    return path === BASE_PATH || path.startsWith(`${BASE_PATH}/`);
 }
 
 // ── Cookies ───────────────────────────────────────────────────────────────
@@ -145,14 +131,25 @@ export function parseCookies(header) {
     return out;
 }
 
-/** A Set-Cookie value: HttpOnly, SameSite=Lax, Path=/staff, Secure when asked. */
-export function serializeCookie(name, value, { maxAgeMs = null, secure = false, path = '/staff' } = {}) {
+/** A Set-Cookie value: HttpOnly, SameSite=Lax, Path=<base path>, Secure when asked. */
+export function serializeCookie(name, value, { maxAgeMs = null, secure = false, path = BASE_PATH } = {}) {
     const parts = [`${name}=${encodeURIComponent(value)}`, `Path=${path}`, 'HttpOnly', 'SameSite=Lax'];
     if (maxAgeMs !== null) parts.push(`Max-Age=${Math.max(0, Math.floor(maxAgeMs / 1000))}`);
     if (secure) parts.push('Secure');
     return parts.join('; ');
 }
 
-export function clearCookie(name, { secure = false } = {}) {
-    return serializeCookie(name, '', { maxAgeMs: 0, secure });
+export function clearCookie(name, { secure = false, path = BASE_PATH } = {}) {
+    return serializeCookie(name, '', { maxAgeMs: 0, secure, path });
+}
+
+/**
+ * True when a state-changing request comes from this dashboard: the Origin header
+ * (or, without one, Sec-Fetch-Site) must be ours. The CSRF token is checked separately.
+ */
+export function isSameOrigin(req, publicOrigin) {
+    const origin = req.headers?.origin;
+    if (origin) return origin === publicOrigin;
+    const site = req.headers?.['sec-fetch-site'];
+    return !site || site === 'same-origin';
 }

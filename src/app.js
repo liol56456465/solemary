@@ -29,7 +29,9 @@ import { pollFeeds } from './services/community/feedService.js';
 import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { registerOAuthRoutes } from './services/oauthVerification.js';
-import { registerStaffDashboard } from './services/staffDashboard/routes.js';
+import { registerDashboard } from './services/dashboard/routes.js';
+import { isGlobalRateLimitExempt } from './services/dashboard/security.js';
+import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import pkg from '../package.json' with { type: 'json' };
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
@@ -103,6 +105,8 @@ class Meowist extends Client {
         startupLog(`✅ Database Status: ${dbStatus.connectionType} (fully operational)`);
       }
       
+      await this.loadSettings(dbStatus);
+
       startupLog('Starting web server...');
       this.startWebServer();
       
@@ -136,6 +140,29 @@ class Meowist extends Client {
     } catch (error) {
       logger.error('Failed to start bot:', error);
       process.exit(1);
+    }
+  }
+
+  /**
+   * Per-server settings (guild_settings) into memory before anything handles events,
+   * then the one-time env seed. With the database down the bot runs on env values.
+   */
+  async loadSettings(dbStatus) {
+    if (dbStatus.isDegraded) {
+      startupLog('Settings: database unavailable, running on env/default values');
+      return;
+    }
+    try {
+      const rows = await loadAllSettings();
+      const seeded = rows === null ? null : await seedFromEnvOnce();
+      const seededText = seeded
+        ? Object.entries(seeded).map(([guildId, keys]) => `${guildId}: ${keys.length ? `seeded ${keys.length} key(s) from env` : 'nothing to seed'}`).join('; ')
+        : 'not seeded';
+      startupLog(rows === null
+        ? 'Settings: not loaded, running on env/default values'
+        : `Settings loaded: ${rows} guild row(s); ${seededText || 'no MAIN_GUILD_ID/SUPPORT_GUILD_ID'}`);
+    } catch (error) {
+      logger.error(`Settings could not be loaded or seeded (running on env/default values): ${error.message}`);
     }
   }
 
@@ -182,6 +209,8 @@ class Meowist extends Client {
     const maxRequests = this.config.api?.rateLimit?.max || 100;
     
     app.use((req, res, next) => {
+      // The dashboard has its own per-session and per-IP limits (services/dashboard/routes.js).
+      if (isGlobalRateLimitExempt(req)) return next();
       const ip = req.ip;
       const now = Date.now();
       const windowStart = now - windowMs;
@@ -257,7 +286,7 @@ class Meowist extends Client {
     });
 
     registerOAuthRoutes(app, this);
-    registerStaffDashboard(app, this);
+    registerDashboard(app, this);
 
     app.get('/', (req, res) => {
       res.status(200).json({ 

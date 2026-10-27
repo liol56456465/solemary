@@ -19,7 +19,10 @@ import { enforcementConfig } from '../config/enforcement.js';
 import { isEveryoneCommand, isSupportServerCommand } from '../config/commands/commandAccess.js';
 
 export function getAdminRequiredMessage() {
-    return `You need the Administrator role to use this command. Request a mod/admin role here: <#${enforcementConfig.adminRequestChannelId}>`;
+    const channelId = enforcementConfig.adminRequestChannelId;
+    return channelId
+        ? `You need the Administrator role to use this command. Request a mod/admin role here: <#${channelId}>`
+        : 'You need the Administrator role to use this command.';
 }
 
 /** True when the command exists in this guild: all commands in the main server, the support list in the support server. */

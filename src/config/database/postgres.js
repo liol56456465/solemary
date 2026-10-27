@@ -39,6 +39,9 @@ const configuredTables = {
     suggestion_votes: 'suggestion_votes',
     starboard_posts: 'starboard_posts',
     feeds: 'feeds',
+    guild_settings: 'guild_settings',
+    dashboard_sessions: 'dashboard_sessions',
+    dashboard_audit: 'dashboard_audit',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -78,6 +81,9 @@ const allowedTableIdentifiers = new Set([
     'suggestion_votes',
     'starboard_posts',
     'feeds',
+    'guild_settings',
+    'dashboard_sessions',
+    'dashboard_audit',
 ]);
 
 const validatedTables = Object.fromEntries(
