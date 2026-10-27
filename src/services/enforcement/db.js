@@ -12,6 +12,7 @@ export const T = {
     cases: pgConfig.tables.mod_cases,
     ladder: pgConfig.tables.mod_ladder,
     appeals: pgConfig.tables.mod_appeals,
+    caseEdits: pgConfig.tables.mod_case_edits,
     settings: pgConfig.tables.enforcement_settings,
     staffWarnings: pgConfig.tables.staff_warnings,
     verificationIps: pgConfig.tables.verification_ips,

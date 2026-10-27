@@ -148,3 +148,99 @@ test('early lift: notifyPunishmentEnded marks every lifted case', { skip }, asyn
     assert.equal((await endDm(a.id)).end_dm_delivered, true);
     assert.equal((await endDm(b.id)).end_dm_delivered, true);
 });
+
+// --- I31: /case edit | void | history ----------------------------------------------
+
+test('case edit: reason and duration change with history; ladder bans and closed cases are refused', { skip }, async () => {
+    const { editCase, getCaseEdits } = await import('../../src/services/enforcement/caseEditService.js');
+    const editor = { id: user(91), username: 'editor' };
+    const created = new Date(Date.now() - 2 * 3600 * 1000);
+    const ban = await insertCase({ type: 'ban', target_user_id: user(10), duration_ms: 3600 * 1000, created_at: created, expires_at: new Date(created.getTime() + 3600 * 1000 * 5) });
+
+    const { after, changes } = await editCase(null, { guildId, caseCode: ban.case_code, editor, reason: 'better reason', durationMs: 24 * 3600 * 1000 });
+    assert.equal(after.reason, 'better reason');
+    assert.equal(Number(after.duration_ms), 24 * 3600 * 1000);
+    assert.equal(new Date(after.expires_at).getTime(), created.getTime() + 24 * 3600 * 1000, 'end = created_at + duration');
+    assert.deepEqual(changes.map((c) => c.field), ['reason', 'duration']);
+
+    await editCase(null, { guildId, caseCode: ban.case_code, editor, durationMs: null });
+    const { rows: [perm] } = await pgDb.pool.query('SELECT expires_at, duration_ms FROM mod_cases WHERE id = $1', [ban.id]);
+    assert.deepEqual({ ...perm }, { expires_at: null, duration_ms: null });
+
+    const edits = await getCaseEdits(ban.case_code);
+    assert.equal(edits.length, 3);
+    assert.deepEqual(edits.map((e) => e.field).sort(), ['duration', 'duration', 'reason']);
+    const reasonEdit = edits.find((e) => e.field === 'reason');
+    assert.deepEqual([reasonEdit.old_value, reasonEdit.new_value, reasonEdit.edited_by], ['r', 'better reason', editor.id]);
+
+    const auto = await insertCase({ type: 'ban', target_user_id: user(10), is_auto: true, duration_ms: 1000, expires_at: new Date(Date.now() + 60000) });
+    await assert.rejects(editCase(null, { guildId, caseCode: auto.case_code, editor, durationMs: 60000 }), /ladder/);
+    const imported = await insertCase({ type: 'mute', target_user_id: user(10), is_imported: true, duration_ms: 1000, expires_at: new Date(Date.now() + 60000) });
+    await assert.rejects(editCase(null, { guildId, caseCode: imported.case_code, editor, durationMs: 60000 }), /Imported/);
+    const expired = await insertCase({ type: 'mute', target_user_id: user(10), status: 'expired', duration_ms: 1000 });
+    await assert.rejects(editCase(null, { guildId, caseCode: expired.case_code, editor, durationMs: 60000 }), /already ended/);
+    const warn = await insertCase({ type: 'warn', target_user_id: user(10) });
+    await assert.rejects(editCase(null, { guildId, caseCode: warn.case_code, editor, durationMs: 60000 }), /Only bans and mutes/);
+    await assert.rejects(editCase(null, { guildId, caseCode: warn.case_code, editor, reason: 'r' }), /Nothing to change/);
+    await assert.rejects(editCase(null, { guildId: `${guildId.slice(0, -1)}9`, caseCode: warn.case_code, editor, reason: 'x' }), /No case/);
+    // The reason of an automatic ban can still be fixed.
+    await editCase(null, { guildId, caseCode: auto.case_code, editor, reason: 'typo fixed' });
+});
+
+test('case void: an active warn is revoked, the ladder count drops, the user is DMed, the case shows voided', { skip }, async () => {
+    const { voidCase, editCase } = await import('../../src/services/enforcement/caseEditService.js');
+    const { caseStatusLabel } = await import('../../src/services/enforcement/caseService.js');
+    const { client, dms } = fakeWorld();
+    const target = user(20);
+    await pgDb.pool.query('INSERT INTO mod_ladder (guild_id, user_id, level, warns_since_level) VALUES ($1, $2, 0, 2)', [guildId, target]);
+    await insertCase({ type: 'warn', target_user_id: target, counts_toward_level: 0, ladder_level_after: 0 });
+    const warn = await insertCase({ type: 'warn', target_user_id: target, counts_toward_level: 0, ladder_level_after: 0 });
+
+    const admin = { id: user(92), username: 'admin' };
+    const { record, dmDelivered } = await voidCase(client, { guildId, caseCode: warn.case_code, admin, reason: 'wrong person' });
+    assert.equal(record.status, 'revoked');
+    assert.ok(record.voided_at);
+    assert.equal(record.voided_by, admin.id);
+    assert.equal(record.void_reason, 'wrong person');
+    assert.equal(caseStatusLabel(record), 'voided');
+    assert.equal(dmDelivered, true);
+    assert.match(dms.at(-1)[1], /was voided/);
+    const { rows: [ladder] } = await pgDb.pool.query('SELECT warns_since_level FROM mod_ladder WHERE guild_id = $1 AND user_id = $2', [guildId, target]);
+    assert.equal(ladder.warns_since_level, 1);
+    await assert.rejects(voidCase(client, { guildId, caseCode: warn.case_code, admin, reason: 'again' }), /already voided/);
+    await assert.rejects(editCase(null, { guildId, caseCode: warn.case_code, editor: admin, reason: 'x' }), /voided/);
+});
+
+test('case void: an active ban is unbanned with an invite and its end DM recorded', { skip }, async () => {
+    const { voidCase } = await import('../../src/services/enforcement/caseEditService.js');
+    const world = fakeWorld();
+    const target = user(21);
+    const banned = new Set([target]);
+    world.guild.bans.fetch = async ({ user: id }) => (banned.has(id) ? { user: { id } } : null);
+    world.guild.members.unban = async (id) => { banned.delete(id); world.unbans.push(id); };
+    const ban = await insertCase({ type: 'ban', target_user_id: target, duration_ms: 3600000, expires_at: new Date(Date.now() + 3600000) });
+
+    const { notes } = await voidCase(world.client, { guildId, caseCode: ban.case_code, admin: { id: user(92), username: 'admin' }, reason: 'mistake' });
+    assert.deepEqual(world.unbans, [target]);
+    assert.ok(notes.some((n) => /unbanned/.test(n)));
+    assert.match(world.dms.at(-1)[1], /Rejoin: https:\/\/discord\.gg\/inv/);
+    assert.equal((await endDm(ban.id)).end_dm_delivered, true);
+});
+
+test('case void: an expired case is only marked, nothing is lifted', { skip }, async () => {
+    const { voidCase } = await import('../../src/services/enforcement/caseEditService.js');
+    const world = fakeWorld();
+    const mute = await insertCase({ type: 'mute', target_user_id: user(22), status: 'expired', duration_ms: 1000 });
+    const { record, notes } = await voidCase(world.client, { guildId, caseCode: mute.case_code, admin: { id: user(92), username: 'admin' }, reason: 'dup' });
+    assert.ok(record.voided_at);
+    assert.ok(notes.some((n) => /already ended/.test(n)));
+    assert.equal(world.unbans.length, 0);
+});
+
+test('case autocomplete matches code, name and username in this guild only', { skip }, async () => {
+    const { searchCases } = await import('../../src/services/enforcement/caseEditService.js');
+    const row = await insertCase({ type: 'kick', target_user_id: user(23), target_username: `zz${runId}` });
+    assert.ok((await searchCases(guildId, row.case_code)).some((r) => r.case_code === row.case_code));
+    assert.ok((await searchCases(guildId, `zz${runId}`)).some((r) => r.case_code === row.case_code));
+    assert.equal((await searchCases(`${guildId.slice(0, -1)}9`, row.case_code)).length, 0);
+});

@@ -195,6 +195,7 @@ export async function getLatestAppealStatuses(userId) {
 
 /** A short status for history lists: lifted by appeal, appeal pending, expired, … */
 export function caseStatusLabel(row, appealStatus = null) {
+    if (row.voided_at) return 'voided';
     if (row.status === 'revoked') {
         if (row.revoke_reason?.startsWith('Appeal accepted')) return 'lifted by appeal';
         if (row.revoke_reason?.startsWith('Automod decision')) return 'reversed by a moderator';

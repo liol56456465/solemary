@@ -69,7 +69,7 @@ export async function staffActivityForWeek(guild, start) {
         query(`SELECT user_id, messages, reviews, tickets FROM ${T.staffActivity} WHERE guild_id = $1 AND week_start = $2`, [guild.id, start]),
         query(
             `SELECT moderator_id AS user_id, COUNT(*)::int AS count FROM ${T.cases}
-             WHERE guild_id = $1 AND created_at >= $2 AND created_at < $3 AND is_test = FALSE AND moderator_id <> $4
+             WHERE guild_id = $1 AND created_at >= $2 AND created_at < $3 AND is_test = FALSE AND voided_at IS NULL AND moderator_id <> $4
              GROUP BY moderator_id`,
             [guild.id, `${start}T00:00:00Z`, end.toISOString(), guild.client.user.id]
         ),

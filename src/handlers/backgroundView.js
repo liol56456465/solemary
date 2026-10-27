@@ -14,6 +14,7 @@ import { InteractionHelper } from '../utils/interactionHelper.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { caseStatusLabel, getAppealHistory, getLatestAppealStatuses, listCasesForUser } from '../services/enforcement/caseService.js';
+import { countCaseEdits } from '../services/enforcement/caseEditService.js';
 import { dateStamp, formatDuration, stamp, truncate } from '../services/enforcement/format.js';
 
 const PAGE_SIZE = 6;
@@ -65,7 +66,7 @@ function appealability(row) {
 }
 
 export async function buildRecordEmbed(row) {
-    const appeals = await getAppealHistory(row.case_code);
+    const [appeals, edits] = await Promise.all([getAppealHistory(row.case_code), countCaseEdits(row.case_code)]);
     const lines = [
         `**Case code:** \`${row.case_code}\``,
         `**Type:** ${row.type}${row.is_auto ? ' (automatic, warn ladder)' : ''}${row.is_imported ? ' (imported, not counted)' : ''}`,
@@ -83,9 +84,13 @@ export async function buildRecordEmbed(row) {
         `**Appeal:** ${appealability(row)}`,
         `**Ladder level after:** ${row.ladder_level_after}`,
         `**DM delivered:** ${row.dm_delivered ? 'Yes' : 'No'}`,
+        ...(row.end_dm_delivered == null ? [] : [`**"Ended" DM delivered:** ${row.end_dm_delivered ? 'Yes' : 'No'}`]),
+        ...(edits ? [`**Edited:** ${edits} change(s) — \`/case history code:${row.case_code}\``] : []),
         `**Status:** ${statusLabel(row, appeals[0]?.status)}`,
     );
-    if (row.status === 'revoked') {
+    if (row.voided_at) {
+        lines.push(`**Voided:** ${dateStamp(row.voided_at)}${row.voided_by ? ` by \`${row.voided_by}\`` : ''}${row.void_reason ? ` — ${row.void_reason}` : ''} (no longer counts)`);
+    } else if (row.status === 'revoked') {
         lines.push(`**Revoked:** ${row.revoked_at ? dateStamp(row.revoked_at) : '—'}${row.revoked_by ? ` by \`${row.revoked_by}\`` : ''}${row.revoke_reason ? ` — ${row.revoke_reason}` : ''}`);
     }
 
@@ -97,7 +102,7 @@ export async function buildRecordEmbed(row) {
         title: truncate(row.name, 256),
         description: truncate(lines.join('\n'), 4096),
         fields: [{ name: 'Appeal history', value: truncate(history, 1024) }],
-        color: row.status === 'active' ? 'warning' : 'secondary',
+        color: row.status === 'active' && !row.voided_at ? 'warning' : 'secondary',
     });
 }
 
