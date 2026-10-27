@@ -24,6 +24,7 @@ import { removeMutedRole } from './muteService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { appealAcceptedDm, appealDeniedDm } from './dmTemplates.js';
 import { dateStamp, formatDuration, stamp, truncate } from './format.js';
+import { evidenceDisplay } from './evidenceService.js';
 
 const UNKNOWN_BAN = 10026;
 
@@ -220,8 +221,8 @@ function appealLine(appeal) {
  * looked at (if any), earlier appeals on this case, and the user's other cases.
  * Used in the appeal channel and by /appeals.
  */
-export async function buildCaseDossier(record, { appeal = null } = {}) {
-    const [{ rows: caseAppeals }, { rows: userAppeals }, { rows: [appealCount] }, { rows: otherCases, total }, ladder] = await Promise.all([
+export async function buildCaseDossier(record, { appeal = null, client = null } = {}) {
+    const [{ rows: caseAppeals }, { rows: userAppeals }, { rows: [appealCount] }, { rows: otherCases, total }, ladder, evidence] = await Promise.all([
         query(
             `SELECT * FROM ${T.appeals} WHERE case_code = $1 AND kind = 'appeal' ORDER BY created_at DESC LIMIT 10`,
             [record.case_code]
@@ -237,12 +238,16 @@ export async function buildCaseDossier(record, { appeal = null } = {}) {
         ),
         listCasesForUser(record.guild_id, record.target_user_id, { limit: 16 }),
         getLadder(record.guild_id, record.target_user_id).catch(() => null),
+        // Appeal channels are staff-only, so excerpts and images can be shown.
+        evidenceDisplay(client, record.case_code).catch(() => ({ field: null, imageUrl: null })),
     ]);
 
     const current = appeal || caseAppeals.find((row) => row.status === 'pending') || null;
     const embeds = [createEmbed({
         title: truncate(`${record.is_test ? 'Test case' : 'Case'} ${record.case_code}: ${record.name}`, 256),
         description: truncate(caseDetailsLines(record).join('\n'), 4096),
+        fields: evidence.field ? [evidence.field] : [],
+        image: evidence.imageUrl,
         color: 'primary',
     })];
 
@@ -380,7 +385,7 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
         await query(`UPDATE ${T.appeals} SET channel_id = $2 WHERE id = $1`, [appeal.id, channel.id]);
 
         const pendingRecord = { ...record, status: record.status === 'active' ? 'appeal_pending' : record.status };
-        const embeds = await buildCaseDossier(pendingRecord, { appeal: { ...appeal, channel_id: channel.id } })
+        const embeds = await buildCaseDossier(pendingRecord, { appeal: { ...appeal, channel_id: channel.id }, client })
             .catch((error) => {
                 logger.warn(`Could not build the case summary for appeal ${record.case_code}: ${error.message}`);
                 return [createEmbed({

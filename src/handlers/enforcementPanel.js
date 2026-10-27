@@ -42,6 +42,9 @@ import {
     nextDefaultName,
 } from '../services/enforcement/caseService.js';
 import { createFlow, getFlow, takeFlow, updateFlow, PANEL_EXPIRED_MESSAGE } from '../services/enforcement/panelState.js';
+import {
+    addEvidence, captureLinks, MAX_LINKS_PER_FORM, parseEvidenceUrls,
+} from '../services/enforcement/evidenceService.js';
 import { dateStamp, formatDuration, parseDuration, stamp, truncate } from '../services/enforcement/format.js';
 
 const ACTION_LABELS = {
@@ -268,6 +271,18 @@ function detailsModal(flow, moderatorId, nonce) {
             .setRequired(false)
             .setValue(flow.nameIsDefault ? '' : (flow.name || ''))));
 
+    // Every record action has room: at most custom reason + duration + name +
+    // evidence + unappealable = 5 inputs (a ban), Discord's limit.
+    modal.addLabelComponents(new LabelBuilder()
+        .setLabel('Evidence (message links, optional)')
+        .setDescription(`Up to ${MAX_LINKS_PER_FORM} links, one per line. Add images later with /case evidence add.`)
+        .setTextInputComponent(new TextInputBuilder()
+            .setCustomId('evidence')
+            .setStyle(TextInputStyle.Paragraph)
+            .setMaxLength(1000)
+            .setRequired(false)
+            .setValue(flow.evidenceInput || '')));
+
     if (flow.type === 'ban') {
         modal.addLabelComponents(new LabelBuilder()
             .setLabel('Unappealable')
@@ -306,6 +321,11 @@ function confirmationPayload(flow, moderatorId, nonce) {
             lines.push(`**Duration:** ${formatDuration(flow.durationMs)}`);
         }
         lines.push(`**Name:** ${flow.nameIsDefault ? `${flow.name} (default)` : flow.name}`);
+        if (flow.evidence?.length) {
+            lines.push(`**Evidence:** ${flow.evidence.map((item) => (item.excerpt
+                ? `${item.url} ("${truncate(item.excerpt.replace(/\s+/g, ' '), 80)}")`
+                : `${item.url}${item.sourceMessageUrl ? ' (message not readable, link only)' : ''}`)).join('\n')}`);
+        }
         if (flow.type === 'warn') {
             const step = previewWarn(flow.ladder);
             lines.push(step.escalates
@@ -362,7 +382,37 @@ function resultPayload(flow, result) {
     };
 }
 
+/**
+ * Stores the links captured in the details form on the new case. Never throws: the
+ * action already ran, so a failure only becomes a note for the moderator.
+ */
+export async function attachFlowEvidence(flow, record, moderatorUser) {
+    if (!record || !flow.evidence?.length) return [];
+    const addedBy = { id: moderatorUser.id, username: moderatorUser.username };
+    let saved = 0;
+    const notes = [];
+    for (const item of flow.evidence) {
+        try {
+            await addEvidence(record.case_code, { kind: 'link', url: item.url, sourceMessageUrl: item.sourceMessageUrl, excerpt: item.excerpt, addedBy });
+            saved += 1;
+        } catch (error) {
+            if (!error?.context?.expected) logger.error('Could not attach evidence', { caseCode: record.case_code, error });
+            notes.push(`⚠️ Evidence ${item.url} was not saved: ${error.userMessage || error.message}`);
+        }
+    }
+    if (saved) notes.unshift(`Evidence attached: ${saved} link${saved === 1 ? '' : 's'}.`);
+    return notes;
+}
+
 // ── Handlers ───────────────────────────────────────────────────────────────
+
+/** Step 1 of a record action (ban/kick/mute/warn): the reason select. */
+function reasonStepPayload(flow, moderatorId, nonce) {
+    return {
+        embeds: [stepEmbed(flow, 'Step 1: choose a reason.')],
+        components: [reasonSelect(moderatorId, nonce, flow.type), cancelRow(moderatorId, nonce)],
+    };
+}
 
 async function startAction(interaction, moderatorId, targetId, action) {
     const targetUser = await interaction.client.users.fetch(targetId).catch(() => null);
@@ -405,10 +455,7 @@ async function startAction(interaction, moderatorId, targetId, action) {
     }
 
     const nonce = createFlow(flow);
-    return interaction.update({
-        embeds: [stepEmbed(flow, 'Step 1: choose a reason.')],
-        components: [reasonSelect(moderatorId, nonce, action), cancelRow(moderatorId, nonce)],
-    });
+    return interaction.update(reasonStepPayload(flow, moderatorId, nonce));
 }
 
 export async function handleEnforcementButton(interaction, client, args) {
@@ -441,6 +488,7 @@ export async function handleEnforcementButton(interaction, client, args) {
         const targetUser = await client.users.fetch(flow.targetId);
         try {
             const result = await executeAction({ guild: interaction.guild, moderator: interaction.member, targetUser, flow });
+            result.notes.push(...await attachFlowEvidence(flow, result.record, interaction.user));
             return InteractionHelper.safeEditReply(interaction, resultPayload(flow, result));
         } catch (error) {
             if (!error?.context?.expected) {
@@ -535,6 +583,18 @@ export async function handleEnforcementModal(interaction, client, args) {
         patch.unappealable = interaction.fields.getCheckbox('unappealable');
     }
 
+    const evidenceRaw = interaction.fields.getTextInputValue('evidence')?.trim() || '';
+    patch.evidenceInput = evidenceRaw;
+    const evidenceEntries = parseEvidenceUrls(evidenceRaw);
+    if (evidenceRaw && evidenceEntries.length === 0) {
+        updateFlow(nonce, patch);
+        return fail('Evidence must be links (e.g. a Discord message link: right-click a message → Copy Message Link).');
+    }
+    if (evidenceEntries.length > MAX_LINKS_PER_FORM) {
+        updateFlow(nonce, patch);
+        return fail(`At most ${MAX_LINKS_PER_FORM} evidence links here; add more afterwards with /case evidence add.`);
+    }
+
     const targetUser = await client.users.fetch(flow.targetId);
     const customName = interaction.fields.getTextInputValue('name')?.trim();
     if (customName) {
@@ -565,6 +625,10 @@ export async function handleEnforcementModal(interaction, client, args) {
     if (flow.type === 'warn') {
         patch.ladder = (await getTargetState(guild, targetUser.id)).ladder;
     }
+
+    // Excerpts are captured now, so the evidence survives the message being deleted
+    // before Confirm.
+    patch.evidence = await captureLinks(guild, evidenceEntries, { prefetched: flow.prefetchedExcerpts });
 
     updateFlow(nonce, patch);
     return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce));
