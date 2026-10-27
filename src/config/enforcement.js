@@ -71,6 +71,13 @@ export const enforcementConfig = {
     massActionLimit: readPositiveInt('MASS_ACTION_LIMIT', 5),
     massActionWindowMs: readPositiveInt('MASS_ACTION_WINDOW_MINUTES', 10) * 60 * 1000,
     massActionBlockMs: readPositiveInt('MASS_ACTION_BLOCK_MINUTES', 60) * 60 * 1000,
+
+    // Stale appeal/report channels (checked with the ticket reminders, every 5 min):
+    // report channels close after this long without a message, and staff get one
+    // reminder in a pending appeal that has been quiet this long. Pending appeals are
+    // never closed automatically.
+    staleReportMs: readPositiveInt('STALE_REPORT_DAYS', 7) * 24 * 60 * 60 * 1000,
+    staleAppealReminderMs: readPositiveInt('STALE_APPEAL_REMINDER_DAYS', 3) * 24 * 60 * 60 * 1000,
 };
 
 /**

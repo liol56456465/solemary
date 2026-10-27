@@ -275,3 +275,62 @@ test('My appeals: lists only the member\'s own appeals, newest first, without te
         await pgDb.pool.query('DELETE FROM mod_cases WHERE case_code = ANY($1)', [codes]);
     }
 });
+
+// --- stale appeal/report channels ------------------------------------------------------
+
+test('stale channels: old report closed, pending appeal reminded once, leftover decided appeal closed', { skip }, async () => {
+    const { tidyStaleAppealChannels } = await import('../../src/services/enforcement/staleAppealService.js');
+    const { enforcementConfig } = await import('../../src/config/enforcement.js');
+    const { SnowflakeUtil, Collection } = await import('discord.js');
+    const longAgo = Date.now() - 30 * 24 * 3600_000;
+    const events = [];
+    const fakeChannel = (id) => ({
+        id,
+        lastMessageId: String(SnowflakeUtil.generate({ timestamp: longAgo })),
+        createdTimestamp: longAgo,
+        name: `c-${id}`,
+        messages: { fetch: async () => new Collection() },
+        send: async (msg) => events.push(['send', id, msg.content]),
+        delete: async () => events.push(['delete', id]),
+    });
+    const ids = { report: '510000000000000001', pending: '510000000000000002', decided: '510000000000000003' };
+    const channels = new Map(Object.values(ids).map((id) => [id, fakeChannel(id)]));
+    const guild = { id: enforcementConfig.mainGuildId, channels: { cache: channels } };
+    const client = { db, guilds: { cache: new Map([[guild.id, guild]]) }, channels: { fetch: async () => null } };
+    const code = `S${runId.slice(-6)}`.slice(0, 7);
+    const member = user(600);
+    try {
+        await pgDb.pool.query(`INSERT INTO mod_cases (guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username, type, name, reason, prebuilt_or_custom)
+            VALUES ($1, $2, $3, 'x', '1', 'm', 'ban', $2, 'r', 'custom')`, [guild.id, code, member]);
+        const { rows } = await pgDb.pool.query(`INSERT INTO mod_appeals (kind, case_code, user_id, username, guild_id, body, status, channel_id, decided_at) VALUES
+            ('report', NULL, $1, 'm', $2, '{}', 'pending', $3, NULL),
+            ('appeal', $4, $1, 'm', $2, '{}', 'pending', $5, NULL),
+            ('appeal', $4, $1, 'm', $2, '{}', 'denied', $6, NOW() - INTERVAL '1 hour') RETURNING id`,
+            [member, guild.id, ids.report, code, ids.pending, ids.decided]);
+        await tidyStaleAppealChannels(client);
+        await tidyStaleAppealChannels(client); // a second run must not remind again
+        const sends = events.filter(([type, id]) => type === 'send' && id === ids.pending);
+        assert.equal(sends.length, 1, 'pending appeal reminded exactly once');
+        assert.ok(events.some(([type, id]) => type === 'delete' && id === ids.report), 'stale report deleted');
+        assert.ok(events.some(([type, id]) => type === 'delete' && id === ids.decided), 'leftover decided appeal deleted');
+        assert.ok(!events.some(([type, id]) => type === 'delete' && id === ids.pending), 'pending appeal never deleted');
+        const { rows: [report] } = await pgDb.pool.query('SELECT status FROM mod_appeals WHERE id = $1', [rows[0].id]);
+        assert.equal(report.status, 'closed');
+        for (const { id } of rows) await pgDb.pool.query('DELETE FROM temp_data WHERE key = $1', [`appeals:stale-reminded:${id}`]);
+    } finally {
+        await pgDb.pool.query('DELETE FROM mod_appeals WHERE channel_id = ANY($1)', [Object.values(ids)]);
+        await pgDb.pool.query('DELETE FROM mod_cases WHERE case_code = $1', [code]);
+    }
+});
+
+test('canned answers: built-ins plus own, own can replace text, built-ins cannot be removed', { skip }, async () => {
+    const { listCanned, saveCanned, removeCanned, getCanned } = await import('../../src/services/cannedService.js');
+    assert.ok(await getCanned(guildB, 'need-proof'), 'built-in present');
+    await saveCanned(guildB, 'rules', 'Read #rules.');
+    await saveCanned(guildB, 'need-proof', 'Screenshots please.');
+    assert.equal(await getCanned(guildB, 'rules'), 'Read #rules.');
+    assert.equal(await getCanned(guildB, 'need-proof'), 'Screenshots please.');
+    assert.equal(await removeCanned(guildB, 'rules'), true);
+    assert.equal(await removeCanned(guildB, 'appeal-received'), false);
+    assert.ok(!('rules' in await listCanned(guildB)));
+});

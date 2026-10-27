@@ -241,6 +241,17 @@ export async function openModmail(client, user, dmChannel, messageId) {
     }
 }
 
+/** Sends staff text (e.g. a canned answer) from a modmail channel to the member by DM. */
+export async function sendStaffTextToMember(channel, staffName, text) {
+    const userId = modmailUserId(channel);
+    if (!userId) return false;
+    const user = await channel.client.users.fetch(userId);
+    for (const chunk of chunkText(`**${staffName} (staff):**\n${text}`)) {
+        await user.send({ content: chunk, allowedMentions: NO_MENTIONS });
+    }
+    return true;
+}
+
 /** Copies a staff message from a modmail channel to the member. Returns true when it was a modmail channel. */
 export async function handleModmailStaffMessage(message, prefix = getCommandPrefix()) {
     const userId = modmailUserId(message.channel);
