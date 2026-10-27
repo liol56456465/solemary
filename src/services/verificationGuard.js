@@ -21,6 +21,7 @@ import { query, T, isEnforcementDbAvailable } from './enforcement/db.js';
 import { OPEN_STATUSES } from './enforcement/caseService.js';
 import { dateStamp, formatDuration, truncate } from './enforcement/format.js';
 import { reviewChannel } from './automod/reviewCards.js';
+import { STATUS_COLORS } from './automod/reviewFormat.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 export const MIN_ACCOUNT_AGE_MS = 7 * DAY;
@@ -129,7 +130,7 @@ export async function postVerificationHold(client, guildId, user, reasons) {
                 { name: 'Why it was held', value: truncate(reasons.map((r) => `• ${r}`).join('\n'), 1024) },
             ],
             footer: { text: 'Approve gives the verified role. Deny leaves them unverified and tells them by DM.' },
-            color: 'warning',
+            color: STATUS_COLORS.waiting,
             timestamp: true,
         })],
         components: [new ActionRowBuilder().addComponents(

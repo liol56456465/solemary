@@ -18,6 +18,7 @@ import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { enforceMassActionGuard } from './massActionGuard.js';
 import { createEmbed } from '../../utils/embeds.js';
+import { ACTION_KINDS, channelPurposeFor, formatModLogLine, resolveChannelId } from '../automod/channelRouting.js';
 
 export const REQUIRED_BOT_PERMISSIONS = [
     ['BanMembers', 'Ban Members'],
@@ -133,28 +134,43 @@ const MOD_LOG_TITLES = {
     unban: ['Unban', 'success'],
     unmute: ['Unmute', 'success'],
     removewarn: ['Warning removed', 'success'],
+    caseedit: ['Case edited', 'secondary'],
+    casevoid: ['Case voided', 'secondary'],
     appeal: ['Appeal decided', 'primary'],
-    raid: ['Join raid', 'error'],
-    staff: ['Staff guard', 'error'],
+    raid: ['🚨 Join raid', 'error'],
+    staff: ['🛡️ Staff guard', 'error'],
+    massguard: ['🛡️ Mass-action guard', 'error'],
     automod: ['Automod', 'primary'],
+    'automod-report': ['📊 Automod report', 'primary'],
+    slowmode: ['🐢 Auto slowmode', 'info'],
+    digest: ['📊 Daily automod digest', 'primary'],
+    system: ['⚙️ Bot problem', 'error'],
 };
 
-/** Posts one enforcement event in the moderation log channel (MOD_LOG_CHANNEL_ID). */
-export async function postModLog(client, action, fields, { title = null, files = [] } = {}) {
-    const channelId = enforcementConfig.modLogChannelId;
+/**
+ * Posts one staff log entry. Routed by kind (services/automod/channelRouting.js):
+ * enforcement actions go to the mod log as one line; raids, staff guard, slowmode,
+ * digests and reports go to the alerts channel (falls back to the mod log).
+ */
+export async function postModLog(client, action, fields, { title = null, files = [], description = null, footer = null } = {}) {
+    const purpose = channelPurposeFor(action);
+    const channelId = resolveChannelId(purpose);
     if (!channelId) return;
     const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
     const channel = guild && (guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null));
     if (!channel?.isTextBased?.()) {
-        logger.warn(`Mod log channel ${channelId} is not a text channel in the main server`);
+        logger.warn(`Staff ${purpose} channel ${channelId} is not a text channel in the main server`);
         return;
     }
     const [defaultTitle, color] = MOD_LOG_TITLES[action] || [action, 'primary'];
+    const embed = ACTION_KINDS.has(action) && !title
+        ? createEmbed({ description: formatModLogLine(action, fields), color, timestamp: true })
+        : createEmbed({ title: title || defaultTitle, description, fields, color, footer, timestamp: true });
     await channel.send({
-        embeds: [createEmbed({ title: title || defaultTitle, fields, color, timestamp: true })],
+        embeds: [embed],
         files,
         allowedMentions: { parse: [] },
-    }).catch((error) => logger.warn(`Mod log post failed: ${error.message}`));
+    }).catch((error) => logger.warn(`Staff ${purpose} post failed: ${error.message}`));
 }
 
 export async function logEnforcement(client, guildId, action, { record = null, target, moderatorLabel, extra = [] }) {

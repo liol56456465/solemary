@@ -1,5 +1,7 @@
 // automodService.js — checks every message in the main server against the rules,
-// acts on the most severe hit, and posts a review card for moderators.
+// acts on the most severe hit, and posts a review card for moderators
+// (reviewCards.js: a compact line for light hits, a full card for serious ones,
+// grouped per member and rule during a burst).
 //
 // Order for one message: skip (bots, exempt channels, administrators) → filters →
 // the most severe hit is acted on: raid joiners during a lockdown are kicked,
@@ -12,10 +14,10 @@ import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction, isAdministrator } from '../enforcement/enforcementService.js';
-import { formatDuration } from '../enforcement/format.js';
 import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
 import { isRaidJoiner } from './raidService.js';
-import { postReviewCard } from './reviewCards.js';
+import { noteRepeatHit, postReviewCard } from './reviewCards.js';
+import * as reasons from './reasons.js';
 import {
     countMentions,
     detectCrossChannelSpam,
@@ -106,7 +108,9 @@ async function targetsOf(message) {
 }
 
 /**
- * All rules the message breaks: [{ rule, evidence, forceLastStep? }].
+ * All rules the message breaks: [{ rule, evidence, detail, forceLastStep? }].
+ * `evidence` is the plain-English reason shown on the review card (reasons.js); it never
+ * repeats a blocked or sexual word. `detail` is the technical match, for the log only.
  * `member` is the author's guild member.
  */
 export async function evaluateMessage(message, member, now = Date.now()) {
@@ -116,10 +120,10 @@ export async function evaluateMessage(message, member, now = Date.now()) {
     const recent = remember(history, key, { at: now, text: text.trim().toLowerCase(), channelId: message.channelId }, automodConfig.historyWindowMs, now);
 
     const scam = findScam(text);
-    if (scam) hits.push({ rule: 'scam', evidence: scam });
+    if (scam) hits.push({ rule: 'scam', evidence: reasons.scamReason(scam), detail: scam });
 
     const nsfw = findNsfwDomain(text);
-    if (nsfw) hits.push({ rule: 'nsfw', evidence: `link to ${nsfw}` });
+    if (nsfw) hits.push({ rule: 'nsfw', evidence: reasons.nsfwReason(nsfw), detail: `link to ${nsfw}` });
 
     const inviteCodes = findInviteCodes(text);
     const foreignInvites = [];
@@ -134,62 +138,89 @@ export async function evaluateMessage(message, member, now = Date.now()) {
     const newJoiner = member?.joinedTimestamp && now - member.joinedTimestamp < automodConfig.adBotJoinAgeMs;
     const crossChannel = detectCrossChannelSpam(recent, now);
     if ((newAccount || newJoiner) && (foreignInvites.length || crossChannel)) {
+        const channelCount = crossChannelCount(recent, now);
         hits.push({
             rule: 'advertising',
-            evidence: `advertising bot pattern: ${newAccount ? 'new account' : 'joined under a day ago'}, ${foreignInvites.length ? `invite ${foreignInvites[0]}` : 'same message in several channels'}`,
+            evidence: reasons.adBotReason({ newAccount, invite: foreignInvites[0] || null, channelCount }),
+            detail: `ad-bot pattern: ${newAccount ? 'new account' : 'joined under a day ago'}; invites [${foreignInvites.join(', ')}]; same text in ${channelCount} channel(s)`,
             forceLastStep: true,
         });
     } else if (foreignInvites.length) {
-        hits.push({ rule: 'advertising', evidence: `invite to another server (${foreignInvites[0]})` });
+        hits.push({ rule: 'advertising', evidence: reasons.inviteReason(foreignInvites[0]), detail: `foreign invites [${foreignInvites.join(', ')}]` });
     }
 
     const personal = findPersonalInfo(text);
-    if (personal) hits.push({ rule: 'privacy', evidence: `contains ${personal}` });
+    if (personal) hits.push({ rule: 'privacy', evidence: reasons.privacyReason(personal), detail: `contains ${personal}` });
 
     const blocked = findBlockedWord(text);
-    if (blocked) hits.push({ rule: 'language', evidence: `blocked word "${blocked}"` });
+    if (blocked) hits.push({ rule: 'language', evidence: reasons.blockedWordReason(), detail: `blocked word "${blocked}"` });
 
     const sexual = findSexualWord(text);
     const insult = findInsult(text);
     const targets = (sexual || insult) ? await targetsOf(message) : [];
     if (sexual && targets.length) {
-        hits.push({ rule: 'sexual', evidence: `"${sexual}" aimed at <@${targets[0]}>` });
+        hits.push({ rule: 'sexual', evidence: reasons.sexualReason(targets[0]), detail: `sexual word "${sexual}" aimed at ${targets[0]}` });
     } else if (sexual) {
-        hits.push({ rule: 'language', evidence: `sexual word "${sexual}"` });
+        hits.push({ rule: 'language', evidence: reasons.sexualReason(), detail: `sexual word "${sexual}"` });
     }
     if (insult && targets.length) {
         const target = targets[0];
         const times = remember(harassment, `${message.guildId}:${message.author.id}:${target}`, now, automodConfig.harassmentWindowMs, now);
         hits.push(times.length >= automodConfig.harassmentRepeats
-            ? { rule: 'harassment', evidence: `${times.length} insults aimed at <@${target}> within ${formatDuration(automodConfig.harassmentWindowMs)} (latest: "${insult}")` }
-            : { rule: 'disrespect', evidence: `insult "${insult}" aimed at <@${target}>` });
+            ? {
+                rule: 'harassment',
+                evidence: reasons.harassmentReason(target, times.length, automodConfig.harassmentWindowMs),
+                detail: `${times.length} insults aimed at ${target}; latest "${insult}"`,
+            }
+            : { rule: 'disrespect', evidence: reasons.disrespectReason(target), detail: `insult "${insult}" aimed at ${target}` });
     }
 
     const mentions = countMentions(message);
     const canPingEveryone = member?.permissions?.has(PermissionFlagsBits.MentionEveryone);
     if (!isStaff(member) && (mentions.total >= automodConfig.mentionLimit || (mentions.everyone && !canPingEveryone))) {
-        hits.push({ rule: 'mentions', evidence: mentions.everyone && !canPingEveryone ? 'tried to ping @everyone/@here' : `${mentions.total} mentions in one message` });
+        const everyone = Boolean(mentions.everyone && !canPingEveryone);
+        hits.push({ rule: 'mentions', evidence: reasons.mentionsReason({ everyone, total: mentions.total }), detail: `${mentions.total} mentions, everyone=${Boolean(mentions.everyone)}` });
     }
 
     const spam = detectSpam(recent, now);
-    if (spam) hits.push({ rule: 'spam', evidence: spam === 'flood' ? `${automodConfig.spamMessages}+ messages in ${automodConfig.spamWindowMs / 1000}s` : `same message ${automodConfig.duplicateMessages}+ times` });
+    if (spam) {
+        hits.push({
+            rule: 'spam',
+            evidence: reasons.spamReason(spam, {
+                messages: automodConfig.spamMessages,
+                windowMs: automodConfig.spamWindowMs,
+                duplicates: automodConfig.duplicateMessages,
+                duplicateWindowMs: automodConfig.duplicateWindowMs,
+            }),
+            detail: `spam: ${spam}`,
+        });
+    }
 
-    if (isCapsFlood(text)) hits.push({ rule: 'caps', evidence: 'mostly capital letters' });
+    if (isCapsFlood(text)) hits.push({ rule: 'caps', evidence: reasons.capsReason(), detail: 'caps flood' });
 
     const characters = findForbiddenCharacters(text);
-    if (characters) hits.push({ rule: 'characters', evidence: characters });
+    if (characters) hits.push({ rule: 'characters', evidence: reasons.charactersReason(characters), detail: characters });
 
     const language = characters ? null : detectNonEnglish(text);
-    if (language) hits.push({ rule: 'english', evidence: `written in another language (${language})` });
+    if (language) hits.push({ rule: 'english', evidence: reasons.englishReason(language), detail: `detected language ${language}` });
 
     return hits;
+}
+
+/** In how many channels the newest text was posted within the ad-bot window. */
+function crossChannelCount(recent, now) {
+    const last = recent[recent.length - 1];
+    if (!last?.text) return 0;
+    return new Set(recent
+        .filter((entry) => now - entry.at <= automodConfig.adBotWindowMs && entry.text === last.text)
+        .map((entry) => entry.channelId)).size;
 }
 
 /** Earlier automod cases in this rule group within the repeat window. */
 async function countOffences(guildId, userId, group) {
     const { rows } = await query(
         `SELECT COUNT(*)::int AS count FROM ${T.cases}
-         WHERE guild_id = $1 AND target_user_id = $2 AND reason_key = $3 AND is_test = FALSE
+         WHERE guild_id = $1 AND target_user_id = $2 AND reason_key = $3 AND is_test = FALSE AND voided_at IS NULL
            AND created_at > NOW() - ($4::bigint * INTERVAL '1 millisecond')`,
         [guildId, userId, `automod:${group}`, automodConfig.repeatWindowMs]
     );
@@ -217,7 +248,7 @@ export async function applyStep({ guild, targetUser, step, rule, reason }) {
 function excerpt(message) {
     const text = message.content || '';
     const files = message.attachments?.size ? ` [${message.attachments.size} attachment(s)]` : '';
-    return `${text}${files}` || '(no text)';
+    return `${text}${files}`.trim();
 }
 
 async function deleteQuietly(message) {
@@ -233,20 +264,24 @@ async function actOn(message, member, hit, settings) {
     const group = rule.group;
     const cooldownKey = `${guild.id}:${targetUser.id}:${group}`;
     const card = {
-        guild, rule: hit.rule, evidence: hit.evidence, targetUser,
+        guild, rule: hit.rule, evidence: hit.evidence, detail: hit.detail, targetUser,
         channelId: message.channelId, messageUrl: message.url, content: excerpt(message),
     };
 
     if (settings.mode === 'monitor') {
         const offences = await countOffences(guild.id, targetUser.id, group);
         const step = rule.steps[hit.forceLastStep ? rule.steps.length - 1 : Math.min(offences, rule.steps.length - 1)];
-        await postReviewCard({ ...card, monitor: true, suggested: step, offence: offences + 1 });
+        await postReviewCard({ ...card, monitor: true, suggested: step, offence: offences + 1, deleted: false });
         return false;
     }
 
     if (rule.deleteMessage) await deleteQuietly(message);
 
-    if ((cooldowns.get(cooldownKey) || 0) > Date.now()) return rule.deleteMessage;
+    if ((cooldowns.get(cooldownKey) || 0) > Date.now()) {
+        // Same rule again right after acting: no new punishment, but the open card counts it.
+        await noteRepeatHit({ ...card, deleted: rule.deleteMessage });
+        return rule.deleteMessage;
+    }
     cooldowns.set(cooldownKey, Date.now() + automodConfig.ruleCooldownMs);
 
     // Read-only decision: on a database error treat them as an ordinary member.
@@ -255,7 +290,7 @@ async function actOn(message, member, hit, settings) {
         const step = { type: 'kick' };
         const result = await applyStep({ guild, targetUser, step, rule: hit.rule, reason: `Automod: ${rule.label} during a join raid` })
             .catch((error) => ({ error }));
-        await postReviewCard({ ...card, step, result, raid: true });
+        await postReviewCard({ ...card, step, result, raid: true, deleted: true });
         return true;
     }
 

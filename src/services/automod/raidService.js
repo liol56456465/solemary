@@ -1,7 +1,7 @@
 // raidService.js — join-raid detection and lockdown for the main server.
 //
 // When raidJoins members join within raidWindowMs, the server goes into lockdown:
-// the verification level is raised to High, admins are alerted (mod log + owner DM),
+// the verification level is raised to High, admins are alerted (alerts channel + owner DM),
 // and everyone who joined in the raid window or during the lockdown is remembered.
 // Nobody is kicked for joining; a raid joiner who then breaks a rule is kicked
 // (see automodService). An administrator ends the lockdown with /automod lockdown-end,
@@ -14,6 +14,7 @@ import { logger } from '../../utils/logger.js';
 import { Mutex } from '../../utils/mutex.js';
 import { postModLog } from '../enforcement/enforcementService.js';
 import { getLockdown, setLockdown } from './automodSettings.js';
+import { recordEvent } from './reviewRegistry.js';
 
 const recentJoins = new Map(); // guildId → [{ at, userId }]
 const lockdownCache = new Map(); // guildId → state | null
@@ -74,6 +75,7 @@ async function startLockdown(guild, joinerIds) {
         await saveLockdown(guild.id, { ...(current?.active ? current : state), raisedVerification: true });
     }
 
+    recordEvent('raid');
     logger.warn(`Join raid in ${guild.id}: ${joinerIds.length} joins within ${automodConfig.raidWindowMs / 1000}s. Lockdown started.`);
     return { joinerCount: joinerIds.length, raised };
 }
@@ -85,7 +87,7 @@ async function announceLockdown(guild, { joinerCount, raised }) {
         { name: 'Verification level', value: raised ? 'Raised to High' : 'Not changed (already High, or missing Manage Server)' },
         { name: 'Raid joiners', value: 'Kicked automatically if they break any rule while the lockdown lasts.' },
         { name: 'End it', value: '`/automod lockdown-end`' },
-    ], { title: 'Join raid: lockdown started' });
+    ], { title: '🚨 Join raid: lockdown started' });
     await alertOwner(guild, `**Join raid in ${guild.name}.** ${summary} The server is in lockdown${raised ? ' and the verification level is now High' : ''}. End it with \`/automod lockdown-end\` when it is over.`);
 }
 
@@ -139,7 +141,7 @@ async function endLockdownLocked(guild, admin) {
         { name: 'Ended by', value: `${admin.username} (${admin.id})` },
         { name: 'Raid joiners tracked', value: String(state.joinerIds?.length || 0) },
         ...(state.raisedVerification ? [{ name: 'Verification level', value: 'Restored' }] : []),
-    ], { title: 'Lockdown ended' });
+    ], { title: '✅ Lockdown ended' });
     return true;
 }
 

@@ -1,144 +1,202 @@
 // reviewCards.js — the staff review card posted for every automod decision and
 // member report, and what its buttons do. Administrators in the main server only.
+// How a card looks is in reviewFormat.js; the in-memory card list in reviewRegistry.js.
 //
-//   amreview:keep:<code>                 keep the automatic action
-//   amreview:undo:<code>                 reverse it (unban/unmute/remove warn, DM the user)
-//   amreview:change:<code>               (select) reverse it and apply another punishment
+//   amreview:keep:<code>[,<code>…]       keep the automatic action(s)
+//   amreview:undo:<code>[,<code>…]       reverse them (unban/unmute/remove warn, DM the user)
+//   amreview:change:<code>[,<code>…]     (select) reverse them and apply another punishment
 //   amreview:apply:<rule>:<userId>       (select) apply a punishment (monitor mode, reports, failed actions)
 //   amreview:delete:<channelId>:<msgId>  delete a reported message
 //   amreview:dismiss                     close the card without acting
+//
+// Cards go to the review channel (AUTOMOD_REVIEW_CHANNEL_ID, falls back to the mod log).
+// Low-severity hits are one compact line with an Undo button. Repeated hits of the same
+// rule by the same member within automodConfig.burstWindowMs update the open card
+// ("3 messages", latest excerpt, every case on the buttons) instead of posting another.
+// Grouping lives in memory: after a restart the next hit starts a new card.
 
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
-import { AUTOMOD_RULES, REVIEW_ACTIONS, automodConfig } from '../../config/automod.js';
+import { AUTOMOD_RULES, REVIEW_ACTIONS } from '../../config/automod.js';
 import { enforcementConfig } from '../../config/enforcement.js';
-import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
+import { Mutex } from '../../utils/mutex.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
-import { formatDuration, truncate } from '../enforcement/format.js';
+import { truncate } from '../enforcement/format.js';
 import { getCaseByCode } from '../enforcement/caseService.js';
 import { createRejoinInvite, executeAction, sendDm } from '../enforcement/enforcementService.js';
 import { liftCase } from '../enforcement/appealService.js';
+import { fetchStaffChannel } from './channelRouting.js';
+import {
+    CLOSE_STATUS, REPORT_RULE, buildCardPayload, cardTier, closedTitle, describeStep, stripLeadingEmoji,
+} from './reviewFormat.js';
+import { burstKey, findOpenBurst, markClosed, recordHit, registerCard } from './reviewRegistry.js';
 
-const REPORT_RULE = 'report';
+export { describeStep };
+
+// Burst updates are coalesced: at most one edit per card in this interval.
+const RENDER_DELAY_MS = 1500;
 
 function userError(message) {
     return createError(message, ErrorTypes.VALIDATION, message, { expected: true });
 }
 
-/** "Warn", "Mute 1 hour", "Ban 7 days", "Permanent ban". */
-export function describeStep(step) {
-    if (step.type === 'warn') return 'Warn';
-    if (step.type === 'kick') return 'Kick';
-    if (step.type === 'mute') return `Mute ${formatDuration(step.durationMs)}`;
-    return step.durationMs ? `Ban ${formatDuration(step.durationMs)}` : 'Permanent ban';
-}
-
 /** The staff channel for review cards: AUTOMOD_REVIEW_CHANNEL_ID, else the mod log channel. */
 export async function reviewChannel(client) {
-    const channelId = automodConfig.reviewChannelId || enforcementConfig.modLogChannelId;
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
-    if (!channelId || !guild) return null;
-    const channel = guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null);
-    return channel?.isTextBased?.() ? channel : null;
+    return fetchStaffChannel(client, 'review');
 }
 
-function actionSelect(customId, placeholder, suggestedKey = null) {
-    return new StringSelectMenuBuilder()
-        .setCustomId(customId)
-        .setPlaceholder(placeholder)
-        .addOptions(Object.entries(REVIEW_ACTIONS).map(([key, action]) => ({
-            label: action.label,
-            value: key,
-            default: false,
-            description: key === suggestedKey ? 'Suggested by the rule ladder' : undefined,
-        })));
+/** One automatic action as the card keeps it. */
+function actionFrom(p) {
+    const record = p.result?.record || p.result?.banRecord || null;
+    return {
+        step: p.step,
+        caseCode: record?.case_code || null,
+        failed: p.result?.error ? (p.result.error.userMessage || p.result.error.message || 'unknown error') : null,
+        limitBanCode: p.result?.record && p.result?.banRecord ? p.result.banRecord.case_code : null,
+    };
 }
 
-function actionKeyFor(step) {
-    return Object.entries(REVIEW_ACTIONS).find(([, action]) =>
-        action.step.type === step?.type && (action.step.durationMs ?? null) === (step?.durationMs ?? null))?.[0] || null;
+/** Card parameters (see postReviewCard) → the card's state. */
+export function entryFrom(p, now = Date.now()) {
+    const kind = p.report ? 'report' : p.monitor ? 'monitor' : 'action';
+    const rule = AUTOMOD_RULES[p.rule];
+    const deleted = p.deleted ?? (kind === 'report' ? Boolean(p.report.removed) : kind === 'action' && Boolean(rule?.deleteMessage));
+    const entry = {
+        rule: p.rule,
+        kind,
+        guildId: p.guild?.id || null,
+        userId: p.targetUser.id,
+        username: p.targetUser.username,
+        channelId: p.channelId || null,
+        evidence: p.evidence,
+        offence: p.offence || null,
+        raid: Boolean(p.raid),
+        count: 1,
+        firstAt: now,
+        lastAt: now,
+        latest: { content: p.content, messageUrl: p.messageUrl || null, deleted },
+        actions: kind === 'action' && p.step ? [actionFrom(p)] : [],
+        suggested: p.suggested || null,
+        report: p.report || null,
+        open: true,
+        noGroup: Boolean(p.raid || p.noGroup),
+        tier: p.tier || null,
+    };
+    entry.key = burstKey(entry);
+    entry.tier = cardTier(entry);
+    return entry;
+}
+
+/** Folds another hit of the same burst into an open card. `p` may have no step (cooldown). */
+export function mergeHit(entry, p, now = Date.now()) {
+    const next = entryFrom(p, now);
+    entry.count += 1;
+    entry.lastAt = now;
+    entry.latest = next.latest;
+    entry.evidence = next.evidence || entry.evidence;
+    entry.channelId = next.channelId || entry.channelId;
+    if (next.offence) entry.offence = next.offence;
+    if (next.suggested) entry.suggested = next.suggested;
+    if (next.actions.length) entry.actions.push(...next.actions);
+    // Once a card is full it stays full; a compact line becomes a card when a serious action joins.
+    const tier = cardTier({ ...entry, tier: null });
+    entry.tier = entry.tier === 'full' ? 'full' : tier;
+    return entry;
+}
+
+function scheduleRender(entry) {
+    if (entry.renderTimer || !entry.message) return;
+    entry.renderTimer = setTimeout(async () => {
+        entry.renderTimer = null;
+        if (!entry.open) return;
+        await entry.message.edit({ ...buildCardPayload(entry), allowedMentions: { parse: [] } })
+            .catch((error) => logger.warn(`Could not update review card ${entry.messageId}: ${error.message}`));
+    }, RENDER_DELAY_MS);
+    entry.renderTimer.unref?.();
+}
+
+function logHit(p) {
+    if (p.detail) logger.info(`Automod ${p.rule} on ${p.targetUser.id}: ${p.detail}`);
 }
 
 /**
- * Posts a card. p: { guild, rule, evidence, targetUser, channelId, messageUrl, content,
- * step?, result?, offence?, monitor?, suggested?, raid?, report?: { reporter, messageId, removed } }
+ * Posts a card, or updates the open card of the same burst. p: { guild, rule, evidence,
+ * targetUser, channelId, messageUrl, content, step?, result?, offence?, monitor?, suggested?,
+ * raid?, report?: { reporter, messageId, removed }, deleted?, detail?, tier?, noGroup? }.
+ * `evidence` is a plain-English phrase (reasons.js); `detail` goes to the log only.
+ * Returns the card message, or null.
  */
 export async function postReviewCard(p) {
-    const channel = await reviewChannel(p.guild.client);
-    if (!channel) {
-        logger.warn(`Automod review card not posted (no review channel): ${p.rule} on ${p.targetUser.id}`);
-        return null;
-    }
-
-    const rule = AUTOMOD_RULES[p.rule];
-    const record = p.result?.record || p.result?.banRecord || null;
-    const failed = p.result?.error;
-    const fields = [
-        { name: 'User', value: `<@${p.targetUser.id}> ${p.targetUser.username} (\`${p.targetUser.id}\`)`, inline: true },
-        { name: 'Channel', value: p.channelId ? `<#${p.channelId}>` : '—', inline: true },
-    ];
-    if (p.offence) fields.push({ name: 'Offence in 30 days', value: `#${p.offence}`, inline: true });
-    fields.push({ name: 'Why', value: truncate(p.evidence || '—', 1024) });
-    fields.push({ name: 'Message', value: truncate(p.content || '(no text)', 1000) });
-    if (p.messageUrl && (p.monitor || p.report || !rule?.deleteMessage)) {
-        fields.push({ name: 'Jump', value: p.messageUrl });
-    }
-
-    let title;
-    let color = 'warning';
-    const components = [];
-    if (p.report) {
-        title = 'Member report';
-        fields.push({ name: 'Reported by', value: p.report.reporter, inline: true });
-        if (p.report.removed) fields.push({ name: 'Message', value: 'Removed by member reports', inline: true });
-        components.push(new ActionRowBuilder().addComponents(actionSelect(`amreview:apply:${REPORT_RULE}:${p.targetUser.id}`, 'Punish the author…')));
-        const buttons = [new ButtonBuilder().setCustomId('amreview:dismiss').setLabel('Dismiss').setStyle(ButtonStyle.Secondary)];
-        if (!p.report.removed && p.report.messageId) {
-            buttons.unshift(new ButtonBuilder().setCustomId(`amreview:delete:${p.channelId}:${p.report.messageId}`).setLabel('Delete message').setStyle(ButtonStyle.Danger));
+    logHit(p);
+    if (!p.report) recordHit({ rule: p.rule, channelId: p.channelId, monitor: Boolean(p.monitor) });
+    const key = entryFrom(p).key;
+    const run = async () => {
+        const now = Date.now();
+        const open = findOpenBurst(key, now);
+        if (open) {
+            mergeHit(open, p, now);
+            scheduleRender(open);
+            return open.message;
         }
-        components.push(new ActionRowBuilder().addComponents(buttons));
-    } else if (p.monitor) {
-        title = `Automod (monitor mode): ${rule.label}`;
-        color = 'secondary';
-        fields.push({ name: 'Would do', value: `${describeStep(p.suggested)} (nothing was done; monitor mode)` });
-        components.push(new ActionRowBuilder().addComponents(actionSelect(`amreview:apply:${p.rule}:${p.targetUser.id}`, 'Apply a punishment…', actionKeyFor(p.suggested))));
-        components.push(new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('amreview:dismiss').setLabel('Dismiss').setStyle(ButtonStyle.Secondary)));
-    } else {
-        title = `Automod: ${rule.label}${p.raid ? ' (raid joiner)' : ''}`;
-        color = failed ? 'error' : 'warning';
-        const done = failed
-            ? `Not applied: ${failed.userMessage || failed.message}`
-            : `${describeStep(p.step)}${record ? ` — case \`${record.case_code}\`` : ''}`;
-        fields.push({ name: 'Action', value: truncate(done, 1024) });
-        if (p.result?.banRecord) fields.push({ name: 'Warning limit', value: `This warn reached the limit: automatic ban \`${p.result.banRecord.case_code}\`` });
-        if (record) {
-            components.push(new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`amreview:keep:${record.case_code}`).setLabel('Keep').setStyle(ButtonStyle.Success),
-                new ButtonBuilder().setCustomId(`amreview:undo:${record.case_code}`).setLabel('Undo').setStyle(ButtonStyle.Danger),
-            ));
-            components.push(new ActionRowBuilder().addComponents(actionSelect(`amreview:change:${record.case_code}`, 'Change to…')));
-        } else {
-            components.push(new ActionRowBuilder().addComponents(actionSelect(`amreview:apply:${p.rule}:${p.targetUser.id}`, 'Apply a punishment…', actionKeyFor(p.step))));
-            components.push(new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('amreview:dismiss').setLabel('Dismiss').setStyle(ButtonStyle.Secondary)));
+        const channel = await reviewChannel(p.guild.client);
+        if (!channel) {
+            logger.warn(`Automod review card not posted (no review channel): ${p.rule} on ${p.targetUser.id}`);
+            return null;
         }
-    }
+        const entry = entryFrom(p, now);
+        const message = await channel.send({ ...buildCardPayload(entry), allowedMentions: { parse: [] } }).catch((error) => {
+            logger.warn(`Automod review card failed: ${error.message}`);
+            return null;
+        });
+        if (!message) return null;
+        registerCard(Object.assign(entry, { messageId: message.id, cardChannelId: channel.id, url: message.url, message }));
+        return message;
+    };
+    return key ? Mutex.runExclusive(`amcard:${key}`, run) : run();
+}
 
-    return channel.send({
-        embeds: [createEmbed({ title: truncate(title, 256), fields, color, timestamp: true })],
-        components,
-        allowedMentions: { parse: [] },
-    }).catch((error) => {
-        logger.warn(`Automod review card failed: ${error.message}`);
-        return null;
+/**
+ * A hit automod did not act on (the same rule again within the cooldown): counted on
+ * the open card of the burst, if there is one. Never posts a new card.
+ */
+export async function noteRepeatHit(p) {
+    logHit(p);
+    recordHit({ rule: p.rule, channelId: p.channelId, monitor: false });
+    const key = entryFrom(p).key;
+    if (!key) return;
+    await Mutex.runExclusive(`amcard:${key}`, async () => {
+        const open = findOpenBurst(key);
+        if (!open) return;
+        mergeHit(open, p);
+        scheduleRender(open);
     });
 }
 
-/** Closes a card: keeps its embed, adds who reviewed it, removes the controls. */
-export async function closeCard(message, outcome) {
+/**
+ * Closes a card: shows who reviewed it and how (title, color), adds the details as a
+ * "Review" field and removes the controls. opts: { status, by, verb } — status is a
+ * key of CLOSE_STATUS (kept, undone, changed, applied, dismissed, deleted, approved,
+ * denied, failed). Without a status only the field is added.
+ */
+export async function closeCard(message, outcome, { status = null, by = null, verb = null } = {}) {
+    markClosed(message.id, status || 'closed');
+    if (!message.embeds?.length) {
+        // A compact line: strike it through and say who handled it.
+        const [emoji, defaultVerb] = CLOSE_STATUS[status] || ['✔️', 'Reviewed'];
+        const line = stripLeadingEmoji(message.content || '');
+        const content = truncate(`${emoji} ${verb || defaultVerb}${by ? ` by ${by}` : ''} — ~~${line}~~\n-# ${outcome}`, 2000);
+        await message.edit({ content, components: [], allowedMentions: { parse: [] } }).catch((error) =>
+            logger.warn(`Could not update review line ${message.id}: ${error.message}`));
+        return;
+    }
     const [embed] = message.embeds;
     const data = embed?.toJSON?.() || {};
     const fields = [...(data.fields || []), { name: 'Review', value: truncate(outcome, 1024) }];
-    await message.edit({ embeds: [{ ...data, fields }], components: [] }).catch((error) =>
+    const update = { ...data, fields };
+    if (status && CLOSE_STATUS[status]) {
+        update.title = closedTitle(data.title, status, by || 'a moderator', verb);
+        update.color = CLOSE_STATUS[status][2];
+    }
+    await message.edit({ embeds: [update], components: [] }).catch((error) =>
         logger.warn(`Could not update review card ${message.id}: ${error.message}`));
 }
 
@@ -156,7 +214,7 @@ function flowFor(step, { reason, reasonKey, targetUser }) {
 }
 
 async function reverse(client, record, admin, verb) {
-    if (record.status === 'revoked') return { notes: ['It was already lifted.'] };
+    if (record.status === 'revoked') return { notes: [`\`${record.case_code}\` was already lifted.`] };
     if (record.type === 'kick') {
         const guild = client.guilds.cache.get(record.guild_id);
         const invite = guild ? await createRejoinInvite(guild, `Automod kick ${record.case_code} ${verb}`) : null;
@@ -182,6 +240,20 @@ async function dmReversal(client, record, invite, replacement = null) {
     return sendDm(user, lines.join('\n'));
 }
 
+/** "a,b,c" → the existing case records, in order. Throws when none exist. */
+async function recordsFor(codesArg) {
+    const codes = String(codesArg || '').split(',').map((code) => code.trim()).filter(Boolean);
+    const records = [];
+    for (const code of codes) {
+        const record = await getCaseByCode(code);
+        if (record) records.push(record);
+    }
+    if (!records.length) throw userError(`Case \`${codes.join(', ') || '?'}\` no longer exists.`);
+    return records;
+}
+
+const codeList = (records) => records.map((record) => `\`${record.case_code}\``).join(', ');
+
 /**
  * Handles a review card component. Returns the confirmation text for the moderator.
  * `interaction.member` must be an administrator in the main server (checked by the caller).
@@ -190,10 +262,11 @@ export async function handleReviewAction(interaction, args) {
     const [action, ...rest] = args;
     const { client, guild } = interaction;
     const admin = interaction.user;
+    const by = admin.username;
     const message = interaction.message;
 
     if (action === 'dismiss') {
-        await closeCard(message, `Dismissed by ${admin.username}`);
+        await closeCard(message, `Dismissed by ${by}`, { status: 'dismissed', by });
         return 'Dismissed.';
     }
 
@@ -202,30 +275,37 @@ export async function handleReviewAction(interaction, args) {
         const channel = guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null);
         const target = channel?.isTextBased?.() ? await channel.messages.fetch(messageId).catch(() => null) : null;
         if (target) await target.delete().catch(() => {});
-        await closeCard(message, `Message deleted by ${admin.username}`);
+        await closeCard(message, target ? `Message deleted by ${by}` : `The message was already gone (${by})`, { status: 'deleted', by });
         return target ? 'Message deleted.' : 'The message was already gone.';
     }
 
     if (action === 'keep' || action === 'undo' || action === 'change') {
-        const record = await getCaseByCode(rest[0]);
-        if (!record) throw userError(`Case \`${rest[0]}\` no longer exists.`);
+        const records = await recordsFor(rest[0]);
 
         if (action === 'keep') {
-            await closeCard(message, `Kept by ${admin.username}`);
-            return `Kept \`${record.case_code}\`.`;
+            await closeCard(message, `Kept by ${by}: ${codeList(records)}`, { status: 'kept', by });
+            return `Kept ${codeList(records)}.`;
         }
 
         if (action === 'undo') {
-            const { notes, invite } = await reverse(client, record, admin, 'reversed');
-            const dm = await dmReversal(client, record, invite);
-            await closeCard(message, `Reversed by ${admin.username}. ${notes.join(' ')} DM: ${dm ? 'delivered' : 'not delivered'}.`);
-            return `Reversed \`${record.case_code}\`. ${notes.join(' ')}`;
+            const notes = [];
+            let delivered = 0;
+            for (const record of records) {
+                const result = await reverse(client, record, admin, 'reversed');
+                notes.push(...result.notes);
+                if (await dmReversal(client, record, result.invite)) delivered += 1;
+            }
+            const dm = records.length === 1 ? (delivered ? 'delivered' : 'not delivered') : `${delivered} of ${records.length} delivered`;
+            await closeCard(message, `Reversed ${codeList(records)} by ${by}. ${notes.join(' ')} DM: ${dm}.`, { status: 'undone', by });
+            return `Reversed ${codeList(records)}. ${notes.join(' ')}`;
         }
 
         const choice = REVIEW_ACTIONS[interaction.values?.[0]];
         if (!choice) throw userError('Pick a punishment from the list.');
-        const targetUser = await client.users.fetch(record.target_user_id);
-        const { notes } = await reverse(client, record, admin, 'changed');
+        const latest = records[records.length - 1];
+        const targetUser = await client.users.fetch(latest.target_user_id);
+        const notes = [];
+        for (const record of records) notes.push(...(await reverse(client, record, admin, 'changed')).notes);
         let result;
         try {
             result = await executeAction({
@@ -233,18 +313,20 @@ export async function handleReviewAction(interaction, args) {
                 moderator: interaction.member,
                 targetUser,
                 flow: flowFor(choice.step, {
-                    reason: `${record.reason} (changed by ${admin.username})`,
-                    reasonKey: record.reason_key,
+                    reason: `${latest.reason} (changed by ${by})`,
+                    reasonKey: latest.reason_key,
                     targetUser,
                 }),
             });
         } catch (error) {
-            await closeCard(message, `Reversed by ${admin.username}, but "${choice.label}" failed: ${error.userMessage || error.message}`);
+            await closeCard(message, `Reversed by ${by}, but "${choice.label}" failed: ${error.userMessage || error.message}`,
+                { status: 'failed', by, verb: `Reversed, "${choice.label}" failed,` });
             throw error;
         }
-        await dmReversal(client, record, null, choice.label);
+        await dmReversal(client, latest, null, choice.label);
         const code = result.record?.case_code;
-        await closeCard(message, `Changed to ${choice.label}${code ? ` (case \`${code}\`)` : ''} by ${admin.username}. ${notes.join(' ')}`);
+        await closeCard(message, `Changed to ${choice.label}${code ? ` (case \`${code}\`)` : ''} by ${by}. ${notes.join(' ')}`,
+            { status: 'changed', by, verb: `Changed to ${choice.label}` });
         return `Changed to ${choice.label}${code ? ` — case \`${code}\`` : ''}.`;
     }
 
@@ -260,13 +342,14 @@ export async function handleReviewAction(interaction, args) {
             moderator: interaction.member,
             targetUser,
             flow: flowFor(choice.step, {
-                reason: label ? `Automod: ${label} (applied by ${admin.username})` : `Reported message (decided by ${admin.username})`,
+                reason: label ? `Automod: ${label} (applied by ${by})` : `Reported message (decided by ${by})`,
                 reasonKey: `automod:${AUTOMOD_RULES[rule]?.group || REPORT_RULE}`,
                 targetUser,
             }),
         });
         const code = result.record?.case_code;
-        await closeCard(message, `${choice.label}${code ? ` (case \`${code}\`)` : ''} applied by ${admin.username}`);
+        await closeCard(message, `${choice.label}${code ? ` (case \`${code}\`)` : ''} applied by ${by}`,
+            { status: 'applied', by, verb: `${choice.label} applied` });
         return `${choice.label} applied${code ? ` — case \`${code}\`` : ''}.`;
     }
 

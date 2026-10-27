@@ -26,11 +26,13 @@ export async function handleVerificationReview(interaction, client, args) {
     if (decision === 'approve') {
         const result = await verifyUser(client, guildId, userId, { source: 'staff_approval', moderatorId: admin.id });
         const dm = user ? await sendDm(user, `**Your verification in ${guild?.name || 'the server'} was approved.** You now have access.`) : false;
-        await closeCard(interaction.message, `Approved by ${admin.username}${result.status === 'already_verified' ? ' (they were already verified)' : ''}. DM: ${dm ? 'delivered' : 'not delivered'}.`);
+        await closeCard(interaction.message, `Approved by ${admin.username}${result.status === 'already_verified' ? ' (they were already verified)' : ''}. DM: ${dm ? 'delivered' : 'not delivered'}.`,
+            { status: 'approved', by: admin.username });
         return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Verification approved', `${user?.username || userId} now has the **${result.roleName}** role.`)] });
     }
 
     const dm = user ? await sendDm(user, `**Your verification in ${guild?.name || 'the server'} was not approved.** If you think this is a mistake, contact a staff member.`) : false;
-    await closeCard(interaction.message, `Denied by ${admin.username}. DM: ${dm ? 'delivered' : 'not delivered'}.`);
+    await closeCard(interaction.message, `Denied by ${admin.username}. DM: ${dm ? 'delivered' : 'not delivered'}.`,
+        { status: 'denied', by: admin.username });
     return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Verification denied', `${user?.username || userId} stays unverified.`)] });
 }
