@@ -1,6 +1,8 @@
 import './config/loadEnv.js';
 // Second on purpose: exits before anything else runs if test-mode safety checks fail.
 import { testMode, installGuildAllowlist, describeTestMode } from './config/testMode.js';
+// Exits in the Replit workspace so it never runs next to the deployment.
+import './config/instanceGuard.js';
 import { Client, Collection, Events, GatewayIntentBits, Partials } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import express from 'express';
