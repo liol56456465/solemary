@@ -15,10 +15,11 @@ import {
     TextInputStyle,
 } from 'discord.js';
 import { enforcementConfig } from '../config/enforcement.js';
-import { successEmbed } from '../utils/embeds.js';
+import { createEmbed, successEmbed } from '../utils/embeds.js';
 import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { normalizeCaseCode } from '../services/enforcement/format.js';
+import { listUserAppeals } from '../services/enforcement/caseService.js';
 import { decideAppeal, submitAppeal, submitStaffReport } from '../services/enforcement/appealService.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 
@@ -94,6 +95,35 @@ export async function handleAppealButton(interaction, client, args) {
     }
     if (step === 'open') return InteractionHelper.safeShowModal(interaction, appealModal());
     if (step === 'report') return InteractionHelper.safeShowModal(interaction, reportModal());
+    if (step === 'status') return showMyAppeals(interaction);
+}
+
+const MY_APPEAL_STATUS = {
+    pending: '⏳ Pending — the administrators have not decided yet',
+    accepted: '✅ Accepted',
+    denied: '❌ Denied',
+    closed: '🔒 Closed',
+};
+
+/** The clicking member's own appeals: case, status and dates. Only they see it. */
+async function showMyAppeals(interaction) {
+    const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    if (!deferred) return;
+    const appeals = await listUserAppeals(interaction.user.id);
+    const stamp = (date) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:d>`;
+    const lines = appeals.map((appeal) => [
+        `**\`${appeal.case_code}\`** — ${appeal.type} (${appeal.name})`,
+        `${MY_APPEAL_STATUS[appeal.status] ?? appeal.status} · filed ${stamp(appeal.created_at)}${appeal.decided_at ? ` · decided ${stamp(appeal.decided_at)}` : ''}`,
+    ].join('\n'));
+    return InteractionHelper.safeEditReply(interaction, {
+        embeds: [createEmbed({
+            title: 'My appeals',
+            description: lines.length
+                ? lines.join('\n\n')
+                : 'You have not filed any appeals. Press **Appeal** to file one; you need the case code from the DM you got.',
+            color: 'primary',
+        })],
+    });
 }
 
 export async function handleAppealModal(interaction, client, args) {

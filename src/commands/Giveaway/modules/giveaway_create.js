@@ -1,19 +1,19 @@
 import { SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, MessageFlags } from 'discord.js';
-import { errorEmbed, successEmbed } from '../../utils/embeds.js';
-import { logger } from '../../utils/logger.js';
-import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
-import { saveGiveaway } from '../../utils/giveaways.js';
+import { errorEmbed, successEmbed } from '../../../utils/embeds.js';
+import { logger } from '../../../utils/logger.js';
+import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
+import { saveGiveaway } from '../../../utils/giveaways.js';
 import { 
     parseDuration, 
     validatePrize, 
     validateWinnerCount,
     createGiveawayEmbed, 
     createGiveawayButtons 
-} from '../../services/giveawayService.js';
-import { logEvent, EVENT_TYPES } from '../../services/loggingService.js';
-import { InteractionHelper } from '../../utils/interactionHelper.js';
+} from '../../../services/giveawayService.js';
+import { logEvent, EVENT_TYPES } from '../../../services/loggingService.js';
+import { InteractionHelper } from '../../../utils/interactionHelper.js';
 
-import { botConfig } from '../../config/bot.js';
+import { botConfig } from '../../../config/bot.js';
 
 const GIVEAWAY_MIN_WINNERS = botConfig.giveaways?.minimumWinners ?? 1;
 const GIVEAWAY_MAX_WINNERS = botConfig.giveaways?.maximumWinners ?? 10;

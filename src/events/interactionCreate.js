@@ -25,10 +25,7 @@ import { skipIfArrivedTooLate, noticeIfHandlerMissedDeadline } from '../utils/la
 const COMMAND_ERROR_SUBTYPES = {
   ticket: 'ticket_failed',
   serverstats: 'serverstats_failed',
-  gcreate: 'giveaway_failed',
-  gend: 'giveaway_failed',
-  gdelete: 'giveaway_failed',
-  greroll: 'giveaway_failed',
+  giveaway: 'giveaway_failed',
 };
 
 // Components without a registered handler are answered by message collectors. Those

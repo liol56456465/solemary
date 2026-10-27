@@ -6,7 +6,8 @@ import {
 } from "discord.js";
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
-import { isCommandAvailableInGuild } from '../../utils/commandGate.js';
+import { isCommandAvailableInGuild, canSeeAdminCommands } from '../../utils/commandGate.js';
+import { hasEveryoneAccess } from '../../config/commands/commandAccess.js';
 import { createEmbed } from "../../utils/embeds.js";
 import {
     createSelectMenu,
@@ -49,12 +50,13 @@ function formatCategoryName(rawCategory) {
         .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export async function createInitialHelpMenu(client, guildId = null) {
+export async function createInitialHelpMenu(client, guildId = null, showAdmin = true) {
     const commandsPath = path.join(__dirname, "../../commands");
-    // Only list categories that have at least one command usable in this server.
+    // Only list categories with at least one command this viewer can use in this server.
     const availableCategories = new Set(
         [...(client?.commands?.values?.() ?? [])]
             .filter((command) => isCommandAvailableInGuild(command, guildId))
+            .filter((command) => showAdmin || hasEveryoneAccess(command.data?.name))
             .map((command) => command.category)
     );
     const categoryDirs = (
@@ -91,19 +93,24 @@ export async function createInitialHelpMenu(client, guildId = null) {
         fields: [
             {
                 name: '🚀 Getting Started',
-                value: [
+                value: (showAdmin ? [
                     '1. **/configwizard** to configure prefix, mod role, and logs.',
                     '2. **/commands dashboard** to turn categories on or off.',
                     '3. **Browse commands** — Use the menu below to view categories and commands.',
-                ].join('\n'),
+                ] : [
+                    'Pick a category in the menu below to see its commands.',
+                    'Need staff? DM the bot: your message goes to the team privately (modmail).',
+                ]).join('\n'),
                 inline: false,
             },
             {
                 name: '🔒 Access',
                 value: [
-                    '• Commands marked 🔒 need the **Administrator** permission; the rest are for everyone.',
+                    showAdmin
+                        ? '• Commands marked 🔒 need the **Administrator** permission; the rest are for everyone.'
+                        : '• This list shows the commands you can use.',
                     '• Commands only work in the Meowist servers.',
-                    '• **/setappeal** posts the appeal panels; **/appeals** lists, shows and decides appeals.',
+                    ...(showAdmin ? ['• **/setappeal** posts the appeal panels; **/appeals** lists, shows and decides appeals.'] : []),
                 ].join('\n'),
                 inline: false,
             },
@@ -159,9 +166,10 @@ export default {
     async execute(interaction, guildConfig, client) {
         
         const { MessageFlags } = await import('discord.js');
-        await InteractionHelper.safeDefer(interaction);
-        
-        const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId);
+        // Private: only the person who asked sees it and can use its menu.
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+
+        const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction));
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds,

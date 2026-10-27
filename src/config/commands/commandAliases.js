@@ -35,13 +35,8 @@ export const commandAliases = {
     'dice': 'roll',
     'fight': 'fight',
 
-    'gcreate': 'gcreate',
-    'gstart': 'gcreate',
-    'gend': 'gend',
-    'gstop': 'gend',
-    'gdelete': 'gdelete',
-    'greroll': 'greroll',
-    'groll': 'greroll',
+    'giveaway': 'giveaway',
+    'gw': 'giveaway',
 
     'ticket': 'ticket',
     't': 'ticket',

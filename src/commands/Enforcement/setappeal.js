@@ -27,14 +27,19 @@ function mainPanel() {
                 '2. Your case code, from the DM you got',
                 '3. More info, if you want to add anything',
                 '',
-                'The administrators review your appeal and you get the decision by DM.',
+                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand.',
                 '',
                 '-# Banned? Appeal in the Meowist Support server instead — the link is in your ban DM.',
             ].join('\n'),
             color: 'primary',
         })],
-        components: [new ActionRowBuilder().addComponents(appealButton())],
+        components: [new ActionRowBuilder().addComponents(appealButton(), myAppealsButton())],
     };
+}
+
+// Shows the member their own appeals and decisions, privately.
+function myAppealsButton() {
+    return new ButtonBuilder().setCustomId('appeal:status').setLabel('My appeals').setStyle(ButtonStyle.Secondary);
 }
 
 function supportPanel() {
@@ -47,7 +52,7 @@ function supportPanel() {
                 '2. Your case code, from the DM you got',
                 '3. More info, if you want to add anything',
                 '',
-                'The administrators review your appeal and you get the decision by DM.',
+                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand.',
                 '',
                 '**Report staff** — report a staff member who broke the rules. Only administrators can see reports.',
                 '',
@@ -57,6 +62,7 @@ function supportPanel() {
         })],
         components: [new ActionRowBuilder().addComponents(
             appealButton(),
+            myAppealsButton(),
             new ButtonBuilder().setCustomId('appeal:report').setLabel('Report staff').setStyle(ButtonStyle.Danger),
         )],
     };

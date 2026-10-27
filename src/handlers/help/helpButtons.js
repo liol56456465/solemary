@@ -1,4 +1,5 @@
 import { createEmbed } from '../../utils/embeds.js';
+import { canSeeAdminCommands } from '../../utils/commandGate.js';
 import { createAllCommandsMenu } from './helpSelectMenus.js';
 import { createInitialHelpMenu } from '../../commands/Core/help.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
@@ -16,7 +17,7 @@ export const helpBackButton = {
                 await interaction.deferUpdate();
             }
 
-            const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId);
+            const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction));
             await interaction.editReply({
                 embeds,
                 components,
@@ -120,7 +121,7 @@ export const helpPaginationButton = {
                     break;
             }
 
-            const { embeds, components } = await createAllCommandsMenu(nextPage, client, interaction.guildId);
+            const { embeds, components } = await createAllCommandsMenu(nextPage, client, interaction.guildId, canSeeAdminCommands(interaction));
             await interaction.editReply({ embeds, components });
         } catch (error) {
             if (error?.code === 40060 || error?.code === 10062) {

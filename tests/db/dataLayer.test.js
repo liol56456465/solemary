@@ -247,3 +247,31 @@ test('mass-action guard: the ban after the limit is refused, the moderator block
         await pgDb.pool.query('DELETE FROM mod_cases WHERE guild_id = $1 AND moderator_id = $2', [guildA, moderatorId]);
     }
 });
+
+// --- My appeals ---------------------------------------------------------------------
+
+test('My appeals: lists only the member\'s own appeals, newest first, without test cases', { skip }, async () => {
+    const { listUserAppeals } = await import('../../src/services/enforcement/caseService.js');
+    const member = user(700);
+    const other = user(701);
+    const codes = [`A${runId.slice(-5)}1`, `A${runId.slice(-5)}2`, `A${runId.slice(-5)}3`].map((c) => c.slice(0, 7));
+    const insertCase = (code, target, isTest = false) => pgDb.pool.query(
+        `INSERT INTO mod_cases (guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username, type, name, reason, prebuilt_or_custom, is_test)
+         VALUES ($1, $2, $3, 'x', '1', 'mod', 'ban', $2, 'r', 'custom', $4)`, [guildA, code, target, isTest]);
+    try {
+        await insertCase(codes[0], member);
+        await insertCase(codes[1], other);
+        await insertCase(codes[2], member, true);
+        await pgDb.pool.query(`INSERT INTO mod_appeals (kind, case_code, user_id, username, guild_id, body, status, created_at) VALUES
+            ('appeal', $1, $3, 'm', $4, '{}', 'denied', NOW() - INTERVAL '2 days'),
+            ('appeal', $1, $3, 'm', $4, '{}', 'pending', NOW()),
+            ('appeal', $2, $5, 'o', $4, '{}', 'pending', NOW())`, [codes[0], codes[1], member, guildA, other]);
+        await pgDb.pool.query(`INSERT INTO mod_appeals (kind, case_code, user_id, username, guild_id, body) VALUES ('appeal', $1, $2, 'm', $3, '{}')`, [codes[2], member, guildA]);
+        const appeals = await listUserAppeals(member);
+        assert.deepEqual(appeals.map((a) => a.status), ['pending', 'denied']);
+        assert.ok(appeals.every((a) => a.case_code === codes[0]));
+    } finally {
+        await pgDb.pool.query('DELETE FROM mod_appeals WHERE case_code = ANY($1)', [codes]);
+        await pgDb.pool.query('DELETE FROM mod_cases WHERE case_code = ANY($1)', [codes]);
+    }
+});
