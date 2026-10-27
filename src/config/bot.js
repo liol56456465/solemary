@@ -60,10 +60,11 @@ export const botConfig = {
   // =========================
   applications: {
     // Default questions shown when someone fills out an application.
+    // minLength: shortest accepted answer (default 1, so "18" is a valid age).
     defaultQuestions: [
       { question: "What is your name?", required: true },
       { question: "How old are you?", required: true },
-      { question: "Why do you want to join?", required: true },
+      { question: "Why do you want to join?", required: true, minLength: 10 },
     ],
 
     // Embed colors by application status.
@@ -556,10 +557,13 @@ export function getApplicationStatusColor(status) {
   return hex ? getColor(hex) : getColor(status === "approved" ? "success" : status === "denied" ? "error" : "warning");
 }
 
+// Same shapes as stored questions: a string, or { question, minLength } when a minimum is set.
 export function getDefaultApplicationQuestions() {
-  return (botConfig.applications?.defaultQuestions || []).map((entry) =>
-    typeof entry === "string" ? entry : entry.question,
-  ).filter(Boolean);
+  return (botConfig.applications?.defaultQuestions || []).map((entry) => {
+    if (typeof entry === "string") return entry;
+    if (!entry?.question) return null;
+    return entry.minLength > 1 ? { question: entry.question, minLength: entry.minLength } : entry.question;
+  }).filter(Boolean);
 }
 
 export function getColor(path, fallback = "#99AAB5") {

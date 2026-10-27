@@ -1,4 +1,5 @@
 import { getColor, getDefaultApplicationQuestions } from '../../config/bot.js';
+import { normalizeApplicationQuestions, MAX_ANSWER_LENGTH } from '../../utils/applicationQuestions.js';
 import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } from 'discord.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
@@ -153,11 +154,13 @@ export async function handleApplicationModal(interaction) {
         questions = roleSettings.questions;
     }
     
+    questions = normalizeApplicationQuestions(questions);
     for (let i = 0; i < questions.length; i++) {
         const answer = interaction.fields.getTextInputValue(`q${i}`);
         answers.push({
-            question: questions[i],
-            answer: answer
+            question: questions[i].question,
+            answer: answer,
+            minLength: questions[i].minLength
         });
     }
     
@@ -321,7 +324,7 @@ async function handleSubmit(interaction, settings) {
         questions = roleSettings.questions;
     }
 
-    questions.forEach((question, index) => {
+    normalizeApplicationQuestions(questions).forEach(({ question, minLength }, index) => {
         const input = new TextInputBuilder()
             .setCustomId(`q${index}`)
             .setLabel(
@@ -331,7 +334,8 @@ async function handleSubmit(interaction, settings) {
             )
             .setStyle(TextInputStyle.Paragraph)
             .setRequired(true)
-            .setMaxLength(1000);
+            .setMinLength(minLength)
+            .setMaxLength(MAX_ANSWER_LENGTH);
 
         const row = new ActionRowBuilder().addComponents(input);
         modal.addComponents(row);

@@ -1,5 +1,12 @@
 import { getColor, getDefaultApplicationQuestions, botConfig } from '../../../config/bot.js';
 import {
+    normalizeApplicationQuestions,
+    applicationQuestionText,
+    parseApplicationQuestionInput,
+    formatApplicationQuestionForEditing,
+    MAX_QUESTION_LENGTH,
+} from '../../../utils/applicationQuestions.js';
+import {
     ActionRowBuilder,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
@@ -50,9 +57,10 @@ async function buildDashboardEmbed(settings, roles, guild, client) {
             ? roles.map(r => `<@&${r.roleId}> — ${r.name}`).join('\n')
             : '`No application roles configured`';
     const questionCount = settings.questions?.length ?? 0;
+    const firstText = applicationQuestionText(settings.questions?.[0]);
     const firstQ =
-        settings.questions?.[0]
-            ? `\`${settings.questions[0].length > 55 ? settings.questions[0].substring(0, 55) + '…' : settings.questions[0]}\``
+        firstText
+            ? `\`${firstText.length > 55 ? firstText.substring(0, 55) + '…' : firstText}\``
             : '`Not set`';
 
     return new EmbedBuilder()
@@ -287,7 +295,8 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
         : '`Inherits global log channel`';
     
     const questionsDisplay = questions.length > 0
-        ? questions.map((q, i) => `${i + 1}. \`${q.length > 60 ? q.substring(0, 60) + '…' : q}\``).join('\n')
+        ? normalizeApplicationQuestions(questions).map(({ question: q, minLength }, i) =>
+            `${i + 1}. \`${q.length > 60 ? q.substring(0, 60) + '…' : q}\`${minLength > 1 ? ` (min ${minLength} chars)` : ''}`).join('\n')
         : '`Inherits global questions`';
     
     const managerRolesDisplay = settings.managerRoles && settings.managerRoles.length > 0
@@ -809,6 +818,10 @@ async function handleManagerRole(selectInteraction, rootInteraction, settings, r
     }
 }
 
+// Questions are up to 100 characters; the extra room is for an optional " [min:N]" tag.
+const QUESTION_INPUT_MAX = MAX_QUESTION_LENGTH + 12;
+const MIN_TAG_HINT = 'End with [min:10] to require answers of at least 10 characters';
+
 async function handleQuestions(selectInteraction, rootInteraction, settings, roles, guildId, client, selectedRoleId) {
     let currentQuestions = settings.questions ?? [];
     
@@ -826,8 +839,9 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
                     .setCustomId('q1')
                     .setLabel('Question 1 (required)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(currentQuestions[0] ?? '')
-                    .setMaxLength(100)
+                    .setValue(formatApplicationQuestionForEditing(currentQuestions[0]))
+                    .setPlaceholder(MIN_TAG_HINT)
+                    .setMaxLength(QUESTION_INPUT_MAX)
                     .setMinLength(1)
                     .setRequired(true),
             ),
@@ -836,8 +850,9 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
                     .setCustomId('q2')
                     .setLabel('Question 2 (optional)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(currentQuestions[1] ?? '')
-                    .setMaxLength(100)
+                    .setValue(formatApplicationQuestionForEditing(currentQuestions[1]))
+                    .setPlaceholder(MIN_TAG_HINT)
+                    .setMaxLength(QUESTION_INPUT_MAX)
                     .setRequired(false),
             ),
             new ActionRowBuilder().addComponents(
@@ -845,8 +860,9 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
                     .setCustomId('q3')
                     .setLabel('Question 3 (optional)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(currentQuestions[2] ?? '')
-                    .setMaxLength(100)
+                    .setValue(formatApplicationQuestionForEditing(currentQuestions[2]))
+                    .setPlaceholder(MIN_TAG_HINT)
+                    .setMaxLength(QUESTION_INPUT_MAX)
                     .setRequired(false),
             ),
             new ActionRowBuilder().addComponents(
@@ -854,8 +870,9 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
                     .setCustomId('q4')
                     .setLabel('Question 4 (optional)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(currentQuestions[3] ?? '')
-                    .setMaxLength(100)
+                    .setValue(formatApplicationQuestionForEditing(currentQuestions[3]))
+                    .setPlaceholder(MIN_TAG_HINT)
+                    .setMaxLength(QUESTION_INPUT_MAX)
                     .setRequired(false),
             ),
             new ActionRowBuilder().addComponents(
@@ -863,8 +880,9 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
                     .setCustomId('q5')
                     .setLabel('Question 5 (optional)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(currentQuestions[4] ?? '')
-                    .setMaxLength(100)
+                    .setValue(formatApplicationQuestionForEditing(currentQuestions[4]))
+                    .setPlaceholder(MIN_TAG_HINT)
+                    .setMaxLength(QUESTION_INPUT_MAX)
                     .setRequired(false),
             ),
         );
@@ -882,7 +900,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
     if (!submitted) return;
 
     const newQuestions = ['q1', 'q2', 'q3', 'q4', 'q5']
-        .map(key => submitted.fields.getTextInputValue(key).trim())
+        .map(key => parseApplicationQuestionInput(submitted.fields.getTextInputValue(key)))
         .filter(Boolean);
 
     if (newQuestions.length === 0) {
