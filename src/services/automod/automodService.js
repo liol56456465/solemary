@@ -239,7 +239,7 @@ async function countOffences(guildId, userId, group) {
 }
 
 /** Runs a punishment step through the normal enforcement path, as the bot. */
-export async function applyStep({ guild, targetUser, step, rule, reason }) {
+export async function applyStep({ guild, targetUser, step, rule, reason, contestable = false }) {
     return executeSystemAction({
         guild,
         targetUser,
@@ -252,6 +252,8 @@ export async function applyStep({ guild, targetUser, step, rule, reason }) {
             unappealable: false,
             name: `${targetUser.username} ${step.type}`,
             nameIsDefault: true,
+            // The DM gets a "Contest this" button when the member's message was deleted.
+            contestable: Boolean(contestable),
         },
     });
 }
@@ -350,7 +352,9 @@ async function actOn(message, member, hit, settings, probation = null) {
     const offences = await countOffences(guild.id, targetUser.id, group);
     if (await giveSecondChance(message, hit, { settings, offences, card, probation })) return rule.deleteMessage;
     const step = stepFor(offences);
-    const result = await applyStep({ guild, targetUser, step, rule: hit.rule, reason: `Automod: ${rule.label}` })
+    const result = await applyStep({
+        guild, targetUser, step, rule: hit.rule, reason: `Automod: ${rule.label}`, contestable: Boolean(rule.deleteMessage),
+    })
         .catch((error) => ({ error }));
     if (result.error) {
         logger.warn(`Automod ${hit.rule} on ${targetUser.id}: ${result.error.userMessage || result.error.message}`);

@@ -12,7 +12,7 @@ import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { query, withTransaction, T } from './db.js';
 import { insertCase, setDmDelivered, setEndDmDelivered, getActiveCase, nextDefaultName, OPEN_STATUSES } from './caseService.js';
 import { ensureMutedRole, addMutedRole, removeMutedRole, findMutedRole } from './muteService.js';
-import { banDm, banEndedDm, kickDm, muteDm, muteEndedDm, warnDm } from './dmTemplates.js';
+import { banDm, banEndedDm, contestComponents, kickDm, muteDm, muteEndedDm, warnDm } from './dmTemplates.js';
 import { addMonths, formatDuration, dateStamp } from './format.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
@@ -80,9 +80,9 @@ export async function lockFor(guildId, userId, task) {
     return Mutex.runExclusive(`enforcement:${guildId}:${userId}`, task);
 }
 
-export async function sendDm(user, content) {
+export async function sendDm(user, content, components = null) {
     try {
-        await user.send({ content, allowedMentions: { parse: [] } });
+        await user.send({ content, allowedMentions: { parse: [] }, ...(components?.length ? { components } : {}) });
         return true;
     } catch (error) {
         logger.info(`Enforcement DM to ${user.id} failed: ${error.message}`);
@@ -314,9 +314,17 @@ function baseRecord(guild, targetUser, flow, moderatorInfo) {
     };
 }
 
+/**
+ * DM components for an action: the "Contest this" button when automod deleted the
+ * member's message (flow.contestable, set by automodService.applyStep).
+ */
+function dmComponentsFor(flow, record) {
+    return flow?.contestable && record?.case_code ? contestComponents(record.case_code) : null;
+}
+
 /** Records the case, DMs first, then bans. Rolls the case back if the ban fails. */
-async function banWithRecord({ guild, targetUser, record, auditReason }) {
-    const dmDelivered = await sendDm(targetUser, banDm(record));
+async function banWithRecord({ guild, targetUser, record, auditReason, dmComponents = null }) {
+    const dmDelivered = await sendDm(targetUser, banDm(record), dmComponents);
     try {
         await guild.members.ban(targetUser.id, { reason: auditReason.slice(0, 512) });
     } catch (error) {
@@ -347,6 +355,7 @@ async function doBan({ guild, moderator, targetUser, flow }) {
     record = await banWithRecord({
         guild, targetUser, record,
         auditReason: `${record.case_code}: ${record.reason} (by ${moderator.user.username})`,
+        dmComponents: dmComponentsFor(flow, record),
     });
     await logEnforcement(guild.client, guild.id, 'ban', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator) });
     return { record, dmDelivered: record.dm_delivered, notes: [] };
@@ -364,7 +373,7 @@ async function doKick({ guild, moderator, targetUser, targetMember, flow }) {
     });
 
     const invite = await createRejoinInvite(guild, `Rejoin invite for kick ${record.case_code}`);
-    const dmDelivered = await sendDm(targetUser, kickDm(record, invite));
+    const dmDelivered = await sendDm(targetUser, kickDm(record, invite), dmComponentsFor(flow, record));
 
     try {
         await targetMember.kick(`${record.case_code}: ${record.reason} (by ${moderator.user.username})`.slice(0, 512));
@@ -407,7 +416,7 @@ async function doMute({ guild, moderator, targetUser, targetMember, flow }) {
             `Could not add the muted role: ${error.message}`, { expected: true });
     }
 
-    const dmDelivered = await sendDm(targetUser, muteDm(record));
+    const dmDelivered = await sendDm(targetUser, muteDm(record), dmComponentsFor(flow, record));
     await setDmDelivered(record.id, dmDelivered);
     record = { ...record, dm_delivered: dmDelivered };
     await logEnforcement(guild.client, guild.id, 'mute', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator) });
@@ -508,7 +517,7 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
     const notes = [];
 
     if (!banRecord) {
-        const dmDelivered = await sendDm(targetUser, warnDm(warnRecord, preview.warnNumber));
+        const dmDelivered = await sendDm(targetUser, warnDm(warnRecord, preview.warnNumber), dmComponentsFor(flow, warnRecord));
         await setDmDelivered(warnRecord.id, dmDelivered);
         const record = { ...warnRecord, dm_delivered: dmDelivered };
         await syncWarnRolesQuietly(guild, targetUser.id);
@@ -523,6 +532,8 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
         ban = await banWithRecord({
             guild, targetUser, record: banRecord,
             auditReason: `${banRecord.case_code}: ${enforcementConfig.ladderReason} (warn ${warnRecord.case_code})`,
+            // The automod warn is what the member contests (the review card carries its code).
+            dmComponents: dmComponentsFor(flow, warnRecord),
         });
         await setDmDelivered(warnRecord.id, ban.dm_delivered);
         record = { ...warnRecord, dm_delivered: ban.dm_delivered };

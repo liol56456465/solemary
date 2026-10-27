@@ -1,5 +1,6 @@
 // dmTemplates.js — the DM layouts sent to punished users.
 
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { dateStamp, formatDuration, stamp } from './format.js';
 
@@ -135,4 +136,16 @@ export function noContactEndedDm(order, other, { early = false } = {}) {
         `**Your no-contact order in ${serverName} has ended**`,
         `${early ? 'Staff ended it early.' : 'It expired.'} You may contact ${other ? `**${other.username}**` : 'the other member'} again.`,
     ].join('\n');
+}
+
+/**
+ * The "Contest this" button under an automod DM whose message was deleted
+ * (automodContest.js). DM buttons work without a shared server. customId carries
+ * the case code: amcontest:open:<code>.
+ */
+export function contestComponents(caseCode) {
+    if (!caseCode) return [];
+    return [new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`amcontest:open:${caseCode}`).setLabel('Contest this').setEmoji('🙋').setStyle(ButtonStyle.Secondary),
+    )];
 }

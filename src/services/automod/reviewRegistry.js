@@ -46,6 +46,33 @@ export function getCard(messageId) {
     return cards.get(messageId) || null;
 }
 
+/** The card (newest first) whose automatic actions include this case code, or null. */
+export function findCardByCase(caseCode) {
+    if (!caseCode) return null;
+    let found = null;
+    for (const entry of cards.values()) {
+        if (!(entry.actions || []).some((action) => action.caseCode === caseCode)) continue;
+        if (!found || (entry.firstAt || 0) > (found.firstAt || 0)) found = entry;
+    }
+    return found;
+}
+
+/**
+ * Fallback when a case code is not on any card (e.g. the buttons only carry the newest
+ * codes): the newest card for this guild + member whose rule is in `group`, active
+ * within `windowMs` of `at`. `ruleGroup(rule)` maps a card's rule to its group.
+ */
+export function findCardForMember({ guildId, userId, group, at, windowMs = 10 * 60 * 1000, ruleGroup }) {
+    let found = null;
+    for (const entry of cards.values()) {
+        if (entry.kind !== 'action' || entry.userId !== userId || (guildId && entry.guildId !== guildId)) continue;
+        if (group && ruleGroup?.(entry.rule) !== group) continue;
+        if (at != null && (at < (entry.firstAt || 0) - windowMs || at > (entry.lastAt || 0) + windowMs)) continue;
+        if (!found || (entry.firstAt || 0) > (found.firstAt || 0)) found = entry;
+    }
+    return found;
+}
+
 /** Marks a card reviewed: it is never grouped into again and leaves the queue. */
 export function markClosed(messageId, status) {
     const entry = cards.get(messageId);

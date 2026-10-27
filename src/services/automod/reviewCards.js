@@ -32,6 +32,7 @@ import {
 } from './reviewFormat.js';
 import { burstKey, findOpenBurst, markClosed, recordHit, registerCard } from './reviewRegistry.js';
 import { switchRuleToMonitor } from './automodTuning.js';
+import { restoreIfContested } from './automodContest.js';
 import { canGiveSecondOpinion, secondOpinionPayload, shouldAskSecondOpinion } from './secondOpinion.js';
 
 export { describeStep };
@@ -56,6 +57,10 @@ function actionFrom(p) {
         caseCode: record?.case_code || null,
         failed: p.result?.error ? (p.result.error.userMessage || p.result.error.message || 'unknown error') : null,
         limitBanCode: p.result?.record && p.result?.banRecord ? p.result.banRecord.case_code : null,
+        // Kept so a contested case that staff undo can have its message restored (automodContest.js).
+        content: p.content ?? null,
+        channelId: p.channelId || null,
+        deleted: Boolean(p.deleted ?? AUTOMOD_RULES[p.rule]?.deleteMessage),
     };
 }
 
@@ -269,6 +274,8 @@ async function undoRecords(client, records, admin) {
     for (const record of records) {
         const result = await reverse(client, record, admin, 'reversed');
         notes.push(...result.notes);
+        const restored = await restoreIfContested(client, record);
+        if (restored) notes.push(restored);
         if (await dmReversal(client, record, result.invite)) delivered += 1;
     }
     const dm = records.length === 1 ? (delivered ? 'delivered' : 'not delivered') : `${delivered} of ${records.length} delivered`;

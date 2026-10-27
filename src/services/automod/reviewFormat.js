@@ -16,13 +16,14 @@
 //     report: { reporter, messageId, removed },              // kind 'report'
 //     tier: 'compact' | 'full' (once full, stays full)
 //     probationUntil,        // epoch ms: the member is on probation (probationService.js)
+//     contest: { caseCode, reason, at },  // the member pressed "Contest this" (automodContest.js)
 //   }
 //
 // Tiers: a low-severity rule with a light action is one compact line with an Undo
 // button; everything else (serious rules, long mutes, bans, failures, monitor mode,
 // reports) is a full card. Status shows in the color and, once reviewed, the title.
 
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, escapeMarkdown } from 'discord.js';
 import { AUTOMOD_RULES, REVIEW_ACTIONS, automodConfig } from '../../config/automod.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { formatDuration, truncate } from '../enforcement/format.js';
@@ -112,6 +113,7 @@ export function isLightAction(ruleKey, step, cfg = automodConfig) {
 export function cardTier(p, cfg = automodConfig) {
     if (p.tier === 'full' || p.tier === 'compact') return p.tier;
     if (p.kind === 'note') return 'compact';
+    if (p.contest) return 'full'; // a disputed decision always gets the full card
     if (p.kind !== 'action' || p.raid) return 'full';
     const actions = p.actions || [];
     if (!actions.length) return 'full';
@@ -235,7 +237,17 @@ export function cardFields(entry) {
     if (codes.length) fields.push({ name: codes.length > 1 ? 'Cases' : 'Case', value: codes.map((c) => `\`${c}\``).join(' '), inline: true });
     if (latest.messageUrl && !latest.deleted) fields.push({ name: 'Message link', value: `[Jump to message](${latest.messageUrl})`, inline: true });
     if (entry.kind === 'report' && entry.report?.reporter) fields.push({ name: 'Reported by', value: truncate(entry.report.reporter, 1024), inline: true });
+    if (entry.contest) fields.push(contestField(entry.contest));
     return fields;
+}
+
+/** The "🙋 Member disputes" field: the member's own words, markdown escaped. */
+export function contestField(contest) {
+    const reason = escapeMarkdown(String(contest?.reason ?? '').trim()) || '(no reason given)';
+    return {
+        name: `🙋 Member disputes${contest?.caseCode ? ` · case ${contest.caseCode}` : ''}`,
+        value: truncate(reason, 1024),
+    };
 }
 
 /** "🟡 **Excessive caps** · <@1> · warned · case `k3f9a` · <#2> · 3 messages" */
