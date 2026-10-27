@@ -3,6 +3,7 @@
 
 import { db, getFromDb, setInDb } from '../../utils/database.js';
 import { automodConfig } from '../../config/automod.js';
+import { clampPanicHours, DEFAULT_PANIC_HOURS } from './incidentActions.js';
 
 const CACHE_TTL_MS = 30 * 1000;
 const DEFAULT_SETTINGS = Object.freeze({
@@ -22,6 +23,9 @@ const DEFAULT_SETTINGS = Object.freeze({
     secondChance: true,
     // Calm-down note + slowmode when a channel heats up (/automod mood).
     moodAlerts: true,
+    // Raid panic mode: when a lockdown starts, also pause invites and DMs with
+    // Discord's incident actions for this many hours (1–24) (/automod panic).
+    panic: { enabled: true, hours: 2 },
 });
 
 /** Stored settings (any shape, or null) → a complete settings object. */
@@ -36,6 +40,8 @@ export function normalizeSettings(stored) {
     value.trusted = { roleId: trusted.roleId || null, minLevel: Math.max(0, Number(trusted.minLevel) || 0) };
     value.secondChance = value.secondChance !== false;
     value.moodAlerts = value.moodAlerts !== false;
+    const panic = value.panic && typeof value.panic === 'object' ? value.panic : {};
+    value.panic = { enabled: panic.enabled !== false, hours: clampPanicHours(panic.hours ?? DEFAULT_PANIC_HOURS) };
     return value;
 }
 
@@ -76,7 +82,7 @@ export async function isChannelExempt(guildId, channel) {
     return ids.has(channel.id) || Boolean(channel.parentId && ids.has(channel.parentId) && channel.isThread?.());
 }
 
-/** { active, startedAt, previousVerificationLevel, joinerIds[] } or null. */
+/** { active, startedAt, previousVerificationLevel, raisedVerification, incidentActions, gateKicks, joinerIds[] } or null. */
 export async function getLockdown(guildId) {
     return getFromDb(lockdownKey(guildId), null);
 }
