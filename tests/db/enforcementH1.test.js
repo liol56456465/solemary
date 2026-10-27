@@ -216,3 +216,32 @@ test('no-contact: add (DMs both), duplicate refused, cache, list, end early, exp
     assert.match(dms[0].content, /It expired/);
     assert.deepEqual(nc.getActiveOrdersFor(guildId, a).map((o) => o.otherId), [b]);
 });
+
+test('staff coverage: hourly incidents vs human cases + appeal decisions, period-limited', { skip }, async () => {
+    const { loadCoverageCounts, buildCoverageReport } = await import('../../src/services/staffCoverageService.js');
+    const bot = user(99);
+    const covGuild = `7${runId}00000004`;
+    const hourAgo = (h) => new Date(Date.now() - h * 3600000);
+    await insertCase({ guild_id: covGuild, created_at: hourAgo(2) });
+    await insertCase({ guild_id: covGuild, created_at: hourAgo(2) });
+    await insertCase({ guild_id: covGuild, created_at: hourAgo(5), moderator_id: bot, moderator_username: 'bot', is_auto: true });
+    await insertCase({ guild_id: covGuild, created_at: hourAgo(5), is_test: true });
+    await insertCase({ guild_id: covGuild, created_at: hourAgo(24 * 10) }); // outside 7 days
+    const appealed = await insertCase({ guild_id: covGuild, created_at: hourAgo(24 * 20) });
+    await pgDb.pool.query(
+        `INSERT INTO mod_appeals (kind, case_code, user_id, username, guild_id, status, decided_by, decided_at)
+         VALUES ('appeal', $1, $2, 'target', $3, 'denied', $4, $5)`,
+        [appealed.case_code, user(1), covGuild, mod.id, hourAgo(1)]
+    );
+
+    const counts = await loadCoverageCounts(covGuild, bot, 7);
+    const sum = (rows) => rows.reduce((total, row) => total + row.count, 0);
+    assert.equal(sum(counts.incidents), 3, 'two human + one automatic; test and old cases left out');
+    assert.equal(sum(counts.staff), 3, 'two human cases + one appeal decision');
+    assert.equal(sum((await loadCoverageCounts(covGuild, bot, 30)).incidents), 5);
+
+    const report = buildCoverageReport(counts, 'UTC');
+    assert.equal(report.totalIncidents, 3);
+    assert.equal(report.totalStaff, 3);
+    assert.equal(report.gaps[0].staff, 0, 'the automatic-only hour is the least covered');
+});
