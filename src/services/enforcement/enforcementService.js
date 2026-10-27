@@ -176,6 +176,7 @@ const MOD_LOG_TITLES = {
     slowmode: ['🐢 Auto slowmode', 'info'],
     digest: ['📊 Daily automod digest', 'primary'],
     system: ['⚙️ Bot problem', 'error'],
+    revert: ['♻️ Server structure reverted', 'success'],
 };
 
 /**

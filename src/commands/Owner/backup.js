@@ -3,10 +3,12 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
-import { isBotOwner } from '../../config/bot.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { backupSummary, getRestoreState, restoreMembers } from '../../services/memberBackupService.js';
-import { getSnapshot, listSnapshots, rebuildFromSnapshot, takeSnapshot } from '../../services/structureBackupService.js';
+import {
+    diffAgainstLive, getSnapshot, isBackupOwner, listSnapshots, rebuildFromSnapshot, takeSnapshot,
+} from '../../services/structureBackupService.js';
+import { diffPayload } from '../../handlers/backupRevert.js';
 import { dateStamp } from '../../services/enforcement/format.js';
 
 function userError(message) {
@@ -17,8 +19,7 @@ function userError(message) {
 // the command runs in doesn't count: that could be the support server's owner.
 // If the main server is gone, only OWNER_IDS can restore, so keep it set.
 function isOwner(interaction) {
-    const main = interaction.client.guilds.cache.get(enforcementConfig.mainGuildId);
-    return isBotOwner(interaction.user.id) || main?.ownerId === interaction.user.id;
+    return isBackupOwner(interaction.client, interaction.user.id);
 }
 
 async function handleStructure(interaction, client, sub) {
@@ -29,13 +30,25 @@ async function handleStructure(interaction, client, sub) {
         const row = await takeSnapshot(main);
         return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Snapshot saved', `#${row.id}: ${row.summary}`)] });
     }
+    if (sub === 'diff' || sub === 'revert') {
+        // Undo the nuke: compare a snapshot with the live main server; revert asks to confirm first.
+        const main = client.guilds.cache.get(mainId);
+        if (!main) throw userError('I cannot reach the main server.');
+        const snapshot = await getSnapshot(mainId, interaction.options.getInteger('snapshot'));
+        if (!snapshot) throw userError('No such snapshot. See `/backup snapshots`.');
+        const payload = diffPayload(snapshot, diffAgainstLive(main, snapshot), { withButtons: sub === 'revert' });
+        if (sub === 'revert' && payload.components.length) {
+            payload.content = '**Revert the main server to this snapshot?** Deleted roles and channels are recreated with their permissions, and changed permissions are put back. Nothing created since is deleted.';
+        }
+        return InteractionHelper.safeEditReply(interaction, payload);
+    }
     if (sub === 'snapshots') {
         const rows = await listSnapshots(mainId);
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
                 title: 'Server snapshots',
                 description: rows.length
-                    ? `${rows.map((row) => `**#${row.id}** · ${dateStamp(row.created_at)} · ${row.summary}`).join('\n')}\n\nRebuild with \`/backup rebuild server_id:<id> snapshot:<number>\`.`
+                    ? `${rows.map((row) => `**#${row.id}** · ${dateStamp(row.created_at)} · ${row.summary}`).join('\n')}\n\nCompare with the server now: \`/backup diff snapshot:<number>\` · undo a nuke: \`/backup revert\` · rebuild elsewhere: \`/backup rebuild server_id:<id> snapshot:<number>\`.`
                     : 'No snapshots yet. One is taken every day, or now with `/backup snapshot`.',
                 color: 'primary',
             })],
@@ -78,6 +91,10 @@ export default {
             .addStringOption((option) => option.setName('server_id').setDescription('ID of the server to add them to').setRequired(true).setMinLength(17).setMaxLength(20)))
         .addSubcommand((sub) => sub.setName('snapshot').setDescription('Save the main server\'s roles and channels now (also done daily)'))
         .addSubcommand((sub) => sub.setName('snapshots').setDescription('List saved snapshots of the main server'))
+        .addSubcommand((sub) => sub.setName('diff').setDescription('What changed in the main server since a snapshot (deleted roles/channels, permissions)')
+            .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setMinValue(1)))
+        .addSubcommand((sub) => sub.setName('revert').setDescription('Undo a nuke: restore deleted roles/channels and permissions from a snapshot')
+            .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setMinValue(1)))
         .addSubcommand((sub) => sub.setName('rebuild').setDescription('Recreate the main server\'s roles and channels in another server')
             .addStringOption((option) => option.setName('server_id').setDescription('ID of the new server').setRequired(true).setMinLength(17).setMaxLength(20))
             .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setMinValue(1))),
@@ -90,7 +107,7 @@ export default {
         if (!deferred) return;
 
         const sub = interaction.options.getSubcommand();
-        if (sub === 'snapshot' || sub === 'snapshots' || sub === 'rebuild') {
+        if (['snapshot', 'snapshots', 'rebuild', 'diff', 'revert'].includes(sub)) {
             return handleStructure(interaction, client, sub);
         }
 
