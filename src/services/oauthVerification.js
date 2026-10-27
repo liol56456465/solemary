@@ -137,7 +137,8 @@ function encrypt(text, key) {
 
 function decrypt(payload, key) {
     const [iv, tag, data] = String(payload).split('.').map((part) => Buffer.from(part, 'base64'));
-    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    if (iv.length !== 12 || tag.length !== 16) throw new Error('Malformed encrypted token');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv, { authTagLength: 16 });
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(data), decipher.final()]).toString('utf8');
 }

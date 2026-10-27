@@ -5,6 +5,7 @@ import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { getGuildConfig } from '../../services/config/guildConfig.js';
 import { ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
+import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
 
 function createAutoroleInfoEmbed(description) {
     return new EmbedBuilder()
@@ -68,9 +69,11 @@ export default {
                 return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'You cannot add AutoRole while the verification system or AutoVerify is enabled. Disable those first.' });
             }
             
-            if (role.position >= guild.members.me.roles.highest.position) {
-                logger.warn(`[Autorole] User ${interaction.user.tag} tried to add role ${role.name} (${role.id}) higher than bot's highest role in ${guild.name}`);
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'I can\'t assign roles that are higher than my highest role.' });
+            // Every new member gets this role, so it must be harmless and assignable.
+            const roleProblem = getRoleAssignmentProblem(role, guild.members.me);
+            if (roleProblem) {
+                logger.warn(`[Autorole] User ${interaction.user.tag} tried to add unsafe role ${role.name} (${role.id}) in ${guild.name}: ${roleProblem}`);
+                return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: roleProblem });
             }
 
             try {

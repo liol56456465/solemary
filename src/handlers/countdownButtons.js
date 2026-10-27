@@ -30,48 +30,36 @@ function formatTime(seconds) {
         .join(":");
 }
 
+// The message is edited at most this often: frequent edits share the channel's rate
+// limit with every other bot message there. The <t:…:R> timestamp counts down in the
+// client between edits.
+const UPDATE_INTERVAL_MS = 15_000;
+
+function buildRunningEmbed(countdownData, remaining) {
+    return successEmbed(
+        `⏱️ ${countdownData.title}`,
+        `Time remaining: **${formatTime(Math.ceil(remaining / 1000))}** (ends <t:${Math.ceil(countdownData.endTime / 1000)}:R>)`,
+    );
+}
+
 function startCountdown(countdownId, countdownData, activeCountdowns) {
     if (countdownData.interval) {
-        clearInterval(countdownData.interval);
+        clearTimeout(countdownData.interval);
         countdownData.interval = null;
     }
 
     logger.info(`Countdown started: ${countdownData.title} (${countdownData.remainingTime / 1000}s remaining)`);
 
-    countdownData.interval = setInterval(async () => {
+    // One timer per countdown, rescheduled after each tick: it fires every
+    // UPDATE_INTERVAL_MS, or exactly at the end when that comes sooner.
+    const tick = async () => {
         try {
             if (countdownData.isPaused) return;
 
-            const now = Date.now();
-            const remaining = Math.max(0, countdownData.endTime - now);
+            const remaining = Math.max(0, countdownData.endTime - Date.now());
             countdownData.remainingTime = remaining;
 
-            if (now - countdownData.lastUpdate >= 1000) {
-                countdownData.lastUpdate = now;
-
-                const embed = successEmbed(
-                    `⏱️ ${countdownData.title}`,
-                    `Time remaining: **${formatTime(Math.ceil(remaining / 1000))}**`,
-                );
-
-                try {
-                    await countdownData.message.edit({
-                        embeds: [embed],
-                        components: [
-                            createControlButtons(
-                                countdownId,
-                                countdownData.isPaused,
-                            ),
-                        ],
-                    });
-                } catch (error) {
-                    logger.error("Error updating countdown message:", error);
-                }
-            }
-
             if (remaining <= 0) {
-                clearInterval(countdownData.interval);
-
                 const finishedEmbed = successEmbed(
                     `⏱️ ${countdownData.title} (Finished!)`,
                     "⏰ Time's up!",
@@ -83,18 +71,35 @@ function startCountdown(countdownId, countdownData, activeCountdowns) {
                 });
 
                 cleanupCountdown(countdownId, activeCountdowns);
+                return;
             }
+
+            try {
+                await countdownData.message.edit({
+                    embeds: [buildRunningEmbed(countdownData, remaining)],
+                    components: [createControlButtons(countdownId, false)],
+                });
+            } catch (error) {
+                logger.error("Error updating countdown message:", error);
+            }
+
+            // Paused or cancelled while the edit was in flight.
+            if (countdownData.isPaused || !activeCountdowns.has(countdownId)) return;
+            const left = Math.max(0, countdownData.endTime - Date.now());
+            countdownData.interval = setTimeout(tick, Math.min(UPDATE_INTERVAL_MS, left));
         } catch (error) {
             logger.error("Countdown update error:", error);
             cleanupCountdown(countdownId, activeCountdowns);
         }
-    }, 100);
+    };
+
+    countdownData.interval = setTimeout(tick, Math.min(UPDATE_INTERVAL_MS, countdownData.remainingTime));
 }
 
 function cleanupCountdown(countdownId, activeCountdowns) {
     const countdownData = activeCountdowns.get(countdownId);
     if (countdownData) {
-        clearInterval(countdownData.interval);
+        clearTimeout(countdownData.interval);
         activeCountdowns.delete(countdownId);
     }
 }
@@ -129,9 +134,8 @@ async function countdownButtonHandler(interaction, client, args) {
                     countdownData.endTime = Date.now() + countdownData.remainingTime;
                     startCountdown(countdownId, countdownData, activeCountdowns);
 
-                    const currentEmbed = countdownData.message.embeds[0];
                     await countdownData.message.edit({
-                        embeds: [currentEmbed],
+                        embeds: [buildRunningEmbed(countdownData, countdownData.remainingTime)],
                         components: [createControlButtons(countdownId, false)],
                     });
 
@@ -140,13 +144,16 @@ async function countdownButtonHandler(interaction, client, args) {
                         flags: ["Ephemeral"],
                     });
                 } else {
-                    clearInterval(countdownData.interval);
+                    clearTimeout(countdownData.interval);
                     countdownData.isPaused = true;
-                    countdownData.remainingTime = countdownData.endTime - Date.now();
+                    countdownData.remainingTime = Math.max(0, countdownData.endTime - Date.now());
 
-                    const currentEmbed = countdownData.message.embeds[0];
+                    // No end timestamp while paused: it would keep counting down in the client.
                     await countdownData.message.edit({
-                        embeds: [currentEmbed],
+                        embeds: [successEmbed(
+                            `⏱️ ${countdownData.title} (Paused)`,
+                            `Time remaining: **${formatTime(Math.ceil(countdownData.remainingTime / 1000))}**`,
+                        )],
                         components: [createControlButtons(countdownId, true)],
                     });
 
@@ -158,7 +165,7 @@ async function countdownButtonHandler(interaction, client, args) {
                 break;
 
             case "cancel":
-                clearInterval(countdownData.interval);
+                clearTimeout(countdownData.interval);
 
                 const embed = successEmbed(
                     `⏱️ ${countdownData.title} (Cancelled)`,

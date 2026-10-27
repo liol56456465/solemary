@@ -239,6 +239,7 @@ export default {
           const autocompleteCommand = client.commands.get(interaction.commandName);
           const autocompleteAccess = checkCommandAccess({
             command: autocompleteCommand,
+            accessKey: resolveSlashAccessKey(interaction),
             guild: interaction.guild,
             userId: interaction.user.id,
             permissions: interaction.memberPermissions,

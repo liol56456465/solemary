@@ -1,4 +1,5 @@
 import { logger } from '../logger.js';
+import { Mutex } from '../mutex.js';
 import { db, getFromDb } from './wrapper.js';
 import { getTicketCounterKey, getTicketKey } from './keys.js';
 
@@ -88,10 +89,12 @@ export async function incrementTicketCounter(guildId) {
     }
 
     const key = getTicketCounterKey(guildId);
-    const currentCounter = await getTicketCounter(guildId);
-    const nextCounter = currentCounter + 1;
-
-    await db.set(key, nextCounter);
+    // Serialized so two tickets opened at once don't get the same number.
+    const nextCounter = await Mutex.runExclusive(`ticket-counter:${guildId}`, async () => {
+        const next = (await getTicketCounter(guildId)) + 1;
+        await db.set(key, next);
+        return next;
+    });
 
     return nextCounter.toString().padStart(3, '0');
 }

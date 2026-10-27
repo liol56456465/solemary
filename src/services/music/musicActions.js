@@ -13,6 +13,7 @@ import {
 import { refreshPlayerMessage } from './playerHandler.js';
 
 const YOUTUBE_URL_PATTERN = /(?:youtube\.com|youtu\.be)/i;
+const MAX_PLAYLIST_TRACKS = 100;
 
 export function getPlayer(client, guildId) {
     return client.riffy?.players?.get(guildId) || null;
@@ -83,6 +84,11 @@ export async function ensurePlayer(client, interaction) {
     const guildData = getGuildMusicData(guildId);
     let player = getPlayer(client, guildId);
 
+    // A running session belongs to its voice channel; only its listeners (or admins) may add to it.
+    if (player) {
+        assertCanControl(interaction.member, player);
+    }
+
     if (!player) {
         player = client.riffy.createConnection({
             guildId,
@@ -118,6 +124,8 @@ export async function joinVoiceChannel(client, interaction) {
     let player = getPlayer(client, guildId);
 
     if (player && player.voiceChannel !== channel.id) {
+        // Moving the bot ends the other channel's session; only admins may do that.
+        assertCanControl(interaction.member, player);
         try {
             player.destroy();
         } catch {
@@ -167,6 +175,7 @@ export async function playQuery(client, interaction, query) {
         let skipped = 0;
 
         for (const track of tracks) {
+            if (added >= MAX_PLAYLIST_TRACKS) break;
             track.info.requester = interaction.user;
             if (isDuplicateTrack(player, track)) {
                 skipped += 1;
@@ -183,7 +192,7 @@ export async function playQuery(client, interaction, query) {
         return {
             embed: successEmbed(
                 'Playlist Added',
-                `**${playlistInfo?.name || 'Playlist'}**\nAdded ${added} of ${tracks.length} track(s).${skipped ? ` Skipped ${skipped} duplicate(s).` : ''}`,
+                `**${playlistInfo?.name || 'Playlist'}**\nAdded ${added} of ${tracks.length} track(s).${skipped ? ` Skipped ${skipped} duplicate(s).` : ''}${added >= MAX_PLAYLIST_TRACKS ? ` (at most ${MAX_PLAYLIST_TRACKS} per playlist)` : ''}`,
             ),
         };
     }

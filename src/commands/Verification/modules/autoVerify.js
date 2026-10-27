@@ -6,6 +6,7 @@ import { withErrorHandling, createError, ErrorTypes } from '../../../utils/error
 import { validateAutoVerifyCriteria } from '../../../services/verificationService.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { getRoleAssignmentProblem } from '../../../utils/roleSafety.js';
 import { getWelcomeConfig } from '../../../utils/database.js';
 import autoVerifyDashboard from './autoVerifyDashboard.js';
 
@@ -125,21 +126,14 @@ async function handleSetup(interaction, guild, client) {
             );
         }
 
-        if (targetRole.id === guild.id || targetRole.managed) {
+        // Members who meet the criteria get this role automatically, so it must be harmless and assignable.
+        const roleProblem = getRoleAssignmentProblem(targetRole, botMember);
+        if (roleProblem) {
             throw createError(
-                'Invalid auto-verify role selected',
-                ErrorTypes.VALIDATION,
-                'Please choose a normal assignable role (not @everyone or an integration-managed role).',
-                { guildId: guild.id, roleId: targetRole.id, managed: targetRole.managed }
-            );
-        }
-
-        if (targetRole.position >= botMember.roles.highest.position) {
-            throw createError(
-                'Role hierarchy error for auto-verify setup',
+                'Unsafe auto-verify role selected',
                 ErrorTypes.PERMISSION,
-                'The selected auto-verify role must be below my highest role in the server role hierarchy.',
-                { guildId: guild.id, roleId: targetRole.id, rolePosition: targetRole.position, botRolePosition: botMember.roles.highest.position }
+                roleProblem,
+                { guildId: guild.id, roleId: targetRole.id }
             );
         }
 

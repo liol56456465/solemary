@@ -229,7 +229,7 @@ export function setupPlayerHandler(client) {
         if (guildData.playerChannelId) {
             const channel = client.channels.cache.get(guildData.playerChannelId);
             if (channel) {
-                channel.send(`Failed to play **${track?.info?.title || 'track'}**. Skipping...`).catch(() => null);
+                channel.send({ content: `Failed to play **${track?.info?.title || 'track'}**. Skipping...`, allowedMentions: { parse: [] } }).catch(() => null);
             }
         }
     });

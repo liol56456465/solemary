@@ -1,4 +1,5 @@
 import { botConfig, getColor } from '../../../config/bot.js';
+import { getRoleAssignmentProblem } from '../../../utils/roleSafety.js';
 import {
     ActionRowBuilder,
     StringSelectMenuBuilder,
@@ -418,20 +419,9 @@ async function handleRole(selectInteraction, rootInteraction, guildConfig, guild
         await roleInteraction.deferUpdate();
         const role = roleInteraction.roles.first();
 
-        if (role.id === rootInteraction.guild.id || role.managed) {
-            await replyUserError(roleInteraction, {
-                type: ErrorTypes.VALIDATION,
-                message: 'Please choose a normal assignable role (not @everyone or a bot-managed role).',
-            });
-            return;
-        }
-
-        const botMember = rootInteraction.guild.members.me;
-        if (role.position >= botMember.roles.highest.position) {
-            await replyUserError(roleInteraction, {
-                type: ErrorTypes.PERMISSION,
-                message: 'The selected role must be below my highest role in the server role hierarchy.',
-            });
+        const roleProblem = getRoleAssignmentProblem(role, rootInteraction.guild.members.me);
+        if (roleProblem) {
+            await replyUserError(roleInteraction, { type: ErrorTypes.VALIDATION, message: roleProblem });
             return;
         }
 

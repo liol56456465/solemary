@@ -84,8 +84,13 @@ async function inviteIsForeign(client, code) {
         inviteGuilds.set(code, invite?.guild?.id || null);
     }
     const guildId = inviteGuilds.get(code);
+    // A code that doesn't resolve (expired, mistyped, lookup failed) advertises nothing.
+    if (!guildId) return false;
     return guildId !== enforcementConfig.mainGuildId && guildId !== enforcementConfig.supportGuildId;
 }
+
+// Each code costs one API call; more than this in one message is advertising anyway.
+const MAX_INVITE_LOOKUPS = 3;
 
 /** The user ids a message is aimed at: mentioned users and the author of the replied-to message. */
 async function targetsOf(message) {
@@ -116,9 +121,14 @@ export async function evaluateMessage(message, member, now = Date.now()) {
     const nsfw = findNsfwDomain(text);
     if (nsfw) hits.push({ rule: 'nsfw', evidence: `link to ${nsfw}` });
 
+    const inviteCodes = findInviteCodes(text);
     const foreignInvites = [];
-    for (const code of findInviteCodes(text)) {
-        if (await inviteIsForeign(message.client, code)) foreignInvites.push(code);
+    if (inviteCodes.length > MAX_INVITE_LOOKUPS) {
+        foreignInvites.push(...inviteCodes);
+    } else {
+        for (const code of inviteCodes) {
+            if (await inviteIsForeign(message.client, code)) foreignInvites.push(code);
+        }
     }
     const newAccount = now - message.author.createdTimestamp < automodConfig.adBotAccountAgeMs;
     const newJoiner = member?.joinedTimestamp && now - member.joinedTimestamp < automodConfig.adBotJoinAgeMs;

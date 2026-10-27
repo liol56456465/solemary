@@ -1,6 +1,7 @@
 // database.js — facade re-exporting split modules for backward compatibility
 
 import { pgDb } from './postgresDatabase.js';
+import { Mutex } from './mutex.js';
 import { logger } from './logger.js';
 import { BotConfig, getDefaultApplicationQuestions } from '../config/bot.js';
 
@@ -302,6 +303,28 @@ export async function getEndedGiveaways(client) {
             return [];
         }
     }
+}
+
+/**
+ * Writes one giveaway row (Postgres only). Returns null when SQL isn't available,
+ * so the caller falls back to the key-value store. Touching only this row keeps a
+ * join on one giveaway from overwriting another giveaway's state.
+ */
+export async function upsertGiveawayRow(client, guildId, giveaway) {
+    const wrapper = client?.db;
+    if (!isPostgresSqlReady(wrapper)) return null;
+    const { pgConfig } = await import('../config/database/postgres.js');
+    await wrapper.db.pool.query(
+        `INSERT INTO ${pgConfig.tables.guilds} (id, created_at) VALUES ($1, CURRENT_TIMESTAMP) ON CONFLICT (id) DO NOTHING`,
+        [guildId],
+    );
+    await wrapper.db.pool.query(
+        `INSERT INTO ${pgConfig.tables.giveaways} (guild_id, message_id, data, ends_at)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (guild_id, message_id) DO UPDATE SET data = $3, ends_at = $4, updated_at = CURRENT_TIMESTAMP`,
+        [guildId, String(giveaway.messageId), giveaway, giveaway.endsAt ? new Date(giveaway.endsAt) : null],
+    );
+    return true;
 }
 
 export async function markGiveawayEnded(client, giveawayId, endedData) {
@@ -1136,17 +1159,23 @@ export async function removeJoinToCreateTrigger(client, guildId, channelId) {
     }
 }
 
+// The temporary channel list lives in one config object; concurrent joins/leaves
+// would overwrite each other's read-modify-write without this lock.
+const jtcLockKey = (guildId) => `jtc-temp:${guildId}`;
+
 export async function registerTemporaryChannel(client, guildId, channelId, ownerId, triggerChannelId) {
     try {
-        const config = await getJoinToCreateConfig(client, guildId);
-        
-        config.temporaryChannels[channelId] = {
-            ownerId,
-            triggerChannelId,
-            createdAt: Date.now()
-        };
-        
-        return await saveJoinToCreateConfig(client, guildId, config);
+        return await Mutex.runExclusive(jtcLockKey(guildId), async () => {
+            const config = await getJoinToCreateConfig(client, guildId);
+
+            config.temporaryChannels[channelId] = {
+                ownerId,
+                triggerChannelId,
+                createdAt: Date.now()
+            };
+
+            return await saveJoinToCreateConfig(client, guildId, config);
+        });
     } catch (error) {
         logger.error(`Error registering temporary channel for guild ${guildId}:`, error);
         return false;
@@ -1155,14 +1184,16 @@ export async function registerTemporaryChannel(client, guildId, channelId, owner
 
 export async function unregisterTemporaryChannel(client, guildId, channelId) {
     try {
-        const config = await getJoinToCreateConfig(client, guildId);
-        
-        if (config.temporaryChannels[channelId]) {
-            delete config.temporaryChannels[channelId];
-            return await saveJoinToCreateConfig(client, guildId, config);
-        }
-        
-        return false;
+        return await Mutex.runExclusive(jtcLockKey(guildId), async () => {
+            const config = await getJoinToCreateConfig(client, guildId);
+
+            if (config.temporaryChannels[channelId]) {
+                delete config.temporaryChannels[channelId];
+                return await saveJoinToCreateConfig(client, guildId, config);
+            }
+
+            return false;
+        });
     } catch (error) {
         logger.error(`Error unregistering temporary channel for guild ${guildId}:`, error);
         return false;

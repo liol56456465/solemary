@@ -11,6 +11,7 @@ import { GuildVerificationLevel } from 'discord.js';
 import { automodConfig } from '../../config/automod.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
+import { Mutex } from '../../utils/mutex.js';
 import { postModLog } from '../enforcement/enforcementService.js';
 import { getLockdown, setLockdown } from './automodSettings.js';
 
@@ -46,6 +47,17 @@ async function alertOwner(guild, text) {
 
 async function startLockdown(guild, joinerIds) {
     const previous = guild.verificationLevel;
+    // Save the lockdown before any slow call, so joins arriving meanwhile add to
+    // it instead of starting a second one that forgets the original level.
+    const state = {
+        active: true,
+        startedAt: new Date().toISOString(),
+        previousVerificationLevel: previous,
+        raisedVerification: false,
+        joinerIds,
+    };
+    await saveLockdown(guild.id, state);
+
     let raised = false;
     if (previous < GuildVerificationLevel.High) {
         raised = await guild.setVerificationLevel(GuildVerificationLevel.High, 'Automod: join raid detected')
@@ -55,16 +67,17 @@ async function startLockdown(guild, joinerIds) {
                 return false;
             });
     }
+    if (raised) {
+        const current = await loadLockdown(guild.id);
+        await saveLockdown(guild.id, { ...(current?.active ? current : state), raisedVerification: true });
+    }
 
-    await saveLockdown(guild.id, {
-        active: true,
-        startedAt: new Date().toISOString(),
-        previousVerificationLevel: previous,
-        raisedVerification: raised,
-        joinerIds,
-    });
+    logger.warn(`Join raid in ${guild.id}: ${joinerIds.length} joins within ${automodConfig.raidWindowMs / 1000}s. Lockdown started.`);
+    return { joinerCount: joinerIds.length, raised };
+}
 
-    const summary = `${joinerIds.length} accounts joined within ${automodConfig.raidWindowMs / 1000} seconds.`;
+async function announceLockdown(guild, { joinerCount, raised }) {
+    const summary = `${joinerCount} accounts joined within ${automodConfig.raidWindowMs / 1000} seconds.`;
     await postModLog(guild.client, 'raid', [
         { name: 'What happened', value: summary },
         { name: 'Verification level', value: raised ? 'Raised to High' : 'Not changed (already High, or missing Manage Server)' },
@@ -72,13 +85,19 @@ async function startLockdown(guild, joinerIds) {
         { name: 'End it', value: '`/automod lockdown-end`' },
     ], { title: 'Join raid: lockdown started' });
     await alertOwner(guild, `**Join raid in ${guild.name}.** ${summary} The server is in lockdown${raised ? ' and the verification level is now High' : ''}. End it with \`/automod lockdown-end\` when it is over.`);
-    logger.warn(`Join raid in ${guild.id}: ${summary} Lockdown started.`);
 }
 
 /** Call for every member who joins the main server. */
 export async function recordJoin(member) {
+    if (member.guild.id !== enforcementConfig.mainGuildId) return;
+    // One join at a time per guild: the lockdown state is read-modify-write.
+    const lockdown = await Mutex.runExclusive(`raid:${member.guild.id}`, () => recordJoinLocked(member));
+    // The mod log and owner DM can be slow; don't hold up the next join.
+    if (lockdown) announceLockdown(member.guild, lockdown).catch((error) => logger.warn(`Lockdown notice failed: ${error.message}`));
+}
+
+async function recordJoinLocked(member) {
     const { guild } = member;
-    if (guild.id !== enforcementConfig.mainGuildId) return;
 
     const state = await loadLockdown(guild.id);
     if (state?.active) {
@@ -95,12 +114,17 @@ export async function recordJoin(member) {
 
     if (joins.length >= automodConfig.raidJoins) {
         recentJoins.delete(guild.id);
-        await startLockdown(guild, joins.map((join) => join.userId));
+        return startLockdown(guild, joins.map((join) => join.userId));
     }
+    return null;
 }
 
 /** Ends the lockdown and restores the verification level. Returns false if none was active. */
 export async function endLockdown(guild, admin) {
+    return Mutex.runExclusive(`raid:${guild.id}`, () => endLockdownLocked(guild, admin));
+}
+
+async function endLockdownLocked(guild, admin) {
     const state = await loadLockdown(guild.id);
     if (!state?.active) return false;
 

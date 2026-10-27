@@ -3,7 +3,8 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { logger } from './logger.js';
 import { TitanBotError, ErrorTypes } from './errorHandler.js';
-import { unwrapReplitData } from './database.js';
+import { unwrapReplitData, upsertGiveawayRow } from './database.js';
+import { Mutex } from './mutex.js';
 import { 
     createGiveawayEmbed as createGiveawayEmbedService,
     createGiveawayButtons as createGiveawayButtonsService,
@@ -63,13 +64,14 @@ export async function saveGiveaway(client, guildId, giveawayData) {
             );
         }
 
-        const key = giveawayKey(guildId);
-        const giveaways = await getGuildGiveaways(client, guildId);
-
-        const giveawayMap = arrayToGiveawayMap(giveaways);
-        giveawayMap[giveawayData.messageId] = giveawayData;
-        
-        await client.db.set(key, giveawayMap);
+        if (await upsertGiveawayRow(client, guildId, giveawayData) === null) {
+            // Key-value store: the whole guild map is rewritten, so serialize per guild.
+            await Mutex.runExclusive(`giveaways:${guildId}`, async () => {
+                const giveawayMap = arrayToGiveawayMap(await getGuildGiveaways(client, guildId));
+                giveawayMap[giveawayData.messageId] = giveawayData;
+                await client.db.set(giveawayKey(guildId), giveawayMap);
+            });
+        }
         
         logger.debug(`Saved giveaway ${giveawayData.messageId} in guild ${guildId}`);
         return true;

@@ -22,6 +22,7 @@ import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorHandler.js';
 import { getLevelingConfig, saveLevelingConfig } from '../../../services/leveling/leveling.js';
 import { botHasPermission } from '../../../utils/permissionGuard.js';
+import { getRoleAssignmentProblem } from '../../../utils/roleSafety.js';
 import { startDashboardSession } from '../../../utils/dashboardSession.js';
 
 function buildDashboardEmbed(cfg, guild) {
@@ -291,6 +292,14 @@ async function handleRoleRewardAdd(selectInteraction, rootInteraction, cfg, guil
     }
 
     const roleId = submitted.fields.getField('reward_role').values[0];
+
+    // Anyone who chats enough gets this role, so it must be harmless and assignable.
+    const guild = rootInteraction.guild;
+    const roleProblem = getRoleAssignmentProblem(guild.roles.cache.get(roleId), guild.members.me);
+    if (roleProblem) {
+        await replyUserError(submitted, { type: ErrorTypes.PERMISSION, message: roleProblem });
+        return;
+    }
 
     cfg.roleRewards = cfg.roleRewards ?? {};
     cfg.roleRewards[level] = roleId;

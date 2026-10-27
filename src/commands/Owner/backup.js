@@ -13,9 +13,12 @@ function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
 }
 
+// Bot owners (OWNER_IDS) or the main server's owner only. The owner of the server
+// the command runs in doesn't count: that could be the support server's owner.
+// If the main server is gone, only OWNER_IDS can restore, so keep it set.
 function isOwner(interaction) {
     const main = interaction.client.guilds.cache.get(enforcementConfig.mainGuildId);
-    return isBotOwner(interaction.user.id) || main?.ownerId === interaction.user.id || interaction.guild?.ownerId === interaction.user.id;
+    return isBotOwner(interaction.user.id) || main?.ownerId === interaction.user.id;
 }
 
 async function handleStructure(interaction, client, sub) {

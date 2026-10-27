@@ -3,18 +3,13 @@
 import { logger } from '../utils/logger.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { getReactionRoleKey, getReactionRolesPrefix } from '../utils/database/keys.js';
+import { getDangerousPermissions, hasDangerousPermissions } from '../utils/roleSafety.js';
+
+// Re-exported for reactroles.js, which imports it from here.
+export { hasDangerousPermissions };
 
 const MAX_ROLES_PER_MESSAGE = 25;
 
-const DANGEROUS_PERMISSIONS = [
-    'Administrator',
-    'ManageGuild',
-    'ManageRoles',
-    'ManageChannels',
-    'ManageWebhooks',
-    'BanMembers',
-    'KickMembers'
-];
 
 function validateGuildId(guildId) {
     if (!guildId || typeof guildId !== 'string' || !/^\d{17,19}$/.test(guildId)) {
@@ -49,17 +44,6 @@ function validateRoleId(roleId) {
     }
 }
 
-export function hasDangerousPermissions(role) {
-    if (!role || !role.permissions) return false;
-    
-    for (const permission of DANGEROUS_PERMISSIONS) {
-        if (role.permissions.has(permission)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 async function validateRoleSafety(client, guildId, roleId) {
     const guild = client.guilds?.cache?.get(guildId) || await client.guilds?.fetch?.(guildId).catch(() => null);
     if (!guild) {
@@ -86,7 +70,7 @@ async function validateRoleSafety(client, guildId, roleId) {
             `Dangerous role permission detected: ${roleId}`,
             ErrorTypes.PERMISSION,
             'For security reasons, high-privilege roles cannot be assigned through reaction roles.',
-            { guildId, roleId, roleName: role.name, dangerousPermissions: DANGEROUS_PERMISSIONS }
+            { guildId, roleId, roleName: role.name, dangerousPermissions: getDangerousPermissions(role) }
         );
     }
 

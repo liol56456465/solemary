@@ -48,6 +48,9 @@ class Meowist extends Client {
       ],
       // DM channels aren't cached; without this partial, DMs (modmail) never arrive.
       partials: [Partials.Channel],
+      // No message may ping @everyone/@here unless it opts in: user text (track
+      // titles, prizes, reports) ends up in bot messages.
+      allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
     });
 
     this.config = config;

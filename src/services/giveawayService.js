@@ -5,6 +5,8 @@ import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
 import { getColor, botConfig } from '../config/bot.js';
 import { getEndedGiveaways, markGiveawayEnded } from '../utils/database.js';
+import { getGuildGiveaways } from '../utils/giveaways.js';
+import { Mutex } from '../utils/mutex.js';
 import { checkRateLimit, getRateLimitStatus } from '../utils/rateLimiter.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
 
@@ -340,100 +342,107 @@ export async function checkGiveaways(client) {
     logger.info(`Processing ${endedGiveaways.length} ended giveaways`);
 
     for (const giveawayRecord of endedGiveaways) {
-      try {
-        const { id: giveawayId, guild_id: guildId, message_id: messageId, data: giveawayData } = giveawayRecord;
-        const giveaway = typeof giveawayData === 'string' ? JSON.parse(giveawayData) : giveawayData;
+      // Same lock as the Join button (giveawayButtons.js).
+      await Mutex.runExclusive(`giveaway:${giveawayRecord.message_id}`, async () => {
+        try {
+          const { id: giveawayId, guild_id: guildId, message_id: messageId, data: giveawayData } = giveawayRecord;
+          // Re-read under the join lock: entries added since the query count, and a
+          // giveaway already ended by an overlapping run is skipped.
+          const fresh = (await getGuildGiveaways(client, guildId)).find((g) => String(g.messageId) === String(messageId));
+          if (fresh?.ended || fresh?.isEnded) return;
+          const giveaway = fresh || (typeof giveawayData === 'string' ? JSON.parse(giveawayData) : giveawayData);
 
-        const guild = client.guilds.cache.get(guildId);
-        if (!guild) {
-          logger.debug(`Guild ${guildId} not found, skipping giveaway ${messageId}`);
-          continue;
-        }
-
-        const channel = await guild.channels.fetch(giveaway.channelId).catch(() => null);
-        if (!channel) {
-          logger.debug(`Channel ${giveaway.channelId} not found for giveaway ${messageId}`);
-          continue;
-        }
-
-        const message = await channel.messages.fetch(messageId).catch(() => null);
-        if (!message) {
-          logger.debug(`Message ${messageId} not found for giveaway in channel ${giveaway.channelId}`);
-          continue;
-        }
-
-        const participants = giveaway.participants || [];
-        const winners = selectWinners(participants, giveaway.winnerCount || 1);
-
-        const winnerMentions = winners.length > 0
-          ? winners.map(id => `<@${id}>`).join(', ')
-          : 'No valid entries!';
-
-        const endedEmbed = createGiveawayEmbed(giveaway, 'ended', winners);
-
-        await message.edit({
-          embeds: [endedEmbed],
-          components: [createGiveawayButtons(true)]
-        });
-
-        giveaway.ended = true;
-        giveaway.isEnded = true;
-        giveaway.winnerIds = winners;
-        giveaway.endedAt = new Date().toISOString();
-        // The key-value fallback of markGiveawayEnded needs guildId on the record;
-        // without it the giveaway is never marked ended and gets re-ended every tick.
-        giveaway.guildId = giveaway.guildId || guildId;
-        giveaway.messageId = giveaway.messageId || messageId;
-
-        const markedSuccess = await markGiveawayEnded(client, giveawayId, giveaway);
-        if (!markedSuccess) {
-          logger.warn(`Failed to mark giveaway ${messageId} as ended in database`);
-        }
-
-        if (winners.length > 0) {
-          const winnerAnnouncement = `🎉 Congratulations ${winnerMentions}! You won the **${giveaway.prize || 'giveaway'}**! Please contact <@${giveaway.hostId}> to claim your prize.`;
-          const winnerPingMsg = await channel.send({ content: winnerAnnouncement });
-          giveaway.winnerPingMessageId = winnerPingMsg.id;
-          await markGiveawayEnded(client, giveawayId, giveaway);
-
-          try {
-            await logEvent({
-              client,
-              guildId,
-              eventType: EVENT_TYPES.GIVEAWAY_WINNER,
-              data: {
-                description: `Giveaway ended with ${winners.length} winner(s)`,
-                channelId: channel.id,
-                fields: [
-                  {
-                    name: '🎁 Prize',
-                    value: giveaway.prize || 'Mystery Prize!',
-                    inline: true
-                  },
-                  {
-                    name: '🏆 Winners',
-                    value: winners.map(id => `<@${id}>`).join(', '),
-                    inline: false
-                  },
-                  {
-                    name: '👥 Entries',
-                    value: participants.length.toString(),
-                    inline: true
-                  }
-                ]
-              }
-            });
-          } catch (error) {
-            logger.debug('Error logging giveaway winner:', error);
+          const guild = client.guilds.cache.get(guildId);
+          if (!guild) {
+            logger.debug(`Guild ${guildId} not found, skipping giveaway ${messageId}`);
+            return;
           }
-        } else {
-          await channel.send({ content: `The giveaway for **${giveaway.prize}** has ended with no valid entries.` });
-        }
 
-        logger.info(`Ended giveaway ${messageId} in guild ${guildId}`);
-      } catch (error) {
-        logger.error(`Error processing giveaway:`, error);
-      }
+          const channel = await guild.channels.fetch(giveaway.channelId).catch(() => null);
+          if (!channel) {
+            logger.debug(`Channel ${giveaway.channelId} not found for giveaway ${messageId}`);
+            return;
+          }
+
+          const message = await channel.messages.fetch(messageId).catch(() => null);
+          if (!message) {
+            logger.debug(`Message ${messageId} not found for giveaway in channel ${giveaway.channelId}`);
+            return;
+          }
+
+          const participants = giveaway.participants || [];
+          const winners = selectWinners(participants, giveaway.winnerCount || 1);
+
+          const winnerMentions = winners.length > 0
+            ? winners.map(id => `<@${id}>`).join(', ')
+            : 'No valid entries!';
+
+          const endedEmbed = createGiveawayEmbed(giveaway, 'ended', winners);
+
+          await message.edit({
+            embeds: [endedEmbed],
+            components: [createGiveawayButtons(true)]
+          });
+
+          giveaway.ended = true;
+          giveaway.isEnded = true;
+          giveaway.winnerIds = winners;
+          giveaway.endedAt = new Date().toISOString();
+          // The key-value fallback of markGiveawayEnded needs guildId on the record;
+          // without it the giveaway is never marked ended and gets re-ended every tick.
+          giveaway.guildId = giveaway.guildId || guildId;
+          giveaway.messageId = giveaway.messageId || messageId;
+
+          const markedSuccess = await markGiveawayEnded(client, giveawayId, giveaway);
+          if (!markedSuccess) {
+            logger.warn(`Failed to mark giveaway ${messageId} as ended in database`);
+          }
+
+          if (winners.length > 0) {
+            const winnerAnnouncement = `🎉 Congratulations ${winnerMentions}! You won the **${giveaway.prize || 'giveaway'}**! Please contact <@${giveaway.hostId}> to claim your prize.`;
+            const winnerPingMsg = await channel.send({ content: winnerAnnouncement });
+            giveaway.winnerPingMessageId = winnerPingMsg.id;
+            await markGiveawayEnded(client, giveawayId, giveaway);
+
+            try {
+              await logEvent({
+                client,
+                guildId,
+                eventType: EVENT_TYPES.GIVEAWAY_WINNER,
+                data: {
+                  description: `Giveaway ended with ${winners.length} winner(s)`,
+                  channelId: channel.id,
+                  fields: [
+                    {
+                      name: '🎁 Prize',
+                      value: giveaway.prize || 'Mystery Prize!',
+                      inline: true
+                    },
+                    {
+                      name: '🏆 Winners',
+                      value: winners.map(id => `<@${id}>`).join(', '),
+                      inline: false
+                    },
+                    {
+                      name: '👥 Entries',
+                      value: participants.length.toString(),
+                      inline: true
+                    }
+                  ]
+                }
+              });
+            } catch (error) {
+              logger.debug('Error logging giveaway winner:', error);
+            }
+          } else {
+            await channel.send({ content: `The giveaway for **${giveaway.prize}** has ended with no valid entries.` });
+          }
+
+          logger.info(`Ended giveaway ${messageId} in guild ${guildId}`);
+        } catch (error) {
+          logger.error(`Error processing giveaway:`, error);
+        }
+      });
     }
   } catch (error) {
     logger.error('Error checking giveaways:', error);

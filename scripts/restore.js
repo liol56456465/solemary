@@ -99,7 +99,7 @@ async function run() {
   logger.warn('Starting database restore', {
     event: 'restore.start',
     inputPath,
-    targetUrl,
+    target: redactUrl(targetUrl),
     dropSchema
   });
 
@@ -127,8 +127,18 @@ async function run() {
   logger.info('Database restore completed', {
     event: 'restore.completed',
     inputPath,
-    targetUrl
+    target: redactUrl(targetUrl)
   });
+}
+
+/** Host and database only: the URL carries the password. */
+function redactUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.host}${parsed.pathname}`;
+  } catch {
+    return '(unparseable URL)';
+  }
 }
 
 run().catch((error) => {

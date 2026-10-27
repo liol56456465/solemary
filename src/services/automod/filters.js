@@ -181,19 +181,31 @@ function passesLuhn(digits) {
     return sum % 10 === 0;
 }
 
+// Mentions, custom emoji and timestamps carry 10-20 digit ids that look like
+// phone or card numbers.
+const DISCORD_MARKUP_PATTERN = /<a?:\w+:\d+>|<[@#&!]+\d+>|<t:-?\d+(?::\w)?>|<\/[\w -]+:\d+>/g;
+
 /** What kind of personal info the text contains, or null. */
 export function findPersonalInfo(text) {
-    const value = String(text || '').normalize('NFKC').replace(INVISIBLE_PATTERN, '').replace(/https?:\/\/\S+/g, ' ');
+    const value = String(text || '').normalize('NFKC').replace(INVISIBLE_PATTERN, '')
+        .replace(/https?:\/\/\S+/g, ' ')
+        .replace(DISCORD_MARKUP_PATTERN, ' ');
     if (EMAIL_PATTERN.test(value)) return 'an e-mail address';
     for (const match of value.match(CARD_PATTERN) || []) {
         const digits = match.replace(/\D/g, '');
+        // A bare 17+ digit run is a pasted Discord id, not a card.
+        if (digits.length >= 17 && digits === match.trim()) continue;
         if (digits.length >= 13 && passesLuhn(digits)) return 'a card number';
     }
     for (const match of value.match(PHONE_PATTERN) || []) {
         const digits = match.replace(/\D/g, '');
-        if (digits.length >= 9 && digits.length <= 15 && !/^(\d)\1+$/.test(digits)) return 'a phone number';
+        // Needs a + or separators: a bare digit run is a score, id or timestamp more often than a phone.
+        const formatted = match.trim().startsWith('+') || /\d[\s()-]+\d/.test(match.trim());
+        if (formatted && digits.length >= 9 && digits.length <= 15 && !/^(\d)\1+$/.test(digits)) return 'a phone number';
     }
-    if (IPV4_PATTERN.test(value)) return 'an IP address';
+    // Version numbers (1.21.4.2) look like IPs; real addresses nearly always have a 3-digit part.
+    const ip = value.match(IPV4_PATTERN)?.[0];
+    if (ip && ip.split('.').some((part) => part.length === 3)) return 'an IP address';
     return null;
 }
 

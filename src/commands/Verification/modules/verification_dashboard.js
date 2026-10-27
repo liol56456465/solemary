@@ -22,6 +22,7 @@ import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorH
 import { getGuildConfig, setGuildConfig } from '../../../services/config/guildConfig.js';
 import { getWelcomeConfig } from '../../../utils/database.js';
 import { botHasPermission } from '../../../utils/permissionGuard.js';
+import { getRoleAssignmentProblem } from '../../../utils/roleSafety.js';
 import {
     getVerificationPanelStatus,
     formatPanelStatusField,
@@ -529,19 +530,10 @@ async function handleRole(selectInteraction, rootInteraction, cfg, guildId, clie
         const guild = rootInteraction.guild;
         const botMember = guild.members.me;
 
-        if (role.id === guild.id || role.managed) {
-            await replyUserError(roleInteraction, {
-                type: ErrorTypes.VALIDATION,
-                message: 'Please choose a normal assignable role (not @everyone or a bot-managed role).',
-            });
-            return;
-        }
-
-        if (role.position >= botMember.roles.highest.position) {
-            await replyUserError(roleInteraction, {
-                type: ErrorTypes.PERMISSION,
-                message: 'The verified role must be below my highest role in the server role hierarchy.',
-            });
+        // Everyone who verifies gets this role, so it must be harmless and assignable.
+        const roleProblem = getRoleAssignmentProblem(role, botMember);
+        if (roleProblem) {
+            await replyUserError(roleInteraction, { type: ErrorTypes.PERMISSION, message: roleProblem });
             return;
         }
 

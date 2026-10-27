@@ -13,8 +13,7 @@ import {
     getApplicationRoles,
     saveApplicationRoles,
     getApplicationRoleSettings,
-    saveApplicationRoleSettings,
-    deleteApplication
+    saveApplicationRoleSettings
 } from '../../utils/database.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import appDashboard from './modules/app_dashboard.js';
@@ -500,18 +499,22 @@ async function handleList(interaction) {
     );
 
     if (!user) {
-        applications = await Promise.all(
-            applications.map(async (app) => {
-                try {
-                    await interaction.guild.members.fetch(app.userId);
-                    return app; 
-                } catch {
-                    
-                    await deleteApplication(interaction.client, interaction.guild.id, app.id, app.userId);
-                    return null; 
-                }
-            })
-        ).then(results => results.filter(Boolean)); 
+        // Hide applicants who left the server. Viewing the list never deletes anything, and
+        // only a definite "Unknown Member" (10007) hides one; other fetch errors keep it listed.
+        const visible = [];
+        for (const app of applications) {
+            if (interaction.guild.members.cache.has(app.userId)) {
+                visible.push(app);
+                continue;
+            }
+            try {
+                await interaction.guild.members.fetch(app.userId);
+                visible.push(app);
+            } catch (error) {
+                if (error?.code !== 10007) visible.push(app);
+            }
+        }
+        applications = visible;
     }
 
     if (user) {

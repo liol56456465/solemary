@@ -35,9 +35,17 @@ export async function backupSummary(guild) {
  */
 export async function restoreMembers(client, target, report) {
     if (running) throw new Error(`A restore into ${running.guildId} is already running (${running.done}/${running.total}).`);
-    const userIds = await listStoredTokenUsers();
+    // Claim the slot before the first await, or two quick restores both get past the check.
+    running = { guildId: target.id, startedAt: Date.now(), done: 0, total: 0 };
+    let userIds;
+    try {
+        userIds = await listStoredTokenUsers();
+    } catch (error) {
+        running = null;
+        throw error;
+    }
     const counts = { added: 0, already: 0, skippedBanned: 0, noToken: 0, failed: 0, total: userIds.length };
-    running = { guildId: target.id, startedAt: Date.now(), done: 0, total: userIds.length };
+    running.total = userIds.length;
 
     try {
         for (const userId of userIds) {

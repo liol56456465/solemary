@@ -58,6 +58,18 @@ test('personal info', () => {
     assert.equal(findPersonalInfo('his ip is 84.15.22.190'), 'an IP address');
     assert.equal(findPersonalInfo('we won 3-2 in 2024'), null);
     assert.equal(findPersonalInfo('version 1.2.3 is out'), null);
+    assert.equal(findPersonalInfo('update to 1.21.4.2'), null);
+    assert.equal(findPersonalInfo('event starts <t:1730000000:R>'), null);
+    assert.equal(findPersonalInfo('my id is 123456789012345678'), null);
+    assert.equal(findPersonalInfo('call 555-123-4567'), 'a phone number');
+});
+
+test('personal info ignores mentions, emoji and ids', () => {
+    // Before the fix about 1 in 10 snowflakes passed Luhn and read as a card number.
+    for (let i = 0; i < 500; i++) {
+        const id = String(100000000000000000n + BigInt(i) * 7919n);
+        assert.equal(findPersonalInfo(`hi <@${id}> <@&${id}> <#${id}> <:cat:${id}> </help:${id}>`), null, id);
+    }
 });
 
 test('caps flood needs enough letters', () => {

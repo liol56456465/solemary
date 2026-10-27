@@ -68,7 +68,7 @@ export default {
 
         const initialEmbed = successEmbed(
             `⏱️ ${title}`,
-            `Time remaining: **${formatTime(totalSeconds)}**`,
+            `Time remaining: **${formatTime(totalSeconds)}** (ends <t:${Math.ceil(endTime / 1000)}:R>)`,
         );
 
         const message = await interaction.channel.send({
@@ -82,7 +82,6 @@ export default {
             remainingTime: totalSeconds * 1000,
             isPaused: false,
             title,
-            lastUpdate: Date.now(),
             interval: null,
         };
 

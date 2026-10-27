@@ -132,6 +132,11 @@ export async function handleApplicationModal(interaction) {
     if (!applicationRole) {
         return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: 'Application configuration not found.' });
     }
+
+    // It may have been disabled while the form was open.
+    if (applicationRole.enabled === false) {
+        return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: `The **${applicationRole.name}** application is currently closed.` });
+    }
     
     const role = interaction.guild.roles.cache.get(roleId);
     
@@ -229,7 +234,8 @@ export async function handleApplicationModal(interaction) {
 
 async function handleList(interaction) {
     try {
-        const applicationRoles = await getApplicationRoles(interaction.client, interaction.guild.id);
+        const applicationRoles = (await getApplicationRoles(interaction.client, interaction.guild.id))
+            .filter((appRole) => appRole.enabled !== false);
         
         if (applicationRoles.length === 0) {
             return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'No applications are currently available.' });
@@ -283,6 +289,10 @@ async function handleSubmit(interaction, settings) {
 
     if (!applicationRole) {
         return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Use `/apply list` to see available applications.' });
+    }
+
+    if (applicationRole.enabled === false) {
+        return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: `The **${applicationRole.name}** application is currently closed. Use \`/apply list\` to see open ones.` });
     }
 
     const userApps = await getUserApplications(

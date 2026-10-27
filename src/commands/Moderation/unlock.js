@@ -40,9 +40,11 @@ export default {
                 return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `${channel} is not explicitly locked (everyone can already send messages).` });
             }
 
+            // Clear the deny instead of allowing: the channel goes back to inheriting from
+            // its category, as it was before /lock.
             await channel.permissionOverwrites.edit(
                 everyoneRole,
-                { SendMessages: true },
+                { SendMessages: null },
                 {
                     type: 0,
                     reason: `Channel unlocked by ${interaction.user.tag}`,

@@ -415,9 +415,26 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
     });
 }
 
+const MAX_REPORTS_PER_DAY = 3;
+
+/** Each report opens a channel, so cap them: one open at a time, three a day. */
+async function assertCanReport(guild, userId) {
+    const { rows } = await query(
+        `SELECT channel_id, created_at > NOW() - INTERVAL '1 day' AS today FROM ${T.appeals}
+         WHERE kind = 'report' AND user_id = $1`,
+        [userId]
+    );
+    if (rows.filter((row) => row.today).length >= MAX_REPORTS_PER_DAY) {
+        throw userError('You have sent the maximum number of staff reports for today. Please try again tomorrow.');
+    }
+    const open = rows.find((row) => row.channel_id && guild.channels.cache.has(row.channel_id));
+    if (open) throw userError('You already have an open staff report. The administrators will contact you about it.');
+}
+
 export async function submitStaffReport({ client, user, staffMember, details, proof }) {
     const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
     if (!guild) throw configError('Main guild unavailable for staff reports');
+    await assertCanReport(guild, user.id);
     const { rows } = await query(
         `INSERT INTO ${T.appeals} (kind, user_id, username, guild_id, body)
          VALUES ('report', $1, $2, $3, $4) RETURNING *`,
