@@ -375,6 +375,103 @@ export const tableStatements = [
         ended_by VARCHAR(20),
         CHECK (user_a <> user_b)
     )`,
+
+    // Sticky messages (/community sticky): reposted at the bottom of a channel after
+    // members talk there. Held in memory; last_message_id is written on each repost.
+    `CREATE TABLE IF NOT EXISTS ${t.sticky_messages} (
+        channel_id VARCHAR(20) PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        content TEXT NOT NULL,
+        last_message_id VARCHAR(20),
+        updated_by VARCHAR(20),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    // Tags (/tag): saved texts shown with /tag show, optionally posted automatically
+    // when a message contains a word/phrase or matches a regex. Names are stored
+    // lowercase. Held in memory per guild; uses is bumped when a tag is shown.
+    `CREATE TABLE IF NOT EXISTS ${t.tags} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        name VARCHAR(32) NOT NULL,
+        content TEXT NOT NULL,
+        trigger_kind VARCHAR(10) NOT NULL DEFAULT 'none' CHECK (trigger_kind IN ('none', 'word', 'regex')),
+        trigger TEXT,
+        allow_channels TEXT[] NOT NULL DEFAULT '{}',
+        deny_channels TEXT[] NOT NULL DEFAULT '{}',
+        cooldown_s INTEGER NOT NULL DEFAULT 60 CHECK (cooldown_s >= 0 AND cooldown_s <= 86400),
+        created_by VARCHAR(20) NOT NULL,
+        uses INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (guild_id, name)
+    )`,
+
+    // Per-guild settings of the community features (/community suggestions and
+    // /community starboard). Held in memory; written only when an admin changes them.
+    `CREATE TABLE IF NOT EXISTS ${t.community_settings} (
+        guild_id VARCHAR(20) PRIMARY KEY,
+        suggestions_channel_id VARCHAR(20),
+        starboard_channel_id VARCHAR(20),
+        starboard_emoji VARCHAR(100) NOT NULL DEFAULT '⭐',
+        starboard_threshold INTEGER NOT NULL DEFAULT 3 CHECK (starboard_threshold >= 1 AND starboard_threshold <= 100),
+        updated_by VARCHAR(20),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    // Suggestions (/suggest): posted in the suggestions channel with vote buttons.
+    // upvotes/downvotes mirror suggestion_votes and are recounted on every vote.
+    `CREATE TABLE IF NOT EXISTS ${t.suggestions} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        content TEXT NOT NULL,
+        channel_id VARCHAR(20),
+        message_id VARCHAR(20),
+        status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'denied', 'considering')),
+        status_reason TEXT,
+        decided_by VARCHAR(20),
+        decided_at TIMESTAMPTZ,
+        upvotes INTEGER NOT NULL DEFAULT 0,
+        downvotes INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS ${t.suggestion_votes} (
+        suggestion_id BIGINT NOT NULL REFERENCES ${t.suggestions}(id) ON DELETE CASCADE,
+        user_id VARCHAR(20) NOT NULL,
+        vote SMALLINT NOT NULL CHECK (vote IN (-1, 1)),
+        voted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (suggestion_id, user_id)
+    )`,
+
+    // Starboard (/community starboard): one starboard post per starred message.
+    // Held in memory; written when a post is created, its count changes or it is removed.
+    `CREATE TABLE IF NOT EXISTS ${t.starboard_posts} (
+        source_message_id VARCHAR(20) PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        source_channel_id VARCHAR(20) NOT NULL,
+        star_channel_id VARCHAR(20) NOT NULL,
+        star_message_id VARCHAR(20) NOT NULL,
+        count INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    // Feeds (/community feed): new YouTube videos posted to a channel. Polled every
+    // 15 minutes from memory; last_item_id is written only when a new video is posted.
+    `CREATE TABLE IF NOT EXISTS ${t.feeds} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        kind VARCHAR(16) NOT NULL DEFAULT 'youtube' CHECK (kind IN ('youtube')),
+        source_id VARCHAR(64) NOT NULL,
+        channel_id VARCHAR(20) NOT NULL,
+        message_template TEXT,
+        last_item_id VARCHAR(64),
+        created_by VARCHAR(20),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (guild_id, kind, source_id, channel_id)
+    )`,
 ];
 
 export const indexStatements = [
@@ -412,6 +509,8 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_guild_created ON ${t.mod_cases}(guild_id, created_at DESC, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_reason ON ${t.mod_cases}(guild_id, reason_key, created_at DESC)`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_no_contact_one_open ON ${t.no_contact_orders}(guild_id, user_a, user_b) WHERE ended_at IS NULL`,
+    `CREATE INDEX IF NOT EXISTS idx_suggestions_guild ON ${t.suggestions}(guild_id, id DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_starboard_posts_star ON ${t.starboard_posts}(star_message_id)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

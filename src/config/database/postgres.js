@@ -32,6 +32,13 @@ const configuredTables = {
     automod_native_rules: 'automod_native_rules',
     automod_raid_incidents: 'automod_raid_incidents',
     no_contact_orders: 'no_contact_orders',
+    sticky_messages: 'sticky_messages',
+    tags: 'tags',
+    community_settings: 'community_settings',
+    suggestions: 'suggestions',
+    suggestion_votes: 'suggestion_votes',
+    starboard_posts: 'starboard_posts',
+    feeds: 'feeds',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -64,6 +71,13 @@ const allowedTableIdentifiers = new Set([
     'automod_native_rules',
     'automod_raid_incidents',
     'no_contact_orders',
+    'sticky_messages',
+    'tags',
+    'community_settings',
+    'suggestions',
+    'suggestion_votes',
+    'starboard_posts',
+    'feeds',
 ]);
 
 const validatedTables = Object.fromEntries(
