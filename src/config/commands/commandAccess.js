@@ -8,7 +8,7 @@
  *
  * Some everyone-commands narrow access further inside the command:
  * - music controls: only members in the bot's voice channel (admins always)
- * - /claim, /priority: ticket staff; /close: ticket staff or the ticket opener
+ * - /claim, /priority, /modmail close: ticket staff; /close: ticket staff or the ticket opener
  * - /rank on another member: admins only
  */
 
@@ -37,7 +37,7 @@ export const EVERYONE_COMMANDS = new Set([
   'search define', 'search google',
 
   // Ticket (the commands check staff / opener themselves)
-  'claim', 'close', 'priority',
+  'claim', 'close', 'priority', 'modmail close',
 
   // Tools (shorten stays admin: it hides link targets from automod)
   'baseconvert', 'calculate', 'generatepassword', 'hexcolor', 'time', 'unixtime',

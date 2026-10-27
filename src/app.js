@@ -1,7 +1,7 @@
 import './config/loadEnv.js';
 // Second on purpose: exits before anything else runs if test-mode safety checks fail.
 import { testMode, installGuildAllowlist, describeTestMode } from './config/testMode.js';
-import { Client, Collection, Events, GatewayIntentBits } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits, Partials } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import express from 'express';
 import cron from 'node-cron';
@@ -46,6 +46,8 @@ class Meowist extends Client {
 
         GatewayIntentBits.GuildBans,                    
       ],
+      // DM channels aren't cached; without this partial, DMs (modmail) never arrive.
+      partials: [Partials.Channel],
     });
 
     this.config = config;

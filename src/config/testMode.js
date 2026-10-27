@@ -140,6 +140,16 @@ export function describeTestMode() {
 
 // Gateway events that carry no guild but are safe (and needed) in test mode.
 const GUILDLESS_ALLOWED = new Set(['READY', 'RESUMED', 'USER_UPDATE']);
+// DMs (modmail) pass only from OWNER_IDS: the token may be production's, and
+// real members' DMs must keep going to the live bot alone.
+const DM_EVENTS = new Set(['MESSAGE_CREATE', 'INTERACTION_CREATE']);
+const DM_TESTERS = new Set((process.env.OWNER_IDS || '').split(',').map((id) => id.trim()).filter(Boolean));
+
+function isTesterDm(packet) {
+    if (!DM_EVENTS.has(packet.t)) return false;
+    const userId = packet.d?.author?.id ?? packet.d?.user?.id ?? null;
+    return Boolean(userId && DM_TESTERS.has(userId));
+}
 const GUILD_OBJECT_EVENTS = new Set(['GUILD_CREATE', 'GUILD_UPDATE', 'GUILD_DELETE']);
 
 function packetGuildId(packet) {
@@ -148,7 +158,7 @@ function packetGuildId(packet) {
 }
 
 /**
- * Drops every gateway packet from guilds outside TEST_GUILD_IDS (and all DMs)
+ * Drops every gateway packet from guilds outside TEST_GUILD_IDS, and DMs from anyone but OWNER_IDS,
  * before discord.js handles it, so other guilds never enter the cache, fire
  * events or get replies. guilds.fetch() is fenced the same way.
  */
@@ -166,7 +176,7 @@ export function installGuildAllowlist(client) {
         }
 
         const guildId = packetGuildId(packet);
-        const allowed = guildId ? testMode.guildIds.has(guildId) : GUILDLESS_ALLOWED.has(packet.t);
+        const allowed = guildId ? testMode.guildIds.has(guildId) : (GUILDLESS_ALLOWED.has(packet.t) || isTesterDm(packet));
         if (!allowed) {
             logger.debug(`[test mode] ignored ${packet.t} from ${guildId ? `guild ${guildId}` : 'a DM / no guild'}`);
             return true;

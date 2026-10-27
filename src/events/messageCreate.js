@@ -16,6 +16,8 @@ import { enforceAbuseProtection, formatCooldownDuration } from '../utils/abusePr
 import { createEmbed } from '../utils/embeds.js';
 import { isCommandEnabled } from '../services/commandAccessService.js';
 import { checkCommandAccess } from '../utils/commandGate.js';
+import { handleModmailDm, handleModmailStaffMessage, isModmailStaff, modmailUserId } from '../services/modmailService.js';
+import { enforcementConfig } from '../config/enforcement.js';
 import {
   getCountingGameConfig,
   saveCountingGameConfig,
@@ -30,10 +32,15 @@ export default {
   name: Events.MessageCreate,
   async execute(message, client) {
     try {
-      if (message.author.bot || !message.guild) return;
+      if (message.author.bot) return;
+      if (!message.guild) {
+        await handleModmailDm(message, client);
+        return;
+      }
 
       // Automod runs first; a removed message gets no commands, counting or XP.
       if (await moderateMessage(message)) return;
+      await relayModmailStaffMessage(message, client);
       noteStaffMessage(message);
       trackChannelActivity(message).catch((error) => logger.warn(`Auto slowmode tracking failed: ${error.message}`));
 
@@ -52,6 +59,18 @@ export default {
     }
   }
 };
+
+// Staff messages in a main-server modmail channel go to the member by DM.
+async function relayModmailStaffMessage(message, client) {
+  if (message.guild.id !== enforcementConfig.mainGuildId || !modmailUserId(message.channel)) return;
+  try {
+    const guildConfig = await getGuildConfig(client, message.guild.id);
+    if (!isModmailStaff(message.member, guildConfig)) return;
+    await handleModmailStaffMessage(message, guildConfig?.prefix || getCommandPrefix());
+  } catch (error) {
+    logger.warn(`Modmail staff relay failed in ${message.channel.id}: ${error.message}`);
+  }
+}
 
 async function handlePrefixCommand(message, client) {
   try {
