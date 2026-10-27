@@ -1,7 +1,7 @@
 // automodReport.js — how automod did over a period: actions per rule, how often
 // moderators undid or changed its decisions, accepted appeals, and the most frequent
 // offenders. A rule with many undos is too strict or misfiring. Posted weekly in the
-// mod log and shown by /automod stats.
+// alerts channel and shown by /automod stats.
 
 import { AUTOMOD_RULES } from '../../config/automod.js';
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -24,14 +24,14 @@ export async function automodStats(guildId, days = 7) {
                     COUNT(*) FILTER (WHERE c.revoke_reason LIKE 'Automod decision changed%')::int AS changed,
                     COUNT(*) FILTER (WHERE c.revoke_reason LIKE 'Appeal accepted%')::int AS appealed
              FROM ${T.cases} c
-             WHERE c.guild_id = $1 AND c.reason_key LIKE 'automod:%' AND c.is_test = FALSE AND c.created_at >= $2
+             WHERE c.guild_id = $1 AND c.reason_key LIKE 'automod:%' AND c.is_test = FALSE AND c.voided_at IS NULL AND c.created_at >= $2
              GROUP BY grp ORDER BY actions DESC`,
             [guildId, since]
         ),
         query(
             `SELECT target_user_id AS user_id, MAX(target_username) AS username, COUNT(*)::int AS count
              FROM ${T.cases}
-             WHERE guild_id = $1 AND reason_key LIKE 'automod:%' AND is_test = FALSE AND created_at >= $2
+             WHERE guild_id = $1 AND reason_key LIKE 'automod:%' AND is_test = FALSE AND voided_at IS NULL AND created_at >= $2
              GROUP BY target_user_id ORDER BY count DESC LIMIT 5`,
             [guildId, since]
         ),
@@ -59,14 +59,14 @@ export function formatAutomodStats(stats) {
     };
 }
 
-/** Posts last week's automod numbers in the mod log. */
+/** Posts last week's automod numbers in the alerts channel. */
 export async function postWeeklyAutomodReport(client) {
     if (!isEnforcementDbAvailable() || !client.guilds.cache.has(enforcementConfig.mainGuildId)) return;
     const stats = await automodStats(enforcementConfig.mainGuildId, 7);
     const text = formatAutomodStats(stats);
-    await postModLog(client, 'automod', [
+    await postModLog(client, 'automod-report', [
         { name: `Last 7 days: ${stats.total} action(s)`, value: text.rules.slice(0, 1024) },
         { name: 'Most actions against', value: text.offenders.slice(0, 1024) },
         { name: 'Note', value: text.footer },
-    ], { title: 'Weekly automod report' });
+    ], { title: '📊 Weekly automod report' });
 }

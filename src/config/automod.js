@@ -97,8 +97,26 @@ export const automodConfig = {
     reportReactions: 3,
     reportEmoji: '🚩',
 
-    // Where review cards and reports go; defaults to the mod log channel.
+    // Staff channels, by purpose (see services/automod/channelRouting.js):
+    //   review  — things that need a decision: automod cards, member reports, held verifications.
+    //   mod log — a one-line record of every enforcement action (MOD_LOG_CHANNEL_ID, config/enforcement.js).
+    //   alerts  — raids, staff guard, mass-action guard, auto slowmode, digests and reports, system problems.
+    // Review and alerts fall back to the mod log channel when unset, so one channel is enough.
     reviewChannelId: (process.env.AUTOMOD_REVIEW_CHANNEL_ID || '').trim() || null,
+    alertsChannelId: (process.env.BOT_ALERTS_CHANNEL_ID || '').trim() || null,
+
+    // Review cards. Low-severity rules (severity at or below lowSeverityMax: mass mentions,
+    // spam, caps, characters, English only) post one compact line instead of a full card
+    // when the action is a warn; the very low ones (at or below compactMuteSeverityMax:
+    // caps, characters, English only) also when it is a mute shorter than compactMaxMuteMs.
+    lowSeverityMax: 40,
+    compactMuteSeverityMax: 20,
+    compactMaxMuteMs: DAY,
+    // Hits of the same rule by the same user within this window update the open card
+    // instead of posting another (in memory: a restart starts fresh).
+    burstWindowMs: 5 * 60 * 1000,
+    // Message text shown on a card, behind a spoiler.
+    cardExcerptChars: 300,
     // Channels automod ignores entirely, in addition to the ones set with /automod exempt.
     exemptChannelIds: readIdList('AUTOMOD_EXEMPT_CHANNEL_IDS'),
     // Extra words for the language filter (AUTOMOD_EXTRA_WORDS=word1,word2).

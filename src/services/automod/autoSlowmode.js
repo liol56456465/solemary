@@ -69,11 +69,11 @@ export async function trackChannelActivity(message) {
     state.set(channel.id, { guildId: channel.guild.id, since: now, lastBusy: now });
     await saveActive();
     await channel.send({ content: `Slowmode is on for a few minutes because this channel got very busy (${SLOWMODE_SECONDS}s between messages).` }).catch(() => {});
-    await postModLog(message.client, 'automod', [
+    await postModLog(message.client, 'slowmode', [
         { name: 'Channel', value: `<#${channel.id}>` },
         { name: 'Why', value: `${list.length} messages from ${new Set(list.map((e) => e.authorId)).size} people in ${BUSY_WINDOW_MS / 1000}s` },
         { name: 'Ends', value: `after ${CALM_MS / 60000} quiet minutes` },
-    ], { title: 'Auto slowmode on' });
+    ], { title: '🐢 Auto slowmode on' });
 }
 
 /** Lifts slowmode the bot set once the channel has been calm; run every minute. */

@@ -5,7 +5,7 @@
 // moderator's own ban/kick cases instead: with MASS_ACTION_LIMIT of them inside
 // MASS_ACTION_WINDOW_MINUTES, the next ban/kick is refused and the moderator is
 // blocked from every panel action for MASS_ACTION_BLOCK_MINUTES. OWNER_IDS get a
-// DM and the mod log gets an entry. The block is stored with a TTL, so a restart
+// DM and the alerts channel gets an entry. The block is stored with a TTL, so a restart
 // doesn't lift it; /staff restore lifts it early.
 
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -65,12 +65,12 @@ async function blockModerator(guild, moderator, count, attempted) {
 
     // Imported lazily: enforcementService imports this module.
     const { postModLog } = await import('./enforcementService.js');
-    await postModLog(guild.client, 'staff', [
+    await postModLog(guild.client, 'massguard', [
         { name: 'Moderator', value: `<@${moderator.id}> (${moderator.id})` },
         { name: 'What happened', value: summary },
         { name: 'Blocked until', value: `<t:${Math.floor(Date.parse(until) / 1000)}:f>` },
         { name: 'Lift early', value: '`/staff restore`' },
-    ], { title: 'Mass-action guard: moderator blocked' });
+    ], { title: '🛡️ Mass-action guard: moderator blocked' });
     await alertOwners(guild.client, `**Mass-action guard in ${guild.name}.** ${summary} Their panel access is blocked until <t:${Math.floor(Date.parse(until) / 1000)}:f>. Lift it early with \`/staff restore\`.`);
     return block;
 }

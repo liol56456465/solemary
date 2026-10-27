@@ -10,6 +10,7 @@ import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
 import { applyStep, isStaff } from './automodService.js';
 import { findForbiddenCharacters, findImpersonation, plainName } from './filters.js';
 import { postReviewCard } from './reviewCards.js';
+import { impersonationReason } from './reasons.js';
 
 const RENAMED_NICKNAME = 'Renamed member';
 const recentlyChecked = new Map(); // guildId:userId → names key (avoids double action on one change)
@@ -51,7 +52,7 @@ export async function checkImpersonation(member) {
         if (!evidence) return;
 
         const card = {
-            guild, rule: 'impersonation', evidence, targetUser: member.user,
+            guild, rule: 'impersonation', evidence: impersonationReason(evidence), detail: evidence, targetUser: member.user,
             channelId: null, messageUrl: null, content: `Names: ${names.filter(Boolean).join(', ')}`,
         };
         if (settings.mode === 'monitor') {
@@ -64,7 +65,7 @@ export async function checkImpersonation(member) {
         const step = AUTOMOD_RULES.impersonation.steps[0];
         const result = await applyStep({ guild, targetUser: member.user, step, rule: 'impersonation', reason: 'Automod: Impersonation or deception' })
             .catch((error) => ({ error }));
-        await postReviewCard({ ...card, evidence: `${evidence}${renamed ? ` (nickname reset to "${RENAMED_NICKNAME}")` : ''}`, step, result });
+        await postReviewCard({ ...card, evidence: `${card.evidence}${renamed ? `; their nickname was reset to "${RENAMED_NICKNAME}"` : ''}`, step, result, deleted: false });
     } catch (error) {
         logger.warn(`Impersonation check failed for ${member?.id}: ${error.message}`);
     }
@@ -77,11 +78,11 @@ export async function reportMessage(message, reporter) {
     await postReviewCard({
         guild: message.guild,
         rule: 'report',
-        evidence: 'Reported with "Report message"',
+        evidence: `was reported by ${reporter.username} with "Report message"`,
         targetUser: message.author,
         channelId: message.channelId,
         messageUrl: message.url,
-        content: message.content || '(no text)',
+        content: message.content || '',
         report: { reporter: `${reporter.username} (\`${reporter.id}\`)`, messageId: message.id, removed: false },
     });
 }
@@ -108,11 +109,11 @@ export async function handleReportReaction(reaction, user) {
         await postReviewCard({
             guild: message.guild,
             rule: 'report',
-            evidence: `${reporters.length} members reacted with ${automodConfig.reportEmoji}`,
+            evidence: `was reported by ${reporters.length} members reacting with ${automodConfig.reportEmoji}`,
             targetUser: message.author,
             channelId: message.channelId,
             messageUrl: null,
-            content: message.content || '(no text)',
+            content: message.content || '',
             report: { reporter: reporters.map((u) => u.username).join(', '), messageId: message.id, removed: true },
         });
     } catch (error) {

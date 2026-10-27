@@ -22,6 +22,7 @@ import { snapshotMainServer } from './services/structureBackupService.js';
 import { runTicketReminders } from './services/ticketReminderService.js';
 import { tidyStaleAppealChannels } from './services/enforcement/staleAppealService.js';
 import { postWeeklyAutomodReport } from './services/automod/automodReport.js';
+import { postDailyAutomodDigest } from './services/automod/automodDigest.js';
 import { liftCalmSlowmodes } from './services/automod/autoSlowmode.js';
 import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
@@ -331,6 +332,8 @@ class Meowist extends Client {
     }));
     // Times are UTC: a daily structure snapshot, and the weekly reports on Monday morning.
     cron.schedule('0 4 * * *', exclusive('structure_snapshot', () => snapshotMainServer(this)), { timezone: 'UTC' });
+    // Daily automod digest in the alerts channel (BOT_ALERTS_CHANNEL_ID, falls back to the mod log).
+    cron.schedule('0 8 * * *', exclusive('automod_digest', () => postDailyAutomodDigest(this)), { timezone: 'UTC' });
     cron.schedule('0 9 * * 1', exclusive('weekly_reports', async () => {
       await postWeeklyStaffReport(this);
       await postWeeklyAutomodReport(this);

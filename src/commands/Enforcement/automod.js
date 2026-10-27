@@ -9,6 +9,7 @@ import { getAutomodSettings, updateAutomodSettings } from '../../services/automo
 import { endLockdown, getLockdownState } from '../../services/automod/raidService.js';
 import { describeStep } from '../../services/automod/reviewCards.js';
 import { automodStats, formatAutomodStats } from '../../services/automod/automodReport.js';
+import { collectOpenReviews, formatQueue } from '../../services/automod/reviewQueue.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -41,7 +42,7 @@ export default {
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('automod')
-        .setDescription('Automatic moderation: status, on/off, mode, exempt channels, raid lockdown')
+        .setDescription('Automatic moderation: status, on/off, mode, exempt channels, review queue, raid lockdown')
         .addSubcommand((sub) => sub.setName('status').setDescription('Show the automod settings and punishments'))
         .addSubcommand((sub) => sub.setName('enable').setDescription('Turn automod on or off')
             .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
@@ -53,6 +54,7 @@ export default {
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildCategory)))
         .addSubcommand((sub) => sub.setName('stats').setDescription('Automod actions, undos and top offenders')
             .addIntegerOption((option) => option.setName('days').setDescription('How far back (default 7)').setMinValue(1).setMaxValue(90)))
+        .addSubcommand((sub) => sub.setName('queue').setDescription('Review cards still waiting for a decision, newest first'))
         .addSubcommand((sub) => sub.setName('lockdown-end').setDescription('End a join-raid lockdown and restore the verification level')),
 
     async execute(interaction) {
@@ -81,6 +83,18 @@ export default {
                     ],
                     footer: { text: text.footer },
                     color: 'primary',
+                })],
+            });
+        }
+
+        if (sub === 'queue') {
+            const items = await collectOpenReviews(interaction.client);
+            return InteractionHelper.safeEditReply(interaction, {
+                embeds: [createEmbed({
+                    title: `Review queue: ${items.length} open`,
+                    description: formatQueue(items),
+                    footer: { text: 'Cards posted since the bot started, plus the review channel\'s last 50 messages that still have buttons. Low-severity lines are not listed.' },
+                    color: items.length ? 'warning' : 'success',
                 })],
             });
         }
