@@ -19,6 +19,7 @@ import { checkCommandAccess } from '../utils/commandGate.js';
 import { handleModmailDm, handleModmailStaffMessage, isModmailStaff, modmailUserId } from '../services/modmailService.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { enforceNoContact } from '../services/enforcement/noContactService.js';
+import { noteStickyActivity } from '../services/community/stickyService.js';
 import {
   getCountingGameConfig,
   resetCountingGame,
@@ -46,6 +47,7 @@ export default {
       await relayModmailStaffMessage(message, client);
       noteStaffMessage(message);
       trackChannelActivity(message).catch((error) => logger.warn(`Auto slowmode tracking failed: ${error.message}`));
+      noteStickyActivity(message);
 
       logger.debug(`Message received from ${message.author.tag}: ${message.content}`);
 

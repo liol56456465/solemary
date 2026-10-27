@@ -8,6 +8,7 @@ import { reconcileLevelRoles } from "../services/leveling/levelRoleSyncService.j
 import { reconcileBannedRoles } from "../services/enforcement/bannedRoleService.js";
 import { describeAutomodReadiness } from "../services/automod/automodService.js";
 import { loadNoContactOrders } from "../services/enforcement/noContactService.js";
+import { loadCommunityCaches } from "../services/community/index.js";
 
 export default {
   name: Events.ClientReady,
@@ -37,6 +38,7 @@ export default {
         return null;
       });
       startupLog(noContactCount == null ? "No-contact orders: not loaded (database unavailable)" : `No-contact orders: ${noContactCount} active`);
+      startupLog(`Community: ${await loadCommunityCaches(client)}`);
 
       const reconciliationSummary = await reconcileReactionRoleMessages(client);
       startupLog(

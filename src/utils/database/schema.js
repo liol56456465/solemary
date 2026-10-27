@@ -360,6 +360,17 @@ export const tableStatements = [
         ended_by VARCHAR(20),
         CHECK (user_a <> user_b)
     )`,
+
+    // Sticky messages (/community sticky): reposted at the bottom of a channel after
+    // members talk there. Held in memory; last_message_id is written on each repost.
+    `CREATE TABLE IF NOT EXISTS ${t.sticky_messages} (
+        channel_id VARCHAR(20) PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        content TEXT NOT NULL,
+        last_message_id VARCHAR(20),
+        updated_by VARCHAR(20),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
 ];
 
 export const indexStatements = [
