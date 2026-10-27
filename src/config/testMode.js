@@ -44,6 +44,7 @@ const GUILD_RESOURCES = [
     { name: 'ADMIN_REQUEST_CHANNEL_ID', guild: 'MAIN_GUILD_ID', kind: 'channel' },
     { name: 'MUTED_ROLE_ID', guild: 'MAIN_GUILD_ID', kind: 'role' },
     { name: 'BANNED_ROLE_ID', guild: 'SUPPORT_GUILD_ID', kind: 'role' },
+    { name: 'MOD_LOG_CHANNEL_ID', guild: 'MAIN_GUILD_ID', kind: 'channel' },
 ];
 
 export function isGuildAllowed(guildId) {

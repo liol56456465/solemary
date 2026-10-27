@@ -9,6 +9,17 @@ function readId(name) {
     return value || null;
 }
 
+// Defaults that point at the real Meowist servers; test mode never uses them.
+const IS_TEST = process.env.NODE_ENV === 'test';
+function prodDefault(value) {
+    return IS_TEST ? null : value;
+}
+
+function readIdList(name) {
+    const raw = (process.env[name] || '').trim();
+    return raw ? raw.split(',').map((id) => id.trim()).filter(Boolean) : null;
+}
+
 export const enforcementConfig = {
     mainGuildId: readId('MAIN_GUILD_ID'),
     supportGuildId: readId('SUPPORT_GUILD_ID'),
@@ -17,12 +28,16 @@ export const enforcementConfig = {
     supportServerInvite: (process.env.SUPPORT_SERVER_INVITE || '').trim() || 'https://discord.gg/7Ckv9Bt577',
     // Fallback main-server category for appeals and staff reports when /ticket has no ticket category set.
     // (Renamed from APPEALS_CATEGORY_ID, which was a support-server category; that variable is ignored.)
-    appealsCategoryId: readId('MAIN_APPEALS_CATEGORY_ID') || '1531365877755285606',
-    // Optional: a main-server category closed appeal/report channels move to. Without it they stay in place, renamed closed-….
-    appealsArchiveCategoryId: readId('APPEALS_ARCHIVE_CATEGORY_ID'),
+    appealsCategoryId: readId('MAIN_APPEALS_CATEGORY_ID') || prodDefault('1531365877755285606'),
     mutedRoleId: readId('MUTED_ROLE_ID'),
-    // Optional: a role in the support server that members with an active main-server ban get.
-    bannedRoleId: readId('BANNED_ROLE_ID'),
+    // A role in the support server that members with an active main-server ban get.
+    bannedRoleId: readId('BANNED_ROLE_ID') || prodDefault('1564363121685176320'),
+    // Main-server roles for 1, 2 and 3+ active warnings (WARN_ROLE_IDS=id1,id2,id3).
+    warnRoleIds: readIdList('WARN_ROLE_IDS')
+        || prodDefault(['1527697636969152672', '1527697712189800641', '1564357658943946794'])
+        || [],
+    // Main-server channel that gets a message for every enforcement action and appeal decision.
+    modLogChannelId: readId('MOD_LOG_CHANNEL_ID') || prodDefault('1564598148251525252'),
 
     serverName: 'Meowist',
     mutedRoleName: 'Muted',
@@ -72,7 +87,6 @@ export function validateEnforcementConfig() {
     const required = {
         MAIN_GUILD_ID: enforcementConfig.mainGuildId,
         SUPPORT_GUILD_ID: enforcementConfig.supportGuildId,
-        MAIN_APPEALS_CATEGORY_ID: enforcementConfig.appealsCategoryId,
     };
 
     for (const [name, value] of Object.entries(required)) {
@@ -83,11 +97,15 @@ export function validateEnforcementConfig() {
         }
     }
 
-    for (const name of ['ADMIN_REQUEST_CHANNEL_ID', 'MUTED_ROLE_ID', 'APPEALS_ARCHIVE_CATEGORY_ID', 'BANNED_ROLE_ID']) {
+    for (const name of ['ADMIN_REQUEST_CHANNEL_ID', 'MUTED_ROLE_ID', 'BANNED_ROLE_ID', 'MOD_LOG_CHANNEL_ID', 'MAIN_APPEALS_CATEGORY_ID']) {
         const value = readId(name);
         if (value && !SNOWFLAKE.test(value)) {
             errors.push(`${name} must be a Discord ID (17–20 digits), got "${value}"`);
         }
+    }
+
+    for (const id of enforcementConfig.warnRoleIds) {
+        if (!SNOWFLAKE.test(id)) errors.push(`WARN_ROLE_IDS must be Discord IDs separated by commas, got "${id}"`);
     }
 
     if (!/^https:\/\/(discord\.gg|discord\.com\/invite)\/[\w-]+$/.test(enforcementConfig.supportServerInvite)) {

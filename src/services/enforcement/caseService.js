@@ -163,3 +163,24 @@ export async function getAppealHistory(caseCode) {
     );
     return rows;
 }
+
+/** Latest appeal status per case for one user: Map(case_code → 'pending' | 'accepted' | 'denied' | 'closed'). */
+export async function getLatestAppealStatuses(userId) {
+    const { rows } = await query(
+        `SELECT DISTINCT ON (case_code) case_code, status FROM ${T.appeals}
+         WHERE user_id = $1 AND kind = 'appeal' ORDER BY case_code, created_at DESC`,
+        [userId]
+    );
+    return new Map(rows.map((row) => [row.case_code, row.status]));
+}
+
+/** A short status for history lists: lifted by appeal, appeal pending, expired, … */
+export function caseStatusLabel(row, appealStatus = null) {
+    if (row.status === 'revoked') {
+        return row.revoke_reason?.startsWith('Appeal accepted') ? 'lifted by appeal' : 'lifted';
+    }
+    if (row.status === 'appeal_pending') return 'appeal pending';
+    if (row.status === 'active' && row.expires_at && new Date(row.expires_at) <= new Date()) return 'expired';
+    if (row.status === 'active' && appealStatus === 'denied') return 'active, appeal denied';
+    return row.status;
+}

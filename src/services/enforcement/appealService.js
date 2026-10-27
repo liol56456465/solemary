@@ -5,7 +5,7 @@
 // (the one set in /ticket; MAIN_APPEALS_CATEGORY_ID when none is set), visible to
 // administrators only. The user is never added; they get the decision by DM.
 
-import { ChannelType, PermissionFlagsBits } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -15,7 +15,10 @@ import { logEvent, EVENT_TYPES } from '../loggingService.js';
 import { query, withTransaction, T, isUniqueViolation } from './db.js';
 import { getCaseByCode, listCasesForUser, OPEN_STATUSES } from './caseService.js';
 import { getGuildConfig } from '../config/guildConfig.js';
-import { createRejoinInvite, getLadder, revokeWarn, sendDm } from './enforcementService.js';
+import {
+    createRejoinInvite, getLadder, liftLadderBanForWarn, logEnforcement, postModLog, revokeWarn, sendDm,
+} from './enforcementService.js';
+import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { removeMutedRole } from './muteService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { appealAcceptedDm, appealDeniedDm } from './dmTemplates.js';
@@ -288,6 +291,32 @@ export async function buildCaseDossier(record, { appeal = null } = {}) {
     return embeds;
 }
 
+const DECISION_BUTTON_ID = 'appealdecide';
+
+/** Accept / Deny buttons under an appeal; each decides that case's appeal straight away. */
+export function appealDecisionRow(caseCode, { disabled = false } = {}) {
+    return new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`${DECISION_BUTTON_ID}:accept:${caseCode}`)
+            .setLabel('Accept').setStyle(ButtonStyle.Success).setDisabled(disabled),
+        new ButtonBuilder().setCustomId(`${DECISION_BUTTON_ID}:deny:${caseCode}`)
+            .setLabel('Deny').setStyle(ButtonStyle.Danger).setDisabled(disabled),
+    );
+}
+
+/** Disables the Accept / Deny buttons on the bot's messages in an appeal channel. */
+async function disableDecisionButtons(channel, caseCode) {
+    const messages = await channel.messages?.fetch({ limit: 20 }).catch(() => null);
+    if (!messages) return;
+    for (const message of messages.values()) {
+        const hasButtons = message.author?.id === channel.client.user.id
+            && message.components.some((row) => row.components?.some((c) => c.customId?.startsWith(`${DECISION_BUTTON_ID}:`)));
+        if (hasButtons) {
+            await message.edit({ components: [appealDecisionRow(caseCode, { disabled: true })] })
+                .catch((error) => logger.warn(`Could not disable appeal buttons in ${channel.id}: ${error.message}`));
+        }
+    }
+}
+
 /** Pending appeals, oldest first, with their case. */
 export async function listPendingAppeals(limit = 20) {
     const { rows } = await query(
@@ -361,8 +390,9 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
                 })];
             });
         await channel.send({
-            content: `New appeal from ${user.username} for \`${record.case_code}\`. Decide with \`/appeals code:${record.case_code} decision:accept|deny\`.`,
+            content: `New appeal from ${user.username} for \`${record.case_code}\`. Decide with the buttons below or \`/appeals\`.`,
             embeds,
+            components: [appealDecisionRow(record.case_code)],
             allowedMentions: { parse: [] },
         });
 
@@ -440,9 +470,14 @@ export async function submitStaffReport({ client, user, staffMember, details, pr
 
 // ── Decisions ──────────────────────────────────────────────────────────────
 
+/**
+ * Lifts what an accepted appeal is about and logs it like the matching manual action
+ * (unban, unmute, warning removed). Returns notes for the decision message.
+ */
 async function liftForAcceptedAppeal(client, record, admin) {
     const mainGuild = client.guilds.cache.get(record.guild_id);
     const reason = `Appeal accepted by ${admin.username}`;
+    const notes = [];
 
     if (record.is_test) {
         // A /test case was never executed: only the record is closed.
@@ -451,21 +486,31 @@ async function liftForAcceptedAppeal(client, record, admin) {
              WHERE id = $1 AND status <> 'revoked'`,
             [record.id, admin.id, reason]
         );
-        return;
+        return notes;
     }
 
-    if (record.type === 'ban' && isStillInEffect(record)) {
+    const target = { id: record.target_user_id, username: record.target_username };
+    const moderatorLabel = `${admin.username} (${admin.id}), appeal \`${record.case_code}\``;
+    const liftedBan = record.type === 'ban' && isStillInEffect(record);
+    const liftedMute = record.type === 'mute' && isStillInEffect(record);
+    let ladderBan = null;
+
+    if (liftedBan) {
         if (!mainGuild) throw createError('Main guild unavailable', ErrorTypes.CONFIGURATION, 'I cannot reach the main server to unban.');
         await mainGuild.members.unban(record.target_user_id, reason).catch((error) => {
             if (error?.code !== UNKNOWN_BAN) throw error;
         });
     }
-    if (record.type === 'mute' && isStillInEffect(record) && mainGuild) {
+    if (liftedMute && mainGuild) {
         await removeMutedRole(mainGuild, record.target_user_id, reason);
     }
     if (record.type === 'warn') {
         // Lowers the counted warns when this warn still counts at the current level.
-        await revokeWarn(record.guild_id, record.case_code, admin.id, reason);
+        const warn = await revokeWarn(record.guild_id, record.case_code, admin.id, reason);
+        // If this warn helped trigger the current ladder ban, the limit was never reached.
+        if (warn && mainGuild) {
+            ladderBan = await liftLadderBanForWarn(mainGuild, warn, admin, `${reason} (warn ${record.case_code})`);
+        }
     }
 
     await withTransaction(async (db) => {
@@ -484,26 +529,47 @@ async function liftForAcceptedAppeal(client, record, admin) {
         }
     });
     if (record.type === 'ban') await syncBannedRoleQuietly(client, record.target_user_id);
+    if (record.type === 'warn' && mainGuild) await syncWarnRolesQuietly(mainGuild, record.target_user_id);
+
+    const extra = [{ name: 'Reason', value: reason }];
+    if (liftedBan) {
+        await logEnforcement(client, record.guild_id, 'unban', { target, moderatorLabel, extra: [...extra, { name: 'Lifted cases', value: `\`${record.case_code}\`` }] });
+        notes.push('The user was unbanned.');
+    }
+    if (liftedMute) {
+        await logEnforcement(client, record.guild_id, 'unmute', { target, moderatorLabel, extra: [...extra, { name: 'Lifted cases', value: `\`${record.case_code}\`` }] });
+        notes.push('The user was unmuted.');
+    }
+    if (record.type === 'warn') {
+        const ladder = await getLadder(record.guild_id, record.target_user_id).catch(() => null);
+        await logEnforcement(client, record.guild_id, 'removewarn', {
+            target, moderatorLabel,
+            extra: [
+                { name: 'Warning', value: `\`${record.case_code}\` — ${record.name}` },
+                ...extra,
+                ...(ladder ? [{ name: 'Counted warns now', value: `${ladder.warns_since_level} (ladder level ${ladder.level})` }] : []),
+            ],
+        });
+        notes.push('The warning was removed.');
+    }
+    if (ladderBan) {
+        await logEnforcement(client, record.guild_id, 'unban', {
+            target, moderatorLabel,
+            extra: [...extra, { name: 'Lifted cases', value: `\`${ladderBan.case_code}\` (automatic ban from the warning limit)` }],
+        });
+        notes.push(`This warning was part of the automatic ban \`${ladderBan.case_code}\`, so the user was unbanned and the warning level stepped back.`);
+    }
+    return notes;
 }
 
-async function closeAppealChannel(guild, channelId, decisionLabel) {
-    const channel = channelId
-        ? guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null)
-        : null;
-    if (!channel) return;
+const APPEAL_CHANNEL_DELETE_DELAY_MS = 10 * 1000;
 
-    // Only an archive category in the same server as the channel is used.
-    const archiveId = enforcementConfig.appealsArchiveCategoryId;
-    const archive = archiveId && guild.channels.cache.has(archiveId) ? archiveId : null;
-    try {
-        await channel.edit({
-            name: `closed-${channel.name}`.slice(0, 100),
-            ...(archive ? { parent: archive, lockPermissions: false } : {}),
-            reason: `Appeal ${decisionLabel}`,
-        });
-    } catch (error) {
-        logger.warn(`Could not close appeal channel ${channelId}: ${error.message}`);
-    }
+/** Deletes a decided appeal's channel after a short delay, so the decision can be read first. */
+function scheduleAppealChannelDelete(channel, decisionLabel) {
+    setTimeout(() => {
+        channel.delete(`Appeal ${decisionLabel}`).catch((error) =>
+            logger.warn(`Could not delete appeal channel ${channel.id}: ${error.message}`));
+    }, APPEAL_CHANNEL_DELETE_DELAY_MS).unref?.();
 }
 
 export async function decideAppeal({ client, admin, caseCode, decision, note }) {
@@ -526,9 +592,10 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
         const mainGuild = client.guilds.cache.get(record.guild_id);
         const appellant = await client.users.fetch(record.target_user_id).catch(() => null);
         let dmDelivered = false;
+        let notes = [];
 
         if (decision === 'accept') {
-            await liftForAcceptedAppeal(client, record, admin);
+            notes = await liftForAcceptedAppeal(client, record, admin);
             const invite = mainGuild ? await createRejoinInvite(mainGuild, `Appeal accepted for ${caseCode}`) : null;
             if (appellant) dmDelivered = await sendDm(appellant, appealAcceptedDm(admin.username, invite));
         } else {
@@ -561,28 +628,31 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
                     note ? `**Note:** ${note}` : null,
                     `**DM to user:** ${dmDelivered ? 'delivered' : 'not delivered'}`,
                     decision === 'deny' && record.is_auto && record.ladder_level_after === 3 ? 'This level-3 ladder ban is now unappealable.' : null,
-                ].filter(Boolean).join('\n'), 4096),
+                    ...notes,
+                    '',
+                    `-# This channel is deleted in ${APPEAL_CHANNEL_DELETE_DELAY_MS / 1000} seconds. The appeal stays in /appeals code:${record.case_code}.`,
+                ].filter((line) => line !== null).join('\n'), 4096),
                 color: decision === 'accept' ? 'success' : 'error',
             })],
             allowedMentions: { parse: [] },
         }).catch(() => {});
+        if (channel) await disableDecisionButtons(channel, caseCode);
 
+        const logFields = [
+            { name: `Appeal ${label}`, value: `\`${record.case_code}\` — ${record.name}` },
+            { name: 'User', value: `${record.target_username} (${record.target_user_id})` },
+            { name: 'Decided by', value: `${admin.username} (${admin.id})` },
+            ...(note ? [{ name: 'Note', value: note }] : []),
+        ];
         await logEvent({
             client,
             guildId: record.guild_id,
             eventType: EVENT_TYPES.MODERATION_APPEAL,
-            data: {
-                userId: record.target_user_id,
-                fields: [
-                    { name: `Appeal ${label}`, value: `\`${record.case_code}\` — ${record.name}` },
-                    { name: 'User', value: `${record.target_username} (${record.target_user_id})` },
-                    { name: 'Decided by', value: `${admin.username} (${admin.id})` },
-                    ...(note ? [{ name: 'Note', value: note }] : []),
-                ],
-            },
+            data: { userId: record.target_user_id, fields: logFields },
         }).catch(() => {});
+        if (!record.is_test) await postModLog(client, 'appeal', logFields, { title: `Appeal ${label}` });
 
-        if (channelGuild) await closeAppealChannel(channelGuild, appeal.channel_id, label);
-        return { record, dmDelivered, label };
+        if (channel) scheduleAppealChannelDelete(channel, label);
+        return { record, dmDelivered, label, notes };
     });
 }

@@ -91,7 +91,11 @@ export default {
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [successEmbed(
                 `Appeal ${result.label}`,
-                `\`${caseCode}\` — ${result.record.name}\nDM to the user: ${result.dmDelivered ? 'delivered' : '**not delivered**'}.`
+                [
+                    `\`${caseCode}\` — ${result.record.name}`,
+                    `DM to the user: ${result.dmDelivered ? 'delivered' : '**not delivered**'}.`,
+                    ...result.notes,
+                ].join('\n')
             )],
         });
     },

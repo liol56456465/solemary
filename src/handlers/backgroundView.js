@@ -8,7 +8,7 @@ import { createError, ErrorTypes, replyUserError } from '../utils/errorHandler.j
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
-import { getAppealHistory, listCasesForUser } from '../services/enforcement/caseService.js';
+import { caseStatusLabel, getAppealHistory, getLatestAppealStatuses, listCasesForUser } from '../services/enforcement/caseService.js';
 import { dateStamp, formatDuration, stamp, truncate } from '../services/enforcement/format.js';
 
 const PAGE_SIZE = 6;
@@ -34,11 +34,8 @@ export async function resolveTargetUser(interaction, client) {
     return user;
 }
 
-function statusLabel(row) {
-    if (row.status === 'active' && row.expires_at && new Date(row.expires_at) <= new Date()) {
-        return 'expired';
-    }
-    return row.status.replace('_', ' ');
+function statusLabel(row, appealStatus = null) {
+    return caseStatusLabel(row, appealStatus);
 }
 
 function appealability(row) {
@@ -66,7 +63,7 @@ export async function buildRecordEmbed(row) {
         `**Appeal:** ${appealability(row)}`,
         `**Ladder level after:** ${row.ladder_level_after}`,
         `**DM delivered:** ${row.dm_delivered ? 'Yes' : 'No'}`,
-        `**Status:** ${statusLabel(row)}`,
+        `**Status:** ${statusLabel(row, appeals[0]?.status)}`,
     );
     if (row.status === 'revoked') {
         lines.push(`**Revoked:** ${row.revoked_at ? dateStamp(row.revoked_at) : '—'}${row.revoked_by ? ` by \`${row.revoked_by}\`` : ''}${row.revoke_reason ? ` — ${row.revoke_reason}` : ''}`);
@@ -85,11 +82,14 @@ export async function buildRecordEmbed(row) {
 }
 
 export async function buildRecordList(guildId, viewerId, targetUser, page) {
-    const { rows, total } = await listCasesForUser(guildId, targetUser.id, { limit: PAGE_SIZE, offset: page * PAGE_SIZE });
+    const [{ rows, total }, appealStatuses] = await Promise.all([
+        listCasesForUser(guildId, targetUser.id, { limit: PAGE_SIZE, offset: page * PAGE_SIZE }),
+        getLatestAppealStatuses(targetUser.id),
+    ]);
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     const fields = rows.map((row) => ({
-        name: truncate(`${row.name} · ${row.type} · ${statusLabel(row)}`, 256),
+        name: truncate(`${row.name} · ${row.type}${row.is_test ? ' (test)' : ''} · ${statusLabel(row, appealStatuses.get(row.case_code))}`, 256),
         value: truncate([
             `\`${row.case_code}\` · ${dateStamp(row.created_at)}${row.is_imported ? ' · imported' : ''}`,
             `Reason: ${row.reason}`,

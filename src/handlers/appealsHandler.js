@@ -1,9 +1,10 @@
 // appealsHandler.js — the public Appeal / Report staff panels posted by /setappeal.
 //
-// These components are deliberately open to everyone (no Administrator check):
+// The panel components are deliberately open to everyone (no Administrator check):
 //   appeal:open | appeal:report            buttons on the panels
 //   appealmodal:submit | appealmodal:report modals they open
 // The Appeal button works in both servers; Report staff only in the support server.
+// The Accept / Deny buttons on appeal messages (at the bottom) are admin-only.
 // Whatever is filed opens an admin-only channel in the main server's appeals category.
 
 import {
@@ -18,7 +19,8 @@ import { successEmbed } from '../utils/embeds.js';
 import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { normalizeCaseCode } from '../services/enforcement/format.js';
-import { submitAppeal, submitStaffReport } from '../services/enforcement/appealService.js';
+import { decideAppeal, submitAppeal, submitStaffReport } from '../services/enforcement/appealService.js';
+import { isAdministrator } from '../services/enforcement/enforcementService.js';
 
 function textLabel(label, input, description = null) {
     const builder = new LabelBuilder().setLabel(label).setTextInputComponent(input);
@@ -140,4 +142,35 @@ export async function handleAppealModal(interaction, client, args) {
             )],
         });
     }
+}
+
+// ── Accept / Deny on an appeal (admins, main server) ───────────────────────
+//   appealdecide:<accept|deny>:<code>   buttons on the appeal message; each decides
+//   only the appeal for that case code, straight away.
+
+const DECISIONS = new Set(['accept', 'deny']);
+
+export async function handleAppealDecisionButton(interaction, client, args) {
+    if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)) {
+        return replyUserError(interaction, {
+            type: ErrorTypes.PERMISSION,
+            message: 'Only administrators in the main server can decide appeals.',
+        });
+    }
+    const [decision, rawCode] = args;
+    const caseCode = normalizeCaseCode(rawCode || '');
+    if (!DECISIONS.has(decision) || !caseCode) return;
+
+    await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    const result = await decideAppeal({ client, admin: interaction.user, caseCode, decision, note: null });
+    return InteractionHelper.safeEditReply(interaction, {
+        embeds: [successEmbed(
+            `Appeal ${result.label}`,
+            [
+                `\`${caseCode}\` — ${result.record.name}`,
+                `DM to the user: ${result.dmDelivered ? 'delivered' : '**not delivered**'}.`,
+                ...result.notes,
+            ].join('\n')
+        )],
+    });
 }

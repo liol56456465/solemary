@@ -9,6 +9,7 @@ import { setBirthday as dbSetBirthday } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { reapplyMuteOnJoin } from '../services/enforcement/enforcementService.js';
 import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService.js';
+import { syncWarnRolesQuietly } from '../services/enforcement/warnRoleService.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 
@@ -29,6 +30,10 @@ export default {
             // Someone banned from the main server who joins the support server gets the banned role.
             if (guild.id === enforcementConfig.supportGuildId) {
                 await syncBannedRoleQuietly(member.client, member.id);
+            }
+            // Rejoining the main server (e.g. after a temporary ban) restores the warning role.
+            if (guild.id === enforcementConfig.mainGuildId) {
+                await syncWarnRolesQuietly(guild, member.id);
             }
         }
         

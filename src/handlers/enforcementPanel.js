@@ -37,6 +37,8 @@ import {
     getCountedWarns,
     isNameTaken,
     listCasesForUser,
+    getLatestAppealStatuses,
+    caseStatusLabel,
     nextDefaultName,
 } from '../services/enforcement/caseService.js';
 import { createFlow, getFlow, takeFlow, updateFlow, PANEL_EXPIRED_MESSAGE } from '../services/enforcement/panelState.js';
@@ -118,7 +120,10 @@ export function availableActions(state) {
 
 export async function buildPanel(guild, moderatorId, targetUser) {
     const state = await getTargetState(guild, targetUser.id);
-    const { rows: recent } = await listCasesForUser(guild.id, targetUser.id, { limit: 5 });
+    const [{ rows: recent }, appealStatuses] = await Promise.all([
+        listCasesForUser(guild.id, targetUser.id, { limit: 5 }),
+        getLatestAppealStatuses(targetUser.id),
+    ]);
 
     const lines = [
         `**User:** ${targetUser.username} (<@${targetUser.id}>)`,
@@ -140,8 +145,13 @@ export async function buildPanel(guild, moderatorId, targetUser) {
         lines.push('**Active mute:** has the muted role (no record)');
     }
 
+    const pendingAppeals = [...appealStatuses].filter(([, status]) => status === 'pending').map(([code]) => `\`${code}\``);
+    if (pendingAppeals.length) {
+        lines.push(`**Pending appeal:** ${pendingAppeals.join(', ')} (decide in the appeal channel or with /appeals)`);
+    }
+
     const recentText = recent.length
-        ? recent.map((row) => `\`${row.case_code}\` ${row.type} · ${row.status}${row.is_imported ? ' · imported' : ''}`).join('\n')
+        ? recent.map((row) => `\`${row.case_code}\` ${row.type}${row.is_test ? ' (test)' : ''} · ${caseStatusLabel(row, appealStatuses.get(row.case_code))}${row.is_imported ? ' · imported' : ''}`).join('\n')
         : 'None';
 
     const embed = createEmbed({

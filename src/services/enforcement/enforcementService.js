@@ -15,6 +15,8 @@ import { ensureMutedRole, addMutedRole, removeMutedRole, findMutedRole } from '.
 import { banDm, kickDm, muteDm, warnDm } from './dmTemplates.js';
 import { addMonths, formatDuration, dateStamp } from './format.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
+import { syncWarnRolesQuietly } from './warnRoleService.js';
+import { createEmbed } from '../../utils/embeds.js';
 
 export const REQUIRED_BOT_PERMISSIONS = [
     ['BanMembers', 'Ban Members'],
@@ -122,6 +124,34 @@ const LOG_TYPES = {
     removewarn: EVENT_TYPES.MODERATION_WARN_REMOVE,
 };
 
+const MOD_LOG_TITLES = {
+    ban: ['Ban', 'error'],
+    kick: ['Kick', 'warning'],
+    mute: ['Mute', 'warning'],
+    warn: ['Warning', 'warning'],
+    unban: ['Unban', 'success'],
+    unmute: ['Unmute', 'success'],
+    removewarn: ['Warning removed', 'success'],
+    appeal: ['Appeal decided', 'primary'],
+};
+
+/** Posts one enforcement event in the moderation log channel (MOD_LOG_CHANNEL_ID). */
+export async function postModLog(client, action, fields, { title = null } = {}) {
+    const channelId = enforcementConfig.modLogChannelId;
+    if (!channelId) return;
+    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
+    const channel = guild && (guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null));
+    if (!channel?.isTextBased?.()) {
+        logger.warn(`Mod log channel ${channelId} is not a text channel in the main server`);
+        return;
+    }
+    const [defaultTitle, color] = MOD_LOG_TITLES[action] || [action, 'primary'];
+    await channel.send({
+        embeds: [createEmbed({ title: title || defaultTitle, fields, color, timestamp: true })],
+        allowedMentions: { parse: [] },
+    }).catch((error) => logger.warn(`Mod log post failed: ${error.message}`));
+}
+
 export async function logEnforcement(client, guildId, action, { record = null, target, moderatorLabel, extra = [] }) {
     const fields = [
         { name: 'User', value: `${target.username} (${target.id})` },
@@ -152,6 +182,8 @@ export async function logEnforcement(client, guildId, action, { record = null, t
         eventType: LOG_TYPES[action],
         data: { userId: target.id, fields },
     }).catch((error) => logger.warn(`Enforcement log failed: ${error.message}`));
+    if (record?.is_test) return;
+    await postModLog(client, action, fields);
 }
 
 function moderatorFields(moderator) {
@@ -406,6 +438,7 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
         const dmDelivered = await sendDm(targetUser, warnDm(warnRecord, preview.warnNumber));
         await setDmDelivered(warnRecord.id, dmDelivered);
         const record = { ...warnRecord, dm_delivered: dmDelivered };
+        await syncWarnRolesQuietly(guild, targetUser.id);
         await logEnforcement(guild.client, guild.id, 'warn', { record, target: targetUser, moderatorLabel: label });
         return { record, dmDelivered, notes, warnNumber: preview.warnNumber };
     }
@@ -427,6 +460,8 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
         ban = null;
     }
 
+    // Only reaches members still in the server (the ban failed); banned users get it on rejoin.
+    await syncWarnRolesQuietly(guild, targetUser.id);
     await logEnforcement(guild.client, guild.id, 'warn', { record, target: targetUser, moderatorLabel: label });
     if (ban) {
         await logEnforcement(guild.client, guild.id, 'ban', {
@@ -538,12 +573,60 @@ export async function revokeWarn(guildId, caseCode, revokedBy, reason) {
     });
 }
 
+/**
+ * After a warn was revoked by an accepted appeal: if that warn was one of the warns
+ * that triggered the user's current automatic ladder ban, the limit was never really
+ * reached, so the ban is lifted and the ladder steps back one level, keeping the
+ * other warns of that level counted. Returns the lifted ban case, or null.
+ */
+export async function liftLadderBanForWarn(guild, warn, admin, reason) {
+    const ban = await withTransaction(async (client) => {
+        const { rows } = await client.query(
+            `SELECT * FROM ${T.cases}
+             WHERE guild_id = $1 AND target_user_id = $2 AND type = 'ban' AND is_auto = TRUE AND is_test = FALSE
+               AND status = ANY($3) AND (expires_at IS NULL OR expires_at > NOW())
+               AND created_at >= $4 AND ladder_level_after = $5
+             ORDER BY created_at DESC LIMIT 1 FOR UPDATE`,
+            [guild.id, warn.target_user_id, OPEN_STATUSES, warn.created_at, Number(warn.counts_toward_level) + 1]
+        );
+        const found = rows[0];
+        if (!found) return null;
+
+        await client.query(
+            `UPDATE ${T.cases} SET status = 'revoked', revoked_by = $2, revoked_at = NOW(), revoke_reason = $3 WHERE id = $1`,
+            [found.id, admin.id, reason]
+        );
+        const previousLevel = Math.max(0, found.ladder_level_after - 1);
+        const { rows: [counted] } = await client.query(
+            `SELECT COUNT(*)::int AS count FROM ${T.cases}
+             WHERE guild_id = $1 AND target_user_id = $2 AND type = 'warn' AND status = ANY($3)
+               AND is_imported = FALSE AND is_test = FALSE AND counts_toward_level = $4`,
+            [guild.id, warn.target_user_id, OPEN_STATUSES, previousLevel]
+        );
+        await lockLadderRow(client, guild.id, warn.target_user_id);
+        await client.query(
+            `UPDATE ${T.ladder} SET level = $3, warns_since_level = $4, updated_at = NOW()
+             WHERE guild_id = $1 AND user_id = $2`,
+            [guild.id, warn.target_user_id, previousLevel, counted?.count || 0]
+        );
+        return found;
+    });
+    if (!ban) return null;
+
+    await guild.members.unban(ban.target_user_id, reason.slice(0, 512)).catch((error) => {
+        if (error?.code !== 10026) throw error;
+    });
+    await syncBannedRoleQuietly(guild.client, ban.target_user_id);
+    return ban;
+}
+
 async function doRemoveWarn({ guild, moderator, targetUser, flow }) {
     const result = await revokeWarn(guild.id, flow.warnCode, moderator.id, flow.reason);
     if (!result) {
         throw userError('That warning is no longer active.');
     }
     const ladder = await getLadder(guild.id, targetUser.id);
+    await syncWarnRolesQuietly(guild, targetUser.id);
     await logEnforcement(guild.client, guild.id, 'removewarn', {
         target: targetUser, moderatorLabel: moderatorLabel(moderator),
         extra: [
