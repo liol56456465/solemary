@@ -4,12 +4,12 @@
 //   appeal:open | appeal:report            buttons on the panels
 //   appealmodal:submit | appealmodal:report modals they open
 // The Appeal button works in both servers; Report staff only in the support server.
+// Whatever is filed opens an admin-only channel in the main server's appeals category.
 
 import {
     LabelBuilder,
     MessageFlags,
     ModalBuilder,
-    StringSelectMenuBuilder,
     TextInputBuilder,
     TextInputStyle,
 } from 'discord.js';
@@ -30,35 +30,23 @@ function appealModal() {
         .setCustomId('appealmodal:submit')
         .setTitle('Appeal a punishment')
         .addLabelComponents(
-            textLabel('Why did you get punished?', new TextInputBuilder()
-                .setCustomId('punished')
-                .setStyle(TextInputStyle.Paragraph)
-                .setMinLength(10)
-                .setMaxLength(1000)
-                .setRequired(true), 'What happened that got you banned, muted or warned?'),
             textLabel('Why should it be lifted?', new TextInputBuilder()
                 .setCustomId('reason')
                 .setStyle(TextInputStyle.Paragraph)
                 .setMinLength(20)
                 .setMaxLength(1000)
-                .setRequired(true)),
-            new LabelBuilder()
-                .setLabel('Did you do it?')
-                .setDescription('Be honest — honest appeals are reviewed more favourably.')
-                .setStringSelectMenuComponent(new StringSelectMenuBuilder()
-                    .setCustomId('didit')
-                    .setRequired(true)
-                    .addOptions(
-                        { label: 'Yes, I did it', value: 'yes' },
-                        { label: 'Partly', value: 'partly' },
-                        { label: "No, I didn't do it", value: 'no' },
-                    )),
-            textLabel('Case code (optional)', new TextInputBuilder()
+                .setRequired(true), 'Why should you be unbanned, unmuted or unwarned?'),
+            textLabel('Case code', new TextInputBuilder()
                 .setCustomId('code')
                 .setStyle(TextInputStyle.Short)
                 .setMinLength(5)
                 .setMaxLength(7)
-                .setRequired(false), 'From your DM, e.g. k7m2qx. Leave empty to appeal your latest punishment.'),
+                .setRequired(true), 'From the DM you got when you were punished, e.g. k7m2qx.'),
+            textLabel('More info (optional)', new TextInputBuilder()
+                .setCustomId('moreinfo')
+                .setStyle(TextInputStyle.Paragraph)
+                .setMaxLength(1000)
+                .setRequired(false), 'Anything else the administrators should know.'),
         );
 }
 
@@ -116,36 +104,30 @@ export async function handleAppealModal(interaction, client, args) {
     const [step] = args;
 
     if (step === 'submit') {
-        const rawCode = interaction.fields.getTextInputValue('code')?.trim() || '';
-        const caseCode = rawCode ? normalizeCaseCode(rawCode) : null;
-        if (rawCode && !caseCode) {
+        const caseCode = normalizeCaseCode(interaction.fields.getTextInputValue('code')?.trim() || '');
+        if (!caseCode) {
             return replyUserError(interaction, {
                 type: ErrorTypes.USER_INPUT,
-                message: 'That is not a valid case code. It is 5–7 letters and digits, from the DM you received. Or leave it empty.',
+                message: 'That is not a valid case code. It is 5–7 letters and digits, from the DM you received.',
             });
         }
-        const { channel } = await submitAppeal({
+        await submitAppeal({
             client,
             user: interaction.user,
             caseCode,
-            from: server,
             answers: {
-                punished: interaction.fields.getTextInputValue('punished').trim(),
                 reason: interaction.fields.getTextInputValue('reason').trim(),
-                didIt: interaction.fields.getStringSelectValues('didit')[0],
+                moreInfo: interaction.fields.getTextInputValue('moreinfo')?.trim() || '',
             },
         });
-        const where = channel.permissionOverwrites.cache.has(interaction.user.id)
-            ? `Your appeal channel: <#${channel.id}>. `
-            : '';
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed('Appeal submitted', `${where}You'll get a DM with the decision.`)],
+            embeds: [successEmbed('Appeal submitted', "The administrators will review it. You'll get a DM with the decision.")],
         });
     }
 
     if (step === 'report' && server === 'support') {
         await submitStaffReport({
-            guild: interaction.guild,
+            client,
             user: interaction.user,
             staffMember: interaction.fields.getTextInputValue('staff').trim(),
             details: interaction.fields.getTextInputValue('details').trim(),

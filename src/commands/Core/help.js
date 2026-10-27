@@ -105,7 +105,7 @@ export async function createInitialHelpMenu(client, guildId = null) {
                 value: [
                     '• Every command needs the **Administrator** permission.',
                     '• Commands only work in the main Meowist server.',
-                    '• **/setappeal** posts the appeal panels; **/appeals** decides appeals.',
+                    '• **/setappeal** posts the appeal panels; **/appeals** lists, shows and decides appeals.',
                 ].join('\n'),
                 inline: false,
             },

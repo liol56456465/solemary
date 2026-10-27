@@ -5,7 +5,7 @@ import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
-import { getMainTicketCategory, getSupportAppealsCategory } from '../../services/enforcement/appealService.js';
+import { getAppealsCategory } from '../../services/enforcement/appealService.js';
 
 const SUPPORT_PANEL_CHANNEL = 'appeals';
 
@@ -22,12 +22,12 @@ function mainPanel() {
         embeds: [createEmbed({
             title: `${enforcementConfig.serverName} appeals`,
             description: [
-                '**Muted or warned?** Press **Appeal** and answer three questions:',
-                '1. Why did you get punished?',
-                '2. Why should it be lifted?',
-                '3. Did you do it? — please be honest.',
+                '**Muted or warned?** Press **Appeal** and fill in:',
+                '1. Why it should be lifted',
+                '2. Your case code, from the DM you got',
+                '3. More info, if you want to add anything',
                 '',
-                'A private appeal channel opens for you and the administrators, like a ticket. You also get the decision by DM.',
+                'The administrators review your appeal and you get the decision by DM.',
                 '',
                 '-# Banned? Appeal in the Meowist Support server instead — the link is in your ban DM.',
             ].join('\n'),
@@ -42,12 +42,12 @@ function supportPanel() {
         embeds: [createEmbed({
             title: `${enforcementConfig.serverName} appeals`,
             description: [
-                '**Appeal** — banned, kicked, muted or warned in Meowist? Press **Appeal** and answer three questions:',
-                '1. Why did you get punished?',
-                '2. Why should it be lifted?',
-                '3. Did you do it? — please be honest.',
+                '**Appeal** — banned, kicked, muted or warned in Meowist? Press **Appeal** and fill in:',
+                '1. Why it should be lifted',
+                '2. Your case code, from the DM you got',
+                '3. More info, if you want to add anything',
                 '',
-                'A private appeal channel opens for you and the administrators. You also get the decision by DM.',
+                'The administrators review your appeal and you get the decision by DM.',
                 '',
                 '**Report staff** — report a staff member who broke the rules. Only administrators can see reports.',
                 '',
@@ -115,17 +115,18 @@ export default {
         const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         if (!deferred) return;
 
-        const ticketCategory = await getMainTicketCategory(interaction.guild);
-        if (!ticketCategory) {
-            throw configError('There is no Tickets category in this server yet. Set one in the ticket dashboard (/ticket) first — mute and warn appeals open there.');
+        const appealsCategory = await getAppealsCategory(interaction.guild);
+        if (!appealsCategory) {
+            throw configError(`The appeals category (${enforcementConfig.appealsCategoryId}) is not a category in this server. Every appeal and staff report opens there.`);
+        }
+        const botPermissions = appealsCategory.permissionsFor(interaction.guild.members.me);
+        if (!botPermissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels])) {
+            throw configError(`I need View Channel and Manage Channels in the **${appealsCategory.name}** category to open appeal channels there.`);
         }
 
         const supportGuild = client.guilds.cache.get(enforcementConfig.supportGuildId);
         if (!supportGuild) {
-            throw configError('I am not in the support server (SUPPORT_GUILD_ID), so ban appeals cannot be set up.');
-        }
-        if (!await getSupportAppealsCategory(supportGuild)) {
-            throw configError('APPEALS_CATEGORY_ID does not point to a category in the support server. Ban appeal channels open there.');
+            throw configError('I am not in the support server (SUPPORT_GUILD_ID), so the ban appeal panel cannot be posted.');
         }
 
         const mainChannel = interaction.options.getChannel('channel') || interaction.channel;
@@ -138,10 +139,11 @@ export default {
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [successEmbed('Appeal panels posted', [
-                `**Main server:** <#${mainChannel.id}> — mute and warn appeals open in **${ticketCategory.name}**.`,
-                `**Support server:** #${supportChannel.name}${created ? ' (created)' : ''} — ban and kick appeals open in the appeals category there.`,
+                `**Main server:** <#${mainChannel.id}>, for mutes and warns.`,
+                `**Support server:** #${supportChannel.name}${created ? ' (created)' : ''}, for bans and kicks, plus staff reports.`,
                 '',
-                'Decide appeals here with **/appeals**.',
+                `Every appeal and report opens in **${appealsCategory.name}**, visible to administrators only.`,
+                'Review and decide them with **/appeals**.',
             ].join('\n'))],
         });
     },

@@ -1,10 +1,9 @@
 // appealService.js — appeals (filed from the /setappeal panels) and staff reports,
-// and the /appeals accept|deny decision.
+// and the /appeals view and accept|deny decision.
 //
-// Where an appeal channel opens depends on the punishment: a banned or kicked user
-// can't see the main server, so their appeal opens in the support server's appeals
-// category; mute and warn appeals open in the main server's Tickets category. The
-// appealing user is added to the channel (like a ticket) when they're in that server.
+// Every appeal and staff report opens a channel in the main server's appeals
+// category (MAIN_APPEALS_CATEGORY_ID), visible to administrators only. The user is
+// never added; they get the decision by DM.
 
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -15,8 +14,7 @@ import { Mutex } from '../../utils/mutex.js';
 import { logEvent, EVENT_TYPES } from '../loggingService.js';
 import { query, withTransaction, T, isUniqueViolation } from './db.js';
 import { getCaseByCode, listCasesForUser, OPEN_STATUSES } from './caseService.js';
-import { getGuildConfig } from '../config/guildConfig.js';
-import { createRejoinInvite, revokeWarn, sendDm } from './enforcementService.js';
+import { createRejoinInvite, getLadder, revokeWarn, sendDm } from './enforcementService.js';
 import { removeMutedRole } from './muteService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { appealAcceptedDm, appealDeniedDm } from './dmTemplates.js';
@@ -77,7 +75,7 @@ export async function assertAppealable(record, userId) {
 }
 
 function privateOverwrites(guild) {
-    // Administrators see every channel anyway; the appealing user is never added.
+    // Administrators see every channel anyway; the user is never added.
     return [
         { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
         {
@@ -93,13 +91,6 @@ function privateOverwrites(guild) {
     ];
 }
 
-const APPELLANT_ALLOW = [
-    PermissionFlagsBits.ViewChannel,
-    PermissionFlagsBits.SendMessages,
-    PermissionFlagsBits.AttachFiles,
-    PermissionFlagsBits.ReadMessageHistory,
-];
-
 function configError(message) {
     return createError(message, ErrorTypes.CONFIGURATION,
         'Appeals are not set up correctly right now. Please try again later.', { expected: true });
@@ -111,62 +102,37 @@ async function fetchCategory(guild, categoryId) {
     return category?.type === ChannelType.GuildCategory ? category : null;
 }
 
-/** The support server's appeals category (APPEALS_CATEGORY_ID). */
-export async function getSupportAppealsCategory(supportGuild) {
-    return fetchCategory(supportGuild, enforcementConfig.appealsCategoryId);
-}
-
-/** The main server's ticket category: the one set in the ticket dashboard, else one named like "tickets". */
-export async function getMainTicketCategory(mainGuild) {
-    const config = await getGuildConfig(mainGuild.client, mainGuild.id).catch(() => ({}));
-    return await fetchCategory(mainGuild, config.ticketCategoryId)
-        || mainGuild.channels.cache.find((channel) =>
-            channel.type === ChannelType.GuildCategory && channel.name.toLowerCase().includes('ticket'))
-        || null;
+/** The main server's appeals category (MAIN_APPEALS_CATEGORY_ID). */
+export async function getAppealsCategory(mainGuild) {
+    return fetchCategory(mainGuild, enforcementConfig.appealsCategoryId);
 }
 
 function channelName(name) {
     return name.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 90);
 }
 
-async function createPrivateChannel(guild, name) {
-    const category = await getSupportAppealsCategory(guild);
-    if (!category) throw configError('Appeals category missing');
+/** An admin-only channel in the main server's appeals category. */
+async function createPrivateChannel(client, name, reason) {
+    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
+    if (!guild) throw configError('Main guild unavailable for appeals');
+    const category = await getAppealsCategory(guild);
+    if (!category) throw configError('Appeals category missing in the main server');
     return guild.channels.create({
         name: channelName(name),
         type: ChannelType.GuildText,
         parent: category.id,
         permissionOverwrites: privateOverwrites(guild),
-        reason: 'Staff report',
+        reason,
     });
 }
 
-/** Ban and kick appeals open in the support server; mute and warn appeals in the main server. */
-function appealGuildFor(client, record) {
-    const inSupport = record.type === 'ban' || record.type === 'kick';
-    const guildId = inSupport ? enforcementConfig.supportGuildId : enforcementConfig.mainGuildId;
-    return { guild: client.guilds.cache.get(guildId) || null, inSupport };
-}
-
-async function createAppealChannel(client, record, user) {
-    const { guild, inSupport } = appealGuildFor(client, record);
-    if (!guild) throw configError(`${inSupport ? 'Support' : 'Main'} guild unavailable for appeals`);
-
-    const category = inSupport ? await getSupportAppealsCategory(guild) : await getMainTicketCategory(guild);
-    if (!category) throw configError(inSupport ? 'Appeals category missing' : 'Main server ticket category missing');
-
-    const member = await guild.members.fetch(user.id).catch(() => null);
-    return guild.channels.create({
-        name: channelName(`appeal-${record.case_code}`),
-        type: ChannelType.GuildText,
-        parent: category.id,
-        permissionOverwrites: [
-            ...privateOverwrites(guild),
-            ...(member ? [{ id: member.id, allow: APPELLANT_ALLOW }] : []),
-        ],
-        reason: `Appeal ${record.case_code}`,
-    });
-}
+// Labels for the stored answers. punished/didIt come from the older form.
+const ANSWER_LABELS = {
+    punished: 'Why did you get punished?',
+    reason: 'Why should it be lifted?',
+    didIt: 'Did you do it?',
+    moreInfo: 'More info',
+};
 
 const DID_IT_LABELS = {
     yes: 'Yes, I did it',
@@ -174,68 +140,175 @@ const DID_IT_LABELS = {
     no: "No, I didn't do it",
 };
 
-const APPEALABLE_TYPES_FROM = {
-    // Someone who can still see the main server was muted or warned; from the
-    // support server they're usually banned or kicked. Either list is tried in order.
-    main: ['mute', 'warn', 'ban', 'kick'],
-    support: ['ban', 'kick', 'mute', 'warn'],
+const CASE_STATUS_LABELS = {
+    active: 'Active',
+    appeal_pending: 'Active, appeal pending',
+    expired: 'Ended',
+    revoked: 'Lifted',
 };
 
-/**
- * The user's most recent case that can be appealed right now, preferring the
- * punishments that fit where they clicked. Throws a user-facing error if none.
- */
-export async function findLatestAppealableCase(userId, from = 'support') {
-    const { rows } = await listCasesForUser(enforcementConfig.mainGuildId, userId, { limit: 25 });
-    const order = APPEALABLE_TYPES_FROM[from] || APPEALABLE_TYPES_FROM.support;
-    const candidates = [...rows].sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
-    for (const record of candidates) {
-        try {
-            await assertAppealable(record, userId);
-            return record;
-        } catch {
-            // not appealable right now; try the next one
-        }
-    }
-    throw userError('You have no punishment that can be appealed right now. If your DM has a case code, enter it in the form.');
+const APPEAL_STATUS_LABELS = {
+    pending: 'pending',
+    accepted: 'accepted',
+    denied: 'denied',
+    closed: 'closed',
+};
+
+function parseBody(body) {
+    if (!body) return {};
+    return typeof body === 'string' ? JSON.parse(body) : body;
 }
 
 function caseDetailsLines(record) {
     const lines = [
         `**Case code:** \`${record.case_code}\``,
         `**Type:** ${record.type}${record.is_auto ? ' (automatic, warn ladder)' : ''}`,
+        `**Status:** ${CASE_STATUS_LABELS[record.status] || record.status}`,
         `**Name:** ${record.name}`,
-        `**User:** ${record.target_username} (\`${record.target_user_id}\`)`,
-        `**By:** ${record.moderator_username}`,
-        `**Date:** ${dateStamp(record.created_at)}`,
-        `**Reason:** ${record.reason}`,
+        `**User:** <@${record.target_user_id}> ${record.target_username} (\`${record.target_user_id}\`)`,
+        `**By:** <@${record.moderator_id}> ${record.moderator_username}`,
+        `**When:** ${stamp(record.created_at)}`,
+        `**Reason:** ${truncate(record.reason, 500)}`,
     ];
     if (record.type === 'ban' || record.type === 'mute') {
         lines.push(record.expires_at
-            ? `**Duration:** ${formatDuration(Number(record.duration_ms))} — ends ${stamp(record.expires_at)}`
+            ? `**Duration:** ${formatDuration(Number(record.duration_ms))}, ends ${stamp(record.expires_at)}`
             : '**Duration:** Permanent');
     }
     if (record.appeal_deadline) {
         lines.push(`**Appeal deadline:** ${dateStamp(record.appeal_deadline)}`);
     }
+    if (record.unappealable) {
+        lines.push('**Unappealable:** yes');
+    }
+    if (record.status === 'revoked' && record.revoked_at) {
+        lines.push(`**Lifted:** ${dateStamp(record.revoked_at)}${record.revoke_reason ? `, ${record.revoke_reason}` : ''}`);
+    }
+    lines.push(`**DM delivered:** ${record.dm_delivered ? 'yes' : 'no'}`);
     lines.push(`**Ladder level after:** ${record.ladder_level_after}`);
     return lines;
+}
+
+function answerFields(body) {
+    return Object.entries(parseBody(body))
+        .filter(([, value]) => value)
+        .map(([key, value]) => ({
+            name: ANSWER_LABELS[key] || key,
+            value: truncate(key === 'didIt' ? (DID_IT_LABELS[value] || value) : value, 1024),
+        }));
+}
+
+function appealLine(appeal) {
+    const status = APPEAL_STATUS_LABELS[appeal.status] || appeal.status;
+    const decided = appeal.decided_at
+        ? `, ${status} by ${appeal.decided_by_username || 'unknown'} ${dateStamp(appeal.decided_at)}`
+        : `, ${status}`;
+    const note = appeal.note ? ` (note: ${truncate(appeal.note, 120)})` : '';
+    return `Filed ${dateStamp(appeal.created_at)}${decided}${note}`;
+}
+
+/**
+ * Embeds describing a case for administrators: the case itself, the appeal being
+ * looked at (if any), earlier appeals on this case, and the user's other cases.
+ * Used in the appeal channel and by /appeals.
+ */
+export async function buildCaseDossier(record, { appeal = null } = {}) {
+    const [{ rows: caseAppeals }, { rows: userAppeals }, { rows: [appealCount] }, { rows: otherCases, total }, ladder] = await Promise.all([
+        query(
+            `SELECT * FROM ${T.appeals} WHERE case_code = $1 AND kind = 'appeal' ORDER BY created_at DESC LIMIT 10`,
+            [record.case_code]
+        ),
+        query(
+            `SELECT DISTINCT ON (case_code) case_code, status FROM ${T.appeals}
+             WHERE user_id = $1 AND kind = 'appeal' ORDER BY case_code, created_at DESC`,
+            [record.target_user_id]
+        ),
+        query(
+            `SELECT COUNT(*)::int AS count FROM ${T.appeals} WHERE user_id = $1 AND kind = 'appeal'`,
+            [record.target_user_id]
+        ),
+        listCasesForUser(record.guild_id, record.target_user_id, { limit: 16 }),
+        getLadder(record.guild_id, record.target_user_id).catch(() => null),
+    ]);
+
+    const current = appeal || caseAppeals.find((row) => row.status === 'pending') || null;
+    const embeds = [createEmbed({
+        title: truncate(`Case ${record.case_code}: ${record.name}`, 256),
+        description: truncate(caseDetailsLines(record).join('\n'), 4096),
+        color: 'primary',
+    })];
+
+    if (current) {
+        embeds.push(createEmbed({
+            title: `Appeal (${APPEAL_STATUS_LABELS[current.status] || current.status})`,
+            description: `Filed by ${current.username} ${stamp(current.created_at)}${current.channel_id ? ` in <#${current.channel_id}>` : ''}`,
+            fields: answerFields(current.body),
+            color: 'secondary',
+        }));
+    }
+
+    const earlier = caseAppeals.filter((row) => row.id !== current?.id);
+    const latestAppealByCase = new Map(userAppeals.map((row) => [row.case_code, row.status]));
+    const others = otherCases.filter((row) => row.case_code !== record.case_code).slice(0, 15);
+    const otherLines = others.map((row) => {
+        const appealStatus = latestAppealByCase.get(row.case_code);
+        return `\`${row.case_code}\` **${row.type}** ${dateStamp(row.created_at)}, ${CASE_STATUS_LABELS[row.status] || row.status}`
+            + `${appealStatus ? `, appeal ${APPEAL_STATUS_LABELS[appealStatus] || appealStatus}` : ''}`
+            + `: ${truncate(row.reason, 80)}`;
+    });
+    const moreCount = Math.max(0, total - 1 - others.length);
+
+    embeds.push(createEmbed({
+        title: 'History',
+        fields: [
+            {
+                name: 'Earlier appeals on this case',
+                value: truncate(earlier.length ? earlier.map(appealLine).join('\n') : 'None', 700),
+            },
+            {
+                name: `Other enforcements (${Math.max(0, total - 1)})`,
+                value: truncate(otherLines.length
+                    ? otherLines.join('\n') + (moreCount ? `\n…and ${moreCount} more` : '')
+                    : 'None', 700),
+            },
+            {
+                name: 'Appeals filed in total',
+                value: String(appealCount?.count ?? 0),
+                inline: true,
+            },
+            ...(ladder ? [{ name: 'Warn ladder', value: `Level ${ladder.level}, ${ladder.warns_since_level} warn(s) since`, inline: true }] : []),
+        ],
+        color: 'secondary',
+    }));
+
+    return embeds;
+}
+
+/** Pending appeals, oldest first, with their case. */
+export async function listPendingAppeals(limit = 20) {
+    const { rows } = await query(
+        `SELECT a.case_code, a.username, a.user_id, a.channel_id, a.created_at, c.type, c.name
+         FROM ${T.appeals} a JOIN ${T.cases} c ON c.case_code = a.case_code
+         WHERE a.kind = 'appeal' AND a.status = 'pending'
+         ORDER BY a.created_at ASC LIMIT $1`,
+        [limit]
+    );
+    return rows;
 }
 
 /**
  * @param {object} p
  * @param {import('discord.js').Client} p.client
  * @param {import('discord.js').User} p.user
- * @param {string|null} p.caseCode  null: appeal the latest appealable case
- * @param {'main'|'support'} p.from  which server the form was opened in
- * @param {{ punished: string, reason: string, didIt: string }} p.answers
+ * @param {string} p.caseCode
+ * @param {{ reason: string, moreInfo: string }} p.answers
  */
-export async function submitAppeal({ client, user, caseCode, from, answers }) {
-    const record = caseCode ? await getCaseByCode(caseCode) : await findLatestAppealableCase(user.id, from);
-    return Mutex.runExclusive(`appeal:${record?.case_code ?? caseCode}`, async () => {
+export async function submitAppeal({ client, user, caseCode, answers }) {
+    const record = await getCaseByCode(caseCode);
+    return Mutex.runExclusive(`appeal:${caseCode}`, async () => {
         await assertAppealable(record, user.id);
-        const { guild } = appealGuildFor(client, record);
-        if (!guild) throw configError('Appeal guild unavailable');
+        const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
+        if (!guild) throw configError('Main guild unavailable for appeals');
 
         let appeal;
         try {
@@ -260,7 +333,7 @@ export async function submitAppeal({ client, user, caseCode, from, answers }) {
 
         let channel;
         try {
-            channel = await createAppealChannel(client, record, user);
+            channel = await createPrivateChannel(client, `appeal-${record.case_code}`, `Appeal ${record.case_code}`);
         } catch (error) {
             // Undo so the user can try again once the channel can be created.
             await withTransaction(async (client) => {
@@ -272,28 +345,21 @@ export async function submitAppeal({ client, user, caseCode, from, answers }) {
 
         await query(`UPDATE ${T.appeals} SET channel_id = $2 WHERE id = $1`, [appeal.id, channel.id]);
 
-        await channel.send({
-            content: channel.permissionOverwrites.cache.has(user.id)
-                ? `<@${user.id}> your appeal is open. An administrator will review it here; you'll also get the decision by DM.`
-                : undefined,
-            embeds: [
-                createEmbed({
-                    title: truncate(`Appeal — ${record.name}`, 256),
-                    description: truncate(caseDetailsLines(record).join('\n'), 4096),
+        const pendingRecord = { ...record, status: record.status === 'active' ? 'appeal_pending' : record.status };
+        const embeds = await buildCaseDossier(pendingRecord, { appeal: { ...appeal, channel_id: channel.id } })
+            .catch((error) => {
+                logger.warn(`Could not build the case summary for appeal ${record.case_code}: ${error.message}`);
+                return [createEmbed({
+                    title: truncate(`Appeal: ${record.name}`, 256),
+                    description: truncate(caseDetailsLines(pendingRecord).join('\n'), 4096),
+                    fields: answerFields(answers),
                     color: 'primary',
-                }),
-                createEmbed({
-                    title: "The user's answers",
-                    fields: [
-                        { name: `Why did you get ${record.type === 'ban' ? 'banned' : 'punished'}?`, value: truncate(answers.punished, 1024) },
-                        { name: 'Why should it be lifted?', value: truncate(answers.reason, 1024) },
-                        { name: 'Did you do it?', value: DID_IT_LABELS[answers.didIt] || answers.didIt },
-                    ],
-                    footer: { text: `Decide with /appeals code:${record.case_code} decision:accept|deny in the main server` },
-                    color: 'secondary',
-                }),
-            ],
-            allowedMentions: { users: [user.id] },
+                })];
+            });
+        await channel.send({
+            content: `New appeal from ${user.username} for \`${record.case_code}\`. Decide with \`/appeals code:${record.case_code} decision:accept|deny\`.`,
+            embeds,
+            allowedMentions: { parse: [] },
         });
 
         await logEvent({
@@ -314,7 +380,9 @@ export async function submitAppeal({ client, user, caseCode, from, answers }) {
     });
 }
 
-export async function submitStaffReport({ guild, user, staffMember, details, proof }) {
+export async function submitStaffReport({ client, user, staffMember, details, proof }) {
+    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
+    if (!guild) throw configError('Main guild unavailable for staff reports');
     const { rows } = await query(
         `INSERT INTO ${T.appeals} (kind, user_id, username, guild_id, body)
          VALUES ('report', $1, $2, $3, $4) RETURNING *`,
@@ -324,7 +392,7 @@ export async function submitStaffReport({ guild, user, staffMember, details, pro
 
     let channel;
     try {
-        channel = await createPrivateChannel(guild, `report-${user.username}`);
+        channel = await createPrivateChannel(client, `report-${user.username}`, 'Staff report');
     } catch (error) {
         await query(`DELETE FROM ${T.appeals} WHERE id = $1`, [report.id]).catch(() => {});
         throw error;
@@ -350,7 +418,7 @@ export async function submitStaffReport({ guild, user, staffMember, details, pro
     });
 
     await logEvent({
-        client: guild.client,
+        client,
         guildId: enforcementConfig.mainGuildId,
         eventType: EVENT_TYPES.MODERATION_STAFF_REPORT,
         data: {
@@ -410,7 +478,7 @@ async function closeAppealChannel(guild, channelId, decisionLabel) {
         : null;
     if (!channel) return;
 
-    // The archive category lives in the support server; main-server appeals stay where they are.
+    // Only an archive category in the same server as the channel is used.
     const archiveId = enforcementConfig.appealsArchiveCategoryId;
     const archive = archiveId && guild.channels.cache.has(archiveId) ? archiveId : null;
     try {

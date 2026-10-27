@@ -216,7 +216,7 @@ export const tableStatements = [
         PRIMARY KEY (guild_id, user_id)
     )`,
 
-    // Appeals and staff reports filed from the support server.
+    // Appeals and staff reports; guild_id is the server their channel opened in.
     `CREATE TABLE IF NOT EXISTS ${t.mod_appeals} (
         id BIGSERIAL PRIMARY KEY,
         kind VARCHAR(10) NOT NULL CHECK (kind IN ('appeal', 'report')),

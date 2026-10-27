@@ -15,8 +15,10 @@ export const enforcementConfig = {
     // Defaults are the production Meowist values; .env.test overrides them for the test servers.
     adminRequestChannelId: readId('ADMIN_REQUEST_CHANNEL_ID') || '1527697155643408442',
     supportServerInvite: (process.env.SUPPORT_SERVER_INVITE || '').trim() || 'https://discord.gg/7Ckv9Bt577',
-    appealsCategoryId: readId('APPEALS_CATEGORY_ID'),
-    // Optional: closed appeal/report channels move here. Without it they stay in place, renamed closed-….
+    // Main-server category where every appeal and staff report opens, visible to administrators only.
+    // (Renamed from APPEALS_CATEGORY_ID, which was a support-server category; that variable is ignored.)
+    appealsCategoryId: readId('MAIN_APPEALS_CATEGORY_ID') || '1531365877755285606',
+    // Optional: a main-server category closed appeal/report channels move to. Without it they stay in place, renamed closed-….
     appealsArchiveCategoryId: readId('APPEALS_ARCHIVE_CATEGORY_ID'),
     mutedRoleId: readId('MUTED_ROLE_ID'),
     // Optional: a role in the support server that members with an active main-server ban get.
@@ -70,7 +72,7 @@ export function validateEnforcementConfig() {
     const required = {
         MAIN_GUILD_ID: enforcementConfig.mainGuildId,
         SUPPORT_GUILD_ID: enforcementConfig.supportGuildId,
-        APPEALS_CATEGORY_ID: enforcementConfig.appealsCategoryId,
+        MAIN_APPEALS_CATEGORY_ID: enforcementConfig.appealsCategoryId,
     };
 
     for (const [name, value] of Object.entries(required)) {
