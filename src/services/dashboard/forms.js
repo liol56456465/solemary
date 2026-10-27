@@ -25,7 +25,10 @@ export class InputError extends Error {
 
 /** Discord markdown in service messages (**bold**, `code`) → plain text for the page. */
 export function plainText(message) {
-    return String(message ?? '').replace(/\*\*|__|`/g, '').replace(/<#(\d+)>/g, '#$1').replace(/<@&(\d+)>/g, '@$1');
+    return String(message ?? '').replace(/\*\*|__|`/g, '').replace(/<#(\d+)>/g, '#$1').replace(/<@&(\d+)>/g, '@$1')
+        .replace(/<@!?(\d+)>/g, '@$1')
+        // Discord timestamps (<t:1700000000:R>) → "2023-11-14 22:13 UTC".
+        .replace(/<t:(\d{1,12})(?::[a-zA-Z])?>/g, (match, seconds) => `${new Date(Number(seconds) * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC`);
 }
 
 // ── Parsing ───────────────────────────────────────────────────────────────

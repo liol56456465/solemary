@@ -7,9 +7,9 @@ import { isAdministrator } from '../../services/enforcement/enforcementService.j
 import { getCaseByCode } from '../../services/enforcement/caseService.js';
 import { isEnforcementDbAvailable } from '../../services/enforcement/db.js';
 import {
-    describeDuration, editCase, getCaseEdits, searchCases, voidCase,
+    describeDuration, editCase, getCaseEdits, parseEditDuration, searchCases, voidCase,
 } from '../../services/enforcement/caseEditService.js';
-import { dateStamp, normalizeCaseCode, parseDuration, stamp, truncate } from '../../services/enforcement/format.js';
+import { dateStamp, normalizeCaseCode, stamp, truncate } from '../../services/enforcement/format.js';
 import {
     addEvidence, addImageEvidence, captureLinks, evidenceDisplay, evidenceLines, fitLines, listEvidence, NOTE_MAX,
     parseEvidenceUrls, removeEvidence, resolveImageUrls,
@@ -35,12 +35,7 @@ function readCode(interaction) {
 
 /** "permanent" → null; otherwise a parsed duration; undefined when the option is absent. */
 function readDuration(interaction) {
-    const raw = interaction.options.getString('duration')?.trim();
-    if (!raw) return undefined;
-    if (/^(perm|permanent|forever)$/i.test(raw)) return null;
-    const ms = parseDuration(raw);
-    if (ms == null) throw userError('Duration must look like 30m, 24h, 7d, 2w, 1mo (or "permanent" for a ban).');
-    return ms;
+    return parseEditDuration(interaction.options.getString('duration'));
 }
 
 function codeOption(option) {

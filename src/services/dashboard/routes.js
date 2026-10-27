@@ -15,6 +15,10 @@
 //                                   module through the SAME services the commands use;
 //                                   success → audit rows + mod log line + flash + 303;
 //                                   invalid input → 400 with the page and the message
+//   Phase 3 (enforcementRoutes.js): /users (lookup), /users/:id (member page, actions
+//   with a confirm step, staff notes), case edit/void/evidence on /cases/:code,
+//   /appeals/:code (dossier, accept/deny with a confirm step), /nocontact, coverage
+//   heatmap and mass-action blocks on /staff. Same POST checks + Administrator (canAct).
 //   GET  /dashboard/static/dashboard.css   the only stylesheet (CSP style-src 'self')
 //   POST /dashboard/logout          CSRF token + same-origin check
 //   /staff, /staff/*                → 301 /dashboard (the old read-only staff dashboard)
@@ -62,6 +66,9 @@ import { collectOverview, defaultOverviewData, moduleStatesFrom, overviewPage } 
 import { MODULES, getAction, getModule } from './modules/index.js';
 import { defaultServices } from './services.js';
 import { AUDIT_PAGE_SIZE, createAuditStore, recordDashboardChange } from './audit.js';
+import { defaultEnforcement } from './enforcementData.js';
+import { createEnforcementHandlers } from './enforcementRoutes.js';
+import { createConfirmStore } from './confirmTokens.js';
 import { InputError, plainText } from './forms.js';
 import { createPgSessionStore } from './sessionStore.js';
 import { query } from '../enforcement/db.js';
@@ -98,6 +105,16 @@ export const SECURITY_HEADERS = {
     'Referrer-Policy': 'same-origin',
     'Cache-Control': 'no-store',
 };
+
+/** Audit-log modules written by the Phase 3 enforcement pages (for the filter). */
+export const ENFORCEMENT_AUDIT_MODULES = [
+    { key: 'actions', label: 'Enforcement actions' },
+    { key: 'cases', label: 'Case changes' },
+    { key: 'appeal-decisions', label: 'Appeal decisions' },
+    { key: 'notes', label: 'Staff notes' },
+    { key: 'nocontact', label: 'No-contact orders' },
+    { key: 'massguard', label: 'Mass-action guard' },
+];
 
 const truthy = (value) => String(value || '').trim().toLowerCase() === 'true';
 
@@ -168,6 +185,7 @@ export function createDashboard({
     client, settings, sessions, access = createAccessChecker(client, { guildId: settings.mainGuildId }), data = defaultData,
     fetchImpl = globalThis.fetch, states = createStateStore(), limits = DEFAULT_LIMITS,
     services = defaultServices, auditStore = null, modules = MODULES, env = process.env,
+    enforcement = defaultEnforcement, confirms = createConfirmStore(),
 }) {
     const secret = settings.sessionSecret;
     const guildId = settings.mainGuildId;
@@ -366,7 +384,7 @@ export function createDashboard({
         }));
     }
 
-    async function caseDetail(req, res) {
+    async function renderCase(req, res, status = 200, { error = null } = {}) {
         const code = normalizeCaseCode(str(req.params?.code, 10));
         const record = code ? await data.getCaseByCode(code) : null;
         if (!record || record.guild_id !== guildId) return fail(res, 404, 'Case not found', 'There is no case with that code.', req);
@@ -377,27 +395,41 @@ export function createDashboard({
         ]);
         // Image URLs expire: fetch fresh ones from the stored evidence messages, server-side.
         const fresh = await data.resolveImageUrls(client, evidenceRows);
-        return sendHtml(res, 200, caseDetailPage({
+        const evidence = evidenceRows.map((row) => ({ row, freshUrl: fresh.get(String(row.id)) || null }));
+        const actions = enforcementHandlers.caseActionForms({
+            record, evidence, csrf: req.dashboard.session.csrf, canWrite: enforcementHandlers.canWrite(req),
+            flash: status === 200 ? req.dashboard.flash : null, error, editEnabled: settings.editEnabled, canAct: req.dashboard.access.canAct,
+        });
+        return sendHtml(res, status, caseDetailPage({
             ...shellOf(req),
             record,
             statusLabel: caseStatusLabel(record, appeals[0]?.status || null),
             edits,
-            evidence: evidenceRows.map((row) => ({ row, freshUrl: fresh.get(String(row.id)) || null })),
+            evidence,
             appeals,
+            top: actions.top,
+            bottom: actions.bottom,
         }));
     }
 
+    const caseDetail = (req, res) => renderCase(req, res);
+
     async function appeals(req, res) {
         const rows = await data.listPendingAppeals(100, guildId);
-        return sendHtml(res, 200, appealsPage({ ...shellOf(req), appeals: rows }));
+        return sendHtml(res, 200, appealsPage({ ...shellOf(req), appeals: rows, flash: req.dashboard.flash, canWrite: enforcementHandlers.canWrite(req) }));
     }
 
-    async function staff(req, res) {
+    async function renderStaff(req, res, status = 200, { error = null } = {}) {
         const requested = str(req.query?.period, 5);
         const period = Object.hasOwn(STATS_PERIODS, requested) ? requested : '30d';
-        const rows = await data.staffModerationStats(guildId, client.user?.id || '0', { period });
-        return sendHtml(res, 200, statsPage({ ...shellOf(req), period, rows }));
+        const [rows, sections] = await Promise.all([
+            data.staffModerationStats(guildId, client.user?.id || '0', { period }),
+            enforcementHandlers.staffSections(req, period),
+        ]);
+        return sendHtml(res, status, statsPage({ ...shellOf(req), period, rows, sections, flash: status === 200 ? req.dashboard.flash : null, error }));
     }
+
+    const staff = (req, res) => renderStaff(req, res);
 
     async function audit(req, res) {
         const userFilter = str(req.query?.user, 20);
@@ -411,7 +443,8 @@ export function createDashboard({
             audits.list(guildId, { userId: filters.user || null, module: filters.module || null, page, pageSize: AUDIT_PAGE_SIZE }),
             audits.users(guildId).catch(() => []),
         ]);
-        const moduleChoices = [...moduleList.map((m) => ({ key: m.key, label: m.label })), { key: 'appeals', label: 'Appeals (registry)' }, { key: 'logging', label: 'Logging' }]
+        const moduleChoices = [...moduleList.map((m) => ({ key: m.key, label: m.label })), { key: 'appeals', label: 'Appeals (registry)' }, { key: 'logging', label: 'Logging' },
+            ...ENFORCEMENT_AUDIT_MODULES]
             .filter((m, i, all) => all.findIndex((x) => x.key === m.key) === i);
         return sendHtml(res, 200, auditPage({ ...shellOf(req), rows, total, page, pageSize: AUDIT_PAGE_SIZE, filters, users, modules: moduleChoices }));
     }
@@ -499,6 +532,14 @@ export function createDashboard({
         return res.redirect(303, path(`/${module.key}`));
     }
 
+    // Phase 3: enforcement and records (enforcementRoutes.js), with the same POST
+    // checks; renderCase / renderStaff re-render those pages with an error.
+    const enforcementHandlers = createEnforcementHandlers({
+        client, guildId, settings, sessions, audits, services, enforcement, confirms,
+        sendHtml, fail, shellOf, checkPost, postLimiter, recordDashboardChange,
+        renderCase: (...args) => renderCase(...args), renderStaff: (...args) => renderStaff(...args),
+    });
+
     async function logout(req, res) {
         if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'The logout request did not come from this dashboard.', req);
         await sessions.destroy(req.dashboard.session.id);
@@ -513,7 +554,7 @@ export function createDashboard({
     return {
         securityHeaders, limitByIp, stylesheet, index, callback, requireUser, checkPost,
         overview, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound,
-        sessions, states,
+        sessions, states, confirms, enforcement: enforcementHandlers,
     };
 }
 
@@ -546,12 +587,32 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.get('/', d.limitByIp, safe(d.index));
     router.get('/oauth/callback', d.limitByIp, safe(d.callback));
     router.post('/logout', express.urlencoded({ extended: false, limit: '2kb' }), user, safe(d.logout));
+    // Phase 3 forms (enforcement and records): registered before the settings catch-all.
+    const form = express.urlencoded({ extended: false, limit: '16kb' });
+    const en = d.enforcement;
+    router.post('/users/:id/action/preview', form, user, safe(en.actionPreview));
+    router.post('/users/:id/action/execute', form, user, safe(en.actionExecute));
+    router.post('/users/:id/notes/add', form, user, safe(en.noteAdd));
+    router.post('/users/:id/notes/remove', form, user, safe(en.noteRemove));
+    router.post('/cases/:code/edit', form, user, safe(en.caseEdit));
+    router.post('/cases/:code/void', form, user, safe(en.caseVoid));
+    router.post('/cases/:code/evidence/add', form, user, safe(en.evidenceAdd));
+    router.post('/cases/:code/evidence/remove', form, user, safe(en.evidenceRemove));
+    router.post('/appeals/:code/preview', form, user, safe(en.appealPreview));
+    router.post('/appeals/:code/decide', form, user, safe(en.appealDecide));
+    router.post('/nocontact/add', form, user, safe(en.noContactAdd));
+    router.post('/nocontact/end', form, user, safe(en.noContactEnd));
+    router.post('/staff/blocks/lift', form, user, safe(en.blockLift));
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
     router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleAction));
     router.get('/overview', user, safe(d.overview));
     router.get('/cases', user, safe(d.cases));
     router.get('/cases/:code', user, safe(d.caseDetail));
     router.get('/appeals', user, safe(d.appeals));
+    router.get('/appeals/:code', user, safe(en.appealDetail));
+    router.get('/users', user, safe(en.users));
+    router.get('/users/:id', user, safe(en.userPage));
+    router.get('/nocontact', user, safe(en.noContact));
     router.get('/staff', user, safe(d.staff));
     router.get('/audit', user, safe(d.audit));
     router.get('/:module', user, safe(d.modulePage));

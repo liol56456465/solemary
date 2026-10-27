@@ -6,8 +6,7 @@
 // forms submit as bgnote:add|del:<targetId>. Notes stay in the usernotes key.
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { db } from '../utils/database/wrapper.js';
-import { getUserNotesKey } from '../utils/database/keys.js';
+import { addNote, listNotes, removeNote } from '../services/enforcement/staffNotesService.js';
 import { createEmbed } from '../utils/embeds.js';
 import { createError, ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
@@ -23,10 +22,7 @@ const PAGE_SIZE = 6;
 const NOTES_SHOWN = 5;
 const NOTE_TYPE_EMOJI = { warning: '⚠️', positive: '✅', neutral: '📝', alert: '🚨' };
 
-async function loadNotes(guildId, userId) {
-    const notes = await db.get(getUserNotesKey(guildId, userId), []);
-    return Array.isArray(notes) ? notes : [];
-}
+const loadNotes = listNotes;
 
 function notesField(notes) {
     if (notes.length === 0) return { name: 'Staff notes', value: 'None. Use **Add note** to write one.' };
@@ -212,30 +208,13 @@ export async function handleBackgroundNoteModal(interaction, client, args) {
     if (!staffOnly(interaction) || !/^\d{17,20}$/.test(targetId ?? '')) {
         return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Only administrators can edit staff notes.' });
     }
-    const key = getUserNotesKey(interaction.guildId, targetId);
-
     if (step === 'add') {
         const content = interaction.fields.getTextInputValue('note').trim();
         if (!content) return replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'The note is empty.' });
-        await db.update(key, (notes) => [...(Array.isArray(notes) ? notes : []), {
-            id: Date.now(),
-            content,
-            type: 'neutral',
-            author: interaction.user.tag,
-            authorId: interaction.user.id,
-            timestamp: new Date().toISOString(),
-        }], []);
+        await addNote(interaction.guildId, targetId, content, { id: interaction.user.id, tag: interaction.user.tag });
     } else if (step === 'del') {
         const number = Number.parseInt(interaction.fields.getTextInputValue('number'), 10);
-        let removed = false;
-        await db.update(key, (notes) => {
-            const list = Array.isArray(notes) ? [...notes] : [];
-            if (Number.isInteger(number) && number >= 1 && number <= list.length) {
-                list.splice(number - 1, 1);
-                removed = true;
-            }
-            return list;
-        }, []);
+        const removed = await removeNote(interaction.guildId, targetId, { number });
         if (!removed) return replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: `There is no note number ${interaction.fields.getTextInputValue('number')}.` });
     } else {
         return;

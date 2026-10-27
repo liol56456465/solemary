@@ -74,6 +74,12 @@ export function shade(count, max) {
     return SHADES[Math.min(SHADES.length - 1, Math.ceil((count / max) * SHADES.length) - 1)];
 }
 
+/** 0 (none) … 4 (busiest quarter) for a count relative to the maximum: the same steps as shade(). */
+export function intensityLevel(count, max) {
+    if (!count || !max) return 0;
+    return Math.min(SHADES.length, Math.ceil((count / max) * SHADES.length));
+}
+
 /** The grid as monospace text: an hour ruler and one row per weekday; pure. */
 export function renderGrid(grid) {
     const max = Math.max(0, ...grid.flat());
@@ -121,5 +127,8 @@ export function buildCoverageReport(counts, timeZone) {
         maxIncidents: Math.max(0, ...incidentGrid.flat()),
         maxStaff: Math.max(0, ...staffGrid.flat()),
         gaps: underCoveredSlots(incidentGrid, staffGrid),
+        // The grids themselves (7 × 24, Mon-first) for the dashboard's HTML heatmap.
+        incidentGrid,
+        staffGrid,
     };
 }

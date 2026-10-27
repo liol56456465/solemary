@@ -31,6 +31,20 @@ export async function getMassActionBlock(guildId, moderatorId) {
     return block && new Date(block.until).getTime() > Date.now() ? block : null;
 }
 
+/** Every moderator currently blocked in a guild: [{ moderatorId, until, count, attempted, at }]. */
+export async function listMassActionBlocks(guildId) {
+    const prefix = blockKey(guildId, '');
+    const keys = await db.list(prefix).catch(() => []);
+    const out = [];
+    for (const key of keys) {
+        const moderatorId = String(key).slice(prefix.length);
+        if (!/^\d{17,20}$/.test(moderatorId)) continue;
+        const block = await getMassActionBlock(guildId, moderatorId);
+        if (block) out.push({ moderatorId, ...block });
+    }
+    return out.sort((a, b) => String(a.until).localeCompare(String(b.until)));
+}
+
 export async function clearMassActionBlock(guildId, moderatorId) {
     await db.delete(blockKey(guildId, moderatorId));
 }

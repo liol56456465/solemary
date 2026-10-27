@@ -77,9 +77,11 @@ export function path(suffix = '') {
 export const NAV = [
     { key: 'overview', label: 'Overview' },
     { group: 'Records', items: [
+        { key: 'users', label: 'Members' },
         { key: 'cases', label: 'Cases' },
         { key: 'appeals', label: 'Appeals' },
-        { key: 'staff', label: 'Staff stats' },
+        { key: 'nocontact', label: 'No-contact' },
+        { key: 'staff', label: 'Staff' },
     ] },
     { group: 'Settings', items: [
         { key: 'enforcement', label: 'Enforcement & appeals' },

@@ -16,7 +16,7 @@ import { liftExpired } from './expiryService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { caseVoidedDm } from './dmTemplates.js';
-import { dateStamp, formatDuration, truncate } from './format.js';
+import { dateStamp, formatDuration, parseDuration, truncate } from './format.js';
 
 function userError(message) {
     return createError(message, ErrorTypes.VALIDATION, message, { expected: true });
@@ -33,6 +33,20 @@ async function loadCase(guildId, caseCode) {
 /** Display text for a stored duration value (ms as text, or null = permanent). */
 export function describeDuration(value) {
     return value == null ? 'Permanent' : formatDuration(Number(value));
+}
+
+/**
+ * A typed new duration for /case edit and the dashboard: "permanent" (perm, forever)
+ * → null; a duration (30m, 24h, 7d, 2w, 1mo) → ms; blank → undefined (unchanged).
+ * Anything else throws a user error.
+ */
+export function parseEditDuration(input) {
+    const raw = String(input ?? '').trim();
+    if (!raw) return undefined;
+    if (/^(perm|permanent|forever)$/i.test(raw)) return null;
+    const ms = parseDuration(raw);
+    if (ms == null) throw userError('Duration must look like 30m, 24h, 7d, 2w, 1mo (or "permanent" for a ban).');
+    return ms;
 }
 
 /** Autocomplete: cases in this guild whose code or name matches, newest first. */

@@ -120,14 +120,15 @@ function evidenceItem({ row, freshUrl }) {
 }
 
 /** input: { session, record, statusLabel, edits, evidence: [{ row, freshUrl }], appeals }. */
-export function caseDetailPage({ session, access = null, moduleStates = {}, record, statusLabel, edits = [], evidence = [], appeals = [] }) {
+export function caseDetailPage({ session, access = null, moduleStates = {}, record, statusLabel, edits = [], evidence = [], appeals = [], top = '', bottom = '' }) {
     const r = record;
     const body = html`<p><a href="/dashboard/cases">← Cases</a></p>
 <h1>Case <code>${r.case_code}</code> · ${r.type}${r.is_test ? ' (test)' : ''}</h1>
+${top}
 <dl>
 <dt>Name</dt><dd>${r.name}</dd>
 <dt>Status</dt><dd class="${statusClass(statusLabel)}">${statusLabel}</dd>
-<dt>Member</dt><dd>${r.target_username} <span class="muted">${r.target_user_id}</span> · <a href="/dashboard/cases${queryString({ member: r.target_user_id })}">all their cases</a></dd>
+<dt>Member</dt><dd><a href="/dashboard/users/${encodeURIComponent(r.target_user_id)}">${r.target_username}</a> <span class="muted">${r.target_user_id}</span> · <a href="/dashboard/cases${queryString({ member: r.target_user_id })}">all their cases</a></dd>
 <dt>Moderator</dt><dd>${r.moderator_username} <span class="muted">${r.moderator_id}</span>${r.is_auto ? ' (automatic)' : ''}</dd>
 <dt>Reason</dt><dd>${r.reason}${r.reason_key ? html` <span class="muted">(${r.reason_key})</span>` : ''}</dd>
 <dt>Created</dt><dd>${formatDate(r.created_at)}</dd>
@@ -149,35 +150,41 @@ ${evidence.length ? html`<ul class="evidence">${evidence.map(evidenceItem)}</ul>
 <h2>Appeals (${appeals.length})</h2>
 ${appeals.length ? html`<div class="scroll"><table><thead><tr><th>Filed</th><th>Status</th><th>Decided</th><th>By</th><th>Note</th></tr></thead><tbody>
 ${appeals.map((a) => html`<tr><td>${formatDate(a.created_at)}</td><td>${a.status}</td><td>${formatDate(a.decided_at)}</td><td>${a.decided_by_username || '—'}</td><td>${a.note || ''}</td></tr>`)}
-</tbody></table></div>` : html`<p class="muted">No appeals.</p>`}`;
+</tbody></table></div>` : html`<p class="muted">No appeals.</p>`}
+${bottom}`;
     return layout({ title: `Case ${r.case_code}`, active: 'cases', session, access, moduleStates, body });
 }
 
 // ── Appeals ───────────────────────────────────────────────────────────────
 
-export function appealsPage({ session, access = null, moduleStates = {}, settingsRows = [], appeals = [], now = Date.now() }) {
+export function appealsPage({ session, access = null, moduleStates = {}, settingsRows = [], appeals = [], now = Date.now(), flash = null, canWrite = false }) {
     const body = html`<h1>Pending appeals (${appeals.length})</h1>
-${appeals.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Filed</th><th>Waiting</th></tr></thead><tbody>
+${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
+${appeals.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Filed</th><th>Waiting</th><th></th></tr></thead><tbody>
 ${appeals.map((a) => {
         const days = (now - new Date(a.created_at).getTime()) / 86400000;
         return html`<tr><td>${caseLink(a.case_code)}</td><td>${a.type}${a.is_test ? ' (test)' : ''}</td><td>${a.username} <span class="muted">${a.user_id}</span></td>
-<td>${formatDate(a.created_at)}</td><td class="${days >= 3 ? 'bad' : days >= 1 ? 'warn' : ''}">${formatAge(a.created_at, now)}</td></tr>`;
+<td>${formatDate(a.created_at)}</td><td class="${days >= 3 ? 'bad' : days >= 1 ? 'warn' : ''}">${formatAge(a.created_at, now)}</td>
+<td><a href="/dashboard/appeals/${encodeURIComponent(a.case_code)}">${canWrite ? 'Review and decide' : 'Open'}</a></td></tr>`;
     })}
-</tbody></table></div><p class="muted">Decide appeals in Discord (Accept / Deny on the appeal message or <code>/appeals</code>).</p>` : html`<p class="muted">No pending appeals.</p>`}`;
+</tbody></table></div><p class="muted">${canWrite ? 'Decide here or in Discord (Accept / Deny on the appeal message): the effects are the same.' : 'Administrators decide appeals here (with editing on) or in Discord.'}</p>` : html`<p class="muted">No pending appeals.</p>`}`;
     return layout({ title: 'Appeals', active: 'appeals', session, access, moduleStates, body: html`${body}${settingsSection(settingsRows)}` });
 }
 
 // ── Staff stats ───────────────────────────────────────────────────────────
 
 /** input: { session, period, rows (staffModerationStats) }. */
-export function statsPage({ session, access = null, moduleStates = {}, settingsRows = [], period = '30d', rows = [] }) {
+export function statsPage({ session, access = null, moduleStates = {}, settingsRows = [], period = '30d', rows = [], sections = [], flash = null, error = null }) {
     const body = html`<h1>Staff moderation stats · ${STATS_PERIODS[period]?.label || period}</h1>
+${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
+${error ? html`<p class="error" role="alert">${error}</p>` : ''}
 <p>${Object.keys(STATS_PERIODS).map((key) => (key === period
         ? html`<strong>${STATS_PERIODS[key].label}</strong> `
         : html`<a href="/dashboard/staff${queryString({ period: key })}">${STATS_PERIODS[key].label}</a> `))}</p>
 ${rows.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Total</th><th>Bans</th><th>Kicks</th><th>Mutes</th><th>Warns</th><th>Appeals accepted</th><th>Appeals denied</th><th>Voided</th></tr></thead><tbody>
 ${rows.map((r) => html`<tr><td><a href="/dashboard/cases${queryString({ moderator: r.moderatorId })}">${r.username}</a></td><td>${r.total}</td><td>${r.actions.ban}</td><td>${r.actions.kick}</td><td>${r.actions.mute}</td><td>${r.actions.warn}</td><td>${r.appealsAccepted}</td><td>${r.appealsDenied}</td><td>${r.voided}</td></tr>`)}
-</tbody></table></div><p class="muted">Automatic (bot) and test cases are left out; voided cases are not in the totals.</p>` : html`<p class="muted">No moderation actions in this period.</p>`}`;
+</tbody></table></div><p class="muted">Automatic (bot) and test cases are left out; voided cases are not in the totals.</p>` : html`<p class="muted">No moderation actions in this period.</p>`}
+${sections}`;
     return layout({ title: 'Staff stats', active: 'staff', session, access, moduleStates, body: html`${body}${settingsSection(settingsRows, 'Enforcement settings')}` });
 }
 

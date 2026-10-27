@@ -1,0 +1,616 @@
+// Dashboard Phase 3: enforcement and records. Flow-builder parity with the panel,
+// confirm tokens (single use, expiry, binding), canAct enforcement, the mass-action
+// guard message, and every POST with fake req/res: no CSRF / bad Origin / editing off /
+// not allowed → 403, invalid input → 400 and nothing called, valid → the service is
+// called, an audit row is written and the browser is sent on with 303.
+
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { PermissionFlagsBits } from 'discord.js';
+import { createDashboard, dashboardSettings } from '../src/services/dashboard/routes.js';
+import { createMemorySessionStore } from '../src/services/dashboard/sessionStore.js';
+import { createAccessChecker } from '../src/services/dashboard/access.js';
+import { SESSION_COOKIE, signValue } from '../src/services/dashboard/security.js';
+import { createConfirmStore, flowHash } from '../src/services/dashboard/confirmTokens.js';
+import { buildRecordFlow, resultMessage, searchMembers } from '../src/services/dashboard/enforcementRoutes.js';
+import {
+    completeFlowDetails, flowSummary, liftReasonPatch, parseFlowInput, reasonPatch, startFlow, availableActions,
+} from '../src/services/enforcement/flowBuilder.js';
+import { createError, ErrorTypes } from '../src/utils/errorHandler.js';
+import { plainText } from '../src/services/dashboard/forms.js';
+import { buildCoverageReport, intensityLevel } from '../src/services/staffCoverageService.js';
+
+const SECRET = 'y'.repeat(64);
+const GUILD = '100000000000000001';
+const ADMIN = '200000000000000002';
+const OWNER = '200000000000000003';
+const TARGET = '300000000000000004';
+const OTHER = '300000000000000005';
+const BOTUSER = '300000000000000006';
+const ORIGIN = 'https://bot.example';
+const CODE = 'abc234x';
+const ENV = {
+    DASHBOARD_ENABLED: 'true', DASHBOARD_EDIT_ENABLED: 'true', SESSION_SECRET: SECRET, CLIENT_ID: '400000000000000004',
+    DISCORD_CLIENT_SECRET: 'cs', PUBLIC_URL: ORIGIN, MAIN_GUILD_ID: GUILD, NODE_ENV: 'test',
+};
+
+const LADDER = { level: 0, warns_since_level: 1 };
+
+// ── fakes ─────────────────────────────────────────────────────────────────
+
+function makeWorld({ admins = new Set([ADMIN]), targetInGuild = true } = {}) {
+    const guild = { id: GUILD, ownerId: '999999999999999990', name: 'Main' };
+    const memberOf = (id) => ({
+        id, guild, nickname: id === TARGET ? 'Nick<b>' : null, joinedAt: new Date('2025-01-01T00:00:00Z'),
+        user: { id, username: id === TARGET ? 'target<script>' : `user${id.slice(-2)}`, globalName: id === TARGET ? 'Target Global' : null },
+        permissions: { has: (flag) => flag === PermissionFlagsBits.Administrator && admins.has(id) },
+        roles: { cache: new Map([[GUILD, { id: GUILD, name: '@everyone', position: 0 }], ['600000000000000001', { id: '600000000000000001', name: 'Member', position: 1 }]]), highest: { position: 1 } },
+    });
+    const cache = new Map([[TARGET, memberOf(TARGET)], [OTHER, memberOf(OTHER)]]);
+    guild.members = {
+        cache,
+        me: { permissions: { has: () => true } },
+        fetch: async (arg) => {
+            const id = typeof arg === 'string' ? arg : arg?.user;
+            if (id === TARGET) return targetInGuild ? cache.get(TARGET) : null;
+            if (id === ADMIN || id === OWNER) return memberOf(id);
+            return cache.get(id) || null;
+        },
+    };
+    const users = new Map([[TARGET, 'target<script>'], [OTHER, 'other'], [ADMIN, 'admin'], [OWNER, 'owner'], [BOTUSER, 'botty']]);
+    const client = {
+        user: { id: '999999999999999998', username: 'bot' },
+        guilds: { cache: new Map([[GUILD, guild]]) },
+        users: {
+            cache: new Map(),
+            fetch: async (id) => (users.has(id) ? {
+                id, username: users.get(id), globalName: null, bot: id === BOTUSER, createdAt: new Date('2020-01-01T00:00:00Z'),
+                displayAvatarURL: () => `https://cdn.discordapp.com/avatars/${id}/x.png`,
+            } : null),
+        },
+    };
+    return { guild, client };
+}
+
+const fakeDeps = {
+    isNameTaken: async (guildId, name) => name === 'taken name',
+    nextDefaultName: async (guildId, userId, username, type) => `${username} ${type} 1`,
+    assertBotPermissions: () => {},
+    assertCanTarget: (guild, moderator, targetId) => {
+        if (targetId === moderator.id) throw createError('self', ErrorTypes.VALIDATION, 'You cannot warn yourself.', { expected: true });
+    },
+    getTargetState: async () => ({ ladder: { ...LADDER } }),
+    captureLinks: async (guild, entries) => entries.map(({ url, message }) => ({ url, sourceMessageUrl: message ? url : null, excerpt: message ? 'someone: bad words' : null })),
+    precedentHint: async (guildId, key, label) => (key === 'custom' ? null : `Precedent for ${label}: 3 cases`),
+};
+
+function makeEnforcement(overrides = {}) {
+    const calls = [];
+    const rec = (name, value) => (...args) => { calls.push({ name, args }); return typeof value === 'function' ? value(...args) : value; };
+    const record = { id: 1, case_code: CODE, guild_id: GUILD, target_user_id: TARGET, target_username: 'target', type: 'ban', status: 'active', reason: 'old reason', name: 'target ban 1', moderator_username: 'mod', created_at: new Date(), duration_ms: 3600000, expires_at: new Date(Date.now() + 3600000) };
+    const e = {
+        getTargetState: rec('getTargetState', async (guild, id) => ({ member: guild.members.cache.get(id) || null, banned: false, muted: false, ladder: { ...LADDER }, activeBan: null, activeMute: null })),
+        getLadder: rec('getLadder', async () => ({ ...LADDER })),
+        getCountedWarns: rec('getCountedWarns', async () => [{ case_code: 'wrn2345', name: 'target warn 1', reason: 'Spam' }]),
+        listCasesForUser: rec('listCasesForUser', async () => ({ rows: [{ ...record, reason: '<img src=x>' }], total: 1 })),
+        getLatestAppealStatuses: rec('getLatestAppealStatuses', async () => new Map([[CODE, 'pending']])),
+        getActiveOrdersFor: rec('getActiveOrdersFor', () => [{ id: 7, otherId: OTHER, until: Date.now() + 86400000 }]),
+        listNotes: rec('listNotes', async () => [{ id: 1700000000000, content: 'note <i>', author: 'admin', timestamp: new Date().toISOString() }]),
+        addNote: rec('addNote', async (g, u, content) => ({ id: 1, content })),
+        removeNote: rec('removeNote', async (g, u, { id }) => (id === '1700000000000' ? { id: 1700000000000, content: 'gone' } : null)),
+        precedentHint: rec('precedentHint', async () => 'Spam: 3 cases'),
+        completeFlowDetails: rec('completeFlowDetails', (args) => completeFlowDetails({ ...args, deps: fakeDeps })),
+        executeAction: rec('executeAction', async ({ flow }) => ({ record: flow.type === 'warn' ? { case_code: 'new2345', name: 'target warn 2' } : null, dmDelivered: true, notes: ['Warning limit reached: automatic 1d ban `ban2345` (ladder level 1).'] })),
+        attachFlowEvidence: rec('attachFlowEvidence', async () => []),
+        getMassActionBlock: rec('getMassActionBlock', async (g, id) => (id === OTHER ? { until: new Date(Date.now() + 60000).toISOString(), count: 5 } : null)),
+        getCaseByCode: rec('getCaseByCode', async (code) => (code === CODE ? { ...record } : null)),
+        getAppealHistory: rec('getAppealHistory', async () => [{ id: 3, status: 'pending', created_at: new Date(), body: { reason: 'I am sorry <b>', didIt: 'yes' } }]),
+        editCase: rec('editCase', async (client, { reason }) => ({ after: { ...record, reason }, changes: [{ field: 'reason', oldValue: 'old reason', newValue: reason }] })),
+        voidCase: rec('voidCase', async () => ({ record: { ...record, voided_at: new Date() }, notes: ['The user was unbanned.'], dmDelivered: true })),
+        addEvidence: rec('addEvidence', async () => ({ id: 11 })),
+        removeEvidence: rec('removeEvidence', async (code, id) => (id === 11 ? { id: 11, kind: 'link', url: 'https://x.example' } : null)),
+        captureLinks: rec('captureLinks', async (guild, entries) => entries.map(({ url }) => ({ url, sourceMessageUrl: null, excerpt: null }))),
+        listEvidence: rec('listEvidence', async () => []),
+        resolveImageUrls: rec('resolveImageUrls', async () => new Map()),
+        decideAppeal: rec('decideAppeal', async ({ decision }) => ({ record, dmDelivered: true, label: decision === 'accept' ? 'accepted' : 'denied', notes: ['The user was unbanned.'] })),
+        listActiveNoContactOrders: rec('listActiveNoContactOrders', async () => [{ id: 7, user_a: TARGET, user_b: OTHER, until: new Date(Date.now() + 86400000), created_by: ADMIN, reason: 'feud <b>' }]),
+        addNoContactOrder: rec('addNoContactOrder', async () => ({ order: { id: 8 }, delivered: [true, true] })),
+        endNoContactOrder: rec('endNoContactOrder', async (c, { id }) => (id === 7 ? { order: { id: 7 }, delivered: [true, false] } : null)),
+        listMassActionBlocks: rec('listMassActionBlocks', async () => [{ moderatorId: ADMIN, until: new Date(Date.now() + 60000).toISOString(), count: 5, at: new Date().toISOString() }]),
+        clearMassActionBlock: rec('clearMassActionBlock', async () => {}),
+        loadCoverageCounts: rec('loadCoverageCounts', async () => ({ incidents: [{ hour: '2026-10-26T10:00:00Z', count: 4 }], staff: [{ hour: '2026-10-26T10:00:00Z', count: 1 }] })),
+        getGuildConfig: rec('getGuildConfig', async () => ({ birthdayTimezone: 'UTC' })),
+        isBotOwner: (id) => id === OWNER,
+        ...overrides,
+    };
+    return { e, calls };
+}
+
+function fakeRes() {
+    return {
+        statusCode: 200, headers: {}, cookies: [], body: null, redirectedTo: null,
+        status(code) { this.statusCode = code; return this; },
+        type() { return this; },
+        send(body) { this.body = body; return this; },
+        set(name, value) { if (typeof name === 'object') Object.assign(this.headers, name); else this.headers[name] = value; return this; },
+        append(name, value) { if (name === 'Set-Cookie') this.cookies.push(value); return this; },
+        redirect(code, url) { this.statusCode = code; this.redirectedTo = url; return this; },
+    };
+}
+
+async function setup({ env = ENV, userId = ADMIN, admins = new Set([ADMIN]), owners = new Set([OWNER]), overrides = {}, targetInGuild = true } = {}) {
+    const { guild, client } = makeWorld({ admins, targetInGuild });
+    const { e, calls } = makeEnforcement(overrides);
+    const sessions = createMemorySessionStore();
+    const access = createAccessChecker(client, { facts: async (c, id) => ({ inGuild: true, isAdmin: admins.has(id), isOwnerId: owners.has(id) }) });
+    const auditRows = [];
+    const modLog = [];
+    const auditStore = {
+        writeRows: async (g, actor, module, changes) => { for (const c of changes) auditRows.push({ actor, module, ...c }); return changes.length; },
+        list: async () => ({ rows: [], total: 0 }), users: async () => [],
+    };
+    const services = { postModLog: async (c, kind, fields, options) => { modLog.push({ kind, options }); }, getAutomodSettings: async () => ({}), getJoinToCreateConfiguration: async () => ({}), getApplicationSettings: async () => ({}) };
+    const confirms = createConfirmStore();
+    const data = {
+        overview: { getGuildConfig: async () => ({}), getWelcomeConfig: async () => ({}) },
+        getCaseByCode: e.getCaseByCode, getCaseEdits: async () => [], listEvidence: async () => [{ id: 11, kind: 'link', url: 'https://x.example', added_by_username: 'a', added_at: new Date() }],
+        resolveImageUrls: async () => new Map(), getAppealHistory: async () => [],
+        listPendingAppeals: async () => [{ case_code: CODE, type: 'ban', username: 'target', user_id: TARGET, created_at: new Date() }],
+        staffModerationStats: async () => [],
+    };
+    const d = createDashboard({ client, settings: dashboardSettings(env), sessions, access, services, auditStore, env, enforcement: e, confirms, data });
+    const session = await sessions.create({ userId, username: userId === OWNER ? 'owner' : 'admin' });
+    const cookie = `${SESSION_COOKIE}=${encodeURIComponent(signValue(session.id, SECRET))}`;
+    return { d, e, calls, sessions, session, cookie, auditRows, modLog, confirms, guild, client };
+}
+
+async function run(h, handler, req) {
+    const res = fakeRes();
+    let passed = false;
+    await h.d.requireUser(req, res, () => { passed = true; });
+    if (passed) await handler(req, res, () => { res.fellThrough = true; });
+    return res;
+}
+
+function get(h, handler, { params = {}, query = {} } = {}) {
+    return run(h, handler, { method: 'GET', params, query, headers: { cookie: h.cookie } });
+}
+
+function post(h, handler, { params = {}, form = {}, origin = ORIGIN, csrf = h.session.csrf } = {}) {
+    return run(h, handler, {
+        method: 'POST', params, query: {}, path: '/x',
+        headers: { cookie: h.cookie, ...(origin ? { origin } : {}) },
+        body: { ...(csrf === null ? {} : { csrf }), ...form },
+    });
+}
+
+const serviceCalls = (h, names) => h.calls.filter((c) => names.includes(c.name));
+
+// ── flow builder parity ───────────────────────────────────────────────────
+
+/** The panel's steps (handleEnforcementSelect + handleEnforcementModal), with the same deps. */
+async function panelFlow({ guild, moderator, targetUser, type, reasonKey, modal }) {
+    const flow = startFlow({ type, moderatorId: moderator.id, targetUser });
+    Object.assign(flow, reasonPatch(flow, reasonKey));
+    const parsed = parseFlowInput(flow, modal);
+    assert.equal(parsed.error, null);
+    const { patch, error, fatal } = await completeFlowDetails({ guild, moderator, targetUser, flow, patch: parsed.patch, customName: modal.name, deps: fakeDeps });
+    assert.equal(error, null);
+    assert.equal(fatal, null);
+    return Object.assign(flow, patch);
+}
+
+test('flow builder parity: the dashboard builds the same flow as the panel for the same inputs', async () => {
+    const { guild, client } = makeWorld();
+    const moderator = await guild.members.fetch({ user: ADMIN });
+    const targetUser = await client.users.fetch(TARGET);
+    const complete = (args) => completeFlowDetails({ ...args, deps: fakeDeps });
+    const evidence = 'see https://discord.com/channels/100000000000000001/500000000000000001/700000000000000001 and https://example.com/x';
+
+    // ban: severe prebuilt reason (unappealable by default), duration, custom name, two links
+    const panelBan = await panelFlow({ guild, moderator, targetUser, type: 'ban', reasonKey: 'harassment', modal: { durationInput: '7d', unappealable: true, evidenceInput: evidence, name: 'my ban' } });
+    const webBan = await buildRecordFlow({ guild, moderator, moderatorId: ADMIN, targetUser, type: 'ban', completeFlowDetails: complete, form: { reason: 'harassment', duration: '7d', unappealable: 'default', evidence, name: 'my ban' } });
+    assert.deepEqual(webBan, panelBan);
+    assert.equal(webBan.unappealable, true);
+    assert.equal(webBan.durationMs, 7 * 86400000);
+    assert.equal(webBan.evidence.length, 2);
+    assert.equal(webBan.evidence[0].excerpt, 'someone: bad words');
+
+    // warn: custom reason, default name, ladder preview and precedent (none for custom)
+    const panelWarn = await panelFlow({ guild, moderator, targetUser, type: 'warn', reasonKey: 'custom', modal: { customReason: 'being rude', evidenceInput: '', name: '' } });
+    const webWarn = await buildRecordFlow({ guild, moderator, moderatorId: ADMIN, targetUser, type: 'warn', completeFlowDetails: complete, form: { reason: 'custom', custom_reason: 'being rude', name: '' } });
+    assert.deepEqual(webWarn, panelWarn);
+    assert.deepEqual(webWarn.ladder, LADDER);
+    assert.equal(webWarn.name, 'target<script> warn 1');
+    assert.equal(webWarn.nameIsDefault, true);
+    assert.equal(webWarn.reasonSource, 'custom');
+
+    // mute with a prebuilt reason; ban with the appealable override
+    const panelMute = await panelFlow({ guild, moderator, targetUser, type: 'mute', reasonKey: 'spam', modal: { durationInput: '1h', evidenceInput: '', name: '' } });
+    const webMute = await buildRecordFlow({ guild, moderator, moderatorId: ADMIN, targetUser, type: 'mute', completeFlowDetails: complete, form: { reason: 'spam', duration: '1h' } });
+    assert.deepEqual(webMute, panelMute);
+    const webAppealable = await buildRecordFlow({ guild, moderator, moderatorId: ADMIN, targetUser, type: 'ban', completeFlowDetails: complete, form: { reason: 'raiding', unappealable: 'no' } });
+    assert.equal(webAppealable.unappealable, false);
+    assert.equal(webAppealable.durationMs, null);
+
+    // lift actions: the same reason patch (only the "via" differs when blank)
+    assert.deepEqual(liftReasonPatch({ type: 'unban' }, '  sorry  '), { reason: 'sorry' });
+    assert.deepEqual(liftReasonPatch({ type: 'unmute' }, ''), { reason: 'Unmute via /enforcements' });
+    assert.deepEqual(liftReasonPatch({ type: 'unmute' }, '', 'the dashboard'), { reason: 'Unmute via the dashboard' });
+});
+
+test('flow builder: the panel\'s validation messages, name clashes and hierarchy refusals', async () => {
+    const { guild, client } = makeWorld();
+    const moderator = await guild.members.fetch({ user: ADMIN });
+    const targetUser = await client.users.fetch(TARGET);
+    const flow = (type, reasonKey) => Object.assign(startFlow({ type, moderatorId: ADMIN, targetUser }), reasonPatch({ type }, reasonKey));
+    assert.match(parseFlowInput(flow('warn', 'custom'), {}).error, /custom reason is required/);
+    assert.match(parseFlowInput(flow('mute', 'spam'), {}).error, /mute needs a duration/);
+    assert.match(parseFlowInput(flow('ban', 'spam'), { durationInput: 'soon' }).error, /not a valid duration/);
+    assert.match(parseFlowInput(flow('warn', 'spam'), { evidenceInput: 'no links here' }).error, /Evidence must be links/);
+    const six = Array.from({ length: 6 }, (_, i) => `https://e.example/${i}`).join(' ');
+    assert.match(parseFlowInput(flow('warn', 'spam'), { evidenceInput: six }).error, /At most 5/);
+    assert.equal(reasonPatch({ type: 'ban' }, 'scamming').unappealable, true);
+    assert.equal(reasonPatch({ type: 'warn' }, 'scamming').unappealable, false);
+
+    const complete = (args) => completeFlowDetails({ ...args, deps: fakeDeps });
+    await assert.rejects(buildRecordFlow({ guild, moderator, moderatorId: ADMIN, targetUser, type: 'warn', completeFlowDetails: complete, form: { reason: 'spam', name: 'taken name' } }), /already exists/);
+    await assert.rejects(buildRecordFlow({ guild, moderator, moderatorId: ADMIN, targetUser, type: 'warn', completeFlowDetails: complete, form: { reason: 'nope' } }), /Choose a reason/);
+    const self = await guild.members.fetch({ user: ADMIN });
+    await assert.rejects(buildRecordFlow({ guild, moderator, moderatorId: ADMIN, targetUser: { id: self.id, username: 'me' }, type: 'warn', completeFlowDetails: complete, form: { reason: 'spam' } }),
+        (error) => error.status === 403 && /cannot warn yourself/.test(error.message));
+
+    const summary = flowSummary(await buildRecordFlow({ guild, moderator, moderatorId: ADMIN, targetUser, type: 'warn', completeFlowDetails: complete, form: { reason: 'spam' } }));
+    assert.equal(summary.effect, 'warning 2 of 3.');
+    assert.equal(summary.precedent, 'Precedent for Spam: 3 cases');
+    assert.deepEqual(availableActions({ banned: false, member: {}, muted: false, ladder: LADDER }), ['ban', 'kick', 'mute', 'warn', 'removewarn']);
+});
+
+// ── confirm tokens ────────────────────────────────────────────────────────
+
+test('confirm tokens: single use, expire after 5 minutes, bound to session + subject + flow hash', () => {
+    const store = createConfirmStore();
+    const payload = { type: 'warn', targetId: TARGET, reason: 'Spam' };
+    const bind = { session: 'sess1', subject: `user:${TARGET}` };
+    const a = store.issue({ ...bind, payload }, 1000);
+    assert.equal(a.hash, flowHash(payload));
+    assert.deepEqual(store.consume(a.token, { ...bind, hash: a.hash }, 2000), payload);
+    assert.equal(store.consume(a.token, { ...bind, hash: a.hash }, 2000), null, 'second use refused');
+
+    const b = store.issue({ ...bind, payload }, 1000);
+    assert.equal(store.consume(b.token, { ...bind, hash: a.hash }, 1000 + 5 * 60 * 1000), null, 'expired');
+    for (const wrong of [{ session: 'sess2' }, { subject: `user:${OTHER}` }, { hash: 'nothash' }]) {
+        const t = store.issue({ ...bind, payload }, 1000);
+        assert.equal(store.consume(t.token, { ...bind, hash: t.hash, ...wrong }, 2000), null, JSON.stringify(wrong));
+        assert.equal(store.consume(t.token, { ...bind, hash: t.hash }, 2000), null, 'a refused token is gone too');
+    }
+    assert.equal(store.consume('', { ...bind, hash: a.hash }), null);
+    assert.equal(flowHash({ a: 1, m: new Map([[1, 2]]) }), flowHash({ a: 1 }), 'Maps are left out of the hash');
+});
+
+// ── actions end to end (handlers) ─────────────────────────────────────────
+
+async function preview(h, form, userId = TARGET) {
+    return post(h, h.d.enforcement.actionPreview, { params: { id: userId }, form });
+}
+
+function tokenFrom(body) {
+    return {
+        token: /name="token" value="([^"]+)"/.exec(body)?.[1],
+        fh: /name="fh" value="([^"]+)"/.exec(body)?.[1],
+    };
+}
+
+test('warn: preview shows the ladder effect and precedent; execute runs executeAction once with a fresh admin member, audits, 303', async () => {
+    const h = await setup();
+    const res = await preview(h, { type: 'warn', reason: 'spam', evidence: 'https://discord.com/channels/100000000000000001/500000000000000001/700000000000000001' });
+    assert.equal(res.statusCode, 200, res.body);
+    assert.match(res.body, /Confirm: Warn/);
+    assert.match(res.body, /warning 2 of 3\./);
+    assert.match(res.body, /Precedent for Spam/);
+    assert.match(res.body, /someone: bad words/);
+    assert.ok(!res.body.includes('<script>'), 'target name escaped');
+    assert.equal(serviceCalls(h, ['executeAction']).length, 0, 'preview runs nothing');
+    const { token, fh } = tokenFrom(res.body);
+    assert.ok(token && fh);
+
+    const done = await post(h, h.d.enforcement.actionExecute, { params: { id: TARGET }, form: { token, fh } });
+    assert.equal(done.statusCode, 303);
+    assert.equal(done.redirectedTo, `/dashboard/users/${TARGET}`);
+    const [call] = serviceCalls(h, ['executeAction']);
+    assert.equal(call.args[0].moderator.id, ADMIN);
+    assert.equal(call.args[0].flow.type, 'warn');
+    assert.equal(call.args[0].flow.reason, 'Spam');
+    assert.equal(call.args[0].flow.moderatorId, ADMIN);
+    assert.equal(serviceCalls(h, ['attachFlowEvidence']).length, 1);
+    assert.equal(h.auditRows.length, 1);
+    assert.equal(h.auditRows[0].module, 'actions');
+    assert.equal(h.auditRows[0].key, 'warn');
+    assert.equal(h.auditRows[0].new.case, 'new2345');
+    assert.equal(h.modLog.length, 0, 'the enforcement service posts the mod log itself');
+    const session = await h.sessions.get(h.session.id);
+    assert.match(session.flash, /Case new2345/);
+    assert.match(session.flash, /automatic 1d ban ban2345/);
+
+    const again = await post(h, h.d.enforcement.actionExecute, { params: { id: TARGET }, form: { token, fh } });
+    assert.equal(again.statusCode, 400);
+    assert.match(again.body, /expired or was already used/);
+    assert.equal(serviceCalls(h, ['executeAction']).length, 1, 'a token works once');
+});
+
+test('the confirm token is bound to the user in the URL and the session', async () => {
+    const h = await setup();
+    const { token, fh } = tokenFrom((await preview(h, { type: 'kick', reason: 'spam' })).body);
+    const other = await post(h, h.d.enforcement.actionExecute, { params: { id: OTHER }, form: { token, fh } });
+    assert.equal(other.statusCode, 400);
+    assert.equal(serviceCalls(h, ['executeAction']).length, 0);
+
+    const h2 = await setup();
+    const t2 = tokenFrom((await preview(h2, { type: 'kick', reason: 'spam' })).body);
+    const session2 = await h2.sessions.create({ userId: ADMIN, username: 'admin' });
+    const otherSession = await run(h2, h2.d.enforcement.actionExecute, {
+        method: 'POST', params: { id: TARGET }, query: {}, headers: { cookie: `${SESSION_COOKIE}=${encodeURIComponent(signValue(session2.id, SECRET))}`, origin: ORIGIN },
+        body: { csrf: session2.csrf, ...t2 },
+    });
+    assert.equal(otherSession.statusCode, 400);
+    assert.equal(serviceCalls(h2, ['executeAction']).length, 0);
+});
+
+test('canAct: OWNER_IDS without Administrator get 403 on preview and execute; nothing runs', async () => {
+    const admin = await setup();
+    const { token, fh } = tokenFrom((await preview(admin, { type: 'warn', reason: 'spam' })).body);
+
+    const h = await setup({ userId: OWNER });
+    const page = await get(h, h.d.enforcement.userPage, { params: { id: TARGET } });
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /View only/);
+    assert.ok(!page.body.includes('/action/preview'), 'no action forms for owners without Administrator');
+    const p = await preview(h, { type: 'warn', reason: 'spam' });
+    assert.equal(p.statusCode, 403);
+    const x = await post(h, h.d.enforcement.actionExecute, { params: { id: TARGET }, form: { token, fh } });
+    assert.equal(x.statusCode, 403);
+    assert.equal(serviceCalls(h, ['executeAction', 'completeFlowDetails']).length, 0);
+});
+
+test('an administrator who lost Administrator since login is refused when the member is fetched fresh', async () => {
+    const admins = new Set([ADMIN]);
+    const h = await setup({ admins });
+    const { token, fh } = tokenFrom((await preview(h, { type: 'warn', reason: 'spam' })).body);
+    // Access is cached for 60 s, but the member is fetched fresh before executing.
+    admins.delete(ADMIN);
+    const res = await post(h, h.d.enforcement.actionExecute, { params: { id: TARGET }, form: { token, fh } });
+    assert.equal(res.statusCode, 403);
+    assert.match(res.body, /Administrator/);
+    assert.equal(serviceCalls(h, ['executeAction']).length, 0);
+});
+
+test('the mass-action guard refusal is shown on the page (plain text), with no audit row', async () => {
+    const until = Math.floor(Date.now() / 1000) + 600;
+    const h = await setup({
+        overrides: {
+            executeAction: async () => {
+                throw createError('blocked', ErrorTypes.PERMISSION,
+                    `You are blocked from the enforcement panel until <t:${until}:t> (<t:${until}:R>) after 5 bans/kicks in a short time. The bot owners were alerted.`, { expected: true });
+            },
+        },
+    });
+    const { token, fh } = tokenFrom((await preview(h, { type: 'ban', reason: 'spam' })).body);
+    const res = await post(h, h.d.enforcement.actionExecute, { params: { id: TARGET }, form: { token, fh } });
+    assert.equal(res.statusCode, 403);
+    assert.match(res.body, /You are blocked from the enforcement panel until \d{4}-\d\d-\d\d \d\d:\d\d UTC/);
+    assert.ok(!res.body.includes('&lt;t:'), 'Discord timestamps converted');
+    assert.equal(h.auditRows.length, 0);
+});
+
+test('an unexpected failure in executeAction is a 500 with a safe message', async () => {
+    const h = await setup({ overrides: { executeAction: async () => { throw new Error('socket hang up'); } } });
+    const { token, fh } = tokenFrom((await preview(h, { type: 'kick', reason: 'spam' })).body);
+    const res = await post(h, h.d.enforcement.actionExecute, { params: { id: TARGET }, form: { token, fh } });
+    assert.equal(res.statusCode, 500);
+    assert.match(res.body, /nothing may have changed/);
+    assert.ok(!res.body.includes('socket hang up'));
+});
+
+test('preview validation: unknown action, unavailable action, bad input, other member\'s warning, not a snowflake', async () => {
+    const h = await setup();
+    assert.equal((await preview(h, { type: 'nuke' })).statusCode, 400);
+    const unban = await preview(h, { type: 'unban' });
+    assert.equal(unban.statusCode, 400);
+    assert.match(unban.body, /not available/);
+    const mute = await preview(h, { type: 'mute', reason: 'spam' });
+    assert.equal(mute.statusCode, 400);
+    assert.match(mute.body, /mute needs a duration/);
+    assert.match(mute.body, /value="mute"/, 'the form keeps what was typed');
+    const rw = await preview(h, { type: 'removewarn', warn: 'zzz2345' });
+    assert.equal(rw.statusCode, 400);
+    assert.match(rw.body, /counted warnings/);
+    const okRw = await preview(h, { type: 'removewarn', warn: 'wrn2345', reason: '' });
+    assert.equal(okRw.statusCode, 200);
+    assert.match(okRw.body, /Remove warn via the dashboard/);
+    assert.equal((await preview(h, { type: 'warn', reason: 'spam' }, '12345')).statusCode, 404);
+    assert.equal(serviceCalls(h, ['executeAction']).length, 0);
+});
+
+// ── the POST framework on every Phase 3 form ──────────────────────────────
+
+const POSTS = [
+    { name: 'action preview', handler: 'actionPreview', params: { id: TARGET }, form: { type: 'warn', reason: 'spam' }, bad: { type: 'warn', reason: 'nope' }, service: 'completeFlowDetails', status: 200 },
+    { name: 'note add', handler: 'noteAdd', params: { id: TARGET }, form: { note: 'watch them' }, bad: { note: '' }, service: 'addNote', audit: 'notes', modLog: true },
+    { name: 'note remove', handler: 'noteRemove', params: { id: TARGET }, form: { note: '1700000000000' }, bad: { note: 'x' }, service: 'removeNote', audit: 'notes', modLog: true },
+    { name: 'case edit', handler: 'caseEdit', params: { code: CODE }, form: { reason: 'better reason' }, bad: { reason: '', duration: 'soon' }, service: 'editCase', audit: 'cases' },
+    { name: 'case void', handler: 'caseVoid', params: { code: CODE }, form: { reason: 'mistake', confirm: '1' }, bad: { reason: 'mistake' }, service: 'voidCase', audit: 'cases' },
+    { name: 'evidence add', handler: 'evidenceAdd', params: { code: CODE }, form: { link: 'https://x.example/1', note: 'n' }, bad: { link: 'not a link' }, service: 'addEvidence', audit: 'cases', modLog: true },
+    { name: 'evidence remove', handler: 'evidenceRemove', params: { code: CODE }, form: { id: '11' }, bad: { id: '1x' }, service: 'removeEvidence', audit: 'cases', modLog: true },
+    { name: 'appeal preview', handler: 'appealPreview', params: { code: CODE }, form: { decision: 'accept', note: 'ok' }, bad: { decision: 'maybe' }, service: 'getAppealHistory', status: 200 },
+    { name: 'no-contact add', handler: 'noContactAdd', params: {}, form: { user_a: TARGET, user_b: OTHER, days: '7', reason: 'feud' }, bad: { user_a: TARGET, user_b: BOTUSER, days: '7', reason: 'feud' }, service: 'addNoContactOrder', audit: 'nocontact' },
+    { name: 'no-contact end', handler: 'noContactEnd', params: {}, form: { id: '7' }, bad: { id: '9' }, service: 'endNoContactOrder', audit: 'nocontact', badCallsService: true },
+    { name: 'block lift', handler: 'blockLift', params: {}, form: { moderator: OTHER }, bad: { moderator: 'x' }, service: 'clearMassActionBlock', audit: 'massguard', modLog: true, owner: true },
+];
+
+for (const spec of POSTS) {
+    test(`POST ${spec.name}: CSRF, Origin, edit switch, access, validation, success`, async () => {
+        const userId = spec.owner ? OWNER : ADMIN;
+        const mk = (opts = {}) => setup({ userId, admins: new Set([ADMIN, ...(spec.owner ? [OWNER] : [])]), ...opts });
+        const call = (h, opts) => post(h, h.d.enforcement[spec.handler], { params: spec.params, form: spec.form, ...opts });
+        const touched = (h) => serviceCalls(h, [spec.service, 'executeAction', 'decideAppeal']).filter((c) => c.name !== 'getAppealHistory' || spec.service === 'getAppealHistory').length;
+
+        let h = await mk();
+        assert.equal((await call(h, { csrf: null })).statusCode, 403, 'no CSRF');
+        assert.equal((await call(h, { csrf: 'wrong' })).statusCode, 403, 'wrong CSRF');
+        assert.equal((await call(h, { origin: 'https://evil.example' })).statusCode, 403, 'bad Origin');
+        assert.equal(touched(h), 0);
+
+        h = await mk({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } });
+        const off = await call(h);
+        assert.equal(off.statusCode, 403);
+        assert.match(off.body, /Editing is off/);
+        assert.equal(touched(h), 0);
+
+        // Not allowed: an owner without Administrator for enforcement; an admin who is not an owner for the block lift.
+        h = spec.owner ? await setup({ userId: ADMIN }) : await setup({ userId: OWNER });
+        assert.equal((await call(h)).statusCode, 403, 'not allowed');
+        assert.equal(touched(h), 0);
+
+        h = await mk();
+        const bad = await call(h, { form: spec.bad });
+        assert.ok([400, 404].includes(bad.statusCode), `invalid input → 400 (got ${bad.statusCode})`);
+        assert.match(bad.body, /class="error"/);
+        if (!spec.badCallsService && spec.service !== 'getAppealHistory') assert.equal(serviceCalls(h, [spec.service]).length, 0, 'service not called on bad input');
+        assert.equal(h.auditRows.length, 0);
+
+        h = await mk();
+        const ok = await call(h);
+        assert.equal(ok.statusCode, spec.status || 303, ok.body);
+        assert.ok(serviceCalls(h, [spec.service]).length >= 1, 'service called');
+        if (spec.audit) {
+            assert.equal(h.auditRows.length >= 1, true, 'audited');
+            assert.equal(h.auditRows[0].module, spec.audit);
+            assert.equal(h.auditRows[0].actor.userId, userId);
+            assert.equal(h.modLog.length, spec.modLog ? 1 : 0);
+            assert.ok((await h.sessions.get(h.session.id)).flash, 'flash set');
+        }
+    });
+}
+
+test('appeal: preview → confirm page → decide runs decideAppeal once with the fresh admin user, audits, 303', async () => {
+    const h = await setup();
+    const res = await post(h, h.d.enforcement.appealPreview, { params: { code: CODE }, form: { decision: 'deny', note: 'no <b>' } });
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, /Confirm: deny/);
+    assert.ok(res.body.includes('no &lt;b&gt;'));
+    assert.equal(serviceCalls(h, ['decideAppeal']).length, 0);
+    const { token, fh } = tokenFrom(res.body);
+    const done = await post(h, h.d.enforcement.appealDecide, { params: { code: CODE }, form: { token, fh } });
+    assert.equal(done.statusCode, 303);
+    assert.equal(done.redirectedTo, '/dashboard/appeals');
+    const [call] = serviceCalls(h, ['decideAppeal']);
+    assert.equal(call.args[0].admin.id, ADMIN);
+    assert.equal(call.args[0].decision, 'deny');
+    assert.equal(call.args[0].note, 'no <b>');
+    assert.equal(h.auditRows[0].module, 'appeal-decisions');
+    const replay = await post(h, h.d.enforcement.appealDecide, { params: { code: CODE }, form: { token, fh } });
+    assert.equal(replay.statusCode, 400);
+    assert.equal(serviceCalls(h, ['decideAppeal']).length, 1);
+
+    const owner = await setup({ userId: OWNER });
+    assert.equal((await post(owner, owner.d.enforcement.appealDecide, { params: { code: CODE }, form: { token, fh } })).statusCode, 403);
+    assert.equal((await post(h, h.d.enforcement.appealDecide, { params: { code: 'not a code!' }, form: { token, fh } })).statusCode, 404);
+});
+
+// ── pages ─────────────────────────────────────────────────────────────────
+
+test('member lookup: ID redirects, names match by prefix (username, display name, nickname), max 25', async () => {
+    const h = await setup();
+    const byId = await get(h, h.d.enforcement.users, { query: { q: TARGET } });
+    assert.equal(byId.statusCode, 302);
+    assert.equal(byId.redirectedTo, `/dashboard/users/${TARGET}`);
+    const unknown = await get(h, h.d.enforcement.users, { query: { q: '123456789012345678' } });
+    assert.equal(unknown.statusCode, 404);
+    const byName = await get(h, h.d.enforcement.users, { query: { q: 'TARG' } });
+    assert.equal(byName.statusCode, 200);
+    assert.ok(byName.body.includes(`/dashboard/users/${TARGET}`));
+    assert.ok(!byName.body.includes('<script>'));
+    assert.equal(searchMembers(h.guild, 'nick').length, 1, 'nickname');
+    assert.equal(searchMembers(h.guild, 'target g').length, 1, 'display name');
+    assert.equal(searchMembers(h.guild, 'zzz').length, 0);
+    const many = { members: { cache: new Map(Array.from({ length: 40 }, (_, i) => [String(i), { id: String(i), user: { id: String(i), username: `bob${i}` } }])) } };
+    assert.equal(searchMembers(many, 'bob').length, 25);
+});
+
+test('member page: standing, no-contact, notes, cases, actions; everything escaped, no inline styles', async () => {
+    const h = await setup();
+    const res = await get(h, h.d.enforcement.userPage, { params: { id: TARGET }, query: { reason: 'spam' } });
+    assert.equal(res.statusCode, 200);
+    for (const text of ['Counted warns', '1 of 3', 'Next warning', 'Pending appeals', 'No-contact orders', 'Staff notes (1)', 'Recent cases (1)', 'Spam: 3 cases', '/action/preview', 'Account created', '@Member', 'cdn.discordapp.com']) {
+        assert.ok(res.body.includes(text), text);
+    }
+    assert.ok(!res.body.includes('<img src=x>') && !res.body.includes('<i>') && !res.body.includes('<script>'));
+    assert.ok(!/style=/.test(res.body) && !/<script/.test(res.body));
+    assert.equal((await get(h, h.d.enforcement.userPage, { params: { id: 'abc' } })).statusCode, 404);
+    assert.equal((await get(h, h.d.enforcement.userPage, { params: { id: '123456789012345678' } })).statusCode, 404);
+
+    const off = await setup({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } });
+    const ro = await get(off, off.d.enforcement.userPage, { params: { id: TARGET } });
+    assert.match(ro.body, /Read-only/);
+    assert.ok(!ro.body.includes('/notes/add'));
+});
+
+test('case page: action forms for administrators (edit, void, evidence links); read-only for owners', async () => {
+    const h = await setup();
+    const res = await get(h, h.d.caseDetail, { params: { code: CODE } });
+    assert.equal(res.statusCode, 200);
+    for (const action of ['/edit', '/void', '/evidence/add', '/evidence/remove']) assert.ok(res.body.includes(`/dashboard/cases/${CODE}${action}`), action);
+    const owner = await setup({ userId: OWNER });
+    const ro = await get(owner, owner.d.caseDetail, { params: { code: CODE } });
+    assert.ok(!ro.body.includes(`/cases/${CODE}/void`));
+    assert.match(ro.body, /View only/);
+});
+
+test('appeals: the queue links each appeal; the detail page shows the answers and the decision form', async () => {
+    const h = await setup();
+    const list = await get(h, h.d.appeals);
+    assert.ok(list.body.includes(`/dashboard/appeals/${CODE}`));
+    const detail = await get(h, h.d.enforcement.appealDetail, { params: { code: CODE } });
+    assert.equal(detail.statusCode, 200);
+    assert.ok(detail.body.includes('I am sorry &lt;b&gt;'));
+    assert.ok(detail.body.includes('Yes, I did it'));
+    assert.ok(detail.body.includes(`/dashboard/appeals/${CODE}/preview`));
+    assert.equal((await get(h, h.d.enforcement.appealDetail, { params: { code: 'zzzzzzz' } })).statusCode, 404);
+});
+
+test('staff page: coverage heatmap as a table with intensity classes and the mass-action blocks (lift for owners only)', async () => {
+    const h = await setup();
+    const res = await get(h, h.d.staff, { query: { coverage: '30d' } });
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, /class="heat"/);
+    assert.match(res.body, /class="heat-4"/);
+    assert.match(res.body, /class="heat-0"/);
+    assert.match(res.body, /Mass-action guard blocks \(1\)/);
+    assert.ok(!res.body.includes('/staff/blocks/lift'), 'admins who are not owners cannot lift');
+    assert.ok(!/style=/.test(res.body));
+    assert.equal(serviceCalls(h, ['loadCoverageCounts'])[0].args[2], 30);
+    const owner = await setup({ userId: OWNER });
+    assert.ok((await get(owner, owner.d.staff)).body.includes('/staff/blocks/lift'));
+    const broken = await setup({ overrides: { loadCoverageCounts: async () => { throw new Error('db down'); } } });
+    assert.match((await get(broken, broken.d.staff)).body, /Coverage could not be loaded/);
+
+    const report = buildCoverageReport({ incidents: [{ hour: '2026-10-26T10:00:00Z', count: 4 }], staff: [] }, 'UTC');
+    assert.equal(report.incidentGrid[0][10], 4);
+    assert.deepEqual([0, 1, 2, 3, 4, 5].map((n) => intensityLevel(n, 4)), [0, 1, 2, 3, 4, 4]);
+});
+
+test('no-contact page lists orders with end buttons and the start form', async () => {
+    const h = await setup();
+    const res = await get(h, h.d.enforcement.noContact);
+    assert.equal(res.statusCode, 200);
+    assert.ok(res.body.includes('feud &lt;b&gt;'));
+    assert.ok(res.body.includes('/dashboard/nocontact/end'));
+    assert.ok(res.body.includes('/dashboard/nocontact/add'));
+});
+
+test('result message and plain text: case code, DM, notes; Discord markdown removed', () => {
+    const text = resultMessage({ type: 'warn', targetUsername: 'bob' }, { record: { case_code: 'k7m2qxa', name: 'bob warn 3' }, dmDelivered: false, notes: ['⚠️ Evidence x was not saved: **full**'] });
+    assert.match(text, /Warn done for bob\. Case k7m2qxa \(bob warn 3\)\. The DM could not be delivered/);
+    assert.match(text, /Warning: Evidence x was not saved: full/);
+    assert.equal(plainText('<@123> in <#456>'), '@123 in #456');
+});

@@ -198,13 +198,18 @@ function caseDetailsLines(record) {
     return lines;
 }
 
-function answerFields(body) {
+/** An appeal's answers as [{ label, value }] (the dashboard shows them too). */
+export function appealAnswers(body) {
     return Object.entries(parseBody(body))
         .filter(([, value]) => value)
         .map(([key, value]) => ({
-            name: ANSWER_LABELS[key] || key,
-            value: truncate(key === 'didIt' ? (DID_IT_LABELS[value] || value) : value, 1024),
+            label: ANSWER_LABELS[key] || key,
+            value: String(key === 'didIt' ? (DID_IT_LABELS[value] || value) : value),
         }));
+}
+
+function answerFields(body) {
+    return appealAnswers(body).map(({ label, value }) => ({ name: label, value: truncate(value, 1024) }));
 }
 
 function appealLine(appeal) {

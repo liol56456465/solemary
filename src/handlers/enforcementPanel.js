@@ -20,7 +20,7 @@ import {
     TextInputBuilder,
     TextInputStyle,
 } from 'discord.js';
-import { enforcementConfig, ENFORCEMENT_REASONS, CUSTOM_REASON_KEY, getReason } from '../config/enforcement.js';
+import { enforcementConfig, ENFORCEMENT_REASONS, CUSTOM_REASON_KEY } from '../config/enforcement.js';
 import { createEmbed } from '../utils/embeds.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { logger } from '../utils/logger.js';
@@ -29,35 +29,24 @@ import {
     executeAction,
     getTargetState,
     isAdministrator,
-    assertBotPermissions,
-    assertCanTarget,
-    previewWarn,
 } from '../services/enforcement/enforcementService.js';
 import {
     getCountedWarns,
-    isNameTaken,
     listCasesForUser,
     getLatestAppealStatuses,
     caseStatusLabel,
-    nextDefaultName,
 } from '../services/enforcement/caseService.js';
 import { createFlow, getFlow, takeFlow, updateFlow, PANEL_EXPIRED_MESSAGE } from '../services/enforcement/panelState.js';
-import {
-    addEvidence, captureLinks, MAX_LINKS_PER_FORM, messageExcerpt, parseEvidenceUrls,
-} from '../services/enforcement/evidenceService.js';
-import { dateStamp, formatDuration, parseDuration, stamp, truncate } from '../services/enforcement/format.js';
-import { precedentHint } from '../services/enforcement/precedentService.js';
+import { MAX_LINKS_PER_FORM, messageExcerpt } from '../services/enforcement/evidenceService.js';
+import { dateStamp, stamp, truncate } from '../services/enforcement/format.js';
 import { getActiveOrdersFor, noContactLines } from '../services/enforcement/noContactService.js';
+import {
+    ACTION_LABELS, RECORD_ACTIONS, attachFlowEvidence, availableActions, completeFlowDetails, countedWarnsText,
+    flowSummary, liftReasonPatch, parseFlowInput, reasonPatch, startFlow,
+} from '../services/enforcement/flowBuilder.js';
 
-const ACTION_LABELS = {
-    ban: 'Ban',
-    kick: 'Kick',
-    mute: 'Mute',
-    warn: 'Warn',
-    unban: 'Unban',
-    unmute: 'Unmute',
-    removewarn: 'Remove warn',
-};
+// The flow logic lives in flowBuilder.js (shared with the web dashboard).
+export { attachFlowEvidence, availableActions };
 const ACTION_STYLES = {
     ban: ButtonStyle.Danger,
     kick: ButtonStyle.Danger,
@@ -67,8 +56,6 @@ const ACTION_STYLES = {
     unmute: ButtonStyle.Success,
     removewarn: ButtonStyle.Secondary,
 };
-const RECORD_ACTIONS = new Set(['ban', 'kick', 'mute', 'warn']);
-
 function userError(message, type = ErrorTypes.VALIDATION) {
     return createError(message, type, message, { expected: true });
 }
@@ -111,18 +98,6 @@ async function expired(interaction) {
 
 // ── Panel ──────────────────────────────────────────────────────────────────
 
-export function availableActions(state) {
-    const actions = [];
-    if (!state.banned) actions.push('ban');
-    if (state.member) actions.push('kick');
-    if (state.member && !state.muted) actions.push('mute');
-    if (state.member) actions.push('warn');
-    if (state.banned) actions.push('unban');
-    if (state.muted) actions.push('unmute');
-    if (state.ladder.warns_since_level > 0) actions.push('removewarn');
-    return actions;
-}
-
 function relative(date) {
     return `<t:${Math.floor(new Date(date).getTime() / 1000)}:R>`;
 }
@@ -141,7 +116,7 @@ export function panelSummaryLines(targetUser, state, appealStatuses = new Map(),
         member
             ? `**In server:** yes, joined ${member.joinedAt ? `${dateStamp(member.joinedAt)} (${relative(member.joinedAt)})` : 'at an unknown time'} · ${roleCount} role${roleCount === 1 ? '' : 's'}`
             : '**In server:** no',
-        `**Counted warns:** ${state.ladder.warns_since_level}${state.ladder.level === 0 ? ` of ${enforcementConfig.warnsPerLevel}` : ' (next warn bans)'} · **Ladder level:** ${state.ladder.level}`,
+        `**Counted warns:** ${countedWarnsText(state.ladder)} · **Ladder level:** ${state.ladder.level}`,
     ];
 
     const active = [];
@@ -314,41 +289,18 @@ function liftModal(flow, moderatorId, nonce) {
 }
 
 function confirmationPayload(flow, moderatorId, nonce) {
-    const lines = [`**User:** ${flow.targetUsername} (\`${flow.targetId}\`)`];
-
-    if (RECORD_ACTIONS.has(flow.type)) {
-        lines.push(`**Reason:** ${flow.reason}`);
-        if (flow.type === 'ban') {
-            lines.push(`**Duration:** ${flow.durationMs ? formatDuration(flow.durationMs) : 'Permanent'}`);
-            lines.push(`**Appealable:** ${flow.unappealable ? 'No' : 'Yes'}`);
-        }
-        if (flow.type === 'mute') {
-            lines.push(`**Duration:** ${formatDuration(flow.durationMs)}`);
-        }
-        lines.push(`**Name:** ${flow.nameIsDefault ? `${flow.name} (default)` : flow.name}`);
-        if (flow.evidence?.length) {
-            lines.push(`**Evidence:** ${flow.evidence.map((item) => (item.excerpt
-                ? `${item.url} ("${truncate(item.excerpt.replace(/\s+/g, ' '), 80)}")`
-                : `${item.url}${item.sourceMessageUrl ? ' (message not readable, link only)' : ''}`)).join('\n')}`);
-        }
-        if (flow.type === 'warn') {
-            const step = previewWarn(flow.ladder);
-            lines.push(step.escalates
-                ? `**Effect:** reaches the warning limit → automatic ${step.banDurationMs ? formatDuration(step.banDurationMs) : 'permanent'} ban (ladder level ${step.nextLevel}).`
-                : `**Effect:** warning ${step.warnNumber} of ${step.threshold}.`);
-        }
-        if (flow.type === 'ban' || flow.type === 'kick') {
-            lines.push('The user is DMed before the action runs.');
-        }
-        if (flow.precedent) {
-            lines.push(`-# ${flow.precedent}`);
-        }
-    } else {
-        if (flow.type === 'removewarn') {
-            lines.push(`**Warning:** \`${flow.warnCode}\``);
-        }
-        lines.push(`**Reason:** ${flow.reason}`);
+    const summary = flowSummary(flow);
+    const lines = summary.rows.map((row) => (row.id
+        ? `**${row.label}:** ${row.value} (\`${row.id}\`)`
+        : `**${row.label}:** ${row.code ? `\`${row.value}\`` : row.value}`));
+    if (summary.evidence.length) {
+        lines.push(`**Evidence:** ${summary.evidence.map((item) => (item.excerpt
+            ? `${item.url} ("${truncate(item.excerpt.replace(/\s+/g, ' '), 80)}")`
+            : `${item.url}${item.unreadable ? ' (message not readable, link only)' : ''}`)).join('\n')}`);
     }
+    if (summary.effect) lines.push(`**Effect:** ${summary.effect}`);
+    lines.push(...summary.notes);
+    if (summary.precedent) lines.push(`-# ${summary.precedent}`);
 
     return {
         embeds: [createEmbed({
@@ -388,28 +340,6 @@ function resultPayload(flow, result) {
         })],
         components: [],
     };
-}
-
-/**
- * Stores the links captured in the details form on the new case. Never throws: the
- * action already ran, so a failure only becomes a note for the moderator.
- */
-export async function attachFlowEvidence(flow, record, moderatorUser) {
-    if (!record || !flow.evidence?.length) return [];
-    const addedBy = { id: moderatorUser.id, username: moderatorUser.username };
-    let saved = 0;
-    const notes = [];
-    for (const item of flow.evidence) {
-        try {
-            await addEvidence(record.case_code, { kind: 'link', url: item.url, sourceMessageUrl: item.sourceMessageUrl, excerpt: item.excerpt, addedBy });
-            saved += 1;
-        } catch (error) {
-            if (!error?.context?.expected) logger.error('Could not attach evidence', { caseCode: record.case_code, error });
-            notes.push(`⚠️ Evidence ${item.url} was not saved: ${error.userMessage || error.message}`);
-        }
-    }
-    if (saved) notes.unshift(`Evidence attached: ${saved} link${saved === 1 ? '' : 's'}.`);
-    return notes;
 }
 
 // ── Handlers ───────────────────────────────────────────────────────────────
@@ -453,13 +383,7 @@ async function startAction(interaction, moderatorId, targetId, action) {
         return expired(interaction);
     }
 
-    const flow = {
-        type: action,
-        moderatorId,
-        targetId,
-        targetUsername: targetUser.username,
-        nameIsDefault: true,
-    };
+    const flow = startFlow({ type: action, moderatorId, targetUser });
 
     if (action === 'unban' || action === 'unmute') {
         const nonce = createFlow(flow);
@@ -547,14 +471,7 @@ export async function handleEnforcementSelect(interaction, client, args) {
     const value = interaction.values[0];
 
     if (step === 'reason') {
-        const reason = getReason(value);
-        updateFlow(nonce, {
-            reasonKey: value,
-            reasonSource: reason ? 'prebuilt' : 'custom',
-            reason: reason ? reason.label : flow.customReason,
-            // Severe reasons pre-check "Unappealable"; the moderator can still untick it.
-            unappealable: flow.type === 'ban' ? Boolean(reason?.severe) : false,
-        });
+        updateFlow(nonce, reasonPatch(flow, value));
         return InteractionHelper.safeShowModal(interaction, detailsModal(getFlow(nonce), moderatorId, nonce));
     }
 
@@ -584,88 +501,43 @@ export async function handleEnforcementModal(interaction, client, args) {
     });
 
     if (step === 'lift') {
-        const reason = interaction.fields.getTextInputValue('reason')?.trim();
-        updateFlow(nonce, { reason: reason || `${ACTION_LABELS[flow.type]} via /enforcements` });
+        updateFlow(nonce, liftReasonPatch(flow, interaction.fields.getTextInputValue('reason')));
         return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce));
     }
 
     if (step !== 'details') return expired(interaction);
 
-    const patch = {};
-    if (flow.reasonKey === CUSTOM_REASON_KEY) {
-        patch.customReason = interaction.fields.getTextInputValue('reason').trim();
-        patch.reason = patch.customReason;
-        if (!patch.reason) return fail('A custom reason is required.');
-    }
-
-    if (flow.type === 'ban' || flow.type === 'mute') {
-        const raw = interaction.fields.getTextInputValue('duration')?.trim() || '';
-        patch.durationInput = raw;
-        if (!raw && flow.type === 'mute') {
-            updateFlow(nonce, patch);
-            return fail('A mute needs a duration, e.g. 30m, 24h, 7d or 1mo.');
-        }
-        patch.durationMs = raw ? parseDuration(raw) : null;
-        if (raw && patch.durationMs == null) {
-            updateFlow(nonce, patch);
-            return fail(`"${truncate(raw, 20)}" is not a valid duration. Use formats like 30m, 24h, 7d or 1mo.`);
-        }
-    }
-
-    if (flow.type === 'ban') {
-        patch.unappealable = interaction.fields.getCheckbox('unappealable');
-    }
-
-    const evidenceRaw = interaction.fields.getTextInputValue('evidence')?.trim() || '';
-    patch.evidenceInput = evidenceRaw;
-    const evidenceEntries = parseEvidenceUrls(evidenceRaw);
-    if (evidenceRaw && evidenceEntries.length === 0) {
-        updateFlow(nonce, patch);
-        return fail('Evidence must be links (e.g. a Discord message link: right-click a message → Copy Message Link).');
-    }
-    if (evidenceEntries.length > MAX_LINKS_PER_FORM) {
-        updateFlow(nonce, patch);
-        return fail(`At most ${MAX_LINKS_PER_FORM} evidence links here; add more afterwards with /case evidence add.`);
+    const parsed = parseFlowInput(flow, {
+        customReason: flow.reasonKey === CUSTOM_REASON_KEY ? interaction.fields.getTextInputValue('reason') : '',
+        durationInput: flow.type === 'ban' || flow.type === 'mute' ? interaction.fields.getTextInputValue('duration') : '',
+        unappealable: flow.type === 'ban' ? interaction.fields.getCheckbox('unappealable') : false,
+        evidenceInput: interaction.fields.getTextInputValue('evidence'),
+    });
+    if (parsed.error) {
+        const { evidenceEntries, ...keep } = parsed.patch;
+        updateFlow(nonce, keep);
+        return fail(parsed.error);
     }
 
     const targetUser = await client.users.fetch(flow.targetId);
-    const customName = interaction.fields.getTextInputValue('name')?.trim();
-    if (customName) {
-        patch.name = customName;
-        patch.nameIsDefault = false;
-        if (await isNameTaken(guild.id, customName)) {
-            updateFlow(nonce, { ...patch, name: undefined, nameIsDefault: true });
-            return fail(`A record named **${truncate(customName, 100)}** already exists in this server. Pick another name.`);
-        }
-    } else {
-        patch.name = await nextDefaultName(guild.id, targetUser.id, targetUser.username, flow.type);
-        patch.nameIsDefault = true;
-    }
-
-    // Fail early on hierarchy and bot permissions; both are checked again on Confirm.
-    try {
-        assertBotPermissions(guild);
-        const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
-        assertCanTarget(guild, interaction.member, targetUser.id, targetMember, flow.type);
-    } catch (error) {
+    // Name, early hierarchy + bot permission checks (again on Confirm), ladder,
+    // evidence excerpts (captured now, so they survive the message being deleted)
+    // and the precedent hint.
+    const { patch, error, fatal } = await completeFlowDetails({
+        guild, moderator: interaction.member, targetUser, flow, patch: parsed.patch,
+        customName: interaction.fields.getTextInputValue('name'),
+    });
+    if (fatal) {
         takeFlow(nonce);
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [stepEmbed(flow, `⛔ ${error.userMessage || error.message}`)],
+            embeds: [stepEmbed(flow, `⛔ ${fatal}`)],
             components: [],
         });
     }
-
-    if (flow.type === 'warn') {
-        patch.ladder = (await getTargetState(guild, targetUser.id)).ladder;
+    if (error) {
+        updateFlow(nonce, patch);
+        return fail(error);
     }
-
-    // Excerpts are captured now, so the evidence survives the message being deleted
-    // before Confirm.
-    // The precedent hint waits briefly at most and is left out on any problem.
-    [patch.evidence, patch.precedent] = await Promise.all([
-        captureLinks(guild, evidenceEntries, { prefetched: flow.prefetchedExcerpts }),
-        precedentHint(guild.id, flow.reasonKey, getReason(flow.reasonKey)?.label || flow.reasonKey),
-    ]);
 
     updateFlow(nonce, patch);
     return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce));
