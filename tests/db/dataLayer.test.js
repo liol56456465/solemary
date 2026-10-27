@@ -1,0 +1,213 @@
+// Data-layer failure tests against the local test database (npm run test:db).
+// Each test injects a database failure into a specific statement mid-operation
+// and checks that the call throws and that nothing stored was overwritten.
+// Skipped unless POSTGRES_URL points at localhost: never run against Neon.
+
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+
+const url = process.env.POSTGRES_URL || '';
+const isLocal = /@(localhost|127\.0\.0\.1)(:\d+)?\//.test(url) || /^postgres(ql)?:\/\/(localhost|127\.0\.0\.1)/.test(url);
+const skip = isLocal ? false : 'needs POSTGRES_URL on localhost (npm run test:db)';
+
+let pgDb, db, client, updateGuildConfig, getGuildConfig;
+let setBirthday, getGuildBirthdays, registerTemporaryChannel, getJoinToCreateConfig;
+let recordCorrectCount, updateCountingGameConfig, getCountingGameConfig;
+let saveGiveaway, getGuildGiveaways;
+
+const runId = String(Date.now()).slice(-9);
+const guildA = `9${runId}00000001`;
+const guildB = `9${runId}00000002`;
+const user = (n) => `8${runId}${String(n).padStart(8, '0')}`;
+const DATABASE = 'database';
+
+// --- fault injection ----------------------------------------------------------
+// Fails the next query whose SQL matches `pattern`, on the pool or on a client
+// checked out for a transaction.
+let fault = null;
+function failNext(pattern, error = Object.assign(new Error('Connection terminated unexpectedly'), { code: 'ECONNRESET' }), { persistent = false } = {}) {
+    fault = { pattern, error, persistent };
+}
+function maybeFail(text) {
+    if (fault && fault.pattern.test(String(text))) {
+        const { error } = fault;
+        if (!fault.persistent) fault = null;
+        throw error;
+    }
+}
+function instrument(pool) {
+    const query = pool.query.bind(pool);
+    pool.query = async (text, params) => {
+        maybeFail(text);
+        return query(text, params);
+    };
+    const connect = pool.connect.bind(pool);
+    // pool.query() itself calls connect(callback); only patch the promise form.
+    pool.connect = async (...args) => {
+        if (args.length > 0) return connect(...args);
+        const c = await connect();
+        if (!c.__instrumented) {
+            const cq = c.query.bind(c);
+            // Pooled clients keep this patch, and pool.query() calls them with a callback.
+            c.query = (text, params, callback) => {
+                if (typeof callback === 'function' || typeof params === 'function') return cq(text, params, callback);
+                try {
+                    maybeFail(text);
+                } catch (error) {
+                    return Promise.reject(error);
+                }
+                return cq(text, params);
+            };
+            c.__instrumented = true;
+        }
+        return c;
+    };
+}
+
+before(async () => {
+    if (skip) return;
+    ({ pgDb } = await import('../../src/utils/postgresDatabase.js'));
+    ({ db } = await import('../../src/utils/database/wrapper.js'));
+    await db.initialize();
+    assert.equal(db.getConnectionType(), 'postgresql');
+    instrument(pgDb.pool);
+    client = { db };
+    ({ updateGuildConfig, getGuildConfig } = await import('../../src/services/config/guildConfig.js'));
+    ({ setBirthday, getGuildBirthdays, registerTemporaryChannel, getJoinToCreateConfig } = await import('../../src/utils/database.js'));
+    ({ recordCorrectCount, updateCountingGameConfig, getCountingGameConfig } = await import('../../src/services/countingGameService.js'));
+    ({ saveGiveaway, getGuildGiveaways } = await import('../../src/utils/giveaways.js'));
+});
+
+after(async () => {
+    if (skip) return;
+    for (const guildId of [guildA, guildB]) {
+        await pgDb.pool.query('DELETE FROM birthdays WHERE guild_id = $1', [guildId]).catch(() => {});
+        await pgDb.pool.query('DELETE FROM giveaways WHERE guild_id = $1', [guildId]).catch(() => {});
+        await pgDb.pool.query('DELETE FROM temp_data WHERE key LIKE $1', [`%${guildId}%`]).catch(() => {});
+        await pgDb.pool.query('DELETE FROM guilds WHERE id = $1', [guildId]).catch(() => {});
+    }
+    await pgDb.disconnect();
+});
+
+// --- reads ------------------------------------------------------------------------
+
+test('a failed read throws instead of returning defaults', { skip }, async () => {
+    await updateGuildConfig(client, guildA, { prefix: '?' });
+    failNext(/SELECT config FROM guilds/);
+    await assert.rejects(getGuildConfig(client, guildA), (error) => error.type === DATABASE);
+    // The lost connection is re-checked on the next query and the real value comes back.
+    assert.equal((await getGuildConfig(client, guildA)).prefix, '?');
+});
+
+test('a failed write throws instead of returning false', { skip }, async () => {
+    failNext(/INSERT INTO temp_data/);
+    await assert.rejects(db.set(`guild:${guildA}:jointocreate`, { enabled: true }), (error) => error.type === DATABASE);
+});
+
+// --- config read-modify-write ---------------------------------------------------------
+
+test('config update: failure while reading the locked row writes nothing', { skip }, async () => {
+    await updateGuildConfig(client, guildA, { prefix: '!', birthdayChannelId: '123456789012345678' });
+    failNext(/FOR UPDATE/);
+    await assert.rejects(updateGuildConfig(client, guildA, { prefix: '$' }), (error) => error.type === DATABASE);
+    const stored = await getGuildConfig(client, guildA);
+    assert.equal(stored.prefix, '!');
+    assert.equal(stored.birthdayChannelId, '123456789012345678', 'other settings must not be reset to defaults');
+});
+
+test('config update: failure on the write rolls back, the old config stays', { skip }, async () => {
+    failNext(/^UPDATE guilds SET config/);
+    await assert.rejects(updateGuildConfig(client, guildA, { prefix: '%' }), (error) => error.type === DATABASE);
+    const stored = await getGuildConfig(client, guildA);
+    assert.equal(stored.prefix, '!');
+    assert.equal(stored.birthdayChannelId, '123456789012345678');
+});
+
+test('config update: concurrent updates of different settings all survive', { skip }, async () => {
+    await Promise.all([
+        updateGuildConfig(client, guildB, { prefix: '>' }),
+        updateGuildConfig(client, guildB, { birthdayChannelId: '223456789012345678' }),
+        updateGuildConfig(client, guildB, { ticketStaffRoleId: '323456789012345678' }),
+    ]);
+    const stored = await getGuildConfig(client, guildB);
+    assert.equal(stored.prefix, '>');
+    assert.equal(stored.birthdayChannelId, '223456789012345678');
+    assert.equal(stored.ticketStaffRoleId, '323456789012345678');
+});
+
+test('atomic increment: 25 parallel increments give 25', { skip }, async () => {
+    const key = `guild:${guildA}:tickets:counter`;
+    await Promise.all(Array.from({ length: 25 }, () => db.update(key, (n) => (Number(n) || 0) + 1, 0)));
+    assert.equal(await db.get(key), 25);
+});
+
+// --- collections ---------------------------------------------------------------------
+
+test('birthdays: one member per row, concurrent sets all survive', { skip }, async () => {
+    await Promise.all(Array.from({ length: 10 }, (_, i) => setBirthday(client, guildA, user(i), 1 + (i % 12), 1 + i)));
+    const birthdays = await getGuildBirthdays(client, guildA);
+    assert.equal(Object.keys(birthdays).length, 10);
+});
+
+test('birthdays: a failed whole-collection write changes nothing', { skip }, async () => {
+    const before = await getGuildBirthdays(client, guildA);
+    // Second row insert of the import fails: the first upsert and the delete must roll back.
+    let inserts = 0;
+    failNext({ test: (sql) => /INSERT INTO birthdays/.test(sql) && ++inserts === 2 });
+    await assert.rejects(db.set(`guild:${guildA}:birthdays`, { [user(0)]: { month: 12, day: 31 }, [user(99)]: { month: 2, day: 2 } }),
+        (error) => error.type === DATABASE);
+    assert.deepEqual(await getGuildBirthdays(client, guildA), before);
+});
+
+test('birthdays: a failed single set throws and leaves the others', { skip }, async () => {
+    const before = await getGuildBirthdays(client, guildA);
+    failNext(/INSERT INTO birthdays/);
+    await assert.rejects(setBirthday(client, guildA, user(50), 5, 5), (error) => error.type === DATABASE);
+    assert.deepEqual(await getGuildBirthdays(client, guildA), before);
+});
+
+test('giveaways: saving one never touches another', { skip }, async () => {
+    const endsAt = new Date(Date.now() + 3600_000).toISOString();
+    await saveGiveaway(client, guildA, { messageId: '700000000000000001', prize: 'A', endsAt, participants: ['1'] });
+    await saveGiveaway(client, guildA, { messageId: '700000000000000002', prize: 'B', endsAt, participants: [] });
+    failNext(/INSERT INTO giveaways/);
+    await assert.rejects(saveGiveaway(client, guildA, { messageId: '700000000000000002', prize: 'B2', endsAt }), (error) => error.type === DATABASE);
+    const giveaways = await getGuildGiveaways(client, guildA);
+    assert.deepEqual(giveaways.map((g) => g.prize).sort(), ['A', 'B']);
+    assert.deepEqual(giveaways.find((g) => g.prize === 'A').participants, ['1']);
+});
+
+test('join-to-create: concurrent temp channel registrations all survive', { skip }, async () => {
+    await Promise.all(Array.from({ length: 8 }, (_, i) => registerTemporaryChannel(client, guildB, `60000000000000000${i}`, user(i), '600000000000000999')));
+    const config = await getJoinToCreateConfig(client, guildB);
+    assert.equal(Object.keys(config.temporaryChannels).length, 8);
+});
+
+test('counting: two correct posts of the same number advance the count once', { skip }, async () => {
+    await updateCountingGameConfig(client, guildB, (config) => ({ ...config, enabled: true, channelId: '1', nextNumber: 5 }));
+    await Promise.all([recordCorrectCount(client, guildB, user(1), 5), recordCorrectCount(client, guildB, user(2), 5)]);
+    assert.equal((await getCountingGameConfig(client, guildB)).nextNumber, 6);
+});
+
+// --- health ------------------------------------------------------------------------------
+
+test('pool error: isConnected clears, the next query health-checks and recovers', { skip }, async () => {
+    pgDb.pool.emit('error', Object.assign(new Error('terminating connection due to administrator command'), { code: '57P01' }));
+    assert.equal(pgDb.isConnected, false);
+    assert.equal(pgDb.isAvailable(), true, 'a lost idle connection is not an outage');
+    assert.equal((await getGuildConfig(client, guildA)).prefix, '!');
+    assert.equal(pgDb.isConnected, true);
+});
+
+test('outage: a failed health check makes everything throw until the database is back', { skip }, async () => {
+    pgDb.markUnhealthy(new Error('simulated'));
+    // The database stays unreachable until the fault is cleared.
+    failNext(/^SELECT 1$/, undefined, { persistent: true });
+    await assert.rejects(getGuildConfig(client, guildA), (error) => error.type === DATABASE);
+    assert.equal(pgDb.isAvailable(), false);
+    await assert.rejects(updateGuildConfig(client, guildA, { prefix: '#' }), (error) => error.type === DATABASE);
+    fault = null;
+    // Database answers again: the next call recovers by itself.
+    assert.equal((await getGuildConfig(client, guildA)).prefix, '!');
+    assert.equal(pgDb.isAvailable(), true);
+});

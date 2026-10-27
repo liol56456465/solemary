@@ -611,7 +611,8 @@ function logVerificationAction(client, guildId, userId, action, metadata = {}) {
     const moderatorId = metadata.moderatorId || metadata.removedBy || null;
     const source = metadata.source || null;
 
-    void insertVerificationAudit({
+    // Recorded after the action; a failed audit write is logged, not shown to the member.
+    insertVerificationAudit({
         guildId,
         userId,
         action,
@@ -619,7 +620,7 @@ function logVerificationAction(client, guildId, userId, action, metadata = {}) {
         moderatorId,
         metadata: sanitizedMetadata,
         createdAt: new Date().toISOString()
-    });
+    }).catch((error) => logger.error(`Verification audit for ${userId} in ${guildId} was not saved:`, error));
 }
 
 function sanitizeAuditMetadata(metadata = {}) {

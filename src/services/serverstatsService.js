@@ -222,8 +222,7 @@ export async function updateCounter(client, guild, counter) {
 export async function getServerCounters(client, guildId) {
   try {
     if (!client || !client.db) {
-      logger.warn('Database not available for getServerCounters');
-      return [];
+      throw new Error('Database not available for getServerCounters');
     }
     
     const data = await client.db.get(getServerCountersKey(guildId));
@@ -253,15 +252,14 @@ export async function getServerCounters(client, guildId) {
     return sanitizeCounters(counters, guildId);
   } catch (error) {
     logger.error("Error getting server counters:", error);
-    return [];
+    throw error;
   }
 }
 
 export async function saveServerCounters(client, guildId, counters) {
   try {
     if (!client || !client.db) {
-      logger.warn('Database not available for saveServerCounters');
-      return false;
+      throw new Error('Database not available for saveServerCounters');
     }
     
     const sanitizedCounters = sanitizeCounters(counters, guildId);
@@ -277,6 +275,6 @@ export async function saveServerCounters(client, guildId, counters) {
     return true;
   } catch (error) {
     logger.error("Error saving server counters:", error);
-    return false;
+    throw error;
   }
 }

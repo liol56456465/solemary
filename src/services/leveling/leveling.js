@@ -165,19 +165,7 @@ export async function getLevelingConfig(client, guildId) {
     };
   } catch (error) {
     logger.error(`Error getting leveling config for guild ${guildId}:`, error);
-    return {
-      enabled: true,
-      xpPerMessage: { min: 15, max: 25 },
-      xpCooldown: 20,
-      levelUpMessage: '{user} has leveled up to level {level}!',
-      levelUpChannel: null,
-      ignoredChannels: [],
-      ignoredRoles: [],
-      blacklistedUsers: [],
-      roleRewards: {},
-      announceLevelUp: true,
-      xpMultiplier: 1
-    };
+    throw error;
   }
 }
 

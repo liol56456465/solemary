@@ -249,7 +249,8 @@ async function actOn(message, member, hit, settings) {
     if ((cooldowns.get(cooldownKey) || 0) > Date.now()) return rule.deleteMessage;
     cooldowns.set(cooldownKey, Date.now() + automodConfig.ruleCooldownMs);
 
-    if (await isRaidJoiner(guild.id, targetUser.id)) {
+    // Read-only decision: on a database error treat them as an ordinary member.
+    if (await isRaidJoiner(guild.id, targetUser.id).catch(() => false)) {
         if (!rule.deleteMessage) await deleteQuietly(message);
         const step = { type: 'kick' };
         const result = await applyStep({ guild, targetUser, step, rule: hit.rule, reason: `Automod: ${rule.label} during a join raid` })

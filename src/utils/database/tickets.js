@@ -1,5 +1,4 @@
 import { logger } from '../logger.js';
-import { Mutex } from '../mutex.js';
 import { db, getFromDb } from './wrapper.js';
 import { getTicketCounterKey, getTicketKey } from './keys.js';
 
@@ -51,7 +50,7 @@ export async function getOpenTicketCountForUser(guildId, userId) {
         return 0;
     } catch (error) {
         logger.error(`Error counting open tickets for user ${userId} in guild ${guildId}:`, error);
-        return 0;
+        throw error;
     }
 }
 
@@ -88,13 +87,9 @@ export async function incrementTicketCounter(guildId) {
         await db.initialize();
     }
 
-    const key = getTicketCounterKey(guildId);
-    // Serialized so two tickets opened at once don't get the same number.
-    const nextCounter = await Mutex.runExclusive(`ticket-counter:${guildId}`, async () => {
-        const next = (await getTicketCounter(guildId)) + 1;
-        await db.set(key, next);
-        return next;
-    });
+    // Locked increment, so two tickets opened at once never get the same number.
+    const nextCounter = await db.update(getTicketCounterKey(guildId),
+        (current) => (Number(current) || 0) + 1, 0);
 
     return nextCounter.toString().padStart(3, '0');
 }
@@ -169,12 +164,6 @@ export async function getGuildTicketStats(guildId) {
         };
     } catch (error) {
         logger.error(`Error computing ticket stats for guild ${guildId}:`, error);
-        return {
-            openCount: 0,
-            closedCount: 0,
-            avgCloseTimeMs: null,
-            feedbackCount: 0,
-            avgRating: null,
-        };
+        throw error;
     }
 }

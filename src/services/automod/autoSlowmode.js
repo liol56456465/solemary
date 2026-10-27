@@ -22,16 +22,19 @@ const STATE_KEY = 'automod:slowmode';
 const recent = new Map(); // channelId → [{ at, authorId }]
 let active = null; // channelId → { guildId, since, lastBusy }
 
+// A failed load throws and is retried next time: caching an empty map here would
+// save it over the stored state on the next change.
 async function loadActive() {
     if (!active) {
-        const stored = await getFromDb(STATE_KEY, null).catch(() => null);
+        const stored = await getFromDb(STATE_KEY, null);
         active = new Map(Object.entries(stored && typeof stored === 'object' ? stored : {}));
     }
     return active;
 }
 
 async function saveActive() {
-    await setInDb(STATE_KEY, Object.fromEntries(active)).catch(() => {});
+    await setInDb(STATE_KEY, Object.fromEntries(active))
+        .catch((error) => logger.warn(`Auto slowmode state was not saved: ${error.message}`));
 }
 
 /** Call for every message in the main server (after automod). */
