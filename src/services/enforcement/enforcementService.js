@@ -165,6 +165,7 @@ const MOD_LOG_TITLES = {
     unban: ['Unban', 'success'],
     unmute: ['Unmute', 'success'],
     removewarn: ['Warning removed', 'success'],
+    nocontact: ['🚧 No-contact order', 'warning'],
     caseedit: ['Case edited', 'secondary'],
     casevoid: ['Case voided', 'secondary'],
     appeal: ['Appeal decided', 'primary'],

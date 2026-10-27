@@ -163,3 +163,56 @@ test('precedent: aggregate by type and duration, excludes test/voided/old/other 
     clearPrecedentCache();
     assert.match(await precedentHint(guildId, key, 'Test reason'), /: 4 —/);
 });
+
+test('no-contact: add (DMs both), duplicate refused, cache, list, end early, expiry', { skip }, async () => {
+    const nc = await import('../../src/services/enforcement/noContactService.js');
+    const dms = [];
+    const fakeUser = (id) => ({ id, username: `u${id.slice(-2)}`, send: async (payload) => { dms.push({ id, content: payload.content }); } });
+    const client = { users: { fetch: async (id) => fakeUser(id) }, guilds: { cache: new Map() } };
+    const admin = { id: user(90), username: 'mod' };
+    const [a, b, c] = [user(21), user(3), user(23)];
+
+    const { order, delivered } = await nc.addNoContactOrder(client, { guildId, userA: a, userB: b, days: 3, reason: 'Keep apart', createdBy: admin });
+    assert.deepEqual([order.user_a, order.user_b], nc.orderedPair(a, b));
+    assert.deepEqual(delivered, [true, true]);
+    assert.equal(dms.length, 2);
+    assert.match(dms[0].content, /No-contact order/);
+    assert.ok(Math.abs(new Date(order.until).getTime() - (Date.now() + 3 * 86400000)) < 60000);
+    assert.deepEqual(nc.getActiveOrdersFor(guildId, a).map((o) => o.otherId), [b], 'cache refreshed');
+    assert.deepEqual(nc.getActiveOrdersFor(guildId, b).map((o) => o.otherId), [a]);
+
+    await assert.rejects(nc.addNoContactOrder(client, { guildId, userA: b, userB: a, days: 1, reason: 'again', createdBy: admin }),
+        new RegExp(`already have an active no-contact order \\(#${order.id}\\)`));
+    await assert.rejects(nc.addNoContactOrder(client, { guildId, userA: a, userB: a, days: 1, reason: 'x', createdBy: admin }), /two different/);
+    await assert.rejects(nc.addNoContactOrder(client, { guildId, userA: a, userB: c, days: 0, reason: 'x', createdBy: admin }), /between 1 and/);
+
+    const second = (await nc.addNoContactOrder(client, { guildId, userA: a, userB: c, days: 1, reason: 'Other', createdBy: admin })).order;
+    assert.deepEqual((await nc.listActiveNoContactOrders(guildId)).map((row) => Number(row.id)), [Number(second.id), Number(order.id)]);
+    assert.equal(nc.getActiveOrdersFor(guildId, a).length, 2);
+
+    dms.length = 0;
+    const ended = await nc.endNoContactOrder(client, { guildId, id: Number(order.id), endedBy: admin });
+    assert.equal(ended.order.ended_by, admin.id);
+    assert.equal(dms.length, 2);
+    assert.match(dms[0].content, /Staff ended it early/);
+    assert.equal(await nc.endNoContactOrder(client, { guildId, id: Number(order.id), endedBy: admin }), null, 'already ended');
+    assert.equal(await nc.endNoContactOrder(client, { guildId: '1', id: Number(second.id), endedBy: admin }), null, 'other guild');
+    assert.deepEqual(nc.getActiveOrdersFor(guildId, b), []);
+
+    // A pair whose order ended may get a new one.
+    const again = (await nc.addNoContactOrder(client, { guildId, userA: a, userB: b, days: 2, reason: 'Again', createdBy: admin })).order;
+
+    // Expiry: run out both remaining orders, then the job ends them and DMs everyone.
+    await pgDb.pool.query(`UPDATE no_contact_orders SET until = NOW() - interval '1 minute' WHERE id = ANY($1::bigint[])`, [[second.id, again.id]]);
+    await nc.refreshNoContactCache();
+    assert.deepEqual(nc.getActiveOrdersFor(guildId, a), [], 'not enforced once past until');
+    // An order past its end but not yet marked ended does not block a new one.
+    const third = (await nc.addNoContactOrder(client, { guildId, userA: a, userB: b, days: 1, reason: 'Third', createdBy: admin })).order;
+    assert.ok(third.id);
+    dms.length = 0;
+    const expired = await nc.expireNoContactOrders(client);
+    assert.equal(expired, 1, 'only a↔c was left to expire (a↔b was closed by the new order)');
+    assert.equal(dms.length, 2);
+    assert.match(dms[0].content, /It expired/);
+    assert.deepEqual(nc.getActiveOrdersFor(guildId, a).map((o) => o.otherId), [b]);
+});

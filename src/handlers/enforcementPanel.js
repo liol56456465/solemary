@@ -47,6 +47,7 @@ import {
 } from '../services/enforcement/evidenceService.js';
 import { dateStamp, formatDuration, parseDuration, stamp, truncate } from '../services/enforcement/format.js';
 import { precedentHint } from '../services/enforcement/precedentService.js';
+import { getActiveOrdersFor, noContactLines } from '../services/enforcement/noContactService.js';
 
 const ACTION_LABELS = {
     ban: 'Ban',
@@ -131,7 +132,7 @@ function relative(date) {
  * before acting: account age, time in server, roles, warns and ladder, any active
  * punishment, pending appeals. (No message counts: member messages are not stored.)
  */
-export function panelSummaryLines(targetUser, state, appealStatuses = new Map()) {
+export function panelSummaryLines(targetUser, state, appealStatuses = new Map(), noContact = []) {
     const member = state.member;
     const roleCount = member ? Math.max(0, (member.roles?.cache?.size ?? 1) - 1) : null; // minus @everyone
     const lines = [
@@ -160,6 +161,9 @@ export function panelSummaryLines(targetUser, state, appealStatuses = new Map())
     if (pendingAppeals.length) {
         lines.push(`**Pending appeal:** ${pendingAppeals.join(', ')} (decide in the appeal channel or with /appeals)`);
     }
+    if (noContact.length) {
+        lines.push(`**No-contact order:** ${noContactLines(noContact).join('; ')}`);
+    }
     return lines;
 }
 
@@ -182,7 +186,7 @@ export async function buildPanel(guild, moderatorId, targetUser) {
 
     const embed = createEmbed({
         title: `Enforcements — ${truncate(targetUser.username, 200)}`,
-        description: truncate(panelSummaryLines(targetUser, state, appealStatuses).join('\n'), 4096),
+        description: truncate(panelSummaryLines(targetUser, state, appealStatuses, getActiveOrdersFor(guild.id, targetUser.id)).join('\n'), 4096),
         fields: [{ name: `Last cases${total ? ` (${Math.min(total, RECENT_CASES_SHOWN)} of ${total})` : ''}`, value: truncate(recentCasesText(recent, total, appealStatuses), 1024) }],
         thumbnail: targetUser.displayAvatarURL(),
         color: 'primary',

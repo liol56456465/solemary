@@ -343,6 +343,23 @@ export const tableStatements = [
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         PRIMARY KEY (guild_id, rule_id)
     )`,
+
+    // No-contact orders (/case nocontact): two members may not mention or reply to
+    // each other until `until`. user_a < user_b (numerically), so a pair is stored
+    // one way. ended_at is set when staff end it early or once it has expired.
+    `CREATE TABLE IF NOT EXISTS ${t.no_contact_orders} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        user_a VARCHAR(20) NOT NULL,
+        user_b VARCHAR(20) NOT NULL,
+        until TIMESTAMPTZ NOT NULL,
+        created_by VARCHAR(20) NOT NULL,
+        reason TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        ended_at TIMESTAMPTZ,
+        ended_by VARCHAR(20),
+        CHECK (user_a <> user_b)
+    )`,
 ];
 
 export const indexStatements = [
@@ -378,6 +395,7 @@ export const indexStatements = [
     // /case search (newest first, by reason key) and the panel's precedent hint.
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_guild_created ON ${t.mod_cases}(guild_id, created_at DESC, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_reason ON ${t.mod_cases}(guild_id, reason_key, created_at DESC)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_no_contact_one_open ON ${t.no_contact_orders}(guild_id, user_a, user_b) WHERE ended_at IS NULL`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

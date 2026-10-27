@@ -18,6 +18,9 @@ import {
     listReasonKeys, normalizeSearchFilters, SEARCH_STATUSES, SEARCH_TEXT_MAX, SEARCH_TYPES,
 } from '../../services/enforcement/caseSearchService.js';
 import { buildSearchView } from '../../handlers/caseSearchView.js';
+import {
+    addNoContactOrder, endNoContactOrder, listActiveNoContactOrders, NO_CONTACT_MAX_DAYS,
+} from '../../services/enforcement/noContactService.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -117,12 +120,65 @@ async function handleEvidence(interaction, client, sub, code) {
     }
 }
 
+const unixOf = (date) => Math.floor(new Date(date).getTime() / 1000);
+const dmNote = ([a, b]) => (a && b ? 'Both members were DMed.' : `DM not delivered to ${[!a && 'the first member', !b && 'the second member'].filter(Boolean).join(' or ')}.`);
+
+/** /case nocontact add | list | end */
+async function handleNoContact(interaction, client, sub) {
+    const admin = { id: interaction.user.id, username: interaction.user.username };
+
+    if (sub === 'add') {
+        const userA = interaction.options.getUser('user_a', true);
+        const userB = interaction.options.getUser('user_b', true);
+        if (userA.bot || userB.bot) throw userError('No-contact orders are between members, not bots.');
+        const { order, delivered } = await addNoContactOrder(client, {
+            guildId: interaction.guildId,
+            userA: userA.id,
+            userB: userB.id,
+            days: interaction.options.getInteger('days', true),
+            reason: interaction.options.getString('reason', true),
+            createdBy: admin,
+        });
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [successEmbed(`No-contact order #${order.id} started`, [
+                `**${userA.username}** and **${userB.username}** may not mention or reply to each other until <t:${unixOf(order.until)}:f> (<t:${unixOf(order.until)}:R>).`,
+                'Breaking messages are deleted and logged in the mod log.',
+                dmNote(delivered),
+            ].join('\n'))],
+        });
+    }
+
+    if (sub === 'list') {
+        const rows = await listActiveNoContactOrders(interaction.guildId);
+        const lines = rows.map((row) => `**#${row.id}** <@${row.user_a}> ↔ <@${row.user_b}> · until <t:${unixOf(row.until)}:f> · by <@${row.created_by}> · ${truncate(row.reason, 120)}`);
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [createEmbed({
+                title: `Active no-contact orders (${rows.length})`,
+                description: truncate(lines.join('\n') || 'None. Start one with `/case nocontact add`.', 4096),
+                color: 'primary',
+            })],
+        });
+    }
+
+    if (sub === 'end') {
+        const id = interaction.options.getInteger('id', true);
+        const result = await endNoContactOrder(client, { guildId: interaction.guildId, id, endedBy: admin });
+        if (!result) throw userError(`There is no active no-contact order #${id}. See \`/case nocontact list\`.`);
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [successEmbed(`No-contact order #${id} ended`, [
+                `<@${result.order.user_a}> and <@${result.order.user_b}> may contact each other again.`,
+                dmNote(result.delivered),
+            ].join('\n'))],
+        });
+    }
+}
+
 export default {
     // Registered as a guild command in MAIN_GUILD_ID only. Admin-only (not in commandAccess).
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('case')
-        .setDescription('Search, edit, void, add evidence to or show the history of enforcement cases')
+        .setDescription('Search, edit and void cases, manage evidence and history, and no-contact orders')
         .addSubcommand((sub) => sub.setName('search').setDescription('Find cases by member, moderator, type, reason, status, date or text')
             .addUserOption((option) => option.setName('member').setDescription('Cases given to this member'))
             .addUserOption((option) => option.setName('moderator').setDescription('Cases given by this moderator'))
@@ -163,6 +219,18 @@ export default {
             .addSubcommand((sub) => sub.setName('remove').setDescription('Remove one piece of evidence from a case')
                 .addStringOption(codeOption)
                 .addIntegerOption((option) => option.setName('id').setDescription('Evidence number (#) from /case evidence list')
+                    .setRequired(true).setMinValue(1))))
+        .addSubcommandGroup((group) => group.setName('nocontact').setDescription('No-contact orders: two members may not mention or reply to each other')
+            .addSubcommand((sub) => sub.setName('add').setDescription('Start a no-contact order between two members (both are DMed)')
+                .addUserOption((option) => option.setName('user_a').setDescription('First member').setRequired(true))
+                .addUserOption((option) => option.setName('user_b').setDescription('Second member').setRequired(true))
+                .addIntegerOption((option) => option.setName('days').setDescription('How many days it lasts')
+                    .setRequired(true).setMinValue(1).setMaxValue(NO_CONTACT_MAX_DAYS))
+                .addStringOption((option) => option.setName('reason').setDescription('Why (shown to both members)')
+                    .setRequired(true).setMaxLength(500)))
+            .addSubcommand((sub) => sub.setName('list').setDescription('List active no-contact orders'))
+            .addSubcommand((sub) => sub.setName('end').setDescription('End a no-contact order early (both are DMed)')
+                .addIntegerOption((option) => option.setName('id').setDescription('Order number (#) from /case nocontact list')
                     .setRequired(true).setMinValue(1)))),
 
     async execute(interaction, config, client) {
@@ -190,6 +258,10 @@ export default {
                 text: interaction.options.getString('text'),
             });
             return InteractionHelper.safeEditReply(interaction, await buildSearchView(interaction.guildId, interaction.user.id, filters, 0));
+        }
+
+        if (group === 'nocontact') {
+            return handleNoContact(interaction, client, sub);
         }
 
         const code = readCode(interaction);

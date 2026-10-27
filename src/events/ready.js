@@ -7,6 +7,7 @@ import { reconcileTicketPanels, reconcileVerificationPanels, reconcileReactionRo
 import { reconcileLevelRoles } from "../services/leveling/levelRoleSyncService.js";
 import { reconcileBannedRoles } from "../services/enforcement/bannedRoleService.js";
 import { describeAutomodReadiness } from "../services/automod/automodService.js";
+import { loadNoContactOrders } from "../services/enforcement/noContactService.js";
 
 export default {
   name: Events.ClientReady,
@@ -30,6 +31,12 @@ export default {
       startupLog(`Serving ${client.guilds.cache.size} guild(s)`);
       startupLog(`Loaded ${client.commands.size} commands`);
       startupLog(`Automod: ${await describeAutomodReadiness(client).catch((error) => `check failed: ${error.message}`)}`);
+
+      const noContactCount = await loadNoContactOrders().catch((error) => {
+        logger.error(`No-contact orders could not be loaded: ${error.message}`);
+        return null;
+      });
+      startupLog(noContactCount == null ? "No-contact orders: not loaded (database unavailable)" : `No-contact orders: ${noContactCount} active`);
 
       const reconciliationSummary = await reconcileReactionRoleMessages(client);
       startupLog(
