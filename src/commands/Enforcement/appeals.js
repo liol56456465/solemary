@@ -77,7 +77,7 @@ export default {
                 throw new TitanBotError('Unknown case code', ErrorTypes.USER_INPUT,
                     `No case with code \`${caseCode}\`.`, { expected: true });
             }
-            return InteractionHelper.safeEditReply(interaction, { embeds: await buildCaseDossier(record) });
+            return InteractionHelper.safeEditReply(interaction, { embeds: await buildCaseDossier(record, { client }) });
         }
 
         const result = await decideAppeal({

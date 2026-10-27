@@ -233,6 +233,24 @@ export const tableStatements = [
         new_value TEXT
     )`,
 
+    // Case evidence: message links (with a text excerpt kept in case the message is
+    // deleted) and images re-hosted in the evidence channel. Discord CDN URLs expire,
+    // so images are shown by re-fetching store_channel_id/store_message_id.
+    `CREATE TABLE IF NOT EXISTS ${t.mod_case_evidence} (
+        id BIGSERIAL PRIMARY KEY,
+        case_code VARCHAR(7) NOT NULL REFERENCES ${t.mod_cases}(case_code) ON DELETE CASCADE,
+        kind VARCHAR(10) NOT NULL CHECK (kind IN ('link', 'image')),
+        url TEXT,
+        store_channel_id VARCHAR(20),
+        store_message_id VARCHAR(20),
+        source_message_url TEXT,
+        excerpt TEXT,
+        note TEXT,
+        added_by VARCHAR(20) NOT NULL,
+        added_by_username VARCHAR(100) NOT NULL,
+        added_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
     // Warn ladder. Never reset; lowered by one only by an accepted ladder-ban appeal.
     `CREATE TABLE IF NOT EXISTS ${t.mod_ladder} (
         guild_id VARCHAR(20) NOT NULL,
@@ -355,6 +373,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_server_snapshots_guild ON ${t.server_snapshots}(guild_id, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_appeals_case ON ${t.mod_appeals}(case_code, decided_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_case_edits_case ON ${t.mod_case_edits}(case_code, edited_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_mod_case_evidence_case ON ${t.mod_case_evidence}(case_code, added_at)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_moderator ON ${t.mod_cases}(guild_id, moderator_id, created_at)`,
 ];
 

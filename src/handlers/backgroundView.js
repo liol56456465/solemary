@@ -15,6 +15,7 @@ import { enforcementConfig } from '../config/enforcement.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { caseStatusLabel, getAppealHistory, getLatestAppealStatuses, listCasesForUser } from '../services/enforcement/caseService.js';
 import { countCaseEdits } from '../services/enforcement/caseEditService.js';
+import { evidenceDisplay } from '../services/enforcement/evidenceService.js';
 import { dateStamp, formatDuration, stamp, truncate } from '../services/enforcement/format.js';
 
 const PAGE_SIZE = 6;
@@ -65,8 +66,13 @@ function appealability(row) {
     return 'Appealable';
 }
 
-export async function buildRecordEmbed(row) {
-    const [appeals, edits] = await Promise.all([getAppealHistory(row.case_code), countCaseEdits(row.case_code)]);
+/** `client` is used to re-fetch evidence images (their CDN URLs expire); optional. */
+export async function buildRecordEmbed(row, { client = null } = {}) {
+    const [appeals, edits, evidence] = await Promise.all([
+        getAppealHistory(row.case_code),
+        countCaseEdits(row.case_code),
+        evidenceDisplay(client, row.case_code),
+    ]);
     const lines = [
         `**Case code:** \`${row.case_code}\``,
         `**Type:** ${row.type}${row.is_auto ? ' (automatic, warn ladder)' : ''}${row.is_imported ? ' (imported, not counted)' : ''}`,
@@ -101,7 +107,11 @@ export async function buildRecordEmbed(row) {
     return createEmbed({
         title: truncate(row.name, 256),
         description: truncate(lines.join('\n'), 4096),
-        fields: [{ name: 'Appeal history', value: truncate(history, 1024) }],
+        fields: [
+            ...(evidence.field ? [evidence.field] : []),
+            { name: 'Appeal history', value: truncate(history, 1024) },
+        ],
+        image: evidence.imageUrl,
         color: row.status === 'active' && !row.voided_at ? 'warning' : 'secondary',
     });
 }

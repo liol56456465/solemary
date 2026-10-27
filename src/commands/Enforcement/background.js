@@ -51,7 +51,7 @@ export default {
                 throw new TitanBotError('Record not found', ErrorTypes.USER_INPUT,
                     `No record named **${truncate(name, 100)}**${targetUser ? ` for ${targetUser.username}` : ''}.`, { expected: true });
             }
-            await InteractionHelper.safeEditReply(interaction, { embeds: [await buildRecordEmbed(record)] });
+            await InteractionHelper.safeEditReply(interaction, { embeds: [await buildRecordEmbed(record, { client })] });
             return;
         }
 

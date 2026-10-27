@@ -43,6 +43,9 @@ export const enforcementConfig = {
         || [],
     // Main-server channel that gets a message for every enforcement action and appeal decision.
     modLogChannelId: readId('MOD_LOG_CHANNEL_ID') || prodDefault('1564598148251525252'),
+    // Private main-server channel where images added as case evidence are re-hosted.
+    // Falls back to the mod log channel when unset.
+    evidenceChannelId: readId('EVIDENCE_CHANNEL_ID'),
 
     serverName: 'Meowist',
     mutedRoleName: 'Muted',

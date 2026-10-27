@@ -3,7 +3,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { buildPanel } from '../../handlers/enforcementPanel.js';
-import { assertBotPermissions, isAdministrator } from '../../services/enforcement/enforcementService.js';
+import { assertBotPermissions, assertCanTarget, isAdministrator } from '../../services/enforcement/enforcementService.js';
 
 export default {
     // Registered as a guild command in MAIN_GUILD_ID only: right-click a member → Apps → Moderate.
@@ -21,8 +21,23 @@ export default {
         }
         const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         if (!deferred) return;
-        assertBotPermissions(interaction.guild);
+        const guild = interaction.guild;
+        const targetUser = interaction.targetUser;
+        assertBotPermissions(guild);
         // The same panel as /enforcements user:<them>.
-        await InteractionHelper.safeEditReply(interaction, await buildPanel(interaction.guild, interaction.user.id, interaction.targetUser));
+        const panel = await buildPanel(guild, interaction.user.id, targetUser);
+
+        // Early hierarchy check: every action would be refused on Confirm anyway, so
+        // show the summary read-only instead of buttons that can only fail.
+        try {
+            const targetMember = interaction.targetMember?.roles?.cache
+                ? interaction.targetMember
+                : await guild.members.fetch(targetUser.id).catch(() => null);
+            assertCanTarget(guild, interaction.member, targetUser.id, targetMember, 'moderate');
+        } catch (error) {
+            panel.content = `⛔ ${error.userMessage || error.message} The panel is read-only.`;
+            panel.components = [];
+        }
+        await InteractionHelper.safeEditReply(interaction, panel);
     },
 };
