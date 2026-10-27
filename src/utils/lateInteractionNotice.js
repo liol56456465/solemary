@@ -2,11 +2,13 @@
 //
 // Discord gives the bot 3 seconds to acknowledge an interaction. After that the
 // token is dead, Discord shows "The application did not respond", and the bot
-// cannot answer in place. These helpers tell the user what happened instead:
-// by DM, or by a short self-deleting channel message when DMs are closed.
+// cannot answer in place. These helpers tell admins what happened instead: by DM,
+// or by a short self-deleting channel message when DMs are closed. Members get no
+// notice: an unexplained "sorry" DM from a bot is noise to them.
 
 import { MessageFlags } from 'discord.js';
 import { logger } from './logger.js';
+import { canSeeAdminCommands } from './commandGate.js';
 
 const ACK_DEADLINE_MS = 3000;
 const CHANNEL_NOTICE_TTL_MS = 15 * 1000;
@@ -36,12 +38,24 @@ function buildNoticeText(interaction, { actionTaken }) {
 }
 
 /**
- * Tell the user their interaction timed out. DM first; if DMs are closed, post a
+ * Tell an admin their interaction timed out (members are only logged). DM first; if DMs are closed, post a
  * mention in the channel and delete it after a few seconds. At most one notice per
  * interaction and one per user per minute.
  */
 export async function sendLateInteractionNotice(interaction, { actionTaken = false } = {}) {
     if (!interaction?.user || interaction._lateNoticeSent) return false;
+    if (!canSeeAdminCommands(interaction)) {
+        interaction._lateNoticeSent = true;
+        logger.warn('Interaction missed the acknowledgement deadline (member, not notified)', {
+            event: 'interaction.late_notice_skipped',
+            interactionId: interaction.id,
+            guildId: interaction.guildId,
+            userId: interaction.user.id,
+            command: interaction.commandName || interaction.customId,
+            ageMs: interactionAgeMs(interaction),
+        });
+        return false;
+    }
     interaction._lateNoticeSent = true;
 
     const userId = interaction.user.id;
