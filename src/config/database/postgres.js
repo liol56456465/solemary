@@ -101,8 +101,24 @@ const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '']);
 // and becomes "don't verify" in pg v9).
 const SSL_URL_PARAMS = ['sslmode', 'ssl', 'sslrootcert', 'sslcert', 'sslkey', 'uselibpqcompat'];
 
+/**
+ * The database URL comes from POSTGRES_URL only. DATABASE_URL is ignored on purpose:
+ * Replit sets it to its own (suspended) database, and silently falling back to it
+ * would hide a missing POSTGRES_URL.
+ */
 function databaseUrl() {
-    return (process.env.POSTGRES_URL || process.env.DATABASE_URL || '').trim();
+    return (process.env.POSTGRES_URL || '').trim();
+}
+
+/** A startup warning when DATABASE_URL is set to something else (it is ignored), or null. */
+export function ignoredDatabaseUrlWarning(env = process.env) {
+    const ignored = (env.DATABASE_URL || '').trim();
+    const used = (env.POSTGRES_URL || '').trim();
+    if (!ignored || ignored === used) return null;
+    const host = hostOf(ignored) || 'an unparseable URL';
+    return used
+        ? `DATABASE_URL is set (${host}) but ignored: the bot only reads POSTGRES_URL.`
+        : `DATABASE_URL is set (${host}) but ignored, and POSTGRES_URL is not set: set POSTGRES_URL to the bot's database.`;
 }
 
 function hostOf(url) {
@@ -193,7 +209,7 @@ export function resolvePostgresPoolConfig() {
 }
 
 export const pgConfig = {
-    url: process.env.POSTGRES_URL || process.env.DATABASE_URL || DEFAULT_POSTGRES_URL,
+    url: process.env.POSTGRES_URL || DEFAULT_POSTGRES_URL,
     
     options: {
         

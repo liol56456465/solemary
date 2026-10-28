@@ -443,19 +443,20 @@ export function validateConfig(config) {
   }
 
   if (process.env.NODE_ENV === 'production') {
-    // A full connection URL (DATABASE_URL / POSTGRES_URL) satisfies all Postgres
-    // requirements, matching how src/config/database/postgres.js resolves the pool config.
-    const hasConnectionUrl = Boolean(process.env.POSTGRES_URL || process.env.DATABASE_URL);
+    // A full connection URL (POSTGRES_URL) satisfies all Postgres requirements, matching
+    // how src/config/database/postgres.js resolves the pool config. DATABASE_URL is
+    // ignored there (Replit points it at its own database), so it does not count here.
+    const hasConnectionUrl = Boolean(process.env.POSTGRES_URL);
 
     if (!hasConnectionUrl) {
       if (!process.env.POSTGRES_HOST) {
-        errors.push("PostgreSQL connection is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_HOST)");
+        errors.push("PostgreSQL connection is required in production (set POSTGRES_URL, or POSTGRES_HOST)");
       }
       if (!process.env.POSTGRES_USER) {
-        errors.push("PostgreSQL user is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_USER)");
+        errors.push("PostgreSQL user is required in production (set POSTGRES_URL, or POSTGRES_USER)");
       }
       if (!process.env.POSTGRES_PASSWORD) {
-        errors.push("PostgreSQL password is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_PASSWORD)");
+        errors.push("PostgreSQL password is required in production (set POSTGRES_URL, or POSTGRES_PASSWORD)");
       }
     }
   }

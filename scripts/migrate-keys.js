@@ -30,7 +30,7 @@ const dryRun = process.argv.includes('--dry-run');
 const force = process.argv.includes('--force');
 
 async function run() {
-    const databaseUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+    const databaseUrl = process.env.POSTGRES_URL;
     const pool = new Pool({
         connectionString: sanitizeConnectionString(databaseUrl),
         ssl: resolveSslConfig(databaseUrl),

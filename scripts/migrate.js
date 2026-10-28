@@ -25,7 +25,7 @@ const { assertAllowlistedIdentifier, quoteIdentifier } = await import('../src/ut
 
 const { Pool } = pg;
 
-const databaseUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+const databaseUrl = process.env.POSTGRES_URL;
 const pool = new Pool({
   connectionString: sanitizeConnectionString(databaseUrl),
   ssl: resolveSslConfig(databaseUrl),

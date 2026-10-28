@@ -65,7 +65,7 @@ class DatabaseWrapper {
         if (!memoryFallbackAllowed()) {
             const requiredError = new Error(
                 'PostgreSQL is unavailable and in-memory storage is not allowed in production ' +
-                '(data would be lost on restart). Fix DATABASE_URL, or set ALLOW_MEMORY_DB=true to accept that.',
+                '(data would be lost on restart). Fix POSTGRES_URL, or set ALLOW_MEMORY_DB=true to accept that.',
             );
             requiredError.code = 'DATABASE_REQUIRED';
             throw requiredError;

@@ -1,7 +1,7 @@
 // postgresDatabase.js
 
 import pg from 'pg';
-import { pgConfig, resolvePostgresPoolConfig } from '../config/database/postgres.js';
+import { ignoredDatabaseUrlWarning, pgConfig, resolvePostgresPoolConfig } from '../config/database/postgres.js';
 import { logger } from './logger.js';
 import { assertAllowlistedIdentifier, quoteIdentifier } from './sqlIdentifiers.js';
 import {
@@ -94,6 +94,11 @@ class PostgreSQLDatabase {
     }
 
     async _establishConnection() {
+        const ignoredUrl = ignoredDatabaseUrlWarning();
+        if (ignoredUrl && !this.warnedIgnoredUrl) {
+            this.warnedIgnoredUrl = true;
+            logger.warn(ignoredUrl);
+        }
         const retries = Number.isFinite(pgConfig.options.retries) ? pgConfig.options.retries : 0;
         const baseDelay = Number.isFinite(pgConfig.options.backoffBase) ? pgConfig.options.backoffBase : 100;
         const multiplier = Number.isFinite(pgConfig.options.backoffMultiplier) ? pgConfig.options.backoffMultiplier : 2;
