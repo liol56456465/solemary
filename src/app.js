@@ -17,6 +17,8 @@ import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
 import { runEnforcementExpiry } from './services/enforcement/expiryService.js';
 import { runTempRoleExpiry } from './services/members/tempRoleService.js';
+import { runRoleRules } from './services/members/roleRuleService.js';
+import { pruneMemberEvents } from './services/members/memberInsightsService.js';
 import { importModmailTopicsOnce } from './services/modmailLinks.js';
 import { enforcementConfig } from './config/enforcement.js';
 import { expireNoContactOrders } from './services/enforcement/noContactService.js';
@@ -374,6 +376,10 @@ class Meowist extends Client {
     cron.schedule('*/15 * * * *', exclusive('youtube_feeds', () => pollFeeds(this)));
     cron.schedule('* * * * *', exclusive('enforcement_expiry', () => runEnforcementExpiry(this)));
     cron.schedule('* * * * *', exclusive('temp_role_expiry', () => runTempRoleExpiry(this)));
+    // Role rules (dashboard Members): every 10 minutes, capped changes per run (roleRuleService.js).
+    cron.schedule('*/10 * * * *', exclusive('role_rules', () => runRoleRules(this)));
+    // Joins/leaves for Members → Insights are kept 90 days.
+    cron.schedule('30 3 * * *', exclusive('member_events_prune', () => pruneMemberEvents()), { timezone: 'UTC' });
     cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
     cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));

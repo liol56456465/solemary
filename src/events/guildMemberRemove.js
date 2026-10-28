@@ -9,6 +9,8 @@ import { getGuildBirthdays, deleteBirthday } from '../utils/database.js';
 import { deleteUserLevelData } from '../services/leveling/leveling.js';
 import { keepTempRolesOnLeave } from '../services/members/tempRoleService.js';
 import { logger } from '../utils/logger.js';
+import { enforcementConfig } from '../config/enforcement.js';
+import { recordMemberEvent } from '../services/members/memberInsightsService.js';
 
 export default {
   name: Events.GuildMemberRemove,
@@ -137,6 +139,11 @@ export default {
             }
         } catch (error) {
             logger.debug('Error handling applications on member leave:', error);
+        }
+
+        // Leaves per day for the dashboard's Members → Insights (main server only).
+        if (guild.id === enforcementConfig.mainGuildId) {
+            await recordMemberEvent(guild.id, user.id, 'leave').catch((error) => logger.warn(`Leave of ${user.id} not recorded: ${error.message}`));
         }
 
         try {

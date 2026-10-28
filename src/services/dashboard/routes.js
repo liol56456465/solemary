@@ -76,6 +76,7 @@ import { defaultServices } from './services.js';
 import { AUDIT_PAGE_SIZE, createAuditStore, recordDashboardChange } from './audit.js';
 import { defaultEnforcement } from './enforcementData.js';
 import { createEnforcementHandlers } from './enforcementRoutes.js';
+import { createMemberToolsHandlers, defaultMemberTools } from './memberToolsRoutes.js';
 import { createConfirmStore } from './confirmTokens.js';
 import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
 import { InputError, plainText } from './forms.js';
@@ -132,6 +133,8 @@ export const ENFORCEMENT_AUDIT_MODULES = [
     { key: 'massguard', label: 'Mass-action guard' },
     { key: 'staff', label: 'Staff discipline' },
     { key: 'owner', label: 'Owner area' },
+    { key: 'members', label: 'Members' },
+    { key: 'rolerules', label: 'Role rules' },
 ];
 
 const truthy = (value) => String(value || '').trim().toLowerCase() === 'true';
@@ -214,6 +217,7 @@ export function createDashboard({
     fetchImpl = globalThis.fetch, states = createStateStore(), limits = DEFAULT_LIMITS,
     services = defaultServices, auditStore = null, modules = MODULES, env = process.env,
     enforcement = defaultEnforcement, confirms = createConfirmStore(), owner = defaultOwnerDeps,
+    memberTools = defaultMemberTools,
 }) {
     const secret = settings.sessionSecret;
     const guildId = settings.mainGuildId;
@@ -655,6 +659,11 @@ export function createDashboard({
         renderCase: (...args) => renderCase(...args), renderStaff: (...args) => renderStaff(...args),
     });
 
+    // Members → Role rules and Insights (memberToolsRoutes.js), with the Members POST guard.
+    const memberToolsHandlers = createMemberToolsHandlers({
+        client, guildId, settings, sendHtml, fail, shellOf, confirms, memberTools, helpers: enforcementHandlers.helpers,
+    });
+
     // The Owner area (ownerRoutes.js): bot owners only, same POST checks + a fresh login.
     const ownerHandlers = createOwnerHandlers({
         client, guildId, settings, sessions, audits, confirms, sendHtml, fail, shellOf, checkPost, postLimiter, owner,
@@ -685,7 +694,7 @@ export function createDashboard({
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, index, callback, requireUser, checkPost,
         overview, modulesHub, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound, setTheme,
-        sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers,
+        sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, memberTools: memberToolsHandlers,
     };
 }
 
@@ -740,6 +749,11 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     // Phase 3 forms (enforcement and records): registered before the settings catch-all.
     const form = express.urlencoded({ extended: false, limit: '16kb' });
     const en = d.enforcement;
+    const mt = d.memberTools;
+    router.post('/users/rules/preview', form, user, safe(mt.preview));
+    router.post('/users/rules/save', form, user, safe(mt.save));
+    router.post('/users/rules/:rid/disable', form, user, safe(mt.disable));
+    router.post('/users/rules/:rid/delete', form, user, safe(mt.remove));
     router.post('/users/:id/action/preview', form, user, safe(en.actionPreview));
     router.post('/users/:id/action/execute', form, user, safe(en.actionExecute));
     router.post('/users/bulk/preview', form, user, safe(en.bulkPreview));
@@ -800,6 +814,8 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.get('/appeals/:code', user, safe(en.appealDetail));
     router.get('/users', user, safe(en.users));
     router.get('/bans', user, safe(en.bans));
+    router.get('/users/rules', user, safe(mt.rules));
+    router.get('/users/insights', user, safe(mt.insights));
     router.get('/users/bulk/:job', user, safe(en.bulkJob));
     router.get('/users/:id', user, safe(en.userPage));
     router.get('/nocontact', user, safe(en.noContact));

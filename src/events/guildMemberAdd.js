@@ -18,6 +18,8 @@ import { checkImpersonation } from '../services/automod/memberChecks.js';
 import { startProbationOnJoin } from '../services/automod/probationService.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
+import { recordMemberEvent } from '../services/members/memberInsightsService.js';
+import { applyRoleRulesToMember } from '../services/members/roleRuleService.js';
 
 export default {
   name: Events.GuildMemberAdd,
@@ -39,6 +41,8 @@ export default {
             }
             // Rejoining the main server (e.g. after a temporary ban) restores the warning role.
             if (guild.id === enforcementConfig.mainGuildId) {
+                // Joins per day for the dashboard's Members → Insights.
+                await recordMemberEvent(guild.id, member.id, 'join').catch((error) => logger.warn(`Join of ${member.id} not recorded: ${error.message}`));
                 await syncWarnRolesQuietly(guild, member.id);
                 // Temporary roles that have not ended yet come back on rejoin.
                 await reapplyTempRolesOnJoin(member).catch((error) => logger.warn(`Temporary roles not given back to ${member.id}: ${error.message}`));
@@ -51,6 +55,8 @@ export default {
                 await checkImpersonation(member);
                 // Back after a ban that ended recently: automod probation.
                 await startProbationOnJoin(member).catch((error) => logger.warn(`Probation check failed for ${member.id}: ${error.message}`));
+                // Role rules (dashboard Members): e.g. "days in the server: 0" gives its role now.
+                await applyRoleRulesToMember(member).catch((error) => logger.warn(`Role rules not applied to ${member.id}: ${error.message}`));
             }
         }
         

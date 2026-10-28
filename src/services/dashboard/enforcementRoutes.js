@@ -953,5 +953,7 @@ export function createEnforcementHandlers(core) {
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd,
         staffSections, blockLift, staffWarn, staffRestore, canWrite,
+        // For the other Members pages (memberToolsRoutes.js): the same POST guard and helpers.
+        helpers: { guardedPost, freshModerator, flash, audit, completeMemberCache, guildOf, isOwner, canWrite },
     };
 }

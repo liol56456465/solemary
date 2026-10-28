@@ -1375,3 +1375,19 @@ form.filters .wide-filter { flex: 1 1 240px; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
 }
+
+/* Members area tabs (Members / Role rules / Insights), above the page's own filter chips. */
+.member-tabs { gap: 4px; margin: 0 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.member-tabs .chip { border-color: transparent; background: transparent; }
+.member-tabs .chip[aria-current] { background: var(--accent-soft); border-color: var(--accent); }
+.error-text { color: var(--red); }
+
+/* Members → Insights: joins/leaves chart (SVG, theme chart colours; no inline styles). */
+.ins-chart { display: block; width: 100%; height: auto; margin: 8px 0; }
+.ins-join { fill: var(--c-warn); }
+.ins-leave { fill: var(--c-ban); }
+.ins-grid { stroke: var(--border); stroke-width: 1; }
+.ins-tick { fill: var(--text-muted); font-size: 11px; }
+.ins-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 13px; color: var(--text-muted); }
+.ins-swatch { flex: none; }
+.ins-table summary { cursor: pointer; color: var(--accent); font-size: 14px; }
