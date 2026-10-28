@@ -1375,3 +1375,17 @@ form.filters .wide-filter { flex: 1 1 240px; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
 }
+
+/* ── Inbox: sidebar count, kind tags, conversation messages ───────────── */
+.nav-badge {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 6px;
+    border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums; flex: none;
+}
+.inbox-kind .icon { width: 14px; height: 14px; }
+.msg-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; max-height: 70vh; overflow-y: auto; }
+.msg { padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--raised); }
+.msg-bot { background: var(--surface); }
+.msg-head { margin: 0 0 4px; font-size: 13px; }
+.msg-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg-embed { margin: 4px 0 0; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg-files { margin: 4px 0 0; padding-left: 18px; font-size: 13px; }

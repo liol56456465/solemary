@@ -7,6 +7,7 @@
 //   GET  /dashboard/cases           case search (the /case search filters), paged
 //   GET  /dashboard/cases/:code     one case: details, edit history, evidence, appeals
 //   GET  /dashboard/appeals         pending appeals of the main server with their age
+//   GET  /dashboard/inbox           everything waiting for staff (inboxRoutes.js); /inbox/modmail|ticket/:id read, reply, close
 //   GET  /dashboard/staff           staff moderation stats (/staff stats), weekly activity, discipline (owners)
 //   GET  /dashboard/audit           dashboard changes (old → new), filter by user/module, paged
 //   GET  /dashboard/<module>        a settings page (modules/*.js): current values + forms
@@ -76,6 +77,8 @@ import { defaultServices } from './services.js';
 import { AUDIT_PAGE_SIZE, createAuditStore, recordDashboardChange } from './audit.js';
 import { defaultEnforcement } from './enforcementData.js';
 import { createEnforcementHandlers } from './enforcementRoutes.js';
+import { createInboxBadge, createInboxHandlers } from './inboxRoutes.js';
+import { collectInbox, defaultInboxData } from './inboxData.js';
 import { createConfirmStore } from './confirmTokens.js';
 import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
 import { InputError, plainText } from './forms.js';
@@ -132,6 +135,7 @@ export const ENFORCEMENT_AUDIT_MODULES = [
     { key: 'massguard', label: 'Mass-action guard' },
     { key: 'staff', label: 'Staff discipline' },
     { key: 'owner', label: 'Owner area' },
+    { key: 'inbox', label: 'Inbox (replies, closes)' },
 ];
 
 const truthy = (value) => String(value || '').trim().toLowerCase() === 'true';
@@ -214,6 +218,7 @@ export function createDashboard({
     fetchImpl = globalThis.fetch, states = createStateStore(), limits = DEFAULT_LIMITS,
     services = defaultServices, auditStore = null, modules = MODULES, env = process.env,
     enforcement = defaultEnforcement, confirms = createConfirmStore(), owner = defaultOwnerDeps,
+    inbox = defaultInboxData, inboxBadge = false,
 }) {
     const secret = settings.sessionSecret;
     const guildId = settings.mainGuildId;
@@ -226,6 +231,8 @@ export function createDashboard({
     const findModule = (key) => (modules === MODULES ? getModule(key) : modules.find((m) => m.key === key) || null);
     const cookieOptions = { secure: settings.secure, path: BASE };
     let moduleStatesCache = { at: 0, value: {} };
+    // The Inbox total on the sidebar (registerDashboard turns it on): cached, refreshed in the background.
+    const badge = inboxBadge ? createInboxBadge({ load: async () => (await collectInbox({ client, guildId, inbox })).total }) : null;
 
     const sendHtml = (res, status, page) => res.status(status).type('html').send(page);
     const fail = (res, status, title, message, req = null) => sendHtml(res, status, messagePage(title, message, req?.dashboard?.session || null, shellOf(req)));
@@ -261,6 +268,7 @@ export function createDashboard({
         const session = {
             ...ctx.session, theme: themeOf(req), server: serverInfo(), path: safeBackPath(req.originalUrl || req.url),
             isOwner: Boolean((owner.isBotOwner || defaultOwnerDeps.isBotOwner)(ctx.session.userId)),
+            inboxCount: badge ? badge.peek() : null,
         };
         return { session, access: ctx.access, moduleStates: ctx.moduleStates || {} };
     }
@@ -656,6 +664,10 @@ export function createDashboard({
     });
 
     // The Owner area (ownerRoutes.js): bot owners only, same POST checks + a fresh login.
+    const inboxHandlers = createInboxHandlers({
+        client, guildId, settings, inbox, confirms, sendHtml, fail, shellOf, enforcement: enforcementHandlers, badge,
+    });
+
     const ownerHandlers = createOwnerHandlers({
         client, guildId, settings, sessions, audits, confirms, sendHtml, fail, shellOf, checkPost, postLimiter, owner,
     });
@@ -685,7 +697,7 @@ export function createDashboard({
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, index, callback, requireUser, checkPost,
         overview, modulesHub, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound, setTheme,
-        sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers,
+        sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, inbox: inboxHandlers, badge,
     };
 }
 
@@ -728,7 +740,7 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
         logger.error(`Dashboard NOT enabled: ${settings.problems.join('; ')}`);
         return false;
     }
-    const d = createDashboard({ client, settings, sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.dashboard_sessions }) });
+    const d = createDashboard({ client, settings, sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.dashboard_sessions }), inboxBadge: true });
     const router = express.Router();
     const user = safe(d.requireUser);
     router.use(d.securityHeaders);
@@ -765,6 +777,10 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.post('/staff/blocks/lift', form, user, safe(en.blockLift));
     router.post('/staff/warn', form, user, safe(en.staffWarn));
     router.post('/staff/restore', form, user, safe(en.staffRestore));
+    const ib = d.inbox;
+    router.post('/inbox/:kind/:id/reply', form, user, safe(ib.reply));
+    router.post('/inbox/:kind/:id/close/preview', form, user, safe(ib.closePreview));
+    router.post('/inbox/:kind/:id/close', form, user, safe(ib.close));
     // Owner area: login → live owner check (404 otherwise) → body. Image uploads: the owner check
     // runs before any of the body is read.
     const ow = d.owner;
@@ -793,6 +809,8 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
     router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleAction));
     router.get('/overview', user, safe(d.overview));
+    router.get('/inbox', user, safe(ib.list));
+    router.get('/inbox/:kind/:id', user, safe(ib.conversation));
     router.get('/modules', user, safe(d.modulesHub));
     router.get('/cases', user, safe(d.cases));
     router.get('/cases/:code', user, safe(d.caseDetail));

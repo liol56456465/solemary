@@ -953,5 +953,7 @@ export function createEnforcementHandlers(core) {
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd,
         staffSections, blockLift, staffWarn, staffRestore, canWrite,
+        // Shared with the Inbox (inboxRoutes.js): the same POST checks, fresh Administrator, audit rows, flash.
+        guardedPost, freshModerator, audit, flash,
     };
 }
