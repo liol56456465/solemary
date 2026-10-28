@@ -80,3 +80,32 @@ export function retireCommandJson(json) {
     }
     return kept.some((o) => o.type === 1 || o.type === 2) ? { ...json, options: kept } : null;
 }
+
+/**
+ * Every access key the loaded commands have (commands without subcommands, each subcommand,
+ * each grouped subcommand, context menus), once each, sorted: { key, description, access, page }.
+ * access: 'everyone' | 'owner kit' | 'admin'; page: the dashboard page for admin ones.
+ */
+export function commandEntries(commands) {
+    const byKey = new Map();
+    const add = (key, description) => {
+        if (byKey.has(key)) return;
+        const access = EVERYONE_COMMANDS.has(key) ? 'everyone' : OWNER_KIT.has(key) ? 'owner kit' : 'admin';
+        byKey.set(key, { key, description: description || '', access, page: access === 'everyone' ? null : dashboardPageFor(key) });
+    };
+    for (const command of commands?.values?.() || []) {
+        const json = typeof command?.data?.toJSON === 'function' ? command.data.toJSON() : null;
+        if (!json?.name) continue;
+        const menu = json.type === 2 || json.type === 3;
+        const subs = (json.options || []).filter((o) => o.type === 1 || o.type === 2);
+        if (menu || !subs.length) {
+            add(json.name, json.description || (menu ? 'Right-click menu' : ''));
+            continue;
+        }
+        for (const option of subs) {
+            if (option.type === 1) add(`${json.name} ${option.name}`, option.description);
+            else for (const sub of option.options || []) add(`${json.name} ${option.name} ${sub.name}`, sub.description);
+        }
+    }
+    return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
+}

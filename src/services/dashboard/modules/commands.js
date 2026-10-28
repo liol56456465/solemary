@@ -4,10 +4,11 @@
 // Also: "Bot settings" (prefix and moderator role, as /configwizard: ConfigService) and
 // "Utilities" (Shorten a link, as /shorten: services/urlShortener.js).
 
-import { EVERYONE_COMMANDS, SUPPORT_SERVER_COMMANDS } from '../../../config/commands/commandAccess.js';
+import { SUPPORT_SERVER_COMMANDS } from '../../../config/commands/commandAccess.js';
+import { adminCommandsRetired, commandEntries } from '../../../config/commands/retirement.js';
 import { normalizeCategoryKey } from '../../../config/commands/commandCategories.js';
 import { getCommandPrefix } from '../../../config/bot.js';
-import { html } from '../html.js';
+import { html, path } from '../html.js';
 import { InputError, boolField, buttonForm, moduleSwitch, postForm, rolePicker, roleField, text, textInput } from '../forms.js';
 import { section, table } from './common.js';
 
@@ -133,10 +134,21 @@ ${textInput('custom', '', { label: 'Custom ending (optional)', max: 30, help: 'L
             const header = html`<p>${cat.enabledCount}/${cat.totalCount} on. ${buttonForm(ctx, 'commands', 'category', cat.categoryDisabled ? 'Turn category on' : 'Turn category off', { key: cat.key, enabled: cat.categoryDisabled ? 'true' : 'false' }, { danger: !cat.categoryDisabled })}</p>`;
             return section(`${cat.displayName}${cat.categoryDisabled ? ' (off)' : ''}`, html`${header}${table(['Command', 'Description', 'State', ''], rows)}`);
         });
-        const access = html`<p>Everyone may use: ${[...EVERYONE_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}</p>
-<p>Support server only: ${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}</p>
-<p class="muted">Every other command needs staff permissions. These lists are part of the bot's code (read-only).</p>`;
-        return html`${settingsPart}${section('Who can use commands', access)}${categories}`;
+        // Every command and subcommand: who may use it, where its job is on the dashboard, and
+        // what happens to it when admin commands are retired (RETIRE_ADMIN_COMMANDS).
+        const entries = commandEntries(ctx.client.commands);
+        const retired = adminCommandsRetired();
+        const WHO = { everyone: 'Everyone', 'owner kit': 'Bot owners (emergency kit)', admin: 'Administrators' };
+        const AFTER = { everyone: 'Stays a command', 'owner kit': 'Stays, owners only', admin: 'Dashboard only' };
+        const every = html`<p>${retired
+            ? html`<span class="state state-on">Retired</span> Admin commands are retired: only everyone-commands and the owners' emergency kit are registered.`
+            : html`<span class="state state-off">Not retired</span> All commands are registered. Set <code>RETIRE_ADMIN_COMMANDS=true</code> to leave only the everyone-commands and the owners' emergency kit.`}</p>
+${table(['Command', 'What it does', 'Who', 'On the dashboard', 'When retired'], entries.map((e) => [
+            html`<code>/${e.key}</code>`, e.description, WHO[e.access],
+            e.page ? html`<a href="${path(`/${e.page}`)}">${e.page}</a>` : html`<span class="muted">—</span>`,
+            AFTER[e.access]]))}
+<p class="muted">Support server too: ${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}. Who may use what is part of the bot's code (read-only).</p>`;
+        return html`${settingsPart}${section(`Every command (${entries.length})`, every)}${categories}`;
     },
 
     actions: {
