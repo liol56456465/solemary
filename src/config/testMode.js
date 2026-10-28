@@ -1,7 +1,7 @@
 // testMode.js — isolates a test run (NODE_ENV=test, normally via .env.test).
 //
-// Test mode may use the production bot token, so it must never reach the real
-// servers:
+// Test mode runs a separate TEST bot (its own application and token). It refuses to
+// start with the production bot's CLIENT_ID or token, and never reaches the real servers:
 //   - only guilds in TEST_GUILD_IDS exist for the bot (see installGuildAllowlist)
 //   - commands are registered as guild commands there; global commands are untouched
 //   - cron jobs are off unless TEST_ENABLE_CRON=true
@@ -21,6 +21,37 @@ export const PRODUCTION_GUILD_IDS = new Map([
     ['1564312871976829009', 'Meowist Support'],
 ]);
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
+
+// The production Meowist application (bot user ID). Test mode refuses it.
+export const PRODUCTION_CLIENT_ID = '1531096173786566697';
+
+/** The bot user ID inside a bot token (its first part is the ID in base64), or null. */
+export function tokenBotId(token) {
+    const first = String(token || '').trim().split('.')[0];
+    if (!first) return null;
+    try {
+        const id = Buffer.from(first, 'base64').toString('utf8');
+        return SNOWFLAKE.test(id) ? id : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Refuses the production bot in test mode: by CLIENT_ID and by the token itself. */
+export function botIdentityErrors(env = process.env) {
+    const errors = [];
+    const clientId = String(env.CLIENT_ID || '').trim();
+    const tokenId = tokenBotId(env.DISCORD_TOKEN || env.TOKEN);
+    if (clientId === PRODUCTION_CLIENT_ID) {
+        errors.push(`CLIENT_ID is the production Meowist bot (${PRODUCTION_CLIENT_ID}). Test mode needs the separate test bot's application ID.`);
+    }
+    if (tokenId === PRODUCTION_CLIENT_ID) {
+        errors.push('DISCORD_TOKEN is the production Meowist bot\'s token. Put the test bot\'s token in .env.test.');
+    } else if (tokenId && clientId && tokenId !== clientId) {
+        errors.push(`DISCORD_TOKEN belongs to bot ${tokenId}, but CLIENT_ID is ${clientId}. Both must come from the test bot's application.`);
+    }
+    return errors;
+}
 
 const usedEnvFile = process.execArgv.find((arg) => arg.startsWith('--env-file')) || '';
 
@@ -84,6 +115,8 @@ export function validateTestMode() {
         return errors;
     }
 
+    errors.push(...botIdentityErrors());
+
     if (testMode.guildIds.size === 0) {
         errors.push('TEST_GUILD_IDS is empty. Set it to "<test main guild id>,<test support guild id>".');
     }
@@ -143,18 +176,9 @@ export function describeTestMode() {
     };
 }
 
-// Gateway events that carry no guild but are safe (and needed) in test mode.
-const GUILDLESS_ALLOWED = new Set(['READY', 'RESUMED', 'USER_UPDATE']);
-// DMs (modmail) pass only from OWNER_IDS: the token may be production's, and
-// real members' DMs must keep going to the live bot alone.
-const DM_EVENTS = new Set(['MESSAGE_CREATE', 'INTERACTION_CREATE']);
-const DM_TESTERS = new Set((process.env.OWNER_IDS || '').split(',').map((id) => id.trim()).filter(Boolean));
-
-function isTesterDm(packet) {
-    if (!DM_EVENTS.has(packet.t)) return false;
-    const userId = packet.d?.author?.id ?? packet.d?.user?.id ?? null;
-    return Boolean(userId && DM_TESTERS.has(userId));
-}
+// Gateway events that carry no guild but are safe (and needed) in test mode. DMs pass
+// (modmail tests from alt accounts): only the test bot receives them.
+const GUILDLESS_ALLOWED = new Set(['READY', 'RESUMED', 'USER_UPDATE', 'MESSAGE_CREATE', 'INTERACTION_CREATE']);
 const GUILD_OBJECT_EVENTS = new Set(['GUILD_CREATE', 'GUILD_UPDATE', 'GUILD_DELETE']);
 
 function packetGuildId(packet) {
@@ -163,8 +187,8 @@ function packetGuildId(packet) {
 }
 
 /**
- * Drops every gateway packet from guilds outside TEST_GUILD_IDS, and DMs from anyone but OWNER_IDS,
- * before discord.js handles it, so other guilds never enter the cache, fire
+ * Drops every gateway packet from guilds outside TEST_GUILD_IDS before discord.js
+ * handles it, so other guilds never enter the cache, fire
  * events or get replies. guilds.fetch() is fenced the same way.
  */
 export function installGuildAllowlist(client) {
@@ -181,7 +205,7 @@ export function installGuildAllowlist(client) {
         }
 
         const guildId = packetGuildId(packet);
-        const allowed = guildId ? testMode.guildIds.has(guildId) : (GUILDLESS_ALLOWED.has(packet.t) || isTesterDm(packet));
+        const allowed = guildId ? testMode.guildIds.has(guildId) : GUILDLESS_ALLOWED.has(packet.t);
         if (!allowed) {
             logger.debug(`[test mode] ignored ${packet.t} from ${guildId ? `guild ${guildId}` : 'a DM / no guild'}`);
             return true;
