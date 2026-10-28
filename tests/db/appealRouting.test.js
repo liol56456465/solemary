@@ -19,6 +19,7 @@ const ALPHA = 'abcdefghjkmnpqrstuvwxyz23456789';
 let seq = Number(runId) * 7;
 const caseCode = () => { let out = ''; let x = (seq += 13); for (let i = 0; i < 7; i += 1) { out += ALPHA[x % ALPHA.length]; x = Math.floor(x / ALPHA.length); } return out; };
 let pgDb, appeals, enforcementConfig;
+let n = 100; // channel numbers, unique across all fake worlds in this file
 const saved = {};
 
 before(async () => {
@@ -41,10 +42,9 @@ after(async () => {
     await pgDb.disconnect();
 });
 
-function world({ appellantInSupport = true } = {}) {
+function world({ appellantInSupport = true, appellantIsSupportAdmin = false } = {}) {
     const sent = []; // { where, payload }
     const dms = [];
-    let n = 100;
     const makeGuild = (gid, categoryId) => {
         const guild = { id: gid, created: [] };
         const makeChannel = (options, type = ChannelType.GuildText) => {
@@ -52,6 +52,8 @@ function world({ appellantInSupport = true } = {}) {
                 id: id('8', (n += 1)), guild, type, ...options,
                 send: async (payload) => { sent.push({ where: channel, payload }); return payload; },
                 messages: { fetch: async () => new Map() },
+                removedMembers: [],
+                members: { remove: async (uid) => { channel.removedMembers.push(uid); } },
                 delete: async () => { guild.channels.cache.delete(channel.id); },
                 threads: {
                     create: async (threadOptions) => {
@@ -73,7 +75,9 @@ function world({ appellantInSupport = true } = {}) {
     };
     const main = makeGuild(enforcementConfig.mainGuildId, id('7', 1));
     const support = makeGuild(enforcementConfig.supportGuildId, id('7', 2));
-    support.members = { fetch: async ({ user }) => (appellantInSupport ? { id: user } : Promise.reject(new Error('Unknown Member'))) };
+    support.members = { fetch: async ({ user }) => (appellantInSupport
+        ? { id: user, permissions: { has: (p) => appellantIsSupportAdmin && p === PermissionFlagsBits.Administrator } }
+        : Promise.reject(new Error('Unknown Member'))) };
     main.members = { fetch: async () => null };
     const client = {
         user: { id: '999999999999999998' },
@@ -113,6 +117,7 @@ for (const type of ['ban', 'kick']) {
         const appellant = overwrites.find((o) => o.id === user.id);
         assert.ok(appellant.allow.includes(PermissionFlagsBits.ViewChannel) && appellant.allow.includes(PermissionFlagsBits.SendMessages), 'appellant added');
         assert.ok(appellant.deny.includes(PermissionFlagsBits.CreatePrivateThreads));
+        assert.ok(appellant.deny.includes(PermissionFlagsBits.ManageThreads), 'Manage Threads would show the private staff thread');
 
         assert.equal(staffChannel.type, ChannelType.PrivateThread, 'staff thread is private');
         assert.equal(staffChannel.invitable, false);
@@ -176,4 +181,27 @@ test('decision on a support appeal: the appellant sees no admin name or note; th
     const inThread = text(w.sent.filter((s) => s.where === staffChannel).map((s) => s.payload));
     assert.match(inThread, /secretadmin/);
     assert.match(inThread, /repeat offender/);
+});
+
+test('an appellant with Administrator in support gets the staff-only main route (Administrator sees every private thread)', { skip }, async () => {
+    enforcementConfig.supportAppealsCategoryId = id('7', 2);
+    const w = world({ appellantIsSupportAdmin: true });
+    const user = { id: id('6', 8), username: 'appellant' };
+    const res = await appeals.submitAppeal({ client: w.client, user, caseCode: await insertCase('ban', user.id), answers: { reason: 'Please unban me, I learned my lesson' } });
+    assert.equal(res.channel.guild.id, w.main.id);
+    assert.equal(w.support.created.length, 0);
+});
+
+test('an appellant added to the staff thread (e.g. by an @mention) is removed at once; others are left alone', { skip }, async () => {
+    enforcementConfig.supportAppealsCategoryId = id('7', 2);
+    const w = world();
+    const user = { id: id('6', 9), username: 'appellant' };
+    const { staffChannel } = await appeals.submitAppeal({ client: w.client, user, caseCode: await insertCase('kick', user.id), answers: { reason: 'It was a misunderstanding, please' } });
+    const { default: event } = await import('../../src/events/threadMembersUpdate.js');
+    await event.execute(new Map([[id('6', 997), {}]]), new Map(), staffChannel);
+    assert.deepEqual(staffChannel.removedMembers, [], 'a staff member joining is fine');
+    w.sent.length = 0;
+    await event.execute(new Map([[user.id, {}]]), new Map(), staffChannel);
+    assert.deepEqual(staffChannel.removedMembers, [user.id]);
+    assert.match(text(w.sent.map((x) => x.payload)), /removed again/);
 });

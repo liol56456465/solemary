@@ -378,6 +378,12 @@ async function openSupportAppealChannel(client, record, user) {
         logger.warn(`Ban/kick appeal ${record.case_code} opens in the main server: ${user.id} is not in the support server`);
         return null;
     }
+    // Administrator ignores channel overwrites and sees every private thread, so such an
+    // appellant would read the staff thread: they get the staff-only main-server route instead.
+    if (member.permissions?.has?.(PermissionFlagsBits.Administrator)) {
+        logger.warn(`Ban/kick appeal ${record.case_code} opens in the main server: the appellant has Administrator in the support server`);
+        return null;
+    }
     let channel = null;
     try {
         channel = await supportGuild.channels.create({
@@ -397,7 +403,8 @@ async function openSupportAppealChannel(client, record, user) {
                 {
                     id: user.id,
                     allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles],
-                    deny: [PermissionFlagsBits.CreatePublicThreads, PermissionFlagsBits.CreatePrivateThreads, PermissionFlagsBits.MentionEveryone],
+                    // ManageThreads would show them the private staff thread.
+                    deny: [PermissionFlagsBits.ManageThreads, PermissionFlagsBits.CreatePublicThreads, PermissionFlagsBits.CreatePrivateThreads, PermissionFlagsBits.MentionEveryone],
                 },
             ],
             reason: `Appeal ${record.case_code}`,
@@ -512,7 +519,8 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
             });
         await staffChannel.send({
             content: `New appeal from ${user.username} for \`${record.case_code}\`. Decide with the buttons below or \`/appeals\`.`
-                + (inSupport ? ' This thread is staff-only; the appellant is in the channel and sees only their summary.' : ''),
+                + (inSupport ? ' This thread is staff-only; the appellant is in the channel and sees only their summary.'
+                    + ' **Do not @mention the appellant here**: Discord would add them to this thread (the bot removes them again at once).' : ''),
             embeds,
             components: [appealDecisionRow(record.case_code)],
             allowedMentions: { parse: [] },
