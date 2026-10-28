@@ -206,7 +206,7 @@ export function layout({ title, active = null, session = null, access = null, mo
     const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
     const top = html`<header class="topbar">
 ${session ? html`<label for="nav-toggle" class="icon-button nav-button" tabindex="0" role="button" aria-label="Menu">${icon('menu')}</label>` : ''}
-<a class="brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">M</span><span class="brand-name">Meowist</span></a>
+<a class="brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a>
 ${session ? html`<form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label><input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : ''}<span class="spacer"></span>
 ${themeToggle(theme, back)}${session ? userMenu(session, access) : ''}</header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

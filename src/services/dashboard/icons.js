@@ -39,6 +39,8 @@ const PATHS = {
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     chevron: '<path d="M9 6l6 6-6 6"/>',
     logout: '<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/>',
+    // The Meowist mark: a filled cat head (two ears) with the eyes cut out (evenodd), so it shows the tile colour.
+    cat: '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M4 20V4.5l5 4h6l5-4V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM8.6 14a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0-2.8 0zM12.6 14a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0-2.8 0z"/>',
     server: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 10h.01M15 10h.01M9 15c1.7 1.3 4.3 1.3 6 0"/>',
 };
 
