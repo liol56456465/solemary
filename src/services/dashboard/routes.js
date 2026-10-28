@@ -22,6 +22,10 @@
 //   GET  /dashboard/static/<file>  dashboard.css (CSP style-src 'self') and dashboard.js (script-src 'self', optional)
 //   POST /dashboard/cases/:code/evidence/upload  an evidence image (multipart, 8 MB, magic-byte check)
 //   POST /dashboard/logout          CSRF token + same-origin check
+//   /dashboard/owner/…              the Owner area (ownerRoutes.js): bot profile, servers, blacklist,
+//                                   health + maintenance, announce. OWNER_IDS only (checked live on
+//                                   every request; anyone else gets 404), POSTs also need a login
+//                                   younger than 12 h.
 //   /staff, /staff/*                → 301 /dashboard (the old read-only staff dashboard)
 //
 // Access: CURRENT Administrators of the main server (canAct) and OWNER_IDS (view and
@@ -73,6 +77,7 @@ import { AUDIT_PAGE_SIZE, createAuditStore, recordDashboardChange } from './audi
 import { defaultEnforcement } from './enforcementData.js';
 import { createEnforcementHandlers } from './enforcementRoutes.js';
 import { createConfirmStore } from './confirmTokens.js';
+import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
 import { InputError, plainText } from './forms.js';
 import { MAX_UPLOAD_BYTES, MultipartError, parseMultipart } from './multipart.js';
 import { createPgSessionStore } from './sessionStore.js';
@@ -126,6 +131,7 @@ export const ENFORCEMENT_AUDIT_MODULES = [
     { key: 'nocontact', label: 'No-contact orders' },
     { key: 'massguard', label: 'Mass-action guard' },
     { key: 'staff', label: 'Staff discipline' },
+    { key: 'owner', label: 'Owner area' },
 ];
 
 const truthy = (value) => String(value || '').trim().toLowerCase() === 'true';
@@ -207,7 +213,7 @@ export function createDashboard({
     client, settings, sessions, access = createAccessChecker(client, { guildId: settings.mainGuildId }), data = defaultData,
     fetchImpl = globalThis.fetch, states = createStateStore(), limits = DEFAULT_LIMITS,
     services = defaultServices, auditStore = null, modules = MODULES, env = process.env,
-    enforcement = defaultEnforcement, confirms = createConfirmStore(),
+    enforcement = defaultEnforcement, confirms = createConfirmStore(), owner = defaultOwnerDeps,
 }) {
     const secret = settings.sessionSecret;
     const guildId = settings.mainGuildId;
@@ -245,8 +251,12 @@ export function createDashboard({
     function shellOf(req) {
         const ctx = req?.dashboard;
         if (!ctx) return req ? { session: null, theme: themeOf(req) } : {};
-        // A copy of the session with display-only extras for the page shell.
-        const session = { ...ctx.session, theme: themeOf(req), server: serverInfo(), path: safeBackPath(req.originalUrl || req.url) };
+        // A copy of the session with display-only extras for the page shell. isOwner (live
+        // OWNER_IDS check) shows the Owner sidebar group.
+        const session = {
+            ...ctx.session, theme: themeOf(req), server: serverInfo(), path: safeBackPath(req.originalUrl || req.url),
+            isOwner: Boolean((owner.isBotOwner || defaultOwnerDeps.isBotOwner)(ctx.session.userId)),
+        };
         return { session, access: ctx.access, moduleStates: ctx.moduleStates || {} };
     }
 
@@ -640,6 +650,11 @@ export function createDashboard({
         renderCase: (...args) => renderCase(...args), renderStaff: (...args) => renderStaff(...args),
     });
 
+    // The Owner area (ownerRoutes.js): bot owners only, same POST checks + a fresh login.
+    const ownerHandlers = createOwnerHandlers({
+        client, guildId, settings, sessions, audits, confirms, sendHtml, fail, shellOf, checkPost, postLimiter, owner,
+    });
+
     async function logout(req, res) {
         if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'The logout request did not come from this dashboard.', req);
         await sessions.destroy(req.dashboard.session.id);
@@ -665,7 +680,7 @@ export function createDashboard({
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, index, callback, requireUser, checkPost,
         overview, modulesHub, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound, setTheme,
-        sessions, states, confirms, enforcement: enforcementHandlers,
+        sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers,
     };
 }
 
@@ -745,6 +760,31 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.post('/staff/blocks/lift', form, user, safe(en.blockLift));
     router.post('/staff/warn', form, user, safe(en.staffWarn));
     router.post('/staff/restore', form, user, safe(en.staffRestore));
+    // Owner area: login → live owner check (404 otherwise) → body. Image uploads: the owner check
+    // runs before any of the body is read.
+    const ow = d.owner;
+    const owner = [user, ow.requireOwner];
+    const ownerUpload = [...owner, uploadBody(MAX_UPLOAD_BYTES + 64 * 1024), safe(d.parseUpload)];
+    router.post('/owner/profile/username', ...owner, form, safe(ow.username));
+    router.post('/owner/profile/about', ...owner, form, safe(ow.about));
+    router.post('/owner/profile/presence', ...owner, form, safe(ow.presence));
+    router.post('/owner/profile/avatar', ...ownerUpload, safe(ow.avatar));
+    router.post('/owner/profile/banner', ...ownerUpload, safe(ow.banner));
+    router.post('/owner/servers/:id/invite', ...owner, form, safe(ow.invite));
+    router.post('/owner/servers/:id/leave/preview', ...owner, form, safe(ow.leavePreview));
+    router.post('/owner/servers/:id/leave', ...owner, form, safe(ow.leave));
+    router.post('/owner/blacklist/add', ...owner, form, safe(ow.blacklistAdd));
+    router.post('/owner/blacklist/remove', ...owner, form, safe(ow.blacklistRemove));
+    router.post('/owner/health/maintenance', ...owner, form, safe(ow.maintenance));
+    router.post('/owner/announce/preview', ...owner, form, safe(ow.announcePreview));
+    router.post('/owner/announce/send', ...owner, form, safe(ow.announceSend));
+    router.get('/owner', ...owner, ow.index);
+    router.get('/owner/profile', ...owner, safe(ow.profile));
+    router.get('/owner/servers', ...owner, safe(ow.servers));
+    router.get('/owner/servers/:id', ...owner, safe(ow.server));
+    router.get('/owner/blacklist', ...owner, safe(ow.blacklist));
+    router.get('/owner/health', ...owner, safe(ow.health));
+    router.get('/owner/announce', ...owner, safe(ow.announce));
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
     router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleAction));
     router.get('/overview', user, safe(d.overview));

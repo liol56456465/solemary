@@ -151,6 +151,26 @@ export const NAV = [
     ] },
 ];
 
+/**
+ * The Owner area (bot owners, OWNER_IDS only): shown as an extra sidebar group when the
+ * page shell's session says `isOwner` (checked live per request). Not part of NAV, so the
+ * module lists (navItems, moduleItems) never include it. `icon` names a sprite icon.
+ */
+export const OWNER_NAV = { group: 'Owner', items: [
+    { key: 'owner/profile', label: 'Bot profile', icon: 'cat' },
+    { key: 'owner/servers', label: 'Servers', icon: 'server' },
+    { key: 'owner/blacklist', label: 'Blacklist', icon: 'nocontact' },
+    { key: 'owner/health', label: 'Health', icon: 'monitor' },
+    { key: 'owner/announce', label: 'Announce', icon: 'messages' },
+] };
+
+/** The sidebar groups for this page's viewer: NAV, plus the Owner group for bot owners. */
+export function navGroups(session = null) {
+    return session?.isOwner ? [...NAV, OWNER_NAV] : NAV;
+}
+
+const itemIcon = (item) => icon(item.icon || item.key);
+
 /** Every sidebar entry, flattened. */
 export function navItems() {
     return NAV.flatMap((item) => (item.group ? item.items : [item]));
@@ -166,35 +186,35 @@ function stateOf(item, moduleStates) {
 }
 
 /** The sidebar groups as sections (phone tab bar): label, icon, first page, pages. */
-const SECTION_ICON = { Moderate: 'enforcement', Community: 'users', 'Server setup': 'server', Bot: 'modules' };
-export function sections() {
-    return NAV.map((item) => ({
+const SECTION_ICON = { Moderate: 'enforcement', Community: 'users', 'Server setup': 'server', Bot: 'modules', Owner: 'cat' };
+export function sections(groups = NAV) {
+    return groups.map((item) => ({
         key: item.group.toLowerCase().replace(/\s+/g, '-'), label: item.group, icon: SECTION_ICON[item.group] || 'overview',
         href: path(`/${item.items[0].key}`), items: item.items,
     }));
 }
 
 /** The group a page belongs to (by its sidebar key). */
-function sectionOf(active) {
-    return sections().find((sec) => sec.items.some((i) => i.key === active)) || null;
+function sectionOf(active, groups = NAV) {
+    return sections(groups).find((sec) => sec.items.some((i) => i.key === active)) || null;
 }
 
 /** Desktop: the sidebar with every page by group; brand and server on top, account at the bottom. */
 function sideNav(active, moduleStates, theme, back, session, access) {
     return html`<nav class="side-nav" aria-label="Dashboard"><a class="side-brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span>Meowist</a>
 ${serverSwitch(session.server)}
-${NAV.map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
+${navGroups(session).map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
         const state = stateOf(item, moduleStates);
         const on = item.key === active;
-        return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}>${icon(item.key)}<span class="side-text">${item.label}</span>${state === null ? ''
+        return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}>${itemIcon(item)}<span class="side-text">${item.label}</span>${state === null ? ''
             : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
     })}</ul></div>`)}
 <div class="side-bottom">${userMenu(session, access, theme, back)}</div></nav>`;
 }
 
 /** "Moderate / Members": where the page sits (the group, then the page). */
-function crumbs(active) {
-    const sec = sectionOf(active);
+function crumbs(active, groups = NAV) {
+    const sec = sectionOf(active, groups);
     const item = sec?.items.find((i) => i.key === active);
     if (!sec || !item) return '';
     return html`<p class="crumbs"><span>${sec.label}</span><span aria-hidden="true">/</span><b>${item.label}</b></p>`;
@@ -202,11 +222,12 @@ function crumbs(active) {
 
 /** Phones: a floating tab bar (the four groups); "More" is a sheet (details, no script) with every page. */
 function tabBar(active, theme, back, session, access) {
-    const current = sectionOf(active);
-    const main = sections().slice(0, 3);
+    const groups = navGroups(session);
+    const current = sectionOf(active, groups);
+    const main = sections(groups).slice(0, 3);
     return html`<nav class="tabbar" aria-label="Sections"><a href="${path('/overview')}"${active === 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon('overview')}<span>Home</span></a>${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key && active !== 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.label === 'Server setup' ? 'Setup' : sec.label}</span></a>`)}
 <details class="more menu-wrap"><summary${current && !main.some((sec) => sec.key === current.key) ? raw(' class="on"') : ''}>${icon('menu')}<span>More</span></summary><div class="more-sheet">
-${sections().map((sec) => html`<p class="more-group">${sec.label}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${icon(item.key)}${item.label}</a>`)}`)}
+${sections(groups).map((sec) => html`<p class="more-group">${sec.label}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${itemIcon(item)}${item.label}</a>`)}`)}
 ${themePicker(theme, back, 'sheet')}<div class="more-foot"><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
 }
 
@@ -272,7 +293,7 @@ ${themePicker(theme, back, 'menu')}<form method="post" action="${path('/logout')
 export function layout({ title, active = null, session = null, access = null, moduleStates = {}, body, theme: pageTheme = 'system', refreshSeconds = 0 }) {
     const theme = themeFrom(session?.theme ?? pageTheme);
     const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
-    const top = session ? html`<header class="page-top">${crumbs(active)}<span class="spacer"></span>
+    const top = session ? html`<header class="page-top">${crumbs(active, navGroups(session))}<span class="spacer"></span>
 <a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form></header>`
         : html`<header class="page-top bare-top"><a class="brand" href="${path('/overview')}" aria-label="Meowist"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a><span class="spacer"></span></header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
