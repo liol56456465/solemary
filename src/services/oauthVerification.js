@@ -264,12 +264,25 @@ function refreshToken(refresh) {
     });
 }
 
+// One lookup/refresh per user at a time: Discord rotates the refresh token, so a second
+// refresh running alongside would get invalid_grant and delete the tokens the first one
+// just stored.
+const tokenLookups = new Map();
+
 /**
  * A usable access token for this user (refreshed and re-stored when it has expired),
  * or null when none is stored, it lacks guilds.join, or the user revoked access
  * (then the stored record is deleted).
  */
-export async function getUsableAccessToken(userId) {
+export function getUsableAccessToken(userId) {
+    const running = tokenLookups.get(userId);
+    if (running) return running;
+    const lookup = usableAccessToken(userId).finally(() => tokenLookups.delete(userId));
+    tokenLookups.set(userId, lookup);
+    return lookup;
+}
+
+async function usableAccessToken(userId) {
     const { tokenKey } = settings();
     const record = await getFromDb(`${TOKEN_KEY_PREFIX}${userId}`, null);
     if (!tokenKey || !record?.tokens || !String(record.scope || '').includes('guilds.join')) return null;
