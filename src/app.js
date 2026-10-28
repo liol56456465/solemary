@@ -33,11 +33,11 @@ import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { registerOAuthRoutes } from './services/oauthVerification.js';
 import { registerDashboard } from './services/dashboard/routes.js';
+import { registerSite } from './services/site/site.js';
 import { finalErrorHandler } from './utils/finalErrorHandler.js';
 import { isGlobalRateLimitExempt } from './services/dashboard/security.js';
 import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
-import pkg from '../package.json' with { type: 'json' };
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
 
 class Meowist extends Client {
@@ -290,15 +290,10 @@ class Meowist extends Client {
     });
 
     registerOAuthRoutes(app, this);
-    registerDashboard(app, this);
+    const dashboardEnabled = registerDashboard(app, this);
 
-    app.get('/', (req, res) => {
-      res.status(200).json({ 
-        message: 'Meowist System Online',
-        version: pkg.version,
-        timestamp: new Date().toISOString()
-      });
-    });
+    // The front website (Home, Commands, About, robots.txt) at the root, after every other route.
+    registerSite(app, this, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite });
 
     // Last: no stack traces in the browser, whatever NODE_ENV is.
     app.use(finalErrorHandler);
