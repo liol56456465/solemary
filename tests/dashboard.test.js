@@ -612,14 +612,17 @@ test('security headers: CSP without unsafe-inline, frame denial, no referrer, no
 
 // ── Design: theme switch, page shell, collapsible records sections ─────────
 
-test('theme: the cookie sets data-theme on <html> server-side; unknown values mean system', () => {
+test('theme: the cookie sets data-theme on <html> server-side; unknown values mean system (follow the device)', () => {
     assert.equal(themeFrom('dark'), 'dark');
     assert.equal(themeFrom('"><script>'), 'system');
+    assert.equal(themeFrom(undefined), 'system');
     const session = { username: 'a', csrf: 't' };
     assert.match(layout({ title: 'x', session: { ...session, theme: 'dark' }, body: html`` }), /^<!doctype html><html lang="en" data-theme="dark">/);
     assert.match(layout({ title: 'x', session: { ...session, theme: 'nope' }, body: html`` }), /^<!doctype html><html lang="en"><head>/);
+    assert.match(layout({ title: 'x', body: html`` }), /^<!doctype html><html lang="en"><head>/, 'pages without a session (login, errors) follow the device');
     // The switch is a plain link (works without JS) to the next theme, back to this page.
     const page = layout({ title: 'x', active: 'cases', session: { ...session, theme: 'light', path: '/dashboard/cases?page=2' }, body: html`` });
+    // Cycle: system → light → dark → system.
     assert.ok(page.includes('href="/dashboard/theme?mode=dark&amp;next=%2Fdashboard%2Fcases%3Fpage%3D2"'));
     assert.ok(page.includes('<symbol id="i-moon"'), 'the icon sprite is inline');
 });

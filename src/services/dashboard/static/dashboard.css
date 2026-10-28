@@ -9,6 +9,7 @@
     --bg: #f7f7f8;
     --surface: #ffffff;
     --surface-2: #f3f3f5;
+    --chrome: #ffffff;
     --fg: #0c0c0e;
     --fg-2: #55555e;
     --line: #e4e4e8;
@@ -37,52 +38,54 @@
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
         color-scheme: dark;
-        --bg: #0b0b0d;
-        --surface: #141417;
-        --surface-2: #1b1b1f;
-        --fg: #f2f2f4;
-        --fg-2: #a3a3ad;
-        --line: #26262b;
-        --line-strong: #3a3a41;
+        --bg: #0d0c12;
+        --surface: #16151d;
+        --surface-2: #1f1d28;
+        --chrome: #111017;
+        --fg: #f3f2f7;
+        --fg-2: #a9a6b8;
+        --line: #2a2834;
+        --line-strong: #3d3a4a;
         --accent: #7c3aed;
         --accent-hover: #6d28d9;
         --accent-fg: #ffffff;
-        --accent-soft: #221a35;
-        --accent-text: #b79cfb;
+        --accent-soft: #261d3d;
+        --accent-text: #b9a2fb;
         --ok: #4ade80;
-        --ok-soft: #13261a;
+        --ok-soft: #132a1c;
         --warn: #fbbf24;
-        --warn-soft: #2a2110;
+        --warn-soft: #2c2312;
         --bad: #f87171;
-        --bad-soft: #2c1515;
+        --bad-soft: #2f1719;
         --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-        --shadow-pop: 0 10px 30px rgb(0 0 0 / 0.55), 0 0 0 1px #26262b;
+        --shadow-pop: 0 10px 30px rgb(0 0 0 / 0.6), 0 0 0 1px #2a2834;
         --scrim: rgb(0 0 0 / 0.6);
     }
 }
 
 :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #0b0b0d;
-    --surface: #141417;
-    --surface-2: #1b1b1f;
-    --fg: #f2f2f4;
-    --fg-2: #a3a3ad;
-    --line: #26262b;
-    --line-strong: #3a3a41;
+    --bg: #0d0c12;
+    --surface: #16151d;
+    --surface-2: #1f1d28;
+    --chrome: #111017;
+    --fg: #f3f2f7;
+    --fg-2: #a9a6b8;
+    --line: #2a2834;
+    --line-strong: #3d3a4a;
     --accent: #7c3aed;
     --accent-hover: #6d28d9;
     --accent-fg: #ffffff;
-    --accent-soft: #221a35;
-    --accent-text: #b79cfb;
+    --accent-soft: #261d3d;
+    --accent-text: #b9a2fb;
     --ok: #4ade80;
-    --ok-soft: #13261a;
+    --ok-soft: #132a1c;
     --warn: #fbbf24;
-    --warn-soft: #2a2110;
+    --warn-soft: #2c2312;
     --bad: #f87171;
-    --bad-soft: #2c1515;
+    --bad-soft: #2f1719;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow-pop: 0 10px 30px rgb(0 0 0 / 0.55), 0 0 0 1px #26262b;
+    --shadow-pop: 0 10px 30px rgb(0 0 0 / 0.6), 0 0 0 1px #2a2834;
     --scrim: rgb(0 0 0 / 0.6);
 }
 
@@ -128,7 +131,7 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
 .topbar {
     position: sticky; top: 0; z-index: 30; height: var(--topbar);
     display: flex; align-items: center; gap: 12px; padding: 0 16px;
-    background: var(--surface); border-bottom: 1px solid var(--line);
+    background: var(--chrome); border-bottom: 1px solid var(--line);
 }
 .topbar .spacer { flex: 1; }
 .quick-find { position: relative; display: flex; align-items: center; margin-left: 12px; width: min(340px, 40vw); }
@@ -188,7 +191,7 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
 .sidebar {
     position: sticky; top: var(--topbar); width: var(--sidebar); flex: none;
     height: calc(100vh - var(--topbar)); overflow-y: auto; overscroll-behavior: contain;
-    padding: 12px 10px 24px; background: var(--surface); border-right: 1px solid var(--line);
+    padding: 12px 10px 24px; background: var(--chrome); border-right: 1px solid var(--line);
 }
 .server-card {
     display: flex; align-items: center; gap: 10px; padding: 10px; margin: 0 0 14px;
