@@ -646,7 +646,7 @@ test('every POST action with invalid input: 400, the message on the page, no wri
             const res = await post(h, module.key, action, c.bad.form);
             assert.equal(res.statusCode, 400, `${module.key}/${action} invalid → 400 (got ${res.statusCode})`);
             assert.match(res.body, c.bad.message, `${module.key}/${action} message`);
-            assert.match(res.body, /class="error" role="alert"/);
+            assert.match(res.body, /class="error( form-error)?" role="alert"/);
             const writes = h.calls.filter((call) => call.name !== 'postModLog' && !['createTag', 'addFeed', 'setSticky', 'updateBirthdaySettings', 'updateSettings', 'removeCanned', 'deleteTag', 'removeFeed', 'deletePanel',
                 // These services refuse by themselves (nothing written when they throw).
                 'publishTicketPanel', 'publishVerificationPanel', 'createGiveaway', 'deleteGiveawayNow', 'setupJoinToCreate', 'createApplicationRole', 'editTag'].includes(call.name));
@@ -1086,7 +1086,7 @@ test('switchInput: an on/off setting is a real checkbox (name=1 when on) drawn a
     const on = String(switchInput('dmOnClose', true, { label: 'DM the member' }));
     assert.match(on, /^<label class="switch-row">/);
     assert.match(on, /<input type="checkbox" class="switch-input" role="switch" name="dmOnClose" value="1" checked>/);
-    assert.match(on, /<span class="switch-track" aria-hidden="true"><\/span><\/label>$/);
+    assert.match(on, /<span class="switch-track" aria-hidden="true"><\/span><span class="switch-word" aria-hidden="true"><span class="w-on">On<\/span><span class="w-off">Off<\/span><\/span><\/span><\/label>$/, 'On/Off in words next to the switch');
     const off = String(switchInput('x', false, { label: '<b>', help: 'why' }));
     assert.ok(!off.includes(' checked'));
     assert.ok(off.includes('&lt;b&gt;') && off.includes('<span class="hint">why</span>'), 'label escaped, help shown');
@@ -1112,4 +1112,15 @@ test('Modules page: state line — On / Off, plus Needs setup from the Getting-s
     assert.match(cardOf('enforcement'), /Needs setup · 1 to do/, 'no on/off state, open setup items');
     assert.ok(!cardOf('giveaways').includes('module-state'), 'no state and no checklist items: no line');
     assert.ok(!String(modulesPage({ session: { username: 'a', csrf: 't' } })).match(/is-setup/), 'no checklist: no setup info');
+});
+
+test('a refused form shows its error inside that form and marks the field', async () => {
+    const { placeFormError } = await import('../src/services/dashboard/pages.js');
+    const { html } = await import('../src/services/dashboard/html.js');
+    const body = html`<form method="post" action="/dashboard/tickets/settings" class="settings-form"><label>Max<input name="maxTicketsPerUser" value="99"></label></form><form method="post" action="/dashboard/tickets/other"></form>`;
+    const out = String(placeFormError(body, { moduleKey: 'tickets', action: 'settings', field: 'maxTicketsPerUser', message: 'Max must be between 1 and 10 <b>' }));
+    assert.ok(out.startsWith('<form method="post" action="/dashboard/tickets/settings" class="settings-form"><p class="error form-error" role="alert" id="form-error">Not saved: Max must be between 1 and 10 &lt;b&gt;</p>'));
+    assert.ok(out.includes('name="maxTicketsPerUser" aria-invalid="true" aria-describedby="form-error"'));
+    assert.equal(placeFormError(body, { moduleKey: 'tickets', action: 'nope', message: 'x' }), null, 'form not on the page: the caller shows it at the top');
+    assert.equal(placeFormError(body, { moduleKey: 'tickets', action: '', message: 'x' }), null);
 });

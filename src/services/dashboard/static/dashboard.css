@@ -447,6 +447,10 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 
 /* "On this page" links on long settings pages. */
 .section-links { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 16px; }
+@media (min-width: 1024px) {
+    /* Desktop: the jump links stay in view while scrolling. */
+    .section-links { position: sticky; top: var(--topbar); z-index: 5; padding: 8px 0; background: var(--bg); }
+}
 .section-links-label { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-2); margin-right: 4px; }
 .section-links a {
     display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border-radius: 999px;
@@ -573,13 +577,18 @@ fieldset.events > label.check:first-child { flex-basis: 100%; font-weight: 600; 
 .settings-form { margin: 4px 0 12px; }
 .settings-form:last-child { margin-bottom: 0; }
 .form-actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+/* Settings forms read best narrow: the field grid stops at 720 px (tables keep the full width). */
+.settings-form .grid { max-width: 720px; }
 /* A settings form that ends its section: the Save row becomes the section footer strip. */
 .section-body > .settings-form:last-child .form-actions {
     margin: 16px -18px -18px; padding: 12px 18px; border-top: 1px solid var(--line);
     background: var(--surface-2); border-radius: 0 0 var(--radius) var(--radius);
 }
 .settings-form > fieldset > button[type="submit"] { margin-top: 14px; }
-form.is-dirty .form-actions::before { content: "Unsaved changes"; margin-right: auto; font-size: 12px; color: var(--warn); }
+form.is-dirty .form-actions::before { content: "Unsaved changes"; margin-right: auto; font-size: 12px; font-weight: 500; color: var(--warn); }
+/* A section with unsaved edits says so in its title (the script sets .is-changed). */
+details.section.is-changed > summary h2::after { content: "Unsaved changes"; font-size: 12px; font-weight: 500; color: var(--warn); }
+.form-error { margin: 0 0 16px; }
 .inline-form { display: inline-block; margin: 0; vertical-align: bottom; }
 .inline-form fieldset { display: flex; gap: 6px; align-items: flex-end; flex-wrap: wrap; }
 .inline-form .form-actions { margin: 0; padding: 0; border: 0; }
@@ -616,7 +625,8 @@ button.danger:hover, button.danger.is-filled { background: var(--red); border-co
 button.copy { height: 24px; padding: 0 8px; margin-left: 8px; font-size: 12px; vertical-align: middle; }
 
 /* On/off: a switch (a real submit button; the pill next to it says on/off in words). */
-.toggle-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 0; margin: 0; }
+.toggle-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 720px; padding: 10px 0; margin: 0; }
+.toggle-label .hint { display: block; }
 .toggle-row + .toggle-row { border-top: 1px solid var(--line); }
 .toggle-label { flex: 1; min-width: 200px; font-weight: 500; }
 .toggle-row fieldset { display: contents; }
@@ -645,6 +655,11 @@ label.switch-row + label.switch-row { border-top: 0; }
 .switch-input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
 .switch-input:focus-visible + .switch-track { outline: 2px solid var(--accent); outline-offset: 2px; }
 .switch-input:disabled + .switch-track { opacity: 0.5; cursor: not-allowed; }
+/* The state in words next to every switch (never colour alone). */
+.switch-control { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+.switch-word { min-width: 2em; font-size: 14px; font-weight: 500; color: var(--text-muted); }
+.switch-word.is-on, .switch-input:checked ~ .switch-word { color: var(--green); }
+.switch-input:checked ~ .switch-word .w-off, .switch-input:not(:checked) ~ .switch-word .w-on { display: none; }
 
 /* ── Records pages ────────────────────────────────────────────────────── */
 .profile { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }

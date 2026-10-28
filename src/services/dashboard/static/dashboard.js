@@ -153,13 +153,25 @@
     });
 
     // ── Unsaved changes ──────────────────────────────────────────────────
+    // The form and its section are marked ("Unsaved changes"); Reset puts the loaded
+    // values back and clears the mark; leaving the page asks first.
     const dirty = new Set();
+    const markSection = (form, on) => form.closest('details.section')?.classList.toggle('is-changed', on);
     document.addEventListener('input', (event) => {
         const form = event.target.closest?.('form[data-dirty]');
         if (form && !event.target.classList.contains('select-filter')) {
             dirty.add(form);
             form.classList.add('is-dirty');
+            markSection(form, true);
         }
+    });
+    document.addEventListener('reset', (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || !dirty.has(form)) return;
+        dirty.delete(form);
+        form.classList.remove('is-dirty');
+        markSection(form, false);
+        document.dispatchEvent(new CustomEvent('meowist:clean', { detail: form }));
     });
     window.addEventListener('beforeunload', (event) => {
         const pending = [...dirty].some((form) => document.contains(form) && !form.dataset.submitting);
@@ -388,10 +400,9 @@
             if (form && !event.target.classList.contains('select-filter')) show(form);
         });
         discard.addEventListener('click', () => {
-            if (!current) return;
-            current.reset();
-            current.classList.remove('is-dirty');
-            dirty.delete(current);
+            if (current) current.reset(); // the reset listener clears the marks
+        });
+        document.addEventListener('meowist:clean', () => {
             const next = [...dirty].find((form) => document.contains(form));
             if (next) show(next); else hide();
         });
@@ -434,6 +445,15 @@
         });
     }
 
+    // ── A refused form: open its section and bring the error into view ───
+    function showFormError() {
+        const error = document.getElementById('form-error');
+        if (!error) return;
+        const details = error.closest('details');
+        if (details) details.open = true;
+        error.scrollIntoView({ block: 'center' });
+    }
+
     // ── "On this page" links open their section ──────────────────────────
     function openSectionFromHash() {
         const id = decodeURIComponent(window.location.hash.slice(1));
@@ -466,6 +486,7 @@
         document.querySelectorAll('select[data-search]').forEach(enhanceSelect);
         document.querySelectorAll('[data-copy]').forEach(addCopyButton);
         document.querySelectorAll('details[data-key]').forEach(rememberDetails);
+        showFormError();
         updateTimes();
         window.setInterval(updateTimes, 60 * 1000);
         setupDrawer();

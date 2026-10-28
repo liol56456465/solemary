@@ -15,11 +15,13 @@ import { html, path, raw } from './html.js';
 const SNOWFLAKE = /^\d{17,20}$/;
 
 export class InputError extends Error {
-    constructor(message, status = 400) {
+    /** `field`: the form field it is about (its name), so the page can mark that field. */
+    constructor(message, status = 400, field = null) {
         super(message);
         this.name = 'InputError';
         this.userMessage = message;
         this.status = status;
+        this.field = field;
     }
 }
 
@@ -71,23 +73,23 @@ export function boolField(form, name, label = name) {
     const value = text(form, name, 10);
     if (value === 'true' || value === 'on') return true;
     if (value === 'false' || value === 'off') return false;
-    throw new InputError(`${label}: choose on or off.`);
+    throw new InputError(`${label}: choose on or off.`, 400, name);
 }
 
 /** A whole number in [min, max]; '' → fallback (or an error when no fallback). */
 export function intField(form, name, { min, max, label = name, fallback = undefined } = {}) {
     const raw = text(form, name, 20);
     if (raw === '' && fallback !== undefined) return fallback;
-    if (!/^-?\d+$/.test(raw)) throw new InputError(`${label} must be a whole number.`);
+    if (!/^-?\d+$/.test(raw)) throw new InputError(`${label} must be a whole number.`, 400, name);
     const value = Number(raw);
-    if (value < min || value > max) throw new InputError(`${label} must be between ${min} and ${max}.`);
+    if (value < min || value > max) throw new InputError(`${label} must be between ${min} and ${max}.`, 400, name);
     return value;
 }
 
 /** One of `choices`; else an InputError. */
 export function choiceField(form, name, choices, label = name) {
     const value = text(form, name, 100);
-    if (!choices.includes(value)) throw new InputError(`${label}: unknown choice.`);
+    if (!choices.includes(value)) throw new InputError(`${label}: unknown choice.`, 400, name);
     return value;
 }
 
@@ -116,13 +118,13 @@ export function channelField(guild, form, name, { kinds = ['text'], optional = t
     const raw = text(form, name, 25);
     if (raw === '' || raw === 'none') {
         if (optional) return null;
-        throw new InputError(`${label}: pick a channel.`);
+        throw new InputError(`${label}: pick a channel.`, 400, name);
     }
-    if (!isSnowflake(raw)) throw new InputError(`${label}: not a channel ID.`);
+    if (!isSnowflake(raw)) throw new InputError(`${label}: not a channel ID.`, 400, name);
     const channel = guild?.channels?.cache?.get(raw);
-    if (!channel) throw new InputError(`${label}: that channel is not in the server.`);
+    if (!channel) throw new InputError(`${label}: that channel is not in the server.`, 400, name);
     if (!typesFor(kinds).includes(channel.type)) {
-        throw new InputError(`${label}: must be a ${kinds.map((k) => KIND_LABEL[k] || k).join(' or ')}.`);
+        throw new InputError(`${label}: must be a ${kinds.map((k) => KIND_LABEL[k] || k).join(' or ')}.`, 400, name);
     }
     return raw;
 }
@@ -132,13 +134,13 @@ export function roleField(guild, form, name, { optional = true, label = name, al
     const raw = text(form, name, 25);
     if (raw === '' || raw === 'none') {
         if (optional) return null;
-        throw new InputError(`${label}: pick a role.`);
+        throw new InputError(`${label}: pick a role.`, 400, name);
     }
-    if (!isSnowflake(raw)) throw new InputError(`${label}: not a role ID.`);
+    if (!isSnowflake(raw)) throw new InputError(`${label}: not a role ID.`, 400, name);
     const role = guild?.roles?.cache?.get(raw);
-    if (!role) throw new InputError(`${label}: that role is not in the server.`);
-    if (role.id === guild.id) throw new InputError(`${label}: @everyone cannot be used.`);
-    if (role.managed && !allowManaged) throw new InputError(`${label}: ${role.name} is managed by an integration or bot.`);
+    if (!role) throw new InputError(`${label}: that role is not in the server.`, 400, name);
+    if (role.id === guild.id) throw new InputError(`${label}: @everyone cannot be used.`, 400, name);
+    if (role.managed && !allowManaged) throw new InputError(`${label}: ${role.name} is managed by an integration or bot.`, 400, name);
     return raw;
 }
 
@@ -147,14 +149,14 @@ export function autoRoleField(guild, form, name, { optional = true, label = name
     const id = roleField(guild, form, name, { optional, label, allowManaged: true });
     if (!id) return null;
     const problem = getRoleAssignmentProblem(guild.roles.cache.get(id), guild.members?.me);
-    if (problem) throw new InputError(`${label}: ${plainText(problem)}`);
+    if (problem) throw new InputError(`${label}: ${plainText(problem)}`, 400, name);
     return id;
 }
 
 /** A Discord user id typed in a form. */
 export function userIdField(form, name, label = name) {
     const raw = text(form, name, 25);
-    if (!isSnowflake(raw)) throw new InputError(`${label} must be a Discord user ID (17–20 digits).`);
+    if (!isSnowflake(raw)) throw new InputError(`${label} must be a Discord user ID (17–20 digits).`, 400, name);
     return raw;
 }
 
@@ -296,7 +298,7 @@ export function textArea(name, value, { label, max = 2000, rows = 4, help = '' }
  * lists of choices stay checkboxes.
  */
 export function switchInput(name, checked, { label, help = '' } = {}) {
-    return html`<label class="switch-row"><span class="switch-label">${label}${help ? html`<span class="hint">${help}</span>` : ''}</span><input type="checkbox" class="switch-input" role="switch" name="${name}" value="1"${checked ? raw(' checked') : ''}><span class="switch-track" aria-hidden="true"></span></label>`;
+    return html`<label class="switch-row"><span class="switch-label">${label}${help ? html`<span class="hint">${help}</span>` : ''}</span><span class="switch-control"><input type="checkbox" class="switch-input" role="switch" name="${name}" value="1"${checked ? raw(' checked') : ''}><span class="switch-track" aria-hidden="true"></span><span class="switch-word" aria-hidden="true"><span class="w-on">On</span><span class="w-off">Off</span></span></span></label>`;
 }
 
 export function checkboxInput(name, checked, { label, help = '' } = {}) {
@@ -316,16 +318,18 @@ export function selectInput(name, value, choices, { label, help = '' } = {}) {
  * options: { submit, hidden: {name: value}, danger, inline, canEdit, className }
  */
 export function postForm(ctx, module, action, fields, {
-    submit = 'Save', hidden = {}, danger = false, inline = false, canEdit = ctx.canEdit, className = '', confirm = '', secondary = false,
+    submit = 'Save changes', hidden = {}, danger = false, inline = false, canEdit = ctx.canEdit, className = '', confirm = '', secondary = false,
 } = {}) {
     const classes = [inline ? 'inline-form' : 'settings-form', className].filter(Boolean).join(' ');
     // data-confirm: the static script asks before submitting (destructive actions).
     // data-dirty: it warns before leaving the page with unsaved changes.
     const attrs = html`${confirm ? html` data-confirm="${confirm}"` : ''}${inline ? '' : raw(' data-dirty')}`;
     const buttonClass = danger ? 'danger' : secondary ? 'secondary' : 'primary';
+    // Settings forms (a "Save…" button) also get Reset: it puts back what was loaded (no request).
+    const reset = !inline && !danger && /^save/i.test(String(submit));
     return html`<form method="post" action="${path(`/${module}/${action}`)}" class="${classes}"${attrs}><input type="hidden" name="csrf" value="${ctx.csrf}">
 ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}
-<fieldset${canEdit ? '' : raw(' disabled')}>${fields}${canEdit ? html`<div class="form-actions"><button type="submit" class="${buttonClass}">${submit}</button></div>` : ''}</fieldset></form>`;
+<fieldset${canEdit ? '' : raw(' disabled')}>${fields}${canEdit ? html`<div class="form-actions">${reset ? html`<button type="reset" class="secondary">Reset</button>` : ''}<button type="submit" class="${buttonClass}">${submit}</button></div>` : ''}</fieldset></form>`;
 }
 
 /**
@@ -337,8 +341,8 @@ export function toggleForm(ctx, module, action, enabled, { label = 'Module', can
     const confirm = enabled && confirmOff ? html` data-confirm="${confirmOff}"` : '';
     return html`<form method="post" action="${path(`/${module}/${action}`)}" class="toggle-row" data-toggle${confirm}><input type="hidden" name="csrf" value="${ctx.csrf}">
 ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}<input type="hidden" name="enabled" value="${enabled ? 'false' : 'true'}">
-<span class="toggle-label">${label}</span>${pill(enabled)}
-<fieldset${canEdit ? '' : raw(' disabled')}>${canEdit ? html`<button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${label}: turn ${enabled ? 'off' : 'on'}"><span class="switch-text">${enabled ? 'Turn off' : 'Turn on'}</span></button>` : ''}</fieldset></form>`;
+<span class="toggle-label">${label}${canEdit ? html`<span class="hint">Saves right away.</span>` : ''}</span>
+<fieldset${canEdit ? '' : raw(' disabled')}>${canEdit ? html`<button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${label}: turn ${enabled ? 'off' : 'on'}"><span class="switch-text">${enabled ? 'Turn off' : 'Turn on'}</span></button>` : ''}</fieldset><span class="switch-word${enabled ? ' is-on' : ''}"${canEdit ? raw(' aria-hidden="true"') : ''}>${enabled ? 'On' : 'Off'}</span></form>`;
 }
 
 /**
@@ -350,7 +354,7 @@ export function moduleSwitch({ csrf, canEdit, module, action, enabled, label, ba
     if (!canEdit) return pill(enabled);
     return html`<form method="post" action="${path(`/${module}/${action}`)}" class="switch-form"><input type="hidden" name="csrf" value="${csrf}">
 ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}<input type="hidden" name="enabled" value="${enabled ? 'false' : 'true'}">${back ? html`<input type="hidden" name="back" value="${back}">` : ''}
-<span class="switch-state" aria-hidden="true">${enabled ? 'On' : 'Off'}</span><button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${label}: turn ${enabled ? 'off' : 'on'}"><span class="switch-text">${enabled ? 'Turn off' : 'Turn on'}</span></button></form>`;
+<button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${label}: turn ${enabled ? 'off' : 'on'}"><span class="switch-text">${enabled ? 'Turn off' : 'Turn on'}</span></button><span class="switch-word${enabled ? ' is-on' : ''}" aria-hidden="true">${enabled ? 'On' : 'Off'}</span></form>`;
 }
 
 /** A status pill: green "on", grey "off" (or custom text / tone: on, off, warn, bad). */

@@ -4,7 +4,7 @@
 import { formatDuration } from '../enforcement/format.js';
 import { SEARCH_STATUSES, SEARCH_TYPES } from '../enforcement/caseSearchService.js';
 import { STATS_PERIODS } from '../staffActivityService.js';
-import { formatAge, formatDate, html, icon, layout, navItems, queryString, raw, section, timeTag } from './html.js';
+import { escapeHtml, formatAge, formatDate, html, icon, layout, navItems, path, queryString, raw, section, timeTag } from './html.js';
 import { moduleSwitch } from './forms.js';
 
 const IMAGE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
@@ -228,10 +228,38 @@ function sectionLinks(body) {
 }
 
 /**
- * The frame of a module page: title, help line, read-only / Administrator notices, the
- * flash message after a save, the error of a refused form, then the module's body.
+ * The error of a refused form, inside that form (its section), linked to the field it is
+ * about (aria-invalid + aria-describedby). `action` only selects the form; nothing from it
+ * is written into the page. null when the form is not on the page (the caller then shows
+ * the error at the top).
  */
-export function moduleSettingsPage({ session, access = null, moduleStates = {}, module, body, flash = null, error = null, warnings = [], editEnabled = false }) {
+export function placeFormError(body, { moduleKey, action, field, message }) {
+    const text = String(body);
+    const marker = `action="${path(`/${moduleKey}/${action}`)}"`;
+    const at = action ? text.indexOf(marker) : -1;
+    if (at === -1) return null;
+    const open = text.indexOf('>', at) + 1;
+    const close = text.indexOf('</form>', open);
+    let form = text.slice(open, close === -1 ? text.length : close);
+    if (field) {
+        const name = `name="${escapeHtml(field)}"`;
+        if (form.includes(name)) form = form.replace(name, `${name} aria-invalid="true" aria-describedby="form-error"`);
+    }
+    const note = html`<p class="error form-error" role="alert" id="form-error">Not saved: ${message}</p>`;
+    return raw(`${text.slice(0, open)}${note}${form}${close === -1 ? '' : text.slice(close)}`);
+}
+
+/**
+ * The frame of a module page: title, help line, read-only / Administrator notices, the
+ * flash message after a save, the error of a refused form (inside that form when it can
+ * be found, else at the top), then the module's body.
+ */
+export function moduleSettingsPage({ session, access = null, moduleStates = {}, module, body, flash = null, error = null, errorAction = null, errorField = null, warnings = [], editEnabled = false }) {
+    const placed = error ? placeFormError(body, { moduleKey: module.key, action: errorAction, field: errorField, message: error }) : null;
+    if (placed) {
+        body = placed;
+        error = null;
+    }
     const notices = html`${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true). Use the bot's commands, or ask the owner to turn it on.</p>` : ''}
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}

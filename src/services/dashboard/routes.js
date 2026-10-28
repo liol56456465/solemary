@@ -538,7 +538,7 @@ export function createDashboard({
         };
     }
 
-    async function renderModule(req, res, module, status = 200, { error = null, warnings = [] } = {}) {
+    async function renderModule(req, res, module, status = 200, { error = null, errorAction = null, errorField = null, warnings = [] } = {}) {
         const ctx = contextFor(req);
         const data = await module.load(ctx);
         // The module's own commands with their switches (not on the Commands page itself).
@@ -553,7 +553,7 @@ export function createDashboard({
         }
         return sendHtml(res, status, moduleSettingsPage({
             ...shellOf(req), module, body: html`${module.render(ctx, data)}${commandsSection}`,
-            flash: req.dashboard.flash, error, warnings, editEnabled: settings.editEnabled,
+            flash: req.dashboard.flash, error, errorAction, errorField, warnings, editEnabled: settings.editEnabled,
         }));
     }
 
@@ -599,7 +599,9 @@ export function createDashboard({
             if (isInputError(error)) {
                 const message = plainText(error.userMessage || error.message);
                 logger.info(`Dashboard ${module.key}/${req.params.action} refused for ${session.userId}: ${message}`);
-                return renderModule(req, res, module, error.status === 403 ? 403 : 400, { error: message });
+                return renderModule(req, res, module, error.status === 403 ? 403 : 400, {
+                    error: message, errorAction: str(req.params?.action, 40), errorField: typeof error.field === 'string' ? error.field : null,
+                });
             }
             throw error;
         }
