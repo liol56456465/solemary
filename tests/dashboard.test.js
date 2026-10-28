@@ -392,7 +392,7 @@ test('protected pages: redirect without a session, 403 once access is lost, 429 
     const { cookie } = await login(d);
     const ok = await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });
     assert.equal(ok.statusCode, 200);
-    assert.match(ok.body, /No cases match/);
+    assert.match(ok.body, /<p class="empty">No cases yet\./, 'no filters: the plain empty state');
 
     for (let i = 0; i < 5; i += 1) await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });
     const limited = await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });

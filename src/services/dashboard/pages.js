@@ -77,7 +77,8 @@ ${page > 0 ? html`<a href="/dashboard/cases${queryString({ ...keep, page: page -
 <span class="muted">Page ${page + 1} of ${pages} · ${total} case${total === 1 ? '' : 's'}</span>
 ${page + 1 < pages ? html`<a href="/dashboard/cases${queryString({ ...keep, page: page + 1 })}">Older →</a>` : ''}
 </div>`;
-    const body = html`<h1>Cases</h1>
+    const filtered = Object.values(keep).some(Boolean);
+    const body = html`<header class="page-head"><h1>Cases</h1><p class="muted">Every enforcement action, newest first. Filter by member, moderator, type, status or date.</p></header>
 <form class="filters" method="get" action="/dashboard/cases">
 <label>Member ID<input name="member" value="${query.member || ''}" inputmode="numeric" maxlength="20"></label>
 <label>Moderator ID<input name="moderator" value="${query.moderator || ''}" inputmode="numeric" maxlength="20"></label>
@@ -96,7 +97,9 @@ ${rows.map((row) => {
 <td>${row.target_username} <span class="muted">${row.target_user_id}</span></td><td>${row.moderator_username}</td>
 <td>${row.reason}</td><td>${timeTag(row.created_at)}</td><td class="${statusClass(label)}">${label}</td></tr>`;
     })}
-</tbody></table></div>${pager}` : html`<p class="muted">No cases match.</p>`}`;
+</tbody></table></div>${pager}` : filtered
+        ? html`<p class="empty">No cases match these filters. <a href="/dashboard/cases">Clear filters</a></p>`
+        : html`<p class="empty">No cases yet. They show up here after the first warn, mute, kick or ban.</p>`}`;
     return layout({ title: 'Cases', active: 'cases', session, access, moduleStates, body });
 }
 
@@ -202,8 +205,7 @@ ${page > 0 ? html`<a href="/dashboard/audit${queryString({ ...keep, page: page -
 ${page + 1 < pages ? html`<a href="/dashboard/audit${queryString({ ...keep, page: page + 1 })}">Older →</a>` : ''}
 </div>`;
     const moduleLabel = (key) => navItems().find((i) => i.key === key)?.label || modules.find((m) => m.key === key)?.label || key;
-    const body = html`<h1>Audit log</h1>
-<p class="muted">Every change made from the dashboard: who, when, old value → new value. Each saved form is also posted to the mod log.</p>
+    const body = html`<header class="page-head"><h1>Audit log</h1><p class="muted">Every change made from the dashboard: who, when, old value → new value. Each saved form is also posted to the mod log.</p></header>
 <form class="filters" method="get" action="/dashboard/audit">
 <label>Who<select name="user">${option('', 'anyone', !filters.user)}${users.map((u) => option(u.user_id, `${u.username || u.user_id} (${u.user_id})`, filters.user === u.user_id))}</select></label>
 <label>Module<select name="module">${option('', 'any', !filters.module)}${modules.map((m) => option(m.key, m.label, filters.module === m.key))}</select></label>
@@ -211,7 +213,9 @@ ${page + 1 < pages ? html`<a href="/dashboard/audit${queryString({ ...keep, page
 </form>
 ${rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Module</th><th>Setting</th><th>Old</th><th>New</th></tr></thead><tbody>
 ${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${moduleLabel(r.module)}</td><td><code>${r.key}</code></td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
-</tbody></table></div>${pager}` : html`<p class="muted">No changes${filters.user || filters.module ? ' match' : ' yet'}.</p>`}`;
+</tbody></table></div>${pager}` : filters.user || filters.module
+        ? html`<p class="empty">No changes match these filters. <a href="/dashboard/audit">Clear filters</a></p>`
+        : html`<p class="empty">No changes yet. Every save from the dashboard is listed here.</p>`}`;
     return layout({ title: 'Audit log', active: 'audit', session, access, moduleStates, body });
 }
 

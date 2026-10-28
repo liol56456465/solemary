@@ -667,7 +667,11 @@ function safe(handler) {
         } catch (error) {
             logger.error(`Dashboard ${req.method} ${req.path} failed: ${error.message}`);
             if (res.headersSent) return undefined;
-            return res.status(500).type('html').send(messagePage('Something went wrong', 'The page could not be loaded. Try again in a moment.'));
+            // After a form, say what matters: the change may not be saved (never a silent failure).
+            const message = req.method === 'POST'
+                ? 'Your change may not have been saved. Reload the page to check, then try again.'
+                : 'The page could not be loaded. Try again in a moment.';
+            return res.status(500).type('html').send(messagePage('Something went wrong', message));
         }
     };
 }

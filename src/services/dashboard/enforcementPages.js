@@ -52,7 +52,7 @@ function option(value, label, selected = false) {
 
 /** input: { q, results: [{ id, username, globalName, nickname, bot }], error }. */
 export function userSearchPage({ session, access = null, moduleStates = {}, q = '', results = null, error = null }) {
-    const body = html`<h1>Members</h1>
+    const body = html`<header class="page-head"><h1>Members</h1></header>
 <p class="muted help">Look up a member by user ID, or by the start of their username, display name or nickname (members of the main server). An ID also finds people who are not in the server.</p>
 <form class="filters" method="get" action="${path('/users')}">
 <label>User ID or name<input name="q" value="${q}" maxlength="40" autocomplete="off"></label>
@@ -60,7 +60,7 @@ export function userSearchPage({ session, access = null, moduleStates = {}, q = 
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
 ${results === null ? '' : results.length ? html`<div class="scroll"><table><thead><tr><th>User</th><th>Display name</th><th>Nickname</th><th>ID</th></tr></thead><tbody>
 ${results.map((r) => html`<tr><td><a href="${userHref(r.id)}">${r.username}</a>${r.bot ? html` <span class="tag">bot</span>` : ''}</td><td>${r.globalName || '—'}</td><td>${r.nickname || '—'}</td><td class="muted">${r.id}</td></tr>`)}
-</tbody></table></div>${results.length >= 25 ? html`<p class="muted">Showing the first 25; type more of the name.</p>` : ''}` : html`<p class="muted">No member matches.</p>`}`;
+</tbody></table></div>${results.length >= 25 ? html`<p class="muted">Showing the first 25; type more of the name.</p>` : ''}` : html`<p class="empty">No member matches. Try the user ID, or the first letters of their name.</p>`}`;
     return layout({ title: 'Members', active: 'users', session, access, moduleStates, body });
 }
 
@@ -123,7 +123,7 @@ function notesSection(view, canWrite, csrf) {
     return html`${notes.length ? html`<div class="scroll"><table><thead><tr><th>#</th><th>Note</th><th>By</th><th>When</th><th></th></tr></thead><tbody>
 ${notes.map((note, i) => html`<tr><td>${i + 1}</td><td class="value">${note.content}</td><td>${note.author || 'unknown'}</td><td>${note.timestamp ? formatDate(note.timestamp) : '—'}</td>
 <td>${canWrite ? actionForm(csrf, `/users/${id}/notes/remove`, '', { submit: 'Remove', hidden: { note: String(note.id ?? '') }, inline: true, danger: true }) : ''}</td></tr>`)}
-</tbody></table></div>` : html`<p class="muted">No staff notes.</p>`}
+</tbody></table></div>` : html`<p class="empty">No staff notes yet. Add one below; only staff can see them.</p>`}
 ${canWrite ? actionForm(csrf, `/users/${id}/notes/add`, html`<label class="wide">New note (only staff can see it)<textarea name="note" maxlength="${NOTE_MAX}" rows="2" required></textarea></label>`, { submit: 'Add note' }) : ''}`;
 }
 
