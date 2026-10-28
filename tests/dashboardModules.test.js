@@ -142,6 +142,13 @@ function makeServices() {
         stickies: [{ channelId: TEXT, content: 'Read the rules' }],
         tags: [{ name: 'rules', content: 'Be nice', triggerKind: 'none', trigger: null }],
         feeds: [{ id: 1, sourceId: 'UCabcdefghijklmnopqrstuv', channelId: TEXT, template: null }],
+        scheduled: [
+            { id: 1, guildId: GUILD, channelId: TEXT, payload: { content: 'Daily <b>reminder</b>', embed: null }, schedule: { kind: 'weekly', time: '09:00', days: [1, 3, 5] },
+                timezone: 'Europe/Vilnius', nextRunAt: Date.now() + 3600000, lastRunAt: Date.now() - 86400000, lastError: null, failureCount: 0, paused: false, createdBy: ADMIN },
+            { id: 2, guildId: GUILD, channelId: TEXT2, payload: { content: '', embed: { title: 'News', description: '', imageUrl: '', footer: '', colour: 0x9b59b6 } },
+                schedule: { kind: 'interval', date: '2026-01-01', time: '08:00', hours: 6 }, timezone: 'UTC', nextRunAt: Date.now() + 7200000, lastRunAt: Date.now() - 60000,
+                lastError: 'I am missing Send Messages in #x. Nothing was posted.', failureCount: 3, paused: true, createdBy: ADMIN },
+        ],
         appRoles: [{ roleId: ROLE_OK, name: 'Helper <b>', enabled: true, questions: ['Why?', { question: 'Age?', minLength: 2 }], logChannelId: null }],
         submitted: [
             { id: '1700000000000-abc', userId: MEMBER, username: 'member<b>', roleId: ROLE_OK, roleName: 'Helper <b>', status: 'pending', createdAt: '2026-10-01T10:00:00.000Z', answers: [{ question: 'Why?', answer: 'I like <i>cats</i>' }] },
@@ -348,6 +355,38 @@ function makeServices() {
         createPoll: async (guild, { channel, question, options, anonymous }) => {
             record('createPoll', [channel.id, question, options, anonymous]);
             return { message: { id: '710000000000000012' }, reacted: s.pollReactions ?? options.length };
+        },
+        listScheduledMessages: async () => clone(s.scheduled),
+        createScheduledMessage: async (input) => {
+            record('createScheduledMessage', [input]);
+            const row = { id: 3, ...clone(input), nextRunAt: Date.now() + 3600000, lastRunAt: null, lastError: null, failureCount: 0, paused: false };
+            s.scheduled.push(row);
+            return clone(row);
+        },
+        updateScheduledMessage: async (g, id, patch) => {
+            record('updateScheduledMessage', [id, patch]);
+            const row = s.scheduled.find((m) => m.id === id);
+            const before = clone(row);
+            Object.assign(row, clone(patch), { failureCount: 0, lastError: null });
+            return { before, after: clone(row) };
+        },
+        setScheduledMessagePaused: async (g, id, paused) => {
+            record('setScheduledMessagePaused', [id, paused]);
+            const row = s.scheduled.find((m) => m.id === id);
+            const before = clone(row);
+            row.paused = paused;
+            return { before, after: clone(row) };
+        },
+        runScheduledMessageNow: async (guild, id) => {
+            record('runScheduledMessageNow', [id]);
+            const row = s.scheduled.find((m) => m.id === id);
+            return { row: clone(row), message: { id: '710000000000000014' }, channel: guild.channels.cache.get(row.channelId) };
+        },
+        deleteScheduledMessage: async (g, id) => {
+            record('deleteScheduledMessage', [id]);
+            const row = s.scheduled.find((m) => m.id === id);
+            s.scheduled = s.scheduled.filter((m) => m.id !== id);
+            return row ? clone(row) : null;
         },
         startCountdownMessage: async (guild, { channel, totalSeconds, title }) => {
             record('startCountdownMessage', [channel.id, totalSeconds, title]);
@@ -632,6 +671,18 @@ const CASES = {
             bad: { form: { channelId: TEXT, question: 'Pizza?', options: 'Only one' }, message: /at least 2 options/ } },
         countdown: { form: { channelId: TEXT, title: 'Launch', minutes: '2', seconds: '30' }, service: 'startCountdownMessage', admin: true,
             bad: { form: { channelId: TEXT, minutes: '0', seconds: '0' }, message: /at least 1 second/ } },
+        schedule: { form: { channelId: TEXT, content: 'Weekly @everyone', title: '', description: '', colour: 'primary', repeat: 'weekdays', time: '18:30', day1: '1', day5: '1', timezone: 'europe/vilnius' },
+            service: 'createScheduledMessage', admin: true,
+            bad: { form: { channelId: TEXT, content: 'x', repeat: 'once', date: '2020-01-01', time: '10:00', timezone: 'UTC' }, message: /already passed/ } },
+        'schedule-edit': { form: { id: '1', channelId: TEXT2, content: 'Changed', colour: 'primary', repeat: 'hours', date: '2026-01-01', time: '07:00', hours: '12', timezone: 'UTC' },
+            service: 'updateScheduledMessage', admin: true,
+            bad: { form: { id: '1', channelId: TEXT, content: 'x', repeat: 'weekdays', time: '10:00', timezone: 'UTC' }, message: /at least one weekday/ } },
+        'schedule-pause': { form: { id: '1', paused: 'true' }, service: 'setScheduledMessagePaused', admin: true,
+            bad: { form: { id: '9', paused: 'true' }, message: /no scheduled message #9/ } },
+        'schedule-run': { form: { id: '1' }, service: 'runScheduledMessageNow', admin: true,
+            bad: { form: { id: 'x' }, message: /whole number/ } },
+        'schedule-delete': { form: { id: '2' }, service: 'deleteScheduledMessage', admin: true,
+            bad: { form: { id: '9' }, message: /no scheduled message #9/ } },
     },
     giveaways: {
         create: { form: { channelId: TEXT, prize: 'Nitro <b>', duration: '2h', winners: '2' }, service: 'createGiveaway', admin: true,
@@ -1410,7 +1461,8 @@ test('messages: every action is Administrator-only; the page has the three forms
     assert.match(page.body, /never ping/);
     const owner = await setup({ userId: OWNER });
     const ownerPage = await get(owner, 'messages');
-    assert.equal((ownerPage.body.match(/<fieldset disabled>/g) || []).length, 3, 'owner: all three forms disabled');
+    assert.ok(!/<fieldset>/.test(ownerPage.body.replace(/<fieldset class="weekdays">/g, '')), 'owner: every form disabled');
+    assert.ok((ownerPage.body.match(/<fieldset disabled>/g) || []).length >= 4, 'owner: send, schedule, poll and countdown forms disabled');
     assert.match(ownerPage.body, /Posting needs Administrator/);
 });
 
@@ -1445,6 +1497,81 @@ test('messages/send: text, embed and colour reach the service; hex colour wins; 
         assert.match(res.body, message);
         assert.ok(!r.calls.some((c) => c.name === 'postBotMessage'), 'nothing posted');
     }
+});
+
+test('messages/scheduled: the list shows channel, next run in its zone, repeat, last result and the right buttons; text is escaped', async () => {
+    const h = await setup();
+    h.state.config.birthdayTimezone = 'Europe/Vilnius';
+    const page = await get(h, 'messages');
+    assert.equal(page.statusCode, 200);
+    assert.ok(page.body.includes('action="/dashboard/messages/schedule"'), 'schedule form');
+    assert.match(page.body, /2 of 50 scheduled messages/);
+    assert.ok(page.body.includes('Daily &lt;b&gt;reminder&lt;/b&gt;'), 'message text escaped');
+    assert.ok(!page.body.includes('<b>reminder'), 'never raw');
+    assert.match(page.body, /Mon, Wed, Fri at 09:00/);
+    assert.match(page.body, /Every 6 hours from 2026-01-01 08:00/);
+    assert.match(page.body, /<span class="muted">Europe\/Vilnius<\/span>/, 'next run in the message\'s own zone');
+    assert.match(page.body, /missing Send Messages[\s\S]*3 of 3 failures/);
+    assert.match(page.body, /state-warn">paused/);
+    assert.ok(page.body.includes('name="paused" value="false"'), 'Resume for the paused one');
+    assert.ok(page.body.includes('name="paused" value="true"'), 'Pause for the active one');
+    assert.ok(page.body.includes('data-confirm="Delete scheduled message #1? This cannot be undone."'), 'delete confirms');
+    assert.ok(page.body.includes('id="edit-1"') && page.body.includes('action="/dashboard/messages/schedule-edit"'), 'edit form per message');
+    assert.ok(page.body.includes('value="Europe/Vilnius" maxlength="64" list="tz-zones"'), 'new schedule defaults to the server time zone');
+    assert.ok(page.body.includes('<datalist id="tz-zones">') && page.body.includes('<option value="America/New_York">'), 'time zone picker');
+    assert.ok(!/style=|<script(?! src)/.test(page.body.replace(ALLOWED_SCRIPT, '')), 'no inline style or script (CSP)');
+});
+
+test('messages/schedule: the message and schedule reach the service (zone canonicalised, weekdays from the boxes); edit prefills', async () => {
+    const h = await setup();
+    assert.equal((await post(h, 'messages', 'schedule', CASES.messages.schedule.form)).statusCode, 303);
+    const [input] = h.calls.find((c) => c.name === 'createScheduledMessage').args;
+    assert.equal(input.channelId, TEXT);
+    assert.deepEqual(input.payload, { content: 'Weekly @everyone', embed: null });
+    assert.deepEqual(input.schedule, { kind: 'weekly', time: '18:30', days: [1, 5] });
+    assert.equal(input.timezone, 'Europe/Vilnius');
+    assert.equal(input.createdBy, ADMIN);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Scheduled message #3 saved for #general: Mon, Fri at 18:30 \(Europe\/Vilnius\)/);
+
+    const daily = await setup();
+    await post(daily, 'messages', 'schedule', { channelId: TEXT, title: 'Hello', colour: 'red', repeat: 'daily', time: '07:05', timezone: '' });
+    const [d] = daily.calls.find((c) => c.name === 'createScheduledMessage').args;
+    assert.deepEqual(d.schedule, { kind: 'weekly', time: '07:05', days: [0, 1, 2, 3, 4, 5, 6] });
+    assert.equal(d.timezone, 'UTC', 'empty zone → UTC');
+    assert.equal(d.payload.embed.title, 'Hello');
+
+    for (const [form, message] of [
+        [{ channelId: TEXT, content: 'x', repeat: 'once', date: '2099-01-01', time: '10:00', timezone: 'Mars/Base' }, /not a known time zone/],
+        [{ channelId: TEXT, content: 'x', repeat: 'hours', date: '2099-01-01', time: '10:00', hours: '500', timezone: 'UTC' }, /between 1 and 168/],
+        [{ channelId: TEXT, repeat: 'daily', time: '10:00', timezone: 'UTC' }, /nothing to post/],
+        [{ channelId: TEXT, content: 'x', repeat: 'once', date: '2099-02-30', time: '10:00', timezone: 'UTC' }, /Date: use YYYY-MM-DD/],
+    ]) {
+        const r = await setup();
+        const res = await post(r, 'messages', 'schedule', form);
+        assert.equal(res.statusCode, 400, String(message));
+        assert.match(res.body, message);
+        assert.ok(!r.calls.some((c) => c.name === 'createScheduledMessage'), 'nothing saved');
+    }
+
+    const page = await get(h, 'messages');
+    const edit2 = page.body.slice(page.body.indexOf('id="edit-2"'));
+    assert.ok(edit2.includes('<option value="hours" selected>'), 'repeat prefilled');
+    assert.ok(edit2.includes('name="hours" value="6"'), 'hours prefilled');
+    assert.ok(edit2.includes('<option value="purple" selected>'), 'colour prefilled');
+});
+
+test('messages/schedule-*: pause, resume and run now report clearly; a paused one cannot be paused again', async () => {
+    const h = await setup();
+    const again = await post(h, 'messages', 'schedule-pause', { id: '2', paused: 'true' });
+    assert.equal(again.statusCode, 303);
+    assert.ok(!h.calls.some((c) => c.name === 'setScheduledMessagePaused'), 'nothing to change');
+    assert.match((await h.sessions.get(h.session.id)).flash, /already paused/);
+    await post(h, 'messages', 'schedule-pause', { id: '2', paused: 'false' });
+    assert.deepEqual(h.calls.find((c) => c.name === 'setScheduledMessagePaused').args, [2, false]);
+    assert.match((await h.sessions.get(h.session.id)).flash, /#2 resumed\. Next post/);
+    await post(h, 'messages', 'schedule-run', { id: '1' });
+    assert.match((await h.sessions.get(h.session.id)).flash, /#1 posted in #general/);
+    assert.equal(h.auditRows.find((r) => r.key === 'scheduled.1.run').new.messageId, '710000000000000014');
 });
 
 test('messages: a channel where the bot lacks a permission is refused clearly, nothing posted', async () => {

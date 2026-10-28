@@ -29,6 +29,7 @@ import { postWeeklyAutomodReport } from './services/automod/automodReport.js';
 import { postDailyAutomodDigest } from './services/automod/automodDigest.js';
 import { liftCalmSlowmodes } from './services/automod/autoSlowmode.js';
 import { pollFeeds } from './services/community/feedService.js';
+import { runDueScheduledMessages } from './services/scheduledMessageService.js';
 import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { registerOAuthRoutes } from './services/oauthVerification.js';
@@ -377,6 +378,8 @@ class Meowist extends Client {
     cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
     cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));
+    // Scheduled and recurring messages (dashboard Messages page).
+    cron.schedule('* * * * *', exclusive('scheduled_messages', () => runDueScheduledMessages(this)));
     cron.schedule('*/5 * * * *', exclusive('ticket_reminders', async () => {
       await runTicketReminders(this);
       await tidyStaleAppealChannels(this);
