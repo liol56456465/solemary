@@ -11,6 +11,16 @@ import {
     getEconomyPrefix,
     getUserLevelPrefix,
 } from '../utils/database.js';
+/**
+ * True when `key` holds `guildId:userId` as whole ids. A plain substring match would
+ * also hit another member whose (longer) id starts with the caller's id, so the ids
+ * must not continue with more digits on either side.
+ */
+export function isOwnDataKey(key, guildId, userId) {
+  if (typeof key !== 'string' || !/^\d+$/.test(String(guildId)) || !/^\d+$/.test(String(userId))) return false;
+  return new RegExp(`(^|\\D)${guildId}:${userId}(\\D|$)`).test(key);
+}
+
 const wipedataConfirmHandler = {
   name: 'wipedata_yes',
   async execute(interaction, client) {
@@ -93,7 +103,7 @@ const wipedataConfirmHandler = {
 
           const additionalUserKeys = [...discoveredKeys].filter((key) => {
             if (dataKeyPatterns.includes(key)) return false;
-            return typeof key === 'string' && key.includes(`${guildId}:${userId}`);
+            return isOwnDataKey(key, guildId, userId);
           });
 
           for (const key of additionalUserKeys) {

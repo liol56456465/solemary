@@ -1,12 +1,52 @@
 // commands.js — Commands: turn commands, subcommands and whole categories off and on
 // in the main server (commandAccessService, the functions /commands uses). Who may use
 // a command (EVERYONE / support server lists) is code, shown read-only.
+// Also: "Bot settings" (prefix and moderator role, as /configwizard: ConfigService) and
+// "Utilities" (Shorten a link, as /shorten: services/urlShortener.js).
 
 import { EVERYONE_COMMANDS, SUPPORT_SERVER_COMMANDS } from '../../../config/commands/commandAccess.js';
 import { normalizeCategoryKey } from '../../../config/commands/commandCategories.js';
+import { getCommandPrefix } from '../../../config/bot.js';
 import { html } from '../html.js';
-import { InputError, boolField, buttonForm, moduleSwitch, text } from '../forms.js';
+import { InputError, boolField, buttonForm, moduleSwitch, postForm, rolePicker, roleField, text, textInput } from '../forms.js';
 import { section, table } from './common.js';
+
+export const PREFIX_MAX = 10;
+
+/** The /configwizard prefix rule: 1–10 characters, no spaces. */
+export function prefixField(form, name = 'prefix') {
+    const value = typeof form?.[name] === 'string' ? form[name].trim() : '';
+    if (!value || value.length > PREFIX_MAX || /\s/.test(value)) throw new InputError('Prefix must be 1-10 characters with no spaces.', 400, name);
+    return value;
+}
+
+/** The stored modRole (an id, or { id } from older configs) as an id. */
+function roleIdOf(value) {
+    if (!value) return null;
+    return typeof value === 'string' ? value : value.id || null;
+}
+
+/**
+ * Roles the bot hands out on its own (auto role, verification, level rewards, reaction
+ * roles): Map roleId → where. Such a role must never be the moderator role, or anyone
+ * who joins, verifies, levels up or clicks would get moderator access.
+ */
+async function autoAssignedRoles(ctx) {
+    const out = new Map();
+    const add = (id, where) => { if (id && !out.has(id)) out.set(id, where); };
+    const [welcome, verification, leveling, panels] = await Promise.all([
+        ctx.services.getWelcomeSettings(ctx.client, ctx.guildId),
+        ctx.services.getVerificationSettings(ctx.client, ctx.guildId),
+        ctx.services.getLevelingConfig(ctx.client, ctx.guildId),
+        ctx.services.getAllReactionRoleMessages(ctx.client, ctx.guildId),
+    ]);
+    for (const id of welcome?.roleIds || []) add(id, 'the auto role given on join');
+    add(verification?.roleId, 'the verification role');
+    add(verification?.autoVerify?.roleId, 'the auto-verify role');
+    for (const id of Object.values(leveling?.roleRewards || {})) add(id, 'a level reward');
+    for (const panel of Array.isArray(panels) ? panels : []) for (const id of panel.roles || []) add(typeof id === 'string' ? id : id?.id, 'a reaction role');
+    return out;
+}
 
 /**
  * The slash commands (and context menus) that belong to each settings module, shown
@@ -66,11 +106,21 @@ export default {
 
     async load(ctx) {
         const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
-        return { snapshot: ctx.client?.commands ? ctx.services.getCommandAccessSnapshot(ctx.client, config) : null };
+        return { config, snapshot: ctx.client?.commands ? ctx.services.getCommandAccessSnapshot(ctx.client, config) : null };
     },
 
-    render(ctx, { snapshot }) {
-        if (!snapshot) return section('Commands', html`<p class="muted">The command list is not loaded yet.</p>`);
+    render(ctx, { config, snapshot }) {
+        const can = ctx.canEdit && ctx.canAct;
+        const botSettings = section('Bot settings', postForm(ctx, 'commands', 'bot-settings', html`<div class="grid">
+${textInput('prefix', config?.prefix || getCommandPrefix(), { label: 'Prefix for text commands', max: PREFIX_MAX, help: '1–10 characters, no spaces.' })}
+${rolePicker(ctx.guild, 'modRole', roleIdOf(config?.modRole), { label: 'Moderator role', assign: false, help: 'Members with this role may use moderation commands. Not a role the bot hands out on its own.' })}</div>`, { canEdit: can }),
+        'Same settings as /configwizard.');
+        const utilities = section('Utilities', postForm(ctx, 'commands', 'shorten', html`<div class="grid">
+${textInput('url', '', { label: 'Link to shorten', max: 2000, type: 'url', placeholder: 'https://example.com/a/long/link' })}
+${textInput('custom', '', { label: 'Custom ending (optional)', max: 30, help: 'Letters, numbers, _ and -.' })}</div>`, { submit: 'Shorten', canEdit: can }),
+        'Shorten a link with is.gd, as /shorten. The short link is shown at the top of this page.', { open: false });
+        const settingsPart = html`${ctx.canAct ? '' : html`<p class="muted">Bot settings and utilities need Administrator in the main server.</p>`}${botSettings}${utilities}`;
+        if (!snapshot) return html`${settingsPart}${section('Commands', html`<p class="muted">The command list is not loaded yet.</p>`)}`;
         const categories = snapshot.categories.map((cat) => {
             const disabled = new Set(cat.disabledCommandNames);
             const rows = cat.commands.map((cmd) => {
@@ -86,10 +136,49 @@ export default {
         const access = html`<p>Everyone may use: ${[...EVERYONE_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}</p>
 <p>Support server only: ${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}</p>
 <p class="muted">Every other command needs staff permissions. These lists are part of the bot's code (read-only).</p>`;
-        return html`${section('Who can use commands', access)}${categories}`;
+        return html`${settingsPart}${section('Who can use commands', access)}${categories}`;
     },
 
     actions: {
+        'bot-settings': {
+            admin: true,
+            async run(ctx, form) {
+                const prefix = prefixField(form);
+                const modRole = roleField(ctx.guild, form, 'modRole', { label: 'Moderator role' });
+                if (modRole) {
+                    const where = (await autoAssignedRoles(ctx)).get(modRole);
+                    if (where) throw new InputError(`Moderator role: @${ctx.guild.roles.cache.get(modRole)?.name || modRole} is ${where}, so everyone who gets it would become a moderator. Pick a staff-only role.`, 400, 'modRole');
+                }
+                const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
+                const current = { prefix: config.prefix || getCommandPrefix(), modRole: roleIdOf(config.modRole) };
+                const changes = [];
+                for (const [key, value] of Object.entries({ prefix, modRole })) {
+                    if ((current[key] ?? null) === (value ?? null)) continue;
+                    await ctx.services.updateConfigSetting(ctx.client, ctx.guildId, key, value, ctx.actor.userId);
+                    changes.push({ key, old: current[key] ?? null, new: value ?? null });
+                }
+                return { changes, message: changes.length ? 'Bot settings saved.' : 'Nothing changed.' };
+            },
+        },
+        shorten: {
+            admin: true,
+            async run(ctx, form) {
+                const url = text(form, 'url', 2000);
+                const custom = text(form, 'custom', 30);
+                let shortUrl;
+                try {
+                    shortUrl = await ctx.services.shortenUrl(url, custom);
+                } catch (error) {
+                    // Network and service errors are shown on the page too (nothing was changed).
+                    if (error?.userMessage) throw new InputError(error.userMessage, 400, error.type === 'validation' ? 'url' : null);
+                    throw error;
+                }
+                return {
+                    changes: [{ key: 'shortLink', old: null, new: { url, shortUrl } }],
+                    message: `Short link: ${shortUrl} (for ${url})`,
+                };
+            },
+        },
         async command(ctx, form) {
             const name = text(form, 'name', 100).toLowerCase();
             const enabled = boolField(form, 'enabled', 'Command');

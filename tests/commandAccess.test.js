@@ -47,7 +47,7 @@ test('every support-server command exists', async () => {
 });
 
 test('owner decisions stay admin-only', () => {
-    for (const key of ['wipedata', 'tools randomuser', 'poll', 'countdown', 'embedbuilder', 'shorten', 'birthday setchannel']) {
+    for (const key of ['tools randomuser', 'poll', 'countdown', 'embedbuilder', 'shorten', 'birthday setchannel']) {
         assert.equal(EVERYONE_COMMANDS.has(key), false, key);
     }
 });
@@ -63,9 +63,10 @@ test('gate: listed keys pass for members, everything else needs Administrator', 
     assert.equal(run('birthday setchannel', member), false);
     assert.equal(run('birthday', member), false); // no subcommand resolved
     assert.equal(run(null, member), false);
-    assert.equal(run('wipedata', member), false);
-    assert.equal(run('wipedata', admin), true);
-    assert.equal(run('wipedata', member, 'owner'), true);
+    assert.equal(run('shorten', member), false);
+    assert.equal(run('shorten', admin), true);
+    assert.equal(run('shorten', member, 'owner'), true);
+    assert.equal(run('wipedata', member), true, 'self-service: deletes only the caller\'s own data');
 });
 
 test('gate: OWNER_IDS without Administrator pass as an owner override (recorded by the caller); admins and open commands do not', async () => {
@@ -76,8 +77,8 @@ test('gate: OWNER_IDS without Administrator pass as an owner override (recorded 
     try {
         const guild = { id: enforcementConfig.mainGuildId, ownerId: 'server-owner' };
         const check = (accessKey, permissions, userId) => checkCommandAccess({ command: {}, accessKey, guild, userId, permissions });
-        assert.deepEqual(check('wipedata', { has: () => false }, ownerId), { allowed: true, ownerOverride: true });
-        assert.deepEqual(check('wipedata', { has: () => true }, ownerId), { allowed: true }, 'an owner who is also admin: no override');
+        assert.deepEqual(check('shorten', { has: () => false }, ownerId), { allowed: true, ownerOverride: true });
+        assert.deepEqual(check('shorten', { has: () => true }, ownerId), { allowed: true }, 'an owner who is also admin: no override');
         assert.deepEqual(check('birthday set', { has: () => false }, ownerId), { allowed: true }, 'open command: no override');
     } finally {
         botConfig.commands.owners = owners;

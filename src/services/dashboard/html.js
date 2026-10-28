@@ -125,11 +125,11 @@ export const NAV = [
     ] },
     { group: 'Community', items: [
         { key: 'tickets', label: 'Tickets & modmail', state: 'tickets', keywords: 'ticket panel, support, modmail, canned answers, saved replies, staff role, transcript, open tickets category, closed tickets category, ticket log channel', summary: 'Ticket panel, modmail, saved answers.' },
-        { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome', keywords: 'join message, leave message, goodbye, greeting, auto role, autorole, embed', summary: 'Join and leave messages, auto roles.' },
+        { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome', keywords: 'join message, leave message, goodbye, greeting, auto role, autorole, embed, image, banner, colour', summary: 'Join and leave messages, auto roles.' },
         { key: 'leveling', label: 'Leveling', state: 'leveling', toggle: 'enabled', keywords: 'xp, levels, rank, level up message, role rewards, leaderboard, no xp channels', summary: 'XP, level-up messages, role rewards.' },
         { key: 'reaction-roles', label: 'Reaction roles', keywords: 'self roles, role menu, buttons, select menu', summary: 'Self-assign role menus.' },
         { key: 'messages', label: 'Messages', keywords: 'post as the bot, send message, embed, embed builder, announcement, poll, vote, countdown, timer', summary: 'Post a message or embed, a poll or a countdown as the bot.' },
-        { key: 'giveaways', label: 'Giveaways', keywords: 'prize, winners, reroll, end giveaway', summary: 'Start, end and reroll giveaways.' },
+        { key: 'giveaways', label: 'Giveaways', keywords: 'prize, winners, reroll, end giveaway, random member, random user, pick a member', summary: 'Start, end and reroll giveaways.' },
         { key: 'birthdays', label: 'Birthdays', state: 'birthdays', keywords: 'birthday channel, birthday role, timezone', summary: 'Birthday announcements and role.' },
         { key: 'applications', label: 'Applications', state: 'applications', toggle: 'enabled', keywords: 'apply, staff application, questions, managers', summary: 'Role applications and their questions.' },
         { key: 'community', label: 'Community', keywords: 'suggestions, starboard, sticky message, tags, youtube feed', summary: 'Suggestions, starboard, stickies, tags, feeds.' },
@@ -145,7 +145,7 @@ export const NAV = [
     ] },
     { group: 'Bot', items: [
         { key: 'modules', label: 'All modules' },
-        { key: 'commands', label: 'Commands', keywords: 'disable command, enable command, categories, permissions', summary: 'Turn commands and categories on or off.' },
+        { key: 'commands', label: 'Commands', keywords: 'disable command, enable command, categories, permissions, prefix, moderator role, mod role, shorten, short link', summary: 'Turn commands and categories on or off.' },
         { key: 'audit', label: 'Audit log' },
     ] },
 ];

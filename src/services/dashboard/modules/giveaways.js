@@ -1,10 +1,12 @@
 // giveaways.js — Giveaways: start one, end now, reroll, delete (Administrators only)
 // through services/giveawayService.js, the functions /giveaway create|end|reroll|delete use.
+// "Pick a random member" is /tools randomuser (services/randomMemberService.js).
 
 import { botConfig } from '../../../config/bot.js';
 import { html, formatDate } from '../html.js';
 import {
-    InputError, PERMS, buttonForm, channelField, channelName, channelPicker, intField, isSnowflake, numberInput, postForm, text, textInput,
+    InputError, PERMS, buttonForm, channelField, channelName, channelPicker, checkbox, intField, isSnowflake, numberInput, postForm, roleField,
+    rolePicker, switchInput, text, textInput,
 } from '../forms.js';
 import { section, table } from './common.js';
 
@@ -51,13 +53,31 @@ ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.post, opt
 ${textInput('prize', '', { label: 'Prize', max: 256 })}
 ${textInput('duration', '1d', { label: 'Duration', max: 10, placeholder: '30m, 12h, 3d', help: 'A number and s, m, h or d (10 s to 30 days).' })}
 ${numberInput('winners', 1, { label: `Winners (${MIN_WINNERS}–${MAX_WINNERS})`, min: MIN_WINNERS, max: MAX_WINNERS })}</div>`, { submit: 'Start giveaway', canEdit: can });
+        const random = postForm(ctx, 'giveaways', 'random-member', html`<div class="grid">
+${rolePicker(g, 'roleId', null, { label: 'Only members with this role', assign: false, includeManaged: true, noneLabel: 'anyone' })}
+${switchInput('includeBots', false, { label: 'Include bots' })}
+${switchInput('onlineOnly', false, { label: 'Only online members' })}</div>`, { submit: 'Pick a member', canEdit: can });
         return html`${ctx.canAct ? '' : html`<p class="muted">Giveaways need Administrator in the main server.</p>`}
 ${section('Start a giveaway', create, 'Same as /giveaway create: the bot posts the giveaway message in the channel.', { open: active.length === 0 })}
 ${section('Active', table(['Prize', 'Channel', 'Ends', 'Entries', 'Winners', ''], activeRows, 'No active giveaways.'))}
+${section('Pick a random member', random, 'Same as /tools randomuser. The pick is shown at the top of this page and kept in the audit log; nothing is posted in Discord.', { open: false })}
 ${section('Ended (latest 25)', table(['Prize', 'Channel', 'Ended', 'Winners', ''], endedRows, 'No ended giveaways.'), '', { open: false })}`;
     },
 
     actions: {
+        'random-member': {
+            admin: true,
+            async run(ctx, form) {
+                const roleId = roleField(ctx.guild, form, 'roleId', { label: 'Role', allowManaged: true });
+                const filters = { roleId, includeBots: checkbox(form, 'includeBots'), onlineOnly: checkbox(form, 'onlineOnly') };
+                const { member, poolSize } = await ctx.services.pickRandomMember(ctx.guild, filters);
+                const name = member.user?.username || member.displayName || member.id;
+                return {
+                    changes: [{ key: 'randomMember', old: null, new: { userId: member.id, username: name, from: poolSize, ...filters } }],
+                    message: `Picked @${name} (${member.id}) from ${poolSize} matching member${poolSize === 1 ? '' : 's'}.`,
+                };
+            },
+        },
         create: {
             admin: true,
             async run(ctx, form) {
