@@ -1,6 +1,7 @@
 // giveaways.js
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { randomInt } from 'node:crypto';
 import { logger } from './logger.js';
 import { TitanBotError, ErrorTypes } from './errorHandler.js';
 import { unwrapReplitData, upsertGiveawayRow, deleteGiveawayRow } from './database.js';
@@ -140,7 +141,7 @@ export function pickWinners(entrants, count) {
         const requested = Math.min(count, entrants.length);
         const shuffled = [...entrants];
         for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = randomInt(i + 1); // crypto: winners must not be predictable
             [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
         return shuffled.slice(0, requested);

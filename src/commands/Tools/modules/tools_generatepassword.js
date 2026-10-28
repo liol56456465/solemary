@@ -1,4 +1,4 @@
-import { webcrypto as crypto } from 'node:crypto';
+import { randomInt } from 'node:crypto';
 import { getColor } from '../../../config/bot.js';
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { createEmbed, successEmbed, infoEmbed, warningEmbed } from '../../../utils/embeds.js';
@@ -62,30 +62,27 @@ export default {
         if (includeNumbers) chars += numbers;
         if (includeSymbols) chars += symbols;
 
+        // randomInt: cryptographic and without modulo bias.
         let password = '';
-        const randomValues = new Uint32Array(length);
-        crypto.getRandomValues(randomValues);
-
         for (let i = 0; i < length; i++) {
-            const randomIndex = randomValues[i] % chars.length;
-            password += chars[randomIndex];
+            password += chars[randomInt(chars.length)];
         }
 
         if (includeUppercase && !/[A-Z]/.test(password)) {
-            const randomIndex = Math.floor(Math.random() * length);
-            const randomUpper = uppercase[Math.floor(Math.random() * uppercase.length)];
+            const randomIndex = randomInt(length);
+            const randomUpper = uppercase[randomInt(uppercase.length)];
             password = password.substring(0, randomIndex) + randomUpper + password.substring(randomIndex + 1);
         }
 
         if (includeNumbers && !/[0-9]/.test(password)) {
-            const randomIndex = Math.floor(Math.random() * length);
-            const randomNumber = numbers[Math.floor(Math.random() * numbers.length)];
+            const randomIndex = randomInt(length);
+            const randomNumber = numbers[randomInt(numbers.length)];
             password = password.substring(0, randomIndex) + randomNumber + password.substring(randomIndex + 1);
         }
 
         if (includeSymbols && !/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password)) {
-            const randomIndex = Math.floor(Math.random() * length);
-            const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+            const randomIndex = randomInt(length);
+            const randomSymbol = symbols[randomInt(symbols.length)];
             password = password.substring(0, randomIndex) + randomSymbol + password.substring(randomIndex + 1);
         }
 
