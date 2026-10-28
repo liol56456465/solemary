@@ -3,6 +3,16 @@ import { canonicalizeKey } from './keys.js';
 import { parseKey } from './keyParser.js';
 
 /**
+ * user_levels.last_message is a TIMESTAMP, but leveling keeps lastMessage in milliseconds
+ * (addXp sets Date.now()). A number goes in as a Date; 0 / missing means "now" (as before).
+ */
+export function lastMessageTimestamp(value) {
+    if (value instanceof Date && Number.isFinite(value.getTime())) return value;
+    const ms = Number(value);
+    return Number.isFinite(ms) && ms > 0 ? new Date(ms) : new Date();
+}
+
+/**
  * Marker version for the key-canonicalization migration. Bump this only if a new
  * legacy → canonical mapping is added that requires re-scanning existing data.
  */
@@ -101,7 +111,7 @@ async function migrateUserLevelFromTemp(client, legacyKey, value) {
             Number(payload?.xp) || 0,
             Number(payload?.level) || 0,
             Number(payload?.totalXp ?? payload?.total_xp) || 0,
-            Number(payload?.lastMessage ?? payload?.last_message) || 0,
+            lastMessageTimestamp(payload?.lastMessage ?? payload?.last_message),
             Number(payload?.rank) || 0,
         ],
     );

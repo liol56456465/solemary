@@ -13,7 +13,7 @@ import {
     isTempBackedType,
     getStructuredListPlan,
 } from './database/keyParser.js';
-import { runKeyMigration } from './database/keyMigration.js';
+import { lastMessageTimestamp, runKeyMigration } from './database/keyMigration.js';
 import { createError, ErrorTypes } from './errorHandler.js';
 import {
     tableStatements,
@@ -1063,7 +1063,7 @@ class PostgreSQLDatabase {
                          VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
                          ON CONFLICT (guild_id, user_id) DO UPDATE SET
                          xp = $3, level = $4, total_xp = $5, last_message = $6, rank = $7, updated_at = CURRENT_TIMESTAMP`,
-                        [parsedKey.guildId, parsedKey.userId, value.xp || 0, value.level || 0, value.totalXp || 0, value.lastMessage || new Date(), value.rank || 0]
+                        [parsedKey.guildId, parsedKey.userId, value.xp || 0, value.level || 0, value.totalXp || 0, lastMessageTimestamp(value.lastMessage), value.rank || 0]
                     );
                 });
                 return true;
