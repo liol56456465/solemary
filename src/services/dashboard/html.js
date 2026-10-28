@@ -8,6 +8,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { ICON_SPRITE_MARKUP, hasIcon } from './icons.js';
+import { allows, levelLabel } from './permissions.js';
 
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' };
 
@@ -165,9 +166,17 @@ export const OWNER_NAV = { group: 'Owner', items: [
     { key: 'owner/announce', label: 'Announce', icon: 'messages' },
 ] };
 
-/** The sidebar groups for this page's viewer: NAV, plus the Owner group for bot owners. */
-export function navGroups(session = null) {
-    return session?.isOwner ? [...NAV, OWNER_NAV] : NAV;
+/**
+ * The sidebar groups for this page's viewer: NAV, plus the Owner group for bot owners.
+ * With an access decision, only the pages its level may use (permissions.js); groups left
+ * empty are dropped. Without one (logged-out pages, tests) everything, as before.
+ */
+export function navGroups(session = null, access = null) {
+    const groups = session?.isOwner ? [...NAV, OWNER_NAV] : NAV;
+    if (!access?.allowed) return groups;
+    return groups
+        .map((group) => (group === OWNER_NAV ? group : { ...group, items: group.items.filter((item) => allows(access, `page:${item.key}`)) }))
+        .filter((group) => group.items.length);
 }
 
 const itemIcon = (item) => icon(item.icon || item.key);
@@ -204,7 +213,7 @@ function sectionOf(active, groups = NAV) {
 function sideNav(active, moduleStates, theme, back, session, access) {
     return html`<nav class="side-nav" aria-label="Dashboard"><a class="side-brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span>Meowist</a>
 ${serverSwitch(session.server)}
-${navGroups(session).map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
+${navGroups(session, access).map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
         const state = stateOf(item, moduleStates);
         const on = item.key === active;
         const badge = item.key === 'inbox' && session.inboxCount > 0
@@ -225,7 +234,7 @@ function crumbs(active, groups = NAV) {
 
 /** Phones: a floating tab bar (the four groups); "More" is a sheet (details, no script) with every page. */
 function tabBar(active, theme, back, session, access) {
-    const groups = navGroups(session);
+    const groups = navGroups(session, access);
     const current = sectionOf(active, groups);
     const main = sections(groups).slice(0, 3);
     return html`<nav class="tabbar" aria-label="Sections"><a href="${path('/overview')}"${active === 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon('overview')}<span>Home</span></a>${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key && active !== 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.label === 'Server setup' ? 'Setup' : sec.label}</span></a>`)}
@@ -282,7 +291,7 @@ function serverSwitch(server) {
 
 function userMenu(session, access, theme = 'system', back = path('/overview')) {
     return html`<details class="user-menu menu-wrap"><summary aria-label="Account: ${session.username}"><span class="avatar-initials" aria-hidden="true">${initials(session.username)}</span><span class="user-name">${session.username}</span></summary>
-<div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${access && !access.canAct ? 'View and settings (bot owner)' : 'Administrator'}</span></p>
+<div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${levelLabel(access)}</span></p>
 ${themePicker(theme, back, 'menu')}<form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
 }
 
@@ -296,8 +305,11 @@ ${themePicker(theme, back, 'menu')}<form method="post" action="${path('/logout')
 export function layout({ title, active = null, session = null, access = null, moduleStates = {}, body, theme: pageTheme = 'system', refreshSeconds = 0 }) {
     const theme = themeFrom(session?.theme ?? pageTheme);
     const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
-    const top = session ? html`<header class="page-top">${crumbs(active, navGroups(session))}<span class="spacer"></span>
-<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form></header>`
+    // "Find a setting" searches the Modules page: not shown to levels that cannot open it.
+    const find = !access?.allowed || allows(access, 'page:modules')
+        ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : '';
+    const top = session ? html`<header class="page-top">${crumbs(active, navGroups(session, access))}<span class="spacer"></span>
+${find}</header>`
         : html`<header class="page-top bare-top"><a class="brand" href="${path('/overview')}" aria-label="Meowist"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a><span class="spacer"></span></header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark">${refreshSeconds > 0 ? html`<meta http-equiv="refresh" content="${refreshSeconds}">` : ''}<title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>

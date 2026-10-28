@@ -17,6 +17,7 @@ import { getSetting, guildIdFor, settingSource } from '../settings/guildSettings
 import { formatDate, html, icon, layout, navItems, path, raw, timeTag, typeBadge } from './html.js';
 import { moduleEntries, setupByModule } from './modulesPage.js';
 import { valueText } from './audit.js';
+import { allows } from './permissions.js';
 
 const PENDING_APPEALS_CAP = 100;
 
@@ -261,13 +262,13 @@ function modulesTile(moduleStates, checklist) {
  * "Needs you": what waits for an admin, oldest first, each with one button: pending appeals,
  * open tickets, an active raid lockdown, and the next open setup steps.
  */
-function needsYou(o, { csrf = '', canEndLockdown = false } = {}) {
+function needsYou(o, { csrf = '', canEndLockdown = false, limited = false } = {}) {
     const items = [];
     if (o.lockdown?.active) {
         // Administrators end it right here (POST /automod/lockdown-end, back to the Overview); others get the link.
         const endButton = canEndLockdown && csrf
             ? html`<form method="post" action="${path('/automod/lockdown-end')}" class="inline-form" data-confirm="End the raid lockdown? The verification level goes back to what it was and paused invites and DMs resume."><input type="hidden" name="csrf" value="${csrf}"><input type="hidden" name="back" value="overview"><button type="submit" class="btn small danger">End lockdown</button></form>`
-            : html`<a class="btn primary small" href="${path('/automod')}">Automod</a>`;
+            : limited ? '' : html`<a class="btn primary small" href="${path('/automod')}">Automod</a>`;
         items.push(html`<li><span class="kind kind-bad" aria-hidden="true">RL</span><span class="what"><b>Raid lockdown is active</b><small>${o.lockdown.since ? html`Since ${formatDate(o.lockdown.since)}` : 'New members are held at the door'}</small></span><span></span>${endButton}</li>`);
     }
     for (const appeal of o.pendingList || []) {
@@ -276,10 +277,10 @@ function needsYou(o, { csrf = '', canEndLockdown = false } = {}) {
     if (o.pendingAppeals > (o.pendingList || []).length) {
         items.push(html`<li><span class="kind kind-appeal" aria-hidden="true">+</span><span class="what"><b>${o.pendingAppeals - o.pendingList.length} more appeal${o.pendingAppeals - o.pendingList.length === 1 ? '' : 's'} waiting</b></span><span></span><a class="btn small" href="${path('/appeals')}">All appeals</a></li>`);
     }
-    if (o.openTickets > 0) {
+    if (o.openTickets > 0 && !limited) {
         items.push(html`<li><span class="kind kind-ticket" aria-hidden="true">TK</span><span class="what"><b>${o.openTickets} open ticket${o.openTickets === 1 ? '' : 's'}</b><small>Answered in their Discord channels</small></span><span></span><a class="btn small" href="${path('/tickets')}">Tickets</a></li>`);
     }
-    for (const step of o.checklist.filter((item) => !item.done).slice(0, 2)) {
+    for (const step of limited ? [] : o.checklist.filter((item) => !item.done).slice(0, 2)) {
         items.push(html`<li><span class="kind kind-setup" aria-hidden="true">SU</span><span class="what"><b>Set up: ${step.label}</b>${step.hint ? html`<small>${step.hint}</small>` : ''}</span><span></span><a class="btn small" href="${step.href}">Set up<span class="sr"> ${step.label}</span></a></li>`);
     }
     const failed = o.pendingAppeals === undefined || o.openTickets === undefined;
@@ -296,6 +297,8 @@ function card(title, body, { link = null, note = null, className = '' } = {}) {
 
 /** The Overview page (v5) from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
 export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [], editEnabled = false }) {
+    // Moderator level (permissions.js): no setup, modules, tickets or audit parts (those pages are Administrator-only).
+    const limited = Boolean(access?.allowed) && !allows(access, 'page:modules');
     const todo = o.checklist.filter((item) => !item.done);
     const pendingText = o.pendingAppeals >= PENDING_APPEALS_CAP ? `${PENDING_APPEALS_CAP}+` : o.pendingAppeals;
     const sanctions = o.activeBans === undefined || o.activeMutes === undefined ? undefined : o.activeBans + o.activeMutes;
@@ -325,19 +328,19 @@ ${metric('Open tickets', o.openTickets, 'waiting for staff')}</div>`;
     const body = html`${head}
 <div class="ov">
 <div class="ov-main">
-${card('Needs you', needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct) }), { note: waiting ? `${waiting} open` : null, link: { href: path('/appeals'), text: 'Appeals →' }, className: 'needs-you' })}
+${card('Needs you', needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct), limited }), { note: waiting ? `${waiting} open` : null, link: { href: path('/appeals'), text: 'Appeals →' }, className: 'needs-you' })}
 ${card('Moderation · last 7 days', weekChart(o.week), { link: { href: path('/cases'), text: 'All cases →' } })}
 ${card('Latest actions', recentFeed(o.recent), { link: { href: path('/cases'), text: 'All cases →' } })}
 </div>
 <div class="ov-side">
 <section class="card ov-card">${metrics}</section>
 ${card('Bot health', system)}
-${card('Setup', setupTile(o.checklist), { link: todo.length ? { href: '#all-steps', text: 'All steps →' } : null })}
+${limited ? '' : card('Setup', setupTile(o.checklist), { link: todo.length ? { href: '#all-steps', text: 'All steps →' } : null })}
 </div>
 </div>
-${card('Modules', modulesTile(moduleStates, o.checklist), { link: { href: path('/modules'), text: 'Manage →' } })}
+${limited ? '' : html`${card('Modules', modulesTile(moduleStates, o.checklist), { link: { href: path('/modules'), text: 'Manage →' } })}
 ${recentChangesSection(recentChanges)}
-<details class="card section" id="all-steps" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>All setup steps${todo.length ? html` <span class="count">${todo.length} to do</span>` : html` <span class="state state-on">all set</span>`}</h2></summary><div class="section-body">${allSteps}</div></details>`;
+<details class="card section" id="all-steps" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>All setup steps${todo.length ? html` <span class="count">${todo.length} to do</span>` : html` <span class="state state-on">all set</span>`}</h2></summary><div class="section-body">${allSteps}</div></details>`}`;
     return layout({ title: 'Overview', active: 'overview', session, access, moduleStates, body });
 }
 

@@ -243,13 +243,15 @@ ${job.done.length ? html`<section class="card"><h2>Done (${job.done.length})</h2
     return layout({ title: `Bulk: ${job.label}`, active: 'users', session, access, moduleStates, body, refreshSeconds: running ? 2 : 0 });
 }
 
-function memberEditSection(view, canWrite, csrf) {
+/** can: { roles, nickname, timeout, unverify } — what this viewer may change (editing on + permissions.js). */
+function memberEditSection(view, can, csrf) {
+    const canWrite = can.roles;
     const id = view.user.id;
     const edit = view.memberEdit;
     const roles = view.member.roles;
     const current = html`<div class="role-list">${roles.length ? roles.map((r) => html`<span class="role-chip role-chip-lg">@${r.name}${edit?.tempRoles?.has(r.id) ? html` <span class="muted">until ${formatDate(edit.tempRoles.get(r.id))}</span>` : ''}${canWrite && !edit?.problem && edit?.removable?.has(r.id)
         ? actionForm(csrf, `/users/${id}/roles/remove`, '', { submit: 'Remove', hidden: { roleId: r.id }, inline: true, secondary: true, className: 'chip-form' }) : ''}</span>`) : html`<span class="muted">No roles.</span>`}</div>`;
-    if (!canWrite) return html`${current}<p class="muted">Changing roles needs Administrator and editing turned on.</p>`;
+    if (!can.roles && !can.nickname && !can.timeout && !can.unverify) return html`${current}<p class="muted">Changing roles needs Administrator and editing turned on.</p>`;
     if (edit?.problem) return html`${current}<p class="notice">${edit.problem}</p>`;
     const roleForm = edit.assignable.length
         ? actionForm(csrf, `/users/${id}/roles/add`, html`<div class="grid"><label>Give a role<select name="roleId" data-search required><option value="">— choose —</option>${edit.assignable.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select><span class="hint">Only roles below your highest role and Meowist's; staff roles only for the server owner or bot owners.</span></label>
@@ -263,7 +265,7 @@ ${actionForm(csrf, `/users/${id}/timeout`, html`<div class="grid"><label>Timeout
     const verifyForm = edit.verifiedRole
         ? html`<h3>Verification</h3><p>Verified (@${edit.verifiedRole.name}).</p>${actionForm(csrf, `/users/${id}/unverify`, html`<div class="grid"><label>Reason (optional, Discord audit log and verification log)<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: 'Unverify', secondary: true, confirm: `Remove verification from ${view.user.username}? They lose @${edit.verifiedRole.name} and must verify again.` })}`
         : '';
-    return html`${current}${roleForm}<h3>Nickname</h3>${nickForm}<h3>Timeout</h3>${timeoutForm}${verifyForm}`;
+    return html`${current}${can.roles ? roleForm : html`<p class="muted">Changing roles needs Administrator.</p>`}${can.nickname ? html`<h3>Nickname</h3>${nickForm}` : ''}${can.timeout ? html`<h3>Timeout</h3>${timeoutForm}` : ''}${can.unverify ? verifyForm : ''}`;
 }
 
 function notesSection(view, canWrite, csrf) {
@@ -333,21 +335,27 @@ ${actionForm(csrf, `/users/${id}/action/preview`, fields, { submit: 'Preview', h
  * casesTotal, appealStatuses, noContact, noContactNames, notes, actions, precedentReason,
  * precedent, block }.
  */
-export function userPage({ session, access = null, moduleStates = {}, view, canAct = false, editEnabled = false, flash = null, error = null, values = {}, now = Date.now() }) {
+export function userPage({ session, access = null, moduleStates = {}, view, canAct = false, allow = null, editEnabled = false, flash = null, error = null, values = {}, now = Date.now() }) {
+    // allow(key): permissions.js for this viewer (the Moderator level runs some actions); default canAct for everything.
+    const may = (key) => Boolean(editEnabled && (allow ? allow(key) : canAct));
     const canWrite = canAct && editEnabled;
+    const can = { roles: may('member.roles'), nickname: may('member.nickname'), timeout: may('member.timeout'), unverify: may('member.unverify') };
+    const actions = view.actions.filter((type) => may(`action:${type}`));
+    const limited = !canAct && actions.length > 0;
     const body = html`<a class="back" href="${path('/users')}">← Members</a>
 ${memberHeader(view, now)}
-${notices({ flash, error, editEnabled, canAct })}
+${notices({ flash, error, editEnabled, canAct: canAct || limited || can.timeout })}
+${editEnabled && !canAct && (limited || can.timeout) ? html`<p class="notice">Moderator: you can ${[...actions.map((t) => ACTION_LABELS[t].toLowerCase()), ...(can.timeout ? ['time out'] : [])].join(', ')} here. Ban, unban, roles, nickname and notes need Administrator.</p>` : ''}
 ${section('Profile', profileSection(view.user, view.member, now), '', { key: 'member-profile', open: false })}
 ${section('Standing', standingSection(view), '', { key: 'member-standing' })}
-${view.member ? section(`Roles (${view.member.roles.length}), nickname and timeout`, memberEditSection(view, canWrite, session.csrf), '', { key: 'member-roles' }) : ''}
+${view.member ? section(`Roles (${view.member.roles.length}), nickname and timeout`, memberEditSection(view, can, session.csrf), '', { key: 'member-roles' }) : ''}
 ${(view.noContact || []).length ? section('No-contact orders', noContactSection(view.noContact, view.noContactNames), '', { key: 'member-nocontact' }) : ''}
 ${section('Actions', html`${view.block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(view.block.until)}; actions will be refused.</p>` : ''}
-${canWrite ? (view.actions.length ? html`<p class="muted">Same actions, DMs, ladder and checks as /enforcements. Each one shows a confirmation first.</p>${view.actions.map((type) => actionBlock(view, type, session.csrf, values.type === type ? values : {}))}` : html`<p class="muted">No actions available.</p>`)
+${canWrite || limited ? (actions.length ? html`<p class="muted">Same actions, DMs, ladder and checks as /enforcements. Each one shows a confirmation first.</p>${actions.map((type) => actionBlock(view, type, session.csrf, values.type === type ? values : {}))}` : html`<p class="muted">No actions available.</p>`)
         : html`<p class="muted">Available: ${view.actions.map((t) => ACTION_LABELS[t]).join(', ') || 'none'}.</p>`}`, '', { key: 'member-actions' })}
 ${section('Precedent', precedentSection(view), '', { key: 'member-precedent', open: Boolean(view.precedentReason) })}
 ${section(`Case history (${view.casesTotal || 0})`, casesSection(view), '', { key: 'member-cases', open: false })}
-${section(`Staff notes (${(view.notes || []).length})`, notesSection(view, canWrite, session.csrf), '', { key: 'member-notes' })}`;
+${section(`Staff notes (${(view.notes || []).length})`, notesSection(view, may('member.notes'), session.csrf), '', { key: 'member-notes' })}`;
     return layout({ title: view.user.username, active: 'users', session, access, moduleStates, body });
 }
 

@@ -114,7 +114,7 @@ export default {
         const can = ctx.canEdit && ctx.canAct;
         const botSettings = section('Bot settings', postForm(ctx, 'commands', 'bot-settings', html`<div class="grid">
 ${textInput('prefix', config?.prefix || getCommandPrefix(), { label: 'Prefix for text commands', max: PREFIX_MAX, help: '1–10 characters, no spaces.' })}
-${rolePicker(ctx.guild, 'modRole', roleIdOf(config?.modRole), { label: 'Moderator role', assign: false, help: 'Members with this role may use moderation commands. Not a role the bot hands out on its own.' })}</div>`, { canEdit: can }),
+${rolePicker(ctx.guild, 'modRole', roleIdOf(config?.modRole), { label: 'Moderator role', assign: false, help: 'Members with this role may use moderation commands, and log in to this dashboard at the Moderator level (view members, cases, appeals; warn, mute, unmute, kick, time out; no bans or settings). Not a role the bot hands out on its own.' })}</div>`, { canEdit: can }),
         'Same settings as /configwizard.');
         const utilities = section('Utilities', postForm(ctx, 'commands', 'shorten', html`<div class="grid">
 ${textInput('url', '', { label: 'Link to shorten', max: 2000, type: 'url', placeholder: 'https://example.com/a/long/link' })}

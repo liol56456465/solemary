@@ -186,12 +186,13 @@ test('access: current main-server administrators act; OWNER_IDS view only; staff
 
 test('access facts: Administrator in MAIN_GUILD_ID only, OWNER_IDS from config', async () => {
     const { memberFacts } = await import('../src/services/dashboard/access.js');
-    const member = (admin) => ({ permissions: { has: () => admin } });
+    const member = (admin) => ({ permissions: { has: () => admin }, roles: { cache: new Map() } });
     const guild = { members: { fetch: async ({ user }) => (user === ADMIN ? member(true) : user === STRANGER ? member(false) : null) } };
     const client = { guilds: { cache: new Map([[GUILD, guild]]) } };
-    assert.deepEqual(await memberFacts(client, ADMIN, GUILD, []), { inGuild: true, isAdmin: true, isOwnerId: false });
-    assert.deepEqual(await memberFacts(client, STRANGER, GUILD, [STRANGER]), { inGuild: true, isAdmin: false, isOwnerId: true });
-    assert.deepEqual(await memberFacts(client, ADMIN, '999999999999999999', []), { inGuild: false, isAdmin: false, isOwnerId: false }, 'other guilds are never consulted');
+    const noConfig = async () => ({});
+    assert.deepEqual(await memberFacts(client, ADMIN, GUILD, [], noConfig), { inGuild: true, isAdmin: true, isOwnerId: false, isModerator: false });
+    assert.deepEqual(await memberFacts(client, STRANGER, GUILD, [STRANGER], noConfig), { inGuild: true, isAdmin: false, isOwnerId: true, isModerator: false });
+    assert.deepEqual(await memberFacts(client, ADMIN, '999999999999999999', [], noConfig), { inGuild: false, isAdmin: false, isOwnerId: false, isModerator: false }, 'other guilds are never consulted');
 });
 
 test('access checks are cached for 60 seconds', async () => {
