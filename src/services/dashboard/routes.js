@@ -59,13 +59,14 @@ import { listPendingAppeals } from '../enforcement/appealService.js';
 import { STATS_PERIODS, staffModerationStats } from '../staffActivityService.js';
 import { listSettingsAudit } from '../settings/guildSettings.js';
 import { createAccessChecker } from './access.js';
-import { BASE, THEME_COOKIE, messagePage, path, themeFrom } from './html.js';
+import { BASE, THEME_COOKIE, html, messagePage, path, themeFrom } from './html.js';
 import {
     appealsPage, auditPage, caseDetailPage, casesPage, moduleSettingsPage, statsPage,
 } from './pages.js';
 import { collectOverview, defaultOverviewData, moduleStatesFrom, overviewPage } from './overview.js';
 import { modulesPage } from './modulesPage.js';
 import { MODULES, getAction, getModule } from './modules/index.js';
+import { MODULE_COMMANDS, moduleCommandsSection } from './modules/commands.js';
 import { defaultServices } from './services.js';
 import { AUDIT_PAGE_SIZE, createAuditStore, recordDashboardChange } from './audit.js';
 import { defaultEnforcement } from './enforcementData.js';
@@ -535,8 +536,18 @@ export function createDashboard({
     async function renderModule(req, res, module, status = 200, { error = null, warnings = [] } = {}) {
         const ctx = contextFor(req);
         const data = await module.load(ctx);
+        // The module's own commands with their switches (not on the Commands page itself).
+        let commandsSection = '';
+        if (module.key !== 'commands' && client?.commands && MODULE_COMMANDS[module.key]) {
+            try {
+                const config = await services.getGuildConfig(client, guildId);
+                commandsSection = moduleCommandsSection(ctx, module.key, services.getCommandAccessSnapshot(client, config));
+            } catch (error) {
+                logger.warn(`Dashboard: commands of ${module.key} not shown: ${error.message}`);
+            }
+        }
         return sendHtml(res, status, moduleSettingsPage({
-            ...shellOf(req), module, body: module.render(ctx, data),
+            ...shellOf(req), module, body: html`${module.render(ctx, data)}${commandsSection}`,
             flash: req.dashboard.flash, error, warnings, editEnabled: settings.editEnabled,
         }));
     }
@@ -598,8 +609,10 @@ export function createDashboard({
         }
         const message = [result?.message || (changes.length ? 'Saved.' : 'Nothing changed.'), ...(result?.warnings || [])].map(plainText).join(' ');
         await sessions.setFlash?.(session.id, message);
-        // A switch on the Modules page comes back there; everything else to the module page.
-        return res.redirect(303, req.body?.back === 'modules' ? path('/modules') : path(`/${module.key}`));
+        // `back`: the Modules page or another module's page (only known names); else this module.
+        const back = typeof req.body?.back === 'string' ? req.body.back : '';
+        const target = back === 'modules' || (back && findModule(back)) ? `/${back}` : `/${module.key}`;
+        return res.redirect(303, path(target));
     }
 
     // Phase 3: enforcement and records (enforcementRoutes.js), with the same POST

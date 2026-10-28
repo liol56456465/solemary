@@ -5,8 +5,57 @@
 import { EVERYONE_COMMANDS, SUPPORT_SERVER_COMMANDS } from '../../../config/commands/commandAccess.js';
 import { normalizeCategoryKey } from '../../../config/commands/commandCategories.js';
 import { html } from '../html.js';
-import { InputError, boolField, buttonForm, text } from '../forms.js';
+import { InputError, boolField, buttonForm, moduleSwitch, text } from '../forms.js';
 import { section, table } from './common.js';
+
+/**
+ * The slash commands (and context menus) that belong to each settings module, shown
+ * as a "Commands" section on that module's page. Names not loaded in the bot are skipped.
+ */
+export const MODULE_COMMANDS = {
+    enforcement: ['enforcements', 'case', 'appeals', 'setappeal', 'background', 'staff', 'Moderate', 'Warn for this message', 'Report message'],
+    automod: ['automod'],
+    logging: ['logging'],
+    welcome: ['welcome', 'greet', 'goodbye', 'autorole'],
+    tickets: ['ticket', 'modmail', 'canned', 'claim', 'close', 'priority'],
+    leveling: ['level', 'rank', 'leaderboard'],
+    verification: ['verification', 'verify'],
+    'reaction-roles': ['reactroles'],
+    giveaways: ['giveaway'],
+    birthdays: ['birthday'],
+    counters: ['serverstats', 'count'],
+    'join-to-create': ['jointocreate'],
+    applications: ['apply', 'app-admin'],
+    community: ['community', 'suggest', 'tag'],
+};
+
+/**
+ * The "Commands" section of a module page: each of the module's commands with its
+ * on/off switch (the same commands/command action as the Commands page, returning to
+ * this module page). Protected commands and commands in a disabled category show why
+ * they cannot be switched here. Empty when the module has no commands or none are loaded.
+ */
+export function moduleCommandsSection(ctx, moduleKey, snapshot) {
+    const names = MODULE_COMMANDS[moduleKey];
+    if (!names || !snapshot) return '';
+    const found = new Map();
+    for (const cat of snapshot.categories) {
+        const disabled = new Set(cat.disabledCommandNames);
+        for (const cmd of cat.commands) {
+            if (names.includes(cmd.name)) found.set(cmd.name, { cmd, cat, on: !disabled.has(cmd.name) });
+        }
+    }
+    const rows = names.filter((name) => found.has(name)).map((name) => {
+        const { cmd, cat, on } = found.get(name);
+        const control = cmd.protected ? html`<span class="muted">protected</span>`
+            : cat.categoryDisabled ? html`<span class="muted">category ${cat.displayName} is off</span>`
+                : moduleSwitch({ csrf: ctx.csrf, canEdit: ctx.canEdit, module: 'commands', action: 'command', enabled: on, label: `/${cmd.name}`, back: moduleKey, hidden: { name: cmd.name } });
+        return [html`<code>${/\s/.test(cmd.name) ? cmd.name : `/${cmd.name}`}</code>`, cmd.description || '', control];
+    });
+    if (!rows.length) return '';
+    return section(`Commands (${rows.length})`, table(['Command', 'Description', 'On'], rows),
+        'Turning a command off makes it answer with a short notice. All commands: the Commands page.', { open: false, key: 'commands' });
+}
 
 export default {
     key: 'commands',

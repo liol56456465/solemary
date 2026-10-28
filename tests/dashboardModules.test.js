@@ -1008,3 +1008,29 @@ test('Overview keeps the full module states (automod etc.) next to the config-ba
     assert.match(res.body, /<span class="nav-label">Automod<\/span><span class="dot dot-on">/);
     assert.ok(!/0 of 0 modules/.test(res.body));
 });
+
+test('module pages list their own commands with switches that come back to the module page', async () => {
+    const h = await setup();
+    h.svc.getCommandAccessSnapshot = (client, config) => ({
+        categories: [
+            { key: 'logging', displayName: 'Logging', categoryDisabled: false, disabledCommandNames: Object.keys(config.disabledCommands || {}),
+                commands: [{ name: 'logging', description: 'Set up <logs>', protected: false }] },
+            { key: 'leveling', displayName: 'Leveling', categoryDisabled: true, disabledCommandNames: [],
+                commands: [{ name: 'rank', description: 'Your rank', protected: false }] },
+        ],
+    });
+    const page = await get(h, 'logging');
+    assert.match(page.body, /<details class="card section" id="s-commands" data-key="commands"><summary><h2>Commands \(1\)<\/h2>/);
+    assert.match(page.body, /<form method="post" action="\/dashboard\/commands\/command" class="switch-form"><input type="hidden" name="csrf" value="[^"]+">\n<input type="hidden" name="name" value="logging"><input type="hidden" name="enabled" value="false"><input type="hidden" name="back" value="logging">/);
+    assert.ok(page.body.includes('Set up &lt;logs&gt;'), 'description escaped');
+    const leveling = await get(h, 'leveling');
+    assert.match(leveling.body, /category Leveling is off/);
+    assert.ok(!leveling.body.includes('action="/dashboard/commands/command"'), 'no switch while the category is off');
+    const commandsPage = await get(h, 'commands');
+    assert.ok(!commandsPage.body.includes('id="s-commands"'), 'not repeated on the Commands page');
+    // The switch's POST returns to the module page; unknown back values go to the Commands page.
+    const back = await post(h, 'commands', 'command', { name: 'joke', enabled: 'false', back: 'logging' });
+    assert.equal(back.redirectedTo, '/dashboard/logging');
+    const evil = await post(h, 'commands', 'command', { name: 'joke', enabled: 'true', back: 'https://evil.example' });
+    assert.equal(evil.redirectedTo, '/dashboard/commands');
+});
