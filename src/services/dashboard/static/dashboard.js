@@ -7,6 +7,7 @@
 //   select[data-search]     a filter box above long channel / role lists
 //   form[data-confirm]      asks before a destructive submit (a <dialog>; red confirm for danger buttons)
 //   form submit             the button shows "Saving…" (aria-busy) and cannot be pressed twice
+//   refused settings form   what was typed comes back (sessionStorage), still marked unsaved
 //   form[data-dirty]        warns before leaving the page with unsaved changes
 //   [data-copy]             a copy-to-clipboard button (case codes)
 //   time[data-relative]     "in 3 h" / "5 min ago" (the UTC time stays in the tooltip)
@@ -31,6 +32,49 @@
             try { window.localStorage.setItem(key, value); } catch { /* private mode */ }
         },
     };
+    // For this tab only: what a settings form sent, until the next page says how it went.
+    const pending = {
+        take() {
+            try {
+                const value = window.sessionStorage.getItem('meowist:pending');
+                window.sessionStorage.removeItem('meowist:pending');
+                return value ? JSON.parse(value) : null;
+            } catch { return null; }
+        },
+        put(value) {
+            try { window.sessionStorage.setItem('meowist:pending', JSON.stringify(value)); } catch { /* private mode */ }
+        },
+    };
+
+    /** The user-editable values of a form: { name: [values] } (no CSRF token, hidden or file fields). */
+    function formValues(form) {
+        const values = {};
+        for (const el of form.elements) {
+            if (!el.name || el.disabled || ['hidden', 'file', 'password', 'submit', 'reset', 'button'].includes(el.type)) continue;
+            const list = values[el.name] || (values[el.name] = []);
+            if (el.type === 'checkbox' || el.type === 'radio') { if (el.checked) list.push(el.value); }
+            else if (el.multiple) list.push(...[...el.selectedOptions].map((o) => o.value));
+            else list.push(el.value);
+        }
+        return values;
+    }
+
+    /** After a refused save: put back what was typed in that form (the page shows the saved values). */
+    function restoreRefusedForm() {
+        const sent = pending.take();
+        const error = document.getElementById('form-error');
+        const form = error?.closest('form');
+        if (!sent || !form || form.getAttribute('action') !== sent.action) return;
+        for (const el of form.elements) {
+            if (!el.name || !Object.hasOwn(sent.values, el.name)) continue;
+            const list = sent.values[el.name];
+            if (el.type === 'checkbox' || el.type === 'radio') el.checked = list.includes(el.value);
+            else if (el.multiple) for (const option of el.options) option.selected = list.includes(option.value);
+            else if (list.length) el.value = list.shift();
+        }
+        // Still unsaved: same marks and bar as after typing.
+        form.querySelector('input, select, textarea')?.dispatchEvent(new Event('input', { bubbles: true }));
+    }
 
     // ── Searchable selects ───────────────────────────────────────────────
     function enhanceSelect(select) {
@@ -131,6 +175,7 @@
         }
         delete form.dataset.confirmed;
         form.dataset.submitting = '1';
+        if (form.matches('form[data-dirty]')) pending.put({ action: form.getAttribute('action'), values: formValues(form) });
         const button = event.submitter || form.querySelector('button[type="submit"]');
         if (button) {
             // Loading state, and no double submits; undone if the user comes back (bfcache).
@@ -487,6 +532,7 @@
         document.querySelectorAll('[data-copy]').forEach(addCopyButton);
         document.querySelectorAll('details[data-key]').forEach(rememberDetails);
         showFormError();
+        restoreRefusedForm();
         updateTimes();
         window.setInterval(updateTimes, 60 * 1000);
         setupDrawer();

@@ -127,7 +127,7 @@ function evidenceItem({ row, freshUrl }) {
 export function caseDetailPage({ session, access = null, moduleStates = {}, record, statusLabel, edits = [], evidence = [], appeals = [], top = '', bottom = '' }) {
     const r = record;
     const body = html`<a class="back" href="/dashboard/cases">← Cases</a>
-<h1>Case <code data-copy="${r.case_code}">${r.case_code}</code> · ${r.type}${r.is_test ? ' (test)' : ''}</h1>
+<h1 class="title-with-badge">Case <code data-copy="${r.case_code}">${r.case_code}</code> ${typeBadge(r.type)}${r.is_test ? html` <span class="muted">(test)</span>` : ''}</h1>
 ${top}
 <section class="card"><dl>
 <dt>Name</dt><dd>${r.name}</dd>

@@ -207,7 +207,7 @@ ${section(`Staff notes (${(view.notes || []).length})`, notesSection(view, canWr
 export function actionConfirmPage({ session, access = null, moduleStates = {}, userId, type, summary, token, hash, block = null }) {
     const body = html`<p><a href="${userHref(userId)}">← Back (cancel)</a></p>
 <h1>Confirm: ${ACTION_LABELS[type]}</h1>
-<dl>${summary.rows.map((row) => html`<dt>${row.label}</dt><dd>${row.code ? html`<code>${row.value}</code>` : row.value}${row.id ? html` <span class="muted">${row.id}</span>` : ''}</dd>`)}
+<section class="card confirm-card"><dl>${summary.rows.map((row) => html`<dt>${row.label}</dt><dd>${row.code ? html`<code>${row.value}</code>` : row.value}${row.id ? html` <span class="muted">${row.id}</span>` : ''}</dd>`)}
 ${summary.evidence.length ? html`<dt>Evidence</dt><dd><ul class="plain">${summary.evidence.map((e) => html`<li>${link(e.url)}${e.excerpt ? html` <blockquote>${e.excerpt}</blockquote>` : e.unreadable ? html` <span class="muted">(message not readable, link only)</span>` : ''}</li>`)}</ul></dd>` : ''}
 ${summary.effect ? html`<dt>Effect</dt><dd>${summary.effect}</dd>` : ''}
 </dl>
@@ -215,7 +215,7 @@ ${summary.notes.map((n) => html`<p>${n}</p>`)}
 ${summary.precedent ? html`<p class="muted">${summary.precedent}</p>` : ''}
 ${block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(block.until)}; this will be refused.</p>` : ''}
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
-${actionForm(session.csrf, `/users/${userId}/action/execute`, '', { submit: `Confirm ${ACTION_LABELS[type].toLowerCase()}`, hidden: { token, fh: hash }, danger: true })}`;
+${actionForm(session.csrf, `/users/${userId}/action/execute`, '', { submit: `Confirm ${ACTION_LABELS[type].toLowerCase()}`, hidden: { token, fh: hash }, danger: true })}</section>`;
     return layout({ title: `Confirm ${ACTION_LABELS[type]}`, active: 'users', session, access, moduleStates, body });
 }
 
@@ -256,7 +256,7 @@ export function appealDetailPage({ session, access = null, moduleStates = {}, da
     const { record: r, appeal, answers = [], history = [], others = [], othersTotal = 0, ladder = null, evidence = [] } = data;
     const pending = appeal?.status === 'pending';
     const body = html`<p><a href="${path('/appeals')}">← Appeals</a></p>
-<h1>Appeal · <code data-copy="${r.case_code}">${r.case_code}</code> · ${r.type}${r.is_test ? ' (test case)' : ''}</h1>
+<h1 class="title-with-badge">Appeal · <code data-copy="${r.case_code}">${r.case_code}</code> ${typeBadge(r.type)}${r.is_test ? html` <span class="muted">(test case)</span>` : ''}</h1>
 ${notices({ flash, error, editEnabled, canAct, actLabel: 'decide appeals' })}
 ${r.is_test ? html`<p class="notice">Test case created with /test: nothing was executed, accepting it changes nothing.</p>` : ''}
 <dl>
@@ -294,12 +294,12 @@ export function appealConfirmPage({ session, access = null, moduleStates = {}, r
         : 'The punishment stays. The member is DMed that the appeal was denied.';
     const body = html`<p><a href="${path(`/appeals/${encodeURIComponent(record.case_code)}`)}">← Back (cancel)</a></p>
 <h1>Confirm: ${accept ? 'accept' : 'deny'} the appeal on <code>${record.case_code}</code></h1>
-<dl><dt>Member</dt><dd>${record.target_username} <span class="muted">${record.target_user_id}</span></dd>
-<dt>Case</dt><dd>${record.type} · ${record.name}</dd>
+<section class="card confirm-card"><dl><dt>Member</dt><dd>${record.target_username} <span class="muted">${record.target_user_id}</span></dd>
+<dt>Case</dt><dd>${typeBadge(record.type)} · ${record.name}</dd>
 <dt>Note</dt><dd>${note || '—'}</dd>
 <dt>Effect</dt><dd>${effect}${!accept && record.is_auto && record.ladder_level_after === 3 ? ' This level-3 ladder ban becomes unappealable.' : ''}</dd></dl>
 <p class="muted">The appeal channel gets the decision and is deleted 10 seconds later (its transcript goes to the mod log). This confirmation works once and expires in 5 minutes.</p>
-${actionForm(session.csrf, `/appeals/${record.case_code}/decide`, '', { submit: accept ? 'Accept appeal' : 'Deny appeal', hidden: { token, fh: hash }, danger: !accept })}`;
+${actionForm(session.csrf, `/appeals/${record.case_code}/decide`, '', { submit: accept ? 'Accept appeal' : 'Deny appeal', hidden: { token, fh: hash }, danger: !accept })}</section>`;
     return layout({ title: `Confirm appeal ${record.case_code}`, active: 'appeals', session, access, moduleStates, body });
 }
 
@@ -308,7 +308,7 @@ ${actionForm(session.csrf, `/appeals/${record.case_code}/decide`, '', { submit: 
 /** rows: listActiveNoContactOrders; names: Map(userId → username). */
 export function noContactPage({ session, access = null, moduleStates = {}, rows = [], names = new Map(), canWrite = false, flash = null, error = null, editEnabled = true, canAct = true, values = {} }) {
     const who = (id) => html`<a href="${userHref(id)}">${names.get(id) || id}</a> <span class="muted">${id}</span>`;
-    const body = html`<h1>No-contact orders (${rows.length})</h1>
+    const body = html`<header class="page-head"><h1>No-contact orders (${rows.length})</h1></header>
 <p class="muted help">Two members may not mention or reply to each other; breaking messages are deleted and logged. Both members are DMed when an order starts and ends.</p>
 ${notices({ flash, error, editEnabled, canAct, actLabel: 'start or end orders' })}
 ${section(`Active orders (${rows.length})`, html`${rows.length ? html`<div class="scroll"><table><thead><tr><th>#</th><th>Members</th><th>Until</th><th>By</th><th>Reason</th><th></th></tr></thead><tbody>

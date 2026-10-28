@@ -668,6 +668,9 @@ label.switch-row + label.switch-row { border-top: 0; }
 .evidence { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .evidence img { max-width: 100%; max-height: 360px; border: 1px solid var(--line); border-radius: var(--radius-sm); display: block; margin: 8px 0; }
 .back { display: inline-flex; margin-bottom: 8px; font-size: 12px; color: var(--fg-2); }
+/* Detail headings with the action badge next to the case code; confirm steps in a card. */
+h1.title-with-badge .type { vertical-align: middle; font-size: 14px; height: 24px; }
+.confirm-card { max-width: 720px; }
 /* Member page header: who, and the standing at a glance. */
 .member-header { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin: 0 0 24px; }
 .member-title { flex: 1; min-width: 200px; }
