@@ -532,7 +532,7 @@ a.kpi-num:hover { text-decoration: none; color: var(--purple); }
 .section-links-label { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-2); margin-right: 4px; }
 .section-links a {
     display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px;
-    background: var(--surface-2); color: var(--fg-2); font-size: 12px;
+    background: var(--raised); border: 1px solid var(--border); color: var(--fg-2); font-size: 12px;
 }
 .section-links a:hover { background: var(--accent-soft); color: var(--accent-text); text-decoration: none; }
 details.section { scroll-margin-top: calc(var(--topbar) + 12px); }
