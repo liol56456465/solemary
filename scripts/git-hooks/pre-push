@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# pre-push: refuses the push when gitleaks finds a secret in the commits being pushed.
+# Install: cp scripts/git-hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+# CI (.github/workflows/gitleaks.yml) scans the full history as well, so a bypass with
+# --no-verify is still caught there.
+set -euo pipefail
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "pre-push: gitleaks is not installed; refusing to push (https://github.com/gitleaks/gitleaks)." >&2
+    exit 1
+fi
+
+zero=0000000000000000000000000000000000000000
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ "$local_sha" = "$zero" ] && continue            # deleting a remote branch
+    if [ "$remote_sha" = "$zero" ]; then
+        range="$local_sha --not --remotes"             # new branch: commits not on any remote yet
+    else
+        range="$remote_sha..$local_sha"
+    fi
+    if ! gitleaks git --redact --no-banner --log-opts="$range" .; then
+        echo "pre-push: gitleaks found possible secrets in $local_ref; push refused." >&2
+        status=1
+    fi
+done
+exit $status
