@@ -104,14 +104,19 @@ export function useTag(guildId, name) {
     return tag;
 }
 
-/** Timeouts in a row before a tag's trigger is switched off (one can be plain CPU load). */
+/**
+ * A tag's trigger is switched off after this many timeouts within the window. One timeout
+ * can be plain CPU load; successful matches do not clear the count (a pattern that is slow
+ * only on some messages must not dodge the limit by alternating with fast ones).
+ */
 export const TRIGGER_TIMEOUT_STRIKES = 3;
+export const TRIGGER_TIMEOUT_WINDOW_MS = 10 * 60 * 1000;
 
 /**
  * The tag a member message triggers, or null; pure apart from the cooldown map.
  * Matching all of a guild's patterns is one time-boxed vm call; a pattern that runs past
- * the timeout TRIGGER_TIMEOUT_STRIKES times in a row is switched off until the next reload
- * (a single timeout can be a busy host, not a bad pattern). `match` is injectable for tests.
+ * the timeout TRIGGER_TIMEOUT_STRIKES times within TRIGGER_TIMEOUT_WINDOW_MS is switched off
+ * until the next reload. `match` is injectable for tests.
  */
 export function findTriggeredTag(message, now = Date.now(), match = matchFirst) {
     const entry = byGuild.get(message.guild?.id);
@@ -124,23 +129,20 @@ export function findTriggeredTag(message, now = Date.now(), match = matchFirst) 
     if (!candidates.length) return null;
     const hit = match(candidates.map((tag) => tag.pattern), message.content);
     if (hit === null) {
-        // Find the slow one(s); switch a tag off only after repeated timeouts rather than
-        // paying the timeout on every message.
+        // Find the slow one(s) and count the timeout; repeated timeouts switch the tag off
+        // rather than paying the timeout on every message.
         for (const tag of candidates) {
-            if (match([tag.pattern], message.content) === null) {
-                tag.timeouts = (tag.timeouts || 0) + 1;
-                if (tag.timeouts >= TRIGGER_TIMEOUT_STRIKES) {
-                    logger.warn(`Tag ${tag.guildId}/${tag.name}: regex timed out ${tag.timeouts} times; trigger disabled until the tag is edited or the bot restarts`);
-                    tag.pattern = null;
-                }
-            } else {
-                tag.timeouts = 0;
+            if (match([tag.pattern], message.content) !== null) continue;
+            tag.timeoutsAt = (tag.timeoutsAt || []).filter((at) => now - at < TRIGGER_TIMEOUT_WINDOW_MS);
+            tag.timeoutsAt.push(now);
+            if (tag.timeoutsAt.length >= TRIGGER_TIMEOUT_STRIKES) {
+                logger.warn(`Tag ${tag.guildId}/${tag.name}: regex timed out ${tag.timeoutsAt.length} times in 10 min; trigger disabled until the tag is edited or the bot restarts`);
+                tag.pattern = null;
             }
         }
         entry.triggered = entry.triggered.filter((tag) => tag.pattern);
         return null;
     }
-    for (const tag of candidates) tag.timeouts = 0;
     if (hit < 0) return null;
     const tag = candidates[hit];
     lastFired.set(`${tag.id}:${channelId}`, now);

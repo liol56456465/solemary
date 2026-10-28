@@ -75,7 +75,8 @@ export function compileTrigger(kind, trigger) {
         }
         if (regex.test('')) throw new Error('That regex matches every message.');
         for (const probe of ['a'.repeat(MATCH_INPUT_MAX), `${'a '.repeat(MATCH_INPUT_MAX / 2 - 1)}!`, `${'1'.repeat(MATCH_INPUT_MAX - 1)}x`]) {
-            if (matchFirst([regex], probe) === null) throw new Error('That regex is too slow to run on every message.');
+            // Twice in a row: one timeout can be a busy host rather than a slow pattern.
+            if (matchFirst([regex], probe) === null && matchFirst([regex], probe) === null) throw new Error('That regex is too slow to run on every message.');
         }
         return regex;
     }

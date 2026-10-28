@@ -87,15 +87,25 @@ test('triggered tags: first match, channel rules and per-channel cooldown from m
     assert.equal(useTag(G, 'missing'), null);
 });
 
-test('triggered tags: one slow match (busy host) does not switch a tag off; repeated timeouts do', async () => {
-    const { TRIGGER_TIMEOUT_STRIKES } = await import('../../src/services/community/tagService.js');
+test('triggered tags: one slow match (busy host) does not switch a tag off; 3 timeouts in 10 min do, even between fast matches', async () => {
+    const { TRIGGER_TIMEOUT_STRIKES, TRIGGER_TIMEOUT_WINDOW_MS } = await import('../../src/services/community/tagService.js');
     setTagsForTests([
         { id: 9, guild_id: G, name: 'ip', content: 'play.example.com', trigger_kind: 'word', trigger: 'server ip', cooldown_s: 0, allow_channels: [], deny_channels: [], created_by: 'x', uses: 0 },
     ]);
     const msg = (content) => ({ guild: { id: G }, channel: { id: '200000000000000009', isThread: () => false }, content });
     const timesOut = () => null;
+    const plain = (patterns, text) => patterns.findIndex((p) => p.test(text)); // no time limit: deterministic
     assert.equal(findTriggeredTag(msg('server ip'), 1000, timesOut), null);
-    assert.equal(findTriggeredTag(msg('server ip'), 2000)?.name, 'ip', 'still active after one timeout');
-    for (let i = 0; i < TRIGGER_TIMEOUT_STRIKES; i += 1) findTriggeredTag(msg('server ip'), 3000 + i, timesOut);
-    assert.equal(findTriggeredTag(msg('server ip'), 9000), null, 'switched off after repeated timeouts');
+    assert.equal(findTriggeredTag(msg('server ip'), 2000, plain)?.name, 'ip', 'still active after one timeout');
+    // Timeouts far apart never add up.
+    assert.equal(findTriggeredTag(msg('server ip'), 1000 + TRIGGER_TIMEOUT_WINDOW_MS + 1, timesOut), null);
+    assert.equal(findTriggeredTag(msg('server ip'), 2 * TRIGGER_TIMEOUT_WINDOW_MS + 5000, timesOut), null);
+    assert.equal(findTriggeredTag(msg('server ip'), 2 * TRIGGER_TIMEOUT_WINDOW_MS + 6000, plain)?.name, 'ip', 'only 2 timeouts in the window');
+    // Fast matches in between do not reset the count.
+    const base = 3 * TRIGGER_TIMEOUT_WINDOW_MS;
+    for (let i = 0; i < TRIGGER_TIMEOUT_STRIKES; i += 1) {
+        findTriggeredTag(msg('server ip'), base + i * 2, timesOut);
+        findTriggeredTag(msg('server ip'), base + i * 2 + 1, plain);
+    }
+    assert.equal(findTriggeredTag(msg('server ip'), base + 100, plain), null, 'switched off after 3 timeouts in 10 min');
 });
