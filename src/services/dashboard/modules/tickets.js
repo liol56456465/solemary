@@ -5,7 +5,7 @@
 import { CANNED_MAX_LENGTH, CANNED_NAME } from '../../cannedService.js';
 import { html } from '../html.js';
 import {
-    InputError, PERMS, buttonForm, channelField, channelName, channelPicker, channelWarnings, checkbox, checkboxInput, intField,
+    InputError, PERMS, buttonForm, channelField, channelName, channelPicker, channelWarnings, checkbox, switchInput, intField,
     multiline, numberInput, postForm, roleField, rolePicker, text, textArea, textInput, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -33,7 +33,7 @@ ${channelPicker(g, 'ticketCategoryId', t.ticketCategoryId, { label: 'Open ticket
 ${channelPicker(g, 'ticketClosedCategoryId', t.ticketClosedCategoryId, { label: 'Closed tickets category', kinds: ['category'], perms: PERMS.category })}
 ${rolePicker(g, 'ticketStaffRoleId', t.ticketStaffRoleId, { label: 'Ticket staff role', assign: false })}
 ${numberInput('maxTicketsPerUser', t.maxTicketsPerUser ?? 3, { label: 'Open tickets per member (1–10)', min: 1, max: 10 })}
-${checkboxInput('dmOnClose', t.dmOnClose !== false, { label: 'DM the member when a ticket closes' })}
+${switchInput('dmOnClose', t.dmOnClose !== false, { label: 'DM the member when a ticket closes' })}
 ${channelPicker(g, 'ticketLogsChannelId', t.ticketLogsChannelId, { label: 'Ticket log channel', perms: PERMS.post })}
 ${channelPicker(g, 'ticketTranscriptChannelId', t.ticketTranscriptChannelId, { label: 'Transcript channel', perms: PERMS.postFiles })}
 ${textInput('ticketButtonLabel', t.ticketButtonLabel || 'Create Ticket', { label: 'Panel button label', max: 80 })}
@@ -50,7 +50,7 @@ ${channelPicker(g, 'categoryId', null, { label: 'Open tickets category', kinds: 
 ${channelPicker(g, 'closedCategoryId', null, { label: 'Closed tickets category', kinds: ['category'], perms: PERMS.category })}
 ${rolePicker(g, 'staffRoleId', null, { label: 'Ticket staff role', assign: false })}
 ${numberInput('maxTicketsPerUser', 3, { label: 'Open tickets per member (1–10)', min: 1, max: 10 })}
-${checkboxInput('dmOnClose', true, { label: 'DM the member when a ticket closes' })}
+${switchInput('dmOnClose', true, { label: 'DM the member when a ticket closes' })}
 ${textArea('panelMessage', 'Click the button below to create a support ticket.', { label: 'Panel message', max: 2000 })}</div>`, { submit: 'Set up and post the panel', canEdit: canPost })}`;
         const blockedRows = blocked.map((id) => [html`<code>${id}</code>`, buttonForm(ctx, 'tickets', 'unblock', 'Unblock', { userId: id }, { danger: false })]);
         const cannedRows = Object.entries(canned).sort((a, b) => a[0].localeCompare(b[0])).map(([name, body]) => [

@@ -9,7 +9,7 @@ import { JOIN_GATE_ACTIONS, JOIN_GATE_CHECKS, normalizeJoinGate } from '../../au
 import { NATIVE_POLICIES, policyFor } from '../../automod/nativeBridge.js';
 import { html } from '../html.js';
 import {
-    InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, checkboxInput, choiceField,
+    InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, switchInput, choiceField,
     intField, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, toggleForm,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -76,7 +76,7 @@ export default {
         const gate = normalizeJoinGate(s.joinGate);
         const ruleKeys = Object.keys(AUTOMOD_RULES);
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
-        const top = html`${postForm(ctx, 'automod', 'mode', selectInput('mode', s.mode, [['enforce', 'Enforce: act and post a review card'], ['monitor', 'Monitor: only post cards (Apply button)']], { label: 'Global mode' }), { inline: true })}`;
+        const top = html`${postForm(ctx, 'automod', 'mode', html`<div class="grid grid-wide">${selectInput('mode', s.mode, [['enforce', 'Enforce: act and post a review card'], ['monitor', 'Monitor: only post cards (Apply button)']], { label: 'Global mode' })}</div>`)}`;
         const rules = postForm(ctx, 'automod', 'rules', table(['Rule', 'Mode'], ruleKeys.map((key) => [
             AUTOMOD_RULES[key].label,
             selectInput(`rule:${key}`, s.ruleModes[key] || 'default', [['default', `default (${s.mode === 'monitor' ? 'monitor' : 'on'})`], ...RULE_MODES.map((m) => [m, m])], { label: '' }),
@@ -102,7 +102,7 @@ ${numberInput('minLevel', s.trusted.minLevel, { label: 'Or minimum level (0 = no
 `;
         const mood = toggleForm(ctx, 'automod', 'mood', s.moodAlerts, { label: 'Mood alerts (calm-down note + short slowmode when a channel heats up)' });
         const panic = html`
-${postForm(ctx, 'automod', 'panic', html`<div class="grid">${checkboxInput('enabled', s.panic.enabled, { label: 'Panic mode: pause invites and DMs when a raid lockdown starts' })}
+${postForm(ctx, 'automod', 'panic', html`<div class="grid">${switchInput('enabled', s.panic.enabled, { label: 'Panic mode: pause invites and DMs when a raid lockdown starts' })}
 ${numberInput('hours', s.panic.hours, { label: 'Pause for (hours)', min: 1, max: 24 })}</div>`)}`;
         const joinGate = postForm(ctx, 'automod', 'join-gate', html`<div class="grid">
 ${Object.entries(JOIN_GATE_CHECKS).map(([check, { label }]) => selectInput(`gate:${check}`, gate[check], JOIN_GATE_ACTIONS.map((a) => [a, a]), { label }))}

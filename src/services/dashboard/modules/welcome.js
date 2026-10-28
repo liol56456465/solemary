@@ -4,7 +4,7 @@
 
 import { html } from '../html.js';
 import {
-    PERMS, autoRoleField, boolField, buttonForm, channelField, channelPicker, checkbox, checkboxInput, intField,
+    PERMS, autoRoleField, boolField, buttonForm, channelField, channelPicker, checkbox, switchInput, intField,
     numberInput, postForm, rolePicker, roleName, text, textArea, toggleForm, roleWarnings,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -35,22 +35,22 @@ export default {
         const welcome = html`${toggleForm(ctx, 'welcome', 'welcome-enabled', w.enabled, { label: 'Welcome messages' })}
 ${postForm(ctx, 'welcome', 'welcome', html`<div class="grid">
 ${channelPicker(g, 'channelId', w.channelId, { label: 'Welcome channel', perms: PERMS.postFiles })}
-${checkboxInput('welcomePing', w.welcomePing, { label: 'Ping the member' })}
+${switchInput('welcomePing', w.welcomePing, { label: 'Ping the member' })}
 ${textArea('welcomeMessage', w.welcomeMessage, { label: 'Welcome message', max: 2000 })}
 ${textArea('dmMessage', w.dmMessage, { label: 'DM to the new member (empty = none)', max: 2000 })}</div>`)}`;
         const goodbye = html`${toggleForm(ctx, 'welcome', 'goodbye-enabled', w.goodbyeEnabled, { label: 'Goodbye messages' })}
 ${postForm(ctx, 'welcome', 'goodbye', html`<div class="grid">
 ${channelPicker(g, 'goodbyeChannelId', w.goodbyeChannelId, { label: 'Goodbye channel', perms: PERMS.postFiles })}
-${checkboxInput('goodbyePing', w.goodbyePing, { label: 'Ping the member' })}
+${switchInput('goodbyePing', w.goodbyePing, { label: 'Ping the member' })}
 ${textArea('leaveMessage', w.leaveMessage, { label: 'Goodbye message', max: 2000 })}</div>`)}`;
         const roles = html`${table(['Role', 'Problems', ''], (w.roleIds || []).map((id) => [roleName(g, id), roleWarnings(g, id, { autoAssign: true }).join('; ') || html`<span class="ok">ok</span>`,
             buttonForm(ctx, 'welcome', 'autorole-remove', 'Remove', { roleId: id })]), 'No roles are given on join.')}
 ${postForm(ctx, 'welcome', 'autorole-add', rolePicker(g, 'roleId', null, { label: 'Role given on join', optional: false, autoAssign: true, includeManaged: false }), { submit: 'Set', inline: true })}
 ${postForm(ctx, 'welcome', 'autorole-delay', numberInput('autoRoleDelay', w.autoRoleDelay || 0, { label: 'Delay before giving roles (seconds)', min: 0, max: 3600 }), { inline: true })}`;
         const logs = postForm(ctx, 'welcome', 'logs', html`<div class="grid">
-${checkboxInput('joinLogsEnabled', w.joinLogs?.enabled, { label: 'Log joins' })}
+${switchInput('joinLogsEnabled', w.joinLogs?.enabled, { label: 'Log joins' })}
 ${channelPicker(g, 'joinLogsChannelId', w.joinLogs?.channelId || null, { label: 'Join log channel', perms: PERMS.post })}
-${checkboxInput('leaveLogsEnabled', w.leaveLogs?.enabled, { label: 'Log leaves' })}
+${switchInput('leaveLogsEnabled', w.leaveLogs?.enabled, { label: 'Log leaves' })}
 ${channelPicker(g, 'leaveLogsChannelId', w.leaveLogs?.channelId || null, { label: 'Leave log channel', perms: PERMS.post })}</div>`);
         return html`${section('Welcome', welcome)}${section('Goodbye', goodbye)}
 ${section('Auto role', roles, 'One role, as with /autorole: setting a role replaces the current one. Roles with staff permissions or above my highest role are refused.')}

@@ -7,7 +7,7 @@
 import { html } from '../html.js';
 import {
     InputError, PERMS, autoRoleField, boolField, buttonForm, channelField, channelName, channelPicker, checkbox,
-    checkboxInput, choiceField, intField, numberInput, postForm, rolePicker, roleName, roleWarnings, selectInput,
+    switchInput, choiceField, intField, numberInput, postForm, rolePicker, roleName, roleWarnings, selectInput,
     text, textArea, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -45,7 +45,7 @@ ${numberInput('xpMin', range.min, { label: 'XP per message: minimum', min: 1, ma
 ${numberInput('xpMax', range.max, { label: 'XP per message: maximum', min: 1, max: 500 })}
 ${numberInput('xpCooldown', cfg.xpCooldown ?? 60, { label: 'Seconds between XP grants', min: 0, max: 3600 })}
 ${channelPicker(g, 'levelUpChannel', cfg.levelUpChannel || null, { label: 'Level-up channel', perms: PERMS.post, noneLabel: 'where the member chatted' })}
-${checkboxInput('announceLevelUp', cfg.announceLevelUp !== false, { label: 'Announce level-ups' })}
+${switchInput('announceLevelUp', cfg.announceLevelUp !== false, { label: 'Announce level-ups' })}
 ${textArea('levelUpMessage', cfg.levelUpMessage || '{user} has leveled up to level {level}!', { label: 'Level-up message', max: 500, rows: 2 })}</div>`);
         const ignoredRows = [
             ...(cfg.ignoredChannels || []).map((id) => ['channel', channelName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', 'Remove', { type: 'channel', id })]),

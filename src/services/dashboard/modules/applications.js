@@ -8,7 +8,7 @@ import { MAX_APPLICATION_QUESTIONS, parseQuestionLines } from '../../application
 import { APPLICATION_NAME_MAX } from '../../applicationRoleService.js';
 import { html } from '../html.js';
 import {
-    InputError, PERMS, boolField, buttonForm, channelField, channelPicker, checkbox, checkboxInput, intField, isSnowflake, multiline,
+    InputError, PERMS, boolField, buttonForm, channelField, channelPicker, checkbox, checkboxInput, switchInput, intField, isSnowflake, multiline,
     numberInput, pill, postForm, roleField, rolePicker, roleName, text, textArea, textInput,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -41,7 +41,7 @@ export default {
         const roleBlocks = roles.map((r) => html`<details class="sub" data-key="app-${r.roleId}"><summary>${r.name} · ${roleName(g, r.roleId)} ${pill(r.enabled)}</summary>
 ${postForm(ctx, 'applications', 'role-update', html`<div class="grid">
 ${textInput('name', r.name, { label: 'Name', max: APPLICATION_NAME_MAX })}
-${checkboxInput('enabled', r.enabled, { label: 'Open for applications' })}
+${switchInput('enabled', r.enabled, { label: 'Open for applications' })}
 ${channelPicker(g, 'logChannelId', r.logChannelId, { label: 'Log channel for this role', perms: PERMS.post, noneLabel: 'the application log channel' })}
 ${textArea('questions', questionText(r.questions), { label: `Questions (one per line, at most ${MAX_APPLICATION_QUESTIONS}; empty = default questions)`, rows: 5, max: 1000 })}</div>`,
         { submit: 'Save application', hidden: { roleId: r.roleId } })}

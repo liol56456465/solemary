@@ -12,7 +12,7 @@ import { createAccessChecker } from '../src/services/dashboard/access.js';
 import { SESSION_COOKIE, signValue, isSameOrigin } from '../src/services/dashboard/security.js';
 import { MODULES, getAction } from '../src/services/dashboard/modules/index.js';
 import { getSettingEntry, seedValue } from '../src/services/settings/settingsRegistry.js';
-import { channelGroups, channelWarnings, roleWarnings } from '../src/services/dashboard/forms.js';
+import { channelGroups, channelWarnings, roleWarnings, switchInput } from '../src/services/dashboard/forms.js';
 import { diffSnapshots, recordDashboardChange, changeSummary } from '../src/services/dashboard/audit.js';
 import { channelPurposeFor } from '../src/services/automod/channelRouting.js';
 import { NAV } from '../src/services/dashboard/html.js';
@@ -1079,4 +1079,14 @@ test('Overview checklist: progress bar, open items first, done/to-do words for s
     assert.match(page, /<span class="sr">to do:<\/span>/);
     assert.match(page, /<span class="sr">done:<\/span>/);
     assert.ok(page.includes('set it &lt;up&gt;'));
+});
+
+test('switchInput: an on/off setting is a real checkbox (name=1 when on) drawn as a switch', () => {
+    const on = String(switchInput('dmOnClose', true, { label: 'DM the member' }));
+    assert.match(on, /^<label class="switch-row">/);
+    assert.match(on, /<input type="checkbox" class="switch-input" role="switch" name="dmOnClose" value="1" checked>/);
+    assert.match(on, /<span class="switch-track" aria-hidden="true"><\/span><\/label>$/);
+    const off = String(switchInput('x', false, { label: '<b>', help: 'why' }));
+    assert.ok(!off.includes(' checked'));
+    assert.ok(off.includes('&lt;b&gt;') && off.includes('<span class="hint">why</span>'), 'label escaped, help shown');
 });

@@ -290,6 +290,15 @@ export function textArea(name, value, { label, max = 2000, rows = 4, help = '' }
     return html`<label class="wide">${label}<textarea name="${name}" maxlength="${max}" rows="${rows}">${value ?? ''}</textarea>${help ? html`<span class="hint">${help}</span>` : ''}</label>`;
 }
 
+/**
+ * An on/off setting inside a settings form: a real checkbox (posted as name=1 when on, like
+ * checkboxInput) drawn as a switch, label left, switch right, full row. Confirm boxes and
+ * lists of choices stay checkboxes.
+ */
+export function switchInput(name, checked, { label, help = '' } = {}) {
+    return html`<label class="switch-row"><span class="switch-label">${label}${help ? html`<span class="hint">${help}</span>` : ''}</span><input type="checkbox" class="switch-input" role="switch" name="${name}" value="1"${checked ? raw(' checked') : ''}><span class="switch-track" aria-hidden="true"></span></label>`;
+}
+
 export function checkboxInput(name, checked, { label, help = '' } = {}) {
     return html`<label class="check"><input type="checkbox" name="${name}" value="1"${checked ? raw(' checked') : ''}> ${label}${help ? html` <span class="hint">${help}</span>` : ''}</label>`;
 }
