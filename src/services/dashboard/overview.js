@@ -15,8 +15,9 @@ import { openCards } from '../automod/reviewRegistry.js';
 import { getLockdownState } from '../automod/raidService.js';
 import { SETTINGS } from '../settings/settingsRegistry.js';
 import { getSetting, guildIdFor, settingSource } from '../settings/guildSettings.js';
-import { formatDate, html, layout, path, raw, timeTag } from './html.js';
+import { formatDate, html, layout, navItems, path, raw, timeTag } from './html.js';
 import { moduleEntries } from './modulesPage.js';
+import { valueText } from './audit.js';
 
 const PENDING_APPEALS_CAP = 100;
 
@@ -138,8 +139,21 @@ function moduleSummary(moduleStates) {
 <p class="card-foot"><a href="${path('/modules')}">Manage modules</a></p>`;
 }
 
-/** The Overview page from collectOverview's result. */
-export function overviewPage({ session, access = null, moduleStates = {}, overview: o }) {
+/** The newest dashboard changes (audit rows): who, which module and setting, old → new, when. */
+function recentChangesSection(rows) {
+    if (rows === null) return html`<section class="card"><h2>Recent dashboard changes</h2><p class="muted">Unavailable (database).</p></section>`;
+    const label = (key) => navItems().find((i) => i.key === key)?.label || key;
+    const list = rows.length ? html`<ul class="activity">${rows.map((r) => html`<li>
+<span class="avatar-initials" aria-hidden="true">${String(r.username || '?').slice(0, 1).toUpperCase()}</span>
+<span class="activity-text"><strong>${r.username || r.user_id || 'someone'}</strong> changed <code>${r.key}</code> in ${navItems().some((i) => i.key === r.module) ? html`<a href="${path(`/${r.module}`)}">${label(r.module)}</a>` : label(r.module)}
+<span class="activity-values muted">${valueText(r.old)} → ${valueText(r.new)}</span></span>
+<span class="activity-time muted">${timeTag(r.created_at)}</span></li>`)}</ul><p class="card-foot"><a href="${path('/audit')}">Full audit log</a></p>`
+        : html`<p class="empty">No dashboard changes yet.</p>`;
+    return html`<section class="card"><h2>Recent dashboard changes</h2>${list}</section>`;
+}
+
+/** The Overview page from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
+export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [] }) {
     const todo = o.checklist.filter((item) => !item.done);
     const pendingText = o.pendingAppeals >= PENDING_APPEALS_CAP ? `${PENDING_APPEALS_CAP}+` : o.pendingAppeals;
     const lockdown = o.lockdown === undefined ? html`<span class="muted">unavailable</span>` : o.lockdown.active ? 'active' : 'off';
@@ -160,6 +174,7 @@ ${o.recent.map((row) => html`<tr><td><a href="${path(`/cases/${encodeURIComponen
 ${stats}
 <details class="card section" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>Getting started${todo.length ? html` <span class="count">${todo.length} to do</span>` : html` <span class="state state-on">all set</span>`}</h2></summary><div class="section-body">${checklist}</div></details>
 <section class="card"><h2>Recent enforcement actions</h2>${recent}</section>
+${recentChangesSection(recentChanges)}
 <section class="card"><h2>Modules</h2>${moduleSummary(moduleStates)}</section>`;
     return layout({ title: 'Overview', active: 'overview', session, access, moduleStates, body });
 }

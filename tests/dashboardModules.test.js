@@ -1034,3 +1034,16 @@ test('module pages list their own commands with switches that come back to the m
     const evil = await post(h, 'commands', 'command', { name: 'joke', enabled: 'true', back: 'https://evil.example' });
     assert.equal(evil.redirectedTo, '/dashboard/commands');
 });
+
+test('Overview: recent dashboard changes (escaped), linked to the module; unavailable when the audit store fails', async () => {
+    const h = await setup();
+    await post(h, 'automod', 'enabled', { enabled: 'false' });
+    const res = await run(h, h.d.overview, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query: {} });
+    assert.match(res.body, /<h2>Recent dashboard changes<\/h2><ul class="activity">/);
+    assert.match(res.body, /<strong>admin&lt;b&gt;<\/strong> changed <code>[^<]+<\/code> in <a href="\/dashboard\/automod">Automod<\/a>/);
+    assert.ok(res.body.includes('href="/dashboard/audit">Full audit log'));
+    const { overviewPage } = await import('../src/services/dashboard/overview.js');
+    const o = { checklist: [], bot: { ready: true, ping: null }, database: null, guild: null, recent: [], lockdown: undefined };
+    assert.match(overviewPage({ session: { username: 'a', csrf: 't' }, overview: o, recentChanges: null }), /Recent dashboard changes<\/h2><p class="muted">Unavailable \(database\)/);
+    assert.match(overviewPage({ session: { username: 'a', csrf: 't' }, overview: o, recentChanges: [] }), /No dashboard changes yet/);
+});

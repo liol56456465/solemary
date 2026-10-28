@@ -90,6 +90,8 @@ const HTTP_TIMEOUT_MS = 10000;
 const CASES_PAGE_SIZE = 25;
 const MAX_PAGE = 10000;
 const MODULE_STATES_TTL_MS = 60 * 1000;
+// Dashboard changes listed on the Overview.
+const RECENT_CHANGES = 6;
 /** The only files under /dashboard/static, with their Content-Type. */
 export const STATIC_FILES = {
     'dashboard.css': 'text/css',
@@ -421,7 +423,9 @@ export function createDashboard({
         const result = await collectOverview({ client, guildId, data: data.overview || defaultOverviewData });
         // Fresh config-based states on top of the full set (automod, join-to-create, applications).
         req.dashboard.moduleStates = { ...req.dashboard.moduleStates, ...result.moduleStates };
-        return sendHtml(res, 200, overviewPage({ ...shellOf(req), overview: result }));
+        const recentChanges = await audits.list(guildId, { page: 0, pageSize: RECENT_CHANGES })
+            .then((r) => r.rows).catch(() => null);
+        return sendHtml(res, 200, overviewPage({ ...shellOf(req), overview: result, recentChanges }));
     }
 
     /** GET /dashboard/modules[?show=on|off]: every module as a card with its switch. */

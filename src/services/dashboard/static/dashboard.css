@@ -340,6 +340,15 @@ details.sub > :not(summary), details.action > :not(summary) { margin: 12px; }
 .module-card-foot { display: inline-flex; align-items: center; gap: 2px; margin-top: 6px; font-size: 13px; font-weight: 500; color: var(--accent-text); }
 .icon-sm { width: 14px; height: 14px; }
 
+/* Overview: recent dashboard changes. */
+.activity { list-style: none; margin: 0; padding: 0; }
+.activity li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.activity li:last-child { border-bottom: 0; }
+.activity .avatar-initials { flex: none; margin-top: 1px; }
+.activity-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.activity-values { display: block; font-size: 12px; margin-top: 2px; }
+.activity-time { flex: none; font-size: 12px; white-space: nowrap; }
+
 /* Overview: compact module list. */
 .module-chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
 .module-chips a {
