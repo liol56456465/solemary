@@ -79,8 +79,8 @@
         --purple-soft: #1f1730;
         --ink: #000000;
         --chart: #3b2d63;
-        --feature: #1f1730;
-        --feature-border: #3b2d63;
+        --feature: #27272a;
+        --feature-border: #3f3f46;
         --chrome-border: #27272a;
         --on-purple: #0b0b0c;
         --green: #4ade80;
@@ -109,8 +109,8 @@
     --purple-soft: #1f1730;
     --ink: #000000;
     --chart: #3b2d63;
-    --feature: #1f1730;
-    --feature-border: #3b2d63;
+    --feature: #27272a;
+    --feature-border: #3f3f46;
     --chrome-border: #27272a;
     --on-purple: #0b0b0c;
     --green: #4ade80;
@@ -178,6 +178,8 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
 }
 .rail-item:hover, .rail-item:focus-visible { background: #27272a; color: #fafafa; text-decoration: none; }
 .rail-item.on { background: #fafafa; color: #09090b; }
+/* On the black chrome the focus ring uses the light purple (>= 3:1 against it). */
+.rail :focus-visible, .tabbar :focus-visible { outline-color: #a78bfa; }
 .rail-tip {
     position: absolute; left: 56px; top: 50%; translate: 0 -50%; z-index: 50; padding: 4px 8px; border-radius: 8px;
     background: #09090b; border: 1px solid #27272a; color: #fafafa; font-size: 12px; font-weight: 500; white-space: nowrap;
@@ -219,7 +221,10 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
 .icon-button.find-link { display: none; }
 
 /* A section's pages as pill tabs (current one inverted: black in light, white in dark). */
-.section-tabs { display: flex; gap: 8px; margin: 0 0 24px; padding: 2px 0 8px; overflow-x: auto; scrollbar-width: none; }
+/* Desktop: the tabs wrap (every page reachable without sideways scrolling). Phones: one scrolling
+   row; the script scrolls the current tab into view. position: relative keeps the hidden
+   on/off labels (.sr, absolute) inside the strip instead of stretching the page. */
+.section-tabs { position: relative; display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; padding: 2px 0 8px; }
 .section-tabs a {
     display: inline-flex; align-items: center; gap: 8px; flex: none; height: 36px; padding: 0 16px; border-radius: 999px;
     background: var(--raised); border: 1px solid var(--border); color: var(--text-muted); font-size: 14px; font-weight: 500; white-space: nowrap;
@@ -508,7 +513,7 @@ a.kpi-num:hover { text-decoration: none; color: var(--purple); }
 }
 .chip:hover { color: var(--fg); border-color: var(--fg-2); text-decoration: none; }
 .chip.is-active { background: var(--purple-soft); border-color: var(--purple); color: var(--purple); }
-.chip-count { font-variant-numeric: tabular-nums; opacity: 0.75; }
+.chip-count { font-variant-numeric: tabular-nums; }
 .toolbar-search input { width: min(280px, 100%); }
 
 /* Module page header: icon tile, title + description, the module's main switch on the right. */
@@ -762,7 +767,7 @@ td.value:has(details.long-value) { min-width: 200px; }
 .member-header { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin: 0 0 24px; }
 .member-title { flex: 1; min-width: 200px; }
 .member-title h1 { margin: 0 0 4px; }
-.member-title p { margin: 0; }
+.member-title p { display: flex; flex-wrap: wrap; gap: 0 16px; margin: 0; }
 .avatar-initials-lg { display: grid; place-items: center; font-size: 24px; font-weight: 600; background: var(--surface); color: var(--text); }
 .member-facts { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .member-facts li { display: flex; flex-direction: column; gap: 4px; min-width: 120px; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--raised); }
@@ -798,7 +803,9 @@ td.value:has(details.long-value) { min-width: 200px; }
     .page-top { height: 72px; gap: 8px; }
     .quick-find, .server-switch > summary .server-name { display: none; }
     .icon-button.find-link { display: inline-grid; }
-    .section-tabs { margin: 0 -16px 16px; padding: 2px 16px 8px; }
+    .section-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 16px; padding: 2px 16px 8px; }
+    /* Keyboard focus never ends up behind the floating tab bar. */
+    html { scroll-padding-bottom: 112px; }
     input, select, button, .icon-button { min-height: 44px; }
     button.switch { min-height: 0; }
     .tabbar {

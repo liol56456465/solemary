@@ -97,7 +97,7 @@ function memberHeader(view, now) {
     const ladder = state.ladder;
     const active = state.activeBan || state.banned ? 'Banned' : state.activeMute || state.muted ? 'Muted' : 'None';
     return html`<header class="member-header">${avatar}<div class="member-title"><h1>${user.username}${user.bot ? html` <span class="tag">bot</span>` : ''}</h1>
-<p class="muted"><span class="nowrap">ID ${user.id}</span> <span class="nowrap">· ${joined}</span></p></div>
+<p class="muted"><span class="nowrap">ID ${user.id}</span><span class="nowrap">${joined}</span></p></div>
 <ul class="member-facts"><li><span class="label">Counted warns</span><span class="value">${countedWarnsText(ladder)}</span></li>
 <li><span class="label">Ladder level</span><span class="value">${ladder.level} of 3</span></li>
 <li><span class="label">Active</span><span class="value">${active === 'None' ? active : html`<span class="dot dot-bad" aria-hidden="true"></span>${active}`}</span></li></ul></header>`;

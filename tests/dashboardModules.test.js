@@ -1141,3 +1141,12 @@ test('audit log: a long value shows its start; the rest is behind "Show all", no
     assert.ok(page.includes(`<details class="long-value"><summary>${'y'.repeat(120)}… <span class="muted">Show all (300 characters)</span></summary><div class="long-value-full">${long}</div></details>`));
     assert.ok(page.includes('<td class="value">short</td>'));
 });
+
+test('Find a setting: also matches a module\'s setup steps (e.g. "category" finds Tickets and Enforcement)', async () => {
+    const { modulesPage } = await import('../src/services/dashboard/modulesPage.js');
+    const checklist = [{ label: 'Ticket staff role', done: false, href: '/dashboard/tickets' }, { label: 'Birthday channel', done: false, href: '/dashboard/birthdays' }];
+    const keys = (q) => [...String(modulesPage({ session: { username: 'a', csrf: 't' }, q, checklist })).matchAll(/class="module-card-name"><a href="\/dashboard\/([a-z-]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(keys('category'), ['enforcement', 'tickets'], 'keywords');
+    assert.deepEqual(keys('birthday channel'), ['birthdays'], 'setup step label');
+    assert.deepEqual(keys('ticket staff role'), ['tickets'], 'every word must match');
+});

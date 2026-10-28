@@ -352,24 +352,43 @@
     const THEME_LABEL = { system: 'System theme', light: 'Light theme', dark: 'Dark theme' };
     const THEME_ICON = { system: 'monitor', light: 'sun', dark: 'moon' };
     function setupThemeToggle() {
-        const link = document.querySelector('[data-theme-toggle]');
-        if (!link) return;
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
-            const current = THEMES.includes(link.dataset.theme) ? link.dataset.theme : 'system';
-            const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
-            const after = THEMES[(THEMES.indexOf(next) + 1) % THEMES.length];
-            const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-            document.cookie = `meowist_theme=${next}; Path=/dashboard; Max-Age=31536000; SameSite=Lax${secure}`;
-            if (next === 'system') delete document.documentElement.dataset.theme;
-            else document.documentElement.dataset.theme = next;
-            link.dataset.theme = next;
-            const text = `${THEME_LABEL[next]}; switch to ${THEME_LABEL[after].toLowerCase()}`;
-            link.title = `${THEME_LABEL[next]} (switch to ${THEME_LABEL[after].toLowerCase()})`;
-            link.querySelector('use')?.setAttribute('href', `#i-${THEME_ICON[next]}`);
-            const label = link.querySelector('.sr');
-            if (label) label.textContent = text;
-        });
+        // The rail and the phone "More" sheet both have a switch; they stay in step.
+        const links = [...document.querySelectorAll('[data-theme-toggle]')];
+        if (!links.length) return;
+        const show = (theme) => {
+            const after = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+            for (const link of links) {
+                link.dataset.theme = theme;
+                link.title = `${THEME_LABEL[theme]} (switch to ${THEME_LABEL[after].toLowerCase()})`;
+                link.querySelector('use')?.setAttribute('href', `#i-${THEME_ICON[theme]}`);
+                const label = link.querySelector('.sr, .theme-text');
+                if (label) label.textContent = `${THEME_LABEL[theme]}; switch to ${THEME_LABEL[after].toLowerCase()}`;
+                // The no-script fallback link goes to the next theme too.
+                const url = new URL(link.href, window.location.href);
+                url.searchParams.set('mode', after);
+                link.href = url.pathname + url.search;
+            }
+        };
+        for (const link of links) {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                const current = THEMES.includes(link.dataset.theme) ? link.dataset.theme : 'system';
+                const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
+                const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+                document.cookie = `meowist_theme=${next}; Path=/dashboard; Max-Age=31536000; SameSite=Lax${secure}`;
+                if (next === 'system') delete document.documentElement.dataset.theme;
+                else document.documentElement.dataset.theme = next;
+                show(next);
+            });
+        }
+    }
+
+    // ── Section tabs: on phones (one scrolling row) the current tab is scrolled into view ──
+    function showCurrentTab() {
+        const tab = document.querySelector('.section-tabs a.on');
+        const strip = tab?.parentElement;
+        if (!tab || strip.scrollWidth <= strip.clientWidth) return;
+        strip.scrollLeft = tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2;
     }
 
     // ── Toasts ───────────────────────────────────────────────────────────
@@ -478,6 +497,9 @@
         none.hidden = true;
         grid.insertAdjacentElement('afterend', none);
         slot.appendChild(input);
+        // The word searched from the top bar (?q=) shows here too (the list is already filtered).
+        const q = new URLSearchParams(window.location.search).get('q');
+        if (q) input.value = q;
         input.addEventListener('input', () => {
             const needle = input.value.trim().toLowerCase();
             let shown = 0;
@@ -537,6 +559,7 @@
         setupQuickFind();
         keepSearchWord();
         setupThemeToggle();
+        showCurrentTab();
         setupToasts();
         setupSaveBar();
         setupModuleSearch();

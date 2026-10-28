@@ -252,7 +252,7 @@ function modulesTile(moduleStates, checklist) {
     return html`<div class="mod-chips">${moduleEntries(moduleStates).map((e) => {
         const todo = setup.get(e.key)?.todo;
         const state = e.on === false ? ['off', 'Off'] : todo ? ['warn', 'Setup'] : e.on === true ? ['on', 'On'] : null;
-        return html`<a href="${path(`/${e.key}`)}">${icon(e.key)}<span class="mod-name">${e.label}</span>${state ? html`<span class="state-word is-${state[0]}"><span class="dot dot-${state[0]}" aria-hidden="true"></span>${state[1]}</span>` : ''}</a>`;
+        return html`<a href="${path(`/${e.key}`)}" title="${e.label}">${icon(e.key)}<span class="mod-name">${e.label}</span>${state ? html`<span class="state-word is-${state[0]}"><span class="dot dot-${state[0]}" aria-hidden="true"></span>${state[1]}</span>` : ''}</a>`;
     })}</div>`;
 }
 
