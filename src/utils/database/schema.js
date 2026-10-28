@@ -551,6 +551,27 @@ export const tableStatements = [
         removed_by VARCHAR(20),
         removed_by_username VARCHAR(100)
     )`,
+
+    // Scheduled and recurring bot messages (dashboard Messages page, services/scheduledMessageService.js).
+    // payload = { content, embed } as for "Send a message"; schedule = { kind: once|weekly|interval, … }
+    // in the IANA `timezone`. next_run_at NULL = finished (a one-time message that was posted).
+    `CREATE TABLE IF NOT EXISTS ${t.scheduled_messages} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        channel_id VARCHAR(20) NOT NULL,
+        payload JSONB NOT NULL,
+        schedule JSONB NOT NULL,
+        timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
+        next_run_at TIMESTAMPTZ,
+        last_run_at TIMESTAMPTZ,
+        last_error VARCHAR(500),
+        last_message_id VARCHAR(20),
+        failure_count INTEGER NOT NULL DEFAULT 0 CHECK (failure_count >= 0),
+        paused BOOLEAN NOT NULL DEFAULT FALSE,
+        created_by VARCHAR(20) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
 ];
 
 export const indexStatements = [
@@ -597,6 +618,8 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_module ON ${t.dashboard_audit}(guild_id, module, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_user ON ${t.dashboard_audit}(guild_id, user_id, id DESC)`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_bot_blacklist_one_active ON ${t.bot_blacklist}(kind, target_id) WHERE removed_at IS NULL`,
+    `CREATE INDEX IF NOT EXISTS idx_scheduled_messages_guild ON ${t.scheduled_messages}(guild_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_scheduled_messages_due ON ${t.scheduled_messages}(next_run_at) WHERE paused = FALSE AND next_run_at IS NOT NULL`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

@@ -68,6 +68,9 @@ import { publishVerificationPanel, setupVerification } from '../verificationPane
 import { postAppealPanels } from '../enforcement/appealPanelService.js';
 import { createReactionRolePanel } from '../reactionRoleService.js';
 import { createPoll, postBotMessage, startCountdownMessage } from '../botMessageService.js';
+import {
+    createScheduledMessage, deleteScheduledMessage, listScheduledMessages, runScheduledMessageNow, setScheduledMessagePaused, updateScheduledMessage,
+} from '../scheduledMessageService.js';
 import { createGiveaway, deleteGiveawayNow } from '../giveawayService.js';
 import { createServerCounter } from '../serverstatsService.js';
 import { setupJoinToCreate } from '../joinToCreateService.js';
@@ -111,5 +114,6 @@ export const defaultServices = {
     createReactionRolePanel, createGiveaway, deleteGiveawayNow, createServerCounter, setupJoinToCreate, editTag,
     createApplicationRole, deleteApplicationRole, listApplicationRoles, updateApplicationRole,
     postBotMessage, createPoll, startCountdownMessage,
+    listScheduledMessages, createScheduledMessage, updateScheduledMessage, setScheduledMessagePaused, runScheduledMessageNow, deleteScheduledMessage,
     updateConfigSetting, pickRandomMember, shortenUrl,
 };

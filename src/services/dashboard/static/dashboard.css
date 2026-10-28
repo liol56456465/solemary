@@ -1123,6 +1123,8 @@ label.check input { width: 16px; height: 16px; padding: 0; margin: 0; accent-col
 fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea { background: var(--surface-2); color: var(--fg-2); cursor: not-allowed; }
 fieldset.events { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+fieldset.weekdays { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
+fieldset.weekdays > legend { font-weight: 600; font-size: 14px; margin-bottom: 8px; padding: 0; }
 fieldset.events > label.check:first-child { flex-basis: 100%; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 
 .settings-form { margin: 4px 0 12px; }
