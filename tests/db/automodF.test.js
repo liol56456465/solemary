@@ -4,9 +4,10 @@
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { isLocalDatabaseUrl } from '../helpers/localDb.js';
 
 const url = process.env.POSTGRES_URL || '';
-const isLocal = /@(localhost|127\.0\.0\.1)(:\d+)?\//.test(url) || /^postgres(ql)?:\/\/(localhost|127\.0\.0\.1)/.test(url);
+const isLocal = isLocalDatabaseUrl(url);
 const skip = isLocal ? false : 'needs POSTGRES_URL on localhost (npm run test:db)';
 
 let pgDb, db;

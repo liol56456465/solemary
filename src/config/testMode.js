@@ -94,7 +94,10 @@ function databaseHosts() {
         const raw = (process.env[name] || '').trim();
         if (!raw) continue;
         try {
-            hosts.push({ source: name, host: new URL(raw).hostname, database: new URL(raw).pathname.replace(/^\//, '') });
+            const url = new URL(raw);
+            // ?host= (and the like) would override the address for pg; refuse instead of guessing.
+            const override = ['host', 'hostaddr', 'port', 'user', 'password', 'database', 'dbname'].find((p) => url.searchParams.has(p));
+            hosts.push({ source: name, host: override ? `(URL parameter "${override}" is not allowed)` : url.hostname, database: url.pathname.replace(/^\//, '') });
         } catch {
             hosts.push({ source: name, host: '(unparseable URL)', database: '' });
         }

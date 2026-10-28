@@ -38,6 +38,17 @@ test('TLS parameters are stripped from the URL so pg cannot override them', () =
     assert.equal(cleaned.includes('channel_binding=require'), true);
 });
 
+test('connection-target parameters are stripped, so ?host= cannot redirect the connection past the TLS decision', async () => {
+    const { parse } = await import('pg-connection-string');
+    const cleaned = sanitizeConnectionString('postgresql://u:p@localhost:5432/db?host=db.remote.example&hostaddr=10.0.0.1&port=1&user=x&dbname=y&channel_binding=require');
+    const target = parse(cleaned);
+    assert.equal(target.host, 'localhost');
+    assert.equal(target.port, '5432');
+    assert.equal(target.user, 'u');
+    assert.equal(target.database, 'db');
+    assert.equal(cleaned.includes('channel_binding=require'), true, 'other parameters stay');
+});
+
 test('a CA certificate from the environment is used for remote hosts (Supabase)', () => {
     const saved = { cert: process.env.POSTGRES_CA_CERT, ssl: process.env.POSTGRES_SSL };
     try {

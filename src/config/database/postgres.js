@@ -102,6 +102,10 @@ const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '']);
 // code below is the only thing deciding (sslmode=require used to mean "verify"
 // and becomes "don't verify" in pg v9).
 const SSL_URL_PARAMS = ['sslmode', 'ssl', 'sslrootcert', 'sslcert', 'sslkey', 'uselibpqcompat'];
+// pg also lets any URL parameter override the connection target (?host=other.example.com
+// beats the host in the address). The host decides TLS and the test-mode "local only" check,
+// so these are stripped as well: the address part of the URL is the only source of truth.
+export const TARGET_URL_PARAMS = ['host', 'hostaddr', 'port', 'user', 'password', 'database', 'dbname'];
 
 /**
  * The database URL comes from POSTGRES_URL only. DATABASE_URL is ignored on purpose:
@@ -169,7 +173,7 @@ function caFromEnv() {
 export function sanitizeConnectionString(url) {
     try {
         const parsed = new URL(url);
-        for (const param of SSL_URL_PARAMS) parsed.searchParams.delete(param);
+        for (const param of [...SSL_URL_PARAMS, ...TARGET_URL_PARAMS]) parsed.searchParams.delete(param);
         return parsed.toString();
     } catch {
         return url;

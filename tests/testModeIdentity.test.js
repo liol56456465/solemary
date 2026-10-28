@@ -46,6 +46,14 @@ test('test mode refuses to start with the production bot (real startup check, se
     assert.match(ok.stdout, /STARTED/);
 });
 
+test('test mode refuses a local-looking URL whose ?host= points elsewhere (pg would follow the parameter)', () => {
+    const run = spawnSync(process.execPath, ['--input-type=module', '-e', "await import('./src/config/testMode.js'); console.log('STARTED');"],
+        { env: testEnv({ POSTGRES_URL: 'postgresql://u:p@localhost:5433/t?host=db.remote.example' }), encoding: 'utf8' });
+    assert.equal(run.status, 1);
+    assert.ok(!run.stdout.includes('STARTED'));
+    assert.match(run.stdout + run.stderr, /URL parameter "host" is not allowed/);
+});
+
 test('test mode: DMs from anyone reach the test bot; other servers stay blocked', () => {
     const script = `
 const { installGuildAllowlist } = await import('./src/config/testMode.js');
