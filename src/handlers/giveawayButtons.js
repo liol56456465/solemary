@@ -1,4 +1,4 @@
-import { MessageFlags, PermissionFlagsBits } from 'discord.js';
+import { MessageFlags } from 'discord.js';
 import { successEmbed } from '../utils/embeds.js';
 import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes, handleInteractionError, replyUserError } from '../utils/errorHandler.js';
@@ -8,6 +8,8 @@ import {
     isGiveawayEnded 
 } from '../utils/giveaways.js';
 import { Mutex } from '../utils/mutex.js';
+import { isBotOwner } from '../config/bot.js';
+import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { 
     selectWinners,
@@ -112,8 +114,9 @@ export const giveawayEndHandler = {
                 );
             }
 
-            if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
-                return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the \'Manage Server\' permission to end a giveaway.' });
+            // Ending or rerolling decides who wins: Administrator only (access model), like the commands.
+            if (!isBotOwner(interaction.user.id) && !isAdministrator(interaction.member)) {
+                return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the Administrator role to end a giveaway.' });
             }
 
             // Saving, editing the giveaway message and logging can exceed Discord's 3s window.
@@ -233,8 +236,8 @@ export const giveawayRerollHandler = {
                 );
             }
 
-            if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
-                return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the \'Manage Server\' permission to reroll a giveaway.' });
+            if (!isBotOwner(interaction.user.id) && !isAdministrator(interaction.member)) {
+                return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the Administrator role to reroll a giveaway.' });
             }
 
             // Saving, editing the giveaway message and logging can exceed Discord's 3s window.

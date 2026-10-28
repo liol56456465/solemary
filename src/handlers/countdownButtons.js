@@ -1,8 +1,10 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { successEmbed } from '../utils/embeds.js';
 import { logger } from '../utils/logger.js';
 
 import { replyUserError, ErrorTypes } from '../utils/errorHandler.js';
+import { isBotOwner } from '../config/bot.js';
+import { isAdministrator } from '../services/enforcement/enforcementService.js';
 function createControlButtons(countdownId, isPaused = false) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -120,9 +122,10 @@ async function countdownButtonHandler(interaction, client, args) {
             });
         }
 
-        if (!interaction.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
+        // Pausing or cancelling a public countdown affects everyone: Administrator only (access model).
+        if (!isBotOwner(interaction.user.id) && !isAdministrator(interaction.member)) {
             return await interaction.reply({
-                content: 'You need the "Manage Messages" permission to control countdowns.',
+                content: 'You need the Administrator role to control countdowns.',
                 flags: ["Ephemeral"],
             });
         }
