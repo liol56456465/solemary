@@ -418,7 +418,7 @@ test('blacklist at startup: a failed load is retried with backoff until it succe
 
 test('owner image URLs: private, loopback and internal addresses are refused after DNS', async () => {
     const { isPrivateAddress, pinnedFetch } = await import('../src/services/owner/safeImageFetch.js');
-    for (const ip of ['127.0.0.1', '10.1.2.3', '172.20.0.1', '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '::1', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1']) {
+    for (const ip of ['127.0.0.1', '10.1.2.3', '172.20.0.1', '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '::1', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '::ffff:7f00:1', '::127.0.0.1', '64:ff9b::7f00:1', '2002:7f00:1::1', '2001:0:4136:e378:8000:63bf:3fff:fdd2', 'ff02::1', '224.0.0.1']) {
         assert.equal(isPrivateAddress(ip), true, ip);
     }
     for (const ip of ['1.1.1.1', '151.101.1.1', '2606:4700::1111']) assert.equal(isPrivateAddress(ip), false, ip);

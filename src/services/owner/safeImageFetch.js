@@ -8,23 +8,26 @@ import https from 'node:https';
 import dns from 'node:dns';
 import net from 'node:net';
 
+// IPv4: everything that is not public. IPv6: only global unicast (2000::/3) is allowed, minus
+// the ranges that tunnel or embed IPv4 (6to4, Teredo) and documentation; anything else (::1,
+// ::ffff:… in any spelling, NAT64 64:ff9b::/96, unique/link-local, multicast) is refused.
+const BLOCKED_V4 = new net.BlockList();
+for (const [net4, prefix] of [['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16],
+    ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.0.2.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['198.51.100.0', 24],
+    ['203.0.113.0', 24], ['224.0.0.0', 3]]) {
+    BLOCKED_V4.addSubnet(net4, prefix, 'ipv4');
+}
+const GLOBAL_V6 = new net.BlockList();
+GLOBAL_V6.addSubnet('2000::', 3, 'ipv6');
+const BLOCKED_V6 = new net.BlockList();
+for (const [net6, prefix] of [['2002::', 16], ['2001::', 32], ['2001:db8::', 32], ['2001:10::', 28], ['2001:20::', 28]]) {
+    BLOCKED_V6.addSubnet(net6, prefix, 'ipv6');
+}
+
 /** True for addresses that are not on the public internet (loopback, private, link-local, …). */
 export function isPrivateAddress(address) {
-    if (net.isIPv4(address)) {
-        const [a, b] = address.split('.').map(Number);
-        return a === 0 || a === 10 || a === 127 || a >= 224
-            || (a === 100 && b >= 64 && b <= 127) // CGNAT
-            || (a === 169 && b === 254) // link-local, cloud metadata
-            || (a === 172 && b >= 16 && b <= 31)
-            || (a === 192 && (b === 168 || (b === 0 && address.startsWith('192.0.0.'))))
-            || (a === 198 && (b === 18 || b === 19));
-    }
-    if (net.isIPv6(address)) {
-        const v = address.toLowerCase();
-        const mapped = v.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-        if (mapped) return isPrivateAddress(mapped[1]);
-        return v === '::' || v === '::1' || /^f[cd]/.test(v) || /^fe[89ab]/.test(v) || v.startsWith('ff');
-    }
+    if (net.isIPv4(address)) return BLOCKED_V4.check(address, 'ipv4');
+    if (net.isIPv6(address)) return !GLOBAL_V6.check(address, 'ipv6') || BLOCKED_V6.check(address, 'ipv6');
     return true;
 }
 
