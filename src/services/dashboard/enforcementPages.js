@@ -292,42 +292,41 @@ export function noContactPage({ session, access = null, moduleStates = {}, rows 
     const body = html`<h1>No-contact orders (${rows.length})</h1>
 <p class="muted help">Two members may not mention or reply to each other; breaking messages are deleted and logged. Both members are DMed when an order starts and ends.</p>
 ${notices({ flash, error, editEnabled, canAct, actLabel: 'start or end orders' })}
-${rows.length ? html`<div class="scroll"><table><thead><tr><th>#</th><th>Members</th><th>Until</th><th>By</th><th>Reason</th><th></th></tr></thead><tbody>
+${section(`Active orders (${rows.length})`, html`${rows.length ? html`<div class="scroll"><table><thead><tr><th>#</th><th>Members</th><th>Until</th><th>By</th><th>Reason</th><th></th></tr></thead><tbody>
 ${rows.map((o) => html`<tr><td>${o.id}</td><td>${who(o.user_a)} ↔ ${who(o.user_b)}</td><td>${formatDate(o.until)}</td><td>${names.get(o.created_by) || o.created_by}</td><td class="value">${o.reason}</td>
 <td>${canWrite ? actionForm(session.csrf, '/nocontact/end', '', { submit: 'End now', hidden: { id: String(o.id) }, inline: true, danger: true }) : ''}</td></tr>`)}
-</tbody></table></div>` : html`<p class="muted">No active orders.</p>`}
-${canWrite ? html`<h2>Start an order</h2>${actionForm(session.csrf, '/nocontact/add', html`<div class="grid">
+</tbody></table></div>` : html`<p class="empty">No active orders.</p>`}`, '', { key: 'nocontact-active' })}
+${canWrite ? section('Start an order', actionForm(session.csrf, '/nocontact/add', html`<div class="grid">
 <label>First member (user ID)<input name="user_a" inputmode="numeric" maxlength="20" required value="${values.user_a || ''}"></label>
 <label>Second member (user ID)<input name="user_b" inputmode="numeric" maxlength="20" required value="${values.user_b || ''}"></label>
 <label>Days<input type="number" name="days" min="1" max="${NO_CONTACT_MAX_DAYS}" step="1" required value="${values.days || ''}"></label>
-<label class="wide">Reason (shown to both members)<input name="reason" maxlength="500" required value="${values.reason || ''}"></label></div>`, { submit: 'Start order' })}` : ''}`;
+<label class="wide">Reason (shown to both members)<input name="reason" maxlength="500" required value="${values.reason || ''}"></label></div>`, { submit: 'Start order' }), '', { key: 'nocontact-start' }) : ''}`;
     return layout({ title: 'No-contact', active: 'nocontact', session, access, moduleStates, body });
 }
 
 // ── Staff: coverage heatmap and mass-action blocks ────────────────────────
 
 function heatTable(title, grid, max) {
-    return html`<div class="scroll"><table class="heat"><caption>${title}</caption><thead><tr><th></th>${Array.from({ length: 24 }, (_, h) => html`<th scope="col">${h}</th>`)}</tr></thead><tbody>
+    return html`<div class="heat-wrap"><table class="heat"><caption>${title}</caption><thead><tr><th></th>${Array.from({ length: 24 }, (_, h) => html`<th scope="col">${h}</th>`)}</tr></thead><tbody>
 ${grid.map((hours, day) => html`<tr><th scope="row">${WEEKDAYS[day]}</th>${hours.map((count, hour) => html`<td class="heat-${intensityLevel(count, max)}" title="${WEEKDAYS[day]} ${hour}:00 · ${count}">${count || ''}</td>`)}</tr>`)}
 </tbody></table></div>`;
 }
 
 /** report: buildCoverageReport (with its grids); period: '7d' | '30d'. */
 export function coverageSection({ report, period, periods, statsPeriod }) {
-    return html`<h2>Coverage · last ${periods[period]} days (${report.timeZone})</h2>
-<p>${Object.keys(periods).map((key) => (key === period ? html`<strong>${periods[key]} days</strong> ` : html`<a href="${path(`/staff${queryString({ period: statsPeriod, coverage: key })}`)}">${periods[key]} days</a> `))}</p>
+    const chips = html`<nav class="chips" aria-label="Coverage period">${Object.keys(periods).map((key) => html`<a class="chip${key === period ? ' is-active' : ''}" href="${path(`/staff${queryString({ period: statsPeriod, coverage: key })}`)}"${key === period ? raw(' aria-current="page"') : ''}>${periods[key]} days</a>`)}</nav>`;
+    return section(`Coverage · last ${periods[period]} days (${report.timeZone})`, html`${chips}
 ${heatTable(`Incidents (cases created, automatic included): ${report.totalIncidents}`, report.incidentGrid, report.maxIncidents)}
 ${heatTable(`Staff activity (cases by human moderators + appeals decided): ${report.totalStaff}`, report.staffGrid, report.maxStaff)}
 <p class="muted">Darker = busier, in quarter steps up to the busiest hour. Columns are hours 0–23 in the server's birthday time zone.</p>
 <h3>Most under-covered slots</h3>
-${report.gaps.length ? html`<ol>${report.gaps.map((slot) => html`<li>${slotLabel(slot)} — ${slot.incidents} incident${slot.incidents === 1 ? '' : 's'}, ${slot.staff} staff action${slot.staff === 1 ? '' : 's'}</li>`)}</ol>` : html`<p class="muted">No incidents in this period.</p>`}`;
+${report.gaps.length ? html`<ol>${report.gaps.map((slot) => html`<li>${slotLabel(slot)} — ${slot.incidents} incident${slot.incidents === 1 ? '' : 's'}, ${slot.staff} staff action${slot.staff === 1 ? '' : 's'}</li>`)}</ol>` : html`<p class="muted">No incidents in this period.</p>`}`, '', { key: 'staff-coverage' });
 }
 
 /** blocks: listMassActionBlocks; names: Map(id → username); canLift: OWNER_IDS (like /staff restore). */
 export function blocksSection({ blocks = [], names = new Map(), canLift = false, csrf, editEnabled = true }) {
-    return html`<h2>Mass-action guard blocks (${blocks.length})</h2>
-${blocks.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Blocked until</th><th>Bans/kicks</th><th>Since</th><th></th></tr></thead><tbody>
+    return section(`Mass-action guard blocks (${blocks.length})`, html`${blocks.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Blocked until</th><th>Bans/kicks</th><th>Since</th><th></th></tr></thead><tbody>
 ${blocks.map((b) => html`<tr><td>${names.get(b.moderatorId) || b.moderatorId} <span class="muted">${b.moderatorId}</span></td><td>${formatDate(b.until)}</td><td>${b.count ?? '—'}</td><td>${formatDate(b.at)}</td>
 <td>${canLift && editEnabled ? actionForm(csrf, '/staff/blocks/lift', '', { submit: 'Lift block', hidden: { moderator: b.moderatorId }, inline: true, danger: true }) : ''}</td></tr>`)}
-</tbody></table></div>${canLift ? '' : html`<p class="muted">Only the bot owners can lift a block (like /staff restore).</p>`}` : html`<p class="muted">Nobody is blocked.</p>`}`;
+</tbody></table></div>${canLift ? '' : html`<p class="muted">Only the bot owners can lift a block (like /staff restore).</p>`}` : html`<p class="muted">Nobody is blocked.</p>`}`, '', { key: 'staff-blocks' });
 }

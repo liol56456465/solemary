@@ -156,7 +156,7 @@ ${bottom}`;
 // ── Appeals ───────────────────────────────────────────────────────────────
 
 export function appealsPage({ session, access = null, moduleStates = {}, settingsRows = [], appeals = [], now = Date.now(), flash = null, canWrite = false }) {
-    const body = html`<h1>Pending appeals (${appeals.length})</h1>
+    const body = html`<header class="page-head"><h1>Pending appeals (${appeals.length})</h1><p>Appeals waiting for a decision, oldest first. Amber after a day, red after three.</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${appeals.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Filed</th><th>Waiting</th><th></th></tr></thead><tbody>
 ${appeals.map((a) => {
@@ -165,7 +165,7 @@ ${appeals.map((a) => {
 <td>${formatDate(a.created_at)}</td><td class="${days >= 3 ? 'bad' : days >= 1 ? 'warn' : ''}">${formatAge(a.created_at, now)}</td>
 <td><a href="/dashboard/appeals/${encodeURIComponent(a.case_code)}">${canWrite ? 'Review and decide' : 'Open'}</a></td></tr>`;
     })}
-</tbody></table></div><p class="muted">${canWrite ? 'Decide here or in Discord (Accept / Deny on the appeal message): the effects are the same.' : 'Administrators decide appeals here (with editing on) or in Discord.'}</p>` : html`<p class="muted">No pending appeals.</p>`}`;
+</tbody></table></div><p class="muted">${canWrite ? 'Decide here or in Discord (Accept / Deny on the appeal message): the effects are the same.' : 'Administrators decide appeals here (with editing on) or in Discord.'}</p>` : html`<p class="empty">No pending appeals. New appeals show up here and in the appeal channels in Discord.</p>`}`;
     return layout({ title: 'Appeals', active: 'appeals', session, access, moduleStates, body: html`${body}${settingsSection(settingsRows)}` });
 }
 
@@ -173,17 +173,16 @@ ${appeals.map((a) => {
 
 /** input: { session, period, rows (staffModerationStats) }. */
 export function statsPage({ session, access = null, moduleStates = {}, settingsRows = [], period = '30d', rows = [], sections = [], flash = null, error = null }) {
-    const body = html`<h1>Staff moderation stats · ${STATS_PERIODS[period]?.label || period}</h1>
+    const periodChips = html`<nav class="chips" aria-label="Period">${Object.keys(STATS_PERIODS).map((key) => html`<a class="chip${key === period ? ' is-active' : ''}" href="/dashboard/staff${queryString({ period: key })}"${key === period ? raw(' aria-current="page"') : ''}>${STATS_PERIODS[key].label}</a>`)}</nav>`;
+    const table = html`${rows.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Total</th><th>Bans</th><th>Kicks</th><th>Mutes</th><th>Warns</th><th>Appeals accepted</th><th>Appeals denied</th><th>Voided</th></tr></thead><tbody>
+${rows.map((r) => html`<tr><td><a href="/dashboard/cases${queryString({ moderator: r.moderatorId })}">${r.username}</a></td><td>${r.total}</td><td>${r.actions.ban}</td><td>${r.actions.kick}</td><td>${r.actions.mute}</td><td>${r.actions.warn}</td><td>${r.appealsAccepted}</td><td>${r.appealsDenied}</td><td>${r.voided}</td></tr>`)}
+</tbody></table></div><p class="muted">Automatic (bot) and test cases are left out; voided cases are not in the totals.</p>` : html`<p class="empty">No moderation actions in this period.</p>`}`;
+    const body = html`<header class="page-head"><h1>Staff</h1><p>Moderation per moderator, when the team is active, and mass-action guard blocks.</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
-<p>${Object.keys(STATS_PERIODS).map((key) => (key === period
-        ? html`<strong>${STATS_PERIODS[key].label}</strong> `
-        : html`<a href="/dashboard/staff${queryString({ period: key })}">${STATS_PERIODS[key].label}</a> `))}</p>
-${rows.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Total</th><th>Bans</th><th>Kicks</th><th>Mutes</th><th>Warns</th><th>Appeals accepted</th><th>Appeals denied</th><th>Voided</th></tr></thead><tbody>
-${rows.map((r) => html`<tr><td><a href="/dashboard/cases${queryString({ moderator: r.moderatorId })}">${r.username}</a></td><td>${r.total}</td><td>${r.actions.ban}</td><td>${r.actions.kick}</td><td>${r.actions.mute}</td><td>${r.actions.warn}</td><td>${r.appealsAccepted}</td><td>${r.appealsDenied}</td><td>${r.voided}</td></tr>`)}
-</tbody></table></div><p class="muted">Automatic (bot) and test cases are left out; voided cases are not in the totals.</p>` : html`<p class="muted">No moderation actions in this period.</p>`}
+${section(`Moderation stats · ${STATS_PERIODS[period]?.label || period}`, html`${periodChips}${table}`, '', { key: 'staff-stats' })}
 ${sections}`;
-    return layout({ title: 'Staff stats', active: 'staff', session, access, moduleStates, body: html`${body}${settingsSection(settingsRows, 'Enforcement settings')}` });
+    return layout({ title: 'Staff', active: 'staff', session, access, moduleStates, body: html`${body}${settingsSection(settingsRows, 'Enforcement settings')}` });
 }
 
 // ── Audit ─────────────────────────────────────────────────────────────────
@@ -202,6 +201,7 @@ ${page > 0 ? html`<a href="/dashboard/audit${queryString({ ...keep, page: page -
 <span class="muted">Page ${page + 1} of ${pages} · ${total} change${total === 1 ? '' : 's'}</span>
 ${page + 1 < pages ? html`<a href="/dashboard/audit${queryString({ ...keep, page: page + 1 })}">Older →</a>` : ''}
 </div>`;
+    const moduleLabel = (key) => navItems().find((i) => i.key === key)?.label || modules.find((m) => m.key === key)?.label || key;
     const body = html`<h1>Audit log</h1>
 <p class="muted">Every change made from the dashboard: who, when, old value → new value. Each saved form is also posted to the mod log.</p>
 <form class="filters" method="get" action="/dashboard/audit">
@@ -210,9 +210,9 @@ ${page + 1 < pages ? html`<a href="/dashboard/audit${queryString({ ...keep, page
 <button class="primary" type="submit">Filter</button> <a href="/dashboard/audit">Clear</a>
 </form>
 ${rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Module</th><th>Setting</th><th>Old</th><th>New</th></tr></thead><tbody>
-${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${r.module}</td><td><code>${r.key}</code></td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
+${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${moduleLabel(r.module)}</td><td><code>${r.key}</code></td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
 </tbody></table></div>${pager}` : html`<p class="muted">No changes${filters.user || filters.module ? ' match' : ' yet'}.</p>`}`;
-    return layout({ title: 'Audit', active: 'audit', session, access, moduleStates, body });
+    return layout({ title: 'Audit log', active: 'audit', session, access, moduleStates, body });
 }
 
 // ── Module (settings) pages ───────────────────────────────────────────────

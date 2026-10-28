@@ -234,5 +234,5 @@ export function section(title, body, help = '', { open = true, collapsible = tru
 
 /** A plain message page (errors, 403, …). */
 export function messagePage(title, message, session = null, extra = {}) {
-    return layout({ title, session, ...extra, body: html`<div class="message card"><h1>${title}</h1><p>${message}</p></div>` });
+    return layout({ title, session, ...extra, body: html`<div class="message card"><h1>${title}</h1><p>${message}</p>${session ? html`<p class="message-actions"><a class="button-link" href="${path('/overview')}">Back to Overview</a></p>` : ''}</div>` });
 }
