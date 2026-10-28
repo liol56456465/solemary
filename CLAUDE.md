@@ -93,7 +93,8 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
   `mod_case_evidence`. OAuth tokens/state live in the key-value store (`setInDb`), not their own tables.
 - Expiry cron (once a minute, with overlap guard) handles unban/unmute/6-month appeal deadline; also runs at startup.
 - Mass-action guard: >5 bans/kicks in 10 min per moderator → blocked 60 min, OWNER_IDS DM'd
-  (`MASS_ACTION_*` env). `/staff restore` lifts it. OWNER_IDS are never blocked.
+  (`MASS_ACTION_*` env); mutes count separately (`MASS_MUTE_LIMIT` 10). `/staff restore` lifts it. OWNER_IDS are
+  never blocked; their actions without Administrator are logged as "owner override" (bot log + mod log).
 - `/background` — case history per user (with `name` autocomplete). `/test action user` — sends the exact
   DM preview **to the invoker**, executes nothing, footer "Simulation — no action taken".
 
@@ -110,13 +111,16 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 
 - `/setappeal [channel]` posts appeal panels (main + Support `#appeals`); re-running replaces old panels.
 - Appeal form: why punished / why lift / did you do it (Yes/Partly/No). Case code optional (latest appealable case).
-- Ban/kick appeals → private channel in Support's appeals category; mute/warn appeals → main server, ticket category.
-  The appellant is added to the channel. One pending appeal per case; 7-day cooldown after a denial.
+- Ban/kick appeals → Support (`APPEALS_CATEGORY_ID`), appellant added, sees a safe summary only; dossier + Accept/Deny
+  in a private staff thread (appellant auto-removed if mentioned in; Support admins fall back to main). Mute/warn → main,
+  staff-only. Appeals, reports, modmail have their own categories; open reports + modmail capped (`OPEN_CHANNEL_CAP` 20),
+  appeals never capped. One pending appeal per case; 7-day cooldown after a denial.
 - `/appeals code decision:accept|deny note` (main server). Accept lifts what's active and DMs an invite.
 - Staff reports: one open per person, max three per day.
 - Banned role in Support: added on join/ban if an active ban exists, removed when the ban ends/is lifted;
   reconciled at startup.
-- Modmail: DM the bot → "Send to staff" → staff channel in the ticket category; `//` = internal note;
+- Modmail: DM the bot → "Send to staff" → staff channel; channel↔member link in `modmail_links` only (topic ignored);
+  `//` = internal note;
   `/modmail close|block|unblock`.
 
 ## OAuth verification
@@ -159,7 +163,8 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 
 ## Status and roadmap
 
-**FEATURE FREEZE until go-live: checks and fixes only.**
+**Go-live postponed (owner, 2026-10-28): "don't go live yet".** Dashboard work continues on `feature/dashboard-members`;
+the go-live plan (plan.md) stays prepared.
 
 **Go-live checklist (in order):** Supabase DB live → final deployment secrets (`NODE_ENV=production`,
 `LOG_LEVEL=info`, `POSTGRES_URL`, OAuth values, `APPEALS_CATEGORY_ID` (seeded once into `guild_settings`, then
