@@ -78,6 +78,7 @@ const GUILD_RESOURCES = [
     { name: 'ADMIN_REQUEST_CHANNEL_ID', setting: 'adminRequestChannelId', guild: 'MAIN_GUILD_ID', kind: 'channel' },
     { name: 'MUTED_ROLE_ID', setting: 'mutedRoleId', guild: 'MAIN_GUILD_ID', kind: 'role' },
     { name: 'BANNED_ROLE_ID', setting: 'bannedRoleId', guild: 'SUPPORT_GUILD_ID', kind: 'role' },
+    { name: 'APPEALS_CATEGORY_ID', setting: 'supportAppealsCategoryId', guild: 'SUPPORT_GUILD_ID', kind: 'category' },
     { name: 'MOD_LOG_CHANNEL_ID', setting: 'modLogChannelId', guild: 'MAIN_GUILD_ID', kind: 'channel' },
     { name: 'EVIDENCE_CHANNEL_ID', setting: 'evidenceChannelId', guild: 'MAIN_GUILD_ID', kind: 'channel' },
     { name: 'AUTOMOD_REVIEW_CHANNEL_ID', setting: 'reviewChannelId', guild: 'MAIN_GUILD_ID', kind: 'channel' },

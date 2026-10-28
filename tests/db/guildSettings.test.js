@@ -43,7 +43,7 @@ test('seedFromEnvOnce stores env/default values once; later env changes are igno
     const seeded = await gs.seedFromEnvOnce(ENV);
     assert.ok(seeded[MAIN].includes('modLogChannelId'));
     assert.ok(seeded[MAIN].includes('appealWindowMs'));
-    assert.deepEqual(seeded[SUPPORT], ['bannedRoleId']);
+    assert.deepEqual(seeded[SUPPORT], ['supportAppealsCategoryId', 'bannedRoleId']);
     const { rows: [row] } = await pgDb.pool.query('SELECT data, seeded_from_env FROM guild_settings WHERE guild_id = $1', [MAIN]);
     assert.equal(row.seeded_from_env, true);
     assert.equal(row.data.modLogChannelId, CH(1));

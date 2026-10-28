@@ -39,8 +39,9 @@ export const enforcementConfig = {
 //   adminRequestChannelId  ADMIN_REQUEST_CHANNEL_ID
 //   supportServerInvite    SUPPORT_SERVER_INVITE
 //   appealsCategoryId      MAIN_APPEALS_CATEGORY_ID (fallback main-server category for appeals
-//                          and staff reports when /ticket has no category; APPEALS_CATEGORY_ID
-//                          is ignored)
+//                          and staff reports when /ticket has no category)
+//   supportAppealsCategoryId  APPEALS_CATEGORY_ID: support-server category for ban/kick appeals; the
+//                          appellant is added to the channel, staff work in a private thread in it
 //   reportsCategoryId, modmailCategoryId  MAIN_REPORTS_CATEGORY_ID / MAIN_MODMAIL_CATEGORY_ID: their own
 //                          categories (unset: the /ticket category, as before)
 //   openChannelCap         OPEN_CHANNEL_CAP (20): open staff reports + modmail channels at most; appeals
@@ -60,7 +61,7 @@ export const enforcementConfig = {
 //                          reminder in a quiet pending appeal (appeals never close automatically)
 bindSettingGetters(enforcementConfig, [
     'adminRequestChannelId', 'supportServerInvite', 'appealsCategoryId', 'reportsCategoryId', 'modmailCategoryId',
-    'openChannelCap', 'mutedRoleId', 'bannedRoleId',
+    'openChannelCap', 'supportAppealsCategoryId', 'mutedRoleId', 'bannedRoleId',
     'warnRoleIds', 'modLogChannelId', 'evidenceChannelId',
     'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds',
     'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',

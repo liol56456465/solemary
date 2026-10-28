@@ -6,7 +6,8 @@
 //   appealmodal:submit | appealmodal:report modals they open
 // The Appeal button works in both servers; Report staff only in the support server.
 // The Accept / Deny buttons on appeal messages (at the bottom) are admin-only.
-// Whatever is filed opens an admin-only channel in the main server's appeals category.
+// Mute/warn appeals and staff reports open admin-only channels in the main server; ban/kick
+// appeals open in the support server with the appellant (staff work in a private thread there).
 
 import {
     LabelBuilder,
@@ -202,8 +203,23 @@ export async function handleAppealModal(interaction, client, args) {
 
 const DECISIONS = new Set(['accept', 'deny']);
 
+/**
+ * Who may press Accept / Deny: Administrators of the main server. In the main server that is
+ * the clicking member; ban/kick appeals sit in the support server (staff thread), where the
+ * clicker's main-server membership is fetched fresh.
+ */
+export async function canDecideAppeals(interaction, client) {
+    if (interaction.guildId === enforcementConfig.mainGuildId) return isAdministrator(interaction.member);
+    if (interaction.guildId !== enforcementConfig.supportGuildId) return false;
+    const mainGuild = client.guilds.cache.get(enforcementConfig.mainGuildId);
+    const mainMember = await mainGuild?.members.fetch({ user: interaction.user.id, force: true }).catch(() => null);
+    return isAdministrator(mainMember);
+}
+
 export async function handleAppealDecisionButton(interaction, client, args) {
-    if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)) {
+    // Deferred first: the support-server check fetches the main-server member.
+    await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    if (!(await canDecideAppeals(interaction, client))) {
         return replyUserError(interaction, {
             type: ErrorTypes.PERMISSION,
             message: 'Only administrators in the main server can decide appeals.',
@@ -213,7 +229,6 @@ export async function handleAppealDecisionButton(interaction, client, args) {
     const caseCode = normalizeCaseCode(rawCode || '');
     if (!DECISIONS.has(decision) || !caseCode) return;
 
-    await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
     const result = await decideAppeal({ client, admin: interaction.user, caseCode, decision, note: null });
     return InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(

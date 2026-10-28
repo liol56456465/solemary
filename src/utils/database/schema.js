@@ -301,6 +301,10 @@ export const tableStatements = [
         note TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+    // Ban/kick appeals open in the support server (the appellant can't see the main one):
+    // the channel's server, and the private staff thread with the dossier and Accept / Deny.
+    `ALTER TABLE ${t.mod_appeals} ADD COLUMN IF NOT EXISTS channel_guild_id VARCHAR(20)`,
+    `ALTER TABLE ${t.mod_appeals} ADD COLUMN IF NOT EXISTS staff_thread_id VARCHAR(20)`,
 
     // Warnings the owner gives staff (/staff warn). They expire; enough active ones
     // remove the member's staff roles.

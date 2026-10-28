@@ -356,6 +356,87 @@ export async function listPendingAppeals(limit = 20, guildId = enforcementConfig
  * @param {string} p.caseCode
  * @param {{ reason: string, moreInfo: string }} p.answers
  */
+// Ban and kick appeals open in the support server, because the appellant cannot see the main
+// one. The appellant is added to that channel and sees only a member-safe summary (no moderator,
+// no evidence, no other cases); the full dossier and Accept / Deny go in a private thread in
+// the same channel that the appellant is not added to. Mute and warn appeals stay staff-only
+// in the main server. If the support route is not usable (category not set, appellant not in
+// the support server, Discord refuses), the appeal opens the staff-only way: never lost.
+const SUPPORT_APPEAL_TYPES = new Set(['ban', 'kick']);
+
+async function openSupportAppealChannel(client, record, user) {
+    if (!SUPPORT_APPEAL_TYPES.has(record.type)) return null;
+    const supportGuild = client.guilds.cache.get(enforcementConfig.supportGuildId);
+    if (!supportGuild) return null;
+    const category = await fetchCategory(supportGuild, enforcementConfig.supportAppealsCategoryId);
+    if (!category) {
+        logger.warn(`Ban/kick appeal ${record.case_code} opens in the main server: no support-server appeals category (APPEALS_CATEGORY_ID / dashboard Support server)`);
+        return null;
+    }
+    const member = await supportGuild.members.fetch({ user: user.id, force: true }).catch(() => null);
+    if (!member) {
+        logger.warn(`Ban/kick appeal ${record.case_code} opens in the main server: ${user.id} is not in the support server`);
+        return null;
+    }
+    let channel = null;
+    try {
+        channel = await supportGuild.channels.create({
+            name: channelName(`appeal-${record.case_code}`),
+            type: ChannelType.GuildText,
+            parent: category.id,
+            permissionOverwrites: [
+                { id: supportGuild.id, deny: [PermissionFlagsBits.ViewChannel] },
+                {
+                    id: client.user.id,
+                    allow: [
+                        PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks,
+                        PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ManageThreads,
+                        PermissionFlagsBits.CreatePrivateThreads, PermissionFlagsBits.SendMessagesInThreads,
+                    ],
+                },
+                {
+                    id: user.id,
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles],
+                    deny: [PermissionFlagsBits.CreatePublicThreads, PermissionFlagsBits.CreatePrivateThreads, PermissionFlagsBits.MentionEveryone],
+                },
+            ],
+            reason: `Appeal ${record.case_code}`,
+        });
+        const staff = await channel.threads.create({
+            name: `staff-${record.case_code}`,
+            type: ChannelType.PrivateThread,
+            invitable: false,
+            autoArchiveDuration: 10080,
+            reason: `Staff discussion for appeal ${record.case_code}`,
+        });
+        return { channel, staff, guildId: supportGuild.id };
+    } catch (error) {
+        logger.warn(`Ban/kick appeal ${record.case_code} opens in the main server: support channel failed (${error.message})`);
+        if (channel) await channel.delete('Appeal channel setup failed').catch(() => {});
+        return null;
+    }
+}
+
+/** What the appellant sees in their support-server appeal channel. */
+function memberAppealSummary(record, answers) {
+    const lines = [
+        `**Case code:** \`${record.case_code}\``,
+        `**Type:** ${record.type}`,
+        `**When:** ${stamp(record.created_at)}`,
+        `**Reason:** ${truncate(record.reason, 500)}`,
+    ];
+    if (record.type === 'ban') {
+        lines.push(record.expires_at ? `**Ends:** ${stamp(record.expires_at)}` : '**Duration:** Permanent');
+    }
+    return createEmbed({
+        title: `Your appeal for ${record.case_code}`,
+        description: truncate(lines.join('\n'), 4096),
+        fields: answerFields(answers),
+        footer: { text: 'Staff will review it here. You can add more details or screenshots in this channel. You get the decision by DM.' },
+        color: 'primary',
+    });
+}
+
 export async function submitAppeal({ client, user, caseCode, answers }) {
     const record = await getCaseByCode(caseCode);
     return Mutex.runExclusive(`appeal:${caseCode}`, async () => {
@@ -384,9 +465,20 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
             throw error;
         }
 
+        // Ban/kick: support server with the appellant (staff in a private thread); otherwise, or if
+        // that is not possible, an admin-only channel in the main server.
         let channel;
+        let staffChannel;
+        let channelGuildId;
         try {
-            channel = await createPrivateChannel(client, `appeal-${record.case_code}`, `Appeal ${record.case_code}`);
+            const support = await openSupportAppealChannel(client, record, user);
+            if (support) {
+                ({ channel, staff: staffChannel, guildId: channelGuildId } = support);
+            } else {
+                channel = await createPrivateChannel(client, `appeal-${record.case_code}`, `Appeal ${record.case_code}`);
+                staffChannel = channel;
+                channelGuildId = guild.id;
+            }
         } catch (error) {
             // Undo so the user can try again once the channel can be created.
             await withTransaction(async (client) => {
@@ -395,8 +487,17 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
             }).catch(() => {});
             throw error;
         }
+        const inSupport = staffChannel !== channel;
 
-        await query(`UPDATE ${T.appeals} SET channel_id = $2 WHERE id = $1`, [appeal.id, channel.id]);
+        await query(`UPDATE ${T.appeals} SET channel_id = $2, channel_guild_id = $3, staff_thread_id = $4 WHERE id = $1`,
+            [appeal.id, channel.id, channelGuildId, inSupport ? staffChannel.id : null]);
+        if (inSupport) {
+            await channel.send({
+                content: `<@${user.id}>, your appeal was received.`,
+                embeds: [memberAppealSummary(record, answers)],
+                allowedMentions: { users: [user.id] },
+            });
+        }
 
         const pendingRecord = { ...record, status: record.status === 'active' ? 'appeal_pending' : record.status };
         const embeds = await buildCaseDossier(pendingRecord, { appeal: { ...appeal, channel_id: channel.id }, client })
@@ -409,8 +510,9 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
                     color: 'primary',
                 })];
             });
-        await channel.send({
-            content: `New appeal from ${user.username} for \`${record.case_code}\`. Decide with the buttons below or \`/appeals\`.`,
+        await staffChannel.send({
+            content: `New appeal from ${user.username} for \`${record.case_code}\`. Decide with the buttons below or \`/appeals\`.`
+                + (inSupport ? ' This thread is staff-only; the appellant is in the channel and sees only their summary.' : ''),
             embeds,
             components: [appealDecisionRow(record.case_code)],
             allowedMentions: { parse: [] },
@@ -425,12 +527,12 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
                 fields: [
                     { name: 'Appeal submitted', value: `\`${record.case_code}\` — ${record.name}` },
                     { name: 'User', value: `${user.username} (${user.id})` },
-                    { name: 'Channel', value: `<#${channel.id}>` },
+                    { name: 'Channel', value: `<#${channel.id}>${inSupport ? ' (support server; staff thread inside)' : ''}` },
                 ],
             },
         }).catch(() => {});
 
-        return { record, channel };
+        return { record, channel, staffChannel };
     });
 }
 
@@ -702,12 +804,27 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
         );
 
         const label = decision === 'accept' ? 'accepted' : 'denied';
-        // The appeal row's guild is the server its channel was opened in.
-        const channelGuild = client.guilds.cache.get(appeal.guild_id);
-        const channel = appeal.channel_id && channelGuild
-            ? channelGuild.channels.cache.get(appeal.channel_id) || await channelGuild.channels.fetch(appeal.channel_id).catch(() => null)
-            : null;
-        await channel?.send({
+        // The channel's server (support for ban/kick appeals); older rows only have guild_id.
+        const channelGuild = client.guilds.cache.get(appeal.channel_guild_id || appeal.guild_id);
+        const fetchIn = async (id) => (id && channelGuild
+            ? channelGuild.channels.cache.get(id) || await channelGuild.channels.fetch(id).catch(() => null)
+            : null);
+        const channel = await fetchIn(appeal.channel_id);
+        // Staff-only place: the private thread when the appellant is in the channel, else the channel.
+        const staffThread = await fetchIn(appeal.staff_thread_id);
+        const staffChannel = staffThread || (appeal.staff_thread_id ? null : channel);
+        if (staffThread && channel) {
+            // The appellant reads the channel: no admin name, no note, no internal notes.
+            await channel.send({
+                embeds: [createEmbed({
+                    title: `Appeal ${label}`,
+                    description: `Your appeal for \`${record.case_code}\` was ${label}. You ${dmDelivered ? 'got' : 'will not get'} the details by DM${dmDelivered ? '' : ' (your DMs are closed)'}.\n\n-# This channel is deleted in ${APPEAL_CHANNEL_DELETE_DELAY_MS / 1000} seconds.`,
+                    color: decision === 'accept' ? 'success' : 'error',
+                })],
+                allowedMentions: { parse: [] },
+            }).catch(() => {});
+        }
+        await staffChannel?.send({
             embeds: [createEmbed({
                 title: `Appeal ${label}`,
                 description: truncate([
@@ -723,10 +840,11 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
             })],
             allowedMentions: { parse: [] },
         }).catch(() => {});
-        if (channel) await disableDecisionButtons(channel, caseCode);
+        if (staffChannel) await disableDecisionButtons(staffChannel, caseCode);
 
-        // The channel is deleted shortly; keep what was said in it.
+        // The channel is deleted shortly; keep what was said in it (and in the staff thread).
         const transcript = channel ? await generateTranscript(channel).catch(() => null) : null;
+        const threadTranscript = staffThread ? await generateTranscript(staffThread).catch(() => null) : null;
         const logFields = [
             { name: `Appeal ${label}`, value: `\`${record.case_code}\` — ${record.name}` },
             { name: 'User', value: `${record.target_username} (${record.target_user_id})` },
@@ -742,7 +860,10 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
         if (!record.is_test || transcript) {
             await postModLog(client, 'appeal', logFields, {
                 title: `Appeal ${label}${record.is_test ? ' (test case)' : ''}`,
-                files: transcript ? [new AttachmentBuilder(transcript.buffer, { name: `appeal-${record.case_code}.html` })] : [],
+                files: [
+                    ...(transcript ? [new AttachmentBuilder(transcript.buffer, { name: `appeal-${record.case_code}.html` })] : []),
+                    ...(threadTranscript ? [new AttachmentBuilder(threadTranscript.buffer, { name: `appeal-${record.case_code}-staff.html` })] : []),
+                ],
             });
         }
 

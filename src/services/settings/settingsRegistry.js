@@ -165,6 +165,10 @@ export const SETTINGS = Object.freeze([
         fallback: 'https://discord.gg/7Ckv9Bt577', schema: invite,
     },
     {
+        key: 'supportAppealsCategoryId', module: 'support', kind: 'category', guild: 'support',
+        label: 'Ban/kick appeals category (support server)', env: 'APPEALS_CATEGORY_ID', fallback: null, schema: optionalId,
+    },
+    {
         key: 'bannedRoleId', module: 'support', kind: 'role', guild: 'support',
         label: 'Banned role (support server)', env: 'BANNED_ROLE_ID',
         fallback: '1564363121685176320', prodOnly: true, schema: optionalId,

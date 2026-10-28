@@ -118,7 +118,7 @@ test('guild roles and module settings', () => {
     setSettingsCacheForTests(SUPPORT, { bannedRoleId: '300000000000000005' });
     assert.equal(getConfiguredSetting('bannedRoleId', env), '300000000000000005', 'read from the support server row');
     assert.deepEqual(Object.keys(getModuleSettings(MAIN, 'logging', env)).sort(), ['evidenceChannelId', 'modLogChannelId']);
-    assert.deepEqual(Object.keys(getModuleSettings(SUPPORT, 'support', env)), ['bannedRoleId']);
+    assert.deepEqual(Object.keys(getModuleSettings(SUPPORT, 'support', env)), ['supportAppealsCategoryId', 'bannedRoleId']);
 });
 
 test('config getters keep their API: env values without a database row, stored values once loaded', () => {

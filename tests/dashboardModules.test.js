@@ -36,6 +36,7 @@ const ROLE_HIGH = '600000000000000003';
 const ROLE_MANAGED = '600000000000000004';
 const ROLE_OK2 = '600000000000000005';
 const SUPPORT_ROLE = '600000000000000009';
+const SUPPORT_CAT = '500000000000000099';
 const PANEL = '700000000000000001';
 const GA_ACTIVE = '700000000000000002';
 const GA_ENDED = '700000000000000003';
@@ -79,7 +80,8 @@ function makeGuild() {
 function makeSupportGuild() {
     const guild = { id: SUPPORT, name: 'Support' };
     guild.roles = { cache: new Map([[SUPPORT, { id: SUPPORT, name: '@everyone', position: 0, guild }], [SUPPORT_ROLE, { id: SUPPORT_ROLE, name: 'Banned', position: 1, managed: false, permissions: perms(), guild }]]) };
-    guild.channels = { cache: new Map() };
+    guild.channels = { cache: new Map([[SUPPORT_CAT, { id: SUPPORT_CAT, name: 'Appeals', type: 4, parentId: null, rawPosition: 0, guild }]]) };
+    guild.members = { me: { permissionsIn: () => ({ has: () => true }), roles: { highest: { position: 10 } }, permissions: { has: () => true } } };
     return guild;
 }
 
@@ -573,6 +575,7 @@ const CASES = {
     },
     support: {
         'banned-role': { form: { bannedRoleId: SUPPORT_ROLE }, service: 'updateSettings', bad: { form: { bannedRoleId: ROLE_OK }, message: /not in the server/ } },
+        'appeals-category': { form: { supportAppealsCategoryId: SUPPORT_CAT }, service: 'updateSettings', bad: { form: { supportAppealsCategoryId: CAT }, message: /not in the server/ } },
     },
 };
 

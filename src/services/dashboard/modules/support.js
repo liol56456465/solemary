@@ -1,9 +1,10 @@
 // support.js — Support server (owner decision 6): the banned role members with an
-// active main-server ban get in the support server, where they appeal. Stored in
-// guild_settings on the support server's row (settings service).
+// active main-server ban get in the support server, where they appeal, and the category
+// their ban/kick appeal channels open in (they are added; staff use a private thread).
+// Stored in guild_settings on the support server's row (settings service).
 
 import { html, path } from '../html.js';
-import { postForm, roleField, rolePicker } from '../forms.js';
+import { PERMS, channelField, channelPicker, postForm, roleField, rolePicker } from '../forms.js';
 import { registryGuildId, registryValue, saveRegistry, section, NOTHING } from './common.js';
 
 export default {
@@ -17,6 +18,7 @@ export default {
             supportGuildId,
             supportGuild: supportGuildId ? ctx.client?.guilds?.cache?.get(supportGuildId) || null : null,
             bannedRoleId: registryValue(ctx, 'bannedRoleId'),
+            supportAppealsCategoryId: registryValue(ctx, 'supportAppealsCategoryId'),
             invite: registryValue(ctx, 'supportServerInvite'),
         };
     },
@@ -26,7 +28,13 @@ export default {
         const form = d.supportGuild
             ? postForm(ctx, 'support', 'banned-role', rolePicker(d.supportGuild, 'bannedRoleId', d.bannedRoleId, { label: 'Banned role (support server)', help: 'Given to members with an active ban in the main server; removed when the ban ends.' }))
             : html`<p class="warn">The bot is not in the support server (or it is not cached), so its roles can't be listed.</p>`;
-        return html`${section(d.supportGuild ? `Support server · ${d.supportGuild.name}` : 'Support server', html`${form}
+        const appeals = d.supportGuild
+            ? postForm(ctx, 'support', 'appeals-category', channelPicker(d.supportGuild, 'supportAppealsCategoryId', d.supportAppealsCategoryId, {
+                label: 'Ban/kick appeals category', kinds: ['category'], perms: PERMS.category,
+                help: 'Ban and kick appeals open here with the member added; staff decide in a private thread. Not set: they open staff-only in the main server.',
+            }))
+            : '';
+        return html`${section(d.supportGuild ? `Support server · ${d.supportGuild.name}` : 'Support server', html`${form}${appeals}
 <p class="muted">Invite sent to banned members: ${d.invite || 'not set'} — <a href="${path('/enforcement')}">change on Enforcement &amp; appeals</a>.</p>`)}`;
     },
 
@@ -37,6 +45,13 @@ export default {
             const bannedRoleId = roleField(supportGuild, form, 'bannedRoleId', { label: 'Banned role' });
             if (bannedRoleId === registryValue(ctx, 'bannedRoleId')) return NOTHING;
             return saveRegistry(ctx, { bannedRoleId }, 'support');
+        },
+        async 'appeals-category'(ctx, form) {
+            const supportGuildId = registryGuildId('supportAppealsCategoryId', ctx.env);
+            const supportGuild = supportGuildId ? ctx.client?.guilds?.cache?.get(supportGuildId) : null;
+            const supportAppealsCategoryId = channelField(supportGuild, form, 'supportAppealsCategoryId', { kinds: ['category'], label: 'Ban/kick appeals category' });
+            if (supportAppealsCategoryId === registryValue(ctx, 'supportAppealsCategoryId')) return NOTHING;
+            return saveRegistry(ctx, { supportAppealsCategoryId }, 'support');
         },
     },
 };

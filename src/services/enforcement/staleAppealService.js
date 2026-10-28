@@ -6,7 +6,8 @@
 //   - Decided appeals whose channel still exists (the delayed delete after a
 //     decision is an in-memory timer, so a restart can skip it): same clean-up.
 //   - Pending appeals are never closed. After STALE_APPEAL_REMINDER_DAYS without a
-//     message, staff get one reminder in the channel.
+//     message, staff get one reminder in the channel (support-server appeals: in the
+//     private staff thread, never where the appellant reads).
 
 import { AttachmentBuilder, SnowflakeUtil } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -48,8 +49,15 @@ async function closeWithTranscript(client, guild, channel, row, why) {
 
 async function remindStaff(client, guild, channel, row) {
     if (await db.get(reminderKey(row.id), null)) return;
+    // Support-server appeal: remind in the staff thread (no main-server role to ping there).
+    const inSupport = Boolean(row.staff_thread_id);
+    if (inSupport) {
+        channel = channel.guild.channels.cache.get(row.staff_thread_id)
+            || await channel.guild.channels.fetch(row.staff_thread_id).catch(() => null);
+        if (!channel) return;
+    }
     const config = await getGuildConfig(client, guild.id);
-    const staffRoleId = config.ticketStaffRoleId;
+    const staffRoleId = inSupport ? null : config.ticketStaffRoleId;
     const days = Math.round(enforcementConfig.staleAppealReminderMs / 86400000);
     await channel.send({
         content: `${staffRoleId ? `<@&${staffRoleId}> ` : ''}This appeal (\`${row.case_code}\`) has had no activity for ${days} days and is still waiting for a decision. Use the Accept / Deny buttons above or \`/appeals\`.`,
@@ -64,13 +72,14 @@ export async function tidyStaleAppealChannels(client) {
     if (!guild) return;
 
     const { rows } = await query(
-        `SELECT id, kind, case_code, user_id, status, channel_id, decided_at FROM ${T.appeals}
+        `SELECT id, kind, case_code, user_id, status, channel_id, channel_guild_id, staff_thread_id, decided_at FROM ${T.appeals}
          WHERE channel_id IS NOT NULL AND created_at > NOW() - INTERVAL '90 days'
          ORDER BY created_at`,
     );
     const now = Date.now();
     for (const row of rows) {
-        const channel = guild.channels.cache.get(row.channel_id);
+        const channelGuild = row.channel_guild_id ? client.guilds.cache.get(row.channel_guild_id) : guild;
+        const channel = channelGuild?.channels.cache.get(row.channel_id);
         if (!channel) continue;
         try {
             const idleMs = now - lastActivity(channel);
