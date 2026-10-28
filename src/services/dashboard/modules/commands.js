@@ -27,6 +27,7 @@ export const MODULE_COMMANDS = {
     'join-to-create': ['jointocreate'],
     applications: ['apply', 'app-admin'],
     community: ['community', 'suggest', 'tag'],
+    channels: ['purge', 'lock', 'unlock'],
 };
 
 /**

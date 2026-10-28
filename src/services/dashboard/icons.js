@@ -14,6 +14,7 @@ const PATHS = {
     appeals: '<path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
     nocontact: '<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>',
     staff: '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+    channels: '<path d="M10 4L8 20M16 4l-1.1 9M5 9h14M4 15h9"/><rect x="15" y="15" width="6" height="5" rx="1"/><path d="M16.5 15v-1.5a1.5 1.5 0 0 1 3 0V15"/>',
     enforcement: '<path d="M14 4l6 6M4 20l7-7M12 6l6 6-4 4-6-6z"/><path d="M3 21h9"/>',
     automod: '<rect x="5" y="8" width="14" height="11" rx="2"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/>',
     logging: '<path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',

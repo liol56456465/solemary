@@ -17,6 +17,7 @@ import { channelGroups, channelWarnings, roleWarnings, switchInput } from '../sr
 import { diffSnapshots, recordDashboardChange, changeSummary } from '../src/services/dashboard/audit.js';
 import { channelPurposeFor } from '../src/services/automod/channelRouting.js';
 import { JS_PATH, NAV, moduleItems } from '../src/services/dashboard/html.js';
+import { lockChannel, purgeChannelMessages, unlockChannel } from '../src/services/channelToolsService.js';
 
 const ALLOWED_SCRIPT = `<script src="${JS_PATH}" defer></script>`;
 const SECRET = 'x'.repeat(64);
@@ -57,7 +58,30 @@ function perms(names = []) {
 
 function makeGuild() {
     const guild = { id: GUILD, name: 'Main <b>' };
-    const ch = (id, name, type, parentId = null) => ({ id, name, type, parentId, rawPosition: 0, guild });
+    const SEND = 1n << 11n;
+    const ch = (id, name, type, parentId = null) => {
+        // Channel overwrites (only @everyone's Send Messages matters here) and recent messages.
+        const denied = new Set();
+        const channel = { id, name, type, parentId, rawPosition: 0, guild, toString: () => `<#${id}>`, edits: [], deletedIds: [] };
+        channel.permissionOverwrites = {
+            cache: { get: (target) => (target === GUILD && denied.has(SEND) ? { id: GUILD, deny: { has: (bit) => denied.has(bit) } } : undefined) },
+            edit: async (target, patch, options) => {
+                channel.edits.push({ target: target?.id || target, patch, options });
+                if (patch.SendMessages === false) denied.add(SEND); else denied.delete(SEND);
+            },
+        };
+        channel.permissionsFor = () => ({ has: (bit) => !denied.has(bit) });
+        const now = Date.now();
+        const msg = (n, authorId, ageMs) => ({ id: `80000000000000000${n}`, author: { id: authorId }, createdTimestamp: now - ageMs });
+        channel.recent = [msg(1, MEMBER, 1000), msg(2, ADMIN, 2000), msg(3, MEMBER, 3000), msg(4, MEMBER, 20 * 86_400_000)];
+        channel.messages = { fetch: async ({ limit }) => new Map(channel.recent.slice(0, limit).map((m) => [m.id, m])) };
+        channel.bulkDelete = async (messages) => {
+            channel.deletedIds.push(...messages.map((m) => m.id));
+            channel.recent = channel.recent.filter((m) => !messages.includes(m));
+            return new Map(messages.map((m) => [m.id, m]));
+        };
+        return channel;
+    };
     guild.channels = { cache: new Map([
         [TEXT, ch(TEXT, 'general', 0, CAT)], [TEXT2, ch(TEXT2, '<script>x</script>', 0)],
         [CAT, ch(CAT, 'Support', 4)], [VOICE, ch(VOICE, 'Join to create', 2, CAT)],
@@ -93,6 +117,7 @@ function makeServices() {
     const record = (name, args) => calls.push({ name, args });
     const s = {
         registry: {},
+        logEvents: [],
         automod: { enabled: true, mode: 'enforce', ruleModes: {}, channelRules: {}, exemptChannelIds: [TEXT2], trusted: { roleId: null, minLevel: 0 }, secondChance: true, moodAlerts: true, panic: { enabled: true, hours: 2 }, joinGate: {} },
         native: new Map(),
         logging: { enabled: false, channels: { audit: null, applications: null, reports: null }, ignore: { channels: [TEXT2], roles: [], users: [] }, enabledEvents: {} },
@@ -250,6 +275,10 @@ function makeServices() {
         enableCategory: async (c, g, key) => { record('enableCategory', [key]); delete s.config.disabledCategories[key]; },
         disableCategory: async (c, g, key) => { record('disableCategory', [key]); s.config.disabledCategories[key] = true; },
         postModLog: async (client, kind, fields, options) => { record('postModLog', [kind, options]); },
+        // Channel tools: the real service on the fake guild, its log event recorded instead of sent.
+        purgeChannelMessages: async (args) => { record('purgeChannelMessages', [args.channel.id, args.amount, args.fromUserId]); return purgeChannelMessages({ ...args, log: async (e) => s.logEvents.push(e) }); },
+        lockChannel: async (args) => { record('lockChannel', [args.channel.id]); return lockChannel({ ...args, log: async (e) => s.logEvents.push(e) }); },
+        unlockChannel: async (args) => { record('unlockChannel', [args.channel.id]); return unlockChannel({ ...args, log: async (e) => s.logEvents.push(e) }); },
         // Posting panels and creating things in Discord (Part 1 of the "everything from the web" work).
         setupTicketSystem: async (c, guild, opts) => {
             record('setupTicketSystem', [opts.panelChannel?.id]);
@@ -573,6 +602,14 @@ const CASES = {
         command: { form: { name: 'joke', enabled: 'false' }, service: 'disableCommand', bad: { form: { name: 'commands', enabled: 'false' }, message: /cannot be disabled/ } },
         category: { form: { key: 'fun', enabled: 'false' }, service: 'disableCategory', bad: { form: { key: 'nope', enabled: 'false' }, message: /Unknown category/ } },
     },
+    channels: {
+        purge: { form: { channelId: TEXT, amount: '2', userId: '', reason: 'spam', confirm: '1' }, service: 'purgeChannelMessages', admin: true,
+            bad: { form: { channelId: TEXT, amount: '101', confirm: '1' }, message: /between 1 and 100/ } },
+        lock: { form: { channelId: TEXT, reason: 'raid' }, service: 'lockChannel', admin: true,
+            bad: { form: { channelId: VOICE }, message: /must be a text channel/ } },
+        unlock: { seed: (s, guild) => { guild.channels.cache.get(TEXT).permissionOverwrites.edit(GUILD, { SendMessages: false }); }, form: { channelId: TEXT }, service: 'unlockChannel', admin: true,
+            bad: { form: { channelId: MISSING }, message: /not in the server/ } },
+    },
     support: {
         'banned-role': { form: { bannedRoleId: SUPPORT_ROLE }, service: 'updateSettings', bad: { form: { bannedRoleId: ROLE_OK }, message: /not in the server/ } },
         'appeals-category': { form: { supportAppealsCategoryId: SUPPORT_CAT }, service: 'updateSettings', bad: { form: { supportAppealsCategoryId: CAT }, message: /not in the server/ } },
@@ -626,7 +663,7 @@ test('every POST action: users without access are refused; admin-only actions re
             assert.equal(res.statusCode, 403, `${module.key}/${action} stranger`);
             assert.equal(stranger.calls.length, 0);
             const owner = await setup({ userId: OWNER });
-            c.seed?.(owner.state);
+            c.seed?.(owner.state, owner.guild);
             const asOwner = await post(owner, module.key, action, c.form);
             if (getAction(module, action).admin) {
                 assert.equal(asOwner.statusCode, 403, `${module.key}/${action} owner must be refused`);
@@ -647,7 +684,7 @@ test('owner override: an OWNER_IDS action without Administrator is logged with u
         const module = MODULES.find((m) => Object.keys(CASES[m.key]).some((a) => !getAction(m, a).admin));
         const action = Object.keys(CASES[module.key]).find((a) => !getAction(module, a).admin);
         const owner = await setup({ userId: OWNER });
-        CASES[module.key][action].seed?.(owner.state);
+        CASES[module.key][action].seed?.(owner.state, owner.guild);
         assert.equal((await post(owner, module.key, action, CASES[module.key][action].form)).statusCode, 303);
         const line = warnings.find((w) => w.startsWith('Owner override:'));
         assert.ok(line, 'override logged');
@@ -656,7 +693,7 @@ test('owner override: an OWNER_IDS action without Administrator is logged with u
         assert.match(line, /via dashboard at \d{4}-\d{2}-\d{2}T/, 'time');
         warnings.length = 0;
         const admin = await setup();
-        CASES[module.key][action].seed?.(admin.state);
+        CASES[module.key][action].seed?.(admin.state, admin.guild);
         await post(admin, module.key, action, CASES[module.key][action].form);
         assert.equal(warnings.filter((w) => w.startsWith('Owner override:')).length, 0);
     } finally {
@@ -671,7 +708,7 @@ test('every POST action with invalid input: 400, the message on the page, no wri
         for (const [action, c] of Object.entries(CASES[module.key])) {
             if (!c.bad) continue;
             const h = await setup();
-            c.bad.seed?.(h.state);
+            c.bad.seed?.(h.state, h.guild);
             const res = await post(h, module.key, action, c.bad.form);
             assert.equal(res.statusCode, 400, `${module.key}/${action} invalid → 400 (got ${res.statusCode})`);
             assert.match(res.body, c.bad.message, `${module.key}/${action} message`);
@@ -690,7 +727,7 @@ test('every POST action with valid input: service called, audit row, one mod-log
     for (const module of MODULES) {
         for (const [action, c] of Object.entries(CASES[module.key])) {
             const h = await setup();
-            c.seed?.(h.state);
+            c.seed?.(h.state, h.guild);
             const res = await post(h, module.key, action, c.form);
             assert.equal(res.statusCode, 303, `${module.key}/${action} → 303 (got ${res.statusCode}: ${String(res.body).match(/role="alert">([^<]*)/)?.[1] || ''})`);
             assert.equal(res.redirectedTo, `/dashboard/${module.key}`);
@@ -1178,4 +1215,86 @@ test('Find a setting: also matches a module\'s setup steps (e.g. "category" find
     assert.deepEqual(keys('category'), ['tickets', 'enforcement', 'support'], 'keywords (sidebar order)');
     assert.deepEqual(keys('birthday channel'), ['birthdays'], 'setup step label');
     assert.deepEqual(keys('ticket staff role'), ['tickets'], 'every word must match');
+});
+
+// ── Channel tools (purge, lock, unlock) ───────────────────────────────────
+
+test('channel tools: every action is Administrator-only; an OWNER_IDS user without Administrator changes nothing', async () => {
+    const module = MODULES.find((m) => m.key === 'channels');
+    for (const action of Object.keys(module.actions)) {
+        assert.equal(getAction(module, action).admin, true, `channels/${action} admin`);
+        const owner = await setup({ userId: OWNER });
+        const res = await post(owner, 'channels', action, CASES.channels[action].form);
+        assert.equal(res.statusCode, 403);
+        assert.deepEqual(owner.guild.channels.cache.get(TEXT).deletedIds, []);
+        assert.deepEqual(owner.guild.channels.cache.get(TEXT).edits, []);
+    }
+    const owner = await setup({ userId: OWNER });
+    const page = await get(owner, 'channels');
+    assert.match(page.body, /need Administrator in the main server/);
+    assert.ok(!page.body.includes('>Delete messages<'), 'no purge button for an owner');
+});
+
+test('channel tools: refused clearly when the bot lacks Manage Messages / Manage Channels; nothing changes', async () => {
+    const h = await setup();
+    h.guild.members.me.permissionsIn = () => ({ has: (bit) => bit === 1n << 10n }); // View Channel only
+    const purge = await post(h, 'channels', 'purge', CASES.channels.purge.form);
+    assert.equal(purge.statusCode, 400);
+    assert.match(purge.body, /missing Read Message History, Manage Messages in #general/);
+    const lock = await post(h, 'channels', 'lock', CASES.channels.lock.form);
+    assert.equal(lock.statusCode, 400);
+    assert.match(lock.body, /missing Manage Channels, Manage Permissions in #general/);
+    const text = h.guild.channels.cache.get(TEXT);
+    assert.deepEqual([text.deletedIds, text.edits, h.state.logEvents, h.auditRows], [[], [], [], []]);
+});
+
+test('channel tools: purge limits (1–100), confirm box required, user filter, 14-day messages skipped', async () => {
+    const h = await setup();
+    for (const amount of ['0', '101', 'x']) {
+        const res = await post(h, 'channels', 'purge', { channelId: TEXT, amount, confirm: '1' });
+        assert.equal(res.statusCode, 400, `amount ${amount}`);
+    }
+    const noConfirm = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5' });
+    assert.equal(noConfirm.statusCode, 400);
+    assert.match(noConfirm.body, /Tick the box/);
+    const badUser = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: 'bob', confirm: '1' });
+    assert.match(badUser.body, /must be a Discord user ID/);
+    const text = h.guild.channels.cache.get(TEXT);
+    assert.deepEqual(text.deletedIds, [], 'nothing deleted by refused forms');
+
+    const res = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: MEMBER, reason: 'spam', confirm: '1' });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(text.deletedIds, ['800000000000000001', '800000000000000003'], 'only the member\'s recent messages');
+    assert.match((await h.sessions.get(h.session.id)).flash, /Deleted 2 messages in #general\. 1 message was older than 14 days and skipped\./);
+    assert.equal(h.state.logEvents.length, 1);
+    assert.equal(h.state.logEvents[0].event.action, 'Messages Purged');
+    assert.match(h.state.logEvents[0].event.reason, /Dashboard \(admin<b>\): spam/);
+    assert.equal(h.auditRows[0].key, `purge.${TEXT}`);
+
+    const onlyOld = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: MEMBER, confirm: '1' });
+    assert.equal(onlyOld.statusCode, 400);
+    assert.match(onlyOld.body, /older than 14 days/);
+});
+
+test('channel tools: lock then unlock round trip (overwrite, audit reason, log events, locked list)', async () => {
+    const h = await setup();
+    const text = h.guild.channels.cache.get(TEXT);
+    assert.match((await get(h, 'channels')).body, /Locked channels \(0\)/);
+    assert.equal((await post(h, 'channels', 'lock', { channelId: TEXT, reason: 'raid' })).statusCode, 303);
+    assert.deepEqual(text.edits[0], { target: GUILD, patch: { SendMessages: false }, options: { type: 0, reason: 'Dashboard (admin<b>): raid' } });
+    const page = await get(h, 'channels');
+    assert.match(page.body, /Locked channels \(1\)/);
+    assert.match(page.body, /action="\/dashboard\/channels\/unlock"/);
+    const again = await post(h, 'channels', 'lock', { channelId: TEXT });
+    assert.equal(again.statusCode, 400);
+    assert.match(again.body, /already locked/);
+
+    assert.equal((await post(h, 'channels', 'unlock', { channelId: TEXT })).statusCode, 303);
+    assert.deepEqual(text.edits[1], { target: GUILD, patch: { SendMessages: null }, options: { type: 0, reason: 'Dashboard (admin<b>)' } });
+    assert.match((await get(h, 'channels')).body, /Locked channels \(0\)/);
+    const notLocked = await post(h, 'channels', 'unlock', { channelId: TEXT });
+    assert.equal(notLocked.statusCode, 400);
+    assert.match(notLocked.body, /is not locked/);
+    assert.deepEqual(h.state.logEvents.map((e) => e.event.action), ['Channel Locked', 'Channel Unlocked']);
+    assert.deepEqual(h.auditRows.map((r) => [r.key, r.old, r.new]), [[`lock.${TEXT}`, false, true], [`lock.${TEXT}`, true, false]]);
 });
