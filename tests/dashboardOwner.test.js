@@ -403,3 +403,26 @@ test('image URL: https only, no localhost / IP hosts, must really be an image', 
     const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(16)]);
     assert.equal((await fetchImageFromUrl('https://img.example/a.png', { fetchImpl: response(png) })).type, 'image/png');
 });
+
+test('blacklist at startup: a failed load is retried with backoff until it succeeds (no fail-open until restart)', async () => {
+    const { loadBlacklistWithRetry } = await import('../src/services/owner/blacklistService.js');
+    let calls = 0;
+    const timers = [];
+    const load = async () => { calls += 1; if (calls < 3) throw new Error('db down'); return 4; };
+    const first = await loadBlacklistWithRetry({ load, schedule: (fn, ms) => { timers.push(ms); setImmediate(fn); return null; } });
+    assert.equal(first, null, 'the first try failed');
+    await new Promise((r) => setTimeout(r, 20));
+    assert.equal(calls, 3, 'retried until it loaded');
+    assert.deepEqual(timers, [15000, 30000], 'backoff doubles');
+});
+
+test('owner image URLs: private, loopback and internal addresses are refused after DNS', async () => {
+    const { isPrivateAddress, pinnedFetch } = await import('../src/services/owner/safeImageFetch.js');
+    for (const ip of ['127.0.0.1', '10.1.2.3', '172.20.0.1', '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '::1', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1']) {
+        assert.equal(isPrivateAddress(ip), true, ip);
+    }
+    for (const ip of ['1.1.1.1', '151.101.1.1', '2606:4700::1111']) assert.equal(isPrivateAddress(ip), false, ip);
+    // A public-looking name that resolves to an internal address never gets a connection.
+    const resolve = (host, opts, cb) => cb(null, [{ address: '127.0.0.1', family: 4 }]);
+    await assert.rejects(pinnedFetch('https://looks-public.example/a.png', { resolve }), (error) => error.code === 'EPRIVATE');
+});

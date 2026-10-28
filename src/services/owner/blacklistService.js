@@ -92,3 +92,27 @@ export function createBlacklistStore({ query = dbQuery, table = pgConfig.tables.
 
 export const blacklistStore = createBlacklistStore();
 export const loadBlacklist = () => blacklistStore.load();
+
+/**
+ * Loads the blacklist, and if the database does not answer, keeps retrying in the background
+ * (15 s, doubling up to 5 min) until it does, so a database hiccup at startup does not leave
+ * blacklisted users and servers able to use the bot until the next restart.
+ * Resolves with the count, or null when the first try failed (the retries go on).
+ */
+export async function loadBlacklistWithRetry({ load = loadBlacklist, log = () => {}, firstDelayMs = 15_000, maxDelayMs = 300_000, schedule = setTimeout } = {}) {
+    try {
+        return await load();
+    } catch (error) {
+        log(`Bot blacklist could not be loaded: ${error.message}; retrying in the background`);
+        let delay = firstDelayMs;
+        const retry = () => {
+            load().then((count) => log(`Bot blacklist loaded on retry: ${count} active`)).catch((err) => {
+                log(`Bot blacklist still not loaded: ${err.message}`);
+                delay = Math.min(delay * 2, maxDelayMs);
+                schedule(retry, delay)?.unref?.();
+            });
+        };
+        schedule(retry, delay)?.unref?.();
+        return null;
+    }
+}

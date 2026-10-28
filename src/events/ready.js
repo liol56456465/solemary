@@ -9,7 +9,7 @@ import { reconcileBannedRoles } from "../services/enforcement/bannedRoleService.
 import { describeAutomodReadiness } from "../services/automod/automodService.js";
 import { loadNoContactOrders } from "../services/enforcement/noContactService.js";
 import { loadCommunityCaches } from "../services/community/index.js";
-import { loadBlacklist } from "../services/owner/blacklistService.js";
+import { loadBlacklistWithRetry } from "../services/owner/blacklistService.js";
 import { applyStoredBotState } from "../services/owner/botStateService.js";
 
 export default {
@@ -21,11 +21,8 @@ export default {
       client.user.setPresence(testMode.enabled ? testMode.presence : config.bot.presence);
       // Presence and maintenance set from the dashboard Owner area (stored, so they survive restarts).
       startupLog(`Bot state: ${await applyStoredBotState(client, { testModeEnabled: testMode.enabled }).catch((error) => `not loaded (${error.message})`)}`);
-      const blacklistCount = await loadBlacklist().catch((error) => {
-        logger.error(`Bot blacklist could not be loaded: ${error.message}`);
-        return null;
-      });
-      startupLog(blacklistCount == null ? "Blacklist: not loaded (database unavailable)" : `Blacklist: ${blacklistCount} active`);
+      const blacklistCount = await loadBlacklistWithRetry({ log: (line) => logger.error(line) });
+      startupLog(blacklistCount == null ? "Blacklist: not loaded yet (database unavailable; retrying in the background)" : `Blacklist: ${blacklistCount} active`);
 
       if (testMode.enabled) {
         const problems = await verifyTestResources(client);

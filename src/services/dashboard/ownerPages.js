@@ -160,6 +160,7 @@ ${notices({ flash, error, editEnabled })}
 <dt>Node</dt><dd>${health.node}</dd>
 <dt>Bot version</dt><dd>${health.version || '—'}</dd>
 <dt>Servers</dt><dd>${health.servers}</dd>
+<dt>Blacklist</dt><dd>${health.blacklistLoaded === false ? html`<span class="state-word is-bad"><span class="dot dot-bad" aria-hidden="true"></span>Not loaded: nobody is blocked until the database answers (retrying)</span>` : html`<span class="state-word is-on"><span class="dot dot-on" aria-hidden="true"></span>Loaded</span>`}</dd>
 <dt>Database</dt><dd>${db ? html`<span class="state-word is-${db.connected ? 'on' : 'bad'}"><span class="dot dot-${db.connected ? 'on' : 'bad'}" aria-hidden="true"></span>${db.connected ? `Connected (${db.type})` : `Degraded (${db.type || 'none'})`}</span>` : 'Unknown'}</dd>
 </dl></section>
 <section class="card"><h2>Recent errors</h2><p class="muted">Not shown: the logger writes error lines to its log files only and keeps none in memory.</p></section>

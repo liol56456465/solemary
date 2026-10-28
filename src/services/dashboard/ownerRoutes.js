@@ -34,6 +34,8 @@ import { InputError, plainText, queryText, text } from './forms.js';
 import { MAX_UPLOAD_BYTES, sniffImage } from './multipart.js';
 import { path } from './html.js';
 import { isSnowflake } from './security.js';
+import { pinnedFetch } from '../owner/safeImageFetch.js';
+import { isBlacklistLoaded } from '../owner/blacklistCache.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, USERNAME_MAX, announceConfirmPage, announcePage, announceResultPage, blacklistPage,
     healthPage, leaveConfirmPage, profilePage, serverPage, serversPage,
@@ -129,10 +131,11 @@ export function pickInviteChannel(guild) {
 
 /**
  * Downloads an image from an https URL for the avatar / banner: no other protocol, no
- * localhost or IP-literal hosts, no redirects, 10 s, at most 8 MB, and it must really be a
+ * localhost or IP-literal hosts, only public addresses after DNS (pinnedFetch connects to the
+ * address it checked), no redirects, 10 s, at most 8 MB, and it must really be a
  * PNG / JPEG / GIF / WebP (first bytes). Returns { data, type }.
  */
-export async function fetchImageFromUrl(url, { fetchImpl = globalThis.fetch, maxBytes = MAX_UPLOAD_BYTES } = {}) {
+export async function fetchImageFromUrl(url, { fetchImpl = (href) => pinnedFetch(href, { timeoutMs: IMAGE_FETCH_TIMEOUT_MS, maxBytes: MAX_UPLOAD_BYTES }), maxBytes = MAX_UPLOAD_BYTES } = {}) {
     let parsed;
     try {
         parsed = new URL(String(url));
@@ -147,9 +150,12 @@ export async function fetchImageFromUrl(url, { fetchImpl = globalThis.fetch, max
     let response;
     try {
         response = await fetchImpl(parsed.href, { redirect: 'error', signal: AbortSignal.timeout(IMAGE_FETCH_TIMEOUT_MS) });
-    } catch {
-        throw new InputError('The image could not be downloaded (redirects are not followed).');
+    } catch (error) {
+        if (error?.code === 'EPRIVATE') throw new InputError('That host points to a private or internal address; use a public image URL.');
+        if (error?.code === 'ETOOLARGE') throw new InputError(`The image is larger than ${Math.floor(maxBytes / 1024 / 1024)} MB.`);
+        throw new InputError('The image could not be downloaded.');
     }
+    if (response.status >= 300 && response.status < 400) throw new InputError('The image URL redirects somewhere else; use the direct image link.');
     if (!response.ok) throw new InputError(`The image could not be downloaded (HTTP ${response.status}).`);
     const declared = Number(response.headers?.get?.('content-length'));
     if (Number.isFinite(declared) && declared > maxBytes) throw new InputError(`The image is larger than ${Math.floor(maxBytes / 1024 / 1024)} MB.`);
@@ -409,7 +415,7 @@ export function createOwnerHandlers(core) {
             maxUses: 1, maxAge: INVITE_MAX_AGE_SECONDS, unique: true,
             reason: `Dashboard (Owner area): invite for ${req.dashboard.session.username} (${req.dashboard.session.userId})`,
         }));
-        await audit(req, [{ key: `servers.${guild.id}.invite`, old: null, new: { code: created.code, channelId: channel.id, maxUses: 1, maxAgeSeconds: INVITE_MAX_AGE_SECONDS } }]);
+        await audit(req, [{ key: `servers.${guild.id}.invite`, old: null, new: { channelId: channel.id, maxUses: 1, maxAgeSeconds: INVITE_MAX_AGE_SECONDS } }]); // no code: audit rows are not secret
         await flash(req, `Invite created (1 use, expires in 1 hour): https://discord.gg/${created.code}`);
         return res.redirect(303, path(`/owner/servers/${guild.id}`));
     }, { rerender: rerenderServer });
@@ -487,6 +493,7 @@ export function createOwnerHandlers(core) {
             servers: client.guilds?.cache?.size ?? 0,
             database: status ? { connected: status.connectionType !== 'none' && !status.isDegraded, type: status.connectionType, degraded: Boolean(status.isDegraded) } : null,
             maintenance: o.isMaintenanceOn(),
+            blacklistLoaded: isBlacklistLoaded(),
         };
     }
 

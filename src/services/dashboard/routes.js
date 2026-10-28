@@ -248,6 +248,11 @@ export function createDashboard({
         return themeFrom(parseCookies(req?.headers?.cookie)[THEME_COOKIE]);
     }
 
+    /** Owner-area changes are for the bot owners' eyes only (Audit page, Overview). */
+    function hiddenAuditModules(req) {
+        return (owner.isBotOwner || defaultOwnerDeps.isBotOwner)(req.dashboard?.session?.userId) ? [] : ['owner'];
+    }
+
     function shellOf(req) {
         const ctx = req?.dashboard;
         if (!ctx) return req ? { session: null, theme: themeOf(req) } : {};
@@ -438,7 +443,7 @@ export function createDashboard({
         const result = await collectOverview({ client, guildId, data: data.overview || defaultOverviewData });
         // Fresh config-based states on top of the full set (automod, join-to-create, applications).
         req.dashboard.moduleStates = { ...req.dashboard.moduleStates, ...result.moduleStates };
-        const recentChanges = await audits.list(guildId, { page: 0, pageSize: RECENT_CHANGES })
+        const recentChanges = await audits.list(guildId, { page: 0, pageSize: RECENT_CHANGES, excludeModules: hiddenAuditModules(req) })
             .then((r) => r.rows).catch(() => null);
         return sendHtml(res, 200, overviewPage({ ...shellOf(req), overview: result, recentChanges, editEnabled: settings.editEnabled }));
     }
@@ -530,7 +535,7 @@ export function createDashboard({
         };
         const page = Math.min(MAX_PAGE, Math.max(0, Number.parseInt(str(req.query?.page, 6), 10) || 0));
         const [{ rows, total }, users] = await Promise.all([
-            audits.list(guildId, { userId: filters.user || null, module: filters.module || null, page, pageSize: AUDIT_PAGE_SIZE }),
+            audits.list(guildId, { userId: filters.user || null, module: filters.module || null, excludeModules: hiddenAuditModules(req), page, pageSize: AUDIT_PAGE_SIZE }),
             audits.users(guildId).catch(() => []),
         ]);
         const moduleChoices = [...moduleList.map((m) => ({ key: m.key, label: m.label })), { key: 'appeals', label: 'Appeals (registry)' }, { key: 'logging', label: 'Logging' },

@@ -967,14 +967,14 @@ test('audit page: filters by user and module, paged; values escaped', async () =
     });
     const res = await run(h, h.d.audit, { method: 'GET', headers: { cookie: h.cookie }, query: { user: ADMIN, module: 'logging', page: '1' } });
     assert.equal(res.statusCode, 200);
-    assert.deepEqual(seen[0], { userId: ADMIN, module: 'logging', page: 1, pageSize: 50 });
+    assert.deepEqual(seen[0], { userId: ADMIN, module: 'logging', excludeModules: ['owner'], page: 1, pageSize: 50 });
     assert.match(res.body, /Page 2 of 3/);
     assert.match(res.body, /&lt;u&gt;/);
     assert.match(res.body, /&lt;x&gt;/);
     assert.match(res.body, /<option value="200000000000000002" selected>/);
     const bad = await run(h, h.d.audit, { method: 'GET', headers: { cookie: h.cookie }, query: { user: '1 OR 1=1', module: "x'; drop" } });
     assert.equal(bad.statusCode, 200);
-    assert.deepEqual(seen[1], { userId: null, module: null, page: 0, pageSize: 50 }, 'bad filters are ignored');
+    assert.deepEqual(seen[1], { userId: null, module: null, excludeModules: ['owner'], page: 0, pageSize: 50 }, 'bad filters are ignored');
 });
 
 test('sidebar: every module listed (no Phase 2 placeholders), on/off states shown', async () => {

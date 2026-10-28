@@ -59,10 +59,14 @@ export function createAuditStore({ query = dbQuery, table = pgConfig.tables.dash
         return changes.length;
     }
 
-    /** { rows, total } newest first; filters: { userId, module, page, pageSize }. */
-    async function list(guildId, { userId = null, module = null, page = 0, pageSize = AUDIT_PAGE_SIZE } = {}) {
+    /** { rows, total } newest first; filters: { userId, module, excludeModules, page, pageSize }. */
+    async function list(guildId, { userId = null, module = null, excludeModules = [], page = 0, pageSize = AUDIT_PAGE_SIZE } = {}) {
         const where = ['guild_id = $1'];
         const params = [guildId];
+        if (excludeModules.length) {
+            params.push(excludeModules);
+            where.push(`module <> ALL($${params.length}::text[])`);
+        }
         if (userId) {
             params.push(userId);
             where.push(`user_id = $${params.length}`);
