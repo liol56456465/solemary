@@ -86,3 +86,16 @@ test('triggered tags: first match, channel rules and per-channel cooldown from m
     assert.equal(useTag(G, 'RULES')?.uses, 4);
     assert.equal(useTag(G, 'missing'), null);
 });
+
+test('triggered tags: one slow match (busy host) does not switch a tag off; repeated timeouts do', async () => {
+    const { TRIGGER_TIMEOUT_STRIKES } = await import('../../src/services/community/tagService.js');
+    setTagsForTests([
+        { id: 9, guild_id: G, name: 'ip', content: 'play.example.com', trigger_kind: 'word', trigger: 'server ip', cooldown_s: 0, allow_channels: [], deny_channels: [], created_by: 'x', uses: 0 },
+    ]);
+    const msg = (content) => ({ guild: { id: G }, channel: { id: '200000000000000009', isThread: () => false }, content });
+    const timesOut = () => null;
+    assert.equal(findTriggeredTag(msg('server ip'), 1000, timesOut), null);
+    assert.equal(findTriggeredTag(msg('server ip'), 2000)?.name, 'ip', 'still active after one timeout');
+    for (let i = 0; i < TRIGGER_TIMEOUT_STRIKES; i += 1) findTriggeredTag(msg('server ip'), 3000 + i, timesOut);
+    assert.equal(findTriggeredTag(msg('server ip'), 9000), null, 'switched off after repeated timeouts');
+});
