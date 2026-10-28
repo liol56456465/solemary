@@ -139,9 +139,9 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 - **Production:** Replit deployment, currently on branch `feature/enforcements`. Must run `NODE_ENV=production`
   (`.replit` sets `development` for the workspace; keep the workspace from acting as production).
   `LOG_LEVEL=info` (debug logs message content).
-- **Database:** live DB is the owner's Neon project, secret `POSTGRES_URL`. The code prefers it over `DATABASE_URL`
-  (`src/config/database/postgres.js:105`); on Replit `DATABASE_URL` points at a suspended DB, so never rely on it.
-  Neon free tier is insufficient (crons keep it awake ~182 CU-h/month vs 100).
+- **Database:** live DB is the owner's Neon project (PostgreSQL 18, ~10 MB), secret `POSTGRES_URL`. The bot reads
+  **only** `POSTGRES_URL`; `DATABASE_URL` (Replit's suspended DB) is ignored with a startup warning.
+  Neon Free is fine on Autoscale (6.96 of 100 CU-h used on 2026-10-28) but not on a Reserved VM (~182 CU-h/month).
   The planned move is to Supabase free tier (session-mode pooler if IPv6 is unavailable), keeping per-minute polling.
 - **Testing:** `npm run start:test` uses the production token, so **the Replit deployment must be stopped** while testing.
   Test mode: `TEST_GUILD_IDS` allowlist (other guilds ignored), guild-only command registration
