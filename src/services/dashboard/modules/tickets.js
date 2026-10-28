@@ -1,5 +1,5 @@
 // tickets.js — Tickets (categories, staff role, limits, logs, panel text), the modmail
-// block list (view / unblock) and canned answers (list / add / remove). Writes go
+// block list (view / block / unblock) and canned answers (list / add / remove). Writes go
 // through ticketSettingsService, modmailService and cannedService, as the commands do.
 
 import { CANNED_MAX_LENGTH, CANNED_NAME } from '../../cannedService.js';
@@ -52,6 +52,9 @@ ${rolePicker(g, 'staffRoleId', null, { label: 'Ticket staff role', assign: false
 ${numberInput('maxTicketsPerUser', 3, { label: 'Open tickets per member (1–10)', min: 1, max: 10 })}
 ${switchInput('dmOnClose', true, { label: 'DM the member when a ticket closes' })}
 ${textArea('panelMessage', 'Click the button below to create a support ticket.', { label: 'Panel message', max: 2000 })}</div>`, { submit: 'Set up and post the panel', canEdit: canPost })}`;
+        const blockForm = postForm(ctx, 'tickets', 'block', html`<div class="grid">
+${textInput('userId', '', { label: 'Member (user ID)', max: 25 })}
+${textInput('reason', '', { label: 'Reason (optional, for the audit log)', max: 200 })}</div>`, { submit: 'Block from modmail', canEdit: ctx.canEdit && ctx.canAct, confirm: 'Block this member from modmail?' })
         const blockedRows = blocked.map((id) => [html`<code>${id}</code>`, buttonForm(ctx, 'tickets', 'unblock', 'Unblock', { userId: id }, { danger: false })]);
         const cannedRows = Object.entries(canned).sort((a, b) => a[0].localeCompare(b[0])).map(([name, body]) => [
             html`<code>${name}</code>${ctx.services.isBuiltInCanned(name) ? html` <span class="muted">(built-in)</span>` : ''}`,
@@ -65,7 +68,7 @@ ${textInput('name', '', { label: 'Name (a-z, 0-9, -)', max: 32 })}
 ${textArea('text', '', { label: 'Answer', max: CANNED_MAX_LENGTH, rows: 3 })}</div>`, { submit: 'Save answer' });
         return html`${section('Ticket panel', panel, ctx.canAct ? '' : 'Posting the panel needs Administrator in the main server.')}
 ${section('Ticket settings', form)}
-${section('Modmail blocked members', table(['User ID', ''], blockedRows, 'Nobody is blocked from modmail.'), 'Block members with /modmail block in Discord.')}
+${section('Modmail blocked members', html`${table(['User ID', ''], blockedRows, 'Nobody is blocked from modmail.')}<h3>Block a member</h3>${blockForm}`, 'Blocked members cannot open modmail conversations (like /modmail block). An open conversation stays until staff close it.')}
 ${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${cannedAdd}`, 'Staff post them with /canned send. Built-in answers can be replaced (same name) but not deleted.')}`;
     },
 
@@ -119,6 +122,22 @@ ${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${can
             if (!Object.keys(patch).length) return NOTHING;
             const { before, after } = await ctx.services.updateTicketSettings(ctx.client, ctx.guildId, patch);
             return { changes: diffSnapshots(before, after, Object.keys(patch)), message: 'Ticket settings saved.' };
+        },
+        block: {
+            admin: true,
+            async run(ctx, form) {
+                const userId = userIdField(form, 'userId', 'User ID');
+                const reason = text(form, 'reason', 200);
+                const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
+                const before = Array.isArray(config.modmailBlocked) ? config.modmailBlocked : [];
+                if (before.includes(userId)) return { changes: [], message: 'That member is already blocked from modmail.' };
+                await ctx.services.setModmailBlocked(ctx.client, ctx.guildId, userId, true);
+                const open = await ctx.services.findModmailChannel(ctx.guild, userId).catch(() => null);
+                return {
+                    changes: [{ key: 'modmailBlocked', old: before, new: [...before, userId] }, ...(reason ? [{ key: `modmailBlocked.${userId}.reason`, old: null, new: reason }] : [])],
+                    message: `${userId} can no longer use modmail.${open ? ` Their open conversation #${open.name} stays until you close it.` : ''}`,
+                };
+            },
         },
         async unblock(ctx, form) {
             const userId = userIdField(form, 'userId', 'User ID');

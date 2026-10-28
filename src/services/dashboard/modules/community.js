@@ -1,13 +1,15 @@
 // community.js — Community: suggestions channel, starboard, sticky messages, tags and
 // YouTube feeds. Writes go through the community services (settingsService,
 // starboardSettingsPatch, stickyService, tagService, feedService), as /community and
-// /tag do; their validators produce the error messages.
+// /tag do; their validators produce the error messages. Open suggestions are decided
+// with decideSuggestion, as /suggest status does (status, message update, DM to the author).
 
 import { STARBOARD_MAX_THRESHOLD } from '../../community/starboardService.js';
 import { STICKY_MAX_LENGTH } from '../../community/stickyService.js';
 import { TAG_CONTENT_MAX, TRIGGER_KINDS } from '../../community/tagService.js';
+import { SUGGESTION_REASON_MAX, SUGGESTION_STATUSES } from '../../community/suggestionService.js';
 import { FEED_TEMPLATE_MAX } from '../../community/feedService.js';
-import { html } from '../html.js';
+import { formatDate, html } from '../html.js';
 import {
     InputError, PERMS, buttonForm, channelField, channelListField, channelName, channelPicker, choiceField, intField, multiline, numberInput, postForm,
     selectInput, text, textArea, textInput,
@@ -19,6 +21,24 @@ const clip = (value, max = 120) => {
     const t = String(value ?? '').replace(/\s+/g, ' ');
     return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 };
+
+const OPEN_SUGGESTIONS_SHOWN = 25;
+const STATUS_CHOICES = { approved: 'Approve', denied: 'Deny', considering: 'Under consideration' };
+const STATUS_TEXT = { pending: 'open for votes', considering: 'under consideration', approved: 'approved', denied: 'denied' };
+
+function openSuggestionsSection(ctx, open) {
+    const canDecide = ctx.canEdit && ctx.canAct;
+    if (!open.length) return html`<p class="muted">No open suggestions.</p>`;
+    const blocks = open.map((row) => html`<details class="sub" data-key="suggestion-${row.id}"><summary>#${row.id} · ${clip(row.content, 80)} · 👍 ${row.upvotes ?? 0} 👎 ${row.downvotes ?? 0} · ${STATUS_TEXT[row.status] || row.status}</summary>
+<p class="value">${row.content}</p>
+<p class="muted">By ${ctx.client?.users?.cache?.get?.(row.user_id)?.username || row.user_id}${row.created_at ? html` on ${formatDate(row.created_at)}` : ''}${row.channel_id ? html` in ${channelName(ctx.guild, row.channel_id)}` : ''}.</p>
+${postForm(ctx, 'community', 'suggestion-status', html`<div class="grid">
+${selectInput('status', 'approved', SUGGESTION_STATUSES.map((st) => [st, STATUS_CHOICES[st] || st]), { label: 'Decision' })}
+${textArea('reason', row.status_reason || '', { label: 'Reason (shown on the suggestion and sent to the author)', max: SUGGESTION_REASON_MAX, rows: 2 })}</div>`,
+        { submit: 'Send decision', hidden: { id: row.id }, canEdit: canDecide })}</details>`);
+    return html`${open.length >= OPEN_SUGGESTIONS_SHOWN ? html`<p class="muted">Newest ${OPEN_SUGGESTIONS_SHOWN} shown.</p>` : ''}${blocks}
+${canDecide ? '' : html`<p class="muted">Deciding needs Administrator in the main server.</p>`}`;
+}
 
 async function updateSettings(ctx, patch, message) {
     const before = ctx.services.getCommunitySettings(ctx.guildId);
@@ -38,10 +58,11 @@ export default {
             stickies: ctx.services.listStickies(ctx.guildId),
             tags: ctx.services.listTags(ctx.guildId),
             feeds: ctx.services.listFeeds(ctx.guildId),
+            openSuggestions: await ctx.services.listOpenSuggestions(ctx.guildId, OPEN_SUGGESTIONS_SHOWN),
         };
     },
 
-    render(ctx, { settings: s, stickies, tags, feeds }) {
+    render(ctx, { settings: s, stickies, tags, feeds, openSuggestions = [] }) {
         const g = ctx.guild;
         const suggestions = postForm(ctx, 'community', 'suggestions', html`<div class="grid">${channelPicker(g, 'channelId', s.suggestionsChannelId, { label: 'Suggestions channel', perms: PERMS.post, noneLabel: 'off' })}</div>`);
         const starboard = html`${postForm(ctx, 'community', 'starboard', html`<div class="grid">
@@ -79,11 +100,34 @@ ${textArea('content', '', { label: 'Content', max: TAG_CONTENT_MAX, rows: 3 })}<
 ${postForm(ctx, 'community', 'feed-add', html`<div class="grid">${textInput('source', '', { label: 'YouTube channel ID or URL (UC…)', max: 200 })}
 ${channelPicker(g, 'channelId', null, { label: 'Post in', perms: PERMS.post, optional: false })}
 ${textArea('template', '', { label: 'Message (empty = default; {author} {title} {url})', max: FEED_TEMPLATE_MAX, rows: 2 })}</div>`, { submit: 'Add feed' })}`;
-        return html`${section('Suggestions', suggestions, '/suggest new posts there; staff decide with the buttons.')}
+        return html`${section('Suggestions', suggestions, '/suggest new posts there; members vote with the buttons.')}
+${section(`Open suggestions (${openSuggestions.length})`, openSuggestionsSection(ctx, openSuggestions), 'Approve or deny closes voting; the suggestion message is updated and the author gets a DM, as with /suggest status.', { key: 'open-suggestions' })}
 ${section('Starboard', starboard)}${section('Sticky messages', sticky)}${section('Tags', tagForms)}${section('YouTube feeds', feedForms, 'Checked every 15 minutes.')}`;
     },
 
     actions: {
+        'suggestion-status': {
+            admin: true,
+            async run(ctx, form) {
+                const id = intField(form, 'id', { min: 1, max: 2147483647, label: 'Suggestion' });
+                const status = choiceField(form, 'status', SUGGESTION_STATUSES, 'Decision');
+                const reason = multiline(form, 'reason', SUGGESTION_REASON_MAX + 1);
+                if (reason.length > SUGGESTION_REASON_MAX) throw new InputError(`The reason is limited to ${SUGGESTION_REASON_MAX} characters.`, 400, 'reason');
+                const before = await ctx.services.getSuggestion(ctx.guildId, id);
+                if (!before) throw new InputError(`There is no suggestion #${id} in this server.`);
+                const decided = await ctx.services.decideSuggestion({ client: ctx.client, guild: ctx.guild, suggestionId: id, status, reason, decidedBy: ctx.actor.userId });
+                if (!decided) throw new InputError(`There is no suggestion #${id} in this server.`);
+                const { row, edited, dmed } = decided;
+                const warnings = [];
+                if (!edited) warnings.push('The suggestion message could not be updated (deleted or no access).');
+                if (!dmed) warnings.push('The author could not be DMed.');
+                return {
+                    changes: [{ key: `suggestion.${id}`, old: { status: before.status, reason: before.status_reason ?? null }, new: { status: row.status, reason: row.status_reason ?? null } }],
+                    message: `Suggestion #${id}: ${STATUS_TEXT[row.status] || row.status}.${dmed ? ' The author was told by DM.' : ''}`,
+                    warnings,
+                };
+            },
+        },
         async suggestions(ctx, form) {
             const channelId = channelField(ctx.guild, form, 'channelId', { label: 'Suggestions channel' });
             return updateSettings(ctx, { suggestionsChannelId: channelId }, channelId ? 'Suggestions channel saved.' : 'Suggestions are off.');

@@ -176,6 +176,44 @@ test('suggestions: post, votes (one per member, changeable, withdraw), status cl
     await assert.rejects(suggestions.setSuggestionStatus({ guildId, suggestionId: Number(row.id), status: 'bogus', decidedBy: id(90) }), /Status/);
 });
 
+test('suggestions: open list (pending + considering, newest first, guild only) and decideSuggestion (status, message, DM)', { skip }, async () => {
+    const suggestions = await import('../../src/services/community/suggestionService.js');
+    const { updateCommunitySettings } = await import('../../src/services/community/settingsService.js');
+    const channel = fakeChannel(id(13));
+    channel.messages.fetch = async () => ({ edit: async (payload) => { channel.edited = payload; } });
+    const guild = { id: guildId, name: 'Main', channels: { cache: new Map([[channel.id, channel]]) } };
+    await updateCommunitySettings(guildId, { suggestionsChannelId: channel.id }, id(90));
+    const post = async (n, content) => {
+        suggestions.resetSuggestionCooldownsForTests();
+        return (await suggestions.createSuggestion({ guild, user: { id: id(n), username: `u${n}` }, content })).row;
+    };
+    const a = await post(50, 'Open one');
+    const b = await post(51, 'Considered one');
+    const c = await post(52, 'Denied one');
+    await suggestions.setSuggestionStatus({ guildId, suggestionId: Number(b.id), status: 'considering', decidedBy: id(90) });
+    await suggestions.setSuggestionStatus({ guildId, suggestionId: Number(c.id), status: 'denied', decidedBy: id(90) });
+    const open = await suggestions.listOpenSuggestions(guildId, 25);
+    const ids = open.map((r) => Number(r.id));
+    assert.ok(ids.includes(Number(a.id)) && ids.includes(Number(b.id)), 'pending and considering listed');
+    assert.ok(!ids.includes(Number(c.id)), 'denied not listed');
+    assert.ok(ids.indexOf(Number(b.id)) < ids.indexOf(Number(a.id)), 'newest first');
+    assert.deepEqual(await suggestions.listOpenSuggestions('other', 25), []);
+    assert.equal((await suggestions.listOpenSuggestions(guildId, 1)).length, 1);
+
+    const dms = [];
+    const client = {
+        channels: { cache: new Map([[channel.id, channel]]) },
+        users: { fetch: async (userId) => ({ id: userId, username: 'u', send: async (payload) => { dms.push(payload); } }) },
+    };
+    const decided = await suggestions.decideSuggestion({ client, guild, suggestionId: Number(a.id), status: 'approved', reason: 'Yes', decidedBy: id(90) });
+    assert.equal(decided.row.status, 'approved');
+    assert.equal(decided.row.status_reason, 'Yes');
+    assert.equal(decided.edited, true);
+    assert.equal(decided.dmed, true);
+    assert.match(dms[0].embeds[0].data.title, /Approved/);
+    assert.equal(await suggestions.decideSuggestion({ client, guild: { id: 'other', name: 'x' }, suggestionId: Number(a.id), status: 'denied', decidedBy: id(90) }), null);
+});
+
 test('starboard: threshold, self-stars, count updates, edits, deletes', { skip }, async () => {
     const starboard = await import('../../src/services/community/starboardService.js');
     const { updateCommunitySettings } = await import('../../src/services/community/settingsService.js');

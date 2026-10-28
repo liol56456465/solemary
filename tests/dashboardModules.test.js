@@ -139,6 +139,14 @@ function makeServices() {
         tags: [{ name: 'rules', content: 'Be nice', triggerKind: 'none', trigger: null }],
         feeds: [{ id: 1, sourceId: 'UCabcdefghijklmnopqrstuv', channelId: TEXT, template: null }],
         appRoles: [{ roleId: ROLE_OK, name: 'Helper <b>', enabled: true, questions: ['Why?', { question: 'Age?', minLength: 2 }], logChannelId: null }],
+        submitted: [
+            { id: '1700000000000-abc', userId: MEMBER, username: 'member<b>', roleId: ROLE_OK, roleName: 'Helper <b>', status: 'pending', createdAt: '2026-10-01T10:00:00.000Z', answers: [{ question: 'Why?', answer: 'I like <i>cats</i>' }] },
+            { id: '1600000000000-old', userId: STRANGER, username: 'stranger', roleId: ROLE_OK, roleName: 'Helper <b>', status: 'denied', createdAt: '2026-09-01T10:00:00.000Z', reviewedAt: '2026-09-02T10:00:00.000Z', reviewMessage: 'Not now', answers: [] },
+        ],
+        suggestions: [
+            { id: 4, guild_id: GUILD, user_id: MEMBER, content: 'More <b>cats</b>', status: 'pending', status_reason: null, upvotes: 3, downvotes: 1, channel_id: TEXT, message_id: '710000000000000010', created_at: new Date('2026-10-01T00:00:00Z') },
+        ],
+        modmailOpen: {},
     };
     const userErr = (message, type) => Object.assign(new Error(message), { type, userMessage: message });
     const clone = (v) => structuredClone(v);
@@ -181,7 +189,8 @@ function makeServices() {
         removeAutoRole: async (c, g, roleId) => { record('removeAutoRole', [roleId]); const before = clone(s.welcome); const changed = s.welcome.roleIds.includes(roleId); s.welcome.roleIds = s.welcome.roleIds.filter((x) => x !== roleId); return { before, after: clone(s.welcome), changed }; },
         getTicketSettings: async () => clone(s.tickets),
         updateTicketSettings: async (c, g, patch) => { record('updateTicketSettings', [patch]); return merge('tickets', patch); },
-        setModmailBlocked: async (c, g, id, blocked) => { record('setModmailBlocked', [id, blocked]); s.config.modmailBlocked = s.config.modmailBlocked.filter((x) => x !== id); },
+        setModmailBlocked: async (c, g, id, blocked) => { record('setModmailBlocked', [id, blocked]); s.config.modmailBlocked = blocked ? [...new Set([...s.config.modmailBlocked, id])] : s.config.modmailBlocked.filter((x) => x !== id); },
+        findModmailChannel: async (guild, id) => s.modmailOpen[id] || null,
         isBuiltInCanned: (name) => name === 'appeal-received',
         listCanned: async () => clone(s.canned),
         saveCanned: async (g, name, text) => { record('saveCanned', [name, text]); s.canned[name] = text; },
@@ -362,6 +371,24 @@ function makeServices() {
             return clone(tag);
         },
         listApplicationRoles: async () => clone(s.appRoles),
+        getApplications: async () => clone(s.submitted),
+        reviewApplicationAndNotify: async (c, guild, id, { action, reason, reviewerId }) => {
+            record('reviewApplicationAndNotify', [id, action, reason, reviewerId]);
+            const app = s.submitted.find((a) => a.id === id);
+            if (!app) throw userErr('Application not found.', 'user_input');
+            if (app.status !== 'pending') throw userErr('This application has already been reviewed.', 'validation');
+            app.status = action === 'approve' ? 'approved' : 'denied';
+            return { application: clone(app), status: app.status, reason: reason || 'No reason provided.', dmDelivered: !s.dmFails, logUpdated: true, roleAdded: action === 'approve' ? !s.roleFails : null };
+        },
+        listOpenSuggestions: async () => clone(s.suggestions.filter((x) => x.status === 'pending' || x.status === 'considering')),
+        getSuggestion: async (g, id) => clone(s.suggestions.find((x) => x.id === id) || null),
+        decideSuggestion: async ({ suggestionId, status, reason, decidedBy }) => {
+            record('decideSuggestion', [suggestionId, status, reason, decidedBy]);
+            const row = s.suggestions.find((x) => x.id === suggestionId);
+            if (!row) return null;
+            Object.assign(row, { status, status_reason: reason || null, decided_by: decidedBy });
+            return { row: clone(row), edited: true, dmed: !s.dmFails };
+        },
         createApplicationRole: async (c, g, { roleId, name, questions }) => {
             record('createApplicationRole', [roleId, name, questions]);
             if (s.appRoles.some((r) => r.roleId === roleId)) throw userErr('This role is already configured as an application.', 'validation');
@@ -543,6 +570,7 @@ const CASES = {
             bad: { seed: (s) => { s.tickets.ticketPanelChannelId = null; }, form: {}, message: /not set up yet/ } },
         settings: { form: { ticketCategoryId: CAT, ticketClosedCategoryId: '', ticketStaffRoleId: ROLE_OK, maxTicketsPerUser: '3', dmOnClose: '1', ticketLogsChannelId: '', ticketTranscriptChannelId: '', ticketButtonLabel: 'Help', ticketPanelMessage: 'Open a ticket' },
             service: 'updateTicketSettings', bad: { form: { ticketCategoryId: TEXT, maxTicketsPerUser: '3' }, message: /must be a category/ } },
+        block: { form: { userId: STRANGER, reason: 'spam' }, service: 'setModmailBlocked', admin: true, bad: { form: { userId: 'abc' }, message: /Discord user ID/ } },
         unblock: { form: { userId: MEMBER }, service: 'setModmailBlocked', bad: { form: { userId: 'me' }, message: /Discord user ID/ } },
         'canned-add': { form: { name: 'hello', text: 'Hello there' }, service: 'saveCanned', bad: { form: { name: 'Bad Name', text: 'x' }, message: /lowercase letters/ } },
         'canned-remove': { form: { name: 'mine' }, service: 'removeCanned', bad: { form: { name: 'appeal-received' }, message: /built in/ } },
@@ -613,6 +641,8 @@ const CASES = {
         'trigger-remove': { form: { channelId: VOICE }, service: 'removeTriggerChannel', bad: { form: { channelId: 'nope' }, message: /Unknown trigger/ } },
     },
     applications: {
+        review: { form: { id: '1700000000000-abc', decision: 'approve', note: 'Welcome' }, service: 'reviewApplicationAndNotify', admin: true,
+            bad: { form: { id: '1700000000000-abc', decision: 'maybe' }, message: /Decision: unknown choice/ } },
         'role-create': { form: { roleId: ROLE_OK2, name: 'Moderator', questions: 'Why?\nAge? [min:2]' }, service: 'createApplicationRole',
             bad: { form: { roleId: ROLE_OK, name: 'Again' }, message: /already configured/ } },
         'role-update': { form: { roleId: ROLE_OK, name: 'Helpers', enabled: '1', logChannelId: TEXT, questions: 'Why join? [min:10]' }, service: 'updateApplicationRole',
@@ -625,6 +655,8 @@ const CASES = {
         'manager-remove': { form: { roleId: ROLE_OK2 }, service: 'updateApplicationSettings', bad: { form: { roleId: ROLE_OK }, message: /not a manager role/ } },
     },
     community: {
+        'suggestion-status': { form: { id: '4', status: 'approved', reason: 'Good idea' }, service: 'decideSuggestion', admin: true,
+            bad: { form: { id: '9', status: 'approved' }, message: /no suggestion #9/ } },
         suggestions: { form: { channelId: TEXT }, service: 'updateCommunitySettings', bad: { form: { channelId: CAT }, message: /must be a text channel/ } },
         starboard: { form: { channelId: TEXT, emoji: '🌟', threshold: '5' }, service: 'updateCommunitySettings', bad: { form: { channelId: TEXT, threshold: '1000' }, message: /between 1 and 100/ } },
         'starboard-off': { form: {}, service: 'updateCommunitySettings' },
@@ -1550,4 +1582,89 @@ test('random member: filters passed as /tools randomuser has them; the pick is s
     const none = await setup();
     await post(none, 'giveaways', 'random-member', {});
     assert.deepEqual(none.calls.find((c) => c.name === 'pickRandomMember').args[0], { roleId: null, includeBots: false, onlineOnly: false });
+});
+
+// ── admin actions that replace slash commands ────────────────────────────
+
+test('applications: submitted list (pending first, answers escaped); review sends the decision through the shared service', async () => {
+    const h = await setup();
+    const page = await get(h, 'applications');
+    const section = page.body.slice(page.body.indexOf('id="s-submitted"'), page.body.indexOf('id="s-application-roles"'));
+    assert.match(section, /1 waiting/);
+    assert.ok(section.includes('I like &lt;i&gt;cats&lt;/i&gt;'), 'answers escaped');
+    assert.ok(section.includes('member&lt;b&gt;'));
+    assert.ok(section.includes('action="/dashboard/applications/review"'));
+    assert.ok(section.indexOf('1700000000000-abc') < section.indexOf('Recently reviewed'), 'pending before reviewed');
+    assert.match(section.slice(section.indexOf('Recently reviewed')), /stranger[\s\S]*Not now/);
+    const res = await post(h, 'applications', 'review', { id: '1700000000000-abc', decision: 'deny', note: 'Too new' });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'reviewApplicationAndNotify').args, ['1700000000000-abc', 'deny', 'Too new', ADMIN]);
+    assert.equal(h.auditRows.at(-1).key, 'applications.submitted.1700000000000-abc');
+    assert.equal(h.auditRows.at(-1).new.status, 'denied');
+    assert.match((await h.sessions.get(h.session.id)).flash, /denied/);
+    // Already reviewed: the service refuses; nothing audited.
+    const again = await post(h, 'applications', 'review', { id: '1700000000000-abc', decision: 'approve' });
+    assert.equal(again.statusCode, 400);
+    assert.match(again.body, /already been reviewed/);
+    assert.equal(h.auditRows.length, 1);
+});
+
+test('applications: approve reports a failed DM and a failed role in the flash; owners without Administrator only see it', async () => {
+    const h = await setup();
+    h.state.dmFails = true;
+    h.state.roleFails = true;
+    assert.equal((await post(h, 'applications', 'review', { id: '1700000000000-abc', decision: 'approve' })).statusCode, 303);
+    const flash = (await h.sessions.get(h.session.id)).flash;
+    assert.match(flash, /approved/);
+    assert.match(flash, /could not be DMed/);
+    assert.match(flash, /role could not be given/);
+    const o = await setup({ userId: OWNER });
+    const page = await get(o, 'applications');
+    const section = page.body.slice(page.body.indexOf('id="s-submitted"'), page.body.indexOf('id="s-application-roles"'));
+    assert.match(section, /Reviewing needs Administrator/);
+    assert.ok(!section.includes('Send decision'), 'no submit button for owners without Administrator');
+    assert.equal((await post(o, 'applications', 'review', { id: '1700000000000-abc', decision: 'approve' })).statusCode, 403);
+    assert.equal(o.calls.length, 0);
+});
+
+test('community: open suggestions listed (escaped) with a decision form; the decision is audited with old and new status', async () => {
+    const h = await setup();
+    const page = await get(h, 'community');
+    const section = page.body.slice(page.body.indexOf('id="s-open-suggestions"'));
+    assert.ok(section.includes('More &lt;b&gt;cats&lt;/b&gt;'));
+    assert.ok(section.includes('action="/dashboard/community/suggestion-status"'));
+    assert.match(section, /<option value="considering">Under consideration<\/option>/);
+    const res = await post(h, 'community', 'suggestion-status', { id: '4', status: 'denied', reason: 'Not now' });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'decideSuggestion').args, [4, 'denied', 'Not now', ADMIN]);
+    const row = h.auditRows.at(-1);
+    assert.equal(row.key, 'suggestion.4');
+    assert.deepEqual(row.old, { status: 'pending', reason: null });
+    assert.deepEqual(row.new, { status: 'denied', reason: 'Not now' });
+    // Denied suggestions are closed: no longer listed.
+    assert.ok(!(await get(h, 'community')).body.includes('More &lt;b&gt;cats'));
+    const bad = await post(h, 'community', 'suggestion-status', { id: '4', status: 'implemented' });
+    assert.equal(bad.statusCode, 400);
+    assert.match(bad.body, /Decision: unknown choice/);
+    h.state.dmFails = true;
+    await post(h, 'community', 'suggestion-status', { id: '4', status: 'considering' });
+    assert.match((await h.sessions.get(h.session.id)).flash, /could not be DMed/);
+});
+
+test('tickets: block from modmail (with reason in the audit); already blocked changes nothing; an open conversation is named', async () => {
+    const h = await setup();
+    const page = await get(h, 'tickets');
+    assert.ok(page.body.includes('action="/dashboard/tickets/block"'));
+    h.state.modmailOpen[STRANGER] = { id: TEXT, name: 'modmail-stranger' };
+    const res = await post(h, 'tickets', 'block', { userId: STRANGER, reason: 'spam <b>' });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'setModmailBlocked').args, [STRANGER, true]);
+    assert.deepEqual(h.state.config.modmailBlocked, [MEMBER, STRANGER]);
+    assert.deepEqual(h.auditRows.map((r) => r.key), ['modmailBlocked', `modmailBlocked.${STRANGER}.reason`]);
+    assert.match((await h.sessions.get(h.session.id)).flash, /open conversation #modmail-stranger stays/);
+    const again = await setup();
+    assert.equal((await post(again, 'tickets', 'block', { userId: MEMBER })).statusCode, 303);
+    assert.equal(again.calls.filter((c) => c.name === 'setModmailBlocked').length, 0);
+    assert.equal(again.auditRows.length, 0);
+    assert.match((await again.sessions.get(again.session.id)).flash, /already blocked/);
 });

@@ -21,11 +21,12 @@ import { addTempRole, endTempRole, listTempRoles } from '../members/tempRoleServ
 import { attachFlowEvidence, completeFlowDetails } from '../enforcement/flowBuilder.js';
 import { loadCoverageCounts } from '../staffCoverageService.js';
 import { getGuildConfig } from '../config/guildConfig.js';
+import { removeVerification } from '../verificationService.js';
 import { isBotOwner } from '../../config/bot.js';
 
 export const defaultEnforcement = {
     // members and standing
-    memberStandings, addTempRole, endTempRole, listTempRoles, getTargetState, getLadder, getCountedWarns, listCasesForUser, getLatestAppealStatuses, getActiveOrdersFor,
+    memberStandings, addTempRole, endTempRole, listTempRoles, removeVerification, getTargetState, getLadder, getCountedWarns, listCasesForUser, getLatestAppealStatuses, getActiveOrdersFor,
     listNotes, addNote, removeNote, precedentHint,
     // actions (same flow builder and executeAction as the panel)
     completeFlowDetails, executeAction, attachFlowEvidence, getMassActionBlock, recentBanKickCount,

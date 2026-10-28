@@ -19,22 +19,7 @@ import {
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import appDashboard from './modules/app_dashboard.js';
 import { createApplicationRole } from '../../services/applicationRoleService.js';
-
-function getApplicationStatusPresentation(statusValue) {
-    const normalized = typeof statusValue === 'string' ? statusValue.trim().toLowerCase() : 'unknown';
-    const statusLabel =
-        normalized === 'pending' ? 'In Progress' :
-        normalized === 'approved' ? 'Accepted' :
-        normalized === 'denied' ? 'Denied' :
-        'Unknown';
-    const statusEmoji =
-        normalized === 'pending' ? '🟡' :
-        normalized === 'approved' ? '🟢' :
-        normalized === 'denied' ? '🔴' :
-        '⚪';
-
-    return { normalized, statusLabel, statusEmoji };
-}
+import { getApplicationStatusPresentation, reviewApplicationAndNotify } from '../../services/applicationReviewService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -355,91 +340,14 @@ async function handleReview(interaction) {
 
             const reason = reasonSubmit.fields.getTextInputValue('review_reason').trim() || "No reason provided.";
             const action = isApprove ? 'approve' : 'deny';
-            const status = isApprove ? 'approved' : 'denied';
 
-            const updatedApplication = await ApplicationService.reviewApplication(
-                reasonSubmit.client,
-                interaction.guild.id,
-                appId,
-                {
-                    action,
-                    reason,
-                    reviewerId: reasonSubmit.user.id
-                }
-            );
-
-            try {
-                const user = await reasonSubmit.client.users.fetch(application.userId);
-                const statusColor = getApplicationStatusColor(status);
-                const reviewStatus = getApplicationStatusPresentation(status);
-                const dmEmbed = createEmbed({
-                    title: `${reviewStatus.statusEmoji} Application ${reviewStatus.statusLabel}`,
-                    description: `Your application for **${application.roleName}** has been **${status}**\n` +
-                        `**Note:** ${reason}\n\n` +
-                        `Use \`/apply status id:${appId}\` to view details.`
-                }).setColor(statusColor);
-
-                await user.send({ embeds: [dmEmbed] });
-            } catch (error) {
-                logger.warn('Failed to send DM to user for application review', {
-                    error: error.message,
-                    userId: application.userId,
-                    applicationId: appId
-                });
-            }
-
-            if (application.logMessageId && application.logChannelId) {
-                try {
-                    const statusColor = getApplicationStatusColor(status);
-                    const logChannel = interaction.guild.channels.cache.get(
-                        application.logChannelId,
-                    );
-                    if (logChannel) {
-                        const logMessage = await logChannel.messages.fetch(
-                            application.logMessageId,
-                        );
-                        if (logMessage) {
-                            const embed = logMessage.embeds[0];
-                            if (embed) {
-                                const reviewStatus = getApplicationStatusPresentation(status);
-                                const newEmbed = EmbedBuilder.from(embed)
-                                    .setColor(statusColor)
-                                    .spliceFields(0, 1, {
-                                        name: "Status",
-                                        value: `${reviewStatus.statusEmoji} ${reviewStatus.statusLabel}`,
-                                    });
-
-                                await logMessage.edit({
-                                    embeds: [newEmbed],
-                                    components: [],
-                                });
-                            }
-                        }
-                    }
-                } catch (error) {
-                    logger.warn('Failed to update log message for application', {
-                        error: error.message,
-                        applicationId: appId,
-                        logMessageId: application.logMessageId
-                    });
-                }
-            }
-
-            if (isApprove) {
-                try {
-                    const member = await interaction.guild.members.fetch(
-                        application.userId,
-                    );
-                    await member.roles.add(application.roleId);
-                } catch (error) {
-                    logger.error('Failed to assign role to approved applicant', {
-                        error: error.message,
-                        userId: application.userId,
-                        roleId: application.roleId,
-                        applicationId: appId
-                    });
-                }
-            }
+            // Status, DM, log message and role: services/applicationReviewService.js
+            // (shared with the web dashboard).
+            const { status } = await reviewApplicationAndNotify(reasonSubmit.client, interaction.guild, appId, {
+                action,
+                reason,
+                reviewerId: reasonSubmit.user.id,
+            });
 
             await reasonSubmit.reply({
                 embeds: [
