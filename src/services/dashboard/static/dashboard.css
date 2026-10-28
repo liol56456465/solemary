@@ -18,7 +18,7 @@
     --accent-fg: #ffffff;
     --accent-soft: #f2edfd;
     --accent-text: #6d28d9;
-    --ok: #15803d;
+    --ok: #13733a;
     --ok-soft: #e8f6ec;
     --warn: #a15c07;
     --warn-soft: #fdf3e2;
@@ -45,7 +45,7 @@
         --line: #26262b;
         --line-strong: #3a3a41;
         --accent: #7c3aed;
-        --accent-hover: #8b5cf6;
+        --accent-hover: #6d28d9;
         --accent-fg: #ffffff;
         --accent-soft: #221a35;
         --accent-text: #b79cfb;
@@ -71,7 +71,7 @@
     --line: #26262b;
     --line-strong: #3a3a41;
     --accent: #7c3aed;
-    --accent-hover: #8b5cf6;
+    --accent-hover: #6d28d9;
     --accent-fg: #ffffff;
     --accent-soft: #221a35;
     --accent-text: #b79cfb;
@@ -456,7 +456,7 @@ table.heat tbody tr:hover td { background: revert; }
 .heat-0 { background: var(--surface-2); color: var(--fg-2); }
 .heat-1 { background: color-mix(in srgb, var(--accent) 18%, var(--surface)); }
 .heat-2 { background: color-mix(in srgb, var(--accent) 38%, var(--surface)); }
-.heat-3 { background: color-mix(in srgb, var(--accent) 65%, var(--surface)); color: #fff; }
+.heat-3 { background: color-mix(in srgb, var(--accent) 80%, var(--surface)); color: #fff; }
 .heat-4 { background: var(--accent); color: #fff; }
 
 /* ── Forms ────────────────────────────────────────────────────────────── */
