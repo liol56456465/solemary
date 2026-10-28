@@ -999,3 +999,12 @@ test('"On this page" links on long module pages point at existing sections', asy
     assert.ok(links.length >= 4, links.join());
     for (const id of links) assert.ok(page.body.includes(`id="${id}"`), id);
 });
+
+test('Overview keeps the full module states (automod etc.) next to the config-based ones', async () => {
+    const h = await setup();
+    const res = await run(h, h.d.overview, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query: {} });
+    assert.equal(res.statusCode, 200);
+    // Automod's state comes from the automod service, not from the guild config.
+    assert.match(res.body, /<span class="nav-label">Automod<\/span><span class="dot dot-on">/);
+    assert.ok(!/0 of 0 modules/.test(res.body));
+});

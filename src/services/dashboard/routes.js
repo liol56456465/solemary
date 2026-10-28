@@ -418,7 +418,8 @@ export function createDashboard({
 
     async function overview(req, res) {
         const result = await collectOverview({ client, guildId, data: data.overview || defaultOverviewData });
-        req.dashboard.moduleStates = result.moduleStates;
+        // Fresh config-based states on top of the full set (automod, join-to-create, applications).
+        req.dashboard.moduleStates = { ...req.dashboard.moduleStates, ...result.moduleStates };
         return sendHtml(res, 200, overviewPage({ ...shellOf(req), overview: result }));
     }
 
