@@ -116,6 +116,7 @@ export function icon(name, className = 'icon') {
 export const NAV = [
     { group: 'Moderate', items: [
         { key: 'overview', label: 'Overview' },
+        { key: 'inbox', label: 'Inbox' },
         { key: 'users', label: 'Members' },
         { key: 'bans', label: 'Banned' },
         { key: 'cases', label: 'Cases' },
@@ -206,7 +207,9 @@ ${serverSwitch(session.server)}
 ${navGroups(session).map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
         const state = stateOf(item, moduleStates);
         const on = item.key === active;
-        return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}>${itemIcon(item)}<span class="side-text">${item.label}</span>${state === null ? ''
+        const badge = item.key === 'inbox' && session.inboxCount > 0
+            ? html`<span class="nav-badge">${session.inboxCount > 99 ? '99+' : session.inboxCount}<span class="sr"> waiting</span></span>` : '';
+        return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}>${itemIcon(item)}<span class="side-text">${item.label}</span>${badge}${state === null ? ''
             : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
     })}</ul></div>`)}
 <div class="side-bottom">${userMenu(session, access, theme, back)}</div></nav>`;
