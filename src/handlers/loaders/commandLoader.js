@@ -6,6 +6,7 @@ import { ApplicationIntegrationType, Collection, InteractionContextType, Routes 
 import { logger } from '../../utils/logger.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { testMode } from '../../config/testMode.js';
+import { adminCommandsRetired, retireCommandJson } from '../../config/commands/retirement.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -276,7 +277,15 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
         throw new Error('Discord REST client is not available for slash command registration');
     }
 
-    const all = [...sets.global, ...sets.main, ...sets.support];
+    let all = [...sets.global, ...sets.main, ...sets.support];
+    // Admin commands retired (RETIRE_ADMIN_COMMANDS): only everyone-commands and the owner kit.
+    if (adminCommandsRetired()) {
+        const before = all.length;
+        const keep = (list) => list.map(retireCommandJson).filter(Boolean);
+        sets = { global: keep(sets.global), main: keep(sets.main), support: keep(sets.support) };
+        all = [...sets.global, ...sets.main, ...sets.support];
+        logger.info(`Admin commands retired: registering ${all.length} of ${before} top-level commands (everyone + owner kit); the rest is on the dashboard`);
+    }
     logger.info(`Preparing to register ${totalSubcommands + all.length} commands (${all.length} top-level) in the main server`);
     logger.info('Validating commands before registration...');
     validateCommands(all);

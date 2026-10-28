@@ -17,6 +17,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import { isBotOwner } from '../config/bot.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { isEveryoneCommand, isSupportServerCommand } from '../config/commands/commandAccess.js';
+import { adminCommandsRetired, isOwnerKit, retiredMessage } from '../config/commands/retirement.js';
 
 export function getAdminRequiredMessage() {
     const channelId = enforcementConfig.adminRequestChannelId;
@@ -65,9 +66,16 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
                 : 'Commands only work in the Meowist servers.',
         };
     }
-    if (isEveryoneCommand(accessKey) || hasAdministrator({ guild, userId, permissions })) {
-        return { allowed: true };
+    if (isEveryoneCommand(accessKey)) return { allowed: true };
+    // Retired admin commands (RETIRE_ADMIN_COMMANDS): the dashboard does them; the emergency kit
+    // is for OWNER_IDS only (an owner without Administrator is still an override, logged).
+    if (adminCommandsRetired()) {
+        if (isOwnerKit(accessKey) && isBotOwner(userId)) {
+            return hasAdministrator({ guild, userId, permissions }) ? { allowed: true } : { allowed: true, ownerOverride: true };
+        }
+        return { allowed: false, message: retiredMessage(accessKey) };
     }
+    if (hasAdministrator({ guild, userId, permissions })) return { allowed: true };
     if (isBotOwner(userId)) return { allowed: true, ownerOverride: true };
     return { allowed: false, message: getAdminRequiredMessage() };
 }
