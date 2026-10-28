@@ -356,7 +356,7 @@
     // redirect); here the same cookie is set and the page switches in place. The options
     // are a radio group: arrow keys move and select, Space/Enter select. Both pickers
     // (account menu, phone sheet) stay in step.
-    const THEMES = ['system', 'white', 'gray', 'dark', 'black', 'paper', 'sage', 'sand'];
+    const THEMES = ['system', 'nebula', 'ember', 'ocean', 'forest', 'gold', 'graphite', 'sakura', 'sunset', 'arctic', 'paper'];
     function setupThemePicker() {
         const options = [...document.querySelectorAll('[data-theme-pick]')];
         if (!options.length) return;

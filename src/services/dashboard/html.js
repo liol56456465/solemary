@@ -208,16 +208,19 @@ ${rest.map((sec) => html`<p class="more-group">${sec.label}</p>${(sec.items || [
 ${themePicker(theme, back, 'sheet')}<div class="more-foot"><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
 }
 
-// Themes (same tokens, different colours): "system" follows the device (White or Dark).
-export const THEMES = ['system', 'white', 'gray', 'dark', 'black', 'paper', 'sage', 'sand'];
+// Themes (same tokens and layout, ten palettes): "system" follows the device (Paper or Graphite).
+export const THEMES = ['system', 'nebula', 'ember', 'ocean', 'forest', 'gold', 'graphite', 'sakura', 'sunset', 'arctic', 'paper'];
 export const THEME_COOKIE = 'meowist_theme';
 const THEME_LABEL = {
-    system: 'Follow device', white: 'White', gray: 'Gray', dark: 'Dark', black: 'Black', paper: 'Paper', sage: 'Sage', sand: 'Sand',
+    system: 'Follow device', nebula: 'Nebula', ember: 'Ember', ocean: 'Ocean', forest: 'Forest', gold: 'Midnight gold',
+    graphite: 'Graphite', sakura: 'Sakura', sunset: 'Sunset', arctic: 'Arctic', paper: 'Paper',
 };
+// Themes from before v5, still in some cookies: the closest new palette.
+const OLD_THEMES = { light: 'paper', white: 'paper', gray: 'graphite', dark: 'graphite', black: 'graphite', sage: 'forest', sand: 'sunset' };
 
-/** The theme saved in the cookie; the old "light" means White; anything else follows the device. */
+/** The theme saved in the cookie (old names map to the closest palette); anything else follows the device. */
 export function themeFrom(value) {
-    if (value === 'light') return 'white';
+    if (Object.hasOwn(OLD_THEMES, value)) return OLD_THEMES[value];
     return THEMES.includes(value) ? value : 'system';
 }
 

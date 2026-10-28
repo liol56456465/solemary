@@ -89,7 +89,12 @@ test('pages have no inline styles or scripts and link the one stylesheet', () =>
     assert.ok(audit.includes('&lt;u&gt;'));
     assert.ok(!/<style|style=|<script/i.test(audit.replace(ALLOWED_SCRIPT, '')));
     const css = readFileSync(new URL('../src/services/dashboard/static/dashboard.css', import.meta.url), 'utf8');
-    assert.ok(!/gradient/i.test(css), 'plain design: no gradients');
+    // The only blend allowed: the page glow on the body background (two radial gradients of
+    // the theme's --glow tokens). Anywhere else, colours stay flat.
+    const blends = css.match(/[a-z-]*gradient\(/gi) || [];
+    assert.deepEqual(blends, ['radial-gradient(', 'radial-gradient('], 'just the body glow');
+    const body = css.slice(css.indexOf('\nbody {'), css.indexOf('}', css.indexOf('\nbody {')));
+    assert.ok(body.includes('var(--glow-1), transparent 70%)') && body.includes('var(--glow-2), transparent 70%), var(--bg);'), 'both on the body, from the theme tokens');
 });
 
 // ── signing, state, sessions ──────────────────────────────────────────────
@@ -650,23 +655,24 @@ test('security headers: CSP without unsafe-inline, frame denial, no referrer, no
 // ── Design: theme switch, page shell, collapsible records sections ─────────
 
 test('theme: the cookie sets data-theme on <html> server-side; unknown values mean system (follow the device)', () => {
-    assert.equal(themeFrom('dark'), 'dark');
+    assert.equal(themeFrom('nebula'), 'nebula');
     assert.equal(themeFrom('"><script>'), 'system');
     assert.equal(themeFrom(undefined), 'system');
     const session = { username: 'a', csrf: 't' };
-    assert.match(layout({ title: 'x', session: { ...session, theme: 'dark' }, body: html`` }), /^<!doctype html><html lang="en" data-theme="dark">/);
+    assert.match(layout({ title: 'x', session: { ...session, theme: 'nebula' }, body: html`` }), /^<!doctype html><html lang="en" data-theme="nebula">/);
     assert.match(layout({ title: 'x', session: { ...session, theme: 'nope' }, body: html`` }), /^<!doctype html><html lang="en"><head>/);
     assert.match(layout({ title: 'x', body: html`` }), /^<!doctype html><html lang="en"><head>/, 'pages without a session (login, errors) follow the device');
-    assert.equal(themeFrom('light'), 'white', 'old cookies keep a light theme');
-    for (const theme of ['white', 'gray', 'black', 'paper', 'sage', 'sand']) assert.equal(themeFrom(theme), theme);
+    // Cookies from before v5 get the closest new palette.
+    for (const [old, now] of [['light', 'paper'], ['white', 'paper'], ['gray', 'graphite'], ['dark', 'graphite'], ['black', 'graphite'], ['sage', 'forest'], ['sand', 'sunset']]) assert.equal(themeFrom(old), now, old);
+    for (const theme of ['nebula', 'ember', 'ocean', 'forest', 'gold', 'graphite', 'sakura', 'sunset', 'arctic', 'paper']) assert.equal(themeFrom(theme), theme);
     // The picker: a radio group of plain links (works without JS), back to this page; the current one checked.
-    const page = layout({ title: 'x', active: 'cases', session: { ...session, theme: 'sage', path: '/dashboard/cases?page=2' }, body: html`` });
-    assert.match(page, /^<!doctype html><html lang="en" data-theme="sage">/);
+    const page = layout({ title: 'x', active: 'cases', session: { ...session, theme: 'forest', path: '/dashboard/cases?page=2' }, body: html`` });
+    assert.match(page, /^<!doctype html><html lang="en" data-theme="forest">/);
     const menu = page.slice(page.indexOf('<div class="theme-grid" role="radiogroup" aria-labelledby="theme-menu">'));
     const options = [...menu.slice(0, menu.indexOf('</div>')).matchAll(/data-theme-pick="([a-z]+)"/g)].map((m) => m[1]);
-    assert.deepEqual(options, ['system', 'white', 'gray', 'dark', 'black', 'paper', 'sage', 'sand']);
+    assert.deepEqual(options, ['system', 'nebula', 'ember', 'ocean', 'forest', 'gold', 'graphite', 'sakura', 'sunset', 'arctic', 'paper']);
     assert.ok(page.includes('href="/dashboard/theme?mode=paper&amp;next=%2Fdashboard%2Fcases%3Fpage%3D2" role="radio" aria-checked="false" tabindex="-1" data-theme-pick="paper"'));
-    assert.match(page, /role="radio" aria-checked="true" tabindex="0" data-theme-pick="sage">/);
+    assert.match(page, /role="radio" aria-checked="true" tabindex="0" data-theme-pick="forest">/);
     assert.ok(page.includes('aria-labelledby="theme-sheet"'), 'the phone sheet has its own picker');
     assert.ok(!page.includes('style='), 'swatches use classes (CSP)');
 });
@@ -674,11 +680,11 @@ test('theme: the cookie sets data-theme on <html> server-side; unknown values me
 test('theme: GET /dashboard/theme sets a non-HttpOnly cookie and only redirects inside the dashboard', () => {
     const { d } = makeDashboard();
     const res = fakeRes();
-    d.setTheme({ headers: {}, query: { mode: 'sand', next: '/dashboard/automod' } }, res);
+    d.setTheme({ headers: {}, query: { mode: 'ember', next: '/dashboard/automod' } }, res);
     assert.equal(res.statusCode, 303);
     assert.equal(res.redirectedTo, '/dashboard/automod');
     const cookie = res.cookies.find((c) => c.startsWith(`${THEME_COOKIE}=`));
-    assert.match(cookie, /^meowist_theme=sand; Path=\/dashboard; SameSite=Lax; Max-Age=31536000; Secure$/);
+    assert.match(cookie, /^meowist_theme=ember; Path=\/dashboard; SameSite=Lax; Max-Age=31536000; Secure$/);
     const bad = fakeRes();
     d.setTheme({ headers: {}, query: { mode: 'x', next: 'https://evil.example/' } }, bad);
     assert.equal(bad.redirectedTo, '/dashboard/overview');

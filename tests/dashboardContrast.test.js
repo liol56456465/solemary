@@ -1,5 +1,5 @@
 // Contrast guard for the dashboard themes: reads every theme's colour tokens straight from
-// dashboard.css and checks every pair the pages use against WCAG AA, in all 7 themes.
+// dashboard.css and checks every pair the pages use against WCAG AA, in all 10 themes.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -12,7 +12,7 @@ function tokens(selector) {
     const start = css.indexOf(`${selector} {`);
     assert.ok(start >= 0, `missing ${selector}`);
     const body = css.slice(start, css.indexOf('}', start));
-    return Object.fromEntries([...body.matchAll(/--([a-z-]+):\s*(#[0-9a-f]{6});/gi)].map((m) => [m[1], m[2].toLowerCase()]));
+    return Object.fromEntries([...body.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-f]{6});/gi)].map((m) => [m[1], m[2].toLowerCase()]));
 }
 
 function luminance(hex) {
@@ -41,13 +41,16 @@ const PAIRS = [
     ['chrome-text', 'ink', TEXT], ['feature-text', 'feature', TEXT], ['feature-muted', 'feature', TEXT],
     ['on-green', 'green', UI], ['accent-ink', 'ink', UI],
     ['border-strong', 'bg', UI], ['border-strong', 'raised', UI],
+    // v5: chart and badge colours, the second accent and text on the sidebar.
+    ['c-ban', 'raised', UI], ['c-mute', 'raised', UI], ['c-warn', 'raised', UI], ['c-kick', 'raised', UI],
+    ['accent-2', 'raised', UI], ['text', 'ink', TEXT],
 ];
 
 const named = THEMES.filter((t) => t !== 'system');
 
-test('dashboard themes: 7 themes, each a full token set', () => {
-    assert.deepEqual(named, ['white', 'gray', 'dark', 'black', 'paper', 'sage', 'sand']);
-    const keys = Object.keys(tokens(':root[data-theme="white"]')).sort();
+test('dashboard themes: 10 themes, each a full token set', () => {
+    assert.deepEqual(named, ['nebula', 'ember', 'ocean', 'forest', 'gold', 'graphite', 'sakura', 'sunset', 'arctic', 'paper']);
+    const keys = Object.keys(tokens(':root[data-theme="paper"]')).sort();
     for (const theme of named) assert.deepEqual(Object.keys(tokens(`:root[data-theme="${theme}"]`)).sort(), keys, theme);
 });
 
@@ -62,8 +65,8 @@ for (const theme of named) {
     });
 }
 
-test('dashboard themes: no theme chosen = White by day, Dark at night (same tokens as those themes)', () => {
+test('dashboard themes: no theme chosen = Paper by day, Graphite at night (same tokens as those themes)', () => {
     const base = tokens(':root');
-    for (const [k, v] of Object.entries(tokens(':root[data-theme="white"]'))) assert.equal(base[k], v, k);
-    assert.deepEqual(tokens(':root:not([data-theme])'), tokens(':root[data-theme="dark"]'));
+    for (const [k, v] of Object.entries(tokens(':root[data-theme="paper"]'))) assert.equal(base[k], v, k);
+    assert.deepEqual(tokens(':root:not([data-theme])'), tokens(':root[data-theme="graphite"]'));
 });
