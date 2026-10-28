@@ -38,7 +38,8 @@ export const EVERYONE_COMMANDS = new Set([
   // Tools (randomuser and shorten stay admin: shorten hides link targets from automod)
   'tools baseconvert', 'tools calculate', 'tools generatepassword', 'tools hexcolor', 'tools time', 'tools unixtime',
 
-  // Utility
+  // Utility (wipedata deletes only the caller's own data in this server)
+  'wipedata',
   'avatar', 'firstmsg', 'serverinfo', 'userinfo', 'weather', 'report file',
   'todo add', 'todo list', 'todo complete', 'todo remove',
   'todo share create', 'todo share add', 'todo share view', 'todo share addtask', 'todo share remove',

@@ -335,6 +335,19 @@ function makeServices() {
             Object.assign(role, patch);
             return { before, after: clone(role) };
         },
+        // Bot settings (/configwizard), random member (/tools randomuser), short links (/shorten).
+        updateConfigSetting: async (c, g, key, value) => { record('updateConfigSetting', [key, value]); s.config[key] = value; },
+        pickRandomMember: async (guild, filters) => {
+            record('pickRandomMember', [filters]);
+            if (filters.roleId === ROLE_OK2) throw userErr('No users have the **Helper** role.\n\nTry adjusting your filters.', 'user_input');
+            return { member: { id: MEMBER, user: { username: 'member<b>' } }, poolSize: 3 };
+        },
+        shortenUrl: async (url, custom) => {
+            record('shortenUrl', [url, custom]);
+            if (!/^https?:\/\//.test(url)) throw userErr('Invalid URL format. Include http:// or https://', 'validation');
+            if (custom === 'down') throw userErr('Unable to reach the URL shortener service right now. Please try again later.', 'network');
+            return 'https://is.gd/abc123';
+        },
         deleteApplicationRole: async (c, g, roleId) => {
             record('deleteApplicationRole', [roleId]);
             const role = s.appRoles.find((r) => r.roleId === roleId);
@@ -477,6 +490,10 @@ const CASES = {
         'autorole-remove': { form: { roleId: ROLE_OK }, service: 'removeAutoRole' },
         'autorole-delay': { form: { autoRoleDelay: '30' }, service: 'updateWelcomeSettings', bad: { form: { autoRoleDelay: '-1' }, message: /between 0 and 3600/ } },
         logs: { form: { joinLogsEnabled: '1', joinLogsChannelId: TEXT, leaveLogsChannelId: '' }, service: 'updateWelcomeSettings', bad: { form: { joinLogsChannelId: VOICE }, message: /must be a text channel/ } },
+        'welcome-embed': { form: { welcomeTitle: 'Hi {user}', welcomeColor: '#112233', welcomeFooter: 'Enjoy', welcomeImage: 'https://example.com/a.png' }, service: 'updateWelcomeSettings', admin: true,
+            bad: { form: { welcomeTitle: 'Hi', welcomeImage: 'http://example.com/a.png' }, message: /must start with https/ } },
+        'goodbye-embed': { form: { goodbyeTitle: 'Bye', goodbyeColor: 'AA0000', goodbyeFooter: '', goodbyeImage: 'https://example.com/b.gif' }, service: 'updateWelcomeSettings', admin: true,
+            bad: { form: { goodbyeColor: 'red' }, message: /hex colour/ } },
     },
     tickets: {
         setup: { seed: (s) => { s.tickets.ticketPanelChannelId = null; }, form: { panelChannelId: TEXT, panelMessage: 'Open one', buttonLabel: 'Help', categoryId: CAT, closedCategoryId: '', staffRoleId: ROLE_OK, maxTicketsPerUser: '3', dmOnClose: '1' },
@@ -523,6 +540,8 @@ const CASES = {
         delete: { form: { messageId: GA_ENDED }, service: 'deleteGiveawayNow', admin: true, bad: { form: { messageId: MISSING }, message: /No giveaway was found/ } },
         end: { form: { messageId: GA_ACTIVE }, service: 'endGiveawayNow', bad: { form: { messageId: '12' }, message: /Unknown giveaway/ }, admin: true },
         reroll: { form: { messageId: GA_ENDED }, service: 'rerollGiveaway', bad: { form: { messageId: '' }, message: /Unknown giveaway/ }, admin: true },
+        'random-member': { form: { roleId: '', includeBots: '1' }, service: 'pickRandomMember', admin: true,
+            bad: { form: { roleId: ROLE_OK2 }, message: /No users have the Helper role/ } },
     },
     birthdays: {
         settings: { form: { channelId: TEXT, timezone: 'Europe/London', roleId: ROLE_OK }, service: 'updateBirthdaySettings', bad: { form: { channelId: TEXT, timezone: 'Mars/Base', roleId: '' }, message: /not a known time zone/ } },
@@ -572,6 +591,10 @@ const CASES = {
     commands: {
         command: { form: { name: 'joke', enabled: 'false' }, service: 'disableCommand', bad: { form: { name: 'commands', enabled: 'false' }, message: /cannot be disabled/ } },
         category: { form: { key: 'fun', enabled: 'false' }, service: 'disableCategory', bad: { form: { key: 'nope', enabled: 'false' }, message: /Unknown category/ } },
+        'bot-settings': { form: { prefix: '?', modRole: ROLE_DANGER }, service: 'updateConfigSetting', admin: true,
+            bad: { form: { prefix: 'two words', modRole: '' }, message: /Prefix must be 1-10 characters with no spaces/ } },
+        shorten: { form: { url: 'https://example.com/a/long/link', custom: '' }, service: 'shortenUrl', admin: true,
+            bad: { form: { url: 'example.com' }, message: /Include http/ } },
     },
     support: {
         'banned-role': { form: { bannedRoleId: SUPPORT_ROLE }, service: 'updateSettings', bad: { form: { bannedRoleId: ROLE_OK }, message: /not in the server/ } },
@@ -678,7 +701,9 @@ test('every POST action with invalid input: 400, the message on the page, no wri
             assert.match(res.body, /class="error( form-error)?" role="alert"/);
             const writes = h.calls.filter((call) => call.name !== 'postModLog' && !['createTag', 'addFeed', 'setSticky', 'updateBirthdaySettings', 'updateSettings', 'removeCanned', 'deleteTag', 'removeFeed', 'deletePanel',
                 // These services refuse by themselves (nothing written when they throw).
-                'publishTicketPanel', 'publishVerificationPanel', 'createGiveaway', 'deleteGiveawayNow', 'setupJoinToCreate', 'createApplicationRole', 'editTag'].includes(call.name));
+                'publishTicketPanel', 'publishVerificationPanel', 'createGiveaway', 'deleteGiveawayNow', 'setupJoinToCreate', 'createApplicationRole', 'editTag',
+                // Read-only tools that refuse by themselves.
+                'pickRandomMember', 'shortenUrl'].includes(call.name));
             assert.deepEqual(writes.map((w) => w.name), [], `${module.key}/${action}: no write on invalid input`);
             assert.equal(h.auditRows.length, 0, `${module.key}/${action}: no audit row`);
             assert.ok(!h.calls.some((call) => call.name === 'postModLog'), `${module.key}/${action}: no mod log`);
@@ -1178,4 +1203,123 @@ test('Find a setting: also matches a module\'s setup steps (e.g. "category" find
     assert.deepEqual(keys('category'), ['tickets', 'enforcement', 'support'], 'keywords (sidebar order)');
     assert.deepEqual(keys('birthday channel'), ['birthdays'], 'setup step label');
     assert.deepEqual(keys('ticket staff role'), ['tickets'], 'every word must match');
+});
+
+// ── welcome embeds and images, bot settings, random member, short links ────
+
+test('welcome embed: title, colour, footer and image saved as /greet stores them; the "only with /greet" note is gone', async () => {
+    const h = await setup();
+    h.state.welcome.welcomeEmbed = { title: 'Old', color: 0x00ff00, thumbnail: true };
+    h.state.welcome.welcomeImageRef = { channelId: TEXT, messageId: PANEL, url: 'https://cdn.example/stored.png' };
+    const page = await get(h, 'welcome');
+    assert.doesNotMatch(page.body, /edited with \/greet|only with \/greet/);
+    assert.match(page.body, /name="welcomeColor" value="#00FF00"/);
+    const res = await post(h, 'welcome', 'welcome-embed', CASES.welcome['welcome-embed'].form);
+    assert.equal(res.statusCode, 303);
+    const patch = h.calls.find((c) => c.name === 'updateWelcomeSettings').args[0];
+    assert.deepEqual(patch.welcomeEmbed, { title: 'Hi {user}', color: 0x112233, thumbnail: true, footer: 'Enjoy' });
+    assert.equal(patch.welcomeImage, 'https://example.com/a.png');
+    assert.equal(patch.welcomeImageRef, null, 'a stored upload is dropped once the link changes');
+    assert.ok(h.auditRows.some((r) => r.key === 'welcomeImage' && r.new === 'https://example.com/a.png'));
+
+    // Empty fields remove the value (the defaults apply); the same link keeps its stored upload.
+    const k = await setup();
+    Object.assign(k.state.welcome, { welcomeEmbed: { title: 'T', footer: 'F', color: 1 }, welcomeImage: 'https://cdn.example/stored.png', welcomeImageRef: { channelId: TEXT, messageId: PANEL, url: 'https://cdn.example/stored.png' } });
+    await post(k, 'welcome', 'welcome-embed', { welcomeTitle: '', welcomeColor: '', welcomeFooter: 'F', welcomeImage: 'https://cdn.example/stored.png' });
+    const kept = k.calls.find((c) => c.name === 'updateWelcomeSettings').args[0];
+    assert.deepEqual(kept, { welcomeEmbed: { footer: 'F' } }, 'only the embed changed; image and its stored copy kept');
+});
+
+test('welcome/goodbye image links: https only, length capped, expired Discord links refused, fresh ones warned', async () => {
+    const bad = [
+        [{ welcomeImage: 'ftp://example.com/a.png' }, /must start with https/],
+        [{ welcomeImage: 'not a url' }, /not a valid link/],
+        [{ welcomeImage: `https://example.com/${'a'.repeat(2050)}` }, /Too long: at most 2048/],
+        [{ welcomeImage: 'https://cdn.discordapp.com/attachments/1/2/a.png?ex=1&is=1&hm=1' }, /has expired/],
+        [{ welcomeTitle: 'x'.repeat(257) }, /at most 256/],
+        [{ welcomeColor: '#12345' }, /hex colour/],
+    ];
+    for (const [form, message] of bad) {
+        const h = await setup();
+        const res = await post(h, 'welcome', 'welcome-embed', form);
+        assert.equal(res.statusCode, 400, JSON.stringify(form).slice(0, 80));
+        assert.match(res.body, message);
+        assert.ok(!h.calls.some((c) => c.name === 'updateWelcomeSettings'));
+    }
+    const h = await setup();
+    const fresh = `https://cdn.discordapp.com/attachments/1/2/a.png?ex=${Math.floor(Date.now() / 1000 + 86400).toString(16)}&is=1&hm=1`;
+    assert.equal((await post(h, 'welcome', 'welcome-embed', { welcomeImage: fresh })).statusCode, 303);
+    assert.match((await h.sessions.get(h.session.id)).flash, /stop working after about a day/);
+});
+
+test('goodbye embed: the image goes into leaveEmbed.image; clearing it removes it', async () => {
+    const h = await setup();
+    h.state.welcome.leaveEmbed = { title: '👋 Goodbye', color: 0xff0000, image: { url: 'https://old.example/x.png' } };
+    const page = await get(h, 'welcome');
+    assert.match(page.body, /name="goodbyeImage" value="https:\/\/old.example\/x.png"/, 'older { url } images are shown');
+    await post(h, 'welcome', 'goodbye-embed', CASES.welcome['goodbye-embed'].form);
+    const patch = h.calls.find((c) => c.name === 'updateWelcomeSettings').args[0];
+    assert.deepEqual(patch.leaveEmbed, { title: 'Bye', color: 0xaa0000, image: 'https://example.com/b.gif' });
+    await post(h, 'welcome', 'goodbye-embed', { goodbyeTitle: 'Bye', goodbyeColor: '#AA0000', goodbyeImage: '' });
+    const cleared = h.calls.filter((c) => c.name === 'updateWelcomeSettings')[1].args[0];
+    assert.deepEqual(cleared.leaveEmbed, { title: 'Bye', color: 0xaa0000 });
+});
+
+test('bot settings: prefix as /configwizard checks it; moderator role never @everyone, a bot role or a role the bot hands out', async () => {
+    const h = await setup();
+    const page = await get(h, 'commands');
+    assert.match(page.body, /Bot settings/);
+    assert.match(page.body, /action="\/dashboard\/commands\/bot-settings"/);
+    assert.equal((await post(h, 'commands', 'bot-settings', { prefix: '?', modRole: ROLE_DANGER })).statusCode, 303);
+    assert.deepEqual(h.calls.filter((c) => c.name === 'updateConfigSetting').map((c) => c.args), [['prefix', '?'], ['modRole', ROLE_DANGER]]);
+    assert.ok(h.auditRows.some((r) => r.key === 'modRole' && r.new === ROLE_DANGER));
+    // Only changed keys are written; clearing the role writes null.
+    await post(h, 'commands', 'bot-settings', { prefix: '?', modRole: '' });
+    assert.deepEqual(h.calls.filter((c) => c.name === 'updateConfigSetting').slice(2).map((c) => c.args), [['modRole', null]]);
+
+    for (const [form, message] of [
+        [{ prefix: '', modRole: '' }, /Prefix must be 1-10/],
+        [{ prefix: 'x'.repeat(11), modRole: '' }, /Prefix must be 1-10/],
+        [{ prefix: '!', modRole: GUILD }, /@everyone/],
+        [{ prefix: '!', modRole: ROLE_MANAGED }, /managed/],
+        [{ prefix: '!', modRole: ROLE_OK }, /auto role given on join/],
+        [{ prefix: '!', modRole: ROLE_OK2 }, /a reaction role/],
+        [{ prefix: '!', modRole: MISSING }, /not in the server/],
+    ]) {
+        const b = await setup();
+        const res = await post(b, 'commands', 'bot-settings', form);
+        assert.equal(res.statusCode, 400, JSON.stringify(form));
+        assert.match(res.body, message);
+        assert.ok(!b.calls.some((c) => c.name === 'updateConfigSetting'));
+    }
+});
+
+test('shorten a link: the short link is shown on the page and audited; service errors are shown, nothing audited', async () => {
+    const h = await setup();
+    await post(h, 'commands', 'shorten', { url: 'https://example.com/x', custom: 'mine' });
+    assert.deepEqual(h.calls.find((c) => c.name === 'shortenUrl').args, ['https://example.com/x', 'mine']);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Short link: https:\/\/is\.gd\/abc123/);
+    const page = await get(h, 'commands');
+    assert.match(page.body, /is\.gd\/abc123/);
+    assert.ok(h.auditRows.some((r) => r.key === 'shortLink'));
+    const down = await setup();
+    const res = await post(down, 'commands', 'shorten', { url: 'https://example.com/x', custom: 'down' });
+    assert.equal(res.statusCode, 400);
+    assert.match(res.body, /Unable to reach the URL shortener/);
+    assert.equal(down.auditRows.length, 0);
+});
+
+test('random member: filters passed as /tools randomuser has them; the pick is shown (escaped) and audited', async () => {
+    const h = await setup();
+    await post(h, 'giveaways', 'random-member', { roleId: ROLE_MANAGED, includeBots: '1', onlineOnly: '1' });
+    assert.deepEqual(h.calls.find((c) => c.name === 'pickRandomMember').args[0], { roleId: ROLE_MANAGED, includeBots: true, onlineOnly: true });
+    assert.match((await h.sessions.get(h.session.id)).flash, new RegExp(`Picked @member<b> \\(${MEMBER}\\) from 3 matching members`));
+    const page = await get(h, 'giveaways');
+    assert.ok(page.body.includes('member&lt;b&gt;'));
+    assert.ok(!page.body.includes('member<b>'));
+    const row = h.auditRows.find((r) => r.key === 'randomMember');
+    assert.equal(row.new.userId, MEMBER);
+    const none = await setup();
+    await post(none, 'giveaways', 'random-member', {});
+    assert.deepEqual(none.calls.find((c) => c.name === 'pickRandomMember').args[0], { roleId: null, includeBots: false, onlineOnly: false });
 });

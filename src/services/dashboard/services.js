@@ -67,6 +67,15 @@ import { editTag } from '../community/tagService.js';
 import {
     createApplicationRole, deleteApplicationRole, listApplicationRoles, updateApplicationRole,
 } from '../applicationRoleService.js';
+// Bot settings (/configwizard), tools (/tools randomuser, /shorten)
+import ConfigService from '../config/configService.js';
+import { pickRandomMember } from '../randomMemberService.js';
+import { shortenUrl } from '../urlShortener.js';
+
+/** The /configwizard write (validated, history recorded): prefix, modRole, … */
+function updateConfigSetting(client, guildId, key, value, actorId) {
+    return ConfigService.updateSetting(client, guildId, key, value, actorId);
+}
 
 export const defaultServices = {
     getGuildConfig, updateGuildConfig, getSetting, updateSettings,
@@ -91,4 +100,5 @@ export const defaultServices = {
     publishTicketPanel, setupTicketSystem, publishVerificationPanel, setupVerification, postAppealPanels,
     createReactionRolePanel, createGiveaway, deleteGiveawayNow, createServerCounter, setupJoinToCreate, editTag,
     createApplicationRole, deleteApplicationRole, listApplicationRoles, updateApplicationRole,
+    updateConfigSetting, pickRandomMember, shortenUrl,
 };

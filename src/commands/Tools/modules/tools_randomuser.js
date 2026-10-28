@@ -4,6 +4,7 @@ import { logger } from '../../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { getColor } from '../../../config/bot.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { filterRandomMemberPool, pickFromPool, pickRandomMember } from '../../../services/randomMemberService.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -49,42 +50,17 @@ export default {
         const onlineOnly = interaction.options.getBoolean('online') || false;
         const shouldMention = interaction.options.getBoolean('mention') || false;
 
-        // The member cache only holds members seen since startup; fetch the full list
-        // (requires the GuildMembers intent) and fall back to the cache on failure.
-        await interaction.guild.members.fetch().catch((error) => {
-            logger.debug('randomuser: member fetch failed, using cache', { error: error?.message });
-        });
-
-        let members = interaction.guild.members.cache.filter(member => {
-            if (member.user.bot && !includeBots) return false;
-
-            if (onlineOnly && member.presence?.status === 'offline') return false;
-
-            if (role && !member.roles.cache.has(role.id)) return false;
-
-            return true;
-        });
-
-        let memberArray = Array.from(members.values());
-
-        if (!includeBots) {
-            memberArray = memberArray.filter(member => !member.user.bot);
-        }
-
-        if (memberArray.length === 0) {
-            let errorMessage = 'Could not find any users matching your filters:';
-            if (role) errorMessage = `No users have the **${role.name}** role.`;
-            if (onlineOnly) errorMessage = 'No users are currently online.';
-            if (role && onlineOnly) errorMessage = `No **${role.name}** members are online.`;
-
+        // The member cache only holds members seen since startup; pickRandomMember fetches
+        // the full list (GuildMembers intent) and falls back to the cache on failure.
+        let selectedMember;
+        try {
+            ({ member: selectedMember } = await pickRandomMember(interaction.guild, { roleId: role?.id || null, includeBots, onlineOnly }));
+        } catch (error) {
             return replyUserError(interaction, {
-                type: ErrorTypes.USER_INPUT,
-                message: errorMessage + '\n\nTry adjusting your filters.',
+                type: error?.type || ErrorTypes.USER_INPUT,
+                message: error?.userMessage || 'Could not pick a member. Try adjusting your filters.',
             });
         }
-
-        const randomIndex = Math.floor(Math.random() * memberArray.length);
-        const selectedMember = memberArray[randomIndex];
 
         const user = selectedMember.user;
         const joinDate = selectedMember.joinedAt;
@@ -126,21 +102,7 @@ export default {
 
         collector.on('collect', async (i) => {
             try {
-                let newMembers = interaction.guild.members.cache.filter(member => {
-                    if (member.user.bot && !includeBots) return false;
-
-                    if (onlineOnly && member.presence?.status === 'offline') return false;
-
-                    if (role && !member.roles.cache.has(role.id)) return false;
-
-                    return true;
-                });
-
-                let newMemberArray = Array.from(newMembers.values());
-
-                if (!includeBots) {
-                    newMemberArray = newMemberArray.filter(member => !member.user.bot);
-                }
+                const newMemberArray = filterRandomMemberPool(interaction.guild.members.cache.values(), { roleId: role?.id || null, includeBots, onlineOnly });
 
                 if (newMemberArray.length === 0) {
                     await replyUserError(i, {
@@ -150,8 +112,7 @@ export default {
                     return;
                 }
 
-                const newRandomIndex = Math.floor(Math.random() * newMemberArray.length);
-                const newSelectedMember = newMemberArray[newRandomIndex];
+                const newSelectedMember = pickFromPool(newMemberArray);
                 const newUser = newSelectedMember.user;
 
                 const newRoles = newSelectedMember.roles.cache
