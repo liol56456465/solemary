@@ -444,6 +444,12 @@ async function assertCanReport(guild, userId) {
 export async function submitStaffReport({ client, user, staffMember, details, proof }) {
     const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
     if (!guild) throw configError('Main guild unavailable for staff reports');
+    // One submission per member at a time: two forms sent at once must not both pass the
+    // "one open report" check (the new row only counts as open once its channel exists).
+    return Mutex.runExclusive(`report:${user.id}`, () => openStaffReport({ client, guild, user, staffMember, details, proof }));
+}
+
+async function openStaffReport({ client, guild, user, staffMember, details, proof }) {
     await assertCanReport(guild, user.id);
     const { rows } = await query(
         `INSERT INTO ${T.appeals} (kind, user_id, username, guild_id, body)
