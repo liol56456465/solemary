@@ -723,8 +723,9 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.post('/cases/:code/edit', form, user, safe(en.caseEdit));
     router.post('/cases/:code/void', form, user, safe(en.caseVoid));
     router.post('/cases/:code/evidence/add', form, user, safe(en.evidenceAdd));
-    // Image upload: raw body capped at 8 MB + 64 kB of form overhead, parsed only after login.
-    router.post('/cases/:code/evidence/upload', uploadBody(MAX_UPLOAD_BYTES + 64 * 1024), user, safe(d.parseUpload), safe(en.evidenceUpload));
+    // Image upload: login is checked first (cookie only), so an anonymous request is refused before
+    // any of the body is read; then the raw body, capped at 8 MB + 64 kB of form overhead.
+    router.post('/cases/:code/evidence/upload', user, uploadBody(MAX_UPLOAD_BYTES + 64 * 1024), safe(d.parseUpload), safe(en.evidenceUpload));
     router.post('/cases/:code/evidence/remove', form, user, safe(en.evidenceRemove));
     router.post('/appeals/:code/preview', form, user, safe(en.appealPreview));
     router.post('/appeals/:code/decide', form, user, safe(en.appealDecide));
