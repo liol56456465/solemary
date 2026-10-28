@@ -631,7 +631,13 @@ test('security headers: CSP without unsafe-inline, frame denial, no referrer, no
     let called = false;
     d.securityHeaders({}, res, () => { called = true; });
     assert.equal(called, true);
-    assert.deepEqual(res.headers, SECURITY_HEADERS);
+    const { 'Strict-Transport-Security': hsts, ...rest } = res.headers;
+    assert.deepEqual(rest, SECURITY_HEADERS);
+    assert.equal(hsts, 'max-age=31536000', 'HTTPS public URL: HSTS on');
+    const local = createDashboard({ client: {}, settings: dashboardSettings({ ...ENV, PUBLIC_URL: 'http://127.0.0.1:5055/' }), access: async () => ({}), sessions: createMemorySessionStore() });
+    const localRes = fakeRes();
+    local.securityHeaders({}, localRes, () => {});
+    assert.equal(localRes.headers['Strict-Transport-Security'], undefined, 'plain http preview: no HSTS');
     const csp = SECURITY_HEADERS['Content-Security-Policy'];
     assert.ok(!csp.includes('unsafe-inline'));
     assert.ok(!csp.includes('unsafe-eval'));

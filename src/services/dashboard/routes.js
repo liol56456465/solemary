@@ -275,6 +275,9 @@ export function createDashboard({
 
     function securityHeaders(req, res, next) {
         res.set(SECURITY_HEADERS);
+        // Served over HTTPS: browsers must not try plain HTTP for a year (no downgrade on a first
+        // visit from a hostile network). Not sent for a local http:// preview.
+        if (settings.secure) res.set('Strict-Transport-Security', 'max-age=31536000');
         next();
     }
 

@@ -31,6 +31,7 @@ import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { registerOAuthRoutes } from './services/oauthVerification.js';
 import { registerDashboard } from './services/dashboard/routes.js';
+import { finalErrorHandler } from './utils/finalErrorHandler.js';
 import { isGlobalRateLimitExempt } from './services/dashboard/security.js';
 import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
@@ -296,6 +297,9 @@ class Meowist extends Client {
         timestamp: new Date().toISOString()
       });
     });
+
+    // Last: no stack traces in the browser, whatever NODE_ENV is.
+    app.use(finalErrorHandler);
 
     const startServer = (port, attempt = 0) => {
       let hasStartedListening = false;
