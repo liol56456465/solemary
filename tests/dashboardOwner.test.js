@@ -409,9 +409,14 @@ test('blacklist at startup: a failed load is retried with backoff until it succe
     let calls = 0;
     const timers = [];
     const load = async () => { calls += 1; if (calls < 3) throw new Error('db down'); return 4; };
-    const first = await loadBlacklistWithRetry({ load, schedule: (fn, ms) => { timers.push(ms); setImmediate(fn); return null; } });
+    const queue = [];
+    const first = await loadBlacklistWithRetry({ load, schedule: (fn, ms) => { timers.push(ms); queue.push(fn); return null; } });
     assert.equal(first, null, 'the first try failed');
-    await new Promise((r) => setTimeout(r, 20));
+    // Run the scheduled retries by hand (no timers), letting each failed load reschedule.
+    while (queue.length) {
+        queue.shift()();
+        for (let i = 0; i < 5; i += 1) await Promise.resolve();
+    }
     assert.equal(calls, 3, 'retried until it loaded');
     assert.deepEqual(timers, [15000, 30000], 'backoff doubles');
 });
