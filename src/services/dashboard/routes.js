@@ -762,6 +762,18 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
         return false;
     }
     const d = createDashboard({ client, settings, sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.dashboard_sessions }), inboxBadge: true });
+    app.use(BASE, dashboardRouter(d));
+    // The old read-only staff dashboard lived at /staff.
+    app.use('/staff', (req, res) => res.redirect(301, BASE));
+    logger.info(`Dashboard enabled at ${BASE} (OAuth redirect ${settings.redirectUri}; editing ${settings.editEnabled ? 'ON' : 'off (DASHBOARD_EDIT_ENABLED)'})`);
+    return true;
+}
+
+/**
+ * Every dashboard route on one router (the same list in production and in local previews):
+ * `d` is a createDashboard() result.
+ */
+export function dashboardRouter(d) {
     const router = express.Router();
     const user = safe(d.requireUser);
     router.use(d.securityHeaders);
@@ -853,9 +865,5 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.get('/audit', user, safe(d.audit));
     router.get('/:module', user, safe(d.modulePage));
     router.use(user, d.notFound);
-    app.use(BASE, router);
-    // The old read-only staff dashboard lived at /staff.
-    app.use('/staff', (req, res) => res.redirect(301, BASE));
-    logger.info(`Dashboard enabled at ${BASE} (OAuth redirect ${settings.redirectUri}; editing ${settings.editEnabled ? 'ON' : 'off (DASHBOARD_EDIT_ENABLED)'})`);
-    return true;
+    return router;
 }
