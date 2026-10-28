@@ -33,9 +33,10 @@ const PAIRS = [
     ['text-muted', 'bg', TEXT], ['text-muted', 'surface', TEXT], ['text-muted', 'raised', TEXT],
     ['accent', 'bg', TEXT], ['accent', 'raised', TEXT], ['accent', 'accent-soft', TEXT],
     ['on-accent', 'accent', TEXT], ['on-accent', 'accent-hover', TEXT],
-    ['green', 'bg', TEXT], ['green', 'raised', TEXT], ['green', 'green-soft', TEXT],
-    ['red', 'bg', TEXT], ['red', 'raised', TEXT], ['red', 'red-soft', TEXT],
-    ['amber', 'bg', TEXT], ['amber', 'raised', TEXT], ['amber', 'amber-soft', TEXT],
+    ['green', 'bg', TEXT], ['green', 'surface', TEXT], ['green', 'raised', TEXT], ['green', 'green-soft', TEXT],
+    ['red', 'bg', TEXT], ['red', 'surface', TEXT], ['red', 'raised', TEXT], ['red', 'red-soft', TEXT],
+    ['amber', 'bg', TEXT], ['amber', 'surface', TEXT], ['amber', 'raised', TEXT], ['amber', 'amber-soft', TEXT],
+    ['accent', 'surface', TEXT],
     ['bg', 'red', TEXT], // filled danger button
     ['chrome-text', 'ink', TEXT], ['feature-text', 'feature', TEXT], ['feature-muted', 'feature', TEXT],
     ['on-green', 'green', UI], ['accent-ink', 'ink', UI],

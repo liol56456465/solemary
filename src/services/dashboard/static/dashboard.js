@@ -343,6 +343,12 @@
         document.addEventListener('click', (event) => {
             for (const menu of menus) if (menu.open && !menu.contains(event.target)) close(menu, false);
         });
+        // Tabbing out of an open menu closes it.
+        for (const menu of menus) {
+            menu.addEventListener('focusout', (event) => {
+                if (menu.open && event.relatedTarget && !menu.contains(event.relatedTarget)) close(menu, false);
+            });
+        }
     }
 
     // ── Theme picker ─────────────────────────────────────────────────────
@@ -374,7 +380,12 @@
             opt.addEventListener('keydown', (event) => {
                 const group = [...opt.closest('[role="radiogroup"]').querySelectorAll('[data-theme-pick]')];
                 const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
-                if (step) {
+                if (event.key === 'Home' || event.key === 'End') {
+                    event.preventDefault();
+                    const next = event.key === 'Home' ? group[0] : group[group.length - 1];
+                    choose(next.dataset.themePick);
+                    next.focus();
+                } else if (step) {
                     event.preventDefault();
                     const next = group[(group.indexOf(opt) + step + group.length) % group.length];
                     choose(next.dataset.themePick);
@@ -529,9 +540,19 @@
         if (!links.length || typeof IntersectionObserver !== 'function') return;
         const byId = new Map(links.map((link) => [link.getAttribute('href').slice(1), link]));
         const visible = new Set();
+        let pinned = null; // a clicked link stays marked until the user scrolls on their own
+        const atBottom = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
         const mark = () => {
-            // The first section (in page order) that is in view.
-            const id = [...byId.keys()].find((key) => visible.has(key));
+            let id = pinned;
+            if (!id && atBottom()) {
+                // Short last sections never reach the top of the screen: at the bottom, the last one in view.
+                id = [...byId.keys()].reverse().find((key) => {
+                    const rect = document.getElementById(key)?.getBoundingClientRect();
+                    return rect && rect.top < window.innerHeight && rect.bottom > 0;
+                });
+            }
+            // Otherwise the first section (in page order) near the top.
+            if (!id) id = [...byId.keys()].find((key) => visible.has(key));
             for (const [key, link] of byId) {
                 link.classList.toggle('is-current', key === id);
                 if (key === id) link.setAttribute('aria-current', 'true'); else link.removeAttribute('aria-current');
@@ -547,6 +568,11 @@
             const section = document.getElementById(id);
             if (section) observer.observe(section);
         }
+        for (const [id, link] of byId) link.addEventListener('click', () => { pinned = id; mark(); });
+        const release = () => { if (pinned) { pinned = null; mark(); } };
+        for (const type of ['wheel', 'touchmove']) window.addEventListener(type, release, { passive: true });
+        window.addEventListener('keydown', (event) => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key) && !event.target.closest?.('input, textarea, select, [role="radiogroup"]')) release(); });
+        window.addEventListener('scroll', () => { if (!pinned && atBottom()) mark(); }, { passive: true });
     }
 
     // ── A refused form: open its section and bring the error into view ───
