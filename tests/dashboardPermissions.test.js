@@ -504,7 +504,8 @@ test('inbox for moderators: staff reports (complaints about staff) are filtered 
 
 test('role rules and insights are Administrator-only (their paths are not swallowed by /users/:id)', async () => {
     const { routeKey, requiredLevel, ADMIN } = await import('../src/services/dashboard/permissions.js');
-    for (const [method, path] of [['GET', '/users/rules'], ['GET', '/users/insights'], ['POST', '/users/rules/save'], ['POST', '/users/rules/12/delete']]) {
+    for (const [method, path] of [['GET', '/users/rules'], ['GET', '/users/insights'], ['POST', '/users/rules/save'], ['POST', '/users/rules/12/delete'],
+        ['GET', '/users/RULES'], ['GET', '/Users/Insights'], ['GET', '/AUDIT'], ['GET', '/Staff']]) { // Express routes ignore case; so must the gate
         assert.equal(requiredLevel(routeKey(method, path)), ADMIN, `${method} ${path}`);
     }
 });

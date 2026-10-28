@@ -150,7 +150,8 @@ const compiled = ROUTES.map(([method, pattern, key]) => {
         }
         return part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }).join('/');
-    return { method, pattern, key, names, regex: new RegExp(`^${source}/?$`) };
+    // Case-insensitive like Express's router: /users/RULES must not slip past as /users/:id.
+    return { method, pattern, key, names, regex: new RegExp(`^${source}/?$`, 'i') };
 });
 
 /** The key of a request (method + path below /dashboard), or null for an unknown path (→ ADMIN). */
