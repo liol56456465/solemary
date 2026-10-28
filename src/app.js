@@ -1,5 +1,9 @@
-import 'dotenv/config';
-import { Client, Collection, GatewayIntentBits } from 'discord.js';
+import './config/loadEnv.js';
+// Second on purpose: exits before anything else runs if test-mode safety checks fail.
+import { testMode, installGuildAllowlist, describeTestMode } from './config/testMode.js';
+// Exits in the Replit workspace so it never runs next to the deployment.
+import './config/instanceGuard.js';
+import { Client, Collection, Events, GatewayIntentBits, Partials } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import express from 'express';
 import cron from 'node-cron';
@@ -11,10 +15,24 @@ import { getServerCounters, saveServerCounters, updateCounter } from './services
 import { logger, startupLog, shutdownLog } from './utils/logger.js';
 import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
+import { runEnforcementExpiry } from './services/enforcement/expiryService.js';
+import { expireNoContactOrders } from './services/enforcement/noContactService.js';
+import { importLegacyWarnings } from './services/enforcement/warnImportService.js';
+import { flushStaffMessages, postWeeklyStaffReport } from './services/staffActivityService.js';
+import { snapshotMainServer } from './services/structureBackupService.js';
+import { runTicketReminders } from './services/ticketReminderService.js';
+import { tidyStaleAppealChannels } from './services/enforcement/staleAppealService.js';
+import { postWeeklyAutomodReport } from './services/automod/automodReport.js';
+import { postDailyAutomodDigest } from './services/automod/automodDigest.js';
+import { liftCalmSlowmodes } from './services/automod/autoSlowmode.js';
+import { pollFeeds } from './services/community/feedService.js';
+import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
+import { registerOAuthRoutes } from './services/oauthVerification.js';
+import { registerDashboard } from './services/dashboard/routes.js';
+import { isGlobalRateLimitExempt } from './services/dashboard/security.js';
+import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
-import { initializeMusic } from './services/music/riffySetup.js';
-import { shutdownMusic } from './services/music/playerHandler.js';
 import pkg from '../package.json' with { type: 'json' };
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
 
@@ -34,7 +52,17 @@ class Meowist extends Client {
         GatewayIntentBits.GuildVoiceStates,             
 
         GatewayIntentBits.GuildBans,                    
+
+        // Native Discord AutoMod executions (services/automod/nativeBridge.js); the
+        // events only arrive while the bot has Manage Server.
+        GatewayIntentBits.AutoModerationExecution,
       ],
+      // DM channels aren't cached; without this partial, DMs (modmail) never arrive.
+      // Message + Reaction: reactions, edits and deletes of uncached (older) messages (starboard).
+      partials: [Partials.Channel, Partials.Message, Partials.Reaction],
+      // No message may ping @everyone/@here unless it opts in: user text (track
+      // titles, prizes, reports) ends up in bot messages.
+      allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
     });
 
     this.config = config;
@@ -46,11 +74,15 @@ class Meowist extends Client {
     this.cooldowns = new Collection();
     this.db = null;
     this.rest = new REST({ version: '10' }).setToken(config.bot.token);
+    installGuildAllowlist(this);
   }
 
   async start() {
     try {
       startupLog('Starting Meowist...');
+      if (testMode.enabled) {
+        startupLog(`TEST MODE — effective config: ${JSON.stringify(describeTestMode())}`);
+      }
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       startupLog('Initializing database...');
@@ -73,6 +105,8 @@ class Meowist extends Client {
         startupLog(`✅ Database Status: ${dbStatus.connectionType} (fully operational)`);
       }
       
+      await this.loadSettings(dbStatus);
+
       startupLog('Starting web server...');
       this.startWebServer();
       
@@ -84,13 +118,11 @@ class Meowist extends Client {
       await this.loadHandlers();
       startupLog('Handlers loaded');
 
-      initializeMusic(this);
-      
       startupLog('Logging into Discord...');
       await this.login(this.config.bot.token);
       startupLog('Discord login successful');
       
-      startupLog('Registering slash commands globally...');
+      startupLog(testMode.enabled ? 'Registering slash commands in test guilds only...' : 'Registering slash commands...');
       await this.registerCommands();
       startupLog('Slash commands registration complete');
       
@@ -101,6 +133,8 @@ class Meowist extends Client {
       startupLog(
         `ONLINE ✅ | ${this.commands.size} commands loaded | ${handlerSummary} | Database: ${databaseMode}`
       );
+
+      startAdminConsole(this);
       
       this.setupCronJobs();
     } catch (error) {
@@ -109,10 +143,48 @@ class Meowist extends Client {
     }
   }
 
+  /**
+   * Per-server settings (guild_settings) into memory before anything handles events,
+   * then the one-time env seed. With the database down the bot runs on env values.
+   */
+  async loadSettings(dbStatus) {
+    if (dbStatus.isDegraded) {
+      startupLog('Settings: database unavailable, running on env/default values');
+      return;
+    }
+    try {
+      const rows = await loadAllSettings();
+      const seeded = rows === null ? null : await seedFromEnvOnce();
+      const seededText = seeded
+        ? Object.entries(seeded).map(([guildId, keys]) => `${guildId}: ${keys.length ? `seeded ${keys.length} key(s) from env` : 'nothing to seed'}`).join('; ')
+        : 'not seeded';
+      startupLog(rows === null
+        ? 'Settings: not loaded, running on env/default values'
+        : `Settings loaded: ${rows} guild row(s); ${seededText || 'no MAIN_GUILD_ID/SUPPORT_GUILD_ID'}`);
+    } catch (error) {
+      logger.error(`Settings could not be loaded or seeded (running on env/default values): ${error.message}`);
+    }
+  }
+
   startWebServer() {
     const app = express();
+    // Railway (and similar hosts) sit behind one reverse proxy; trust it so req.ip is the real client.
+    app.set('trust proxy', 1);
+
+    // TEMPORARY (first deploy only, remove in the next one): shows how many proxies
+    // Replit puts in front of the app, to set 'trust proxy' to the real hop count.
+    let loggedProxyHops = false;
+    app.use((req, res, next) => {
+      if (!loggedProxyHops) {
+        loggedProxyHops = true;
+        startupLog(`Proxy check (first HTTP request): req.ip=${req.ip} req.ips=${JSON.stringify(req.ips)} X-Forwarded-For=${req.get('x-forwarded-for') || '(none)'}`);
+      }
+      next();
+    });
     const configuredPort = Number(this.config.api?.port || process.env.PORT || 3000);
-    const maxPortRetryAttempts = Number(process.env.PORT_RETRY_ATTEMPTS || 5);
+    // A host-provided PORT is the only port the proxy routes to, so never drift off it.
+    // Port retry is a local-dev convenience only.
+    const maxPortRetryAttempts = process.env.PORT ? 0 : Number(process.env.PORT_RETRY_ATTEMPTS || 5);
     const host = process.env.WEB_HOST || '0.0.0.0';
     const corsOrigin = this.config.api?.cors?.origin || '*';
     
@@ -137,6 +209,8 @@ class Meowist extends Client {
     const maxRequests = this.config.api?.rateLimit?.max || 100;
     
     app.use((req, res, next) => {
+      // The dashboard has its own per-session and per-IP limits (services/dashboard/routes.js).
+      if (isGlobalRateLimitExempt(req)) return next();
       const ip = req.ip;
       const now = Date.now();
       const windowStart = now - windowMs;
@@ -155,6 +229,15 @@ class Meowist extends Client {
       requestCounts.set(ip, times);
       next();
     });
+
+    // Drop idle IPs so the map can't grow without bound on an internet-facing port.
+    const requestSweep = setInterval(() => {
+      const windowStart = Date.now() - windowMs;
+      for (const [ip, times] of requestCounts) {
+        if (!times.some((t) => t > windowStart)) requestCounts.delete(ip);
+      }
+    }, windowMs);
+    requestSweep.unref();
 
     app.get('/health', (req, res) => {
       const dbStatus = this.db?.getStatus?.() || { isDegraded: 'unknown' };
@@ -202,6 +285,9 @@ class Meowist extends Client {
       });
     });
 
+    registerOAuthRoutes(app, this);
+    registerDashboard(app, this);
+
     app.get('/', (req, res) => {
       res.status(200).json({ 
         message: 'Meowist System Online',
@@ -248,9 +334,70 @@ class Meowist extends Client {
   }
 
   setupCronJobs() {
-    cron.schedule('0 6 * * *', runSafeTask('birthday_check', () => checkBirthdays(this)));
-    cron.schedule('* * * * *', runSafeTask('giveaway_check', () => checkGiveaways(this)));
-    cron.schedule('*/15 * * * *', runSafeTask('counter_update', () => this.updateAllCounters()));
+    if (testMode.enabled && !testMode.cronEnabled) {
+      startupLog('Test mode: cron jobs disabled (set TEST_ENABLE_CRON=true to enable)');
+      // Legacy warn import only touches the local test database.
+      const importOnly = runSafeTask('enforcement_import', () => importLegacyWarnings(this));
+      if (this.isReady()) importOnly(); else this.once(Events.ClientReady, () => importOnly());
+      return;
+    }
+
+    // A tick is skipped while the previous run of the same job is still going, so a
+    // slow run (e.g. ending many giveaways) can never overlap and act twice.
+    const running = new Set();
+    const exclusive = (name, fn) => runSafeTask(name, async () => {
+      if (running.has(name)) {
+        logger.warn(`Cron job ${name} is still running; skipping this tick`);
+        return;
+      }
+      running.add(name);
+      try {
+        await fn();
+      } finally {
+        running.delete(name);
+      }
+    });
+
+    cron.schedule('0 6 * * *', exclusive('birthday_check', () => checkBirthdays(this)));
+    cron.schedule('* * * * *', exclusive('giveaway_check', () => checkGiveaways(this)));
+    cron.schedule('*/15 * * * *', exclusive('counter_update', () => this.updateAllCounters()));
+    cron.schedule('*/15 * * * *', exclusive('youtube_feeds', () => pollFeeds(this)));
+    cron.schedule('* * * * *', exclusive('enforcement_expiry', () => runEnforcementExpiry(this)));
+    cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
+    cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
+    cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));
+    cron.schedule('*/5 * * * *', exclusive('ticket_reminders', async () => {
+      await runTicketReminders(this);
+      await tidyStaleAppealChannels(this);
+    }));
+    // Times are UTC: a daily structure snapshot, and the weekly reports on Monday morning.
+    cron.schedule('0 4 * * *', exclusive('structure_snapshot', () => snapshotMainServer(this)), { timezone: 'UTC' });
+    // Daily automod digest in the alerts channel (BOT_ALERTS_CHANNEL_ID, falls back to the mod log).
+    cron.schedule('0 8 * * *', exclusive('automod_digest', () => postDailyAutomodDigest(this)), { timezone: 'UTC' });
+    cron.schedule('0 9 * * 1', exclusive('weekly_reports', async () => {
+      await postWeeklyStaffReport(this);
+      await postWeeklyAutomodReport(this);
+    }), { timezone: 'UTC' });
+
+    // Expired per-user command cooldowns are dead weight; sweep them every 10 minutes.
+    cron.schedule('*/10 * * * *', runSafeTask('cooldown_sweep', () => {
+      const now = Date.now();
+      for (const [key, expiresAt] of this.cooldowns) {
+        if (expiresAt <= now) this.cooldowns.delete(key);
+      }
+    }));
+
+    // Catch up on bans/mutes that expired while the bot was offline, then import
+    // legacy KV warnings (idempotent) once the gateway is ready.
+    const startupEnforcement = runSafeTask('enforcement_startup', async () => {
+      await runEnforcementExpiry(this);
+      await importLegacyWarnings(this);
+    });
+    if (this.isReady()) {
+      startupEnforcement();
+    } else {
+      this.once(Events.ClientReady, () => startupEnforcement());
+    }
   }
 
   async updateAllCounters() {
@@ -341,10 +488,6 @@ class Meowist extends Client {
       logger.info('Stopping cron jobs...');
       cron.getTasks().forEach(task => task.stop());
       logger.info('✅ Cron jobs stopped');
-
-      logger.info('Stopping music players...');
-      await shutdownMusic(this);
-      logger.info('✅ Music players stopped');
 
       if (this.webServer) {
         logger.info('Closing web server...');

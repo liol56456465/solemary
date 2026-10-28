@@ -1,6 +1,7 @@
 import { Events } from 'discord.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { logger } from '../utils/logger.js';
+import { moderateMessage } from '../services/automod/automodService.js';
 import { formatLogLine } from '../utils/logging/logEmbeds.js';
 
 const MAX_LOGGED_EDIT_CONTENT_LENGTH = 512;
@@ -14,6 +15,12 @@ export default {
       if (!newMessage.guild || newMessage.author?.bot) return;
 
       if (oldMessage.content === newMessage.content) return;
+
+      // An edit must not sneak past automod (a clean message edited into an invite).
+      const message = newMessage.partial ? await newMessage.fetch().catch(() => null) : newMessage;
+      if (message && await moderateMessage(message, { edited: true })) return;
+      // Edits of uncached messages (Message partial): automod above still runs; the old text is unknown, so no log.
+      if (oldMessage.partial) return;
 
       const metaLines = [
         formatLogLine('Channel', newMessage.channel ? `${newMessage.channel.name} ${newMessage.channel.toString()}` : 'Unknown'),

@@ -1,7 +1,7 @@
 import { getColor } from '../../../config/bot.js';
 import { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createEmbed } from '../../../utils/embeds.js';
-import { getServerCounters, saveServerCounters, getCounterEmoji, getCounterTypeLabel } from '../../../services/serverstatsService.js';
+import { getServerCounters, removeServerCounter, getCounterEmoji, getCounterTypeLabel } from '../../../services/serverstatsService.js';
 import { logger } from '../../../utils/logger.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
@@ -64,41 +64,8 @@ export async function handleDelete(interaction, client) {
 }
 
 export const performDeletionByCounterId = wrapServiceBoundary(async function performDeletionByCounterId(client, guild, counterId) {
-    const counters = await getServerCounters(client, guild.id);
-
-    const counter = counters.find(c => c.id === counterId);
-    if (!counter) {
-        throw createError(
-            'Counter not found',
-            ErrorTypes.USER_INPUT,
-            `Counter with ID \`${counterId}\` was not found.`,
-            { guildId: guild.id, counterId, operation: 'performDeletionByCounterId' }
-        );
-    }
-
-    const updatedCounters = counters.filter(c => c.id !== counter.id);
-
-    const saved = await saveServerCounters(client, guild.id, updatedCounters);
-    if (!saved) {
-        throw createError(
-            'Counter delete failed',
-            ErrorTypes.DATABASE,
-            'Failed to delete counter. Please try again.',
-            { guildId: guild.id, counterId, operation: 'performDeletionByCounterId' }
-        );
-    }
-
-    const channel = guild.channels.cache.get(counter.channelId);
-    let channelDeleted = false;
-
-    if (channel) {
-        try {
-            await channel.delete(`Counter deleted - removing channel: ${counter.id}`);
-            channelDeleted = true;
-        } catch (error) {
-            logger.error("Error deleting channel:", error);
-        }
-    }
+    // Atomic (row lock) removal + channel delete: services/serverstatsService.js.
+    const { counter, channel, channelDeleted } = await removeServerCounter(client, guild, counterId);
 
     let message = `✅ **Counter Deleted Successfully!**\n\n**ID:** \`${counter.id}\`\n**Type:** ${getCounterTypeDisplay(counter.type)}`;
 

@@ -1,10 +1,16 @@
-import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
+import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, escapeMarkdown } from 'discord.js';
 import { successEmbed } from '../utils/embeds.js';
 import { getFromDb, setInDb } from '../utils/database.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
 
 import { replyUserError, ErrorTypes } from '../utils/errorHandler.js';
+// User text goes into embed markdown; escape it (escapeMarkdown also escapes backslashes) so it
+// cannot form masked links or formatting.
+function escapeUserText(text) {
+  return escapeMarkdown(String(text ?? '')).replace(/[[\]()]/g, '\\$&');
+}
+
 function buildSharedTodoViewPayload(listData, listId, guild) {
   const memberList = (listData.members || []).map(memberId => {
     const member = guild?.members?.cache?.get(memberId);
@@ -20,11 +26,11 @@ function buildSharedTodoViewPayload(listData, listId, guild) {
     return {
       embeds: [
         successEmbed(
-          `📋 **${listData.name}**\n\n` +
+          `Shared List (ID: \`${listId}\`)`,
+          `📋 **${escapeUserText(listData.name)}**\n\n` +
           `👑 **Owner:** ${ownerName}\n` +
           `👥 **Members:** ${memberList}\n\n` +
-          '*This list is currently empty. Use the "Add Task" button to add tasks!*',
-          `Shared List (ID: \`${listId}\`)`
+          '*This list is currently empty. Use the "Add Task" button to add tasks!*'
         )
       ],
       components: [
@@ -48,7 +54,7 @@ function buildSharedTodoViewPayload(listData, listId, guild) {
 
   const taskList = tasks
     .map(task =>
-      `${task.completed ? '✅' : '📝'} #${task.id} ${task.text} ` +
+      `${task.completed ? '✅' : '📝'} #${task.id} ${escapeUserText(task.text)} ` +
       `\`[${new Date(task.createdAt).toLocaleDateString()}]` +
       (task.completed ? ` • Completed by <@${task.completedBy}>` : '') + '`'
     )
@@ -57,11 +63,11 @@ function buildSharedTodoViewPayload(listData, listId, guild) {
   return {
     embeds: [
       successEmbed(
-        `📋 **${listData.name}**\n\n` +
+        `Shared List (ID: \`${listId}\`)`,
+        `📋 **${escapeUserText(listData.name)}**\n\n` +
         `👑 **Owner:** ${ownerName}\n` +
         `👥 **Members:** ${memberList}\n\n` +
-        `**Tasks:**\n${taskList}`,
-        `Shared List (ID: \`${listId}\`)`
+        `**Tasks:**\n${taskList}`
       )
     ],
     components: [
@@ -250,7 +256,7 @@ const sharedTodoAddModalHandler = {
       await refreshSharedTodoMessage(interaction, listId, sourceMessageId);
 
       return interaction.reply({
-        embeds: [successEmbed("Task Added", `Added "${taskText}" to the shared list.`)],
+        embeds: [successEmbed("Task Added", `Added "${escapeUserText(taskText)}" to the shared list.`)],
         flags: MessageFlags.Ephemeral
       });
 
@@ -315,7 +321,7 @@ const sharedTodoCompleteModalHandler = {
       await refreshSharedTodoMessage(interaction, listId, sourceMessageId);
       
       return interaction.reply({
-        embeds: [successEmbed("Task Completed", `Marked "${task.text}" as complete!`)],
+        embeds: [successEmbed("Task Completed", `Marked "${escapeUserText(task.text)}" as complete!`)],
         flags: MessageFlags.Ephemeral
       });
 
@@ -374,7 +380,7 @@ const sharedTodoRemoveModalHandler = {
       await refreshSharedTodoMessage(interaction, listId, sourceMessageId);
 
       return interaction.reply({
-        embeds: [successEmbed('Task Removed', `Removed "${removedTask.text}" from the shared list.`)],
+        embeds: [successEmbed('Task Removed', `Removed "${escapeUserText(removedTask.text)}" from the shared list.`)],
         flags: MessageFlags.Ephemeral
       });
     } catch (error) {

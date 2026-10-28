@@ -3,6 +3,8 @@ import { infoEmbed, successEmbed } from '../../utils/embeds.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { verifyUser } from '../../services/verificationService.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { isOAuthVerificationEnabled } from '../../services/oauthVerification.js';
+import { buildOAuthVerifyReply } from '../../handlers/verificationButtons.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -11,6 +13,13 @@ export default {
 
     async execute(interaction, config, client) {
         const guild = interaction.guild;
+
+        if (isOAuthVerificationEnabled()) {
+            return await InteractionHelper.safeReply(interaction, {
+                ...buildOAuthVerifyReply(guild.id, interaction.user.id),
+                flags: MessageFlags.Ephemeral,
+            });
+        }
 
         const result = await verifyUser(client, guild.id, interaction.user.id, {
             source: 'command_self',

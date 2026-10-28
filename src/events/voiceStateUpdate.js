@@ -3,12 +3,11 @@ import {
     getJoinToCreateConfig, 
     registerTemporaryChannel, 
     unregisterTemporaryChannel,
-    getTemporaryChannelInfo,
-    formatChannelName
+    getTemporaryChannelInfo
 } from '../utils/database.js';
+import { formatChannelName } from '../services/joinToCreateService.js';
 import { sanitizeInput } from '../utils/validation.js';
 import { logger } from '../utils/logger.js';
-import { handleMusicVoiceState } from '../services/music/musicVoiceState.js';
 
 const channelCreationCooldown = new Map();
 const VOICE_CREATE_COOLDOWN_MS = 2000;
@@ -22,7 +21,7 @@ const MAX_TRACKED_COOLDOWNS = 10000;
 export default {
     name: 'voiceStateUpdate',
     async execute(oldState, newState, client) {
-        if (newState.member.user.bot) return;
+        if (!newState.member || newState.member.user.bot) return;
 
         const guildId = newState.guild.id;
         const userId = newState.member.id;
@@ -160,7 +159,11 @@ if (now - lastCreation < VOICE_CREATE_COOLDOWN_MS) {
                 const nameTemplate = channelOptions.nameTemplate || config.channelNameTemplate || "{username}'s Room";
                 
                 let userLimit = channelOptions.userLimit ?? config.userLimit ?? 0;
-                const bitrate = clampVoiceBitrate(channelOptions.bitrate ?? config.bitrate ?? DEFAULT_VOICE_BITRATE);
+                // Channel creation fails outright if bitrate exceeds the guild's boost-tier cap.
+                const bitrate = Math.min(
+                    clampVoiceBitrate(channelOptions.bitrate ?? config.bitrate ?? DEFAULT_VOICE_BITRATE),
+                    guild.maximumBitrate || DEFAULT_VOICE_BITRATE,
+                );
 
                 userLimit = Math.max(0, Math.min(99, userLimit || 0));
 
@@ -173,17 +176,19 @@ if (now - lastCreation < VOICE_CREATE_COOLDOWN_MS) {
 
                 let finalName;
 
-                if (
-                    nameTemplate.includes('{username}') ||
-                    nameTemplate.includes('{displayName}')
-                ) {
-                    finalName = formatChannelName(nameTemplate, {
-                        username: member.user.username,
-                        userTag: member.user.tag,
-                        displayName: member.displayName,
-                        guildName: guild.name,
-                        channelName: triggerChannel.name
-                    });
+                if (/\{(username|user_tag|display_name|displayName|guild_name|guildName|channel_name|channelName)\}/.test(nameTemplate)) {
+                    try {
+                        finalName = formatChannelName(nameTemplate, {
+                            username: member.user.username,
+                            userTag: member.user.tag,
+                            displayName: member.displayName,
+                            guildName: guild.name,
+                            channelName: triggerChannel.name
+                        });
+                    } catch {
+                        // An invalid stored template must not block channel creation.
+                        finalName = `${triggerChannel.name} ${existingChannels + 1}`;
+                    }
                 } else {
                     finalName = `${triggerChannel.name} ${existingChannels + 1}`;
                 }
@@ -265,17 +270,24 @@ userLimit: userLimit === 0 ? undefined : userLimit,
                 const newOwner = await channel.guild.members.fetch(newOwnerId);
                 if (newOwner) {
                     const channelOptions = config.channelOptions?.[tempChannelInfo.triggerChannelId] || {};
-                    const nameTemplate = channelOptions.nameTemplate || config.channelNameTemplate;
+                    const nameTemplate = channelOptions.nameTemplate || config.channelNameTemplate || "{username}'s Room";
                     
-                    const newChannelName = sanitizeVoiceChannelName(formatChannelName(nameTemplate, {
-                        username: newOwner.user.username,
-                        userTag: newOwner.user.tag,
-                        displayName: newOwner.displayName,
-                        guildName: channel.guild.name,
-                        channelName: channel.guild.channels.cache.get(tempChannelInfo.triggerChannelId)?.name || 'Voice Channel'
-                    }));
+                    let formattedName = null;
+                    try {
+                        formattedName = formatChannelName(nameTemplate, {
+                            username: newOwner.user.username,
+                            userTag: newOwner.user.tag,
+                            displayName: newOwner.displayName,
+                            guildName: channel.guild.name,
+                            channelName: channel.guild.channels.cache.get(tempChannelInfo.triggerChannelId)?.name || 'Voice Channel'
+                        });
+                    } catch {
+                        // Keep the current name if the stored template is invalid.
+                    }
 
-                    await channel.setName(newChannelName);
+                    if (formattedName) {
+                        await channel.setName(sanitizeVoiceChannelName(formattedName));
+                    }
                 }
 
                 logger.info(`Transferred ownership of temporary channel ${channel.id} to user ${newOwnerId}`);
@@ -283,12 +295,6 @@ userLimit: userLimit === 0 ? undefined : userLimit,
             } catch (error) {
                 logger.error(`Failed to transfer ownership of channel ${channel.id}:`, error);
             }
-        }
-
-        if (client.config?.features?.music) {
-            handleMusicVoiceState(client, oldState, newState).catch((error) => {
-                logger.error('Music voice state handler error:', error);
-            });
         }
     }
 };

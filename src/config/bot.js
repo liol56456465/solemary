@@ -60,10 +60,11 @@ export const botConfig = {
   // =========================
   applications: {
     // Default questions shown when someone fills out an application.
+    // minLength: shortest accepted answer (default 1, so "18" is a valid age).
     defaultQuestions: [
       { question: "What is your name?", required: true },
       { question: "How old are you?", required: true },
-      { question: "Why do you want to join?", required: true },
+      { question: "Why do you want to join?", required: true, minLength: 10 },
     ],
 
     // Embed colors by application status.
@@ -126,7 +127,6 @@ export const botConfig = {
         closed: "#ED4245",
         pending: "#99AAB5",
       },
-      economy: "#F1C40F",
       birthday: "#E91E63",
       moderation: "#9B59B6",
 
@@ -140,8 +140,8 @@ export const botConfig = {
       },
     },
     footer: {
-      // Default footer text used in bot embeds.
-      text: "Meowist",
+      // Default footer text for bot embeds; null = none (embeds set their own when needed).
+      text: null,
       // Footer icon URL (null = no icon).
       icon: null,
     },
@@ -153,60 +153,6 @@ export const botConfig = {
       icon: null,
       url: null,
     },
-  },
-
-  // =========================
-  // ECONOMY SETTINGS
-  // =========================
-  economy: {
-    currency: {
-      // Currency display name.
-      name: "coins",
-      // Plural display name.
-      namePlural: "coins",
-      // Currency symbol shown in balances.
-      symbol: "$",
-    },
-
-    // Starting balance for new users.
-    startingBalance: 0,
-
-    // Maximum bank amount before upgrades (if upgrades are used).
-    baseBankCapacity: 100000,
-
-    // Daily reward amount.
-    dailyAmount: 100,
-
-    // Work command random payout range.
-    workMin: 10,
-    workMax: 100,
-
-    // Beg command random payout range.
-    begMin: 5,
-    begMax: 50,
-
-    // Command cooldowns (milliseconds).
-    cooldowns: {
-      daily: 24 * 60 * 60 * 1000,
-      work: 60 * 60 * 1000,
-      crime: 2 * 60 * 60 * 1000,
-      rob: 4 * 60 * 60 * 1000,
-    },
-
-    // Chance to succeed when robbing (0.4 = 40%).
-    robSuccessRate: 0.4,
-
-    // Jail time after failed rob (milliseconds).
-    // 3600000 = 1 hour.
-    robFailJailTime: 3600000,
-  },
-
-  // =========================
-  // SHOP SETTINGS
-  // =========================
-  // Add shop defaults here when needed.
-  shop: {
-
   },
 
   // =========================
@@ -449,7 +395,6 @@ export const botConfig = {
   // Set any feature to `false` to disable it globally.
   features: {
     // Core systems.
-    economy: true,
     leveling: true,
     moderation: true,
     logging: true,
@@ -473,7 +418,6 @@ export const botConfig = {
     utility: true,
     community: true,
     fun: true,
-    music: true,
   },
 };
 
@@ -499,19 +443,20 @@ export function validateConfig(config) {
   }
 
   if (process.env.NODE_ENV === 'production') {
-    // A full connection URL (DATABASE_URL / POSTGRES_URL) satisfies all Postgres
-    // requirements, matching how src/config/database/postgres.js resolves the pool config.
-    const hasConnectionUrl = Boolean(process.env.POSTGRES_URL || process.env.DATABASE_URL);
+    // A full connection URL (POSTGRES_URL) satisfies all Postgres requirements, matching
+    // how src/config/database/postgres.js resolves the pool config. DATABASE_URL is
+    // ignored there (Replit points it at its own database), so it does not count here.
+    const hasConnectionUrl = Boolean(process.env.POSTGRES_URL);
 
     if (!hasConnectionUrl) {
       if (!process.env.POSTGRES_HOST) {
-        errors.push("PostgreSQL connection is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_HOST)");
+        errors.push("PostgreSQL connection is required in production (set POSTGRES_URL, or POSTGRES_HOST)");
       }
       if (!process.env.POSTGRES_USER) {
-        errors.push("PostgreSQL user is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_USER)");
+        errors.push("PostgreSQL user is required in production (set POSTGRES_URL, or POSTGRES_USER)");
       }
       if (!process.env.POSTGRES_PASSWORD) {
-        errors.push("PostgreSQL password is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_PASSWORD)");
+        errors.push("PostgreSQL password is required in production (set POSTGRES_URL, or POSTGRES_PASSWORD)");
       }
     }
   }
@@ -532,14 +477,12 @@ export const BotConfig = botConfig;
 const COMMAND_CATEGORY_FEATURE_MAP = {
   birthday: "birthday",
   community: "community",
-  economy: "economy",
   fun: "fun",
   giveaway: "giveaways",
   jointocreate: "joinToCreate",
   leveling: "leveling",
   logging: "logging",
   moderation: "moderation",
-  music: "music",
   reaction_roles: "reactionRoles",
   search: "search",
   serverstats: "counter",
@@ -615,10 +558,13 @@ export function getApplicationStatusColor(status) {
   return hex ? getColor(hex) : getColor(status === "approved" ? "success" : status === "denied" ? "error" : "warning");
 }
 
+// Same shapes as stored questions: a string, or { question, minLength } when a minimum is set.
 export function getDefaultApplicationQuestions() {
-  return (botConfig.applications?.defaultQuestions || []).map((entry) =>
-    typeof entry === "string" ? entry : entry.question,
-  ).filter(Boolean);
+  return (botConfig.applications?.defaultQuestions || []).map((entry) => {
+    if (typeof entry === "string") return entry;
+    if (!entry?.question) return null;
+    return entry.minLength > 1 ? { question: entry.question, minLength: entry.minLength } : entry.question;
+  }).filter(Boolean);
 }
 
 export function getColor(path, fallback = "#99AAB5") {

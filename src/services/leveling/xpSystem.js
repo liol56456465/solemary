@@ -79,7 +79,7 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
       level: levelData.level,
       xp: levelData.xp,
       totalXp: levelData.totalXp,
-      xpNeeded: getXpForLevel(levelData.level + 1),
+      xpNeeded: getXpForLevel(levelData.level),
       leveledUp: didLevelUp,
     };
   });
@@ -129,7 +129,7 @@ async function sendLevelUpAnnouncement(guild, member, levelData, config) {
       .replace(/{user}/g, member.toString())
       .replace(/{level}/g, levelData.level)
       .replace(/{xp}/g, levelData.xp)
-      .replace(/{xpNeeded}/g, getXpForLevel(levelData.level + 1));
+      .replace(/{xpNeeded}/g, getXpForLevel(levelData.level));
 
     await levelUpChannel.send(message).catch(error => {
       logger.error(`Failed to send level up message in channel ${levelUpChannel.id}:`, error);

@@ -1,6 +1,8 @@
 import { logger } from '../utils/logger.js';
 import { getReactionRoleKey } from '../utils/database/keys.js';
-import { getGuildConfig, setGuildConfig, patchGuildConfig } from './config/guildConfig.js';
+import { getGuildConfig } from './config/guildConfig.js';
+import { updateTicketSettings } from './ticketSettingsService.js';
+import { updateVerificationSettings } from './verificationSettingsService.js';
 import {
     getTicketPanelStatus,
     getVerificationPanelStatus,
@@ -10,9 +12,7 @@ import { getAllReactionRoleMessages } from './reactionRoleService.js';
 
 async function persistVerificationMessageId(client, guildId, config, messageId) {
     if (!messageId || config.verification?.messageId === messageId) return;
-    await patchGuildConfig(client, guildId, {
-        verification: { ...config.verification, messageId },
-    });
+    await updateVerificationSettings(client, guildId, { messageId });
 }
 
 async function persistReactionRoleMessageId(client, guildId, panelData, messageId) {
@@ -46,7 +46,7 @@ export async function reconcileTicketPanels(client) {
             if (panelStatus.recoveredId) {
                 summary.recoveredIds += 1;
                 config.ticketPanelMessageId = panelStatus.recoveredId;
-                await setGuildConfig(client, guild.id, config);
+                await updateTicketSettings(client, guild.id, { ticketPanelMessageId: panelStatus.recoveredId });
             }
 
             if (panelStatus.exists) {

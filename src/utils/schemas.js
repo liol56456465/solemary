@@ -2,13 +2,15 @@
 
 import { z } from 'zod';
 import { createError, ErrorTypes } from './errorHandler.js';
+import { isValidTimeZone } from './timezone.js';
 
 export const LogIgnoreSchema = z
   .object({
     users: z.array(z.string()).default([]),
-    channels: z.array(z.string()).default([])
+    channels: z.array(z.string()).default([]),
+    roles: z.array(z.string()).default([])
   })
-  .default({ users: [], channels: [] });
+  .default({ users: [], channels: [], roles: [] });
 
 export const LoggingChannelsSchema = z
   .object({
@@ -23,7 +25,7 @@ export const LoggingConfigSchema = z
     enabled: z.boolean().default(false),
     channels: LoggingChannelsSchema.optional(),
     ignore: LogIgnoreSchema.optional(),
-    enabledEvents: z.record(z.boolean()).default({}),
+    enabledEvents: z.record(z.string(), z.boolean()).default({}),
     // legacy flat fields — accepted on parse, stripped on normalize
     channelId: z.string().nullable().optional(),
   })
@@ -57,6 +59,30 @@ const VerificationConfigSchema = z
   })
   .optional();
 
+// Leveling settings (services/leveling/leveling.js). Lenient on purpose: every
+// field optional and unknown keys kept, so stored configs always parse; tight
+// bounds live in the leveling service.
+const XpRangeSchema = z.looseObject({
+    min: z.number().optional(),
+    max: z.number().optional()
+});
+
+const LevelingConfigSchema = z.looseObject({
+    configured: z.boolean().optional(),
+    enabled: z.boolean().optional(),
+    xpPerMessage: z.union([z.number(), XpRangeSchema]).nullable().optional(),
+    xpRange: XpRangeSchema.nullable().optional(),
+    xpCooldown: z.number().nullable().optional(),
+    levelUpMessage: z.string().nullable().optional(),
+    levelUpChannel: z.string().nullable().optional(),
+    ignoredChannels: z.array(z.string()).nullable().optional(),
+    ignoredRoles: z.array(z.string()).nullable().optional(),
+    blacklistedUsers: z.array(z.string()).nullable().optional(),
+    roleRewards: z.record(z.string(), z.string()).nullable().optional(),
+    announceLevelUp: z.boolean().optional(),
+    xpMultiplier: z.number().nullable().optional()
+});
+
 export const GuildConfigSchema = z
   .object({
     prefix: z.string().optional(),
@@ -69,41 +95,37 @@ export const GuildConfigSchema = z
     dmOnClose: z.boolean().optional(),
     reportChannelId: z.string().nullable().optional(),
     birthdayChannelId: z.string().nullable().optional(),
+    // IANA zone whose local date decides whose birthday it is (default UTC).
+    birthdayTimezone: z.string().refine(isValidTimeZone, 'Unknown IANA time zone').optional(),
+    // Role given on the member's birthday (services/birthdayService.js); set from the web dashboard.
+    birthdayRoleId: z.string().nullable().optional(),
     premiumRoleId: z.string().nullable().optional(),
     logIgnore: LogIgnoreSchema.optional(),
-    disabledCommands: z.record(z.boolean()).optional(),
-    disabledCategories: z.record(z.boolean()).optional(),
+    disabledCommands: z.record(z.string(), z.boolean()).optional(),
+    disabledCategories: z.record(z.string(), z.boolean()).optional(),
     logging: LoggingConfigSchema.optional(),
     ticketLogging: TicketLoggingSchema.optional(),
     enableLogging: z.boolean().optional(),
-    verification: VerificationConfigSchema
-  })
-  .passthrough();
-
-export const EconomyDataSchema = z
-  .object({
-    wallet: z.number().nonnegative().default(0),
-    bank: z.number().nonnegative().default(0),
-    bankLevel: z.number().int().nonnegative().default(0),
-    dailyStreak: z.number().int().nonnegative().default(0),
-    lastDaily: z.number().int().nonnegative().default(0),
-    lastWeekly: z.number().int().nonnegative().default(0),
-    lastWork: z.number().int().nonnegative().default(0),
-    lastCrime: z.number().int().nonnegative().default(0),
-    lastRob: z.number().int().nonnegative().default(0),
-    lastDeposit: z.number().int().nonnegative().default(0),
-    lastWithdraw: z.number().int().nonnegative().default(0),
-    xp: z.number().int().nonnegative().default(0),
-    level: z.number().int().nonnegative().default(1),
-    inventory: z.record(z.any()).default({}),
-    cooldowns: z.record(z.number().int().nonnegative()).default({})
+    verification: VerificationConfigSchema,
+    // Ticket settings (services/ticketSettingsService.js); tight checks live there.
+    ticketPanelChannelId: z.string().nullable().optional(),
+    ticketPanelMessageId: z.string().nullable().optional(),
+    ticketStaffRoleId: z.string().nullable().optional(),
+    ticketCategoryId: z.string().nullable().optional(),
+    ticketClosedCategoryId: z.string().nullable().optional(),
+    ticketLogsChannelId: z.string().nullable().optional(),
+    ticketTranscriptChannelId: z.string().nullable().optional(),
+    ticketPanelMessage: z.string().nullable().optional(),
+    ticketButtonLabel: z.string().nullable().optional(),
+    maxTicketsPerUser: z.number().nullable().optional(),
+    leveling: LevelingConfigSchema.nullable().optional()
   })
   .passthrough();
 
 const DEFAULT_LOGGING = {
   enabled: false,
   channels: { audit: null, applications: null, reports: null },
-  ignore: { users: [], channels: [] },
+  ignore: { users: [], channels: [], roles: [] },
   enabledEvents: {},
 };
 
@@ -132,6 +154,7 @@ function migrateLoggingConfig(raw = {}, legacy = {}) {
   const ignore = {
     users: base.ignore?.users ?? logIgnore?.users ?? [],
     channels: base.ignore?.channels ?? logIgnore?.channels ?? [],
+    roles: base.ignore?.roles ?? [],
   };
 
   let enabled = base.enabled ?? false;
@@ -200,13 +223,6 @@ export function normalizeGuildConfig(raw, defaults = {}) {
   });
 
   return stripLegacyLoggingFields(normalized);
-}
-
-export function normalizeEconomyData(raw, defaults = {}) {
-  const base = typeof raw === 'object' && raw !== null ? raw : {};
-  const merged = { ...defaults, ...base };
-  const parsed = EconomyDataSchema.safeParse(merged);
-  return parsed.success ? parsed.data : { ...defaults, ...base };
 }
 
 export function validateGuildConfigOrThrow(rawConfig, context = {}) {

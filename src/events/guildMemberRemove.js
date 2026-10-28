@@ -2,6 +2,7 @@ import { Events, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { getColor, botConfig } from '../config/bot.js';
 import { getWelcomeConfig, getUserApplications, deleteApplication } from '../utils/database.js';
 import { formatWelcomeMessage } from '../utils/welcome.js';
+import { resolveWelcomeImageUrl } from '../utils/welcomeImageStore.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { getServerCounters, updateCounter } from '../services/serverstatsService.js';
 import { getGuildBirthdays, deleteBirthday } from '../utils/database.js';
@@ -20,14 +21,13 @@ export default {
         
         const goodbyeChannelId = welcomeConfig?.goodbyeChannelId;
 
-        if (welcomeConfig?.goodbyeEnabled && goodbyeChannelId) {
+        // Skip only the goodbye message on missing permissions / send failure; the
+        // logging, counters and data cleanup below must still run.
+        if (welcomeConfig?.goodbyeEnabled && goodbyeChannelId) try {
             const channel = guild.channels.cache.get(goodbyeChannelId);
-            if (channel?.isTextBased?.()) {
-                const me = guild.members.me;
-                const permissions = me ? channel.permissionsFor(me) : null;
-                if (!permissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
-                    return;
-                }
+            const me = guild.members.me;
+            const permissions = channel?.isTextBased?.() && me ? channel.permissionsFor(me) : null;
+            if (permissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
 
                 const formatData = { user, guild, member };
                 const goodbyeMessage = formatWelcomeMessage(
@@ -64,7 +64,7 @@ export default {
                         .setFooter({ text: embedFooter });
 
                     if (typeof welcomeConfig.leaveEmbed?.image === 'string') {
-                        embed.setImage(welcomeConfig.leaveEmbed.image);
+                        embed.setImage(await resolveWelcomeImageUrl(member.client, welcomeConfig.leaveEmbed.image, welcomeConfig.goodbyeImageRef, { guildId: guild.id, label: 'goodbye' }));
                     } else if (welcomeConfig.leaveEmbed?.image?.url) {
                         embed.setImage(welcomeConfig.leaveEmbed.image.url);
                     }
@@ -76,6 +76,8 @@ export default {
                     });
                 }
             }
+        } catch (error) {
+            logger.warn(`Could not send goodbye message in guild ${guild.id}: ${error.message}`);
         }
 
         try {
@@ -115,9 +117,8 @@ export default {
             const birthdays = await getGuildBirthdays(member.client, guild.id);
             if (birthdays[user.id]) {
                 const backupKey = `guild:${guild.id}:birthdays:left`;
-                const backup = (await member.client.db.get(backupKey)) || {};
-                backup[user.id] = birthdays[user.id];
-                await member.client.db.set(backupKey, backup);
+                // Locked: a raid's mass kicks would otherwise overwrite each other's entries.
+                await member.client.db.update(backupKey, (backup) => ({ ...backup, [user.id]: birthdays[user.id] }), {});
                 await deleteBirthday(member.client, guild.id, user.id);
                 logger.debug(`Birthday backed up and removed for user ${user.id} in guild ${guild.id}`);
             }

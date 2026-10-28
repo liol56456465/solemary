@@ -2,6 +2,7 @@ modules = ["nodejs-20"]
 
 [nix]
 channel = "stable-25_05"
+packages = ["dt"]
 
 [agent]
 expertMode = true
@@ -18,15 +19,12 @@ PORT_RETRY_ATTEMPTS = "5"
 WEB_HOST = "0.0.0.0"
 
 [[ports]]
-localPort = 3000
-externalPort = 80
-
-[[ports]]
 localPort = 5000
-externalPort = 5000
+externalPort = 80
 
 [deployment]
 deploymentTarget = "cloudrun"
+run = ["npm", "start"]
 
 [workflows]
 runButton = "Project"

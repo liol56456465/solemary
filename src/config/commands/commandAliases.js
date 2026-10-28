@@ -4,35 +4,13 @@
  */
 
 export const commandAliases = {
-    'bal': 'balance',
-    'money': 'balance',
-    'cash': 'balance',
-
-    'dep': 'deposit',
-    'with': 'withdraw',
-    'work': 'work',
-    'daily': 'daily',
-    'gamble': 'gamble',
-    'bet': 'gamble',
-    'rob': 'rob',
-    'crime': 'crime',
-    'pay': 'pay',
-    'give': 'pay',
-    'send': 'pay',
-
     'ping': 'ping',
     'help': 'help',
     'h': 'help',
     'info': 'help',
 
-    'ban': 'ban',
-    'kick': 'kick',
-    'mute': 'timeout',
-    'warn': 'warn',
     'clear': 'purge',
     'purge': 'purge',
-    'untimeout': 'untimeout',
-    'unmute': 'untimeout',
 
     'rank': 'rank',
     'lvl': 'rank',
@@ -41,11 +19,6 @@ export const commandAliases = {
     'lb': 'leaderboard',
     'top': 'leaderboard',
 
-    'shop': 'shop',
-    'buy': 'buy',
-    'inventory': 'inventory',
-    'inv': 'inventory',
-    'items': 'inventory',
 
     'user': 'userinfo',
     'avatar': 'avatar',
@@ -56,19 +29,22 @@ export const commandAliases = {
     'bday': 'birthday',
     'b': 'birthday',
 
-    'flip': 'flip',
-    'coin': 'flip',
-    'roll': 'roll',
-    'dice': 'roll',
-    'fight': 'fight',
+    'fun': 'fun',
+    'flip': 'fun flip',
+    'coin': 'fun flip',
+    'roll': 'fun roll',
+    'dice': 'fun roll',
+    'fight': 'fun fight',
 
-    'gcreate': 'gcreate',
-    'gstart': 'gcreate',
-    'gend': 'gend',
-    'gstop': 'gend',
-    'gdelete': 'gdelete',
-    'greroll': 'greroll',
-    'groll': 'greroll',
+    'giveaway': 'giveaway',
+    'gw': 'giveaway',
+    'gcreate': 'giveaway create',
+    'gstart': 'giveaway create',
+    'gend': 'giveaway end',
+    'gstop': 'giveaway end',
+    'greroll': 'giveaway reroll',
+    'groll': 'giveaway reroll',
+    'gdelete': 'giveaway delete',
 
     'ticket': 'ticket',
     't': 'ticket',
@@ -76,15 +52,16 @@ export const commandAliases = {
 
     'ver': 'verify',
     'vadmin': 'verification',
-    'av': 'autoverify',
+    'av': 'verification auto',
 
     'welcome': 'welcome',
     'greet': 'greet',
     'goodbye': 'goodbye',
     'autorole': 'autorole',
 
-    'calc': 'calculate',
-    'math': 'calculate',
+    'tools': 'tools',
+    'calc': 'tools calculate',
+    'math': 'tools calculate',
     'weather': 'weather',
     'todo': 'todo',
     'report': 'report',
@@ -139,6 +116,15 @@ export const subcommandAliases = {
 export function resolveCommandAlias(commandName) {
     const normalized = commandName.toLowerCase();
     return commandAliases[normalized] || commandName;
+}
+
+/**
+ * Resolves an alias that may name a subcommand of a merged command:
+ * "flip" → { commandName: 'fun', subcommandArgs: ['flip'] }.
+ */
+export function resolveCommandAliasWithArgs(commandName) {
+    const [name, ...subcommandArgs] = resolveCommandAlias(commandName).split(' ');
+    return { commandName: name, subcommandArgs };
 }
 
 /**

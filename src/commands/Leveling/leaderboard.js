@@ -8,6 +8,12 @@ export default {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription("Shows the server's level leaderboard")
+    .addIntegerOption(option =>
+      option
+        .setName('page')
+        .setDescription('Page to show (10 members per page)')
+        .setMinValue(1)
+        .setRequired(false))
     .setDMPermission(false),
   category: 'Leveling',
 
@@ -28,41 +34,39 @@ export default {
       return;
     }
 
-    const leaderboard = await getLeaderboard(client, interaction.guildId, 10);
+    const pageSize = 10;
+    const page = interaction.options.getInteger?.('page') ?? 1;
+    const offset = (page - 1) * pageSize;
+    const leaderboard = await getLeaderboard(client, interaction.guildId, pageSize, offset);
 
     if (leaderboard.length === 0) {
       throw new TitanBotError(
         'No leaderboard data found',
         ErrorTypes.DATABASE,
-        'No level data found yet. Start chatting to gain XP!'
+        page > 1 ? `There are no members on page ${page} of the leaderboard.` : 'No level data found yet. Start chatting to gain XP!'
       );
     }
 
     const embed = new EmbedBuilder()
       .setTitle('Level Leaderboard')
       .setColor('#2ecc71')
-      .setDescription("Top 10 most active members in this server:")
+      .setDescription(page > 1
+        ? `Ranks ${offset + 1}-${offset + leaderboard.length} in this server:`
+        : "Top 10 most active members in this server:")
       .setTimestamp();
 
-    const leaderboardText = await Promise.all(
-      leaderboard.map(async (user, index) => {
-        try {
-          const member = await interaction.guild.members.fetch(user.userId).catch(() => null);
-          const userMention = member?.user.toString() || `<@${user.userId}>`;
-          const xpForNextLevel = getXpForLevel(user.level + 1);
+    // getLeaderboard already resolved the page's members; a mention needs no lookup.
+    const leaderboardText = leaderboard.map((user) => {
+      const xpForNextLevel = getXpForLevel(user.level);
 
-          let rankPrefix = `${index + 1}.`;
-          if (index === 0) rankPrefix = '🥇';
-          else if (index === 1) rankPrefix = '🥈';
-          else if (index === 2) rankPrefix = '🥉';
-          else rankPrefix = `**${index + 1}.**`;
+      let rankPrefix;
+      if (user.rank === 1) rankPrefix = '🥇';
+      else if (user.rank === 2) rankPrefix = '🥈';
+      else if (user.rank === 3) rankPrefix = '🥉';
+      else rankPrefix = `**${user.rank}.**`;
 
-          return `${rankPrefix} ${userMention} - Level ${user.level} (${user.xp}/${xpForNextLevel} XP)`;
-        } catch {
-          return `**${index + 1}.** Error loading user ${user.userId}`;
-        }
-      })
-    );
+      return `${rankPrefix} <@${user.userId}> - Level ${user.level} (${user.xp}/${xpForNextLevel} XP)`;
+    });
 
     embed.addFields({
       name: 'Rankings',

@@ -1,9 +1,11 @@
 import fs from 'fs/promises';
+import { isSupportServerCommand } from '../../config/commands/commandAccess.js';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { Collection } from 'discord.js';
+import { ApplicationIntegrationType, Collection, InteractionContextType, Routes } from 'discord.js';
 import { logger } from '../../utils/logger.js';
-import botConfig from '../../config/bot.js';
+import { enforcementConfig } from '../../config/enforcement.js';
+import { testMode } from '../../config/testMode.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -120,8 +122,14 @@ export async function loadCommands(client) {
     return client.commands;
 }
 
+/**
+ * Splits loaded commands into the global set and per-scope guild sets.
+ * Commands stay visible to everyone (default_member_permissions = null); access
+ * is enforced at dispatch by utils/commandGate.js. contexts = [Guild] keeps them
+ * out of DMs.
+ */
 function collectCommandPayloads(client) {
-    const commands = [];
+    const sets = { global: [], main: [], support: [] };
     let totalSubcommands = 0;
     const registeredNames = new Set();
 
@@ -140,16 +148,29 @@ function collectCommandPayloads(client) {
         }
 
         registeredNames.add(commandName);
-        const commandJson = command.data.toJSON();
-        commands.push(commandJson);
+        const commandJson = {
+            ...command.data.toJSON(),
+            default_member_permissions: null,
+            contexts: [InteractionContextType.Guild],
+            integration_types: [ApplicationIntegrationType.GuildInstall],
+        };
+        delete commandJson.dm_permission;
+
+        const scope = command.scope || 'global';
+        if (!sets[scope]) {
+            logger.warn(`Command ${commandName} has unknown scope "${scope}"; registering it globally`);
+            sets.global.push(commandJson);
+        } else {
+            sets[scope].push(commandJson);
+        }
         totalSubcommands += getSubcommandInfo(commandJson).length;
 
         if (process.env.NODE_ENV !== 'production') {
-            logger.debug(`Registering command: ${commandName}`);
+            logger.debug(`Registering command: ${commandName} (${scope})`);
         }
     }
 
-    return { commands, totalSubcommands };
+    return { sets, totalSubcommands };
 }
 
 function validateCommands(commands) {
@@ -223,7 +244,7 @@ function validateCommands(commands) {
 
 function prepareCommandsForRegistration(commands) {
     if (commands.length >= COMMAND_COUNT_WARN_THRESHOLD) {
-        logger.warn(`Command count (${commands.length}) is near Discord's ${MAX_COMMANDS} global command limit`);
+        logger.warn(`Command count (${commands.length}) is near Discord's ${MAX_COMMANDS}-command limit per server`);
     }
 
     if (commands.length <= MAX_COMMANDS) {
@@ -236,44 +257,82 @@ function prepareCommandsForRegistration(commands) {
     return truncated;
 }
 
-async function registerGlobalCommands(client, clientId, commands, totalSubcommands) {
+async function putCommands(rest, route, commands, label) {
+    logger.info(`Registering ${commands.length} ${label} commands...`);
+    await rest.put(route, { body: commands });
+    logger.info(`Successfully registered ${commands.length} ${label} commands`);
+}
+
+/**
+ * Commands are guild commands: the full set in the main server, and the commands in
+ * SUPPORT_SERVER_COMMANDS (config/commands/commandAccess.js) in the support server. The global list is emptied. Each PUT replaces
+ * the whole list, so commands deleted from the codebase disappear too.
+ */
+export async function registerCommandSets(rest, clientId, sets, totalSubcommands = 0) {
     if (!clientId) {
         throw new Error('CLIENT_ID is required for slash command registration');
     }
-
-    if (!client.rest) {
+    if (!rest) {
         throw new Error('Discord REST client is not available for slash command registration');
     }
 
-    logger.info(`Preparing to register ${totalSubcommands + commands.length} commands globally`);
+    const all = [...sets.global, ...sets.main, ...sets.support];
+    logger.info(`Preparing to register ${totalSubcommands + all.length} commands (${all.length} top-level) in the main server`);
     logger.info('Validating commands before registration...');
-    validateCommands(commands);
+    validateCommands(all);
     logger.info('Command validation passed');
 
-    const commandsToRegister = prepareCommandsForRegistration(commands);
+    const mainCommands = prepareCommandsForRegistration(all);
+    const supportCommands = prepareCommandsForRegistration(
+        [...sets.global, ...sets.support].filter((command) => isSupportServerCommand(command.name)));
 
-    if (botConfig.commands?.deleteCommands) {
-        logger.info('Clearing existing global commands before registration...');
-        await client.rest.put(`/applications/${clientId}/commands`, { body: [] });
+    if (testMode.enabled) {
+        // Test mode never touches global commands; the test main guild plays the main server.
+        for (const guildId of testMode.guildIds) {
+            const body = guildId === enforcementConfig.mainGuildId ? mainCommands
+                : guildId === enforcementConfig.supportGuildId ? supportCommands
+                    : [];
+            try {
+                await putCommands(rest, Routes.applicationGuildCommands(clientId, guildId), body, `test-guild ${guildId}`);
+            } catch (error) {
+                logger.error(`Could not register test commands in ${guildId}: ${error.message}`);
+            }
+        }
+        logger.info('Test mode: global commands were not changed');
+        return;
     }
 
-    logger.info(`Registering ${commandsToRegister.length} global commands...`);
-    await client.rest.put(`/applications/${clientId}/commands`, { body: commandsToRegister });
-    logger.info(`Successfully registered ${commandsToRegister.length} global commands`);
-    logger.info('Global commands may take up to an hour to appear in all servers on first deploy');
+    if (!enforcementConfig.mainGuildId) {
+        logger.error('MAIN_GUILD_ID is not set; no commands were registered (and the existing ones were left as they are)');
+        return;
+    }
+
+    await putCommands(rest, Routes.applicationGuildCommands(clientId, enforcementConfig.mainGuildId), mainCommands, 'main-guild');
+    await putCommands(rest, Routes.applicationCommands(clientId), [], 'global');
+
+    if (enforcementConfig.supportGuildId) {
+        try {
+            await putCommands(rest, Routes.applicationGuildCommands(clientId, enforcementConfig.supportGuildId), supportCommands, 'support-guild');
+        } catch (error) {
+            // 50001 Missing Access: the bot is not in that guild (or lacks applications.commands).
+            logger.error(`Could not register support-guild commands in ${enforcementConfig.supportGuildId}: ${error.message}`);
+        }
+    }
 }
 
 export async function registerCommands(client, options = {}) {
     const { clientId = null } = options;
 
     try {
-        const { commands, totalSubcommands } = collectCommandPayloads(client);
-        await registerGlobalCommands(client, clientId, commands, totalSubcommands);
+        const { sets, totalSubcommands } = collectCommandPayloads(client);
+        await registerCommandSets(client.rest, clientId, sets, totalSubcommands);
     } catch (error) {
         logger.error('Error registering commands:', error);
         throw error;
     }
 }
+
+export { collectCommandPayloads };
 
 export async function reloadCommand(client, commandName) {
     const command = client.commands.get(commandName);
@@ -288,7 +347,10 @@ export async function reloadCommand(client, commandName) {
         moduleUrl.searchParams.set('t', Date.now().toString());
 
         const newCommand = (await import(moduleUrl.href)).default;
-        
+        // Keep what the loader added, or the next reload has no filePath.
+        newCommand.category = command.category;
+        newCommand.filePath = command.filePath;
+
         client.commands.set(commandName, newCommand);
         
         logger.info(`Reloaded command: ${commandName}`);

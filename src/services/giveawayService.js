@@ -5,6 +5,8 @@ import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
 import { getColor, botConfig } from '../config/bot.js';
 import { getEndedGiveaways, markGiveawayEnded } from '../utils/database.js';
+import { deleteGiveaway, getGuildGiveaways, saveGiveaway } from '../utils/giveaways.js';
+import { Mutex } from '../utils/mutex.js';
 import { checkRateLimit, getRateLimitStatus } from '../utils/rateLimiter.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
 
@@ -340,98 +342,515 @@ export async function checkGiveaways(client) {
     logger.info(`Processing ${endedGiveaways.length} ended giveaways`);
 
     for (const giveawayRecord of endedGiveaways) {
-      try {
-        const { id: giveawayId, guild_id: guildId, message_id: messageId, data: giveawayData } = giveawayRecord;
-        const giveaway = typeof giveawayData === 'string' ? JSON.parse(giveawayData) : giveawayData;
+      // Same lock as the Join button (giveawayButtons.js).
+      await Mutex.runExclusive(`giveaway:${giveawayRecord.message_id}`, async () => {
+        try {
+          const { id: giveawayId, guild_id: guildId, message_id: messageId, data: giveawayData } = giveawayRecord;
+          // Re-read under the join lock: entries added since the query count, and a
+          // giveaway already ended by an overlapping run is skipped.
+          const fresh = (await getGuildGiveaways(client, guildId)).find((g) => String(g.messageId) === String(messageId));
+          if (fresh?.ended || fresh?.isEnded) return;
+          const giveaway = fresh || (typeof giveawayData === 'string' ? JSON.parse(giveawayData) : giveawayData);
 
-        const guild = client.guilds.cache.get(guildId);
-        if (!guild) {
-          logger.debug(`Guild ${guildId} not found, skipping giveaway ${messageId}`);
-          continue;
-        }
-
-        const channel = await guild.channels.fetch(giveaway.channelId).catch(() => null);
-        if (!channel) {
-          logger.debug(`Channel ${giveaway.channelId} not found for giveaway ${messageId}`);
-          continue;
-        }
-
-        const message = await channel.messages.fetch(messageId).catch(() => null);
-        if (!message) {
-          logger.debug(`Message ${messageId} not found for giveaway in channel ${giveaway.channelId}`);
-          continue;
-        }
-
-        const participants = giveaway.participants || [];
-        const winners = selectWinners(participants, giveaway.winnerCount || 1);
-
-        const winnerMentions = winners.length > 0
-          ? winners.map(id => `<@${id}>`).join(', ')
-          : 'No valid entries!';
-
-        const endedEmbed = createGiveawayEmbed(giveaway, 'ended', winners);
-
-        await message.edit({
-          embeds: [endedEmbed],
-          components: [createGiveawayButtons(true)]
-        });
-
-        giveaway.ended = true;
-        giveaway.isEnded = true;
-        giveaway.winnerIds = winners;
-        giveaway.endedAt = new Date().toISOString();
-
-        const markedSuccess = await markGiveawayEnded(client, giveawayId, giveaway);
-        if (!markedSuccess) {
-          logger.warn(`Failed to mark giveaway ${messageId} as ended in database`);
-        }
-
-        if (winners.length > 0) {
-          const winnerAnnouncement = `🎉 Congratulations ${winnerMentions}! You won the **${giveaway.prize || 'giveaway'}**! Please contact <@${giveaway.hostId}> to claim your prize.`;
-          const winnerPingMsg = await channel.send({ content: winnerAnnouncement });
-          giveaway.winnerPingMessageId = winnerPingMsg.id;
-          await markGiveawayEnded(client, giveawayId, giveaway);
-
-          try {
-            await logEvent({
-              client,
-              guildId,
-              eventType: EVENT_TYPES.GIVEAWAY_WINNER,
-              data: {
-                description: `Giveaway ended with ${winners.length} winner(s)`,
-                channelId: channel.id,
-                fields: [
-                  {
-                    name: '🎁 Prize',
-                    value: giveaway.prize || 'Mystery Prize!',
-                    inline: true
-                  },
-                  {
-                    name: '🏆 Winners',
-                    value: winners.map(id => `<@${id}>`).join(', '),
-                    inline: false
-                  },
-                  {
-                    name: '👥 Entries',
-                    value: participants.length.toString(),
-                    inline: true
-                  }
-                ]
-              }
-            });
-          } catch (error) {
-            logger.debug('Error logging giveaway winner:', error);
+          const guild = client.guilds.cache.get(guildId);
+          if (!guild) {
+            logger.debug(`Guild ${guildId} not found, skipping giveaway ${messageId}`);
+            return;
           }
-        } else {
-          await channel.send({ content: `The giveaway for **${giveaway.prize}** has ended with no valid entries.` });
-        }
 
-        logger.info(`Ended giveaway ${messageId} in guild ${guildId}`);
-      } catch (error) {
-        logger.error(`Error processing giveaway:`, error);
-      }
+          const channel = await guild.channels.fetch(giveaway.channelId).catch(() => null);
+          if (!channel) {
+            logger.debug(`Channel ${giveaway.channelId} not found for giveaway ${messageId}`);
+            return;
+          }
+
+          const message = await channel.messages.fetch(messageId).catch(() => null);
+          if (!message) {
+            logger.debug(`Message ${messageId} not found for giveaway in channel ${giveaway.channelId}`);
+            return;
+          }
+
+          const participants = giveaway.participants || [];
+          const winners = selectWinners(participants, giveaway.winnerCount || 1);
+
+          const winnerMentions = winners.length > 0
+            ? winners.map(id => `<@${id}>`).join(', ')
+            : 'No valid entries!';
+
+          const endedEmbed = createGiveawayEmbed(giveaway, 'ended', winners);
+
+          await message.edit({
+            embeds: [endedEmbed],
+            components: [createGiveawayButtons(true)]
+          });
+
+          giveaway.ended = true;
+          giveaway.isEnded = true;
+          giveaway.winnerIds = winners;
+          giveaway.endedAt = new Date().toISOString();
+          // The key-value fallback of markGiveawayEnded needs guildId on the record;
+          // without it the giveaway is never marked ended and gets re-ended every tick.
+          giveaway.guildId = giveaway.guildId || guildId;
+          giveaway.messageId = giveaway.messageId || messageId;
+
+          const markedSuccess = await markGiveawayEnded(client, giveawayId, giveaway);
+          if (!markedSuccess) {
+            logger.warn(`Failed to mark giveaway ${messageId} as ended in database`);
+          }
+
+          if (winners.length > 0) {
+            const winnerAnnouncement = `🎉 Congratulations ${winnerMentions}! You won the **${giveaway.prize || 'giveaway'}**! Please contact <@${giveaway.hostId}> to claim your prize.`;
+            const winnerPingMsg = await channel.send({ content: winnerAnnouncement });
+            giveaway.winnerPingMessageId = winnerPingMsg.id;
+            await markGiveawayEnded(client, giveawayId, giveaway);
+
+            try {
+              await logEvent({
+                client,
+                guildId,
+                eventType: EVENT_TYPES.GIVEAWAY_WINNER,
+                data: {
+                  description: `Giveaway ended with ${winners.length} winner(s)`,
+                  channelId: channel.id,
+                  fields: [
+                    {
+                      name: '🎁 Prize',
+                      value: giveaway.prize || 'Mystery Prize!',
+                      inline: true
+                    },
+                    {
+                      name: '🏆 Winners',
+                      value: winners.map(id => `<@${id}>`).join(', '),
+                      inline: false
+                    },
+                    {
+                      name: '👥 Entries',
+                      value: participants.length.toString(),
+                      inline: true
+                    }
+                  ]
+                }
+              });
+            } catch (error) {
+              logger.debug('Error logging giveaway winner:', error);
+            }
+          } else {
+            await channel.send({ content: `The giveaway for **${giveaway.prize}** has ended with no valid entries.` });
+          }
+
+          logger.info(`Ended giveaway ${messageId} in guild ${guildId}`);
+        } catch (error) {
+          logger.error(`Error processing giveaway:`, error);
+        }
+      });
     }
   } catch (error) {
     logger.error('Error checking giveaways:', error);
   }
+}
+
+// ── End now / reroll ──────────────────────────────────────────────────────────
+// Shared by /gend, /greroll and the web dashboard. Both run under the same
+// per-giveaway lock as the Join button and the scheduled end (checkGiveaways), and
+// re-read the giveaway inside it, so entries and a concurrent end aren't lost.
+
+function validateGiveawayMessageId(messageId) {
+  if (!messageId || !/^\d+$/.test(messageId)) {
+    throw new TitanBotError(
+      'Invalid message ID format',
+      ErrorTypes.VALIDATION,
+      'Please provide a valid message ID.',
+      { providedId: messageId }
+    );
+  }
+}
+
+async function findGiveaway(client, guildId, messageId) {
+  const giveaways = await getGuildGiveaways(client, guildId);
+  const giveaway = giveaways.find(g => g.messageId === messageId);
+  if (!giveaway) {
+    throw new TitanBotError(
+      `Giveaway not found: ${messageId}`,
+      ErrorTypes.VALIDATION,
+      'No giveaway was found with that message ID in the database.',
+      { messageId, guildId }
+    );
+  }
+  return giveaway;
+}
+
+async function fetchGiveawayChannel(client, channelId) {
+  const channel = await client.channels.fetch(channelId).catch(err => {
+    logger.warn(`Could not fetch channel ${channelId}:`, err.message);
+    return null;
+  });
+  return channel && channel.isTextBased() ? channel : null;
+}
+
+async function fetchGiveawayMessage(channel, messageId) {
+  return channel.messages.fetch(messageId).catch(err => {
+    logger.warn(`Could not fetch message ${messageId}:`, err.message);
+    return null;
+  });
+}
+
+/**
+ * Ends an active giveaway now: picks winners, saves, edits the giveaway message,
+ * announces the winners and logs GIVEAWAY_WINNER. Resolves
+ * { giveaway, winners, participantCount, channelId, messageFound }.
+ * Throws TitanBotError (userMessage) for a bad id, an unknown or already-ended
+ * giveaway, and a missing channel or message (the ended state is saved first).
+ */
+export async function endGiveawayNow(client, guildId, messageId, endedBy) {
+  validateGiveawayMessageId(messageId);
+
+  return Mutex.runExclusive(`giveaway:${messageId}`, async () => {
+    const giveaway = await findGiveaway(client, guildId, messageId);
+    const endResult = await endGiveaway(client, giveaway, guildId, endedBy);
+    const updatedGiveaway = endResult.giveaway;
+    const winners = endResult.winners;
+
+    const channel = await fetchGiveawayChannel(client, updatedGiveaway.channelId);
+    if (!channel) {
+      await saveGiveaway(client, guildId, updatedGiveaway);
+      throw new TitanBotError(
+        `Channel not found: ${updatedGiveaway.channelId}`,
+        ErrorTypes.VALIDATION,
+        'Could not find the channel where the giveaway was hosted. The giveaway state has been updated.',
+        { channelId: updatedGiveaway.channelId, messageId }
+      );
+    }
+
+    const message = await fetchGiveawayMessage(channel, messageId);
+    if (!message) {
+      await saveGiveaway(client, guildId, updatedGiveaway);
+      throw new TitanBotError(
+        `Message not found: ${messageId}`,
+        ErrorTypes.VALIDATION,
+        'Could not find the giveaway message. The giveaway state has been updated.',
+        { messageId, channelId: updatedGiveaway.channelId }
+      );
+    }
+
+    await saveGiveaway(client, guildId, updatedGiveaway);
+
+    await message.edit({
+      content: '🎉 **GIVEAWAY ENDED** 🎉',
+      embeds: [createGiveawayEmbed(updatedGiveaway, 'ended', winners)],
+      components: [createGiveawayButtons(true)],
+    });
+
+    if (winners.length > 0) {
+      const winnerMentions = winners.map((id) => `<@${id}>`).join(',');
+      const winnerPingMsg = await channel.send({
+        content: `🎉 CONGRATULATIONS ${winnerMentions}! You won the **${updatedGiveaway.prize}** giveaway! Please contact the host <@${updatedGiveaway.hostId}> to claim your prize.`,
+      });
+      updatedGiveaway.winnerPingMessageId = winnerPingMsg.id;
+      await saveGiveaway(client, guildId, updatedGiveaway);
+
+      logger.info(`Giveaway ended with ${winners.length} winner(s): ${messageId}`);
+
+      try {
+        await logEvent({
+          client,
+          guildId,
+          eventType: EVENT_TYPES.GIVEAWAY_WINNER,
+          data: {
+            description: `Giveaway ended with ${winners.length} winner(s)`,
+            channelId: channel.id,
+            userId: endedBy,
+            fields: [
+              { name: 'Prize', value: updatedGiveaway.prize || 'Mystery Prize!', inline: true },
+              { name: 'Winners', value: winnerMentions, inline: false },
+              { name: 'Entries', value: endResult.participantCount.toString(), inline: true },
+            ],
+          },
+        });
+      } catch (logError) {
+        logger.debug('Error logging giveaway winner event:', logError);
+      }
+    } else {
+      await channel.send({
+        content: `The giveaway for **${updatedGiveaway.prize}** has ended with no valid entries.`,
+      });
+      logger.info(`Giveaway ended with no winners: ${messageId}`);
+    }
+
+    return {
+      giveaway: updatedGiveaway,
+      winners,
+      participantCount: endResult.participantCount,
+      channelId: channel.id,
+      messageFound: true,
+    };
+  });
+}
+
+/**
+ * Picks new winners for an ended giveaway, saves them, updates the giveaway message
+ * (when found) and the winner ping, and logs GIVEAWAY_REROLL. Resolves
+ * { giveaway, winners, participantCount, channelId, messageFound }: channelId is null
+ * when the channel is gone (winners saved, nothing announced); messageFound is false
+ * when only the giveaway message is gone (winners announced in the channel).
+ * Throws TitanBotError (userMessage) for a bad id, an unknown or still-active
+ * giveaway, and too few entries.
+ */
+export async function rerollGiveaway(client, guildId, messageId, rerolledBy) {
+  validateGiveawayMessageId(messageId);
+
+  return Mutex.runExclusive(`giveaway:${messageId}`, async () => {
+    const giveaway = await findGiveaway(client, guildId, messageId);
+
+    if (!giveaway.isEnded && !giveaway.ended) {
+      throw new TitanBotError(
+        `Giveaway still active: ${messageId}`,
+        ErrorTypes.VALIDATION,
+        'This giveaway is still active. Please use `/giveaway end` to end it first.',
+        { messageId, status: 'active' }
+      );
+    }
+
+    const participants = giveaway.participants || [];
+    if (participants.length < giveaway.winnerCount) {
+      throw new TitanBotError(
+        `Insufficient participants for reroll: ${participants.length} < ${giveaway.winnerCount}`,
+        ErrorTypes.VALIDATION,
+        'Not enough entries to pick the required number of winners.',
+        { participantsCount: participants.length, winnersNeeded: giveaway.winnerCount }
+      );
+    }
+
+    const newWinners = selectWinners(participants, giveaway.winnerCount);
+    const updatedGiveaway = {
+      ...giveaway,
+      winnerIds: newWinners,
+      rerolledAt: new Date().toISOString(),
+      rerolledBy,
+    };
+    const result = (channelId, messageFound) => ({
+      giveaway: updatedGiveaway,
+      winners: newWinners,
+      participantCount: participants.length,
+      channelId,
+      messageFound,
+    });
+
+    const channel = await fetchGiveawayChannel(client, giveaway.channelId);
+    if (!channel) {
+      await saveGiveaway(client, guildId, updatedGiveaway);
+      logger.warn(`Could not find channel for giveaway ${messageId}, but saved new winners to database`);
+      return result(null, false);
+    }
+
+    const message = await fetchGiveawayMessage(channel, messageId);
+    await saveGiveaway(client, guildId, updatedGiveaway);
+
+    if (message) {
+      await message.edit({
+        content: '🔄 **GIVEAWAY REROLLED** 🔄',
+        embeds: [createGiveawayEmbed(updatedGiveaway, 'reroll', newWinners)],
+        components: [createGiveawayButtons(true)],
+      });
+    }
+
+    const winnerMentions = newWinners.map((id) => `<@${id}>`).join(',');
+    const pingContent = message
+      ? `🔄 **REROLL WINNERS** 🔄 CONGRATULATIONS ${winnerMentions}! You are the new winner(s) for the **${giveaway.prize}** giveaway! Please contact the host <@${giveaway.hostId}> to claim your prize.`
+      : `🔄 **GIVEAWAY REROLL** 🔄 New winners for **${giveaway.prize}**: ${winnerMentions}!`;
+
+    const existingPingMsg = giveaway.winnerPingMessageId
+      ? await channel.messages.fetch(giveaway.winnerPingMessageId).catch(() => null)
+      : null;
+    if (existingPingMsg) {
+      await existingPingMsg.edit({ content: pingContent });
+    } else {
+      const newPingMsg = await channel.send({ content: pingContent });
+      updatedGiveaway.winnerPingMessageId = newPingMsg.id;
+      await saveGiveaway(client, guildId, updatedGiveaway);
+    }
+
+    logger.info(message
+      ? `Giveaway successfully rerolled: ${messageId} with ${newWinners.length} new winners`
+      : `Giveaway rerolled (message not found, but announced): ${messageId}`);
+
+    try {
+      await logEvent({
+        client,
+        guildId,
+        eventType: EVENT_TYPES.GIVEAWAY_REROLL,
+        data: {
+          description: `Giveaway rerolled: ${giveaway.prize}`,
+          channelId: giveaway.channelId,
+          userId: rerolledBy,
+          fields: [
+            { name: 'Prize', value: giveaway.prize || 'Mystery Prize!', inline: true },
+            { name: 'New Winners', value: winnerMentions, inline: false },
+            { name: 'Total Entries', value: participants.length.toString(), inline: true },
+          ],
+        },
+      });
+    } catch (logError) {
+      logger.debug('Error logging giveaway reroll event:', logError);
+    }
+
+    return result(channel.id, Boolean(message));
+  });
+}
+
+// ── Create / delete ───────────────────────────────────────────────────────────
+// Shared by /giveaway create, /giveaway delete and the web dashboard.
+
+const GIVEAWAY_CHANNEL_PERMISSIONS = ['ViewChannel', 'SendMessages', 'EmbedLinks'];
+
+/**
+ * Starts a giveaway: validates the duration ("1h", "30m", …), prize and winner count,
+ * checks the bot can post in the channel, posts the giveaway message, saves it and
+ * logs GIVEAWAY_CREATE. Resolves { giveaway, message, durationMs, saved }.
+ * Throws TitanBotError (userMessage) for bad input or a channel the bot can't use.
+ */
+export async function createGiveaway(client, guild, { channel, duration, winnerCount, prize, hostId }) {
+  const durationMs = parseDuration(duration);
+  validateWinnerCount(winnerCount);
+  const prizeName = validatePrize(prize);
+
+  if (!channel || typeof channel.isTextBased !== 'function' || !channel.isTextBased()) {
+    throw new TitanBotError(
+      'Target channel is not text-based',
+      ErrorTypes.VALIDATION,
+      'The channel must be a text channel.',
+      { channelId: channel?.id, channelType: channel?.type }
+    );
+  }
+  const me = guild?.members?.me;
+  const granted = me && typeof channel.permissionsFor === 'function' ? channel.permissionsFor(me) : null;
+  if (granted && !granted.has(GIVEAWAY_CHANNEL_PERMISSIONS)) {
+    throw new TitanBotError(
+      `Missing permissions in ${channel.id}`,
+      ErrorTypes.PERMISSION,
+      `I need View Channel, Send Messages and Embed Links in <#${channel.id}> to post the giveaway.`,
+      { channelId: channel.id, expected: true }
+    );
+  }
+
+  const endTime = Date.now() + durationMs;
+  const giveaway = {
+    messageId: 'placeholder',
+    channelId: channel.id,
+    guildId: guild.id,
+    prize: prizeName,
+    hostId,
+    endTime,
+    endsAt: endTime,
+    winnerCount,
+    participants: [],
+    isEnded: false,
+    ended: false,
+    createdAt: new Date().toISOString(),
+  };
+
+  const message = await channel.send({
+    content: '🎉 **NEW GIVEAWAY** 🎉',
+    embeds: [createGiveawayEmbed(giveaway, 'active')],
+    components: [createGiveawayButtons(false)],
+  });
+
+  giveaway.messageId = message.id;
+  const saved = await saveGiveaway(client, guild.id, giveaway);
+  if (!saved) logger.warn(`Failed to save giveaway to database: ${message.id}`);
+
+  try {
+    await logEvent({
+      client,
+      guildId: guild.id,
+      eventType: EVENT_TYPES.GIVEAWAY_CREATE,
+      data: {
+        description: `Giveaway created: ${prizeName}`,
+        channelId: channel.id,
+        userId: hostId,
+        fields: [
+          { name: 'Prize', value: prizeName, inline: true },
+          { name: 'Winners', value: String(winnerCount), inline: true },
+          { name: 'Duration', value: String(duration), inline: true },
+          { name: 'Channel', value: `<#${channel.id}>`, inline: true },
+        ],
+      },
+    });
+  } catch (logError) {
+    logger.debug('Error logging giveaway creation event:', logError);
+  }
+
+  logger.info(`Giveaway created: ${message.id} in ${channel.name}`);
+  return { giveaway, message, durationMs, saved: Boolean(saved) };
+}
+
+/**
+ * Deletes a giveaway: its message (in its channel, else searched in the guild's text
+ * channels), its database entry, and logs GIVEAWAY_DELETE. Resolves
+ * { giveaway, deletedMessage, channelName }. Throws TitanBotError (userMessage) for a
+ * bad id, an unknown giveaway or a failed database delete.
+ */
+export async function deleteGiveawayNow(client, guild, messageId, deletedBy) {
+  validateGiveawayMessageId(messageId);
+  const guildId = guild.id;
+
+  return Mutex.runExclusive(`giveaway:${messageId}`, async () => {
+    const giveaway = await findGiveaway(client, guildId, messageId);
+    let deletedMessage = false;
+    let channelName = 'Unknown Channel';
+
+    const tryDeleteFromChannel = async (channel) => {
+      if (!channel || !channel.isTextBased?.() || !channel.messages?.fetch) return false;
+      const message = await channel.messages.fetch(messageId).catch(() => null);
+      if (!message) return false;
+      await message.delete();
+      channelName = channel.name || 'unknown-channel';
+      deletedMessage = true;
+      return true;
+    };
+
+    try {
+      const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
+      if (!(await tryDeleteFromChannel(channel)) && guild.channels?.cache) {
+        const others = guild.channels.cache.filter((ch) => ch.id !== giveaway.channelId && ch.isTextBased?.() && ch.messages?.fetch);
+        for (const [, other] of others) {
+          if (await tryDeleteFromChannel(other).catch(() => false)) break;
+        }
+      }
+    } catch (error) {
+      logger.warn(`Could not delete giveaway message: ${error.message}`);
+    }
+
+    const removed = await deleteGiveaway(client, guildId, messageId);
+    const stillThere = (await getGuildGiveaways(client, guildId)).some((g) => g.messageId === messageId);
+    if (!removed || stillThere) {
+      throw new TitanBotError(
+        `Failed to delete giveaway from database: ${messageId}`,
+        ErrorTypes.UNKNOWN,
+        'The giveaway could not be removed from the database. Please try again.',
+        { messageId, guildId }
+      );
+    }
+
+    try {
+      await logEvent({
+        client,
+        guildId,
+        eventType: EVENT_TYPES.GIVEAWAY_DELETE,
+        data: {
+          description: `Giveaway deleted: ${giveaway.prize}`,
+          channelId: giveaway.channelId,
+          userId: deletedBy,
+          fields: [
+            { name: 'Prize', value: giveaway.prize || 'Unknown', inline: true },
+            { name: 'Entries', value: String(giveaway.participants?.length || 0), inline: true },
+          ],
+        },
+      });
+    } catch (logError) {
+      logger.debug('Error logging giveaway deletion:', logError);
+    }
+
+    logger.info(`Giveaway deleted: ${messageId} in ${channelName}`);
+    return { giveaway, deletedMessage, channelName };
+  });
 }

@@ -2,6 +2,22 @@ import { pgDb } from '../postgresDatabase.js';
 import { MemoryStorage } from '../memoryStorage.js';
 import { logger } from '../logger.js';
 import { validateGuildConfigOrThrow } from '../schemas.js';
+import { Mutex } from '../mutex.js';
+
+const GUILD_CONFIG_KEY = /^guild:[^:]+:config$/;
+
+// Production (NODE_ENV=production, or any Replit deployment) must not silently run on
+// in-memory storage; ALLOW_MEMORY_DB=true is the explicit opt-out.
+function memoryFallbackAllowed() {
+    const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.REPLIT_DEPLOYMENT);
+    return !isProduction || process.env.ALLOW_MEMORY_DB === 'true';
+}
+
+function validateIfGuildConfig(key, value) {
+    if (typeof key === 'string' && GUILD_CONFIG_KEY.test(key)) {
+        validateGuildConfigOrThrow(value, { guildId: key.split(':')[1], errorCode: 'VALIDATION_FAILED' });
+    }
+}
 
 class DatabaseWrapper {
     constructor() {
@@ -46,6 +62,15 @@ class DatabaseWrapper {
             }
         }
 
+        if (!memoryFallbackAllowed()) {
+            const requiredError = new Error(
+                'PostgreSQL is unavailable and in-memory storage is not allowed in production ' +
+                '(data would be lost on restart). Fix POSTGRES_URL, or set ALLOW_MEMORY_DB=true to accept that.',
+            );
+            requiredError.code = 'DATABASE_REQUIRED';
+            throw requiredError;
+        }
+
         this.db = new MemoryStorage();
         this.useFallback = true;
         this.connectionType = 'memory';
@@ -61,15 +86,36 @@ class DatabaseWrapper {
             logger.debug(`[DEGRADED] Writing to memory: ${key}`);
         }
 
-        if (typeof key === 'string' && /^guild:[^:]+:config$/.test(key)) {
-            const guildId = key.split(':')[1];
-            validateGuildConfigOrThrow(value, {
-                guildId,
-                errorCode: 'VALIDATION_FAILED',
-            });
-        }
-
+        validateIfGuildConfig(key, value);
         return this.db.set(key, value, ttl);
+    }
+
+    /**
+     * Atomic read-modify-write: mutator(current) returns the new value, which is
+     * saved and returned. On Postgres the row is locked for the whole step; a
+     * failure anywhere leaves the stored value as it was.
+     */
+    async update(key, mutator, defaultValue = null) {
+        const checked = async (current) => {
+            const next = await mutator(current);
+            validateIfGuildConfig(key, next);
+            return next;
+        };
+        if (typeof this.db.update === 'function') {
+            return this.db.update(key, checked, defaultValue);
+        }
+        // In-memory fallback: serialize per key so concurrent updates don't interleave.
+        return Mutex.runExclusive(`db-update:${key}`, async () => {
+            const current = await this.db.get(key, null);
+            const next = await checked(current ?? structuredClone(defaultValue));
+            await this.db.set(key, next);
+            return next;
+        });
+    }
+
+    /** Postgres-only row writes (birthdays, giveaways); null when running on memory. */
+    rows() {
+        return this.useFallback ? null : this.db;
     }
 
     async get(key, defaultValue = null) {
@@ -155,7 +201,7 @@ export async function initializeDatabase() {
     } catch (error) {
         logger.error('❌ Database Initialization Error:', error);
 
-        if (error.code === 'SCHEMA_VERSION_MISMATCH') {
+        if (error.code === 'SCHEMA_VERSION_MISMATCH' || error.code === 'DATABASE_REQUIRED') {
             throw error;
         }
 
@@ -163,32 +209,19 @@ export async function initializeDatabase() {
     }
 }
 
+// These pass database errors on: a failed read must not look like "no data",
+// and a failed write must not look saved.
 export async function getFromDb(key, defaultValue = null) {
-    try {
-        const value = await db.get(key);
-        return value === null ? defaultValue : value;
-    } catch (error) {
-        logger.error(`Error getting value for key ${key}:`, error);
-        return defaultValue;
-    }
+    const value = await db.get(key);
+    return value === null ? defaultValue : value;
 }
 
 export async function setInDb(key, value, ttl = null) {
-    try {
-        await db.set(key, value, ttl);
-        return true;
-    } catch (error) {
-        logger.error(`Error setting value for key ${key}:`, error);
-        return false;
-    }
+    await db.set(key, value, ttl);
+    return true;
 }
 
 export async function deleteFromDb(key) {
-    try {
-        await db.delete(key);
-        return true;
-    } catch (error) {
-        logger.error(`Error deleting key ${key}:`, error);
-        return false;
-    }
+    await db.delete(key);
+    return true;
 }

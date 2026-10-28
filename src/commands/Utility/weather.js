@@ -30,10 +30,15 @@ export default {
 
         const city = interaction.options.getString("city");
 
-        const geoResponse = await fetch(
-            `${GEOCODING_URL}?name=${encodeURIComponent(city)}`,
-        );
-        const geoData = await geoResponse.json();
+        let geoData;
+        let weatherData;
+        try {
+            geoData = await fetchJson(`${GEOCODING_URL}?name=${encodeURIComponent(city)}`);
+        } catch (error) {
+            logger.warn('Weather geocoding request failed', { error: error.message, city });
+            await replyUserError(interaction, { type: ErrorTypes.NETWORK, message: 'The weather service is not responding right now. Please try again later.' });
+            return;
+        }
 
         if (!geoData.results || geoData.results.length === 0) {
             logger.info(`Weather command - city not found`, {
@@ -48,10 +53,15 @@ export default {
         const { latitude, longitude, name, country } = geoData.results[0];
         const cityDisplay = name;
 
-        const weatherResponse = await fetch(
-            `${WEATHER_URL}?latitude=${latitude}&longitude=${longitude}&current_weather=true`,
-        );
-        const weatherData = await weatherResponse.json();
+        try {
+            weatherData = await fetchJson(
+                `${WEATHER_URL}?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code`,
+            );
+        } catch (error) {
+            logger.warn('Weather forecast request failed', { error: error.message, city });
+            await replyUserError(interaction, { type: ErrorTypes.NETWORK, message: 'The weather service is not responding right now. Please try again later.' });
+            return;
+        }
 
         if (weatherData.error) {
             logger.error(`Weather API error`, {
@@ -65,14 +75,16 @@ export default {
         }
 
         const current = weatherData.current || weatherData.current_weather || {};
-        const temperature = current.temperature != null ? Math.round(current.temperature) : "N/A";
+        const rawTemperature = current.temperature_2m ?? current.temperature;
+        const rawWind = current.wind_speed_10m ?? current.windspeed;
+        const temperature = rawTemperature != null ? Math.round(rawTemperature) : "N/A";
         const humidity = current.relativehumidity ?? current.relative_humidity_2m ?? "N/A";
-        const windSpeed = current.windspeed != null ? Math.round(current.windspeed) : "N/A";
+        const windSpeed = rawWind != null ? Math.round(rawWind) : "N/A";
         const weatherCode = current.weathercode ?? current.weather_code ?? null;
 
         const condition = getWeatherDescription(weatherCode);
 
-        const embed = createEmbed({ title: `Weather in ${cityDisplay}, ${country}`, description: condition.description })
+        const embed = createEmbed({ title: `Weather in ${cityDisplay}${country ? `, ${country}` : ''}`, description: condition.description })
             .addFields(
                 {
                     name: "Temperature",
@@ -104,6 +116,14 @@ export default {
         });
     },
 };
+
+async function fetchJson(url) {
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
+}
 
 function getWeatherDescription(code) {
     if (code >= 0 && code <= 3) {

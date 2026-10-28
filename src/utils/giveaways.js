@@ -3,7 +3,8 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { logger } from './logger.js';
 import { TitanBotError, ErrorTypes } from './errorHandler.js';
-import { unwrapReplitData } from './database.js';
+import { unwrapReplitData, upsertGiveawayRow, deleteGiveawayRow } from './database.js';
+import { Mutex } from './mutex.js';
 import { 
     createGiveawayEmbed as createGiveawayEmbedService,
     createGiveawayButtons as createGiveawayButtonsService,
@@ -29,8 +30,8 @@ function arrayToGiveawayMap(giveaways) {
 export async function getGuildGiveaways(client, guildId) {
     try {
         if (!client.db) {
-            logger.warn('Database not available for getGuildGiveaways');
-            return [];
+            throw new TitanBotError('Database not available for getGuildGiveaways', ErrorTypes.DATABASE,
+                'The database is not responding right now. Please try again in a moment.');
         }
 
         const key = giveawayKey(guildId);
@@ -43,15 +44,15 @@ export async function getGuildGiveaways(client, guildId) {
         return Array.isArray(unwrappedGiveaways) ? unwrappedGiveaways : [];
     } catch (error) {
         logger.error(`Error getting giveaways for guild ${guildId}:`, error);
-        return [];
+        throw error;
     }
 }
 
 export async function saveGiveaway(client, guildId, giveawayData) {
     try {
         if (!client.db) {
-            logger.warn('Database not available for saveGiveaway');
-            return false;
+            throw new TitanBotError('Database not available for saveGiveaway', ErrorTypes.DATABASE,
+                'The database is not responding right now. Please try again in a moment.');
         }
 
         if (!giveawayData || !giveawayData.messageId) {
@@ -63,63 +64,55 @@ export async function saveGiveaway(client, guildId, giveawayData) {
             );
         }
 
-        const key = giveawayKey(guildId);
-        const giveaways = await getGuildGiveaways(client, guildId);
-
-        const giveawayMap = arrayToGiveawayMap(giveaways);
-        giveawayMap[giveawayData.messageId] = giveawayData;
-        
-        await client.db.set(key, giveawayMap);
+        if (await upsertGiveawayRow(client, guildId, giveawayData) === null) {
+            // Key-value store: the whole guild map is rewritten, so serialize per guild.
+            await Mutex.runExclusive(`giveaways:${guildId}`, async () => {
+                const giveawayMap = arrayToGiveawayMap(await getGuildGiveaways(client, guildId));
+                giveawayMap[giveawayData.messageId] = giveawayData;
+                await client.db.set(giveawayKey(guildId), giveawayMap);
+            });
+        }
         
         logger.debug(`Saved giveaway ${giveawayData.messageId} in guild ${guildId}`);
         return true;
     } catch (error) {
         logger.error(`Error saving giveaway in guild ${guildId}:`, error);
-        if (error instanceof TitanBotError) {
-            throw error;
-        }
-        return false;
+        throw error;
     }
 }
 
 export async function deleteGiveaway(client, guildId, messageId) {
-    try {
-        if (!client.db) {
-            logger.warn('Database not available for deleteGiveaway');
-            return false;
-        }
+    if (!client.db) {
+        throw new TitanBotError('Database not available for deleteGiveaway', ErrorTypes.DATABASE,
+            'The database is not responding right now. Please try again in a moment.');
+    }
 
-        if (!messageId) {
-            throw new TitanBotError(
-                'Missing messageId parameter',
-                ErrorTypes.VALIDATION,
-                'Cannot delete giveaway without a message ID.',
-                { messageId }
-            );
-        }
+    if (!messageId) {
+        throw new TitanBotError(
+            'Missing messageId parameter',
+            ErrorTypes.VALIDATION,
+            'Cannot delete giveaway without a message ID.',
+            { messageId }
+        );
+    }
 
-        const key = giveawayKey(guildId);
-        const giveaways = await getGuildGiveaways(client, guildId);
+    const deletedRow = await deleteGiveawayRow(client, guildId, messageId);
+    if (deletedRow !== null) {
+        logger.debug(`Deleted giveaway ${messageId} from guild ${guildId}: ${deletedRow}`);
+        return deletedRow;
+    }
 
-        const giveawayMap = arrayToGiveawayMap(giveaways);
-        
+    // Key-value store: the whole guild map is rewritten, so serialize per guild.
+    return Mutex.runExclusive(`giveaways:${guildId}`, async () => {
+        const giveawayMap = arrayToGiveawayMap(await getGuildGiveaways(client, guildId));
         if (!giveawayMap[messageId]) {
             logger.debug(`Giveaway not found for deletion: ${messageId} in guild ${guildId}`);
             return false;
         }
-        
         delete giveawayMap[messageId];
-        await client.db.set(key, giveawayMap);
-        
-        logger.debug(`Deleted giveaway ${messageId} from guild ${guildId}`);
+        await client.db.set(giveawayKey(guildId), giveawayMap);
         return true;
-    } catch (error) {
-        logger.error(`Error deleting giveaway ${messageId} in guild ${guildId}:`, error);
-        if (error instanceof TitanBotError) {
-            throw error;
-        }
-        return false;
-    }
+    });
 }
 
 export function createGiveawayEmbed(giveaway, status, winners = []) {

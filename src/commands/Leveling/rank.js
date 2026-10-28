@@ -4,6 +4,8 @@ import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { getUserLevelData, getLevelingConfig, getXpForLevel } from '../../services/leveling/leveling.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { hasAdministrator } from '../../utils/commandGate.js';
+import { isBotOwner } from '../../config/bot.js';
 export default {
   data: new SlashCommandBuilder()
     .setName('rank')
@@ -34,6 +36,16 @@ export default {
     }
 
     const targetUser = interaction.options.getUser('user') || interaction.user;
+    // Everyone may check their own rank; other members' ranks are admin-only (commandAccess.js).
+    if (targetUser.id !== interaction.user.id
+      && !isBotOwner(interaction.user.id)
+      && !hasAdministrator({ guild: interaction.guild, userId: interaction.user.id, permissions: interaction.memberPermissions })) {
+      throw new TitanBotError(
+        `Non-admin ${interaction.user.id} tried to view rank of ${targetUser.id}`,
+        ErrorTypes.PERMISSION,
+        'Only admins can check another member\'s rank. Use `/rank` without a user to see your own.'
+      );
+    }
     const member = await interaction.guild.members
       .fetch(targetUser.id)
       .catch(() => null);
@@ -54,7 +66,8 @@ export default {
       totalXp: userData?.totalXp ?? 0
     };
 
-    const xpNeeded = getXpForLevel(safeUserData.level + 1);
+    // addXp levels a user up once xp reaches getXpForLevel(currentLevel).
+    const xpNeeded = getXpForLevel(safeUserData.level);
     const progress = xpNeeded > 0 ? Math.floor((safeUserData.xp / xpNeeded) * 100) : 0;
     const progressBar = createProgressBar(progress, 20);
 

@@ -3,10 +3,20 @@ import { getColor, botConfig } from '../config/bot.js';
 import { getGuildConfig } from '../services/config/guildConfig.js';
 import { getWelcomeConfig } from '../utils/database.js';
 import { formatWelcomeMessage } from '../utils/welcome.js';
+import { resolveWelcomeImageUrl } from '../utils/welcomeImageStore.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { getServerCounters, updateCounter } from '../services/serverstatsService.js';
 import { setBirthday as dbSetBirthday } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
+import { reapplyMuteOnJoin } from '../services/enforcement/enforcementService.js';
+import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService.js';
+import { syncWarnRolesQuietly } from '../services/enforcement/warnRoleService.js';
+import { noteGateKick, recordJoin } from '../services/automod/raidService.js';
+import { checkJoinGate } from '../services/automod/joinGate.js';
+import { checkImpersonation } from '../services/automod/memberChecks.js';
+import { startProbationOnJoin } from '../services/automod/probationService.js';
+import { enforcementConfig } from '../config/enforcement.js';
+import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 
 export default {
   name: Events.GuildMemberAdd,
@@ -15,6 +25,31 @@ export default {
   async execute(member) {
     try {
         const { guild, user } = member;
+
+        // Leaving and rejoining must not shake off an active mute; runs first so
+        // nothing later in the join pipeline can skip it.
+        if (isEnforcementDbAvailable()) {
+            await reapplyMuteOnJoin(member).catch((error) => {
+                logger.warn(`Could not check mute state for ${member.id}: ${error.message}`);
+            });
+            // Someone banned from the main server who joins the support server gets the banned role.
+            if (guild.id === enforcementConfig.supportGuildId) {
+                await syncBannedRoleQuietly(member.client, member.id);
+            }
+            // Rejoining the main server (e.g. after a temporary ban) restores the warning role.
+            if (guild.id === enforcementConfig.mainGuildId) {
+                await syncWarnRolesQuietly(guild, member.id);
+                await recordJoin(member).catch((error) => logger.warn(`Raid tracking failed for ${member.id}: ${error.message}`));
+                // Join gate (/automod joingate): a kicked member skips the rest of the pipeline.
+                const gate = await checkJoinGate(member, {
+                    onKick: (userId) => noteGateKick(guild.id, userId).catch((error) => logger.warn(`Could not note join gate kick: ${error.message}`)),
+                });
+                if (gate === 'kicked') return;
+                await checkImpersonation(member);
+                // Back after a ban that ended recently: automod probation.
+                await startProbationOnJoin(member).catch((error) => logger.warn(`Probation check failed for ${member.id}: ${error.message}`));
+            }
+        }
         
         const config = await getGuildConfig(member.client, guild.id);
         
@@ -22,7 +57,9 @@ export default {
         
         const welcomeChannelId = welcomeConfig?.channelId;
 
-        if (welcomeConfig?.enabled && welcomeChannelId) {
+        // A failed welcome send (bad image URL, perms changed mid-send, ...) must not
+        // abort auto-role and the rest of the join pipeline below.
+        if (welcomeConfig?.enabled && welcomeChannelId) try {
             const channel = guild.channels.cache.get(welcomeChannelId);
             const me = guild.members.me;
             const permissions = channel?.isTextBased?.() && me ? channel.permissionsFor(me) : null;
@@ -49,7 +86,7 @@ export default {
 
                 if (!canEmbed) {
                     await channel.send({
-                        content: messageContent || welcomeMessage
+                        content: messageContent ? `${messageContent} ${welcomeMessage}` : welcomeMessage
                     });
                 } else {
                     const embed = new EmbedBuilder()
@@ -65,7 +102,7 @@ export default {
                         .setFooter({ text: embedFooter });
                     
                     if (welcomeConfig.welcomeImage) {
-                        embed.setImage(welcomeConfig.welcomeImage);
+                        embed.setImage(await resolveWelcomeImageUrl(member.client, welcomeConfig.welcomeImage, welcomeConfig.welcomeImageRef, { guildId: guild.id, label: 'welcome' }));
                     } else if (welcomeConfig.welcomeEmbed?.image?.url) {
                         embed.setImage(welcomeConfig.welcomeEmbed.image.url);
                     }
@@ -76,6 +113,8 @@ export default {
                     });
                 }
             }
+        } catch (error) {
+            logger.warn(`Could not send welcome message in guild ${guild.id}: ${error.message}`);
         }
         
         if (welcomeConfig?.roleIds && welcomeConfig.roleIds.length > 0) {
@@ -143,8 +182,11 @@ export default {
             if (backup[user.id]) {
                 const { month, day } = backup[user.id];
                 await dbSetBirthday(member.client, guild.id, user.id, month, day);
-                delete backup[user.id];
-                await member.client.db.set(backupKey, backup);
+                await member.client.db.update(backupKey, (current) => {
+                    const next = { ...current };
+                    delete next[user.id];
+                    return next;
+                }, {});
                 logger.debug(`Birthday restored for user ${user.id} in guild ${guild.id}`);
             }
         } catch (error) {

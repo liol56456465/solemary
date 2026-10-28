@@ -1,20 +1,29 @@
 import { Events } from 'discord.js';
 import { logger } from '../utils/logger.js';
+import { moderateMessage } from '../services/automod/automodService.js';
+import { noteStaffMessage } from '../services/staffActivityService.js';
+import { trackChannelActivity } from '../services/automod/autoSlowmode.js';
 import { getLevelingConfig, getUserLevelData } from '../services/leveling/leveling.js';
 import { addXp } from '../services/leveling/xpSystem.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { parsePrefixCommand } from '../utils/prefixParser.js';
 import { supportsPrefixExecution, executePrefixCommand, resolvePrefixAccessKey } from '../utils/messageAdapter.js';
-import { resolveCommandAlias, resolveSubcommandAlias } from '../config/commands/commandAliases.js';
+import { resolveCommandAliasWithArgs, resolveSubcommandAlias } from '../config/commands/commandAliases.js';
 import { getPrefixRestriction } from '../config/commands/prefixRestrictions.js';
 import { getGuildConfig } from '../services/config/guildConfig.js';
 import { getCommandPrefix, getBotMessage, isBotOwner, isCommandCategoryEnabled, isMaintenanceMode } from '../config/bot.js';
 import { enforceAbuseProtection, formatCooldownDuration } from '../utils/abuseProtection.js';
 import { createEmbed } from '../utils/embeds.js';
 import { isCommandEnabled } from '../services/commandAccessService.js';
+import { checkCommandAccess } from '../utils/commandGate.js';
+import { handleModmailDm, handleModmailStaffMessage, isModmailStaff, modmailUserId } from '../services/modmailService.js';
+import { enforcementConfig } from '../config/enforcement.js';
+import { enforceNoContact } from '../services/enforcement/noContactService.js';
+import { noteStickyActivity } from '../services/community/stickyService.js';
+import { respondToTags } from '../services/community/tagService.js';
 import {
   getCountingGameConfig,
-  saveCountingGameConfig,
+  resetCountingGame,
   isValidCountingMessage,
   recordCorrectCount,
 } from '../services/countingGameService.js';
@@ -26,7 +35,20 @@ export default {
   name: Events.MessageCreate,
   async execute(message, client) {
     try {
-      if (message.author.bot || !message.guild) return;
+      if (message.author.bot) return;
+      if (!message.guild) {
+        await handleModmailDm(message, client);
+        return;
+      }
+
+      // Automod runs first; a removed message gets no commands, counting or XP.
+      if (await moderateMessage(message)) return;
+      // No-contact orders: in-memory check; a removed message goes no further.
+      if (await enforceNoContact(message)) return;
+      await relayModmailStaffMessage(message, client);
+      noteStaffMessage(message);
+      trackChannelActivity(message).catch((error) => logger.warn(`Auto slowmode tracking failed: ${error.message}`));
+      noteStickyActivity(message);
 
       logger.debug(`Message received from ${message.author.tag}: ${message.content}`);
 
@@ -35,7 +57,8 @@ export default {
         return;
       }
 
-      await handlePrefixCommand(message, client);
+      // Tag auto-responses only for messages that are not prefix commands.
+      if (await handlePrefixCommand(message, client) === false) await respondToTags(message);
 
       await handleLeveling(message, client);
     } catch (error) {
@@ -44,6 +67,18 @@ export default {
   }
 };
 
+// Staff messages in a main-server modmail channel go to the member by DM.
+async function relayModmailStaffMessage(message, client) {
+  if (message.guild.id !== enforcementConfig.mainGuildId || !modmailUserId(message.channel)) return;
+  try {
+    const guildConfig = await getGuildConfig(client, message.guild.id);
+    if (!isModmailStaff(message.member, guildConfig)) return;
+    await handleModmailStaffMessage(message, guildConfig?.prefix || getCommandPrefix());
+  } catch (error) {
+    logger.warn(`Modmail staff relay failed in ${message.channel.id}: ${error.message}`);
+  }
+}
+
 async function handlePrefixCommand(message, client) {
   try {
     const guildConfig = await getGuildConfig(client, message.guild.id);
@@ -51,26 +86,40 @@ async function handlePrefixCommand(message, client) {
     const parsed = parsePrefixCommand(message.content, prefix);
     
     if (!parsed) {
-      return; 
+      return false; // not a command (any other return means it was one)
     }
 
-    let { commandName, args } = parsed;
-    const musicPrefixShortcut = commandName.toLowerCase();
-    const MUSIC_PREFIX_SHORTCUTS = new Set(['leave', 'pause', 'resume', 'skip', 'stop', 'volume']);
-    if (MUSIC_PREFIX_SHORTCUTS.has(musicPrefixShortcut)) {
-      commandName = 'music';
-      args = [musicPrefixShortcut, ...args];
-    }
+    const { commandName } = parsed;
+    // An alias may name a subcommand of a merged command ("!flip" → /fun flip).
+    const { commandName: resolvedCommandName, subcommandArgs } = resolveCommandAliasWithArgs(commandName);
+    const args = [...subcommandArgs, ...parsed.args];
 
     logger.info(`Prefix command detected: ${commandName}, args: ${args.join(', ')}`);
 
-    const resolvedCommandName = resolveCommandAlias(commandName);
     logger.info(`Resolved command name: ${resolvedCommandName}`);
     const command = client.commands.get(resolvedCommandName);
 
     if (!command) {
       logger.warn(`Command not found: ${resolvedCommandName}`);
       return; 
+    }
+
+    let accessKey = null;
+    try {
+      accessKey = resolvePrefixAccessKey(command.data, args);
+    } catch {
+      // Unparseable arguments: no key, so only admins pass the gate.
+    }
+    const access = checkCommandAccess({
+      command,
+      accessKey,
+      guild: message.guild,
+      userId: message.author.id,
+      permissions: message.member?.permissions,
+    });
+    if (!access.allowed) {
+      await message.reply({ content: access.message, allowedMentions: { parse: [], repliedUser: false } }).catch(() => {});
+      return;
     }
 
     if (isMaintenanceMode() && !isBotOwner(message.author.id)) {
@@ -159,12 +208,7 @@ async function handleCountingGame(message, client) {
 
     if (invalidAttempt) {
       await message.delete().catch(() => {});
-      await saveCountingGameConfig(client, message.guild.id, {
-        ...config,
-        nextNumber: 1,
-        lastUserId: null,
-        currentStreak: 0,
-      });
+      await resetCountingGame(client, message.guild.id, 1);
 
       const failureMessage = await message.channel.send(`❌ Count broken by <@${message.author.id}>. The sequence has been reset to **1**.`);
       setTimeout(() => {
@@ -174,7 +218,7 @@ async function handleCountingGame(message, client) {
       return true;
     }
 
-    await recordCorrectCount(client, message.guild.id, message.author.id);
+    await recordCorrectCount(client, message.guild.id, message.author.id, config.nextNumber || 1);
     return true;
   } catch (error) {
     logger.error('Error handling counting game:', error);

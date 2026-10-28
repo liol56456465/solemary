@@ -6,7 +6,10 @@ import dotenv from 'dotenv';
 import { logger } from '../src/utils/logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+// Skip .env when started with --env-file (e.g. .env.test) so production values never leak in.
+if (!process.execArgv.some((arg) => arg.startsWith('--env-file'))) {
+  dotenv.config({ path: path.join(__dirname, '..', '.env') });
+}
 
 function parseArgs(argv) {
   const args = {};
@@ -96,9 +99,14 @@ async function run() {
   logger.warn('Starting database restore', {
     event: 'restore.start',
     inputPath,
-    targetUrl,
+    target: redactUrl(targetUrl),
     dropSchema
   });
+
+  // Supabase owns grants and defaults on schema public; dropping it breaks them.
+  if (dropSchema && /\.supabase\.(co|com)/i.test(redactUrl(targetUrl))) {
+    throw new Error('--drop-schema is not allowed on Supabase; restore without it (pg_restore --clean replaces the tables).');
+  }
 
   if (dropSchema) {
     runCommand('psql', [
@@ -124,8 +132,18 @@ async function run() {
   logger.info('Database restore completed', {
     event: 'restore.completed',
     inputPath,
-    targetUrl
+    target: redactUrl(targetUrl)
   });
+}
+
+/** Host and database only: the URL carries the password. */
+function redactUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.host}${parsed.pathname}`;
+  } catch {
+    return '(unparseable URL)';
+  }
 }
 
 run().catch((error) => {

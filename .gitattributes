@@ -31,3 +31,4 @@
 *.zip binary
 *.7z binary
 *.pdf binary
+*.bat text eol=crlf

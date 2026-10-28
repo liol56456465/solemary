@@ -200,7 +200,8 @@ export function mapArgumentsToOptions(args, commandData) {
     getChannel: (name) => options[name] || null,
     getRole: (name) => options[name] || null,
     getInteger: (name) => options[name] ? parseInt(options[name]) : null,
-    getBoolean: (name) => options[name] === 'true',
+    // Absent options are null (as with slash commands), so `?? default` still works.
+    getBoolean: (name) => (options[name] == null ? null : ['true', 'yes', 'on', '1'].includes(String(options[name]).toLowerCase())),
     getSubcommand: () => subcommandName,
     getSubcommandGroup: () => subcommandGroupName,
     validateRequired: () => ({

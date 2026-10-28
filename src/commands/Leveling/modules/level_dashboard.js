@@ -20,8 +20,9 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { successEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorHandler.js';
-import { getLevelingConfig, saveLevelingConfig } from '../../../services/leveling/leveling.js';
+import { getLevelingConfig, updateLevelingConfig, setLevelRoleReward } from '../../../services/leveling/leveling.js';
 import { botHasPermission } from '../../../utils/permissionGuard.js';
+import { getRoleAssignmentProblem } from '../../../utils/roleSafety.js';
 import { startDashboardSession } from '../../../utils/dashboardSession.js';
 
 function buildDashboardEmbed(cfg, guild) {
@@ -130,6 +131,13 @@ function buildButtonRow(cfg, guildId, disabled = false) {
     );
 }
 
+// Saves only the changed fields (atomic), then syncs the local copy with what is
+// stored so the dashboard also shows changes made elsewhere meanwhile.
+async function saveLevelingPatch(client, guildId, cfg, patch) {
+    const { after } = await updateLevelingConfig(client, guildId, patch);
+    Object.assign(cfg, after);
+}
+
 async function refreshDashboard(rootInteraction, cfg, guildId) {
     const selectMenu = buildSelectMenu(guildId);
     await InteractionHelper.safeEditReply(rootInteraction, {
@@ -202,7 +210,7 @@ export default {
 
                     if (isAnnounce) {
                         cfg.announceLevelUp = cfg.announceLevelUp === false;
-                        await saveLevelingConfig(client, guildId, cfg);
+                        await saveLevelingPatch(client, guildId, cfg, { announceLevelUp: cfg.announceLevelUp });
                         await btnInteraction.followUp({
                             embeds: [
                                 successEmbed(
@@ -215,7 +223,7 @@ export default {
                     } else {
                         const wasEnabled = cfg.enabled !== false;
                         cfg.enabled = !wasEnabled;
-                        await saveLevelingConfig(client, guildId, cfg);
+                        await saveLevelingPatch(client, guildId, cfg, { enabled: cfg.enabled });
                         await btnInteraction.followUp({
                             embeds: [
                                 successEmbed(
@@ -292,9 +300,18 @@ async function handleRoleRewardAdd(selectInteraction, rootInteraction, cfg, guil
 
     const roleId = submitted.fields.getField('reward_role').values[0];
 
+    // Anyone who chats enough gets this role, so it must be harmless and assignable.
+    const guild = rootInteraction.guild;
+    const roleProblem = getRoleAssignmentProblem(guild.roles.cache.get(roleId), guild.members.me);
+    if (roleProblem) {
+        await replyUserError(submitted, { type: ErrorTypes.PERMISSION, message: roleProblem });
+        return;
+    }
+
     cfg.roleRewards = cfg.roleRewards ?? {};
     cfg.roleRewards[level] = roleId;
-    await saveLevelingConfig(client, guildId, cfg);
+    const { after: afterAdd } = await setLevelRoleReward(client, guildId, level, roleId);
+    Object.assign(cfg, afterAdd);
 
     await submitted.reply({
         embeds: [successEmbed('Role Reward Added', `<@&${roleId}> will now be awarded at level **${level}**.`)],
@@ -362,7 +379,8 @@ async function handleRoleRewardRemove(selectInteraction, rootInteraction, cfg, g
     }
 
     delete cfg.roleRewards[level];
-    await saveLevelingConfig(client, guildId, cfg);
+    const { after: afterRemove } = await setLevelRoleReward(client, guildId, level, null);
+    Object.assign(cfg, afterRemove);
 
     await submitted.reply({
         embeds: [successEmbed('Role Reward Removed', `The role reward for level **${level}** has been removed.`)],
@@ -412,7 +430,7 @@ async function handleChannel(selectInteraction, rootInteraction, cfg, guildId, c
     }
 
     cfg.levelUpChannel = channelId;
-    await saveLevelingConfig(client, guildId, cfg);
+    await saveLevelingPatch(client, guildId, cfg, { levelUpChannel: channelId });
 
     await submitted.reply({
         embeds: [successEmbed('\u2705 Channel Updated', `Level-up notifications will now be sent in ${channel ??`<#${channelId}>`}.`)],
@@ -465,7 +483,7 @@ async function handleIgnoreChannels(selectInteraction, rootInteraction, cfg, gui
     }
 
     cfg.ignoredChannels = Array.from(ignoreSet);
-    await saveLevelingConfig(client, guildId, cfg);
+    await saveLevelingPatch(client, guildId, cfg, { ignoredChannels: cfg.ignoredChannels });
 
     const list = cfg.ignoredChannels.length > 0
         ? cfg.ignoredChannels.map(id => `<#${id}>`).join(',')
@@ -521,7 +539,7 @@ async function handleIgnoreRoles(selectInteraction, rootInteraction, cfg, guildI
     }
 
     cfg.ignoredRoles = Array.from(ignoreSet);
-    await saveLevelingConfig(client, guildId, cfg);
+    await saveLevelingPatch(client, guildId, cfg, { ignoredRoles: cfg.ignoredRoles });
 
     const list = cfg.ignoredRoles.length > 0
         ? cfg.ignoredRoles.map(id => `<@&${id}>`).join(',')
@@ -574,7 +592,7 @@ async function handleMessage(selectInteraction, rootInteraction, cfg, guildId, c
     }
 
     cfg.levelUpMessage = newMessage;
-    await saveLevelingConfig(client, guildId, cfg);
+    await saveLevelingPatch(client, guildId, cfg, { levelUpMessage: newMessage });
 
     const preview = newMessage.replace('{user}', '@User').replace('{level}', '5');
 
@@ -651,7 +669,7 @@ async function handleXpRange(selectInteraction, rootInteraction, cfg, guildId, c
     }
 
     cfg.xpRange = { min: newMin, max: newMax };
-    await saveLevelingConfig(client, guildId, cfg);
+    await saveLevelingPatch(client, guildId, cfg, { xpRange: cfg.xpRange });
 
     await submitted.reply({
         embeds: [
@@ -705,7 +723,7 @@ async function handleXpCooldown(selectInteraction, rootInteraction, cfg, guildId
     }
 
     cfg.xpCooldown = newCooldown;
-    await saveLevelingConfig(client, guildId, cfg);
+    await saveLevelingPatch(client, guildId, cfg, { xpCooldown: newCooldown });
 
     await submitted.reply({
         embeds: [

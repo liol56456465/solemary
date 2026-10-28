@@ -24,7 +24,9 @@ export default {
     }
 
     const user = interaction.options.getUser("target") || interaction.user;
-    const member = interaction.guild.members.cache.get(user.id);
+    // The resolved member from the option payload is always present; the cache often isn't.
+    const member = interaction.options.getMember("target")
+      || (user.id === interaction.user.id ? interaction.member : interaction.guild.members.cache.get(user.id));
 
     const createdTimestamp = Math.floor(user.createdAt.getTime() / 1000);
     const joinedTimestamp = member?.joinedAt ? Math.floor(member.joinedAt.getTime() / 1000) : null;

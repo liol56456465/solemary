@@ -14,6 +14,7 @@ import { getTicketData, saveTicketData, deleteTicketData, getOpenTicketCountForU
 import { logger } from '../utils/logger.js';
 import { createEmbed, errorEmbed } from '../utils/embeds.js';
 import { logTicketEvent } from '../utils/ticket/ticketLogging.js';
+import { noteTicketClaim } from './staffActivityService.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { ensureTypedServiceError, wrapServiceBoundary } from '../utils/serviceErrorBoundary.js';
 import { PRIORITY_MAP } from '../utils/helpers.js';
@@ -465,6 +466,7 @@ export async function claimTicket(channel, claimer) {
     
     ticketData.claimedBy = claimer.id;
     ticketData.claimedAt = new Date().toISOString();
+    noteTicketClaim(channel.guild.id, claimer.id);
     
     await saveTicketData(channel.guild.id, channel.id, ticketData);
     
@@ -661,7 +663,7 @@ function safeExternalUrl(value) {
   }
 }
 
-async function generateTranscript(channel) {
+export async function generateTranscript(channel) {
   try {
     logger.debug('Generating transcript for channel', {
       channelId: channel.id,

@@ -5,6 +5,7 @@ import { handleInteractionError, createError, ErrorTypes } from '../../utils/err
 import { getColor } from '../../config/bot.js';
 import { logEvent, EVENT_TYPES } from '../../services/loggingService.js';
 import { getReactionRoleMessage } from '../../services/reactionRoleService.js';
+import { hasDangerousPermissions } from '../../utils/roleSafety.js';
 
 export async function handleReactionRolesSelectMenu(interaction, client) {
     try {
@@ -81,18 +82,8 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
                 continue;
             }
 
-            const roleHasDangerousPermissions = role.permissions.has([
-                'Administrator',
-                'ManageGuild',
-                'ManageRoles',
-                'ManageChannels',
-                'ManageWebhooks',
-                'BanMembers',
-                'KickMembers',
-                'MentionEveryone'
-            ]);
-
-            if (role.managed || roleHasDangerousPermissions) {
+            // Re-checked on every click: the role's permissions may have changed since setup.
+            if (role.managed || hasDangerousPermissions(role)) {
                 logger.warn(`Blocked self-assignment for protected role ${role.name} (${roleId})`);
                 skippedRoles.push(role.name);
                 continue;

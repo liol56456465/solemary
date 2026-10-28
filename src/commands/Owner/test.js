@@ -1,416 +1,201 @@
-import {
-    ChannelType,
-    MessageFlags,
-    PermissionFlagsBits,
-    SlashCommandBuilder,
-} from 'discord.js';
-import { getGuildConfig } from '../../services/config/guildConfig.js';
-import { ModerationService } from '../../services/moderation/moderationService.js';
-import { isBotOwner } from '../../config/bot.js';
-import { createEmbed } from '../../utils/embeds.js';
+// test.js — /test: send the DM an enforcement action would send, without doing it.
+//
+// Nothing is executed: no ban/kick/role change, no ladder change, no log entry. The
+// case IS saved, marked is_test, with a real case code, so the whole flow can be
+// tested: appeal it with that code, see it in /appeals, accept or deny it. The bot
+// never acts on test cases (no unban, role, ladder or banned-role changes; expiry
+// only closes the record). The DM comes from the same dmTemplates functions as the
+// real action, and kicks and accepted appeals get a real one-time invite. It goes to
+// the person running the command, never to the target.
+
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
-import { ErrorTypes, replyUserError, TitanBotError } from '../../utils/errorHandler.js';
+import { successEmbed } from '../../utils/embeds.js';
+import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
+import { logger } from '../../utils/logger.js';
+import { enforcementConfig } from '../../config/enforcement.js';
+import { createRejoinInvite, getLadder, isAdministrator, previewWarn, sendDm } from '../../services/enforcement/enforcementService.js';
+import { isEnforcementDbAvailable } from '../../services/enforcement/db.js';
+import { insertCase, setDmDelivered } from '../../services/enforcement/caseService.js';
+import { appealAcceptedDm, appealDeniedDm, banDm, kickDm, muteDm, warnDm } from '../../services/enforcement/dmTemplates.js';
+import { addMonths, parseDuration } from '../../services/enforcement/format.js';
 
-const ACTIONS = [
-    { name: 'All safe checks', value: 'all' },
-    { name: 'Ban readiness', value: 'ban' },
-    { name: 'Kick readiness', value: 'kick' },
-    { name: 'Timeout readiness', value: 'timeout' },
-    { name: 'Warn readiness', value: 'warn' },
-    { name: 'Unban readiness', value: 'unban' },
-    { name: 'Massban readiness', value: 'massban' },
-    { name: 'Masskick readiness', value: 'masskick' },
-    { name: 'Purge readiness', value: 'purge' },
-    { name: 'Lock readiness', value: 'lock' },
-    { name: 'Unlock readiness', value: 'unlock' },
-    { name: 'Verification setup', value: 'verification' },
-    { name: 'Ticket setup', value: 'ticket' },
-    { name: 'Feedback logging', value: 'feedback' },
-    { name: 'Transcript delivery', value: 'transcript' },
-];
-
-const DURATION_CHOICES = [
-    { name: '5 minutes', value: 5 },
-    { name: '30 minutes', value: 30 },
-    { name: '1 hour', value: 60 },
-    { name: '1 day', value: 1440 },
-];
-
-function status(ok) {
-    return ok ? '✅ Ready' : '❌ Needs attention';
+function userError(message) {
+    return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
 }
 
-function checkField(name, ok, detail) {
+/** Saves a test case shaped like the real action's, and returns the mod_cases row. */
+function saveTestCase({ moderator, target, type, reason, durationMs = null, unappealable = false, ladderLevel = 0, extra = {} }) {
+    const now = new Date();
+    return insertCase(null, {
+        guildId: enforcementConfig.mainGuildId,
+        targetUserId: target.id,
+        targetUsername: target.username,
+        moderatorId: moderator.id,
+        moderatorUsername: moderator.username,
+        type,
+        // Unique per server; kept out of the real "<username> <type> <n>" numbering.
+        name: `${target.username} test ${type} ${now.getTime().toString(36)}`,
+        reason,
+        reasonSource: 'custom',
+        durationMs,
+        expiresAt: durationMs ? new Date(now.getTime() + durationMs) : null,
+        unappealable,
+        ladderLevelAfter: ladderLevel,
+        isTest: true,
+        ...extra,
+    });
+}
+
+/** The warn DM, or — when this warn would hit the ladder limit — the automatic ban DM that replaces it. */
+async function warnPreview({ invoker, target, reason, ladder }) {
+    const step = previewWarn(ladder);
+    const warn = await saveTestCase({
+        moderator: invoker, target, type: 'warn', reason, ladderLevel: step.nextLevel,
+    });
+    if (!step.escalates) {
+        return { content: warnDm(warn, step.warnNumber), record: warn, note: `warn ${step.warnNumber} of ${step.threshold}` };
+    }
+    const ban = await saveTestCase({
+        moderator: { id: invoker.client.user.id, username: invoker.client.user.username },
+        target,
+        type: 'ban',
+        reason: enforcementConfig.ladderReason,
+        durationMs: step.banDurationMs,
+        ladderLevel: step.nextLevel,
+        extra: {
+            isAuto: true,
+            appealDeadline: step.nextLevel === 3 ? addMonths(new Date(), enforcementConfig.level3AppealMonths) : null,
+        },
+    });
     return {
-        name: `${status(ok)} · ${name}`,
-        value: detail,
-        inline: false,
+        content: banDm(ban),
+        record: ban,
+        note: `this warn reaches the limit, so they'd get the automatic ladder-level-${step.nextLevel} ban DM instead (warn \`${warn.case_code}\` was saved too)`,
     };
 }
 
-function isGuildOwnerOrBotOwner(interaction) {
-    return interaction.guild?.ownerId === interaction.user.id || isBotOwner(interaction.user.id);
-}
-
-function getBotMember(guild) {
-    return guild.members.me || guild.members.cache.get(guild.client.user.id);
-}
-
-function requireTarget(interaction) {
-    const target = interaction.options.getUser('target');
-    if (!target) {
-        throw new TitanBotError(
-            'Missing diagnostic target',
-            ErrorTypes.USER_INPUT,
-            'Choose a target user other than yourself for this diagnostic.',
-        );
+async function buildPreview({ action, guild, invoker, target, reason, durationMs, unappealable }) {
+    if (!action.startsWith('appeal-') && !isEnforcementDbAvailable()) {
+        throw userError('The database is unavailable, so no test case can be saved. Try again later.');
     }
-    if (target.id === interaction.user.id) {
-        throw new TitanBotError(
-            'Diagnostic target is executor',
-            ErrorTypes.VALIDATION,
-            'The owner cannot test against themselves. Choose another member or test account.',
-        );
-    }
-    return target;
-}
+    const ladder = isEnforcementDbAvailable()
+        ? await getLadder(enforcementConfig.mainGuildId, target.id)
+        : { level: 0, warns_since_level: 0 };
+    const save = (type, options = {}) => saveTestCase({ moderator: invoker, target, type, reason, ladderLevel: ladder.level, ...options });
 
-async function runModerationCheck(interaction, action) {
-    const target = requireTarget(interaction);
-    const member = interaction.options.getMember('target');
-    const botMember = getBotMember(interaction.guild);
-    const requiredPermission = {
-        ban: PermissionFlagsBits.BanMembers,
-        kick: PermissionFlagsBits.KickMembers,
-        timeout: PermissionFlagsBits.ModerateMembers,
-        warn: PermissionFlagsBits.ModerateMembers,
-        unban: PermissionFlagsBits.BanMembers,
-    }[action];
-    const permissionName = {
-        ban: 'Ban Members',
-        kick: 'Kick Members',
-        timeout: 'Moderate Members',
-        warn: 'Moderate Members',
-        unban: 'Ban Members',
-    }[action];
-
-    const fields = [
-        checkField(
-            permissionName,
-            Boolean(botMember?.permissions.has(requiredPermission)),
-            `The bot must have **${permissionName}**.`,
-        ),
-        checkField(
-            'Target availability',
-            action === 'unban' || Boolean(member),
-            action === 'unban'
-                ? `The diagnostic will look up **${target.tag}** without changing their ban status.`
-                : member
-                    ? `**${target.tag}** is currently in this server.`
-                    : `**${target.tag}** is not currently in this server.`,
-        ),
-    ];
-
-    if (action === 'unban') {
-        let isBanned = false;
-        let lookupError = null;
-        try {
-            await interaction.guild.bans.fetch(target.id);
-            isBanned = true;
-        } catch (error) {
-            if (error.code !== 10026) {
-                lookupError = error;
-            }
+    switch (action) {
+        case 'ban': {
+            const record = await save('ban', { durationMs, unappealable });
+            return { content: banDm(record), record };
         }
-        fields.push(checkField(
-            'Ban status',
-            Boolean(isBanned),
-            lookupError
-                ? `Could not confirm ban status (Discord error ${lookupError.code || 'unknown'}).`
-                : isBanned
-                ? `**${target.tag}** is banned. A real unban would be possible if permissions are correct.`
-                : `**${target.tag}** is not currently banned.`,
-        ));
-        return fields;
-    }
-
-    if (!member) {
-        if (action === 'ban') {
-            fields.push(checkField(
-                'Target availability',
-                true,
-                'Bans can target users who are not currently in the server. No action was performed.',
-            ));
-        } else {
-            fields.push(checkField(
-                'Target availability',
-                false,
-                `${action} requires the target to be a current server member.`,
-            ));
+        case 'kick': {
+            const record = await save('kick');
+            const invite = await createRejoinInvite(guild, `Rejoin invite for kick ${record.case_code} (/test)`);
+            return { content: kickDm(record, invite), record, invite };
         }
-        return fields;
+        case 'mute': {
+            if (!durationMs) throw userError('A mute needs a duration, e.g. `duration:1h`.');
+            const record = await save('mute', { durationMs });
+            return { content: muteDm(record), record };
+        }
+        case 'warn':
+            return warnPreview({ invoker, target, reason, ladder });
+        case 'appeal-accepted': {
+            const invite = await createRejoinInvite(guild, 'Appeal accepted (/test)');
+            return { content: appealAcceptedDm(invoker.username, invite), invite };
+        }
+        case 'appeal-denied':
+            return { content: appealDeniedDm() };
+        default:
+            throw userError(`Unknown action: ${action}`);
     }
-
-    const hierarchy = ModerationService.validateBotHierarchy(member, action);
-    fields.push(checkField(
-        'Bot role hierarchy',
-        hierarchy.valid,
-        hierarchy.valid ? 'The bot role is above the target.' : hierarchy.error,
-    ));
-
-    if (action === 'kick') {
-        fields.push(checkField(
-            'Kick readiness',
-            member.kickable,
-            member.kickable ? 'Discord reports this member as kickable.' : 'Discord reports this member as not kickable.',
-        ));
-    } else if (action === 'timeout') {
-        const duration = interaction.options.getInteger('duration') || 5;
-        fields.push(checkField(
-            'Timeout readiness',
-            member.moderatable,
-            member.moderatable ? `Discord reports this member as timeout-ready for ${duration} minutes.` : 'Discord reports this member as not timeout-ready.',
-        ));
-    } else if (action === 'warn') {
-        fields.push(checkField(
-            'Warning dry-run',
-            true,
-            'The warning would be recorded without writing anything in this safe test.',
-        ));
-    } else {
-        fields.push(checkField(
-            'Ban dry-run',
-            true,
-            'The ban would be attempted only after this diagnostic passes. No ban was issued.',
-        ));
-    }
-
-    return fields;
-}
-
-function runChannelModerationCheck(interaction, action) {
-    const channel = interaction.options.getChannel('channel') || interaction.channel;
-    const botMember = getBotMember(interaction.guild);
-    const requiredPermission = {
-        massban: PermissionFlagsBits.BanMembers,
-        masskick: PermissionFlagsBits.KickMembers,
-        purge: PermissionFlagsBits.ManageMessages,
-        lock: PermissionFlagsBits.ManageChannels,
-        unlock: PermissionFlagsBits.ManageChannels,
-    }[action];
-    const permissionName = {
-        massban: 'Ban Members',
-        masskick: 'Kick Members',
-        purge: 'Manage Messages',
-        lock: 'Manage Channels',
-        unlock: 'Manage Channels',
-    }[action];
-    const channelPermissions = channel?.permissionsFor(botMember);
-    const permissionAvailable = action === 'massban' || action === 'masskick'
-        ? Boolean(botMember?.permissions.has(requiredPermission))
-        : Boolean(channelPermissions?.has(requiredPermission));
-
-    return [
-        checkField(
-            `${permissionName} permission`,
-            permissionAvailable,
-            action === 'massban' || action === 'masskick'
-                ? `The bot needs **${permissionName}** in this server.`
-                : `The bot needs **${permissionName}** in ${channel || 'the selected channel'}.`,
-        ),
-        checkField(
-            'No action performed',
-            true,
-            `This is only a readiness check for **${action}**; no member or channel was changed.`,
-        ),
-    ];
-}
-
-async function runSystemCheck(interaction, action) {
-    const config = await getGuildConfig(interaction.client, interaction.guildId);
-    const botMember = getBotMember(interaction.guild);
-    const selectedChannel = interaction.options.getChannel('channel');
-    const fields = [];
-
-    if (action === 'verification') {
-        const role = config.verification?.roleId
-            ? interaction.guild.roles.cache.get(config.verification.roleId)
-            : null;
-        const channel = config.verification?.channelId
-            ? interaction.guild.channels.cache.get(config.verification.channelId)
-            : null;
-        fields.push(
-            checkField('Verification enabled', Boolean(config.verification?.enabled), 'The server verification system must be enabled.'),
-            checkField('Verification channel', Boolean(channel), channel ? `Verification panel channel: ${channel}.` : 'Run `/verification setup` to choose a channel.'),
-            checkField('Verified role', Boolean(role), role ? `Verified role: ${role}.` : 'Run `/verification setup` to choose a role.'),
-            checkField('Manage Roles permission', Boolean(botMember?.permissions.has(PermissionFlagsBits.ManageRoles)), 'The bot needs Manage Roles.'),
-            checkField(
-                'Verified role hierarchy',
-                Boolean(role && botMember && botMember.roles.highest.position > role.position),
-                role ? 'The bot role must be above the verified role.' : 'Configure a verified role first.',
-            ),
-        );
-        return fields;
-    }
-
-    const logsChannel = selectedChannel || (config.ticketLogsChannelId
-        ? interaction.guild.channels.cache.get(config.ticketLogsChannelId)
-        : null);
-    const transcriptChannel = selectedChannel || (config.ticketTranscriptChannelId
-        ? interaction.guild.channels.cache.get(config.ticketTranscriptChannelId)
-        : null);
-    const channelPermissions = (channel, required) => {
-        if (!channel || !botMember) return false;
-        const permissions = channel.permissionsFor(botMember);
-        return Boolean(permissions?.has(required));
-    };
-
-    if (action === 'ticket') {
-        const panelChannel = config.ticketPanelChannelId
-            ? interaction.guild.channels.cache.get(config.ticketPanelChannelId)
-            : null;
-        const dbStatus = interaction.client.db?.getStatus?.();
-        fields.push(
-            checkField('Ticket panel', Boolean(panelChannel), panelChannel ? `Ticket panel channel: ${panelChannel}.` : 'Run `/ticket setup` first or repair its configured channel.'),
-            checkField('Manage Channels permission', Boolean(botMember?.permissions.has(PermissionFlagsBits.ManageChannels)), 'The bot needs Manage Channels to create and close tickets.'),
-            checkField('Send Messages permission', Boolean(botMember?.permissions.has(PermissionFlagsBits.SendMessages)), 'The bot needs Send Messages in ticket channels.'),
-            checkField('Database', Boolean(dbStatus && !dbStatus.isDegraded), dbStatus?.isDegraded ? 'Ticket data is not persistent while the database is degraded.' : 'Ticket data storage is available.'),
-        );
-    } else if (action === 'feedback') {
-        const dbStatus = interaction.client.db?.getStatus?.();
-        fields.push(
-            checkField('Feedback log channel', Boolean(logsChannel), logsChannel ? `Feedback log channel: ${logsChannel}.` : 'Configure a ticket logs channel in `/ticket dashboard`.'),
-            checkField(
-                'Feedback channel permissions',
-                channelPermissions(logsChannel, [PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks]),
-                'The bot needs Send Messages and Embed Links in the feedback log channel.',
-            ),
-            checkField('Database', Boolean(dbStatus && !dbStatus.isDegraded), dbStatus?.isDegraded ? 'Feedback cannot be saved persistently while the database is degraded.' : 'Feedback storage is available.'),
-        );
-    } else {
-        fields.push(
-            checkField('Transcript channel', Boolean(transcriptChannel), transcriptChannel ? `Transcript channel: ${transcriptChannel}.` : 'Configure a transcript channel in `/ticket dashboard`.'),
-            checkField(
-                'Transcript channel permissions',
-                channelPermissions(transcriptChannel, [
-                    PermissionFlagsBits.SendMessages,
-                    PermissionFlagsBits.EmbedLinks,
-                    PermissionFlagsBits.AttachFiles,
-                ]),
-                'The bot needs Send Messages, Embed Links, and Attach Files in the transcript channel.',
-            ),
-            checkField(
-                'DM transcript delivery',
-                true,
-                'The bot attempts to DM the transcript after closing; each user must allow DMs from server members.',
-            ),
-        );
-    }
-
-    return fields;
 }
 
 export default {
+    // Registered as a guild command in MAIN_GUILD_ID only.
+    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('test')
-        .setDescription('Owner-only safe diagnostics; never performs moderation actions')
-        .setDefaultMemberPermissions(null)
-        .addStringOption(option =>
-            option
-                .setName('action')
-                .setDescription('What should be checked')
-                .setRequired(true)
-                .addChoices(...ACTIONS),
-        )
-        .addUserOption(option =>
-            option
-                .setName('target')
-                .setDescription('Different user to use for moderation readiness checks')
-                .setRequired(false),
-        )
-        .addIntegerOption(option =>
-            option
-                .setName('duration')
-                .setDescription('Timeout duration for the timeout readiness check')
-                .setRequired(false)
-                .addChoices(...DURATION_CHOICES),
-        )
-        .addChannelOption(option =>
-            option
-                .setName('channel')
-                .setDescription('Optional channel to inspect for system diagnostics')
-                .addChannelTypes(ChannelType.GuildText)
-                .setRequired(false),
-        ),
-
-    category: 'owner',
+        .setDescription('Send yourself the DM an action would send and save a test case. Nothing is executed')
+        .addStringOption((option) => option
+            .setName('action')
+            .setDescription('Which DM to preview')
+            .setRequired(true)
+            .addChoices(
+                { name: 'ban', value: 'ban' },
+                { name: 'kick', value: 'kick' },
+                { name: 'mute', value: 'mute' },
+                { name: 'warn', value: 'warn' },
+                { name: 'appeal accepted', value: 'appeal-accepted' },
+                { name: 'appeal denied', value: 'appeal-denied' },
+            ))
+        .addUserOption((option) => option
+            .setName('user')
+            .setDescription('Who the DM would be for (they receive nothing)')
+            .setRequired(true))
+        .addStringOption((option) => option
+            .setName('reason')
+            .setDescription('Reason shown in the DM')
+            .setMaxLength(500))
+        .addStringOption((option) => option
+            .setName('duration')
+            .setDescription('Ban/mute length, e.g. 30m, 12h, 7d, 1mo (ban: empty = permanent)')
+            .setMaxLength(20))
+        .addBooleanOption((option) => option
+            .setName('unappealable')
+            .setDescription('Ban only: preview an unappealable ban')),
 
     async execute(interaction) {
-        if (!interaction.guild) {
-            return await replyUserError(interaction, {
-                type: ErrorTypes.USER_INPUT,
-                message: 'This diagnostic command can only be used in a server.',
-            });
+        if (interaction.guildId !== enforcementConfig.mainGuildId) {
+            throw new TitanBotError('Wrong guild for /test', ErrorTypes.PERMISSION,
+                'This command only works in the main server.', { expected: true });
         }
-
-        if (!isGuildOwnerOrBotOwner(interaction)) {
-            return await replyUserError(interaction, {
-                type: ErrorTypes.PERMISSION,
-                message: 'Only the server owner or a configured bot owner can use this diagnostic command.',
-            });
+        if (!isAdministrator(interaction.member)) {
+            throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION,
+                'You need the Administrator permission to use /test.', { expected: true });
         }
 
         const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         if (!deferred) return;
 
         const action = interaction.options.getString('action');
-        let fields = [];
-        const memberActions = ['ban', 'kick', 'timeout', 'warn', 'unban'];
-        const channelActions = ['massban', 'masskick', 'purge', 'lock', 'unlock'];
-
-        if ([...memberActions, ...channelActions, 'all'].includes(action)) {
-            if (action === 'all') {
-                for (const moderationAction of memberActions) {
-                    fields.push(
-                        { name: `── ${moderationAction.toUpperCase()} ──`, value: '\u200b', inline: false },
-                        ...(await runModerationCheck(interaction, moderationAction)),
-                    );
-                }
-                for (const moderationAction of channelActions) {
-                    fields.push(
-                        { name: `── ${moderationAction.toUpperCase()} ──`, value: '\u200b', inline: false },
-                        ...runChannelModerationCheck(interaction, moderationAction),
-                    );
-                }
-                fields.push(
-                    { name: '── SYSTEMS ──', value: '\u200b', inline: false },
-                    ...(await runSystemCheck(interaction, 'ticket')),
-                    ...(await runSystemCheck(interaction, 'feedback')),
-                    ...(await runSystemCheck(interaction, 'transcript')),
-                    ...(await runSystemCheck(interaction, 'verification')),
-                );
-            } else if (memberActions.includes(action)) {
-                fields = await runModerationCheck(interaction, action);
-            } else {
-                fields = runChannelModerationCheck(interaction, action);
-            }
-        } else {
-            fields = await runSystemCheck(interaction, action);
+        const target = interaction.options.getUser('user');
+        const rawDuration = interaction.options.getString('duration')?.trim() || '';
+        const durationMs = rawDuration ? parseDuration(rawDuration) : null;
+        if (rawDuration && durationMs == null) {
+            throw userError('That duration is not valid. Use e.g. `30m`, `12h`, `7d`, `2w` or `1mo` (at least 1 minute).');
         }
 
-        const embedChunks = [];
-        for (let i = 0; i < fields.length; i += 25) {
-            embedChunks.push(fields.slice(i, i + 25));
+        const { content, note, invite, record } = await buildPreview({
+            action,
+            guild: interaction.guild,
+            invoker: interaction.user,
+            target,
+            reason: interaction.options.getString('reason')?.trim() || 'No reason given',
+            durationMs,
+            unappealable: interaction.options.getBoolean('unappealable') ?? false,
+        });
+
+        const delivered = await sendDm(interaction.user, content);
+        if (record) await setDmDelivered(record.id, delivered);
+        logger.info(`/test preview of ${action} DM for ${target.id} sent to ${interaction.user.id}: ${delivered ? 'delivered' : 'not delivered'}`);
+        if (!delivered) {
+            throw userError('I could not DM you. Allow direct messages from server members in this server and try again.');
         }
-        const embeds = embedChunks.map((embedFields, index) =>
-                createEmbed({
-                    title: `🧪 Safe Test: ${action}${embedChunks.length > 1 ? ` (${index + 1}/${embedChunks.length})` : ''}`,
-                    description: 'Diagnostics only. No moderation action, ticket action, or configuration change was performed.',
-                    color: 0x5865f2,
-                    fields: embedFields,
-                    footer: { text: 'Choose a different target user to test moderation readiness.' },
-                }),
-            );
-        await InteractionHelper.safeEditReply(interaction, { embeds });
+
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [successEmbed('Preview DM sent to you.', [
+                `The exact **${action}** DM ${target.username} would get.${note ? ` Note: ${note}.` : ''}`,
+                'Nothing was executed.',
+                record
+                    ? `Test case \`${record.case_code}\` was saved, so it can be appealed and decided with /appeals like a real one. `
+                        + (target.id === interaction.user.id
+                            ? 'Appeal it from the support server with that code.'
+                            : `Only ${target.username} can appeal it; run /test on yourself to try the appeal flow.`)
+                    : null,
+                invite ? 'The invite in it is a real one-time invite to this server.' : null,
+            ].filter(Boolean).join('\n'))],
+        });
     },
 };

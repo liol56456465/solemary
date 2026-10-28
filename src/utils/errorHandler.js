@@ -20,7 +20,7 @@ import { logger } from './logger.js';
 import { buildUserErrorEmbed } from './embeds.js';
 import { MessageFlags } from 'discord.js';
 import { getErrorMetadata, getDefaultErrorCodeByType, resolveErrorCode, ErrorCodes } from './errorRegistry.js';
-import { InteractionHelper } from './interactionHelper.js';
+import { InteractionHelper, isAcknowledgedViaMessageUpdate } from './interactionHelper.js';
 
 // Re-export so consumers only ever need to import from errorHandler.js
 export { ErrorCodes, getErrorMetadata, resolveErrorCode, getDefaultErrorCodeByType } from './errorRegistry.js';
@@ -280,8 +280,10 @@ async function sendErrorResponse(interaction, embed, context = {}) {
 
         const useEphemeral = context.ephemeral !== false;
 
-        if (interaction.replied) {
-            // A visible reply already exists; don't overwrite it — follow up ephemerally.
+        if (interaction.replied || isAcknowledgedViaMessageUpdate(interaction)) {
+            // A visible reply already exists (or the interaction was acknowledged with
+            // update()/deferUpdate(), where editReply would overwrite the component's
+            // panel message) — don't overwrite it; follow up ephemerally.
             await interaction.followUp({ ...errorMessage, flags: MessageFlags.Ephemeral });
         } else if (interaction.deferred) {
             await interaction.editReply(errorMessage);

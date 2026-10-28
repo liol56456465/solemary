@@ -1,3 +1,4 @@
+import { MessageFlags } from 'discord.js';
 import { createEmbed } from '../../../utils/embeds.js';
 import { getGuildConfig } from '../../../services/config/guildConfig.js';
 import { logEvent, EVENT_TYPES, resolveLogChannel } from '../../../services/loggingService.js';
@@ -5,18 +6,27 @@ import { formatLogLine, resolveUserAuthor } from '../../../utils/logging/logEmbe
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { logger } from '../../../utils/logger.js';
+import { checkRateLimit } from '../../../utils/rateLimiter.js';
+
+// Each report pings the server owner, so members may file only a few at a time.
+const REPORT_LIMIT = 2;
+const REPORT_WINDOW_MS = 10 * 60 * 1000;
 
 export default {
     async execute(interaction, config, client) {
-        const deferSuccess = await InteractionHelper.safeDefer(interaction, { ephemeral: true });
+        const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         if (!deferSuccess) {
             logger.warn('Report interaction defer failed', { userId: interaction.user.id, guildId: interaction.guildId });
             return;
         }
 
+        const guildId = interaction.guildId;
+        if (!(await checkRateLimit(`report:${guildId}:${interaction.user.id}`, REPORT_LIMIT, REPORT_WINDOW_MS))) {
+            return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'You have filed several reports recently. Please wait a few minutes before filing another.' });
+        }
+
         const targetUser = interaction.options.getUser('user');
         const reason = interaction.options.getString('reason');
-        const guildId = interaction.guildId;
 
         const guildConfig = await getGuildConfig(client, guildId);
         const reportChannelId = resolveLogChannel(guildConfig, 'reports');
@@ -29,7 +39,7 @@ export default {
             ? `<@${interaction.guild.ownerId}> New report!`
             : 'New report!';
 
-        await logEvent({
+        const sent = await logEvent({
             client,
             guildId,
             eventType: EVENT_TYPES.REPORT_FILE,
@@ -46,6 +56,12 @@ export default {
                 thumbnail: targetUser.displayAvatarURL(),
             },
         });
+
+        // logEvent returns null (without throwing) when logging is disabled, the channel
+        // is gone, or the bot lacks permissions there — don't claim the report was filed.
+        if (!sent) {
+            return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: 'Your report could not be delivered: the report channel is missing, logging is disabled, or I lack permission to post there. Please contact a moderator directly.' });
+        }
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({

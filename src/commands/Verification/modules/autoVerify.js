@@ -1,11 +1,13 @@
 import { botConfig, getColor } from '../../../config/bot.js';
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from 'discord.js';
 import { createEmbed, errorEmbed, successEmbed, infoEmbed } from '../../../utils/embeds.js';
-import { getGuildConfig, setGuildConfig } from '../../../services/config/guildConfig.js';
+import { getGuildConfig } from '../../../services/config/guildConfig.js';
+import { updateVerificationSettings } from '../../../services/verificationSettingsService.js';
 import { withErrorHandling, createError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { validateAutoVerifyCriteria } from '../../../services/verificationService.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { getRoleAssignmentProblem } from '../../../utils/roleSafety.js';
 import { getWelcomeConfig } from '../../../utils/database.js';
 import autoVerifyDashboard from './autoVerifyDashboard.js';
 
@@ -125,39 +127,28 @@ async function handleSetup(interaction, guild, client) {
             );
         }
 
-        if (targetRole.id === guild.id || targetRole.managed) {
+        // Members who meet the criteria get this role automatically, so it must be harmless and assignable.
+        const roleProblem = getRoleAssignmentProblem(targetRole, botMember);
+        if (roleProblem) {
             throw createError(
-                'Invalid auto-verify role selected',
-                ErrorTypes.VALIDATION,
-                'Please choose a normal assignable role (not @everyone or an integration-managed role).',
-                { guildId: guild.id, roleId: targetRole.id, managed: targetRole.managed }
-            );
-        }
-
-        if (targetRole.position >= botMember.roles.highest.position) {
-            throw createError(
-                'Role hierarchy error for auto-verify setup',
+                'Unsafe auto-verify role selected',
                 ErrorTypes.PERMISSION,
-                'The selected auto-verify role must be below my highest role in the server role hierarchy.',
-                { guildId: guild.id, roleId: targetRole.id, rolePosition: targetRole.position, botRolePosition: botMember.roles.highest.position }
+                roleProblem,
+                { guildId: guild.id, roleId: targetRole.id }
             );
         }
 
         validateAutoVerifyCriteria(criteria, criteria === 'account_age' ? accountAgeDays : 1);
         
-        if (!guildConfig.verification) {
-            guildConfig.verification = {};
-        }
-
-        guildConfig.verification.autoVerify = {
-            enabled: true,
-            criteria: criteria,
-            accountAgeDays: criteria === "account_age" ? accountAgeDays : null,
-            roleId: targetRole.id,
-            configuredVia: 'setup'
-        };
-
-        await setGuildConfig(client, guild.id, guildConfig);
+        await updateVerificationSettings(client, guild.id, {
+            autoVerify: {
+                enabled: true,
+                criteria: criteria,
+                accountAgeDays: criteria === "account_age" ? accountAgeDays : null,
+                roleId: targetRole.id,
+                configuredVia: 'setup'
+            }
+        });
 
         let criteriaDescription = "";
         switch (criteria) {

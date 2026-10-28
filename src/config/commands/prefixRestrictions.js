@@ -9,6 +9,11 @@ export const SLASH_ONLY_COMMANDS = new Set([
   'embedbuilder',
   'wipedata',
   'apply',
+  'enforcements',
+  'background',
+  'appeals',
+  'setappeal',
+  'test',
 ]);
 
 /** Subcommands blocked for every command when invoked via prefix. */
@@ -24,15 +29,6 @@ export const GLOBAL_BLOCKED_SUBCOMMAND_GROUPS = new Set([
 
 /** Per-command subcommands that stay slash-only (beyond the global block list). */
 export const COMMAND_BLOCKED_SUBCOMMANDS = {
-  music: new Set([
-    'shuffle',
-    'loop',
-    'seek',
-    'remove',
-    'move',
-    'clear',
-    '247',
-  ]),
   birthday: new Set(['setchannel']),
   report: new Set(['setchannel']),
 };

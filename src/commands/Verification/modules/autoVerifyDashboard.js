@@ -1,4 +1,5 @@
 import { botConfig, getColor } from '../../../config/bot.js';
+import { getRoleAssignmentProblem } from '../../../utils/roleSafety.js';
 import {
     ActionRowBuilder,
     StringSelectMenuBuilder,
@@ -17,7 +18,8 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { successEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorHandler.js';
-import { getGuildConfig, setGuildConfig } from '../../../services/config/guildConfig.js';
+import { getGuildConfig } from '../../../services/config/guildConfig.js';
+import { updateVerificationSettings } from '../../../services/verificationSettingsService.js';
 import { getWelcomeConfig } from '../../../utils/database.js';
 import { validateAutoVerifyCriteria } from '../../../services/verificationService.js';
 import { botHasPermission } from '../../../utils/permissionGuard.js';
@@ -161,7 +163,7 @@ export default {
                     embeds: [
                         new EmbedBuilder()
                             .setTitle('🤖 Auto-Verification Dashboard')
-                            .setDescription(`Auto-verification is not yet configured.${blockingText}\n\nUse \`/autoverify setup\` to configure it.`)
+                            .setDescription(`Auto-verification is not yet configured.${blockingText}\n\nUse \`/verification auto setup\` to configure it.`)
                             .setColor(getColor('warning'))
                             .setFooter({ text: 'Dashboard closes after 10 minutes of inactivity' })
                             .setTimestamp()
@@ -257,7 +259,9 @@ export default {
                     } else if (btnInteraction.customId === `autoverify_cfg_toggle_${guildId}`) {
                         await btnInteraction.deferUpdate().catch(() => null);
                         guildConfig.verification.autoVerify.enabled = !guildConfig.verification.autoVerify.enabled;
-                        await setGuildConfig(client, guildId, guildConfig);
+                        await updateVerificationSettings(client, guildId, {
+                            autoVerify: { enabled: guildConfig.verification.autoVerify.enabled },
+                        });
                         
                         await btnInteraction.followUp({
                             embeds: [
@@ -357,7 +361,12 @@ async function handleCriteria(selectInteraction, rootInteraction, guildConfig, g
             guildConfig.verification.autoVerify.accountAgeDays = defaultAccountAgeDays;
         }
 
-        await setGuildConfig(client, guildId, guildConfig);
+        await updateVerificationSettings(client, guildId, {
+            autoVerify: {
+                criteria: newCriteria,
+                accountAgeDays: guildConfig.verification.autoVerify.accountAgeDays ?? null,
+            },
+        });
 
         let criteriaDisplay = '';
         switch (newCriteria) {
@@ -418,25 +427,14 @@ async function handleRole(selectInteraction, rootInteraction, guildConfig, guild
         await roleInteraction.deferUpdate();
         const role = roleInteraction.roles.first();
 
-        if (role.id === rootInteraction.guild.id || role.managed) {
-            await replyUserError(roleInteraction, {
-                type: ErrorTypes.VALIDATION,
-                message: 'Please choose a normal assignable role (not @everyone or a bot-managed role).',
-            });
-            return;
-        }
-
-        const botMember = rootInteraction.guild.members.me;
-        if (role.position >= botMember.roles.highest.position) {
-            await replyUserError(roleInteraction, {
-                type: ErrorTypes.PERMISSION,
-                message: 'The selected role must be below my highest role in the server role hierarchy.',
-            });
+        const roleProblem = getRoleAssignmentProblem(role, rootInteraction.guild.members.me);
+        if (roleProblem) {
+            await replyUserError(roleInteraction, { type: ErrorTypes.VALIDATION, message: roleProblem });
             return;
         }
 
         guildConfig.verification.autoVerify.roleId = role.id;
-        await setGuildConfig(client, guildId, guildConfig);
+        await updateVerificationSettings(client, guildId, { autoVerify: { roleId: role.id } });
 
         await roleInteraction.followUp({
             embeds: [successEmbed('Role Updated', `Auto-verification role set to ${role}.`)],
@@ -493,7 +491,7 @@ async function handleAccountAge(selectInteraction, rootInteraction, guildConfig,
     }
 
     guildConfig.verification.autoVerify.accountAgeDays = days;
-    await setGuildConfig(client, guildId, guildConfig);
+    await updateVerificationSettings(client, guildId, { autoVerify: { accountAgeDays: days } });
 
     await submitted.reply({
         embeds: [successEmbed('Account Age Updated', `Minimum account age requirement set to **${days} days**.`)],

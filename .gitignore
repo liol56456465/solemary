@@ -82,6 +82,7 @@ web_modules/
 
 # dotenv environment variable files
 .env
+.env.test
 .env.development.local
 .env.test.local
 .env.production.local
@@ -144,3 +145,11 @@ dist
 # Database backup artifacts
 backups/
 *.dump
+
+# Local AI working notes (repo is public)
+claude/
+
+
+# Claude Code: personal settings and agent worktrees stay local
+.claude/settings.local.json
+.claude/worktrees/

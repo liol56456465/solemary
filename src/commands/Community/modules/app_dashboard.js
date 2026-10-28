@@ -1,4 +1,12 @@
+import { updateApplicationSettings } from '../../../services/applicationSettingsService.js';
 import { getColor, getDefaultApplicationQuestions, botConfig } from '../../../config/bot.js';
+import {
+    normalizeApplicationQuestions,
+    applicationQuestionText,
+    parseApplicationQuestionInput,
+    formatApplicationQuestionForEditing,
+    MAX_QUESTION_LENGTH,
+} from '../../../utils/applicationQuestions.js';
 import {
     ActionRowBuilder,
     StringSelectMenuBuilder,
@@ -25,7 +33,6 @@ import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorH
 import { safeDeferInteraction } from '../../../utils/interactionValidator.js';
 import {
     getApplicationSettings,
-    saveApplicationSettings,
     getApplicationRoles,
     saveApplicationRoles,
     getApplicationRoleSettings,
@@ -35,6 +42,7 @@ import {
     deleteApplication,
 } from '../../../utils/database.js';
 import { getGuildConfig } from '../../../services/config/guildConfig.js';
+import { createApplicationRole, deleteApplicationRole, updateApplicationRole } from '../../../services/applicationRoleService.js';
 import { setLogChannel, resolveApplicationLogChannel, resolveLogChannel } from '../../../services/loggingService.js';
 
 async function buildDashboardEmbed(settings, roles, guild, client) {
@@ -50,9 +58,10 @@ async function buildDashboardEmbed(settings, roles, guild, client) {
             ? roles.map(r => `<@&${r.roleId}> — ${r.name}`).join('\n')
             : '`No application roles configured`';
     const questionCount = settings.questions?.length ?? 0;
+    const firstText = applicationQuestionText(settings.questions?.[0]);
     const firstQ =
-        settings.questions?.[0]
-            ? `\`${settings.questions[0].length > 55 ? settings.questions[0].substring(0, 55) + '…' : settings.questions[0]}\``
+        firstText
+            ? `\`${firstText.length > 55 ? firstText.substring(0, 55) + '…' : firstText}\``
             : '`Not set`';
 
     return new EmbedBuilder()
@@ -125,7 +134,15 @@ function buildButtonRow(settings, guildId, disabled = false) {
     );
 }
 
-async function refreshDashboard(rootInteraction, settings, roles, guildId, client) {
+async function refreshDashboard(rootInteraction, settings, roles, guildId, client, selectedRoleId = null) {
+    // Role dashboards must re-render the role view: its collectors only listen for
+    // app_cfg_<roleId>, so swapping in the global menu leaves dead components.
+    const selectedRole = selectedRoleId ? roles.find(r => r.roleId === selectedRoleId) : null;
+    if (selectedRole) {
+        await showApplicationDashboard(rootInteraction, selectedRole, settings, roles, guildId, client, false).catch(() => {});
+        return;
+    }
+
     const selectMenu = buildSelectMenu(guildId);
     await InteractionHelper.safeEditReply(rootInteraction, {
         embeds: [await buildDashboardEmbed(settings, roles, rootInteraction.guild, client)],
@@ -249,7 +266,7 @@ async function showApplicationSelector(interaction, roles, settings, guildId, cl
     });
 }
 
-async function showGlobalDashboard(interaction, settings, roles, guildId, client) {
+async function showGlobalDashboard(interaction, settings, roles, guildId, client, attachCollectors = true) {
     const selectMenu = buildSelectMenu(guildId);
 
     await InteractionHelper.safeEditReply(interaction, {
@@ -260,10 +277,12 @@ async function showGlobalDashboard(interaction, settings, roles, guildId, client
         ],
     });
 
-    setupCollectors(interaction, settings, roles, guildId, client, null);
+    if (attachCollectors) {
+        setupCollectors(interaction, settings, roles, guildId, client, null);
+    }
 }
 
-async function showApplicationDashboard(rootInteraction, selectedRole, settings, roles, guildId, client) {
+async function showApplicationDashboard(rootInteraction, selectedRole, settings, roles, guildId, client, attachCollectors = true) {
     const roleObj = rootInteraction.guild.roles.cache.get(selectedRole.roleId);
 
     const guildConfig = await getGuildConfig(client, guildId);
@@ -277,7 +296,8 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
         : '`Inherits global log channel`';
     
     const questionsDisplay = questions.length > 0
-        ? questions.map((q, i) => `${i + 1}. \`${q.length > 60 ? q.substring(0, 60) + '…' : q}\``).join('\n')
+        ? normalizeApplicationQuestions(questions).map(({ question: q, minLength }, i) =>
+            `${i + 1}. \`${q.length > 60 ? q.substring(0, 60) + '…' : q}\`${minLength > 1 ? ` (min ${minLength} chars)` : ''}`).join('\n')
         : '`Inherits global questions`';
     
     const managerRolesDisplay = settings.managerRoles && settings.managerRoles.length > 0
@@ -345,7 +365,9 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
         components: [menuRow, controlButtons],
     });
 
-    setupCollectors(rootInteraction, settings, roles, guildId, client, selectedRole.roleId);
+    if (attachCollectors) {
+        setupCollectors(rootInteraction, settings, roles, guildId, client, selectedRole.roleId);
+    }
 }
 
 function setupCollectors(interaction, settings, roles, guildId, client, selectedRoleId) {
@@ -442,11 +464,11 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
                 const wasEnabled = settings.enabled === true;
                 settings.enabled = !wasEnabled;
 
-                await saveApplicationSettings(interaction.client, guildId, settings);
+                await updateApplicationSettings(interaction.client, guildId, { enabled: settings.enabled });
 
                 const updatedSettings = await getApplicationSettings(interaction.client, guildId);
                 const updatedRoles = await getApplicationRoles(interaction.client, guildId);
-                await showGlobalDashboard(interaction, updatedSettings, updatedRoles, guildId, interaction.client);
+                await showGlobalDashboard(interaction, updatedSettings, updatedRoles, guildId, interaction.client, false);
 
                 await toggleInteraction.followUp({
                     embeds: [successEmbed(
@@ -602,11 +624,11 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
                 const wasEnabled = roles[roleIndex].enabled !== false;
                 roles[roleIndex].enabled = !wasEnabled;
 
-                await saveApplicationRoles(interaction.client, guildId, roles);
+                await updateApplicationRole(interaction.client, guildId, selectedRoleId, { enabled: !wasEnabled });
 
                 const updatedRole = roles[roleIndex];
                 const updatedSettings = await getApplicationSettings(interaction.client, guildId);
-                await showApplicationDashboard(interaction, updatedRole, updatedSettings, roles, guildId, interaction.client);
+                await showApplicationDashboard(interaction, updatedRole, updatedSettings, roles, guildId, interaction.client, false);
 
                 await toggleInteraction.followUp({
                     embeds: [successEmbed(
@@ -717,7 +739,7 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
         } else {
             await setLogChannel(client, guildId, 'applications', channelId);
             settings.logChannelId = channelId;
-            await saveApplicationSettings(client, guildId, settings);
+            await updateApplicationSettings(client, guildId, { logChannelId: channelId });
         }
 
         await modalSubmission.reply({
@@ -725,9 +747,9 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
             flags: MessageFlags.Ephemeral,
         });
 
-        await refreshDashboard(rootInteraction, settings, roles, guildId, client);
+        await refreshDashboard(rootInteraction, settings, roles, guildId, client, selectedRoleId);
     } catch (error) {
-        if (error.code === 'INTERACTION_TIMEOUT') return;
+        if (error.code === 'InteractionCollectorError' || error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in log channel modal:', error);
         await replyUserError(selectInteraction, {
             type: ErrorTypes.UNKNOWN,
@@ -736,7 +758,7 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
     }
 }
 
-async function handleManagerRole(selectInteraction, rootInteraction, settings, roles, guildId, client) {
+async function handleManagerRole(selectInteraction, rootInteraction, settings, roles, guildId, client, selectedRoleId = null) {
     const modal = new ModalBuilder()
         .setCustomId(`app_cfg_manager_role_modal_${guildId}`)
         .setTitle('Configure Manager Roles');
@@ -775,7 +797,7 @@ async function handleManagerRole(selectInteraction, rootInteraction, settings, r
         }
 
         settings.managerRoles = Array.from(roleSet);
-        await saveApplicationSettings(client, guildId, settings);
+        await updateApplicationSettings(client, guildId, { managerRoles: settings.managerRoles });
 
         const finalList = settings.managerRoles.length > 0
             ? settings.managerRoles.map(id => `<@&${id}>`).join(',')
@@ -786,9 +808,9 @@ async function handleManagerRole(selectInteraction, rootInteraction, settings, r
             flags: MessageFlags.Ephemeral,
         });
 
-        await refreshDashboard(rootInteraction, settings, roles, guildId, client);
+        await refreshDashboard(rootInteraction, settings, roles, guildId, client, selectedRoleId);
     } catch (error) {
-        if (error.code === 'INTERACTION_TIMEOUT') return;
+        if (error.code === 'InteractionCollectorError' || error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in manager role modal:', error);
         await replyUserError(selectInteraction, {
             type: ErrorTypes.UNKNOWN,
@@ -796,6 +818,10 @@ async function handleManagerRole(selectInteraction, rootInteraction, settings, r
         });
     }
 }
+
+// Questions are up to 100 characters; the extra room is for an optional " [min:N]" tag.
+const QUESTION_INPUT_MAX = MAX_QUESTION_LENGTH + 12;
+const MIN_TAG_HINT = 'End with [min:10] to require answers of at least 10 characters';
 
 async function handleQuestions(selectInteraction, rootInteraction, settings, roles, guildId, client, selectedRoleId) {
     let currentQuestions = settings.questions ?? [];
@@ -814,8 +840,9 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
                     .setCustomId('q1')
                     .setLabel('Question 1 (required)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(currentQuestions[0] ?? '')
-                    .setMaxLength(100)
+                    .setValue(formatApplicationQuestionForEditing(currentQuestions[0]))
+                    .setPlaceholder(MIN_TAG_HINT)
+                    .setMaxLength(QUESTION_INPUT_MAX)
                     .setMinLength(1)
                     .setRequired(true),
             ),
@@ -824,8 +851,9 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
                     .setCustomId('q2')
                     .setLabel('Question 2 (optional)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(currentQuestions[1] ?? '')
-                    .setMaxLength(100)
+                    .setValue(formatApplicationQuestionForEditing(currentQuestions[1]))
+                    .setPlaceholder(MIN_TAG_HINT)
+                    .setMaxLength(QUESTION_INPUT_MAX)
                     .setRequired(false),
             ),
             new ActionRowBuilder().addComponents(
@@ -833,8 +861,9 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
                     .setCustomId('q3')
                     .setLabel('Question 3 (optional)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(currentQuestions[2] ?? '')
-                    .setMaxLength(100)
+                    .setValue(formatApplicationQuestionForEditing(currentQuestions[2]))
+                    .setPlaceholder(MIN_TAG_HINT)
+                    .setMaxLength(QUESTION_INPUT_MAX)
                     .setRequired(false),
             ),
             new ActionRowBuilder().addComponents(
@@ -842,8 +871,9 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
                     .setCustomId('q4')
                     .setLabel('Question 4 (optional)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(currentQuestions[3] ?? '')
-                    .setMaxLength(100)
+                    .setValue(formatApplicationQuestionForEditing(currentQuestions[3]))
+                    .setPlaceholder(MIN_TAG_HINT)
+                    .setMaxLength(QUESTION_INPUT_MAX)
                     .setRequired(false),
             ),
             new ActionRowBuilder().addComponents(
@@ -851,8 +881,9 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
                     .setCustomId('q5')
                     .setLabel('Question 5 (optional)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(currentQuestions[4] ?? '')
-                    .setMaxLength(100)
+                    .setValue(formatApplicationQuestionForEditing(currentQuestions[4]))
+                    .setPlaceholder(MIN_TAG_HINT)
+                    .setMaxLength(QUESTION_INPUT_MAX)
                     .setRequired(false),
             ),
         );
@@ -870,7 +901,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
     if (!submitted) return;
 
     const newQuestions = ['q1', 'q2', 'q3', 'q4', 'q5']
-        .map(key => submitted.fields.getTextInputValue(key).trim())
+        .map(key => parseApplicationQuestionInput(submitted.fields.getTextInputValue(key)))
         .filter(Boolean);
 
     if (newQuestions.length === 0) {
@@ -880,13 +911,11 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
 
     if (selectedRoleId) {
         
-        const roleSettings = await getApplicationRoleSettings(client, guildId, selectedRoleId);
-        roleSettings.questions = newQuestions;
-        await saveApplicationRoleSettings(client, guildId, selectedRoleId, roleSettings);
+        await updateApplicationRole(client, guildId, selectedRoleId, { questions: newQuestions });
     } else {
         
         settings.questions = newQuestions;
-        await saveApplicationSettings(client, guildId, settings);
+        await updateApplicationSettings(client, guildId, { questions: newQuestions });
     }
 
     await submitted.reply({
@@ -899,7 +928,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
         flags: MessageFlags.Ephemeral,
     });
 
-    await refreshDashboard(rootInteraction, settings, roles, guildId, client);
+    await refreshDashboard(rootInteraction, settings, roles, guildId, client, selectedRoleId);
 }
 
 async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles, guildId, client) {
@@ -946,11 +975,8 @@ async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles
             return;
         }
 
-        roles.push({ roleId, name: customName });
-        await saveApplicationRoles(client, guildId, roles);
-        await saveApplicationRoleSettings(client, guildId, roleId, {
-            questions: getDefaultApplicationQuestions(),
-        });
+        const { role: added } = await createApplicationRole(client, guildId, { roleId, name: customName.slice(0, 50) });
+        roles.push(added);
 
         await modalSubmission.reply({
             embeds: [successEmbed('Role Added', `${role ?? roleId} added as **${customName}**.`)],
@@ -959,7 +985,7 @@ async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles
 
         await refreshDashboard(rootInteraction, settings, roles, guildId, client);
     } catch (error) {
-        if (error.code === 'INTERACTION_TIMEOUT') return;
+        if (error.code === 'InteractionCollectorError' || error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in role add modal:', error);
         await replyUserError(selectInteraction, {
             type: ErrorTypes.UNKNOWN,
@@ -1012,7 +1038,8 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
         }
 
         roles.splice(index, 1);
-        await saveApplicationRoles(client, guildId, roles);
+        // Removes the role from the list (its submitted applications are kept).
+        await deleteApplicationRole(client, guildId, roleId, { deleteApplications: false });
 
         await modalSubmission.reply({
             embeds: [successEmbed('Role Removed', `<@&${roleId}> has been removed from the application roles.`)],
@@ -1021,7 +1048,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
 
         await refreshDashboard(rootInteraction, settings, roles, guildId, client);
     } catch (error) {
-        if (error.code === 'INTERACTION_TIMEOUT') return;
+        if (error.code === 'InteractionCollectorError' || error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in role remove modal:', error);
         await replyUserError(selectInteraction, {
             type: ErrorTypes.UNKNOWN,
@@ -1030,7 +1057,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
     }
 }
 
-async function handleRetention(selectInteraction, rootInteraction, settings, roles, guildId, client) {
+async function handleRetention(selectInteraction, rootInteraction, settings, roles, guildId, client, selectedRoleId = null) {
     const modal = new ModalBuilder()
         .setCustomId('app_cfg_retention')
         .setTitle('Application Retention Periods');
@@ -1097,7 +1124,10 @@ async function handleRetention(selectInteraction, rootInteraction, settings, rol
 
     settings.pendingApplicationRetentionDays = pendingDays;
     settings.reviewedApplicationRetentionDays = reviewedDays;
-    await saveApplicationSettings(client, guildId, settings);
+    await updateApplicationSettings(client, guildId, {
+        pendingApplicationRetentionDays: pendingDays,
+        reviewedApplicationRetentionDays: reviewedDays,
+    });
 
     await submitted.reply({
         embeds: [
@@ -1109,7 +1139,7 @@ async function handleRetention(selectInteraction, rootInteraction, settings, rol
         flags: MessageFlags.Ephemeral,
     });
 
-    await refreshDashboard(rootInteraction, settings, roles, guildId, client);
+    await refreshDashboard(rootInteraction, settings, roles, guildId, client, selectedRoleId);
 }
 
 async function handleDeleteApplication(confirmSubmit, selectedRoleId, guildId, roles, client) {
@@ -1125,23 +1155,15 @@ async function handleDeleteApplication(confirmSubmit, selectedRoleId, guildId, r
 
         roles.splice(roleIndex, 1);
 
-        await saveApplicationRoles(client, guildId, roles);
-
-        await deleteApplicationRoleSettings(client, guildId, selectedRoleId);
-
-        const allApplications = await getApplications(client, guildId);
-        const applicationsToDelete = allApplications.filter(app => app.roleId === selectedRoleId);
-
-        for (const app of applicationsToDelete) {
-            await deleteApplication(client, guildId, app.id, app.userId);
-        }
+        // Role, its settings and every application for it (shared with the web dashboard).
+        const { deletedApplications } = await deleteApplicationRole(client, guildId, selectedRoleId);
 
         await confirmSubmit.reply({
             embeds: [
                 successEmbed(
                     '🗑️ Application Deleted',
                     `The application for <@&${selectedRoleId}> (**${deletedRole.name}**) has been permanently deleted.\n\n` +
-                    `Deleted: **${applicationsToDelete.length}** application${applicationsToDelete.length !== 1 ? 's' : ''}`,
+                    `Deleted: **${deletedApplications}** application${deletedApplications !== 1 ? 's' : ''}`,
                 ),
             ],
             flags: MessageFlags.Ephemeral,

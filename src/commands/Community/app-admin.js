@@ -4,6 +4,7 @@ import { getColor, getApplicationStatusColor } from '../../config/bot.js';
 import { logger } from '../../utils/logger.js';
 import { withErrorHandling, createError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
 import ApplicationService from '../../services/applicationService.js';
+import { parseApplicationQuestionInput } from '../../utils/applicationQuestions.js';
 import { 
     getApplicationSettings, 
     saveApplicationSettings, 
@@ -13,11 +14,11 @@ import {
     getApplicationRoles,
     saveApplicationRoles,
     getApplicationRoleSettings,
-    saveApplicationRoleSettings,
-    deleteApplication
+    saveApplicationRoleSettings
 } from '../../utils/database.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import appDashboard from './modules/app_dashboard.js';
+import { createApplicationRole } from '../../services/applicationRoleService.js';
 
 function getApplicationStatusPresentation(statusValue) {
     const normalized = typeof statusValue === 'string' ? statusValue.trim().toLowerCase() : 'unknown';
@@ -170,7 +171,7 @@ async function handleSetup(interaction) {
         .setCustomId('app_question_1')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('Why do you want this role?')
-        .setMaxLength(100)
+        .setMaxLength(112)
         .setMinLength(1)
         .setRequired(true);
 
@@ -182,7 +183,7 @@ async function handleSetup(interaction) {
         .setCustomId('app_question_2')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('What experience do you have?')
-        .setMaxLength(100)
+        .setMaxLength(112)
         .setRequired(false);
 
     const q2Label = new LabelBuilder()
@@ -192,7 +193,7 @@ async function handleSetup(interaction) {
     const q3Input = new TextInputBuilder()
         .setCustomId('app_question_3')
         .setStyle(TextInputStyle.Short)
-        .setMaxLength(100)
+        .setMaxLength(112)
         .setRequired(false);
 
     const q3Label = new LabelBuilder()
@@ -224,11 +225,12 @@ async function handleSetup(interaction) {
         return;
     }
 
+    // A trailing "[min:N]" sets that question's minimum answer length.
     const questions = [
-        submitted.fields.getTextInputValue('app_question_1').trim(),
-        submitted.fields.getTextInputValue('app_question_2').trim(),
-        submitted.fields.getTextInputValue('app_question_3').trim(),
-    ].filter(q => q.length > 0);
+        submitted.fields.getTextInputValue('app_question_1'),
+        submitted.fields.getTextInputValue('app_question_2'),
+        submitted.fields.getTextInputValue('app_question_3'),
+    ].map(parseApplicationQuestionInput).filter(Boolean);
 
     const role = await interaction.guild.roles.fetch(roleId).catch(() => null);
     if (!role) {
@@ -236,26 +238,17 @@ async function handleSetup(interaction) {
         return;
     }
 
-    const existingRoles = await getApplicationRoles(interaction.client, interaction.guild.id);
-    if (existingRoles.some(r => r.roleId === roleId)) {
-        await replyUserError(submitted, { type: ErrorTypes.CONFIGURATION, message: `The role ${role} is already configured as an application.` });
+    // Duplicate check, atomic save, the role's questions and turning the system on:
+    // services/applicationRoleService.js (shared with the web dashboard).
+    try {
+        await createApplicationRole(interaction.client, interaction.guild.id, {
+            roleId, name: appName, questions, enabled: true, enableSystem: true,
+        });
+    } catch (error) {
+        if (!error.userMessage || error.type !== ErrorTypes.VALIDATION) throw error;
+        await replyUserError(submitted, { type: ErrorTypes.CONFIGURATION, message: error.userMessage.replace('This role', `The role ${role}`) });
         return;
     }
-
-    existingRoles.push({
-        roleId: roleId,
-        name: appName,
-        enabled: true,  
-    });
-
-    await saveApplicationRoles(interaction.client, interaction.guild.id, existingRoles);
-
-    const settings = await getApplicationSettings(interaction.client, interaction.guild.id);
-    if (!settings.enabled) {
-        await ApplicationService.updateSettings(interaction.client, interaction.guild.id, { enabled: true });
-    }
-
-    await saveApplicationRoleSettings(interaction.client, interaction.guild.id, roleId, { questions });
 
     await submitted.reply({
         embeds: [successEmbed(
@@ -500,18 +493,22 @@ async function handleList(interaction) {
     );
 
     if (!user) {
-        applications = await Promise.all(
-            applications.map(async (app) => {
-                try {
-                    await interaction.guild.members.fetch(app.userId);
-                    return app; 
-                } catch {
-                    
-                    await deleteApplication(interaction.client, interaction.guild.id, app.id, app.userId);
-                    return null; 
-                }
-            })
-        ).then(results => results.filter(Boolean)); 
+        // Hide applicants who left the server. Viewing the list never deletes anything, and
+        // only a definite "Unknown Member" (10007) hides one; other fetch errors keep it listed.
+        const visible = [];
+        for (const app of applications) {
+            if (interaction.guild.members.cache.has(app.userId)) {
+                visible.push(app);
+                continue;
+            }
+            try {
+                await interaction.guild.members.fetch(app.userId);
+                visible.push(app);
+            } catch (error) {
+                if (error?.code !== 10007) visible.push(app);
+            }
+        }
+        applications = visible;
     }
 
     if (user) {

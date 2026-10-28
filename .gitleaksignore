@@ -1,0 +1,6 @@
+# Old DISCORD_TOKEN values in .env.example history. The token was reset (the current
+# token matches none of them, checked 2026-10-28), so these are dead. History is not
+# rewritten on purpose (see CLAUDE.md). Format: commit:file:rule:line
+37f8382eb5c169c110ddae8446a2950e9c275cde:.env.example:generic-api-key:4
+0f7dbae45d2a44d818b28a6ffbd5826a94b081fc:.env.example:generic-api-key:4
+f20e58d4f37ead34f8b14e4d20c72014383114e7:.env.example:generic-api-key:4

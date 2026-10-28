@@ -49,7 +49,8 @@ export default {
                         }
                         return text;
                     })
-                    .join('\n\n');
+                    .join('\n\n')
+                    .slice(0, 1024); // embed field values are capped at 1024 chars
 
                 if (definitions) {
                     embed.addFields({

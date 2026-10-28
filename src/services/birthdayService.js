@@ -1,9 +1,45 @@
 // birthdayService.js
 
-import { getGuildConfig } from './config/guildConfig.js';
+import { getGuildConfig, updateGuildConfig } from './config/guildConfig.js';
 import { getGuildBirthdays, setBirthday as dbSetBirthday, deleteBirthday as dbDeleteBirthday, getMonthName, getBirthdayTrackingKey } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
+import { DEFAULT_TIMEZONE, canonicalTimeZone, localDateParts, localDateKey } from '../utils/timezone.js';
+
+function isLeapYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+// Feb 29 birthdays are celebrated on Feb 28 in non-leap years.
+function celebratedDay(year, month, day) {
+  return month === 2 && day === 29 && !isLeapYear(year) ? 28 : day;
+}
+
+/** True when a stored birthday falls on the date `date` has in `timeZone` (IANA, default UTC). */
+export function isBirthdayOn(birthday, date, timeZone = DEFAULT_TIMEZONE) {
+  const { year, month, day } = localDateParts(date, timeZone);
+  return birthday.month === month
+    && celebratedDay(year, birthday.month, birthday.day) === day;
+}
+
+/**
+ * Tracking data for the daily check: { announcedDate: 'YYYY-MM-DD', roles: { userId: true } }.
+ * Older data is a bare { userId: true } map of members holding the birthday role.
+ */
+export function readBirthdayTracking(raw) {
+  if (raw && typeof raw === 'object' && ('announcedDate' in raw || 'roles' in raw)) {
+    return { announcedDate: raw.announcedDate ?? null, roles: { ...(raw.roles || {}) } };
+  }
+  const roles = {};
+  for (const [userId, value] of Object.entries(raw || {})) {
+    if (value) roles[userId] = true;
+  }
+  return { announcedDate: null, roles };
+}
+
+function guildTimeZone(config) {
+  return config?.birthdayTimezone || DEFAULT_TIMEZONE;
+}
 
 export function validateBirthday(month, day) {
   
@@ -28,8 +64,8 @@ export function validateBirthday(month, day) {
     };
   }
 
-  const currentYear = new Date().getFullYear();
-  const date = new Date(currentYear, month - 1, day);
+  // Validate against a leap year so Feb 29 birthdays are accepted every year.
+  const date = new Date(2000, month - 1, day);
   
   if (isNaN(date.getTime()) || date.getMonth() !== month - 1 || date.getDate() !== day) {
     return {
@@ -204,19 +240,22 @@ export async function getUpcomingBirthdays(client, guildId, limit = 5) {
       return [];
     }
 
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    
+    // Day arithmetic on the guild's local calendar date, expressed as UTC midnights.
+    const config = await getGuildConfig(client, guildId);
+    const local = localDateParts(new Date(), guildTimeZone(config));
+    const currentYear = local.year;
+    const today = new Date(Date.UTC(currentYear, local.month - 1, local.day));
+
     const upcomingBirthdays = [];
-    
+
     for (const [userId, userData] of Object.entries(birthdays)) {
-      let nextBirthday = new Date(currentYear, userData.month - 1, userData.day);
+      let nextBirthday = new Date(Date.UTC(currentYear, userData.month - 1, celebratedDay(currentYear, userData.month, userData.day)));
 
       if (nextBirthday < today) {
-        nextBirthday = new Date(currentYear + 1, userData.month - 1, userData.day);
+        nextBirthday = new Date(Date.UTC(currentYear + 1, userData.month - 1, celebratedDay(currentYear + 1, userData.month, userData.day)));
       }
-      
-      const daysUntil = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
+
+      const daysUntil = Math.round((nextBirthday - today) / (1000 * 60 * 60 * 24));
       
       upcomingBirthdays.push({
         userId,
@@ -244,14 +283,14 @@ export async function getUpcomingBirthdays(client, guildId, limit = 5) {
 export async function getTodaysBirthdays(client, guildId) {
   try {
     const birthdays = await getGuildBirthdays(client, guildId);
+    const config = await getGuildConfig(client, guildId);
+    const timeZone = guildTimeZone(config);
     const today = new Date();
-    const currentMonth = today.getUTCMonth() + 1;
-    const currentDay = today.getUTCDate();
 
     const todaysBirthdays = [];
 
     for (const [userId, userData] of Object.entries(birthdays)) {
-      if (userData.month === currentMonth && userData.day === currentDay) {
+      if (isBirthdayOn(userData, today, timeZone)) {
         todaysBirthdays.push({
           userId,
           month: userData.month,
@@ -271,19 +310,26 @@ export async function getTodaysBirthdays(client, guildId) {
   }
 }
 
+/**
+ * Daily birthday check. Each guild is handled on its own local date
+ * (birthdayTimezone): the 06:00 UTC cron run falls on every local date exactly
+ * once (e.g. 22:00 the same day in UTC-8, 15:00 in UTC+9), so announcements land
+ * on the right day, at the first run after local midnight. The tracking key records
+ * the local date already handled, so running this more often never announces twice.
+ */
 export async function checkBirthdays(client) {
-  const today = new Date();
-  const currentMonth = today.getUTCMonth() + 1;
-  const currentDay = today.getUTCDate();
+  const now = new Date();
 
   if (process.env.NODE_ENV !== 'production') {
-    logger.debug(`🎂 Running daily birthday check for UTC: ${currentMonth}/${currentDay}.`);
+    logger.debug(`🎂 Running birthday check at ${now.toISOString()}.`);
   }
 
   for (const [guildId, guild] of client.guilds.cache) {
     try {
       const config = await getGuildConfig(client, guildId);
       const { birthdayChannelId, birthdayRoleId } = config;
+      const timeZone = guildTimeZone(config);
+      const localDate = localDateKey(now, timeZone);
 
       // A channel is required for announcements; the birthday role is optional.
       if (!birthdayChannelId) {
@@ -293,14 +339,16 @@ export async function checkBirthdays(client) {
         continue;
       }
 
+      const trackingKey = getBirthdayTrackingKey(guildId);
+      const tracking = readBirthdayTracking(await client.db.get(trackingKey));
+      if (tracking.announcedDate === localDate) continue;
+
       const channel = await guild.channels.fetch(birthdayChannelId).catch(() => null);
       if (!channel) continue;
 
-      const trackingKey = getBirthdayTrackingKey(guildId);
-      const trackingData = (await client.db.get(trackingKey)) || {};
-      const updatedTrackingData = { ...trackingData };
-      
-      for (const userId of Object.keys(trackingData)) {
+      // Yesterday's birthday roles come off; failures stay tracked and are retried next time.
+      const roles = {};
+      for (const userId of Object.keys(tracking.roles)) {
         try {
           if (birthdayRoleId) {
             const member = await guild.members.fetch(userId).catch(() => null);
@@ -308,40 +356,47 @@ export async function checkBirthdays(client) {
               await member.roles.remove(birthdayRoleId, "Birthday role expired");
             }
           }
-          delete updatedTrackingData[userId];
         } catch (error) {
-           logger.error(`Error removing birthday role from ${userId}:`, error);
+          roles[userId] = true;
+          logger.error(`Error removing birthday role from ${userId}:`, error);
         }
-      }
-
-      if (Object.keys(updatedTrackingData).length !== Object.keys(trackingData).length) {
-        await client.db.set(trackingKey, updatedTrackingData);
       }
 
       // Use the canonical birthday storage (guild:<id>:birthdays) that set/remove commands write to.
       const birthdays = (await getGuildBirthdays(client, guildId)) || {};
       const birthdayMembers = [];
       for (const [userId, userData] of Object.entries(birthdays)) {
-        if (userData.month === currentMonth && userData.day === currentDay) {
+        if (isBirthdayOn(userData, now, timeZone)) {
           const member = await guild.members.fetch(userId).catch(() => null);
           if (member) {
             birthdayMembers.push(member);
-            if (birthdayRoleId) {
-              try {
-                await member.roles.add(birthdayRoleId, "Happy Birthday! 🎉");
-                updatedTrackingData[userId] = true;
-              } catch (error) {
-                  logger.error(`Error adding birthday role to ${member.user.tag}:`, error);
-              }
-            }
+            if (birthdayRoleId) roles[userId] = true;
+          }
+        }
+      }
+
+      // Claim the local date before announcing, so a crash or a second run can't post again.
+      let claimed = false;
+      await client.db.update(trackingKey, (current) => {
+        if (readBirthdayTracking(current).announcedDate === localDate) return current;
+        claimed = true;
+        return { announcedDate: localDate, roles };
+      }, {});
+      if (!claimed) continue;
+
+      if (birthdayRoleId) {
+        for (const member of birthdayMembers) {
+          try {
+            await member.roles.add(birthdayRoleId, "Happy Birthday! 🎉");
+          } catch (error) {
+            logger.error(`Error adding birthday role to ${member.user.tag}:`, error);
           }
         }
       }
 
       if (birthdayMembers.length > 0) {
-        await client.db.set(trackingKey, updatedTrackingData);
         const mentionList = birthdayMembers.map(m => m.toString()).join(', ');
-        
+
         await channel.send({
           embeds: [{
             title: '🎉 Happy Birthday! 🎂',
@@ -356,4 +411,39 @@ export async function checkBirthdays(client) {
       logger.error(`Error processing birthdays for guild ${guildId}:`, error);
     }
   }
+}
+
+const BIRTHDAY_SETTING_KEYS = { channelId: 'birthdayChannelId', timezone: 'birthdayTimezone', roleId: 'birthdayRoleId' };
+
+/**
+ * Changes the birthday settings of a guild (atomic top-level merge of the guild
+ * config). patch: { channelId?: id|null, timezone?: IANA name, roleId?: id|null };
+ * keys left undefined are not touched. The time zone is canonicalized; an unknown one
+ * throws a VALIDATION error. Returns { before, after } with the three settings.
+ */
+export async function updateBirthdaySettings(client, guildId, patch = {}) {
+  const updates = {};
+  for (const [key, field] of Object.entries(BIRTHDAY_SETTING_KEYS)) {
+    if (patch[key] === undefined) continue;
+    let value = patch[key];
+    if (key === 'timezone') {
+      value = canonicalTimeZone(value);
+      if (!value) {
+        throw new TitanBotError(`Unknown time zone: ${patch[key]}`, ErrorTypes.VALIDATION,
+          `${patch[key]} is not a known time zone. Use an IANA name such as Europe/London, America/New_York or UTC.`);
+      }
+    } else if (value !== null && !/^\d{17,20}$/.test(String(value))) {
+      throw new TitanBotError(`Invalid ${field}`, ErrorTypes.VALIDATION, `The birthday ${key === 'roleId' ? 'role' : 'channel'} is not valid.`);
+    }
+    updates[field] = value;
+  }
+  const pick = (config) => ({
+    birthdayChannelId: config.birthdayChannelId ?? null,
+    birthdayTimezone: config.birthdayTimezone ?? DEFAULT_TIMEZONE,
+    birthdayRoleId: config.birthdayRoleId ?? null,
+  });
+  const before = pick(await getGuildConfig(client, guildId));
+  if (!Object.keys(updates).length) return { before, after: before };
+  const saved = await updateGuildConfig(client, guildId, updates);
+  return { before, after: pick(saved || await getGuildConfig(client, guildId)) };
 }

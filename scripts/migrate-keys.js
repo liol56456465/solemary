@@ -15,21 +15,25 @@ import pg from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { resolveSslConfig } from '../src/config/database/postgres.js';
+import { resolveSslConfig, sanitizeConnectionString } from '../src/config/database/postgres.js';
 import { runKeyMigration } from '../src/utils/database/keyMigration.js';
 import { logger } from '../src/utils/logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+// Skip .env when started with --env-file (e.g. .env.test) so production values never leak in.
+if (!process.execArgv.some((arg) => arg.startsWith('--env-file'))) {
+  dotenv.config({ path: path.join(__dirname, '..', '.env') });
+}
 
 const { Pool } = pg;
 const dryRun = process.argv.includes('--dry-run');
 const force = process.argv.includes('--force');
 
 async function run() {
+    const databaseUrl = process.env.POSTGRES_URL;
     const pool = new Pool({
-        connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-        ssl: resolveSslConfig(),
+        connectionString: sanitizeConnectionString(databaseUrl),
+        ssl: resolveSslConfig(databaseUrl),
     });
 
     try {

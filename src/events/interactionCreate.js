@@ -19,22 +19,37 @@ import { resolveSlashAccessKey } from '../utils/messageAdapter.js';
 import { isCollectorManagedComponent } from '../utils/collectorComponents.js';
 import { ResponseCoordinator } from '../utils/responseCoordinator.js';
 import { enforceDefaultCommandPermissions } from '../utils/permissionGuard.js';
+import { checkCommandAccess } from '../utils/commandGate.js';
+import { skipIfArrivedTooLate, noticeIfHandlerMissedDeadline } from '../utils/lateInteractionNotice.js';
 
 const COMMAND_ERROR_SUBTYPES = {
-  warn: 'warn_failed',
-  kick: 'kick_failed',
-  ban: 'ban_failed',
-  unban: 'unban_failed',
-  timeout: 'timeout_failed',
-  untimeout: 'untimeout_failed',
-  warnings: 'warnings_view_failed',
   ticket: 'ticket_failed',
   serverstats: 'serverstats_failed',
-  gcreate: 'giveaway_failed',
-  gend: 'giveaway_failed',
-  gdelete: 'giveaway_failed',
-  greroll: 'giveaway_failed',
+  giveaway: 'giveaway_failed',
 };
+
+// Components without a registered handler are answered by message collectors. Those
+// live in memory for at most 15 minutes and die with the process, so a press on a
+// message that has been idle longer (or predates this process) reaches nobody and
+// Discord shows "This interaction failed". Answer those presses instead.
+const PROCESS_STARTED_AT = Date.now();
+const MAX_COLLECTOR_LIFETIME_MS = 15 * 60 * 1000;
+const EXPIRED_COMPONENT_MESSAGE = 'This menu has expired. Run the command again to get a fresh one.';
+
+function isExpiredCollectorMessage(message) {
+  if (!message) return false;
+  const lastActivity = Math.max(message.createdTimestamp || 0, message.editedTimestamp || 0);
+  if (!lastActivity) return false;
+  return lastActivity < PROCESS_STARTED_AT || Date.now() - lastActivity > MAX_COLLECTOR_LIFETIME_MS;
+}
+
+async function replyExpiredComponent(interaction) {
+  if (!isExpiredCollectorMessage(interaction.message)) return;
+  await InteractionHelper.safeReply(interaction, {
+    content: EXPIRED_COMPONENT_MESSAGE,
+    flags: MessageFlags.Ephemeral,
+  });
+}
 
 function withTraceContext(context = {}, traceContext = {}) {
   return {
@@ -54,6 +69,9 @@ export default {
     interaction.traceId = interactionTraceContext.traceId;
 
     return runWithTraceContext(interactionTraceContext, async () => {
+      // Set once a registered handler runs, so the late check below skips
+      // collector-managed and inline-awaited interactions.
+      let dispatched = false;
       try {
         InteractionHelper.patchInteractionResponses(interaction);
         ResponseCoordinator.attach(interaction);
@@ -82,6 +100,22 @@ export default {
                 'Sorry, that command does not exist.',
                 withTraceContext({ commandName: interaction.commandName }, interactionTraceContext)
               );
+            }
+
+            const access = checkCommandAccess({
+              command,
+              accessKey: resolveSlashAccessKey(interaction),
+              guild: interaction.guild,
+              userId: interaction.user.id,
+              permissions: interaction.memberPermissions,
+            });
+            if (!access.allowed) {
+              await InteractionHelper.safeReply(interaction, {
+                content: access.message,
+                flags: MessageFlags.Ephemeral,
+                allowedMentions: { parse: [] },
+              });
+              return;
             }
 
             if (isMaintenanceMode() && !isBotOwner(interaction.user.id)) {
@@ -160,6 +194,8 @@ export default {
               return;
             }
 
+            if (await skipIfArrivedTooLate(interaction)) return;
+            dispatched = true;
             await command.execute(interaction, guildConfig, client);
           } catch (error) {
             await handleInteractionError(interaction, error, withTraceContext({
@@ -168,8 +204,48 @@ export default {
               subtype: COMMAND_ERROR_SUBTYPES[interaction.commandName] || error?.context?.subtype,
             }, interactionTraceContext));
           }
+        } else if (interaction.isContextMenuCommand()) {
+          // Right-click commands ("Report message"): same access rules, no options to validate.
+          const command = client.commands.get(interaction.commandName);
+          try {
+            if (!command) {
+              throw createError(`No context menu command ${interaction.commandName}`, ErrorTypes.CONFIGURATION,
+                'Sorry, that command does not exist.', withTraceContext({ commandName: interaction.commandName }, interactionTraceContext));
+            }
+            const access = checkCommandAccess({
+              command,
+              accessKey: interaction.commandName,
+              guild: interaction.guild,
+              userId: interaction.user.id,
+              permissions: interaction.memberPermissions,
+            });
+            if (!access.allowed) {
+              await InteractionHelper.safeReply(interaction, { content: access.message, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+              return;
+            }
+            if (await skipIfArrivedTooLate(interaction)) return;
+            dispatched = true;
+            await command.execute(interaction, null, client);
+          } catch (error) {
+            await handleInteractionError(interaction, error, withTraceContext({
+              type: 'context_menu',
+              commandName: interaction.commandName,
+            }, interactionTraceContext));
+          }
         } else if (interaction.isAutocomplete()) {
           const autocompleteCommand = client.commands.get(interaction.commandName);
+          const autocompleteAccess = checkCommandAccess({
+            command: autocompleteCommand,
+            accessKey: resolveSlashAccessKey(interaction),
+            guild: interaction.guild,
+            userId: interaction.user.id,
+            permissions: interaction.memberPermissions,
+          });
+          if (!autocompleteAccess.allowed) {
+            await interaction.respond([]).catch(() => {});
+            return;
+          }
+
           if (autocompleteCommand?.autocomplete) {
             try {
               await autocompleteCommand.autocomplete(interaction, client);
@@ -315,6 +391,8 @@ export default {
 
             if (button) {
               try {
+                if (await skipIfArrivedTooLate(interaction)) return;
+                dispatched = true;
                 await button.execute(interaction, client, [listId]);
               } catch (error) {
                 await handleInteractionError(interaction, error, withTraceContext({
@@ -339,6 +417,7 @@ export default {
 
           if (!button) {
             if (!interaction.customId.includes(':') || isCollectorManagedComponent(customId)) {
+              await replyExpiredComponent(interaction);
               return;
             }
 
@@ -351,6 +430,8 @@ export default {
           }
 
           try {
+            if (await skipIfArrivedTooLate(interaction)) return;
+            dispatched = true;
             await button.execute(interaction, client, args);
           } catch (error) {
             await handleInteractionError(interaction, error, withTraceContext({
@@ -365,6 +446,7 @@ export default {
 
           if (!selectMenu) {
             if (!interaction.customId.includes(':') || isCollectorManagedComponent(customId)) {
+              await replyExpiredComponent(interaction);
               return;
             }
 
@@ -377,6 +459,8 @@ export default {
           }
 
           try {
+            if (await skipIfArrivedTooLate(interaction)) return;
+            dispatched = true;
             await selectMenu.execute(interaction, client, args);
           } catch (error) {
             await handleInteractionError(interaction, error, withTraceContext({
@@ -384,9 +468,14 @@ export default {
               customId: interaction.customId
             }, interactionTraceContext));
           }
+        } else if (interaction.isAnySelectMenu?.()) {
+          // User/role/channel select menus only ever belong to collectors.
+          await replyExpiredComponent(interaction);
         } else if (interaction.isModalSubmit()) {
           if (interaction.customId.startsWith('app_modal_')) {
             try {
+              if (await skipIfArrivedTooLate(interaction)) return;
+              dispatched = true;
               await handleApplicationModal(interaction);
             } catch (error) {
               await handleInteractionError(interaction, error, withTraceContext({
@@ -430,6 +519,8 @@ export default {
           }
 
           try {
+            if (await skipIfArrivedTooLate(interaction)) return;
+            dispatched = true;
             await modal.execute(interaction, client, args);
           } catch (error) {
             await handleInteractionError(interaction, error, withTraceContext({
@@ -464,6 +555,10 @@ export default {
             error: replyError,
             traceId: interactionTraceContext.traceId
           });
+        }
+      } finally {
+        if (dispatched) {
+          await noticeIfHandlerMissedDeadline(interaction).catch(() => {});
         }
       }
     });

@@ -8,8 +8,6 @@ import {
     getEconomyKey,
     getUserLevelKey,
     getAFKKey,
-    getWarningsKey,
-    getUserNotesKey,
     getEconomyPrefix,
     getUserLevelPrefix,
 } from '../utils/database.js';
@@ -17,8 +15,9 @@ const wipedataConfirmHandler = {
   name: 'wipedata_yes',
   async execute(interaction, client) {
     try {
-      const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
-      if (!deferSuccess) return;
+      // deferUpdate so the result replaces the confirmation prompt (and its buttons)
+      // instead of leaving a live "Confirm" button behind a second reply.
+      await interaction.deferUpdate();
 
       const userId = interaction.user.id;
       const guildId = interaction.guildId;
@@ -27,8 +26,6 @@ const wipedataConfirmHandler = {
         getEconomyKey(guildId, userId),
         getUserLevelKey(guildId, userId),
         getAFKKey(guildId, userId),
-        getWarningsKey(guildId, userId),
-        getUserNotesKey(guildId, userId),
         `level:${guildId}:${userId}`,
         `xp:${guildId}:${userId}`,
         `inventory:${guildId}:${userId}`,

@@ -3,113 +3,8 @@
 import { EmbedBuilder } from 'discord.js';
 import { getColor, botConfig } from '../config/bot.js';
 
-const EMOJI_REGEX = /[\p{Extended_Pictographic}\uFE0F]/gu;
-const EMBED_FOOTER_SYMBOL = Symbol('titanbotFooterText');
-const EMBED_BASE_DESCRIPTION_SYMBOL = Symbol('titanbotBaseDescription');
-
-function sanitizeEmbedText(text = '') {
-  if (typeof text !== 'string') {
-    return text;
-  }
-
-  return text
-    .replace(EMOJI_REGEX, '')
-    .replace(/[ \t]+/g, ' ')  // Replace consecutive spaces/tabs with single space
-    .replace(/[ \t]\n/g, '\n')  // Remove spaces before newlines
-    .replace(/\n[ \t]/g, '\n')  // Remove spaces after newlines
-    .replace(/\n{3,}/g, '\n\n')  // Limit consecutive newlines to 2
-    .trim();
-}
-
-function sanitizeEmbedField(field) {
-  if (!field || typeof field !== 'object') {
-    return field;
-  }
-
-  return {
-    ...field,
-    name: sanitizeEmbedText(field.name),
-    value: sanitizeEmbedText(field.value),
-  };
-}
-
-const originalSetTitle = EmbedBuilder.prototype.setTitle;
-const originalSetAuthor = EmbedBuilder.prototype.setAuthor;
-const originalAddFields = EmbedBuilder.prototype.addFields;
-
-EmbedBuilder.prototype.setTitle = function setSanitizedTitle(title) {
-  return originalSetTitle.call(this, sanitizeEmbedText(title));
-};
-
-EmbedBuilder.prototype.setAuthor = function setSanitizedAuthor(author) {
-  if (typeof author === 'string') {
-    return originalSetAuthor.call(this, sanitizeEmbedText(author));
-  }
-
-  if (author && typeof author.name === 'string') {
-    return originalSetAuthor.call(this, {
-      ...author,
-      name: sanitizeEmbedText(author.name),
-    });
-  }
-
-  return originalSetAuthor.call(this, author);
-};
-
-EmbedBuilder.prototype.addFields = function addSanitizedFields(...fields) {
-  const normalized = fields.flatMap((field) => (Array.isArray(field) ? field : [field]));
-  const sanitized = normalized.map(sanitizeEmbedField);
-  return originalAddFields.call(this, sanitized);
-};
-
-function normalizeFooterText(footer) {
-  if (!footer) {
-    return '';
-  }
-
-  if (typeof footer === 'string') {
-    return footer.trim();
-  }
-
-  if (footer && typeof footer.text === 'string') {
-    return footer.text.trim();
-  }
-
-  return '';
-}
-
-function isImportantFooter(footerText) {
-  if (!footerText) {
-    return false;
-  }
-
-  const normalized = footerText.toLowerCase();
-  return /\b(close|closes|closed|expire|expires|available in|page\s+\d+|dashboard closes|ticket id)\b/.test(normalized);
-}
-
-const originalSetDescription = EmbedBuilder.prototype.setDescription;
-const originalSetFooter = EmbedBuilder.prototype.setFooter;
-const originalSetTimestamp = EmbedBuilder.prototype.setTimestamp;
-
-EmbedBuilder.prototype.setDescription = function(description = '') {
-  const descString = sanitizeEmbedText(description || '');
-  this[EMBED_BASE_DESCRIPTION_SYMBOL] = descString;
-  return originalSetDescription.call(this, descString);
-};
-
-EmbedBuilder.prototype.setFooter = function(footer) {
-  const footerText = sanitizeEmbedText(normalizeFooterText(footer));
-  if (!footerText || !isImportantFooter(footerText)) {
-    return this;
-  }
-
-  this[EMBED_FOOTER_SYMBOL] = footerText;
-  return originalSetFooter.call(this, { text: footerText });
-};
-
-EmbedBuilder.prototype.setTimestamp = function() {
-  return this;
-};
+// No global EmbedBuilder patches: an earlier version stripped every emoji from
+// titles, fields and descriptions and silently dropped footers and timestamps.
 
 export function createEmbed({
   title = '',
@@ -141,9 +36,24 @@ export function createEmbed({
   }
 
   if (Array.isArray(fields) && fields.length > 0) {
-    const validFields = fields.filter(f => f && f.name && f.value);
+    // Discord rejects the whole message if any field breaks a limit, so clamp
+    // each field (name 256, value 1024) and stop before the 6000-char total.
+    const clamp = (text, max) => {
+      const value = String(text);
+      return value.length > max ? `${value.slice(0, max - 1)}…` : value;
+    };
+    const textOf = (part) => (typeof part === 'string' ? part : part?.text || part?.name || '');
+    let budget = 6000 - (embed.data.title?.length || 0) - (embed.data.description?.length || 0)
+      - Math.min(textOf(footer).length, 2048) - Math.min(textOf(author).length, 256);
+    const validFields = [];
+    for (const f of fields.filter(f => f && f.name && f.value).slice(0, 25)) {
+      const field = { ...f, name: clamp(f.name, 256), value: clamp(f.value, 1024) };
+      budget -= field.name.length + field.value.length;
+      if (budget < 0) break;
+      validFields.push(field);
+    }
     if (validFields.length > 0) {
-      embed.addFields(validFields.slice(0, 25)); 
+      embed.addFields(validFields);
     }
   }
 

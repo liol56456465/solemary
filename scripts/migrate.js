@@ -6,10 +6,13 @@ import { logger } from '../src/utils/logger.js';
 import { EXPECTED_SCHEMA_LABEL, EXPECTED_SCHEMA_VERSION } from '../src/config/database/schemaVersion.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+// Skip .env when started with --env-file (e.g. .env.test) so production values never leak in.
+if (!process.execArgv.some((arg) => arg.startsWith('--env-file'))) {
+  dotenv.config({ path: path.join(__dirname, '..', '.env') });
+}
 
 // Imported after dotenv.config so resolveSslConfig sees the loaded env vars.
-const { resolveSslConfig } = await import('../src/config/database/postgres.js');
+const { resolveSslConfig, sanitizeConnectionString } = await import('../src/config/database/postgres.js');
 // The schema is the single source of truth shared with the runtime auto-create
 // path (src/utils/postgresDatabase.js), so this script can never diverge from it.
 const {
@@ -22,9 +25,10 @@ const { assertAllowlistedIdentifier, quoteIdentifier } = await import('../src/ut
 
 const { Pool } = pg;
 
+const databaseUrl = process.env.POSTGRES_URL;
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL,
-  ssl: resolveSslConfig(),
+  connectionString: sanitizeConnectionString(databaseUrl),
+  ssl: resolveSslConfig(databaseUrl),
 });
 
 const migrationTable = process.env.POSTGRES_MIGRATION_TABLE || 'schema_migrations';

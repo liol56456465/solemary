@@ -1,0 +1,25 @@
+# Local Postgres for testing with .env.test.
+#   docker compose -f docker-compose.test.yml up -d
+# Matching .env.test line:
+#   POSTGRES_URL=postgresql://meowist:meowist@localhost:5433/meowist_test
+# Port 5433 avoids clashing with a Postgres already running on 5432.
+services:
+  db-test:
+    image: postgres:16-alpine
+    container_name: meowist-test-db
+    environment:
+      - POSTGRES_USER=meowist
+      - POSTGRES_PASSWORD=meowist
+      - POSTGRES_DB=meowist_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - meowist_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meowist -d meowist_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  meowist_test_data:

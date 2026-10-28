@@ -3,16 +3,30 @@
 import { logger } from './logger.js';
 
 const rateLimitStore = new Map();
+const PRUNE_EVERY_MS = 10 * 60 * 1000;
+let lastPrune = Date.now();
+
+// Drops entries whose window has passed; without this the map grows for every
+// user/command key ever seen.
+function pruneExpired(now) {
+  if (now - lastPrune < PRUNE_EVERY_MS) return;
+  lastPrune = now;
+  for (const [key, entry] of rateLimitStore) {
+    if (now - entry.windowStart > entry.windowMs) rateLimitStore.delete(key);
+  }
+}
 
 export async function checkRateLimit(key, maxAttempts = 5, windowMs = 60000) {
   try {
     const now = Date.now();
+    pruneExpired(now);
     const entry = rateLimitStore.get(key);
 
     if (!entry || now - entry.windowStart > windowMs) {
       rateLimitStore.set(key, {
         count: 1,
-        windowStart: now
+        windowStart: now,
+        windowMs
       });
       return true;
     }

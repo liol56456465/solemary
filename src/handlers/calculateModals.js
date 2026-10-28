@@ -10,7 +10,7 @@ function evaluate(expression) {
 async function calculateModalHandler(interaction, client, args) {
     try {
         const operation = args[0];
-        const operandInput = interaction.fields.first();
+        const operandInput = interaction.fields.fields.first();
         const contextKey = operandInput?.customId?.split(':')[1];
         
         if (!contextKey) {

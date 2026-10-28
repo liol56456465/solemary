@@ -14,11 +14,9 @@ export function isInteractionValid(interaction) {
         return true; 
     }
 
-    const ageMs = Date.now() - interaction.createdTimestamp;
-    if (ageMs > 2800) { 
-        return false;
-    }
-    
+    // No age check here: createdTimestamp comes from Discord's clock, so comparing it
+    // with this host's clock (skewed on some hosts) refused perfectly valid
+    // interactions. Callers attempt the response and handle 10062 instead.
     return true;
 }
 
@@ -33,7 +31,7 @@ export async function safeDeferInteraction(interaction, options = {}) {
             return false;
         }
 
-        if (interaction.deferred) {
+        if (interaction.deferred || interaction.replied) {
             return true;
         }
 

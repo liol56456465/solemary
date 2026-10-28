@@ -20,7 +20,9 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { successEmbed, infoEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorHandler.js';
-import { getGuildConfig, setGuildConfig } from '../../../services/config/guildConfig.js';
+import { getGuildConfig } from '../../../services/config/guildConfig.js';
+import { updateTicketSettings, clearTicketSettings } from '../../../services/ticketSettingsService.js';
+import { refreshTicketPanel, repostTicketPanel as repostTicketPanelService } from '../../../services/ticketPanelService.js';
 import { getGuildTicketStats } from '../../../utils/database/tickets.js';
 import { getUserTicketCount } from '../../../services/ticket.js';
 import {
@@ -75,44 +77,14 @@ async function persistPanelMessageId(client, guildId, guildConfig, messageId) {
     if (!messageId || guildConfig.ticketPanelMessageId === messageId) return;
     guildConfig.ticketPanelMessageId = messageId;
     if (client.db) {
-        await setGuildConfig(client, guildId, guildConfig);
+        await updateTicketSettings(client, guildId, { ticketPanelMessageId: messageId });
     }
 }
 
-function buildPanelEmbed(config) {
-    return new EmbedBuilder()
-        .setTitle('Support Tickets')
-        .setDescription(config.ticketPanelMessage || 'Click the button below to create a support ticket.')
-        .setColor(getColor('info'));
-}
-
-function buildPanelButtonRow(config) {
-    return new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-            .setCustomId('create_ticket')
-            .setLabel(config.ticketButtonLabel || 'Create Ticket')
-            .setStyle(ButtonStyle.Primary)
-            .setEmoji('📩'),
-    );
-}
-
-async function repostTicketPanel(client, guild, guildConfig, guildId) {
-    const channel = await guild.channels.fetch(guildConfig.ticketPanelChannelId).catch(() => null);
-    if (!channel) {
-        throw new TitanBotError(
-            'Panel channel missing',
-            ErrorTypes.CONFIGURATION,
-            'The configured ticket panel channel no longer exists. Set a new panel channel from the dashboard.',
-        );
-    }
-
-    const sentPanel = await channel.send({
-        embeds: [buildPanelEmbed(guildConfig)],
-        components: [buildPanelButtonRow(guildConfig)],
-    });
-
-    await persistPanelMessageId(client, guildId, guildConfig, sentPanel.id);
-    return sentPanel;
+// The panel message itself (build, repost, refresh) lives in
+// services/ticketPanelService.js, shared with /ticket setup and the web dashboard.
+async function repostTicketPanel(client, guild, guildConfig) {
+    return repostTicketPanelService(client, guild, guildConfig);
 }
 
 function formatCloseDuration(ms) {
@@ -235,24 +207,8 @@ async function refreshDashboard(rootInteraction, guildConfig, guildId, client) {
     }).catch(() => {});
 }
 
-async function updateLivePanel(client, guild, config, guildId) {
-    if (!config.ticketPanelChannelId) return false;
-    try {
-        const panelStatus = await getTicketPanelStatus(client, guild, config);
-        if (panelStatus.recoveredId) {
-            await persistPanelMessageId(client, guildId, config, panelStatus.recoveredId);
-        }
-        if (!panelStatus.exists || !panelStatus.message) return false;
-
-        await panelStatus.message.edit({
-            embeds: [buildPanelEmbed(config)],
-            components: [buildPanelButtonRow(config)],
-        });
-        return true;
-    } catch (error) {
-        logger.warn('Failed to update live ticket panel:', error.message);
-        return false;
-    }
+async function updateLivePanel(client, guild, config) {
+    return refreshTicketPanel(client, guild, config);
 }
 
 export default {
@@ -378,7 +334,7 @@ async function handlePanelMessage(selectInteraction, rootInteraction, guildConfi
 
     const newMessage = submitted.fields.getTextInputValue('panel_msg_input').trim();
     guildConfig.ticketPanelMessage = newMessage;
-    await setGuildConfig(client, guildId, guildConfig);
+    await updateTicketSettings(client, guildId, { ticketPanelMessage: guildConfig.ticketPanelMessage });
 
     const panelUpdated = await updateLivePanel(client, rootInteraction.guild, guildConfig, guildId);
 
@@ -431,7 +387,7 @@ async function handleButtonLabel(selectInteraction, rootInteraction, guildConfig
 
     const newLabel = submitted.fields.getTextInputValue('btn_label_input').trim();
     guildConfig.ticketButtonLabel = newLabel;
-    await setGuildConfig(client, guildId, guildConfig);
+    await updateTicketSettings(client, guildId, { ticketButtonLabel: guildConfig.ticketButtonLabel });
 
     const panelUpdated = await updateLivePanel(client, rootInteraction.guild, guildConfig, guildId);
 
@@ -488,7 +444,7 @@ async function handleStaffRole(selectInteraction, rootInteraction, guildConfig, 
         const role = roleInteraction.roles.first();
 
         guildConfig.ticketStaffRoleId = role.id;
-        await setGuildConfig(client, guildId, guildConfig);
+        await updateTicketSettings(client, guildId, { ticketStaffRoleId: guildConfig.ticketStaffRoleId });
 
         await roleInteraction.followUp({
             embeds: [successEmbed('Staff Role Updated', `Staff role set to ${role}.`)],
@@ -543,7 +499,7 @@ async function handleOpenCategory(selectInteraction, rootInteraction, guildConfi
         const category = catInteraction.channels.first();
 
         guildConfig.ticketCategoryId = category.id;
-        await setGuildConfig(client, guildId, guildConfig);
+        await updateTicketSettings(client, guildId, { ticketCategoryId: guildConfig.ticketCategoryId });
 
         await catInteraction.followUp({
             embeds: [
@@ -603,7 +559,7 @@ async function handleClosedCategory(selectInteraction, rootInteraction, guildCon
         const category = catInteraction.channels.first();
 
         guildConfig.ticketClosedCategoryId = category.id;
-        await setGuildConfig(client, guildId, guildConfig);
+        await updateTicketSettings(client, guildId, { ticketClosedCategoryId: guildConfig.ticketClosedCategoryId });
 
         await catInteraction.followUp({
             embeds: [
@@ -670,7 +626,7 @@ async function handleMaxTickets(selectInteraction, rootInteraction, guildConfig,
     }
 
     guildConfig.maxTicketsPerUser = newMax;
-    await setGuildConfig(client, guildId, guildConfig);
+    await updateTicketSettings(client, guildId, { maxTicketsPerUser: guildConfig.maxTicketsPerUser });
 
     await submitted.reply({
         embeds: [
@@ -690,7 +646,7 @@ async function handleDmOnClose(btnInteraction, rootInteraction, guildConfig, gui
 
     const newState = guildConfig.dmOnClose === false;
     guildConfig.dmOnClose = newState;
-    await setGuildConfig(client, guildId, guildConfig);
+    await updateTicketSettings(client, guildId, { dmOnClose: guildConfig.dmOnClose });
 
     await btnInteraction.followUp({
         embeds: [
@@ -737,7 +693,7 @@ async function handleLogsChannel(selectInteraction, rootInteraction, guildConfig
         const channel = channelInteraction.channels.first();
 
         guildConfig.ticketLogsChannelId = channel.id;
-        await setGuildConfig(client, guildId, guildConfig);
+        await updateTicketSettings(client, guildId, { ticketLogsChannelId: guildConfig.ticketLogsChannelId });
 
         await channelInteraction.followUp({
             embeds: [successEmbed('Logs Channel Updated', `Ticket logs will be sent to ${channel}`)],
@@ -789,7 +745,7 @@ async function handleTranscriptChannel(selectInteraction, rootInteraction, guild
         const channel = channelInteraction.channels.first();
 
         guildConfig.ticketTranscriptChannelId = channel.id;
-        await setGuildConfig(client, guildId, guildConfig);
+        await updateTicketSettings(client, guildId, { ticketTranscriptChannelId: guildConfig.ticketTranscriptChannelId });
 
         await channelInteraction.followUp({
             embeds: [successEmbed('Transcript Channel Updated', `Transcripts will be sent to ${channel}`)],
@@ -995,7 +951,7 @@ async function handleDeleteSystem(btnInteraction, rootInteraction, guildConfig, 
     for (const key of keysToDelete) {
         delete guildConfig[key];
     }
-    await setGuildConfig(client, guildId, guildConfig);
+    await clearTicketSettings(client, guildId, keysToDelete);
 
     await submitted.followUp({
         embeds: [

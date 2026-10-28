@@ -2,6 +2,7 @@ import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { createControlButtons, formatTime, startCountdown } from '../../handlers/countdownButtons.js';
 
 const activeCountdowns = new Map();
@@ -36,7 +37,7 @@ export default {
         ),
 
     async execute(interaction) {
-        const deferSuccess = await InteractionHelper.safeDefer(interaction);
+        const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         if (!deferSuccess) {
             logger.warn(`Countdown interaction defer failed`, {
                 userId: interaction.user.id,
@@ -53,11 +54,11 @@ export default {
         const totalSeconds = minutes * 60 + seconds;
 
         if (totalSeconds <= 0) {
-            throw new Error("Please specify a duration of at least 1 second.");
+            return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: "Please specify a duration of at least 1 second." });
         }
 
         if (totalSeconds > 86400) {
-            throw new Error("Countdown cannot be longer than 24 hours.");
+            return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: "Countdown cannot be longer than 24 hours." });
         }
 
         const endTime = Date.now() + totalSeconds * 1000;
@@ -67,7 +68,7 @@ export default {
 
         const initialEmbed = successEmbed(
             `⏱️ ${title}`,
-            `Time remaining: **${formatTime(totalSeconds)}**`,
+            `Time remaining: **${formatTime(totalSeconds)}** (ends <t:${Math.ceil(endTime / 1000)}:R>)`,
         );
 
         const message = await interaction.channel.send({
@@ -81,7 +82,6 @@ export default {
             remainingTime: totalSeconds * 1000,
             isPaused: false,
             title,
-            lastUpdate: Date.now(),
             interval: null,
         };
 

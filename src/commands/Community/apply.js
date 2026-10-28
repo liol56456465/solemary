@@ -1,5 +1,6 @@
 import { getColor, getDefaultApplicationQuestions } from '../../config/bot.js';
-import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { normalizeApplicationQuestions, MAX_ANSWER_LENGTH } from '../../utils/applicationQuestions.js';
+import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } from 'discord.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError, withErrorHandling, createError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
@@ -118,7 +119,12 @@ export async function handleApplicationModal(interaction) {
     
     const customId = interaction.customId;
     if (!customId.startsWith('app_modal_')) return;
-    
+
+    // Several DB reads + the submission run before the first reply; acknowledge
+    // within Discord's 3 s window so the modal does not show "interaction failed".
+    const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    if (!deferred) return;
+
     const roleId = customId.split('_')[2];
     
     const applicationRoles = await getApplicationRoles(interaction.client, interaction.guild.id);
@@ -126,6 +132,11 @@ export async function handleApplicationModal(interaction) {
     
     if (!applicationRole) {
         return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: 'Application configuration not found.' });
+    }
+
+    // It may have been disabled while the form was open.
+    if (applicationRole.enabled === false) {
+        return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: `The **${applicationRole.name}** application is currently closed.` });
     }
     
     const role = interaction.guild.roles.cache.get(roleId);
@@ -143,11 +154,13 @@ export async function handleApplicationModal(interaction) {
         questions = roleSettings.questions;
     }
     
+    questions = normalizeApplicationQuestions(questions);
     for (let i = 0; i < questions.length; i++) {
         const answer = interaction.fields.getTextInputValue(`q${i}`);
         answers.push({
-            question: questions[i],
-            answer: answer
+            question: questions[i].question,
+            answer: answer,
+            minLength: questions[i].minLength
         });
     }
     
@@ -224,7 +237,8 @@ export async function handleApplicationModal(interaction) {
 
 async function handleList(interaction) {
     try {
-        const applicationRoles = await getApplicationRoles(interaction.client, interaction.guild.id);
+        const applicationRoles = (await getApplicationRoles(interaction.client, interaction.guild.id))
+            .filter((appRole) => appRole.enabled !== false);
         
         if (applicationRoles.length === 0) {
             return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'No applications are currently available.' });
@@ -280,6 +294,10 @@ async function handleSubmit(interaction, settings) {
         return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Use `/apply list` to see available applications.' });
     }
 
+    if (applicationRole.enabled === false) {
+        return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: `The **${applicationRole.name}** application is currently closed. Use \`/apply list\` to see open ones.` });
+    }
+
     const userApps = await getUserApplications(
         interaction.client,
         interaction.guild.id,
@@ -306,7 +324,7 @@ async function handleSubmit(interaction, settings) {
         questions = roleSettings.questions;
     }
 
-    questions.forEach((question, index) => {
+    normalizeApplicationQuestions(questions).forEach(({ question, minLength }, index) => {
         const input = new TextInputBuilder()
             .setCustomId(`q${index}`)
             .setLabel(
@@ -316,7 +334,8 @@ async function handleSubmit(interaction, settings) {
             )
             .setStyle(TextInputStyle.Paragraph)
             .setRequired(true)
-            .setMaxLength(1000);
+            .setMinLength(minLength)
+            .setMaxLength(MAX_ANSWER_LENGTH);
 
         const row = new ActionRowBuilder().addComponents(input);
         modal.addComponents(row);

@@ -1,4 +1,4 @@
-import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, AttachmentBuilder, MessageFlags } from 'discord.js';
+import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, AttachmentBuilder, MessageFlags, PermissionFlagsBits, ChannelType } from 'discord.js';
 import { createEmbed, successEmbed } from '../utils/embeds.js';
 import { createTicket, closeTicket, claimTicket, updateTicketPriority } from '../services/ticket.js';
 import { getGuildConfig } from '../services/config/guildConfig.js';
@@ -6,7 +6,7 @@ import { logTicketEvent } from '../utils/ticket/ticketLogging.js';
 import { logger } from '../utils/logger.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
-import { replyUserError, ErrorTypes, handleInteractionError, createError } from '../utils/errorHandler.js';
+import { replyUserError, ErrorTypes, handleInteractionError, createError, TitanBotError } from '../utils/errorHandler.js';
 import { getTicketPermissionContext } from '../utils/ticket/ticketPermissions.js';
 
 function escapeHtml(text) {
@@ -29,6 +29,70 @@ async function ensureGuildContext(interaction) {
   }
 
   return false;
+}
+
+const PERMISSION_LABELS = {
+  ViewChannel: 'View Channel',
+  SendMessages: 'Send Messages',
+  ReadMessageHistory: 'Read Message History',
+  EmbedLinks: 'Embed Links',
+  ManageChannels: 'Manage Channels',
+  ManageRoles: 'Manage Roles'
+};
+
+// Errors whose message is meant for the user (denied access, wrong channel, too fast).
+const USER_FACING_TYPES = new Set([ErrorTypes.PERMISSION, ErrorTypes.VALIDATION, ErrorTypes.RATE_LIMIT, ErrorTypes.USER_INPUT]);
+
+// Discord refused one of the bot's own requests: either the raw API error (50001 Missing
+// Access, 50013 Missing Permissions) or the ticket service's wrapped copy of it, which keeps
+// type PERMISSION but is marked unexpected (user denials from assertTicketPermission are not).
+function isBotPermissionError(error) {
+  if (error?.code === 50001 || error?.code === 50013) return true;
+  return error instanceof TitanBotError && error.type === ErrorTypes.PERMISSION && error.context?.expected === false;
+}
+
+function missingBotPermissions(interaction, channel, required) {
+  const me = interaction.guild?.members?.me;
+  const permissions = me ? channel?.permissionsFor?.(me) : null;
+  if (!permissions) return [];
+  return required.filter(name => !permissions.has(PermissionFlagsBits[name]));
+}
+
+/**
+ * Replies to a failed ticket action. Permission problems get a specific message
+ * (the user's access or the bot's missing permissions in this category); anything
+ * else falls back to the generic message.
+ */
+async function replyTicketActionError(interaction, error, { fallback, action, botPermissions = ['ManageChannels'], channel = interaction.channel }) {
+  if (interaction.replied && !interaction.deferred) return;
+
+  if (isBotPermissionError(error)) {
+    const missing = missingBotPermissions(interaction, channel, botPermissions);
+    // If every listed permission looks granted, a channel overwrite is likely blocking; name them all.
+    const shown = missing.length > 0 ? missing : botPermissions;
+    const names = shown.map(name => `**${PERMISSION_LABELS[name] || name}**`).join(', ');
+    const category = channel?.type === ChannelType.GuildCategory ? channel : channel?.parent;
+    const where = category ? ` in the **${category.name}** category` : ' in this server';
+    await replyUserError(interaction, {
+      type: ErrorTypes.PERMISSION,
+      message: `I'm missing ${names}${where}, so I can't ${action}. Ask a server admin to grant ${shown.length > 1 ? 'them' : 'it'} to my role.`
+    });
+    return;
+  }
+
+  if (error instanceof TitanBotError && USER_FACING_TYPES.has(error.type) && error.userMessage) {
+    await replyUserError(interaction, { type: error.type, message: error.userMessage });
+    return;
+  }
+
+  await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: fallback });
+}
+
+function ticketAccessMessage(context, actionLabel, allowTicketCreator) {
+  const staffRole = context.config?.ticketStaffRoleId ? 'the **Ticket Staff** role' : 'the **Ticket Staff** role (none is configured yet)';
+  return allowTicketCreator
+    ? `You need ${staffRole} or **Manage Channels**, or to be the person who opened this ticket, to ${actionLabel}.`
+    : `You need ${staffRole} or **Manage Channels** to ${actionLabel}.`;
 }
 
 async function assertTicketPermission(interaction, client, actionLabel, options = {}, timeoutMs = 2500) {
@@ -66,13 +130,10 @@ async function assertTicketPermission(interaction, client, actionLabel, options 
 
   const allowed = allowTicketCreator ? context.canCloseTicket : context.canManageTicket;
   if (!allowed) {
-    const permissionMessage = allowTicketCreator
-      ? 'You must have **Manage Channels**, the configured **Ticket Staff Role**, or be the **ticket creator**.'
-      : 'You must have **Manage Channels** or the configured **Ticket Staff Role**.';
     throw createError(
       'Ticket permission denied',
       ErrorTypes.PERMISSION,
-      `${permissionMessage}\n\nYou cannot ${actionLabel}.`
+      ticketAccessMessage(context, actionLabel, allowTicketCreator)
     );
   }
 
@@ -91,11 +152,7 @@ async function ensureTicketPermission(interaction, client, actionLabel, options 
 
   const allowed = allowTicketCreator ? context.canCloseTicket : context.canManageTicket;
   if (!allowed) {
-    const permissionMessage = allowTicketCreator
-      ? 'You must have **Manage Channels**, the configured **Ticket Staff Role**, or be the **ticket creator**.'
-      : 'You must have **Manage Channels** or the configured **Ticket Staff Role**.';
-
-    await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: `${permissionMessage}\n\nYou cannot ${actionLabel}.` });
+    await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: ticketAccessMessage(context, actionLabel, allowTicketCreator) });
     return null;
   }
 
@@ -153,6 +210,7 @@ const createTicketHandler = {
 const createTicketModalHandler = {
   name: 'create_ticket_modal',
   async execute(interaction, client) {
+    let categoryId = null;
     try {
       if (!(await ensureGuildContext(interaction))) return;
 
@@ -161,7 +219,7 @@ const createTicketModalHandler = {
       
       const reason = interaction.fields.getTextInputValue('reason');
       const config = await getGuildConfig(client, interaction.guildId);
-      const categoryId = config.ticketCategoryId || null;
+      categoryId = config.ticketCategoryId || null;
       
       const { channel } = await createTicket(
         interaction.guild,
@@ -176,6 +234,16 @@ const createTicketModalHandler = {
         )]
       });
     } catch (error) {
+      if (isBotPermissionError(error)) {
+        const category = categoryId ? interaction.guild?.channels?.cache?.get(categoryId) : null;
+        await replyTicketActionError(interaction, error, {
+          fallback: 'Failed to create ticket. Please try again in a moment.',
+          action: 'create your ticket',
+          botPermissions: ['ViewChannel', 'ManageChannels', 'ManageRoles'],
+          channel: category ?? interaction.channel
+        });
+        return;
+      }
       await handleInteractionError(interaction, error, { type: 'button', handler: 'ticket', customId: interaction.customId });
     }
   }
@@ -208,9 +276,7 @@ const closeTicketHandler = {
     } catch (error) {
       logger.error('Error closing ticket:', error);
 
-      if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Could not open ticket close form.' });
-      }
+      await replyTicketActionError(interaction, error, { fallback: 'Could not open ticket close form.', action: 'close this ticket' });
     }
   }
 };
@@ -233,11 +299,7 @@ const closeTicketModalHandler = {
       await interaction.editReply({ embeds: [successEmbed('Ticket Closed', 'This ticket has been closed.')] });
     } catch (error) {
       logger.error('Error submitting close ticket modal:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while closing the ticket.' });
-      } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while closing the ticket.' });
-      }
+      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while closing the ticket.', action: 'close this ticket', botPermissions: ['ManageChannels', 'ManageRoles'] });
     }
   }
 };
@@ -257,11 +319,7 @@ const claimTicketHandler = {
       await interaction.editReply({ embeds: [successEmbed('Ticket Claimed', 'You have claimed this ticket.')] });
     } catch (error) {
       logger.error('Error claiming ticket:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while claiming the ticket.' });
-      } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while claiming the ticket.' });
-      }
+      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while claiming the ticket.', action: 'claim this ticket', botPermissions: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'EmbedLinks'] });
     }
   }
 };
@@ -287,11 +345,7 @@ const priorityTicketHandler = {
       await interaction.editReply({ embeds: [successEmbed('Priority Updated', `Ticket priority set to **${priority.toUpperCase()}**.`)] });
     } catch (error) {
       logger.error('Error updating ticket priority:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while updating the priority.' });
-      } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while updating the priority.' });
-      }
+      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while updating the priority.', action: 'change the priority', botPermissions: ['ManageChannels'] });
     }
   }
 };
@@ -383,11 +437,7 @@ const pinTicketHandler = {
 
     } catch (error) {
       logger.error('Error pinning/unpinning ticket:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Failed to pin/unpin the ticket.' });
-      } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Failed to pin/unpin the ticket.' });
-      }
+      await replyTicketActionError(interaction, error, { fallback: 'Failed to pin/unpin the ticket.', action: 'pin this ticket', botPermissions: ['ManageChannels'] });
     }
   }
 };
@@ -408,11 +458,7 @@ const unclaimTicketHandler = {
       await interaction.editReply({ embeds: [successEmbed('Ticket Unclaimed', 'This ticket has been unclaimed.')] });
     } catch (error) {
       logger.error('Error unclaiming ticket:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while unclaiming the ticket.' });
-      } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while unclaiming the ticket.' });
-      }
+      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while unclaiming the ticket.', action: 'unclaim this ticket', botPermissions: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'EmbedLinks'] });
     }
   }
 };
@@ -437,11 +483,7 @@ const reopenTicketHandler = {
       await interaction.editReply({ embeds: [successEmbed('Ticket Reopened', reopenMessage)] });
     } catch (error) {
       logger.error('Error reopening ticket:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while reopening the ticket.' });
-      } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while reopening the ticket.' });
-      }
+      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while reopening the ticket.', action: 'reopen this ticket', botPermissions: ['ManageChannels', 'ManageRoles'] });
     }
   }
 };
@@ -462,11 +504,7 @@ const deleteTicketHandler = {
       await interaction.editReply({ embeds: [successEmbed('Ticket Deleted', 'This ticket will be deleted shortly.')] });
     } catch (error) {
       logger.error('Error deleting ticket:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while deleting the ticket.' });
-      } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while deleting the ticket.' });
-      }
+      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while deleting the ticket.', action: 'delete this ticket', botPermissions: ['ManageChannels'] });
     }
   }
 };
@@ -481,5 +519,7 @@ export {
   pinTicketHandler,
   unclaimTicketHandler,
   reopenTicketHandler,
-  deleteTicketHandler 
+  deleteTicketHandler,
+  isBotPermissionError,
+  ticketAccessMessage
 };

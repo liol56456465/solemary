@@ -43,7 +43,8 @@ export default {
         logger.warn(`Failed to clean up reaction role data for deleted message ${message.id}:`, reactionRoleCleanupError);
       }
 
-      if (message.author?.bot) return;
+      // Uncached (partial) messages arrive since the Message partial; there is nothing to log.
+      if (message.partial || message.author?.bot) return;
 
       const metaLines = [
         formatLogLine('Channel', message.channel ? `${message.channel.name} ${message.channel.toString()}` : 'Unknown'),

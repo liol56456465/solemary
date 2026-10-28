@@ -1,10 +1,14 @@
 import { Events } from "discord.js";
 import { logger, startupLog } from "../utils/logger.js";
 import config from "../config/application.js";
+import { testMode, verifyTestResources } from "../config/testMode.js";
 import { reconcileReactionRoleMessages } from "../services/reactionRoleService.js";
 import { reconcileTicketPanels, reconcileVerificationPanels, reconcileReactionRolePanelHealth } from "../services/panelHealthService.js";
 import { reconcileLevelRoles } from "../services/leveling/levelRoleSyncService.js";
-import { initRiffyAfterReady } from "../services/music/riffySetup.js";
+import { reconcileBannedRoles } from "../services/enforcement/bannedRoleService.js";
+import { describeAutomodReadiness } from "../services/automod/automodService.js";
+import { loadNoContactOrders } from "../services/enforcement/noContactService.js";
+import { loadCommunityCaches } from "../services/community/index.js";
 
 export default {
   name: Events.ClientReady,
@@ -12,15 +16,29 @@ export default {
 
   async execute(client) {
     try {
-      client.user.setPresence(config.bot.presence);
+      client.user.setPresence(testMode.enabled ? testMode.presence : config.bot.presence);
+
+      if (testMode.enabled) {
+        const problems = await verifyTestResources(client);
+        if (problems.length > 0) {
+          logger.error("Test mode: configured resources are not in the test servers — shutting down:\n" + problems.map((p) => `  - ${p}`).join("\n"));
+          client.destroy();
+          process.exit(1);
+        }
+        startupLog("Test mode: category, channel, role and support invite verified in the test servers");
+      }
 
       startupLog(`Ready! Logged in as ${client.user.tag}`);
       startupLog(`Serving ${client.guilds.cache.size} guild(s)`);
       startupLog(`Loaded ${client.commands.size} commands`);
+      startupLog(`Automod: ${await describeAutomodReadiness(client).catch((error) => `check failed: ${error.message}`)}`);
 
-      if (client.config?.features?.music) {
-        initRiffyAfterReady(client);
-      }
+      const noContactCount = await loadNoContactOrders().catch((error) => {
+        logger.error(`No-contact orders could not be loaded: ${error.message}`);
+        return null;
+      });
+      startupLog(noContactCount == null ? "No-contact orders: not loaded (database unavailable)" : `No-contact orders: ${noContactCount} active`);
+      startupLog(`Community: ${await loadCommunityCaches(client)}`);
 
       const reconciliationSummary = await reconcileReactionRoleMessages(client);
       startupLog(
@@ -41,6 +59,16 @@ export default {
       startupLog(
         `Reaction role panel health: scanned ${reactionRolePanelSummary.scannedPanels} panels, healthy ${reactionRolePanelSummary.healthyPanels}, deleted ${reactionRolePanelSummary.deletedPanels}, missing channel ${reactionRolePanelSummary.missingChannels}, recovered ${reactionRolePanelSummary.recoveredIds}, errors ${reactionRolePanelSummary.errors}`
       );
+
+      const bannedRoleSummary = await reconcileBannedRoles(client).catch((error) => ({ skipped: error.message }));
+      if (bannedRoleSummary.skipped) {
+        const log = bannedRoleSummary.skipped === 'BANNED_ROLE_ID is not set' ? startupLog : (message) => logger.error(message);
+        log(`Banned role sync skipped: ${bannedRoleSummary.skipped}`);
+      } else {
+        startupLog(
+          `Banned role sync: scanned ${bannedRoleSummary.scanned} support members, added ${bannedRoleSummary.added}, removed ${bannedRoleSummary.removed}, errors ${bannedRoleSummary.errors}`
+        );
+      }
 
       const levelRoleSummary = await reconcileLevelRoles(client);
       startupLog(

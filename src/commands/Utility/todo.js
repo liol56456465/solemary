@@ -1,10 +1,16 @@
-import { SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, escapeMarkdown } from 'discord.js';
 import { createEmbed, successEmbed, infoEmbed, warningEmbed } from '../../utils/embeds.js';
 import { getFromDb, setInDb } from '../../utils/database.js';
 import { logger } from '../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import crypto from 'crypto';
+
+// User text goes into embed markdown; escape it (escapeMarkdown also escapes backslashes) so it
+// cannot form masked links or formatting.
+function escapeUserText(text) {
+    return escapeMarkdown(String(text ?? '')).replace(/[[\]()]/g, '\\$&');
+}
 
 function generateShareId() {
     return crypto.randomBytes(16).toString('hex');
@@ -169,7 +175,12 @@ export default {
             return listData;
         }
 
-        const deferSuccess = await InteractionHelper.safeDefer(interaction);
+        // Only a shared-list view is posted for everyone (its buttons are for the list's members);
+        // personal lists and confirmations stay private.
+        const deferSuccess = await InteractionHelper.safeDefer(
+            interaction,
+            shareSubcommand === 'view' ? {} : { flags: MessageFlags.Ephemeral },
+        );
         if (!deferSuccess) {
             logger.warn(`Todo interaction defer failed`, {
                 userId: interaction.user.id,
@@ -198,7 +209,7 @@ export default {
                         embeds: [
                             successEmbed(
                                 "Shared List Created",
-                                `Created shared list "${listName}" with ID: \`${listId}\`\n` +
+                                `Created shared list "${escapeUserText(listName)}" with ID: \`${listId}\`\n` +
                                 `Use \`/todo share add list_id:${listId} user:@username\` to add members.`
                             )
                         ]
@@ -232,7 +243,7 @@ export default {
                         return await InteractionHelper.safeEditReply(interaction, {
                             embeds: [
                                 successEmbed('Member Added', 
-                                    `Added ${memberToAdd.username} to the shared list "${listData.name}"`
+                                    `Added ${memberToAdd.username} to the shared list "${escapeUserText(listData.name)}"`
                                 )
                             ]
                         });
@@ -265,11 +276,11 @@ export default {
                         return await InteractionHelper.safeEditReply(interaction, {
                                 embeds: [
                                     successEmbed(
-                                        `📋 **${listData.name}**\n\n` +
+                                        `Shared List (ID: \`${listId}\`)`,
+                                        `📋 **${escapeUserText(listData.name)}**\n\n` +
                                         `👑 **Owner:** ${ownerName}\n` +
                                         `👥 **Members:** ${memberList}\n\n` +
-                                        `*This list is currently empty. Use the "Add Task" button to add tasks!*`,
-                                        `Shared List (ID: \`${listId}\`)`
+                                        `*This list is currently empty. Use the "Add Task" button to add tasks!*`
                                     )
                                 ],
                                 components: [
@@ -293,7 +304,7 @@ export default {
 
                     const taskList = listData.tasks
                         .map(task => 
-                            `${task.completed ? '✅' : '📝'} #${task.id} ${task.text}` +
+                            `${task.completed ? '✅' : '📝'} #${task.id} ${escapeUserText(task.text)}` +
                             `\`[${new Date(task.createdAt).toLocaleDateString()}]` +
                             (task.completed ? `• Completed by ${task.completedBy}` : '') + '`'
                         )
@@ -307,7 +318,7 @@ export default {
                     const owner = interaction.guild.members.cache.get(listData.creatorId);
                     const ownerName = owner ? owner.user.username : `<@${listData.creatorId}>`;
 
-                    const fullListDisplay = `📋 **${listData.name}**\n\n` +
+                    const fullListDisplay = `📋 **${escapeUserText(listData.name)}**\n\n` +
                         `👑 **Owner:** ${ownerName}\n` +
                         `👥 **Members:** ${memberList}\n\n` +
                         `**Tasks:**\n${taskList}`;
@@ -362,7 +373,7 @@ export default {
 
                     return await InteractionHelper.safeEditReply(interaction, {
                         embeds: [
-                            successEmbed('Task Added', `Added "${taskText}" to the shared list "${listData.name}"`)
+                            successEmbed('Task Added', `Added "${escapeUserText(taskText)}" to the shared list "${escapeUserText(listData.name)}"`)
                         ]
                     });
                 }
@@ -391,7 +402,7 @@ export default {
 
                     return await InteractionHelper.safeEditReply(interaction, {
                         embeds: [
-                            successEmbed('Task Removed', `Removed "${removedTask.text}" from the shared list "${listData.name}".`)
+                            successEmbed('Task Removed', `Removed "${escapeUserText(removedTask.text)}" from the shared list "${escapeUserText(listData.name)}".`)
                         ]
                     });
                 }
@@ -427,7 +438,7 @@ export default {
                     embeds: [
                         successEmbed(
                             "Task Added",
-                            `Added "${taskText}" to your to-do list.`
+                            `Added "${escapeUserText(taskText)}" to your to-do list.`
                         ),
                     ],
                 });
@@ -436,14 +447,14 @@ export default {
             case 'list': {
                 if (userData.tasks.length === 0) {
                     return await InteractionHelper.safeEditReply(interaction, {
-                        embeds: [successEmbed('Your to-do list is empty!', "Your To-Do List")],
+                        embeds: [successEmbed("Your To-Do List", 'Your to-do list is empty!')],
                     });
                 }
 
                 const taskList = userData.tasks
                     .map(task => 
-                        `${task.completed ? '✅' : '📝'} #${task.id} ${task.text}` +
-                        `\`[${new Date(task.createdAt).toLocaleDateString()}\``
+                        `${task.completed ? '✅' : '📝'} #${task.id} ${escapeUserText(task.text)}` +
+                        `\`[${new Date(task.createdAt).toLocaleDateString()}]\``
                     )
                     .join('\n');
 
@@ -471,7 +482,7 @@ export default {
 
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
-                        successEmbed('Task Completed', `Marked "${task.text}" as complete!`)
+                        successEmbed('Task Completed', `Marked "${escapeUserText(task.text)}" as complete!`)
                     ],
                 });
             }
@@ -489,7 +500,7 @@ export default {
 
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
-                        successEmbed('Task Removed', `Removed "${removedTask.text}" from your to-do list.`)
+                        successEmbed('Task Removed', `Removed "${escapeUserText(removedTask.text)}" from your to-do list.`)
                     ],
                 });
             }

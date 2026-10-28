@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { assertAllowlistedIdentifier } from '../../utils/sqlIdentifiers.js';
 import { EXPECTED_SCHEMA_LABEL, EXPECTED_SCHEMA_VERSION } from './schemaVersion.js';
 
@@ -18,6 +19,29 @@ const configuredTables = {
     verification_audit: 'verification_audit',
     temp_data: 'temp_data',
     cache_data: 'cache_data',
+    mod_cases: 'mod_cases',
+    mod_ladder: 'mod_ladder',
+    mod_appeals: 'mod_appeals',
+    mod_case_edits: 'mod_case_edits',
+    mod_case_evidence: 'mod_case_evidence',
+    enforcement_settings: 'enforcement_settings',
+    staff_warnings: 'staff_warnings',
+    verification_ips: 'verification_ips',
+    staff_activity: 'staff_activity',
+    server_snapshots: 'server_snapshots',
+    automod_native_rules: 'automod_native_rules',
+    automod_raid_incidents: 'automod_raid_incidents',
+    no_contact_orders: 'no_contact_orders',
+    sticky_messages: 'sticky_messages',
+    tags: 'tags',
+    community_settings: 'community_settings',
+    suggestions: 'suggestions',
+    suggestion_votes: 'suggestion_votes',
+    starboard_posts: 'starboard_posts',
+    feeds: 'feeds',
+    guild_settings: 'guild_settings',
+    dashboard_sessions: 'dashboard_sessions',
+    dashboard_audit: 'dashboard_audit',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -37,6 +61,29 @@ const allowedTableIdentifiers = new Set([
     'verification_audit',
     'temp_data',
     'cache_data',
+    'mod_cases',
+    'mod_ladder',
+    'mod_appeals',
+    'mod_case_edits',
+    'mod_case_evidence',
+    'enforcement_settings',
+    'staff_warnings',
+    'verification_ips',
+    'staff_activity',
+    'server_snapshots',
+    'automod_native_rules',
+    'automod_raid_incidents',
+    'no_contact_orders',
+    'sticky_messages',
+    'tags',
+    'community_settings',
+    'suggestions',
+    'suggestion_votes',
+    'starboard_posts',
+    'feeds',
+    'guild_settings',
+    'dashboard_sessions',
+    'dashboard_audit',
 ]);
 
 const validatedTables = Object.fromEntries(
@@ -48,48 +95,107 @@ const validatedTables = Object.fromEntries(
 
 const DEFAULT_POSTGRES_URL = 'postgresql://localhost:5432/titanbot';
 
-export function resolveSslConfig() {
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '']);
+// pg lets these URL parameters override the ssl option; they are stripped so the
+// code below is the only thing deciding (sslmode=require used to mean "verify"
+// and becomes "don't verify" in pg v9).
+const SSL_URL_PARAMS = ['sslmode', 'ssl', 'sslrootcert', 'sslcert', 'sslkey', 'uselibpqcompat'];
+
+/**
+ * The database URL comes from POSTGRES_URL only. DATABASE_URL is ignored on purpose:
+ * Replit sets it to its own (suspended) database, and silently falling back to it
+ * would hide a missing POSTGRES_URL.
+ */
+function databaseUrl() {
+    return (process.env.POSTGRES_URL || '').trim();
+}
+
+/** A startup warning when DATABASE_URL is set to something else (it is ignored), or null. */
+export function ignoredDatabaseUrlWarning(env = process.env) {
+    const ignored = (env.DATABASE_URL || '').trim();
+    const used = (env.POSTGRES_URL || '').trim();
+    if (!ignored || ignored === used) return null;
+    const host = hostOf(ignored) || 'an unparseable URL';
+    return used
+        ? `DATABASE_URL is set (${host}) but ignored: the bot only reads POSTGRES_URL.`
+        : `DATABASE_URL is set (${host}) but ignored, and POSTGRES_URL is not set: set POSTGRES_URL to the bot's database.`;
+}
+
+function hostOf(url) {
+    try {
+        return new URL(url).hostname.replace(/^\[|\]$/g, '');
+    } catch {
+        return '';
+    }
+}
+
+/**
+ * TLS settings for a database URL. Remote hosts (Neon) always get TLS with
+ * certificate and hostname verification, whatever the URL says. Only a local
+ * database may run without TLS. POSTGRES_SSL=no-verify is the explicit escape
+ * hatch for a provider with a self-signed certificate.
+ */
+export function resolveSslConfig(url = databaseUrl()) {
+    const host = hostOf(url) || process.env.POSTGRES_HOST || 'localhost';
     const sslEnv = process.env.POSTGRES_SSL?.toLowerCase();
-    if (sslEnv === 'false' || sslEnv === '0') {
-        return false;
+    if (LOCAL_HOSTS.has(host)) {
+        return sslEnv === 'true' || sslEnv === '1' ? { rejectUnauthorized: true } : false;
     }
-    if (sslEnv === 'true' || sslEnv === '1') {
+    const ca = caFromEnv();
+    if (sslEnv === 'no-verify') {
+        if (ca) throw new Error('POSTGRES_SSL=no-verify and a CA certificate are both set; remove one (verification stays on with the CA)');
         return { rejectUnauthorized: false };
     }
+    // With a CA (Supabase signs with its own root), only that CA is trusted.
+    return ca ? { rejectUnauthorized: true, ca } : { rejectUnauthorized: true };
+}
 
-    const url = process.env.POSTGRES_URL || process.env.DATABASE_URL || '';
-    if (/sslmode=(require|verify-ca|verify-full|prefer)/i.test(url)) {
-        return { rejectUnauthorized: false };
+/**
+ * The database's CA certificate, for providers whose root is not publicly
+ * trusted (Supabase: "Supabase Root 2021 CA", prod-ca-2021.crt). POSTGRES_CA_CERT
+ * holds the PEM text (a secret can store "\n" for line breaks); POSTGRES_CA_FILE
+ * is a path to it.
+ */
+function caFromEnv() {
+    const pem = process.env.POSTGRES_CA_CERT?.trim();
+    if (pem) return pem.replace(/\\n/g, '\n');
+    const file = process.env.POSTGRES_CA_FILE?.trim();
+    return file ? fs.readFileSync(file, 'utf8') : undefined;
+}
+
+/** The URL without TLS parameters, so pg can't override resolveSslConfig(). */
+export function sanitizeConnectionString(url) {
+    try {
+        const parsed = new URL(url);
+        for (const param of SSL_URL_PARAMS) parsed.searchParams.delete(param);
+        return parsed.toString();
+    } catch {
+        return url;
     }
+}
 
-    if (process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID) {
-        return { rejectUnauthorized: false };
-    }
-
-    if (process.env.NODE_ENV === 'production') {
-        return { rejectUnauthorized: false };
-    }
-
-    return false;
+function intFromEnv(name, fallback) {
+    const value = Number.parseInt(process.env[name], 10);
+    return Number.isFinite(value) ? value : fallback;
 }
 
 export function resolvePostgresPoolConfig() {
-    const ssl = resolveSslConfig();
-    const url = (process.env.POSTGRES_URL || process.env.DATABASE_URL || '').trim();
+    const url = databaseUrl();
     const sharedOptions = {
-        max: parseInt(process.env.POSTGRES_MAX_CONNECTIONS) || 20,
-        min: parseInt(process.env.POSTGRES_MIN_CONNECTIONS) || 2,
-        idleTimeoutMillis: parseInt(process.env.POSTGRES_IDLE_TIMEOUT) || 30000,
-        connectionTimeoutMillis: parseInt(process.env.POSTGRES_CONNECTION_TIMEOUT) || 10000,
+        max: intFromEnv('POSTGRES_MAX_CONNECTIONS', 20),
+        // 0 lets idle connections close; Neon drops them anyway when it scales to zero.
+        min: intFromEnv('POSTGRES_MIN_CONNECTIONS', 0),
+        idleTimeoutMillis: intFromEnv('POSTGRES_IDLE_TIMEOUT', 30000),
+        connectionTimeoutMillis: intFromEnv('POSTGRES_CONNECTION_TIMEOUT', 10000),
         application_name: 'titanbot',
         statement_timeout: process.env.NODE_ENV === 'production' ? 30000 : 0,
-        keepalives: 1,
-        keepalives_idle: 30,
-        ssl,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 30000,
+        ssl: resolveSslConfig(url),
     };
 
     if (url && url !== DEFAULT_POSTGRES_URL) {
-        return { connectionString: url, ...sharedOptions };
+        return { connectionString: sanitizeConnectionString(url), ...sharedOptions };
     }
 
     return {
@@ -103,7 +209,7 @@ export function resolvePostgresPoolConfig() {
 }
 
 export const pgConfig = {
-    url: process.env.POSTGRES_URL || process.env.DATABASE_URL || DEFAULT_POSTGRES_URL,
+    url: process.env.POSTGRES_URL || DEFAULT_POSTGRES_URL,
     
     options: {
         
@@ -114,8 +220,8 @@ export const pgConfig = {
         password: (process.env.POSTGRES_PASSWORD || '').toString(),
         ssl: resolveSslConfig(),
 
-        max: parseInt(process.env.POSTGRES_MAX_CONNECTIONS) || 20,
-        min: parseInt(process.env.POSTGRES_MIN_CONNECTIONS) || 2,
+        max: intFromEnv('POSTGRES_MAX_CONNECTIONS', 20),
+        min: intFromEnv('POSTGRES_MIN_CONNECTIONS', 0),
         idleTimeoutMillis: parseInt(process.env.POSTGRES_IDLE_TIMEOUT) || 30000,
         connectionTimeoutMillis: parseInt(process.env.POSTGRES_CONNECTION_TIMEOUT) || 10000,
 
