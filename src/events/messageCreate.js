@@ -16,6 +16,7 @@ import { enforceAbuseProtection, formatCooldownDuration } from '../utils/abusePr
 import { createEmbed } from '../utils/embeds.js';
 import { isCommandEnabled } from '../services/commandAccessService.js';
 import { checkCommandAccess } from '../utils/commandGate.js';
+import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { handleModmailDm, handleModmailStaffMessage, isModmailStaff, modmailUserId } from '../services/modmailService.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { enforceNoContact } from '../services/enforcement/noContactService.js';
@@ -120,6 +121,10 @@ async function handlePrefixCommand(message, client) {
     if (!access.allowed) {
       await message.reply({ content: access.message, allowedMentions: { parse: [], repliedUser: false } }).catch(() => {});
       return;
+    }
+    if (access.ownerOverride) {
+      noteOwnerOverride({ client, guildId: message.guild.id, userId: message.author.id, username: message.author.username,
+        action: accessKey || command.data?.name || 'prefix command', via: 'prefix' });
     }
 
     if (isMaintenanceMode() && !isBotOwner(message.author.id)) {

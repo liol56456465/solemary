@@ -5,6 +5,7 @@ import { logger } from '../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../utils/errorHandler.js';
 import { isBotOwner } from '../config/bot.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
+import { noteOwnerOverride } from '../services/ownerOverride.js';
 function createControlButtons(countdownId, isPaused = false) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -128,6 +129,9 @@ async function countdownButtonHandler(interaction, client, args) {
                 content: 'You need the Administrator role to control countdowns.',
                 flags: ["Ephemeral"],
             });
+        }
+        if (!isAdministrator(interaction.member)) {
+            noteOwnerOverride({ client, guildId: interaction.guildId, userId: interaction.user.id, username: interaction.user.username, action: `countdown ${action}`, via: 'button' });
         }
 
         switch (action) {

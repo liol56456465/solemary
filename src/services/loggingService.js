@@ -31,6 +31,7 @@ const EVENT_TYPES = {
   MODERATION_WARN_REMOVE: 'moderation.warnremove',
   MODERATION_APPEAL: 'moderation.appeal',
   MODERATION_STAFF_REPORT: 'moderation.staffreport',
+  MODERATION_OWNER_OVERRIDE: 'moderation.owneroverride',
 
   LEVELING_LEVELUP: 'leveling.levelup',
   LEVELING_MILESTONE: 'leveling.milestone',
@@ -110,6 +111,7 @@ const EVENT_COLORS = {
   'moderation.warnremove': 0x2ecc71,
   'moderation.appeal': 0x5865F2,
   'moderation.staffreport': 0xED4245,
+  'moderation.owneroverride': 0xE67E22,
   'leveling.levelup': 0x00ff00,
   'leveling.milestone': 0xFFD700,
   'message.delete': 0x8b0000,
@@ -177,6 +179,7 @@ const EVENT_ICONS = {
   'moderation.warnremove': '🧹',
   'moderation.appeal': '📨',
   'moderation.staffreport': '🚨',
+  'moderation.owneroverride': '🗝️',
   'leveling.levelup': '📈',
   'leveling.milestone': '🏆',
   'message.delete': '❌',

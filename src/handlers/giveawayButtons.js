@@ -10,6 +10,7 @@ import {
 import { Mutex } from '../utils/mutex.js';
 import { isBotOwner } from '../config/bot.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
+import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { 
     selectWinners,
@@ -117,6 +118,9 @@ export const giveawayEndHandler = {
             // Ending or rerolling decides who wins: Administrator only (access model), like the commands.
             if (!isBotOwner(interaction.user.id) && !isAdministrator(interaction.member)) {
                 return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the Administrator role to end a giveaway.' });
+            }
+            if (!isAdministrator(interaction.member)) {
+                noteOwnerOverride({ client, guildId: interaction.guildId, userId: interaction.user.id, username: interaction.user.username, action: 'giveaway end', via: 'button' });
             }
 
             // Saving, editing the giveaway message and logging can exceed Discord's 3s window.
@@ -238,6 +242,9 @@ export const giveawayRerollHandler = {
 
             if (!isBotOwner(interaction.user.id) && !isAdministrator(interaction.member)) {
                 return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the Administrator role to reroll a giveaway.' });
+            }
+            if (!isAdministrator(interaction.member)) {
+                noteOwnerOverride({ client, guildId: interaction.guildId, userId: interaction.user.id, username: interaction.user.username, action: 'giveaway reroll', via: 'button' });
             }
 
             // Saving, editing the giveaway message and logging can exceed Discord's 3s window.

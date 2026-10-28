@@ -20,6 +20,7 @@ import { isCollectorManagedComponent } from '../utils/collectorComponents.js';
 import { ResponseCoordinator } from '../utils/responseCoordinator.js';
 import { enforceDefaultCommandPermissions } from '../utils/permissionGuard.js';
 import { checkCommandAccess } from '../utils/commandGate.js';
+import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { skipIfArrivedTooLate, noticeIfHandlerMissedDeadline } from '../utils/lateInteractionNotice.js';
 
 const COMMAND_ERROR_SUBTYPES = {
@@ -116,6 +117,10 @@ export default {
                 allowedMentions: { parse: [] },
               });
               return;
+            }
+            if (access.ownerOverride) {
+              noteOwnerOverride({ client, guildId: interaction.guildId, userId: interaction.user.id, username: interaction.user.username,
+                action: `/${resolveSlashAccessKey(interaction) || interaction.commandName}`, via: 'slash' });
             }
 
             if (isMaintenanceMode() && !isBotOwner(interaction.user.id)) {
@@ -222,6 +227,10 @@ export default {
             if (!access.allowed) {
               await InteractionHelper.safeReply(interaction, { content: access.message, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
               return;
+            }
+            if (access.ownerOverride) {
+              noteOwnerOverride({ client, guildId: interaction.guildId, userId: interaction.user.id, username: interaction.user.username,
+                action: interaction.commandName, via: 'context menu' });
             }
             if (await skipIfArrivedTooLate(interaction)) return;
             dispatched = true;

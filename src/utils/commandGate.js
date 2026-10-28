@@ -50,7 +50,8 @@ export function canSeeAdminCommands(interaction) {
  * @param {object|null} p.guild
  * @param {string} p.userId
  * @param {object|null} p.permissions  PermissionsBitField of the member in this guild
- * @returns {{ allowed: true } | { allowed: false, message: string }}
+ * @returns {{ allowed: true, ownerOverride?: true } | { allowed: false, message: string }}
+ *   ownerOverride: allowed only because the user is in OWNER_IDS (the caller records it).
  */
 export function checkCommandAccess({ command, accessKey, guild, userId, permissions }) {
     if (!guild) {
@@ -64,8 +65,9 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
                 : 'Commands only work in the Meowist servers.',
         };
     }
-    if (isEveryoneCommand(accessKey) || isBotOwner(userId) || hasAdministrator({ guild, userId, permissions })) {
+    if (isEveryoneCommand(accessKey) || hasAdministrator({ guild, userId, permissions })) {
         return { allowed: true };
     }
+    if (isBotOwner(userId)) return { allowed: true, ownerOverride: true };
     return { allowed: false, message: getAdminRequiredMessage() };
 }

@@ -12,6 +12,7 @@ import { createAccessChecker } from '../src/services/dashboard/access.js';
 import { SESSION_COOKIE, signValue, isSameOrigin } from '../src/services/dashboard/security.js';
 import { MODULES, getAction } from '../src/services/dashboard/modules/index.js';
 import { getSettingEntry, seedValue } from '../src/services/settings/settingsRegistry.js';
+import { logger } from '../src/utils/logger.js';
 import { channelGroups, channelWarnings, roleWarnings, switchInput } from '../src/services/dashboard/forms.js';
 import { diffSnapshots, recordDashboardChange, changeSummary } from '../src/services/dashboard/audit.js';
 import { channelPurposeFor } from '../src/services/automod/channelRouting.js';
@@ -632,6 +633,31 @@ test('every POST action: users without access are refused; admin-only actions re
                 assert.equal(asOwner.statusCode, 303, `${module.key}/${action} owner may change settings (decision 4)`);
             }
         }
+    }
+});
+
+test('owner override: an OWNER_IDS action without Administrator is logged with user, action and time; an admin\'s is not', async () => {
+    const warnings = [];
+    const realWarn = logger.warn;
+    logger.warn = (message, ...rest) => { warnings.push(String(message)); return realWarn.call(logger, message, ...rest); };
+    try {
+        const module = MODULES.find((m) => Object.keys(CASES[m.key]).some((a) => !getAction(m, a).admin));
+        const action = Object.keys(CASES[module.key]).find((a) => !getAction(module, a).admin);
+        const owner = await setup({ userId: OWNER });
+        CASES[module.key][action].seed?.(owner.state);
+        assert.equal((await post(owner, module.key, action, CASES[module.key][action].form)).statusCode, 303);
+        const line = warnings.find((w) => w.startsWith('Owner override:'));
+        assert.ok(line, 'override logged');
+        assert.ok(line.includes(OWNER), 'user id');
+        assert.ok(line.includes(`${module.key}/${action}`), 'action');
+        assert.match(line, /via dashboard at \d{4}-\d{2}-\d{2}T/, 'time');
+        warnings.length = 0;
+        const admin = await setup();
+        CASES[module.key][action].seed?.(admin.state);
+        await post(admin, module.key, action, CASES[module.key][action].form);
+        assert.equal(warnings.filter((w) => w.startsWith('Owner override:')).length, 0);
+    } finally {
+        logger.warn = realWarn;
     }
 });
 

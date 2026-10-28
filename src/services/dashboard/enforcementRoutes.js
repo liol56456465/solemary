@@ -22,6 +22,7 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { CUSTOM_REASON_KEY, enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
+import { recordOwnerOverride } from '../ownerOverride.js';
 import { isAdministrator } from '../enforcement/enforcementService.js';
 import { normalizeCaseCode } from '../enforcement/format.js';
 import { parseEditDuration } from '../enforcement/caseEditService.js';
@@ -200,7 +201,12 @@ export function createEnforcementHandlers(core) {
             }
             if (!guildOf()) return fail(res, 503, 'Server unavailable', 'The bot cannot see the main server right now. Try again in a moment.', req);
             try {
-                return await run(req, res);
+                const result = await run(req, res);
+                // Owner-only actions (lift a mass-action block) by an owner without Administrator.
+                if (!req.dashboard.access.canAct && isOwner(req)) {
+                    await recordOwnerOverride({ client, guildId, userId: session.userId, username: session.username, action: req.path, via: 'dashboard' });
+                }
+                return result;
             } catch (error) {
                 if (!isExpectedError(error)) throw error;
                 const message = plainText(error.userMessage || error.message);

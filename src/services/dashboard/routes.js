@@ -48,6 +48,7 @@ import fs from 'node:fs';
 import express from 'express';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
+import { recordOwnerOverride } from '../ownerOverride.js';
 import { normalizeCaseCode } from '../enforcement/format.js';
 import { normalizeSearchFilters, searchCaseRecords } from '../enforcement/caseSearchService.js';
 import {
@@ -607,6 +608,9 @@ export function createDashboard({
                 });
             }
             throw error;
+        }
+        if (!decision.canAct && decision.role === 'owner') {
+            await recordOwnerOverride({ client, guildId, userId: session.userId, username: session.username, action: `${module.key}/${str(req.params?.action, 40)}`, via: 'dashboard' });
         }
         const changes = result?.changes || [];
         await recordDashboardChange({

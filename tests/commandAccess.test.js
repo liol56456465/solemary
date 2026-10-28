@@ -67,3 +67,19 @@ test('gate: listed keys pass for members, everything else needs Administrator', 
     assert.equal(run('wipedata', admin), true);
     assert.equal(run('wipedata', member, 'owner'), true);
 });
+
+test('gate: OWNER_IDS without Administrator pass as an owner override (recorded by the caller); admins and open commands do not', async () => {
+    const { botConfig } = await import('../src/config/bot.js');
+    const ownerId = '1999999999999999991';
+    const owners = botConfig.commands.owners;
+    botConfig.commands.owners = [...(owners || []), ownerId];
+    try {
+        const guild = { id: enforcementConfig.mainGuildId, ownerId: 'server-owner' };
+        const check = (accessKey, permissions, userId) => checkCommandAccess({ command: {}, accessKey, guild, userId, permissions });
+        assert.deepEqual(check('wipedata', { has: () => false }, ownerId), { allowed: true, ownerOverride: true });
+        assert.deepEqual(check('wipedata', { has: () => true }, ownerId), { allowed: true }, 'an owner who is also admin: no override');
+        assert.deepEqual(check('birthday set', { has: () => false }, ownerId), { allowed: true }, 'open command: no override');
+    } finally {
+        botConfig.commands.owners = owners;
+    }
+});
