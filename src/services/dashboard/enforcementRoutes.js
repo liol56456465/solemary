@@ -378,9 +378,11 @@ export function createEnforcementHandlers(core) {
         const userId = userIdParam(req);
         if (!userId) throw new InputError('Not a user ID.');
         const guild = guildOf();
+        // The moderator is fetched fresh and must still be an Administrator (the access check on
+        // the request can be up to a minute old).
         const [target, actorMember] = await Promise.all([
             guild.members.fetch({ user: userId, force: true }).catch(() => null),
-            guild.members.fetch({ user: req.dashboard.session.userId, force: true }).catch(() => null),
+            freshModerator(req),
         ]);
         const ctx = { guild, userId, target, actorMember, actorIsOwner: isOwner(req), botMember: guild.members.me, actorId: req.dashboard.session.userId };
         const problem = targetProblem(ctx);
@@ -518,7 +520,12 @@ export function createEnforcementHandlers(core) {
         const role = payload.roleId ? guild.roles.cache.get(payload.roleId) : null;
         const reason = auditReason(session.username, payload.reason);
         const label = `${BULK_ACTIONS[payload.action]}${role ? ` @${role.name}` : ''}${payload.forKey ? ` for ${TEMP_ROLE_LENGTHS[payload.forKey].label}` : ''}${payload.action === 'timeout' ? ` (${TIMEOUTS[payload.timeoutKey].label})` : ''}`;
+        // The moderator must still be an Administrator for every member; once that fails, the
+        // rest of the job stops without touching Discord.
+        let revoked = null;
         const work = async (item) => {
+            if (revoked) throw revoked;
+            const moderator = await freshModerator(req).catch((error) => { revoked = error; throw error; });
             // Checked again per member at run time (roles and positions can change meanwhile).
             const member = await guild.members.fetch({ user: item.id, force: true }).catch(() => null);
             const problem = targetProblem({ guild, target: member, actorId: session.userId, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me })

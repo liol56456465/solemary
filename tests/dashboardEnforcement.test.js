@@ -873,6 +873,19 @@ test('bulk: a timed role-add says the length on the preview and stores each memb
     assert.equal(bad.statusCode, 400);
 });
 
+test('member page: an admin who lost Administrator since login cannot change roles, nickname or timeout (fresh check)', async () => {
+    const admins = new Set([ADMIN]);
+    const h = await setup({ admins });
+    assert.equal((await get(h, h.d.enforcement.userPage, { params: { id: TARGET } })).statusCode, 200); // access is now cached for 60 s
+    admins.delete(ADMIN); // the access check on the request is cached; the member fetch is not
+    for (const [handler, form] of [[h.d.enforcement.roleAdd, { roleId: '600000000000000002' }], [h.d.enforcement.nickname, { nickname: 'x' }], [h.d.enforcement.timeout, { duration: '1h' }]]) {
+        const res = await post(h, handler, { params: { id: TARGET }, form });
+        assert.equal(res.statusCode, 403);
+        assert.match(res.body, /Administrator/);
+    }
+    assert.equal(h.guild.memberCalls.length, 0, 'nothing reached Discord');
+});
+
 // ── bulk actions ──────────────────────────────────────────────────────────
 
 const waitForJob = async (h, location) => {
@@ -905,6 +918,25 @@ test('bulk: preview lists who changes and who is skipped (with why); run needs t
     assert.match(h.auditRows.at(-1).new, /2 done, 0 failed/);
     const again = await post(h, h.d.enforcement.bulkExecute, { form: { token, fh } });
     assert.equal(again.statusCode, 400, 'the token works once');
+});
+
+test('bulk: a job stops for the remaining members once the moderator loses Administrator', async () => {
+    const admins = new Set([ADMIN]);
+    const h = await setup({ admins });
+    const preview = await post(h, h.d.enforcement.bulkPreview, { form: { scope: 'selected', ids: [TARGET, OTHER], action: 'role-add', roleId: '600000000000000002' } });
+    const token = preview.body.match(/name="token" value="([^"]+)"/)[1];
+    const fh = preview.body.match(/name="fh" value="([^"]+)"/)[1];
+    // The first member that is changed takes the moderator's Administrator away.
+    for (const id of [TARGET, OTHER]) {
+        const member = h.guild.members.cache.get(id);
+        const add = member.roles.add;
+        member.roles.add = async (...args) => { admins.delete(ADMIN); return add(...args); };
+    }
+    const run = await post(h, h.d.enforcement.bulkExecute, { form: { token, fh } });
+    const done = await waitForJob(h, run.redirectedTo);
+    assert.match(done.body, /Finished: 1 done, 1 failed/);
+    assert.match(done.body, /Administrator/);
+    assert.equal(h.guild.memberCalls.filter((c) => c.call === 'roles.add').length, 1);
 });
 
 test('bulk: kicks/bans stop at the mass-action guard (4 of 5 used → 1 planned), each through executeAction', async () => {
