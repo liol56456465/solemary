@@ -18,7 +18,7 @@
 //   main .flash             "Saved." becomes a toast that closes itself
 //   form[data-dirty]        also shows a Discard / Save bar at the bottom while changed
 //   [data-module-search]    a search box above the module cards
-//   #s-<section> links      open the collapsible section they point to
+//   #s-<section> links      open the collapsible section they point to; the one in view is marked
 //   [data-quick-find]       "/" focuses the top bar search
 
 (function () {
@@ -523,6 +523,32 @@
         if (q && input && !input.value) input.value = q;
     }
 
+    // ── "On this page": mark the section in view (desktop list on the left) ──
+    function setupSectionSpy() {
+        const links = [...document.querySelectorAll('.settings-layout > .section-links a[href^="#s-"]')];
+        if (!links.length || typeof IntersectionObserver !== 'function') return;
+        const byId = new Map(links.map((link) => [link.getAttribute('href').slice(1), link]));
+        const visible = new Set();
+        const mark = () => {
+            // The first section (in page order) that is in view.
+            const id = [...byId.keys()].find((key) => visible.has(key));
+            for (const [key, link] of byId) {
+                link.classList.toggle('is-current', key === id);
+                if (key === id) link.setAttribute('aria-current', 'true'); else link.removeAttribute('aria-current');
+            }
+        };
+        const observer = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.isIntersecting) visible.add(entry.target.id); else visible.delete(entry.target.id);
+            }
+            mark();
+        }, { rootMargin: '0px 0px -60% 0px' });
+        for (const id of byId.keys()) {
+            const section = document.getElementById(id);
+            if (section) observer.observe(section);
+        }
+    }
+
     // ── A refused form: open its section and bring the error into view ───
     function showFormError() {
         const error = document.getElementById('form-error');
@@ -564,6 +590,7 @@
         keepSearchWord();
         setupThemePicker();
         showCurrentTab();
+        setupSectionSpy();
         setupToasts();
         setupSaveBar();
         setupModuleSearch();

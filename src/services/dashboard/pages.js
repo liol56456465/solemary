@@ -230,11 +230,11 @@ ${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || 
 
 /**
  * "On this page": links to the collapsible sections of a long settings page (read from
- * the page's own section markup; four or more sections). The script opens the target.
+ * the page's own section markup; three or more sections). The script opens the target.
  */
 function sectionLinks(body) {
     const found = [...String(body).matchAll(/<details class="card section" id="s-([a-z0-9-]+)"[^>]*><summary><h2>([^<]+)<\/h2>/g)];
-    if (found.length < 4) return '';
+    if (found.length < 3) return '';
     return html`<nav class="section-links" aria-label="On this page"><span class="section-links-label">On this page</span>${found.map(([, key, title]) => html`<a href="#s-${key}">${raw(title)}</a>`)}</nav>`;
 }
 
@@ -281,6 +281,8 @@ ${warnings.length ? html`<ul class="warnings">${warnings.map((w) => html`<li>${w
     const main = state === null ? '' : moduleSwitch({ csrf: session?.csrf, canEdit, module: module.key, action: item.toggle, enabled: state, label: module.label });
     const head = html`<header class="module-header"><span class="module-icon" aria-hidden="true">${icon(module.key)}</span>
 <div class="module-title"><h1>${module.label}</h1>${module.help ? html`<p class="help">${module.help}</p>` : ''}</div>${main ? html`<div class="module-main">${main}</div>` : ''}</header>`;
-    const page = html`${head}${sectionLinks(body)}${notices}${body}`;
+    // Desktop: "On this page" as a sticky list on the left, the sections on the right.
+    const links = sectionLinks(body);
+    const page = html`${head}<div class="settings-layout${links ? '' : ' single'}">${links}<div class="settings-main">${notices}${body}</div></div>`;
     return layout({ title: module.label, active: module.key, session, access, moduleStates, body: page });
 }

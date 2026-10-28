@@ -346,7 +346,7 @@ body {
 }
 a { color: var(--accent-text); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 2px; }
-h1 { font-size: 24px; line-height: 1.25; font-weight: 600; margin: 0 0 4px; }
+h1 { font-size: 32px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 4px; }
 h2 { font-size: 16px; line-height: 1.4; font-weight: 600; margin: 24px 0 12px; }
 h3 { font-size: 14px; font-weight: 600; margin: 4px 0 8px; }
 p { margin: 0 0 12px; }
@@ -528,7 +528,7 @@ main > h1 + .help { margin-bottom: 16px; }
 .card > h2:first-child { margin-top: 0; }
 details.section { padding: 0; }
 details.section > summary {
-    display: flex; align-items: center; gap: 12px; padding: 16px 16px; cursor: pointer; list-style: none;
+    display: flex; align-items: center; gap: 12px; padding: 16px 24px; cursor: pointer; list-style: none;
     border-radius: var(--radius); user-select: none;
 }
 details.section > summary::-webkit-details-marker { display: none; }
@@ -540,7 +540,7 @@ details.section > summary::after, details.sub > summary::before, details.action 
     transform: rotate(-45deg);
 }
 details.section[open] > summary::after, details.sub[open] > summary::before, details.action[open] > summary::before { transform: rotate(45deg); }
-.section-body { padding: 16px 16px 16px; }
+.section-body { padding: 24px; }
 .section-body > :last-child, .card > :last-child { margin-bottom: 0; }
 .section-help { margin-top: -2px; }
 .card-foot { margin: 12px 0 0; font-size: 14px; }
@@ -748,23 +748,37 @@ a.kpi-num:hover { text-decoration: none; color: var(--accent); }
 .toolbar-search input { width: min(280px, 100%); }
 
 /* Module page header: icon tile, title + description, the module's main switch on the right. */
-.module-header { display: flex; align-items: flex-start; gap: 16px; margin: 0 0 16px; }
-.module-header .module-icon { width: 44px; height: 44px; }
-.module-header .module-icon .icon { width: 24px; height: 24px; }
+/* Page header of a module: icon tile, big title + one line, the main on/off switch as a small card. */
+.module-header { display: flex; align-items: center; gap: 16px; margin: 8px 0 32px; }
+.module-header .module-icon { width: 56px; height: 56px; border-radius: var(--radius); }
+.module-header .module-icon .icon { width: 28px; height: 28px; }
 .module-title { flex: 1; min-width: 0; }
-.module-title h1 { margin: 0 0 2px; }
-.module-title .help { margin: 0; }
-.module-main { flex: none; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--raised); }
+.module-title h1 { margin: 0 0 4px; font-size: 32px; letter-spacing: -0.02em; }
+.module-title .help { margin: 0; max-width: 80ch; }
+.module-main { flex: none; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--raised); }
+
+/* Settings pages: "On this page" on the left (sticky, the script marks the section in view), sections on the right. */
+.settings-main { min-width: 0; }
+@media (min-width: 1024px) {
+    .settings-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 32px; align-items: start; }
+    .settings-layout.single { display: block; }
+    .settings-layout > .section-links {
+        position: sticky; top: 24px; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 2px; margin: 0;
+    }
+    .settings-layout > .section-links .section-links-label { margin: 0 0 8px 12px; }
+    .settings-layout > .section-links a {
+        height: auto; padding: 8px 12px; border: 0; border-left: 2px solid var(--border); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        background: none; color: var(--text-muted); font-size: 14px;
+    }
+    .settings-layout > .section-links a:hover { background: var(--raised); color: var(--text); }
+    .settings-layout > .section-links a.is-current { border-left-color: var(--accent); background: var(--raised); color: var(--text); font-weight: 600; }
+}
 .switch-form { display: inline-flex; align-items: center; gap: 12px; margin: 0; }
 .switch-state { font-size: 14px; font-weight: 600; color: var(--fg-2); min-width: 2em; text-align: right; }
 .switch-form:has(.is-on) .switch-state { color: var(--ok); }
 
 /* "On this page" links on long settings pages. */
 .section-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 16px; }
-@media (min-width: 1024px) {
-    /* Desktop: the jump links stay in view while scrolling. */
-    .section-links { position: sticky; top: var(--topbar); z-index: 5; padding: 8px 0; background: var(--bg); }
-}
 .section-links-label { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-2); margin-right: 4px; }
 .section-links a {
     display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px;
@@ -897,7 +911,7 @@ fieldset.events > label.check:first-child { flex-basis: 100%; font-weight: 600; 
 .settings-form .grid { max-width: 720px; }
 /* A settings form that ends its section: the Save row becomes the section footer strip. */
 .section-body > .settings-form:last-child .form-actions {
-    margin: 16px -16px -16px; padding: 12px 16px; border-top: 1px solid var(--line);
+    margin: 24px -24px -24px; padding: 12px 24px; border-top: 1px solid var(--line);
     background: var(--surface-2); border-radius: 0 0 var(--radius) var(--radius);
 }
 .settings-form > fieldset > button[type="submit"] { margin-top: 16px; }
@@ -1035,6 +1049,15 @@ td.value:has(details.long-value) { min-width: 200px; }
     .quick-find, .server-switch > summary .server-name { display: none; }
     .icon-button.find-link { display: inline-grid; }
     .section-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 16px; padding: 2px 16px 8px; }
+    form.filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    form.filters label { min-width: 0; }
+    form.filters label input, form.filters label select { width: 100%; }
+    .module-header { align-items: flex-start; gap: 12px; margin: 0 0 24px; }
+    .module-header .module-icon { width: 44px; height: 44px; }
+    h1, .module-title h1, .hello-text h1 { font-size: 24px; }
+    .section-body { padding: 16px; }
+    details.section > summary { padding: 16px; }
+    .section-body > .settings-form:last-child .form-actions { margin: 16px -16px -16px; padding: 12px 16px; }
     /* Keyboard focus never ends up behind the floating tab bar. */
     html { scroll-padding-bottom: 112px; }
     input, select, button, .icon-button { min-height: 44px; }
@@ -1066,7 +1089,6 @@ td.value:has(details.long-value) { min-width: 200px; }
     dl { grid-template-columns: 1fr; gap: 2px; }
     dd + dt { margin-top: 8px; }
     .grid { grid-template-columns: 1fr; }
-    h1 { font-size: 20px; }
 }
 @media (pointer: coarse) {
     input, select, button { min-height: 44px; }
