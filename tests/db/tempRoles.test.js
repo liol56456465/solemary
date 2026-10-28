@@ -1,6 +1,7 @@
 // Temporary roles against the local test database (npm run test:db): give with an end time,
 // give again (replaces the end time), expiry takes the role off and deletes the row, a
-// rejoin before the end gives the role back, and a member who left is just forgotten.
+// rejoin before the end gives the role back unless the role became unsafe, a member who left is
+// just forgotten, and endTempRoles (role removed in Discord, ban) clears rows.
 // Skipped unless POSTGRES_URL points at localhost: never run against Neon.
 
 import { test, before, after } from 'node:test';
@@ -16,12 +17,16 @@ const guildId = `9${runId}00000008`;
 const user = (n) => `6${runId}${String(n).padStart(8, '0')}`;
 const ROLE = `7${runId}00000001`;
 const GONE_ROLE = `7${runId}00000002`;
+const STAFF_ROLE = `7${runId}00000003`;
 
 function fakeWorld() {
     const calls = [];
     const members = new Map();
-    const guild = { id: guildId, roles: { cache: new Map([[ROLE, { id: ROLE, name: 'Event' }]]) } };
+    const guild = { id: guildId };
+    const role = (id, name, perms = []) => ({ id, name, guild, position: 1, managed: false, permissions: { has: (p) => perms.includes(p) } });
+    guild.roles = { cache: new Map([[ROLE, role(ROLE, 'Event')], [STAFF_ROLE, role(STAFF_ROLE, 'Was event', ['Administrator'])]]) };
     guild.members = {
+        me: { roles: { highest: { position: 10 } } },
         fetch: async ({ user: id }) => { if (!members.has(id)) throw new Error('Unknown Member'); return members.get(id); },
     };
     const member = (id) => {
@@ -107,4 +112,28 @@ test('rejoin before the end gives the role back; an ended or deleted role is not
     w.calls.length = 0;
     await temp.reapplyTempRolesOnJoin(w.member(user(5)), new Date(Date.now() + 2 * 3_600_000));
     assert.deepEqual(w.calls, [], 'after the end nothing is given back');
+});
+
+test('rejoin skips (and forgets) a role that has since gained staff permissions', { skip }, async () => {
+    const w = fakeWorld();
+    const by = { id: user(9), username: 'admin' };
+    await temp.addTempRole({ member: w.member(user(6)), role: { id: STAFF_ROLE }, ms: 3_600_000, by });
+    w.calls.length = 0;
+    await temp.reapplyTempRolesOnJoin(w.member(user(6)));
+    assert.deepEqual(w.calls, [], 'a role with Administrator is never handed out automatically');
+    assert.deepEqual(await rowsFor(user(6)), []);
+});
+
+test('endTempRoles: only the removed roles, or every role (ban)', { skip }, async () => {
+    const w = fakeWorld();
+    const by = { id: user(9), username: 'admin' };
+    const m = w.member(user(7));
+    await temp.addTempRole({ member: m, role: { id: ROLE }, ms: 3_600_000, by });
+    await temp.addTempRole({ member: m, role: { id: GONE_ROLE }, ms: 3_600_000, by });
+    await temp.endTempRoles(guildId, user(7), []);
+    assert.equal((await rowsFor(user(7))).length, 2, 'an empty list removes nothing');
+    await temp.endTempRoles(guildId, user(7), [ROLE]);
+    assert.deepEqual((await rowsFor(user(7))).map((r) => r.role_id), [GONE_ROLE]);
+    await temp.endTempRoles(guildId, user(7));
+    assert.deepEqual(await rowsFor(user(7)), []);
 });

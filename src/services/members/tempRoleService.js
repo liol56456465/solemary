@@ -1,11 +1,14 @@
 // tempRoleService.js — temporary roles: a role given until a set time (dashboard Members).
 // The role is added in Discord and a row is kept in member_temp_roles; the expiry cron
 // (once a minute, with the other expiry jobs) takes the role off and deletes the row; a member
-// who leaves and rejoins before the end gets the role back. Giving the same role again
-// replaces the end time; taking the role off by hand from the dashboard ends the row too.
+// who leaves and rejoins before the end gets the role back, unless the role has since become
+// unsafe to hand out (staff permissions, managed, not below the bot). Giving the same role again
+// replaces the end time. Taking the role off anywhere (dashboard or Discord) and a ban end the row,
+// so a role that was taken away is never given back on rejoin.
 
 import { query, T } from '../enforcement/db.js';
 import { logger } from '../../utils/logger.js';
+import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
 
 export const TEMP_ROLE_LENGTHS = {
     '1h': { label: '1 hour', ms: 3_600_000 },
@@ -43,6 +46,16 @@ export async function endTempRole(guildId, userId, roleId) {
     await query(`DELETE FROM ${T.tempRoles} WHERE guild_id = $1 AND user_id = $2 AND role_id = $3`, [guildId, userId, roleId]);
 }
 
+/** Forgets all of a member's temporary roles, or only those in roleIds (role removed in Discord, ban). */
+export async function endTempRoles(guildId, userId, roleIds = null) {
+    if (roleIds) {
+        if (!roleIds.length) return;
+        await query(`DELETE FROM ${T.tempRoles} WHERE guild_id = $1 AND user_id = $2 AND role_id = ANY($3::varchar[])`, [guildId, userId, roleIds]);
+    } else {
+        await query(`DELETE FROM ${T.tempRoles} WHERE guild_id = $1 AND user_id = $2`, [guildId, userId]);
+    }
+}
+
 /**
  * Takes expired temporary roles off and deletes their rows (batch of 50 per run). A member who
  * left keeps nothing to remove; a role that no longer exists or is above the bot is just
@@ -66,12 +79,17 @@ export async function runTempRoleExpiry(client, now = new Date()) {
     return rows.length;
 }
 
-/** On join: gives back temporary roles that have not ended yet. */
+/** On join: gives back temporary roles that have not ended yet and are still safe to hand out. */
 export async function reapplyTempRolesOnJoin(member, now = new Date()) {
     const { rows } = await query(
         `SELECT role_id FROM ${T.tempRoles} WHERE guild_id = $1 AND user_id = $2 AND expires_at > $3`, [member.guild.id, member.id, now]);
     for (const row of rows) {
-        if (!member.guild.roles.cache.has(row.role_id)) continue;
+        const problem = getRoleAssignmentProblem(member.guild.roles.cache.get(row.role_id), member.guild.members.me);
+        if (problem) {
+            logger.warn(`Temporary role ${row.role_id} not given back to ${member.id}: ${problem}`);
+            await endTempRole(member.guild.id, member.id, row.role_id);
+            continue;
+        }
         await member.roles.add(row.role_id, 'Temporary role (rejoined before it ended)').catch((error) => {
             logger.warn(`Temporary role ${row.role_id} could not be given back to ${member.id}: ${error.message}`);
         });
