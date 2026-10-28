@@ -668,6 +668,16 @@ label.switch-row + label.switch-row { border-top: 0; }
 .evidence { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .evidence img { max-width: 100%; max-height: 360px; border: 1px solid var(--line); border-radius: var(--radius-sm); display: block; margin: 6px 0; }
 .back { display: inline-flex; margin-bottom: 8px; font-size: 13px; color: var(--fg-2); }
+/* Member page header: who, and the standing at a glance. */
+.member-header { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin: 0 0 24px; }
+.member-title { flex: 1; min-width: 200px; }
+.member-title h1 { margin: 0 0 4px; }
+.member-title p { margin: 0; }
+.avatar-initials-lg { display: grid; place-items: center; font-size: 24px; font-weight: 600; background: var(--surface); color: var(--text); }
+.member-facts { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.member-facts li { display: flex; flex-direction: column; gap: 4px; min-width: 120px; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--raised); }
+.member-facts .label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.member-facts .value { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .heat-wrap { overflow-x: auto; margin: 0 0 14px; }
 .section-body > .chips { margin-bottom: 14px; }

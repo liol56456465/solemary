@@ -12,7 +12,7 @@ import { MAX_LINKS_PER_FORM, NOTE_MAX as EVIDENCE_NOTE_MAX } from '../enforcemen
 import { NO_CONTACT_MAX_DAYS } from '../enforcement/noContactService.js';
 import { NOTE_MAX } from '../enforcement/staffNotesService.js';
 import { WEEKDAYS, intensityLevel, slotLabel } from '../staffCoverageService.js';
-import { formatAge, formatDate, html, layout, path, queryString, raw, section } from './html.js';
+import { formatAge, formatDate, html, layout, path, queryString, raw, section, typeBadge } from './html.js';
 import { isAllowedImageUrl, isSafeLink } from './pages.js';
 
 export const DURATION_CHOICES = ['30m', '1h', '6h', '12h', '1d', '3d', '7d', '14d', '1mo', '3mo'];
@@ -84,6 +84,25 @@ function standingSection(view) {
 </dl>`;
 }
 
+/**
+ * The member page header: avatar, name, ID, joined date, and the standing at a glance
+ * (counted warns, ladder level, what is active). The full details follow in sections.
+ */
+function memberHeader(view, now) {
+    const { user, member, state } = view;
+    const avatar = user.avatarUrl && isAllowedImageUrl(user.avatarUrl)
+        ? html`<img class="avatar" src="${user.avatarUrl}" alt="" width="64" height="64" referrerpolicy="no-referrer">`
+        : html`<span class="avatar avatar-initials-lg" aria-hidden="true">${String(user.username || '?').slice(0, 1).toUpperCase()}</span>`;
+    const joined = member ? (member.joinedAt ? html`Joined ${formatDate(member.joinedAt)}` : 'In the server') : 'Not in the server';
+    const ladder = state.ladder;
+    const active = state.activeBan || state.banned ? 'Banned' : state.activeMute || state.muted ? 'Muted' : 'None';
+    return html`<header class="member-header">${avatar}<div class="member-title"><h1>${user.username}${user.bot ? html` <span class="tag">bot</span>` : ''}</h1>
+<p class="muted"><span class="nowrap">ID ${user.id}</span> · <span class="nowrap">${joined}</span></p></div>
+<ul class="member-facts"><li><span class="label">Counted warns</span><span class="value">${countedWarnsText(ladder)}</span></li>
+<li><span class="label">Ladder level</span><span class="value">${ladder.level} of 3</span></li>
+<li><span class="label">Active</span><span class="value">${active === 'None' ? active : html`<span class="dot dot-bad" aria-hidden="true"></span>${active}`}</span></li></ul></header>`;
+}
+
 function profileSection(user, member, now) {
     const avatar = user.avatarUrl && isAllowedImageUrl(user.avatarUrl)
         ? html`<img class="avatar" src="${user.avatarUrl}" alt="" width="64" height="64" referrerpolicy="no-referrer">` : '';
@@ -111,7 +130,7 @@ ${canWrite ? actionForm(csrf, `/users/${id}/notes/add`, html`<label class="wide"
 function casesSection(view) {
     const { cases = [], casesTotal = 0, appealStatuses = new Map(), user } = view;
     return html`${cases.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Name</th><th>Reason</th><th>Date</th><th>Status</th></tr></thead><tbody>
-${cases.map((row) => html`<tr><td>${caseLink(row.case_code)}</td><td>${row.type}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.name}</td><td>${row.reason}</td>
+${cases.map((row) => html`<tr><td>${caseLink(row.case_code)}</td><td>${typeBadge(row.type)}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.name}</td><td>${row.reason}</td>
 <td>${formatDate(row.created_at)}</td><td>${caseStatusLabel(row, appealStatuses.get(row.case_code))}</td></tr>`)}
 </tbody></table></div>${casesTotal > cases.length ? html`<p><a href="${path(`/cases${queryString({ member: user.id })}`)}">All ${casesTotal} cases →</a></p>` : ''}` : html`<p class="muted">No cases.</p>`}`;
 }
@@ -168,16 +187,16 @@ ${actionForm(csrf, `/users/${id}/action/preview`, fields, { submit: 'Preview', h
 export function userPage({ session, access = null, moduleStates = {}, view, canAct = false, editEnabled = false, flash = null, error = null, values = {}, now = Date.now() }) {
     const canWrite = canAct && editEnabled;
     const body = html`<a class="back" href="${path('/users')}">← Members</a>
-<h1>${view.user.username}</h1>
+${memberHeader(view, now)}
 ${notices({ flash, error, editEnabled, canAct })}
-${section('Profile', profileSection(view.user, view.member, now), '', { key: 'member-profile' })}
+${section('Profile', profileSection(view.user, view.member, now), '', { key: 'member-profile', open: false })}
 ${section('Standing', standingSection(view), '', { key: 'member-standing' })}
 ${(view.noContact || []).length ? section('No-contact orders', noContactSection(view.noContact, view.noContactNames), '', { key: 'member-nocontact' }) : ''}
 ${section('Actions', html`${view.block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(view.block.until)}; actions will be refused.</p>` : ''}
 ${canWrite ? (view.actions.length ? html`<p class="muted">Same actions, DMs, ladder and checks as /enforcements. Each one shows a confirmation first.</p>${view.actions.map((type) => actionBlock(view, type, session.csrf, values.type === type ? values : {}))}` : html`<p class="muted">No actions available.</p>`)
         : html`<p class="muted">Available: ${view.actions.map((t) => ACTION_LABELS[t]).join(', ') || 'none'}.</p>`}`, '', { key: 'member-actions' })}
 ${section('Precedent', precedentSection(view), '', { key: 'member-precedent', open: Boolean(view.precedentReason) })}
-${section(`Recent cases (${view.casesTotal || 0})`, casesSection(view), '', { key: 'member-cases' })}
+${section(`Case history (${view.casesTotal || 0})`, casesSection(view), '', { key: 'member-cases', open: false })}
 ${section(`Staff notes (${(view.notes || []).length})`, notesSection(view, canWrite, session.csrf), '', { key: 'member-notes' })}`;
     return layout({ title: view.user.username, active: 'users', session, access, moduleStates, body });
 }
@@ -257,7 +276,7 @@ ${row.kind === 'image' ? (freshUrl && isAllowedImageUrl(freshUrl) ? html`<a href
 <h2>Earlier appeals on this case (${history.length})</h2>
 ${history.length ? html`<ul>${history.map((a) => html`<li>${formatDate(a.created_at)} · ${a.status}${a.decided_by_username ? html` by ${a.decided_by_username}` : ''}${a.note ? html` — ${a.note}` : ''}</li>`)}</ul>` : html`<p class="muted">None.</p>`}
 <h2>Other cases (${othersTotal})</h2>
-${others.length ? html`<ul>${others.map((c) => html`<li>${caseLink(c.case_code)} ${c.type} · ${formatDate(c.created_at)} · ${caseStatusLabel(c)} · ${c.reason}</li>`)}</ul>` : html`<p class="muted">None.</p>`}
+${others.length ? html`<ul>${others.map((c) => html`<li>${caseLink(c.case_code)} ${typeBadge(c.type)} · ${formatDate(c.created_at)} · ${caseStatusLabel(c)} · ${c.reason}</li>`)}</ul>` : html`<p class="muted">None.</p>`}
 ${pending && canWrite ? html`<h2>Decide</h2>${actionForm(session.csrf, `/appeals/${r.case_code}/preview`, html`<label class="wide">Note (optional, shown in the appeal channel and the log)<textarea name="note" rows="2" maxlength="500"></textarea></label>
 <div class="buttons"><button type="submit" name="decision" value="accept" class="primary">Accept…</button> <button type="submit" name="decision" value="deny" class="danger">Deny…</button></div>`, { submit: null })}` : ''}`;
     return layout({ title: `Appeal ${r.case_code}`, active: 'appeals', session, access, moduleStates, body });

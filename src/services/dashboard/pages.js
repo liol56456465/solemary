@@ -4,7 +4,7 @@
 import { formatDuration } from '../enforcement/format.js';
 import { SEARCH_STATUSES, SEARCH_TYPES } from '../enforcement/caseSearchService.js';
 import { STATS_PERIODS } from '../staffActivityService.js';
-import { escapeHtml, formatAge, formatDate, html, icon, layout, navItems, path, queryString, raw, section, timeTag } from './html.js';
+import { escapeHtml, formatAge, formatDate, html, icon, layout, navItems, path, queryString, raw, section, timeTag, typeBadge } from './html.js';
 import { moduleSwitch } from './forms.js';
 
 const IMAGE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
@@ -92,7 +92,7 @@ ${error ? html`<p class="bad">${error}</p>` : ''}
 ${rows.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Moderator</th><th>Reason</th><th>Date</th><th>Status</th></tr></thead><tbody>
 ${rows.map((row) => {
         const label = statusLabel(row);
-        return html`<tr><td>${caseLink(row.case_code)}</td><td>${row.type}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td>
+        return html`<tr><td>${caseLink(row.case_code)}</td><td>${typeBadge(row.type)}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td>
 <td>${row.target_username} <span class="muted">${row.target_user_id}</span></td><td>${row.moderator_username}</td>
 <td>${row.reason}</td><td>${timeTag(row.created_at)}</td><td class="${statusClass(label)}">${label}</td></tr>`;
     })}
@@ -161,7 +161,7 @@ ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${appeals.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Filed</th><th>Waiting</th><th></th></tr></thead><tbody>
 ${appeals.map((a) => {
         const days = (now - new Date(a.created_at).getTime()) / 86400000;
-        return html`<tr><td>${caseLink(a.case_code)}</td><td>${a.type}${a.is_test ? ' (test)' : ''}</td><td>${a.username} <span class="muted">${a.user_id}</span></td>
+        return html`<tr><td>${caseLink(a.case_code)}</td><td>${typeBadge(a.type)}${a.is_test ? ' (test)' : ''}</td><td>${a.username} <span class="muted">${a.user_id}</span></td>
 <td>${formatDate(a.created_at)}</td><td class="${days >= 3 ? 'bad' : days >= 1 ? 'warn' : ''}">${formatAge(a.created_at, now)}</td>
 <td><a href="/dashboard/appeals/${encodeURIComponent(a.case_code)}">${canWrite ? 'Review and decide' : 'Open'}</a></td></tr>`;
     })}

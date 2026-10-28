@@ -544,7 +544,10 @@ test('member page: standing, no-contact, notes, cases, actions; everything escap
     const h = await setup();
     const res = await get(h, h.d.enforcement.userPage, { params: { id: TARGET }, query: { reason: 'spam' } });
     assert.equal(res.statusCode, 200);
-    for (const text of ['Counted warns', '1 of 3', 'Next warning', 'Pending appeals', 'No-contact orders', 'Staff notes (1)', 'Recent cases (1)', 'Spam: 3 cases', '/action/preview', 'Account created', '@Member', 'cdn.discordapp.com']) {
+    assert.match(res.body, /<header class="member-header">/, 'header: who + standing at a glance');
+    assert.match(res.body, /<span class="label">Ladder level<\/span><span class="value">\d of 3<\/span>/);
+    assert.match(res.body, /<details class="card section" id="s-member-cases" data-key="member-cases"><summary>/, 'case history collapsed by default');
+    for (const text of ['Counted warns', '1 of 3', 'Next warning', 'Pending appeals', 'No-contact orders', 'Staff notes (1)', 'Case history (1)', 'Spam: 3 cases', '/action/preview', 'Account created', '@Member', 'cdn.discordapp.com']) {
         assert.ok(res.body.includes(text), text);
     }
     assert.ok(!res.body.includes('<img src=x>') && !res.body.includes('<i>') && !res.body.includes('<script>'));
