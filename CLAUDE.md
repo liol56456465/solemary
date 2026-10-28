@@ -158,6 +158,8 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 
 ## Status and roadmap
 
+**FEATURE FREEZE until go-live: checks and fixes only.**
+
 **Go-live checklist (in order):** Supabase DB live → final deployment secrets (`NODE_ENV=production`,
 `LOG_LEVEL=info`, `POSTGRES_URL`, OAuth values, `APPEALS_CATEGORY_ID` (seeded once into `guild_settings`, then
 edited in the dashboard), `OWNER_IDS`, `BANNED_ROLE_ID`;
