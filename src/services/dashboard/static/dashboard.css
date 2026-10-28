@@ -1100,6 +1100,20 @@ fieldset.events > label.check:first-child { flex-basis: 100%; font-weight: 600; 
 }
 .settings-form > fieldset > button[type="submit"] { margin-top: 16px; }
 form.is-dirty .form-actions::before { content: "Unsaved changes"; margin-right: auto; font-size: 12px; font-weight: 500; color: var(--warn); }
+/* v5 settings rows (tablet and up): one row per setting, its name and hint on the left, the
+   control on the right; switches and wide fields (messages) keep their own rows. */
+@media (min-width: 768px) {
+    .settings-form .grid { display: block; max-width: none; }
+    .settings-form .grid > label:not(.wide):not(.switch-row):not(.check) {
+        display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 340px); column-gap: 32px; row-gap: 2px;
+        align-items: center; padding: 14px 0; border-top: 1px solid var(--line);
+    }
+    .settings-form .grid > label:not(.wide):not(.switch-row):not(.check) > :is(input, select, textarea) { grid-column: 2; grid-row: 1 / span 4; }
+    .settings-form .grid > label:not(.wide):not(.switch-row):not(.check) > :not(input, select, textarea) { grid-column: 1; }
+    .settings-form .grid > label.wide { padding: 14px 0; border-top: 1px solid var(--line); }
+    .settings-form .grid > label.switch-row { border-bottom: 0; padding: 14px 0; }
+    .settings-form .grid > label:first-child:is(*, :not(.wide):not(.switch-row):not(.check)) { border-top: 0; padding-top: 4px; }
+}
 /* A section with unsaved edits says so in its title (the script sets .is-changed). */
 details.section.is-changed > summary h2::after { content: "Unsaved changes"; font-size: 12px; font-weight: 500; color: var(--warn); }
 .form-error { margin: 0 0 16px; }
