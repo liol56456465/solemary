@@ -131,6 +131,15 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
     background: var(--surface); border-bottom: 1px solid var(--line);
 }
 .topbar .spacer { flex: 1; }
+.quick-find { position: relative; display: flex; align-items: center; margin-left: 12px; width: min(340px, 40vw); }
+.quick-find input { width: 100%; height: 34px; padding-right: 32px; background: var(--surface-2); border-color: var(--line); }
+.quick-find input:focus-visible { background: var(--surface); }
+.quick-find kbd {
+    position: absolute; right: 8px; padding: 0 6px; border: 1px solid var(--line-strong); border-radius: 4px;
+    font: 11px/18px var(--mono); color: var(--fg-2); pointer-events: none;
+}
+.quick-find input:focus + kbd, .quick-find input:not(:placeholder-shown) + kbd { display: none; }
+.search-result { margin: 0 0 14px; color: var(--fg-2); }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--fg); font-weight: 650; font-size: 15px; }
 .brand:hover { text-decoration: none; }
 .brand-mark {
@@ -556,6 +565,9 @@ button.switch.is-on::after { transform: translateX(18px); }
     .nav-toggle:checked ~ .shell .scrim { display: block; position: fixed; inset: var(--topbar) 0 0 0; z-index: 45; background: var(--scrim); }
     .shell main { padding: 18px 16px 48px; }
     .save-bar { left: 12px; right: 12px; bottom: 12px; }
+    .quick-find { margin-left: 4px; width: auto; flex: 1; min-width: 0; }
+    .topbar .spacer { display: none; }
+    .quick-find kbd { display: none; }
     .module-header { flex-wrap: wrap; }
     .module-main { width: 100%; }
     /* Horizontal scrolling tables instead of sticky headers. */

@@ -16,6 +16,7 @@
 //   form[data-dirty]        also shows a Discard / Save bar at the bottom while changed
 //   [data-module-search]    a search box above the module cards
 //   #s-<section> links      open the collapsible section they point to
+//   [data-quick-find]       "/" focuses the top bar search
 
 (function () {
     'use strict';
@@ -332,8 +333,22 @@
         if (target instanceof HTMLDetailsElement) target.open = true;
     }
 
+    // ── "/" focuses the top bar search (not while typing somewhere) ────────
+    function setupQuickFind() {
+        const input = document.querySelector('[data-quick-find]');
+        if (!input) return;
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return;
+            const target = event.target;
+            if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+            event.preventDefault();
+            input.focus();
+        });
+    }
+
     function init() {
         document.documentElement.classList.add('js');
+        setupQuickFind();
         setupThemeToggle();
         setupToasts();
         setupSaveBar();

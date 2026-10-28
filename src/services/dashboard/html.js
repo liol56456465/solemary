@@ -101,22 +101,22 @@ export const NAV = [
         { key: 'staff', label: 'Staff' },
     ] },
     { group: 'Settings', items: [
-        { key: 'enforcement', label: 'Enforcement & appeals', summary: 'Log channels, warning roles, appeal timings, appeal panels.' },
-        { key: 'automod', label: 'Automod', state: 'automod', toggle: 'enabled', summary: 'Rule modes, exceptions, join gate, raid panic.' },
-        { key: 'logging', label: 'Logging', state: 'logging', toggle: 'enabled', summary: 'Which server events are logged, and where.' },
-        { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome', summary: 'Join and leave messages, auto roles.' },
-        { key: 'tickets', label: 'Tickets', state: 'tickets', summary: 'Ticket panel, modmail, saved answers.' },
-        { key: 'leveling', label: 'Leveling', state: 'leveling', toggle: 'enabled', summary: 'XP, level-up messages, role rewards.' },
-        { key: 'verification', label: 'Verification', state: 'verification', summary: 'Verify panel or auto-verify on join.' },
-        { key: 'reaction-roles', label: 'Reaction roles', summary: 'Self-assign role menus.' },
-        { key: 'giveaways', label: 'Giveaways', summary: 'Start, end and reroll giveaways.' },
-        { key: 'birthdays', label: 'Birthdays', state: 'birthdays', summary: 'Birthday announcements and role.' },
-        { key: 'counters', label: 'Counters', summary: 'Member counters and the counting game.' },
-        { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate', summary: 'Temporary voice channels.' },
-        { key: 'applications', label: 'Applications', state: 'applications', toggle: 'enabled', summary: 'Role applications and their questions.' },
-        { key: 'community', label: 'Community', summary: 'Suggestions, starboard, stickies, tags, feeds.' },
-        { key: 'commands', label: 'Commands', summary: 'Turn commands and categories on or off.' },
-        { key: 'support', label: 'Support server', summary: 'The banned role in the support server.' },
+        { key: 'enforcement', label: 'Enforcement & appeals', keywords: 'mod log, evidence, muted role, warning roles, appeal window, cooldown, mass-action guard, ladder, reasons, appeal panel', summary: 'Log channels, warning roles, appeal timings, appeal panels.' },
+        { key: 'automod', label: 'Automod', state: 'automod', toggle: 'enabled', keywords: 'spam, links, invites, bad words, raid, lockdown, panic, join gate, trusted, second chance, mood, native automod, slowmode', summary: 'Rule modes, exceptions, join gate, raid panic.' },
+        { key: 'logging', label: 'Logging', state: 'logging', toggle: 'enabled', keywords: 'audit log, message delete, edits, joins, leaves, ignore channels, events', summary: 'Which server events are logged, and where.' },
+        { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome', keywords: 'join message, leave message, goodbye, greeting, auto role, autorole, embed', summary: 'Join and leave messages, auto roles.' },
+        { key: 'tickets', label: 'Tickets', state: 'tickets', keywords: 'ticket panel, support, modmail, canned answers, saved replies, staff role, transcript', summary: 'Ticket panel, modmail, saved answers.' },
+        { key: 'leveling', label: 'Leveling', state: 'leveling', toggle: 'enabled', keywords: 'xp, levels, rank, level up message, role rewards, leaderboard, no xp channels', summary: 'XP, level-up messages, role rewards.' },
+        { key: 'verification', label: 'Verification', state: 'verification', keywords: 'verify, captcha, verified role, auto-verify, panel', summary: 'Verify panel or auto-verify on join.' },
+        { key: 'reaction-roles', label: 'Reaction roles', keywords: 'self roles, role menu, buttons, select menu', summary: 'Self-assign role menus.' },
+        { key: 'giveaways', label: 'Giveaways', keywords: 'prize, winners, reroll, end giveaway', summary: 'Start, end and reroll giveaways.' },
+        { key: 'birthdays', label: 'Birthdays', state: 'birthdays', keywords: 'birthday channel, birthday role, timezone', summary: 'Birthday announcements and role.' },
+        { key: 'counters', label: 'Counters', keywords: 'member count, stats channels, counting game', summary: 'Member counters and the counting game.' },
+        { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate', keywords: 'temporary voice, voice channels, jtc', summary: 'Temporary voice channels.' },
+        { key: 'applications', label: 'Applications', state: 'applications', toggle: 'enabled', keywords: 'apply, staff application, questions, managers', summary: 'Role applications and their questions.' },
+        { key: 'community', label: 'Community', keywords: 'suggestions, starboard, sticky message, tags, youtube feed', summary: 'Suggestions, starboard, stickies, tags, feeds.' },
+        { key: 'commands', label: 'Commands', keywords: 'disable command, enable command, categories, permissions', summary: 'Turn commands and categories on or off.' },
+        { key: 'support', label: 'Support server', keywords: 'banned role, support server', summary: 'The banned role in the support server.' },
     ] },
     { key: 'audit', label: 'Audit log' },
 ];
@@ -207,7 +207,7 @@ export function layout({ title, active = null, session = null, access = null, mo
     const top = html`<header class="topbar">
 ${session ? html`<label for="nav-toggle" class="icon-button nav-button" tabindex="0" role="button" aria-label="Menu">${icon('menu')}</label>` : ''}
 <a class="brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">M</span><span class="brand-name">Meowist</span></a>
-<span class="spacer"></span>
+${session ? html`<form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label><input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : ''}<span class="spacer"></span>
 ${themeToggle(theme, back)}${session ? userMenu(session, access) : ''}</header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>

@@ -431,7 +431,7 @@ export function createDashboard({
     /** GET /dashboard/modules[?show=on|off]: every module as a card with its switch. */
     async function modulesHub(req, res) {
         return sendHtml(res, 200, modulesPage({
-            ...shellOf(req), flash: req.dashboard.flash, editEnabled: settings.editEnabled, show: str(req.query?.show, 5),
+            ...shellOf(req), flash: req.dashboard.flash, editEnabled: settings.editEnabled, show: str(req.query?.show, 5), q: str(req.query?.q, 60),
         }));
     }
 

@@ -1047,3 +1047,19 @@ test('Overview: recent dashboard changes (escaped), linked to the module; unavai
     assert.match(overviewPage({ session: { username: 'a', csrf: 't' }, overview: o, recentChanges: null }), /Recent dashboard changes<\/h2><p class="muted">Unavailable \(database\)/);
     assert.match(overviewPage({ session: { username: 'a', csrf: 't' }, overview: o, recentChanges: [] }), /No dashboard changes yet/);
 });
+
+test('top bar search: ?q= filters modules by name, one-liner or keywords (every word), escaped', async () => {
+    const h = await setup();
+    const find = (q) => modulesPageGet(h, { q });
+    const xp = await find('xp');
+    assert.equal((xp.body.match(/<li class="module-card"/g) || []).length, 1);
+    assert.match(xp.body, /href="\/dashboard\/leveling"/);
+    assert.match(xp.body, /1 module match <strong>“xp”<\/strong>/);
+    const two = await find('join message');
+    assert.match(two.body, /href="\/dashboard\/welcome"/);
+    const none = await find('<script>zzz');
+    assert.ok(!none.body.includes('<script>zzz'));
+    assert.match(none.body, /No module matches/);
+    // The header still counts every module; the filter chips keep the search.
+    assert.match(xp.body, /href="\/dashboard\/modules\?show=on&amp;q=xp"/);
+});

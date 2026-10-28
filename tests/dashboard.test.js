@@ -473,7 +473,9 @@ test('overview: status, counts, checklist and recent actions; read-only', async 
     assert.match(res.body, /Getting started/);
     assert.match(res.body, /Mod log channel/);
     assert.match(res.body, /&lt;t&gt;/);
-    assert.ok(!/<form(?![^>]*logout)/.test(res.body), 'no forms besides logout');
+    // Read-only: no POST form besides logout (the top bar search is a GET to /dashboard/modules).
+    assert.ok(!/<form method="post"(?![^>]*logout)/.test(res.body), 'no POST forms besides logout');
+    assert.match(res.body, /<form class="quick-find" role="search" method="get" action="\/dashboard\/modules">/);
 });
 
 test('overview survives failing sources (shows unavailable)', async () => {
