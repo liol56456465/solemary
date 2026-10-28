@@ -15,7 +15,8 @@ import { openCards } from '../automod/reviewRegistry.js';
 import { getLockdownState } from '../automod/raidService.js';
 import { SETTINGS } from '../settings/settingsRegistry.js';
 import { getSetting, guildIdFor, settingSource } from '../settings/guildSettings.js';
-import { NAV, formatDate, html, icon, layout, path, raw, timeTag } from './html.js';
+import { formatDate, html, layout, path, raw, timeTag } from './html.js';
+import { moduleEntries } from './modulesPage.js';
 
 const PENDING_APPEALS_CAP = 100;
 
@@ -128,18 +129,13 @@ function stat(label, value, { tone = '', note = '', href = null } = {}) {
     return html`<li class="stat${tone ? ` stat-${tone}` : ''}"><span class="label">${label}</span><span class="value">${value}</span>${note ? html`<span class="note">${note}</span>` : ''}${href ? html`<a class="stat-link" href="${href}"><span class="sr">Open ${label}</span></a>` : ''}</li>`;
 }
 
-/**
- * Module cards (name, one line, on/off, link to its settings): the settings pages at a
- * glance. The on/off switches live on each page, next to the settings they affect.
- */
-function moduleCards(moduleStates) {
-    const settings = NAV.find((item) => item.group === 'Settings')?.items || [];
-    return html`<ul class="module-grid">${settings.map((item) => {
-        const state = item.state && Object.hasOwn(moduleStates, item.state) ? moduleStates[item.state] : null;
-        return html`<li class="module-card"><a href="${path(`/${item.key}`)}">
-<span class="module-head">${icon(item.key)}<span class="module-name">${item.label}</span>${state === null ? '' : html`<span class="state state-${state ? 'on' : 'off'}">${state ? 'on' : 'off'}</span>`}</span>
-<span class="module-summary">${item.summary || ''}</span></a></li>`;
-    })}</ul>`;
+/** A compact module summary (name + on/off dot); the full cards and switches are on the Modules page. */
+function moduleSummary(moduleStates) {
+    const entries = moduleEntries(moduleStates);
+    const known = entries.filter((e) => e.on !== null);
+    return html`<p class="muted">${known.filter((e) => e.on).length} of ${known.length} modules with an on/off state are on.</p>
+<ul class="module-chips">${entries.map((e) => html`<li><a href="${path(`/${e.key}`)}">${e.on === null ? '' : html`<span class="dot ${e.on ? 'dot-on' : 'dot-off'}"><span class="sr">${e.on ? 'on' : 'off'}</span></span>`}${e.label}</a></li>`)}</ul>
+<p class="card-foot"><a href="${path('/modules')}">Manage modules</a></p>`;
 }
 
 /** The Overview page from collectOverview's result. */
@@ -164,7 +160,7 @@ ${o.recent.map((row) => html`<tr><td><a href="${path(`/cases/${encodeURIComponen
 ${stats}
 <details class="card section" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>Getting started${todo.length ? html` <span class="count">${todo.length} to do</span>` : html` <span class="state state-on">all set</span>`}</h2></summary><div class="section-body">${checklist}</div></details>
 <section class="card"><h2>Recent enforcement actions</h2>${recent}</section>
-<details class="card section" data-key="modules" open><summary><h2>Modules</h2></summary><div class="section-body">${moduleCards(moduleStates)}</div></details>`;
+<section class="card"><h2>Modules</h2>${moduleSummary(moduleStates)}</section>`;
     return layout({ title: 'Overview', active: 'overview', session, access, moduleStates, body });
 }
 

@@ -332,6 +332,18 @@ ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" v
 <fieldset${canEdit ? '' : raw(' disabled')}>${canEdit ? html`<button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${label}: turn ${enabled ? 'off' : 'on'}"><span class="switch-text">${enabled ? 'Turn off' : 'Turn on'}</span></button>` : ''}</fieldset></form>`;
 }
 
+/**
+ * A module's main switch (Modules page cards, module page header): the same POST as
+ * toggleForm (enabled=true|false), compact. `back: 'modules'` returns to the Modules
+ * page instead of the module page. Without edit rights it is the on/off pill only.
+ */
+export function moduleSwitch({ csrf, canEdit, module, action, enabled, label, back = '' }) {
+    if (!canEdit) return pill(enabled);
+    return html`<form method="post" action="${path(`/${module}/${action}`)}" class="switch-form"><input type="hidden" name="csrf" value="${csrf}">
+<input type="hidden" name="enabled" value="${enabled ? 'false' : 'true'}">${back === 'modules' ? raw('<input type="hidden" name="back" value="modules">') : ''}
+<span class="switch-state" aria-hidden="true">${enabled ? 'On' : 'Off'}</span><button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${label}: turn ${enabled ? 'off' : 'on'}"><span class="switch-text">${enabled ? 'Turn off' : 'Turn on'}</span></button></form>`;
+}
+
 /** A status pill: green "on", grey "off" (or custom text / tone: on, off, warn, bad). */
 export function pill(on, text = on ? 'on' : 'off', tone = on ? 'on' : 'off') {
     return html`<span class="state state-${tone}">${text}</span>`;

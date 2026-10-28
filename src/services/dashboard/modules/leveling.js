@@ -8,7 +8,7 @@ import { html } from '../html.js';
 import {
     InputError, PERMS, autoRoleField, boolField, buttonForm, channelField, channelName, channelPicker, checkbox,
     checkboxInput, choiceField, intField, numberInput, postForm, rolePicker, roleName, roleWarnings, selectInput,
-    text, textArea, userIdField, toggleForm,
+    text, textArea, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, section, table } from './common.js';
@@ -65,8 +65,8 @@ ${rolePicker(g, 'roleId', null, { label: 'Role', optional: false, autoAssign: tr
 ${selectInput('op', 'add', [['add', 'Add levels'], ['remove', 'Remove levels'], ['set', 'Set level']], { label: 'Action' })}
 ${numberInput('levels', '', { label: 'Levels', min: 0, max: MAX_LEVEL })}</div>`, { submit: 'Apply', canEdit: ctx.canEdit && ctx.canAct })
             : html`<p class="muted">Changing a member's level needs Administrator in the main server.</p>`;
-        return html`${section('Status', toggleForm(ctx, 'leveling', 'enabled', cfg.enabled !== false, { label: 'Leveling' }))}
-${section('XP and messages', settings)}${section('No XP in', ignored)}
+        // The on/off switch is in the page header (pages.js moduleSettingsPage).
+        return html`${section('XP and messages', settings)}${section('No XP in', ignored)}
 ${section('Role rewards', rewardTable, 'Roles with staff permissions or above my highest role are refused (same rule as /level dashboard).')}
 ${section('Member levels', members, 'Same as /level add, /level remove and /level set.')}`;
     },

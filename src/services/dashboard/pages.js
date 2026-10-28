@@ -4,7 +4,8 @@
 import { formatDuration } from '../enforcement/format.js';
 import { SEARCH_STATUSES, SEARCH_TYPES } from '../enforcement/caseSearchService.js';
 import { STATS_PERIODS } from '../staffActivityService.js';
-import { formatAge, formatDate, html, layout, queryString, raw, section, timeTag } from './html.js';
+import { formatAge, formatDate, html, icon, layout, navItems, queryString, raw, section, timeTag } from './html.js';
+import { moduleSwitch } from './forms.js';
 
 const IMAGE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
 
@@ -217,6 +218,16 @@ ${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || 
 // ── Module (settings) pages ───────────────────────────────────────────────
 
 /**
+ * "On this page": links to the collapsible sections of a long settings page (read from
+ * the page's own section markup; four or more sections). The script opens the target.
+ */
+function sectionLinks(body) {
+    const found = [...String(body).matchAll(/<details class="card section" id="s-([a-z0-9-]+)"[^>]*><summary><h2>([^<]+)<\/h2>/g)];
+    if (found.length < 4) return '';
+    return html`<nav class="section-links" aria-label="On this page"><span class="section-links-label">On this page</span>${found.map(([, key, title]) => html`<a href="#s-${key}">${raw(title)}</a>`)}</nav>`;
+}
+
+/**
  * The frame of a module page: title, help line, read-only / Administrator notices, the
  * flash message after a save, the error of a refused form, then the module's body.
  */
@@ -225,6 +236,12 @@ export function moduleSettingsPage({ session, access = null, moduleStates = {}, 
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
 ${warnings.length ? html`<ul class="warnings">${warnings.map((w) => html`<li>${w}</li>`)}</ul>` : ''}`;
-    const page = html`<h1>${module.label}</h1>${module.help ? html`<p class="muted help">${module.help}</p>` : ''}${notices}${body}`;
+    const item = navItems().find((i) => i.key === module.key) || {};
+    const state = item.toggle && Object.hasOwn(moduleStates, item.state) ? moduleStates[item.state] : null;
+    const canEdit = Boolean(editEnabled && session && access?.canView !== false);
+    const main = state === null ? '' : moduleSwitch({ csrf: session?.csrf, canEdit, module: module.key, action: item.toggle, enabled: state, label: module.label });
+    const head = html`<header class="module-header"><span class="module-icon" aria-hidden="true">${icon(module.key)}</span>
+<div class="module-title"><h1>${module.label}</h1>${module.help ? html`<p class="help">${module.help}</p>` : ''}</div>${main ? html`<div class="module-main">${main}</div>` : ''}</header>`;
+    const page = html`${head}${sectionLinks(body)}${notices}${body}`;
     return layout({ title: module.label, active: module.key, session, access, moduleStates, body: page });
 }

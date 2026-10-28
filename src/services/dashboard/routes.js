@@ -64,6 +64,7 @@ import {
     appealsPage, auditPage, caseDetailPage, casesPage, moduleSettingsPage, statsPage,
 } from './pages.js';
 import { collectOverview, defaultOverviewData, moduleStatesFrom, overviewPage } from './overview.js';
+import { modulesPage } from './modulesPage.js';
 import { MODULES, getAction, getModule } from './modules/index.js';
 import { defaultServices } from './services.js';
 import { AUDIT_PAGE_SIZE, createAuditStore, recordDashboardChange } from './audit.js';
@@ -421,6 +422,13 @@ export function createDashboard({
         return sendHtml(res, 200, overviewPage({ ...shellOf(req), overview: result }));
     }
 
+    /** GET /dashboard/modules[?show=on|off]: every module as a card with its switch. */
+    async function modulesHub(req, res) {
+        return sendHtml(res, 200, modulesPage({
+            ...shellOf(req), flash: req.dashboard.flash, editEnabled: settings.editEnabled, show: str(req.query?.show, 5),
+        }));
+    }
+
     async function cases(req, res) {
         const query = {
             member: str(req.query?.member, 20), moderator: str(req.query?.moderator, 20), type: str(req.query?.type, 10),
@@ -589,7 +597,8 @@ export function createDashboard({
         }
         const message = [result?.message || (changes.length ? 'Saved.' : 'Nothing changed.'), ...(result?.warnings || [])].map(plainText).join(' ');
         await sessions.setFlash?.(session.id, message);
-        return res.redirect(303, path(`/${module.key}`));
+        // A switch on the Modules page comes back there; everything else to the module page.
+        return res.redirect(303, req.body?.back === 'modules' ? path('/modules') : path(`/${module.key}`));
     }
 
     // Phase 3: enforcement and records (enforcementRoutes.js), with the same POST
@@ -624,7 +633,7 @@ export function createDashboard({
 
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, index, callback, requireUser, checkPost,
-        overview, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound, setTheme,
+        overview, modulesHub, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound, setTheme,
         sessions, states, confirms, enforcement: enforcementHandlers,
     };
 }
@@ -694,6 +703,7 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
     router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleAction));
     router.get('/overview', user, safe(d.overview));
+    router.get('/modules', user, safe(d.modulesHub));
     router.get('/cases', user, safe(d.cases));
     router.get('/cases/:code', user, safe(d.caseDetail));
     router.get('/appeals', user, safe(d.appeals));

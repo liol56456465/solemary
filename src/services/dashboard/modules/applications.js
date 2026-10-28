@@ -9,7 +9,7 @@ import { APPLICATION_NAME_MAX } from '../../applicationRoleService.js';
 import { html } from '../html.js';
 import {
     InputError, PERMS, boolField, buttonForm, channelField, channelPicker, checkbox, checkboxInput, intField, isSnowflake, multiline,
-    numberInput, pill, postForm, roleField, rolePicker, roleName, text, textArea, textInput, toggleForm,
+    numberInput, pill, postForm, roleField, rolePicker, roleName, text, textArea, textInput,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, section, table } from './common.js';
@@ -60,8 +60,8 @@ ${numberInput('reviewedDays', s.reviewedApplicationRetentionDays ?? 14, { label:
             { label: `Default questions (one per line, at most ${MAX_APPLICATION_QUESTIONS})`, rows: 6, max: 1000 }));
         const managerTable = html`${table(['Role', ''], managers.map((id) => [roleName(g, id), buttonForm(ctx, 'applications', 'manager-remove', 'Remove', { roleId: id })]), 'No manager roles.')}
 ${postForm(ctx, 'applications', 'manager-add', rolePicker(g, 'roleId', null, { label: 'Add manager role', optional: false, assign: false }), { submit: 'Add', inline: true })}`;
-        return html`${section('Status', toggleForm(ctx, 'applications', 'enabled', s.enabled === true, { label: 'Applications' }))}
-${section(`Applications (${roles.length})`, html`${roles.length ? roleBlocks : html`<p class="muted">No applications yet.</p>`}<h3>New application</h3>${roleCreate}`, 'What members can apply for with /apply. Each has its own questions, or uses the default questions.', { key: 'application-roles' })}
+        // The on/off switch is in the page header (pages.js moduleSettingsPage).
+        return html`${section(`Applications (${roles.length})`, html`${roles.length ? roleBlocks : html`<p class="muted">No applications yet.</p>`}<h3>New application</h3>${roleCreate}`, 'What members can apply for with /apply. Each has its own questions, or uses the default questions.', { key: 'application-roles' })}
 ${section('Settings', settings, 'Setting the log channel here also sets the Applications log channel of Logging (as /app-admin does).')}
 ${section('Default questions', questions)}${section('Manager roles', managerTable, 'Members with these roles can review applications.')}`;
     },

@@ -936,8 +936,66 @@ test('giveaways: start form, times as <time> for the relative display, delete as
 test('destructive buttons carry data-confirm; toggles are switches with role="switch"', async () => {
     const h = await setup();
     const page = await get(h, 'applications');
-    assert.match(page.body, /<form method="post" action="\/dashboard\/applications\/enabled" class="toggle-row" data-toggle>/);
+    // The main switch is in the page header (no separate Status section).
+    assert.match(page.body, /<div class="module-main"><form method="post" action="\/dashboard\/applications\/enabled" class="switch-form">/);
     assert.match(page.body, /role="switch" aria-checked="false"/);
     const counters = await get(h, 'counters');
     assert.match(counters.body, /data-confirm="Delete this counter and its channel\?"/);
+});
+
+// ── Modules page, module header switch, section links ─────────────────────
+
+function modulesPageGet(h, query = {}) {
+    return run(h, h.d.modulesHub, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query });
+}
+
+test('Modules page: a card per settings module; switches on cards with a main switch; filters', async () => {
+    const h = await setup();
+    const res = await modulesPageGet(h);
+    assert.equal(res.statusCode, 200);
+    const settings = NAV.find((i) => i.group === 'Settings').items;
+    for (const item of settings) assert.ok(res.body.includes(`href="/dashboard/${item.key}"`), item.key);
+    assert.equal((res.body.match(/<li class="module-card"/g) || []).length, settings.length);
+    // Automod has a main switch → a switch form that comes back to the Modules page.
+    assert.match(res.body, /<form method="post" action="\/dashboard\/automod\/enabled" class="switch-form"><input type="hidden" name="csrf" value="[^"]+">\n<input type="hidden" name="enabled" value="(true|false)"><input type="hidden" name="back" value="modules">/);
+    assert.match(res.body, /data-module-search/);
+    assert.ok(!/style="|<script>/.test(res.body));
+    const on = await modulesPageGet(h, { show: 'on' });
+    assert.ok(!/data-state="off"/.test(on.body) && !/data-state="none"/.test(on.body));
+    const off = await modulesPageGet(h, { show: 'off' });
+    assert.ok(!/data-state="on"/.test(off.body));
+    const junk = await modulesPageGet(h, { show: '<x>' });
+    assert.equal((junk.body.match(/<li class="module-card"/g) || []).length, settings.length, 'unknown filter = all');
+});
+
+test('a switch from the Modules page returns there; any other back value goes to the module page', async () => {
+    const h = await setup();
+    const back = await post(h, 'automod', 'enabled', { enabled: 'false', back: 'modules' });
+    assert.equal(back.statusCode, 303);
+    assert.equal(back.redirectedTo, '/dashboard/modules');
+    for (const value of ['https://evil.example/', '/dashboard/modules', '//evil', 'modules ']) {
+        const res = await post(h, 'automod', 'enabled', { enabled: 'false', back: value });
+        assert.equal(res.redirectedTo, '/dashboard/automod', value);
+    }
+});
+
+test('module header: the main switch; read-only shows the on/off pill and no form', async () => {
+    const h = await setup();
+    const page = await get(h, 'automod');
+    assert.match(page.body, /<header class="module-header">/);
+    assert.match(page.body, /<div class="module-main"><form method="post" action="\/dashboard\/automod\/enabled" class="switch-form">/);
+    const off = await setup({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } });
+    const ro = await get(off, 'automod');
+    assert.match(ro.body, /<div class="module-main"><span class="state state-(on|off)">/);
+    assert.ok(!ro.body.includes('action="/dashboard/automod/enabled"'));
+    const mods = await modulesPageGet(off);
+    assert.ok(!mods.body.includes('class="switch-form"'), 'no switches when editing is off');
+});
+
+test('"On this page" links on long module pages point at existing sections', async () => {
+    const h = await setup();
+    const page = await get(h, 'automod');
+    const links = [...page.body.matchAll(/<a href="#(s-[a-z0-9-]+)">/g)].map((m) => m[1]);
+    assert.ok(links.length >= 4, links.join());
+    for (const id of links) assert.ok(page.body.includes(`id="${id}"`), id);
 });

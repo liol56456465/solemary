@@ -87,10 +87,12 @@ export function icon(name, className = 'icon') {
 
 /**
  * The sidebar. `state` names the on/off indicator from moduleStates, where the module
- * has an on/off setting; `summary` is the one-liner on the Overview's module cards.
+ * has an on/off setting; `toggle` is the module action behind its main switch (Modules
+ * page and the module page header); `summary` is the one-liner on the module cards.
  */
 export const NAV = [
     { key: 'overview', label: 'Overview' },
+    { key: 'modules', label: 'Modules' },
     { group: 'Records', items: [
         { key: 'users', label: 'Members' },
         { key: 'cases', label: 'Cases' },
@@ -100,18 +102,18 @@ export const NAV = [
     ] },
     { group: 'Settings', items: [
         { key: 'enforcement', label: 'Enforcement & appeals', summary: 'Log channels, warning roles, appeal timings, appeal panels.' },
-        { key: 'automod', label: 'Automod', state: 'automod', summary: 'Rule modes, exceptions, join gate, raid panic.' },
-        { key: 'logging', label: 'Logging', state: 'logging', summary: 'Which server events are logged, and where.' },
+        { key: 'automod', label: 'Automod', state: 'automod', toggle: 'enabled', summary: 'Rule modes, exceptions, join gate, raid panic.' },
+        { key: 'logging', label: 'Logging', state: 'logging', toggle: 'enabled', summary: 'Which server events are logged, and where.' },
         { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome', summary: 'Join and leave messages, auto roles.' },
         { key: 'tickets', label: 'Tickets', state: 'tickets', summary: 'Ticket panel, modmail, saved answers.' },
-        { key: 'leveling', label: 'Leveling', state: 'leveling', summary: 'XP, level-up messages, role rewards.' },
+        { key: 'leveling', label: 'Leveling', state: 'leveling', toggle: 'enabled', summary: 'XP, level-up messages, role rewards.' },
         { key: 'verification', label: 'Verification', state: 'verification', summary: 'Verify panel or auto-verify on join.' },
         { key: 'reaction-roles', label: 'Reaction roles', summary: 'Self-assign role menus.' },
         { key: 'giveaways', label: 'Giveaways', summary: 'Start, end and reroll giveaways.' },
         { key: 'birthdays', label: 'Birthdays', state: 'birthdays', summary: 'Birthday announcements and role.' },
         { key: 'counters', label: 'Counters', summary: 'Member counters and the counting game.' },
         { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate', summary: 'Temporary voice channels.' },
-        { key: 'applications', label: 'Applications', state: 'applications', summary: 'Role applications and their questions.' },
+        { key: 'applications', label: 'Applications', state: 'applications', toggle: 'enabled', summary: 'Role applications and their questions.' },
         { key: 'community', label: 'Community', summary: 'Suggestions, starboard, stickies, tags, feeds.' },
         { key: 'commands', label: 'Commands', summary: 'Turn commands and categories on or off.' },
         { key: 'support', label: 'Support server', summary: 'The banned role in the support server.' },
@@ -135,8 +137,8 @@ function navLink(item, active, moduleStates) {
         : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
 }
 
-function sidebar(active, moduleStates) {
-    return html`<nav class="sidebar" id="sidebar" aria-label="Dashboard"><ul>${NAV.map((item) => (item.group
+function sidebar(active, moduleStates, server) {
+    return html`<nav class="sidebar" id="sidebar" aria-label="Dashboard">${serverCard(server)}<ul>${NAV.map((item) => (item.group
         ? html`<li class="group"><span class="group-label">${item.group}</span><ul>${item.items.map((sub) => navLink(sub, active, moduleStates))}</ul></li>`
         : navLink(item, active, moduleStates)))}</ul></nav>`;
 }
@@ -164,12 +166,13 @@ function initials(name) {
     return String(name || '?').trim().split(/\s+/).slice(0, 2).map((word) => word[0] || '').join('').toUpperCase() || '?';
 }
 
-function serverBadge(server) {
+/** The server this dashboard manages, at the top of the sidebar. */
+function serverCard(server) {
     if (!server) return '';
     const avatar = server.iconUrl
-        ? html`<img class="server-icon" src="${server.iconUrl}" alt="" width="24" height="24" referrerpolicy="no-referrer">`
+        ? html`<img class="server-icon" src="${server.iconUrl}" alt="" width="36" height="36" referrerpolicy="no-referrer">`
         : html`<span class="server-icon server-initials" aria-hidden="true">${initials(server.name)}</span>`;
-    return html`<span class="server">${avatar}<span class="server-name">${server.name}</span></span>`;
+    return html`<div class="server-card">${avatar}<span class="server-text"><span class="server-name">${server.name}</span><span class="server-sub">Main server</span></span></div>`;
 }
 
 function userMenu(session, access) {
@@ -204,12 +207,12 @@ export function layout({ title, active = null, session = null, access = null, mo
     const top = html`<header class="topbar">
 ${session ? html`<label for="nav-toggle" class="icon-button nav-button" tabindex="0" role="button" aria-label="Menu">${icon('menu')}</label>` : ''}
 <a class="brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">M</span><span class="brand-name">Meowist</span></a>
-${session ? serverBadge(session.server) : ''}<span class="spacer"></span>
+<span class="spacer"></span>
 ${themeToggle(theme, back)}${session ? userMenu(session, access) : ''}</header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>${session ? raw('<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-controls="sidebar">') : ''}${top}
-<div class="${session ? 'shell' : 'shell bare'}">${session ? html`${sidebar(active, moduleStates)}<label for="nav-toggle" class="scrim" aria-hidden="true"></label>` : ''}
+<div class="${session ? 'shell' : 'shell bare'}">${session ? html`${sidebar(active, moduleStates, session.server)}<label for="nav-toggle" class="scrim" aria-hidden="true"></label>` : ''}
 <main id="main" tabindex="-1">${breadcrumbs(active, title)}${body}</main></div></body></html>`.text;
 }
 
@@ -226,7 +229,7 @@ export function slug(text) {
 export function section(title, body, help = '', { open = true, collapsible = true, key = slug(title) } = {}) {
     const inner = html`${help ? html`<p class="muted section-help">${help}</p>` : ''}${body}`;
     if (!collapsible) return html`<section class="card"><h2>${title}</h2>${inner}</section>`;
-    return html`<details class="card section" data-key="${key}"${open ? raw(' open') : ''}><summary><h2>${title}</h2></summary><div class="section-body">${inner}</div></details>`;
+    return html`<details class="card section" id="s-${key}" data-key="${key}"${open ? raw(' open') : ''}><summary><h2>${title}</h2></summary><div class="section-body">${inner}</div></details>`;
 }
 
 /** A plain message page (errors, 403, …). */

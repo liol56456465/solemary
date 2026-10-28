@@ -6,7 +6,7 @@ import { EVENT_TYPES, LOG_DESTINATIONS } from '../../loggingService.js';
 import { html, path } from '../html.js';
 import {
     InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, checkboxInput,
-    choiceField, postForm, roleName, text, toggleForm, userIdField, roleList,
+    choiceField, postForm, roleName, text, userIdField, roleList,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, registryValue, section, table } from './common.js';
@@ -68,8 +68,8 @@ ${types.map((type) => checkboxInput(fieldName(type), events[type] !== false, { l
 <div class="grid">${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'Ignore channel', kinds: ['text', 'voice', 'category', 'forum'], perms: [], optional: false })}`, { submit: 'Add', inline: true })}
 ${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="role"><label>Ignore role<select name="id">${roleList(g, { includeManaged: true }).map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>`, { submit: 'Add', inline: true })}
 ${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="user"><label>Ignore user ID<input name="id" inputmode="numeric" maxlength="20"></label>`, { submit: 'Add', inline: true })}</div>`;
-        return html`${section('Status', html`${toggleForm(ctx, 'logging', 'enabled', status.enabled, { label: 'Logging' })}
-<p class="muted">Mod log channel: ${channelName(g, modLogChannelId)} — <a href="${path('/enforcement')}">change on Enforcement &amp; appeals</a>. Ticket logs are set on <a href="${path('/tickets')}">Tickets</a>.</p>`)}
+        // The on/off switch is in the page header (pages.js moduleSettingsPage).
+        return html`${section('Mod log', html`<p class="muted">Mod log channel: ${channelName(g, modLogChannelId)} — <a href="${path('/enforcement')}">change on Enforcement &amp; appeals</a>. Ticket logs are set on <a href="${path('/tickets')}">Tickets</a>.</p>`)}
 ${section('Channels', channels, 'Setting a channel turns logging on (as /logging does).')}
 ${section('Events', toggles, 'Unticking a whole category turns every event in it off.')}
 ${section('Ignore lists', ignoreForms, 'Events from these channels (and their threads), roles or users are not logged.')}`;

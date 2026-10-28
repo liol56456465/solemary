@@ -646,7 +646,7 @@ test('case page: history, evidence and appeals are collapsible sections (history
         record: { case_code: 'abcdefg', type: 'warn', name: 'n', target_user_id: '1', target_username: 'u', moderator_id: '2', moderator_username: 'm', reason: 'r', created_at: new Date(0) },
         edits: [{ edited_at: new Date(0), edited_by_username: 'm', field: 'reason', old_value: 'a', new_value: 'b' }],
     });
-    assert.match(page, /<details class="card section" data-key="case-history"><summary><h2>History \(1\)<\/h2>/);
-    assert.match(page, /<details class="card section" data-key="case-evidence" open>/);
-    assert.match(page, /<details class="card section" data-key="case-appeals"><summary><h2>Appeals \(0\)/);
+    assert.match(page, /<details class="card section" id="s-case-history" data-key="case-history"><summary><h2>History \(1\)<\/h2>/);
+    assert.match(page, /<details class="card section" id="s-case-evidence" data-key="case-evidence" open>/);
+    assert.match(page, /<details class="card section" id="s-case-appeals" data-key="case-appeals"><summary><h2>Appeals \(0\)/);
 });

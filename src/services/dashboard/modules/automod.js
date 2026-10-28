@@ -75,8 +75,8 @@ export default {
         const s = data.settings;
         const gate = normalizeJoinGate(s.joinGate);
         const ruleKeys = Object.keys(AUTOMOD_RULES);
-        const top = html`${toggleForm(ctx, 'automod', 'enabled', s.enabled, { label: 'Automod' })}
-${postForm(ctx, 'automod', 'mode', selectInput('mode', s.mode, [['enforce', 'Enforce: act and post a review card'], ['monitor', 'Monitor: only post cards (Apply button)']], { label: 'Global mode' }), { inline: true })}`;
+        // The on/off switch is in the page header (pages.js moduleSettingsPage).
+        const top = html`${postForm(ctx, 'automod', 'mode', selectInput('mode', s.mode, [['enforce', 'Enforce: act and post a review card'], ['monitor', 'Monitor: only post cards (Apply button)']], { label: 'Global mode' }), { inline: true })}`;
         const rules = postForm(ctx, 'automod', 'rules', table(['Rule', 'Mode'], ruleKeys.map((key) => [
             AUTOMOD_RULES[key].label,
             selectInput(`rule:${key}`, s.ruleModes[key] || 'default', [['default', `default (${s.mode === 'monitor' ? 'monitor' : 'on'})`], ...RULE_MODES.map((m) => [m, m])], { label: '' }),
@@ -123,7 +123,7 @@ ${table(['Rule', 'Actions', 'Undone', 'Changed', 'Undo rate'], rulesStats.map(([
         const rate = pct(t.undone + t.changed, t.actions);
         return [AUTOMOD_RULES[rule]?.label || rule, t.actions, t.undone, t.changed, html`<span class="${rate >= 30 ? 'bad' : ''}">${rate}%</span>`];
     }), 'No automod actions.')}`;
-        return html`${section('Status', top)}${section('Rule modes', rules, 'default follows the global mode; monitor only posts cards; off ignores the rule.')}
+        return html`${section('Global mode', top)}${section('Rule modes', rules, 'default follows the global mode; monitor only posts cards; off ignores the rule.')}
 ${section('Channel exceptions', exceptions)}${section('Ignored channels', exempt)}
 ${section('Trusted members', trusted, 'Trusted members (the role, or this leveling level) skip the low-severity rules. Pick none and level 0 to clear.')}
 ${section('Second chance', secondChance)}${section('Mood', mood)}${section('Panic', panic)}${section('Join gate', joinGate, 'off / flag (review line with Kick/Dismiss) / kick (DM with how to come back).')}

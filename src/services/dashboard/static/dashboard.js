@@ -13,6 +13,9 @@
 //   #nav-toggle             the mobile drawer: Escape and link clicks close it
 //   [data-theme-toggle]     switches light / dark / system in place (same cookie)
 //   main .flash             "Saved." becomes a toast that closes itself
+//   form[data-dirty]        also shows a Discard / Save bar at the bottom while changed
+//   [data-module-search]    a search box above the module cards
+//   #s-<section> links      open the collapsible section they point to
 
 (function () {
     'use strict';
@@ -234,10 +237,109 @@
         }
     }
 
+    // ── Unsaved-changes bar ──────────────────────────────────────────────
+    // When a settings form has changes, a bar at the bottom offers Discard / Save for
+    // that form (the form's own Save button still works; nothing is sent until Save).
+    function setupSaveBar() {
+        if (!document.querySelector('form[data-dirty]')) return;
+        const bar = document.createElement('div');
+        bar.className = 'save-bar';
+        bar.setAttribute('role', 'region');
+        bar.setAttribute('aria-label', 'Unsaved changes');
+        bar.hidden = true;
+        const text = document.createElement('span');
+        text.className = 'save-bar-text';
+        const discard = document.createElement('button');
+        discard.type = 'button';
+        discard.className = 'secondary';
+        discard.textContent = 'Discard';
+        const save = document.createElement('button');
+        save.type = 'button';
+        save.className = 'primary';
+        save.textContent = 'Save changes';
+        bar.append(text, discard, save);
+        document.body.appendChild(bar);
+
+        let current = null;
+        const where = (form) => form.closest('details.section')?.querySelector('summary h2')?.textContent.trim() || '';
+        const show = (form) => {
+            current = form;
+            const place = where(form);
+            text.textContent = place ? `Unsaved changes in ${place}` : 'Unsaved changes';
+            bar.hidden = false;
+            document.body.classList.add('has-save-bar');
+        };
+        const hide = () => {
+            current = null;
+            bar.hidden = true;
+            document.body.classList.remove('has-save-bar');
+        };
+        document.addEventListener('input', (event) => {
+            const form = event.target.closest?.('form[data-dirty]');
+            if (form && !event.target.classList.contains('select-filter')) show(form);
+        });
+        discard.addEventListener('click', () => {
+            if (!current) return;
+            current.reset();
+            current.classList.remove('is-dirty');
+            dirty.delete(current);
+            const next = [...dirty].find((form) => document.contains(form));
+            if (next) show(next); else hide();
+        });
+        save.addEventListener('click', () => {
+            if (!current) return;
+            const button = current.querySelector('button[type="submit"]');
+            if (typeof current.requestSubmit === 'function') current.requestSubmit(button || undefined);
+            else current.submit();
+        });
+        document.addEventListener('submit', (event) => {
+            if (event.target === current && !event.defaultPrevented) hide();
+        });
+    }
+
+    // ── Module search (Modules page) ─────────────────────────────────────
+    function setupModuleSearch() {
+        const slot = document.querySelector('[data-module-search]');
+        const grid = document.querySelector('[data-module-grid]');
+        if (!slot || !grid) return;
+        const input = document.createElement('input');
+        input.type = 'search';
+        input.placeholder = 'Search modules…';
+        input.setAttribute('aria-label', 'Search modules');
+        input.autocomplete = 'off';
+        const none = document.createElement('p');
+        none.className = 'empty';
+        none.textContent = 'No module matches.';
+        none.hidden = true;
+        grid.insertAdjacentElement('afterend', none);
+        slot.appendChild(input);
+        input.addEventListener('input', () => {
+            const needle = input.value.trim().toLowerCase();
+            let shown = 0;
+            for (const card of grid.querySelectorAll('[data-name]')) {
+                const match = !needle || card.dataset.name.includes(needle) || card.textContent.toLowerCase().includes(needle);
+                card.hidden = !match;
+                if (match) shown += 1;
+            }
+            none.hidden = shown > 0;
+        });
+    }
+
+    // ── "On this page" links open their section ──────────────────────────
+    function openSectionFromHash() {
+        const id = decodeURIComponent(window.location.hash.slice(1));
+        const target = id && document.getElementById(id);
+        if (target instanceof HTMLDetailsElement) target.open = true;
+    }
+
     function init() {
         document.documentElement.classList.add('js');
         setupThemeToggle();
         setupToasts();
+        setupSaveBar();
+        setupModuleSearch();
+        openSectionFromHash();
+        window.addEventListener('hashchange', openSectionFromHash);
         document.querySelectorAll('select[data-search]').forEach(enhanceSelect);
         document.querySelectorAll('[data-copy]').forEach(addCopyButton);
         document.querySelectorAll('details[data-key]').forEach(rememberDetails);
