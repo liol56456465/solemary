@@ -28,7 +28,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import { CUSTOM_REASON_KEY, enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { recordOwnerOverride } from '../ownerOverride.js';
-import { isAdministrator } from '../enforcement/enforcementService.js';
+import { isAdministrator, previewWarn } from '../enforcement/enforcementService.js';
 import { normalizeCaseCode } from '../enforcement/format.js';
 import { parseEditDuration } from '../enforcement/caseEditService.js';
 import { parseEvidenceUrls } from '../enforcement/evidenceService.js';
@@ -412,6 +412,10 @@ export function createEnforcementHandlers(core) {
             throw new InputError(`${ACTION_LABELS[type]} is not available for ${targetUser.username} right now (reload the page).`);
         }
         const moderator = await freshModerator(req, `action:${type}`);
+        // A dashboard moderator cannot ban, so not through the warn ladder either (executeAction checks again under the lock).
+        if (type === 'warn' && req.dashboard.fresh?.level === MODERATOR && !isAdministrator(moderator) && previewWarn(state.ladder).escalates) {
+            throw new InputError(`This warning would automatically ban ${targetUser.username} (warn ladder), so it needs an Administrator.`, 403);
+        }
         const moderatorId = req.dashboard.session.userId;
         let flow;
         if (RECORD_ACTIONS.has(type)) {

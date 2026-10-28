@@ -272,6 +272,10 @@ export async function executeAction({ guild, moderator, targetUser, flow, staffR
         // warn will use: a warn that escalates bans the member, so it counts as a ban.
         const guard = async () => {
             const guardType = flow.type === 'warn' && previewWarn(await getLadder(guild.id, targetUser.id)).escalates ? 'ban' : flow.type;
+            // A dashboard moderator may not ban, so not through the warn ladder either.
+            if (guardType === 'ban' && !isAdministrator(moderator) && !staffRole?.actions?.includes?.('ban')) {
+                throw userError(`This warning would automatically ban ${targetUser.username} (warn ladder), so it needs an Administrator.`, ErrorTypes.PERMISSION);
+            }
             await enforceMassActionGuard(guild, moderator, guardType);
         };
         return runAction({ guild, moderator, targetUser, flow, guard });
