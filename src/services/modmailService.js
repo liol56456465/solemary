@@ -26,6 +26,7 @@ import { generateTranscript } from './ticket.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
 import { linkModmailChannel, linkedChannelId, linkedUserId, unlinkModmailChannel } from './modmailLinks.js';
+import { withOpenChannelSlot } from './openChannelCap.js';
 
 const NOTE_PREFIX = '//';
 const MAX_MESSAGE = 2000;
@@ -208,29 +209,38 @@ export async function openModmail(client, user, dmChannel, messageId) {
             PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages,
             PermissionFlagsBits.AttachFiles, PermissionFlagsBits.ReadMessageHistory,
         ];
-        const category = config.ticketCategoryId ? guild.channels.cache.get(config.ticketCategoryId) : null;
+        // Its own category (dashboard), else the /ticket category as before.
+        const categoryOf = (id) => (id ? guild.channels.cache.get(id) : null);
+        const category = [categoryOf(enforcementConfig.modmailCategoryId), categoryOf(config.ticketCategoryId)]
+            .find((c) => c?.type === ChannelType.GuildCategory) || null;
         const safeName = user.username.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 80) || user.id;
 
-        const channel = await guild.channels.create({
-            name: `modmail-${safeName}`,
-            type: ChannelType.GuildText,
-            parent: category?.type === ChannelType.GuildCategory ? category.id : undefined,
-            // For people only; the bot reads the member from modmail_links, never from the topic.
-            topic: `Modmail with ${user.username} (${user.id})`,
-            permissionOverwrites: [
-                { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-                { id: client.user.id, allow: [...staffAccess, PermissionFlagsBits.ManageChannels] },
-                ...(staffRoleId ? [{ id: staffRoleId, allow: staffAccess }] : []),
-            ],
-            reason: `Modmail from ${user.tag} (${user.id})`,
+        // Modmail counts toward the open-channel cap (with staff reports); appeals never do.
+        const slot = await withOpenChannelSlot(guild, 'modmail conversation', async () => {
+            const created = await guild.channels.create({
+                name: `modmail-${safeName}`,
+                type: ChannelType.GuildText,
+                parent: category?.type === ChannelType.GuildCategory ? category.id : undefined,
+                // For people only; the bot reads the member from modmail_links, never from the topic.
+                topic: `Modmail with ${user.username} (${user.id})`,
+                permissionOverwrites: [
+                    { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+                    { id: client.user.id, allow: [...staffAccess, PermissionFlagsBits.ManageChannels] },
+                    ...(staffRoleId ? [{ id: staffRoleId, allow: staffAccess }] : []),
+                ],
+                reason: `Modmail from ${user.tag} (${user.id})`,
+            });
+            // The link is what makes it a modmail channel; without it the channel is useless.
+            try {
+                await linkModmailChannel(guild.id, created.id, user.id);
+            } catch (error) {
+                await created.delete('Modmail link could not be saved').catch(() => {});
+                throw error;
+            }
+            return { channel: created };
         });
-        // The link is what makes it a modmail channel; without it the channel is useless.
-        try {
-            await linkModmailChannel(guild.id, channel.id, user.id);
-        } catch (error) {
-            await channel.delete('Modmail link could not be saved').catch(() => {});
-            throw error;
-        }
+        if (slot.refused) return slot.refused;
+        const { channel } = slot;
 
         const header = new EmbedBuilder()
             .setTitle('Modmail')

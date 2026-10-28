@@ -11,6 +11,7 @@ import { createEmbed } from '../../utils/embeds.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { Mutex } from '../../utils/mutex.js';
+import { withOpenChannelSlot } from '../openChannelCap.js';
 import { logEvent, EVENT_TYPES } from '../loggingService.js';
 import { query, withTransaction, T, isUniqueViolation } from './db.js';
 import { getCaseByCode, listCasesForUser, setEndDmDelivered, OPEN_STATUSES } from './caseService.js';
@@ -108,10 +109,18 @@ async function fetchCategory(guild, categoryId) {
     return category?.type === ChannelType.GuildCategory ? category : null;
 }
 
-/** Where appeals open: the main server's ticket category from /ticket, else MAIN_APPEALS_CATEGORY_ID. */
+/** Where appeals open in the main server: their own category, else the /ticket category. */
 export async function getAppealsCategory(mainGuild) {
     const config = await getGuildConfig(mainGuild.client, mainGuild.id).catch(() => ({}));
-    return await fetchCategory(mainGuild, config?.ticketCategoryId)
+    return await fetchCategory(mainGuild, enforcementConfig.appealsCategoryId)
+        || fetchCategory(mainGuild, config?.ticketCategoryId);
+}
+
+/** Where staff reports open: their own category, else the /ticket category, else the appeals one. */
+export async function getReportsCategory(mainGuild) {
+    const config = await getGuildConfig(mainGuild.client, mainGuild.id).catch(() => ({}));
+    return await fetchCategory(mainGuild, enforcementConfig.reportsCategoryId)
+        || await fetchCategory(mainGuild, config?.ticketCategoryId)
         || fetchCategory(mainGuild, enforcementConfig.appealsCategoryId);
 }
 
@@ -119,12 +128,12 @@ function channelName(name) {
     return name.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 90);
 }
 
-/** An admin-only channel in the main server's appeals category. */
-async function createPrivateChannel(client, name, reason) {
+/** An admin-only channel in the main server, in the appeals category (or the one findCategory picks). */
+async function createPrivateChannel(client, name, reason, findCategory = getAppealsCategory) {
     const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
     if (!guild) throw configError('Main guild unavailable for appeals');
-    const category = await getAppealsCategory(guild);
-    if (!category) throw configError('No ticket category (or MAIN_APPEALS_CATEGORY_ID) in the main server for appeals');
+    const category = await findCategory(guild);
+    if (!category) throw configError('No category for this channel in the main server: set it in the dashboard (Enforcement & appeals) or set the /ticket category');
     return guild.channels.create({
         name: channelName(name),
         type: ChannelType.GuildText,
@@ -451,21 +460,25 @@ export async function submitStaffReport({ client, user, staffMember, details, pr
 
 async function openStaffReport({ client, guild, user, staffMember, details, proof }) {
     await assertCanReport(guild, user.id);
-    const { rows } = await query(
-        `INSERT INTO ${T.appeals} (kind, user_id, username, guild_id, body)
-         VALUES ('report', $1, $2, $3, $4) RETURNING *`,
-        [user.id, user.username, guild.id, JSON.stringify({ staffMember, details, proof })]
-    );
-    const report = rows[0];
-
-    let channel;
-    try {
-        channel = await createPrivateChannel(client, `report-${user.username}`, 'Staff report');
-    } catch (error) {
-        await query(`DELETE FROM ${T.appeals} WHERE id = $1`, [report.id]).catch(() => {});
-        throw error;
-    }
-    await query(`UPDATE ${T.appeals} SET channel_id = $2 WHERE id = $1`, [report.id, channel.id]);
+    // Reports count toward the open-channel cap (with modmail); appeals never do.
+    const slot = await withOpenChannelSlot(guild, 'staff report', async () => {
+        const { rows } = await query(
+            `INSERT INTO ${T.appeals} (kind, user_id, username, guild_id, body)
+             VALUES ('report', $1, $2, $3, $4) RETURNING *`,
+            [user.id, user.username, guild.id, JSON.stringify({ staffMember, details, proof })]
+        );
+        const created = rows[0];
+        try {
+            const opened = await createPrivateChannel(client, `report-${user.username}`, 'Staff report', getReportsCategory);
+            await query(`UPDATE ${T.appeals} SET channel_id = $2 WHERE id = $1`, [created.id, opened.id]);
+            return { report: created, channel: opened };
+        } catch (error) {
+            await query(`DELETE FROM ${T.appeals} WHERE id = $1`, [created.id]).catch(() => {});
+            throw error;
+        }
+    });
+    if (slot.refused) throw userError(slot.refused);
+    const { report, channel } = slot;
 
     await channel.send({
         embeds: [createEmbed({

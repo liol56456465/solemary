@@ -89,6 +89,12 @@ export async function importModmailTopicsOnce(guild) {
     return imported;
 }
 
+/** Channel ids of every modmail conversation in this server. */
+export async function linkedChannelIds(guildId) {
+    await loadModmailLinks();
+    return [...byChannel.entries()].filter(([, link]) => link.guildId === guildId).map(([channelId]) => channelId);
+}
+
 /** Tests only: forget the in-memory mirror. */
 export function resetModmailLinksForTests() {
     byChannel.clear();

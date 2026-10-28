@@ -117,7 +117,7 @@ export async function removeOldAppealPanels(channel) {
 export async function postAppealPanels(client, mainGuild, mainChannel, { reason = '/setappeal' } = {}) {
     const appealsCategory = await getAppealsCategory(mainGuild);
     if (!appealsCategory) {
-        throw configError(`There is no ticket category to open appeals in. Set one in the ticket settings, or make sure ${enforcementConfig.appealsCategoryId} is a category in this server.`);
+        throw configError('There is no category to open appeals in. Set the appeals category in the dashboard (Enforcement & appeals), or a ticket category.');
     }
     const botPermissions = appealsCategory.permissionsFor(mainGuild.members.me);
     if (!botPermissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels])) {

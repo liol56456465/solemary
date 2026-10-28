@@ -85,8 +85,20 @@ export const SETTINGS = Object.freeze([
     // ── Appeals ──
     {
         key: 'appealsCategoryId', module: 'appeals', kind: 'category', guild: 'main',
-        label: 'Appeals / reports category', env: 'MAIN_APPEALS_CATEGORY_ID',
+        label: 'Appeals category (mute/warn appeals)', env: 'MAIN_APPEALS_CATEGORY_ID',
         fallback: '1531365877755285606', prodOnly: true, schema: optionalId,
+    },
+    {
+        key: 'reportsCategoryId', module: 'appeals', kind: 'category', guild: 'main',
+        label: 'Staff reports category', env: 'MAIN_REPORTS_CATEGORY_ID', fallback: null, schema: optionalId,
+    },
+    {
+        key: 'modmailCategoryId', module: 'appeals', kind: 'category', guild: 'main',
+        label: 'Modmail category', env: 'MAIN_MODMAIL_CATEGORY_ID', fallback: null, schema: optionalId,
+    },
+    {
+        key: 'openChannelCap', module: 'appeals', kind: 'number', guild: 'main',
+        label: 'Most open staff reports + modmail at once', env: 'OPEN_CHANNEL_CAP', fallback: 20, schema: int(1, 45),
     },
     {
         key: 'appealWindowMs', module: 'appeals', kind: 'duration', guild: 'main',

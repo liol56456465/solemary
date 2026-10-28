@@ -41,6 +41,10 @@ export const enforcementConfig = {
 //   appealsCategoryId      MAIN_APPEALS_CATEGORY_ID (fallback main-server category for appeals
 //                          and staff reports when /ticket has no category; APPEALS_CATEGORY_ID
 //                          is ignored)
+//   reportsCategoryId, modmailCategoryId  MAIN_REPORTS_CATEGORY_ID / MAIN_MODMAIL_CATEGORY_ID: their own
+//                          categories (unset: the /ticket category, as before)
+//   openChannelCap         OPEN_CHANNEL_CAP (20): open staff reports + modmail channels at most; appeals
+//                          are never counted or refused (Discord allows 50 channels per category)
 //   mutedRoleId            MUTED_ROLE_ID
 //   bannedRoleId           BANNED_ROLE_ID (support server: members with an active main-server ban)
 //   warnRoleIds            WARN_ROLE_IDS (roles for 1, 2 and 3+ active warnings)
@@ -55,7 +59,8 @@ export const enforcementConfig = {
 //                          channels close after this long without a message; staff get one
 //                          reminder in a quiet pending appeal (appeals never close automatically)
 bindSettingGetters(enforcementConfig, [
-    'adminRequestChannelId', 'supportServerInvite', 'appealsCategoryId', 'mutedRoleId', 'bannedRoleId',
+    'adminRequestChannelId', 'supportServerInvite', 'appealsCategoryId', 'reportsCategoryId', 'modmailCategoryId',
+    'openChannelCap', 'mutedRoleId', 'bannedRoleId',
     'warnRoleIds', 'modLogChannelId', 'evidenceChannelId',
     'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds',
     'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',

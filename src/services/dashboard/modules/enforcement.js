@@ -10,7 +10,8 @@ import { PERMS, channelField, channelPicker, numberInput, postForm, roleField, r
 import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, section, table, NOTHING } from './common.js';
 
 const KEYS = [
-    'adminRequestChannelId', 'modLogChannelId', 'evidenceChannelId', 'appealsCategoryId', 'mutedRoleId', 'warnRoleIds',
+    'adminRequestChannelId', 'modLogChannelId', 'evidenceChannelId', 'appealsCategoryId', 'reportsCategoryId', 'modmailCategoryId',
+    'openChannelCap', 'mutedRoleId', 'warnRoleIds',
     'supportServerInvite', 'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds', 'staleReportMs',
     'staleAppealReminderMs', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
 ];
@@ -41,7 +42,10 @@ export default {
 ${channelPicker(g, 'modLogChannelId', v.modLogChannelId, { label: 'Mod log channel', perms: PERMS.post, help: 'One line per enforcement action; review and alerts fall back to it.' })}
 ${channelPicker(g, 'evidenceChannelId', v.evidenceChannelId, { label: 'Evidence channel', perms: PERMS.postFiles, help: 'Re-hosted evidence images (falls back to the mod log).' })}
 ${channelPicker(g, 'adminRequestChannelId', v.adminRequestChannelId, { label: 'Admin request channel', perms: PERMS.post, help: 'Where moderators ask an administrator to act.' })}
-${channelPicker(g, 'appealsCategoryId', v.appealsCategoryId, { label: 'Appeals / reports category', kinds: ['category'], perms: PERMS.category, help: 'Used when /ticket has no category.' })}
+${channelPicker(g, 'appealsCategoryId', v.appealsCategoryId, { label: 'Appeals category', kinds: ['category'], perms: PERMS.category, help: 'Mute and warn appeals. Not set: the /ticket category.' })}
+${channelPicker(g, 'reportsCategoryId', v.reportsCategoryId, { label: 'Staff reports category', kinds: ['category'], perms: PERMS.category, help: 'Not set: the /ticket category.' })}
+${channelPicker(g, 'modmailCategoryId', v.modmailCategoryId, { label: 'Modmail category', kinds: ['category'], perms: PERMS.category, help: 'Not set: the /ticket category.' })}
+${numberInput('openChannelCap', v.openChannelCap, { label: 'Most open staff reports + modmail at once', min: 1, max: 45, help: 'At the limit new ones are refused and staff are alerted. Appeals are never refused.' })}
 ${textInput('supportServerInvite', v.supportServerInvite, { label: 'Support server invite', max: 100, placeholder: 'https://discord.gg/…', help: 'Sent to banned members so they can appeal.' })}
 </div>`);
         const roles = postForm(ctx, 'enforcement', 'roles', html`<div class="grid">
@@ -97,6 +101,10 @@ ${section('Automod steps', steps, 'Read-only for now.')}`;
                 evidenceChannelId: channelField(g, form, 'evidenceChannelId', { label: 'Evidence channel' }),
                 adminRequestChannelId: channelField(g, form, 'adminRequestChannelId', { label: 'Admin request channel' }),
                 appealsCategoryId: channelField(g, form, 'appealsCategoryId', { kinds: ['category'], label: 'Appeals category' }),
+                reportsCategoryId: channelField(g, form, 'reportsCategoryId', { kinds: ['category'], label: 'Staff reports category' }),
+                modmailCategoryId: channelField(g, form, 'modmailCategoryId', { kinds: ['category'], label: 'Modmail category' }),
+                // Absent from the form: unchanged (like the other fields of this form).
+                ...(form.openChannelCap !== undefined ? { openChannelCap: durationField(form, 'openChannelCap', 1, { min: 1, max: 45, label: 'Open staff reports + modmail' }) } : {}),
                 ...(invite ? { supportServerInvite: invite } : {}),
             }, current(ctx));
             if (!Object.keys(patch).length) return NOTHING;

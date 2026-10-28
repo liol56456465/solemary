@@ -434,7 +434,7 @@ const CASES = {
     enforcement: {
         'appeal-panels': { form: { channelId: TEXT }, service: 'postAppealPanels', admin: true,
             bad: { form: { channelId: VOICE }, message: /must be a text channel/ } },
-        channels: { form: { modLogChannelId: TEXT, evidenceChannelId: '', adminRequestChannelId: '', appealsCategoryId: CAT, supportServerInvite: 'https://discord.gg/abc' }, service: 'updateSettings',
+        channels: { form: { modLogChannelId: TEXT, evidenceChannelId: '', adminRequestChannelId: '', appealsCategoryId: CAT, reportsCategoryId: CAT, modmailCategoryId: '', openChannelCap: '15', supportServerInvite: 'https://discord.gg/abc' }, service: 'updateSettings',
             bad: { form: { modLogChannelId: MISSING }, message: /not in the server/ } },
         roles: { form: { mutedRoleId: ROLE_OK, warnRole1: ROLE_OK2 }, service: 'updateSettings', bad: { form: { mutedRoleId: GUILD }, message: /@everyone/ } },
         timings: { form: { appealWindowDays: '20', appealCooldownDays: '7', rejoinInviteHours: '168', staleReportDays: '7', staleAppealReminderDays: '3' }, service: 'updateSettings',
