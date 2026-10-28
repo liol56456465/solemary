@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { logger } from '../src/utils/logger.js';
+import { assertWriteTargetAllowed, libpqTarget } from './lib/dbTarget.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Skip .env when started with --env-file (e.g. .env.test) so production values never leak in.
@@ -65,10 +66,11 @@ async function resolveLatestBackup(backupDir) {
   return path.join(backupDir, dumpFiles[0]);
 }
 
-function runCommand(command, args) {
+function runCommand(command, args, env = process.env) {
   const result = spawnSync(command, args, {
     encoding: 'utf8',
     stdio: 'pipe',
+    env,
     shell: process.platform === 'win32'
   });
 
@@ -89,6 +91,9 @@ async function run() {
   if (!args.confirm) {
     throw new Error('Restore requires explicit confirmation. Re-run with --confirm.');
   }
+  // A remote target (the live database) also needs its host typed out: --confirm-host=<host>.
+  assertWriteTargetAllowed(targetUrl, args['confirm-host'], 'Restore');
+  const target = libpqTarget(targetUrl);
 
   ensureCommand('pg_restore');
   ensureCommand('psql');
@@ -111,12 +116,12 @@ async function run() {
   if (dropSchema) {
     runCommand('psql', [
       '--dbname',
-      targetUrl,
+      target.url,
       '-v',
       'ON_ERROR_STOP=1',
       '-c',
       'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;'
-    ]);
+    ], target.env);
   }
 
   runCommand('pg_restore', [
@@ -125,9 +130,9 @@ async function run() {
     '--no-owner',
     '--no-privileges',
     '--dbname',
-    targetUrl,
+    target.url,
     inputPath
-  ]);
+  ], target.env);
 
   logger.info('Database restore completed', {
     event: 'restore.completed',

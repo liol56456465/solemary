@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { logger } from '../src/utils/logger.js';
+import { libpqTarget, makeOwnerOnly, ownerOnlyFiles } from './lib/dbTarget.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Skip .env when started with --env-file (e.g. .env.test) so production values never leak in.
@@ -103,7 +104,9 @@ async function run() {
   const backupDir = path.resolve(args['backup-dir'] || process.env.BACKUP_DIR || path.join(process.cwd(), 'backups'));
 
   ensureCommand('pg_dump');
-  await mkdir(backupDir, { recursive: true });
+  ownerOnlyFiles();
+  await mkdir(backupDir, { recursive: true, mode: 0o700 });
+  const source = libpqTarget(databaseUrl);
 
   const outputPath = args.output
     ? path.resolve(args.output)
@@ -115,7 +118,7 @@ async function run() {
     '--no-privileges',
     '--file',
     outputPath,
-    databaseUrl
+    source.url
   ];
 
   logger.info('Starting PostgreSQL backup', {
@@ -126,12 +129,14 @@ async function run() {
   const result = spawnSync('pg_dump', dumpArgs, {
     encoding: 'utf8',
     stdio: 'pipe',
+    env: source.env,
     shell: process.platform === 'win32'
   });
 
   if (result.status !== 0) {
     throw new Error(`pg_dump failed: ${result.stderr || result.stdout || 'Unknown error'}`);
   }
+  await makeOwnerOnly(outputPath);
 
   await pruneBackups(backupDir, retentionDays);
 

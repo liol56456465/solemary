@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import pg from 'pg';
 import { logger } from '../src/utils/logger.js';
+import { resolveSslConfig, sanitizeConnectionString } from '../src/config/database/postgres.js';
+import { assertWriteTargetAllowed, libpqTarget, makeOwnerOnly, ownerOnlyFiles, withoutTargetOverrides } from './lib/dbTarget.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Skip .env when started with --env-file (e.g. .env.test) so production values never leak in.
@@ -60,10 +62,11 @@ function createTimestamp() {
   return `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}`;
 }
 
-function runCommand(command, args) {
+function runCommand(command, args, env = process.env) {
   const result = spawnSync(command, args, {
     encoding: 'utf8',
     stdio: 'pipe',
+    env,
     shell: process.platform === 'win32'
   });
 
@@ -96,7 +99,7 @@ async function pruneBackups(backupDir, retentionDays) {
 }
 
 function buildDatabaseUrlWithName(databaseUrl, databaseName) {
-  const parsed = new URL(databaseUrl);
+  const parsed = new URL(withoutTargetOverrides(databaseUrl));
   parsed.pathname = `/${databaseName}`;
   return parsed.toString();
 }
@@ -112,10 +115,14 @@ async function run() {
   const retentionDays = Number.parseInt(args['retention-days'] || process.env.BACKUP_RETENTION_DAYS || '14', 10);
   const backupDir = path.resolve(args['backup-dir'] || process.env.BACKUP_DIR || path.join(process.cwd(), 'backups'));
 
+  // The drill creates and drops a database on the same server: a remote server needs its host typed out.
+  assertWriteTargetAllowed(sourceDatabaseUrl, args['confirm-host'], 'The restore drill');
+
   ensureCommand('pg_dump');
   ensureCommand('pg_restore');
 
-  await mkdir(backupDir, { recursive: true });
+  ownerOnlyFiles();
+  await mkdir(backupDir, { recursive: true, mode: 0o700 });
 
   const stamp = createTimestamp();
   const backupPath = path.join(backupDir, `restore-drill-${stamp}.dump`);
@@ -123,7 +130,11 @@ async function run() {
   const maintenanceUrl = buildDatabaseUrlWithName(sourceDatabaseUrl, 'postgres');
   const drillDatabaseUrl = buildDatabaseUrlWithName(sourceDatabaseUrl, drillDatabaseName);
 
-  const maintenancePool = new Pool({ connectionString: maintenanceUrl });
+  // Same TLS rules as the bot (remote hosts: verified certificates).
+  const poolFor = (url) => new Pool({ connectionString: sanitizeConnectionString(url), ssl: resolveSslConfig(url) });
+  const maintenancePool = poolFor(maintenanceUrl);
+  const source = libpqTarget(sourceDatabaseUrl);
+  const drill = libpqTarget(drillDatabaseUrl);
 
   logger.info('Starting restore drill', {
     event: 'restore_drill.start',
@@ -137,8 +148,9 @@ async function run() {
       '--no-privileges',
       '--file',
       backupPath,
-      sourceDatabaseUrl
-    ]);
+      source.url
+    ], source.env);
+    await makeOwnerOnly(backupPath);
 
     const createClient = await maintenancePool.connect();
     try {
@@ -153,11 +165,11 @@ async function run() {
       '--no-owner',
       '--no-privileges',
       '--dbname',
-      drillDatabaseUrl,
+      drill.url,
       backupPath
-    ]);
+    ], drill.env);
 
-    const verifyPool = new Pool({ connectionString: drillDatabaseUrl });
+    const verifyPool = poolFor(drillDatabaseUrl);
     try {
       const tableCount = await verifyPool.query(
         `SELECT COUNT(*)::int AS value FROM information_schema.tables WHERE table_schema = 'public'`
