@@ -12,7 +12,7 @@ import { MAX_LINKS_PER_FORM, NOTE_MAX as EVIDENCE_NOTE_MAX } from '../enforcemen
 import { NO_CONTACT_MAX_DAYS } from '../enforcement/noContactService.js';
 import { NOTE_MAX } from '../enforcement/staffNotesService.js';
 import { WEEKDAYS, intensityLevel, slotLabel } from '../staffCoverageService.js';
-import { formatAge, formatDate, html, layout, path, queryString, raw, section, typeBadge } from './html.js';
+import { formatAge, formatDate, html, icon, layout, path, queryString, raw, section, typeBadge } from './html.js';
 import { isAllowedImageUrl, isSafeLink } from './pages.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS } from './membersData.js';
 import { NICKNAME_MAX, REASON_MAX, TIMEOUTS } from './memberActions.js';
@@ -83,18 +83,21 @@ ${rows.map((row) => html`<tr>${tick(row)}<td><a class="member-cell" href="${user
         : ['q', 'role', 'joined', 'state'].some((key) => filters[key])
             ? html`<p class="empty">No member matches these filters. <a href="${path('/users')}">Clear filters</a></p>`
             : html`<p class="empty">No members to show yet. The list fills once the bot has loaded the main server.</p>`;
-    const body = html`<header class="page-head"><h1>Members</h1><p class="muted">Everyone in the main server. Open a member to change their roles or take an action; search by name, nickname or user ID.</p></header>
+    // Quick filters as chips (the other filters stay as they are); the bulk form folds away.
+    const chips = html`<nav class="chips" aria-label="Show">${Object.entries(STATE_FILTERS).map(([k, v]) => html`<a class="chip" href="${path(`/users${queryString({ ...keep, state: k, page: '' })}`)}"${(filters.state || '') === k ? raw(' aria-current="page"') : ''}>${v}</a>`)}</nav>`;
+    const count = list ? html`${list.total} member${list.total === 1 ? '' : 's'}${list.memberCount && list.total !== list.memberCount ? ` of ${list.memberCount}` : ''}` : '';
+    const body = html`<header class="page-head"><h1>Members</h1><p class="muted">${count ? html`${count} · ` : ''}open a member to change their roles or take an action.</p></header>
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
 ${list && list.memberCount && list.cached < list.memberCount * 0.9 ? html`<p class="notice">Showing ${list.cached} of ${list.memberCount} members: the member list is still loading. Reload in a minute.</p>` : ''}
 ${loading ? html`<p class="notice">The member list is not available right now (the bot cannot see the main server).</p>` : ''}
-<form class="filters" method="get" action="${path('/users')}" role="search">
+${chips}
+<form class="filters" method="get" action="${path('/users')}" role="search"><input type="hidden" name="state" value="${filters.state || ''}">
 <label class="wide-filter">Search<input type="search" name="q" value="${filters.q || ''}" maxlength="40" autocomplete="off" placeholder="Name, nickname or user ID"></label>
 <label>Role<select name="role">${opt('', 'Any role', filters.role || '')}${roles.map((r) => opt(r.id, `@${r.name}`, filters.role))}</select></label>
 <label>Joined<select name="joined">${Object.entries(JOINED_FILTERS).map(([k, v]) => opt(k, v, filters.joined || ''))}</select></label>
-<label>Show<select name="state">${Object.entries(STATE_FILTERS).map(([k, v]) => opt(k, v, filters.state || ''))}</select></label>
 <label>Sort<select name="sort">${Object.entries(SORTS).map(([k, v]) => opt(k, v, filters.sort || 'joined_desc'))}</select></label>
 <button class="primary" type="submit">Apply</button> <a href="${path('/users')}">Clear</a></form>
-${canWrite && list?.rows?.length ? bulkForm(session.csrf, list, filters, roles) : ''}
+${canWrite && list?.rows?.length ? html`<details class="bulk-wrap"><summary class="btn">${icon('users')}Bulk action<span class="muted"> · tick members below, or use everyone matching the filters</span></summary>${bulkForm(session.csrf, list, filters, roles)}</details>` : ''}
 ${list ? table : ''}`;
     return layout({ title: 'Members', active: 'users', session, access, moduleStates, body });
 }
@@ -162,7 +165,6 @@ function bulkForm(csrf, list, filters, roles) {
     const canAll = list.total <= BULK_LIMIT;
     return html`<form class="card bulk" id="bulk-form" method="post" action="${path('/users/bulk/preview')}"><input type="hidden" name="csrf" value="${csrf}">
 ${['q', 'joined', 'state', 'sort'].map((k) => html`<input type="hidden" name="${k}" value="${filters[k] || ''}">`)}<input type="hidden" name="frole" value="${filters.role || ''}">
-<h2>Bulk action</h2>
 <fieldset class="bulk-scope"><legend class="sr">Which members</legend>
 <label class="check"><input type="radio" name="scope" value="selected" checked> The members ticked below</label>
 <label class="check"><input type="radio" name="scope" value="filter"${canAll ? '' : raw(' disabled')}> Everyone matching these filters (${list.total})${canAll ? '' : html` <span class="muted">more than ${BULK_LIMIT}: narrow the filters</span>`}</label></fieldset>

@@ -1159,6 +1159,16 @@ details.section.is-changed > summary h2::after { content: "Unsaved changes"; fon
 .inline-form { display: inline-block; margin: 0; vertical-align: bottom; }
 .inline-form fieldset { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
 .inline-form .form-actions { margin: 0; padding: 0; border: 0; }
+/* Quick filter chips (Members) and the folded bulk-action box. */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.chip { display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--raised); color: var(--text-muted); font-size: 13px; font-weight: 500; }
+.chip:hover { color: var(--text); border-color: var(--border-strong); text-decoration: none; }
+.chip[aria-current] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); font-weight: 650; }
+.bulk-wrap { margin: 0 0 16px; }
+.bulk-wrap > summary { list-style: none; display: inline-flex; gap: 8px; cursor: pointer; }
+.bulk-wrap > summary::-webkit-details-marker { display: none; }
+.bulk-wrap[open] > summary { margin-bottom: 12px; }
+.bulk-wrap > summary .muted { font-weight: 400; }
 form.filters {
     display: flex; flex-wrap: wrap; gap: 12px 12px; align-items: flex-end; margin: 0 0 16px; padding: 16px 16px;
     background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
