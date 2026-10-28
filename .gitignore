@@ -149,3 +149,7 @@ backups/
 # Local AI working notes (repo is public)
 claude/
 
+
+# Claude Code: personal settings and agent worktrees stay local
+.claude/settings.local.json
+.claude/worktrees/

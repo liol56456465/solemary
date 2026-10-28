@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y", "@playwright/mcp@0.0.83",
+        "--headless", "--isolated",
+        "--executable-path", "${HOME}/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome",
+        "--allowed-origins", "http://localhost:5000;http://127.0.0.1:5000;http://localhost:5055;http://127.0.0.1:5055"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y", "chrome-devtools-mcp@1.12.0",
+        "--headless", "--isolated", "--no-usage-statistics",
+        "--executable-path", "${HOME}/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+      ]
+    }
+  }
+}
