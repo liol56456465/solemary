@@ -121,6 +121,7 @@ export const NAV = [
         { key: 'appeals', label: 'Appeals' },
         { key: 'nocontact', label: 'No-contact' },
         { key: 'staff', label: 'Staff' },
+        { key: 'channels', label: 'Channel tools' },
     ] },
     { group: 'Community', items: [
         { key: 'tickets', label: 'Tickets & modmail', state: 'tickets', keywords: 'ticket panel, support, modmail, canned answers, saved replies, staff role, transcript, open tickets category, closed tickets category, ticket log channel', summary: 'Ticket panel, modmail, saved answers.' },
