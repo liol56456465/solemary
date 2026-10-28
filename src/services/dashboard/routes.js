@@ -63,7 +63,7 @@ import { BASE, THEME_COOKIE, html, messagePage, path, themeFrom } from './html.j
 import {
     appealsPage, auditPage, caseDetailPage, casesPage, moduleSettingsPage, statsPage,
 } from './pages.js';
-import { collectOverview, defaultOverviewData, moduleStatesFrom, overviewPage } from './overview.js';
+import { collectChecklist, collectOverview, defaultOverviewData, moduleStatesFrom, overviewPage } from './overview.js';
 import { modulesPage } from './modulesPage.js';
 import { MODULES, getAction, getModule } from './modules/index.js';
 import { MODULE_COMMANDS, moduleCommandsSection } from './modules/commands.js';
@@ -430,8 +430,9 @@ export function createDashboard({
 
     /** GET /dashboard/modules[?show=on|off]: every module as a card with its switch. */
     async function modulesHub(req, res) {
+        const checklist = await collectChecklist({ client, guildId, data: data.overview || defaultOverviewData });
         return sendHtml(res, 200, modulesPage({
-            ...shellOf(req), flash: req.dashboard.flash, editEnabled: settings.editEnabled, show: str(req.query?.show, 5), q: str(req.query?.q, 60),
+            ...shellOf(req), flash: req.dashboard.flash, editEnabled: settings.editEnabled, show: str(req.query?.show, 5), q: str(req.query?.q, 60), checklist,
         }));
     }
 

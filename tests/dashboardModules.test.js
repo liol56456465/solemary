@@ -1090,3 +1090,21 @@ test('switchInput: an on/off setting is a real checkbox (name=1 when on) drawn a
     assert.ok(!off.includes(' checked'));
     assert.ok(off.includes('&lt;b&gt;') && off.includes('<span class="hint">why</span>'), 'label escaped, help shown');
 });
+
+test('Modules page: "Set up / Needs setup" line per card from the Getting-started checklist', async () => {
+    const { modulesPage, setupByModule } = await import('../src/services/dashboard/modulesPage.js');
+    const checklist = [
+        { label: 'Ticket category', done: true, href: '/dashboard/tickets' },
+        { label: 'Ticket staff role', done: false, href: '/dashboard/tickets' },
+        { label: 'Welcome channel', done: true, href: '/dashboard/welcome' },
+    ];
+    assert.deepEqual(Object.fromEntries(setupByModule(checklist)), { tickets: { total: 2, todo: 1 }, welcome: { total: 1, todo: 0 } });
+    const full = String(modulesPage({ session: { username: 'a', csrf: 't' }, moduleStates: { welcome: true }, checklist }));
+    const page = full.slice(full.indexOf('data-module-grid'));
+    const cardOf = (key) => page.slice(page.indexOf(`href="/dashboard/${key}"`), page.indexOf('</li>', page.indexOf(`href="/dashboard/${key}"`)));
+    assert.match(cardOf('tickets'), /<span class="dot dot-warn" aria-hidden="true"><\/span>Needs setup · 1 to do/);
+    assert.match(cardOf('welcome'), /<span class="dot dot-on" aria-hidden="true"><\/span>Set up/);
+    assert.ok(!cardOf('logging').includes('module-setup'), 'no checklist items, no line');
+    // No checklist (config unreadable): no lines at all.
+    assert.ok(!String(modulesPage({ session: { username: 'a', csrf: 't' } })).includes('module-setup'));
+});

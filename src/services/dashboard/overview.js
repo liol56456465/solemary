@@ -86,6 +86,30 @@ export function gettingStarted({ config, welcome, settings, mutedRole }) {
     return items;
 }
 
+/** The guild settings the checklist looks at (mod log, review, alerts, muted role, appeals category, banned role). */
+function setupSettings() {
+    const settings = {};
+    for (const key of ['modLogChannelId', 'reviewChannelId', 'alertsChannelId', 'mutedRoleId', 'appealsCategoryId', 'bannedRoleId']) {
+        settings[key] = getSetting(guildIdFor(SETTINGS.find((e) => e.key === key).guild), key);
+    }
+    return settings;
+}
+
+/**
+ * Only the Getting-started checklist (Modules page "Set up / Needs setup" lines).
+ * null when the guild config could not be read: no line is better than a wrong one.
+ */
+export async function collectChecklist({ client, guildId, data = defaultOverviewData }) {
+    const guild = client.guilds?.cache?.get(guildId) || null;
+    const [config, welcome, mutedRole] = await Promise.all([
+        attempt(() => data.getGuildConfig(client, guildId)),
+        attempt(() => data.getWelcomeConfig(client, guildId)),
+        attempt(() => (guild ? data.findMutedRole(guild) : null)),
+    ]);
+    if (config === undefined) return null;
+    return gettingStarted({ config, welcome, settings: setupSettings(), mutedRole });
+}
+
 /** Everything the Overview page shows. `data` is injectable for tests. */
 export async function collectOverview({ client, guildId, data = defaultOverviewData, now = Date.now() }) {
     const guild = client.guilds?.cache?.get(guildId) || null;
@@ -104,10 +128,7 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
     const online = presences && presences.size > 0
         ? [...presences.values()].filter((p) => p.status && p.status !== 'offline').length
         : null;
-    const settings = {};
-    for (const key of ['modLogChannelId', 'reviewChannelId', 'alertsChannelId', 'mutedRoleId', 'appealsCategoryId', 'bannedRoleId']) {
-        settings[key] = getSetting(guildIdFor(SETTINGS.find((e) => e.key === key).guild), key);
-    }
+    const settings = setupSettings();
     return {
         now,
         bot: { ready: Boolean(client.isReady?.()), ping: Number.isFinite(client.ws?.ping) && client.ws.ping >= 0 ? Math.round(client.ws.ping) : null },

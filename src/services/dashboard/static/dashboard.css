@@ -347,6 +347,7 @@ details.sub > :not(summary), details.action > :not(summary) { margin: 12px; }
     transition: border-color 0.15s ease-out;
 }
 .module-card:hover { border-color: var(--line-strong); }
+.module-setup { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; font-size: 13px; color: var(--fg-2); }
 .module-card:focus-within { border-color: var(--accent); }
 .module-card[data-state="on"] { border-top: 2px solid var(--ok); padding-top: 15px; }
 .module-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }

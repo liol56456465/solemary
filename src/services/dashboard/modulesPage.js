@@ -26,6 +26,29 @@ function status(entry, { csrf, canEdit }) {
     return entry.on ? pill(true, 'Active') : pill(false, 'Not set up');
 }
 
+/**
+ * Setup per module from the Getting-started checklist: Map key → { total, todo }. Each item
+ * belongs to the module its link opens (/dashboard/<key>). Modules without items get no line.
+ */
+export function setupByModule(checklist) {
+    const byModule = new Map();
+    for (const item of checklist || []) {
+        const key = String(item.href || '').split('/').pop();
+        const entry = byModule.get(key) || { total: 0, todo: 0 };
+        entry.total += 1;
+        if (!item.done) entry.todo += 1;
+        byModule.set(key, entry);
+    }
+    return byModule;
+}
+
+function setupLine(setup) {
+    if (!setup) return '';
+    return setup.todo
+        ? html`<p class="module-setup"><span class="dot dot-warn" aria-hidden="true"></span>Needs setup · ${setup.todo} to do</p>`
+        : html`<p class="module-setup"><span class="dot dot-on" aria-hidden="true"></span>Set up</p>`;
+}
+
 /** The text a search matches: name, one-liner and keywords. */
 function searchText(entry) {
     return `${entry.label} ${entry.summary || ''} ${entry.keywords || ''}`.toLowerCase();
@@ -33,14 +56,17 @@ function searchText(entry) {
 
 function card(entry, opts) {
     const state = entry.on === null ? 'none' : entry.on ? 'on' : 'off';
+    const setup = opts.setup?.get(entry.key);
+    // A module whose on/off comes from its setup (no switch) shows the setup line instead of the pill.
+    const top = setup && !entry.toggle ? '' : status(entry, opts);
     return html`<li class="module-card" data-state="${state}" data-name="${searchText(entry)}">
-<div class="module-card-top"><span class="module-icon" aria-hidden="true">${icon(entry.key)}</span>${status(entry, opts)}</div>
+<div class="module-card-top"><span class="module-icon" aria-hidden="true">${icon(entry.key)}</span>${top}</div>
 <h3 class="module-card-name"><a href="${path(`/${entry.key}`)}">${entry.label}</a></h3>
-<p class="module-summary">${entry.summary || ''}</p>
+<p class="module-summary">${entry.summary || ''}</p>${setupLine(setup)}
 <span class="module-card-foot" aria-hidden="true">Settings ${icon('chevron', 'icon icon-sm')}</span></li>`;
 }
 
-export function modulesPage({ session, access = null, moduleStates = {}, flash = null, editEnabled = false, show = 'all', q = '' }) {
+export function modulesPage({ session, access = null, moduleStates = {}, flash = null, editEnabled = false, show = 'all', q = '', checklist = null }) {
     const filter = MODULE_FILTERS.includes(show) ? show : 'all';
     const needle = String(q || '').trim().toLowerCase().slice(0, 60);
     const all = moduleEntries(moduleStates);
@@ -51,6 +77,7 @@ export function modulesPage({ session, access = null, moduleStates = {}, flash =
     const onCount = known.filter((e) => e.on).length;
     const visible = entries.filter((e) => filter === 'all' || (filter === 'on' ? e.on === true : e.on === false));
     const canEdit = Boolean(editEnabled && access?.canView !== false);
+    const setup = setupByModule(checklist);
     const chips = MODULE_FILTERS.map((f) => {
         const count = f === 'all' ? entries.length : f === 'on' ? onCount : known.length - onCount;
         const label = { all: 'All', on: 'On', off: 'Off' }[f];
@@ -62,7 +89,7 @@ ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${needle ? html`<p class="search-result">${entries.length} module${entries.length === 1 ? '' : 's'} match <strong>“${needle}”</strong> · <a href="${path('/modules')}">Show all</a></p>` : ''}
 ${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true).</p>` : ''}
 <div class="toolbar"><nav class="chips" aria-label="Filter modules">${chips}</nav><span class="toolbar-search" data-module-search></span></div>
-${visible.length ? html`<ul class="module-grid" data-module-grid>${visible.map((e) => card(e, { csrf: session?.csrf, canEdit }))}</ul>`
+${visible.length ? html`<ul class="module-grid" data-module-grid>${visible.map((e) => card(e, { csrf: session?.csrf, canEdit, setup }))}</ul>`
         : html`<p class="empty">${needle ? 'No module matches. Try another word, or browse all modules.' : `No modules ${filter === 'on' ? 'are on' : 'are off'}.`}</p>`}`;
     return layout({ title: 'Modules', active: 'modules', session, access, moduleStates, body });
 }
