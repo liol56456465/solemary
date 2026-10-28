@@ -16,6 +16,7 @@ import { logger, startupLog, shutdownLog } from './utils/logger.js';
 import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
 import { runEnforcementExpiry } from './services/enforcement/expiryService.js';
+import { runTempRoleExpiry } from './services/members/tempRoleService.js';
 import { expireNoContactOrders } from './services/enforcement/noContactService.js';
 import { importLegacyWarnings } from './services/enforcement/warnImportService.js';
 import { flushStaffMessages, postWeeklyStaffReport } from './services/staffActivityService.js';
@@ -363,6 +364,7 @@ class Meowist extends Client {
     cron.schedule('*/15 * * * *', exclusive('counter_update', () => this.updateAllCounters()));
     cron.schedule('*/15 * * * *', exclusive('youtube_feeds', () => pollFeeds(this)));
     cron.schedule('* * * * *', exclusive('enforcement_expiry', () => runEnforcementExpiry(this)));
+    cron.schedule('* * * * *', exclusive('temp_role_expiry', () => runTempRoleExpiry(this)));
     cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
     cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));
@@ -391,6 +393,7 @@ class Meowist extends Client {
     // legacy KV warnings (idempotent) once the gateway is ready.
     const startupEnforcement = runSafeTask('enforcement_startup', async () => {
       await runEnforcementExpiry(this);
+      await runTempRoleExpiry(this);
       await importLegacyWarnings(this);
     });
     if (this.isReady()) {

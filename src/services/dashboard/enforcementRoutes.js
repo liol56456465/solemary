@@ -37,6 +37,7 @@ import { InputError, multiline, plainText, queryText, text } from './forms.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS, listMembers } from './membersData.js';
 import { NICKNAME_MAX, REASON_MAX, TIMEOUTS, assignableRoles, auditReason, roleProblem, targetProblem } from './memberActions.js';
 import { BULK_ACTIONS, BULK_LIMIT, createJobStore, planBulk } from './bulkActions.js';
+import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
 import { html, path } from './html.js';
 import { isSnowflake } from './security.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
@@ -277,6 +278,7 @@ export function createEnforcementHandlers(core) {
                 assignable: assignableRoles(ctx).filter((r) => !member.roles?.cache?.has?.(r.id)),
                 removable: new Set([...(member.roles?.cache?.values?.() || [])].filter((r) => !roleProblem({ ...ctx, role: r })).map((r) => r.id)),
                 timeoutUntil: until > Date.now() ? new Date(until) : null,
+                tempRoles: new Map((await e.listTempRoles(guildId, userId).catch(() => [])).map((row) => [row.role_id, new Date(row.expires_at)])),
             };
         }
         return {
@@ -393,14 +395,25 @@ export function createEnforcementHandlers(core) {
         const problem = roleProblem({ ...ctx, role });
         if (problem) throw new InputError(problem);
         const has = ctx.target.roles.cache.has(role.id);
-        if (mode === 'add' && has) throw new InputError(`${ctx.target.user.username} already has @${role.name}.`);
+        if (mode === 'add' && has && !text(req.body, 'for', 4)) throw new InputError(`${ctx.target.user.username} already has @${role.name}.`);
         if (mode === 'remove' && !has) throw new InputError(`${ctx.target.user.username} does not have @${role.name}.`);
-        const reason = auditReason(req.dashboard.session.username, text(req.body, 'reason', REASON_MAX));
-        if (mode === 'add') await ctx.target.roles.add(role.id, reason);
-        else await ctx.target.roles.remove(role.id, reason);
-        await audit(req, 'members', [{ key: `role:${ctx.userId}`, old: mode === 'add' ? null : `@${role.name}`, new: mode === 'add' ? `@${role.name}` : null }],
+        const typed = text(req.body, 'reason', REASON_MAX);
+        const reason = auditReason(req.dashboard.session.username, typed);
+        const forKey = mode === 'add' ? text(req.body, 'for', 4) : '';
+        if (forKey && !Object.hasOwn(TEMP_ROLE_LENGTHS, forKey)) throw new InputError('Choose how long.', 400, 'for');
+        let until = null;
+        if (mode === 'add' && forKey) {
+            until = await e.addTempRole({ guildId, member: ctx.target, role, ms: TEMP_ROLE_LENGTHS[forKey].ms, by: { id: req.dashboard.session.userId, username: req.dashboard.session.username }, reason: typed || null, auditReason: reason });
+        } else if (mode === 'add') {
+            await ctx.target.roles.add(role.id, reason);
+        } else {
+            await ctx.target.roles.remove(role.id, reason);
+            await e.endTempRole(guildId, ctx.userId, role.id);
+        }
+        const label = `@${role.name}${forKey ? ` for ${TEMP_ROLE_LENGTHS[forKey].label}` : ''}`;
+        await audit(req, 'members', [{ key: `role:${ctx.userId}`, old: mode === 'add' ? null : `@${role.name}`, new: mode === 'add' ? label : null }],
             { modLog: true, label: 'Members' });
-        await flash(req, mode === 'add' ? `Gave @${role.name} to ${ctx.target.user.username}.` : `Took @${role.name} from ${ctx.target.user.username}.`);
+        await flash(req, mode === 'add' ? `Gave ${label} to ${ctx.target.user.username}.` : `Took @${role.name} from ${ctx.target.user.username}.`);
         return res.redirect(303, path(`/users/${ctx.userId}`));
     }, { rerender: rerenderUser });
     const roleAdd = roleChange('add');
@@ -489,9 +502,11 @@ export function createEnforcementHandlers(core) {
             const first = guild.members.cache.get(plan.run[0].id)?.user || await client.users.fetch(plan.run[0].id);
             await buildRecordFlow({ guild, moderator, moderatorId: moderator.id, targetUser: first, type: action, form: recordForm, completeFlowDetails: e.completeFlowDetails });
         }
-        const payload = { action, roleId: role?.id || null, timeoutKey, reason: text(req.body, 'reason', REASON_MAX), recordForm, run: plan.run };
+        const forKey = action === 'role-add' ? text(req.body, 'for', 4) : '';
+        if (forKey && !Object.hasOwn(TEMP_ROLE_LENGTHS, forKey)) throw new InputError('Choose how long.');
+        const payload = { action, roleId: role?.id || null, timeoutKey, forKey, reason: text(req.body, 'reason', REASON_MAX), recordForm, run: plan.run };
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'bulk', payload });
-        return sendHtml(res, 200, bulkPreviewPage({ ...shellOf(req), action, label: BULK_ACTIONS[action], role, timeout: TIMEOUTS[timeoutKey] || null, plan, token, hash, guardLeft }));
+        return sendHtml(res, 200, bulkPreviewPage({ ...shellOf(req), action, label: BULK_ACTIONS[action], role, timeout: TIMEOUTS[timeoutKey] || TEMP_ROLE_LENGTHS[forKey] || null, plan, token, hash, guardLeft }));
     }, { rerender: bulkBack });
 
     const bulkExecute = guardedPost(async (req, res) => {
@@ -502,15 +517,21 @@ export function createEnforcementHandlers(core) {
         const session = req.dashboard.session;
         const role = payload.roleId ? guild.roles.cache.get(payload.roleId) : null;
         const reason = auditReason(session.username, payload.reason);
-        const label = `${BULK_ACTIONS[payload.action]}${role ? ` @${role.name}` : ''}${payload.action === 'timeout' ? ` (${TIMEOUTS[payload.timeoutKey].label})` : ''}`;
+        const label = `${BULK_ACTIONS[payload.action]}${role ? ` @${role.name}` : ''}${payload.forKey ? ` for ${TEMP_ROLE_LENGTHS[payload.forKey].label}` : ''}${payload.action === 'timeout' ? ` (${TIMEOUTS[payload.timeoutKey].label})` : ''}`;
         const work = async (item) => {
             // Checked again per member at run time (roles and positions can change meanwhile).
             const member = await guild.members.fetch({ user: item.id, force: true }).catch(() => null);
             const problem = targetProblem({ guild, target: member, actorId: session.userId, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me })
                 || (role ? roleProblem({ guild, role, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me }) : null);
             if (problem) throw new InputError(problem);
+            if (payload.action === 'role-add' && payload.forKey) {
+                return e.addTempRole({ guildId, member, role, ms: TEMP_ROLE_LENGTHS[payload.forKey].ms, by: { id: session.userId, username: session.username }, reason: payload.reason || null, auditReason: reason });
+            }
             if (payload.action === 'role-add') return member.roles.add(role.id, reason);
-            if (payload.action === 'role-remove') return member.roles.remove(role.id, reason);
+            if (payload.action === 'role-remove') {
+                await member.roles.remove(role.id, reason);
+                return e.endTempRole(guildId, member.id, role.id);
+            }
             if (payload.action === 'timeout') return member.timeout(TIMEOUTS[payload.timeoutKey].ms, reason);
             const flow = await buildRecordFlow({ guild, moderator, moderatorId: moderator.id, targetUser: member.user, type: payload.action, form: payload.recordForm, completeFlowDetails: e.completeFlowDetails });
             return e.executeAction({ guild, moderator, targetUser: member.user, flow });

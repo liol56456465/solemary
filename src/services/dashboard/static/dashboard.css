@@ -1016,9 +1016,10 @@ td.tick input, th.tick input { width: 18px; height: 18px; margin: 0; accent-colo
 /* Bulk card: only the fields of the chosen action are shown (CSS only, no script). */
 .bulk h2 { margin-top: 0; }
 .bulk-scope { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0 0 16px; }
-.bulk .only-role, .bulk .only-timeout, .bulk .only-record, .bulk .only-ban, .bulk .only-plain { display: none; }
+.bulk .only-role, .bulk .only-role-add, .bulk .only-timeout, .bulk .only-record, .bulk .only-ban, .bulk .only-plain { display: none; }
 .bulk:has(select[name="action"] option[value="role-add"]:checked) .only-role,
 .bulk:has(select[name="action"] option[value="role-remove"]:checked) .only-role,
+.bulk:has(select[name="action"] option[value="role-add"]:checked) .only-role-add,
 .bulk:has(select[name="action"] option[value="timeout"]:checked) .only-timeout,
 .bulk:has(select[name="action"] option[value="kick"]:checked) .only-record,
 .bulk:has(select[name="action"] option[value="ban"]:checked) .only-record,

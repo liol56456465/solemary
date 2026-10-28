@@ -1,4 +1,4 @@
-const rawSchemaVersion = Number.parseInt(process.env.SCHEMA_VERSION || '2', 10);
+const rawSchemaVersion = Number.parseInt(process.env.SCHEMA_VERSION || '3', 10);
 
 export const EXPECTED_SCHEMA_VERSION = Number.isInteger(rawSchemaVersion) && rawSchemaVersion > 0
     ? rawSchemaVersion

@@ -18,6 +18,7 @@ export const T = {
     staffWarnings: pgConfig.tables.staff_warnings,
     verificationIps: pgConfig.tables.verification_ips,
     staffActivity: pgConfig.tables.staff_activity,
+    tempRoles: pgConfig.tables.member_temp_roles,
     serverSnapshots: pgConfig.tables.server_snapshots,
     tickets: pgConfig.tables.tickets,
     nativeRules: pgConfig.tables.automod_native_rules,

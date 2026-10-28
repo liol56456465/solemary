@@ -233,6 +233,19 @@ export const tableStatements = [
         new_value TEXT
     )`,
 
+    // Temporary roles (dashboard Members): the role is removed by the expiry cron at expires_at
+    // and given back if the member rejoins before then. One row per member + role.
+    `CREATE TABLE IF NOT EXISTS ${t.member_temp_roles} (
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        role_id VARCHAR(20) NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        given_by VARCHAR(20) NOT NULL,
+        given_by_username VARCHAR(100) NOT NULL,
+        reason TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (guild_id, user_id, role_id)
+    )`,
     // Case evidence: message links (with a text excerpt kept in case the message is
     // deleted) and images re-hosted in the evidence channel. Discord CDN URLs expire,
     // so images are shown by re-fetching store_channel_id/store_message_id.
@@ -541,6 +554,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_mod_appeals_case ON ${t.mod_appeals}(case_code, decided_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_case_edits_case ON ${t.mod_case_edits}(case_code, edited_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_case_evidence_case ON ${t.mod_case_evidence}(case_code, added_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_member_temp_roles_expires ON ${t.member_temp_roles}(expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_moderator ON ${t.mod_cases}(guild_id, moderator_id, created_at)`,
     `CREATE INDEX IF NOT EXISTS idx_raid_incidents_guild ON ${t.automod_raid_incidents}(guild_id, ended_at DESC)`,
     // /case search (newest first, by reason key) and the panel's precedent hint.

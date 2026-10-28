@@ -9,6 +9,7 @@ import { getServerCounters, updateCounter } from '../services/serverstatsService
 import { setBirthday as dbSetBirthday } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { reapplyMuteOnJoin } from '../services/enforcement/enforcementService.js';
+import { reapplyTempRolesOnJoin } from '../services/members/tempRoleService.js';
 import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService.js';
 import { syncWarnRolesQuietly } from '../services/enforcement/warnRoleService.js';
 import { noteGateKick, recordJoin } from '../services/automod/raidService.js';
@@ -39,6 +40,8 @@ export default {
             // Rejoining the main server (e.g. after a temporary ban) restores the warning role.
             if (guild.id === enforcementConfig.mainGuildId) {
                 await syncWarnRolesQuietly(guild, member.id);
+                // Temporary roles that have not ended yet come back on rejoin.
+                await reapplyTempRolesOnJoin(member).catch((error) => logger.warn(`Temporary roles not given back to ${member.id}: ${error.message}`));
                 await recordJoin(member).catch((error) => logger.warn(`Raid tracking failed for ${member.id}: ${error.message}`));
                 // Join gate (/automod joingate): a kicked member skips the rest of the pipeline.
                 const gate = await checkJoinGate(member, {

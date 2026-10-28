@@ -117,6 +117,9 @@ function makeEnforcement(overrides = {}) {
         executeAction: rec('executeAction', async ({ flow }) => ({ record: flow.type === 'warn' ? { case_code: 'new2345', name: 'target warn 2' } : null, dmDelivered: true, notes: ['Warning limit reached: automatic 1d ban `ban2345` (ladder level 1).'] })),
         attachFlowEvidence: rec('attachFlowEvidence', async () => []),
         recentBanKickCount: rec('recentBanKickCount', async () => 4),
+        addTempRole: rec('addTempRole', async ({ member, role, ms, auditReason }) => { if (!member.roles.cache.has(role.id)) await member.roles.add(role.id, auditReason); return new Date(Date.now() + ms); }),
+        endTempRole: rec('endTempRole', async () => {}),
+        listTempRoles: rec('listTempRoles', async () => []),
         getMassActionBlock: rec('getMassActionBlock', async (g, id) => (id === OTHER ? { until: new Date(Date.now() + 60000).toISOString(), count: 5 } : null)),
         getCaseByCode: rec('getCaseByCode', async (code) => (code === CODE ? { ...record } : null)),
         getAppealHistory: rec('getAppealHistory', async () => [{ id: 3, status: 'pending', created_at: new Date(), body: { reason: 'I am sorry <b>', didIt: 'yes' } }]),
@@ -825,6 +828,49 @@ test('member page: the roles section shows Remove only where allowed and a picke
     assert.ok(!section.includes('value="600000000000000008"'), 'role above the moderator not offered');
     assert.ok(section.includes('action="/dashboard/users/' + TARGET + '/roles/remove"'), 'Member can be removed');
     assert.ok(section.includes('action="/dashboard/users/' + TARGET + '/timeout"'));
+});
+
+test('member page: a timed role is stored with its end time, shown on the chip, and ended when taken off; unknown lengths are refused', async () => {
+    const h = await setup();
+    const add = await post(h, h.d.enforcement.roleAdd, { params: { id: TARGET }, form: { roleId: '600000000000000002', for: '7d', reason: 'event' } });
+    assert.equal(add.statusCode, 303);
+    const [call] = serviceCalls(h, ['addTempRole']);
+    assert.equal(call.args[0].ms, 7 * 86_400_000);
+    assert.equal(call.args[0].role.id, '600000000000000002');
+    assert.deepEqual(call.args[0].by, { id: ADMIN, username: 'admin' });
+    assert.equal(call.args[0].auditReason, 'Dashboard (admin): event');
+    assert.deepEqual(h.guild.memberCalls.at(-1), { id: TARGET, call: 'roles.add', roleId: '600000000000000002', reason: 'Dashboard (admin): event' });
+    assert.equal(h.auditRows.at(-1).new, '@Helper for 7 days');
+    // A length on a role they already have sets an end time instead of being refused.
+    const again = await post(h, h.d.enforcement.roleAdd, { params: { id: TARGET }, form: { roleId: '600000000000000001', for: '1d' } });
+    assert.equal(again.statusCode, 303);
+    assert.equal(serviceCalls(h, ['addTempRole']).length, 2);
+    const bad = await post(h, h.d.enforcement.roleAdd, { params: { id: TARGET }, form: { roleId: '600000000000000002', for: '9y' } });
+    assert.equal(bad.statusCode, 400);
+    assert.match(bad.body, /Choose how long/);
+    const remove = await post(h, h.d.enforcement.roleRemove, { params: { id: TARGET }, form: { roleId: '600000000000000001' } });
+    assert.equal(remove.statusCode, 303);
+    assert.deepEqual(serviceCalls(h, ['endTempRole']).at(-1).args, [GUILD, TARGET, '600000000000000001']);
+    const t = await setup({ overrides: { listTempRoles: async () => [{ role_id: '600000000000000001', expires_at: new Date('2030-01-02T03:04:00Z') }] } });
+    const page = await get(t, t.d.enforcement.userPage, { params: { id: TARGET } });
+    const section = page.body.slice(page.body.indexOf('id="s-member-roles"'));
+    assert.match(section, /@Member <span class="muted">until [^<]*2030/);
+    assert.match(section, /<select name="for"><option value="">Permanently<\/option>/);
+});
+
+test('bulk: a timed role-add says the length on the preview and stores each member through addTempRole', async () => {
+    const h = await setup();
+    const preview = await post(h, h.d.enforcement.bulkPreview, { form: { scope: 'selected', ids: [TARGET, OTHER], action: 'role-add', roleId: '600000000000000002', for: '3d' } });
+    assert.equal(preview.statusCode, 200);
+    assert.match(preview.body, /Give @Helper to 2 members for 3 days/);
+    const token = preview.body.match(/name="token" value="([^"]+)"/)[1];
+    const fh = preview.body.match(/name="fh" value="([^"]+)"/)[1];
+    const run = await post(h, h.d.enforcement.bulkExecute, { form: { token, fh } });
+    const done = await waitForJob(h, run.redirectedTo);
+    assert.match(done.body, /for 3 days/);
+    assert.deepEqual(serviceCalls(h, ['addTempRole']).map((c) => c.args[0].ms), [3 * 86_400_000, 3 * 86_400_000]);
+    const bad = await post(h, h.d.enforcement.bulkPreview, { form: { scope: 'selected', ids: [TARGET], action: 'role-add', roleId: '600000000000000002', for: 'x' } });
+    assert.equal(bad.statusCode, 400);
 });
 
 // ── bulk actions ──────────────────────────────────────────────────────────

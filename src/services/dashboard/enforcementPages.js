@@ -17,6 +17,7 @@ import { isAllowedImageUrl, isSafeLink } from './pages.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS } from './membersData.js';
 import { NICKNAME_MAX, REASON_MAX, TIMEOUTS } from './memberActions.js';
 import { BULK_ACTIONS, BULK_LIMIT } from './bulkActions.js';
+import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
 
 export const DURATION_CHOICES = ['30m', '1h', '6h', '12h', '1d', '3d', '7d', '14d', '1mo', '3mo'];
 
@@ -168,6 +169,7 @@ ${['q', 'joined', 'state', 'sort'].map((k) => html`<input type="hidden" name="${
 <div class="grid">
 <label>Do this<select name="action" required><option value="">— choose —</option>${Object.entries(BULK_ACTIONS).map(([k, v]) => html`<option value="${k}">${v}</option>`)}</select></label>
 <label class="only-role">Role<select name="roleId" data-search><option value="">— choose —</option>${roles.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>
+<label class="only-role-add">For<select name="for"><option value="">Permanently</option>${Object.entries(TEMP_ROLE_LENGTHS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select></label>
 <label class="only-timeout">Timeout length<select name="timeout"><option value="">— choose —</option>${Object.entries(TIMEOUTS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select></label>
 <label class="only-record">Reason<select name="reasonKey">${ENFORCEMENT_REASONS.map((r) => html`<option value="${r.key}">${r.label}</option>`)}<option value="${CUSTOM_REASON_KEY}">Custom…</option></select></label>
 <label class="only-record">Custom reason<input name="custom_reason" maxlength="500"><span class="hint">Only used with "Custom…". Each member gets the same DM and case as one-by-one.</span></label>
@@ -183,7 +185,7 @@ export function bulkPreviewPage({ session, access = null, moduleStates = {}, act
     const what = `${label}${role ? ` @${role.name}` : ''}${timeout ? ` for ${timeout.label}` : ''}`;
     const destructive = action === 'kick' || action === 'ban';
     const n = `${plan.run.length} member${plan.run.length === 1 ? '' : 's'}`;
-    const verb = { 'role-add': `Give @${role?.name} to ${n}`, 'role-remove': `Take @${role?.name} from ${n}`, timeout: `Time out ${n}`, kick: `Kick ${n}`, ban: `Ban ${n}` }[action] || `${label} ${n}`;
+    const verb = { 'role-add': `Give @${role?.name} to ${n}${timeout ? ` for ${timeout.label}` : ''}`, 'role-remove': `Take @${role?.name} from ${n}`, timeout: `Time out ${n}`, kick: `Kick ${n}`, ban: `Ban ${n}` }[action] || `${label} ${n}`;
     const body = html`<a class="back" href="${path('/users')}">← Members</a>
 <header class="page-head"><h1>${what}: ${plan.run.length} member${plan.run.length === 1 ? '' : 's'}</h1><p class="muted">Check the list. Nothing has been changed yet.</p></header>
 ${destructive && Number.isFinite(guardLeft) ? html`<p class="notice">The mass-action guard allows ${guardLeft} more ban${guardLeft === 1 ? '' : 's'}/kick${guardLeft === 1 ? '' : 's'} in this 10-minute window; members beyond that are skipped.</p>` : ''}
@@ -210,12 +212,13 @@ function memberEditSection(view, canWrite, csrf) {
     const id = view.user.id;
     const edit = view.memberEdit;
     const roles = view.member.roles;
-    const current = html`<div class="role-list">${roles.length ? roles.map((r) => html`<span class="role-chip role-chip-lg">@${r.name}${canWrite && !edit?.problem && edit?.removable?.has(r.id)
+    const current = html`<div class="role-list">${roles.length ? roles.map((r) => html`<span class="role-chip role-chip-lg">@${r.name}${edit?.tempRoles?.has(r.id) ? html` <span class="muted">until ${formatDate(edit.tempRoles.get(r.id))}</span>` : ''}${canWrite && !edit?.problem && edit?.removable?.has(r.id)
         ? actionForm(csrf, `/users/${id}/roles/remove`, '', { submit: 'Remove', hidden: { roleId: r.id }, inline: true, secondary: true, className: 'chip-form' }) : ''}</span>`) : html`<span class="muted">No roles.</span>`}</div>`;
     if (!canWrite) return html`${current}<p class="muted">Changing roles needs Administrator and editing turned on.</p>`;
     if (edit?.problem) return html`${current}<p class="notice">${edit.problem}</p>`;
     const roleForm = edit.assignable.length
         ? actionForm(csrf, `/users/${id}/roles/add`, html`<div class="grid"><label>Give a role<select name="roleId" data-search required><option value="">— choose —</option>${edit.assignable.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select><span class="hint">Only roles below your highest role and Meowist's; staff roles only for the server owner or bot owners.</span></label>
+<label>For<select name="for"><option value="">Permanently</option>${Object.entries(TEMP_ROLE_LENGTHS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select><span class="hint">Timed roles are taken off automatically, and given back if they rejoin before the end.</span></label>
 <label>Reason (optional, Discord audit log)<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: 'Give role' })
         : html`<p class="muted">There is no other role you can give.</p>`;
     const nickForm = actionForm(csrf, `/users/${id}/nickname`, html`<div class="grid"><label>Nickname<input name="nickname" maxlength="${NICKNAME_MAX}" value="${view.member.nickname || ''}" placeholder="${view.user.globalName || view.user.username}"><span class="hint">Empty removes the nickname.</span></label></div>`, { submit: 'Save nickname' });
