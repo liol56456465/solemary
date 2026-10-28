@@ -1,12 +1,10 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
-import { successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
-import { createControlButtons, formatTime, startCountdown } from '../../handlers/countdownButtons.js';
+import { activeCountdowns, startCountdownMessage } from '../../services/botMessageService.js';
 
-const activeCountdowns = new Map();
-
+// The map lives in the service (the dashboard starts countdowns too); the buttons import it from here.
 export { activeCountdowns };
 
 export default {
@@ -61,32 +59,7 @@ export default {
             return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: "Countdown cannot be longer than 24 hours." });
         }
 
-        const endTime = Date.now() + totalSeconds * 1000;
-        const countdownId = `${interaction.channelId}-${Date.now()}`;
-
-        const row = createControlButtons(countdownId);
-
-        const initialEmbed = successEmbed(
-            `⏱️ ${title}`,
-            `Time remaining: **${formatTime(totalSeconds)}** (ends <t:${Math.ceil(endTime / 1000)}:R>)`,
-        );
-
-        const message = await interaction.channel.send({
-            embeds: [initialEmbed],
-            components: [row],
-        });
-
-        const countdownData = {
-            message,
-            endTime,
-            remainingTime: totalSeconds * 1000,
-            isPaused: false,
-            title,
-            interval: null,
-        };
-
-        activeCountdowns.set(countdownId, countdownData);
-        startCountdown(countdownId, countdownData, activeCountdowns);
+        await startCountdownMessage(interaction.guild, { channel: interaction.channel, totalSeconds, title });
 
         await InteractionHelper.safeEditReply(interaction, {
             content: "✅ Countdown started!",

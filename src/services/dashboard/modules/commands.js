@@ -22,6 +22,7 @@ export const MODULE_COMMANDS = {
     verification: ['verification', 'verify'],
     'reaction-roles': ['reactroles'],
     giveaways: ['giveaway'],
+    messages: ['embedbuilder', 'poll', 'countdown'],
     birthdays: ['birthday'],
     counters: ['serverstats', 'count'],
     'join-to-create': ['jointocreate'],

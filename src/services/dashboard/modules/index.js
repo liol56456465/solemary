@@ -9,6 +9,7 @@ import leveling from './leveling.js';
 import verification from './verification.js';
 import reactionRoles from './reactionRoles.js';
 import giveaways from './giveaways.js';
+import messages from './messages.js';
 import birthdays from './birthdays.js';
 import counters from './counters.js';
 import joinToCreate from './joinToCreate.js';
@@ -18,7 +19,7 @@ import commands from './commands.js';
 import support from './support.js';
 
 export const MODULES = [
-    enforcement, automod, logging, welcome, tickets, leveling, verification, reactionRoles, giveaways, birthdays,
+    enforcement, automod, logging, welcome, tickets, leveling, verification, reactionRoles, messages, giveaways, birthdays,
     counters, joinToCreate, applications, community, commands, support,
 ];
 

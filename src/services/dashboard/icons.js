@@ -22,6 +22,7 @@ const PATHS = {
     leveling: '<path d="M4 20V14M10 20V10M16 20V6M22 20H2"/><path d="M15 4l2-2 2 2"/>',
     verification: '<path d="M12 3l2.4 1.8 3-.2.9 2.9 2.5 1.7-1 2.8 1 2.8-2.5 1.7-.9 2.9-3-.2L12 21l-2.4-1.8-3 .2-.9-2.9L3.2 14.8l1-2.8-1-2.8 2.5-1.7.9-2.9 3 .2z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
     'reaction-roles': '<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.5"/>',
+    messages: '<path d="M20 4L3 11l6 2.5L11.5 20z"/><path d="M9 13.5L20 4"/>',
     giveaways: '<rect x="3" y="9" width="18" height="4" rx="1"/><path d="M5 13v8h14v-8M12 9v12M12 9c-1.5-4-6-4-6-1.5S10 9 12 9zM12 9c1.5-4 6-4 6-1.5S14 9 12 9z"/>',
     birthdays: '<path d="M4 21h16M5 21v-7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v7"/><path d="M5 16c2 1 3-1 4.5 0s3 1 4.5 0 3-1 5 0M12 13V9M12 6.5v.01"/>',
     counters: '<path d="M9 4L7 20M17 4l-2 16M4 9h16M3 15h16"/>',

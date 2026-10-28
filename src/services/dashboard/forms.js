@@ -175,6 +175,7 @@ export function userIdField(form, name, label = name) {
 export const PERMS = {
     post: ['ViewChannel', 'SendMessages', 'EmbedLinks'],
     postFiles: ['ViewChannel', 'SendMessages', 'EmbedLinks', 'AttachFiles'],
+    poll: ['ViewChannel', 'SendMessages', 'EmbedLinks', 'AddReactions', 'ReadMessageHistory'],
     read: ['ViewChannel', 'ReadMessageHistory'],
     manage: ['ViewChannel', 'ManageChannels'],
     category: ['ViewChannel', 'ManageChannels'],
@@ -184,7 +185,7 @@ export const PERMS = {
 const PERM_LABEL = {
     ViewChannel: 'View Channel', SendMessages: 'Send Messages', EmbedLinks: 'Embed Links', AttachFiles: 'Attach Files',
     ReadMessageHistory: 'Read Message History', ManageChannels: 'Manage Channels', Connect: 'Connect',
-    MoveMembers: 'Move Members', ManageMessages: 'Manage Messages', ManageRoles: 'Manage Roles',
+    MoveMembers: 'Move Members', ManageMessages: 'Manage Messages', ManageRoles: 'Manage Roles', AddReactions: 'Add Reactions',
 };
 
 /** Problems the bot has with a channel: missing, or permissions it lacks there. */
