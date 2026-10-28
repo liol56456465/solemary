@@ -313,6 +313,18 @@ function makeServices() {
             s.panels.push({ messageId: '710000000000000005', channelId: channel.id, roles: roles.map((r) => r.id) });
             return { message: { id: '710000000000000005' }, roles, rejected: roleIds.length > roles.length ? ['Mods - dangerous'] : [] };
         },
+        postBotMessage: async (guild, { channel, content, embed }) => {
+            record('postBotMessage', [channel.id, content, embed]);
+            return { message: { id: '710000000000000011' } };
+        },
+        createPoll: async (guild, { channel, question, options, anonymous }) => {
+            record('createPoll', [channel.id, question, options, anonymous]);
+            return { message: { id: '710000000000000012' }, reacted: s.pollReactions ?? options.length };
+        },
+        startCountdownMessage: async (guild, { channel, totalSeconds, title }) => {
+            record('startCountdownMessage', [channel.id, totalSeconds, title]);
+            return { message: { id: '710000000000000013' }, countdownId: `${channel.id}-1`, endTime: Date.now() + totalSeconds * 1000 };
+        },
         createGiveaway: async (c, guild, { channel, duration, winnerCount, prize }) => {
             record('createGiveaway', [channel.id, duration, winnerCount, prize]);
             if (!/^\d+[smhd]$/.test(duration)) throw userErr('Invalid duration format. Use: 1h, 30m, 5d, 10s (min: 10s, max: 30d)', 'validation');
@@ -545,6 +557,14 @@ const CASES = {
         'role-add': { form: { messageId: PANEL, roleId: ROLE_DANGER }, service: 'addPanelRole', bad: { form: { messageId: PANEL, roleId: MISSING }, message: /not in the server/ } },
         'role-remove': { form: { messageId: PANEL, roleId: ROLE_OK }, service: 'removePanelRole', bad: { form: { messageId: 'x', roleId: ROLE_OK }, message: /Unknown panel/ } },
         'panel-delete': { form: { messageId: PANEL }, service: 'deletePanel', bad: { form: { messageId: MISSING }, message: /no longer exists/ } },
+    },
+    messages: {
+        send: { form: { channelId: TEXT, content: 'Hello @everyone', title: 'News', description: 'Line 1\r\nLine 2', colour: 'purple', hex: '', imageUrl: 'https://example.com/a.png', footer: 'Staff' },
+            service: 'postBotMessage', admin: true, bad: { form: { channelId: TEXT, title: 'News', imageUrl: 'http://example.com/a.png' }, message: /https:\/\/ link/ } },
+        poll: { form: { channelId: TEXT, question: 'Pizza?', options: 'Yes\r\nNo\r\n\r\nMaybe', anonymous: '1' }, service: 'createPoll', admin: true,
+            bad: { form: { channelId: TEXT, question: 'Pizza?', options: 'Only one' }, message: /at least 2 options/ } },
+        countdown: { form: { channelId: TEXT, title: 'Launch', minutes: '2', seconds: '30' }, service: 'startCountdownMessage', admin: true,
+            bad: { form: { channelId: TEXT, minutes: '0', seconds: '0' }, message: /at least 1 second/ } },
     },
     giveaways: {
         create: { form: { channelId: TEXT, prize: 'Nitro <b>', duration: '2h', winners: '2' }, service: 'createGiveaway', admin: true,
@@ -1297,4 +1317,93 @@ test('channel tools: lock then unlock round trip (overwrite, audit reason, log e
     assert.match(notLocked.body, /is not locked/);
     assert.deepEqual(h.state.logEvents.map((e) => e.event.action), ['Channel Locked', 'Channel Unlocked']);
     assert.deepEqual(h.auditRows.map((r) => [r.key, r.old, r.new]), [[`lock.${TEXT}`, false, true], [`lock.${TEXT}`, true, false]]);
+});
+
+// ── Messages (post as the bot) ────────────────────────────────────────────
+
+test('messages: every action is Administrator-only; the page has the three forms, disabled for OWNER_IDS without Administrator', async () => {
+    const module = MODULES.find((m) => m.key === 'messages');
+    for (const name of ['send', 'poll', 'countdown']) assert.equal(getAction(module, name).admin, true, `${name} is admin-only`);
+    const h = await setup();
+    const page = await get(h, 'messages');
+    assert.equal(page.statusCode, 200);
+    for (const action of ['send', 'poll', 'countdown']) assert.ok(page.body.includes(`action="/dashboard/messages/${action}"`), `${action} form`);
+    assert.match(page.body, /never ping/);
+    const owner = await setup({ userId: OWNER });
+    const ownerPage = await get(owner, 'messages');
+    assert.equal((ownerPage.body.match(/<fieldset disabled>/g) || []).length, 3, 'owner: all three forms disabled');
+    assert.match(ownerPage.body, /Posting needs Administrator/);
+});
+
+test('messages/send: text, embed and colour reach the service; hex colour wins; bad hex and footer-only embeds are refused', async () => {
+    const h = await setup();
+    assert.equal((await post(h, 'messages', 'send', CASES.messages.send.form)).statusCode, 303);
+    const [channelId, content, embed] = h.calls.find((c) => c.name === 'postBotMessage').args;
+    assert.equal(channelId, TEXT);
+    assert.equal(content, 'Hello @everyone');
+    assert.equal(embed.description, 'Line 1\nLine 2', 'line breaks normalised');
+    assert.equal(embed.colour, 0x9B59B6);
+    assert.ok(h.auditRows.some((r) => r.key === 'message.710000000000000011' && r.new.embed.colour === '#9b59b6'));
+
+    const hex = await setup();
+    await post(hex, 'messages', 'send', { channelId: TEXT, content: 'hi', colour: 'red', hex: '#00ff00' });
+    assert.equal(hex.calls.find((c) => c.name === 'postBotMessage').args[2], null, 'no embed fields: text only');
+    await post(hex, 'messages', 'send', { channelId: TEXT, title: 't', hex: '00ff00' });
+    assert.equal(hex.calls.filter((c) => c.name === 'postBotMessage')[1].args[2].colour, 0x00ff00);
+
+    for (const [form, message] of [
+        [{ channelId: TEXT, title: 't', hex: 'green' }, /hex code/],
+        [{ channelId: TEXT, footer: 'only a footer' }, /footer alone/],
+        [{ channelId: TEXT }, /nothing to post/],
+        [{ channelId: VOICE, content: 'x' }, /must be a text channel/],
+        [{ channelId: TEXT, content: 'x'.repeat(2001) }, /at most 2000 characters/],
+        [{ channelId: TEXT, title: 'x', imageUrl: 'javascript:alert(1)' }, /https:\/\/ link/],
+        [{ channelId: TEXT, title: 'x', imageUrl: 'https://user:pw@example.com/a.png' }, /https:\/\/ link/],
+    ]) {
+        const r = await setup();
+        const res = await post(r, 'messages', 'send', form);
+        assert.equal(res.statusCode, 400, JSON.stringify(form));
+        assert.match(res.body, message);
+        assert.ok(!r.calls.some((c) => c.name === 'postBotMessage'), 'nothing posted');
+    }
+});
+
+test('messages: a channel where the bot lacks a permission is refused clearly, nothing posted', async () => {
+    const { PermissionFlagsBits } = await import('discord.js');
+    const h = await setup();
+    h.guild.members.me.permissionsIn = () => ({ has: (p) => p !== PermissionFlagsBits.EmbedLinks });
+    const res = await post(h, 'messages', 'send', { channelId: TEXT, content: 'hi' });
+    assert.equal(res.statusCode, 400);
+    assert.match(res.body, /I am missing Embed Links in #general\. Nothing was posted\./);
+    assert.ok(!h.calls.some((c) => c.name === 'postBotMessage'));
+
+    const p = await setup();
+    p.guild.members.me.permissionsIn = () => ({ has: (perm) => perm !== PermissionFlagsBits.AddReactions });
+    assert.equal((await post(p, 'messages', 'countdown', CASES.messages.countdown.form)).statusCode, 303, 'countdown needs no reactions');
+    const poll = await post(p, 'messages', 'poll', CASES.messages.poll.form);
+    assert.equal(poll.statusCode, 400);
+    assert.match(poll.body, /missing Add Reactions/);
+    assert.ok(!p.calls.some((c) => c.name === 'createPoll'));
+});
+
+test('messages/poll and countdown: options one per line, anonymous switch, reaction shortfall in the flash; duration limits', async () => {
+    const h = await setup();
+    await post(h, 'messages', 'poll', CASES.messages.poll.form);
+    assert.deepEqual(h.calls.find((c) => c.name === 'createPoll').args, [TEXT, 'Pizza?', ['Yes', 'No', 'Maybe'], true]);
+    const few = await setup();
+    few.state.pollReactions = 1;
+    await post(few, 'messages', 'poll', CASES.messages.poll.form);
+    assert.match((await few.sessions.get(few.session.id)).flash, /Only 1 of 3 vote reactions/);
+    const many = await setup();
+    const res = await post(many, 'messages', 'poll', { channelId: TEXT, question: 'Q', options: Array.from({ length: 11 }, (_, i) => `o${i}`).join('\n') });
+    assert.equal(res.statusCode, 400);
+    assert.match(res.body, /at most 10 options/);
+
+    const c = await setup();
+    await post(c, 'messages', 'countdown', CASES.messages.countdown.form);
+    assert.deepEqual(c.calls.find((x) => x.name === 'startCountdownMessage').args, [TEXT, 150, 'Launch']);
+    const long = await setup();
+    const tooLong = await post(long, 'messages', 'countdown', { channelId: TEXT, minutes: '1440', seconds: '1' });
+    assert.equal(tooLong.statusCode, 400);
+    assert.match(tooLong.body, /longer than 24 hours/);
 });

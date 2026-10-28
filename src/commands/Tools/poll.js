@@ -1,10 +1,7 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
-import { createEmbed, errorEmbed, successEmbed, infoEmbed, warningEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
-import { getColor } from '../../config/bot.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
-const EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
-const MAX_OPTIONS = 10;
+import { POLL_MAX_OPTIONS as MAX_OPTIONS, createPoll } from '../../services/botMessageService.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('poll')
@@ -78,32 +75,8 @@ export default {
             if (option) options.push(option);
         }
 
-        if (options.length < 2) {
-            throw new Error("You must provide at least 2 options for the poll.");
-        }
-
-        let description = `**${question}**\n\n`;
-        options.forEach((option, index) => {
-            description += `${EMOJIS[index]} ${option}\n`;
-        });
-
-        if (isAnonymous) {
-            description += '\n*This is an anonymous poll. Votes are not tracked to users.*';
-        } else {
-            description += '\n*React with the emoji to vote!*';
-        }
-
-        const embed = successEmbed(
-            `📊 ${isAnonymous ? 'Anonymous ' : ''}Poll`,
-            description
-        );
-
-        const message = await interaction.channel.send({ embeds: [embed] });
-
-        for (let i = 0; i < options.length; i++) {
-            await message.react(EMOJIS[i]);
-            await new Promise(resolve => setTimeout(resolve, 500));
-        }
+        // Same poll as the dashboard's Messages page (checks the bot's permissions first).
+        await createPoll(interaction.guild, { channel: interaction.channel, question, options, anonymous: isAnonymous });
 
         await InteractionHelper.safeEditReply(interaction, {
             content: '✅ Poll created successfully!',
