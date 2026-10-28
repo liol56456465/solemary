@@ -839,7 +839,8 @@ export function createEnforcementHandlers(core) {
             e.getGuildConfig(client, guildId).catch(() => null),
             loadOrNull('coverage', () => e.loadCoverageCounts(guildId, client.user?.id || '0', COVERAGE_PERIODS[period])),
             Promise.resolve().then(() => e.listMassActionBlocks(guildId)).catch(() => []),
-            guild ? loadOrNull('staff activity', async () => {
+            // /staff activity is owner-only, so the weekly list is too.
+            owner && guild ? loadOrNull('staff activity', async () => {
                 await completeMemberCache(guild);
                 return e.staffActivityForWeek(guild, start);
             }) : null,
@@ -854,7 +855,8 @@ export function createEnforcementHandlers(core) {
         return [
             counts ? coverageSection({ report: buildCoverageReport(counts, config?.birthdayTimezone || 'UTC'), period, periods: COVERAGE_PERIODS, statsPeriod })
                 : html`<h2>Coverage</h2><p class="muted">Coverage could not be loaded (database unavailable).</p>`,
-            activitySection({ rows: activity, week, start, keep, warningsLink: owner }),
+            owner ? activitySection({ rows: activity, week, start, keep, warningsLink: owner })
+                : html`<h2>Staff activity</h2><p class="muted">Weekly staff activity is shown to the bot owners only (like /staff activity).</p>`,
             disciplineSection({
                 isOwner: owner, csrf: req.dashboard.session.csrf, editEnabled: settings.editEnabled,
                 staff: (activity || []).map((r) => ({ userId: r.userId, username: r.username })),

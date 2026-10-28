@@ -637,25 +637,28 @@ test('staff page: coverage heatmap as a table with intensity classes and the mas
     assert.deepEqual([0, 1, 2, 3, 4, 5].map((n) => intensityLevel(n, 4)), [0, 1, 2, 3, 4, 4]);
 });
 
-test('staff page: weekly activity for every viewer (this/last week); discipline (warn, warnings, removed roles) for owners only', async () => {
+test('staff page: weekly activity and discipline (warn, warnings, removed roles) for owners only, like /staff', async () => {
     const h = await setup();
     const res = await get(h, h.d.staff);
     assert.equal(res.statusCode, 200);
-    assert.match(res.body, /Staff activity · week of \d{4}-\d{2}-\d{2}/);
-    assert.ok(res.body.includes('other&lt;b&gt;'), 'names escaped');
-    assert.match(res.body, /<span class="warn">Inactive<\/span>/);
+    assert.match(res.body, /Weekly staff activity is shown to the bot owners only/);
     assert.match(res.body, /Only the bot owners can warn staff members/);
     assert.ok(!res.body.includes('/staff/warn') && !res.body.includes('/staff/restore'), 'admins who are not owners get no discipline forms');
-    assert.equal(serviceCalls(h, ['listRemovedStaffRoles', 'listStaffWarnings']).length, 0, 'nothing owner-only is read for them');
-    assert.equal(serviceCalls(h, ['listStaffWarnings']).length, 0);
-    const [thisWeek] = serviceCalls(h, ['staffActivityForWeek']);
-    const last = await get(h, h.d.staff, { query: { week: 'last' } });
-    assert.match(last.body, /class="chip is-active" href="\/dashboard\/staff\?period=30d&amp;week=last" aria-current="page">Last week/);
-    const [, lastWeek] = serviceCalls(h, ['staffActivityForWeek']);
-    assert.equal((new Date(thisWeek.args[1]) - new Date(lastWeek.args[1])) / 86400000, 7, 'last week = the Monday 7 days before');
+    assert.equal(serviceCalls(h, ['listRemovedStaffRoles', 'listStaffWarnings', 'staffActivityForWeek']).length, 0, 'nothing owner-only is read for them');
     // Ignored: someone else's warnings via the query when not an owner.
     await get(h, h.d.staff, { query: { warnings: TARGET } });
     assert.equal(serviceCalls(h, ['listStaffWarnings']).length, 0);
+
+    const o = await setup({ userId: OWNER });
+    const week = await get(o, o.d.staff);
+    assert.match(week.body, /Staff activity · week of \d{4}-\d{2}-\d{2}/);
+    assert.ok(week.body.includes('other&lt;b&gt;'), 'names escaped');
+    assert.match(week.body, /<span class="warn">Inactive<\/span>/);
+    const [thisWeek] = serviceCalls(o, ['staffActivityForWeek']);
+    const last = await get(o, o.d.staff, { query: { week: 'last' } });
+    assert.match(last.body, /class="chip is-active" href="\/dashboard\/staff\?period=30d&amp;week=last" aria-current="page">Last week/);
+    const [, lastWeek] = serviceCalls(o, ['staffActivityForWeek']);
+    assert.equal((new Date(thisWeek.args[1]) - new Date(lastWeek.args[1])) / 86400000, 7, 'last week = the Monday 7 days before');
 
     const owner = await setup({ userId: OWNER });
     const page = await get(owner, owner.d.staff, { query: { warnings: TARGET } });
