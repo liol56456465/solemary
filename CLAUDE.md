@@ -75,6 +75,9 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 - All commands are registered in the main server only (61 slash + 3 context menus at the last
   verified boot; limit 100 per server).
   Prefer subcommands for new features.
+- `RETIRE_ADMIN_COMMANDS=true` (off by default): only everyone-commands + owner-only kit (/enforcements, /automod
+  panic|lockdown-end, /staff restore, /backup) are registered; other keys answer with their dashboard page
+  (`config/commands/retirement.js`). The Commands page lists all 175 entries and where each lives.
 
 ## Enforcement system
 
@@ -184,7 +187,8 @@ pages, plain CSS + one static script, strict CSP, no SPA. Discord login (`identi
 on every request (`OWNER_IDS` without Administrator: view + settings only), CSRF + Origin check, audit log.
 Settings in `guild_settings` keyed by `guild_id`; the dashboard calls the same services as the commands.
 Env: `DASHBOARD_ENABLED`, `DASHBOARD_EDIT_ENABLED`, `SESSION_SECRET`; redirect `${PUBLIC_URL}/dashboard/oauth/callback`.
-Design: white/near-black, one purple accent, green = on, red = destructive only; light/dark. No AI-startup look.
+Design (v5): grouped sidebar (Moderate · Community · Server setup · Bot), settings as rows, Overview "Needs you" first;
+10 palette themes (only colours change; contrast test guards AA); only gradient = body glow. No AI-startup look.
 To view it locally without the bot token, mount `createDashboard` on a bare Express app with the fake guild
 from `tests/dashboardModules.test.js` and the local test DB. Public release, multi-server support and premium
 come only after that.
