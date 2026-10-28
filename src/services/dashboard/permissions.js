@@ -72,6 +72,8 @@ export const PERMISSIONS = Object.freeze({
     'nocontact.edit': ADMIN,
     'inbox.reply': MODERATOR, // modmail / ticket replies from the web
     'inbox.close': MODERATOR,
+    'members.rules': ADMIN, // role rules: pages and changes
+    'page:member-insights': ADMIN,
     'staff.manage': ADMIN, // mass-action blocks, staff warnings, restore (OWNER_IDS checked on top)
     'settings.edit': ADMIN, // every module settings form
     // ── Session ──
@@ -85,6 +87,10 @@ export const PERMISSIONS = Object.freeze({
  */
 export const ROUTES = [
     ['POST', '/logout', 'session.logout'],
+    ['POST', '/users/rules/preview', 'members.rules'],
+    ['POST', '/users/rules/save', 'members.rules'],
+    ['POST', '/users/rules/:rid/disable', 'members.rules'],
+    ['POST', '/users/rules/:rid/delete', 'members.rules'],
     ['POST', '/users/bulk/preview', 'member.bulk'],
     ['POST', '/users/bulk/execute', 'member.bulk'],
     ['POST', '/users/:id/action/preview', 'member.action'],
@@ -125,6 +131,8 @@ export const ROUTES = [
     ['GET', '/inbox', 'page:inbox'],
     ['GET', '/inbox/:kind/:id', 'page:inbox'],
     ['GET', '/users/bulk/:job', 'member.bulk'],
+    ['GET', '/users/rules', 'members.rules'],
+    ['GET', '/users/insights', 'page:member-insights'],
     ['GET', '/users/:id', 'page:users'],
     ['GET', '/nocontact', 'page:nocontact'],
     ['GET', '/staff', 'page:staff'],

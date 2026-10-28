@@ -53,6 +53,13 @@ function option(value, label, selected = false) {
     return html`<option value="${value}"${selected ? raw(' selected') : ''}>${label}</option>`;
 }
 
+export const MEMBER_TABS = { list: ['Members', '/users'], rules: ['Role rules', '/users/rules'], insights: ['Insights', '/users/insights'] };
+
+/** The tab row of the Members area (chips; the current one has aria-current). */
+export function memberTabs(active) {
+    return html`<nav class="chips member-tabs" aria-label="Members area">${Object.entries(MEMBER_TABS).map(([key, [label, href]]) => html`<a class="chip" href="${path(href)}"${key === active ? raw(' aria-current="page"') : ''}>${label}</a>`)}</nav>`;
+}
+
 // ── Member lookup ─────────────────────────────────────────────────────────
 
 /** input: { q, results: [{ id, username, globalName, nickname, bot }], error }. */
@@ -88,6 +95,7 @@ ${rows.map((row) => html`<tr>${tick(row)}<td><a class="member-cell" href="${user
     const chips = html`<nav class="chips" aria-label="Show">${Object.entries(STATE_FILTERS).map(([k, v]) => html`<a class="chip" href="${path(`/users${queryString({ ...keep, state: k, page: '' })}`)}"${(filters.state || '') === k ? raw(' aria-current="page"') : ''}>${v}</a>`)}</nav>`;
     const count = list ? html`${list.total} member${list.total === 1 ? '' : 's'}${list.memberCount && list.total !== list.memberCount ? ` of ${list.memberCount}` : ''}` : '';
     const body = html`<header class="page-head"><h1>Members</h1><p class="muted">${count ? html`${count} · ` : ''}open a member to change their roles or take an action.</p></header>
+${memberTabs('list')}
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
 ${list && list.memberCount && list.cached < list.memberCount * 0.9 ? html`<p class="notice">Showing ${list.cached} of ${list.memberCount} members: the member list is still loading. Reload in a minute.</p>` : ''}
 ${loading ? html`<p class="notice">The member list is not available right now (the bot cannot see the main server).</p>` : ''}

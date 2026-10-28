@@ -6,6 +6,7 @@ import { logEvent, EVENT_TYPES } from '../loggingService.js';
 import { formatLogLine } from '../../utils/logging/logEmbeds.js';
 import { Mutex } from '../../utils/mutex.js';
 import { wrapServiceBoundary } from '../../utils/errorHandler.js';
+import { applyRoleRulesToMember } from '../members/roleRuleService.js';
 
 /**
  * Award XP to a member. Returns null when XP is skipped (disabled/invalid amount).
@@ -74,6 +75,13 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
     }
 
     await saveUserLevelData(client, guild.id, member.user.id, levelData);
+
+    // Role rules with a level trigger (dashboard Members); the 10-minute run catches up on a miss.
+    if (didLevelUp) {
+      await applyRoleRulesToMember(member, { triggers: ['level_reached'], level: levelData.level }).catch((error) => {
+        logger.warn(`Role rules not applied to ${member.user.id} after level-up: ${error.message}`);
+      });
+    }
 
     return {
       level: levelData.level,

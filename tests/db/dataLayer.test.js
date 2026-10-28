@@ -412,6 +412,19 @@ test('leaderboard: one ordered page from user_levels, absolute ranks', { skip },
     assert.equal((await getLeaderboard(fakeClient, guildB, 2, 4)).length, 0, 'zero-XP rows are not ranked');
 });
 
+test('leveling: an XP save with lastMessage = Date.now() is stored and read back (user_levels.last_message is a TIMESTAMP)', { skip }, async () => {
+    const { getUserLevelKey } = await import('../../src/utils/database/keys.js');
+    const at = Date.now() - 3 * 864e5;
+    // addXp saves lastMessage as milliseconds; Postgres refused that number for the TIMESTAMP column.
+    await db.set(getUserLevelKey(guildB, user(30)), { xp: 5, level: 1, totalXp: 105, lastMessage: at, rank: 0 });
+    const back = await db.get(getUserLevelKey(guildB, user(30)));
+    assert.equal(back.level, 1);
+    assert.ok(Math.abs(back.lastMessage - at) < 1000, `lastMessage round trip (${back.lastMessage} vs ${at})`);
+    // 0 (never) keeps the old behaviour: the save time.
+    await db.set(getUserLevelKey(guildB, user(31)), { xp: 0, level: 0, totalXp: 0, lastMessage: 0, rank: 0 });
+    assert.ok(Math.abs((await db.get(getUserLevelKey(guildB, user(31)))).lastMessage - Date.now()) < 60_000);
+});
+
 test('Banned page: activeBanCases keeps only open, real, unexpired ban cases; the newest per member', { skip }, async () => {
     const { activeBanCases } = await import('../../src/services/dashboard/bansData.js');
     const code = (n) => `B${runId.slice(-5)}${n}`.slice(0, 7);

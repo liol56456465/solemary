@@ -1000,5 +1000,7 @@ export function createEnforcementHandlers(core) {
         staffSections, blockLift, staffWarn, staffRestore, canWrite,
         // Shared with the Inbox (inboxRoutes.js): the same POST checks, fresh Administrator, audit rows, flash.
         guardedPost, freshModerator, audit, flash,
+        // For the other Members pages (memberToolsRoutes.js): the same POST guard and helpers.
+        helpers: { guardedPost, freshModerator, flash, audit, completeMemberCache, guildOf, isOwner, canWrite },
     };
 }

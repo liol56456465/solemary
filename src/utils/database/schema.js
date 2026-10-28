@@ -572,6 +572,39 @@ export const tableStatements = [
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+    // Role rules (dashboard Members, services/members/roleRuleService.js): a role the bot gives
+    // when a member meets a condition (days in the server, leveling level, has a role), and
+    // optionally takes back. Applied by a cron every 10 minutes and on join / level-up / role
+    // change. last_* = the last cron run of the rule (shown on the page).
+    `CREATE TABLE IF NOT EXISTS ${t.member_role_rules} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        name VARCHAR(80) NOT NULL,
+        trigger_kind VARCHAR(20) NOT NULL CHECK (trigger_kind IN ('days_in_server', 'level_reached', 'has_role')),
+        threshold INTEGER,
+        trigger_role_id VARCHAR(20),
+        role_id VARCHAR(20) NOT NULL,
+        remove_when_false BOOLEAN NOT NULL DEFAULT FALSE,
+        enabled BOOLEAN NOT NULL DEFAULT FALSE,
+        created_by VARCHAR(20) NOT NULL,
+        created_by_username VARCHAR(100) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_run_at TIMESTAMPTZ,
+        last_added INTEGER NOT NULL DEFAULT 0,
+        last_removed INTEGER NOT NULL DEFAULT 0,
+        last_failed INTEGER NOT NULL DEFAULT 0,
+        last_problem TEXT
+    )`,
+    // Joins and leaves (dashboard Members → Insights), one row per event; kept 90 days
+    // (pruned daily, services/members/memberInsightsService.js).
+    `CREATE TABLE IF NOT EXISTS ${t.member_events} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        kind VARCHAR(5) NOT NULL CHECK (kind IN ('join', 'leave')),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
 ];
 
 export const indexStatements = [
@@ -620,6 +653,9 @@ export const indexStatements = [
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_bot_blacklist_one_active ON ${t.bot_blacklist}(kind, target_id) WHERE removed_at IS NULL`,
     `CREATE INDEX IF NOT EXISTS idx_scheduled_messages_guild ON ${t.scheduled_messages}(guild_id)`,
     `CREATE INDEX IF NOT EXISTS idx_scheduled_messages_due ON ${t.scheduled_messages}(next_run_at) WHERE paused = FALSE AND next_run_at IS NOT NULL`,
+    `CREATE INDEX IF NOT EXISTS idx_member_role_rules_guild ON ${t.member_role_rules}(guild_id, id)`,
+    `CREATE INDEX IF NOT EXISTS idx_member_events_guild ON ${t.member_events}(guild_id, created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_member_events_created ON ${t.member_events}(created_at)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

@@ -46,6 +46,8 @@ const configuredTables = {
     dashboard_audit: 'dashboard_audit',
     bot_blacklist: 'bot_blacklist',
     scheduled_messages: 'scheduled_messages',
+    member_role_rules: 'member_role_rules',
+    member_events: 'member_events',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -92,6 +94,8 @@ const allowedTableIdentifiers = new Set([
     'dashboard_audit',
     'bot_blacklist',
     'scheduled_messages',
+    'member_role_rules',
+    'member_events',
 ]);
 
 const validatedTables = Object.fromEntries(
