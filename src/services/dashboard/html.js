@@ -5,6 +5,8 @@
 // are joined. null / undefined / false render as nothing. There is no other way to
 // put text into a page, so user-provided strings are always escaped.
 
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { ICON_SPRITE_MARKUP, hasIcon } from './icons.js';
 
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' };
@@ -73,8 +75,20 @@ export function formatAge(value, now = Date.now()) {
 }
 
 export const BASE = '/dashboard';
-export const CSS_PATH = `${BASE}/static/dashboard.css`;
-export const JS_PATH = `${BASE}/static/dashboard.js`;
+/**
+ * A short hash of a static file, added to its URL (?v=…). The files are cached for an hour,
+ * so after a deploy the new pages would otherwise run with the old stylesheet or script.
+ */
+function assetVersion(name) {
+    try {
+        return createHash('sha256').update(readFileSync(new URL(`./static/${name}`, import.meta.url))).digest('hex').slice(0, 10);
+    } catch {
+        return '0';
+    }
+}
+
+export const CSS_PATH = `${BASE}/static/dashboard.css?v=${assetVersion('dashboard.css')}`;
+export const JS_PATH = `${BASE}/static/dashboard.js?v=${assetVersion('dashboard.js')}`;
 
 /** A dashboard URL: path('/cases') → '/dashboard/cases'. */
 export function path(suffix = '') {
@@ -143,7 +157,8 @@ function sidebar(active, moduleStates, server) {
         : navLink(item, active, moduleStates)))}</ul></nav>`;
 }
 
-export const THEMES = ['system', 'light', 'dark'];
+// The switch cycles system (follow the device) → dark → light.
+export const THEMES = ['system', 'dark', 'light'];
 export const THEME_COOKIE = 'meowist_theme';
 const THEME_LABEL = { system: 'System theme', light: 'Light theme', dark: 'Dark theme' };
 const THEME_ICON = { system: 'monitor', light: 'sun', dark: 'moon' };

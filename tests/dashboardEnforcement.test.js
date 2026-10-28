@@ -19,8 +19,9 @@ import {
 import { createError, ErrorTypes } from '../src/utils/errorHandler.js';
 import { plainText } from '../src/services/dashboard/forms.js';
 import { buildCoverageReport, intensityLevel } from '../src/services/staffCoverageService.js';
+import { JS_PATH } from '../src/services/dashboard/html.js';
 
-const ALLOWED_SCRIPT = '<script src="/dashboard/static/dashboard.js" defer></script>';
+const ALLOWED_SCRIPT = `<script src="${JS_PATH}" defer></script>`;
 const SECRET = 'y'.repeat(64);
 const GUILD = '100000000000000001';
 const ADMIN = '200000000000000002';

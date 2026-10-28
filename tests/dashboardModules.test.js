@@ -15,9 +15,9 @@ import { getSettingEntry, seedValue } from '../src/services/settings/settingsReg
 import { channelGroups, channelWarnings, roleWarnings, switchInput } from '../src/services/dashboard/forms.js';
 import { diffSnapshots, recordDashboardChange, changeSummary } from '../src/services/dashboard/audit.js';
 import { channelPurposeFor } from '../src/services/automod/channelRouting.js';
-import { NAV } from '../src/services/dashboard/html.js';
+import { JS_PATH, NAV } from '../src/services/dashboard/html.js';
 
-const ALLOWED_SCRIPT = '<script src="/dashboard/static/dashboard.js" defer></script>';
+const ALLOWED_SCRIPT = `<script src="${JS_PATH}" defer></script>`;
 const SECRET = 'x'.repeat(64);
 const GUILD = '100000000000000001';
 const SUPPORT = '100000000000000002';

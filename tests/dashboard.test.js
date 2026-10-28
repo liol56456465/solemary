@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { THEME_COOKIE, escapeHtml, formatAge, html, layout, queryString, raw, themeFrom } from '../src/services/dashboard/html.js';
+import { CSS_PATH, JS_PATH, THEME_COOKIE, escapeHtml, formatAge, html, layout, queryString, raw, themeFrom } from '../src/services/dashboard/html.js';
 import {
     SESSION_COOKIE, STATE_COOKIE, createRateLimiter, createState, createStateStore, isGlobalRateLimitExempt,
     isSnowflake, parseCookies, serializeCookie, signValue, verifySignedValue,
@@ -13,7 +13,7 @@ import { auditPage, caseDetailPage, casesPage, isAllowedImageUrl, isSafeLink } f
 import { SECURITY_HEADERS, createDashboard, dashboardSettings, registerDashboard, safeBackPath } from '../src/services/dashboard/routes.js';
 
 // The only script on any page: the static enhancement file (CSP script-src 'self').
-const ALLOWED_SCRIPT = '<script src="/dashboard/static/dashboard.js" defer></script>';
+const ALLOWED_SCRIPT = `<script src="${JS_PATH}" defer></script>`;
 const SECRET = 'x'.repeat(64);
 const GUILD = '100000000000000001';
 const ADMIN = '200000000000000002';
@@ -77,7 +77,9 @@ test('pages escape user-provided case fields', () => {
 
 test('pages have no inline styles or scripts and link the one stylesheet', () => {
     const page = casesPage({ session: { username: 'a', csrf: 't' }, rows: [], total: 0 });
-    assert.ok(page.includes('<link rel="stylesheet" href="/dashboard/static/dashboard.css">'));
+    assert.ok(page.includes(`<link rel="stylesheet" href="${CSS_PATH}">`));
+    assert.match(CSS_PATH, /^\/dashboard\/static\/dashboard\.css\?v=[0-9a-f]{10}$/, 'versioned, so a deploy never mixes new pages with a cached old stylesheet');
+    assert.match(JS_PATH, /^\/dashboard\/static\/dashboard\.js\?v=[0-9a-f]{10}$/);
     assert.ok(page.includes(ALLOWED_SCRIPT), 'the one external script (progressive enhancement)');
     assert.ok(!/<style|style=|<script/i.test(page.replace(ALLOWED_SCRIPT, '')));
     assert.ok(page.includes('href="/dashboard/overview"'), 'sidebar');
@@ -622,8 +624,8 @@ test('theme: the cookie sets data-theme on <html> server-side; unknown values me
     assert.match(layout({ title: 'x', body: html`` }), /^<!doctype html><html lang="en"><head>/, 'pages without a session (login, errors) follow the device');
     // The switch is a plain link (works without JS) to the next theme, back to this page.
     const page = layout({ title: 'x', active: 'cases', session: { ...session, theme: 'light', path: '/dashboard/cases?page=2' }, body: html`` });
-    // Cycle: system → light → dark → system.
-    assert.ok(page.includes('href="/dashboard/theme?mode=dark&amp;next=%2Fdashboard%2Fcases%3Fpage%3D2"'));
+    // Cycle: system → dark → light → system.
+    assert.ok(page.includes('href="/dashboard/theme?mode=system&amp;next=%2Fdashboard%2Fcases%3Fpage%3D2"'));
     assert.ok(page.includes('<symbol id="i-moon"'), 'the icon sprite is inline');
 });
 

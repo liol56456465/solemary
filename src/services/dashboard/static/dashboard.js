@@ -183,7 +183,7 @@
     // ── Theme switch ─────────────────────────────────────────────────────
     // Without the script the link goes through GET /dashboard/theme (cookie + redirect);
     // here the same cookie is set and the page switches in place.
-    const THEMES = ['system', 'light', 'dark'];
+    const THEMES = ['system', 'dark', 'light'];
     const THEME_LABEL = { system: 'System theme', light: 'Light theme', dark: 'Dark theme' };
     const THEME_ICON = { system: 'monitor', light: 'sun', dark: 'moon' };
     function setupThemeToggle() {

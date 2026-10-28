@@ -318,7 +318,7 @@ export function coverageSection({ report, period, periods, statsPeriod }) {
     return section(`Coverage · last ${periods[period]} days (${report.timeZone})`, html`${chips}
 ${heatTable(`Incidents (cases created, automatic included): ${report.totalIncidents}`, report.incidentGrid, report.maxIncidents)}
 ${heatTable(`Staff activity (cases by human moderators + appeals decided): ${report.totalStaff}`, report.staffGrid, report.maxStaff)}
-<p class="muted">Darker = busier, in quarter steps up to the busiest hour. Columns are hours 0–23 in the server's birthday time zone.</p>
+<p class="muted">Stronger shade = busier, in quarter steps up to the busiest hour. Columns are hours 0–23 in the server's birthday time zone.</p>
 <h3>Most under-covered slots</h3>
 ${report.gaps.length ? html`<ol>${report.gaps.map((slot) => html`<li>${slotLabel(slot)} — ${slot.incidents} incident${slot.incidents === 1 ? '' : 's'}, ${slot.staff} staff action${slot.staff === 1 ? '' : 's'}</li>`)}</ol>` : html`<p class="muted">No incidents in this period.</p>`}`, '', { key: 'staff-coverage' });
 }
