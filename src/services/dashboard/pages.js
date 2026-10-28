@@ -180,7 +180,7 @@ export function statsPage({ session, access = null, moduleStates = {}, settingsR
     const table = html`${rows.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Total</th><th>Bans</th><th>Kicks</th><th>Mutes</th><th>Warns</th><th>Appeals accepted</th><th>Appeals denied</th><th>Voided</th></tr></thead><tbody>
 ${rows.map((r) => html`<tr><td><a href="/dashboard/cases${queryString({ moderator: r.moderatorId })}">${r.username}</a></td><td>${r.total}</td><td>${r.actions.ban}</td><td>${r.actions.kick}</td><td>${r.actions.mute}</td><td>${r.actions.warn}</td><td>${r.appealsAccepted}</td><td>${r.appealsDenied}</td><td>${r.voided}</td></tr>`)}
 </tbody></table></div><p class="muted">Automatic (bot) and test cases are left out; voided cases are not in the totals.</p>` : html`<p class="empty">No moderation actions in this period.</p>`}`;
-    const body = html`<header class="page-head"><h1>Staff</h1><p>Moderation per moderator, when the team is active, and mass-action guard blocks.</p></header>
+    const body = html`<header class="page-head"><h1>Staff</h1><p>Moderation per moderator, when the team is active, weekly activity, staff discipline and mass-action guard blocks.</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
 ${section(`Moderation stats · ${STATS_PERIODS[period]?.label || period}`, html`${periodChips}${table}`, '', { key: 'staff-stats' })}

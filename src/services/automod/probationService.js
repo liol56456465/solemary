@@ -8,7 +8,7 @@
 
 import { automodConfig } from '../../config/automod.js';
 import { enforcementConfig } from '../../config/enforcement.js';
-import { deleteFromDb, getFromDb, setInDb } from '../../utils/database.js';
+import { db, deleteFromDb, getFromDb, setInDb } from '../../utils/database.js';
 import { logger } from '../../utils/logger.js';
 import { query, T } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
@@ -79,6 +79,23 @@ export async function endProbation(guildId, userId) {
     await deleteFromDb(probationKey(guildId, userId));
     cache.set(`${guildId}:${userId}`, { record: null, expiresAt: Date.now() + CACHE_MS });
     return existing;
+}
+
+/**
+ * Every running probation in a guild, soonest end first: [{ userId, startedAt, until,
+ * caseCode, how }] (for the dashboard). Throws on a DB error.
+ */
+export async function listProbations(guildId, now = Date.now()) {
+    const prefix = probationKey(guildId, '');
+    const keys = await db.list(prefix);
+    const out = [];
+    for (const key of keys || []) {
+        const userId = String(key).slice(prefix.length);
+        if (!/^\d{17,20}$/.test(userId)) continue;
+        const record = await getProbation(guildId, userId, now);
+        if (record) out.push({ userId, ...record });
+    }
+    return out.sort((a, b) => Number(a.until) - Number(b.until));
 }
 
 /** "⚠️ on probation (rejoined after ban, until <t:…:D>)" */

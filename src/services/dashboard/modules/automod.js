@@ -1,22 +1,49 @@
 // automod.js — Automod: global on/off and mode, per-rule modes, channel exceptions,
 // trusted members, second chance, mood alerts, panic mode, join gate, native AutoMod
-// policies, review/alerts channels — plus the 7-day stats. Every change goes through
-// services/automod/automodSettings.js (row-locked), the same helpers /automod uses.
+// policies, review/alerts channels — plus the stats (1/7/30 days, ?days=), and the live
+// operations of /automod: the review queue (/automod queue), members on probation
+// (/automod probation end) and ending a raid lockdown (/automod lockdown-end). Every
+// change goes through the same services /automod uses (automodSettings.js is row-locked).
+//
+// Review cards are decided on the card in Discord: their buttons (keep, undo, change,
+// apply, dismiss, delete) act on the card message and the select menu of that
+// interaction (reviewCards.js handleReviewAction), so the queue here links to each card.
 
 import { AUTOMOD_RULES } from '../../../config/automod.js';
 import { CHANNEL_RULE_MODES, RULE_MODES } from '../../automod/policy.js';
 import { JOIN_GATE_ACTIONS, JOIN_GATE_CHECKS, normalizeJoinGate } from '../../automod/joinGate.js';
 import { NATIVE_POLICIES, policyFor } from '../../automod/nativeBridge.js';
-import { html } from '../html.js';
+import { formatDate, html, path, queryString, raw, timeTag } from '../html.js';
 import {
     InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, switchInput, choiceField,
-    intField, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, toggleForm,
+    intField, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, registryValue, saveRegistry, section, table } from './common.js';
 
 const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : 0);
-const STATS_DAYS = 7;
+/** Stats periods offered on the page (/automod stats days); 7 is the default. */
+export const STATS_DAY_CHOICES = [1, 7, 30];
+const DEFAULT_STATS_DAYS = 7;
+const QUEUE_LISTED = 20;
+
+/** ?days= of the page, one of STATS_DAY_CHOICES, else 7. */
+export function statsDays(query) {
+    const days = Number.parseInt(String(query?.days ?? ''), 10);
+    return STATS_DAY_CHOICES.includes(days) ? days : DEFAULT_STATS_DAYS;
+}
+
+/** Runs a read; a failure (or a missing service) becomes `fallback` so the page still loads. */
+async function attempt(run, fallback) {
+    try {
+        return await run();
+    } catch {
+        return fallback;
+    }
+}
+
+const isDiscordUrl = (url) => /^https:\/\/(?:[a-z]+\.)?discord\.com\/channels\/\d+\/\d+\/\d+$/.test(String(url || ''));
+const memberName = (guild, id) => guild?.members?.cache?.get(id)?.user?.username || null;
 
 /** before/after snapshot diff of the automod settings, as audit changes. */
 function settingsChanges(before, after, keys) {
@@ -55,12 +82,17 @@ export default {
         } catch {
             nativeRules = null;
         }
-        const [byRule, stats] = await Promise.all([
-            ctx.services.automodRuleStats(ctx.guildId, STATS_DAYS).catch(() => ({})),
-            ctx.services.automodStats(ctx.guildId, STATS_DAYS).catch(() => ({ total: 0, byGroup: [] })),
+        const days = statsDays(ctx.query);
+        const [byRule, stats, lockdown, reviews, probations] = await Promise.all([
+            attempt(() => ctx.services.automodRuleStats(ctx.guildId, days), {}),
+            attempt(() => ctx.services.automodStats(ctx.guildId, days), { total: 0, byGroup: [] }),
+            // undefined / null = could not be read (shown as such, never as "none").
+            attempt(() => ctx.services.getLockdownState(ctx.guildId), undefined),
+            attempt(() => ctx.services.collectOpenReviews(ctx.client), null),
+            attempt(() => ctx.services.listProbations(ctx.guildId), null),
         ]);
         return {
-            settings, nativeRules, policies, byRule, stats,
+            settings, nativeRules, policies, byRule, stats, days, lockdown, reviews, probations,
             registry: {
                 reviewChannelId: registryValue(ctx, 'reviewChannelId'),
                 alertsChannelId: registryValue(ctx, 'alertsChannelId'),
@@ -118,16 +150,50 @@ ${channelPicker(g, 'reviewChannelId', data.registry.reviewChannelId, { label: 'R
 ${channelPicker(g, 'alertsChannelId', data.registry.alertsChannelId, { label: 'Alerts channel', help: 'Raids, guards, digests. Falls back to the mod log.' })}
 ${textArea('extraBlockedWords', data.registry.extraBlockedWords.join('\n'), { label: 'Extra blocked words (one per line; applied after a restart)', rows: 4, max: 20000 })}</div>`);
         const rulesStats = Object.entries(data.byRule).sort((a, b) => b[1].actions - a[1].actions);
-        const stats = html`<p>${data.stats.total} automatic action${data.stats.total === 1 ? '' : 's'} in ${STATS_DAYS} days. <span class="muted">Undo rate 30% or more suggests a rule is too strict.</span></p>
+        const days = data.days || DEFAULT_STATS_DAYS;
+        const dayChips = html`<nav class="chips" aria-label="Stats period">${STATS_DAY_CHOICES.map((n) => html`<a class="chip${n === days ? ' is-active' : ''}" href="${path(`/automod${queryString({ days: n })}`)}"${n === days ? raw(' aria-current="page"') : ''}>${n === 1 ? '1 day' : `${n} days`}</a>`)}</nav>`;
+        const stats = html`${dayChips}<p>${data.stats.total} automatic action${data.stats.total === 1 ? '' : 's'} in ${days === 1 ? 'the last day' : `${days} days`}. <span class="muted">Undo rate 30% or more suggests a rule is too strict.</span></p>
 ${table(['Rule', 'Actions', 'Undone', 'Changed', 'Undo rate'], rulesStats.map(([rule, t]) => {
         const rate = pct(t.undone + t.changed, t.actions);
         return [AUTOMOD_RULES[rule]?.label || rule, t.actions, t.undone, t.changed, html`<span class="${rate >= 30 ? 'bad' : ''}">${rate}%</span>`];
     }), 'No automod actions.')}`;
-        return html`${section('Global mode', top)}${section('Rule modes', rules, 'default follows the global mode; monitor only posts cards; off ignores the rule.')}
+        // Live operations (admins act; OWNER_IDS without Administrator view them).
+        const canAct = Boolean(ctx.canEdit && ctx.canAct);
+        const lockdown = data.lockdown;
+        const lockdownBody = lockdown === undefined
+            ? html`<p class="error" role="alert">The lockdown state could not be read (database). Reload the page to try again.</p>`
+            : lockdown?.active
+                ? html`<p class="warn"><b>A raid lockdown is active</b>${lockdown.startedAt ? html` since ${formatDate(lockdown.startedAt)}` : ''}, ${(lockdown.joinerIds || []).length} raid joiner${(lockdown.joinerIds || []).length === 1 ? '' : 's'}.</p>
+${buttonForm(ctx, 'automod', 'lockdown-end', 'End lockdown', {}, { confirm: 'End the raid lockdown? The verification level goes back to what it was and paused invites and DMs resume.', canEdit: canAct })}
+${canAct ? '' : html`<p class="muted">Ending a lockdown needs Administrator in the main server.</p>`}`
+                : html`<p class="muted">No lockdown. One starts by itself when a join raid is detected.</p>`;
+        const reviews = data.reviews;
+        const queue = reviews === null
+            ? html`<p class="error" role="alert">The review queue could not be read (review channel unavailable).</p>`
+            : html`${table(['Card', 'Since', 'Messages'], reviews.slice(0, QUEUE_LISTED).map((item) => [
+                isDiscordUrl(item.url) ? html`<a href="${item.url}" rel="noopener noreferrer" target="_blank">${item.title || 'Review card'}</a>` : (item.title || 'Review card'),
+                item.at ? timeTag(new Date(item.at)) : '—',
+                item.count || 1,
+            ]), 'Nothing is waiting for review.')}
+${reviews.length > QUEUE_LISTED ? html`<p class="muted">…and ${reviews.length - QUEUE_LISTED} more.</p>` : ''}
+<p class="muted">Cards posted since the bot started, plus the review channel's last 50 messages that still have buttons; low-severity lines are not listed. Decide on the card in Discord (Keep, Undo, Change, Dismiss).</p>`;
+        const probations = data.probations;
+        const probation = probations === null
+            ? html`<p class="error" role="alert">Probations could not be read (database). Reload the page to try again.</p>`
+            : table(['Member', 'Until', 'Ban', ''], probations.map((p) => [
+                html`<a href="${path(`/users/${encodeURIComponent(p.userId)}`)}">${memberName(g, p.userId) || p.userId}</a> <span class="muted">${p.userId}</span>`,
+                formatDate(new Date(Number(p.until))),
+                p.caseCode ? html`<a href="${path(`/cases/${encodeURIComponent(p.caseCode)}`)}"><code>${p.caseCode}</code></a>${p.how ? ` (${p.how})` : ''}` : '—',
+                buttonForm(ctx, 'automod', 'probation-end', 'End probation', { user: p.userId }, { confirm: 'End this probation now?', canEdit: canAct }),
+            ]), 'Nobody is on probation.');
+        const live = html`${lockdown?.active ? section('Raid lockdown', lockdownBody) : ''}
+${section(`Review queue${reviews ? ` (${reviews.length})` : ''}`, queue)}
+${section(`Probation${probations ? ` (${probations.length})` : ''}`, probation, 'Members who rejoined after a ban ended: automod uses the next step of the ladder for them, no second chance or trusted relaxing.')}`;
+        return html`${live}${section('Global mode', top)}${section('Rule modes', rules, 'default follows the global mode; monitor only posts cards; off ignores the rule.')}
 ${section('Channel exceptions', exceptions)}${section('Ignored channels', exempt)}
 ${section('Trusted members', trusted, 'Trusted members (the role, or this leveling level) skip the low-severity rules. Pick none and level 0 to clear.')}
 ${section('Second chance', secondChance)}${section('Mood', mood)}${section('Panic', panic)}${section('Join gate', joinGate, 'off / flag (review line with Kick/Dismiss) / kick (DM with how to come back).')}
-${section('Native AutoMod', native)}${section('Channels and words', channels)}${section(`Last ${STATS_DAYS} days`, stats)}`;
+${section('Native AutoMod', native)}${section('Channels and words', channels)}${lockdown?.active ? '' : section('Raid lockdown', lockdownBody)}${section(days === 1 ? 'Last day' : `Last ${days} days`, stats, '', { key: 'automod-stats' })}`;
     },
 
     actions: {
@@ -224,6 +290,33 @@ ${section('Native AutoMod', native)}${section('Channels and words', channels)}${
             const after = policyFor(await ctx.services.loadNativePolicies(ctx.guildId), ruleId);
             const changes = diffSnapshots(before, after, null, `native.${ruleId}.`);
             return { changes, message: changes.length ? `Native rule "${rule.name}" updated.` : 'Nothing changed.' };
+        },
+        // /automod lockdown-end: restores the verification level, resumes invites and DMs, posts the incident report.
+        'lockdown-end': {
+            admin: true,
+            async run(ctx) {
+                const state = await ctx.services.getLockdownState(ctx.guildId);
+                if (!state?.active) throw new InputError('There is no lockdown right now.');
+                const ended = await ctx.services.endLockdown(ctx.guild, { id: ctx.actor.userId, username: ctx.actor.username });
+                if (!ended) throw new InputError('There is no lockdown right now.');
+                return {
+                    changes: [{ key: 'lockdown', old: { active: true, startedAt: state.startedAt || null, joiners: (state.joinerIds || []).length }, new: null }],
+                    message: 'Lockdown ended. The verification level is back to what it was, and paused invites and DMs are resumed.',
+                };
+            },
+        },
+        // /automod probation user end:true
+        'probation-end': {
+            admin: true,
+            async run(ctx, form) {
+                const userId = userIdField(form, 'user', 'Member');
+                const record = await ctx.services.endProbation(ctx.guildId, userId);
+                if (!record) throw new InputError('That member is not on probation.');
+                return {
+                    changes: [{ key: `probation:${userId}`, old: { until: new Date(Number(record.until)).toISOString(), caseCode: record.caseCode || null }, new: null }],
+                    message: `Probation for ${memberName(ctx.guild, userId) || userId} ended early.`,
+                };
+            },
         },
         async channels(ctx, form) {
             const g = ctx.guild;

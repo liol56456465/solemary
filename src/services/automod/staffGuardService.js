@@ -18,7 +18,7 @@ import { AuditLogEvent, PermissionFlagsBits } from 'discord.js';
 import { automodConfig } from '../../config/automod.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
-import { getFromDb, setInDb, deleteFromDb } from '../../utils/database.js';
+import { db, getFromDb, setInDb, deleteFromDb } from '../../utils/database.js';
 import { query, T } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
 import { dateStamp } from '../enforcement/format.js';
@@ -100,6 +100,23 @@ export async function restoreStaffRoles(guild, userId, restoredBy) {
         { name: 'Roles', value: roles.map((role) => role.name).join(', ') || 'None could be restored' },
     ], { title: 'Staff roles restored' });
     return roles;
+}
+
+/**
+ * Everyone whose removed staff roles are saved for a restore: [{ userId, roleIds, reason, at }],
+ * newest first (for the dashboard). Throws on a DB error.
+ */
+export async function listRemovedStaffRoles(guildId) {
+    const prefix = backupKey(guildId, '');
+    const keys = await db.list(prefix);
+    const out = [];
+    for (const key of keys || []) {
+        const userId = String(key).slice(prefix.length);
+        if (!/^\d{17,20}$/.test(userId)) continue;
+        const backup = await getFromDb(backupKey(guildId, userId), null);
+        if (backup?.roleIds?.length) out.push({ userId, roleIds: backup.roleIds, reason: backup.reason || null, at: backup.at || null });
+    }
+    return out.sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
 }
 
 /** `nuke`: the alert gets a "Show diff" button (snapshot vs now, for /backup revert). */

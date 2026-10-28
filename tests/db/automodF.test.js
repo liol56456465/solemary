@@ -127,6 +127,36 @@ test('probation record: start, read, end', { skip }, async () => {
     assert.equal(await getProbation(guildId, user(5)), null);
 });
 
+test('dashboard lists: running probations (soonest end first) and saved removed staff roles', { skip }, async () => {
+    const { endProbation, listProbations, resetProbationCache, startProbation } = await import('../../src/services/automod/probationService.js');
+    const { listRemovedStaffRoles } = await import('../../src/services/automod/staffGuardService.js');
+    resetProbationCache();
+    assert.deepEqual(await listProbations(guildId), []);
+    const later = await startProbation(guildId, user(6), { caseCode: 'late', how: 'expired' }, Date.now() + 5000);
+    await startProbation(guildId, user(7), { caseCode: 'soon', how: 'lifted' });
+    resetProbationCache();
+    const listed = await listProbations(guildId);
+    assert.deepEqual(listed.map((p) => p.userId), [user(7), user(6)]);
+    assert.equal(listed[1].until, later.until);
+    assert.equal(listed[0].caseCode, 'soon');
+    await endProbation(guildId, user(7));
+    assert.deepEqual((await listProbations(guildId)).map((p) => p.userId), [user(6)]);
+    await endProbation(guildId, user(6));
+
+    const key = (n) => `staffguard:removed:${guildId}:${user(n)}`;
+    assert.deepEqual(await listRemovedStaffRoles(guildId), []);
+    await db.set(key(8), { roleIds: ['1', '2'], reason: 'older', at: '2026-10-01T00:00:00.000Z' });
+    await db.set(key(9), { roleIds: ['3'], reason: 'newer', at: '2026-10-02T00:00:00.000Z' });
+    try {
+        const removed = await listRemovedStaffRoles(guildId);
+        assert.deepEqual(removed.map((r) => [r.userId, r.reason]), [[user(9), 'newer'], [user(8), 'older']]);
+        assert.deepEqual(removed[1].roleIds, ['1', '2']);
+    } finally {
+        await db.delete(key(8));
+        await db.delete(key(9));
+    }
+});
+
 test('per-rule stats: caps and spam split within the spam group, undos counted', { skip }, async () => {
     const { automodRuleStats } = await import('../../src/services/automod/automodTuning.js');
     for (let i = 0; i < 4; i += 1) {

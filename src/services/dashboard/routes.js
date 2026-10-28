@@ -7,7 +7,7 @@
 //   GET  /dashboard/cases           case search (the /case search filters), paged
 //   GET  /dashboard/cases/:code     one case: details, edit history, evidence, appeals
 //   GET  /dashboard/appeals         pending appeals of the main server with their age
-//   GET  /dashboard/staff           staff moderation stats (/staff stats)
+//   GET  /dashboard/staff           staff moderation stats (/staff stats), weekly activity, discipline (owners)
 //   GET  /dashboard/audit           dashboard changes (old → new), filter by user/module, paged
 //   GET  /dashboard/<module>        a settings page (modules/*.js): current values + forms
 //   POST /dashboard/<module>/<act>  a settings form: CSRF + same origin + edit switch +
@@ -125,6 +125,7 @@ export const ENFORCEMENT_AUDIT_MODULES = [
     { key: 'notes', label: 'Staff notes' },
     { key: 'nocontact', label: 'No-contact orders' },
     { key: 'massguard', label: 'Mass-action guard' },
+    { key: 'staff', label: 'Staff discipline' },
 ];
 
 const truthy = (value) => String(value || '').trim().toLowerCase() === 'true';
@@ -429,7 +430,7 @@ export function createDashboard({
         req.dashboard.moduleStates = { ...req.dashboard.moduleStates, ...result.moduleStates };
         const recentChanges = await audits.list(guildId, { page: 0, pageSize: RECENT_CHANGES })
             .then((r) => r.rows).catch(() => null);
-        return sendHtml(res, 200, overviewPage({ ...shellOf(req), overview: result, recentChanges }));
+        return sendHtml(res, 200, overviewPage({ ...shellOf(req), overview: result, recentChanges, editEnabled: settings.editEnabled }));
     }
 
     /** GET /dashboard/modules[?show=on|off]: every module as a card with its switch. */
@@ -535,6 +536,8 @@ export function createDashboard({
             client, guildId, env, services,
             guild: client.guilds?.cache?.get(guildId) || null,
             session, access: decision, csrf: session.csrf,
+            // The page's query (GET only matters: e.g. Automod ?days=); module code validates what it reads.
+            query: req.query || {},
             actor: { userId: session.userId, username: session.username },
             editEnabled: settings.editEnabled,
             canEdit: Boolean(settings.editEnabled && decision.canView),
@@ -623,9 +626,9 @@ export function createDashboard({
         }
         const message = [result?.message || (changes.length ? 'Saved.' : 'Nothing changed.'), ...(result?.warnings || [])].map(plainText).join(' ');
         await sessions.setFlash?.(session.id, message);
-        // `back`: the Modules page or another module's page (only known names); else this module.
+        // `back`: the Modules page, the Overview or another module's page (only known names); else this module.
         const back = typeof req.body?.back === 'string' ? req.body.back : '';
-        const target = back === 'modules' || (back && findModule(back)) ? `/${back}` : `/${module.key}`;
+        const target = back === 'modules' || back === 'overview' || (back && findModule(back)) ? `/${back}` : `/${module.key}`;
         return res.redirect(303, path(target));
     }
 
@@ -740,6 +743,8 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.post('/nocontact/add', form, user, safe(en.noContactAdd));
     router.post('/nocontact/end', form, user, safe(en.noContactEnd));
     router.post('/staff/blocks/lift', form, user, safe(en.blockLift));
+    router.post('/staff/warn', form, user, safe(en.staffWarn));
+    router.post('/staff/restore', form, user, safe(en.staffRestore));
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
     router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleAction));
     router.get('/overview', user, safe(d.overview));

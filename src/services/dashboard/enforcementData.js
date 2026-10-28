@@ -20,6 +20,8 @@ import { memberStandings } from './membersData.js';
 import { addTempRole, endTempRole, listTempRoles } from '../members/tempRoleService.js';
 import { attachFlowEvidence, completeFlowDetails } from '../enforcement/flowBuilder.js';
 import { loadCoverageCounts } from '../staffCoverageService.js';
+import { staffActivityForWeek } from '../staffActivityService.js';
+import { giveStaffWarning, listRemovedStaffRoles, listStaffWarnings, restoreStaffRoles } from '../automod/staffGuardService.js';
 import { getGuildConfig } from '../config/guildConfig.js';
 import { removeVerification } from '../verificationService.js';
 import { isBotOwner } from '../../config/bot.js';
@@ -38,4 +40,5 @@ export const defaultEnforcement = {
     listActiveNoContactOrders, addNoContactOrder, endNoContactOrder,
     // staff
     listMassActionBlocks, clearMassActionBlock, loadCoverageCounts, getGuildConfig, isBotOwner,
+    staffActivityForWeek, giveStaffWarning, listStaffWarnings, restoreStaffRoles, listRemovedStaffRoles,
 };

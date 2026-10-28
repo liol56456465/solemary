@@ -261,10 +261,14 @@ function modulesTile(moduleStates, checklist) {
  * "Needs you": what waits for an admin, oldest first, each with one button: pending appeals,
  * open tickets, an active raid lockdown, and the next open setup steps.
  */
-function needsYou(o) {
+function needsYou(o, { csrf = '', canEndLockdown = false } = {}) {
     const items = [];
     if (o.lockdown?.active) {
-        items.push(html`<li><span class="kind kind-bad" aria-hidden="true">RL</span><span class="what"><b>Raid lockdown is active</b><small>${o.lockdown.since ? html`Since ${formatDate(o.lockdown.since)}` : 'New members are held at the door'}</small></span><span></span><a class="btn primary small" href="${path('/automod')}">Automod</a></li>`);
+        // Administrators end it right here (POST /automod/lockdown-end, back to the Overview); others get the link.
+        const endButton = canEndLockdown && csrf
+            ? html`<form method="post" action="${path('/automod/lockdown-end')}" class="inline-form" data-confirm="End the raid lockdown? The verification level goes back to what it was and paused invites and DMs resume."><input type="hidden" name="csrf" value="${csrf}"><input type="hidden" name="back" value="overview"><button type="submit" class="btn small danger">End lockdown</button></form>`
+            : html`<a class="btn primary small" href="${path('/automod')}">Automod</a>`;
+        items.push(html`<li><span class="kind kind-bad" aria-hidden="true">RL</span><span class="what"><b>Raid lockdown is active</b><small>${o.lockdown.since ? html`Since ${formatDate(o.lockdown.since)}` : 'New members are held at the door'}</small></span><span></span>${endButton}</li>`);
     }
     for (const appeal of o.pendingList || []) {
         items.push(html`<li><span class="kind kind-appeal" aria-hidden="true">AP</span><span class="what"><b>${appeal.type ? `${appeal.type[0].toUpperCase()}${appeal.type.slice(1)} appeal` : 'Appeal'} from ${appeal.username}</b><small>Case <code>${appeal.case_code}</code>${appeal.name ? ` · ${appeal.name}` : ''}${appeal.is_test ? ' · test case' : ''}</small></span>${timeTag(appeal.created_at)}<a class="btn primary small" href="${path(`/appeals/${encodeURIComponent(appeal.case_code)}`)}">Review<span class="sr"> appeal ${appeal.case_code}</span></a></li>`);
@@ -291,7 +295,7 @@ function card(title, body, { link = null, note = null, className = '' } = {}) {
 }
 
 /** The Overview page (v5) from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
-export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [] }) {
+export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [], editEnabled = false }) {
     const todo = o.checklist.filter((item) => !item.done);
     const pendingText = o.pendingAppeals >= PENDING_APPEALS_CAP ? `${PENDING_APPEALS_CAP}+` : o.pendingAppeals;
     const sanctions = o.activeBans === undefined || o.activeMutes === undefined ? undefined : o.activeBans + o.activeMutes;
@@ -321,7 +325,7 @@ ${metric('Open tickets', o.openTickets, 'waiting for staff')}</div>`;
     const body = html`${head}
 <div class="ov">
 <div class="ov-main">
-${card('Needs you', needsYou(o), { note: waiting ? `${waiting} open` : null, link: { href: path('/appeals'), text: 'Appeals →' }, className: 'needs-you' })}
+${card('Needs you', needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct) }), { note: waiting ? `${waiting} open` : null, link: { href: path('/appeals'), text: 'Appeals →' }, className: 'needs-you' })}
 ${card('Moderation · last 7 days', weekChart(o.week), { link: { href: path('/cases'), text: 'All cases →' } })}
 ${card('Latest actions', recentFeed(o.recent), { link: { href: path('/cases'), text: 'All cases →' } })}
 </div>

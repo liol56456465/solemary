@@ -120,6 +120,10 @@ function makeServices() {
         logEvents: [],
         automod: { enabled: true, mode: 'enforce', ruleModes: {}, channelRules: {}, exemptChannelIds: [TEXT2], trusted: { roleId: null, minLevel: 0 }, secondChance: true, moodAlerts: true, panic: { enabled: true, hours: 2 }, joinGate: {} },
         native: new Map(),
+        lockdown: null,
+        probations: { [MEMBER]: { startedAt: Date.now() - 1000, until: Date.now() + 86400000, caseCode: 'abc234x', how: 'expired' } },
+        reviews: [{ title: 'Excessive caps <b>', url: `https://discord.com/channels/${GUILD}/${TEXT}/700000000000000010`, at: Date.now() - 60000, count: 3 },
+            { title: 'Bad link', url: 'javascript:alert(1)', at: Date.now() - 120000, count: 1 }],
         logging: { enabled: false, channels: { audit: null, applications: null, reports: null }, ignore: { channels: [TEXT2], roles: [], users: [] }, enabledEvents: {} },
         welcome: { enabled: false, channelId: null, welcomeMessage: 'Welcome {user}', welcomePing: false, dmMessage: '', goodbyeEnabled: false, goodbyeChannelId: null, leaveMessage: 'Bye', goodbyePing: false, roleIds: [ROLE_OK], autoRoleDelay: 0, joinLogs: { enabled: false, channelId: null }, leaveLogs: { enabled: false, channelId: null } },
         tickets: { ticketCategoryId: null, ticketClosedCategoryId: null, ticketStaffRoleId: null, maxTicketsPerUser: 3, dmOnClose: true, ticketLogsChannelId: null, ticketTranscriptChannelId: null, ticketPanelMessage: 'Open a ticket', ticketButtonLabel: 'Create Ticket', ticketPanelChannelId: TEXT },
@@ -177,7 +181,22 @@ function makeServices() {
         loadNativePolicies: async () => new Map(s.native),
         setNativePolicy: async (guildId, ruleId, policy, dedupe) => { record('setNativePolicy', [ruleId, policy]); s.native.set(ruleId, { policy, dedupeMinutes: dedupe ?? 10 }); return true; },
         automodStats: async () => ({ total: 0, byGroup: [] }),
-        automodRuleStats: async () => ({}),
+        automodRuleStats: async (guildId, days) => { s.statsDays = days; return {}; },
+        getLockdownState: async () => clone(s.lockdown),
+        endLockdown: async (guild, admin) => {
+            record('endLockdown', [admin]);
+            if (!s.lockdown?.active) return false;
+            s.lockdown = null;
+            return true;
+        },
+        collectOpenReviews: async () => clone(s.reviews),
+        listProbations: async () => Object.entries(s.probations).map(([userId, p]) => ({ userId, ...p })),
+        endProbation: async (guildId, userId) => {
+            record('endProbation', [userId]);
+            const existing = s.probations[userId] || null;
+            delete s.probations[userId];
+            return existing;
+        },
         getLoggingStatus: async () => clone(s.logging),
         setLoggingEnabled: async (c, g, enabled) => { record('setLoggingEnabled', [enabled]); s.logging.enabled = enabled; return true; },
         setLogChannel: async (c, g, dest, id) => { record('setLogChannel', [dest, id]); s.logging.channels[dest] = id; return true; },
@@ -541,6 +560,9 @@ const CASES = {
             bad: { form: { 'gate:avatar': 'ban', 'gate:links': 'off', 'gate:botname': 'off', 'gate:age': 'off', ageDays: '7' }, message: /unknown choice/ } },
         native: { form: { ruleId: NATIVE_RULE, policy: 'warn', dedupeMinutes: '' }, service: 'setNativePolicy', bad: { form: { ruleId: MISSING, policy: 'warn' }, message: /no longer exists/ } },
         channels: { form: { reviewChannelId: TEXT, alertsChannelId: '', extraBlockedWords: 'foo\nBar' }, service: 'updateSettings', bad: { form: { reviewChannelId: CAT, alertsChannelId: '' }, message: /must be a text channel/ } },
+        'lockdown-end': { seed: (s) => { s.lockdown = { active: true, startedAt: '2026-10-28T10:00:00Z', joinerIds: ['1', '2'] }; }, form: {}, service: 'endLockdown', admin: true,
+            bad: { form: {}, message: /no lockdown right now/ } },
+        'probation-end': { form: { user: MEMBER }, service: 'endProbation', admin: true, bad: { form: { user: 'x' }, message: /Discord user ID/ } },
     },
     logging: {
         enabled: { form: { enabled: 'true' }, service: 'setLoggingEnabled', bad: { form: { enabled: 'x' }, message: /on or off/ } },
@@ -1667,4 +1689,100 @@ test('tickets: block from modmail (with reason in the audit); already blocked ch
     assert.equal(again.calls.filter((c) => c.name === 'setModmailBlocked').length, 0);
     assert.equal(again.auditRows.length, 0);
     assert.match((await again.sessions.get(again.session.id)).flash, /already blocked/);
+});
+
+// ── Automod live operations (/automod queue, probation, lockdown-end, stats days) ──
+
+function getWithQuery(h, module, query) {
+    return run(h, h.d.modulePage, { method: 'GET', params: { module }, headers: { cookie: h.cookie }, query });
+}
+
+test('Automod page: review queue links to the cards (escaped, Discord links only), probation list, stats period chips', async () => {
+    const h = await setup();
+    const res = await get(h, 'automod');
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, /Review queue \(2\)/);
+    assert.ok(res.body.includes(`<a href="https://discord.com/channels/${GUILD}/${TEXT}/700000000000000010" rel="noopener noreferrer" target="_blank">Excessive caps &lt;b&gt;</a>`));
+    assert.ok(!res.body.includes('javascript:'), 'a non-Discord URL is never a link');
+    assert.match(res.body, /Probation \(1\)/);
+    assert.ok(res.body.includes('action="/dashboard/automod/probation-end"'));
+    assert.ok(res.body.includes(`name="user" value="${MEMBER}"`));
+    assert.ok(res.body.includes('href="/dashboard/cases/abc234x"'));
+    assert.match(res.body, /No lockdown\./);
+    assert.ok(!res.body.includes('/dashboard/automod/lockdown-end'), 'no End lockdown button without a lockdown');
+    assert.equal(h.state.statsDays, 7, 'default 7 days');
+    assert.match(res.body, /class="chip is-active" href="\/dashboard\/automod\?days=7" aria-current="page"/);
+    for (const [days, expected] of [['1', 1], ['30', 30], ['5', 7], ['abc', 7]]) {
+        const page = await getWithQuery(h, 'automod', { days });
+        assert.equal(page.statusCode, 200);
+        assert.equal(h.state.statsDays, expected, `?days=${days}`);
+        assert.match(page.body, expected === 1 ? /automatic actions in the last day/ : new RegExp(`automatic actions in ${expected} days`));
+    }
+    // A failing read shows "could not be read", never "nothing".
+    h.svc.collectOpenReviews = async () => { throw new Error('discord down'); };
+    h.svc.listProbations = async () => { throw new Error('db down'); };
+    const broken = await get(h, 'automod');
+    assert.equal(broken.statusCode, 200);
+    assert.match(broken.body, /review queue could not be read/);
+    assert.match(broken.body, /Probations could not be read/);
+});
+
+test('Automod lockdown: active → shown first with End lockdown; ending calls endLockdown as the admin; none → 400; owner without Administrator → 403', async () => {
+    const h = await setup();
+    h.state.lockdown = { active: true, startedAt: '2026-10-28T10:00:00Z', joinerIds: ['1', '2', '3'] };
+    const page = await get(h, 'automod');
+    assert.match(page.body, /A raid lockdown is active<\/b> since 2026-10-28 10:00 UTC, 3 raid joiners/);
+    assert.ok(page.body.indexOf('/dashboard/automod/lockdown-end') < page.body.indexOf('action="/dashboard/automod/mode"'), 'before the settings while active');
+    const res = await post(h, 'automod', 'lockdown-end', {});
+    assert.equal(res.statusCode, 303);
+    const [call] = h.calls.filter((c) => c.name === 'endLockdown');
+    assert.equal(call.args[0].id, ADMIN);
+    assert.equal(h.auditRows[0].key, 'lockdown');
+    assert.equal(h.auditRows[0].new, null);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Lockdown ended/);
+    // Nothing left to end: refused, endLockdown not called again.
+    const again = await post(h, 'automod', 'lockdown-end', {});
+    assert.equal(again.statusCode, 400);
+    assert.match(again.body, /There is no lockdown right now/);
+    assert.equal(h.calls.filter((c) => c.name === 'endLockdown').length, 1);
+    // From the Overview: back=overview returns there.
+    h.state.lockdown = { active: true, startedAt: '2026-10-28T10:00:00Z', joinerIds: [] };
+    const fromOverview = await post(h, 'automod', 'lockdown-end', { back: 'overview' });
+    assert.equal(fromOverview.redirectedTo, '/dashboard/overview');
+    // OWNER_IDS without Administrator: the button is disabled and the POST refused.
+    const owner = await setup({ userId: OWNER });
+    owner.state.lockdown = { active: true, startedAt: '2026-10-28T10:00:00Z', joinerIds: [] };
+    const ownerPage = await get(owner, 'automod');
+    assert.match(ownerPage.body, /Ending a lockdown needs Administrator/);
+    assert.equal((await post(owner, 'automod', 'lockdown-end', {})).statusCode, 403);
+    assert.equal(owner.calls.length, 0);
+});
+
+test('Automod probation end: ends it early (audited); a member not on probation → 400', async () => {
+    const h = await setup();
+    const res = await post(h, 'automod', 'probation-end', { user: MEMBER });
+    assert.equal(res.statusCode, 303);
+    assert.equal(h.auditRows[0].key, `probation:${MEMBER}`);
+    assert.equal(h.auditRows[0].old.caseCode, 'abc234x');
+    assert.match((await h.sessions.get(h.session.id)).flash, /Probation for .* ended early/);
+    const again = await post(h, 'automod', 'probation-end', { user: MEMBER });
+    assert.equal(again.statusCode, 400);
+    assert.match(again.body, /not on probation/);
+    assert.equal(h.auditRows.length, 1);
+    const owner = await setup({ userId: OWNER });
+    assert.equal((await post(owner, 'automod', 'probation-end', { user: MEMBER })).statusCode, 403);
+});
+
+test('Overview "Needs you": an active lockdown gets an End lockdown form for admins (back to the Overview), a link otherwise', async () => {
+    const { overviewPage } = await import('../src/services/dashboard/overview.js');
+    const o = { checklist: [], bot: { ready: true, ping: null }, database: null, guild: null, recent: [], lockdown: { active: true, since: '2026-10-28T10:00:00Z' } };
+    const admin = String(overviewPage({ session: { username: 'a', csrf: 'tok' }, access: { canAct: true }, overview: o, editEnabled: true }));
+    assert.match(admin, /<form method="post" action="\/dashboard\/automod\/lockdown-end" class="inline-form" data-confirm="[^"]+"><input type="hidden" name="csrf" value="tok"><input type="hidden" name="back" value="overview"><button type="submit" class="btn small danger">End lockdown<\/button><\/form>/);
+    for (const page of [
+        overviewPage({ session: { username: 'a', csrf: 'tok' }, access: { canAct: false }, overview: o, editEnabled: true }),
+        overviewPage({ session: { username: 'a', csrf: 'tok' }, access: { canAct: true }, overview: o, editEnabled: false }),
+    ]) {
+        assert.ok(!String(page).includes('lockdown-end'));
+        assert.match(String(page), /<a class="btn primary small" href="\/dashboard\/automod">Automod<\/a>/);
+    }
 });
