@@ -5,7 +5,8 @@
 // changes how the page behaves in the browser.
 //
 //   select[data-search]     a filter box above long channel / role lists
-//   form[data-confirm]      asks before a destructive submit
+//   form[data-confirm]      asks before a destructive submit (a <dialog>; red confirm for danger buttons)
+//   form submit             the button shows "Saving…" (aria-busy) and cannot be pressed twice
 //   form[data-dirty]        warns before leaving the page with unsaved changes
 //   [data-copy]             a copy-to-clipboard button (case codes)
 //   time[data-relative]     "in 3 h" / "5 min ago" (the UTC time stays in the tooltip)
@@ -62,23 +63,89 @@
     }
 
     // ── Confirm before destructive submits ───────────────────────────────
+    // A <dialog> titled with the form's own question (data-confirm, plus an optional
+    // data-confirm-detail line); the confirm button repeats the action ("Delete panel")
+    // and is red when the form's button is a danger button. Cancel has
+    // the focus, so Enter or Escape never confirms by accident.
+    function askConfirm(form, submitter) {
+        const button = submitter || form.querySelector('button[type="submit"]');
+        const action = button?.textContent.trim() || 'Continue';
+        if (typeof HTMLDialogElement !== 'function') return Promise.resolve(window.confirm(form.dataset.confirm));
+        return new Promise((resolve) => {
+            const dialog = document.createElement('dialog');
+            dialog.className = 'confirm-dialog';
+            dialog.setAttribute('aria-labelledby', 'confirm-title');
+            if (form.dataset.confirmDetail) dialog.setAttribute('aria-describedby', 'confirm-text');
+            const body = document.createElement('div');
+            body.className = 'confirm-body';
+            // The form's own question names the thing and the action ("Delete the tag “rules”?").
+            const title = document.createElement('h2');
+            title.id = 'confirm-title';
+            title.textContent = form.dataset.confirm;
+            body.append(title);
+            if (form.dataset.confirmDetail) {
+                const text = document.createElement('p');
+                text.id = 'confirm-text';
+                text.textContent = form.dataset.confirmDetail;
+                body.append(text);
+            }
+            const actions = document.createElement('div');
+            actions.className = 'confirm-actions';
+            const cancel = document.createElement('button');
+            cancel.type = 'button';
+            cancel.className = 'secondary';
+            cancel.textContent = 'Cancel';
+            const ok = document.createElement('button');
+            ok.type = 'button';
+            ok.className = button?.classList.contains('danger') ? 'danger is-filled' : 'primary';
+            ok.textContent = action;
+            actions.append(cancel, ok);
+            dialog.append(body, actions);
+            document.body.appendChild(dialog);
+            let answer = false;
+            cancel.addEventListener('click', () => dialog.close());
+            ok.addEventListener('click', () => { answer = true; dialog.close(); });
+            dialog.addEventListener('close', () => {
+                dialog.remove();
+                if (!answer) button?.focus();
+                resolve(answer);
+            });
+            dialog.showModal();
+            cancel.focus();
+        });
+    }
+
     document.addEventListener('submit', (event) => {
         const form = event.target;
         if (!(form instanceof HTMLFormElement)) return;
-        const message = form.dataset.confirm;
-        if (message && !window.confirm(message)) {
+        if (form.dataset.confirm && form.dataset.confirmed !== '1') {
             event.preventDefault();
+            const submitter = event.submitter;
+            askConfirm(form, submitter).then((yes) => {
+                if (!yes) return;
+                form.dataset.confirmed = '1';
+                if (typeof form.requestSubmit === 'function') form.requestSubmit(submitter || undefined);
+                else form.submit();
+            });
             return;
         }
+        delete form.dataset.confirmed;
         form.dataset.submitting = '1';
-        const button = form.querySelector('button[type="submit"]');
+        const button = event.submitter || form.querySelector('button[type="submit"]');
         if (button) {
-            // Avoid double submits; re-enabled if the user comes back (bfcache).
+            // Loading state, and no double submits; undone if the user comes back (bfcache).
+            button.dataset.label = button.textContent;
+            button.setAttribute('aria-busy', 'true');
+            if (/^save/i.test(button.textContent.trim())) button.textContent = 'Saving…';
             window.setTimeout(() => { button.disabled = true; }, 0);
         }
     }, true);
 
     window.addEventListener('pageshow', () => {
+        for (const button of document.querySelectorAll('button[aria-busy="true"]')) {
+            button.removeAttribute('aria-busy');
+            if (button.dataset.label) button.textContent = button.dataset.label;
+        }
         for (const button of document.querySelectorAll('button[type="submit"][disabled]')) {
             if (!button.closest('fieldset[disabled]')) button.disabled = false;
         }
@@ -271,7 +338,7 @@
             close.addEventListener('click', dismiss);
             flash.appendChild(close);
             stack.appendChild(flash);
-            let timer = window.setTimeout(dismiss, 6000);
+            let timer = window.setTimeout(dismiss, 4000);
             // Hovering or focusing keeps it open.
             flash.addEventListener('mouseenter', () => window.clearTimeout(timer));
             flash.addEventListener('focusin', () => window.clearTimeout(timer));

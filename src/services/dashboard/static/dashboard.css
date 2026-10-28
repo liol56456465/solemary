@@ -317,9 +317,10 @@ details.sub > :not(summary), details.action > :not(summary) { margin: 12px; }
 .state-warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
 .state-bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
 .tag { font-weight: 500; }
-.type-ban, .type-kick { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
-.type-mute, .type-warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
-.type-unban, .type-unmute { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+/* Action badges: neutral outline with an icon; red only for Ban. */
+.type { height: 22px; background: transparent; color: var(--text); border-color: var(--border-strong); font-weight: 500; }
+.type .icon { width: 13px; height: 13px; vertical-align: 0; }
+.type-ban { color: var(--red); border-color: var(--red); }
 
 /* ── Notices, flash, errors, toasts ───────────────────────────────────── */
 .notice, .flash, .error, .warnings {
@@ -335,6 +336,9 @@ details.sub > :not(summary), details.action > :not(summary) { margin: 12px; }
 .error::before { background: var(--bad); }
 .warnings { display: block; padding-left: 32px; color: var(--warn); background: var(--warn-soft); border-color: transparent; }
 .field-warn { display: block; font-size: 12px; color: var(--warn); }
+/* A field with an error: red border, the message under it (linked with aria-describedby). */
+input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--red); }
+.field-error { display: block; font-size: 12px; font-weight: 500; color: var(--red); }
 
 /* With the script, the flash becomes a toast in the corner (dashboard.js). */
 .toast-stack { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: grid; gap: 8px; max-width: min(420px, calc(100vw - 32px)); }
@@ -420,7 +424,7 @@ details.sub > :not(summary), details.action > :not(summary) { margin: 12px; }
     border: 1px solid var(--line-strong); color: var(--fg-2); font-size: 13px; font-weight: 500; background: var(--raised);
 }
 .chip:hover { color: var(--fg); border-color: var(--fg-2); text-decoration: none; }
-.chip.is-active { background: var(--fg); border-color: var(--fg); color: var(--raised); }
+.chip.is-active { background: var(--purple-soft); border-color: var(--purple); color: var(--purple); }
 .chip-count { font-variant-numeric: tabular-nums; opacity: 0.75; }
 .toolbar-search input { width: min(280px, 100%); }
 
@@ -471,7 +475,20 @@ progress { flex: 1; max-width: 360px; height: 8px; appearance: none; border: 0; 
 progress::-webkit-progress-bar { background: var(--surface-2); border-radius: 999px; }
 progress::-webkit-progress-value { background: var(--ok); border-radius: 999px; }
 progress::-moz-progress-bar { background: var(--ok); border-radius: 999px; }
-.empty { padding: 20px; text-align: center; color: var(--fg-2); border: 1px dashed var(--line-strong); border-radius: var(--radius-sm); }
+/* Empty state: one sentence and at most one action, no illustration. */
+.empty { padding: 24px; text-align: center; color: var(--fg-2); border: 1px dashed var(--line-strong); border-radius: var(--radius-sm); }
+.empty a, .empty .button-link { margin-left: 4px; }
+
+/* Confirmation dialog (the script replaces data-confirm prompts with it). */
+dialog.confirm-dialog {
+    width: min(440px, calc(100vw - 32px)); padding: 0; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--raised); color: var(--text); box-shadow: var(--shadow-pop);
+}
+dialog.confirm-dialog::backdrop { background: var(--scrim); }
+.confirm-body { padding: 24px 24px 16px; }
+.confirm-body h2 { margin: 0 0 8px; font-size: 16px; }
+.confirm-body p { margin: 0; color: var(--text-muted); }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 24px; border-top: 1px solid var(--border); background: var(--surface); border-radius: 0 0 var(--radius) var(--radius); }
 
 /* ── Tables ───────────────────────────────────────────────────────────── */
 .scroll, .table-wrap { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--raised); }
@@ -576,11 +593,16 @@ button {
 button:hover { background: var(--surface-2); border-color: var(--fg-2); }
 button:active { transform: translateY(0.5px); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Loading: the script sets aria-busy while a form is being sent ("Saving…"). */
+button[aria-busy="true"] { opacity: 0.7; cursor: progress; }
+button.ghost { background: transparent; border-color: transparent; color: var(--text); }
+button.ghost:hover { background: var(--surface); border-color: transparent; }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 button.secondary { background: var(--raised); }
-button.danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); background: var(--raised); }
-button.danger:hover { background: var(--bad); border-color: var(--bad); color: #fff; }
+button.danger { color: var(--red); border-color: var(--red); background: var(--raised); }
+/* Filled red: text in the page colour (white in light, near-black in dark; both >= 4.5:1). */
+button.danger:hover, button.danger.is-filled { background: var(--red); border-color: var(--red); color: var(--bg); }
 .inline-form button, .row-actions button { height: 32px; padding: 0 12px; font-size: 13px; }
 button.copy { height: 24px; padding: 0 8px; margin-left: 8px; font-size: 12px; vertical-align: middle; }
 

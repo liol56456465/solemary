@@ -35,6 +35,7 @@ const PAIRS = [
     ['green', 'bg', TEXT], ['green', 'surface', TEXT], ['green', 'raised', TEXT], ['green', 'green-soft', TEXT],
     ['red', 'bg', TEXT], ['red', 'surface', TEXT], ['red', 'raised', TEXT], ['red', 'red-soft', TEXT],
     ['amber', 'bg', TEXT], ['amber', 'surface', TEXT], ['amber', 'raised', TEXT], ['amber', 'amber-soft', TEXT],
+    ['bg', 'red', TEXT], // filled danger button
     ['on-green', 'green', UI],
     ['border-strong', 'bg', UI], ['border-strong', 'surface', UI], ['border-strong', 'raised', UI],
 ];
