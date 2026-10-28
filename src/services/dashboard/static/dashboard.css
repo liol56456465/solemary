@@ -351,19 +351,19 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 
 /* ── Stats and module grid (Overview) ─────────────────────────────────── */
 /* One row of equal tiles on wide screens (7), 4 on tablets, 2 on phones (an odd last tile spans both). */
-.stats { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.stats { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; margin: 0 0 24px; padding: 0; list-style: none; }
 .stat {
-    position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 12px 14px;
+    position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 16px;
     background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
 }
 .stat .label { font-size: 12px; font-weight: 500; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stat .value { font-size: 20px; line-height: 1.4; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.stat .value.has-dot { display: flex; align-items: center; gap: 8px; font-size: 15px; line-height: 28px; }
+.stat .value { font-size: 24px; line-height: 32px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stat .value.has-dot { display: flex; align-items: center; gap: 8px; font-size: 16px; }
 .stat .note { font-size: 12px; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dot-warn { background: var(--warn); }
 .dot-bad { background: var(--bad); }
-@media (max-width: 1180px) { .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-@media (max-width: 600px) {
+@media (max-width: 1279px) { .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 639px) {
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .stats > .stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
@@ -465,11 +465,15 @@ body.has-save-bar main { padding-bottom: 96px; }
 body.has-save-bar .toast-stack { bottom: 84px; }
 
 .checklist { list-style: none; margin: 0; padding: 0; }
-.checklist li { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.checklist li { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.checklist-text { flex: 1; min-width: 0; }
+.checklist-state { font-size: 12px; color: var(--fg-2); }
+.setup-link { flex: none; font-weight: 500; }
+.check-icon.ok { color: var(--green); }
 .checklist li:last-child { border-bottom: 0; }
 .check-icon { width: 20px; height: 20px; margin-top: 1px; }
 .checklist-hint { display: block; font-size: 13px; color: var(--fg-2); }
-.checklist li.is-done a { color: var(--fg-2); }
+.checklist li.is-done .checklist-text { color: var(--fg-2); }
 .progress-row { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; }
 progress { flex: 1; max-width: 360px; height: 8px; appearance: none; border: 0; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 progress::-webkit-progress-bar { background: var(--surface-2); border-radius: 999px; }

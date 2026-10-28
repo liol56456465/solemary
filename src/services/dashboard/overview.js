@@ -11,11 +11,10 @@ import { searchCaseRecords } from '../enforcement/caseSearchService.js';
 import { findMutedRole } from '../enforcement/muteService.js';
 import { formatDuration } from '../enforcement/format.js';
 import { query, T } from '../enforcement/db.js';
-import { openCards } from '../automod/reviewRegistry.js';
 import { getLockdownState } from '../automod/raidService.js';
 import { SETTINGS } from '../settings/settingsRegistry.js';
 import { getSetting, guildIdFor, settingSource } from '../settings/guildSettings.js';
-import { formatDate, html, icon, layout, navItems, path, raw, timeTag } from './html.js';
+import { formatDate, html, icon, layout, navItems, path, raw, timeTag, typeBadge } from './html.js';
 import { moduleEntries } from './modulesPage.js';
 import { valueText } from './audit.js';
 
@@ -27,11 +26,26 @@ async function countOpenTickets(guildId) {
     return Number(row?.count || 0);
 }
 
+/**
+ * Active bans and mutes (same rule as case search's "active": not voided, not expired, not
+ * a /test case): { ban, mute }.
+ */
+async function countActiveSanctions(guildId) {
+    const { rows } = await query(
+        `SELECT type, COUNT(*)::int AS count FROM ${T.cases}
+         WHERE guild_id = $1 AND type IN ('ban', 'mute') AND status IN ('active', 'appeal_pending')
+           AND voided_at IS NULL AND is_test = FALSE AND (expires_at IS NULL OR expires_at > NOW())
+         GROUP BY type`, [guildId]);
+    const counts = { ban: 0, mute: 0 };
+    for (const row of rows) counts[row.type] = Number(row.count || 0);
+    return counts;
+}
+
 export const defaultOverviewData = {
     countOpenTickets,
+    countActiveSanctions,
     listPendingAppeals,
     searchCaseRecords,
-    openCards,
     getLockdownState,
     findMutedRole,
     getGuildConfig: (client, guildId) => getGuildConfig(client, guildId),
@@ -114,16 +128,16 @@ export async function collectChecklist({ client, guildId, data = defaultOverview
 export async function collectOverview({ client, guildId, data = defaultOverviewData, now = Date.now() }) {
     const guild = client.guilds?.cache?.get(guildId) || null;
     const dbStatus = client.db?.getStatus?.() || null;
-    const [config, welcome, openTickets, pending, recent, lockdown, mutedRole] = await Promise.all([
+    const [config, welcome, openTickets, sanctions, pending, recent, lockdown, mutedRole] = await Promise.all([
         attempt(() => data.getGuildConfig(client, guildId)),
         attempt(() => data.getWelcomeConfig(client, guildId)),
         attempt(() => data.countOpenTickets(guildId)),
+        attempt(() => data.countActiveSanctions(guildId)),
         attempt(() => data.listPendingAppeals(PENDING_APPEALS_CAP, guildId)),
         attempt(() => data.searchCaseRecords(guildId, {}, { page: 0, pageSize: 10 })),
         attempt(() => data.getLockdownState(guildId)),
         attempt(() => (guild ? data.findMutedRole(guild) : null)),
     ]);
-    const cards = await attempt(() => data.openCards({ includeCompact: true }).filter((card) => !card.guildId || card.guildId === guildId));
     const presences = guild?.presences?.cache;
     const online = presences && presences.size > 0
         ? [...presences.values()].filter((p) => p.status && p.status !== 'offline').length
@@ -135,8 +149,9 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
         database: dbStatus ? { connected: dbStatus.connectionType !== 'none' && !dbStatus.isDegraded, type: dbStatus.connectionType, degraded: Boolean(dbStatus.isDegraded) } : null,
         guild: guild ? { name: guild.name, memberCount: guild.memberCount ?? null, online } : null,
         openTickets,
+        activeBans: sanctions?.ban,
+        activeMutes: sanctions?.mute,
         pendingAppeals: pending === undefined ? undefined : pending.length,
-        openReviewCards: cards === undefined ? undefined : cards.length,
         lockdown: lockdown === undefined ? undefined : { active: Boolean(lockdown?.active), since: lockdown?.startedAt || lockdown?.since || null },
         recent: recent?.rows,
         checklist: gettingStarted({ config, welcome, settings, mutedRole }),
@@ -181,27 +196,30 @@ function recentChangesSection(rows) {
 export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [] }) {
     const todo = o.checklist.filter((item) => !item.done);
     const pendingText = o.pendingAppeals >= PENDING_APPEALS_CAP ? `${PENDING_APPEALS_CAP}+` : o.pendingAppeals;
-    const lockdown = o.lockdown === undefined ? html`<span class="muted">Unavailable</span>` : o.lockdown.active ? 'Active' : 'Off';
-    // One row of equal tiles: short labels, a status dot where the value is a state.
+    // One row of equal tiles: short labels, big tabular numbers, a status dot + word for states.
     const stats = html`<ul class="stats">
-${stat('Bot', o.bot.ready ? 'Online' : 'Offline', { dot: o.bot.ready ? 'on' : 'bad', note: o.bot.ping !== null ? `${o.bot.ping} ms ping` : '' })}
-${stat('Database', o.database ? (o.database.connected ? 'Connected' : 'Degraded') : html`<span class="muted">Unknown</span>`, { dot: o.database ? (o.database.connected ? 'on' : 'bad') : 'off', note: o.database?.type || '' })}
 ${stat('Members', o.guild?.memberCount ?? '—', { note: o.guild?.online != null ? `${o.guild.online} online` : '' })}
 ${stat('Open tickets', show(o.openTickets))}
-${stat('Appeals', show(o.pendingAppeals, html`<a href="${path('/appeals')}">${pendingText}</a>`), { dot: o.pendingAppeals > 0 ? 'warn' : '', note: 'pending', title: 'Pending appeals' })}
-${stat('Review cards', show(o.openReviewCards), { note: 'since restart', title: 'Open automod review cards' })}
-${stat('Lockdown', lockdown, { dot: o.lockdown?.active ? 'bad' : o.lockdown ? 'off' : '', note: o.lockdown?.active && o.lockdown.since ? `since ${formatDate(o.lockdown.since)}` : '', title: 'Raid lockdown' })}
-</ul>`;
+${stat('Pending appeals', show(o.pendingAppeals, html`<a href="${path('/appeals')}">${pendingText}</a>`), { dot: o.pendingAppeals > 0 ? 'warn' : '' })}
+${stat('Active bans', show(o.activeBans))}
+${stat('Active mutes', show(o.activeMutes))}
+${stat('Bot', o.bot.ready ? 'Online' : 'Offline', { dot: o.bot.ready ? 'on' : 'bad', note: o.bot.ping !== null ? `${o.bot.ping} ms ping` : '' })}
+${stat('Database', o.database ? (o.database.connected ? 'Connected' : 'Degraded') : html`<span class="muted">Unknown</span>`, { dot: o.database ? (o.database.connected ? 'on' : 'bad') : 'off', note: o.database?.type || '' })}
+</ul>
+${o.lockdown?.active ? html`<p class="error" role="alert">Raid lockdown is active${o.lockdown.since ? html` since ${formatDate(o.lockdown.since)}` : ''}. <a href="${path('/automod')}">Automod settings</a></p>` : ''}`;
     // Open items first; a check icon for done ones (the word is there for screen readers).
     const doneCount = o.checklist.length - todo.length;
     const ordered = [...todo, ...o.checklist.filter((item) => item.done)];
     const checklist = html`<div class="progress-row"><progress value="${doneCount}" max="${o.checklist.length || 1}" aria-label="Setup progress"></progress><span class="muted">${doneCount} of ${o.checklist.length} done</span></div>
 <ul class="checklist">${ordered.map((item) => html`<li class="${item.done ? 'is-done' : ''}">${icon(item.done ? 'check' : 'circle', `icon check-icon ${item.done ? 'ok' : 'muted'}`)}<span class="sr">${item.done ? 'done' : 'to do'}:</span>
-<span><a href="${item.href}">${item.label}</a>${item.done ? '' : html`<span class="checklist-hint">${item.hint}</span>`}</span></li>`)}</ul>`;
-    const recent = o.recent === undefined ? html`<p class="muted">Unavailable (database).</p>` : o.recent.length ? html`<div class="table-wrap"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Moderator</th><th>Reason</th><th>When</th></tr></thead><tbody>
-${o.recent.map((row) => html`<tr><td><a href="${path(`/cases/${encodeURIComponent(row.case_code)}`)}"><code>${row.case_code}</code></a></td><td><span class="type type-${row.type}">${row.type}</span>${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.target_username} <span class="muted">${row.target_user_id}</span></td><td>${row.moderator_username}</td><td class="clip">${row.reason}</td><td class="nowrap">${timeTag(row.created_at)}</td></tr>`)}
-</tbody></table></div><p class="card-foot"><a href="${path('/cases')}">All cases</a></p>` : html`<p class="empty">No cases yet.</p>`;
-    const body = html`<div class="page-head"><h1>Overview</h1>${o.guild ? html`<p class="muted">${o.guild.name}</p>` : ''}</div>
+<span class="checklist-text">${item.label}${item.done ? '' : html`<span class="checklist-hint">${item.hint}</span>`}</span>${item.done
+        ? html`<span class="checklist-state">Done</span>`
+        : html`<a class="setup-link" href="${item.href}">Set up<span class="sr"> ${item.label}</span></a>`}</li>`)}</ul>`;
+    // Compact: when, action badge, member, moderator, case code.
+    const recent = o.recent === undefined ? html`<p class="error" role="alert">Recent actions could not be loaded (database). Reload the page to try again.</p>` : o.recent.length ? html`<div class="table-wrap"><table class="compact"><thead><tr><th>When</th><th>Action</th><th>Member</th><th>Moderator</th><th>Case</th></tr></thead><tbody>
+${o.recent.map((row) => html`<tr><td class="nowrap muted">${timeTag(row.created_at)}</td><td>${typeBadge(row.type)}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.target_username}</td><td>${row.moderator_username}</td><td><a href="${path(`/cases/${encodeURIComponent(row.case_code)}`)}"><code>${row.case_code}</code></a></td></tr>`)}
+</tbody></table></div><p class="card-foot"><a href="${path('/cases')}">All cases</a></p>` : html`<p class="empty">No enforcement actions yet. They show up here after the first warn, mute, kick or ban.</p>`;
+    const body = html`<div class="page-head"><h1>Overview</h1><p class="muted">Server health, what still needs setting up, and the latest moderation actions.</p></div>
 ${stats}
 <details class="card section" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>Getting started${todo.length ? html` <span class="count">${todo.length} to do</span>` : html` <span class="state state-on">all set</span>`}</h2></summary><div class="section-body">${checklist}</div></details>
 <section class="card"><h2>Recent enforcement actions</h2>${recent}</section>

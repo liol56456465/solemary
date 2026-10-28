@@ -94,6 +94,14 @@ export const JS_PATH = `${BASE}/static/dashboard.js?v=${assetVersion('dashboard.
 export function path(suffix = '') {
     return `${BASE}${suffix}`;
 }
+const ACTION_ICON = { ban: 'nocontact', kick: 'kick', mute: 'mute', warn: 'warn' };
+
+/** An enforcement action badge: neutral outline + icon + the word; red only for ban. */
+export function typeBadge(type) {
+    const name = String(type || '');
+    return html`<span class="type type-${name}">${ACTION_ICON[name] ? icon(ACTION_ICON[name]) : ''}${name ? name[0].toUpperCase() + name.slice(1) : ''}</span>`;
+}
+
 /** A decorative line icon from the sprite (icons.js); labels are always next to it. */
 export function icon(name, className = 'icon') {
     return html`<svg class="${className}" aria-hidden="true" focusable="false"><use href="#i-${hasIcon(name) ? name : 'overview'}"></use></svg>`;

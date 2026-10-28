@@ -268,7 +268,7 @@ const OVERVIEW_DATA = {
     countOpenTickets: async () => 2,
     listPendingAppeals: async () => [{}, {}, {}],
     searchCaseRecords: async () => ({ rows: [], total: 0 }),
-    openCards: () => [{ guildId: GUILD }, { guildId: 'other' }],
+    countActiveSanctions: async (guildId) => { assert.equal(guildId, GUILD); return { ban: 4, mute: 1 }; },
     getLockdownState: async () => ({ active: false }),
     findMutedRole: async () => null,
 };
@@ -471,7 +471,10 @@ test('overview: status, counts, checklist and recent actions; read-only', async 
     assert.match(res.body, /42 ms ping/);
     assert.match(res.body, /Open tickets<\/span><span class="value">2</);
     assert.match(res.body, />3<\/a>/, 'pending appeals of the main guild');
-    assert.match(res.body, /Review cards<span class="sr"> \(Open automod review cards\)<\/span><\/span><span class="value">1</, 'cards of other guilds are not counted');
+    assert.match(res.body, /Active bans<\/span><span class="value">4</);
+    assert.match(res.body, /Active mutes<\/span><span class="value">1</);
+    assert.match(res.body, /<a class="setup-link" href="\/dashboard\/automod">Set up<span class="sr"> Automod review channel<\/span><\/a>/);
+    assert.match(res.body, /<span class="type type-ban"><svg class="icon"[^>]*><use href="#i-nocontact"><\/use><\/svg>Ban<\/span>/, 'action badge with an icon');
     assert.match(res.body, /Getting started/);
     assert.match(res.body, /Mod log channel/);
     assert.match(res.body, /&lt;t&gt;/);
@@ -485,9 +488,10 @@ test('overview survives failing sources (shows unavailable)', async () => {
     const o = await collectOverview({
         client: { guilds: { cache: new Map() }, isReady: () => false },
         guildId: GUILD,
-        data: { ...OVERVIEW_DATA, countOpenTickets: boom, listPendingAppeals: boom, searchCaseRecords: boom, getLockdownState: boom, getGuildConfig: boom, openCards: () => { throw new Error('x'); } },
+        data: { ...OVERVIEW_DATA, countOpenTickets: boom, listPendingAppeals: boom, searchCaseRecords: boom, getLockdownState: boom, getGuildConfig: boom, countActiveSanctions: boom },
     });
     assert.equal(o.openTickets, undefined);
+    assert.equal(o.activeBans, undefined);
     assert.equal(o.recent, undefined);
     const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
     assert.match(page, /unavailable/);
