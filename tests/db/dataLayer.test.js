@@ -411,3 +411,29 @@ test('leaderboard: one ordered page from user_levels, absolute ranks', { skip },
     assert.deepEqual(second.map(e => [e.userId, e.rank]), [[user(1), 3], [user(5), 4]]);
     assert.equal((await getLeaderboard(fakeClient, guildB, 2, 4)).length, 0, 'zero-XP rows are not ranked');
 });
+
+test('Banned page: activeBanCases keeps only open, real, unexpired ban cases; the newest per member', { skip }, async () => {
+    const { activeBanCases } = await import('../../src/services/dashboard/bansData.js');
+    const code = (n) => `B${runId.slice(-5)}${n}`.slice(0, 7);
+    const ins = (n, target, extra = '') => pgDb.pool.query(
+        `INSERT INTO mod_cases (guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username, type, name, reason, prebuilt_or_custom, status, created_at${extra ? `, ${extra.split('=')[0]}` : ''})
+         VALUES ($1, $2, $3, 'x', '1', 'mod', 'ban', $2, 'r', 'custom', $4, $5${extra ? `, ${extra.split('=')[1]}` : ''})`,
+        [guildA, code(n), target, n === 5 ? 'appeal_pending' : n === 6 ? 'revoked' : 'active', new Date(Date.now() - (10 - n) * 60000)]);
+    try {
+        await ins(1, user(960));                                  // older case of the same member
+        await ins(2, user(960));                                  // newest → kept
+        await ins(3, user(961), 'voided_at=NOW()');               // voided → out
+        await ins(4, user(962), "expires_at=NOW() - INTERVAL '1 hour'"); // expired → out
+        await ins(5, user(963));                                  // appeal pending → kept
+        await ins(6, user(964));                                  // revoked → out
+        await ins(7, user(965), 'is_test=TRUE');                  // /test case → out
+        const map = await activeBanCases(guildA);
+        const mine = new Set([960, 961, 962, 963, 964, 965].map(user));
+        assert.deepEqual([...map.keys()].filter((id) => mine.has(id)).sort(), [user(960), user(963)].sort());
+        assert.equal(map.get(user(960)).case_code, code(2), 'newest case per member');
+        assert.equal(map.get(user(963)).status, 'appeal_pending');
+        assert.equal((await activeBanCases(guildB)).has(user(960)), false, 'other servers not mixed in');
+    } finally {
+        await pgDb.pool.query('DELETE FROM mod_cases WHERE guild_id = $1 AND case_code LIKE $2', [guildA, `B${runId.slice(-5)}%`]);
+    }
+});

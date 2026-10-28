@@ -117,6 +117,7 @@ export const NAV = [
     { group: 'Moderate', items: [
         { key: 'overview', label: 'Overview' },
         { key: 'users', label: 'Members' },
+        { key: 'bans', label: 'Banned' },
         { key: 'cases', label: 'Cases' },
         { key: 'appeals', label: 'Appeals' },
         { key: 'nocontact', label: 'No-contact' },

@@ -43,13 +43,14 @@ import { InputError, multiline, plainText, queryText, text } from './forms.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS, listMembers } from './membersData.js';
 import { NICKNAME_MAX, REASON_MAX, TIMEOUTS, assignableRoles, auditReason, roleProblem, targetProblem } from './memberActions.js';
 import { BULK_ACTIONS, BULK_LIMIT, createJobStore, planBulk } from './bulkActions.js';
+import { BAN_FILTERS, listBans } from './bansData.js';
 import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
 import { html, path, queryString } from './html.js';
 import { isSnowflake } from './security.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
 import { evidenceFileName, sniffImage } from './multipart.js';
 import {
-    actionConfirmPage, activitySection, appealConfirmPage, appealDetailPage, blocksSection, disciplineSection, bulkJobPage, bulkPreviewPage, membersPage, coverageSection, noContactPage, userPage,
+    actionConfirmPage, activitySection, appealConfirmPage, appealDetailPage, blocksSection, disciplineSection, bansPage, bulkJobPage, bulkPreviewPage, membersPage, coverageSection, noContactPage, userPage,
 } from './enforcementPages.js';
 
 const SEARCH_LIMIT = 25;
@@ -233,6 +234,34 @@ export function createEnforcementHandlers(core) {
     }
 
     /** GET /dashboard/users: the Members list (filters in the query); an ID opens that member. */
+    /** GET /dashboard/bans: everyone banned in the main server, with their case; ?q=&filter=&page= */
+    async function bans(req, res) {
+        const guild = guildOf();
+        const filters = { q: queryText(req.query, 'q', 40), filter: Object.hasOwn(BAN_FILTERS, queryText(req.query, 'filter', 12)) ? queryText(req.query, 'filter', 12) : '' };
+        const page = Math.max(0, Number.parseInt(queryText(req.query, 'page', 6), 10) || 0);
+        let list = null;
+        let error = null;
+        if (!guild) {
+            error = 'The bot cannot see the main server right now. Try again in a moment.';
+        } else {
+            try {
+                const [banned, cases] = await Promise.all([
+                    guild.bans.fetch({ limit: 1000 }).then((c) => [...c.values()]),
+                    e.activeBanCases(guildId),
+                ]);
+                const plain = banned.map((b) => ({
+                    reason: b.reason || null,
+                    user: { id: b.user.id, username: b.user.username, globalName: b.user.globalName || null, avatarUrl: typeof b.user.displayAvatarURL === 'function' ? b.user.displayAvatarURL({ size: 64 }) : null },
+                }));
+                list = listBans(plain, cases, { ...filters, page });
+            } catch (err) {
+                logger.warn(`Dashboard bans list failed: ${err.message}`);
+                error = 'The ban list could not be loaded (Discord or the database did not answer). Reload the page to try again.';
+            }
+        }
+        return sendHtml(res, error && !list ? 503 : 200, bansPage({ ...shellOf(req), list, filters, error, canAct: req.dashboard.access.canAct }));
+    }
+
     async function users(req, res) {
         const filters = {
             q: queryText(req.query, 'q', 40), role: queryText(req.query, 'role', 20), joined: queryText(req.query, 'joined', 5),
@@ -919,7 +948,7 @@ export function createEnforcementHandlers(core) {
     }, { rerender: rerenderStaff, need: 'owner' });
 
     return {
-        users, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, unverify, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
+        users, bans, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, unverify, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
         caseEdit, caseVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd,

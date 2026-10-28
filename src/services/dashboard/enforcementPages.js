@@ -15,6 +15,7 @@ import { WEEKDAYS, intensityLevel, slotLabel } from '../staffCoverageService.js'
 import { formatAge, formatDate, html, icon, layout, path, queryString, raw, section, typeBadge } from './html.js';
 import { isAllowedImageUrl, isSafeLink } from './pages.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS } from './membersData.js';
+import { BAN_FILTERS } from './bansData.js';
 import { NICKNAME_MAX, REASON_MAX, TIMEOUTS } from './memberActions.js';
 import { BULK_ACTIONS, BULK_LIMIT } from './bulkActions.js';
 import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
@@ -100,6 +101,38 @@ ${chips}
 ${canWrite && list?.rows?.length ? html`<details class="bulk-wrap"><summary class="btn">${icon('users')}Bulk action<span class="muted"> · tick members below, or use everyone matching the filters</span></summary>${bulkForm(session.csrf, list, filters, roles)}</details>` : ''}
 ${list ? table : ''}`;
     return layout({ title: 'Members', active: 'users', session, access, moduleStates, body });
+}
+
+/** The Banned page: Discord's ban list joined with the open ban cases; Unban runs on the member page. */
+export function bansPage({ session, access = null, moduleStates = {}, list, filters = {}, error = null, canAct = false }) {
+    const keep = { q: filters.q, filter: filters.filter };
+    const chips = html`<nav class="chips" aria-label="Show">${Object.entries(BAN_FILTERS).map(([k, v]) => html`<a class="chip" href="${path(`/bans${queryString({ ...keep, filter: k, page: '' })}`)}"${(filters.filter || '') === k ? raw(' aria-current="page"') : ''}>${v}</a>`)}</nav>`;
+    const pageLink = (page, label) => html`<a class="btn" href="${path(`/bans${queryString({ ...keep, page: page || '' })}`)}">${label}</a>`;
+    const kind = (row) => {
+        if (!row.record) return html`<span class="muted">no case (banned outside the bot)</span>`;
+        const ladder = row.record.is_auto ? html` <span class="muted">· warn ladder level ${row.record.ladder_level_after}</span>` : '';
+        return row.permanent ? html`Permanent${ladder}` : html`Until ${formatDate(row.record.expires_at)}${ladder}`;
+    };
+    const rows = list?.rows || [];
+    const table = rows.length ? html`<div class="table-wrap"><table class="members"><thead><tr><th>Member</th><th>Reason</th><th>Case</th><th>Ban</th><th></th></tr></thead><tbody>
+${rows.map((row) => html`<tr><td><a class="member-cell" href="${userHref(row.id)}">${row.avatarUrl && isAllowedImageUrl(row.avatarUrl)
+        ? html`<img class="avatar-sm" src="${row.avatarUrl}" alt="" width="32" height="32" loading="lazy" referrerpolicy="no-referrer">`
+        : html`<span class="avatar-sm" aria-hidden="true">${row.displayName.slice(0, 1).toUpperCase()}</span>`}<span><b>${row.displayName}</b><small>${row.username} · ${row.id}</small></span></a></td>
+<td>${row.reason || html`<span class="muted">no reason given</span>`}</td>
+<td class="nowrap">${row.record ? html`${caseLink(row.record.case_code)}${row.record.status === 'appeal_pending' ? html`<br><a class="state-word is-warn" href="${path(`/appeals/${encodeURIComponent(row.record.case_code)}`)}"><span class="dot dot-warn" aria-hidden="true"></span>appeal pending</a>` : ''}` : html`<span class="muted">—</span>`}</td>
+<td>${kind(row)}${row.record ? html`<br><small class="muted">by ${row.record.moderator_username}, ${formatDate(row.record.created_at)}</small>` : ''}</td>
+<td class="nowrap"><a class="btn small" href="${userHref(row.id)}#s-member-actions">${canAct ? 'Unban…' : 'Open'}<span class="sr"> ${row.displayName}</span></a></td></tr>`)}
+</tbody></table></div>
+<nav class="pager" aria-label="Pages"><span class="muted">Page ${list.page + 1} of ${list.pages} · ${list.total} ban${list.total === 1 ? '' : 's'}</span>${list.page > 0 ? pageLink(list.page - 1, '← Previous') : ''}${list.page + 1 < list.pages ? pageLink(list.page + 1, 'Next →') : ''}</nav>`
+        : list && (filters.q || filters.filter)
+            ? html`<p class="empty">No ban matches. <a href="${path('/bans')}">Show everyone banned</a></p>`
+            : list ? html`<p class="empty">Nobody is banned in the main server.</p>` : '';
+    const body = html`<header class="page-head"><h1>Banned</h1><p class="muted">${list ? html`${list.banned} banned in the main server · ` : ''}Unban opens the member page: you see the effect, then confirm. The member gets a DM with an invite back.</p></header>
+${error ? html`<p class="error" role="alert">${error}</p>` : ''}
+${list ? html`${chips}<form class="filters" method="get" action="${path('/bans')}" role="search"><input type="hidden" name="filter" value="${filters.filter || ''}">
+<label class="wide-filter">Search<input type="search" name="q" value="${filters.q || ''}" maxlength="40" autocomplete="off" placeholder="Name or user ID"></label>
+<button class="primary" type="submit">Search</button> <a href="${path('/bans')}">Clear</a></form>${table}` : ''}`;
+    return layout({ title: 'Banned', active: 'bans', session, access, moduleStates, body });
 }
 
 // ── Member page ───────────────────────────────────────────────────────────

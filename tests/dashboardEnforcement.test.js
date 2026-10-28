@@ -117,6 +117,7 @@ function makeEnforcement(overrides = {}) {
         executeAction: rec('executeAction', async ({ flow }) => ({ record: flow.type === 'warn' ? { case_code: 'new2345', name: 'target warn 2' } : null, dmDelivered: true, notes: ['Warning limit reached: automatic 1d ban `ban2345` (ladder level 1).'] })),
         attachFlowEvidence: rec('attachFlowEvidence', async () => []),
         recentBanKickCount: rec('recentBanKickCount', async () => 4),
+        activeBanCases: rec('activeBanCases', async () => new Map()),
         addTempRole: rec('addTempRole', async ({ member, role, ms, auditReason }) => { if (!member.roles.cache.has(role.id)) await member.roles.add(role.id, auditReason); return new Date(Date.now() + ms); }),
         endTempRole: rec('endTempRole', async () => {}),
         listTempRoles: rec('listTempRoles', async () => []),
@@ -1137,4 +1138,46 @@ test('member page: Unverify is hidden when verification is off; refused for unve
     const res = await post(lost, lost.d.enforcement.unverify, { params: { id: TARGET }, form: {} });
     assert.equal(res.statusCode, 403);
     assert.deepEqual(unverifyOverrides.calls, [], 'removeVerification never ran');
+});
+
+// ── Banned page ───────────────────────────────────────────────────────────
+
+test('banned page: Discord bans joined with open cases; filters; escaped; Unban opens the member page actions', async () => {
+    const h = await setup({ overrides: {
+        activeBanCases: async () => new Map([
+            [TARGET, { case_code: 'ban2345', reason: 'spam <b>', status: 'appeal_pending', created_at: new Date('2026-10-20T00:00:00Z'), expires_at: null, is_auto: true, ladder_level_after: 3, moderator_username: 'mod' }],
+            [OTHER, { case_code: 'ban3456', reason: 'raid', status: 'active', created_at: new Date('2026-10-25T00:00:00Z'), expires_at: new Date(Date.now() + 86400000), is_auto: false, moderator_username: 'mod' }],
+        ]),
+    } });
+    const user = (id, username) => ({ id, username, globalName: null, displayAvatarURL: () => null });
+    h.guild.bans = { fetch: async () => new Map([
+        [TARGET, { user: user(TARGET, 'target<script>'), reason: 'discord reason' }],
+        [OTHER, { user: user(OTHER, 'other'), reason: null }],
+        ['300000000000000099', { user: user('300000000000000099', 'outsider'), reason: 'banned by hand' }],
+    ]) };
+    const page = await get(h, h.d.enforcement.bans);
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /3 banned in the main server/);
+    assert.ok(page.body.includes('target&lt;script&gt;') && page.body.includes('spam &lt;b&gt;'), 'names and reasons escaped');
+    assert.ok(page.body.indexOf('ban3456') < page.body.indexOf('ban2345'), 'newest case first');
+    assert.match(page.body, /Permanent <span class="muted">· warn ladder level 3<\/span>/);
+    assert.match(page.body, /appeal pending<\/a>/);
+    assert.match(page.body, /no case \(banned outside the bot\)/);
+    assert.ok(page.body.includes(`href="/dashboard/users/${TARGET}#s-member-actions">Unban…`));
+    const only = async (filter) => [...(await get(h, h.d.enforcement.bans, { query: { filter } })).body.matchAll(/<small>([a-z<>&;]+) · \d+<\/small>/g)].map((m) => m[1]);
+    assert.deepEqual(await only('nocase'), ['outsider']);
+    assert.deepEqual(await only('temporary'), ['other']);
+    assert.deepEqual(await only('appeal'), ['target&lt;script&gt;']);
+    const search = await get(h, h.d.enforcement.bans, { query: { q: 'outs' } });
+    assert.match(search.body, /1 ban</);
+
+    const o = await setup({ userId: OWNER, overrides: { activeBanCases: h.e.activeBanCases } });
+    o.guild.bans = h.guild.bans;
+    const view = await get(o, o.d.enforcement.bans);
+    assert.ok(view.body.includes('#s-member-actions">Open'), 'owners without Administrator can look, not unban');
+
+    h.guild.bans = { fetch: async () => { throw new Error('discord down'); } };
+    const down = await get(h, h.d.enforcement.bans);
+    assert.equal(down.statusCode, 503);
+    assert.match(down.body, /could not be loaded/);
 });

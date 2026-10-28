@@ -754,6 +754,7 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.get('/appeals', user, safe(d.appeals));
     router.get('/appeals/:code', user, safe(en.appealDetail));
     router.get('/users', user, safe(en.users));
+    router.get('/bans', user, safe(en.bans));
     router.get('/users/bulk/:job', user, safe(en.bulkJob));
     router.get('/users/:id', user, safe(en.userPage));
     router.get('/nocontact', user, safe(en.noContact));
