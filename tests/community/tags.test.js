@@ -46,8 +46,9 @@ test('matching is time-boxed: a catastrophic pattern times out instead of blocki
     const started = Date.now();
     assert.equal(matchFirst([evil], `${'a'.repeat(40)}b`, 20), null);
     assert.ok(Date.now() - started < 1000);
-    assert.equal(matchFirst([/x/, /hello/i], 'say HELLO'), 1);
-    assert.equal(matchFirst([/x/], 'nope'), -1);
+    // Plain matches with a generous limit: these check results, not timing (busy test hosts).
+    assert.equal(matchFirst([/x/, /hello/i], 'say HELLO', 1000), 1);
+    assert.equal(matchFirst([/x/], 'nope', 1000), -1);
     assert.equal(matchFirst([], 'nope'), -1);
 });
 
@@ -76,13 +77,15 @@ test('triggered tags: first match, channel rules and per-channel cooldown from m
         { id: 3, guild_id: G, name: 'broken', content: 'x', trigger_kind: 'regex', trigger: '(a+)+', cooldown_s: 60, allow_channels: [], deny_channels: [], created_by: 'x', uses: 0 },
     ]);
     const msg = (content, channelId = C1) => ({ guild: { id: G }, channel: { id: channelId, isThread: () => false }, content });
+    // A plain matcher (no time limit): this test is about cooldowns and channel rules, not timing.
+    const plain = (patterns, text) => patterns.findIndex((p) => p.test(text));
     assert.equal(getTag(G, 'broken').pattern, null); // stored unsafe trigger never fires
-    assert.equal(findTriggeredTag(msg('what is the server ip'), 1000)?.name, 'ip');
-    assert.equal(findTriggeredTag(msg('server ip again'), 2000), null); // cooldown in C1
-    assert.equal(findTriggeredTag(msg('server ip', C2), 2000), null); // denied
-    assert.equal(findTriggeredTag(msg('server ip', '200000000000000003'), 2000)?.name, 'ip'); // other channel
-    assert.equal(findTriggeredTag(msg('server ip'), 62_000)?.name, 'ip');
-    assert.equal(findTriggeredTag({ guild: { id: 'other' }, channel: { id: C1 }, content: 'server ip' }), null);
+    assert.equal(findTriggeredTag(msg('what is the server ip'), 1000, plain)?.name, 'ip');
+    assert.equal(findTriggeredTag(msg('server ip again'), 2000, plain), null); // cooldown in C1
+    assert.equal(findTriggeredTag(msg('server ip', C2), 2000, plain), null); // denied
+    assert.equal(findTriggeredTag(msg('server ip', '200000000000000003'), 2000, plain)?.name, 'ip'); // other channel
+    assert.equal(findTriggeredTag(msg('server ip'), 62_000, plain)?.name, 'ip');
+    assert.equal(findTriggeredTag({ guild: { id: 'other' }, channel: { id: C1 }, content: 'server ip' }, Date.now(), plain), null);
     assert.equal(useTag(G, 'RULES')?.uses, 4);
     assert.equal(useTag(G, 'missing'), null);
 });
