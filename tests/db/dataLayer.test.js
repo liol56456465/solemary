@@ -248,6 +248,35 @@ test('mass-action guard: the ban after the limit is refused, the moderator block
     }
 });
 
+test('mass-action guard: warn-ladder bans count for the moderator whose warn triggered them', { skip }, async () => {
+    const { recentBanKickCount } = await import('../../src/services/enforcement/massActionGuard.js');
+    const moderatorId = user(910);
+    const botId = user(911);
+    const code = (n) => `L${runId.slice(-5)}${n}`.slice(0, 7);
+    const insert = (c, target, moderator, type, extra = {}) => pgDb.pool.query(
+        `INSERT INTO mod_cases (guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username, type, name, reason, prebuilt_or_custom, reason_key, is_auto, created_at)
+         VALUES ($1, $2, $3, 'x', $4, 'm', $5, $2, 'r', 'prebuilt', $6, $7, $8)`,
+        [guildA, c, target, moderator, type, extra.reasonKey || null, Boolean(extra.auto), extra.at]);
+    try {
+        const t1 = new Date(Date.now() - 60_000);
+        const t2 = new Date(Date.now() - 30_000);
+        // Two escalating warns by the moderator, each with its ladder ban in the same transaction (same time).
+        await insert(code(1), user(920), moderatorId, 'warn', { at: t1 });
+        await insert(code(2), user(920), botId, 'ban', { at: t1, auto: true, reasonKey: 'warn_ladder' });
+        await insert(code(3), user(921), moderatorId, 'warn', { at: t2 });
+        await insert(code(4), user(921), botId, 'ban', { at: t2, auto: true, reasonKey: 'warn_ladder' });
+        // Not theirs: a ladder ban from another moderator's warn, and a non-escalating warn.
+        await insert(code(5), user(922), user(912), 'warn', { at: t1 });
+        await insert(code(6), user(922), botId, 'ban', { at: t1, auto: true, reasonKey: 'warn_ladder' });
+        await insert(code(7), user(923), moderatorId, 'warn', { at: new Date(Date.now() - 10_000) });
+        assert.equal(await recentBanKickCount(guildA, moderatorId), 2);
+        assert.equal(await recentBanKickCount(guildA, user(912)), 1);
+        assert.equal(await recentBanKickCount(guildA, botId), 3, 'the bot\'s own ban cases still count for the bot');
+    } finally {
+        await pgDb.pool.query('DELETE FROM mod_cases WHERE guild_id = $1 AND case_code LIKE $2', [guildA, `L${runId.slice(-5)}%`]);
+    }
+});
+
 // --- My appeals ---------------------------------------------------------------------
 
 test('My appeals: lists only the member\'s own appeals, newest first, without test cases', { skip }, async () => {

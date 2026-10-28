@@ -264,7 +264,9 @@ export async function executeAction({ guild, moderator, targetUser, flow }) {
     // One action at a time per moderator, so the mass-action count can't be raced
     // by clicking several panels at once.
     return Mutex.runExclusive(`panel-mod:${guild.id}:${moderator.id}`, async () => {
-        await enforceMassActionGuard(guild, moderator, flow.type);
+        // A warn that escalates bans the member (warn ladder), so it counts as a ban here.
+        const guardType = flow.type === 'warn' && previewWarn(await getLadder(guild.id, targetUser.id)).escalates ? 'ban' : flow.type;
+        await enforceMassActionGuard(guild, moderator, guardType);
         return runAction({ guild, moderator, targetUser, flow });
     });
 }

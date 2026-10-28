@@ -49,12 +49,22 @@ export async function clearMassActionBlock(guildId, moderatorId) {
     await db.delete(blockKey(guildId, moderatorId));
 }
 
-/** Bans/kicks this moderator recorded within the window (test cases excluded). */
+/**
+ * Bans/kicks this moderator caused within the window (test cases excluded): their own ban/kick
+ * cases plus warn-ladder bans their warns triggered. A ladder ban is recorded under the bot, in
+ * the same transaction as the warn, so both rows carry the same NOW() (transaction start time):
+ * that is what ties the ban to the moderator's warn.
+ */
 export async function recentBanKickCount(guildId, moderatorId, windowMs = enforcementConfig.massActionWindowMs) {
     const { rows } = await query(
-        `SELECT COUNT(*)::int AS n FROM ${T.cases}
-         WHERE guild_id = $1 AND moderator_id = $2 AND type IN ('ban', 'kick') AND NOT is_test
-           AND created_at > NOW() - ($3::bigint * INTERVAL '1 millisecond')`,
+        `SELECT COUNT(*)::int AS n FROM ${T.cases} c
+         WHERE c.guild_id = $1 AND NOT c.is_test
+           AND c.created_at > NOW() - ($3::bigint * INTERVAL '1 millisecond')
+           AND ((c.moderator_id = $2 AND c.type IN ('ban', 'kick'))
+             OR (c.type = 'ban' AND c.is_auto AND c.reason_key = 'warn_ladder' AND EXISTS (
+                   SELECT 1 FROM ${T.cases} w
+                   WHERE w.guild_id = c.guild_id AND w.target_user_id = c.target_user_id AND w.type = 'warn'
+                     AND w.moderator_id = $2 AND w.created_at = c.created_at)))`,
         [guildId, moderatorId, windowMs]
     );
     return rows[0]?.n ?? 0;
@@ -91,7 +101,8 @@ async function blockModerator(guild, moderator, count, attempted) {
 
 /**
  * Call before every panel action. Throws while the moderator is blocked; for a
- * ban/kick over the limit it blocks them, alerts the owners and throws.
+ * ban/kick over the limit it blocks them, alerts the owners and throws. A warn that
+ * will trigger a ladder ban is passed in as 'ban' (see executeAction).
  */
 export async function enforceMassActionGuard(guild, moderator, actionType) {
     if (isBotOwner(moderator.id)) return;
