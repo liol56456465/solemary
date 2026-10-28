@@ -68,6 +68,11 @@ export const SETTINGS = Object.freeze([
         fallback: 5, schema: int(1, 100),
     },
     {
+        key: 'massMuteLimit', module: 'enforcement', kind: 'number', guild: 'main',
+        label: 'Mass-action guard: mutes allowed in the window', env: 'MASS_MUTE_LIMIT',
+        fallback: 10, schema: int(1, 200),
+    },
+    {
         key: 'massActionWindowMs', module: 'enforcement', kind: 'duration', guild: 'main',
         label: 'Mass-action guard: window', env: 'MASS_ACTION_WINDOW_MINUTES', envUnit: 'minutes',
         fallback: 10 * MINUTE, schema: int(MINUTE, DAY),

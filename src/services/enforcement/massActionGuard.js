@@ -4,7 +4,8 @@
 // (automod/staffGuardService.js) never sees them. This guard counts the
 // moderator's own ban/kick cases instead: with MASS_ACTION_LIMIT of them inside
 // MASS_ACTION_WINDOW_MINUTES, the next ban/kick is refused and the moderator is
-// blocked from every panel action for MASS_ACTION_BLOCK_MINUTES. OWNER_IDS get a
+// blocked from every panel action for MASS_ACTION_BLOCK_MINUTES. Mutes have their own,
+// higher count (MASS_MUTE_LIMIT) in the same window, with the same block. OWNER_IDS get a
 // DM and the alerts channel gets an entry. The block is stored with a TTL, so a restart
 // doesn't lift it; /staff restore lifts it early.
 
@@ -15,14 +16,13 @@ import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { query, T } from './db.js';
 
-const GUARDED_TYPES = new Set(['ban', 'kick']);
 
 const blockKey = (guildId, moderatorId) => `enforcement:massguard:${guildId}:${moderatorId}`;
 
 function blockedError(block) {
     const until = Math.floor(new Date(block.until).getTime() / 1000);
     return createError(`Moderator blocked by the mass-action guard until ${block.until}`, ErrorTypes.PERMISSION,
-        `You are blocked from the enforcement panel until <t:${until}:t> (<t:${until}:R>) after ${block.count} bans/kicks in a short time. The bot owners were alerted.`,
+        `You are blocked from the enforcement panel until <t:${until}:t> (<t:${until}:R>) after ${block.count} ${block.attempted === 'mute' ? 'mutes' : 'bans/kicks'} in a short time. The bot owners were alerted.`,
         { expected: true });
 }
 
@@ -70,6 +70,17 @@ export async function recentBanKickCount(guildId, moderatorId, windowMs = enforc
     return rows[0]?.n ?? 0;
 }
 
+/** Mutes this moderator recorded within the window (test cases excluded). */
+export async function recentMuteCount(guildId, moderatorId, windowMs = enforcementConfig.massActionWindowMs) {
+    const { rows } = await query(
+        `SELECT COUNT(*)::int AS n FROM ${T.cases}
+         WHERE guild_id = $1 AND moderator_id = $2 AND type = 'mute' AND NOT is_test
+           AND created_at > NOW() - ($3::bigint * INTERVAL '1 millisecond')`,
+        [guildId, moderatorId, windowMs]
+    );
+    return rows[0]?.n ?? 0;
+}
+
 async function alertOwners(client, text) {
     for (const ownerId of botConfig.commands?.owners ?? []) {
         const owner = await client.users.fetch(ownerId).catch(() => null);
@@ -84,7 +95,8 @@ async function blockModerator(guild, moderator, count, attempted) {
     await db.set(blockKey(guild.id, moderator.id), block, Math.ceil(enforcementConfig.massActionBlockMs / 1000));
 
     const windowMinutes = Math.round(enforcementConfig.massActionWindowMs / 60000);
-    const summary = `${moderator.user?.username ?? moderator.id} (${moderator.id}) made ${count} bans/kicks within ${windowMinutes} minutes and tried another ${attempted}.`;
+    const what = attempted === 'mute' ? 'mutes' : 'bans/kicks';
+    const summary = `${moderator.user?.username ?? moderator.id} (${moderator.id}) made ${count} ${what} within ${windowMinutes} minutes and tried another ${attempted}.`;
     logger.warn(`Mass-action guard in ${guild.id}: ${summary} Blocked until ${until}.`);
 
     // Imported lazily: enforcementService imports this module.
@@ -108,10 +120,18 @@ export async function enforceMassActionGuard(guild, moderator, actionType) {
     if (isBotOwner(moderator.id)) return;
     const existing = await getMassActionBlock(guild.id, moderator.id);
     if (existing) throw blockedError(existing);
-    if (!GUARDED_TYPES.has(actionType)) return;
-
-    const count = await recentBanKickCount(guild.id, moderator.id);
-    if (count >= enforcementConfig.massActionLimit) {
+    let count;
+    let limit;
+    if (actionType === 'ban' || actionType === 'kick') {
+        count = await recentBanKickCount(guild.id, moderator.id);
+        limit = enforcementConfig.massActionLimit;
+    } else if (actionType === 'mute') {
+        count = await recentMuteCount(guild.id, moderator.id);
+        limit = enforcementConfig.massMuteLimit;
+    } else {
+        return;
+    }
+    if (count >= limit) {
         throw blockedError(await blockModerator(guild, moderator, count, actionType));
     }
 }

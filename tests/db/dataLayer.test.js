@@ -249,6 +249,33 @@ test('mass-action guard: the ban after the limit is refused, the moderator block
     }
 });
 
+test('mass-action guard: mutes have their own, higher limit (MASS_MUTE_LIMIT, default 10); same block and owner DM', { skip }, async () => {
+    const { enforceMassActionGuard, getMassActionBlock, clearMassActionBlock, recentBanKickCount } = await import('../../src/services/enforcement/massActionGuard.js');
+    const { enforcementConfig } = await import('../../src/config/enforcement.js');
+    assert.equal(enforcementConfig.massMuteLimit, 10);
+    const moderatorId = user(930);
+    const dms = [];
+    const guild = { id: guildA, name: 'Test guild', client: { guilds: { cache: new Map() }, users: { fetch: async (id) => ({ send: async (msg) => dms.push({ id, msg }) }) } } };
+    const moderator = { id: moderatorId, user: { username: 'muter' } };
+    try {
+        for (let i = 0; i < 10; i++) {
+            await pgDb.pool.query(
+                `INSERT INTO mod_cases (guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username, type, name, reason, prebuilt_or_custom)
+                 VALUES ($1, $2, $3, 'x', $4, 'muter', 'mute', $2, 'r', 'custom')`,
+                [guildA, `M${runId.slice(-4)}${i}`.slice(0, 7), user(940 + i), moderatorId]);
+        }
+        assert.equal(await recentBanKickCount(guildA, moderatorId), 0, 'mutes are not bans/kicks');
+        await enforceMassActionGuard(guild, moderator, 'ban'); // 0 bans: allowed
+        await assert.rejects(enforceMassActionGuard(guild, moderator, 'mute'), (error) => error.type === 'permission' && /10 mutes/.test(error.userMessage || ''));
+        assert.ok(await getMassActionBlock(guildA, moderatorId), 'blocked like for bans');
+        assert.equal(dms.length, (process.env.OWNER_IDS || '').split(',').filter(Boolean).length, 'owners DM\'d');
+        await assert.rejects(enforceMassActionGuard(guild, moderator, 'warn'), (error) => error.type === 'permission', 'blocked from every action');
+        await clearMassActionBlock(guildA, moderatorId);
+    } finally {
+        await pgDb.pool.query('DELETE FROM mod_cases WHERE guild_id = $1 AND moderator_id = $2', [guildA, moderatorId]);
+    }
+});
+
 test('mass-action guard: warn-ladder bans count for the moderator whose warn triggered them', { skip }, async () => {
     const { recentBanKickCount } = await import('../../src/services/enforcement/massActionGuard.js');
     const moderatorId = user(910);

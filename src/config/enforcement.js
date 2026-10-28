@@ -50,6 +50,7 @@ export const enforcementConfig = {
 //   massActionLimit/WindowMs/BlockMs  MASS_ACTION_LIMIT / _WINDOW_MINUTES / _BLOCK_MINUTES: a
 //                          moderator who already banned/kicked this many members within the
 //                          window is blocked from the panel; OWNER_IDS get a DM and are never blocked
+//   massMuteLimit          MASS_MUTE_LIMIT: the same for mutes, with its own (higher) count in the same window
 //   staleReportMs, staleAppealReminderMs  STALE_REPORT_DAYS / STALE_APPEAL_REMINDER_DAYS: report
 //                          channels close after this long without a message; staff get one
 //                          reminder in a quiet pending appeal (appeals never close automatically)
@@ -57,7 +58,7 @@ bindSettingGetters(enforcementConfig, [
     'adminRequestChannelId', 'supportServerInvite', 'appealsCategoryId', 'mutedRoleId', 'bannedRoleId',
     'warnRoleIds', 'modLogChannelId', 'evidenceChannelId',
     'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds',
-    'massActionLimit', 'massActionWindowMs', 'massActionBlockMs',
+    'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
     'staleReportMs', 'staleAppealReminderMs',
 ]);
 

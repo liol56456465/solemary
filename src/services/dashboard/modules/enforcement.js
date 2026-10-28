@@ -12,7 +12,7 @@ import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, s
 const KEYS = [
     'adminRequestChannelId', 'modLogChannelId', 'evidenceChannelId', 'appealsCategoryId', 'mutedRoleId', 'warnRoleIds',
     'supportServerInvite', 'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds', 'staleReportMs',
-    'staleAppealReminderMs', 'massActionLimit', 'massActionWindowMs', 'massActionBlockMs',
+    'staleAppealReminderMs', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
 ];
 
 function current(ctx) {
@@ -59,6 +59,7 @@ ${numberInput('staleAppealReminderDays', Math.round(v.staleAppealReminderMs / DA
 </div>`);
         const mass = postForm(ctx, 'enforcement', 'mass-action', html`<div class="grid">
 ${numberInput('massActionLimit', v.massActionLimit, { label: 'Bans/kicks allowed in the window', min: 1, max: 100 })}
+${numberInput('massMuteLimit', v.massMuteLimit, { label: 'Mutes allowed in the window', min: 1, max: 200 })}
 ${numberInput('massActionWindowMinutes', Math.round(v.massActionWindowMs / MINUTE), { label: 'Window (minutes)', min: 1, max: 1440 })}
 ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE), { label: 'Block length (minutes)', min: 1, max: 10080 })}
 </div>`);
@@ -125,6 +126,7 @@ ${section('Automod steps', steps, 'Read-only for now.')}`;
         async 'mass-action'(ctx, form) {
             const patch = changedOnly({
                 massActionLimit: durationField(form, 'massActionLimit', 1, { min: 1, max: 100, label: 'Bans/kicks allowed' }),
+                massMuteLimit: durationField(form, 'massMuteLimit', 1, { min: 1, max: 200, label: 'Mutes allowed' }),
                 massActionWindowMs: durationField(form, 'massActionWindowMinutes', MINUTE, { min: 1, max: 1440, label: 'Window' }),
                 massActionBlockMs: durationField(form, 'massActionBlockMinutes', MINUTE, { min: 1, max: 10080, label: 'Block length' }),
             }, current(ctx));
