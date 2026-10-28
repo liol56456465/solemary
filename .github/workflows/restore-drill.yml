@@ -5,6 +5,10 @@ on:
     - cron: '0 4 * * 1'
   workflow_dispatch:
 
+# Read-only token: these jobs only check out code and talk to their own Postgres service.
+permissions:
+  contents: read
+
 jobs:
   restore-drill:
     runs-on: ubuntu-latest

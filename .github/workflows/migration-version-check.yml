@@ -8,6 +8,10 @@ on:
       - master
       - mitchwork
 
+# Read-only token: these jobs only check out code and talk to their own Postgres service.
+permissions:
+  contents: read
+
 jobs:
   migration-check:
     runs-on: ubuntu-latest

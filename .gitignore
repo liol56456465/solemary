@@ -153,3 +153,10 @@ claude/
 # Claude Code: personal settings and agent worktrees stay local
 .claude/settings.local.json
 .claude/worktrees/
+
+# Keys and certificates (e.g. a database CA file next to POSTGRES_CA_FILE) never go in git.
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
