@@ -20,7 +20,7 @@ import { getLoggingStatus, setLogChannel, setLoggingEnabled, toggleEventLogging,
 import { addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings } from '../welcomeService.js';
 // Tickets, modmail, canned answers
 import { getTicketSettings, updateTicketSettings } from '../ticketSettingsService.js';
-import { setModmailBlocked } from '../modmailService.js';
+import { findModmailChannel, setModmailBlocked } from '../modmailService.js';
 import { isBuiltInCanned, listCanned, removeCanned, saveCanned } from '../cannedService.js';
 // Leveling
 import {
@@ -41,13 +41,15 @@ import {
 } from '../countingGameService.js';
 // Join to create, applications
 import { getConfiguration as getJoinToCreateConfiguration, removeTriggerChannel, updateChannelConfig } from '../joinToCreateService.js';
-import { getApplicationSettings } from '../../utils/database.js';
+import { getApplications, getApplicationSettings } from '../../utils/database.js';
+import { reviewApplicationAndNotify } from '../applicationReviewService.js';
 import { updateApplicationSettings } from '../applicationSettingsService.js';
 // Community
 import { getCommunitySettings, updateCommunitySettings } from '../community/settingsService.js';
 import { starboardSettingsPatch } from '../community/starboardService.js';
 import { listStickies, removeSticky, setSticky } from '../community/stickyService.js';
 import { createTag, deleteTag, listTags } from '../community/tagService.js';
+import { decideSuggestion, getSuggestion, listOpenSuggestions } from '../community/suggestionService.js';
 import { addFeed, listFeeds, removeFeed } from '../community/feedService.js';
 // Commands
 import {
@@ -75,7 +77,7 @@ export const defaultServices = {
     loadNativePolicies, setNativePolicy, automodStats, automodRuleStats,
     getLoggingStatus, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList,
     addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings,
-    getTicketSettings, updateTicketSettings, setModmailBlocked, isBuiltInCanned, listCanned, removeCanned, saveCanned,
+    getTicketSettings, updateTicketSettings, setModmailBlocked, findModmailChannel, isBuiltInCanned, listCanned, removeCanned, saveCanned,
     addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelRoleReward, setUserLevel, updateLevelingConfig,
     getVerificationSettings, updateVerificationSettings, validateAutoVerifyCriteria,
     addPanelRole, deletePanel, getAllReactionRoleMessages, removePanelRole,
@@ -83,9 +85,9 @@ export const defaultServices = {
     changeCounterType, getServerCounters, removeServerCounter,
     activateCountingGame, disableCountingGame, getCountingGameConfig, resetCountingGame,
     getJoinToCreateConfiguration, removeTriggerChannel, updateChannelConfig,
-    getApplicationSettings, updateApplicationSettings,
+    getApplicationSettings, updateApplicationSettings, getApplications, reviewApplicationAndNotify,
     getCommunitySettings, updateCommunitySettings, starboardSettingsPatch, listStickies, removeSticky, setSticky,
-    createTag, deleteTag, listTags, addFeed, listFeeds, removeFeed,
+    createTag, deleteTag, listTags, addFeed, listFeeds, removeFeed, listOpenSuggestions, getSuggestion, decideSuggestion,
     disableCategory, disableCommand, enableCategory, enableCommand, getCommandAccessSnapshot, resolveCommandTarget, getCategoryRegistry,
     postModLog,
     publishTicketPanel, setupTicketSystem, publishVerificationPanel, setupVerification, postAppealPanels,

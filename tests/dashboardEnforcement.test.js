@@ -966,3 +966,64 @@ test('bulk: refused without a choice, without ticks, and above the limit; anothe
     const unknown = await get(h, h.d.enforcement.bulkJob, { params: { job: '00000000-0000-0000-0000-000000000000' } });
     assert.equal(unknown.statusCode, 404);
 });
+
+// ── member page: unverify (like /verification remove) ─────────────────────
+
+const VERIFIED = { verification: { enabled: true, roleId: '600000000000000001' } };
+const unverifyOverrides = (status = 'removed') => ({
+    getGuildConfig: async () => ({ birthdayTimezone: 'UTC', ...VERIFIED }),
+    removeVerification: async (client, guildId, userId, options) => {
+        unverifyOverrides.calls.push({ guildId, userId, options });
+        return { status, userId, roleId: '600000000000000001' };
+    },
+});
+unverifyOverrides.calls = [];
+
+test('member page: Unverify shows for verified members and runs removeVerification with the moderator; audit + mod log', async () => {
+    unverifyOverrides.calls = [];
+    const h = await setup({ overrides: unverifyOverrides() });
+    const page = await get(h, h.d.enforcement.userPage, { params: { id: TARGET } });
+    const section = page.body.slice(page.body.indexOf('id="s-member-roles"'));
+    assert.ok(section.includes(`action="/dashboard/users/${TARGET}/unverify"`));
+    assert.match(section, /Verified \(@Member\)/);
+    const res = await post(h, h.d.enforcement.unverify, { params: { id: TARGET }, form: { reason: 'alt account' } });
+    assert.equal(res.statusCode, 303);
+    assert.equal(res.redirectedTo, `/dashboard/users/${TARGET}`);
+    assert.deepEqual(unverifyOverrides.calls, [{ guildId: GUILD, userId: TARGET, options: { moderatorId: ADMIN, reason: 'alt account' } }]);
+    assert.equal(h.auditRows.at(-1).key, `verification:${TARGET}`);
+    assert.equal(h.auditRows.at(-1).module, 'members');
+    assert.equal(h.modLog.length, 1);
+    // Without a reason the command's default is used.
+    await post(h, h.d.enforcement.unverify, { params: { id: TARGET }, form: {} });
+    assert.equal(unverifyOverrides.calls.at(-1).options.reason, 'admin_removal');
+});
+
+test('member page: Unverify is hidden when verification is off; refused for unverified members, protected targets, owners and lost Administrator', async () => {
+    const off = await setup();
+    const page = await get(off, off.d.enforcement.userPage, { params: { id: TARGET } });
+    assert.ok(!page.body.includes('/unverify"'), 'no Unverify without verification on');
+
+    unverifyOverrides.calls = [];
+    const n = await setup({ overrides: unverifyOverrides('not_verified') });
+    const notVerified = await post(n, n.d.enforcement.unverify, { params: { id: TARGET }, form: {} });
+    assert.equal(notVerified.statusCode, 400);
+    assert.match(notVerified.body, /does not have the verified role/);
+    assert.equal(n.auditRows.length, 0);
+    assert.equal(n.modLog.length, 0);
+
+    unverifyOverrides.calls = [];
+    const h = await setup({ overrides: unverifyOverrides() });
+    const self = await post(h, h.d.enforcement.unverify, { params: { id: ADMIN }, form: {} });
+    assert.equal(self.statusCode, 400, 'own member is a protected target');
+    const o = await setup({ userId: OWNER, overrides: unverifyOverrides() });
+    assert.equal((await post(o, o.d.enforcement.unverify, { params: { id: TARGET }, form: {} })).statusCode, 403);
+    const noCsrf = await post(h, h.d.enforcement.unverify, { params: { id: TARGET }, form: {}, csrf: null });
+    assert.equal(noCsrf.statusCode, 403);
+    const admins = new Set([ADMIN]);
+    const lost = await setup({ admins, overrides: unverifyOverrides() });
+    assert.equal((await get(lost, lost.d.enforcement.userPage, { params: { id: TARGET } })).statusCode, 200);
+    admins.delete(ADMIN);
+    const res = await post(lost, lost.d.enforcement.unverify, { params: { id: TARGET }, form: {} });
+    assert.equal(res.statusCode, 403);
+    assert.deepEqual(unverifyOverrides.calls, [], 'removeVerification never ran');
+});

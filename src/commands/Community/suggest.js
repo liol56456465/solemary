@@ -3,7 +3,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { successEmbed } from '../../utils/embeds.js';
 import { userError } from '../../services/community/db.js';
 import {
-    createSuggestion, notifySuggestionAuthor, refreshSuggestionMessage, setSuggestionStatus,
+    createSuggestion, decideSuggestion,
     SUGGESTION_MAX_LENGTH, SUGGESTION_REASON_MAX, SUGGESTION_STATUSES,
 } from '../../services/community/suggestionService.js';
 
@@ -42,16 +42,16 @@ export default {
 
         if (sub === 'status') {
             const id = interaction.options.getInteger('id', true);
-            const row = await setSuggestionStatus({
-                guildId: interaction.guildId,
+            const decided = await decideSuggestion({
+                client,
+                guild: interaction.guild,
                 suggestionId: id,
                 status: interaction.options.getString('status', true),
                 reason: interaction.options.getString('reason'),
                 decidedBy: interaction.user.id,
             });
-            if (!row) throw userError(`There is no suggestion #${id} in this server.`);
-            const edited = await refreshSuggestionMessage(client, row);
-            const dmed = await notifySuggestionAuthor(client, row, interaction.guild.name);
+            if (!decided) throw userError(`There is no suggestion #${id} in this server.`);
+            const { row, edited, dmed } = decided;
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [successEmbed(`Suggestion #${id}: ${row.status}`, [
                     edited ? 'The suggestion message was updated.' : 'The suggestion message could not be updated (deleted or no access).',

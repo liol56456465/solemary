@@ -725,6 +725,7 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.post('/users/:id/roles/remove', form, user, safe(en.roleRemove));
     router.post('/users/:id/nickname', form, user, safe(en.nickname));
     router.post('/users/:id/timeout', form, user, safe(en.timeout));
+    router.post('/users/:id/unverify', form, user, safe(en.unverify));
     router.post('/users/:id/notes/add', form, user, safe(en.noteAdd));
     router.post('/users/:id/notes/remove', form, user, safe(en.noteRemove));
     router.post('/cases/:code/edit', form, user, safe(en.caseEdit));

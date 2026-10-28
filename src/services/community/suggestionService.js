@@ -149,6 +149,29 @@ export async function setSuggestionStatus({ guildId, suggestionId, status, reaso
     return row || null;
 }
 
+/** Open suggestions (still taking votes: pending or considering), newest first, at most `limit`. */
+export async function listOpenSuggestions(guildId, limit = 25) {
+    const { rows } = await query(
+        `SELECT * FROM ${CT.suggestions} WHERE guild_id = $1 AND status IN ('pending', 'considering')
+         ORDER BY id DESC LIMIT $2`,
+        [guildId, Math.max(1, Math.min(100, Number(limit) || 25))]
+    );
+    return rows;
+}
+
+/**
+ * A staff decision, as /suggest status does it: sets the status, updates the
+ * suggestion message and DMs the author. Returns { row, edited, dmed }, or null when
+ * there is no such suggestion in the guild.
+ */
+export async function decideSuggestion({ client, guild, suggestionId, status, reason, decidedBy }) {
+    const row = await setSuggestionStatus({ guildId: guild.id, suggestionId, status, reason, decidedBy });
+    if (!row) return null;
+    const edited = await refreshSuggestionMessage(client, row);
+    const dmed = await notifySuggestionAuthor(client, row, guild.name);
+    return { row, edited, dmed };
+}
+
 export async function getSuggestion(guildId, suggestionId) {
     const { rows: [row] } = await query(`SELECT * FROM ${CT.suggestions} WHERE guild_id = $1 AND id = $2`, [guildId, suggestionId]);
     return row || null;

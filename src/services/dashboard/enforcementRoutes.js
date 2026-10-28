@@ -6,6 +6,7 @@
 //   POST /dashboard/users/:id/action/preview     builds the flow (flowBuilder, like the panel) → confirm page
 //   POST /dashboard/users/:id/action/execute     single-use token → executeAction → flash + 303
 //   POST /dashboard/users/:id/notes/add|remove   staff notes
+//   POST /dashboard/users/:id/unverify          removeVerification (like /verification remove)
 //   POST /dashboard/cases/:code/edit|void        caseEditService
 //   POST /dashboard/cases/:code/evidence/add|upload|remove   links, or an uploaded image (re-hosted)
 //   GET  /dashboard/appeals/:code                appeal dossier
@@ -279,7 +280,12 @@ export function createEnforcementHandlers(core) {
             const actorMember = await guild.members.fetch({ user: req.dashboard.session.userId }).catch(() => null);
             const ctx = { guild, target: member, actorId: req.dashboard.session.userId, actorMember, actorIsOwner: isOwner(req), botMember: guild.members.me };
             const until = member.communicationDisabledUntilTimestamp;
+            // The verified role, when verification is on and they have it (for "Unverify").
+            const verification = (await e.getGuildConfig(client, guildId).catch(() => null))?.verification;
+            const verifiedRole = verification?.enabled && verification.roleId && member.roles?.cache?.has?.(verification.roleId)
+                ? (guild.roles.cache.get(verification.roleId) || null) : null;
             memberEdit = {
+                verifiedRole: verifiedRole ? { id: verifiedRole.id, name: verifiedRole.name } : null,
                 problem: targetProblem(ctx),
                 assignable: assignableRoles(ctx).filter((r) => !member.roles?.cache?.has?.(r.id)),
                 removable: new Set([...(member.roles?.cache?.values?.() || [])].filter((r) => !roleProblem({ ...ctx, role: r })).map((r) => r.id)),
@@ -453,6 +459,18 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'members', [{ key: `timeout:${ctx.userId}`, old: until > Date.now() ? new Date(until).toISOString() : null, new: lift ? null : TIMEOUTS[choice].label }],
             { modLog: true, label: 'Members' });
         await flash(req, lift ? `Timeout of ${ctx.target.user.username} removed.` : `${ctx.target.user.username} is timed out for ${TIMEOUTS[choice].label}.`);
+        return res.redirect(303, path(`/users/${ctx.userId}`));
+    }, { rerender: rerenderUser });
+
+    // Same service as /verification remove: takes the verified role, logs it to the verification log.
+    const unverify = guardedPost(async (req, res) => {
+        const ctx = await memberContext(req);
+        const typed = text(req.body, 'reason', REASON_MAX);
+        const result = await e.removeVerification(client, guildId, ctx.userId, { moderatorId: req.dashboard.session.userId, reason: typed || 'admin_removal' });
+        if (result?.status === 'not_verified') throw new InputError(`${ctx.target.user.username} does not have the verified role.`);
+        await audit(req, 'members', [{ key: `verification:${ctx.userId}`, old: 'verified', new: typed ? { verified: false, reason: typed } : null }],
+            { modLog: true, label: 'Members' });
+        await flash(req, `Verification removed from ${ctx.target.user.username}.`);
         return res.redirect(303, path(`/users/${ctx.userId}`));
     }, { rerender: rerenderUser });
 
@@ -826,7 +844,7 @@ export function createEnforcementHandlers(core) {
     }, { rerender: rerenderStaff, need: 'owner' });
 
     return {
-        users, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
+        users, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, unverify, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
         caseEdit, caseVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd,

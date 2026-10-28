@@ -227,7 +227,10 @@ function memberEditSection(view, canWrite, csrf) {
     const timeoutForm = html`${edit.timeoutUntil ? html`<p class="notice">Timed out until ${formatDate(edit.timeoutUntil)}.</p>${actionForm(csrf, `/users/${id}/timeout`, '', { submit: 'Remove timeout', hidden: { duration: 'off' }, inline: true, secondary: true })}` : ''}
 ${actionForm(csrf, `/users/${id}/timeout`, html`<div class="grid"><label>Timeout length<select name="duration" required><option value="">— choose —</option>${Object.entries(TIMEOUTS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select><span class="hint">Discord's own timeout (max 28 days): they can read but not write or talk. For longer, use Mute.</span></label>
 <label>Reason (optional, Discord audit log)<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: edit.timeoutUntil ? 'Change timeout' : 'Time out', confirm: `Time out ${view.user.username}?` })}`;
-    return html`${current}${roleForm}<h3>Nickname</h3>${nickForm}<h3>Timeout</h3>${timeoutForm}`;
+    const verifyForm = edit.verifiedRole
+        ? html`<h3>Verification</h3><p>Verified (@${edit.verifiedRole.name}).</p>${actionForm(csrf, `/users/${id}/unverify`, html`<div class="grid"><label>Reason (optional, Discord audit log and verification log)<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: 'Unverify', secondary: true, confirm: `Remove verification from ${view.user.username}? They lose @${edit.verifiedRole.name} and must verify again.` })}`
+        : '';
+    return html`${current}${roleForm}<h3>Nickname</h3>${nickForm}<h3>Timeout</h3>${timeoutForm}${verifyForm}`;
 }
 
 function notesSection(view, canWrite, csrf) {
