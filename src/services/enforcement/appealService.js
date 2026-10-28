@@ -356,12 +356,14 @@ export async function listPendingAppeals(limit = 20, guildId = enforcementConfig
  * @param {string} p.caseCode
  * @param {{ reason: string, moreInfo: string }} p.answers
  */
-// Ban and kick appeals open in the support server, because the appellant cannot see the main
-// one. The appellant is added to that channel and sees only a member-safe summary (no moderator,
-// no evidence, no other cases); the full dossier and Accept / Deny go in a private thread in
-// the same channel that the appellant is not added to. Mute and warn appeals stay staff-only
-// in the main server. If the support route is not usable (category not set, appellant not in
-// the support server, Discord refuses), the appeal opens the staff-only way: never lost.
+// Ban and kick appeals get a conversation channel in the support server, because the appellant
+// cannot see the main one: they are added to it and see only a member-safe summary (no
+// moderator, no evidence, no other cases). The full dossier and Accept / Deny go to an
+// admin-only staff channel in the main server's appeals category, like every other appeal, so
+// only main-server admins ever see them (owner decision: no private thread in the support
+// server, where anyone with Manage Threads could read it). Mute and warn appeals have only the
+// staff channel. If the support channel cannot be opened (category not set, appellant not in
+// the support server, Discord refuses), the appeal still opens staff-only: never lost.
 const SUPPORT_APPEAL_TYPES = new Set(['ban', 'kick']);
 
 async function openSupportAppealChannel(client, record, user) {
@@ -378,12 +380,6 @@ async function openSupportAppealChannel(client, record, user) {
         logger.warn(`Ban/kick appeal ${record.case_code} opens in the main server: ${user.id} is not in the support server`);
         return null;
     }
-    // Administrator ignores channel overwrites and sees every private thread, so such an
-    // appellant would read the staff thread: they get the staff-only main-server route instead.
-    if (member.permissions?.has?.(PermissionFlagsBits.Administrator)) {
-        logger.warn(`Ban/kick appeal ${record.case_code} opens in the main server: the appellant has Administrator in the support server`);
-        return null;
-    }
     let channel = null;
     try {
         channel = await supportGuild.channels.create({
@@ -396,27 +392,18 @@ async function openSupportAppealChannel(client, record, user) {
                     id: client.user.id,
                     allow: [
                         PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks,
-                        PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ManageThreads,
-                        PermissionFlagsBits.CreatePrivateThreads, PermissionFlagsBits.SendMessagesInThreads,
+                        PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.ManageChannels,
                     ],
                 },
                 {
                     id: user.id,
                     allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles],
-                    // ManageThreads would show them the private staff thread.
-                    deny: [PermissionFlagsBits.ManageThreads, PermissionFlagsBits.CreatePublicThreads, PermissionFlagsBits.CreatePrivateThreads, PermissionFlagsBits.MentionEveryone],
+                    deny: [PermissionFlagsBits.CreatePublicThreads, PermissionFlagsBits.CreatePrivateThreads, PermissionFlagsBits.MentionEveryone],
                 },
             ],
             reason: `Appeal ${record.case_code}`,
         });
-        const staff = await channel.threads.create({
-            name: `staff-${record.case_code}`,
-            type: ChannelType.PrivateThread,
-            invitable: false,
-            autoArchiveDuration: 10080,
-            reason: `Staff discussion for appeal ${record.case_code}`,
-        });
-        return { channel, staff, guildId: supportGuild.id };
+        return { channel, guildId: supportGuild.id };
     } catch (error) {
         logger.warn(`Ban/kick appeal ${record.case_code} opens in the main server: support channel failed (${error.message})`);
         if (channel) await channel.delete('Appeal channel setup failed').catch(() => {});
@@ -472,21 +459,19 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
             throw error;
         }
 
-        // Ban/kick: support server with the appellant (staff in a private thread); otherwise, or if
-        // that is not possible, an admin-only channel in the main server.
+        // Always an admin-only staff channel in the main server; ban/kick also a conversation
+        // channel with the appellant in the support server.
         let channel;
         let staffChannel;
         let channelGuildId;
+        let support = null;
         try {
-            const support = await openSupportAppealChannel(client, record, user);
-            if (support) {
-                ({ channel, staff: staffChannel, guildId: channelGuildId } = support);
-            } else {
-                channel = await createPrivateChannel(client, `appeal-${record.case_code}`, `Appeal ${record.case_code}`);
-                staffChannel = channel;
-                channelGuildId = guild.id;
-            }
+            support = await openSupportAppealChannel(client, record, user);
+            staffChannel = await createPrivateChannel(client, `appeal-${record.case_code}`, `Appeal ${record.case_code}`);
+            channel = support?.channel || staffChannel;
+            channelGuildId = support?.guildId || guild.id;
         } catch (error) {
+            if (support) await support.channel.delete('Appeal staff channel could not be opened').catch(() => {});
             // Undo so the user can try again once the channel can be created.
             await withTransaction(async (client) => {
                 await client.query(`DELETE FROM ${T.appeals} WHERE id = $1`, [appeal.id]);
@@ -496,7 +481,9 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
         }
         const inSupport = staffChannel !== channel;
 
-        await query(`UPDATE ${T.appeals} SET channel_id = $2, channel_guild_id = $3, staff_thread_id = $4 WHERE id = $1`,
+        // channel_id: where the appellant is (support) or the staff channel; staff_channel_id: the
+        // main-server staff channel when the two differ.
+        await query(`UPDATE ${T.appeals} SET channel_id = $2, channel_guild_id = $3, staff_channel_id = $4 WHERE id = $1`,
             [appeal.id, channel.id, channelGuildId, inSupport ? staffChannel.id : null]);
         if (inSupport) {
             await channel.send({
@@ -519,8 +506,7 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
             });
         await staffChannel.send({
             content: `New appeal from ${user.username} for \`${record.case_code}\`. Decide with the buttons below or \`/appeals\`.`
-                + (inSupport ? ' This thread is staff-only; the appellant is in the channel and sees only their summary.'
-                    + ' **Do not @mention the appellant here**: Discord would add them to this thread (the bot removes them again at once).' : ''),
+                + (inSupport ? ` To talk with the appellant: <#${channel.id}> in the support server (they see only their own summary there).` : ''),
             embeds,
             components: [appealDecisionRow(record.case_code)],
             allowedMentions: { parse: [] },
@@ -535,7 +521,7 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
                 fields: [
                     { name: 'Appeal submitted', value: `\`${record.case_code}\` — ${record.name}` },
                     { name: 'User', value: `${user.username} (${user.id})` },
-                    { name: 'Channel', value: `<#${channel.id}>${inSupport ? ' (support server; staff thread inside)' : ''}` },
+                    { name: 'Channel', value: `<#${staffChannel.id}>${inSupport ? ` (conversation in the support server: <#${channel.id}>)` : ''}` },
                 ],
             },
         }).catch(() => {});
@@ -812,16 +798,16 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
         );
 
         const label = decision === 'accept' ? 'accepted' : 'denied';
-        // The channel's server (support for ban/kick appeals); older rows only have guild_id.
-        const channelGuild = client.guilds.cache.get(appeal.channel_guild_id || appeal.guild_id);
-        const fetchIn = async (id) => (id && channelGuild
-            ? channelGuild.channels.cache.get(id) || await channelGuild.channels.fetch(id).catch(() => null)
-            : null);
-        const channel = await fetchIn(appeal.channel_id);
-        // Staff-only place: the private thread when the appellant is in the channel, else the channel.
-        const staffThread = await fetchIn(appeal.staff_thread_id);
-        const staffChannel = staffThread || (appeal.staff_thread_id ? null : channel);
-        if (staffThread && channel) {
+        // channel: where the appellant talks (support server for ban/kick; else the staff channel).
+        // staffChannel: the admin-only main-server channel with the dossier and buttons.
+        const fetchIn = async (guildId, id) => {
+            const g = client.guilds.cache.get(guildId);
+            return id && g ? g.channels.cache.get(id) || await g.channels.fetch(id).catch(() => null) : null;
+        };
+        const channel = await fetchIn(appeal.channel_guild_id || appeal.guild_id, appeal.channel_id);
+        const separateStaff = Boolean(appeal.staff_channel_id);
+        const staffChannel = separateStaff ? await fetchIn(appeal.guild_id, appeal.staff_channel_id) : channel;
+        if (separateStaff && channel) {
             // The appellant reads the channel: no admin name, no note, no internal notes.
             await channel.send({
                 embeds: [createEmbed({
@@ -850,9 +836,9 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
         }).catch(() => {});
         if (staffChannel) await disableDecisionButtons(staffChannel, caseCode);
 
-        // The channel is deleted shortly; keep what was said in it (and in the staff thread).
+        // The channels are deleted shortly; keep what was said in them.
         const transcript = channel ? await generateTranscript(channel).catch(() => null) : null;
-        const threadTranscript = staffThread ? await generateTranscript(staffThread).catch(() => null) : null;
+        const staffTranscript = separateStaff && staffChannel ? await generateTranscript(staffChannel).catch(() => null) : null;
         const logFields = [
             { name: `Appeal ${label}`, value: `\`${record.case_code}\` — ${record.name}` },
             { name: 'User', value: `${record.target_username} (${record.target_user_id})` },
@@ -870,12 +856,13 @@ export async function decideAppeal({ client, admin, caseCode, decision, note }) 
                 title: `Appeal ${label}${record.is_test ? ' (test case)' : ''}`,
                 files: [
                     ...(transcript ? [new AttachmentBuilder(transcript.buffer, { name: `appeal-${record.case_code}.html` })] : []),
-                    ...(threadTranscript ? [new AttachmentBuilder(threadTranscript.buffer, { name: `appeal-${record.case_code}-staff.html` })] : []),
+                    ...(staffTranscript ? [new AttachmentBuilder(staffTranscript.buffer, { name: `appeal-${record.case_code}-staff.html` })] : []),
                 ],
             });
         }
 
         if (channel) scheduleAppealChannelDelete(channel, label);
+        if (separateStaff && staffChannel) scheduleAppealChannelDelete(staffChannel, label);
         return { record, dmDelivered, label, notes };
     });
 }

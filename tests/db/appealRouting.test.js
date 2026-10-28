@@ -1,10 +1,9 @@
 // Appeal routing against the local test database (npm run test:db):
-//   - ban and kick appeals open in the support server; the appellant is added to the channel
-//     and sees a member-safe summary only; the dossier and Accept / Deny are in a private
-//     staff thread they are not in;
+//   - ban and kick appeals: a support-server channel with the appellant (member-safe summary
+//     only) plus an admin-only staff channel in the main server with the dossier and buttons;
 //   - mute and warn appeals open staff-only in the main server;
 //   - no support category (or the appellant not in the support server): staff-only in main;
-//   - a decision shows the appellant no admin name or note; the staff thread gets the details.
+//   - a decision shows the appellant no admin name or note; the staff channel gets the details.
 // Skipped unless POSTGRES_URL points at localhost: never run against Neon.
 
 import { test, before, after } from 'node:test';
@@ -102,7 +101,7 @@ async function insertCase(type, target, extra = {}) {
 const text = (payload) => JSON.stringify(payload);
 
 for (const type of ['ban', 'kick']) {
-    test(`${type} appeal: support server, appellant added and sees only a safe summary; dossier + buttons in a private staff thread`, { skip }, async () => {
+    test(`${type} appeal: support channel with the appellant (safe summary); dossier + buttons in a main-server staff channel`, { skip }, async () => {
         enforcementConfig.supportAppealsCategoryId = id('7', 2);
         const w = world();
         const user = { id: id('6', type === 'ban' ? 1 : 2), username: 'appellant' };
@@ -117,23 +116,24 @@ for (const type of ['ban', 'kick']) {
         const appellant = overwrites.find((o) => o.id === user.id);
         assert.ok(appellant.allow.includes(PermissionFlagsBits.ViewChannel) && appellant.allow.includes(PermissionFlagsBits.SendMessages), 'appellant added');
         assert.ok(appellant.deny.includes(PermissionFlagsBits.CreatePrivateThreads));
-        assert.ok(appellant.deny.includes(PermissionFlagsBits.ManageThreads), 'Manage Threads would show the private staff thread');
 
-        assert.equal(staffChannel.type, ChannelType.PrivateThread, 'staff thread is private');
-        assert.equal(staffChannel.invitable, false);
-        assert.equal(staffChannel.parentId, channel.id);
+        assert.equal(staffChannel.guild.id, w.main.id, 'staff side in the main server');
+        assert.equal(staffChannel.parent, id('7', 1), 'in the main appeals category');
+        assert.ok(!staffChannel.permissionOverwrites.some((o) => o.id === user.id), 'appellant not in the staff channel');
+        assert.equal(w.support.created.length, 1, 'no thread or extra channel in support');
 
         const inChannel = text(w.sent.filter((s) => s.where === channel).map((s) => s.payload));
         assert.match(inChannel, new RegExp(code));
         assert.match(inChannel, /I am sorry/, 'their own answers');
         assert.ok(!inChannel.includes('secretmod') && !inChannel.includes(id('6', 999)), 'no moderator in what the appellant sees');
         assert.ok(!inChannel.includes('appealdecide'), 'no Accept / Deny where the appellant reads');
-        const inThread = w.sent.filter((s) => s.where === staffChannel).map((s) => s.payload);
-        assert.match(text(inThread), /secretmod/, 'full dossier in the staff thread');
-        assert.match(text(inThread), /appealdecide:accept/, 'buttons in the staff thread');
+        const inStaff = w.sent.filter((s) => s.where === staffChannel).map((s) => s.payload);
+        assert.match(text(inStaff), /secretmod/, 'full dossier in the staff channel');
+        assert.match(text(inStaff), /appealdecide:accept/, 'buttons in the staff channel');
+        assert.match(text(inStaff), new RegExp(channel.id), 'link to the support conversation');
 
-        const { rows: [row] } = await pgDb.pool.query(`SELECT guild_id, channel_id, channel_guild_id, staff_thread_id FROM mod_appeals WHERE case_code = $1`, [code]);
-        assert.deepEqual(row, { guild_id: enforcementConfig.mainGuildId, channel_id: channel.id, channel_guild_id: w.support.id, staff_thread_id: staffChannel.id });
+        const { rows: [row] } = await pgDb.pool.query(`SELECT guild_id, channel_id, channel_guild_id, staff_channel_id FROM mod_appeals WHERE case_code = $1`, [code]);
+        assert.deepEqual(row, { guild_id: enforcementConfig.mainGuildId, channel_id: channel.id, channel_guild_id: w.support.id, staff_channel_id: staffChannel.id });
     });
 }
 
@@ -167,7 +167,7 @@ test('ban appeal falls back to staff-only in main when the support category is n
     assert.equal(w.support.created.length, 0);
 });
 
-test('decision on a support appeal: the appellant sees no admin name or note; the staff thread gets the details', { skip }, async () => {
+test('decision on a support appeal: the appellant sees no admin name or note; the staff channel gets the details', { skip }, async () => {
     enforcementConfig.supportAppealsCategoryId = id('7', 2);
     const w = world();
     const user = { id: id('6', 7), username: 'appellant' };
@@ -178,30 +178,7 @@ test('decision on a support appeal: the appellant sees no admin name or note; th
     const inChannel = text(w.sent.filter((s) => s.where === channel).map((s) => s.payload));
     assert.match(inChannel, /denied/);
     assert.ok(!inChannel.includes('secretadmin') && !inChannel.includes('repeat offender'), 'no admin or note for the appellant');
-    const inThread = text(w.sent.filter((s) => s.where === staffChannel).map((s) => s.payload));
-    assert.match(inThread, /secretadmin/);
-    assert.match(inThread, /repeat offender/);
-});
-
-test('an appellant with Administrator in support gets the staff-only main route (Administrator sees every private thread)', { skip }, async () => {
-    enforcementConfig.supportAppealsCategoryId = id('7', 2);
-    const w = world({ appellantIsSupportAdmin: true });
-    const user = { id: id('6', 8), username: 'appellant' };
-    const res = await appeals.submitAppeal({ client: w.client, user, caseCode: await insertCase('ban', user.id), answers: { reason: 'Please unban me, I learned my lesson' } });
-    assert.equal(res.channel.guild.id, w.main.id);
-    assert.equal(w.support.created.length, 0);
-});
-
-test('an appellant added to the staff thread (e.g. by an @mention) is removed at once; others are left alone', { skip }, async () => {
-    enforcementConfig.supportAppealsCategoryId = id('7', 2);
-    const w = world();
-    const user = { id: id('6', 9), username: 'appellant' };
-    const { staffChannel } = await appeals.submitAppeal({ client: w.client, user, caseCode: await insertCase('kick', user.id), answers: { reason: 'It was a misunderstanding, please' } });
-    const { default: event } = await import('../../src/events/threadMembersUpdate.js');
-    await event.execute(new Map([[id('6', 997), {}]]), new Map(), staffChannel);
-    assert.deepEqual(staffChannel.removedMembers, [], 'a staff member joining is fine');
-    w.sent.length = 0;
-    await event.execute(new Map([[user.id, {}]]), new Map(), staffChannel);
-    assert.deepEqual(staffChannel.removedMembers, [user.id]);
-    assert.match(text(w.sent.map((x) => x.payload)), /removed again/);
+    const inStaff = text(w.sent.filter((s) => s.where === staffChannel).map((s) => s.payload));
+    assert.match(inStaff, /secretadmin/);
+    assert.match(inStaff, /repeat offender/);
 });

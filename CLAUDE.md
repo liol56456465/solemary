@@ -111,9 +111,8 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 
 - `/setappeal [channel]` posts appeal panels (main + Support `#appeals`); re-running replaces old panels.
 - Appeal form: why punished / why lift / did you do it (Yes/Partly/No). Case code optional (latest appealable case).
-- Ban/kick appeals → Support (`APPEALS_CATEGORY_ID`), appellant added, sees a safe summary only; dossier + Accept/Deny
-  in a private staff thread (appellant auto-removed if mentioned in; Support admins fall back to main). Mute/warn → main,
-  staff-only. Appeals, reports, modmail have their own categories; open reports + modmail capped (`OPEN_CHANNEL_CAP` 20),
+- Ban/kick appeals → conversation channel in Support (`APPEALS_CATEGORY_ID`), appellant added, safe summary only;
+  dossier + Accept/Deny in an admin-only main-server staff channel (no threads). Mute/warn → main, staff-only. Appeals, reports, modmail have their own categories; open reports + modmail capped (`OPEN_CHANNEL_CAP` 20),
   appeals never capped. One pending appeal per case; 7-day cooldown after a denial.
 - `/appeals code decision:accept|deny note` (main server). Accept lifts what's active and DMs an invite.
 - Staff reports: one open per person, max three per day.
