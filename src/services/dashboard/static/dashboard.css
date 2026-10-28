@@ -1011,6 +1011,24 @@ details.long-value[open] > summary { -webkit-line-clamp: 1; line-clamp: 1; }
 td.value:has(details.long-value) { min-width: 200px; }
 .long-value-full { margin-top: 8px; max-height: 240px; overflow: auto; overflow-wrap: anywhere; white-space: pre-wrap; }
 /* Members list: avatar + name cell, role chips, pager. */
+th.tick, td.tick { width: 40px; padding-right: 0; }
+td.tick input, th.tick input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+/* Bulk card: only the fields of the chosen action are shown (CSS only, no script). */
+.bulk h2 { margin-top: 0; }
+.bulk-scope { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0 0 16px; }
+.bulk .only-role, .bulk .only-timeout, .bulk .only-record, .bulk .only-ban, .bulk .only-plain { display: none; }
+.bulk:has(select[name="action"] option[value="role-add"]:checked) .only-role,
+.bulk:has(select[name="action"] option[value="role-remove"]:checked) .only-role,
+.bulk:has(select[name="action"] option[value="timeout"]:checked) .only-timeout,
+.bulk:has(select[name="action"] option[value="kick"]:checked) .only-record,
+.bulk:has(select[name="action"] option[value="ban"]:checked) .only-record,
+.bulk:has(select[name="action"] option[value="ban"]:checked) .only-ban,
+.bulk:has(select[name="action"] option[value^="role-"]:checked) .only-plain,
+.bulk:has(select[name="action"] option[value="timeout"]:checked) .only-plain { display: flex; }
+.name-list { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 0; list-style: none; }
+.skip-list { margin: 0; padding: 0; list-style: none; }
+.skip-list li { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 8px 0; border-top: 1px solid var(--border); }
+.skip-list li:first-child { border-top: 0; }
 .role-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
 .role-chip-lg { height: 32px; padding: 0 4px 0 12px; gap: 8px; font-size: 14px; }
 .role-chip-lg:not(:has(form)) { padding-right: 12px; }

@@ -116,6 +116,7 @@ function makeEnforcement(overrides = {}) {
         completeFlowDetails: rec('completeFlowDetails', (args) => completeFlowDetails({ ...args, deps: fakeDeps })),
         executeAction: rec('executeAction', async ({ flow }) => ({ record: flow.type === 'warn' ? { case_code: 'new2345', name: 'target warn 2' } : null, dmDelivered: true, notes: ['Warning limit reached: automatic 1d ban `ban2345` (ladder level 1).'] })),
         attachFlowEvidence: rec('attachFlowEvidence', async () => []),
+        recentBanKickCount: rec('recentBanKickCount', async () => 4),
         getMassActionBlock: rec('getMassActionBlock', async (g, id) => (id === OTHER ? { until: new Date(Date.now() + 60000).toISOString(), count: 5 } : null)),
         getCaseByCode: rec('getCaseByCode', async (code) => (code === CODE ? { ...record } : null)),
         getAppealHistory: rec('getAppealHistory', async () => [{ id: 3, status: 'pending', created_at: new Date(), body: { reason: 'I am sorry <b>', didIt: 'yes' } }]),
@@ -824,4 +825,66 @@ test('member page: the roles section shows Remove only where allowed and a picke
     assert.ok(!section.includes('value="600000000000000008"'), 'role above the moderator not offered');
     assert.ok(section.includes('action="/dashboard/users/' + TARGET + '/roles/remove"'), 'Member can be removed');
     assert.ok(section.includes('action="/dashboard/users/' + TARGET + '/timeout"'));
+});
+
+// ── bulk actions ──────────────────────────────────────────────────────────
+
+const waitForJob = async (h, location) => {
+    const job = location.split('/').pop();
+    for (let i = 0; i < 50; i += 1) {
+        const page = await get(h, h.d.enforcement.bulkJob, { params: { job } });
+        if (/Finished:/.test(page.body)) return page;
+        await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    throw new Error('bulk job did not finish');
+};
+
+test('bulk: preview lists who changes and who is skipped (with why); run needs the one-time token; progress page; audit + mod log', async () => {
+    const h = await setup();
+    const preview = await post(h, h.d.enforcement.bulkPreview, { form: { scope: 'selected', ids: [TARGET, OTHER, ADMIN], action: 'role-add', roleId: '600000000000000002', reason: 'event' } });
+    assert.equal(preview.statusCode, 200);
+    assert.match(preview.body, /Give a role @Helper: 2 members/);
+    assert.match(preview.body, /Skipped \(1\)/);
+    assert.match(preview.body, /your own roles/, 'yourself is skipped with the reason');
+    assert.equal(h.guild.memberCalls.length, 0, 'nothing changed at the preview');
+    const token = preview.body.match(/name="token" value="([^"]+)"/)[1];
+    const fh = preview.body.match(/name="fh" value="([^"]+)"/)[1];
+    const run = await post(h, h.d.enforcement.bulkExecute, { form: { token, fh } });
+    assert.equal(run.statusCode, 303);
+    assert.match(run.redirectedTo, /^\/dashboard\/users\/bulk\/[0-9a-f-]{36}$/);
+    const done = await waitForJob(h, run.redirectedTo);
+    assert.match(done.body, /Finished: 2 done, 0 failed/);
+    assert.deepEqual(h.guild.memberCalls.map((c) => [c.id, c.call, c.roleId]).sort(), [[OTHER, 'roles.add', '600000000000000002'], [TARGET, 'roles.add', '600000000000000002']].sort());
+    assert.equal(h.auditRows.at(-1).key, 'bulk:role-add');
+    assert.match(h.auditRows.at(-1).new, /2 done, 0 failed/);
+    const again = await post(h, h.d.enforcement.bulkExecute, { form: { token, fh } });
+    assert.equal(again.statusCode, 400, 'the token works once');
+});
+
+test('bulk: kicks/bans stop at the mass-action guard (4 of 5 used → 1 planned), each through executeAction', async () => {
+    const h = await setup();
+    const preview = await post(h, h.d.enforcement.bulkPreview, { form: { scope: 'selected', ids: [TARGET, OTHER], action: 'kick', reasonKey: 'spam' } });
+    assert.equal(preview.statusCode, 200);
+    assert.match(preview.body, /Kick: 1 member/);
+    assert.match(preview.body, /mass-action guard: no more bans\/kicks/);
+    assert.match(preview.body, /allows 1 more ban\/kick/);
+    const token = preview.body.match(/name="token" value="([^"]+)"/)[1];
+    const fh = preview.body.match(/name="fh" value="([^"]+)"/)[1];
+    const run = await post(h, h.d.enforcement.bulkExecute, { form: { token, fh } });
+    await waitForJob(h, run.redirectedTo);
+    const kicks = h.calls.filter((c) => c.name === 'executeAction');
+    assert.equal(kicks.length, 1);
+    assert.equal(kicks[0].args[0].flow.type, 'kick');
+});
+
+test('bulk: refused without a choice, without ticks, and above the limit; another session cannot see the job', async () => {
+    const h = await setup();
+    const noAction = await post(h, h.d.enforcement.bulkPreview, { form: { scope: 'selected', ids: [TARGET] } });
+    assert.equal(noAction.statusCode, 400);
+    const noTicks = await post(h, h.d.enforcement.bulkPreview, { form: { scope: 'selected', action: 'timeout', timeout: '1h' } });
+    assert.match(noTicks.body, /Tick at least one member/);
+    const tooMany = await post(h, h.d.enforcement.bulkPreview, { form: { scope: 'selected', action: 'timeout', timeout: '1h', ids: Array.from({ length: 101 }, (_, i) => `30000000000000${String(1000 + i)}`) } });
+    assert.match(tooMany.body, /at most 100 members/);
+    const unknown = await get(h, h.d.enforcement.bulkJob, { params: { job: '00000000-0000-0000-0000-000000000000' } });
+    assert.equal(unknown.statusCode, 404);
 });

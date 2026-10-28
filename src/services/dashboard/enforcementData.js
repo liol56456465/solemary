@@ -14,7 +14,7 @@ import { precedentHint } from '../enforcement/precedentService.js';
 import {
     addNoContactOrder, endNoContactOrder, getActiveOrdersFor, listActiveNoContactOrders,
 } from '../enforcement/noContactService.js';
-import { clearMassActionBlock, getMassActionBlock, listMassActionBlocks } from '../enforcement/massActionGuard.js';
+import { clearMassActionBlock, getMassActionBlock, listMassActionBlocks, recentBanKickCount } from '../enforcement/massActionGuard.js';
 import { addNote, listNotes, removeNote } from '../enforcement/staffNotesService.js';
 import { memberStandings } from './membersData.js';
 import { attachFlowEvidence, completeFlowDetails } from '../enforcement/flowBuilder.js';
@@ -27,7 +27,7 @@ export const defaultEnforcement = {
     memberStandings, getTargetState, getLadder, getCountedWarns, listCasesForUser, getLatestAppealStatuses, getActiveOrdersFor,
     listNotes, addNote, removeNote, precedentHint,
     // actions (same flow builder and executeAction as the panel)
-    completeFlowDetails, executeAction, attachFlowEvidence, getMassActionBlock,
+    completeFlowDetails, executeAction, attachFlowEvidence, getMassActionBlock, recentBanKickCount,
     // cases
     getCaseByCode, getAppealHistory, editCase, voidCase, addEvidence, addImageEvidence, removeEvidence, captureLinks, listEvidence, resolveImageUrls,
     // appeals

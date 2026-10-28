@@ -20,7 +20,7 @@
 // Discord commands (DMs, ladder, hierarchy, bot permissions, mass-action guard, logs).
 
 import { PermissionFlagsBits } from 'discord.js';
-import { CUSTOM_REASON_KEY } from '../../config/enforcement.js';
+import { CUSTOM_REASON_KEY, enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { isAdministrator } from '../enforcement/enforcementService.js';
 import { normalizeCaseCode } from '../enforcement/format.js';
@@ -36,12 +36,13 @@ import { COVERAGE_PERIODS, buildCoverageReport } from '../staffCoverageService.j
 import { InputError, multiline, plainText, queryText, text } from './forms.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS, listMembers } from './membersData.js';
 import { NICKNAME_MAX, REASON_MAX, TIMEOUTS, assignableRoles, auditReason, roleProblem, targetProblem } from './memberActions.js';
+import { BULK_ACTIONS, BULK_LIMIT, createJobStore, planBulk } from './bulkActions.js';
 import { html, path } from './html.js';
 import { isSnowflake } from './security.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
 import { evidenceFileName, sniffImage } from './multipart.js';
 import {
-    actionConfirmPage, appealConfirmPage, appealDetailPage, blocksSection, membersPage, coverageSection, noContactPage, userPage,
+    actionConfirmPage, appealConfirmPage, appealDetailPage, blocksSection, bulkJobPage, bulkPreviewPage, membersPage, coverageSection, noContactPage, userPage,
 } from './enforcementPages.js';
 
 const SEARCH_LIMIT = 25;
@@ -244,7 +245,7 @@ export function createEnforcementHandlers(core) {
         if (isSnowflake(filters.q)) return res.redirect(302, path(`/users/${filters.q}`));
         await completeMemberCache(guild);
         const standings = await e.memberStandings(guildId);
-        return render(200, { roles, list: listMembers(guild, standings, { ...filters, page }) });
+        return render(200, { roles, canWrite: canWrite(req), list: listMembers(guild, standings, { ...filters, page }) });
     }
 
     async function loadUserView(req, userId, { precedentReason = '' } = {}) {
@@ -433,6 +434,105 @@ export function createEnforcementHandlers(core) {
         await flash(req, lift ? `Timeout of ${ctx.target.user.username} removed.` : `${ctx.target.user.username} is timed out for ${TIMEOUTS[choice].label}.`);
         return res.redirect(303, path(`/users/${ctx.userId}`));
     }, { rerender: rerenderUser });
+
+    // ── Bulk: one action on many members (preview → confirm → background job) ──
+
+    const jobs = createJobStore();
+    const listFilters = (src) => {
+        const f = { q: text(src, 'q', 40), role: text(src, 'frole', 20), joined: text(src, 'joined', 5), state: text(src, 'state', 10), sort: text(src, 'sort', 12) };
+        if (!Object.hasOwn(JOINED_FILTERS, f.joined)) f.joined = '';
+        if (!Object.hasOwn(STATE_FILTERS, f.state)) f.state = '';
+        if (!Object.hasOwn(SORTS, f.sort)) f.sort = 'joined_desc';
+        if (!isSnowflake(f.role)) f.role = '';
+        return f;
+    };
+    const bulkBack = (req, res, status, message) => fail(res, status, 'Not done', message, req);
+
+    /** The members the form points at: ticked ones, or everyone matching the list filters (max BULK_LIMIT). */
+    async function bulkTargets(req, guild) {
+        if (text(req.body, 'scope', 10) === 'filter') {
+            const filters = listFilters(req.body);
+            const standings = await e.memberStandings(guildId);
+            const all = listMembers(guild, standings, { ...filters, page: 0, pageSize: BULK_LIMIT + 1 });
+            if (all.total > BULK_LIMIT) throw new InputError(`${all.total} members match these filters; one bulk action can change at most ${BULK_LIMIT}. Narrow the filters.`);
+            return all.rows.map((row) => guild.members.cache.get(row.id)).filter(Boolean);
+        }
+        const raw = req.body?.ids;
+        const ids = [...new Set((Array.isArray(raw) ? raw : raw ? [raw] : []).filter((id) => isSnowflake(String(id))))];
+        if (!ids.length) throw new InputError('Tick at least one member, or choose "everyone matching these filters".');
+        if (ids.length > BULK_LIMIT) throw new InputError(`One bulk action can change at most ${BULK_LIMIT} members.`);
+        const members = await Promise.all(ids.map((id) => guild.members.fetch({ user: id }).catch(() => null)));
+        return members.filter(Boolean);
+    }
+
+    const bulkPreview = guardedPost(async (req, res) => {
+        const guild = guildOf();
+        const action = text(req.body, 'action', 12);
+        if (!Object.hasOwn(BULK_ACTIONS, action)) throw new InputError('Choose what to do.');
+        const moderator = await freshModerator(req);
+        const roleId = text(req.body, 'roleId', 20);
+        const role = action.startsWith('role-') ? (isSnowflake(roleId) ? guild.roles.cache.get(roleId) : null) : null;
+        if (action.startsWith('role-') && !role) throw new InputError('Choose a role.');
+        const timeoutKey = text(req.body, 'timeout', 5);
+        if (action === 'timeout' && !Object.hasOwn(TIMEOUTS, timeoutKey)) throw new InputError('Choose a timeout length.');
+        const members = await bulkTargets(req, guild);
+        const owner = e.isBotOwner(req.dashboard.session.userId);
+        let guardLeft = Infinity;
+        if ((action === 'kick' || action === 'ban') && !owner) {
+            if (await e.getMassActionBlock(guildId, req.dashboard.session.userId)) throw new InputError('You are blocked by the mass-action guard; nothing was done.');
+            guardLeft = Math.max(0, enforcementConfig.massActionLimit - await e.recentBanKickCount(guildId, req.dashboard.session.userId));
+        }
+        const plan = planBulk({ guild, members, action, role, timeoutKey, actorId: req.dashboard.session.userId, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me, guardLeft });
+        // Kick / ban: the enforcement form is checked now (same flow builder as one member), so the run cannot fail on it.
+        const recordForm = { reason: text(req.body, 'reasonKey', 50), custom_reason: text(req.body, 'custom_reason', 500), duration: text(req.body, 'duration', 20), unappealable: text(req.body, 'unappealable', 10) || 'default' };
+        if ((action === 'kick' || action === 'ban') && plan.run.length) {
+            const first = guild.members.cache.get(plan.run[0].id)?.user || await client.users.fetch(plan.run[0].id);
+            await buildRecordFlow({ guild, moderator, moderatorId: moderator.id, targetUser: first, type: action, form: recordForm, completeFlowDetails: e.completeFlowDetails });
+        }
+        const payload = { action, roleId: role?.id || null, timeoutKey, reason: text(req.body, 'reason', REASON_MAX), recordForm, run: plan.run };
+        const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'bulk', payload });
+        return sendHtml(res, 200, bulkPreviewPage({ ...shellOf(req), action, label: BULK_ACTIONS[action], role, timeout: TIMEOUTS[timeoutKey] || null, plan, token, hash, guardLeft }));
+    }, { rerender: bulkBack });
+
+    const bulkExecute = guardedPost(async (req, res) => {
+        const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: 'bulk', hash: text(req.body, 'fh', 100) });
+        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; preview the bulk action again.');
+        const guild = guildOf();
+        const moderator = await freshModerator(req);
+        const session = req.dashboard.session;
+        const role = payload.roleId ? guild.roles.cache.get(payload.roleId) : null;
+        const reason = auditReason(session.username, payload.reason);
+        const label = `${BULK_ACTIONS[payload.action]}${role ? ` @${role.name}` : ''}${payload.action === 'timeout' ? ` (${TIMEOUTS[payload.timeoutKey].label})` : ''}`;
+        const work = async (item) => {
+            // Checked again per member at run time (roles and positions can change meanwhile).
+            const member = await guild.members.fetch({ user: item.id, force: true }).catch(() => null);
+            const problem = targetProblem({ guild, target: member, actorId: session.userId, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me })
+                || (role ? roleProblem({ guild, role, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me }) : null);
+            if (problem) throw new InputError(problem);
+            if (payload.action === 'role-add') return member.roles.add(role.id, reason);
+            if (payload.action === 'role-remove') return member.roles.remove(role.id, reason);
+            if (payload.action === 'timeout') return member.timeout(TIMEOUTS[payload.timeoutKey].ms, reason);
+            const flow = await buildRecordFlow({ guild, moderator, moderatorId: moderator.id, targetUser: member.user, type: payload.action, form: payload.recordForm, completeFlowDetails: e.completeFlowDetails });
+            return e.executeAction({ guild, moderator, targetUser: member.user, flow });
+        };
+        const job = jobs.start({
+            session: session.idHash, label, items: payload.run, work,
+            onDone: async (finished) => {
+                await audit(req, 'members', [{ key: `bulk:${payload.action}`, old: null, new: `${label}: ${finished.done.length} done, ${finished.failed.length} failed` }],
+                    { modLog: true, label: 'Members (bulk)' });
+            },
+        });
+        logger.info(`Dashboard bulk ${payload.action} by ${session.userId}: ${payload.run.length} members (job ${job.id})`);
+        return res.redirect(303, path(`/users/bulk/${job.id}`));
+    }, { rerender: bulkBack });
+
+    /** GET /dashboard/users/bulk/:job: progress (refreshes itself while running), then the result. */
+    async function bulkJob(req, res) {
+        const id = typeof req.params?.job === 'string' ? req.params.job.slice(0, 40) : '';
+        const job = jobs.get(id, req.dashboard.session.idHash);
+        if (!job) return fail(res, 404, 'Not found', 'This bulk action is not known (it may be over an hour old, or the bot restarted).', req);
+        return sendHtml(res, 200, bulkJobPage({ ...shellOf(req), job }));
+    }
 
     const noteAdd = guardedPost(async (req, res) => {
         const userId = userIdParam(req);
@@ -692,7 +792,7 @@ export function createEnforcementHandlers(core) {
     }, { rerender: rerenderStaff, need: 'owner' });
 
     return {
-        users, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, noteAdd, noteRemove,
+        users, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
         caseEdit, caseVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd,

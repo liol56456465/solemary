@@ -712,6 +712,8 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     const en = d.enforcement;
     router.post('/users/:id/action/preview', form, user, safe(en.actionPreview));
     router.post('/users/:id/action/execute', form, user, safe(en.actionExecute));
+    router.post('/users/bulk/preview', form, user, safe(en.bulkPreview));
+    router.post('/users/bulk/execute', form, user, safe(en.bulkExecute));
     router.post('/users/:id/roles/add', form, user, safe(en.roleAdd));
     router.post('/users/:id/roles/remove', form, user, safe(en.roleRemove));
     router.post('/users/:id/nickname', form, user, safe(en.nickname));
@@ -738,6 +740,7 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     router.get('/appeals', user, safe(d.appeals));
     router.get('/appeals/:code', user, safe(en.appealDetail));
     router.get('/users', user, safe(en.users));
+    router.get('/users/bulk/:job', user, safe(en.bulkJob));
     router.get('/users/:id', user, safe(en.userPage));
     router.get('/nocontact', user, safe(en.noContact));
     router.get('/staff', user, safe(d.staff));

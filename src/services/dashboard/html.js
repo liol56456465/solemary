@@ -265,14 +265,14 @@ ${themePicker(theme, back, 'menu')}<form method="post" action="${path('/logout')
  * `session` may carry display extras added by the routes: theme, server, path.
  * No inline styles or scripts (CSP); the one script is the static enhancement file.
  */
-export function layout({ title, active = null, session = null, access = null, moduleStates = {}, body, theme: pageTheme = 'system' }) {
+export function layout({ title, active = null, session = null, access = null, moduleStates = {}, body, theme: pageTheme = 'system', refreshSeconds = 0 }) {
     const theme = themeFrom(session?.theme ?? pageTheme);
     const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
     const top = session ? html`<header class="page-top">${serverSwitch(session.server)}<span class="spacer"></span>
 <a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form></header>`
         : html`<header class="page-top bare-top"><a class="brand" href="${path('/overview')}" aria-label="Meowist"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a><span class="spacer"></span></header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
+<meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark">${refreshSeconds > 0 ? html`<meta http-equiv="refresh" content="${refreshSeconds}">` : ''}<title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>
 <div class="${session ? 'app' : 'app bare'}">${session ? rail(active, theme, back, session, access) : ''}
 <div class="page">${top}${session ? sectionTabs(active, moduleStates) : ''}<main id="main" tabindex="-1">${body}</main></div></div>

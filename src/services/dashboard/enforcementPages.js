@@ -16,6 +16,7 @@ import { formatAge, formatDate, html, layout, path, queryString, raw, section, t
 import { isAllowedImageUrl, isSafeLink } from './pages.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS } from './membersData.js';
 import { NICKNAME_MAX, REASON_MAX, TIMEOUTS } from './memberActions.js';
+import { BULK_ACTIONS, BULK_LIMIT } from './bulkActions.js';
 
 export const DURATION_CHOICES = ['30m', '1h', '6h', '12h', '1d', '3d', '7d', '14d', '1mo', '3mo'];
 
@@ -59,7 +60,7 @@ function option(value, label, selected = false) {
  * filters = the current query; roles = [{ id, name }] for the role filter. An ID in the search
  * box opens that member's page (also people who are not in the server).
  */
-export function membersPage({ session, access = null, moduleStates = {}, list, filters = {}, roles = [], error = null, loading = false }) {
+export function membersPage({ session, access = null, moduleStates = {}, list, filters = {}, roles = [], error = null, loading = false, canWrite = false }) {
     const opt = (value, label, current) => html`<option value="${value}"${value === current ? raw(' selected') : ''}>${label}</option>`;
     const keep = { q: filters.q, role: filters.role, joined: filters.joined, state: filters.state, sort: filters.sort };
     const pageLink = (page, label) => html`<a class="btn" href="${path(`/users${queryString({ ...keep, page: page || '' })}`)}">${label}</a>`;
@@ -69,8 +70,9 @@ export function membersPage({ session, access = null, moduleStates = {}, list, f
         : html`<span class="muted">no roles</span>`);
     const warnCell = (row) => (row.level > 0 ? html`level ${row.level}${row.warns ? html` · ${row.warns} warn${row.warns === 1 ? '' : 's'}` : ''}`
         : row.warns ? html`${row.warns} of 3` : html`<span class="muted">—</span>`);
-    const table = rows.length ? html`<div class="table-wrap"><table class="members"><thead><tr><th>Member</th><th>Roles</th><th>Joined</th><th>Warns</th><th>State</th></tr></thead><tbody>
-${rows.map((row) => html`<tr><td><a class="member-cell" href="${userHref(row.id)}">${row.avatarUrl && isAllowedImageUrl(row.avatarUrl)
+    const tick = (row) => (canWrite ? html`<td class="tick"><input type="checkbox" name="ids" value="${row.id}" form="bulk-form" aria-label="Select ${row.displayName}"></td>` : '');
+    const table = rows.length ? html`<div class="table-wrap"><table class="members"><thead><tr>${canWrite ? html`<th class="tick"><input type="checkbox" data-select-all="ids" aria-label="Select everyone on this page"></th>` : ''}<th>Member</th><th>Roles</th><th>Joined</th><th>Warns</th><th>State</th></tr></thead><tbody>
+${rows.map((row) => html`<tr>${tick(row)}<td><a class="member-cell" href="${userHref(row.id)}">${row.avatarUrl && isAllowedImageUrl(row.avatarUrl)
         ? html`<img class="avatar-sm" src="${row.avatarUrl}" alt="" width="32" height="32" loading="lazy" referrerpolicy="no-referrer">`
         : html`<span class="avatar-sm" aria-hidden="true">${row.displayName.slice(0, 1).toUpperCase()}</span>`}<span><b>${row.displayName}</b>${row.bot ? html` <span class="tag">bot</span>` : ''}<small>${row.username} · ${row.id}</small></span></a></td>
 <td class="roles-cell">${roleCell(row)}</td><td class="nowrap">${row.joinedAt ? html`<time datetime="${new Date(row.joinedAt).toISOString()}" data-relative>${formatDate(new Date(row.joinedAt))}</time>` : html`<span class="muted">unknown</span>`}</td>
@@ -91,6 +93,7 @@ ${loading ? html`<p class="notice">The member list is not available right now (t
 <label>Show<select name="state">${Object.entries(STATE_FILTERS).map(([k, v]) => opt(k, v, filters.state || ''))}</select></label>
 <label>Sort<select name="sort">${Object.entries(SORTS).map(([k, v]) => opt(k, v, filters.sort || 'joined_desc'))}</select></label>
 <button class="primary" type="submit">Apply</button> <a href="${path('/users')}">Clear</a></form>
+${canWrite && list?.rows?.length ? bulkForm(session.csrf, list, filters, roles) : ''}
 ${list ? table : ''}`;
     return layout({ title: 'Members', active: 'users', session, access, moduleStates, body });
 }
@@ -153,6 +156,56 @@ ${member ? html`<dt>Roles (${roles.length})</dt><dd>${roles.length ? roles.map((
  * moderator may take them), a role picker of the roles they may give, nickname, timeout. When
  * the member cannot be changed (owner, bot, yourself, equal or higher role) it says why.
  */
+/** The bulk card under the Members list: what to do with the ticked members (or everyone matching). */
+function bulkForm(csrf, list, filters, roles) {
+    const canAll = list.total <= BULK_LIMIT;
+    return html`<form class="card bulk" id="bulk-form" method="post" action="${path('/users/bulk/preview')}"><input type="hidden" name="csrf" value="${csrf}">
+${['q', 'joined', 'state', 'sort'].map((k) => html`<input type="hidden" name="${k}" value="${filters[k] || ''}">`)}<input type="hidden" name="frole" value="${filters.role || ''}">
+<h2>Bulk action</h2>
+<fieldset class="bulk-scope"><legend class="sr">Which members</legend>
+<label class="check"><input type="radio" name="scope" value="selected" checked> The members ticked below</label>
+<label class="check"><input type="radio" name="scope" value="filter"${canAll ? '' : raw(' disabled')}> Everyone matching these filters (${list.total})${canAll ? '' : html` <span class="muted">more than ${BULK_LIMIT}: narrow the filters</span>`}</label></fieldset>
+<div class="grid">
+<label>Do this<select name="action" required><option value="">— choose —</option>${Object.entries(BULK_ACTIONS).map(([k, v]) => html`<option value="${k}">${v}</option>`)}</select></label>
+<label class="only-role">Role<select name="roleId" data-search><option value="">— choose —</option>${roles.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>
+<label class="only-timeout">Timeout length<select name="timeout"><option value="">— choose —</option>${Object.entries(TIMEOUTS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select></label>
+<label class="only-record">Reason<select name="reasonKey">${ENFORCEMENT_REASONS.map((r) => html`<option value="${r.key}">${r.label}</option>`)}<option value="${CUSTOM_REASON_KEY}">Custom…</option></select></label>
+<label class="only-record">Custom reason<input name="custom_reason" maxlength="500"><span class="hint">Only used with "Custom…". Each member gets the same DM and case as one-by-one.</span></label>
+<label class="only-ban">Ban length<input name="duration" maxlength="20" placeholder="e.g. 7d, 1mo, permanent"></label>
+<label class="only-plain">Reason (optional, Discord audit log)<input name="reason" maxlength="${REASON_MAX}"></label>
+</div>
+<p class="muted">Nothing happens yet: the next page shows exactly who will be changed and who is skipped, and why. At most ${BULK_LIMIT} members; kicks and bans only as many as the mass-action guard still allows.</p>
+<div class="form-actions"><button type="submit" class="primary">Preview</button></div></form>`;
+}
+
+/** Who a bulk action will change and who is skipped (with the reason); Run needs the one-time token. */
+export function bulkPreviewPage({ session, access = null, moduleStates = {}, action, label, role, timeout, plan, token, hash, guardLeft }) {
+    const what = `${label}${role ? ` @${role.name}` : ''}${timeout ? ` for ${timeout.label}` : ''}`;
+    const destructive = action === 'kick' || action === 'ban';
+    const n = `${plan.run.length} member${plan.run.length === 1 ? '' : 's'}`;
+    const verb = { 'role-add': `Give @${role?.name} to ${n}`, 'role-remove': `Take @${role?.name} from ${n}`, timeout: `Time out ${n}`, kick: `Kick ${n}`, ban: `Ban ${n}` }[action] || `${label} ${n}`;
+    const body = html`<a class="back" href="${path('/users')}">← Members</a>
+<header class="page-head"><h1>${what}: ${plan.run.length} member${plan.run.length === 1 ? '' : 's'}</h1><p class="muted">Check the list. Nothing has been changed yet.</p></header>
+${destructive && Number.isFinite(guardLeft) ? html`<p class="notice">The mass-action guard allows ${guardLeft} more ban${guardLeft === 1 ? '' : 's'}/kick${guardLeft === 1 ? '' : 's'} in this 10-minute window; members beyond that are skipped.</p>` : ''}
+<section class="card"><h2>Will be changed (${plan.run.length})</h2>${plan.run.length ? html`<ul class="name-list">${plan.run.map((m) => html`<li><a href="${userHref(m.id)}">${m.name}</a></li>`)}</ul>` : html`<p class="empty">Nobody: every selected member is skipped.</p>`}</section>
+${plan.skipped.length ? html`<section class="card"><h2>Skipped (${plan.skipped.length})</h2><ul class="skip-list">${plan.skipped.map((m) => html`<li><a href="${userHref(m.id)}">${m.name}</a><span class="muted">${m.why}</span></li>`)}</ul></section>` : ''}
+${plan.run.length ? actionForm(session.csrf, '/users/bulk/execute', html`<p class="muted">Runs one member at a time (Discord rate limits); you can leave the page and come back to the progress.${destructive ? ' Every member gets the same DM and case as a single action.' : ''}</p>`,
+        { submit: verb, hidden: { token, fh: hash }, danger: destructive, confirm: destructive ? `${verb}?` : '' }) : ''}`;
+    return layout({ title: `Bulk: ${what}`, active: 'users', session, access, moduleStates, body });
+}
+
+/** Progress of a bulk job; reloads itself every 2 s while running (meta refresh, CSP-safe). */
+export function bulkJobPage({ session, access = null, moduleStates = {}, job }) {
+    const running = !job.finishedAt;
+    const doneCount = job.done.length + job.failed.length;
+    const body = html`<a class="back" href="${path('/users')}">← Members</a>
+<header class="page-head"><h1>${job.label}</h1><p class="muted">${running ? html`Working… ${doneCount} of ${job.total} done. This page updates itself.` : html`Finished: ${job.done.length} done, ${job.failed.length} failed.`}</p></header>
+<div class="progress-row"><progress value="${doneCount}" max="${job.total || 1}" aria-label="Progress"></progress><span class="muted">${doneCount} / ${job.total}</span></div>
+${job.failed.length ? html`<section class="card"><h2>Failed (${job.failed.length})</h2><ul class="skip-list">${job.failed.map((m) => html`<li><a href="${userHref(m.id)}">${m.name}</a><span class="muted">${m.why}</span></li>`)}</ul></section>` : ''}
+${job.done.length ? html`<section class="card"><h2>Done (${job.done.length})</h2><ul class="name-list">${job.done.map((m) => html`<li><a href="${userHref(m.id)}">${m.name}</a></li>`)}</ul></section>` : ''}`;
+    return layout({ title: `Bulk: ${job.label}`, active: 'users', session, access, moduleStates, body, refreshSeconds: running ? 2 : 0 });
+}
+
 function memberEditSection(view, canWrite, csrf) {
     const id = view.user.id;
     const edit = view.memberEdit;

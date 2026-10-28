@@ -597,6 +597,20 @@
         if (target instanceof HTMLDetailsElement) target.open = true;
     }
 
+    // ── "Select everyone on this page" (Members list bulk ticks) ──────────
+    function setupSelectAll() {
+        for (const all of document.querySelectorAll('input[data-select-all]')) {
+            const boxes = () => [...document.querySelectorAll(`input[type="checkbox"][name="${all.dataset.selectAll}"]`)];
+            all.addEventListener('change', () => { for (const box of boxes()) box.checked = all.checked; });
+            document.addEventListener('change', (event) => {
+                if (event.target.name !== all.dataset.selectAll) return;
+                const list = boxes();
+                all.checked = list.every((box) => box.checked);
+                all.indeterminate = !all.checked && list.some((box) => box.checked);
+            });
+        }
+    }
+
     // ── "/" focuses the top bar search (not while typing somewhere) ────────
     function setupQuickFind() {
         const input = document.querySelector('[data-quick-find]');
@@ -617,6 +631,7 @@
         setupThemePicker();
         showCurrentTab();
         setupSectionSpy();
+        setupSelectAll();
         setupToasts();
         setupSaveBar();
         setupModuleSearch();
