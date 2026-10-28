@@ -125,9 +125,13 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
 
 const show = (value, text = value) => (value === undefined ? html`<span class="muted">unavailable</span>` : text);
 
-/** One stat card: label, value (tone: ok = green, warn, bad, or neutral) and a note. */
-function stat(label, value, { tone = '', note = '', href = null } = {}) {
-    return html`<li class="stat${tone ? ` stat-${tone}` : ''}"><span class="label">${label}</span><span class="value">${value}</span>${note ? html`<span class="note">${note}</span>` : ''}${href ? html`<a class="stat-link" href="${href}"><span class="sr">Open ${label}</span></a>` : ''}</li>`;
+/**
+ * One stat tile: short label, value and an optional note. `dot` (on, off, warn, bad) puts a small
+ * status dot before the value; the value itself stays in the normal text colour. `title` is the
+ * long name, shown on hover and read by screen readers.
+ */
+function stat(label, value, { dot = '', note = '', href = null, title = '' } = {}) {
+    return html`<li class="stat"${title ? html` title="${title}"` : ''}><span class="label">${label}${title ? html`<span class="sr"> (${title})</span>` : ''}</span><span class="value${dot ? ' has-dot' : ''}">${dot ? html`<span class="dot dot-${dot}" aria-hidden="true"></span>` : ''}${value}</span>${note ? html`<span class="note">${note}</span>` : ''}${href ? html`<a class="stat-link" href="${href}"><span class="sr">Open ${label}</span></a>` : ''}</li>`;
 }
 
 /** A compact module summary (name + on/off dot); the full cards and switches are on the Modules page. */
@@ -156,15 +160,16 @@ function recentChangesSection(rows) {
 export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [] }) {
     const todo = o.checklist.filter((item) => !item.done);
     const pendingText = o.pendingAppeals >= PENDING_APPEALS_CAP ? `${PENDING_APPEALS_CAP}+` : o.pendingAppeals;
-    const lockdown = o.lockdown === undefined ? html`<span class="muted">unavailable</span>` : o.lockdown.active ? 'active' : 'off';
+    const lockdown = o.lockdown === undefined ? html`<span class="muted">Unavailable</span>` : o.lockdown.active ? 'Active' : 'Off';
+    // One row of equal tiles: short labels, a status dot where the value is a state.
     const stats = html`<ul class="stats">
-${stat('Bot', o.bot.ready ? 'online' : 'offline', { tone: o.bot.ready ? 'ok' : 'bad', note: o.bot.ping !== null ? `${o.bot.ping} ms ping` : '' })}
-${stat('Database', o.database ? (o.database.connected ? 'connected' : 'degraded') : html`<span class="muted">unknown</span>`, { tone: o.database ? (o.database.connected ? 'ok' : 'bad') : '', note: o.database?.type || '' })}
+${stat('Bot', o.bot.ready ? 'Online' : 'Offline', { dot: o.bot.ready ? 'on' : 'bad', note: o.bot.ping !== null ? `${o.bot.ping} ms ping` : '' })}
+${stat('Database', o.database ? (o.database.connected ? 'Connected' : 'Degraded') : html`<span class="muted">Unknown</span>`, { dot: o.database ? (o.database.connected ? 'on' : 'bad') : 'off', note: o.database?.type || '' })}
 ${stat('Members', o.guild?.memberCount ?? '—', { note: o.guild?.online != null ? `${o.guild.online} online` : '' })}
 ${stat('Open tickets', show(o.openTickets))}
-${stat('Pending appeals', show(o.pendingAppeals, html`<a href="${path('/appeals')}">${pendingText}</a>`), { tone: o.pendingAppeals > 0 ? 'warn' : '' })}
-${stat('Open automod review cards', show(o.openReviewCards), { note: 'since the last restart' })}
-${stat('Raid lockdown', lockdown, { tone: o.lockdown?.active ? 'bad' : o.lockdown ? 'ok' : '', note: o.lockdown?.active && o.lockdown.since ? `since ${formatDate(o.lockdown.since)}` : '' })}
+${stat('Appeals', show(o.pendingAppeals, html`<a href="${path('/appeals')}">${pendingText}</a>`), { dot: o.pendingAppeals > 0 ? 'warn' : '', note: 'pending', title: 'Pending appeals' })}
+${stat('Review cards', show(o.openReviewCards), { note: 'since restart', title: 'Open automod review cards' })}
+${stat('Lockdown', lockdown, { dot: o.lockdown?.active ? 'bad' : o.lockdown ? 'off' : '', note: o.lockdown?.active && o.lockdown.since ? `since ${formatDate(o.lockdown.since)}` : '', title: 'Raid lockdown' })}
 </ul>`;
     // Open items first; a check icon for done ones (the word is there for screen readers).
     const doneCount = o.checklist.length - todo.length;

@@ -465,11 +465,11 @@ test('overview: status, counts, checklist and recent actions; read-only', async 
     const { cookie } = await login(d);
     const res = await runProtected(d, d.overview, { method: 'GET', headers: { cookie }, query: {} });
     assert.equal(res.statusCode, 200);
-    assert.match(res.body, /online/);
+    assert.match(res.body, /<span class="dot dot-on" aria-hidden="true"><\/span>Online</);
     assert.match(res.body, /42 ms ping/);
     assert.match(res.body, /Open tickets<\/span><span class="value">2</);
     assert.match(res.body, />3<\/a>/, 'pending appeals of the main guild');
-    assert.match(res.body, /Open automod review cards<\/span><span class="value">1</, 'cards of other guilds are not counted');
+    assert.match(res.body, /Review cards<span class="sr"> \(Open automod review cards\)<\/span><\/span><span class="value">1</, 'cards of other guilds are not counted');
     assert.match(res.body, /Getting started/);
     assert.match(res.body, /Mod log channel/);
     assert.match(res.body, /&lt;t&gt;/);
@@ -489,7 +489,7 @@ test('overview survives failing sources (shows unavailable)', async () => {
     assert.equal(o.recent, undefined);
     const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
     assert.match(page, /unavailable/);
-    assert.match(page, /offline/);
+    assert.match(page, /<span class="dot dot-bad" aria-hidden="true"><\/span>Offline</);
 });
 
 test('getting started lists what is not configured; module states for the sidebar', () => {
