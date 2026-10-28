@@ -44,6 +44,7 @@ const configuredTables = {
     guild_settings: 'guild_settings',
     dashboard_sessions: 'dashboard_sessions',
     dashboard_audit: 'dashboard_audit',
+    bot_blacklist: 'bot_blacklist',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -88,6 +89,7 @@ const allowedTableIdentifiers = new Set([
     'guild_settings',
     'dashboard_sessions',
     'dashboard_audit',
+    'bot_blacklist',
 ]);
 
 const validatedTables = Object.fromEntries(

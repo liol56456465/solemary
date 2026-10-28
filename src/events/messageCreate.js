@@ -119,6 +119,8 @@ async function handlePrefixCommand(message, client) {
       permissions: message.member?.permissions,
     });
     if (!access.allowed) {
+      // A blacklisted server is ignored (no answer at all).
+      if (access.silent) return;
       await message.reply({ content: access.message, allowedMentions: { parse: [], repliedUser: false } }).catch(() => {});
       return;
     }

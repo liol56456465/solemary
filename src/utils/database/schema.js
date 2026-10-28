@@ -536,6 +536,21 @@ export const tableStatements = [
         new JSONB,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+
+    // Global bot blacklist (dashboard Owner area, services/owner/blacklistService.js): users or
+    // servers that may not use the bot. Undo sets removed_at (the row stays as history).
+    `CREATE TABLE IF NOT EXISTS ${t.bot_blacklist} (
+        id BIGSERIAL PRIMARY KEY,
+        kind VARCHAR(10) NOT NULL CHECK (kind IN ('user', 'guild')),
+        target_id VARCHAR(20) NOT NULL,
+        reason VARCHAR(300) NOT NULL,
+        added_by VARCHAR(20) NOT NULL,
+        added_by_username VARCHAR(100),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        removed_at TIMESTAMPTZ,
+        removed_by VARCHAR(20),
+        removed_by_username VARCHAR(100)
+    )`,
 ];
 
 export const indexStatements = [
@@ -581,6 +596,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_guild ON ${t.dashboard_audit}(guild_id, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_module ON ${t.dashboard_audit}(guild_id, module, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_user ON ${t.dashboard_audit}(guild_id, user_id, id DESC)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_bot_blacklist_one_active ON ${t.bot_blacklist}(kind, target_id) WHERE removed_at IS NULL`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

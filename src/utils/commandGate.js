@@ -9,15 +9,19 @@
 // Commands stay visible to everyone (no default_member_permissions), so
 // non-admins see this message instead of an empty command list.
 //
+// 0. The global blacklist (dashboard Owner area) comes first: a blacklisted user gets
+//    "You can't use this bot."; a blacklisted server is ignored (silent: true, the caller
+//    sends nothing). OWNER_IDS are never blocked.
 // Message components (buttons, selects, modals) are not gated here: the appeal
 // panel and verification must work for everyone, and each admin-only panel
-// re-checks Administrator itself.
+// re-checks Administrator itself. interactionCreate applies the blacklist to them.
 
 import { PermissionFlagsBits } from 'discord.js';
 import { isBotOwner } from '../config/bot.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { isEveryoneCommand, isSupportServerCommand } from '../config/commands/commandAccess.js';
 import { adminCommandsRetired, isOwnerKit, retiredMessage } from '../config/commands/retirement.js';
+import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
 
 export function getAdminRequiredMessage() {
     const channelId = enforcementConfig.adminRequestChannelId;
@@ -51,10 +55,17 @@ export function canSeeAdminCommands(interaction) {
  * @param {object|null} p.guild
  * @param {string} p.userId
  * @param {object|null} p.permissions  PermissionsBitField of the member in this guild
- * @returns {{ allowed: true, ownerOverride?: true } | { allowed: false, message: string }}
+ * @returns {{ allowed: true, ownerOverride?: true } | { allowed: false, message: string, silent?: true }}
  *   ownerOverride: allowed only because the user is in OWNER_IDS (the caller records it).
+ *   silent: a blacklisted server; the caller does not answer at all.
  */
 export function checkCommandAccess({ command, accessKey, guild, userId, permissions }) {
+    const blocked = blacklistHit({ userId, guildId: guild?.id || null });
+    if (blocked) {
+        return blocked.kind === 'guild'
+            ? { allowed: false, silent: true, message: BLACKLIST_MESSAGE }
+            : { allowed: false, message: BLACKLIST_MESSAGE };
+    }
     if (!guild) {
         return { allowed: false, message: 'This bot only works in servers.' };
     }

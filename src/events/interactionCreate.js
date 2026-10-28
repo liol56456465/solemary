@@ -20,6 +20,7 @@ import { isCollectorManagedComponent } from '../utils/collectorComponents.js';
 import { ResponseCoordinator } from '../utils/responseCoordinator.js';
 import { enforceDefaultCommandPermissions } from '../utils/permissionGuard.js';
 import { checkCommandAccess } from '../utils/commandGate.js';
+import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { skipIfArrivedTooLate, noticeIfHandlerMissedDeadline } from '../utils/lateInteractionNotice.js';
 
@@ -52,6 +53,22 @@ async function replyExpiredComponent(interaction) {
   });
 }
 
+/** True when a component / modal interaction was refused by the blacklist (answered or ignored). */
+export async function refuseBlacklistedComponent(interaction) {
+  const isComponent = interaction.isMessageComponent?.() || interaction.isModalSubmit?.();
+  if (!isComponent) return false;
+  const blocked = blacklistHit({ userId: interaction.user?.id, guildId: interaction.guildId || null });
+  if (!blocked) return false;
+  if (blocked.kind === 'user') {
+    await InteractionHelper.safeReply(interaction, {
+      content: BLACKLIST_MESSAGE,
+      flags: MessageFlags.Ephemeral,
+      allowedMentions: { parse: [] },
+    });
+  }
+  return true;
+}
+
 function withTraceContext(context = {}, traceContext = {}) {
   return {
     traceId: traceContext.traceId,
@@ -76,6 +93,10 @@ export default {
       try {
         InteractionHelper.patchInteractionResponses(interaction);
         ResponseCoordinator.attach(interaction);
+
+        // Global blacklist (dashboard Owner area) for buttons, select menus and modals; commands
+        // are checked by the command gate. A blacklisted server is ignored without an answer.
+        if (await refuseBlacklistedComponent(interaction)) return;
 
         if (interaction.isChatInputCommand()) {
           try {
@@ -111,6 +132,8 @@ export default {
               permissions: interaction.memberPermissions,
             });
             if (!access.allowed) {
+              // A blacklisted server is ignored (no answer at all).
+              if (access.silent) return;
               await InteractionHelper.safeReply(interaction, {
                 content: access.message,
                 flags: MessageFlags.Ephemeral,
@@ -225,6 +248,7 @@ export default {
               permissions: interaction.memberPermissions,
             });
             if (!access.allowed) {
+              if (access.silent) return;
               await InteractionHelper.safeReply(interaction, { content: access.message, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
               return;
             }
