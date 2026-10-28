@@ -9,6 +9,7 @@ import { getServerCounters, saveServerCounters } from '../services/serverstatsSe
 import { logger } from '../utils/logger.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { channelLines } from '../utils/logging/channelLogLines.js';
+import { linkedUserId, unlinkModmailChannel } from '../services/modmailLinks.js';
 
 export default {
     name: 'channelDelete',
@@ -20,6 +21,11 @@ export default {
                 eventType: EVENT_TYPES.CHANNEL_DELETE,
                 data: { title: 'Channel Deleted', headline: `**#${channel.name}** was deleted`, lines: channelLines(channel), channelId: channel.id },
             }).catch((error) => logger.debug(`Channel delete log failed: ${error.message}`));
+        }
+
+        // A modmail channel deleted by hand: forget its link so the member can open a new one.
+        if (channel.guild && await linkedUserId(channel).catch(() => null)) {
+            await unlinkModmailChannel(channel.id).catch((error) => logger.warn(`Modmail link for deleted channel ${channel.id} not removed: ${error.message}`));
         }
 
         if (channel.type === 0 && channel.guild) {

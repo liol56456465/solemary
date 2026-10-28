@@ -1,14 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chunkText, modmailUserId, isModmailStaff } from '../src/services/modmailService.js';
+import { chunkText, isModmailStaff } from '../src/services/modmailService.js';
 
-test('modmail channels are recognised only by a well-formed topic', () => {
-    assert.equal(modmailUserId({ topic: 'modmail:123456789012345678' }), '123456789012345678');
-    assert.equal(modmailUserId({ topic: 'modmail:abc' }), null);
-    assert.equal(modmailUserId({ topic: 'general chat' }), null);
-    assert.equal(modmailUserId({ topic: null }), null);
-    assert.equal(modmailUserId(null), null);
-});
+// Which member a modmail channel belongs to comes from modmail_links (tests/db/modmailLinks.test.js).
 
 test('long relays are split under the 2000 character limit', () => {
     assert.deepEqual(chunkText('hi'), ['hi']);

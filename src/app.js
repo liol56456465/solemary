@@ -17,6 +17,8 @@ import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
 import { runEnforcementExpiry } from './services/enforcement/expiryService.js';
 import { runTempRoleExpiry } from './services/members/tempRoleService.js';
+import { importModmailTopicsOnce } from './services/modmailLinks.js';
+import { enforcementConfig } from './config/enforcement.js';
 import { expireNoContactOrders } from './services/enforcement/noContactService.js';
 import { importLegacyWarnings } from './services/enforcement/warnImportService.js';
 import { flushStaffMessages, postWeeklyStaffReport } from './services/staffActivityService.js';
@@ -342,7 +344,10 @@ class Meowist extends Client {
     if (testMode.enabled && !testMode.cronEnabled) {
       startupLog('Test mode: cron jobs disabled (set TEST_ENABLE_CRON=true to enable)');
       // Legacy warn import only touches the local test database.
-      const importOnly = runSafeTask('enforcement_import', () => importLegacyWarnings(this));
+      const importOnly = runSafeTask('enforcement_import', async () => {
+        await importLegacyWarnings(this);
+        await importModmailTopicsOnce(this.guilds.cache.get(enforcementConfig.mainGuildId));
+      });
       if (this.isReady()) importOnly(); else this.once(Events.ClientReady, () => importOnly());
       return;
     }
@@ -399,6 +404,8 @@ class Meowist extends Client {
       await runEnforcementExpiry(this);
       await runTempRoleExpiry(this);
       await importLegacyWarnings(this);
+      // Modmail channels opened before modmail_links existed: linked once from their topic.
+      await importModmailTopicsOnce(this.guilds.cache.get(enforcementConfig.mainGuildId));
     });
     if (this.isReady()) {
       startupEnforcement();

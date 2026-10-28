@@ -246,6 +246,15 @@ export const tableStatements = [
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         PRIMARY KEY (guild_id, user_id, role_id)
     )`,
+    // Modmail: which member a modmail channel belongs to. The only source of truth (the channel
+    // topic is ignored: staff with Manage Channels could fake it). One channel per member.
+    `CREATE TABLE IF NOT EXISTS ${t.modmail_links} (
+        channel_id VARCHAR(20) PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (guild_id, user_id)
+    )`,
     // Case evidence: message links (with a text excerpt kept in case the message is
     // deleted) and images re-hosted in the evidence channel. Discord CDN URLs expire,
     // so images are shown by re-fetching store_channel_id/store_message_id.

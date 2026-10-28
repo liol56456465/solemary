@@ -19,6 +19,7 @@ export const T = {
     verificationIps: pgConfig.tables.verification_ips,
     staffActivity: pgConfig.tables.staff_activity,
     tempRoles: pgConfig.tables.member_temp_roles,
+    modmailLinks: pgConfig.tables.modmail_links,
     serverSnapshots: pgConfig.tables.server_snapshots,
     tickets: pgConfig.tables.tickets,
     nativeRules: pgConfig.tables.automod_native_rules,

@@ -38,7 +38,7 @@ export const cancelModmailHandler = {
 export const closeModmailHandler = {
     name: MODMAIL_BUTTONS.close,
     async execute(interaction, client) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId || !modmailUserId(interaction.channel)) {
+        if (interaction.guildId !== enforcementConfig.mainGuildId || !(await modmailUserId(interaction.channel))) {
             await interaction.reply({ content: 'This is not an open modmail conversation.', flags: MessageFlags.Ephemeral });
             return;
         }

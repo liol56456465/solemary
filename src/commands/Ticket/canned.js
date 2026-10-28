@@ -45,7 +45,7 @@ export default {
             const staffName = interaction.member?.displayName || interaction.user.username;
             await interaction.channel.send({ content: `**${staffName} (staff):**\n${text}`, allowedMentions: { parse: [] } });
             // In a modmail channel the member only sees what reaches their DMs.
-            if (modmailUserId(interaction.channel)) await sendStaffTextToMember(interaction.channel, staffName, text);
+            if (await modmailUserId(interaction.channel)) await sendStaffTextToMember(interaction.channel, staffName, text);
             return InteractionHelper.safeReply(interaction, { content: `Sent **${name}**.`, flags: MessageFlags.Ephemeral });
         }
 

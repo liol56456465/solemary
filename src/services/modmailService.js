@@ -25,8 +25,8 @@ import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js
 import { generateTranscript } from './ticket.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
+import { linkModmailChannel, linkedChannelId, linkedUserId, unlinkModmailChannel } from './modmailLinks.js';
 
-const TOPIC_PREFIX = 'modmail:';
 const NOTE_PREFIX = '//';
 const MAX_MESSAGE = 2000;
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // Discord's upload limit for bots in unboosted servers
@@ -40,16 +40,22 @@ export function getMainGuild(client) {
     return client.guilds.cache.get(enforcementConfig.mainGuildId) ?? null;
 }
 
-/** The userId a modmail channel belongs to, or null for any other channel. */
-export function modmailUserId(channel) {
-    const topic = channel?.topic;
-    if (!topic?.startsWith(TOPIC_PREFIX)) return null;
-    const id = topic.slice(TOPIC_PREFIX.length).trim();
-    return /^\d{17,20}$/.test(id) ? id : null;
+/**
+ * The userId a modmail channel belongs to, or null for any other channel. Read from
+ * modmail_links only; the channel topic is not trusted (see modmailLinks.js).
+ */
+export async function modmailUserId(channel) {
+    return linkedUserId(channel);
 }
 
-export function findModmailChannel(guild, userId) {
-    return guild.channels.cache.find((c) => c.type === ChannelType.GuildText && modmailUserId(c) === userId) ?? null;
+/** The member's open modmail channel, or null. A link to a channel that is gone is removed. */
+export async function findModmailChannel(guild, userId) {
+    const channelId = await linkedChannelId(guild.id, userId);
+    if (!channelId) return null;
+    const channel = guild.channels.cache.get(channelId);
+    if (channel) return channel;
+    await unlinkModmailChannel(channelId).catch((error) => logger.warn(`Stale modmail link ${channelId} not removed: ${error.message}`));
+    return null;
 }
 
 export async function isModmailBlocked(client, guildId, userId) {
@@ -159,7 +165,7 @@ export async function handleModmailDm(message, client) {
         return;
     }
 
-    const channel = findModmailChannel(guild, userId);
+    const channel = await findModmailChannel(guild, userId);
     if (channel) {
         try {
             await relay(channel, `**${message.author.username}:**`, message);
@@ -187,7 +193,7 @@ export async function openModmail(client, user, dmChannel, messageId) {
     const guild = getMainGuild(client);
     const refusal = await modmailRefusal(client, guild, user.id);
     if (refusal) return refusal;
-    if (findModmailChannel(guild, user.id)) return 'You already have an open conversation. Just send your messages here.';
+    if (await findModmailChannel(guild, user.id)) return 'You already have an open conversation. Just send your messages here.';
     if (opening.has(user.id)) return 'Your conversation is being opened.';
 
     const original = await dmChannel.messages.fetch(messageId).catch(() => null);
@@ -209,7 +215,8 @@ export async function openModmail(client, user, dmChannel, messageId) {
             name: `modmail-${safeName}`,
             type: ChannelType.GuildText,
             parent: category?.type === ChannelType.GuildCategory ? category.id : undefined,
-            topic: `${TOPIC_PREFIX}${user.id}`,
+            // For people only; the bot reads the member from modmail_links, never from the topic.
+            topic: `Modmail with ${user.username} (${user.id})`,
             permissionOverwrites: [
                 { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
                 { id: client.user.id, allow: [...staffAccess, PermissionFlagsBits.ManageChannels] },
@@ -217,6 +224,13 @@ export async function openModmail(client, user, dmChannel, messageId) {
             ],
             reason: `Modmail from ${user.tag} (${user.id})`,
         });
+        // The link is what makes it a modmail channel; without it the channel is useless.
+        try {
+            await linkModmailChannel(guild.id, channel.id, user.id);
+        } catch (error) {
+            await channel.delete('Modmail link could not be saved').catch(() => {});
+            throw error;
+        }
 
         const header = new EmbedBuilder()
             .setTitle('Modmail')
@@ -246,7 +260,7 @@ export async function openModmail(client, user, dmChannel, messageId) {
 
 /** Sends staff text (e.g. a canned answer) from a modmail channel to the member by DM. */
 export async function sendStaffTextToMember(channel, staffName, text) {
-    const userId = modmailUserId(channel);
+    const userId = await modmailUserId(channel);
     if (!userId) return false;
     const user = await channel.client.users.fetch(userId);
     for (const chunk of chunkText(`**${staffName} (staff):**\n${text}`)) {
@@ -257,7 +271,7 @@ export async function sendStaffTextToMember(channel, staffName, text) {
 
 /** Copies a staff message from a modmail channel to the member. Returns true when it was a modmail channel. */
 export async function handleModmailStaffMessage(message, prefix = getCommandPrefix()) {
-    const userId = modmailUserId(message.channel);
+    const userId = await modmailUserId(message.channel);
     if (!userId) return false;
     const text = message.content.trimStart();
     if (text.startsWith(NOTE_PREFIX) || (prefix && text.startsWith(prefix))) return true;
@@ -280,7 +294,7 @@ export async function handleModmailStaffMessage(message, prefix = getCommandPref
 
 /** Ends a conversation: tells the member, files the transcript, deletes the channel. */
 export async function closeModmail(channel, closer, reason = '') {
-    const userId = modmailUserId(channel);
+    const userId = await modmailUserId(channel);
     if (!userId) return false;
     const client = channel.client;
     const note = reason ? `\nReason: ${reason}` : '';
@@ -308,8 +322,8 @@ export async function closeModmail(channel, closer, reason = '') {
         logger.warn(`Modmail transcript for ${channel.id} failed: ${error.message}`);
     }
 
-    // Clear the topic first so a DM arriving during deletion isn't copied into a dying channel.
-    await channel.setTopic(null).catch(() => {});
+    // Unlink first so a DM arriving during deletion isn't copied into a dying channel.
+    await unlinkModmailChannel(channel.id);
     await channel.delete(`Modmail closed by ${closer.tag ?? closer.id}`);
     logger.info(`Modmail for ${userId} closed by ${closer.id}`);
     return true;

@@ -25,7 +25,7 @@ export default {
         const subcommand = interaction.options.getSubcommand();
 
         if (subcommand === 'close') {
-            if (!modmailUserId(interaction.channel)) {
+            if (!(await modmailUserId(interaction.channel))) {
                 return replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Use this inside a modmail conversation channel.' });
             }
             if (!isModmailStaff(interaction.member, guildConfig ?? await getGuildConfig(client, interaction.guildId))) {
@@ -39,7 +39,7 @@ export default {
         const user = interaction.options.getUser('user', true);
         const blocked = subcommand === 'block';
         await setModmailBlocked(client, interaction.guildId, user.id, blocked);
-        const open = blocked ? findModmailChannel(interaction.guild, user.id) : null;
+        const open = blocked ? await findModmailChannel(interaction.guild, user.id) : null;
         await InteractionHelper.safeReply(interaction, {
             content: blocked
                 ? `${user} can no longer use modmail.${open ? ` Their open conversation ${open} stays until you close it.` : ''}`

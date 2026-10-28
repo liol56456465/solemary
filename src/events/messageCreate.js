@@ -70,7 +70,7 @@ export default {
 
 // Staff messages in a main-server modmail channel go to the member by DM.
 async function relayModmailStaffMessage(message, client) {
-  if (message.guild.id !== enforcementConfig.mainGuildId || !modmailUserId(message.channel)) return;
+  if (message.guild.id !== enforcementConfig.mainGuildId || !(await modmailUserId(message.channel))) return;
   try {
     const guildConfig = await getGuildConfig(client, message.guild.id);
     if (!isModmailStaff(message.member, guildConfig)) return;
