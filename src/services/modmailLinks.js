@@ -6,11 +6,16 @@
 //
 // Channels opened before this table existed carried "modmail:<userId>" in the topic. They are
 // imported once (logged per channel), then a flag stops any later import, so a topic faked
-// afterwards changes nothing.
+// afterwards changes nothing. Even that one import only takes channels that look bot-made: a
+// text channel in the modmail or ticket category, @everyone denied, the bot allowed Manage
+// Channels. Two channels claiming the same member: neither is imported and staff are alerted.
 
 import { query, T } from './enforcement/db.js';
 import { db } from '../utils/database/wrapper.js';
+import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import { logger } from '../utils/logger.js';
+import { enforcementConfig } from '../config/enforcement.js';
+import { getGuildConfig } from './config/guildConfig.js';
 
 const LEGACY_TOPIC = /^modmail:(\d{17,20})$/;
 const importFlagKey = (guildId) => `modmail:links:imported:${guildId}`;
@@ -76,15 +81,47 @@ export async function importModmailTopicsOnce(guild) {
     if (!guild) return null;
     if (await db.get(importFlagKey(guild.id), null)) return null;
     await loadModmailLinks();
-    let imported = 0;
+    const config = await getGuildConfig(guild.client, guild.id).catch(() => ({}));
+    const parents = new Set([enforcementConfig.modmailCategoryId, config?.ticketCategoryId].filter(Boolean));
+    const botId = guild.members?.me?.id || guild.client?.user?.id;
+    const looksBotMade = (channel) => {
+        const overwrites = channel.permissionOverwrites?.cache;
+        return channel.type === ChannelType.GuildText && parents.has(channel.parentId)
+            && Boolean(overwrites?.get(guild.id)?.deny?.has?.(PermissionFlagsBits.ViewChannel))
+            && Boolean(overwrites?.get(botId)?.allow?.has?.(PermissionFlagsBits.ManageChannels));
+    };
+
+    const claims = new Map(); // userId → [channel]
     for (const channel of guild.channels.cache.values()) {
         const match = LEGACY_TOPIC.exec(String(channel.topic || '').trim());
-        if (!match || byChannel.has(channel.id) || byUser.has(`${guild.id}:${match[1]}`)) continue;
-        await linkModmailChannel(guild.id, channel.id, match[1]);
-        logger.warn(`Modmail import: channel ${channel.id} (#${channel.name}) linked to member ${match[1]} from its topic (one-time import)`);
+        if (!match || byChannel.has(channel.id)) continue;
+        if (!looksBotMade(channel)) {
+            logger.warn(`Modmail import: skipped #${channel.name} (${channel.id}): its topic names ${match[1]} but it does not look like a channel the bot opened`);
+            continue;
+        }
+        claims.set(match[1], [...(claims.get(match[1]) || []), channel]);
+    }
+    let imported = 0;
+    const disputed = [];
+    for (const [userId, channels] of claims) {
+        if (byUser.has(`${guild.id}:${userId}`)) continue;
+        if (channels.length > 1) {
+            disputed.push(`member ${userId}: ${channels.map((c) => `#${c.name} (${c.id})`).join(', ')}`);
+            continue;
+        }
+        await linkModmailChannel(guild.id, channels[0].id, userId);
+        logger.warn(`Modmail import: channel ${channels[0].id} (#${channels[0].name}) linked to member ${userId} from its topic (one-time import)`);
         imported += 1;
     }
-    await db.set(importFlagKey(guild.id), { at: new Date().toISOString(), imported });
+    if (disputed.length) {
+        logger.warn(`Modmail import: not imported, several channels claim the same member: ${disputed.join('; ')}`);
+        const { postModLog } = await import('./enforcement/enforcementService.js');
+        await postModLog(guild.client, 'system', [
+            { name: 'Not imported', value: disputed.join('\n').slice(0, 1000) },
+            { name: 'Why', value: 'Several channels name the same member in their topic, so none is trusted. Close the extra channels by hand; the member can open a new conversation.' },
+        ], { title: '📬 Modmail import: conflicting channels' }).catch(() => {});
+    }
+    await db.set(importFlagKey(guild.id), { at: new Date().toISOString(), imported, disputed: disputed.length });
     logger.info(`Modmail import done in ${guild.id}: ${imported} open channel(s) linked; from now on only modmail_links counts`);
     return imported;
 }

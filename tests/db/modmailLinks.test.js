@@ -6,13 +6,14 @@
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import { isLocalDatabaseUrl } from '../helpers/localDb.js';
 
 const skip = isLocalDatabaseUrl(process.env.POSTGRES_URL || '') ? false : 'needs POSTGRES_URL on localhost (npm run test:db)';
 const runId = String(Date.now()).slice(-9);
 const guildId = `9${runId}00000009`;
 const id = (prefix, n) => `${prefix}${runId}${String(n).padStart(8, '0')}`;
-let pgDb, db, links, modmail;
+let pgDb, db, links, modmail, enforcementConfig;
 
 before(async () => {
     if (skip) return;
@@ -20,6 +21,8 @@ before(async () => {
     ({ db } = await import('../../src/utils/database/wrapper.js'));
     await db.initialize();
     links = await import('../../src/services/modmailLinks.js');
+    ({ enforcementConfig } = await import('../../src/config/enforcement.js'));
+    enforcementConfig.modmailCategoryId = CATEGORY;
     modmail = await import('../../src/services/modmailService.js');
 });
 
@@ -27,14 +30,23 @@ after(async () => {
     if (skip) return;
     await pgDb.pool.query('DELETE FROM modmail_links WHERE guild_id = $1', [guildId]);
     await db.delete(`modmail:links:imported:${guildId}`).catch(() => {});
+    enforcementConfig.modmailCategoryId = undefined;
     await pgDb.disconnect();
 });
 
+const BOT = '999999999999999998';
+const CATEGORY = id('7', 1);
+const bits = (list) => ({ has: (p) => list.includes(p) });
 const fakeGuild = () => {
-    const guild = { id: guildId, channels: { cache: new Map() } };
+    const client = { user: { id: BOT }, users: { fetch: async (u) => ({ id: u, send: async (m) => dms.push({ to: u, m }) }) } };
+    const guild = { id: guildId, client, members: { me: { id: BOT } }, channels: { cache: new Map() } };
     const dms = [];
-    const channel = (n, topic) => {
-        const c = { id: id('8', n), name: `chan${n}`, topic, guild, client: { users: { fetch: async (u) => ({ id: u, send: async (m) => dms.push({ to: u, m }) }) } } };
+    // botMade: what openModmail creates (text channel in the category, @everyone denied, bot allowed Manage Channels).
+    const channel = (n, topic, { botMade = true, parentId = CATEGORY } = {}) => {
+        const overwrites = botMade
+            ? new Map([[guildId, { deny: bits([PermissionFlagsBits.ViewChannel]), allow: bits([]) }], [BOT, { deny: bits([]), allow: bits([PermissionFlagsBits.ManageChannels]) }]])
+            : new Map();
+        const c = { id: id('8', n), name: `chan${n}`, type: ChannelType.GuildText, parentId, topic, guild, client, permissionOverwrites: { cache: overwrites } };
         guild.channels.cache.set(c.id, c);
         return c;
     };
@@ -46,7 +58,14 @@ test('one-time import links pre-existing channels from their topic; a topic fake
     const { guild, channel, dms } = fakeGuild();
     const victim = id('6', 1);
     const legacy = channel(1, `modmail:${id('6', 2)}`);
-    assert.equal(await links.importModmailTopicsOnce(guild), 1);
+    // Faked before the first import: not bot-made, or outside the category, or two claims on one member.
+    const lookalike = channel(10, `modmail:${id('6', 10)}`, { botMade: false });
+    const elsewhere = channel(11, `modmail:${id('6', 11)}`, { parentId: id('7', 9) });
+    const twinA = channel(12, `modmail:${id('6', 12)}`);
+    const twinB = channel(13, `modmail:${id('6', 12)}`);
+    assert.equal(await links.importModmailTopicsOnce(guild), 1, 'only the real one');
+    for (const c of [lookalike, elsewhere, twinA, twinB]) assert.equal(await modmail.modmailUserId(c), null, `${c.name} not imported`);
+    assert.equal(await modmail.findModmailChannel(guild, id('6', 12)), null, 'a disputed member gets no channel');
     assert.equal(await modmail.modmailUserId(legacy), id('6', 2), 'imported');
 
     // Someone with Manage Channels creates a channel whose topic names another member.
