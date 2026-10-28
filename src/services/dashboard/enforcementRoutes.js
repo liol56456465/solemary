@@ -32,7 +32,7 @@ import {
     parseFlowInput, reasonPatch, startFlow,
 } from '../enforcement/flowBuilder.js';
 import { COVERAGE_PERIODS, buildCoverageReport } from '../staffCoverageService.js';
-import { InputError, multiline, plainText, text } from './forms.js';
+import { InputError, multiline, plainText, queryText, text } from './forms.js';
 import { html, path } from './html.js';
 import { isSnowflake } from './security.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
@@ -208,7 +208,7 @@ export function createEnforcementHandlers(core) {
     // ── Members ──────────────────────────────────────────────────────────
 
     async function users(req, res) {
-        const q = text(req.query, 'q', 40);
+        const q = queryText(req.query, 'q', 40);
         if (!q) return sendHtml(res, 200, userSearchPage({ ...shellOf(req) }));
         if (isSnowflake(q)) {
             const user = await client.users.fetch(q).catch(() => null);
@@ -258,7 +258,7 @@ export function createEnforcementHandlers(core) {
 
     async function renderUser(req, res, status = 200, { error = null, values = {} } = {}) {
         const userId = userIdParam(req);
-        const view = userId ? await loadUserView(req, userId, { precedentReason: text(req.query, 'reason', 50) }) : null;
+        const view = userId ? await loadUserView(req, userId, { precedentReason: queryText(req.query, 'reason', 50) }) : null;
         if (!view) return fail(res, 404, 'Not found', 'There is no Discord user with that ID.', req);
         return sendHtml(res, status, userPage({
             ...shellOf(req), view, canAct: req.dashboard.access.canAct, editEnabled: settings.editEnabled,
@@ -552,7 +552,7 @@ export function createEnforcementHandlers(core) {
 
     /** Extra sections of the staff page: the coverage heatmap and the mass-action blocks. */
     async function staffSections(req, statsPeriod) {
-        const requested = text(req.query, 'coverage', 5);
+        const requested = queryText(req.query, 'coverage', 5);
         const period = Object.hasOwn(COVERAGE_PERIODS, requested) ? requested : '7d';
         const [config, counts, blocks] = await Promise.all([
             e.getGuildConfig(client, guildId).catch(() => null),

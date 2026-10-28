@@ -533,6 +533,9 @@ test('member lookup: ID redirects, names match by prefix (username, display name
     assert.equal(byName.statusCode, 200);
     assert.ok(byName.body.includes(`/dashboard/users/${TARGET}`));
     assert.ok(!byName.body.includes('<script>'));
+    // A long search in the address bar is cut, never a server error (regression from the "too long" form check).
+    const long = await get(h, h.d.enforcement.users, { query: { q: 'TARG' + 'x'.repeat(200) } });
+    assert.equal(long.statusCode, 200);
     assert.equal(searchMembers(h.guild, 'nick').length, 1, 'nickname');
     assert.equal(searchMembers(h.guild, 'target g').length, 1, 'display name');
     assert.equal(searchMembers(h.guild, 'zzz').length, 0);

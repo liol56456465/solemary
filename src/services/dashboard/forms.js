@@ -36,6 +36,12 @@ export function plainText(message) {
 // ── Parsing ───────────────────────────────────────────────────────────────
 
 /** A posted string (trimmed, capped), '' when missing or not a string. */
+/** A value from the address bar (search, filter): trimmed and cut to `max`; never refused. */
+export function queryText(query, name, max) {
+    const value = query?.[name];
+    return typeof value === 'string' ? value.trim().slice(0, max) : '';
+}
+
 export function text(form, name, max = 2000) {
     const value = form?.[name];
     if (typeof value !== 'string') return '';
