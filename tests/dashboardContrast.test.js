@@ -1,8 +1,9 @@
-// Contrast guard for the dashboard palette (design system v2, plan.md): reads the colour
-// tokens straight from dashboard.css and checks every pair the pages use against WCAG AA.
+// Contrast guard for the dashboard themes: reads every theme's colour tokens straight from
+// dashboard.css and checks every pair the pages use against WCAG AA, in all 7 themes.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { THEMES } from '../src/services/dashboard/html.js';
 
 const css = readFileSync(new URL('../src/services/dashboard/static/dashboard.css', import.meta.url), 'utf8');
 
@@ -26,33 +27,42 @@ function ratio(a, b) {
 }
 
 const TEXT = 4.5; // normal text
-const UI = 3; // input borders, switch tracks
+const UI = 3; // input borders, switch tracks, focus ring on the chrome
 const PAIRS = [
     ['text', 'bg', TEXT], ['text', 'surface', TEXT], ['text', 'raised', TEXT],
     ['text-muted', 'bg', TEXT], ['text-muted', 'surface', TEXT], ['text-muted', 'raised', TEXT],
-    ['purple', 'bg', TEXT], ['purple', 'surface', TEXT], ['purple', 'raised', TEXT], ['purple', 'purple-soft', TEXT],
-    ['on-purple', 'purple', TEXT], ['on-purple', 'purple-hover', TEXT],
-    ['green', 'bg', TEXT], ['green', 'surface', TEXT], ['green', 'raised', TEXT], ['green', 'green-soft', TEXT],
-    ['red', 'bg', TEXT], ['red', 'surface', TEXT], ['red', 'raised', TEXT], ['red', 'red-soft', TEXT],
-    ['amber', 'bg', TEXT], ['amber', 'surface', TEXT], ['amber', 'raised', TEXT], ['amber', 'amber-soft', TEXT],
+    ['accent', 'bg', TEXT], ['accent', 'raised', TEXT], ['accent', 'accent-soft', TEXT],
+    ['on-accent', 'accent', TEXT], ['on-accent', 'accent-hover', TEXT],
+    ['green', 'bg', TEXT], ['green', 'raised', TEXT], ['green', 'green-soft', TEXT],
+    ['red', 'bg', TEXT], ['red', 'raised', TEXT], ['red', 'red-soft', TEXT],
+    ['amber', 'bg', TEXT], ['amber', 'raised', TEXT], ['amber', 'amber-soft', TEXT],
     ['bg', 'red', TEXT], // filled danger button
-    ['on-green', 'green', UI],
-    ['border-strong', 'bg', UI], ['border-strong', 'surface', UI], ['border-strong', 'raised', UI],
+    ['chrome-text', 'ink', TEXT], ['feature-text', 'feature', TEXT], ['feature-muted', 'feature', TEXT],
+    ['on-green', 'green', UI], ['accent-ink', 'ink', UI],
+    ['border-strong', 'bg', UI], ['border-strong', 'raised', UI],
 ];
 
-const light = tokens(':root');
-const dark = tokens(':root[data-theme="dark"]');
+const named = THEMES.filter((t) => t !== 'system');
 
-for (const [name, theme] of [['light', light], ['dark', dark]]) {
-    test(`dashboard palette (${name}): every pair meets WCAG AA`, () => {
+test('dashboard themes: 7 themes, each a full token set', () => {
+    assert.deepEqual(named, ['white', 'gray', 'dark', 'black', 'paper', 'sage', 'sand']);
+    const keys = Object.keys(tokens(':root[data-theme="white"]')).sort();
+    for (const theme of named) assert.deepEqual(Object.keys(tokens(`:root[data-theme="${theme}"]`)).sort(), keys, theme);
+});
+
+for (const theme of named) {
+    test(`dashboard theme ${theme}: every pair meets WCAG AA`, () => {
+        const t = tokens(`:root[data-theme="${theme}"]`);
         const failures = PAIRS
-            .map(([fg, bg, min]) => ({ fg, bg, min, value: ratio(theme[fg], theme[bg]) }))
+            .map(([fg, bg, min]) => ({ fg, bg, min, value: ratio(t[fg], t[bg]) }))
             .filter((p) => !(p.value >= p.min))
             .map((p) => `${p.fg} on ${p.bg}: ${p.value.toFixed(2)} < ${p.min}`);
         assert.deepEqual(failures, []);
     });
 }
 
-test('dashboard palette: the system-dark block and the data-theme="dark" block are identical', () => {
-    assert.deepEqual(tokens(':root:not([data-theme="light"])'), dark);
+test('dashboard themes: no theme chosen = White by day, Dark at night (same tokens as those themes)', () => {
+    const base = tokens(':root');
+    for (const [k, v] of Object.entries(tokens(':root[data-theme="white"]'))) assert.equal(base[k], v, k);
+    assert.deepEqual(tokens(':root:not([data-theme])'), tokens(':root[data-theme="dark"]'));
 });

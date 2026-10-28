@@ -181,7 +181,7 @@ function rail(active, theme, back, session, access) {
     const current = sectionOf(active);
     return html`<nav class="rail" aria-label="Sections"><a class="rail-logo" href="${path('/overview')}" aria-label="Meowist: Overview">${icon('cat')}</a>
 <ul class="rail-list">${sections().map((sec) => html`<li><a class="rail-item${current?.key === sec.key ? ' on' : ''}" href="${sec.href}"${current?.key === sec.key ? raw(' aria-current="true"') : ''}>${icon(sec.icon)}<span class="rail-tip">${sec.label}</span></a></li>`)}</ul>
-<div class="rail-bottom">${themeToggle(theme, back, 'rail-item')}${userMenu(session, access)}</div></nav>`;
+<div class="rail-bottom">${userMenu(session, access, theme, back)}</div></nav>`;
 }
 
 /** A section's pages as pill tabs above the content (with the module on/off dot). */
@@ -205,27 +205,32 @@ function tabBar(active, theme, back, session, access) {
     return html`<nav class="tabbar" aria-label="Sections">${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.key === 'overview' ? 'Home' : sec.label}</span></a>`)}
 <details class="more menu-wrap"><summary${moreOn ? raw(' class="on"') : ''}>${icon('menu')}<span>More</span></summary><div class="more-sheet">
 ${rest.map((sec) => html`<p class="more-group">${sec.label}</p>${(sec.items || [{ key: sec.key, label: sec.label }]).map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${icon(item.key)}${item.label}</a>`)}`)}
-<div class="more-foot">${themeToggle(theme, back, 'more-theme', true)}<form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
+${themePicker(theme, back, 'sheet')}<div class="more-foot"><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
 }
 
-// The switch cycles system (follow the device) → dark → light.
-export const THEMES = ['system', 'dark', 'light'];
+// Themes (same tokens, different colours): "system" follows the device (White or Dark).
+export const THEMES = ['system', 'white', 'gray', 'dark', 'black', 'paper', 'sage', 'sand'];
 export const THEME_COOKIE = 'meowist_theme';
-const THEME_LABEL = { system: 'System theme', light: 'Light theme', dark: 'Dark theme' };
-const THEME_ICON = { system: 'monitor', light: 'sun', dark: 'moon' };
+const THEME_LABEL = {
+    system: 'Follow device', white: 'White', gray: 'Gray', dark: 'Dark', black: 'Black', paper: 'Paper', sage: 'Sage', sand: 'Sand',
+};
 
-/** The theme saved in the cookie: 'light', 'dark' or 'system' (anything else). */
+/** The theme saved in the cookie; the old "light" means White; anything else follows the device. */
 export function themeFrom(value) {
+    if (value === 'light') return 'white';
     return THEMES.includes(value) ? value : 'system';
 }
 
 /**
- * The theme switch: a plain link that works without JS (GET /dashboard/theme sets the
- * cookie and comes back); the static script switches in place instead.
+ * The theme picker: a radio group of links (GET /dashboard/theme sets the cookie and comes
+ * back, so it works without JS; the static script switches in place). Each option shows a
+ * swatch of its own theme. `id` keeps the label ids unique (account menu and phone sheet).
  */
-function themeToggle(theme, back, className = 'icon-button', withText = false) {
-    const next = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
-    return html`<a class="${className}" href="${path(`/theme${queryString({ mode: next, next: back })}`)}" data-theme-toggle data-theme="${theme}" title="${THEME_LABEL[theme]} (switch to ${THEME_LABEL[next].toLowerCase()})">${icon(THEME_ICON[theme])}<span class="${withText ? 'theme-text' : 'sr'}">${THEME_LABEL[theme]}; switch to ${THEME_LABEL[next].toLowerCase()}</span></a>`;
+function themePicker(theme, back, id) {
+    return html`<div class="theme-picker"><p class="theme-picker-title" id="theme-${id}">Theme</p><div class="theme-grid" role="radiogroup" aria-labelledby="theme-${id}">${THEMES.map((key) => {
+        const on = key === theme;
+        return html`<a class="theme-opt sw-${key}${key === 'system' ? ' wide' : ''}" href="${path(`/theme${queryString({ mode: key, next: back })}`)}" role="radio" aria-checked="${on ? 'true' : 'false'}" tabindex="${on ? '0' : '-1'}" data-theme-pick="${key}"><span class="sw" aria-hidden="true"><i class="sw-1"></i><i class="sw-2"></i><i class="sw-3"></i><i class="sw-a"></i></span><span class="theme-name">${THEME_LABEL[key]}<span class="theme-check" aria-hidden="true">✓</span></span></a>`;
+    })}</div></div>`;
 }
 
 function initials(name) {
@@ -246,10 +251,10 @@ function serverSwitch(server) {
 <p class="menu-note">Only this server can be managed for now.</p></div></details>`;
 }
 
-function userMenu(session, access) {
+function userMenu(session, access, theme = 'system', back = path('/overview')) {
     return html`<details class="user-menu menu-wrap"><summary aria-label="Account: ${session.username}"><span class="avatar-initials" aria-hidden="true">${initials(session.username)}</span><span class="user-name">${session.username}</span></summary>
 <div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${access && !access.canAct ? 'View and settings (bot owner)' : 'Administrator'}</span></p>
-<form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
+${themePicker(theme, back, 'menu')}<form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
 }
 
 /**
@@ -265,7 +270,7 @@ export function layout({ title, active = null, session = null, access = null, mo
     const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
     const top = session ? html`<header class="page-top">${serverSwitch(session.server)}<span class="spacer"></span>
 <a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form></header>`
-        : html`<header class="page-top bare-top"><a class="brand" href="${path('/overview')}" aria-label="Meowist"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a><span class="spacer"></span>${themeToggle(theme, back)}</header>`;
+        : html`<header class="page-top bare-top"><a class="brand" href="${path('/overview')}" aria-label="Meowist"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a><span class="spacer"></span></header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>

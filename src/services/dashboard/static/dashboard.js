@@ -14,7 +14,7 @@
 //   details[data-key]       remembers which sections were open (per page)
 //   #nav-toggle             the sidebar drawer: focus stays inside while open; Escape and link clicks close it
 //   details.menu-wrap       top bar menus: Escape or a click outside closes them, one open at a time
-//   [data-theme-toggle]     switches light / dark / system in place (same cookie)
+//   [data-theme-pick]       the theme picker (radio group) switches in place (same cookie)
 //   main .flash             "Saved." becomes a toast that closes itself
 //   form[data-dirty]        also shows a Discard / Save bar at the bottom while changed
 //   [data-module-search]    a search box above the module cards
@@ -345,40 +345,44 @@
         });
     }
 
-    // ── Theme switch ─────────────────────────────────────────────────────
-    // Without the script the link goes through GET /dashboard/theme (cookie + redirect);
-    // here the same cookie is set and the page switches in place.
-    const THEMES = ['system', 'dark', 'light'];
-    const THEME_LABEL = { system: 'System theme', light: 'Light theme', dark: 'Dark theme' };
-    const THEME_ICON = { system: 'monitor', light: 'sun', dark: 'moon' };
-    function setupThemeToggle() {
-        // The rail and the phone "More" sheet both have a switch; they stay in step.
-        const links = [...document.querySelectorAll('[data-theme-toggle]')];
-        if (!links.length) return;
-        const show = (theme) => {
-            const after = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
-            for (const link of links) {
-                link.dataset.theme = theme;
-                link.title = `${THEME_LABEL[theme]} (switch to ${THEME_LABEL[after].toLowerCase()})`;
-                link.querySelector('use')?.setAttribute('href', `#i-${THEME_ICON[theme]}`);
-                const label = link.querySelector('.sr, .theme-text');
-                if (label) label.textContent = `${THEME_LABEL[theme]}; switch to ${THEME_LABEL[after].toLowerCase()}`;
-                // The no-script fallback link goes to the next theme too.
-                const url = new URL(link.href, window.location.href);
-                url.searchParams.set('mode', after);
-                link.href = url.pathname + url.search;
+    // ── Theme picker ─────────────────────────────────────────────────────
+    // Without the script each option is a link through GET /dashboard/theme (cookie +
+    // redirect); here the same cookie is set and the page switches in place. The options
+    // are a radio group: arrow keys move and select, Space/Enter select. Both pickers
+    // (account menu, phone sheet) stay in step.
+    const THEMES = ['system', 'white', 'gray', 'dark', 'black', 'paper', 'sage', 'sand'];
+    function setupThemePicker() {
+        const options = [...document.querySelectorAll('[data-theme-pick]')];
+        if (!options.length) return;
+        const choose = (theme) => {
+            if (!THEMES.includes(theme)) return;
+            const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie = `meowist_theme=${theme}; Path=/dashboard; Max-Age=31536000; SameSite=Lax${secure}`;
+            if (theme === 'system') delete document.documentElement.dataset.theme;
+            else document.documentElement.dataset.theme = theme;
+            for (const opt of options) {
+                const on = opt.dataset.themePick === theme;
+                opt.setAttribute('aria-checked', on ? 'true' : 'false');
+                opt.tabIndex = on ? 0 : -1;
             }
         };
-        for (const link of links) {
-            link.addEventListener('click', (event) => {
+        for (const opt of options) {
+            opt.addEventListener('click', (event) => {
                 event.preventDefault();
-                const current = THEMES.includes(link.dataset.theme) ? link.dataset.theme : 'system';
-                const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
-                const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-                document.cookie = `meowist_theme=${next}; Path=/dashboard; Max-Age=31536000; SameSite=Lax${secure}`;
-                if (next === 'system') delete document.documentElement.dataset.theme;
-                else document.documentElement.dataset.theme = next;
-                show(next);
+                choose(opt.dataset.themePick);
+            });
+            opt.addEventListener('keydown', (event) => {
+                const group = [...opt.closest('[role="radiogroup"]').querySelectorAll('[data-theme-pick]')];
+                const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+                if (step) {
+                    event.preventDefault();
+                    const next = group[(group.indexOf(opt) + step + group.length) % group.length];
+                    choose(next.dataset.themePick);
+                    next.focus();
+                } else if (event.key === ' ') {
+                    event.preventDefault();
+                    choose(opt.dataset.themePick);
+                }
             });
         }
     }
@@ -558,7 +562,7 @@
         document.documentElement.classList.add('js');
         setupQuickFind();
         keepSearchWord();
-        setupThemeToggle();
+        setupThemePicker();
         showCurrentTab();
         setupToasts();
         setupSaveBar();
