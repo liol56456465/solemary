@@ -132,6 +132,12 @@ export async function collectInbox({ client, guildId, inbox = defaultInboxData }
     return { items, counts, failed, total: items.length };
 }
 
+/** What a moderator may see: staff reports are complaints about staff, so admins only. */
+export function inboxForModerator(result) {
+    const items = result.items.filter((item) => item.kind !== 'report');
+    return { ...result, items, counts: { ...result.counts, report: 0 }, failed: result.failed.filter((k) => k !== 'report'), total: items.length };
+}
+
 /**
  * The conversation behind an Inbox row: the channel and who it belongs to, or null when
  * it is not an open modmail conversation / ticket of this guild (the DB link decides,

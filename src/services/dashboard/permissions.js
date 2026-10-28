@@ -27,6 +27,7 @@ export const PERMISSIONS = Object.freeze({
     'page:cases': MODERATOR, // list and case pages (view only)
     'page:appeals': MODERATOR, // list and dossiers (view only)
     'page:nocontact': MODERATOR, // view only
+    'page:inbox': MODERATOR, // staff reports filtered out for moderators (inboxRoutes)
     'page:staff': ADMIN,
     'page:channels': ADMIN,
     'page:tickets': ADMIN,
@@ -69,6 +70,8 @@ export const PERMISSIONS = Object.freeze({
     'case.evidence': ADMIN,
     'appeal.decide': ADMIN,
     'nocontact.edit': ADMIN,
+    'inbox.reply': MODERATOR, // modmail / ticket replies from the web
+    'inbox.close': MODERATOR,
     'staff.manage': ADMIN, // mass-action blocks, staff warnings, restore (OWNER_IDS checked on top)
     'settings.edit': ADMIN, // every module settings form
     // ── Session ──
@@ -105,6 +108,9 @@ export const ROUTES = [
     ['POST', '/staff/blocks/lift', 'staff.manage'],
     ['POST', '/staff/warn', 'staff.manage'],
     ['POST', '/staff/restore', 'staff.manage'],
+    ['POST', '/inbox/:kind/:id/reply', 'inbox.reply'],
+    ['POST', '/inbox/:kind/:id/close/preview', 'inbox.close'],
+    ['POST', '/inbox/:kind/:id/close', 'inbox.close'],
     ['*', '/owner', OWNER_AREA],
     ['*', '/owner/*', OWNER_AREA],
     ['POST', '/:module/:action', 'settings.edit'],
@@ -116,6 +122,8 @@ export const ROUTES = [
     ['GET', '/appeals/:code', 'page:appeals'],
     ['GET', '/users', 'page:users'],
     ['GET', '/bans', 'page:bans'],
+    ['GET', '/inbox', 'page:inbox'],
+    ['GET', '/inbox/:kind/:id', 'page:inbox'],
     ['GET', '/users/bulk/:job', 'member.bulk'],
     ['GET', '/users/:id', 'page:users'],
     ['GET', '/nocontact', 'page:nocontact'],

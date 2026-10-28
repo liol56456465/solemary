@@ -18,8 +18,7 @@ import { InputError, plainText, queryText, text } from './forms.js';
 import { isSnowflake } from './security.js';
 import { path, queryString } from './html.js';
 import {
-    CONVERSATION_KINDS, INBOX_KINDS, REPLY_MAX, closeConversation, collectInbox, defaultInboxData, findConversation, recentMessages, replyText, sendReply,
-} from './inboxData.js';
+    CONVERSATION_KINDS, INBOX_KINDS, REPLY_MAX, closeConversation, collectInbox, defaultInboxData, findConversation, recentMessages, replyText, sendReply, inboxForModerator } from './inboxData.js';
 import { closeConfirmPage, conversationPage, inboxPage } from './inboxPages.js';
 
 export const BADGE_TTL_MS = 60 * 1000;
@@ -59,8 +58,12 @@ export function createInboxHandlers(core) {
     async function list(req, res) {
         const requested = queryText(req.query, 'kind', 10);
         const kind = Object.hasOwn(INBOX_KINDS, requested) ? requested : '';
-        const result = await collectInbox({ client, guildId, inbox });
-        if (!result.failed.length) badge?.set(result.total);
+        const full = await collectInbox({ client, guildId, inbox });
+        if (!full.failed.length) badge?.set(full.total);
+        // Moderators never see staff reports (complaints about staff); the kind filter too.
+        const moderator = req.dashboard.access?.role === 'moderator';
+        const result = moderator ? inboxForModerator(full) : full;
+        if (moderator && kind === 'report') return sendHtml(res, 200, inboxPage({ ...shellOf(req), inbox: result, kind: '', flash: req.dashboard.flash }));
         return sendHtml(res, 200, inboxPage({ ...shellOf(req), inbox: result, kind, flash: req.dashboard.flash }));
     }
 

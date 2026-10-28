@@ -65,8 +65,8 @@ test('matrix: every sidebar page has an entry; unknown pages, keys and paths are
 test('matrix: the final Moderator level', () => {
     const moderatorKeys = Object.keys(PERMISSIONS).filter((key) => PERMISSIONS[key] === MODERATOR).sort();
     assert.deepEqual(moderatorKeys, [
-        'action:kick', 'action:mute', 'action:unmute', 'action:warn', 'member.action', 'member.timeout',
-        'page:appeals', 'page:bans', 'page:cases', 'page:nocontact', 'page:overview', 'page:users', 'session.logout',
+        'action:kick', 'action:mute', 'action:unmute', 'action:warn', 'inbox.close', 'inbox.reply', 'member.action', 'member.timeout',
+        'page:appeals', 'page:bans', 'page:cases', 'page:inbox', 'page:nocontact', 'page:overview', 'page:users', 'session.logout',
     ]);
     assert.deepEqual(moderatorActionTypes().sort(), ['kick', 'mute', 'unmute', 'warn']);
     // Admins and owners are not restricted by the table (their existing checks apply); moderators only by it.
@@ -444,11 +444,25 @@ test('executeAction (service): a non-Administrator runs only the listed types wh
     await assert.rejects(executeAction({ guild, moderator: mod([]), targetUser: target, flow: { type: 'warn' }, staffRole }), /Administrator/);
 });
 
+test('moderator: a warn that would trigger the automatic ladder ban is refused (no ban by the back door)', async () => {
+    const h = await setup();
+    h.e.getTargetState = async (guild, id) => ({ member: guild.members.cache.get(id) || null, banned: false, muted: false, ladder: { level: 0, warns_since_level: 2 }, activeBan: null, activeMute: null });
+    const preview = await post(h, h.d.enforcement.actionPreview, `/users/${TARGET}/action/preview`, { params: { id: TARGET }, form: { type: 'warn', reason: 'spam' } });
+    assert.equal(preview.statusCode, 403);
+    assert.match(preview.body, /would automatically ban .* needs an Administrator/);
+    assert.equal(h.calls.filter((c) => c.name === 'executeAction').length, 0);
+    // An Administrator may still give that warn.
+    const admin = await setup({ userId: ADMIN });
+    admin.e.getTargetState = h.e.getTargetState;
+    const ok = await post(admin, admin.d.enforcement.actionPreview, `/users/${TARGET}/action/preview`, { params: { id: TARGET }, form: { type: 'warn', reason: 'spam' } });
+    assert.equal(ok.statusCode, 200);
+});
+
 // ── sidebar and shell ─────────────────────────────────────────────────────
 
 test('sidebar: a moderator sees only their pages; no "Find a setting"; Administrators see everything', () => {
     const groups = navGroups({}, MOD_DECISION);
-    assert.deepEqual(groups.flatMap((g) => g.items.map((i) => i.key)), ['overview', 'users', 'bans', 'cases', 'appeals', 'nocontact']);
+    assert.deepEqual(groups.flatMap((g) => g.items.map((i) => i.key)), ['overview', 'inbox', 'users', 'bans', 'cases', 'appeals', 'nocontact']);
     assert.deepEqual(groups.map((g) => g.group), ['Moderate'], 'empty groups dropped');
     assert.deepEqual(navGroups({ isOwner: true }, OWNER_DECISION).map((g) => g.group), [...NAV.map((g) => g.group), OWNER_NAV.group]);
     assert.equal(navGroups({}, ADMIN_DECISION).flatMap((g) => g.items).length, navItems().length);
@@ -473,4 +487,17 @@ test('Overview for a moderator: no setup, modules, tickets or audit parts', () =
     assert.ok(!mod.includes('Recent dashboard changes'));
     const admin = String(overviewPage({ session: { username: 'a', csrf: 't' }, access: ADMIN_DECISION, overview: o, recentChanges: [], editEnabled: true }));
     assert.ok(admin.includes('href="/dashboard/tickets"') && admin.includes('Recent dashboard changes'));
+});
+
+test('inbox for moderators: staff reports (complaints about staff) are filtered out', async () => {
+    const { inboxForModerator } = await import('../src/services/dashboard/inboxData.js');
+    const full = {
+        items: [{ kind: 'appeal' }, { kind: 'report' }, { kind: 'ticket' }],
+        counts: { appeal: 1, report: 1, ticket: 1, modmail: 0, review: 0 }, failed: ['report'], total: 3,
+    };
+    const mod = inboxForModerator(full);
+    assert.deepEqual(mod.items.map((i) => i.kind), ['appeal', 'ticket']);
+    assert.equal(mod.counts.report, 0);
+    assert.equal(mod.total, 2);
+    assert.deepEqual(mod.failed, []);
 });
