@@ -14,6 +14,9 @@ import {
 import { loadNativePolicies, setNativePolicy } from '../automod/nativeBridge.js';
 import { automodStats } from '../automod/automodReport.js';
 import { automodRuleStats } from '../automod/automodTuning.js';
+import { endLockdown, getLockdownState } from '../automod/raidService.js';
+import { collectOpenReviews } from '../automod/reviewQueue.js';
+import { endProbation, listProbations } from '../automod/probationService.js';
 // Logging
 import { getLoggingStatus, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList } from '../loggingService.js';
 // Welcome
@@ -73,6 +76,7 @@ export const defaultServices = {
     getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode, setExemptChannel,
     setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
     loadNativePolicies, setNativePolicy, automodStats, automodRuleStats,
+    endLockdown, getLockdownState, collectOpenReviews, endProbation, listProbations,
     getLoggingStatus, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList,
     addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings,
     getTicketSettings, updateTicketSettings, setModmailBlocked, isBuiltInCanned, listCanned, removeCanned, saveCanned,

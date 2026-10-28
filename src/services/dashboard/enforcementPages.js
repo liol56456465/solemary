@@ -463,3 +463,69 @@ ${blocks.map((b) => html`<tr><td>${names.get(b.moderatorId) || b.moderatorId} <s
 <td>${canLift && editEnabled ? actionForm(csrf, '/staff/blocks/lift', '', { submit: 'Lift block', hidden: { moderator: b.moderatorId }, inline: true, danger: true }) : ''}</td></tr>`)}
 </tbody></table></div>${canLift ? '' : html`<p class="muted">Only the bot owners can lift a block (like /staff restore).</p>`}` : html`<p class="muted">Nobody is blocked.</p>`}`, '', { key: 'staff-blocks' });
 }
+
+// ── Staff: weekly activity and discipline (/staff activity, warn, warnings, restore) ──
+
+export const STAFF_WEEKS = { this: 'This week', last: 'Last week' };
+
+/**
+ * rows: staffActivityForWeek (null = could not be loaded); week: 'this' | 'last'; start: YYYY-MM-DD.
+ * `keep`: the other query values of the staff page (stats period, coverage) for the links.
+ * `warningsLink`: owners get a "Warnings" link per member.
+ */
+export function activitySection({ rows, week = 'this', start, keep = {}, warningsLink = false }) {
+    const chips = html`<nav class="chips" aria-label="Week">${Object.keys(STAFF_WEEKS).map((key) => html`<a class="chip${key === week ? ' is-active' : ''}" href="${path(`/staff${queryString({ ...keep, week: key })}`)}"${key === week ? raw(' aria-current="page"') : ''}>${STAFF_WEEKS[key]}</a>`)}</nav>`;
+    const body = rows === null
+        ? html`<p class="muted">Activity could not be loaded (database unavailable).</p>`
+        : rows.length
+            ? html`<div class="scroll"><table><thead><tr><th>Staff member</th><th>Messages</th><th>Actions</th><th>Appeals</th><th>Reviews</th><th>Tickets</th><th></th></tr></thead><tbody>
+${rows.map((r) => html`<tr><td><a href="${userHref(r.userId)}">${r.username}</a>${r.isOwner ? html` <span class="muted">owner</span>` : ''}</td><td>${r.messages}</td><td>${r.actions}</td><td>${r.appeals}</td><td>${r.reviews}</td><td>${r.tickets}</td>
+<td>${r.inactive ? html`<span class="warn">Inactive</span> ` : ''}${warningsLink ? html`<a href="${path(`/staff${queryString({ ...keep, week, warnings: r.userId })}`)}#staff-discipline">Warnings</a>` : ''}</td></tr>`)}
+</tbody></table></div><p class="muted">Inactive = no moderation work and under 20 messages. Actions are cases they created; reviews are automod and verification cards.</p>`
+            : html`<p class="muted">No staff found.</p>`;
+    return section(`Staff activity · week of ${start}`, html`${chips}${body}`, '', { key: 'staff-activity' });
+}
+
+/**
+ * Owner-only discipline: warn a staff member, look up their warnings, give back removed roles.
+ * staff: [{ userId, username }] for the picker; lookup: { userId, name, rows (null = failed) } | null;
+ * removed: listRemovedStaffRoles (null = failed); roleNames: Map(roleId → name); names: Map(userId → username).
+ */
+export function disciplineSection({
+    isOwner = false, csrf, editEnabled = true, staff = [], lookup = null, removed = [], roleNames = new Map(), names = new Map(),
+    warnLimit = 3, keep = {}, now = Date.now(),
+}) {
+    if (!isOwner) {
+        return section('Staff discipline', html`<p class="muted">Only the bot owners can warn staff members, see their staff warnings or give back removed staff roles (like /staff warn, warnings and restore).</p>`, '', { key: 'staff-discipline' });
+    }
+    const canWrite = Boolean(editEnabled);
+    const who = (id) => html`<a href="${userHref(id)}">${names.get(id) || id}</a> <span class="muted">${id}</span>`;
+    const warnForm = actionForm(csrf, '/staff/warn', html`<div class="grid">
+<label>Staff member (user ID)<input name="user" inputmode="numeric" maxlength="20" required list="staff-members" value="${lookup?.userId || ''}"></label>
+<datalist id="staff-members">${staff.map((m) => html`<option value="${m.userId}">${m.username}</option>`)}</datalist>
+<label class="wide">Reason: which admin rule they broke (sent to them)<input name="reason" maxlength="500" required></label></div>`, { submit: 'Give staff warning', enabled: canWrite, confirm: `Give this staff member a warning? At ${warnLimit} active warnings their staff roles are removed.` });
+    const lookupForm = html`<form method="get" action="${path('/staff')}" class="inline-form">${Object.entries(keep).filter(([, v]) => v).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}
+<label>Show warnings of (user ID)<input name="warnings" inputmode="numeric" maxlength="20" list="staff-members" value="${lookup?.userId || ''}"></label><button type="submit" class="secondary">Show</button></form>`;
+    const lookupBody = !lookup ? '' : lookup.rows === null
+        ? html`<p class="muted">Warnings could not be loaded (database unavailable).</p>`
+        : html`<h3>Staff warnings: ${lookup.name || lookup.userId}</h3>${lookup.rows.length ? html`<div class="scroll"><table><thead><tr><th>Status</th><th>Given</th><th>By</th><th>Reason</th></tr></thead><tbody>
+${lookup.rows.map((w) => html`<tr><td>${new Date(w.expires_at).getTime() > now ? html`<b>active</b>` : html`<span class="muted">expired</span>`}</td><td>${formatDate(w.created_at)}</td><td>${w.given_by_username || w.given_by}</td><td class="value">${w.reason}</td></tr>`)}
+</tbody></table></div>` : html`<p class="muted">None.</p>`}`;
+    const removedBody = removed === null
+        ? html`<p class="muted">Removed staff roles could not be loaded (database unavailable).</p>`
+        : removed.length
+            ? html`<div class="scroll"><table><thead><tr><th>Staff member</th><th>Removed roles</th><th>Why</th><th>When</th><th></th></tr></thead><tbody>
+${removed.map((r) => html`<tr><td>${who(r.userId)}</td><td>${r.roleIds.map((id, i) => html`${i ? ', ' : ''}${roleNames.get(id) || id}`)}</td><td class="value">${r.reason || '—'}</td><td>${formatDate(r.at)}</td>
+<td>${canWrite ? actionForm(csrf, '/staff/restore', '', { submit: 'Restore roles', hidden: { user: r.userId }, inline: true, confirm: 'Give these staff roles back?' }) : ''}</td></tr>`)}
+</tbody></table></div>`
+            : html`<p class="muted">No removed staff roles are saved.</p>`;
+    const restoreById = actionForm(csrf, '/staff/restore', html`<label>Restore by user ID<input name="user" inputmode="numeric" maxlength="20" required></label>`, { submit: 'Restore roles', inline: true, enabled: canWrite, secondary: true });
+    return section('Staff discipline', html`<p class="muted">Staff warnings expire; at ${warnLimit} active warnings the staff roles are removed (the staff guard removes them too). The member is DMed and the mod log gets a line.</p>
+${warnForm}
+${lookupForm}
+${lookupBody}
+<h3>Removed staff roles</h3>
+${removedBody}
+${restoreById}
+<p class="muted">Restoring gives back the saved roles the bot can still manage. A mass-action panel block is lifted separately (Mass-action guard blocks).</p>`, '', { key: 'staff-discipline' });
+}

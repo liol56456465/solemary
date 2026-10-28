@@ -140,6 +140,17 @@ function makeEnforcement(overrides = {}) {
         loadCoverageCounts: rec('loadCoverageCounts', async () => ({ incidents: [{ hour: '2026-10-26T10:00:00Z', count: 4 }], staff: [{ hour: '2026-10-26T10:00:00Z', count: 1 }] })),
         getGuildConfig: rec('getGuildConfig', async () => ({ birthdayTimezone: 'UTC' })),
         isBotOwner: (id) => id === OWNER,
+        staffActivityForWeek: rec('staffActivityForWeek', async (guild, start) => [
+            { userId: OTHER, username: 'other<b>', isOwner: false, messages: 3, actions: 0, appeals: 0, reviews: 0, tickets: 0, inactive: true },
+            { userId: TARGET, username: 'busy', isOwner: false, messages: 50, actions: 4, appeals: 1, reviews: 2, tickets: 0, inactive: false, start },
+        ]),
+        giveStaffWarning: rec('giveStaffWarning', async () => ({ active: 2, demoted: false })),
+        listStaffWarnings: rec('listStaffWarnings', async () => [
+            { reason: 'abused <b>power</b>', created_at: new Date('2026-10-01T00:00:00Z'), expires_at: new Date(Date.now() + 86400000), given_by: OWNER, given_by_username: 'owner' },
+            { reason: 'old', created_at: new Date('2026-01-01T00:00:00Z'), expires_at: new Date('2026-04-01T00:00:00Z'), given_by: OWNER, given_by_username: 'owner' },
+        ]),
+        restoreStaffRoles: rec('restoreStaffRoles', async (guild, userId) => (userId === TARGET ? [{ id: '600000000000000009', name: 'Staff' }] : null)),
+        listRemovedStaffRoles: rec('listRemovedStaffRoles', async () => [{ userId: TARGET, roleIds: ['600000000000000009', '600000000000000077'], reason: 'Staff guard: 5 bans', at: '2026-10-27T10:00:00Z' }]),
         ...overrides,
     };
     return { e, calls };
@@ -464,6 +475,8 @@ const POSTS = [
     { name: 'no-contact add', handler: 'noContactAdd', params: {}, form: { user_a: TARGET, user_b: OTHER, days: '7', reason: 'feud' }, bad: { user_a: TARGET, user_b: BOTUSER, days: '7', reason: 'feud' }, service: 'addNoContactOrder', audit: 'nocontact' },
     { name: 'no-contact end', handler: 'noContactEnd', params: {}, form: { id: '7' }, bad: { id: '9' }, service: 'endNoContactOrder', audit: 'nocontact', badCallsService: true },
     { name: 'block lift', handler: 'blockLift', params: {}, form: { moderator: OTHER }, bad: { moderator: 'x' }, service: 'clearMassActionBlock', audit: 'massguard', modLog: true, owner: true },
+    { name: 'staff warn', handler: 'staffWarn', params: {}, form: { user: TARGET, reason: 'broke admin rule 2' }, bad: { user: TARGET, reason: '' }, service: 'giveStaffWarning', audit: 'staff', owner: true },
+    { name: 'staff restore', handler: 'staffRestore', params: {}, form: { user: TARGET }, bad: { user: 'x' }, service: 'restoreStaffRoles', audit: 'staff', owner: true },
 ];
 
 for (const spec of POSTS) {
@@ -622,6 +635,101 @@ test('staff page: coverage heatmap as a table with intensity classes and the mas
     const report = buildCoverageReport({ incidents: [{ hour: '2026-10-26T10:00:00Z', count: 4 }], staff: [] }, 'UTC');
     assert.equal(report.incidentGrid[0][10], 4);
     assert.deepEqual([0, 1, 2, 3, 4, 5].map((n) => intensityLevel(n, 4)), [0, 1, 2, 3, 4, 4]);
+});
+
+test('staff page: weekly activity for every viewer (this/last week); discipline (warn, warnings, removed roles) for owners only', async () => {
+    const h = await setup();
+    const res = await get(h, h.d.staff);
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, /Staff activity · week of \d{4}-\d{2}-\d{2}/);
+    assert.ok(res.body.includes('other&lt;b&gt;'), 'names escaped');
+    assert.match(res.body, /<span class="warn">Inactive<\/span>/);
+    assert.match(res.body, /Only the bot owners can warn staff members/);
+    assert.ok(!res.body.includes('/staff/warn') && !res.body.includes('/staff/restore'), 'admins who are not owners get no discipline forms');
+    assert.equal(serviceCalls(h, ['listRemovedStaffRoles', 'listStaffWarnings']).length, 0, 'nothing owner-only is read for them');
+    assert.equal(serviceCalls(h, ['listStaffWarnings']).length, 0);
+    const [thisWeek] = serviceCalls(h, ['staffActivityForWeek']);
+    const last = await get(h, h.d.staff, { query: { week: 'last' } });
+    assert.match(last.body, /class="chip is-active" href="\/dashboard\/staff\?period=30d&amp;week=last" aria-current="page">Last week/);
+    const [, lastWeek] = serviceCalls(h, ['staffActivityForWeek']);
+    assert.equal((new Date(thisWeek.args[1]) - new Date(lastWeek.args[1])) / 86400000, 7, 'last week = the Monday 7 days before');
+    // Ignored: someone else's warnings via the query when not an owner.
+    await get(h, h.d.staff, { query: { warnings: TARGET } });
+    assert.equal(serviceCalls(h, ['listStaffWarnings']).length, 0);
+
+    const owner = await setup({ userId: OWNER });
+    const page = await get(owner, owner.d.staff, { query: { warnings: TARGET } });
+    assert.ok(page.body.includes('action="/dashboard/staff/warn"'));
+    assert.ok(page.body.includes(`<option value="${OTHER}">other&lt;b&gt;</option>`), 'staff picker from the activity rows');
+    assert.match(page.body, /Staff warnings: target&lt;script&gt;/);
+    assert.ok(page.body.includes('abused &lt;b&gt;power&lt;/b&gt;'));
+    assert.match(page.body, /<b>active<\/b>/);
+    assert.match(page.body, /<span class="muted">expired<\/span>/);
+    assert.equal(serviceCalls(owner, ['listStaffWarnings'])[0].args[1], TARGET);
+    assert.match(page.body, /Staff, 600000000000000077/, 'removed roles by name, unknown ones by id');
+    assert.ok(page.body.includes('action="/dashboard/staff/restore"'));
+    assert.ok(page.body.includes(`name="user" value="${TARGET}"`));
+    const failing = await setup({ userId: OWNER, overrides: { listRemovedStaffRoles: async () => { throw new Error('db down'); }, staffActivityForWeek: async () => { throw new Error('db down'); } } });
+    const failed = await get(failing, failing.d.staff);
+    assert.match(failed.body, /Removed staff roles could not be loaded/);
+    assert.match(failed.body, /Activity could not be loaded/);
+});
+
+test('staff warn / restore: refusals change nothing; owners without Administrator are allowed and the override is logged', async () => {
+    const asOwner = () => setup({ userId: OWNER, admins: new Set([ADMIN, OWNER]) });
+    const warn = (h, form) => post(h, h.d.enforcement.staffWarn, { form });
+    let h = await asOwner();
+    for (const [form, message] of [
+        [{ user: '999999999999999990', reason: 'x' }, /cannot warn the owner/],
+        [{ user: '123456789012345678', reason: 'x' }, /not in the server/],
+        [{ user: TARGET, reason: 'x'.repeat(501) }, /at most 500 characters/],
+        [{ user: 'abc', reason: 'x' }, /Discord user ID/],
+    ]) {
+        const res = await warn(h, form);
+        assert.equal(res.statusCode, 400, JSON.stringify(form));
+        assert.match(res.body, message);
+    }
+    assert.equal(serviceCalls(h, ['giveStaffWarning']).length, 0);
+    assert.equal(h.auditRows.length, 0);
+
+    const ok = await warn(h, { user: TARGET, reason: 'broke rule <b>2</b>' });
+    assert.equal(ok.statusCode, 303);
+    assert.equal(ok.redirectedTo, `/dashboard/staff?warnings=${TARGET}`);
+    const [call] = serviceCalls(h, ['giveStaffWarning']);
+    assert.equal(call.args[1].id, TARGET);
+    assert.deepEqual(call.args[2], { id: OWNER, username: 'owner' });
+    assert.equal(call.args[3], 'broke rule <b>2</b>');
+    assert.deepEqual(h.auditRows[0].new, { reason: 'broke rule <b>2</b>', active: 2, demoted: false });
+    assert.equal(h.modLog.length, 0, 'the staff service posts the mod-log line itself');
+    assert.match((await h.sessions.get(h.session.id)).flash, /2 of 3 active/);
+
+    h = await setup({ userId: OWNER, admins: new Set([ADMIN, OWNER]), overrides: { giveStaffWarning: async () => ({ active: 3, demoted: true }) } });
+    await warn(h, { user: TARGET, reason: 'third' });
+    assert.match((await h.sessions.get(h.session.id)).flash, /staff roles were removed/);
+
+    h = await asOwner();
+    const none = await post(h, h.d.enforcement.staffRestore, { form: { user: OTHER } });
+    assert.equal(none.statusCode, 400);
+    assert.match(none.body, /No removed staff roles are saved/);
+    assert.equal(h.auditRows.length, 0);
+    const restored = await post(h, h.d.enforcement.staffRestore, { form: { user: TARGET } });
+    assert.equal(restored.statusCode, 303);
+    assert.deepEqual(serviceCalls(h, ['restoreStaffRoles']).at(-1).args[2], { id: OWNER, username: 'owner' });
+    assert.deepEqual(h.auditRows[0].new, ['Staff']);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Staff roles given back to .*: Staff\./);
+
+    // An owner without Administrator may (like /staff); the override is logged.
+    const warnings = [];
+    const { logger } = await import('../src/utils/logger.js');
+    const realWarn = logger.warn;
+    logger.warn = (message, ...rest) => { warnings.push(String(message)); return realWarn.call(logger, message, ...rest); };
+    try {
+        const plainOwner = await setup({ userId: OWNER });
+        assert.equal((await warn(plainOwner, { user: TARGET, reason: 'r' })).statusCode, 303);
+        assert.ok(warnings.some((w) => w.startsWith('Owner override:') && w.includes(OWNER)), 'override logged');
+    } finally {
+        logger.warn = realWarn;
+    }
 });
 
 test('no-contact page lists orders with end buttons and the start form', async () => {

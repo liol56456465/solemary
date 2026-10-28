@@ -12,10 +12,12 @@
 //   POST /dashboard/appeals/:code/preview|decide confirm step → decideAppeal
 //   GET  /dashboard/nocontact, POST /dashboard/nocontact/add|end
 //   POST /dashboard/staff/blocks/lift            OWNER_IDS only (like /staff restore)
+//   POST /dashboard/staff/warn|restore           OWNER_IDS only (/staff warn, /staff restore's roles)
 //
 // Every POST: 30/min per session, same origin + CSRF, edit switch (DASHBOARD_EDIT_ENABLED),
 // then Administrator in the main server (canAct; OWNER_IDS without it get 403, owner
-// decision 4) — except lifting a mass-action block, which is for OWNER_IDS. Actions run
+// decision 4) — except lifting a mass-action block, warning staff and restoring staff
+// roles, which are for OWNER_IDS (like /staff). Actions run
 // with the logged-in user's GuildMember fetched fresh, through the SAME services as the
 // Discord commands (DMs, ladder, hierarchy, bot permissions, mass-action guard, logs).
 
@@ -34,17 +36,19 @@ import {
     parseFlowInput, reasonPatch, startFlow,
 } from '../enforcement/flowBuilder.js';
 import { COVERAGE_PERIODS, buildCoverageReport } from '../staffCoverageService.js';
+import { weekStart } from '../staffActivityService.js';
+import { automodConfig } from '../../config/automod.js';
 import { InputError, multiline, plainText, queryText, text } from './forms.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS, listMembers } from './membersData.js';
 import { NICKNAME_MAX, REASON_MAX, TIMEOUTS, assignableRoles, auditReason, roleProblem, targetProblem } from './memberActions.js';
 import { BULK_ACTIONS, BULK_LIMIT, createJobStore, planBulk } from './bulkActions.js';
 import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
-import { html, path } from './html.js';
+import { html, path, queryString } from './html.js';
 import { isSnowflake } from './security.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
 import { evidenceFileName, sniffImage } from './multipart.js';
 import {
-    actionConfirmPage, appealConfirmPage, appealDetailPage, blocksSection, bulkJobPage, bulkPreviewPage, membersPage, coverageSection, noContactPage, userPage,
+    actionConfirmPage, activitySection, appealConfirmPage, appealDetailPage, blocksSection, disciplineSection, bulkJobPage, bulkPreviewPage, membersPage, coverageSection, noContactPage, userPage,
 } from './enforcementPages.js';
 
 const SEARCH_LIMIT = 25;
@@ -792,23 +796,54 @@ export function createEnforcementHandlers(core) {
 
     // ── Staff ────────────────────────────────────────────────────────────
 
-    /** Extra sections of the staff page: the coverage heatmap and the mass-action blocks. */
+    /** A read for the staff page; a failure is logged and shown as "could not be loaded" (null). */
+    const loadOrNull = (label, run) => Promise.resolve().then(run).catch((error) => {
+        logger.warn(`Dashboard ${label} failed: ${error.message}`);
+        return null;
+    });
+
+    /**
+     * Extra sections of the staff page: the coverage heatmap, weekly staff activity
+     * (/staff activity, ?week=this|last), staff discipline for OWNER_IDS (/staff warn,
+     * warnings ?warnings=<id>, restore) and the mass-action blocks.
+     */
     async function staffSections(req, statsPeriod) {
         const requested = queryText(req.query, 'coverage', 5);
         const period = Object.hasOwn(COVERAGE_PERIODS, requested) ? requested : '7d';
-        const [config, counts, blocks] = await Promise.all([
+        const week = queryText(req.query, 'week', 5) === 'last' ? 'last' : 'this';
+        const weekDate = new Date();
+        if (week === 'last') weekDate.setUTCDate(weekDate.getUTCDate() - 7);
+        const start = weekStart(weekDate);
+        const owner = isOwner(req);
+        const lookupId = owner ? queryText(req.query, 'warnings', 25) : '';
+        const guild = guildOf();
+        const [config, counts, blocks, activity, removed, warnings] = await Promise.all([
             e.getGuildConfig(client, guildId).catch(() => null),
-            Promise.resolve().then(() => e.loadCoverageCounts(guildId, client.user?.id || '0', COVERAGE_PERIODS[period])).catch((error) => {
-                logger.warn(`Dashboard coverage failed: ${error.message}`);
-                return null;
-            }),
+            loadOrNull('coverage', () => e.loadCoverageCounts(guildId, client.user?.id || '0', COVERAGE_PERIODS[period])),
             Promise.resolve().then(() => e.listMassActionBlocks(guildId)).catch(() => []),
+            guild ? loadOrNull('staff activity', async () => {
+                await completeMemberCache(guild);
+                return e.staffActivityForWeek(guild, start);
+            }) : null,
+            owner ? loadOrNull('removed staff roles', () => e.listRemovedStaffRoles(guildId)) : [],
+            isSnowflake(lookupId) ? loadOrNull('staff warnings', () => e.listStaffWarnings(guildId, lookupId)) : undefined,
         ]);
-        const names = new Map(blocks.map((b) => [b.moderatorId, client.users.cache?.get?.(b.moderatorId)?.username || null]));
+        const userName = (id) => guild?.members?.cache?.get?.(id)?.user?.username || client.users.cache?.get?.(id)?.username || null;
+        const names = new Map(blocks.map((b) => [b.moderatorId, userName(b.moderatorId)]));
+        const removedNames = new Map((removed || []).map((r) => [r.userId, userName(r.userId)]));
+        const roleNames = new Map((removed || []).flatMap((r) => r.roleIds).map((id) => [id, guild?.roles?.cache?.get?.(id)?.name || null]).filter(([, n]) => n));
+        const keep = { period: statsPeriod, coverage: period === '7d' ? undefined : period };
         return [
             counts ? coverageSection({ report: buildCoverageReport(counts, config?.birthdayTimezone || 'UTC'), period, periods: COVERAGE_PERIODS, statsPeriod })
                 : html`<h2>Coverage</h2><p class="muted">Coverage could not be loaded (database unavailable).</p>`,
-            blocksSection({ blocks, names, canLift: isOwner(req), csrf: req.dashboard.session.csrf, editEnabled: settings.editEnabled }),
+            activitySection({ rows: activity, week, start, keep, warningsLink: owner }),
+            disciplineSection({
+                isOwner: owner, csrf: req.dashboard.session.csrf, editEnabled: settings.editEnabled,
+                staff: (activity || []).map((r) => ({ userId: r.userId, username: r.username })),
+                lookup: warnings === undefined ? null : { userId: lookupId, name: userName(lookupId), rows: warnings },
+                removed, roleNames, names: removedNames, warnLimit: automodConfig.staffWarnLimit, keep: { ...keep, week: week === 'last' ? 'last' : undefined },
+            }),
+            blocksSection({ blocks, names, canLift: owner, csrf: req.dashboard.session.csrf, editEnabled: settings.editEnabled }),
         ];
     }
 
@@ -825,11 +860,49 @@ export function createEnforcementHandlers(core) {
         return res.redirect(303, path('/staff'));
     }, { rerender: rerenderStaff, need: 'owner' });
 
+    /** The logged-in owner as the giver / restorer the staff services record. */
+    const ownerActor = (req) => ({ id: req.dashboard.session.userId, username: req.dashboard.session.username || req.dashboard.session.userId });
+
+    // /staff warn: OWNER_IDS only, like the command. The service DMs the member, posts the
+    // mod-log line and removes the staff roles at the limit; here only the audit row.
+    const staffWarn = guardedPost(async (req, res) => {
+        const userId = text(req.body, 'user', 25);
+        if (!isSnowflake(userId)) throw new InputError('Staff member must be a Discord user ID (17–20 digits).');
+        const reason = text(req.body, 'reason', 500);
+        if (!reason) throw new InputError('A reason is required (which admin rule they broke).');
+        const guild = guildOf();
+        if (userId === guild.ownerId) throw new InputError('You cannot warn the owner or a bot.');
+        const member = await guild.members.fetch(userId).catch(() => null);
+        if (!member) throw new InputError('That user is not in the server.');
+        if (member.user?.bot) throw new InputError('You cannot warn the owner or a bot.');
+        const { active, demoted } = await e.giveStaffWarning(guild, member, ownerActor(req), reason);
+        await audit(req, 'staff', [{ key: `warning:${userId}`, old: null, new: { reason, active, demoted: Boolean(demoted) } }]);
+        await flash(req, [
+            `Staff warning given to ${member.user?.username || userId}: ${active} of ${automodConfig.staffWarnLimit} active.`,
+            demoted ? 'That reached the limit: their staff roles were removed (restore them under Removed staff roles).' : null,
+        ].filter(Boolean).join(' '));
+        return res.redirect(303, path(`/staff${queryString({ warnings: userId })}`));
+    }, { rerender: rerenderStaff, need: 'owner' });
+
+    // /staff restore (the roles part; a mass-action block is lifted with blockLift). OWNER_IDS only.
+    const staffRestore = guardedPost(async (req, res) => {
+        const userId = text(req.body, 'user', 25);
+        if (!isSnowflake(userId)) throw new InputError('Staff member must be a Discord user ID (17–20 digits).');
+        const roles = await e.restoreStaffRoles(guildOf(), userId, ownerActor(req));
+        if (!roles) throw new InputError('No removed staff roles are saved for that user (or they are not in the server).');
+        await audit(req, 'staff', [{ key: `roles:${userId}`, old: 'removed', new: roles.map((role) => role.name) }]);
+        const name = guildOf()?.members?.cache?.get?.(userId)?.user?.username || userId;
+        await flash(req, roles.length
+            ? `Staff roles given back to ${name}: ${roles.map((role) => role.name).join(', ')}.`
+            : `None of the saved roles could be given back to ${name} (deleted or above my role).`);
+        return res.redirect(303, path('/staff'));
+    }, { rerender: rerenderStaff, need: 'owner' });
+
     return {
         users, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
         caseEdit, caseVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd,
-        staffSections, blockLift, canWrite,
+        staffSections, blockLift, staffWarn, staffRestore, canWrite,
     };
 }
