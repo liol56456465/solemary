@@ -817,7 +817,7 @@ test('sidebar: every module listed (no Phase 2 placeholders), on/off states show
     for (const module of MODULES) assert.ok(keys.includes(module.key), module.key);
     const h = await setup();
     const res = await get(h, 'automod');
-    assert.match(res.body, /<span class="nav-label">Automod<\/span><span class="dot dot-on"><span class="sr">on<\/span><\/span>/);
+    assert.match(res.body, /<\/svg>Automod<span class="dot dot-on"><span class="sr">on<\/span><\/span><\/a>/, 'section tab with the on/off dot');
 });
 
 test('security headers: CSP still without unsafe-inline; same-origin referrer policy', () => {
@@ -1006,7 +1006,8 @@ test('Overview keeps the full module states (automod etc.) next to the config-ba
     const res = await run(h, h.d.overview, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query: {} });
     assert.equal(res.statusCode, 200);
     // Automod's state comes from the automod service, not from the guild config.
-    assert.match(res.body, /<span class="nav-label">Automod<\/span><span class="dot dot-on">/);
+    assert.match(res.body, /<span class="mod-name">Automod<\/span><span class="state-word is-(on|warn)">/);
+    assert.match(res.body, /<li><span>Automod<\/span><span class="state-word is-on">/, 'System tile');
     assert.ok(!/0 of 0 modules/.test(res.body));
 });
 
@@ -1075,7 +1076,8 @@ test('Overview checklist: progress bar, open items first, done/to-do words for s
         ],
     };
     const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
-    assert.match(page, /<progress value="1" max="2" aria-label="Setup progress"><\/progress><span class="muted">1 of 2 done<\/span>/);
+    assert.match(page, /<svg class="ring"[^>]*aria-label="1 of 2 setup steps done">/, 'setup ring with a text alternative');
+    assert.match(page, /stroke-dasharray="50.0 100"/);
     assert.ok(page.indexOf('Open thing') < page.indexOf('Done thing'), 'open items first');
     assert.match(page, /<span class="sr">to do:<\/span>/);
     assert.match(page, /<span class="sr">done:<\/span>/);

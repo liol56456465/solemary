@@ -269,6 +269,7 @@ const OVERVIEW_DATA = {
     listPendingAppeals: async () => [{}, {}, {}],
     searchCaseRecords: async () => ({ rows: [], total: 0 }),
     countActiveSanctions: async (guildId) => { assert.equal(guildId, GUILD); return { ban: 4, mute: 1 }; },
+    casesPerDay: async (guildId, days) => { assert.equal(days, 7); return { [new Date().toISOString().slice(0, 10)]: 2 }; },
     getLockdownState: async () => ({ active: false }),
     findMutedRole: async () => null,
 };
@@ -467,12 +468,12 @@ test('overview: status, counts, checklist and recent actions; read-only', async 
     const { cookie } = await login(d);
     const res = await runProtected(d, d.overview, { method: 'GET', headers: { cookie }, query: {} });
     assert.equal(res.statusCode, 200);
-    assert.match(res.body, /<span class="dot dot-on" aria-hidden="true"><\/span>Online</);
-    assert.match(res.body, /42 ms ping/);
-    assert.match(res.body, /Open tickets<\/span><span class="value">2</);
-    assert.match(res.body, />3<\/a>/, 'pending appeals of the main guild');
-    assert.match(res.body, /Active bans<\/span><span class="value">4</);
-    assert.match(res.body, /Active mutes<\/span><span class="value">1</);
+    assert.match(res.body, /<span class="dot dot-on" aria-hidden="true"><\/span>Online · 42 ms</);
+    assert.match(res.body, /Open tickets<\/h2><span class="kpi-num">2</);
+    assert.match(res.body, /Pending appeals<\/h2><a class="kpi-num" href="\/dashboard\/appeals">3<\/a>/, 'pending appeals of the main guild');
+    assert.match(res.body, /Active sanctions<\/h2><span class="kpi-num">5<\/span><p class="kpi-sub">4 bans · 1 mute</);
+    assert.match(res.body, /<div class="chart" role="img" aria-label="Enforcement actions per day: [^"]*Today 2">/, 'chart with a text alternative');
+    assert.match(res.body, /<div class="bar today"><span class="bar-count">2<\/span><i class="h-10"><\/i>/, 'the busiest day is the full height');
     assert.match(res.body, /<a class="setup-link" href="\/dashboard\/automod">Set up<span class="sr"> Automod review channel<\/span><\/a>/);
     assert.match(res.body, /<span class="type type-ban"><svg class="icon"[^>]*><use href="#i-nocontact"><\/use><\/svg>Ban<\/span>/, 'action badge with an icon');
     assert.match(res.body, /Getting started/);
@@ -662,13 +663,30 @@ test('case page: history, evidence and appeals are collapsible sections (history
     assert.match(page, /<details class="card section" id="s-case-appeals" data-key="case-appeals"><summary><h2>Appeals \(0\)/);
 });
 
-test('layout v2: server switcher in the top bar, sidebar groups Moderation / Community / Server', () => {
+test('layout v3: rail with the sections, section pages as tabs, phone tab bar with a More sheet', () => {
     const page = layout({ title: 'x', active: 'tickets', session: { username: 'a', csrf: 't', server: { name: 'Cats <3', iconUrl: null } }, body: html`` });
     assert.match(page, /<details class="server-switch menu-wrap"><summary aria-label="Server: Cats &lt;3">/);
     assert.ok(page.includes('Only this server can be managed for now.'));
-    assert.ok(!page.includes('server-card'), 'the server moved from the sidebar to the top bar');
-    const groups = [...page.matchAll(/<span class="group-label">([^<]+)<\/span>/g)].map((m) => m[1]);
-    assert.deepEqual(groups, ['Moderation', 'Community', 'Server']);
-    assert.match(page, /<a href="\/dashboard\/tickets" class="on" aria-current="page">.*Tickets &amp; modmail/);
+    const rail = page.slice(page.indexOf('<nav class="rail"'), page.indexOf('</nav>', page.indexOf('<nav class="rail"')));
+    const tips = [...rail.matchAll(/<span class="rail-tip">([^<]+)<\/span>/g)].map((m) => m[1]);
+    assert.deepEqual(tips, ['Overview', 'Modules', 'Moderation', 'Community', 'Server']);
+    assert.match(rail, /<a class="rail-item on" href="\/dashboard\/welcome" aria-current="true">.*Community/, 'tickets is in Community');
+    const tabs = page.slice(page.indexOf('<nav class="section-tabs"'), page.indexOf('</nav>', page.indexOf('<nav class="section-tabs"')));
+    assert.match(tabs, /<a href="\/dashboard\/tickets" class="on" aria-current="page">.*Tickets &amp; modmail/);
+    assert.ok(!tabs.includes('/dashboard/cases'), 'only the current section');
+    assert.match(page, /<nav class="tabbar" aria-label="Sections">/);
+    assert.match(page, /<details class="more menu-wrap"><summary>.*More<\/span><\/summary><div class="more-sheet">/);
+    assert.ok(page.includes('href="/dashboard/audit"'), 'Audit log reachable from the More sheet');
     assert.ok(page.includes('class="icon-button find-link" href="/dashboard/modules" aria-label="Find a setting"'), 'phones get a search icon');
+    assert.ok(!/class="sidebar"|class="topbar"|nav-toggle/.test(page), 'old shell gone');
+});
+
+test('overview week chart: the last 7 UTC days, oldest first, today last, missing days 0', async () => {
+    const { weekSeries } = await import('../src/services/dashboard/overview.js');
+    const now = Date.UTC(2026, 9, 28, 23, 30); // Wednesday 28 Oct 2026, late UTC evening
+    const week = weekSeries({ '2026-10-28': 3, '2026-10-22': 1, '2026-10-21': 9 }, now);
+    assert.deepEqual(week.map((d) => d.day), ['2026-10-22', '2026-10-23', '2026-10-24', '2026-10-25', '2026-10-26', '2026-10-27', '2026-10-28']);
+    assert.deepEqual(week.map((d) => d.label), ['Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Today']);
+    assert.deepEqual(week.map((d) => d.count), [1, 0, 0, 0, 0, 0, 3], 'the 8th day back is not counted');
+    assert.equal(week.filter((d) => d.today).length, 1);
 });

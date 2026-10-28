@@ -15,7 +15,7 @@ import { getLockdownState } from '../automod/raidService.js';
 import { SETTINGS } from '../settings/settingsRegistry.js';
 import { getSetting, guildIdFor, settingSource } from '../settings/guildSettings.js';
 import { formatDate, html, icon, layout, navItems, path, raw, timeTag, typeBadge } from './html.js';
-import { moduleEntries } from './modulesPage.js';
+import { moduleEntries, setupByModule } from './modulesPage.js';
 import { valueText } from './audit.js';
 
 const PENDING_APPEALS_CAP = 100;
@@ -41,7 +41,28 @@ async function countActiveSanctions(guildId) {
     return counts;
 }
 
+/** Cases per UTC day for the last `days` days (oldest first, today last), /test cases left out. */
+async function casesPerDay(guildId, days = 7) {
+    const { rows } = await query(
+        `SELECT to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day, COUNT(*)::int AS count FROM ${T.cases}
+         WHERE guild_id = $1 AND is_test = FALSE
+           AND created_at >= ((NOW() AT TIME ZONE 'UTC')::date - ($2::int - 1)) AT TIME ZONE 'UTC'
+         GROUP BY day`, [guildId, days]);
+    return Object.fromEntries(rows.map((row) => [row.day, Number(row.count || 0)]));
+}
+
+/** The last `days` UTC days as [{ day: 'YYYY-MM-DD', label, count, today }] from casesPerDay's map. */
+export function weekSeries(counts, now = Date.now(), days = 7) {
+    const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return Array.from({ length: days }, (_, i) => {
+        const date = new Date(now - (days - 1 - i) * 86_400_000);
+        const day = date.toISOString().slice(0, 10);
+        return { day, label: i === days - 1 ? 'Today' : names[date.getUTCDay()], count: counts?.[day] || 0, today: i === days - 1 };
+    });
+}
+
 export const defaultOverviewData = {
+    casesPerDay,
     countOpenTickets,
     countActiveSanctions,
     listPendingAppeals,
@@ -128,7 +149,7 @@ export async function collectChecklist({ client, guildId, data = defaultOverview
 export async function collectOverview({ client, guildId, data = defaultOverviewData, now = Date.now() }) {
     const guild = client.guilds?.cache?.get(guildId) || null;
     const dbStatus = client.db?.getStatus?.() || null;
-    const [config, welcome, openTickets, sanctions, pending, recent, lockdown, mutedRole] = await Promise.all([
+    const [config, welcome, openTickets, sanctions, pending, recent, lockdown, mutedRole, perDay] = await Promise.all([
         attempt(() => data.getGuildConfig(client, guildId)),
         attempt(() => data.getWelcomeConfig(client, guildId)),
         attempt(() => data.countOpenTickets(guildId)),
@@ -137,7 +158,13 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
         attempt(() => data.searchCaseRecords(guildId, {}, { page: 0, pageSize: 10 })),
         attempt(() => data.getLockdownState(guildId)),
         attempt(() => (guild ? data.findMutedRole(guild) : null)),
+        attempt(() => data.casesPerDay(guildId, 7)),
     ]);
+    // Joined this week: only when the member cache holds (nearly) everyone; otherwise unknown.
+    const members = guild?.members?.cache;
+    const joinedThisWeek = members && guild.memberCount && members.size >= guild.memberCount * 0.9
+        ? [...members.values()].filter((m) => m.joinedTimestamp && m.joinedTimestamp >= now - 7 * 86_400_000).length
+        : null;
     const presences = guild?.presences?.cache;
     const online = presences && presences.size > 0
         ? [...presences.values()].filter((p) => p.status && p.status !== 'offline').length
@@ -149,6 +176,8 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
         database: dbStatus ? { connected: dbStatus.connectionType !== 'none' && !dbStatus.isDegraded, type: dbStatus.connectionType, degraded: Boolean(dbStatus.isDegraded) } : null,
         guild: guild ? { name: guild.name, memberCount: guild.memberCount ?? null, online } : null,
         openTickets,
+        week: perDay === undefined ? undefined : weekSeries(perDay, now),
+        joinedThisWeek,
         activeBans: sanctions?.ban,
         activeMutes: sanctions?.mute,
         pendingAppeals: pending === undefined ? undefined : pending.length,
@@ -160,24 +189,6 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
 }
 
 const show = (value, text = value) => (value === undefined ? html`<span class="muted">unavailable</span>` : text);
-
-/**
- * One stat tile: short label, value and an optional note. `dot` (on, off, warn, bad) puts a small
- * status dot before the value; the value itself stays in the normal text colour. `title` is the
- * long name, shown on hover and read by screen readers.
- */
-function stat(label, value, { dot = '', note = '', href = null, title = '' } = {}) {
-    return html`<li class="stat"${title ? html` title="${title}"` : ''}><span class="label">${label}${title ? html`<span class="sr"> (${title})</span>` : ''}</span><span class="value${dot ? ' has-dot' : ''}">${dot ? html`<span class="dot dot-${dot}" aria-hidden="true"></span>` : ''}${value}</span>${note ? html`<span class="note">${note}</span>` : ''}${href ? html`<a class="stat-link" href="${href}"><span class="sr">Open ${label}</span></a>` : ''}</li>`;
-}
-
-/** A compact module summary (name + on/off dot); the full cards and switches are on the Modules page. */
-function moduleSummary(moduleStates) {
-    const entries = moduleEntries(moduleStates);
-    const known = entries.filter((e) => e.on !== null);
-    return html`<p class="muted">${known.filter((e) => e.on).length} of ${known.length} modules with an on/off state are on.</p>
-<ul class="module-chips">${entries.map((e) => html`<li><a href="${path(`/${e.key}`)}">${e.on === null ? '' : html`<span class="dot ${e.on ? 'dot-on' : 'dot-off'}"><span class="sr">${e.on ? 'on' : 'off'}</span></span>`}${e.label}</a></li>`)}</ul>
-<p class="card-foot"><a href="${path('/modules')}">Manage modules</a></p>`;
-}
 
 /** The newest dashboard changes (audit rows): who, which module and setting, old → new, when. */
 function recentChangesSection(rows) {
@@ -193,38 +204,96 @@ function recentChangesSection(rows) {
 }
 
 /** The Overview page from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
+/** A bento tile: optional title row (with a link) and content; `span` = columns of 12. */
+function tile(span, title, body, { link = null, className = '' } = {}) {
+    return html`<section class="tile span-${span}${className ? ` ${className}` : ''}">${title ? html`<h2 class="tile-title">${title}${link ? html`<a href="${link.href}">${link.text}</a>` : ''}</h2>` : ''}${body}</section>`;
+}
+
+/** A KPI tile: label, big number, one line under it. */
+function kpi(label, value, sub, { dark = false, href = null } = {}) {
+    const number = href && value !== undefined ? html`<a class="kpi-num" href="${href}">${show(value)}</a>` : html`<span class="kpi-num">${show(value)}</span>`;
+    return tile(3, label, html`${number}<p class="kpi-sub">${sub}</p>`, { className: `kpi${dark ? ' kpi-dark' : ''}` });
+}
+
+/** Actions per day as bars (height in 10 % steps: CSS classes, no inline styles), with a text alternative. */
+function weekChart(week) {
+    if (week === undefined) return html`<p class="error" role="alert">The chart could not be loaded (database). Reload the page to try again.</p>`;
+    const max = Math.max(1, ...week.map((d) => d.count));
+    const total = week.reduce((sum, d) => sum + d.count, 0);
+    const summary = week.map((d) => `${d.label} ${d.count}`).join(', ');
+    return html`<div class="chart" role="img" aria-label="Enforcement actions per day: ${summary}">${week.map((d) => html`<div class="bar${d.today ? ' today' : ''}"><span class="bar-count">${d.count}</span><i class="h-${Math.round((d.count / max) * 10)}"></i><span class="bar-label">${d.label}</span></div>`)}</div>
+<p class="kpi-sub">${total} action${total === 1 ? '' : 's'} in 7 days (UTC days, /test cases not counted).</p>`;
+}
+
+/** The setup ring: an SVG circle (presentation attributes only, CSP-safe) and the next open steps. */
+function setupTile(checklist) {
+    const done = checklist.filter((item) => item.done).length;
+    const total = checklist.length || 1;
+    const todo = checklist.filter((item) => !item.done);
+    const arc = ((done / total) * 100).toFixed(1);
+    const ring = html`<svg class="ring" width="104" height="104" viewBox="0 0 36 36" role="img" aria-label="${done} of ${checklist.length} setup steps done"><circle cx="18" cy="18" r="15.9155" fill="none" class="ring-track" stroke-width="3.2"></circle>${done ? html`<circle cx="18" cy="18" r="15.9155" fill="none" class="ring-value" stroke-width="3.2" stroke-dasharray="${arc} 100" stroke-linecap="round" transform="rotate(-90 18 18)"></circle>` : ''}<text x="18" y="20.6" text-anchor="middle" class="ring-text">${done}/${checklist.length}</text></svg>`;
+    const next = todo.length
+        ? html`<ul class="steps">${todo.slice(0, 4).map((item) => html`<li>${icon('circle', 'icon check-icon muted')}<span>${item.label}</span><a href="${item.href}">Set up<span class="sr"> ${item.label}</span></a></li>`)}</ul>`
+        : html`<p class="steps-done">${icon('check', 'icon check-icon ok')} Everything is set up.</p>`;
+    return html`<div class="setup">${ring}${next}</div>${todo.length > 4 ? html`<p class="kpi-sub"><a href="#all-steps">${todo.length - 4} more step${todo.length - 4 === 1 ? '' : 's'}</a></p>` : ''}`;
+}
+
+/** Recent enforcement actions as a feed: badge, who and by whom, reason + case, when. */
+function recentFeed(recent) {
+    if (recent === undefined) return html`<p class="error" role="alert">Recent actions could not be loaded (database). Reload the page to try again.</p>`;
+    if (!recent.length) return html`<p class="empty">No enforcement actions yet. They show up here after the first warn, mute, kick or ban.</p>`;
+    return html`<ul class="feed">${recent.slice(0, 5).map((row) => html`<li>${typeBadge(row.type)}<span class="feed-text"><b>${row.target_username}</b> by ${row.moderator_username}${row.is_test ? html` <span class="muted">(test)</span>` : ''}
+<small>${row.reason} · case <a href="${path(`/cases/${encodeURIComponent(row.case_code)}`)}"><code>${row.case_code}</code></a></small></span>${timeTag(row.created_at)}</li>`)}</ul>`;
+}
+
+/** Every settings module as a chip with its state in words (same rule as the Modules page). */
+function modulesTile(moduleStates, checklist) {
+    const setup = setupByModule(checklist);
+    return html`<div class="mod-chips">${moduleEntries(moduleStates).map((e) => {
+        const todo = setup.get(e.key)?.todo;
+        const state = e.on === false ? ['off', 'Off'] : todo ? ['warn', 'Setup'] : e.on === true ? ['on', 'On'] : null;
+        return html`<a href="${path(`/${e.key}`)}">${icon(e.key)}<span class="mod-name">${e.label}</span>${state ? html`<span class="state-word is-${state[0]}"><span class="dot dot-${state[0]}" aria-hidden="true"></span>${state[1]}</span>` : ''}</a>`;
+    })}</div>`;
+}
+
+/** The Overview page (bento) from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
 export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [] }) {
     const todo = o.checklist.filter((item) => !item.done);
     const pendingText = o.pendingAppeals >= PENDING_APPEALS_CAP ? `${PENDING_APPEALS_CAP}+` : o.pendingAppeals;
-    // One row of equal tiles: short labels, big tabular numbers, a status dot + word for states.
-    const stats = html`<ul class="stats">
-${stat('Members', o.guild?.memberCount ?? '—', { note: o.guild?.online != null ? `${o.guild.online} online` : '' })}
-${stat('Open tickets', show(o.openTickets))}
-${stat('Pending appeals', show(o.pendingAppeals, html`<a href="${path('/appeals')}">${pendingText}</a>`), { dot: o.pendingAppeals > 0 ? 'warn' : '' })}
-${stat('Active bans', show(o.activeBans))}
-${stat('Active mutes', show(o.activeMutes))}
-${stat('Bot', o.bot.ready ? 'Online' : 'Offline', { dot: o.bot.ready ? 'on' : 'bad', note: o.bot.ping !== null ? `${o.bot.ping} ms ping` : '' })}
-${stat('Database', o.database ? (o.database.connected ? 'Connected' : 'Degraded') : html`<span class="muted">Unknown</span>`, { dot: o.database ? (o.database.connected ? 'on' : 'bad') : 'off', note: o.database?.type || '' })}
-</ul>
+    const sanctions = o.activeBans === undefined || o.activeMutes === undefined ? undefined : o.activeBans + o.activeMutes;
+    const server = session?.server;
+    const avatar = server?.iconUrl
+        ? html`<img class="hello-avatar" src="${server.iconUrl}" alt="" width="64" height="64" referrerpolicy="no-referrer">`
+        : html`<span class="hello-avatar" aria-hidden="true">${String(o.guild?.name || server?.name || 'M').slice(0, 2).toUpperCase()}</span>`;
+    const head = html`<header class="hello">${avatar}<div class="hello-text"><p>Welcome back, ${session?.username || 'admin'}</p><h1>${o.guild?.name || server?.name || 'Overview'}</h1></div>
+<div class="hello-actions"><a class="btn secondary" href="${path('/cases')}">${icon('cases')}Cases</a><a class="btn primary" href="${path('/users')}">${icon('enforcement')}Moderate a member</a></div></header>
 ${o.lockdown?.active ? html`<p class="error" role="alert">Raid lockdown is active${o.lockdown.since ? html` since ${formatDate(o.lockdown.since)}` : ''}. <a href="${path('/automod')}">Automod settings</a></p>` : ''}`;
-    // Open items first; a check icon for done ones (the word is there for screen readers).
-    const doneCount = o.checklist.length - todo.length;
+    const system = html`<ul class="health">
+<li><span>Bot</span><span class="state-word is-${o.bot.ready ? 'on' : 'bad'}"><span class="dot dot-${o.bot.ready ? 'on' : 'bad'}" aria-hidden="true"></span>${o.bot.ready ? `Online${o.bot.ping !== null ? ` · ${o.bot.ping} ms` : ''}` : 'Offline'}</span></li>
+<li><span>Database</span>${o.database ? html`<span class="state-word is-${o.database.connected ? 'on' : 'bad'}"><span class="dot dot-${o.database.connected ? 'on' : 'bad'}" aria-hidden="true"></span>${o.database.connected ? 'Connected' : 'Degraded'}</span>` : html`<span class="state-word is-off"><span class="dot dot-off" aria-hidden="true"></span>Unknown</span>`}</li>
+<li><span>Automod</span>${Object.hasOwn(moduleStates, 'automod') ? html`<span class="state-word is-${moduleStates.automod ? 'on' : 'off'}"><span class="dot dot-${moduleStates.automod ? 'on' : 'off'}" aria-hidden="true"></span>${moduleStates.automod ? 'On' : 'Off'}</span>` : html`<span class="muted">unknown</span>`}</li>
+<li><span>Raid lockdown</span>${o.lockdown === undefined ? html`<span class="muted">unavailable</span>` : html`<span class="state-word is-${o.lockdown.active ? 'bad' : 'off'}"><span class="dot dot-${o.lockdown.active ? 'bad' : 'off'}" aria-hidden="true"></span>${o.lockdown.active ? 'Active' : 'Off'}</span>`}</li></ul>`;
+    // Full checklist (all steps) at the bottom, open while anything is left.
     const ordered = [...todo, ...o.checklist.filter((item) => item.done)];
-    const checklist = html`<div class="progress-row"><progress value="${doneCount}" max="${o.checklist.length || 1}" aria-label="Setup progress"></progress><span class="muted">${doneCount} of ${o.checklist.length} done</span></div>
-<ul class="checklist">${ordered.map((item) => html`<li class="${item.done ? 'is-done' : ''}">${icon(item.done ? 'check' : 'circle', `icon check-icon ${item.done ? 'ok' : 'muted'}`)}<span class="sr">${item.done ? 'done' : 'to do'}:</span>
+    const allSteps = html`<ul class="checklist">${ordered.map((item) => html`<li class="${item.done ? 'is-done' : ''}">${icon(item.done ? 'check' : 'circle', `icon check-icon ${item.done ? 'ok' : 'muted'}`)}<span class="sr">${item.done ? 'done' : 'to do'}:</span>
 <span class="checklist-text">${item.label}${item.done ? '' : html`<span class="checklist-hint">${item.hint}</span>`}</span>${item.done
         ? html`<span class="checklist-state">Done</span>`
         : html`<a class="setup-link" href="${item.href}">Set up<span class="sr"> ${item.label}</span></a>`}</li>`)}</ul>`;
-    // Compact: when, action badge, member, moderator, case code.
-    const recent = o.recent === undefined ? html`<p class="error" role="alert">Recent actions could not be loaded (database). Reload the page to try again.</p>` : o.recent.length ? html`<div class="table-wrap"><table class="compact"><thead><tr><th>When</th><th>Action</th><th>Member</th><th>Moderator</th><th>Case</th></tr></thead><tbody>
-${o.recent.map((row) => html`<tr><td class="nowrap muted">${timeTag(row.created_at)}</td><td>${typeBadge(row.type)}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.target_username}</td><td>${row.moderator_username}</td><td><a href="${path(`/cases/${encodeURIComponent(row.case_code)}`)}"><code>${row.case_code}</code></a></td></tr>`)}
-</tbody></table></div><p class="card-foot"><a href="${path('/cases')}">All cases</a></p>` : html`<p class="empty">No enforcement actions yet. They show up here after the first warn, mute, kick or ban.</p>`;
-    const body = html`<div class="page-head"><h1>Overview</h1><p class="muted">Server health, what still needs setting up, and the latest moderation actions.</p></div>
-${stats}
-<details class="card section" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>Getting started${todo.length ? html` <span class="count">${todo.length} to do</span>` : html` <span class="state state-on">all set</span>`}</h2></summary><div class="section-body">${checklist}</div></details>
-<section class="card"><h2>Recent enforcement actions</h2>${recent}</section>
+    const memberSub = o.joinedThisWeek != null ? html`<span class="up">+${o.joinedThisWeek}</span> joined this week` : o.guild?.online != null ? `${o.guild.online} online` : 'members in the server';
+    const body = html`${head}
+<div class="bento">
+${kpi('Members', o.guild?.memberCount ?? '—', memberSub, { dark: true })}
+${kpi('Open tickets', o.openTickets, 'tickets waiting for staff')}
+${kpi('Pending appeals', o.pendingAppeals === undefined ? undefined : pendingText, o.pendingAppeals > 0 ? html`<span class="state-word is-warn"><span class="dot dot-warn" aria-hidden="true"></span>needs a decision</span>` : 'nothing waiting', { href: path('/appeals') })}
+${kpi('Active sanctions', sanctions, sanctions === undefined ? 'unavailable' : `${o.activeBans} ban${o.activeBans === 1 ? '' : 's'} · ${o.activeMutes} mute${o.activeMutes === 1 ? '' : 's'}`)}
+${tile(8, 'Moderation this week', weekChart(o.week), { link: { href: path('/cases'), text: 'Cases →' } })}
+${tile(4, 'System', system)}
+${tile(5, 'Getting started', setupTile(o.checklist), { link: todo.length ? { href: '#all-steps', text: 'All steps →' } : null })}
+${tile(7, 'Recent actions', recentFeed(o.recent), { link: { href: path('/cases'), text: 'All cases →' } })}
+${tile(12, 'Modules', modulesTile(moduleStates, o.checklist), { link: { href: path('/modules'), text: 'Manage →' } })}
+</div>
 ${recentChangesSection(recentChanges)}
-<section class="card"><h2>Modules</h2>${moduleSummary(moduleStates)}</section>`;
+<details class="card section" id="all-steps" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>All setup steps${todo.length ? html` <span class="count">${todo.length} to do</span>` : html` <span class="state state-on">all set</span>`}</h2></summary><div class="section-body">${allSteps}</div></details>`;
     return layout({ title: 'Overview', active: 'overview', session, access, moduleStates, body });
 }
 

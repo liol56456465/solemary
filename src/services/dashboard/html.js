@@ -160,17 +160,52 @@ function stateOf(item, moduleStates) {
     return item.state && Object.hasOwn(moduleStates, item.state) ? moduleStates[item.state] : null;
 }
 
-function navLink(item, active, moduleStates) {
-    const state = stateOf(item, moduleStates);
-    const on = item.key === active;
-    return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' class="on" aria-current="page"') : ''}>${icon(item.key)}<span class="nav-label">${item.label}</span>${state === null ? ''
-        : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
+/**
+ * The top-level sections of the rail (desktop) and tab bar (phones): Overview, Modules, then
+ * one per NAV group. A group's link opens its first page; its pages are tabs on the page.
+ */
+const SECTION_ICON = { overview: 'overview', modules: 'modules', Moderation: 'enforcement', Community: 'users', Server: 'server' };
+export function sections() {
+    return NAV.map((item) => (item.group
+        ? { key: item.group.toLowerCase(), label: item.group, icon: SECTION_ICON[item.group] || 'overview', href: path(`/${item.items[0].key}`), items: item.items }
+        : { key: item.key, label: item.label, icon: SECTION_ICON[item.key] || item.key, href: path(`/${item.key}`), items: null }));
 }
 
-function sidebar(active, moduleStates) {
-    return html`<nav class="sidebar" id="sidebar" aria-label="Dashboard"><ul>${NAV.map((item) => (item.group
-        ? html`<li class="group"><span class="group-label">${item.group}</span><ul>${item.items.map((sub) => navLink(sub, active, moduleStates))}</ul></li>`
-        : navLink(item, active, moduleStates)))}</ul></nav>`;
+/** The section a page belongs to (by its sidebar key). */
+function sectionOf(active) {
+    return sections().find((sec) => (sec.items ? sec.items.some((i) => i.key === active) : sec.key === active)) || null;
+}
+
+/** Desktop: the floating rail (icons with tooltips; theme switch and account at the bottom). */
+function rail(active, theme, back, session, access) {
+    const current = sectionOf(active);
+    return html`<nav class="rail" aria-label="Sections"><a class="rail-logo" href="${path('/overview')}" aria-label="Meowist: Overview">${icon('cat')}</a>
+<ul class="rail-list">${sections().map((sec) => html`<li><a class="rail-item${current?.key === sec.key ? ' on' : ''}" href="${sec.href}"${current?.key === sec.key ? raw(' aria-current="true"') : ''}>${icon(sec.icon)}<span class="rail-tip">${sec.label}</span></a></li>`)}</ul>
+<div class="rail-bottom">${themeToggle(theme, back, 'rail-item')}${userMenu(session, access)}</div></nav>`;
+}
+
+/** A section's pages as pill tabs above the content (with the module on/off dot). */
+function sectionTabs(active, moduleStates) {
+    const sec = sectionOf(active);
+    if (!sec?.items) return '';
+    return html`<nav class="section-tabs" aria-label="${sec.label}">${sec.items.map((item) => {
+        const state = stateOf(item, moduleStates);
+        const on = item.key === active;
+        return html`<a href="${path(`/${item.key}`)}"${on ? raw(' class="on" aria-current="page"') : ''}>${icon(item.key)}${item.label}${state === null ? ''
+            : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a>`;
+    })}</nav>`;
+}
+
+/** Phones: a floating tab bar; "More" is a sheet (details, no script) with the rest. */
+function tabBar(active, theme, back, session, access) {
+    const current = sectionOf(active);
+    const main = sections().filter((sec) => ['overview', 'moderation', 'modules', 'community'].includes(sec.key));
+    const rest = sections().filter((sec) => !main.some((m) => m.key === sec.key));
+    const moreOn = rest.some((sec) => sec.key === current?.key);
+    return html`<nav class="tabbar" aria-label="Sections">${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.key === 'overview' ? 'Home' : sec.label}</span></a>`)}
+<details class="more menu-wrap"><summary${moreOn ? raw(' class="on"') : ''}>${icon('menu')}<span>More</span></summary><div class="more-sheet">
+${rest.map((sec) => html`<p class="more-group">${sec.label}</p>${(sec.items || [{ key: sec.key, label: sec.label }]).map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${icon(item.key)}${item.label}</a>`)}`)}
+<div class="more-foot">${themeToggle(theme, back, 'more-theme', true)}<form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
 }
 
 // The switch cycles system (follow the device) → dark → light.
@@ -188,9 +223,9 @@ export function themeFrom(value) {
  * The theme switch: a plain link that works without JS (GET /dashboard/theme sets the
  * cookie and comes back); the static script switches in place instead.
  */
-function themeToggle(theme, back) {
+function themeToggle(theme, back, className = 'icon-button', withText = false) {
     const next = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
-    return html`<a class="icon-button" href="${path(`/theme${queryString({ mode: next, next: back })}`)}" data-theme-toggle data-theme="${theme}" title="${THEME_LABEL[theme]} (switch to ${THEME_LABEL[next].toLowerCase()})">${icon(THEME_ICON[theme])}<span class="sr">${THEME_LABEL[theme]}; switch to ${THEME_LABEL[next].toLowerCase()}</span></a>`;
+    return html`<a class="${className}" href="${path(`/theme${queryString({ mode: next, next: back })}`)}" data-theme-toggle data-theme="${theme}" title="${THEME_LABEL[theme]} (switch to ${THEME_LABEL[next].toLowerCase()})">${icon(THEME_ICON[theme])}<span class="${withText ? 'theme-text' : 'sr'}">${THEME_LABEL[theme]}; switch to ${THEME_LABEL[next].toLowerCase()}</span></a>`;
 }
 
 function initials(name) {
@@ -217,23 +252,10 @@ function userMenu(session, access) {
 <form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
 }
 
-/** Breadcrumbs from the sidebar: Overview › group › page › (detail title). */
-function breadcrumbs(active, title) {
-    if (!active || active === 'overview') return '';
-    const group = NAV.find((item) => item.group && item.items.some((sub) => sub.key === active));
-    const item = navItems().find((i) => i.key === active);
-    if (!item) return '';
-    const crumbs = [html`<a href="${path('/overview')}">Overview</a>`];
-    if (group) crumbs.push(html`<span>${group.group}</span>`);
-    crumbs.push(item.label === title ? html`<span aria-current="page">${item.label}</span>` : html`<a href="${path(`/${item.key}`)}">${item.label}</a>`);
-    if (item.label !== title) crumbs.push(html`<span aria-current="page">${title}</span>`);
-    return html`<nav class="crumbs" aria-label="Breadcrumb"><ol>${crumbs.map((c) => html`<li>${c}</li>`)}</ol></nav>`;
-}
-
 /**
- * The page shell: top bar (brand, server switcher, search, theme switch, user menu), left
- * sidebar (full ≥ 1024 px, an icon rail on tablets, a drawer on phones; opened by a
- * checkbox, no script needed), breadcrumbs, then `body` (SafeHtml).
+ * The page shell (design v3 "Bento"): a floating icon rail with the sections (desktop), a top
+ * strip with the server switcher and search, the section's pages as pill tabs, then `body`
+ * (SafeHtml); on phones a floating tab bar with a "More" sheet (details: no script needed).
  * The theme comes from the cookie, set on <html> server-side so there is no flash.
  * `session` may carry display extras added by the routes: theme, server, path.
  * No inline styles or scripts (CSP); the one script is the static enhancement file.
@@ -241,17 +263,15 @@ function breadcrumbs(active, title) {
 export function layout({ title, active = null, session = null, access = null, moduleStates = {}, body, theme: pageTheme = 'system' }) {
     const theme = themeFrom(session?.theme ?? pageTheme);
     const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
-    const top = html`<header class="topbar">
-${session ? html`<label for="nav-toggle" class="icon-button nav-button" tabindex="0" role="button" aria-label="Menu">${icon('menu')}</label>` : ''}
-<a class="brand" href="${path('/overview')}" aria-label="Meowist: Overview"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a>
-${session ? serverSwitch(session.server) : ''}
-${session ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label><input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : ''}<span class="spacer"></span>
-${themeToggle(theme, back)}${session ? userMenu(session, access) : ''}</header>`;
+    const top = session ? html`<header class="page-top">${serverSwitch(session.server)}<span class="spacer"></span>
+<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form></header>`
+        : html`<header class="page-top bare-top"><a class="brand" href="${path('/overview')}" aria-label="Meowist"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a><span class="spacer"></span>${themeToggle(theme, back)}</header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
-<body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>${session ? raw('<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-controls="sidebar">') : ''}${top}
-<div class="${session ? 'shell' : 'shell bare'}">${session ? html`${sidebar(active, moduleStates)}<label for="nav-toggle" class="scrim" aria-hidden="true"></label>` : ''}
-<main id="main" tabindex="-1">${breadcrumbs(active, title)}${body}</main></div></body></html>`.text;
+<body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>
+<div class="${session ? 'app' : 'app bare'}">${session ? rail(active, theme, back, session, access) : ''}
+<div class="page">${top}${session ? sectionTabs(active, moduleStates) : ''}<main id="main" tabindex="-1">${body}</main></div></div>
+${session ? tabBar(active, theme, back, session, access) : ''}</body></html>`.text;
 }
 
 /** "Channel exceptions" → "channel-exceptions" (a stable key for remembering open sections). */
