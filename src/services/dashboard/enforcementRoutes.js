@@ -19,6 +19,7 @@
 // with the logged-in user's GuildMember fetched fresh, through the SAME services as the
 // Discord commands (DMs, ladder, hierarchy, bot permissions, mass-action guard, logs).
 
+import { PermissionFlagsBits } from 'discord.js';
 import { CUSTOM_REASON_KEY } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { isAdministrator } from '../enforcement/enforcementService.js';
@@ -34,6 +35,7 @@ import {
 import { COVERAGE_PERIODS, buildCoverageReport } from '../staffCoverageService.js';
 import { InputError, multiline, plainText, queryText, text } from './forms.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS, listMembers } from './membersData.js';
+import { NICKNAME_MAX, REASON_MAX, TIMEOUTS, assignableRoles, auditReason, roleProblem, targetProblem } from './memberActions.js';
 import { html, path } from './html.js';
 import { isSnowflake } from './security.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
@@ -263,6 +265,19 @@ export function createEnforcementHandlers(core) {
         const noContact = e.getActiveOrdersFor(guildId, userId) || [];
         const noContactNames = new Map(noContact.map((o) => [o.otherId, client.users.cache?.get?.(o.otherId)?.username || null]));
         const member = state.member;
+        // What this moderator may change on this member (roles, nickname, timeout).
+        let memberEdit = null;
+        if (member) {
+            const actorMember = await guild.members.fetch({ user: req.dashboard.session.userId }).catch(() => null);
+            const ctx = { guild, target: member, actorId: req.dashboard.session.userId, actorMember, actorIsOwner: isOwner(req), botMember: guild.members.me };
+            const until = member.communicationDisabledUntilTimestamp;
+            memberEdit = {
+                problem: targetProblem(ctx),
+                assignable: assignableRoles(ctx).filter((r) => !member.roles?.cache?.has?.(r.id)),
+                removable: new Set([...(member.roles?.cache?.values?.() || [])].filter((r) => !roleProblem({ ...ctx, role: r })).map((r) => r.id)),
+                timeoutUntil: until > Date.now() ? new Date(until) : null,
+            };
+        }
         return {
             user: {
                 id: user.id, username: user.username, globalName: user.globalName || null, bot: Boolean(user.bot), createdAt: user.createdAt,
@@ -272,8 +287,9 @@ export function createEnforcementHandlers(core) {
                 nickname: member.nickname || null,
                 joinedAt: member.joinedAt || null,
                 roles: [...(member.roles?.cache?.values?.() || [])].filter((r) => r.id !== guild.id)
-                    .sort((a, b) => (b.position ?? 0) - (a.position ?? 0)).map((r) => r.name),
+                    .sort((a, b) => (b.position ?? 0) - (a.position ?? 0)).map((r) => ({ id: r.id, name: r.name })),
             } : null,
+            memberEdit,
             state, cases, casesTotal: total, appealStatuses, countedWarns, notes, block,
             noContact, noContactNames,
             actions: availableActions(state),
@@ -350,6 +366,72 @@ export function createEnforcementHandlers(core) {
         logger.info(`Dashboard ${flow.type} by ${req.dashboard.session.userId} on ${userId}${result.record ? ` (${result.record.case_code})` : ''}`);
         await flash(req, resultMessage(flow, result));
         return res.redirect(303, path(`/users/${userId}`));
+    }, { rerender: rerenderUser });
+
+    // ── Member changes: roles, nickname, timeout (same hierarchy rule as enforcement) ──
+
+    /** The member of the URL, the moderator as a member, and whether they may change them. */
+    async function memberContext(req) {
+        const userId = userIdParam(req);
+        if (!userId) throw new InputError('Not a user ID.');
+        const guild = guildOf();
+        const [target, actorMember] = await Promise.all([
+            guild.members.fetch({ user: userId, force: true }).catch(() => null),
+            guild.members.fetch({ user: req.dashboard.session.userId, force: true }).catch(() => null),
+        ]);
+        const ctx = { guild, userId, target, actorMember, actorIsOwner: isOwner(req), botMember: guild.members.me, actorId: req.dashboard.session.userId };
+        const problem = targetProblem(ctx);
+        if (problem) throw new InputError(problem);
+        return ctx;
+    }
+
+    const roleChange = (mode) => guardedPost(async (req, res) => {
+        const ctx = await memberContext(req);
+        const roleId = text(req.body, 'roleId', 20);
+        const role = isSnowflake(roleId) ? ctx.guild.roles.cache.get(roleId) : null;
+        const problem = roleProblem({ ...ctx, role });
+        if (problem) throw new InputError(problem);
+        const has = ctx.target.roles.cache.has(role.id);
+        if (mode === 'add' && has) throw new InputError(`${ctx.target.user.username} already has @${role.name}.`);
+        if (mode === 'remove' && !has) throw new InputError(`${ctx.target.user.username} does not have @${role.name}.`);
+        const reason = auditReason(req.dashboard.session.username, text(req.body, 'reason', REASON_MAX));
+        if (mode === 'add') await ctx.target.roles.add(role.id, reason);
+        else await ctx.target.roles.remove(role.id, reason);
+        await audit(req, 'members', [{ key: `role:${ctx.userId}`, old: mode === 'add' ? null : `@${role.name}`, new: mode === 'add' ? `@${role.name}` : null }],
+            { modLog: true, label: 'Members' });
+        await flash(req, mode === 'add' ? `Gave @${role.name} to ${ctx.target.user.username}.` : `Took @${role.name} from ${ctx.target.user.username}.`);
+        return res.redirect(303, path(`/users/${ctx.userId}`));
+    }, { rerender: rerenderUser });
+    const roleAdd = roleChange('add');
+    const roleRemove = roleChange('remove');
+
+    const nickname = guardedPost(async (req, res) => {
+        const ctx = await memberContext(req);
+        const nick = text(req.body, 'nickname', NICKNAME_MAX);
+        const before = ctx.target.nickname || null;
+        if ((nick || null) === before) throw new InputError('That is already their nickname.');
+        await ctx.target.setNickname(nick || null, auditReason(req.dashboard.session.username, text(req.body, 'reason', REASON_MAX)));
+        await audit(req, 'members', [{ key: `nickname:${ctx.userId}`, old: before, new: nick || null }], { modLog: true, label: 'Members' });
+        await flash(req, nick ? `Nickname set to "${nick}".` : 'Nickname removed.');
+        return res.redirect(303, path(`/users/${ctx.userId}`));
+    }, { rerender: rerenderUser });
+
+    const timeout = guardedPost(async (req, res) => {
+        const ctx = await memberContext(req);
+        const choice = text(req.body, 'duration', 5);
+        const lift = choice === 'off';
+        if (!lift && !Object.hasOwn(TIMEOUTS, choice)) throw new InputError('Choose a timeout length.', 400, 'duration');
+        if (!lift && ctx.target.permissions?.has?.(PermissionFlagsBits.Administrator)) {
+            throw new InputError('Discord does not allow timing out a member with Administrator.');
+        }
+        const until = ctx.target.communicationDisabledUntilTimestamp;
+        if (lift && !(until > Date.now())) throw new InputError(`${ctx.target.user.username} is not timed out.`);
+        const reason = auditReason(req.dashboard.session.username, text(req.body, 'reason', REASON_MAX));
+        await ctx.target.timeout(lift ? null : TIMEOUTS[choice].ms, reason);
+        await audit(req, 'members', [{ key: `timeout:${ctx.userId}`, old: until > Date.now() ? new Date(until).toISOString() : null, new: lift ? null : TIMEOUTS[choice].label }],
+            { modLog: true, label: 'Members' });
+        await flash(req, lift ? `Timeout of ${ctx.target.user.username} removed.` : `${ctx.target.user.username} is timed out for ${TIMEOUTS[choice].label}.`);
+        return res.redirect(303, path(`/users/${ctx.userId}`));
     }, { rerender: rerenderUser });
 
     const noteAdd = guardedPost(async (req, res) => {
@@ -610,7 +692,7 @@ export function createEnforcementHandlers(core) {
     }, { rerender: rerenderStaff, need: 'owner' });
 
     return {
-        users, userPage: userPageHandler, actionPreview, actionExecute, noteAdd, noteRemove,
+        users, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, noteAdd, noteRemove,
         caseEdit, caseVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd,

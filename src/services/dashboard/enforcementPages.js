@@ -15,6 +15,7 @@ import { WEEKDAYS, intensityLevel, slotLabel } from '../staffCoverageService.js'
 import { formatAge, formatDate, html, layout, path, queryString, raw, section, typeBadge } from './html.js';
 import { isAllowedImageUrl, isSafeLink } from './pages.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS } from './membersData.js';
+import { NICKNAME_MAX, REASON_MAX, TIMEOUTS } from './memberActions.js';
 
 export const DURATION_CHOICES = ['30m', '1h', '6h', '12h', '1d', '3d', '7d', '14d', '1mo', '3mo'];
 
@@ -37,12 +38,12 @@ ${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is
  * A POST form to any dashboard path, with the CSRF token; disabled when `enabled` is
  * false. `submit: null` leaves the button out (the fields bring their own).
  */
-export function actionForm(csrf, actionPath, fields, { submit = 'Save', hidden = {}, danger = false, inline = false, enabled = true, className = '', multipart = false, confirm = '' } = {}) {
+export function actionForm(csrf, actionPath, fields, { submit = 'Save', hidden = {}, danger = false, secondary = false, inline = false, enabled = true, className = '', multipart = false, confirm = '' } = {}) {
     const classes = [inline ? 'inline-form' : 'settings-form', className].filter(Boolean).join(' ');
     const attrs = html`${multipart ? raw(' enctype="multipart/form-data"') : ''}${confirm ? html` data-confirm="${confirm}"` : ''}`;
     return html`<form method="post" action="${path(actionPath)}" class="${classes}"${attrs}><input type="hidden" name="csrf" value="${csrf}">
 ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}
-<fieldset${enabled ? '' : raw(' disabled')}>${fields}${enabled && submit !== null ? html`<button type="submit" class="${danger ? 'danger' : 'primary'}">${submit}</button>` : ''}</fieldset></form>`;
+<fieldset${enabled ? '' : raw(' disabled')}>${fields}${enabled && submit !== null ? html`<button type="submit" class="${danger ? 'danger' : secondary ? 'secondary' : 'primary'}">${submit}</button>` : ''}</fieldset></form>`;
 }
 
 function option(value, label, selected = false) {
@@ -143,8 +144,32 @@ function profileSection(user, member, now) {
 ${member ? html`<dt>Nickname</dt><dd>${member.nickname || '—'}</dd>` : ''}
 <dt>Account created</dt><dd>${formatDate(user.createdAt)} (${formatAge(user.createdAt, now)} ago)</dd>
 <dt>In server</dt><dd>${member ? html`yes, joined ${member.joinedAt ? html`${formatDate(member.joinedAt)} (${formatAge(member.joinedAt, now)} ago)` : 'at an unknown time'}` : 'no'}</dd>
-${member ? html`<dt>Roles (${roles.length})</dt><dd>${roles.length ? roles.map((r, i) => html`${i ? ', ' : ''}@${r}`) : 'none'}</dd>` : ''}
+${member ? html`<dt>Roles (${roles.length})</dt><dd>${roles.length ? roles.map((r, i) => html`${i ? ', ' : ''}@${r.name}`) : 'none'}</dd>` : ''}
 </dl></div>`;
+}
+
+/**
+ * Roles, nickname and timeout of a member in the server: current roles (with Remove where this
+ * moderator may take them), a role picker of the roles they may give, nickname, timeout. When
+ * the member cannot be changed (owner, bot, yourself, equal or higher role) it says why.
+ */
+function memberEditSection(view, canWrite, csrf) {
+    const id = view.user.id;
+    const edit = view.memberEdit;
+    const roles = view.member.roles;
+    const current = html`<div class="role-list">${roles.length ? roles.map((r) => html`<span class="role-chip role-chip-lg">@${r.name}${canWrite && !edit?.problem && edit?.removable?.has(r.id)
+        ? actionForm(csrf, `/users/${id}/roles/remove`, '', { submit: 'Remove', hidden: { roleId: r.id }, inline: true, secondary: true, className: 'chip-form' }) : ''}</span>`) : html`<span class="muted">No roles.</span>`}</div>`;
+    if (!canWrite) return html`${current}<p class="muted">Changing roles needs Administrator and editing turned on.</p>`;
+    if (edit?.problem) return html`${current}<p class="notice">${edit.problem}</p>`;
+    const roleForm = edit.assignable.length
+        ? actionForm(csrf, `/users/${id}/roles/add`, html`<div class="grid"><label>Give a role<select name="roleId" data-search required><option value="">— choose —</option>${edit.assignable.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select><span class="hint">Only roles below your highest role and Meowist's; staff roles only for the server owner or bot owners.</span></label>
+<label>Reason (optional, Discord audit log)<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: 'Give role' })
+        : html`<p class="muted">There is no other role you can give.</p>`;
+    const nickForm = actionForm(csrf, `/users/${id}/nickname`, html`<div class="grid"><label>Nickname<input name="nickname" maxlength="${NICKNAME_MAX}" value="${view.member.nickname || ''}" placeholder="${view.user.globalName || view.user.username}"><span class="hint">Empty removes the nickname.</span></label></div>`, { submit: 'Save nickname' });
+    const timeoutForm = html`${edit.timeoutUntil ? html`<p class="notice">Timed out until ${formatDate(edit.timeoutUntil)}.</p>${actionForm(csrf, `/users/${id}/timeout`, '', { submit: 'Remove timeout', hidden: { duration: 'off' }, inline: true, secondary: true })}` : ''}
+${actionForm(csrf, `/users/${id}/timeout`, html`<div class="grid"><label>Timeout length<select name="duration" required><option value="">— choose —</option>${Object.entries(TIMEOUTS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select><span class="hint">Discord's own timeout (max 28 days): they can read but not write or talk. For longer, use Mute.</span></label>
+<label>Reason (optional, Discord audit log)<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: edit.timeoutUntil ? 'Change timeout' : 'Time out', confirm: `Time out ${view.user.username}?` })}`;
+    return html`${current}${roleForm}<h3>Nickname</h3>${nickForm}<h3>Timeout</h3>${timeoutForm}`;
 }
 
 function notesSection(view, canWrite, csrf) {
@@ -221,6 +246,7 @@ ${memberHeader(view, now)}
 ${notices({ flash, error, editEnabled, canAct })}
 ${section('Profile', profileSection(view.user, view.member, now), '', { key: 'member-profile', open: false })}
 ${section('Standing', standingSection(view), '', { key: 'member-standing' })}
+${view.member ? section(`Roles (${view.member.roles.length}), nickname and timeout`, memberEditSection(view, canWrite, session.csrf), '', { key: 'member-roles' }) : ''}
 ${(view.noContact || []).length ? section('No-contact orders', noContactSection(view.noContact, view.noContactNames), '', { key: 'member-nocontact' }) : ''}
 ${section('Actions', html`${view.block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(view.block.until)}; actions will be refused.</p>` : ''}
 ${canWrite ? (view.actions.length ? html`<p class="muted">Same actions, DMs, ladder and checks as /enforcements. Each one shows a confirmation first.</p>${view.actions.map((type) => actionBlock(view, type, session.csrf, values.type === type ? values : {}))}` : html`<p class="muted">No actions available.</p>`)

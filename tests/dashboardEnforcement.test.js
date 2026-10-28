@@ -41,18 +41,28 @@ const LADDER = { level: 0, warns_since_level: 1 };
 // ── fakes ─────────────────────────────────────────────────────────────────
 
 function makeWorld({ admins = new Set([ADMIN]), targetInGuild = true } = {}) {
-    const guild = { id: GUILD, ownerId: '999999999999999990', name: 'Main' };
+    const guild = { id: GUILD, ownerId: '999999999999999990', name: 'Main', memberCalls: [] };
+    // Role / nickname / timeout calls that reached "Discord" (member page actions).
+    const discordSide = (id) => ({
+        add: async (roleId, reason) => { guild.memberCalls.push({ id, call: 'roles.add', roleId, reason }); },
+        remove: async (roleId, reason) => { guild.memberCalls.push({ id, call: 'roles.remove', roleId, reason }); },
+    });
     const memberOf = (id) => ({
         id, guild, nickname: id === TARGET ? 'Nick<b>' : null, joinedAt: new Date('2025-01-01T00:00:00Z'),
         user: { id, username: id === TARGET ? 'target<script>' : `user${id.slice(-2)}`, globalName: id === TARGET ? 'Target Global' : null },
         permissions: { has: (flag) => flag === PermissionFlagsBits.Administrator && admins.has(id) },
-        roles: { cache: new Map([[GUILD, { id: GUILD, name: '@everyone', position: 0 }], ['600000000000000001', { id: '600000000000000001', name: 'Member', position: 1 }]]), highest: { position: 1 } },
+        roles: { cache: new Map([[GUILD, { id: GUILD, name: '@everyone', position: 0 }], ['600000000000000001', { id: '600000000000000001', name: 'Member', position: 1 }]]), highest: { position: id === ADMIN ? 5 : 1 }, ...discordSide(id) },
+        setNickname: async (nick, reason) => { guild.memberCalls.push({ id, call: 'setNickname', nick, reason }); },
+        timeout: async (ms, reason) => { guild.memberCalls.push({ id, call: 'timeout', ms, reason }); },
+        communicationDisabledUntilTimestamp: null,
     });
     const cache = new Map([[TARGET, memberOf(TARGET)], [OTHER, memberOf(OTHER)]]);
-    guild.roles = { cache: new Map([[GUILD, { id: GUILD, name: '@everyone', position: 0 }], ['600000000000000001', { id: '600000000000000001', name: 'Member', position: 1 }]]) };
+    guild.roles = { cache: new Map([[GUILD, { id: GUILD, name: '@everyone', position: 0 }], ['600000000000000001', { id: '600000000000000001', name: 'Member', position: 1 }],
+        ['600000000000000002', { id: '600000000000000002', name: 'Helper', position: 2 }], ['600000000000000009', { id: '600000000000000009', name: 'Staff', position: 3, permissions: { has: (p) => p === 'BanMembers' } }],
+        ['600000000000000008', { id: '600000000000000008', name: 'Above me', position: 6 }]]) };
     guild.members = {
         cache,
-        me: { permissions: { has: () => true } },
+        me: { id: '999999999999999998', user: { id: '999999999999999998' }, permissions: { has: () => true }, roles: { highest: { position: 10 } } },
         fetch: async (arg) => {
             const id = typeof arg === 'string' ? arg : arg?.user;
             if (id === TARGET) return targetInGuild ? cache.get(TARGET) : null;
@@ -751,4 +761,67 @@ test('case page: the image upload form is multipart with the CSRF token (adminis
     assert.equal(res.statusCode, 200);
     assert.match(res.body, new RegExp(`<form method="post" action="/dashboard/cases/${CODE}/evidence/upload" class="settings-form" enctype="multipart/form-data"><input type="hidden" name="csrf" value="${h.session.csrf}">`));
     assert.match(res.body, /accept="image\/png,image\/jpeg,image\/gif,image\/webp"/);
+});
+
+// ── member page: roles, nickname, timeout ─────────────────────────────────
+
+test('member page: give and take roles; Discord gets the change with the moderator in the audit reason; audit + mod log', async () => {
+    const h = await setup();
+    const add = await post(h, h.d.enforcement.roleAdd, { params: { id: TARGET }, form: { roleId: '600000000000000002', reason: 'event helper' } });
+    assert.equal(add.statusCode, 303);
+    assert.equal(add.redirectedTo, `/dashboard/users/${TARGET}`);
+    assert.deepEqual(h.guild.memberCalls.at(-1), { id: TARGET, call: 'roles.add', roleId: '600000000000000002', reason: 'Dashboard (admin): event helper' });
+    assert.equal(h.auditRows.at(-1).key, `role:${TARGET}`);
+    assert.equal(h.auditRows.at(-1).new, '@Helper');
+    assert.equal(h.modLog.length, 1);
+    const remove = await post(h, h.d.enforcement.roleRemove, { params: { id: TARGET }, form: { roleId: '600000000000000001' } });
+    assert.equal(remove.statusCode, 303);
+    assert.equal(h.guild.memberCalls.at(-1).call, 'roles.remove');
+});
+
+test('member page: role changes are refused for staff roles, roles at or above you or the bot, roles they already have, and protected targets', async () => {
+    const h = await setup();
+    const refused = async (handler, params, form, message) => {
+        const before = h.guild.memberCalls.length;
+        const res = await post(h, handler, { params, form });
+        assert.equal(res.statusCode, 400, message.source);
+        assert.match(res.body, message);
+        assert.equal(h.guild.memberCalls.length, before, 'nothing reached Discord');
+    };
+    await refused(h.d.enforcement.roleAdd, { id: TARGET }, { roleId: '600000000000000009' }, /staff permissions \(BanMembers\)/);
+    await refused(h.d.enforcement.roleAdd, { id: TARGET }, { roleId: '600000000000000008' }, /not below your highest role/);
+    await refused(h.d.enforcement.roleAdd, { id: TARGET }, { roleId: GUILD }, /@everyone/);
+    await refused(h.d.enforcement.roleAdd, { id: TARGET }, { roleId: '600000000000000001' }, /already has @Member/);
+    await refused(h.d.enforcement.roleRemove, { id: TARGET }, { roleId: '600000000000000002' }, /does not have @Helper/);
+    await refused(h.d.enforcement.roleAdd, { id: ADMIN }, { roleId: '600000000000000002' }, /your own roles/);
+    await refused(h.d.enforcement.timeout, { id: TARGET }, { duration: '3y' }, /Choose a timeout length/);
+    // Owners (OWNER_IDS) are above the hierarchy here and may hand out staff roles.
+    const o = await setup({ userId: OWNER });
+    const res = await post(o, o.d.enforcement.roleAdd, { params: { id: TARGET }, form: { roleId: '600000000000000009' } });
+    assert.equal(res.statusCode, 403, 'OWNER_IDS without Administrator cannot act at all (canAct)');
+});
+
+test('member page: nickname and timeout reach Discord; removing a timeout that is not there is refused', async () => {
+    const h = await setup();
+    const nick = await post(h, h.d.enforcement.nickname, { params: { id: TARGET }, form: { nickname: 'Calm cat' } });
+    assert.equal(nick.statusCode, 303);
+    assert.deepEqual(h.guild.memberCalls.at(-1), { id: TARGET, call: 'setNickname', nick: 'Calm cat', reason: 'Dashboard (admin)' });
+    const out = await post(h, h.d.enforcement.timeout, { params: { id: TARGET }, form: { duration: '1h', reason: 'cool down' } });
+    assert.equal(out.statusCode, 303);
+    assert.deepEqual(h.guild.memberCalls.at(-1), { id: TARGET, call: 'timeout', ms: 3_600_000, reason: 'Dashboard (admin): cool down' });
+    const off = await post(h, h.d.enforcement.timeout, { params: { id: TARGET }, form: { duration: 'off' } });
+    assert.equal(off.statusCode, 400);
+    assert.match(off.body, /is not timed out/);
+});
+
+test('member page: the roles section shows Remove only where allowed and a picker without staff / higher / owned roles', async () => {
+    const h = await setup();
+    const page = await get(h, h.d.enforcement.userPage, { params: { id: TARGET } });
+    assert.equal(page.statusCode, 200);
+    const section = page.body.slice(page.body.indexOf('id="s-member-roles"'));
+    assert.match(section, /<option value="600000000000000002">@Helper<\/option>/);
+    assert.ok(!section.includes('value="600000000000000009"'), 'staff role not offered');
+    assert.ok(!section.includes('value="600000000000000008"'), 'role above the moderator not offered');
+    assert.ok(section.includes('action="/dashboard/users/' + TARGET + '/roles/remove"'), 'Member can be removed');
+    assert.ok(section.includes('action="/dashboard/users/' + TARGET + '/timeout"'));
 });

@@ -861,7 +861,6 @@ dl {
 dt { color: var(--fg-2); }
 dd { margin: 0; overflow-wrap: anywhere; }
 
-.pager { display: flex; gap: 12px; margin: 16px 0; align-items: center; color: var(--fg-2); }
 
 table.heat { width: auto; font-size: 12px; margin-bottom: 16px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
 table.heat caption { text-align: left; font-size: 14px; font-weight: 600; padding: 4px 0 8px; color: var(--fg); }
@@ -1012,6 +1011,10 @@ details.long-value[open] > summary { -webkit-line-clamp: 1; line-clamp: 1; }
 td.value:has(details.long-value) { min-width: 200px; }
 .long-value-full { margin-top: 8px; max-height: 240px; overflow: auto; overflow-wrap: anywhere; white-space: pre-wrap; }
 /* Members list: avatar + name cell, role chips, pager. */
+.role-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.role-chip-lg { height: 32px; padding: 0 4px 0 12px; gap: 8px; font-size: 14px; }
+.role-chip-lg:not(:has(form)) { padding-right: 12px; }
+.chip-form button { height: 24px; min-height: 0; padding: 0 8px; font-size: 12px; border-radius: 999px; }
 .member-cell { display: flex; align-items: center; gap: 12px; color: var(--text); min-width: 220px; }
 .member-cell:hover { text-decoration: none; }
 .member-cell:hover b { text-decoration: underline; }

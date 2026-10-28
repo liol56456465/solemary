@@ -15,8 +15,8 @@
 //                                   module through the SAME services the commands use;
 //                                   success → audit rows + mod log line + flash + 303;
 //                                   invalid input → 400 with the page and the message
-//   Phase 3 (enforcementRoutes.js): /users (lookup), /users/:id (member page, actions
-//   with a confirm step, staff notes), case edit/void/evidence on /cases/:code,
+//   Phase 3 (enforcementRoutes.js): /users (every member, filters), /users/:id (member page,
+//   actions with a confirm step, roles / nickname / timeout, staff notes), case edit/void/evidence on /cases/:code,
 //   /appeals/:code (dossier, accept/deny with a confirm step), /nocontact, coverage
 //   heatmap and mass-action blocks on /staff. Same POST checks + Administrator (canAct).
 //   GET  /dashboard/static/<file>  dashboard.css (CSP style-src 'self') and dashboard.js (script-src 'self', optional)
@@ -712,6 +712,10 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     const en = d.enforcement;
     router.post('/users/:id/action/preview', form, user, safe(en.actionPreview));
     router.post('/users/:id/action/execute', form, user, safe(en.actionExecute));
+    router.post('/users/:id/roles/add', form, user, safe(en.roleAdd));
+    router.post('/users/:id/roles/remove', form, user, safe(en.roleRemove));
+    router.post('/users/:id/nickname', form, user, safe(en.nickname));
+    router.post('/users/:id/timeout', form, user, safe(en.timeout));
     router.post('/users/:id/notes/add', form, user, safe(en.noteAdd));
     router.post('/users/:id/notes/remove', form, user, safe(en.noteRemove));
     router.post('/cases/:code/edit', form, user, safe(en.caseEdit));
