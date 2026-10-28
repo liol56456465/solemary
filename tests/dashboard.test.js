@@ -490,7 +490,7 @@ test('overview: status, counts, checklist and recent actions; read-only', async 
                     assert.deepEqual(opts, { page: 0, pageSize: 10 });
                     return { rows: [{ case_code: 'abcde', type: 'ban', target_username: '<t>', target_user_id: STRANGER, moderator_username: 'm', reason: 'r', created_at: new Date(0) }], total: 1 };
                 },
-                listPendingAppeals: async (limit, guildId) => { assert.equal(guildId, GUILD); return [{}, {}, {}]; },
+                listPendingAppeals: async (limit, guildId) => { assert.equal(guildId, GUILD); return [{ case_code: 'abc2345', username: '<cat>', type: 'ban', name: 'cat ban 1', created_at: new Date() }, {}, {}]; },
             },
         },
     });
@@ -498,14 +498,19 @@ test('overview: status, counts, checklist and recent actions; read-only', async 
     const res = await runProtected(d, d.overview, { method: 'GET', headers: { cookie }, query: {} });
     assert.equal(res.statusCode, 200);
     assert.match(res.body, /<span class="dot dot-on" aria-hidden="true"><\/span>Online · 42 ms</);
-    assert.match(res.body, /Open tickets<\/h2><span class="kpi-num">2</);
-    assert.match(res.body, /Pending appeals<\/h2><a class="kpi-num" href="\/dashboard\/appeals">3<\/a>/, 'pending appeals of the main guild');
-    assert.match(res.body, /Active sanctions<\/h2><span class="kpi-num">5<\/span><p class="kpi-sub">4 bans · 1 mute</);
+    assert.match(res.body, /<p class="metric-label">Open tickets<\/p><p class="metric-value">2</);
+    assert.match(res.body, /<p class="metric-label">Pending appeals<\/p><a class="metric-value" href="\/dashboard\/appeals">3<\/a>/, 'pending appeals of the main guild');
+    assert.match(res.body, /<p class="metric-label">Active sanctions<\/p><a class="metric-value" href="\/dashboard\/cases">5<\/a><p class="metric-sub">4 bans · 1 mute</);
+    // Needs you: each waiting appeal with a Review button (escaped), then the tickets; the count in the header.
+    assert.match(res.body, /<b>Ban appeal from &lt;cat&gt;<\/b><small>Case <code>abc2345<\/code> · cat ban 1<\/small>/);
+    assert.ok(res.body.includes('href="/dashboard/appeals/abc2345">Review<span class="sr"> appeal abc2345</span>'));
+    assert.match(res.body, /<b>2 open tickets<\/b>/);
+    assert.match(res.body, /<span class="card-note">5 open<\/span>/, '3 appeals + 2 tickets');
     assert.match(res.body, /<div class="chart" role="img" aria-label="Enforcement actions per day: [^"]*Today 2">/, 'chart with a text alternative');
     assert.match(res.body, /<div class="bar today"><span class="bar-count">2<\/span><i class="h-10"><\/i>/, 'the busiest day is the full height');
     assert.match(res.body, /<a class="setup-link" href="\/dashboard\/automod">Set up<span class="sr"> Automod review channel<\/span><\/a>/);
     assert.match(res.body, /<span class="type type-ban"><svg class="icon"[^>]*><use href="#i-nocontact"><\/use><\/svg>Ban<\/span>/, 'action badge with an icon');
-    assert.match(res.body, /Getting started/);
+    assert.match(res.body, /<h2>Setup<\/h2>/);
     assert.match(res.body, /Mod log channel/);
     assert.match(res.body, /&lt;t&gt;/);
     // Read-only: no POST form besides logout (the top bar search is a GET to /dashboard/modules).

@@ -790,6 +790,43 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 
 /* ── Overview (bento): greeting header, 12-column grid of tiles ──────── */
 .hello { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 8px 0 32px; }
+/* ── Overview (v5): "Needs you" first, numbers and health on the right ── */
+.ov { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.ov-main, .ov-side { display: grid; gap: 16px; min-width: 0; }
+.ov > * > .card, .ov-card { margin: 0; }
+.ov-card { padding: 0; overflow: hidden; }
+.ov ~ .ov-card, .ov + .card { margin-top: 16px; }
+.card-head { display: flex; align-items: baseline; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.card-head h2 { margin: 0; font-size: 15px; }
+.card-note { font-size: 12px; color: var(--text-muted); }
+.card-link { margin-left: auto; font-size: 13px; font-weight: 600; }
+.card-body { padding: 16px 18px; }
+.needs-you .card-body { padding: 0; }
+.needs-you .card-body > .empty, .needs-you .card-body > .error { margin: 16px 18px; }
+.queue > li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 12px 18px; border-top: 1px solid var(--line); }
+.queue > li:first-child { border-top: 0; }
+.queue .what b { display: block; font-size: 14px; }
+.queue .what small { display: block; color: var(--text-muted); font-size: 12px; }
+.queue time { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+.kind {
+    display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; font-size: 11px; font-weight: 800;
+    border: 1px solid currentColor;
+}
+.kind-appeal { color: var(--c-ban); } .kind-ticket { color: var(--accent-2); } .kind-setup { color: var(--c-kick); } .kind-bad { color: var(--red); }
+.btn.small, a.btn.small { min-height: 0; padding: 6px 12px; font-size: 13px; }
+.metrics { display: grid; grid-template-columns: 1fr 1fr; }
+.metric { padding: 14px 18px; border-top: 1px solid var(--line); min-width: 0; }
+.metric:nth-child(odd) { border-right: 1px solid var(--line); }
+.metric:nth-child(-n+2) { border-top: 0; }
+.metric-label { margin: 0; font-size: 12px; color: var(--text-muted); }
+.metric-value { display: block; margin: 2px 0; font-size: 26px; font-weight: 750; letter-spacing: -0.02em; color: var(--text); line-height: 1.2; }
+a.metric-value:hover { color: var(--accent); text-decoration: none; }
+.metric-sub { margin: 0; font-size: 12px; color: var(--text-muted); }
+.metric-sub .up { color: var(--green); font-weight: 600; }
+.ov-side .setup { flex-direction: column; align-items: stretch; gap: 12px; }
+.ov-side .setup .ring { align-self: center; }
+.ov-side .setup .steps { width: 100%; }
+@media (max-width: 1100px) { .ov { grid-template-columns: minmax(0, 1fr); } }
 .hello-avatar { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; background: var(--text); color: var(--bg); font-size: 20px; font-weight: 800; object-fit: cover; flex: none; }
 .hello-text { flex: 1; min-width: 200px; }
 .hello-text p { margin: 0; color: var(--text-muted); }

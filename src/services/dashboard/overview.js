@@ -181,6 +181,7 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
         activeBans: sanctions?.ban,
         activeMutes: sanctions?.mute,
         pendingAppeals: pending === undefined ? undefined : pending.length,
+        pendingList: pending === undefined ? undefined : pending.slice(0, 5),
         lockdown: lockdown === undefined ? undefined : { active: Boolean(lockdown?.active), since: lockdown?.startedAt || lockdown?.since || null },
         recent: recent?.rows,
         checklist: gettingStarted({ config, welcome, settings, mutedRole }),
@@ -256,42 +257,81 @@ function modulesTile(moduleStates, checklist) {
     })}</div>`;
 }
 
-/** The Overview page (bento) from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
+/**
+ * "Needs you": what waits for an admin, oldest first, each with one button: pending appeals,
+ * open tickets, an active raid lockdown, and the next open setup steps.
+ */
+function needsYou(o) {
+    const items = [];
+    if (o.lockdown?.active) {
+        items.push(html`<li><span class="kind kind-bad" aria-hidden="true">RL</span><span class="what"><b>Raid lockdown is active</b><small>${o.lockdown.since ? html`Since ${formatDate(o.lockdown.since)}` : 'New members are held at the door'}</small></span><span></span><a class="btn primary small" href="${path('/automod')}">Automod</a></li>`);
+    }
+    for (const appeal of o.pendingList || []) {
+        items.push(html`<li><span class="kind kind-appeal" aria-hidden="true">AP</span><span class="what"><b>${appeal.type ? `${appeal.type[0].toUpperCase()}${appeal.type.slice(1)} appeal` : 'Appeal'} from ${appeal.username}</b><small>Case <code>${appeal.case_code}</code>${appeal.name ? ` · ${appeal.name}` : ''}${appeal.is_test ? ' · test case' : ''}</small></span>${timeTag(appeal.created_at)}<a class="btn primary small" href="${path(`/appeals/${encodeURIComponent(appeal.case_code)}`)}">Review<span class="sr"> appeal ${appeal.case_code}</span></a></li>`);
+    }
+    if (o.pendingAppeals > (o.pendingList || []).length) {
+        items.push(html`<li><span class="kind kind-appeal" aria-hidden="true">+</span><span class="what"><b>${o.pendingAppeals - o.pendingList.length} more appeal${o.pendingAppeals - o.pendingList.length === 1 ? '' : 's'} waiting</b></span><span></span><a class="btn small" href="${path('/appeals')}">All appeals</a></li>`);
+    }
+    if (o.openTickets > 0) {
+        items.push(html`<li><span class="kind kind-ticket" aria-hidden="true">TK</span><span class="what"><b>${o.openTickets} open ticket${o.openTickets === 1 ? '' : 's'}</b><small>Answered in their Discord channels</small></span><span></span><a class="btn small" href="${path('/tickets')}">Tickets</a></li>`);
+    }
+    for (const step of o.checklist.filter((item) => !item.done).slice(0, 2)) {
+        items.push(html`<li><span class="kind kind-setup" aria-hidden="true">SU</span><span class="what"><b>Set up: ${step.label}</b>${step.hint ? html`<small>${step.hint}</small>` : ''}</span><span></span><a class="btn small" href="${step.href}">Set up<span class="sr"> ${step.label}</span></a></li>`);
+    }
+    const failed = o.pendingAppeals === undefined || o.openTickets === undefined;
+    const list = items.length
+        ? html`<ul class="plain queue">${items}</ul>`
+        : html`<p class="empty">${icon('check', 'icon check-icon ok')} Nothing needs you right now.</p>`;
+    return html`${failed ? html`<p class="error" role="alert">Some items could not be loaded (database). Reload the page to try again.</p>` : ''}${list}`;
+}
+
+/** A card with a header row (title, optional count and link) and a body. */
+function card(title, body, { link = null, note = null, className = '' } = {}) {
+    return html`<section class="card ov-card${className ? ` ${className}` : ''}"><header class="card-head"><h2>${title}</h2>${note ? html`<span class="card-note">${note}</span>` : ''}${link ? html`<a class="card-link" href="${link.href}">${link.text}</a>` : ''}</header><div class="card-body">${body}</div></section>`;
+}
+
+/** The Overview page (v5) from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
 export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [] }) {
     const todo = o.checklist.filter((item) => !item.done);
     const pendingText = o.pendingAppeals >= PENDING_APPEALS_CAP ? `${PENDING_APPEALS_CAP}+` : o.pendingAppeals;
     const sanctions = o.activeBans === undefined || o.activeMutes === undefined ? undefined : o.activeBans + o.activeMutes;
     const server = session?.server;
-    const avatar = server?.iconUrl
-        ? html`<img class="hello-avatar" src="${server.iconUrl}" alt="" width="64" height="64" referrerpolicy="no-referrer">`
-        : html`<span class="hello-avatar" aria-hidden="true">${String(o.guild?.name || server?.name || 'M').slice(0, 2).toUpperCase()}</span>`;
-    const head = html`<header class="hello">${avatar}<div class="hello-text"><p>Welcome back, ${session?.username || 'admin'}</p><h1>${o.guild?.name || server?.name || 'Overview'}</h1></div>
-<div class="hello-actions"><a class="btn secondary" href="${path('/cases')}">${icon('cases')}Cases</a><a class="btn primary" href="${path('/users')}">${icon('enforcement')}Moderate a member</a></div></header>
-${o.lockdown?.active ? html`<p class="error" role="alert">Raid lockdown is active${o.lockdown.since ? html` since ${formatDate(o.lockdown.since)}` : ''}. <a href="${path('/automod')}">Automod settings</a></p>` : ''}`;
+    const name = o.guild?.name || server?.name || 'your server';
+    const waiting = (o.pendingAppeals || 0) + (o.openTickets || 0) + (o.lockdown?.active ? 1 : 0);
+    const head = html`<header class="hello"><div class="hello-text"><h1>Welcome back, ${session?.username || 'admin'}</h1><p class="help">${name}${o.guild?.memberCount != null ? ` · ${o.guild.memberCount} members` : ''} · ${waiting ? `${waiting} thing${waiting === 1 ? '' : 's'} waiting` : 'nothing waiting'}</p></div>
+<div class="hello-actions"><a class="btn secondary" href="${path('/cases')}">${icon('cases')}Cases</a><a class="btn primary" href="${path('/users')}">${icon('enforcement')}Moderate a member</a></div></header>`;
     const system = html`<ul class="health">
 <li><span>Bot</span><span class="state-word is-${o.bot.ready ? 'on' : 'bad'}"><span class="dot dot-${o.bot.ready ? 'on' : 'bad'}" aria-hidden="true"></span>${o.bot.ready ? `Online${o.bot.ping !== null ? ` · ${o.bot.ping} ms` : ''}` : 'Offline'}</span></li>
 <li><span>Database</span>${o.database ? html`<span class="state-word is-${o.database.connected ? 'on' : 'bad'}"><span class="dot dot-${o.database.connected ? 'on' : 'bad'}" aria-hidden="true"></span>${o.database.connected ? 'Connected' : 'Degraded'}</span>` : html`<span class="state-word is-off"><span class="dot dot-off" aria-hidden="true"></span>Unknown</span>`}</li>
 <li><span>Automod</span>${Object.hasOwn(moduleStates, 'automod') ? html`<span class="state-word is-${moduleStates.automod ? 'on' : 'off'}"><span class="dot dot-${moduleStates.automod ? 'on' : 'off'}" aria-hidden="true"></span>${moduleStates.automod ? 'On' : 'Off'}</span>` : html`<span class="muted">unknown</span>`}</li>
 <li><span>Raid lockdown</span>${o.lockdown === undefined ? html`<span class="muted">unavailable</span>` : html`<span class="state-word is-${o.lockdown.active ? 'bad' : 'off'}"><span class="dot dot-${o.lockdown.active ? 'bad' : 'off'}" aria-hidden="true"></span>${o.lockdown.active ? 'Active' : 'Off'}</span>`}</li></ul>`;
+    const metric = (label, value, sub, href = null) => html`<div class="metric"><p class="metric-label">${label}</p>${href && value !== undefined ? html`<a class="metric-value" href="${href}">${show(value)}</a>` : html`<p class="metric-value">${show(value)}</p>`}<p class="metric-sub">${sub}</p></div>`;
+    const memberSub = o.joinedThisWeek != null ? html`<span class="up">+${o.joinedThisWeek}</span> this week` : o.guild?.online != null ? `${o.guild.online} online` : 'in the server';
+    const metrics = html`<div class="metrics">
+${metric('Members', o.guild?.memberCount ?? '—', memberSub, path('/users'))}
+${metric('Active sanctions', sanctions, sanctions === undefined ? 'unavailable' : `${o.activeBans} ban${o.activeBans === 1 ? '' : 's'} · ${o.activeMutes} mute${o.activeMutes === 1 ? '' : 's'}`, path('/cases'))}
+${metric('Pending appeals', o.pendingAppeals === undefined ? undefined : pendingText, o.pendingAppeals > 0 ? 'need a decision' : 'nothing waiting', path('/appeals'))}
+${metric('Open tickets', o.openTickets, 'waiting for staff')}</div>`;
     // Full checklist (all steps) at the bottom, open while anything is left.
     const ordered = [...todo, ...o.checklist.filter((item) => item.done)];
     const allSteps = html`<ul class="checklist">${ordered.map((item) => html`<li class="${item.done ? 'is-done' : ''}">${icon(item.done ? 'check' : 'circle', `icon check-icon ${item.done ? 'ok' : 'muted'}`)}<span class="sr">${item.done ? 'done' : 'to do'}:</span>
 <span class="checklist-text">${item.label}${item.done ? '' : html`<span class="checklist-hint">${item.hint}</span>`}</span>${item.done
         ? html`<span class="checklist-state">Done</span>`
         : html`<a class="setup-link" href="${item.href}">Set up<span class="sr"> ${item.label}</span></a>`}</li>`)}</ul>`;
-    const memberSub = o.joinedThisWeek != null ? html`<span class="up">+${o.joinedThisWeek}</span> joined this week` : o.guild?.online != null ? `${o.guild.online} online` : 'members in the server';
     const body = html`${head}
-<div class="bento">
-${kpi('Members', o.guild?.memberCount ?? '—', memberSub, { dark: true })}
-${kpi('Open tickets', o.openTickets, 'tickets waiting for staff')}
-${kpi('Pending appeals', o.pendingAppeals === undefined ? undefined : pendingText, o.pendingAppeals > 0 ? html`<span class="state-word is-warn"><span class="dot dot-warn" aria-hidden="true"></span>needs a decision</span>` : 'nothing waiting', { href: path('/appeals') })}
-${kpi('Active sanctions', sanctions, sanctions === undefined ? 'unavailable' : `${o.activeBans} ban${o.activeBans === 1 ? '' : 's'} · ${o.activeMutes} mute${o.activeMutes === 1 ? '' : 's'}`)}
-${tile(8, 'Moderation this week', weekChart(o.week), { link: { href: path('/cases'), text: 'Cases →' } })}
-${tile(4, 'System', system)}
-${tile(5, 'Getting started', setupTile(o.checklist), { link: todo.length ? { href: '#all-steps', text: 'All steps →' } : null })}
-${tile(7, 'Recent actions', recentFeed(o.recent), { link: { href: path('/cases'), text: 'All cases →' } })}
-${tile(12, 'Modules', modulesTile(moduleStates, o.checklist), { link: { href: path('/modules'), text: 'Manage →' } })}
+<div class="ov">
+<div class="ov-main">
+${card('Needs you', needsYou(o), { note: waiting ? `${waiting} open` : null, link: { href: path('/appeals'), text: 'Appeals →' }, className: 'needs-you' })}
+${card('Moderation · last 7 days', weekChart(o.week), { link: { href: path('/cases'), text: 'All cases →' } })}
+${card('Latest actions', recentFeed(o.recent), { link: { href: path('/cases'), text: 'All cases →' } })}
 </div>
+<div class="ov-side">
+<section class="card ov-card">${metrics}</section>
+${card('Bot health', system)}
+${card('Setup', setupTile(o.checklist), { link: todo.length ? { href: '#all-steps', text: 'All steps →' } : null })}
+</div>
+</div>
+${card('Modules', modulesTile(moduleStates, o.checklist), { link: { href: path('/modules'), text: 'Manage →' } })}
 ${recentChangesSection(recentChanges)}
 <details class="card section" id="all-steps" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>All setup steps${todo.length ? html` <span class="count">${todo.length} to do</span>` : html` <span class="state state-on">all set</span>`}</h2></summary><div class="section-body">${allSteps}</div></details>`;
     return layout({ title: 'Overview', active: 'overview', session, access, moduleStates, body });
