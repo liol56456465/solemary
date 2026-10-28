@@ -254,11 +254,15 @@ async function isBanned(guild, userId) {
 
 /**
  * flow: { type, targetId, reason, reasonSource, reasonKey, durationMs, name, unappealable }
+ * staffRole (dashboard Moderator level only): { roleId, actions } — a moderator without
+ * Administrator may run flow.type when it is in `actions` and they hold `roleId` right now.
  * Returns { record, dmDelivered, notes[] } for the moderator's confirmation message.
  */
-export async function executeAction({ guild, moderator, targetUser, flow }) {
+export async function executeAction({ guild, moderator, targetUser, flow, staffRole = null }) {
     assertBotPermissions(guild);
-    if (!isAdministrator(moderator)) {
+    const asModerator = Boolean(staffRole?.roleId && Array.isArray(staffRole.actions) && staffRole.actions.includes(flow?.type)
+        && moderator?.roles?.cache?.has?.(staffRole.roleId));
+    if (!isAdministrator(moderator) && !asModerator) {
         throw userError('You need the Administrator permission to use this panel.', ErrorTypes.PERMISSION);
     }
     // One action at a time per moderator, so the mass-action count can't be raced

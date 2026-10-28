@@ -18,7 +18,9 @@
 // Every POST: 30/min per session, same origin + CSRF, edit switch (DASHBOARD_EDIT_ENABLED),
 // then Administrator in the main server (canAct; OWNER_IDS without it get 403, owner
 // decision 4) — except lifting a mass-action block, warning staff and restoring staff
-// roles, which are for OWNER_IDS (like /staff). Actions run
+// roles, which are for OWNER_IDS (like /staff), and what permissions.js lets the Moderator
+// level run (warn, mute, unmute, kick, timeout): the moderator role is re-checked on a
+// fresh member fetch, and hierarchy + the mass-action guard apply as usual. Actions run
 // with the logged-in user's GuildMember fetched fresh, through the SAME services as the
 // Discord commands (DMs, ladder, hierarchy, bot permissions, mass-action guard, logs).
 
@@ -47,6 +49,8 @@ import { BAN_FILTERS, listBans } from './bansData.js';
 import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
 import { html, path, queryString } from './html.js';
 import { isSnowflake } from './security.js';
+import { MODERATOR, mayRun, moderatorActionTypes, requiredLevel } from './permissions.js';
+import { memberHasConfiguredModeratorRole } from '../../utils/permissionGuard.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
 import { evidenceFileName, sniffImage } from './multipart.js';
 import {
@@ -170,14 +174,46 @@ export function createEnforcementHandlers(core) {
             .catch((error) => logger.error(`Dashboard audit write failed (${module}): ${error.message}`));
     }
 
-    /** The logged-in user's member in the main server, fetched fresh; must still be Administrator. */
-    async function freshModerator(req) {
+    /** The configured moderator role (guild config modRole) as an id, or null; a failed read → null (fail closed). */
+    async function moderatorRoleId() {
+        const config = await Promise.resolve().then(() => e.getGuildConfig(client, guildId)).catch(() => null);
+        const role = config?.modRole;
+        return typeof role === 'string' ? role : role?.id || null;
+    }
+
+    /**
+     * The logged-in user's member in the main server, fetched fresh: must still be
+     * Administrator — or, for a key the Moderator level may run (permissions.js), still hold
+     * the moderator role. `key` defaults to the route's (guardedPost). Sets
+     * req.dashboard.fresh = { level, roleId } for the enforcement service's own check.
+     */
+    async function freshModerator(req, key = req.dashboard.perm || null) {
         const guild = guildOf();
         const member = await guild?.members?.fetch?.({ user: req.dashboard.session.userId, force: true }).catch(() => null);
-        if (!member || !isAdministrator(member)) {
-            throw new InputError('You need the Administrator permission in the main server to do this.', 403);
+        if (member && isAdministrator(member)) {
+            req.dashboard.fresh = { level: 'admin', roleId: null };
+            return member;
         }
-        return member;
+        if (member && requiredLevel(key) === MODERATOR) {
+            const roleId = await moderatorRoleId();
+            if (roleId && memberHasConfiguredModeratorRole(member, { modRole: roleId })) {
+                req.dashboard.fresh = { level: MODERATOR, roleId };
+                return member;
+            }
+            throw new InputError('You need the moderator role or Administrator in the main server to do this (it may have been removed since you logged in).', 403);
+        }
+        throw new InputError('You need the Administrator permission in the main server to do this.', 403);
+    }
+
+    /** What executeAction needs for a moderator (the service re-checks role + action type). */
+    const staffRoleOf = (req) => (req.dashboard.fresh?.level === MODERATOR
+        ? { roleId: req.dashboard.fresh.roleId, actions: moderatorActionTypes() } : null);
+
+    /** Refuses an enforcement type the level may not run (ban, unban, remove warn for moderators). */
+    function assertActionAllowed(req, type) {
+        if (!mayRun(req.dashboard.access, `action:${type}`)) {
+            throw new InputError(`${ACTION_LABELS[type] || 'This action'} needs Administrator in the main server.`, 403);
+        }
     }
 
     async function flash(req, message) {
@@ -190,7 +226,7 @@ export function createEnforcementHandlers(core) {
      * Expected errors (bad input, service refusals, the mass-action guard) re-render the
      * page with the message; nothing is changed.
      */
-    function guardedPost(run, { rerender, need = 'act' }) {
+    function guardedPost(run, { rerender, need = 'act', perm = null }) {
         return async (req, res) => {
             const session = req.dashboard.session;
             if (!postLimiter.allow(session.idHash)) {
@@ -199,13 +235,15 @@ export function createEnforcementHandlers(core) {
             }
             if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
             if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
-            const allowed = need === 'owner' ? isOwner(req) : req.dashboard.access.canAct;
+            // perm: the permissions.js key; null → Administrator only (canAct), as before.
+            const allowed = need === 'owner' ? isOwner(req) : mayRun(req.dashboard.access, perm);
             if (!allowed) {
                 return fail(res, 403, 'Not allowed', need === 'owner'
                     ? 'Only the bot owners can do this (like /staff restore).'
                     : 'Enforcement actions need Administrator in the main server (bot owners without it can view only).', req);
             }
             if (!guildOf()) return fail(res, 503, 'Server unavailable', 'The bot cannot see the main server right now. Try again in a moment.', req);
+            req.dashboard.perm = perm;
             try {
                 const result = await run(req, res);
                 // Owner-only actions (lift a mass-action block) by an owner without Administrator.
@@ -352,6 +390,7 @@ export function createEnforcementHandlers(core) {
         if (!view) return fail(res, 404, 'Not found', 'There is no Discord user with that ID.', req);
         return sendHtml(res, status, userPage({
             ...shellOf(req), view, canAct: req.dashboard.access.canAct, editEnabled: settings.editEnabled,
+            allow: (key) => mayRun(req.dashboard.access, key),
             flash: status === 200 ? req.dashboard.flash : null, error, values,
         }));
     }
@@ -364,6 +403,7 @@ export function createEnforcementHandlers(core) {
         if (!userId) throw new InputError('Not a user ID.');
         const type = text(req.body, 'type', 20);
         if (!ACTION_TYPES.includes(type)) throw new InputError('Unknown action.');
+        assertActionAllowed(req, type);
         const guild = guildOf();
         const targetUser = await client.users.fetch(userId).catch(() => null);
         if (!targetUser) throw new InputError('There is no Discord user with that ID.');
@@ -371,7 +411,7 @@ export function createEnforcementHandlers(core) {
         if (!availableActions(state).includes(type)) {
             throw new InputError(`${ACTION_LABELS[type]} is not available for ${targetUser.username} right now (reload the page).`);
         }
-        const moderator = await freshModerator(req);
+        const moderator = await freshModerator(req, `action:${type}`);
         const moderatorId = req.dashboard.session.userId;
         let flow;
         if (RECORD_ACTIONS.has(type)) {
@@ -389,7 +429,7 @@ export function createEnforcementHandlers(core) {
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: `user:${userId}`, payload: flow });
         const block = await e.getMassActionBlock(guildId, moderatorId).catch(() => null);
         return sendHtml(res, 200, actionConfirmPage({ ...shellOf(req), userId, type, summary: flowSummary(flow), token, hash, block }));
-    }, { rerender: rerenderUser });
+    }, { rerender: rerenderUser, perm: 'member.action' });
 
     const actionExecute = guardedPost(async (req, res) => {
         const userId = userIdParam(req);
@@ -398,12 +438,13 @@ export function createEnforcementHandlers(core) {
             session: req.dashboard.session.idHash, subject: `user:${userId}`, hash: text(req.body, 'fh', 100),
         });
         if (!flow) throw new InputError('This confirmation expired or was already used. Nothing was done; preview the action again.');
-        const moderator = await freshModerator(req);
+        assertActionAllowed(req, flow.type);
+        const moderator = await freshModerator(req, `action:${flow.type}`);
         const targetUser = await client.users.fetch(userId).catch(() => null);
         if (!targetUser) throw new InputError('There is no Discord user with that ID.');
         let result;
         try {
-            result = await e.executeAction({ guild: guildOf(), moderator, targetUser, flow });
+            result = await e.executeAction({ guild: guildOf(), moderator, targetUser, flow, staffRole: staffRoleOf(req) });
         } catch (error) {
             if (isExpectedError(error)) throw error;
             logger.error('Dashboard enforcement action failed', { action: flow.type, targetId: flow.targetId, error });
@@ -414,7 +455,7 @@ export function createEnforcementHandlers(core) {
         logger.info(`Dashboard ${flow.type} by ${req.dashboard.session.userId} on ${userId}${result.record ? ` (${result.record.case_code})` : ''}`);
         await flash(req, resultMessage(flow, result));
         return res.redirect(303, path(`/users/${userId}`));
-    }, { rerender: rerenderUser });
+    }, { rerender: rerenderUser, perm: 'member.action' });
 
     // ── Member changes: roles, nickname, timeout (same hierarchy rule as enforcement) ──
 
@@ -423,8 +464,8 @@ export function createEnforcementHandlers(core) {
         const userId = userIdParam(req);
         if (!userId) throw new InputError('Not a user ID.');
         const guild = guildOf();
-        // The moderator is fetched fresh and must still be an Administrator (the access check on
-        // the request can be up to a minute old).
+        // The moderator is fetched fresh and must still be an Administrator, or a moderator for
+        // what that level may do (the access check on the request can be up to a minute old).
         const [target, actorMember] = await Promise.all([
             guild.members.fetch({ user: userId, force: true }).catch(() => null),
             freshModerator(req),
@@ -462,7 +503,7 @@ export function createEnforcementHandlers(core) {
             { modLog: true, label: 'Members' });
         await flash(req, mode === 'add' ? `Gave ${label} to ${ctx.target.user.username}.` : `Took @${role.name} from ${ctx.target.user.username}.`);
         return res.redirect(303, path(`/users/${ctx.userId}`));
-    }, { rerender: rerenderUser });
+    }, { rerender: rerenderUser, perm: 'member.roles' });
     const roleAdd = roleChange('add');
     const roleRemove = roleChange('remove');
 
@@ -475,7 +516,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'members', [{ key: `nickname:${ctx.userId}`, old: before, new: nick || null }], { modLog: true, label: 'Members' });
         await flash(req, nick ? `Nickname set to "${nick}".` : 'Nickname removed.');
         return res.redirect(303, path(`/users/${ctx.userId}`));
-    }, { rerender: rerenderUser });
+    }, { rerender: rerenderUser, perm: 'member.nickname' });
 
     const timeout = guardedPost(async (req, res) => {
         const ctx = await memberContext(req);
@@ -493,7 +534,7 @@ export function createEnforcementHandlers(core) {
             { modLog: true, label: 'Members' });
         await flash(req, lift ? `Timeout of ${ctx.target.user.username} removed.` : `${ctx.target.user.username} is timed out for ${TIMEOUTS[choice].label}.`);
         return res.redirect(303, path(`/users/${ctx.userId}`));
-    }, { rerender: rerenderUser });
+    }, { rerender: rerenderUser, perm: 'member.timeout' });
 
     // Same service as /verification remove: takes the verified role, logs it to the verification log.
     const unverify = guardedPost(async (req, res) => {
@@ -505,7 +546,7 @@ export function createEnforcementHandlers(core) {
             { modLog: true, label: 'Members' });
         await flash(req, `Verification removed from ${ctx.target.user.username}.`);
         return res.redirect(303, path(`/users/${ctx.userId}`));
-    }, { rerender: rerenderUser });
+    }, { rerender: rerenderUser, perm: 'member.unverify' });
 
     // ── Bulk: one action on many members (preview → confirm → background job) ──
 
@@ -566,7 +607,7 @@ export function createEnforcementHandlers(core) {
         const payload = { action, roleId: role?.id || null, timeoutKey, forKey, reason: text(req.body, 'reason', REASON_MAX), recordForm, run: plan.run };
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'bulk', payload });
         return sendHtml(res, 200, bulkPreviewPage({ ...shellOf(req), action, label: BULK_ACTIONS[action], role, timeout: TIMEOUTS[timeoutKey] || TEMP_ROLE_LENGTHS[forKey] || null, plan, token, hash, guardLeft }));
-    }, { rerender: bulkBack });
+    }, { rerender: bulkBack, perm: 'member.bulk' });
 
     const bulkExecute = guardedPost(async (req, res) => {
         const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: 'bulk', hash: text(req.body, 'fh', 100) });
@@ -609,7 +650,7 @@ export function createEnforcementHandlers(core) {
         });
         logger.info(`Dashboard bulk ${payload.action} by ${session.userId}: ${payload.run.length} members (job ${job.id})`);
         return res.redirect(303, path(`/users/bulk/${job.id}`));
-    }, { rerender: bulkBack });
+    }, { rerender: bulkBack, perm: 'member.bulk' });
 
     /** GET /dashboard/users/bulk/:job: progress (refreshes itself while running), then the result. */
     async function bulkJob(req, res) {
@@ -628,7 +669,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'notes', [{ key: `note:${userId}`, old: null, new: note?.content ?? content }], { modLog: true, label: 'Staff notes' });
         await flash(req, 'Note added.');
         return res.redirect(303, path(`/users/${userId}`));
-    }, { rerender: rerenderUser });
+    }, { rerender: rerenderUser, perm: 'member.notes' });
 
     const noteRemove = guardedPost(async (req, res) => {
         const userId = userIdParam(req);
@@ -640,7 +681,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'notes', [{ key: `note:${userId}`, old: removed.content, new: null }], { modLog: true, label: 'Staff notes' });
         await flash(req, 'Note removed.');
         return res.redirect(303, path(`/users/${userId}`));
-    }, { rerender: rerenderUser });
+    }, { rerender: rerenderUser, perm: 'member.notes' });
 
     // ── Cases ────────────────────────────────────────────────────────────
 
@@ -668,7 +709,7 @@ export function createEnforcementHandlers(core) {
         const ended = changes.some((c) => c.field === 'duration') && after.expires_at && new Date(after.expires_at) <= new Date();
         await flash(req, `Case ${record.case_code} edited: ${changes.map((c) => c.field).join(' and ')}.${ended ? ' The new end is already past: it will be lifted within a minute.' : ''}`);
         return res.redirect(303, path(`/cases/${record.case_code}`));
-    }, { rerender: rerenderCase });
+    }, { rerender: rerenderCase, perm: 'case.edit' });
 
     const caseVoid = guardedPost(async (req, res) => {
         const record = await caseOf(req);
@@ -681,7 +722,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'cases', [{ key: `${record.case_code}.void`, old: null, new: reason }]);
         await flash(req, [`Case ${voided.case_code} voided.`, ...notes, `DM to the member: ${dmDelivered ? 'delivered' : 'not delivered'}.`].join(' '));
         return res.redirect(303, path(`/cases/${record.case_code}`));
-    }, { rerender: rerenderCase });
+    }, { rerender: rerenderCase, perm: 'case.edit' });
 
     const evidenceAdd = guardedPost(async (req, res) => {
         const record = await caseOf(req);
@@ -696,7 +737,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'cases', [{ key: `${record.case_code}.evidence`, old: null, new: entry.url }], { modLog: true, label: `Case ${record.case_code} evidence` });
         await flash(req, `Evidence #${row.id} added.${entry.sourceMessageUrl && !entry.excerpt ? ' The message could not be read (other server, no access or deleted), so only the link is saved.' : ''}`);
         return res.redirect(303, path(`/cases/${record.case_code}`));
-    }, { rerender: rerenderCase });
+    }, { rerender: rerenderCase, perm: 'case.evidence' });
 
     // An evidence image from the web: the multipart body was size-capped (express.raw)
     // and parsed by multipart.js before this runs (req.upload); only PNG / JPEG / GIF /
@@ -715,7 +756,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'cases', [{ key: `${record.case_code}.evidence`, old: null, new: `image #${row.id} (${image.type}, ${file.data.length} bytes)` }], { modLog: true, label: `Case ${record.case_code} evidence` });
         await flash(req, `Image evidence #${row.id} added (re-hosted in the evidence channel).`);
         return res.redirect(303, path(`/cases/${record.case_code}`));
-    }, { rerender: rerenderCase });
+    }, { rerender: rerenderCase, perm: 'case.evidence' });
 
     const evidenceRemove = guardedPost(async (req, res) => {
         const record = await caseOf(req);
@@ -726,7 +767,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'cases', [{ key: `${record.case_code}.evidence`, old: removed.url || `image #${id}`, new: null }], { modLog: true, label: `Case ${record.case_code} evidence` });
         await flash(req, `Evidence #${id} removed.${removed.kind === 'image' ? ' Its copy in the evidence channel is kept.' : ''}`);
         return res.redirect(303, path(`/cases/${record.case_code}`));
-    }, { rerender: rerenderCase });
+    }, { rerender: rerenderCase, perm: 'case.evidence' });
 
     // ── Appeals ──────────────────────────────────────────────────────────
 
@@ -778,7 +819,7 @@ export function createEnforcementHandlers(core) {
         const payload = { caseCode: code, decision, note };
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: `appeal:${code}`, payload });
         return sendHtml(res, 200, appealConfirmPage({ ...shellOf(req), record, decision, note, token, hash }));
-    }, { rerender: rerenderAppeal });
+    }, { rerender: rerenderAppeal, perm: 'appeal.decide' });
 
     const appealDecide = guardedPost(async (req, res) => {
         const code = caseCodeParam(req);
@@ -793,7 +834,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'appeal-decisions', [{ key: code, old: 'pending', new: { decision: result.label, note: payload.note || null, dmDelivered: result.dmDelivered } }]);
         await flash(req, [`Appeal on ${code} ${result.label}.`, `DM to the member: ${result.dmDelivered ? 'delivered' : 'not delivered'}.`, ...(result.notes || [])].join(' '));
         return res.redirect(303, path('/appeals'));
-    }, { rerender: rerenderAppeal });
+    }, { rerender: rerenderAppeal, perm: 'appeal.decide' });
 
     // ── No-contact orders ────────────────────────────────────────────────
 
@@ -828,7 +869,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'nocontact', [{ key: `order:${order.id}`, old: null, new: { userA, userB, days, reason } }]);
         await flash(req, `No-contact order #${order.id} started between ${a.username} and ${b.username}. ${delivered.every(Boolean) ? 'Both members were DMed.' : 'A DM could not be delivered to one of them.'}`);
         return res.redirect(303, path('/nocontact'));
-    }, { rerender: rerenderNoContact });
+    }, { rerender: rerenderNoContact, perm: 'nocontact.edit' });
 
     const noContactEnd = guardedPost(async (req, res) => {
         const id = text(req.body, 'id', 12);
@@ -839,7 +880,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'nocontact', [{ key: `order:${id}`, old: 'active', new: 'ended' }]);
         await flash(req, `No-contact order #${id} ended. ${result.delivered.every(Boolean) ? 'Both members were DMed.' : 'A DM could not be delivered to one of them.'}`);
         return res.redirect(303, path('/nocontact'));
-    }, { rerender: rerenderNoContact });
+    }, { rerender: rerenderNoContact, perm: 'nocontact.edit' });
 
     // ── Staff ────────────────────────────────────────────────────────────
 
@@ -907,7 +948,7 @@ export function createEnforcementHandlers(core) {
         await audit(req, 'massguard', [{ key: `block:${moderatorId}`, old: block.until, new: null }], { modLog: true, label: 'Mass-action guard' });
         await flash(req, `Mass-action block lifted for ${client.users.cache?.get?.(moderatorId)?.username || moderatorId}.`);
         return res.redirect(303, path('/staff'));
-    }, { rerender: rerenderStaff, need: 'owner' });
+    }, { rerender: rerenderStaff, need: 'owner', perm: 'staff.manage' });
 
     /** The logged-in owner as the giver / restorer the staff services record. */
     const ownerActor = (req) => ({ id: req.dashboard.session.userId, username: req.dashboard.session.username || req.dashboard.session.userId });
@@ -931,7 +972,7 @@ export function createEnforcementHandlers(core) {
             demoted ? 'That reached the limit: their staff roles were removed (restore them under Removed staff roles).' : null,
         ].filter(Boolean).join(' '));
         return res.redirect(303, path(`/staff${queryString({ warnings: userId })}`));
-    }, { rerender: rerenderStaff, need: 'owner' });
+    }, { rerender: rerenderStaff, need: 'owner', perm: 'staff.manage' });
 
     // /staff restore (the roles part; a mass-action block is lifted with blockLift). OWNER_IDS only.
     const staffRestore = guardedPost(async (req, res) => {
@@ -945,7 +986,7 @@ export function createEnforcementHandlers(core) {
             ? `Staff roles given back to ${name}: ${roles.map((role) => role.name).join(', ')}.`
             : `None of the saved roles could be given back to ${name} (deleted or above my role).`);
         return res.redirect(303, path('/staff'));
-    }, { rerender: rerenderStaff, need: 'owner' });
+    }, { rerender: rerenderStaff, need: 'owner', perm: 'staff.manage' });
 
     return {
         users, bans, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, unverify, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,

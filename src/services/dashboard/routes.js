@@ -28,8 +28,10 @@
 //                                   younger than 12 h.
 //   /staff, /staff/*                → 301 /dashboard (the old read-only staff dashboard)
 //
-// Access: CURRENT Administrators of the main server (canAct) and OWNER_IDS (view and
-// settings only), re-checked on every request (cached 60 s, access.js). The login
+// Access: CURRENT Administrators of the main server (canAct), OWNER_IDS (view and
+// settings only) and members with the moderator role (the Moderator level: only what
+// permissions.js marks MODERATOR; every other page/action → 403), re-checked on every
+// request (cached 60 s, access.js; POSTs fetch the member fresh). The login
 // state is HMAC-signed, expires after 10 minutes, is single use and bound to the
 // browser by a nonce cookie. Sessions are in Postgres (sessionStore.js: hashed ids,
 // rotated on login, 12 h); the browser only gets a signed random id in an HttpOnly,
@@ -64,6 +66,7 @@ import { listPendingAppeals } from '../enforcement/appealService.js';
 import { STATS_PERIODS, staffModerationStats } from '../staffActivityService.js';
 import { listSettingsAudit } from '../settings/guildSettings.js';
 import { createAccessChecker } from './access.js';
+import { OWNER_AREA, allows, routeKey } from './permissions.js';
 import { BASE, THEME_COOKIE, html, messagePage, path, themeFrom } from './html.js';
 import {
     appealsPage, auditPage, caseDetailPage, casesPage, moduleSettingsPage, statsPage,
@@ -394,7 +397,7 @@ export function createDashboard({
         const decision = await access.check(me.id);
         if (!decision.allowed) {
             logger.info(`Dashboard login refused for ${me.id}: ${decision.reason}`);
-            return fail(res, 403, 'No access', 'The dashboard is for administrators of the main server and the bot owners.');
+            return fail(res, 403, 'No access', 'The dashboard is for administrators and moderators of the main server and the bot owners.');
         }
         // Rotation: whatever session this browser had is dropped; a fresh id is issued.
         const session = await sessions.rotate(cookieSessionId(req), {
@@ -422,9 +425,16 @@ export function createDashboard({
         if (!decision.allowed) {
             await sessions.destroy(session.id);
             res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
-            return fail(res, 403, 'No access', 'You are no longer an administrator of the main server.');
+            return fail(res, 403, 'No access', 'You are no longer an administrator or moderator of the main server.');
         }
         req.dashboard = { session, access: decision, moduleStates: await moduleStates().catch(() => ({})), flash: null };
+        // The level's permissions (permissions.js): one table for every route; unknown paths are
+        // Administrator-only. The Owner area keeps its own check (requireOwner, 404).
+        const key = routeKey(req.method, req.path);
+        if (key !== OWNER_AREA && !allows(decision, key)) {
+            logger.info(`Dashboard ${req.method} ${req.path} refused for ${session.userId} (${decision.role}): ${key || 'unknown page'} needs Administrator`);
+            return fail(res, 403, 'Not allowed', 'This needs Administrator in the main server. As a moderator you can use Overview, Members, Banned, Cases, Appeals and No-contact, and warn, mute, unmute, time out or kick members.', req);
+        }
         if (req.method === 'GET' && session.flash) {
             // One-shot message from the last saved form (POST → 303 → this GET).
             req.dashboard.flash = session.flash;
@@ -443,8 +453,10 @@ export function createDashboard({
         const result = await collectOverview({ client, guildId, data: data.overview || defaultOverviewData });
         // Fresh config-based states on top of the full set (automod, join-to-create, applications).
         req.dashboard.moduleStates = { ...req.dashboard.moduleStates, ...result.moduleStates };
-        const recentChanges = await audits.list(guildId, { page: 0, pageSize: RECENT_CHANGES, excludeModules: hiddenAuditModules(req) })
-            .then((r) => r.rows).catch(() => null);
+        // The audit rows only for levels that may open the Audit log.
+        const recentChanges = allows(req.dashboard.access, 'page:audit')
+            ? await audits.list(guildId, { page: 0, pageSize: RECENT_CHANGES, excludeModules: hiddenAuditModules(req) }).then((r) => r.rows).catch(() => null)
+            : [];
         return sendHtml(res, 200, overviewPage({ ...shellOf(req), overview: result, recentChanges, editEnabled: settings.editEnabled }));
     }
 
@@ -609,7 +621,7 @@ export function createDashboard({
         const action = module ? getAction(module, str(req.params?.action, 40)) : null;
         if (!module || !action) return fail(res, 404, 'Not found', 'There is no such form.', req);
         const decision = req.dashboard.access;
-        if (!decision.canView || (action.admin && !decision.canAct)) {
+        if (!decision.canView || !allows(decision, 'settings.edit') || (action.admin && !decision.canAct)) {
             return fail(res, 403, 'Not allowed', 'This needs Administrator in the main server.', req);
         }
         const ctx = contextFor(req);
