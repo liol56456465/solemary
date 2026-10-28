@@ -50,9 +50,14 @@ export default {
         const channels = postForm(ctx, 'logging', 'channels', html`<div class="grid">
 ${LOG_DESTINATIONS.map((d) => channelPicker(g, d, status.channels?.[d] || null, { label: DESTINATION_LABEL[d] || d, perms: PERMS.post }))}</div>`,
         { submit: 'Save channels' });
-        const toggles = postForm(ctx, 'logging', 'events', html`${eventCategories().map(([category, types]) => html`<fieldset class="events"><legend>
-${checkboxInput(categoryField(category), events[`${category}.*`] !== false, { label: `${category} (whole category)` })}</legend>
-${types.map((type) => checkboxInput(fieldName(type), events[type] !== false, { label: type.split('.')[1] }))}</fieldset>`)}`, { submit: 'Save events' });
+        // One collapsible group per category (closed by default; the browser remembers which were open).
+        const toggles = postForm(ctx, 'logging', 'events', html`${eventCategories().map(([category, types]) => {
+            const on = types.filter((type) => events[type] !== false).length;
+            const whole = events[`${category}.*`] !== false;
+            return html`<details class="sub" data-key="log-${category}"><summary>${category} <span class="muted">${whole ? `${on}/${types.length} events on` : 'category off'}</span></summary>
+<fieldset class="events">${checkboxInput(categoryField(category), whole, { label: `${category} (whole category)` })}
+${types.map((type) => checkboxInput(fieldName(type), events[type] !== false, { label: type.split('.')[1] }))}</fieldset></details>`;
+        })}`, { submit: 'Save events' });
         const ignore = status.ignore || { channels: [], roles: [], users: [] };
         const ignoreRows = [
             ...ignore.channels.map((id) => ['channel', channelName(g, id), buttonForm(ctx, 'logging', 'ignore-remove', 'Remove', { type: 'channel', id })]),

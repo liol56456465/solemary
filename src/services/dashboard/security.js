@@ -132,8 +132,8 @@ export function parseCookies(header) {
 }
 
 /** A Set-Cookie value: HttpOnly, SameSite=Lax, Path=<base path>, Secure when asked. */
-export function serializeCookie(name, value, { maxAgeMs = null, secure = false, path = BASE_PATH } = {}) {
-    const parts = [`${name}=${encodeURIComponent(value)}`, `Path=${path}`, 'HttpOnly', 'SameSite=Lax'];
+export function serializeCookie(name, value, { maxAgeMs = null, secure = false, path = BASE_PATH, httpOnly = true } = {}) {
+    const parts = [`${name}=${encodeURIComponent(value)}`, `Path=${path}`, ...(httpOnly ? ['HttpOnly'] : []), 'SameSite=Lax'];
     if (maxAgeMs !== null) parts.push(`Max-Age=${Math.max(0, Math.floor(maxAgeMs / 1000))}`);
     if (secure) parts.push('Secure');
     return parts.join('; ');

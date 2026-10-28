@@ -5,6 +5,8 @@
 // are joined. null / undefined / false render as nothing. There is no other way to
 // put text into a page, so user-provided strings are always escaped.
 
+import { ICON_SPRITE_MARKUP, hasIcon } from './icons.js';
+
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' };
 
 export function escapeHtml(value) {
@@ -78,10 +80,14 @@ export const JS_PATH = `${BASE}/static/dashboard.js`;
 export function path(suffix = '') {
     return `${BASE}${suffix}`;
 }
+/** A decorative line icon from the sprite (icons.js); labels are always next to it. */
+export function icon(name, className = 'icon') {
+    return html`<svg class="${className}" aria-hidden="true" focusable="false"><use href="#i-${hasIcon(name) ? name : 'overview'}"></use></svg>`;
+}
 
 /**
  * The sidebar. `state` names the on/off indicator from moduleStates, where the module
- * has an on/off setting. Every entry is a working page (Phase 2: settings pages).
+ * has an on/off setting; `summary` is the one-liner on the Overview's module cards.
  */
 export const NAV = [
     { key: 'overview', label: 'Overview' },
@@ -93,22 +99,22 @@ export const NAV = [
         { key: 'staff', label: 'Staff' },
     ] },
     { group: 'Settings', items: [
-        { key: 'enforcement', label: 'Enforcement & appeals' },
-        { key: 'automod', label: 'Automod', state: 'automod' },
-        { key: 'logging', label: 'Logging', state: 'logging' },
-        { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome' },
-        { key: 'tickets', label: 'Tickets', state: 'tickets' },
-        { key: 'leveling', label: 'Leveling', state: 'leveling' },
-        { key: 'verification', label: 'Verification', state: 'verification' },
-        { key: 'reaction-roles', label: 'Reaction roles' },
-        { key: 'giveaways', label: 'Giveaways' },
-        { key: 'birthdays', label: 'Birthdays', state: 'birthdays' },
-        { key: 'counters', label: 'Counters' },
-        { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate' },
-        { key: 'applications', label: 'Applications', state: 'applications' },
-        { key: 'community', label: 'Community' },
-        { key: 'commands', label: 'Commands' },
-        { key: 'support', label: 'Support server' },
+        { key: 'enforcement', label: 'Enforcement & appeals', summary: 'Log channels, warning roles, appeal timings, appeal panels.' },
+        { key: 'automod', label: 'Automod', state: 'automod', summary: 'Rule modes, exceptions, join gate, raid panic.' },
+        { key: 'logging', label: 'Logging', state: 'logging', summary: 'Which server events are logged, and where.' },
+        { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome', summary: 'Join and leave messages, auto roles.' },
+        { key: 'tickets', label: 'Tickets', state: 'tickets', summary: 'Ticket panel, modmail, saved answers.' },
+        { key: 'leveling', label: 'Leveling', state: 'leveling', summary: 'XP, level-up messages, role rewards.' },
+        { key: 'verification', label: 'Verification', state: 'verification', summary: 'Verify panel or auto-verify on join.' },
+        { key: 'reaction-roles', label: 'Reaction roles', summary: 'Self-assign role menus.' },
+        { key: 'giveaways', label: 'Giveaways', summary: 'Start, end and reroll giveaways.' },
+        { key: 'birthdays', label: 'Birthdays', state: 'birthdays', summary: 'Birthday announcements and role.' },
+        { key: 'counters', label: 'Counters', summary: 'Member counters and the counting game.' },
+        { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate', summary: 'Temporary voice channels.' },
+        { key: 'applications', label: 'Applications', state: 'applications', summary: 'Role applications and their questions.' },
+        { key: 'community', label: 'Community', summary: 'Suggestions, starboard, stickies, tags, feeds.' },
+        { key: 'commands', label: 'Commands', summary: 'Turn commands and categories on or off.' },
+        { key: 'support', label: 'Support server', summary: 'The banned role in the support server.' },
     ] },
     { key: 'audit', label: 'Audit log' },
 ];
@@ -118,35 +124,112 @@ export function navItems() {
     return NAV.flatMap((item) => (item.group ? item.items : [item]));
 }
 
+function stateOf(item, moduleStates) {
+    return item.state && Object.hasOwn(moduleStates, item.state) ? moduleStates[item.state] : null;
+}
+
 function navLink(item, active, moduleStates) {
-    const state = item.state && Object.hasOwn(moduleStates, item.state) ? moduleStates[item.state] : null;
-    const classes = item.key === active ? 'on' : '';
-    return html`<li><a href="${path(`/${item.key}`)}"${classes ? raw(` class="${classes}"`) : ''}${item.key === active ? raw(' aria-current="page"') : ''}>
-<span>${item.label}</span>${state === null ? '' : html`<span class="state ${state ? 'state-on' : 'state-off'}">${state ? 'on' : 'off'}</span>`}</a></li>`;
+    const state = stateOf(item, moduleStates);
+    const on = item.key === active;
+    return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' class="on" aria-current="page"') : ''}>${icon(item.key)}<span class="nav-label">${item.label}</span>${state === null ? ''
+        : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
 }
 
 function sidebar(active, moduleStates) {
-    return html`<input type="checkbox" id="nav-toggle" class="nav-toggle"><label for="nav-toggle" class="nav-button">Menu</label>
-<nav class="sidebar" aria-label="Modules"><ul>${NAV.map((item) => (item.group
+    return html`<nav class="sidebar" id="sidebar" aria-label="Dashboard"><ul>${NAV.map((item) => (item.group
         ? html`<li class="group"><span class="group-label">${item.group}</span><ul>${item.items.map((sub) => navLink(sub, active, moduleStates))}</ul></li>`
         : navLink(item, active, moduleStates)))}</ul></nav>`;
 }
 
+export const THEMES = ['system', 'light', 'dark'];
+export const THEME_COOKIE = 'meowist_theme';
+const THEME_LABEL = { system: 'System theme', light: 'Light theme', dark: 'Dark theme' };
+const THEME_ICON = { system: 'monitor', light: 'sun', dark: 'moon' };
+
+/** The theme saved in the cookie: 'light', 'dark' or 'system' (anything else). */
+export function themeFrom(value) {
+    return THEMES.includes(value) ? value : 'system';
+}
+
 /**
- * The page shell. `session` adds the sidebar, the user and the logout form; `body`
- * must be SafeHtml. No inline styles or scripts (CSP: style-src 'self', no scripts).
+ * The theme switch: a plain link that works without JS (GET /dashboard/theme sets the
+ * cookie and comes back); the static script switches in place instead.
  */
-export function layout({ title, active = null, session = null, access = null, moduleStates = {}, body }) {
-    const user = session ? html`<div class="user"><span>${session.username}</span>${access && !access.canAct ? html` <span class="tag">view and settings</span>` : ''}
-<form method="post" action="${path('/logout')}" class="inline"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit">Log out</button></form></div>` : '';
-    return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="referrer" content="same-origin"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
-<body><header class="top"><a class="brand" href="${path('/overview')}">Meowist dashboard</a>${user}</header>
-<div class="${session ? 'shell' : 'shell bare'}">${session ? sidebar(active, moduleStates) : ''}<main>${body}</main></div></body></html>`.text;
+function themeToggle(theme, back) {
+    const next = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+    return html`<a class="icon-button" href="${path(`/theme${queryString({ mode: next, next: back })}`)}" data-theme-toggle data-theme="${theme}" title="${THEME_LABEL[theme]} (switch to ${THEME_LABEL[next].toLowerCase()})">${icon(THEME_ICON[theme])}<span class="sr">${THEME_LABEL[theme]}; switch to ${THEME_LABEL[next].toLowerCase()}</span></a>`;
+}
+
+function initials(name) {
+    return String(name || '?').trim().split(/\s+/).slice(0, 2).map((word) => word[0] || '').join('').toUpperCase() || '?';
+}
+
+function serverBadge(server) {
+    if (!server) return '';
+    const avatar = server.iconUrl
+        ? html`<img class="server-icon" src="${server.iconUrl}" alt="" width="24" height="24" referrerpolicy="no-referrer">`
+        : html`<span class="server-icon server-initials" aria-hidden="true">${initials(server.name)}</span>`;
+    return html`<span class="server">${avatar}<span class="server-name">${server.name}</span></span>`;
+}
+
+function userMenu(session, access) {
+    return html`<details class="user-menu"><summary><span class="avatar-initials" aria-hidden="true">${initials(session.username)}</span><span class="user-name">${session.username}</span></summary>
+<div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${access && !access.canAct ? 'View and settings (bot owner)' : 'Administrator'}</span></p>
+<form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
+}
+
+/** Breadcrumbs from the sidebar: Overview › group › page › (detail title). */
+function breadcrumbs(active, title) {
+    if (!active || active === 'overview') return '';
+    const group = NAV.find((item) => item.group && item.items.some((sub) => sub.key === active));
+    const item = navItems().find((i) => i.key === active);
+    if (!item) return '';
+    const crumbs = [html`<a href="${path('/overview')}">Overview</a>`];
+    if (group) crumbs.push(html`<span>${group.group}</span>`);
+    crumbs.push(item.label === title ? html`<span aria-current="page">${item.label}</span>` : html`<a href="${path(`/${item.key}`)}">${item.label}</a>`);
+    if (item.label !== title) crumbs.push(html`<span aria-current="page">${title}</span>`);
+    return html`<nav class="crumbs" aria-label="Breadcrumb"><ol>${crumbs.map((c) => html`<li>${c}</li>`)}</ol></nav>`;
+}
+
+/**
+ * The page shell: top bar (server, theme switch, user menu), left sidebar (a drawer on
+ * phones, opened by a checkbox: no script needed), breadcrumbs, then `body` (SafeHtml).
+ * The theme comes from the cookie, set on <html> server-side so there is no flash.
+ * `session` may carry display extras added by the routes: theme, server, path.
+ * No inline styles or scripts (CSP); the one script is the static enhancement file.
+ */
+export function layout({ title, active = null, session = null, access = null, moduleStates = {}, body, theme: pageTheme = 'system' }) {
+    const theme = themeFrom(session?.theme ?? pageTheme);
+    const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
+    const top = html`<header class="topbar">
+${session ? html`<label for="nav-toggle" class="icon-button nav-button" tabindex="0" role="button" aria-label="Menu">${icon('menu')}</label>` : ''}
+<a class="brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">M</span><span class="brand-name">Meowist</span></a>
+${session ? serverBadge(session.server) : ''}<span class="spacer"></span>
+${themeToggle(theme, back)}${session ? userMenu(session, access) : ''}</header>`;
+    return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
+<body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>${session ? raw('<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-controls="sidebar">') : ''}${top}
+<div class="${session ? 'shell' : 'shell bare'}">${session ? html`${sidebar(active, moduleStates)}<label for="nav-toggle" class="scrim" aria-hidden="true"></label>` : ''}
+<main id="main" tabindex="-1">${breadcrumbs(active, title)}${body}</main></div></body></html>`.text;
+}
+
+/** "Channel exceptions" → "channel-exceptions" (a stable key for remembering open sections). */
+export function slug(text) {
+    return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'section';
+}
+
+/**
+ * A titled block on a module page: a collapsible card (<details>, keyboard accessible
+ * without JS; the static script remembers which ones were open). options:
+ * { open (default true), collapsible (default true), key }.
+ */
+export function section(title, body, help = '', { open = true, collapsible = true, key = slug(title) } = {}) {
+    const inner = html`${help ? html`<p class="muted section-help">${help}</p>` : ''}${body}`;
+    if (!collapsible) return html`<section class="card"><h2>${title}</h2>${inner}</section>`;
+    return html`<details class="card section" data-key="${key}"${open ? raw(' open') : ''}><summary><h2>${title}</h2></summary><div class="section-body">${inner}</div></details>`;
 }
 
 /** A plain message page (errors, 403, …). */
 export function messagePage(title, message, session = null, extra = {}) {
-    return layout({ title, session, ...extra, body: html`<h1>${title}</h1><p>${message}</p>` });
+    return layout({ title, session, ...extra, body: html`<div class="message card"><h1>${title}</h1><p>${message}</p></div>` });
 }
-

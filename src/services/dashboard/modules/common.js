@@ -1,6 +1,8 @@
 // common.js — helpers shared by the module pages.
 
-import { html, raw } from '../html.js';
+import { html, section, slug } from '../html.js';
+
+export { section, slug };
 import { guildIdFor } from '../../settings/guildSettings.js';
 import { getSettingEntry } from '../../settings/settingsRegistry.js';
 import { InputError, intField } from '../forms.js';
@@ -8,22 +10,6 @@ import { InputError, intField } from '../forms.js';
 export const MINUTE = 60 * 1000;
 export const HOUR = 60 * MINUTE;
 export const DAY = 24 * HOUR;
-
-/** "Channel exceptions" → "channel-exceptions" (a stable key for remembering open sections). */
-export function slug(text) {
-    return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'section';
-}
-
-/**
- * A titled block on a module page: a collapsible card (<details>, keyboard accessible
- * without JS; the static script remembers which ones were open). options:
- * { open (default true), collapsible (default true), key }.
- */
-export function section(title, body, help = '', { open = true, collapsible = true, key = slug(title) } = {}) {
-    const inner = html`${help ? html`<p class="muted section-help">${help}</p>` : ''}${body}`;
-    if (!collapsible) return html`<section class="card"><h2>${title}</h2>${inner}</section>`;
-    return html`<details class="card section" data-key="${key}"${open ? raw(' open') : ''}><summary><h2>${title}</h2></summary><div class="section-body">${inner}</div></details>`;
-}
 
 /** A plain table: headers + rows of cells (SafeHtml or text). */
 export function table(headers, rows, empty = 'None.') {

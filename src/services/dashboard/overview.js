@@ -15,7 +15,7 @@ import { openCards } from '../automod/reviewRegistry.js';
 import { getLockdownState } from '../automod/raidService.js';
 import { SETTINGS } from '../settings/settingsRegistry.js';
 import { getSetting, guildIdFor, settingSource } from '../settings/guildSettings.js';
-import { formatDate, html, layout, path } from './html.js';
+import { NAV, formatDate, html, icon, layout, path, raw, timeTag } from './html.js';
 
 const PENDING_APPEALS_CAP = 100;
 
@@ -123,26 +123,48 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
 
 const show = (value, text = value) => (value === undefined ? html`<span class="muted">unavailable</span>` : text);
 
+/** One stat card: label, value (tone: ok = green, warn, bad, or neutral) and a note. */
+function stat(label, value, { tone = '', note = '', href = null } = {}) {
+    return html`<li class="stat${tone ? ` stat-${tone}` : ''}"><span class="label">${label}</span><span class="value">${value}</span>${note ? html`<span class="note">${note}</span>` : ''}${href ? html`<a class="stat-link" href="${href}"><span class="sr">Open ${label}</span></a>` : ''}</li>`;
+}
+
+/**
+ * Module cards (name, one line, on/off, link to its settings): the settings pages at a
+ * glance. The on/off switches live on each page, next to the settings they affect.
+ */
+function moduleCards(moduleStates) {
+    const settings = NAV.find((item) => item.group === 'Settings')?.items || [];
+    return html`<ul class="module-grid">${settings.map((item) => {
+        const state = item.state && Object.hasOwn(moduleStates, item.state) ? moduleStates[item.state] : null;
+        return html`<li class="module-card"><a href="${path(`/${item.key}`)}">
+<span class="module-head">${icon(item.key)}<span class="module-name">${item.label}</span>${state === null ? '' : html`<span class="state state-${state ? 'on' : 'off'}">${state ? 'on' : 'off'}</span>`}</span>
+<span class="module-summary">${item.summary || ''}</span></a></li>`;
+    })}</ul>`;
+}
+
 /** The Overview page from collectOverview's result. */
 export function overviewPage({ session, access = null, moduleStates = {}, overview: o }) {
     const todo = o.checklist.filter((item) => !item.done);
     const pendingText = o.pendingAppeals >= PENDING_APPEALS_CAP ? `${PENDING_APPEALS_CAP}+` : o.pendingAppeals;
-    const body = html`<h1>Overview${o.guild ? html` <span class="muted">· ${o.guild.name}</span>` : ''}</h1>
-<ul class="stats">
-<li><span class="label">Bot</span><span class="value ${o.bot.ready ? 'ok' : 'bad'}">${o.bot.ready ? 'online' : 'offline'}</span>${o.bot.ping !== null ? html`<span class="muted">${o.bot.ping} ms ping</span>` : ''}</li>
-<li><span class="label">Database</span>${o.database ? html`<span class="value ${o.database.connected ? 'ok' : 'bad'}">${o.database.connected ? 'connected' : 'degraded'}</span><span class="muted">${o.database.type}</span>` : html`<span class="value muted">unknown</span>`}</li>
-<li><span class="label">Members</span><span class="value">${o.guild?.memberCount ?? '—'}</span>${o.guild?.online != null ? html`<span class="muted">${o.guild.online} online</span>` : ''}</li>
-<li><span class="label">Open tickets</span><span class="value">${show(o.openTickets)}</span></li>
-<li><span class="label">Pending appeals</span><span class="value ${o.pendingAppeals > 0 ? 'warn' : ''}">${show(o.pendingAppeals, html`<a href="${path('/appeals')}">${pendingText}</a>`)}</span></li>
-<li><span class="label">Open automod review cards</span><span class="value">${show(o.openReviewCards)}</span><span class="muted">since the last restart</span></li>
-<li><span class="label">Raid lockdown</span>${o.lockdown === undefined ? html`<span class="value muted">unavailable</span>` : html`<span class="value ${o.lockdown.active ? 'bad' : 'ok'}">${o.lockdown.active ? 'active' : 'off'}</span>${o.lockdown.active && o.lockdown.since ? html`<span class="muted">since ${formatDate(o.lockdown.since)}</span>` : ''}`}</li>
-</ul>
-<h2>Getting started${todo.length ? html` <span class="muted">(${todo.length} to do)</span>` : ''}</h2>
-<ul class="checklist">${o.checklist.map((item) => html`<li><span class="mark ${item.done ? 'ok' : 'warn'}">${item.done ? 'done' : 'to do'}</span><span><a href="${item.href}">${item.label}</a>${item.done ? '' : html` <span class="muted">— ${item.hint}</span>`}</span></li>`)}</ul>
-<h2>Recent enforcement actions</h2>
-${o.recent === undefined ? html`<p class="muted">Unavailable (database).</p>` : o.recent.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Moderator</th><th>Reason</th><th>Date</th></tr></thead><tbody>
-${o.recent.map((row) => html`<tr><td><a href="${path(`/cases/${encodeURIComponent(row.case_code)}`)}"><code>${row.case_code}</code></a></td><td>${row.type}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.target_username} <span class="muted">${row.target_user_id}</span></td><td>${row.moderator_username}</td><td>${row.reason}</td><td>${formatDate(row.created_at)}</td></tr>`)}
-</tbody></table></div><p><a href="${path('/cases')}">All cases</a></p>` : html`<p class="muted">No cases yet.</p>`}`;
+    const lockdown = o.lockdown === undefined ? html`<span class="muted">unavailable</span>` : o.lockdown.active ? 'active' : 'off';
+    const stats = html`<ul class="stats">
+${stat('Bot', o.bot.ready ? 'online' : 'offline', { tone: o.bot.ready ? 'ok' : 'bad', note: o.bot.ping !== null ? `${o.bot.ping} ms ping` : '' })}
+${stat('Database', o.database ? (o.database.connected ? 'connected' : 'degraded') : html`<span class="muted">unknown</span>`, { tone: o.database ? (o.database.connected ? 'ok' : 'bad') : '', note: o.database?.type || '' })}
+${stat('Members', o.guild?.memberCount ?? '—', { note: o.guild?.online != null ? `${o.guild.online} online` : '' })}
+${stat('Open tickets', show(o.openTickets))}
+${stat('Pending appeals', show(o.pendingAppeals, html`<a href="${path('/appeals')}">${pendingText}</a>`), { tone: o.pendingAppeals > 0 ? 'warn' : '' })}
+${stat('Open automod review cards', show(o.openReviewCards), { note: 'since the last restart' })}
+${stat('Raid lockdown', lockdown, { tone: o.lockdown?.active ? 'bad' : o.lockdown ? 'ok' : '', note: o.lockdown?.active && o.lockdown.since ? `since ${formatDate(o.lockdown.since)}` : '' })}
+</ul>`;
+    const checklist = html`<ul class="checklist">${o.checklist.map((item) => html`<li class="${item.done ? 'is-done' : ''}"><span class="state state-${item.done ? 'on' : 'warn'}">${item.done ? 'done' : 'to do'}</span><span><a href="${item.href}">${item.label}</a>${item.done ? '' : html` <span class="muted">— ${item.hint}</span>`}</span></li>`)}</ul>`;
+    const recent = o.recent === undefined ? html`<p class="muted">Unavailable (database).</p>` : o.recent.length ? html`<div class="table-wrap"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Moderator</th><th>Reason</th><th>When</th></tr></thead><tbody>
+${o.recent.map((row) => html`<tr><td><a href="${path(`/cases/${encodeURIComponent(row.case_code)}`)}"><code>${row.case_code}</code></a></td><td><span class="type type-${row.type}">${row.type}</span>${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.target_username} <span class="muted">${row.target_user_id}</span></td><td>${row.moderator_username}</td><td class="clip">${row.reason}</td><td class="nowrap">${timeTag(row.created_at)}</td></tr>`)}
+</tbody></table></div><p class="card-foot"><a href="${path('/cases')}">All cases</a></p>` : html`<p class="empty">No cases yet.</p>`;
+    const body = html`<div class="page-head"><h1>Overview</h1>${o.guild ? html`<p class="muted">${o.guild.name}</p>` : ''}</div>
+${stats}
+<details class="card section" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>Getting started${todo.length ? html` <span class="count">${todo.length} to do</span>` : html` <span class="state state-on">all set</span>`}</h2></summary><div class="section-body">${checklist}</div></details>
+<section class="card"><h2>Recent enforcement actions</h2>${recent}</section>
+<details class="card section" data-key="modules" open><summary><h2>Modules</h2></summary><div class="section-body">${moduleCards(moduleStates)}</div></details>`;
     return layout({ title: 'Overview', active: 'overview', session, access, moduleStates, body });
 }
 

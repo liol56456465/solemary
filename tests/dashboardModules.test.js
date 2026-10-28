@@ -817,7 +817,7 @@ test('sidebar: every module listed (no Phase 2 placeholders), on/off states show
     for (const module of MODULES) assert.ok(keys.includes(module.key), module.key);
     const h = await setup();
     const res = await get(h, 'automod');
-    assert.match(res.body, /<span>Automod<\/span><span class="state state-on">on<\/span>/);
+    assert.match(res.body, /<span class="nav-label">Automod<\/span><span class="dot dot-on"><span class="sr">on<\/span><\/span>/);
 });
 
 test('security headers: CSP still without unsafe-inline; same-origin referrer policy', () => {

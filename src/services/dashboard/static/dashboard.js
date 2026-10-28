@@ -11,6 +11,8 @@
 //   time[data-relative]     "in 3 h" / "5 min ago" (the UTC time stays in the tooltip)
 //   details[data-key]       remembers which sections were open (per page)
 //   #nav-toggle             the mobile drawer: Escape and link clicks close it
+//   [data-theme-toggle]     switches light / dark / system in place (same cookie)
+//   main .flash             "Saved." becomes a toast that closes itself
 
 (function () {
     'use strict';
@@ -174,8 +176,68 @@
         });
     }
 
+    // ── Theme switch ─────────────────────────────────────────────────────
+    // Without the script the link goes through GET /dashboard/theme (cookie + redirect);
+    // here the same cookie is set and the page switches in place.
+    const THEMES = ['system', 'light', 'dark'];
+    const THEME_LABEL = { system: 'System theme', light: 'Light theme', dark: 'Dark theme' };
+    const THEME_ICON = { system: 'monitor', light: 'sun', dark: 'moon' };
+    function setupThemeToggle() {
+        const link = document.querySelector('[data-theme-toggle]');
+        if (!link) return;
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const current = THEMES.includes(link.dataset.theme) ? link.dataset.theme : 'system';
+            const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
+            const after = THEMES[(THEMES.indexOf(next) + 1) % THEMES.length];
+            const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie = `meowist_theme=${next}; Path=/dashboard; Max-Age=31536000; SameSite=Lax${secure}`;
+            if (next === 'system') delete document.documentElement.dataset.theme;
+            else document.documentElement.dataset.theme = next;
+            link.dataset.theme = next;
+            const text = `${THEME_LABEL[next]}; switch to ${THEME_LABEL[after].toLowerCase()}`;
+            link.title = `${THEME_LABEL[next]} (switch to ${THEME_LABEL[after].toLowerCase()})`;
+            link.querySelector('use')?.setAttribute('href', `#i-${THEME_ICON[next]}`);
+            const label = link.querySelector('.sr');
+            if (label) label.textContent = text;
+        });
+    }
+
+    // ── Toasts ───────────────────────────────────────────────────────────
+    // The "Saved." line after a form becomes a toast in the corner that closes itself
+    // after a few seconds (errors stay in the page, next to the form).
+    function setupToasts() {
+        const flashes = document.querySelectorAll('main .flash');
+        if (!flashes.length) return;
+        const stack = document.createElement('div');
+        stack.className = 'toast-stack';
+        stack.setAttribute('aria-live', 'polite');
+        document.body.appendChild(stack);
+        for (const flash of flashes) {
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.className = 'toast-close';
+            close.setAttribute('aria-label', 'Dismiss');
+            close.textContent = '×';
+            const dismiss = () => {
+                flash.classList.add('is-leaving');
+                window.setTimeout(() => flash.remove(), 160);
+            };
+            close.addEventListener('click', dismiss);
+            flash.appendChild(close);
+            stack.appendChild(flash);
+            let timer = window.setTimeout(dismiss, 6000);
+            // Hovering or focusing keeps it open.
+            flash.addEventListener('mouseenter', () => window.clearTimeout(timer));
+            flash.addEventListener('focusin', () => window.clearTimeout(timer));
+            flash.addEventListener('mouseleave', () => { timer = window.setTimeout(dismiss, 3000); });
+        }
+    }
+
     function init() {
         document.documentElement.classList.add('js');
+        setupThemeToggle();
+        setupToasts();
         document.querySelectorAll('select[data-search]').forEach(enhanceSelect);
         document.querySelectorAll('[data-copy]').forEach(addCopyButton);
         document.querySelectorAll('details[data-key]').forEach(rememberDetails);

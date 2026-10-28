@@ -12,7 +12,7 @@ import { MAX_LINKS_PER_FORM, NOTE_MAX as EVIDENCE_NOTE_MAX } from '../enforcemen
 import { NO_CONTACT_MAX_DAYS } from '../enforcement/noContactService.js';
 import { NOTE_MAX } from '../enforcement/staffNotesService.js';
 import { WEEKDAYS, intensityLevel, slotLabel } from '../staffCoverageService.js';
-import { formatAge, formatDate, html, layout, path, queryString, raw } from './html.js';
+import { formatAge, formatDate, html, layout, path, queryString, raw, section } from './html.js';
 import { isAllowedImageUrl, isSafeLink } from './pages.js';
 
 export const DURATION_CHOICES = ['30m', '1h', '6h', '12h', '1d', '3d', '7d', '14d', '1mo', '3mo'];
@@ -75,7 +75,7 @@ function standingSection(view) {
     if (state.activeMute) active.push(html`mute ${caseLink(state.activeMute.case_code)} — ends ${formatDate(state.activeMute.expires_at)}`);
     else if (state.muted) active.push(html`has the muted role (no record)`);
     const pending = [...appealStatuses].filter(([, status]) => status === 'pending').map(([code]) => code);
-    return html`<h2>Standing</h2><dl>
+    return html`<dl>
 <dt>Counted warns</dt><dd>${countedWarnsText(ladder)}${countedWarns.length ? html` · ${countedWarns.map((w, i) => html`${i ? ', ' : ''}${caseLink(w.case_code)}`)}` : ''}</dd>
 <dt>Ladder level</dt><dd>${ladder.level} of 3</dd>
 <dt>Next warning</dt><dd>${nextWarningText(ladder)}</dd>
@@ -101,8 +101,7 @@ ${member ? html`<dt>Roles (${roles.length})</dt><dd>${roles.length ? roles.map((
 function notesSection(view, canWrite, csrf) {
     const notes = view.notes || [];
     const id = view.user.id;
-    return html`<h2>Staff notes (${notes.length})</h2>
-${notes.length ? html`<div class="scroll"><table><thead><tr><th>#</th><th>Note</th><th>By</th><th>When</th><th></th></tr></thead><tbody>
+    return html`${notes.length ? html`<div class="scroll"><table><thead><tr><th>#</th><th>Note</th><th>By</th><th>When</th><th></th></tr></thead><tbody>
 ${notes.map((note, i) => html`<tr><td>${i + 1}</td><td class="value">${note.content}</td><td>${note.author || 'unknown'}</td><td>${note.timestamp ? formatDate(note.timestamp) : '—'}</td>
 <td>${canWrite ? actionForm(csrf, `/users/${id}/notes/remove`, '', { submit: 'Remove', hidden: { note: String(note.id ?? '') }, inline: true, danger: true }) : ''}</td></tr>`)}
 </tbody></table></div>` : html`<p class="muted">No staff notes.</p>`}
@@ -111,8 +110,7 @@ ${canWrite ? actionForm(csrf, `/users/${id}/notes/add`, html`<label class="wide"
 
 function casesSection(view) {
     const { cases = [], casesTotal = 0, appealStatuses = new Map(), user } = view;
-    return html`<h2>Recent cases (${casesTotal})</h2>
-${cases.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Name</th><th>Reason</th><th>Date</th><th>Status</th></tr></thead><tbody>
+    return html`${cases.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Name</th><th>Reason</th><th>Date</th><th>Status</th></tr></thead><tbody>
 ${cases.map((row) => html`<tr><td>${caseLink(row.case_code)}</td><td>${row.type}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.name}</td><td>${row.reason}</td>
 <td>${formatDate(row.created_at)}</td><td>${caseStatusLabel(row, appealStatuses.get(row.case_code))}</td></tr>`)}
 </tbody></table></div>${casesTotal > cases.length ? html`<p><a href="${path(`/cases${queryString({ member: user.id })}`)}">All ${casesTotal} cases →</a></p>` : ''}` : html`<p class="muted">No cases.</p>`}`;
@@ -120,13 +118,12 @@ ${cases.map((row) => html`<tr><td>${caseLink(row.case_code)}</td><td>${row.type}
 
 function noContactSection(orders, names = new Map()) {
     if (!orders.length) return '';
-    return html`<h2>No-contact orders</h2><ul>${orders.map((o) => html`<li>with ${names.get(o.otherId) || o.otherId} <span class="muted">${o.otherId}</span> until ${formatDate(o.until)} (order #${o.id})</li>`)}</ul>`;
+    return html`<ul>${orders.map((o) => html`<li>with ${names.get(o.otherId) || o.otherId} <span class="muted">${o.otherId}</span> until ${formatDate(o.until)} (order #${o.id})</li>`)}</ul>`;
 }
 
 function precedentSection(view) {
     const reasonKey = view.precedentReason || '';
-    return html`<h2>Precedent</h2>
-<form class="filters" method="get" action="${userHref(view.user.id)}">
+    return html`<form class="filters" method="get" action="${userHref(view.user.id)}">
 <label>How was this reason handled before?<select name="reason">${option('', 'choose a reason', !reasonKey)}${ENFORCEMENT_REASONS.map((r) => option(r.key, r.label, r.key === reasonKey))}</select></label>
 <button type="submit">Show</button></form>
 ${reasonKey ? html`<p>${view.precedent || html`<span class="muted">No precedent available for this reason.</span>`}</p>` : ''}`;
@@ -170,19 +167,18 @@ ${actionForm(csrf, `/users/${id}/action/preview`, fields, { submit: 'Preview', h
  */
 export function userPage({ session, access = null, moduleStates = {}, view, canAct = false, editEnabled = false, flash = null, error = null, values = {}, now = Date.now() }) {
     const canWrite = canAct && editEnabled;
-    const body = html`<p><a href="${path('/users')}">← Members</a></p>
+    const body = html`<a class="back" href="${path('/users')}">← Members</a>
 <h1>${view.user.username}</h1>
 ${notices({ flash, error, editEnabled, canAct })}
-${profileSection(view.user, view.member, now)}
-${standingSection(view)}
-${noContactSection(view.noContact || [], view.noContactNames)}
-<h2>Actions</h2>
-${view.block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(view.block.until)}; actions will be refused.</p>` : ''}
+${section('Profile', profileSection(view.user, view.member, now), '', { key: 'member-profile' })}
+${section('Standing', standingSection(view), '', { key: 'member-standing' })}
+${(view.noContact || []).length ? section('No-contact orders', noContactSection(view.noContact, view.noContactNames), '', { key: 'member-nocontact' }) : ''}
+${section('Actions', html`${view.block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(view.block.until)}; actions will be refused.</p>` : ''}
 ${canWrite ? (view.actions.length ? html`<p class="muted">Same actions, DMs, ladder and checks as /enforcements. Each one shows a confirmation first.</p>${view.actions.map((type) => actionBlock(view, type, session.csrf, values.type === type ? values : {}))}` : html`<p class="muted">No actions available.</p>`)
-        : html`<p class="muted">Available: ${view.actions.map((t) => ACTION_LABELS[t]).join(', ') || 'none'}.</p>`}
-${precedentSection(view)}
-${casesSection(view)}
-${notesSection(view, canWrite, session.csrf)}`;
+        : html`<p class="muted">Available: ${view.actions.map((t) => ACTION_LABELS[t]).join(', ') || 'none'}.</p>`}`, '', { key: 'member-actions' })}
+${section('Precedent', precedentSection(view), '', { key: 'member-precedent', open: Boolean(view.precedentReason) })}
+${section(`Recent cases (${view.casesTotal || 0})`, casesSection(view), '', { key: 'member-cases' })}
+${section(`Staff notes (${(view.notes || []).length})`, notesSection(view, canWrite, session.csrf), '', { key: 'member-notes' })}`;
     return layout({ title: view.user.username, active: 'users', session, access, moduleStates, body });
 }
 

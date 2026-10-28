@@ -98,8 +98,10 @@ ${data.registry.exemptChannelIds.length ? html`<p class="muted">Also ignored (se
         const trusted = postForm(ctx, 'automod', 'trusted', html`<div class="grid">
 ${rolePicker(g, 'roleId', s.trusted.roleId, { label: 'Trusted role', assign: false, noneLabel: 'none' })}
 ${numberInput('minLevel', s.trusted.minLevel, { label: 'Or minimum level (0 = none)', min: 0, max: 1000 })}</div>`);
-        const behaviour = html`${toggleForm(ctx, 'automod', 'second-chance', s.secondChance, { label: 'Second chance (first small offence: a notice instead of a warning)' })}
-${toggleForm(ctx, 'automod', 'mood', s.moodAlerts, { label: 'Mood alerts (calm-down note + short slowmode when a channel heats up)' })}
+        const secondChance = html`${toggleForm(ctx, 'automod', 'second-chance', s.secondChance, { label: 'Second chance (first small offence: a notice instead of a warning)' })}
+`;
+        const mood = toggleForm(ctx, 'automod', 'mood', s.moodAlerts, { label: 'Mood alerts (calm-down note + short slowmode when a channel heats up)' });
+        const panic = html`
 ${postForm(ctx, 'automod', 'panic', html`<div class="grid">${checkboxInput('enabled', s.panic.enabled, { label: 'Panic mode: pause invites and DMs when a raid lockdown starts' })}
 ${numberInput('hours', s.panic.hours, { label: 'Pause for (hours)', min: 1, max: 24 })}</div>`)}`;
         const joinGate = postForm(ctx, 'automod', 'join-gate', html`<div class="grid">
@@ -124,7 +126,7 @@ ${table(['Rule', 'Actions', 'Undone', 'Changed', 'Undo rate'], rulesStats.map(([
         return html`${section('Status', top)}${section('Rule modes', rules, 'default follows the global mode; monitor only posts cards; off ignores the rule.')}
 ${section('Channel exceptions', exceptions)}${section('Ignored channels', exempt)}
 ${section('Trusted members', trusted, 'Trusted members (the role, or this leveling level) skip the low-severity rules. Pick none and level 0 to clear.')}
-${section('Behaviour', behaviour)}${section('Join gate', joinGate, 'off / flag (review line with Kick/Dismiss) / kick (DM with how to come back).')}
+${section('Second chance', secondChance)}${section('Mood', mood)}${section('Panic', panic)}${section('Join gate', joinGate, 'off / flag (review line with Kick/Dismiss) / kick (DM with how to come back).')}
 ${section('Native AutoMod', native)}${section('Channels and words', channels)}${section(`Last ${STATS_DAYS} days`, stats)}`;
     },
 

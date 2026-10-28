@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { escapeHtml, formatAge, html, queryString, raw } from '../src/services/dashboard/html.js';
+import { THEME_COOKIE, escapeHtml, formatAge, html, layout, queryString, raw, themeFrom } from '../src/services/dashboard/html.js';
 import {
     SESSION_COOKIE, STATE_COOKIE, createRateLimiter, createState, createStateStore, isGlobalRateLimitExempt,
     isSnowflake, parseCookies, serializeCookie, signValue, verifySignedValue,
@@ -10,7 +10,7 @@ import { gettingStarted, moduleStatesFrom, overviewPage, collectOverview } from 
 import { readFileSync } from 'node:fs';
 import { createAccessChecker, decideAccess } from '../src/services/dashboard/access.js';
 import { auditPage, caseDetailPage, casesPage, isAllowedImageUrl, isSafeLink } from '../src/services/dashboard/pages.js';
-import { SECURITY_HEADERS, createDashboard, dashboardSettings, registerDashboard } from '../src/services/dashboard/routes.js';
+import { SECURITY_HEADERS, createDashboard, dashboardSettings, registerDashboard, safeBackPath } from '../src/services/dashboard/routes.js';
 
 // The only script on any page: the static enhancement file (CSP script-src 'self').
 const ALLOWED_SCRIPT = '<script src="/dashboard/static/dashboard.js" defer></script>';
@@ -376,7 +376,7 @@ test('OWNER_IDS without Administrator get in with view-only access', async () =>
     assert.equal(page.statusCode, 200);
     assert.equal(req.dashboard.access.canAct, false);
     assert.equal(req.dashboard.access.canView, true);
-    assert.match(page.body, /view and settings/);
+    assert.match(page.body, /View and settings/i);
 });
 
 test('protected pages: redirect without a session, 403 once access is lost, 429 over the per-session limit', async () => {
@@ -606,4 +606,47 @@ test('security headers: CSP without unsafe-inline, frame denial, no referrer, no
     assert.match(csp, /default-src 'none'/);
     assert.match(csp, /frame-ancestors 'none'/);
     assert.equal(SECURITY_HEADERS['X-Frame-Options'], 'DENY');
+});
+
+// ── Design: theme switch, page shell, collapsible records sections ─────────
+
+test('theme: the cookie sets data-theme on <html> server-side; unknown values mean system', () => {
+    assert.equal(themeFrom('dark'), 'dark');
+    assert.equal(themeFrom('"><script>'), 'system');
+    const session = { username: 'a', csrf: 't' };
+    assert.match(layout({ title: 'x', session: { ...session, theme: 'dark' }, body: html`` }), /^<!doctype html><html lang="en" data-theme="dark">/);
+    assert.match(layout({ title: 'x', session: { ...session, theme: 'nope' }, body: html`` }), /^<!doctype html><html lang="en"><head>/);
+    // The switch is a plain link (works without JS) to the next theme, back to this page.
+    const page = layout({ title: 'x', active: 'cases', session: { ...session, theme: 'light', path: '/dashboard/cases?page=2' }, body: html`` });
+    assert.ok(page.includes('href="/dashboard/theme?mode=dark&amp;next=%2Fdashboard%2Fcases%3Fpage%3D2"'));
+    assert.ok(page.includes('<symbol id="i-moon"'), 'the icon sprite is inline');
+});
+
+test('theme: GET /dashboard/theme sets a non-HttpOnly cookie and only redirects inside the dashboard', () => {
+    const { d } = makeDashboard();
+    const res = fakeRes();
+    d.setTheme({ headers: {}, query: { mode: 'dark', next: '/dashboard/automod' } }, res);
+    assert.equal(res.statusCode, 303);
+    assert.equal(res.redirectedTo, '/dashboard/automod');
+    const cookie = res.cookies.find((c) => c.startsWith(`${THEME_COOKIE}=`));
+    assert.match(cookie, /^meowist_theme=dark; Path=\/dashboard; SameSite=Lax; Max-Age=31536000; Secure$/);
+    const bad = fakeRes();
+    d.setTheme({ headers: {}, query: { mode: 'x', next: 'https://evil.example/' } }, bad);
+    assert.equal(bad.redirectedTo, '/dashboard/overview');
+    assert.match(bad.cookies[0], /^meowist_theme=system;/);
+    for (const next of ['//evil.example', '/dashboard//evil.example', '/dashboardx', '/dashboard/a b', 'javascript:alert(1)', '/dashboard/x?a=<b>']) {
+        assert.equal(safeBackPath(next), '/dashboard/overview', next);
+    }
+    assert.equal(safeBackPath('/dashboard/cases?member=123&page=2'), '/dashboard/cases?member=123&page=2');
+});
+
+test('case page: history, evidence and appeals are collapsible sections (history closed)', () => {
+    const page = caseDetailPage({
+        session: { username: 'a', csrf: 't' }, statusLabel: 'active',
+        record: { case_code: 'abcdefg', type: 'warn', name: 'n', target_user_id: '1', target_username: 'u', moderator_id: '2', moderator_username: 'm', reason: 'r', created_at: new Date(0) },
+        edits: [{ edited_at: new Date(0), edited_by_username: 'm', field: 'reason', old_value: 'a', new_value: 'b' }],
+    });
+    assert.match(page, /<details class="card section" data-key="case-history"><summary><h2>History \(1\)<\/h2>/);
+    assert.match(page, /<details class="card section" data-key="case-evidence" open>/);
+    assert.match(page, /<details class="card section" data-key="case-appeals"><summary><h2>Appeals \(0\)/);
 });

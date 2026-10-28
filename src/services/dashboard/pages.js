@@ -4,7 +4,7 @@
 import { formatDuration } from '../enforcement/format.js';
 import { SEARCH_STATUSES, SEARCH_TYPES } from '../enforcement/caseSearchService.js';
 import { STATS_PERIODS } from '../staffActivityService.js';
-import { formatAge, formatDate, html, layout, queryString, raw, timeTag } from './html.js';
+import { formatAge, formatDate, html, layout, queryString, raw, section, timeTag } from './html.js';
 
 const IMAGE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
 
@@ -122,10 +122,10 @@ function evidenceItem({ row, freshUrl }) {
 /** input: { session, record, statusLabel, edits, evidence: [{ row, freshUrl }], appeals }. */
 export function caseDetailPage({ session, access = null, moduleStates = {}, record, statusLabel, edits = [], evidence = [], appeals = [], top = '', bottom = '' }) {
     const r = record;
-    const body = html`<p><a href="/dashboard/cases">← Cases</a></p>
+    const body = html`<a class="back" href="/dashboard/cases">← Cases</a>
 <h1>Case <code data-copy="${r.case_code}">${r.case_code}</code> · ${r.type}${r.is_test ? ' (test)' : ''}</h1>
 ${top}
-<dl>
+<section class="card"><dl>
 <dt>Name</dt><dd>${r.name}</dd>
 <dt>Status</dt><dd class="${statusClass(statusLabel)}">${statusLabel}</dd>
 <dt>Member</dt><dd><a href="/dashboard/users/${encodeURIComponent(r.target_user_id)}">${r.target_username}</a> <span class="muted">${r.target_user_id}</span> · <a href="/dashboard/cases${queryString({ member: r.target_user_id })}">all their cases</a></dd>
@@ -140,17 +140,14 @@ ${r.appeal_deadline ? html`<dt>Appeal deadline</dt><dd>${formatDate(r.appeal_dea
 <dt>Ladder level after</dt><dd>${r.ladder_level_after ?? '—'}</dd>
 ${r.revoked_at ? html`<dt>Lifted</dt><dd>${formatDate(r.revoked_at)}${r.revoke_reason ? html` — ${r.revoke_reason}` : ''}</dd>` : ''}
 ${r.voided_at ? html`<dt>Voided</dt><dd>${formatDate(r.voided_at)}${r.void_reason ? html` — ${r.void_reason}` : ''}</dd>` : ''}
-</dl>
-<h2>History (${edits.length})</h2>
-${edits.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>By</th><th>Field</th><th>Old</th><th>New</th></tr></thead><tbody>
+</dl></section>
+${section(`History (${edits.length})`, html`${edits.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>By</th><th>Field</th><th>Old</th><th>New</th></tr></thead><tbody>
 ${edits.map((e) => html`<tr><td>${formatDate(e.edited_at)}</td><td>${e.edited_by_username}</td><td>${e.field}</td><td>${e.old_value ?? '—'}</td><td>${e.new_value ?? '—'}</td></tr>`)}
-</tbody></table></div>` : html`<p class="muted">Never edited.</p>`}
-<h2>Evidence (${evidence.length})</h2>
-${evidence.length ? html`<ul class="evidence">${evidence.map(evidenceItem)}</ul>` : html`<p class="muted">No evidence attached.</p>`}
-<h2>Appeals (${appeals.length})</h2>
-${appeals.length ? html`<div class="scroll"><table><thead><tr><th>Filed</th><th>Status</th><th>Decided</th><th>By</th><th>Note</th></tr></thead><tbody>
+</tbody></table></div>` : html`<p class="muted">Never edited.</p>`}`, '', { key: 'case-history', open: false })}
+${section(`Evidence (${evidence.length})`, evidence.length ? html`<ul class="evidence">${evidence.map(evidenceItem)}</ul>` : html`<p class="muted">No evidence attached.</p>`, '', { key: 'case-evidence' })}
+${section(`Appeals (${appeals.length})`, html`${appeals.length ? html`<div class="scroll"><table><thead><tr><th>Filed</th><th>Status</th><th>Decided</th><th>By</th><th>Note</th></tr></thead><tbody>
 ${appeals.map((a) => html`<tr><td>${formatDate(a.created_at)}</td><td>${a.status}</td><td>${formatDate(a.decided_at)}</td><td>${a.decided_by_username || '—'}</td><td>${a.note || ''}</td></tr>`)}
-</tbody></table></div>` : html`<p class="muted">No appeals.</p>`}
+</tbody></table></div>` : html`<p class="muted">No appeals.</p>`}`, '', { key: 'case-appeals', open: appeals.length > 0 })}
 ${bottom}`;
     return layout({ title: `Case ${r.case_code}`, active: 'cases', session, access, moduleStates, body });
 }

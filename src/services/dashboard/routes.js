@@ -59,7 +59,7 @@ import { listPendingAppeals } from '../enforcement/appealService.js';
 import { STATS_PERIODS, staffModerationStats } from '../staffActivityService.js';
 import { listSettingsAudit } from '../settings/guildSettings.js';
 import { createAccessChecker } from './access.js';
-import { BASE, messagePage, path } from './html.js';
+import { BASE, THEME_COOKIE, messagePage, path, themeFrom } from './html.js';
 import {
     appealsPage, auditPage, caseDetailPage, casesPage, moduleSettingsPage, statsPage,
 } from './pages.js';
@@ -156,6 +156,16 @@ export function dashboardSettings(env = process.env) {
     return settings;
 }
 
+/**
+ * A dashboard path to come back to (theme switch): only /dashboard/<letters, digits,
+ * - / _> with an optional simple query; anything else → the Overview. Never an
+ * absolute URL, never another site.
+ */
+export function safeBackPath(value) {
+    const text = typeof value === 'string' ? value : '';
+    return /^\/dashboard(\/[A-Za-z0-9_\-/]*)?(\?[A-Za-z0-9_\-=&%.]*)?$/.test(text) && !text.includes('//') ? text : path('/overview');
+}
+
 /** Express 5 may hand over arrays for repeated keys: keep strings only. */
 function str(value, max = 200) {
     return typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -208,9 +218,30 @@ export function createDashboard({
     const sendHtml = (res, status, page) => res.status(status).type('html').send(page);
     const fail = (res, status, title, message, req = null) => sendHtml(res, status, messagePage(title, message, req?.dashboard?.session || null, shellOf(req)));
 
+    /** The server shown in the top bar: name and icon (Discord CDN, allowed by the CSP img-src). */
+    function serverInfo() {
+        const guild = client.guilds?.cache?.get(guildId);
+        if (!guild) return null;
+        let iconUrl = null;
+        try {
+            iconUrl = typeof guild.iconURL === 'function' ? guild.iconURL({ size: 64, extension: 'png' }) : null;
+        } catch {
+            iconUrl = null;
+        }
+        return { name: guild.name, iconUrl: iconUrl && /^https:\/\/cdn\.discordapp\.com\//.test(iconUrl) ? iconUrl : null };
+    }
+
+    /** The theme cookie (light / dark / system): set on <html> server-side, so no flash. */
+    function themeOf(req) {
+        return themeFrom(parseCookies(req?.headers?.cookie)[THEME_COOKIE]);
+    }
+
     function shellOf(req) {
         const ctx = req?.dashboard;
-        return ctx ? { session: ctx.session, access: ctx.access, moduleStates: ctx.moduleStates || {} } : {};
+        if (!ctx) return req ? { session: null, theme: themeOf(req) } : {};
+        // A copy of the session with display-only extras for the page shell.
+        const session = { ...ctx.session, theme: themeOf(req), server: serverInfo(), path: safeBackPath(req.originalUrl || req.url) };
+        return { session, access: ctx.access, moduleStates: ctx.moduleStates || {} };
     }
 
     function cookieSessionId(req) {
@@ -576,13 +607,24 @@ export function createDashboard({
         return fail(res, 200, 'Logged out', `You are logged out. Open ${BASE} to log in again.`);
     }
 
+    /**
+     * GET /dashboard/theme?mode=light|dark|system&next=/dashboard/… — the theme switch
+     * without JS: a one-year cookie (not secret, not HttpOnly so the script can switch in
+     * place) and a redirect back to a dashboard path. Changes nothing on the server.
+     */
+    function setTheme(req, res) {
+        const mode = themeFrom(str(req.query?.mode, 10));
+        res.append('Set-Cookie', serializeCookie(THEME_COOKIE, mode, { ...cookieOptions, httpOnly: false, maxAgeMs: 365 * 24 * 3600 * 1000 }));
+        return res.redirect(303, safeBackPath(str(req.query?.next, 300)));
+    }
+
     function notFound(req, res) {
         return fail(res, 404, 'Not found', 'There is no such page.', req);
     }
 
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, index, callback, requireUser, checkPost,
-        overview, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound,
+        overview, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound, setTheme,
         sessions, states, confirms, enforcement: enforcementHandlers,
     };
 }
@@ -627,6 +669,7 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
     const user = safe(d.requireUser);
     router.use(d.securityHeaders);
     router.get('/static/:file', d.staticFile);
+    router.get('/theme', d.limitByIp, d.setTheme);
     router.get('/', d.limitByIp, safe(d.index));
     router.get('/oauth/callback', d.limitByIp, safe(d.callback));
     router.post('/logout', express.urlencoded({ extended: false, limit: '2kb' }), user, safe(d.logout));
