@@ -99,13 +99,16 @@ non-admin accounts in the test main server (Alt A also joins the test support se
 |---|---|---|
 | 7.1 | Open as **Admin** → Log in with Discord | Back on Overview; bot "online", database "connected", your test server's name and icon |
 | 7.2 | Log in as **Alt A** (private window) | 403 "Not allowed" page; no dashboard content |
-| 7.3 | Visit every sidebar page (Overview, Members, Cases, Appeals, No-contact, Staff, 16 settings pages, Audit log) | Each loads, no "Something went wrong" |
-| 7.4 | Valid save: Logging → untick one event → Save events | Toast "Saved."; Audit log row; one mod-log line in Discord |
-| 7.5 | Invalid save: Giveaways → start one in a **voice** channel | Red error "must be a text channel"; nothing posted |
-| 7.6 | Members → Alt A → Warn → confirm page → Confirm | Same DM, case and ladder as the panel (step 1.2) |
-| 7.7 | Cases → a case → edit reason; Appeals → accept/deny a pending one | Same results as steps 3.2 / 4.7 |
-| 7.8 | Theme switch (top bar), phone width (DevTools) | Light/dark/system switch; sidebar becomes a drawer |
-| 7.9 | Stop the bot, set `DASHBOARD_EDIT_ENABLED=false`, start, open a settings page | "Read-only" notice; no Save buttons |
-| 7.10 | Log out (user menu) | Logged-out page; `/dashboard/overview` redirects to Discord login |
+| 7.3 | Visit every sidebar page (Overview, Modules, Moderation, Community and Server groups) | Each loads, no "Something went wrong"; active item purple with a bar on the left |
+| 7.4 | Valid save: Tickets & modmail → change "Open tickets per member" → **Save changes** | Section says "Unsaved changes" while editing; then green toast; value kept after reload; Audit log row; one mod-log line in Discord |
+| 7.5 | Same field → change it → **Reset** | Old value back, "Unsaved changes" gone, bottom bar gone; nothing saved |
+| 7.6 | Invalid save: Giveaways → start one in a **voice** channel | "Not saved: … must be a text channel" inside that form; what you typed is still there; nothing posted |
+| 7.7 | Giveaways (or Community → a tag) → **Delete** → dialog | Dialog names the thing; Cancel or Esc closes it and nothing is deleted |
+| 7.8 | Members → Alt A → Warn → confirm page → Confirm | Same DM, case and ladder as the panel (step 1.2); Overview "Active bans/mutes" match the cases |
+| 7.9 | Cases → a case → edit reason; Appeals → accept/deny a pending one | Same results as steps 3.2 / 4.7; action badges with icons, only Ban is red |
+| 7.10 | Modules page | Cards with a state show On / Off and "Needs setup · N to do" in words (Giveaways, Counters… show none); no switches on the cards |
+| 7.11 | Theme switch (top bar); DevTools widths 1440 / 820 / 390 | Cycles system → dark → light, kept after reload; 820 = icon rail, menu button opens the full sidebar; 390 = drawer, Esc closes it |
+| 7.12 | Stop the bot, set `DASHBOARD_EDIT_ENABLED=false`, start, open a settings page | "Read-only" notice; no Save buttons |
+| 7.13 | Log out (user menu) | Logged-out page; `/dashboard/overview` redirects to Discord login |
 
 When done: `Ctrl+C` the test bot. Nothing in the live servers should have changed.
