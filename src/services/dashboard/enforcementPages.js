@@ -14,6 +14,7 @@ import { NOTE_MAX } from '../enforcement/staffNotesService.js';
 import { WEEKDAYS, intensityLevel, slotLabel } from '../staffCoverageService.js';
 import { formatAge, formatDate, html, layout, path, queryString, raw, section, typeBadge } from './html.js';
 import { isAllowedImageUrl, isSafeLink } from './pages.js';
+import { JOINED_FILTERS, SORTS, STATE_FILTERS } from './membersData.js';
 
 export const DURATION_CHOICES = ['30m', '1h', '6h', '12h', '1d', '3d', '7d', '14d', '1mo', '3mo'];
 
@@ -51,16 +52,45 @@ function option(value, label, selected = false) {
 // ── Member lookup ─────────────────────────────────────────────────────────
 
 /** input: { q, results: [{ id, username, globalName, nickname, bot }], error }. */
-export function userSearchPage({ session, access = null, moduleStates = {}, q = '', results = null, error = null }) {
-    const body = html`<header class="page-head"><h1>Members</h1></header>
-<p class="muted help">Look up a member by user ID, or by the start of their username, display name or nickname (members of the main server). An ID also finds people who are not in the server.</p>
-<form class="filters" method="get" action="${path('/users')}">
-<label>User ID or name<input name="q" value="${q}" maxlength="40" autocomplete="off"></label>
-<button class="primary" type="submit">Search</button></form>
+/**
+ * The Members list: every member of the main server (50 per page) with filters, roles, join
+ * date, counted warns and whether they are muted now. list from membersData.listMembers;
+ * filters = the current query; roles = [{ id, name }] for the role filter. An ID in the search
+ * box opens that member's page (also people who are not in the server).
+ */
+export function membersPage({ session, access = null, moduleStates = {}, list, filters = {}, roles = [], error = null, loading = false }) {
+    const opt = (value, label, current) => html`<option value="${value}"${value === current ? raw(' selected') : ''}>${label}</option>`;
+    const keep = { q: filters.q, role: filters.role, joined: filters.joined, state: filters.state, sort: filters.sort };
+    const pageLink = (page, label) => html`<a class="btn" href="${path(`/users${queryString({ ...keep, page: page || '' })}`)}">${label}</a>`;
+    const rows = list?.rows || [];
+    const roleCell = (row) => (row.roles.length
+        ? html`${row.roles.slice(0, 3).map((r) => html`<span class="role-chip">@${r.name}</span>`)}${row.roles.length > 3 ? html`<span class="muted"> +${row.roles.length - 3}</span>` : ''}`
+        : html`<span class="muted">no roles</span>`);
+    const warnCell = (row) => (row.level > 0 ? html`level ${row.level}${row.warns ? html` · ${row.warns} warn${row.warns === 1 ? '' : 's'}` : ''}`
+        : row.warns ? html`${row.warns} of 3` : html`<span class="muted">—</span>`);
+    const table = rows.length ? html`<div class="table-wrap"><table class="members"><thead><tr><th>Member</th><th>Roles</th><th>Joined</th><th>Warns</th><th>State</th></tr></thead><tbody>
+${rows.map((row) => html`<tr><td><a class="member-cell" href="${userHref(row.id)}">${row.avatarUrl && isAllowedImageUrl(row.avatarUrl)
+        ? html`<img class="avatar-sm" src="${row.avatarUrl}" alt="" width="32" height="32" loading="lazy" referrerpolicy="no-referrer">`
+        : html`<span class="avatar-sm" aria-hidden="true">${row.displayName.slice(0, 1).toUpperCase()}</span>`}<span><b>${row.displayName}</b>${row.bot ? html` <span class="tag">bot</span>` : ''}<small>${row.username} · ${row.id}</small></span></a></td>
+<td class="roles-cell">${roleCell(row)}</td><td class="nowrap">${row.joinedAt ? html`<time datetime="${new Date(row.joinedAt).toISOString()}" data-relative>${formatDate(new Date(row.joinedAt))}</time>` : html`<span class="muted">unknown</span>`}</td>
+<td class="nowrap">${warnCell(row)}</td><td>${row.muted ? html`<span class="state-word is-warn"><span class="dot dot-warn" aria-hidden="true"></span>Muted</span>` : html`<span class="muted">—</span>`}</td></tr>`)}
+</tbody></table></div>
+<nav class="pager" aria-label="Pages"><span class="muted">Page ${list.page + 1} of ${list.pages} · ${list.total} member${list.total === 1 ? '' : 's'}</span>${list.page > 0 ? pageLink(list.page - 1, '← Previous') : ''}${list.page + 1 < list.pages ? pageLink(list.page + 1, 'Next →') : ''}</nav>`
+        : ['q', 'role', 'joined', 'state'].some((key) => filters[key])
+            ? html`<p class="empty">No member matches these filters. <a href="${path('/users')}">Clear filters</a></p>`
+            : html`<p class="empty">No members to show yet. The list fills once the bot has loaded the main server.</p>`;
+    const body = html`<header class="page-head"><h1>Members</h1><p class="muted">Everyone in the main server. Open a member to change their roles or take an action; search by name, nickname or user ID.</p></header>
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
-${results === null ? '' : results.length ? html`<div class="scroll"><table><thead><tr><th>User</th><th>Display name</th><th>Nickname</th><th>ID</th></tr></thead><tbody>
-${results.map((r) => html`<tr><td><a href="${userHref(r.id)}">${r.username}</a>${r.bot ? html` <span class="tag">bot</span>` : ''}</td><td>${r.globalName || '—'}</td><td>${r.nickname || '—'}</td><td class="muted">${r.id}</td></tr>`)}
-</tbody></table></div>${results.length >= 25 ? html`<p class="muted">Showing the first 25; type more of the name.</p>` : ''}` : html`<p class="empty">No member matches. Try the user ID, or the first letters of their name.</p>`}`;
+${list && list.memberCount && list.cached < list.memberCount * 0.9 ? html`<p class="notice">Showing ${list.cached} of ${list.memberCount} members: the member list is still loading. Reload in a minute.</p>` : ''}
+${loading ? html`<p class="notice">The member list is not available right now (the bot cannot see the main server).</p>` : ''}
+<form class="filters" method="get" action="${path('/users')}" role="search">
+<label class="wide-filter">Search<input type="search" name="q" value="${filters.q || ''}" maxlength="40" autocomplete="off" placeholder="Name, nickname or user ID"></label>
+<label>Role<select name="role">${opt('', 'Any role', filters.role || '')}${roles.map((r) => opt(r.id, `@${r.name}`, filters.role))}</select></label>
+<label>Joined<select name="joined">${Object.entries(JOINED_FILTERS).map(([k, v]) => opt(k, v, filters.joined || ''))}</select></label>
+<label>Show<select name="state">${Object.entries(STATE_FILTERS).map(([k, v]) => opt(k, v, filters.state || ''))}</select></label>
+<label>Sort<select name="sort">${Object.entries(SORTS).map(([k, v]) => opt(k, v, filters.sort || 'joined_desc'))}</select></label>
+<button class="primary" type="submit">Apply</button> <a href="${path('/users')}">Clear</a></form>
+${list ? table : ''}`;
     return layout({ title: 'Members', active: 'users', session, access, moduleStates, body });
 }
 

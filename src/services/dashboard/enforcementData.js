@@ -16,6 +16,7 @@ import {
 } from '../enforcement/noContactService.js';
 import { clearMassActionBlock, getMassActionBlock, listMassActionBlocks } from '../enforcement/massActionGuard.js';
 import { addNote, listNotes, removeNote } from '../enforcement/staffNotesService.js';
+import { memberStandings } from './membersData.js';
 import { attachFlowEvidence, completeFlowDetails } from '../enforcement/flowBuilder.js';
 import { loadCoverageCounts } from '../staffCoverageService.js';
 import { getGuildConfig } from '../config/guildConfig.js';
@@ -23,7 +24,7 @@ import { isBotOwner } from '../../config/bot.js';
 
 export const defaultEnforcement = {
     // members and standing
-    getTargetState, getLadder, getCountedWarns, listCasesForUser, getLatestAppealStatuses, getActiveOrdersFor,
+    memberStandings, getTargetState, getLadder, getCountedWarns, listCasesForUser, getLatestAppealStatuses, getActiveOrdersFor,
     listNotes, addNote, removeNote, precedentHint,
     // actions (same flow builder and executeAction as the panel)
     completeFlowDetails, executeAction, attachFlowEvidence, getMassActionBlock,

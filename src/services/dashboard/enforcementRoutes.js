@@ -33,12 +33,13 @@ import {
 } from '../enforcement/flowBuilder.js';
 import { COVERAGE_PERIODS, buildCoverageReport } from '../staffCoverageService.js';
 import { InputError, multiline, plainText, queryText, text } from './forms.js';
+import { JOINED_FILTERS, SORTS, STATE_FILTERS, listMembers } from './membersData.js';
 import { html, path } from './html.js';
 import { isSnowflake } from './security.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
 import { evidenceFileName, sniffImage } from './multipart.js';
 import {
-    actionConfirmPage, appealConfirmPage, appealDetailPage, blocksSection, coverageSection, noContactPage, userPage, userSearchPage,
+    actionConfirmPage, appealConfirmPage, appealDetailPage, blocksSection, membersPage, coverageSection, noContactPage, userPage,
 } from './enforcementPages.js';
 
 const SEARCH_LIMIT = 25;
@@ -207,16 +208,41 @@ export function createEnforcementHandlers(core) {
 
     // ── Members ──────────────────────────────────────────────────────────
 
+    // The member cache can be incomplete after a restart; fetch everyone at most every 5 minutes.
+    let lastMemberFetch = 0;
+    async function completeMemberCache(guild) {
+        if (!guild?.memberCount || guild.members.cache.size >= guild.memberCount * 0.9) return;
+        if (Date.now() - lastMemberFetch < 5 * 60 * 1000) return;
+        lastMemberFetch = Date.now();
+        await Promise.race([guild.members.fetch().catch(() => null), new Promise((resolve) => setTimeout(resolve, 8000))]);
+    }
+
+    /** GET /dashboard/users: the Members list (filters in the query); an ID opens that member. */
     async function users(req, res) {
-        const q = queryText(req.query, 'q', 40);
-        if (!q) return sendHtml(res, 200, userSearchPage({ ...shellOf(req) }));
-        if (isSnowflake(q)) {
-            const user = await client.users.fetch(q).catch(() => null);
-            if (user) return res.redirect(302, path(`/users/${q}`));
-            return sendHtml(res, 404, userSearchPage({ ...shellOf(req), q, results: [], error: `No Discord user with ID ${q} exists.` }));
+        const filters = {
+            q: queryText(req.query, 'q', 40), role: queryText(req.query, 'role', 20), joined: queryText(req.query, 'joined', 5),
+            state: queryText(req.query, 'state', 10), sort: queryText(req.query, 'sort', 12),
+        };
+        if (!Object.hasOwn(JOINED_FILTERS, filters.joined)) filters.joined = '';
+        if (!Object.hasOwn(STATE_FILTERS, filters.state)) filters.state = '';
+        if (!Object.hasOwn(SORTS, filters.sort)) filters.sort = 'joined_desc';
+        if (!isSnowflake(filters.role)) filters.role = '';
+        const page = Math.max(0, Number.parseInt(queryText(req.query, 'page', 5), 10) || 0);
+        const guild = guildOf();
+        const render = (status, extra = {}) => sendHtml(res, status, membersPage({ ...shellOf(req), filters, ...extra }));
+        if (!guild) return render(200, { loading: true });
+        const roles = [...guild.roles.cache.values()].filter((r) => r.id !== guild.id)
+            .sort((a, b) => (b.position || 0) - (a.position || 0)).map((r) => ({ id: r.id, name: r.name }));
+        if (isSnowflake(filters.q) && !guild.members.cache.has(filters.q)) {
+            // Not in the server: still open the page when the user exists (cases, bans, notes).
+            const user = await client.users.fetch(filters.q).catch(() => null);
+            if (user) return res.redirect(302, path(`/users/${filters.q}`));
+            return render(404, { roles, error: `No Discord user with ID ${filters.q} exists.` });
         }
-        if (/^\d+$/.test(q)) return sendHtml(res, 400, userSearchPage({ ...shellOf(req), q, results: [], error: 'A user ID has 17–20 digits.' }));
-        return sendHtml(res, 200, userSearchPage({ ...shellOf(req), q, results: searchMembers(guildOf(), q) }));
+        if (isSnowflake(filters.q)) return res.redirect(302, path(`/users/${filters.q}`));
+        await completeMemberCache(guild);
+        const standings = await e.memberStandings(guildId);
+        return render(200, { roles, list: listMembers(guild, standings, { ...filters, page }) });
     }
 
     async function loadUserView(req, userId, { precedentReason = '' } = {}) {

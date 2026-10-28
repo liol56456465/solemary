@@ -49,6 +49,7 @@ function makeWorld({ admins = new Set([ADMIN]), targetInGuild = true } = {}) {
         roles: { cache: new Map([[GUILD, { id: GUILD, name: '@everyone', position: 0 }], ['600000000000000001', { id: '600000000000000001', name: 'Member', position: 1 }]]), highest: { position: 1 } },
     });
     const cache = new Map([[TARGET, memberOf(TARGET)], [OTHER, memberOf(OTHER)]]);
+    guild.roles = { cache: new Map([[GUILD, { id: GUILD, name: '@everyone', position: 0 }], ['600000000000000001', { id: '600000000000000001', name: 'Member', position: 1 }]]) };
     guild.members = {
         cache,
         me: { permissions: { has: () => true } },
@@ -91,6 +92,7 @@ function makeEnforcement(overrides = {}) {
     const rec = (name, value) => (...args) => { calls.push({ name, args }); return typeof value === 'function' ? value(...args) : value; };
     const record = { id: 1, case_code: CODE, guild_id: GUILD, target_user_id: TARGET, target_username: 'target', type: 'ban', status: 'active', reason: 'old reason', name: 'target ban 1', moderator_username: 'mod', created_at: new Date(), duration_ms: 3600000, expires_at: new Date(Date.now() + 3600000) };
     const e = {
+        memberStandings: rec('memberStandings', async () => ({ ladder: new Map([[TARGET, { level: 0, warns: 1 }]]), muted: new Set([OTHER]) })),
         getTargetState: rec('getTargetState', async (guild, id) => ({ member: guild.members.cache.get(id) || null, banned: false, muted: false, ladder: { ...LADDER }, activeBan: null, activeMute: null })),
         getLadder: rec('getLadder', async () => ({ ...LADDER })),
         getCountedWarns: rec('getCountedWarns', async () => [{ case_code: 'wrn2345', name: 'target warn 1', reason: 'Spam' }]),

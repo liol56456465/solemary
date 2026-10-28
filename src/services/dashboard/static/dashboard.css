@@ -1011,6 +1011,17 @@ details.long-value > summary { cursor: pointer; overflow-wrap: anywhere; display
 details.long-value[open] > summary { -webkit-line-clamp: 1; line-clamp: 1; }
 td.value:has(details.long-value) { min-width: 200px; }
 .long-value-full { margin-top: 8px; max-height: 240px; overflow: auto; overflow-wrap: anywhere; white-space: pre-wrap; }
+/* Members list: avatar + name cell, role chips, pager. */
+.member-cell { display: flex; align-items: center; gap: 12px; color: var(--text); min-width: 220px; }
+.member-cell:hover { text-decoration: none; }
+.member-cell:hover b { text-decoration: underline; }
+.member-cell small { display: block; color: var(--text-muted); font-size: 12px; }
+.avatar-sm { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--surface); color: var(--text); font-size: 12px; font-weight: 700; object-fit: cover; }
+.roles-cell { min-width: 160px; }
+.role-chip { display: inline-flex; align-items: center; height: 22px; margin: 2px 4px 2px 0; padding: 0 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; white-space: nowrap; }
+.pager { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 16px 0 0; }
+.pager > span { margin-right: auto; }
+form.filters .wide-filter { flex: 1 1 240px; }
 /* Member page header: who, and the standing at a glance. */
 .member-header { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin: 0 0 24px; }
 .member-title { flex: 1; min-width: 200px; }
@@ -1052,6 +1063,7 @@ td.value:has(details.long-value) { min-width: 200px; }
     .section-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 16px; padding: 2px 16px 8px; }
     form.filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     form.filters label { min-width: 0; }
+    form.filters .wide-filter { grid-column: 1 / -1; }
     form.filters label input, form.filters label select { width: 100%; }
     .module-header { align-items: flex-start; gap: 12px; margin: 0 0 24px; }
     .module-header .module-icon { width: 44px; height: 44px; }
