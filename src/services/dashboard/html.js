@@ -101,43 +101,51 @@ export function icon(name, className = 'icon') {
 
 /**
  * The sidebar. `state` names the on/off indicator from moduleStates, where the module
- * has an on/off setting; `toggle` is the module action behind its main switch (Modules
- * page and the module page header); `summary` is the one-liner on the module cards.
+ * has an on/off setting; `toggle` is the module action behind its main switch (module
+ * page header); `summary` (one line on the Modules page cards) marks a settings module.
+ * Groups: Moderation, Community, Server (design system v2).
  */
 export const NAV = [
     { key: 'overview', label: 'Overview' },
     { key: 'modules', label: 'Modules' },
-    { group: 'Records', items: [
-        { key: 'users', label: 'Members' },
+    { group: 'Moderation', items: [
         { key: 'cases', label: 'Cases' },
         { key: 'appeals', label: 'Appeals' },
+        { key: 'users', label: 'Members' },
+        { key: 'enforcement', label: 'Enforcement & appeals', keywords: 'mod log, evidence, muted role, warning roles, appeal window, cooldown, mass-action guard, ladder, reasons, appeal panel', summary: 'Log channels, warning roles, appeal timings, appeal panels.' },
+        { key: 'automod', label: 'Automod', state: 'automod', toggle: 'enabled', keywords: 'spam, links, invites, bad words, raid, lockdown, panic, join gate, trusted, second chance, mood, native automod, slowmode', summary: 'Rule modes, exceptions, join gate, raid panic.' },
         { key: 'nocontact', label: 'No-contact' },
         { key: 'staff', label: 'Staff' },
     ] },
-    { group: 'Settings', items: [
-        { key: 'enforcement', label: 'Enforcement & appeals', keywords: 'mod log, evidence, muted role, warning roles, appeal window, cooldown, mass-action guard, ladder, reasons, appeal panel', summary: 'Log channels, warning roles, appeal timings, appeal panels.' },
-        { key: 'automod', label: 'Automod', state: 'automod', toggle: 'enabled', keywords: 'spam, links, invites, bad words, raid, lockdown, panic, join gate, trusted, second chance, mood, native automod, slowmode', summary: 'Rule modes, exceptions, join gate, raid panic.' },
-        { key: 'logging', label: 'Logging', state: 'logging', toggle: 'enabled', keywords: 'audit log, message delete, edits, joins, leaves, ignore channels, events', summary: 'Which server events are logged, and where.' },
+    { group: 'Community', items: [
         { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome', keywords: 'join message, leave message, goodbye, greeting, auto role, autorole, embed', summary: 'Join and leave messages, auto roles.' },
-        { key: 'tickets', label: 'Tickets', state: 'tickets', keywords: 'ticket panel, support, modmail, canned answers, saved replies, staff role, transcript', summary: 'Ticket panel, modmail, saved answers.' },
         { key: 'leveling', label: 'Leveling', state: 'leveling', toggle: 'enabled', keywords: 'xp, levels, rank, level up message, role rewards, leaderboard, no xp channels', summary: 'XP, level-up messages, role rewards.' },
-        { key: 'verification', label: 'Verification', state: 'verification', keywords: 'verify, captcha, verified role, auto-verify, panel', summary: 'Verify panel or auto-verify on join.' },
         { key: 'reaction-roles', label: 'Reaction roles', keywords: 'self roles, role menu, buttons, select menu', summary: 'Self-assign role menus.' },
+        { key: 'tickets', label: 'Tickets & modmail', state: 'tickets', keywords: 'ticket panel, support, modmail, canned answers, saved replies, staff role, transcript', summary: 'Ticket panel, modmail, saved answers.' },
         { key: 'giveaways', label: 'Giveaways', keywords: 'prize, winners, reroll, end giveaway', summary: 'Start, end and reroll giveaways.' },
         { key: 'birthdays', label: 'Birthdays', state: 'birthdays', keywords: 'birthday channel, birthday role, timezone', summary: 'Birthday announcements and role.' },
-        { key: 'counters', label: 'Counters', keywords: 'member count, stats channels, counting game', summary: 'Member counters and the counting game.' },
-        { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate', keywords: 'temporary voice, voice channels, jtc', summary: 'Temporary voice channels.' },
         { key: 'applications', label: 'Applications', state: 'applications', toggle: 'enabled', keywords: 'apply, staff application, questions, managers', summary: 'Role applications and their questions.' },
         { key: 'community', label: 'Community', keywords: 'suggestions, starboard, sticky message, tags, youtube feed', summary: 'Suggestions, starboard, stickies, tags, feeds.' },
+        { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate', keywords: 'temporary voice, voice channels, jtc', summary: 'Temporary voice channels.' },
+    ] },
+    { group: 'Server', items: [
+        { key: 'logging', label: 'Logging', state: 'logging', toggle: 'enabled', keywords: 'audit log, message delete, edits, joins, leaves, ignore channels, events', summary: 'Which server events are logged, and where.' },
+        { key: 'verification', label: 'Verification', state: 'verification', keywords: 'verify, captcha, verified role, auto-verify, panel', summary: 'Verify panel or auto-verify on join.' },
+        { key: 'counters', label: 'Counters', keywords: 'member count, stats channels, counting game', summary: 'Member counters and the counting game.' },
         { key: 'commands', label: 'Commands', keywords: 'disable command, enable command, categories, permissions', summary: 'Turn commands and categories on or off.' },
         { key: 'support', label: 'Support server', keywords: 'banned role, support server', summary: 'The banned role in the support server.' },
+        { key: 'audit', label: 'Audit log' },
     ] },
-    { key: 'audit', label: 'Audit log' },
 ];
 
 /** Every sidebar entry, flattened. */
 export function navItems() {
     return NAV.flatMap((item) => (item.group ? item.items : [item]));
+}
+
+/** The settings modules (entries with a one-line summary), in sidebar order. */
+export function moduleItems() {
+    return navItems().filter((item) => item.summary);
 }
 
 function stateOf(item, moduleStates) {
@@ -151,8 +159,8 @@ function navLink(item, active, moduleStates) {
         : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
 }
 
-function sidebar(active, moduleStates, server) {
-    return html`<nav class="sidebar" id="sidebar" aria-label="Dashboard">${serverCard(server)}<ul>${NAV.map((item) => (item.group
+function sidebar(active, moduleStates) {
+    return html`<nav class="sidebar" id="sidebar" aria-label="Dashboard"><ul>${NAV.map((item) => (item.group
         ? html`<li class="group"><span class="group-label">${item.group}</span><ul>${item.items.map((sub) => navLink(sub, active, moduleStates))}</ul></li>`
         : navLink(item, active, moduleStates)))}</ul></nav>`;
 }
@@ -181,17 +189,22 @@ function initials(name) {
     return String(name || '?').trim().split(/\s+/).slice(0, 2).map((word) => word[0] || '').join('').toUpperCase() || '?';
 }
 
-/** The server this dashboard manages, at the top of the sidebar. */
-function serverCard(server) {
+/**
+ * The server switcher in the top bar. The dashboard manages one server for now (the login
+ * asks Discord for `identify` only, so it cannot list other servers); the menu says so.
+ */
+function serverSwitch(server) {
     if (!server) return '';
-    const avatar = server.iconUrl
-        ? html`<img class="server-icon" src="${server.iconUrl}" alt="" width="36" height="36" referrerpolicy="no-referrer">`
-        : html`<span class="server-icon server-initials" aria-hidden="true">${initials(server.name)}</span>`;
-    return html`<div class="server-card">${avatar}<span class="server-text"><span class="server-name">${server.name}</span><span class="server-sub">Main server</span></span></div>`;
+    const avatar = (size) => (server.iconUrl
+        ? html`<img class="server-icon" src="${server.iconUrl}" alt="" width="${size}" height="${size}" referrerpolicy="no-referrer">`
+        : html`<span class="server-icon server-initials" aria-hidden="true">${initials(server.name)}</span>`);
+    return html`<details class="server-switch menu-wrap"><summary aria-label="Server: ${server.name}">${avatar(24)}<span class="server-name">${server.name}</span>${icon('chevron', 'icon icon-down')}</summary>
+<div class="menu"><p class="menu-item is-current">${avatar(24)}<span class="server-text"><span class="server-name">${server.name}</span><span class="server-sub">Main server · managing now</span></span></p>
+<p class="menu-note">Only this server can be managed for now.</p></div></details>`;
 }
 
 function userMenu(session, access) {
-    return html`<details class="user-menu"><summary><span class="avatar-initials" aria-hidden="true">${initials(session.username)}</span><span class="user-name">${session.username}</span></summary>
+    return html`<details class="user-menu menu-wrap"><summary><span class="avatar-initials" aria-hidden="true">${initials(session.username)}</span><span class="user-name">${session.username}</span></summary>
 <div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${access && !access.canAct ? 'View and settings (bot owner)' : 'Administrator'}</span></p>
 <form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
 }
@@ -210,8 +223,9 @@ function breadcrumbs(active, title) {
 }
 
 /**
- * The page shell: top bar (server, theme switch, user menu), left sidebar (a drawer on
- * phones, opened by a checkbox: no script needed), breadcrumbs, then `body` (SafeHtml).
+ * The page shell: top bar (brand, server switcher, search, theme switch, user menu), left
+ * sidebar (full ≥ 1024 px, an icon rail on tablets, a drawer on phones; opened by a
+ * checkbox, no script needed), breadcrumbs, then `body` (SafeHtml).
  * The theme comes from the cookie, set on <html> server-side so there is no flash.
  * `session` may carry display extras added by the routes: theme, server, path.
  * No inline styles or scripts (CSP); the one script is the static enhancement file.
@@ -222,12 +236,13 @@ export function layout({ title, active = null, session = null, access = null, mo
     const top = html`<header class="topbar">
 ${session ? html`<label for="nav-toggle" class="icon-button nav-button" tabindex="0" role="button" aria-label="Menu">${icon('menu')}</label>` : ''}
 <a class="brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a>
-${session ? html`<form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label><input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : ''}<span class="spacer"></span>
+${session ? serverSwitch(session.server) : ''}
+${session ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label><input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : ''}<span class="spacer"></span>
 ${themeToggle(theme, back)}${session ? userMenu(session, access) : ''}</header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark"><title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>${session ? raw('<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-controls="sidebar">') : ''}${top}
-<div class="${session ? 'shell' : 'shell bare'}">${session ? html`${sidebar(active, moduleStates, session.server)}<label for="nav-toggle" class="scrim" aria-hidden="true"></label>` : ''}
+<div class="${session ? 'shell' : 'shell bare'}">${session ? html`${sidebar(active, moduleStates)}<label for="nav-toggle" class="scrim" aria-hidden="true"></label>` : ''}
 <main id="main" tabindex="-1">${breadcrumbs(active, title)}${body}</main></div></body></html>`.text;
 }
 

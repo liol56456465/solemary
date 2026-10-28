@@ -13,7 +13,7 @@ import { NOTHING, changedOnly, section, table } from './common.js';
 
 export default {
     key: 'tickets',
-    label: 'Tickets',
+    label: 'Tickets & modmail',
     state: 'tickets',
     help: 'Support tickets, modmail and saved answers. Set up and post the ticket panel here or with /ticket setup in Discord.',
 

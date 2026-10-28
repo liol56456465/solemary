@@ -10,7 +10,8 @@
 //   [data-copy]             a copy-to-clipboard button (case codes)
 //   time[data-relative]     "in 3 h" / "5 min ago" (the UTC time stays in the tooltip)
 //   details[data-key]       remembers which sections were open (per page)
-//   #nav-toggle             the mobile drawer: Escape and link clicks close it
+//   #nav-toggle             the sidebar drawer: focus stays inside while open; Escape and link clicks close it
+//   details.menu-wrap       top bar menus: Escape or a click outside closes them, one open at a time
 //   [data-theme-toggle]     switches light / dark / system in place (same cookie)
 //   main .flash             "Saved." becomes a toast that closes itself
 //   form[data-dirty]        also shows a Discard / Save bar at the bottom while changed
@@ -152,19 +153,36 @@
         details.addEventListener('toggle', () => store.set(key, details.open ? '1' : '0'));
     }
 
-    // ── Mobile drawer ────────────────────────────────────────────────────
+    // ── Sidebar drawer (tablets and phones) ──────────────────────────────
     function setupDrawer() {
         const toggle = document.getElementById('nav-toggle');
         if (!toggle) return;
         const button = document.querySelector('label[for="nav-toggle"]');
-        const sync = () => button?.setAttribute('aria-expanded', toggle.checked ? 'true' : 'false');
+        const sidebar = document.getElementById('sidebar');
+        const links = () => [...(sidebar?.querySelectorAll('a[href]') || [])];
+        const sync = () => {
+            button?.setAttribute('aria-expanded', toggle.checked ? 'true' : 'false');
+            if (toggle.checked) (sidebar?.querySelector('a.on') || links()[0])?.focus();
+        };
         toggle.addEventListener('change', sync);
-        sync();
+        button?.setAttribute('aria-expanded', 'false');
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && toggle.checked) {
+            if (!toggle.checked) return;
+            if (event.key === 'Escape') {
                 toggle.checked = false;
                 sync();
                 button?.focus();
+                return;
+            }
+            // While the drawer is open, Tab moves between its links only (focus trap).
+            if (event.key === 'Tab') {
+                const all = links();
+                if (!all.length) return;
+                const index = all.indexOf(document.activeElement);
+                if (index === -1 || (event.shiftKey && index === 0) || (!event.shiftKey && index === all.length - 1)) {
+                    event.preventDefault();
+                    all[event.shiftKey ? (index <= 0 ? all.length - 1 : index - 1) : (index === -1 || index === all.length - 1 ? 0 : index + 1)].focus();
+                }
             }
         });
         for (const link of document.querySelectorAll('.sidebar a')) {
@@ -177,6 +195,29 @@
                 toggle.checked = !toggle.checked;
                 sync();
             }
+        });
+    }
+
+    // ── Top bar menus (server switcher, user menu) ───────────────────────
+    function setupMenus() {
+        const menus = [...document.querySelectorAll('details.menu-wrap')];
+        if (!menus.length) return;
+        const close = (menu, focus) => {
+            if (!menu.open) return;
+            menu.open = false;
+            if (focus) menu.querySelector('summary')?.focus();
+        };
+        for (const menu of menus) {
+            menu.addEventListener('toggle', () => {
+                if (menu.open) for (const other of menus) if (other !== menu) close(other, false);
+            });
+        }
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            for (const menu of menus) if (menu.open) close(menu, true);
+        });
+        document.addEventListener('click', (event) => {
+            for (const menu of menus) if (menu.open && !menu.contains(event.target)) close(menu, false);
         });
     }
 
@@ -361,6 +402,7 @@
         updateTimes();
         window.setInterval(updateTimes, 60 * 1000);
         setupDrawer();
+        setupMenus();
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

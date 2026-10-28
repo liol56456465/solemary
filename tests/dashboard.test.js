@@ -657,3 +657,14 @@ test('case page: history, evidence and appeals are collapsible sections (history
     assert.match(page, /<details class="card section" id="s-case-evidence" data-key="case-evidence" open>/);
     assert.match(page, /<details class="card section" id="s-case-appeals" data-key="case-appeals"><summary><h2>Appeals \(0\)/);
 });
+
+test('layout v2: server switcher in the top bar, sidebar groups Moderation / Community / Server', () => {
+    const page = layout({ title: 'x', active: 'tickets', session: { username: 'a', csrf: 't', server: { name: 'Cats <3', iconUrl: null } }, body: html`` });
+    assert.match(page, /<details class="server-switch menu-wrap"><summary aria-label="Server: Cats &lt;3">/);
+    assert.ok(page.includes('Only this server can be managed for now.'));
+    assert.ok(!page.includes('server-card'), 'the server moved from the sidebar to the top bar');
+    const groups = [...page.matchAll(/<span class="group-label">([^<]+)<\/span>/g)].map((m) => m[1]);
+    assert.deepEqual(groups, ['Moderation', 'Community', 'Server']);
+    assert.match(page, /<a href="\/dashboard\/tickets" class="on" aria-current="page">.*Tickets &amp; modmail/);
+    assert.ok(page.includes('class="icon-button find-link" href="/dashboard/modules" aria-label="Find a setting"'), 'phones get a search icon');
+});

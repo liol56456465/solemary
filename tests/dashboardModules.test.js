@@ -15,7 +15,7 @@ import { getSettingEntry, seedValue } from '../src/services/settings/settingsReg
 import { channelGroups, channelWarnings, roleWarnings, switchInput } from '../src/services/dashboard/forms.js';
 import { diffSnapshots, recordDashboardChange, changeSummary } from '../src/services/dashboard/audit.js';
 import { channelPurposeFor } from '../src/services/automod/channelRouting.js';
-import { JS_PATH, NAV } from '../src/services/dashboard/html.js';
+import { JS_PATH, NAV, moduleItems } from '../src/services/dashboard/html.js';
 
 const ALLOWED_SCRIPT = `<script src="${JS_PATH}" defer></script>`;
 const SECRET = 'x'.repeat(64);
@@ -953,7 +953,7 @@ test('Modules page: a card per settings module; switches on cards with a main sw
     const h = await setup();
     const res = await modulesPageGet(h);
     assert.equal(res.statusCode, 200);
-    const settings = NAV.find((i) => i.group === 'Settings').items;
+    const settings = moduleItems();
     for (const item of settings) assert.ok(res.body.includes(`href="/dashboard/${item.key}"`), item.key);
     assert.equal((res.body.match(/<li class="module-card"/g) || []).length, settings.length);
     // Automod has a main switch → a switch form that comes back to the Modules page.

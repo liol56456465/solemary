@@ -3,15 +3,14 @@
 // the card; the others link to their page. Filters (all / on / off) are plain links, so
 // they work without the script; the script adds a search box (data-module-search).
 
-import { NAV, html, icon, layout, path, queryString } from './html.js';
+import { html, icon, layout, moduleItems, path, queryString } from './html.js';
 import { moduleSwitch, pill } from './forms.js';
 
 export const MODULE_FILTERS = ['all', 'on', 'off'];
 
 /** The settings modules with their state: true / false (known) or null (no on/off). */
 export function moduleEntries(moduleStates = {}) {
-    const items = NAV.find((item) => item.group === 'Settings')?.items || [];
-    return items.map((item) => ({
+    return moduleItems().map((item) => ({
         ...item,
         on: item.state && Object.hasOwn(moduleStates, item.state) ? Boolean(moduleStates[item.state]) : null,
     }));
