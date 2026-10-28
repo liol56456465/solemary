@@ -1063,3 +1063,20 @@ test('top bar search: ?q= filters modules by name, one-liner or keywords (every 
     // The header still counts every module; the filter chips keep the search.
     assert.match(xp.body, /href="\/dashboard\/modules\?show=on&amp;q=xp"/);
 });
+
+test('Overview checklist: progress bar, open items first, done/to-do words for screen readers', async () => {
+    const { overviewPage } = await import('../src/services/dashboard/overview.js');
+    const o = {
+        bot: { ready: true, ping: null }, database: null, guild: null, recent: [], lockdown: undefined,
+        checklist: [
+            { label: 'Done thing', done: true, href: '/dashboard/logging', hint: '' },
+            { label: 'Open thing', done: false, href: '/dashboard/tickets', hint: 'set it <up>' },
+        ],
+    };
+    const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
+    assert.match(page, /<progress value="1" max="2" aria-label="Setup progress"><\/progress><span class="muted">1 of 2 done<\/span>/);
+    assert.ok(page.indexOf('Open thing') < page.indexOf('Done thing'), 'open items first');
+    assert.match(page, /<span class="sr">to do:<\/span>/);
+    assert.match(page, /<span class="sr">done:<\/span>/);
+    assert.ok(page.includes('set it &lt;up&gt;'));
+});

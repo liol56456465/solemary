@@ -15,7 +15,7 @@ import { openCards } from '../automod/reviewRegistry.js';
 import { getLockdownState } from '../automod/raidService.js';
 import { SETTINGS } from '../settings/settingsRegistry.js';
 import { getSetting, guildIdFor, settingSource } from '../settings/guildSettings.js';
-import { formatDate, html, layout, navItems, path, raw, timeTag } from './html.js';
+import { formatDate, html, icon, layout, navItems, path, raw, timeTag } from './html.js';
 import { moduleEntries } from './modulesPage.js';
 import { valueText } from './audit.js';
 
@@ -166,7 +166,12 @@ ${stat('Pending appeals', show(o.pendingAppeals, html`<a href="${path('/appeals'
 ${stat('Open automod review cards', show(o.openReviewCards), { note: 'since the last restart' })}
 ${stat('Raid lockdown', lockdown, { tone: o.lockdown?.active ? 'bad' : o.lockdown ? 'ok' : '', note: o.lockdown?.active && o.lockdown.since ? `since ${formatDate(o.lockdown.since)}` : '' })}
 </ul>`;
-    const checklist = html`<ul class="checklist">${o.checklist.map((item) => html`<li class="${item.done ? 'is-done' : ''}"><span class="state state-${item.done ? 'on' : 'warn'}">${item.done ? 'done' : 'to do'}</span><span><a href="${item.href}">${item.label}</a>${item.done ? '' : html` <span class="muted">— ${item.hint}</span>`}</span></li>`)}</ul>`;
+    // Open items first; a check icon for done ones (the word is there for screen readers).
+    const doneCount = o.checklist.length - todo.length;
+    const ordered = [...todo, ...o.checklist.filter((item) => item.done)];
+    const checklist = html`<div class="progress-row"><progress value="${doneCount}" max="${o.checklist.length || 1}" aria-label="Setup progress"></progress><span class="muted">${doneCount} of ${o.checklist.length} done</span></div>
+<ul class="checklist">${ordered.map((item) => html`<li class="${item.done ? 'is-done' : ''}">${icon(item.done ? 'check' : 'circle', `icon check-icon ${item.done ? 'ok' : 'muted'}`)}<span class="sr">${item.done ? 'done' : 'to do'}:</span>
+<span><a href="${item.href}">${item.label}</a>${item.done ? '' : html`<span class="checklist-hint">${item.hint}</span>`}</span></li>`)}</ul>`;
     const recent = o.recent === undefined ? html`<p class="muted">Unavailable (database).</p>` : o.recent.length ? html`<div class="table-wrap"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Moderator</th><th>Reason</th><th>When</th></tr></thead><tbody>
 ${o.recent.map((row) => html`<tr><td><a href="${path(`/cases/${encodeURIComponent(row.case_code)}`)}"><code>${row.case_code}</code></a></td><td><span class="type type-${row.type}">${row.type}</span>${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.target_username} <span class="muted">${row.target_user_id}</span></td><td>${row.moderator_username}</td><td class="clip">${row.reason}</td><td class="nowrap">${timeTag(row.created_at)}</td></tr>`)}
 </tbody></table></div><p class="card-foot"><a href="${path('/cases')}">All cases</a></p>` : html`<p class="empty">No cases yet.</p>`;
