@@ -372,24 +372,29 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 
 /* Module cards (Modules page): icon tile + switch on top, name, one line, "Settings". The name
    link stretches over the card; the switch sits above it so it stays clickable. */
-.module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.module-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+@media (max-width: 1100px) { .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 639px) { .module-grid { grid-template-columns: 1fr; } }
 .module-card {
     position: relative; display: flex; flex-direction: column; gap: 6px; padding: 16px;
     background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
     transition: border-color 0.15s ease-out;
 }
 .module-card:hover { border-color: var(--line-strong); }
-.module-setup { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; font-size: 13px; color: var(--fg-2); }
+.module-state { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 12px 0 0; font-size: 14px; font-weight: 500; }
+.module-state-item { display: inline-flex; align-items: center; gap: 8px; }
+.module-state-item.is-on { color: var(--green); }
+.module-state-item.is-off { color: var(--text-muted); }
+.module-state-item.is-setup { color: var(--amber); }
 .module-card:focus-within { border-color: var(--accent); }
-.module-card[data-state="on"] { border-top: 2px solid var(--ok); padding-top: 15px; }
 .module-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
 .module-card-top > :not(.module-icon) { position: relative; z-index: 1; }
 .module-icon {
     display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: var(--radius-sm);
-    background: var(--accent-soft); color: var(--accent-text);
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
 }
 .module-icon .icon { width: 20px; height: 20px; }
-.module-card-name { margin: 0; font-size: 15px; }
+.module-card-name { margin: 0; font-size: 16px; }
 .module-card-name a { color: var(--fg); }
 .module-card-name a::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius); }
 .module-card-name a:hover { text-decoration: none; }

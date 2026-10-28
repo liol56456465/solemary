@@ -949,15 +949,16 @@ function modulesPageGet(h, query = {}) {
     return run(h, h.d.modulesHub, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query });
 }
 
-test('Modules page: a card per settings module; switches on cards with a main switch; filters', async () => {
+test('Modules page: a card per settings module; state only (no switches on cards); filters', async () => {
     const h = await setup();
     const res = await modulesPageGet(h);
     assert.equal(res.statusCode, 200);
     const settings = moduleItems();
     for (const item of settings) assert.ok(res.body.includes(`href="/dashboard/${item.key}"`), item.key);
     assert.equal((res.body.match(/<li class="module-card"/g) || []).length, settings.length);
-    // Automod has a main switch → a switch form that comes back to the Modules page.
-    assert.match(res.body, /<form method="post" action="\/dashboard\/automod\/enabled" class="switch-form"><input type="hidden" name="csrf" value="[^"]+">\n<input type="hidden" name="enabled" value="(true|false)"><input type="hidden" name="back" value="modules">/);
+    // State only: the main switch lives in the module page header, not on the card.
+    assert.ok(!res.body.includes('class="switch-form"'), 'no switches on the cards');
+    assert.match(res.body, /<p class="module-state"><span class="module-state-item is-(on|off)"><span class="dot dot-(on|off)" aria-hidden="true"><\/span>(On|Off)<\/span>/);
     assert.match(res.body, /data-module-search/);
     assert.ok(!/style="|<script>/.test(res.body));
     const on = await modulesPageGet(h, { show: 'on' });
@@ -1091,20 +1092,24 @@ test('switchInput: an on/off setting is a real checkbox (name=1 when on) drawn a
     assert.ok(off.includes('&lt;b&gt;') && off.includes('<span class="hint">why</span>'), 'label escaped, help shown');
 });
 
-test('Modules page: "Set up / Needs setup" line per card from the Getting-started checklist', async () => {
+test('Modules page: state line — On / Off, plus Needs setup from the Getting-started checklist', async () => {
     const { modulesPage, setupByModule } = await import('../src/services/dashboard/modulesPage.js');
     const checklist = [
         { label: 'Ticket category', done: true, href: '/dashboard/tickets' },
         { label: 'Ticket staff role', done: false, href: '/dashboard/tickets' },
         { label: 'Welcome channel', done: true, href: '/dashboard/welcome' },
+        { label: 'Mod log channel', done: false, href: '/dashboard/enforcement' },
     ];
-    assert.deepEqual(Object.fromEntries(setupByModule(checklist)), { tickets: { total: 2, todo: 1 }, welcome: { total: 1, todo: 0 } });
-    const full = String(modulesPage({ session: { username: 'a', csrf: 't' }, moduleStates: { welcome: true }, checklist }));
+    assert.deepEqual(Object.fromEntries(setupByModule(checklist)), {
+        tickets: { total: 2, todo: 1 }, welcome: { total: 1, todo: 0 }, enforcement: { total: 1, todo: 1 },
+    });
+    const full = String(modulesPage({ session: { username: 'a', csrf: 't' }, moduleStates: { welcome: true, tickets: true, automod: false }, checklist }));
     const page = full.slice(full.indexOf('data-module-grid'));
     const cardOf = (key) => page.slice(page.indexOf(`href="/dashboard/${key}"`), page.indexOf('</li>', page.indexOf(`href="/dashboard/${key}"`)));
-    assert.match(cardOf('tickets'), /<span class="dot dot-warn" aria-hidden="true"><\/span>Needs setup · 1 to do/);
-    assert.match(cardOf('welcome'), /<span class="dot dot-on" aria-hidden="true"><\/span>Set up/);
-    assert.ok(!cardOf('logging').includes('module-setup'), 'no checklist items, no line');
-    // No checklist (config unreadable): no lines at all.
-    assert.ok(!String(modulesPage({ session: { username: 'a', csrf: 't' } })).includes('module-setup'));
+    assert.match(cardOf('tickets'), /is-on"><span class="dot dot-on" aria-hidden="true"><\/span>On<\/span><span class="module-state-item is-setup"><span class="dot dot-warn" aria-hidden="true"><\/span>Needs setup · 1 to do/);
+    assert.match(cardOf('welcome'), />On<\/span><\/p>/);
+    assert.match(cardOf('automod'), /is-off"><span class="dot dot-off" aria-hidden="true"><\/span>Off<\/span><\/p>/, 'off wins');
+    assert.match(cardOf('enforcement'), /Needs setup · 1 to do/, 'no on/off state, open setup items');
+    assert.ok(!cardOf('giveaways').includes('module-state'), 'no state and no checklist items: no line');
+    assert.ok(!String(modulesPage({ session: { username: 'a', csrf: 't' } })).match(/is-setup/), 'no checklist: no setup info');
 });

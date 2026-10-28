@@ -1,10 +1,9 @@
 // modulesPage.js — the Modules page: every settings module as a card (icon, name, one
-// line, status). Modules with a main switch (NAV `toggle`) can be turned on/off right on
-// the card; the others link to their page. Filters (all / on / off) are plain links, so
+// line, state line, Settings link). Cards show state only; the main switch of a module
+// (NAV `toggle`) is in its page header. Filters (all / on / off) are plain links, so
 // they work without the script; the script adds a search box (data-module-search).
 
 import { html, icon, layout, moduleItems, path, queryString } from './html.js';
-import { moduleSwitch, pill } from './forms.js';
 
 export const MODULE_FILTERS = ['all', 'on', 'off'];
 
@@ -14,15 +13,6 @@ export function moduleEntries(moduleStates = {}) {
         ...item,
         on: item.state && Object.hasOwn(moduleStates, item.state) ? Boolean(moduleStates[item.state]) : null,
     }));
-}
-
-function status(entry, { csrf, canEdit }) {
-    if (entry.on === null) return '';
-    if (entry.toggle) {
-        return moduleSwitch({ csrf, canEdit, module: entry.key, action: entry.toggle, enabled: entry.on, label: entry.label, back: 'modules' });
-    }
-    // On/off follows from the module's setup (a channel or category), not a switch.
-    return entry.on ? pill(true, 'Active') : pill(false, 'Not set up');
 }
 
 /**
@@ -41,11 +31,18 @@ export function setupByModule(checklist) {
     return byModule;
 }
 
-function setupLine(setup) {
-    if (!setup) return '';
-    return setup.todo
-        ? html`<p class="module-setup"><span class="dot dot-warn" aria-hidden="true"></span>Needs setup · ${setup.todo} to do</p>`
-        : html`<p class="module-setup"><span class="dot dot-on" aria-hidden="true"></span>Set up</p>`;
+/**
+ * The state line: On (green) / Off (grey) where the module has an on/off state, and
+ * "Needs setup · N to do" (amber) while Getting-started items of the module are open.
+ * Off wins: setup does not matter while a module is off. Always words, never colour alone.
+ */
+function stateLine(entry, setup) {
+    const parts = [];
+    if (entry.on === false) return html`<p class="module-state"><span class="module-state-item is-off"><span class="dot dot-off" aria-hidden="true"></span>Off</span></p>`;
+    if (entry.on === true) parts.push(html`<span class="module-state-item is-on"><span class="dot dot-on" aria-hidden="true"></span>On</span>`);
+    if (setup?.todo) parts.push(html`<span class="module-state-item is-setup"><span class="dot dot-warn" aria-hidden="true"></span>Needs setup · ${setup.todo} to do</span>`);
+    else if (setup && entry.on === null) parts.push(html`<span class="module-state-item is-on"><span class="dot dot-on" aria-hidden="true"></span>Set up</span>`);
+    return parts.length ? html`<p class="module-state">${parts}</p>` : '';
 }
 
 /** The text a search matches: name, one-liner and keywords. */
@@ -55,13 +52,10 @@ function searchText(entry) {
 
 function card(entry, opts) {
     const state = entry.on === null ? 'none' : entry.on ? 'on' : 'off';
-    const setup = opts.setup?.get(entry.key);
-    // A module whose on/off comes from its setup (no switch) shows the setup line instead of the pill.
-    const top = setup && !entry.toggle ? '' : status(entry, opts);
     return html`<li class="module-card" data-state="${state}" data-name="${searchText(entry)}">
-<div class="module-card-top"><span class="module-icon" aria-hidden="true">${icon(entry.key)}</span>${top}</div>
+<div class="module-card-top"><span class="module-icon" aria-hidden="true">${icon(entry.key)}</span></div>
 <h3 class="module-card-name"><a href="${path(`/${entry.key}`)}">${entry.label}</a></h3>
-<p class="module-summary">${entry.summary || ''}</p>${setupLine(setup)}
+<p class="module-summary">${entry.summary || ''}</p>${stateLine(entry, opts.setup?.get(entry.key))}
 <span class="module-card-foot" aria-hidden="true">Settings ${icon('chevron', 'icon icon-sm')}</span></li>`;
 }
 
@@ -75,7 +69,6 @@ export function modulesPage({ session, access = null, moduleStates = {}, flash =
     const known = entries.filter((e) => e.on !== null);
     const onCount = known.filter((e) => e.on).length;
     const visible = entries.filter((e) => filter === 'all' || (filter === 'on' ? e.on === true : e.on === false));
-    const canEdit = Boolean(editEnabled && access?.canView !== false);
     const setup = setupByModule(checklist);
     const chips = MODULE_FILTERS.map((f) => {
         const count = f === 'all' ? entries.length : f === 'on' ? onCount : known.length - onCount;
@@ -83,12 +76,12 @@ export function modulesPage({ session, access = null, moduleStates = {}, flash =
         return html`<a class="chip${f === filter ? ' is-active' : ''}" href="${path(`/modules${queryString({ show: f === 'all' ? '' : f, q: needle })}`)}"${f === filter ? html` aria-current="page"` : ''}>${label} <span class="chip-count">${count}</span></a>`;
     });
     const allKnown = all.filter((e) => e.on !== null);
-    const body = html`<header class="page-head"><h1>Modules</h1><p>${allKnown.filter((e) => e.on).length} of ${allKnown.length} modules with an on/off state are on. Open a module for its settings.</p></header>
+    const body = html`<header class="page-head"><h1>Modules</h1><p class="muted">Every part of Meowist in one place. ${allKnown.filter((e) => e.on).length} of ${allKnown.length} modules with an on/off state are on; open a module to change its settings.</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${needle ? html`<p class="search-result">${entries.length} module${entries.length === 1 ? '' : 's'} match <strong>“${needle}”</strong> · <a href="${path('/modules')}">Show all</a></p>` : ''}
 ${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true).</p>` : ''}
 <div class="toolbar"><nav class="chips" aria-label="Filter modules">${chips}</nav><span class="toolbar-search" data-module-search></span></div>
-${visible.length ? html`<ul class="module-grid" data-module-grid>${visible.map((e) => card(e, { csrf: session?.csrf, canEdit, setup }))}</ul>`
+${visible.length ? html`<ul class="module-grid" data-module-grid>${visible.map((e) => card(e, { setup }))}</ul>`
         : html`<p class="empty">${needle ? 'No module matches. Try another word, or browse all modules.' : `No modules ${filter === 'on' ? 'are on' : 'are off'}.`}</p>`}`;
     return layout({ title: 'Modules', active: 'modules', session, access, moduleStates, body });
 }
