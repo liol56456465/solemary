@@ -3,8 +3,10 @@
 // (once a minute, with the other expiry jobs) takes the role off and deletes the row; a member
 // who leaves and rejoins before the end gets the role back, unless the role has since become
 // unsafe to hand out (staff permissions, managed, not below the bot). Giving the same role again
-// replaces the end time. Taking the role off anywhere (dashboard or Discord) and a ban end the row,
-// so a role that was taken away is never given back on rejoin.
+// replaces the end time. A role that was taken away is never given back on rejoin: taking it off
+// (dashboard, or Discord via guildMemberUpdate), a kick or ban, and leaving without it end the
+// row; and because those events are not sent for members outside the cache, the expiry job also
+// forgets rows of present members who no longer hold the role (a backstop that needs no event).
 
 import { query, T } from '../enforcement/db.js';
 import { logger } from '../../utils/logger.js';
@@ -18,6 +20,9 @@ export const TEMP_ROLE_LENGTHS = {
     '30d': { label: '30 days', ms: 30 * 86_400_000 },
 };
 const EXPIRY_BATCH = 50;
+const RECONCILE_BATCH = 1000;
+// A member who joined this recently may still be getting the role back (reapplyTempRolesOnJoin).
+const JOIN_GRACE_MS = 5 * 60_000;
 
 /** Gives the role in Discord, then stores (or replaces) its end time. */
 export async function addTempRole({ member, guildId = member.guild.id, role, ms, by, reason = null, auditReason = null, now = Date.now() }) {
@@ -76,7 +81,35 @@ export async function runTempRoleExpiry(client, now = new Date()) {
         }
         await endTempRole(row.guild_id, row.user_id, row.role_id);
     }
+    await reconcileTempRoles(client, now);
     return rows.length;
+}
+
+/**
+ * Forgets running rows whose member is in the server (cached) but no longer holds the role, so a
+ * role removed while no event reached the bot is not given back on a later rejoin. Members who
+ * joined in the last 5 minutes are left alone (their role may be on its way back).
+ */
+export async function reconcileTempRoles(client, now = new Date()) {
+    const { rows } = await query(
+        `SELECT guild_id, user_id, role_id FROM ${T.tempRoles} WHERE expires_at > $1 ORDER BY expires_at LIMIT ${RECONCILE_BATCH}`, [now]);
+    let ended = 0;
+    for (const row of rows) {
+        const member = client.guilds.cache.get(row.guild_id)?.members?.cache?.get(row.user_id);
+        if (!member || member.roles.cache.has(row.role_id)) continue;
+        if (member.joinedTimestamp && now.getTime() - member.joinedTimestamp < JOIN_GRACE_MS) continue;
+        await endTempRole(row.guild_id, row.user_id, row.role_id);
+        ended += 1;
+    }
+    return ended;
+}
+
+/** On leave: keeps only rows for roles the member still held; if their roles are unknown, none. */
+export async function keepTempRolesOnLeave(member) {
+    const roles = member.partial ? null : member.roles?.cache;
+    if (!roles) return endTempRoles(member.guild.id, member.id);
+    const gone = (await listTempRoles(member.guild.id, member.id)).map((r) => r.role_id).filter((id) => !roles.has(id));
+    return endTempRoles(member.guild.id, member.id, gone);
 }
 
 /** On join: gives back temporary roles that have not ended yet and are still safe to hand out. */

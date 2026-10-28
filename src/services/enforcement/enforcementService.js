@@ -17,6 +17,7 @@ import { addMonths, formatDuration, dateStamp } from './format.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { enforceMassActionGuard } from './massActionGuard.js';
+import { endTempRoles } from '../members/tempRoleService.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { ACTION_KINDS, channelPurposeFor, formatModLogLine, resolveChannelId } from '../automod/channelRouting.js';
 
@@ -386,6 +387,8 @@ async function doKick({ guild, moderator, targetUser, targetMember, flow }) {
 
     await setDmDelivered(record.id, dmDelivered);
     record = { ...record, dm_delivered: dmDelivered };
+    // A kicked member gets no temporary role back when they rejoin.
+    await endTempRoles(guild.id, targetUser.id).catch((error) => logger.warn(`Temporary roles not ended after kick ${record.case_code}: ${error.message}`));
     const notes = invite ? [] : ['No rejoin invite could be created (no channel where I can create invites).'];
     await logEnforcement(guild.client, guild.id, 'kick', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator) });
     return { record, dmDelivered, notes };

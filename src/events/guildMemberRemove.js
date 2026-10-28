@@ -7,6 +7,7 @@ import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { getServerCounters, updateCounter } from '../services/serverstatsService.js';
 import { getGuildBirthdays, deleteBirthday } from '../utils/database.js';
 import { deleteUserLevelData } from '../services/leveling/leveling.js';
+import { keepTempRolesOnLeave } from '../services/members/tempRoleService.js';
 import { logger } from '../utils/logger.js';
 
 export default {
@@ -136,6 +137,12 @@ export default {
             }
         } catch (error) {
             logger.debug('Error handling applications on member leave:', error);
+        }
+
+        try {
+            await keepTempRolesOnLeave(member);
+        } catch (error) {
+            logger.warn(`Could not check temporary roles of ${user.id} on leave: ${error.message}`);
         }
 
         try {

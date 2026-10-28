@@ -137,3 +137,29 @@ test('endTempRoles: only the removed roles, or every role (ban)', { skip }, asyn
     await temp.endTempRoles(guildId, user(7));
     assert.deepEqual(await rowsFor(user(7)), []);
 });
+
+test('reconcile forgets rows of present members without the role (not just-joined ones); leave keeps only held roles', { skip }, async () => {
+    const w = fakeWorld();
+    const by = { id: user(9), username: 'admin' };
+    const client = { guilds: { cache: new Map([[guildId, { id: guildId, members: { cache: w.members } }]]) } };
+    const lost = w.member(user(10));
+    await temp.addTempRole({ member: lost, role: { id: ROLE }, ms: 3_600_000, by });
+    lost.roles.cache.delete(ROLE); // taken off in Discord, no event seen
+    lost.joinedTimestamp = Date.now() - 3_600_000;
+    const fresh = w.member(user(11)); // just rejoined: the role is on its way back
+    await temp.addTempRole({ member: fresh, role: { id: ROLE }, ms: 3_600_000, by });
+    fresh.roles.cache.delete(ROLE);
+    fresh.joinedTimestamp = Date.now();
+    await temp.reconcileTempRoles(client);
+    assert.deepEqual(await rowsFor(user(10)), []);
+    assert.equal((await rowsFor(user(11))).length, 1);
+
+    const leaver = w.member(user(12));
+    await temp.addTempRole({ member: leaver, role: { id: ROLE }, ms: 3_600_000, by });
+    await temp.addTempRole({ member: leaver, role: { id: GONE_ROLE }, ms: 3_600_000, by });
+    leaver.roles.cache.delete(GONE_ROLE);
+    await temp.keepTempRolesOnLeave(leaver);
+    assert.deepEqual((await rowsFor(user(12))).map((r) => r.role_id), [ROLE]);
+    await temp.keepTempRolesOnLeave({ partial: true, id: user(12), guild: { id: guildId } });
+    assert.deepEqual(await rowsFor(user(12)), [], 'unknown roles at leave: nothing is kept');
+});
