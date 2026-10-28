@@ -1055,7 +1055,7 @@ test('top bar search: ?q= filters modules by name, one-liner or keywords (every 
     const xp = await find('xp');
     assert.equal((xp.body.match(/<li class="module-card"/g) || []).length, 1);
     assert.match(xp.body, /href="\/dashboard\/leveling"/);
-    assert.match(xp.body, /1 module match <strong>“xp”<\/strong>/);
+    assert.match(xp.body, /1 module matches <strong>“xp”<\/strong>/);
     const two = await find('join message');
     assert.match(two.body, /href="\/dashboard\/welcome"/);
     const none = await find('<script>zzz');
@@ -1123,4 +1123,19 @@ test('a refused form shows its error inside that form and marks the field', asyn
     assert.ok(out.includes('name="maxTicketsPerUser" aria-invalid="true" aria-describedby="form-error"'));
     assert.equal(placeFormError(body, { moduleKey: 'tickets', action: 'nope', message: 'x' }), null, 'form not on the page: the caller shows it at the top');
     assert.equal(placeFormError(body, { moduleKey: 'tickets', action: '', message: 'x' }), null);
+});
+
+test('text fields never cut silently: over the limit is refused, naming the field', async () => {
+    const { text, InputError } = await import('../src/services/dashboard/forms.js');
+    assert.equal(text({ a: '  hi  ' }, 'a', 5), 'hi');
+    assert.equal(text({ a: 'x'.repeat(5) }, 'a', 5), 'xxxxx');
+    assert.throws(() => text({ a: 'x'.repeat(6) }, 'a', 5), (e) => e instanceof InputError && e.field === 'a' && /at most 5 characters \(6 entered\)/.test(e.userMessage));
+});
+
+test('audit log: a long value shows its start; the rest is behind "Show all", nothing dropped', async () => {
+    const { auditPage } = await import('../src/services/dashboard/pages.js');
+    const long = 'y'.repeat(300);
+    const page = String(auditPage({ session: { username: 'a', csrf: 't' }, rows: [{ created_at: new Date(0), username: 'a', user_id: '1', module: 'welcome', key: 'message', old: 'short', new: long }] }));
+    assert.ok(page.includes(`<details class="long-value"><summary>${'y'.repeat(120)}… <span class="muted">Show all (300 characters)</span></summary><div class="long-value-full">${long}</div></details>`));
+    assert.ok(page.includes('<td class="value">short</td>'));
 });

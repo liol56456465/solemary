@@ -490,6 +490,13 @@
         });
     }
 
+    /** The word searched from the top bar stays visible in the search box (?q=). */
+    function keepSearchWord() {
+        const q = new URLSearchParams(window.location.search).get('q');
+        const input = document.querySelector('[data-quick-find]');
+        if (q && input && !input.value) input.value = q;
+    }
+
     // ── A refused form: open its section and bring the error into view ───
     function showFormError() {
         const error = document.getElementById('form-error');
@@ -497,6 +504,12 @@
         const details = error.closest('details');
         if (details) details.open = true;
         error.scrollIntoView({ block: 'center' });
+        // The page came from the form's POST address; show the module page's own address so a
+        // reload does not send the form again (that address answers GET with 404).
+        const action = error.closest('form')?.getAttribute('action') || '';
+        if (window.location.pathname === action && window.history?.replaceState) {
+            window.history.replaceState(null, '', action.replace(/\/[^/]+$/, '') + (details?.id ? `#${details.id}` : ''));
+        }
     }
 
     // ── "On this page" links open their section ──────────────────────────
@@ -522,6 +535,7 @@
     function init() {
         document.documentElement.classList.add('js');
         setupQuickFind();
+        keepSearchWord();
         setupThemeToggle();
         setupToasts();
         setupSaveBar();

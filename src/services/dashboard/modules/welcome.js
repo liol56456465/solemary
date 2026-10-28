@@ -46,7 +46,7 @@ ${textArea('leaveMessage', w.leaveMessage, { label: 'Goodbye message', max: 2000
         const roles = html`${table(['Role', 'Problems', ''], (w.roleIds || []).map((id) => [roleName(g, id), roleWarnings(g, id, { autoAssign: true }).join('; ') || html`<span class="ok">ok</span>`,
             buttonForm(ctx, 'welcome', 'autorole-remove', 'Remove', { roleId: id })]), 'No roles are given on join.')}
 ${postForm(ctx, 'welcome', 'autorole-add', rolePicker(g, 'roleId', null, { label: 'Role given on join', optional: false, autoAssign: true, includeManaged: false }), { submit: 'Set', inline: true })}
-${postForm(ctx, 'welcome', 'autorole-delay', numberInput('autoRoleDelay', w.autoRoleDelay || 0, { label: 'Delay before giving roles (seconds)', min: 0, max: 3600 }), { inline: true })}`;
+${postForm(ctx, 'welcome', 'autorole-delay', html`<div class="grid">${numberInput('autoRoleDelay', w.autoRoleDelay || 0, { label: 'Delay before giving roles (seconds)', min: 0, max: 3600 })}</div>`)}`;
         const logs = postForm(ctx, 'welcome', 'logs', html`<div class="grid">
 ${switchInput('joinLogsEnabled', w.joinLogs?.enabled, { label: 'Log joins' })}
 ${channelPicker(g, 'joinLogsChannelId', w.joinLogs?.channelId || null, { label: 'Join log channel', perms: PERMS.post })}

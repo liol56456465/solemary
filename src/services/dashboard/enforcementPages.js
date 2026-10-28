@@ -97,7 +97,7 @@ function memberHeader(view, now) {
     const ladder = state.ladder;
     const active = state.activeBan || state.banned ? 'Banned' : state.activeMute || state.muted ? 'Muted' : 'None';
     return html`<header class="member-header">${avatar}<div class="member-title"><h1>${user.username}${user.bot ? html` <span class="tag">bot</span>` : ''}</h1>
-<p class="muted"><span class="nowrap">ID ${user.id}</span> · <span class="nowrap">${joined}</span></p></div>
+<p class="muted"><span class="nowrap">ID ${user.id}</span> <span class="nowrap">· ${joined}</span></p></div>
 <ul class="member-facts"><li><span class="label">Counted warns</span><span class="value">${countedWarnsText(ladder)}</span></li>
 <li><span class="label">Ladder level</span><span class="value">${ladder.level} of 3</span></li>
 <li><span class="label">Active</span><span class="value">${active === 'None' ? active : html`<span class="dot dot-bad" aria-hidden="true"></span>${active}`}</span></li></ul></header>`;
@@ -337,7 +337,7 @@ export function coverageSection({ report, period, periods, statsPeriod }) {
     return section(`Coverage · last ${periods[period]} days (${report.timeZone})`, html`${chips}
 ${heatTable(`Incidents (cases created, automatic included): ${report.totalIncidents}`, report.incidentGrid, report.maxIncidents)}
 ${heatTable(`Staff activity (cases by human moderators + appeals decided): ${report.totalStaff}`, report.staffGrid, report.maxStaff)}
-<p class="muted">Stronger shade = busier, in quarter steps up to the busiest hour. Columns are hours 0–23 in the server's birthday time zone.</p>
+<p class="muted">Stronger shade = busier, in quarter steps up to the busiest hour. Columns are hours 0–23 in ${report.timeZone} (the server's birthday time zone, set under Birthdays; UTC when none is set).</p>
 <h3>Most under-covered slots</h3>
 ${report.gaps.length ? html`<ol>${report.gaps.map((slot) => html`<li>${slotLabel(slot)} — ${slot.incidents} incident${slot.incidents === 1 ? '' : 's'}, ${slot.staff} staff action${slot.staff === 1 ? '' : 's'}</li>`)}</ol>` : html`<p class="muted">No incidents in this period.</p>`}`, '', { key: 'staff-coverage' });
 }

@@ -43,7 +43,7 @@ export default {
 
     render(ctx, { settings: s, stickies, tags, feeds }) {
         const g = ctx.guild;
-        const suggestions = postForm(ctx, 'community', 'suggestions', channelPicker(g, 'channelId', s.suggestionsChannelId, { label: 'Suggestions channel', perms: PERMS.post, noneLabel: 'off' }), { inline: true });
+        const suggestions = postForm(ctx, 'community', 'suggestions', html`<div class="grid">${channelPicker(g, 'channelId', s.suggestionsChannelId, { label: 'Suggestions channel', perms: PERMS.post, noneLabel: 'off' })}</div>`);
         const starboard = html`${postForm(ctx, 'community', 'starboard', html`<div class="grid">
 ${channelPicker(g, 'channelId', s.starboardChannelId, { label: 'Starboard channel', perms: PERMS.post, optional: false })}
 ${textInput('emoji', s.starboardEmoji, { label: 'Emoji', max: 64 })}

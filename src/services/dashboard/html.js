@@ -212,7 +212,7 @@ function serverSwitch(server) {
 }
 
 function userMenu(session, access) {
-    return html`<details class="user-menu menu-wrap"><summary><span class="avatar-initials" aria-hidden="true">${initials(session.username)}</span><span class="user-name">${session.username}</span></summary>
+    return html`<details class="user-menu menu-wrap"><summary aria-label="Account: ${session.username}"><span class="avatar-initials" aria-hidden="true">${initials(session.username)}</span><span class="user-name">${session.username}</span></summary>
 <div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${access && !access.canAct ? 'View and settings (bot owner)' : 'Administrator'}</span></p>
 <form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
 }
@@ -243,7 +243,7 @@ export function layout({ title, active = null, session = null, access = null, mo
     const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
     const top = html`<header class="topbar">
 ${session ? html`<label for="nav-toggle" class="icon-button nav-button" tabindex="0" role="button" aria-label="Menu">${icon('menu')}</label>` : ''}
-<a class="brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a>
+<a class="brand" href="${path('/overview')}" aria-label="Meowist: Overview"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a>
 ${session ? serverSwitch(session.server) : ''}
 ${session ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label><input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : ''}<span class="spacer"></span>
 ${themeToggle(theme, back)}${session ? userMenu(session, access) : ''}</header>`;

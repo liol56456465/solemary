@@ -290,7 +290,7 @@ details.section[open] > summary::after, details.sub[open] > summary::before, det
 .card-foot { margin: 12px 0 0; font-size: 14px; }
 .count {
     display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px;
-    background: var(--accent-soft); color: var(--accent-text); font-size: 12px; font-weight: 600;
+    background: var(--surface); color: var(--text); border: 1px solid var(--border); font-size: 12px; font-weight: 600;
 }
 
 details.sub, details.action {
@@ -467,6 +467,8 @@ details.section { scroll-margin-top: calc(var(--topbar) + 12px); }
     animation: toast-in 0.15s ease-out;
 }
 .save-bar[hidden] { display: none; }
+/* [hidden] always wins over a component's own display (module cards, empty notes). */
+[hidden] { display: none !important; }
 .save-bar-text { flex: 1; font-weight: 500; }
 .save-bar button.secondary { background: transparent; color: var(--raised); border-color: color-mix(in srgb, var(--raised) 35%, transparent); }
 .save-bar button.secondary:hover { background: color-mix(in srgb, var(--raised) 12%, transparent); }
@@ -589,6 +591,8 @@ form.is-dirty .form-actions::before { content: "Unsaved changes"; margin-right: 
 /* A section with unsaved edits says so in its title (the script sets .is-changed). */
 details.section.is-changed > summary h2::after { content: "Unsaved changes"; font-size: 12px; font-weight: 500; color: var(--warn); }
 .form-error { margin: 0 0 16px; }
+/* Compact add-a-row forms: the section title already says "Unsaved changes". */
+.inline-form.is-dirty .form-actions::before { content: none; }
 .inline-form { display: inline-block; margin: 0; vertical-align: bottom; }
 .inline-form fieldset { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
 .inline-form .form-actions { margin: 0; padding: 0; border: 0; }
@@ -671,6 +675,11 @@ label.switch-row + label.switch-row { border-top: 0; }
 /* Detail headings with the action badge next to the case code; confirm steps in a card. */
 h1.title-with-badge .type { vertical-align: middle; font-size: 14px; height: 24px; }
 .confirm-card { max-width: 720px; }
+/* Long audit values: the start, the rest behind "Show all". */
+details.long-value > summary { cursor: pointer; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+details.long-value[open] > summary { -webkit-line-clamp: 1; line-clamp: 1; }
+td.value:has(details.long-value) { min-width: 200px; }
+.long-value-full { margin-top: 8px; max-height: 240px; overflow: auto; overflow-wrap: anywhere; white-space: pre-wrap; }
 /* Member page header: who, and the standing at a glance. */
 .member-header { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin: 0 0 24px; }
 .member-title { flex: 1; min-width: 200px; }

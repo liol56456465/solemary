@@ -97,7 +97,7 @@ ${rows.map((row) => {
 <td>${row.target_username} <span class="muted">${row.target_user_id}</span></td><td>${row.moderator_username}</td>
 <td>${row.reason}</td><td>${timeTag(row.created_at)}</td><td class="${statusClass(label)}">${label}</td></tr>`;
     })}
-</tbody></table></div>${pager}` : filtered
+</tbody></table></div>${pager}` : error ? '' : filtered
         ? html`<p class="empty">No cases match these filters. <a href="/dashboard/cases">Clear filters</a></p>`
         : html`<p class="empty">No cases yet. They show up here after the first warn, mute, kick or ban.</p>`}`;
     return layout({ title: 'Cases', active: 'cases', session, access, moduleStates, body });
@@ -190,7 +190,14 @@ ${sections}`;
 
 // ── Audit ─────────────────────────────────────────────────────────────────
 
-const auditValue = (value) => (value === null || value === undefined ? '—' : typeof value === 'string' ? value : JSON.stringify(value));
+const AUDIT_VALUE_PREVIEW = 120;
+/** An audited value; a long one shows its start, the rest behind "Show all" (nothing is dropped). */
+function auditValue(value) {
+    if (value === null || value === undefined) return '—';
+    const full = typeof value === 'string' ? value : JSON.stringify(value);
+    if (full.length <= AUDIT_VALUE_PREVIEW) return full;
+    return html`<details class="long-value"><summary>${full.slice(0, AUDIT_VALUE_PREVIEW)}… <span class="muted">Show all (${full.length} characters)</span></summary><div class="long-value-full">${full}</div></details>`;
+}
 
 /**
  * input: { rows (dashboard_audit, newest first), total, page, pageSize, filters: { user, module },

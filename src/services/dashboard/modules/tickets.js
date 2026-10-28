@@ -56,7 +56,9 @@ ${textArea('panelMessage', 'Click the button below to create a support ticket.',
         const cannedRows = Object.entries(canned).sort((a, b) => a[0].localeCompare(b[0])).map(([name, body]) => [
             html`<code>${name}</code>${ctx.services.isBuiltInCanned(name) ? html` <span class="muted">(built-in)</span>` : ''}`,
             body.length > 200 ? `${body.slice(0, 199)}…` : body,
-            buttonForm(ctx, 'tickets', 'canned-remove', 'Delete', { name }),
+            // Built-ins can be replaced (same name) but not deleted: no button that would only be refused.
+            ctx.services.isBuiltInCanned(name) ? ''
+                : buttonForm(ctx, 'tickets', 'canned-remove', 'Delete', { name }, { confirm: `Delete the saved answer "${name}"?` }),
         ]);
         const cannedAdd = postForm(ctx, 'tickets', 'canned-add', html`<div class="grid">
 ${textInput('name', '', { label: 'Name (a-z, 0-9, -)', max: 32 })}

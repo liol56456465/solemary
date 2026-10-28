@@ -78,7 +78,7 @@ export function modulesPage({ session, access = null, moduleStates = {}, flash =
     const allKnown = all.filter((e) => e.on !== null);
     const body = html`<header class="page-head"><h1>Modules</h1><p class="muted">Every part of Meowist in one place. ${allKnown.filter((e) => e.on).length} of ${allKnown.length} modules with an on/off state are on; open a module to change its settings.</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
-${needle ? html`<p class="search-result">${entries.length} module${entries.length === 1 ? '' : 's'} match <strong>“${needle}”</strong> · <a href="${path('/modules')}">Show all</a></p>` : ''}
+${needle ? html`<p class="search-result">${entries.length} module${entries.length === 1 ? ' matches' : 's match'} <strong>“${needle}”</strong> · <a href="${path('/modules')}">Show all</a></p>` : ''}
 ${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true).</p>` : ''}
 <div class="toolbar"><nav class="chips" aria-label="Filter modules">${chips}</nav><span class="toolbar-search" data-module-search></span></div>
 ${visible.length ? html`<ul class="module-grid" data-module-grid>${visible.map((e) => card(e, { setup }))}</ul>`

@@ -68,7 +68,7 @@ ${postForm(ctx, 'verification', 'auto', html`<div class="grid">
 ${selectInput('criteria', auto.criteria || 'none', CRITERIA, { label: 'Who is auto-verified' })}
 ${numberInput('accountAgeDays', auto.accountAgeDays ?? '', { label: 'Account age (days, for "account older than")', min: 1, max: 365 })}
 ${rolePicker(g, 'autoRoleId', auto.roleId || null, { label: 'Role given', autoAssign: true, noneLabel: 'the verified role' })}</div>`)}`;
-        const web = postForm(ctx, 'verification', 'redirect', textInput('verifySuccessRedirect', redirect, { label: 'Page after "Verify with Discord"', max: 500, placeholder: 'https://…' }), { inline: true });
+        const web = postForm(ctx, 'verification', 'redirect', html`<div class="grid">${textInput('verifySuccessRedirect', redirect, { label: 'Page after "Verify with Discord"', max: 500, placeholder: 'https://…' })}</div>`);
         return html`${section('Verification panel', manual)}${section('Auto-verify', autoForm)}${section('Web verification', web)}`;
     },
 

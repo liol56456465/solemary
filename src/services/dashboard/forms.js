@@ -38,7 +38,11 @@ export function plainText(message) {
 /** A posted string (trimmed, capped), '' when missing or not a string. */
 export function text(form, name, max = 2000) {
     const value = form?.[name];
-    return typeof value === 'string' ? value.trim().slice(0, max) : '';
+    if (typeof value !== 'string') return '';
+    const trimmed = value.trim();
+    // Never cut silently: a longer value is refused (the field is marked on the page).
+    if (trimmed.length > max) throw new InputError(`Too long: at most ${max} characters (${trimmed.length} entered).`, 400, name);
+    return trimmed;
 }
 
 /**
@@ -323,7 +327,8 @@ export function postForm(ctx, module, action, fields, {
     const classes = [inline ? 'inline-form' : 'settings-form', className].filter(Boolean).join(' ');
     // data-confirm: the static script asks before submitting (destructive actions).
     // data-dirty: it warns before leaving the page with unsaved changes.
-    const attrs = html`${confirm ? html` data-confirm="${confirm}"` : ''}${inline ? '' : raw(' data-dirty')}`;
+    // Every form warns before leaving with something typed; inline forms (add-a-row) stay compact (no Reset).
+    const attrs = html`${confirm ? html` data-confirm="${confirm}"` : ''}${raw(' data-dirty')}`;
     const buttonClass = danger ? 'danger' : secondary ? 'secondary' : 'primary';
     // Settings forms (a "Save…" button) also get Reset: it puts back what was loaded (no request).
     const reset = !inline && !danger && /^save/i.test(String(submit));
@@ -362,8 +367,12 @@ export function pill(on, text = on ? 'on' : 'off', tone = on ? 'on' : 'off') {
     return html`<span class="state state-${tone}">${text}</span>`;
 }
 
-/** A small one-button form (remove, end now, …). `confirm` asks first (with JS). */
-export function buttonForm(ctx, module, action, label, hidden = {}, { danger = true, canEdit = ctx.canEdit, confirm = '' } = {}) {
+/**
+ * A small one-button form (remove, end now, …). `confirm` asks first (with JS). Red (danger)
+ * only for destructive actions, which always confirm; reversible ones (remove from a list,
+ * turn off) are a neutral outline button and act at once.
+ */
+export function buttonForm(ctx, module, action, label, hidden = {}, { confirm = '', danger = Boolean(confirm), canEdit = ctx.canEdit } = {}) {
     return postForm(ctx, module, action, '', { submit: label, hidden, inline: true, danger, secondary: !danger, canEdit, confirm });
 }
 
