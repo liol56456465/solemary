@@ -846,7 +846,7 @@ test('sidebar: every module listed (no Phase 2 placeholders), on/off states show
     for (const module of MODULES) assert.ok(keys.includes(module.key), module.key);
     const h = await setup();
     const res = await get(h, 'automod');
-    assert.match(res.body, /<\/svg>Automod<span class="dot dot-on"><span class="sr">on<\/span><\/span><\/a>/, 'section tab with the on/off dot');
+    assert.match(res.body, /<\/svg><span class="side-text">Automod<\/span><span class="dot dot-on"><span class="sr">on<\/span><\/span><\/a>/, 'sidebar entry with the on/off dot');
 });
 
 test('security headers: CSP still without unsafe-inline; same-origin referrer policy', () => {
@@ -1175,7 +1175,7 @@ test('Find a setting: also matches a module\'s setup steps (e.g. "category" find
     const { modulesPage } = await import('../src/services/dashboard/modulesPage.js');
     const checklist = [{ label: 'Ticket staff role', done: false, href: '/dashboard/tickets' }, { label: 'Birthday channel', done: false, href: '/dashboard/birthdays' }];
     const keys = (q) => [...String(modulesPage({ session: { username: 'a', csrf: 't' }, q, checklist })).matchAll(/class="module-card-name"><a href="\/dashboard\/([a-z-]+)"/g)].map((m) => m[1]);
-    assert.deepEqual(keys('category'), ['enforcement', 'tickets'], 'keywords');
+    assert.deepEqual(keys('category'), ['tickets', 'enforcement', 'support'], 'keywords (sidebar order)');
     assert.deepEqual(keys('birthday channel'), ['birthdays'], 'setup step label');
     assert.deepEqual(keys('ticket staff role'), ['tickets'], 'every word must match');
 });

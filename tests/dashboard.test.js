@@ -706,22 +706,23 @@ test('case page: history, evidence and appeals are collapsible sections (history
     assert.match(page, /<details class="card section" id="s-case-appeals" data-key="case-appeals"><summary><h2>Appeals \(0\)/);
 });
 
-test('layout v3: rail with the sections, section pages as tabs, phone tab bar with a More sheet', () => {
+test('layout v5: grouped sidebar with every page, breadcrumbs, phone tab bar with a More sheet', () => {
     const page = layout({ title: 'x', active: 'tickets', session: { username: 'a', csrf: 't', server: { name: 'Cats <3', iconUrl: null } }, body: html`` });
     assert.match(page, /<details class="server-switch menu-wrap"><summary aria-label="Server: Cats &lt;3">/);
     assert.ok(page.includes('Only this server can be managed for now.'));
-    const rail = page.slice(page.indexOf('<nav class="rail"'), page.indexOf('</nav>', page.indexOf('<nav class="rail"')));
-    const tips = [...rail.matchAll(/<span class="rail-tip">([^<]+)<\/span>/g)].map((m) => m[1]);
-    assert.deepEqual(tips, ['Overview', 'Modules', 'Moderation', 'Community', 'Server']);
-    assert.match(rail, /<a class="rail-item on" href="\/dashboard\/welcome" aria-current="true">.*Community/, 'tickets is in Community');
-    const tabs = page.slice(page.indexOf('<nav class="section-tabs"'), page.indexOf('</nav>', page.indexOf('<nav class="section-tabs"')));
-    assert.match(tabs, /<a href="\/dashboard\/tickets" class="on" aria-current="page">.*Tickets &amp; modmail/);
-    assert.ok(!tabs.includes('/dashboard/cases'), 'only the current section');
+    const side = page.slice(page.indexOf('<nav class="side-nav"'), page.indexOf('</nav>', page.indexOf('<nav class="side-nav"')));
+    const groups = [...side.matchAll(/<p class="side-group-label">([^<]+)<\/p>/g)].map((m) => m[1]);
+    assert.deepEqual(groups, ['Moderate', 'Community', 'Server setup', 'Bot']);
+    for (const key of ['overview', 'users', 'cases', 'appeals', 'automod', 'enforcement', 'modules', 'commands', 'audit', 'support']) {
+        assert.ok(side.includes(`href="/dashboard/${key}"`), `${key} in the sidebar`);
+    }
+    assert.match(side, /<a href="\/dashboard\/tickets" aria-current="page">.*Tickets &amp; modmail/, 'the current page is marked');
+    assert.equal((side.match(/aria-current="page"/g) || []).length, 1);
+    assert.match(page, /<p class="crumbs"><span>Community<\/span><span aria-hidden="true">\/<\/span><b>Tickets &amp; modmail<\/b><\/p>/);
     assert.match(page, /<nav class="tabbar" aria-label="Sections">/);
     assert.match(page, /<details class="more menu-wrap"><summary>.*More<\/span><\/summary><div class="more-sheet">/);
-    assert.ok(page.includes('href="/dashboard/audit"'), 'Audit log reachable from the More sheet');
     assert.ok(page.includes('class="icon-button find-link" href="/dashboard/modules" aria-label="Find a setting"'), 'phones get a search icon');
-    assert.ok(!/class="sidebar"|class="topbar"|nav-toggle/.test(page), 'old shell gone');
+    assert.ok(!/class="rail|class="section-tabs"|nav-toggle/.test(page), 'old shells gone');
 });
 
 test('overview week chart: the last 7 UTC days, oldest first, today last, missing days 0', async () => {

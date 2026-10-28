@@ -398,12 +398,15 @@
         }
     }
 
-    // ── Section tabs: on phones (one scrolling row) the current tab is scrolled into view ──
+    // ── Sidebar: when it scrolls (short windows), the current page is kept in view ──
     function showCurrentTab() {
-        const tab = document.querySelector('.section-tabs a.on');
-        const strip = tab?.parentElement;
-        if (!tab || strip.scrollWidth <= strip.clientWidth) return;
-        strip.scrollLeft = tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2;
+        const nav = document.querySelector('.side-nav');
+        const item = nav?.querySelector('a[aria-current]');
+        if (!item || nav.scrollHeight <= nav.clientHeight) return;
+        const top = item.offsetTop - nav.offsetTop;
+        if (top < nav.scrollTop || top > nav.scrollTop + nav.clientHeight - item.offsetHeight) {
+            nav.scrollTop = top - nav.clientHeight / 2;
+        }
     }
 
     // ── Toasts ───────────────────────────────────────────────────────────

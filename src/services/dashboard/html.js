@@ -108,40 +108,42 @@ export function icon(name, className = 'icon') {
 }
 
 /**
- * The sidebar. `state` names the on/off indicator from moduleStates, where the module
- * has an on/off setting; `toggle` is the module action behind its main switch (module
- * page header); `summary` (one line on the Modules page cards) marks a settings module.
- * Groups: Moderation, Community, Server (design system v2).
+ * The sidebar (v5): four groups by job, every page listed. `state` names the on/off dot from
+ * moduleStates, where the module has an on/off setting; `toggle` is the module action behind
+ * its main switch (module page header); `summary` (one line on the Modules page cards) marks a
+ * settings module.
  */
 export const NAV = [
-    { key: 'overview', label: 'Overview' },
-    { key: 'modules', label: 'Modules' },
-    { group: 'Moderation', items: [
+    { group: 'Moderate', items: [
+        { key: 'overview', label: 'Overview' },
+        { key: 'users', label: 'Members' },
         { key: 'cases', label: 'Cases' },
         { key: 'appeals', label: 'Appeals' },
-        { key: 'users', label: 'Members' },
-        { key: 'enforcement', label: 'Enforcement & appeals', keywords: 'mod log, evidence, muted role, warning roles, appeal window, cooldown, mass-action guard, ladder, reasons, appeal panel, appeals category, alerts channel', summary: 'Log channels, warning roles, appeal timings, appeal panels.' },
-        { key: 'automod', label: 'Automod', state: 'automod', toggle: 'enabled', keywords: 'spam, links, invites, bad words, raid, lockdown, panic, join gate, trusted, second chance, mood, native automod, slowmode', summary: 'Rule modes, exceptions, join gate, raid panic.' },
         { key: 'nocontact', label: 'No-contact' },
         { key: 'staff', label: 'Staff' },
     ] },
     { group: 'Community', items: [
+        { key: 'tickets', label: 'Tickets & modmail', state: 'tickets', keywords: 'ticket panel, support, modmail, canned answers, saved replies, staff role, transcript, open tickets category, closed tickets category, ticket log channel', summary: 'Ticket panel, modmail, saved answers.' },
         { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome', keywords: 'join message, leave message, goodbye, greeting, auto role, autorole, embed', summary: 'Join and leave messages, auto roles.' },
         { key: 'leveling', label: 'Leveling', state: 'leveling', toggle: 'enabled', keywords: 'xp, levels, rank, level up message, role rewards, leaderboard, no xp channels', summary: 'XP, level-up messages, role rewards.' },
         { key: 'reaction-roles', label: 'Reaction roles', keywords: 'self roles, role menu, buttons, select menu', summary: 'Self-assign role menus.' },
-        { key: 'tickets', label: 'Tickets & modmail', state: 'tickets', keywords: 'ticket panel, support, modmail, canned answers, saved replies, staff role, transcript, open tickets category, closed tickets category, ticket log channel', summary: 'Ticket panel, modmail, saved answers.' },
         { key: 'giveaways', label: 'Giveaways', keywords: 'prize, winners, reroll, end giveaway', summary: 'Start, end and reroll giveaways.' },
         { key: 'birthdays', label: 'Birthdays', state: 'birthdays', keywords: 'birthday channel, birthday role, timezone', summary: 'Birthday announcements and role.' },
         { key: 'applications', label: 'Applications', state: 'applications', toggle: 'enabled', keywords: 'apply, staff application, questions, managers', summary: 'Role applications and their questions.' },
         { key: 'community', label: 'Community', keywords: 'suggestions, starboard, sticky message, tags, youtube feed', summary: 'Suggestions, starboard, stickies, tags, feeds.' },
         { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate', keywords: 'temporary voice, voice channels, jtc', summary: 'Temporary voice channels.' },
     ] },
-    { group: 'Server', items: [
+    { group: 'Server setup', items: [
+        { key: 'automod', label: 'Automod', state: 'automod', toggle: 'enabled', keywords: 'spam, links, invites, bad words, raid, lockdown, panic, join gate, trusted, second chance, mood, native automod, slowmode', summary: 'Rule modes, exceptions, join gate, raid panic.' },
+        { key: 'enforcement', label: 'Enforcement & appeals', keywords: 'mod log, evidence, muted role, warning roles, appeal window, cooldown, mass-action guard, ladder, reasons, appeal panel, appeals category, reports category, modmail category, alerts channel', summary: 'Log channels, warning roles, appeal timings, appeal panels.' },
         { key: 'logging', label: 'Logging', state: 'logging', toggle: 'enabled', keywords: 'audit log, message delete, edits, joins, leaves, ignore channels, events', summary: 'Which server events are logged, and where.' },
         { key: 'verification', label: 'Verification', state: 'verification', keywords: 'verify, captcha, verified role, auto-verify, panel', summary: 'Verify panel or auto-verify on join.' },
         { key: 'counters', label: 'Counters', keywords: 'member count, stats channels, counting game', summary: 'Member counters and the counting game.' },
+        { key: 'support', label: 'Support server', keywords: 'banned role, support server, ban appeals category', summary: 'The support server: banned role, ban appeals.' },
+    ] },
+    { group: 'Bot', items: [
+        { key: 'modules', label: 'All modules' },
         { key: 'commands', label: 'Commands', keywords: 'disable command, enable command, categories, permissions', summary: 'Turn commands and categories on or off.' },
-        { key: 'support', label: 'Support server', keywords: 'banned role, support server', summary: 'The banned role in the support server.' },
         { key: 'audit', label: 'Audit log' },
     ] },
 ];
@@ -160,51 +162,48 @@ function stateOf(item, moduleStates) {
     return item.state && Object.hasOwn(moduleStates, item.state) ? moduleStates[item.state] : null;
 }
 
-/**
- * The top-level sections of the rail (desktop) and tab bar (phones): Overview, Modules, then
- * one per NAV group. A group's link opens its first page; its pages are tabs on the page.
- */
-const SECTION_ICON = { overview: 'overview', modules: 'modules', Moderation: 'enforcement', Community: 'users', Server: 'server' };
+/** The sidebar groups as sections (phone tab bar): label, icon, first page, pages. */
+const SECTION_ICON = { Moderate: 'enforcement', Community: 'users', 'Server setup': 'server', Bot: 'modules' };
 export function sections() {
-    return NAV.map((item) => (item.group
-        ? { key: item.group.toLowerCase(), label: item.group, icon: SECTION_ICON[item.group] || 'overview', href: path(`/${item.items[0].key}`), items: item.items }
-        : { key: item.key, label: item.label, icon: SECTION_ICON[item.key] || item.key, href: path(`/${item.key}`), items: null }));
+    return NAV.map((item) => ({
+        key: item.group.toLowerCase().replace(/\s+/g, '-'), label: item.group, icon: SECTION_ICON[item.group] || 'overview',
+        href: path(`/${item.items[0].key}`), items: item.items,
+    }));
 }
 
-/** The section a page belongs to (by its sidebar key). */
+/** The group a page belongs to (by its sidebar key). */
 function sectionOf(active) {
-    return sections().find((sec) => (sec.items ? sec.items.some((i) => i.key === active) : sec.key === active)) || null;
+    return sections().find((sec) => sec.items.some((i) => i.key === active)) || null;
 }
 
-/** Desktop: the floating rail (icons with tooltips; theme switch and account at the bottom). */
-function rail(active, theme, back, session, access) {
-    const current = sectionOf(active);
-    return html`<nav class="rail" aria-label="Sections"><a class="rail-logo" href="${path('/overview')}" aria-label="Meowist: Overview">${icon('cat')}</a>
-<ul class="rail-list">${sections().map((sec) => html`<li><a class="rail-item${current?.key === sec.key ? ' on' : ''}" href="${sec.href}"${current?.key === sec.key ? raw(' aria-current="true"') : ''}>${icon(sec.icon)}<span class="rail-tip">${sec.label}</span></a></li>`)}</ul>
-<div class="rail-bottom">${userMenu(session, access, theme, back)}</div></nav>`;
-}
-
-/** A section's pages as pill tabs above the content (with the module on/off dot). */
-function sectionTabs(active, moduleStates) {
-    const sec = sectionOf(active);
-    if (!sec?.items) return '';
-    return html`<nav class="section-tabs" aria-label="${sec.label}">${sec.items.map((item) => {
+/** Desktop: the sidebar with every page by group; brand and server on top, account at the bottom. */
+function sideNav(active, moduleStates, theme, back, session, access) {
+    return html`<nav class="side-nav" aria-label="Dashboard"><a class="side-brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span>Meowist</a>
+${serverSwitch(session.server)}
+${NAV.map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
         const state = stateOf(item, moduleStates);
         const on = item.key === active;
-        return html`<a href="${path(`/${item.key}`)}"${on ? raw(' class="on" aria-current="page"') : ''}>${icon(item.key)}${item.label}${state === null ? ''
-            : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a>`;
-    })}</nav>`;
+        return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}>${icon(item.key)}<span class="side-text">${item.label}</span>${state === null ? ''
+            : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
+    })}</ul></div>`)}
+<div class="side-bottom">${userMenu(session, access, theme, back)}</div></nav>`;
 }
 
-/** Phones: a floating tab bar; "More" is a sheet (details, no script) with the rest. */
+/** "Moderate / Members": where the page sits (the group, then the page). */
+function crumbs(active) {
+    const sec = sectionOf(active);
+    const item = sec?.items.find((i) => i.key === active);
+    if (!sec || !item) return '';
+    return html`<p class="crumbs"><span>${sec.label}</span><span aria-hidden="true">/</span><b>${item.label}</b></p>`;
+}
+
+/** Phones: a floating tab bar (the four groups); "More" is a sheet (details, no script) with every page. */
 function tabBar(active, theme, back, session, access) {
     const current = sectionOf(active);
-    const main = sections().filter((sec) => ['overview', 'moderation', 'modules', 'community'].includes(sec.key));
-    const rest = sections().filter((sec) => !main.some((m) => m.key === sec.key));
-    const moreOn = rest.some((sec) => sec.key === current?.key);
-    return html`<nav class="tabbar" aria-label="Sections">${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.key === 'overview' ? 'Home' : sec.label}</span></a>`)}
-<details class="more menu-wrap"><summary${moreOn ? raw(' class="on"') : ''}>${icon('menu')}<span>More</span></summary><div class="more-sheet">
-${rest.map((sec) => html`<p class="more-group">${sec.label}</p>${(sec.items || [{ key: sec.key, label: sec.label }]).map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${icon(item.key)}${item.label}</a>`)}`)}
+    const main = sections().slice(0, 3);
+    return html`<nav class="tabbar" aria-label="Sections"><a href="${path('/overview')}"${active === 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon('overview')}<span>Home</span></a>${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key && active !== 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.label === 'Server setup' ? 'Setup' : sec.label}</span></a>`)}
+<details class="more menu-wrap"><summary${current && !main.some((sec) => sec.key === current.key) ? raw(' class="on"') : ''}>${icon('menu')}<span>More</span></summary><div class="more-sheet">
+${sections().map((sec) => html`<p class="more-group">${sec.label}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${icon(item.key)}${item.label}</a>`)}`)}
 ${themePicker(theme, back, 'sheet')}<div class="more-foot"><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
 }
 
@@ -261,9 +260,8 @@ ${themePicker(theme, back, 'menu')}<form method="post" action="${path('/logout')
 }
 
 /**
- * The page shell (design v3 "Bento"): a floating icon rail with the sections (desktop), a top
- * strip with the server switcher and search, the section's pages as pill tabs, then `body`
- * (SafeHtml); on phones a floating tab bar with a "More" sheet (details: no script needed).
+ * The page shell (v5): the grouped sidebar (desktop), a header with where-you-are and search,
+ * then `body` (SafeHtml); on phones a floating tab bar with a "More" sheet (details: no script).
  * The theme comes from the cookie, set on <html> server-side so there is no flash.
  * `session` may carry display extras added by the routes: theme, server, path.
  * No inline styles or scripts (CSP); the one script is the static enhancement file.
@@ -271,14 +269,14 @@ ${themePicker(theme, back, 'menu')}<form method="post" action="${path('/logout')
 export function layout({ title, active = null, session = null, access = null, moduleStates = {}, body, theme: pageTheme = 'system', refreshSeconds = 0 }) {
     const theme = themeFrom(session?.theme ?? pageTheme);
     const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
-    const top = session ? html`<header class="page-top">${serverSwitch(session.server)}<span class="spacer"></span>
+    const top = session ? html`<header class="page-top">${crumbs(active)}<span class="spacer"></span>
 <a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form></header>`
         : html`<header class="page-top bare-top"><a class="brand" href="${path('/overview')}" aria-label="Meowist"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a><span class="spacer"></span></header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark">${refreshSeconds > 0 ? html`<meta http-equiv="refresh" content="${refreshSeconds}">` : ''}<title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>
-<div class="${session ? 'app' : 'app bare'}">${session ? rail(active, theme, back, session, access) : ''}
-<div class="page">${top}${session ? sectionTabs(active, moduleStates) : ''}<main id="main" tabindex="-1">${body}</main></div></div>
+<div class="${session ? 'app' : 'app bare'}">${session ? sideNav(active, moduleStates, theme, back, session, access) : ''}
+<div class="page">${top}<main id="main" tabindex="-1">${body}</main></div></div>
 ${session ? tabBar(active, theme, back, session, access) : ''}</body></html>`.text;
 }
 
