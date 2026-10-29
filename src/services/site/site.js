@@ -114,7 +114,8 @@ function navLinks(ctx, active) {
 ${ctx.supportInvite ? html`<li><a href="${ctx.supportInvite}" rel="noopener">Support server</a></li>` : ''}
 <li><a href="/commands"${current('commands')}>Commands</a></li>
 <li><a href="/leaderboard"${current('leaderboard')}>Leaderboard</a></li>
-<li><a href="/about"${current('about')}>About</a></li>`;
+<li><a href="/about"${current('about')}>About</a></li>
+${ctx.memberPortal ? html`<li><a href="/me"${current('me')}>My record</a></li>` : ''}`;
 }
 
 /** The footer-only links: status and the legal pages. */
@@ -483,7 +484,7 @@ export function notFoundPage(ctx) {
  * tests pass fakes.
  */
 export function createSite({
-    client = null, env = process.env, dashboardEnabled = false, supportInvite = () => null,
+    client = null, env = process.env, dashboardEnabled = false, memberPortalEnabled = false, supportInvite = () => null,
     leaderboard = createLeaderboardReader(client), status = () => botStatus(client),
 } = {}) {
     const router = express.Router();
@@ -491,6 +492,7 @@ export function createSite({
     const base = {
         publicSite,
         dashboardEnabled: Boolean(dashboardEnabled),
+        memberPortal: Boolean(memberPortalEnabled),
         installUrl: installUrl(env.CLIENT_ID),
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
     };
@@ -553,7 +555,7 @@ export function createSite({
 }
 
 /** Mounts the front site at the root of `app` (after /health, /ready, OAuth and the dashboard). */
-export function registerSite(app, client, { env = process.env, dashboardEnabled = false, supportInvite, leaderboard, status } = {}) {
-    app.use(createSite({ client, env, dashboardEnabled, supportInvite, leaderboard, status }));
+export function registerSite(app, client, { env = process.env, dashboardEnabled = false, memberPortalEnabled = false, supportInvite, leaderboard, status } = {}) {
+    app.use(createSite({ client, env, dashboardEnabled, memberPortalEnabled, supportInvite, leaderboard, status }));
     logger.info(`Front site at / (${publicSiteEnabled(env) ? 'public' : 'not public: noindex, no add button (PUBLIC_SITE_ENABLED)'})`);
 }

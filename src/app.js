@@ -37,6 +37,7 @@ import { loadCommands, registerCommands as registerSlashCommands } from './handl
 import { registerOAuthRoutes } from './services/oauthVerification.js';
 import { registerDashboard } from './services/dashboard/routes.js';
 import { registerSite } from './services/site/site.js';
+import { registerMemberPortal } from './services/site/memberPortal.js';
 import { finalErrorHandler } from './utils/finalErrorHandler.js';
 import { isGlobalRateLimitExempt } from './services/dashboard/security.js';
 import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
@@ -297,7 +298,9 @@ class Meowist extends Client {
 
     // The front website (Home, Commands, Leaderboard, About, Status, Privacy, Terms, robots.txt) at
     // the root, after every other route. Leaderboard and status read this client (site.js defaults).
-    registerSite(app, this, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite });
+    // "My record" (/me): members see their own moderation record (MEMBER_PORTAL_ENABLED, off by default).
+    const memberPortalEnabled = registerMemberPortal(app, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite });
+    registerSite(app, this, { dashboardEnabled, memberPortalEnabled, supportInvite: () => enforcementConfig.supportServerInvite });
 
     // Last: no stack traces in the browser, whatever NODE_ENV is.
     app.use(finalErrorHandler);

@@ -523,6 +523,19 @@ export const tableStatements = [
     )`,
     // One-shot message shown after a dashboard form was saved (POST → 303 → GET).
     `ALTER TABLE ${t.dashboard_sessions} ADD COLUMN IF NOT EXISTS flash TEXT`,
+    // "My record" logins on the website (/me, services/site/memberPortal.js). Same shape as
+    // dashboard_sessions but its own table, so a member session can never be a dashboard one.
+    `CREATE TABLE IF NOT EXISTS ${t.member_sessions} (
+        id_hash CHAR(64) PRIMARY KEY,
+        user_id VARCHAR(20) NOT NULL,
+        username VARCHAR(100),
+        avatar VARCHAR(100),
+        csrf VARCHAR(64) NOT NULL,
+        flash TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL,
+        last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
 
     // Who changed which dashboard setting (old → new), one row per key.
     `CREATE TABLE IF NOT EXISTS ${t.dashboard_audit} (
@@ -647,6 +660,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_starboard_posts_star ON ${t.starboard_posts}(star_message_id)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_sessions_expires ON ${t.dashboard_sessions}(expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_sessions_user ON ${t.dashboard_sessions}(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_member_sessions_expires ON ${t.member_sessions}(expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_guild ON ${t.dashboard_audit}(guild_id, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_module ON ${t.dashboard_audit}(guild_id, module, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_user ON ${t.dashboard_audit}(guild_id, user_id, id DESC)`,
