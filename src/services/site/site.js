@@ -5,6 +5,10 @@
 //   GET /            Home: what Meowist does
 //   GET /commands    the commands every member may use (EVERYONE_COMMANDS + the loaded descriptions)
 //   GET /about       who runs it
+//   GET /leaderboard the main server's leveling leaderboard, 50 a page (?page=)
+//   GET /status      Online / Starting / Degraded and the uptime, nothing else
+//   GET /privacy     what the bot stores and why (written from the code, nothing invented)
+//   GET /terms       the short rules for using the bot
 //   GET /robots.txt  Disallow: / while the site is not public
 //   GET /favicon.svg the cat on a black tile (the site and the dashboard link it)
 //   GET /site.css    the dashboard's theme tokens + site layout, cached, ?v=<content hash>
@@ -22,6 +26,8 @@ import { html, raw } from '../dashboard/html.js';
 import { CAT_PATH } from '../dashboard/icons.js';
 import { EVERYONE_COMMANDS } from '../../config/commands/commandAccess.js';
 import { commandEntries } from '../../config/commands/retirement.js';
+import { enforcementConfig } from '../../config/enforcement.js';
+import { getLeaderboard, getLevelingConfig } from '../leveling/leveling.js';
 import { logger } from '../../utils/logger.js';
 
 const DASHBOARD_PATH = '/dashboard';
@@ -107,7 +113,16 @@ function navLinks(ctx, active) {
     return html`${ctx.mainInvite ? html`<li><a href="${ctx.mainInvite}" rel="noopener">Our server</a></li>` : ''}
 ${ctx.supportInvite ? html`<li><a href="${ctx.supportInvite}" rel="noopener">Support server</a></li>` : ''}
 <li><a href="/commands"${current('commands')}>Commands</a></li>
+<li><a href="/leaderboard"${current('leaderboard')}>Leaderboard</a></li>
 <li><a href="/about"${current('about')}>About</a></li>`;
+}
+
+/** The footer-only links: status and the legal pages. */
+function footerLinks(ctx, active) {
+    const current = (key) => (key === active ? raw(' aria-current="page"') : '');
+    return html`<li><a href="/status"${current('status')}>Status</a></li>
+<li><a href="/privacy"${current('privacy')}>Privacy</a></li>
+<li><a href="/terms"${current('terms')}>Terms</a></li>`;
 }
 
 function addButton(ctx, className = 'button') {
@@ -116,12 +131,13 @@ function addButton(ctx, className = 'button') {
         : '';
 }
 
-export function layout(ctx, { title, active = null, description = '', body }) {
+// `refresh` (seconds) adds a <meta http-equiv="refresh">: the status page reloads itself without a script.
+export function layout(ctx, { title, active = null, description = '', refresh = 0, body }) {
     // The way into the dashboard, like other bots' sites: a filled button unless "Add to your server" is shown.
     const login = ctx.dashboardEnabled ? html`<a class="button${ctx.publicSite && ctx.installUrl ? ' button-quiet' : ''}" href="${DASHBOARD_PATH}">Dashboard</a>` : '';
     return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
-<title>${title === 'Meowist' ? 'Meowist' : `${title} · Meowist`}</title>${description ? html`<meta name="description" content="${description}">` : ''}
+<title>${title === 'Meowist' ? 'Meowist' : `${title} · Meowist`}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="${CSS_PATH}"></head>
 <body><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>Meowist</span></a>
@@ -129,7 +145,7 @@ export function layout(ctx, { title, active = null, description = '', body }) {
 <div class="topbar-actions">${addButton(ctx)}${login}</div></div></header>
 <main id="main" tabindex="-1">${body}</main>
 <footer class="footer"><div class="wrap footer-inner"><p class="footer-brand">${LOGO}<span>Meowist</span></p>
-<nav aria-label="Footer"><ul>${navLinks(ctx, active)}${ctx.dashboardEnabled ? html`<li><a href="${DASHBOARD_PATH}">Dashboard</a></li>` : ''}</ul></nav></div></footer>
+<nav aria-label="Footer"><ul>${navLinks(ctx, active)}${footerLinks(ctx, active)}${ctx.dashboardEnabled ? html`<li><a href="${DASHBOARD_PATH}">Dashboard</a></li>` : ''}</ul></nav></div></footer>
 </body></html>`.text;
 }
 
@@ -240,6 +256,217 @@ export function aboutPage(ctx) {
     });
 }
 
+// ── Leaderboard ───────────────────────────────────────────────────────────
+
+export const LEADERBOARD_PAGE_SIZE = 50;
+const MAX_LEADERBOARD_PAGE = 1000;
+const LEADERBOARD_CACHE_MS = 60 * 1000;
+const LEADERBOARD_CACHE_MAX = 20;
+
+/** ?page= as a whole number from 1 to MAX_LEADERBOARD_PAGE; anything else is page 1. */
+export function leaderboardPageNumber(value) {
+    const text = String((Array.isArray(value) ? value[0] : value) ?? '').trim();
+    if (!/^\d{1,4}$/.test(text)) return 1;
+    return Math.min(Math.max(Number(text), 1), MAX_LEADERBOARD_PAGE);
+}
+
+/**
+ * The real leaderboard reader: ({ offset, limit }) → { enabled, rows: [{ rank, name, level, totalXp }] }.
+ * Reads the main server (MAIN_GUILD_ID) through the same services as /leaderboard. Throws when
+ * the bot is not connected yet, the server is not set or a read fails: the page then says the
+ * leaderboard could not be loaded (503) instead of showing an empty one.
+ * Members who ran /wipedata have no user_levels row any more (wipedataButtons.js deletes
+ * getUserLevelKey → postgresDatabase.js deleteStructuredData 'user_level'), so they are not listed.
+ * Names: the member's server display name; anyone who left shows as "Former member" (never an ID).
+ * Each page is cached for a minute (one promise per page, so concurrent views share a read):
+ * getLeaderboard fetches uncached members from the gateway, which an open page must not hammer.
+ */
+export function createLeaderboardReader(client, { guildId = () => enforcementConfig.mainGuildId, now = () => Date.now() } = {}) {
+    const cache = new Map();
+    const read = async ({ offset, limit }) => {
+        const id = guildId();
+        if (!id) throw new Error('MAIN_GUILD_ID is not set');
+        if (!client?.isReady?.()) throw new Error('the bot is not connected yet');
+        const guild = client.guilds?.cache?.get(id);
+        if (!guild) throw new Error('the main server is not in the cache');
+        const config = await getLevelingConfig(client, id);
+        if (!config?.enabled) return { enabled: false, rows: [] };
+        const entries = await getLeaderboard(client, id, limit, offset);
+        return {
+            enabled: true,
+            rows: entries.map((entry) => ({
+                rank: entry.rank,
+                name: guild.members.cache.get(entry.userId)?.displayName || 'Former member',
+                level: entry.level,
+                totalXp: entry.totalXp,
+            })),
+        };
+    };
+    return ({ offset, limit }) => {
+        const key = `${offset}:${limit}`;
+        const hit = cache.get(key);
+        if (hit && hit.until > now()) return hit.promise;
+        const promise = read({ offset, limit });
+        cache.delete(key);
+        cache.set(key, { promise, until: now() + LEADERBOARD_CACHE_MS });
+        while (cache.size > LEADERBOARD_CACHE_MAX) cache.delete(cache.keys().next().value);
+        // A failed read is not cached: the next view tries again.
+        promise.catch(() => { if (cache.get(key)?.promise === promise) cache.delete(key); });
+        return promise;
+    };
+}
+
+const formatNumber = (value) => (Number(value) || 0).toLocaleString('en-US');
+
+/** `board` is the reader's result (with one row too many when there is a next page), or null when the read failed. */
+export function leaderboardPage(ctx, { page, board }) {
+    const head = html`<h1>Leaderboard</h1>
+<p class="lead">The most active members of the Meowist server by level and total XP. You earn XP by chatting; members who delete their data with <code>/wipedata</code> are not listed.</p>`;
+    let content;
+    if (!board) {
+        content = html`<p class="notice notice-bad" role="alert">The leaderboard could not be loaded right now. Nothing was changed; please try again in a minute.</p>`;
+    } else if (!board.enabled) {
+        content = html`<p class="notice">Leveling is turned off on the Meowist server, so there is no leaderboard right now.</p>`;
+    } else {
+        const rows = board.rows.slice(0, LEADERBOARD_PAGE_SIZE);
+        const hasNext = board.rows.length > LEADERBOARD_PAGE_SIZE;
+        const link = (n, label, rel) => html`<a class="button button-quiet" href="/leaderboard${n > 1 ? `?page=${n}` : ''}" rel="${rel}">${label}</a>`;
+        const pager = page > 1 || hasNext
+            ? html`<nav class="pager" aria-label="Leaderboard pages">${page > 1 ? link(page - 1, 'Previous', 'prev') : ''}<span class="pager-current">Page ${page}</span>${hasNext ? link(page + 1, 'Next', 'next') : ''}</nav>`
+            : '';
+        content = rows.length
+            ? html`<div class="table-wrap"><table class="board"><caption class="visually-hidden">Leaderboard, page ${page}</caption>
+<thead><tr><th scope="col">Rank</th><th scope="col">Member</th><th scope="col">Level</th><th scope="col">Total XP</th></tr></thead>
+<tbody>${rows.map((r) => html`<tr><td class="num">${r.rank}</td><td class="board-name">${r.name}</td><td class="num">${r.level}</td><td class="num">${formatNumber(r.totalXp)}</td></tr>`)}</tbody></table></div>${pager}`
+            : html`<p class="notice">${page > 1 ? 'There is nobody on this page.' : 'Nobody has earned XP yet.'}</p>${page > 1 ? html`<p><a class="button button-quiet" href="/leaderboard">Back to the first page</a></p>` : ''}`;
+    }
+    return layout(ctx, {
+        title: page > 1 ? `Leaderboard, page ${page}` : 'Leaderboard', active: 'leaderboard',
+        description: 'The Meowist server leveling leaderboard.',
+        body: html`<div class="wrap page">${head}${content}</div>`,
+    });
+}
+
+// ── Status ────────────────────────────────────────────────────────────────
+
+/**
+ * online / starting / degraded, decided like /ready in app.js: the Discord client is ready and
+ * the database is not degraded. Only the state and the uptime leave this function: no counts,
+ * IDs, schema version or memory (those stay on /health and /ready).
+ */
+export function botStatus(client) {
+    if (!client?.isReady?.()) return { state: 'starting', uptimeMs: null };
+    const db = client.db?.getStatus?.() || { isDegraded: true };
+    const uptime = Number(client.uptime);
+    return { state: db.isDegraded ? 'degraded' : 'online', uptimeMs: Number.isFinite(uptime) && uptime >= 0 ? uptime : null };
+}
+
+/** "3 days, 4 hours", "12 minutes", "less than a minute": the two largest units. */
+export function uptimeWords(ms) {
+    const total = Math.floor(Number(ms) / 60000);
+    if (!Number.isFinite(total) || total < 1) return 'less than a minute';
+    const units = [['day', Math.floor(total / 1440)], ['hour', Math.floor((total % 1440) / 60)], ['minute', total % 60]];
+    const first = units.findIndex(([, n]) => n > 0);
+    return units.slice(first, first + 2).filter(([, n]) => n > 0).map(([unit, n]) => `${n} ${unit}${n === 1 ? '' : 's'}`).join(', ');
+}
+
+const STATUS_TEXT = {
+    online: { label: 'Online', text: 'Meowist is running normally.' },
+    starting: { label: 'Starting', text: 'Meowist is starting or reconnecting to Discord. Commands answer again in a moment.' },
+    degraded: { label: 'Degraded', text: 'Meowist is connected to Discord but its database is not responding. Commands that read or save data may fail until it recovers.' },
+};
+
+export function statusPage(ctx, status) {
+    const state = STATUS_TEXT[status?.state] ? status.state : 'degraded';
+    const { label, text } = STATUS_TEXT[state];
+    const uptime = state !== 'starting' && Number.isFinite(status?.uptimeMs) ? status.uptimeMs : null;
+    return layout(ctx, {
+        title: 'Status', active: 'status', refresh: 60,
+        description: 'Whether the Meowist bot is online.',
+        body: html`<div class="wrap page"><h1>Status</h1>
+<p class="status status-${state}"><span class="status-dot" aria-hidden="true"></span>${label}</p>
+<p class="lead">${text}</p>
+${uptime !== null ? html`<p>Up for ${uptimeWords(uptime)}.</p>` : ''}
+<p class="note">This page refreshes every minute.${ctx.supportInvite ? html` Something not working? <a href="${ctx.supportInvite}" rel="noopener">Tell us in the support server</a>.` : ''}</p></div>`,
+    });
+}
+
+// ── Privacy and terms ─────────────────────────────────────────────────────
+
+export const LEGAL_UPDATED = '2026-10-29';
+const updatedLine = () => html`<p class="note">Last updated <time datetime="${LEGAL_UPDATED}">29 October 2026</time>.</p>`;
+const contactLine = (ctx) => (ctx.supportInvite
+    ? html`<a href="${ctx.supportInvite}" rel="noopener">the support server</a>`
+    : 'the staff team on the Meowist server');
+
+// Written from what the code stores (utils/database/schema.js, oauthVerification.js,
+// verificationGuard.js, wipedataButtons.js, dashboard/security.js, utils/logger.js); nothing invented.
+export function privacyPage(ctx) {
+    return layout(ctx, {
+        title: 'Privacy', active: 'privacy',
+        description: 'What the Meowist bot stores about you and why.',
+        body: html`<div class="wrap page prose"><h1>Privacy</h1>
+${updatedLine()}
+<p class="lead">What Meowist stores, why, and how to have it removed. Meowist is run by its owner for the Meowist Discord server. Your data is never sold or used for advertising.</p>
+<h2>In short</h2>
+<ul><li>Meowist works with Discord IDs (the numbers that identify accounts, servers and channels). Where a record needs a readable name, such as a moderation case, the username at that moment is saved with it.</li>
+<li>Everything is kept in a PostgreSQL database used only by the bot. Nothing is shared, except with Discord, which the bot runs on, and the services that host the bot and its database.</li>
+<li>Meowist never asks for your email address or your password.</li></ul>
+<h2>Leveling</h2>
+<p>For each server: your XP, your level and when your last message counted towards XP. The text of your messages is not saved for this. Levels are shown on the server’s leaderboard and on this website’s leaderboard (your server display name, level and total XP).</p>
+<h2>Moderation records</h2>
+<p>When staff warn, mute, kick or ban someone, Meowist saves a case: the case code, the type, the reason, who took the action, when, how long it lasts, whether it can be appealed and whether the DM about it was delivered. Changes to a case are kept as its history. Staff can attach evidence: links to messages with a short excerpt of the text (kept in case the message is deleted) and images, which are re-posted in a staff-only channel. Your step on the warning ladder is stored per server and is never reset automatically.</p>
+<p>A case that turns out to be a mistake can be voided: it stays on record but no longer counts.</p>
+<h2>Appeals, reports, tickets and modmail</h2>
+<ul><li><strong>Appeals and staff reports:</strong> what you write in the form, the decision, who made it and the staff note. The conversation happens in a Discord channel; when an appeal is decided, a transcript of that channel is posted to a staff-only channel.</li>
+<li><strong>Tickets:</strong> a record of the ticket channel, who opened it and its state. A transcript is posted to a staff-only channel when it closes.</li>
+<li><strong>Modmail:</strong> when you message the bot and choose to send it to staff, your messages are passed on to a staff channel. The database only keeps which channel belongs to which member; when the conversation is closed, a transcript is posted to a staff-only channel.</li></ul>
+<h2>Verification</h2>
+<p>If a server uses “Verify with Discord”, you sign in with Discord and allow two things: <code>identify</code> (your account’s ID and name) and <code>guilds.join</code> (so the bot can add you to the support server, which keeps appeal messages reaching you even after a ban). The sign-in tokens Discord gives the bot are stored encrypted (AES-256-GCM).</p>
+<p>To spot people coming back on a new account after a ban, Meowist stores a keyed one-way hash of the IP address you verified from, never the address itself. These hashes are deleted after 60 days, unless the account has an active ban on the Meowist server. Accounts younger than 7 days, and accounts that match a banned member’s hash, are held for a person on the staff team to approve; a match alone never refuses anyone. Verification actions (for example verified, or approved by staff) are recorded with their time.</p>
+<h2>Server logs and member history</h2>
+<p>If a server turns on logging, events such as joins, leaves, role changes and edited or deleted messages (including their text) are posted to that server’s staff log channels on Discord. Joins and leaves are also kept in the database for 90 days, for the staff’s member statistics.</p>
+<h2>Things you choose to save</h2>
+<p>Features you use store what you give them, for example your birthday if you set one, your AFK message, your suggestions and votes, and giveaway entries.</p>
+<h2>The dashboard (staff only)</h2>
+<p>Staff who sign in to the dashboard with Discord (<code>identify</code> only) get a session that ends after 12 hours. The database keeps a hash of the session ID with their ID, username and avatar. Every change made in the dashboard is written to an audit log: who changed which setting, from what, to what.</p>
+<h2>The bot’s own logs</h2>
+<p>Technical logs record what the bot did and the errors it ran into, so problems can be fixed. They are deleted automatically after 7 days (error logs after 14 days).</p>
+<h2>Deleting your data</h2>
+<p>Run <code>/wipedata</code> in a server to delete your levels and XP, your economy balance and your AFK status in that server. It does not delete moderation records, appeals, reports or verification records: those are the server’s safety records and stay so decisions can be checked later. For anything else, ask in ${contactLine(ctx)}.</p>
+<h2>Blocked accounts</h2>
+<p>Accounts or servers blocked from using the bot are recorded with the reason and who blocked them. Lifting a block keeps the entry as history.</p>
+<h2>Changes and contact</h2>
+<p>When what Meowist stores changes, this page is updated along with the date above. Questions about your data: ask in ${contactLine(ctx)}.</p></div>`,
+    });
+}
+
+export function termsPage(ctx) {
+    return layout(ctx, {
+        title: 'Terms', active: 'terms',
+        description: 'The rules for using the Meowist bot.',
+        body: html`<div class="wrap page prose"><h1>Terms</h1>
+${updatedLine()}
+<p class="lead">The short rules for using Meowist. By using the bot you accept them.</p>
+<h2>Using the bot</h2>
+<ul><li>Follow Discord’s Terms of Service and Community Guidelines, and the rules of the server you are in.</li>
+<li>Don’t use Meowist to harass anyone, to spam, or to get around a punishment.</li>
+<li>Don’t try to break, overload or misuse the bot, this website or the dashboard.</li></ul>
+<h2>Moderation decisions</h2>
+<p>Meowist carries out what a server’s staff decide. Warnings, mutes, kicks and bans are decisions of that server’s staff team; the automatic steps of the warning ladder follow the rules that server has set.</p>
+<h2>Appeals</h2>
+<p>If a punishment can be appealed, the DM about it says how. One appeal per case can be open at a time, and staff decide and tell you the result. Some punishments cannot be appealed; the DM says so.</p>
+<h2>Being blocked</h2>
+<p>The bot’s owner can block an account or a server from using Meowist, for example for abusing it.</p>
+<h2>No warranty</h2>
+<p>Meowist is provided as it is, for free, without any promise that it is always available, free of errors or fit for a particular purpose. It can change, pause or stop at any time.</p>
+<h2>Your data</h2>
+<p>See the <a href="/privacy">privacy page</a> for what Meowist stores and how to delete it.</p>
+<h2>Changes</h2>
+<p>These terms can change; the date above shows the latest version. Questions: ask in ${contactLine(ctx)}.</p></div>`,
+    });
+}
+
 export function notFoundPage(ctx) {
     return layout(ctx, {
         title: 'Not found',
@@ -252,8 +479,13 @@ export function notFoundPage(ctx) {
 /**
  * The front-site router. `client` gives the loaded commands (read per request: the web server
  * starts before the commands load); `support()` the current support invite (a settings getter).
+ * `leaderboard({ offset, limit })` and `status()` default to the real readers on `client`;
+ * tests pass fakes.
  */
-export function createSite({ client = null, env = process.env, dashboardEnabled = false, supportInvite = () => null } = {}) {
+export function createSite({
+    client = null, env = process.env, dashboardEnabled = false, supportInvite = () => null,
+    leaderboard = createLeaderboardReader(client), status = () => botStatus(client),
+} = {}) {
     const router = express.Router();
     const publicSite = publicSiteEnabled(env);
     const base = {
@@ -280,6 +512,26 @@ export function createSite({ client = null, env = process.env, dashboardEnabled 
     router.get('/', page(homePage));
     router.get('/commands', page(commandsPage));
     router.get('/about', page(aboutPage));
+    router.get('/privacy', page(privacyPage));
+    router.get('/terms', page(termsPage));
+    // Always 200: it is a page about the bot, not a health check (that is /ready).
+    router.get('/status', page((ctx) => {
+        let current;
+        try { current = status(); } catch { current = { state: 'degraded', uptimeMs: null }; }
+        return statusPage(ctx, current);
+    }));
+    // One row more than a page is read, only to know whether there is a next page.
+    router.get('/leaderboard', async (req, res) => {
+        const number = leaderboardPageNumber(req.query.page);
+        let board = null;
+        try {
+            board = await leaderboard({ offset: (number - 1) * LEADERBOARD_PAGE_SIZE, limit: LEADERBOARD_PAGE_SIZE + 1 });
+        } catch (error) {
+            logger.warn(`Site leaderboard could not be loaded: ${error.message}`);
+        }
+        res.set('Cache-Control', 'no-cache');
+        res.status(board ? 200 : 503).type('html').send(leaderboardPage(context(), { page: number, board }));
+    });
     router.get('/robots.txt', (req, res) => {
         res.set('Cache-Control', 'no-cache');
         res.type('text/plain').send(publicSite ? 'User-agent: *\nDisallow: /dashboard\nDisallow: /oauth\n' : 'User-agent: *\nDisallow: /\n');
@@ -301,7 +553,7 @@ export function createSite({ client = null, env = process.env, dashboardEnabled 
 }
 
 /** Mounts the front site at the root of `app` (after /health, /ready, OAuth and the dashboard). */
-export function registerSite(app, client, { env = process.env, dashboardEnabled = false, supportInvite } = {}) {
-    app.use(createSite({ client, env, dashboardEnabled, supportInvite }));
+export function registerSite(app, client, { env = process.env, dashboardEnabled = false, supportInvite, leaderboard, status } = {}) {
+    app.use(createSite({ client, env, dashboardEnabled, supportInvite, leaderboard, status }));
     logger.info(`Front site at / (${publicSiteEnabled(env) ? 'public' : 'not public: noindex, no add button (PUBLIC_SITE_ENABLED)'})`);
 }
