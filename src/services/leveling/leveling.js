@@ -93,7 +93,9 @@ async function readAllLevelRows(client, guildId) {
  * user_levels; only the members on the page are looked up (cache first, then one
  * fetch for the rest). Users who left the guild keep their rank and show by ID.
  */
-export async function getLeaderboard(client, guildId, limit = 10, offset = 0) {
+// fetchMissing: false never asks the gateway for members (the public website: page views must not
+// trigger Discord requests); members not in the cache keep the fallback name.
+export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { fetchMissing = true } = {}) {
   try {
     
     if (!guildId || typeof guildId !== 'string') {
@@ -123,7 +125,7 @@ export async function getLeaderboard(client, guildId, limit = 10, offset = 0) {
       : rankLevelRows(await readAllLevelRows(client, guildId), limit, offset);
 
     const missing = page.map(entry => entry.userId).filter(id => !guild.members.cache.has(id));
-    if (missing.length > 0) {
+    if (fetchMissing && missing.length > 0) {
       await guild.members.fetch({ user: missing }).catch(error => {
         logger.warn(`Failed to fetch leaderboard members for guild ${guildId}:`, error);
       });

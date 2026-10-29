@@ -379,10 +379,12 @@ test('leaderboard: leveling turned off says so', async () => {
 /** A client shaped like the real one, enough for getLevelingConfig and getLeaderboard. */
 function fakeClient({ ready = true, enabled = true, levels = [], members = {}, failRows = false } = {}) {
     const memberCache = new Map(Object.entries(members).map(([id, displayName]) => [id, { displayName, user: { username: displayName } }]));
-    const guild = { id: '111111111111111111', members: { cache: memberCache, fetch: async () => memberCache } };
+    let fetches = 0;
+    const guild = { id: '111111111111111111', members: { cache: memberCache, fetch: async () => { fetches += 1; return memberCache; } } };
     let reads = 0;
     return {
         reads: () => reads,
+        fetches: () => fetches,
         isReady: () => ready,
         guilds: { cache: new Map([[guild.id, guild]]) },
         users: { cache: new Map() },
@@ -413,6 +415,7 @@ test('the real reader: main server only, display names, former members without I
         { rank: 1, name: 'Kitty <3', level: 4, totalXp: 900 },
         { rank: 2, name: 'Former member', level: 2, totalXp: 300 },
     ]);
+    assert.equal(client.fetches(), 0, 'a page view never asks Discord for members (former member stays uncached)');
     await read({ offset: 0, limit: 51 });
     assert.equal(client.reads(), 1, 'second view within a minute is cached');
     clock += 61_000;

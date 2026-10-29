@@ -292,7 +292,8 @@ export function createLeaderboardReader(client, { guildId = () => enforcementCon
         if (!guild) throw new Error('the main server is not in the cache');
         const config = await getLevelingConfig(client, id);
         if (!config?.enabled) return { enabled: false, rows: [] };
-        const entries = await getLeaderboard(client, id, limit, offset);
+        // Cache only: a public page view never makes the bot fetch members from Discord.
+        const entries = await getLeaderboard(client, id, limit, offset, { fetchMissing: false });
         return {
             enabled: true,
             rows: entries.map((entry) => ({
