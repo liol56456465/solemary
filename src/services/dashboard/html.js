@@ -145,6 +145,7 @@ export const NAV = [
         { key: 'verification', label: 'Verification', state: 'verification', keywords: 'verify, captcha, verified role, auto-verify, panel', summary: 'Verify panel or auto-verify on join.' },
         { key: 'counters', label: 'Counters', keywords: 'member count, stats channels, counting game', summary: 'Member counters and the counting game.' },
         { key: 'support', label: 'Support server', keywords: 'banned role, support server, ban appeals category', summary: 'The support server: banned role, ban appeals.' },
+        { key: 'rules', label: 'Rules', keywords: 'server rules, rules page, rule numbers, reasons, rule link, punishment dm', summary: 'The server rules, and which reason points to which rule.' },
     ] },
     { group: 'Bot', items: [
         { key: 'modules', label: 'All modules' },

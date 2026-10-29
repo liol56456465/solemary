@@ -46,6 +46,7 @@ export const PERMISSIONS = Object.freeze({
     'page:verification': ADMIN,
     'page:counters': ADMIN,
     'page:support': ADMIN,
+    'page:rules': ADMIN,
     'page:modules': ADMIN,
     'page:commands': ADMIN,
     'page:audit': ADMIN,

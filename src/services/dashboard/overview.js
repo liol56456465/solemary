@@ -370,6 +370,8 @@ function displayValue(client, guildId, entry, value) {
             return formatDuration(Number(value));
         case 'boolean':
             return value ? 'on' : 'off';
+        case 'json':
+            return entry.describe ? entry.describe(value) : 'set';
         default:
             return `${value}${entry.unit ? ` ${entry.unit}` : ''}`;
     }
