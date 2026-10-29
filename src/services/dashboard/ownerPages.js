@@ -1,6 +1,7 @@
 // ownerPages.js — the Owner area pages (bot owners only): overview, bot profile, servers,
-// server detail, leave confirm, user lookup, blacklist, health and maintenance, announce (compose,
-// confirm, result), activity (the owner audit rows). Pure: data in, HTML out, everything escaped by the `html` template. No inline
+// server detail, leave confirm, user lookup, blacklist, health and maintenance, command sync
+// (compare + re-register confirm), announce (compose, confirm, result), activity (the owner
+// audit rows). Pure: data in, HTML out, everything escaped by the `html` template. No inline
 // styles or scripts (CSP).
 
 import { formatDate, html, layout, path, queryString, timeTag } from './html.js';
@@ -234,6 +235,7 @@ export function ownerActionText(key, names = new Map()) {
     let m;
     if (k === 'maintenance') return 'Maintenance mode';
     if (k === 'announce') return 'Announcement to every server';
+    if (k === 'commands.register') return 'Commands re-registered in the main server';
     if ((m = /^profile\.(username|about|presence|avatar|banner)$/.exec(k))) {
         return `Bot profile: ${{ username: 'username', about: 'about me', presence: 'status', avatar: 'avatar', banner: 'banner' }[m[1]]}`;
     }
@@ -289,7 +291,7 @@ ${page > 0 ? html`<a href="${path(`/owner/activity${queryString({ page: page - 1
 <span class="muted">Page ${page + 1} of ${pages} · ${total} action${total === 1 ? '' : 's'}</span>
 ${page + 1 < pages ? html`<a href="${path(`/owner/activity${queryString({ page: page + 1 })}`)}">Older →</a>` : ''}
 </div>`;
-    const body = html`<header class="page-head"><h1>Owner activity</h1><p class="muted">Everything done in the Owner area: profile changes, invites, leaving servers, blacklist, maintenance and announcements. Not shown in the server's audit log.</p></header>
+    const body = html`<header class="page-head"><h1>Owner activity</h1><p class="muted">Everything done in the Owner area: profile changes, invites, leaving servers, blacklist, maintenance, announcements and command re-registration. Not shown in the server's audit log.</p></header>
 ${rows === null ? html`<p class="error" role="alert">The activity could not be loaded (database). Reload the page to try again.</p>`
         : rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>What</th><th>Before</th><th>After</th></tr></thead><tbody>
 ${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${ownerActionText(r.key, names)}</td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
@@ -341,6 +343,54 @@ ${recentLogsSection(health.recentLogs)}
 ${actionForm(session.csrf, '/owner/health/maintenance', '', { submit: health.maintenance ? 'Turn maintenance off' : 'Turn maintenance on', hidden: { enabled: health.maintenance ? 'off' : 'on' }, danger: !health.maintenance, enabled: editEnabled })}
 <p class="muted">Kept after a restart.</p></section>`;
     return shell({ title: 'Health', active: 'owner/health', session, access, moduleStates, body });
+}
+
+// ── Command sync ──────────────────────────────────────────────────────────
+
+const countText = (c) => (c ? `${c.slash} slash command${c.slash === 1 ? '' : 's'} + ${c.menus} context menu${c.menus === 1 ? '' : 's'}` : '—');
+
+function diffList(title, rows, note) {
+    return rows.length ? html`<h3>${title} (${rows.length})</h3><p class="muted">${note}</p>
+<ul class="skip-list">${rows.map((c) => html`<li><b>${c.name}</b> <span class="muted">${c.type}</span></li>`)}</ul>` : '';
+}
+
+/**
+ * state: { mainId, mainName, loaded, retired, expected: { slash, menus } | null, registered: { slash,
+ * menus } | null, diff: { missing, extra, inSync } | null, expectedError, registeredError }.
+ */
+export function commandsPage({ session, access = null, moduleStates = {}, state, flash = null, error = null, editEnabled = true }) {
+    const s = state;
+    const comparison = s.diff
+        ? s.diff.inSync
+            ? html`<p>${stateWord('on', 'In sync: Discord has exactly the commands the bot registers.')}</p>`
+            : html`<p>${stateWord('warn', 'Out of sync')} <span class="muted">Re-register below to fix it.</span></p>
+${diffList('Missing on Discord', s.diff.missing, 'In the bot\'s list but not registered: members cannot use them.')}
+${diffList('On Discord but not in the bot\'s list', s.diff.extra, 'Left over from an older version or another registration; using them fails.')}`
+        : html`<p class="muted">No comparison: one side could not be read (see above).</p>`;
+    const body = html`<header class="page-head"><h1>Command sync</h1><p class="muted">The slash commands and context menus registered in the main server compared with the bot's list. Global and support-server commands are not shown or changed here.</p></header>
+${notices({ flash, error, editEnabled })}
+${s.expectedError ? html`<p class="error" role="alert">${s.expectedError}</p>` : ''}
+${s.registeredError ? html`<p class="error" role="alert">${s.registeredError}</p>` : ''}
+<section class="card"><h2>Main server${s.mainName ? html` · ${s.mainName}` : ''}</h2><dl>
+<dt>Loaded by the bot</dt><dd>${s.loaded} command file${s.loaded === 1 ? '' : 's'}</dd>
+<dt>Startup registers</dt><dd>${countText(s.expected)}${s.retired ? html` <span class="muted">(RETIRE_ADMIN_COMMANDS is on: everyone-commands and the owner kit only)</span>` : ''}</dd>
+<dt>On Discord now</dt><dd>${countText(s.registered)}</dd>
+</dl>${comparison}</section>
+<section class="card"><h2>Re-register</h2><p class="muted">Sends the bot's list to the main server again, with the same code the bot runs at startup (RETIRE_ADMIN_COMMANDS applied the same way). It replaces the main server's whole list; global and support-server commands are not touched. You confirm on the next page.</p>
+${s.mainId ? actionForm(session.csrf, '/owner/commands/register/preview', '', { submit: 'Re-register commands in the main server…', enabled: editEnabled && !s.expectedError }) : html`<p class="muted">MAIN_GUILD_ID is not set.</p>`}</section>`;
+    return shell({ title: 'Command sync', active: 'owner/commands', session, access, moduleStates, body });
+}
+
+export function registerConfirmPage({ session, access = null, moduleStates = {}, state, token, hash }) {
+    const body = html`<p><a href="${path('/owner/commands')}">← Back (cancel)</a></p>
+<h1>Confirm: re-register commands in the main server</h1>
+<section class="card confirm-card"><dl><dt>Server</dt><dd>${state.mainName || 'Main server'} <span class="muted">${state.mainId}</span></dd>
+<dt>Will register</dt><dd>${countText(state.expected)}${state.retired ? ' (admin commands retired)' : ''}</dd>
+<dt>On Discord now</dt><dd>${countText(state.registered)}</dd>
+<dt>Effect</dt><dd>The main server's command list is replaced by the bot's list in one request. Global and support-server commands stay as they are.</dd></dl>
+<p class="muted">This confirmation works once and expires in 5 minutes.</p>
+${actionForm(session.csrf, '/owner/commands/register', html`<label class="check"><input type="checkbox" name="confirm" value="1" required> Re-register the commands in the main server</label>`, { submit: 'Re-register commands', hidden: { token, fh: hash }, danger: true })}</section>`;
+    return shell({ title: 'Re-register commands', active: 'owner/commands', session, access, moduleStates, body });
 }
 
 // ── Announce ──────────────────────────────────────────────────────────────

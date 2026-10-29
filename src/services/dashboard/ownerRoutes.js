@@ -17,13 +17,16 @@
 //   GET  /dashboard/owner/blacklist[?kind=&id=], POST …/add|remove  global blacklist (users, servers);
 //                                                       kind/id only pre-fill the form
 //   GET  /dashboard/owner/health, POST …/maintenance    process status, maintenance switch
+//   GET  /dashboard/owner/commands                      main-server commands on Discord vs the bot's list
+//   POST /dashboard/owner/commands/register/preview|register   re-register the main server's commands
+//                                                       (startup's code; global + support never touched)
 //   GET  /dashboard/owner/announce, POST …/preview|send one message to every server's log channel
 //
 // Access: every request checks isBotOwner(session user) live (not the cached access
 // decision); anyone else gets the normal 404 page. POSTs also need: 30/min per session,
 // same origin + CSRF, DASHBOARD_EDIT_ENABLED, and a login younger than 12 hours. Every
-// change writes a dashboard_audit row (module 'owner'). Leaving a server and announcing
-// need a one-time confirm token (5 minutes, this session) plus a tick-box.
+// change writes a dashboard_audit row (module 'owner'). Leaving a server, announcing and
+// re-registering commands need a one-time confirm token (5 minutes, this session) plus a tick-box.
 
 import { ChannelType, PermissionFlagsBits, SnowflakeUtil } from 'discord.js';
 import { readFileSync } from 'node:fs';
@@ -48,9 +51,11 @@ import { getLadder } from '../enforcement/enforcementService.js';
 import { getActiveCase, listCasesForUser } from '../enforcement/caseService.js';
 import { findMutedRole } from '../enforcement/muteService.js';
 import { INSTALL_PERMISSIONS } from '../site/site.js';
+import { expectedMainCommands, registerMainGuildCommands } from '../../handlers/loaders/commandLoader.js';
+import { adminCommandsRetired } from '../../config/commands/retirement.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
-    blacklistPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage, userLookupPage,
+    blacklistPage, commandsPage, registerConfirmPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage, userLookupPage,
 } from './ownerPages.js';
 
 export const OWNER_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
@@ -200,6 +205,31 @@ export function rolesAboveBot(botTop, roles = []) {
     });
 }
 
+const COMMAND_TYPE_LABEL = { 1: 'Slash command', 2: 'User menu', 3: 'Message menu' };
+const commandKey = (c) => `${Number(c?.type) || 1}:${c?.name}`;
+
+/** Slash commands and context menus in a command list: { slash, menus }. */
+export function commandCounts(list = []) {
+    const slash = list.filter((c) => (Number(c?.type) || 1) === 1).length;
+    return { slash, menus: list.length - slash };
+}
+
+/**
+ * The bot's list (what startup registers) against what Discord has in the main server, by name
+ * and type: missing = in the bot's list but not on Discord; extra = on Discord but not in the
+ * bot's list. Each [{ name, type }] sorted by name; inSync when both are empty.
+ */
+export function commandDiff(expected = [], registered = []) {
+    const want = new Map(expected.map((c) => [commandKey(c), c]));
+    const have = new Map(registered.map((c) => [commandKey(c), c]));
+    const rows = (from, other) => [...from].filter(([k]) => !other.has(k))
+        .map(([, c]) => ({ name: c.name, type: COMMAND_TYPE_LABEL[Number(c.type) || 1] || 'Command' }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+    const missing = rows(want, have);
+    const extra = rows(have, want);
+    return { missing, extra, inSync: !missing.length && !extra.length };
+}
+
 /** What an announcement sends: plain text, no mention ever pings. */
 export function announcePayload(message) {
     return { content: String(message), allowedMentions: { parse: [] } };
@@ -344,6 +374,14 @@ async function defaultManagedRoles(guild) {
     return roles;
 }
 
+/** The bot's own commands registered in that server now (one API call): [{ name, type }]. */
+async function defaultRegisteredCommands(client, guildId) {
+    const guild = client.guilds?.cache?.get?.(guildId);
+    if (!guild) throw new InputError('The bot is not in the main server.');
+    const list = await guild.commands.fetch();
+    return [...list.values()].map((c) => ({ name: c.name, type: c.type }));
+}
+
 export const defaultOwnerDeps = {
     isBotOwner: configIsBotOwner,
     blacklist: blacklistStore,
@@ -355,6 +393,11 @@ export const defaultOwnerDeps = {
     recentLogs: getRecentLogs,
     moderationRecord: defaultModerationRecord,
     managedRoles: defaultManagedRoles,
+    // Command sync: the same list and the same registration code as startup (commandLoader.js).
+    expectedCommands: (client) => expectedMainCommands(client),
+    registeredCommands: defaultRegisteredCommands,
+    registerMainCommands: (client) => registerMainGuildCommands(client),
+    commandsRetired: () => adminCommandsRetired(),
 };
 
 // ── Handlers ──────────────────────────────────────────────────────────────
@@ -796,6 +839,68 @@ export function createOwnerHandlers(core) {
         return res.redirect(303, path('/owner/health'));
     }, { rerender: (req, res, status, message) => renderHealth(req, res, status, message) });
 
+    // ── Command sync ─────────────────────────────────────────────────────
+
+    /** The comparison for the page; each side's error is kept (never shown as "in sync"). */
+    async function commandState() {
+        const mainId = protectedIds()[0] || null;
+        let expected = null;
+        let expectedError = null;
+        let registered = null;
+        let registeredError = null;
+        try {
+            expected = await o.expectedCommands(client);
+        } catch (error) {
+            expectedError = `The bot's command list could not be built: ${plainText(error.message || 'unknown error')}`;
+        }
+        if (!mainId) registeredError = 'MAIN_GUILD_ID is not set.';
+        else {
+            try {
+                registered = await o.registeredCommands(client, mainId);
+            } catch (error) {
+                registeredError = `Discord's list could not be read: ${plainText(error.message || 'unknown error')}`;
+            }
+        }
+        return {
+            mainId, mainName: client.guilds?.cache?.get?.(mainId)?.name || null, loaded: client.commands?.size ?? 0, retired: Boolean(o.commandsRetired()),
+            expected: expected ? commandCounts(expected) : null, registered: registered ? commandCounts(registered) : null,
+            diff: expected && registered ? commandDiff(expected, registered) : null, expectedError, registeredError,
+        };
+    }
+
+    async function renderCommands(req, res, status = 200, error = null) {
+        return sendHtml(res, status, commandsPage({ ...page(req), state: await commandState(), flash: status === 200 ? takeFlash(req) : null, error }));
+    }
+    const commands = (req, res) => renderCommands(req, res);
+    const rerenderCommands = (req, res, status, message) => renderCommands(req, res, status, message);
+
+    const registerPreview = ownerPost(async (req, res) => {
+        const state = await commandState();
+        if (!state.mainId) throw new InputError('MAIN_GUILD_ID is not set; there is no main server to register in.');
+        if (state.expectedError) throw new InputError(state.expectedError);
+        const payload = { registered: state.registered ? state.registered.slash + state.registered.menus : null };
+        const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'commands:register', payload });
+        return sendHtml(res, 200, registerConfirmPage({ ...page(req), state, token, hash }));
+    }, { rerender: rerenderCommands });
+
+    const register = ownerPost(async (req, res) => {
+        const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: 'commands:register', hash: text(req.body, 'fh', 100) });
+        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was registered; start again.');
+        if (text(req.body, 'confirm', 5) !== '1') throw new InputError('Tick the box to confirm. Nothing was registered; start again.');
+        let result;
+        try {
+            result = await o.registerMainCommands(client);
+        } catch (error) {
+            logger.warn(`Dashboard owner ${req.dashboard.session.userId}: command registration failed: ${error.message}`);
+            throw new InputError(`Registration failed; the main server's list was not changed: ${plainText(error.message || 'unknown error')}`);
+        }
+        const retired = Boolean(o.commandsRetired());
+        await audit(req, [{ key: 'commands.register', old: { count: payload.registered }, new: { count: result?.count ?? null, retired } }]);
+        logger.warn(`Dashboard owner ${req.dashboard.session.userId} re-registered ${result?.count ?? '?'} command(s) in the main server`);
+        await flash(req, `Registered ${result?.count ?? 'the'} command${result?.count === 1 ? '' : 's'} in the main server${retired ? ' (admin commands retired)' : ''}. Discord shows the change within a few seconds.`);
+        return res.redirect(303, path('/owner/commands'));
+    }, { rerender: rerenderCommands });
+
     // ── Announce ─────────────────────────────────────────────────────────
 
     /** Every server: its log channel when the bot can post there, else why it is skipped. */
@@ -868,6 +973,6 @@ export function createOwnerHandlers(core) {
     return {
         requireOwner, index, home, activity, profile, username, about, presence, avatar: imageAction('avatar'), banner: imageAction('banner'),
         servers, server, invite, leavePreview, leave, users, blacklist, blacklistAdd, blacklistRemove,
-        health, maintenance, announce, announcePreview, announceSend,
+        health, maintenance, commands, registerPreview, register, announce, announcePreview, announceSend,
     };
 }

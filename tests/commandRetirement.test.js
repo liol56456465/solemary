@@ -7,7 +7,8 @@ import { adminCommandsRetired, dashboardPageFor, retireCommandJson, retiredMessa
 const { enforcementConfig } = await import('../src/config/enforcement.js');
 const { botConfig } = await import('../src/config/bot.js');
 const { checkCommandAccess } = await import('../src/utils/commandGate.js');
-const { registerCommandSets } = await import('../src/handlers/loaders/commandLoader.js');
+const { expectedMainCommands, registerCommandSets, registerMainGuildCommands } = await import('../src/handlers/loaders/commandLoader.js');
+const { testMode } = await import('../src/config/testMode.js');
 
 const SUB = (name) => ({ type: 1, name, description: name });
 
@@ -81,5 +82,39 @@ test('registerCommandSets while retired registers the reduced lists', async () =
         assert.deepEqual(main.names, ['ping', 'birthday']);
     } finally {
         Object.assign(enforcementConfig, { mainGuildId: saved.main, supportGuildId: saved.support });
+    }
+});
+
+test('registerMainGuildCommands: one PUT to the main guild with the startup list (retirement applied); global and support untouched', async () => {
+    const puts = [];
+    const cmd = (json) => ({ data: { name: json.name, toJSON: () => json } });
+    const client = {
+        rest: { put: async (route, { body }) => { puts.push({ route: String(route), names: body.map((c) => c.name) }); } },
+        commands: new Map([
+            ['ping', cmd({ name: 'ping', description: 'p' })], ['purge', cmd({ name: 'purge', description: 'p' })],
+            ['birthday', cmd({ name: 'birthday', description: 'b', options: [SUB('set'), SUB('setchannel')] })],
+        ]),
+    };
+    const saved = { main: enforcementConfig.mainGuildId, support: enforcementConfig.supportGuildId, test: testMode.enabled, ids: testMode.guildIds };
+    Object.assign(enforcementConfig, { mainGuildId: '1700000000000000001', supportGuildId: '1700000000000000002' });
+    testMode.enabled = false;
+    try {
+        const result = await withEnv({ RETIRE_ADMIN_COMMANDS: 'true' }, () => registerMainGuildCommands(client, { clientId: '1600000000000000001' }));
+        assert.deepEqual(result, { guildId: '1700000000000000001', count: 2 });
+        assert.equal(puts.length, 1, 'exactly one request');
+        assert.equal(puts[0].route, '/applications/1600000000000000001/guilds/1700000000000000001/commands');
+        assert.deepEqual(puts[0].names, ['ping', 'birthday']);
+        assert.deepEqual(withEnv({ RETIRE_ADMIN_COMMANDS: '' }, () => expectedMainCommands(client)).map((c) => c.name), ['ping', 'purge', 'birthday']);
+        assert.equal(puts.length, 1, 'the comparison list never registers anything');
+
+        await assert.rejects(registerMainGuildCommands(client, { clientId: '' }), /CLIENT_ID/);
+        testMode.enabled = true;
+        testMode.guildIds = new Set(['1700000000000000009']);
+        await assert.rejects(registerMainGuildCommands(client, { clientId: '1600000000000000001' }), /TEST_GUILD_IDS/);
+        assert.equal(puts.length, 1, 'refused without a request');
+    } finally {
+        Object.assign(enforcementConfig, { mainGuildId: saved.main, supportGuildId: saved.support });
+        testMode.enabled = saved.test;
+        testMode.guildIds = saved.ids;
     }
 });

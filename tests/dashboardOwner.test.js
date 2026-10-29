@@ -16,7 +16,7 @@ const { createAccessChecker } = await import('../src/services/dashboard/access.j
 const { SESSION_COOKIE, signValue } = await import('../src/services/dashboard/security.js');
 const { layout, JS_PATH } = await import('../src/services/dashboard/html.js');
 const {
-    accountCreatedAt, announcePayload, missingPermissions, rolesAboveBot, canLeaveGuild, canOfferUserBlacklist, fetchImageFromUrl, userBlacklistState, inviteOptions, isSessionFresh, OWNER_SESSION_MAX_AGE_MS,
+    accountCreatedAt, announcePayload, commandCounts, commandDiff, missingPermissions, rolesAboveBot, canLeaveGuild, canOfferUserBlacklist, fetchImageFromUrl, userBlacklistState, inviteOptions, isSessionFresh, OWNER_SESSION_MAX_AGE_MS,
     serverTagsFor, serverTotals, sortServers,
 } = await import('../src/services/dashboard/ownerRoutes.js');
 const { ownerActionText } = await import('../src/services/dashboard/ownerPages.js');
@@ -91,6 +91,9 @@ async function setup({
     blacklistActive = [], auditList = async () => ({ rows: [], total: 0 }), recentLogLines = [],
     moderationRecord = async () => ({ ladder: { level: 0, warns_since_level: 0 }, caseCount: 0, activeBan: null, activeMute: null }),
     blacklistList = null, managedRoles = async () => [],
+    expectedCommands = async () => [{ name: 'help' }, { name: 'rank' }, { name: 'Moderate', type: 2 }],
+    registeredCommands = async () => [{ name: 'help', type: 1 }, { name: 'rank', type: 1 }, { name: 'Moderate', type: 2 }],
+    registerMainCommands = async () => ({ guildId: '100000000000000001', count: 3 }), retired = false,
 } = {}) {
     const guilds = new Map([
         [MAIN, makeGuild(MAIN, { name: 'Main', ownerId: '999999999999999990' })],
@@ -124,6 +127,10 @@ async function setup({
         recentLogs: () => recentLogLines,
         moderationRecord: rec('moderationRecord', moderationRecord),
         managedRoles,
+        expectedCommands: rec('expectedCommands', expectedCommands),
+        registeredCommands: rec('registeredCommands', registeredCommands),
+        registerMainCommands: rec('registerMainCommands', registerMainCommands),
+        commandsRetired: () => retired,
     };
     const sessions = createMemorySessionStore({ ttlMs: 48 * 3600 * 1000 });
     const access = createAccessChecker(client, { facts: async (c, id) => ({ inGuild: true, isAdmin: admins.has(id), isOwnerId: owners.has(id) }) });
@@ -167,7 +174,7 @@ const tokenOf = (body) => ({ token: body.match(/name="token" value="([^"]+)"/)?.
 
 test('owner area: a non-owner (even an Administrator) gets the normal 404 page; an owner gets the page', async () => {
     const admin = await setup({ userId: ADMIN });
-    for (const handler of ['home', 'activity', 'profile', 'servers', 'users', 'blacklist', 'health', 'announce']) {
+    for (const handler of ['home', 'activity', 'profile', 'servers', 'users', 'blacklist', 'health', 'commands', 'announce']) {
         const res = await get(admin, admin.ow[handler], { query: { q: OWNER } });
         assert.equal(res.statusCode, 404, handler);
         assert.match(res.body, /Not found/);
@@ -177,7 +184,7 @@ test('owner area: a non-owner (even an Administrator) gets the normal 404 page; 
     assert.equal(admin.calls.length, 0);
 
     const owner = await setup();
-    for (const handler of ['home', 'activity', 'profile', 'servers', 'users', 'blacklist', 'health', 'announce']) {
+    for (const handler of ['home', 'activity', 'profile', 'servers', 'users', 'blacklist', 'health', 'commands', 'announce']) {
         const page = await get(owner, owner.ow[handler], handler === 'users' ? { query: { q: '300000000000000009' } } : {});
         assert.equal(page.statusCode, 200, handler);
         assert.ok(!/<style|style=|<script/i.test(page.body.replace(ALLOWED_SCRIPT, '')), `${handler}: no inline styles or scripts`);
@@ -560,6 +567,7 @@ test('owner action text: every audit key the owner area writes reads as words', 
     const names = new Map([['100000000000000077', 'Other']]);
     assert.equal(ownerActionText('maintenance'), 'Maintenance mode');
     assert.equal(ownerActionText('announce'), 'Announcement to every server');
+    assert.equal(ownerActionText('commands.register'), 'Commands re-registered in the main server');
     assert.equal(ownerActionText('profile.presence'), 'Bot profile: status');
     assert.equal(ownerActionText('servers.100000000000000077.invite', names), 'Invite created in Other');
     assert.equal(ownerActionText('servers.100000000000000099.leave', names), 'Left 100000000000000099');
@@ -702,4 +710,82 @@ test('server page: lists missing permissions and roles above the bot; a full set
     assert.equal(ok.statusCode, 200, 'an unreadable role list does not break the page');
     assert.ok(ok.body.includes('The bot has every permission it asks for when added.'));
     assert.ok(ok.body.includes('No known role the bot manages'));
+});
+
+// ── command sync ──────────────────────────────────────────────────────────
+
+test('command sync rules: counts and mismatches by name and type', () => {
+    assert.deepEqual(commandCounts([{ name: 'a' }, { name: 'b', type: 1 }, { name: 'M', type: 3 }]), { slash: 2, menus: 1 });
+    const same = commandDiff([{ name: 'help' }, { name: 'Moderate', type: 2 }], [{ name: 'Moderate', type: 2 }, { name: 'help', type: 1 }]);
+    assert.deepEqual(same, { missing: [], extra: [], inSync: true }, 'type 1 is the default');
+    const diff = commandDiff(
+        [{ name: 'rank' }, { name: 'help' }, { name: 'Moderate', type: 2 }],
+        [{ name: 'help', type: 1 }, { name: 'Moderate', type: 1 }, { name: 'purge', type: 1 }],
+    );
+    assert.deepEqual(diff.missing, [{ name: 'Moderate', type: 'User menu' }, { name: 'rank', type: 'Slash command' }]);
+    assert.deepEqual(diff.extra, [{ name: 'Moderate', type: 'Slash command' }, { name: 'purge', type: 'Slash command' }]);
+    assert.equal(diff.inSync, false);
+});
+
+test('command sync page: counts, mismatches by name, errors never shown as "in sync"', async () => {
+    const h = await setup({ registeredCommands: async () => [{ name: 'help', type: 1 }, { name: 'purge', type: 1 }] });
+    h.client.commands = new Map([['help', {}], ['rank', {}], ['purge', {}], ['Moderate', {}]]);
+    const res = await get(h, h.ow.commands);
+    assert.equal(res.statusCode, 200);
+    assert.ok(res.body.includes('4 command files'), 'loaded count');
+    assert.ok(res.body.includes('2 slash commands + 1 context menu'), 'what startup registers');
+    assert.ok(res.body.includes('2 slash commands + 0 context menus'), 'what Discord has');
+    assert.ok(res.body.includes('Missing on Discord (2)') && res.body.includes('<b>rank</b>') && res.body.includes('<b>Moderate</b>'));
+    assert.match(res.body, /not in the bot(&#39;|&#x27;|')s list \(1\)/);
+    assert.deepEqual(h.calls.find((c) => c.name === 'registeredCommands').args[1], MAIN, 'the main server is read');
+    assert.ok(!h.calls.some((c) => c.name === 'registerMainCommands'), 'a GET never registers');
+
+    const synced = await setup({ retired: true });
+    const ok = (await get(synced, synced.ow.commands)).body;
+    assert.ok(ok.includes('In sync'));
+    assert.ok(ok.includes('RETIRE_ADMIN_COMMANDS is on'));
+
+    const broken = await setup({ registeredCommands: async () => { throw new Error('Missing Access'); } });
+    const err = (await get(broken, broken.ow.commands)).body;
+    assert.ok(err.includes('list could not be read: Missing Access'));
+    assert.ok(!err.includes('In sync') && !err.includes('Out of sync'));
+});
+
+test('command re-register: owner POST checks, token + tick-box, the injected registration runs once and is audited', async () => {
+    const admin = await setup({ userId: ADMIN });
+    assert.equal((await post(admin, admin.ow.registerPreview)).statusCode, 404);
+    assert.equal((await post(admin, admin.ow.register, { form: { token: 'x', fh: 'y', confirm: '1' } })).statusCode, 404);
+    const stale = await setup({ createdAt: Date.now() - OWNER_SESSION_MAX_AGE_MS - 60000 });
+    assert.equal((await post(stale, stale.ow.registerPreview)).statusCode, 401);
+    const off = await setup({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } });
+    assert.equal((await post(off, off.ow.registerPreview)).statusCode, 403);
+
+    const h = await setup();
+    assert.equal((await post(h, h.ow.registerPreview, { csrf: 'wrong' })).statusCode, 403, 'CSRF');
+    assert.equal((await post(h, h.ow.registerPreview, { origin: 'https://evil.example' })).statusCode, 403, 'Origin');
+    const preview = await post(h, h.ow.registerPreview);
+    assert.equal(preview.statusCode, 200);
+    assert.ok(preview.body.includes('Confirm: re-register commands in the main server'));
+    assert.ok(!/<style|style=|<script/i.test(preview.body.replace(ALLOWED_SCRIPT, '')));
+    const { token, fh } = tokenOf(preview.body);
+    const noTick = await post(h, h.ow.register, { form: { token, fh } });
+    assert.equal(noTick.statusCode, 400);
+    assert.ok(!h.calls.some((c) => c.name === 'registerMainCommands'), 'nothing registered without the tick-box');
+
+    const again = tokenOf((await post(h, h.ow.registerPreview)).body);
+    const done = await post(h, h.ow.register, { form: { ...again, confirm: '1' } });
+    assert.equal(done.statusCode, 303);
+    assert.equal(done.redirectedTo, '/dashboard/owner/commands');
+    assert.equal(h.calls.filter((c) => c.name === 'registerMainCommands').length, 1);
+    assert.deepEqual(h.auditRows.map((r) => [r.module, r.key, r.old, r.new]), [['owner', 'commands.register', { count: 3 }, { count: 3, retired: false }]]);
+    const reused = await post(h, h.ow.register, { form: { ...again, confirm: '1' } });
+    assert.equal(reused.statusCode, 400, 'a token works once');
+    assert.equal(h.calls.filter((c) => c.name === 'registerMainCommands').length, 1);
+
+    const failing = await setup({ registerMainCommands: async () => { throw new Error('Missing Access'); } });
+    const t = tokenOf((await post(failing, failing.ow.registerPreview)).body);
+    const failed = await post(failing, failing.ow.register, { form: { ...t, confirm: '1' } });
+    assert.equal(failed.statusCode, 400);
+    assert.match(failed.body, /Registration failed; the main server(&#39;|&#x27;|')s list was not changed: Missing Access/);
+    assert.equal(failing.auditRows.length, 0, 'a failed registration is not audited as done');
 });

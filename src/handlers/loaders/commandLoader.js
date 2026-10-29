@@ -243,8 +243,8 @@ function validateCommands(commands) {
     }
 }
 
-function prepareCommandsForRegistration(commands) {
-    if (commands.length >= COMMAND_COUNT_WARN_THRESHOLD) {
+function prepareCommandsForRegistration(commands, { quiet = false } = {}) {
+    if (commands.length >= COMMAND_COUNT_WARN_THRESHOLD && !quiet) {
         logger.warn(`Command count (${commands.length}) is near Discord's ${MAX_COMMANDS}-command limit per server`);
     }
 
@@ -269,6 +269,33 @@ async function putCommands(rest, route, commands, label) {
  * SUPPORT_SERVER_COMMANDS (config/commands/commandAccess.js) in the support server. The global list is emptied. Each PUT replaces
  * the whole list, so commands deleted from the codebase disappear too.
  */
+/**
+ * The command lists startup registers, without registering anything: RETIRE_ADMIN_COMMANDS
+ * applied, validated (throws when invalid), capped at 100. { mainCommands, supportCommands }.
+ * `quiet` skips the info lines (the dashboard's read-only comparison calls this per page view).
+ */
+export function buildRegistrationBodies(sets, totalSubcommands = 0, { quiet = false } = {}) {
+    const info = quiet ? () => {} : (message) => logger.info(message);
+    let all = [...sets.global, ...sets.main, ...sets.support];
+    // Admin commands retired (RETIRE_ADMIN_COMMANDS): only everyone-commands and the owner kit.
+    if (adminCommandsRetired()) {
+        const before = all.length;
+        const keep = (list) => list.map(retireCommandJson).filter(Boolean);
+        sets = { global: keep(sets.global), main: keep(sets.main), support: keep(sets.support) };
+        all = [...sets.global, ...sets.main, ...sets.support];
+        info(`Admin commands retired: registering ${all.length} of ${before} top-level commands (everyone + owner kit); the rest is on the dashboard`);
+    }
+    info(`Preparing to register ${totalSubcommands + all.length} commands (${all.length} top-level) in the main server`);
+    info('Validating commands before registration...');
+    validateCommands(all);
+    info('Command validation passed');
+
+    const mainCommands = prepareCommandsForRegistration(all, { quiet });
+    const supportCommands = prepareCommandsForRegistration(
+        [...sets.global, ...sets.support].filter((command) => isSupportServerCommand(command.name)), { quiet });
+    return { mainCommands, supportCommands };
+}
+
 export async function registerCommandSets(rest, clientId, sets, totalSubcommands = 0) {
     if (!clientId) {
         throw new Error('CLIENT_ID is required for slash command registration');
@@ -277,23 +304,7 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
         throw new Error('Discord REST client is not available for slash command registration');
     }
 
-    let all = [...sets.global, ...sets.main, ...sets.support];
-    // Admin commands retired (RETIRE_ADMIN_COMMANDS): only everyone-commands and the owner kit.
-    if (adminCommandsRetired()) {
-        const before = all.length;
-        const keep = (list) => list.map(retireCommandJson).filter(Boolean);
-        sets = { global: keep(sets.global), main: keep(sets.main), support: keep(sets.support) };
-        all = [...sets.global, ...sets.main, ...sets.support];
-        logger.info(`Admin commands retired: registering ${all.length} of ${before} top-level commands (everyone + owner kit); the rest is on the dashboard`);
-    }
-    logger.info(`Preparing to register ${totalSubcommands + all.length} commands (${all.length} top-level) in the main server`);
-    logger.info('Validating commands before registration...');
-    validateCommands(all);
-    logger.info('Command validation passed');
-
-    const mainCommands = prepareCommandsForRegistration(all);
-    const supportCommands = prepareCommandsForRegistration(
-        [...sets.global, ...sets.support].filter((command) => isSupportServerCommand(command.name)));
+    const { mainCommands, supportCommands } = buildRegistrationBodies(sets, totalSubcommands);
 
     if (testMode.enabled) {
         // Test mode never touches global commands; the test main guild plays the main server.
@@ -339,6 +350,32 @@ export async function registerCommands(client, options = {}) {
         logger.error('Error registering commands:', error);
         throw error;
     }
+}
+
+/** The main-server list startup would register now (same collect + build steps), without registering. */
+export function expectedMainCommands(client) {
+    const { sets, totalSubcommands } = collectCommandPayloads(client);
+    return buildRegistrationBodies(sets, totalSubcommands, { quiet: true }).mainCommands;
+}
+
+/**
+ * Re-registers the main server's commands only (dashboard Owner → Commands): the same list
+ * startup builds (RETIRE_ADMIN_COMMANDS included), one PUT to the main guild. Global and
+ * support-server commands are never touched. Test mode: only when the main server is a test guild.
+ * Returns { guildId, count }.
+ */
+export async function registerMainGuildCommands(client, { clientId = client?.config?.bot?.clientId || process.env.CLIENT_ID } = {}) {
+    if (!clientId) throw new Error('CLIENT_ID is required for slash command registration');
+    if (!client?.rest) throw new Error('Discord REST client is not available for slash command registration');
+    const guildId = enforcementConfig.mainGuildId;
+    if (!guildId) throw new Error('MAIN_GUILD_ID is not set; no commands were registered');
+    if (testMode.enabled && !testMode.guildIds.has(String(guildId))) {
+        throw new Error('Test mode: the main server is not in TEST_GUILD_IDS; no commands were registered');
+    }
+    const { sets, totalSubcommands } = collectCommandPayloads(client);
+    const { mainCommands } = buildRegistrationBodies(sets, totalSubcommands);
+    await putCommands(client.rest, Routes.applicationGuildCommands(clientId, guildId), mainCommands, 'main-guild');
+    return { guildId, count: mainCommands.length };
 }
 
 export { collectCommandPayloads };
