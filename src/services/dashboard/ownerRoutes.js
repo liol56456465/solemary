@@ -51,7 +51,6 @@ import { getLadder } from '../enforcement/enforcementService.js';
 import { getActiveCase, listCasesForUser } from '../enforcement/caseService.js';
 import { findMutedRole } from '../enforcement/muteService.js';
 import { INSTALL_PERMISSIONS } from '../site/site.js';
-import { expectedMainCommands, registerMainGuildCommands } from '../../handlers/loaders/commandLoader.js';
 import { adminCommandsRetired } from '../../config/commands/retirement.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
@@ -394,9 +393,11 @@ export const defaultOwnerDeps = {
     moderationRecord: defaultModerationRecord,
     managedRoles: defaultManagedRoles,
     // Command sync: the same list and the same registration code as startup (commandLoader.js).
-    expectedCommands: (client) => expectedMainCommands(client),
+    // Loaded on use: commandLoader pulls in testMode.js, whose import-time checks must not run
+    // just because the dashboard module is loaded (scripts and DB tests import it).
+    expectedCommands: async (client) => (await import('../../handlers/loaders/commandLoader.js')).expectedMainCommands(client),
     registeredCommands: defaultRegisteredCommands,
-    registerMainCommands: (client) => registerMainGuildCommands(client),
+    registerMainCommands: async (client) => (await import('../../handlers/loaders/commandLoader.js')).registerMainGuildCommands(client),
     commandsRetired: () => adminCommandsRetired(),
 };
 
