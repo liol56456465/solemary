@@ -1,0 +1,74 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>How warnings and bans escalate · Mewvo</title><meta name="description" content="The warning ladder: three warnings, then 7 days, 30 days and a permanent ban.">
+<link rel="canonical" href="https://mewvo.com/docs/warnings">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Mewvo"><meta property="og:title" content="How warnings and bans escalate · Mewvo">
+<meta property="og:description" content="The warning ladder: three warnings, then 7 days, 30 days and a permanent ban."><meta property="og:url" content="https://mewvo.com/docs/warnings"><meta property="og:image" content="https://mewvo.com/img/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Mewvo: Discord moderation with case codes, a warning ladder and appeals.">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="How warnings and bans escalate · Mewvo"><meta name="twitter:description" content="The warning ladder: three warnings, then 7 days, 30 days and a permanent ban."><meta name="twitter:image" content="https://mewvo.com/img/og.png">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"><link rel="stylesheet" href="/site.css?v=a25de1915a"></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/"><img class="logo" src="/img/logo.png?v=9e5d4938f1" width="28" height="28" alt=""><span>Mewvo</span></a>
+<nav class="topnav" aria-label="Main"><ul><li><a href="/features">Features</a></li>
+<li><a href="/pricing">Pricing</a></li>
+<li><a href="/docs" aria-current="page">Docs</a></li>
+<li><a href="/commands">Commands</a></li>
+<li><a href="https://app.mewvo.com/leaderboard">Leaderboard</a></li>
+</ul></nav>
+<div class="topbar-actions"><a class="button" href="https://app.mewvo.com/dashboard">Dashboard</a></div></div></header>
+<main id="main" tabindex="-1"><div class="wrap page"><div class="doc">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/docs">Docs</a><span aria-hidden="true">/</span><span>02</span></nav>
+<header class="doc-head"><h1>How warnings and bans escalate</h1><p class="lead">The warning ladder: three warnings, then 7 days, 30 days and a permanent ban.</p></header>
+<div class="prose doc-body"><p>Every member has a ladder in each server. It starts at level 0 with no warnings, and it never resets on its own.</p>
+<figure class="mock mock-ladder"><div class="mock-bar"><span class="mock-label">Warning ladder · per member, per server</span></div>
+<ol class="ladder">
+<li class="ladder-step"><span class="ladder-key">Warn 1</span><span class="ladder-what">DM: “Warning 1 of 3”</span><span class="ladder-result">Level 0</span></li>
+<li class="ladder-step"><span class="ladder-key">Warn 2</span><span class="ladder-what">DM: “Warning 2 of 3”</span><span class="ladder-result">Level 0</span></li>
+<li class="ladder-step is-ban"><span class="ladder-key">Warn 3</span><span class="ladder-what">Automatic ban</span><span class="ladder-result">7 days · level 1</span></li>
+<li class="ladder-step is-ban"><span class="ladder-key">Next warn</span><span class="ladder-what">Automatic ban</span><span class="ladder-result">30 days · level 2</span></li>
+<li class="ladder-step is-ban"><span class="ladder-key">Next warn</span><span class="ladder-what">Permanent ban</span><span class="ladder-result">Appealable for 6 months · level 3</span></li>
+</ol></figure>
+<h2 id="steps">The steps</h2>
+<ol class="steps-list"><li><strong>Warnings 1 and 2</strong> are a DM: “Warning 1 of 3” and “Warning 2 of 3”.</li>
+<li><strong>Warning 3</strong> is an automatic 7-day ban. The member is now at level 1.</li>
+<li>After they return, the <strong>next warning</strong> is an automatic 30-day ban (level 2).</li>
+<li>The <strong>warning after that</strong> is a permanent ban (level 3). It can be appealed for 6 months. After that, or after a denied appeal, it can no longer be appealed.</li></ol>
+<figure class="mock mock-dm"><div class="mock-bar"><span class="mock-label">Direct message · Mewvo</span></div>
+<div class="dc"><div class="dc-msg"><span class="dc-avatar" aria-hidden="true"><img class="logo" src="/img/logo.png?v=9e5d4938f1" width="28" height="28" alt=""></span><div class="dc-content">
+<p class="dc-meta"><span class="dc-name">Mewvo</span><span class="dc-app">APP</span><span class="dc-time">Saturday at 19:40</span></p>
+<p><strong>Appeal here:</strong> <span class="dc-link">https://discord.gg/7Ckv9Bt577</span></p>
+<p><strong>Banned from Mewvo</strong></p>
+<p>By: Mewvo</p>
+<p>Reason: Reached warning limit</p>
+<p>Date: <span class="dc-stamp">Saturday, 31 October 2026 at 19:40</span></p>
+<p>Duration: 7 days — ends <span class="dc-stamp">Saturday, 7 November 2026 at 19:40</span> <span class="dc-stamp">(in 7 days)</span></p>
+<p>Case code: <code class="dc-code">w8hd3a</code></p>
+<p>Appealing this code also removes the warning that caused this ban.</p></div></div></div><figcaption class="mock-caption">The DM for the automatic ban at warning 3. Appealing this code also removes the warning that caused it.</figcaption></figure>
+<h2 id="what-changes">What changes the ladder</h2>
+<dl class="ref-list"><div><dt>Remove warn</dt><dd>Lowers the warning count.</dd></div>
+<div><dt>Accepted appeal of a ladder ban</dt><dd>Lowers the level by one, never below 0.</dd></div>
+<div><dt>A ban given by hand</dt><dd>Does not move the ladder.</dd></div>
+<div><dt>Voiding a case</dt><dd>The case stays on record but no longer counts.</dd></div>
+<div><dt>Imported old warnings</dt><dd>Shown as history only. They don’t count.</dd></div></dl>
+<p>Members can check where they are with <strong>My standing</strong> on the appeal panel.</p></div>
+<nav class="doc-next" aria-label="Next guide"><a href="/docs/appeals"><span class="doc-next-label">Next</span>Appeals: how they work</a></nav></div></div></main>
+<footer class="footer"><div class="wrap"><div class="footer-grid"><div class="footer-about"><p class="footer-brand"><img class="logo" src="/img/logo.png?v=9e5d4938f1" width="28" height="28" alt=""><span>Mewvo</span></p>
+<p class="footer-text">A Discord bot for moderation, appeals and community tools. Built and run by its owner for the Mewvo server.</p></div>
+<nav class="footer-nav" aria-label="Footer"><div class="footer-col"><h2 class="footer-title">Product</h2><ul><li><a href="/features">Features</a></li>
+<li><a href="/pricing">Pricing</a></li>
+<li><a href="/commands">Commands</a></li>
+<li><a href="https://app.mewvo.com/leaderboard">Leaderboard</a></li>
+<li><a href="https://app.mewvo.com/dashboard">Dashboard</a></li></ul></div>
+<div class="footer-col"><h2 class="footer-title">Resources</h2><ul><li><a href="/docs" aria-current="page">Docs</a></li>
+<li><a href="/faq">FAQ</a></li>
+<li><a href="https://app.mewvo.com/rules">Rules</a></li>
+<li><a href="https://app.mewvo.com/status">Status</a></li>
+
+<li><a href="/about">About</a></li></ul></div>
+<div class="footer-col"><h2 class="footer-title">Legal</h2><ul><li><a href="/privacy">Privacy</a></li>
+<li><a href="/terms">Terms</a></li></ul></div>
+<div class="footer-col"><h2 class="footer-title">Community</h2><ul>
+<li><a href="https://discord.gg/7Ckv9Bt577" rel="noopener">Support server</a></li>
+</ul></div></nav></div>
+<p class="footer-legal">Mewvo is not affiliated with Discord. Prices on this site are in euros.</p></div></footer>
+</body></html>

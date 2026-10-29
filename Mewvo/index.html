@@ -1,0 +1,160 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Mewvo</title><meta name="description" content="Mewvo is a Discord bot for moderation with case codes and DMs, a three-step warning ladder, appeals that reach a person, automod, tickets and community tools.">
+<link rel="canonical" href="https://mewvo.com/">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Mewvo"><meta property="og:title" content="Mewvo">
+<meta property="og:description" content="Mewvo is a Discord bot for moderation with case codes and DMs, a three-step warning ladder, appeals that reach a person, automod, tickets and community tools."><meta property="og:url" content="https://mewvo.com/"><meta property="og:image" content="https://mewvo.com/img/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Mewvo: Discord moderation with case codes, a warning ladder and appeals.">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Mewvo"><meta name="twitter:description" content="Mewvo is a Discord bot for moderation with case codes and DMs, a three-step warning ladder, appeals that reach a person, automod, tickets and community tools."><meta name="twitter:image" content="https://mewvo.com/img/og.png">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"><link rel="stylesheet" href="/site.css?v=a25de1915a"></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/" aria-current="page"><img class="logo" src="/img/logo.png?v=9e5d4938f1" width="28" height="28" alt=""><span>Mewvo</span></a>
+<nav class="topnav" aria-label="Main"><ul><li><a href="/features">Features</a></li>
+<li><a href="/pricing">Pricing</a></li>
+<li><a href="/docs">Docs</a></li>
+<li><a href="/commands">Commands</a></li>
+<li><a href="https://app.mewvo.com/leaderboard">Leaderboard</a></li>
+</ul></nav>
+<div class="topbar-actions"><a class="button" href="https://app.mewvo.com/dashboard">Dashboard</a></div></div></header>
+<main id="main" tabindex="-1"><section class="hero"><div class="wrap hero-grid">
+<div class="hero-copy"><p class="kicker"><span class="kbd">Discord bot</span><span>Moderation, appeals and community tools</span></p>
+<h1>Discord moderation with a paper trail.</h1>
+<p class="lead">Mewvo warns, mutes, kicks and bans from one panel. The member gets a DM with the reason, the end time and how to appeal. Your staff get a case they can review, correct or void.</p>
+<p class="hero-actions"><a class="button" href="https://discord.gg/7Ckv9Bt577" rel="noopener">Join the support server</a><a class="button button-quiet" href="#enforcement">See how it works</a><a class="button button-quiet" href="https://app.mewvo.com/dashboard">Open the dashboard</a></p>
+<p class="note">Mewvo runs on its own server for now. It can’t be added to other servers yet.</p></div>
+<div class="hero-visual"><figure class="mock mock-dm"><div class="mock-bar"><span class="mock-label">Direct message · Mewvo</span></div>
+<div class="dc"><div class="dc-msg"><span class="dc-avatar" aria-hidden="true"><img class="logo" src="/img/logo.png?v=9e5d4938f1" width="28" height="28" alt=""></span><div class="dc-content">
+<p class="dc-meta"><span class="dc-name">Mewvo</span><span class="dc-app">APP</span><span class="dc-time">Today at 14:05</span></p>
+<p><strong>Appeal here:</strong> <span class="dc-link">https://discord.gg/7Ckv9Bt577</span></p>
+<p><strong>Warning 2 of 3 in Mewvo</strong></p>
+<p>By: mira</p>
+<p>Reason: Spam in #general</p>
+<p>Date: <span class="dc-stamp">Thursday, 29 October 2026 at 14:05</span></p>
+<p>Case code: <code class="dc-code">k7xq2</code></p>
+<p>At 3 warnings you will be banned.</p></div></div></div><figcaption class="mock-caption">The DM a member gets for a second warning. Wording from the bot, names made up.</figcaption></figure></div></div></section>
+
+<section class="facts" aria-label="Mewvo in numbers that never change"><div class="wrap"><dl class="facts-list">
+<div><dt>Case codes</dt><dd>5–7 characters, like <code>k7xq2</code>. No 0, o, 1, l or i.</dd></div>
+<div><dt>Warnings</dt><dd>3 per level, then an automatic ban.</dd></div>
+<div><dt>Appeals</dt><dd>One open per case, decided by a person.</dd></div>
+<div><dt>Staff checks</dt><dd>Administrator re-checked on every action.</dd></div>
+</dl></div></section>
+
+<section class="block" id="enforcement" aria-labelledby="enforcement-title"><div class="wrap split">
+<div class="split-copy"><p class="section-num"><span class="section-index">01</span>Enforcement</p><h2 id="enforcement-title">One panel, with the member’s history on top.</h2><p>Run <code>/enforcements</code> on a member and Mewvo shows their account age, warnings, ladder level, active punishments and last cases before you choose what to do.</p>
+<p class="flow" aria-label="The steps"><kbd>Action</kbd><span aria-hidden="true">→</span><kbd>Reason</kbd><span aria-hidden="true">→</span><kbd>Duration</kbd><span aria-hidden="true">→</span><kbd>Confirm</kbd></p>
+<ul class="ticks"><li>The DM goes out before a kick or ban, so it still reaches the member. If it fails, the moderator is told.</li>
+<li>Every action is a case with a short code, and staff can edit it, void it or attach evidence later.</li>
+<li>It refuses the server owner, the bot, yourself and anyone with an equal or higher role.</li>
+<li>More than 5 bans or kicks in 10 minutes blocks that moderator for an hour and alerts the owner.</li></ul></div><div class="split-visual"><figure class="mock mock-panel"><div class="mock-bar"><span class="mock-label">#staff-commands</span></div>
+<div class="dc"><p class="dc-command"><span class="dc-slash">/enforcements</span> <span class="dc-opt">user</span> <span class="dc-mention">@pixelfox</span></p>
+<div class="dc-msg"><span class="dc-avatar" aria-hidden="true"><img class="logo" src="/img/logo.png?v=9e5d4938f1" width="28" height="28" alt=""></span><div class="dc-content">
+<p class="dc-meta"><span class="dc-name">Mewvo</span><span class="dc-app">APP</span><span class="dc-time">Today at 14:05</span></p>
+<div class="dc-embed"><p class="dc-embed-title">Enforcements — pixelfox</p>
+<p><strong>User:</strong> pixelfox (<span class="dc-mention">@pixelfox</span>)</p>
+<p><strong>Account created:</strong> <span class="dc-stamp">2 years ago</span></p>
+<p><strong>In server:</strong> yes, joined <span class="dc-stamp">5 months ago</span> · 3 roles</p>
+<p><strong>Counted warns:</strong> 1 of 3 · <strong>Ladder level:</strong> 0</p>
+<p><strong>Active punishment:</strong> none</p>
+<p class="dc-embed-field">Last cases (1 of 1)</p>
+<p><code class="dc-code">p2nfe</code> <strong>warn</strong> · Off-topic · 12/10/2026 · active</p></div>
+<p class="dc-buttons"><span class="dc-btn dc-btn-danger">Ban</span><span class="dc-btn dc-btn-danger">Kick</span><span class="dc-btn dc-btn-primary">Mute</span><span class="dc-btn dc-btn-primary">Warn</span><span class="dc-btn dc-btn-grey">Remove warn</span></p>
+<p class="dc-ephemeral">Only you can see this</p></div></div></div><figcaption class="mock-caption">The /enforcements panel. Only the moderator who ran it can see it.</figcaption></figure></div></div></section>
+
+<section class="block" id="ladder" aria-labelledby="ladder-title"><div class="wrap split split-flip">
+<div class="split-copy"><p class="section-num"><span class="section-index">02</span>Warning ladder</p><h2 id="ladder-title">Three warnings, then a ban. No surprises.</h2><p>The ladder counts per member and per server, and it never quietly resets. Each warning DM says which one it is. The third is an automatic 7-day ban. After that, the next warning is a 30-day ban, and the one after is permanent, still open to appeal for six months.</p>
+<ul class="ticks"><li>Bans a moderator gives by hand don’t move the ladder.</li>
+<li>Removing a warning lowers the count again.</li>
+<li>An accepted appeal of a ladder ban steps the level down by one.</li></ul>
+<p><a class="more" href="/docs/warnings">How warnings escalate, step by step</a></p></div><div class="split-visual"><figure class="mock mock-ladder"><div class="mock-bar"><span class="mock-label">Warning ladder · per member, per server</span></div>
+<ol class="ladder">
+<li class="ladder-step"><span class="ladder-key">Warn 1</span><span class="ladder-what">DM: “Warning 1 of 3”</span><span class="ladder-result">Level 0</span></li>
+<li class="ladder-step"><span class="ladder-key">Warn 2</span><span class="ladder-what">DM: “Warning 2 of 3”</span><span class="ladder-result">Level 0</span></li>
+<li class="ladder-step is-ban"><span class="ladder-key">Warn 3</span><span class="ladder-what">Automatic ban</span><span class="ladder-result">7 days · level 1</span></li>
+<li class="ladder-step is-ban"><span class="ladder-key">Next warn</span><span class="ladder-what">Automatic ban</span><span class="ladder-result">30 days · level 2</span></li>
+<li class="ladder-step is-ban"><span class="ladder-key">Next warn</span><span class="ladder-what">Permanent ban</span><span class="ladder-result">Appealable for 6 months · level 3</span></li>
+</ol></figure></div></div></section>
+
+<section class="block" id="appeals" aria-labelledby="appeals-title"><div class="wrap split">
+<div class="split-copy"><p class="section-num"><span class="section-index">03</span>Appeals</p><h2 id="appeals-title">Appeals reach a person, even after a ban.</h2><p>Members press <strong>Appeal</strong> on the appeal panel and fill in three fields. Ban and kick appeals open a private channel in the support server, so the conversation works even when they can’t see your server any more. Staff see the case and the member’s history next to Accept and Deny.</p>
+<ul class="ticks"><li>One pending appeal per case. After a denial, the member waits 7 days to try again.</li>
+<li>Bans and mutes can be appealed while they last; warnings and kicks within 30 days.</li>
+<li>Accepting lifts the punishment and DMs a one-time invite back to the server.</li></ul>
+<p><a class="more" href="/docs/appeals">How appeals work</a></p></div><div class="split-visual"><figure class="mock mock-modal"><div class="mock-bar"><span class="mock-label">Appeal form · opens from the Appeal button</span></div>
+<div class="dc dc-modal"><p class="dc-modal-title">Appeal a punishment</p>
+<div class="dc-field"><p class="dc-field-label">Why should it be lifted?<span class="dc-req" aria-hidden="true"> *</span></p>
+<p class="dc-field-help">Why should you be unbanned, unmuted or unwarned?</p><p class="dc-input dc-input-tall">I posted the same link three times because I thought it had not sent. I know the rule now and it won’t happen again.</p></div>
+<div class="dc-field"><p class="dc-field-label">Case code<span class="dc-req" aria-hidden="true"> *</span></p>
+<p class="dc-field-help">From the DM you got when you were punished, e.g. k7m2qx.</p><p class="dc-input">w8hd3a</p></div>
+<div class="dc-field"><p class="dc-field-label">More info (optional)</p>
+<p class="dc-field-help">Anything else the administrators should know.</p><p class="dc-input dc-input-tall dc-input-empty"></p></div>
+<p class="dc-modal-actions"><span class="dc-btn dc-btn-link">Cancel</span><span class="dc-btn dc-btn-primary">Submit</span></p></div>
+<figcaption class="mock-caption">The appeal form, as Discord shows it. Case code from the member’s DM.</figcaption></figure></div></div></section>
+
+<section class="block" id="automod" aria-labelledby="automod-title"><div class="wrap split split-flip">
+<div class="split-copy"><p class="section-num"><span class="section-index">04</span>Automod</p><h2 id="automod-title">Automod that shows its work.</h2><p>Fourteen rules, from scam links and mass mentions to caps and fancy fonts. Each rule has its own punishment steps, and every automatic action is a normal case with a review card in your staff channel: keep it, undo it or change it.</p>
+<ul class="ticks"><li>Text is folded back to plain letters first, so look-alike characters and zalgo don’t slip past.</li>
+<li>Links, attachments and fast posting are limited for new members in their first 3 days.</li>
+<li>Ten joins in a minute counts as a raid: the server locks down, invites and DMs pause, and admins are alerted.</li>
+<li>Works next to Discord’s own AutoMod, with a bridge for its rules.</li></ul></div><div class="split-visual"><figure class="mock mock-review"><div class="mock-bar"><span class="mock-label">#automod-review</span></div>
+<div class="dc"><div class="dc-msg"><span class="dc-avatar" aria-hidden="true"><img class="logo" src="/img/logo.png?v=9e5d4938f1" width="28" height="28" alt=""></span><div class="dc-content">
+<p class="dc-meta"><span class="dc-name">Mewvo</span><span class="dc-app">APP</span><span class="dc-time">Today at 14:05</span></p>
+<div class="dc-embed dc-embed-warn"><p class="dc-embed-title">Warned — Spam</p>
+<p><span class="dc-mention">@pixelfox</span> sent 6 messages in 5 seconds in <span class="dc-mention">#general</span>.</p>
+<p>1st Spam offence in 30 days.</p>
+<p class="dc-embed-field">Message (deleted)</p><p class="dc-quote">anyone up for ranked??</p>
+<p class="dc-embed-field">Case</p><p><code class="dc-code">m3kpv</code></p>
+<p class="dc-embed-foot">pixelfox</p></div>
+<p class="dc-buttons"><span class="dc-btn dc-btn-success">Keep</span><span class="dc-btn dc-btn-danger">Undo</span></p>
+<p class="dc-select">Change to…</p></div></div></div><figcaption class="mock-caption">A review card in the staff channel after an automatic warning.</figcaption></figure></div></div></section>
+
+<section class="block" id="tickets" aria-labelledby="tickets-title"><div class="wrap split">
+<div class="split-copy"><p class="section-num"><span class="section-index">05</span>Tickets and modmail</p><h2 id="tickets-title">Tickets and modmail in channels your staff already use.</h2><p>A ticket panel with claim, priority, saved answers and a transcript when the ticket closes. Members can also DM the bot and choose <strong>Send to staff</strong>: the conversation becomes a staff channel, and anything a moderator starts with <code>//</code> stays internal.</p>
+<ul class="ticks"><li>Close, block and unblock with <code>/modmail</code>.</li>
+<li>Members can report a staff member privately; only administrators see those reports.</li></ul></div><div class="split-visual"><figure class="mock mock-modmail"><div class="mock-bar"><span class="mock-label">#modmail-nightowl</span></div>
+<div class="dc"><div class="dc-msg"><span class="dc-avatar dc-avatar-letter" aria-hidden="true">N</span><div class="dc-content">
+<p class="dc-meta"><span class="dc-name">nightowl_</span><span class="dc-app">via DM</span><span class="dc-time">Today at 09:12</span></p><p>Hi, someone keeps sending me weird links in DMs after I left #trading. Can you look?</p></div></div>
+<div class="dc-msg"><span class="dc-avatar dc-avatar-letter" aria-hidden="true">T</span><div class="dc-content">
+<p class="dc-meta"><span class="dc-name">tobi</span><span class="dc-time">Today at 09:12</span></p><p>Thanks for telling us. Can you send the username and a screenshot?</p></div></div>
+<div class="dc-msg dc-note"><span class="dc-avatar dc-avatar-letter" aria-hidden="true">M</span><div class="dc-content">
+<p class="dc-meta"><span class="dc-name">mira</span><span class="dc-time">Today at 09:12</span></p><p>// same account as case r4mzp, checking the join date</p></div></div></div><figcaption class="mock-caption">A modmail channel. The grey line is an internal note the member never sees.</figcaption></figure></div></div></section>
+
+<section class="block block-wide" id="dashboard" aria-labelledby="dashboard-title"><div class="wrap">
+<div class="block-head"><div><p class="section-num"><span class="section-index">06</span>Dashboard</p><h2 id="dashboard-title">The whole server in a browser tab.</h2></div><div class="block-text"><p>Members, cases, appeals, the staff inbox and every module’s settings, on one page per area. Sign in with Discord. Administrator is checked again on every request, and every change is written to an audit log with the old and the new value.</p>
+<p><a class="more" href="/docs/using-the-dashboard">A tour of the dashboard</a></p></div></div><figure class="shot"><picture><source srcset="/img/screen-overview-dark.webp" media="(prefers-color-scheme: dark)" type="image/webp">
+<img src="/img/screen-overview-light.webp" width="1280" height="800" alt="The Mewvo dashboard Overview page: a “Needs you” list with two appeals waiting, open tickets and a setup step, a bar chart of moderation actions over the last seven days, member and sanction counts, and the bot’s health." decoding="async"></picture><figcaption class="mock-caption">The Overview page of the dashboard, with made-up members and cases.</figcaption></figure></div></section>
+
+<section class="block" id="community" aria-labelledby="community-title"><div class="wrap split split-narrow">
+<div class="split-copy"><p class="section-num"><span class="section-index">07</span>Community tools</p><h2 id="community-title">The everyday parts, too.</h2>
+<p>The same bot runs the friendly side of the server, set up from the same dashboard.</p><p><a class="more" href="/features">Every feature</a></p></div>
+<dl class="spec-list"><div><dt>Leveling</dt><dd>XP for chatting, level-up messages, role rewards and a public leaderboard.</dd></div><div><dt>Tags</dt><dd>Saved answers anyone can call up by name. Up to 100 per server.</dd></div><div><dt>Suggestions</dt><dd>A suggestions channel with votes and staff decisions.</dd></div><div><dt>Starboard</dt><dd>Messages that get enough stars are copied to a highlights channel.</dd></div><div><dt>Sticky messages</dt><dd>A message that stays at the bottom of a busy channel. Up to 10.</dd></div><div><dt>YouTube feeds</dt><dd>New uploads from a channel posted for you. Up to 20 feeds.</dd></div><div><dt>Reaction roles</dt><dd>Role menus with buttons or a select menu.</dd></div><div><dt>Giveaways</dt><dd>Start, end and reroll, with winners picked at random.</dd></div><div><dt>Birthdays</dt><dd>Birthday announcements and a birthday role for the day.</dd></div><div><dt>Applications</dt><dd>Role applications with your own questions, reviewed by staff.</dd></div><div><dt>Join to create</dt><dd>Temporary voice channels that clean up after themselves.</dd></div><div><dt>Welcome and goodbye</dt><dd>Join and leave messages, and roles given on join.</dd></div></dl></div></section>
+
+<section class="block block-pricing" aria-labelledby="pricing-title"><div class="wrap split split-narrow">
+<div class="split-copy"><p class="section-num"><span class="section-index">€</span>Pricing</p><h2 id="pricing-title">Free while it runs on one server.</h2>
+<p>Everything above is free. Paid plans with higher limits come when Mewvo opens to other servers.</p><p><a class="more" href="/pricing">Compare plans</a></p></div>
+<ul class="price-rows"><li><span class="price-name">Free</span><span class="price-desc">Everything on this page</span><span class="price-amount">€0</span></li>
+<li><span class="price-name">Normal</span><span class="price-desc">More room for busy community servers.</span><span class="price-amount">€1.99<span class="per">/month</span></span></li><li><span class="price-name">Pro</span><span class="price-desc">For servers with a real staff team.</span><span class="price-amount">€4.99<span class="per">/month</span></span></li><li><span class="price-name">Max</span><span class="price-desc">For people who run several servers.</span><span class="price-amount">€9.99<span class="per">/month</span></span></li></ul></div></section>
+
+<section class="cta" aria-labelledby="cta-title"><div class="wrap cta-inner"><div><h2 id="cta-title">See it on a real server.</h2>
+<p>Mewvo runs the Mewvo Discord server. Join it to see the appeal panel, the leaderboard and the bot at work.</p></div>
+<p class="hero-actions"><a class="button" href="https://discord.gg/7Ckv9Bt577" rel="noopener">Join the support server</a><a class="button button-quiet" href="/docs">Read the docs</a></p></div></section></main>
+<footer class="footer"><div class="wrap"><div class="footer-grid"><div class="footer-about"><p class="footer-brand"><img class="logo" src="/img/logo.png?v=9e5d4938f1" width="28" height="28" alt=""><span>Mewvo</span></p>
+<p class="footer-text">A Discord bot for moderation, appeals and community tools. Built and run by its owner for the Mewvo server.</p></div>
+<nav class="footer-nav" aria-label="Footer"><div class="footer-col"><h2 class="footer-title">Product</h2><ul><li><a href="/features">Features</a></li>
+<li><a href="/pricing">Pricing</a></li>
+<li><a href="/commands">Commands</a></li>
+<li><a href="https://app.mewvo.com/leaderboard">Leaderboard</a></li>
+<li><a href="https://app.mewvo.com/dashboard">Dashboard</a></li></ul></div>
+<div class="footer-col"><h2 class="footer-title">Resources</h2><ul><li><a href="/docs">Docs</a></li>
+<li><a href="/faq">FAQ</a></li>
+<li><a href="https://app.mewvo.com/rules">Rules</a></li>
+<li><a href="https://app.mewvo.com/status">Status</a></li>
+
+<li><a href="/about">About</a></li></ul></div>
+<div class="footer-col"><h2 class="footer-title">Legal</h2><ul><li><a href="/privacy">Privacy</a></li>
+<li><a href="/terms">Terms</a></li></ul></div>
+<div class="footer-col"><h2 class="footer-title">Community</h2><ul>
+<li><a href="https://discord.gg/7Ckv9Bt577" rel="noopener">Support server</a></li>
+</ul></div></nav></div>
+<p class="footer-legal">Mewvo is not affiliated with Discord. Prices on this site are in euros.</p></div></footer>
+</body></html>

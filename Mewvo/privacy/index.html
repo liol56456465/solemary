@@ -1,0 +1,71 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Privacy · Mewvo</title><meta name="description" content="What the Mewvo bot stores about you and why.">
+<link rel="canonical" href="https://mewvo.com/privacy">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Mewvo"><meta property="og:title" content="Privacy · Mewvo">
+<meta property="og:description" content="What the Mewvo bot stores about you and why."><meta property="og:url" content="https://mewvo.com/privacy"><meta property="og:image" content="https://mewvo.com/img/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Mewvo: Discord moderation with case codes, a warning ladder and appeals.">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Privacy · Mewvo"><meta name="twitter:description" content="What the Mewvo bot stores about you and why."><meta name="twitter:image" content="https://mewvo.com/img/og.png">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"><link rel="stylesheet" href="/site.css?v=a25de1915a"></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/"><img class="logo" src="/img/logo.png?v=9e5d4938f1" width="28" height="28" alt=""><span>Mewvo</span></a>
+<nav class="topnav" aria-label="Main"><ul><li><a href="/features">Features</a></li>
+<li><a href="/pricing">Pricing</a></li>
+<li><a href="/docs">Docs</a></li>
+<li><a href="/commands">Commands</a></li>
+<li><a href="https://app.mewvo.com/leaderboard">Leaderboard</a></li>
+</ul></nav>
+<div class="topbar-actions"><a class="button" href="https://app.mewvo.com/dashboard">Dashboard</a></div></div></header>
+<main id="main" tabindex="-1"><div class="wrap page prose"><p class="section-num">Legal</p><h1>Privacy</h1>
+<p class="note">Last updated <time datetime="2026-10-29">29 October 2026</time>.</p>
+<p class="lead">What Mewvo stores, why, and how to have it removed. Mewvo is run by its owner for the Mewvo Discord server. Your data is never sold or used for advertising.</p>
+<h2>In short</h2>
+<ul><li>Mewvo works with Discord IDs (the numbers that identify accounts, servers and channels). Where a record needs a readable name, such as a moderation case, the username at that moment is saved with it.</li>
+<li>Everything is kept in a PostgreSQL database used only by the bot. Nothing is shared, except with Discord, which the bot runs on, and the services that host the bot and its database.</li>
+<li>Mewvo never asks for your email address or your password.</li></ul>
+<h2>Leveling</h2>
+<p>For each server: your XP, your level and when your last message counted towards XP. The text of your messages is not saved for this. Levels are shown on the server’s leaderboard and on this website’s leaderboard (your server display name, level and total XP).</p>
+<h2>Moderation records</h2>
+<p>When staff warn, mute, kick or ban someone, Mewvo saves a case: the case code, the type, the reason, who took the action, when, how long it lasts, whether it can be appealed and whether the DM about it was delivered. Changes to a case are kept as its history. Staff can attach evidence: links to messages with a short excerpt of the text (kept in case the message is deleted) and images, which are re-posted in a staff-only channel. Your step on the warning ladder is stored per server and is never reset automatically.</p>
+<p>A case that turns out to be a mistake can be voided: it stays on record but no longer counts.</p>
+<h2>Appeals, reports, tickets and modmail</h2>
+<ul><li><strong>Appeals and staff reports:</strong> what you write in the form, the decision, who made it and the staff note. The conversation happens in a Discord channel; when an appeal is decided, a transcript of that channel is posted to a staff-only channel.</li>
+<li><strong>Tickets:</strong> a record of the ticket channel, who opened it and its state. A transcript is posted to a staff-only channel when it closes.</li>
+<li><strong>Modmail:</strong> when you message the bot and choose to send it to staff, your messages are passed on to a staff channel. The database only keeps which channel belongs to which member; when the conversation is closed, a transcript is posted to a staff-only channel.</li></ul>
+<h2>Verification</h2>
+<p>If a server uses “Verify with Discord”, you sign in with Discord and allow two things: <code>identify</code> (your account’s ID and name) and <code>guilds.join</code> (so the bot can add you to the support server, which keeps appeal messages reaching you even after a ban). The sign-in tokens Discord gives the bot are stored encrypted (AES-256-GCM).</p>
+<p>To spot people coming back on a new account after a ban, Mewvo stores a keyed one-way hash of the IP address you verified from, never the address itself. These hashes are deleted after 60 days, unless the account has an active ban on the Mewvo server. Accounts younger than 7 days, and accounts that match a banned member’s hash, are held for a person on the staff team to approve; a match alone never refuses anyone. Verification actions (for example verified, or approved by staff) are recorded with their time.</p>
+<h2>Server logs and member history</h2>
+<p>If a server turns on logging, events such as joins, leaves, role changes and edited or deleted messages (including their text) are posted to that server’s staff log channels on Discord. Joins and leaves are also kept in the database for 90 days, for the staff’s member statistics.</p>
+<h2>Things you choose to save</h2>
+<p>Features you use store what you give them, for example your birthday if you set one, your AFK message, your suggestions and votes, and giveaway entries.</p>
+<h2>The dashboard (staff only)</h2>
+<p>Staff who sign in to the dashboard with Discord (<code>identify</code> only) get a session that ends after 12 hours. The database keeps a hash of the session ID with their ID, username and avatar. Every change made in the dashboard is written to an audit log: who changed which setting, from what, to what.</p>
+<h2>The bot’s own logs</h2>
+<p>Technical logs record what the bot did and the errors it ran into, so problems can be fixed. They are deleted automatically after 7 days (error logs after 14 days).</p>
+<h2>Deleting your data</h2>
+<p>Run <code>/wipedata</code> in a server to delete your levels and XP, your economy balance and your AFK status in that server. It does not delete moderation records, appeals, reports or verification records: those are the server’s safety records and stay so decisions can be checked later. For anything else, ask in <a href="https://discord.gg/7Ckv9Bt577" rel="noopener">the support server</a>.</p>
+<h2>Blocked accounts</h2>
+<p>Accounts or servers blocked from using the bot are recorded with the reason and who blocked them. Lifting a block keeps the entry as history.</p>
+<h2>Changes and contact</h2>
+<p>When what Mewvo stores changes, this page is updated along with the date above. Questions about your data: ask in <a href="https://discord.gg/7Ckv9Bt577" rel="noopener">the support server</a>.</p></div></main>
+<footer class="footer"><div class="wrap"><div class="footer-grid"><div class="footer-about"><p class="footer-brand"><img class="logo" src="/img/logo.png?v=9e5d4938f1" width="28" height="28" alt=""><span>Mewvo</span></p>
+<p class="footer-text">A Discord bot for moderation, appeals and community tools. Built and run by its owner for the Mewvo server.</p></div>
+<nav class="footer-nav" aria-label="Footer"><div class="footer-col"><h2 class="footer-title">Product</h2><ul><li><a href="/features">Features</a></li>
+<li><a href="/pricing">Pricing</a></li>
+<li><a href="/commands">Commands</a></li>
+<li><a href="https://app.mewvo.com/leaderboard">Leaderboard</a></li>
+<li><a href="https://app.mewvo.com/dashboard">Dashboard</a></li></ul></div>
+<div class="footer-col"><h2 class="footer-title">Resources</h2><ul><li><a href="/docs">Docs</a></li>
+<li><a href="/faq">FAQ</a></li>
+<li><a href="https://app.mewvo.com/rules">Rules</a></li>
+<li><a href="https://app.mewvo.com/status">Status</a></li>
+
+<li><a href="/about">About</a></li></ul></div>
+<div class="footer-col"><h2 class="footer-title">Legal</h2><ul><li><a href="/privacy" aria-current="page">Privacy</a></li>
+<li><a href="/terms">Terms</a></li></ul></div>
+<div class="footer-col"><h2 class="footer-title">Community</h2><ul>
+<li><a href="https://discord.gg/7Ckv9Bt577" rel="noopener">Support server</a></li>
+</ul></div></nav></div>
+<p class="footer-legal">Mewvo is not affiliated with Discord. Prices on this site are in euros.</p></div></footer>
+</body></html>
