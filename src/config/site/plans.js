@@ -26,6 +26,7 @@ export const PLANS = [
             { text: 'Automod with 14 rules and review cards' },
             { text: 'Tickets, modmail and the web dashboard' },
             { text: 'Leveling, tags, suggestions, starboard, feeds' },
+            { text: 'Up to 50 scheduled messages' },
         ],
     },
     {
@@ -36,7 +37,7 @@ export const PLANS = [
         perks: [
             { text: 'Everything in Free' },
             { text: '250 tags, 25 sticky messages, 40 YouTube feeds', planned: true },
-            { text: '10 scheduled messages', planned: true },
+            { text: '100 scheduled messages', planned: true },
             { text: 'Case export (CSV), last 90 days', planned: true },
         ],
     },
@@ -97,7 +98,7 @@ export const COMPARISON = [
             { label: 'Tags', planned: true, values: { free: '100', normal: '250', pro: '500', max: '1,000' } },
             { label: 'Sticky messages', planned: true, values: { free: '10', normal: '25', pro: '50', max: '100' } },
             { label: 'YouTube feeds', planned: true, values: { free: '20', normal: '40', pro: '75', max: '150' } },
-            { label: 'Scheduled messages', planned: true, values: { free: false, normal: '10', pro: '50', max: '200' } },
+            { label: 'Scheduled messages', planned: true, values: { free: '50', normal: '100', pro: '200', max: '500' } },
         ],
     },
     {
