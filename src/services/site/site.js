@@ -6,6 +6,7 @@
 //   GET /commands    the commands every member may use (EVERYONE_COMMANDS + the loaded descriptions)
 //   GET /about       who runs it
 //   GET /robots.txt  Disallow: / while the site is not public
+//   GET /favicon.svg the cat on a black tile (the site and the dashboard link it)
 //   GET /site.css    the dashboard's theme tokens + site layout, cached, ?v=<content hash>
 //
 // NOT PUBLIC YET: PUBLIC_SITE_ENABLED=true (default off) shows the "Add to your server" button
@@ -18,6 +19,7 @@ import { readFileSync } from 'node:fs';
 import express from 'express';
 import { PermissionFlagsBits } from 'discord.js';
 import { html, raw } from '../dashboard/html.js';
+import { CAT_PATH } from '../dashboard/icons.js';
 import { EVERYONE_COMMANDS } from '../../config/commands/commandAccess.js';
 import { commandEntries } from '../../config/commands/retirement.js';
 import { logger } from '../../utils/logger.js';
@@ -93,8 +95,11 @@ export const CSS_PATH = `/site.css?v=${createHash('sha256').update(STYLESHEET).d
 
 // ── Pages ─────────────────────────────────────────────────────────────────
 
-// A plain cat mark (stroke = currentColor, follows the theme). Decorative: the name is next to it.
-const LOGO = raw('<svg class="logo" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false"><path d="M5 20V8.5L4 3l5 3.2c1-.3 2-.4 3-.4s2 .1 3 .4L20 3l-1 5.5V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 20h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9.5" cy="12.5" r="1.1" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.1" fill="currentColor"/><path d="M11 15.5l1 .8 1-.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+// The Meowist cat (fill = currentColor, follows the theme). Decorative: the name is next to it.
+const LOGO = raw(`<svg class="logo" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="${CAT_PATH}"/></svg>`);
+
+// The browser-tab icon: the owner's logo, a white cat on black.
+export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#000"/><path fill="#fff" fill-rule="evenodd" d="${CAT_PATH}"/></svg>`;
 
 /** The links of the top bar and the footer; invites only when set. */
 function navLinks(ctx, active) {
@@ -112,18 +117,19 @@ function addButton(ctx, className = 'button') {
 }
 
 export function layout(ctx, { title, active = null, description = '', body }) {
-    const login = ctx.dashboardEnabled ? html`<a class="button button-quiet" href="${DASHBOARD_PATH}">Log in</a>` : '';
+    // The way into the dashboard, like other bots' sites: a filled button unless "Add to your server" is shown.
+    const login = ctx.dashboardEnabled ? html`<a class="button${ctx.publicSite && ctx.installUrl ? ' button-quiet' : ''}" href="${DASHBOARD_PATH}">Dashboard</a>` : '';
     return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
 <title>${title === 'Meowist' ? 'Meowist' : `${title} · Meowist`}</title>${description ? html`<meta name="description" content="${description}">` : ''}
-<link rel="stylesheet" href="${CSS_PATH}"></head>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="${CSS_PATH}"></head>
 <body><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>Meowist</span></a>
 <nav class="topnav" aria-label="Main"><ul>${navLinks(ctx, active)}</ul></nav>
 <div class="topbar-actions">${addButton(ctx)}${login}</div></div></header>
 <main id="main" tabindex="-1">${body}</main>
 <footer class="footer"><div class="wrap footer-inner"><p class="footer-brand">${LOGO}<span>Meowist</span></p>
-<nav aria-label="Footer"><ul>${navLinks(ctx, active)}${ctx.dashboardEnabled ? html`<li><a href="${DASHBOARD_PATH}">Log in</a></li>` : ''}</ul></nav></div></footer>
+<nav aria-label="Footer"><ul>${navLinks(ctx, active)}${ctx.dashboardEnabled ? html`<li><a href="${DASHBOARD_PATH}">Dashboard</a></li>` : ''}</ul></nav></div></footer>
 </body></html>`.text;
 }
 
@@ -147,7 +153,7 @@ export function homePage(ctx) {
         body: html`<section class="hero"><div class="wrap"><p class="eyebrow">Discord bot</p>
 <h1>Moderation that explains itself.</h1>
 <p class="lead">Meowist keeps a Discord server calm: clear enforcement with case codes and DMs, a warning ladder members can understand, appeals that reach a person, automod, tickets and the community features around them.</p>
-<p class="hero-actions">${addButton(ctx)}<a class="button${ctx.publicSite && ctx.installUrl ? ' button-quiet' : ''}" href="/commands">See the commands</a>${support}</p>
+<p class="hero-actions">${addButton(ctx)}<a class="button${ctx.publicSite && ctx.installUrl ? ' button-quiet' : ''}" href="/commands">See the commands</a>${ctx.dashboardEnabled ? html`<a class="button button-quiet" href="${DASHBOARD_PATH}">Open the dashboard</a>` : ''}${support}</p>
 ${ctx.publicSite ? '' : html`<p class="note">Meowist runs on its own server for now; it can’t be added to other servers yet.</p>`}</div></section>
 <section class="features" aria-labelledby="features-title"><div class="wrap"><h2 id="features-title">What it does</h2>
 <ul class="feature-grid">${FEATURES.map((f) => html`<li class="feature"><h3>${f.title}</h3><p>${f.text}</p></li>`)}</ul></div></section>
@@ -277,6 +283,10 @@ export function createSite({ client = null, env = process.env, dashboardEnabled 
     router.get('/robots.txt', (req, res) => {
         res.set('Cache-Control', 'no-cache');
         res.type('text/plain').send(publicSite ? 'User-agent: *\nDisallow: /dashboard\nDisallow: /oauth\n' : 'User-agent: *\nDisallow: /\n');
+    });
+    router.get('/favicon.svg', (req, res) => {
+        res.set('Cache-Control', 'public, max-age=86400');
+        res.status(200).type('image/svg+xml').send(FAVICON_SVG);
     });
     router.get('/site.css', (req, res) => {
         res.set('Cache-Control', 'public, max-age=3600');

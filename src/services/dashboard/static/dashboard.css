@@ -593,6 +593,9 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
 .side-list a[aria-current] .icon { color: var(--accent); }
 .side-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side-bottom { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--chrome-border); }
+.side-site { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; padding: 7px 10px; border-radius: 9px; color: var(--chrome-text); font-size: 14px; font-weight: 500; }
+.side-site .icon { width: 16px; height: 16px; }
+.side-site:hover { color: var(--text); background: var(--surface); text-decoration: none; }
 .side-nav .server-switch > summary { width: 100%; max-width: none; }
 .side-nav .user-menu > summary { padding: 6px 8px; border-radius: 10px; }
 .side-nav .user-menu > summary:hover { background: var(--surface); }
@@ -661,6 +664,8 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
     background: none; color: var(--fg); font: inherit; text-align: left; cursor: pointer; min-height: 0;
 }
 .menu-item:hover { background: var(--bad-soft); color: var(--bad); }
+.menu-link:hover { background: var(--surface); color: var(--text); text-decoration: none; }
+.menu-link .icon { width: 16px; height: 16px; }
 .server-icon { width: 36px; height: 36px; border-radius: 12px; flex: none; }
 .server-initials { display: grid; place-items: center; background: var(--text); color: var(--bg); font-size: 12px; font-weight: 700; }
 .server-text { display: flex; flex-direction: column; min-width: 0; }

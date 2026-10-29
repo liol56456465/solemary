@@ -22,7 +22,7 @@
 //   heatmap and mass-action blocks on /staff. Same POST checks + Administrator (canAct).
 //   GET  /dashboard/static/<file>  dashboard.css (CSP style-src 'self') and dashboard.js (script-src 'self', optional)
 //   POST /dashboard/cases/:code/evidence/upload  an evidence image (multipart, 8 MB, magic-byte check)
-//   POST /dashboard/logout          CSRF token + same-origin check
+//   POST /dashboard/logout          CSRF token + same-origin check, then back to the website (/)
 //   /dashboard/owner/…              the Owner area (ownerRoutes.js): bot profile, servers, blacklist,
 //                                   health + maintenance, announce. OWNER_IDS only (checked live on
 //                                   every request; anyone else gets 404), POSTs also need a login
@@ -697,7 +697,8 @@ export function createDashboard({
         if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'The logout request did not come from this dashboard.', req);
         await sessions.destroy(req.dashboard.session.id);
         res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
-        return fail(res, 200, 'Logged out', `You are logged out. Open ${BASE} to log in again.`);
+        // To the website, not a dashboard page: one would start a new Discord login (often silent).
+        return res.redirect(303, '/');
     }
 
     /**

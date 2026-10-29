@@ -394,6 +394,9 @@ test('OAuth callback refuses replayed or cookie-less states and users without ac
     const { res } = await login(stranger.d);
     assert.equal(res.statusCode, 403);
     assert.equal(cookieValue(res, SESSION_COOKIE), null);
+    assert.ok(res.body.includes('<a class="brand" href="/" aria-label="Meowist website">'), 'logo leads to the website');
+    assert.ok(res.body.includes('<a class="button-link" href="/">Back to the home page</a>'));
+    assert.ok(!res.body.includes('/dashboard/overview'), 'no link that would start a login again');
 
     const cancelled = fakeRes();
     await d.callback({ headers: {}, query: { error: 'access_denied' } }, cancelled);
@@ -630,8 +633,9 @@ test('logout needs the CSRF token and a same-origin request', async () => {
     const crossFetch = await runProtected(d, d.logout, { method: 'POST', headers: { cookie, 'sec-fetch-site': 'cross-site' }, body: { csrf } });
     assert.equal(crossFetch.statusCode, 403);
     const ok = await runProtected(d, d.logout, { method: 'POST', headers: { cookie, origin: 'https://bot.example' }, body: { csrf } });
-    assert.equal(ok.statusCode, 200);
-    assert.match(ok.body, /logged out/);
+    assert.equal(ok.statusCode, 303);
+    assert.equal(ok.redirectedTo, '/', 'to the website: a dashboard page would start a new (often silent) Discord login');
+    assert.ok(ok.cookies.some((c) => c.startsWith(`${SESSION_COOKIE}=;`) && c.includes('Max-Age=0')), 'session cookie cleared');
     const after = await runProtected(d, d.cases, { method: 'GET', headers: { cookie }, query: {} });
     assert.equal(after.redirectedTo, '/dashboard', 'session destroyed server-side');
 });
@@ -729,6 +733,10 @@ test('layout v5: grouped sidebar with every page, breadcrumbs, phone tab bar wit
     assert.match(page, /<details class="more menu-wrap"><summary>.*More<\/span><\/summary><div class="more-sheet">/);
     assert.ok(page.includes('class="icon-button find-link" href="/dashboard/modules" aria-label="Find a setting"'), 'phones get a search icon');
     assert.ok(!/class="rail|class="section-tabs"|nav-toggle/.test(page), 'old shells gone');
+    assert.ok(side.includes('<a class="side-site" href="/">'), 'sidebar links back to the website');
+    assert.ok(page.includes('<a class="menu-item menu-link" href="/">'), 'account menu links to the website');
+    assert.match(page, /<div class="more-foot"><a href="\/">.*Website<\/a>/, 'phone sheet links to the website');
+    assert.ok(page.includes('<link rel="icon" href="/favicon.svg" type="image/svg+xml">'));
 });
 
 test('overview week chart: the last 7 UTC days, oldest first, today last, missing days 0', async () => {

@@ -67,7 +67,9 @@ test('every front page renders with the shell, the hashed stylesheet and no inli
             assert.ok(!/<script/i.test(res.body), `${path}: no scripts`);
             assert.ok(!/\sstyle=/i.test(res.body) && !/<style/i.test(res.body), `${path}: no inline styles`);
             assert.ok(res.body.includes(`href="${SUPPORT}"`), `${path}: support link`);
-            assert.ok(res.body.includes('href="/dashboard">Log in'), `${path}: log in`);
+            assert.ok(res.body.includes('<a class="button" href="/dashboard">Dashboard</a>'), `${path}: filled Dashboard button in the top bar`);
+            assert.ok(res.body.includes('<li><a href="/dashboard">Dashboard</a></li>'), `${path}: footer link`);
+            assert.ok(res.body.includes('<link rel="icon" href="/favicon.svg" type="image/svg+xml">'), `${path}: favicon`);
         }
         const notFound = await site.get('/nope');
         assert.equal(notFound.status, 404);
@@ -178,6 +180,36 @@ test('invite links: only Discord invites, the main-server link only when MAIN_SE
     } finally { await withMain.close(); }
     const brokenGetter = await serve({ supportInvite: () => { throw new Error('settings not loaded'); } });
     try { assert.equal((await brokenGetter.get('/')).status, 200); } finally { await brokenGetter.close(); }
+});
+
+test('the home page links to the dashboard from the hero', async () => {
+    const site = await serve();
+    try {
+        const body = (await site.get('/')).body;
+        assert.match(body, /<p class="hero-actions">.*<a class="button button-quiet" href="\/dashboard">Open the dashboard<\/a>/s);
+    } finally { await site.close(); }
+});
+
+test('with the add button shown, Dashboard is the quiet button', async () => {
+    const site = await serve({ env: { PUBLIC_SITE_ENABLED: 'true' } });
+    try {
+        const body = (await site.get('/')).body;
+        assert.ok(body.includes('<a class="button button-quiet" href="/dashboard">Dashboard</a>'));
+        assert.ok(body.includes('data-add-bot>Add to your server</a>'));
+    } finally { await site.close(); }
+});
+
+test('the favicon is the cat on a black tile, cached, under the site CSP', async () => {
+    const site = await serve();
+    try {
+        const res = await site.get('/favicon.svg');
+        assert.equal(res.status, 200);
+        assert.match(res.headers.get('content-type'), /^image\/svg\+xml/);
+        assert.equal(res.headers.get('cache-control'), 'public, max-age=86400');
+        assert.equal(res.headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
+        assert.ok(res.body.startsWith('<svg xmlns="http://www.w3.org/2000/svg"') && res.body.includes('fill="#000"'));
+        assert.ok(!/<script|on\w+=/i.test(res.body), 'nothing active in the icon');
+    } finally { await site.close(); }
 });
 
 test('Log in is hidden when the dashboard is not enabled', async () => {

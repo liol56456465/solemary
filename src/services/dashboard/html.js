@@ -221,7 +221,7 @@ ${navGroups(session, access).map((group) => html`<div class="side-group"><p clas
         return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}>${itemIcon(item)}<span class="side-text">${item.label}</span>${badge}${state === null ? ''
             : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
     })}</ul></div>`)}
-<div class="side-bottom">${userMenu(session, access, theme, back)}</div></nav>`;
+<div class="side-bottom"><a class="side-site" href="/">${icon('home')}<span class="side-text">Meowist website</span></a>${userMenu(session, access, theme, back)}</div></nav>`;
 }
 
 /** "Moderate / Members": where the page sits (the group, then the page). */
@@ -240,7 +240,7 @@ function tabBar(active, theme, back, session, access) {
     return html`<nav class="tabbar" aria-label="Sections"><a href="${path('/overview')}"${active === 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon('overview')}<span>Home</span></a>${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key && active !== 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.label === 'Server setup' ? 'Setup' : sec.label}</span></a>`)}
 <details class="more menu-wrap"><summary${current && !main.some((sec) => sec.key === current.key) ? raw(' class="on"') : ''}>${icon('menu')}<span>More</span></summary><div class="more-sheet">
 ${sections(groups).map((sec) => html`<p class="more-group">${sec.label}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${itemIcon(item)}${item.label}</a>`)}`)}
-${themePicker(theme, back, 'sheet')}<div class="more-foot"><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
+${themePicker(theme, back, 'sheet')}<div class="more-foot"><a href="/">${icon('home')}Website</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
 }
 
 // Themes (same tokens and layout, ten palettes): "system" follows the device (Paper or Graphite).
@@ -292,7 +292,7 @@ function serverSwitch(server) {
 function userMenu(session, access, theme = 'system', back = path('/overview')) {
     return html`<details class="user-menu menu-wrap"><summary aria-label="Account: ${session.username}"><span class="avatar-initials" aria-hidden="true">${initials(session.username)}</span><span class="user-name">${session.username}</span></summary>
 <div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${levelLabel(access)}</span></p>
-${themePicker(theme, back, 'menu')}<form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
+${themePicker(theme, back, 'menu')}<a class="menu-item menu-link" href="/">${icon('home')}Meowist website</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
 }
 
 /**
@@ -310,9 +310,9 @@ export function layout({ title, active = null, session = null, access = null, mo
         ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : '';
     const top = session ? html`<header class="page-top">${crumbs(active, navGroups(session, access))}<span class="spacer"></span>
 ${find}</header>`
-        : html`<header class="page-top bare-top"><a class="brand" href="${path('/overview')}" aria-label="Meowist"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a><span class="spacer"></span></header>`;
+        : html`<header class="page-top bare-top"><a class="brand" href="/" aria-label="Meowist website"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a><span class="spacer"></span></header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark">${refreshSeconds > 0 ? html`<meta http-equiv="refresh" content="${refreshSeconds}">` : ''}<title>${title} · Meowist dashboard</title><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
+<meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark">${refreshSeconds > 0 ? html`<meta http-equiv="refresh" content="${refreshSeconds}">` : ''}<title>${title} · Meowist dashboard</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>
 <div class="${session ? 'app' : 'app bare'}">${session ? sideNav(active, moduleStates, theme, back, session, access) : ''}
 <div class="page">${top}<main id="main" tabindex="-1">${body}</main></div></div>
@@ -337,5 +337,5 @@ export function section(title, body, help = '', { open = true, collapsible = tru
 
 /** A plain message page (errors, 403, …). */
 export function messagePage(title, message, session = null, extra = {}) {
-    return layout({ title, session, ...extra, body: html`<div class="message card"><h1>${title}</h1><p>${message}</p>${session ? html`<p class="message-actions"><a class="button-link" href="${path('/overview')}">Back to Overview</a></p>` : ''}</div>` });
+    return layout({ title, session, ...extra, body: html`<div class="message card"><h1>${title}</h1><p>${message}</p><p class="message-actions">${session ? html`<a class="button-link" href="${path('/overview')}">Back to Overview</a>` : html`<a class="button-link" href="/">Back to the home page</a>`}</p></div>` });
 }
