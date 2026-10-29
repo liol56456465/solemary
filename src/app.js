@@ -295,7 +295,8 @@ class Meowist extends Client {
     registerOAuthRoutes(app, this);
     const dashboardEnabled = registerDashboard(app, this);
 
-    // The front website (Home, Commands, About, robots.txt) at the root, after every other route.
+    // The front website (Home, Commands, Leaderboard, About, Status, Privacy, Terms, robots.txt) at
+    // the root, after every other route. Leaderboard and status read this client (site.js defaults).
     registerSite(app, this, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite });
 
     // Last: no stack traces in the browser, whatever NODE_ENV is.
