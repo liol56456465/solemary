@@ -13,7 +13,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
-import { enforcementConfig } from '../../config/enforcement.js';
+import { ENFORCEMENT_REASONS, enforcementConfig } from '../../config/enforcement.js';
 import { createRejoinInvite, getLadder, isAdministrator, previewWarn, sendDm } from '../../services/enforcement/enforcementService.js';
 import { isEnforcementDbAvailable } from '../../services/enforcement/db.js';
 import { insertCase, setDmDelivered } from '../../services/enforcement/caseService.js';
@@ -47,11 +47,22 @@ function saveTestCase({ moderator, target, type, reason, durationMs = null, unap
     });
 }
 
+/**
+ * A reason typed exactly as a prebuilt reason (its label or key, any case) is saved as that
+ * prebuilt reason, so the preview shows the rule line it is linked to (dashboard Rules page).
+ * Anything else stays a custom reason (no rule line).
+ */
+export function prebuiltReasonFields(reason) {
+    const text = String(reason || '').trim().toLowerCase();
+    const match = ENFORCEMENT_REASONS.find((r) => r.label.toLowerCase() === text || r.key === text);
+    return match ? { reason: match.label, reasonSource: 'prebuilt', reasonKey: match.key } : {};
+}
+
 /** The warn DM, or — when this warn would hit the ladder limit — the automatic ban DM that replaces it. */
 async function warnPreview({ invoker, target, reason, ladder }) {
     const step = previewWarn(ladder);
     const warn = await saveTestCase({
-        moderator: invoker, target, type: 'warn', reason, ladderLevel: step.nextLevel,
+        moderator: invoker, target, type: 'warn', reason, ladderLevel: step.nextLevel, extra: prebuiltReasonFields(reason),
     });
     if (!step.escalates) {
         return { content: warnDm(warn, step.warnNumber), record: warn, note: `warn ${step.warnNumber} of ${step.threshold}` };
@@ -82,7 +93,9 @@ async function buildPreview({ action, guild, invoker, target, reason, durationMs
     const ladder = isEnforcementDbAvailable()
         ? await getLadder(enforcementConfig.mainGuildId, target.id)
         : { level: 0, warns_since_level: 0 };
-    const save = (type, options = {}) => saveTestCase({ moderator: invoker, target, type, reason, ladderLevel: ladder.level, ...options });
+    const save = (type, options = {}) => saveTestCase({
+        moderator: invoker, target, type, reason, ladderLevel: ladder.level, ...options, extra: { ...prebuiltReasonFields(reason), ...options.extra },
+    });
 
     switch (action) {
         case 'ban': {

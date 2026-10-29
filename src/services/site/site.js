@@ -10,6 +10,7 @@
 //   GET /commands     the commands every member may use (EVERYONE_COMMANDS + the loaded descriptions)
 //   GET /about        who runs it
 //   GET /leaderboard  the main server's leveling leaderboard, 50 a page (?page=)
+//   GET /rules        the main server's rules, #rule-N anchors (pages/rules.js; 503 when unreadable)
 //   GET /status       Online / Starting / Degraded and the uptime, nothing else
 //   GET /privacy      what the bot stores and why (written from the code, nothing invented)
 //   GET /terms        the short rules for using the bot
@@ -43,12 +44,14 @@ import { featuresPage } from './pages/features.js';
 import { pricingPage } from './pages/pricing.js';
 import { faqPage } from './pages/faq.js';
 import { GUIDES, docsPage, guidePage } from './pages/docs.js';
+import { rulesPage } from './pages/rules.js';
+import { readPublicRules } from '../rules/serverRules.js';
 
 export {
     CSS_PATH, DASHBOARD_PATH, FAVICON_SVG, INSTALL_PERMISSIONS, NOINDEX, SECURITY_HEADERS, STYLESHEET, addButton,
     installPermissionBits, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
 } from './shell.js';
-export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, GUIDES };
+export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, rulesPage, GUIDES };
 
 const CATEGORY_LABEL = {
     Core: 'General', Community: 'Community', Leveling: 'Leveling', Fun: 'Fun', Birthday: 'Birthdays',
@@ -353,7 +356,7 @@ export function notFoundPage(ctx) {
 /** The public pages, for /sitemap.xml. */
 export const SITEMAP_PATHS = [
     '/', '/features', '/pricing', '/docs', ...GUIDES.map((g) => `/docs/${g.slug}`), '/faq',
-    '/commands', '/leaderboard', '/about', '/status', '/privacy', '/terms',
+    '/commands', '/leaderboard', '/rules', '/about', '/status', '/privacy', '/terms',
 ];
 
 export function sitemapXml(origin) {
@@ -367,12 +370,12 @@ export function sitemapXml(origin) {
 /**
  * The front-site router. `client` gives the loaded commands (read per request: the web server
  * starts before the commands load); `support()` the current support invite (a settings getter).
- * `leaderboard({ offset, limit })` and `status()` default to the real readers on `client`;
+ * `leaderboard({ offset, limit })`, `status()` and `rules()` default to the real readers;
  * tests pass fakes.
  */
 export function createSite({
     client = null, env = process.env, dashboardEnabled = false, memberPortalEnabled = false, supportInvite = () => null,
-    leaderboard = createLeaderboardReader(client), status = () => botStatus(client),
+    leaderboard = createLeaderboardReader(client), status = () => botStatus(client), rules = () => readPublicRules(env),
 } = {}) {
     const router = express.Router();
     const publicSite = publicSiteEnabled(env);
@@ -431,6 +434,17 @@ export function createSite({
         res.set('Cache-Control', 'no-cache');
         res.status(board ? 200 : 503).type('html').send(leaderboardPage(context(), { page: number, board }));
     });
+    // A failed read is a 503 page, never an empty list (which would say "no rules").
+    router.get('/rules', async (req, res) => {
+        let data = null;
+        try {
+            data = await rules();
+        } catch (error) {
+            logger.warn(`Site rules could not be loaded: ${error.message}`);
+        }
+        res.set('Cache-Control', 'no-cache');
+        res.status(data ? 200 : 503).type('html').send(rulesPage(context(), data));
+    });
     router.get('/robots.txt', (req, res) => {
         res.set('Cache-Control', 'no-cache');
         const sitemap = publicSite && base.origin ? `Sitemap: ${base.origin}/sitemap.xml\n` : '';
@@ -465,7 +479,7 @@ export function createSite({
 }
 
 /** Mounts the front site at the root of `app` (after /health, /ready, OAuth and the dashboard). */
-export function registerSite(app, client, { env = process.env, dashboardEnabled = false, memberPortalEnabled = false, supportInvite, leaderboard, status } = {}) {
-    app.use(createSite({ client, env, dashboardEnabled, memberPortalEnabled, supportInvite, leaderboard, status }));
+export function registerSite(app, client, { env = process.env, dashboardEnabled = false, memberPortalEnabled = false, supportInvite, leaderboard, status, rules } = {}) {
+    app.use(createSite({ client, env, dashboardEnabled, memberPortalEnabled, supportInvite, leaderboard, status, rules }));
     logger.info(`Front site at / (${publicSiteEnabled(env) ? 'public' : 'not public: noindex, no add button (PUBLIC_SITE_ENABLED)'})`);
 }

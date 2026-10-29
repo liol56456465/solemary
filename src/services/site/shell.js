@@ -125,6 +125,7 @@ function footerColumns(ctx, active) {
 ${ctx.dashboardEnabled ? html`<li><a href="${DASHBOARD_PATH}">Dashboard</a></li>` : ''}`)}
 ${column('Resources', html`<li><a href="/docs"${current('docs')}>Docs</a></li>
 <li><a href="/faq"${current('faq')}>FAQ</a></li>
+<li><a href="/rules"${current('rules')}>Rules</a></li>
 <li><a href="/status"${current('status')}>Status</a></li>
 <li><a href="/about"${current('about')}>About</a></li>`)}
 ${column('Legal', html`<li><a href="/privacy"${current('privacy')}>Privacy</a></li>

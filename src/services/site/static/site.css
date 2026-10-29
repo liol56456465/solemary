@@ -391,6 +391,18 @@ button.button { cursor: pointer; }
 .doc-next a:hover { border-color: var(--border-strong); }
 .doc-next-label { display: block; font-family: var(--mono); font-size: 12px; font-weight: 400; color: var(--text-muted); margin-bottom: 4px; }
 
+/* Rules: numbered like the docs steps; each rule is a link target (#rule-3) from the DMs */
+.rules { max-width: 760px; }
+.rules > .note:first-child { margin-top: -24px; }
+.rules-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+.rule { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 4px 24px; padding: 24px 0; border-bottom: 1px solid var(--border); scroll-margin-top: 88px; }
+.rule:target { background: var(--accent-soft); box-shadow: -16px 0 0 var(--accent-soft), 16px 0 0 var(--accent-soft); }
+.rule-num { font-family: var(--mono); font-size: 13px; line-height: 28px; color: var(--accent); text-decoration: none; }
+.rule-num:hover { text-decoration: underline; }
+.rule-title { font-size: 20px; line-height: 28px; letter-spacing: -0.015em; margin: 0; overflow-wrap: anywhere; }
+.rule-text { color: var(--text-muted); margin: 6px 0 0; white-space: pre-line; overflow-wrap: anywhere; }
+.rules-appeal { margin-top: 32px; }
+
 /* Commands */
 .jump ul { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .jump a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: 1px solid var(--border-control); border-radius: 6px; color: var(--text); text-decoration: none; font-size: 14px; }
@@ -495,6 +507,8 @@ button.button { cursor: pointer; }
     .footer-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .guide { grid-template-columns: 40px minmax(0, 1fr); }
     .guide-time { grid-column: 2; }
+    .rule { grid-template-columns: 40px minmax(0, 1fr); gap: 4px 12px; }
+    .rule-title { font-size: 18px; }
     .ladder-step { grid-template-columns: 80px minmax(0, 1fr); }
     .ladder-result { grid-column: 2; text-align: left; }
     .dc { padding: 14px 12px 16px; font-size: 14px; }

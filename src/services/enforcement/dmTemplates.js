@@ -3,6 +3,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { dateStamp, formatDuration, stamp } from './format.js';
+import { ruleLineFor } from '../rules/serverRules.js';
 
 const { serverName } = enforcementConfig;
 // Read on every use: a per-server setting that can change at runtime.
@@ -14,12 +15,25 @@ function appealLine(record) {
         : `**Appeal here:** ${invite()}`;
 }
 
+// Discord's message content limit: the rule line is dropped rather than going over it.
+const DM_MAX = 2000;
+
 function common(record) {
     return [
         `By: ${record.moderator_username}`,
         `Reason: ${record.reason}`,
+        // "Rule 3: No spam — <link>" when the prebuilt reason is linked to a server rule.
+        { ruleLine: ruleLineFor(record) },
         `Date: ${dateStamp(record.created_at)}`,
     ];
+}
+
+/** Joins DM lines; the rule line placeholder is kept only while the DM fits the limit. */
+function finish(lines) {
+    const plain = lines.filter((line) => typeof line === 'string');
+    const withRule = lines.map((line) => (typeof line === 'string' ? line : line?.ruleLine || null)).filter(Boolean);
+    const text = withRule.join('\n');
+    return text.length <= DM_MAX ? text : plain.join('\n');
 }
 
 export function banDm(record) {
@@ -39,37 +53,37 @@ export function banDm(record) {
     if (record.ladder_level_after === 3 && record.is_auto && record.appeal_deadline && !record.unappealable) {
         lines.push(`You can appeal until ${dateStamp(record.appeal_deadline)}.`);
     }
-    return lines.join('\n');
+    return finish(lines);
 }
 
 export function kickDm(record, inviteUrl) {
-    return [
+    return finish([
         `**Appeal here:** ${invite()}`,
         `**Kicked from ${serverName}**`,
         ...common(record),
         `Case code: ${record.case_code}`,
         `Rejoin: ${inviteUrl || 'ask a staff member for an invite'}`,
-    ].join('\n');
+    ]);
 }
 
 export function muteDm(record) {
-    return [
+    return finish([
         `**Appeal here:** ${invite()}`,
         `**Muted in ${serverName}**`,
         ...common(record),
         `Duration: ${formatDuration(Number(record.duration_ms))} — ends ${stamp(record.expires_at)}`,
         `Case code: ${record.case_code}`,
-    ].join('\n');
+    ]);
 }
 
 export function warnDm(record, warnNumber) {
-    return [
+    return finish([
         `**Appeal here:** ${invite()}`,
         `**Warning ${warnNumber} of ${enforcementConfig.warnsPerLevel} in ${serverName}**`,
         ...common(record),
         `Case code: ${record.case_code}`,
         `At ${enforcementConfig.warnsPerLevel} warnings you will be banned.`,
-    ].join('\n');
+    ]);
 }
 
 export function appealAcceptedDm(adminUsername, inviteUrl) {

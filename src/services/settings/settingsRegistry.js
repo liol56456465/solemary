@@ -5,7 +5,8 @@
 //   key        the name used everywhere (also the property on the config object
 //              that exposes it: enforcementConfig.<key>, automodConfig.<key>, …)
 //   module     the dashboard module / page it belongs to
-//   kind       channel | category | role | number | duration | string | url | boolean | list
+//   kind       channel | category | role | number | duration | string | url | boolean | list | json
+//              (json: a structured value, e.g. the server rules; `describe(value)` is its one-line summary)
 //   guild      'main' (MAIN_GUILD_ID) or 'support' (SUPPORT_GUILD_ID): the server whose
 //              row holds it
 //   env        the environment variable that seeds it once (and is the fallback while
@@ -42,7 +43,25 @@ const httpsUrl = z.string().max(500).refine((value) => {
 const int = (min, max) => z.number().int('must be a whole number').min(min).max(max);
 const wordList = z.array(z.string().trim().toLowerCase().min(1).max(64)).max(500, 'at most 500 words');
 
-export const SETTING_KINDS = ['channel', 'category', 'role', 'number', 'duration', 'string', 'url', 'boolean', 'list'];
+// Server rules (dashboard Rules page, public /rules, the rule line in punishment DMs).
+// Each rule has a stable id, so moving or deleting rules never re-points a reason link;
+// its number is its position (1-based). updatedAt: when the list last changed (ISO).
+export const RULES_LIMITS = Object.freeze({ maxRules: 30, titleMax: 80, textMax: 1000 });
+const ruleId = z.string().regex(/^[a-z0-9]{4,16}$/, 'must be a rule id');
+const serverRules = z.object({
+    rules: z.array(z.object({
+        id: ruleId,
+        title: z.string().trim().min(1, 'a rule needs a title').max(RULES_LIMITS.titleMax).refine((v) => !/[\r\n]/.test(v), 'the title must be one line'),
+        text: z.string().trim().max(RULES_LIMITS.textMax),
+    }).strict()).max(RULES_LIMITS.maxRules, `at most ${RULES_LIMITS.maxRules} rules`)
+        .refine((rules) => new Set(rules.map((r) => r.id)).size === rules.length, 'rule ids must be unique'),
+    updatedAt: z.string().refine((v) => Number.isFinite(Date.parse(v)), 'must be a date').nullable(),
+}).strict();
+// Prebuilt reason key (config/enforcement.js ENFORCEMENT_REASONS) → rule id.
+const reasonRuleLinks = z.record(z.string().regex(/^[a-z0-9_]{1,40}$/, 'must be a reason key'), ruleId)
+    .refine((links) => Object.keys(links).length <= 50, 'at most 50 links');
+
+export const SETTING_KINDS = ['channel', 'category', 'role', 'number', 'duration', 'string', 'url', 'boolean', 'list', 'json'];
 
 /** @type {ReadonlyArray<object>} */
 export const SETTINGS = Object.freeze([
@@ -172,6 +191,17 @@ export const SETTINGS = Object.freeze([
         key: 'bannedRoleId', module: 'support', kind: 'role', guild: 'support',
         label: 'Banned role (support server)', env: 'BANNED_ROLE_ID',
         fallback: '1564363121685176320', prodOnly: true, schema: optionalId,
+    },
+    // ── Server rules ──
+    {
+        key: 'serverRules', module: 'rules', kind: 'json', guild: 'main', label: 'Server rules',
+        fallback: Object.freeze({ rules: Object.freeze([]), updatedAt: null }), schema: serverRules,
+        describe: (value) => `${value?.rules?.length || 0} rule${value?.rules?.length === 1 ? '' : 's'}`,
+    },
+    {
+        key: 'reasonRuleLinks', module: 'rules', kind: 'json', guild: 'main', label: 'Reasons linked to rules',
+        fallback: Object.freeze({}), schema: reasonRuleLinks,
+        describe: (value) => `${Object.keys(value || {}).length} linked`,
     },
 ].map((entry) => Object.freeze({ sensitive: false, envUnit: null, ...entry })));
 

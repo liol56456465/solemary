@@ -624,6 +624,13 @@ function get(h, module) {
     return run(h, h.d.modulePage, { method: 'GET', params: { module }, headers: { cookie: h.cookie }, query: {} });
 }
 
+// Server rules (Rules page): two rules, the first with a <b> in its text (escaping).
+const RULE_A = 'aaaa1111';
+const RULE_B = 'bbbb2222';
+function seedRules(state) {
+    state.registry.serverRules = { rules: [{ id: RULE_A, title: 'No spam', text: 'Do not <b>spam</b>.' }, { id: RULE_B, title: 'Be kind', text: '' }], updatedAt: '2026-10-01T00:00:00.000Z' };
+}
+
 // Valid form, the service it must reach, and an invalid form with the expected message.
 const CASES = {
     enforcement: {
@@ -821,6 +828,16 @@ const CASES = {
     support: {
         'banned-role': { form: { bannedRoleId: SUPPORT_ROLE }, service: 'updateSettings', bad: { form: { bannedRoleId: ROLE_OK }, message: /not in the server/ } },
         'appeals-category': { form: { supportAppealsCategoryId: SUPPORT_CAT }, service: 'updateSettings', bad: { form: { supportAppealsCategoryId: CAT }, message: /not in the server/ } },
+    },
+    rules: {
+        'rule-add': { form: { title: 'No ads', text: 'Keep ads out.' }, service: 'updateSettings', bad: { form: { title: '   ', text: 'x' }, message: /needs a title/ } },
+        'rule-edit': { seed: seedRules, form: { id: RULE_A, title: 'No spamming', text: 'Nope.' }, service: 'updateSettings',
+            bad: { seed: seedRules, form: { id: 'zzzz9999', title: 'X' }, message: /no longer exists/ } },
+        'rule-delete': { seed: seedRules, form: { id: RULE_A }, service: 'updateSettings', bad: { form: { id: RULE_A }, message: /no longer exists/ } },
+        'rule-move': { seed: seedRules, form: { id: RULE_A, direction: 'down' }, service: 'updateSettings',
+            bad: { seed: seedRules, form: { id: RULE_A, direction: 'up' }, message: /already the first/ } },
+        links: { seed: seedRules, form: { link_spam: RULE_A }, service: 'updateSettings',
+            bad: { seed: seedRules, form: { link_spam: 'zzzz9999' }, message: /no longer exists/ } },
     },
 };
 
@@ -2134,4 +2151,90 @@ test('Overview "Needs you": an active lockdown gets an End lockdown form for adm
         assert.ok(!String(page).includes('lockdown-end'));
         assert.match(String(page), /<a class="btn primary small" href="\/dashboard\/automod">Automod<\/a>/);
     }
+});
+
+// ── Rules page ────────────────────────────────────────────────────────────
+
+test('rules: add, edit, move, delete — stored as the serverRules setting with a fresh date; audit rows and a mod-log line naming the rule', async () => {
+    const h = await setup();
+    assert.equal((await post(h, 'rules', 'rule-add', { title: 'No spam', text: 'Line one\r\nLine two' })).statusCode, 303);
+    assert.equal((await post(h, 'rules', 'rule-add', { title: 'Be kind', text: '' })).statusCode, 303);
+    let stored = h.state.registry.serverRules;
+    assert.deepEqual(stored.rules.map((r) => [r.title, r.text]), [['No spam', 'Line one\nLine two'], ['Be kind', '']]);
+    assert.match(stored.rules[0].id, /^[a-z0-9]{8}$/);
+    assert.ok(Date.parse(stored.updatedAt) > Date.now() - 60000, 'updatedAt set');
+    const [first, second] = stored.rules.map((r) => r.id);
+    assert.equal(h.auditRows.filter((r) => r.key === 'serverRules').length, 2, 'one audit row per save (settings service)');
+    const modLog = h.calls.filter((c) => c.name === 'postModLog').map((c) => c.args[1].description);
+    assert.match(modLog[0], /changed Rules: rule 1: — → No spam — Line one Line two/);
+
+    assert.equal((await post(h, 'rules', 'rule-edit', { id: second, title: 'Be very kind', text: 'Always.' })).statusCode, 303);
+    assert.deepEqual(h.state.registry.serverRules.rules[1], { id: second, title: 'Be very kind', text: 'Always.' });
+    assert.equal((await post(h, 'rules', 'rule-move', { id: second, direction: 'up' })).statusCode, 303);
+    assert.deepEqual(h.state.registry.serverRules.rules.map((r) => r.id), [second, first], 'ids keep their rule when moved');
+    assert.match((await h.sessions.get(h.session.id)).flash, /is now rule 1/);
+
+    assert.equal((await post(h, 'rules', 'links', { link_spam: first, link_harassment: second })).statusCode, 303);
+    assert.deepEqual(h.state.registry.reasonRuleLinks, { spam: first, harassment: second });
+    const before = h.auditRows.length;
+    assert.equal((await post(h, 'rules', 'rule-delete', { id: first })).statusCode, 303);
+    stored = h.state.registry.serverRules;
+    assert.deepEqual(stored.rules.map((r) => r.id), [second]);
+    assert.deepEqual(h.state.registry.reasonRuleLinks, { harassment: second }, 'the link to the deleted rule is removed with it');
+    assert.deepEqual(h.auditRows.slice(before).map((r) => r.key).sort(), ['reasonRuleLinks', 'serverRules']);
+    assert.equal(h.calls.filter((c) => c.name === 'updateSettings').at(-1).args[2].module, 'rules');
+});
+
+test('rules: limits and validation — 30 rules at most, title ≤ 80 and one line, text ≤ 1000; nothing saved when refused', async () => {
+    const h = await setup();
+    h.state.registry.serverRules = { rules: Array.from({ length: 30 }, (_, i) => ({ id: `r${String(i).padStart(4, '0')}`, title: `Rule ${i}`, text: '' })), updatedAt: null };
+    const full = await post(h, 'rules', 'rule-add', { title: 'One more' });
+    assert.equal(full.statusCode, 400);
+    assert.match(full.body, /already has 30 rules/);
+    assert.equal(h.state.registry.serverRules.rules.length, 30);
+    assert.match((await get(h, 'rules')).body, /the most there can be/, 'no add form at the limit');
+
+    const e = await setup();
+    const longTitle = await post(e, 'rules', 'rule-add', { title: 'x'.repeat(81) });
+    assert.equal(longTitle.statusCode, 400);
+    assert.match(longTitle.body, /at most 80 characters/);
+    const longText = await post(e, 'rules', 'rule-add', { title: 'Ok', text: 'y'.repeat(1001) });
+    assert.equal(longText.statusCode, 400);
+    assert.match(longText.body, /at most 1000 characters/);
+    assert.equal((await post(e, 'rules', 'rule-add', { title: 'Ok', text: 'y'.repeat(1000) })).statusCode, 303, '1000 is allowed');
+    const twoLines = await post(e, 'rules', 'rule-add', { title: 'Two\nlines' });
+    assert.equal(twoLines.statusCode, 400);
+    assert.match(twoLines.body, /one line/);
+    const badMove = await post(e, 'rules', 'rule-move', { id: e.state.registry.serverRules.rules[0].id, direction: 'sideways' });
+    assert.equal(badMove.statusCode, 400);
+    assert.equal(e.state.registry.serverRules.rules.length, 1);
+});
+
+test('rules: links — one select per prebuilt reason; unchanged → "Nothing changed", no audit; unknown fields ignored', async () => {
+    const h = await setup();
+    seedRules(h.state);
+    const page = (await get(h, 'rules')).body;
+    for (const key of ['slurs', 'spam', 'harassment', 'staff_disrespect']) assert.ok(page.includes(`name="link_${key}"`), key);
+    assert.ok(page.includes(`<option value="${RULE_A}">Rule 1: No spam</option>`));
+    assert.ok(page.includes('Do not &lt;b&gt;spam&lt;/b&gt;.'), 'rule text escaped');
+    assert.ok(page.includes('data-confirm="Delete rule 1'), 'delete asks first');
+    const res = await post(h, 'rules', 'links', { link_spam: '', link_nope: RULE_A });
+    assert.equal(res.statusCode, 303);
+    assert.equal(h.auditRows.length, 0);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Nothing changed/);
+    await post(h, 'rules', 'links', { link_spam: RULE_B, link_nope: RULE_A });
+    assert.deepEqual(h.state.registry.reasonRuleLinks, { spam: RULE_B });
+    const line = h.calls.filter((c) => c.name === 'postModLog').at(-1).args[1].description;
+    assert.match(line, /reason spam: — → rule 2: Be kind/);
+});
+
+test('rules: refused without CSRF, with editing off, and for users without access; nothing saved', async () => {
+    const h = await setup();
+    assert.equal((await post(h, 'rules', 'rule-add', { title: 'X' }, { csrf: null })).statusCode, 403);
+    const off = await setup({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } });
+    assert.equal((await post(off, 'rules', 'rule-add', { title: 'X' })).statusCode, 403);
+    assert.ok(!(await get(off, 'rules')).body.includes('>Add rule</button>'), 'read-only page has no submit');
+    const stranger = await setup({ userId: STRANGER });
+    assert.equal((await post(stranger, 'rules', 'rule-add', { title: 'X' })).statusCode, 403);
+    for (const x of [h, off, stranger]) assert.equal(x.state.registry.serverRules, undefined);
 });
