@@ -136,7 +136,7 @@ test('my standing: only own counted warns at the current level, active punishmen
     assert.equal(nobody.warns.length, 0);
 });
 
-test('precedent: aggregate by type and duration, excludes test/voided/old/other reasons, counts accepted appeals; cached', { skip }, async () => {
+test('precedent: aggregate by type and duration, excludes test/voided/old/other reasons, counts accepted appeals; newest N only; cached', { skip }, async () => {
     const { loadPrecedent, precedentHint, clearPrecedentCache } = await import('../../src/services/enforcement/precedentService.js');
     const key = `h1_${runId}`;
     const recent = new Date(Date.now() - 24 * 3600000);
@@ -144,6 +144,7 @@ test('precedent: aggregate by type and duration, excludes test/voided/old/other 
     await insertCase({ reason_key: key, type: 'mute', duration_ms: 3600000, created_at: recent });
     await insertCase({ reason_key: key, type: 'warn', created_at: recent });
     await insertCase({ reason_key: key, type: 'warn', created_at: recent, is_test: true });
+    await insertCase({ reason_key: key, type: 'warn', created_at: recent, is_imported: true });
     await insertCase({ reason_key: key, type: 'warn', created_at: recent, voided_at: new Date(), status: 'revoked' });
     await insertCase({ reason_key: key, type: 'warn', created_at: new Date(Date.now() - 200 * 24 * 3600000) });
     await insertCase({ reason_key: `${key}x`, type: 'ban', created_at: recent });
@@ -158,11 +159,13 @@ test('precedent: aggregate by type and duration, excludes test/voided/old/other 
 
     clearPrecedentCache();
     const hint = await precedentHint(guildId, key, 'Test reason');
-    assert.equal(hint, 'Similar cases (reason "Test reason", last 180 days): 3 — usually Mute 1 hour (2), Warn (1); 1 overturned on appeal.');
+    assert.equal(hint, 'Similar cases (reason "Test reason", last 180 days, 3 cases): 1 warn · 2 mutes. Most common: mute, usually 1 hour. 1 overturned on appeal.');
     await insertCase({ reason_key: key, type: 'warn', created_at: recent });
     assert.equal(await precedentHint(guildId, key, 'Test reason'), hint, 'served from the cache');
     clearPrecedentCache();
-    assert.match(await precedentHint(guildId, key, 'Test reason'), /: 4 —/);
+    assert.match(await precedentHint(guildId, key, 'Test reason'), /, 4 cases\): 2 warns · 2 mutes\./);
+    // Only the newest `limit` cases count (same created_at → newest id first).
+    assert.deepEqual(await loadPrecedent(guildId, key, { limit: 2 }), [{ type: 'warn', duration_ms: null, count: 2, overturned: 0 }]);
 });
 
 test('no-contact: add (DMs both), duplicate refused, cache, list, end early, expiry', { skip }, async () => {

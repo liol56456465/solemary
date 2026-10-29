@@ -170,6 +170,7 @@ const fakeDeps = {
     getTargetState: async () => ({ ladder: { level: 0, warns_since_level: 1 } }),
     captureLinks: async (guild, entries) => entries.map(({ url }) => ({ url, sourceMessageUrl: null, excerpt: null })),
     precedentHint: async () => null,
+    getLadder: async () => ({ level: 0, warns_since_level: 1 }),
 };
 
 function makeEnforcement(state) {

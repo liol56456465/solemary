@@ -36,6 +36,7 @@ import {
     getLatestAppealStatuses,
     caseStatusLabel,
 } from '../services/enforcement/caseService.js';
+import { warmPrecedent } from '../services/enforcement/precedentService.js';
 import { createFlow, getFlow, takeFlow, updateFlow, PANEL_EXPIRED_MESSAGE } from '../services/enforcement/panelState.js';
 import { MAX_LINKS_PER_FORM, messageExcerpt } from '../services/enforcement/evidenceService.js';
 import { dateStamp, stamp, truncate } from '../services/enforcement/format.js';
@@ -288,7 +289,8 @@ function liftModal(flow, moderatorId, nonce) {
                 .setRequired(false)));
 }
 
-function confirmationPayload(flow, moderatorId, nonce) {
+/** The confirm step (exported for tests). */
+export function confirmationPayload(flow, moderatorId, nonce) {
     const summary = flowSummary(flow);
     const lines = summary.rows.map((row) => (row.id
         ? `**${row.label}:** ${row.value} (\`${row.id}\`)`
@@ -300,7 +302,9 @@ function confirmationPayload(flow, moderatorId, nonce) {
     }
     if (summary.effect) lines.push(`**Effect:** ${summary.effect}`);
     lines.push(...summary.notes);
+    // Consistency hints (read-only): similar cases for this reason + the target's ladder.
     if (summary.precedent) lines.push(`-# ${summary.precedent}`);
+    if (summary.memberHint) lines.push(`-# ${summary.memberHint}`);
 
     return {
         embeds: [createEmbed({
@@ -472,6 +476,9 @@ export async function handleEnforcementSelect(interaction, client, args) {
 
     if (step === 'reason') {
         updateFlow(nonce, reasonPatch(flow, value));
+        // Start the similar-cases query now (not awaited: the modal must open within 3 s),
+        // so the confirm step usually finds it cached.
+        if (RECORD_ACTIONS.has(flow.type)) warmPrecedent(interaction.guildId, value);
         return InteractionHelper.safeShowModal(interaction, detailsModal(getFlow(nonce), moderatorId, nonce));
     }
 

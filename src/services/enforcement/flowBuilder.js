@@ -6,7 +6,7 @@
 //
 // A flow: { type, moderatorId, targetId, targetUsername, reasonKey, reasonSource,
 // reason, customReason, durationInput, durationMs, name, nameIsDefault, unappealable,
-// evidenceInput, evidence, ladder, precedent, warnCode, sourceMessageUrl,
+// evidenceInput, evidence, ladder, precedent, memberHint, warnCode, sourceMessageUrl,
 // prefetchedExcerpts }. Steps:
 //   startFlow → reasonPatch (record actions) → parseFlowInput → completeFlowDetails
 //   startFlow → liftReasonPatch (unban / unmute / remove warn)
@@ -14,11 +14,11 @@
 
 import { enforcementConfig, CUSTOM_REASON_KEY, getReason } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
-import { assertBotPermissions, assertCanTarget, getTargetState, previewWarn } from './enforcementService.js';
+import { assertBotPermissions, assertCanTarget, getLadder, getTargetState, previewWarn } from './enforcementService.js';
 import { isNameTaken, nextDefaultName } from './caseService.js';
 import { addEvidence, captureLinks, MAX_LINKS_PER_FORM, parseEvidenceUrls } from './evidenceService.js';
 import { formatDuration, parseDuration, truncate } from './format.js';
-import { precedentHint } from './precedentService.js';
+import { memberLadderHint, precedentHint, PRECEDENT_UNAVAILABLE } from './precedentService.js';
 
 export const ACTION_LABELS = {
     ban: 'Ban',
@@ -125,6 +125,7 @@ export function parseFlowInput(flow, input = {}) {
 
 export const defaultFlowDeps = {
     isNameTaken, nextDefaultName, assertBotPermissions, assertCanTarget, getTargetState, captureLinks, precedentHint,
+    getLadder,
 };
 
 /**
@@ -132,11 +133,12 @@ export const defaultFlowDeps = {
  * (custom → must be free; blank → the next default name), an early hierarchy and bot
  * permission check (both run again on execute), the warn ladder for the preview, the
  * evidence excerpts (captured now, so they survive the message being deleted) and the
- * precedent hint. Returns { patch, error, fatal }:
+ * consistency hints (similar cases + the target's ladder). Returns { patch, error, fatal }:
  *   error — the moderator can fix it (a name already used); keep the flow
  *   fatal — the action cannot run (hierarchy, missing permissions); drop the flow
  */
-export async function completeFlowDetails({ guild, moderator, targetUser, flow, patch: parsed, customName = '', deps = defaultFlowDeps }) {
+export async function completeFlowDetails({ guild, moderator, targetUser, flow, patch: parsed, customName = '', deps: depsIn = defaultFlowDeps }) {
+    const deps = { ...defaultFlowDeps, ...depsIn };
     const { evidenceEntries = [], ...patch } = parsed;
     const name = String(customName || '').trim();
     if (name) {
@@ -166,10 +168,13 @@ export async function completeFlowDetails({ guild, moderator, targetUser, flow, 
         patch.ladder = (await deps.getTargetState(guild, targetUser.id)).ladder;
     }
 
-    // The precedent hint waits briefly at most and is left out on any problem.
-    [patch.evidence, patch.precedent] = await Promise.all([
+    // The consistency hints wait briefly at most and say "unavailable right now" on any
+    // problem; the .catch guards a replaced dependency that throws anyway.
+    [patch.evidence, patch.precedent, patch.memberHint] = await Promise.all([
         deps.captureLinks(guild, evidenceEntries, { prefetched: flow.prefetchedExcerpts }),
-        deps.precedentHint(guild.id, flow.reasonKey, getReason(flow.reasonKey)?.label || flow.reasonKey),
+        Promise.resolve().then(() => deps.precedentHint(guild.id, flow.reasonKey, getReason(flow.reasonKey)?.label || flow.reasonKey))
+            .catch(() => PRECEDENT_UNAVAILABLE),
+        memberLadderHint(guild.id, targetUser.id, { ladder: patch.ladder, getLadder: deps.getLadder }),
     ]);
     return { patch, error: null, fatal: null };
 }
@@ -185,7 +190,7 @@ export function warnEffectText(ladder) {
 /**
  * The confirm step's summary of a flow, as plain data both the panel (markdown) and
  * the dashboard (HTML) render: { rows: [{ label, value, code }], evidence: [{ url,
- * excerpt, unreadable }], effect, notes: [text], precedent }. Pure.
+ * excerpt, unreadable }], effect, notes: [text], precedent, memberHint }. Pure.
  */
 export function flowSummary(flow) {
     const rows = [{ label: 'User', value: flow.targetUsername, id: flow.targetId }];
@@ -211,7 +216,12 @@ export function flowSummary(flow) {
         if (flow.type === 'removewarn') rows.push({ label: 'Warning', value: flow.warnCode, code: true });
         rows.push({ label: 'Reason', value: flow.reason });
     }
-    return { rows, evidence, effect, notes, precedent: RECORD_ACTIONS.has(flow.type) ? flow.precedent || null : null };
+    const record = RECORD_ACTIONS.has(flow.type);
+    return {
+        rows, evidence, effect, notes,
+        precedent: record ? flow.precedent || null : null,
+        memberHint: record ? flow.memberHint || null : null,
+    };
 }
 
 /**
