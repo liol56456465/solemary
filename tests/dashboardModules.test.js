@@ -18,6 +18,8 @@ import { diffSnapshots, recordDashboardChange, changeSummary } from '../src/serv
 import { channelPurposeFor } from '../src/services/automod/channelRouting.js';
 import { JS_PATH, NAV, moduleItems } from '../src/services/dashboard/html.js';
 import { lockChannel, purgeChannelMessages, unlockChannel } from '../src/services/channelToolsService.js';
+import { resolveLogChannel } from '../src/services/loggingService.js';
+import { storeWelcomeImage } from '../src/utils/welcomeImageStore.js';
 
 const ALLOWED_SCRIPT = `<script src="${JS_PATH}" defer></script>`;
 const SECRET = 'x'.repeat(64);
@@ -210,6 +212,10 @@ function makeServices() {
         toggleEventLogging: async (c, g, types, on) => { record('toggleEventLogging', [types, on]); for (const t of types) s.logging.enabledEvents[t] = on; return true; },
         updateIgnoreList: async (c, g, { action, type, id }) => { record('updateIgnoreList', [action, type, id]); const k = `${type}s`; s.logging.ignore[k] = action === 'add' ? [...s.logging.ignore[k], id] : s.logging.ignore[k].filter((x) => x !== id); return true; },
         getWelcomeSettings: async () => clone(s.welcome),
+        // The /greet image store itself, on the fake guild (its channel.send is recorded by withImageStore).
+        resolveLogChannel,
+        storeWelcomeImage: async (guild, attachment, channelIds, label) => { record('storeWelcomeImage', [attachment, channelIds, label]); return storeWelcomeImage(guild, attachment, channelIds, label); },
+        resolveWelcomeImageUrl: async (c, url, ref) => (ref ? `${ref.url}&fresh=1` : url),
         updateWelcomeSettings: async (c, g, patch) => { record('updateWelcomeSettings', [patch]); return merge('welcome', patch); },
         addAutoRole: async (c, g, roleId) => { record('addAutoRole', [roleId]); const before = clone(s.welcome); const changed = !s.welcome.roleIds.includes(roleId); s.welcome.roleIds = [roleId]; return { before, after: clone(s.welcome), changed }; },
         removeAutoRole: async (c, g, roleId) => { record('removeAutoRole', [roleId]); const before = clone(s.welcome); const changed = s.welcome.roleIds.includes(roleId); s.welcome.roleIds = s.welcome.roleIds.filter((x) => x !== roleId); return { before, after: clone(s.welcome), changed }; },
@@ -558,12 +564,60 @@ async function run(h, handler, req) {
     return res;
 }
 
-function post(h, module, action, form, { origin = ORIGIN, csrf = h.session.csrf, headers = {} } = {}) {
+function post(h, module, action, form, { origin = ORIGIN, csrf = h.session.csrf, headers = {}, upload = null } = {}) {
     return run(h, h.d.moduleAction, {
         method: 'POST', params: { module, action },
         headers: { cookie: h.cookie, ...(origin ? { origin } : {}), ...headers },
         body: { ...(csrf === null ? {} : { csrf }), ...form },
+        // As parseMultipart leaves it for an upload action (the multipart path is tested on its own).
+        ...(upload ? { upload } : {}),
     });
+}
+
+// ── image uploads (Welcome & goodbye) ─────────────────────────────────────
+
+const BOUNDARY = '----meowistWelcomeBoundary';
+const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64, 1)]);
+const STORED_URL = 'https://cdn.discordapp.com/attachments/500000000000000001/800000000000000099/welcome-image.png?ex=ffffffff&is=1&hm=1';
+
+/** An audit log channel (TEXT) where the bot can post: its sends are recorded, as the stored message. */
+function withImageStore(state, guild) {
+    state.config.logging = { channels: { audit: TEXT } };
+    const channel = guild.channels.cache.get(TEXT);
+    channel.sent = [];
+    channel.deleted = [];
+    channel.isTextBased = () => true;
+    channel.send = async (payload) => {
+        channel.sent.push(payload);
+        const name = payload.files?.[0]?.name || 'image.png';
+        return { id: '800000000000000099', attachments: { first: () => ({ url: STORED_URL.replace('welcome-image.png', name) }) } };
+    };
+    channel.messages.delete = async (id) => { channel.deleted.push(id); };
+    return channel;
+}
+
+function multipartBody(fields, file = null) {
+    const parts = Object.entries(fields).map(([name, value]) => Buffer.from(`--${BOUNDARY}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`));
+    if (file) parts.push(Buffer.from(`--${BOUNDARY}\r\nContent-Disposition: form-data; name="image"; filename="${file.name}"\r\nContent-Type: ${file.type}\r\n\r\n`), file.data, Buffer.from('\r\n'));
+    parts.push(Buffer.from(`--${BOUNDARY}--\r\n`));
+    return Buffer.concat(parts);
+}
+
+/** A multipart POST through the real chain: requireUser → moduleUploadBody → moduleAction. */
+async function uploadPost(h, action, { file = { name: 'cat.png', type: 'image/png', data: PNG }, csrf = h.session.csrf, origin = ORIGIN } = {}) {
+    const res = fakeRes();
+    const req = {
+        method: 'POST', params: { module: 'welcome', action }, query: {},
+        headers: { cookie: h.cookie, ...(origin ? { origin } : {}), 'content-type': `multipart/form-data; boundary=${BOUNDARY}` },
+        body: multipartBody(csrf === null ? {} : { csrf }, file),
+    };
+    let passed = false;
+    await h.d.requireUser(req, res, () => { passed = true; });
+    if (!passed) return res;
+    let parsed = false;
+    await h.d.moduleUploadBody(req, res, () => { parsed = true; });
+    if (parsed) await h.d.moduleAction(req, res);
+    return res;
 }
 
 function get(h, module) {
@@ -621,6 +675,12 @@ const CASES = {
         logs: { form: { joinLogsEnabled: '1', joinLogsChannelId: TEXT, leaveLogsChannelId: '' }, service: 'updateWelcomeSettings', bad: { form: { joinLogsChannelId: VOICE }, message: /must be a text channel/ } },
         'welcome-embed': { form: { welcomeTitle: 'Hi {user}', welcomeColor: '#112233', welcomeFooter: 'Enjoy', welcomeImage: 'https://example.com/a.png' }, service: 'updateWelcomeSettings', admin: true,
             bad: { form: { welcomeTitle: 'Hi', welcomeImage: 'http://example.com/a.png' }, message: /must start with https/ } },
+        'welcome-image-upload': { seed: withImageStore, form: {}, upload: { file: { field: 'image', filename: 'cat.png', data: PNG } }, service: 'storeWelcomeImage', admin: true,
+            bad: { form: {}, message: /Choose an image file/ } },
+        'goodbye-image-upload': { seed: withImageStore, form: {}, upload: { file: { field: 'image', filename: 'cat.png', data: PNG } }, service: 'storeWelcomeImage', admin: true,
+            bad: { seed: withImageStore, form: {}, message: /Choose an image file/ } },
+        'welcome-image-remove': { seed: (s) => { s.welcome.welcomeImage = 'https://example.com/a.png'; }, form: {}, service: 'updateWelcomeSettings', admin: true },
+        'goodbye-image-remove': { seed: (s) => { s.welcome.leaveEmbed = { title: 'Bye', image: 'https://example.com/b.png' }; }, form: {}, service: 'updateWelcomeSettings', admin: true },
         'goodbye-embed': { form: { goodbyeTitle: 'Bye', goodbyeColor: 'AA0000', goodbyeFooter: '', goodbyeImage: 'https://example.com/b.gif' }, service: 'updateWelcomeSettings', admin: true,
             bad: { form: { goodbyeColor: 'red' }, message: /hex colour/ } },
     },
@@ -878,7 +938,7 @@ test('every POST action with valid input: service called, audit row, one mod-log
         for (const [action, c] of Object.entries(CASES[module.key])) {
             const h = await setup();
             c.seed?.(h.state, h.guild);
-            const res = await post(h, module.key, action, c.form);
+            const res = await post(h, module.key, action, c.form, { upload: c.upload });
             assert.equal(res.statusCode, 303, `${module.key}/${action} → 303 (got ${res.statusCode}: ${String(res.body).match(/role="alert">([^<]*)/)?.[1] || ''})`);
             assert.equal(res.redirectedTo, `/dashboard/${module.key}`);
             assert.ok(h.calls.some((call) => call.name === c.service), `${module.key}/${action} calls ${c.service}`);
@@ -1672,6 +1732,168 @@ test('goodbye embed: the image goes into leaveEmbed.image; clearing it removes i
     await post(h, 'welcome', 'goodbye-embed', { goodbyeTitle: 'Bye', goodbyeColor: '#AA0000', goodbyeImage: '' });
     const cleared = h.calls.filter((c) => c.name === 'updateWelcomeSettings')[1].args[0];
     assert.deepEqual(cleared.leaveEmbed, { title: 'Bye', color: 0xaa0000 });
+});
+
+test('welcome image upload: stored with the /greet store in the audit log channel, saved as /greet saves it, audited, one mod-log line', async () => {
+    const h = await setup();
+    const channel = withImageStore(h.state, h.guild);
+    const res = await uploadPost(h, 'welcome-image-upload');
+    assert.equal(res.statusCode, 303, String(res.body).match(/role="alert">([^<]*)/)?.[1]);
+    assert.equal(res.redirectedTo, '/dashboard/welcome');
+    // The same function as /greet dashboard (utils/welcomeImageStore.js), with the checked bytes.
+    const [store] = h.calls.filter((c) => c.name === 'storeWelcomeImage');
+    assert.ok(Buffer.isBuffer(store.args[0].data));
+    assert.equal(store.args[0].name, 'welcome-image.png', 'the file name is ours, not the uploaded one');
+    assert.deepEqual(store.args[1], [TEXT]);
+    assert.equal(channel.sent.length, 1);
+    assert.equal(channel.sent[0].files[0].attachment, store.args[0].data, 'the bytes are re-posted, not a link');
+    assert.deepEqual(channel.sent[0].allowedMentions, { parse: [] });
+    const patch = h.calls.find((c) => c.name === 'updateWelcomeSettings').args[0];
+    assert.deepEqual(patch, {
+        welcomeImage: STORED_URL,
+        welcomeImageRef: { channelId: TEXT, messageId: '800000000000000099', url: STORED_URL },
+    });
+    assert.ok(h.auditRows.some((r) => r.key === 'welcomeImage' && r.new === STORED_URL));
+    assert.equal(h.auditRows[0].module, 'welcome');
+    assert.equal(h.calls.filter((c) => c.name === 'postModLog').length, 1);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Welcome image uploaded\. A copy is kept in #general/);
+
+    // The page: a preview from the stored message's fresh link, where the copy is kept, Remove image.
+    const page = await get(h, 'welcome');
+    assert.match(page.body, /<img class="image-preview" src="https:\/\/cdn\.discordapp\.com\/attachments\/[^"]*&amp;fresh=1" alt="Current welcome image"/);
+    assert.match(page.body, /a copy is kept in #general/);
+    assert.match(page.body, /action="\/dashboard\/welcome\/welcome-image-upload" class="settings-form" enctype="multipart\/form-data"/);
+    assert.match(page.body, /action="\/dashboard\/welcome\/welcome-image-remove"/);
+    assert.doesNotMatch(page.body, /action="\/dashboard\/welcome\/goodbye-image-remove"/, 'no Remove without a goodbye image');
+    assert.doesNotMatch(page.body, /style=|<script(?! src)/);
+});
+
+test('goodbye image upload: into leaveEmbed.image with goodbyeImageRef (as /greet); Remove clears both and keeps the embed', async () => {
+    const h = await setup();
+    withImageStore(h.state, h.guild);
+    h.state.welcome.leaveEmbed = { title: 'Bye', color: 1, image: 'https://old.example/x.png' };
+    const gif = Buffer.concat([Buffer.from('GIF89a'), Buffer.alloc(16)]);
+    assert.equal((await uploadPost(h, 'goodbye-image-upload', { file: { name: 'x.gif', type: 'image/gif', data: gif } })).statusCode, 303);
+    const url = STORED_URL.replace('welcome-image.png', 'goodbye-image.gif');
+    const patch = h.calls.find((c) => c.name === 'updateWelcomeSettings').args[0];
+    assert.deepEqual(patch, { leaveEmbed: { title: 'Bye', color: 1, image: url }, goodbyeImageRef: { channelId: TEXT, messageId: '800000000000000099', url } });
+
+    const removed = await post(h, 'welcome', 'goodbye-image-remove', {});
+    assert.equal(removed.statusCode, 303);
+    const cleared = h.calls.filter((c) => c.name === 'updateWelcomeSettings')[1].args[0];
+    assert.deepEqual(cleared, { leaveEmbed: { title: 'Bye', color: 1 }, goodbyeImageRef: null });
+    assert.ok(h.auditRows.some((r) => r.key === 'goodbyeImageRef' && r.new === null));
+    // Nothing left to remove: nothing changes.
+    const again = await post(h, 'welcome', 'welcome-image-remove', {});
+    assert.equal(again.statusCode, 303);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Nothing changed/);
+});
+
+test('welcome image upload refused: wrong type, too large, no file, no audit channel, bot cannot post; error in the form, nothing saved', async () => {
+    const cases = [
+        [{ file: { name: 'evil.png', type: 'image/png', data: Buffer.from('<script>alert(1)</script>') } }, 400, /not a PNG, JPEG, GIF or WebP/],
+        [{ file: { name: 'big.png', type: 'image/png', data: Buffer.concat([PNG, Buffer.alloc(8 * 1024 * 1024)]) } }, 413, /larger than 8 MB/],
+        [{ file: null }, 400, /Choose an image file/],
+    ];
+    for (const [options, status, message] of cases) {
+        const h = await setup();
+        const channel = withImageStore(h.state, h.guild);
+        const res = await uploadPost(h, 'welcome-image-upload', options);
+        assert.equal(res.statusCode, status, String(message));
+        assert.match(res.body, message);
+        assert.match(res.body, /action="\/dashboard\/welcome\/welcome-image-upload"[^>]*><p class="error form-error" role="alert" id="form-error">Not saved: /, 'the error sits in the upload form');
+        assert.match(res.body, /name="image" aria-invalid="true"/);
+        assert.equal(channel.sent.length, 0);
+        assert.ok(!h.calls.some((c) => c.name === 'updateWelcomeSettings'));
+        assert.equal(h.auditRows.length, 0);
+        assert.ok(!h.calls.some((c) => c.name === 'postModLog'));
+    }
+
+    const noChannel = await setup();
+    const res = await uploadPost(noChannel, 'welcome-image-upload');
+    assert.equal(res.statusCode, 400);
+    assert.match(res.body, /no audit log channel is set/);
+    assert.ok(!noChannel.calls.some((c) => c.name === 'updateWelcomeSettings'));
+
+    const cannot = await setup();
+    const channel = withImageStore(cannot.state, cannot.guild);
+    channel.permissionsFor = () => ({ has: () => false });
+    const refused = await uploadPost(cannot, 'welcome-image-upload');
+    assert.equal(refused.statusCode, 400);
+    assert.match(refused.body, /could not post the image in the audit log channel \(#general\)/);
+    assert.equal(channel.sent.length, 0);
+    assert.ok(!cannot.calls.some((c) => c.name === 'updateWelcomeSettings'));
+
+    // A failed save deletes the copy it just posted.
+    const failing = await setup();
+    const store = withImageStore(failing.state, failing.guild);
+    failing.svc.updateWelcomeSettings = async () => { throw new Error('database not responding'); };
+    await assert.rejects(() => uploadPost(failing, 'welcome-image-upload'), /database not responding/);
+    assert.deepEqual(store.deleted, ['800000000000000099']);
+});
+
+test('welcome image upload: CSRF, Origin, edit switch, Administrator; files only for upload actions', async () => {
+    const check = async (h, options, label) => {
+        const channel = withImageStore(h.state, h.guild);
+        const res = await uploadPost(h, 'welcome-image-upload', options);
+        assert.equal(res.statusCode, 403, label);
+        assert.equal(channel.sent.length, 0, `${label}: nothing posted`);
+        assert.equal(h.auditRows.length, 0, `${label}: no audit row`);
+        return res;
+    };
+    await check(await setup(), { csrf: null }, 'no CSRF');
+    await check(await setup(), { csrf: 'A'.repeat(32) }, 'wrong CSRF');
+    await check(await setup(), { origin: 'https://evil.example' }, 'bad Origin');
+    const off = await check(await setup({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } }), {}, 'editing off');
+    assert.match(off.body, /Editing is off/);
+    await check(await setup({ userId: OWNER }), {}, 'OWNER_IDS without Administrator');
+
+    // Any other settings form refuses a multipart body without reading it.
+    const h = await setup();
+    const res = fakeRes();
+    const req = { method: 'POST', params: { module: 'welcome', action: 'welcome-embed' }, query: {}, headers: { cookie: h.cookie, origin: ORIGIN, 'content-type': `multipart/form-data; boundary=${BOUNDARY}` } };
+    let passed = false;
+    await h.d.requireUser(req, res, () => { passed = true; });
+    assert.ok(passed);
+    let next = false;
+    await h.d.moduleUploadBody(req, res, () => { next = true; });
+    assert.equal(next, false);
+    assert.equal(res.statusCode, 415);
+    // A urlencoded form passes on untouched.
+    const plain = { ...req, headers: { ...req.headers, 'content-type': 'application/x-www-form-urlencoded' }, body: { csrf: 'x' } };
+    let passedOn = false;
+    await h.d.moduleUploadBody(plain, fakeRes(), () => { passedOn = true; });
+    assert.ok(passedOn);
+});
+
+test('welcome image upload through the real router (Express reads the multipart body after login): 303 and stored', async () => {
+    const express = (await import('express')).default;
+    const http = await import('node:http');
+    const { dashboardRouter } = await import('../src/services/dashboard/routes.js');
+    const h = await setup();
+    const channel = withImageStore(h.state, h.guild);
+    const app = express();
+    app.use('/dashboard', dashboardRouter(h.d));
+    const server = app.listen(0, '127.0.0.1');
+    await new Promise((resolve) => server.once('listening', resolve));
+    try {
+        const body = multipartBody({ csrf: h.session.csrf }, { name: 'cat.png', type: 'image/png', data: PNG });
+        const result = await new Promise((resolve, reject) => {
+            const req = http.request({
+                host: '127.0.0.1', port: server.address().port, method: 'POST', path: '/dashboard/welcome/welcome-image-upload',
+                headers: { cookie: h.cookie, origin: ORIGIN, 'content-type': `multipart/form-data; boundary=${BOUNDARY}`, 'content-length': String(body.length) },
+            }, (res) => { res.resume(); resolve({ status: res.statusCode, location: res.headers.location }); });
+            req.on('error', reject);
+            req.end(body);
+        });
+        assert.equal(result.status, 303);
+        assert.equal(result.location, '/dashboard/welcome');
+        assert.equal(channel.sent.length, 1);
+        assert.equal(h.state.welcome.welcomeImage, STORED_URL);
+    } finally {
+        server.closeAllConnections?.();
+        await new Promise((resolve) => server.close(resolve));
+    }
 });
 
 test('bot settings: prefix as /configwizard checks it; moderator role never @everyone, a bot role or a role the bot hands out', async () => {

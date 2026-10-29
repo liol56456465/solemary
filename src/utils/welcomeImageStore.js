@@ -7,7 +7,8 @@
 // fetched again for a fresh attachment URL (cached for an hour).
 //
 // Storage channel: the guild's audit log channel (staff-only, already configured
-// by most servers), else the channel the dashboard was opened in.
+// by most servers), else the channel /greet dashboard was opened in. The web
+// dashboard (services/dashboard/modules/welcome.js) uses the audit log channel only.
 
 import { PermissionFlagsBits } from 'discord.js';
 import { logger } from './logger.js';
@@ -33,8 +34,10 @@ export function isExpiredDiscordCdnUrl(url, now = Date.now()) {
 }
 
 /**
- * Re-posts an uploaded attachment to the first usable storage channel.
- * Returns { channelId, messageId, url } or null when no channel accepted it.
+ * Re-posts an uploaded image to the first usable storage channel. `attachment` is a
+ * Discord attachment ({ url, name }) from /greet, or the checked bytes ({ data, name })
+ * from the web dashboard. Returns { channelId, messageId, url } or null when no channel
+ * accepted it.
  */
 export async function storeWelcomeImage(guild, attachment, candidateChannelIds, label) {
   const me = guild.members.me;
@@ -50,8 +53,8 @@ export async function storeWelcomeImage(guild, attachment, candidateChannelIds, 
 
     try {
       const message = await channel.send({
-        content: `Stored ${label} image for the greet dashboard. Please keep this message: the ${label} message loads its image from here.`,
-        files: [{ attachment: attachment.url, name: attachment.name || 'image.png' }],
+        content: `Stored ${label} image for the welcome & goodbye settings. Please keep this message: the ${label} message loads its image from here.`,
+        files: [{ attachment: attachment.data ?? attachment.url, name: attachment.name || 'image.png' }],
         allowedMentions: { parse: [] },
       });
       const url = message.attachments.first()?.url;

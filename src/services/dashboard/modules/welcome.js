@@ -1,8 +1,11 @@
 // welcome.js — Welcome & goodbye: messages and channels, auto roles, join/leave logs.
 // Writes go through services/welcomeService.js (row-locked), shared with /greet,
 // /welcome, /goodbye and /autorole. The embed (title, colour, footer) and the image
-// are edited here too, with the checks of /welcome setup and /greet dashboard; an image
-// is a link (uploads stay in /greet, which re-posts the file so its link keeps working).
+// are edited here too, with the checks of /welcome setup and /greet dashboard. An image
+// is a link, or an uploaded file: like /greet dashboard, the upload is re-posted through
+// utils/welcomeImageStore.js (storeWelcomeImage) into the audit log channel and saved as
+// { channelId, messageId, url }, so the join/leave events fetch a fresh link from that
+// message (Discord attachment links expire after about a day).
 
 import { html } from '../html.js';
 import { isExpiredDiscordCdnUrl } from '../../../utils/welcomeImageStore.js';
@@ -10,6 +13,8 @@ import {
     InputError, PERMS, autoRoleField, boolField, buttonForm, channelField, channelPicker, checkbox, switchInput, intField,
     numberInput, postForm, rolePicker, roleName, text, textArea, textInput, toggleForm, roleWarnings,
 } from '../forms.js';
+import { MAX_UPLOAD_BYTES, sniffImage } from '../multipart.js';
+import { isAllowedImageUrl, isSafeLink } from '../pages.js';
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, section, table } from './common.js';
 
@@ -55,9 +60,9 @@ export function imageUrlField(form, name, label) {
         throw new InputError(`${label}: not a valid link.`, 400, name);
     }
     if (parsed.protocol !== 'https:') throw new InputError(`${label} must start with https://.`, 400, name);
-    if (isExpiredDiscordCdnUrl(raw)) throw new InputError(`${label}: that Discord attachment link has expired. Upload the image again with /greet, or use a permanent image link.`, 400, name);
+    if (isExpiredDiscordCdnUrl(raw)) throw new InputError(`${label}: that Discord attachment link has expired. Upload the image file below instead, or use a permanent image link.`, 400, name);
     const warning = DISCORD_CDN.test(parsed.hostname) && parsed.searchParams.has('ex')
-        ? `${label}: Discord attachment links stop working after about a day. For a lasting image, upload it with /greet or use a permanent image host.`
+        ? `${label}: Discord attachment links stop working after about a day. For a lasting image, upload the file below (Upload image) or use a permanent image host.`
         : null;
     return { url: raw, warning };
 }
@@ -83,7 +88,83 @@ function embedFields(prefix, embed, imageUrl, defaults) {
 ${textInput(`${prefix}Title`, embed?.title || '', { label: 'Embed title', max: EMBED_TITLE_MAX, help: `Empty = ${defaults.title}. Placeholders work here.` })}
 ${textInput(`${prefix}Color`, colourText(embed?.color), { label: 'Embed colour', max: 7, placeholder: '#57F287', help: 'Hex colour. Empty = the default colour.' })}
 ${textInput(`${prefix}Footer`, embed?.footer || '', { label: 'Embed footer', max: EMBED_FOOTER_MAX, help: `Empty = ${defaults.footer}. Placeholders work here.` })}
-${textInput(`${prefix}Image`, imageUrl || '', { label: 'Image link (empty = no image)', max: IMAGE_URL_MAX, type: 'url', placeholder: 'https://example.com/banner.png', help: 'A direct https:// link to a PNG, JPG, GIF or WebP image, shown large under the message.' })}</div>`;
+${textInput(`${prefix}Image`, imageUrl || '', { label: 'Image link (empty = no image)', max: IMAGE_URL_MAX, type: 'url', placeholder: 'https://example.com/banner.png', help: 'A direct https:// link to a PNG, JPG, GIF or WebP image, shown large under the message. To use a file from your computer, use Upload image below.' })}</div>`;
+}
+
+const UPLOAD_MB = Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024);
+
+/**
+ * The current image (a preview when it is stored on Discord, which the CSP allows; else
+ * the link), the upload form and Remove image. `image`: { url, fresh, ref } from load().
+ */
+function imageBlock(ctx, prefix, image) {
+    const canEdit = ctx.canEdit && ctx.canAct;
+    const storedIn = image.ref ? ctx.guild?.channels?.cache?.get(image.ref.channelId) : null;
+    let current;
+    if (!image.url) current = html`<p class="muted">No image.</p>`;
+    else if (isAllowedImageUrl(image.fresh)) current = html`<img class="image-preview" src="${image.fresh}" alt="Current ${prefix} image" loading="lazy" referrerpolicy="no-referrer">`;
+    else if (isSafeLink(image.url)) current = html`<p>Current image: <a href="${image.url}" rel="noopener noreferrer" target="_blank">${image.url}</a> <span class="muted">(only images stored on Discord are previewed here)</span></p>`;
+    else current = html`<p>Current image: <code>${image.url}</code></p>`;
+    const stored = image.ref
+        ? html`<p class="hint">Uploaded file: a copy is kept in ${storedIn ? html`#${storedIn.name}` : html`channel ${image.ref.channelId}`}. Don't delete that message; the ${prefix} message loads the image from it.</p>`
+        : '';
+    const upload = postForm(ctx, 'welcome', `${prefix}-image-upload`, html`<div class="grid"><label class="wide">Upload an image (PNG, JPEG, GIF or WebP, up to ${UPLOAD_MB} MB)<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required><span class="hint">Replaces the image link above. The file is posted in the audit log channel so its link keeps working, as with /greet.</span></label></div>`,
+        { submit: 'Upload image', multipart: true, canEdit });
+    const remove = image.url ? buttonForm(ctx, 'welcome', `${prefix}-image-remove`, 'Remove image', {}, { confirm: `Remove the ${prefix} image?`, canEdit }) : '';
+    return html`<div class="image-current">${current}${stored}</div>${upload}${remove}`;
+}
+
+/** The image for the page: the saved link, a fresh link for the preview, and the stored copy (only while it is the saved link). */
+async function imageFor(ctx, url, ref, label) {
+    if (!url) return { url: null, fresh: null, ref: null };
+    const ownRef = ref?.url && ref.url === url ? ref : null;
+    let fresh = url;
+    try {
+        fresh = (await ctx.services.resolveWelcomeImageUrl?.(ctx.client, url, ownRef, { guildId: ctx.guildId, label })) || url;
+    } catch {
+        fresh = url;
+    }
+    return { url, fresh, ref: ownRef };
+}
+
+/**
+ * Re-posts an uploaded image with storeWelcomeImage (the /greet store) into the audit log
+ * channel. Returns the stored ref { channelId, messageId, url }; refuses (nothing saved)
+ * when the file is not an image or there is no usable storage channel.
+ */
+async function storeUpload(ctx, prefix, label) {
+    const field = 'image';
+    const file = ctx.upload?.file || null;
+    if (!file) throw new InputError('Choose an image file to upload.', 400, field);
+    const image = sniffImage(file.data);
+    if (!image) throw new InputError('That file is not a PNG, JPEG, GIF or WebP image.', 400, field);
+    const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
+    const channelId = ctx.services.resolveLogChannel(config, 'audit');
+    if (!channelId) {
+        throw new InputError(`${label}: no audit log channel is set, so the uploaded image has nowhere to be kept. Set one on the Logging page (or use an image link). Nothing was changed.`, 400, field);
+    }
+    const ref = await ctx.services.storeWelcomeImage(ctx.guild, { data: file.data, name: `${prefix}-image.${image.ext}` }, [channelId], prefix);
+    if (!ref) {
+        const channel = ctx.guild?.channels?.cache?.get(channelId);
+        throw new InputError(`${label}: I could not post the image in the audit log channel (${channel ? `#${channel.name}` : channelId}). I need View Channel, Send Messages and Attach Files there. Nothing was changed.`, 400, field);
+    }
+    return ref;
+}
+
+/** Saves the stored image; when the save fails, the just-posted copy is deleted again (as evidence uploads do). */
+async function saveStored(ctx, ref, patch, message) {
+    try {
+        return await update(ctx, patch, message);
+    } catch (error) {
+        const channel = ctx.guild?.channels?.cache?.get(ref.channelId);
+        await Promise.resolve(channel?.messages?.delete?.(ref.messageId)).catch(() => {});
+        throw error;
+    }
+}
+
+function storedNote(ctx, ref, prefix) {
+    const channel = ctx.guild?.channels?.cache?.get(ref.channelId);
+    return `A copy is kept in ${channel ? `#${channel.name}` : 'the audit log channel'}; don't delete that message, the ${prefix} message loads the image from it.`;
 }
 
 async function update(ctx, patch, message) {
@@ -100,10 +181,15 @@ export default {
     help: 'Messages when members join and leave (with their embed and image), roles given on join, and join/leave logs. Placeholders: {user}, {user.tag}, {server}, {memberCount}.',
 
     async load(ctx) {
-        return { welcome: await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId) };
+        const welcome = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
+        const [welcomeImage, goodbyeImage] = await Promise.all([
+            imageFor(ctx, welcome.welcomeImage || null, welcome.welcomeImageRef, 'welcome'),
+            imageFor(ctx, goodbyeImageOf(welcome.leaveEmbed) || null, welcome.goodbyeImageRef, 'goodbye'),
+        ]);
+        return { welcome, images: { welcome: welcomeImage, goodbye: goodbyeImage } };
     },
 
-    render(ctx, { welcome: w }) {
+    render(ctx, { welcome: w, images = { welcome: { url: null }, goodbye: { url: null } } }) {
         const g = ctx.guild;
         const welcome = html`${toggleForm(ctx, 'welcome', 'welcome-enabled', w.enabled, { label: 'Welcome messages' })}
 ${postForm(ctx, 'welcome', 'welcome', html`<div class="grid">
@@ -125,11 +211,11 @@ ${switchInput('joinLogsEnabled', w.joinLogs?.enabled, { label: 'Log joins' })}
 ${channelPicker(g, 'joinLogsChannelId', w.joinLogs?.channelId || null, { label: 'Join log channel', perms: PERMS.post })}
 ${switchInput('leaveLogsEnabled', w.leaveLogs?.enabled, { label: 'Log leaves' })}
 ${channelPicker(g, 'leaveLogsChannelId', w.leaveLogs?.channelId || null, { label: 'Leave log channel', perms: PERMS.post })}</div>`);
-        const embedHint = 'The message above is the embed text. Without Embed Links in the channel, only the text is sent.';
-        const welcomeEmbed = postForm(ctx, 'welcome', 'welcome-embed', embedFields('welcome', w.welcomeEmbed, w.welcomeImage,
-            { title: '🎉 Welcome!', footer: 'Welcome to <server name>!' }), { canEdit: ctx.canEdit && ctx.canAct });
-        const goodbyeEmbed = postForm(ctx, 'welcome', 'goodbye-embed', embedFields('goodbye', w.leaveEmbed, goodbyeImageOf(w.leaveEmbed),
-            { title: '👋 Goodbye', footer: 'Goodbye from <server name>!' }), { canEdit: ctx.canEdit && ctx.canAct });
+        const embedHint = 'The message above is the embed text. Without Embed Links in the channel, only the text is sent. The image is a link, or a file you upload (kept in the audit log channel so it keeps working).';
+        const welcomeEmbed = html`${postForm(ctx, 'welcome', 'welcome-embed', embedFields('welcome', w.welcomeEmbed, w.welcomeImage,
+            { title: '🎉 Welcome!', footer: 'Welcome to <server name>!' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'welcome', images.welcome)}`;
+        const goodbyeEmbed = html`${postForm(ctx, 'welcome', 'goodbye-embed', embedFields('goodbye', w.leaveEmbed, goodbyeImageOf(w.leaveEmbed),
+            { title: '👋 Goodbye', footer: 'Goodbye from <server name>!' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'goodbye', images.goodbye)}`;
         return html`${section('Welcome', welcome)}${section('Welcome embed and image', welcomeEmbed, embedHint)}
 ${section('Goodbye', goodbye)}${section('Goodbye embed and image', goodbyeEmbed, embedHint)}
 ${section('Auto role', roles, 'One role, as with /autorole: setting a role replaces the current one. Roles with staff permissions or above my highest role are refused.')}
@@ -194,6 +280,46 @@ ${section('Join and leave logs', logs)}`;
                 const goodbyeImageRef = url && current.goodbyeImageRef?.url === url ? current.goodbyeImageRef : null;
                 const result = await update(ctx, changedOnly({ leaveEmbed, goodbyeImageRef }, current), 'Goodbye embed saved.');
                 return warning && result.changes.length ? { ...result, warnings: [warning] } : result;
+            },
+        },
+        // Uploads: the file is re-posted with the /greet store, then saved exactly as
+        // /greet dashboard saves it (link = the stored message's attachment, plus its ref).
+        'welcome-image-upload': {
+            admin: true,
+            upload: true,
+            async run(ctx) {
+                const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
+                const ref = await storeUpload(ctx, 'welcome', 'Welcome image');
+                const result = await saveStored(ctx, ref, changedOnly({ welcomeImage: ref.url, welcomeImageRef: ref }, current), 'Welcome image uploaded.');
+                return { ...result, message: `Welcome image uploaded. ${storedNote(ctx, ref, 'welcome')}` };
+            },
+        },
+        'goodbye-image-upload': {
+            admin: true,
+            upload: true,
+            async run(ctx) {
+                const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
+                const ref = await storeUpload(ctx, 'goodbye', 'Goodbye image');
+                const leaveEmbed = { ...(current.leaveEmbed && typeof current.leaveEmbed === 'object' ? current.leaveEmbed : {}), image: ref.url };
+                const result = await saveStored(ctx, ref, changedOnly({ leaveEmbed, goodbyeImageRef: ref }, current), 'Goodbye image uploaded.');
+                return { ...result, message: `Goodbye image uploaded. ${storedNote(ctx, ref, 'goodbye')}` };
+            },
+        },
+        // Remove: no image (as /greet with an empty link). The stored copy's message is kept.
+        'welcome-image-remove': {
+            admin: true,
+            async run(ctx) {
+                const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
+                return update(ctx, changedOnly({ welcomeImage: null, welcomeImageRef: null }, current), 'Welcome image removed.');
+            },
+        },
+        'goodbye-image-remove': {
+            admin: true,
+            async run(ctx) {
+                const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
+                const leaveEmbed = { ...(current.leaveEmbed && typeof current.leaveEmbed === 'object' ? current.leaveEmbed : {}) };
+                delete leaveEmbed.image;
+                return update(ctx, changedOnly({ leaveEmbed, goodbyeImageRef: null }, current), 'Goodbye image removed.');
             },
         },
         async 'autorole-add'(ctx, form) {

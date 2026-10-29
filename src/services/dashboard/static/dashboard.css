@@ -1251,6 +1251,8 @@ label.switch-row + label.switch-row { border-top: 0; }
 .avatar { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); flex: none; }
 .evidence { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .evidence img { max-width: 100%; max-height: 360px; border: 1px solid var(--line); border-radius: var(--radius-sm); display: block; margin: 8px 0; }
+.image-current { margin: 4px 0 12px; }
+.image-preview { max-width: 100%; max-height: 240px; border: 1px solid var(--line); border-radius: var(--radius-sm); display: block; margin: 8px 0; }
 .back { display: inline-flex; margin-bottom: 8px; font-size: 12px; color: var(--fg-2); }
 /* Detail headings with the action badge next to the case code; confirm steps in a card. */
 h1.title-with-badge .type { vertical-align: middle; font-size: 14px; height: 24px; }
