@@ -329,13 +329,14 @@ export function selectInput(name, value, choices, { label, help = '' } = {}) {
  * options: { submit, hidden: {name: value}, danger, inline, canEdit, className }
  */
 export function postForm(ctx, module, action, fields, {
-    submit = 'Save changes', hidden = {}, danger = false, inline = false, canEdit = ctx.canEdit, className = '', confirm = '', secondary = false,
+    submit = 'Save changes', hidden = {}, danger = false, inline = false, canEdit = ctx.canEdit, className = '', confirm = '', secondary = false, multipart = false,
 } = {}) {
     const classes = [inline ? 'inline-form' : 'settings-form', className].filter(Boolean).join(' ');
     // data-confirm: the static script asks before submitting (destructive actions).
     // data-dirty: it warns before leaving the page with unsaved changes.
     // Every form warns before leaving with something typed; inline forms (add-a-row) stay compact (no Reset).
-    const attrs = html`${confirm ? html` data-confirm="${confirm}"` : ''}${raw(' data-dirty')}`;
+    // multipart: a file upload (only actions marked `upload` accept it, see routes.js moduleUploadBody).
+    const attrs = html`${multipart ? raw(' enctype="multipart/form-data"') : ''}${confirm ? html` data-confirm="${confirm}"` : ''}${raw(' data-dirty')}`;
     const buttonClass = danger ? 'danger' : secondary ? 'secondary' : 'primary';
     // Settings forms (a "Save…" button) also get Reset: it puts back what was loaded (no request).
     const reset = !inline && !danger && /^save/i.test(String(submit));

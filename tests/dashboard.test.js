@@ -268,6 +268,30 @@ test('evidence upload: an anonymous request is refused before the (up to 8 MB) b
     }
 });
 
+test('welcome image upload: an anonymous request is refused before the (up to 8 MB) body is read', async () => {
+    const express = (await import('express')).default;
+    const http = await import('node:http');
+    const app = express();
+    registerDashboard(app, {}, ENV, { sessions: createMemorySessionStore() });
+    const server = app.listen(0, '127.0.0.1');
+    await new Promise((resolve) => server.once('listening', resolve));
+    try {
+        const status = await new Promise((resolve, reject) => {
+            const req = http.request({
+                host: '127.0.0.1', port: server.address().port, method: 'POST', path: '/dashboard/welcome/welcome-image-upload',
+                headers: { 'Content-Type': 'multipart/form-data; boundary=a', 'Content-Length': String(8 * 1024 * 1024) },
+            }, (res) => { res.resume(); resolve(res.statusCode); });
+            req.on('error', (error) => (error.code === 'ECONNRESET' || error.code === 'EPIPE' ? null : reject(error)));
+            req.write(Buffer.alloc(1024)); // only 1 kB of the announced 8 MB: an answer proves the body was not awaited
+            setTimeout(() => reject(new Error('no answer: the body is being read before login')), 2000).unref();
+        });
+        assert.ok(status === 401 || status === 403, `status ${status}`);
+    } finally {
+        server.closeAllConnections?.();
+        await new Promise((resolve) => server.close(resolve));
+    }
+});
+
 // ── route handlers with fake req/res ──────────────────────────────────────
 
 function fakeRes() {

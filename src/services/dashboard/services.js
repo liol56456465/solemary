@@ -18,9 +18,11 @@ import { endLockdown, getLockdownState } from '../automod/raidService.js';
 import { collectOpenReviews } from '../automod/reviewQueue.js';
 import { endProbation, listProbations } from '../automod/probationService.js';
 // Logging
-import { getLoggingStatus, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList } from '../loggingService.js';
+import { getLoggingStatus, resolveLogChannel, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList } from '../loggingService.js';
 // Welcome
 import { addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings } from '../welcomeService.js';
+// The image store of /greet dashboard: re-posts an upload so its link keeps working.
+import { resolveWelcomeImageUrl, storeWelcomeImage } from '../../utils/welcomeImageStore.js';
 // Tickets, modmail, canned answers
 import { getTicketSettings, updateTicketSettings } from '../ticketSettingsService.js';
 import { findModmailChannel, setModmailBlocked } from '../modmailService.js';
@@ -94,8 +96,8 @@ export const defaultServices = {
     setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
     loadNativePolicies, setNativePolicy, automodStats, automodRuleStats,
     endLockdown, getLockdownState, collectOpenReviews, endProbation, listProbations,
-    getLoggingStatus, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList,
-    addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings,
+    getLoggingStatus, resolveLogChannel, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList,
+    addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings, storeWelcomeImage, resolveWelcomeImageUrl,
     getTicketSettings, updateTicketSettings, setModmailBlocked, findModmailChannel, isBuiltInCanned, listCanned, removeCanned, saveCanned,
     addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelRoleReward, setUserLevel, updateLevelingConfig,
     getVerificationSettings, updateVerificationSettings, validateAutoVerifyCriteria,

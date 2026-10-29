@@ -22,6 +22,9 @@
 //   heatmap and mass-action blocks on /staff. Same POST checks + Administrator (canAct).
 //   GET  /dashboard/static/<file>  dashboard.css (CSP style-src 'self') and dashboard.js (script-src 'self', optional)
 //   POST /dashboard/cases/:code/evidence/upload  an evidence image (multipart, 8 MB, magic-byte check)
+//   POST /dashboard/<module>/<act> with multipart/form-data: only actions marked `upload` (the
+//                                   Welcome & goodbye images); login first, then the 8 MB body,
+//                                   then the same checks as every settings form
 //   POST /dashboard/logout          CSRF token + same-origin check, then back to the website (/)
 //   /dashboard/owner/…              the Owner area (ownerRoutes.js): bot profile, servers, blacklist,
 //                                   health + maintenance, announce. OWNER_IDS only (checked live on
@@ -581,7 +584,44 @@ export function createDashboard({
             editEnabled: settings.editEnabled,
             canEdit: Boolean(settings.editEnabled && decision.canView),
             canAct: Boolean(decision.canAct),
+            // An upload action's file ({ file: { data, … } | null }, parseMultipart), else null.
+            upload: req.upload || null,
         };
+    }
+
+    const moduleRawBody = express.raw({ type: 'multipart/form-data', limit: MAX_UPLOAD_BYTES + 64 * 1024 });
+
+    /**
+     * For POST /dashboard/<module>/<act>, after requireUser (so an anonymous request is
+     * refused before the body is read): a multipart body is read (8 MB cap) and parsed only
+     * for actions marked `upload`; any other action refuses it unread. A broken or too-large
+     * upload re-renders the module page with the error in that form. Other bodies pass on.
+     */
+    function moduleUploadBody(req, res, next) {
+        if (!/^multipart\/form-data/i.test(String(req.headers?.['content-type'] || ''))) return next();
+        const module = findModule(str(req.params?.module, 40));
+        const action = module ? getAction(module, str(req.params?.action, 40)) : null;
+        if (!module || !action) return fail(res, 404, 'Not found', 'There is no such form.', req);
+        if (!action.upload) return fail(res, 415, 'Upload refused', 'This form does not take files.', req);
+        const refuse = (status, message) => renderModule(req, res, module, status, { error: message, errorAction: str(req.params?.action, 40), errorField: 'image' });
+        const parse = (error) => {
+            if (error) {
+                const tooLarge = error.status === 413 || error.type === 'entity.too.large';
+                return refuse(tooLarge ? 413 : 400, tooLarge ? `The image is larger than ${Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024)} MB.` : 'The upload could not be read.');
+            }
+            try {
+                const { fields, file } = parseMultipart(Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0), req.headers?.['content-type']);
+                req.body = fields;
+                req.upload = { file };
+            } catch (parseError) {
+                if (!(parseError instanceof MultipartError)) throw parseError;
+                return refuse(parseError.status, parseError.userMessage);
+            }
+            return next();
+        };
+        // Already a Buffer (tests, or a body read earlier): parse it; else read it with the cap.
+        if (Buffer.isBuffer(req.body)) return parse(null);
+        return moduleRawBody(req, res, (error) => Promise.resolve(parse(error)).catch(next));
     }
 
     async function renderModule(req, res, module, status = 200, { error = null, errorAction = null, errorField = null, warnings = [] } = {}) {
@@ -717,7 +757,7 @@ export function createDashboard({
     }
 
     return {
-        securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, index, callback, requireUser, checkPost,
+        securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
         overview, modulesHub, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound, setTheme,
         sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
     };
@@ -848,7 +888,8 @@ export function dashboardRouter(d) {
     router.get('/owner/health', ...owner, safe(ow.health));
     router.get('/owner/announce', ...owner, safe(ow.announce));
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
-    router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleAction));
+    // urlencoded skips multipart bodies, so an upload is read only after the login check.
+    router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleUploadBody), safe(d.moduleAction));
     router.get('/overview', user, safe(d.overview));
     router.get('/inbox', user, safe(ib.list));
     router.get('/inbox/:kind/:id', user, safe(ib.conversation));
