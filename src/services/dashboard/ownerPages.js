@@ -1,5 +1,5 @@
 // ownerPages.js — the Owner area pages (bot owners only): overview, bot profile, servers,
-// server detail, leave confirm, blacklist, health and maintenance, announce (compose,
+// server detail, leave confirm, user lookup, blacklist, health and maintenance, announce (compose,
 // confirm, result), activity (the owner audit rows). Pure: data in, HTML out, everything escaped by the `html` template. No inline
 // styles or scripts (CSP).
 
@@ -9,6 +9,7 @@ import { auditValue, isAllowedImageUrl } from './pages.js';
 import { kpi, tile } from './overview.js';
 import { ACTIVITY_TEXT_MAX, STATUSES } from '../owner/botStateService.js';
 import { BLACKLIST_REASON_MAX } from '../owner/blacklistService.js';
+import { countedWarnsText } from '../enforcement/flowBuilder.js';
 
 export const USERNAME_MAX = 32;
 export const ABOUT_MAX = 400;
@@ -137,6 +138,60 @@ export function leaveConfirmPage({ session, access = null, moduleStates = {}, gu
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
 ${actionForm(session.csrf, `/owner/servers/${guild.id}/leave`, html`<label class="check"><input type="checkbox" name="confirm" value="1" required> I want the bot to leave ${guild.name}</label>`, { submit: 'Leave server', hidden: { token, fh: hash }, danger: true })}</section>`;
     return shell({ title: `Leave ${guild.name}`, active: 'owner/servers', session, access, moduleStates, body });
+}
+
+// ── User lookup ───────────────────────────────────────────────────────────
+
+const stateWord = (tone, label) => html`<span class="state-word is-${tone}"><span class="dot dot-${tone}" aria-hidden="true"></span>${label}</span>`;
+
+/** The main-server record: ladder, cases, active ban / mute, with links to the existing pages. */
+function recordSection(r) {
+    const caseLink = (c) => html`<a href="${path(`/cases/${c.case_code}`)}"><code>${c.case_code}</code></a>${c.expires_at ? html` · ends ${formatDate(c.expires_at)}` : html` · no end date`}`;
+    const body = r.recordError
+        ? html`<p class="error" role="alert">${r.recordError}</p>`
+        : html`<dl>
+<dt>Warn ladder</dt><dd>Level ${r.record.ladder?.level ?? 0} · counted warns ${countedWarnsText(r.record.ladder || { level: 0, warns_since_level: 0 })}</dd>
+<dt>Cases</dt><dd>${r.record.caseCount ?? 0}${r.record.caseCount ? html` · <a href="${path(`/cases${queryString({ member: r.id })}`)}">All cases</a>` : ''}</dd>
+<dt>Active ban</dt><dd>${r.record.activeBan ? html`${stateWord('bad', 'Banned')} ${caseLink(r.record.activeBan)}` : 'None'}</dd>
+<dt>Active mute</dt><dd>${r.record.activeMute ? html`${stateWord('warn', 'Muted')} ${caseLink(r.record.activeMute)}` : 'None'}</dd>
+</dl>`;
+    return html`<section class="card"><h2>Main server record</h2>${body}
+<p><a href="${path(`/users/${r.id}`)}">Open the member page</a> <span class="muted">(Members area; actions there need Administrator in the main server)</span></p></section>`;
+}
+
+/**
+ * result: { id, username, globalName, bot, avatarUrl, createdAt, servers: [{ id, name, tags, joinedAt,
+ * nickname }], totalServers, blacklist: { state, entry }, isOwner, offerBlacklist, record, recordError }.
+ */
+export function userLookupPage({ session, access = null, moduleStates = {}, q = '', result = null, error = null }) {
+    const r = result;
+    const blacklistText = !r ? '' : r.blacklist.state === 'unknown'
+        ? html`<span class="error" role="alert">The blacklist could not be read (database). Reload to try again.</span>`
+        : r.blacklist.state === 'listed'
+            ? html`${stateWord('bad', 'Blacklisted')} ${r.blacklist.entry.reason} · <a href="${path('/owner/blacklist')}">Blacklist</a>`
+            : r.isOwner
+                ? html`Not blacklisted <span class="muted">(bot owners can never be blacklisted)</span>`
+                : html`Not blacklisted${r.offerBlacklist ? html` · <a href="${path(`/owner/blacklist${queryString({ kind: 'user', id: r.id })}`)}">Blacklist this user…</a> <span class="muted">(fills in the form; you add a reason there)</span>` : ''}`;
+    const servers = !r ? '' : html`<section class="card"><h2>Shared servers (${r.servers.length})</h2>${r.servers.length
+        ? html`<div class="table-wrap"><table><thead><tr><th>Server</th><th>Nickname</th><th>Joined</th></tr></thead><tbody>
+${r.servers.map((g) => html`<tr><td><a href="${path(`/owner/servers/${g.id}`)}"><b>${g.name}</b></a>${serverTags(g.tags)}<br><small class="muted">${g.id}</small></td><td>${g.nickname || html`<span class="muted">—</span>`}</td><td>${formatDate(g.joinedAt)}</td></tr>`)}
+</tbody></table></div>` : html`<p class="empty">No shared server found.</p>`}
+<p class="muted">The main and the support server are asked directly. Every other server is checked only in the bot's member cache, which is often incomplete, so the user may be in a server not listed here.</p></section>`;
+    const body = html`<header class="page-head"><h1>Users</h1><p class="muted">Look up one Discord user by ID: account, shared servers, blacklist and the main server's moderation record. Read-only.</p></header>
+<form class="filters" method="get" action="${path('/owner/users')}" role="search"><label class="wide-filter">User ID<input type="search" name="q" value="${q}" inputmode="numeric" maxlength="25" autocomplete="off" placeholder="Discord user ID"></label>
+<button class="primary" type="submit">Look up</button>${q ? html` <a href="${path('/owner/users')}">Clear</a>` : ''}</form>
+${error ? html`<p class="error" role="alert">${error}</p>` : ''}
+${r ? html`<section class="card"><h2>${r.globalName || r.username || r.id}</h2>${img(r.avatarUrl, '', 64)}<dl>
+<dt>Username</dt><dd>${r.username || '—'}${r.bot ? html` <span class="muted">(bot account)</span>` : ''}</dd>
+<dt>Display name</dt><dd>${r.globalName || html`<span class="muted">none</span>`}</dd>
+<dt>ID</dt><dd><code>${r.id}</code></dd>
+<dt>Account created</dt><dd>${formatDate(r.createdAt)}</dd>
+<dt>Bot owner</dt><dd>${r.isOwner ? stateWord('on', 'Yes (OWNER_IDS)') : 'No'}</dd>
+<dt>Blacklist</dt><dd>${blacklistText}</dd>
+</dl></section>
+${recordSection(r)}
+${servers}` : ''}`;
+    return shell({ title: 'Users', active: 'owner/users', session, access, moduleStates, body });
 }
 
 // ── Blacklist ─────────────────────────────────────────────────────────────

@@ -162,6 +162,7 @@ export const OWNER_NAV = { group: 'Owner', items: [
     { key: 'owner/home', label: 'Owner overview', icon: 'overview' },
     { key: 'owner/profile', label: 'Bot profile', icon: 'cat' },
     { key: 'owner/servers', label: 'Servers', icon: 'server' },
+    { key: 'owner/users', label: 'Users', icon: 'users' },
     { key: 'owner/blacklist', label: 'Blacklist', icon: 'nocontact' },
     { key: 'owner/health', label: 'Health', icon: 'monitor' },
     { key: 'owner/announce', label: 'Announce', icon: 'messages' },

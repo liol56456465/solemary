@@ -11,6 +11,8 @@
 //   GET  /dashboard/owner/servers/:id                   channels, roles, bot permissions (read-only)
 //   POST /dashboard/owner/servers/:id/invite            1-use, 1-hour invite (owner/admin of that server only)
 //   POST /dashboard/owner/servers/:id/leave/preview|leave   confirm step, never the main/support server
+//   GET  /dashboard/owner/users[?q=<user id>]           one user: name, account age, shared servers,
+//                                                       blacklist, owner, main-server record (read-only)
 //   GET  /dashboard/owner/blacklist[?kind=&id=], POST …/add|remove  global blacklist (users, servers);
 //                                                       kind/id only pre-fill the form
 //   GET  /dashboard/owner/health, POST …/maintenance    process status, maintenance switch
@@ -22,7 +24,7 @@
 // change writes a dashboard_audit row (module 'owner'). Leaving a server and announcing
 // need a one-time confirm token (5 minutes, this session) plus a tick-box.
 
-import { ChannelType, PermissionFlagsBits } from 'discord.js';
+import { ChannelType, PermissionFlagsBits, SnowflakeUtil } from 'discord.js';
 import { readFileSync } from 'node:fs';
 import { isBotOwner as configIsBotOwner } from '../../config/bot.js';
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -41,9 +43,11 @@ import { isSnowflake } from './security.js';
 import { pinnedFetch } from '../owner/safeImageFetch.js';
 import { isBlacklistLoaded } from '../owner/blacklistCache.js';
 import { getRecentLogs } from '../../utils/recentLogs.js';
+import { getLadder } from '../enforcement/enforcementService.js';
+import { getActiveCase, listCasesForUser } from '../enforcement/caseService.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
-    blacklistPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage,
+    blacklistPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage, userLookupPage,
 } from './ownerPages.js';
 
 export const OWNER_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
@@ -118,6 +122,27 @@ export function serverTagsFor(guildId, { mainId = null, supportId = null, blackl
     if (supportId && guildId === supportId) tags.push('Support');
     if (blacklisted.has(guildId)) tags.push('Blacklisted');
     return tags;
+}
+
+/** When a Discord account was created (from its ID), or null for anything that is not an ID. */
+export function accountCreatedAt(userId) {
+    if (!isSnowflake(String(userId ?? ''))) return null;
+    return new Date(SnowflakeUtil.timestampFrom(String(userId)));
+}
+
+/**
+ * A user's global blacklist state from the active entries: 'unknown' when the store could not
+ * be read (active === null; never shown as "not blacklisted"), 'listed' with its entry, or 'clear'.
+ */
+export function userBlacklistState(active, userId) {
+    if (active === null || active === undefined) return { state: 'unknown', entry: null };
+    const entry = active.find((r) => r.kind === 'user' && String(r.target_id) === String(userId)) || null;
+    return entry ? { state: 'listed', entry } : { state: 'clear', entry: null };
+}
+
+/** The "Blacklist this user…" link is offered only for a known clear state and never for an owner. */
+export function canOfferUserBlacklist({ state, isOwner }) {
+    return state === 'clear' && !isOwner;
 }
 
 /** What an announcement sends: plain text, no mention ever pings. */
@@ -230,6 +255,21 @@ async function defaultAnnounceChannelId(client, guild) {
     return resolveLogChannel(config, 'audit');
 }
 
+/**
+ * A user's record in the main server, from the same enforcement reads the Members page uses:
+ * ladder (level + warns since level), number of cases, the active ban and mute (or null).
+ * A database error throws (the page shows it; never as a clean record).
+ */
+async function defaultModerationRecord(guildId, userId) {
+    const [ladder, cases, activeBan, activeMute] = await Promise.all([
+        getLadder(guildId, userId),
+        listCasesForUser(guildId, userId, { limit: 1 }),
+        getActiveCase(guildId, userId, 'ban'),
+        getActiveCase(guildId, userId, 'mute'),
+    ]);
+    return { ladder, caseCount: cases.total, activeBan, activeMute };
+}
+
 export const defaultOwnerDeps = {
     isBotOwner: configIsBotOwner,
     blacklist: blacklistStore,
@@ -239,6 +279,7 @@ export const defaultOwnerDeps = {
     protectedGuildIds: () => [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId],
     dbStatus: (client) => client.db?.getStatus?.() || null,
     recentLogs: getRecentLogs,
+    moderationRecord: defaultModerationRecord,
 };
 
 // ── Handlers ──────────────────────────────────────────────────────────────
@@ -546,6 +587,59 @@ export function createOwnerHandlers(core) {
         return res.redirect(303, path('/owner/servers'));
     }, { rerender: rerenderServer });
 
+    // ── User lookup ──────────────────────────────────────────────────────
+
+    /**
+     * The servers the bot shares with this user: every server's member cache, plus a fetch
+     * (one API call each) only in the main and the support server. Other servers whose cache
+     * is incomplete can miss them; the page says so.
+     */
+    async function sharedServers(userId, tags) {
+        const fetchable = new Set(protectedIds().filter(Boolean).map(String));
+        const rows = [];
+        for (const guild of allGuilds()) {
+            let member = guild.members?.cache?.get?.(userId) || null;
+            if (!member && fetchable.has(guild.id)) member = await guild.members?.fetch?.({ user: userId }).catch(() => null) || null;
+            if (!member) continue;
+            rows.push({
+                id: guild.id, name: guild.name, tags: serverTagsFor(guild.id, tags),
+                joinedAt: member.joinedTimestamp ? new Date(member.joinedTimestamp) : member.joinedAt || null,
+                nickname: member.nickname || null,
+            });
+        }
+        return rows.sort((a, b) => String(a.name).localeCompare(String(b.name), 'en', { sensitivity: 'base' }));
+    }
+
+    async function users(req, res) {
+        const q = queryText(req.query, 'q', 25);
+        const render = (status, extra = {}) => sendHtml(res, status, userLookupPage({ ...page(req), q, ...extra }));
+        if (!q) return render(200);
+        if (!isSnowflake(q)) return render(400, { error: 'Enter a Discord user ID (17 to 20 digits).' });
+        const user = await client.users?.fetch?.(q).catch(() => null);
+        if (!user) return render(404, { error: `No Discord user with ID ${q} exists.` });
+        const active = await activeBlacklist();
+        const tags = tagContext(active);
+        const blacklist = userBlacklistState(active, q);
+        const isOwnerId = Boolean(o.isBotOwner(q));
+        let record = null;
+        let recordError = null;
+        try {
+            record = await o.moderationRecord(guildId, q);
+        } catch (error) {
+            logger.warn(`Owner user lookup: moderation record not readable: ${error.message}`);
+            recordError = 'The moderation record could not be loaded (database not responding). Reload the page to try again.';
+        }
+        return render(200, {
+            result: {
+                id: q, username: user.username || null, globalName: user.globalName || null, bot: Boolean(user.bot),
+                avatarUrl: user.displayAvatarURL?.({ size: 64, extension: 'png' }) || null,
+                createdAt: accountCreatedAt(q), servers: await sharedServers(q, tags), totalServers: allGuilds().length,
+                blacklist, isOwner: isOwnerId, offerBlacklist: canOfferUserBlacklist({ state: blacklist.state, isOwner: isOwnerId }),
+                record, recordError,
+            },
+        });
+    }
+
     // ── Blacklist ────────────────────────────────────────────────────────
 
     async function renderBlacklist(req, res, status = 200, error = null, values = {}) {
@@ -693,7 +787,7 @@ export function createOwnerHandlers(core) {
 
     return {
         requireOwner, index, home, activity, profile, username, about, presence, avatar: imageAction('avatar'), banner: imageAction('banner'),
-        servers, server, invite, leavePreview, leave, blacklist, blacklistAdd, blacklistRemove,
+        servers, server, invite, leavePreview, leave, users, blacklist, blacklistAdd, blacklistRemove,
         health, maintenance, announce, announcePreview, announceSend,
     };
 }

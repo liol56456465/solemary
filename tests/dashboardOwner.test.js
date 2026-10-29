@@ -16,7 +16,7 @@ const { createAccessChecker } = await import('../src/services/dashboard/access.j
 const { SESSION_COOKIE, signValue } = await import('../src/services/dashboard/security.js');
 const { layout, JS_PATH } = await import('../src/services/dashboard/html.js');
 const {
-    announcePayload, canLeaveGuild, fetchImageFromUrl, inviteOptions, isSessionFresh, OWNER_SESSION_MAX_AGE_MS,
+    accountCreatedAt, announcePayload, canLeaveGuild, canOfferUserBlacklist, fetchImageFromUrl, userBlacklistState, inviteOptions, isSessionFresh, OWNER_SESSION_MAX_AGE_MS,
     serverTagsFor, serverTotals, sortServers,
 } = await import('../src/services/dashboard/ownerRoutes.js');
 const { ownerActionText } = await import('../src/services/dashboard/ownerPages.js');
@@ -88,6 +88,8 @@ function fakeRes() {
 async function setup({
     env = ENV, userId = OWNER, owners = new Set([OWNER]), admins = new Set([ADMIN]), createdAt = Date.now(), guildOpts = {},
     blacklistActive = [], auditList = async () => ({ rows: [], total: 0 }), recentLogLines = [],
+    moderationRecord = async () => ({ ladder: { level: 0, warns_since_level: 0 }, caseCount: 0, activeBan: null, activeMute: null }),
+    blacklistList = null,
 } = {}) {
     const guilds = new Map([
         [MAIN, makeGuild(MAIN, { name: 'Main', ownerId: '999999999999999990' })],
@@ -106,7 +108,7 @@ async function setup({
     const owner = {
         isBotOwner: (id) => owners.has(id),
         blacklist: {
-            list: rec('list', async () => ({ active: blacklistActive, removed: [] })),
+            list: rec('list', blacklistList || (async () => ({ active: blacklistActive, removed: [] }))),
             add: rec('add', async (entry) => ({ id: 1, kind: entry.kind, target_id: entry.targetId, reason: entry.reason })),
             remove: rec('remove', async () => null),
         },
@@ -119,6 +121,7 @@ async function setup({
         protectedGuildIds: [MAIN, SUPPORT],
         dbStatus: () => ({ connectionType: 'postgresql', isDegraded: false }),
         recentLogs: () => recentLogLines,
+        moderationRecord: rec('moderationRecord', moderationRecord),
     };
     const sessions = createMemorySessionStore({ ttlMs: 48 * 3600 * 1000 });
     const access = createAccessChecker(client, { facts: async (c, id) => ({ inGuild: true, isAdmin: admins.has(id), isOwnerId: owners.has(id) }) });
@@ -162,8 +165,8 @@ const tokenOf = (body) => ({ token: body.match(/name="token" value="([^"]+)"/)?.
 
 test('owner area: a non-owner (even an Administrator) gets the normal 404 page; an owner gets the page', async () => {
     const admin = await setup({ userId: ADMIN });
-    for (const handler of ['home', 'activity', 'profile', 'servers', 'blacklist', 'health', 'announce']) {
-        const res = await get(admin, admin.ow[handler]);
+    for (const handler of ['home', 'activity', 'profile', 'servers', 'users', 'blacklist', 'health', 'announce']) {
+        const res = await get(admin, admin.ow[handler], { query: { q: OWNER } });
         assert.equal(res.statusCode, 404, handler);
         assert.match(res.body, /Not found/);
     }
@@ -172,8 +175,8 @@ test('owner area: a non-owner (even an Administrator) gets the normal 404 page; 
     assert.equal(admin.calls.length, 0);
 
     const owner = await setup();
-    for (const handler of ['home', 'activity', 'profile', 'servers', 'blacklist', 'health', 'announce']) {
-        const page = await get(owner, owner.ow[handler]);
+    for (const handler of ['home', 'activity', 'profile', 'servers', 'users', 'blacklist', 'health', 'announce']) {
+        const page = await get(owner, owner.ow[handler], handler === 'users' ? { query: { q: '300000000000000009' } } : {});
         assert.equal(page.statusCode, 200, handler);
         assert.ok(!/<style|style=|<script/i.test(page.body.replace(ALLOWED_SCRIPT, '')), `${handler}: no inline styles or scripts`);
     }
@@ -198,6 +201,7 @@ test('sidebar: the Owner group is shown only to owners', () => {
     const owner = layout({ title: 'x', session: { ...base, isOwner: true }, body: '' });
     const other = layout({ title: 'x', session: { ...base, isOwner: false }, body: '' });
     assert.ok(owner.includes('href="/dashboard/owner/servers"'));
+    assert.ok(owner.includes('href="/dashboard/owner/users"'));
     assert.ok(owner.includes('>Owner</p>'));
     assert.ok(!other.includes('/dashboard/owner/'));
 });
@@ -574,4 +578,81 @@ test('health: recent warnings and errors are listed (escaped); none → a plain 
     assert.ok(res.body.includes('(2, 1 error)'));
     const empty = await setup();
     assert.ok((await get(empty, empty.ow.health)).body.includes('No warnings or errors since the last restart.'));
+});
+
+// ── user lookup ───────────────────────────────────────────────────────────
+
+test('user lookup rules: account date from the ID, blacklist state (unknown is never "clear"), no link for owners', () => {
+    assert.equal(accountCreatedAt('175928847299117063').toISOString(), '2016-04-30T11:18:25.796Z');
+    assert.equal(accountCreatedAt('abc'), null);
+    assert.deepEqual(userBlacklistState(null, '1'), { state: 'unknown', entry: null });
+    const entry = { kind: 'user', target_id: '300000000000000009', reason: 'spam' };
+    assert.deepEqual(userBlacklistState([entry, { kind: 'guild', target_id: '300000000000000010' }], '300000000000000009'), { state: 'listed', entry });
+    assert.deepEqual(userBlacklistState([{ kind: 'guild', target_id: '300000000000000009' }], '300000000000000009'), { state: 'clear', entry: null }, 'a server entry with the same id is not the user');
+    assert.equal(canOfferUserBlacklist({ state: 'clear', isOwner: false }), true);
+    assert.equal(canOfferUserBlacklist({ state: 'clear', isOwner: true }), false);
+    assert.equal(canOfferUserBlacklist({ state: 'unknown', isOwner: false }), false);
+    assert.equal(canOfferUserBlacklist({ state: 'listed', isOwner: false }), false);
+});
+
+test('user lookup: account, shared servers (cache + main/support fetch only), blacklist link, record with links', async () => {
+    const USER = '300000000000000009';
+    const h = await setup({
+        moderationRecord: async () => ({
+            ladder: { level: 1, warns_since_level: 0 }, caseCount: 4,
+            activeBan: null, activeMute: { case_code: 'mute7k', expires_at: new Date('2026-11-01T00:00:00Z') },
+        }),
+    });
+    const fetched = [];
+    for (const g of h.guilds.values()) {
+        g.members.fetch = async (arg) => { fetched.push(g.id); return g.id === MAIN ? { id: arg.user, nickname: 'Kitty', joinedTimestamp: Date.parse('2025-01-01T00:00:00Z') } : null; };
+    }
+    h.guilds.get(OTHER_GUILD).members.cache.set(USER, { id: USER, nickname: null, joinedTimestamp: Date.parse('2025-06-01T00:00:00Z') });
+    const res = await get(h, h.ow.users, { query: { q: USER } });
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(fetched.sort(), [MAIN, SUPPORT].sort(), 'only the main and the support server are fetched');
+    assert.ok(res.body.includes('user09'), 'username');
+    assert.ok(res.body.includes('Shared servers (2)'));
+    assert.ok(res.body.includes('Kitty'));
+    assert.ok(res.body.includes(`href="/dashboard/owner/servers/${OTHER_GUILD}"`));
+    assert.ok(res.body.includes('member cache'), 'the limit is explained');
+    assert.ok(res.body.includes(`href="/dashboard/owner/blacklist?kind=user&amp;id=${USER}"`), 'pre-fill link');
+    assert.ok(res.body.includes('Level 1 · counted warns 0 (next warn bans)'));
+    assert.ok(res.body.includes(`href="/dashboard/cases?member=${USER}"`));
+    assert.ok(res.body.includes('href="/dashboard/cases/mute7k"'));
+    assert.ok(res.body.includes(`href="/dashboard/users/${USER}"`));
+    assert.deepEqual(h.calls.find((c) => c.name === 'moderationRecord').args, [MAIN, USER], 'the main server record');
+    assert.ok(!/<style|style=|<script/i.test(res.body.replace(ALLOWED_SCRIPT, '')));
+
+    const own = await get(h, h.ow.users, { query: { q: OWNER } });
+    assert.ok(own.body.includes('Yes (OWNER_IDS)'));
+    assert.ok(!own.body.includes('/owner/blacklist?'), 'owners cannot be blacklisted: no link');
+
+    const listed = await setup({ blacklistActive: [{ id: 1, kind: 'user', target_id: USER, reason: 'raids' }] });
+    const lb = (await get(listed, listed.ow.users, { query: { q: USER } })).body;
+    assert.ok(lb.includes('Blacklisted</span> raids'));
+    assert.ok(!lb.includes('/owner/blacklist?'));
+});
+
+test('user lookup: bad or unknown IDs, and database errors are shown as errors (never as a clean record)', async () => {
+    const h = await setup();
+    const empty = await get(h, h.ow.users);
+    assert.equal(empty.statusCode, 200);
+    assert.ok(!h.calls.some((c) => c.name === 'moderationRecord'), 'no lookup without a query');
+    const bad = await get(h, h.ow.users, { query: { q: '"><b>x' } });
+    assert.equal(bad.statusCode, 400);
+    assert.ok(!bad.body.includes('<b>x'));
+    h.client.users.fetch = async () => { throw new Error('Unknown User'); };
+    assert.equal((await get(h, h.ow.users, { query: { q: '300000000000000009' } })).statusCode, 404);
+
+    const broken = await setup({
+        moderationRecord: async () => { throw new Error('db down'); },
+        blacklistList: async () => { throw new Error('db down'); },
+    });
+    const res = await get(broken, broken.ow.users, { query: { q: '300000000000000009' } });
+    assert.equal(res.statusCode, 200);
+    assert.ok(res.body.includes('moderation record could not be loaded'));
+    assert.ok(res.body.includes('blacklist could not be read'));
+    assert.ok(!res.body.includes('Not blacklisted') && !res.body.includes('<dt>Active ban</dt>'), 'an error is not shown as "clean"');
+    assert.ok(!res.body.includes('/owner/blacklist?'));
 });
