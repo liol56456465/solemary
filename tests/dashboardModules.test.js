@@ -636,6 +636,7 @@ const CASES = {
             bad: { form: { appealWindowDays: '999', appealCooldownDays: '7', rejoinInviteHours: '1', staleReportDays: '7', staleAppealReminderDays: '3' }, message: /between 1 and 365/ } },
         'mass-action': { form: { massActionLimit: '7', massMuteLimit: '12', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, service: 'updateSettings',
             bad: { form: { massActionLimit: 'x', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, message: /whole number/ } },
+        transparency: { form: { enabled: 'true' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
     },
     automod: {
         enabled: { form: { enabled: 'false' }, service: 'setAutomodEnabled', bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
@@ -2134,4 +2135,28 @@ test('Overview "Needs you": an active lockdown gets an End lockdown form for adm
         assert.ok(!String(page).includes('lockdown-end'));
         assert.match(String(page), /<a class="btn primary small" href="\/dashboard\/automod">Automod<\/a>/);
     }
+});
+
+test('transparency report switch: off by default, an administrator turns it on (saved + audited), owners without Administrator cannot', async () => {
+    const admin = await setup();
+    const page = await get(admin, 'enforcement');
+    assert.match(page.body, /Transparency report/);
+    assert.match(page.body, /action="\/dashboard\/enforcement\/transparency"/);
+    assert.match(page.body, /aria-label="Publish a monthly transparency report on the website: turn on"/, 'off by default');
+    const res = await post(admin, 'enforcement', 'transparency', { enabled: 'true' });
+    assert.equal(res.statusCode, 303);
+    assert.equal(admin.state.registry.transparencyReportEnabled, true);
+    const update = admin.calls.find((c) => c.name === 'updateSettings');
+    assert.deepEqual(update.args[1], { transparencyReportEnabled: true });
+    assert.equal(update.args[2].userId, ADMIN);
+    assert.ok(admin.auditRows.some((r) => r.key === 'transparencyReportEnabled' && r.old === false && r.new === true), 'audited old → new');
+    // Again with the same value: nothing changes, nothing is audited.
+    const rows = admin.auditRows.length;
+    assert.equal((await post(admin, 'enforcement', 'transparency', { enabled: 'true' })).statusCode, 303);
+    assert.equal(admin.auditRows.length, rows);
+    const owner = await setup({ userId: OWNER });
+    const refused = await post(owner, 'enforcement', 'transparency', { enabled: 'true' });
+    assert.equal(refused.statusCode, 403);
+    assert.equal(owner.state.registry.transparencyReportEnabled, undefined);
+    assert.ok(!(await get(owner, 'enforcement')).body.includes('aria-label="Publish a monthly transparency report on the website: turn on"'), 'owners see the state only (no switch button)');
 });

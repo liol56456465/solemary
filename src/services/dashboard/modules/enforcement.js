@@ -6,14 +6,14 @@ import { ENFORCEMENT_REASONS, enforcementConfig } from '../../../config/enforcem
 import { AUTOMOD_RULES } from '../../../config/automod.js';
 import { formatDuration } from '../../enforcement/format.js';
 import { html } from '../html.js';
-import { PERMS, channelField, channelPicker, numberInput, postForm, roleField, rolePicker, text, textInput } from '../forms.js';
+import { PERMS, boolField, channelField, channelPicker, numberInput, postForm, roleField, rolePicker, text, textInput, toggleForm } from '../forms.js';
 import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, section, table, NOTHING } from './common.js';
 
 const KEYS = [
     'adminRequestChannelId', 'modLogChannelId', 'evidenceChannelId', 'appealsCategoryId', 'reportsCategoryId', 'modmailCategoryId',
     'openChannelCap', 'mutedRoleId', 'warnRoleIds',
     'supportServerInvite', 'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds', 'staleReportMs',
-    'staleAppealReminderMs', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
+    'staleAppealReminderMs', 'transparencyReportEnabled', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
 ];
 
 function current(ctx) {
@@ -73,9 +73,15 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
         const appealPanels = postForm(ctx, 'enforcement', 'appeal-panels',
             channelPicker(g, 'channelId', null, { label: 'Main-server panel channel', perms: PERMS.post, optional: false, help: 'The support server panel goes to its #appeals channel (created when missing).' }),
             { submit: 'Post the appeal panels', canEdit: ctx.canEdit && ctx.canAct, confirm: 'Post the appeal panels now? Earlier appeal panels in these channels are replaced.' });
+        // Admin-only (like the appeal panels): it publishes numbers about the server on the website.
+        const transparency = toggleForm(ctx, 'enforcement', 'transparency', v.transparencyReportEnabled === true, {
+            label: 'Publish a monthly transparency report on the website', canEdit: ctx.canEdit && ctx.canAct,
+            confirmOff: 'Take the transparency report off the website?',
+        });
         return html`${section('Appeal panels', appealPanels, `Same as /setappeal: posts (or replaces) the appeal panel here and in the support server.${ctx.canAct ? '' : ' Needs Administrator in the main server.'}`)}
 ${section('Channels', channels)}${section('Roles', roles, 'Warning roles are given for 1, 2 and 3+ active warnings.')}
-${section('Appeals and reports', timings)}${section('Mass-action guard', mass, 'A moderator who bans or kicks this many members within the window is blocked from the panel; bot owners get a DM.')}
+${section('Appeals and reports', timings)}
+${section('Transparency report', transparency, `Off by default. When on, /transparency on the website shows the monthly number of warnings, mutes, kicks, bans and appeals of this server: counts only, no names, IDs, case codes, reasons or moderators; counts of 1–2 show as “fewer than 3”.${ctx.canAct ? '' : ' Needs Administrator in the main server.'}`)}${section('Mass-action guard', mass, 'A moderator who bans or kicks this many members within the window is blocked from the panel; bot owners get a DM.')}
 ${section('Warn ladder', html`<p class="muted">${enforcementConfig.warnsPerLevel} warnings at level 0 ban; at level 1 and above the first warning bans. Read-only for now.</p>${ladder}`)}
 ${section('Reasons', reasons, 'Read-only for now (the keys are stored with each case).')}
 ${section('Automod steps', steps, 'Read-only for now.')}`;
@@ -91,6 +97,16 @@ ${section('Automod steps', steps, 'Read-only for now.')}`;
                     changes: [{ key: 'appealPanels', old: null, new: { main: mainChannel.id, support: supportChannel.id } }],
                     message: `Appeal panels posted in #${mainChannel.name} and in #${supportChannel.name} of the support server${created ? ' (created)' : ''}.`,
                 };
+            },
+        },
+        transparency: {
+            admin: true,
+            async run(ctx, form) {
+                const enabled = boolField(form, 'enabled', 'Transparency report');
+                const patch = changedOnly({ transparencyReportEnabled: enabled }, current(ctx));
+                if (!Object.keys(patch).length) return NOTHING;
+                const result = await saveRegistry(ctx, patch, 'enforcement');
+                return { ...result, message: `The transparency report is ${enabled ? 'on: /transparency is public' : 'off: /transparency is gone from the website'}.` };
             },
         },
         async channels(ctx, form) {
