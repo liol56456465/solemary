@@ -107,7 +107,8 @@ function navLinks(ctx, active) {
     return html`${ctx.mainInvite ? html`<li><a href="${ctx.mainInvite}" rel="noopener">Our server</a></li>` : ''}
 ${ctx.supportInvite ? html`<li><a href="${ctx.supportInvite}" rel="noopener">Support server</a></li>` : ''}
 <li><a href="/commands"${current('commands')}>Commands</a></li>
-<li><a href="/about"${current('about')}>About</a></li>`;
+<li><a href="/about"${current('about')}>About</a></li>
+${ctx.memberPortal ? html`<li><a href="/me"${current('me')}>My record</a></li>` : ''}`;
 }
 
 function addButton(ctx, className = 'button') {
@@ -253,12 +254,13 @@ export function notFoundPage(ctx) {
  * The front-site router. `client` gives the loaded commands (read per request: the web server
  * starts before the commands load); `support()` the current support invite (a settings getter).
  */
-export function createSite({ client = null, env = process.env, dashboardEnabled = false, supportInvite = () => null } = {}) {
+export function createSite({ client = null, env = process.env, dashboardEnabled = false, memberPortalEnabled = false, supportInvite = () => null } = {}) {
     const router = express.Router();
     const publicSite = publicSiteEnabled(env);
     const base = {
         publicSite,
         dashboardEnabled: Boolean(dashboardEnabled),
+        memberPortal: Boolean(memberPortalEnabled),
         installUrl: installUrl(env.CLIENT_ID),
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
     };
@@ -301,7 +303,7 @@ export function createSite({ client = null, env = process.env, dashboardEnabled 
 }
 
 /** Mounts the front site at the root of `app` (after /health, /ready, OAuth and the dashboard). */
-export function registerSite(app, client, { env = process.env, dashboardEnabled = false, supportInvite } = {}) {
-    app.use(createSite({ client, env, dashboardEnabled, supportInvite }));
+export function registerSite(app, client, { env = process.env, dashboardEnabled = false, memberPortalEnabled = false, supportInvite } = {}) {
+    app.use(createSite({ client, env, dashboardEnabled, memberPortalEnabled, supportInvite }));
     logger.info(`Front site at / (${publicSiteEnabled(env) ? 'public' : 'not public: noindex, no add button (PUBLIC_SITE_ENABLED)'})`);
 }

@@ -90,3 +90,18 @@ code { font-family: var(--mono); font-size: 14px; padding: 1px 6px; border-radiu
     .cmd { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+/* ── My record (/me) ── */
+.record-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.record-head form { margin: 0; }
+button.button { font: inherit; font-weight: 600; cursor: pointer; }
+.record-summary { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.record-summary h2 { font-size: 16px; margin: 0 0 8px; }
+.record-big { font-size: 24px; font-weight: 700; color: var(--text); margin: 0 0 8px; }
+.record-active { margin: 0; padding-left: 20px; }
+.table-wrap { overflow-x: auto; background: var(--raised); border: 1px solid var(--border); border-radius: var(--radius); }
+.record-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.record-table th, .record-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--border); }
+.record-table thead th { border-top: 0; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+.record-table td:nth-child(3) { min-width: 200px; overflow-wrap: anywhere; }
+.record .note { margin-top: 24px; }
