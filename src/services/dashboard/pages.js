@@ -164,7 +164,7 @@ ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${appeals.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Filed</th><th>Waiting</th><th></th></tr></thead><tbody>
 ${appeals.map((a) => {
         const days = (now - new Date(a.created_at).getTime()) / 86400000;
-        return html`<tr><td>${caseLink(a.case_code)}</td><td>${typeBadge(a.type)}${a.is_test ? ' (test)' : ''}</td><td>${a.username} <span class="muted">${a.user_id}</span></td>
+        return html`<tr><td>${caseLink(a.case_code)}${a.needsSecondReviewer ? html` <span class="warn" title="You issued this punishment, so another staff member has to decide this appeal.">Needs second reviewer</span>` : ''}</td><td>${typeBadge(a.type)}${a.is_test ? ' (test)' : ''}</td><td>${a.username} <span class="muted">${a.user_id}</span></td>
 <td>${formatDate(a.created_at)}</td><td class="${days >= 3 ? 'bad' : days >= 1 ? 'warn' : ''}">${formatAge(a.created_at, now)}</td>
 <td><a href="/dashboard/appeals/${encodeURIComponent(a.case_code)}">${canWrite ? 'Review and decide' : 'Open'}</a></td></tr>`;
     })}

@@ -26,6 +26,8 @@ import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { appealAcceptedDm, appealDeniedDm } from './dmTemplates.js';
 import { dateStamp, formatDuration, stamp, truncate } from './format.js';
 import { evidenceDisplay } from './evidenceService.js';
+import { checkAppealReviewer, needsSecondReviewer } from './appealReviewer.js';
+import { recordOwnerOverride } from '../ownerOverride.js';
 
 const UNKNOWN_BAN = 10026;
 
@@ -260,7 +262,13 @@ export async function buildCaseDossier(record, { appeal = null, client = null } 
     const embeds = [createEmbed({
         title: truncate(`${record.is_test ? 'Test case' : 'Case'} ${record.case_code}: ${record.name}`, 256),
         description: truncate(caseDetailsLines(record).join('\n'), 4096),
-        fields: evidence.field ? [evidence.field] : [],
+        fields: [
+            ...(needsSecondReviewer(record, { botUserId: client?.user?.id || null }) ? [{
+                name: 'Independent review',
+                value: truncate(`Issued by ${record.moderator_username} — needs a second reviewer`, 1024),
+            }] : []),
+            ...(evidence.field ? [evidence.field] : []),
+        ],
         image: evidence.imageUrl,
         color: 'primary',
     })];
@@ -340,7 +348,8 @@ async function disableDecisionButtons(channel, caseCode) {
 /** Pending appeals of one server's cases (the main server by default), oldest first, with their case. */
 export async function listPendingAppeals(limit = 20, guildId = enforcementConfig.mainGuildId) {
     const { rows } = await query(
-        `SELECT a.case_code, a.username, a.user_id, a.channel_id, a.created_at, c.type, c.name, c.is_test
+        `SELECT a.case_code, a.username, a.user_id, a.channel_id, a.created_at, c.type, c.name, c.is_test,
+                c.guild_id, c.moderator_id, c.moderator_username, c.is_auto
          FROM ${T.appeals} a JOIN ${T.cases} c ON c.case_code = a.case_code
          WHERE a.kind = 'appeal' AND a.status = 'pending' AND c.guild_id = $2
          ORDER BY a.created_at ASC LIMIT $1`,
@@ -747,12 +756,38 @@ function scheduleAppealChannelDelete(channel, decisionLabel) {
     }, APPEAL_CHANNEL_DELETE_DELAY_MS).unref?.();
 }
 
-export async function decideAppeal({ client, admin, caseCode, decision, note }) {
+/**
+ * Independent appeal review: throws the "another staff member has to decide" error when
+ * `deciderId` issued the case and the setting is on. Returns { ownerOverride } (true when a
+ * bot owner decides their own case anyway). Every decision path goes through decideAppeal,
+ * which calls this; the dashboard also calls it before its confirm step.
+ */
+export function assertAppealReviewer(record, deciderId, { client = null, ...options } = {}) {
+    const check = checkAppealReviewer(record, deciderId, { botUserId: client?.user?.id || null, ...options });
+    if (!check.allowed) throw userError(check.message);
+    return { ownerOverride: Boolean(check.ownerOverride) };
+}
+
+export async function decideAppeal({ client, admin, caseCode, decision, note, via = 'unknown' }) {
     const record = await getCaseByCode(caseCode);
     if (!record) {
         throw userError(`No case with code \`${caseCode}\`.`);
     }
+    // Before anything changes: the issuing moderator may not decide (when the setting is on).
+    const { ownerOverride } = assertAppealReviewer(record, admin.id, { client });
 
+    const result = await decideAppealLocked({ client, admin, caseCode, decision, note, record });
+    if (ownerOverride) {
+        await recordOwnerOverride({
+            client, guildId: record.guild_id, userId: admin.id, username: admin.username,
+            action: `appeal ${result.label} on \`${record.case_code}\``, via,
+            reason: 'who issued this punishment themselves (independent appeal review is on)',
+        }).catch(() => {});
+    }
+    return { ...result, ownerOverride };
+}
+
+async function decideAppealLocked({ client, admin, caseCode, decision, note, record }) {
     return Mutex.runExclusive(`enforcement:${record.guild_id}:${record.target_user_id}`, async () => {
         const { rows } = await query(
             `SELECT * FROM ${T.appeals} WHERE case_code = $1 AND kind = 'appeal' AND status = 'pending'

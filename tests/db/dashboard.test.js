@@ -119,6 +119,14 @@ test('dashboard pages render real data', { skip }, async () => {
     assert.match(appeals.body, new RegExp(warn.case_code));
     assert.match(appeals.body, /2 d|4\d h/);
 
+    // listPendingAppeals also returns who issued each case (independent appeal review marks).
+    const { listPendingAppeals } = await import('../../src/services/enforcement/appealService.js');
+    const pending = (await listPendingAppeals(100, guildId)).find((r) => r.case_code === warn.case_code);
+    assert.equal(pending.guild_id, guildId);
+    assert.equal(pending.moderator_id, warn.moderator_id);
+    assert.equal(pending.moderator_username, warn.moderator_username);
+    assert.equal(pending.is_auto, warn.is_auto);
+
     const automod = await run(d.modulePage, { params: { module: 'automod' } });
     assert.equal(automod.statusCode, 200);
     assert.match(automod.body, /Spam/);

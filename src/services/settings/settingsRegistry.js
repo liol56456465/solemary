@@ -130,6 +130,13 @@ export const SETTINGS = Object.freeze([
         key: 'transparencyReportEnabled', module: 'appeals', kind: 'boolean', guild: 'main',
         label: 'Publish a monthly transparency report on the website', env: null, fallback: false, schema: z.boolean(),
     },
+    {
+        // On: the moderator who issued a punishment cannot decide its appeal (OWNER_IDS
+        // excepted, logged as an owner override). See enforcement/appealReviewer.js.
+        key: 'independentAppealReview', module: 'appeals', kind: 'boolean', guild: 'main',
+        label: 'Appeals must be decided by someone other than the issuing moderator', env: null,
+        fallback: false, schema: z.boolean(),
+    },
     // ── Logging ──
     {
         key: 'modLogChannelId', module: 'logging', kind: 'channel', guild: 'main',

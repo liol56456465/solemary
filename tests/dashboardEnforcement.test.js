@@ -19,6 +19,7 @@ import {
 } from '../src/services/enforcement/flowBuilder.js';
 import { createError, ErrorTypes } from '../src/utils/errorHandler.js';
 import { plainText } from '../src/services/dashboard/forms.js';
+import { resetSettingsCacheForTests, setSettingsCacheForTests } from '../src/services/settings/guildSettings.js';
 import { buildCoverageReport, intensityLevel } from '../src/services/staffCoverageService.js';
 import { JS_PATH } from '../src/services/dashboard/html.js';
 
@@ -171,7 +172,7 @@ function fakeRes() {
     };
 }
 
-async function setup({ env = ENV, userId = ADMIN, admins = new Set([ADMIN]), owners = new Set([OWNER]), overrides = {}, targetInGuild = true } = {}) {
+async function setup({ env = ENV, userId = ADMIN, admins = new Set([ADMIN]), owners = new Set([OWNER]), overrides = {}, targetInGuild = true, pendingAppeals = null } = {}) {
     const { guild, client } = makeWorld({ admins, targetInGuild });
     const { e, calls } = makeEnforcement(overrides);
     const sessions = createMemorySessionStore();
@@ -188,7 +189,7 @@ async function setup({ env = ENV, userId = ADMIN, admins = new Set([ADMIN]), own
         overview: { getGuildConfig: async () => ({}), getWelcomeConfig: async () => ({}) },
         getCaseByCode: e.getCaseByCode, getCaseEdits: async () => [], listEvidence: async () => [{ id: 11, kind: 'link', url: 'https://x.example', added_by_username: 'a', added_at: new Date() }],
         resolveImageUrls: async () => new Map(), getAppealHistory: async () => [],
-        listPendingAppeals: async () => [{ case_code: CODE, type: 'ban', username: 'target', user_id: TARGET, created_at: new Date() }],
+        listPendingAppeals: async () => pendingAppeals || [{ case_code: CODE, type: 'ban', username: 'target', user_id: TARGET, created_at: new Date() }],
         staffModerationStats: async () => [],
     };
     const d = createDashboard({ client, settings: dashboardSettings(env), sessions, access, services, auditStore, env, enforcement: e, confirms, data });
@@ -642,6 +643,104 @@ test('appeals: the queue links each appeal; the detail page shows the answers an
     assert.ok(detail.body.includes('Yes, I did it'));
     assert.ok(detail.body.includes(`/dashboard/appeals/${CODE}/preview`));
     assert.equal((await get(h, h.d.enforcement.appealDetail, { params: { code: 'zzzzzzz' } })).statusCode, 404);
+});
+
+// ── Independent appeal review (setting independentAppealReview) ───────────
+
+const SECOND_REVIEWER = 'You issued this punishment, so another staff member has to decide this appeal.';
+const issuedBy = (moderatorId, username = 'issuer<b>') => (code) => (code === CODE
+    ? { id: 1, case_code: CODE, guild_id: GUILD, target_user_id: TARGET, target_username: 'target', type: 'ban', status: 'appeal_pending', reason: 'r', name: 'target ban 1', moderator_id: moderatorId, moderator_username: username, is_auto: false, created_at: new Date() }
+    : null);
+
+test('independent review on: the issuing admin sees "needs a second reviewer", no decision form, and the preview refuses', async () => {
+    setSettingsCacheForTests(GUILD, { independentAppealReview: true });
+    try {
+        const h = await setup({ overrides: { getCaseByCode: async (code) => issuedBy(ADMIN)(code) } });
+        const detail = await get(h, h.d.enforcement.appealDetail, { params: { code: CODE } });
+        assert.equal(detail.statusCode, 200);
+        assert.ok(detail.body.includes('Issued by issuer&lt;b&gt; — needs a second reviewer'));
+        assert.ok(detail.body.includes(SECOND_REVIEWER));
+        assert.ok(!detail.body.includes(`/dashboard/appeals/${CODE}/preview`), 'no decision form for the issuer');
+        assert.ok(!/<[^>]*style=/i.test(detail.body), 'no inline styles');
+
+        const preview = await post(h, h.d.enforcement.appealPreview, { params: { code: CODE }, form: { decision: 'accept' } });
+        assert.equal(preview.statusCode, 400);
+        assert.ok(preview.body.includes(SECOND_REVIEWER));
+        assert.ok(!/Confirm: accept/.test(preview.body));
+        assert.equal(h.auditRows.length, 0);
+
+        // Another admin: the note is shown, the form is there, the preview works.
+        const other = await setup({ admins: new Set([ADMIN, OTHER]), userId: OTHER, overrides: { getCaseByCode: async (code) => issuedBy(ADMIN)(code) } });
+        const otherDetail = await get(other, other.d.enforcement.appealDetail, { params: { code: CODE } });
+        assert.ok(otherDetail.body.includes('needs a second reviewer'));
+        assert.ok(otherDetail.body.includes(`/dashboard/appeals/${CODE}/preview`));
+        const ok = await post(other, other.d.enforcement.appealPreview, { params: { code: CODE }, form: { decision: 'accept' } });
+        assert.equal(ok.statusCode, 200);
+        assert.match(ok.body, /Confirm: accept/);
+    } finally {
+        resetSettingsCacheForTests();
+    }
+});
+
+test('independent review on: decide shows the service refusal (the shared check in decideAppeal) and audits nothing', async () => {
+    setSettingsCacheForTests(GUILD, { independentAppealReview: true });
+    try {
+        // The confirm token was issued before the setting changed; decideAppeal (the shared
+        // service) refuses: the dashboard shows its message.
+        const refuse = async () => { throw createError(SECOND_REVIEWER, ErrorTypes.VALIDATION, SECOND_REVIEWER, { expected: true }); };
+        const h = await setup({ overrides: { decideAppeal: refuse } });
+        const res = await post(h, h.d.enforcement.appealPreview, { params: { code: CODE }, form: { decision: 'deny' } });
+        const { token, fh } = tokenFrom(res.body);
+        const done = await post(h, h.d.enforcement.appealDecide, { params: { code: CODE }, form: { token, fh } });
+        assert.equal(done.statusCode, 400);
+        assert.ok(done.body.includes(SECOND_REVIEWER));
+        assert.equal(h.auditRows.length, 0);
+    } finally {
+        resetSettingsCacheForTests();
+    }
+});
+
+test('independent review: owner who issued the case may decide (page says so); decide passes via "dashboard"', async () => {
+    setSettingsCacheForTests(GUILD, { independentAppealReview: true });
+    try {
+        const h = await setup({ admins: new Set([ADMIN, OWNER]), userId: OWNER, overrides: { getCaseByCode: async (code) => issuedBy(OWNER, 'owner')(code) } });
+        const detail = await get(h, h.d.enforcement.appealDetail, { params: { code: CODE } });
+        assert.ok(detail.body.includes('needs a second reviewer'));
+        assert.ok(detail.body.includes('As a bot owner you may decide anyway; it is logged as an owner override.'));
+        assert.ok(detail.body.includes(`/dashboard/appeals/${CODE}/preview`));
+        const res = await post(h, h.d.enforcement.appealPreview, { params: { code: CODE }, form: { decision: 'deny' } });
+        assert.equal(res.statusCode, 200);
+        const { token, fh } = tokenFrom(res.body);
+        assert.equal((await post(h, h.d.enforcement.appealDecide, { params: { code: CODE }, form: { token, fh } })).statusCode, 303);
+        assert.equal(serviceCalls(h, ['decideAppeal'])[0].args[0].via, 'dashboard');
+    } finally {
+        resetSettingsCacheForTests();
+    }
+});
+
+test('independent review: the appeals list marks the viewer\'s own cases; nothing changes when the setting is off', async () => {
+    const pendingAppeals = [
+        { case_code: CODE, type: 'ban', username: 'target', user_id: TARGET, created_at: new Date(), guild_id: GUILD, moderator_id: ADMIN, moderator_username: 'admin', is_auto: false },
+        { case_code: 'def2345', type: 'mute', username: 'other', user_id: OTHER, created_at: new Date(), guild_id: GUILD, moderator_id: OTHER, moderator_username: 'other', is_auto: false },
+        { case_code: 'ghj2345', type: 'ban', username: 'x', user_id: OTHER, created_at: new Date(), guild_id: GUILD, moderator_id: ADMIN, moderator_username: 'admin', is_auto: true },
+    ];
+    setSettingsCacheForTests(GUILD, { independentAppealReview: true });
+    try {
+        const h = await setup({ pendingAppeals });
+        const list = await get(h, h.d.appeals);
+        assert.equal((list.body.match(/Needs second reviewer/g) || []).length, 1, 'only the viewer\'s own human-issued case');
+        const row = list.body.split('<tr>').find((r) => r.includes(`/dashboard/cases/${CODE}`));
+        assert.match(row, /Needs second reviewer/);
+    } finally {
+        resetSettingsCacheForTests();
+    }
+    // Off (default): no marks, and the detail page of an admin's own case still has the form.
+    const off = await setup({ pendingAppeals, overrides: { getCaseByCode: async (code) => issuedBy(ADMIN)(code) } });
+    assert.ok(!(await get(off, off.d.appeals)).body.includes('Needs second reviewer'));
+    const detail = await get(off, off.d.enforcement.appealDetail, { params: { code: CODE } });
+    assert.ok(!detail.body.includes('second reviewer'));
+    assert.ok(detail.body.includes(`/dashboard/appeals/${CODE}/preview`));
+    assert.equal((await post(off, off.d.enforcement.appealPreview, { params: { code: CODE }, form: { decision: 'accept' } })).statusCode, 200);
 });
 
 test('staff page: coverage heatmap as a table with intensity classes and the mass-action blocks (lift for owners only)', async () => {

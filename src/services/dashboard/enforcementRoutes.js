@@ -32,7 +32,8 @@ import { isAdministrator, previewWarn } from '../enforcement/enforcementService.
 import { normalizeCaseCode } from '../enforcement/format.js';
 import { parseEditDuration } from '../enforcement/caseEditService.js';
 import { parseEvidenceUrls } from '../enforcement/evidenceService.js';
-import { appealAnswers } from '../enforcement/appealService.js';
+import { appealAnswers, assertAppealReviewer } from '../enforcement/appealService.js';
+import { checkAppealReviewer, needsSecondReviewer } from '../enforcement/appealReviewer.js';
 import { NO_CONTACT_MAX_DAYS } from '../enforcement/noContactService.js';
 import {
     ACTION_LABELS, ACTION_TYPES, RECORD_ACTIONS, availableActions, flowSummary, isKnownReasonKey, liftReasonPatch,
@@ -777,6 +778,14 @@ export function createEnforcementHandlers(core) {
 
     // ── Appeals ──────────────────────────────────────────────────────────
 
+    /** Independent appeal review, for the page: { required, issuer, blocked, ownerOverride }. */
+    function appealReviewState(record, viewerId) {
+        const botUserId = client.user?.id || null;
+        if (!needsSecondReviewer(record, { botUserId })) return { required: false };
+        const check = checkAppealReviewer(record, viewerId, { botUserId, isOwner: e.isBotOwner });
+        return { required: true, issuer: record.moderator_username, blocked: !check.allowed, message: check.message || null, ownerOverride: Boolean(check.ownerOverride) };
+    }
+
     async function renderAppeal(req, res, status = 200, { error = null } = {}) {
         const code = caseCodeParam(req);
         const record = code ? await e.getCaseByCode(code) : null;
@@ -802,6 +811,7 @@ export function createEnforcementHandlers(core) {
             othersTotal: Math.max(0, total - 1),
             ladder,
             evidence: evidenceRows.map((row) => ({ row, freshUrl: fresh.get(String(row.id)) || null })),
+            review: appealReviewState(record, req.dashboard.session.userId),
         };
         return sendHtml(res, status, appealDetailPage({
             ...shellOf(req), data, canWrite: canWrite(req), editEnabled: settings.editEnabled, canAct: req.dashboard.access.canAct,
@@ -820,7 +830,9 @@ export function createEnforcementHandlers(core) {
         if (decision !== 'accept' && decision !== 'deny') throw new InputError('Choose Accept or Deny.');
         const appeals = await e.getAppealHistory(code);
         if (!appeals.some((a) => a.status === 'pending')) throw new InputError(`There is no pending appeal for ${code}.`);
-        await freshModerator(req);
+        const moderator = await freshModerator(req);
+        // Independent appeal review: refuse before the confirm step (decideAppeal checks again).
+        assertAppealReviewer(record, moderator.id || req.dashboard.session.userId, { client, isOwner: e.isBotOwner });
         const note = multiline(req.body, 'note', 500);
         const payload = { caseCode: code, decision, note };
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: `appeal:${code}`, payload });
@@ -836,9 +848,10 @@ export function createEnforcementHandlers(core) {
         if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; decide again.');
         const moderator = await freshModerator(req);
         const admin = moderator.user || { id: moderator.id, username: req.dashboard.session.username };
-        const result = await e.decideAppeal({ client, admin, caseCode: code, decision: payload.decision, note: payload.note || null });
+        const result = await e.decideAppeal({ client, admin, caseCode: code, decision: payload.decision, note: payload.note || null, via: 'dashboard' });
         await audit(req, 'appeal-decisions', [{ key: code, old: 'pending', new: { decision: result.label, note: payload.note || null, dmDelivered: result.dmDelivered } }]);
-        await flash(req, [`Appeal on ${code} ${result.label}.`, `DM to the member: ${result.dmDelivered ? 'delivered' : 'not delivered'}.`, ...(result.notes || [])].join(' '));
+        await flash(req, [`Appeal on ${code} ${result.label}.`, `DM to the member: ${result.dmDelivered ? 'delivered' : 'not delivered'}.`, ...(result.notes || []),
+            ...(result.ownerOverride ? ['You issued this punishment: decided as a bot owner, logged as an owner override.'] : [])].join(' '));
         return res.redirect(303, path('/appeals'));
     }, { rerender: rerenderAppeal, perm: 'appeal.decide' });
 

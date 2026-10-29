@@ -421,7 +421,7 @@ ${evidence.length ? html`<p>${evidence.map(({ row }) => actionForm(csrf, `/cases
  * history (earlier appeals), others (other cases), othersTotal, ladder, evidence }.
  */
 export function appealDetailPage({ session, access = null, moduleStates = {}, data, canWrite = false, flash = null, error = null, editEnabled = true, canAct = true, now = Date.now() }) {
-    const { record: r, appeal, answers = [], history = [], others = [], othersTotal = 0, ladder = null, evidence = [] } = data;
+    const { record: r, appeal, answers = [], history = [], others = [], othersTotal = 0, ladder = null, evidence = [], review = { required: false } } = data;
     const pending = appeal?.status === 'pending';
     const body = html`<p><a href="${path('/appeals')}">← Appeals</a></p>
 <h1 class="title-with-badge">Appeal · <code data-copy="${r.case_code}">${r.case_code}</code> ${typeBadge(r.type)}${r.is_test ? html` <span class="muted">(test case)</span>` : ''}</h1>
@@ -432,6 +432,7 @@ ${r.is_test ? html`<p class="notice">Test case created with /test: nothing was e
 <dt>Case</dt><dd>${caseLink(r.case_code)} · ${r.name}</dd>
 <dt>Reason</dt><dd>${r.reason}</dd>
 <dt>Given by</dt><dd>${r.moderator_username}${r.is_auto ? ' (automatic, warn ladder)' : ''} · ${formatDate(r.created_at)}</dd>
+${review.required ? html`<dt>Independent review</dt><dd class="warn">Issued by ${review.issuer} — needs a second reviewer</dd>` : ''}
 ${r.type === 'ban' || r.type === 'mute' ? html`<dt>Ends</dt><dd>${r.expires_at ? formatDate(r.expires_at) : 'permanent'}</dd>` : ''}
 ${ladder ? html`<dt>Warn ladder</dt><dd>level ${ladder.level}, ${ladder.warns_since_level} counted warn(s)</dd>` : ''}
 </dl>
@@ -445,7 +446,8 @@ ${row.kind === 'image' ? (freshUrl && isAllowedImageUrl(freshUrl) ? html`<a href
 ${history.length ? html`<ul>${history.map((a) => html`<li>${formatDate(a.created_at)} · ${a.status}${a.decided_by_username ? html` by ${a.decided_by_username}` : ''}${a.note ? html` — ${a.note}` : ''}</li>`)}</ul>` : html`<p class="muted">None.</p>`}
 <h2>Other cases (${othersTotal})</h2>
 ${others.length ? html`<ul>${others.map((c) => html`<li>${caseLink(c.case_code)} ${typeBadge(c.type)} · ${formatDate(c.created_at)} · ${caseStatusLabel(c)} · ${c.reason}</li>`)}</ul>` : html`<p class="muted">None.</p>`}
-${pending && canWrite ? html`<h2>Decide</h2>${actionForm(session.csrf, `/appeals/${r.case_code}/preview`, html`<label class="wide">Note (optional, shown in the appeal channel and the log)<textarea name="note" rows="2" maxlength="500"></textarea></label>
+${pending && canWrite && review.blocked ? html`<h2>Decide</h2><p class="notice">${review.message}</p>` : ''}
+${pending && canWrite && !review.blocked ? html`<h2>Decide</h2>${review.ownerOverride ? html`<p class="notice">You issued this punishment. As a bot owner you may decide anyway; it is logged as an owner override.</p>` : ''}${actionForm(session.csrf, `/appeals/${r.case_code}/preview`, html`<label class="wide">Note (optional, shown in the appeal channel and the log)<textarea name="note" rows="2" maxlength="500"></textarea></label>
 <div class="buttons"><button type="submit" name="decision" value="accept" class="primary">Accept…</button> <button type="submit" name="decision" value="deny" class="danger">Deny…</button></div>`, { submit: null })}` : ''}`;
     return layout({ title: `Appeal ${r.case_code}`, active: 'appeals', session, access, moduleStates, body });
 }

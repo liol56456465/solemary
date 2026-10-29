@@ -67,6 +67,7 @@ import {
 import { getCaseEdits } from '../enforcement/caseEditService.js';
 import { listEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
 import { listPendingAppeals } from '../enforcement/appealService.js';
+import { needsSecondReviewer } from '../enforcement/appealReviewer.js';
 import { STATS_PERIODS, staffModerationStats } from '../staffActivityService.js';
 import { listSettingsAudit } from '../settings/guildSettings.js';
 import { createAccessChecker } from './access.js';
@@ -537,7 +538,13 @@ export function createDashboard({
     const caseDetail = (req, res) => renderCase(req, res);
 
     async function appeals(req, res) {
-        const rows = await data.listPendingAppeals(100, guildId);
+        const viewerId = req.dashboard.session.userId;
+        const botUserId = client.user?.id || null;
+        // Independent appeal review: mark the appeals the viewer issued (they cannot decide them).
+        const rows = (await data.listPendingAppeals(100, guildId)).map((row) => ({
+            ...row,
+            needsSecondReviewer: needsSecondReviewer(row, { botUserId }) && String(row.moderator_id) === String(viewerId),
+        }));
         return sendHtml(res, 200, appealsPage({ ...shellOf(req), appeals: rows, flash: req.dashboard.flash, canWrite: enforcementHandlers.canWrite(req) }));
     }
 

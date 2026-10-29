@@ -86,6 +86,7 @@ export default {
             caseCode,
             decision,
             note: interaction.options.getString('note')?.trim() || null,
+            via: 'slash',
         });
 
         await InteractionHelper.safeEditReply(interaction, {
@@ -95,6 +96,7 @@ export default {
                     `\`${caseCode}\` — ${result.record.name}`,
                     `DM to the user: ${result.dmDelivered ? 'delivered' : '**not delivered**'}.`,
                     ...result.notes,
+                    ...(result.ownerOverride ? ['You issued this punishment: decided as a bot owner, logged as an owner override.'] : []),
                 ].join('\n')
             )],
         });
