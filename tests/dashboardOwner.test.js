@@ -87,7 +87,7 @@ function fakeRes() {
 
 async function setup({
     env = ENV, userId = OWNER, owners = new Set([OWNER]), admins = new Set([ADMIN]), createdAt = Date.now(), guildOpts = {},
-    blacklistActive = [], auditList = async () => ({ rows: [], total: 0 }),
+    blacklistActive = [], auditList = async () => ({ rows: [], total: 0 }), recentLogLines = [],
 } = {}) {
     const guilds = new Map([
         [MAIN, makeGuild(MAIN, { name: 'Main', ownerId: '999999999999999990' })],
@@ -118,6 +118,7 @@ async function setup({
         announceChannelId: async (c, guild) => (guild.id === SUPPORT ? null : guild.channel.id),
         protectedGuildIds: [MAIN, SUPPORT],
         dbStatus: () => ({ connectionType: 'postgresql', isDegraded: false }),
+        recentLogs: () => recentLogLines,
     };
     const sessions = createMemorySessionStore({ ttlMs: 48 * 3600 * 1000 });
     const access = createAccessChecker(client, { facts: async (c, id) => ({ inGuild: true, isAdmin: admins.has(id), isOwnerId: owners.has(id) }) });
@@ -559,4 +560,18 @@ test('owner action text: every audit key the owner area writes reads as words', 
     assert.equal(ownerActionText('blacklist.guild.100000000000000077', names), 'Blacklist: server Other');
     assert.equal(ownerActionText('blacklist.user.300000000000000001'), 'Blacklist: user 300000000000000001');
     assert.equal(ownerActionText('something.else'), 'something.else');
+});
+
+test('health: recent warnings and errors are listed (escaped); none → a plain "no warnings" line', async () => {
+    const h = await setup({ recentLogLines: [
+        { at: new Date(), level: 'error', text: 'Database <b>down</b>', traceId: 'trc_abc' },
+        { at: new Date(), level: 'warn', text: 'slow', traceId: null },
+    ] });
+    const res = await get(h, h.ow.health);
+    assert.ok(res.body.includes('Recent warnings and errors'));
+    assert.ok(res.body.includes('Database &lt;b&gt;down&lt;/b&gt;'), 'escaped');
+    assert.ok(res.body.includes('trc_abc'));
+    assert.ok(res.body.includes('(2, 1 error)'));
+    const empty = await setup();
+    assert.ok((await get(empty, empty.ow.health)).body.includes('No warnings or errors since the last restart.'));
 });

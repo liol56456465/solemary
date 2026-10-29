@@ -245,6 +245,19 @@ function duration(seconds) {
 }
 const mb = (bytes) => `${Math.round((bytes || 0) / 1024 / 1024)} MB`;
 
+export const RECENT_LOGS_SHOWN = 25;
+
+/** The newest warnings and errors (recentLogs.js: already masked and cut), newest first. */
+function recentLogsSection(lines) {
+    const list = Array.isArray(lines) ? lines.slice(0, RECENT_LOGS_SHOWN) : [];
+    const errors = list.filter((l) => l.level === 'error').length;
+    return html`<section class="card"><h2>Recent warnings and errors</h2>
+<p class="muted">Since the last restart, newest first (${list.length}${Array.isArray(lines) && lines.length > list.length ? ` of ${lines.length}` : ''}${errors ? `, ${errors} error${errors === 1 ? '' : 's'}` : ''}). Kept in memory only; tokens, passwords and long keys are masked. The full lines are in the host's logs.</p>
+${list.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Level</th><th>Message</th></tr></thead><tbody>
+${list.map((l) => html`<tr><td class="nowrap">${timeTag(l.at)}</td><td><span class="state-word is-${l.level === 'error' ? 'bad' : 'warn'}"><span class="dot dot-${l.level === 'error' ? 'bad' : 'warn'}" aria-hidden="true"></span>${l.level === 'error' ? 'Error' : 'Warning'}</span></td><td class="value">${l.text}${l.traceId ? html`<br><small class="muted">${l.traceId}</small>` : ''}</td></tr>`)}
+</tbody></table></div>` : html`<p class="empty">No warnings or errors since the last restart.</p>`}</section>`;
+}
+
 /** health: { uptimeSeconds, gatewayUptimeMs, ping, memory, node, version, servers, database, maintenance }. */
 export function healthPage({ session, access = null, moduleStates = {}, health, flash = null, error = null, editEnabled = true }) {
     const db = health.database;
@@ -260,7 +273,7 @@ ${notices({ flash, error, editEnabled })}
 <dt>Blacklist</dt><dd>${health.blacklistLoaded === false ? html`<span class="state-word is-bad"><span class="dot dot-bad" aria-hidden="true"></span>Not loaded: nobody is blocked until the database answers (retrying)</span>` : html`<span class="state-word is-on"><span class="dot dot-on" aria-hidden="true"></span>Loaded</span>`}</dd>
 <dt>Database</dt><dd>${db ? html`<span class="state-word is-${db.connected ? 'on' : 'bad'}"><span class="dot dot-${db.connected ? 'on' : 'bad'}" aria-hidden="true"></span>${db.connected ? `Connected (${db.type})` : `Degraded (${db.type || 'none'})`}</span>` : 'Unknown'}</dd>
 </dl></section>
-<section class="card"><h2>Recent errors</h2><p class="muted">Not shown: the logger writes error lines to its log files only and keeps none in memory.</p></section>
+${recentLogsSection(health.recentLogs)}
 <section class="card"><h2>Maintenance mode</h2><p>${health.maintenance ? html`<span class="state-word is-warn"><span class="dot dot-warn" aria-hidden="true"></span>On: only bot owners can run commands.</span>` : html`<span class="state-word is-off"><span class="dot dot-off" aria-hidden="true"></span>Off</span>`}</p>
 ${actionForm(session.csrf, '/owner/health/maintenance', '', { submit: health.maintenance ? 'Turn maintenance off' : 'Turn maintenance on', hidden: { enabled: health.maintenance ? 'off' : 'on' }, danger: !health.maintenance, enabled: editEnabled })}
 <p class="muted">Kept after a restart.</p></section>`;

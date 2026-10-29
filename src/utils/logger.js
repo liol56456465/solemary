@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { AsyncLocalStorage } from 'async_hooks';
 import crypto from 'crypto';
+import { RecentLogTransport } from './recentLogs.js';
 
 const traceStorage = new AsyncLocalStorage();
 
@@ -218,6 +219,9 @@ if (process.env.NODE_ENV !== 'production') {
     level: resolvedLogLevel,
   }));
 }
+
+// The last warnings and errors in memory (masked) for the owner Health page.
+logger.add(new RecentLogTransport());
 
 logger.stream = {
   write: (message) => {

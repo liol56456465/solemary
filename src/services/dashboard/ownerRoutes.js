@@ -40,6 +40,7 @@ import { path } from './html.js';
 import { isSnowflake } from './security.js';
 import { pinnedFetch } from '../owner/safeImageFetch.js';
 import { isBlacklistLoaded } from '../owner/blacklistCache.js';
+import { getRecentLogs } from '../../utils/recentLogs.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
     blacklistPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage,
@@ -237,6 +238,7 @@ export const defaultOwnerDeps = {
     announceChannelId: defaultAnnounceChannelId,
     protectedGuildIds: () => [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId],
     dbStatus: (client) => client.db?.getStatus?.() || null,
+    recentLogs: getRecentLogs,
 };
 
 // ── Handlers ──────────────────────────────────────────────────────────────
@@ -600,6 +602,7 @@ export function createOwnerHandlers(core) {
             database: status ? { connected: status.connectionType !== 'none' && !status.isDegraded, type: status.connectionType, degraded: Boolean(status.isDegraded) } : null,
             maintenance: o.isMaintenanceOn(),
             blacklistLoaded: isBlacklistLoaded(),
+            recentLogs: o.recentLogs(),
         };
     }
 
