@@ -758,6 +758,7 @@ test('layout v5: grouped sidebar with every page, breadcrumbs, phone tab bar wit
     assert.ok(page.includes('class="icon-button find-link" href="/dashboard/modules" aria-label="Find a setting"'), 'phones get a search icon');
     assert.ok(!/class="rail|class="section-tabs"|nav-toggle/.test(page), 'old shells gone');
     assert.ok(side.includes('<a class="side-site" href="/">'), 'sidebar links back to the website');
+    assert.ok(side.includes('<img class="brand-mark" src="/favicon.png" width="32" height="32" alt="">'), "the owner's logo, not a drawn icon");
     assert.ok(page.includes('<a class="menu-item menu-link" href="/">'), 'account menu links to the website');
     assert.match(page, /<div class="more-foot"><a href="\/">.*Website<\/a>/, 'phone sheet links to the website');
     assert.ok(page.includes('<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">'));

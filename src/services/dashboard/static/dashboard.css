@@ -622,8 +622,7 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
 .search-result { margin: 0 0 16px; color: var(--fg-2); }
 .brand { display: flex; align-items: center; gap: 12px; color: var(--fg); font-weight: 700; font-size: 16px; }
 .brand:hover { text-decoration: none; }
-.brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--accent); color: var(--on-accent); }
-.brand-mark .icon { width: 20px; height: 20px; }
+.brand-mark { display: block; flex: none; width: 32px; height: 32px; border-radius: 10px; }
 
 .icon-button {
     display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: var(--radius-sm);

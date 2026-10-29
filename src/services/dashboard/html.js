@@ -214,9 +214,13 @@ function sectionOf(active, groups = NAV) {
     return sections(groups).find((sec) => sec.items.some((i) => i.key === active)) || null;
 }
 
+// The owner's logo (the website serves it at /favicon.png, same origin: CSP img-src 'self').
+// Decorative: the name "Mewvo" is next to it.
+const BRAND_LOGO = raw('<img class="brand-mark" src="/favicon.png" width="32" height="32" alt="">');
+
 /** Desktop: the sidebar with every page by group; brand and server on top, account at the bottom. */
 function sideNav(active, moduleStates, theme, back, session, access) {
-    return html`<nav class="side-nav" aria-label="Dashboard"><a class="side-brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span>Mewvo</a>
+    return html`<nav class="side-nav" aria-label="Dashboard"><a class="side-brand" href="${path('/overview')}">${BRAND_LOGO}Mewvo</a>
 ${serverSwitch(session.server)}
 ${navGroups(session, access).map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
         const state = stateOf(item, moduleStates);
@@ -315,7 +319,7 @@ export function layout({ title, active = null, session = null, access = null, mo
         ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : '';
     const top = session ? html`<header class="page-top">${crumbs(active, navGroups(session, access))}<span class="spacer"></span>
 ${find}</header>`
-        : html`<header class="page-top bare-top"><a class="brand" href="/" aria-label="Mewvo website"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Mewvo</span></a><span class="spacer"></span></header>`;
+        : html`<header class="page-top bare-top"><a class="brand" href="/" aria-label="Mewvo website">${BRAND_LOGO}<span class="brand-name">Mewvo</span></a><span class="spacer"></span></header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark">${refreshSeconds > 0 ? html`<meta http-equiv="refresh" content="${refreshSeconds}">` : ''}<title>${title} · Mewvo dashboard</title><link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>
