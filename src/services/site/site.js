@@ -1,183 +1,54 @@
-// site.js — the front website at the site root: Home, Commands, About, /robots.txt and
-// the stylesheet. Server-rendered with the dashboard's `html` template (every value escaped),
-// no scripts at all and no inline styles (CSP: style-src 'self', script-src 'none').
+// site.js — the front website at the site root. Server-rendered with the dashboard's `html`
+// template (every value escaped), no scripts at all and no inline styles
+// (CSP: style-src 'self', script-src 'none', img-src 'self').
 //
-//   GET /            Home: what Meowist does
-//   GET /commands    the commands every member may use (EVERYONE_COMMANDS + the loaded descriptions)
-//   GET /about       who runs it
-//   GET /leaderboard the main server's leveling leaderboard, 50 a page (?page=)
-//   GET /status      Online / Starting / Degraded and the uptime, nothing else
-//   GET /privacy     what the bot stores and why (written from the code, nothing invented)
-//   GET /terms       the short rules for using the bot
-//   GET /robots.txt  Disallow: / while the site is not public
-//   GET /favicon.svg the cat on a black tile (the site and the dashboard link it)
-//   GET /site.css    the dashboard's theme tokens + site layout, cached, ?v=<content hash>
+//   GET /             Home (pages/home.js)
+//   GET /features     the full feature reference (pages/features.js)
+//   GET /pricing      Free + the planned paid plans from config/site/plans.js (pages/pricing.js)
+//   GET /docs         the guide hub; /docs/<slug> one guide (pages/docs.js)
+//   GET /faq          questions and answers (pages/faq.js)
+//   GET /commands     the commands every member may use (EVERYONE_COMMANDS + the loaded descriptions)
+//   GET /about        who runs it
+//   GET /leaderboard  the main server's leveling leaderboard, 50 a page (?page=)
+//   GET /status       Online / Starting / Degraded and the uptime, nothing else
+//   GET /privacy      what the bot stores and why (written from the code, nothing invented)
+//   GET /terms        the short rules for using the bot
+//   GET /robots.txt   Disallow: / while the site is not public; with the sitemap when it is
+//   GET /sitemap.xml  only when public and PUBLIC_URL is set (absolute URLs need the origin)
+//   GET /img/<file>   the site's images (static/img: dashboard screenshots, the share image)
+//   GET /favicon.svg  the cat on a black tile (the site and the dashboard link it)
+//   GET /site.css     the site's tokens + layout, cached, ?v=<content hash>
 //
-// NOT PUBLIC YET: PUBLIC_SITE_ENABLED=true (default off) shows the "Add to your server" button
+// NOT PUBLIC YET: PUBLIC_SITE_ENABLED=true (default off) shows the "Add to Discord" button
 // and lets search engines index the pages. While off, every response carries
 // X-Robots-Tag: noindex, nofollow and every page the matching <meta name="robots">.
+// PUBLIC_URL (the site's origin) adds canonical and share tags; no host is hard-coded.
 // The health endpoints (/health, /ready) stay in app.js, registered before this router.
+//
+// The shell (layout, headers, install link, stylesheet) is in shell.js and re-exported here.
 
-import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
-import { PermissionFlagsBits } from 'discord.js';
-import { html, raw } from '../dashboard/html.js';
-import { CAT_PATH } from '../dashboard/icons.js';
+import { html } from '../dashboard/html.js';
 import { EVERYONE_COMMANDS } from '../../config/commands/commandAccess.js';
 import { commandEntries } from '../../config/commands/retirement.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { getLeaderboard, getLevelingConfig } from '../leveling/leveling.js';
 import { logger } from '../../utils/logger.js';
+import {
+    FAVICON_SVG, NOINDEX, SECURITY_HEADERS, STYLESHEET, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
+} from './shell.js';
+import { homePage } from './pages/home.js';
+import { featuresPage } from './pages/features.js';
+import { pricingPage } from './pages/pricing.js';
+import { faqPage } from './pages/faq.js';
+import { GUIDES, docsPage, guidePage } from './pages/docs.js';
 
-const DASHBOARD_PATH = '/dashboard';
-
-export const SECURITY_HEADERS = {
-    'Content-Security-Policy': "default-src 'none'; style-src 'self'; script-src 'none'; img-src 'self'; "
-        + "form-action 'none'; frame-ancestors 'none'; base-uri 'none'",
-    'X-Frame-Options': 'DENY',
-    'X-Content-Type-Options': 'nosniff',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
-};
-export const NOINDEX = 'noindex, nofollow';
-
-/**
- * What the bot needs in a new server (the "Add to your server" link): no Administrator.
- * Moderation (ban, kick, timeout, nicknames), the managed Muted role and its channel overwrites
- * (Manage Roles + Manage Channels), automod and native AutoMod rules (Manage Messages,
- * Manage Server), logging (View Audit Log), one-time rejoin invites (Create Invite),
- * join-to-create voice and mute disconnects (Move Members), appeal/ticket threads,
- * and posting embeds, files and reactions.
- */
-export const INSTALL_PERMISSIONS = [
-    'ViewChannel', 'SendMessages', 'SendMessagesInThreads', 'EmbedLinks', 'AttachFiles', 'ReadMessageHistory',
-    'AddReactions', 'UseExternalEmojis', 'ManageMessages', 'ManageThreads', 'CreatePrivateThreads',
-    'ManageChannels', 'ManageRoles', 'ManageGuild', 'ViewAuditLog', 'CreateInstantInvite',
-    'KickMembers', 'BanMembers', 'ModerateMembers', 'ManageNicknames', 'MoveMembers', 'Connect',
-];
-
-export function installPermissionBits() {
-    return INSTALL_PERMISSIONS.reduce((bits, name) => bits | PermissionFlagsBits[name], 0n);
-}
-
-const SNOWFLAKE = /^\d{17,20}$/;
-const INVITE = /^https:\/\/(discord\.gg|discord\.com\/invite)\/[\w-]+$/;
-
-/** The OAuth2 install link for CLIENT_ID, or null when the id is missing or malformed. */
-export function installUrl(clientId) {
-    const id = String(clientId || '').trim();
-    if (!SNOWFLAKE.test(id)) return null;
-    const params = new URLSearchParams({ client_id: id, permissions: installPermissionBits().toString(), scope: 'bot applications.commands' });
-    return `https://discord.com/oauth2/authorize?${params.toString()}`;
-}
-
-/** A Discord invite link, or null (anything else is never put in a page). */
-export function inviteOrNull(value) {
-    const text = String(value || '').trim();
-    return INVITE.test(text) ? text : null;
-}
-
-export function publicSiteEnabled(env = process.env) {
-    return /^(1|true|yes|on)$/i.test(String(env.PUBLIC_SITE_ENABLED || '').trim());
-}
-
-// The theme tokens (every palette, light/dark by device) are the top of dashboard.css, up to
-// its "Base" section: the site uses the same colours without duplicating them.
-const BASE_MARKER = '/* ── Base';
-function buildStylesheet() {
-    try {
-        const dashboard = readFileSync(new URL('../dashboard/static/dashboard.css', import.meta.url), 'utf8');
-        const cut = dashboard.indexOf(BASE_MARKER);
-        const tokens = cut > 0 ? dashboard.slice(0, cut) : '';
-        const site = readFileSync(new URL('./static/site.css', import.meta.url), 'utf8');
-        return `${tokens}\n${site}`;
-    } catch (error) {
-        logger.error(`Site stylesheet missing: ${error.message}`);
-        return '';
-    }
-}
-export const STYLESHEET = buildStylesheet();
-export const CSS_PATH = `/site.css?v=${createHash('sha256').update(STYLESHEET).digest('hex').slice(0, 10)}`;
-
-// ── Pages ─────────────────────────────────────────────────────────────────
-
-// The Meowist cat (fill = currentColor, follows the theme). Decorative: the name is next to it.
-const LOGO = raw(`<svg class="logo" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="${CAT_PATH}"/></svg>`);
-
-// The browser-tab icon: the owner's logo, a white cat on black.
-export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#000"/><path fill="#fff" fill-rule="evenodd" d="${CAT_PATH}"/></svg>`;
-
-/** The links of the top bar and the footer; invites only when set. */
-function navLinks(ctx, active) {
-    const current = (key) => (key === active ? raw(' aria-current="page"') : '');
-    return html`${ctx.mainInvite ? html`<li><a href="${ctx.mainInvite}" rel="noopener">Our server</a></li>` : ''}
-${ctx.supportInvite ? html`<li><a href="${ctx.supportInvite}" rel="noopener">Support server</a></li>` : ''}
-<li><a href="/commands"${current('commands')}>Commands</a></li>
-<li><a href="/leaderboard"${current('leaderboard')}>Leaderboard</a></li>
-<li><a href="/about"${current('about')}>About</a></li>
-${ctx.memberPortal ? html`<li><a href="/me"${current('me')}>My record</a></li>` : ''}`;
-}
-
-/** The footer-only links: status and the legal pages. */
-function footerLinks(ctx, active) {
-    const current = (key) => (key === active ? raw(' aria-current="page"') : '');
-    return html`<li><a href="/status"${current('status')}>Status</a></li>
-<li><a href="/privacy"${current('privacy')}>Privacy</a></li>
-<li><a href="/terms"${current('terms')}>Terms</a></li>`;
-}
-
-function addButton(ctx, className = 'button') {
-    return ctx.publicSite && ctx.installUrl
-        ? html`<a class="${className}" href="${ctx.installUrl}" rel="noopener" data-add-bot>Add to your server</a>`
-        : '';
-}
-
-// `refresh` (seconds) adds a <meta http-equiv="refresh">: the status page reloads itself without a script.
-export function layout(ctx, { title, active = null, description = '', refresh = 0, body }) {
-    // The way into the dashboard, like other bots' sites: a filled button unless "Add to your server" is shown.
-    const login = ctx.dashboardEnabled ? html`<a class="button${ctx.publicSite && ctx.installUrl ? ' button-quiet' : ''}" href="${DASHBOARD_PATH}">Dashboard</a>` : '';
-    return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
-<title>${title === 'Meowist' ? 'Meowist' : `${title} · Meowist`}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}
-<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="${CSS_PATH}"></head>
-<body><a class="skip" href="#main">Skip to content</a>
-<header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>Meowist</span></a>
-<nav class="topnav" aria-label="Main"><ul>${navLinks(ctx, active)}</ul></nav>
-<div class="topbar-actions">${addButton(ctx)}${login}</div></div></header>
-<main id="main" tabindex="-1">${body}</main>
-<footer class="footer"><div class="wrap footer-inner"><p class="footer-brand">${LOGO}<span>Meowist</span></p>
-<nav aria-label="Footer"><ul>${navLinks(ctx, active)}${footerLinks(ctx, active)}${ctx.dashboardEnabled ? html`<li><a href="${DASHBOARD_PATH}">Dashboard</a></li>` : ''}</ul></nav></div></footer>
-</body></html>`.text;
-}
-
-// What the bot does, from the dashboard modules and CLAUDE.md (nothing invented).
-const FEATURES = [
-    { title: 'Enforcement with case codes', text: 'Ban, kick, mute and warn from one panel. Every action gets a short case code, the member gets a DM with the reason, the time and how to appeal, and staff can edit, void and attach evidence to cases.' },
-    { title: 'A fair warning ladder', text: 'Two warnings are a heads-up; the third is a 7-day ban. After that the steps are a 30-day ban and then a permanent one. The ladder never quietly resets, and an accepted appeal steps it back down.' },
-    { title: 'Appeals that reach a person', text: 'Members appeal from a panel, even after a ban: ban and kick appeals open a private channel in the support server. One pending appeal per case, and staff decide with a note.' },
-    { title: 'Automod and raid protection', text: 'Rules for spam, links, invites and words, each with its own mode and exceptions, a join gate, raid panic with lockdown, automatic slowmode, and a bridge to Discord’s native AutoMod.' },
-    { title: 'Tickets and modmail', text: 'A ticket panel with claim, priority and saved answers. Members can also DM the bot to reach the staff team privately.' },
-    { title: 'Community tools', text: 'Leveling with role rewards, suggestions, a starboard, sticky messages, tags, YouTube feeds, reaction roles, giveaways, birthdays, role applications and join-to-create voice channels.' },
-    { title: 'Logging and verification', text: 'Server events logged to the channels you choose, a verification panel, and welcome and goodbye messages.' },
-    { title: 'A web dashboard', text: 'Staff run the server from the browser: members, cases, appeals and every module’s settings, with an audit log of each change. Administrator is checked on every request.' },
-];
-
-export function homePage(ctx) {
-    const support = ctx.supportInvite ? html`<a class="button button-quiet" href="${ctx.supportInvite}" rel="noopener">Join the support server</a>` : '';
-    return layout(ctx, {
-        title: 'Meowist', active: 'home',
-        description: 'Meowist is a Discord bot for moderation, appeals, automod, tickets and community tools.',
-        body: html`<section class="hero"><div class="wrap"><p class="eyebrow">Discord bot</p>
-<h1>Moderation that explains itself.</h1>
-<p class="lead">Meowist keeps a Discord server calm: clear enforcement with case codes and DMs, a warning ladder members can understand, appeals that reach a person, automod, tickets and the community features around them.</p>
-<p class="hero-actions">${addButton(ctx)}<a class="button${ctx.publicSite && ctx.installUrl ? ' button-quiet' : ''}" href="/commands">See the commands</a>${ctx.dashboardEnabled ? html`<a class="button button-quiet" href="${DASHBOARD_PATH}">Open the dashboard</a>` : ''}${support}</p>
-${ctx.publicSite ? '' : html`<p class="note">Meowist runs on its own server for now; it can’t be added to other servers yet.</p>`}</div></section>
-<section class="features" aria-labelledby="features-title"><div class="wrap"><h2 id="features-title">What it does</h2>
-<ul class="feature-grid">${FEATURES.map((f) => html`<li class="feature"><h3>${f.title}</h3><p>${f.text}</p></li>`)}</ul></div></section>
-<section class="strip" aria-labelledby="access-title"><div class="wrap"><h2 id="access-title">Who can do what</h2>
-<p>Everyday commands (help, rank, leaderboard, fun, to-do lists, reports…) are open to every member. Anything that moderates, changes settings or affects other members needs the Administrator role, and is checked again each time it runs.</p></div></section>`,
-    });
-}
+export {
+    CSS_PATH, DASHBOARD_PATH, FAVICON_SVG, INSTALL_PERMISSIONS, NOINDEX, SECURITY_HEADERS, STYLESHEET, addButton,
+    installPermissionBits, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
+} from './shell.js';
+export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, GUIDES };
 
 const CATEGORY_LABEL = {
     Core: 'General', Community: 'Community', Leveling: 'Leveling', Fun: 'Fun', Birthday: 'Birthdays',
@@ -227,10 +98,10 @@ export function everyoneCommandGroups(commands) {
 export function commandsPage(ctx) {
     const groups = everyoneCommandGroups(ctx.commands);
     return layout(ctx, {
-        title: 'Commands', active: 'commands',
+        title: 'Commands', active: 'commands', path: '/commands',
         description: 'The Meowist commands every member can use.',
-        body: html`<div class="wrap page"><h1>Commands</h1>
-<p class="lead">The commands every member can use. Staff tools live on the dashboard and need the Administrator role.</p>
+        body: html`<div class="wrap page"><header class="page-head page-head-split"><div><p class="section-num">Reference</p><h1>Commands</h1></div>
+<p class="lead">The commands every member can use. Staff tools live on the dashboard and need the Administrator role.</p></header>
 ${groups.length > 1 ? html`<nav class="jump" aria-label="Command groups"><ul>${groups.map((g) => html`<li><a href="#c-${g.key}">${g.label}</a></li>`)}</ul></nav>` : ''}
 ${groups.map((g) => html`<section class="cmd-group" id="c-${g.key}" aria-labelledby="h-${g.key}"><h2 id="h-${g.key}">${g.label}</h2>
 <dl class="cmd-list">${g.items.map((c) => html`<div class="cmd"><dt><code>${c.slash ? `/${c.key}` : c.key}</code>${c.note ? html` <span class="tag">${c.note}</span>` : ''}</dt><dd>${c.description || ' '}</dd></div>`)}</dl></section>`)}</div>`,
@@ -239,9 +110,9 @@ ${groups.map((g) => html`<section class="cmd-group" id="c-${g.key}" aria-labelle
 
 export function aboutPage(ctx) {
     return layout(ctx, {
-        title: 'About', active: 'about',
+        title: 'About', active: 'about', path: '/about',
         description: 'About Meowist, the Discord bot of the Meowist server.',
-        body: html`<div class="wrap page prose"><h1>About Meowist</h1>
+        body: html`<div class="wrap page prose"><p class="section-num">About</p><h1>About Meowist</h1>
 <p class="lead">Meowist is the bot of the Meowist Discord server, built and run by its owner for that community.</p>
 <h2>How it started</h2>
 <p>Meowist began as a fork of TitanBot, an open-source (MIT) Discord bot, and has since been rebuilt around the server’s own needs: an enforcement system with case codes and appeals, a warning ladder, automod, tickets and modmail, and a web dashboard for the staff team.</p>
@@ -322,8 +193,8 @@ const formatNumber = (value) => (Number(value) || 0).toLocaleString('en-US');
 
 /** `board` is the reader's result (with one row too many when there is a next page), or null when the read failed. */
 export function leaderboardPage(ctx, { page, board }) {
-    const head = html`<h1>Leaderboard</h1>
-<p class="lead">The most active members of the Meowist server by level and total XP. You earn XP by chatting; members who delete their data with <code>/wipedata</code> are not listed.</p>`;
+    const head = html`<header class="page-head page-head-split"><div><p class="section-num">Leveling</p><h1>Leaderboard</h1></div>
+<p class="lead">The most active members of the Meowist server by level and total XP. You earn XP by chatting; members who delete their data with <code>/wipedata</code> are not listed.</p></header>`;
     let content;
     if (!board) {
         content = html`<p class="notice notice-bad" role="alert">The leaderboard could not be loaded right now. Nothing was changed; please try again in a minute.</p>`;
@@ -343,7 +214,7 @@ export function leaderboardPage(ctx, { page, board }) {
             : html`<p class="notice">${page > 1 ? 'There is nobody on this page.' : 'Nobody has earned XP yet.'}</p>${page > 1 ? html`<p><a class="button button-quiet" href="/leaderboard">Back to the first page</a></p>` : ''}`;
     }
     return layout(ctx, {
-        title: page > 1 ? `Leaderboard, page ${page}` : 'Leaderboard', active: 'leaderboard',
+        title: page > 1 ? `Leaderboard, page ${page}` : 'Leaderboard', active: 'leaderboard', path: page > 1 ? `/leaderboard?page=${page}` : '/leaderboard',
         description: 'The Meowist server leveling leaderboard.',
         body: html`<div class="wrap page">${head}${content}</div>`,
     });
@@ -383,9 +254,9 @@ export function statusPage(ctx, status) {
     const { label, text } = STATUS_TEXT[state];
     const uptime = state !== 'starting' && Number.isFinite(status?.uptimeMs) ? status.uptimeMs : null;
     return layout(ctx, {
-        title: 'Status', active: 'status', refresh: 60,
+        title: 'Status', active: 'status', refresh: 60, path: '/status',
         description: 'Whether the Meowist bot is online.',
-        body: html`<div class="wrap page"><h1>Status</h1>
+        body: html`<div class="wrap page prose"><p class="section-num">System</p><h1>Status</h1>
 <p class="status status-${state}"><span class="status-dot" aria-hidden="true"></span>${label}</p>
 <p class="lead">${text}</p>
 ${uptime !== null ? html`<p>Up for ${uptimeWords(uptime)}.</p>` : ''}
@@ -405,9 +276,9 @@ const contactLine = (ctx) => (ctx.supportInvite
 // verificationGuard.js, wipedataButtons.js, dashboard/security.js, utils/logger.js); nothing invented.
 export function privacyPage(ctx) {
     return layout(ctx, {
-        title: 'Privacy', active: 'privacy',
+        title: 'Privacy', active: 'privacy', path: '/privacy',
         description: 'What the Meowist bot stores about you and why.',
-        body: html`<div class="wrap page prose"><h1>Privacy</h1>
+        body: html`<div class="wrap page prose"><p class="section-num">Legal</p><h1>Privacy</h1>
 ${updatedLine()}
 <p class="lead">What Meowist stores, why, and how to have it removed. Meowist is run by its owner for the Meowist Discord server. Your data is never sold or used for advertising.</p>
 <h2>In short</h2>
@@ -445,9 +316,9 @@ ${updatedLine()}
 
 export function termsPage(ctx) {
     return layout(ctx, {
-        title: 'Terms', active: 'terms',
+        title: 'Terms', active: 'terms', path: '/terms',
         description: 'The rules for using the Meowist bot.',
-        body: html`<div class="wrap page prose"><h1>Terms</h1>
+        body: html`<div class="wrap page prose"><p class="section-num">Legal</p><h1>Terms</h1>
 ${updatedLine()}
 <p class="lead">The short rules for using Meowist. By using the bot you accept them.</p>
 <h2>Using the bot</h2>
@@ -472,8 +343,23 @@ ${updatedLine()}
 export function notFoundPage(ctx) {
     return layout(ctx, {
         title: 'Not found',
-        body: html`<div class="wrap page"><h1>Page not found</h1><p class="lead">There is no such page.</p><p><a class="button" href="/">Go to the home page</a></p></div>`,
+        body: html`<div class="wrap page prose"><p class="section-num">Error 404</p><h1>Page not found</h1><p class="lead">There is no page at this address. It may have moved, or the link has a typo.</p>
+<p class="hero-actions"><a class="button" href="/">Go to the home page</a><a class="button button-quiet" href="/docs">Read the docs</a></p></div>`,
     });
+}
+
+// ── Sitemap ───────────────────────────────────────────────────────────────
+
+/** The public pages, for /sitemap.xml. */
+export const SITEMAP_PATHS = [
+    '/', '/features', '/pricing', '/docs', ...GUIDES.map((g) => `/docs/${g.slug}`), '/faq',
+    '/commands', '/leaderboard', '/about', '/status', '/privacy', '/terms',
+];
+
+export function sitemapXml(origin) {
+    const escape = (text) => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const urls = SITEMAP_PATHS.map((path) => `  <url><loc>${escape(`${origin}${path}`)}</loc></url>`).join('\n');
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 
 // ── Router ────────────────────────────────────────────────────────────────
@@ -496,6 +382,7 @@ export function createSite({
         memberPortal: Boolean(memberPortalEnabled),
         installUrl: installUrl(env.CLIENT_ID),
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
+        origin: siteOrigin(env),
     };
     const context = () => {
         let support = null;
@@ -513,6 +400,15 @@ export function createSite({
         res.status(200).type('html').send(render(context()));
     };
     router.get('/', page(homePage));
+    router.get('/features', page(featuresPage));
+    router.get('/pricing', page(pricingPage));
+    router.get('/faq', page(faqPage));
+    router.get('/docs', page(docsPage));
+    router.get('/docs/:slug', (req, res, next) => {
+        const guide = GUIDES.find((g) => g.slug === req.params.slug);
+        if (!guide) return next();
+        return page((ctx) => guidePage(ctx, guide))(req, res);
+    });
     router.get('/commands', page(commandsPage));
     router.get('/about', page(aboutPage));
     router.get('/privacy', page(privacyPage));
@@ -537,8 +433,21 @@ export function createSite({
     });
     router.get('/robots.txt', (req, res) => {
         res.set('Cache-Control', 'no-cache');
-        res.type('text/plain').send(publicSite ? 'User-agent: *\nDisallow: /dashboard\nDisallow: /oauth\n' : 'User-agent: *\nDisallow: /\n');
+        const sitemap = publicSite && base.origin ? `Sitemap: ${base.origin}/sitemap.xml\n` : '';
+        res.type('text/plain').send(publicSite ? `User-agent: *\nDisallow: /dashboard\nDisallow: /oauth\nDisallow: /me\n${sitemap}` : 'User-agent: *\nDisallow: /\n');
     });
+    // Only when the site is public and its origin is known: a sitemap needs absolute URLs.
+    if (publicSite && base.origin) {
+        router.get('/sitemap.xml', (req, res) => {
+            res.set('Cache-Control', 'public, max-age=3600');
+            res.type('application/xml').send(sitemapXml(base.origin));
+        });
+    }
+    // The site's images: dashboard screenshots and the share image. Missing files fall through to the 404 page.
+    router.use('/img', express.static(fileURLToPath(new URL('./static/img/', import.meta.url)), {
+        index: false, dotfiles: 'ignore', redirect: false, fallthrough: true,
+        setHeaders: (res) => res.set('Cache-Control', 'public, max-age=604800'),
+    }));
     router.get('/favicon.svg', (req, res) => {
         res.set('Cache-Control', 'public, max-age=86400');
         res.status(200).type('image/svg+xml').send(FAVICON_SVG);
