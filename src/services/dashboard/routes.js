@@ -26,10 +26,10 @@
 //                                   Welcome & goodbye images); login first, then the 8 MB body,
 //                                   then the same checks as every settings form
 //   POST /dashboard/logout          CSRF token + same-origin check, then back to the website (/)
-//   /dashboard/owner/…              the Owner area (ownerRoutes.js): bot profile, servers, blacklist,
-//                                   health + maintenance, announce. OWNER_IDS only (checked live on
-//                                   every request; anyone else gets 404), POSTs also need a login
-//                                   younger than 12 h.
+//   /dashboard/owner/…              the Owner area (ownerRoutes.js): bot profile, servers, users,
+//                                   blacklist, health + maintenance, command sync, announce.
+//                                   OWNER_IDS only (checked live on every request; anyone else
+//                                   gets 404), POSTs also need a login younger than 12 h.
 //   /staff, /staff/*                → 301 /dashboard (the old read-only staff dashboard)
 //
 // Access: CURRENT Administrators of the main server (canAct), OWNER_IDS (view and
@@ -876,6 +876,8 @@ export function dashboardRouter(d) {
     router.post('/owner/blacklist/add', ...owner, form, safe(ow.blacklistAdd));
     router.post('/owner/blacklist/remove', ...owner, form, safe(ow.blacklistRemove));
     router.post('/owner/health/maintenance', ...owner, form, safe(ow.maintenance));
+    router.post('/owner/commands/register/preview', ...owner, form, safe(ow.registerPreview));
+    router.post('/owner/commands/register', ...owner, form, safe(ow.register));
     router.post('/owner/announce/preview', ...owner, form, safe(ow.announcePreview));
     router.post('/owner/announce/send', ...owner, form, safe(ow.announceSend));
     router.get('/owner', ...owner, ow.index);
@@ -884,8 +886,10 @@ export function dashboardRouter(d) {
     router.get('/owner/profile', ...owner, safe(ow.profile));
     router.get('/owner/servers', ...owner, safe(ow.servers));
     router.get('/owner/servers/:id', ...owner, safe(ow.server));
+    router.get('/owner/users', ...owner, safe(ow.users));
     router.get('/owner/blacklist', ...owner, safe(ow.blacklist));
     router.get('/owner/health', ...owner, safe(ow.health));
+    router.get('/owner/commands', ...owner, safe(ow.commands));
     router.get('/owner/announce', ...owner, safe(ow.announce));
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
     // urlencoded skips multipart bodies, so an upload is read only after the login check.

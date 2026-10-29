@@ -16,10 +16,11 @@ const { createAccessChecker } = await import('../src/services/dashboard/access.j
 const { SESSION_COOKIE, signValue } = await import('../src/services/dashboard/security.js');
 const { layout, JS_PATH } = await import('../src/services/dashboard/html.js');
 const {
-    announcePayload, canLeaveGuild, fetchImageFromUrl, inviteOptions, isSessionFresh, OWNER_SESSION_MAX_AGE_MS,
+    accountCreatedAt, announcePayload, commandCounts, commandDiff, missingPermissions, rolesAboveBot, canLeaveGuild, canOfferUserBlacklist, fetchImageFromUrl, userBlacklistState, inviteOptions, isSessionFresh, OWNER_SESSION_MAX_AGE_MS,
     serverTagsFor, serverTotals, sortServers,
 } = await import('../src/services/dashboard/ownerRoutes.js');
 const { ownerActionText } = await import('../src/services/dashboard/ownerPages.js');
+const { INSTALL_PERMISSIONS } = await import('../src/services/site/site.js');
 const { BLACKLIST_MESSAGE, blacklistHit, setBlacklistCache } = await import('../src/services/owner/blacklistCache.js');
 const { blacklistProblem } = await import('../src/services/owner/blacklistService.js');
 const { parsePresence, presenceData } = await import('../src/services/owner/botStateService.js');
@@ -88,6 +89,11 @@ function fakeRes() {
 async function setup({
     env = ENV, userId = OWNER, owners = new Set([OWNER]), admins = new Set([ADMIN]), createdAt = Date.now(), guildOpts = {},
     blacklistActive = [], auditList = async () => ({ rows: [], total: 0 }), recentLogLines = [],
+    moderationRecord = async () => ({ ladder: { level: 0, warns_since_level: 0 }, caseCount: 0, activeBan: null, activeMute: null }),
+    blacklistList = null, managedRoles = async () => [],
+    expectedCommands = async () => [{ name: 'help' }, { name: 'rank' }, { name: 'Moderate', type: 2 }],
+    registeredCommands = async () => [{ name: 'help', type: 1 }, { name: 'rank', type: 1 }, { name: 'Moderate', type: 2 }],
+    registerMainCommands = async () => ({ guildId: '100000000000000001', count: 3 }), retired = false,
 } = {}) {
     const guilds = new Map([
         [MAIN, makeGuild(MAIN, { name: 'Main', ownerId: '999999999999999990' })],
@@ -106,7 +112,7 @@ async function setup({
     const owner = {
         isBotOwner: (id) => owners.has(id),
         blacklist: {
-            list: rec('list', async () => ({ active: blacklistActive, removed: [] })),
+            list: rec('list', blacklistList || (async () => ({ active: blacklistActive, removed: [] }))),
             add: rec('add', async (entry) => ({ id: 1, kind: entry.kind, target_id: entry.targetId, reason: entry.reason })),
             remove: rec('remove', async () => null),
         },
@@ -119,6 +125,12 @@ async function setup({
         protectedGuildIds: [MAIN, SUPPORT],
         dbStatus: () => ({ connectionType: 'postgresql', isDegraded: false }),
         recentLogs: () => recentLogLines,
+        moderationRecord: rec('moderationRecord', moderationRecord),
+        managedRoles,
+        expectedCommands: rec('expectedCommands', expectedCommands),
+        registeredCommands: rec('registeredCommands', registeredCommands),
+        registerMainCommands: rec('registerMainCommands', registerMainCommands),
+        commandsRetired: () => retired,
     };
     const sessions = createMemorySessionStore({ ttlMs: 48 * 3600 * 1000 });
     const access = createAccessChecker(client, { facts: async (c, id) => ({ inGuild: true, isAdmin: admins.has(id), isOwnerId: owners.has(id) }) });
@@ -162,8 +174,8 @@ const tokenOf = (body) => ({ token: body.match(/name="token" value="([^"]+)"/)?.
 
 test('owner area: a non-owner (even an Administrator) gets the normal 404 page; an owner gets the page', async () => {
     const admin = await setup({ userId: ADMIN });
-    for (const handler of ['home', 'activity', 'profile', 'servers', 'blacklist', 'health', 'announce']) {
-        const res = await get(admin, admin.ow[handler]);
+    for (const handler of ['home', 'activity', 'profile', 'servers', 'users', 'blacklist', 'health', 'commands', 'announce']) {
+        const res = await get(admin, admin.ow[handler], { query: { q: OWNER } });
         assert.equal(res.statusCode, 404, handler);
         assert.match(res.body, /Not found/);
     }
@@ -172,8 +184,8 @@ test('owner area: a non-owner (even an Administrator) gets the normal 404 page; 
     assert.equal(admin.calls.length, 0);
 
     const owner = await setup();
-    for (const handler of ['home', 'activity', 'profile', 'servers', 'blacklist', 'health', 'announce']) {
-        const page = await get(owner, owner.ow[handler]);
+    for (const handler of ['home', 'activity', 'profile', 'servers', 'users', 'blacklist', 'health', 'commands', 'announce']) {
+        const page = await get(owner, owner.ow[handler], handler === 'users' ? { query: { q: '300000000000000009' } } : {});
         assert.equal(page.statusCode, 200, handler);
         assert.ok(!/<style|style=|<script/i.test(page.body.replace(ALLOWED_SCRIPT, '')), `${handler}: no inline styles or scripts`);
     }
@@ -198,6 +210,7 @@ test('sidebar: the Owner group is shown only to owners', () => {
     const owner = layout({ title: 'x', session: { ...base, isOwner: true }, body: '' });
     const other = layout({ title: 'x', session: { ...base, isOwner: false }, body: '' });
     assert.ok(owner.includes('href="/dashboard/owner/servers"'));
+    assert.ok(owner.includes('href="/dashboard/owner/users"'));
     assert.ok(owner.includes('>Owner</p>'));
     assert.ok(!other.includes('/dashboard/owner/'));
 });
@@ -554,6 +567,7 @@ test('owner action text: every audit key the owner area writes reads as words', 
     const names = new Map([['100000000000000077', 'Other']]);
     assert.equal(ownerActionText('maintenance'), 'Maintenance mode');
     assert.equal(ownerActionText('announce'), 'Announcement to every server');
+    assert.equal(ownerActionText('commands.register'), 'Commands re-registered in the main server');
     assert.equal(ownerActionText('profile.presence'), 'Bot profile: status');
     assert.equal(ownerActionText('servers.100000000000000077.invite', names), 'Invite created in Other');
     assert.equal(ownerActionText('servers.100000000000000099.leave', names), 'Left 100000000000000099');
@@ -574,4 +588,204 @@ test('health: recent warnings and errors are listed (escaped); none → a plain 
     assert.ok(res.body.includes('(2, 1 error)'));
     const empty = await setup();
     assert.ok((await get(empty, empty.ow.health)).body.includes('No warnings or errors since the last restart.'));
+});
+
+// ── user lookup ───────────────────────────────────────────────────────────
+
+test('user lookup rules: account date from the ID, blacklist state (unknown is never "clear"), no link for owners', () => {
+    assert.equal(accountCreatedAt('175928847299117063').toISOString(), '2016-04-30T11:18:25.796Z');
+    assert.equal(accountCreatedAt('abc'), null);
+    assert.deepEqual(userBlacklistState(null, '1'), { state: 'unknown', entry: null });
+    const entry = { kind: 'user', target_id: '300000000000000009', reason: 'spam' };
+    assert.deepEqual(userBlacklistState([entry, { kind: 'guild', target_id: '300000000000000010' }], '300000000000000009'), { state: 'listed', entry });
+    assert.deepEqual(userBlacklistState([{ kind: 'guild', target_id: '300000000000000009' }], '300000000000000009'), { state: 'clear', entry: null }, 'a server entry with the same id is not the user');
+    assert.equal(canOfferUserBlacklist({ state: 'clear', isOwner: false }), true);
+    assert.equal(canOfferUserBlacklist({ state: 'clear', isOwner: true }), false);
+    assert.equal(canOfferUserBlacklist({ state: 'unknown', isOwner: false }), false);
+    assert.equal(canOfferUserBlacklist({ state: 'listed', isOwner: false }), false);
+});
+
+test('user lookup: account, shared servers (cache + main/support fetch only), blacklist link, record with links', async () => {
+    const USER = '300000000000000009';
+    const h = await setup({
+        moderationRecord: async () => ({
+            ladder: { level: 1, warns_since_level: 0 }, caseCount: 4,
+            activeBan: null, activeMute: { case_code: 'mute7k', expires_at: new Date('2026-11-01T00:00:00Z') },
+        }),
+    });
+    const fetched = [];
+    for (const g of h.guilds.values()) {
+        g.members.fetch = async (arg) => { fetched.push(g.id); return g.id === MAIN ? { id: arg.user, nickname: 'Kitty', joinedTimestamp: Date.parse('2025-01-01T00:00:00Z') } : null; };
+    }
+    h.guilds.get(OTHER_GUILD).members.cache.set(USER, { id: USER, nickname: null, joinedTimestamp: Date.parse('2025-06-01T00:00:00Z') });
+    const res = await get(h, h.ow.users, { query: { q: USER } });
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(fetched.sort(), [MAIN, SUPPORT].sort(), 'only the main and the support server are fetched');
+    assert.ok(res.body.includes('user09'), 'username');
+    assert.ok(res.body.includes('Shared servers (2)'));
+    assert.ok(res.body.includes('Kitty'));
+    assert.ok(res.body.includes(`href="/dashboard/owner/servers/${OTHER_GUILD}"`));
+    assert.ok(res.body.includes('member cache'), 'the limit is explained');
+    assert.ok(res.body.includes(`href="/dashboard/owner/blacklist?kind=user&amp;id=${USER}"`), 'pre-fill link');
+    assert.ok(res.body.includes('Level 1 · counted warns 0 (next warn bans)'));
+    assert.ok(res.body.includes(`href="/dashboard/cases?member=${USER}"`));
+    assert.ok(res.body.includes('href="/dashboard/cases/mute7k"'));
+    assert.ok(res.body.includes(`href="/dashboard/users/${USER}"`));
+    assert.deepEqual(h.calls.find((c) => c.name === 'moderationRecord').args, [MAIN, USER], 'the main server record');
+    assert.ok(!/<style|style=|<script/i.test(res.body.replace(ALLOWED_SCRIPT, '')));
+
+    const own = await get(h, h.ow.users, { query: { q: OWNER } });
+    assert.ok(own.body.includes('Yes (OWNER_IDS)'));
+    assert.ok(!own.body.includes('/owner/blacklist?'), 'owners cannot be blacklisted: no link');
+
+    const listed = await setup({ blacklistActive: [{ id: 1, kind: 'user', target_id: USER, reason: 'raids' }] });
+    const lb = (await get(listed, listed.ow.users, { query: { q: USER } })).body;
+    assert.ok(lb.includes('Blacklisted</span> raids'));
+    assert.ok(!lb.includes('/owner/blacklist?'));
+});
+
+test('user lookup: bad or unknown IDs, and database errors are shown as errors (never as a clean record)', async () => {
+    const h = await setup();
+    const empty = await get(h, h.ow.users);
+    assert.equal(empty.statusCode, 200);
+    assert.ok(!h.calls.some((c) => c.name === 'moderationRecord'), 'no lookup without a query');
+    const bad = await get(h, h.ow.users, { query: { q: '"><b>x' } });
+    assert.equal(bad.statusCode, 400);
+    assert.ok(!bad.body.includes('<b>x'));
+    h.client.users.fetch = async () => { throw new Error('Unknown User'); };
+    assert.equal((await get(h, h.ow.users, { query: { q: '300000000000000009' } })).statusCode, 404);
+
+    const broken = await setup({
+        moderationRecord: async () => { throw new Error('db down'); },
+        blacklistList: async () => { throw new Error('db down'); },
+    });
+    const res = await get(broken, broken.ow.users, { query: { q: '300000000000000009' } });
+    assert.equal(res.statusCode, 200);
+    assert.ok(res.body.includes('moderation record could not be loaded'));
+    assert.ok(res.body.includes('blacklist could not be read'));
+    assert.ok(!res.body.includes('Not blacklisted') && !res.body.includes('<dt>Active ban</dt>'), 'an error is not shown as "clean"');
+    assert.ok(!res.body.includes('/owner/blacklist?'));
+});
+
+// ── server permission check ───────────────────────────────────────────────
+
+test('permission check rules: missing permissions in plain words, Administrator covers all, roles above the bot', () => {
+    assert.deepEqual(missingPermissions(INSTALL_PERMISSIONS), []);
+    assert.deepEqual(missingPermissions(['Administrator']), []);
+    const missing = missingPermissions(INSTALL_PERMISSIONS.filter((p) => !['BanMembers', 'ManageRoles'].includes(p)));
+    assert.deepEqual(missing.map((m) => `${m.label} — ${m.why}`), [
+        'Manage Roles — needed for the Muted role and giving or removing roles', 'Ban Members — needed for bans',
+    ], 'INSTALL_PERMISSIONS order');
+    assert.equal(missingPermissions([]).length, INSTALL_PERMISSIONS.length);
+    assert.ok(missingPermissions([]).every((m) => m.label !== m.name || m.name === 'Connect'), 'every permission has a plain name');
+    assert.equal(missingPermissions(null, ['Speak'])[0].why, 'needed by the bot', 'unknown names still listed');
+
+    const top = { name: 'Meowist', position: 5 };
+    const roles = [
+        { id: 'a', name: 'Muted', position: 7, why: 'the Muted role (mutes)' }, { id: 'a', name: 'Muted', position: 7, why: 'dup' },
+        { id: 'b', name: 'Warning 1', position: 5, why: 'a warning role' }, { id: 'c', name: 'Low', position: 2, why: 'x' },
+    ];
+    assert.deepEqual(rolesAboveBot(top, roles).map((r) => r.name), ['Muted', 'Warning 1'], 'at or above, each role once');
+    assert.deepEqual(rolesAboveBot(null, roles), []);
+});
+
+test('server page: lists missing permissions and roles above the bot; a full set says so', async () => {
+    const h = await setup({ managedRoles: async () => [{ id: 'm', name: 'Muted', position: 9, why: 'the Muted role (mutes)' }] });
+    const me = h.guilds.get(OTHER_GUILD).members.me;
+    me.roles = { highest: { name: 'Meowist', position: 3 } };
+    const res = await get(h, h.ow.server, { params: { id: OTHER_GUILD } });
+    assert.equal(res.statusCode, 200);
+    assert.ok(res.body.includes('Permission check'));
+    assert.ok(res.body.includes('<b>Ban Members</b> <span class="muted">— needed for bans</span>'));
+    assert.ok(!res.body.includes('<b>Send Messages</b>'), 'granted permissions are not listed as missing');
+    assert.match(res.body, /at or above the bot's highest role \(Meowist\)/);
+    assert.ok(res.body.includes('<b>Muted</b> <span class="muted">— the Muted role (mutes)</span>'));
+    assert.ok(!/<style|style=|<script/i.test(res.body.replace(ALLOWED_SCRIPT, '')));
+
+    const full = await setup({ managedRoles: async () => { throw new Error('db down'); } });
+    const fme = full.guilds.get(OTHER_GUILD).members.me;
+    fme.permissions = { toArray: () => [...INSTALL_PERMISSIONS] };
+    fme.roles = { highest: { name: 'Meowist', position: 3 } };
+    const ok = await get(full, full.ow.server, { params: { id: OTHER_GUILD } });
+    assert.equal(ok.statusCode, 200, 'an unreadable role list does not break the page');
+    assert.ok(ok.body.includes('The bot has every permission it asks for when added.'));
+    assert.ok(ok.body.includes('No known role the bot manages'));
+});
+
+// ── command sync ──────────────────────────────────────────────────────────
+
+test('command sync rules: counts and mismatches by name and type', () => {
+    assert.deepEqual(commandCounts([{ name: 'a' }, { name: 'b', type: 1 }, { name: 'M', type: 3 }]), { slash: 2, menus: 1 });
+    const same = commandDiff([{ name: 'help' }, { name: 'Moderate', type: 2 }], [{ name: 'Moderate', type: 2 }, { name: 'help', type: 1 }]);
+    assert.deepEqual(same, { missing: [], extra: [], inSync: true }, 'type 1 is the default');
+    const diff = commandDiff(
+        [{ name: 'rank' }, { name: 'help' }, { name: 'Moderate', type: 2 }],
+        [{ name: 'help', type: 1 }, { name: 'Moderate', type: 1 }, { name: 'purge', type: 1 }],
+    );
+    assert.deepEqual(diff.missing, [{ name: 'Moderate', type: 'User menu' }, { name: 'rank', type: 'Slash command' }]);
+    assert.deepEqual(diff.extra, [{ name: 'Moderate', type: 'Slash command' }, { name: 'purge', type: 'Slash command' }]);
+    assert.equal(diff.inSync, false);
+});
+
+test('command sync page: counts, mismatches by name, errors never shown as "in sync"', async () => {
+    const h = await setup({ registeredCommands: async () => [{ name: 'help', type: 1 }, { name: 'purge', type: 1 }] });
+    h.client.commands = new Map([['help', {}], ['rank', {}], ['purge', {}], ['Moderate', {}]]);
+    const res = await get(h, h.ow.commands);
+    assert.equal(res.statusCode, 200);
+    assert.ok(res.body.includes('4 command files'), 'loaded count');
+    assert.ok(res.body.includes('2 slash commands + 1 context menu'), 'what startup registers');
+    assert.ok(res.body.includes('2 slash commands + 0 context menus'), 'what Discord has');
+    assert.ok(res.body.includes('Missing on Discord (2)') && res.body.includes('<b>rank</b>') && res.body.includes('<b>Moderate</b>'));
+    assert.match(res.body, /not in the bot(&#39;|&#x27;|')s list \(1\)/);
+    assert.deepEqual(h.calls.find((c) => c.name === 'registeredCommands').args[1], MAIN, 'the main server is read');
+    assert.ok(!h.calls.some((c) => c.name === 'registerMainCommands'), 'a GET never registers');
+
+    const synced = await setup({ retired: true });
+    const ok = (await get(synced, synced.ow.commands)).body;
+    assert.ok(ok.includes('In sync'));
+    assert.ok(ok.includes('RETIRE_ADMIN_COMMANDS is on'));
+
+    const broken = await setup({ registeredCommands: async () => { throw new Error('Missing Access'); } });
+    const err = (await get(broken, broken.ow.commands)).body;
+    assert.ok(err.includes('list could not be read: Missing Access'));
+    assert.ok(!err.includes('In sync') && !err.includes('Out of sync'));
+});
+
+test('command re-register: owner POST checks, token + tick-box, the injected registration runs once and is audited', async () => {
+    const admin = await setup({ userId: ADMIN });
+    assert.equal((await post(admin, admin.ow.registerPreview)).statusCode, 404);
+    assert.equal((await post(admin, admin.ow.register, { form: { token: 'x', fh: 'y', confirm: '1' } })).statusCode, 404);
+    const stale = await setup({ createdAt: Date.now() - OWNER_SESSION_MAX_AGE_MS - 60000 });
+    assert.equal((await post(stale, stale.ow.registerPreview)).statusCode, 401);
+    const off = await setup({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } });
+    assert.equal((await post(off, off.ow.registerPreview)).statusCode, 403);
+
+    const h = await setup();
+    assert.equal((await post(h, h.ow.registerPreview, { csrf: 'wrong' })).statusCode, 403, 'CSRF');
+    assert.equal((await post(h, h.ow.registerPreview, { origin: 'https://evil.example' })).statusCode, 403, 'Origin');
+    const preview = await post(h, h.ow.registerPreview);
+    assert.equal(preview.statusCode, 200);
+    assert.ok(preview.body.includes('Confirm: re-register commands in the main server'));
+    assert.ok(!/<style|style=|<script/i.test(preview.body.replace(ALLOWED_SCRIPT, '')));
+    const { token, fh } = tokenOf(preview.body);
+    const noTick = await post(h, h.ow.register, { form: { token, fh } });
+    assert.equal(noTick.statusCode, 400);
+    assert.ok(!h.calls.some((c) => c.name === 'registerMainCommands'), 'nothing registered without the tick-box');
+
+    const again = tokenOf((await post(h, h.ow.registerPreview)).body);
+    const done = await post(h, h.ow.register, { form: { ...again, confirm: '1' } });
+    assert.equal(done.statusCode, 303);
+    assert.equal(done.redirectedTo, '/dashboard/owner/commands');
+    assert.equal(h.calls.filter((c) => c.name === 'registerMainCommands').length, 1);
+    assert.deepEqual(h.auditRows.map((r) => [r.module, r.key, r.old, r.new]), [['owner', 'commands.register', { count: 3 }, { count: 3, retired: false }]]);
+    const reused = await post(h, h.ow.register, { form: { ...again, confirm: '1' } });
+    assert.equal(reused.statusCode, 400, 'a token works once');
+    assert.equal(h.calls.filter((c) => c.name === 'registerMainCommands').length, 1);
+
+    const failing = await setup({ registerMainCommands: async () => { throw new Error('Missing Access'); } });
+    const t = tokenOf((await post(failing, failing.ow.registerPreview)).body);
+    const failed = await post(failing, failing.ow.register, { form: { ...t, confirm: '1' } });
+    assert.equal(failed.statusCode, 400);
+    assert.match(failed.body, /Registration failed; the main server(&#39;|&#x27;|')s list was not changed: Missing Access/);
+    assert.equal(failing.auditRows.length, 0, 'a failed registration is not audited as done');
 });

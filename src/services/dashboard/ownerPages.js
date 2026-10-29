@@ -1,6 +1,7 @@
 // ownerPages.js — the Owner area pages (bot owners only): overview, bot profile, servers,
-// server detail, leave confirm, blacklist, health and maintenance, announce (compose,
-// confirm, result), activity (the owner audit rows). Pure: data in, HTML out, everything escaped by the `html` template. No inline
+// server detail, leave confirm, user lookup, blacklist, health and maintenance, command sync
+// (compare + re-register confirm), announce (compose, confirm, result), activity (the owner
+// audit rows). Pure: data in, HTML out, everything escaped by the `html` template. No inline
 // styles or scripts (CSP).
 
 import { formatDate, html, layout, path, queryString, timeTag } from './html.js';
@@ -9,6 +10,7 @@ import { auditValue, isAllowedImageUrl } from './pages.js';
 import { kpi, tile } from './overview.js';
 import { ACTIVITY_TEXT_MAX, STATUSES } from '../owner/botStateService.js';
 import { BLACKLIST_REASON_MAX } from '../owner/blacklistService.js';
+import { countedWarnsText } from '../enforcement/flowBuilder.js';
 
 export const USERNAME_MAX = 32;
 export const ABOUT_MAX = 400;
@@ -29,6 +31,7 @@ ${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is
 const opt = (value, label, current) => html`<option value="${value}"${value === current ? html` selected` : ''}>${label}</option>`;
 const img = (url, alt, size, className = 'avatar-sm') => (url && isAllowedImageUrl(url)
     ? html`<img class="${className}" src="${url}" alt="${alt}" width="${size}" height="${size}" loading="lazy" referrerpolicy="no-referrer">` : '');
+const stateWord = (tone, label) => html`<span class="state-word is-${tone}"><span class="dot dot-${tone}" aria-hidden="true"></span>${label}</span>`;
 
 // ── Bot profile ───────────────────────────────────────────────────────────
 
@@ -93,8 +96,9 @@ ${rows.length < total ? html`<p class="muted">Showing ${rows.length} of ${total}
 
 /**
  * detail: { id, name, iconUrl, ownerId, ownerName, memberCount, joinedAt, channels: [{ name,
- * type, category }], roles: [{ name, color, members }], permissions: [string], vanityUrl,
- * canCreateInvite, canLeave, membersCached }.
+ * type, category }], roles: [{ name, color, members }], permissions: [string], missing: [{ label, why }],
+ * botTop: { name, position } | null, rolesAbove: [{ name, why }], vanityUrl, canCreateInvite, canLeave,
+ * membersCached }.
  */
 export function serverPage({ session, access = null, moduleStates = {}, detail, flash = null, error = null, editEnabled = true }) {
     const csrf = session.csrf;
@@ -117,6 +121,14 @@ ${notices({ flash, error, editEnabled })}
             : html`<span class="muted">The main and the support server cannot be blacklisted.</span>`}</dd>
 </dl></section>
 ${inviteBits.length ? html`<section class="card"><h2>Invite</h2>${inviteBits}</section>` : ''}
+<section class="card"><h2>Permission check</h2>${detail.missing?.length
+        ? html`<p class="error" role="alert">The bot is missing ${detail.missing.length} permission${detail.missing.length === 1 ? '' : 's'} it asks for when added; those features fail here.</p>
+<ul class="skip-list">${detail.missing.map((m) => html`<li><b>${m.label}</b> <span class="muted">— ${m.why}</span></li>`)}</ul>`
+        : html`<p>${stateWord('on', 'The bot has every permission it asks for when added.')}</p>`}
+${detail.rolesAbove?.length
+        ? html`<p class="error" role="alert">These roles are at or above the bot's highest role${detail.botTop ? html` (${detail.botTop.name})` : ''}, so the bot cannot give or remove them. Move the bot's role above them in Server Settings → Roles.</p>
+<ul class="skip-list">${detail.rolesAbove.map((r) => html`<li><b>${r.name}</b> <span class="muted">— ${r.why}</span></li>`)}</ul>`
+        : detail.botTop ? html`<p class="muted">No known role the bot manages (Muted, warning or Banned role) is above its highest role (${detail.botTop.name}).</p>` : ''}</section>
 <section class="card"><h2>Bot permissions here</h2>${detail.permissions.length ? html`<ul class="name-list">${detail.permissions.map((p) => html`<li>${p}</li>`)}</ul>` : html`<p class="empty">None.</p>`}</section>
 <section class="card"><h2>Channels (${detail.channels.length})</h2>${detail.channels.length ? html`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Category</th></tr></thead><tbody>
 ${detail.channels.map((c) => html`<tr><td>${c.name}</td><td>${c.type}</td><td>${c.category || html`<span class="muted">—</span>`}</td></tr>`)}</tbody></table></div>` : html`<p class="empty">No channels visible.</p>`}</section>
@@ -137,6 +149,58 @@ export function leaveConfirmPage({ session, access = null, moduleStates = {}, gu
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
 ${actionForm(session.csrf, `/owner/servers/${guild.id}/leave`, html`<label class="check"><input type="checkbox" name="confirm" value="1" required> I want the bot to leave ${guild.name}</label>`, { submit: 'Leave server', hidden: { token, fh: hash }, danger: true })}</section>`;
     return shell({ title: `Leave ${guild.name}`, active: 'owner/servers', session, access, moduleStates, body });
+}
+
+// ── User lookup ───────────────────────────────────────────────────────────
+
+/** The main-server record: ladder, cases, active ban / mute, with links to the existing pages. */
+function recordSection(r) {
+    const caseLink = (c) => html`<a href="${path(`/cases/${c.case_code}`)}"><code>${c.case_code}</code></a>${c.expires_at ? html` · ends ${formatDate(c.expires_at)}` : html` · no end date`}`;
+    const body = r.recordError
+        ? html`<p class="error" role="alert">${r.recordError}</p>`
+        : html`<dl>
+<dt>Warn ladder</dt><dd>Level ${r.record.ladder?.level ?? 0} · counted warns ${countedWarnsText(r.record.ladder || { level: 0, warns_since_level: 0 })}</dd>
+<dt>Cases</dt><dd>${r.record.caseCount ?? 0}${r.record.caseCount ? html` · <a href="${path(`/cases${queryString({ member: r.id })}`)}">All cases</a>` : ''}</dd>
+<dt>Active ban</dt><dd>${r.record.activeBan ? html`${stateWord('bad', 'Banned')} ${caseLink(r.record.activeBan)}` : 'None'}</dd>
+<dt>Active mute</dt><dd>${r.record.activeMute ? html`${stateWord('warn', 'Muted')} ${caseLink(r.record.activeMute)}` : 'None'}</dd>
+</dl>`;
+    return html`<section class="card"><h2>Main server record</h2>${body}
+<p><a href="${path(`/users/${r.id}`)}">Open the member page</a> <span class="muted">(Members area; actions there need Administrator in the main server)</span></p></section>`;
+}
+
+/**
+ * result: { id, username, globalName, bot, avatarUrl, createdAt, servers: [{ id, name, tags, joinedAt,
+ * nickname }], totalServers, blacklist: { state, entry }, isOwner, offerBlacklist, record, recordError }.
+ */
+export function userLookupPage({ session, access = null, moduleStates = {}, q = '', result = null, error = null }) {
+    const r = result;
+    const blacklistText = !r ? '' : r.blacklist.state === 'unknown'
+        ? html`<span class="error" role="alert">The blacklist could not be read (database). Reload to try again.</span>`
+        : r.blacklist.state === 'listed'
+            ? html`${stateWord('bad', 'Blacklisted')} ${r.blacklist.entry.reason} · <a href="${path('/owner/blacklist')}">Blacklist</a>`
+            : r.isOwner
+                ? html`Not blacklisted <span class="muted">(bot owners can never be blacklisted)</span>`
+                : html`Not blacklisted${r.offerBlacklist ? html` · <a href="${path(`/owner/blacklist${queryString({ kind: 'user', id: r.id })}`)}">Blacklist this user…</a> <span class="muted">(fills in the form; you add a reason there)</span>` : ''}`;
+    const servers = !r ? '' : html`<section class="card"><h2>Shared servers (${r.servers.length})</h2>${r.servers.length
+        ? html`<div class="table-wrap"><table><thead><tr><th>Server</th><th>Nickname</th><th>Joined</th></tr></thead><tbody>
+${r.servers.map((g) => html`<tr><td><a href="${path(`/owner/servers/${g.id}`)}"><b>${g.name}</b></a>${serverTags(g.tags)}<br><small class="muted">${g.id}</small></td><td>${g.nickname || html`<span class="muted">—</span>`}</td><td>${formatDate(g.joinedAt)}</td></tr>`)}
+</tbody></table></div>` : html`<p class="empty">No shared server found.</p>`}
+<p class="muted">The main and the support server are asked directly. Every other server is checked only in the bot's member cache, which is often incomplete, so the user may be in a server not listed here.</p></section>`;
+    const body = html`<header class="page-head"><h1>Users</h1><p class="muted">Look up one Discord user by ID: account, shared servers, blacklist and the main server's moderation record. Read-only.</p></header>
+<form class="filters" method="get" action="${path('/owner/users')}" role="search"><label class="wide-filter">User ID<input type="search" name="q" value="${q}" inputmode="numeric" maxlength="25" autocomplete="off" placeholder="Discord user ID"></label>
+<button class="primary" type="submit">Look up</button>${q ? html` <a href="${path('/owner/users')}">Clear</a>` : ''}</form>
+${error ? html`<p class="error" role="alert">${error}</p>` : ''}
+${r ? html`<section class="card"><h2>${r.globalName || r.username || r.id}</h2>${img(r.avatarUrl, '', 64)}<dl>
+<dt>Username</dt><dd>${r.username || '—'}${r.bot ? html` <span class="muted">(bot account)</span>` : ''}</dd>
+<dt>Display name</dt><dd>${r.globalName || html`<span class="muted">none</span>`}</dd>
+<dt>ID</dt><dd><code>${r.id}</code></dd>
+<dt>Account created</dt><dd>${formatDate(r.createdAt)}</dd>
+<dt>Bot owner</dt><dd>${r.isOwner ? stateWord('on', 'Yes (OWNER_IDS)') : 'No'}</dd>
+<dt>Blacklist</dt><dd>${blacklistText}</dd>
+</dl></section>
+${recordSection(r)}
+${servers}` : ''}`;
+    return shell({ title: 'Users', active: 'owner/users', session, access, moduleStates, body });
 }
 
 // ── Blacklist ─────────────────────────────────────────────────────────────
@@ -171,6 +235,7 @@ export function ownerActionText(key, names = new Map()) {
     let m;
     if (k === 'maintenance') return 'Maintenance mode';
     if (k === 'announce') return 'Announcement to every server';
+    if (k === 'commands.register') return 'Commands re-registered in the main server';
     if ((m = /^profile\.(username|about|presence|avatar|banner)$/.exec(k))) {
         return `Bot profile: ${{ username: 'username', about: 'about me', presence: 'status', avatar: 'avatar', banner: 'banner' }[m[1]]}`;
     }
@@ -226,7 +291,7 @@ ${page > 0 ? html`<a href="${path(`/owner/activity${queryString({ page: page - 1
 <span class="muted">Page ${page + 1} of ${pages} · ${total} action${total === 1 ? '' : 's'}</span>
 ${page + 1 < pages ? html`<a href="${path(`/owner/activity${queryString({ page: page + 1 })}`)}">Older →</a>` : ''}
 </div>`;
-    const body = html`<header class="page-head"><h1>Owner activity</h1><p class="muted">Everything done in the Owner area: profile changes, invites, leaving servers, blacklist, maintenance and announcements. Not shown in the server's audit log.</p></header>
+    const body = html`<header class="page-head"><h1>Owner activity</h1><p class="muted">Everything done in the Owner area: profile changes, invites, leaving servers, blacklist, maintenance, announcements and command re-registration. Not shown in the server's audit log.</p></header>
 ${rows === null ? html`<p class="error" role="alert">The activity could not be loaded (database). Reload the page to try again.</p>`
         : rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>What</th><th>Before</th><th>After</th></tr></thead><tbody>
 ${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${ownerActionText(r.key, names)}</td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
@@ -278,6 +343,54 @@ ${recentLogsSection(health.recentLogs)}
 ${actionForm(session.csrf, '/owner/health/maintenance', '', { submit: health.maintenance ? 'Turn maintenance off' : 'Turn maintenance on', hidden: { enabled: health.maintenance ? 'off' : 'on' }, danger: !health.maintenance, enabled: editEnabled })}
 <p class="muted">Kept after a restart.</p></section>`;
     return shell({ title: 'Health', active: 'owner/health', session, access, moduleStates, body });
+}
+
+// ── Command sync ──────────────────────────────────────────────────────────
+
+const countText = (c) => (c ? `${c.slash} slash command${c.slash === 1 ? '' : 's'} + ${c.menus} context menu${c.menus === 1 ? '' : 's'}` : '—');
+
+function diffList(title, rows, note) {
+    return rows.length ? html`<h3>${title} (${rows.length})</h3><p class="muted">${note}</p>
+<ul class="skip-list">${rows.map((c) => html`<li><b>${c.name}</b> <span class="muted">${c.type}</span></li>`)}</ul>` : '';
+}
+
+/**
+ * state: { mainId, mainName, loaded, retired, expected: { slash, menus } | null, registered: { slash,
+ * menus } | null, diff: { missing, extra, inSync } | null, expectedError, registeredError }.
+ */
+export function commandsPage({ session, access = null, moduleStates = {}, state, flash = null, error = null, editEnabled = true }) {
+    const s = state;
+    const comparison = s.diff
+        ? s.diff.inSync
+            ? html`<p>${stateWord('on', 'In sync: Discord has exactly the commands the bot registers.')}</p>`
+            : html`<p>${stateWord('warn', 'Out of sync')} <span class="muted">Re-register below to fix it.</span></p>
+${diffList('Missing on Discord', s.diff.missing, 'In the bot\'s list but not registered: members cannot use them.')}
+${diffList('On Discord but not in the bot\'s list', s.diff.extra, 'Left over from an older version or another registration; using them fails.')}`
+        : html`<p class="muted">No comparison: one side could not be read (see above).</p>`;
+    const body = html`<header class="page-head"><h1>Command sync</h1><p class="muted">The slash commands and context menus registered in the main server compared with the bot's list. Global and support-server commands are not shown or changed here.</p></header>
+${notices({ flash, error, editEnabled })}
+${s.expectedError ? html`<p class="error" role="alert">${s.expectedError}</p>` : ''}
+${s.registeredError ? html`<p class="error" role="alert">${s.registeredError}</p>` : ''}
+<section class="card"><h2>Main server${s.mainName ? html` · ${s.mainName}` : ''}</h2><dl>
+<dt>Loaded by the bot</dt><dd>${s.loaded} command file${s.loaded === 1 ? '' : 's'}</dd>
+<dt>Startup registers</dt><dd>${countText(s.expected)}${s.retired ? html` <span class="muted">(RETIRE_ADMIN_COMMANDS is on: everyone-commands and the owner kit only)</span>` : ''}</dd>
+<dt>On Discord now</dt><dd>${countText(s.registered)}</dd>
+</dl>${comparison}</section>
+<section class="card"><h2>Re-register</h2><p class="muted">Sends the bot's list to the main server again, with the same code the bot runs at startup (RETIRE_ADMIN_COMMANDS applied the same way). It replaces the main server's whole list; global and support-server commands are not touched. You confirm on the next page.</p>
+${s.mainId ? actionForm(session.csrf, '/owner/commands/register/preview', '', { submit: 'Re-register commands in the main server…', enabled: editEnabled && !s.expectedError }) : html`<p class="muted">MAIN_GUILD_ID is not set.</p>`}</section>`;
+    return shell({ title: 'Command sync', active: 'owner/commands', session, access, moduleStates, body });
+}
+
+export function registerConfirmPage({ session, access = null, moduleStates = {}, state, token, hash }) {
+    const body = html`<p><a href="${path('/owner/commands')}">← Back (cancel)</a></p>
+<h1>Confirm: re-register commands in the main server</h1>
+<section class="card confirm-card"><dl><dt>Server</dt><dd>${state.mainName || 'Main server'} <span class="muted">${state.mainId}</span></dd>
+<dt>Will register</dt><dd>${countText(state.expected)}${state.retired ? ' (admin commands retired)' : ''}</dd>
+<dt>On Discord now</dt><dd>${countText(state.registered)}</dd>
+<dt>Effect</dt><dd>The main server's command list is replaced by the bot's list in one request. Global and support-server commands stay as they are.</dd></dl>
+<p class="muted">This confirmation works once and expires in 5 minutes.</p>
+${actionForm(session.csrf, '/owner/commands/register', html`<label class="check"><input type="checkbox" name="confirm" value="1" required> Re-register the commands in the main server</label>`, { submit: 'Re-register commands', hidden: { token, fh: hash }, danger: true })}</section>`;
+    return shell({ title: 'Re-register commands', active: 'owner/commands', session, access, moduleStates, body });
 }
 
 // ── Announce ──────────────────────────────────────────────────────────────

@@ -8,21 +8,27 @@
 //   POST /dashboard/owner/profile/username|about|presence
 //   POST /dashboard/owner/profile/avatar|banner         https URL or an uploaded image (multipart)
 //   GET  /dashboard/owner/servers[?q=&sort=]            every server the bot is in (name, members, newest, oldest)
-//   GET  /dashboard/owner/servers/:id                   channels, roles, bot permissions (read-only)
+//   GET  /dashboard/owner/servers/:id                   channels, roles, bot permissions, permission check
+//                                                       (missing vs INSTALL_PERMISSIONS, roles above the bot)
 //   POST /dashboard/owner/servers/:id/invite            1-use, 1-hour invite (owner/admin of that server only)
 //   POST /dashboard/owner/servers/:id/leave/preview|leave   confirm step, never the main/support server
+//   GET  /dashboard/owner/users[?q=<user id>]           one user: name, account age, shared servers,
+//                                                       blacklist, owner, main-server record (read-only)
 //   GET  /dashboard/owner/blacklist[?kind=&id=], POST …/add|remove  global blacklist (users, servers);
 //                                                       kind/id only pre-fill the form
 //   GET  /dashboard/owner/health, POST …/maintenance    process status, maintenance switch
+//   GET  /dashboard/owner/commands                      main-server commands on Discord vs the bot's list
+//   POST /dashboard/owner/commands/register/preview|register   re-register the main server's commands
+//                                                       (startup's code; global + support never touched)
 //   GET  /dashboard/owner/announce, POST …/preview|send one message to every server's log channel
 //
 // Access: every request checks isBotOwner(session user) live (not the cached access
 // decision); anyone else gets the normal 404 page. POSTs also need: 30/min per session,
 // same origin + CSRF, DASHBOARD_EDIT_ENABLED, and a login younger than 12 hours. Every
-// change writes a dashboard_audit row (module 'owner'). Leaving a server and announcing
-// need a one-time confirm token (5 minutes, this session) plus a tick-box.
+// change writes a dashboard_audit row (module 'owner'). Leaving a server, announcing and
+// re-registering commands need a one-time confirm token (5 minutes, this session) plus a tick-box.
 
-import { ChannelType, PermissionFlagsBits } from 'discord.js';
+import { ChannelType, PermissionFlagsBits, SnowflakeUtil } from 'discord.js';
 import { readFileSync } from 'node:fs';
 import { isBotOwner as configIsBotOwner } from '../../config/bot.js';
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -41,9 +47,15 @@ import { isSnowflake } from './security.js';
 import { pinnedFetch } from '../owner/safeImageFetch.js';
 import { isBlacklistLoaded } from '../owner/blacklistCache.js';
 import { getRecentLogs } from '../../utils/recentLogs.js';
+import { getLadder } from '../enforcement/enforcementService.js';
+import { getActiveCase, listCasesForUser } from '../enforcement/caseService.js';
+import { findMutedRole } from '../enforcement/muteService.js';
+import { INSTALL_PERMISSIONS } from '../site/site.js';
+import { expectedMainCommands, registerMainGuildCommands } from '../../handlers/loaders/commandLoader.js';
+import { adminCommandsRetired } from '../../config/commands/retirement.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
-    blacklistPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage,
+    blacklistPage, commandsPage, registerConfirmPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage, userLookupPage,
 } from './ownerPages.js';
 
 export const OWNER_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
@@ -118,6 +130,104 @@ export function serverTagsFor(guildId, { mainId = null, supportId = null, blackl
     if (supportId && guildId === supportId) tags.push('Support');
     if (blacklisted.has(guildId)) tags.push('Blacklisted');
     return tags;
+}
+
+/** When a Discord account was created (from its ID), or null for anything that is not an ID. */
+export function accountCreatedAt(userId) {
+    if (!isSnowflake(String(userId ?? ''))) return null;
+    return new Date(SnowflakeUtil.timestampFrom(String(userId)));
+}
+
+/**
+ * A user's global blacklist state from the active entries: 'unknown' when the store could not
+ * be read (active === null; never shown as "not blacklisted"), 'listed' with its entry, or 'clear'.
+ */
+export function userBlacklistState(active, userId) {
+    if (active === null || active === undefined) return { state: 'unknown', entry: null };
+    const entry = active.find((r) => r.kind === 'user' && String(r.target_id) === String(userId)) || null;
+    return entry ? { state: 'listed', entry } : { state: 'clear', entry: null };
+}
+
+/** The "Blacklist this user…" link is offered only for a known clear state and never for an owner. */
+export function canOfferUserBlacklist({ state, isOwner }) {
+    return state === 'clear' && !isOwner;
+}
+
+/** Each permission the bot asks for when added (INSTALL_PERMISSIONS): its name in Discord and why. */
+export const PERMISSION_NEEDS = {
+    ViewChannel: ['View Channels', 'needed to see channels at all'],
+    SendMessages: ['Send Messages', 'needed for replies, logs and panels'],
+    SendMessagesInThreads: ['Send Messages in Threads', 'needed to answer in threads'],
+    EmbedLinks: ['Embed Links', 'needed for embeds (logs, panels, case messages)'],
+    AttachFiles: ['Attach Files', 'needed for files such as transcripts and evidence'],
+    ReadMessageHistory: ['Read Message History', 'needed to read earlier messages (purge, evidence, panels)'],
+    AddReactions: ['Add Reactions', 'needed for reactions (reaction roles, polls)'],
+    UseExternalEmojis: ['Use External Emojis', 'needed for emojis from other servers in messages'],
+    ManageMessages: ['Manage Messages', 'needed for automod deletes and purge'],
+    ManageThreads: ['Manage Threads', 'needed to manage and close threads'],
+    CreatePrivateThreads: ['Create Private Threads', 'needed for private appeal and ticket threads'],
+    ManageChannels: ['Manage Channels', 'needed for the Muted role overwrites, lock/unlock and new channels'],
+    ManageRoles: ['Manage Roles', 'needed for the Muted role and giving or removing roles'],
+    ManageGuild: ['Manage Server', 'needed for native AutoMod rules'],
+    ViewAuditLog: ['View Audit Log', 'needed for logging who did what'],
+    CreateInstantInvite: ['Create Invite', 'needed for one-time rejoin invites'],
+    KickMembers: ['Kick Members', 'needed for kicks'],
+    BanMembers: ['Ban Members', 'needed for bans'],
+    ModerateMembers: ['Timeout Members', 'needed for timeouts'],
+    ManageNicknames: ['Manage Nicknames', 'needed for nickname changes'],
+    MoveMembers: ['Move Members', 'needed for join-to-create voice and disconnecting muted members'],
+    Connect: ['Connect', 'needed for voice channels (join-to-create)'],
+};
+
+/**
+ * What the bot is missing in a server, compared with what it asks for when added:
+ * [{ name, label, why }] in INSTALL_PERMISSIONS order. Administrator covers everything.
+ */
+export function missingPermissions(granted, needed = INSTALL_PERMISSIONS) {
+    const have = new Set(granted || []);
+    if (have.has('Administrator')) return [];
+    return needed.filter((name) => !have.has(name)).map((name) => ({
+        name, label: PERMISSION_NEEDS[name]?.[0] || name, why: PERMISSION_NEEDS[name]?.[1] || 'needed by the bot',
+    }));
+}
+
+/**
+ * Roles the bot must give or remove that sit at or above its highest role (Discord then refuses):
+ * roles [{ id, name, position, why }], botTop { name, position }; each role once. No top role → [].
+ */
+export function rolesAboveBot(botTop, roles = []) {
+    if (!botTop || !Number.isFinite(Number(botTop.position))) return [];
+    const seen = new Set();
+    return roles.filter((r) => {
+        if (!r || seen.has(r.id)) return false;
+        seen.add(r.id);
+        return Number(r.position) >= Number(botTop.position);
+    });
+}
+
+const COMMAND_TYPE_LABEL = { 1: 'Slash command', 2: 'User menu', 3: 'Message menu' };
+const commandKey = (c) => `${Number(c?.type) || 1}:${c?.name}`;
+
+/** Slash commands and context menus in a command list: { slash, menus }. */
+export function commandCounts(list = []) {
+    const slash = list.filter((c) => (Number(c?.type) || 1) === 1).length;
+    return { slash, menus: list.length - slash };
+}
+
+/**
+ * The bot's list (what startup registers) against what Discord has in the main server, by name
+ * and type: missing = in the bot's list but not on Discord; extra = on Discord but not in the
+ * bot's list. Each [{ name, type }] sorted by name; inSync when both are empty.
+ */
+export function commandDiff(expected = [], registered = []) {
+    const want = new Map(expected.map((c) => [commandKey(c), c]));
+    const have = new Map(registered.map((c) => [commandKey(c), c]));
+    const rows = (from, other) => [...from].filter(([k]) => !other.has(k))
+        .map(([, c]) => ({ name: c.name, type: COMMAND_TYPE_LABEL[Number(c.type) || 1] || 'Command' }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+    const missing = rows(want, have);
+    const extra = rows(have, want);
+    return { missing, extra, inSync: !missing.length && !extra.length };
 }
 
 /** What an announcement sends: plain text, no mention ever pings. */
@@ -230,6 +340,48 @@ async function defaultAnnounceChannelId(client, guild) {
     return resolveLogChannel(config, 'audit');
 }
 
+/**
+ * A user's record in the main server, from the same enforcement reads the Members page uses:
+ * ladder (level + warns since level), number of cases, the active ban and mute (or null).
+ * A database error throws (the page shows it; never as a clean record).
+ */
+async function defaultModerationRecord(guildId, userId) {
+    const [ladder, cases, activeBan, activeMute] = await Promise.all([
+        getLadder(guildId, userId),
+        listCasesForUser(guildId, userId, { limit: 1 }),
+        getActiveCase(guildId, userId, 'ban'),
+        getActiveCase(guildId, userId, 'mute'),
+    ]);
+    return { ladder, caseCount: cases.total, activeBan, activeMute };
+}
+
+/**
+ * The roles the bot must give or remove in this server, as far as is cheaply known: the Muted
+ * role (stored id in the main server, plus any role named like it), the warning roles (main)
+ * and the Banned role (support). Never throws: an unreadable stored id is skipped.
+ */
+async function defaultManagedRoles(guild) {
+    const cache = guild.roles?.cache;
+    const roles = [];
+    const add = (role, why) => { if (role) roles.push({ id: role.id, name: role.name, position: role.position, why }); };
+    if (guild.id === enforcementConfig.mainGuildId) {
+        add(await findMutedRole(guild).catch(() => null), 'the Muted role (mutes)');
+        for (const id of enforcementConfig.warnRoleIds || []) add(cache?.get?.(id), 'a warning role');
+    }
+    if (guild.id === enforcementConfig.supportGuildId && enforcementConfig.bannedRoleId) add(cache?.get?.(enforcementConfig.bannedRoleId), 'the Banned role');
+    const mutedName = String(enforcementConfig.mutedRoleName || 'Muted').toLowerCase();
+    for (const role of cache?.values?.() || []) if (String(role.name).toLowerCase() === mutedName) add(role, 'the Muted role (mutes)');
+    return roles;
+}
+
+/** The bot's own commands registered in that server now (one API call): [{ name, type }]. */
+async function defaultRegisteredCommands(client, guildId) {
+    const guild = client.guilds?.cache?.get?.(guildId);
+    if (!guild) throw new InputError('The bot is not in the main server.');
+    const list = await guild.commands.fetch();
+    return [...list.values()].map((c) => ({ name: c.name, type: c.type }));
+}
+
 export const defaultOwnerDeps = {
     isBotOwner: configIsBotOwner,
     blacklist: blacklistStore,
@@ -239,6 +391,13 @@ export const defaultOwnerDeps = {
     protectedGuildIds: () => [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId],
     dbStatus: (client) => client.db?.getStatus?.() || null,
     recentLogs: getRecentLogs,
+    moderationRecord: defaultModerationRecord,
+    managedRoles: defaultManagedRoles,
+    // Command sync: the same list and the same registration code as startup (commandLoader.js).
+    expectedCommands: (client) => expectedMainCommands(client),
+    registeredCommands: defaultRegisteredCommands,
+    registerMainCommands: (client) => registerMainGuildCommands(client),
+    commandsRetired: () => adminCommandsRetired(),
 };
 
 // ── Handlers ──────────────────────────────────────────────────────────────
@@ -487,6 +646,8 @@ export function createOwnerHandlers(core) {
             .sort((a, b) => (b.position ?? 0) - (a.position ?? 0))
             .map((r) => ({ name: r.name, color: r.hexColor || '#000000', members: r.members?.size ?? 0 }));
         const active = await activeBlacklist();
+        const permissions = guild.members?.me?.permissions?.toArray?.() || [];
+        const botTop = guild.members?.me?.roles?.highest || null;
         const detail = {
             ...await serverRow(guild, tagContext(active)),
             createdAt: guild.createdTimestamp ? new Date(guild.createdTimestamp) : null,
@@ -496,7 +657,10 @@ export function createOwnerHandlers(core) {
             blacklisted: blacklistedGuilds(active).has(guild.id),
             channels: channelRows(guild),
             roles,
-            permissions: guild.members?.me?.permissions?.toArray?.() || [],
+            permissions,
+            missing: missingPermissions(permissions),
+            botTop: botTop ? { name: botTop.name, position: botTop.position } : null,
+            rolesAbove: rolesAboveBot(botTop, await Promise.resolve().then(() => o.managedRoles(guild)).catch(() => [])),
             membersCached: !guild.memberCount || (guild.members?.cache?.size || 0) >= guild.memberCount,
             canLeave: canLeaveGuild(guild.id, protectedIds()),
             ...inviteOptions({ vanityCode: guild.vanityURLCode || null, ...rights }),
@@ -545,6 +709,59 @@ export function createOwnerHandlers(core) {
         await flash(req, `The bot left ${name}.`);
         return res.redirect(303, path('/owner/servers'));
     }, { rerender: rerenderServer });
+
+    // ── User lookup ──────────────────────────────────────────────────────
+
+    /**
+     * The servers the bot shares with this user: every server's member cache, plus a fetch
+     * (one API call each) only in the main and the support server. Other servers whose cache
+     * is incomplete can miss them; the page says so.
+     */
+    async function sharedServers(userId, tags) {
+        const fetchable = new Set(protectedIds().filter(Boolean).map(String));
+        const rows = [];
+        for (const guild of allGuilds()) {
+            let member = guild.members?.cache?.get?.(userId) || null;
+            if (!member && fetchable.has(guild.id)) member = await guild.members?.fetch?.({ user: userId }).catch(() => null) || null;
+            if (!member) continue;
+            rows.push({
+                id: guild.id, name: guild.name, tags: serverTagsFor(guild.id, tags),
+                joinedAt: member.joinedTimestamp ? new Date(member.joinedTimestamp) : member.joinedAt || null,
+                nickname: member.nickname || null,
+            });
+        }
+        return rows.sort((a, b) => String(a.name).localeCompare(String(b.name), 'en', { sensitivity: 'base' }));
+    }
+
+    async function users(req, res) {
+        const q = queryText(req.query, 'q', 25);
+        const render = (status, extra = {}) => sendHtml(res, status, userLookupPage({ ...page(req), q, ...extra }));
+        if (!q) return render(200);
+        if (!isSnowflake(q)) return render(400, { error: 'Enter a Discord user ID (17 to 20 digits).' });
+        const user = await client.users?.fetch?.(q).catch(() => null);
+        if (!user) return render(404, { error: `No Discord user with ID ${q} exists.` });
+        const active = await activeBlacklist();
+        const tags = tagContext(active);
+        const blacklist = userBlacklistState(active, q);
+        const isOwnerId = Boolean(o.isBotOwner(q));
+        let record = null;
+        let recordError = null;
+        try {
+            record = await o.moderationRecord(guildId, q);
+        } catch (error) {
+            logger.warn(`Owner user lookup: moderation record not readable: ${error.message}`);
+            recordError = 'The moderation record could not be loaded (database not responding). Reload the page to try again.';
+        }
+        return render(200, {
+            result: {
+                id: q, username: user.username || null, globalName: user.globalName || null, bot: Boolean(user.bot),
+                avatarUrl: user.displayAvatarURL?.({ size: 64, extension: 'png' }) || null,
+                createdAt: accountCreatedAt(q), servers: await sharedServers(q, tags), totalServers: allGuilds().length,
+                blacklist, isOwner: isOwnerId, offerBlacklist: canOfferUserBlacklist({ state: blacklist.state, isOwner: isOwnerId }),
+                record, recordError,
+            },
+        });
+    }
 
     // ── Blacklist ────────────────────────────────────────────────────────
 
@@ -622,6 +839,68 @@ export function createOwnerHandlers(core) {
         return res.redirect(303, path('/owner/health'));
     }, { rerender: (req, res, status, message) => renderHealth(req, res, status, message) });
 
+    // ── Command sync ─────────────────────────────────────────────────────
+
+    /** The comparison for the page; each side's error is kept (never shown as "in sync"). */
+    async function commandState() {
+        const mainId = protectedIds()[0] || null;
+        let expected = null;
+        let expectedError = null;
+        let registered = null;
+        let registeredError = null;
+        try {
+            expected = await o.expectedCommands(client);
+        } catch (error) {
+            expectedError = `The bot's command list could not be built: ${plainText(error.message || 'unknown error')}`;
+        }
+        if (!mainId) registeredError = 'MAIN_GUILD_ID is not set.';
+        else {
+            try {
+                registered = await o.registeredCommands(client, mainId);
+            } catch (error) {
+                registeredError = `Discord's list could not be read: ${plainText(error.message || 'unknown error')}`;
+            }
+        }
+        return {
+            mainId, mainName: client.guilds?.cache?.get?.(mainId)?.name || null, loaded: client.commands?.size ?? 0, retired: Boolean(o.commandsRetired()),
+            expected: expected ? commandCounts(expected) : null, registered: registered ? commandCounts(registered) : null,
+            diff: expected && registered ? commandDiff(expected, registered) : null, expectedError, registeredError,
+        };
+    }
+
+    async function renderCommands(req, res, status = 200, error = null) {
+        return sendHtml(res, status, commandsPage({ ...page(req), state: await commandState(), flash: status === 200 ? takeFlash(req) : null, error }));
+    }
+    const commands = (req, res) => renderCommands(req, res);
+    const rerenderCommands = (req, res, status, message) => renderCommands(req, res, status, message);
+
+    const registerPreview = ownerPost(async (req, res) => {
+        const state = await commandState();
+        if (!state.mainId) throw new InputError('MAIN_GUILD_ID is not set; there is no main server to register in.');
+        if (state.expectedError) throw new InputError(state.expectedError);
+        const payload = { registered: state.registered ? state.registered.slash + state.registered.menus : null };
+        const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'commands:register', payload });
+        return sendHtml(res, 200, registerConfirmPage({ ...page(req), state, token, hash }));
+    }, { rerender: rerenderCommands });
+
+    const register = ownerPost(async (req, res) => {
+        const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: 'commands:register', hash: text(req.body, 'fh', 100) });
+        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was registered; start again.');
+        if (text(req.body, 'confirm', 5) !== '1') throw new InputError('Tick the box to confirm. Nothing was registered; start again.');
+        let result;
+        try {
+            result = await o.registerMainCommands(client);
+        } catch (error) {
+            logger.warn(`Dashboard owner ${req.dashboard.session.userId}: command registration failed: ${error.message}`);
+            throw new InputError(`Registration failed; the main server's list was not changed: ${plainText(error.message || 'unknown error')}`);
+        }
+        const retired = Boolean(o.commandsRetired());
+        await audit(req, [{ key: 'commands.register', old: { count: payload.registered }, new: { count: result?.count ?? null, retired } }]);
+        logger.warn(`Dashboard owner ${req.dashboard.session.userId} re-registered ${result?.count ?? '?'} command(s) in the main server`);
+        await flash(req, `Registered ${result?.count ?? 'the'} command${result?.count === 1 ? '' : 's'} in the main server${retired ? ' (admin commands retired)' : ''}. Discord shows the change within a few seconds.`);
+        return res.redirect(303, path('/owner/commands'));
+    }, { rerender: rerenderCommands });
+
     // ── Announce ─────────────────────────────────────────────────────────
 
     /** Every server: its log channel when the bot can post there, else why it is skipped. */
@@ -693,7 +972,7 @@ export function createOwnerHandlers(core) {
 
     return {
         requireOwner, index, home, activity, profile, username, about, presence, avatar: imageAction('avatar'), banner: imageAction('banner'),
-        servers, server, invite, leavePreview, leave, blacklist, blacklistAdd, blacklistRemove,
-        health, maintenance, announce, announcePreview, announceSend,
+        servers, server, invite, leavePreview, leave, users, blacklist, blacklistAdd, blacklistRemove,
+        health, maintenance, commands, registerPreview, register, announce, announcePreview, announceSend,
     };
 }
