@@ -45,7 +45,7 @@ async function serve({
         const res = await fetch(base + path, { redirect: 'manual' });
         return { status: res.status, headers: res.headers, body: await res.text() };
     };
-    return { get, close: () => new Promise((resolve) => server.close(resolve)) };
+    return { get, base, close: () => new Promise((resolve) => server.close(resolve)) };
 }
 
 test('PUBLIC_SITE_ENABLED is off unless true', () => {
@@ -79,7 +79,8 @@ test('every front page renders with the shell, the hashed stylesheet and no inli
             assert.ok(res.body.includes(`href="${SUPPORT}"`), `${path}: support link`);
             assert.ok(res.body.includes('<a class="button" href="/dashboard">Dashboard</a>'), `${path}: filled Dashboard button in the top bar`);
             assert.ok(res.body.includes('<li><a href="/dashboard">Dashboard</a></li>'), `${path}: footer link`);
-            assert.ok(res.body.includes('<link rel="icon" href="/favicon.svg" type="image/svg+xml">'), `${path}: favicon`);
+            assert.ok(res.body.includes('<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">'), `${path}: favicon`);
+            assert.match(res.body, /<img class="logo" src="\/img\/logo\.png\?v=[0-9a-f]{10}" width="28" height="28" alt="">/, `${path}: the owner's logo`);
         }
         const notFound = await site.get('/nope');
         assert.equal(notFound.status, 404);
@@ -210,16 +211,18 @@ test('with the add button shown, Dashboard is the quiet button', async () => {
     } finally { await site.close(); }
 });
 
-test('the favicon is the cat on a black tile, cached, under the site CSP', async () => {
+test('the favicon and the logo are the owner\'s PNG (also at /favicon.ico), cached, under the site CSP', async () => {
     const site = await serve();
     try {
-        const res = await site.get('/favicon.svg');
-        assert.equal(res.status, 200);
-        assert.match(res.headers.get('content-type'), /^image\/svg\+xml/);
-        assert.equal(res.headers.get('cache-control'), 'public, max-age=86400');
-        assert.equal(res.headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
-        assert.ok(res.body.startsWith('<svg xmlns="http://www.w3.org/2000/svg"') && res.body.includes('fill="#000"'));
-        assert.ok(!/<script|on\w+=/i.test(res.body), 'nothing active in the icon');
+        const logo = readFileSync(new URL('../src/services/site/static/img/logo.png', import.meta.url));
+        for (const path of ['/favicon.png', '/favicon.ico', '/img/logo.png']) {
+            const res = await fetch(site.base + path);
+            assert.equal(res.status, 200, path);
+            assert.match(res.headers.get('content-type'), /^image\/png/, path);
+            assert.equal(res.headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy'], path);
+            assert.ok(Buffer.from(await res.arrayBuffer()).equals(logo), `${path}: the same file`);
+        }
+        assert.equal((await site.get('/favicon.png')).headers.get('cache-control'), 'public, max-age=86400');
     } finally { await site.close(); }
 });
 
@@ -307,7 +310,7 @@ test('leaderboard: rank, escaped display name, level and total XP; nav marks it 
         const res = await site.get('/leaderboard');
         assert.equal(res.status, 200);
         assert.deepEqual(calls, [{ offset: 0, limit: LEADERBOARD_PAGE_SIZE + 1 }]);
-        assert.ok(!res.body.includes('<img'), 'name escaped');
+        assert.ok(!res.body.includes('<img src=x') && res.body.includes('&lt;img src=x onerror=alert(1)&gt;'), 'name escaped');
         assert.ok(res.body.includes('&lt;img src=x onerror=alert(1)&gt;'));
         assert.ok(res.body.includes('Ann &amp; &quot;Bob&quot;'));
         assert.ok(res.body.includes('<td class="num">1</td><td class="board-name">'));
@@ -611,7 +614,8 @@ test('every image has alt text and a size; the image files are small and served 
             const imgs = body.match(/<img [^>]+>/g) || [];
             assert.ok(imgs.length >= 1, path);
             for (const img of imgs) {
-                assert.match(img, /alt="[^"]{30,}"/, img);
+                // The logo is decorative (the name "Meowist" is next to it): empty alt on purpose.
+                assert.match(img, /class="logo"[^>]* alt=""|alt="[^"]{30,}"/, img);
                 assert.match(img, /width="\d+" height="\d+"/, img);
             }
         }

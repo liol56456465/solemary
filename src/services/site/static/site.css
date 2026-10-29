@@ -125,7 +125,8 @@ strong { font-weight: 600; }
 .topbar-inner { display: flex; align-items: center; gap: 8px 32px; min-height: 64px; }
 .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 650; font-size: 17px; letter-spacing: -0.01em; color: var(--text); text-decoration: none; min-height: 44px; }
 .brand:hover { color: var(--text); }
-.logo { flex: none; }
+.logo { flex: none; border-radius: 7px; }
+.dc-avatar .logo { width: 100%; height: 100%; border-radius: 50%; }
 .topnav { flex: 1 1 auto; min-width: 0; }
 .topnav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; }
 .topnav a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 10px; border-radius: 6px; font-size: 14px; color: var(--text-muted); text-decoration: none; white-space: nowrap; }

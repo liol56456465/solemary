@@ -10,7 +10,6 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { PermissionFlagsBits } from 'discord.js';
 import { html, raw } from '../dashboard/html.js';
-import { CAT_PATH } from '../dashboard/icons.js';
 import { logger } from '../../utils/logger.js';
 
 export const DASHBOARD_PATH = '/dashboard';
@@ -94,11 +93,22 @@ function buildStylesheet() {
 export const STYLESHEET = buildStylesheet();
 export const CSS_PATH = `/site.css?v=${createHash('sha256').update(STYLESHEET).digest('hex').slice(0, 10)}`;
 
-// The Meowist cat (fill = currentColor, follows the theme). Decorative: the name is next to it.
-export const LOGO = raw(`<svg class="logo" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="${CAT_PATH}"/></svg>`);
-
-// The browser-tab icon: the owner's logo, a white cat on black.
-export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#000"/><path fill="#fff" fill-rule="evenodd" d="${CAT_PATH}"/></svg>`;
+// The owner's logo (static/img/logo.png, 64×64: the white cat on a black tile). The ?v= hash
+// changes with the file, so the week-long /img cache never shows an old logo.
+// Decorative where it is used: the name "Meowist" is always next to it.
+export const LOGO_FILE = new URL('./static/img/logo.png', import.meta.url);
+function logoVersion() {
+    try {
+        return createHash('sha256').update(readFileSync(LOGO_FILE)).digest('hex').slice(0, 10);
+    } catch (error) {
+        logger.error(`Site logo missing: ${error.message}`);
+        return '0';
+    }
+}
+export const LOGO_PATH = `/img/logo.png?v=${logoVersion()}`;
+export const LOGO = raw(`<img class="logo" src="${LOGO_PATH}" width="28" height="28" alt="">`);
+/** The browser-tab icon (the same PNG); the dashboard links it too. */
+export const FAVICON_PATH = '/favicon.png';
 
 /** aria-current="page" when `key` is the active page. */
 export const currentIf = (active) => (key) => (key === active ? raw(' aria-current="page"') : '');
@@ -169,7 +179,7 @@ export function layout(ctx, { title, active = null, description = '', refresh = 
     return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
 <title>${title === 'Meowist' ? 'Meowist' : `${title} · Meowist`}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path })}
-<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="${CSS_PATH}"></head>
+<link rel="icon" href="${FAVICON_PATH}" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"></head>
 <body><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>Meowist</span></a>
 <nav class="topnav" aria-label="Main"><ul>${navLinks(ctx, active)}</ul></nav>

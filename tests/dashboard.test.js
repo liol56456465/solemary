@@ -760,7 +760,7 @@ test('layout v5: grouped sidebar with every page, breadcrumbs, phone tab bar wit
     assert.ok(side.includes('<a class="side-site" href="/">'), 'sidebar links back to the website');
     assert.ok(page.includes('<a class="menu-item menu-link" href="/">'), 'account menu links to the website');
     assert.match(page, /<div class="more-foot"><a href="\/">.*Website<\/a>/, 'phone sheet links to the website');
-    assert.ok(page.includes('<link rel="icon" href="/favicon.svg" type="image/svg+xml">'));
+    assert.ok(page.includes('<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">'));
 });
 
 test('overview week chart: the last 7 UTC days, oldest first, today last, missing days 0', async () => {

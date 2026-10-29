@@ -16,7 +16,7 @@
 //   GET /robots.txt   Disallow: / while the site is not public; with the sitemap when it is
 //   GET /sitemap.xml  only when public and PUBLIC_URL is set (absolute URLs need the origin)
 //   GET /img/<file>   the site's images (static/img: dashboard screenshots, the share image)
-//   GET /favicon.svg  the cat on a black tile (the site and the dashboard link it)
+//   GET /favicon.png  the owner's logo (static/img/logo.png), also at /favicon.ico; site and dashboard link it
 //   GET /site.css     the site's tokens + layout, cached, ?v=<content hash>
 //
 // NOT PUBLIC YET: PUBLIC_SITE_ENABLED=true (default off) shows the "Add to Discord" button
@@ -36,7 +36,7 @@ import { enforcementConfig } from '../../config/enforcement.js';
 import { getLeaderboard, getLevelingConfig } from '../leveling/leveling.js';
 import { logger } from '../../utils/logger.js';
 import {
-    FAVICON_SVG, NOINDEX, SECURITY_HEADERS, STYLESHEET, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
+    FAVICON_PATH, LOGO_FILE, NOINDEX, SECURITY_HEADERS, STYLESHEET, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
 } from './shell.js';
 import { homePage } from './pages/home.js';
 import { featuresPage } from './pages/features.js';
@@ -45,7 +45,7 @@ import { faqPage } from './pages/faq.js';
 import { GUIDES, docsPage, guidePage } from './pages/docs.js';
 
 export {
-    CSS_PATH, DASHBOARD_PATH, FAVICON_SVG, INSTALL_PERMISSIONS, NOINDEX, SECURITY_HEADERS, STYLESHEET, addButton,
+    CSS_PATH, DASHBOARD_PATH, FAVICON_PATH, INSTALL_PERMISSIONS, LOGO, LOGO_PATH, NOINDEX, SECURITY_HEADERS, STYLESHEET, addButton,
     installPermissionBits, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
 } from './shell.js';
 export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, GUIDES };
@@ -448,10 +448,14 @@ export function createSite({
         index: false, dotfiles: 'ignore', redirect: false, fallthrough: true,
         setHeaders: (res) => res.set('Cache-Control', 'public, max-age=604800'),
     }));
-    router.get('/favicon.svg', (req, res) => {
+    // The browser-tab icon is the owner's logo PNG. /favicon.ico serves it too (browsers ask for
+    // that path on their own; PNG content is accepted there).
+    const favicon = (req, res) => {
         res.set('Cache-Control', 'public, max-age=86400');
-        res.status(200).type('image/svg+xml').send(FAVICON_SVG);
-    });
+        res.status(200).type('image/png').sendFile(fileURLToPath(LOGO_FILE));
+    };
+    router.get(FAVICON_PATH, favicon);
+    router.get('/favicon.ico', favicon);
     router.get('/site.css', (req, res) => {
         res.set('Cache-Control', 'public, max-age=3600');
         res.status(200).type('text/css').send(STYLESHEET);
