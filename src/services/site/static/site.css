@@ -1,6 +1,6 @@
 /* ── Mewvo front site ─────────────────────────────────────────────────────
    Served at /site.css (hashed). No inline styles anywhere (CSP style-src 'self'), no web
-   fonts, no gradients, glows or blur. Near-white / near-black, one accent (ginger) used for
+   fonts, no gradients, glows or blur. Near-white / near-black, one accent (purple) used for
    links, section numbers, ticks and focus; buttons are ink. Light and dark by device.
    Colour pairs are checked by tests/siteContrast.test.js (AA: 4.5:1 text, 3:1 UI marks):
    change a token here, run that test. The Discord mock-ups use the --dc-* tokens.
@@ -16,9 +16,9 @@
     --border: #e6e6e3;
     --border-control: #cfcfca;
     --border-strong: #8a8a86;
-    --accent: #c2410c;
-    --accent-hover: #9a3412;
-    --accent-soft: #fdf1ea;
+    --accent: #6d28d9;
+    --accent-hover: #5b21b6;
+    --accent-soft: #f3effe;
     --ink: #111111;
     --ink-hover: #333333;
     --on-ink: #ffffff;
@@ -59,9 +59,9 @@
         --border: #26262a;
         --border-control: #3f3f46;
         --border-strong: #71717a;
-        --accent: #ff7a45;
-        --accent-hover: #ff9466;
-        --accent-soft: #2a160d;
+        --accent: #a78bfa;
+        --accent-hover: #c4b5fd;
+        --accent-soft: #1e1533;
         --ink: #ededed;
         --ink-hover: #ffffff;
         --on-ink: #0a0a0b;
