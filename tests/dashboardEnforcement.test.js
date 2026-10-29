@@ -13,6 +13,7 @@ import { createAccessChecker } from '../src/services/dashboard/access.js';
 import { SESSION_COOKIE, signValue } from '../src/services/dashboard/security.js';
 import { createConfirmStore, flowHash } from '../src/services/dashboard/confirmTokens.js';
 import { buildRecordFlow, resultMessage, searchMembers } from '../src/services/dashboard/enforcementRoutes.js';
+import { precedentHint } from '../src/services/enforcement/precedentService.js';
 import {
     completeFlowDetails, flowSummary, liftReasonPatch, parseFlowInput, reasonPatch, startFlow, availableActions,
 } from '../src/services/enforcement/flowBuilder.js';
@@ -95,6 +96,7 @@ const fakeDeps = {
     getTargetState: async () => ({ ladder: { ...LADDER } }),
     captureLinks: async (guild, entries) => entries.map(({ url, message }) => ({ url, sourceMessageUrl: message ? url : null, excerpt: message ? 'someone: bad words' : null })),
     precedentHint: async (guildId, key, label) => (key === 'custom' ? null : `Precedent for ${label}: 3 cases`),
+    getLadder: async () => ({ level: 0, warns_since_level: 1 }),
 };
 
 function makeEnforcement(overrides = {}) {
@@ -297,6 +299,30 @@ test('flow builder: the panel\'s validation messages, name clashes and hierarchy
     assert.deepEqual(availableActions({ banned: false, member: {}, muted: false, ladder: LADDER }), ['ban', 'kick', 'mute', 'warn', 'removewarn']);
 });
 
+test('consistency hints: the confirm page says "unavailable right now" when the database fails; custom reasons have no comparison', async () => {
+    const failing = {
+        ...fakeDeps,
+        precedentHint: (g, key, label) => precedentHint(g, key, label, { load: async () => { throw new Error('db down'); } }),
+        getLadder: async () => ({ level: 2, warns_since_level: 0 }),
+    };
+    const h = await setup({ overrides: { completeFlowDetails: (args) => completeFlowDetails({ ...args, deps: failing }) } });
+    const res = await preview(h, { type: 'mute', reason: 'spam', duration: '1h' });
+    assert.equal(res.statusCode, 200, res.body);
+    assert.match(res.body, /Confirm: Mute/);
+    assert.match(res.body, /Similar cases: unavailable right now\./);
+    assert.match(res.body, /This member: 0 counted warnings, ladder level 2 \(the next warning bans\)\./);
+    assert.ok(tokenFrom(res.body).token, 'the action can still be confirmed');
+
+    const custom = await preview(h, { type: 'mute', reason: 'custom', custom_reason: 'rude', duration: '1h' });
+    assert.equal(custom.statusCode, 200, custom.body);
+    assert.match(custom.body, /Custom reason: no comparison\./);
+
+    // The member page's "how was this reason handled" lookup passes the reason's label, not its key.
+    const page = await get(h, h.d.enforcement.userPage, { params: { id: TARGET }, query: { reason: 'spam' } });
+    assert.equal(page.statusCode, 200);
+    assert.equal(serviceCalls(h, ['precedentHint']).at(-1).args[2], 'Spam');
+});
+
 // ── confirm tokens ────────────────────────────────────────────────────────
 
 test('confirm tokens: single use, expire after 5 minutes, bound to session + subject + flow hash', () => {
@@ -339,6 +365,7 @@ test('warn: preview shows the ladder effect and precedent; execute runs executeA
     assert.match(res.body, /Confirm: Warn/);
     assert.match(res.body, /warning 2 of 3\./);
     assert.match(res.body, /Precedent for Spam/);
+    assert.match(res.body, /<p class="muted">This member: 1 of 3 counted warnings, ladder level 0\.<\/p>/);
     assert.match(res.body, /someone: bad words/);
     assert.ok(!res.body.includes('<script>'), 'target name escaped');
     assert.equal(serviceCalls(h, ['executeAction']).length, 0, 'preview runs nothing');
@@ -1058,6 +1085,8 @@ test('bulk: kicks/bans stop at the mass-action guard (4 of 5 used → 1 planned)
     assert.match(preview.body, /Kick: 1 member/);
     assert.match(preview.body, /mass-action guard: no more bans\/kicks/);
     assert.match(preview.body, /allows 1 more ban\/kick/);
+    assert.match(preview.body, /<p class="muted">Precedent for Spam: 3 cases<\/p>/, 'similar-cases hint for the chosen reason');
+    assert.ok(!preview.body.includes('This member:'), 'no per-member ladder line on a bulk preview');
     const token = preview.body.match(/name="token" value="([^"]+)"/)[1];
     const fh = preview.body.match(/name="fh" value="([^"]+)"/)[1];
     const run = await post(h, h.d.enforcement.bulkExecute, { form: { token, fh } });

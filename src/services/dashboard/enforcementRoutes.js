@@ -25,7 +25,7 @@
 // Discord commands (DMs, ladder, hierarchy, bot permissions, mass-action guard, logs).
 
 import { PermissionFlagsBits } from 'discord.js';
-import { CUSTOM_REASON_KEY, enforcementConfig } from '../../config/enforcement.js';
+import { CUSTOM_REASON_KEY, enforcementConfig, getReason } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { recordOwnerOverride } from '../ownerOverride.js';
 import { isAdministrator, previewWarn } from '../enforcement/enforcementService.js';
@@ -340,7 +340,7 @@ export function createEnforcementHandlers(core) {
             e.listNotes(guildId, userId),
             e.getMassActionBlock(guildId, req.dashboard.session.userId).catch(() => null),
             precedentReason && isKnownReasonKey(precedentReason) && precedentReason !== CUSTOM_REASON_KEY
-                ? e.precedentHint(guildId, precedentReason, precedentReason).catch(() => null) : null,
+                ? e.precedentHint(guildId, precedentReason, getReason(precedentReason)?.label || precedentReason).catch(() => null) : null,
         ]);
         const noContact = e.getActiveOrdersFor(guildId, userId) || [];
         const noContactNames = new Map(noContact.map((o) => [o.otherId, client.users.cache?.get?.(o.otherId)?.username || null]));
@@ -602,15 +602,17 @@ export function createEnforcementHandlers(core) {
         const plan = planBulk({ guild, members, action, role, timeoutKey, actorId: req.dashboard.session.userId, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me, guardLeft });
         // Kick / ban: the enforcement form is checked now (same flow builder as one member), so the run cannot fail on it.
         const recordForm = { reason: text(req.body, 'reasonKey', 50), custom_reason: text(req.body, 'custom_reason', 500), duration: text(req.body, 'duration', 20), unappealable: text(req.body, 'unappealable', 10) || 'default' };
+        let precedent = null;
         if ((action === 'kick' || action === 'ban') && plan.run.length) {
             const first = guild.members.cache.get(plan.run[0].id)?.user || await client.users.fetch(plan.run[0].id);
-            await buildRecordFlow({ guild, moderator, moderatorId: moderator.id, targetUser: first, type: action, form: recordForm, completeFlowDetails: e.completeFlowDetails });
+            // The similar-cases hint applies to every member (same reason); the ladder line does not.
+            ({ precedent = null } = await buildRecordFlow({ guild, moderator, moderatorId: moderator.id, targetUser: first, type: action, form: recordForm, completeFlowDetails: e.completeFlowDetails }));
         }
         const forKey = action === 'role-add' ? text(req.body, 'for', 4) : '';
         if (forKey && !Object.hasOwn(TEMP_ROLE_LENGTHS, forKey)) throw new InputError('Choose how long.');
         const payload = { action, roleId: role?.id || null, timeoutKey, forKey, reason: text(req.body, 'reason', REASON_MAX), recordForm, run: plan.run };
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'bulk', payload });
-        return sendHtml(res, 200, bulkPreviewPage({ ...shellOf(req), action, label: BULK_ACTIONS[action], role, timeout: TIMEOUTS[timeoutKey] || TEMP_ROLE_LENGTHS[forKey] || null, plan, token, hash, guardLeft }));
+        return sendHtml(res, 200, bulkPreviewPage({ ...shellOf(req), action, label: BULK_ACTIONS[action], role, timeout: TIMEOUTS[timeoutKey] || TEMP_ROLE_LENGTHS[forKey] || null, plan, token, hash, guardLeft, precedent }));
     }, { rerender: bulkBack, perm: 'member.bulk' });
 
     const bulkExecute = guardedPost(async (req, res) => {

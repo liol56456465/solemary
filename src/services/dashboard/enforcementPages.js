@@ -224,13 +224,14 @@ ${['q', 'joined', 'state', 'sort'].map((k) => html`<input type="hidden" name="${
 }
 
 /** Who a bulk action will change and who is skipped (with the reason); Run needs the one-time token. */
-export function bulkPreviewPage({ session, access = null, moduleStates = {}, action, label, role, timeout, plan, token, hash, guardLeft }) {
+export function bulkPreviewPage({ session, access = null, moduleStates = {}, action, label, role, timeout, plan, token, hash, guardLeft, precedent = null }) {
     const what = `${label}${role ? ` @${role.name}` : ''}${timeout ? ` for ${timeout.label}` : ''}`;
     const destructive = action === 'kick' || action === 'ban';
     const n = `${plan.run.length} member${plan.run.length === 1 ? '' : 's'}`;
     const verb = { 'role-add': `Give @${role?.name} to ${n}${timeout ? ` for ${timeout.label}` : ''}`, 'role-remove': `Take @${role?.name} from ${n}`, timeout: `Time out ${n}`, kick: `Kick ${n}`, ban: `Ban ${n}` }[action] || `${label} ${n}`;
     const body = html`<a class="back" href="${path('/users')}">← Members</a>
 <header class="page-head"><h1>${what}: ${plan.run.length} member${plan.run.length === 1 ? '' : 's'}</h1><p class="muted">Check the list. Nothing has been changed yet.</p></header>
+${precedent ? html`<p class="muted">${precedent}</p>` : ''}
 ${destructive && Number.isFinite(guardLeft) ? html`<p class="notice">The mass-action guard allows ${guardLeft} more ban${guardLeft === 1 ? '' : 's'}/kick${guardLeft === 1 ? '' : 's'} in this 10-minute window; members beyond that are skipped.</p>` : ''}
 <section class="card"><h2>Will be changed (${plan.run.length})</h2>${plan.run.length ? html`<ul class="name-list">${plan.run.map((m) => html`<li><a href="${userHref(m.id)}">${m.name}</a></li>`)}</ul>` : html`<p class="empty">Nobody: every selected member is skipped.</p>`}</section>
 ${plan.skipped.length ? html`<section class="card"><h2>Skipped (${plan.skipped.length})</h2><ul class="skip-list">${plan.skipped.map((m) => html`<li><a href="${userHref(m.id)}">${m.name}</a><span class="muted">${m.why}</span></li>`)}</ul></section>` : ''}
@@ -379,6 +380,7 @@ ${summary.effect ? html`<dt>Effect</dt><dd>${summary.effect}</dd>` : ''}
 </dl>
 ${summary.notes.map((n) => html`<p>${n}</p>`)}
 ${summary.precedent ? html`<p class="muted">${summary.precedent}</p>` : ''}
+${summary.memberHint ? html`<p class="muted">${summary.memberHint}</p>` : ''}
 ${block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(block.until)}; this will be refused.</p>` : ''}
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
 ${actionForm(session.csrf, `/users/${userId}/action/execute`, '', { submit: `Confirm ${ACTION_LABELS[type].toLowerCase()}`, hidden: { token, fh: hash }, danger: true })}</section>`;
