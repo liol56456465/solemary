@@ -11,6 +11,8 @@
 //   GET /about        who runs it
 //   GET /leaderboard  the main server's leveling leaderboard, 50 a page (?page=)
 //   GET /status       Online / Starting / Degraded and the uptime, nothing else
+//   GET /transparency monthly moderation numbers (pages/transparency.js); 404 unless the
+//                     dashboard setting transparencyReportEnabled is on
 //   GET /privacy      what the bot stores and why (written from the code, nothing invented)
 //   GET /terms        the short rules for using the bot
 //   GET /robots.txt   Disallow: / while the site is not public; with the sitemap when it is
@@ -34,6 +36,8 @@ import { EVERYONE_COMMANDS } from '../../config/commands/commandAccess.js';
 import { commandEntries } from '../../config/commands/retirement.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { getLeaderboard, getLevelingConfig } from '../leveling/leveling.js';
+import { getConfiguredSetting } from '../settings/guildSettings.js';
+import { createTransparencyReader } from '../enforcement/transparencyService.js';
 import { logger } from '../../utils/logger.js';
 import {
     FAVICON_SVG, NOINDEX, SECURITY_HEADERS, STYLESHEET, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
@@ -43,6 +47,7 @@ import { featuresPage } from './pages/features.js';
 import { pricingPage } from './pages/pricing.js';
 import { faqPage } from './pages/faq.js';
 import { GUIDES, docsPage, guidePage } from './pages/docs.js';
+import { transparencyErrorPage, transparencyPage } from './pages/transparency.js';
 
 export {
     CSS_PATH, DASHBOARD_PATH, FAVICON_SVG, INSTALL_PERMISSIONS, NOINDEX, SECURITY_HEADERS, STYLESHEET, addButton,
@@ -350,15 +355,16 @@ export function notFoundPage(ctx) {
 
 // ── Sitemap ───────────────────────────────────────────────────────────────
 
-/** The public pages, for /sitemap.xml. */
+/** The public pages, for /sitemap.xml (plus /transparency while it is turned on). */
 export const SITEMAP_PATHS = [
     '/', '/features', '/pricing', '/docs', ...GUIDES.map((g) => `/docs/${g.slug}`), '/faq',
     '/commands', '/leaderboard', '/about', '/status', '/privacy', '/terms',
 ];
 
-export function sitemapXml(origin) {
+export function sitemapXml(origin, { transparency = false } = {}) {
     const escape = (text) => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-    const urls = SITEMAP_PATHS.map((path) => `  <url><loc>${escape(`${origin}${path}`)}</loc></url>`).join('\n');
+    const paths = transparency ? [...SITEMAP_PATHS, '/transparency'] : SITEMAP_PATHS;
+    const urls = paths.map((path) => `  <url><loc>${escape(`${origin}${path}`)}</loc></url>`).join('\n');
     return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 
@@ -368,11 +374,13 @@ export function sitemapXml(origin) {
  * The front-site router. `client` gives the loaded commands (read per request: the web server
  * starts before the commands load); `support()` the current support invite (a settings getter).
  * `leaderboard({ offset, limit })` and `status()` default to the real readers on `client`;
- * tests pass fakes.
+ * `transparency` is { enabled() → boolean (the dashboard setting, read per request), read() →
+ * Promise<report> (cached 10 minutes) }; tests pass fakes.
  */
 export function createSite({
     client = null, env = process.env, dashboardEnabled = false, memberPortalEnabled = false, supportInvite = () => null,
     leaderboard = createLeaderboardReader(client), status = () => botStatus(client),
+    transparency = defaultTransparency(),
 } = {}) {
     const router = express.Router();
     const publicSite = publicSiteEnabled(env);
@@ -387,7 +395,11 @@ export function createSite({
     const context = () => {
         let support = null;
         try { support = inviteOrNull(supportInvite()); } catch { support = null; }
-        return { ...base, supportInvite: support, commands: client?.commands || null };
+        return { ...base, supportInvite: support, commands: client?.commands || null, transparency: transparencyOn() };
+    };
+    // A settings read that throws counts as off: the page and its link simply do not appear.
+    const transparencyOn = () => {
+        try { return transparency?.enabled?.() === true; } catch { return false; }
     };
 
     router.use((req, res, next) => {
@@ -431,6 +443,22 @@ export function createSite({
         res.set('Cache-Control', 'no-cache');
         res.status(board ? 200 : 503).type('html').send(leaderboardPage(context(), { page: number, board }));
     });
+    // Off: the same 404 as any unknown page. A failed read: 503 with a message, never zeros.
+    router.get('/transparency', async (req, res, next) => {
+        if (!transparencyOn()) return next();
+        let report = null;
+        try {
+            report = await transparency.read();
+        } catch (error) {
+            logger.warn(`Site transparency report could not be loaded: ${error.message}`);
+        }
+        res.set('Cache-Control', 'no-cache');
+        if (!report) {
+            res.set('Retry-After', '120');
+            return res.status(503).type('html').send(transparencyErrorPage(context()));
+        }
+        return res.status(200).type('html').send(transparencyPage(context(), report));
+    });
     router.get('/robots.txt', (req, res) => {
         res.set('Cache-Control', 'no-cache');
         const sitemap = publicSite && base.origin ? `Sitemap: ${base.origin}/sitemap.xml\n` : '';
@@ -440,7 +468,7 @@ export function createSite({
     if (publicSite && base.origin) {
         router.get('/sitemap.xml', (req, res) => {
             res.set('Cache-Control', 'public, max-age=3600');
-            res.type('application/xml').send(sitemapXml(base.origin));
+            res.type('application/xml').send(sitemapXml(base.origin, { transparency: transparencyOn() }));
         });
     }
     // The site's images: dashboard screenshots and the share image. Missing files fall through to the 404 page.
@@ -462,6 +490,14 @@ export function createSite({
         res.status(404).type('html').send(notFoundPage(context()));
     });
     return router;
+}
+
+/** The real transparency source: the main server's dashboard setting and the cached report reader. */
+function defaultTransparency() {
+    return {
+        enabled: () => getConfiguredSetting('transparencyReportEnabled') === true,
+        read: createTransparencyReader({ guildId: () => enforcementConfig.mainGuildId }),
+    };
 }
 
 /** Mounts the front site at the root of `app` (after /health, /ready, OAuth and the dashboard). */

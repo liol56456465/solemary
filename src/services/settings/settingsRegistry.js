@@ -124,6 +124,12 @@ export const SETTINGS = Object.freeze([
         label: 'Remind staff about a quiet appeal after', env: 'STALE_APPEAL_REMINDER_DAYS', envUnit: 'days',
         fallback: 3 * DAY, schema: int(DAY, 90 * DAY),
     },
+    {
+        // /transparency on the website (services/site/pages/transparency.js): monthly counts
+        // only, never names or IDs. Off until an administrator turns it on in the dashboard.
+        key: 'transparencyReportEnabled', module: 'appeals', kind: 'boolean', guild: 'main',
+        label: 'Publish a monthly transparency report on the website', env: null, fallback: false, schema: z.boolean(),
+    },
     // ── Logging ──
     {
         key: 'modLogChannelId', module: 'logging', kind: 'channel', guild: 'main',
