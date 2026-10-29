@@ -24,7 +24,7 @@ const RULES = {
 };
 
 const saved = { MAIN_GUILD_ID: process.env.MAIN_GUILD_ID, PUBLIC_URL: process.env.PUBLIC_URL };
-function useRules({ rules = RULES, links = { spam: RULE_B }, publicUrl = 'https://meowist.example' } = {}) {
+function useRules({ rules = RULES, links = { spam: RULE_B }, publicUrl = 'https://mewvo.example' } = {}) {
     process.env.MAIN_GUILD_ID = MAIN;
     if (publicUrl === null) delete process.env.PUBLIC_URL; else process.env.PUBLIC_URL = publicUrl;
     setSettingsCacheForTests(MAIN, { serverRules: rules, reasonRuleLinks: links });
@@ -47,7 +47,7 @@ const record = (extra = {}) => ({
 
 test('DM: a linked reason adds "Rule N: title" with the /rules#rule-N link, right after the reason, in every punishment DM', () => {
     useRules();
-    const line = 'Rule 2: No spam — <https://meowist.example/rules#rule-2>';
+    const line = 'Rule 2: No spam — <https://mewvo.example/rules#rule-2>';
     for (const dm of [banDm(record()), kickDm(record(), 'https://discord.gg/x'), muteDm(record()), warnDm(record(), 1)]) {
         const lines = dm.split('\n');
         assert.equal(lines[lines.indexOf('Reason: Spam') + 1], line, dm);
@@ -69,7 +69,7 @@ test('DM: without PUBLIC_URL the line names the rule without a link; rule number
     assert.ok(banDm(record()).includes('\nRule 2: No spam\n'));
     assert.equal(rulesPageUrl(2, {}), null);
     useRules({ rules: moveRule(RULES, RULE_B, -1) });
-    assert.ok(banDm(record()).includes('Rule 1: No spam — <https://meowist.example/rules#rule-1>'));
+    assert.ok(banDm(record()).includes('Rule 1: No spam — <https://mewvo.example/rules#rule-1>'));
 });
 
 test('DM: a failing rule lookup never blocks the DM — it is sent without the line', async () => {
@@ -219,7 +219,7 @@ test('/rules: the real reader refuses (503) while the settings were never loaded
 
 test('sitemap and footer include /rules', async () => {
     assert.ok(SITEMAP_PATHS.includes('/rules'));
-    assert.ok(sitemapXml('https://meowist.example').includes('<loc>https://meowist.example/rules</loc>'));
+    assert.ok(sitemapXml('https://mewvo.example').includes('<loc>https://mewvo.example/rules</loc>'));
     const site = await serve(() => ({ rules: [], updatedAt: null }));
     try {
         const footer = (await site.get('/faq')).body.split('<footer')[1];

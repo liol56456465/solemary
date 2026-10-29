@@ -14,7 +14,7 @@
 //   envUnit    how the env value is written when it differs from the stored unit
 //              (durations are stored in ms; their env vars are in minutes or days)
 //   fallback   the value used when the env var is empty (the old hardcoded default)
-//   prodOnly   the fallback points at the real Meowist servers: never used in test mode
+//   prodOnly   the fallback points at the real Mewvo servers: never used in test mode
 //   sensitive  never shown in full on a page or in the audit log
 //   schema     zod schema every new value must pass
 //

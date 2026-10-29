@@ -147,7 +147,7 @@ async function modmailRefusal(client, guild, userId) {
     if (await isModmailBlocked(client, guild.id, userId)) return 'You can\'t use modmail.';
     const member = await guild.members.fetch(userId).catch(() => null);
     if (!member) {
-        return 'Modmail is for members of the Meowist server. If you were banned, use the appeal panel in the support server.';
+        return 'Modmail is for members of the Mewvo server. If you were banned, use the appeal panel in the support server.';
     }
     return null;
 }
@@ -180,7 +180,7 @@ export async function handleModmailDm(message, client) {
 
     if (!(await checkRateLimit(`modmail:prompt:${userId}`, 3, 60_000))) return;
     await message.reply({
-        content: 'Do you want to send this message to the Meowist staff? They will reply here in DMs.',
+        content: 'Do you want to send this message to the Mewvo staff? They will reply here in DMs.',
         components: [promptRow(message.id)],
         allowedMentions: NO_MENTIONS,
     }).catch((error) => logger.warn(`Modmail prompt failed for ${userId}: ${error.message}`));
@@ -311,7 +311,7 @@ export async function closeModmail(channel, closer, reason = '') {
 
     const user = await client.users.fetch(userId).catch(() => null);
     await user?.send({
-        content: `Your conversation with the Meowist staff was closed.${note}\nSend a new message here any time to start another one.`,
+        content: `Your conversation with the Mewvo staff was closed.${note}\nSend a new message here any time to start another one.`,
         allowedMentions: NO_MENTIONS,
     }).catch(() => {});
 

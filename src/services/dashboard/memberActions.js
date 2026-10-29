@@ -28,9 +28,9 @@ export function targetProblem({ guild, target, actorId, actorMember, actorIsOwne
     if (!target) return 'That user is not in the server.';
     const id = target.id || target.user?.id;
     if (id === guild.ownerId) return 'The server owner cannot be changed from here.';
-    if (id === botMember?.id || id === botMember?.user?.id) return 'Meowist cannot change itself.';
+    if (id === botMember?.id || id === botMember?.user?.id) return 'Mewvo cannot change itself.';
     if (id === actorId) return 'You cannot change your own roles or timeout from here.';
-    if (highest(target) >= highest(botMember)) return `${target.user?.username || 'This member'} has a role at or above Meowist's highest role, so Discord does not let the bot change them.`;
+    if (highest(target) >= highest(botMember)) return `${target.user?.username || 'This member'} has a role at or above Mewvo's highest role, so Discord does not let the bot change them.`;
     if (!actorIsOwner && highest(target) >= highest(actorMember)) return `${target.user?.username || 'This member'} has a role at or above your highest role.`;
     return null;
 }
@@ -40,7 +40,7 @@ export function roleProblem({ guild, role, actorMember, actorIsOwner = false, bo
     if (!role) return 'That role no longer exists.';
     if (role.id === guild.id) return 'The @everyone role cannot be given or taken.';
     if (role.managed) return `@${role.name} is managed by an integration or bot; Discord does not allow changing it by hand.`;
-    if ((role.position ?? 0) >= highest(botMember)) return `@${role.name} is not below Meowist's highest role, so Discord does not let the bot give or take it.`;
+    if ((role.position ?? 0) >= highest(botMember)) return `@${role.name} is not below Mewvo's highest role, so Discord does not let the bot give or take it.`;
     if (!actorIsOwner && (role.position ?? 0) >= highest(actorMember)) return `@${role.name} is not below your highest role.`;
     const dangerous = getDangerousPermissions(role);
     if (dangerous.length && !actorIsOwner) {

@@ -25,7 +25,7 @@ test('the local test database may run without TLS', () => {
     const saved = process.env.POSTGRES_SSL;
     try {
         process.env.POSTGRES_SSL = 'false';
-        assert.equal(resolveSslConfig('postgresql://u:p@localhost:5433/meowist_test'), false);
+        assert.equal(resolveSslConfig('postgresql://u:p@localhost:5433/mewvo_test'), false);
     } finally {
         if (saved === undefined) delete process.env.POSTGRES_SSL;
         else process.env.POSTGRES_SSL = saved;

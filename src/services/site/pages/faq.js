@@ -10,11 +10,11 @@ function faqItems(ctx) {
         : 'the support server';
     return [
         {
-            group: 'About Meowist',
+            group: 'About Mewvo',
             items: [
-                ['What does Meowist do?', html`<p>It moderates a Discord server and runs its community features. Staff warn, mute, kick and ban from one panel; every action becomes a case with a code and the member gets a DM saying why, until when and how to appeal. Around that: a warning ladder, appeals, automod, tickets and modmail, a web dashboard, leveling and other community tools. The <a href="/features">features page</a> lists everything.</p>`],
-                ['Why can’t I add it to my server yet?', html`<p>${ctx.publicSite ? 'You can now: use the Add to Discord button at the top of the page.' : 'Meowist is built for and runs on the Meowist server only for now. Opening it to other servers needs more work first, such as settings and limits per server. When it opens, a button to add it to your server appears on this site, and the paid plans on the pricing page start then too.'}</p>`],
-                ['Is it free?', html`<p>Yes. Everything it does today is free. Paid plans with higher limits are planned for when Meowist opens to other servers; see <a href="/pricing">Pricing</a>.</p>`],
+                ['What does Mewvo do?', html`<p>It moderates a Discord server and runs its community features. Staff warn, mute, kick and ban from one panel; every action becomes a case with a code and the member gets a DM saying why, until when and how to appeal. Around that: a warning ladder, appeals, automod, tickets and modmail, a web dashboard, leveling and other community tools. The <a href="/features">features page</a> lists everything.</p>`],
+                ['Why can’t I add it to my server yet?', html`<p>${ctx.publicSite ? 'You can now: use the Add to Discord button at the top of the page.' : 'Mewvo is built for and runs on the Mewvo server only for now. Opening it to other servers needs more work first, such as settings and limits per server. When it opens, a button to add it to your server appears on this site, and the paid plans on the pricing page start then too.'}</p>`],
+                ['Is it free?', html`<p>Yes. Everything it does today is free. Paid plans with higher limits are planned for when Mewvo opens to other servers; see <a href="/pricing">Pricing</a>.</p>`],
             ],
         },
         {
@@ -29,7 +29,7 @@ function faqItems(ctx) {
         {
             group: 'Data and contact',
             items: [
-                ['What data does Meowist store?', html`<p>Discord IDs, your levels and XP, moderation cases, appeals and what you write in forms or tickets, and a few things you choose to save, such as a birthday. No email, no password, never sold. The <a href="/privacy">privacy page</a> has the full list, and <code>/wipedata</code> deletes your levels, balance and AFK status.</p>`],
+                ['What data does Mewvo store?', html`<p>Discord IDs, your levels and XP, moderation cases, appeals and what you write in forms or tickets, and a few things you choose to save, such as a birthday. No email, no password, never sold. The <a href="/privacy">privacy page</a> has the full list, and <code>/wipedata</code> deletes your levels, balance and AFK status.</p>`],
                 ['How do I reach the staff?', html`<p>Three ways: DM the bot and choose <strong>Send to staff</strong> (modmail), open a ticket from the ticket panel, or ask in ${support}. To report a staff member, use <strong>Report staff</strong> on the appeal panel in the support server; only administrators see those reports.</p>`],
                 ['Is the bot down?', html`<p>Check the <a href="/status">status page</a>. It shows whether the bot is online and refreshes every minute.</p>`],
             ],
@@ -41,7 +41,7 @@ export function faqPage(ctx) {
     const groups = faqItems(ctx);
     return layout(ctx, {
         title: 'FAQ', active: 'faq', path: '/faq',
-        description: 'Answers about Meowist: what it does, the warning ladder, appeals, stored data and how to reach staff.',
+        description: 'Answers about Mewvo: what it does, the warning ladder, appeals, stored data and how to reach staff.',
         body: html`<div class="wrap page">
 <header class="page-head page-head-split"><div><p class="section-num">Help</p><h1>Questions and answers</h1></div>
 <p class="lead">Short answers. For step-by-step guides, see the <a href="/docs">docs</a>.</p></header>

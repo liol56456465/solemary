@@ -9,7 +9,7 @@
 //
 // Separate from the dashboard on every level, so a member login can never open the
 // dashboard and a dashboard login never opens this page:
-//   - own cookies (meowist_me, meowist_me_state) with Path=/me;
+//   - own cookies (mewvo_me, mewvo_me_state) with Path=/me;
 //   - own signing key: an HMAC of SESSION_SECRET with a fixed label, so a value signed for
 //     the dashboard does not verify here (and the other way round), even under a renamed cookie;
 //   - own session table (member_sessions, same shape as dashboard_sessions, hashed ids, 1 h).
@@ -44,11 +44,11 @@ import { getMemberStanding, nextWarningText } from '../enforcement/standingServi
 import { NOINDEX, installUrl, inviteOrNull, layout, publicSiteEnabled } from './site.js';
 
 export const MEMBER_BASE = '/me';
-export const MEMBER_SESSION_COOKIE = 'meowist_me';
-export const MEMBER_STATE_COOKIE = 'meowist_me_state';
+export const MEMBER_SESSION_COOKIE = 'mewvo_me';
+export const MEMBER_STATE_COOKIE = 'mewvo_me_state';
 export const MEMBER_SESSION_TTL_MS = 60 * 60 * 1000;
 // The label that turns SESSION_SECRET into this page's own signing key.
-const KEY_LABEL = 'meowist member portal v1';
+const KEY_LABEL = 'mewvo member portal v1';
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
 const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
 const ME_URL = 'https://discord.com/api/v10/users/@me';
@@ -234,7 +234,7 @@ export function loginPage(ctx) {
         body: html`<div class="wrap page prose"><h1>My record</h1>
 <p class="lead">See your own moderation record in ${enforcementConfig.serverName}: your warnings, warning-ladder level, any active ban or mute, your cases and your appeals.</p>
 <p><a class="button" href="${MEMBER_BASE}/login">Log in with Discord</a></p>
-<p class="note">Meowist asks Discord only who you are (the identify permission): no email, no servers, nothing else. You only ever see your own record. The login lasts one hour.</p></div>`,
+<p class="note">Mewvo asks Discord only who you are (the identify permission): no email, no servers, nothing else. You only ever see your own record. The login lasts one hour.</p></div>`,
     });
 }
 

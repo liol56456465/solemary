@@ -73,8 +73,8 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
         return {
             allowed: false,
             message: guild.id === enforcementConfig.supportGuildId
-                ? 'This command only works in the main Meowist server.'
-                : 'Commands only work in the Meowist servers.',
+                ? 'This command only works in the main Mewvo server.'
+                : 'Commands only work in the Mewvo servers.',
         };
     }
     if (isEveryoneCommand(accessKey)) return { allowed: true };

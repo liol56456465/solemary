@@ -87,7 +87,7 @@ export function modulesPage({ session, access = null, moduleStates = {}, flash =
         return html`<a class="chip${f === filter ? ' is-active' : ''}" href="${path(`/modules${queryString({ show: f === 'all' ? '' : f, q: needle })}`)}"${f === filter ? html` aria-current="page"` : ''}>${label} <span class="chip-count">${count}</span></a>`;
     });
     const allKnown = all.filter((e) => e.on !== null);
-    const body = html`<header class="page-head"><h1>Modules</h1><p class="muted">Every part of Meowist in one place. ${allKnown.filter((e) => e.on).length} of ${allKnown.length} modules with an on/off state are on; open a module to change its settings.</p></header>
+    const body = html`<header class="page-head"><h1>Modules</h1><p class="muted">Every part of Mewvo in one place. ${allKnown.filter((e) => e.on).length} of ${allKnown.length} modules with an on/off state are on; open a module to change its settings.</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${needle ? html`<p class="search-result">${entries.length} module${entries.length === 1 ? ' matches' : 's match'} <strong>“${needle}”</strong> · <a href="${path('/modules')}">Show all</a></p>` : ''}
 ${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true).</p>` : ''}

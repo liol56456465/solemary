@@ -8,7 +8,7 @@ function fakeInteraction(id, isAdmin) {
         sent,
         id: `i-${id}`,
         user: { id, send: async (msg) => sent.push(['dm', msg]) },
-        guild: { id: 'g', name: 'Meowist', ownerId: 'owner' },
+        guild: { id: 'g', name: 'Mewvo', ownerId: 'owner' },
         guildId: 'g',
         channel: { send: async (msg) => { sent.push(['channel', msg]); return { delete: async () => {} }; } },
         memberPermissions: { has: () => isAdmin },

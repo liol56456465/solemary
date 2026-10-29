@@ -14,15 +14,15 @@ import { getConfiguredSetting, guildIdFor, settingSource } from '../services/set
 
 const SNOWFLAKE = /^\d{17,20}$/;
 
-// The real Meowist servers. Test mode refuses to start if any of these appears in
+// The real Mewvo servers. Test mode refuses to start if any of these appears in
 // TEST_GUILD_IDS, MAIN_GUILD_ID or SUPPORT_GUILD_ID, whatever else is configured.
 export const PRODUCTION_GUILD_IDS = new Map([
-    ['1527697154926182492', 'Meowist (main)'],
-    ['1564312871976829009', 'Meowist Support'],
+    ['1527697154926182492', 'Mewvo (main)'],
+    ['1564312871976829009', 'Mewvo Support'],
 ]);
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 
-// The production Meowist application (bot user ID). Test mode refuses it.
+// The production Mewvo application (bot user ID). Test mode refuses it.
 export const PRODUCTION_CLIENT_ID = '1531096173786566697';
 
 /** The bot user ID inside a bot token (its first part is the ID in base64), or null. */
@@ -43,10 +43,10 @@ export function botIdentityErrors(env = process.env) {
     const clientId = String(env.CLIENT_ID || '').trim();
     const tokenId = tokenBotId(env.DISCORD_TOKEN || env.TOKEN);
     if (clientId === PRODUCTION_CLIENT_ID) {
-        errors.push(`CLIENT_ID is the production Meowist bot (${PRODUCTION_CLIENT_ID}). Test mode needs the separate test bot's application ID.`);
+        errors.push(`CLIENT_ID is the production Mewvo bot (${PRODUCTION_CLIENT_ID}). Test mode needs the separate test bot's application ID.`);
     }
     if (tokenId === PRODUCTION_CLIENT_ID) {
-        errors.push('DISCORD_TOKEN is the production Meowist bot\'s token. Put the test bot\'s token in .env.test.');
+        errors.push('DISCORD_TOKEN is the production Mewvo bot\'s token. Put the test bot\'s token in .env.test.');
     } else if (tokenId && clientId && tokenId !== clientId) {
         errors.push(`DISCORD_TOKEN belongs to bot ${tokenId}, but CLIENT_ID is ${clientId}. Both must come from the test bot's application.`);
     }

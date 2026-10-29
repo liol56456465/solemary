@@ -116,10 +116,10 @@ export const FEATURE_GROUPS = [
 export function featuresPage(ctx) {
     return layout(ctx, {
         title: 'Features', active: 'features', path: '/features',
-        description: 'Everything Meowist does: enforcement, the warning ladder, appeals, automod, tickets and modmail, the web dashboard and community tools.',
+        description: 'Everything Mewvo does: enforcement, the warning ladder, appeals, automod, tickets and modmail, the web dashboard and community tools.',
         body: html`<div class="wrap page">
 <header class="page-head"><p class="section-num">Reference</p><h1>Features</h1>
-<p class="lead">Everything Meowist does today, grouped by area. Nothing on this page is planned or paid; for what may come with paid plans, see <a href="/pricing">Pricing</a>.</p></header>
+<p class="lead">Everything Mewvo does today, grouped by area. Nothing on this page is planned or paid; for what may come with paid plans, see <a href="/pricing">Pricing</a>.</p></header>
 <div class="with-index"><nav class="index" aria-label="Feature areas"><ol>${FEATURE_GROUPS.map((g, i) => html`<li><a href="#f-${g.key}"><span class="index-num">${String(i + 1).padStart(2, '0')}</span>${g.title}</a></li>`)}</ol></nav>
 <div class="index-body">${FEATURE_GROUPS.map((g, i) => html`<section class="ref-group" id="f-${g.key}" aria-labelledby="f-${g.key}-title">
 <p class="section-num"><span class="section-index">${String(i + 1).padStart(2, '0')}</span>${g.intro}</p><h2 id="f-${g.key}-title">${g.title}</h2>

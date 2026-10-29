@@ -17,7 +17,7 @@ function updatedOn(value) {
 
 export function rulesPage(ctx, data) {
     const head = html`<header class="page-head page-head-split"><div><p class="section-num">Community</p><h1>Server rules</h1></div>
-<p class="lead">The rules of the Meowist server. When staff warn, mute, kick or ban for one of them, the DM names the rule and links here.</p></header>`;
+<p class="lead">The rules of the Mewvo server. When staff warn, mute, kick or ban for one of them, the DM names the rule and links here.</p></header>`;
     let content;
     if (!data) {
         content = html`<p class="notice notice-bad" role="alert">The rules could not be loaded right now. Please try again in a minute.</p>`;
@@ -30,7 +30,7 @@ export function rulesPage(ctx, data) {
     }
     return layout(ctx, {
         title: 'Rules', active: 'rules', path: '/rules',
-        description: 'The rules of the Meowist Discord server.',
+        description: 'The rules of the Mewvo Discord server.',
         body: html`<div class="wrap page">${head}<div class="rules">${content}
 <p class="note rules-appeal">Punished for a rule you think you did not break? Every DM says whether and how it can be appealed. <a href="/docs/appeals">How appeals work</a>.</p></div></div>`,
     });

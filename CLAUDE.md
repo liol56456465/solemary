@@ -1,6 +1,6 @@
-# CLAUDE.md — Meowist Discord bot
+# CLAUDE.md — Mewvo Discord bot
 
-Owner: Ramūnas. Bot name: **Meowist**. Fork of TitanBot v2.1.0, now heavily customized.
+Owner: Ramūnas. Bot name: **Mewvo**. Fork of TitanBot v2.1.0, now heavily customized.
 Read this file first. Task list and resume notes: `plan.md` (repo root, not committed).
 
 ## Hard rules (never break)
@@ -59,7 +59,7 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 
 ## Servers and IDs (not secrets)
 
-- Main Meowist server: `1527697154926182492`. Support server: `1564312871976829009`.
+- Main Mewvo server: `1527697154926182492`. Support server: `1564312871976829009`.
 - Admin-request channel: `1527697155643408442`. Banned role (support server): `1564363121685176320`.
 - Client ID: `1531096173786566697`. Support invite: `https://discord.gg/7Ckv9Bt577` (permanent).
 - Production URL: `https://meowist--sxexx.replit.app` (port 5000).

@@ -9,8 +9,8 @@ import crypto from 'crypto';
 export const BASE_PATH = '/dashboard';
 export const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 export const STATE_TTL_MS = 10 * 60 * 1000;
-export const SESSION_COOKIE = 'meowist_dash';
-export const STATE_COOKIE = 'meowist_dash_state';
+export const SESSION_COOKIE = 'mewvo_dash';
+export const STATE_COOKIE = 'mewvo_dash_state';
 export const MIN_SECRET_LENGTH = 32;
 const SNOWFLAKE = /^\d{17,20}$/;
 

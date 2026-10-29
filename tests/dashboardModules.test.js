@@ -576,7 +576,7 @@ function post(h, module, action, form, { origin = ORIGIN, csrf = h.session.csrf,
 
 // ── image uploads (Welcome & goodbye) ─────────────────────────────────────
 
-const BOUNDARY = '----meowistWelcomeBoundary';
+const BOUNDARY = '----mewvoWelcomeBoundary';
 const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64, 1)]);
 const STORED_URL = 'https://cdn.discordapp.com/attachments/500000000000000001/800000000000000099/welcome-image.png?ex=ffffffff&is=1&hm=1';
 

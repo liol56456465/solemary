@@ -44,7 +44,7 @@ import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSetti
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
 
-class Meowist extends Client {
+class Mewvo extends Client {
   constructor() {
     super({
       intents: [
@@ -87,7 +87,7 @@ class Meowist extends Client {
 
   async start() {
     try {
-      startupLog('Starting Meowist...');
+      startupLog('Starting Mewvo...');
       if (testMode.enabled) {
         startupLog(`TEST MODE — effective config: ${JSON.stringify(describeTestMode())}`);
       }
@@ -553,7 +553,7 @@ class Meowist extends Client {
 }
 
 try {
-  const bot = new Meowist();
+  const bot = new Mewvo();
   
   const setupShutdown = () => {
     process.on('SIGTERM', () => bot.shutdown('SIGTERM'));
@@ -593,4 +593,4 @@ try {
   process.exit(1);
 }
 
-export default Meowist;
+export default Mewvo;

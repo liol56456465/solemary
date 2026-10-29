@@ -42,7 +42,7 @@ export function mainAppealPanel() {
                 '',
                 'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My standing** to see your warnings and what a next warning would do.',
                 '',
-                '-# Banned? Appeal in the Meowist Support server instead — the link is in your ban DM.',
+                '-# Banned? Appeal in the Mewvo Support server instead — the link is in your ban DM.',
             ].join('\n'),
             color: 'primary',
         })],
@@ -55,7 +55,7 @@ export function supportAppealPanel() {
         embeds: [createEmbed({
             title: `${enforcementConfig.serverName} appeals`,
             description: [
-                '**Appeal** — banned, kicked, muted or warned in Meowist? Press **Appeal** and fill in:',
+                '**Appeal** — banned, kicked, muted or warned in Mewvo? Press **Appeal** and fill in:',
                 '1. Why it should be lifted',
                 '2. Your case code, from the DM you got',
                 '3. More info, if you want to add anything',

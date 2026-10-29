@@ -112,7 +112,7 @@ export function feedUrl(sourceId) {
 export async function fetchYoutubeFeed(sourceId, fetchImpl = fetch) {
     const response = await fetchImpl(feedUrl(sourceId), {
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        headers: { 'user-agent': 'Meowist Discord bot (feed reader)' },
+        headers: { 'user-agent': 'Mewvo Discord bot (feed reader)' },
     });
     if (!response.ok) {
         const error = new Error(`HTTP ${response.status}`);

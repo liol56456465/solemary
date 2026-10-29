@@ -88,7 +88,7 @@ function panelServer(interaction) {
     return null;
 }
 
-const WRONG_PLACE = 'Appeals are handled in the Meowist servers.';
+const WRONG_PLACE = 'Appeals are handled in the Mewvo servers.';
 
 export async function handleAppealButton(interaction, client, args) {
     const server = panelServer(interaction);

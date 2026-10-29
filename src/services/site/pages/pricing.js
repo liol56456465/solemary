@@ -38,7 +38,7 @@ function cell(value) {
 
 function comparisonTable() {
     return html`<div class="table-wrap compare-wrap" role="region" aria-labelledby="compare-title" tabindex="0"><table class="compare">
-<caption class="visually-hidden">Plan comparison. Rows marked Planned are not built yet; the Free column is what Meowist does today.</caption>
+<caption class="visually-hidden">Plan comparison. Rows marked Planned are not built yet; the Free column is what Mewvo does today.</caption>
 <thead><tr><th scope="col">Feature</th>${PLANS.map((p) => html`<th scope="col">${p.name}</th>`)}</tr></thead>
 ${COMPARISON.map((group) => html`<tbody><tr class="compare-group"><th scope="rowgroup" colspan="${PLANS.length + 1}">${group.group}</th></tr>
 ${group.rows.map((row) => html`<tr><th scope="row">${row.label}${row.planned ? html` ${PLANNED}` : ''}</th>${PLANS.map((p) => cell(row.values[p.id]))}</tr>`)}</tbody>`)}
@@ -48,10 +48,10 @@ ${group.rows.map((row) => html`<tr><th scope="row">${row.label}${row.planned ? h
 export function pricingPage(ctx) {
     return layout(ctx, {
         title: 'Pricing', active: 'pricing', path: '/pricing',
-        description: 'Meowist is free today. Planned paid plans: Normal €1.99, Pro €4.99 and Max €9.99 a month, or two months free with yearly billing.',
+        description: 'Mewvo is free today. Planned paid plans: Normal €1.99, Pro €4.99 and Max €9.99 a month, or two months free with yearly billing.',
         body: html`<div class="wrap page">
 <header class="page-head page-head-split"><div><p class="section-num">Pricing</p><h1>Free today. Paid plans later.</h1></div>
-<p class="lead">Everything Meowist does now is free. Paid plans start when Meowist opens to other servers; until then nothing can be bought.${ctx.supportInvite ? html` <a href="${ctx.supportInvite}" rel="noopener">Join the support server</a> to hear first.` : ''}</p></header>
+<p class="lead">Everything Mewvo does now is free. Paid plans start when Mewvo opens to other servers; until then nothing can be bought.${ctx.supportInvite ? html` <a href="${ctx.supportInvite}" rel="noopener">Join the support server</a> to hear first.` : ''}</p></header>
 <div class="billing">
 <input class="billing-input" type="radio" name="billing" id="billing-monthly" value="monthly" checked>
 <input class="billing-input" type="radio" name="billing" id="billing-yearly" value="yearly">

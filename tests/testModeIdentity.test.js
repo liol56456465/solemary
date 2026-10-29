@@ -19,11 +19,11 @@ test('tokenBotId reads the bot ID from the first part of a token', () => {
 
 test('botIdentityErrors refuses the production CLIENT_ID and token, and a mismatched pair', () => {
     assert.deepEqual(botIdentityErrors({ CLIENT_ID: TEST_BOT, DISCORD_TOKEN: fakeToken(TEST_BOT) }), []);
-    assert.match(botIdentityErrors({ CLIENT_ID: PRODUCTION_CLIENT_ID, DISCORD_TOKEN: fakeToken(TEST_BOT) }).join(), /CLIENT_ID is the production Meowist bot/);
+    assert.match(botIdentityErrors({ CLIENT_ID: PRODUCTION_CLIENT_ID, DISCORD_TOKEN: fakeToken(TEST_BOT) }).join(), /CLIENT_ID is the production Mewvo bot/);
     // A test CLIENT_ID does not hide the production token.
-    assert.match(botIdentityErrors({ CLIENT_ID: TEST_BOT, DISCORD_TOKEN: fakeToken(PRODUCTION_CLIENT_ID) }).join(), /DISCORD_TOKEN is the production Meowist bot's token/);
+    assert.match(botIdentityErrors({ CLIENT_ID: TEST_BOT, DISCORD_TOKEN: fakeToken(PRODUCTION_CLIENT_ID) }).join(), /DISCORD_TOKEN is the production Mewvo bot's token/);
     assert.match(botIdentityErrors({ CLIENT_ID: '1600000000000000002', DISCORD_TOKEN: fakeToken(TEST_BOT) }).join(), /belongs to bot 1600000000000000001, but CLIENT_ID is 1600000000000000002/);
-    assert.match(botIdentityErrors({ CLIENT_ID: TEST_BOT, TOKEN: fakeToken(PRODUCTION_CLIENT_ID) }).join(), /production Meowist bot's token/, 'TOKEN alias too');
+    assert.match(botIdentityErrors({ CLIENT_ID: TEST_BOT, TOKEN: fakeToken(PRODUCTION_CLIENT_ID) }).join(), /production Mewvo bot's token/, 'TOKEN alias too');
 });
 
 const MAIN = '1700000000000000001';
@@ -39,7 +39,7 @@ test('test mode refuses to start with the production bot (real startup check, se
         { env: testEnv({ CLIENT_ID: PRODUCTION_CLIENT_ID, DISCORD_TOKEN: fakeToken(PRODUCTION_CLIENT_ID) }), encoding: 'utf8' });
     assert.equal(run.status, 1);
     assert.ok(!run.stdout.includes('STARTED'));
-    assert.match(run.stdout + run.stderr, /CLIENT_ID is the production Meowist bot/);
+    assert.match(run.stdout + run.stderr, /CLIENT_ID is the production Mewvo bot/);
     const ok = spawnSync(process.execPath, ['--input-type=module', '-e', "await import('./src/config/testMode.js'); console.log('STARTED');"],
         { env: testEnv(), encoding: 'utf8' });
     assert.equal(ok.status, 0, ok.stdout + ok.stderr);

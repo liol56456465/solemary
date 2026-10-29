@@ -1,4 +1,4 @@
-# Meowist — full-bot test script (test bot, test servers)
+# Mewvo — full-bot test script (test bot, test servers)
 
 Run with the **test bot** only (`npm run start:test`). The live deployment keeps running:
 the test bot has its own token and sees only `TEST_GUILD_IDS`.
@@ -6,7 +6,7 @@ Tick each line; if a result differs, note the step number and paste the bot's lo
 
 ## 0. One-time setup: the test bot
 
-1. <https://discord.com/developers/applications> → **New Application** → name it `Meowist Test`.
+1. <https://discord.com/developers/applications> → **New Application** → name it `Mewvo Test`.
 2. **Bot** tab → **Reset Token** → copy it into `.env.test` as `DISCORD_TOKEN` (never into chat or git).
    Turn on **Server Members Intent** and **Message Content Intent** (Presence is not needed).
 3. **General Information** → copy **Application ID** → `.env.test` `CLIENT_ID`.
@@ -18,8 +18,8 @@ Tick each line; if a result differs, note the step number and paste the bot's lo
    (test servers only) → open the URL → add the bot to your **test main** and **test support** servers.
 6. `.env.test`: add the dashboard block from `.env.test.example`; `SESSION_SECRET` = output of `openssl rand -hex 32`.
    Keep `TEST_GUILD_IDS`, `MAIN_GUILD_ID`, `SUPPORT_GUILD_ID` = the test servers.
-7. Check: `docker start meowist-test-db` then `npm run test:config` → no errors, `CLIENT_ID` = the test app.
-   With the old production values it must refuse: "CLIENT_ID is the production Meowist bot".
+7. Check: `docker start mewvo-test-db` then `npm run test:config` → no errors, `CLIENT_ID` = the test app.
+   With the old production values it must refuse: "CLIENT_ID is the production Mewvo bot".
 8. Start: `npm run start:test` → log shows "Discord login successful", presence "🛠 Maintenance".
 
 Accounts: **Admin** = you (Administrator in the test main server). **Alt A**, **Alt B** = two

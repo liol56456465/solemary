@@ -105,7 +105,7 @@ test('insightsPage: escapes names, explains missing activity data instead of inv
     assert.ok(off.includes('&lt;script&gt;x&lt;/script&gt;') && !off.includes('<script>x'), 'escaped');
     assert.ok(off.includes('&lt;img src=x&gt;'));
     assert.ok(off.includes('3<br><small class="muted">2 warns, 1 kick</small>'));
-    assert.match(off, /Not available: the only activity time Meowist stores is the last time leveling gave a member XP, and leveling is off/);
+    assert.match(off, /Not available: the only activity time Mewvo stores is the last time leveling gave a member XP, and leveling is off/);
     assert.ok(off.includes('Nothing counted yet'));
     assert.ok(!/style=/.test(off), 'no inline styles');
     assert.ok(off.includes('aria-current="page">Insights'), 'tab row');

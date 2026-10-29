@@ -49,12 +49,12 @@ export function homePage(ctx) {
     const body = html`<section class="hero"><div class="wrap hero-grid">
 <div class="hero-copy"><p class="kicker"><span class="kbd">Discord bot</span><span>Moderation, appeals and community tools</span></p>
 <h1>Discord moderation with a paper trail.</h1>
-<p class="lead">Meowist warns, mutes, kicks and bans from one panel. The member gets a DM with the reason, the end time and how to appeal. Your staff get a case they can review, correct or void.</p>
+<p class="lead">Mewvo warns, mutes, kicks and bans from one panel. The member gets a DM with the reason, the end time and how to appeal. Your staff get a case they can review, correct or void.</p>
 ${heroActions(ctx)}
-${ctx.publicSite ? '' : html`<p class="note">Meowist runs on its own server for now. It can’t be added to other servers yet.</p>`}</div>
+${ctx.publicSite ? '' : html`<p class="note">Mewvo runs on its own server for now. It can’t be added to other servers yet.</p>`}</div>
 <div class="hero-visual">${warnDmMock(ctx, { caption: 'The DM a member gets for a second warning. Wording from the bot, names made up.' })}</div></div></section>
 
-<section class="facts" aria-label="Meowist in numbers that never change"><div class="wrap"><dl class="facts-list">
+<section class="facts" aria-label="Mewvo in numbers that never change"><div class="wrap"><dl class="facts-list">
 <div><dt>Case codes</dt><dd>5–7 characters, like <code>k7xq2</code>. No 0, o, 1, l or i.</dd></div>
 <div><dt>Warnings</dt><dd>3 per level, then an automatic ban.</dd></div>
 <div><dt>Appeals</dt><dd>One open per case, decided by a person.</dd></div>
@@ -64,7 +64,7 @@ ${ctx.publicSite ? '' : html`<p class="note">Meowist runs on its own server for 
 ${section({
         id: 'enforcement', number: '01', label: 'Enforcement',
         title: 'One panel, with the member’s history on top.',
-        body: html`<p>Run <code>/enforcements</code> on a member and Meowist shows their account age, warnings, ladder level, active punishments and last cases before you choose what to do.</p>
+        body: html`<p>Run <code>/enforcements</code> on a member and Mewvo shows their account age, warnings, ladder level, active punishments and last cases before you choose what to do.</p>
 <p class="flow" aria-label="The steps"><kbd>Action</kbd><span aria-hidden="true">→</span><kbd>Reason</kbd><span aria-hidden="true">→</span><kbd>Duration</kbd><span aria-hidden="true">→</span><kbd>Confirm</kbd></p>
 <ul class="ticks"><li>The DM goes out before a kick or ban, so it still reaches the member. If it fails, the moderator is told.</li>
 <li>Every action is a case with a short code, and staff can edit it, void it or attach evidence later.</li>
@@ -120,7 +120,7 @@ ${section({
         title: 'The whole server in a browser tab.',
         body: html`<p>Members, cases, appeals, the staff inbox and every module’s settings, on one page per area. Sign in with Discord. Administrator is checked again on every request, and every change is written to an audit log with the old and the new value.</p>
 <p><a class="more" href="/docs/using-the-dashboard">A tour of the dashboard</a></p>`,
-        visual: dashboardShot({ name: 'overview', alt: 'The Meowist dashboard Overview page: a “Needs you” list with two appeals waiting, open tickets and a setup step, a bar chart of moderation actions over the last seven days, member and sanction counts, and the bot’s health.', caption: 'The Overview page of the dashboard, with made-up members and cases.', eager: true }),
+        visual: dashboardShot({ name: 'overview', alt: 'The Mewvo dashboard Overview page: a “Needs you” list with two appeals waiting, open tickets and a setup step, a bar chart of moderation actions over the last seven days, member and sanction counts, and the bot’s health.', caption: 'The Overview page of the dashboard, with made-up members and cases.', eager: true }),
     })}
 
 <section class="block" id="community" aria-labelledby="community-title"><div class="wrap split split-narrow">
@@ -130,16 +130,16 @@ ${section({
 
 <section class="block block-pricing" aria-labelledby="pricing-title"><div class="wrap split split-narrow">
 <div class="split-copy"><p class="section-num"><span class="section-index">€</span>Pricing</p><h2 id="pricing-title">Free while it runs on one server.</h2>
-<p>Everything above is free. Paid plans with higher limits come when Meowist opens to other servers.</p><p><a class="more" href="/pricing">Compare plans</a></p></div>
+<p>Everything above is free. Paid plans with higher limits come when Mewvo opens to other servers.</p><p><a class="more" href="/pricing">Compare plans</a></p></div>
 <ul class="price-rows"><li><span class="price-name">Free</span><span class="price-desc">Everything on this page</span><span class="price-amount">€0</span></li>
 ${paid.map((p) => html`<li><span class="price-name">${p.name}</span><span class="price-desc">${p.summary}</span><span class="price-amount">${euros(p.monthlyCents)}<span class="per">/month</span></span></li>`)}</ul></div></section>
 
 <section class="cta" aria-labelledby="cta-title"><div class="wrap cta-inner"><div><h2 id="cta-title">See it on a real server.</h2>
-<p>${ctx.publicSite ? 'Add Meowist to your server, or look around ours first.' : 'Meowist runs the Meowist Discord server. Join it to see the appeal panel, the leaderboard and the bot at work.'}</p></div>
+<p>${ctx.publicSite ? 'Add Mewvo to your server, or look around ours first.' : 'Mewvo runs the Mewvo Discord server. Join it to see the appeal panel, the leaderboard and the bot at work.'}</p></div>
 ${heroActions(ctx, { how: '/docs', howLabel: 'Read the docs', dashboard: false })}</div></section>`;
     return layout(ctx, {
-        title: 'Meowist', active: 'home', path: '/',
-        description: 'Meowist is a Discord bot for moderation with case codes and DMs, a three-step warning ladder, appeals that reach a person, automod, tickets and community tools.',
+        title: 'Mewvo', active: 'home', path: '/',
+        description: 'Mewvo is a Discord bot for moderation with case codes and DMs, a three-step warning ladder, appeals that reach a person, automod, tickets and community tools.',
         body,
     });
 }

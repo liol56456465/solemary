@@ -80,7 +80,7 @@ test('env seeding: units, lists, empty values and production-only defaults', () 
     assert.deepEqual(envValue(e('extraBlockedWords'), { AUTOMOD_EXTRA_WORDS: 'Foo, BAR' }), ['foo', 'bar']);
     assert.equal(envValue(e('modLogChannelId'), { MOD_LOG_CHANNEL_ID: '  ' }), undefined);
     assert.equal(seedValue(e('appealWindowMs'), {}), 30 * 86400000, 'hardcoded value (no env var)');
-    // Production-only fallbacks (real Meowist IDs) never apply in test mode.
+    // Production-only fallbacks (real Mewvo IDs) never apply in test mode.
     assert.equal(seedValue(e('adminRequestChannelId'), { NODE_ENV: 'test' }), null, 'bug fix: no prod ID in test mode');
     assert.equal(seedValue(e('adminRequestChannelId'), { NODE_ENV: 'production' }), '1527697155643408442');
     assert.deepEqual(seedValue(e('warnRoleIds'), { NODE_ENV: 'test' }), []);

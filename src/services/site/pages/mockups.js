@@ -14,7 +14,7 @@ const inviteText = (ctx) => ctx.supportInvite || 'https://discord.gg/…';
 /** A Discord message from the bot: avatar, name, APP tag, time, then the lines. */
 function botMessage(lines, { time = 'Today at 14:05' } = {}) {
     return html`<div class="dc-msg"><span class="dc-avatar" aria-hidden="true">${LOGO}</span><div class="dc-content">
-<p class="dc-meta"><span class="dc-name">Meowist</span><span class="dc-app">APP</span><span class="dc-time">${time}</span></p>
+<p class="dc-meta"><span class="dc-name">Mewvo</span><span class="dc-app">APP</span><span class="dc-time">${time}</span></p>
 ${lines}</div></div>`;
 }
 
@@ -25,8 +25,8 @@ function frame(label, body, { className = '', caption = '' } = {}) {
 
 /** Warning 2 of 3: dmTemplates.warnDm. */
 export function warnDmMock(ctx, { caption = '' } = {}) {
-    return frame('Direct message · Meowist', botMessage(html`<p><strong>Appeal here:</strong> <span class="dc-link">${inviteText(ctx)}</span></p>
-<p><strong>Warning 2 of 3 in Meowist</strong></p>
+    return frame('Direct message · Mewvo', botMessage(html`<p><strong>Appeal here:</strong> <span class="dc-link">${inviteText(ctx)}</span></p>
+<p><strong>Warning 2 of 3 in Mewvo</strong></p>
 <p>By: mira</p>
 <p>Reason: Spam in #general</p>
 <p>Date: <span class="dc-stamp">Thursday, 29 October 2026 at 14:05</span></p>
@@ -36,9 +36,9 @@ export function warnDmMock(ctx, { caption = '' } = {}) {
 
 /** The automatic 7-day ban on the third warning: dmTemplates.banDm for a ladder ban. */
 export function banDmMock(ctx, { caption = '' } = {}) {
-    return frame('Direct message · Meowist', botMessage(html`<p><strong>Appeal here:</strong> <span class="dc-link">${inviteText(ctx)}</span></p>
-<p><strong>Banned from Meowist</strong></p>
-<p>By: Meowist</p>
+    return frame('Direct message · Mewvo', botMessage(html`<p><strong>Appeal here:</strong> <span class="dc-link">${inviteText(ctx)}</span></p>
+<p><strong>Banned from Mewvo</strong></p>
+<p>By: Mewvo</p>
 <p>Reason: Reached warning limit</p>
 <p>Date: <span class="dc-stamp">Saturday, 31 October 2026 at 19:40</span></p>
 <p>Duration: 7 days — ends <span class="dc-stamp">Saturday, 7 November 2026 at 19:40</span> <span class="dc-stamp">(in 7 days)</span></p>

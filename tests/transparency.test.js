@@ -186,7 +186,7 @@ async function serve({ enabled = true, read = async () => REPORT, env = {} } = {
 }
 
 test('off: /transparency is the 404 page, nothing is read, no footer link, not in the sitemap', async () => {
-    const site = await serve({ enabled: false, env: { PUBLIC_SITE_ENABLED: 'true', PUBLIC_URL: 'https://meowist.example' } });
+    const site = await serve({ enabled: false, env: { PUBLIC_SITE_ENABLED: 'true', PUBLIC_URL: 'https://mewvo.example' } });
     try {
         const page = await site.get('/transparency');
         assert.equal(page.status, 404);
@@ -208,7 +208,7 @@ test('a setting read that throws counts as off', async () => {
 });
 
 test('on: numbers only, small counts hidden, current month marked, footer link and sitemap entry', async () => {
-    const site = await serve({ env: { PUBLIC_SITE_ENABLED: 'true', PUBLIC_URL: 'https://meowist.example' } });
+    const site = await serve({ env: { PUBLIC_SITE_ENABLED: 'true', PUBLIC_URL: 'https://mewvo.example' } });
     try {
         const page = await site.get('/transparency');
         assert.equal(page.status, 200);
@@ -238,7 +238,7 @@ test('on: numbers only, small counts hidden, current month marked, footer link a
         assert.ok(!/style=|<script/i.test(body));
         assert.match(body, /<li><a href="\/transparency" aria-current="page">Transparency<\/a><\/li>/);
         assert.match((await site.get('/about')).body, /href="\/transparency"/);
-        assert.match((await site.get('/sitemap.xml')).body, /<loc>https:\/\/meowist\.example\/transparency<\/loc>/);
+        assert.match((await site.get('/sitemap.xml')).body, /<loc>https:\/\/mewvo\.example\/transparency<\/loc>/);
     } finally { await site.close(); }
 });
 

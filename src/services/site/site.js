@@ -107,7 +107,7 @@ export function commandsPage(ctx) {
     const groups = everyoneCommandGroups(ctx.commands);
     return layout(ctx, {
         title: 'Commands', active: 'commands', path: '/commands',
-        description: 'The Meowist commands every member can use.',
+        description: 'The Mewvo commands every member can use.',
         body: html`<div class="wrap page"><header class="page-head page-head-split"><div><p class="section-num">Reference</p><h1>Commands</h1></div>
 <p class="lead">The commands every member can use. Staff tools live on the dashboard and need the Administrator role.</p></header>
 ${groups.length > 1 ? html`<nav class="jump" aria-label="Command groups"><ul>${groups.map((g) => html`<li><a href="#c-${g.key}">${g.label}</a></li>`)}</ul></nav>` : ''}
@@ -119,20 +119,20 @@ ${groups.map((g) => html`<section class="cmd-group" id="c-${g.key}" aria-labelle
 export function aboutPage(ctx) {
     return layout(ctx, {
         title: 'About', active: 'about', path: '/about',
-        description: 'About Meowist, the Discord bot of the Meowist server.',
-        body: html`<div class="wrap page prose"><p class="section-num">About</p><h1>About Meowist</h1>
-<p class="lead">Meowist is the bot of the Meowist Discord server, built and run by its owner for that community.</p>
+        description: 'About Mewvo, the Discord bot of the Mewvo server.',
+        body: html`<div class="wrap page prose"><p class="section-num">About</p><h1>About Mewvo</h1>
+<p class="lead">Mewvo is the bot of the Mewvo Discord server, built and run by its owner for that community.</p>
 <h2>How it started</h2>
-<p>Meowist began as a fork of TitanBot, an open-source (MIT) Discord bot, and has since been rebuilt around the server’s own needs: an enforcement system with case codes and appeals, a warning ladder, automod, tickets and modmail, and a web dashboard for the staff team.</p>
+<p>Mewvo began as a fork of TitanBot, an open-source (MIT) Discord bot, and has since been rebuilt around the server’s own needs: an enforcement system with case codes and appeals, a warning ladder, automod, tickets and modmail, and a web dashboard for the staff team.</p>
 <h2>How it treats members</h2>
 <ul><li>Every punishment comes with a DM that says what happened, why, until when, and whether and how it can be appealed.</li>
 <li>Staff actions are recorded as cases, so decisions can be reviewed and corrected.</li>
 <li>Verification asks Discord only for your identity and permission to add you to the support server, never your email.</li>
 <li>Members can delete their own data from the bot in a server with <code>/wipedata</code>.</li></ul>
 <h2>Availability</h2>
-<p>${ctx.publicSite ? 'Meowist can be added to other servers with the button at the top of the page.' : 'For now Meowist runs only on its own server; it can’t be added to other servers yet.'}</p>
+<p>${ctx.publicSite ? 'Mewvo can be added to other servers with the button at the top of the page.' : 'For now Mewvo runs only on its own server; it can’t be added to other servers yet.'}</p>
 <h2>Get help</h2>
-<p>${ctx.supportInvite ? html`Questions, appeals or problems: <a href="${ctx.supportInvite}" rel="noopener">join the support server</a>.` : 'Ask the staff team on the Meowist server.'}</p></div>`,
+<p>${ctx.supportInvite ? html`Questions, appeals or problems: <a href="${ctx.supportInvite}" rel="noopener">join the support server</a>.` : 'Ask the staff team on the Mewvo server.'}</p></div>`,
     });
 }
 
@@ -202,12 +202,12 @@ const formatNumber = (value) => (Number(value) || 0).toLocaleString('en-US');
 /** `board` is the reader's result (with one row too many when there is a next page), or null when the read failed. */
 export function leaderboardPage(ctx, { page, board }) {
     const head = html`<header class="page-head page-head-split"><div><p class="section-num">Leveling</p><h1>Leaderboard</h1></div>
-<p class="lead">The most active members of the Meowist server by level and total XP. You earn XP by chatting; members who delete their data with <code>/wipedata</code> are not listed.</p></header>`;
+<p class="lead">The most active members of the Mewvo server by level and total XP. You earn XP by chatting; members who delete their data with <code>/wipedata</code> are not listed.</p></header>`;
     let content;
     if (!board) {
         content = html`<p class="notice notice-bad" role="alert">The leaderboard could not be loaded right now. Nothing was changed; please try again in a minute.</p>`;
     } else if (!board.enabled) {
-        content = html`<p class="notice">Leveling is turned off on the Meowist server, so there is no leaderboard right now.</p>`;
+        content = html`<p class="notice">Leveling is turned off on the Mewvo server, so there is no leaderboard right now.</p>`;
     } else {
         const rows = board.rows.slice(0, LEADERBOARD_PAGE_SIZE);
         const hasNext = board.rows.length > LEADERBOARD_PAGE_SIZE;
@@ -223,7 +223,7 @@ export function leaderboardPage(ctx, { page, board }) {
     }
     return layout(ctx, {
         title: page > 1 ? `Leaderboard, page ${page}` : 'Leaderboard', active: 'leaderboard', path: page > 1 ? `/leaderboard?page=${page}` : '/leaderboard',
-        description: 'The Meowist server leveling leaderboard.',
+        description: 'The Mewvo server leveling leaderboard.',
         body: html`<div class="wrap page">${head}${content}</div>`,
     });
 }
@@ -252,9 +252,9 @@ export function uptimeWords(ms) {
 }
 
 const STATUS_TEXT = {
-    online: { label: 'Online', text: 'Meowist is running normally.' },
-    starting: { label: 'Starting', text: 'Meowist is starting or reconnecting to Discord. Commands answer again in a moment.' },
-    degraded: { label: 'Degraded', text: 'Meowist is connected to Discord but its database is not responding. Commands that read or save data may fail until it recovers.' },
+    online: { label: 'Online', text: 'Mewvo is running normally.' },
+    starting: { label: 'Starting', text: 'Mewvo is starting or reconnecting to Discord. Commands answer again in a moment.' },
+    degraded: { label: 'Degraded', text: 'Mewvo is connected to Discord but its database is not responding. Commands that read or save data may fail until it recovers.' },
 };
 
 export function statusPage(ctx, status) {
@@ -263,7 +263,7 @@ export function statusPage(ctx, status) {
     const uptime = state !== 'starting' && Number.isFinite(status?.uptimeMs) ? status.uptimeMs : null;
     return layout(ctx, {
         title: 'Status', active: 'status', refresh: 60, path: '/status',
-        description: 'Whether the Meowist bot is online.',
+        description: 'Whether the Mewvo bot is online.',
         body: html`<div class="wrap page prose"><p class="section-num">System</p><h1>Status</h1>
 <p class="status status-${state}"><span class="status-dot" aria-hidden="true"></span>${label}</p>
 <p class="lead">${text}</p>
@@ -278,25 +278,25 @@ export const LEGAL_UPDATED = '2026-10-29';
 const updatedLine = () => html`<p class="note">Last updated <time datetime="${LEGAL_UPDATED}">29 October 2026</time>.</p>`;
 const contactLine = (ctx) => (ctx.supportInvite
     ? html`<a href="${ctx.supportInvite}" rel="noopener">the support server</a>`
-    : 'the staff team on the Meowist server');
+    : 'the staff team on the Mewvo server');
 
 // Written from what the code stores (utils/database/schema.js, oauthVerification.js,
 // verificationGuard.js, wipedataButtons.js, dashboard/security.js, utils/logger.js); nothing invented.
 export function privacyPage(ctx) {
     return layout(ctx, {
         title: 'Privacy', active: 'privacy', path: '/privacy',
-        description: 'What the Meowist bot stores about you and why.',
+        description: 'What the Mewvo bot stores about you and why.',
         body: html`<div class="wrap page prose"><p class="section-num">Legal</p><h1>Privacy</h1>
 ${updatedLine()}
-<p class="lead">What Meowist stores, why, and how to have it removed. Meowist is run by its owner for the Meowist Discord server. Your data is never sold or used for advertising.</p>
+<p class="lead">What Mewvo stores, why, and how to have it removed. Mewvo is run by its owner for the Mewvo Discord server. Your data is never sold or used for advertising.</p>
 <h2>In short</h2>
-<ul><li>Meowist works with Discord IDs (the numbers that identify accounts, servers and channels). Where a record needs a readable name, such as a moderation case, the username at that moment is saved with it.</li>
+<ul><li>Mewvo works with Discord IDs (the numbers that identify accounts, servers and channels). Where a record needs a readable name, such as a moderation case, the username at that moment is saved with it.</li>
 <li>Everything is kept in a PostgreSQL database used only by the bot. Nothing is shared, except with Discord, which the bot runs on, and the services that host the bot and its database.</li>
-<li>Meowist never asks for your email address or your password.</li></ul>
+<li>Mewvo never asks for your email address or your password.</li></ul>
 <h2>Leveling</h2>
 <p>For each server: your XP, your level and when your last message counted towards XP. The text of your messages is not saved for this. Levels are shown on the server’s leaderboard and on this website’s leaderboard (your server display name, level and total XP).</p>
 <h2>Moderation records</h2>
-<p>When staff warn, mute, kick or ban someone, Meowist saves a case: the case code, the type, the reason, who took the action, when, how long it lasts, whether it can be appealed and whether the DM about it was delivered. Changes to a case are kept as its history. Staff can attach evidence: links to messages with a short excerpt of the text (kept in case the message is deleted) and images, which are re-posted in a staff-only channel. Your step on the warning ladder is stored per server and is never reset automatically.</p>
+<p>When staff warn, mute, kick or ban someone, Mewvo saves a case: the case code, the type, the reason, who took the action, when, how long it lasts, whether it can be appealed and whether the DM about it was delivered. Changes to a case are kept as its history. Staff can attach evidence: links to messages with a short excerpt of the text (kept in case the message is deleted) and images, which are re-posted in a staff-only channel. Your step on the warning ladder is stored per server and is never reset automatically.</p>
 <p>A case that turns out to be a mistake can be voided: it stays on record but no longer counts.</p>
 <h2>Appeals, reports, tickets and modmail</h2>
 <ul><li><strong>Appeals and staff reports:</strong> what you write in the form, the decision, who made it and the staff note. The conversation happens in a Discord channel; when an appeal is decided, a transcript of that channel is posted to a staff-only channel.</li>
@@ -304,7 +304,7 @@ ${updatedLine()}
 <li><strong>Modmail:</strong> when you message the bot and choose to send it to staff, your messages are passed on to a staff channel. The database only keeps which channel belongs to which member; when the conversation is closed, a transcript is posted to a staff-only channel.</li></ul>
 <h2>Verification</h2>
 <p>If a server uses “Verify with Discord”, you sign in with Discord and allow two things: <code>identify</code> (your account’s ID and name) and <code>guilds.join</code> (so the bot can add you to the support server, which keeps appeal messages reaching you even after a ban). The sign-in tokens Discord gives the bot are stored encrypted (AES-256-GCM).</p>
-<p>To spot people coming back on a new account after a ban, Meowist stores a keyed one-way hash of the IP address you verified from, never the address itself. These hashes are deleted after 60 days, unless the account has an active ban on the Meowist server. Accounts younger than 7 days, and accounts that match a banned member’s hash, are held for a person on the staff team to approve; a match alone never refuses anyone. Verification actions (for example verified, or approved by staff) are recorded with their time.</p>
+<p>To spot people coming back on a new account after a ban, Mewvo stores a keyed one-way hash of the IP address you verified from, never the address itself. These hashes are deleted after 60 days, unless the account has an active ban on the Mewvo server. Accounts younger than 7 days, and accounts that match a banned member’s hash, are held for a person on the staff team to approve; a match alone never refuses anyone. Verification actions (for example verified, or approved by staff) are recorded with their time.</p>
 <h2>Server logs and member history</h2>
 <p>If a server turns on logging, events such as joins, leaves, role changes and edited or deleted messages (including their text) are posted to that server’s staff log channels on Discord. Joins and leaves are also kept in the database for 90 days, for the staff’s member statistics.</p>
 <h2>Things you choose to save</h2>
@@ -318,31 +318,31 @@ ${updatedLine()}
 <h2>Blocked accounts</h2>
 <p>Accounts or servers blocked from using the bot are recorded with the reason and who blocked them. Lifting a block keeps the entry as history.</p>
 <h2>Changes and contact</h2>
-<p>When what Meowist stores changes, this page is updated along with the date above. Questions about your data: ask in ${contactLine(ctx)}.</p></div>`,
+<p>When what Mewvo stores changes, this page is updated along with the date above. Questions about your data: ask in ${contactLine(ctx)}.</p></div>`,
     });
 }
 
 export function termsPage(ctx) {
     return layout(ctx, {
         title: 'Terms', active: 'terms', path: '/terms',
-        description: 'The rules for using the Meowist bot.',
+        description: 'The rules for using the Mewvo bot.',
         body: html`<div class="wrap page prose"><p class="section-num">Legal</p><h1>Terms</h1>
 ${updatedLine()}
-<p class="lead">The short rules for using Meowist. By using the bot you accept them.</p>
+<p class="lead">The short rules for using Mewvo. By using the bot you accept them.</p>
 <h2>Using the bot</h2>
 <ul><li>Follow Discord’s Terms of Service and Community Guidelines, and the rules of the server you are in.</li>
-<li>Don’t use Meowist to harass anyone, to spam, or to get around a punishment.</li>
+<li>Don’t use Mewvo to harass anyone, to spam, or to get around a punishment.</li>
 <li>Don’t try to break, overload or misuse the bot, this website or the dashboard.</li></ul>
 <h2>Moderation decisions</h2>
-<p>Meowist carries out what a server’s staff decide. Warnings, mutes, kicks and bans are decisions of that server’s staff team; the automatic steps of the warning ladder follow the rules that server has set.</p>
+<p>Mewvo carries out what a server’s staff decide. Warnings, mutes, kicks and bans are decisions of that server’s staff team; the automatic steps of the warning ladder follow the rules that server has set.</p>
 <h2>Appeals</h2>
 <p>If a punishment can be appealed, the DM about it says how. One appeal per case can be open at a time, and staff decide and tell you the result. Some punishments cannot be appealed; the DM says so.</p>
 <h2>Being blocked</h2>
-<p>The bot’s owner can block an account or a server from using Meowist, for example for abusing it.</p>
+<p>The bot’s owner can block an account or a server from using Mewvo, for example for abusing it.</p>
 <h2>No warranty</h2>
-<p>Meowist is provided as it is, for free, without any promise that it is always available, free of errors or fit for a particular purpose. It can change, pause or stop at any time.</p>
+<p>Mewvo is provided as it is, for free, without any promise that it is always available, free of errors or fit for a particular purpose. It can change, pause or stop at any time.</p>
 <h2>Your data</h2>
-<p>See the <a href="/privacy">privacy page</a> for what Meowist stores and how to delete it.</p>
+<p>See the <a href="/privacy">privacy page</a> for what Mewvo stores and how to delete it.</p>
 <h2>Changes</h2>
 <p>These terms can change; the date above shows the latest version. Questions: ask in ${contactLine(ctx)}.</p></div>`,
     });

@@ -41,7 +41,7 @@ export function missingBotPerms(guild, channel, perms) {
 function requireBotPerms(guild, channel, perms, doing) {
     const missing = missingBotPerms(guild, channel, perms);
     if (missing.length) {
-        throw refuse(`Meowist is missing ${missing.join(', ')} in #${channel.name}, so it cannot ${doing} there. Nothing was changed.`, 'permission');
+        throw refuse(`Mewvo is missing ${missing.join(', ')} in #${channel.name}, so it cannot ${doing} there. Nothing was changed.`, 'permission');
     }
 }
 

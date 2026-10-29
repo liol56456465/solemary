@@ -47,11 +47,11 @@ test('join gate: only enabled checks hit, the strongest action wins', () => {
 });
 
 test('join gate: the kick DM explains only the kick reasons and how to come back', () => {
-    const text = kickNotice('Meowist', [
+    const text = kickNotice('Mewvo', [
         { check: 'avatar', action: 'kick', reason: 'no profile picture' },
         { check: 'botname', action: 'flag', reason: 'generated-looking username' },
     ]);
-    assert.match(text, /removed from \*\*Meowist\*\*/);
+    assert.match(text, /removed from \*\*Mewvo\*\*/);
     assert.match(text, /no profile picture/);
     assert.doesNotMatch(text, /generated/);
     assert.match(text, /not a ban/);

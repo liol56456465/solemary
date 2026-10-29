@@ -33,7 +33,7 @@ function ruleForm(csrf, values, { givable, roles, enabled }) {
 <label>When<select name="trigger" required>${Object.entries(RULE_TRIGGERS).map(([k, label]) => opt(k, label, v.trigger || 'days_in_server'))}</select></label>
 <label>Days or level<input type="number" name="threshold" value="${v.threshold ?? ''}" min="0" max="${Math.max(MAX_DAYS, MAX_LEVEL)}" step="1"><span class="hint">Days in the server (0 = on joining, up to ${MAX_DAYS}) or the leveling level (1–${MAX_LEVEL}). Not used for "Has a role".</span></label>
 <label>Trigger role<select name="triggerRoleId">${opt('', '— only for "Has a role" —', v.triggerRoleId)}${roles.map((r) => opt(r.id, `@${r.name}`, v.triggerRoleId))}</select></label>
-<label>Give this role<select name="roleId" required>${opt('', '— choose —', v.roleId)}${givable.map((r) => opt(r.id, `@${r.name}`, v.roleId))}</select><span class="hint">Only roles below Meowist (and below your own top role), not managed, without staff permissions.</span></label>
+<label>Give this role<select name="roleId" required>${opt('', '— choose —', v.roleId)}${givable.map((r) => opt(r.id, `@${r.name}`, v.roleId))}</select><span class="hint">Only roles below Mewvo (and below your own top role), not managed, without staff permissions.</span></label>
 </div>
 <label class="check"><input type="checkbox" name="removeWhenFalse" value="1"${v.removeWhenFalse ? raw(' checked') : ''}> Take the role away again when the condition is no longer true</label>
 <p class="muted">Taking away also applies to members who got the role by hand; a member still matched by another enabled rule for the same role keeps it.</p>
@@ -78,7 +78,7 @@ export function roleRulesPage({ session, access = null, moduleStates = {}, rules
 ${rules.map((rule) => ruleRow(rule, { csrf, canWrite, roleName, problem: problems.get(rule.id) || null }))}</tbody></table></div>`
         : loadError ? '' : html`<p class="empty">No role rules yet.</p>`;
     const full = rules.length >= MAX_RULES && !editing;
-    const body = html`<header class="page-head"><h1>Role rules</h1><p class="muted">Roles Meowist gives by itself: checked every 10 minutes (at most ${RUN_CHANGE_LIMIT} role changes per run, one at a time), and right away when a member joins, levels up or gets a role.</p></header>
+    const body = html`<header class="page-head"><h1>Role rules</h1><p class="muted">Roles Mewvo gives by itself: checked every 10 minutes (at most ${RUN_CHANGE_LIMIT} role changes per run, one at a time), and right away when a member joins, levels up or gets a role.</p></header>
 ${memberTabs('rules')}
 ${notices({ flash, error, editEnabled, canAct })}
 ${loadError ? html`<p class="error" role="alert">${loadError}</p>` : ''}
@@ -177,7 +177,7 @@ ${noRoles ? (noRoles.rows.length ? html`<ul class="skip-list">${noRoles.rows.map
 ${offenders ? (offenders.length ? html`<div class="table-wrap"><table><thead><tr><th>Member</th><th>Cases</th><th>Last</th></tr></thead><tbody>${offenders.map((r) => html`<tr><td><a href="${userHref(r.userId)}">${r.username}</a> <small class="muted">${r.userId}</small></td><td>${r.cases}<br><small class="muted">${kinds(r)}</small></td><td class="nowrap">${formatDate(r.lastAt)}</td></tr>`)}</tbody></table></div>` : html`<p class="empty">Nobody has two or more cases in the last ${OFFENDER_DAYS} days.</p>`)
         : html`<p class="error" role="alert">${offendersError || 'Could not be loaded.'}</p>`}</section>`;
     const inactiveCard = html`<section class="card"><h2>Inactive members (no XP for ${INACTIVE_DAYS}+ days)</h2>
-${!levelingOn ? html`<p class="notice">Not available: the only activity time Meowist stores is the last time leveling gave a member XP, and leveling is off. Turn leveling on to start measuring; nothing is guessed here.</p>`
+${!levelingOn ? html`<p class="notice">Not available: the only activity time Mewvo stores is the last time leveling gave a member XP, and leveling is off. Turn leveling on to start measuring; nothing is guessed here.</p>`
         : inactive ? html`<p class="muted">Activity = the last time leveling gave the member XP (messages that earn XP). Members in the server for less than ${INACTIVE_DAYS} days and bots are left out. ${inactive.noRecord} member${inactive.noRecord === 1 ? ' has' : 's have'} no leveling record at all (never earned XP, or before leveling was on) and ${inactive.noRecord === 1 ? 'is' : 'are'} not listed.</p>
 ${inactive.rows.length ? html`<ul class="skip-list">${inactive.rows.map((r) => memberLink(r, html`last XP ${formatDate(r.lastActiveAt)}`))}</ul>${inactive.total > inactive.rows.length ? html`<p class="muted">… and ${inactive.total - inactive.rows.length} more.</p>` : ''}` : html`<p class="empty">Nobody with a leveling record has been quiet for ${INACTIVE_DAYS} days.</p>`}`
             : html`<p class="error" role="alert">${inactiveError || 'Could not be loaded.'}</p>`}</section>`;

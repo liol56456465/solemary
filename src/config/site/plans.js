@@ -1,6 +1,6 @@
 // plans.js — the plans on the website's Pricing page (/pricing) and the Home teaser.
 //
-// DRAFT FOR THE OWNER TO EDIT. Nothing here is on sale: paid plans start when Meowist opens
+// DRAFT FOR THE OWNER TO EDIT. Nothing here is on sale: paid plans start when Mewvo opens
 // to other servers, and every paid perk below is PLANNED (not built yet) unless the row says
 // otherwise. Change names, prices, perks and the comparison freely; the pages read only this file.
 //
@@ -19,7 +19,7 @@ export const PLANS = [
         id: 'free',
         name: 'Free',
         monthlyCents: 0,
-        summary: 'Everything Meowist does today, for one server.',
+        summary: 'Everything Mewvo does today, for one server.',
         perks: [
             { text: 'Enforcement panel, case codes and DMs' },
             { text: 'Warning ladder and appeals' },
@@ -115,10 +115,10 @@ export const COMPARISON = [
 
 /** Short answers under the plans. Plain text (escaped on the page). */
 export const PRICING_FAQ = [
-    { q: 'Can I buy a plan now?', a: 'No. Meowist runs only on its own server for now. Paid plans start when it opens to other servers; until then nothing can be bought and nobody is charged.' },
+    { q: 'Can I buy a plan now?', a: 'No. Mewvo runs only on its own server for now. Paid plans start when it opens to other servers; until then nothing can be bought and nobody is charged.' },
     { q: 'What currency are prices in?', a: 'Euros. The prices on this page are the planned monthly and yearly prices.' },
     { q: 'Can I cancel?', a: 'Yes, any time. A paid plan is meant to run until the end of the period you paid for and then fall back to Free.' },
-    { q: 'What does Free keep?', a: 'Everything Meowist does today: enforcement, the warning ladder, appeals, automod, tickets, modmail, the dashboard and the community tools. Your case history is never deleted when a plan ends.' },
+    { q: 'What does Free keep?', a: 'Everything Mewvo does today: enforcement, the warning ladder, appeals, automod, tickets, modmail, the dashboard and the community tools. Your case history is never deleted when a plan ends.' },
     { q: 'What happens to extra tags or feeds if I go back to Free?', a: 'The plan is that nothing is deleted: items over the Free limit stop working until you remove some or upgrade again. This may still change before launch.' },
 ];
 

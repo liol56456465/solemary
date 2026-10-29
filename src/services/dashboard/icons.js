@@ -5,7 +5,7 @@
 
 // Plain strings only (html.js wraps them): html.js imports this file.
 
-/** The Meowist cat (24×24, evenodd): also the website logo and the favicon. */
+/** The Mewvo cat (24×24, evenodd): also the website logo and the favicon. */
 export const CAT_PATH = 'M5.4 6.4C5.6 4.8 7.2 3.9 8.7 4.6L9.7 5.2C11.2 4.9 12.8 4.9 14.3 5.2L15.3 4.6C16.8 3.9 18.4 4.8 18.6 6.4L20.1 12.6C20.5 15 19.8 17.2 18.3 18.8L16.3 20.6L15.5 18.6C13.2 19.2 10.8 19.2 8.5 18.6L7.7 20.6L5.7 18.8C4.2 17.2 3.5 15 3.9 12.6ZM6.3 7.7C7.3 6.4 8.8 5.8 10.3 5.9C8.8 6.4 7.5 7 6.3 7.7ZM17.7 7.7C16.7 6.4 15.2 5.8 13.7 5.9C15.2 6.4 16.5 7 17.7 7.7ZM7 11.7a2.1 2.4 0 1 0 4.2 0a2.1 2.4 0 1 0-4.2 0ZM9.1 9.7C9.7 10.8 9.7 12.6 9.1 13.7C8.5 12.6 8.5 10.8 9.1 9.7ZM12.8 11.7a2.1 2.4 0 1 0 4.2 0a2.1 2.4 0 1 0-4.2 0ZM14.9 9.7C15.5 10.8 15.5 12.6 14.9 13.7C14.3 12.6 14.3 10.8 14.9 9.7ZM11 14.8H13L12 16ZM6.6 16C9.6 18.6 14.4 18.6 17.4 16C14.4 17.6 9.6 17.6 6.6 16Z';
 
 const PATHS = {
@@ -51,7 +51,7 @@ const PATHS = {
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     chevron: '<path d="M9 6l6 6-6 6"/>',
     logout: '<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/>',
-    // The Meowist mark (owner's logo): a filled cat head with eyes, nose, smile and ear lines cut out
+    // The Mewvo mark (owner's logo): a filled cat head with eyes, nose, smile and ear lines cut out
     // (evenodd, the slit pupils filled again), so the cut-outs show the tile colour.
     cat: `<path fill="currentColor" stroke="none" fill-rule="evenodd" d="${CAT_PATH}"/>`,
     home: '<path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>',

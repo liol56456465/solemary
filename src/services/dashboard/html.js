@@ -216,7 +216,7 @@ function sectionOf(active, groups = NAV) {
 
 /** Desktop: the sidebar with every page by group; brand and server on top, account at the bottom. */
 function sideNav(active, moduleStates, theme, back, session, access) {
-    return html`<nav class="side-nav" aria-label="Dashboard"><a class="side-brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span>Meowist</a>
+    return html`<nav class="side-nav" aria-label="Dashboard"><a class="side-brand" href="${path('/overview')}"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span>Mewvo</a>
 ${serverSwitch(session.server)}
 ${navGroups(session, access).map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
         const state = stateOf(item, moduleStates);
@@ -226,7 +226,7 @@ ${navGroups(session, access).map((group) => html`<div class="side-group"><p clas
         return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}>${itemIcon(item)}<span class="side-text">${item.label}</span>${badge}${state === null ? ''
             : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
     })}</ul></div>`)}
-<div class="side-bottom"><a class="side-site" href="/">${icon('home')}<span class="side-text">Meowist website</span></a>${userMenu(session, access, theme, back)}</div></nav>`;
+<div class="side-bottom"><a class="side-site" href="/">${icon('home')}<span class="side-text">Mewvo website</span></a>${userMenu(session, access, theme, back)}</div></nav>`;
 }
 
 /** "Moderate / Members": where the page sits (the group, then the page). */
@@ -250,7 +250,7 @@ ${themePicker(theme, back, 'sheet')}<div class="more-foot"><a href="/">${icon('h
 
 // Themes (same tokens and layout, ten palettes): "system" follows the device (Paper or Graphite).
 export const THEMES = ['system', 'nebula', 'ember', 'ocean', 'forest', 'gold', 'graphite', 'sakura', 'sunset', 'arctic', 'paper'];
-export const THEME_COOKIE = 'meowist_theme';
+export const THEME_COOKIE = 'mewvo_theme';
 const THEME_LABEL = {
     system: 'Follow device', nebula: 'Nebula', ember: 'Ember', ocean: 'Ocean', forest: 'Forest', gold: 'Midnight gold',
     graphite: 'Graphite', sakura: 'Sakura', sunset: 'Sunset', arctic: 'Arctic', paper: 'Paper',
@@ -297,7 +297,7 @@ function serverSwitch(server) {
 function userMenu(session, access, theme = 'system', back = path('/overview')) {
     return html`<details class="user-menu menu-wrap"><summary aria-label="Account: ${session.username}"><span class="avatar-initials" aria-hidden="true">${initials(session.username)}</span><span class="user-name">${session.username}</span></summary>
 <div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${levelLabel(access)}</span></p>
-${themePicker(theme, back, 'menu')}<a class="menu-item menu-link" href="/">${icon('home')}Meowist website</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
+${themePicker(theme, back, 'menu')}<a class="menu-item menu-link" href="/">${icon('home')}Mewvo website</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
 }
 
 /**
@@ -315,9 +315,9 @@ export function layout({ title, active = null, session = null, access = null, mo
         ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : '';
     const top = session ? html`<header class="page-top">${crumbs(active, navGroups(session, access))}<span class="spacer"></span>
 ${find}</header>`
-        : html`<header class="page-top bare-top"><a class="brand" href="/" aria-label="Meowist website"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Meowist</span></a><span class="spacer"></span></header>`;
+        : html`<header class="page-top bare-top"><a class="brand" href="/" aria-label="Mewvo website"><span class="brand-mark" aria-hidden="true">${icon('cat')}</span><span class="brand-name">Mewvo</span></a><span class="spacer"></span></header>`;
     return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark">${refreshSeconds > 0 ? html`<meta http-equiv="refresh" content="${refreshSeconds}">` : ''}<title>${title} · Meowist dashboard</title><link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
+<meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark">${refreshSeconds > 0 ? html`<meta http-equiv="refresh" content="${refreshSeconds}">` : ''}<title>${title} · Mewvo dashboard</title><link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>
 <div class="${session ? 'app' : 'app bare'}">${session ? sideNav(active, moduleStates, theme, back, session, access) : ''}
 <div class="page">${top}<main id="main" tabindex="-1">${body}</main></div></div>

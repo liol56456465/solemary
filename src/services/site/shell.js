@@ -64,7 +64,7 @@ export function publicSiteEnabled(env = process.env) {
 }
 
 /**
- * The site's own origin from PUBLIC_URL ("https://meowist.example"), or null when it is not
+ * The site's own origin from PUBLIC_URL ("https://mewvo.example"), or null when it is not
  * set or not an http(s) URL. Used only for absolute URLs (canonical, Open Graph, sitemap):
  * nothing in the site hard-codes a host, so a new domain is one env change.
  */
@@ -95,7 +95,7 @@ export const CSS_PATH = `/site.css?v=${createHash('sha256').update(STYLESHEET).d
 
 // The owner's logo (static/img/logo.png, 64×64: the white cat on a black tile). The ?v= hash
 // changes with the file, so the week-long /img cache never shows an old logo.
-// Decorative where it is used: the name "Meowist" is always next to it.
+// Decorative where it is used: the name "Mewvo" is always next to it.
 export const LOGO_FILE = new URL('./static/img/logo.png', import.meta.url);
 function logoVersion() {
     try {
@@ -153,20 +153,20 @@ export function addButton(ctx, className = 'button') {
         : '';
 }
 
-const DEFAULT_DESCRIPTION = 'Meowist is a Discord bot for moderation with case codes, a warning ladder, appeals, automod, tickets and community tools.';
+const DEFAULT_DESCRIPTION = 'Mewvo is a Discord bot for moderation with case codes, a warning ladder, appeals, automod, tickets and community tools.';
 
 /** canonical + Open Graph / Twitter tags: only with a known origin (PUBLIC_URL), never a guessed host. */
 function shareTags(ctx, { title, description, path }) {
     if (!ctx.origin || typeof path !== 'string') return '';
     const url = `${ctx.origin}${path}`;
-    const fullTitle = title === 'Meowist' ? 'Meowist' : `${title} · Meowist`;
+    const fullTitle = title === 'Mewvo' ? 'Mewvo' : `${title} · Mewvo`;
     const text = description || DEFAULT_DESCRIPTION;
     const image = `${ctx.origin}/img/og.png`;
     return html`
 <link rel="canonical" href="${url}">
-<meta property="og:type" content="website"><meta property="og:site_name" content="Meowist"><meta property="og:title" content="${fullTitle}">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Mewvo"><meta property="og:title" content="${fullTitle}">
 <meta property="og:description" content="${text}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}">
-<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Meowist: Discord moderation with case codes, a warning ladder and appeals.">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Mewvo: Discord moderation with case codes, a warning ladder and appeals.">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${fullTitle}"><meta name="twitter:description" content="${text}"><meta name="twitter:image" content="${image}">`;
 }
 
@@ -180,16 +180,16 @@ export function layout(ctx, { title, active = null, description = '', refresh = 
     const login = ctx.dashboardEnabled ? html`<a class="button${ctx.publicSite && ctx.installUrl ? ' button-quiet' : ''}" href="${DASHBOARD_PATH}">Dashboard</a>` : '';
     return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
-<title>${title === 'Meowist' ? 'Meowist' : `${title} · Meowist`}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path })}
+<title>${title === 'Mewvo' ? 'Mewvo' : `${title} · Mewvo`}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path })}
 <link rel="icon" href="${FAVICON_PATH}" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>Meowist</span></a>
+<header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>Mewvo</span></a>
 <nav class="topnav" aria-label="Main"><ul>${navLinks(ctx, active)}</ul></nav>
 <div class="topbar-actions">${addButton(ctx)}${login}</div></div></header>
 <main id="main" tabindex="-1">${body}</main>
-<footer class="footer"><div class="wrap"><div class="footer-grid"><div class="footer-about"><p class="footer-brand">${LOGO}<span>Meowist</span></p>
-<p class="footer-text">A Discord bot for moderation, appeals and community tools. Built and run by its owner for the Meowist server.</p></div>
+<footer class="footer"><div class="wrap"><div class="footer-grid"><div class="footer-about"><p class="footer-brand">${LOGO}<span>Mewvo</span></p>
+<p class="footer-text">A Discord bot for moderation, appeals and community tools. Built and run by its owner for the Mewvo server.</p></div>
 <nav class="footer-nav" aria-label="Footer">${footerColumns(ctx, active)}</nav></div>
-<p class="footer-legal">Meowist is not affiliated with Discord. Prices on this site are in euros.</p></div></footer>
+<p class="footer-legal">Mewvo is not affiliated with Discord. Prices on this site are in euros.</p></div></footer>
 </body></html>`.text;
 }

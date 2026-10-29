@@ -13,7 +13,7 @@ function readId(name) {
 export const enforcementConfig = {
     mainGuildId: readId('MAIN_GUILD_ID'),
     supportGuildId: readId('SUPPORT_GUILD_ID'),
-    serverName: 'Meowist',
+    serverName: 'Mewvo',
     mutedRoleName: 'Muted',
 
     // Warn ladder: at level 0 the third warn bans; at level ≥ 1 the first warn bans.

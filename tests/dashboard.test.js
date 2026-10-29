@@ -418,7 +418,7 @@ test('OAuth callback refuses replayed or cookie-less states and users without ac
     const { res } = await login(stranger.d);
     assert.equal(res.statusCode, 403);
     assert.equal(cookieValue(res, SESSION_COOKIE), null);
-    assert.ok(res.body.includes('<a class="brand" href="/" aria-label="Meowist website">'), 'logo leads to the website');
+    assert.ok(res.body.includes('<a class="brand" href="/" aria-label="Mewvo website">'), 'logo leads to the website');
     assert.ok(res.body.includes('<a class="button-link" href="/">Back to the home page</a>'));
     assert.ok(!res.body.includes('/dashboard/overview'), 'no link that would start a login again');
 
@@ -718,11 +718,11 @@ test('theme: GET /dashboard/theme sets a non-HttpOnly cookie and only redirects 
     assert.equal(res.statusCode, 303);
     assert.equal(res.redirectedTo, '/dashboard/automod');
     const cookie = res.cookies.find((c) => c.startsWith(`${THEME_COOKIE}=`));
-    assert.match(cookie, /^meowist_theme=ember; Path=\/dashboard; SameSite=Lax; Max-Age=31536000; Secure$/);
+    assert.match(cookie, /^mewvo_theme=ember; Path=\/dashboard; SameSite=Lax; Max-Age=31536000; Secure$/);
     const bad = fakeRes();
     d.setTheme({ headers: {}, query: { mode: 'x', next: 'https://evil.example/' } }, bad);
     assert.equal(bad.redirectedTo, '/dashboard/overview');
-    assert.match(bad.cookies[0], /^meowist_theme=system;/);
+    assert.match(bad.cookies[0], /^mewvo_theme=system;/);
     for (const next of ['//evil.example', '/dashboard//evil.example', '/dashboardx', '/dashboard/a b', 'javascript:alert(1)', '/dashboard/x?a=<b>']) {
         assert.equal(safeBackPath(next), '/dashboard/overview', next);
     }

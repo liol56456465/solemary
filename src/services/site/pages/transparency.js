@@ -60,7 +60,7 @@ ${tile('Bans', total((m) => m.cases.bans))}${tile('Appeals received', total((m) 
 
 function explanation() {
     return html`<dl class="qa">
-<div><dt>What is counted</dt><dd>Every warning, mute, kick and ban given on the Meowist server, in the month it was given (UTC), whether by a moderator, by the warning ladder or by automod. Automatic ladder bans and automod actions are already part of the four main columns; their own columns only show how many of them there were.</dd></div>
+<div><dt>What is counted</dt><dd>Every warning, mute, kick and ban given on the Mewvo server, in the month it was given (UTC), whether by a moderator, by the warning ladder or by automod. Automatic ladder bans and automod actions are already part of the four main columns; their own columns only show how many of them there were.</dd></div>
 <div><dt>What is not counted</dt><dd>Test simulations (staff previewing a message; nothing happens to anyone), warnings imported from the old bot as history, and staff reports. Cases voided as mistakes are left out of the main columns and shown on their own in the “Voided as mistakes” column, by the month they were first given.</dd></div>
 <div><dt>Appeals</dt><dd>Appeals are counted in the month they were sent, with their result today. An appeal on a case that was later voided still counts: the appeal happened. Appeals that were closed without a decision are counted as received only. The median time runs from sending the appeal to the staff decision, over the accepted and denied appeals of that month.</dd></div>
 <div><dt>Small numbers</dt><dd>To keep single cases from being recognised, a count of 1 or 2 is shown as “fewer than 3”, and a median is only shown when at least 3 appeals were decided. When a month in a column is hidden that way, the total says “at least” instead of the exact number.</dd></div>
@@ -74,10 +74,10 @@ export function transparencyPage(ctx, report) {
     const generated = report.generatedAt instanceof Date ? report.generatedAt : new Date(report.generatedAt);
     return layout(ctx, {
         title: 'Transparency report', active: 'transparency', path: '/transparency',
-        description: 'How many warnings, mutes, kicks and bans the Meowist server gave each month, and how appeals were decided. Numbers only.',
+        description: 'How many warnings, mutes, kicks and bans the Mewvo server gave each month, and how appeals were decided. Numbers only.',
         body: html`<div class="wrap page">
 <header class="page-head page-head-split"><div><p class="section-num">Moderation</p><h1>Transparency report</h1></div>
-<p class="lead">How often staff on the Meowist server warned, muted, kicked and banned, and how appeals went, month by month. Numbers only: no names, no reasons, no moderators.</p></header>
+<p class="lead">How often staff on the Mewvo server warned, muted, kicked and banned, and how appeals went, month by month. Numbers only: no names, no reasons, no moderators.</p></header>
 <p class="note">From <time datetime="${first.start.toISOString().slice(0, 10)}">${DAY_NAME.format(first.start)}</time> to <time datetime="${generated.toISOString().slice(0, 10)}">${DAY_NAME.format(generated)}</time>, in UTC. Updated at most every 10 minutes.</p>
 ${summary(report)}
 <section class="tr-section" aria-labelledby="tr-actions"><h2 id="tr-actions">Moderation actions</h2>

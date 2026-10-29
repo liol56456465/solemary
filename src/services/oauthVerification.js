@@ -6,7 +6,7 @@
 // GET /oauth/callback; the bot exchanges the code, checks the authorizing account is
 // the one that pressed Verify, gives the verified role, stores the OAuth tokens
 // encrypted (AES-256-GCM with OAUTH_TOKEN_KEY) so guilds.join can be used later, and
-// sends the browser on to the Meowist invite (VERIFY_SUCCESS_REDIRECT). Accounts under
+// sends the browser on to the Mewvo invite (VERIFY_SUCCESS_REDIRECT). Accounts under
 // 7 days old and likely ban-evasion alts are held for staff approval instead
 // (see verificationGuard.js).
 //
@@ -27,7 +27,7 @@ const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
 const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
 const ME_URL = 'https://discord.com/api/v10/users/@me';
 const SCOPES = ['identify', 'guilds.join'];
-// Where the browser goes after a successful verification: the main Meowist server's invite.
+// Where the browser goes after a successful verification: the main Mewvo server's invite.
 const DEFAULT_SUCCESS_REDIRECT = 'https://discord.gg/WyceK9YENP';
 const STATE_TTL_MS = 10 * 60 * 1000;
 const HTTP_TIMEOUT_MS = 10000;

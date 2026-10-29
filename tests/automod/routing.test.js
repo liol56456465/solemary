@@ -29,13 +29,13 @@ test('review and alerts fall back to the mod log; all three when set', () => {
 test('mod log line: one line per action', () => {
     const line = formatModLogLine('ban', [
         { name: 'User', value: 'alice (111)' },
-        { name: 'Moderator', value: 'Meowist (automatic)' },
+        { name: 'Moderator', value: 'Mewvo (automatic)' },
         { name: 'Case', value: '`k3f9a` — alice ban 1' },
         { name: 'Reason', value: 'Automod: NSFW content' },
         { name: 'Duration', value: '7 days (ends <t:1:F>)' },
         { name: 'DM', value: 'Not delivered' },
     ]);
-    assert.equal(line, '🔨 **Ban** · alice (111) · by Meowist (automatic) · `k3f9a` alice ban 1 · “Automod: NSFW content” · 7 days (ends <t:1:F>) · DM: Not delivered');
+    assert.equal(line, '🔨 **Ban** · alice (111) · by Mewvo (automatic) · `k3f9a` alice ban 1 · “Automod: NSFW content” · 7 days (ends <t:1:F>) · DM: Not delivered');
     assert.ok(!line.includes('\n'));
     assert.ok(!formatModLogLine('warn', [{ name: 'Reason', value: 'a\nb' }]).includes('\n'));
 });

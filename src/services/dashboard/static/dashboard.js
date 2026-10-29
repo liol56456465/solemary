@@ -1,4 +1,4 @@
-// dashboard.js — small enhancements for the Meowist web dashboard.
+// dashboard.js — small enhancements for the Mewvo web dashboard.
 //
 // Progressive enhancement only: every page and form works without this file (CSP
 // script-src 'self', no inline scripts). Nothing here talks to the network; it only
@@ -36,13 +36,13 @@
     const pending = {
         take() {
             try {
-                const value = window.sessionStorage.getItem('meowist:pending');
-                window.sessionStorage.removeItem('meowist:pending');
+                const value = window.sessionStorage.getItem('mewvo:pending');
+                window.sessionStorage.removeItem('mewvo:pending');
                 return value ? JSON.parse(value) : null;
             } catch { return null; }
         },
         put(value) {
-            try { window.sessionStorage.setItem('meowist:pending', JSON.stringify(value)); } catch { /* private mode */ }
+            try { window.sessionStorage.setItem('mewvo:pending', JSON.stringify(value)); } catch { /* private mode */ }
         },
     };
 
@@ -216,7 +216,7 @@
         dirty.delete(form);
         form.classList.remove('is-dirty');
         markSection(form, false);
-        document.dispatchEvent(new CustomEvent('meowist:clean', { detail: form }));
+        document.dispatchEvent(new CustomEvent('mewvo:clean', { detail: form }));
     });
     window.addEventListener('beforeunload', (event) => {
         const pending = [...dirty].some((form) => document.contains(form) && !form.dataset.submitting);
@@ -270,7 +270,7 @@
 
     // ── Remember open sections ───────────────────────────────────────────
     function rememberDetails(details) {
-        const key = `meowist:open:${window.location.pathname}:${details.dataset.key}`;
+        const key = `mewvo:open:${window.location.pathname}:${details.dataset.key}`;
         const saved = store.get(key);
         if (saved === '1') details.open = true;
         if (saved === '0') details.open = false;
@@ -363,7 +363,7 @@
         const choose = (theme) => {
             if (!THEMES.includes(theme)) return;
             const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-            document.cookie = `meowist_theme=${theme}; Path=/dashboard; Max-Age=31536000; SameSite=Lax${secure}`;
+            document.cookie = `mewvo_theme=${theme}; Path=/dashboard; Max-Age=31536000; SameSite=Lax${secure}`;
             if (theme === 'system') delete document.documentElement.dataset.theme;
             else document.documentElement.dataset.theme = theme;
             for (const opt of options) {
@@ -484,7 +484,7 @@
         discard.addEventListener('click', () => {
             if (current) current.reset(); // the reset listener clears the marks
         });
-        document.addEventListener('meowist:clean', () => {
+        document.addEventListener('mewvo:clean', () => {
             const next = [...dirty].find((form) => document.contains(form));
             if (next) show(next); else hide();
         });

@@ -155,7 +155,7 @@ export function startAdminConsole(client) {
         return;
     }
 
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout, prompt: 'meowist> ' });
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout, prompt: 'mewvo> ' });
     out(`\nAdmin console ready — type "help" for commands.${testMode.enabled ? ' (test mode: test servers only)' : ''}`);
     rl.prompt();
 

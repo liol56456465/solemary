@@ -263,7 +263,7 @@ function memberEditSection(view, can, csrf) {
     if (!can.roles && !can.nickname && !can.timeout && !can.unverify) return html`${current}<p class="muted">Changing roles needs Administrator and editing turned on.</p>`;
     if (edit?.problem) return html`${current}<p class="notice">${edit.problem}</p>`;
     const roleForm = edit.assignable.length
-        ? actionForm(csrf, `/users/${id}/roles/add`, html`<div class="grid"><label>Give a role<select name="roleId" data-search required><option value="">— choose —</option>${edit.assignable.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select><span class="hint">Only roles below your highest role and Meowist's; staff roles only for the server owner or bot owners.</span></label>
+        ? actionForm(csrf, `/users/${id}/roles/add`, html`<div class="grid"><label>Give a role<select name="roleId" data-search required><option value="">— choose —</option>${edit.assignable.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select><span class="hint">Only roles below your highest role and Mewvo's; staff roles only for the server owner or bot owners.</span></label>
 <label>For<select name="for"><option value="">Permanently</option>${Object.entries(TEMP_ROLE_LENGTHS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select><span class="hint">Timed roles are taken off automatically, and given back if they rejoin before the end.</span></label>
 <label>Reason (optional, Discord audit log)<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: 'Give role' })
         : html`<p class="muted">There is no other role you can give.</p>`;

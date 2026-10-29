@@ -101,7 +101,7 @@ async function setup({
         [OTHER_GUILD, makeGuild(OTHER_GUILD, { name: 'Other', ...guildOpts })],
     ]);
     const client = {
-        user: { id: '999999999999999998', username: 'Meowist', setUsername: async () => {}, displayAvatarURL: () => null, bannerURL: () => null },
+        user: { id: '999999999999999998', username: 'Mewvo', setUsername: async () => {}, displayAvatarURL: () => null, bannerURL: () => null },
         guilds: { cache: guilds },
         users: { cache: new Map(), fetch: async (id) => ({ id, username: `user${id.slice(-2)}` }) },
         ws: { ping: 42 }, uptime: 1000,
@@ -680,7 +680,7 @@ test('permission check rules: missing permissions in plain words, Administrator 
     assert.ok(missingPermissions([]).every((m) => m.label !== m.name || m.name === 'Connect'), 'every permission has a plain name');
     assert.equal(missingPermissions(null, ['Speak'])[0].why, 'needed by the bot', 'unknown names still listed');
 
-    const top = { name: 'Meowist', position: 5 };
+    const top = { name: 'Mewvo', position: 5 };
     const roles = [
         { id: 'a', name: 'Muted', position: 7, why: 'the Muted role (mutes)' }, { id: 'a', name: 'Muted', position: 7, why: 'dup' },
         { id: 'b', name: 'Warning 1', position: 5, why: 'a warning role' }, { id: 'c', name: 'Low', position: 2, why: 'x' },
@@ -692,20 +692,20 @@ test('permission check rules: missing permissions in plain words, Administrator 
 test('server page: lists missing permissions and roles above the bot; a full set says so', async () => {
     const h = await setup({ managedRoles: async () => [{ id: 'm', name: 'Muted', position: 9, why: 'the Muted role (mutes)' }] });
     const me = h.guilds.get(OTHER_GUILD).members.me;
-    me.roles = { highest: { name: 'Meowist', position: 3 } };
+    me.roles = { highest: { name: 'Mewvo', position: 3 } };
     const res = await get(h, h.ow.server, { params: { id: OTHER_GUILD } });
     assert.equal(res.statusCode, 200);
     assert.ok(res.body.includes('Permission check'));
     assert.ok(res.body.includes('<b>Ban Members</b> <span class="muted">— needed for bans</span>'));
     assert.ok(!res.body.includes('<b>Send Messages</b>'), 'granted permissions are not listed as missing');
-    assert.match(res.body, /at or above the bot's highest role \(Meowist\)/);
+    assert.match(res.body, /at or above the bot's highest role \(Mewvo\)/);
     assert.ok(res.body.includes('<b>Muted</b> <span class="muted">— the Muted role (mutes)</span>'));
     assert.ok(!/<style|style=|<script/i.test(res.body.replace(ALLOWED_SCRIPT, '')));
 
     const full = await setup({ managedRoles: async () => { throw new Error('db down'); } });
     const fme = full.guilds.get(OTHER_GUILD).members.me;
     fme.permissions = { toArray: () => [...INSTALL_PERMISSIONS] };
-    fme.roles = { highest: { name: 'Meowist', position: 3 } };
+    fme.roles = { highest: { name: 'Mewvo', position: 3 } };
     const ok = await get(full, full.ow.server, { params: { id: OTHER_GUILD } });
     assert.equal(ok.statusCode, 200, 'an unreadable role list does not break the page');
     assert.ok(ok.body.includes('The bot has every permission it asks for when added.'));

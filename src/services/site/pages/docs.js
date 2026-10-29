@@ -32,7 +32,7 @@ export const GUIDES = [
 <div><dt><code>/staff</code></dt><dd>Staff activity and stats.</dd></div>
 <div><dt>Warn for this message</dt><dd>Right-click a message, then Apps: warns the author with the message attached.</dd></div></dl>
 <h2 id="limits">Limits that protect the server</h2>
-<p>Meowist refuses to act on the server owner, the bot, yourself, or anyone whose highest role is equal to or above yours. If one moderator bans or kicks more than 5 members in 10 minutes, they are blocked for an hour and the owner is told.</p>`,
+<p>Mewvo refuses to act on the server owner, the bot, yourself, or anyone whose highest role is equal to or above yours. If one moderator bans or kicks more than 5 members in 10 minutes, they are blocked for an hour and the owner is told.</p>`,
     },
     {
         slug: 'warnings', title: 'How warnings and bans escalate', minutes: 3,
@@ -77,8 +77,8 @@ ${appealFormMock()}
         slug: 'using-the-dashboard', title: 'Using the dashboard', minutes: 3,
         summary: 'Signing in, the four areas of the sidebar, and where changes are recorded.',
         body: (ctx) => html`<h2 id="sign-in">Signing in</h2>
-<p>${ctx.dashboardEnabled ? html`Open <a href="${DASHBOARD_PATH}">the dashboard</a>` : 'Open the dashboard'} and log in with Discord. Meowist only asks Discord who you are (<code>identify</code>). You need the Administrator role in the server; it is checked again on every page and every save. A server can also give a moderator role view access to the moderation pages.</p>
-${dashboardShot({ name: 'cases', alt: 'The Cases page of the Meowist dashboard: filters for member, moderator, type, status, text and dates above a table of cases with code, type, member, moderator, reason, date and status.', caption: 'Cases, with made-up members.' })}
+<p>${ctx.dashboardEnabled ? html`Open <a href="${DASHBOARD_PATH}">the dashboard</a>` : 'Open the dashboard'} and log in with Discord. Mewvo only asks Discord who you are (<code>identify</code>). You need the Administrator role in the server; it is checked again on every page and every save. A server can also give a moderator role view access to the moderation pages.</p>
+${dashboardShot({ name: 'cases', alt: 'The Cases page of the Mewvo dashboard: filters for member, moderator, type, status, text and dates above a table of cases with code, type, member, moderator, reason, date and status.', caption: 'Cases, with made-up members.' })}
 <h2 id="areas">The four areas</h2>
 <dl class="ref-list"><div><dt>Moderate</dt><dd>Overview (what needs you first), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff and Channel tools.</dd></div>
 <div><dt>Community</dt><dd>Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community and Join to create.</dd></div>
@@ -93,10 +93,10 @@ ${dashboardShot({ name: 'cases', alt: 'The Cases page of the Meowist dashboard: 
 export function docsPage(ctx) {
     return layout(ctx, {
         title: 'Docs', active: 'docs', path: '/docs',
-        description: 'Short guides to Meowist: getting started for staff, how warnings escalate, how appeals work and using the dashboard.',
+        description: 'Short guides to Mewvo: getting started for staff, how warnings escalate, how appeals work and using the dashboard.',
         body: html`<div class="wrap page">
 <header class="page-head page-head-split"><div><p class="section-num">Docs</p><h1>Guides</h1></div>
-<p class="lead">Short, accurate guides to how Meowist behaves. For every command members can use, see <a href="/commands">Commands</a>.</p></header>
+<p class="lead">Short, accurate guides to how Mewvo behaves. For every command members can use, see <a href="/commands">Commands</a>.</p></header>
 <ol class="guide-list">${GUIDES.map((g, i) => html`<li><a class="guide" href="/docs/${g.slug}"><span class="guide-num">${String(i + 1).padStart(2, '0')}</span><span class="guide-text"><span class="guide-title">${g.title}</span><span class="guide-summary">${g.summary}</span></span><span class="guide-time">${g.minutes} min read</span></a></li>`)}</ol></div>`,
     });
 }

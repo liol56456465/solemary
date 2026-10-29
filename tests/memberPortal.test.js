@@ -190,7 +190,7 @@ test('login: redirect to Discord with scope identify, the /me redirect URI and a
         assert.equal(url.searchParams.get('scope'), 'identify');
         assert.equal(url.searchParams.get('redirect_uri'), `${ORIGIN}/me/callback`);
         assert.ok(url.searchParams.get('state'));
-        assert.match(cookieLine(res.cookies, MEMBER_STATE_COOKIE), /^meowist_me_state=[^;]+; Path=\/me; HttpOnly; SameSite=Lax; Max-Age=600; Secure$/);
+        assert.match(cookieLine(res.cookies, MEMBER_STATE_COOKIE), /^mewvo_me_state=[^;]+; Path=\/me; HttpOnly; SameSite=Lax; Max-Age=600; Secure$/);
     } finally {
         await app.close();
     }
@@ -203,7 +203,7 @@ test('callback: a member session cookie scoped to /me, 1 hour, HttpOnly, Secure;
         const { res, value } = await login(app);
         assert.equal(res.status, 303);
         assert.equal(res.headers.get('location'), '/me');
-        assert.match(cookieLine(res.cookies, MEMBER_SESSION_COOKIE), /^meowist_me=[^;]+; Path=\/me; HttpOnly; SameSite=Lax; Max-Age=3600; Secure$/);
+        assert.match(cookieLine(res.cookies, MEMBER_SESSION_COOKIE), /^mewvo_me=[^;]+; Path=\/me; HttpOnly; SameSite=Lax; Max-Age=3600; Secure$/);
         assert.ok(res.cookies.some((c) => c.startsWith(`${MEMBER_STATE_COOKIE}=;`) && c.includes('Max-Age=0')), 'state cookie cleared');
         assert.ok(!res.cookies.some((c) => c.startsWith(`${SESSION_COOKIE}=`)), 'no dashboard cookie');
         assert.equal(app.memberSessions.size(), 1);
@@ -233,7 +233,7 @@ test('callback: rejects a missing, wrong-nonce, forged, dashboard-signed or repl
         // A state the dashboard issued (signed with SESSION_SECRET) is not valid here.
         const dash = await app.request('/dashboard');
         const dashState = new URL(dash.headers.get('location')).searchParams.get('state');
-        const dashNonce = cookieVal(dash.cookies, 'meowist_dash_state');
+        const dashNonce = cookieVal(dash.cookies, 'mewvo_dash_state');
         assert.equal((await app.request(`/me/callback?code=c&state=${encodeURIComponent(dashState)}`, { cookie: `${MEMBER_STATE_COOKIE}=${encodeURIComponent(dashNonce)}` })).status, 400, 'dashboard state');
         const ok = await app.request(`/me/callback?code=c&state=${encodeURIComponent(state)}`, { cookie });
         assert.equal(ok.status, 303);

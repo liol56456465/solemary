@@ -55,9 +55,9 @@ try {
 
     // Transactions and row locks must work (session pooler, not transaction mode).
     await client.query('BEGIN');
-    await client.query('CREATE TEMP TABLE meowist_check (id int) ON COMMIT DROP');
-    await client.query('INSERT INTO meowist_check VALUES (1)');
-    await client.query('SELECT id FROM meowist_check WHERE id = 1 FOR UPDATE');
+    await client.query('CREATE TEMP TABLE mewvo_check (id int) ON COMMIT DROP');
+    await client.query('INSERT INTO mewvo_check VALUES (1)');
+    await client.query('SELECT id FROM mewvo_check WHERE id = 1 FOR UPDATE');
     await client.query('ROLLBACK');
     report('Transaction + FOR UPDATE', 'ok');
 } catch (error) {

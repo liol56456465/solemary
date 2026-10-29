@@ -30,8 +30,8 @@ const humanCase = (over = {}) => ({
     target_user_id: TARGET, target_username: 'target', moderator_id: ISSUER, moderator_username: 'issuer',
     is_auto: false, is_test: true, reason: 'spam', created_at: new Date('2026-10-01T00:00:00Z'), ...over,
 });
-const ladderCase = (over = {}) => humanCase({ moderator_id: BOT, moderator_username: 'Meowist', is_auto: true, reason_key: 'warn_ladder', ...over });
-const automodCase = (over = {}) => humanCase({ moderator_id: BOT, moderator_username: 'Meowist', is_auto: false, reason_key: 'automod:spam', ...over });
+const ladderCase = (over = {}) => humanCase({ moderator_id: BOT, moderator_username: 'Mewvo', is_auto: true, reason_key: 'warn_ladder', ...over });
+const automodCase = (over = {}) => humanCase({ moderator_id: BOT, moderator_username: 'Mewvo', is_auto: false, reason_key: 'automod:spam', ...over });
 
 const settingOn = () => setSettingsCacheForTests(GUILD, { independentAppealReview: true });
 const settingOff = () => setSettingsCacheForTests(GUILD, { independentAppealReview: false });
@@ -72,7 +72,7 @@ function installPool({ record, appeal = null }) {
 }
 
 const fakeClient = () => ({
-    user: { id: BOT, username: 'Meowist' },
+    user: { id: BOT, username: 'Mewvo' },
     guilds: { cache: new Map(), fetch: async () => null },
     users: { fetch: async () => { throw new Error('unknown user'); } },
 });
@@ -214,7 +214,7 @@ test('decideAppeal: warn-ladder and automod cases are unaffected (the "issuer" i
     settingOn();
     for (const record of [ladderCase(), automodCase()]) {
         await withPool({ record, appeal: pendingAppeal }, async () => {
-            const result = await decideAppeal({ client: fakeClient(), admin: { id: BOT, username: 'Meowist' }, caseCode: 'abc2345', decision: 'deny', note: null });
+            const result = await decideAppeal({ client: fakeClient(), admin: { id: BOT, username: 'Mewvo' }, caseCode: 'abc2345', decision: 'deny', note: null });
             assert.equal(result.label, 'denied');
         });
     }
