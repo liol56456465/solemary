@@ -30,6 +30,7 @@ ${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is
 const opt = (value, label, current) => html`<option value="${value}"${value === current ? html` selected` : ''}>${label}</option>`;
 const img = (url, alt, size, className = 'avatar-sm') => (url && isAllowedImageUrl(url)
     ? html`<img class="${className}" src="${url}" alt="${alt}" width="${size}" height="${size}" loading="lazy" referrerpolicy="no-referrer">` : '');
+const stateWord = (tone, label) => html`<span class="state-word is-${tone}"><span class="dot dot-${tone}" aria-hidden="true"></span>${label}</span>`;
 
 // ── Bot profile ───────────────────────────────────────────────────────────
 
@@ -94,8 +95,9 @@ ${rows.length < total ? html`<p class="muted">Showing ${rows.length} of ${total}
 
 /**
  * detail: { id, name, iconUrl, ownerId, ownerName, memberCount, joinedAt, channels: [{ name,
- * type, category }], roles: [{ name, color, members }], permissions: [string], vanityUrl,
- * canCreateInvite, canLeave, membersCached }.
+ * type, category }], roles: [{ name, color, members }], permissions: [string], missing: [{ label, why }],
+ * botTop: { name, position } | null, rolesAbove: [{ name, why }], vanityUrl, canCreateInvite, canLeave,
+ * membersCached }.
  */
 export function serverPage({ session, access = null, moduleStates = {}, detail, flash = null, error = null, editEnabled = true }) {
     const csrf = session.csrf;
@@ -118,6 +120,14 @@ ${notices({ flash, error, editEnabled })}
             : html`<span class="muted">The main and the support server cannot be blacklisted.</span>`}</dd>
 </dl></section>
 ${inviteBits.length ? html`<section class="card"><h2>Invite</h2>${inviteBits}</section>` : ''}
+<section class="card"><h2>Permission check</h2>${detail.missing?.length
+        ? html`<p class="error" role="alert">The bot is missing ${detail.missing.length} permission${detail.missing.length === 1 ? '' : 's'} it asks for when added; those features fail here.</p>
+<ul class="skip-list">${detail.missing.map((m) => html`<li><b>${m.label}</b> <span class="muted">— ${m.why}</span></li>`)}</ul>`
+        : html`<p>${stateWord('on', 'The bot has every permission it asks for when added.')}</p>`}
+${detail.rolesAbove?.length
+        ? html`<p class="error" role="alert">These roles are at or above the bot's highest role${detail.botTop ? html` (${detail.botTop.name})` : ''}, so the bot cannot give or remove them. Move the bot's role above them in Server Settings → Roles.</p>
+<ul class="skip-list">${detail.rolesAbove.map((r) => html`<li><b>${r.name}</b> <span class="muted">— ${r.why}</span></li>`)}</ul>`
+        : detail.botTop ? html`<p class="muted">No known role the bot manages (Muted, warning or Banned role) is above its highest role (${detail.botTop.name}).</p>` : ''}</section>
 <section class="card"><h2>Bot permissions here</h2>${detail.permissions.length ? html`<ul class="name-list">${detail.permissions.map((p) => html`<li>${p}</li>`)}</ul>` : html`<p class="empty">None.</p>`}</section>
 <section class="card"><h2>Channels (${detail.channels.length})</h2>${detail.channels.length ? html`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Category</th></tr></thead><tbody>
 ${detail.channels.map((c) => html`<tr><td>${c.name}</td><td>${c.type}</td><td>${c.category || html`<span class="muted">—</span>`}</td></tr>`)}</tbody></table></div>` : html`<p class="empty">No channels visible.</p>`}</section>
@@ -141,8 +151,6 @@ ${actionForm(session.csrf, `/owner/servers/${guild.id}/leave`, html`<label class
 }
 
 // ── User lookup ───────────────────────────────────────────────────────────
-
-const stateWord = (tone, label) => html`<span class="state-word is-${tone}"><span class="dot dot-${tone}" aria-hidden="true"></span>${label}</span>`;
 
 /** The main-server record: ladder, cases, active ban / mute, with links to the existing pages. */
 function recordSection(r) {

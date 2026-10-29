@@ -8,7 +8,8 @@
 //   POST /dashboard/owner/profile/username|about|presence
 //   POST /dashboard/owner/profile/avatar|banner         https URL or an uploaded image (multipart)
 //   GET  /dashboard/owner/servers[?q=&sort=]            every server the bot is in (name, members, newest, oldest)
-//   GET  /dashboard/owner/servers/:id                   channels, roles, bot permissions (read-only)
+//   GET  /dashboard/owner/servers/:id                   channels, roles, bot permissions, permission check
+//                                                       (missing vs INSTALL_PERMISSIONS, roles above the bot)
 //   POST /dashboard/owner/servers/:id/invite            1-use, 1-hour invite (owner/admin of that server only)
 //   POST /dashboard/owner/servers/:id/leave/preview|leave   confirm step, never the main/support server
 //   GET  /dashboard/owner/users[?q=<user id>]           one user: name, account age, shared servers,
@@ -45,6 +46,8 @@ import { isBlacklistLoaded } from '../owner/blacklistCache.js';
 import { getRecentLogs } from '../../utils/recentLogs.js';
 import { getLadder } from '../enforcement/enforcementService.js';
 import { getActiveCase, listCasesForUser } from '../enforcement/caseService.js';
+import { findMutedRole } from '../enforcement/muteService.js';
+import { INSTALL_PERMISSIONS } from '../site/site.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
     blacklistPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage, userLookupPage,
@@ -143,6 +146,58 @@ export function userBlacklistState(active, userId) {
 /** The "Blacklist this user…" link is offered only for a known clear state and never for an owner. */
 export function canOfferUserBlacklist({ state, isOwner }) {
     return state === 'clear' && !isOwner;
+}
+
+/** Each permission the bot asks for when added (INSTALL_PERMISSIONS): its name in Discord and why. */
+export const PERMISSION_NEEDS = {
+    ViewChannel: ['View Channels', 'needed to see channels at all'],
+    SendMessages: ['Send Messages', 'needed for replies, logs and panels'],
+    SendMessagesInThreads: ['Send Messages in Threads', 'needed to answer in threads'],
+    EmbedLinks: ['Embed Links', 'needed for embeds (logs, panels, case messages)'],
+    AttachFiles: ['Attach Files', 'needed for files such as transcripts and evidence'],
+    ReadMessageHistory: ['Read Message History', 'needed to read earlier messages (purge, evidence, panels)'],
+    AddReactions: ['Add Reactions', 'needed for reactions (reaction roles, polls)'],
+    UseExternalEmojis: ['Use External Emojis', 'needed for emojis from other servers in messages'],
+    ManageMessages: ['Manage Messages', 'needed for automod deletes and purge'],
+    ManageThreads: ['Manage Threads', 'needed to manage and close threads'],
+    CreatePrivateThreads: ['Create Private Threads', 'needed for private appeal and ticket threads'],
+    ManageChannels: ['Manage Channels', 'needed for the Muted role overwrites, lock/unlock and new channels'],
+    ManageRoles: ['Manage Roles', 'needed for the Muted role and giving or removing roles'],
+    ManageGuild: ['Manage Server', 'needed for native AutoMod rules'],
+    ViewAuditLog: ['View Audit Log', 'needed for logging who did what'],
+    CreateInstantInvite: ['Create Invite', 'needed for one-time rejoin invites'],
+    KickMembers: ['Kick Members', 'needed for kicks'],
+    BanMembers: ['Ban Members', 'needed for bans'],
+    ModerateMembers: ['Timeout Members', 'needed for timeouts'],
+    ManageNicknames: ['Manage Nicknames', 'needed for nickname changes'],
+    MoveMembers: ['Move Members', 'needed for join-to-create voice and disconnecting muted members'],
+    Connect: ['Connect', 'needed for voice channels (join-to-create)'],
+};
+
+/**
+ * What the bot is missing in a server, compared with what it asks for when added:
+ * [{ name, label, why }] in INSTALL_PERMISSIONS order. Administrator covers everything.
+ */
+export function missingPermissions(granted, needed = INSTALL_PERMISSIONS) {
+    const have = new Set(granted || []);
+    if (have.has('Administrator')) return [];
+    return needed.filter((name) => !have.has(name)).map((name) => ({
+        name, label: PERMISSION_NEEDS[name]?.[0] || name, why: PERMISSION_NEEDS[name]?.[1] || 'needed by the bot',
+    }));
+}
+
+/**
+ * Roles the bot must give or remove that sit at or above its highest role (Discord then refuses):
+ * roles [{ id, name, position, why }], botTop { name, position }; each role once. No top role → [].
+ */
+export function rolesAboveBot(botTop, roles = []) {
+    if (!botTop || !Number.isFinite(Number(botTop.position))) return [];
+    const seen = new Set();
+    return roles.filter((r) => {
+        if (!r || seen.has(r.id)) return false;
+        seen.add(r.id);
+        return Number(r.position) >= Number(botTop.position);
+    });
 }
 
 /** What an announcement sends: plain text, no mention ever pings. */
@@ -270,6 +325,25 @@ async function defaultModerationRecord(guildId, userId) {
     return { ladder, caseCount: cases.total, activeBan, activeMute };
 }
 
+/**
+ * The roles the bot must give or remove in this server, as far as is cheaply known: the Muted
+ * role (stored id in the main server, plus any role named like it), the warning roles (main)
+ * and the Banned role (support). Never throws: an unreadable stored id is skipped.
+ */
+async function defaultManagedRoles(guild) {
+    const cache = guild.roles?.cache;
+    const roles = [];
+    const add = (role, why) => { if (role) roles.push({ id: role.id, name: role.name, position: role.position, why }); };
+    if (guild.id === enforcementConfig.mainGuildId) {
+        add(await findMutedRole(guild).catch(() => null), 'the Muted role (mutes)');
+        for (const id of enforcementConfig.warnRoleIds || []) add(cache?.get?.(id), 'a warning role');
+    }
+    if (guild.id === enforcementConfig.supportGuildId && enforcementConfig.bannedRoleId) add(cache?.get?.(enforcementConfig.bannedRoleId), 'the Banned role');
+    const mutedName = String(enforcementConfig.mutedRoleName || 'Muted').toLowerCase();
+    for (const role of cache?.values?.() || []) if (String(role.name).toLowerCase() === mutedName) add(role, 'the Muted role (mutes)');
+    return roles;
+}
+
 export const defaultOwnerDeps = {
     isBotOwner: configIsBotOwner,
     blacklist: blacklistStore,
@@ -280,6 +354,7 @@ export const defaultOwnerDeps = {
     dbStatus: (client) => client.db?.getStatus?.() || null,
     recentLogs: getRecentLogs,
     moderationRecord: defaultModerationRecord,
+    managedRoles: defaultManagedRoles,
 };
 
 // ── Handlers ──────────────────────────────────────────────────────────────
@@ -528,6 +603,8 @@ export function createOwnerHandlers(core) {
             .sort((a, b) => (b.position ?? 0) - (a.position ?? 0))
             .map((r) => ({ name: r.name, color: r.hexColor || '#000000', members: r.members?.size ?? 0 }));
         const active = await activeBlacklist();
+        const permissions = guild.members?.me?.permissions?.toArray?.() || [];
+        const botTop = guild.members?.me?.roles?.highest || null;
         const detail = {
             ...await serverRow(guild, tagContext(active)),
             createdAt: guild.createdTimestamp ? new Date(guild.createdTimestamp) : null,
@@ -537,7 +614,10 @@ export function createOwnerHandlers(core) {
             blacklisted: blacklistedGuilds(active).has(guild.id),
             channels: channelRows(guild),
             roles,
-            permissions: guild.members?.me?.permissions?.toArray?.() || [],
+            permissions,
+            missing: missingPermissions(permissions),
+            botTop: botTop ? { name: botTop.name, position: botTop.position } : null,
+            rolesAbove: rolesAboveBot(botTop, await Promise.resolve().then(() => o.managedRoles(guild)).catch(() => [])),
             membersCached: !guild.memberCount || (guild.members?.cache?.size || 0) >= guild.memberCount,
             canLeave: canLeaveGuild(guild.id, protectedIds()),
             ...inviteOptions({ vanityCode: guild.vanityURLCode || null, ...rights }),

@@ -16,10 +16,11 @@ const { createAccessChecker } = await import('../src/services/dashboard/access.j
 const { SESSION_COOKIE, signValue } = await import('../src/services/dashboard/security.js');
 const { layout, JS_PATH } = await import('../src/services/dashboard/html.js');
 const {
-    accountCreatedAt, announcePayload, canLeaveGuild, canOfferUserBlacklist, fetchImageFromUrl, userBlacklistState, inviteOptions, isSessionFresh, OWNER_SESSION_MAX_AGE_MS,
+    accountCreatedAt, announcePayload, missingPermissions, rolesAboveBot, canLeaveGuild, canOfferUserBlacklist, fetchImageFromUrl, userBlacklistState, inviteOptions, isSessionFresh, OWNER_SESSION_MAX_AGE_MS,
     serverTagsFor, serverTotals, sortServers,
 } = await import('../src/services/dashboard/ownerRoutes.js');
 const { ownerActionText } = await import('../src/services/dashboard/ownerPages.js');
+const { INSTALL_PERMISSIONS } = await import('../src/services/site/site.js');
 const { BLACKLIST_MESSAGE, blacklistHit, setBlacklistCache } = await import('../src/services/owner/blacklistCache.js');
 const { blacklistProblem } = await import('../src/services/owner/blacklistService.js');
 const { parsePresence, presenceData } = await import('../src/services/owner/botStateService.js');
@@ -89,7 +90,7 @@ async function setup({
     env = ENV, userId = OWNER, owners = new Set([OWNER]), admins = new Set([ADMIN]), createdAt = Date.now(), guildOpts = {},
     blacklistActive = [], auditList = async () => ({ rows: [], total: 0 }), recentLogLines = [],
     moderationRecord = async () => ({ ladder: { level: 0, warns_since_level: 0 }, caseCount: 0, activeBan: null, activeMute: null }),
-    blacklistList = null,
+    blacklistList = null, managedRoles = async () => [],
 } = {}) {
     const guilds = new Map([
         [MAIN, makeGuild(MAIN, { name: 'Main', ownerId: '999999999999999990' })],
@@ -122,6 +123,7 @@ async function setup({
         dbStatus: () => ({ connectionType: 'postgresql', isDegraded: false }),
         recentLogs: () => recentLogLines,
         moderationRecord: rec('moderationRecord', moderationRecord),
+        managedRoles,
     };
     const sessions = createMemorySessionStore({ ttlMs: 48 * 3600 * 1000 });
     const access = createAccessChecker(client, { facts: async (c, id) => ({ inGuild: true, isAdmin: admins.has(id), isOwnerId: owners.has(id) }) });
@@ -655,4 +657,49 @@ test('user lookup: bad or unknown IDs, and database errors are shown as errors (
     assert.ok(res.body.includes('blacklist could not be read'));
     assert.ok(!res.body.includes('Not blacklisted') && !res.body.includes('<dt>Active ban</dt>'), 'an error is not shown as "clean"');
     assert.ok(!res.body.includes('/owner/blacklist?'));
+});
+
+// ── server permission check ───────────────────────────────────────────────
+
+test('permission check rules: missing permissions in plain words, Administrator covers all, roles above the bot', () => {
+    assert.deepEqual(missingPermissions(INSTALL_PERMISSIONS), []);
+    assert.deepEqual(missingPermissions(['Administrator']), []);
+    const missing = missingPermissions(INSTALL_PERMISSIONS.filter((p) => !['BanMembers', 'ManageRoles'].includes(p)));
+    assert.deepEqual(missing.map((m) => `${m.label} — ${m.why}`), [
+        'Manage Roles — needed for the Muted role and giving or removing roles', 'Ban Members — needed for bans',
+    ], 'INSTALL_PERMISSIONS order');
+    assert.equal(missingPermissions([]).length, INSTALL_PERMISSIONS.length);
+    assert.ok(missingPermissions([]).every((m) => m.label !== m.name || m.name === 'Connect'), 'every permission has a plain name');
+    assert.equal(missingPermissions(null, ['Speak'])[0].why, 'needed by the bot', 'unknown names still listed');
+
+    const top = { name: 'Meowist', position: 5 };
+    const roles = [
+        { id: 'a', name: 'Muted', position: 7, why: 'the Muted role (mutes)' }, { id: 'a', name: 'Muted', position: 7, why: 'dup' },
+        { id: 'b', name: 'Warning 1', position: 5, why: 'a warning role' }, { id: 'c', name: 'Low', position: 2, why: 'x' },
+    ];
+    assert.deepEqual(rolesAboveBot(top, roles).map((r) => r.name), ['Muted', 'Warning 1'], 'at or above, each role once');
+    assert.deepEqual(rolesAboveBot(null, roles), []);
+});
+
+test('server page: lists missing permissions and roles above the bot; a full set says so', async () => {
+    const h = await setup({ managedRoles: async () => [{ id: 'm', name: 'Muted', position: 9, why: 'the Muted role (mutes)' }] });
+    const me = h.guilds.get(OTHER_GUILD).members.me;
+    me.roles = { highest: { name: 'Meowist', position: 3 } };
+    const res = await get(h, h.ow.server, { params: { id: OTHER_GUILD } });
+    assert.equal(res.statusCode, 200);
+    assert.ok(res.body.includes('Permission check'));
+    assert.ok(res.body.includes('<b>Ban Members</b> <span class="muted">— needed for bans</span>'));
+    assert.ok(!res.body.includes('<b>Send Messages</b>'), 'granted permissions are not listed as missing');
+    assert.match(res.body, /at or above the bot's highest role \(Meowist\)/);
+    assert.ok(res.body.includes('<b>Muted</b> <span class="muted">— the Muted role (mutes)</span>'));
+    assert.ok(!/<style|style=|<script/i.test(res.body.replace(ALLOWED_SCRIPT, '')));
+
+    const full = await setup({ managedRoles: async () => { throw new Error('db down'); } });
+    const fme = full.guilds.get(OTHER_GUILD).members.me;
+    fme.permissions = { toArray: () => [...INSTALL_PERMISSIONS] };
+    fme.roles = { highest: { name: 'Meowist', position: 3 } };
+    const ok = await get(full, full.ow.server, { params: { id: OTHER_GUILD } });
+    assert.equal(ok.statusCode, 200, 'an unreadable role list does not break the page');
+    assert.ok(ok.body.includes('The bot has every permission it asks for when added.'));
+    assert.ok(ok.body.includes('No known role the bot manages'));
 });
