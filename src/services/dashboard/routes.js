@@ -839,6 +839,8 @@ export function dashboardRouter(d) {
     router.post('/owner/announce/preview', ...owner, form, safe(ow.announcePreview));
     router.post('/owner/announce/send', ...owner, form, safe(ow.announceSend));
     router.get('/owner', ...owner, ow.index);
+    router.get('/owner/home', ...owner, safe(ow.home));
+    router.get('/owner/activity', ...owner, safe(ow.activity));
     router.get('/owner/profile', ...owner, safe(ow.profile));
     router.get('/owner/servers', ...owner, safe(ow.servers));
     router.get('/owner/servers/:id', ...owner, safe(ow.server));

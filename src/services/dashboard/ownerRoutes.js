@@ -1,14 +1,18 @@
 // ownerRoutes.js — the Owner area of the dashboard: the bot's owners (OWNER_IDS) manage
 // the bot itself.
 //
+//   GET  /dashboard/owner[/home]                        overview: servers, members, uptime, database,
+//                                                       blacklist, recently joined, largest, recent actions
+//   GET  /dashboard/owner/activity[?page=]              every owner action (audit rows, module 'owner')
 //   GET  /dashboard/owner/profile                       username, avatar, banner, about me, presence
 //   POST /dashboard/owner/profile/username|about|presence
 //   POST /dashboard/owner/profile/avatar|banner         https URL or an uploaded image (multipart)
-//   GET  /dashboard/owner/servers[?q=]                  every server the bot is in
+//   GET  /dashboard/owner/servers[?q=&sort=]            every server the bot is in (name, members, newest, oldest)
 //   GET  /dashboard/owner/servers/:id                   channels, roles, bot permissions (read-only)
 //   POST /dashboard/owner/servers/:id/invite            1-use, 1-hour invite (owner/admin of that server only)
 //   POST /dashboard/owner/servers/:id/leave/preview|leave   confirm step, never the main/support server
-//   GET  /dashboard/owner/blacklist, POST …/add|remove  global blacklist (users, servers)
+//   GET  /dashboard/owner/blacklist[?kind=&id=], POST …/add|remove  global blacklist (users, servers);
+//                                                       kind/id only pre-fill the form
 //   GET  /dashboard/owner/health, POST …/maintenance    process status, maintenance switch
 //   GET  /dashboard/owner/announce, POST …/preview|send one message to every server's log channel
 //
@@ -37,11 +41,13 @@ import { isSnowflake } from './security.js';
 import { pinnedFetch } from '../owner/safeImageFetch.js';
 import { isBlacklistLoaded } from '../owner/blacklistCache.js';
 import {
-    ABOUT_MAX, ANNOUNCE_MAX, USERNAME_MAX, announceConfirmPage, announcePage, announceResultPage, blacklistPage,
-    healthPage, leaveConfirmPage, profilePage, serverPage, serversPage,
+    ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
+    blacklistPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage,
 } from './ownerPages.js';
 
 export const OWNER_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+export const ACTIVITY_PAGE_SIZE = 50;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 export const INVITE_MAX_AGE_SECONDS = 3600;
 const IMAGE_FETCH_TIMEOUT_MS = 10000;
 const AUDIT_MODULE = 'owner';
@@ -81,10 +87,44 @@ export function canLeaveGuild(guildId, protectedGuildIds) {
     return Boolean(guildId) && !protectedGuildIds.filter(Boolean).includes(String(guildId));
 }
 
+const joinedMs = (g) => g.joinedTimestamp ?? (g.joinedAt ? new Date(g.joinedAt).getTime() : 0);
+
+/** The servers in the chosen order (unknown sort → name); a copy, ties by name. */
+export function sortServers(guilds, sort = 'name') {
+    const byName = (a, b) => String(a.name).localeCompare(String(b.name), 'en', { sensitivity: 'base' });
+    const order = {
+        members: (a, b) => (b.memberCount ?? 0) - (a.memberCount ?? 0) || byName(a, b),
+        newest: (a, b) => joinedMs(b) - joinedMs(a) || byName(a, b),
+        oldest: (a, b) => joinedMs(a) - joinedMs(b) || byName(a, b),
+    }[sort] || byName;
+    return [...guilds].sort(order);
+}
+
+/** Totals over every server: count, members (sum of memberCount), joined in the last 7 days. */
+export function serverTotals(guilds, now = Date.now()) {
+    const list = [...guilds];
+    return {
+        servers: list.length,
+        members: list.reduce((sum, g) => sum + (Number(g.memberCount) || 0), 0),
+        joinedWeek: list.filter((g) => joinedMs(g) && now - joinedMs(g) < WEEK_MS).length,
+    };
+}
+
+/** The badges of a server row: Main / Support (protected) and Blacklisted. */
+export function serverTagsFor(guildId, { mainId = null, supportId = null, blacklisted = new Set() } = {}) {
+    const tags = [];
+    if (mainId && guildId === mainId) tags.push('Main');
+    if (supportId && guildId === supportId) tags.push('Support');
+    if (blacklisted.has(guildId)) tags.push('Blacklisted');
+    return tags;
+}
+
 /** What an announcement sends: plain text, no mention ever pings. */
 export function announcePayload(message) {
     return { content: String(message), allowedMentions: { parse: [] } };
 }
+
+const VERIFICATION_LABEL = { 0: 'None', 1: 'Low', 2: 'Medium', 3: 'High', 4: 'Highest' };
 
 const CHANNEL_TYPE_LABEL = {
     [ChannelType.GuildText]: 'Text', [ChannelType.GuildVoice]: 'Voice', [ChannelType.GuildCategory]: 'Category',
@@ -354,21 +394,75 @@ export function createOwnerHandlers(core) {
         }
     }
 
-    async function serverRow(guild) {
+    /** Active blacklist entries (null when the store cannot be read: pages still render). */
+    async function activeBlacklist() {
+        try {
+            return (await o.blacklist.list()).active || [];
+        } catch (error) {
+            logger.warn(`Owner area: blacklist not readable: ${error.message}`);
+            return null;
+        }
+    }
+    const blacklistedGuilds = (active) => new Set((active || []).filter((r) => r.kind === 'guild').map((r) => String(r.target_id)));
+    function tagContext(active) {
+        const [mainId, supportId] = protectedIds();
+        return { mainId, supportId, blacklisted: blacklistedGuilds(active) };
+    }
+
+    async function serverRow(guild, tags = null) {
         return {
             id: guild.id, name: guild.name, iconUrl: iconOf(guild), ownerId: guild.ownerId || null,
             ownerName: await ownerName(guild.ownerId), memberCount: guild.memberCount ?? null,
             joinedAt: guild.joinedTimestamp ? new Date(guild.joinedTimestamp) : guild.joinedAt || null,
+            tags: tags ? serverTagsFor(guild.id, tags) : [],
         };
     }
 
+    const allGuilds = () => [...(client.guilds?.cache?.values?.() || [])];
+
     async function servers(req, res) {
         const q = queryText(req.query, 'q', 100).toLowerCase();
-        const all = [...(client.guilds?.cache?.values?.() || [])];
-        const matching = q ? all.filter((g) => g.id === q || String(g.name || '').toLowerCase().includes(q)) : all;
-        matching.sort((a, b) => String(a.name).localeCompare(String(b.name), 'en', { sensitivity: 'base' }));
-        const rows = await Promise.all(matching.slice(0, 200).map(serverRow));
-        return sendHtml(res, 200, serversPage({ ...page(req), rows, total: all.length, q: queryText(req.query, 'q', 100), flash: takeFlash(req) }));
+        const wanted = queryText(req.query, 'sort', 20);
+        const sort = Object.hasOwn(SERVER_SORTS, wanted) ? wanted : 'name';
+        const all = allGuilds();
+        const matching = sortServers(q ? all.filter((g) => g.id === q || String(g.name || '').toLowerCase().includes(q)) : all, sort);
+        const tags = tagContext(await activeBlacklist());
+        const rows = await Promise.all(matching.slice(0, 200).map((g) => serverRow(g, tags)));
+        return sendHtml(res, 200, serversPage({
+            ...page(req), rows, total: matching.length, totals: serverTotals(all), q: queryText(req.query, 'q', 100), sort, flash: takeFlash(req),
+        }));
+    }
+
+    // ── Overview and activity ────────────────────────────────────────────
+
+    /** Server names by id, for the activity text (servers the bot left show their id). */
+    const guildNames = () => new Map(allGuilds().map((g) => [g.id, g.name]));
+
+    async function home(req, res) {
+        const all = allGuilds();
+        const active = await activeBlacklist();
+        const tags = tagContext(active);
+        const recent = await Promise.all(sortServers(all, 'newest').slice(0, 5).map((g) => serverRow(g, tags)));
+        const largest = await Promise.all(sortServers(all, 'members').slice(0, 5).map((g) => serverRow(g, tags)));
+        const actions = await audits.list(guildId, { module: AUDIT_MODULE, page: 0, pageSize: 8 }).then((r) => r.rows).catch(() => null);
+        return sendHtml(res, 200, ownerHomePage({
+            ...page(req),
+            home: {
+                totals: serverTotals(all), recent, largest, health: collectHealth(),
+                blacklistCount: active === null ? undefined : active.length, actions, names: guildNames(),
+            },
+        }));
+    }
+
+    async function activity(req, res) {
+        const pageNo = Math.min(10000, Math.max(0, Number.parseInt(queryText(req.query, 'page', 6), 10) || 0));
+        const result = await audits.list(guildId, { module: AUDIT_MODULE, page: pageNo, pageSize: ACTIVITY_PAGE_SIZE }).catch((error) => {
+            logger.warn(`Owner activity not readable: ${error.message}`);
+            return null;
+        });
+        return sendHtml(res, 200, activityPage({
+            ...page(req), rows: result ? result.rows : null, total: result?.total || 0, page: pageNo, pageSize: ACTIVITY_PAGE_SIZE, names: guildNames(),
+        }));
     }
 
     function guildParam(req) {
@@ -390,8 +484,14 @@ export function createOwnerHandlers(core) {
         const roles = [...(guild.roles?.cache?.values?.() || [])]
             .sort((a, b) => (b.position ?? 0) - (a.position ?? 0))
             .map((r) => ({ name: r.name, color: r.hexColor || '#000000', members: r.members?.size ?? 0 }));
+        const active = await activeBlacklist();
         const detail = {
-            ...await serverRow(guild),
+            ...await serverRow(guild, tagContext(active)),
+            createdAt: guild.createdTimestamp ? new Date(guild.createdTimestamp) : null,
+            boosts: guild.premiumSubscriptionCount ?? 0,
+            boostTier: guild.premiumTier ?? 0,
+            verificationLevel: VERIFICATION_LABEL[guild.verificationLevel] || null,
+            blacklisted: blacklistedGuilds(active).has(guild.id),
             channels: channelRows(guild),
             roles,
             permissions: guild.members?.me?.permissions?.toArray?.() || [],
@@ -458,7 +558,13 @@ export function createOwnerHandlers(core) {
         }
         return sendHtml(res, status, blacklistPage({ ...page(req), active, removed, names, flash: status === 200 ? takeFlash(req) : null, error, values }));
     }
-    const blacklist = (req, res) => renderBlacklist(req, res);
+    // ?kind=guild&id=… (the "Blacklist this server…" link) only pre-fills the form; nothing is added.
+    const blacklist = (req, res) => {
+        const kind = queryText(req.query, 'kind', 10);
+        const id = queryText(req.query, 'id', 25);
+        const values = ['user', 'guild'].includes(kind) && isSnowflake(id) ? { kind, id } : {};
+        return renderBlacklist(req, res, 200, null, values);
+    };
     const rerenderBlacklist = (req, res, status, message) => renderBlacklist(req, res, status, message, {
         kind: queryText(req.body, 'kind', 10), id: queryText(req.body, 'id', 25), reason: queryText(req.body, 'reason', 300),
     });
@@ -580,10 +686,10 @@ export function createOwnerHandlers(core) {
         return sendHtml(res, 200, announceResultPage({ ...page(req), result }));
     }, { rerender: rerenderAnnounce });
 
-    const index = (req, res) => res.redirect(302, path('/owner/profile'));
+    const index = (req, res) => res.redirect(302, path('/owner/home'));
 
     return {
-        requireOwner, index, profile, username, about, presence, avatar: imageAction('avatar'), banner: imageAction('banner'),
+        requireOwner, index, home, activity, profile, username, about, presence, avatar: imageAction('avatar'), banner: imageAction('banner'),
         servers, server, invite, leavePreview, leave, blacklist, blacklistAdd, blacklistRemove,
         health, maintenance, announce, announcePreview, announceSend,
     };

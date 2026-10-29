@@ -192,7 +192,7 @@ ${sections}`;
 
 const AUDIT_VALUE_PREVIEW = 120;
 /** An audited value; a long one shows its start, the rest behind "Show all" (nothing is dropped). */
-function auditValue(value) {
+export function auditValue(value) {
     if (value === null || value === undefined) return '—';
     const full = typeof value === 'string' ? value : JSON.stringify(value);
     if (full.length <= AUDIT_VALUE_PREVIEW) return full;

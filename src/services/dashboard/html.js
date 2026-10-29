@@ -159,11 +159,13 @@ export const NAV = [
  * module lists (navItems, moduleItems) never include it. `icon` names a sprite icon.
  */
 export const OWNER_NAV = { group: 'Owner', items: [
+    { key: 'owner/home', label: 'Owner overview', icon: 'overview' },
     { key: 'owner/profile', label: 'Bot profile', icon: 'cat' },
     { key: 'owner/servers', label: 'Servers', icon: 'server' },
     { key: 'owner/blacklist', label: 'Blacklist', icon: 'nocontact' },
     { key: 'owner/health', label: 'Health', icon: 'monitor' },
     { key: 'owner/announce', label: 'Announce', icon: 'messages' },
+    { key: 'owner/activity', label: 'Owner activity', icon: 'audit' },
 ] };
 
 /**

@@ -207,12 +207,12 @@ function recentChangesSection(rows) {
 
 /** The Overview page from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
 /** A bento tile: optional title row (with a link) and content; `span` = columns of 12. */
-function tile(span, title, body, { link = null, className = '' } = {}) {
+export function tile(span, title, body, { link = null, className = '' } = {}) {
     return html`<section class="tile span-${span}${className ? ` ${className}` : ''}">${title ? html`<h2 class="tile-title">${title}${link ? html`<a href="${link.href}">${link.text}</a>` : ''}</h2>` : ''}${body}</section>`;
 }
 
 /** A KPI tile: label, big number, one line under it. */
-function kpi(label, value, sub, { dark = false, href = null } = {}) {
+export function kpi(label, value, sub, { dark = false, href = null } = {}) {
     const number = href && value !== undefined ? html`<a class="kpi-num" href="${href}">${show(value)}</a>` : html`<span class="kpi-num">${show(value)}</span>`;
     return tile(3, label, html`${number}<p class="kpi-sub">${sub}</p>`, { className: `kpi${dark ? ' kpi-dark' : ''}` });
 }

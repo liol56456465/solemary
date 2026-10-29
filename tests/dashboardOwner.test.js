@@ -17,7 +17,9 @@ const { SESSION_COOKIE, signValue } = await import('../src/services/dashboard/se
 const { layout, JS_PATH } = await import('../src/services/dashboard/html.js');
 const {
     announcePayload, canLeaveGuild, fetchImageFromUrl, inviteOptions, isSessionFresh, OWNER_SESSION_MAX_AGE_MS,
+    serverTagsFor, serverTotals, sortServers,
 } = await import('../src/services/dashboard/ownerRoutes.js');
+const { ownerActionText } = await import('../src/services/dashboard/ownerPages.js');
 const { BLACKLIST_MESSAGE, blacklistHit, setBlacklistCache } = await import('../src/services/owner/blacklistCache.js');
 const { blacklistProblem } = await import('../src/services/owner/blacklistService.js');
 const { parsePresence, presenceData } = await import('../src/services/owner/botStateService.js');
@@ -83,7 +85,10 @@ function fakeRes() {
     };
 }
 
-async function setup({ env = ENV, userId = OWNER, owners = new Set([OWNER]), admins = new Set([ADMIN]), createdAt = Date.now(), guildOpts = {} } = {}) {
+async function setup({
+    env = ENV, userId = OWNER, owners = new Set([OWNER]), admins = new Set([ADMIN]), createdAt = Date.now(), guildOpts = {},
+    blacklistActive = [], auditList = async () => ({ rows: [], total: 0 }),
+} = {}) {
     const guilds = new Map([
         [MAIN, makeGuild(MAIN, { name: 'Main', ownerId: '999999999999999990' })],
         [SUPPORT, makeGuild(SUPPORT, { name: 'Support', ownerId: '999999999999999990' })],
@@ -101,7 +106,7 @@ async function setup({ env = ENV, userId = OWNER, owners = new Set([OWNER]), adm
     const owner = {
         isBotOwner: (id) => owners.has(id),
         blacklist: {
-            list: rec('list', async () => ({ active: [], removed: [] })),
+            list: rec('list', async () => ({ active: blacklistActive, removed: [] })),
             add: rec('add', async (entry) => ({ id: 1, kind: entry.kind, target_id: entry.targetId, reason: entry.reason })),
             remove: rec('remove', async () => null),
         },
@@ -119,7 +124,7 @@ async function setup({ env = ENV, userId = OWNER, owners = new Set([OWNER]), adm
     const auditRows = [];
     const auditStore = {
         writeRows: async (g, actor, module, changes) => { for (const c of changes) auditRows.push({ actor, module, ...c }); return changes.length; },
-        list: async () => ({ rows: [], total: 0 }), users: async () => [],
+        list: auditList, users: async () => [],
     };
     const services = { postModLog: async () => {}, getAutomodSettings: async () => ({}), getJoinToCreateConfiguration: async () => ({}), getApplicationSettings: async () => ({}) };
     const data = { overview: { getGuildConfig: async () => ({}), getWelcomeConfig: async () => ({}) } };
@@ -156,7 +161,7 @@ const tokenOf = (body) => ({ token: body.match(/name="token" value="([^"]+)"/)?.
 
 test('owner area: a non-owner (even an Administrator) gets the normal 404 page; an owner gets the page', async () => {
     const admin = await setup({ userId: ADMIN });
-    for (const handler of ['profile', 'servers', 'blacklist', 'health', 'announce']) {
+    for (const handler of ['home', 'activity', 'profile', 'servers', 'blacklist', 'health', 'announce']) {
         const res = await get(admin, admin.ow[handler]);
         assert.equal(res.statusCode, 404, handler);
         assert.match(res.body, /Not found/);
@@ -166,7 +171,7 @@ test('owner area: a non-owner (even an Administrator) gets the normal 404 page; 
     assert.equal(admin.calls.length, 0);
 
     const owner = await setup();
-    for (const handler of ['profile', 'servers', 'blacklist', 'health', 'announce']) {
+    for (const handler of ['home', 'activity', 'profile', 'servers', 'blacklist', 'health', 'announce']) {
         const page = await get(owner, owner.ow[handler]);
         assert.equal(page.statusCode, 200, handler);
         assert.ok(!/<style|style=|<script/i.test(page.body.replace(ALLOWED_SCRIPT, '')), `${handler}: no inline styles or scripts`);
@@ -430,4 +435,128 @@ test('owner image URLs: private, loopback and internal addresses are refused aft
     // A public-looking name that resolves to an internal address never gets a connection.
     const resolve = (host, opts, cb) => cb(null, [{ address: '127.0.0.1', family: 4 }]);
     await assert.rejects(pinnedFetch('https://looks-public.example/a.png', { resolve }), (error) => error.code === 'EPRIVATE');
+});
+
+// ── overview, activity, servers list, server facts ────────────────────────
+
+test('owner overview: totals, newest and largest servers, blacklist count, recent actions in words', async () => {
+    const auditCalls = [];
+    const h = await setup({
+        blacklistActive: [{ id: 1, kind: 'guild', target_id: OTHER_GUILD, reason: 'spam' }, { id: 2, kind: 'user', target_id: '300000000000000001', reason: 'x' }],
+        auditList: async (g, opts) => {
+            auditCalls.push({ g, opts });
+            return { rows: [{ user_id: OWNER, username: 'owner', key: `servers.${OTHER_GUILD}.leave`, old: { name: 'Other' }, new: null, created_at: new Date() }], total: 1 };
+        },
+    });
+    h.guilds.get(OTHER_GUILD).memberCount = 500;
+    h.guilds.get(OTHER_GUILD).joinedTimestamp = Date.now() - 1000;
+    const res = await get(h, h.ow.home);
+    assert.equal(res.statusCode, 200);
+    assert.ok(res.body.includes('<h1>Owner overview</h1>'));
+    assert.match(res.body, /<a class="kpi-num" href="\/dashboard\/owner\/servers">3<\/a>/, 'server count links to the list');
+    assert.ok(res.body.includes('524 members in total · 1 new this week'));
+    assert.match(res.body, /<a class="kpi-num" href="\/dashboard\/owner\/blacklist">2<\/a>/);
+    assert.ok(res.body.includes('Left Other'), 'audit key shown in words with the server name');
+    assert.deepEqual(auditCalls[0].opts, { module: 'owner', page: 0, pageSize: 8 }, 'only owner rows');
+    const largest = res.body.slice(res.body.indexOf('Largest servers'));
+    assert.match(largest, /<b>Other<\/b>/, 'largest first');
+    assert.ok(res.body.includes('Blacklisted</span>'), 'blacklisted server is tagged');
+
+    const broken = await setup({ auditList: async () => { throw new Error('db down'); } });
+    const page = await get(broken, broken.ow.home);
+    assert.equal(page.statusCode, 200, 'the overview still renders without the audit store');
+    assert.ok(page.body.includes('Unavailable (database).'));
+
+    const redirect = await get(h, h.ow.index);
+    assert.equal(redirect.redirectedTo, '/dashboard/owner/home');
+});
+
+test('owner activity: owner rows only, paged, a database error is shown instead of an empty list', async () => {
+    const seen = [];
+    const h = await setup({
+        auditList: async (g, opts) => {
+            seen.push(opts);
+            return { rows: [{ user_id: OWNER, username: 'owner', key: 'maintenance', old: false, new: true, created_at: new Date() }], total: 120 };
+        },
+    });
+    const res = await get(h, h.ow.activity, { query: { page: '1' } });
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(seen[0], { module: 'owner', page: 1, pageSize: 50 });
+    assert.ok(res.body.includes('Maintenance mode'));
+    assert.ok(res.body.includes('Page 2 of 3 · 120 actions'));
+    assert.ok(res.body.includes('href="/dashboard/owner/activity?page=0"') && res.body.includes('href="/dashboard/owner/activity?page=2"'));
+    const bad = await get(h, h.ow.activity, { query: { page: '-5' } });
+    assert.equal(seen[1].page, 0, 'bad page numbers fall back to the first page');
+    assert.equal(bad.statusCode, 200);
+
+    const broken = await setup({ auditList: async () => { throw new Error('down'); } });
+    const err = await get(broken, broken.ow.activity);
+    assert.equal(err.statusCode, 200);
+    assert.ok(err.body.includes('could not be loaded (database)'));
+    assert.ok(!err.body.includes('No owner actions yet'), 'an error is not shown as "nothing"');
+});
+
+test('servers list: sort, totals over every server, Main / Support / Blacklisted tags', async () => {
+    const h = await setup({ blacklistActive: [{ id: 1, kind: 'guild', target_id: OTHER_GUILD, reason: 'r' }] });
+    h.guilds.get(SUPPORT).memberCount = 900;
+    const byMembers = await get(h, h.ow.servers, { query: { sort: 'members' } });
+    const order = [...byMembers.body.matchAll(/<b>(Main|Support|Other)<\/b>/g)].map((m) => m[1]);
+    assert.deepEqual(order, ['Support', 'Main', 'Other']);
+    assert.ok(byMembers.body.includes('<option value="members" selected>'));
+    assert.ok(byMembers.body.includes('3 servers, 924 members in total'));
+    assert.match(byMembers.body, /<b>Main<\/b> <span class="state-word is-on">.*Main<\/span>/);
+    assert.match(byMembers.body, /<b>Other<\/b> <span class="state-word is-bad">.*Blacklisted<\/span>/);
+    const odd = await get(h, h.ow.servers, { query: { sort: '<script>' } });
+    assert.ok(odd.body.includes('<option value="name" selected>'), 'unknown sort → name');
+    assert.ok(!odd.body.includes('<script>'));
+});
+
+test('server page: facts, and "Blacklist this server" only pre-fills the form (never for main / support)', async () => {
+    const h = await setup();
+    Object.assign(h.guilds.get(OTHER_GUILD), { createdTimestamp: Date.parse('2024-05-01T00:00:00Z'), premiumSubscriptionCount: 7, premiumTier: 2, verificationLevel: 3 });
+    const other = await get(h, h.ow.server, { params: { id: OTHER_GUILD } });
+    assert.ok(other.body.includes('<dt>Boosts</dt><dd>7 (level 2)</dd>'));
+    assert.ok(other.body.includes('<dt>Verification level</dt><dd>High</dd>'));
+    assert.ok(other.body.includes(`href="/dashboard/owner/blacklist?kind=guild&amp;id=${OTHER_GUILD}"`));
+    const main = await get(h, h.ow.server, { params: { id: MAIN } });
+    assert.ok(!main.body.includes('/owner/blacklist?'), 'no blacklist link for the main server');
+    assert.ok(main.body.includes('cannot be blacklisted'));
+
+    const form = await get(h, h.ow.blacklist, { query: { kind: 'guild', id: OTHER_GUILD } });
+    assert.ok(form.body.includes(`name="id" inputmode="numeric" maxlength="20" required value="${OTHER_GUILD}"`));
+    assert.ok(form.body.includes('<option value="guild" selected>'));
+    assert.ok(!h.calls.some((c) => c.name === 'add'), 'a GET never adds anything');
+    const junk = await get(h, h.ow.blacklist, { query: { kind: 'guild', id: '"><b>x' } });
+    assert.ok(!junk.body.includes('<b>x') && junk.body.includes('required value=""'), 'a bad id is ignored');
+
+    const listed = await setup({ blacklistActive: [{ id: 1, kind: 'guild', target_id: OTHER_GUILD, reason: 'r' }] });
+    const page = await get(listed, listed.ow.server, { params: { id: OTHER_GUILD } });
+    assert.ok(page.body.includes('Blacklisted: the bot ignores this server'));
+});
+
+test('server rules: sort orders, totals and tags', () => {
+    const now = Date.parse('2026-10-29T12:00:00Z');
+    const g = (name, memberCount, daysAgo) => ({ id: name, name, memberCount, joinedTimestamp: now - daysAgo * 86400000 });
+    const list = [g('b', 5, 1), g('a', 50, 30), g('c', 5, 3)];
+    assert.deepEqual(sortServers(list, 'name').map((x) => x.name), ['a', 'b', 'c']);
+    assert.deepEqual(sortServers(list, 'members').map((x) => x.name), ['a', 'b', 'c'], 'ties by name');
+    assert.deepEqual(sortServers(list, 'newest').map((x) => x.name), ['b', 'c', 'a']);
+    assert.deepEqual(sortServers(list, 'oldest').map((x) => x.name), ['a', 'c', 'b']);
+    assert.deepEqual(sortServers(list, 'nope').map((x) => x.name), ['a', 'b', 'c']);
+    assert.deepEqual(list.map((x) => x.name), ['b', 'a', 'c'], 'the input is not changed');
+    assert.deepEqual(serverTotals(list, now), { servers: 3, members: 60, joinedWeek: 2 });
+    assert.deepEqual(serverTagsFor('1', { mainId: '1', supportId: '2', blacklisted: new Set(['1']) }), ['Main', 'Blacklisted']);
+    assert.deepEqual(serverTagsFor('3', { mainId: '1', supportId: '2' }), []);
+});
+
+test('owner action text: every audit key the owner area writes reads as words', () => {
+    const names = new Map([['100000000000000077', 'Other']]);
+    assert.equal(ownerActionText('maintenance'), 'Maintenance mode');
+    assert.equal(ownerActionText('announce'), 'Announcement to every server');
+    assert.equal(ownerActionText('profile.presence'), 'Bot profile: status');
+    assert.equal(ownerActionText('servers.100000000000000077.invite', names), 'Invite created in Other');
+    assert.equal(ownerActionText('servers.100000000000000099.leave', names), 'Left 100000000000000099');
+    assert.equal(ownerActionText('blacklist.guild.100000000000000077', names), 'Blacklist: server Other');
+    assert.equal(ownerActionText('blacklist.user.300000000000000001'), 'Blacklist: user 300000000000000001');
+    assert.equal(ownerActionText('something.else'), 'something.else');
 });

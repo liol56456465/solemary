@@ -1,11 +1,12 @@
-// ownerPages.js — the Owner area pages (bot owners only): bot profile, servers, server
-// detail, leave confirm, blacklist, health and maintenance, announce (compose, confirm,
-// result). Pure: data in, HTML out, everything escaped by the `html` template. No inline
+// ownerPages.js — the Owner area pages (bot owners only): overview, bot profile, servers,
+// server detail, leave confirm, blacklist, health and maintenance, announce (compose,
+// confirm, result), activity (the owner audit rows). Pure: data in, HTML out, everything escaped by the `html` template. No inline
 // styles or scripts (CSP).
 
-import { formatDate, html, layout, path } from './html.js';
+import { formatDate, html, layout, path, queryString, timeTag } from './html.js';
 import { actionForm } from './enforcementPages.js';
-import { isAllowedImageUrl } from './pages.js';
+import { auditValue, isAllowedImageUrl } from './pages.js';
+import { kpi, tile } from './overview.js';
 import { ACTIVITY_TEXT_MAX, STATUSES } from '../owner/botStateService.js';
 import { BLACKLIST_REASON_MAX } from '../owner/blacklistService.js';
 
@@ -63,17 +64,30 @@ ${notices({ flash, error, editEnabled })}
 
 // ── Servers ───────────────────────────────────────────────────────────────
 
-/** rows: [{ id, name, iconUrl, ownerId, ownerName, memberCount, joinedAt }]. */
-export function serversPage({ session, access = null, moduleStates = {}, rows = [], total = rows.length, q = '', flash = null }) {
+export const SERVER_SORTS = { name: 'Name', members: 'Most members', newest: 'Joined most recently', oldest: 'Joined first' };
+const TAG_TONE = { Main: 'on', Support: 'on', Blacklisted: 'bad' };
+const serverTags = (tags = []) => tags.map((t) => html` <span class="state-word is-${TAG_TONE[t] || 'off'}"><span class="dot dot-${TAG_TONE[t] || 'off'}" aria-hidden="true"></span>${t}</span>`);
+const serverInitial = (row) => html`<span class="avatar-sm" aria-hidden="true">${String(row.name || '?').slice(0, 1).toUpperCase()}</span>`;
+
+/**
+ * rows: [{ id, name, iconUrl, ownerId, ownerName, memberCount, joinedAt, tags }]; totals: { servers,
+ * members, joinedWeek } over every server (not only the matching ones).
+ */
+export function serversPage({ session, access = null, moduleStates = {}, rows = [], total = rows.length, totals = null, q = '', sort = 'name', flash = null }) {
     const table = rows.length ? html`<div class="table-wrap"><table class="members"><thead><tr><th>Server</th><th>Owner</th><th>Members</th><th>Bot joined</th></tr></thead><tbody>
-${rows.map((row) => html`<tr><td><a class="member-cell" href="${path(`/owner/servers/${row.id}`)}">${img(row.iconUrl, '', 32) || html`<span class="avatar-sm" aria-hidden="true">${String(row.name || '?').slice(0, 1).toUpperCase()}</span>`}<span><b>${row.name}</b><small>${row.id}</small></span></a></td>
+${rows.map((row) => html`<tr><td><a class="member-cell" href="${path(`/owner/servers/${row.id}`)}">${img(row.iconUrl, '', 32) || serverInitial(row)}<span><b>${row.name}</b>${serverTags(row.tags)}<small>${row.id}</small></span></a></td>
 <td>${row.ownerName || html`<span class="muted">unknown</span>`}<br><small class="muted">${row.ownerId || '—'}</small></td>
 <td>${row.memberCount ?? '—'}</td><td>${formatDate(row.joinedAt)}</td></tr>`)}
 </tbody></table></div>` : html`<p class="empty">${q ? 'No server matches.' : 'The bot is in no server.'}</p>`;
-    const body = html`<header class="page-head"><h1>Servers</h1><p class="muted">Every server the bot is in (${total}).</p></header>
+    const summary = totals
+        ? `Every server the bot is in: ${totals.servers} server${totals.servers === 1 ? '' : 's'}, ${totals.members} members in total, ${totals.joinedWeek} joined in the last 7 days.`
+        : `Every server the bot is in (${total}).`;
+    const body = html`<header class="page-head"><h1>Servers</h1><p class="muted">${summary}</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 <form class="filters" method="get" action="${path('/owner/servers')}" role="search"><label class="wide-filter">Search<input type="search" name="q" value="${q}" maxlength="100" autocomplete="off" placeholder="Name or server ID"></label>
-<button class="primary" type="submit">Search</button> <a href="${path('/owner/servers')}">Clear</a></form>${table}`;
+<label>Sort<select name="sort">${Object.entries(SERVER_SORTS).map(([key, label]) => opt(key, label, sort))}</select></label>
+<button class="primary" type="submit">Show</button> <a href="${path('/owner/servers')}">Clear</a></form>
+${rows.length < total ? html`<p class="muted">Showing ${rows.length} of ${total}.</p>` : ''}${table}`;
     return shell({ title: 'Servers', active: 'owner/servers', session, access, moduleStates, body });
 }
 
@@ -89,8 +103,19 @@ export function serverPage({ session, access = null, moduleStates = {}, detail, 
         detail.canCreateInvite ? actionForm(csrf, `/owner/servers/${detail.id}/invite`, html`<p class="muted">You own this server or have Administrator there. The invite works once and expires after 1 hour.</p>`, { submit: 'Create invite', enabled: editEnabled }) : '',
     ].filter(Boolean);
     const body = html`<a class="back" href="${path('/owner/servers')}">← Servers</a>
-<header class="page-head"><h1>${detail.name}</h1><p class="muted">${detail.id} · owner ${detail.ownerName || 'unknown'} (${detail.ownerId || '—'}) · ${detail.memberCount ?? '—'} members · bot joined ${formatDate(detail.joinedAt)}</p></header>
+<header class="page-head"><h1>${detail.name}${serverTags(detail.tags)}</h1><p class="muted">${detail.id} · owner ${detail.ownerName || 'unknown'} (${detail.ownerId || '—'}) · ${detail.memberCount ?? '—'} members · bot joined ${formatDate(detail.joinedAt)}</p></header>
 ${notices({ flash, error, editEnabled })}
+<section class="card"><h2>About this server</h2><dl>
+<dt>Created</dt><dd>${detail.createdAt ? formatDate(detail.createdAt) : '—'}</dd>
+<dt>Boosts</dt><dd>${detail.boosts ?? 0} (level ${detail.boostTier ?? 0})</dd>
+<dt>Verification level</dt><dd>${detail.verificationLevel || '—'}</dd>
+<dt>Channels / roles</dt><dd>${detail.channels.length} / ${detail.roles.length}</dd>
+<dt>Blacklist</dt><dd>${detail.blacklisted
+        ? html`<span class="state-word is-bad"><span class="dot dot-bad" aria-hidden="true"></span>Blacklisted: the bot ignores this server</span> <a href="${path('/owner/blacklist')}">Blacklist</a>`
+        : detail.canLeave
+            ? html`Not blacklisted · <a href="${path(`/owner/blacklist${queryString({ kind: 'guild', id: detail.id })}`)}">Blacklist this server…</a> <span class="muted">(fills in the form; you add a reason there)</span>`
+            : html`<span class="muted">The main and the support server cannot be blacklisted.</span>`}</dd>
+</dl></section>
 ${inviteBits.length ? html`<section class="card"><h2>Invite</h2>${inviteBits}</section>` : ''}
 <section class="card"><h2>Bot permissions here</h2>${detail.permissions.length ? html`<ul class="name-list">${detail.permissions.map((p) => html`<li>${p}</li>`)}</ul>` : html`<p class="empty">None.</p>`}</section>
 <section class="card"><h2>Channels (${detail.channels.length})</h2>${detail.channels.length ? html`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Category</th></tr></thead><tbody>
@@ -135,6 +160,78 @@ ${removed.length ? html`<section class="card"><h2>Recently removed</h2><div clas
 ${removed.map((row) => html`<tr><td>${kindLabel(row.kind)}: ${who(row.target_id, names.get(row.target_id))}</td><td>${row.reason}</td><td>${row.added_by_username || row.added_by}<br><small class="muted">${formatDate(row.created_at)}</small></td><td>${row.removed_by_username || row.removed_by}<br><small class="muted">${formatDate(row.removed_at)}</small></td></tr>`)}
 </tbody></table></div></section>` : ''}`;
     return shell({ title: 'Blacklist', active: 'owner/blacklist', session, access, moduleStates, body });
+}
+
+// ── Overview and activity ─────────────────────────────────────────────────
+
+/** What an owner audit row did, in words (keys written by ownerRoutes.js). names: id → server name. */
+export function ownerActionText(key, names = new Map()) {
+    const k = String(key || '');
+    const server = (id) => names.get(id) || id;
+    let m;
+    if (k === 'maintenance') return 'Maintenance mode';
+    if (k === 'announce') return 'Announcement to every server';
+    if ((m = /^profile\.(username|about|presence|avatar|banner)$/.exec(k))) {
+        return `Bot profile: ${{ username: 'username', about: 'about me', presence: 'status', avatar: 'avatar', banner: 'banner' }[m[1]]}`;
+    }
+    if ((m = /^servers\.(\d+)\.invite$/.exec(k))) return `Invite created in ${server(m[1])}`;
+    if ((m = /^servers\.(\d+)\.leave$/.exec(k))) return `Left ${server(m[1])}`;
+    if ((m = /^blacklist\.(user|guild)\.(\d+)$/.exec(k))) return `Blacklist: ${m[1] === 'guild' ? `server ${server(m[2])}` : `user ${m[2]}`}`;
+    return k;
+}
+
+function actionList(rows, names) {
+    return html`<ul class="activity">${rows.map((r) => html`<li>
+<span class="avatar-initials" aria-hidden="true">${String(r.username || '?').slice(0, 1).toUpperCase()}</span>
+<span class="activity-text"><strong>${r.username || r.user_id || 'someone'}</strong> · ${ownerActionText(r.key, names)}
+<span class="activity-values muted">${auditValue(r.old)} → ${auditValue(r.new)}</span></span>
+<span class="activity-time muted">${timeTag(r.created_at)}</span></li>`)}</ul>`;
+}
+
+function serverFeed(rows, sub) {
+    return rows.length ? html`<ul class="feed">${rows.map((row) => html`<li>${img(row.iconUrl, '', 32) || serverInitial(row)}<span class="feed-text"><a href="${path(`/owner/servers/${row.id}`)}"><b>${row.name}</b></a>${serverTags(row.tags)}<small>${sub(row)}</small></span></li>`)}</ul>`
+        : html`<p class="empty">None.</p>`;
+}
+
+/**
+ * home: { totals: { servers, members, joinedWeek }, recent: [server rows], largest: [server rows],
+ * health (collectHealth), blacklistCount (undefined = unavailable), actions (audit rows; null = unavailable), names }.
+ */
+export function ownerHomePage({ session, access = null, moduleStates = {}, home }) {
+    const h = home.health;
+    const db = h.database;
+    const ping = Number.isFinite(h.ping) && h.ping >= 0 ? `${Math.round(h.ping)} ms gateway ping` : 'gateway ping unknown';
+    const body = html`<header class="page-head"><h1>Owner overview</h1><p class="muted">The bot across every server. Only bot owners (OWNER_IDS) see this area.</p></header>
+${h.maintenance ? html`<p class="notice">Maintenance mode is on: only bot owners can run commands. <a href="${path('/owner/health')}">Turn it off on Health</a></p>` : ''}
+${db && !db.connected ? html`<p class="error" role="alert">The database is degraded (${db.type || 'none'}). <a href="${path('/owner/health')}">Health</a></p>` : ''}
+<div class="bento">
+${kpi('Servers', h.servers, `${home.totals.members} members in total · ${home.totals.joinedWeek} new this week`, { dark: true, href: path('/owner/servers') })}
+${kpi('Uptime', duration(h.uptimeSeconds), ping)}
+${kpi('Database', db ? (db.connected ? 'OK' : 'Degraded') : 'Unknown', db ? `${db.type || 'none'} · memory ${mb(h.memory?.rss)}` : `memory ${mb(h.memory?.rss)}`, { href: path('/owner/health') })}
+${kpi('Blacklist', home.blacklistCount, home.blacklistCount === undefined ? 'could not be loaded' : 'active entries', { href: path('/owner/blacklist') })}
+${tile(7, 'Joined recently', serverFeed(home.recent, (row) => `${row.memberCount ?? '—'} members · joined ${formatDate(row.joinedAt)}`), { link: { href: path(`/owner/servers${queryString({ sort: 'newest' })}`), text: 'All servers' } })}
+${tile(5, 'Largest servers', serverFeed(home.largest, (row) => `${row.memberCount ?? '—'} members`), { link: { href: path(`/owner/servers${queryString({ sort: 'members' })}`), text: 'By size' } })}
+${tile(12, 'Recent owner actions', home.actions === null
+        ? html`<p class="muted">Unavailable (database).</p>`
+        : home.actions.length ? actionList(home.actions, home.names) : html`<p class="empty">No owner actions yet.</p>`, { link: { href: path('/owner/activity'), text: 'All activity' } })}
+</div>`;
+    return shell({ title: 'Owner overview', active: 'owner/home', session, access, moduleStates, body });
+}
+
+/** rows: owner audit rows (newest first); null = the audit store could not be read. */
+export function activityPage({ session, access = null, moduleStates = {}, rows, total = 0, page = 0, pageSize = 50, names = new Map() }) {
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    const pager = html`<div class="pager">
+${page > 0 ? html`<a href="${path(`/owner/activity${queryString({ page: page - 1 })}`)}">← Newer</a>` : ''}
+<span class="muted">Page ${page + 1} of ${pages} · ${total} action${total === 1 ? '' : 's'}</span>
+${page + 1 < pages ? html`<a href="${path(`/owner/activity${queryString({ page: page + 1 })}`)}">Older →</a>` : ''}
+</div>`;
+    const body = html`<header class="page-head"><h1>Owner activity</h1><p class="muted">Everything done in the Owner area: profile changes, invites, leaving servers, blacklist, maintenance and announcements. Not shown in the server's audit log.</p></header>
+${rows === null ? html`<p class="error" role="alert">The activity could not be loaded (database). Reload the page to try again.</p>`
+        : rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>What</th><th>Before</th><th>After</th></tr></thead><tbody>
+${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${ownerActionText(r.key, names)}</td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
+</tbody></table></div>${pager}` : html`<p class="empty">No owner actions yet.</p>`}`;
+    return shell({ title: 'Owner activity', active: 'owner/activity', session, access, moduleStates, body });
 }
 
 // ── Health ────────────────────────────────────────────────────────────────
