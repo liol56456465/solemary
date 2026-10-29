@@ -124,6 +124,13 @@ export const SETTINGS = Object.freeze([
         label: 'Remind staff about a quiet appeal after', env: 'STALE_APPEAL_REMINDER_DAYS', envUnit: 'days',
         fallback: 3 * DAY, schema: int(DAY, 90 * DAY),
     },
+    {
+        // On: the moderator who issued a punishment cannot decide its appeal (OWNER_IDS
+        // excepted, logged as an owner override). See enforcement/appealReviewer.js.
+        key: 'independentAppealReview', module: 'appeals', kind: 'boolean', guild: 'main',
+        label: 'Appeals must be decided by someone other than the issuing moderator', env: null,
+        fallback: false, schema: z.boolean(),
+    },
     // ── Logging ──
     {
         key: 'modLogChannelId', module: 'logging', kind: 'channel', guild: 'main',

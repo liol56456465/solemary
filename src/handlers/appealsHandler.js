@@ -229,7 +229,7 @@ export async function handleAppealDecisionButton(interaction, client, args) {
     const caseCode = normalizeCaseCode(rawCode || '');
     if (!DECISIONS.has(decision) || !caseCode) return;
 
-    const result = await decideAppeal({ client, admin: interaction.user, caseCode, decision, note: null });
+    const result = await decideAppeal({ client, admin: interaction.user, caseCode, decision, note: null, via: 'button' });
     return InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
             `Appeal ${result.label}`,
@@ -237,6 +237,7 @@ export async function handleAppealDecisionButton(interaction, client, args) {
                 `\`${caseCode}\` — ${result.record.name}`,
                 `DM to the user: ${result.dmDelivered ? 'delivered' : '**not delivered**'}.`,
                 ...result.notes,
+                ...(result.ownerOverride ? ['You issued this punishment: decided as a bot owner, logged as an owner override.'] : []),
             ].join('\n')
         )],
     });

@@ -634,6 +634,7 @@ const CASES = {
         roles: { form: { mutedRoleId: ROLE_OK, warnRole1: ROLE_OK2 }, service: 'updateSettings', bad: { form: { mutedRoleId: GUILD }, message: /@everyone/ } },
         timings: { form: { appealWindowDays: '20', appealCooldownDays: '7', rejoinInviteHours: '168', staleReportDays: '7', staleAppealReminderDays: '3' }, service: 'updateSettings',
             bad: { form: { appealWindowDays: '999', appealCooldownDays: '7', rejoinInviteHours: '1', staleReportDays: '7', staleAppealReminderDays: '3' }, message: /between 1 and 365/ } },
+        'appeal-review': { form: { independentAppealReview: '1' }, service: 'updateSettings' },
         'mass-action': { form: { massActionLimit: '7', massMuteLimit: '12', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, service: 'updateSettings',
             bad: { form: { massActionLimit: 'x', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, message: /whole number/ } },
     },
@@ -972,6 +973,30 @@ test('audit rows: registry settings are audited by the settings service (not twi
     const row = t.auditRows.find((r) => r.key === 'maxTicketsPerUser');
     assert.deepEqual([row.old, row.new, row.module, row.actor.userId], [3, 5, 'tickets', ADMIN]);
     assert.deepEqual(t.calls.find((c) => c.name === 'updateTicketSettings').args[0].maxTicketsPerUser, 5, 'only changed keys are sent');
+});
+
+test('independent appeal review: off by default, the switch turns it on and off, each change audited', async () => {
+    const h = await setup();
+    const page = await get(h, 'enforcement');
+    assert.match(page.body, /Appeals must be decided by someone other than the moderator who issued the punishment/);
+    assert.match(page.body, /name="independentAppealReview" value="1">/, 'rendered unchecked (default off)');
+    assert.ok(!/<[^>]*style=/i.test(page.body), 'no inline styles');
+
+    assert.equal((await post(h, 'enforcement', 'appeal-review', { independentAppealReview: '1' })).statusCode, 303);
+    assert.equal(h.state.registry.independentAppealReview, true);
+    assert.deepEqual(h.auditRows.map((r) => [r.key, r.old, r.new]), [['independentAppealReview', false, true]]);
+    assert.equal(h.calls.find((c) => c.name === 'updateSettings').args[2].module, 'enforcement');
+    assert.match((await get(h, 'enforcement')).body, /name="independentAppealReview" value="1" checked>/);
+
+    // Unchecked switch: the field is absent from the form → off.
+    assert.equal((await post(h, 'enforcement', 'appeal-review', {})).statusCode, 303);
+    assert.equal(h.state.registry.independentAppealReview, false);
+    assert.deepEqual(h.auditRows.map((r) => [r.key, r.old, r.new]), [['independentAppealReview', false, true], ['independentAppealReview', true, false]]);
+
+    // Same value again: nothing changed, no audit row.
+    await post(h, 'enforcement', 'appeal-review', {});
+    assert.equal(h.auditRows.length, 2);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Nothing changed/);
 });
 
 test('a form that changes nothing: 303 with "Nothing changed", no audit row, no mod log', async () => {

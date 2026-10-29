@@ -9,10 +9,13 @@ import { logEvent, EVENT_TYPES } from './loggingService.js';
 /**
  * via: 'slash' | 'context menu' | 'prefix' | 'button' | 'dashboard'.
  * action: what ran, e.g. "/case edit" or "automod/panic".
+ * reason: what was overridden, when it is not the usual missing Administrator
+ *   (e.g. "decided an appeal on a case they issued (independent appeal review is on)").
  */
-export async function recordOwnerOverride({ client, guildId, userId, username = null, action, via, now = new Date() }) {
+export async function recordOwnerOverride({ client, guildId, userId, username = null, action, via, reason = null, now = new Date() }) {
     const who = `${username || 'unknown'} (${userId})`;
-    logger.warn(`Owner override: ${who} ran ${action} via ${via} at ${now.toISOString()} without Administrator`);
+    const why = reason ? String(reason).slice(0, 300) : 'without Administrator';
+    logger.warn(`Owner override: ${who} ran ${action} via ${via} at ${now.toISOString()} ${why}`);
     if (!client || !guildId) return;
     try {
         await logEvent({
@@ -24,7 +27,7 @@ export async function recordOwnerOverride({ client, guildId, userId, username = 
                     `**User:** <@${userId}> ${who}`,
                     `**Action:** ${String(action).slice(0, 200)} (${via})`,
                     `**Time:** <t:${Math.floor(now.getTime() / 1000)}:F>`,
-                    'Run by a bot owner (OWNER_IDS) without Administrator.',
+                    `Run by a bot owner (OWNER_IDS) ${why}.`,
                 ],
             },
         });

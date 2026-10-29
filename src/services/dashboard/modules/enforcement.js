@@ -6,14 +6,14 @@ import { ENFORCEMENT_REASONS, enforcementConfig } from '../../../config/enforcem
 import { AUTOMOD_RULES } from '../../../config/automod.js';
 import { formatDuration } from '../../enforcement/format.js';
 import { html } from '../html.js';
-import { PERMS, channelField, channelPicker, numberInput, postForm, roleField, rolePicker, text, textInput } from '../forms.js';
+import { PERMS, channelField, channelPicker, checkbox, numberInput, postForm, roleField, rolePicker, switchInput, text, textInput } from '../forms.js';
 import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, section, table, NOTHING } from './common.js';
 
 const KEYS = [
     'adminRequestChannelId', 'modLogChannelId', 'evidenceChannelId', 'appealsCategoryId', 'reportsCategoryId', 'modmailCategoryId',
     'openChannelCap', 'mutedRoleId', 'warnRoleIds',
     'supportServerInvite', 'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds', 'staleReportMs',
-    'staleAppealReminderMs', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
+    'staleAppealReminderMs', 'independentAppealReview', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
 ];
 
 function current(ctx) {
@@ -61,6 +61,10 @@ ${numberInput('rejoinInviteHours', Math.round(v.rejoinInviteMaxAgeSeconds / 3600
 ${numberInput('staleReportDays', Math.round(v.staleReportMs / DAY), { label: 'Close quiet report channels after (days)', min: 1, max: 90 })}
 ${numberInput('staleAppealReminderDays', Math.round(v.staleAppealReminderMs / DAY), { label: 'Remind staff about a quiet appeal after (days)', min: 1, max: 90 })}
 </div>`);
+        const review = postForm(ctx, 'enforcement', 'appeal-review', switchInput('independentAppealReview', v.independentAppealReview === true, {
+            label: 'Appeals must be decided by someone other than the moderator who issued the punishment',
+            help: 'The issuing moderator cannot Accept or Deny the appeal (buttons, /appeals or here); another staff member has to. Bot owners (OWNER_IDS) may still decide as an emergency override, which is logged. Automatic punishments (warn ladder, automod) are not affected.',
+        }));
         const mass = postForm(ctx, 'enforcement', 'mass-action', html`<div class="grid">
 ${numberInput('massActionLimit', v.massActionLimit, { label: 'Bans/kicks allowed in the window', min: 1, max: 100 })}
 ${numberInput('massMuteLimit', v.massMuteLimit, { label: 'Mutes allowed in the window', min: 1, max: 200 })}
@@ -75,7 +79,7 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
             { submit: 'Post the appeal panels', canEdit: ctx.canEdit && ctx.canAct, confirm: 'Post the appeal panels now? Earlier appeal panels in these channels are replaced.' });
         return html`${section('Appeal panels', appealPanels, `Same as /setappeal: posts (or replaces) the appeal panel here and in the support server.${ctx.canAct ? '' : ' Needs Administrator in the main server.'}`)}
 ${section('Channels', channels)}${section('Roles', roles, 'Warning roles are given for 1, 2 and 3+ active warnings.')}
-${section('Appeals and reports', timings)}${section('Mass-action guard', mass, 'A moderator who bans or kicks this many members within the window is blocked from the panel; bot owners get a DM.')}
+${section('Appeals and reports', timings)}${section('Independent appeal review', review, 'Off by default: anyone who may decide appeals can decide any appeal.')}${section('Mass-action guard', mass, 'A moderator who bans or kicks this many members within the window is blocked from the panel; bot owners get a DM.')}
 ${section('Warn ladder', html`<p class="muted">${enforcementConfig.warnsPerLevel} warnings at level 0 ban; at level 1 and above the first warning bans. Read-only for now.</p>${ladder}`)}
 ${section('Reasons', reasons, 'Read-only for now (the keys are stored with each case).')}
 ${section('Automod steps', steps, 'Read-only for now.')}`;
@@ -128,6 +132,11 @@ ${section('Automod steps', steps, 'Read-only for now.')}`;
                 staleReportMs: durationField(form, 'staleReportDays', DAY, { min: 1, max: 90, label: 'Stale report' }),
                 staleAppealReminderMs: durationField(form, 'staleAppealReminderDays', DAY, { min: 1, max: 90, label: 'Stale appeal reminder' }),
             }, current(ctx));
+            if (!Object.keys(patch).length) return NOTHING;
+            return saveRegistry(ctx, patch, 'enforcement');
+        },
+        async 'appeal-review'(ctx, form) {
+            const patch = changedOnly({ independentAppealReview: checkbox(form, 'independentAppealReview') }, current(ctx));
             if (!Object.keys(patch).length) return NOTHING;
             return saveRegistry(ctx, patch, 'enforcement');
         },
