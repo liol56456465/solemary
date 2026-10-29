@@ -58,8 +58,11 @@ test('every front page renders with the shell, the hashed stylesheet and no inli
     const site = await serve();
     try {
         for (const [path, heading] of [
-            ['/', 'Moderation that explains itself.'], ['/commands', 'Commands'], ['/about', 'About Meowist'],
+            ['/', 'Discord moderation with a paper trail.'], ['/commands', 'Commands'], ['/about', 'About Meowist'],
             ['/leaderboard', 'Leaderboard'], ['/status', 'Status'], ['/privacy', 'Privacy'], ['/terms', 'Terms'],
+            ['/features', 'Features'], ['/pricing', 'Free today. Paid plans later.'], ['/faq', 'Questions and answers'],
+            ['/docs', 'Guides'], ['/docs/getting-started', 'Getting started for staff'], ['/docs/warnings', 'How warnings and bans escalate'],
+            ['/docs/appeals', 'Appeals: how they work'], ['/docs/using-the-dashboard', 'Using the dashboard'],
         ]) {
             const res = await site.get(path);
             assert.equal(res.status, 200, path);
@@ -84,26 +87,27 @@ test('every front page renders with the shell, the hashed stylesheet and no inli
     } finally { await site.close(); }
 });
 
-test('the stylesheet is served with the dashboard theme tokens', async () => {
+test('the stylesheet is the site\'s own: its tokens, light and dark, no dashboard layout, nothing remote', async () => {
     const site = await serve();
     try {
         const res = await site.get(CSS_PATH);
         assert.equal(res.status, 200);
         assert.match(res.headers.get('content-type'), /text\/css/);
+        assert.equal(res.headers.get('cache-control'), 'public, max-age=3600');
         assert.equal(res.body, STYLESHEET);
-        const dashboard = readFileSync(new URL('../src/services/dashboard/static/dashboard.css', import.meta.url), 'utf8');
-        for (const selector of [':root {', ':root:not([data-theme]) {', ':root[data-theme="paper"] {', '@media (prefers-color-scheme: dark)']) {
-            assert.ok(dashboard.includes(selector) && STYLESHEET.includes(selector), selector);
-        }
-        assert.ok(!STYLESHEET.includes('.side-nav'), 'only the tokens, not the dashboard layout');
-        assert.ok(STYLESHEET.includes('.topbar'));
+        const file = readFileSync(new URL('../src/services/site/static/site.css', import.meta.url), 'utf8');
+        assert.equal(STYLESHEET, file);
+        for (const selector of [':root {', '@media (prefers-color-scheme: dark)', '.topbar', '.plans', '.mock']) assert.ok(STYLESHEET.includes(selector), selector);
+        assert.ok(!STYLESHEET.includes('.side-nav'), 'not the dashboard layout');
+        assert.ok(!/@import|url\(|@font-face/i.test(STYLESHEET), 'no imports, remote files or web fonts');
+        assert.ok(!/gradient\(|backdrop-filter|filter:\s*blur/i.test(STYLESHEET), 'no gradients, glass or blur');
     } finally { await site.close(); }
 });
 
 test('CSP and security headers: no unsafe-inline, no scripts, no framing', async () => {
     const site = await serve();
     try {
-        for (const path of ['/', '/commands', '/about', '/leaderboard', '/status', '/privacy', '/terms', '/robots.txt', CSS_PATH, '/nope']) {
+        for (const path of ['/', '/features', '/pricing', '/faq', '/docs', '/docs/appeals', '/commands', '/about', '/leaderboard', '/status', '/privacy', '/terms', '/robots.txt', '/img/og.png', CSS_PATH, '/nope']) {
             const res = await site.get(path);
             const csp = res.headers.get('content-security-policy');
             assert.equal(csp, SECURITY_HEADERS['Content-Security-Policy'], path);
@@ -121,13 +125,13 @@ test('CSP and security headers: no unsafe-inline, no scripts, no framing', async
 test('while not public: noindex everywhere, robots.txt disallows all, no add button', async () => {
     const site = await serve();
     try {
-        for (const path of ['/', '/commands', '/about', '/leaderboard', '/status', '/privacy', '/terms', '/nope']) {
+        for (const path of ['/', '/features', '/pricing', '/faq', '/docs', '/docs/warnings', '/commands', '/about', '/leaderboard', '/status', '/privacy', '/terms', '/nope']) {
             const res = await site.get(path);
             assert.equal(res.headers.get('x-robots-tag'), NOINDEX, path);
             assert.ok(res.body.includes(`<meta name="robots" content="${NOINDEX}">`), path);
             assert.ok(!res.body.includes('data-add-bot'), `${path}: no add button`);
             assert.ok(!res.body.includes('oauth2/authorize'), `${path}: no install URL`);
-            assert.ok(!res.body.includes('Add to your server'), path);
+            assert.ok(!res.body.includes('Add to Discord'), path);
         }
         const robots = await site.get('/robots.txt');
         assert.equal(robots.status, 200);
@@ -143,7 +147,7 @@ test('when public: the add button links to the install URL for CLIENT_ID; pages 
         const home = await site.get('/');
         assert.equal(home.headers.get('x-robots-tag'), null);
         assert.ok(!home.body.includes('name="robots"'));
-        const href = home.body.match(/<a class="button" href="([^"]+)" rel="noopener" data-add-bot>Add to your server<\/a>/);
+        const href = home.body.match(/<a class="button" href="([^"]+)" rel="noopener" data-add-bot>Add to Discord<\/a>/);
         assert.ok(href, 'add button present');
         const url = new URL(href[1].replace(/&amp;/g, '&'));
         assert.equal(url.origin + url.pathname, 'https://discord.com/oauth2/authorize');
@@ -202,7 +206,7 @@ test('with the add button shown, Dashboard is the quiet button', async () => {
     try {
         const body = (await site.get('/')).body;
         assert.ok(body.includes('<a class="button button-quiet" href="/dashboard">Dashboard</a>'));
-        assert.ok(body.includes('data-add-bot>Add to your server</a>'));
+        assert.ok(body.includes('data-add-bot>Add to Discord</a>'));
     } finally { await site.close(); }
 });
 
@@ -509,4 +513,187 @@ test('privacy and terms: dated, linked from the footer, contact via the support 
     } finally { await site.close(); }
     const noInvite = await serve({ supportInvite: () => null });
     try { assert.ok((await noInvite.get('/privacy')).body.includes('the staff team on the Meowist server')); } finally { await noInvite.close(); }
+});
+
+// ── Redesign: new pages, pricing, share tags, sitemap, images ────────────
+
+test('top bar: Features, Pricing, Docs, Commands, Leaderboard; footer columns', async () => {
+    const site = await serve();
+    try {
+        const body = (await site.get('/features')).body;
+        const topnav = body.slice(body.indexOf('<nav class="topnav"'), body.indexOf('</nav>'));
+        const order = ['/features', '/pricing', '/docs', '/commands', '/leaderboard'].map((p) => topnav.indexOf(`<a href="${p}"`));
+        assert.ok(order.every((i, n) => i > 0 && (n === 0 || i > order[n - 1])), `nav order ${order}`);
+        assert.ok(topnav.includes('<a href="/features" aria-current="page">Features</a>'));
+        const footer = body.slice(body.indexOf('<footer'));
+        for (const title of ['Product', 'Resources', 'Legal', 'Community']) assert.ok(footer.includes(`<h2 class="footer-title">${title}</h2>`), title);
+        assert.ok(footer.includes('<a href="/faq">FAQ</a>') && footer.includes('<a href="/about">About</a>'));
+    } finally { await site.close(); }
+});
+
+test('pricing: every price for both periods, the CSS-only switch, "Coming soon" is never a link', async () => {
+    const site = await serve();
+    try {
+        const body = (await site.get('/pricing')).body;
+        for (const price of ['€0', '€1.99', '€4.99', '€9.99', '€19.90', '€49.90', '€99.90', '€1.66', '€4.16', '€8.33']) assert.ok(body.includes(price), price);
+        assert.ok(body.includes('2 months free'));
+        // Two radios with labels, before the plans (same parent), monthly checked by default.
+        assert.ok(body.includes('<input class="billing-input" type="radio" name="billing" id="billing-monthly" value="monthly" checked>'));
+        assert.ok(body.includes('<input class="billing-input" type="radio" name="billing" id="billing-yearly" value="yearly">'));
+        assert.ok(body.includes('<label for="billing-monthly">Monthly</label>') && body.includes('<label for="billing-yearly">Yearly'));
+        assert.ok(body.indexOf('id="billing-yearly"') < body.indexOf('<ul class="plans">'));
+        assert.equal((body.match(/class="price-monthly"/g) || []).length, 3);
+        assert.equal((body.match(/class="price-yearly"/g) || []).length, 3);
+        for (const rule of ['#billing-yearly:checked ~ .plans .price-yearly { display: block; }', '#billing-yearly:checked ~ .plans .price-monthly { display: none; }', '.price-yearly { display: none; }', '#billing-yearly:focus-visible ~ .billing-switch label[for="billing-yearly"]']) {
+            assert.ok(STYLESHEET.includes(rule), rule);
+        }
+        assert.equal((body.match(/<span class="button button-disabled" aria-disabled="true">Coming soon<\/span>/g) || []).length, 3);
+        assert.ok(!/<a[^>]*>Coming soon/.test(body), 'Coming soon is not a link');
+        assert.ok(!/<form|<button|checkout|stripe|paypal/i.test(body.slice(body.indexOf('<main'), body.indexOf('</main>'))), 'nothing to buy');
+        assert.ok(body.includes('Paid plans start when Meowist opens to other servers'));
+        assert.ok(body.includes(`<a href="${SUPPORT}" rel="noopener">Join the support server</a> to hear first.`));
+        assert.ok(body.includes('<span class="planned">Planned</span>'));
+        assert.ok(body.includes('<table class="compare">'));
+    } finally { await site.close(); }
+});
+
+test('pricing: names, prices, perks and the comparison come from config/site/plans.js', async () => {
+    const plans = await import('../src/config/site/plans.js');
+    assert.deepEqual(plans.PLANS.map((p) => [p.name, p.monthlyCents]), [['Free', 0], ['Normal', 199], ['Pro', 499], ['Max', 999]]);
+    assert.deepEqual(plans.PLANS.slice(1).map((p) => plans.euros(plans.yearlyCents(p))), ['€19.90', '€49.90', '€99.90']);
+    assert.deepEqual(plans.PLANS.slice(1).map((p) => plans.euros(plans.yearlyPerMonthCents(p))), ['€1.66', '€4.16', '€8.33']);
+    const source = readFileSync(new URL('../src/config/site/plans.js', import.meta.url), 'utf8');
+    assert.match(source.slice(0, 400), /DRAFT FOR THE OWNER TO EDIT/);
+    const pro = plans.PLANS.find((p) => p.id === 'pro');
+    const saved = { name: pro.name, monthlyCents: pro.monthlyCents };
+    pro.name = 'Pro <Test>';
+    pro.monthlyCents = 777;
+    const site = await serve();
+    try {
+        const body = (await site.get('/pricing')).body;
+        assert.ok(body.includes('Pro &lt;Test&gt;'), 'name from plans.js, escaped');
+        assert.ok(body.includes('€7.77') && body.includes('€77.70') && body.includes('€6.48'), 'prices from plans.js');
+        for (const plan of plans.PLANS) for (const perk of plan.perks) assert.ok(body.includes(perk.text.replace(/&/g, '&amp;')), perk.text);
+        for (const group of plans.COMPARISON) for (const row of group.rows) assert.ok(body.includes(row.label), row.label);
+        for (const item of plans.PRICING_FAQ) assert.ok(body.includes(item.q.replace(/'/g, '&#39;')), item.q);
+    } finally {
+        Object.assign(pro, saved);
+        await site.close();
+    }
+});
+
+test('home: the numbered sections, a real DM preview, the dashboard screenshot and the pricing teaser', async () => {
+    const site = await serve();
+    try {
+        const body = (await site.get('/')).body;
+        let last = 0;
+        for (const id of ['enforcement', 'ladder', 'appeals', 'automod', 'tickets', 'dashboard', 'community']) {
+            const at = body.indexOf(`id="${id}"`);
+            assert.ok(at > last, `section ${id} in order`);
+            last = at;
+        }
+        assert.ok(body.includes('Warning 2 of 3 in Meowist') && body.includes('At 3 warnings you will be banned.'), 'warnDm wording');
+        assert.ok(body.includes(`<span class="dc-link">${SUPPORT}</span>`), 'the real support invite in the DM preview');
+        assert.ok(body.includes('Appeal a punishment') && body.includes('Why should it be lifted?'), 'appeal form wording');
+        assert.ok(body.includes('srcset="/img/screen-overview-dark.webp" media="(prefers-color-scheme: dark)"'));
+        assert.ok(body.includes('€1.99') && body.includes('href="/pricing"'));
+        for (const word of ['Supercharge', 'Unleash', 'Elevate', 'Seamless', 'Next-level', 'Revolutioni', 'Empower', 'trusted by']) {
+            assert.ok(!body.toLowerCase().includes(word.toLowerCase()), word);
+        }
+    } finally { await site.close(); }
+});
+
+test('every image has alt text and a size; the image files are small and served under the CSP', async () => {
+    const site = await serve();
+    try {
+        for (const path of ['/', '/docs/using-the-dashboard']) {
+            const body = (await site.get(path)).body;
+            const imgs = body.match(/<img [^>]+>/g) || [];
+            assert.ok(imgs.length >= 1, path);
+            for (const img of imgs) {
+                assert.match(img, /alt="[^"]{30,}"/, img);
+                assert.match(img, /width="\d+" height="\d+"/, img);
+            }
+        }
+        const og = await site.get('/img/og.png');
+        assert.equal(og.status, 200);
+        assert.match(og.headers.get('content-type'), /^image\/png/);
+        assert.equal(og.headers.get('cache-control'), 'public, max-age=604800');
+        assert.equal(og.headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
+        assert.equal((await site.get('/img/screen-overview-light.webp')).headers.get('content-type'), 'image/webp');
+        assert.equal((await site.get('/img/nope.png')).status, 404);
+        assert.equal((await site.get('/img/../site.js')).status, 404);
+    } finally { await site.close(); }
+    const { readdirSync, statSync } = await import('node:fs');
+    const dir = new URL('../src/services/site/static/img/', import.meta.url);
+    const total = readdirSync(dir).reduce((sum, name) => sum + statSync(new URL(name, dir)).size, 0);
+    assert.ok(total < 600 * 1024, `images ${total} bytes`);
+});
+
+test('docs: the hub lists four guides; an unknown guide is the 404 page; FAQ answers open without a script', async () => {
+    const site = await serve();
+    try {
+        const hub = (await site.get('/docs')).body;
+        for (const slug of ['getting-started', 'warnings', 'appeals', 'using-the-dashboard']) assert.ok(hub.includes(`href="/docs/${slug}"`), slug);
+        const warnings = (await site.get('/docs/warnings')).body;
+        for (const fact of ['7-day ban', '30-day ban', 'permanent ban', '6 months', 'Lowers the level by one']) assert.ok(warnings.includes(fact), fact);
+        assert.equal((await site.get('/docs/nope')).status, 404);
+        const faq = (await site.get('/faq')).body;
+        assert.ok((faq.match(/<details class="faq"><summary>/g) || []).length >= 8);
+        assert.ok(faq.includes('href="/privacy"'));
+    } finally { await site.close(); }
+});
+
+test('canonical and share tags only with a valid PUBLIC_URL; no hard-coded host anywhere', async () => {
+    const without = await serve();
+    try {
+        for (const path of ['/', '/pricing']) {
+            const body = (await without.get(path)).body;
+            assert.ok(!body.includes('rel="canonical"') && !body.includes('og:') && !body.includes('twitter:'), path);
+        }
+    } finally { await without.close(); }
+    const bad = await serve({ env: { PUBLIC_URL: 'javascript:alert(1)' } });
+    try { assert.ok(!(await bad.get('/')).body.includes('rel="canonical"')); } finally { await bad.close(); }
+    const site = await serve({ env: { PUBLIC_URL: 'https://meowist.example/' } });
+    try {
+        const body = (await site.get('/pricing')).body;
+        assert.ok(body.includes('<link rel="canonical" href="https://meowist.example/pricing">'));
+        assert.ok(body.includes('<meta property="og:image" content="https://meowist.example/img/og.png">'));
+        assert.ok(body.includes('<meta property="og:title" content="Pricing · Meowist">'));
+        assert.ok(body.includes('<meta name="twitter:card" content="summary_large_image">'));
+        assert.ok((await site.get('/')).body.includes('<link rel="canonical" href="https://meowist.example/">'));
+        assert.ok((await site.get('/leaderboard?page=2')).body.includes('href="https://meowist.example/leaderboard?page=2"'));
+    } finally { await site.close(); }
+    const { readdirSync } = await import('node:fs');
+    for (const dir of ['../src/services/site/', '../src/services/site/pages/', '../src/config/site/', '../src/services/site/static/']) {
+        for (const name of readdirSync(new URL(dir, import.meta.url)).filter((n) => n.endsWith('.js') || n.endsWith('.css'))) {
+            assert.ok(!readFileSync(new URL(dir + name, import.meta.url), 'utf8').includes('replit'), `${dir}${name}: no replit host`);
+        }
+    }
+});
+
+test('sitemap: only when public and PUBLIC_URL is set, and robots.txt points to it', async () => {
+    const hidden = await serve({ env: { PUBLIC_URL: 'https://meowist.example' } });
+    try {
+        assert.equal((await hidden.get('/sitemap.xml')).status, 404);
+        assert.equal((await hidden.get('/robots.txt')).body, 'User-agent: *\nDisallow: /\n');
+    } finally { await hidden.close(); }
+    const noOrigin = await serve({ env: { PUBLIC_SITE_ENABLED: 'true' } });
+    try {
+        assert.equal((await noOrigin.get('/sitemap.xml')).status, 404);
+        assert.ok(!(await noOrigin.get('/robots.txt')).body.includes('Sitemap:'));
+    } finally { await noOrigin.close(); }
+    const site = await serve({ env: { PUBLIC_SITE_ENABLED: 'true', PUBLIC_URL: 'https://meowist.example' } });
+    try {
+        const map = await site.get('/sitemap.xml');
+        assert.equal(map.status, 200);
+        assert.match(map.headers.get('content-type'), /application\/xml/);
+        for (const path of ['/', '/features', '/pricing', '/docs', '/docs/appeals', '/faq', '/commands', '/leaderboard', '/privacy', '/terms']) {
+            assert.ok(map.body.includes(`<loc>https://meowist.example${path}</loc>`), path);
+        }
+        assert.ok(!map.body.includes('/dashboard') && !map.body.includes('/me<'));
+        const robots = (await site.get('/robots.txt')).body;
+        assert.ok(robots.includes('Sitemap: https://meowist.example/sitemap.xml\n'));
+        assert.ok(robots.includes('Disallow: /dashboard'));
+    } finally { await site.close(); }
 });
