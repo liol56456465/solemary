@@ -87,3 +87,10 @@ test('/support links the configured support invite, never the old hard-coded one
     assert.equal(supportInviteUrl({ supportServerInvite: 'javascript:alert(1)' }), 'https://discord.gg/7Ckv9Bt577');
     assert.equal(supportInviteUrl({}), 'https://discord.gg/7Ckv9Bt577');
 });
+
+test('/support adds Privacy Policy and Terms buttons when PUBLIC_URL is set', async () => {
+    const { legalLinks } = await import('../src/commands/Core/support.js');
+    assert.deepEqual(legalLinks({ PUBLIC_URL: 'https://mewvo.example/' }), [['Privacy Policy', 'https://mewvo.example/privacy'], ['Terms', 'https://mewvo.example/terms']]);
+    assert.deepEqual(legalLinks({}), []);
+    assert.deepEqual(legalLinks({ PUBLIC_URL: 'javascript:x' }), []);
+});
