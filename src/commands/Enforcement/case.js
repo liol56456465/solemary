@@ -18,6 +18,7 @@ import {
     listReasonKeys, normalizeSearchFilters, SEARCH_STATUSES, SEARCH_TEXT_MAX, SEARCH_TYPES,
 } from '../../services/enforcement/caseSearchService.js';
 import { buildSearchView } from '../../handlers/caseSearchView.js';
+import { CaseNoteError, caseNotes, normalizeTags, tagsText } from '../../services/enforcement/caseNotesService.js';
 import {
     addNoContactOrder, endNoContactOrder, listActiveNoContactOrders, NO_CONTACT_MAX_DAYS,
 } from '../../services/enforcement/noContactService.js';
@@ -47,6 +48,40 @@ async function loadCaseInGuild(interaction, code) {
     const record = await getCaseByCode(code);
     if (!record || record.guild_id !== interaction.guildId) throw userError(`No case with code \`${code}\` in this server.`);
     return record;
+}
+
+/** /case tags, /case note add | list (staff-only; services/enforcement/caseNotesService.js). */
+async function handleNotesAndTags(interaction, group, sub, code) {
+    try {
+        if (sub === 'tags') {
+            const tags = normalizeTags(interaction.options.getString('tags', true));
+            const { before, after } = await caseNotes.setTags(interaction.guildId, code, tags);
+            return InteractionHelper.safeEditReply(interaction, {
+                embeds: [successEmbed(`Tags on \`${code}\``, `${tagsText(before)} → ${tagsText(after)}`)],
+            });
+        }
+        if (sub === 'add') {
+            await caseNotes.addNote(interaction.guildId, code, { id: interaction.user.id, username: interaction.user.username },
+                interaction.options.getString('text', true));
+            return InteractionHelper.safeEditReply(interaction, {
+                embeds: [successEmbed(`Note added to \`${code}\``, 'Only staff can see it. `/case note list` shows all notes on this case.')],
+            });
+        }
+        await loadCaseInGuild(interaction, code);
+        const notes = await caseNotes.listNotes(code);
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [createEmbed({
+                title: `Staff notes on ${code}`,
+                description: truncate(notes.length
+                    ? notes.map((n) => `${dateStamp(n.created_at)} · **${n.author_username || n.author_id}**: ${truncate(n.text, 600)}`).join('\n')
+                    : 'No notes yet. Add one with `/case note add`.', 4096),
+                color: 'primary',
+            })],
+        });
+    } catch (error) {
+        if (error instanceof CaseNoteError) throw userError(error.userMessage);
+        throw error;
+    }
 }
 
 /** /case evidence add | list | remove */
@@ -187,6 +222,7 @@ export default {
                 .setMinLength(10).setMaxLength(10))
             .addStringOption((option) => option.setName('to').setDescription('Given on or before (YYYY-MM-DD, UTC)')
                 .setMinLength(10).setMaxLength(10))
+            .addStringOption((option) => option.setName('tag').setDescription('Cases with this tag').setAutocomplete(true).setMaxLength(21))
             .addStringOption((option) => option.setName('text').setDescription('Text in the case name or reason')
                 .setMaxLength(SEARCH_TEXT_MAX)))
         .addSubcommand((sub) => sub.setName('edit').setDescription("Change a case's reason or duration (history is kept)")
@@ -201,6 +237,15 @@ export default {
                 .setRequired(true).setMaxLength(500)))
         .addSubcommand((sub) => sub.setName('history').setDescription("Show a case's edit history and evidence")
             .addStringOption(codeOption))
+        .addSubcommand((sub) => sub.setName('tags').setDescription('Set the tags on a case, like scam, alt or raid')
+            .addStringOption(codeOption)
+            .addStringOption((option) => option.setName('tags').setDescription('Comma-separated; "none" clears them').setRequired(true).setMaxLength(250)))
+        .addSubcommandGroup((group) => group.setName('note').setDescription('Private staff notes on a case')
+            .addSubcommand((sub) => sub.setName('add').setDescription('Add a note only staff can see')
+                .addStringOption(codeOption)
+                .addStringOption((option) => option.setName('text').setDescription('The note').setRequired(true).setMaxLength(1000)))
+            .addSubcommand((sub) => sub.setName('list').setDescription('Show the notes on a case')
+                .addStringOption(codeOption)))
         .addSubcommandGroup((group) => group.setName('evidence').setDescription('Evidence attached to a case')
             .addSubcommand((sub) => sub.setName('add').setDescription('Attach a message link and/or an image to a case')
                 .addStringOption(codeOption)
@@ -251,6 +296,7 @@ export default {
                 from: interaction.options.getString('from'),
                 to: interaction.options.getString('to'),
                 text: interaction.options.getString('text'),
+                tag: interaction.options.getString('tag'),
             });
             return InteractionHelper.safeEditReply(interaction, await buildSearchView(interaction.guildId, interaction.user.id, filters, 0));
         }
@@ -264,6 +310,10 @@ export default {
 
         if (group === 'evidence') {
             return handleEvidence(interaction, client, sub, code);
+        }
+
+        if (group === 'note' || sub === 'tags') {
+            return handleNotesAndTags(interaction, group, sub, code);
         }
 
         if (sub === 'edit') {
@@ -318,11 +368,14 @@ export default {
                 lines.unshift(`**Voided** ${dateStamp(record.voided_at)} by \`${record.voided_by}\`: ${truncate(record.void_reason || '', 300)}`);
             }
             const evidence = await evidenceDisplay(client, code);
+            const noteCount = await caseNotes.countNotes(code);
+            const extra = [{ name: 'Tags', value: tagsText(record.tags), inline: true }];
+            if (noteCount) extra.push({ name: 'Staff notes', value: `${noteCount} · \`/case note list code:${code}\``, inline: true });
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [createEmbed({
                     title: truncate(`Case history: ${record.case_code} (${record.name})`, 256),
                     description: truncate(lines.join('\n') || 'This case was never edited.', 4096),
-                    fields: evidence.field ? [evidence.field] : [],
+                    fields: [...extra, ...(evidence.field ? [evidence.field] : [])],
                     image: evidence.imageUrl,
                     footer: { text: `${record.type} on ${record.target_username} by ${record.moderator_username}` },
                     color: 'primary',
@@ -343,6 +396,10 @@ export default {
                 name: truncate(`${getReason(row.reason_key)?.label || row.reason_key} (${row.reason_key}): ${row.count} case${row.count === 1 ? '' : 's'}`, 100),
                 value: row.reason_key,
             })));
+        }
+        if (focused.name === 'tag') {
+            const tags = await caseNotes.usedTags(interaction.guildId, focused.value);
+            return interaction.respond(tags.map((tag) => ({ name: `#${tag}`, value: tag })));
         }
         if (focused.name !== 'code') return interaction.respond([]);
         const rows = await searchCases(interaction.guildId, focused.value);

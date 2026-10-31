@@ -132,6 +132,8 @@ function makeEnforcement(overrides = {}) {
         addEvidence: rec('addEvidence', async () => ({ id: 11 })),
         addImageEvidence: rec('addImageEvidence', async () => ({ id: 12 })),
         removeEvidence: rec('removeEvidence', async (code, id) => (id === 11 ? { id: 11, kind: 'link', url: 'https://x.example' } : null)),
+        addCaseNote: rec('addCaseNote', async () => ({ id: 1 })),
+        setCaseTags: rec('setCaseTags', async (g, code, tags) => ({ before: [], after: tags })),
         captureLinks: rec('captureLinks', async (guild, entries) => entries.map(({ url }) => ({ url, sourceMessageUrl: null, excerpt: null }))),
         listEvidence: rec('listEvidence', async () => []),
         resolveImageUrls: rec('resolveImageUrls', async () => new Map()),
@@ -499,6 +501,8 @@ const POSTS = [
     { name: 'case edit', handler: 'caseEdit', params: { code: CODE }, form: { reason: 'better reason' }, bad: { reason: '', duration: 'soon' }, service: 'editCase', audit: 'cases' },
     { name: 'case void', handler: 'caseVoid', params: { code: CODE }, form: { reason: 'mistake', confirm: '1' }, bad: { reason: 'mistake' }, service: 'voidCase', audit: 'cases' },
     { name: 'evidence add', handler: 'evidenceAdd', params: { code: CODE }, form: { link: 'https://x.example/1', note: 'n' }, bad: { link: 'not a link' }, service: 'addEvidence', audit: 'cases', modLog: true },
+    { name: 'case note', handler: 'caseNote', params: { code: CODE }, form: { text: 'alt of a banned member' }, bad: { text: '  ' }, service: 'addCaseNote', audit: 'cases' },
+    { name: 'case tags', handler: 'caseTags', params: { code: CODE }, form: { tags: 'scam, Alt' }, bad: { tags: 'not ok!' }, service: 'setCaseTags', audit: 'cases' },
     { name: 'evidence remove', handler: 'evidenceRemove', params: { code: CODE }, form: { id: '11' }, bad: { id: '1x' }, service: 'removeEvidence', audit: 'cases', modLog: true },
     { name: 'appeal preview', handler: 'appealPreview', params: { code: CODE }, form: { decision: 'accept', note: 'ok' }, bad: { decision: 'maybe' }, service: 'getAppealHistory', status: 200 },
     { name: 'no-contact add', handler: 'noContactAdd', params: {}, form: { user_a: TARGET, user_b: OTHER, days: '7', reason: 'feud' }, bad: { user_a: TARGET, user_b: BOTUSER, days: '7', reason: 'feud' }, service: 'addNoContactOrder', audit: 'nocontact' },
@@ -626,7 +630,7 @@ test('case page: action forms for administrators (edit, void, evidence links); r
     const h = await setup();
     const res = await get(h, h.d.caseDetail, { params: { code: CODE } });
     assert.equal(res.statusCode, 200);
-    for (const action of ['/edit', '/void', '/evidence/add', '/evidence/remove']) assert.ok(res.body.includes(`/dashboard/cases/${CODE}${action}`), action);
+    for (const action of ['/edit', '/void', '/evidence/add', '/evidence/remove', '/notes', '/tags']) assert.ok(res.body.includes(`/dashboard/cases/${CODE}${action}`), action);
     const owner = await setup({ userId: OWNER });
     const ro = await get(owner, owner.d.caseDetail, { params: { code: CODE } });
     assert.ok(!ro.body.includes(`/cases/${CODE}/void`));

@@ -8,6 +8,7 @@ import {
     getAppealHistory, getCaseByCode, getCountedWarns, getLatestAppealStatuses, listCasesForUser,
 } from '../enforcement/caseService.js';
 import { editCase, voidCase } from '../enforcement/caseEditService.js';
+import { caseNotes } from '../enforcement/caseNotesService.js';
 import { addEvidence, addImageEvidence, captureLinks, listEvidence, removeEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
 import { decideAppeal } from '../enforcement/appealService.js';
 import { precedentHint } from '../enforcement/precedentService.js';
@@ -35,6 +36,7 @@ export const defaultEnforcement = {
     completeFlowDetails, executeAction, attachFlowEvidence, getMassActionBlock, recentBanKickCount,
     // cases
     getCaseByCode, getAppealHistory, editCase, voidCase, addEvidence, addImageEvidence, removeEvidence, captureLinks, listEvidence, resolveImageUrls,
+    addCaseNote: (...args) => caseNotes.addNote(...args), setCaseTags: (...args) => caseNotes.setTags(...args),
     // appeals
     decideAppeal,
     // no-contact orders

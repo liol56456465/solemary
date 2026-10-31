@@ -410,7 +410,10 @@ ${actionForm(csrf, `/cases/${code}/evidence/add`, html`<div class="grid"><label 
 ${actionForm(csrf, `/cases/${code}/evidence/upload`, html`<div class="grid"><label class="wide">Image (PNG, JPEG, GIF or WebP, up to 8 MB)<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required></label>
 <label class="wide">Note (optional)<input name="note" maxlength="${EVIDENCE_NOTE_MAX}"></label></div>`, { submit: 'Upload image', multipart: true })}
 <p class="muted">Images are re-hosted in the evidence channel, as with /case evidence add.</p>
-${evidence.length ? html`<p>${evidence.map(({ row }) => actionForm(csrf, `/cases/${code}/evidence/remove`, '', { submit: `Remove #${row.id}`, hidden: { id: String(row.id) }, inline: true, danger: true, confirm: `Remove evidence #${row.id}?` }))}</p>` : ''}</div>`;
+${evidence.length ? html`<p>${evidence.map(({ row }) => actionForm(csrf, `/cases/${code}/evidence/remove`, '', { submit: `Remove #${row.id}`, hidden: { id: String(row.id) }, inline: true, danger: true, confirm: `Remove evidence #${row.id}?` }))}</p>` : ''}</div>
+<div class="card"><h3>Notes and tags</h3><p class="muted">Only staff see these. The member never does.</p>
+${actionForm(csrf, `/cases/${code}/notes`, html`<label class="wide">New note<textarea name="text" rows="3" maxlength="1000" required></textarea></label>`, { submit: 'Add note' })}
+${actionForm(csrf, `/cases/${code}/tags`, html`<label class="wide">Tags<input name="tags" maxlength="250" value="${(record.tags || []).join(', ')}" placeholder="scam, alt"><span class="hint">Comma-separated. Leave empty to remove all.</span></label>`, { submit: 'Save tags' })}</div>`;
     return { top, bottom };
 }
 

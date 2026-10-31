@@ -31,6 +31,7 @@ export function describeSearchFilters(filters) {
     if (filters.status) parts.push(`status **${filters.status}**`);
     if (filters.from || filters.to) parts.push(`date **${filters.from || '…'} → ${filters.to || '…'}** (UTC)`);
     if (filters.text) parts.push(`text “${truncate(filters.text, 60)}”`);
+    if (filters.tag) parts.push(`tag **#${filters.tag}**`);
     return parts.length ? parts.join(' · ') : 'none (all cases)';
 }
 

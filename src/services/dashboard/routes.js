@@ -65,6 +65,7 @@ import {
     caseStatusLabel, getAppealHistory, getCaseByCode, getLatestAppealStatusesForCases,
 } from '../enforcement/caseService.js';
 import { getCaseEdits } from '../enforcement/caseEditService.js';
+import { caseNotes } from '../enforcement/caseNotesService.js';
 import { listEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
 import { listPendingAppeals } from '../enforcement/appealService.js';
 import { needsSecondReviewer } from '../enforcement/appealReviewer.js';
@@ -199,6 +200,7 @@ function str(value, max = 200) {
 
 const defaultData = {
     searchCaseRecords, getCaseByCode, getCaseEdits, listEvidence, resolveImageUrls, getAppealHistory,
+    listCaseNotes: (code) => caseNotes.listNotes(code, 50),
     listPendingAppeals, staffModerationStats, getLatestAppealStatusesForCases,
     listSettingsAudit, overview: defaultOverviewData,
 };
@@ -488,13 +490,14 @@ export function createDashboard({
         const query = {
             member: str(req.query?.member, 20), moderator: str(req.query?.moderator, 20), type: str(req.query?.type, 10),
             status: str(req.query?.status, 10), text: str(req.query?.text, 100), from: str(req.query?.from, 10), to: str(req.query?.to, 10),
+            tag: str(req.query?.tag, 21),
         };
         const page = Math.min(MAX_PAGE, Math.max(0, Number.parseInt(str(req.query?.page, 6), 10) || 0));
         let filters;
         try {
             filters = normalizeSearchFilters({
                 memberId: query.member, moderatorId: query.moderator, type: query.type, status: query.status,
-                text: query.text, from: query.from, to: query.to,
+                text: query.text, from: query.from, to: query.to, tag: query.tag,
             });
         } catch (error) {
             return sendHtml(res, 400, casesPage({ ...shellOf(req), query, error: error.userMessage || 'Invalid filter.' }));
@@ -511,10 +514,11 @@ export function createDashboard({
         const code = normalizeCaseCode(str(req.params?.code, 10));
         const record = code ? await data.getCaseByCode(code) : null;
         if (!record || record.guild_id !== guildId) return fail(res, 404, 'Case not found', 'There is no case with that code.', req);
-        const [edits, evidenceRows, appeals] = await Promise.all([
+        const [edits, evidenceRows, appeals, notes] = await Promise.all([
             data.getCaseEdits(code, 50),
             data.listEvidence(code),
             data.getAppealHistory(code),
+            data.listCaseNotes ? data.listCaseNotes(code) : [],
         ]);
         // Image URLs expire: fetch fresh ones from the stored evidence messages, server-side.
         const fresh = await data.resolveImageUrls(client, evidenceRows);
@@ -530,6 +534,7 @@ export function createDashboard({
             edits,
             evidence,
             appeals,
+            notes,
             top: actions.top,
             bottom: actions.bottom,
         }));
@@ -856,6 +861,8 @@ export function dashboardRouter(d) {
     // any of the body is read; then the raw body, capped at 8 MB + 64 kB of form overhead.
     router.post('/cases/:code/evidence/upload', user, uploadBody(MAX_UPLOAD_BYTES + 64 * 1024), safe(d.parseUpload), safe(en.evidenceUpload));
     router.post('/cases/:code/evidence/remove', form, user, safe(en.evidenceRemove));
+    router.post('/cases/:code/notes', form, user, safe(en.caseNote));
+    router.post('/cases/:code/tags', form, user, safe(en.caseTags));
     router.post('/appeals/:code/preview', form, user, safe(en.appealPreview));
     router.post('/appeals/:code/decide', form, user, safe(en.appealDecide));
     router.post('/nocontact/add', form, user, safe(en.noContactAdd));

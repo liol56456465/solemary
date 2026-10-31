@@ -67,10 +67,15 @@ export function normalizeSearchFilters(raw = {}) {
     }
     const text = String(raw.text || '').trim();
     if (text) filters.text = text.slice(0, SEARCH_TEXT_MAX);
+    const tag = String(raw.tag || '').trim().toLowerCase().replace(/^#/, '');
+    if (tag) {
+        if (!/^[a-z0-9][a-z0-9-]{0,19}$/.test(tag)) throw userError('A tag is letters, numbers and dashes, up to 20 characters.');
+        filters.tag = tag;
+    }
     return filters;
 }
 
-const KEYS = { memberId: 'm', moderatorId: 'o', type: 't', reasonKey: 'r', status: 's', from: 'f', to: 'u', text: 'x' };
+const KEYS = { memberId: 'm', moderatorId: 'o', type: 't', reasonKey: 'r', status: 's', from: 'f', to: 'u', text: 'x', tag: 'g' };
 const FROM_KEYS = Object.fromEntries(Object.entries(KEYS).map(([long, short]) => [short, long]));
 
 /** Compact, URL-safe encoding of a filter object (for the result message). */
@@ -119,6 +124,7 @@ export function buildSearchWhere(guildId, filters = {}, now = new Date()) {
     if (filters.moderatorId) add('moderator_id = ?', filters.moderatorId);
     if (filters.type) add('type = ?', filters.type);
     if (filters.reasonKey) add('reason_key = ?', filters.reasonKey);
+    if (filters.tag) add('? = ANY(tags)', filters.tag);
     if (filters.from) add('created_at >= ?', `${filters.from}T00:00:00Z`);
     if (filters.to) add('created_at < ?', new Date(Date.parse(`${filters.to}T00:00:00Z`) + DAY_MS).toISOString());
     if (filters.text) {

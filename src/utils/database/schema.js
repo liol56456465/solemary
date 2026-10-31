@@ -677,6 +677,16 @@ export const tableStatements = [
         kind VARCHAR(5) NOT NULL CHECK (kind IN ('join', 'leave')),
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+    // Case tags and private staff notes (schema v6).
+    `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}'`,
+    `CREATE TABLE IF NOT EXISTS ${t.mod_case_notes} (
+        id BIGSERIAL PRIMARY KEY,
+        case_code VARCHAR(7) NOT NULL REFERENCES ${t.mod_cases}(case_code) ON DELETE CASCADE,
+        author_id VARCHAR(20) NOT NULL,
+        author_username VARCHAR(100),
+        text VARCHAR(1000) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
     // /remind: one row per reminder; sent_at set when the cron claims it (schema v6).
     `CREATE TABLE IF NOT EXISTS ${t.reminders} (
         id BIGSERIAL PRIMARY KEY,
@@ -692,6 +702,8 @@ export const tableStatements = [
 ];
 
 export const indexStatements = [
+    `CREATE INDEX IF NOT EXISTS idx_mod_cases_tags ON ${t.mod_cases} USING GIN (tags)`,
+    `CREATE INDEX IF NOT EXISTS idx_mod_case_notes_case ON ${t.mod_case_notes}(case_code)`,
     `CREATE INDEX IF NOT EXISTS idx_reminders_due ON ${t.reminders}(due_at) WHERE sent_at IS NULL`,
     `CREATE INDEX IF NOT EXISTS idx_reminders_user ON ${t.reminders}(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_guild_users_guild_id ON ${t.guild_users}(guild_id)`,

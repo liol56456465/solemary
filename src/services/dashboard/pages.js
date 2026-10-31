@@ -71,20 +71,21 @@ ${rows.map((row) => html`<tr><td>${row.label} <span class="muted"><code>${row.ke
  */
 export function casesPage({ session, access = null, moduleStates = {}, query = {}, rows = [], total = 0, page = 0, pageSize = 25, error = null, statusLabel = (r) => r.status }) {
     const pages = Math.max(1, Math.ceil(total / pageSize));
-    const keep = { member: query.member, moderator: query.moderator, type: query.type, status: query.status, text: query.text, from: query.from, to: query.to };
+    const keep = { member: query.member, moderator: query.moderator, type: query.type, status: query.status, text: query.text, from: query.from, to: query.to, tag: query.tag };
     const pager = html`<div class="pager">
 ${page > 0 ? html`<a href="/dashboard/cases${queryString({ ...keep, page: page - 1 })}">← Newer</a>` : ''}
 <span class="muted">Page ${page + 1} of ${pages} · ${total} case${total === 1 ? '' : 's'}</span>
 ${page + 1 < pages ? html`<a href="/dashboard/cases${queryString({ ...keep, page: page + 1 })}">Older →</a>` : ''}
 </div>`;
     const filtered = Object.values(keep).some(Boolean);
-    const body = html`<header class="page-head"><h1>Cases</h1><p class="muted">Every enforcement action, newest first. Filter by member, moderator, type, status or date.</p></header>
+    const body = html`<header class="page-head"><h1>Cases</h1><p class="muted">Every enforcement action, newest first. Filter by member, moderator, type, status, tag or date.</p></header>
 <form class="filters" method="get" action="/dashboard/cases">
 <label>Member ID<input name="member" value="${query.member || ''}" inputmode="numeric" maxlength="20"></label>
 <label>Moderator ID<input name="moderator" value="${query.moderator || ''}" inputmode="numeric" maxlength="20"></label>
 <label>Type<select name="type">${option('', 'any', !query.type)}${SEARCH_TYPES.map((t) => option(t, t, query.type === t))}</select></label>
 <label>Status<select name="status">${option('', 'any', !query.status)}${SEARCH_STATUSES.map((s) => option(s, s, query.status === s))}</select></label>
 <label>Text<input name="text" value="${query.text || ''}" maxlength="100"></label>
+<label>Tag<input name="tag" value="${query.tag || ''}" maxlength="21" placeholder="e.g. scam"></label>
 <label>From<input type="date" name="from" value="${query.from || ''}"></label>
 <label>To<input type="date" name="to" value="${query.to || ''}"></label>
 <button class="primary" type="submit">Search</button> <a href="/dashboard/cases">Clear</a>
@@ -124,7 +125,7 @@ function evidenceItem({ row, freshUrl }) {
 }
 
 /** input: { session, record, statusLabel, edits, evidence: [{ row, freshUrl }], appeals }. */
-export function caseDetailPage({ session, access = null, moduleStates = {}, record, statusLabel, edits = [], evidence = [], appeals = [], top = '', bottom = '' }) {
+export function caseDetailPage({ session, access = null, moduleStates = {}, record, statusLabel, edits = [], evidence = [], appeals = [], notes = [], top = '', bottom = '' }) {
     const r = record;
     const body = html`<a class="back" href="/dashboard/cases">← Cases</a>
 <h1 class="title-with-badge">Case <code data-copy="${r.case_code}">${r.case_code}</code> ${typeBadge(r.type)}${r.is_test ? html` <span class="muted">(test)</span>` : ''}</h1>
@@ -142,12 +143,14 @@ ${r.appeal_deadline ? html`<dt>Appeal deadline</dt><dd>${formatDate(r.appeal_dea
 <dt>Appealable</dt><dd>${r.unappealable ? 'no' : 'yes'}</dd>
 <dt>DM delivered</dt><dd>${r.dm_delivered ? 'yes' : 'no'}</dd>
 <dt>Ladder level after</dt><dd>${r.ladder_level_after ?? '-'}</dd>
+<dt>Tags</dt><dd>${r.tags?.length ? r.tags.map((t) => html`<a class="role-chip" href="/dashboard/cases${queryString({ tag: t })}">#${t}</a>`) : html`<span class="muted">none</span>`}</dd>
 ${r.revoked_at ? html`<dt>Lifted</dt><dd>${formatDate(r.revoked_at)}${r.revoke_reason ? html`: ${r.revoke_reason}` : ''}</dd>` : ''}
 ${r.voided_at ? html`<dt>Voided</dt><dd>${formatDate(r.voided_at)}${r.void_reason ? html`: ${r.void_reason}` : ''}</dd>` : ''}
 </dl></section>
 ${section(`History (${edits.length})`, html`${edits.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>By</th><th>Field</th><th>Old</th><th>New</th></tr></thead><tbody>
 ${edits.map((e) => html`<tr><td>${formatDate(e.edited_at)}</td><td>${e.edited_by_username}</td><td>${e.field}</td><td>${e.old_value ?? '-'}</td><td>${e.new_value ?? '-'}</td></tr>`)}
 </tbody></table></div>` : html`<p class="muted">Never edited.</p>`}`, '', { key: 'case-history', open: false })}
+${section(`Staff notes (${notes.length})`, notes.length ? html`<ul class="evidence">${notes.map((n) => html`<li><span class="muted">${n.author_username || n.author_id} · ${formatDate(n.created_at)}</span><div>${n.text}</div></li>`)}</ul>` : html`<p class="muted">No notes. Only staff can see notes.</p>`, '', { key: 'case-notes', open: notes.length > 0 })}
 ${section(`Evidence (${evidence.length})`, evidence.length ? html`<ul class="evidence">${evidence.map(evidenceItem)}</ul>` : html`<p class="muted">No evidence attached.</p>`, '', { key: 'case-evidence' })}
 ${section(`Appeals (${appeals.length})`, html`${appeals.length ? html`<div class="scroll"><table><thead><tr><th>Filed</th><th>Status</th><th>Decided</th><th>By</th><th>Note</th></tr></thead><tbody>
 ${appeals.map((a) => html`<tr><td>${formatDate(a.created_at)}</td><td>${a.status}</td><td>${formatDate(a.decided_at)}</td><td>${a.decided_by_username || '-'}</td><td>${a.note || ''}</td></tr>`)}

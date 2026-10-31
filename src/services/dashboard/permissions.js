@@ -108,6 +108,8 @@ export const ROUTES = [
     ['POST', '/cases/:code/evidence/add', 'case.evidence'],
     ['POST', '/cases/:code/evidence/upload', 'case.evidence'],
     ['POST', '/cases/:code/evidence/remove', 'case.evidence'],
+    ['POST', '/cases/:code/notes', 'case.evidence'],
+    ['POST', '/cases/:code/tags', 'case.evidence'],
     ['POST', '/appeals/:code/preview', 'appeal.decide'],
     ['POST', '/appeals/:code/decide', 'appeal.decide'],
     ['POST', '/nocontact/add', 'nocontact.edit'],

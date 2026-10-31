@@ -53,6 +53,7 @@ import { isSnowflake } from './security.js';
 import { MODERATOR, mayRun, moderatorActionTypes, requiredLevel } from './permissions.js';
 import { memberHasConfiguredModeratorRole } from '../../utils/permissionGuard.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
+import { normalizeTags } from '../enforcement/caseNotesService.js';
 import { evidenceFileName, sniffImage } from './multipart.js';
 import {
     actionConfirmPage, activitySection, appealConfirmPage, appealDetailPage, blocksSection, disciplineSection, bansPage, bulkJobPage, bulkPreviewPage, membersPage, coverageSection, noContactPage, userPage,
@@ -776,6 +777,31 @@ export function createEnforcementHandlers(core) {
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.evidence' });
 
+    /** Notes and tags on a case (staff-only; caseNotesService.js). */
+    const noteError = (error) => (error?.userMessage && !(error instanceof InputError) ? new InputError(error.userMessage) : error);
+    const caseNote = guardedPost(async (req, res) => {
+        const record = await caseOf(req);
+        const note = text(req.body, 'text', 1000).trim();
+        if (!note) throw new InputError('The note is empty.');
+        try {
+            await e.addCaseNote(guildId, record.case_code, { id: req.dashboard.session.userId, username: req.dashboard.session.username }, note);
+        } catch (error) { throw noteError(error); }
+        await audit(req, 'cases', [{ key: `${record.case_code}.note`, old: null, new: 'added' }]);
+        await flash(req, 'Note added. Only staff can see it.');
+        return res.redirect(303, path(`/cases/${record.case_code}`));
+    }, { rerender: rerenderCase, perm: 'case.evidence' });
+
+    const caseTags = guardedPost(async (req, res) => {
+        const record = await caseOf(req);
+        let result;
+        try {
+            result = await e.setCaseTags(guildId, record.case_code, normalizeTags(text(req.body, 'tags', 250)));
+        } catch (error) { throw noteError(error); }
+        await audit(req, 'cases', [{ key: `${record.case_code}.tags`, old: result.before.join(', ') || null, new: result.after.join(', ') || null }]);
+        await flash(req, result.after.length ? `Tags saved: ${result.after.map((t) => `#${t}`).join(' ')}.` : 'Tags removed.');
+        return res.redirect(303, path(`/cases/${record.case_code}`));
+    }, { rerender: rerenderCase, perm: 'case.evidence' });
+
     // ── Appeals ──────────────────────────────────────────────────────────
 
     /** Independent appeal review, for the page: { required, issuer, blocked, ownerOverride }. */
@@ -1009,7 +1035,7 @@ export function createEnforcementHandlers(core) {
 
     return {
         users, bans, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, unverify, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
-        caseEdit, caseVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseActionForms: (args) => caseActionForms(args),
+        caseEdit, caseVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseNote, caseTags, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd,
         staffSections, blockLift, staffWarn, staffRestore, canWrite,
