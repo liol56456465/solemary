@@ -71,6 +71,7 @@ export const PERMISSIONS = Object.freeze({
     // ── Records ──
     'case.edit': ADMIN, // edit / void
     'case.evidence': ADMIN,
+    'case.export': ADMIN, // Cases → Download CSV (a paid perk on top)
     'appeal.decide': ADMIN,
     'nocontact.edit': ADMIN,
     'inbox.reply': MODERATOR, // modmail / ticket replies from the web
@@ -130,6 +131,7 @@ export const ROUTES = [
     ['GET', '/overview', 'page:overview'],
     ['GET', '/modules', 'page:modules'],
     ['GET', '/cases', 'page:cases'],
+    ['GET', '/cases/export.csv', 'case.export'], // before /cases/:code (first match wins)
     ['GET', '/cases/:code', 'page:cases'],
     ['GET', '/appeals', 'page:appeals'],
     ['GET', '/appeals/:code', 'page:appeals'],

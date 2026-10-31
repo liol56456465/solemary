@@ -66,8 +66,10 @@ import {
 } from '../enforcement/caseService.js';
 import { getCaseEdits } from '../enforcement/caseEditService.js';
 import { caseNotes } from '../enforcement/caseNotesService.js';
-import { activitySeries } from '../stats/activityService.js';
-import { activityPage } from './activityPage.js';
+import { activitySeries, staffAnalytics } from '../stats/activityService.js';
+import { activityPage, analyticsSection } from './activityPage.js';
+import { casesCsv, exportCases, exportWindowDays } from '../enforcement/caseExport.js';
+import { guildPlan } from '../billing/premiumEffects.js';
 import { backupPage, backupPreviewPage } from './backupPages.js';
 import { BACKUP_MAX_BYTES, applyBackup, exportSettings, planBackup } from '../settings/settingsBackup.js';
 import { randomBytes } from 'node:crypto';
@@ -207,6 +209,9 @@ const defaultData = {
     searchCaseRecords, getCaseByCode, getCaseEdits, listEvidence, resolveImageUrls, getAppealHistory,
     listCaseNotes: (code) => caseNotes.listNotes(code, 50),
     activitySeries: (guildId) => activitySeries(guildId),
+    staffAnalytics: (guildId) => staffAnalytics(guildId),
+    exportCases: (guildId, planId) => exportCases(guildId, planId),
+    guildPlan: (guildId) => guildPlan(guildId),
     listPendingAppeals, staffModerationStats, getLatestAppealStatusesForCases,
     listSettingsAudit, overview: defaultOverviewData,
 };
@@ -510,10 +515,27 @@ export function createDashboard({
         }
         const { rows, total } = await data.searchCaseRecords(guildId, filters, { page, pageSize: CASES_PAGE_SIZE });
         const appealStatuses = await data.getLatestAppealStatusesForCases(rows.map((row) => row.case_code));
+        const planId = data.guildPlan ? data.guildPlan(guildId) : 'free';
         return sendHtml(res, 200, casesPage({
-            ...shellOf(req), query, rows, total, page, pageSize: CASES_PAGE_SIZE,
+            ...shellOf(req), query, rows, total, page, pageSize: CASES_PAGE_SIZE, exportDays: exportWindowDays(planId), canExport: allows(req.dashboard.access, 'case.export'),
             statusLabel: (row) => caseStatusLabel(row, appealStatuses.get(row.case_code)),
         }));
+    }
+
+    /** GET /cases/export.csv: a paid perk, by the server owner's plan (caseExport.js). */
+    async function casesExport(req, res) {
+        const planId = data.guildPlan ? data.guildPlan(guildId) : 'free';
+        const rows = await data.exportCases(guildId, planId);
+        if (rows === null) {
+            return fail(res, 403, 'Not on the Free plan', 'Case export comes with Mewvo Normal (last 90 days) and Pro or Max (full history), on the plan of the server owner.', req);
+        }
+        logger.info(`Dashboard case export by ${req.dashboard.session.userId}: ${rows.length} case(s), plan ${planId}`);
+        await audits.writeRows(guildId, { userId: req.dashboard.session.userId, username: req.dashboard.session.username }, 'cases',
+            [{ key: 'export', old: null, new: `${rows.length} cases (${Number.isFinite(exportWindowDays(planId)) ? `last ${exportWindowDays(planId)} days` : 'full history'})` }])
+            .catch((error) => logger.error(`Dashboard audit write failed (case export): ${error.message}`));
+        res.set('Cache-Control', 'no-store');
+        res.set('Content-Disposition', `attachment; filename="mewvo-cases-${new Date().toISOString().slice(0, 10)}.csv"`);
+        return res.status(200).type('text/csv; charset=utf-8').send(`\ufeff${casesCsv(rows)}`);
     }
 
     async function renderCase(req, res, status = 200, { error = null } = {}) {
@@ -632,7 +654,14 @@ export function createDashboard({
         } catch (error) {
             logger.warn(`Dashboard activity: ${error.message}`);
         }
-        return sendHtml(res, series ? 200 : 503, activityPage({ ...shellOf(req), series }));
+        // Pro and Max (server owner's plan): per moderator and per automod rule.
+        const planId = data.guildPlan ? data.guildPlan(guildId) : 'free';
+        const locked = planId !== 'pro' && planId !== 'max';
+        const analytics = locked || !data.staffAnalytics ? null : await data.staffAnalytics(guildId).catch((error) => {
+            logger.warn(`Dashboard staff analytics: ${error.message}`);
+            return null;
+        });
+        return sendHtml(res, series ? 200 : 503, activityPage({ ...shellOf(req), series, extra: analyticsSection({ analytics, locked }) }));
     }
 
     async function audit(req, res) {
@@ -840,7 +869,7 @@ export function createDashboard({
 
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
-        overview, modulesHub, cases, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme,
+        overview, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme,
         sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
     };
 }
@@ -992,6 +1021,7 @@ export function dashboardRouter(d) {
     router.get('/inbox/:kind/:id', user, safe(ib.conversation));
     router.get('/modules', user, safe(d.modulesHub));
     router.get('/cases', user, safe(d.cases));
+    router.get('/cases/export.csv', user, safe(d.casesExport));
     router.get('/cases/:code', user, safe(d.caseDetail));
     router.get('/appeals', user, safe(d.appeals));
     router.get('/appeals/:code', user, safe(en.appealDetail));

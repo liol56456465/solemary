@@ -83,3 +83,26 @@ export async function activitySeries(guildId, { days = ACTIVITY_DAYS, now = Date
 
 /** For tests. */
 export function _pendingActivity() { return pending; }
+
+/**
+ * Pro and Max (by the server owner's plan): the last `days` days per moderator and per
+ * automod rule. { moderators: [{ name, total, ban, kick, mute, warn, voided }],
+ * rules: [{ key, total, undone }] }. Throws on a database error.
+ */
+export async function staffAnalytics(guildId, { days = ACTIVITY_DAYS, now = Date.now(), query = defaultQuery } = {}) {
+    const t = pgConfig.tables.mod_cases;
+    const since = new Date(now - days * DAY_MS);
+    const [mods, rules] = await Promise.all([
+        query(`SELECT moderator_username AS name, COUNT(*)::int AS total,
+                      COUNT(*) FILTER (WHERE type = 'ban')::int AS ban, COUNT(*) FILTER (WHERE type = 'kick')::int AS kick,
+                      COUNT(*) FILTER (WHERE type = 'mute')::int AS mute, COUNT(*) FILTER (WHERE type = 'warn')::int AS warn,
+                      COUNT(*) FILTER (WHERE voided_at IS NOT NULL)::int AS voided
+               FROM ${t} WHERE guild_id = $1 AND created_at >= $2 AND is_auto IS NOT TRUE AND is_test IS NOT TRUE AND is_imported IS NOT TRUE
+               GROUP BY moderator_username ORDER BY total DESC LIMIT 50`, [guildId, since]),
+        query(`SELECT reason_key AS key, COUNT(*)::int AS total,
+                      COUNT(*) FILTER (WHERE voided_at IS NOT NULL OR status = 'revoked')::int AS undone
+               FROM ${t} WHERE guild_id = $1 AND created_at >= $2 AND reason_key LIKE 'automod:%' AND is_test IS NOT TRUE
+               GROUP BY reason_key ORDER BY total DESC LIMIT 50`, [guildId, since]),
+    ]);
+    return { moderators: mods.rows, rules: rules.rows };
+}

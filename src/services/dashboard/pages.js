@@ -69,7 +69,7 @@ ${rows.map((row) => html`<tr><td>${row.label} <span class="muted"><code>${row.ke
  * input: { session, query (raw strings as typed), rows, total, page, pageSize, error,
  * statusLabel(row) }.
  */
-export function casesPage({ session, access = null, moduleStates = {}, query = {}, rows = [], total = 0, page = 0, pageSize = 25, error = null, statusLabel = (r) => r.status }) {
+export function casesPage({ session, access = null, moduleStates = {}, query = {}, rows = [], total = 0, page = 0, pageSize = 25, error = null, statusLabel = (r) => r.status, exportDays = null, canExport = false }) {
     const pages = Math.max(1, Math.ceil(total / pageSize));
     const keep = { member: query.member, moderator: query.moderator, type: query.type, status: query.status, text: query.text, from: query.from, to: query.to, tag: query.tag };
     const pager = html`<div class="pager">
@@ -78,7 +78,10 @@ ${page > 0 ? html`<a href="/dashboard/cases${queryString({ ...keep, page: page -
 ${page + 1 < pages ? html`<a href="/dashboard/cases${queryString({ ...keep, page: page + 1 })}">Older →</a>` : ''}
 </div>`;
     const filtered = Object.values(keep).some(Boolean);
-    const body = html`<header class="page-head"><h1>Cases</h1><p class="muted">Every enforcement action, newest first. Filter by member, moderator, type, status, tag or date.</p></header>
+    const exportLine = !canExport ? '' : exportDays === null
+        ? html`<p class="muted">Case export (CSV) comes with Mewvo Normal and up, on the server owner's plan. <a href="/pricing">Plans</a></p>`
+        : html`<p><a class="button secondary" href="/dashboard/cases/export.csv" download>Download CSV</a> <span class="muted">${Number.isFinite(exportDays) ? `The last ${exportDays} days (Mewvo Normal).` : 'The full history.'}</span></p>`;
+    const body = html`<header class="page-head"><h1>Cases</h1><p class="muted">Every enforcement action, newest first. Filter by member, moderator, type, status, tag or date.</p>${exportLine}</header>
 <form class="filters" method="get" action="/dashboard/cases">
 <label>Member ID<input name="member" value="${query.member || ''}" inputmode="numeric" maxlength="20"></label>
 <label>Moderator ID<input name="moderator" value="${query.moderator || ''}" inputmode="numeric" maxlength="20"></label>

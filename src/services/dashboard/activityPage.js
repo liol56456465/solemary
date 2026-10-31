@@ -3,6 +3,7 @@
 // (no inline styles, no script) and the same numbers as a table. Real data only.
 
 import { html, layout } from './html.js';
+import { AUTOMOD_RULES } from '../../config/automod.js';
 
 const SHORT = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const dayLabel = (day) => SHORT.format(new Date(`${day}T00:00:00Z`));
@@ -13,6 +14,21 @@ export function barChart(series, field, label) {
     const total = series.reduce((sum, d) => sum + d[field], 0);
     const last = series.length - 1;
     return html`<div class="chart chart-wide" role="img" aria-label="${label} per day for ${series.length} days, ${total} in total. The table below has every day.">${series.map((d, i) => html`<div class="bar${i === last ? ' today' : ''}" title="${dayLabel(d.day)}: ${d[field]}"><i class="h-${Math.round((d[field] / max) * 10)}"></i><span class="bar-label">${i % 5 === 0 || i === last ? dayLabel(d.day) : ''}</span></div>`)}</div>`;
+}
+
+/** Pro/Max: per moderator and per automod rule. analytics null = could not be read; locked = not on the plan. */
+export function analyticsSection({ analytics = null, locked = false, days = 30 }) {
+    if (locked) return html`<section class="card"><h2>Staff and automod</h2><p class="muted">Cases per moderator and how often each automod rule is undone come with Mewvo Pro and Max, on the server owner's plan. <a href="/pricing">Plans</a></p></section>`;
+    if (!analytics) return html`<section class="card"><h2>Staff and automod</h2><p class="error" role="alert">These numbers could not be loaded (database). Reload the page to try again.</p></section>`;
+    const ruleName = (key) => AUTOMOD_RULES[String(key).replace(/^automod:/, '')]?.label || String(key).replace(/^automod:/, '');
+    const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : '-');
+    return html`<section class="card"><h2>Cases per moderator <span class="muted">· last ${days} days</span></h2>
+${analytics.moderators.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Total</th><th>Bans</th><th>Kicks</th><th>Mutes</th><th>Warns</th><th>Voided</th></tr></thead><tbody>
+${analytics.moderators.map((m) => html`<tr><td>${m.name}</td><td>${m.total}</td><td>${m.ban}</td><td>${m.kick}</td><td>${m.mute}</td><td>${m.warn}</td><td>${m.voided}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">No cases by people in this time.</p>`}</section>
+<section class="card"><h2>Automod rules <span class="muted">· last ${days} days</span></h2>
+${analytics.rules.length ? html`<div class="scroll"><table><thead><tr><th>Rule</th><th>Actions</th><th>Undone</th><th>Undone share</th></tr></thead><tbody>
+${analytics.rules.map((r) => html`<tr><td>${ruleName(r.key)}</td><td>${r.total}</td><td>${r.undone}</td><td>${pct(r.undone, r.total)}</td></tr>`)}</tbody></table></div>
+<p class="muted">A rule that is undone often may be too strict: consider monitor mode for it.</p>` : html`<p class="muted">Automod took no action in this time.</p>`}</section>`;
 }
 
 export function totals(series) {
