@@ -165,6 +165,7 @@ export const OWNER_NAV = { group: 'Owner', items: [
     { key: 'owner/servers', label: 'Servers', icon: 'server' },
     { key: 'owner/users', label: 'Users', icon: 'users' },
     { key: 'owner/blacklist', label: 'Blacklist', icon: 'nocontact' },
+    { key: 'owner/premium', label: 'Premium keys', icon: 'key' },
     { key: 'owner/health', label: 'Health', icon: 'monitor' },
     { key: 'owner/commands', label: 'Command sync', icon: 'commands' },
     { key: 'owner/announce', label: 'Announce', icon: 'messages' },

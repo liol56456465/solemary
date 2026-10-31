@@ -41,11 +41,15 @@ import { createPgSessionStore } from '../dashboard/sessionStore.js';
 import { query } from '../enforcement/db.js';
 import { OPEN_STATUSES, caseStatusLabel, listCasesForUser, listUserAppeals } from '../enforcement/caseService.js';
 import { getMemberStanding, nextWarningText } from '../enforcement/standingService.js';
-import { NOINDEX, installUrl, inviteOrNull, layout, publicSiteEnabled } from './site.js';
+import { NOINDEX, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin } from './site.js';
+import { createBillingHandlers } from './billing.js';
+import { premiumSettings, premiumStore } from '../billing/premiumService.js';
 
 export const MEMBER_BASE = '/me';
 export const MEMBER_SESSION_COOKIE = 'mewvo_me';
 export const MEMBER_STATE_COOKIE = 'mewvo_me_state';
+// Where to go after login (a /me page, e.g. the checkout someone started logged out).
+export const MEMBER_NEXT_COOKIE = 'mewvo_me_next';
 export const MEMBER_SESSION_TTL_MS = 60 * 60 * 1000;
 // The label that turns SESSION_SECRET into this page's own signing key.
 const KEY_LABEL = 'mewvo member portal v1';
@@ -59,7 +63,19 @@ const APPEAL_LIMIT = 100;
 export const MEMBER_LIMITS = {
     login: { limit: 30, windowMs: 60 * 1000 },
     page: { limit: 60, windowMs: 60 * 1000 },
+    redeem: { limit: 10, windowMs: 60 * 1000 },
 };
+
+/**
+ * A return path after login: only this portal's own pages (/me…), no scheme, host, "//",
+ * backslash or control characters; anything else → /me. Pure.
+ */
+export function safeNextPath(value) {
+    const next = typeof value === 'string' ? value.trim() : '';
+    if (next.length > 200 || !/^\/me(\/|\?|$)/.test(next)) return MEMBER_BASE;
+    if (/[\\\s\u0000-\u001f]|\/\//.test(next)) return MEMBER_BASE;
+    return next;
+}
 
 export const MEMBER_SECURITY_HEADERS = {
     // Like the site, plus form-action 'self' for the logout form.
@@ -248,7 +264,7 @@ export function recordPage(ctx, { session, view }) {
         title: 'My record', active: 'me',
         body: html`<div class="wrap page record"><div class="record-head"><div><h1>My record</h1>
 <p class="lead">Your moderation record in ${enforcementConfig.serverName}, logged in as <strong>${session.username}</strong>. Only you can see this.</p></div>
-<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">Log out</button></form></div>
+<div class="record-links">${ctx.billing ? html`<a class="button button-quiet" href="${MEMBER_BASE}/billing">Subscription</a> ` : ''}<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">Log out</button></form></div></div>
 <ul class="record-summary">
 <li class="feature"><h2>Warnings</h2><p class="record-big">${warn.count} of ${warn.threshold}</p><p>Counted warnings at your level. Warnings do not expire.</p></li>
 <li class="feature"><h2>Warning ladder</h2><p class="record-big">Level ${view.ladder.level} of 3</p><p>${view.ladder.next}</p></li>
@@ -296,14 +312,17 @@ const clientIp = (req) => String(req.ip || req.socket?.remoteAddress || 'unknown
  */
 export function createMemberPortal({
     settings, sessions, data = defaultData, fetchImpl = globalThis.fetch, states = createStateStore(),
-    limits = MEMBER_LIMITS, context = () => ({}),
+    limits = MEMBER_LIMITS, context = () => ({}), premium = null,
 }) {
     const key = settings.signingKey;
+    // Its own key for the return-path cookie, so it can never stand in for a session cookie.
+    const nextKey = hmac('mewvo member next v1', key);
     const guildId = settings.mainGuildId;
     const cookieOptions = { secure: settings.secure, path: MEMBER_BASE };
     const loginLimiter = createRateLimiter(limits.login);
     const pageLimiter = createRateLimiter(limits.page);
-    const ctx = () => ({ ...context(), memberPortal: true });
+    const redeemLimiter = createRateLimiter(limits.redeem || MEMBER_LIMITS.redeem);
+    const ctx = () => ({ ...context(), memberPortal: true, billing: Boolean(premium) });
     const send = (res, status, page) => res.status(status).type('html').send(page);
     const fail = (res, status, title, message, options) => send(res, status, messagePage(ctx(), title, message, options));
 
@@ -333,6 +352,9 @@ export function createMemberPortal({
     function login(req, res) {
         const { state, nonce } = createState(key);
         res.append('Set-Cookie', serializeCookie(MEMBER_STATE_COOKIE, nonce, { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
+        const next = safeNextPath(req.query?.next);
+        if (next !== MEMBER_BASE) res.append('Set-Cookie', serializeCookie(MEMBER_NEXT_COOKIE, signValue(next, nextKey), { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
+        else res.append('Set-Cookie', clearCookie(MEMBER_NEXT_COOKIE, cookieOptions));
         const params = new URLSearchParams({
             client_id: settings.clientId, response_type: 'code', redirect_uri: settings.redirectUri, scope: 'identify', state,
         });
@@ -370,7 +392,8 @@ export function createMemberPortal({
         });
         res.append('Set-Cookie', serializeCookie(MEMBER_SESSION_COOKIE, signValue(session.id, key), { ...cookieOptions, maxAgeMs: MEMBER_SESSION_TTL_MS }));
         logger.info(`Member portal login: ${me.id}`);
-        return res.redirect(303, MEMBER_BASE);
+        res.append('Set-Cookie', clearCookie(MEMBER_NEXT_COOKIE, cookieOptions));
+        return res.redirect(303, safeNextPath(verifySignedValue(cookies[MEMBER_NEXT_COOKIE], nextKey) || MEMBER_BASE));
     }
 
     async function index(req, res) {
@@ -408,6 +431,11 @@ export function createMemberPortal({
         return fail(res, 404, 'Not found', 'There is no such page.');
     }
 
+    // Subscriptions (billing.js): only with a premium store (PREMIUM_TEST_CHECKOUT=true).
+    const billing = premium ? createBillingHandlers({
+        readSession, sessions, settings, ctx, send, store: premium, redeemLimiter, clientIp,
+    }) : null;
+
     /** A thrown error (database down while reading the session…) → 503, never a stack trace. */
     function safe(handler) {
         return async (req, res, next) => {
@@ -429,18 +457,27 @@ export function createMemberPortal({
         r.get('/login', limitBy(loginLimiter), login);
         r.get('/callback', limitBy(loginLimiter), safe(callback));
         r.post('/logout', limitBy(pageLimiter), express.urlencoded({ extended: false, limit: '2kb' }), safe(logout));
+        if (billing) {
+            const form = express.urlencoded({ extended: false, limit: '2kb' });
+            r.get('/billing', limitBy(pageLimiter), safe(billing.billing));
+            r.get('/billing/orders/:id', limitBy(pageLimiter), safe(billing.receipt));
+            r.get('/checkout', limitBy(pageLimiter), safe(billing.checkout));
+            r.post('/checkout', limitBy(pageLimiter), form, safe(billing.checkoutPost));
+            r.get('/redeem', limitBy(pageLimiter), safe(billing.redeemForm));
+            r.post('/redeem', limitBy(pageLimiter), form, safe(billing.redeemPost));
+        }
         r.use(notFound);
         return r;
     }
 
-    return { headers, login, callback, index, logout, notFound, router, sessions, states };
+    return { headers, login, callback, index, logout, notFound, router, sessions, states, billing };
 }
 
 /**
  * Mounts /me when MEMBER_PORTAL_ENABLED=true and the configuration is complete.
  * Returns true when mounted (the site then shows the "My record" link).
  */
-export function registerMemberPortal(app, { env = process.env, dashboardEnabled = false, supportInvite = () => null, sessions = null, data, fetchImpl, limits } = {}) {
+export function registerMemberPortal(app, { env = process.env, dashboardEnabled = false, supportInvite = () => null, sessions = null, data, fetchImpl, limits, premium } = {}) {
     const settings = memberPortalSettings(env);
     if (!settings.requested) return false;
     if (!settings.enabled) {
@@ -452,6 +489,7 @@ export function registerMemberPortal(app, { env = process.env, dashboardEnabled 
         dashboardEnabled: Boolean(dashboardEnabled),
         installUrl: installUrl(env.CLIENT_ID),
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
+        origin: siteOrigin(env),
     };
     const context = () => {
         let support = null;
@@ -465,8 +503,10 @@ export function registerMemberPortal(app, { env = process.env, dashboardEnabled 
         ...(data ? { data } : {}),
         ...(fetchImpl ? { fetchImpl } : {}),
         ...(limits ? { limits } : {}),
+        // Test checkout: only when PREMIUM_TEST_CHECKOUT=true (premiumService.js).
+        premium: premiumSettings(env).testCheckout ? (premium || premiumStore) : null,
     });
     app.use(MEMBER_BASE, portal.router());
-    logger.info(`Member portal enabled at ${MEMBER_BASE} (OAuth redirect ${settings.redirectUri})`);
+    logger.info(`Member portal enabled at ${MEMBER_BASE} (OAuth redirect ${settings.redirectUri})${portal.billing ? '; subscriptions in TEST CHECKOUT mode (no payments)' : ''}`);
     return true;
 }

@@ -56,6 +56,7 @@ const PATHS = {
     cat: `<path fill="currentColor" stroke="none" fill-rule="evenodd" d="${CAT_PATH}"/>`,
     home: '<path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>',
     server: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 10h.01M15 10h.01M9 15c1.7 1.3 4.3 1.3 6 0"/>',
+    key: '<circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M16 7l3 3M14 9l2 2"/>',
 };
 
 export const ICON_NAMES = Object.keys(PATHS);

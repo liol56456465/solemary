@@ -21,6 +21,8 @@
 //   POST /dashboard/owner/commands/register/preview|register   re-register the main server's commands
 //                                                       (startup's code; global + support never touched)
 //   GET  /dashboard/owner/announce, POST …/preview|send one message to every server's log channel
+//   GET  /dashboard/owner/premium[?status=]             premium keys (test checkout), subscriptions, orders
+//   POST /dashboard/owner/premium/generate|revoke|end   create keys, cancel an unused key, end a subscription
 //
 // Access: every request checks isBotOwner(session user) live (not the cached access
 // decision); anyone else gets the normal 404 page. POSTs also need: 30/min per session,
@@ -52,9 +54,10 @@ import { getActiveCase, listCasesForUser } from '../enforcement/caseService.js';
 import { findMutedRole } from '../enforcement/muteService.js';
 import { INSTALL_PERMISSIONS } from '../site/site.js';
 import { adminCommandsRetired } from '../../config/commands/retirement.js';
+import { KEY_DURATIONS, MAX_KEYS_PER_BATCH, keyHint, premiumSettings, premiumStore } from '../billing/premiumService.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
-    blacklistPage, commandsPage, registerConfirmPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage, userLookupPage,
+    KEY_FILTERS, blacklistPage, commandsPage, premiumPage, registerConfirmPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage, userLookupPage,
 } from './ownerPages.js';
 
 export const OWNER_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
@@ -399,6 +402,8 @@ export const defaultOwnerDeps = {
     registeredCommands: defaultRegisteredCommands,
     registerMainCommands: async (client) => (await import('../../handlers/loaders/commandLoader.js')).registerMainGuildCommands(client),
     commandsRetired: () => adminCommandsRetired(),
+    premium: premiumStore,
+    premiumTestCheckout: () => premiumSettings().testCheckout,
 };
 
 // ── Handlers ──────────────────────────────────────────────────────────────
@@ -969,11 +974,70 @@ export function createOwnerHandlers(core) {
         return sendHtml(res, 200, announceResultPage({ ...page(req), result }));
     }, { rerender: rerenderAnnounce });
 
+    // ── Premium keys ─────────────────────────────────────────────────────
+
+    const keyFilter = (value) => (Object.hasOwn(KEY_FILTERS, value) ? value : 'unused');
+    const nullOnError = (what) => (error) => {
+        logger.warn(`Owner area: ${what} not readable: ${error.message}`);
+        return null;
+    };
+
+    async function renderPremium(req, res, status = 200, error = null, { values = {}, created = [], filter = null } = {}) {
+        const current = keyFilter(filter ?? queryText(req.query, 'status', 20));
+        const [keys, subscriptions, orders] = await Promise.all([
+            o.premium.listKeys({ status: current }).catch(nullOnError('premium keys')),
+            o.premium.listActiveSubscriptions().catch(nullOnError('subscriptions')),
+            o.premium.listOrders(30).catch(nullOnError('premium orders')),
+        ]);
+        return sendHtml(res, status, premiumPage({
+            ...page(req), keys, subscriptions, orders, filter: current, created, values,
+            testCheckout: Boolean(o.premiumTestCheckout()), flash: status === 200 && !created.length ? takeFlash(req) : null, error,
+        }));
+    }
+    const premium = (req, res) => renderPremium(req, res);
+    // Re-render after a refusal: the form values as typed (cut, never refused again here).
+    const typed = (req, name, max) => (typeof req.body?.[name] === 'string' ? req.body[name].trim().slice(0, max) : '');
+    const rerenderPremium = (req, res, status, message) => renderPremium(req, res, status, message, {
+        values: { plan: typed(req, 'plan', 20), days: typed(req, 'days', 5), count: typed(req, 'count', 5), note: typed(req, 'note', 200) },
+        filter: typed(req, 'status', 20) || null,
+    });
+
+    const premiumGenerate = ownerPost(async (req, res) => {
+        const days = Number.parseInt(text(req.body, 'days', 5), 10);
+        const count = Number.parseInt(text(req.body, 'count', 5), 10);
+        if (!KEY_DURATIONS.some((d) => d.days === days)) throw new InputError('Choose one of the listed times.');
+        if (!Number.isInteger(count) || count < 1 || count > MAX_KEYS_PER_BATCH) throw new InputError(`Create between 1 and ${MAX_KEYS_PER_BATCH} keys at a time.`);
+        const rows = await o.premium.generateKeys({ planId: text(req.body, 'plan', 20), days, count, note: text(req.body, 'note', 200), actor: actorOf(req) });
+        // Audit rows are not secret: only the last four characters of each key.
+        await audit(req, [{ key: 'premium.keys.generate', old: null, new: { plan: rows[0]?.plan_id, days, count: rows.length, keys: rows.map((k) => keyHint(k.code)) } }]);
+        logger.info(`Dashboard owner ${req.dashboard.session.userId} created ${rows.length} premium key(s) (${rows[0]?.plan_id}, ${days} days)`);
+        return renderPremium(req, res, 200, null, { created: rows, filter: 'unused' });
+    }, { rerender: rerenderPremium });
+
+    const premiumRevoke = ownerPost(async (req, res) => {
+        const row = await o.premium.revokeKey(text(req.body, 'code', 40), actorOf(req));
+        if (!row) throw new InputError('That key is not unused any more (redeemed or already cancelled). Reload the page.');
+        await audit(req, [{ key: 'premium.keys.revoke', old: { key: keyHint(row.code), plan: row.plan_id }, new: null }]);
+        await flash(req, `Key ${row.code} cancelled.`);
+        return res.redirect(303, path(`/owner/premium?status=${keyFilter(text(req.body, 'status', 20))}`));
+    }, { rerender: rerenderPremium });
+
+    const premiumEnd = ownerPost(async (req, res) => {
+        const userId = text(req.body, 'user', 25);
+        if (!isSnowflake(userId)) throw new InputError('Unknown account.');
+        const row = await o.premium.endSubscription(userId, actorOf(req));
+        if (!row) throw new InputError('That account has no active subscription any more. Reload the page.');
+        await audit(req, [{ key: `premium.subscriptions.${userId}.end`, old: { plan: row.plan_id, until: row.expires_at }, new: null }]);
+        await flash(req, `The ${row.plan_id} plan of ${row.username || userId} has ended.`);
+        return res.redirect(303, path('/owner/premium'));
+    }, { rerender: rerenderPremium });
+
     const index = (req, res) => res.redirect(302, path('/owner/home'));
 
     return {
         requireOwner, index, home, activity, profile, username, about, presence, avatar: imageAction('avatar'), banner: imageAction('banner'),
         servers, server, invite, leavePreview, leave, users, blacklist, blacklistAdd, blacklistRemove,
         health, maintenance, commands, registerPreview, register, announce, announcePreview, announceSend,
+        premium, premiumGenerate, premiumRevoke, premiumEnd,
     };
 }

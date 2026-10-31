@@ -11,6 +11,10 @@ import { kpi, tile } from './overview.js';
 import { ACTIVITY_TEXT_MAX, STATUSES } from '../owner/botStateService.js';
 import { BLACKLIST_REASON_MAX } from '../owner/blacklistService.js';
 import { countedWarnsText } from '../enforcement/flowBuilder.js';
+import {
+    KEY_DURATIONS, MAX_KEYS_PER_BATCH, NOTE_MAX, PAID_PLANS, PERIODS, keyStatus, planName,
+} from '../billing/premiumService.js';
+import { euros } from '../../config/site/plans.js';
 
 export const USERNAME_MAX = 32;
 export const ABOUT_MAX = 400;
@@ -242,6 +246,9 @@ export function ownerActionText(key, names = new Map()) {
     if ((m = /^servers\.(\d+)\.invite$/.exec(k))) return `Invite created in ${server(m[1])}`;
     if ((m = /^servers\.(\d+)\.leave$/.exec(k))) return `Left ${server(m[1])}`;
     if ((m = /^blacklist\.(user|guild)\.(\d+)$/.exec(k))) return `Blacklist: ${m[1] === 'guild' ? `server ${server(m[2])}` : `user ${m[2]}`}`;
+    if (k === 'premium.keys.generate') return 'Premium keys created';
+    if (k === 'premium.keys.revoke') return 'Premium key cancelled';
+    if ((m = /^premium\.subscriptions\.(\d+)\.end$/.exec(k))) return `Subscription of user ${m[1]} ended`;
     return k;
 }
 
@@ -430,3 +437,53 @@ ${result.skipped.length ? html`<section class="card"><h2>Skipped (${result.skipp
     return shell({ title: 'Announcement sent', active: 'owner/announce', session, access, moduleStates, body });
 }
 
+
+// ── Premium keys (test checkout; services/billing/premiumService.js) ─────
+
+export const KEY_FILTERS = { unused: 'Not redeemed', redeemed: 'Redeemed', revoked: 'Cancelled', all: 'All' };
+const KEY_STATUS_TEXT = { unused: 'Not redeemed', redeemed: 'Redeemed', revoked: 'Cancelled' };
+const KEY_TONE = { unused: 'on', redeemed: 'off', revoked: 'bad' };
+
+/**
+ * keys: { rows, counts } (null = database unavailable); subscriptions / orders: rows (null = unavailable);
+ * created: the rows just generated (shown once at the top); testCheckout: PREMIUM_TEST_CHECKOUT.
+ */
+export function premiumPage({
+    session, access = null, moduleStates = {}, keys = null, subscriptions = null, orders = null, filter = 'unused',
+    created = [], testCheckout = false, flash = null, error = null, values = {}, editEnabled = true,
+}) {
+    const csrf = session.csrf;
+    const who = (id, name) => (id ? html`${name || id}${name ? html` <small class="muted">${id}</small>` : ''}` : '—');
+    const counts = keys?.counts || {};
+    const body = html`<header class="page-head"><h1>Premium keys</h1><p class="muted">Create keys for Normal, Pro or Max. Anyone who logs in on the website (My record → Subscription) can redeem a key once; it adds the plan and time to their account. Same plan: the time is added to the end date. Test mode only: no payments are connected.</p></header>
+${notices({ flash, error, editEnabled })}
+${testCheckout ? '' : html`<p class="notice">Redeeming and the checkout are off: set <code>PREMIUM_TEST_CHECKOUT=true</code> (and <code>MEMBER_PORTAL_ENABLED=true</code>) to turn them on. Keys created now still work once it is on.</p>`}
+${created.length ? html`<section class="card"><h2>New keys (${created.length})</h2><p class="muted">${planName(created[0].plan_id)}, ${created[0].duration_days} days each. They also stay in the list below.</p>
+<textarea class="key-output" readonly rows="${Math.min(created.length, 12)}" aria-label="New keys, one per line">${created.map((k) => k.code).join('\n')}</textarea></section>` : ''}
+<section class="card"><h2>Create keys</h2>${actionForm(csrf, '/owner/premium/generate', html`<div class="grid">
+<label>Plan<select name="plan">${PAID_PLANS.map((p) => opt(p.id, `${p.name} (${euros(p.monthlyCents)}/month)`, values.plan || 'pro'))}</select></label>
+<label>Time<select name="days">${KEY_DURATIONS.map((d) => opt(String(d.days), d.label, String(values.days || 30)))}</select></label>
+<label>How many<input name="count" type="number" min="1" max="${MAX_KEYS_PER_BATCH}" required value="${values.count || 1}"></label>
+<label class="wide">Note (optional, only you see it)<input name="note" maxlength="${NOTE_MAX}" value="${values.note || ''}" placeholder="e.g. giveaway winners, October"></label></div>`, { submit: 'Create keys', enabled: editEnabled })}</section>
+<section class="card"><h2>Keys</h2>
+<nav class="chips" aria-label="Key status">${Object.entries(KEY_FILTERS).map(([key, label]) => html`<a class="chip" href="${path(`/owner/premium${queryString({ status: key })}`)}"${key === filter ? html` aria-current="page"` : ''}>${label}${key === 'all' ? ` (${counts.total ?? '—'})` : ` (${counts[key] ?? '—'})`}</a>`)}</nav>
+${keys === null ? html`<p class="error" role="alert">The keys could not be loaded (database). Reload the page to try again.</p>`
+        : keys.rows.length ? html`<div class="scroll"><table><thead><tr><th>Key</th><th>Plan</th><th>Time</th><th>From</th><th>Created</th><th>Status</th><th></th></tr></thead><tbody>
+${keys.rows.map((k) => { const st = keyStatus(k); return html`<tr><td><code class="key-code">${k.code}</code>${k.note ? html`<br><small class="muted">${k.note}</small>` : ''}</td><td>${planName(k.plan_id)}</td><td>${k.duration_days} days</td>
+<td>${k.source === 'gift' ? html`Gift bought by ${who(k.created_by, k.created_by_username)}` : html`Owner: ${k.created_by_username || k.created_by}`}</td><td>${timeTag(k.created_at)}</td>
+<td>${stateWord(KEY_TONE[st], KEY_STATUS_TEXT[st])}${st === 'redeemed' ? html`<br><small class="muted">by ${who(k.redeemed_by, k.redeemed_by_username)}, ${formatDate(k.redeemed_at)}</small>` : ''}${st === 'revoked' ? html`<br><small class="muted">${formatDate(k.revoked_at)}</small>` : ''}</td>
+<td class="nowrap">${st === 'unused' ? actionForm(csrf, '/owner/premium/revoke', '', { submit: 'Cancel key', hidden: { code: k.code, status: filter }, inline: true, secondary: true, enabled: editEnabled, confirm: `Cancel ${k.code}? It can no longer be redeemed.` }) : ''}</td></tr>`; })}
+</tbody></table></div>` : html`<p class="empty">No keys here.</p>`}</section>
+<section class="card"><h2>Active subscriptions${subscriptions ? ` (${subscriptions.length})` : ''}</h2>
+${subscriptions === null ? html`<p class="error" role="alert">The subscriptions could not be loaded (database).</p>`
+        : subscriptions.length ? html`<div class="scroll"><table><thead><tr><th>Account</th><th>Plan</th><th>Since</th><th>Until</th><th>Last added by</th><th></th></tr></thead><tbody>
+${subscriptions.map((sub) => html`<tr><td>${who(sub.user_id, sub.username)}</td><td>${planName(sub.plan_id)}</td><td>${formatDate(sub.started_at)}</td><td>${formatDate(sub.expires_at)}</td><td>${sub.source === 'key' ? 'Key' : sub.source === 'purchase' ? 'Test purchase' : sub.source || '—'}</td>
+<td class="nowrap">${actionForm(csrf, '/owner/premium/end', '', { submit: 'End now', hidden: { user: sub.user_id }, inline: true, danger: true, enabled: editEnabled, confirm: `End the ${planName(sub.plan_id)} plan of ${sub.username || sub.user_id} now?` })}</td></tr>`)}
+</tbody></table></div>` : html`<p class="empty">No active subscriptions.</p>`}</section>
+<section class="card"><h2>Recent test orders</h2>
+${orders === null ? html`<p class="error" role="alert">The orders could not be loaded (database).</p>`
+        : orders.length ? html`<div class="scroll"><table><thead><tr><th>Order</th><th>When</th><th>Account</th><th>Plan</th><th>For</th><th>Amount</th></tr></thead><tbody>
+${orders.map((o) => html`<tr><td><code>#${o.id}</code></td><td>${timeTag(o.created_at)}</td><td>${who(o.user_id, o.username)}</td><td>${planName(o.plan_id)} · ${PERIODS[o.period]?.label || o.period}</td><td>${o.kind === 'gift' ? 'Gift' : 'Own account'}</td><td>${euros(o.amount_cents)}${o.test ? ' (test)' : ''}</td></tr>`)}
+</tbody></table></div>` : html`<p class="empty">No orders yet.</p>`}</section>`;
+    return shell({ title: 'Premium keys', active: 'owner/premium', session, access, moduleStates, body });
+}

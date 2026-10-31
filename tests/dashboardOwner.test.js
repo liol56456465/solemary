@@ -94,6 +94,7 @@ async function setup({
     expectedCommands = async () => [{ name: 'help' }, { name: 'rank' }, { name: 'Moderate', type: 2 }],
     registeredCommands = async () => [{ name: 'help', type: 1 }, { name: 'rank', type: 1 }, { name: 'Moderate', type: 2 }],
     registerMainCommands = async () => ({ guildId: '100000000000000001', count: 3 }), retired = false,
+    premium = null, testCheckout = true,
 } = {}) {
     const guilds = new Map([
         [MAIN, makeGuild(MAIN, { name: 'Main', ownerId: '999999999999999990' })],
@@ -131,6 +132,8 @@ async function setup({
         registeredCommands: rec('registeredCommands', registeredCommands),
         registerMainCommands: rec('registerMainCommands', registerMainCommands),
         commandsRetired: () => retired,
+        premium: premium || fakePremium(),
+        premiumTestCheckout: () => testCheckout,
     };
     const sessions = createMemorySessionStore({ ttlMs: 48 * 3600 * 1000 });
     const access = createAccessChecker(client, { facts: async (c, id) => ({ inGuild: true, isAdmin: admins.has(id), isOwnerId: owners.has(id) }) });
@@ -145,6 +148,32 @@ async function setup({
     const session = await sessions.create({ userId, username: 'owner' }, createdAt);
     const cookie = `${SESSION_COOKIE}=${encodeURIComponent(signValue(session.id, SECRET))}`;
     return { d, calls, session, cookie, auditRows, guilds, client, ow: d.owner };
+}
+
+/** Owner → Premium keys: an in-memory store with the service's method names. */
+function fakePremium({ fail = false } = {}) {
+    const keys = [];
+    const subs = [{ user_id: '300000000000000031', username: 'subbed', plan_id: 'max', started_at: new Date(), expires_at: new Date(Date.now() + 86400000), source: 'key' }];
+    let n = 0;
+    const guard = () => { if (fail) throw new Error('connection refused'); };
+    return {
+        keys, subs,
+        listKeys: async ({ status }) => { guard(); const rows = keys.filter((k) => status === 'all' || (status === 'unused' ? !k.redeemed_at && !k.revoked_at : status === 'revoked' ? k.revoked_at : k.redeemed_at)); return { rows, counts: { unused: keys.filter((k) => !k.revoked_at).length, redeemed: 0, revoked: keys.filter((k) => k.revoked_at).length, total: keys.length } }; },
+        listActiveSubscriptions: async () => { guard(); return subs; },
+        listOrders: async () => { guard(); return [{ id: 7, user_id: '300000000000000031', username: 'subbed', plan_id: 'pro', period: 'yearly', kind: 'gift', amount_cents: 4990, test: true, created_at: new Date() }]; },
+        generateKeys: async ({ planId, days, count, note, actor }) => {
+            const rows = [];
+            for (let i = 0; i < count; i += 1) {
+                n += 1;
+                const row = { code: `MEWVO-AAAA-BBBB-${String(n).padStart(4, '2').replace(/[01]/g, '9')}`, plan_id: planId, duration_days: days, source: 'owner', created_by: actor.userId, created_by_username: actor.username, note, created_at: new Date(), redeemed_at: null, revoked_at: null };
+                keys.unshift(row);
+                rows.push(row);
+            }
+            return rows;
+        },
+        revokeKey: async (code) => { const k = keys.find((row) => row.code === code && !row.revoked_at && !row.redeemed_at); if (!k) return null; k.revoked_at = new Date(); return k; },
+        endSubscription: async (userId) => { const i = subs.findIndex((row) => row.user_id === userId); return i === -1 ? null : subs.splice(i, 1)[0]; },
+    };
 }
 
 async function run(h, handler, req) {
@@ -788,4 +817,70 @@ test('command re-register: owner POST checks, token + tick-box, the injected reg
     assert.equal(failed.statusCode, 400);
     assert.match(failed.body, /Registration failed; the main server(&#39;|&#x27;|')s list was not changed: Missing Access/);
     assert.equal(failing.auditRows.length, 0, 'a failed registration is not audited as done');
+});
+
+// ── Premium keys (test checkout) ──────────────────────────────────────────
+
+test('premium keys: owners only; create keys (shown once at the top, audited with the last four only)', async () => {
+    const admin = await setup({ userId: ADMIN });
+    assert.equal((await get(admin, admin.ow.premium)).statusCode, 404);
+    assert.equal((await post(admin, admin.ow.premiumGenerate, { form: { plan: 'pro', days: '30', count: '2' } })).statusCode, 404);
+
+    const h = await setup();
+    const page = await get(h, h.ow.premium);
+    assert.equal(page.statusCode, 200);
+    assert.ok(!/<style|style=|<script/i.test(page.body.replace(ALLOWED_SCRIPT, '')), 'no inline styles or scripts');
+    assert.match(page.body, /Create keys/);
+    assert.match(page.body, /subbed/, 'active subscription listed');
+    assert.match(page.body, /#7/, 'orders listed');
+    assert.ok(page.body.includes('href="/dashboard/owner/premium"'), 'sidebar link');
+
+    const made = await post(h, h.ow.premiumGenerate, { form: { plan: 'pro', days: '90', count: '3', note: 'giveaway' } });
+    assert.equal(made.statusCode, 200);
+    const codes = made.body.match(/<textarea class="key-output"[^>]*>([^<]*)<\/textarea>/)[1].split('\n');
+    assert.equal(codes.length, 3);
+    assert.match(made.body, /Pro, 90 days each/);
+    const row = h.auditRows.find((r) => r.key === 'premium.keys.generate');
+    assert.deepEqual(row.new, { plan: 'pro', days: 90, count: 3, keys: codes.map((c) => `…${c.slice(-4)}`) });
+    assert.ok(!JSON.stringify(h.auditRows).includes(codes[0]), 'full key never in the audit log');
+    assert.equal(ownerActionText('premium.keys.generate'), 'Premium keys created');
+});
+
+test('premium keys: bad input re-renders with 400 and the typed values; nothing is created', async () => {
+    const h = await setup();
+    for (const form of [{ plan: 'pro', days: '31', count: '1' }, { plan: 'pro', days: '30', count: '0' }, { plan: 'pro', days: '30', count: '51' }]) {
+        const res = await post(h, h.ow.premiumGenerate, { form });
+        assert.equal(res.statusCode, 400, JSON.stringify(form));
+        assert.equal(h.ow && h.auditRows.length, 0);
+    }
+});
+
+test('premium keys: cancel an unused key; end a subscription; both audited; a stale row is a 400', async () => {
+    const premium = fakePremium();
+    const h = await setup({ premium });
+    await post(h, h.ow.premiumGenerate, { form: { plan: 'normal', days: '30', count: '1' } });
+    const code = premium.keys[0].code;
+    const ok = await post(h, h.ow.premiumRevoke, { form: { code, status: 'unused' } });
+    assert.equal(ok.statusCode, 303);
+    assert.equal(ok.redirectedTo, '/dashboard/owner/premium?status=unused');
+    assert.ok(premium.keys[0].revoked_at);
+    assert.equal((await post(h, h.ow.premiumRevoke, { form: { code } })).statusCode, 400, 'second cancel refused');
+    assert.ok(h.auditRows.some((r) => r.key === 'premium.keys.revoke' && r.old.key === `…${code.slice(-4)}`));
+
+    const ended = await post(h, h.ow.premiumEnd, { form: { user: '300000000000000031' } });
+    assert.equal(ended.statusCode, 303);
+    assert.equal(premium.subs.length, 0);
+    assert.ok(h.auditRows.some((r) => r.key === 'premium.subscriptions.300000000000000031.end'));
+    assert.equal((await post(h, h.ow.premiumEnd, { form: { user: '300000000000000031' } })).statusCode, 400);
+    assert.equal(ownerActionText('premium.subscriptions.300000000000000031.end'), 'Subscription of user 300000000000000031 ended');
+});
+
+test('premium keys: a database error shows a message per section (never an empty list); checkout-off notice', async () => {
+    const h = await setup({ premium: fakePremium({ fail: true }), testCheckout: false });
+    const page = await get(h, h.ow.premium);
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /keys could not be loaded/);
+    assert.match(page.body, /subscriptions could not be loaded/);
+    assert.ok(!page.body.includes('No keys here'));
+    assert.match(page.body, /PREMIUM_TEST_CHECKOUT=true/);
 });

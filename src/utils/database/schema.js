@@ -611,6 +611,48 @@ export const tableStatements = [
     )`,
     // Joins and leaves (dashboard Members → Insights), one row per event; kept 90 days
     // (pruned daily, services/members/memberInsightsService.js).
+    // Premium (TEST CHECKOUT ONLY, services/billing/premiumService.js; no payment provider):
+    // one subscription row per Discord account, the test orders, and premium keys (gifts and
+    // owner-generated). A key is unused until redeemed_at or revoked_at is set.
+    `CREATE TABLE IF NOT EXISTS ${t.premium_subscriptions} (
+        user_id VARCHAR(20) PRIMARY KEY,
+        username VARCHAR(100),
+        plan_id VARCHAR(20),
+        started_at TIMESTAMPTZ,
+        expires_at TIMESTAMPTZ,
+        source VARCHAR(60),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+    `CREATE TABLE IF NOT EXISTS ${t.premium_orders} (
+        id BIGSERIAL PRIMARY KEY,
+        user_id VARCHAR(20) NOT NULL,
+        username VARCHAR(100),
+        plan_id VARCHAR(20) NOT NULL,
+        period VARCHAR(10) NOT NULL CHECK (period IN ('monthly', 'yearly')),
+        kind VARCHAR(10) NOT NULL CHECK (kind IN ('personal', 'gift')),
+        amount_cents INTEGER NOT NULL CHECK (amount_cents >= 0),
+        currency CHAR(3) NOT NULL DEFAULT 'EUR',
+        test BOOLEAN NOT NULL DEFAULT TRUE,
+        key_code VARCHAR(30),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+    `CREATE TABLE IF NOT EXISTS ${t.premium_keys} (
+        code VARCHAR(30) PRIMARY KEY,
+        plan_id VARCHAR(20) NOT NULL,
+        duration_days INTEGER NOT NULL CHECK (duration_days > 0),
+        source VARCHAR(10) NOT NULL CHECK (source IN ('gift', 'owner')),
+        created_by VARCHAR(20) NOT NULL,
+        created_by_username VARCHAR(100),
+        order_id BIGINT,
+        note VARCHAR(200),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        redeemed_by VARCHAR(20),
+        redeemed_by_username VARCHAR(100),
+        redeemed_at TIMESTAMPTZ,
+        revoked_at TIMESTAMPTZ,
+        revoked_by VARCHAR(20)
+    )`,
     `CREATE TABLE IF NOT EXISTS ${t.member_events} (
         id BIGSERIAL PRIMARY KEY,
         guild_id VARCHAR(20) NOT NULL,
@@ -670,6 +712,10 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_member_role_rules_guild ON ${t.member_role_rules}(guild_id, id)`,
     `CREATE INDEX IF NOT EXISTS idx_member_events_guild ON ${t.member_events}(guild_id, created_at)`,
     `CREATE INDEX IF NOT EXISTS idx_member_events_created ON ${t.member_events}(created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_premium_orders_user ON ${t.premium_orders}(user_id, created_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_premium_keys_created_by ON ${t.premium_keys}(created_by, created_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_premium_keys_created ON ${t.premium_keys}(created_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_premium_subscriptions_expires ON ${t.premium_subscriptions}(expires_at)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

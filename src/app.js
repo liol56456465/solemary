@@ -38,6 +38,7 @@ import { registerOAuthRoutes } from './services/oauthVerification.js';
 import { registerDashboard } from './services/dashboard/routes.js';
 import { registerSite } from './services/site/site.js';
 import { registerMemberPortal } from './services/site/memberPortal.js';
+import { premiumSettings } from './services/billing/premiumService.js';
 import { finalErrorHandler } from './utils/finalErrorHandler.js';
 import { isGlobalRateLimitExempt } from './services/dashboard/security.js';
 import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
@@ -300,7 +301,7 @@ class Mewvo extends Client {
     // the root, after every other route. Leaderboard and status read this client (site.js defaults).
     // "My record" (/me): members see their own moderation record (MEMBER_PORTAL_ENABLED, off by default).
     const memberPortalEnabled = registerMemberPortal(app, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite });
-    registerSite(app, this, { dashboardEnabled, memberPortalEnabled, supportInvite: () => enforcementConfig.supportServerInvite });
+    registerSite(app, this, { dashboardEnabled, memberPortalEnabled, billingEnabled: premiumSettings().testCheckout, supportInvite: () => enforcementConfig.supportServerInvite });
 
     // Last: no stack traces in the browser, whatever NODE_ENV is.
     app.use(finalErrorHandler);

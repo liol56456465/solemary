@@ -1,13 +1,16 @@
 // pricing.js — /pricing: the plans from config/site/plans.js (the one file to edit), a
 // Monthly / Yearly switch done with two radio inputs and `:checked ~` selectors (no script,
 // keyboard: Tab to the group, arrow keys to switch), a comparison table and a short FAQ.
-// Nothing is on sale: every plan button is a non-link "Coming soon".
+// Nothing is on sale: every plan button is a non-link "Coming soon" — unless test checkout is
+// on (ctx.billing: PREMIUM_TEST_CHECKOUT=true + the member portal), then each paid plan has
+// "Buy" and "Gift it" for the billing period shown (the same :checked ~ switch picks the pair).
 
 import { html } from '../../dashboard/html.js';
 import {
     COMPARISON, PLANS, PRICING_FAQ, YEARLY_MONTHS_CHARGED, euros, yearlyCents, yearlyPerMonthCents,
 } from '../../../config/site/plans.js';
 import { layout } from '../shell.js';
+import { TEST_NOTICE, planButtons } from '../billing.js';
 
 const FREE_MONTHS = 12 - YEARLY_MONTHS_CHARGED;
 const PLANNED = html`<span class="planned">Planned</span>`;
@@ -23,7 +26,7 @@ function priceBlock(plan) {
 
 function planCard(plan, ctx) {
     const action = plan.monthlyCents
-        ? html`<span class="button button-disabled" aria-disabled="true">Coming soon</span>`
+        ? (ctx.billing ? planButtons(plan) : html`<span class="button button-disabled" aria-disabled="true">Coming soon</span>`)
         : html`<a class="button button-quiet" href="${ctx.supportInvite || '/features'}"${ctx.supportInvite ? html` rel="noopener"` : ''}>${ctx.supportInvite ? 'Join the support server' : 'See what’s included'}</a>`;
     return html`<li class="plan${plan.featured ? ' plan-featured' : ''}"><div class="plan-head"><h3 class="plan-name">${plan.name}</h3></div>
 <p class="plan-summary">${plan.summary}</p>${priceBlock(plan)}${action}
@@ -45,13 +48,19 @@ ${group.rows.map((row) => html`<tr><th scope="row">${row.label}${row.planned ? h
 </table></div>`;
 }
 
+const TEST_FAQ = { q: 'Can I buy a plan now?', a: 'Only as a test. The checkout works end to end (for you or as a gift key), but no payment provider is connected: no card is asked for and nobody is charged. Paid perks marked Planned are not built yet.' };
+
 export function pricingPage(ctx) {
+    const faq = ctx.billing ? PRICING_FAQ.map((item) => (item.q === TEST_FAQ.q ? TEST_FAQ : item)) : PRICING_FAQ;
     return layout(ctx, {
         title: 'Pricing', active: 'pricing', path: '/pricing',
         description: 'Mewvo is free today. Planned paid plans: Normal €1.99, Pro €4.99 and Max €9.99 a month, or two months free with yearly billing.',
         body: html`<div class="wrap page">
-<header class="page-head page-head-split"><div><p class="section-num">Pricing</p><h1>Free today. Paid plans later.</h1></div>
-<p class="lead">Everything Mewvo does now is free. Paid plans start when Mewvo opens to other servers; until then nothing can be bought.${ctx.supportInvite ? html` <a href="${ctx.supportInvite}" rel="noopener">Join the support server</a> to hear first.` : ''}</p></header>
+${ctx.billing ? html`<header class="page-head page-head-split"><div><p class="section-num">Pricing</p><h1>Pick a plan.</h1></div>
+<p class="lead">Free covers everything Mewvo does today. Paid plans add room and tools; buy one for your account or as a gift key for someone else. <a href="/me/redeem">Have a key?</a></p></header>
+<p class="test-banner" role="note"><span class="planned">Test mode</span> ${TEST_NOTICE}</p>`
+        : html`<header class="page-head page-head-split"><div><p class="section-num">Pricing</p><h1>Free today. Paid plans later.</h1></div>
+<p class="lead">Everything Mewvo does now is free. Paid plans start when Mewvo opens to other servers; until then nothing can be bought.${ctx.supportInvite ? html` <a href="${ctx.supportInvite}" rel="noopener">Join the support server</a> to hear first.` : ''}</p></header>`}
 <div class="billing">
 <input class="billing-input" type="radio" name="billing" id="billing-monthly" value="monthly" checked>
 <input class="billing-input" type="radio" name="billing" id="billing-yearly" value="yearly">
@@ -60,6 +69,6 @@ export function pricingPage(ctx) {
 <p class="note plans-note">Prices in euros. <span class="planned">Planned</span> means the perk is not built yet and may change before paid plans start.</p>
 <section class="block-tight" aria-labelledby="compare-title"><h2 id="compare-title">Compare plans</h2>${comparisonTable()}</section>
 <section class="block-tight split split-narrow" aria-labelledby="pricing-faq-title"><div class="split-copy"><h2 id="pricing-faq-title">Questions about pricing</h2><p>More answers in the <a href="/faq">FAQ</a>.</p></div>
-<dl class="qa">${PRICING_FAQ.map((item) => html`<div><dt>${item.q}</dt><dd>${item.a}</dd></div>`)}</dl></section></div>`,
+<dl class="qa">${faq.map((item) => html`<div><dt>${item.q}</dt><dd>${item.a}</dd></div>`)}</dl></section></div>`,
     });
 }

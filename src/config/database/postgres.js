@@ -49,6 +49,9 @@ const configuredTables = {
     scheduled_messages: 'scheduled_messages',
     member_role_rules: 'member_role_rules',
     member_events: 'member_events',
+    premium_subscriptions: 'premium_subscriptions',
+    premium_orders: 'premium_orders',
+    premium_keys: 'premium_keys',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -98,6 +101,9 @@ const allowedTableIdentifiers = new Set([
     'scheduled_messages',
     'member_role_rules',
     'member_events',
+    'premium_subscriptions',
+    'premium_orders',
+    'premium_keys',
 ]);
 
 const validatedTables = Object.fromEntries(

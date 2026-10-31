@@ -381,7 +381,7 @@ export function sitemapXml(origin, { transparency = false } = {}) {
  * Promise<report> (cached 10 minutes) }; tests pass fakes.
  */
 export function createSite({
-    client = null, env = process.env, dashboardEnabled = false, memberPortalEnabled = false, supportInvite = () => null,
+    client = null, env = process.env, dashboardEnabled = false, memberPortalEnabled = false, billingEnabled = false, supportInvite = () => null,
     leaderboard = createLeaderboardReader(client), status = () => botStatus(client), rules = () => readPublicRules(env),
     transparency = defaultTransparency(),
 } = {}) {
@@ -391,6 +391,8 @@ export function createSite({
         publicSite,
         dashboardEnabled: Boolean(dashboardEnabled),
         memberPortal: Boolean(memberPortalEnabled),
+        // Test checkout (PREMIUM_TEST_CHECKOUT): lives inside the member portal, so both must be on.
+        billing: Boolean(memberPortalEnabled && billingEnabled),
         installUrl: installUrl(env.CLIENT_ID),
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
         origin: siteOrigin(env),
@@ -519,7 +521,7 @@ function defaultTransparency() {
 }
 
 /** Mounts the front site at the root of `app` (after /health, /ready, OAuth and the dashboard). */
-export function registerSite(app, client, { env = process.env, dashboardEnabled = false, memberPortalEnabled = false, supportInvite, leaderboard, status, rules } = {}) {
-    app.use(createSite({ client, env, dashboardEnabled, memberPortalEnabled, supportInvite, leaderboard, status, rules }));
+export function registerSite(app, client, { env = process.env, dashboardEnabled = false, memberPortalEnabled = false, billingEnabled = false, supportInvite, leaderboard, status, rules } = {}) {
+    app.use(createSite({ client, env, dashboardEnabled, memberPortalEnabled, billingEnabled, supportInvite, leaderboard, status, rules }));
     logger.info(`Front site at / (${publicSiteEnabled(env) ? 'public' : 'not public: noindex, no add button (PUBLIC_SITE_ENABLED)'})`);
 }

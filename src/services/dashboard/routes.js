@@ -887,6 +887,9 @@ export function dashboardRouter(d) {
     router.post('/owner/commands/register', ...owner, form, safe(ow.register));
     router.post('/owner/announce/preview', ...owner, form, safe(ow.announcePreview));
     router.post('/owner/announce/send', ...owner, form, safe(ow.announceSend));
+    router.post('/owner/premium/generate', ...owner, form, safe(ow.premiumGenerate));
+    router.post('/owner/premium/revoke', ...owner, form, safe(ow.premiumRevoke));
+    router.post('/owner/premium/end', ...owner, form, safe(ow.premiumEnd));
     router.get('/owner', ...owner, ow.index);
     router.get('/owner/home', ...owner, safe(ow.home));
     router.get('/owner/activity', ...owner, safe(ow.activity));
@@ -898,6 +901,7 @@ export function dashboardRouter(d) {
     router.get('/owner/health', ...owner, safe(ow.health));
     router.get('/owner/commands', ...owner, safe(ow.commands));
     router.get('/owner/announce', ...owner, safe(ow.announce));
+    router.get('/owner/premium', ...owner, safe(ow.premium));
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
     // urlencoded skips multipart bodies, so an upload is read only after the login check.
     router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleUploadBody), safe(d.moduleAction));
