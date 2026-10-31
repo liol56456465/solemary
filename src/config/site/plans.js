@@ -45,7 +45,7 @@ export const PLANS = [
             { text: '250 tags, 25 sticky messages, 40 YouTube feeds' },
             { text: '100 scheduled messages' },
             { text: 'Supporter role in the Mewvo server' },
-            { text: 'Case export (CSV), last 90 days', planned: true },
+            { text: 'Case export (CSV), last 90 days' },
         ],
     },
     {
@@ -58,9 +58,9 @@ export const PLANS = [
         perks: [
             { text: 'Everything in Normal, with higher limits' },
             { text: '25 custom automod rules', planned: true },
-            { text: 'Staff and automod analytics on the dashboard', planned: true },
-            { text: 'Custom bot name and avatar in your server', planned: true },
-            { text: 'Full case history export', planned: true },
+            { text: 'Staff and automod analytics on the dashboard' },
+            { text: 'Custom bot name and avatar in your server' },
+            { text: 'Full case history export' },
         ],
     },
     {
@@ -90,7 +90,7 @@ export const COMPARISON = [
             { label: 'Enforcement panel, case codes, DMs', values: { free: true, normal: true, pro: true, max: true } },
             { label: 'Warning ladder and appeals', values: { free: true, normal: true, pro: true, max: true } },
             { label: 'Case history', values: { free: 'Kept for good', normal: 'Kept for good', pro: 'Kept for good', max: 'Kept for good' } },
-            { label: 'Case export (CSV)', planned: true, values: { free: false, normal: 'Last 90 days', pro: 'Full history', max: 'Full history' } },
+            { label: 'Case export (CSV)', values: { free: false, normal: 'Last 90 days', pro: 'Full history', max: 'Full history' } },
             { label: 'Shared cases across servers', planned: true, values: { free: false, normal: false, pro: false, max: true } },
         ],
     },
@@ -114,8 +114,8 @@ export const COMPARISON = [
         group: 'Dashboard and support',
         rows: [
             { label: 'Web dashboard with audit log', values: { free: true, normal: true, pro: true, max: true } },
-            { label: 'Staff and automod analytics', planned: true, values: { free: false, normal: false, pro: true, max: true } },
-            { label: 'Custom bot name and avatar', planned: true, values: { free: false, normal: false, pro: true, max: true } },
+            { label: 'Staff and automod analytics', values: { free: false, normal: false, pro: true, max: true } },
+            { label: 'Custom bot name and avatar', values: { free: false, normal: false, pro: true, max: true } },
             { label: 'Servers in one dashboard', planned: true, values: { free: '1', normal: '1', pro: '1', max: 'Up to 5' } },
             { label: 'Help in the support server', planned: true, values: { free: 'Yes', normal: 'Yes', pro: 'Yes', max: 'Priority' } },
         ],

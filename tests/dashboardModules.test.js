@@ -215,6 +215,10 @@ function makeServices() {
         // The /greet image store itself, on the fake guild (its channel.send is recorded by withImageStore).
         resolveLogChannel,
         storeWelcomeImage: async (guild, attachment, channelIds, label) => { record('storeWelcomeImage', [attachment, channelIds, label]); return storeWelcomeImage(guild, attachment, channelIds, label); },
+        // Bot in this server (appearance.js): the server owner's plan, and the two Discord calls.
+        guildPlan: () => s.plan ?? 'pro',
+        setBotNickname: async (guild, nick) => { record('setBotNickname', [nick]); },
+        setBotAvatar: async (client, guildId, dataUri) => { record('setBotAvatar', [dataUri ? dataUri.slice(0, 22) : null]); },
         resolveWelcomeImageUrl: async (c, url, ref) => (ref ? `${ref.url}&fresh=1` : url),
         updateWelcomeSettings: async (c, g, patch) => { record('updateWelcomeSettings', [patch]); return merge('welcome', patch); },
         addAutoRole: async (c, g, roleId) => { record('addAutoRole', [roleId]); const before = clone(s.welcome); const changed = !s.welcome.roleIds.includes(roleId); s.welcome.roleIds = [roleId]; return { before, after: clone(s.welcome), changed }; },
@@ -649,6 +653,13 @@ const CASES = {
             bad: { form: { name: 'No time', action: 'mute', reasonKey: 'spam', duration: '' }, message: /needs a duration/ } },
         'template-remove': { seed: (s) => { s.registry.enforcementTemplates = [{ name: 'Spam', action: 'warn', reasonKey: 'spam', duration: null }]; }, form: { index: '0' }, service: 'updateSettings',
             bad: { form: { index: '5' }, message: /gone already/ } },
+    },
+    appearance: {
+        nickname: { form: { nickname: 'Mewvo Helper' }, service: 'setBotNickname', admin: true,
+            bad: { form: { nickname: 'x'.repeat(40) }, message: /at most 32/ } },
+        avatar: { form: {}, upload: { file: { field: 'image', filename: 'cat.png', data: PNG } }, service: 'setBotAvatar', admin: true,
+            bad: { form: {}, message: /Choose an image file/ } },
+        'avatar-reset': { form: {}, service: 'setBotAvatar', admin: true },
     },
     automod: {
         enabled: { form: { enabled: 'false' }, service: 'setAutomodEnabled', bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
@@ -2337,4 +2348,19 @@ test('settings backup: download, check a file (no write), CSRF/Origin/Administra
     const unknown = await apply('nope');
     assert.equal(unknown.statusCode, 400);
     assert.match(unknown.body, /expired or was already used/);
+});
+
+test('bot in this server: not an image refused; below Pro the page says so and every action refuses', async () => {
+    const h = await setup();
+    const notImage = await post(h, 'appearance', 'avatar', {}, { upload: { file: { field: 'image', filename: 'x.txt', data: Buffer.from('hello') } } });
+    assert.equal(notImage.statusCode, 400);
+    assert.match(notImage.body, /not a PNG, JPEG, GIF or WebP/);
+    const free = await setup();
+    free.state.plan = 'normal';
+    const page = await run(free, free.d.modulePage, { method: 'GET', params: { module: 'appearance' }, headers: { cookie: free.cookie }, query: {} });
+    assert.match(page.body, /come with Mewvo Pro and Max/);
+    assert.ok(!page.body.includes('action="/dashboard/appearance/nickname"'));
+    const refused = await post(free, 'appearance', 'nickname', { nickname: 'x' });
+    assert.equal(refused.statusCode, 403);
+    assert.equal(free.calls.filter((c) => c.name === 'setBotNickname').length, 0);
 });

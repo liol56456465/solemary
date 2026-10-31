@@ -19,10 +19,11 @@ import commands from './commands.js';
 import support from './support.js';
 import channels from './channels.js';
 import rules from './rules.js';
+import appearance from './appearance.js';
 
 export const MODULES = [
     enforcement, automod, logging, welcome, tickets, leveling, verification, reactionRoles, messages, giveaways, birthdays,
-    counters, joinToCreate, applications, community, commands, support, channels, rules,
+    counters, joinToCreate, applications, community, commands, support, channels, rules, appearance,
 ];
 
 const BY_KEY = new Map(MODULES.map((m) => [m.key, m]));

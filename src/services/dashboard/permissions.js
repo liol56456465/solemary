@@ -52,6 +52,7 @@ export const PERMISSIONS = Object.freeze({
     'page:commands': ADMIN,
     'page:audit': ADMIN,
     'page:backup': ADMIN,
+    'page:appearance': ADMIN,
     // ── Enforcement actions on one member (the type of /users/:id/action/*) ──
     'action:warn': MODERATOR,
     'action:mute': MODERATOR,

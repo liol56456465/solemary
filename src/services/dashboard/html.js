@@ -150,6 +150,7 @@ export const NAV = [
     ] },
     { group: 'Bot', items: [
         { key: 'modules', label: 'All modules' },
+        { key: 'appearance', label: 'Bot in this server', keywords: 'nickname, avatar, bot name, profile, custom bot', summary: 'Nickname and avatar for Mewvo here (Pro and Max).' },
         { key: 'commands', label: 'Commands', keywords: 'disable command, enable command, categories, permissions, prefix, moderator role, mod role, shorten, short link', summary: 'Turn commands and categories on or off.' },
         { key: 'audit', label: 'Audit log' },
         { key: 'backup', label: 'Settings backup' },
