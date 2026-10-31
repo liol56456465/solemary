@@ -30,7 +30,7 @@ export const EVERYONE_COMMANDS = new Set([
   'fun fight', 'fun flip', 'fun roll', 'count status', 'count leaderboard',
 
   // Leveling
-  'leaderboard', 'rank',
+  'leaderboard', 'rank', 'profile',
 
 
   // Search
