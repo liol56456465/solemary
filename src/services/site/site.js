@@ -157,7 +157,7 @@ export function leaderboardPageNumber(value) {
  * Reads the main server (MAIN_GUILD_ID) through the same services as /leaderboard. Throws when
  * the bot is not connected yet, the server is not set or a read fails: the page then says the
  * leaderboard could not be loaded (503) instead of showing an empty one.
- * Members who ran /wipedata have no user_levels row any more (wipedataButtons.js deletes
+ * Members who ran /wipedata have no user_levels row any more (wipedataService.js deletes
  * getUserLevelKey → postgresDatabase.js deleteStructuredData 'user_level'), so they are not listed.
  * Names: the member's server display name; anyone who left shows as "Former member" (never an ID).
  * Each page is cached for a minute (one promise per page, so concurrent views share a read):

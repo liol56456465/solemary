@@ -108,7 +108,7 @@ export const FEATURE_GROUPS = [
             ['Logging', 'Joins, leaves, role changes, edited and deleted messages and more, each to the channel you choose, with ignored channels.'],
             ['Verification', 'A verify panel or verification on join. “Verify with Discord” can also add the member to the support server so appeal messages still reach them.'],
             ['Posting as the bot', 'Messages, embeds, polls and countdowns from the dashboard or commands.'],
-            ['Member tools', 'To-do lists (also shared), a calculator and converters, weather, server and user info, and /wipedata to delete your own levels and balance.'],
+            ['Member tools', 'To-do lists (also shared), a calculator and converters, weather, server and user info, and /wipedata to delete your own levels, balance, AFK status, birthday and to-do list.'],
         ],
     },
 ];

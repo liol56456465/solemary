@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { emptyPoolMessage, filterRandomMemberPool, pickFromPool, pickRandomMember } from '../src/services/randomMemberService.js';
 import { shortenUrl, validateShortenInput } from '../src/services/urlShortener.js';
-import { isOwnDataKey } from '../src/handlers/wipedataButtons.js';
+import { WIPE_ITEMS, wipeMemberData } from '../src/services/wipedataService.js';
 
 const ROLE = '600000000000000001';
 const member = (id, { bot = false, status = 'online', roles = [] } = {}) => ({
@@ -55,14 +55,28 @@ test('shorten: input checks of /shorten (http/https, custom ending), is.gd answe
     await assert.rejects(shortenUrl('https://example.com', '', { fetchImpl: async () => { throw Object.assign(new Error('x'), { name: 'AbortError' }); } }), (e) => e.type === 'network' && /timed out/.test(e.userMessage));
 });
 
-test('wipedata: only keys holding the caller\'s own guild:user ids (a longer id that starts the same is someone else)', () => {
+test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failures instead of success', async () => {
     const g = '100000000000000001';
     const me = '20000000000000000';
-    const other = `${me}9`;
-    assert.equal(isOwnDataKey(`economy:${g}:${me}`, g, me), true);
-    assert.equal(isOwnDataKey(`${g}:${me}:inventory`, g, me), true);
-    assert.equal(isOwnDataKey(`economy:${g}:${other}`, g, me), false, 'another member whose id starts with mine');
-    assert.equal(isOwnDataKey(`economy:9${g}:${me}`, g, me), false, 'another guild whose id ends with mine');
-    assert.equal(isOwnDataKey(`economy:${g}:x`, g, me), false);
-    assert.equal(isOwnDataKey(null, g, me), false);
+    const store = new Map([
+        [`guild:${g}:leveling:users:${me}`, { xp: 5 }],
+        [`guild:${g}:afk:${me}`, { reason: 'x' }],
+        [`todo_${me}`, { tasks: [] }],
+        [`guild:${g}:leveling:users:${me}9`, { xp: 9 }],
+    ]);
+    const db = { exists: async (k) => store.has(k), delete: async (k) => store.delete(k) };
+    const birthdays = [];
+    const result = await wipeMemberData({ db }, g, me, { removeBirthday: async (_c, guild, user) => { birthdays.push(`${guild}:${user}`); } });
+    assert.deepEqual(result.deleted, WIPE_ITEMS.map((i) => i.id));
+    assert.deepEqual(result.failed, []);
+    assert.deepEqual([...store.keys()], [`guild:${g}:leveling:users:${me}9`], 'another member with a longer id is untouched');
+    assert.deepEqual(birthdays, [`${g}:${me}`], 'the birthday row is removed (it was never deleted before)');
+
+    const broken = { db: { exists: async () => true, delete: async (k) => { if (k.includes('afk')) throw new Error('db down'); return true; } } };
+    const partial = await wipeMemberData(broken, g, me, { removeBirthday: async () => { throw new Error('db down'); } });
+    assert.deepEqual(partial.failed.map((f) => f.id), ['afk', 'birthday']);
+    assert.ok(partial.deleted.includes('levels'));
+    const silentFail = await wipeMemberData({ db: { exists: async () => true, delete: async () => false } }, g, me, { removeBirthday: async () => {} });
+    assert.ok(silentFail.failed.length === 4, 'a false from delete is an error');
+    await assert.rejects(wipeMemberData({ db }, 'x', me), /bad ids/);
 });

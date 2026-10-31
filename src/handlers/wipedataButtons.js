@@ -4,142 +4,47 @@ import { MessageFlags } from 'discord.js';
 import { logger } from '../utils/logger.js';
 
 import { replyUserError, ErrorTypes } from '../utils/errorHandler.js';
-import {
-    getEconomyKey,
-    getUserLevelKey,
-    getAFKKey,
-    getEconomyPrefix,
-    getUserLevelPrefix,
-} from '../utils/database.js';
-/**
- * True when `key` holds `guildId:userId` as whole ids. A plain substring match would
- * also hit another member whose (longer) id starts with the caller's id, so the ids
- * must not continue with more digits on either side.
- */
-export function isOwnDataKey(key, guildId, userId) {
-  if (typeof key !== 'string' || !/^\d+$/.test(String(guildId)) || !/^\d+$/.test(String(userId))) return false;
-  return new RegExp(`(^|\\D)${guildId}:${userId}(\\D|$)`).test(key);
-}
-
+import { WIPE_ITEMS, wipeMemberData } from '../services/wipedataService.js';
 const wipedataConfirmHandler = {
   name: 'wipedata_yes',
   async execute(interaction, client) {
+    // deferUpdate so the result replaces the confirmation prompt (and its buttons)
+    // instead of leaving a live "Confirm" button behind a second reply.
     try {
-      // deferUpdate so the result replaces the confirmation prompt (and its buttons)
-      // instead of leaving a live "Confirm" button behind a second reply.
       await interaction.deferUpdate();
-
-      const userId = interaction.user.id;
-      const guildId = interaction.guildId;
-
-      const dataKeyPatterns = [
-        getEconomyKey(guildId, userId),
-        getUserLevelKey(guildId, userId),
-        getAFKKey(guildId, userId),
-        `level:${guildId}:${userId}`,
-        `xp:${guildId}:${userId}`,
-        `inventory:${guildId}:${userId}`,
-        `bank:${guildId}:${userId}`,
-        `wallet:${guildId}:${userId}`,
-        `cooldowns:${guildId}:${userId}`,
-        `shop:${guildId}:${userId}`,
-        `shop_data:${guildId}:${userId}`,
-        `counter:${guildId}:${userId}`,
-        `birthday:${guildId}:${userId}`,
-        `balance:${guildId}:${userId}`,
-        `user:${guildId}:${userId}`,
-        `leveling:${guildId}:${userId}`,
-        `crimexp:${guildId}:${userId}`,
-        `robxp:${guildId}:${userId}`,
-        `crime_cooldown:${guildId}:${userId}`,
-        `rob_cooldown:${guildId}:${userId}`,
-        `lastDaily:${guildId}:${userId}`,
-        `lastWork:${guildId}:${userId}`,
-        `lastCrime:${guildId}:${userId}`,
-        `lastRob:${guildId}:${userId}`,
-        `${guildId}:leveling:users:${userId}`,
-      ];
-
-      let deletedCount = 0;
-      const deleteErrors = [];
-
-      for (const key of dataKeyPatterns) {
-        try {
-          const exists = await client.db.exists(key);
-          if (exists) {
-            await client.db.delete(key);
-            deletedCount++;
-          }
-        } catch (error) {
-          logger.error(`Error deleting key ${key}:`, error);
-          deleteErrors.push(key);
-        }
+    } catch (error) {
+      logger.error('Wipedata: could not acknowledge the button:', error);
+      return;
+    }
+    const userId = interaction.user.id;
+    const guildId = interaction.guildId;
+    try {
+      const { deleted, failed } = await wipeMemberData(client, guildId, userId);
+      const label = (id) => WIPE_ITEMS.find((item) => item.id === id)?.label || id;
+      if (failed.length > 0) {
+        for (const { id, error } of failed) logger.error(`Wipedata: deleting ${id} failed for ${userId} in ${guildId}: ${error.message}`);
+        await interaction.editReply({
+          embeds: [createEmbed({
+            title: 'Not everything was deleted',
+            description: `The database did not respond for: ${failed.map(({ id }) => label(id)).join(', ')}. `
+              + (deleted.length ? `Deleted: ${deleted.map(label).join(', ')}. ` : '')
+              + 'Run /wipedata again in a few minutes.',
+            color: 'error',
+          })],
+          components: [],
+        });
+        return;
       }
-
-      try {
-        if (client.db.list && typeof client.db.list === 'function') {
-          const searchPrefixes = [
-            `${guildId}:${userId}`,
-            `${guildId}:`,
-            getEconomyPrefix(guildId),
-            getUserLevelPrefix(guildId),
-            `level:${guildId}:`,
-            `xp:${guildId}:`,
-            `user:${guildId}:`
-          ];
-
-          const discoveredKeys = new Set();
-
-          for (const prefix of searchPrefixes) {
-            try {
-              const keys = await client.db.list(prefix);
-              if (Array.isArray(keys)) {
-                keys.forEach((key) => discoveredKeys.add(key));
-              }
-            } catch (listError) {
-              logger.debug(`Key listing failed for prefix ${prefix}:`, listError);
-            }
-          }
-
-          const additionalUserKeys = [...discoveredKeys].filter((key) => {
-            if (dataKeyPatterns.includes(key)) return false;
-            return isOwnDataKey(key, guildId, userId);
-          });
-
-          for (const key of additionalUserKeys) {
-            try {
-              await client.db.delete(key);
-              deletedCount++;
-            } catch (error) {
-              logger.error(`Error deleting additional key ${key}:`, error);
-              deleteErrors.push(key);
-            }
-          }
-        }
-      } catch (error) {
-        logger.warn('Could not perform prefix search on database:', error);
-      }
-
-      const successMessage =
-        `✅ **Your data has been successfully wiped!**\n\n` +
-        `**Records Deleted:** ${deletedCount}\n\n` +
-        `Your account has been reset to default values. You can now start fresh!\n\n` +
-        `*All your economy balance, levels, items, and personal data have been removed.*`;
-
       await interaction.editReply({
-        embeds: [successEmbed('Data Wipe Complete', successMessage)],
-        components: []
+        embeds: [successEmbed('Your data was deleted', `Deleted in this server: ${deleted.map(label).join(', ')}.\n\n`
+          + 'Moderation, appeal, report and verification records are kept, because they are the server\'s safety records. '
+          + 'See the Privacy Policy for how to ask about those.')],
+        components: [],
       });
-
-      logger.info(`User ${interaction.user.tag} (${userId}) wiped their data in guild ${guildId} - Deleted ${deletedCount} records`);
-      if (deleteErrors.length > 0) {
-        logger.warn(`Data wipe completed with ${deleteErrors.length} deletion errors for user ${userId} in guild ${guildId}`);
-      }
-
+      logger.info(`User ${userId} wiped their data in guild ${guildId}`);
     } catch (error) {
       logger.error('Wipedata confirm button handler error:', error);
-      
-      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while wiping your data. Please try again later or contact support.' });
+      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'The database is not responding. Nothing may have been deleted; try again in a few minutes.' });
     }
   }
 };
@@ -151,8 +56,8 @@ const wipedataCancelHandler = {
       await interaction.update({
         embeds: [
           createEmbed({
-            title: '❌ Data Wipe Cancelled',
-            description: 'Your data has been preserved. Your account remains unchanged.',
+            title: 'Nothing was deleted',
+            description: 'Your data is unchanged.',
             color: 'info'
           })
         ],

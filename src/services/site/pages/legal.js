@@ -1,7 +1,7 @@
 // legal.js — the Privacy Policy and the Terms and Conditions.
 //
 // Written from what the code stores and does (utils/database/schema.js, oauthVerification.js,
-// verificationGuard.js, wipedataButtons.js, dashboard/security.js, site/memberPortal.js,
+// verificationGuard.js, wipedataService.js, dashboard/security.js, site/memberPortal.js,
 // billing/premiumService.js, utils/logger.js). Nothing here is invented: when the code changes
 // what it stores, change this page and LEGAL_UPDATED with it.
 //
@@ -114,7 +114,7 @@ ${row('Technical logs of what the bot did and the errors it hit (they can contai
 <li>your data to be deleted (Art. 17), or its use to be limited (Art. 18);</li>
 <li>your data to no longer be used for a legitimate interest (objection, Art. 21).</li></ul>
 <p>To use any of these, ${contactLine(ctx)}. You get an answer within one month. Some safety records, such as an active ban, may be kept for as long as they are still needed to keep a server safe; if so, you are told why.</p>
-<p>You can also delete some data yourself: run <code>/wipedata</code> in a server to delete your levels and XP, your economy balance and your AFK status in that server. It does not delete moderation records, appeals, reports or verification records.</p>
+<p>You can also delete some data yourself: run <code>/wipedata</code> in a server to delete your levels and XP, your economy balance, your AFK status and your birthday in that server, and your personal to-do list. It does not delete moderation records, appeals, reports or verification records.</p>
 <p>If you think your data is handled wrongly, you can complain to the data protection authority of the EU country where you live or work, or where the problem happened.</p>
 
 <h2>Children</h2>
