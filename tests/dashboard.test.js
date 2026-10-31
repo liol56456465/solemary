@@ -770,3 +770,13 @@ test('overview week chart: the last 7 UTC days, oldest first, today last, missin
     assert.deepEqual(week.map((d) => d.count), [1, 0, 0, 0, 0, 0, 3], 'the 8th day back is not counted');
     assert.equal(week.filter((d) => d.today).length, 1);
 });
+
+test('expired dashboard and My record sessions are pruned from both tables', async () => {
+    const { pruneExpiredSessions } = await import('../src/services/dashboard/sessionStore.js');
+    const seen = [];
+    const now = new Date('2026-10-31T12:00:00Z');
+    const total = await pruneExpiredSessions(async (text, params) => { seen.push({ text, params }); return { rowCount: 2 }; }, undefined, now);
+    assert.equal(total, 4);
+    assert.deepEqual(seen.map((q) => q.text), ['DELETE FROM dashboard_sessions WHERE expires_at <= $1', 'DELETE FROM member_sessions WHERE expires_at <= $1']);
+    assert.deepEqual(seen[0].params, [now]);
+});

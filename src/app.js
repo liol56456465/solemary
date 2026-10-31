@@ -19,6 +19,8 @@ import { runEnforcementExpiry } from './services/enforcement/expiryService.js';
 import { runTempRoleExpiry } from './services/members/tempRoleService.js';
 import { runRoleRules } from './services/members/roleRuleService.js';
 import { pruneMemberEvents } from './services/members/memberInsightsService.js';
+import { pruneExpiredSessions } from './services/dashboard/sessionStore.js';
+import { query as enforcementQuery } from './services/enforcement/db.js';
 import { importModmailTopicsOnce } from './services/modmailLinks.js';
 import { enforcementConfig } from './config/enforcement.js';
 import { expireNoContactOrders } from './services/enforcement/noContactService.js';
@@ -388,6 +390,8 @@ class Mewvo extends Client {
     cron.schedule('*/10 * * * *', exclusive('role_rules', () => runRoleRules(this)));
     // Joins/leaves for Members → Insights are kept 90 days.
     cron.schedule('30 3 * * *', exclusive('member_events_prune', () => pruneMemberEvents()), { timezone: 'UTC' });
+    // Expired dashboard / My record sessions (Privacy Policy: 12 h / 1 h).
+    cron.schedule('17 * * * *', exclusive('session_prune', () => pruneExpiredSessions(enforcementQuery)));
     cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
     cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));

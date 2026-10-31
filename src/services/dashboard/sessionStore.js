@@ -14,6 +14,7 @@
 
 import crypto from 'crypto';
 import { SESSION_TTL_MS } from './security.js';
+import { pgConfig } from '../../config/database/postgres.js';
 
 const CLEANUP_EVERY_MS = 10 * 60 * 1000;
 const TOUCH_EVERY_MS = 5 * 60 * 1000;
@@ -149,4 +150,18 @@ export function createMemorySessionStore({ ttlMs = SESSION_TTL_MS } = {}) {
     }
 
     return { create, get, destroy, rotate, cleanup, setFlash, size: () => rows.size, hashes: () => [...rows.keys()] };
+}
+
+/**
+ * Deletes expired sessions from both login tables (dashboard and My record), so they are
+ * gone when the Privacy Policy says (12 h / 1 h), not only when someone logs in again.
+ * Hourly from app.js. Returns the number deleted.
+ */
+export async function pruneExpiredSessions(query, tables = [pgConfig.tables.dashboard_sessions, pgConfig.tables.member_sessions], now = new Date()) {
+    let total = 0;
+    for (const table of tables) {
+        const { rowCount } = await query(`DELETE FROM ${table} WHERE expires_at <= $1`, [now]);
+        total += rowCount || 0;
+    }
+    return total;
 }
