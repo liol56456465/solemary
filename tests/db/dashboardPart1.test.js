@@ -175,7 +175,7 @@ test('server counter: created in the category and saved; one per type (a second 
     const stored = await counters.getServerCounters(client, guildId);
     assert.deepEqual(stored.map((c) => [c.id, c.type, c.channelId]), [[counter.id, 'members', channel.id]]);
     await rejectsUser(counters.createServerCounter(client, w.guild, { type: 'members', category: w.category }), /already exists/);
-    await rejectsUser(counters.createServerCounter(client, w.guild, { type: 'members_only', category: w.text }), /valid category/);
+    await rejectsUser(counters.createServerCounter(client, w.guild, { type: 'members_only', category: w.text }), /Pick a category/);
     await rejectsUser(counters.createServerCounter(client, w.guild, { type: 'cats', category: w.category }), /Unknown counter type/);
     // Two creates of the same type at once: exactly one survives, the loser's channel is deleted.
     const results = await Promise.allSettled([

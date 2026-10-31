@@ -1,3 +1,4 @@
+import { supportInviteUrl } from './support.js';
 import {
     SlashCommandBuilder,
     ActionRowBuilder,
@@ -108,7 +109,7 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
 
     const supportButton = new ButtonBuilder()
         .setLabel("Support Server")
-        .setURL("https://discord.gg/8x8w6gbEuZ")
+        .setURL(supportInviteUrl())
         .setStyle(ButtonStyle.Link);
 
     const selectRow = createSelectMenu(
