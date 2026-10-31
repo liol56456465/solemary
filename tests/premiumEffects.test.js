@@ -251,7 +251,7 @@ test('/premium gift: test-mode gift key DMed to them; closed DMs show the key to
     assert.equal(purchases[0].kind, 'gift');
     assert.equal(purchases[0].period, 'monthly', 'a month by default');
     assert.equal(purchases[0].giftTo, 'Friend');
-    assert.match(dms[0].content, /^Member gave you \*\*Mewvo Pro\*\* for 30 days\.\n> enjoy\nYour key: `MEWVO-2222-3333-4444`/);
+    assert.match(dms[0].content, new RegExp(`^<@${MEMBER}> gave you \\*\\*Mewvo Pro\\*\\* for 30 days\\.\\nTheir note: enjoy\\nYour key: \`MEWVO-2222-3333-4444\``));
     assert.match(dms[0].content, /https:\/\/mewvo\.example\/me\/redeem\?code=MEWVO-2222-3333-4444/);
     assert.deepEqual(dms[0].allowedMentions, { parse: [] });
     assert.match(description(ok), /^Sent\. friend got a DM/);
@@ -274,5 +274,10 @@ test('/premium gift: test-mode gift key DMed to them; closed DMs show the key to
     assert.ok(allowGift('u', t0, limits) && allowGift('u', t0 + 1, limits) && allowGift('u', t0 + 2, limits));
     assert.equal(allowGift('u', t0 + 3, limits), false);
     assert.equal(allowGift('u', t0 + 3600001, limits), true, 'an hour later');
-    assert.ok(!giftDm({ fromName: 'A', planId: 'max', days: 365, code: 'K', message: '' }).includes('>'));
+    assert.ok(!giftDm({ fromId: '1', planId: 'max', days: 365, code: 'K', message: '' }).includes('Their note'));
+    // Phishing-proof: no masked links, no URLs, no markdown, no mass mentions from member text.
+    const evil = giftDm({ fromId: '1', planId: 'pro', days: 30, code: 'K', message: '# Official\n[Claim Nitro](https://evil.example/x) www.evil.example discord.gg/abc @everyone **bold**' });
+    assert.ok(!/https?:\/\/evil|www\.evil|discord\.gg\/abc/.test(evil), evil);
+    assert.ok(!/(^|[^\\])\]\(/.test(evil) && !evil.includes('\n#') && !evil.includes('@everyone'), evil);
+    assert.match(evil, /\(link removed\)/);
 });

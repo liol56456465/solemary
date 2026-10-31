@@ -5,7 +5,7 @@
 // Everyone may use it (EVERYONE_COMMANDS); every reply is ephemeral. Redeem is limited to
 // 5 tries a minute per user. Off (a short notice) unless PREMIUM_TEST_CHECKOUT=true.
 
-import { SlashCommandBuilder, MessageFlags } from 'discord.js';
+import { SlashCommandBuilder, MessageFlags, escapeMarkdown } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
@@ -45,11 +45,23 @@ export function allowGift(userId, now = Date.now(), store = gifts) {
     return true;
 }
 
-/** The DM the gifted person gets. Pure, for tests. */
-export function giftDm({ fromName, planId, days, code, message, redeemUrl }) {
+/**
+ * Text a member typed, made safe for a DM that comes from the bot: no markdown (so no masked
+ * "[click here](…)" links or fake headings), no links at all, no mentions. Pure.
+ */
+export function plainUserText(text) {
+    return escapeMarkdown(String(text ?? ''))
+        .replace(/(?:https?:\/\/|www\.)\S+/gi, '(link removed)')
+        .replace(/discord\.gg\/\S+/gi, '(link removed)')
+        .replace(/@(everyone|here)/gi, '@\u200b$1')
+        .replace(/[[\]]/g, (c) => `\\${c}`);
+}
+
+/** The DM the gifted person gets. The sender is a mention (can't be faked). Pure, for tests. */
+export function giftDm({ fromId, fromName, planId, days, code, message, redeemUrl }) {
     return [
-        `${fromName} gave you **Mewvo ${planName(planId)}** for ${days} days.`,
-        message ? `> ${String(message).replace(/\n/g, '\n> ')}` : null,
+        `${fromId ? `<@${fromId}>` : plainUserText(fromName)} gave you **Mewvo ${planName(planId)}** for ${days} days.`,
+        message ? `Their note: ${plainUserText(message).replace(/\n+/g, ' ')}` : null,
         `Your key: \`${code}\``,
         `Redeem it with \`/premium redeem\`${redeemUrl ? ` or at ${redeemUrl}` : ''}. It can be used once, within a year.`,
     ].filter(Boolean).join('\n');
@@ -87,7 +99,7 @@ async function gift(interaction, client, { store, env, reply }) {
     let delivered = false;
     try {
         await target.send({
-            content: giftDm({ fromName: buyer.globalName || buyer.username, planId, days: result.key.duration_days, code: result.key.code, message, redeemUrl }),
+            content: giftDm({ fromId: buyer.id, fromName: buyer.globalName || buyer.username, planId, days: result.key.duration_days, code: result.key.code, message, redeemUrl }),
             allowedMentions: { parse: [] },
         });
         delivered = true;
