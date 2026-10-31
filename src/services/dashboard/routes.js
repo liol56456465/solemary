@@ -66,6 +66,8 @@ import {
 } from '../enforcement/caseService.js';
 import { getCaseEdits } from '../enforcement/caseEditService.js';
 import { caseNotes } from '../enforcement/caseNotesService.js';
+import { activitySeries } from '../stats/activityService.js';
+import { activityPage } from './activityPage.js';
 import { listEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
 import { listPendingAppeals } from '../enforcement/appealService.js';
 import { needsSecondReviewer } from '../enforcement/appealReviewer.js';
@@ -201,6 +203,7 @@ function str(value, max = 200) {
 const defaultData = {
     searchCaseRecords, getCaseByCode, getCaseEdits, listEvidence, resolveImageUrls, getAppealHistory,
     listCaseNotes: (code) => caseNotes.listNotes(code, 50),
+    activitySeries: (guildId) => activitySeries(guildId),
     listPendingAppeals, staffModerationStats, getLatestAppealStatusesForCases,
     listSettingsAudit, overview: defaultOverviewData,
 };
@@ -565,6 +568,16 @@ export function createDashboard({
 
     const staff = (req, res) => renderStaff(req, res);
 
+    async function activity(req, res) {
+        let series = null;
+        try {
+            series = await data.activitySeries(guildId);
+        } catch (error) {
+            logger.warn(`Dashboard activity: ${error.message}`);
+        }
+        return sendHtml(res, series ? 200 : 503, activityPage({ ...shellOf(req), series }));
+    }
+
     async function audit(req, res) {
         const userFilter = str(req.query?.user, 20);
         const moduleFilter = str(req.query?.module, 40);
@@ -770,7 +783,7 @@ export function createDashboard({
 
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
-        overview, modulesHub, cases, caseDetail, appeals, staff, audit, modulePage, moduleAction, logout, notFound, setTheme,
+        overview, modulesHub, cases, caseDetail, appeals, staff, activity, audit, modulePage, moduleAction, logout, notFound, setTheme,
         sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
     };
 }
@@ -931,6 +944,7 @@ export function dashboardRouter(d) {
     router.get('/users/:id', user, safe(en.userPage));
     router.get('/nocontact', user, safe(en.noContact));
     router.get('/staff', user, safe(d.staff));
+    router.get('/activity', user, safe(d.activity));
     router.get('/audit', user, safe(d.audit));
     router.get('/:module', user, safe(d.modulePage));
     router.use(user, d.notFound);

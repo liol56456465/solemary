@@ -22,6 +22,7 @@ import { pruneMemberEvents } from './services/members/memberInsightsService.js';
 import { pruneExpiredSessions } from './services/dashboard/sessionStore.js';
 import { reminderStore, runReminders } from './services/reminders/reminderService.js';
 import { remindStaleAppeals } from './services/enforcement/appealStatusService.js';
+import { flushActivity, pruneActivity } from './services/stats/activityService.js';
 import { query as enforcementQuery } from './services/enforcement/db.js';
 import { importModmailTopicsOnce } from './services/modmailLinks.js';
 import { enforcementConfig } from './config/enforcement.js';
@@ -403,6 +404,9 @@ class Mewvo extends Client {
     cron.schedule('5 * * * *', exclusive('appeal_reminders', () => remindStaleAppeals(this)));
     cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
     cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
+    // Messages per server per day (Dashboard → Activity), a count only; kept 400 days.
+    cron.schedule('* * * * *', exclusive('activity_flush', () => flushActivity()));
+    cron.schedule('45 3 * * *', exclusive('activity_prune', () => pruneActivity()), { timezone: 'UTC' });
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));
     // Scheduled and recurring messages (dashboard Messages page).
     cron.schedule('* * * * *', exclusive('scheduled_messages', () => runDueScheduledMessages(this)));

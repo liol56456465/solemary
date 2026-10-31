@@ -1389,3 +1389,9 @@ form.filters .wide-filter { flex: 1 1 240px; }
 .ins-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 13px; color: var(--text-muted); }
 .ins-swatch { flex: none; }
 .ins-table summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+
+/* Activity page: 30 bars a chart, so tighter gaps; day labels every 5 days. */
+.chart.chart-wide { gap: 3px; height: 140px; }
+.chart.chart-wide .bar { gap: 6px; }
+.chart.chart-wide .bar i { border-radius: 3px 3px 1px 1px; }
+.chart.chart-wide .bar-label { white-space: nowrap; font-size: 11px; min-height: 14px; }

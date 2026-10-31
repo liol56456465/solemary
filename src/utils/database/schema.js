@@ -687,6 +687,13 @@ export const tableStatements = [
         text VARCHAR(1000) NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+    // Messages per server per UTC day, a count only (Dashboard → Activity; schema v6).
+    `CREATE TABLE IF NOT EXISTS ${t.guild_daily_stats} (
+        guild_id VARCHAR(20) NOT NULL,
+        day DATE NOT NULL,
+        messages INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (guild_id, day)
+    )`,
     // /remind: one row per reminder; sent_at set when the cron claims it (schema v6).
     `CREATE TABLE IF NOT EXISTS ${t.reminders} (
         id BIGSERIAL PRIMARY KEY,

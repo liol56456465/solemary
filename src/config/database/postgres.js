@@ -54,6 +54,7 @@ const configuredTables = {
     premium_keys: 'premium_keys',
     reminders: 'reminders',
     mod_case_notes: 'mod_case_notes',
+    guild_daily_stats: 'guild_daily_stats',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -108,6 +109,7 @@ const allowedTableIdentifiers = new Set([
     'premium_keys',
     'reminders',
     'mod_case_notes',
+    'guild_daily_stats',
 ]);
 
 const validatedTables = Object.fromEntries(

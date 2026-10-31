@@ -2,6 +2,7 @@ import { Events } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { moderateMessage } from '../services/automod/automodService.js';
 import { noteStaffMessage } from '../services/staffActivityService.js';
+import { noteMessage } from '../services/stats/activityService.js';
 import { trackChannelActivity } from '../services/automod/autoSlowmode.js';
 import { getLevelingConfig, getUserLevelData } from '../services/leveling/leveling.js';
 import { addXp } from '../services/leveling/xpSystem.js';
@@ -48,6 +49,7 @@ export default {
       if (await enforceNoContact(message)) return;
       await relayModmailStaffMessage(message, client);
       noteStaffMessage(message);
+      noteMessage(message);
       trackChannelActivity(message).catch((error) => logger.warn(`Auto slowmode tracking failed: ${error.message}`));
       noteStickyActivity(message);
 
