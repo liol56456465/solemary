@@ -68,6 +68,9 @@ import { getCaseEdits } from '../enforcement/caseEditService.js';
 import { caseNotes } from '../enforcement/caseNotesService.js';
 import { activitySeries } from '../stats/activityService.js';
 import { activityPage } from './activityPage.js';
+import { backupPage, backupPreviewPage } from './backupPages.js';
+import { BACKUP_MAX_BYTES, applyBackup, exportSettings, planBackup } from '../settings/settingsBackup.js';
+import { randomBytes } from 'node:crypto';
 import { listEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
 import { listPendingAppeals } from '../enforcement/appealService.js';
 import { needsSecondReviewer } from '../enforcement/appealReviewer.js';
@@ -568,6 +571,60 @@ export function createDashboard({
 
     const staff = (req, res) => renderStaff(req, res);
 
+    // ── Settings backup ──────────────────────────────────────────────────
+    const backupPlans = new Map(); // token → { plan, userId, at }: one use, 10 minutes
+    const BACKUP_PLAN_TTL_MS = 10 * 60 * 1000;
+    const canWriteSettings = (req) => Boolean(settings.editEnabled && req.dashboard.access.canAct);
+    /** The same checks as every settings form; returns an error page or null. */
+    function backupGuard(req, res) {
+        if (!postLimiter.allow(req.dashboard.session.idHash)) { res.set('Retry-After', '60'); return fail(res, 429, 'Slow down', 'Too many changes in the last minute. Wait a moment and try again.', req); }
+        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
+        if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
+        if (!req.dashboard.access.canAct) return fail(res, 403, 'Not allowed', 'This needs Administrator in the main server.', req);
+        return null;
+    }
+
+    function backup(req, res, status = 200, error = null) {
+        return sendHtml(res, status, backupPage({ ...shellOf(req), canWrite: canWriteSettings(req), flash: status === 200 ? req.dashboard.flash : null, error }));
+    }
+
+    function backupDownload(req, res) {
+        const file = exportSettings({ env });
+        res.set('Cache-Control', 'no-store');
+        res.set('Content-Disposition', `attachment; filename="mewvo-settings-${file.exportedAt.slice(0, 10)}.json"`);
+        return res.status(200).type('application/json').send(`${JSON.stringify(file, null, 2)}\n`);
+    }
+
+    function backupPreview(req, res) {
+        const refused = backupGuard(req, res);
+        if (refused) return refused;
+        const file = req.upload?.file;
+        if (!file) return backup(req, res, 400, 'Choose a backup file.');
+        const plan = planBackup(file.data.toString('utf8'), { env });
+        if (!plan.ok) return backup(req, res, 400, plan.error);
+        const now = Date.now();
+        for (const [t, v] of backupPlans) if (now - v.at > BACKUP_PLAN_TTL_MS) backupPlans.delete(t);
+        const token = randomBytes(24).toString('base64url');
+        backupPlans.set(token, { plan, userId: req.dashboard.session.userId, at: now });
+        return sendHtml(res, 200, backupPreviewPage({ ...shellOf(req), plan, token }));
+    }
+
+    async function backupApply(req, res) {
+        const refused = backupGuard(req, res);
+        if (refused) return refused;
+        const token = str(req.body?.token, 100);
+        const entry = backupPlans.get(token);
+        backupPlans.delete(token);
+        if (!entry || entry.userId !== req.dashboard.session.userId || Date.now() - entry.at > BACKUP_PLAN_TTL_MS) {
+            return backup(req, res, 400, 'That check expired or was already used. Load the file again.');
+        }
+        const changed = await applyBackup(entry.plan, { userId: req.dashboard.session.userId, username: req.dashboard.session.username }, { env });
+        moduleStatesCache = { at: 0, value: {} };
+        logger.info(`Dashboard settings backup applied by ${req.dashboard.session.userId}: ${changed} change(s)`);
+        await sessions.setFlash?.(req.dashboard.session.id, `Backup applied: ${changed} setting${changed === 1 ? '' : 's'} changed. They are in the audit log.`);
+        return res.redirect(303, path('/backup'));
+    }
+
     async function activity(req, res) {
         let series = null;
         try {
@@ -783,7 +840,7 @@ export function createDashboard({
 
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
-        overview, modulesHub, cases, caseDetail, appeals, staff, activity, audit, modulePage, moduleAction, logout, notFound, setTheme,
+        overview, modulesHub, cases, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme,
         sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
     };
 }
@@ -873,6 +930,8 @@ export function dashboardRouter(d) {
     // Image upload: login is checked first (cookie only), so an anonymous request is refused before
     // any of the body is read; then the raw body, capped at 8 MB + 64 kB of form overhead.
     router.post('/cases/:code/evidence/upload', user, uploadBody(MAX_UPLOAD_BYTES + 64 * 1024), safe(d.parseUpload), safe(en.evidenceUpload));
+    router.post('/backup/preview', user, uploadBody(BACKUP_MAX_BYTES + 16 * 1024), safe(d.parseUpload), safe(d.backupPreview));
+    router.post('/backup/apply', form, user, safe(d.backupApply));
     router.post('/cases/:code/evidence/remove', form, user, safe(en.evidenceRemove));
     router.post('/cases/:code/notes', form, user, safe(en.caseNote));
     router.post('/cases/:code/tags', form, user, safe(en.caseTags));
@@ -945,6 +1004,8 @@ export function dashboardRouter(d) {
     router.get('/nocontact', user, safe(en.noContact));
     router.get('/staff', user, safe(d.staff));
     router.get('/activity', user, safe(d.activity));
+    router.get('/backup', user, safe(d.backup));
+    router.get('/backup/download', user, safe(d.backupDownload));
     router.get('/audit', user, safe(d.audit));
     router.get('/:module', user, safe(d.modulePage));
     router.use(user, d.notFound);

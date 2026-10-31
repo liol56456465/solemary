@@ -2292,3 +2292,49 @@ test('rules: refused without CSRF, with editing off, and for users without acces
     assert.equal((await post(stranger, 'rules', 'rule-add', { title: 'X' })).statusCode, 403);
     for (const x of [h, off, stranger]) assert.equal(x.state.registry.serverRules, undefined);
 });
+
+// ── Settings backup (Bot → Settings backup) ───────────────────────────────
+
+test('settings backup: download, check a file (no write), CSRF/Origin/Administrator, one-time token', async () => {
+    const { exportSettings } = await import('../src/services/settings/settingsBackup.js');
+    const h = await setup();
+    const get = (handler) => run(h, handler, { method: 'GET', params: {}, query: {}, headers: { cookie: h.cookie } });
+    const page = await get(h.d.backup);
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /Download settings/);
+    assert.match(page.body, /enctype="multipart\/form-data"/);
+    const download = await get(h.d.backupDownload);
+    assert.equal(download.statusCode, 200);
+    assert.match(download.headers['Content-Disposition'], /^attachment; filename="mewvo-settings-\d{4}-\d{2}-\d{2}\.json"$/);
+    assert.equal(JSON.parse(download.body).format, 'mewvo-settings-v1');
+
+    const file = exportSettings({ env: ENV });
+    file.guilds.main.settings.openChannelCap = (file.guilds.main.settings.openChannelCap || 20) === 33 ? 34 : 33;
+    const upload = { file: { data: Buffer.from(JSON.stringify(file)) } };
+    const preview = (opts = {}, hh = h) => run(hh, hh.d.backupPreview, {
+        method: 'POST', params: {}, query: {}, upload: opts.upload ?? upload,
+        headers: { cookie: hh.cookie, ...(opts.origin === null ? {} : { origin: opts.origin || ORIGIN }) },
+        body: opts.csrf === null ? {} : { csrf: opts.csrf || hh.session.csrf },
+    });
+    assert.equal((await preview({ csrf: null })).statusCode, 403, 'no CSRF');
+    assert.equal((await preview({ origin: 'https://evil.example' })).statusCode, 403, 'bad Origin');
+    const owner = await setup({ userId: OWNER });
+    assert.equal((await preview({}, owner)).statusCode, 403, 'not an Administrator');
+    const bad = await preview({ upload: { file: { data: Buffer.from('{"format":"x"}') } } });
+    assert.equal(bad.statusCode, 400);
+    assert.match(bad.body, /not a Mewvo settings backup/);
+
+    const ok = await preview();
+    assert.equal(ok.statusCode, 200);
+    assert.match(ok.body, /1 setting would change/);
+    const token = ok.body.match(/name="token" value="([^"]+)"/)[1];
+    assert.equal(h.calls.filter((c) => c.name === 'updateSettings').length, 0, 'checking writes nothing');
+
+    const apply = (tok, hh = h) => run(hh, hh.d.backupApply, { method: 'POST', params: {}, query: {}, headers: { cookie: hh.cookie, origin: ORIGIN }, body: { csrf: hh.session.csrf, token: tok } });
+    const other = await setup();
+    const stolen = await apply(token, other);
+    assert.equal(stolen.statusCode, 400, 'a token works only for the admin who checked the file');
+    const unknown = await apply('nope');
+    assert.equal(unknown.statusCode, 400);
+    assert.match(unknown.body, /expired or was already used/);
+});

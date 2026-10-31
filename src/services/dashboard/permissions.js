@@ -51,6 +51,7 @@ export const PERMISSIONS = Object.freeze({
     'page:modules': ADMIN,
     'page:commands': ADMIN,
     'page:audit': ADMIN,
+    'page:backup': ADMIN,
     // ── Enforcement actions on one member (the type of /users/:id/action/*) ──
     'action:warn': MODERATOR,
     'action:mute': MODERATOR,
@@ -109,6 +110,8 @@ export const ROUTES = [
     ['POST', '/cases/:code/evidence/add', 'case.evidence'],
     ['POST', '/cases/:code/evidence/upload', 'case.evidence'],
     ['POST', '/cases/:code/evidence/remove', 'case.evidence'],
+    ['POST', '/backup/preview', 'settings.edit'],
+    ['POST', '/backup/apply', 'settings.edit'],
     ['POST', '/cases/:code/notes', 'case.evidence'],
     ['POST', '/cases/:code/tags', 'case.evidence'],
     ['POST', '/appeals/:code/preview', 'appeal.decide'],
@@ -142,6 +145,8 @@ export const ROUTES = [
     ['GET', '/staff', 'page:staff'],
     ['GET', '/activity', 'page:activity'],
     ['GET', '/audit', 'page:audit'],
+    ['GET', '/backup', 'page:backup'],
+    ['GET', '/backup/download', 'page:backup'],
     ['GET', '/:module', (params) => `page:${params.module}`],
 ];
 

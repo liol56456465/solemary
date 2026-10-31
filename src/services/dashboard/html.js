@@ -152,6 +152,7 @@ export const NAV = [
         { key: 'modules', label: 'All modules' },
         { key: 'commands', label: 'Commands', keywords: 'disable command, enable command, categories, permissions, prefix, moderator role, mod role, shorten, short link', summary: 'Turn commands and categories on or off.' },
         { key: 'audit', label: 'Audit log' },
+        { key: 'backup', label: 'Settings backup' },
     ] },
 ];
 
