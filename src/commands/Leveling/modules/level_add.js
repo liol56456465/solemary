@@ -67,8 +67,8 @@ export default {
     await InteractionHelper.safeEditReply(interaction, {
       embeds: [
         createEmbed({
-          title: 'Levels Added',
-          description: `Successfully added ${levelsToAdd} levels to ${targetUser.tag}.\n**New Level:** ${userData.level}`,
+          title: 'Levels added',
+          description: `Added ${levelsToAdd} levels to ${targetUser.tag}.\n**New level:** ${userData.level}`,
           color: 'success'
         })
       ]

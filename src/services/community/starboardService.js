@@ -73,7 +73,7 @@ function firstImage(message) {
 export function buildStarPost(message, count, emoji) {
     const author = message.author;
     const name = message.member?.displayName || author?.username || 'Unknown';
-    const attachmentsNote = message.attachments?.size && !firstImage(message) ? `\n\n📎 ${message.attachments.size} attachment(s)` : '';
+    const attachmentsNote = message.attachments?.size && !firstImage(message) ? `\n\n${message.attachments.size} attachment(s)` : '';
     const embed = createEmbed({
         description: `${message.content || ''}${attachmentsNote}`.trim() || '*(no text)*',
         color: 'warning',

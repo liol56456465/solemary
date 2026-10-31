@@ -20,14 +20,14 @@ import { getActiveOrdersFor, noContactLines } from '../services/enforcement/noCo
 
 const PAGE_SIZE = 6;
 const NOTES_SHOWN = 5;
-const NOTE_TYPE_EMOJI = { warning: '⚠️', positive: '✅', neutral: '📝', alert: '🚨' };
+const NOTE_TYPE_LABEL = { warning: 'Warning', positive: 'Positive', neutral: 'Note', alert: 'Alert' };
 
 const loadNotes = listNotes;
 
 function notesField(notes) {
     if (notes.length === 0) return { name: 'Staff notes', value: 'None. Use **Add note** to write one.' };
     const lines = notes.map((note, index) => ({ note, number: index + 1 })).slice(-NOTES_SHOWN).reverse().map(({ note, number }) =>
-        truncate(`**${number}.** ${NOTE_TYPE_EMOJI[note.type] ?? '📝'} ${note.content} · ${note.author ?? 'unknown'}, ${note.timestamp ? stamp(note.timestamp) : '?'}`, 200));
+        truncate(`**${number}.** ${NOTE_TYPE_LABEL[note.type] ?? 'Note'}: ${note.content} · ${note.author ?? 'unknown'}, ${note.timestamp ? stamp(note.timestamp) : '?'}`, 200));
     const more = notes.length > NOTES_SHOWN ? `\n…and ${notes.length - NOTES_SHOWN} older` : '';
     return { name: `Staff notes (${notes.length})`, value: truncate(lines.join('\n') + more, 1024) };
 }

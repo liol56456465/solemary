@@ -47,9 +47,9 @@ export default {
         ) {
             return await replyUserError(interaction, {
                 type: ErrorTypes.VALIDATION,
-                message: '**Contains unsupported characters.**\n\n' +
-                    '✅ Supported: Numbers, decimals, + - * / ^ %, sin cos tan sqrt abs log exp, pi e, ()\n' +
-                    '❌ Not supported: Brackets, curly braces, and other symbols'
+                message: '**That has characters the calculator can\'t use.**\n\n' +
+                    'Allowed: numbers, decimals, + - * / ^ %, sin cos tan sqrt abs log exp, pi e, ()\n' +
+                    'Not allowed: square brackets, curly braces and other symbols'
             });
         }
 
@@ -66,9 +66,9 @@ export default {
             if (pattern.test(expression)) {
                 return await replyUserError(interaction, {
                     type: ErrorTypes.VALIDATION,
-                    message: '**Contains blocked code patterns.**\n\n' +
-                        '🚫 **Blocked:** import, require, eval, Function, setTimeout, setInterval, process, fs, document, window, fetch, loops, async/await\n\n' +
-                        'Code-like syntax is not allowed in calculations.'
+                    message: '**That looks like code, not maths.**\n\n' +
+                        '**Blocked:** import, require, eval, Function, setTimeout, setInterval, process, fs, document, window, fetch, loops, async/await\n\n' +
+                        'Only plain maths works here.'
                 });
             }
         }
@@ -143,10 +143,10 @@ export default {
             );
 
             const embed = successEmbed(
-                "🧮 Calculation Result",
+                "Result",
                 `**Expression:** \`${expression.replace(/`/g, "\`")}\`\n` +
                     `**Result:** \`${formattedResult}\`\n\n` +
-                    `*Use the buttons below to perform operations with the result.*`,
+                    `-# Use the buttons to keep calculating with this result.`,
             );
 
             await InteractionHelper.safeEditReply(interaction, {
@@ -193,7 +193,7 @@ export default {
                             .join("\n\n");
 
                         await i.followUp({
-                            content: `📜 **Your Calculation History**\n\n${historyText}`,
+                            content: `**Your recent calculations**\n\n${historyText}`,
                             flags: ["Ephemeral"],
                         });
                         return;
@@ -251,7 +251,7 @@ export default {
                         logger.error("Failed to show modal:", modalError);
                         if (!i.replied && !i.deferred) {
                             await i.reply({
-                                content: "Failed to open calculator. Please try again.",
+                                content: "Couldn't open the calculator. Try again.",
                                 flags: ["Ephemeral"],
                             }).catch(console.error);
                         }
@@ -286,7 +286,7 @@ export default {
                         .editReply({
                             components: [disabledRow],
                             content:
-                                "⏱️ This calculator has expired. Use the command again to perform more calculations.",
+                                "This calculator timed out. Run the command again to keep going.",
                         })
                         .catch(console.error);
                 } else {
@@ -323,7 +323,7 @@ export default {
                 errorMessage +=
                     'The expression contains an invalid operator or character.';
             } else {
-                errorMessage += 'Please check the syntax and try again.';
+                errorMessage += 'Check the expression and try again.';
             }
 
             await replyUserError(interaction, {

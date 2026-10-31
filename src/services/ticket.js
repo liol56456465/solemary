@@ -56,18 +56,15 @@ function buildTicketControlRow({ claimedBy = null } = {}) {
       .setCustomId('ticket_claim')
       .setLabel(claimedBy ? 'Claimed' : 'Claim')
       .setStyle(claimedBy ? ButtonStyle.Secondary : ButtonStyle.Primary)
-      .setEmoji('🙋')
       .setDisabled(!!claimedBy),
     new ButtonBuilder()
       .setCustomId('ticket_pin')
       .setLabel('Pin')
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji('📌'),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('ticket_close')
       .setLabel('Close')
-      .setStyle(ButtonStyle.Danger)
-      .setEmoji('🔒'),
+      .setStyle(ButtonStyle.Danger),
   );
 }
 
@@ -175,10 +172,10 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     
     const embed = createEmbed({
       title: `Ticket #${ticketNumber}`,
-      description: `${member.toString()}, thanks for creating a ticket!\n\n**Reason:** ${reason}\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}`,
+      description: `${member.toString()}, thanks for opening a ticket. Staff will be with you soon.\n\n**Reason:** ${reason}\n**Priority:** ${priorityInfo.label}`,
       color: priorityInfo.color,
       fields: [
-        { name: 'Status', value: '🟢 Open', inline: true },
+        { name: 'Status', value: 'Open', inline: true },
         { name: 'Claimed By', value: 'Not claimed', inline: true },
         { name: 'Created', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
       ],
@@ -191,13 +188,11 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
         new ButtonBuilder()
           .setCustomId('ticket_priority:low')
           .setLabel('Low')
-          .setStyle(ButtonStyle.Secondary)
-          .setEmoji('🔵'),
+          .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
           .setCustomId('ticket_priority:high')
           .setLabel('High')
           .setStyle(ButtonStyle.Danger)
-          .setEmoji('🔴')
       );
     }
     
@@ -288,8 +283,8 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
 
     if (dmOnClose && ticketCreator) {
       const dmEmbed = createEmbed({
-        title: '🎫 Your Ticket Has Been Closed',
-        description: `Your ticket **${channel.name}** has been closed.\n\n**Reason:** ${reason}\n**Closed by:** ${closer.tag}\n**Closed at:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nThank you for using our support system! If you have any further questions, feel free to create a new ticket.`,
+        title: 'Your ticket was closed',
+        description: `Your ticket **${channel.name}** has been closed.\n\n**Reason:** ${reason}\n**Closed by:** ${closer.tag}\n**Closed at:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nIf you need anything else, just open a new ticket.`,
         color: '#e74c3c',
         footer: { text: `Ticket ID: ${ticketData.id}` }
       });
@@ -305,28 +300,28 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
     if (ticketCreator) {
       try {
         const feedbackEmbed = createEmbed({
-          title: '⭐ How was your support experience?',
-          description: `We'd love to know how we did with **${channel.name}**.\nSelect a rating below. It only takes a second.`,
+          title: 'How did we do?',
+          description: `Rate your ticket **${channel.name}** from 1 to 5. Pick a number below.`,
           color: '#F1C40F',
-          footer: { text: 'Your feedback helps us improve.' },
+          footer: { text: 'This is optional.' },
         });
 
         const base = `ticket_feedback:${channel.guild.id}:${channel.id}`;
         const starsRow = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`${base}:1`).setLabel('⭐ 1').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`${base}:2`).setLabel('⭐ 2').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`${base}:3`).setLabel('⭐ 3').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`${base}:4`).setLabel('⭐ 4').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`${base}:5`).setLabel('⭐ 5').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId(`${base}:1`).setLabel('1').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`${base}:2`).setLabel('2').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`${base}:3`).setLabel('3').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`${base}:4`).setLabel('4').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`${base}:5`).setLabel('5').setStyle(ButtonStyle.Primary),
         );
         const declineRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId(`ticket_feedback_comment:${channel.guild.id}:${channel.id}`)
-            .setLabel('✍️ Add Comment')
+            .setLabel('Add a comment')
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId(`ticket_feedback_decline:${channel.guild.id}:${channel.id}`)
-            .setLabel('❌ No thanks')
+            .setLabel('No thanks')
             .setStyle(ButtonStyle.Secondary),
         );
 
@@ -375,7 +370,7 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
       const statusField = embed.fields?.find(f => f.name === 'Status');
       
       if (statusField) {
-        statusField.value = '🔴 Closed';
+        statusField.value = 'Closed';
       }
       
       const updatedEmbed = createEmbed({
@@ -394,7 +389,7 @@ components: []
     
     const closeEmbed = createEmbed({
       title: 'Ticket Closed',
-      description: `This ticket has been closed by ${closer}.\n**Reason:** ${reason}${closeNotificationSent ? '\n\n📩 A DM has been sent to the ticket creator.' : dmOnClose ? '\n\n⚠️ The closure DM could not be delivered.' : ''}`,
+      description: `This ticket has been closed by ${closer}.\n**Reason:** ${reason}${closeNotificationSent ? '\n\nThe ticket creator got a DM about it.' : dmOnClose ? '\n\nCouldn\'t DM the ticket creator about it.' : ''}`,
       color: '#e74c3c',
       footer: { text: `Ticket ID: ${ticketData.id}` }
     });
@@ -402,14 +397,12 @@ components: []
     const controlRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('ticket_reopen')
-        .setLabel('Reopen Ticket')
-        .setStyle(ButtonStyle.Success)
-        .setEmoji('🔓'),
+        .setLabel('Reopen')
+        .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId('ticket_delete')
-        .setLabel('Delete Ticket')
+        .setLabel('Delete')
         .setStyle(ButtonStyle.Danger)
-        .setEmoji('🗑️')
     );
     
     await channel.send({ embeds: [closeEmbed], components: [controlRow] });
@@ -494,7 +487,7 @@ export async function claimTicket(channel, claimer) {
     
     const claimEmbed = createEmbed({
       title: 'Ticket Claimed',
-      description: `🎉 ${claimer} has claimed this ticket!`,
+      description: `${claimer} claimed this ticket.`,
       color: '#2ecc71'
     });
     
@@ -503,7 +496,6 @@ export async function claimTicket(channel, claimer) {
         .setCustomId('ticket_unclaim')
         .setLabel('Unclaim')
         .setStyle(ButtonStyle.Secondary)
-        .setEmoji('🔓')
     );
 
     const claimStatusMessage = messages.find(m =>
@@ -607,7 +599,7 @@ export async function reopenTicket(channel, reopener) {
       const statusField = embed.fields?.find(f => f.name === 'Status');
       
       if (statusField) {
-        statusField.value = '🟢 Open';
+        statusField.value = 'Open';
       }
       
       const row = buildTicketControlRow({ claimedBy: ticketData.claimedBy });
@@ -619,8 +611,8 @@ export async function reopenTicket(channel, reopener) {
     }
     
     const reopenEmbed = createEmbed({
-      title: 'Ticket Reopened',
-      description: `🔓 ${reopener} has reopened this ticket!`,
+      title: 'Ticket reopened',
+      description: `${reopener} reopened this ticket.`,
       color: '#2ecc71'
     });
 
@@ -741,7 +733,7 @@ a{color:#00aff4}
 </style>
 </head>
 <body>
-<h1>📜 Transcript – #${escapeHtml(channel.name)}</h1>
+<h1>Transcript: #${escapeHtml(channel.name)}</h1>
 <p style="color:#72767d">${messages.length} message(s) exported on ${new Date().toUTCString()}</p>
 <table>
 <thead><tr><th>Timestamp (UTC)</th><th>Author</th><th>Message</th></tr></thead>
@@ -821,7 +813,7 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
       } else {
         const transcriptEmbed = buildStandardLogEmbed({
           color: 0x3498db,
-          title: 'Ticket Transcript',
+          title: 'Ticket transcript',
           description: [
             formatLogLine('Ticket', `#${ticketData.id}`),
             formatLogLine('Channel', `#${channel.name}`),
@@ -860,8 +852,8 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
         await ticketCreator.send({
           embeds: [
             createEmbed({
-              title: '📜 Your Ticket Transcript',
-              description: `Here is the transcript for **${channel.name}**. Keep it for your records.`,
+              title: 'Your ticket transcript',
+              description: `Here's the transcript for **${channel.name}**.`,
               color: '#3498db',
               footer: { text: `Ticket ID: ${ticketData.id}` },
             }),
@@ -914,8 +906,8 @@ export async function deleteTicket(channel, deleter) {
     const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel);
     
     const deleteEmbed = createEmbed({
-      title: 'Ticket Deleted',
-      description: `🗑️ This ticket will be permanently deleted in ${TICKET_DELETE_DELAY_SECONDS} seconds.`,
+      title: 'Ticket deleted',
+      description: `This ticket will be deleted in ${TICKET_DELETE_DELAY_SECONDS} seconds.`,
       color: '#e74c3c',
       footer: { text: `Ticket ID: ${ticketData.id}` }
     });
@@ -1050,7 +1042,7 @@ export async function unclaimTicket(channel, unclaimer) {
     if (claimMessage) {
       const unclaimEmbed = createEmbed({
         title: 'Ticket Unclaimed',
-        description: `🔓 ${unclaimer} has unclaimed this ticket!`,
+        description: `${unclaimer} unclaimed this ticket.`,
         color: '#f39c12'
       });
       
@@ -1061,7 +1053,7 @@ export async function unclaimTicket(channel, unclaimer) {
     } else {
       const unclaimEmbed = createEmbed({
         title: 'Ticket Unclaimed',
-        description: `🔓 ${unclaimer} has unclaimed this ticket!`,
+        description: `${unclaimer} unclaimed this ticket.`,
         color: '#f39c12'
       });
       
@@ -1141,7 +1133,7 @@ export async function updateTicketPriority(channel, priority, updater) {
       
       const updatedEmbed = createEmbed({
         title: embed.title || 'Ticket',
-        description: embed.description?.split('\n**Priority:**')[0] + `\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}`,
+        description: embed.description?.split('\n**Priority:**')[0] + `\n**Priority:** ${priorityInfo.label}`,
         color: priorityInfo.color,
         fields: embed.fields || [],
         footer: embed.footer
@@ -1151,8 +1143,8 @@ export async function updateTicketPriority(channel, priority, updater) {
     }
     
     const updateEmbed = createEmbed({
-      title: 'Priority Updated',
-      description: `📊 Ticket priority updated to **${priorityInfo.emoji} ${priorityInfo.label}** by ${updater}`,
+      title: 'Priority changed',
+      description: `${updater} set the priority to **${priorityInfo.label}**.`,
       color: priorityInfo.color
     });
     

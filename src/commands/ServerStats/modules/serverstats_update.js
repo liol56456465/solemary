@@ -41,18 +41,18 @@ export async function handleUpdate(interaction, client) {
         }
         const { counter: updatedCounter, oldType, renamed } = result;
         if (!renamed) {
-            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Counter updated but failed to update channel name. The counter will update on the next scheduled run.' }).catch(logger.error);
+            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Counter updated, but I couldn\'t rename the channel yet. It will update on the next run.' }).catch(logger.error);
             return;
         }
 
         const finalChannel = guild.channels.cache.get(updatedCounter.channelId);
 
         await InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed(`**Counter Updated Successfully!**\n\n**Counter ID:** \`${counterId}\`\n**Type Changed:** ${getCounterEmoji(oldType)} ${getCounterTypeLabel(oldType)} → ${getCounterEmoji(newType)} ${getCounterTypeLabel(newType)}\n\n**Current Settings:**\n**Type:** ${getCounterEmoji(updatedCounter.type)} ${getCounterTypeLabel(updatedCounter.type)}\n**Channel:** ${finalChannel}\n**Channel Name:** ${finalChannel.name}\n\nThe counter will automatically update every 15 minutes.`)]
+            embeds: [successEmbed(`**Counter updated**\n\n**Counter ID:** \`${counterId}\`\n**Type:** ${getCounterTypeLabel(oldType)} → ${getCounterTypeLabel(newType)}\n**Channel:** ${finalChannel}\n**Channel Name:** ${finalChannel.name}\n\nIt updates every 15 minutes.`)]
         }).catch(logger.error);
 
     } catch (error) {
         logger.error("Error updating counter:", error);
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while updating the counter. Please try again.' }).catch(logger.error);
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Something went wrong while updating the counter. Try again.' }).catch(logger.error);
     }
 }

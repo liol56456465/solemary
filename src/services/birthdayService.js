@@ -387,7 +387,7 @@ export async function checkBirthdays(client) {
       if (birthdayRoleId) {
         for (const member of birthdayMembers) {
           try {
-            await member.roles.add(birthdayRoleId, "Happy Birthday! 🎉");
+            await member.roles.add(birthdayRoleId, "Birthday role");
           } catch (error) {
             logger.error(`Error adding birthday role to ${member.user.tag}:`, error);
           }
@@ -399,10 +399,9 @@ export async function checkBirthdays(client) {
 
         await channel.send({
           embeds: [{
-            title: '🎉 Happy Birthday! 🎂',
-            description: `A very happy birthday to ${mentionList}! Wishing you an amazing day! 🎈`,
+            title: 'Happy birthday',
+            description: `Happy birthday ${mentionList}, have a good one.`,
             color: 0xff69b4,
-            footer: { text: 'Birthday Bot' },
             timestamp: new Date()
           }]
         });

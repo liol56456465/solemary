@@ -381,7 +381,7 @@ function resultPayload(flow, result) {
         }
     }
     if (result.dmDelivered === false) {
-        lines.push('⚠️ **The DM could not be delivered** (DMs closed or no shared server). The action still ran.');
+        lines.push('**The DM could not be delivered** (DMs closed or no shared server). The action still ran.');
     } else if (result.dmDelivered === true) {
         lines.push('DM delivered.');
     }
@@ -556,7 +556,7 @@ export async function handleEnforcementModal(interaction, client, args) {
         ? [new ButtonBuilder().setCustomId(`enf:details:${moderatorId}:${nonce}`).setLabel('Try again').setStyle(ButtonStyle.Primary)]
         : []);
     const fail = (message) => InteractionHelper.safeEditReply(interaction, {
-        embeds: [stepEmbed(flow, `⚠️ ${message}`)],
+        embeds: [stepEmbed(flow, message)],
         components: [retryRow],
     });
 
@@ -590,7 +590,7 @@ export async function handleEnforcementModal(interaction, client, args) {
     if (fatal) {
         takeFlow(nonce);
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [stepEmbed(flow, `⛔ ${fatal}`)],
+            embeds: [stepEmbed(flow, fatal)],
             components: [],
         });
     }

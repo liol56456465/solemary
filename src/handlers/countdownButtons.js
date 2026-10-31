@@ -10,11 +10,11 @@ function createControlButtons(countdownId, isPaused = false) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`countdown_pause:${countdownId}`)
-            .setLabel(isPaused ? "▶️ Resume" : "⏸️ Pause")
+            .setLabel(isPaused ? "Resume" : "Pause")
             .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
             .setCustomId(`countdown_cancel:${countdownId}`)
-            .setLabel("❌ Cancel")
+            .setLabel("Cancel")
             .setStyle(ButtonStyle.Danger),
     );
 }
@@ -40,7 +40,7 @@ const UPDATE_INTERVAL_MS = 15_000;
 
 function buildRunningEmbed(countdownData, remaining) {
     return successEmbed(
-        `⏱️ ${countdownData.title}`,
+        countdownData.title,
         `Time remaining: **${formatTime(Math.ceil(remaining / 1000))}** (ends <t:${Math.ceil(countdownData.endTime / 1000)}:R>)`,
     );
 }
@@ -64,8 +64,8 @@ function startCountdown(countdownId, countdownData, activeCountdowns) {
 
             if (remaining <= 0) {
                 const finishedEmbed = successEmbed(
-                    `⏱️ ${countdownData.title} (Finished!)`,
-                    "⏰ Time's up!",
+                    `${countdownData.title} (finished)`,
+                    "Time's up.",
                 );
 
                 await countdownData.message.edit({
@@ -147,7 +147,7 @@ async function countdownButtonHandler(interaction, client, args) {
                     });
 
                     await interaction.reply({
-                        content: "▶️ Countdown resumed!",
+                        content: "Countdown resumed.",
                         flags: ["Ephemeral"],
                     });
                 } else {
@@ -158,14 +158,14 @@ async function countdownButtonHandler(interaction, client, args) {
                     // No end timestamp while paused: it would keep counting down in the client.
                     await countdownData.message.edit({
                         embeds: [successEmbed(
-                            `⏱️ ${countdownData.title} (Paused)`,
+                            `${countdownData.title} (paused)`,
                             `Time remaining: **${formatTime(Math.ceil(countdownData.remainingTime / 1000))}**`,
                         )],
                         components: [createControlButtons(countdownId, true)],
                     });
 
                     await interaction.reply({
-                        content: "⏸️ Countdown paused!",
+                        content: "Countdown paused.",
                         flags: ["Ephemeral"],
                     });
                 }
@@ -175,7 +175,7 @@ async function countdownButtonHandler(interaction, client, args) {
                 clearTimeout(countdownData.interval);
 
                 const embed = successEmbed(
-                    `⏱️ ${countdownData.title} (Cancelled)`,
+                    `${countdownData.title} (cancelled)`,
                     "The countdown was cancelled.",
                 );
 
@@ -187,7 +187,7 @@ async function countdownButtonHandler(interaction, client, args) {
                 cleanupCountdown(countdownId, activeCountdowns);
 
                 await interaction.reply({
-                    content: "❌ Countdown cancelled!",
+                    content: "Countdown cancelled.",
                     flags: ["Ephemeral"],
                 });
                 break;

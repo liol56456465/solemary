@@ -3,9 +3,9 @@
 // When automod deletes a member's message and punishes them, the DM carries a
 // "Contest this" button (dmTemplates.contestComponents). Pressing it opens a short
 // modal ("Why was this OK?"); submitting it marks the matching review card with a
-// "🙋 Member disputes" field and raises it to a full card, so staff decide with the
+// "Member disputes" field and raises it to a full card, so staff decide with the
 // existing Keep / Undo buttons. When no open card is found (restart, card already
-// kept), a new line "🙋 Member disputes · case X" with Keep / Undo is posted in the
+// kept), a new line "Member disputes · case X" with Keep / Undo is posted in the
 // review channel instead.
 //
 //   amcontest:open:<code>     button in the DM: checks and opens the modal
@@ -70,12 +70,12 @@ export function caseGroup(record) {
 
 /**
  * Pure: the review-channel line when no open card could be marked:
- * "🙋 **Member disputes** · case `abc12` · <@1> · Automod: Spam\n> their reason".
+ * "**Member disputes** · case `abc12` · <@1> · Automod: Spam\n> their reason".
  */
 export function contestLine(record, reason, cardUrl = null) {
     const quoted = escapeMarkdown(cleanContestReason(reason)).split('\n').map((line) => `> ${line}`).join('\n');
     const head = [
-        '🙋 **Member disputes**',
+        '**Member disputes**',
         `case \`${record.case_code}\``,
         `<@${record.target_user_id}>`,
         record.type ? record.type : null,

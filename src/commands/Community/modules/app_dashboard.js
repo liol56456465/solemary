@@ -65,16 +65,16 @@ async function buildDashboardEmbed(settings, roles, guild, client) {
             : '`Not set`';
 
     return new EmbedBuilder()
-        .setTitle('Applications Dashboard')
+        .setTitle('Applications dashboard')
         .setDescription(`Manage application settings for **${guild.name}**.\nSelect an option below to modify a setting.`)
         .setColor(getColor('info'))
         .addFields(
-            { name: 'Application Status', value: settings.enabled ? 'Enabled' : 'Disabled', inline: true },
-            { name: 'Log Channel', value: logChannel, inline: true },
+            { name: 'Application status', value: settings.enabled ? 'Enabled' : 'Disabled', inline: true },
+            { name: 'Log channel', value: logChannel, inline: true },
             { name: '\u200B', value: '\u200B', inline: true },
-            { name: 'Manager Roles', value: managerRoleList, inline: false },
+            { name: 'Manager roles', value: managerRoleList, inline: false },
             { name: 'Questions', value: `${questionCount} configured, first: ${firstQ}`, inline: false },
-            { name: 'Application Roles', value: roleList, inline: false },
+            { name: 'Application roles', value: roleList, inline: false },
             {
                 name: 'Retention',
                 value: `Pending: **${settings.pendingApplicationRetentionDays ?? 30}d** · Reviewed: **${settings.reviewedApplicationRetentionDays ?? 14}d**`,
@@ -91,35 +91,29 @@ function buildSelectMenu(guildId) {
         .setPlaceholder('Select a setting to configure...')
         .addOptions(
             new StringSelectMenuOptionBuilder()
-                .setLabel('Log Channel')
+                .setLabel('Log channel')
                 .setDescription('Set the channel where new applications are logged')
-                .setValue('log_channel')
-                .setEmoji('📢'),
+                .setValue('log_channel'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Manager Roles')
+                .setLabel('Manager roles')
                 .setDescription('Add or remove a role that can manage applications')
-                .setValue('manager_role')
-                .setEmoji('🛡️'),
+                .setValue('manager_role'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Edit Questions')
+                .setLabel('Edit questions')
                 .setDescription('Customise the questions shown on the application form')
-                .setValue('questions')
-                .setEmoji('📝'),
+                .setValue('questions'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Add Application Role')
+                .setLabel('Add application role')
                 .setDescription('Add a role that members can apply for')
-                .setValue('role_add')
-                .setEmoji('➕'),
+                .setValue('role_add'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Remove Application Role')
+                .setLabel('Remove application role')
                 .setDescription('Remove a role from the applications list')
-                .setValue('role_remove')
-                .setEmoji('➖'),
+                .setValue('role_remove'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Retention Period')
+                .setLabel('Retention period')
                 .setDescription('Set how long pending and reviewed applications are kept')
-                .setValue('retention')
-                .setEmoji('🗑️'),
+                .setValue('retention'),
         );
 }
 
@@ -221,13 +215,12 @@ async function showApplicationSelector(interaction, roles, settings, guildId, cl
                 new StringSelectMenuOptionBuilder()
                     .setLabel(role.name)
                     .setDescription(`Configure the ${role.name} application`)
-                    .setValue(role.roleId)
-                    .setEmoji('📋'),
+                    .setValue(role.roleId),
             ),
         );
 
     const embed = new EmbedBuilder()
-        .setTitle('Select Application')
+        .setTitle('Select application')
         .setDescription('Choose which application role you want to configure.')
         .setColor(getColor('info'));
 
@@ -305,7 +298,7 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
         : '`None configured`';
 
     const embed = new EmbedBuilder()
-        .setTitle('📋 Application Dashboard')
+        .setTitle('Application dashboard')
         .setDescription(`Configuration for **${selectedRole.name}**`)
         .setColor(isEnabled ? getColor('success') : getColor('error'))
         .addFields(
@@ -315,8 +308,8 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
                 inline: true 
             },
             { 
-                name: 'Application Status', 
-                value: isEnabled ? '✅ **Enabled**' : '❌ **Disabled**', 
+                name: 'Application status', 
+                value: isEnabled ? '**Enabled**' : '**Disabled**', 
                 inline: true 
             },
             { name: '\u200B', value: '\u200B', inline: true },
@@ -326,17 +319,17 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
                 inline: false 
             },
             { 
-                name: 'Log Channel', 
+                name: 'Log channel', 
                 value: logChannelDisplay,
                 inline: true 
             },
             { 
-                name: 'Manager Roles',
+                name: 'Manager roles',
                 value: managerRolesDisplay,
                 inline: true 
             },
             { 
-                name: 'Retention Period',
+                name: 'Retention period',
                 value: `Pending: **${settings.pendingApplicationRetentionDays ?? 30}d** · Reviewed: **${settings.reviewedApplicationRetentionDays ?? 14}d**`,
                 inline: false 
             },
@@ -353,9 +346,8 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
             .setStyle(isEnabled ? ButtonStyle.Danger : ButtonStyle.Success),
         new ButtonBuilder()
             .setCustomId(`app_delete_${selectedRole.roleId}`)
-            .setLabel('Delete Application')
-            .setStyle(ButtonStyle.Danger)
-            .setEmoji('🗑️'),
+            .setLabel('Delete application')
+            .setStyle(ButtonStyle.Danger),
     );
 
     const menuRow = new ActionRowBuilder().addComponents(configMenu);
@@ -436,7 +428,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
             const timeoutEmbed = new EmbedBuilder()
-                .setTitle('\u23f0 Dashboard Timed Out')
+                .setTitle('Dashboard timed out')
                 .setDescription('This dashboard has been closed due to inactivity. Please run the command again to continue.')
                 .setColor(getColor('error'));
                 
@@ -472,7 +464,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 
                 await toggleInteraction.followUp({
                     embeds: [successEmbed(
-                        wasEnabled ? '🔴 Applications Disabled' : '🟢 Applications Enabled',
+                        wasEnabled ? 'Applications turned off' : 'Applications turned on',
                         `The applications system is now **${wasEnabled ? 'disabled' : 'enabled'}**.\n\n${
                             wasEnabled 
                                 ? 'Members will no longer be able to apply for roles.' 
@@ -494,7 +486,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
         globalToggleCollector.on('end', async (collected, reason) => {
             if (reason === 'time') {
                 const timeoutEmbed = new EmbedBuilder()
-                    .setTitle('Configuration Timeout')
+                    .setTitle('Configuration timeout')
                     .setDescription('This dashboard session has timed out due to inactivity (10 minutes).\n\nTo continue configuring your applications, please run the command again.')
                     .setColor(getColor('warning'));
                     
@@ -522,10 +514,10 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 
             const confirmModal = new ModalBuilder()
                 .setCustomId('app_delete_confirm')
-                .setTitle('Confirm Application Deletion');
+                .setTitle('Confirm application deletion');
 
             const deleteWarningText = new TextDisplayBuilder()
-                .setContent(`⚠️ You are about to permanently delete **${appNameForDelete}**. All stored applications and settings for this role will be removed and cannot be recovered.`);
+                .setContent(`You are about to permanently delete **${appNameForDelete}**. All stored applications and settings for this role will be removed and cannot be recovered.`);
 
             const deleteCheckbox = new CheckboxBuilder()
                 .setCustomId('confirm_delete')
@@ -587,7 +579,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
         btnCollector.on('end', async (collected, reason) => {
             if (reason === 'time') {
                 const timeoutEmbed = new EmbedBuilder()
-                    .setTitle('Configuration Timeout')
+                    .setTitle('Configuration timeout')
                     .setDescription('This dashboard session has timed out due to inactivity (10 minutes).\n\nTo continue configuring your applications, please run the command again.')
                     .setColor(getColor('warning'));
                     
@@ -632,7 +624,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 
                 await toggleInteraction.followUp({
                     embeds: [successEmbed(
-                        wasEnabled ? '🔴 Application Disabled' : '🟢 Application Enabled',
+                        wasEnabled ? 'Application turned off' : 'Application turned on',
                         `The **${updatedRole.name}** application is now **${wasEnabled ? 'disabled' : 'enabled'}**.\n\n${
                             wasEnabled 
                                 ? 'This application will no longer appear in `/apply submit` options.' 
@@ -654,7 +646,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
         toggleCollector.on('end', async (collected, reason) => {
             if (reason === 'time') {
                 const timeoutEmbed = new EmbedBuilder()
-                    .setTitle('Configuration Timeout')
+                    .setTitle('Configuration timeout')
                     .setDescription('This dashboard session has timed out due to inactivity (10 minutes).\n\nTo continue configuring your applications, please run the command again.')
                     .setColor(getColor('warning'));
                     
@@ -673,25 +665,21 @@ function buildApplicationSelectMenu(guildId, roleId) {
         .setPlaceholder('Select a setting to configure...')
         .addOptions(
             new StringSelectMenuOptionBuilder()
-                .setLabel('Log Channel')
+                .setLabel('Log channel')
                 .setDescription('Set the channel where applications are logged')
-                .setValue('log_channel')
-                .setEmoji('📢'),
+                .setValue('log_channel'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Manager Roles')
+                .setLabel('Manager roles')
                 .setDescription('Add or remove a role that can manage applications')
-                .setValue('manager_role')
-                .setEmoji('🛡️'),
+                .setValue('manager_role'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Edit Questions')
+                .setLabel('Edit questions')
                 .setDescription('Customise the questions shown on the application form')
-                .setValue('questions')
-                .setEmoji('📝'),
+                .setValue('questions'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Retention Period')
+                .setLabel('Retention period')
                 .setDescription('Set how long pending and reviewed applications are kept')
-                .setValue('retention')
-                .setEmoji('🗑️'),
+                .setValue('retention'),
         );
 }
 
@@ -704,7 +692,7 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
 
     const modal = new ModalBuilder()
         .setCustomId(`app_cfg_log_channel_modal_${guildId}_${selectedRoleId || 'global'}`)
-        .setTitle('Configure Log Channel');
+        .setTitle('Configure log channel');
 
     const channelSelect = new ChannelSelectMenuBuilder()
         .setCustomId('log_channel')
@@ -715,7 +703,7 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
         .setRequired(true);
 
     const channelLabel = new LabelBuilder()
-        .setLabel('Log Channel')
+        .setLabel('Log channel')
         .setDescription('Channel where new applications will be logged')
         .setChannelSelectMenuComponent(channelSelect);
 
@@ -743,7 +731,7 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
         }
 
         await modalSubmission.reply({
-            embeds: [successEmbed('Log Channel Updated', `Application logs will now be sent to ${channel ?? `<#${channelId}>`}.\nYou can also manage this from \`/logging dashboard\`.`)],
+            embeds: [successEmbed('Log channel updated', `Application logs will now be sent to ${channel ?? `<#${channelId}>`}.\nYou can also manage this from \`/logging dashboard\`.`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -761,7 +749,7 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
 async function handleManagerRole(selectInteraction, rootInteraction, settings, roles, guildId, client, selectedRoleId = null) {
     const modal = new ModalBuilder()
         .setCustomId(`app_cfg_manager_role_modal_${guildId}`)
-        .setTitle('Configure Manager Roles');
+        .setTitle('Configure manager roles');
 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('manager_roles')
@@ -771,7 +759,7 @@ async function handleManagerRole(selectInteraction, rootInteraction, settings, r
         .setRequired(true);
 
     const roleLabel = new LabelBuilder()
-        .setLabel('Manager Roles')
+        .setLabel('Manager roles')
         .setDescription('Selected roles will be toggled on/off as manager roles')
         .setRoleSelectMenuComponent(roleSelect);
 
@@ -804,7 +792,7 @@ async function handleManagerRole(selectInteraction, rootInteraction, settings, r
             : '`None`';
 
         await modalSubmission.reply({
-            embeds: [successEmbed('Manager Roles Updated', `Current manager roles: ${finalList}`)],
+            embeds: [successEmbed('Manager roles updated', `Current manager roles: ${finalList}`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -833,7 +821,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
 
     const modal = new ModalBuilder()
         .setCustomId('app_cfg_questions')
-        .setTitle('Edit Application Questions')
+        .setTitle('Edit application questions')
         .addComponents(
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
@@ -921,7 +909,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
     await submitted.reply({
         embeds: [
             successEmbed(
-                '✅ Questions Updated',
+                'Questions updated',
                 `${newQuestions.length} question${newQuestions.length !== 1 ? 's' : ''} saved.`,
             ),
         ],
@@ -934,7 +922,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
 async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles, guildId, client) {
     const modal = new ModalBuilder()
         .setCustomId(`app_cfg_role_add_modal_${guildId}`)
-        .setTitle('Add Application Role');
+        .setTitle('Add application role');
 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('application_role')
@@ -944,7 +932,7 @@ async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles
         .setRequired(true);
 
     const roleLabel = new LabelBuilder()
-        .setLabel('Application Role')
+        .setLabel('Application role')
         .setDescription('Select the Discord role members will be applying for')
         .setRoleSelectMenuComponent(roleSelect);
 
@@ -979,7 +967,7 @@ async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles
         roles.push(added);
 
         await modalSubmission.reply({
-            embeds: [successEmbed('Role Added', `${role ?? roleId} added as **${customName}**.`)],
+            embeds: [successEmbed('Role added', `${role ?? roleId} added as **${customName}**.`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -1005,7 +993,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
 
     const modal = new ModalBuilder()
         .setCustomId(`app_cfg_role_remove_modal_${guildId}`)
-        .setTitle('Remove Application Role');
+        .setTitle('Remove application role');
 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('remove_role')
@@ -1015,7 +1003,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
         .setRequired(true);
 
     const roleLabel = new LabelBuilder()
-        .setLabel('Remove Application Role')
+        .setLabel('Remove application role')
         .setDescription('Select the role to remove from the applications list')
         .setRoleSelectMenuComponent(roleSelect);
 
@@ -1042,7 +1030,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
         await deleteApplicationRole(client, guildId, roleId, { deleteApplications: false });
 
         await modalSubmission.reply({
-            embeds: [successEmbed('Role Removed', `<@&${roleId}> has been removed from the application roles.`)],
+            embeds: [successEmbed('Role removed', `<@&${roleId}> has been removed from the application roles.`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -1060,7 +1048,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
 async function handleRetention(selectInteraction, rootInteraction, settings, roles, guildId, client, selectedRoleId = null) {
     const modal = new ModalBuilder()
         .setCustomId('app_cfg_retention')
-        .setTitle('Application Retention Periods');
+        .setTitle('Application retention periods');
 
     const retentionInfo = new TextDisplayBuilder()
         .setContent(
@@ -1132,7 +1120,7 @@ async function handleRetention(selectInteraction, rootInteraction, settings, rol
     await submitted.reply({
         embeds: [
             successEmbed(
-                '✅ Retention Updated',
+                'Retention updated',
                 `Pending applications will be kept for **${pendingDays} days**.\nReviewed applications will be kept for **${reviewedDays} days**.`,
             ),
         ],
@@ -1161,7 +1149,7 @@ async function handleDeleteApplication(confirmSubmit, selectedRoleId, guildId, r
         await confirmSubmit.reply({
             embeds: [
                 successEmbed(
-                    '🗑️ Application Deleted',
+                    'Application deleted',
                     `The application for <@&${selectedRoleId}> (**${deletedRole.name}**) has been permanently deleted.\n\n` +
                     `Deleted: **${deletedApplications}** application${deletedApplications !== 1 ? 's' : ''}`,
                 ),

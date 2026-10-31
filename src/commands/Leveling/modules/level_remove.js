@@ -76,8 +76,8 @@ export default {
     await InteractionHelper.safeEditReply(interaction, {
       embeds: [
         createEmbed({
-          title: 'Levels Removed',
-          description: `Successfully removed ${levelsToRemove} levels from ${targetUser.tag}.\n**New Level:** ${updatedData.level}`,
+          title: 'Levels removed',
+          description: `Removed ${levelsToRemove} levels from ${targetUser.tag}.\n**New level:** ${updatedData.level}`,
           color: 'success'
         })
       ]

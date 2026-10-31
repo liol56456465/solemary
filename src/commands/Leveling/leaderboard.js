@@ -43,7 +43,7 @@ export default {
       throw new TitanBotError(
         'No leaderboard data found',
         ErrorTypes.DATABASE,
-        page > 1 ? `There are no members on page ${page} of the leaderboard.` : 'No level data found yet. Start chatting to gain XP!'
+        page > 1 ? `There are no members on page ${page} of the leaderboard.` : 'Nobody has any XP yet. Chat a bit and check back.'
       );
     }
 
@@ -52,18 +52,14 @@ export default {
       .setColor('#2ecc71')
       .setDescription(page > 1
         ? `Ranks ${offset + 1}-${offset + leaderboard.length} in this server:`
-        : "Top 10 most active members in this server:")
+        : "Top 10 in this server:")
       .setTimestamp();
 
     // getLeaderboard already resolved the page's members; a mention needs no lookup.
     const leaderboardText = leaderboard.map((user) => {
       const xpForNextLevel = getXpForLevel(user.level);
 
-      let rankPrefix;
-      if (user.rank === 1) rankPrefix = '🥇';
-      else if (user.rank === 2) rankPrefix = '🥈';
-      else if (user.rank === 3) rankPrefix = '🥉';
-      else rankPrefix = `**${user.rank}.**`;
+      const rankPrefix = `**${user.rank}.**`;
 
       return `${rankPrefix} <@${user.userId}> - Level ${user.level} (${user.xp}/${xpForNextLevel} XP)`;
     });

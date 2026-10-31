@@ -17,7 +17,7 @@ export default {
       client: channel.client,
       guildId: channel.guild.id,
       eventType: EVENT_TYPES.CHANNEL_CREATE,
-      data: { title: 'Channel Created', headline: `${channel.toString()} was created`, lines: channelLines(channel), channelId: channel.id },
+      data: { title: 'Channel created', headline: `${channel.toString()} was created`, lines: channelLines(channel), channelId: channel.id },
     }).catch((error) => logger.debug(`Channel create log failed: ${error.message}`));
 
     // New channels get the muted-role deny overwrite so muted members stay muted there.

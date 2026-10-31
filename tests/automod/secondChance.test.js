@@ -36,12 +36,12 @@ test('second chance notice mentions the member and says what to fix', () => {
 test('second chance shows as a compact line without buttons', () => {
     const entry = entryFrom({
         guild: { id: 'g' }, rule: 'caps', evidence: 'wrote mostly in capital letters', targetUser: { id: '42', username: 'amy' },
-        channelId: '7', content: 'HELLO', note: { emoji: '💬', title: 'Second chance' }, deleted: true,
+        channelId: '7', content: 'HELLO', note: { title: 'Second chance' }, deleted: true,
     });
     assert.equal(entry.kind, 'note');
     assert.equal(cardTier(entry), 'compact');
     const payload = buildCardPayload(entry);
-    assert.equal(payload.content, '💬 Second chance · <@42> · Excessive caps · <#7>');
+    assert.equal(payload.content, 'Second chance · <@42> · Excessive caps · <#7>');
     assert.deepEqual(payload.components, []);
     assert.deepEqual(payload.embeds, []);
 });

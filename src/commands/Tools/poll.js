@@ -79,7 +79,7 @@ export default {
         await createPoll(interaction.guild, { channel: interaction.channel, question, options, anonymous: isAnonymous });
 
         await InteractionHelper.safeEditReply(interaction, {
-            content: '✅ Poll created successfully!',
+            content: 'Poll posted.',
         });
     },
 };

@@ -106,7 +106,7 @@ async function blockModerator(guild, moderator, count, attempted) {
         { name: 'What happened', value: summary },
         { name: 'Blocked until', value: `<t:${Math.floor(Date.parse(until) / 1000)}:f>` },
         { name: 'Lift early', value: '`/staff restore`' },
-    ], { title: '🛡️ Mass-action guard: moderator blocked' });
+    ], { title: 'Mass-action guard: moderator blocked' });
     await alertOwners(guild.client, `**Mass-action guard in ${guild.name}.** ${summary} Their panel access is blocked until <t:${Math.floor(Date.parse(until) / 1000)}:f>. Lift it early with \`/staff restore\`.`);
     return block;
 }

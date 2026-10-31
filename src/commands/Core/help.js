@@ -23,26 +23,6 @@ const CATEGORY_SELECT_ID = "help-category-select";
 const ALL_COMMANDS_ID = "help-all-commands";
 const HELP_MENU_TIMEOUT_MS = 5 * 60 * 1000;
 
-const CATEGORY_ICONS = {
-    Core: "ℹ️",
-    Moderation: "🛡️",
-    Fun: "🎮",
-    Leveling: "📊",
-    Utility: "🔧",
-    Ticket: "🎫",
-    Welcome: "👋",
-    Giveaway: "🎉",
-    Counter: "🔢",
-    Tools: "🛠️",
-    Search: "🔍",
-    "Reaction Roles": "🎭",
-    Community: "👥",
-    Birthday: "🎂",
-    "Join To Create": "🔌",
-    Verification: "✅",
-    Enforcement: "⚖️",
-};
-
 function formatCategoryName(rawCategory) {
     return rawCategory
         .replace(/_/g, '')
@@ -69,16 +49,15 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
 
     const options = [
         {
-            label: "📋 All Commands",
-            description: "Browse every available command in a single list",
+            label: "All commands",
+            description: "Every command in one list",
             value: ALL_COMMANDS_ID,
         },
         ...categoryDirs.map((category) => {
             const categoryName = formatCategoryName(category);
-            const icon = CATEGORY_ICONS[categoryName] || "🔍";
             return {
-                label: `${icon} ${categoryName}`,
-                description: `View commands in the ${categoryName} category`,
+                label: categoryName,
+                description: `${categoryName} commands`,
                 value: category,
             };
         }),
@@ -86,17 +65,17 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
 
     const botName = client?.user?.username || "Bot";
     const embed = createEmbed({
-        title: `📖 ${botName} Help`,
+        title: `${botName} help`,
         description: 'support us by boosting',
         color: 'primary',
         thumbnail: client.user?.displayAvatarURL?.({ size: 1024 }),
         fields: [
             {
-                name: '🚀 Getting Started',
+                name: 'Getting started',
                 value: (showAdmin ? [
-                    '1. **/configwizard** to configure prefix, mod role, and logs.',
-                    '2. **/commands dashboard** to turn categories on or off.',
-                    '3. **Browse commands**: Use the menu below to view categories and commands.',
+                    '1. **/configwizard** sets the mod role and log channel.',
+                    '2. **/commands dashboard** turns categories on or off.',
+                    '3. Pick a category in the menu below to see its commands.',
                 ] : [
                     'Pick a category in the menu below to see its commands.',
                     'Need staff? DM the bot: your message goes to the team privately (modmail).',
@@ -104,7 +83,7 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
                 inline: false,
             },
             {
-                name: '🔒 Access',
+                name: 'Access',
                 value: [
                     showAdmin
                         ? '• Commands marked 🔒 need the **Administrator** permission; the rest are for everyone.'
@@ -115,25 +94,16 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
                 inline: false,
             },
             {
-                name: 'ℹ️ How It Works',
+                name: 'Good to know',
                 value: [
-                    '• Dashboard commands manage each feature visually',
+                    '• Most features have a dashboard command for their settings',
                     '• Settings are saved per server',
-                    '• Slash commands and prefixes both work once enabled',
                 ].join('\n'),
-                inline: false,
-            },
-            {
-                name: '\u200B',
-                value: `-#`,
                 inline: false,
             },
         ],
     });
 
-    embed.setFooter({ 
-        text: "Made with ❤️" 
-    });
     embed.setTimestamp();
 
     const supportButton = new ButtonBuilder()
@@ -143,7 +113,7 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
 
     const selectRow = createSelectMenu(
         CATEGORY_SELECT_ID,
-        "Select to view the commands",
+        "Pick a category",
         options,
     );
 
@@ -161,7 +131,7 @@ export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
         .setName("help")
-        .setDescription("Displays the help menu with all available commands"),
+        .setDescription("Show the commands you can use"),
 
     async execute(interaction, guildConfig, client) {
         
@@ -184,7 +154,7 @@ export default {
 
                 const closedEmbed = createEmbed({
                     title: "Help menu closed",
-                    description: "Help menu has been closed, use /help again.",
+                    description: "Run /help again to open it.",
                     color: "secondary",
                 });
 

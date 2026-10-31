@@ -39,15 +39,15 @@ export async function handleDelete(interaction, client) {
         const channel = guild.channels.cache.get(counterToDelete.channelId);
 
         const embed = createEmbed({
-            title: "Delete Counter & Channel",
-            description: `Are you sure you want to delete this counter and its channel?\n\n**ID:** \`${counterToDelete.id}\`\n**Type:** ${getCounterTypeDisplay(counterToDelete.type)}\n**Channel:** ${channel || 'Deleted Channel'}\n\n **The channel will be permanently deleted!**`,
+            title: "Delete counter and channel",
+            description: `Delete this counter and its channel?\n\n**ID:** \`${counterToDelete.id}\`\n**Type:** ${getCounterTypeDisplay(counterToDelete.type)}\n**Channel:** ${channel || 'already deleted'}\n\n**The channel is deleted for good.**`,
             color: getColor('error')
         });
 
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId(`counter-delete:confirm:${counterToDelete.id}:${interaction.user.id}`)
-                .setLabel("Confirm Delete")
+                .setLabel("Delete")
                 .setStyle(ButtonStyle.Danger),
             new ButtonBuilder()
                 .setCustomId(`counter-delete:cancel:${counterToDelete.id}:${interaction.user.id}`)
@@ -59,7 +59,7 @@ export async function handleDelete(interaction, client) {
 
     } catch (error) {
         logger.error("Error in handleDelete:", error);
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while fetching counters. Please try again.' }).catch(logger.error);
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Couldn\'t load the counters. Try again.' }).catch(logger.error);
     }
 }
 
@@ -67,7 +67,7 @@ export const performDeletionByCounterId = wrapServiceBoundary(async function per
     // Atomic (row lock) removal + channel delete: services/serverstatsService.js.
     const { counter, channel, channelDeleted } = await removeServerCounter(client, guild, counterId);
 
-    let message = `✅ **Counter Deleted Successfully!**\n\n**ID:** \`${counter.id}\`\n**Type:** ${getCounterTypeDisplay(counter.type)}`;
+    let message = `**Counter deleted**\n\n**ID:** \`${counter.id}\`\n**Type:** ${getCounterTypeDisplay(counter.type)}`;
 
     if (channelDeleted) {
         message += `\n**Channel:** ${channel.name} (deleted)`;
@@ -81,9 +81,9 @@ export const performDeletionByCounterId = wrapServiceBoundary(async function per
 }, {
     service: 'serverstats',
     operation: 'performDeletionByCounterId',
-    userMessage: 'An error occurred while deleting the counter. Please try again.',
+    userMessage: 'Couldn\'t delete the counter. Try again.',
 });
 
 function getCounterTypeDisplay(type) {
-    return `${getCounterEmoji(type)} ${getCounterTypeLabel(type)}`;
+    return getCounterTypeLabel(type);
 }

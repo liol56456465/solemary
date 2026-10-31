@@ -26,9 +26,9 @@ export const DASHBOARD_REFRESH = 'cmdaccess_refresh';
 export const DASHBOARD_HOME = 'cmdaccess_home';
 
 const STATUS = {
-  enabled: '🟢',
-  partial: '🟡',
-  disabled: '🔴',
+  enabled: 'On',
+  partial: 'Partly on',
+  disabled: 'Off',
 };
 
 function customId(base, guildId, suffix = '') {
@@ -79,23 +79,17 @@ export function buildOverviewEmbed(snapshot, guild) {
   const disabled = snapshot.categories.filter((c) => c.categoryDisabled).length;
 
   const categoryLines = snapshot.categories.map((category) => {
-    const icon = getCategoryStatus(category);
-    const subcommandNote = category.commands.some((c) => c.isSubcommand) ? ' · incl. subcommands' : '';
-    return `${icon} ${category.icon} **${category.displayName}**: ${category.enabledCount}/${category.totalCount}${subcommandNote}`;
+    const status = getCategoryStatus(category);
+    return `**${category.displayName}**: ${status} (${category.enabledCount}/${category.totalCount})`;
   });
 
   const fields = [
     {
-      name: '📊 Summary',
+      name: 'Summary',
       value: [
-        `**${snapshot.enabledTotal}/${snapshot.totalCommands}** entries enabled`,
-        `${STATUS.enabled} ${fullyEnabled} fully on · ${STATUS.partial} ${partial} partial · ${STATUS.disabled} ${disabled} off`,
+        `**${snapshot.enabledTotal}/${snapshot.totalCommands}** commands on`,
+        `${fullyEnabled} categories fully on · ${partial} partly on · ${disabled} off`,
       ].join('\n'),
-      inline: false,
-    },
-    {
-      name: '🔑 Legend',
-      value: `${STATUS.enabled} All enabled · ${STATUS.partial} Some disabled · ${STATUS.disabled} Category off`,
       inline: false,
     },
   ];
@@ -103,54 +97,52 @@ export function buildOverviewEmbed(snapshot, guild) {
   const chunks = chunkLines(categoryLines);
   chunks.forEach((chunk, index) => {
     fields.push({
-      name: index === 0 ? '📁 Categories' : '📁 Categories (cont.)',
+      name: index === 0 ? 'Categories' : 'Categories (cont.)',
       value: chunk,
       inline: false,
     });
   });
 
   fields.push({
-    name: 'How to Use',
+    name: 'How to use',
     value: [
-      '• Select a category below to manage commands and subcommands',
-      '• `/commands disable`: turn off a category or specific command',
-      '• `/commands enable`: turn something back on',
+      '• Pick a category below to turn its commands on or off',
+      '• `/commands disable` turns off a category or one command',
+      '• `/commands enable` turns it back on',
     ].join('\n'),
   });
 
   return createEmbed({
-    title: '⚙️ Command Access',
-    description: `Manage slash and prefix commands for **${guild.name}**. Subcommands (e.g. \`birthday list\`) are listed separately.`,
+    title: 'Command access',
+    description: `Commands for **${guild.name}**. Subcommands (like \`birthday list\`) are counted on their own.`,
     color: 'info',
     fields,
-    footer: '🔒 commands & configwizard always stay available',
+    footer: '/commands and /configwizard always stay on',
   });
 }
 
 export function buildCategoryEmbed(category, guild) {
-  const statusIcon = getCategoryStatus(category);
   const statusText = category.categoryDisabled
-    ? 'Category disabled'
+    ? 'Category off'
     : category.disabledCount === 0
-      ? 'All entries enabled'
-      : `${category.disabledCount} of ${category.totalCount} disabled`;
+      ? 'Everything on'
+      : `${category.disabledCount} of ${category.totalCount} off`;
 
   const commandLines = category.commands.map((command) => {
     const enabled = category.enabledCommands.includes(command.name);
-    const icon = enabled ? STATUS.enabled : STATUS.disabled;
-    const lock = command.protected ? ' 🔒' : '';
-    return `${icon} ${formatCommandLabel(command)}${lock}`;
+    const state = command.protected ? 'On (always)' : enabled ? STATUS.enabled : STATUS.disabled;
+    return `${formatCommandLabel(command)}: ${state}`;
   });
 
   const fields = [
     {
-      name: `${statusIcon} Status`,
+      name: 'Status',
       value: statusText,
       inline: true,
     },
     {
-      name: '📈 Count',
-      value: `${category.enabledCount}/${category.totalCount} enabled`,
+      name: 'Count',
+      value: `${category.enabledCount}/${category.totalCount} on`,
       inline: true,
     },
   ];
@@ -158,27 +150,27 @@ export function buildCategoryEmbed(category, guild) {
   const chunks = chunkLines(commandLines);
   chunks.forEach((chunk, index) => {
     fields.push({
-      name: index === 0 ? '📋 Commands & Subcommands' : '📋 (cont.)',
+      name: index === 0 ? 'Commands' : 'Commands (cont.)',
       value: chunk,
       inline: false,
     });
   });
 
   fields.push({
-    name: 'How to Use',
+    name: 'How to use',
     value: [
-      '• Use the dropdown to toggle individual commands or subcommands',
-      '• **Disable All** turns off the whole category',
-      '• **Clear Overrides** re-enables individually disabled entries',
+      '• Pick a command in the menu to turn it on or off',
+      '• **Disable all** turns off the whole category',
+      '• **Clear overrides** turns back on the ones you switched off one by one',
     ].join('\n'),
   });
 
   return createEmbed({
-    title: `${category.icon} ${category.displayName}`,
+    title: category.displayName,
     description: `Command access for **${guild.name}**.`,
     color: category.categoryDisabled ? 'error' : category.disabledCount > 0 ? 'warning' : 'success',
     fields,
-    footer: '🔒 Protected entries cannot be disabled',
+    footer: 'Commands marked "always" can\'t be turned off',
   });
 }
 
@@ -187,23 +179,21 @@ export function buildOverviewComponents(guildId, snapshot) {
     const status = getCategoryStatus(category);
     return new StringSelectMenuOptionBuilder()
       .setLabel(`${category.displayName}`.slice(0, 100))
-      .setDescription(`${status} ${category.enabledCount}/${category.totalCount} enabled`.slice(0, 100))
-      .setValue(category.key)
-      .setEmoji(category.icon);
+      .setDescription(`${status} · ${category.enabledCount}/${category.totalCount}`.slice(0, 100))
+      .setValue(category.key);
   });
 
   return [
     new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId(customId(DASHBOARD_CATEGORY_SELECT, guildId))
-        .setPlaceholder('📁 Select a category...')
+        .setPlaceholder('Pick a category')
         .addOptions(categoryOptions),
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_REFRESH, guildId))
         .setLabel('Refresh')
-        .setEmoji('🔄')
         .setStyle(ButtonStyle.Secondary),
     ),
   ];
@@ -219,7 +209,7 @@ export function buildCategoryComponents(guildId, category) {
 
     return new StringSelectMenuOptionBuilder()
       .setLabel(label)
-      .setDescription((enabled ? '🟢 Enabled. Click to disable.' : '🔴 Disabled. Click to enable.').slice(0, 100))
+      .setDescription((enabled ? 'On. Pick to turn off.' : 'Off. Pick to turn on.').slice(0, 100))
       .setValue(command.name);
   });
 
@@ -228,27 +218,22 @@ export function buildCategoryComponents(guildId, category) {
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_HOME, guildId))
         .setLabel('Back')
-        .setEmoji('◀️')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_TOGGLE_CATEGORY, guildId, category.key))
-        .setLabel(category.categoryDisabled ? 'Enable Category' : 'Disable Category')
-        .setEmoji(category.categoryDisabled ? '🟢' : '🔴')
+        .setLabel(category.categoryDisabled ? 'Turn category on' : 'Turn category off')
         .setStyle(category.categoryDisabled ? ButtonStyle.Success : ButtonStyle.Danger),
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_ENABLE_ALL, guildId, category.key))
-        .setLabel('Enable All')
-        .setEmoji('✅')
+        .setLabel('Enable all')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_DISABLE_ALL, guildId, category.key))
-        .setLabel('Disable All')
-        .setEmoji('⛔')
+        .setLabel('Disable all')
         .setStyle(ButtonStyle.Danger),
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_RESET_COMMANDS, guildId, category.key))
-        .setLabel('Clear Overrides')
-        .setEmoji('🧹')
+        .setLabel('Clear overrides')
         .setStyle(ButtonStyle.Secondary),
     ),
   ];
@@ -258,7 +243,7 @@ export function buildCategoryComponents(guildId, category) {
       new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(customId(DASHBOARD_COMMAND_SELECT, guildId, category.key))
-          .setPlaceholder('Toggle a command or subcommand...')
+          .setPlaceholder('Turn a command on or off')
           .addOptions(commandOptions),
       ),
     );

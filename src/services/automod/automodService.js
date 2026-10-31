@@ -302,7 +302,7 @@ async function giveSecondChance(message, hit, { settings, offences, card, probat
         allowedMentions: { users: [author.id] },
     }).catch(() => null);
     if (notice) setTimeout(() => notice.delete().catch(() => {}), automodConfig.secondChanceNoticeMs).unref?.();
-    await postReviewCard({ ...card, note: { emoji: '💬', title: 'Second chance' }, deleted });
+    await postReviewCard({ ...card, note: { title: 'Second chance' }, deleted });
     return true;
 }
 

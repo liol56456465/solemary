@@ -105,7 +105,7 @@ async function announceLockdown(guild, { joinerCount, raised, panic }) {
         { name: 'Invites and DMs', value: describePanic(panic) },
         { name: 'Raid joiners', value: 'Kicked automatically if they break any rule while the lockdown lasts.' },
         { name: 'End it', value: '`/automod lockdown-end`' },
-    ], { title: '🚨 Join raid: lockdown started' });
+    ], { title: 'Join raid: lockdown started' });
     const extras = [raised ? 'the verification level is now High' : null, panic?.applied ? 'invites and DMs are paused' : null].filter(Boolean);
     await alertOwner(guild, `**Join raid in ${guild.name}.** ${summary} The server is in lockdown${extras.length ? ` and ${extras.join(' and ')}` : ''}. End it with \`/automod lockdown-end\` when it is over.`);
 }

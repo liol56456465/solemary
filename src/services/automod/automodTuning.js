@@ -83,7 +83,7 @@ export async function postTuningSuggestions(client, now = Date.now()) {
         if (!await claimSuggestion(guildId, suggestion.rule, now)) continue;
         const sent = await channel.send({
             embeds: [createEmbed({
-                title: '🎛️ Automod tuning suggestion',
+                title: 'Automod tuning suggestion',
                 description: [
                     `**${formatTuningSuggestion(suggestion)}**`,
                     `Moderators reversed or changed ${Math.round(suggestion.rate * 100)}% of this rule's automatic decisions. In monitor mode it only posts review cards; nothing is deleted or punished until someone applies it.`,

@@ -19,7 +19,7 @@ export default {
                 client,
                 guildId: channel.guild.id,
                 eventType: EVENT_TYPES.CHANNEL_DELETE,
-                data: { title: 'Channel Deleted', headline: `**#${channel.name}** was deleted`, lines: channelLines(channel), channelId: channel.id },
+                data: { title: 'Channel deleted', headline: `**#${channel.name}** was deleted`, lines: channelLines(channel), channelId: channel.id },
             }).catch((error) => logger.debug(`Channel delete log failed: ${error.message}`));
         }
 

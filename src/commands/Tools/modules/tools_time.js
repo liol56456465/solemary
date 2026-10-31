@@ -35,7 +35,7 @@ export default {
                     logger.warn(`Invalid timezone requested: ${timezone}`);
                     await replyUserError(interaction, {
                         type: ErrorTypes.VALIDATION,
-                        message: 'Invalid timezone. Please use a valid timezone identifier (e.g., UTC, America/New_York, Europe/London)',
+                        message: 'Unknown timezone. Try something like UTC, America/New_York or Europe/London.',
                     });
                     return;
                 }
@@ -44,7 +44,7 @@ export default {
                 const unixTimestamp = Math.floor(now.getTime() / 1000);
 
                 const embed = successEmbed(
-                    '🕒 Current Time',
+                    'Current time',
                     `**${timezone}:** ${timeString}\n` +
                     `**Unix Timestamp:** \`${unixTimestamp}\`\n` +
                     `**ISO String:** \`${now.toISOString()}\``
@@ -52,7 +52,7 @@ export default {
 
                 await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
             },
-            'Failed to get current time. Please try again.',
+            'Couldn\'t get the time. Try again.',
             {
                 autoDefer: true,
                 deferOptions: { flags: MessageFlags.Ephemeral }

@@ -20,7 +20,7 @@ import { limitMessage, planLimit } from '../billing/premiumEffects.js';
 export const FEED_MAX_PER_GUILD = 20;
 export const FEED_TEMPLATE_MAX = 500;
 export const FEED_MAX_POSTS_PER_POLL = 3;
-export const DEFAULT_FEED_TEMPLATE = '📺 **{author}** posted a new video: **{title}**\n{url}';
+export const DEFAULT_FEED_TEMPLATE = '**{author}** posted a new video: **{title}**\n{url}';
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_FEED_BYTES = 1_000_000;
 const YOUTUBE_CHANNEL_ID = /^UC[\w-]{22}$/;

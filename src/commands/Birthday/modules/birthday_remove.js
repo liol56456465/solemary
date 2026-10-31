@@ -14,7 +14,7 @@ export default {
         if (result.status === 'not_found') {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('No Birthday Found')
+                .setTitle('No birthday set')
                 .setDescription('You don\'t have a birthday set to remove.');
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [embed]
@@ -24,8 +24,8 @@ export default {
 
         const embed = new EmbedBuilder()
             .setColor(0x00FF00)
-            .setTitle('Birthday Removed')
-            .setDescription('Your birthday has been successfully removed from the server.');
+            .setTitle('Birthday removed')
+            .setDescription('Your birthday is removed.');
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [embed]
         });

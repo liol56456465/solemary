@@ -196,9 +196,9 @@ export async function closeCard(message, outcome, { status = null, by = null, ve
     markClosed(message.id, status || 'closed');
     if (!message.embeds?.length) {
         // A compact line: strike it through and say who handled it.
-        const [emoji, defaultVerb] = CLOSE_STATUS[status] || ['✔️', 'Reviewed'];
+        const [defaultVerb] = CLOSE_STATUS[status] || ['Reviewed'];
         const line = stripLeadingEmoji(message.content || '');
-        const content = truncate(`${emoji} ${verb || defaultVerb}${by ? ` by ${by}` : ''} · ~~${line}~~\n-# ${outcome}`, 2000);
+        const content = truncate(`${verb || defaultVerb}${by ? ` by ${by}` : ''} · ~~${line}~~\n-# ${outcome}`, 2000);
         await message.edit({ content, components: [], allowedMentions: { parse: [] } }).catch((error) =>
             logger.warn(`Could not update review line ${message.id}: ${error.message}`));
         return;
@@ -209,7 +209,7 @@ export async function closeCard(message, outcome, { status = null, by = null, ve
     const update = { ...data, fields };
     if (status && CLOSE_STATUS[status]) {
         update.title = closedTitle(data.title, status, by || 'a moderator', verb);
-        update.color = CLOSE_STATUS[status][2];
+        update.color = CLOSE_STATUS[status][1];
     }
     await message.edit({ embeds: [update], components: [] }).catch((error) =>
         logger.warn(`Could not update review card ${message.id}: ${error.message}`));

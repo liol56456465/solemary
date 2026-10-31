@@ -239,7 +239,7 @@ export async function attachFlowEvidence(flow, record, moderatorUser, { add = ad
             saved += 1;
         } catch (error) {
             if (!error?.context?.expected) logger.error('Could not attach evidence', { caseCode: record.case_code, error });
-            notes.push(`⚠️ Evidence ${item.url} was not saved: ${error.userMessage || error.message}`);
+            notes.push(`Evidence ${item.url} was not saved: ${error.userMessage || error.message}`);
         }
     }
     if (saved) notes.unshift(`Evidence attached: ${saved} link${saved === 1 ? '' : 's'}.`);

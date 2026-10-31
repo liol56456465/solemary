@@ -40,11 +40,11 @@ test('native: evidence keeps the keyword behind a spoiler; cards and lines', () 
         evidence: nativeEvidence('Bad words', 'darn'), targetUser: { id: '42', username: 'amy' },
         channelId: '7', content: 'darn it', deleted: true,
     };
-    const line = buildCardPayload(entryFrom({ ...base, note: { emoji: '🛡️', title: 'Discord AutoMod blocked a message' } }));
-    assert.equal(line.content, '🛡️ Discord AutoMod blocked a message · <@42> · Discord AutoMod: Bad words · <#7>');
+    const line = buildCardPayload(entryFrom({ ...base, note: { title: 'Discord AutoMod blocked a message' } }));
+    assert.equal(line.content, 'Discord AutoMod blocked a message · <@42> · Discord AutoMod: Bad words · <#7>');
     const card = buildCardPayload(entryFrom({ ...base, step: { type: 'warn' }, result: { record: { case_code: 'abc1234' } }, tier: 'full' }));
     const embed = card.embeds[0].data;
-    assert.equal(embed.title, '🟡 Warned · Discord AutoMod: Bad words');
+    assert.equal(embed.title, 'Warned · Discord AutoMod: Bad words');
     assert.match(embed.description, /\|\|darn\|\|/);
     assert.equal(embed.fields[0].value, '||darn it||');
     assert.equal(card.components[0].toJSON().components[0].custom_id, 'amreview:keep:abc1234');

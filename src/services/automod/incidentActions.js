@@ -56,6 +56,6 @@ export async function resumeInvitesAndDms(guild) {
 export function describePanic(result) {
     if (!result) return 'Not paused (panic mode is off: `/automod panic`)';
     if (result.applied) return `Invites and DMs paused until <t:${Math.floor(new Date(result.until).getTime() / 1000)}:t>`;
-    if (result.reason === 'missing Manage Server') return '⚠️ Not paused: I need the **Manage Server** permission';
-    return `⚠️ Not paused: ${String(result.reason || 'Discord refused').slice(0, 200)}`;
+    if (result.reason === 'missing Manage Server') return 'Not paused: I need the **Manage Server** permission';
+    return `Not paused: ${String(result.reason || 'Discord refused').slice(0, 200)}`;
 }

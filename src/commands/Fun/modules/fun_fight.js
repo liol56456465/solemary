@@ -26,16 +26,16 @@ export default {
 
     if (challenger.id === opponent.id) {
       const embed = warningEmbed(
-        "⚔️ Invalid Challenge",
-        `**${challenger.username}**, you can't fight yourself! That's a draw before it even starts.`
+        "Can't fight yourself",
+        `**${challenger.username}**, that would be a draw before it starts. Pick someone else.`
       );
       return await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
     }
 
     if (opponent.bot) {
       const embed = warningEmbed(
-        "⚔️ Invalid Opponent",
-        "You can't fight bots! Challenge a real person instead."
+        "Can't fight a bot",
+        "Bots don't fight back. Pick a real person."
       );
       return await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
     }
@@ -47,7 +47,7 @@ export default {
 
     const log = [];
     log.push(
-      `💥 **${challenger.username}** challenges **${opponent.username}** to a duel! (Best of ${rounds} rounds)`,
+      `**${challenger.username}** challenges **${opponent.username}** to a fight. ${rounds} rounds.`,
     );
 
     for (let i = 1; i <= rounds; i++) {
@@ -60,12 +60,12 @@ export default {
         "parries and counterattacks",
       ][rand(0, 3)];
       log.push(
-        `\n**Round ${i}:** ${attacker.username} ${action} on ${target.username} for ${rand(1, damage)} damage!`,
+        `\n**Round ${i}:** ${attacker.username} ${action} on ${target.username} for ${rand(1, damage)} damage.`,
       );
     }
 
     const outcomeText = log.join("\n");
-    const winnerText = `👑 **${winner.username}** has defeated ${loser.username} and claims the victory!`;
+    const winnerText = `**${winner.username}** beats ${loser.username}.`;
     const fullDescription = `${outcomeText}\n\n${winnerText}`;
 
     const description = fullDescription.length <= EMBED_DESCRIPTION_LIMIT
@@ -73,7 +73,7 @@ export default {
       : `${fullDescription.slice(0, EMBED_DESCRIPTION_LIMIT - 15)}\n\n...`;
 
     const embed = successEmbed(
-      "🏆 Duel Complete!",
+      "Fight over",
       description
     );
 

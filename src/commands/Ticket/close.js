@@ -42,8 +42,8 @@ export default {
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [
                 successEmbed(
-                    "Ticket Closed!",
-                    "This ticket has been closed successfully.",
+                    "Ticket closed",
+                    "This ticket is closed.",
                 ),
             ],
         });

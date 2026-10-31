@@ -36,11 +36,11 @@ export default {
             });
 
             const embed = successEmbed(
-                '✅ Join to Create Setup Complete',
+                'Join to create is set up',
                 `Created trigger channel: ${triggerChannel}\n\n` +
                 `**Settings:**\n` +
-                `• Temporary Channel Name Template: \`${nameTemplate}\`\n` +
-                `• User Limit: ${userLimit === 0 ? 'No limit' : userLimit + ' users'}\n` +
+                `• Channel name template: \`${nameTemplate}\`\n` +
+                `• User limit: ${userLimit === 0 ? 'No limit' : userLimit + ' users'}\n` +
                 `• Bitrate: ${bitrate} kbps\n` +
                 `${category ?`• Category: ${category.name}`: '• Category: None (root level)'}\n\n` +
                 `When users join this channel, a temporary voice channel will be created for them.`

@@ -162,6 +162,6 @@ export function noContactEndedDm(order, other, { early = false } = {}) {
 export function contestComponents(caseCode) {
     if (!caseCode) return [];
     return [new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`amcontest:open:${caseCode}`).setLabel('Contest this').setEmoji('🙋').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`amcontest:open:${caseCode}`).setLabel('Contest this').setStyle(ButtonStyle.Secondary),
     )];
 }

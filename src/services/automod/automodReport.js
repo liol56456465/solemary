@@ -49,13 +49,13 @@ export function formatAutomodStats(stats) {
     const rules = stats.byGroup.map((row) => {
         const corrected = row.undone + row.changed;
         const rate = row.actions ? Math.round((corrected / row.actions) * 100) : 0;
-        return `**${row.label}:** ${row.actions} action(s)${corrected ? ` · ${row.undone} undone, ${row.changed} changed (${rate}%)${rate >= 30 ? ' ⚠️' : ''}` : ''}${row.appealed ? ` · ${row.appealed} appeal(s) accepted` : ''}`;
+        return `**${row.label}:** ${row.actions} action(s)${corrected ? ` · ${row.undone} undone, ${row.changed} changed (${rate}%)${rate >= 30 ? ' · **often corrected**' : ''}` : ''}${row.appealed ? ` · ${row.appealed} appeal(s) accepted` : ''}`;
     });
     const offenders = stats.topOffenders.map((row) => `<@${row.userId}> ${row.username}: ${row.count}`);
     return {
         rules: rules.join('\n') || 'No automod actions.',
         offenders: offenders.join('\n') || 'None',
-        footer: '⚠️ = moderators corrected 30% or more of this rule\'s decisions: it may be too strict.',
+        footer: 'Often corrected = moderators corrected 30% or more of this rule\'s decisions, so it may be too strict.',
     };
 }
 
@@ -68,5 +68,5 @@ export async function postWeeklyAutomodReport(client) {
         { name: `Last 7 days: ${stats.total} action(s)`, value: text.rules.slice(0, 1024) },
         { name: 'Most actions against', value: text.offenders.slice(0, 1024) },
         { name: 'Note', value: text.footer },
-    ], { title: '📊 Weekly automod report' });
+    ], { title: 'Weekly automod report' });
 }

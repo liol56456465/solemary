@@ -61,7 +61,7 @@ export async function trackChannelActivity(message) {
         { name: 'Channel', value: `<#${channel.id}>` },
         { name: 'Why', value: `${list.length} messages from ${new Set(list.map((e) => e.authorId)).size} people in ${BUSY_WINDOW_MS / 1000}s` },
         { name: 'Ends', value: `after ${CALM_MS / 60000} quiet minutes` },
-    ], { title: '🐢 Auto slowmode on' });
+    ], { title: 'Auto slowmode on' });
 }
 
 /**

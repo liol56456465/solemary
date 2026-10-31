@@ -12,11 +12,9 @@ export default {
 
   async execute(interaction, config, client) {
     const result = Math.random() < 0.5 ? "Heads" : "Tails";
-    const emoji = result === "Heads" ? "🪙" : "🔮";
-
     const embed = successEmbed(
-      "Heads or Tails?",
-      `The coin landed on... **${result}** ${emoji}!`,
+      "Coin flip",
+      `It's **${result}**.`,
     );
 
     await InteractionHelper.safeReply(interaction, { embeds: [embed] });

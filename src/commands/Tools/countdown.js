@@ -52,7 +52,7 @@ export default {
         const totalSeconds = minutes * 60 + seconds;
 
         if (totalSeconds <= 0) {
-            return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: "Please specify a duration of at least 1 second." });
+            return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: "The duration has to be at least 1 second." });
         }
 
         if (totalSeconds > 86400) {
@@ -62,7 +62,7 @@ export default {
         await startCountdownMessage(interaction.guild, { channel: interaction.channel, totalSeconds, title });
 
         await InteractionHelper.safeEditReply(interaction, {
-            content: "✅ Countdown started!",
+            content: "Countdown started.",
             flags: MessageFlags.Ephemeral,
         });
     },

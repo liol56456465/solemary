@@ -20,12 +20,12 @@ export function supportInviteUrl(config = enforcementConfig) {
 export default {
     data: new SlashCommandBuilder()
     .setName("support")
-    .setDescription("Get link to the support server"),
+    .setDescription("Get the support server link"),
 
   async execute(interaction) {
     try {
       const supportButton = new ButtonBuilder()
-        .setLabel("Join Support Server")
+        .setLabel("Join the support server")
         .setStyle(ButtonStyle.Link)
         .setURL(supportInviteUrl());
 
@@ -46,7 +46,7 @@ export default {
       
       try {
         return await InteractionHelper.safeReply(interaction, {
-          embeds: [createEmbed({ title: 'System Error', description: 'Could not display support information.', color: 'error' })],
+          embeds: [createEmbed({ title: 'Something went wrong', description: 'Couldn\'t show the support info.', color: 'error' })],
           flags: MessageFlags.Ephemeral,
         });
       } catch (replyError) {

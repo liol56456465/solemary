@@ -104,7 +104,7 @@ export function formatRatingStars(rating) {
   }
 
   const clamped = Math.min(5, Math.max(1, Math.round(numeric)));
-  return `${'⭐'.repeat(clamped)} (${clamped}/5)`;
+  return `${clamped}/5`;
 }
 
 export async function resolveUserAuthor(client, userId) {

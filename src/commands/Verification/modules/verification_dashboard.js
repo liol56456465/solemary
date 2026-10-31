@@ -46,22 +46,22 @@ function buildDashboardEmbed(cfg, guild, verifiedUserCount = 0, conflictSummary 
     const panelStatusValue = cfg.channelId ? formatPanelStatusField(panelStatus) : '`Not configured`';
 
     const embed = new EmbedBuilder()
-        .setTitle('✅ Verification System Dashboard')
+        .setTitle('Verification system dashboard')
         .setDescription(`Manage verification settings for **${guild.name}**.\nSelect an option below to modify a setting.`)
         .setColor(getColor('info'))
         .addFields(
-            { name: 'Panel Status', value: panelStatusValue, inline: false },
-            { name: 'Verification Channel', value: channel, inline: true },
-            { name: 'Verified Role', value: role, inline: true },
-            { name: 'System Status', value: cfg.enabled !== false ? 'Enabled' : 'Disabled', inline: true },
-            { name: 'Button Text', value: `\`${buttonText}\``, inline: true },
-            { name: 'Verified Users', value: `${verifiedUserCount} users`, inline: true },
+            { name: 'Panel status', value: panelStatusValue, inline: false },
+            { name: 'Verification channel', value: channel, inline: true },
+            { name: 'Verified role', value: role, inline: true },
+            { name: 'System status', value: cfg.enabled !== false ? 'Enabled' : 'Disabled', inline: true },
+            { name: 'Button text', value: `\`${buttonText}\``, inline: true },
+            { name: 'Verified users', value: `${verifiedUserCount} users`, inline: true },
             { name: '\u200B', value: '\u200B', inline: true },
-            { name: 'Verification Message', value: msgPreview, inline: false },
+            { name: 'Verification message', value: msgPreview, inline: false },
         );
 
     if (conflictSummary) {
-        embed.addFields({ name: 'Setup Conflicts', value: conflictSummary, inline: false });
+        embed.addFields({ name: 'Setup conflicts', value: conflictSummary, inline: false });
     }
 
     return embed
@@ -75,25 +75,21 @@ function buildSelectMenu(guildId) {
         .setPlaceholder('Select a setting to configure...')
         .addOptions(
             new StringSelectMenuOptionBuilder()
-                .setLabel('Change Verification Channel')
+                .setLabel('Change verification channel')
                 .setDescription('Set the channel where the verification panel is posted')
-                .setValue('channel')
-                .setEmoji('📢'),
+                .setValue('channel'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Change Verified Role')
+                .setLabel('Change verified role')
                 .setDescription('Set the role assigned when a user verifies')
-                .setValue('role')
-                .setEmoji('🏷️'),
+                .setValue('role'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Edit Verification Message')
+                .setLabel('Edit verification message')
                 .setDescription('Customise the message shown on the verification panel embed')
-                .setValue('message')
-                .setEmoji('💬'),
+                .setValue('message'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Edit Button Text')
+                .setLabel('Edit button text')
                 .setDescription('Change the label on the verify button')
-                .setValue('button_text')
-                .setEmoji('🔘'),
+                .setValue('button_text'),
         );
 }
 
@@ -108,9 +104,8 @@ function buildButtonRow(cfg, guildId, disabled = false, panelStatus = null) {
         buttons.push(
             new ButtonBuilder()
                 .setCustomId(`verif_cfg_repost_${guildId}`)
-                .setLabel('Repost Panel')
+                .setLabel('Repost panel')
                 .setStyle(ButtonStyle.Primary)
-                .setEmoji('📌')
                 .setDisabled(disabled),
         );
     }
@@ -120,7 +115,6 @@ function buildButtonRow(cfg, guildId, disabled = false, panelStatus = null) {
             .setCustomId(`verif_cfg_toggle_${guildId}`)
             .setLabel('Verification')
             .setStyle(systemOn ? ButtonStyle.Success : ButtonStyle.Danger)
-            .setEmoji('🔒')
             .setDisabled(disabled),
     );
 
@@ -278,7 +272,7 @@ export default {
                         cfg.messageId = newMsg.id;
                         await updateVerificationSettings(client, guildId, { messageId: cfg.messageId });
                         await btnInteraction.followUp({
-                            embeds: [successEmbed('Panel Reposted', `Verification panel restored in ${newMsg.channel}.`)],
+                            embeds: [successEmbed('Panel reposted', `Verification panel restored in ${newMsg.channel}.`)],
                             flags: MessageFlags.Ephemeral,
                         });
                         await refreshDashboard(interaction, cfg, guildId, client);
@@ -322,7 +316,7 @@ export default {
                     await btnInteraction.followUp({
                         embeds: [
                             successEmbed(
-                                '✅ System Updated',
+                                'System updated',
                                 `The verification system is now **${cfg.enabled ? 'enabled' : 'disabled'}**.`,
                             ),
                         ],
@@ -335,7 +329,7 @@ export default {
                     await InteractionHelper.safeEditReply(rootInteraction, {
                         embeds: [
                             new EmbedBuilder()
-                                .setTitle('Dashboard Timed Out')
+                                .setTitle('Dashboard timed out')
                                 .setDescription('This dashboard has been closed due to inactivity. Please run the command again to continue.')
                                 .setColor(getColor('error')),
                         ],
@@ -368,9 +362,9 @@ async function handleChannel(selectInteraction, rootInteraction, cfg, guildId, c
     await selectInteraction.followUp({
         embeds: [
             new EmbedBuilder()
-                .setTitle('Change Verification Channel')
+                .setTitle('Change verification channel')
                 .setDescription(
-                    `**Current:** ${cfg.channelId ?`<#${cfg.channelId}>`: '`Not set`'}\n\nSelect the channel where the verification panel will be posted.\n\n> ⚠️ The existing panel will be deleted and re-posted in the new channel.`,
+                    `**Current:** ${cfg.channelId ?`<#${cfg.channelId}>`: '`Not set`'}\n\nSelect the channel where the verification panel will be posted.\n\n> The current panel will be deleted and posted again in the new channel.`,
                 )
                 .setColor(getColor('info')),
         ],
@@ -423,7 +417,7 @@ async function handleChannel(selectInteraction, rootInteraction, cfg, guildId, c
         await updateVerificationSettings(client, guildId, { channelId: cfg.channelId, messageId: cfg.messageId });
 
         await chanInteraction.followUp({
-            embeds: [successEmbed('Channel Updated', `Verification panel moved to ${newChannel}.`)],
+            embeds: [successEmbed('Channel updated', `Verification panel moved to ${newChannel}.`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -451,7 +445,7 @@ async function handleRole(selectInteraction, rootInteraction, cfg, guildId, clie
     await selectInteraction.followUp({
         embeds: [
             new EmbedBuilder()
-                .setTitle('Change Verified Role')
+                .setTitle('Change verified role')
                 .setDescription(
                     `**Current:** ${cfg.roleId ?`<@&${cfg.roleId}>`: '`Not set`'}\n\nSelect the role to assign when a user verifies.`,
                 )
@@ -486,7 +480,7 @@ async function handleRole(selectInteraction, rootInteraction, cfg, guildId, clie
         await updateVerificationSettings(client, guildId, { roleId: cfg.roleId });
 
         await roleInteraction.followUp({
-            embeds: [successEmbed('Role Updated', `Verified role set to ${role}.`)],
+            embeds: [successEmbed('Role updated', `Verified role set to ${role}.`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -507,7 +501,7 @@ async function handleMessage(selectInteraction, rootInteraction, cfg, guildId, c
     try {
         const modal = new ModalBuilder()
             .setCustomId('verif_cfg_message')
-            .setTitle('Edit Verification Message')
+            .setTitle('Edit verification message')
             .addComponents(
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
@@ -540,7 +534,7 @@ async function handleMessage(selectInteraction, rootInteraction, cfg, guildId, c
         await updateLivePanel(rootInteraction.guild, cfg);
 
         await submitted.reply({
-            embeds: [successEmbed('Message Updated', 'The verification panel has been updated with the new message.')],
+            embeds: [successEmbed('Message updated', 'The verification panel has been updated with the new message.')],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -555,7 +549,7 @@ async function handleButtonText(selectInteraction, rootInteraction, cfg, guildId
     try {
         const modal = new ModalBuilder()
             .setCustomId('verif_cfg_button_text')
-            .setTitle('Edit Button Text')
+            .setTitle('Edit button text')
             .addComponents(
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
@@ -588,7 +582,7 @@ async function handleButtonText(selectInteraction, rootInteraction, cfg, guildId
         await updateLivePanel(rootInteraction.guild, cfg);
 
         await submitted.reply({
-            embeds: [successEmbed('Button Text Updated', `The verify button now reads **${cfg.buttonText}**.`)],
+            embeds: [successEmbed('Button text updated', `The verify button now reads **${cfg.buttonText}**.`)],
             flags: MessageFlags.Ephemeral,
         });
 

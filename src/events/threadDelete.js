@@ -15,7 +15,7 @@ export default {
         guildId: thread.guild.id,
         eventType: EVENT_TYPES.THREAD_DELETE,
         // The thread itself is gone, so the ignore check uses its parent channel.
-        data: { title: 'Thread Deleted', headline: `**${thread.name}** was deleted`, lines: threadLines(thread), channelId: thread.parentId || thread.id },
+        data: { title: 'Thread deleted', headline: `**${thread.name}** was deleted`, lines: threadLines(thread), channelId: thread.parentId || thread.id },
       });
     } catch (error) {
       logger.debug(`Thread delete log failed: ${error.message}`);

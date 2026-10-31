@@ -71,8 +71,8 @@ export default {
     const modifierText = modifier !== 0 ? `+ (${modifier})` : "";
 
     const embed = successEmbed(
-      `🎲 Rolling ${numDice}d${numSides}${modifier !== 0 ? match[3] : ""}`,
-      `${resultsDetail}**Total Roll:** ${totalRoll}${modifierText} = **${finalTotal}**`,
+      `Rolled ${numDice}d${numSides}${modifier !== 0 ? match[3] : ""}`,
+      `${resultsDetail}**Total:** ${totalRoll}${modifierText} = **${finalTotal}**`,
     );
 
     await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });

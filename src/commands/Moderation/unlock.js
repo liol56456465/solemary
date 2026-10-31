@@ -68,8 +68,8 @@ export default {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     successEmbed(
-                        `🔓 **Channel Unlocked**`,
-                        `${channel} is now unlocked. You may speak now.`,
+                        'Channel unlocked',
+                        `${channel} is unlocked. Members can talk here again.`,
                     ),
                 ],
             });

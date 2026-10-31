@@ -58,25 +58,25 @@ export async function fetchStaffChannel(client, purpose) {
 }
 
 const ACTION_LINE = {
-    ban: ['🔨', 'Ban'],
-    kick: ['👢', 'Kick'],
-    mute: ['🔇', 'Mute'],
-    warn: ['⚠️', 'Warning'],
-    unban: ['✅', 'Unban'],
-    unmute: ['🔊', 'Unmute'],
-    removewarn: ['🧹', 'Warning removed'],
-    nocontact: ['🚧', 'No-contact'],
+    ban: 'Ban',
+    kick: 'Kick',
+    mute: 'Mute',
+    warn: 'Warning',
+    unban: 'Unban',
+    unmute: 'Unmute',
+    removewarn: 'Warning removed',
+    nocontact: 'No-contact',
 };
 
 const oneLine = (text) => String(text ?? '').replace(/\s*\n+\s*/g, ' ').trim();
 
 /**
  * The mod log line for an enforcement action, from the fields logEnforcement builds:
- * "🔨 **Ban** · alice (123) · by Bob · `k3f9a` alice ban 1 · 7 days (ends …) · “Spam” · DM: Not delivered".
+ * "**Ban** · alice (123) · by Bob · `k3f9a` alice ban 1 · 7 days (ends …) · “Spam” · DM: Not delivered".
  */
 export function formatModLogLine(kind, fields = []) {
-    const [emoji, label] = ACTION_LINE[kind] || ['•', kind];
-    const parts = [`${emoji} **${label}**`];
+    const label = ACTION_LINE[kind] || kind;
+    const parts = [`**${label}**`];
     for (const field of fields) {
         if (!field?.value) continue;
         const value = oneLine(field.value);

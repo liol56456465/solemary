@@ -139,7 +139,7 @@ export async function handleNativeExecution(execution) {
         probation,
     };
 
-    const logLine = policy === 'log' ? { note: { emoji: '🛡️', title: 'Discord AutoMod blocked a message' } } : {};
+    const logLine = policy === 'log' ? { note: { title: 'Discord AutoMod blocked a message' } } : {};
     const now = Date.now();
     const key = `${guild.id}:${targetUser.id}:${execution.ruleId}`;
     if (isDuplicate(lastActed.get(key), dedupeMinutes, now)) {

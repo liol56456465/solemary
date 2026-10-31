@@ -179,18 +179,18 @@ const createTicketHandler = {
       const currentTicketCount = await getUserTicketCount(interaction.guildId, interaction.user.id);
       
       if (currentTicketCount >= maxTicketsPerUser) {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `You have reached the maximum number of open tickets (${maxTicketsPerUser}).\n\nPlease close your existing tickets before creating a new one.\n\n**Current Tickets:** ${currentTicketCount}/${maxTicketsPerUser}` });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `You already have ${currentTicketCount} of ${maxTicketsPerUser} open tickets. Close one before opening a new one.` });
       }
       
       const modal = new ModalBuilder()
         .setCustomId('create_ticket_modal')
-        .setTitle('Create a Ticket');
+        .setTitle('Open a ticket');
 
       const reasonInput = new TextInputBuilder()
         .setCustomId('reason')
-        .setLabel('Why are you creating this ticket?')
+        .setLabel('What do you need help with?')
         .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Describe your issue...')
+        .setPlaceholder('Describe the problem')
         .setRequired(true)
         .setMaxLength(1000);
 
@@ -229,8 +229,8 @@ const createTicketModalHandler = {
       );
       await interaction.editReply({
         embeds: [successEmbed(
-          'Ticket Created',
-          `Your ticket has been created in ${channel}!`
+          'Ticket opened',
+          `Your ticket is open: ${channel}`
         )]
       });
     } catch (error) {
@@ -259,13 +259,13 @@ const closeTicketHandler = {
 
       const modal = new ModalBuilder()
         .setCustomId('ticket_close_modal')
-        .setTitle('Close Ticket');
+        .setTitle('Close ticket');
 
       const reasonInput = new TextInputBuilder()
         .setCustomId('reason')
         .setLabel('Reason for closing (optional)')
         .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Add an optional reason for closing this ticket...')
+        .setPlaceholder('Why is this ticket being closed?')
         .setRequired(false)
         .setMaxLength(1000);
 
@@ -296,7 +296,7 @@ const closeTicketModalHandler = {
       const reason = providedReason || 'Closed via ticket button without a specific reason.';
 
       await closeTicket(interaction.channel, interaction.user, reason);
-      await interaction.editReply({ embeds: [successEmbed('Ticket Closed', 'This ticket has been closed.')] });
+      await interaction.editReply({ embeds: [successEmbed('Ticket closed', 'This ticket is closed.')] });
     } catch (error) {
       logger.error('Error submitting close ticket modal:', error);
       await replyTicketActionError(interaction, error, { fallback: 'An error occurred while closing the ticket.', action: 'close this ticket', botPermissions: ['ManageChannels', 'ManageRoles'] });
@@ -316,7 +316,7 @@ const claimTicketHandler = {
       if (!deferSuccess) return;
       
       await claimTicket(interaction.channel, interaction.user);
-      await interaction.editReply({ embeds: [successEmbed('Ticket Claimed', 'You have claimed this ticket.')] });
+      await interaction.editReply({ embeds: [successEmbed('Ticket claimed', 'You claimed this ticket.')] });
     } catch (error) {
       logger.error('Error claiming ticket:', error);
       await replyTicketActionError(interaction, error, { fallback: 'An error occurred while claiming the ticket.', action: 'claim this ticket', botPermissions: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'EmbedLinks'] });
@@ -342,7 +342,7 @@ const priorityTicketHandler = {
       }
 
       await updateTicketPriority(interaction.channel, priority, interaction.user);
-      await interaction.editReply({ embeds: [successEmbed('Priority Updated', `Ticket priority set to **${priority.toUpperCase()}**.`)] });
+      await interaction.editReply({ embeds: [successEmbed('Priority changed', `Priority set to **${priority}**.`)] });
     } catch (error) {
       logger.error('Error updating ticket priority:', error);
       await replyTicketActionError(interaction, error, { fallback: 'An error occurred while updating the priority.', action: 'change the priority', botPermissions: ['ManageChannels'] });
@@ -381,8 +381,8 @@ const pinTicketHandler = {
 
         await interaction.editReply({
           embeds: [createEmbed({
-            title: '📌 Ticket Unpinned',
-            description: 'This ticket has been unpinned and moved back to normal position.',
+            title: 'Ticket unpinned',
+            description: 'This ticket is no longer pinned.',
             color: 0x95A5A6
           })],
           flags: MessageFlags.Ephemeral
@@ -404,8 +404,8 @@ const pinTicketHandler = {
 
         await interaction.editReply({
           embeds: [createEmbed({
-            title: '📌 Ticket Pinned',
-            description: 'This ticket has been pinned to the top of the category.',
+            title: 'Ticket pinned',
+            description: 'This ticket is pinned to the top of the category.',
             color: 0x3498db
           })],
           flags: MessageFlags.Ephemeral
@@ -455,7 +455,7 @@ const unclaimTicketHandler = {
       
       const { unclaimTicket } = await import('../services/ticket.js');
       await unclaimTicket(interaction.channel, interaction.member);
-      await interaction.editReply({ embeds: [successEmbed('Ticket Unclaimed', 'This ticket has been unclaimed.')] });
+      await interaction.editReply({ embeds: [successEmbed('Ticket unclaimed', 'You unclaimed this ticket.')] });
     } catch (error) {
       logger.error('Error unclaiming ticket:', error);
       await replyTicketActionError(interaction, error, { fallback: 'An error occurred while unclaiming the ticket.', action: 'unclaim this ticket', botPermissions: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'EmbedLinks'] });
@@ -476,11 +476,11 @@ const reopenTicketHandler = {
       
       const { reopenTicket } = await import('../services/ticket.js');
       const { movedToOpenCategory, openCategoryMoveFailed } = await reopenTicket(interaction.channel, interaction.member);
-      let reopenMessage = 'This ticket has been reopened.';
+      let reopenMessage = 'This ticket is open again.';
       if (openCategoryMoveFailed) {
-        reopenMessage += ' Note: Could not move the channel back to the open tickets category.';
+        reopenMessage += ' Couldn\'t move the channel back to the open tickets category.';
       }
-      await interaction.editReply({ embeds: [successEmbed('Ticket Reopened', reopenMessage)] });
+      await interaction.editReply({ embeds: [successEmbed('Ticket reopened', reopenMessage)] });
     } catch (error) {
       logger.error('Error reopening ticket:', error);
       await replyTicketActionError(interaction, error, { fallback: 'An error occurred while reopening the ticket.', action: 'reopen this ticket', botPermissions: ['ManageChannels', 'ManageRoles'] });
@@ -501,7 +501,7 @@ const deleteTicketHandler = {
       
       const { deleteTicket } = await import('../services/ticket.js');
       await deleteTicket(interaction.channel, interaction.member);
-      await interaction.editReply({ embeds: [successEmbed('Ticket Deleted', 'This ticket will be deleted shortly.')] });
+      await interaction.editReply({ embeds: [successEmbed('Ticket deleted', 'This ticket will be deleted in a few seconds.')] });
     } catch (error) {
       logger.error('Error deleting ticket:', error);
       await replyTicketActionError(interaction, error, { fallback: 'An error occurred while deleting the ticket.', action: 'delete this ticket', botPermissions: ['ManageChannels'] });

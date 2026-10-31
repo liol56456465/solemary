@@ -46,20 +46,20 @@ function buildDashboardEmbed(cfg, guild, conflictSummary = '') {
     }
 
     const embed = new EmbedBuilder()
-        .setTitle('🤖 Auto-Verification Dashboard')
+        .setTitle('Auto-verification dashboard')
         .setDescription(`Manage auto-verification settings for **${guild.name}**.\nSelect an option below to modify a setting.`)
         .setColor(getColor('info'))
         .addFields(
-            { name: 'System Status', value: autoVerify?.enabled ? 'Enabled' : 'Disabled', inline: true },
-            { name: 'Target Role', value: autoVerifyRole ? autoVerifyRole.toString() : '`Not set`', inline: true },
+            { name: 'System status', value: autoVerify?.enabled ? 'Enabled' : 'Disabled', inline: true },
+            { name: 'Target role', value: autoVerifyRole ? autoVerifyRole.toString() : '`Not set`', inline: true },
             { name: 'Criteria', value: criteriaDescription, inline: true },
-            { name: 'Account Age', value: autoVerify?.accountAgeDays ? `\`${autoVerify.accountAgeDays}\` days` : '`N/A`', inline: true },
+            { name: 'Account age', value: autoVerify?.accountAgeDays ? `\`${autoVerify.accountAgeDays}\` days` : '`N/A`', inline: true },
             { name: '\u200B', value: '\u200B', inline: true },
             { name: '\u200B', value: '\u200B', inline: true },
         );
 
     if (conflictSummary) {
-        embed.addFields({ name: 'Setup Conflicts', value: conflictSummary, inline: false });
+        embed.addFields({ name: 'Setup conflicts', value: conflictSummary, inline: false });
     }
 
     return embed
@@ -73,15 +73,13 @@ function buildSelectMenu(guildId) {
         .setPlaceholder('Select a setting to configure...')
         .addOptions(
             new StringSelectMenuOptionBuilder()
-                .setLabel('Change Role')
+                .setLabel('Change role')
                 .setDescription('Select the role to assign automatically')
-                .setValue('role')
-                .setEmoji('🏷️'),
+                .setValue('role'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Edit Account Age Days')
+                .setLabel('Edit account age days')
                 .setDescription('Set minimum account age in days')
-                .setValue('account_age')
-                .setEmoji('📅'),
+                .setValue('account_age'),
         );
 }
 
@@ -90,15 +88,13 @@ function buildButtonRow(cfg, guildId, disabled = false) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`autoverify_cfg_criteria_${guildId}`)
-            .setLabel('Change Criteria')
+            .setLabel('Change criteria')
             .setStyle(ButtonStyle.Primary)
-            .setEmoji('🎯')
             .setDisabled(disabled),
         new ButtonBuilder()
             .setCustomId(`autoverify_cfg_toggle_${guildId}`)
             .setLabel('Auto-Verification')
             .setStyle(autoVerifyOn ? ButtonStyle.Success : ButtonStyle.Danger)
-            .setEmoji('🤖')
             .setDisabled(disabled),
     );
 }
@@ -156,13 +152,13 @@ export default {
                 if (autoRoleConfigured) blockingMessage.push('AutoRole is configured');
 
                 const blockingText = blockingMessage.length > 0 
-                    ? `\n\n⚠️ **To enable AutoVerify, you must first disable:**\n${blockingMessage.map(msg =>`• ${msg}`).join('\n')}`
+                    ? `\n\n**To turn on AutoVerify, first turn off:**\n${blockingMessage.map(msg =>`• ${msg}`).join('\n')}`
                     : '';
 
                 return await InteractionHelper.safeReply(interaction, {
                     embeds: [
                         new EmbedBuilder()
-                            .setTitle('🤖 Auto-Verification Dashboard')
+                            .setTitle('Auto-verification dashboard')
                             .setDescription(`Auto-verification is not yet configured.${blockingText}\n\nUse \`/verification auto setup\` to configure it.`)
                             .setColor(getColor('warning'))
                             .setFooter({ text: 'Dashboard closes after 10 minutes of inactivity' })
@@ -266,7 +262,7 @@ export default {
                         await btnInteraction.followUp({
                             embeds: [
                                 successEmbed(
-                                    '✅ Status Updated',
+                                    'Status updated',
                                     `Auto-verification is now **${guildConfig.verification.autoVerify.enabled ? 'enabled' : 'disabled'}**.`,
                                 ),
                             ],
@@ -285,7 +281,7 @@ export default {
                     btnCollector.stop();
                     try {
                         const timeoutEmbed = new EmbedBuilder()
-                            .setTitle('Dashboard Timed Out')
+                            .setTitle('Dashboard timed out')
                             .setDescription('This dashboard has been closed due to inactivity. Please run the command again to continue.')
                             .setColor(getColor('error'));
                         await InteractionHelper.safeEditReply(interaction, {
@@ -317,7 +313,7 @@ async function handleCriteria(selectInteraction, rootInteraction, guildConfig, g
     }
     
     const criteriaEmbed = new EmbedBuilder()
-        .setTitle('Select Verification Criteria')
+        .setTitle('Select verification criteria')
         .setDescription('Choose the criteria for automatic verification')
         .setColor(getColor('info'));
 
@@ -330,7 +326,7 @@ async function handleCriteria(selectInteraction, rootInteraction, guildConfig, g
                 .setDescription('Users with older accounts will be auto-verified')
                 .setValue('account_age'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('No Criteria (verify everyone)')
+                .setLabel('No criteria (verify everyone)')
                 .setDescription('All users gain the role immediately')
                 .setValue('none'),
         );
@@ -379,7 +375,7 @@ async function handleCriteria(selectInteraction, rootInteraction, guildConfig, g
         }
 
         await criteriaInteraction.followUp({
-            embeds: [successEmbed('Criteria Updated', `Auto-verification criteria changed to **${criteriaDisplay}**.`)],
+            embeds: [successEmbed('Criteria updated', `Auto-verification criteria changed to **${criteriaDisplay}**.`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -407,7 +403,7 @@ async function handleRole(selectInteraction, rootInteraction, guildConfig, guild
     await selectInteraction.followUp({
         embeds: [
             new EmbedBuilder()
-                .setTitle('Auto-Verification Role')
+                .setTitle('Auto-verification role')
                 .setDescription('Select the role to assign to auto-verified users.')
                 .setColor(getColor('info')),
         ],
@@ -437,7 +433,7 @@ async function handleRole(selectInteraction, rootInteraction, guildConfig, guild
         await updateVerificationSettings(client, guildId, { autoVerify: { roleId: role.id } });
 
         await roleInteraction.followUp({
-            embeds: [successEmbed('Role Updated', `Auto-verification role set to ${role}.`)],
+            embeds: [successEmbed('Role updated', `Auto-verification role set to ${role}.`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -457,12 +453,12 @@ async function handleRole(selectInteraction, rootInteraction, guildConfig, guild
 async function handleAccountAge(selectInteraction, rootInteraction, guildConfig, guildId, client) {
     const modal = new ModalBuilder()
         .setCustomId('autoverify_account_age_modal')
-        .setTitle('Set Account Age Requirement')
+        .setTitle('Set account age requirement')
         .addComponents(
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId('age_input')
-                    .setLabel('Minimum Account Age (days)')
+                    .setLabel('Minimum account age (days)')
                     .setStyle(TextInputStyle.Short)
                     .setPlaceholder(`Between ${minAccountAgeDays} and ${maxAccountAgeDays}`)
                     .setValue((guildConfig.verification.autoVerify.accountAgeDays || defaultAccountAgeDays).toString())
@@ -494,7 +490,7 @@ async function handleAccountAge(selectInteraction, rootInteraction, guildConfig,
     await updateVerificationSettings(client, guildId, { autoVerify: { accountAgeDays: days } });
 
     await submitted.reply({
-        embeds: [successEmbed('Account Age Updated', `Minimum account age requirement set to **${days} days**.`)],
+        embeds: [successEmbed('Account age updated', `Minimum account age requirement set to **${days} days**.`)],
         flags: MessageFlags.Ephemeral,
     });
 

@@ -121,7 +121,7 @@ export default {
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [createEmbed({
                     title: `Staff activity, week of ${start}`,
-                    description: truncate(rows.length ? `${rows.map(formatActivityLine).join('\n')}\n\n-# ⚠️ = no moderation work and under 20 messages. Actions are cases they created; reviews are automod and verification cards.` : 'No staff found.', 4096),
+                    description: truncate(rows.length ? `${rows.map(formatActivityLine).join('\n')}\n\n-# (inactive) = no moderation work and under 20 messages. Actions are cases they created; reviews are automod and verification cards.` : 'No staff found.', 4096),
                     color: 'primary',
                 })],
             });
