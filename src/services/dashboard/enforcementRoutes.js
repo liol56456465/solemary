@@ -344,6 +344,8 @@ export function createEnforcementHandlers(core) {
             precedentReason && isKnownReasonKey(precedentReason) && precedentReason !== CUSTOM_REASON_KEY
                 ? e.precedentHint(guildId, precedentReason, getReason(precedentReason)?.label || precedentReason).catch(() => null) : null,
         ]);
+        // The timeline is extra: a database problem leaves it out (the page says so), never the page.
+        const timeline = e.memberTimeline ? await e.memberTimeline(guildId, userId).catch(() => null) : [];
         const noContact = e.getActiveOrdersFor(guildId, userId) || [];
         const noContactNames = new Map(noContact.map((o) => [o.otherId, client.users.cache?.get?.(o.otherId)?.username || null]));
         const member = state.member;
@@ -367,6 +369,7 @@ export function createEnforcementHandlers(core) {
             };
         }
         return {
+            timeline,
             user: {
                 id: user.id, username: user.username, globalName: user.globalName || null, bot: Boolean(user.bot), createdAt: user.createdAt,
                 avatarUrl: typeof user.displayAvatarURL === 'function' ? user.displayAvatarURL({ size: 128 }) : null,

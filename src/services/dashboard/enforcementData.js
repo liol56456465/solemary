@@ -9,6 +9,7 @@ import {
 } from '../enforcement/caseService.js';
 import { editCase, voidCase } from '../enforcement/caseEditService.js';
 import { caseNotes } from '../enforcement/caseNotesService.js';
+import { memberTimeline } from '../members/memberTimeline.js';
 import { addEvidence, addImageEvidence, captureLinks, listEvidence, removeEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
 import { decideAppeal } from '../enforcement/appealService.js';
 import { precedentHint } from '../enforcement/precedentService.js';
@@ -37,6 +38,7 @@ export const defaultEnforcement = {
     // cases
     getCaseByCode, getAppealHistory, editCase, voidCase, addEvidence, addImageEvidence, removeEvidence, captureLinks, listEvidence, resolveImageUrls,
     addCaseNote: (...args) => caseNotes.addNote(...args), setCaseTags: (...args) => caseNotes.setTags(...args),
+    memberTimeline,
     // appeals
     decideAppeal,
     // no-contact orders

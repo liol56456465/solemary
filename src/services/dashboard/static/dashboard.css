@@ -1395,3 +1395,8 @@ form.filters .wide-filter { flex: 1 1 240px; }
 .chart.chart-wide .bar { gap: 6px; }
 .chart.chart-wide .bar i { border-radius: 3px 3px 1px 1px; }
 .chart.chart-wide .bar-label { white-space: nowrap; font-size: 11px; min-height: 14px; }
+
+/* Member page timeline: a plain dated list. */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { padding: 8px 0; border-top: 1px solid var(--line); }
+.timeline li:first-child { border-top: 0; }

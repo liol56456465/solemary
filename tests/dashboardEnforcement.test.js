@@ -113,6 +113,7 @@ function makeEnforcement(overrides = {}) {
         getLatestAppealStatuses: rec('getLatestAppealStatuses', async () => new Map([[CODE, 'pending']])),
         getActiveOrdersFor: rec('getActiveOrdersFor', () => [{ id: 7, otherId: OTHER, until: Date.now() + 86400000 }]),
         listNotes: rec('listNotes', async () => [{ id: 1700000000000, content: 'note <i>', author: 'admin', timestamp: new Date().toISOString() }]),
+        memberTimeline: rec('memberTimeline', async () => [{ at: new Date('2026-10-30T10:00:00Z'), kind: 'case', code: 'wrn2345', text: 'warn by mod: Spam <b>' }, { at: new Date('2026-10-01T10:00:00Z'), kind: 'join', text: 'Joined the server' }]),
         addNote: rec('addNote', async (g, u, content) => ({ id: 1, content })),
         removeNote: rec('removeNote', async (g, u, { id }) => (id === '1700000000000' ? { id: 1700000000000, content: 'gone' } : null)),
         precedentHint: rec('precedentHint', async () => 'Spam: 3 cases'),
@@ -1312,4 +1313,17 @@ test('banned page: Discord bans joined with open cases; filters; escaped; Unban 
     const down = await get(h, h.d.enforcement.bans);
     assert.equal(down.statusCode, 503);
     assert.match(down.body, /could not be loaded/);
+});
+
+test('member page: timeline section, escaped, newest first; a database error says so and keeps the page', async () => {
+    const h = await setup();
+    const page = await get(h, h.d.enforcement.userPage, { params: { id: TARGET } });
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /<ol class="timeline">/);
+    assert.ok(page.body.includes('warn by mod: Spam &lt;b&gt;'));
+    assert.ok(page.body.indexOf('Spam &lt;b&gt;') < page.body.indexOf('Joined the server'));
+    const h2 = await setup({ overrides: { memberTimeline: async () => { throw new Error('db down'); } } });
+    const res = await get(h2, h2.d.enforcement.userPage, { params: { id: TARGET } });
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, /timeline could not be loaded/);
 });

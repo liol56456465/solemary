@@ -344,6 +344,14 @@ ${actionForm(csrf, `/users/${id}/action/preview`, fields, { submit: 'Preview', h
  * casesTotal, appealStatuses, noContact, noContactNames, notes, actions, precedentReason,
  * precedent, block }.
  */
+/** Everything about the member in date order (memberTimeline.js); null = could not be read. */
+function timelineSection(timeline) {
+    if (timeline === null) return html`<p class="error" role="alert">The timeline could not be loaded (database). Reload the page to try again.</p>`;
+    if (!timeline?.length) return html`<p class="muted">Nothing recorded yet. Joins and leaves are kept 90 days.</p>`;
+    return html`<ol class="timeline">${timeline.map((e) => html`<li class="tl-${e.kind}"><span class="muted">${formatDate(e.at)}</span> ${e.text}${e.code ? html` · ${caseLink(e.code)}` : ''}</li>`)}</ol>
+<p class="muted">Newest first. Joins and leaves are kept 90 days.</p>`;
+}
+
 export function userPage({ session, access = null, moduleStates = {}, view, canAct = false, allow = null, editEnabled = false, flash = null, error = null, values = {}, now = Date.now() }) {
     // allow(key): permissions.js for this viewer (the Moderator level runs some actions); default canAct for everything.
     const may = (key) => Boolean(editEnabled && (allow ? allow(key) : canAct));
@@ -363,6 +371,7 @@ ${section('Actions', html`${view.block ? html`<p class="error">You are blocked b
 ${canWrite || limited ? (actions.length ? html`<p class="muted">Same actions, DMs, ladder and checks as /enforcements. Each one shows a confirmation first.</p>${actions.map((type) => actionBlock(view, type, session.csrf, values.type === type ? values : {}))}` : html`<p class="muted">No actions available.</p>`)
         : html`<p class="muted">Available: ${view.actions.map((t) => ACTION_LABELS[t]).join(', ') || 'none'}.</p>`}`, '', { key: 'member-actions' })}
 ${section('Precedent', precedentSection(view), '', { key: 'member-precedent', open: Boolean(view.precedentReason) })}
+${section('Timeline', timelineSection(view.timeline), '', { key: 'member-timeline', open: false })}
 ${section(`Case history (${view.casesTotal || 0})`, casesSection(view), '', { key: 'member-cases', open: false })}
 ${section(`Staff notes (${(view.notes || []).length})`, notesSection(view, may('member.notes'), session.csrf), '', { key: 'member-notes' })}`;
     return layout({ title: view.user.username, active: 'users', session, access, moduleStates, body });
