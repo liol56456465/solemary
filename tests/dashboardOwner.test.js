@@ -95,6 +95,7 @@ async function setup({
     registeredCommands = async () => [{ name: 'help', type: 1 }, { name: 'rank', type: 1 }, { name: 'Moderate', type: 2 }],
     registerMainCommands = async () => ({ guildId: '100000000000000001', count: 3 }), retired = false,
     premium = null, testCheckout = true, premiumRoles = { normal: null, pro: null, max: null },
+    exportUserData = async (id) => ({ format: 'mewvo-data-export-v1', userId: id, levels: [] }),
 } = {}) {
     const guilds = new Map([
         [MAIN, makeGuild(MAIN, { name: 'Main', ownerId: '999999999999999990' })],
@@ -137,6 +138,7 @@ async function setup({
         premiumAfter: rec('premiumAfter', async () => {}),
         premiumRoles: () => premiumRoles,
         savePremiumRoles: rec('savePremiumRoles', async (g, value) => { Object.assign(premiumRoles, value); return value; }),
+        exportUserData: rec('exportUserData', exportUserData),
     };
     const sessions = createMemorySessionStore({ ttlMs: 48 * 3600 * 1000 });
     const access = createAccessChecker(client, { facts: async (c, id) => ({ inGuild: true, isAdmin: admins.has(id), isOwnerId: owners.has(id) }) });
@@ -930,4 +932,28 @@ test('premium: supporter roles are saved and audited; a role outside the main se
     const bad = await post(h, h.ow.premiumRolesSave, { form: { role_pro: '300000000000000099' } });
     assert.equal(bad.statusCode, 400);
     assert.match(bad.body, /not in the main server/);
+});
+
+test('users: download a user\'s data for a data request (owner only, audited, 503 on a database error)', async () => {
+    const id = '300000000000000031';
+    const admin = await setup({ userId: ADMIN });
+    assert.equal((await get(admin, admin.ow.userData, { params: { id } })).statusCode, 404, 'not for administrators');
+    assert.equal(admin.calls.filter((c) => c.name === 'exportUserData').length, 0);
+
+    const h = await setup();
+    const page = await get(h, h.ow.users, { query: { q: id } });
+    assert.ok(page.body.includes(`href="/dashboard/owner/users/${id}/data" download>Download their data (JSON)</a>`));
+    const res = await get(h, h.ow.userData, { params: { id } });
+    assert.equal(res.statusCode, 200);
+    assert.match(res.headers['Content-Disposition'], new RegExp(`^attachment; filename="mewvo-data-${id}-\\d{4}-\\d{2}-\\d{2}\\.json"$`));
+    assert.equal(res.headers['Cache-Control'], 'no-store');
+    assert.equal(JSON.parse(res.body).userId, id);
+    assert.ok(h.auditRows.some((r) => r.key === `privacy.export.${id}` && r.new === 'downloaded'));
+    assert.equal(ownerActionText(`privacy.export.${id}`), `Data of user ${id} downloaded`);
+    assert.equal((await get(h, h.ow.userData, { params: { id: 'abc' } })).statusCode, 404);
+
+    const broken = await setup({ exportUserData: async () => { throw new Error('db down'); } });
+    const fail = await get(broken, broken.ow.userData, { params: { id } });
+    assert.equal(fail.statusCode, 503);
+    assert.equal(broken.auditRows.length, 0, 'nothing logged when nothing was downloaded');
 });

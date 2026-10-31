@@ -58,6 +58,9 @@ import { adminCommandsRetired } from '../../config/commands/retirement.js';
 import { KEY_DURATIONS, KEY_VALIDITY, MAX_KEYS_PER_BATCH, keyHint, premiumSettings, premiumStore } from '../billing/premiumService.js';
 import { afterPremiumChange, tierRoles } from '../billing/premiumEffects.js';
 import { updateSettings } from '../settings/guildSettings.js';
+import { buildDataExport, exportFileName } from '../privacy/dataExport.js';
+import { query } from '../enforcement/db.js';
+import { getFromDb } from '../../utils/database/wrapper.js';
 import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
@@ -411,6 +414,8 @@ export const defaultOwnerDeps = {
     premiumAfter: afterPremiumChange,
     premiumRoles: () => tierRoles(),
     savePremiumRoles: (guildId, value, actor) => updateSettings(guildId, { premiumRoleIds: value }, { ...actor, module: 'owner' }),
+    // A data request that came by email or in the support server (Privacy Policy, GDPR Art. 15).
+    exportUserData: (userId) => buildDataExport(userId, { query, readKey: (key) => getFromDb(key, null) }),
 };
 
 // ── Handlers ──────────────────────────────────────────────────────────────
@@ -776,6 +781,26 @@ export function createOwnerHandlers(core) {
         });
     }
 
+    /**
+     * GET /owner/users/:id/data: the same JSON a member gets from "Download my data", for a
+     * request that came another way. Written to the owner audit log (who exported whose data).
+     */
+    async function userData(req, res) {
+        const id = String(req.params.id || '');
+        if (!isSnowflake(id)) return notFound(req, res);
+        let file;
+        try {
+            file = await o.exportUserData(id);
+        } catch (error) {
+            logger.error(`Owner data export of ${id} failed: ${error.message}`);
+            return fail(res, 503, 'Export unavailable', 'The data could not be collected because the database is not responding. Nothing was downloaded; try again in a few minutes.', req);
+        }
+        await audit(req, [{ key: `privacy.export.${id}`, old: null, new: 'downloaded' }]);
+        res.set('Cache-Control', 'no-store');
+        res.set('Content-Disposition', `attachment; filename="${exportFileName(id)}"`);
+        return res.status(200).type('application/json').send(`${JSON.stringify(file, null, 2)}\n`);
+    }
+
     // ── Blacklist ────────────────────────────────────────────────────────
 
     async function renderBlacklist(req, res, status = 200, error = null, values = {}) {
@@ -1087,7 +1112,7 @@ export function createOwnerHandlers(core) {
 
     return {
         requireOwner, index, home, activity, profile, username, about, presence, avatar: imageAction('avatar'), banner: imageAction('banner'),
-        servers, server, invite, leavePreview, leave, users, blacklist, blacklistAdd, blacklistRemove,
+        servers, server, invite, leavePreview, leave, users, userData, blacklist, blacklistAdd, blacklistRemove,
         health, maintenance, commands, registerPreview, register, announce, announcePreview, announceSend,
         premium, premiumGenerate, premiumRevoke, premiumEnd, premiumGrant, premiumRolesSave,
     };

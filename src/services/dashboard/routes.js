@@ -899,6 +899,7 @@ export function dashboardRouter(d) {
     router.get('/owner/servers', ...owner, safe(ow.servers));
     router.get('/owner/servers/:id', ...owner, safe(ow.server));
     router.get('/owner/users', ...owner, safe(ow.users));
+    router.get('/owner/users/:id/data', ...owner, safe(ow.userData));
     router.get('/owner/blacklist', ...owner, safe(ow.blacklist));
     router.get('/owner/health', ...owner, safe(ow.health));
     router.get('/owner/commands', ...owner, safe(ow.commands));

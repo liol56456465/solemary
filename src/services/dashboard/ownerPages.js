@@ -201,6 +201,7 @@ ${r ? html`<section class="card"><h2>${r.globalName || r.username || r.id}</h2>$
 <dt>Account created</dt><dd>${formatDate(r.createdAt)}</dd>
 <dt>Bot owner</dt><dd>${r.isOwner ? stateWord('on', 'Yes (OWNER_IDS)') : 'No'}</dd>
 <dt>Blacklist</dt><dd>${blacklistText}</dd>
+<dt>Their data</dt><dd><a href="${path(`/owner/users/${r.id}/data`)}" download>Download their data (JSON)</a> <span class="muted">for a data request (Privacy Policy). Logged in Owner activity.</span></dd>
 </dl></section>
 ${recordSection(r)}
 ${servers}` : ''}`;
@@ -251,6 +252,7 @@ export function ownerActionText(key, names = new Map()) {
     if (k === 'premium.roles') return 'Supporter roles changed';
     if ((m = /^premium\.subscriptions\.(\d+)\.grant$/.exec(k))) return `Plan given to user ${m[1]}`;
     if ((m = /^premium\.subscriptions\.(\d+)\.end$/.exec(k))) return `Subscription of user ${m[1]} ended`;
+    if ((m = /^privacy\.export\.(\d+)$/.exec(k))) return `Data of user ${m[1]} downloaded`;
     return k;
 }
 
