@@ -233,3 +233,46 @@ test('/premium redeem: at most 5 tries a minute per user', () => {
     assert.equal(allowRedeem('other', now + 10, store), true);
     assert.equal(allowRedeem('u', now + 61_000, store), true, 'window passed');
 });
+
+test('/premium gift: test-mode gift key DMed to them; closed DMs show the key to the buyer; no bots, not yourself, 3 an hour', async () => {
+    const { allowGift, giftDm } = await import('../src/commands/Core/premium.js');
+    const purchases = [];
+    const store = { purchase: async (p) => { purchases.push(p); return { key: { code: 'MEWVO-2222-3333-4444', duration_days: 30, plan_id: p.planId } }; } };
+    const make = (target, buyerId = MEMBER, opts = { plan: 'pro', period: null, message: 'enjoy' }) => {
+        const i = fakeInteraction('gift', null, buyerId);
+        i.options.getUser = () => target;
+        i.options.getString = (name) => opts[name] ?? null;
+        return i;
+    };
+    const dms = [];
+    const friend = { id: '300000000000000099', username: 'friend', globalName: 'Friend', bot: false, send: async (p) => dms.push(p) };
+    const ok = make(friend);
+    await premiumCommand.execute(ok, null, null, { env: ON, store });
+    assert.equal(purchases[0].kind, 'gift');
+    assert.equal(purchases[0].period, 'monthly', 'a month by default');
+    assert.equal(purchases[0].giftTo, 'Friend');
+    assert.match(dms[0].content, /^Member gave you \*\*Mewvo Pro\*\* for 30 days\.\n> enjoy\nYour key: `MEWVO-2222-3333-4444`/);
+    assert.match(dms[0].content, /https:\/\/mewvo\.example\/me\/redeem\?code=MEWVO-2222-3333-4444/);
+    assert.deepEqual(dms[0].allowedMentions, { parse: [] });
+    assert.match(description(ok), /^Sent\. friend got a DM/);
+
+    const closed = make({ ...friend, send: async () => { throw new Error('Cannot send messages to this user'); } }, '200000000000000077');
+    await premiumCommand.execute(closed, null, null, { env: ON, store });
+    assert.match(description(closed), /Their DMs are closed, so give them this key yourself: `MEWVO-2222-3333-4444`/);
+
+    const before = purchases.length;
+    const bot = make({ ...friend, bot: true }, '200000000000000078');
+    await premiumCommand.execute(bot, null, null, { env: ON, store });
+    assert.match(description(bot), /Bots can't have a plan/);
+    const self = make({ ...friend, id: '200000000000000079' }, '200000000000000079');
+    await premiumCommand.execute(self, null, null, { env: ON, store });
+    assert.match(description(self), /That's you/);
+    assert.equal(purchases.length, before, 'nothing bought for refused gifts');
+
+    const t0 = 1000;
+    const limits = new Map();
+    assert.ok(allowGift('u', t0, limits) && allowGift('u', t0 + 1, limits) && allowGift('u', t0 + 2, limits));
+    assert.equal(allowGift('u', t0 + 3, limits), false);
+    assert.equal(allowGift('u', t0 + 3600001, limits), true, 'an hour later');
+    assert.ok(!giftDm({ fromName: 'A', planId: 'max', days: 365, code: 'K', message: '' }).includes('>'));
+});
