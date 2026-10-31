@@ -243,8 +243,11 @@ async function handleSetup(interaction) {
         flags: ['Ephemeral'],
     });
 
+    // Opens the settings panel right after; a failure there must not become an unhandled rejection.
     setTimeout(() => {
-        appDashboard.execute(submitted, null, interaction.client, appName);
+        Promise.resolve()
+            .then(() => appDashboard.execute(submitted, null, interaction.client, appName))
+            .catch((error) => logger.error(`Application dashboard after create failed: ${error.message}`));
     }, 500);
 }
 
