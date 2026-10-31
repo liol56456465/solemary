@@ -89,12 +89,9 @@ test('pages have no inline styles or scripts and link the one stylesheet', () =>
     assert.ok(audit.includes('&lt;u&gt;'));
     assert.ok(!/<style|style=|<script/i.test(audit.replace(ALLOWED_SCRIPT, '')));
     const css = readFileSync(new URL('../src/services/dashboard/static/dashboard.css', import.meta.url), 'utf8');
-    // The only blend allowed: the page glow on the body background (two radial gradients of
-    // the theme's --glow tokens). Anywhere else, colours stay flat.
-    const blends = css.match(/[a-z-]*gradient\(/gi) || [];
-    assert.deepEqual(blends, ['radial-gradient(', 'radial-gradient('], 'just the body glow');
-    const body = css.slice(css.indexOf('\nbody {'), css.indexOf('}', css.indexOf('\nbody {')));
-    assert.ok(body.includes('var(--glow-1), transparent 70%)') && body.includes('var(--glow-2), transparent 70%), var(--bg);'), 'both on the body, from the theme tokens');
+    // No gradients or glows anywhere, and no pill shapes: colours stay flat, corners small.
+    assert.deepEqual(css.match(/[a-z-]*gradient\(/gi) || [], [], 'no gradients');
+    assert.ok(!/border-radius:\s*999px/.test(css), 'no pill shapes');
 });
 
 // ── signing, state, sessions ──────────────────────────────────────────────

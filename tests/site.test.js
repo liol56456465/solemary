@@ -59,7 +59,7 @@ test('every front page renders with the shell, the hashed stylesheet and no inli
     try {
         for (const [path, heading] of [
             ['/', 'Discord moderation with a paper trail.'], ['/commands', 'Commands'], ['/about', 'About Mewvo'],
-            ['/leaderboard', 'Leaderboard'], ['/status', 'Status'], ['/privacy', 'Privacy'], ['/terms', 'Terms'],
+            ['/leaderboard', 'Leaderboard'], ['/status', 'Status'], ['/privacy', 'Privacy Policy'], ['/terms', 'Terms and Conditions'],
             ['/features', 'Features'], ['/pricing', 'Free today. Paid plans later.'], ['/faq', 'Questions and answers'],
             ['/docs', 'Guides'], ['/docs/getting-started', 'Getting started for staff'], ['/docs/warnings', 'How warnings and bans escalate'],
             ['/docs/appeals', 'Appeals: how they work'], ['/docs/using-the-dashboard', 'Using the dashboard'],
@@ -494,20 +494,20 @@ test('privacy and terms: dated, linked from the footer, contact via the support 
         for (const path of ['/privacy', '/terms']) {
             const res = await site.get(path);
             assert.equal(res.status, 200);
-            assert.ok(res.body.includes('Last updated <time datetime="2026-10-29">29 October 2026</time>.'), path);
+            assert.ok(res.body.includes('Last updated <time datetime="2026-10-31">31 October 2026</time>.'), path);
             assert.ok(res.body.includes(`<a href="${SUPPORT}" rel="noopener">the support server</a>`), path);
         }
         const privacy = (await site.get('/privacy')).body;
-        for (const fact of ['<code>identify</code>', '<code>guilds.join</code>', 'AES-256-GCM', '60 days', '<code>/wipedata</code>', 'never sold', 'PostgreSQL', 'never asks for your email']) {
+        for (const fact of ['AES-256-GCM', '60 days', '90 days', '<code>/wipedata</code>', 'never sold', 'PostgreSQL', 'never asks for your email', 'Art. 6(1)(f)', 'data protection authority', 'Automatic decisions', 'Cookies', 'at least 13']) {
             assert.ok(privacy.includes(fact), fact);
         }
         assert.ok(privacy.includes('does not delete moderation records'));
         const terms = (await site.get('/terms')).body;
-        assert.ok(terms.includes('No warranty') && terms.includes('href="/privacy"'));
+        assert.ok(terms.includes('No payments are taken yet') && terms.includes('Liability') && terms.includes('href="/privacy"'));
         // Footer: status and legal links on every page; Leaderboard also in the top nav.
         const home = (await site.get('/')).body;
         const footer = home.slice(home.indexOf('<footer'));
-        for (const link of ['<a href="/status">Status</a>', '<a href="/privacy">Privacy</a>', '<a href="/terms">Terms</a>', '<a href="/leaderboard">Leaderboard</a>']) {
+        for (const link of ['<a href="/status">Status</a>', '<a href="/privacy">Privacy Policy</a>', '<a href="/terms">Terms and Conditions</a>', '<a href="/leaderboard">Leaderboard</a>']) {
             assert.ok(footer.includes(link), link);
         }
         const topnav = home.slice(home.indexOf('<nav class="topnav"'), home.indexOf('</nav>'));

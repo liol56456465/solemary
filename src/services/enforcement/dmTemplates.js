@@ -38,7 +38,7 @@ function finish(lines) {
 
 export function banDm(record) {
     const duration = record.expires_at
-        ? `Duration: ${formatDuration(Number(record.duration_ms))} — ends ${stamp(record.expires_at)}`
+        ? `Duration: ${formatDuration(Number(record.duration_ms))}, ends ${stamp(record.expires_at)}`
         : 'Duration: Permanent';
     const lines = [
         appealLine(record),
@@ -71,7 +71,7 @@ export function muteDm(record) {
         `**Appeal here:** ${invite()}`,
         `**Muted in ${serverName}**`,
         ...common(record),
-        `Duration: ${formatDuration(Number(record.duration_ms))} — ends ${stamp(record.expires_at)}`,
+        `Duration: ${formatDuration(Number(record.duration_ms))}, ends ${stamp(record.expires_at)}`,
         `Case code: ${record.case_code}`,
     ]);
 }

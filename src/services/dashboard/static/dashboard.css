@@ -8,7 +8,7 @@
    chart colours per theme (--c-ban/-mute/-warn/-kick); green = on / success, red = destructive /
    errors, amber = warnings. Every text pair >= 4.5:1 and every UI mark >= 3:1 in every theme:
    tests/dashboardContrast.test.js checks the pairs, so change colours here and run it.
-   The only blend is the soft page glow (--glow-1 / --glow-2 on the body background).
+   No gradients or glows: every surface is one flat colour.
    Scales: type 12 14 16 20 24 · spacing 4 8 12 16 24 32 48 · radius 14 cards, 10 controls. */
 
 :root {
@@ -44,8 +44,6 @@
     --c-mute: #8a7d64;
     --c-warn: #1f1d19;
     --c-kick: #835608;
-    --glow-1: rgba(0,0,0,0);
-    --glow-2: rgba(0,0,0,0);
     --shadow-pop: 0 6px 18px rgb(0 0 0 / 0.08);
     --scrim: rgb(0 0 0 / 0.45);
     --radius: 14px;
@@ -110,8 +108,6 @@
         --c-mute: #9a9ea7;
         --c-warn: #ececee;
         --c-kick: #e8c46a;
-        --glow-1: rgba(0,0,0,0);
-        --glow-2: rgba(0,0,0,0);
         --shadow-pop: 0 8px 24px rgb(0 0 0 / 0.45);
         --scrim: rgb(0 0 0 / 0.6);
     }
@@ -151,8 +147,6 @@
     --c-mute: #a58bff;
     --c-warn: #ec7cc7;
     --c-kick: #f3c26b;
-    --glow-1: rgba(236,124,199,.16);
-    --glow-2: rgba(165,139,255,.14);
     --shadow-pop: 0 8px 24px rgb(0 0 0 / 0.45);
     --scrim: rgb(0 0 0 / 0.6);
 }
@@ -191,8 +185,6 @@
     --c-mute: #ffd447;
     --c-warn: #ff9a3d;
     --c-kick: #e8c39e;
-    --glow-1: rgba(255,146,51,.16);
-    --glow-2: rgba(255,212,71,.07);
     --shadow-pop: 0 8px 24px rgb(0 0 0 / 0.45);
     --scrim: rgb(0 0 0 / 0.6);
 }
@@ -231,8 +223,6 @@
     --c-mute: #7c9eff;
     --c-warn: #3fcad6;
     --c-kick: #f2c96b;
-    --glow-1: rgba(63,202,214,.14);
-    --glow-2: rgba(124,158,255,.12);
     --shadow-pop: 0 8px 24px rgb(0 0 0 / 0.45);
     --scrim: rgb(0 0 0 / 0.6);
 }
@@ -271,8 +261,6 @@
     --c-mute: #d6c46e;
     --c-warn: #7fd083;
     --c-kick: #93badd;
-    --glow-1: rgba(127,208,131,.12);
-    --glow-2: rgba(214,196,110,.08);
     --shadow-pop: 0 8px 24px rgb(0 0 0 / 0.45);
     --scrim: rgb(0 0 0 / 0.6);
 }
@@ -311,8 +299,6 @@
     --c-mute: #8f9cff;
     --c-warn: #e9c25d;
     --c-kick: #72d79d;
-    --glow-1: rgba(233,194,93,.12);
-    --glow-2: rgba(143,156,255,.10);
     --shadow-pop: 0 8px 24px rgb(0 0 0 / 0.45);
     --scrim: rgb(0 0 0 / 0.6);
 }
@@ -351,8 +337,6 @@
     --c-mute: #9a9ea7;
     --c-warn: #ececee;
     --c-kick: #e8c46a;
-    --glow-1: rgba(0,0,0,0);
-    --glow-2: rgba(0,0,0,0);
     --shadow-pop: 0 8px 24px rgb(0 0 0 / 0.45);
     --scrim: rgb(0 0 0 / 0.6);
 }
@@ -391,8 +375,6 @@
     --c-mute: #cf6a8e;
     --c-warn: #b8346a;
     --c-kick: #8c5c0c;
-    --glow-1: rgba(232,160,180,.28);
-    --glow-2: rgba(255,255,255,0);
     --shadow-pop: 0 6px 18px rgb(0 0 0 / 0.08);
     --scrim: rgb(0 0 0 / 0.45);
 }
@@ -431,8 +413,6 @@
     --c-mute: #7b2cbf;
     --c-warn: #b8390a;
     --c-kick: #a87400;
-    --glow-1: rgba(255,166,99,.28);
-    --glow-2: rgba(123,44,191,.06);
     --shadow-pop: 0 6px 18px rgb(0 0 0 / 0.08);
     --scrim: rgb(0 0 0 / 0.45);
 }
@@ -471,8 +451,6 @@
     --c-mute: #2f9cbf;
     --c-warn: #1b65a6;
     --c-kick: #845900;
-    --glow-1: rgba(91,192,222,.24);
-    --glow-2: rgba(255,255,255,0);
     --shadow-pop: 0 6px 18px rgb(0 0 0 / 0.08);
     --scrim: rgb(0 0 0 / 0.45);
 }
@@ -511,8 +489,6 @@
     --c-mute: #8a7d64;
     --c-warn: #1f1d19;
     --c-kick: #835608;
-    --glow-1: rgba(0,0,0,0);
-    --glow-2: rgba(0,0,0,0);
     --shadow-pop: 0 6px 18px rgb(0 0 0 / 0.08);
     --scrim: rgb(0 0 0 / 0.45);
 }
@@ -535,10 +511,8 @@
 html, body { margin: 0; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-    /* The one blend in the stylesheet: a soft glow of the theme's two accents behind the page. */
-    background: radial-gradient(900px 520px at 85% -10%, var(--glow-1), transparent 70%),
-                radial-gradient(760px 520px at 15% 110%, var(--glow-2), transparent 70%), var(--bg);
-    background-attachment: fixed; color: var(--fg);
+    /* Flat page colour: no gradients or glows anywhere in the stylesheet. */
+    background: var(--bg); color: var(--fg);
     font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
 }
@@ -732,7 +706,7 @@ details.section[open] > summary::after, details.sub[open] > summary::before, det
 .section-help { margin-top: -2px; }
 .card-foot { margin: 12px 0 0; font-size: 14px; }
 .count {
-    display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px;
+    display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 6px;
     background: var(--surface); color: var(--text); border: 1px solid var(--border); font-size: 12px; font-weight: 600;
 }
 
@@ -750,7 +724,7 @@ details.sub > :not(summary), details.action > :not(summary) { margin: 12px; }
 
 /* ── Status pills ─────────────────────────────────────────────────────── */
 .state, .tag, .type {
-    display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: 6px;
     font-size: 12px; font-weight: 600; white-space: nowrap; vertical-align: 1px;
     background: var(--surface-2); color: var(--fg-2); border: 1px solid var(--line);
 }
@@ -954,7 +928,7 @@ a.kpi-num:hover { text-decoration: none; color: var(--accent); }
 /* Overview: compact module list. */
 .module-chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
 .module-chips a {
-    display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 6px;
     border: 1px solid var(--line); background: var(--raised); color: var(--fg); font-size: 12px;
 }
 .module-chips a:hover { border-color: var(--accent); text-decoration: none; }
@@ -963,7 +937,7 @@ a.kpi-num:hover { text-decoration: none; color: var(--accent); }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin: 0 0 16px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
-    display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 6px;
     border: 1px solid var(--line-strong); color: var(--fg-2); font-size: 12px; font-weight: 500; background: var(--raised);
 }
 .chip:hover { color: var(--fg); border-color: var(--fg-2); text-decoration: none; }
@@ -1005,7 +979,7 @@ a.kpi-num:hover { text-decoration: none; color: var(--accent); }
 .section-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 16px; }
 .section-links-label { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-2); margin-right: 4px; }
 .section-links a {
-    display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px;
+    display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 6px;
     background: var(--raised); border: 1px solid var(--border); color: var(--fg-2); font-size: 12px;
 }
 .section-links a:hover { background: var(--accent-soft); color: var(--accent-text); text-decoration: none; }
@@ -1038,10 +1012,10 @@ body.has-save-bar .toast-stack { bottom: 84px; }
 .checklist-hint { display: block; font-size: 12px; color: var(--fg-2); }
 .checklist li.is-done .checklist-text { color: var(--fg-2); }
 .progress-row { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; }
-progress { flex: 1; max-width: 360px; height: 8px; appearance: none; border: 0; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
-progress::-webkit-progress-bar { background: var(--surface-2); border-radius: 999px; }
-progress::-webkit-progress-value { background: var(--ok); border-radius: 999px; }
-progress::-moz-progress-bar { background: var(--ok); border-radius: 999px; }
+progress { flex: 1; max-width: 360px; height: 8px; appearance: none; border: 0; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+progress::-webkit-progress-bar { background: var(--surface-2); border-radius: 6px; }
+progress::-webkit-progress-value { background: var(--ok); border-radius: 6px; }
+progress::-moz-progress-bar { background: var(--ok); border-radius: 6px; }
 /* Empty state: one sentence and at most one action, no illustration. */
 .empty { padding: 24px; text-align: center; color: var(--fg-2); border: 1px dashed var(--line-strong); border-radius: var(--radius-sm); }
 .empty a, .empty .button-link { margin-left: 4px; }
@@ -1170,7 +1144,7 @@ details.section.is-changed > summary h2::after { content: "Unsaved changes"; fon
 .inline-form .form-actions { margin: 0; padding: 0; border: 0; }
 /* Quick filter chips (Members) and the folded bulk-action box. */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
-.chip { display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--raised); color: var(--text-muted); font-size: 13px; font-weight: 500; }
+.chip { display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--raised); color: var(--text-muted); font-size: 13px; font-weight: 500; }
 .chip:hover { color: var(--text); border-color: var(--border-strong); text-decoration: none; }
 .chip[aria-current] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); font-weight: 650; }
 .bulk-wrap { margin: 0 0 16px; }
@@ -1219,11 +1193,11 @@ button.copy { height: 24px; padding: 0 8px; margin-left: 8px; font-size: 12px; v
 /* Switch: a pill. Off = outline + grey knob, on = green track + light knob (dark knob in dark mode).
    The On/Off word next to it (.switch-state / .switch-word) carries the state too. */
 button.switch, .switch-track {
-    position: relative; display: inline-block; width: 40px; height: 24px; padding: 0; flex: none; border-radius: 999px;
+    position: relative; display: inline-block; width: 40px; height: 24px; padding: 0; flex: none; border-radius: 6px;
     background: var(--raised); border: 1.5px solid var(--control);
 }
 button.switch::after, .switch-track::after {
-    content: ""; position: absolute; top: 2.5px; left: 2.5px; width: 16px; height: 16px; border-radius: 50%;
+    content: ""; position: absolute; top: 2.5px; left: 2.5px; width: 16px; height: 16px; border-radius: 4px;
     background: var(--control);
 }
 button.switch:hover, .switch-row:hover .switch-track { background: var(--surface-2); border-color: var(--fg-2); }
@@ -1287,14 +1261,14 @@ td.tick input, th.tick input { width: 18px; height: 18px; margin: 0; accent-colo
 .role-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
 .role-chip-lg { height: 32px; padding: 0 4px 0 12px; gap: 8px; font-size: 14px; }
 .role-chip-lg:not(:has(form)) { padding-right: 12px; }
-.chip-form button { height: 24px; min-height: 0; padding: 0 8px; font-size: 12px; border-radius: 999px; }
+.chip-form button { height: 24px; min-height: 0; padding: 0 8px; font-size: 12px; border-radius: 6px; }
 .member-cell { display: flex; align-items: center; gap: 12px; color: var(--text); min-width: 220px; }
 .member-cell:hover { text-decoration: none; }
 .member-cell:hover b { text-decoration: underline; }
 .member-cell small { display: block; color: var(--text-muted); font-size: 12px; }
 .avatar-sm { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--surface); color: var(--text); font-size: 12px; font-weight: 700; object-fit: cover; }
 .roles-cell { min-width: 160px; }
-.role-chip { display: inline-flex; align-items: center; height: 22px; margin: 2px 4px 2px 0; padding: 0 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; white-space: nowrap; }
+.role-chip { display: inline-flex; align-items: center; height: 22px; margin: 2px 4px 2px 0; padding: 0 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; white-space: nowrap; }
 .pager { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 16px 0 0; }
 .pager > span { margin-right: auto; }
 form.filters .wide-filter { flex: 1 1 240px; }
@@ -1390,7 +1364,7 @@ form.filters .wide-filter { flex: 1 1 240px; }
 /* ── Inbox: sidebar count, kind tags, conversation messages ───────────── */
 .nav-badge {
     display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 6px;
-    border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums; flex: none;
+    border-radius: 6px; background: var(--accent); color: var(--on-accent); font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums; flex: none;
 }
 .inbox-kind .icon { width: 14px; height: 14px; }
 .msg-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; max-height: 70vh; overflow-y: auto; }

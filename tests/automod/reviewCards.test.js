@@ -50,12 +50,12 @@ test('tier: compact only for light automatic actions with a case', () => {
 });
 
 test('titles state the outcome', () => {
-    assert.equal(cardTitle(entryFrom(params({ rule: 'nsfw', step: ban(7 * DAY) }))), '🔴 Banned 7 days — NSFW content');
-    assert.equal(cardTitle(entryFrom(params({ rule: 'harassment', step: mute(HOUR) }))), '🟠 Muted 1 hour — Harassment');
-    assert.equal(cardTitle(entryFrom(params({ rule: 'scam', step: ban(null) }))), '🔴 Permanently banned — Scam or phishing link');
-    assert.equal(cardTitle(entryFrom(params({ rule: 'spam', monitor: true, suggested: mute(HOUR) }))), '👀 Monitor: would mute 1 hour — Spam');
+    assert.equal(cardTitle(entryFrom(params({ rule: 'nsfw', step: ban(7 * DAY) }))), '🔴 Banned 7 days · NSFW content');
+    assert.equal(cardTitle(entryFrom(params({ rule: 'harassment', step: mute(HOUR) }))), '🟠 Muted 1 hour · Harassment');
+    assert.equal(cardTitle(entryFrom(params({ rule: 'scam', step: ban(null) }))), '🔴 Permanently banned · Scam or phishing link');
+    assert.equal(cardTitle(entryFrom(params({ rule: 'spam', monitor: true, suggested: mute(HOUR) }))), '👀 Monitor: would mute 1 hour · Spam');
     assert.equal(cardTitle(entryFrom(params({ report: { reporter: 'bob', messageId: '1' } }))), '🚩 Member report');
-    assert.equal(cardTitle(entryFrom(params({ result: { error: new Error('x') } }))), '❌ Failed to warn — Excessive caps');
+    assert.equal(cardTitle(entryFrom(params({ result: { error: new Error('x') } }))), '❌ Failed to warn · Excessive caps');
     assert.equal(outcomeLabel(warn), 'Warned');
     assert.equal(stepVerb(ban(null)), 'ban permanently');
     assert.equal(ordinal(1), '1st');
@@ -170,10 +170,10 @@ test('registry: queue lists open full cards newest first, not compact lines', ()
 });
 
 test('closed titles say who reviewed it', () => {
-    assert.equal(closedTitle('🟠 Muted 1 hour — Harassment', 'kept', 'Admin'), '✅ Kept by Admin — Muted 1 hour — Harassment');
-    assert.equal(closedTitle('🔴 Banned 7 days — NSFW content', 'undone', 'Admin'), '↩️ Undone by Admin — Banned 7 days — NSFW content');
-    assert.equal(closedTitle('Verification needs approval', 'approved', 'Admin'), '✅ Approved by Admin — Verification needs approval');
-    assert.equal(closedTitle('👀 Monitor: would warn — Spam', 'applied', 'Admin', 'Warn applied'), '✅ Warn applied by Admin — Monitor: would warn — Spam');
-    assert.equal(stripLeadingEmoji('🟡 Warned — Spam'), 'Warned — Spam');
+    assert.equal(closedTitle('🟠 Muted 1 hour · Harassment', 'kept', 'Admin'), '✅ Kept by Admin · Muted 1 hour · Harassment');
+    assert.equal(closedTitle('🔴 Banned 7 days · NSFW content', 'undone', 'Admin'), '↩️ Undone by Admin · Banned 7 days · NSFW content');
+    assert.equal(closedTitle('Verification needs approval', 'approved', 'Admin'), '✅ Approved by Admin · Verification needs approval');
+    assert.equal(closedTitle('👀 Monitor: would warn · Spam', 'applied', 'Admin', 'Warn applied'), '✅ Warn applied by Admin · Monitor: would warn · Spam');
+    assert.equal(stripLeadingEmoji('🟡 Warned · Spam'), 'Warned · Spam');
     assert.equal(stripLeadingEmoji('⚠️ Not applied'), 'Not applied');
 });

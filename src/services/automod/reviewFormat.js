@@ -139,11 +139,11 @@ export function stripLeadingEmoji(title) {
     return String(title || '').replace(LEADING_EMOJI, '');
 }
 
-/** "✅ Kept by Admin — Muted 1 hour — Harassment". `verb` overrides the status verb. */
+/** "✅ Kept by Admin · Muted 1 hour · Harassment". `verb` overrides the status verb. */
 export function closedTitle(title, status, byName, verb = null) {
     const [emoji, defaultVerb] = CLOSE_STATUS[status] || CLOSE_STATUS.kept;
     const base = stripLeadingEmoji(title);
-    return truncate(`${emoji} ${verb || defaultVerb} by ${byName}${base ? ` — ${base}` : ''}`, 256);
+    return truncate(`${emoji} ${verb || defaultVerb} by ${byName}${base ? ` · ${base}` : ''}`, 256);
 }
 
 function ruleLabel(entry) {
@@ -168,12 +168,12 @@ export function buttonCodes(entry) {
 export function cardTitle(entry) {
     const label = ruleLabel(entry);
     if (entry.kind === 'report') return '🚩 Member report';
-    if (entry.kind === 'monitor') return `👀 Monitor: would ${stepVerb(entry.suggested)} — ${label}`;
+    if (entry.kind === 'monitor') return `👀 Monitor: would ${stepVerb(entry.suggested)} · ${label}`;
     const action = latestAction(entry);
-    if (!action) return `Automod — ${label}`;
-    if (action.failed) return `❌ Failed to ${stepVerb(action.step)} — ${label}`;
-    if (entry.raid) return `🔴 Kicked (raid joiner) — ${label}`;
-    return `${stepEmoji(action.step)} ${outcomeLabel(action.step)} — ${label}`;
+    if (!action) return `Automod · ${label}`;
+    if (action.failed) return `❌ Failed to ${stepVerb(action.step)} · ${label}`;
+    if (entry.raid) return `🔴 Kicked (raid joiner) · ${label}`;
+    return `${stepEmoji(action.step)} ${outcomeLabel(action.step)} · ${label}`;
 }
 
 export function cardColor(entry) {

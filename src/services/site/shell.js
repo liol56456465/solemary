@@ -139,8 +139,8 @@ ${column('Resources', html`<li><a href="/docs"${current('docs')}>Docs</a></li>
 <li><a href="/status"${current('status')}>Status</a></li>
 ${ctx.transparency ? html`<li><a href="/transparency"${current('transparency')}>Transparency</a></li>` : ''}
 <li><a href="/about"${current('about')}>About</a></li>`)}
-${column('Legal', html`<li><a href="/privacy"${current('privacy')}>Privacy</a></li>
-<li><a href="/terms"${current('terms')}>Terms</a></li>`)}
+${column('Legal', html`<li><a href="/privacy"${current('privacy')}>Privacy Policy</a></li>
+<li><a href="/terms"${current('terms')}>Terms and Conditions</a></li>`)}
 ${ctx.mainInvite || ctx.supportInvite || ctx.memberPortal ? column('Community', html`${ctx.mainInvite ? html`<li><a href="${ctx.mainInvite}" rel="noopener">Our server</a></li>` : ''}
 ${ctx.supportInvite ? html`<li><a href="${ctx.supportInvite}" rel="noopener">Support server</a></li>` : ''}
 ${ctx.memberPortal ? html`<li><a href="/me"${current('me')}>My record</a></li>` : ''}`) : ''}`;

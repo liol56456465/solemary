@@ -34,8 +34,8 @@ function planCard(plan, ctx) {
 }
 
 function cell(value) {
-    if (value === true) return html`<td class="yes"><span aria-hidden="true">✓</span><span class="visually-hidden">Included</span></td>`;
-    if (value === false || value === '' || value == null) return html`<td class="no"><span aria-hidden="true">—</span><span class="visually-hidden">Not included</span></td>`;
+    if (value === true) return html`<td class="yes">Yes</td>`;
+    if (value === false || value === '' || value == null) return html`<td class="no">No</td>`;
     return html`<td>${value}</td>`;
 }
 

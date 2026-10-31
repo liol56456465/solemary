@@ -41,7 +41,7 @@ export function banDmMock(ctx, { caption = '' } = {}) {
 <p>By: Mewvo</p>
 <p>Reason: Reached warning limit</p>
 <p>Date: <span class="dc-stamp">Saturday, 31 October 2026 at 19:40</span></p>
-<p>Duration: 7 days — ends <span class="dc-stamp">Saturday, 7 November 2026 at 19:40</span> <span class="dc-stamp">(in 7 days)</span></p>
+<p>Duration: 7 days, ends <span class="dc-stamp">Saturday, 7 November 2026 at 19:40</span> <span class="dc-stamp">(in 7 days)</span></p>
 <p>Case code: <code class="dc-code">w8hd3a</code></p>
 <p>Appealing this code also removes the warning that caused this ban.</p>`, { time: 'Saturday at 19:40' }), { className: 'mock-dm', caption });
 }
@@ -62,7 +62,7 @@ ${caption ? html`<figcaption class="mock-caption">${caption}</figcaption>` : ''}
 /** The /enforcements panel: enforcementPanel.buildPanel (summary lines + action buttons). */
 export function enforcementPanelMock({ caption = '' } = {}) {
     return frame('#staff-commands', html`<p class="dc-command"><span class="dc-slash">/enforcements</span> <span class="dc-opt">user</span> <span class="dc-mention">@pixelfox</span></p>
-${botMessage(html`<div class="dc-embed"><p class="dc-embed-title">Enforcements — pixelfox</p>
+${botMessage(html`<div class="dc-embed"><p class="dc-embed-title">Enforcements: pixelfox</p>
 <p><strong>User:</strong> pixelfox (<span class="dc-mention">@pixelfox</span>)</p>
 <p><strong>Account created:</strong> <span class="dc-stamp">2 years ago</span></p>
 <p><strong>In server:</strong> yes, joined <span class="dc-stamp">5 months ago</span> · 3 roles</p>
@@ -76,7 +76,7 @@ ${botMessage(html`<div class="dc-embed"><p class="dc-embed-title">Enforcements �
 
 /** An automod review card in the staff review channel (reviewFormat: Keep / Undo / Change to…). */
 export function reviewCardMock({ caption = '' } = {}) {
-    return frame('#automod-review', botMessage(html`<div class="dc-embed dc-embed-warn"><p class="dc-embed-title">Warned — Spam</p>
+    return frame('#automod-review', botMessage(html`<div class="dc-embed dc-embed-warn"><p class="dc-embed-title">Warned · Spam</p>
 <p><span class="dc-mention">@pixelfox</span> sent 6 messages in 5 seconds in <span class="dc-mention">#general</span>.</p>
 <p>1st Spam offence in 30 days.</p>
 <p class="dc-embed-field">Message (deleted)</p><p class="dc-quote">anyone up for ranked??</p>

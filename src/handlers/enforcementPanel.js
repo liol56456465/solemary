@@ -161,7 +161,7 @@ export async function buildPanel(guild, moderatorId, targetUser) {
     ]);
 
     const embed = createEmbed({
-        title: `Enforcements — ${truncate(targetUser.username, 200)}`,
+        title: `Enforcements: ${truncate(targetUser.username, 200)}`,
         description: truncate(panelSummaryLines(targetUser, state, appealStatuses, getActiveOrdersFor(guild.id, targetUser.id)).join('\n'), 4096),
         fields: [{ name: `Last cases${total ? ` (${Math.min(total, RECENT_CASES_SHOWN)} of ${total})` : ''}`, value: truncate(recentCasesText(recent, total, appealStatuses), 1024) }],
         thumbnail: targetUser.displayAvatarURL(),

@@ -14,8 +14,8 @@
 //   GET /status       Online / Starting / Degraded and the uptime, nothing else
 //   GET /transparency monthly moderation numbers (pages/transparency.js); 404 unless the
 //                     dashboard setting transparencyReportEnabled is on
-//   GET /privacy      what the bot stores and why (written from the code, nothing invented)
-//   GET /terms        the short rules for using the bot
+//   GET /privacy      Privacy Policy: what is stored, why, how long, rights (pages/legal.js)
+//   GET /terms        Terms and Conditions (pages/legal.js)
 //   GET /robots.txt   Disallow: / while the site is not public; with the sitemap when it is
 //   GET /sitemap.xml  only when public and PUBLIC_URL is set (absolute URLs need the origin)
 //   GET /img/<file>   the site's images (static/img: dashboard screenshots, the share image)
@@ -50,6 +50,7 @@ import { faqPage } from './pages/faq.js';
 import { GUIDES, docsPage, guidePage } from './pages/docs.js';
 import { transparencyErrorPage, transparencyPage } from './pages/transparency.js';
 import { rulesPage } from './pages/rules.js';
+import { LEGAL_UPDATED, legalContact, privacyPage, termsPage } from './pages/legal.js';
 import { readPublicRules } from '../rules/serverRules.js';
 
 export {
@@ -57,6 +58,7 @@ export {
     installPermissionBits, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
 } from './shell.js';
 export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, rulesPage, GUIDES };
+export { LEGAL_UPDATED, legalContact, privacyPage, termsPage };
 
 const CATEGORY_LABEL = {
     Core: 'General', Community: 'Community', Leveling: 'Leveling', Fun: 'Fun', Birthday: 'Birthdays',
@@ -272,81 +274,7 @@ ${uptime !== null ? html`<p>Up for ${uptimeWords(uptime)}.</p>` : ''}
     });
 }
 
-// ── Privacy and terms ─────────────────────────────────────────────────────
-
-export const LEGAL_UPDATED = '2026-10-29';
-const updatedLine = () => html`<p class="note">Last updated <time datetime="${LEGAL_UPDATED}">29 October 2026</time>.</p>`;
-const contactLine = (ctx) => (ctx.supportInvite
-    ? html`<a href="${ctx.supportInvite}" rel="noopener">the support server</a>`
-    : 'the staff team on the Mewvo server');
-
-// Written from what the code stores (utils/database/schema.js, oauthVerification.js,
-// verificationGuard.js, wipedataButtons.js, dashboard/security.js, utils/logger.js); nothing invented.
-export function privacyPage(ctx) {
-    return layout(ctx, {
-        title: 'Privacy', active: 'privacy', path: '/privacy',
-        description: 'What the Mewvo bot stores about you and why.',
-        body: html`<div class="wrap page prose"><p class="section-num">Legal</p><h1>Privacy</h1>
-${updatedLine()}
-<p class="lead">What Mewvo stores, why, and how to have it removed. Mewvo is run by its owner for the Mewvo Discord server. Your data is never sold or used for advertising.</p>
-<h2>In short</h2>
-<ul><li>Mewvo works with Discord IDs (the numbers that identify accounts, servers and channels). Where a record needs a readable name, such as a moderation case, the username at that moment is saved with it.</li>
-<li>Everything is kept in a PostgreSQL database used only by the bot. Nothing is shared, except with Discord, which the bot runs on, and the services that host the bot and its database.</li>
-<li>Mewvo never asks for your email address or your password.</li></ul>
-<h2>Leveling</h2>
-<p>For each server: your XP, your level and when your last message counted towards XP. The text of your messages is not saved for this. Levels are shown on the server’s leaderboard and on this website’s leaderboard (your server display name, level and total XP).</p>
-<h2>Moderation records</h2>
-<p>When staff warn, mute, kick or ban someone, Mewvo saves a case: the case code, the type, the reason, who took the action, when, how long it lasts, whether it can be appealed and whether the DM about it was delivered. Changes to a case are kept as its history. Staff can attach evidence: links to messages with a short excerpt of the text (kept in case the message is deleted) and images, which are re-posted in a staff-only channel. Your step on the warning ladder is stored per server and is never reset automatically.</p>
-<p>A case that turns out to be a mistake can be voided: it stays on record but no longer counts.</p>
-<h2>Appeals, reports, tickets and modmail</h2>
-<ul><li><strong>Appeals and staff reports:</strong> what you write in the form, the decision, who made it and the staff note. The conversation happens in a Discord channel; when an appeal is decided, a transcript of that channel is posted to a staff-only channel.</li>
-<li><strong>Tickets:</strong> a record of the ticket channel, who opened it and its state. A transcript is posted to a staff-only channel when it closes.</li>
-<li><strong>Modmail:</strong> when you message the bot and choose to send it to staff, your messages are passed on to a staff channel. The database only keeps which channel belongs to which member; when the conversation is closed, a transcript is posted to a staff-only channel.</li></ul>
-<h2>Verification</h2>
-<p>If a server uses “Verify with Discord”, you sign in with Discord and allow two things: <code>identify</code> (your account’s ID and name) and <code>guilds.join</code> (so the bot can add you to the support server, which keeps appeal messages reaching you even after a ban). The sign-in tokens Discord gives the bot are stored encrypted (AES-256-GCM).</p>
-<p>To spot people coming back on a new account after a ban, Mewvo stores a keyed one-way hash of the IP address you verified from, never the address itself. These hashes are deleted after 60 days, unless the account has an active ban on the Mewvo server. Accounts younger than 7 days, and accounts that match a banned member’s hash, are held for a person on the staff team to approve; a match alone never refuses anyone. Verification actions (for example verified, or approved by staff) are recorded with their time.</p>
-<h2>Server logs and member history</h2>
-<p>If a server turns on logging, events such as joins, leaves, role changes and edited or deleted messages (including their text) are posted to that server’s staff log channels on Discord. Joins and leaves are also kept in the database for 90 days, for the staff’s member statistics.</p>
-<h2>Things you choose to save</h2>
-<p>Features you use store what you give them, for example your birthday if you set one, your AFK message, your suggestions and votes, and giveaway entries.</p>
-<h2>The dashboard (staff only)</h2>
-<p>Staff who sign in to the dashboard with Discord (<code>identify</code> only) get a session that ends after 12 hours. The database keeps a hash of the session ID with their ID, username and avatar. Every change made in the dashboard is written to an audit log: who changed which setting, from what, to what.</p>
-<h2>The bot’s own logs</h2>
-<p>Technical logs record what the bot did and the errors it ran into, so problems can be fixed. They are deleted automatically after 7 days (error logs after 14 days).</p>
-<h2>Deleting your data</h2>
-<p>Run <code>/wipedata</code> in a server to delete your levels and XP, your economy balance and your AFK status in that server. It does not delete moderation records, appeals, reports or verification records: those are the server’s safety records and stay so decisions can be checked later. For anything else, ask in ${contactLine(ctx)}.</p>
-<h2>Blocked accounts</h2>
-<p>Accounts or servers blocked from using the bot are recorded with the reason and who blocked them. Lifting a block keeps the entry as history.</p>
-<h2>Changes and contact</h2>
-<p>When what Mewvo stores changes, this page is updated along with the date above. Questions about your data: ask in ${contactLine(ctx)}.</p></div>`,
-    });
-}
-
-export function termsPage(ctx) {
-    return layout(ctx, {
-        title: 'Terms', active: 'terms', path: '/terms',
-        description: 'The rules for using the Mewvo bot.',
-        body: html`<div class="wrap page prose"><p class="section-num">Legal</p><h1>Terms</h1>
-${updatedLine()}
-<p class="lead">The short rules for using Mewvo. By using the bot you accept them.</p>
-<h2>Using the bot</h2>
-<ul><li>Follow Discord’s Terms of Service and Community Guidelines, and the rules of the server you are in.</li>
-<li>Don’t use Mewvo to harass anyone, to spam, or to get around a punishment.</li>
-<li>Don’t try to break, overload or misuse the bot, this website or the dashboard.</li></ul>
-<h2>Moderation decisions</h2>
-<p>Mewvo carries out what a server’s staff decide. Warnings, mutes, kicks and bans are decisions of that server’s staff team; the automatic steps of the warning ladder follow the rules that server has set.</p>
-<h2>Appeals</h2>
-<p>If a punishment can be appealed, the DM about it says how. One appeal per case can be open at a time, and staff decide and tell you the result. Some punishments cannot be appealed; the DM says so.</p>
-<h2>Being blocked</h2>
-<p>The bot’s owner can block an account or a server from using Mewvo, for example for abusing it.</p>
-<h2>No warranty</h2>
-<p>Mewvo is provided as it is, for free, without any promise that it is always available, free of errors or fit for a particular purpose. It can change, pause or stop at any time.</p>
-<h2>Your data</h2>
-<p>See the <a href="/privacy">privacy page</a> for what Mewvo stores and how to delete it.</p>
-<h2>Changes</h2>
-<p>These terms can change; the date above shows the latest version. Questions: ask in ${contactLine(ctx)}.</p></div>`,
-    });
-}
+// ── Privacy Policy and Terms and Conditions: pages/legal.js ────────────────
 
 export function notFoundPage(ctx) {
     return layout(ctx, {
@@ -396,6 +324,7 @@ export function createSite({
         installUrl: installUrl(env.CLIENT_ID),
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
         origin: siteOrigin(env),
+        legal: legalContact(env),
     };
     const context = () => {
         let support = null;

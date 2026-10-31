@@ -29,7 +29,7 @@ const STATUS_TEXT = { pending: 'open for votes', considering: 'under considerati
 function openSuggestionsSection(ctx, open) {
     const canDecide = ctx.canEdit && ctx.canAct;
     if (!open.length) return html`<p class="muted">No open suggestions.</p>`;
-    const blocks = open.map((row) => html`<details class="sub" data-key="suggestion-${row.id}"><summary>#${row.id} · ${clip(row.content, 80)} · 👍 ${row.upvotes ?? 0} 👎 ${row.downvotes ?? 0} · ${STATUS_TEXT[row.status] || row.status}</summary>
+    const blocks = open.map((row) => html`<details class="sub" data-key="suggestion-${row.id}"><summary>#${row.id} · ${clip(row.content, 80)} · ${row.upvotes ?? 0} up, ${row.downvotes ?? 0} down · ${STATUS_TEXT[row.status] || row.status}</summary>
 <p class="value">${row.content}</p>
 <p class="muted">By ${ctx.client?.users?.cache?.get?.(row.user_id)?.username || row.user_id}${row.created_at ? html` on ${formatDate(row.created_at)}` : ''}${row.channel_id ? html` in ${channelName(ctx.guild, row.channel_id)}` : ''}.</p>
 ${postForm(ctx, 'community', 'suggestion-status', html`<div class="grid">
