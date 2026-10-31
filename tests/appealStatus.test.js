@@ -3,8 +3,9 @@
 // reminder and one DM; the dossier has the third button; the cron never throws.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { claimAppeal, claimedDm, remindStaleAppeals, staleStaffLine, stillOpenDm } from '../src/services/enforcement/appealStatusService.js';
+import { claimAppeal, claimedDm, remindStaleAppeals, stillOpenDm } from '../src/services/enforcement/appealStatusService.js';
 import { appealDecisionRow } from '../src/services/enforcement/appealService.js';
+import { enforcementConfig } from '../src/config/enforcement.js';
 
 const client = (dms, channels = new Map()) => ({
     users: { fetch: async (id) => ({ send: async (p) => { if (id === 'closed') throw new Error('closed'); dms.push([id, p.content]); } }) },
@@ -37,23 +38,14 @@ test('claim: first click takes it and DMs the member (no staff name); later clic
     assert.deepEqual(none, { status: 'none' });
 });
 
-test('stale appeals: one line in the staff channel and one DM each; errors never throw', async () => {
-    const posted = [];
-    const channels = new Map([['staff1', { send: async (p) => posted.push(p) }]]);
+test('stale appeals: one "still open" DM per appeal (staff get their own reminder elsewhere); errors never throw', async () => {
     const dms = [];
-    const rows = [
-        { case_code: 'aaaaa', user_id: 'm1', staff_channel_id: 'staff1', created_at: new Date(0), claimed_by_username: null },
-        { case_code: 'bbbbb', user_id: 'closed', staff_channel_id: 'gone', created_at: new Date(0), claimed_by_username: 'Ann' },
-    ];
+    const rows = [{ case_code: 'aaaaa', user_id: 'm1' }, { case_code: 'bbbbb', user_id: 'closed' }];
     let cutoff = null;
-    const n = await remindStaleAppeals(client(dms, channels), { now: 3 * 86400000, query: async (text, params) => { cutoff = params[0]; return { rows }; } });
+    const now = 100 * 86400000;
+    const n = await remindStaleAppeals(client(dms), { now, query: async (text, params) => { cutoff = params[0]; return { rows }; } });
     assert.equal(n, 2);
-    assert.equal(cutoff.getTime(), 86400000, '2 days before now');
-    assert.equal(posted.length, 1);
-    assert.equal(posted[0].content, staleStaffLine(rows[0]));
-    assert.match(posted[0].content, /Nobody has taken it yet/);
-    assert.match(staleStaffLine(rows[1]), /Ann said they're looking at it/);
-    assert.deepEqual(posted[0].allowedMentions, { parse: [] });
+    assert.equal(cutoff.getTime(), now - (enforcementConfig.staleAppealReminderMs || 2 * 86400000), 'the configured quiet time before now');
     assert.deepEqual(dms, [['m1', stillOpenDm('aaaaa')]]);
     assert.equal(await remindStaleAppeals(client([]), { query: async () => { throw new Error('db down'); } }), 0);
 });

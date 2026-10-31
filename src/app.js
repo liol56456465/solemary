@@ -399,7 +399,7 @@ class Mewvo extends Client {
     // /remind: send what is due; sent reminders are deleted after 30 days.
     cron.schedule('* * * * *', exclusive('reminders', () => runReminders(this)));
     cron.schedule('40 3 * * *', exclusive('reminders_prune', () => reminderStore.prune()), { timezone: 'UTC' });
-    // Appeals waiting 2 days: one reminder in the staff channel and one DM to the member.
+    // Appeals still pending after the quiet time: one "still open" DM to the member (staff: staleAppealService).
     cron.schedule('5 * * * *', exclusive('appeal_reminders', () => remindStaleAppeals(this)));
     cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
     cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
