@@ -524,6 +524,8 @@ export function createDashboard({
 
     /** GET /cases/export.csv: a paid perk, by the server owner's plan (caseExport.js). */
     async function casesExport(req, res) {
+        // The route gate already maps this path to case.export; checked again here (defence in depth).
+        if (!allows(req.dashboard.access, 'case.export')) return fail(res, 403, 'Not allowed', 'Exporting cases needs Administrator in the main server.', req);
         const planId = data.guildPlan ? data.guildPlan(guildId) : 'free';
         const rows = await data.exportCases(guildId, planId);
         if (rows === null) {

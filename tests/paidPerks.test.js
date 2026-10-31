@@ -43,3 +43,10 @@ test('analytics: locked below Pro, error note, tables with rule names and undone
     assert.deepEqual(res, { moderators: [], rules: [] });
     assert.ok(texts.every((t) => t.includes('is_test IS NOT TRUE')));
 });
+
+test('case export route: the permission table gives it to administrators only, before /cases/:code', async () => {
+    const { routeKey, PERMISSIONS } = await import('../src/services/dashboard/permissions.js');
+    assert.equal(routeKey('GET', '/cases/export.csv'), 'case.export');
+    assert.equal(routeKey('GET', '/cases/abcde'), 'page:cases');
+    if (PERMISSIONS) assert.equal(PERMISSIONS['case.export'], 'admin');
+});
