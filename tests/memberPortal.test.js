@@ -68,6 +68,7 @@ function fakeData({ fail = false } = {}) {
             getMemberStanding: async (guildId, userId) => { guard('standing', userId); assert.equal(guildId, GUILD); return STANDING; },
             listCasesForUser: async (guildId, userId) => { guard('cases', userId); assert.equal(guildId, GUILD); return { rows: CASES, total: CASES.length }; },
             listUserAppeals: async (userId) => { guard('appeals', userId); return APPEALS; },
+            exportData: async (userId) => { guard('export', userId); return { format: 'mewvo-data-export-v1', userId, levels: [{ guild_id: GUILD, xp: 5 }] }; },
         },
     };
 }
@@ -421,4 +422,35 @@ test('buildRecordView keeps only member-safe fields', () => {
     assert.equal(view.activeMute, null);
     const level2 = buildRecordView({ standing: { ...STANDING, ladder: { level: 2, warns_since_level: 0 } }, cases: [], appeals: [] });
     assert.deepEqual(level2.warnings, { count: 0, threshold: 1 });
+});
+
+// ── Download my data ───────────────────────────────────────────────────────
+
+test('download my data: own data only, as a JSON attachment; login needed; 503 on a database error', async () => {
+    const { data, calls } = fakeData();
+    const app = await serve({ data });
+    try {
+        const anonymous = await app.request('/me/data');
+        assert.equal(anonymous.status, 401);
+        assert.equal(calls.length, 0, 'nothing is read without a session');
+        const { cookie } = await login(app);
+        const page = await app.request('/me', { cookie });
+        assert.ok(page.body.includes('href="/me/data" download>Download my data</a>'));
+        const res = await app.request(`/me/data?user=${OTHER}`, { cookie });
+        assert.equal(res.status, 200);
+        assert.match(res.headers.get('content-type'), /^application\/json/);
+        assert.match(res.headers.get('content-disposition'), new RegExp(`^attachment; filename="mewvo-data-${MEMBER}-\\d{4}-\\d{2}-\\d{2}\\.json"$`));
+        assert.equal(res.headers.get('cache-control'), 'no-store');
+        const file = JSON.parse(res.body);
+        assert.equal(file.userId, MEMBER, 'the id comes from the session, not the URL');
+        assert.deepEqual(calls.filter((c) => c.name === 'export').map((c) => c.userId), [MEMBER]);
+    } finally { await app.close(); }
+
+    const broken = await serve({ data: fakeData({ fail: true }).data });
+    try {
+        const { cookie } = await login(broken);
+        const res = await broken.request('/me/data', { cookie });
+        assert.equal(res.status, 503);
+        assert.ok(!res.body.includes('ECONNREFUSED'));
+    } finally { await broken.close(); }
 });

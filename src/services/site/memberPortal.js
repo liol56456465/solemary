@@ -44,6 +44,8 @@ import { getMemberStanding, nextWarningText } from '../enforcement/standingServi
 import { NOINDEX, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin } from './site.js';
 import { createBillingHandlers } from './billing.js';
 import { premiumSettings, premiumStore } from '../billing/premiumService.js';
+import { buildDataExport, exportFileName } from '../privacy/dataExport.js';
+import { getFromDb } from '../../utils/database/wrapper.js';
 
 export const MEMBER_BASE = '/me';
 export const MEMBER_SESSION_COOKIE = 'mewvo_me';
@@ -64,6 +66,8 @@ export const MEMBER_LIMITS = {
     login: { limit: 30, windowMs: 60 * 1000 },
     page: { limit: 60, windowMs: 60 * 1000 },
     redeem: { limit: 10, windowMs: 60 * 1000 },
+    // "Download my data": a heavier read across every table, so a few a minute is plenty.
+    dataExport: { limit: 5, windowMs: 60 * 1000 },
 };
 
 /**
@@ -264,7 +268,7 @@ export function recordPage(ctx, { session, view }) {
         title: 'My record', active: 'me',
         body: html`<div class="wrap page record"><div class="record-head"><div><h1>My record</h1>
 <p class="lead">Your moderation record in ${enforcementConfig.serverName}, logged in as <strong>${session.username}</strong>. Only you can see this.</p></div>
-<div class="record-links">${ctx.billing ? html`<a class="button button-quiet" href="${MEMBER_BASE}/billing">Subscription</a> ` : ''}<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">Log out</button></form></div></div>
+<div class="record-links"><a class="button button-quiet" href="${MEMBER_BASE}/data" download>Download my data</a> ${ctx.billing ? html`<a class="button button-quiet" href="${MEMBER_BASE}/billing">Subscription</a> ` : ''}<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">Log out</button></form></div></div>
 <ul class="record-summary">
 <li class="feature"><h2>Warnings</h2><p class="record-big">${warn.count} of ${warn.threshold}</p><p>Counted warnings at your level. Warnings do not expire.</p></li>
 <li class="feature"><h2>Warning ladder</h2><p class="record-big">Level ${view.ladder.level} of 3</p><p>${view.ladder.next}</p></li>
@@ -293,7 +297,10 @@ function messagePage(ctx, title, message, { login = false } = {}) {
 
 // ── Handlers ──────────────────────────────────────────────────────────────
 
-const defaultData = { getMemberStanding, listCasesForUser, listUserAppeals };
+const defaultData = {
+    getMemberStanding, listCasesForUser, listUserAppeals,
+    exportData: (userId) => buildDataExport(userId, { query, readKey: (key) => getFromDb(key, null) }),
+};
 
 async function discordFetch(fetchImpl, url, options) {
     const response = await fetchImpl(url, { ...options, signal: AbortSignal.timeout(HTTP_TIMEOUT_MS) });
@@ -322,6 +329,7 @@ export function createMemberPortal({
     const loginLimiter = createRateLimiter(limits.login);
     const pageLimiter = createRateLimiter(limits.page);
     const redeemLimiter = createRateLimiter(limits.redeem || MEMBER_LIMITS.redeem);
+    const exportLimiter = createRateLimiter(limits.dataExport || MEMBER_LIMITS.dataExport);
     const ctx = () => ({ ...context(), memberPortal: true, billing: Boolean(premium) });
     const send = (res, status, page) => res.status(status).type('html').send(page);
     const fail = (res, status, title, message, options) => send(res, status, messagePage(ctx(), title, message, options));
@@ -416,6 +424,24 @@ export function createMemberPortal({
         return send(res, 200, recordPage(ctx(), { session, view }));
     }
 
+    /** GET /me/data: the member's own data as a JSON download (id from the session only). */
+    async function dataExport(req, res) {
+        const session = await readSession(req);
+        if (!session) return fail(res, 401, 'Log in first', 'Log in with Discord to download your data.', { login: true });
+        let file;
+        try {
+            file = await data.exportData(session.userId);
+        } catch (error) {
+            logger.error(`Member portal: data export of ${session.userId} failed: ${error.message}`);
+            res.set('Retry-After', '60');
+            return fail(res, 503, 'Download unavailable', 'Your data could not be collected because the database is not responding. Try again in a few minutes.');
+        }
+        logger.info(`Member portal: ${session.userId} downloaded their data`);
+        res.set('Cache-Control', 'no-store');
+        res.set('Content-Disposition', `attachment; filename="${exportFileName(session.userId)}"`);
+        return res.status(200).type('application/json').send(`${JSON.stringify(file, null, 2)}\n`);
+    }
+
     async function logout(req, res) {
         const session = await readSession(req);
         if (!session) return fail(res, 401, 'Logged out', 'You are not logged in.', { login: true });
@@ -456,6 +482,7 @@ export function createMemberPortal({
         r.get('/', limitBy(pageLimiter), safe(index));
         r.get('/login', limitBy(loginLimiter), login);
         r.get('/callback', limitBy(loginLimiter), safe(callback));
+        r.get('/data', limitBy(exportLimiter), safe(dataExport));
         r.post('/logout', limitBy(pageLimiter), express.urlencoded({ extended: false, limit: '2kb' }), safe(logout));
         if (billing) {
             const form = express.urlencoded({ extended: false, limit: '2kb' });
@@ -470,7 +497,7 @@ export function createMemberPortal({
         return r;
     }
 
-    return { headers, login, callback, index, logout, notFound, router, sessions, states, billing };
+    return { headers, login, callback, index, dataExport, logout, notFound, router, sessions, states, billing };
 }
 
 /**

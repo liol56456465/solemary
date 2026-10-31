@@ -701,3 +701,9 @@ test('sitemap: only when public and PUBLIC_URL is set, and robots.txt points to 
         assert.ok(robots.includes('Disallow: /dashboard'));
     } finally { await site.close(); }
 });
+
+test('privacy policy: points to Download my data only when My record is on', async () => {
+    const { privacyPage } = await import('../src/services/site/pages/legal.js');
+    assert.ok(privacyPage({ memberPortal: true }).includes('<strong>Download my data</strong>'));
+    assert.ok(!privacyPage({ memberPortal: false }).includes('Download my data'));
+});
