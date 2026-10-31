@@ -164,7 +164,7 @@ const logger = createLogger({
     errors({ stack: true }),
     format.json()
   ),
-  defaultMeta: { service: 'titan-bot' },
+  defaultMeta: { service: 'mewvo' },
   transports: [
     new transports.DailyRotateFile({
       filename: path.join(__dirname, '../../logs/error-%DATE%.log'),

@@ -110,7 +110,7 @@ async function run() {
 
   const outputPath = args.output
     ? path.resolve(args.output)
-    : path.join(backupDir, `titanbot-backup-${createTimestamp()}.dump`);
+    : path.join(backupDir, `mewvo-backup-${createTimestamp()}.dump`);
 
   const dumpArgs = [
     '--format=custom',

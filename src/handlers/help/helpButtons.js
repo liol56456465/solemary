@@ -1,3 +1,4 @@
+import { supportInviteUrl } from '../../commands/Core/support.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { canSeeAdminCommands } from '../../utils/commandGate.js';
 import { createAllCommandsMenu } from './helpSelectMenus.js';
@@ -41,29 +42,23 @@ export const helpBackButton = {
 export const helpBugReportButton = {
     name: BUG_REPORT_BUTTON_ID,
     async execute(interaction, client) {
-        const githubButton = new ButtonBuilder()
-            .setLabel('🐛 Report Bug on GitHub')
+        // Bugs are reported in the Mewvo support server (the same invite as /support).
+        const supportButton = new ButtonBuilder()
+            .setLabel('Open the support server')
             .setStyle(ButtonStyle.Link)
-            .setURL('https://github.com/codebymitch/TitanBot/issues');
+            .setURL(supportInviteUrl());
 
-        const bugRow = new ActionRowBuilder().addComponents(githubButton);
+        const bugRow = new ActionRowBuilder().addComponents(supportButton);
 
         const bugReportEmbed = createEmbed({
-            title: '🐛 Bug Report',
-            description: 'Found a bug? Please report it on our GitHub Issues page!\n\n' +
-                '**When reporting a bug, please include:**\n' +
-                '• 📝 Detailed description of the issue\n' +
-                '• 📋 Steps to reproduce the problem\n' +
-                '• 📸 Screenshots if applicable\n' +
-                '• 💻 Your bot version and environment\n\n' +
-                'This helps us fix issues faster and more effectively!',
+            title: 'Report a bug',
+            description: 'Tell us in the support server what happened. It helps if you include:\n'
+                + '- what you did (the command and its options)\n'
+                + '- what you expected and what happened instead\n'
+                + '- a screenshot, if you have one',
             color: 'error'
         });
-        bugReportEmbed.setFooter({
-            text: 'TitanBot Bug Reporting System',
-            iconURL: client.user.displayAvatarURL()
-        });
-        bugReportEmbed.setTimestamp();
+        bugReportEmbed.setFooter({ text: 'Mewvo', iconURL: client.user.displayAvatarURL() });
 
         await interaction.reply({
             embeds: [bugReportEmbed],

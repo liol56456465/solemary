@@ -42,7 +42,7 @@ export async function shortenUrl(url, custom = '', { fetchImpl = fetch, timeoutM
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     let response;
     try {
-        response = await fetchImpl(apiUrl, { signal: controller.signal, headers: { 'User-Agent': 'TitanBot URL Shortener/1.0' } });
+        response = await fetchImpl(apiUrl, { signal: controller.signal, headers: { 'User-Agent': 'Mewvo URL Shortener/1.0' } });
     } catch (networkError) {
         throw userError(networkError?.name === 'AbortError'
             ? 'The URL shortener timed out. Please try again in a moment.'

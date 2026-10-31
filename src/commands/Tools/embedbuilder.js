@@ -93,7 +93,7 @@ function buildPreviewEmbed(state) {
         state.fields.length === 0 &&
         !state.author?.name
     ) {
-        embed.setDescription('*(Empty — use the menu below to add content)*');
+        embed.setDescription('*(Empty. Use the menu below to add content.)*');
     }
 
     return embed;
@@ -116,7 +116,7 @@ function buildDashboardEmbed(state) {
     ];
 
     return new EmbedBuilder()
-        .setTitle('Embed Builder — Control Panel')
+        .setTitle('Embed Builder: Control Panel')
         .setDescription(lines.join('\n'))
         .setColor(getColor('info'))
         .setFooter({ text: 'The preview above updates live · Closes after 5 min of inactivity' });
@@ -445,7 +445,7 @@ async function handleSetFooter(selectInteraction, rootInteraction, state) {
                     .setValue(state.footer?.text || '')
                     .setMaxLength(2048)
                     .setRequired(false)
-                    .setPlaceholder('Built with TitanBot'),
+                    .setPlaceholder('Footer text'),
             ),
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
@@ -646,8 +646,8 @@ async function handleAddField(selectInteraction, rootInteraction, state) {
         .setCustomId('field_inline')
         .setRequired(false)
         .addOptions([
-            { label: 'No — full width', value: 'no' },
-            { label: 'Yes — side-by-side', value: 'yes' },
+            { label: 'No, full width', value: 'no' },
+            { label: 'Yes, side-by-side', value: 'yes' },
         ]);
 
     const inlineLabel = new LabelBuilder()
@@ -751,14 +751,14 @@ async function handleEditField(selectInteraction, rootInteraction, state) {
             .setCustomId('field_inline')
             .setRequired(false)
             .addOptions([
-                { label: 'No — full width', value: 'no' },
-                { label: 'Yes — side-by-side', value: 'yes' },
+                { label: 'No, full width', value: 'no' },
+                { label: 'Yes, side-by-side', value: 'yes' },
             ]);
         
         if (field.inline) {
             editInlineRadio.setOptions([
-                { label: 'No — full width', value: 'no' },
-                { label: 'Yes — side-by-side', value: 'yes', default: true },
+                { label: 'No, full width', value: 'no' },
+                { label: 'Yes, side-by-side', value: 'yes', default: true },
             ]);
         }
 
@@ -905,7 +905,7 @@ async function handleReorderFields(selectInteraction, rootInteraction, state) {
                 new EmbedBuilder()
                     .setTitle('Move Field')
                     .setDescription(
-                        `Moving **${state.fields[sourceIdx].name}** — currently at position **${sourceIdx + 1}** of **${state.fields.length}**.`,
+                        `Moving **${state.fields[sourceIdx].name}**. It is at position **${sourceIdx + 1}** of **${state.fields.length}**.`,
                     )
                     .setColor(getColor('info')),
             ],
@@ -1004,7 +1004,7 @@ async function handlePostEmbed(selectInteraction, rootInteraction, state, guild)
 
         const finalEmbed = buildPreviewEmbed(state);
 
-        if (finalEmbed.data.description === '*(Empty — use the menu below to add content)*') {
+        if (finalEmbed.data.description === '*(Empty. Use the menu below to add content.)*') {
             finalEmbed.setDescription(null);
         }
 
@@ -1038,7 +1038,7 @@ async function handleJsonExport(selectInteraction, rootInteraction, state) {
             embeds: [
                 new EmbedBuilder()
                     .setTitle('Embed JSON')
-                    .setDescription('The JSON is too long to display inline — see the attached file.')
+                    .setDescription('The JSON is too long to show here. See the attached file.')
                     .setColor(getColor('info')),
             ],
             files: [

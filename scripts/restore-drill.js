@@ -126,7 +126,7 @@ async function run() {
 
   const stamp = createTimestamp();
   const backupPath = path.join(backupDir, `restore-drill-${stamp}.dump`);
-  const drillDatabaseName = `titanbot_restore_drill_${stamp}`;
+  const drillDatabaseName = `mewvo_restore_drill_${stamp}`;
   const maintenanceUrl = buildDatabaseUrlWithName(sourceDatabaseUrl, 'postgres');
   const drillDatabaseUrl = buildDatabaseUrlWithName(sourceDatabaseUrl, drillDatabaseName);
 

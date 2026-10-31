@@ -211,7 +211,7 @@ export function resolvePostgresPoolConfig() {
         min: intFromEnv('POSTGRES_MIN_CONNECTIONS', 0),
         idleTimeoutMillis: intFromEnv('POSTGRES_IDLE_TIMEOUT', 30000),
         connectionTimeoutMillis: intFromEnv('POSTGRES_CONNECTION_TIMEOUT', 10000),
-        application_name: 'titanbot',
+        application_name: 'mewvo',
         statement_timeout: process.env.NODE_ENV === 'production' ? 30000 : 0,
         keepAlive: true,
         keepAliveInitialDelayMillis: 30000,
@@ -249,7 +249,7 @@ export const pgConfig = {
         idleTimeoutMillis: parseInt(process.env.POSTGRES_IDLE_TIMEOUT) || 30000,
         connectionTimeoutMillis: parseInt(process.env.POSTGRES_CONNECTION_TIMEOUT) || 10000,
 
-        application_name: 'titanbot',
+        application_name: 'mewvo',
         statement_timeout: process.env.NODE_ENV === 'production' ? 30000 : 0,
         keepalives: 1,
         keepalives_idle: 30,

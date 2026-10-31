@@ -1,4 +1,4 @@
-TitanBot Roadmap / Structure Overview
+Mewvo code map
 
 Goal
 - Keep this as a practical map of the codebase.
@@ -25,12 +25,14 @@ src/
     - modules/logging_setchannel.js
   - Ticket/                   -> support ticket system + dashboard
   - ServerStats/              -> server stats channel system
-  - Economy/                  -> economy system
+  - Enforcement/              -> /enforcements, cases, appeals, staff tools
+  - Owner/                    -> bot-owner commands
   - Moderation/               -> moderation/admin commands
   - Verification/             -> member verification flow
   - JoinToCreate/             -> dynamic voice channel creation
   - Reaction_roles/           -> automatic role assignment
   - Birthday/, Fun/, Giveaway/, Leveling/, Search/, Tools/, Utility/, Welcome/
+  (the web dashboard and website are in src/services/dashboard and src/services/site)
 
 - config/                     -> centralized configuration modules
 - events/                     -> Discord event listeners
