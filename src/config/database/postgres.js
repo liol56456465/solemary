@@ -52,6 +52,7 @@ const configuredTables = {
     premium_subscriptions: 'premium_subscriptions',
     premium_orders: 'premium_orders',
     premium_keys: 'premium_keys',
+    reminders: 'reminders',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -104,6 +105,7 @@ const allowedTableIdentifiers = new Set([
     'premium_subscriptions',
     'premium_orders',
     'premium_keys',
+    'reminders',
 ]);
 
 const validatedTables = Object.fromEntries(

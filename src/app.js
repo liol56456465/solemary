@@ -20,6 +20,7 @@ import { runTempRoleExpiry } from './services/members/tempRoleService.js';
 import { runRoleRules } from './services/members/roleRuleService.js';
 import { pruneMemberEvents } from './services/members/memberInsightsService.js';
 import { pruneExpiredSessions } from './services/dashboard/sessionStore.js';
+import { reminderStore, runReminders } from './services/reminders/reminderService.js';
 import { query as enforcementQuery } from './services/enforcement/db.js';
 import { importModmailTopicsOnce } from './services/modmailLinks.js';
 import { enforcementConfig } from './config/enforcement.js';
@@ -394,6 +395,9 @@ class Mewvo extends Client {
     cron.schedule('30 3 * * *', exclusive('member_events_prune', () => pruneMemberEvents()), { timezone: 'UTC' });
     // Expired dashboard / My record sessions (Privacy Policy: 12 h / 1 h).
     cron.schedule('17 * * * *', exclusive('session_prune', () => pruneExpiredSessions(enforcementQuery)));
+    // /remind: send what is due; sent reminders are deleted after 30 days.
+    cron.schedule('* * * * *', exclusive('reminders', () => runReminders(this)));
+    cron.schedule('40 3 * * *', exclusive('reminders_prune', () => reminderStore.prune()), { timezone: 'UTC' });
     cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
     cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));

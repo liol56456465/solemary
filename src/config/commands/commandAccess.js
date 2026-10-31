@@ -16,6 +16,8 @@ export const EVERYONE_COMMANDS = new Set([
   'help', 'ping', 'stats', 'uptime', 'support',
   // Your own Mewvo plan (status, redeem a key)
   'premium status', 'premium redeem',
+  // Personal reminders
+  'remind me', 'remind list', 'remind delete',
 
   // Community
   'apply submit', 'apply status', 'apply list',

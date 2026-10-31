@@ -672,9 +672,23 @@ export const tableStatements = [
         kind VARCHAR(5) NOT NULL CHECK (kind IN ('join', 'leave')),
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+    // /remind: one row per reminder; sent_at set when the cron claims it (schema v6).
+    `CREATE TABLE IF NOT EXISTS ${t.reminders} (
+        id BIGSERIAL PRIMARY KEY,
+        user_id VARCHAR(20) NOT NULL,
+        guild_id VARCHAR(20),
+        channel_id VARCHAR(20),
+        text VARCHAR(500) NOT NULL,
+        due_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        sent_at TIMESTAMPTZ,
+        failed_at TIMESTAMPTZ
+    )`,
 ];
 
 export const indexStatements = [
+    `CREATE INDEX IF NOT EXISTS idx_reminders_due ON ${t.reminders}(due_at) WHERE sent_at IS NULL`,
+    `CREATE INDEX IF NOT EXISTS idx_reminders_user ON ${t.reminders}(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_guild_users_guild_id ON ${t.guild_users}(guild_id)`,
     `CREATE INDEX IF NOT EXISTS idx_guild_users_user_id ON ${t.guild_users}(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_birthdays_guild_id ON ${t.birthdays}(guild_id)`,
