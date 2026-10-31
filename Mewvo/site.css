@@ -107,8 +107,8 @@ a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset:
 a:hover { color: var(--accent-hover); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 h1, h2, h3 { color: var(--text); font-weight: 650; }
-h1 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px; }
-h2 { font-size: clamp(24px, 2.8vw, 30px); line-height: 1.2; letter-spacing: -0.005em; margin: 0 0 20px; }
+h1 { font-size: clamp(28px, 3.2vw, 36px); line-height: 1.15; letter-spacing: 0; margin: 0 0 16px; }
+h2 { font-size: clamp(20px, 2.2vw, 24px); line-height: 1.25; letter-spacing: 0; margin: 0 0 16px; }
 h3 { font-size: 16px; line-height: 1.4; margin: 0 0 8px; }
 p { margin: 0 0 16px; }
 code { font-family: var(--mono); font-size: 0.875em; padding: 1px 5px; border-radius: 5px; background: var(--bg-alt); border: 1px solid var(--border); color: var(--text); }
@@ -154,7 +154,7 @@ button.button { cursor: pointer; }
 .more::after { content: " →"; }
 .more:hover { text-decoration: underline; }
 .tag { display: inline-block; font-size: 12px; line-height: 20px; padding: 0 8px; border-radius: 4px; border: 1px solid var(--border-control); color: var(--text-muted); white-space: nowrap; }
-.planned { display: inline-block; font-size: 12px; line-height: 18px; font-weight: 500; padding: 0 6px; border-radius: 4px; color: var(--accent); background: var(--accent-soft); white-space: nowrap; vertical-align: 1px; }
+.planned { font-size: 0.9em; font-weight: 400; color: var(--text-muted); white-space: nowrap; }
 
 .ticks { list-style: none; margin: 24px 0; padding: 0; }
 .ticks li { position: relative; padding: 10px 0 10px 28px; border-top: 1px solid var(--border); color: var(--text); font-size: 15px; }
@@ -163,8 +163,9 @@ button.button { cursor: pointer; }
 .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--text-muted); margin: 24px 0; }
 
 /* ── Home: hero ── */
-.hero { padding: 88px 0 80px; }
-.hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 64px; align-items: center; }
+.hero { padding: 48px 0 40px; }
+.hero-grid { display: block; max-width: 760px; }
+.hero-visual { margin-top: 32px; max-width: 560px; }
 .hero h1 { max-width: 640px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 32px 0 16px; }
 .hero .note { margin-top: 8px; }
@@ -187,10 +188,11 @@ button.button { cursor: pointer; }
 .what-list dd { margin: 0; color: var(--text-muted); }
 .ref-intro { color: var(--text-muted); margin: -8px 0 20px; }
 .facts + .block { border-top: 0; }
-.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 72px; align-items: start; }
-.split-narrow { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); }
-.split-flip { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
-.split-flip .split-copy { order: 2; }
+.split { display: block; }
+.split > * + * { margin-top: 16px; }
+.split-narrow { }
+.split-flip { }
+
 .split-copy p { color: var(--text-muted); }
 .split-copy p.section-num { margin-bottom: 16px; }
 .split-copy .more { color: var(--accent); }
@@ -288,10 +290,10 @@ button.button { cursor: pointer; }
 .shot .mock-caption { border-top: 1px solid var(--border); }
 
 /* ── Inner pages ── */
-.page { padding-top: 72px; padding-bottom: 96px; }
+.page { padding-top: 40px; padding-bottom: 64px; }
 .page-head { margin-bottom: 56px; }
-.page-head-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 64px; align-items: end; }
-.page-head-split h1, .page-head-split .lead { margin-bottom: 0; }
+.page-head-split { display: block; }
+.page-head-split h1 { margin-bottom: 12px; }
 .prose { max-width: 760px; }
 .prose h2 { font-size: 22px; letter-spacing: -0.015em; margin: 48px 0 12px; }
 .prose ul { padding-left: 20px; }
@@ -365,7 +367,8 @@ button.button { cursor: pointer; }
 .qa dd { margin: 6px 0 0; color: var(--text-muted); }
 
 /* FAQ */
-.faq-group { margin-top: 72px; }
+.faq-group { margin-top: 40px; }
+.faq-group h2 { font-size: 20px; margin-bottom: 8px; }
 .faq-group:first-of-type { margin-top: 0; }
 .faq { border-top: 1px solid var(--border); }
 .faq:last-child { border-bottom: 1px solid var(--border); }
@@ -475,7 +478,7 @@ button.button { cursor: pointer; }
 .footer-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 48px; }
 .footer-brand { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 12px; font-weight: 650; }
 .footer-text { font-size: 14px; color: var(--text-muted); max-width: 300px; }
-.footer-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; }
+.footer-nav { display: block; }
 .footer-title { font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 12px; }
 .footer ul { list-style: none; margin: 0; padding: 0; }
 .footer li a { display: inline-block; padding: 4px 0; font-size: 14px; color: var(--text); text-decoration: none; }
@@ -613,3 +616,20 @@ button.button { cursor: pointer; }
     .report th, .report td { padding: 10px 12px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+/* Plain pages (owner, 2026-11-01): one column, tables for plans. */
+.narrow-page { max-width: 920px; }
+.narrow-page h2 { font-size: 20px; margin: 40px 0 12px; }
+.plans-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.plans-table th, .plans-table td { text-align: left; vertical-align: top; padding: 12px 16px; border-top: 1px solid var(--border); }
+.plans-table thead th { border-top: 0; font-size: 13px; color: var(--text-muted); font-weight: 600; }
+.plans-table tbody th { font-weight: 600; }
+.qa > div { padding: 12px 0; border-top: 1px solid var(--border); }
+.qa dt { font-weight: 600; margin-bottom: 4px; }
+.qa dd { margin: 0; color: var(--text-muted); }
+
+.footer { padding: 24px 0 32px; }
+.footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; }
+.footer-links a { color: var(--text-muted); }
+.footer-links a[aria-current="page"] { color: var(--text); }
+.footer-legal { margin: 16px 0 0; padding: 0; border: 0; font-size: 13px; color: var(--text-muted); }

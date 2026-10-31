@@ -520,7 +520,7 @@ test('privacy and terms: dated, linked from the footer, contact via the support 
 
 // ── Redesign: new pages, pricing, share tags, sitemap, images ────────────
 
-test('top bar: Features, Pricing, Docs, Commands, Leaderboard; footer columns', async () => {
+test('top bar: Features, Pricing, Docs, Commands, Leaderboard; footer is one plain row of links', async () => {
     const site = await serve();
     try {
         const body = (await site.get('/features')).body;
@@ -529,33 +529,26 @@ test('top bar: Features, Pricing, Docs, Commands, Leaderboard; footer columns', 
         assert.ok(order.every((i, n) => i > 0 && (n === 0 || i > order[n - 1])), `nav order ${order}`);
         assert.ok(topnav.includes('<a href="/features" aria-current="page">Features</a>'));
         const footer = body.slice(body.indexOf('<footer'));
-        for (const title of ['Product', 'Resources', 'Legal', 'Community']) assert.ok(footer.includes(`<h2 class="footer-title">${title}</h2>`), title);
+        assert.ok(footer.includes('<ul class="footer-links">'));
+        assert.ok(!footer.includes('footer-title') && !footer.includes('footer-brand'), 'no column headings or brand blurb');
         assert.ok(footer.includes('<a href="/faq">FAQ</a>') && footer.includes('<a href="/about">About</a>'));
     } finally { await site.close(); }
 });
 
-test('pricing: every price for both periods, the CSS-only switch, "Coming soon" is never a link', async () => {
+test('pricing: one plain plans table with both prices, "Coming soon" never a link, no cards or switch', async () => {
     const site = await serve();
     try {
         const body = (await site.get('/pricing')).body;
-        for (const price of ['€0', '€1.99', '€4.99', '€9.99', '€19.90', '€49.90', '€99.90', '€1.66', '€4.16', '€8.33']) assert.ok(body.includes(price), price);
+        for (const price of ['€1.99', '€4.99', '€9.99', '€19.90', '€49.90', '€99.90']) assert.ok(body.includes(price), price);
         assert.ok(body.includes('2 months free'));
-        // Two radios with labels, before the plans (same parent), monthly checked by default.
-        assert.ok(body.includes('<input class="billing-input" type="radio" name="billing" id="billing-monthly" value="monthly" checked>'));
-        assert.ok(body.includes('<input class="billing-input" type="radio" name="billing" id="billing-yearly" value="yearly">'));
-        assert.ok(body.includes('<label for="billing-monthly">Monthly</label>') && body.includes('<label for="billing-yearly">Yearly'));
-        assert.ok(body.indexOf('id="billing-yearly"') < body.indexOf('<ul class="plans">'));
-        assert.equal((body.match(/class="price-monthly"/g) || []).length, 3);
-        assert.equal((body.match(/class="price-yearly"/g) || []).length, 3);
-        for (const rule of ['#billing-yearly:checked ~ .plans .price-yearly { display: block; }', '#billing-yearly:checked ~ .plans .price-monthly { display: none; }', '.price-yearly { display: none; }', '#billing-yearly:focus-visible ~ .billing-switch label[for="billing-yearly"]']) {
-            assert.ok(STYLESHEET.includes(rule), rule);
-        }
-        assert.equal((body.match(/<span class="button button-disabled" aria-disabled="true">Coming soon<\/span>/g) || []).length, 3);
+        assert.ok(body.includes('<table class="plans-table">'));
+        assert.ok(!body.includes('billing-input') && !body.includes('<ul class="plans">') && !body.includes('plan-featured'), 'no plan cards, no monthly/yearly switch');
+        assert.equal((body.match(/<span class="muted">Coming soon<\/span>/g) || []).length, 6, '3 paid plans x 2 periods');
         assert.ok(!/<a[^>]*>Coming soon/.test(body), 'Coming soon is not a link');
         assert.ok(!/<form|<button|checkout|stripe|paypal/i.test(body.slice(body.indexOf('<main'), body.indexOf('</main>'))), 'nothing to buy');
         assert.ok(body.includes('Paid plans start when Mewvo opens to other servers'));
         assert.ok(body.includes(`<a href="${SUPPORT}" rel="noopener">Join the support server</a> to hear first.`));
-        assert.ok(body.includes('<span class="planned">Planned</span>'));
+        assert.ok(body.includes('<span class="planned">(planned)</span>'));
         assert.ok(body.includes('<table class="compare">'));
     } finally { await site.close(); }
 });
@@ -575,8 +568,8 @@ test('pricing: names, prices, perks and the comparison come from config/site/pla
     try {
         const body = (await site.get('/pricing')).body;
         assert.ok(body.includes('Pro &lt;Test&gt;'), 'name from plans.js, escaped');
-        assert.ok(body.includes('€7.77') && body.includes('€77.70') && body.includes('€6.48'), 'prices from plans.js');
-        for (const plan of plans.PLANS) for (const perk of plan.perks) assert.ok(body.includes(perk.text.replace(/&/g, '&amp;')), perk.text);
+        assert.ok(body.includes('€7.77') && body.includes('€77.70'), 'prices from plans.js');
+        for (const plan of plans.PLANS) assert.ok(body.includes(plan.summary), plan.summary);
         for (const group of plans.COMPARISON) for (const row of group.rows) assert.ok(body.includes(row.label), row.label);
         for (const item of plans.PRICING_FAQ) assert.ok(body.includes(item.q.replace(/'/g, '&#39;')), item.q);
     } finally {

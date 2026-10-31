@@ -117,6 +117,7 @@ export const COMPARISON = [
             { label: 'Staff and automod analytics', values: { free: false, normal: false, pro: true, max: true } },
             { label: 'Custom bot name and avatar', values: { free: false, normal: false, pro: true, max: true } },
             { label: 'Servers in one dashboard', planned: true, values: { free: '1', normal: '1', pro: '1', max: 'Up to 5' } },
+            { label: 'Supporter role in the Mewvo server', values: { free: false, normal: true, pro: true, max: true } },
             { label: 'Help in the support server', planned: true, values: { free: 'Yes', normal: 'Yes', pro: 'Yes', max: 'Priority' } },
         ],
     },

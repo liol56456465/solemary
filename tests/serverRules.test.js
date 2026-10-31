@@ -223,7 +223,6 @@ test('sitemap and footer include /rules', async () => {
     const site = await serve(() => ({ rules: [], updatedAt: null }));
     try {
         const footer = (await site.get('/faq')).body.split('<footer')[1];
-        const resources = footer.slice(footer.indexOf('>Resources<'), footer.indexOf('>Legal<'));
-        assert.ok(resources.includes('<li><a href="/rules">Rules</a></li>'));
+        assert.ok(footer.includes('<li><a href="/rules">Rules</a></li>'));
     } finally { await site.close(); }
 });
