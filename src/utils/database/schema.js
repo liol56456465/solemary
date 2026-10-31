@@ -621,9 +621,14 @@ export const tableStatements = [
         started_at TIMESTAMPTZ,
         expires_at TIMESTAMPTZ,
         source VARCHAR(60),
+        reminded_for TIMESTAMPTZ,
+        ended_notified_for TIMESTAMPTZ,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+    // The cron's "ends in 3 days" / "has ended" DMs: done for this end date (an extension re-arms them).
+    `ALTER TABLE ${t.premium_subscriptions} ADD COLUMN IF NOT EXISTS reminded_for TIMESTAMPTZ`,
+    `ALTER TABLE ${t.premium_subscriptions} ADD COLUMN IF NOT EXISTS ended_notified_for TIMESTAMPTZ`,
     `CREATE TABLE IF NOT EXISTS ${t.premium_orders} (
         id BIGSERIAL PRIMARY KEY,
         user_id VARCHAR(20) NOT NULL,
@@ -651,8 +656,15 @@ export const tableStatements = [
         redeemed_by_username VARCHAR(100),
         redeemed_at TIMESTAMPTZ,
         revoked_at TIMESTAMPTZ,
-        revoked_by VARCHAR(20)
+        revoked_by VARCHAR(20),
+        gift_to VARCHAR(50),
+        gift_message VARCHAR(300),
+        expires_at TIMESTAMPTZ
     )`,
+    // Gift "to" + message; unused keys expire (NULL = never).
+    `ALTER TABLE ${t.premium_keys} ADD COLUMN IF NOT EXISTS gift_to VARCHAR(50)`,
+    `ALTER TABLE ${t.premium_keys} ADD COLUMN IF NOT EXISTS gift_message VARCHAR(300)`,
+    `ALTER TABLE ${t.premium_keys} ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ`,
     `CREATE TABLE IF NOT EXISTS ${t.member_events} (
         id BIGSERIAL PRIMARY KEY,
         guild_id VARCHAR(20) NOT NULL,

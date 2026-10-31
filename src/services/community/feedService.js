@@ -14,7 +14,9 @@
 
 import { logger } from '../../utils/logger.js';
 import { CT, query, isCommunityDbAvailable, isUniqueViolation, userError } from './db.js';
+import { limitMessage, planLimit } from '../billing/premiumEffects.js';
 
+// Free's limit; a server owner's plan raises it (planLimit, plans.js).
 export const FEED_MAX_PER_GUILD = 20;
 export const FEED_TEMPLATE_MAX = 500;
 export const FEED_MAX_POSTS_PER_POLL = 3;
@@ -152,7 +154,7 @@ export async function addFeed({ guildId, sourceInput, channelId, template = null
     const sourceId = parseYoutubeChannelId(sourceInput);
     const text = template == null ? null : String(template).trim() || null;
     if (text && text.length > FEED_TEMPLATE_MAX) throw userError(`The message is limited to ${FEED_TEMPLATE_MAX} characters.`);
-    if (listFeeds(guildId).length >= FEED_MAX_PER_GUILD) throw userError(`A server can have at most ${FEED_MAX_PER_GUILD} feeds.`);
+    if (listFeeds(guildId).length >= planLimit(guildId, 'feeds')) throw userError(limitMessage(guildId, 'feeds', 'YouTube feeds'));
     let entries;
     try {
         entries = await fetchYoutubeFeed(sourceId, fetchImpl);

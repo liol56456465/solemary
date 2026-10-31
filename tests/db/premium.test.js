@@ -36,7 +36,7 @@ after(async () => {
     await pgDb.disconnect();
 });
 
-test('premium: buy for me starts and then extends; another plan is refused and writes nothing', { skip }, async () => {
+test('premium: buy for me starts and then extends; a lower plan is refused and writes nothing', { skip }, async () => {
     const first = await store.purchase({ userId: alice, username: 'alice', planId: 'pro', period: 'monthly', kind: 'personal' });
     assert.equal(first.order.amount_cents, 499);
     assert.equal(first.order.test, true);
@@ -48,7 +48,7 @@ test('premium: buy for me starts and then extends; another plan is refused and w
     assert.equal(second.order.amount_cents, 4990);
     assert.equal(new Date(second.subscription.expires_at).getTime(), end1 + 365 * DAY, 'added to the end date');
 
-    await assert.rejects(store.purchase({ userId: alice, username: 'alice', planId: 'max', period: 'monthly', kind: 'personal' }), /already have Pro/);
+    await assert.rejects(store.purchase({ userId: alice, username: 'alice', planId: 'normal', period: 'monthly', kind: 'personal' }), /already have Pro.*more than Normal/);
     const { rows } = await pgDb.pool.query('SELECT COUNT(*)::int AS n FROM premium_orders WHERE user_id = $1', [alice]);
     assert.equal(rows[0].n, 2, 'the refused purchase left no order');
 
@@ -120,4 +120,66 @@ test('premium: owner keys, other active plan keeps the key unused, revoke, lists
     assert.equal((await store.accountOf(carol)).subscription, null);
     assert.equal(await store.endSubscription(carol, owner), null, 'nothing active any more');
     assert.ok((await store.listOrders(10)).some((o) => o.user_id === alice));
+});
+
+test('premium: gift details + 1-year expiry; expired keys refused; upgrade converts; grant; reminders once per end date; stats', { skip }, async () => {
+    const dave = `7${runId}00000035`;
+    const erin = `7${runId}00000036`;
+    users.push(dave, erin);
+
+    // Gift with a name and message, valid for a year; peek shows it while unused.
+    const { key } = await store.purchase({ userId: dave, username: 'dave', planId: 'normal', period: 'monthly', kind: 'gift', giftTo: 'Erin', giftMessage: 'For you' });
+    assert.equal(key.gift_to, 'Erin');
+    assert.equal(key.gift_message, 'For you');
+    assert.ok(Math.abs(new Date(key.expires_at).getTime() - (Date.now() + 365 * DAY)) < 60000);
+    const peek = await store.peekKey(key.code);
+    assert.deepEqual([peek.planId, peek.days, peek.from, peek.giftTo, peek.giftMessage], ['normal', 30, 'dave', 'Erin', 'For you']);
+
+    // Expired owner key: refused, listed as expired, and not peekable.
+    const [old] = await store.generateKeys({ planId: 'pro', days: 7, count: 1, validDays: 30, actor: owner });
+    await pgDb.pool.query('UPDATE premium_keys SET expires_at = NOW() - INTERVAL \'1 minute\' WHERE code = $1', [old.code]);
+    await assert.rejects(store.redeem({ code: old.code, userId: erin }), /expired on/);
+    assert.equal(await store.peekKey(old.code), null);
+    assert.ok((await store.listKeys({ status: 'expired' })).rows.some((k) => k.code === old.code));
+    assert.ok(!(await store.listKeys({ status: 'unused' })).rows.some((k) => k.code === old.code));
+
+    // Erin redeems Normal (30 days), then upgrades to Max with a purchase: 30 × 199 / 999 days + 30.
+    await store.redeem({ code: key.code, userId: erin, username: 'erin' });
+    const up = await store.purchase({ userId: erin, username: 'erin', planId: 'max', period: 'monthly', kind: 'personal' });
+    assert.equal(up.subscription.plan_id, 'max');
+    assert.equal(up.next.converted.fromPlanId, 'normal');
+    const expected = Date.now() + (30 * DAY * 199) / 999 + 30 * DAY;
+    assert.ok(Math.abs(new Date(up.subscription.expires_at).getTime() - expected) < 120000, 'converted time added');
+    // A lower grant is refused; a same-plan grant adds time and is marked as from an owner.
+    await assert.rejects(store.grant({ userId: erin, planId: 'pro', days: 30, actor: owner }), /more than Pro/);
+    const granted = await store.grant({ userId: erin, planId: 'max', days: 7, actor: owner });
+    assert.equal(granted.subscription.source, 'owner');
+    assert.equal(new Date(granted.subscription.expires_at).getTime(), new Date(up.subscription.expires_at).getTime() + 7 * DAY);
+
+    // Reminder: due when the end is within 3 days, once per end date; an extension re-arms it.
+    await pgDb.pool.query("UPDATE premium_subscriptions SET expires_at = NOW() + INTERVAL '2 days' WHERE user_id = $1", [erin]);
+    let due = (await store.dueReminders(3 * DAY)).filter((r) => r.user_id === erin);
+    assert.equal(due.length, 1);
+    await store.markNotified(erin, 'reminder', due[0].expires_at);
+    assert.equal((await store.dueReminders(3 * DAY)).filter((r) => r.user_id === erin).length, 0, 'once');
+    await store.grant({ userId: erin, planId: 'max', days: 7, actor: owner });
+    assert.equal((await store.dueReminders(3 * DAY)).filter((r) => r.user_id === erin).length, 0, 'extended past the window');
+    await pgDb.pool.query("UPDATE premium_subscriptions SET expires_at = NOW() + INTERVAL '1 day' WHERE user_id = $1", [erin]);
+    assert.equal((await store.dueReminders(3 * DAY)).filter((r) => r.user_id === erin).length, 1, 'new end date: due again');
+
+    // Ended: due once; an owner "End now" is marked as handled (no ended DM).
+    await pgDb.pool.query("UPDATE premium_subscriptions SET expires_at = NOW() - INTERVAL '1 minute' WHERE user_id = $1", [erin]);
+    const ended = (await store.dueEndings()).filter((r) => r.user_id === erin);
+    assert.equal(ended.length, 1);
+    await store.markNotified(erin, 'ended', ended[0].expires_at);
+    assert.equal((await store.dueEndings()).filter((r) => r.user_id === erin).length, 0);
+    await store.grant({ userId: dave, planId: 'pro', days: 30, actor: owner });
+    await store.endSubscription(dave, owner);
+    assert.equal((await store.dueEndings()).filter((r) => r.user_id === dave).length, 0, 'owner end: no ended DM');
+
+    const stats = await store.stats();
+    assert.ok(stats.orders30 >= 2);
+    assert.ok(stats.cents30 >= 199 + 999);
+    assert.ok(stats.gifts30 >= 1);
+    assert.equal(typeof stats.activeTotal, 'number');
 });

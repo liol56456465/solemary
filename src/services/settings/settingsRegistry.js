@@ -205,6 +205,14 @@ export const SETTINGS = Object.freeze([
         label: 'Banned role (support server)', env: 'BANNED_ROLE_ID',
         fallback: '1564363121685176320', prodOnly: true, schema: optionalId,
     },
+    // ── Premium (Owner → Premium keys; services/billing/premiumEffects.js) ──
+    {
+        // One role per paid plan in the main server, given while the plan is active.
+        key: 'premiumRoleIds', module: 'premium', kind: 'json', guild: 'main', label: 'Supporter roles per plan',
+        fallback: Object.freeze({ normal: null, pro: null, max: null }),
+        schema: z.object({ normal: optionalId, pro: optionalId, max: optionalId }).strict(),
+        describe: (value) => `${Object.values(value || {}).filter(Boolean).length} of 3 set`,
+    },
     // ── Server rules ──
     {
         key: 'serverRules', module: 'rules', kind: 'json', guild: 'main', label: 'Server rules',

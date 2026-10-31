@@ -533,6 +533,15 @@ button.button { cursor: pointer; }
 .redeem-row input { flex: 1 1 220px; min-height: 40px; padding: 0 12px; border: 1px solid var(--border-control); border-radius: 8px; background: var(--bg); color: var(--text); font: 15px var(--mono); text-transform: uppercase; }
 .redeem-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .redeem-row input::placeholder { color: var(--text-muted); text-transform: none; }
+.redeem-form + .note { margin-top: 16px; }
+.gift-fields { display: grid; gap: 6px; margin: 4px 0 16px; }
+.gift-fields label { font-size: 14px; color: var(--text-muted); }
+.gift-fields input, .gift-fields textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border-control); border-radius: 8px; background: var(--bg); color: var(--text); font: 15px/1.5 var(--sans); }
+.gift-fields input { min-height: 40px; }
+.gift-fields textarea { resize: vertical; }
+.gift-fields input:focus-visible, .gift-fields textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.gift-message { margin: 12px 0 0; padding: 8px 0 8px 14px; border-left: 3px solid var(--accent); color: var(--text); white-space: pre-line; font-size: 16px; }
+.summary-upgrade { color: var(--text) !important; }
 
 /* ── Smaller screens ── */
 @media (max-width: 1000px) {

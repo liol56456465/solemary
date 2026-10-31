@@ -14,6 +14,8 @@
 export const EVERYONE_COMMANDS = new Set([
   // Core
   'help', 'ping', 'stats', 'uptime', 'support',
+  // Your own Mewvo plan (status, redeem a key)
+  'premium status', 'premium redeem',
 
   // Community
   'apply submit', 'apply status', 'apply list',

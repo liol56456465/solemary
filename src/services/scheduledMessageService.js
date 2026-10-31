@@ -24,7 +24,9 @@ import { logger } from '../utils/logger.js';
 import { pgConfig } from '../config/database/postgres.js';
 import { canonicalTimeZone } from '../utils/timezone.js';
 import { postBotMessage } from './botMessageService.js';
+import { limitMessage, planLimit } from './billing/premiumEffects.js';
 
+// Free's limit; a server owner's plan raises it (planLimit, plans.js).
 export const SCHEDULED_MAX_PER_GUILD = 50;
 export const FAILURE_LIMIT = 3;
 export const INTERVAL_MAX_HOURS = 168;
@@ -345,8 +347,8 @@ export async function createScheduledMessage({ guildId, channelId, payload, sche
     const clean = cleanSchedule(schedule);
     const nextRunAt = nextRunAfter(clean, zone, now);
     if (nextRunAt === null) throw userError('That time has already passed: pick a time in the future.');
-    const row = await storeOf(store).insert({ guildId, channelId, payload: cleanPayload(payload), schedule: clean, timezone: zone, nextRunAt, createdBy }, SCHEDULED_MAX_PER_GUILD);
-    if (!row) throw userError(`A server can have at most ${SCHEDULED_MAX_PER_GUILD} scheduled messages. Delete one first.`);
+    const row = await storeOf(store).insert({ guildId, channelId, payload: cleanPayload(payload), schedule: clean, timezone: zone, nextRunAt, createdBy }, planLimit(guildId, 'scheduled'));
+    if (!row) throw userError(`${limitMessage(guildId, 'scheduled', 'scheduled messages')} Delete one first.`);
     return row;
 }
 

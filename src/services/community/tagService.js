@@ -9,9 +9,11 @@
 import { logger } from '../../utils/logger.js';
 import { CT, query, isCommunityDbAvailable, isUniqueViolation, userError } from './db.js';
 import { channelAllowed, compileTrigger, matchFirst, onCooldown } from './tagMatcher.js';
+import { limitMessage, planLimit } from '../billing/premiumEffects.js';
 
 export const TAG_NAME = /^[a-z0-9_-]{1,32}$/;
 export const TAG_CONTENT_MAX = 2000;
+// Free's limit; a server owner's plan raises it (planLimit, plans.js).
 export const TAG_MAX_PER_GUILD = 100;
 export const TAG_DEFAULT_COOLDOWN_S = 60;
 export const TAG_MIN_TRIGGER_COOLDOWN_S = 5;
@@ -212,7 +214,7 @@ export async function createTag({ guildId, name, content, triggerKind = 'none', 
     if (!TAG_NAME.test(key)) throw userError('Tag names use lowercase letters, digits, - and _ (up to 32).');
     const fields = normalizeFields({ content, triggerKind, trigger, allowChannels, denyChannels, cooldownS: cooldownS ?? TAG_DEFAULT_COOLDOWN_S });
     const { rows: [{ count }] } = await query(`SELECT COUNT(*)::int AS count FROM ${CT.tags} WHERE guild_id = $1`, [guildId]);
-    if (count >= TAG_MAX_PER_GUILD) throw userError(`A server can have at most ${TAG_MAX_PER_GUILD} tags.`);
+    if (count >= planLimit(guildId, 'tags')) throw userError(limitMessage(guildId, 'tags', 'tags'));
     try {
         await query(
             `INSERT INTO ${CT.tags} (guild_id, name, content, trigger_kind, trigger, allow_channels, deny_channels, cooldown_s, created_by)

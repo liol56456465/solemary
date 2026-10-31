@@ -23,6 +23,7 @@
 //   GET  /dashboard/owner/announce, POST …/preview|send one message to every server's log channel
 //   GET  /dashboard/owner/premium[?status=]             premium keys (test checkout), subscriptions, orders
 //   POST /dashboard/owner/premium/generate|revoke|end   create keys, cancel an unused key, end a subscription
+//   POST /dashboard/owner/premium/grant|roles           give a plan to a user ID; supporter roles per plan
 //
 // Access: every request checks isBotOwner(session user) live (not the cached access
 // decision); anyone else gets the normal 404 page. POSTs also need: 30/min per session,
@@ -54,7 +55,10 @@ import { getActiveCase, listCasesForUser } from '../enforcement/caseService.js';
 import { findMutedRole } from '../enforcement/muteService.js';
 import { INSTALL_PERMISSIONS } from '../site/site.js';
 import { adminCommandsRetired } from '../../config/commands/retirement.js';
-import { KEY_DURATIONS, MAX_KEYS_PER_BATCH, keyHint, premiumSettings, premiumStore } from '../billing/premiumService.js';
+import { KEY_DURATIONS, KEY_VALIDITY, MAX_KEYS_PER_BATCH, keyHint, premiumSettings, premiumStore } from '../billing/premiumService.js';
+import { afterPremiumChange, tierRoles } from '../billing/premiumEffects.js';
+import { updateSettings } from '../settings/guildSettings.js';
+import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
     KEY_FILTERS, blacklistPage, commandsPage, premiumPage, registerConfirmPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage, userLookupPage,
@@ -404,6 +408,9 @@ export const defaultOwnerDeps = {
     commandsRetired: () => adminCommandsRetired(),
     premium: premiumStore,
     premiumTestCheckout: () => premiumSettings().testCheckout,
+    premiumAfter: afterPremiumChange,
+    premiumRoles: () => tierRoles(),
+    savePremiumRoles: (guildId, value, actor) => updateSettings(guildId, { premiumRoleIds: value }, { ...actor, module: 'owner' }),
 };
 
 // ── Handlers ──────────────────────────────────────────────────────────────
@@ -982,15 +989,26 @@ export function createOwnerHandlers(core) {
         return null;
     };
 
+    /** The main server's roles for the supporter-role pickers, with a problem note when unsafe. */
+    function roleChoices() {
+        const guild = client.guilds?.cache?.get(guildId);
+        const me = guild?.members?.me || null;
+        return [...(guild?.roles?.cache?.values?.() || [])]
+            .filter((role) => role.id !== guild.id && !role.managed)
+            .sort((a, b) => (b.position ?? 0) - (a.position ?? 0))
+            .map((role) => ({ id: role.id, name: role.name, problem: me ? getRoleAssignmentProblem(role, me) : null }));
+    }
+
     async function renderPremium(req, res, status = 200, error = null, { values = {}, created = [], filter = null } = {}) {
         const current = keyFilter(filter ?? queryText(req.query, 'status', 20));
-        const [keys, subscriptions, orders] = await Promise.all([
+        const [keys, subscriptions, orders, stats] = await Promise.all([
             o.premium.listKeys({ status: current }).catch(nullOnError('premium keys')),
             o.premium.listActiveSubscriptions().catch(nullOnError('subscriptions')),
             o.premium.listOrders(30).catch(nullOnError('premium orders')),
+            (o.premium.stats ? o.premium.stats() : Promise.resolve(null)).catch(nullOnError('premium stats')),
         ]);
         return sendHtml(res, status, premiumPage({
-            ...page(req), keys, subscriptions, orders, filter: current, created, values,
+            ...page(req), keys, subscriptions, orders, stats, roles: o.premiumRoles(), roleChoices: roleChoices(), filter: current, created, values,
             testCheckout: Boolean(o.premiumTestCheckout()), flash: status === 200 && !created.length ? takeFlash(req) : null, error,
         }));
     }
@@ -998,7 +1016,10 @@ export function createOwnerHandlers(core) {
     // Re-render after a refusal: the form values as typed (cut, never refused again here).
     const typed = (req, name, max) => (typeof req.body?.[name] === 'string' ? req.body[name].trim().slice(0, max) : '');
     const rerenderPremium = (req, res, status, message) => renderPremium(req, res, status, message, {
-        values: { plan: typed(req, 'plan', 20), days: typed(req, 'days', 5), count: typed(req, 'count', 5), note: typed(req, 'note', 200) },
+        values: {
+            plan: typed(req, 'plan', 20), days: typed(req, 'days', 5), count: typed(req, 'count', 5), note: typed(req, 'note', 200), valid: typed(req, 'valid', 5),
+            grantUser: typed(req, 'user', 25), grantPlan: typed(req, 'grant_plan', 20), grantDays: typed(req, 'grant_days', 5),
+        },
         filter: typed(req, 'status', 20) || null,
     });
 
@@ -1007,9 +1028,11 @@ export function createOwnerHandlers(core) {
         const count = Number.parseInt(text(req.body, 'count', 5), 10);
         if (!KEY_DURATIONS.some((d) => d.days === days)) throw new InputError('Choose one of the listed times.');
         if (!Number.isInteger(count) || count < 1 || count > MAX_KEYS_PER_BATCH) throw new InputError(`Create between 1 and ${MAX_KEYS_PER_BATCH} keys at a time.`);
-        const rows = await o.premium.generateKeys({ planId: text(req.body, 'plan', 20), days, count, note: text(req.body, 'note', 200), actor: actorOf(req) });
+        const validDays = Number.parseInt(text(req.body, 'valid', 5) || '0', 10);
+        if (!KEY_VALIDITY.some((v) => v.days === validDays)) throw new InputError('Choose how long the keys can be redeemed.');
+        const rows = await o.premium.generateKeys({ planId: text(req.body, 'plan', 20), days, count, note: text(req.body, 'note', 200), validDays, actor: actorOf(req) });
         // Audit rows are not secret: only the last four characters of each key.
-        await audit(req, [{ key: 'premium.keys.generate', old: null, new: { plan: rows[0]?.plan_id, days, count: rows.length, keys: rows.map((k) => keyHint(k.code)) } }]);
+        await audit(req, [{ key: 'premium.keys.generate', old: null, new: { plan: rows[0]?.plan_id, days, validDays, count: rows.length, keys: rows.map((k) => keyHint(k.code)) } }]);
         logger.info(`Dashboard owner ${req.dashboard.session.userId} created ${rows.length} premium key(s) (${rows[0]?.plan_id}, ${days} days)`);
         return renderPremium(req, res, 200, null, { created: rows, filter: 'unused' });
     }, { rerender: rerenderPremium });
@@ -1027,8 +1050,36 @@ export function createOwnerHandlers(core) {
         if (!isSnowflake(userId)) throw new InputError('Unknown account.');
         const row = await o.premium.endSubscription(userId, actorOf(req));
         if (!row) throw new InputError('That account has no active subscription any more. Reload the page.');
+        await o.premiumAfter({ subscription: row }, 'ended');
         await audit(req, [{ key: `premium.subscriptions.${userId}.end`, old: { plan: row.plan_id, until: row.expires_at }, new: null }]);
         await flash(req, `The ${row.plan_id} plan of ${row.username || userId} has ended.`);
+        return res.redirect(303, path('/owner/premium'));
+    }, { rerender: rerenderPremium });
+
+    const premiumGrant = ownerPost(async (req, res) => {
+        const userId = text(req.body, 'user', 25);
+        if (!isSnowflake(userId)) throw new InputError('Enter a Discord user ID (17–20 digits).');
+        const days = Number.parseInt(text(req.body, 'grant_days', 5), 10);
+        const result = await o.premium.grant({ userId, planId: text(req.body, 'grant_plan', 20), days, actor: actorOf(req) });
+        await o.premiumAfter(result, 'owner');
+        await audit(req, [{ key: `premium.subscriptions.${userId}.grant`, old: result.previous?.plan_id ? { plan: result.previous.plan_id, until: result.previous.expires_at } : null, new: { plan: result.subscription.plan_id, days, until: result.subscription.expires_at } }]);
+        await flash(req, `${result.subscription.plan_id} given to ${userId} until ${new Date(result.subscription.expires_at).toISOString().slice(0, 10)}${result.next?.converted ? ' (remaining time converted)' : ''}.`);
+        return res.redirect(303, path('/owner/premium'));
+    }, { rerender: rerenderPremium });
+
+    const premiumRolesSave = ownerPost(async (req, res) => {
+        const choices = new Map(roleChoices().map((role) => [role.id, role]));
+        const value = {};
+        for (const plan of ['normal', 'pro', 'max']) {
+            const id = text(req.body, `role_${plan}`, 25);
+            if (id && !choices.has(id)) throw new InputError('That role is not in the main server (reload the page).');
+            if (id && choices.get(id).problem) throw new InputError(`The ${plan} role cannot be handed out: ${choices.get(id).problem}`);
+            value[plan] = id || null;
+        }
+        const old = o.premiumRoles();
+        await o.savePremiumRoles(guildId, value, actorOf(req));
+        await audit(req, [{ key: 'premium.roles', old, new: value }]);
+        await flash(req, 'Supporter roles saved. Members get them within 5 minutes (or right away on their next plan change).');
         return res.redirect(303, path('/owner/premium'));
     }, { rerender: rerenderPremium });
 
@@ -1038,6 +1089,6 @@ export function createOwnerHandlers(core) {
         requireOwner, index, home, activity, profile, username, about, presence, avatar: imageAction('avatar'), banner: imageAction('banner'),
         servers, server, invite, leavePreview, leave, users, blacklist, blacklistAdd, blacklistRemove,
         health, maintenance, commands, registerPreview, register, announce, announcePreview, announceSend,
-        premium, premiumGenerate, premiumRevoke, premiumEnd,
+        premium, premiumGenerate, premiumRevoke, premiumEnd, premiumGrant, premiumRolesSave,
     };
 }

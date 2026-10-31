@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
 import {
-    KEY_ALPHABET, PremiumError, applyTime, generateKeyCode, isActive, keyHint, keyStatus, normalizeKeyCode, priceCents, quote,
+    KEY_ALPHABET, PremiumError, applyTime, giftDetails, generateKeyCode, isActive, keyHint, keyStatus, normalizeKeyCode, priceCents, quote,
 } from '../src/services/billing/premiumService.js';
 import { checkoutChoice } from '../src/services/site/billing.js';
 import {
@@ -75,7 +75,15 @@ test('time: starts now when none or expired; same plan adds to the end; another 
     assert.equal(more.expiresAt.getTime(), now + 385 * DAY);
     assert.equal(more.startedAt.getTime(), now - 10 * DAY, 'start date kept');
     assert.equal(more.extended, true);
-    assert.throws(() => applyTime(active, 'max', 30, now), (e) => e instanceof PremiumError && e.status === 409 && /already have Pro/.test(e.message));
+    // Higher plan: upgrade. 20 days of Pro (€4.99) → 20 × 4.99 / 9.99 ≈ 9.99 days of Max, then + 30.
+    const up = applyTime(active, 'max', 30, now);
+    assert.equal(up.planId, 'max');
+    assert.equal(up.converted.fromPlanId, 'pro');
+    assert.equal(up.converted.convertedMs, Math.floor(20 * DAY * 499 / 999));
+    assert.equal(up.expiresAt.getTime(), now + Math.floor(20 * DAY * 499 / 999) + 30 * DAY);
+    assert.equal(up.startedAt.getTime(), now, 'a new plan starts now');
+    // Lower plan while a higher one runs: refused.
+    assert.throws(() => applyTime(active, 'normal', 30, now), (e) => e instanceof PremiumError && e.status === 409 && /already have Pro/.test(e.message));
     assert.throws(() => applyTime(null, 'pro', 0, now), PremiumError);
     assert.equal(isActive(active, now), true);
     assert.equal(isActive(expired, now), false);
@@ -119,14 +127,15 @@ function memoryStore() {
     };
     return {
         subs, orders, keys,
-        async purchase({ userId, username, planId, period, kind }) {
+        async purchase({ userId, username, planId, period, kind, giftTo, giftMessage }) {
             const q = quote({ planId, period, kind });
+            const gift = kind === 'gift' ? giftDetails({ to: giftTo, message: giftMessage }) : null;
             const next = kind === 'personal' ? applyTime(subs.get(userId), planId, q.days) : null;
             orderId += 1;
             const order = { id: orderId, user_id: userId, username, plan_id: planId, period, kind, amount_cents: q.amountCents, test: true, created_at: new Date(), key_code: null };
             orders.unshift(order);
             if (next) return { order, subscription: setSub(userId, username, next, 'purchase'), key: null };
-            const key = makeKey({ plan_id: planId, duration_days: q.days, source: 'gift', created_by: userId, order_id: order.id });
+            const key = makeKey({ plan_id: planId, duration_days: q.days, source: 'gift', created_by: userId, created_by_username: username, order_id: order.id, gift_to: gift.giftTo, gift_message: gift.giftMessage, expires_at: new Date(Date.now() + 365 * DAY) });
             order.key_code = key.code;
             return { order, subscription: null, key };
         },
@@ -141,6 +150,11 @@ function memoryStore() {
             const subscription = setSub(userId, username, next, 'key');
             Object.assign(key, { redeemed_at: new Date(), redeemed_by: userId, redeemed_by_username: username });
             return { key, subscription };
+        },
+        async peekKey(code) {
+            const key = keys.get(normalizeKeyCode(code));
+            if (!key || keyStatus(key) !== 'unused') return null;
+            return { planId: key.plan_id, days: key.duration_days, from: key.created_by_username, giftTo: key.gift_to, giftMessage: key.gift_message, expiresAt: key.expires_at };
         },
         async accountOf(userId) {
             const sub = subs.get(userId);
@@ -251,11 +265,19 @@ test('checkout logged out → login → back to the same checkout; buying for me
         assert.ok(billing.body.includes('Active until'));
         assert.equal(app.premium.subs.get(ALICE).plan_id, 'normal');
 
-        // Another plan while Normal is active: refused, nothing bought.
-        const clash = await app.request('/me/checkout', { method: 'POST', cookie, body: form({ csrf, plan: 'max', period: 'monthly', for: 'personal' }), headers: { origin: ORIGIN } });
+        // Upgrade preview, then the upgrade to Max.
+        const preview = await app.request('/me/checkout?plan=max&period=monthly&for=personal', { cookie });
+        assert.match(preview.body, /Upgrade: your remaining 365 days of Normal become [\d.]+ days of Max/);
+        const up = await app.request('/me/checkout', { method: 'POST', cookie, body: form({ csrf, plan: 'max', period: 'monthly', for: 'personal' }), headers: { origin: ORIGIN } });
+        assert.equal(up.status, 303);
+        assert.equal(app.premium.subs.get(ALICE).plan_id, 'max');
+        // A lower plan while Max runs: the checkout says so and a post is refused; nothing bought.
+        const lower = await app.request('/me/checkout?plan=normal&period=monthly&for=personal', { cookie });
+        assert.match(lower.body, /Not available while your plan runs/);
+        const clash = await app.request('/me/checkout', { method: 'POST', cookie, body: form({ csrf, plan: 'normal', period: 'monthly', for: 'personal' }), headers: { origin: ORIGIN } });
         assert.equal(clash.status, 409);
-        assert.ok(clash.body.includes('already have Normal'));
-        assert.equal(app.premium.orders.length, 1);
+        assert.ok(clash.body.includes('already have Max'));
+        assert.equal(app.premium.orders.length, 2);
     } finally {
         await app.close();
     }
@@ -317,6 +339,39 @@ test('redeem is rate limited per address and account', async () => {
         }
         assert.equal(last.status, 429);
         assert.equal(last.headers.get('retry-after'), '60');
+    } finally {
+        await app.close();
+    }
+});
+
+test('gift with a name and message: shown on the receipt and as a card on the gift link (escaped); too long refused', async () => {
+    const app = await serve();
+    try {
+        const alice = await login(app, { id: ALICE, username: 'alice', global_name: 'Alice' });
+        const csrf = csrfOf((await app.request('/me/checkout?plan=max&period=monthly&for=gift', { cookie: alice.cookie })).body);
+        const post = (fields) => app.request('/me/checkout', { method: 'POST', cookie: alice.cookie, body: form({ csrf, plan: 'max', period: 'monthly', for: 'gift', ...fields }), headers: { origin: ORIGIN } });
+        const tooLong = await post({ gift_to: 'x'.repeat(51) });
+        assert.equal(tooLong.status, 400);
+        assert.match(tooLong.body, /limited to 50 characters/);
+        assert.ok(tooLong.body.includes('value="xxxxx'), 'typed values kept');
+        assert.equal(app.premium.orders.length, 0);
+
+        const bought = await post({ gift_to: 'Sam', gift_message: 'Happy <b>birthday</b>!' });
+        assert.equal(bought.status, 303);
+        const receipt = (await app.request(bought.headers.get('location'), { cookie: alice.cookie })).body;
+        assert.ok(receipt.includes('to Sam'));
+        assert.ok(receipt.includes('Happy &lt;b&gt;birthday&lt;/b&gt;!'), 'message escaped');
+        assert.ok(receipt.includes('Redeem by'), 'gift keys expire');
+        const code = receipt.match(/MEWVO-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}/)[0];
+
+        const bob = await login(app, { id: BOB, username: 'bob' });
+        const page = (await app.request(`/me/redeem?code=${code}`, { cookie: bob.cookie })).body;
+        assert.match(page, /You got a gift/);
+        assert.match(page, /A gift from Alice for Sam/);
+        assert.match(page, /Mewvo Max · 30 days/);
+        assert.ok(page.includes('Happy &lt;b&gt;birthday&lt;/b&gt;!'));
+        const unknown = (await app.request('/me/redeem?code=MEWVO-2222-2222-2222', { cookie: bob.cookie })).body;
+        assert.ok(!unknown.includes('gift-card'), 'no card for an unknown key');
     } finally {
         await app.close();
     }

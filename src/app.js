@@ -38,7 +38,8 @@ import { registerOAuthRoutes } from './services/oauthVerification.js';
 import { registerDashboard } from './services/dashboard/routes.js';
 import { registerSite } from './services/site/site.js';
 import { registerMemberPortal } from './services/site/memberPortal.js';
-import { premiumSettings } from './services/billing/premiumService.js';
+import { premiumSettings, premiumStore } from './services/billing/premiumService.js';
+import { loadPremiumCache, runPremiumCron, setGuildOwnerResolver, setPremiumClient } from './services/billing/premiumEffects.js';
 import { finalErrorHandler } from './utils/finalErrorHandler.js';
 import { isGlobalRateLimitExempt } from './services/dashboard/security.js';
 import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
@@ -300,6 +301,10 @@ class Mewvo extends Client {
     // The front website (Home, Commands, Leaderboard, About, Status, Privacy, Terms, robots.txt) at
     // the root, after every other route. Leaderboard and status read this client (site.js defaults).
     // "My record" (/me): members see their own moderation record (MEMBER_PORTAL_ENABLED, off by default).
+    // Plans (test checkout): changes made on the website reach Discord through this client
+    // (role + DM); a server's limits follow its owner's plan.
+    setPremiumClient(this);
+    setGuildOwnerResolver((guildId) => this.guilds.cache.get(guildId)?.ownerId || null);
     const memberPortalEnabled = registerMemberPortal(app, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite });
     registerSite(app, this, { dashboardEnabled, memberPortalEnabled, billingEnabled: premiumSettings().testCheckout, supportInvite: () => enforcementConfig.supportServerInvite });
 
@@ -377,6 +382,8 @@ class Mewvo extends Client {
     cron.schedule('*/15 * * * *', exclusive('youtube_feeds', () => pollFeeds(this)));
     cron.schedule('* * * * *', exclusive('enforcement_expiry', () => runEnforcementExpiry(this)));
     cron.schedule('* * * * *', exclusive('temp_role_expiry', () => runTempRoleExpiry(this)));
+    // Plans: "ends in 3 days" / "has ended" DMs, the plan cache, supporter roles (premiumEffects.js).
+    cron.schedule('*/5 * * * *', exclusive('premium', () => runPremiumCron(this, premiumStore)));
     // Role rules (dashboard Members): every 10 minutes, capped changes per run (roleRuleService.js).
     cron.schedule('*/10 * * * *', exclusive('role_rules', () => runRoleRules(this)));
     // Joins/leaves for Members → Insights are kept 90 days.
@@ -412,6 +419,8 @@ class Mewvo extends Client {
     const startupEnforcement = runSafeTask('enforcement_startup', async () => {
       await runEnforcementExpiry(this);
       await runTempRoleExpiry(this);
+      // Active plans into memory before limits are checked (a failure keeps everyone on Free limits until the cron).
+      await loadPremiumCache(premiumStore).catch((error) => logger.warn(`Plan cache not loaded at startup: ${error.message}`));
       await importLegacyWarnings(this);
       // Modmail channels opened before modmail_links existed: linked once from their topic.
       await importModmailTopicsOnce(this.guilds.cache.get(enforcementConfig.mainGuildId));

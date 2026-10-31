@@ -14,9 +14,10 @@ import {
     pill, postForm, selectInput, switchInput, text, textArea, textInput,
 } from '../forms.js';
 import { section, table } from './common.js';
+import { planLimit } from '../../billing/premiumEffects.js';
 import { DEFAULT_TIMEZONE, canonicalTimeZone } from '../../../utils/timezone.js';
 import {
-    INTERVAL_MAX_HOURS, SCHEDULED_MAX_PER_GUILD, FAILURE_LIMIT, WEEKDAYS, cleanSchedule, describeSchedule, formatInZone, nextRunAfter, zonedParts,
+    INTERVAL_MAX_HOURS, FAILURE_LIMIT, WEEKDAYS, cleanSchedule, describeSchedule, formatInZone, nextRunAfter, zonedParts,
 } from '../../scheduledMessageService.js';
 import {
     COUNTDOWN_MAX_SECONDS, COUNTDOWN_TITLE_MAX, EMBED_COLOURS, EMBED_DESCRIPTION_MAX, EMBED_FOOTER_MAX, EMBED_TITLE_MAX, EMBED_TOTAL_MAX,
@@ -222,7 +223,7 @@ ${buttonForm(ctx, 'messages', 'schedule-delete', 'Delete', { id: m.id }, { canEd
     ]);
     const edits = list.map((m) => html`<details class="sub" id="edit-${m.id}" data-key="scheduled-${m.id}"><summary>Edit #${m.id} · ${describeSchedule(m.schedule)}</summary>
 ${postForm(ctx, 'messages', 'schedule-edit', html`<div class="grid">${messageFields(g, m)}</div>${scheduleFields(m, defaultZone)}`, { submit: 'Save scheduled message', hidden: { id: m.id }, canEdit: can })}</details>`);
-    return html`<p>${list.length} of ${SCHEDULED_MAX_PER_GUILD} scheduled messages.</p>
+    return html`<p>${list.length} of ${planLimit(ctx.guildId, 'scheduled')} scheduled messages.</p>
 ${table(['Message', 'Channel', 'Next run', 'Repeat', 'Last result', 'Status', ''], rows, 'No scheduled messages.')}${edits}`;
 }
 
@@ -267,7 +268,7 @@ ${numberInput('minutes', 5, { label: 'Minutes (0–1440)', min: 0, max: 1440 })}
 ${numberInput('seconds', 0, { label: 'Seconds (0–59)', min: 0, max: 59 })}</div>`,
         { submit: 'Start countdown', canEdit: canPost });
         return html`${section('Send a message', send, `Same as /embedbuilder: the bot posts the text and/or embed in the channel.${adminNote}`)}
-${section('Schedule a message', schedule, `The same message, posted later: once, every day or on chosen weekdays at a time, or every N hours. Checked once a minute; the bot's permissions are checked again when it posts. After ${FAILURE_LIMIT} failed posts in a row it is paused and the alerts channel is told. At most ${SCHEDULED_MAX_PER_GUILD} per server.${adminNote}`)}
+${section('Schedule a message', schedule, `The same message, posted later: once, every day or on chosen weekdays at a time, or every N hours. Checked once a minute; the bot's permissions are checked again when it posts. After ${FAILURE_LIMIT} failed posts in a row it is paused and the alerts channel is told. At most ${planLimit(ctx.guildId, 'scheduled')} per server (the server owner's plan sets it).${adminNote}`)}
 ${section('Scheduled messages', scheduledSection(ctx, scheduled, data.timezone || DEFAULT_TIMEZONE), 'Next run is shown in each message\'s own time zone.')}
 <datalist id="tz-zones">${timeZoneList().map((z) => html`<option value="${z}"></option>`)}</datalist>
 ${section('Start a poll', poll, `Same as /poll.${adminNote}`)}

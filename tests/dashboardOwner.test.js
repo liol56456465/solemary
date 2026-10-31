@@ -94,7 +94,7 @@ async function setup({
     expectedCommands = async () => [{ name: 'help' }, { name: 'rank' }, { name: 'Moderate', type: 2 }],
     registeredCommands = async () => [{ name: 'help', type: 1 }, { name: 'rank', type: 1 }, { name: 'Moderate', type: 2 }],
     registerMainCommands = async () => ({ guildId: '100000000000000001', count: 3 }), retired = false,
-    premium = null, testCheckout = true,
+    premium = null, testCheckout = true, premiumRoles = { normal: null, pro: null, max: null },
 } = {}) {
     const guilds = new Map([
         [MAIN, makeGuild(MAIN, { name: 'Main', ownerId: '999999999999999990' })],
@@ -134,6 +134,9 @@ async function setup({
         commandsRetired: () => retired,
         premium: premium || fakePremium(),
         premiumTestCheckout: () => testCheckout,
+        premiumAfter: rec('premiumAfter', async () => {}),
+        premiumRoles: () => premiumRoles,
+        savePremiumRoles: rec('savePremiumRoles', async (g, value) => { Object.assign(premiumRoles, value); return value; }),
     };
     const sessions = createMemorySessionStore({ ttlMs: 48 * 3600 * 1000 });
     const access = createAccessChecker(client, { facts: async (c, id) => ({ inGuild: true, isAdmin: admins.has(id), isOwnerId: owners.has(id) }) });
@@ -173,6 +176,13 @@ function fakePremium({ fail = false } = {}) {
         },
         revokeKey: async (code) => { const k = keys.find((row) => row.code === code && !row.revoked_at && !row.redeemed_at); if (!k) return null; k.revoked_at = new Date(); return k; },
         endSubscription: async (userId) => { const i = subs.findIndex((row) => row.user_id === userId); return i === -1 ? null : subs.splice(i, 1)[0]; },
+        stats: async () => { guard(); return { active: { pro: 1 }, activeTotal: 1, orders30: 2, cents30: 998, gifts30: 1 }; },
+        grant: async ({ userId, planId, days }) => {
+            if (planId === 'normal') { const { PremiumError } = await import('../src/services/billing/premiumService.js'); throw new PremiumError('You already have Max until 2027-01-01, which is more than Normal.', 409); }
+            const row = { user_id: userId, plan_id: planId, started_at: new Date(), expires_at: new Date(Date.now() + days * 86400000), source: 'owner' };
+            subs.push(row);
+            return { subscription: row, previous: null, next: { converted: null } };
+        },
     };
 }
 
@@ -841,7 +851,7 @@ test('premium keys: owners only; create keys (shown once at the top, audited wit
     assert.equal(codes.length, 3);
     assert.match(made.body, /Pro, 90 days each/);
     const row = h.auditRows.find((r) => r.key === 'premium.keys.generate');
-    assert.deepEqual(row.new, { plan: 'pro', days: 90, count: 3, keys: codes.map((c) => `…${c.slice(-4)}`) });
+    assert.deepEqual(row.new, { plan: 'pro', days: 90, validDays: 0, count: 3, keys: codes.map((c) => `…${c.slice(-4)}`) });
     assert.ok(!JSON.stringify(h.auditRows).includes(codes[0]), 'full key never in the audit log');
     assert.equal(ownerActionText('premium.keys.generate'), 'Premium keys created');
 });
@@ -883,4 +893,41 @@ test('premium keys: a database error shows a message per section (never an empty
     assert.match(page.body, /subscriptions could not be loaded/);
     assert.ok(!page.body.includes('No keys here'));
     assert.match(page.body, /PREMIUM_TEST_CHECKOUT=true/);
+});
+
+test('premium: stats tiles; give a plan (follow-up + audit); a refused grant re-renders with the typed values', async () => {
+    const premium = fakePremium();
+    const h = await setup({ premium });
+    const page = await get(h, h.ow.premium);
+    assert.match(page.body, /Active plans/);
+    assert.match(page.body, /€9\.98/);
+    const ok = await post(h, h.ow.premiumGrant, { form: { user: '300000000000000041', grant_plan: 'max', grant_days: '30' } });
+    assert.equal(ok.statusCode, 303);
+    assert.ok(premium.subs.some((s) => s.user_id === '300000000000000041' && s.plan_id === 'max'));
+    assert.deepEqual(h.calls.filter((c) => c.name === 'premiumAfter').map((c) => c.args[1]), ['owner']);
+    assert.ok(h.auditRows.some((r) => r.key === 'premium.subscriptions.300000000000000041.grant'));
+    const bad = await post(h, h.ow.premiumGrant, { form: { user: 'abc', grant_plan: 'max', grant_days: '30' } });
+    assert.equal(bad.statusCode, 400);
+    const lower = await post(h, h.ow.premiumGrant, { form: { user: '300000000000000042', grant_plan: 'normal', grant_days: '30' } });
+    assert.equal(lower.statusCode, 400);
+    assert.match(lower.body, /more than Normal/);
+    assert.ok(lower.body.includes('value="300000000000000042"'), 'typed user id kept');
+    await post(h, h.ow.premiumEnd, { form: { user: '300000000000000041' } });
+    assert.deepEqual(h.calls.filter((c) => c.name === 'premiumAfter').map((c) => c.args[1]), ['owner', 'ended']);
+});
+
+test('premium: supporter roles are saved and audited; a role outside the main server is refused', async () => {
+    const h = await setup();
+    const main = h.guilds.get(MAIN);
+    main.roles.cache.set('300000000000000051', { id: '300000000000000051', name: 'Supporter', managed: false, position: 1, guild: { id: MAIN }, permissions: { has: () => false, any: () => false } });
+    main.members.me.roles = { highest: { position: 50 } };
+    const page = await get(h, h.ow.premium);
+    assert.match(page.body, /@Supporter/);
+    const ok = await post(h, h.ow.premiumRolesSave, { form: { role_normal: '', role_pro: '300000000000000051', role_max: '' } });
+    assert.equal(ok.statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'savePremiumRoles').args[1], { normal: null, pro: '300000000000000051', max: null });
+    assert.ok(h.auditRows.some((r) => r.key === 'premium.roles'));
+    const bad = await post(h, h.ow.premiumRolesSave, { form: { role_pro: '300000000000000099' } });
+    assert.equal(bad.statusCode, 400);
+    assert.match(bad.body, /not in the main server/);
 });

@@ -10,6 +10,7 @@ import { setBirthday as dbSetBirthday } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { reapplyMuteOnJoin } from '../services/enforcement/enforcementService.js';
 import { reapplyTempRolesOnJoin } from '../services/members/tempRoleService.js';
+import { syncPremiumRole } from '../services/billing/premiumEffects.js';
 import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService.js';
 import { syncWarnRolesQuietly } from '../services/enforcement/warnRoleService.js';
 import { noteGateKick, recordJoin } from '../services/automod/raidService.js';
@@ -46,6 +47,8 @@ export default {
                 await syncWarnRolesQuietly(guild, member.id);
                 // Temporary roles that have not ended yet come back on rejoin.
                 await reapplyTempRolesOnJoin(member).catch((error) => logger.warn(`Temporary roles not given back to ${member.id}: ${error.message}`));
+                // An active plan gives its supporter role back.
+                await syncPremiumRole(member.client, member.id).catch((error) => logger.warn(`Supporter role not given back to ${member.id}: ${error.message}`));
                 await recordJoin(member).catch((error) => logger.warn(`Raid tracking failed for ${member.id}: ${error.message}`));
                 // Join gate (/automod joingate): a kicked member skips the rest of the pipeline.
                 const gate = await checkJoinGate(member, {

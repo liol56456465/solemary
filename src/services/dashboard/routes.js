@@ -890,6 +890,8 @@ export function dashboardRouter(d) {
     router.post('/owner/premium/generate', ...owner, form, safe(ow.premiumGenerate));
     router.post('/owner/premium/revoke', ...owner, form, safe(ow.premiumRevoke));
     router.post('/owner/premium/end', ...owner, form, safe(ow.premiumEnd));
+    router.post('/owner/premium/grant', ...owner, form, safe(ow.premiumGrant));
+    router.post('/owner/premium/roles', ...owner, form, safe(ow.premiumRolesSave));
     router.get('/owner', ...owner, ow.index);
     router.get('/owner/home', ...owner, safe(ow.home));
     router.get('/owner/activity', ...owner, safe(ow.activity));

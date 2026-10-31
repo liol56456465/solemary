@@ -7,6 +7,10 @@
 // Prices are whole euro cents. Yearly = 10 × monthly (two months free). The per-month figure
 // shown for yearly billing is yearly / 12, rounded to the cent.
 //
+// `limits` are LIVE (since 2026-10-31): a server's tags, sticky messages, YouTube feeds and
+// scheduled messages are capped by the plan of the server's OWNER (services/billing/
+// premiumEffects.js, planLimit). Free's numbers are the old fixed limits.
+//
 // `planned: true` on a perk or a comparison row puts a "Planned" label next to it on the page.
 // Free's values are what the bot does today (limits from the code: tags 100, sticky messages 10,
 // YouTube feeds 20 per server; src/services/community/*Service.js).
@@ -19,6 +23,7 @@ export const PLANS = [
         id: 'free',
         name: 'Free',
         monthlyCents: 0,
+        limits: { tags: 100, stickies: 10, feeds: 20, scheduled: 50 },
         summary: 'Everything Mewvo does today, for one server.',
         perks: [
             { text: 'Enforcement panel, case codes and DMs' },
@@ -33,11 +38,13 @@ export const PLANS = [
         id: 'normal',
         name: 'Normal',
         monthlyCents: 199,
+        limits: { tags: 250, stickies: 25, feeds: 40, scheduled: 100 },
         summary: 'More room for busy community servers.',
         perks: [
             { text: 'Everything in Free' },
-            { text: '250 tags, 25 sticky messages, 40 YouTube feeds', planned: true },
-            { text: '100 scheduled messages', planned: true },
+            { text: '250 tags, 25 sticky messages, 40 YouTube feeds' },
+            { text: '100 scheduled messages' },
+            { text: 'Supporter role in the Mewvo server' },
             { text: 'Case export (CSV), last 90 days', planned: true },
         ],
     },
@@ -45,10 +52,11 @@ export const PLANS = [
         id: 'pro',
         name: 'Pro',
         monthlyCents: 499,
+        limits: { tags: 500, stickies: 50, feeds: 75, scheduled: 200 },
         summary: 'For servers with a real staff team.',
         featured: true,
         perks: [
-            { text: 'Everything in Normal' },
+            { text: 'Everything in Normal, with higher limits' },
             { text: '25 custom automod rules', planned: true },
             { text: 'Staff and automod analytics on the dashboard', planned: true },
             { text: 'Custom bot name and avatar in your server', planned: true },
@@ -59,13 +67,14 @@ export const PLANS = [
         id: 'max',
         name: 'Max',
         monthlyCents: 999,
+        limits: { tags: 1000, stickies: 100, feeds: 150, scheduled: 500 },
         summary: 'For people who run several servers.',
         perks: [
             { text: 'Everything in Pro' },
             { text: 'One dashboard for up to 5 servers', planned: true },
             { text: 'Shared case history across your servers', planned: true },
             { text: 'Priority help in the support server', planned: true },
-            { text: 'Highest limits on everything', planned: true },
+            { text: 'Highest limits on everything' },
         ],
     },
 ];
@@ -95,10 +104,10 @@ export const COMPARISON = [
     {
         group: 'Community',
         rows: [
-            { label: 'Tags', planned: true, values: { free: '100', normal: '250', pro: '500', max: '1,000' } },
-            { label: 'Sticky messages', planned: true, values: { free: '10', normal: '25', pro: '50', max: '100' } },
-            { label: 'YouTube feeds', planned: true, values: { free: '20', normal: '40', pro: '75', max: '150' } },
-            { label: 'Scheduled messages', planned: true, values: { free: '50', normal: '100', pro: '200', max: '500' } },
+            { label: 'Tags', values: { free: '100', normal: '250', pro: '500', max: '1,000' } },
+            { label: 'Sticky messages', values: { free: '10', normal: '25', pro: '50', max: '100' } },
+            { label: 'YouTube feeds', values: { free: '20', normal: '40', pro: '75', max: '150' } },
+            { label: 'Scheduled messages', values: { free: '50', normal: '100', pro: '200', max: '500' } },
         ],
     },
     {

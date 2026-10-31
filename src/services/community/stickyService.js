@@ -12,12 +12,14 @@
 import { logger } from '../../utils/logger.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { CT, query, isCommunityDbAvailable, userError } from './db.js';
+import { limitMessage, planLimit } from '../billing/premiumEffects.js';
 
 export const STICKY_MAX_LENGTH = 1800;
 export const STICKY_MIN_INTERVAL_MS = 15_000;
 // A short wait after the last message even when the interval has passed, so a
 // burst of messages produces one repost instead of several.
 export const STICKY_SETTLE_MS = 2_000;
+// Free's limit; a server owner's plan raises it (planLimit, plans.js).
 export const STICKY_MAX_PER_GUILD = 10;
 
 // channelId → { guildId, content, lastMessageId, lastPostAt, timer }
@@ -125,8 +127,8 @@ export async function setSticky({ guildId, channel, content, updatedBy }) {
     const text = String(content || '').trim();
     if (!text) throw userError('The sticky message cannot be empty.');
     if (text.length > STICKY_MAX_LENGTH) throw userError(`Sticky messages are limited to ${STICKY_MAX_LENGTH} characters.`);
-    if (!stickies.has(channel.id) && listStickies(guildId).length >= STICKY_MAX_PER_GUILD) {
-        throw userError(`A server can have at most ${STICKY_MAX_PER_GUILD} sticky messages. Remove one first.`);
+    if (!stickies.has(channel.id) && listStickies(guildId).length >= planLimit(guildId, 'stickies')) {
+        throw userError(`${limitMessage(guildId, 'stickies', 'sticky messages')} Remove one first.`);
     }
     const { rows: [row] } = await query(
         `INSERT INTO ${CT.sticky} (channel_id, guild_id, content, updated_by, updated_at)
