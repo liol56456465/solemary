@@ -508,9 +508,9 @@ test('owner overview: totals, newest and largest servers, blacklist count, recen
     const res = await get(h, h.ow.home);
     assert.equal(res.statusCode, 200);
     assert.ok(res.body.includes('<h1>Owner overview</h1>'));
-    assert.match(res.body, /<a class="kpi-num" href="\/dashboard\/owner\/servers">3<\/a>/, 'server count links to the list');
+    assert.match(res.body, /<dt>Servers<\/dt><dd><b><a href="\/dashboard\/owner\/servers">3<\/a><\/b>/, 'server count links to the list');
     assert.ok(res.body.includes('524 members in total · 1 new this week'));
-    assert.match(res.body, /<a class="kpi-num" href="\/dashboard\/owner\/blacklist">2<\/a>/);
+    assert.match(res.body, /<dt>Blacklist<\/dt><dd><b><a href="\/dashboard\/owner\/blacklist">2<\/a><\/b>/);
     assert.ok(res.body.includes('Left Other'), 'audit key shown in words with the server name');
     assert.deepEqual(auditCalls[0].opts, { module: 'owner', page: 0, pageSize: 8 }, 'only owner rows');
     const largest = res.body.slice(res.body.indexOf('Largest servers'));

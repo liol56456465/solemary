@@ -1151,7 +1151,9 @@ test('sidebar: every module listed (no Phase 2 placeholders), on/off states show
     for (const module of MODULES) assert.ok(keys.includes(module.key), module.key);
     const h = await setup();
     const res = await get(h, 'automod');
-    assert.match(res.body, /<\/svg><span class="side-text">Automod<\/span><span class="dot dot-on"><span class="sr">on<\/span><\/span><\/a>/, 'sidebar entry with the on/off dot');
+    assert.match(res.body, /><span class="side-text">Automod<\/span><span class="dot dot-on"><span class="sr">on<\/span><\/span><\/a>/, 'sidebar entry with the on/off dot');
+    const side = res.body.slice(res.body.indexOf('class="side-nav"'), res.body.indexOf('</nav>', res.body.indexOf('class="side-nav"')));
+    assert.ok(!side.includes('<use href="#i-automod">'), 'words only in the sidebar, no icon per item');
 });
 
 test('security headers: CSP still without unsafe-inline; same-origin referrer policy', () => {
@@ -1289,10 +1291,11 @@ test('Modules page: a card per settings module; state only (no switches on cards
     assert.equal(res.statusCode, 200);
     const settings = moduleItems();
     for (const item of settings) assert.ok(res.body.includes(`href="/dashboard/${item.key}"`), item.key);
-    assert.equal((res.body.match(/<li class="module-card"/g) || []).length, settings.length);
+    assert.equal((res.body.match(/<tr class="module-row"/g) || []).length, settings.length);
     // State only: the main switch lives in the module page header, not on the card.
     assert.ok(!res.body.includes('class="switch-form"'), 'no switches on the cards');
-    assert.match(res.body, /<p class="module-state"><span class="module-state-item is-(on|off)"><span class="dot dot-(on|off)" aria-hidden="true"><\/span>(On|Off)<\/span>/);
+    assert.match(res.body, /<span class="module-state is-(on|off)">(On|Off)<\/span>/);
+    assert.ok(!res.body.includes('module-card') && !res.body.includes('module-icon'), 'a table, not a card grid');
     assert.match(res.body, /data-module-search/);
     assert.ok(!/style="|<script>/.test(res.body));
     const on = await modulesPageGet(h, { show: 'on' });
@@ -1300,7 +1303,7 @@ test('Modules page: a card per settings module; state only (no switches on cards
     const off = await modulesPageGet(h, { show: 'off' });
     assert.ok(!/data-state="on"/.test(off.body));
     const junk = await modulesPageGet(h, { show: '<x>' });
-    assert.equal((junk.body.match(/<li class="module-card"/g) || []).length, settings.length, 'unknown filter = all');
+    assert.equal((junk.body.match(/<tr class="module-row"/g) || []).length, settings.length, 'unknown filter = all');
 });
 
 test('a switch from the Modules page returns there; any other back value goes to the module page', async () => {
@@ -1340,8 +1343,7 @@ test('Overview keeps the full module states (automod etc.) next to the config-ba
     const res = await run(h, h.d.overview, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query: {} });
     assert.equal(res.statusCode, 200);
     // Automod's state comes from the automod service, not from the guild config.
-    assert.match(res.body, /<span class="mod-name">Automod<\/span><span class="state-word is-(on|warn)">/);
-    assert.match(res.body, /<li><span>Automod<\/span><span class="state-word is-on">/, 'System tile');
+    assert.match(res.body, /automod on/, 'status line');
     assert.ok(!/0 of 0 modules/.test(res.body));
 });
 
@@ -1375,8 +1377,8 @@ test('Overview: recent dashboard changes (escaped), linked to the module; unavai
     const h = await setup();
     await post(h, 'automod', 'enabled', { enabled: 'false' });
     const res = await run(h, h.d.overview, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query: {} });
-    assert.match(res.body, /<h2>Recent dashboard changes<\/h2><ul class="activity">/);
-    assert.match(res.body, /<strong>admin&lt;b&gt;<\/strong> changed <code>[^<]+<\/code> in <a href="\/dashboard\/automod">Automod<\/a>/);
+    assert.match(res.body, /<h2>Recent dashboard changes<\/h2><div class="scroll"><table>/);
+    assert.match(res.body, /<td>admin&lt;b&gt;<\/td><td><a href="\/dashboard\/automod">Automod<\/a><\/td>\n<td><code>[^<]+<\/code><\/td>/);
     assert.ok(res.body.includes('href="/dashboard/audit">Full audit log'));
     const { overviewPage } = await import('../src/services/dashboard/overview.js');
     const o = { checklist: [], bot: { ready: true, ping: null }, database: null, guild: null, recent: [], lockdown: undefined };
@@ -1388,7 +1390,7 @@ test('top bar search: ?q= filters modules by name, one-liner or keywords (every 
     const h = await setup();
     const find = (q) => modulesPageGet(h, { q });
     const xp = await find('xp');
-    assert.equal((xp.body.match(/<li class="module-card"/g) || []).length, 1);
+    assert.equal((xp.body.match(/<tr class="module-row"/g) || []).length, 1);
     assert.match(xp.body, /href="\/dashboard\/leveling"/);
     assert.match(xp.body, /1 module matches <strong>“xp”<\/strong>/);
     const two = await find('join message');
@@ -1410,11 +1412,9 @@ test('Overview checklist: progress bar, open items first, done/to-do words for s
         ],
     };
     const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
-    assert.match(page, /<svg class="ring"[^>]*aria-label="1 of 2 setup steps done">/, 'setup ring with a text alternative');
-    assert.match(page, /stroke-dasharray="50.0 100"/);
-    assert.ok(page.indexOf('Open thing') < page.indexOf('Done thing'), 'open items first');
-    assert.match(page, /<span class="sr">to do:<\/span>/);
-    assert.match(page, /<span class="sr">done:<\/span>/);
+    assert.match(page, /1 of 2 steps done\./, 'progress in words (no ring)');
+    assert.ok(!page.includes('class="ring"'));
+    assert.ok(page.indexOf('Open thing') < page.indexOf('Done: Done thing'), 'open items first');
     assert.ok(page.includes('set it &lt;up&gt;'));
 });
 
@@ -1441,12 +1441,12 @@ test('Modules page: state line — On / Off, plus Needs setup from the Getting-s
     });
     const full = String(modulesPage({ session: { username: 'a', csrf: 't' }, moduleStates: { welcome: true, tickets: true, automod: false }, checklist }));
     const page = full.slice(full.indexOf('data-module-grid'));
-    const cardOf = (key) => page.slice(page.indexOf(`href="/dashboard/${key}"`), page.indexOf('</li>', page.indexOf(`href="/dashboard/${key}"`)));
-    assert.match(cardOf('tickets'), /is-on"><span class="dot dot-on" aria-hidden="true"><\/span>On<\/span><span class="module-state-item is-setup"><span class="dot dot-warn" aria-hidden="true"><\/span>Needs setup · 1 to do/);
-    assert.match(cardOf('welcome'), />On<\/span><\/p>/);
-    assert.match(cardOf('automod'), /is-off"><span class="dot dot-off" aria-hidden="true"><\/span>Off<\/span><\/p>/, 'off wins');
-    assert.match(cardOf('enforcement'), /Needs setup · 1 to do/, 'no on/off state, open setup items');
-    assert.ok(!cardOf('giveaways').includes('module-state'), 'no state and no checklist items: no line');
+    const cardOf = (key) => page.slice(page.indexOf(`href="/dashboard/${key}"`), page.indexOf('</tr>', page.indexOf(`href="/dashboard/${key}"`)));
+    assert.match(cardOf('tickets'), /<span class="module-state is-on">On<\/span>, <span class="module-state is-setup">needs setup \(1\)<\/span>/);
+    assert.match(cardOf('welcome'), /<span class="module-state is-on">On<\/span><\/td>/);
+    assert.match(cardOf('automod'), /<span class="module-state is-off">Off<\/span><\/td>/, 'off wins');
+    assert.match(cardOf('enforcement'), /needs setup \(1\)/, 'no on/off state, open setup items');
+    assert.ok(!cardOf('giveaways').includes('module-state'), 'no state and no checklist items: a dash');
     assert.ok(!String(modulesPage({ session: { username: 'a', csrf: 't' } })).match(/is-setup/), 'no checklist: no setup info');
 });
 
@@ -1479,7 +1479,7 @@ test('audit log: a long value shows its start; the rest is behind "Show all", no
 test('Find a setting: also matches a module\'s setup steps (e.g. "category" finds Tickets and Enforcement)', async () => {
     const { modulesPage } = await import('../src/services/dashboard/modulesPage.js');
     const checklist = [{ label: 'Ticket staff role', done: false, href: '/dashboard/tickets' }, { label: 'Birthday channel', done: false, href: '/dashboard/birthdays' }];
-    const keys = (q) => [...String(modulesPage({ session: { username: 'a', csrf: 't' }, q, checklist })).matchAll(/class="module-card-name"><a href="\/dashboard\/([a-z-]+)"/g)].map((m) => m[1]);
+    const keys = (q) => [...String(modulesPage({ session: { username: 'a', csrf: 't' }, q, checklist })).matchAll(/<tr class="module-row"[^>]*>\n<td><a href="\/dashboard\/([a-z-]+)"/g)].map((m) => m[1]);
     assert.deepEqual(keys('category'), ['tickets', 'enforcement', 'support'], 'keywords (sidebar order)');
     assert.deepEqual(keys('birthday channel'), ['birthdays'], 'setup step label');
     assert.deepEqual(keys('ticket staff role'), ['tickets'], 'every word must match');

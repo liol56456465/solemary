@@ -188,7 +188,6 @@ export function navGroups(session = null, access = null) {
         .filter((group) => group.items.length);
 }
 
-const itemIcon = (item) => icon(item.icon || item.key);
 
 /** Every sidebar entry, flattened. */
 export function navItems() {
@@ -231,10 +230,10 @@ ${navGroups(session, access).map((group) => html`<div class="side-group"><p clas
         const on = item.key === active;
         const badge = item.key === 'inbox' && session.inboxCount > 0
             ? html`<span class="nav-badge">${session.inboxCount > 99 ? '99+' : session.inboxCount}<span class="sr"> waiting</span></span>` : '';
-        return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}>${itemIcon(item)}<span class="side-text">${item.label}</span>${badge}${state === null ? ''
+        return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}><span class="side-text">${item.label}</span>${badge}${state === null ? ''
             : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
     })}</ul></div>`)}
-<div class="side-bottom"><a class="side-site" href="/">${icon('home')}<span class="side-text">Mewvo website</span></a>${userMenu(session, access, theme, back)}</div></nav>`;
+<div class="side-bottom"><a class="side-site" href="/"><span class="side-text">Mewvo website</span></a>${userMenu(session, access, theme, back)}</div></nav>`;
 }
 
 /** "Moderate / Members": where the page sits (the group, then the page). */
@@ -252,7 +251,7 @@ function tabBar(active, theme, back, session, access) {
     const main = sections(groups).slice(0, 3);
     return html`<nav class="tabbar" aria-label="Sections"><a href="${path('/overview')}"${active === 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon('overview')}<span>Home</span></a>${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key && active !== 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.label === 'Server setup' ? 'Setup' : sec.label}</span></a>`)}
 <details class="more menu-wrap"><summary${current && !main.some((sec) => sec.key === current.key) ? raw(' class="on"') : ''}>${icon('menu')}<span>More</span></summary><div class="more-sheet">
-${sections(groups).map((sec) => html`<p class="more-group">${sec.label}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${itemIcon(item)}${item.label}</a>`)}`)}
+${sections(groups).map((sec) => html`<p class="more-group">${sec.label}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${item.label}</a>`)}`)}
 ${themePicker(theme, back, 'sheet')}<div class="more-foot"><a href="/">${icon('home')}Website</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
 }
 
@@ -284,10 +283,6 @@ function themePicker(theme, back, id) {
     })}</div></div>`;
 }
 
-function initials(name) {
-    return String(name || '?').trim().split(/\s+/).slice(0, 2).map((word) => word[0] || '').join('').toUpperCase() || '?';
-}
-
 /**
  * The server switcher in the top bar. The dashboard manages one server for now (the login
  * asks Discord for `identify` only, so it cannot list other servers); the menu says so.
@@ -296,14 +291,14 @@ function serverSwitch(server) {
     if (!server) return '';
     const avatar = (size) => (server.iconUrl
         ? html`<img class="server-icon" src="${server.iconUrl}" alt="" width="${size}" height="${size}" referrerpolicy="no-referrer">`
-        : html`<span class="server-icon server-initials" aria-hidden="true">${initials(server.name)}</span>`);
+        : '');
     return html`<details class="server-switch menu-wrap"><summary aria-label="Server: ${server.name}">${avatar(24)}<span class="server-name">${server.name}</span>${icon('chevron', 'icon icon-down')}</summary>
 <div class="menu"><p class="menu-item is-current">${avatar(24)}<span class="server-text"><span class="server-name">${server.name}</span><span class="server-sub">Main server · managing now</span></span></p>
 <p class="menu-note">Only this server can be managed for now.</p></div></details>`;
 }
 
 function userMenu(session, access, theme = 'system', back = path('/overview')) {
-    return html`<details class="user-menu menu-wrap"><summary aria-label="Account: ${session.username}"><span class="avatar-initials" aria-hidden="true">${initials(session.username)}</span><span class="user-name">${session.username}</span></summary>
+    return html`<details class="user-menu menu-wrap"><summary aria-label="Account: ${session.username}"><span class="user-name">${session.username}</span></summary>
 <div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${levelLabel(access)}</span></p>
 ${themePicker(theme, back, 'menu')}<a class="menu-item menu-link" href="/">${icon('home')}Mewvo website</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
 }
@@ -320,7 +315,7 @@ export function layout({ title, active = null, session = null, access = null, mo
     const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
     // "Find a setting" searches the Modules page: not shown to levels that cannot open it.
     const find = !access?.allowed || allows(access, 'page:modules')
-        ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find><kbd aria-hidden="true">/</kbd></form>` : '';
+        ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find></form>` : '';
     const top = session ? html`<header class="page-top">${crumbs(active, navGroups(session, access))}<span class="spacer"></span>
 ${find}</header>`
         : html`<header class="page-top bare-top"><a class="brand" href="/" aria-label="Mewvo website">${BRAND_LOGO}<span class="brand-name">Mewvo</span></a><span class="spacer"></span></header>`;

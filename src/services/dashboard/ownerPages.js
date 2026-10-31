@@ -74,15 +74,13 @@ ${notices({ flash, error, editEnabled })}
 export const SERVER_SORTS = { name: 'Name', members: 'Most members', newest: 'Joined most recently', oldest: 'Joined first' };
 const TAG_TONE = { Main: 'on', Support: 'on', Blacklisted: 'bad' };
 const serverTags = (tags = []) => tags.map((t) => html` <span class="state-word is-${TAG_TONE[t] || 'off'}"><span class="dot dot-${TAG_TONE[t] || 'off'}" aria-hidden="true"></span>${t}</span>`);
-const serverInitial = (row) => html`<span class="avatar-sm" aria-hidden="true">${String(row.name || '?').slice(0, 1).toUpperCase()}</span>`;
-
 /**
  * rows: [{ id, name, iconUrl, ownerId, ownerName, memberCount, joinedAt, tags }]; totals: { servers,
  * members, joinedWeek } over every server (not only the matching ones).
  */
 export function serversPage({ session, access = null, moduleStates = {}, rows = [], total = rows.length, totals = null, q = '', sort = 'name', flash = null }) {
     const table = rows.length ? html`<div class="table-wrap"><table class="members"><thead><tr><th>Server</th><th>Owner</th><th>Members</th><th>Bot joined</th></tr></thead><tbody>
-${rows.map((row) => html`<tr><td><a class="member-cell" href="${path(`/owner/servers/${row.id}`)}">${img(row.iconUrl, '', 32) || serverInitial(row)}<span><b>${row.name}</b>${serverTags(row.tags)}<small>${row.id}</small></span></a></td>
+${rows.map((row) => html`<tr><td><a class="member-cell" href="${path(`/owner/servers/${row.id}`)}">${img(row.iconUrl, '', 32) || ''}<span><b>${row.name}</b>${serverTags(row.tags)}<small>${row.id}</small></span></a></td>
 <td>${row.ownerName || html`<span class="muted">unknown</span>`}<br><small class="muted">${row.ownerId || '-'}</small></td>
 <td>${row.memberCount ?? '-'}</td><td>${formatDate(row.joinedAt)}</td></tr>`)}
 </tbody></table></div>` : html`<p class="empty">${q ? 'No server matches.' : 'The bot is in no server.'}</p>`;
@@ -265,7 +263,7 @@ function actionList(rows, names) {
 }
 
 function serverFeed(rows, sub) {
-    return rows.length ? html`<ul class="feed">${rows.map((row) => html`<li>${img(row.iconUrl, '', 32) || serverInitial(row)}<span class="feed-text"><a href="${path(`/owner/servers/${row.id}`)}"><b>${row.name}</b></a>${serverTags(row.tags)}<small>${sub(row)}</small></span></li>`)}</ul>`
+    return rows.length ? html`<ul class="feed">${rows.map((row) => html`<li>${img(row.iconUrl, '', 32) || ''}<span class="feed-text"><a href="${path(`/owner/servers/${row.id}`)}"><b>${row.name}</b></a>${serverTags(row.tags)}<small>${sub(row)}</small></span></li>`)}</ul>`
         : html`<p class="empty">None.</p>`;
 }
 
@@ -280,17 +278,17 @@ export function ownerHomePage({ session, access = null, moduleStates = {}, home 
     const body = html`<header class="page-head"><h1>Owner overview</h1><p class="muted">The bot across every server. Only bot owners (OWNER_IDS) see this area.</p></header>
 ${h.maintenance ? html`<p class="notice">Maintenance mode is on: only bot owners can run commands. <a href="${path('/owner/health')}">Turn it off on Health</a></p>` : ''}
 ${db && !db.connected ? html`<p class="error" role="alert">The database is degraded (${db.type || 'none'}). <a href="${path('/owner/health')}">Health</a></p>` : ''}
-<div class="bento">
+<dl class="facts">
 ${kpi('Servers', h.servers, `${home.totals.members} members in total · ${home.totals.joinedWeek} new this week`, { dark: true, href: path('/owner/servers') })}
 ${kpi('Uptime', duration(h.uptimeSeconds), ping)}
 ${kpi('Database', db ? (db.connected ? 'OK' : 'Degraded') : 'Unknown', db ? `${db.type || 'none'} · memory ${mb(h.memory?.rss)}` : `memory ${mb(h.memory?.rss)}`, { href: path('/owner/health') })}
 ${kpi('Blacklist', home.blacklistCount, home.blacklistCount === undefined ? 'could not be loaded' : 'active entries', { href: path('/owner/blacklist') })}
+</dl>
 ${tile(7, 'Joined recently', serverFeed(home.recent, (row) => `${row.memberCount ?? '-'} members · joined ${formatDate(row.joinedAt)}`), { link: { href: path(`/owner/servers${queryString({ sort: 'newest' })}`), text: 'All servers' } })}
 ${tile(5, 'Largest servers', serverFeed(home.largest, (row) => `${row.memberCount ?? '-'} members`), { link: { href: path(`/owner/servers${queryString({ sort: 'members' })}`), text: 'By size' } })}
 ${tile(12, 'Recent owner actions', home.actions === null
         ? html`<p class="muted">Unavailable (database).</p>`
-        : home.actions.length ? actionList(home.actions, home.names) : html`<p class="empty">No owner actions yet.</p>`, { link: { href: path('/owner/activity'), text: 'All activity' } })}
-</div>`;
+        : home.actions.length ? actionList(home.actions, home.names) : html`<p class="empty">No owner actions yet.</p>`, { link: { href: path('/owner/activity'), text: 'All activity' } })}`;
     return shell({ title: 'Owner overview', active: 'owner/home', session, access, moduleStates, body });
 }
 
@@ -464,7 +462,7 @@ export function premiumPage({
     const body = html`<header class="page-head"><h1>Premium keys</h1><p class="muted">Create keys for Normal, Pro or Max. Anyone who logs in on the website (My record → Subscription) can redeem a key once; it adds the plan and time to their account. Same plan: the time is added to the end date. Test mode only: no payments are connected.</p></header>
 ${notices({ flash, error, editEnabled })}
 ${testCheckout ? '' : html`<p class="notice">Redeeming and the checkout are off: set <code>PREMIUM_TEST_CHECKOUT=true</code> (and <code>MEMBER_PORTAL_ENABLED=true</code>) to turn them on. Keys created now still work once it is on.</p>`}
-${stats ? html`<div class="bento">${kpi('Active plans', stats.activeTotal, PAID_PLANS.map((p) => `${p.name} ${stats.active[p.id] || 0}`).join(' · '))}${kpi('Test orders, 30 days', stats.orders30, `${stats.gifts30} gift${stats.gifts30 === 1 ? '' : 's'}`)}${kpi('Test amount, 30 days', euros(stats.cents30), 'not charged')}${kpi('Unused keys', keys?.counts?.unused ?? '-', `${keys?.counts?.expired ?? 0} expired`)}</div>` : ''}
+${stats ? html`<dl class="facts">${kpi('Active plans', stats.activeTotal, PAID_PLANS.map((p) => `${p.name} ${stats.active[p.id] || 0}`).join(' · '))}${kpi('Test orders, 30 days', stats.orders30, `${stats.gifts30} gift${stats.gifts30 === 1 ? '' : 's'}`)}${kpi('Test amount, 30 days', euros(stats.cents30), 'not charged')}${kpi('Unused keys', keys?.counts?.unused ?? '-', `${keys?.counts?.expired ?? 0} expired`)}</dl>` : ''}
 ${created.length ? html`<section class="card"><h2>New keys (${created.length})</h2><p class="muted">${planName(created[0].plan_id)}, ${created[0].duration_days} days each. They also stay in the list below.</p>
 <textarea class="key-output" readonly rows="${Math.min(created.length, 12)}" aria-label="New keys, one per line">${created.map((k) => k.code).join('\n')}</textarea></section>` : ''}
 <section class="card"><h2>Create keys</h2>${actionForm(csrf, '/owner/premium/generate', html`<div class="grid">

@@ -522,15 +522,17 @@ test('overview: status, counts, checklist and recent actions; read-only', async 
     const { cookie } = await login(d);
     const res = await runProtected(d, d.overview, { method: 'GET', headers: { cookie }, query: {} });
     assert.equal(res.statusCode, 200);
-    assert.match(res.body, /<span class="dot dot-on" aria-hidden="true"><\/span>Online · 42 ms</);
-    assert.match(res.body, /<p class="metric-label">Open tickets<\/p><p class="metric-value">2</);
-    assert.match(res.body, /<p class="metric-label">Pending appeals<\/p><a class="metric-value" href="\/dashboard\/appeals">3<\/a>/, 'pending appeals of the main guild');
-    assert.match(res.body, /<p class="metric-label">Active sanctions<\/p><a class="metric-value" href="\/dashboard\/cases">5<\/a><p class="metric-sub">4 bans · 1 mute</);
+    // One plain line of facts (no number tiles) and one status line.
+    assert.match(res.body, /Bot online \(42 ms\)/);
+    assert.match(res.body, /2 open tickets/);
+    assert.match(res.body, /<a href="\/dashboard\/appeals">3 pending appeals<\/a>/, 'pending appeals of the main guild');
+    assert.match(res.body, /4 active bans, 1 mute/);
+    assert.ok(!/metric-value|kpi-num|class="ring"|Welcome back/.test(res.body), 'no number tiles, ring or greeting');
     // Needs you: each waiting appeal with a Review button (escaped), then the tickets; the count in the header.
     assert.match(res.body, /<b>Ban appeal from &lt;cat&gt;<\/b><small>Case <code>abc2345<\/code> · cat ban 1<\/small>/);
     assert.ok(res.body.includes('href="/dashboard/appeals/abc2345">Review<span class="sr"> appeal abc2345</span>'));
     assert.match(res.body, /<b>2 open tickets<\/b>/);
-    assert.match(res.body, /<span class="card-note">5 open<\/span>/, '3 appeals + 2 tickets');
+    assert.match(res.body, /<h2>To do <span class="muted">\(5\)<\/span><\/h2>/, '3 appeals + 2 tickets');
     assert.match(res.body, /<div class="chart" role="img" aria-label="Enforcement actions per day: [^"]*Today 2">/, 'chart with a text alternative');
     assert.match(res.body, /<div class="bar today"><span class="bar-count">2<\/span><i class="h-10"><\/i>/, 'the busiest day is the full height');
     assert.match(res.body, /<a class="setup-link" href="\/dashboard\/automod">Set up<span class="sr"> Automod review channel<\/span><\/a>/);
@@ -555,7 +557,7 @@ test('overview survives failing sources (shows unavailable)', async () => {
     assert.equal(o.recent, undefined);
     const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
     assert.match(page, /unavailable/);
-    assert.match(page, /<span class="dot dot-bad" aria-hidden="true"><\/span>Offline</);
+    assert.match(page, /Bot offline/);
 });
 
 test('getting started lists what is not configured; module states for the sidebar', () => {
@@ -779,4 +781,19 @@ test('expired dashboard and My record sessions are pruned from both tables', asy
     assert.equal(total, 4);
     assert.deepEqual(seen.map((q) => q.text), ['DELETE FROM dashboard_sessions WHERE expires_at <= $1', 'DELETE FROM member_sessions WHERE expires_at <= $1']);
     assert.deepEqual(seen[0].params, [now]);
+});
+
+test('plain look: no number tiles, rings, card grids, initials badges or big corners', async () => {
+    const { overviewPage } = await import('../src/services/dashboard/overview.js');
+    const { modulesPage } = await import('../src/services/dashboard/modulesPage.js');
+    const o = { checklist: [{ label: 'X', done: false, href: '/dashboard/logging', hint: '' }], bot: { ready: true, ping: 1 }, database: { connected: true }, guild: { name: 'G', memberCount: 3 }, recent: [], lockdown: { active: false }, pendingAppeals: 0, openTickets: 0, activeBans: 0, activeMutes: 0, pendingList: [] };
+    const pages = [overviewPage({ session: { username: 'a', csrf: 't' }, overview: o }), String(modulesPage({ session: { username: 'a', csrf: 't' } }))];
+    for (const page of pages) {
+        for (const sign of ['kpi-num', 'metric-value', 'class="ring"', 'module-card', 'avatar-initials', 'class="kind', 'Welcome back', 'class="bento"', '→</a>']) {
+            assert.ok(!page.includes(sign), sign);
+        }
+    }
+    const css = readFileSync(new URL('../src/services/dashboard/static/dashboard.css', import.meta.url), 'utf8');
+    const radius = css.match(/--radius(?:-[a-z]+)?:\s*(\d+)px/g).map((r) => Number(r.match(/(\d+)px/)[1]));
+    assert.ok(radius.every((r) => r <= 6), `corner tokens stay small: ${radius}`);
 });

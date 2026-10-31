@@ -1,9 +1,9 @@
-// modulesPage.js — the Modules page: every settings module as a card (icon, name, one
+// modulesPage.js — the Modules page: every settings module as a table row (name, one
 // line, state line, Settings link). Cards show state only; the main switch of a module
 // (NAV `toggle`) is in its page header. Filters (all / on / off) are plain links, so
 // they work without the script; the script adds a search box (data-module-search).
 
-import { html, icon, layout, moduleItems, path, queryString } from './html.js';
+import { html, layout, moduleItems, path, queryString } from './html.js';
 
 export const MODULE_FILTERS = ['all', 'on', 'off'];
 
@@ -38,11 +38,11 @@ export function setupByModule(checklist) {
  */
 function stateLine(entry, setup) {
     const parts = [];
-    if (entry.on === false) return html`<p class="module-state"><span class="module-state-item is-off"><span class="dot dot-off" aria-hidden="true"></span>Off</span></p>`;
-    if (entry.on === true) parts.push(html`<span class="module-state-item is-on"><span class="dot dot-on" aria-hidden="true"></span>On</span>`);
-    if (setup?.todo) parts.push(html`<span class="module-state-item is-setup"><span class="dot dot-warn" aria-hidden="true"></span>Needs setup · ${setup.todo} to do</span>`);
-    else if (setup && entry.on === null) parts.push(html`<span class="module-state-item is-on"><span class="dot dot-on" aria-hidden="true"></span>Set up</span>`);
-    return parts.length ? html`<p class="module-state">${parts}</p>` : '';
+    if (entry.on === false) return html`<span class="module-state is-off">Off</span>`;
+    if (entry.on === true) parts.push(html`<span class="module-state is-on">On</span>`);
+    if (setup?.todo) parts.push(html`<span class="module-state is-setup">needs setup (${setup.todo})</span>`);
+    else if (setup && entry.on === null) parts.push(html`<span class="module-state is-on">Set up</span>`);
+    return parts.length ? html`${parts.map((p, i) => html`${i ? ', ' : ''}${p}`)}` : html`<span class="muted">-</span>`;
 }
 
 /** The text a search matches: name, one-liner, keywords and the module's setup steps (checklist labels). */
@@ -60,13 +60,11 @@ function stepsByModule(checklist) {
     return steps;
 }
 
+/** One module as a table row: name (link), what it does, its state. */
 function card(entry, opts) {
     const state = entry.on === null ? 'none' : entry.on ? 'on' : 'off';
-    return html`<li class="module-card" data-state="${state}" data-name="${searchText(entry, opts.steps?.get(entry.key))}">
-<div class="module-card-top"><span class="module-icon" aria-hidden="true">${icon(entry.key)}</span></div>
-<h3 class="module-card-name"><a href="${path(`/${entry.key}`)}">${entry.label}</a></h3>
-<p class="module-summary">${entry.summary || ''}</p>${stateLine(entry, opts.setup?.get(entry.key))}
-<span class="module-card-foot" aria-hidden="true">Settings ${icon('chevron', 'icon icon-sm')}</span></li>`;
+    return html`<tr class="module-row" data-state="${state}" data-name="${searchText(entry, opts.steps?.get(entry.key))}">
+<td><a href="${path(`/${entry.key}`)}"><b>${entry.label}</b></a></td><td class="muted">${entry.summary || ''}</td><td class="nowrap">${stateLine(entry, opts.setup?.get(entry.key))}</td></tr>`;
 }
 
 export function modulesPage({ session, access = null, moduleStates = {}, flash = null, editEnabled = false, show = 'all', q = '', checklist = null }) {
@@ -92,7 +90,7 @@ ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${needle ? html`<p class="search-result">${entries.length} module${entries.length === 1 ? ' matches' : 's match'} <strong>“${needle}”</strong> · <a href="${path('/modules')}">Show all</a></p>` : ''}
 ${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true).</p>` : ''}
 <div class="toolbar"><nav class="chips" aria-label="Filter modules">${chips}</nav><span class="toolbar-search" data-module-search></span></div>
-${visible.length ? html`<ul class="module-grid" data-module-grid>${visible.map((e) => card(e, { setup, steps }))}</ul>`
+${visible.length ? html`<div class="scroll"><table class="module-table"><thead><tr><th>Module</th><th>What it does</th><th>State</th></tr></thead><tbody data-module-grid>${visible.map((e) => card(e, { setup, steps }))}</tbody></table></div>`
         : html`<p class="empty">${needle ? 'No module matches. Try another word, or browse all modules.' : `No modules ${filter === 'on' ? 'are on' : 'are off'}.`}</p>`}`;
     return layout({ title: 'Modules', active: 'modules', session, access, moduleStates, body });
 }

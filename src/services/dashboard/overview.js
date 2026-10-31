@@ -194,27 +194,25 @@ const show = (value, text = value) => (value === undefined ? html`<span class="m
 
 /** The newest dashboard changes (audit rows): who, which module and setting, old → new, when. */
 function recentChangesSection(rows) {
-    if (rows === null) return html`<section class="card"><h2>Recent dashboard changes</h2><p class="muted">Unavailable (database).</p></section>`;
+    if (rows === null) return html`<section class="plain-section"><h2>Recent dashboard changes</h2><p class="muted">Unavailable (database).</p></section>`;
     const label = (key) => navItems().find((i) => i.key === key)?.label || key;
-    const list = rows.length ? html`<ul class="activity">${rows.map((r) => html`<li>
-<span class="avatar-initials" aria-hidden="true">${String(r.username || '?').slice(0, 1).toUpperCase()}</span>
-<span class="activity-text"><strong>${r.username || r.user_id || 'someone'}</strong> changed <code>${r.key}</code> in ${navItems().some((i) => i.key === r.module) ? html`<a href="${path(`/${r.module}`)}">${label(r.module)}</a>` : label(r.module)}
-<span class="activity-values muted">${valueText(r.old)} → ${valueText(r.new)}</span></span>
-<span class="activity-time muted">${timeTag(r.created_at)}</span></li>`)}</ul><p class="card-foot"><a href="${path('/audit')}">Full audit log</a></p>`
+    const list = rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Page</th><th>Setting</th><th>Old</th><th>New</th></tr></thead><tbody>${rows.map((r) => html`<tr>
+<td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || 'someone'}</td><td>${navItems().some((i) => i.key === r.module) ? html`<a href="${path(`/${r.module}`)}">${label(r.module)}</a>` : label(r.module)}</td>
+<td><code>${r.key}</code></td><td class="value muted">${valueText(r.old)}</td><td class="value">${valueText(r.new)}</td></tr>`)}</tbody></table></div><p><a href="${path('/audit')}">Full audit log</a></p>`
         : html`<p class="empty">No dashboard changes yet.</p>`;
-    return html`<section class="card"><h2>Recent dashboard changes</h2>${list}</section>`;
+    return html`<section class="plain-section"><h2>Recent dashboard changes</h2>${list}</section>`;
 }
 
 /** The Overview page from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
-/** A bento tile: optional title row (with a link) and content; `span` = columns of 12. */
+/** A plain section (the old "tile"): heading with an optional link, then the content. `span` is ignored. */
 export function tile(span, title, body, { link = null, className = '' } = {}) {
-    return html`<section class="tile span-${span}${className ? ` ${className}` : ''}">${title ? html`<h2 class="tile-title">${title}${link ? html`<a href="${link.href}">${link.text}</a>` : ''}</h2>` : ''}${body}</section>`;
+    return html`<section class="plain-section${className ? ` ${className}` : ''}">${title ? html`<h2>${title}${link ? html` <a class="section-link" href="${link.href}">${link.text}</a>` : ''}</h2>` : ''}${body}</section>`;
 }
 
-/** A KPI tile: label, big number, one line under it. */
-export function kpi(label, value, sub, { dark = false, href = null } = {}) {
-    const number = href && value !== undefined ? html`<a class="kpi-num" href="${href}">${show(value)}</a>` : html`<span class="kpi-num">${show(value)}</span>`;
-    return tile(3, label, html`${number}<p class="kpi-sub">${sub}</p>`, { className: `kpi${dark ? ' kpi-dark' : ''}` });
+/** One fact in a facts row: "Label  value  (note)". No big numbers. */
+export function kpi(label, value, sub, { href = null } = {}) {
+    const number = href && value !== undefined ? html`<a href="${href}">${show(value)}</a>` : show(value);
+    return html`<div class="fact"><dt>${label}</dt><dd><b>${number}</b>${sub ? html` <span class="muted">${sub}</span>` : ''}</dd></div>`;
 }
 
 /** Actions per day as bars (height in 10 % steps: CSS classes, no inline styles), with a text alternative. */
@@ -227,35 +225,19 @@ function weekChart(week) {
 <p class="kpi-sub">${total} action${total === 1 ? '' : 's'} in 7 days (UTC days, /test cases not counted).</p>`;
 }
 
-/** The setup ring: an SVG circle (presentation attributes only, CSP-safe) and the next open steps. */
+/** The next open setup steps as a plain list. */
 function setupTile(checklist) {
     const done = checklist.filter((item) => item.done).length;
-    const total = checklist.length || 1;
     const todo = checklist.filter((item) => !item.done);
-    const arc = ((done / total) * 100).toFixed(1);
-    const ring = html`<svg class="ring" width="104" height="104" viewBox="0 0 36 36" role="img" aria-label="${done} of ${checklist.length} setup steps done"><circle cx="18" cy="18" r="15.9155" fill="none" class="ring-track" stroke-width="3.2"></circle>${done ? html`<circle cx="18" cy="18" r="15.9155" fill="none" class="ring-value" stroke-width="3.2" stroke-dasharray="${arc} 100" stroke-linecap="round" transform="rotate(-90 18 18)"></circle>` : ''}<text x="18" y="20.6" text-anchor="middle" class="ring-text">${done}/${checklist.length}</text></svg>`;
-    const next = todo.length
-        ? html`<ul class="steps">${todo.slice(0, 4).map((item) => html`<li>${icon('circle', 'icon check-icon muted')}<span>${item.label}</span><a href="${item.href}">Set up<span class="sr"> ${item.label}</span></a></li>`)}</ul>`
-        : html`<p class="steps-done">${icon('check', 'icon check-icon ok')} Everything is set up.</p>`;
-    return html`<div class="setup">${ring}${next}</div>${todo.length > 4 ? html`<p class="kpi-sub"><a href="#all-steps">${todo.length - 4} more step${todo.length - 4 === 1 ? '' : 's'}</a></p>` : ''}`;
+    if (!todo.length) return html`<p>Everything is set up.</p>`;
+    return html`<p class="muted">${done} of ${checklist.length} steps done.</p><ul class="steps">${todo.slice(0, 4).map((item) => html`<li><span>${item.label}</span> <a href="${item.href}">Set up<span class="sr"> ${item.label}</span></a></li>`)}</ul>${todo.length > 4 ? html`<p><a href="#all-steps">${todo.length - 4} more</a></p>` : ''}`;
 }
 
-/** Recent enforcement actions as a feed: badge, who and by whom, reason + case, when. */
+/** Recent enforcement actions as a table. */
 function recentFeed(recent) {
     if (recent === undefined) return html`<p class="error" role="alert">Recent actions could not be loaded (database). Reload the page to try again.</p>`;
     if (!recent.length) return html`<p class="empty">No enforcement actions yet. They show up here after the first warn, mute, kick or ban.</p>`;
-    return html`<ul class="feed">${recent.slice(0, 5).map((row) => html`<li>${typeBadge(row.type)}<span class="feed-text"><b>${row.target_username}</b> by ${row.moderator_username}${row.is_test ? html` <span class="muted">(test)</span>` : ''}
-<small>${row.reason} · case <a href="${path(`/cases/${encodeURIComponent(row.case_code)}`)}"><code>${row.case_code}</code></a></small></span>${timeTag(row.created_at)}</li>`)}</ul>`;
-}
-
-/** Every settings module as a chip with its state in words (same rule as the Modules page). */
-function modulesTile(moduleStates, checklist) {
-    const setup = setupByModule(checklist);
-    return html`<div class="mod-chips">${moduleEntries(moduleStates).map((e) => {
-        const todo = setup.get(e.key)?.todo;
-        const state = e.on === false ? ['off', 'Off'] : todo ? ['warn', 'Setup'] : e.on === true ? ['on', 'On'] : null;
-        return html`<a href="${path(`/${e.key}`)}" title="${e.label}">${icon(e.key)}<span class="mod-name">${e.label}</span>${state ? html`<span class="state-word is-${state[0]}"><span class="dot dot-${state[0]}" aria-hidden="true"></span>${state[1]}</span>` : ''}</a>`;
-    })}</div>`;
+    return html`<div class="scroll"><table class="feed-table"><thead><tr><th>When</th><th>Action</th><th>Member</th><th>By</th><th>Reason</th><th>Case</th></tr></thead><tbody>${recent.slice(0, 8).map((row) => html`<tr><td>${timeTag(row.created_at)}</td><td>${typeBadge(row.type)}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.target_username}</td><td>${row.moderator_username}</td><td>${row.reason}</td><td><a href="${path(`/cases/${encodeURIComponent(row.case_code)}`)}"><code>${row.case_code}</code></a></td></tr>`)}</tbody></table></div>`;
 }
 
 /**
@@ -269,30 +251,30 @@ function needsYou(o, { csrf = '', canEndLockdown = false, limited = false } = {}
         const endButton = canEndLockdown && csrf
             ? html`<form method="post" action="${path('/automod/lockdown-end')}" class="inline-form" data-confirm="End the raid lockdown? The verification level goes back to what it was and paused invites and DMs resume."><input type="hidden" name="csrf" value="${csrf}"><input type="hidden" name="back" value="overview"><button type="submit" class="btn small danger">End lockdown</button></form>`
             : limited ? '' : html`<a class="btn primary small" href="${path('/automod')}">Automod</a>`;
-        items.push(html`<li><span class="kind kind-bad" aria-hidden="true">RL</span><span class="what"><b>Raid lockdown is active</b><small>${o.lockdown.since ? html`Since ${formatDate(o.lockdown.since)}` : 'New members are held at the door'}</small></span><span></span>${endButton}</li>`);
+        items.push(html`<li><span class="what"><b>Raid lockdown is active</b><small>${o.lockdown.since ? html`Since ${formatDate(o.lockdown.since)}` : 'New members are held at the door'}</small></span><span></span>${endButton}</li>`);
     }
     for (const appeal of o.pendingList || []) {
-        items.push(html`<li><span class="kind kind-appeal" aria-hidden="true">AP</span><span class="what"><b>${appeal.type ? `${appeal.type[0].toUpperCase()}${appeal.type.slice(1)} appeal` : 'Appeal'} from ${appeal.username}</b><small>Case <code>${appeal.case_code}</code>${appeal.name ? ` · ${appeal.name}` : ''}${appeal.is_test ? ' · test case' : ''}</small></span>${timeTag(appeal.created_at)}<a class="btn primary small" href="${path(`/appeals/${encodeURIComponent(appeal.case_code)}`)}">Review<span class="sr"> appeal ${appeal.case_code}</span></a></li>`);
+        items.push(html`<li><span class="what"><b>${appeal.type ? `${appeal.type[0].toUpperCase()}${appeal.type.slice(1)} appeal` : 'Appeal'} from ${appeal.username}</b><small>Case <code>${appeal.case_code}</code>${appeal.name ? ` · ${appeal.name}` : ''}${appeal.is_test ? ' · test case' : ''}</small></span>${timeTag(appeal.created_at)}<a class="btn primary small" href="${path(`/appeals/${encodeURIComponent(appeal.case_code)}`)}">Review<span class="sr"> appeal ${appeal.case_code}</span></a></li>`);
     }
     if (o.pendingAppeals > (o.pendingList || []).length) {
-        items.push(html`<li><span class="kind kind-appeal" aria-hidden="true">+</span><span class="what"><b>${o.pendingAppeals - o.pendingList.length} more appeal${o.pendingAppeals - o.pendingList.length === 1 ? '' : 's'} waiting</b></span><span></span><a class="btn small" href="${path('/appeals')}">All appeals</a></li>`);
+        items.push(html`<li><span class="what"><b>${o.pendingAppeals - o.pendingList.length} more appeal${o.pendingAppeals - o.pendingList.length === 1 ? '' : 's'} waiting</b></span><span></span><a class="btn small" href="${path('/appeals')}">All appeals</a></li>`);
     }
     if (o.openTickets > 0 && !limited) {
-        items.push(html`<li><span class="kind kind-ticket" aria-hidden="true">TK</span><span class="what"><b>${o.openTickets} open ticket${o.openTickets === 1 ? '' : 's'}</b><small>Answered in their Discord channels</small></span><span></span><a class="btn small" href="${path('/tickets')}">Tickets</a></li>`);
+        items.push(html`<li><span class="what"><b>${o.openTickets} open ticket${o.openTickets === 1 ? '' : 's'}</b><small>Answered in their Discord channels</small></span><span></span><a class="btn small" href="${path('/tickets')}">Tickets</a></li>`);
     }
     for (const step of limited ? [] : o.checklist.filter((item) => !item.done).slice(0, 2)) {
-        items.push(html`<li><span class="kind kind-setup" aria-hidden="true">SU</span><span class="what"><b>Set up: ${step.label}</b>${step.hint ? html`<small>${step.hint}</small>` : ''}</span><span></span><a class="btn small" href="${step.href}">Set up<span class="sr"> ${step.label}</span></a></li>`);
+        items.push(html`<li><span class="what"><b>Set up: ${step.label}</b>${step.hint ? html`<small>${step.hint}</small>` : ''}</span><span></span><a class="btn small" href="${step.href}">Set up<span class="sr"> ${step.label}</span></a></li>`);
     }
     const failed = o.pendingAppeals === undefined || o.openTickets === undefined;
     const list = items.length
         ? html`<ul class="plain queue">${items}</ul>`
-        : html`<p class="empty">${icon('check', 'icon check-icon ok')} Nothing needs you right now.</p>`;
+        : html`<p class="empty">Nothing needs you right now.</p>`;
     return html`${failed ? html`<p class="error" role="alert">Some items could not be loaded (database). Reload the page to try again.</p>` : ''}${list}`;
 }
 
-/** A card with a header row (title, optional count and link) and a body. */
+/** A plain section: a heading (with an optional count and link) and its content. */
 function card(title, body, { link = null, note = null, className = '' } = {}) {
-    return html`<section class="card ov-card${className ? ` ${className}` : ''}"><header class="card-head"><h2>${title}</h2>${note ? html`<span class="card-note">${note}</span>` : ''}${link ? html`<a class="card-link" href="${link.href}">${link.text}</a>` : ''}</header><div class="card-body">${body}</div></section>`;
+    return html`<section class="plain-section${className ? ` ${className}` : ''}"><h2>${title}${note ? html` <span class="muted">(${note})</span>` : ''}${link ? html` <a class="section-link" href="${link.href}">${link.text}</a>` : ''}</h2>${body}</section>`;
 }
 
 /** The Overview page (v5) from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
@@ -305,42 +287,33 @@ export function overviewPage({ session, access = null, moduleStates = {}, overvi
     const server = session?.server;
     const name = o.guild?.name || server?.name || 'your server';
     const waiting = (o.pendingAppeals || 0) + (o.openTickets || 0) + (o.lockdown?.active ? 1 : 0);
-    const head = html`<header class="hello"><div class="hello-text"><h1>Welcome back, ${session?.username || 'admin'}</h1><p class="help">${name}${o.guild?.memberCount != null ? ` · ${o.guild.memberCount} members` : ''} · ${waiting ? `${waiting} thing${waiting === 1 ? '' : 's'} waiting` : 'nothing waiting'}</p></div>
-<div class="hello-actions"><a class="btn secondary" href="${path('/cases')}">${icon('cases')}Cases</a><a class="btn primary" href="${path('/users')}">${icon('enforcement')}Moderate a member</a></div></header>`;
-    const system = html`<ul class="health">
-<li><span>Bot</span><span class="state-word is-${o.bot.ready ? 'on' : 'bad'}"><span class="dot dot-${o.bot.ready ? 'on' : 'bad'}" aria-hidden="true"></span>${o.bot.ready ? `Online${o.bot.ping !== null ? ` · ${o.bot.ping} ms` : ''}` : 'Offline'}</span></li>
-<li><span>Database</span>${o.database ? html`<span class="state-word is-${o.database.connected ? 'on' : 'bad'}"><span class="dot dot-${o.database.connected ? 'on' : 'bad'}" aria-hidden="true"></span>${o.database.connected ? 'Connected' : 'Degraded'}</span>` : html`<span class="state-word is-off"><span class="dot dot-off" aria-hidden="true"></span>Unknown</span>`}</li>
-<li><span>Automod</span>${Object.hasOwn(moduleStates, 'automod') ? html`<span class="state-word is-${moduleStates.automod ? 'on' : 'off'}"><span class="dot dot-${moduleStates.automod ? 'on' : 'off'}" aria-hidden="true"></span>${moduleStates.automod ? 'On' : 'Off'}</span>` : html`<span class="muted">unknown</span>`}</li>
-<li><span>Raid lockdown</span>${o.lockdown === undefined ? html`<span class="muted">unavailable</span>` : html`<span class="state-word is-${o.lockdown.active ? 'bad' : 'off'}"><span class="dot dot-${o.lockdown.active ? 'bad' : 'off'}" aria-hidden="true"></span>${o.lockdown.active ? 'Active' : 'Off'}</span>`}</li></ul>`;
-    const metric = (label, value, sub, href = null) => html`<div class="metric"><p class="metric-label">${label}</p>${href && value !== undefined ? html`<a class="metric-value" href="${href}">${show(value)}</a>` : html`<p class="metric-value">${show(value)}</p>`}<p class="metric-sub">${sub}</p></div>`;
-    const memberSub = o.joinedThisWeek != null ? html`<span class="up">+${o.joinedThisWeek}</span> this week` : o.guild?.online != null ? `${o.guild.online} online` : 'in the server';
-    const metrics = html`<div class="metrics">
-${metric('Members', o.guild?.memberCount ?? '-', memberSub, path('/users'))}
-${metric('Active sanctions', sanctions, sanctions === undefined ? 'unavailable' : `${o.activeBans} ban${o.activeBans === 1 ? '' : 's'} · ${o.activeMutes} mute${o.activeMutes === 1 ? '' : 's'}`, path('/cases'))}
-${metric('Pending appeals', o.pendingAppeals === undefined ? undefined : pendingText, o.pendingAppeals > 0 ? 'need a decision' : 'nothing waiting', path('/appeals'))}
-${metric('Open tickets', o.openTickets, 'waiting for staff')}</div>`;
+    const word = (ok, yes, no) => (ok ? yes : no);
+    const facts = [
+        o.guild?.memberCount != null ? `${o.guild.memberCount} members${o.joinedThisWeek != null ? ` (${o.joinedThisWeek} joined this week)` : ''}` : null,
+        sanctions === undefined ? 'sanctions unavailable' : `${o.activeBans} active ban${o.activeBans === 1 ? '' : 's'}, ${o.activeMutes} mute${o.activeMutes === 1 ? '' : 's'}`,
+        o.pendingAppeals === undefined ? 'appeals unavailable' : html`<a href="${path('/appeals')}">${pendingText} pending appeal${o.pendingAppeals === 1 ? '' : 's'}</a>`,
+        o.openTickets === undefined ? 'tickets unavailable' : `${o.openTickets} open ticket${o.openTickets === 1 ? '' : 's'}`,
+    ].filter(Boolean);
+    const status = [
+        `Bot ${word(o.bot.ready, `online${o.bot.ping !== null ? ` (${o.bot.ping} ms)` : ''}`, 'offline')}`,
+        `database ${o.database ? word(o.database.connected, 'connected', 'degraded') : 'unknown'}`,
+        Object.hasOwn(moduleStates, 'automod') ? `automod ${word(moduleStates.automod, 'on', 'off')}` : null,
+        o.lockdown?.active ? 'raid lockdown ACTIVE' : null,
+    ].filter(Boolean);
+    const head = html`<header class="page-head"><h1>Overview</h1><p class="facts-line">${name} · ${facts.map((f, i) => html`${i ? ' · ' : ''}${f}`)}</p>
+<p class="facts-line muted"><span class="${o.bot.ready && (!o.database || o.database.connected) ? '' : 'bad'}">${status.join(', ')}.</span></p></header>`;
     // Full checklist (all steps) at the bottom, open while anything is left.
     const ordered = [...todo, ...o.checklist.filter((item) => item.done)];
-    const allSteps = html`<ul class="checklist">${ordered.map((item) => html`<li class="${item.done ? 'is-done' : ''}">${icon(item.done ? 'check' : 'circle', `icon check-icon ${item.done ? 'ok' : 'muted'}`)}<span class="sr">${item.done ? 'done' : 'to do'}:</span>
-<span class="checklist-text">${item.label}${item.done ? '' : html`<span class="checklist-hint">${item.hint}</span>`}</span>${item.done
-        ? html`<span class="checklist-state">Done</span>`
-        : html`<a class="setup-link" href="${item.href}">Set up<span class="sr"> ${item.label}</span></a>`}</li>`)}</ul>`;
+    const allSteps = html`<ul class="checklist">${ordered.map((item) => html`<li class="${item.done ? 'is-done' : ''}"><span class="checklist-text">${item.done ? 'Done: ' : ''}${item.label}${item.done ? '' : html` <span class="checklist-hint">${item.hint}</span>`}</span>${item.done
+        ? ''
+        : html` <a class="setup-link" href="${item.href}">Set up<span class="sr"> ${item.label}</span></a>`}</li>`)}</ul>`;
     const body = html`${head}
-<div class="ov">
-<div class="ov-main">
-${card('Needs you', needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct), limited }), { note: waiting ? `${waiting} open` : null, link: { href: path('/appeals'), text: 'Appeals →' }, className: 'needs-you' })}
-${card('Moderation · last 7 days', weekChart(o.week), { link: { href: path('/cases'), text: 'All cases →' } })}
-${card('Latest actions', recentFeed(o.recent), { link: { href: path('/cases'), text: 'All cases →' } })}
-</div>
-<div class="ov-side">
-<section class="card ov-card">${metrics}</section>
-${card('Bot health', system)}
-${limited ? '' : card('Setup', setupTile(o.checklist), { link: todo.length ? { href: '#all-steps', text: 'All steps →' } : null })}
-</div>
-</div>
-${limited ? '' : html`${card('Modules', modulesTile(moduleStates, o.checklist), { link: { href: path('/modules'), text: 'Manage →' } })}
+${card('To do', needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct), limited }), { note: waiting ? `${waiting}` : null })}
+${card('Last 7 days', weekChart(o.week), { link: { href: path('/cases'), text: 'All cases' } })}
+${card('Latest actions', recentFeed(o.recent), { link: { href: path('/cases'), text: 'All cases' } })}
+${limited ? '' : html`${card('Setup', setupTile(o.checklist))}
 ${recentChangesSection(recentChanges)}
-<details class="card section" id="all-steps" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>All setup steps${todo.length ? html` <span class="count">${todo.length} to do</span>` : html` <span class="state state-on">all set</span>`}</h2></summary><div class="section-body">${allSteps}</div></details>`}`;
+<details class="plain-section" id="all-steps" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>All setup steps${todo.length ? html` <span class="muted">(${todo.length} to do)</span>` : ''}</h2></summary>${allSteps}</details>`}`;
     return layout({ title: 'Overview', active: 'overview', session, access, moduleStates, body });
 }
 

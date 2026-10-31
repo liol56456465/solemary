@@ -13,16 +13,16 @@
 
 :root {
     color-scheme: light;
-    --bg: #f5f3ee;
-    --surface: #ece9e1;
+    --bg: #ffffff;
+    --surface: #f3f3f3;
     --raised: #ffffff;
-    --border: #e3dfd5;
-    --border-strong: #948c7c;
-    --text: #1f1d19;
-    --text-muted: #5f5a52;
+    --border: #dedede;
+    --border-strong: #8a8a8a;
+    --text: #1a1a1a;
+    --text-muted: #595959;
     --accent: #1f1d19;
     --accent-hover: #3a3730;
-    --accent-soft: #ebe7de;
+    --accent-soft: #ececec;
     --on-accent: #ffffff;
     --accent-ink: #1f1d19;
     --accent-2: #8a7d64;
@@ -33,8 +33,8 @@
     --amber: #835608;
     --amber-soft: #f0ebe1;
     --ink: #faf9f5;
-    --chrome-text: #5f5a52;
-    --chrome-border: #e3dfd5;
+    --chrome-text: #595959;
+    --chrome-border: #dedede;
     --chart: #bcbbba;
     --feature: #ffffff;
     --feature-text: #1f1d19;
@@ -44,12 +44,12 @@
     --c-mute: #8a7d64;
     --c-warn: #1f1d19;
     --c-kick: #835608;
-    --shadow-pop: 0 6px 18px rgb(0 0 0 / 0.08);
+    --shadow-pop: 0 2px 8px rgb(0 0 0 / 0.12);
     --scrim: rgb(0 0 0 / 0.45);
-    --radius: 14px;
-    --radius-sm: 10px;
-    --radius-btn: 10px;
-    --radius-xs: 8px;
+    --radius: 4px;
+    --radius-sm: 4px;
+    --radius-btn: 4px;
+    --radius-xs: 3px;
     --topbar: 0px;
     --sidebar: 248px;
     --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -458,16 +458,16 @@
 /* Paper */
 :root[data-theme="paper"] {
     color-scheme: light;
-    --bg: #f5f3ee;
-    --surface: #ece9e1;
+    --bg: #ffffff;
+    --surface: #f3f3f3;
     --raised: #ffffff;
-    --border: #e3dfd5;
-    --border-strong: #948c7c;
-    --text: #1f1d19;
-    --text-muted: #5f5a52;
+    --border: #dedede;
+    --border-strong: #8a8a8a;
+    --text: #1a1a1a;
+    --text-muted: #595959;
     --accent: #1f1d19;
     --accent-hover: #3a3730;
-    --accent-soft: #ebe7de;
+    --accent-soft: #ececec;
     --on-accent: #ffffff;
     --accent-ink: #1f1d19;
     --accent-2: #8a7d64;
@@ -478,8 +478,8 @@
     --amber: #835608;
     --amber-soft: #f0ebe1;
     --ink: #faf9f5;
-    --chrome-text: #5f5a52;
-    --chrome-border: #e3dfd5;
+    --chrome-text: #595959;
+    --chrome-border: #dedede;
     --chart: #bcbbba;
     --feature: #ffffff;
     --feature-text: #1f1d19;
@@ -1326,21 +1326,21 @@ form.filters .wide-filter { flex: 1 1 240px; }
     input, select, button, .icon-button { min-height: 44px; }
     button.switch { min-height: 0; }
     .tabbar {
-        position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 40; display: flex; justify-content: space-around;
-        padding: 8px; background: var(--ink); border: 1px solid var(--chrome-border); border-radius: 24px;
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; justify-content: space-around;
+        padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line);
     }
     .tabbar > a, .tabbar .more > summary {
-        display: grid; place-items: center; gap: 2px; min-width: 56px; padding: 6px 8px; border-radius: 16px;
+        display: grid; place-items: center; gap: 2px; min-width: 56px; padding: 6px 8px; border-radius: 0;
         color: var(--chrome-text); font-size: 11px; font-weight: 600;
     }
     .tabbar > a:hover { text-decoration: none; color: var(--feature-text); }
-    .tabbar > a.on, .tabbar .more > summary.on, .tabbar .more[open] > summary { background: var(--raised); color: var(--text); }
+    .tabbar > a.on, .tabbar .more > summary.on, .tabbar .more[open] > summary { color: var(--text); box-shadow: inset 0 2px 0 var(--text); }
     .more-sheet {
-        position: fixed; left: 12px; right: 12px; bottom: 92px; max-height: 70vh; overflow-y: auto; padding: 12px;
-        background: var(--raised); border: 1px solid var(--border); border-radius: 24px; box-shadow: var(--shadow-pop);
+        position: fixed; left: 0; right: 0; bottom: 60px; max-height: 70vh; overflow-y: auto; padding: 8px 12px;
+        background: var(--raised); border-top: 1px solid var(--border); border-radius: 0; box-shadow: var(--shadow-pop);
     }
-    .more-group { margin: 8px 8px 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
-    .more-sheet > a { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 12px; color: var(--text); font-weight: 500; }
+    .more-group { margin: 8px 8px 4px; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+    .more-sheet > a { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 0; color: var(--text); font-weight: 500; }
     .more-sheet > a:hover, .more-sheet > a[aria-current] { background: var(--surface); text-decoration: none; }
     .more-foot { display: flex; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
     .more-foot > a, .more-foot button { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 12px; color: var(--text); font-weight: 500; }
@@ -1400,3 +1400,62 @@ form.filters .wide-filter { flex: 1 1 240px; }
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline li { padding: 8px 0; border-top: 1px solid var(--line); }
 .timeline li:first-child { border-top: 0; }
+
+
+/* ── Plain look (owner, 2026-11-01: "redo everything that looks AI") ─────────
+   A tool, not a product page: no floating cards, no big number tiles, no icon on every
+   item, no rings or initials. Sections are a heading and a thin rule; data is in tables. */
+body { font-size: 14px; }
+h1 { font-size: 22px; letter-spacing: 0; margin: 0 0 4px; }
+h2 { font-size: 15px; }
+.page-head { margin-bottom: 16px; }
+.facts-line { margin: 2px 0; }
+.facts-line .bad { color: var(--red); font-weight: 600; }
+
+/* Cards become plain sections. */
+.card, .tile, .plain-section, details.section {
+    background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; box-shadow: none;
+    padding: 16px 0 0; margin: 0 0 24px;
+}
+details.section > summary, details.plain-section > summary { padding: 0; border: 0; border-radius: 0; background: none; }
+details.section[open] > summary { border-bottom: 0; }
+.section-body { padding: 8px 0 0; }
+.card-head { padding: 0 0 8px; border-bottom: 0; }
+.card-body { padding: 0; }
+.plain-section > h2, .card > h2, .tile > h2 { margin: 0 0 10px; font-size: 15px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.section-link, .card-link { font-size: 13px; font-weight: 400; margin-left: auto; }
+.bento { display: block; }
+
+/* Facts instead of number tiles. */
+.facts { display: flex; flex-wrap: wrap; gap: 4px 32px; margin: 0 0 24px; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.fact { min-width: 0; }
+.fact dt { font-size: 12px; color: var(--text-muted); }
+.fact dd { margin: 0; font-size: 15px; }
+
+/* Sidebar: words only, normal-case group names. */
+.side-nav .icon, .side-list a .icon, .side-site .icon { display: none; }
+.side-group-label { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; color: var(--text-muted); padding: 0 10px; }
+.side-list a { padding-top: 5px; padding-bottom: 5px; }
+.side-list a[aria-current] { box-shadow: none; background: var(--surface); }
+.quick-find input { padding-right: 12px; }
+
+/* No letter-in-a-circle placeholders, no decorative icon squares. */
+span.avatar-sm, .avatar-initials, .server-initials, .avatar-initials-lg, .module-icon, .kind { display: none; }
+.module-header .module-icon { display: none; }
+
+/* Tables: plain rules, no rounded frames. */
+.scroll, .table-wrap { border-radius: 0; }
+table th { background: none; font-weight: 600; }
+.module-state.is-on { color: var(--green); }
+.module-state.is-setup { color: var(--amber); }
+.module-state.is-off { color: var(--text-muted); }
+
+/* Buttons and inputs: small corners, no pill or soft shadow. */
+button, .btn, input, select, textarea { border-radius: var(--radius-btn); box-shadow: none; }
+.chip { border-radius: 3px; }
+.module-table .module-state { display: inline; margin: 0; padding: 0; }
+.module-table td { vertical-align: top; }
+dl.facts { border-left: 0; border-right: 0; border-radius: 0; background: none; padding-left: 0; padding-right: 0; }
+.server-switch > summary { border-radius: var(--radius); box-shadow: none; }
+.empty { border: 0; background: none; padding: 4px 0; text-align: left; color: var(--text-muted); border-radius: 0; }
+.module-header h1 { font-size: 22px; letter-spacing: 0; }
