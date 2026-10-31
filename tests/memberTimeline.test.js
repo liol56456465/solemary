@@ -18,3 +18,17 @@ test('timeline: merged, newest first, capped', async () => {
     assert.ok(seen.some((t) => t.includes('is_test IS NOT TRUE')));
     assert.equal((await memberTimeline('1', '2', { query, limit: 2 })).length, 2);
 });
+
+test('timeline: staff reports only when includeReports (administrators); moderators never see them', async () => {
+    const params = [];
+    const query = async (text, p) => {
+        if (text.includes('mod_appeals')) { params.push(p); return { rows: [{ case_code: null, kind: 'report', status: 'pending', created_at: '2026-10-03T00:00:00Z', decided_at: null }] }; }
+        return { rows: [] };
+    };
+    const forModerator = await memberTimeline('1', '2', { query });
+    assert.deepEqual(forModerator, [], 'filtered even if the database returned it');
+    assert.equal(params[0][3], false);
+    const forAdmin = await memberTimeline('1', '2', { query, includeReports: true });
+    assert.deepEqual(forAdmin.map((e) => e.text), ['Staff report filed']);
+    assert.equal(params[1][3], true);
+});

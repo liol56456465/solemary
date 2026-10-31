@@ -1322,6 +1322,11 @@ test('member page: timeline section, escaped, newest first; a database error say
     assert.match(page.body, /<ol class="timeline">/);
     assert.ok(page.body.includes('warn by mod: Spam &lt;b&gt;'));
     assert.ok(page.body.indexOf('Spam &lt;b&gt;') < page.body.indexOf('Joined the server'));
+    assert.equal(serviceCalls(h, ['memberTimeline'])[0].args[2].includeReports, true, 'an administrator may see staff reports');
+    const owner = await setup({ userId: OWNER });
+    await get(owner, owner.d.enforcement.userPage, { params: { id: TARGET } });
+    const ownerCall = serviceCalls(owner, ['memberTimeline'])[0];
+    if (ownerCall) assert.equal(ownerCall.args[2].includeReports, false, 'not an administrator: no staff reports');
     const h2 = await setup({ overrides: { memberTimeline: async () => { throw new Error('db down'); } } });
     const res = await get(h2, h2.d.enforcement.userPage, { params: { id: TARGET } });
     assert.equal(res.statusCode, 200);

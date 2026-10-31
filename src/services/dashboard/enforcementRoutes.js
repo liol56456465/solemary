@@ -345,7 +345,8 @@ export function createEnforcementHandlers(core) {
                 ? e.precedentHint(guildId, precedentReason, getReason(precedentReason)?.label || precedentReason).catch(() => null) : null,
         ]);
         // The timeline is extra: a database problem leaves it out (the page says so), never the page.
-        const timeline = e.memberTimeline ? await e.memberTimeline(guildId, userId).catch(() => null) : [];
+        const timeline = e.memberTimeline
+            ? await e.memberTimeline(guildId, userId, { includeReports: Boolean(req.dashboard.access.canAct) }).catch(() => null) : [];
         const noContact = e.getActiveOrdersFor(guildId, userId) || [];
         const noContactNames = new Map(noContact.map((o) => [o.otherId, client.users.cache?.get?.(o.otherId)?.username || null]));
         const member = state.member;
