@@ -248,6 +248,9 @@ test('checkout logged out → login → back to the same checkout; buying for me
         const page = await app.request(location, { cookie });
         assert.ok(page.body.includes('€19.90'), 'yearly Normal price');
         assert.ok(page.body.includes('Complete test purchase'));
+        assert.ok(page.body.includes('By completing the purchase, you accept the <a href="/terms">Terms and Conditions</a>'));
+        assert.ok(page.body.includes('<a href="/privacy">Privacy Policy</a>'));
+        assert.ok((await app.request('/me/billing', { cookie })).body.includes('By redeeming a key, you accept the <a href="/terms">Terms and Conditions</a>'));
         const csrf = csrfOf(page.body);
         const body = form({ csrf, plan: 'normal', period: 'yearly', for: 'personal' });
         assert.equal((await app.request('/me/checkout', { method: 'POST', cookie, body, headers: { origin: 'https://evil.example' } })).status, 403);
@@ -376,3 +379,4 @@ test('gift with a name and message: shown on the receipt and as a card on the gi
         await app.close();
     }
 });
+

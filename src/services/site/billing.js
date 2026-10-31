@@ -51,6 +51,9 @@ function when(value) {
     return date && !Number.isNaN(date.getTime()) ? html`<time datetime="${date.toISOString()}">${formatDate(date)}</time>` : '-';
 }
 
+/** "By …, you accept the Terms and Conditions. Privacy Policy." under every form that adds a plan. */
+const TERMS_LINE = (action) => html`By ${action}, you accept the <a href="/terms">Terms and Conditions</a>. How your data is used: <a href="/privacy">Privacy Policy</a>.`;
+
 const testBanner = () => html`<p class="test-banner" role="note"><span class="planned">Test mode</span> ${TEST_NOTICE}</p>`;
 const notices = ({ flash = null, error = null }) => html`${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}${error ? html`<p class="error" role="alert">${error}</p>` : ''}`;
 
@@ -118,7 +121,7 @@ ${effect?.kind === 'blocked' ? html`<p class="button button-disabled summary-pay
 ${gift ? html`<div class="gift-fields"><label for="gift-to">To (optional)</label><input id="gift-to" name="gift_to" maxlength="${GIFT_TO_MAX}" autocomplete="off" value="${values.giftTo || ''}" placeholder="Their name">
 <label for="gift-message">Message (optional)</label><textarea id="gift-message" name="gift_message" maxlength="${GIFT_MESSAGE_MAX}" rows="3" placeholder="Shown when they open the gift link">${values.giftMessage || ''}</textarea></div>` : ''}
 <button class="button summary-pay" type="submit">Complete test purchase · ${q.amountText}</button></form>`}
-<p class="note">No payment is taken in test mode.</p></aside></div></div>`,
+<p class="note">No payment is taken in test mode. ${TERMS_LINE('completing the purchase')}</p></aside></div></div>`,
     });
 }
 
@@ -134,7 +137,8 @@ function subscriptionCard(subscription) {
 function redeemForm(session, code = '') {
     return html`<form class="redeem-form" method="post" action="/me/redeem"><input type="hidden" name="csrf" value="${session.csrf}">
 <label for="redeem-code">Key</label><div class="redeem-row"><input id="redeem-code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" placeholder="MEWVO-XXXX-XXXX-XXXX" required value="${code}">
-<button class="button" type="submit">Redeem</button></div></form>`;
+<button class="button" type="submit">Redeem</button></div></form>
+<p class="note">${TERMS_LINE('redeeming a key')}</p>`;
 }
 
 export function billingPage(ctx, { session, account, flash = null, error = null, code = '' }) {
