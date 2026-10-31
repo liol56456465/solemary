@@ -41,6 +41,7 @@ export const EXPORT_SECTIONS = [
     ['giftKeysBought', (t) => `SELECT code, plan_id, duration_days, gift_to, gift_message, created_at, expires_at, (redeemed_at IS NOT NULL) AS redeemed, (revoked_at IS NOT NULL) AS revoked
         FROM ${t.premium_keys} WHERE created_by = $1 AND source = 'gift' ORDER BY created_at`],
     ['keysRedeemed', (t) => `SELECT code, plan_id, duration_days, gift_to, gift_message, redeemed_at FROM ${t.premium_keys} WHERE redeemed_by = $1 ORDER BY redeemed_at`],
+    ['reminders', (t) => `SELECT text, due_at, created_at, sent_at, guild_id FROM ${t.reminders} WHERE user_id = $1 ORDER BY created_at`],
     ['blocks', (t) => `SELECT reason, created_at, removed_at FROM ${t.bot_blacklist} WHERE kind = 'user' AND target_id = $1 ORDER BY created_at`],
 ];
 

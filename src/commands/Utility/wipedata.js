@@ -9,13 +9,13 @@ export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
         .setName('wipedata')
-        .setDescription('Delete your levels, balance, AFK, birthday and to-do list (cannot be undone)'),
+        .setDescription('Delete your levels, balance, AFK, birthday, to-do list and reminders (cannot be undone)'),
 
     async execute(interaction, guildConfig, client) {
         const warningMessage =
             'This permanently deletes your data in this server:\n'
             + WIPE_ITEMS.map((item) => `- ${item.label}`).join('\n')
-            + '\n\nYour to-do list is the same in every server, so it is deleted everywhere. '
+            + "\n\nYour to-do list and reminders are the same in every server, so they are deleted everywhere. "
             + 'Moderation, appeal, report and verification records are kept.\n\n**This cannot be undone.**';
 
         const embed = warningEmbed('Delete your data?', warningMessage);

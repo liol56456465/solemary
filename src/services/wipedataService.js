@@ -9,6 +9,13 @@
 
 import { getAFKKey, getEconomyKey, getUserLevelKey } from '../utils/database/keys.js';
 import { deleteBirthday } from '../utils/database.js';
+import { query } from './enforcement/db.js';
+import { pgConfig } from '../config/database/postgres.js';
+
+/** The member's own unsent and sent reminders (everywhere: reminders are personal). */
+async function deleteReminders(userId) {
+    await query(`DELETE FROM ${pgConfig.tables.reminders} WHERE user_id = $1`, [userId]);
+}
 
 /** The data /wipedata removes, in the order shown to the member. */
 export const WIPE_ITEMS = [
@@ -17,6 +24,7 @@ export const WIPE_ITEMS = [
     { id: 'afk', label: 'AFK status' },
     { id: 'birthday', label: 'Birthday' },
     { id: 'todo', label: 'Personal to-do list' },
+    { id: 'reminders', label: 'Reminders' },
 ];
 
 const ID = /^\d{17,20}$/;
@@ -25,7 +33,7 @@ const ID = /^\d{17,20}$/;
  * Deletes the caller's own data. Returns { deleted: [ids], failed: [ids] }.
  * `removeBirthday` is injectable for tests.
  */
-export async function wipeMemberData(client, guildId, userId, { removeBirthday = deleteBirthday } = {}) {
+export async function wipeMemberData(client, guildId, userId, { removeBirthday = deleteBirthday, removeReminders = deleteReminders } = {}) {
     if (!ID.test(String(guildId)) || !ID.test(String(userId))) throw new Error('wipeMemberData: bad ids');
     const db = client?.db;
     if (!db) throw new Error('wipeMemberData: database not available');
@@ -43,6 +51,7 @@ export async function wipeMemberData(client, guildId, userId, { removeBirthday =
         afk: () => deleteKey(getAFKKey(guildId, userId)),
         birthday: () => removeBirthday(client, guildId, userId),
         todo: () => deleteKey(`todo_${userId}`),
+        reminders: () => removeReminders(userId),
     };
 
     const deleted = [];

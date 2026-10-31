@@ -82,6 +82,7 @@ ${row('Verification: your account ID and name, encrypted Discord sign-in tokens 
 ${row('A keyed one-way hash of the IP address you verified from (never the address itself)', 'To spot someone returning on a new account after a ban. A match alone never refuses anyone: a person on the staff team decides.', '60 days, or longer while that account has an active ban on the Mewvo server.')}
 ${row('Joins and leaves', 'Member statistics for the staff team.', '90 days.')}
 ${row('Things you choose to save: birthday, AFK message, suggestions and votes, giveaway entries, to-do items', 'To provide the feature you used.', 'Until you remove them, run /wipedata (where it covers them) or ask.')}
+${row('Reminders: what you asked to be reminded about, when, and the channel you set it in', 'To send the reminder (by DM, or in that channel if your DMs are closed).', 'Until it is sent, then 30 more days. Delete one any time with /remind delete.')}
 ${row('Plans and keys: your plan, start and end date, test orders (plan, period, amount), keys you bought or redeemed, and a gift’s “to” name and message', 'To give you the plan you chose and send DMs when it starts and ends.', 'As long as you have an account with Mewvo, or until you ask. When real payments start, invoices are kept as long as tax law requires.')}
 ${row('Website and dashboard sign-in: a hash of the session ID with your ID, username and avatar', 'To keep you signed in and protect forms against forgery.', '1 hour for “My record”, 12 hours for the staff dashboard.')}
 ${row('Dashboard audit log: who changed which setting, from what, to what', 'So the staff team can see and undo changes.', 'As long as the server uses Mewvo.')}
@@ -115,7 +116,7 @@ ${row('Technical logs of what the bot did and the errors it hit (they can contai
 <li>your data to no longer be used for a legitimate interest (objection, Art. 21).</li></ul>
 ${ctx.memberPortal ? html`<p>You can download a copy of your data yourself: log in on <a href="/me">My record</a> and choose <strong>Download my data</strong>. You get a JSON file with everything Mewvo stores about your account, except what would reveal other people, such as staff notes or who reported something.</p>
 ` : ''}<p>To use any of these, ${contactLine(ctx)}. You get an answer within one month. Some safety records, such as an active ban, may be kept for as long as they are still needed to keep a server safe; if so, you are told why.</p>
-<p>You can also delete some data yourself: run <code>/wipedata</code> in a server to delete your levels and XP, your economy balance, your AFK status and your birthday in that server, and your personal to-do list. It does not delete moderation records, appeals, reports or verification records.</p>
+<p>You can also delete some data yourself: run <code>/wipedata</code> in a server to delete your levels and XP, your economy balance, your AFK status and your birthday in that server, and your personal to-do list and reminders. It does not delete moderation records, appeals, reports or verification records.</p>
 <p>If you think your data is handled wrongly, you can complain to the data protection authority of the EU country where you live or work, or where the problem happened.</p>
 
 <h2>Children</h2>

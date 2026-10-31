@@ -66,17 +66,19 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
     ]);
     const db = { exists: async (k) => store.has(k), delete: async (k) => store.delete(k) };
     const birthdays = [];
-    const result = await wipeMemberData({ db }, g, me, { removeBirthday: async (_c, guild, user) => { birthdays.push(`${guild}:${user}`); } });
+    const reminders = [];
+    const result = await wipeMemberData({ db }, g, me, { removeBirthday: async (_c, guild, user) => { birthdays.push(`${guild}:${user}`); }, removeReminders: async (user) => { reminders.push(user); } });
     assert.deepEqual(result.deleted, WIPE_ITEMS.map((i) => i.id));
     assert.deepEqual(result.failed, []);
     assert.deepEqual([...store.keys()], [`guild:${g}:leveling:users:${me}9`], 'another member with a longer id is untouched');
     assert.deepEqual(birthdays, [`${g}:${me}`], 'the birthday row is removed (it was never deleted before)');
+    assert.deepEqual(reminders, [me], 'reminders too');
 
     const broken = { db: { exists: async () => true, delete: async (k) => { if (k.includes('afk')) throw new Error('db down'); return true; } } };
-    const partial = await wipeMemberData(broken, g, me, { removeBirthday: async () => { throw new Error('db down'); } });
+    const partial = await wipeMemberData(broken, g, me, { removeBirthday: async () => { throw new Error('db down'); }, removeReminders: async () => {} });
     assert.deepEqual(partial.failed.map((f) => f.id), ['afk', 'birthday']);
     assert.ok(partial.deleted.includes('levels'));
-    const silentFail = await wipeMemberData({ db: { exists: async () => true, delete: async () => false } }, g, me, { removeBirthday: async () => {} });
+    const silentFail = await wipeMemberData({ db: { exists: async () => true, delete: async () => false } }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {} });
     assert.ok(silentFail.failed.length === 4, 'a false from delete is an error');
     await assert.rejects(wipeMemberData({ db }, 'x', me), /bad ids/);
 });
