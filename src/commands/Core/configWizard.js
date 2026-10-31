@@ -38,7 +38,7 @@ async function notifyWizardStarted(buttonInteraction) {
     await buttonInteraction.followUp({
         embeds: [infoEmbed(
             'Setup Wizard Started',
-            'Check your DMs — I sent you the first setup question there.\n\nAnswer each question in that DM. Type `skip` to keep the current value.',
+            'Check your DMs. I sent you the first setup question there.\n\nAnswer each question in that DM. Type `skip` to keep the current value.',
         )],
         flags: MessageFlags.Ephemeral,
     }).catch(() => {});
@@ -131,7 +131,7 @@ function buildDashboardEmbed(config, guild) {
             {
                 name: `${setupDone ? '✅' : '📝'} Setup`,
                 value: setupDone
-                    ? 'Setup wizard completed — re-run anytime to update settings.'
+                    ? 'Setup wizard completed. Run it again any time to change settings.'
                     : 'Run the setup wizard to configure your server quickly.',
                 inline: false,
             },

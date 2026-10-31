@@ -171,13 +171,13 @@ export async function staffModerationStats(guildId, botUserId, { period = '30d',
 
 export function formatStatsLine(row) {
     const { ban, kick, mute, warn } = row.actions;
-    return `**${row.username}** — ${row.total} actions (${ban} bans · ${kick} kicks · ${mute} mutes · ${warn} warns)`
+    return `**${row.username}**: ${row.total} actions (${ban} bans · ${kick} kicks · ${mute} mutes · ${warn} warns)`
         + ` · appeals on their cases: ${row.appealsAccepted} accepted / ${row.appealsDenied} denied`
         + (row.voided ? ` · ${row.voided} voided` : '');
 }
 
 export function formatActivityLine(row) {
-    return `${row.inactive ? '⚠️ ' : ''}**${row.username}** — ${row.messages} msgs · ${row.actions} actions · ${row.appeals} appeals · ${row.reviews} reviews · ${row.tickets} tickets`;
+    return `${row.inactive ? '⚠️ ' : ''}**${row.username}**: ${row.messages} msgs · ${row.actions} actions · ${row.appeals} appeals · ${row.reviews} reviews · ${row.tickets} tickets`;
 }
 
 /** Posts last week's staff activity in the mod log and DMs the owner who was inactive. */

@@ -122,7 +122,7 @@ async function showMyStanding(interaction) {
 }
 
 const MY_APPEAL_STATUS = {
-    pending: '⏳ Pending — the administrators have not decided yet',
+    pending: '⏳ Pending: the administrators have not decided yet',
     accepted: '✅ Accepted',
     denied: '❌ Denied',
     closed: '🔒 Closed',
@@ -135,7 +135,7 @@ async function showMyAppeals(interaction) {
     const appeals = await listUserAppeals(interaction.user.id);
     const stamp = (date) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:d>`;
     const lines = appeals.map((appeal) => [
-        `**\`${appeal.case_code}\`** — ${appeal.type} (${appeal.name})`,
+        `**\`${appeal.case_code}\`**: ${appeal.type} (${appeal.name})`,
         `${MY_APPEAL_STATUS[appeal.status] ?? appeal.status} · filed ${stamp(appeal.created_at)}${appeal.decided_at ? ` · decided ${stamp(appeal.decided_at)}` : ''}`,
     ].join('\n'));
     return InteractionHelper.safeEditReply(interaction, {
@@ -234,7 +234,7 @@ export async function handleAppealDecisionButton(interaction, client, args) {
         embeds: [successEmbed(
             `Appeal ${result.label}`,
             [
-                `\`${caseCode}\` — ${result.record.name}`,
+                `\`${caseCode}\` · ${result.record.name}`,
                 `DM to the user: ${result.dmDelivered ? 'delivered' : '**not delivered**'}.`,
                 ...result.notes,
                 ...(result.ownerOverride ? ['You issued this punishment: decided as a bot owner, logged as an owner override.'] : []),

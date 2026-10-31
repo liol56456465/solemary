@@ -33,7 +33,7 @@ test('standing fields: warnings, ladder, punishments, appeals', () => {
     assert.match(byName['Counted warnings'], /do not expire/);
     assert.match(byName['Warning ladder'], /Level \*\*0\*\* of 3/);
     assert.match(byName['Warning ladder'], /reach the warning limit/);
-    assert.match(byName['Active punishments'], /Mute `ccccc` — ends <t:1893456000:d>/);
+    assert.match(byName['Active punishments'], /Mute `ccccc` · ends <t:1893456000:d>/);
     assert.match(byName.Appeals, /`ccccc` mute · ⏳ pending/);
 
     const clean = standingFields({ ladder: { level: 0, warns_since_level: 0 }, warns: [], activeBan: null, activeMute: null, appeals: [] });

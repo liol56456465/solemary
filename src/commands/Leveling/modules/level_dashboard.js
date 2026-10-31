@@ -455,7 +455,7 @@ async function handleIgnoreChannels(selectInteraction, rootInteraction, cfg, gui
 
     const channelLabel = new LabelBuilder()
         .setLabel('Toggle Ignored Channels')
-        .setDescription('Selected channels will be toggled — XP will not be awarded in them')
+        .setDescription('Selected channels will be toggled. XP will not be awarded in them.')
         .setChannelSelectMenuComponent(channelSelect);
 
     modal.addLabelComponents(channelLabel);
@@ -511,7 +511,7 @@ async function handleIgnoreRoles(selectInteraction, rootInteraction, cfg, guildI
 
     const roleLabel = new LabelBuilder()
         .setLabel('Toggle Ignored Roles')
-        .setDescription('Selected roles will be toggled — members with them will not earn XP')
+        .setDescription('Selected roles will be toggled. Members with them will not earn XP.')
         .setRoleSelectMenuComponent(roleSelect);
 
     modal.addLabelComponents(roleLabel);

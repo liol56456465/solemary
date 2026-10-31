@@ -90,7 +90,7 @@ test('warn for this message: opens the warn flow with the message attached as ev
     const payload = replies[0];
     const url = `https://discord.com/channels/${MAIN}/${message.channelId}/${message.id}`;
     const embed = payload.embeds[0].toJSON();
-    assert.match(embed.title, /^Warn — kit/);
+    assert.match(embed.title, /^Warn: kit/);
     assert.ok(embed.description.includes(url));
 
     const select = payload.components[0].toJSON().components[0];

@@ -749,7 +749,7 @@ async function handleDeletePanel(btnInteraction, rootInteraction, panelData, pan
         .setDefault(false);
 
     const deleteCheckboxLabel = new LabelBuilder()
-        .setLabel('I confirm — this cannot be undone')
+        .setLabel('I confirm, this cannot be undone')
         .setCheckboxComponent(deleteCheckbox);
 
     deleteModal

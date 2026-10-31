@@ -198,7 +198,7 @@ export async function closeCard(message, outcome, { status = null, by = null, ve
         // A compact line: strike it through and say who handled it.
         const [emoji, defaultVerb] = CLOSE_STATUS[status] || ['✔️', 'Reviewed'];
         const line = stripLeadingEmoji(message.content || '');
-        const content = truncate(`${emoji} ${verb || defaultVerb}${by ? ` by ${by}` : ''} — ~~${line}~~\n-# ${outcome}`, 2000);
+        const content = truncate(`${emoji} ${verb || defaultVerb}${by ? ` by ${by}` : ''} · ~~${line}~~\n-# ${outcome}`, 2000);
         await message.edit({ content, components: [], allowedMentions: { parse: [] } }).catch((error) =>
             logger.warn(`Could not update review line ${message.id}: ${error.message}`));
         return;
@@ -400,7 +400,7 @@ export async function handleReviewAction(interaction, args) {
         const code = result.record?.case_code;
         await closeCard(message, `Changed to ${choice.label}${code ? ` (case \`${code}\`)` : ''} by ${by}. ${notes.join(' ')}`,
             { status: 'changed', by, verb: `Changed to ${choice.label}` });
-        return `Changed to ${choice.label}${code ? ` — case \`${code}\`` : ''}.`;
+        return `Changed to ${choice.label}${code ? `, case \`${code}\`` : ''}.`;
     }
 
     if (action === 'apply') {
@@ -423,7 +423,7 @@ export async function handleReviewAction(interaction, args) {
         const code = result.record?.case_code;
         await closeCard(message, `${choice.label}${code ? ` (case \`${code}\`)` : ''} applied by ${by}`,
             { status: 'applied', by, verb: `${choice.label} applied` });
-        return `${choice.label} applied${code ? ` — case \`${code}\`` : ''}.`;
+        return `${choice.label} applied${code ? `, case \`${code}\`` : ''}.`;
     }
 
     throw userError('Unknown review action.');

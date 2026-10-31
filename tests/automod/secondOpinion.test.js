@@ -36,7 +36,7 @@ test('second opinion payload: no ping text, Confirm and Undo carry the keeper', 
     const payload = secondOpinionPayload('111', ['abc1234', 'def5678'], 'https://discord.com/channels/1/2/3');
     const embed = payload.embeds[0].data;
     assert.equal(payload.content, undefined);
-    assert.match(embed.description, /^Kept by <@111> — a second admin can confirm or undo\./);
+    assert.match(embed.description, /^Kept by <@111>. A second admin can confirm or undo\./);
     assert.match(embed.description, /`abc1234` `def5678`/);
     const [confirm, undo] = payload.components[0].toJSON().components;
     assert.equal(confirm.custom_id, 'amreview:2nd:confirm:111:abc1234,def5678');

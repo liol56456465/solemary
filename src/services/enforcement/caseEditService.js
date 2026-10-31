@@ -146,7 +146,7 @@ export async function editCase(client, { guildId, caseCode, editor, reason, dura
 
     if (!result.after.is_test && client) {
         await postModLog(client, 'caseedit', [
-            { name: 'Case', value: `\`${result.after.case_code}\` — ${truncate(result.after.name, 200)} (${result.after.type})` },
+            { name: 'Case', value: `\`${result.after.case_code}\` · ${truncate(result.after.name, 200)} (${result.after.type})` },
             { name: 'User', value: `${result.after.target_username} (${result.after.target_user_id})` },
             { name: 'Edited by', value: `${editor.username} (${editor.id})` },
             ...result.changes.map((change) => ({
@@ -233,7 +233,7 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
 
         if (!record.is_test) {
             await postModLog(client, 'casevoid', [
-                { name: 'Case', value: `\`${record.case_code}\` — ${truncate(record.name, 200)} (${record.type})` },
+                { name: 'Case', value: `\`${record.case_code}\` · ${truncate(record.name, 200)} (${record.type})` },
                 { name: 'User', value: `${record.target_username} (${record.target_user_id})` },
                 { name: 'Voided by', value: `${admin.username} (${admin.id})` },
                 { name: 'Reason', value: truncate(reason, 1024) },

@@ -96,7 +96,7 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
                 value: (showAdmin ? [
                     '1. **/configwizard** to configure prefix, mod role, and logs.',
                     '2. **/commands dashboard** to turn categories on or off.',
-                    '3. **Browse commands** — Use the menu below to view categories and commands.',
+                    '3. **Browse commands**: Use the menu below to view categories and commands.',
                 ] : [
                     'Pick a category in the menu below to see its commands.',
                     'Need staff? DM the bot: your message goes to the team privately (modmail).',

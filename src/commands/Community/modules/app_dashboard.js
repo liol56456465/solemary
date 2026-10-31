@@ -55,7 +55,7 @@ async function buildDashboardEmbed(settings, roles, guild, client) {
             : '`None configured`';
     const roleList =
         roles.length > 0
-            ? roles.map(r => `<@&${r.roleId}> — ${r.name}`).join('\n')
+            ? roles.map(r => `<@&${r.roleId}> · ${r.name}`).join('\n')
             : '`No application roles configured`';
     const questionCount = settings.questions?.length ?? 0;
     const firstText = applicationQuestionText(settings.questions?.[0]);
@@ -73,7 +73,7 @@ async function buildDashboardEmbed(settings, roles, guild, client) {
             { name: 'Log Channel', value: logChannel, inline: true },
             { name: '\u200B', value: '\u200B', inline: true },
             { name: 'Manager Roles', value: managerRoleList, inline: false },
-            { name: 'Questions', value: `${questionCount} configured — first: ${firstQ}`, inline: false },
+            { name: 'Questions', value: `${questionCount} configured, first: ${firstQ}`, inline: false },
             { name: 'Application Roles', value: roleList, inline: false },
             {
                 name: 'Retention',
@@ -532,7 +532,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
                 .setDefault(false);
 
             const deleteCheckboxLabel = new LabelBuilder()
-                .setLabel('I confirm — this cannot be undone')
+                .setLabel('I confirm, this cannot be undone')
                 .setCheckboxComponent(deleteCheckbox);
 
             confirmModal
@@ -1064,8 +1064,8 @@ async function handleRetention(selectInteraction, rootInteraction, settings, rol
 
     const retentionInfo = new TextDisplayBuilder()
         .setContent(
-            '**Pending** — how long unanswered/in-progress applications are kept before being automatically removed.\n' +
-            '**Reviewed** — how long approved or denied applications are kept.\n' +
+            '**Pending**: how long unanswered/in-progress applications are kept before being automatically removed.\n' +
+            '**Reviewed**: how long approved or denied applications are kept.\n' +
             '-# Enter a whole number between 1 and 3650 (max 10 years).',
         );
 

@@ -59,7 +59,7 @@ export async function buildSearchView(guildId, viewerId, filters, page) {
         : (total ? 'No cases on this page any more. Use **Newer**.' : 'No cases match these filters.');
 
     const embed = createEmbed({
-        title: `Case search — ${total} result${total === 1 ? '' : 's'}`,
+        title: `Case search: ${total} result${total === 1 ? '' : 's'}`,
         description: truncate(`${header}\n\n${body}`, 4096),
         footer: { text: `Page ${current + 1} of ${pages} · newest first · ref ${encodeSearchFilters(filters)}` },
         color: 'primary',
@@ -71,7 +71,7 @@ export async function buildSearchView(guildId, viewerId, filters, page) {
             .setCustomId(`csearch:open:${viewerId}`)
             .setPlaceholder('Open a record in full')
             .addOptions(rows.map((row) => ({
-                label: truncate(`${row.case_code} — ${row.name}`, 100),
+                label: truncate(`${row.case_code}: ${row.name}`, 100),
                 value: row.case_code,
                 description: truncate(`${row.type} · ${row.target_username} · by ${row.moderator_username}`, 100),
             })))));

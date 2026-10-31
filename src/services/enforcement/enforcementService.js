@@ -215,7 +215,7 @@ export async function logEnforcement(client, guildId, action, { record = null, t
     ];
     if (record) {
         fields.push(
-            { name: 'Case', value: `\`${record.case_code}\` — ${record.name}` },
+            { name: 'Case', value: `\`${record.case_code}\` · ${record.name}` },
             { name: 'Reason', value: record.reason },
         );
         if (record.type === 'ban' || record.type === 'mute') {
@@ -737,7 +737,7 @@ async function doRemoveWarn({ guild, moderator, targetUser, flow }) {
     await logEnforcement(guild.client, guild.id, 'removewarn', {
         target: targetUser, moderatorLabel: moderatorLabel(moderator),
         extra: [
-            { name: 'Warning', value: `\`${result.case_code}\` — ${result.name}` },
+            { name: 'Warning', value: `\`${result.case_code}\` · ${result.name}` },
             { name: 'Reason', value: flow.reason },
             { name: 'Counted warns now', value: `${ladder.warns_since_level} (ladder level ${ladder.level})` },
         ],

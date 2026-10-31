@@ -27,7 +27,7 @@ const loadNotes = listNotes;
 function notesField(notes) {
     if (notes.length === 0) return { name: 'Staff notes', value: 'None. Use **Add note** to write one.' };
     const lines = notes.map((note, index) => ({ note, number: index + 1 })).slice(-NOTES_SHOWN).reverse().map(({ note, number }) =>
-        truncate(`**${number}.** ${NOTE_TYPE_EMOJI[note.type] ?? '📝'} ${note.content} — ${note.author ?? 'unknown'}, ${note.timestamp ? stamp(note.timestamp) : '?'}`, 200));
+        truncate(`**${number}.** ${NOTE_TYPE_EMOJI[note.type] ?? '📝'} ${note.content} · ${note.author ?? 'unknown'}, ${note.timestamp ? stamp(note.timestamp) : '?'}`, 200));
     const more = notes.length > NOTES_SHOWN ? `\n…and ${notes.length - NOTES_SHOWN} older` : '';
     return { name: `Staff notes (${notes.length})`, value: truncate(lines.join('\n') + more, 1024) };
 }
@@ -80,7 +80,7 @@ export async function buildRecordEmbed(row, { client = null } = {}) {
     ];
     if (row.type === 'ban' || row.type === 'mute') {
         lines.push(row.expires_at
-            ? `**Duration:** ${formatDuration(Number(row.duration_ms))} — ends ${stamp(row.expires_at)}`
+            ? `**Duration:** ${formatDuration(Number(row.duration_ms))}, ends ${stamp(row.expires_at)}`
             : '**Duration:** Permanent');
     }
     lines.push(
@@ -88,17 +88,17 @@ export async function buildRecordEmbed(row, { client = null } = {}) {
         `**Ladder level after:** ${row.ladder_level_after}`,
         `**DM delivered:** ${row.dm_delivered ? 'Yes' : 'No'}`,
         ...(row.end_dm_delivered == null ? [] : [`**"Ended" DM delivered:** ${row.end_dm_delivered ? 'Yes' : 'No'}`]),
-        ...(edits ? [`**Edited:** ${edits} change(s) — \`/case history code:${row.case_code}\``] : []),
+        ...(edits ? [`**Edited:** ${edits} change(s): \`/case history code:${row.case_code}\``] : []),
         `**Status:** ${statusLabel(row, appeals[0]?.status)}`,
     );
     if (row.voided_at) {
-        lines.push(`**Voided:** ${dateStamp(row.voided_at)}${row.voided_by ? ` by \`${row.voided_by}\`` : ''}${row.void_reason ? ` — ${row.void_reason}` : ''} (no longer counts)`);
+        lines.push(`**Voided:** ${dateStamp(row.voided_at)}${row.voided_by ? ` by \`${row.voided_by}\`` : ''}${row.void_reason ? `, ${row.void_reason}` : ''} (no longer counts)`);
     } else if (row.status === 'revoked') {
-        lines.push(`**Revoked:** ${row.revoked_at ? dateStamp(row.revoked_at) : '—'}${row.revoked_by ? ` by \`${row.revoked_by}\`` : ''}${row.revoke_reason ? ` — ${row.revoke_reason}` : ''}`);
+        lines.push(`**Revoked:** ${row.revoked_at ? dateStamp(row.revoked_at) : '-'}${row.revoked_by ? ` by \`${row.revoked_by}\`` : ''}${row.revoke_reason ? `, ${row.revoke_reason}` : ''}`);
     }
 
     const history = appeals.length
-        ? appeals.map((appeal) => `${dateStamp(appeal.created_at)} — **${appeal.status}**${appeal.decided_by_username ? ` by ${appeal.decided_by_username}` : ''}${appeal.note ? `: ${appeal.note}` : ''}`).join('\n')
+        ? appeals.map((appeal) => `${dateStamp(appeal.created_at)}: **${appeal.status}**${appeal.decided_by_username ? ` by ${appeal.decided_by_username}` : ''}${appeal.note ? `: ${appeal.note}` : ''}`).join('\n')
         : 'None';
 
     return createEmbed({
@@ -136,7 +136,7 @@ export async function buildRecordList(guildId, viewerId, targetUser, page) {
         : [];
 
     const embed = createEmbed({
-        title: truncate(`Background — ${targetUser.username}`, 256),
+        title: truncate(`Background: ${targetUser.username}`, 256),
         description: total
             ? `${total} record(s), newest first. Use \`name:\` to open one in full.`
             : 'No records for this user.',

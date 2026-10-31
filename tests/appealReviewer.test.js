@@ -303,13 +303,13 @@ test('/appeals code decision: another admin decides and the reply is the usual o
 
 // ── Staff dossier embed ───────────────────────────────────────────────────
 
-test('dossier: "Issued by … — needs a second reviewer" only when the setting is on and a person issued it', async () => {
+test('dossier: "Issued by …, so it needs a second reviewer" only when the setting is on and a person issued it', async () => {
     const field = async (record) => withPool({ record, appeal: null }, async () => {
         const embeds = await buildCaseDossier(record, { client: fakeClient() });
         return ((embeds[0].data || embeds[0]).fields || []).find((f) => f.name === 'Independent review') || null;
     });
     settingOn();
-    assert.equal((await field(humanCase()))?.value, 'Issued by issuer — needs a second reviewer');
+    assert.equal((await field(humanCase()))?.value, 'Issued by issuer, so it needs a second reviewer');
     assert.equal(await field(ladderCase()), null);
     assert.equal(await field(automodCase()), null);
     settingOff();

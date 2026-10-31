@@ -139,7 +139,7 @@ export function validateTestMode() {
         if (PRODUCTION_GUILD_IDS.has(value)) {
             errors.push(`${name} is the real ${PRODUCTION_GUILD_IDS.get(value)} server (${value}). Use your test server.`);
         } else if (value && !testMode.guildIds.has(value)) {
-            errors.push(`${name} is not in TEST_GUILD_IDS — it would point the panel at a non-test server.`);
+            errors.push(`${name} is not in TEST_GUILD_IDS. It would point the panel at a non-test server.`);
         }
     }
 
@@ -272,6 +272,6 @@ export async function verifyTestResources(client) {
 
 const testModeErrors = validateTestMode();
 if (testModeErrors.length > 0) {
-    logger.error('Refusing to start — test-mode safety checks failed:\n' + testModeErrors.map((error) => `  - ${error}`).join('\n'));
+    logger.error('Refusing to start: test-mode safety checks failed:\n' + testModeErrors.map((error) => `  - ${error}`).join('\n'));
     process.exit(1);
 }

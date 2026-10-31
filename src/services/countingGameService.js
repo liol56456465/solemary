@@ -313,6 +313,6 @@ export function buildCountingLeaderboard(config, guild) {
     .map(([userId, count], index) => {
       const member = guild?.members?.cache?.get(userId);
       const username = member ? `${member.user.username}#${member.user.discriminator}` : `<@${userId}>`;
-      return `**${index + 1}.** ${username} — ${count} ${count === 1 ? 'count' : 'counts'}`;
+      return `**${index + 1}.** ${username}: ${count} ${count === 1 ? 'count' : 'counts'}`;
     });
 }

@@ -47,7 +47,7 @@ export function formatPanelStatusField(panelStatus, { repostHint = 'Repost Panel
 
     if (panelStatus.exists) {
         return panelStatus.message?.url
-            ? `✅ Active — [view panel](${panelStatus.message.url})`
+            ? `✅ Active · [view panel](${panelStatus.message.url})`
             : '✅ Active';
     }
 
@@ -56,7 +56,7 @@ export function formatPanelStatusField(panelStatus, { repostHint = 'Repost Panel
     }
 
     if (panelStatus.reason === 'panel_deleted') {
-        return `⚠️ Panel message was deleted — use **${repostHint}** below`;
+        return `⚠️ The panel message was deleted. Use **${repostHint}** below.`;
     }
 
     if (panelStatus.reason === 'no_channel') {

@@ -93,7 +93,7 @@ class Mewvo extends Client {
     try {
       startupLog('Starting Mewvo...');
       if (testMode.enabled) {
-        startupLog(`TEST MODE — effective config: ${JSON.stringify(describeTestMode())}`);
+        startupLog(`TEST MODE, effective config: ${JSON.stringify(describeTestMode())}`);
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
       

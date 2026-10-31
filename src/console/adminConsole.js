@@ -74,7 +74,7 @@ async function resolveContext(client) {
 
 async function runAction(client, type, args) {
     const userId = parseUserId(args[0]);
-    if (!userId) return out('  usage: see "help" — the first argument must be a user ID or mention');
+    if (!userId) return out('  usage: see "help". The first argument must be a user ID or mention');
 
     const { guild, moderator } = await resolveContext(client);
     const targetUser = await client.users.fetch(userId).catch(() => null);
@@ -110,7 +110,7 @@ async function runAction(client, type, args) {
         if (rest.length === 0) return out('  a reason is required');
         Object.assign(flow, reasonFields(rest));
         if (type === 'ban' && !rest.includes('--unappealable') && flow.severe) {
-            out('  note: severe reason — ban is appealable unless you add --unappealable');
+            out('  note: severe reason, ban is appealable unless you add --unappealable');
         }
     } else {
         flow.reason = rest.join(' ').trim() || `${type} via admin console`;
@@ -156,7 +156,7 @@ export function startAdminConsole(client) {
     }
 
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout, prompt: 'mewvo> ' });
-    out(`\nAdmin console ready — type "help" for commands.${testMode.enabled ? ' (test mode: test servers only)' : ''}`);
+    out(`\nAdmin console ready, type "help" for commands.${testMode.enabled ? ' (test mode: test servers only)' : ''}`);
     rl.prompt();
 
     rl.on('line', async (line) => {
@@ -176,7 +176,7 @@ export function startAdminConsole(client) {
                     rl.close();
                     process.kill(process.pid, 'SIGINT');
                     return;
-                default: out(`  unknown command "${command}" — type "help"`);
+                default: out(`  unknown command "${command}", type "help"`);
             }
         } catch (error) {
             out(`  ✗ ${(error.userMessage || error.message || String(error)).replace(/\*\*/g, '')}`);

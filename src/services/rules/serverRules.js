@@ -80,7 +80,7 @@ export function ruleLineFor(record, env = process.env) {
         const title = String(rule.title).replace(/\s+/g, ' ').trim();
         const url = rulesPageUrl(rule.number, env);
         // <link> keeps Discord from adding a preview card under the DM.
-        return `Rule ${rule.number}: ${title}${url ? ` — <${url}>` : ''}`;
+        return `Rule ${rule.number}: ${title}${url ? `, <${url}>` : ''}`;
     } catch (error) {
         logger.warn(`Rule lookup for a punishment DM failed (sent without the rule line): ${error.message}`);
         return null;

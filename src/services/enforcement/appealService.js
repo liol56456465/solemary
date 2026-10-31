@@ -265,7 +265,7 @@ export async function buildCaseDossier(record, { appeal = null, client = null } 
         fields: [
             ...(needsSecondReviewer(record, { botUserId: client?.user?.id || null }) ? [{
                 name: 'Independent review',
-                value: truncate(`Issued by ${record.moderator_username} — needs a second reviewer`, 1024),
+                value: truncate(`Issued by ${record.moderator_username}, so it needs a second reviewer`, 1024),
             }] : []),
             ...(evidence.field ? [evidence.field] : []),
         ],
@@ -528,7 +528,7 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
             data: {
                 userId: user.id,
                 fields: [
-                    { name: 'Appeal submitted', value: `\`${record.case_code}\` — ${record.name}` },
+                    { name: 'Appeal submitted', value: `\`${record.case_code}\` · ${record.name}` },
                     { name: 'User', value: `${user.username} (${user.id})` },
                     { name: 'Channel', value: `<#${staffChannel.id}>${inSupport ? ` (conversation in the support server: <#${channel.id}>)` : ''}` },
                 ],
@@ -719,7 +719,7 @@ export async function liftCase(client, record, admin, { reason, via }) {
         await logEnforcement(client, record.guild_id, 'removewarn', {
             target, moderatorLabel,
             extra: [
-                { name: 'Warning', value: `\`${record.case_code}\` — ${record.name}` },
+                { name: 'Warning', value: `\`${record.case_code}\` · ${record.name}` },
                 ...extra,
                 ...(ladder ? [{ name: 'Counted warns now', value: `${ladder.warns_since_level} (ladder level ${ladder.level})` }] : []),
             ],
@@ -730,7 +730,7 @@ export async function liftCase(client, record, admin, { reason, via }) {
         await logEnforcement(client, record.guild_id, 'removewarn', {
             target, moderatorLabel,
             extra: [
-                { name: 'Warning', value: `\`${triggerWarn.case_code}\` — ${triggerWarn.name}` },
+                { name: 'Warning', value: `\`${triggerWarn.case_code}\` · ${triggerWarn.name}` },
                 { name: 'Reason', value: `${reason} (it triggered the automatic ban \`${record.case_code}\`)` },
             ],
         });
@@ -875,7 +875,7 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
         const transcript = channel ? await generateTranscript(channel).catch(() => null) : null;
         const staffTranscript = separateStaff && staffChannel ? await generateTranscript(staffChannel).catch(() => null) : null;
         const logFields = [
-            { name: `Appeal ${label}`, value: `\`${record.case_code}\` — ${record.name}` },
+            { name: `Appeal ${label}`, value: `\`${record.case_code}\` · ${record.name}` },
             { name: 'User', value: `${record.target_username} (${record.target_user_id})` },
             { name: 'Decided by', value: `${admin.username} (${admin.id})` },
             ...(note ? [{ name: 'Note', value: note }] : []),

@@ -42,7 +42,7 @@ export function secondOpinionPayload(keeperId, codes, cardUrl = null) {
     const embed = createEmbed({
         title: '🤝 Second opinion?',
         description: [
-            `Kept by <@${keeperId}> — a second admin can confirm or undo.`,
+            `Kept by <@${keeperId}>. A second admin can confirm or undo.`,
             `Case${shown.length > 1 ? 's' : ''}: ${shown.map((c) => `\`${c}\``).join(' ')}${omitted > 0 ? ` (+${omitted} older, use \`/case\`)` : ''}`,
             cardUrl ? `[Open the card](${cardUrl})` : null,
         ].filter(Boolean).join('\n'),

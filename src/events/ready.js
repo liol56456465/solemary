@@ -27,7 +27,7 @@ export default {
       if (testMode.enabled) {
         const problems = await verifyTestResources(client);
         if (problems.length > 0) {
-          logger.error("Test mode: configured resources are not in the test servers — shutting down:\n" + problems.map((p) => `  - ${p}`).join("\n"));
+          logger.error("Test mode: configured resources are not in the test servers, shutting down:\n" + problems.map((p) => `  - ${p}`).join("\n"));
           client.destroy();
           process.exit(1);
         }

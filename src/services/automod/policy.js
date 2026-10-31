@@ -155,7 +155,7 @@ const SECOND_CHANCE_TEXT = {
 export function secondChanceNotice(ruleKey, userId, deleted) {
     const what = SECOND_CHANCE_TEXT[ruleKey] || `without breaking the rule (${AUTOMOD_RULES[ruleKey]?.label || ruleKey})`;
     const verb = deleted ? 'repost' : 'edit your message';
-    return `<@${userId}> Please ${verb} ${what} — no warning this time.`;
+    return `<@${userId}> Please ${verb} ${what}. No warning this time.`;
 }
 
 // ── Mood (channel heat) ───────────────────────────────────────────────────────
@@ -234,7 +234,7 @@ export function tuningSuggestions(byRule, { settings, lastSuggested = {}, now = 
 /** "Excessive caps: 9 of 20 undone in 14 days — switch to monitor?" */
 export function formatTuningSuggestion(s, days = automodConfig.tuningWindowDays) {
     const what = s.changed ? (s.undone ? 'undone or changed' : 'changed') : 'undone';
-    return `${AUTOMOD_RULES[s.rule]?.label || s.rule}: ${s.corrected} of ${s.actions} ${what} in ${days} days — switch to monitor?`;
+    return `${AUTOMOD_RULES[s.rule]?.label || s.rule}: ${s.corrected} of ${s.actions} ${what} in ${days} days, switch to monitor?`;
 }
 
 /** settings.channelRules with one exception set ('off' | 'monitor') or removed ('default'). */

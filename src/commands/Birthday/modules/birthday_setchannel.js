@@ -70,7 +70,7 @@ export default {
                 const embed = new EmbedBuilder()
                     .setColor(0xFFFF00)
                     .setTitle('Birthday Announcements Disabled')
-                    .setDescription('No channel provided — birthday announcements have been disabled.');
+                    .setDescription('No channel given, so birthday announcements are turned off.');
                 return InteractionHelper.safeReply(interaction, {
                     embeds: [embed],
                     flags: MessageFlags.Ephemeral,

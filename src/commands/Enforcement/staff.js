@@ -73,7 +73,7 @@ export default {
             const empty = moderator ? `${moderator.username} has no moderation cases in this period.` : 'No moderation cases in this period.';
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [createEmbed({
-                    title: truncate(`Moderation stats${moderator ? ` — ${moderator.username}` : ''}, ${label}`, 256),
+                    title: truncate(`Moderation stats${moderator ? `, ${moderator.username}` : ''}, ${label}`, 256),
                     description: truncate(rows.length
                         ? `${rows.map(formatStatsLine).join('\n')}\n\n-# Cases they created (test and automatic cases left out; voided cases are not in the totals). Appeals: decided in this period on their cases.`
                         : empty, 4096),
@@ -88,7 +88,7 @@ export default {
             const counts = await loadCoverageCounts(interaction.guildId, interaction.client.user.id, days);
             const report = buildCoverageReport(counts, guildConfig?.birthdayTimezone || 'UTC');
             const gaps = report.gaps.length
-                ? report.gaps.map((slot, i) => `${i + 1}. **${slotLabel(slot)}** — ${slot.incidents} incident${slot.incidents === 1 ? '' : 's'}, ${slot.staff} staff action${slot.staff === 1 ? '' : 's'}`).join('\n')
+                ? report.gaps.map((slot, i) => `${i + 1}. **${slotLabel(slot)}**: ${slot.incidents} incident${slot.incidents === 1 ? '' : 's'}, ${slot.staff} staff action${slot.staff === 1 ? '' : 's'}`).join('\n')
                 : 'No incidents in this period.';
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [createEmbed({

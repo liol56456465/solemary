@@ -43,7 +43,7 @@ function changeOf(entry, key) {
 }
 
 function show(value, key) {
-    if (value === undefined || value === null || value === '') return '—';
+    if (value === undefined || value === null || value === '') return '-';
     if (key === 'channel_id') return `<#${value}>`;
     if (key === 'max_age') return Number(value) ? `${Math.round(Number(value) / 3600)} h` : 'never';
     if (key === 'max_uses') return Number(value) ? String(value) : 'no limit';
@@ -77,7 +77,7 @@ export function describeAuditEntry(entry) {
     const channelId = valueOf(entry, 'channel_id') || entry.target?.channelId || null;
     const targetId = entry.targetId || entry.target?.id || null;
 
-    const lines = [`**${isInvite ? 'Invite' : 'Name'}:** ${name ? show(name) : '—'}${targetId && !isInvite ? ` (\`${targetId}\`)` : ''}`];
+    const lines = [`**${isInvite ? 'Invite' : 'Name'}:** ${name ? show(name) : '-'}${targetId && !isInvite ? ` (\`${targetId}\`)` : ''}`];
     if (entry.executorId) lines.push(`**By:** <@${entry.executorId}> (\`${entry.executorId}\`)`);
     if (channelId) lines.push(`**Channel:** <#${channelId}>`);
     if (isInvite && entry.action === AuditLogEvent.InviteCreate) {

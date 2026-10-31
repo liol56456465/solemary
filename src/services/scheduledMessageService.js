@@ -152,7 +152,7 @@ export function nextRunAfter(schedule, timeZone, afterMs) {
 
 /** "2026-11-01 09:00" in `timeZone`. */
 export function formatInZone(ms, timeZone) {
-    if (ms === null || ms === undefined) return '—';
+    if (ms === null || ms === undefined) return '-';
     const zone = canonicalTimeZone(timeZone) || 'UTC';
     const p = zonedParts(Number(ms), zone);
     const pad = (n) => String(n).padStart(2, '0');

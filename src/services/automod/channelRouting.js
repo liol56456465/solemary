@@ -83,7 +83,7 @@ export function formatModLogLine(kind, fields = []) {
         switch (field.name) {
             case 'User': parts.push(value); break;
             case 'Moderator': parts.push(`by ${value}`); break;
-            case 'Case': parts.push(value.replace(' — ', ' ')); break;
+            case 'Case': parts.push(value.replace(' · ', ' ')); break;
             case 'Reason': parts.push(`“${value}”`); break;
             case 'Duration': parts.push(value); break;
             case 'Note': parts.push(value); break;

@@ -113,8 +113,8 @@ function buildDashboardEmbed(config, guild, panelStatus = null, ticketStats = nu
 
     let panelStatusValue = formatPanelStatusField(panelStatus);
 
-    const openTickets = ticketStats ? String(ticketStats.openCount) : '`—`';
-    const avgCloseTime = ticketStats ? formatCloseDuration(ticketStats.avgCloseTimeMs) : '`—`';
+    const openTickets = ticketStats ? String(ticketStats.openCount) : '`-`';
+    const avgCloseTime = ticketStats ? formatCloseDuration(ticketStats.avgCloseTimeMs) : '`-`';
     const feedbackSummary = ticketStats?.feedbackCount
         ? `${ticketStats.avgRating}/5 (${ticketStats.feedbackCount} rating${ticketStats.feedbackCount !== 1 ? 's' : ''})`
         : '`No ratings yet`';
@@ -804,7 +804,7 @@ async function handleCheckUser(selectInteraction, rootInteraction, guildConfig, 
         await userInteraction.followUp({
             embeds: [
                 new EmbedBuilder()
-                    .setTitle(`Ticket Check — ${targetUser.username}`)
+                    .setTitle(`Ticket Check: ${targetUser.username}`)
                     .setDescription(
                         `**Open Tickets:** ${openCount} / ${maxTickets}\n` +
                             `**Remaining:** ${Math.max(0, maxTickets - openCount)}\n\n` +

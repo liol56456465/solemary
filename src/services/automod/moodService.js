@@ -17,7 +17,7 @@ import { computeHeat, messageHeat, shouldCalmChannel } from './policy.js';
 const signals = new Map();   // channelId → [{ at, userId, weight }]
 const lastCalm = new Map();  // channelId → epoch ms
 
-export const CALM_NOTE = "Let's keep it friendly — slowmode is on for a few minutes.";
+export const CALM_NOTE = "Let's keep it friendly. Slowmode is on for a few minutes.";
 export const CALM_NOTE_NO_SLOWMODE = "Let's keep it friendly, everyone.";
 
 /**

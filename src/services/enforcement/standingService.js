@@ -71,8 +71,8 @@ export function standingFields(standing) {
     ].join('\n');
 
     const active = [];
-    if (activeBan) active.push(`Ban \`${activeBan.case_code}\` — ${activeBan.expires_at ? `ends ${day(activeBan.expires_at)} (${relative(activeBan.expires_at)})` : 'permanent'}`);
-    if (activeMute) active.push(`Mute \`${activeMute.case_code}\` — ends ${day(activeMute.expires_at)} (${relative(activeMute.expires_at)})`);
+    if (activeBan) active.push(`Ban \`${activeBan.case_code}\` · ${activeBan.expires_at ? `ends ${day(activeBan.expires_at)} (${relative(activeBan.expires_at)})` : 'permanent'}`);
+    if (activeMute) active.push(`Mute \`${activeMute.case_code}\` · ends ${day(activeMute.expires_at)} (${relative(activeMute.expires_at)})`);
 
     const appealLines = appeals.map((appeal) => `\`${appeal.case_code}\` ${appeal.type} · ${APPEAL_STATUS[appeal.status] ?? appeal.status} · filed ${day(appeal.created_at)}${appeal.decided_at ? `, decided ${day(appeal.decided_at)}` : ''}`);
 

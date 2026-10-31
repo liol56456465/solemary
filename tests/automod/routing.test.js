@@ -30,7 +30,7 @@ test('mod log line: one line per action', () => {
     const line = formatModLogLine('ban', [
         { name: 'User', value: 'alice (111)' },
         { name: 'Moderator', value: 'Mewvo (automatic)' },
-        { name: 'Case', value: '`k3f9a` — alice ban 1' },
+        { name: 'Case', value: '`k3f9a` · alice ban 1' },
         { name: 'Reason', value: 'Automod: NSFW content' },
         { name: 'Duration', value: '7 days (ends <t:1:F>)' },
         { name: 'DM', value: 'Not delivered' },

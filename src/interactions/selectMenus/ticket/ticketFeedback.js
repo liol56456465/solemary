@@ -5,11 +5,11 @@ import { getColor } from '../../../config/bot.js';
 import { logTicketFeedback } from '../../../utils/ticket/ticketLogging.js';
 
 const STAR_LABELS = {
-    '1': '⭐ 1 — Poor',
-    '2': '⭐ 2 — Below Average',
-    '3': '⭐ 3 — Average',
-    '4': '⭐ 4 — Good',
-    '5': '⭐ 5 — Excellent',
+    '1': '⭐ 1: Poor',
+    '2': '⭐ 2: Below Average',
+    '3': '⭐ 3: Average',
+    '4': '⭐ 4: Good',
+    '5': '⭐ 5: Excellent',
 };
 
 export default {

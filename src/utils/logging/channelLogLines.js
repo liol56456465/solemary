@@ -46,7 +46,7 @@ function overwriteKey(overwrites) {
 export function channelUpdateLines(before, after) {
     const lines = [];
     if (before.name !== after.name) lines.push(`**Name:** ${clip(before.name)} → ${clip(after.name)}`);
-    if ((before.topic || '') !== (after.topic || '')) lines.push(`**Topic:** ${clip(before.topic || '—', 150)} → ${clip(after.topic || '—', 150)}`);
+    if ((before.topic || '') !== (after.topic || '')) lines.push(`**Topic:** ${clip(before.topic || '-', 150)} → ${clip(after.topic || '-', 150)}`);
     if ((before.parentId || null) !== (after.parentId || null)) {
         lines.push(`**Category:** ${before.parentId ? `<#${before.parentId}>` : 'none'} → ${after.parentId ? `<#${after.parentId}>` : 'none'}`);
     }

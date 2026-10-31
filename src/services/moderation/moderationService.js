@@ -15,13 +15,13 @@ export class ModerationService {
   static buildHierarchyMessage({ actor, actorRole, targetRole, targetLabel, action }) {
     if (actor === 'moderator') {
       return (
-        `You cannot ${action} **${targetLabel}** — their role **${targetRole.name}** is equal to or above yours (**${actorRole.name}**). ` +
+        `You cannot ${action} **${targetLabel}**: their role **${targetRole.name}** is equal to or above yours (**${actorRole.name}**). ` +
         `In **Server Settings → Roles**, drag your moderator role above **${targetRole.name}**.`
       );
     }
 
     return (
-      `I cannot ${action} **${targetLabel}** — my role **${actorRole.name}** is equal to or below theirs (**${targetRole.name}**). ` +
+      `I cannot ${action} **${targetLabel}**: my role **${actorRole.name}** is equal to or below theirs (**${targetRole.name}**). ` +
       `In **Server Settings → Roles**, drag my bot role above **${targetRole.name}**.`
     );
   }
@@ -36,14 +36,14 @@ export class ModerationService {
       if (!botRole || !targetRole) {
         return `Bot role hierarchy blocked ${action} for ${targetLabel}`;
       }
-      return `Bot role **${botRole.name}** is too low for **${targetRole.name}** — move the bot role higher`;
+      return `Bot role **${botRole.name}** is too low for **${targetRole.name}**: move the bot role higher`;
     }
 
     const modRole = getHighestRole(moderator);
     if (!modRole || !targetRole) {
       return `Role hierarchy blocked ${action} for ${targetLabel}`;
     }
-    return `Your role **${modRole.name}** is too low for **${targetRole.name}** — move your role higher`;
+    return `Your role **${modRole.name}** is too low for **${targetRole.name}**: move your role higher`;
   }
 
   static validateHierarchy(moderator, target, action) {

@@ -86,7 +86,7 @@ function quote(text, max) {
 export function evidenceLines(rows, freshUrls = new Map(), { excerptMax = 160 } = {}) {
     return rows.map((row) => {
         const meta = `${row.added_by_username}, ${dateStamp(row.added_at)}`;
-        const note = row.note ? ` — ${truncate(row.note, 120)}` : '';
+        const note = row.note ? `: ${truncate(row.note, 120)}` : '';
         if (row.kind === 'image') {
             const fresh = freshUrls.get(String(row.id));
             const stored = row.store_channel_id && row.store_message_id ? jumpLink(row.store_channel_id, row.store_message_id) : null;

@@ -28,7 +28,7 @@ test('panel summary: banned non-member without a record', () => {
     const text = panelSummaryLines(user, state).join('\n');
     assert.match(text, /In server:\*\* no/);
     assert.match(text, /2 of 3/);
-    assert.match(text, /banned \(no record/);
+    assert.match(text, /banned outside the panel \(no record\)/);
 });
 
 test('last cases: type, name, date, status, and a pointer to older ones', () => {

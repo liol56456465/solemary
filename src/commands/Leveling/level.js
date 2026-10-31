@@ -22,7 +22,7 @@ const levelCommand = mergeSubcommands(
         .addSubcommand((subcommand) =>
             subcommand
                 .setName('setup')
-                .setDescription('Set up the leveling system — this also enables it')
+                .setDescription('Set up the leveling system (this also enables it)')
                 .addChannelOption((option) =>
                     option
                         .setName('channel')

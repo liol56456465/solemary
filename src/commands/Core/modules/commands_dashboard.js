@@ -81,7 +81,7 @@ export function buildOverviewEmbed(snapshot, guild) {
   const categoryLines = snapshot.categories.map((category) => {
     const icon = getCategoryStatus(category);
     const subcommandNote = category.commands.some((c) => c.isSubcommand) ? ' · incl. subcommands' : '';
-    return `${icon} ${category.icon} **${category.displayName}** — ${category.enabledCount}/${category.totalCount}${subcommandNote}`;
+    return `${icon} ${category.icon} **${category.displayName}**: ${category.enabledCount}/${category.totalCount}${subcommandNote}`;
   });
 
   const fields = [
@@ -113,8 +113,8 @@ export function buildOverviewEmbed(snapshot, guild) {
     name: 'How to Use',
     value: [
       '• Select a category below to manage commands and subcommands',
-      '• `/commands disable` — turn off a category or specific command',
-      '• `/commands enable` — turn something back on',
+      '• `/commands disable`: turn off a category or specific command',
+      '• `/commands enable`: turn something back on',
     ].join('\n'),
   });
 
@@ -219,7 +219,7 @@ export function buildCategoryComponents(guildId, category) {
 
     return new StringSelectMenuOptionBuilder()
       .setLabel(label)
-      .setDescription((enabled ? '🟢 Enabled — click to disable' : '🔴 Disabled — click to enable').slice(0, 100))
+      .setDescription((enabled ? '🟢 Enabled. Click to disable.' : '🔴 Disabled. Click to enable.').slice(0, 100))
       .setValue(command.name);
   });
 

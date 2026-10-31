@@ -93,7 +93,7 @@ async function handleEvidence(interaction, client, sub, code) {
         const firstImage = rows.find((row) => fresh.has(String(row.id)));
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
-                title: truncate(`Evidence — ${record.case_code} (${record.name})`, 256),
+                title: truncate(`Evidence: ${record.case_code} (${record.name})`, 256),
                 description: rows.length
                     ? fitLines(evidenceLines(rows, fresh, { excerptMax: 300 }), 4096)
                     : 'No evidence yet. Add some with `/case evidence add`.',
@@ -320,7 +320,7 @@ export default {
             const evidence = await evidenceDisplay(client, code);
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [createEmbed({
-                    title: truncate(`Case history — ${record.case_code} (${record.name})`, 256),
+                    title: truncate(`Case history: ${record.case_code} (${record.name})`, 256),
                     description: truncate(lines.join('\n') || 'This case was never edited.', 4096),
                     fields: evidence.field ? [evidence.field] : [],
                     image: evidence.imageUrl,
@@ -340,14 +340,14 @@ export default {
         if (focused.name === 'reason_key') {
             const keys = await listReasonKeys(interaction.guildId, focused.value);
             return interaction.respond(keys.map((row) => ({
-                name: truncate(`${getReason(row.reason_key)?.label || row.reason_key} (${row.reason_key}) — ${row.count} case${row.count === 1 ? '' : 's'}`, 100),
+                name: truncate(`${getReason(row.reason_key)?.label || row.reason_key} (${row.reason_key}): ${row.count} case${row.count === 1 ? '' : 's'}`, 100),
                 value: row.reason_key,
             })));
         }
         if (focused.name !== 'code') return interaction.respond([]);
         const rows = await searchCases(interaction.guildId, focused.value);
         await interaction.respond(rows.map((row) => ({
-            name: truncate(`${row.case_code} — ${row.name} (${row.type}, ${row.target_username})${row.voided_at ? ' · voided' : ''}`, 100),
+            name: truncate(`${row.case_code}: ${row.name} (${row.type}, ${row.target_username})${row.voided_at ? ' · voided' : ''}`, 100),
             value: row.case_code,
         })));
     },

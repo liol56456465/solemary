@@ -28,8 +28,8 @@ test('second chance eligibility: first offence only, once per window, not on pro
 });
 
 test('second chance notice mentions the member and says what to fix', () => {
-    assert.equal(secondChanceNotice('caps', '42', true), '<@42> Please repost without all the caps — no warning this time.');
-    assert.equal(secondChanceNotice('english', '42', false), '<@42> Please edit your message in English — no warning this time.');
+    assert.equal(secondChanceNotice('caps', '42', true), '<@42> Please repost without all the caps. No warning this time.');
+    assert.equal(secondChanceNotice('english', '42', false), '<@42> Please edit your message in English. No warning this time.');
     assert.match(secondChanceNotice('characters', '1', true), /fancy fonts/);
 });
 

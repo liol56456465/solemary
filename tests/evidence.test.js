@@ -53,7 +53,7 @@ test('evidenceLines: links with excerpt and images with fresh or stored link', (
     assert.match(lines[0], /^\*\*#1\*\* 🔗 https:\/\/discord\.com\/channels\/1\/2\/3 "kit: bad words" · mod, <t:/);
     assert.match(lines[1], /\[image\]\(https:\/\/cdn\.example\/fresh\.png\)/);
     assert.match(lines[1], new RegExp(`\\[stored\\]\\(https://discord\\.com/channels/[^/]+/${C}/${M}\\)`));
-    assert.match(lines[1], /— screenshot/);
+    assert.match(lines[1], /: screenshot/);
     assert.match(lines[2], /stored message missing/);
 });
 

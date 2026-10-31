@@ -6,11 +6,11 @@ import { logTicketFeedback } from '../../../utils/ticket/ticketLogging.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 
 const STAR_LABELS = {
-    '1': '⭐ 1 — Poor',
-    '2': '⭐ 2 — Below Average',
-    '3': '⭐ 3 — Average',
-    '4': '⭐ 4 — Good',
-    '5': '⭐ 5 — Excellent',
+    '1': '⭐ 1: Poor',
+    '2': '⭐ 2: Below Average',
+    '3': '⭐ 3: Average',
+    '4': '⭐ 4: Good',
+    '5': '⭐ 5: Excellent',
 };
 
 const feedbackHandler = {

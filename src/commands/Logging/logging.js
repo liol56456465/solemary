@@ -10,13 +10,13 @@ import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('logging')
-        .setDescription('Manage server logging — channels, filters, and event categories.')
+        .setDescription('Manage server logging: channels, filters and event categories.')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false)
         .addSubcommand((subcommand) =>
             subcommand
                 .setName('dashboard')
-                .setDescription('Open the logging dashboard — set channels, filters, and toggle categories.'),
+                .setDescription('Open the logging dashboard: channels, filters and categories.'),
         )
         .addSubcommand((subcommand) =>
             subcommand

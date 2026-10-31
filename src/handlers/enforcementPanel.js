@@ -122,12 +122,12 @@ export function panelSummaryLines(targetUser, state, appealStatuses = new Map(),
 
     const active = [];
     if (state.activeBan) {
-        active.push(`ban \`${state.activeBan.case_code}\` — ${state.activeBan.expires_at ? `ends ${stamp(state.activeBan.expires_at)}` : 'permanent'}`);
+        active.push(`ban \`${state.activeBan.case_code}\` · ${state.activeBan.expires_at ? `ends ${stamp(state.activeBan.expires_at)}` : 'permanent'}`);
     } else if (state.banned) {
-        active.push('banned (no record — banned outside the panel)');
+        active.push('banned outside the panel (no record)');
     }
     if (state.activeMute) {
-        active.push(`mute \`${state.activeMute.case_code}\` — ends ${stamp(state.activeMute.expires_at)}`);
+        active.push(`mute \`${state.activeMute.case_code}\` · ends ${stamp(state.activeMute.expires_at)}`);
     } else if (state.muted) {
         active.push('has the muted role (no record)');
     }
@@ -147,7 +147,7 @@ export function panelSummaryLines(targetUser, state, appealStatuses = new Map(),
 export function recentCasesText(rows, total, appealStatuses = new Map()) {
     if (!rows.length) return 'None';
     const lines = rows.map((row) => `\`${row.case_code}\` **${row.type}**${row.is_test ? ' (test)' : ''} · ${truncate(row.name, 60)} · <t:${Math.floor(new Date(row.created_at).getTime() / 1000)}:d> · ${caseStatusLabel(row, appealStatuses.get(row.case_code))}${row.is_imported ? ' · imported' : ''}`);
-    if (total > rows.length) lines.push(`-# ${total - rows.length} older — see /background`);
+    if (total > rows.length) lines.push(`-# ${total - rows.length} older: see /background`);
     return lines.join('\n');
 }
 
@@ -187,7 +187,7 @@ function reasonSelect(moderatorId, nonce, action) {
         ...ENFORCEMENT_REASONS.map((reason) => ({
             label: reason.label,
             value: reason.key,
-            description: action === 'ban' && reason.severe ? 'Severe — ban is unappealable by default' : undefined,
+            description: action === 'ban' && reason.severe ? 'Severe: the ban is unappealable by default' : undefined,
         })),
         { label: 'Custom…', value: CUSTOM_REASON_KEY, description: 'Type your own reason' },
     ];
@@ -206,7 +206,7 @@ function cancelRow(moderatorId, nonce, extra = []) {
 
 function stepEmbed(flow, description) {
     return createEmbed({
-        title: `${ACTION_LABELS[flow.type]} — ${truncate(flow.targetUsername, 200)}`,
+        title: `${ACTION_LABELS[flow.type]}: ${truncate(flow.targetUsername, 200)}`,
         description,
         color: 'primary',
     });
@@ -338,7 +338,7 @@ function resultPayload(flow, result) {
 
     return {
         embeds: [createEmbed({
-            title: `${ACTION_LABELS[flow.type]} done — ${truncate(flow.targetUsername, 200)}`,
+            title: `${ACTION_LABELS[flow.type]} done: ${truncate(flow.targetUsername, 200)}`,
             description: truncate(lines.join('\n') || 'Done.', 4096),
             color: 'success',
         })],
