@@ -95,7 +95,7 @@ export function checkoutPage(ctx, { session, choice, current = null, values = {}
     return layout(ctx, {
         title: 'Checkout', active: 'me',
         body: html`<div class="wrap page"><a class="back-link" href="/pricing">← Plans</a>
-<header class="page-head"><p class="section-num">Checkout</p><h1>${gift ? `Gift Mewvo ${q.plan.name}` : `Mewvo ${q.plan.name}`}</h1></header>
+<header class="page-head"><h1>${gift ? `Gift Mewvo ${q.plan.name}` : `Mewvo ${q.plan.name}`}</h1></header>
 ${testBanner()}${notices({ error })}
 <div class="checkout"><div class="checkout-options">
 ${seg('Plan', PAID_PLANS.map((p) => ({ label: p.name, sub: `${euros(priceCents(p.id, choice.period))}/${per}`, href: others({ planId: p.id }), current: p.id === choice.planId })))}
@@ -168,7 +168,7 @@ export function receiptPage(ctx, { session, order, key = null }) {
     return layout(ctx, {
         title: `Order #${order.id}`, active: 'me',
         body: html`<div class="wrap page prose"><a class="back-link" href="/me/billing">← Subscription</a>
-<p class="section-num">Receipt</p><h1>${gift ? 'Your gift key is ready' : 'Thanks, your plan is active'}</h1>
+<h1>${gift ? 'Your gift key is ready' : 'Thanks, your plan is active'}</h1>
 ${testBanner()}
 ${gift && key ? html`<div class="key-box"><p class="seg-label">Gift key · ${planName(key.plan_id)}, ${key.duration_days} days${key.gift_to ? ` · to ${key.gift_to}` : ''}</p><p class="key-big"><code>${key.code}</code></p>
 ${key.gift_message ? html`<blockquote class="gift-message">${key.gift_message}</blockquote>` : ''}
@@ -197,7 +197,7 @@ ${peek.expiresAt ? html`<p class="note">Redeem by ${when(peek.expiresAt)}.</p>` 
 export function redeemPage(ctx, { session, code = '', peek = null, error = null }) {
     return layout(ctx, {
         title: 'Redeem a key', active: 'me',
-        body: html`<div class="wrap page prose"><p class="section-num">Subscription</p><h1>${peek?.from ? 'You got a gift' : 'Redeem a key'}</h1>
+        body: html`<div class="wrap page prose"><h1>${peek?.from ? 'You got a gift' : 'Redeem a key'}</h1>
 <p class="lead">Logged in as <strong>${session.username}</strong>. The key's plan is added to this account.</p>
 ${testBanner()}${notices({ error })}${giftCard(peek)}${redeemForm(session, code)}
 <p class="note"><a href="/me/billing">Back to Subscription</a></p></div>`,

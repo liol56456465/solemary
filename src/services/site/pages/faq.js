@@ -43,9 +43,9 @@ export function faqPage(ctx) {
         title: 'FAQ', active: 'faq', path: '/faq',
         description: 'Answers about Mewvo: what it does, the warning ladder, appeals, stored data and how to reach staff.',
         body: html`<div class="wrap page">
-<header class="page-head page-head-split"><div><p class="section-num">Help</p><h1>Questions and answers</h1></div>
+<header class="page-head page-head-split"><div><h1>Questions and answers</h1></div>
 <p class="lead">Short answers. For step-by-step guides, see the <a href="/docs">docs</a>.</p></header>
-${groups.map((g, i) => html`<section class="faq-group split split-narrow" aria-labelledby="faq-${i}"><div class="split-copy"><p class="section-num"><span class="section-index">${String(i + 1).padStart(2, '0')}</span></p><h2 id="faq-${i}">${g.group}</h2></div>
+${groups.map((g, i) => html`<section class="faq-group split split-narrow" aria-labelledby="faq-${i}"><div class="split-copy"><h2 id="faq-${i}">${g.group}</h2></div>
 <div class="faq-list">${g.items.map(([q, a]) => html`<details class="faq"><summary>${q}</summary><div class="faq-answer">${a}</div></details>`)}</div></section>`)}</div>`,
     });
 }

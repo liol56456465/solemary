@@ -16,7 +16,7 @@ function updatedOn(value) {
 }
 
 export function rulesPage(ctx, data) {
-    const head = html`<header class="page-head page-head-split"><div><p class="section-num">Community</p><h1>Server rules</h1></div>
+    const head = html`<header class="page-head page-head-split"><div><h1>Server rules</h1></div>
 <p class="lead">The rules of the Mewvo server. When staff warn, mute, kick or ban for one of them, the DM names the rule and links here.</p></header>`;
     let content;
     if (!data) {

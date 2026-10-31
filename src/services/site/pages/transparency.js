@@ -76,7 +76,7 @@ export function transparencyPage(ctx, report) {
         title: 'Transparency report', active: 'transparency', path: '/transparency',
         description: 'How many warnings, mutes, kicks and bans the Mewvo server gave each month, and how appeals were decided. Numbers only.',
         body: html`<div class="wrap page">
-<header class="page-head page-head-split"><div><p class="section-num">Moderation</p><h1>Transparency report</h1></div>
+<header class="page-head page-head-split"><div><h1>Transparency report</h1></div>
 <p class="lead">How often staff on the Mewvo server warned, muted, kicked and banned, and how appeals went, month by month. Numbers only: no names, no reasons, no moderators.</p></header>
 <p class="note">From <time datetime="${first.start.toISOString().slice(0, 10)}">${DAY_NAME.format(first.start)}</time> to <time datetime="${generated.toISOString().slice(0, 10)}">${DAY_NAME.format(generated)}</time>, in UTC. Updated at most every 10 minutes.</p>
 ${summary(report)}
@@ -93,7 +93,7 @@ ${explanation()}</section></div>`,
 export function transparencyErrorPage(ctx) {
     return layout(ctx, {
         title: 'Transparency report', active: 'transparency', path: '/transparency',
-        body: html`<div class="wrap page prose"><p class="section-num">Moderation</p><h1>Transparency report</h1>
+        body: html`<div class="wrap page prose"><h1>Transparency report</h1>
 <p class="notice notice-bad" role="alert">The report could not be loaded right now because the database is not responding. No numbers are shown rather than wrong ones; please try again in a few minutes.</p></div>`,
     });
 }

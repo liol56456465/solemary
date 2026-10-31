@@ -110,7 +110,7 @@ export function commandsPage(ctx) {
     return layout(ctx, {
         title: 'Commands', active: 'commands', path: '/commands',
         description: 'The Mewvo commands every member can use.',
-        body: html`<div class="wrap page"><header class="page-head page-head-split"><div><p class="section-num">Reference</p><h1>Commands</h1></div>
+        body: html`<div class="wrap page"><header class="page-head page-head-split"><div><h1>Commands</h1></div>
 <p class="lead">The commands every member can use. Staff tools live on the dashboard and need the Administrator role.</p></header>
 ${groups.length > 1 ? html`<nav class="jump" aria-label="Command groups"><ul>${groups.map((g) => html`<li><a href="#c-${g.key}">${g.label}</a></li>`)}</ul></nav>` : ''}
 ${groups.map((g) => html`<section class="cmd-group" id="c-${g.key}" aria-labelledby="h-${g.key}"><h2 id="h-${g.key}">${g.label}</h2>
@@ -122,7 +122,7 @@ export function aboutPage(ctx) {
     return layout(ctx, {
         title: 'About', active: 'about', path: '/about',
         description: 'About Mewvo, the Discord bot of the Mewvo server.',
-        body: html`<div class="wrap page prose"><p class="section-num">About</p><h1>About Mewvo</h1>
+        body: html`<div class="wrap page prose"><h1>About Mewvo</h1>
 <p class="lead">Mewvo is the bot of the Mewvo Discord server, built and run by its owner for that community.</p>
 <h2>How it started</h2>
 <p>Mewvo began as a fork of TitanBot, an open-source (MIT) Discord bot, and has since been rebuilt around the server’s own needs: an enforcement system with case codes and appeals, a warning ladder, automod, tickets and modmail, and a web dashboard for the staff team.</p>
@@ -203,7 +203,7 @@ const formatNumber = (value) => (Number(value) || 0).toLocaleString('en-US');
 
 /** `board` is the reader's result (with one row too many when there is a next page), or null when the read failed. */
 export function leaderboardPage(ctx, { page, board }) {
-    const head = html`<header class="page-head page-head-split"><div><p class="section-num">Leveling</p><h1>Leaderboard</h1></div>
+    const head = html`<header class="page-head page-head-split"><div><h1>Leaderboard</h1></div>
 <p class="lead">The most active members of the Mewvo server by level and total XP. You earn XP by chatting; members who delete their data with <code>/wipedata</code> are not listed.</p></header>`;
     let content;
     if (!board) {
@@ -266,7 +266,7 @@ export function statusPage(ctx, status) {
     return layout(ctx, {
         title: 'Status', active: 'status', refresh: 60, path: '/status',
         description: 'Whether the Mewvo bot is online.',
-        body: html`<div class="wrap page prose"><p class="section-num">System</p><h1>Status</h1>
+        body: html`<div class="wrap page prose"><h1>Status</h1>
 <p class="status status-${state}"><span class="status-dot" aria-hidden="true"></span>${label}</p>
 <p class="lead">${text}</p>
 ${uptime !== null ? html`<p>Up for ${uptimeWords(uptime)}.</p>` : ''}
@@ -279,7 +279,7 @@ ${uptime !== null ? html`<p>Up for ${uptimeWords(uptime)}.</p>` : ''}
 export function notFoundPage(ctx) {
     return layout(ctx, {
         title: 'Not found',
-        body: html`<div class="wrap page prose"><p class="section-num">Error 404</p><h1>Page not found</h1><p class="lead">There is no page at this address. It may have moved, or the link has a typo.</p>
+        body: html`<div class="wrap page prose"><h1>Page not found</h1><p class="lead">There is no page at this address. It may have moved, or the link has a typo.</p>
 <p class="hero-actions"><a class="button" href="/">Go to the home page</a><a class="button button-quiet" href="/docs">Read the docs</a></p></div>`,
     });
 }

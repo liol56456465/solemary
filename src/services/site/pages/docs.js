@@ -19,10 +19,10 @@ export const GUIDES = [
 <p>Members without Administrator who try a staff command are told so and pointed to the channel where they can request a role.</p>
 <h2 id="first-action">Your first action</h2>
 <ol class="steps-list"><li>Run <code>/enforcements user:@member</code>. The panel shows the member’s account age, time in the server, counted warnings, ladder level, any active punishment and their last cases. Only you can see it.</li>
-<li>Press the action: <kbd>Ban</kbd>, <kbd>Kick</kbd>, <kbd>Mute</kbd> or <kbd>Warn</kbd> (or <kbd>Unban</kbd>, <kbd>Unmute</kbd>, <kbd>Remove warn</kbd> when they apply).</li>
+<li>Press the action: <strong>Ban</strong>, <strong>Kick</strong>, <strong>Mute</strong> or <strong>Warn</strong> (or <strong>Unban</strong>, <strong>Unmute</strong>, <strong>Remove warn</strong> when they apply).</li>
 <li>Choose a prebuilt reason or <strong>Custom…</strong> and type one.</li>
 <li>For a mute, give a duration such as <code>30m</code>, <code>24h</code>, <code>7d</code> or <code>1mo</code>. For a ban, the same, or leave it blank for a permanent ban.</li>
-<li>Check the summary and press <kbd>Confirm</kbd>.</li></ol>
+<li>Check the summary and press <strong>Confirm</strong>.</li></ol>
 <p>The member gets a DM before a kick or ban happens. If the DM can’t be delivered, the action still goes ahead and you are told. The panel expires after 15 minutes; run the command again if it does.</p>
 <h2 id="every-week">Commands you’ll use</h2>
 <dl class="ref-list"><div><dt><code>/background</code></dt><dd>A member’s full case history.</dd></div>
@@ -64,11 +64,11 @@ ${appealFormMock()}
 <div><dt>Case code</dt><dd>From the DM, for example <code>k7xq2</code>.</dd></div>
 <div><dt>More info</dt><dd>Optional, anything else staff should know.</dd></div></dl>
 <h2 id="after">What happens next</h2>
-<ul class="ticks"><li><strong>Ban and kick appeals</strong> open a channel in the support server with you in it, so staff can ask questions.</li>
+<ul><li><strong>Ban and kick appeals</strong> open a channel in the support server with you in it, so staff can ask questions.</li>
 <li><strong>Mute and warning appeals</strong> are reviewed by staff in the main server.</li>
 <li>The administrators decide. You get the decision by DM. An accepted appeal lifts what is still active and, for bans and kicks, comes with a one-time invite back.</li></ul>
 <h2 id="limits">Limits</h2>
-<ul class="ticks"><li>One pending appeal per case.</li>
+<ul><li>One pending appeal per case.</li>
 <li>After a denial, wait 7 days before appealing the same case again.</li>
 <li>Bans and mutes can be appealed while they last. Warnings and kicks within 30 days.</li>
 <li>Some cases can’t be appealed, for example a permanent ladder ban after 6 months. The DM says so.</li></ul>`,
@@ -95,9 +95,9 @@ export function docsPage(ctx) {
         title: 'Docs', active: 'docs', path: '/docs',
         description: 'Short guides to Mewvo: getting started for staff, how warnings escalate, how appeals work and using the dashboard.',
         body: html`<div class="wrap page">
-<header class="page-head page-head-split"><div><p class="section-num">Docs</p><h1>Guides</h1></div>
-<p class="lead">Short, accurate guides to how Mewvo behaves. For every command members can use, see <a href="/commands">Commands</a>.</p></header>
-<ol class="guide-list">${GUIDES.map((g, i) => html`<li><a class="guide" href="/docs/${g.slug}"><span class="guide-num">${String(i + 1).padStart(2, '0')}</span><span class="guide-text"><span class="guide-title">${g.title}</span><span class="guide-summary">${g.summary}</span></span><span class="guide-time">${g.minutes} min read</span></a></li>`)}</ol></div>`,
+<header class="page-head page-head-split"><div><h1>Guides</h1></div>
+<p class="lead">How Mewvo works, step by step. For every command members can use, see <a href="/commands">Commands</a>.</p></header>
+<ol class="guide-list">${GUIDES.map((g) => html`<li><a class="guide" href="/docs/${g.slug}"><span class="guide-text"><span class="guide-title">${g.title}</span><span class="guide-summary">${g.summary}</span></span></a></li>`)}</ol></div>`,
     });
 }
 
@@ -108,7 +108,7 @@ export function guidePage(ctx, guide) {
         title: guide.title, active: 'docs', path: `/docs/${guide.slug}`,
         description: guide.summary,
         body: html`<div class="wrap page"><div class="doc">
-<nav class="crumbs" aria-label="Breadcrumb"><a href="/docs">Docs</a><span aria-hidden="true">/</span><span>${String(index + 1).padStart(2, '0')}</span></nav>
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/docs">Docs</a><span aria-hidden="true">/</span><span>${guide.title}</span></nav>
 <header class="doc-head"><h1>${guide.title}</h1><p class="lead">${guide.summary}</p></header>
 <div class="prose doc-body">${guide.body(ctx)}</div>
 <nav class="doc-next" aria-label="Next guide">${next ? html`<a href="/docs/${next.slug}"><span class="doc-next-label">Next</span>${next.title}</a>` : html`<a href="/faq"><span class="doc-next-label">Still have questions?</span>Read the FAQ</a>`}</nav></div></div>`,

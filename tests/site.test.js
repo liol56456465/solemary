@@ -585,21 +585,24 @@ test('pricing: names, prices, perks and the comparison come from config/site/pla
     }
 });
 
-test('home: the numbered sections, a real DM preview, the dashboard screenshot and the pricing teaser', async () => {
+test('home: plain layout, a real DM preview, what it does with links, the price in one line', async () => {
     const site = await serve();
     try {
         const body = (await site.get('/')).body;
         let last = 0;
         for (const id of ['enforcement', 'ladder', 'appeals', 'automod', 'tickets', 'dashboard', 'community']) {
             const at = body.indexOf(`id="${id}"`);
-            assert.ok(at > last, `section ${id} in order`);
+            assert.ok(at > last, `item ${id} in order`);
             last = at;
         }
         assert.ok(body.includes('Warning 2 of 3 in Mewvo') && body.includes('At 3 warnings you will be banned.'), 'warnDm wording');
         assert.ok(body.includes(`<span class="dc-link">${SUPPORT}</span>`), 'the real support invite in the DM preview');
-        assert.ok(body.includes('Appeal a punishment') && body.includes('Why should it be lifted?'), 'appeal form wording');
-        assert.ok(body.includes('srcset="/img/screen-overview-dark.webp" media="(prefers-color-scheme: dark)"'));
         assert.ok(body.includes('€1.99') && body.includes('href="/pricing"'));
+        for (const href of ['/docs/warnings', '/docs/appeals', '/docs/using-the-dashboard', '/features#f-automod']) assert.ok(body.includes(`href="${href}"`), href);
+        // No template furniture: numbered eyebrows, tick lists, a CTA band, made-up handles.
+        for (const sign of ['section-num', 'section-index', 'class="ticks"', 'class="cta"', 'kicker', 'mira', 'pixelfox', '—']) {
+            assert.ok(!body.includes(sign), sign);
+        }
         for (const word of ['Supercharge', 'Unleash', 'Elevate', 'Seamless', 'Next-level', 'Revolutioni', 'Empower', 'trusted by']) {
             assert.ok(!body.toLowerCase().includes(word.toLowerCase()), word);
         }

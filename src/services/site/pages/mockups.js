@@ -27,7 +27,7 @@ function frame(label, body, { className = '', caption = '' } = {}) {
 export function warnDmMock(ctx, { caption = '' } = {}) {
     return frame('Direct message · Mewvo', botMessage(html`<p><strong>Appeal here:</strong> <span class="dc-link">${inviteText(ctx)}</span></p>
 <p><strong>Warning 2 of 3 in Mewvo</strong></p>
-<p>By: mira</p>
+<p>By: Moderator</p>
 <p>Reason: Spam in #general</p>
 <p>Date: <span class="dc-stamp">Thursday, 29 October 2026 at 14:05</span></p>
 <p>Case code: <code class="dc-code">k7xq2</code></p>
@@ -57,42 +57,6 @@ ${field('Case code', 'From the DM you got when you were punished, e.g. k7m2qx.',
 ${field('More info (optional)', 'Anything else the administrators should know.', '', { tall: true, required: false, placeholder: true })}
 <p class="dc-modal-actions"><span class="dc-btn dc-btn-link">Cancel</span><span class="dc-btn dc-btn-primary">Submit</span></p></div>
 ${caption ? html`<figcaption class="mock-caption">${caption}</figcaption>` : ''}</figure>`;
-}
-
-/** The /enforcements panel: enforcementPanel.buildPanel (summary lines + action buttons). */
-export function enforcementPanelMock({ caption = '' } = {}) {
-    return frame('#staff-commands', html`<p class="dc-command"><span class="dc-slash">/enforcements</span> <span class="dc-opt">user</span> <span class="dc-mention">@pixelfox</span></p>
-${botMessage(html`<div class="dc-embed"><p class="dc-embed-title">Enforcements: pixelfox</p>
-<p><strong>User:</strong> pixelfox (<span class="dc-mention">@pixelfox</span>)</p>
-<p><strong>Account created:</strong> <span class="dc-stamp">2 years ago</span></p>
-<p><strong>In server:</strong> yes, joined <span class="dc-stamp">5 months ago</span> · 3 roles</p>
-<p><strong>Counted warns:</strong> 1 of 3 · <strong>Ladder level:</strong> 0</p>
-<p><strong>Active punishment:</strong> none</p>
-<p class="dc-embed-field">Last cases (1 of 1)</p>
-<p><code class="dc-code">p2nfe</code> <strong>warn</strong> · Off-topic · 12/10/2026 · active</p></div>
-<p class="dc-buttons"><span class="dc-btn dc-btn-danger">Ban</span><span class="dc-btn dc-btn-danger">Kick</span><span class="dc-btn dc-btn-primary">Mute</span><span class="dc-btn dc-btn-primary">Warn</span><span class="dc-btn dc-btn-grey">Remove warn</span></p>
-<p class="dc-ephemeral">Only you can see this</p>`)}`, { className: 'mock-panel', caption });
-}
-
-/** An automod review card in the staff review channel (reviewFormat: Keep / Undo / Change to…). */
-export function reviewCardMock({ caption = '' } = {}) {
-    return frame('#automod-review', botMessage(html`<div class="dc-embed dc-embed-warn"><p class="dc-embed-title">Warned · Spam</p>
-<p><span class="dc-mention">@pixelfox</span> sent 6 messages in 5 seconds in <span class="dc-mention">#general</span>.</p>
-<p>1st Spam offence in 30 days.</p>
-<p class="dc-embed-field">Message (deleted)</p><p class="dc-quote">anyone up for ranked??</p>
-<p class="dc-embed-field">Case</p><p><code class="dc-code">m3kpv</code></p>
-<p class="dc-embed-foot">pixelfox</p></div>
-<p class="dc-buttons"><span class="dc-btn dc-btn-success">Keep</span><span class="dc-btn dc-btn-danger">Undo</span></p>
-<p class="dc-select">Change to…</p>`), { className: 'mock-review', caption });
-}
-
-/** A modmail channel: the member's message relayed, a staff reply, and an internal note. */
-export function modmailMock({ caption = '' } = {}) {
-    const line = (initial, name, tag, text, { note = false } = {}) => html`<div class="dc-msg${note ? ' dc-note' : ''}"><span class="dc-avatar dc-avatar-letter" aria-hidden="true">${initial}</span><div class="dc-content">
-<p class="dc-meta"><span class="dc-name">${name}</span>${tag ? html`<span class="dc-app">${tag}</span>` : ''}<span class="dc-time">Today at 09:12</span></p><p>${text}</p></div></div>`;
-    return frame('#modmail-nightowl', html`${line('N', 'nightowl_', 'via DM', 'Hi, someone keeps sending me weird links in DMs after I left #trading. Can you look?')}
-${line('T', 'tobi', '', 'Thanks for telling us. Can you send the username and a screenshot?')}
-${line('M', 'mira', '', '// same account as case r4mzp, checking the join date', { note: true })}`, { className: 'mock-modmail', caption });
 }
 
 /** The warning ladder as a list of steps (enforcementConfig: 3 warns, 7 days, 30 days, permanent). */

@@ -54,7 +54,7 @@ export function privacyPage(ctx) {
     return layout(ctx, {
         title: 'Privacy Policy', active: 'privacy', path: '/privacy',
         description: 'What the Mewvo bot and website store about you, why, for how long, and your rights.',
-        body: html`<div class="wrap page prose"><p class="section-num">Legal</p><h1>Privacy Policy</h1>
+        body: html`<div class="wrap page prose"><h1>Privacy Policy</h1>
 ${updatedLine()}
 <p class="lead">What Mewvo stores about you, why, for how long, who else sees it, and how to get a copy or have it deleted. Your data is never sold, never used for advertising and never used to train AI models.</p>
 
@@ -134,7 +134,7 @@ export function termsPage(ctx) {
     return layout(ctx, {
         title: 'Terms and Conditions', active: 'terms', path: '/terms',
         description: 'The rules for using the Mewvo bot, its website and its plans.',
-        body: html`<div class="wrap page prose"><p class="section-num">Legal</p><h1>Terms and Conditions</h1>
+        body: html`<div class="wrap page prose"><h1>Terms and Conditions</h1>
 ${updatedLine()}
 <p class="lead">The rules for using the Mewvo Discord bot, this website and its plans. By using any of them you accept these terms. If you don’t, please don’t use them.</p>
 
