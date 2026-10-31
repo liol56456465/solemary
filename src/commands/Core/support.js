@@ -3,7 +3,14 @@ import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
-const SUPPORT_SERVER_URL = "https://discord.gg/QnWNz2dKCE";
+import { enforcementConfig } from '../../config/enforcement.js';
+import { inviteOrNull } from '../../services/site/shell.js';
+
+// The same invite the website and the DMs use (setting supportServerInvite, dashboard-editable).
+const FALLBACK_INVITE = 'https://discord.gg/7Ckv9Bt577';
+export function supportInviteUrl(config = enforcementConfig) {
+  return inviteOrNull(config?.supportServerInvite) || FALLBACK_INVITE;
+}
 export default {
     data: new SlashCommandBuilder()
     .setName("support")
@@ -14,13 +21,13 @@ export default {
       const supportButton = new ButtonBuilder()
         .setLabel("Join Support Server")
         .setStyle(ButtonStyle.Link)
-        .setURL(SUPPORT_SERVER_URL);
+        .setURL(supportInviteUrl());
 
       const actionRow = new ActionRowBuilder().addComponents(supportButton);
 
       await InteractionHelper.safeReply(interaction, {
         embeds: [
-          createEmbed({ title: "Need Help?", description: "Join our official support server for assistance, report bugs, or suggest features. If you are customizing this bot, remember to change the link in the code!" }),
+          createEmbed({ title: "Need help?", description: "Join the Mewvo support server to ask questions, appeal, report bugs or suggest features." }),
         ],
         components: [actionRow],
         flags: MessageFlags.Ephemeral,

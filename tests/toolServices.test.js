@@ -80,3 +80,10 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
     assert.ok(silentFail.failed.length === 4, 'a false from delete is an error');
     await assert.rejects(wipeMemberData({ db }, 'x', me), /bad ids/);
 });
+
+test('/support links the configured support invite, never the old hard-coded one', async () => {
+    const { supportInviteUrl } = await import('../src/commands/Core/support.js');
+    assert.equal(supportInviteUrl({ supportServerInvite: 'https://discord.gg/abcDEF1' }), 'https://discord.gg/abcDEF1');
+    assert.equal(supportInviteUrl({ supportServerInvite: 'javascript:alert(1)' }), 'https://discord.gg/7Ckv9Bt577');
+    assert.equal(supportInviteUrl({}), 'https://discord.gg/7Ckv9Bt577');
+});
