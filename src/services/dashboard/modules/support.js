@@ -35,7 +35,7 @@ export default {
             }))
             : '';
         return html`${section(d.supportGuild ? `Support server · ${d.supportGuild.name}` : 'Support server', html`${form}${appeals}
-<p class="muted">Invite sent to banned members: ${d.invite || 'not set'} — <a href="${path('/enforcement')}">change on Enforcement &amp; appeals</a>.</p>`)}`;
+<p class="muted">Invite sent to banned members: ${d.invite || 'not set'}. <a href="${path('/enforcement')}">change on Enforcement &amp; appeals</a>.</p>`)}`;
     },
 
     actions: {

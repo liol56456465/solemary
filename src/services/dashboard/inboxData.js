@@ -170,7 +170,7 @@ export async function recentMessages(channel, limit = HISTORY_LIMIT) {
         bot: Boolean(m.author?.bot),
         at: new Date(toTime(m.createdTimestamp ?? m.createdAt)),
         content: typeof m.content === 'string' ? m.content : '',
-        embeds: [...(m.embeds || [])].map((e) => [e.title, e.description].filter(Boolean).join(' — ')).filter(Boolean),
+        embeds: [...(m.embeds || [])].map((e) => [e.title, e.description].filter(Boolean).join(' · ')).filter(Boolean),
         attachments: [...(m.attachments?.values?.() || [])].map((a) => ({ name: a.name || 'attachment', url: safeUrl(a.url) })).filter((a) => a.url),
     }));
 }

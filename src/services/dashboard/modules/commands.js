@@ -145,7 +145,7 @@ ${textInput('custom', '', { label: 'Custom ending (optional)', max: 30, help: 'L
             : html`<span class="state state-off">Not retired</span> All commands are registered. Set <code>RETIRE_ADMIN_COMMANDS=true</code> to leave only the everyone-commands and the owners' emergency kit.`}</p>
 ${table(['Command', 'What it does', 'Who', 'On the dashboard', 'When retired'], entries.map((e) => [
             html`<code>/${e.key}</code>`, e.description, WHO[e.access],
-            e.page ? html`<a href="${path(`/${e.page}`)}">${e.page}</a>` : html`<span class="muted">—</span>`,
+            e.page ? html`<a href="${path(`/${e.page}`)}">${e.page}</a>` : html`<span class="muted">-</span>`,
             AFTER[e.access]]))}
 <p class="muted">Support server too: ${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}. Who may use what is part of the bot's code (read-only).</p>`;
         return html`${settingsPart}${section(`Every command (${entries.length})`, every)}${categories}`;

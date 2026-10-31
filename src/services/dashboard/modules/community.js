@@ -77,7 +77,7 @@ ${postForm(ctx, 'community', 'sticky-set', textArea('content', st.content, { lab
 <h3>New sticky</h3>
 ${postForm(ctx, 'community', 'sticky-set', html`<div class="grid">${channelPicker(g, 'channelId', null, { label: 'Channel', perms: [...PERMS.post, 'ManageMessages'], optional: false })}
 ${textArea('content', '', { label: 'Sticky message (replaces the channel\'s current one)', max: STICKY_MAX_LENGTH, rows: 3 })}</div>`, { submit: 'Set sticky' })}`;
-        const tagRows = tags.map((t) => [html`<code>${t.name}</code>`, clip(t.content), t.triggerKind === 'none' ? '—' : `${t.triggerKind}: ${clip(t.trigger, 40)}`,
+        const tagRows = tags.map((t) => [html`<code>${t.name}</code>`, clip(t.content), t.triggerKind === 'none' ? '-' : `${t.triggerKind}: ${clip(t.trigger, 40)}`,
             buttonForm(ctx, 'community', 'tag-delete', 'Delete', { name: t.name }, { confirm: `Delete the tag "${t.name}"?` })]);
         const tagEdits = tags.map((t) => html`<details class="sub" data-key="tag-${t.name}"><summary>Edit <code>${t.name}</code></summary>
 ${postForm(ctx, 'community', 'tag-edit', html`<div class="grid">

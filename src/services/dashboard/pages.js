@@ -106,8 +106,8 @@ ${rows.map((row) => {
 // ── Case detail ───────────────────────────────────────────────────────────
 
 function durationText(record) {
-    if (record.type === 'warn' || record.type === 'kick') return '—';
-    if (!record.duration_ms) return record.type === 'ban' ? 'permanent' : '—';
+    if (record.type === 'warn' || record.type === 'kick') return '-';
+    if (!record.duration_ms) return record.type === 'ban' ? 'permanent' : '-';
     return formatDuration(Number(record.duration_ms));
 }
 
@@ -141,16 +141,16 @@ ${r.expires_at ? html`<dt>Ends</dt><dd>${formatDate(r.expires_at)}</dd>` : ''}
 ${r.appeal_deadline ? html`<dt>Appeal deadline</dt><dd>${formatDate(r.appeal_deadline)}</dd>` : ''}
 <dt>Appealable</dt><dd>${r.unappealable ? 'no' : 'yes'}</dd>
 <dt>DM delivered</dt><dd>${r.dm_delivered ? 'yes' : 'no'}</dd>
-<dt>Ladder level after</dt><dd>${r.ladder_level_after ?? '—'}</dd>
-${r.revoked_at ? html`<dt>Lifted</dt><dd>${formatDate(r.revoked_at)}${r.revoke_reason ? html` — ${r.revoke_reason}` : ''}</dd>` : ''}
-${r.voided_at ? html`<dt>Voided</dt><dd>${formatDate(r.voided_at)}${r.void_reason ? html` — ${r.void_reason}` : ''}</dd>` : ''}
+<dt>Ladder level after</dt><dd>${r.ladder_level_after ?? '-'}</dd>
+${r.revoked_at ? html`<dt>Lifted</dt><dd>${formatDate(r.revoked_at)}${r.revoke_reason ? html`: ${r.revoke_reason}` : ''}</dd>` : ''}
+${r.voided_at ? html`<dt>Voided</dt><dd>${formatDate(r.voided_at)}${r.void_reason ? html`: ${r.void_reason}` : ''}</dd>` : ''}
 </dl></section>
 ${section(`History (${edits.length})`, html`${edits.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>By</th><th>Field</th><th>Old</th><th>New</th></tr></thead><tbody>
-${edits.map((e) => html`<tr><td>${formatDate(e.edited_at)}</td><td>${e.edited_by_username}</td><td>${e.field}</td><td>${e.old_value ?? '—'}</td><td>${e.new_value ?? '—'}</td></tr>`)}
+${edits.map((e) => html`<tr><td>${formatDate(e.edited_at)}</td><td>${e.edited_by_username}</td><td>${e.field}</td><td>${e.old_value ?? '-'}</td><td>${e.new_value ?? '-'}</td></tr>`)}
 </tbody></table></div>` : html`<p class="muted">Never edited.</p>`}`, '', { key: 'case-history', open: false })}
 ${section(`Evidence (${evidence.length})`, evidence.length ? html`<ul class="evidence">${evidence.map(evidenceItem)}</ul>` : html`<p class="muted">No evidence attached.</p>`, '', { key: 'case-evidence' })}
 ${section(`Appeals (${appeals.length})`, html`${appeals.length ? html`<div class="scroll"><table><thead><tr><th>Filed</th><th>Status</th><th>Decided</th><th>By</th><th>Note</th></tr></thead><tbody>
-${appeals.map((a) => html`<tr><td>${formatDate(a.created_at)}</td><td>${a.status}</td><td>${formatDate(a.decided_at)}</td><td>${a.decided_by_username || '—'}</td><td>${a.note || ''}</td></tr>`)}
+${appeals.map((a) => html`<tr><td>${formatDate(a.created_at)}</td><td>${a.status}</td><td>${formatDate(a.decided_at)}</td><td>${a.decided_by_username || '-'}</td><td>${a.note || ''}</td></tr>`)}
 </tbody></table></div>` : html`<p class="muted">No appeals.</p>`}`, '', { key: 'case-appeals', open: appeals.length > 0 })}
 ${bottom}`;
     return layout({ title: `Case ${r.case_code}`, active: 'cases', session, access, moduleStates, body });
@@ -193,7 +193,7 @@ ${sections}`;
 const AUDIT_VALUE_PREVIEW = 120;
 /** An audited value; a long one shows its start, the rest behind "Show all" (nothing is dropped). */
 export function auditValue(value) {
-    if (value === null || value === undefined) return '—';
+    if (value === null || value === undefined) return '(none)';
     const full = typeof value === 'string' ? value : JSON.stringify(value);
     if (full.length <= AUDIT_VALUE_PREVIEW) return full;
     return html`<details class="long-value"><summary>${full.slice(0, AUDIT_VALUE_PREVIEW)}… <span class="muted">Show all (${full.length} characters)</span></summary><div class="long-value-full">${full}</div></details>`;
@@ -219,7 +219,7 @@ ${page + 1 < pages ? html`<a href="/dashboard/audit${queryString({ ...keep, page
 <button class="primary" type="submit">Filter</button> <a href="/dashboard/audit">Clear</a>
 </form>
 ${rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Module</th><th>Setting</th><th>Old</th><th>New</th></tr></thead><tbody>
-${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${moduleLabel(r.module)}</td><td><code>${r.key}</code></td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
+${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '-'} <span class="muted">${r.user_id || ''}</span></td><td>${moduleLabel(r.module)}</td><td><code>${r.key}</code></td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
 </tbody></table></div>${pager}` : filters.user || filters.module
         ? html`<p class="empty">No changes match these filters. <a href="/dashboard/audit">Clear filters</a></p>`
         : html`<p class="empty">No changes yet. Every save from the dashboard is listed here.</p>`}`;

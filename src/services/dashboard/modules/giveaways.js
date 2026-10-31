@@ -22,9 +22,9 @@ function messageIdField(form) {
 
 /** <time> with the UTC text; the static script shows it relative ("in 3 h"). */
 function when(value) {
-    if (!value) return '—';
+    if (!value) return '-';
     const date = new Date(Number.isFinite(Number(value)) ? Number(value) : value);
-    if (Number.isNaN(date.getTime())) return '—';
+    if (Number.isNaN(date.getTime())) return '-';
     return html`<time datetime="${date.toISOString()}" data-relative>${formatDate(date)}</time>`;
 }
 
@@ -44,9 +44,9 @@ export default {
         const active = giveaways.filter((x) => !isEnded(x)).sort((a, b) => Number(a.endTime || 0) - Number(b.endTime || 0));
         const ended = giveaways.filter(isEnded).sort((a, b) => String(b.endedAt || '').localeCompare(String(a.endedAt || ''))).slice(0, 25);
         const del = (x) => buttonForm(ctx, 'giveaways', 'delete', 'Delete', { messageId: x.messageId }, { canEdit: can, confirm: `Delete the "${x.prize || 'giveaway'}" giveaway and its message?` });
-        const activeRows = active.map((x) => [x.prize || '—', channelName(g, x.channelId), when(x.endTime || x.endsAt), (x.participants || []).length, x.winnerCount ?? 1,
+        const activeRows = active.map((x) => [x.prize || '-', channelName(g, x.channelId), when(x.endTime || x.endsAt), (x.participants || []).length, x.winnerCount ?? 1,
             html`<div class="row-actions">${buttonForm(ctx, 'giveaways', 'end', 'End now', { messageId: x.messageId }, { canEdit: can, danger: false, confirm: 'End this giveaway now and pick the winners?' })}${del(x)}</div>`]);
-        const endedRows = ended.map((x) => [x.prize || '—', channelName(g, x.channelId), when(x.endedAt), (x.winnerIds || []).map((id) => html`<code>${id}</code> `),
+        const endedRows = ended.map((x) => [x.prize || '-', channelName(g, x.channelId), when(x.endedAt), (x.winnerIds || []).map((id) => html`<code>${id}</code> `),
             html`<div class="row-actions">${buttonForm(ctx, 'giveaways', 'reroll', 'Reroll', { messageId: x.messageId }, { canEdit: can, danger: false })}${del(x)}</div>`]);
         const create = postForm(ctx, 'giveaways', 'create', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.post, optional: false })}

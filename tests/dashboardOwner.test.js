@@ -735,10 +735,10 @@ test('server page: lists missing permissions and roles above the bot; a full set
     const res = await get(h, h.ow.server, { params: { id: OTHER_GUILD } });
     assert.equal(res.statusCode, 200);
     assert.ok(res.body.includes('Permission check'));
-    assert.ok(res.body.includes('<b>Ban Members</b> <span class="muted">— needed for bans</span>'));
+    assert.ok(res.body.includes('<b>Ban Members</b>: <span class="muted">needed for bans</span>'));
     assert.ok(!res.body.includes('<b>Send Messages</b>'), 'granted permissions are not listed as missing');
     assert.match(res.body, /at or above the bot's highest role \(Mewvo\)/);
-    assert.ok(res.body.includes('<b>Muted</b> <span class="muted">— the Muted role (mutes)</span>'));
+    assert.ok(res.body.includes('<b>Muted</b>: <span class="muted">the Muted role (mutes)</span>'));
     assert.ok(!/<style|style=|<script/i.test(res.body.replace(ALLOWED_SCRIPT, '')));
 
     const full = await setup({ managedRoles: async () => { throw new Error('db down'); } });

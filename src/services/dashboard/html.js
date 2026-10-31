@@ -51,17 +51,17 @@ export function queryString(params) {
 
 /** "2026-10-27 14:03 UTC" or "—". */
 export function formatDate(value) {
-    if (!value) return '—';
+    if (!value) return '-';
     const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return '—';
+    if (Number.isNaN(date.getTime())) return '-';
     return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
 
 /** A <time> showing formatDate; the static script turns it into "5 min ago" (UTC stays in the tooltip). */
 export function timeTag(value) {
-    if (!value) return '—';
+    if (!value) return '-';
     const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return '—';
+    if (Number.isNaN(date.getTime())) return '-';
     return html`<time datetime="${date.toISOString()}" data-relative>${formatDate(date)}</time>`;
 }
 

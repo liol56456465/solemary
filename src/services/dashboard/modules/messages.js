@@ -211,7 +211,7 @@ function scheduledSection(ctx, list, defaultZone) {
     const rows = list.map((m) => [
         html`<a href="#edit-${m.id}">#${m.id}</a> <span class="muted">${preview(m.payload)}</span>`,
         channelName(g, m.channelId),
-        m.nextRunAt === null ? html`<span class="muted">—</span>` : html`${formatInZone(m.nextRunAt, m.timezone)} <span class="muted">${m.timezone}</span>`,
+        m.nextRunAt === null ? html`<span class="muted">-</span>` : html`${formatInZone(m.nextRunAt, m.timezone)} <span class="muted">${m.timezone}</span>`,
         describeSchedule(m.schedule),
         lastResult(m),
         statusPill(m),

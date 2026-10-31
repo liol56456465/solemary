@@ -57,7 +57,7 @@ function existingRule(ctx, form) {
 }
 
 function ruleText(rule) {
-    return rule ? `${rule.title}${rule.text ? ` — ${clip(rule.text, 200)}` : ''}` : null;
+    return rule ? `${rule.title}${rule.text ? `: ${clip(rule.text, 200)}` : ''}` : null;
 }
 
 export default {

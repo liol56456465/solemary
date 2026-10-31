@@ -32,8 +32,8 @@ function ruleForm(csrf, values, { givable, roles, enabled }) {
 <label>Name<input name="name" value="${v.name || ''}" maxlength="${NAME_MAX}" required placeholder="e.g. Regulars after 30 days"></label>
 <label>When<select name="trigger" required>${Object.entries(RULE_TRIGGERS).map(([k, label]) => opt(k, label, v.trigger || 'days_in_server'))}</select></label>
 <label>Days or level<input type="number" name="threshold" value="${v.threshold ?? ''}" min="0" max="${Math.max(MAX_DAYS, MAX_LEVEL)}" step="1"><span class="hint">Days in the server (0 = on joining, up to ${MAX_DAYS}) or the leveling level (1–${MAX_LEVEL}). Not used for "Has a role".</span></label>
-<label>Trigger role<select name="triggerRoleId">${opt('', '— only for "Has a role" —', v.triggerRoleId)}${roles.map((r) => opt(r.id, `@${r.name}`, v.triggerRoleId))}</select></label>
-<label>Give this role<select name="roleId" required>${opt('', '— choose —', v.roleId)}${givable.map((r) => opt(r.id, `@${r.name}`, v.roleId))}</select><span class="hint">Only roles below Mewvo (and below your own top role), not managed, without staff permissions.</span></label>
+<label>Trigger role<select name="triggerRoleId">${opt('', 'Only for "Has a role"', v.triggerRoleId)}${roles.map((r) => opt(r.id, `@${r.name}`, v.triggerRoleId))}</select></label>
+<label>Give this role<select name="roleId" required>${opt('', 'Choose…', v.roleId)}${givable.map((r) => opt(r.id, `@${r.name}`, v.roleId))}</select><span class="hint">Only roles below Mewvo (and below your own top role), not managed, without staff permissions.</span></label>
 </div>
 <label class="check"><input type="checkbox" name="removeWhenFalse" value="1"${v.removeWhenFalse ? raw(' checked') : ''}> Take the role away again when the condition is no longer true</label>
 <p class="muted">Taking away also applies to members who got the role by hand; a member still matched by another enabled rule for the same role keeps it.</p>

@@ -50,7 +50,7 @@ export function profilePage({ session, access = null, moduleStates = {}, profile
     const body = html`<header class="page-head"><h1>Bot profile</h1><p class="muted">How the bot looks on Discord, everywhere. Discord limits how often the name and images can change; its answer is shown here when it refuses.</p></header>
 ${notices({ flash, error, editEnabled })}
 <section class="card"><h2>Now</h2><dl>
-<dt>Username</dt><dd>${profile.username || '—'} <span class="muted">${profile.id || ''}</span></dd>
+<dt>Username</dt><dd>${profile.username || '-'} <span class="muted">${profile.id || ''}</span></dd>
 <dt>Avatar</dt><dd>${img(profile.avatarUrl, 'Current avatar', 64) || html`<span class="muted">default</span>`}</dd>
 <dt>Banner</dt><dd>${profile.bannerUrl && isAllowedImageUrl(profile.bannerUrl) ? html`<img src="${profile.bannerUrl}" alt="Current banner" width="300" height="106" loading="lazy" referrerpolicy="no-referrer">` : html`<span class="muted">none</span>`}</dd>
 <dt>About me</dt><dd>${profile.about || html`<span class="muted">empty</span>`}</dd>
@@ -83,8 +83,8 @@ const serverInitial = (row) => html`<span class="avatar-sm" aria-hidden="true">$
 export function serversPage({ session, access = null, moduleStates = {}, rows = [], total = rows.length, totals = null, q = '', sort = 'name', flash = null }) {
     const table = rows.length ? html`<div class="table-wrap"><table class="members"><thead><tr><th>Server</th><th>Owner</th><th>Members</th><th>Bot joined</th></tr></thead><tbody>
 ${rows.map((row) => html`<tr><td><a class="member-cell" href="${path(`/owner/servers/${row.id}`)}">${img(row.iconUrl, '', 32) || serverInitial(row)}<span><b>${row.name}</b>${serverTags(row.tags)}<small>${row.id}</small></span></a></td>
-<td>${row.ownerName || html`<span class="muted">unknown</span>`}<br><small class="muted">${row.ownerId || '—'}</small></td>
-<td>${row.memberCount ?? '—'}</td><td>${formatDate(row.joinedAt)}</td></tr>`)}
+<td>${row.ownerName || html`<span class="muted">unknown</span>`}<br><small class="muted">${row.ownerId || '-'}</small></td>
+<td>${row.memberCount ?? '-'}</td><td>${formatDate(row.joinedAt)}</td></tr>`)}
 </tbody></table></div>` : html`<p class="empty">${q ? 'No server matches.' : 'The bot is in no server.'}</p>`;
     const summary = totals
         ? `Every server the bot is in: ${totals.servers} server${totals.servers === 1 ? '' : 's'}, ${totals.members} members in total, ${totals.joinedWeek} joined in the last 7 days.`
@@ -111,12 +111,12 @@ export function serverPage({ session, access = null, moduleStates = {}, detail, 
         detail.canCreateInvite ? actionForm(csrf, `/owner/servers/${detail.id}/invite`, html`<p class="muted">You own this server or have Administrator there. The invite works once and expires after 1 hour.</p>`, { submit: 'Create invite', enabled: editEnabled }) : '',
     ].filter(Boolean);
     const body = html`<a class="back" href="${path('/owner/servers')}">← Servers</a>
-<header class="page-head"><h1>${detail.name}${serverTags(detail.tags)}</h1><p class="muted">${detail.id} · owner ${detail.ownerName || 'unknown'} (${detail.ownerId || '—'}) · ${detail.memberCount ?? '—'} members · bot joined ${formatDate(detail.joinedAt)}</p></header>
+<header class="page-head"><h1>${detail.name}${serverTags(detail.tags)}</h1><p class="muted">${detail.id} · owner ${detail.ownerName || 'unknown'} (${detail.ownerId || '-'}) · ${detail.memberCount ?? '-'} members · bot joined ${formatDate(detail.joinedAt)}</p></header>
 ${notices({ flash, error, editEnabled })}
 <section class="card"><h2>About this server</h2><dl>
-<dt>Created</dt><dd>${detail.createdAt ? formatDate(detail.createdAt) : '—'}</dd>
+<dt>Created</dt><dd>${detail.createdAt ? formatDate(detail.createdAt) : '-'}</dd>
 <dt>Boosts</dt><dd>${detail.boosts ?? 0} (level ${detail.boostTier ?? 0})</dd>
-<dt>Verification level</dt><dd>${detail.verificationLevel || '—'}</dd>
+<dt>Verification level</dt><dd>${detail.verificationLevel || '-'}</dd>
 <dt>Channels / roles</dt><dd>${detail.channels.length} / ${detail.roles.length}</dd>
 <dt>Blacklist</dt><dd>${detail.blacklisted
         ? html`<span class="state-word is-bad"><span class="dot dot-bad" aria-hidden="true"></span>Blacklisted: the bot ignores this server</span> <a href="${path('/owner/blacklist')}">Blacklist</a>`
@@ -127,15 +127,15 @@ ${notices({ flash, error, editEnabled })}
 ${inviteBits.length ? html`<section class="card"><h2>Invite</h2>${inviteBits}</section>` : ''}
 <section class="card"><h2>Permission check</h2>${detail.missing?.length
         ? html`<p class="error" role="alert">The bot is missing ${detail.missing.length} permission${detail.missing.length === 1 ? '' : 's'} it asks for when added; those features fail here.</p>
-<ul class="skip-list">${detail.missing.map((m) => html`<li><b>${m.label}</b> <span class="muted">— ${m.why}</span></li>`)}</ul>`
+<ul class="skip-list">${detail.missing.map((m) => html`<li><b>${m.label}</b>: <span class="muted">${m.why}</span></li>`)}</ul>`
         : html`<p>${stateWord('on', 'The bot has every permission it asks for when added.')}</p>`}
 ${detail.rolesAbove?.length
         ? html`<p class="error" role="alert">These roles are at or above the bot's highest role${detail.botTop ? html` (${detail.botTop.name})` : ''}, so the bot cannot give or remove them. Move the bot's role above them in Server Settings → Roles.</p>
-<ul class="skip-list">${detail.rolesAbove.map((r) => html`<li><b>${r.name}</b> <span class="muted">— ${r.why}</span></li>`)}</ul>`
+<ul class="skip-list">${detail.rolesAbove.map((r) => html`<li><b>${r.name}</b>: <span class="muted">${r.why}</span></li>`)}</ul>`
         : detail.botTop ? html`<p class="muted">No known role the bot manages (Muted, warning or Banned role) is above its highest role (${detail.botTop.name}).</p>` : ''}</section>
 <section class="card"><h2>Bot permissions here</h2>${detail.permissions.length ? html`<ul class="name-list">${detail.permissions.map((p) => html`<li>${p}</li>`)}</ul>` : html`<p class="empty">None.</p>`}</section>
 <section class="card"><h2>Channels (${detail.channels.length})</h2>${detail.channels.length ? html`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Category</th></tr></thead><tbody>
-${detail.channels.map((c) => html`<tr><td>${c.name}</td><td>${c.type}</td><td>${c.category || html`<span class="muted">—</span>`}</td></tr>`)}</tbody></table></div>` : html`<p class="empty">No channels visible.</p>`}</section>
+${detail.channels.map((c) => html`<tr><td>${c.name}</td><td>${c.type}</td><td>${c.category || html`<span class="muted">-</span>`}</td></tr>`)}</tbody></table></div>` : html`<p class="empty">No channels visible.</p>`}</section>
 <section class="card"><h2>Roles (${detail.roles.length})</h2>${detail.roles.length ? html`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Colour</th><th>Members</th></tr></thead><tbody>
 ${detail.roles.map((r) => html`<tr><td>${r.name}</td><td><code>${r.color}</code></td><td>${r.members}</td></tr>`)}</tbody></table></div>
 ${detail.membersCached ? '' : html`<p class="muted">Member counts come from the bot's member cache, which is not complete for this server.</p>`}` : html`<p class="empty">No roles.</p>`}</section>
@@ -148,7 +148,7 @@ ${detail.membersCached ? '' : html`<p class="muted">Member counts come from the 
 export function leaveConfirmPage({ session, access = null, moduleStates = {}, guild, token, hash }) {
     const body = html`<p><a href="${path(`/owner/servers/${guild.id}`)}">← Back (cancel)</a></p>
 <h1>Confirm: leave ${guild.name}</h1>
-<section class="card confirm-card"><dl><dt>Server</dt><dd>${guild.name} <span class="muted">${guild.id}</span></dd><dt>Members</dt><dd>${guild.memberCount ?? '—'}</dd>
+<section class="card confirm-card"><dl><dt>Server</dt><dd>${guild.name} <span class="muted">${guild.id}</span></dd><dt>Members</dt><dd>${guild.memberCount ?? '-'}</dd>
 <dt>Effect</dt><dd>The bot leaves the server now. Its settings and records stay in the database.</dd></dl>
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
 ${actionForm(session.csrf, `/owner/servers/${guild.id}/leave`, html`<label class="check"><input type="checkbox" name="confirm" value="1" required> I want the bot to leave ${guild.name}</label>`, { submit: 'Leave server', hidden: { token, fh: hash }, danger: true })}</section>`;
@@ -187,7 +187,7 @@ export function userLookupPage({ session, access = null, moduleStates = {}, q = 
                 : html`Not blacklisted${r.offerBlacklist ? html` · <a href="${path(`/owner/blacklist${queryString({ kind: 'user', id: r.id })}`)}">Blacklist this user…</a> <span class="muted">(fills in the form; you add a reason there)</span>` : ''}`;
     const servers = !r ? '' : html`<section class="card"><h2>Shared servers (${r.servers.length})</h2>${r.servers.length
         ? html`<div class="table-wrap"><table><thead><tr><th>Server</th><th>Nickname</th><th>Joined</th></tr></thead><tbody>
-${r.servers.map((g) => html`<tr><td><a href="${path(`/owner/servers/${g.id}`)}"><b>${g.name}</b></a>${serverTags(g.tags)}<br><small class="muted">${g.id}</small></td><td>${g.nickname || html`<span class="muted">—</span>`}</td><td>${formatDate(g.joinedAt)}</td></tr>`)}
+${r.servers.map((g) => html`<tr><td><a href="${path(`/owner/servers/${g.id}`)}"><b>${g.name}</b></a>${serverTags(g.tags)}<br><small class="muted">${g.id}</small></td><td>${g.nickname || html`<span class="muted">-</span>`}</td><td>${formatDate(g.joinedAt)}</td></tr>`)}
 </tbody></table></div>` : html`<p class="empty">No shared server found.</p>`}
 <p class="muted">The main and the support server are asked directly. Every other server is checked only in the bot's member cache, which is often incomplete, so the user may be in a server not listed here.</p></section>`;
     const body = html`<header class="page-head"><h1>Users</h1><p class="muted">Look up one Discord user by ID: account, shared servers, blacklist and the main server's moderation record. Read-only.</p></header>
@@ -195,7 +195,7 @@ ${r.servers.map((g) => html`<tr><td><a href="${path(`/owner/servers/${g.id}`)}">
 <button class="primary" type="submit">Look up</button>${q ? html` <a href="${path('/owner/users')}">Clear</a>` : ''}</form>
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
 ${r ? html`<section class="card"><h2>${r.globalName || r.username || r.id}</h2>${img(r.avatarUrl, '', 64)}<dl>
-<dt>Username</dt><dd>${r.username || '—'}${r.bot ? html` <span class="muted">(bot account)</span>` : ''}</dd>
+<dt>Username</dt><dd>${r.username || '-'}${r.bot ? html` <span class="muted">(bot account)</span>` : ''}</dd>
 <dt>Display name</dt><dd>${r.globalName || html`<span class="muted">none</span>`}</dd>
 <dt>ID</dt><dd><code>${r.id}</code></dd>
 <dt>Account created</dt><dd>${formatDate(r.createdAt)}</dd>
@@ -283,8 +283,8 @@ ${kpi('Servers', h.servers, `${home.totals.members} members in total · ${home.t
 ${kpi('Uptime', duration(h.uptimeSeconds), ping)}
 ${kpi('Database', db ? (db.connected ? 'OK' : 'Degraded') : 'Unknown', db ? `${db.type || 'none'} · memory ${mb(h.memory?.rss)}` : `memory ${mb(h.memory?.rss)}`, { href: path('/owner/health') })}
 ${kpi('Blacklist', home.blacklistCount, home.blacklistCount === undefined ? 'could not be loaded' : 'active entries', { href: path('/owner/blacklist') })}
-${tile(7, 'Joined recently', serverFeed(home.recent, (row) => `${row.memberCount ?? '—'} members · joined ${formatDate(row.joinedAt)}`), { link: { href: path(`/owner/servers${queryString({ sort: 'newest' })}`), text: 'All servers' } })}
-${tile(5, 'Largest servers', serverFeed(home.largest, (row) => `${row.memberCount ?? '—'} members`), { link: { href: path(`/owner/servers${queryString({ sort: 'members' })}`), text: 'By size' } })}
+${tile(7, 'Joined recently', serverFeed(home.recent, (row) => `${row.memberCount ?? '-'} members · joined ${formatDate(row.joinedAt)}`), { link: { href: path(`/owner/servers${queryString({ sort: 'newest' })}`), text: 'All servers' } })}
+${tile(5, 'Largest servers', serverFeed(home.largest, (row) => `${row.memberCount ?? '-'} members`), { link: { href: path(`/owner/servers${queryString({ sort: 'members' })}`), text: 'By size' } })}
 ${tile(12, 'Recent owner actions', home.actions === null
         ? html`<p class="muted">Unavailable (database).</p>`
         : home.actions.length ? actionList(home.actions, home.names) : html`<p class="empty">No owner actions yet.</p>`, { link: { href: path('/owner/activity'), text: 'All activity' } })}
@@ -303,7 +303,7 @@ ${page + 1 < pages ? html`<a href="${path(`/owner/activity${queryString({ page: 
     const body = html`<header class="page-head"><h1>Owner activity</h1><p class="muted">Everything done in the Owner area: profile changes, invites, leaving servers, blacklist, maintenance, announcements and command re-registration. Not shown in the server's audit log.</p></header>
 ${rows === null ? html`<p class="error" role="alert">The activity could not be loaded (database). Reload the page to try again.</p>`
         : rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>What</th><th>Before</th><th>After</th></tr></thead><tbody>
-${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '—'} <span class="muted">${r.user_id || ''}</span></td><td>${ownerActionText(r.key, names)}</td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
+${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '-'} <span class="muted">${r.user_id || ''}</span></td><td>${ownerActionText(r.key, names)}</td><td class="value">${auditValue(r.old)}</td><td class="value">${auditValue(r.new)}</td></tr>`)}
 </tbody></table></div>${pager}` : html`<p class="empty">No owner actions yet.</p>`}`;
     return shell({ title: 'Owner activity', active: 'owner/activity', session, access, moduleStates, body });
 }
@@ -339,10 +339,10 @@ export function healthPage({ session, access = null, moduleStates = {}, health, 
 ${notices({ flash, error, editEnabled })}
 <section class="card"><h2>Status</h2><dl>
 <dt>Uptime</dt><dd>${duration(health.uptimeSeconds)}${health.gatewayUptimeMs != null ? html` <span class="muted">(gateway connected ${duration(health.gatewayUptimeMs / 1000)})</span>` : ''}</dd>
-<dt>Gateway ping</dt><dd>${Number.isFinite(health.ping) && health.ping >= 0 ? `${Math.round(health.ping)} ms` : '—'}</dd>
+<dt>Gateway ping</dt><dd>${Number.isFinite(health.ping) && health.ping >= 0 ? `${Math.round(health.ping)} ms` : '-'}</dd>
 <dt>Memory</dt><dd>${mb(health.memory?.rss)} in use · heap ${mb(health.memory?.heapUsed)} of ${mb(health.memory?.heapTotal)}</dd>
 <dt>Node</dt><dd>${health.node}</dd>
-<dt>Bot version</dt><dd>${health.version || '—'}</dd>
+<dt>Bot version</dt><dd>${health.version || '-'}</dd>
 <dt>Servers</dt><dd>${health.servers}</dd>
 <dt>Blacklist</dt><dd>${health.blacklistLoaded === false ? html`<span class="state-word is-bad"><span class="dot dot-bad" aria-hidden="true"></span>Not loaded: nobody is blocked until the database answers (retrying)</span>` : html`<span class="state-word is-on"><span class="dot dot-on" aria-hidden="true"></span>Loaded</span>`}</dd>
 <dt>Database</dt><dd>${db ? html`<span class="state-word is-${db.connected ? 'on' : 'bad'}"><span class="dot dot-${db.connected ? 'on' : 'bad'}" aria-hidden="true"></span>${db.connected ? `Connected (${db.type})` : `Degraded (${db.type || 'none'})`}</span>` : 'Unknown'}</dd>
@@ -356,7 +356,7 @@ ${actionForm(session.csrf, '/owner/health/maintenance', '', { submit: health.mai
 
 // ── Command sync ──────────────────────────────────────────────────────────
 
-const countText = (c) => (c ? `${c.slash} slash command${c.slash === 1 ? '' : 's'} + ${c.menus} context menu${c.menus === 1 ? '' : 's'}` : '—');
+const countText = (c) => (c ? `${c.slash} slash command${c.slash === 1 ? '' : 's'} + ${c.menus} context menu${c.menus === 1 ? '' : 's'}` : '-');
 
 function diffList(title, rows, note) {
     return rows.length ? html`<h3>${title} (${rows.length})</h3><p class="muted">${note}</p>
@@ -457,12 +457,12 @@ export function premiumPage({
     stats = null, roles = {}, roleChoices = [],
 }) {
     const csrf = session.csrf;
-    const who = (id, name) => (id ? html`${name || id}${name ? html` <small class="muted">${id}</small>` : ''}` : '—');
+    const who = (id, name) => (id ? html`${name || id}${name ? html` <small class="muted">${id}</small>` : ''}` : '-');
     const counts = keys?.counts || {};
     const body = html`<header class="page-head"><h1>Premium keys</h1><p class="muted">Create keys for Normal, Pro or Max. Anyone who logs in on the website (My record → Subscription) can redeem a key once; it adds the plan and time to their account. Same plan: the time is added to the end date. Test mode only: no payments are connected.</p></header>
 ${notices({ flash, error, editEnabled })}
 ${testCheckout ? '' : html`<p class="notice">Redeeming and the checkout are off: set <code>PREMIUM_TEST_CHECKOUT=true</code> (and <code>MEMBER_PORTAL_ENABLED=true</code>) to turn them on. Keys created now still work once it is on.</p>`}
-${stats ? html`<div class="bento">${kpi('Active plans', stats.activeTotal, PAID_PLANS.map((p) => `${p.name} ${stats.active[p.id] || 0}`).join(' · '))}${kpi('Test orders, 30 days', stats.orders30, `${stats.gifts30} gift${stats.gifts30 === 1 ? '' : 's'}`)}${kpi('Test amount, 30 days', euros(stats.cents30), 'not charged')}${kpi('Unused keys', keys?.counts?.unused ?? '—', `${keys?.counts?.expired ?? 0} expired`)}</div>` : ''}
+${stats ? html`<div class="bento">${kpi('Active plans', stats.activeTotal, PAID_PLANS.map((p) => `${p.name} ${stats.active[p.id] || 0}`).join(' · '))}${kpi('Test orders, 30 days', stats.orders30, `${stats.gifts30} gift${stats.gifts30 === 1 ? '' : 's'}`)}${kpi('Test amount, 30 days', euros(stats.cents30), 'not charged')}${kpi('Unused keys', keys?.counts?.unused ?? '-', `${keys?.counts?.expired ?? 0} expired`)}</div>` : ''}
 ${created.length ? html`<section class="card"><h2>New keys (${created.length})</h2><p class="muted">${planName(created[0].plan_id)}, ${created[0].duration_days} days each. They also stay in the list below.</p>
 <textarea class="key-output" readonly rows="${Math.min(created.length, 12)}" aria-label="New keys, one per line">${created.map((k) => k.code).join('\n')}</textarea></section>` : ''}
 <section class="card"><h2>Create keys</h2>${actionForm(csrf, '/owner/premium/generate', html`<div class="grid">
@@ -478,7 +478,7 @@ ${created.length ? html`<section class="card"><h2>New keys (${created.length})</
 <section class="card"><h2>Supporter roles</h2><p class="muted">One role per plan in the main server. An active plan gives its role and removes the other two; when the plan ends the role is removed. Checked every 5 minutes, on rejoin and right after every change. Roles the bot cannot hand out are marked.</p>${actionForm(csrf, '/owner/premium/roles', html`<div class="grid">
 ${PAID_PLANS.map((p) => html`<label>${p.name} role<select name="role_${p.id}"><option value="">No role</option>${roleChoices.map((role) => html`<option value="${role.id}"${role.id === roles[p.id] ? html` selected` : ''}${role.problem ? html` disabled` : ''}>@${role.name}${role.problem ? ' (cannot be handed out)' : ''}</option>`)}</select></label>`)}</div>`, { submit: 'Save roles', enabled: editEnabled })}</section>
 <section class="card"><h2>Keys</h2>
-<nav class="chips" aria-label="Key status">${Object.entries(KEY_FILTERS).map(([key, label]) => html`<a class="chip" href="${path(`/owner/premium${queryString({ status: key })}`)}"${key === filter ? html` aria-current="page"` : ''}>${label}${key === 'all' ? ` (${counts.total ?? '—'})` : ` (${counts[key] ?? '—'})`}</a>`)}</nav>
+<nav class="chips" aria-label="Key status">${Object.entries(KEY_FILTERS).map(([key, label]) => html`<a class="chip" href="${path(`/owner/premium${queryString({ status: key })}`)}"${key === filter ? html` aria-current="page"` : ''}>${label}${key === 'all' ? ` (${counts.total ?? '-'})` : ` (${counts[key] ?? '-'})`}</a>`)}</nav>
 ${keys === null ? html`<p class="error" role="alert">The keys could not be loaded (database). Reload the page to try again.</p>`
         : keys.rows.length ? html`<div class="scroll"><table><thead><tr><th>Key</th><th>Plan</th><th>Time</th><th>From</th><th>Created</th><th>Status</th><th></th></tr></thead><tbody>
 ${keys.rows.map((k) => { const st = keyStatus(k); return html`<tr><td><code class="key-code">${k.code}</code>${k.note ? html`<br><small class="muted">${k.note}</small>` : ''}</td><td>${planName(k.plan_id)}</td><td>${k.duration_days} days</td>
@@ -489,7 +489,7 @@ ${keys.rows.map((k) => { const st = keyStatus(k); return html`<tr><td><code clas
 <section class="card"><h2>Active subscriptions${subscriptions ? ` (${subscriptions.length})` : ''}</h2>
 ${subscriptions === null ? html`<p class="error" role="alert">The subscriptions could not be loaded (database).</p>`
         : subscriptions.length ? html`<div class="scroll"><table><thead><tr><th>Account</th><th>Plan</th><th>Since</th><th>Until</th><th>Last added by</th><th></th></tr></thead><tbody>
-${subscriptions.map((sub) => html`<tr><td>${who(sub.user_id, sub.username)}</td><td>${planName(sub.plan_id)}</td><td>${formatDate(sub.started_at)}</td><td>${formatDate(sub.expires_at)}</td><td>${SOURCE_LABEL[sub.source] || sub.source || '—'}</td>
+${subscriptions.map((sub) => html`<tr><td>${who(sub.user_id, sub.username)}</td><td>${planName(sub.plan_id)}</td><td>${formatDate(sub.started_at)}</td><td>${formatDate(sub.expires_at)}</td><td>${SOURCE_LABEL[sub.source] || sub.source || '-'}</td>
 <td class="nowrap">${actionForm(csrf, '/owner/premium/end', '', { submit: 'End now', hidden: { user: sub.user_id }, inline: true, danger: true, enabled: editEnabled, confirm: `End the ${planName(sub.plan_id)} plan of ${sub.username || sub.user_id} now?` })}</td></tr>`)}
 </tbody></table></div>` : html`<p class="empty">No active subscriptions.</p>`}</section>
 <section class="card"><h2>Recent test orders</h2>

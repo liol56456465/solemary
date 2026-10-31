@@ -30,8 +30,8 @@ export function inboxPage({ session, access = null, moduleStates = {}, inbox, ki
 ${rows.map((item) => {
         const days = item.at ? (now - item.at) / 86400000 : 0;
         return html`<tr><td>${kindTag(item.kind)}</td><td>${item.title}${item.note ? html` <span class="muted">· ${item.note}</span>` : ''}</td>
-<td>${item.userId ? html`<a href="${userHref(item.userId)}">${item.who || item.userId}</a>` : html`<span class="muted">—</span>`}</td>
-<td class="nowrap ${days >= 3 ? 'bad' : days >= 1 ? 'warn' : ''}" title="${item.at ? formatDate(new Date(item.at)) : ''}">${item.at ? formatAge(item.at, now) : '—'}</td>
+<td>${item.userId ? html`<a href="${userHref(item.userId)}">${item.who || item.userId}</a>` : html`<span class="muted">-</span>`}</td>
+<td class="nowrap ${days >= 3 ? 'bad' : days >= 1 ? 'warn' : ''}" title="${item.at ? formatDate(new Date(item.at)) : ''}">${item.at ? formatAge(item.at, now) : '-'}</td>
 <td class="nowrap">${rowAction(item)}</td></tr>`;
     })}</tbody></table></div>`
         : html`<p class="empty">${kind ? `No open ${INBOX_KINDS[kind]?.label.toLowerCase() || 'items'}.` : 'Nothing is waiting for staff.'}</p>`;
@@ -75,8 +75,8 @@ export function closeConfirmPage({ session, access = null, moduleStates = {}, ki
     const base = `/inbox/${kind}/${channel.id}`;
     const body = html`<p><a href="${path(base)}">← Back (cancel)</a></p>
 <h1>Confirm: close ${kind === 'modmail' ? 'the modmail conversation' : 'the ticket'} #${channel.name}</h1>
-<section class="card confirm-card"><dl><dt>Member</dt><dd>${member?.name || member?.id || '—'} <span class="muted">${member?.id || ''}</span></dd>
-<dt>Reason</dt><dd>${reason || '—'}</dd>
+<section class="card confirm-card"><dl><dt>Member</dt><dd>${member?.name || member?.id || '-'} <span class="muted">${member?.id || ''}</span></dd>
+<dt>Reason</dt><dd>${reason || '-'}</dd>
 <dt>Effect</dt><dd>${kind === 'modmail' ? 'The member is DMed that the conversation was closed, the transcript is filed and the channel is deleted.' : 'The ticket is closed for the member (they can no longer write in it), the transcript is filed.'}</dd></dl>
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
 ${actionForm(session.csrf, `${base}/close`, '', { submit: 'Close now', hidden: { token, fh: hash }, danger: true })}</section>`;

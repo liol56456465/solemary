@@ -275,7 +275,7 @@ export function channelPicker(guild, name, value, { label, kinds = ['text'], per
     const prefix = kinds.includes('category') && kinds.length === 1 ? '' : kinds.includes('text') ? '#' : '';
     const count = groups.reduce((n, g) => n + g.channels.length, 0);
     return html`<label>${label}<select ${selectAttrs(name, count, multiple)}>
-${optional && !multiple ? html`<option value=""${selected(!value)}>— ${noneLabel} —</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${id} (missing)</option>`)}
+${optional && !multiple ? html`<option value=""${selected(!value)}>${noneLabel}</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${id} (missing)</option>`)}
 ${groups.map((g) => html`<optgroup label="${g.group}">${g.channels.map((c) => html`<option value="${c.id}"${selected(values.includes(c.id))}>${prefix}${c.name}</option>`)}</optgroup>`)}
 </select>${help ? html`<span class="hint">${help}</span>` : ''}${warningList(values.flatMap((id) => channelWarnings(guild, id, perms)))}</label>`;
 }
@@ -286,7 +286,7 @@ export function rolePicker(guild, name, value, { label, optional = true, autoAss
     const values = multiple ? (Array.isArray(value) ? value : []) : [value].filter(Boolean);
     const missing = values.filter((id) => !guild?.roles?.cache?.get(id));
     return html`<label>${label}<select ${selectAttrs(name, roles.length, multiple)}>
-${optional && !multiple ? html`<option value=""${selected(!value)}>— ${noneLabel} —</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${id} (missing)</option>`)}
+${optional && !multiple ? html`<option value=""${selected(!value)}>${noneLabel}</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${id} (missing)</option>`)}
 ${roles.map((r) => html`<option value="${r.id}"${selected(values.includes(r.id))}>@${r.name}</option>`)}
 </select>${help ? html`<span class="hint">${help}</span>` : ''}${warningList(values.flatMap((id) => roleWarnings(guild, id, { autoAssign, assign })))}</label>`;
 }

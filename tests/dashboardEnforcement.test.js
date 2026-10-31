@@ -658,7 +658,7 @@ test('independent review on: the issuing admin sees "needs a second reviewer", n
         const h = await setup({ overrides: { getCaseByCode: async (code) => issuedBy(ADMIN)(code) } });
         const detail = await get(h, h.d.enforcement.appealDetail, { params: { code: CODE } });
         assert.equal(detail.statusCode, 200);
-        assert.ok(detail.body.includes('Issued by issuer&lt;b&gt; — needs a second reviewer'));
+        assert.ok(detail.body.includes('Issued by issuer&lt;b&gt;, so it needs a second reviewer'));
         assert.ok(detail.body.includes(SECOND_REVIEWER));
         assert.ok(!detail.body.includes(`/dashboard/appeals/${CODE}/preview`), 'no decision form for the issuer');
         assert.ok(!/<[^>]*style=/i.test(detail.body), 'no inline styles');

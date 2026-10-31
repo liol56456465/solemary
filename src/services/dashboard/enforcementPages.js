@@ -78,14 +78,14 @@ export function membersPage({ session, access = null, moduleStates = {}, list, f
         ? html`${row.roles.slice(0, 3).map((r) => html`<span class="role-chip">@${r.name}</span>`)}${row.roles.length > 3 ? html`<span class="muted"> +${row.roles.length - 3}</span>` : ''}`
         : html`<span class="muted">no roles</span>`);
     const warnCell = (row) => (row.level > 0 ? html`level ${row.level}${row.warns ? html` · ${row.warns} warn${row.warns === 1 ? '' : 's'}` : ''}`
-        : row.warns ? html`${row.warns} of 3` : html`<span class="muted">—</span>`);
+        : row.warns ? html`${row.warns} of 3` : html`<span class="muted">-</span>`);
     const tick = (row) => (canWrite ? html`<td class="tick"><input type="checkbox" name="ids" value="${row.id}" form="bulk-form" aria-label="Select ${row.displayName}"></td>` : '');
     const table = rows.length ? html`<div class="table-wrap"><table class="members"><thead><tr>${canWrite ? html`<th class="tick"><input type="checkbox" data-select-all="ids" aria-label="Select everyone on this page"></th>` : ''}<th>Member</th><th>Roles</th><th>Joined</th><th>Warns</th><th>State</th></tr></thead><tbody>
 ${rows.map((row) => html`<tr>${tick(row)}<td><a class="member-cell" href="${userHref(row.id)}">${row.avatarUrl && isAllowedImageUrl(row.avatarUrl)
         ? html`<img class="avatar-sm" src="${row.avatarUrl}" alt="" width="32" height="32" loading="lazy" referrerpolicy="no-referrer">`
         : html`<span class="avatar-sm" aria-hidden="true">${row.displayName.slice(0, 1).toUpperCase()}</span>`}<span><b>${row.displayName}</b>${row.bot ? html` <span class="tag">bot</span>` : ''}<small>${row.username} · ${row.id}</small></span></a></td>
 <td class="roles-cell">${roleCell(row)}</td><td class="nowrap">${row.joinedAt ? html`<time datetime="${new Date(row.joinedAt).toISOString()}" data-relative>${formatDate(new Date(row.joinedAt))}</time>` : html`<span class="muted">unknown</span>`}</td>
-<td class="nowrap">${warnCell(row)}</td><td>${row.muted ? html`<span class="state-word is-warn"><span class="dot dot-warn" aria-hidden="true"></span>Muted</span>` : html`<span class="muted">—</span>`}</td></tr>`)}
+<td class="nowrap">${warnCell(row)}</td><td>${row.muted ? html`<span class="state-word is-warn"><span class="dot dot-warn" aria-hidden="true"></span>Muted</span>` : html`<span class="muted">-</span>`}</td></tr>`)}
 </tbody></table></div>
 <nav class="pager" aria-label="Pages"><span class="muted">Page ${list.page + 1} of ${list.pages} · ${list.total} member${list.total === 1 ? '' : 's'}</span>${list.page > 0 ? pageLink(list.page - 1, '← Previous') : ''}${list.page + 1 < list.pages ? pageLink(list.page + 1, 'Next →') : ''}</nav>`
         : ['q', 'role', 'joined', 'state'].some((key) => filters[key])
@@ -127,7 +127,7 @@ ${rows.map((row) => html`<tr><td><a class="member-cell" href="${userHref(row.id)
         ? html`<img class="avatar-sm" src="${row.avatarUrl}" alt="" width="32" height="32" loading="lazy" referrerpolicy="no-referrer">`
         : html`<span class="avatar-sm" aria-hidden="true">${row.displayName.slice(0, 1).toUpperCase()}</span>`}<span><b>${row.displayName}</b><small>${row.username} · ${row.id}</small></span></a></td>
 <td>${row.reason || html`<span class="muted">no reason given</span>`}</td>
-<td class="nowrap">${row.record ? html`${caseLink(row.record.case_code)}${row.record.status === 'appeal_pending' ? html`<br><a class="state-word is-warn" href="${path(`/appeals/${encodeURIComponent(row.record.case_code)}`)}"><span class="dot dot-warn" aria-hidden="true"></span>appeal pending</a>` : ''}` : html`<span class="muted">—</span>`}</td>
+<td class="nowrap">${row.record ? html`${caseLink(row.record.case_code)}${row.record.status === 'appeal_pending' ? html`<br><a class="state-word is-warn" href="${path(`/appeals/${encodeURIComponent(row.record.case_code)}`)}"><span class="dot dot-warn" aria-hidden="true"></span>appeal pending</a>` : ''}` : html`<span class="muted">-</span>`}</td>
 <td>${kind(row)}${row.record ? html`<br><small class="muted">by ${row.record.moderator_username}, ${formatDate(row.record.created_at)}</small>` : ''}</td>
 <td class="nowrap"><a class="btn small" href="${userHref(row.id)}#s-member-actions">${canAct ? 'Unban…' : 'Open'}<span class="sr"> ${row.displayName}</span></a></td></tr>`)}
 </tbody></table></div>
@@ -149,9 +149,9 @@ function standingSection(view) {
     const { state, countedWarns = [], appealStatuses = new Map() } = view;
     const ladder = state.ladder;
     const active = [];
-    if (state.activeBan) active.push(html`ban ${caseLink(state.activeBan.case_code)} — ${state.activeBan.expires_at ? html`ends ${formatDate(state.activeBan.expires_at)}` : 'permanent'}`);
-    else if (state.banned) active.push(html`banned (no record — banned outside the bot)`);
-    if (state.activeMute) active.push(html`mute ${caseLink(state.activeMute.case_code)} — ends ${formatDate(state.activeMute.expires_at)}`);
+    if (state.activeBan) active.push(html`ban ${caseLink(state.activeBan.case_code)}, ${state.activeBan.expires_at ? html`ends ${formatDate(state.activeBan.expires_at)}` : 'permanent'}`);
+    else if (state.banned) active.push(html`banned outside the bot (no record)`);
+    if (state.activeMute) active.push(html`mute ${caseLink(state.activeMute.case_code)}, ends ${formatDate(state.activeMute.expires_at)}`);
     else if (state.muted) active.push(html`has the muted role (no record)`);
     const pending = [...appealStatuses].filter(([, status]) => status === 'pending').map(([code]) => code);
     return html`<dl>
@@ -188,8 +188,8 @@ function profileSection(user, member, now) {
     const roles = member?.roles || [];
     return html`<div class="profile">${avatar}<dl>
 <dt>Username</dt><dd>${user.username}${user.bot ? html` <span class="tag">bot</span>` : ''} <span class="muted">${user.id}</span></dd>
-<dt>Display name</dt><dd>${user.globalName || '—'}</dd>
-${member ? html`<dt>Nickname</dt><dd>${member.nickname || '—'}</dd>` : ''}
+<dt>Display name</dt><dd>${user.globalName || '-'}</dd>
+${member ? html`<dt>Nickname</dt><dd>${member.nickname || '-'}</dd>` : ''}
 <dt>Account created</dt><dd>${formatDate(user.createdAt)} (${formatAge(user.createdAt, now)} ago)</dd>
 <dt>In server</dt><dd>${member ? html`yes, joined ${member.joinedAt ? html`${formatDate(member.joinedAt)} (${formatAge(member.joinedAt, now)} ago)` : 'at an unknown time'}` : 'no'}</dd>
 ${member ? html`<dt>Roles (${roles.length})</dt><dd>${roles.length ? roles.map((r, i) => html`${i ? ', ' : ''}@${r.name}`) : 'none'}</dd>` : ''}
@@ -210,10 +210,10 @@ ${['q', 'joined', 'state', 'sort'].map((k) => html`<input type="hidden" name="${
 <label class="check"><input type="radio" name="scope" value="selected" checked> The members ticked below</label>
 <label class="check"><input type="radio" name="scope" value="filter"${canAll ? '' : raw(' disabled')}> Everyone matching these filters (${list.total})${canAll ? '' : html` <span class="muted">more than ${BULK_LIMIT}: narrow the filters</span>`}</label></fieldset>
 <div class="grid">
-<label>Do this<select name="action" required><option value="">— choose —</option>${Object.entries(BULK_ACTIONS).map(([k, v]) => html`<option value="${k}">${v}</option>`)}</select></label>
-<label class="only-role">Role<select name="roleId" data-search><option value="">— choose —</option>${roles.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>
+<label>Do this<select name="action" required><option value="">Choose…</option>${Object.entries(BULK_ACTIONS).map(([k, v]) => html`<option value="${k}">${v}</option>`)}</select></label>
+<label class="only-role">Role<select name="roleId" data-search><option value="">Choose…</option>${roles.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>
 <label class="only-role-add">For<select name="for"><option value="">Permanently</option>${Object.entries(TEMP_ROLE_LENGTHS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select></label>
-<label class="only-timeout">Timeout length<select name="timeout"><option value="">— choose —</option>${Object.entries(TIMEOUTS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select></label>
+<label class="only-timeout">Timeout length<select name="timeout"><option value="">Choose…</option>${Object.entries(TIMEOUTS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select></label>
 <label class="only-record">Reason<select name="reasonKey">${ENFORCEMENT_REASONS.map((r) => html`<option value="${r.key}">${r.label}</option>`)}<option value="${CUSTOM_REASON_KEY}">Custom…</option></select></label>
 <label class="only-record">Custom reason<input name="custom_reason" maxlength="500"><span class="hint">Only used with "Custom…". Each member gets the same DM and case as one-by-one.</span></label>
 <label class="only-ban">Ban length<input name="duration" maxlength="20" placeholder="e.g. 7d, 1mo, permanent"></label>
@@ -263,13 +263,13 @@ function memberEditSection(view, can, csrf) {
     if (!can.roles && !can.nickname && !can.timeout && !can.unverify) return html`${current}<p class="muted">Changing roles needs Administrator and editing turned on.</p>`;
     if (edit?.problem) return html`${current}<p class="notice">${edit.problem}</p>`;
     const roleForm = edit.assignable.length
-        ? actionForm(csrf, `/users/${id}/roles/add`, html`<div class="grid"><label>Give a role<select name="roleId" data-search required><option value="">— choose —</option>${edit.assignable.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select><span class="hint">Only roles below your highest role and Mewvo's; staff roles only for the server owner or bot owners.</span></label>
+        ? actionForm(csrf, `/users/${id}/roles/add`, html`<div class="grid"><label>Give a role<select name="roleId" data-search required><option value="">Choose…</option>${edit.assignable.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select><span class="hint">Only roles below your highest role and Mewvo's; staff roles only for the server owner or bot owners.</span></label>
 <label>For<select name="for"><option value="">Permanently</option>${Object.entries(TEMP_ROLE_LENGTHS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select><span class="hint">Timed roles are taken off automatically, and given back if they rejoin before the end.</span></label>
 <label>Reason (optional, Discord audit log)<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: 'Give role' })
         : html`<p class="muted">There is no other role you can give.</p>`;
     const nickForm = actionForm(csrf, `/users/${id}/nickname`, html`<div class="grid"><label>Nickname<input name="nickname" maxlength="${NICKNAME_MAX}" value="${view.member.nickname || ''}" placeholder="${view.user.globalName || view.user.username}"><span class="hint">Empty removes the nickname.</span></label></div>`, { submit: 'Save nickname' });
     const timeoutForm = html`${edit.timeoutUntil ? html`<p class="notice">Timed out until ${formatDate(edit.timeoutUntil)}.</p>${actionForm(csrf, `/users/${id}/timeout`, '', { submit: 'Remove timeout', hidden: { duration: 'off' }, inline: true, secondary: true })}` : ''}
-${actionForm(csrf, `/users/${id}/timeout`, html`<div class="grid"><label>Timeout length<select name="duration" required><option value="">— choose —</option>${Object.entries(TIMEOUTS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select><span class="hint">Discord's own timeout (max 28 days): they can read but not write or talk. For longer, use Mute.</span></label>
+${actionForm(csrf, `/users/${id}/timeout`, html`<div class="grid"><label>Timeout length<select name="duration" required><option value="">Choose…</option>${Object.entries(TIMEOUTS).map(([k, t]) => html`<option value="${k}">${t.label}</option>`)}</select><span class="hint">Discord's own timeout (max 28 days): they can read but not write or talk. For longer, use Mute.</span></label>
 <label>Reason (optional, Discord audit log)<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: edit.timeoutUntil ? 'Change timeout' : 'Time out', confirm: `Time out ${view.user.username}?` })}`;
     const verifyForm = edit.verifiedRole
         ? html`<h3>Verification</h3><p>Verified (@${edit.verifiedRole.name}).</p>${actionForm(csrf, `/users/${id}/unverify`, html`<div class="grid"><label>Reason (optional, Discord audit log and verification log)<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: 'Unverify', secondary: true, confirm: `Remove verification from ${view.user.username}? They lose @${edit.verifiedRole.name} and must verify again.` })}`
@@ -281,7 +281,7 @@ function notesSection(view, canWrite, csrf) {
     const notes = view.notes || [];
     const id = view.user.id;
     return html`${notes.length ? html`<div class="scroll"><table><thead><tr><th>#</th><th>Note</th><th>By</th><th>When</th><th></th></tr></thead><tbody>
-${notes.map((note, i) => html`<tr><td>${i + 1}</td><td class="value">${note.content}</td><td>${note.author || 'unknown'}</td><td>${note.timestamp ? formatDate(note.timestamp) : '—'}</td>
+${notes.map((note, i) => html`<tr><td>${i + 1}</td><td class="value">${note.content}</td><td>${note.author || 'unknown'}</td><td>${note.timestamp ? formatDate(note.timestamp) : '-'}</td>
 <td>${canWrite ? actionForm(csrf, `/users/${id}/notes/remove`, '', { submit: 'Remove', hidden: { note: String(note.id ?? '') }, inline: true, danger: true }) : ''}</td></tr>`)}
 </tbody></table></div>` : html`<p class="empty">No staff notes yet. Add one below; only staff can see them.</p>`}
 ${canWrite ? actionForm(csrf, `/users/${id}/notes/add`, html`<label class="wide">New note (only staff can see it)<textarea name="note" maxlength="${NOTE_MAX}" rows="2" required></textarea></label>`, { submit: 'Add note' }) : ''}`;
@@ -432,7 +432,7 @@ ${r.is_test ? html`<p class="notice">Test case created with /test: nothing was e
 <dt>Case</dt><dd>${caseLink(r.case_code)} · ${r.name}</dd>
 <dt>Reason</dt><dd>${r.reason}</dd>
 <dt>Given by</dt><dd>${r.moderator_username}${r.is_auto ? ' (automatic, warn ladder)' : ''} · ${formatDate(r.created_at)}</dd>
-${review.required ? html`<dt>Independent review</dt><dd class="warn">Issued by ${review.issuer} — needs a second reviewer</dd>` : ''}
+${review.required ? html`<dt>Independent review</dt><dd class="warn">Issued by ${review.issuer}, so it needs a second reviewer</dd>` : ''}
 ${r.type === 'ban' || r.type === 'mute' ? html`<dt>Ends</dt><dd>${r.expires_at ? formatDate(r.expires_at) : 'permanent'}</dd>` : ''}
 ${ladder ? html`<dt>Warn ladder</dt><dd>level ${ladder.level}, ${ladder.warns_since_level} counted warn(s)</dd>` : ''}
 </dl>
@@ -443,7 +443,7 @@ ${evidence.length ? html`<ul class="evidence">${evidence.map(({ row, freshUrl })
 ${row.kind === 'image' ? (freshUrl && isAllowedImageUrl(freshUrl) ? html`<a href="${freshUrl}" rel="noopener noreferrer" target="_blank"><img src="${freshUrl}" alt="Evidence image ${row.id}" loading="lazy" referrerpolicy="no-referrer"></a>` : html`<div class="muted">Image not available.</div>`)
         : html`${row.url ? link(row.url) : ''}${row.excerpt ? html`<blockquote>${row.excerpt}</blockquote>` : ''}`}</li>`)}</ul>` : html`<p class="muted">No evidence attached.</p>`}
 <h2>Earlier appeals on this case (${history.length})</h2>
-${history.length ? html`<ul>${history.map((a) => html`<li>${formatDate(a.created_at)} · ${a.status}${a.decided_by_username ? html` by ${a.decided_by_username}` : ''}${a.note ? html` — ${a.note}` : ''}</li>`)}</ul>` : html`<p class="muted">None.</p>`}
+${history.length ? html`<ul>${history.map((a) => html`<li>${formatDate(a.created_at)} · ${a.status}${a.decided_by_username ? html` by ${a.decided_by_username}` : ''}${a.note ? html`: ${a.note}` : ''}</li>`)}</ul>` : html`<p class="muted">None.</p>`}
 <h2>Other cases (${othersTotal})</h2>
 ${others.length ? html`<ul>${others.map((c) => html`<li>${caseLink(c.case_code)} ${typeBadge(c.type)} · ${formatDate(c.created_at)} · ${caseStatusLabel(c)} · ${c.reason}</li>`)}</ul>` : html`<p class="muted">None.</p>`}
 ${pending && canWrite && review.blocked ? html`<h2>Decide</h2><p class="notice">${review.message}</p>` : ''}
@@ -466,7 +466,7 @@ export function appealConfirmPage({ session, access = null, moduleStates = {}, r
 <h1>Confirm: ${accept ? 'accept' : 'deny'} the appeal on <code>${record.case_code}</code></h1>
 <section class="card confirm-card"><dl><dt>Member</dt><dd>${record.target_username} <span class="muted">${record.target_user_id}</span></dd>
 <dt>Case</dt><dd>${typeBadge(record.type)} · ${record.name}</dd>
-<dt>Note</dt><dd>${note || '—'}</dd>
+<dt>Note</dt><dd>${note || '-'}</dd>
 <dt>Effect</dt><dd>${effect}${!accept && record.is_auto && record.ladder_level_after === 3 ? ' This level-3 ladder ban becomes unappealable.' : ''}</dd></dl>
 <p class="muted">The appeal channel gets the decision and is deleted 10 seconds later (its transcript goes to the mod log). This confirmation works once and expires in 5 minutes.</p>
 ${actionForm(session.csrf, `/appeals/${record.case_code}/decide`, '', { submit: accept ? 'Accept appeal' : 'Deny appeal', hidden: { token, fh: hash }, danger: !accept })}</section>`;
@@ -509,13 +509,13 @@ ${heatTable(`Incidents (cases created, automatic included): ${report.totalIncide
 ${heatTable(`Staff activity (cases by human moderators + appeals decided): ${report.totalStaff}`, report.staffGrid, report.maxStaff)}
 <p class="muted">Stronger shade = busier, in quarter steps up to the busiest hour. Columns are hours 0–23 in ${report.timeZone} (the server's birthday time zone, set under Birthdays; UTC when none is set).</p>
 <h3>Most under-covered slots</h3>
-${report.gaps.length ? html`<ol>${report.gaps.map((slot) => html`<li>${slotLabel(slot)} — ${slot.incidents} incident${slot.incidents === 1 ? '' : 's'}, ${slot.staff} staff action${slot.staff === 1 ? '' : 's'}</li>`)}</ol>` : html`<p class="muted">No incidents in this period.</p>`}`, '', { key: 'staff-coverage' });
+${report.gaps.length ? html`<ol>${report.gaps.map((slot) => html`<li>${slotLabel(slot)}: ${slot.incidents} incident${slot.incidents === 1 ? '' : 's'}, ${slot.staff} staff action${slot.staff === 1 ? '' : 's'}</li>`)}</ol>` : html`<p class="muted">No incidents in this period.</p>`}`, '', { key: 'staff-coverage' });
 }
 
 /** blocks: listMassActionBlocks; names: Map(id → username); canLift: OWNER_IDS (like /staff restore). */
 export function blocksSection({ blocks = [], names = new Map(), canLift = false, csrf, editEnabled = true }) {
     return section(`Mass-action guard blocks (${blocks.length})`, html`${blocks.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Blocked until</th><th>Bans/kicks</th><th>Since</th><th></th></tr></thead><tbody>
-${blocks.map((b) => html`<tr><td>${names.get(b.moderatorId) || b.moderatorId} <span class="muted">${b.moderatorId}</span></td><td>${formatDate(b.until)}</td><td>${b.count ?? '—'}</td><td>${formatDate(b.at)}</td>
+${blocks.map((b) => html`<tr><td>${names.get(b.moderatorId) || b.moderatorId} <span class="muted">${b.moderatorId}</span></td><td>${formatDate(b.until)}</td><td>${b.count ?? '-'}</td><td>${formatDate(b.at)}</td>
 <td>${canLift && editEnabled ? actionForm(csrf, '/staff/blocks/lift', '', { submit: 'Lift block', hidden: { moderator: b.moderatorId }, inline: true, danger: true }) : ''}</td></tr>`)}
 </tbody></table></div>${canLift ? '' : html`<p class="muted">Only the bot owners can lift a block (like /staff restore).</p>`}` : html`<p class="muted">Nobody is blocked.</p>`}`, '', { key: 'staff-blocks' });
 }
@@ -571,7 +571,7 @@ ${lookup.rows.map((w) => html`<tr><td>${new Date(w.expires_at).getTime() > now ?
         ? html`<p class="muted">Removed staff roles could not be loaded (database unavailable).</p>`
         : removed.length
             ? html`<div class="scroll"><table><thead><tr><th>Staff member</th><th>Removed roles</th><th>Why</th><th>When</th><th></th></tr></thead><tbody>
-${removed.map((r) => html`<tr><td>${who(r.userId)}</td><td>${r.roleIds.map((id, i) => html`${i ? ', ' : ''}${roleNames.get(id) || id}`)}</td><td class="value">${r.reason || '—'}</td><td>${formatDate(r.at)}</td>
+${removed.map((r) => html`<tr><td>${who(r.userId)}</td><td>${r.roleIds.map((id, i) => html`${i ? ', ' : ''}${roleNames.get(id) || id}`)}</td><td class="value">${r.reason || '-'}</td><td>${formatDate(r.at)}</td>
 <td>${canWrite ? actionForm(csrf, '/staff/restore', '', { submit: 'Restore roles', hidden: { user: r.userId }, inline: true, confirm: 'Give these staff roles back?' }) : ''}</td></tr>`)}
 </tbody></table></div>`
             : html`<p class="muted">No removed staff roles are saved.</p>`;

@@ -315,7 +315,7 @@ export function overviewPage({ session, access = null, moduleStates = {}, overvi
     const metric = (label, value, sub, href = null) => html`<div class="metric"><p class="metric-label">${label}</p>${href && value !== undefined ? html`<a class="metric-value" href="${href}">${show(value)}</a>` : html`<p class="metric-value">${show(value)}</p>`}<p class="metric-sub">${sub}</p></div>`;
     const memberSub = o.joinedThisWeek != null ? html`<span class="up">+${o.joinedThisWeek}</span> this week` : o.guild?.online != null ? `${o.guild.online} online` : 'in the server';
     const metrics = html`<div class="metrics">
-${metric('Members', o.guild?.memberCount ?? '—', memberSub, path('/users'))}
+${metric('Members', o.guild?.memberCount ?? '-', memberSub, path('/users'))}
 ${metric('Active sanctions', sanctions, sanctions === undefined ? 'unavailable' : `${o.activeBans} ban${o.activeBans === 1 ? '' : 's'} · ${o.activeMutes} mute${o.activeMutes === 1 ? '' : 's'}`, path('/cases'))}
 ${metric('Pending appeals', o.pendingAppeals === undefined ? undefined : pendingText, o.pendingAppeals > 0 ? 'need a decision' : 'nothing waiting', path('/appeals'))}
 ${metric('Open tickets', o.openTickets, 'waiting for staff')}</div>`;

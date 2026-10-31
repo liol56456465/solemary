@@ -172,7 +172,7 @@ ${canAct ? '' : html`<p class="muted">Ending a lockdown needs Administrator in t
             ? html`<p class="error" role="alert">The review queue could not be read (review channel unavailable).</p>`
             : html`${table(['Card', 'Since', 'Messages'], reviews.slice(0, QUEUE_LISTED).map((item) => [
                 isDiscordUrl(item.url) ? html`<a href="${item.url}" rel="noopener noreferrer" target="_blank">${item.title || 'Review card'}</a>` : (item.title || 'Review card'),
-                item.at ? timeTag(new Date(item.at)) : '—',
+                item.at ? timeTag(new Date(item.at)) : '-',
                 item.count || 1,
             ]), 'Nothing is waiting for review.')}
 ${reviews.length > QUEUE_LISTED ? html`<p class="muted">…and ${reviews.length - QUEUE_LISTED} more.</p>` : ''}
@@ -183,7 +183,7 @@ ${reviews.length > QUEUE_LISTED ? html`<p class="muted">…and ${reviews.length 
             : table(['Member', 'Until', 'Ban', ''], probations.map((p) => [
                 html`<a href="${path(`/users/${encodeURIComponent(p.userId)}`)}">${memberName(g, p.userId) || p.userId}</a> <span class="muted">${p.userId}</span>`,
                 formatDate(new Date(Number(p.until))),
-                p.caseCode ? html`<a href="${path(`/cases/${encodeURIComponent(p.caseCode)}`)}"><code>${p.caseCode}</code></a>${p.how ? ` (${p.how})` : ''}` : '—',
+                p.caseCode ? html`<a href="${path(`/cases/${encodeURIComponent(p.caseCode)}`)}"><code>${p.caseCode}</code></a>${p.how ? ` (${p.how})` : ''}` : '-',
                 buttonForm(ctx, 'automod', 'probation-end', 'End probation', { user: p.userId }, { confirm: 'End this probation now?', canEdit: canAct }),
             ]), 'Nobody is on probation.');
         const live = html`${lockdown?.active ? section('Raid lockdown', lockdownBody) : ''}

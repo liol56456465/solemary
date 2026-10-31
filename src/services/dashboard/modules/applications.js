@@ -46,7 +46,7 @@ ${selectInput('decision', 'approve', [['approve', 'Approve (gives the role)'], [
 ${textArea('note', '', { label: 'Note to the applicant (optional)', max: REVIEW_NOTE_MAX, rows: 2 })}</div>`,
         { submit: 'Send decision', hidden: { id: a.id }, canEdit: canReview, confirm: `Send this decision to ${a.username || a.userId}? They get a DM.` })}</details>`);
     const reviewedRows = reviewed.map((a) => [a.roleName || 'Unknown role', who(a), pill(a.status === 'approved', a.status === 'approved' ? 'approved' : 'denied', a.status === 'approved' ? 'on' : 'off'),
-        a.reviewMessage || '—', a.reviewedAt ? formatDate(a.reviewedAt) : '—']);
+        a.reviewMessage || '-', a.reviewedAt ? formatDate(a.reviewedAt) : '-']);
     return html`${pendingTotal ? html`<p>${pendingTotal} waiting${pendingTotal > pending.length ? html` (newest ${pending.length} shown)` : ''}.</p>${pendingBlocks}` : html`<p class="muted">No applications are waiting for review.</p>`}
 ${canReview ? '' : html`<p class="muted">Reviewing needs Administrator in the main server.</p>`}
 <h3>Recently reviewed</h3>${table(['Application', 'Member', 'Decision', 'Note', 'Reviewed'], reviewedRows, 'Nothing reviewed yet.')}`;

@@ -1158,7 +1158,7 @@ test('same-origin check: Origin, else Referer, else Sec-Fetch-Site; nothing → 
 
 test('audit helpers and the mod log route', async () => {
     assert.deepEqual(diffSnapshots({ a: 1, b: [1] }, { a: 1, b: [1, 2], c: null }), [{ key: 'b', old: [1], new: [1, 2] }]);
-    assert.match(changeSummary([{ key: 'k', old: null, new: 'x'.repeat(500) }]), /^k: — → x+…$/);
+    assert.match(changeSummary([{ key: 'k', old: null, new: 'x'.repeat(500) }]), /^k: \(none\) → x+…$/);
     assert.equal(channelPurposeFor('dashboard'), 'modlog');
     const rows = [];
     const posts = [];
@@ -2216,7 +2216,7 @@ test('rules: add, edit, move, delete — stored as the serverRules setting with 
     const [first, second] = stored.rules.map((r) => r.id);
     assert.equal(h.auditRows.filter((r) => r.key === 'serverRules').length, 2, 'one audit row per save (settings service)');
     const modLog = h.calls.filter((c) => c.name === 'postModLog').map((c) => c.args[1].description);
-    assert.match(modLog[0], /changed Rules: rule 1: — → No spam — Line one Line two/);
+    assert.match(modLog[0], /changed Rules: rule 1: \(none\) → No spam: Line one Line two/);
 
     assert.equal((await post(h, 'rules', 'rule-edit', { id: second, title: 'Be very kind', text: 'Always.' })).statusCode, 303);
     assert.deepEqual(h.state.registry.serverRules.rules[1], { id: second, title: 'Be very kind', text: 'Always.' });
@@ -2275,7 +2275,7 @@ test('rules: links — one select per prebuilt reason; unchanged → "Nothing ch
     await post(h, 'rules', 'links', { link_spam: RULE_B, link_nope: RULE_A });
     assert.deepEqual(h.state.registry.reasonRuleLinks, { spam: RULE_B });
     const line = h.calls.filter((c) => c.name === 'postModLog').at(-1).args[1].description;
-    assert.match(line, /reason spam: — → rule 2: Be kind/);
+    assert.match(line, /reason spam: \(none\) → rule 2: Be kind/);
 });
 
 test('rules: refused without CSRF, with editing off, and for users without access; nothing saved', async () => {

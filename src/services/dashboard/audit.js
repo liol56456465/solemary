@@ -32,7 +32,7 @@ export function diffSnapshots(before = {}, after = {}, keys = null, prefix = '')
 
 /** A value as short text for the audit page and the mod log line. */
 export function valueText(value) {
-    if (value === null || value === undefined || value === '') return '—';
+    if (value === null || value === undefined || value === '') return '(none)';
     const text = typeof value === 'string' ? value : JSON.stringify(value);
     return text.length > MAX_VALUE_TEXT ? `${text.slice(0, MAX_VALUE_TEXT - 1)}…` : text;
 }

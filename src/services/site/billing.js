@@ -48,7 +48,7 @@ export function checkoutHref({ planId, period, kind }) {
 
 function when(value) {
     const date = value ? new Date(value) : null;
-    return date && !Number.isNaN(date.getTime()) ? html`<time datetime="${date.toISOString()}">${formatDate(date)}</time>` : '—';
+    return date && !Number.isNaN(date.getTime()) ? html`<time datetime="${date.toISOString()}">${formatDate(date)}</time>` : '-';
 }
 
 const testBanner = () => html`<p class="test-banner" role="note"><span class="planned">Test mode</span> ${TEST_NOTICE}</p>`;
