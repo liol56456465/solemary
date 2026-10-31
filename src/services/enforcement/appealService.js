@@ -321,13 +321,15 @@ export async function buildCaseDossier(record, { appeal = null, client = null } 
 
 const DECISION_BUTTON_ID = 'appealdecide';
 
-/** Accept / Deny buttons under an appeal; each decides that case's appeal straight away. */
+/** Accept / Deny under an appeal (each decides it straight away), plus "I'm looking at it" (appealStatusService). */
 export function appealDecisionRow(caseCode, { disabled = false } = {}) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(`${DECISION_BUTTON_ID}:accept:${caseCode}`)
             .setLabel('Accept').setStyle(ButtonStyle.Success).setDisabled(disabled),
         new ButtonBuilder().setCustomId(`${DECISION_BUTTON_ID}:deny:${caseCode}`)
             .setLabel('Deny').setStyle(ButtonStyle.Danger).setDisabled(disabled),
+        new ButtonBuilder().setCustomId(`${DECISION_BUTTON_ID}:claim:${caseCode}`)
+            .setLabel('I\'m looking at it').setStyle(ButtonStyle.Secondary).setDisabled(disabled),
     );
 }
 

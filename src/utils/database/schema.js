@@ -305,6 +305,11 @@ export const tableStatements = [
     // channel_guild_id); the dossier and Accept / Deny are in a main-server staff channel.
     `ALTER TABLE ${t.mod_appeals} ADD COLUMN IF NOT EXISTS channel_guild_id VARCHAR(20)`,
     `ALTER TABLE ${t.mod_appeals} ADD COLUMN IF NOT EXISTS staff_channel_id VARCHAR(20)`,
+    // Appeal status updates (schema v6): who took it ("I'm looking at it") and the 2-day reminder.
+    `ALTER TABLE ${t.mod_appeals} ADD COLUMN IF NOT EXISTS claimed_by VARCHAR(20)`,
+    `ALTER TABLE ${t.mod_appeals} ADD COLUMN IF NOT EXISTS claimed_by_username VARCHAR(100)`,
+    `ALTER TABLE ${t.mod_appeals} ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ`,
+    `ALTER TABLE ${t.mod_appeals} ADD COLUMN IF NOT EXISTS reminded_at TIMESTAMPTZ`,
 
     // Warnings the owner gives staff (/staff warn). They expire; enough active ones
     // remove the member's staff roles.

@@ -23,6 +23,7 @@ import { InteractionHelper } from '../utils/interactionHelper.js';
 import { normalizeCaseCode } from '../services/enforcement/format.js';
 import { listUserAppeals } from '../services/enforcement/caseService.js';
 import { decideAppeal, submitAppeal, submitStaffReport } from '../services/enforcement/appealService.js';
+import { claimAppeal } from '../services/enforcement/appealStatusService.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { getMemberStanding, standingFields } from '../services/enforcement/standingService.js';
 
@@ -216,6 +217,21 @@ export async function canDecideAppeals(interaction, client) {
     return isAdministrator(mainMember);
 }
 
+/** "I'm looking at it": records the reviewer once, DMs the member, tells the staff channel. */
+async function handleClaim(interaction, client, caseCode) {
+    const result = await claimAppeal({ client, admin: interaction.user, caseCode });
+    if (result.status === 'none') {
+        return InteractionHelper.safeEditReply(interaction, { embeds: [createEmbed({ title: 'Nothing to take', description: `There is no open appeal for \`${caseCode}\` any more.`, color: 'warning' })] });
+    }
+    if (result.status === 'already') {
+        return InteractionHelper.safeEditReply(interaction, { embeds: [createEmbed({ title: 'Already taken', description: `${result.by} is already looking at this appeal.`, color: 'warning' })] });
+    }
+    await interaction.channel?.send?.({ content: `${interaction.user.username} is looking at this appeal.`, allowedMentions: { parse: [] } }).catch(() => {});
+    return InteractionHelper.safeEditReply(interaction, {
+        embeds: [successEmbed('You took this appeal', `The member was told someone is looking at it. DM ${result.dmDelivered ? 'delivered' : '**not delivered** (their DMs are closed)'}.`)],
+    });
+}
+
 export async function handleAppealDecisionButton(interaction, client, args) {
     // Deferred first: the support-server check fetches the main-server member.
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
@@ -227,6 +243,7 @@ export async function handleAppealDecisionButton(interaction, client, args) {
     }
     const [decision, rawCode] = args;
     const caseCode = normalizeCaseCode(rawCode || '');
+    if (decision === 'claim' && caseCode) return handleClaim(interaction, client, caseCode);
     if (!DECISIONS.has(decision) || !caseCode) return;
 
     const result = await decideAppeal({ client, admin: interaction.user, caseCode, decision, note: null, via: 'button' });
