@@ -80,7 +80,7 @@ ${page + 1 < pages ? html`<a href="/dashboard/cases${queryString({ ...keep, page
     const filtered = Object.values(keep).some(Boolean);
     const exportLine = !canExport ? '' : exportDays === null
         ? html`<p class="muted">Case export (CSV) comes with Mewvo Normal and up, on the server owner's plan. <a href="/pricing">Plans</a></p>`
-        : html`<p><a class="button secondary" href="/dashboard/cases/export.csv" download>Download CSV</a> <span class="muted">${Number.isFinite(exportDays) ? `The last ${exportDays} days (Mewvo Normal).` : 'The full history.'}</span></p>`;
+        : html`<p><a class="btn" href="/dashboard/cases/export.csv" download>Download CSV</a> <span class="muted">${Number.isFinite(exportDays) ? `The last ${exportDays} days (Mewvo Normal).` : 'The full history.'}</span></p>`;
     const body = html`<header class="page-head"><h1>Cases</h1><p class="muted">Every enforcement action, newest first. Filter by member, moderator, type, status, tag or date.</p>${exportLine}</header>
 <form class="filters" method="get" action="/dashboard/cases">
 <label>Member ID<input name="member" value="${query.member || ''}" inputmode="numeric" maxlength="20"></label>

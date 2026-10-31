@@ -17,7 +17,7 @@ function uploadForm(csrf) {
 export function backupPage({ session, access = null, moduleStates = {}, canWrite = false, flash = null, error = null }) {
     const body = html`<header class="page-head"><h1>Settings backup</h1><p class="muted">Every dashboard setting of the main and the support server in one file. Use it before big changes, or to move to a new host. Secrets are never in it.</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}${error ? html`<p class="error" role="alert">${error}</p>` : ''}
-<section class="card"><h2>Download</h2><p><a class="button" href="${path('/backup/download')}" download>Download settings (.json)</a></p></section>
+<section class="card"><h2>Download</h2><p><a class="btn primary" href="${path('/backup/download')}" download>Download settings (.json)</a></p></section>
 <section class="card"><h2>Load a backup</h2>
 ${canWrite ? html`<p class="muted">Nothing changes yet: you first see every setting the file would change, then choose to apply it.</p>${uploadForm(session.csrf)}`
         : html`<p class="muted">Loading a backup needs Administrator and editing turned on.</p>`}</section>`;
