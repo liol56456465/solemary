@@ -88,6 +88,19 @@ export function reminderMessage(row) {
     return `Reminder from ${ts(row.created_at, 'R')}: ${row.text}`;
 }
 
+/**
+ * The channel fallback only posts where the member could post the same text themselves right
+ * now: same server as when it was made, still a member, not timed out, and able to see and
+ * write in that channel (a mute or a ban removes that). Otherwise the reminder fails.
+ */
+export async function mayPostIn(channel, row) {
+    if (!channel?.isTextBased?.() || !channel.guild || !row.guild_id || channel.guild.id !== row.guild_id) return false;
+    const member = await channel.guild.members.fetch(row.user_id).catch(() => null);
+    if (!member || member.isCommunicationDisabled?.()) return false;
+    const perms = channel.permissionsFor?.(member);
+    return Boolean(perms?.has?.(['ViewChannel', 'SendMessages']));
+}
+
 /** Sends one reminder: DM first, then the channel it was made in. Returns 'dm' | 'channel' | 'failed'. */
 export async function deliverReminder(client, row) {
     const content = reminderMessage(row);
@@ -100,7 +113,7 @@ export async function deliverReminder(client, row) {
     }
     try {
         const channel = row.channel_id ? await client.channels.fetch(row.channel_id) : null;
-        if (channel?.isTextBased?.() && typeof channel.send === 'function') {
+        if (await mayPostIn(channel, row) && typeof channel.send === 'function') {
             await channel.send({ content: `<@${row.user_id}> ${content}`, allowedMentions: { users: [row.user_id] } });
             return 'channel';
         }

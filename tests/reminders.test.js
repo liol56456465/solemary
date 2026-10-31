@@ -58,17 +58,30 @@ test('/remind: set, list, delete only your own; private replies; DB error says n
 });
 
 test('delivery: DM first, then the channel with only that user mentioned; failures are marked, the cron never throws', async () => {
-    const row = { id: 7, user_id: ME, channel_id: '300000000000000003', text: 'stretch @everyone', created_at: new Date(0) };
+    const row = { id: 7, user_id: ME, guild_id: 'G1', channel_id: '300000000000000003', text: 'stretch @everyone', created_at: new Date(0) };
     const sent = [];
     const dmOk = { users: { fetch: async () => ({ send: async (p) => sent.push(['dm', p]) }) }, channels: { fetch: async () => null } };
     assert.equal(await deliverReminder(dmOk, row), 'dm');
     assert.deepEqual(sent[0][1].allowedMentions, { parse: [] });
-    const channel = { isTextBased: () => true, send: async (p) => sent.push(['channel', p]) };
+    let canWrite = true;
+    let timedOut = false;
+    const member = { isCommunicationDisabled: () => timedOut };
+    const guild = { id: 'G1', members: { fetch: async (id) => (id === ME ? member : null) } };
+    const channel = { isTextBased: () => true, guild, permissionsFor: () => ({ has: () => canWrite }), send: async (p) => sent.push(['channel', p]) };
     const dmClosed = { users: { fetch: async () => ({ send: async () => { throw new Error('Cannot send messages to this user'); } }) }, channels: { fetch: async () => channel } };
     assert.equal(await deliverReminder(dmClosed, row), 'channel');
     assert.deepEqual(sent[1][1].allowedMentions, { users: [ME] });
     assert.ok(sent[1][1].content.startsWith(`<@${ME}> Reminder from`));
     assert.match(reminderMessage(row), /^Reminder from <t:0:R>: stretch @everyone$/);
+    // Never posts where the member could not post it themselves now (muted, timed out, left, other server).
+    canWrite = false;
+    assert.equal(await deliverReminder(dmClosed, row), 'failed', 'muted: no Send Messages');
+    canWrite = true; timedOut = true;
+    assert.equal(await deliverReminder(dmClosed, row), 'failed', 'timed out');
+    timedOut = false;
+    assert.equal(await deliverReminder(dmClosed, { ...row, user_id: '999' }), 'failed', 'not a member any more');
+    assert.equal(await deliverReminder(dmClosed, { ...row, guild_id: 'G2' }), 'failed', 'another server');
+    assert.equal(sent.length, 2);
 
     const failed = [];
     const nowhere = { users: { fetch: async () => { throw new Error('x'); } }, channels: { fetch: async () => null } };
