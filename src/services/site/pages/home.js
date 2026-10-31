@@ -47,8 +47,8 @@ const COMMUNITY = [
 export function homePage(ctx) {
     const paid = PLANS.filter((p) => p.monthlyCents > 0);
     const body = html`<section class="hero"><div class="wrap hero-grid">
-<div class="hero-copy"><p class="kicker"><span class="kbd">Discord bot</span><span>Moderation, appeals and community tools</span></p>
-<h1>Discord moderation with a paper trail.</h1>
+<div class="hero-copy"><p class="kicker"><span class="kbd">Discord bot</span><span>Moderation, appeals, automod, tickets, community tools</span></p>
+<h1>A Discord bot for moderation and appeals</h1>
 <p class="lead">Mewvo warns, mutes, kicks and bans from one panel. The member gets a DM with the reason, the end time and how to appeal. Your staff get a case they can review, correct or void.</p>
 ${heroActions(ctx)}
 ${ctx.publicSite ? '' : html`<p class="note">Mewvo runs on its own server for now. It can’t be added to other servers yet.</p>`}</div>
@@ -63,7 +63,7 @@ ${ctx.publicSite ? '' : html`<p class="note">Mewvo runs on its own server for no
 
 ${section({
         id: 'enforcement', number: '01', label: 'Enforcement',
-        title: 'One panel, with the member’s history on top.',
+        title: 'Warn, mute, kick and ban from one panel',
         body: html`<p>Run <code>/enforcements</code> on a member and Mewvo shows their account age, warnings, ladder level, active punishments and last cases before you choose what to do.</p>
 <p class="flow" aria-label="The steps"><kbd>Action</kbd><span aria-hidden="true">→</span><kbd>Reason</kbd><span aria-hidden="true">→</span><kbd>Duration</kbd><span aria-hidden="true">→</span><kbd>Confirm</kbd></p>
 <ul class="ticks"><li>The DM goes out before a kick or ban, so it still reaches the member. If it fails, the moderator is told.</li>
@@ -75,7 +75,7 @@ ${section({
 
 ${section({
         id: 'ladder', number: '02', label: 'Warning ladder', flip: true,
-        title: 'Three warnings, then a ban. No surprises.',
+        title: 'The third warning is an automatic ban',
         body: html`<p>The ladder counts per member and per server, and it never quietly resets. Each warning DM says which one it is. The third is an automatic 7-day ban. After that, the next warning is a 30-day ban, and the one after is permanent, still open to appeal for six months.</p>
 <ul class="ticks"><li>Bans a moderator gives by hand don’t move the ladder.</li>
 <li>Removing a warning lowers the count again.</li>
@@ -86,7 +86,7 @@ ${section({
 
 ${section({
         id: 'appeals', number: '03', label: 'Appeals',
-        title: 'Appeals reach a person, even after a ban.',
+        title: 'Members can appeal, even after a ban',
         body: html`<p>Members press <strong>Appeal</strong> on the appeal panel and fill in three fields. Ban and kick appeals open a private channel in the support server, so the conversation works even when they can’t see your server any more. Staff see the case and the member’s history next to Accept and Deny.</p>
 <ul class="ticks"><li>One pending appeal per case. After a denial, the member waits 7 days to try again.</li>
 <li>Bans and mutes can be appealed while they last; warnings and kicks within 30 days.</li>
@@ -97,7 +97,7 @@ ${section({
 
 ${section({
         id: 'automod', number: '04', label: 'Automod', flip: true,
-        title: 'Automod that shows its work.',
+        title: 'Every automod action gets a review card',
         body: html`<p>Fourteen rules, from scam links and mass mentions to caps and fancy fonts. Each rule has its own punishment steps, and every automatic action is a normal case with a review card in your staff channel: keep it, undo it or change it.</p>
 <ul class="ticks"><li>Text is folded back to plain letters first, so look-alike characters and zalgo don’t slip past.</li>
 <li>Links, attachments and fast posting are limited for new members in their first 3 days.</li>
@@ -108,7 +108,7 @@ ${section({
 
 ${section({
         id: 'tickets', number: '05', label: 'Tickets and modmail',
-        title: 'Tickets and modmail in channels your staff already use.',
+        title: 'Tickets and modmail as Discord channels',
         body: html`<p>A ticket panel with claim, priority, saved answers and a transcript when the ticket closes. Members can also DM the bot and choose <strong>Send to staff</strong>: the conversation becomes a staff channel, and anything a moderator starts with <code>//</code> stays internal.</p>
 <ul class="ticks"><li>Close, block and unblock with <code>/modmail</code>.</li>
 <li>Members can report a staff member privately; only administrators see those reports.</li></ul>`,
@@ -117,24 +117,24 @@ ${section({
 
 ${section({
         id: 'dashboard', number: '06', label: 'Dashboard', wide: true,
-        title: 'The whole server in a browser tab.',
+        title: 'A web dashboard for your staff',
         body: html`<p>Members, cases, appeals, the staff inbox and every module’s settings, on one page per area. Sign in with Discord. Administrator is checked again on every request, and every change is written to an audit log with the old and the new value.</p>
 <p><a class="more" href="/docs/using-the-dashboard">A tour of the dashboard</a></p>`,
         visual: dashboardShot({ name: 'overview', alt: 'The Mewvo dashboard Overview page: a “Needs you” list with two appeals waiting, open tickets and a setup step, a bar chart of moderation actions over the last seven days, member and sanction counts, and the bot’s health.', caption: 'The Overview page of the dashboard, with made-up members and cases.', eager: true }),
     })}
 
 <section class="block" id="community" aria-labelledby="community-title"><div class="wrap split split-narrow">
-<div class="split-copy"><p class="section-num"><span class="section-index">07</span>Community tools</p><h2 id="community-title">The everyday parts, too.</h2>
+<div class="split-copy"><p class="section-num"><span class="section-index">07</span>Community tools</p><h2 id="community-title">Leveling, tags, giveaways and more</h2>
 <p>The same bot runs the friendly side of the server, set up from the same dashboard.</p><p><a class="more" href="/features">Every feature</a></p></div>
 <dl class="spec-list">${COMMUNITY.map(([name, text]) => html`<div><dt>${name}</dt><dd>${text}</dd></div>`)}</dl></div></section>
 
 <section class="block block-pricing" aria-labelledby="pricing-title"><div class="wrap split split-narrow">
-<div class="split-copy"><p class="section-num"><span class="section-index">€</span>Pricing</p><h2 id="pricing-title">Free while it runs on one server.</h2>
+<div class="split-copy"><p class="section-num"><span class="section-index">€</span>Pricing</p><h2 id="pricing-title">Free plan and paid plans</h2>
 <p>Everything above is free. Paid plans with higher limits come when Mewvo opens to other servers.</p><p><a class="more" href="/pricing">Compare plans</a></p></div>
 <ul class="price-rows"><li><span class="price-name">Free</span><span class="price-desc">Everything on this page</span><span class="price-amount">€0</span></li>
 ${paid.map((p) => html`<li><span class="price-name">${p.name}</span><span class="price-desc">${p.summary}</span><span class="price-amount">${euros(p.monthlyCents)}<span class="per">/month</span></span></li>`)}</ul></div></section>
 
-<section class="cta" aria-labelledby="cta-title"><div class="wrap cta-inner"><div><h2 id="cta-title">See it on a real server.</h2>
+<section class="cta" aria-labelledby="cta-title"><div class="wrap cta-inner"><div><h2 id="cta-title">Try Mewvo</h2>
 <p>${ctx.publicSite ? 'Add Mewvo to your server, or look around ours first.' : 'Mewvo runs the Mewvo Discord server. Join it to see the appeal panel, the leaderboard and the bot at work.'}</p></div>
 ${heroActions(ctx, { how: '/docs', howLabel: 'Read the docs', dashboard: false })}</div></section>`;
     return layout(ctx, {

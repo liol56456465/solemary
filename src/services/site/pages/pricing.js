@@ -56,10 +56,10 @@ export function pricingPage(ctx) {
         title: 'Pricing', active: 'pricing', path: '/pricing',
         description: 'Mewvo is free today. Planned paid plans: Normal €1.99, Pro €4.99 and Max €9.99 a month, or two months free with yearly billing.',
         body: html`<div class="wrap page">
-${ctx.billing ? html`<header class="page-head page-head-split"><div><p class="section-num">Pricing</p><h1>Pick a plan.</h1></div>
+${ctx.billing ? html`<header class="page-head page-head-split"><div><p class="section-num">Pricing</p><h1>Plans and prices</h1></div>
 <p class="lead">Free covers everything Mewvo does today. Paid plans add room and tools; buy one for your account or as a gift key for someone else. <a href="/me/redeem">Have a key?</a></p></header>
 <p class="test-banner" role="note"><span class="planned">Test mode</span> ${TEST_NOTICE}</p>`
-        : html`<header class="page-head page-head-split"><div><p class="section-num">Pricing</p><h1>Free today. Paid plans later.</h1></div>
+        : html`<header class="page-head page-head-split"><div><p class="section-num">Pricing</p><h1>Plans and prices</h1></div>
 <p class="lead">Everything Mewvo does now is free. Paid plans start when Mewvo opens to other servers; until then nothing can be bought.${ctx.supportInvite ? html` <a href="${ctx.supportInvite}" rel="noopener">Join the support server</a> to hear first.` : ''}</p></header>`}
 <div class="billing">
 <input class="billing-input" type="radio" name="billing" id="billing-monthly" value="monthly" checked>

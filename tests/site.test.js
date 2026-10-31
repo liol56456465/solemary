@@ -58,9 +58,9 @@ test('every front page renders with the shell, the hashed stylesheet and no inli
     const site = await serve();
     try {
         for (const [path, heading] of [
-            ['/', 'Discord moderation with a paper trail.'], ['/commands', 'Commands'], ['/about', 'About Mewvo'],
+            ['/', 'A Discord bot for moderation and appeals'], ['/commands', 'Commands'], ['/about', 'About Mewvo'],
             ['/leaderboard', 'Leaderboard'], ['/status', 'Status'], ['/privacy', 'Privacy Policy'], ['/terms', 'Terms and Conditions'],
-            ['/features', 'Features'], ['/pricing', 'Free today. Paid plans later.'], ['/faq', 'Questions and answers'],
+            ['/features', 'Features'], ['/pricing', 'Plans and prices'], ['/faq', 'Questions and answers'],
             ['/docs', 'Guides'], ['/docs/getting-started', 'Getting started for staff'], ['/docs/warnings', 'How warnings and bans escalate'],
             ['/docs/appeals', 'Appeals: how they work'], ['/docs/using-the-dashboard', 'Using the dashboard'],
         ]) {
