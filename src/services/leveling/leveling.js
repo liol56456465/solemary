@@ -153,21 +153,20 @@ export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { 
 
 export function createLeaderboardEmbed(leaderboard, guild) {
   const embed = new EmbedBuilder()
-    .setTitle(`🏆 ${guild.name} Leaderboard`)
+    .setTitle(`${guild.name} leaderboard`)
     .setColor('#2ecc71')
     .setTimestamp();
     
   if (!leaderboard || leaderboard.length === 0) {
-    embed.setDescription('No users on the leaderboard yet!');
+    embed.setDescription('Nobody on the leaderboard yet.');
     return embed;
   }
   
   const top3 = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
   
-  const top3Text = top3.map((user, index) => {
-    const medal = ['🥇', '🥈', '🥉'][index];
-    return `${medal} **#${user.rank}** ${user.username} - Level ${user.level} (${user.totalXp} XP)`;
+  const top3Text = top3.map(user => {
+    return `**#${user.rank}** ${user.username} - Level ${user.level} (${user.totalXp} XP)`;
   }).join('\n');
   
   const restText = rest.map(user => {
@@ -175,7 +174,7 @@ export function createLeaderboardEmbed(leaderboard, guild) {
   }).join('\n');
   
   embed.setDescription(
-    `**Top Members**\n${top3Text}${restText ? '\n\n' + restText : ''}`
+    `**Top 3**\n${top3Text}${restText ? '\n\n' + restText : ''}`
   );
   
   return embed;
@@ -187,7 +186,7 @@ function defaultLevelingConfig() {
     enabled: true,
     xpPerMessage: { min: 15, max: 25 },
     xpCooldown: 20,
-    levelUpMessage: '{user} has leveled up to level {level}!',
+    levelUpMessage: '{user} is now level {level}.',
     levelUpChannel: null,
     ignoredChannels: [],
     ignoredRoles: [],

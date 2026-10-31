@@ -208,7 +208,7 @@ export default {
                     return await InteractionHelper.safeEditReply(interaction, {
                         embeds: [
                             successEmbed(
-                                "Shared List Created",
+                                "Shared list created",
                                 `Created shared list "${escapeUserText(listName)}" with ID: \`${listId}\`\n` +
                                 `Use \`/todo share add list_id:${listId} user:@username\` to add members.`
                             )
@@ -242,7 +242,7 @@ export default {
 
                         return await InteractionHelper.safeEditReply(interaction, {
                             embeds: [
-                                successEmbed('Member Added', 
+                                successEmbed('Member added', 
                                     `Added ${memberToAdd.username} to the shared list "${escapeUserText(listData.name)}"`
                                 )
                             ]
@@ -276,26 +276,26 @@ export default {
                         return await InteractionHelper.safeEditReply(interaction, {
                                 embeds: [
                                     successEmbed(
-                                        `Shared List (ID: \`${listId}\`)`,
-                                        `📋 **${escapeUserText(listData.name)}**\n\n` +
-                                        `👑 **Owner:** ${ownerName}\n` +
-                                        `👥 **Members:** ${memberList}\n\n` +
-                                        `*This list is currently empty. Use the "Add Task" button to add tasks!*`
+                                        `Shared list (ID: \`${listId}\`)`,
+                                        `**${escapeUserText(listData.name)}**\n\n` +
+                                        `**Owner:** ${ownerName}\n` +
+                                        `**Members:** ${memberList}\n\n` +
+                                        `*This list is empty. Click "Add task" to add one.*`
                                     )
                                 ],
                                 components: [
                                     new ActionRowBuilder().addComponents(
                                         new ButtonBuilder()
                                             .setCustomId(`shared_todo_add_${listId}`)
-                                            .setLabel('Add Task')
+                                            .setLabel('Add task')
                                             .setStyle(ButtonStyle.Primary),
                                         new ButtonBuilder()
                                             .setCustomId(`shared_todo_complete_${listId}`)
-                                            .setLabel('Complete Task')
+                                            .setLabel('Complete task')
                                             .setStyle(ButtonStyle.Success),
                                         new ButtonBuilder()
                                             .setCustomId(`shared_todo_remove_${listId}`)
-                                            .setLabel('Remove Task')
+                                            .setLabel('Remove task')
                                             .setStyle(ButtonStyle.Danger)
                                     )
                                 ]
@@ -304,7 +304,7 @@ export default {
 
                     const taskList = listData.tasks
                         .map(task => 
-                            `${task.completed ? '✅' : '📝'} #${task.id} ${escapeUserText(task.text)}` +
+                            `${task.completed ? 'Done' : 'Open'} · #${task.id} ${escapeUserText(task.text)}` +
                             `\`[${new Date(task.createdAt).toLocaleDateString()}]` +
                             (task.completed ? `• Completed by ${task.completedBy}` : '') + '`'
                         )
@@ -318,28 +318,28 @@ export default {
                     const owner = interaction.guild.members.cache.get(listData.creatorId);
                     const ownerName = owner ? owner.user.username : `<@${listData.creatorId}>`;
 
-                    const fullListDisplay = `📋 **${escapeUserText(listData.name)}**\n\n` +
-                        `👑 **Owner:** ${ownerName}\n` +
-                        `👥 **Members:** ${memberList}\n\n` +
+                    const fullListDisplay = `**${escapeUserText(listData.name)}**\n\n` +
+                        `**Owner:** ${ownerName}\n` +
+                        `**Members:** ${memberList}\n\n` +
                         `**Tasks:**\n${taskList}`;
 
                     return await InteractionHelper.safeEditReply(interaction, {
                         embeds: [
-                            successEmbed(`Shared List (ID: \`${listId}\`)`, fullListDisplay)
+                            successEmbed(`Shared list (ID: \`${listId}\`)`, fullListDisplay)
                         ],
                         components: [
                             new ActionRowBuilder().addComponents(
                                 new ButtonBuilder()
                                     .setCustomId(`shared_todo_add_${listId}`)
-                                    .setLabel('Add Task')
+                                    .setLabel('Add task')
                                     .setStyle(ButtonStyle.Primary),
                                 new ButtonBuilder()
                                     .setCustomId(`shared_todo_complete_${listId}`)
-                                    .setLabel('Complete Task')
+                                    .setLabel('Complete task')
                                     .setStyle(ButtonStyle.Success),
                                 new ButtonBuilder()
                                     .setCustomId(`shared_todo_remove_${listId}`)
-                                    .setLabel('Remove Task')
+                                    .setLabel('Remove task')
                                     .setStyle(ButtonStyle.Danger)
                             )
                         ]
@@ -373,7 +373,7 @@ export default {
 
                     return await InteractionHelper.safeEditReply(interaction, {
                         embeds: [
-                            successEmbed('Task Added', `Added "${escapeUserText(taskText)}" to the shared list "${escapeUserText(listData.name)}"`)
+                            successEmbed('Task added', `Added "${escapeUserText(taskText)}" to the shared list "${escapeUserText(listData.name)}"`)
                         ]
                     });
                 }
@@ -402,7 +402,7 @@ export default {
 
                     return await InteractionHelper.safeEditReply(interaction, {
                         embeds: [
-                            successEmbed('Task Removed', `Removed "${escapeUserText(removedTask.text)}" from the shared list "${escapeUserText(listData.name)}".`)
+                            successEmbed('Task removed', `Removed "${escapeUserText(removedTask.text)}" from the shared list "${escapeUserText(listData.name)}".`)
                         ]
                     });
                 }
@@ -437,7 +437,7 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         successEmbed(
-                            "Task Added",
+                            "Task added",
                             `Added "${escapeUserText(taskText)}" to your to-do list.`
                         ),
                     ],
@@ -447,20 +447,20 @@ export default {
             case 'list': {
                 if (userData.tasks.length === 0) {
                     return await InteractionHelper.safeEditReply(interaction, {
-                        embeds: [successEmbed("Your To-Do List", 'Your to-do list is empty!')],
+                        embeds: [successEmbed("Your to-do list", 'Your to-do list is empty.')],
                     });
                 }
 
                 const taskList = userData.tasks
                     .map(task => 
-                        `${task.completed ? '✅' : '📝'} #${task.id} ${escapeUserText(task.text)}` +
+                        `${task.completed ? 'Done' : 'Open'} · #${task.id} ${escapeUserText(task.text)}` +
                         `\`[${new Date(task.createdAt).toLocaleDateString()}]\``
                     )
                     .join('\n');
 
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
-                        successEmbed('Your To-Do List', taskList)
+                        successEmbed('Your to-do list', taskList)
                     ],
                 });
             }
@@ -482,7 +482,7 @@ export default {
 
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
-                        successEmbed('Task Completed', `Marked "${escapeUserText(task.text)}" as complete!`)
+                        successEmbed('Task done', `Marked "${escapeUserText(task.text)}" as done.`)
                     ],
                 });
             }
@@ -500,7 +500,7 @@ export default {
 
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
-                        successEmbed('Task Removed', `Removed "${escapeUserText(removedTask.text)}" from your to-do list.`)
+                        successEmbed('Task removed', `Removed "${escapeUserText(removedTask.text)}" from your to-do list.`)
                     ],
                 });
             }

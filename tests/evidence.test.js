@@ -50,7 +50,7 @@ test('evidenceLines: links with excerpt and images with fresh or stored link', (
         { ...base, id: '3', kind: 'image', store_channel_id: null, store_message_id: null },
     ];
     const lines = evidenceLines(rows, new Map([['2', 'https://cdn.example/fresh.png']]));
-    assert.match(lines[0], /^\*\*#1\*\* 🔗 https:\/\/discord\.com\/channels\/1\/2\/3 "kit: bad words" · mod, <t:/);
+    assert.match(lines[0], /^\*\*#1\*\* https:\/\/discord\.com\/channels\/1\/2\/3 "kit: bad words" · mod, <t:/);
     assert.match(lines[1], /\[image\]\(https:\/\/cdn\.example\/fresh\.png\)/);
     assert.match(lines[1], new RegExp(`\\[stored\\]\\(https://discord\\.com/channels/[^/]+/${C}/${M}\\)`));
     assert.match(lines[1], /: screenshot/);

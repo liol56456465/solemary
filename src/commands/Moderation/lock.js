@@ -59,8 +59,8 @@ export default {
       await InteractionHelper.safeEditReply(interaction, {
         embeds: [
           successEmbed(
-            `🔒 **Channel Locked**`,
-            `${channel} is now locked down. No one can speak here now.`,
+            'Channel locked',
+            `${channel} is locked. Members can't send messages here until it's unlocked.`,
           ),
         ],
       });

@@ -92,8 +92,8 @@ export default {
         return await InteractionHelper.safeEditReply(interaction, {
           embeds: [
             successEmbed(
-              'Counting Game Enabled',
-              `The counting game is now active in ${channel} using the **${getCountingSystemLabel(system)}** system. Players must count up from **1** and may not post two numbers in a row.`,
+              'Counting game on',
+              `Counting is on in ${channel} (**${getCountingSystemLabel(system)}**). Start at **1**. Nobody can post two numbers in a row.`,
             ),
           ],
         });
@@ -102,13 +102,13 @@ export default {
       if (subcommand === 'disable') {
         if (!config.enabled) {
           return await InteractionHelper.safeEditReply(interaction, {
-            embeds: [infoEmbed('Counting Game Disabled', 'The counting game is already disabled for this server.')],
+            embeds: [infoEmbed('Counting game off', 'The counting game is already off.')],
           });
         }
 
         await disableCountingGame(interaction.client, guildId);
         return await InteractionHelper.safeEditReply(interaction, {
-          embeds: [successEmbed('Counting Game Disabled', 'The counting game has been disabled.')],
+          embeds: [successEmbed('Counting game off', 'The counting game is turned off.')],
         });
       }
 
@@ -126,8 +126,8 @@ export default {
         return await InteractionHelper.safeEditReply(interaction, {
           embeds: [
             createEmbed({
-              title: 'Counting Game Status',
-              description: 'Overview of the currently configured counting game.',
+              title: 'Counting game',
+              description: 'Current settings and streaks.',
               fields,
               color: 'primary',
             }),
@@ -146,8 +146,8 @@ export default {
         return await InteractionHelper.safeEditReply(interaction, {
           embeds: [
             successEmbed(
-              'Counting Game Reset',
-              `The counting sequence has been reset. Start again with **${startNumber}** in <#${config.channelId}>.`,
+              'Counting reset',
+              `Count reset. Start again with **${startNumber}** in <#${config.channelId}>.`,
             ),
           ],
         });
@@ -159,8 +159,8 @@ export default {
         return await InteractionHelper.safeEditReply(interaction, {
           embeds: [
             createEmbed({
-              title: 'Counting Game Leaderboard',
-              description: leaderboard.length > 0 ? leaderboard.join('\n') : 'No counts have been recorded yet.',
+              title: 'Counting leaderboard',
+              description: leaderboard.length > 0 ? leaderboard.join('\n') : 'Nobody has counted yet.',
               color: 'primary',
             }),
           ],

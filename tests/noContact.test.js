@@ -93,6 +93,6 @@ test('panel summary and mod log line show no-contact orders', () => {
 
     assert.equal(
         formatModLogLine('nocontact', [{ name: 'User', value: 'alice (1)' }, { name: 'Note', value: 'message removed' }, { name: 'Order', value: '#7' }]),
-        '🚧 **No-contact** · alice (1) · message removed · Order: #7',
+        '**No-contact** · alice (1) · message removed · Order: #7',
     );
 });

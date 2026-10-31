@@ -185,7 +185,7 @@ export default {
                 result = formatBigIntToBase(decimalValue, toBase);
 
                 const embed = successEmbed(
-                    '🔄 Base Conversion Result',
+                    'Base conversion',
                     `**From ${fromName} (${fromBase}):** \`${fromPrefix}${cleanNumber}\`\n` +
                     `**To ${toName} (${toBase}):** \`${toPrefix}${result}\`\n` +
                     `**Decimal:** \`${decimalValue.toLocaleString()}\``
@@ -219,7 +219,7 @@ export default {
             }
 
             const embed = successEmbed(
-                '🔄 Base Conversion Results',
+                'Base conversion',
                 description
             );
             embed.setColor(getColor('primary'));

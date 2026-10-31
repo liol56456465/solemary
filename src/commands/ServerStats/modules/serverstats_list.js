@@ -45,25 +45,25 @@ export async function handleList(interaction, client) {
 
         if (validCounters.length === 0) {
             const embed = createEmbed({
-                title: "Server Counters",
-                description: "No counters have been set up for this server yet.\n\nUse `/serverstats create` to set up your first counter!",
+                title: "Server counters",
+                description: "There are no counters yet.\n\nUse `/serverstats create` to add one.",
                 color: getColor('warning')
             });
 
             embed.addFields({
-                name: "**Available Counter Types**",
-                value: "**Members + Bots** - Total server members\n **Members Only** - Human members only\n **Bots Only** - Bot members only",
+                name: "Counter types",
+                value: "**Members + Bots**: everyone\n**Members Only**: people, no bots\n**Bots Only**: just bots",
                 inline: false
             });
 
             embed.addFields({
-                name: "**Usage Examples**",
+                name: "Examples",
                 value: "`/serverstats create type:members channel_type:voice category:Stats`\n`/serverstats create type:bots channel_type:text category:Server Info`\n`/serverstats list`",
                 inline: false
             });
 
             embed.setFooter({ 
-                text: "Counter System • Automatic updates every 15 minutes" 
+                text: "Counters update every 15 minutes" 
             });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] }).catch(logger.error);
@@ -71,8 +71,8 @@ export async function handleList(interaction, client) {
         }
 
         const embed = createEmbed({
-            title: `Server Counters (${validCounters.length})`,
-            description: "Here are all the active counters for this server.\n\nCounters automatically update every 15 minutes.",
+            title: `Server counters (${validCounters.length})`,
+            description: "All counters in this server. They update every 15 minutes.",
             color: getColor('info')
         });
 
@@ -87,32 +87,32 @@ export async function handleList(interaction, client) {
             }
 
             const currentCount = getCurrentCount(stats, counter.type);
-            const status = channel.name === formatCounterChannelName(counter.type, currentCount) ? '✅ Active' : '⚠️ Not Updated';
+            const status = channel.name === formatCounterChannelName(counter.type, currentCount) ? 'Up to date' : 'Not updated yet';
             
             embed.addFields({
-                name: `${getCounterTypeEmoji(counter.type)} Counter #${i + 1} - ${channel.name}`,
-                value: `**ID:** \`${counter.id}\`\n**Type:** ${getCounterTypeDisplay(counter.type)}\n**Channel:** ${channel}\n**Current Count:** ${currentCount}\n**Status:** ${status}\n**Created:** ${new Date(counter.createdAt).toLocaleDateString()}`,
+                name: `Counter #${i + 1} · ${channel.name}`,
+                value: `**ID:** \`${counter.id}\`\n**Type:** ${getCounterTypeDisplay(counter.type)}\n**Channel:** ${channel}\n**Count:** ${currentCount}\n**Status:** ${status}\n**Created:** ${new Date(counter.createdAt).toLocaleDateString()}`,
                 inline: false
             });
         }
 
         embed.addFields({
-            name: "**Statistics**",
-            value: `**Total Counters:** ${validCounters.length}\n**Active Counters:** ${validCounters.filter(c => {
+            name: "Totals",
+            value: `**Counters:** ${validCounters.length}\n**Up to date:** ${validCounters.filter(c => {
                 const channel = guild.channels.cache.get(c.channelId);
                 return channel && channel.name === formatCounterChannelName(c.type, getCurrentCount(stats, c.type));
-            }).length}\n**Next Update:** <t:${Math.floor(Date.now() / 1000) + 900}:R>`,
+            }).length}\n**Next update:** <t:${Math.floor(Date.now() / 1000) + 900}:R>`,
             inline: false
         });
 
         embed.addFields({
-            name: "**Management Commands**",
-            value: "`/serverstats create` - Create new counter\n`/serverstats update` - Update existing counter\n`/serverstats delete` - Delete counter",
+            name: "Commands",
+            value: "`/serverstats create`: add a counter\n`/serverstats update`: change a counter\n`/serverstats delete`: remove a counter",
             inline: false
         });
 
         embed.setFooter({ 
-            text: "Counter System • Automatic updates every 15 minutes" 
+            text: "Counters update every 15 minutes" 
         });
         embed.setTimestamp();
 
@@ -120,12 +120,12 @@ export async function handleList(interaction, client) {
 
     } catch (error) {
         logger.error("Error displaying counters:", error);
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while fetching counters. Please try again.' }).catch(logger.error);
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Couldn\'t load the counters. Try again.' }).catch(logger.error);
     }
 }
 
 function getCounterTypeDisplay(type) {
-    return `${getCounterTypeEmoji(type)} ${getCounterTypeLabel(type)}`;
+    return getCounterTypeLabel(type);
 }
 
 function getCounterEmoji(type) {

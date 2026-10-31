@@ -5,11 +5,11 @@ import { getColor } from '../../../config/bot.js';
 import { logTicketFeedback } from '../../../utils/ticket/ticketLogging.js';
 
 const STAR_LABELS = {
-    '1': '⭐ 1: Poor',
-    '2': '⭐ 2: Below Average',
-    '3': '⭐ 3: Average',
-    '4': '⭐ 4: Good',
-    '5': '⭐ 5: Excellent',
+    '1': '1/5 - Bad',
+    '2': '2/5 - Not great',
+    '3': '3/5 - Okay',
+    '4': '4/5 - Good',
+    '5': '5/5 - Great',
 };
 
 export default {
@@ -24,8 +24,8 @@ export default {
             await interaction.update({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('⚠️ Invalid Feedback Link')
-                        .setDescription('This feedback link appears to be malformed.')
+                        .setTitle('Broken link')
+                        .setDescription('This feedback link doesn\'t work.')
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -46,8 +46,8 @@ export default {
             await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('⚠️ Ticket Not Found')
-                        .setDescription('Could not find the ticket associated with this survey.')
+                        .setTitle('Ticket not found')
+                        .setDescription('Couldn\'t find the ticket for this rating.')
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -59,8 +59,8 @@ export default {
             await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('❌ Not Allowed')
-                        .setDescription('Only the ticket creator can submit feedback for this ticket.')
+                        .setTitle('Not your ticket')
+                        .setDescription('Only the person who opened this ticket can rate it.')
                         .setColor(getColor('error')),
                 ],
             });
@@ -71,8 +71,8 @@ export default {
             await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('✅ Already Submitted')
-                        .setDescription(`You already rated this ticket **${STAR_LABELS[String(ticketData.feedback.rating)]}**.\nThank you for your feedback!`)
+                        .setTitle('Already rated')
+                        .setDescription(`You already rated this ticket **${STAR_LABELS[String(ticketData.feedback.rating)]}**.`)
                         .setColor(getColor('success')),
                 ],
                 components: [],
@@ -85,8 +85,8 @@ export default {
             await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('⚠️ Invalid Rating')
-                        .setDescription('Please choose a rating from 1 to 5 stars.')
+                        .setTitle('Invalid rating')
+                        .setDescription('Pick a rating from 1 to 5.')
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -94,7 +94,7 @@ export default {
             return;
         }
 
-        const ratingLabel = STAR_LABELS[String(rating)] ?? `${rating} stars`;
+        const ratingLabel = STAR_LABELS[String(rating)] ?? `${rating}/5`;
 
         try {
             ticketData.feedback = {
@@ -108,8 +108,8 @@ export default {
             await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('⚠️ Feedback Not Saved')
-                        .setDescription('Your feedback could not be saved right now. Please try again later.')
+                        .setTitle('Not saved')
+                        .setDescription('Couldn\'t save your rating right now. Try again later.')
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -131,10 +131,10 @@ export default {
         }
 
         const thankYouEmbed = new EmbedBuilder()
-            .setTitle('✅ Thanks for your feedback!')
-            .setDescription(`You rated your support experience **${ratingLabel}**.\n\nYour feedback has been recorded and helps us improve!`)
+            .setTitle('Rating saved')
+            .setDescription(`You rated this ticket **${ratingLabel}**.`)
             .setColor(getColor('success'))
-            .setFooter({ text: 'Thank you for using our support system.' })
+            .setFooter({ text: 'Thanks for rating.' })
             .setTimestamp();
 
         await interaction.editReply({

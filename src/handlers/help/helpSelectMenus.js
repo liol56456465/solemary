@@ -16,29 +16,8 @@ const BACK_BUTTON_ID = "help-back-to-main";
 const ALL_COMMANDS_ID = "help-all-commands";
 const PAGINATION_PREFIX = "help-page";
 const CATEGORY_SELECT_ID = "help-category-select";
-const FOOTER_TEXT = "Made with ❤️";
 const SUBCOMMAND_TYPE = 1;
 const SUBCOMMAND_GROUP_TYPE = 2;
-
-const CATEGORY_ICONS = {
-    Core: "ℹ️",
-    Moderation: "🛡️",
-    Fun: "🎮",
-    Leveling: "📊",
-    Utility: "🔧",
-    Ticket: "🎫",
-    Welcome: "👋",
-    Giveaway: "🎉",
-    Counter: "🔢",
-    Tools: "🛠️",
-    Search: "🔍",
-    "Reaction Roles": "🎭",
-    Community: "👥",
-    Birthday: "🎂",
-    "Join To Create": "🔌",
-    Verification: "✅",
-    Config: "⚙️",
-};
 
 function formatCategoryName(rawCategory) {
     return rawCategory
@@ -132,7 +111,6 @@ function normalizeCommandData(command) {
 
 async function createCategoryCommandsMenu(category, client, guildId = null, showAdmin = true) {
     const categoryName = formatCategoryName(category);
-    const icon = CATEGORY_ICONS[categoryName] || "🔍";
 
     const categoryCommands = [];
 
@@ -181,10 +159,10 @@ async function createCategoryCommandsMenu(category, client, guildId = null, show
     }
 
     const embed = createEmbed({
-        title: `${icon} ${categoryName} Commands`,
+        title: `${categoryName} commands`,
         description: categoryCommands.length > 0
-            ? `Click any command mention below to use it.`
-            : `No commands found in the **${categoryName}** category.`
+            ? `Click a command to use it.`
+            : `There are no commands in **${categoryName}** yet.`
     });
 
     if (categoryCommands.length > 0) {
@@ -222,7 +200,7 @@ async function createCategoryCommandsMenu(category, client, guildId = null, show
 
             chunks.forEach((chunk, index) => {
                 embed.addFields({
-                    name: `Commands (Part ${index + 1})`,
+                    name: index === 0 ? 'Commands' : 'Commands (cont.)',
                     value: chunk,
                     inline: false,
                 });
@@ -230,14 +208,13 @@ async function createCategoryCommandsMenu(category, client, guildId = null, show
         }
     }
 
-    embed.setFooter({ text: FOOTER_TEXT });
     embed.setTimestamp();
 
     const backButton = createButton(
         BACK_BUTTON_ID,
         "Back",
         "primary",
-        "⬅️",
+        null,
         false,
     );
 
@@ -319,11 +296,10 @@ export async function createAllCommandsMenu(page = 1, client, guildId = null, sh
     const pageCommands = allCommands.slice(startIndex, endIndex);
 
     const embed = createEmbed({
-        title: "📋 All Commands",
-        description: `Browse every available command in one list. Use the page buttons below to move through the full set.`
+        title: "All commands",
+        description: totalPages > 1 ? `Use the buttons below to change page.` : null
     });
 
-    embed.setFooter({ text: FOOTER_TEXT });
     embed.setTimestamp();
 
     if (pageCommands.length > 0) {
@@ -368,7 +344,7 @@ export async function createAllCommandsMenu(page = 1, client, guildId = null, sh
         BACK_BUTTON_ID,
         "Back",
         "primary",
-        "⬅️",
+        null,
         false,
     );
 

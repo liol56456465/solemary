@@ -21,7 +21,7 @@ async function calculateModalHandler(interaction, client, args) {
         const context = calculationContexts.get(contextKey);
         
         if (!context) {
-            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This calculation has expired. Please start a new calculation.' });
+            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This calculation timed out. Start a new one.' });
         }
 
         await interaction.deferReply({ ephemeral: false });
@@ -29,7 +29,7 @@ async function calculateModalHandler(interaction, client, args) {
         const operand = interaction.fields.getTextInputValue(operandInput.customId);
         
         if (!operand || isNaN(operand)) {
-            return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Please provide a valid number.' });
+            return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'That isn\'t a number.' });
         }
 
         const { expression, formattedResult, operator } = context;
@@ -56,7 +56,7 @@ async function calculateModalHandler(interaction, client, args) {
             }
 
             const updatedEmbed = successEmbed(
-                "🧮 Calculation Result",
+                "Result",
                 `**Expression:** \`${newExpression.replace(/`/g, "\`")}\`\n` +
                     `**Result:** \`${formattedNewResult}\`\n\n` +
                     `*Use the buttons in the channel message to perform more operations.*`,
@@ -77,7 +77,7 @@ async function calculateModalHandler(interaction, client, args) {
             calculationContexts.delete(contextKey);
 
             await interaction.editReply({
-                embeds: [successEmbed('✅ Calculated', `\`${newExpression}\` = \`${formattedNewResult}\``)],
+                embeds: [successEmbed('Result', `\`${newExpression}\` = \`${formattedNewResult}\``)],
             });
 
         } catch (calcError) {

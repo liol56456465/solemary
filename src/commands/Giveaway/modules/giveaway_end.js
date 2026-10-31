@@ -9,12 +9,12 @@ export default {
     data: new SlashCommandBuilder()
         .setName("gend")
         .setDescription(
-            "Ends an active giveaway immediately and picks the winner(s).",
+            "End a giveaway now and pick the winners",
         )
         .addStringOption((option) =>
             option
                 .setName("messageid")
-                .setDescription("The message ID of the giveaway to end.")
+                .setDescription("Message ID of the giveaway")
                 .setRequired(true),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
@@ -59,8 +59,8 @@ export default {
         return InteractionHelper.safeReply(interaction, {
             embeds: [
                 successEmbed(
-                    "Giveaway Ended ✅",
-                    `Successfully ended the giveaway for **${updatedGiveaway.prize}** in ${channel}. Selected ${winners.length} winner(s) from ${participantCount} entries.`,
+                    "Giveaway ended",
+                    `Ended **${updatedGiveaway.prize}** in ${channel}. Picked ${winners.length} winner(s) from ${participantCount} entries.`,
                 ),
             ],
             flags: MessageFlags.Ephemeral,

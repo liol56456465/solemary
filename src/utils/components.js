@@ -8,13 +8,11 @@ export function getConfirmationButtons(customIdPrefix = 'confirm') {
         new ButtonBuilder()
             .setCustomId(`${customIdPrefix}_yes`)
             .setLabel('Confirm')
-            .setStyle(ButtonStyle.Success)
-            .setEmoji('✅'),
+            .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
             .setCustomId(`${customIdPrefix}_no`)
             .setLabel('Cancel')
             .setStyle(ButtonStyle.Danger)
-            .setEmoji('❌')
     );
 }
 
@@ -22,12 +20,12 @@ export function getPaginationRow(customIdPrefix = 'page', currentPage = 1, total
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`${customIdPrefix}_first`)
-            .setLabel('⏮️')
+            .setLabel('First')
             .setStyle(ButtonStyle.Secondary)
             .setDisabled(currentPage === 1),
         new ButtonBuilder()
             .setCustomId(`${customIdPrefix}_prev`)
-            .setLabel('◀️')
+            .setLabel('Previous')
             .setStyle(ButtonStyle.Secondary)
             .setDisabled(currentPage === 1),
         new ButtonBuilder()
@@ -37,12 +35,12 @@ export function getPaginationRow(customIdPrefix = 'page', currentPage = 1, total
             .setDisabled(true),
         new ButtonBuilder()
             .setCustomId(`${customIdPrefix}_next`)
-            .setLabel('▶️')
+            .setLabel('Next')
             .setStyle(ButtonStyle.Secondary)
             .setDisabled(currentPage >= totalPages),
         new ButtonBuilder()
             .setCustomId(`${customIdPrefix}_last`)
-            .setLabel('⏭️')
+            .setLabel('Last')
             .setStyle(ButtonStyle.Secondary)
             .setDisabled(currentPage >= totalPages)
     );

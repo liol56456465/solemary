@@ -162,72 +162,73 @@ const EVENT_COLORS = {
   'server.automodupdate': 0x5865F2,
 };
 
-const EVENT_ICONS = {
-  'moderation.ban': '🔨',
-  'moderation.kick': '👢',
-  'moderation.mute': '🔇',
-  'moderation.warn': '⚠️',
-  'moderation.purge': '🗑️',
-  'moderation.timeout': '⏳',
-  'moderation.untimeout': '✅',
-  'moderation.unban': '🔓',
-  'moderation.lock': '🔒',
-  'moderation.unlock': '🔓',
-  'moderation.dm': '✉️',
-  'moderation.config': '⚙️',
-  'moderation.unmute': '🔊',
-  'moderation.warnremove': '🧹',
-  'moderation.appeal': '📨',
-  'moderation.staffreport': '🚨',
-  'moderation.owneroverride': '🗝️',
-  'leveling.levelup': '📈',
-  'leveling.milestone': '🏆',
-  'message.delete': '❌',
-  'message.edit': '✏️',
-  'message.bulkdelete': '🗑️',
-  'role.create': '➕',
-  'role.delete': '➖',
-  'role.update': '🔄',
-  'member.join': '👋',
-  'member.leave': '👋',
-  'member.namechange': '🏷️',
-  'reactionrole.add': '✅',
-  'reactionrole.remove': '❌',
-  'reactionrole.create': '🎭',
-  'reactionrole.delete': '🗑️',
-  'reactionrole.update': '🔄',
-  'giveaway.create': '🎁',
-  'giveaway.winner': '🎉',
-  'giveaway.reroll': '🔄',
-  'giveaway.delete': '🗑️',
-  'counter.update': '📊',
-  'counter.config': '⚙️',
-  'application.submit': '📝',
-  'application.review': '📋',
-  'report.file': '🚨',
-  'channel.create': '➕',
-  'channel.delete': '➖',
-  'channel.update': '🔄',
-  'channel.threadcreate': '🧵',
-  'channel.threaddelete': '🧵',
-  'channel.threadupdate': '🧵',
-  'server.emojicreate': '😀',
-  'server.emojidelete': '😀',
-  'server.emojiupdate': '😀',
-  'server.stickercreate': '🏷️',
-  'server.stickerdelete': '🏷️',
-  'server.stickerupdate': '🏷️',
-  'server.eventcreate': '📅',
-  'server.eventdelete': '📅',
-  'server.eventupdate': '📅',
-  'server.webhookcreate': '🪝',
-  'server.webhookdelete': '🪝',
-  'server.webhookupdate': '🪝',
-  'server.invitecreate': '✉️',
-  'server.invitedelete': '✉️',
-  'server.automodcreate': '🛡️',
-  'server.automoddelete': '🛡️',
-  'server.automodupdate': '🛡️',
+// Default embed titles when a caller passes none. Plain sentence case, no emoji.
+const EVENT_TITLES = {
+  'moderation.ban': 'Member banned',
+  'moderation.kick': 'Member kicked',
+  'moderation.mute': 'Member muted',
+  'moderation.warn': 'Member warned',
+  'moderation.purge': 'Messages purged',
+  'moderation.timeout': 'Member timed out',
+  'moderation.untimeout': 'Timeout removed',
+  'moderation.unban': 'Member unbanned',
+  'moderation.lock': 'Channel locked',
+  'moderation.unlock': 'Channel unlocked',
+  'moderation.dm': 'DM sent',
+  'moderation.config': 'Moderation settings changed',
+  'moderation.unmute': 'Member unmuted',
+  'moderation.warnremove': 'Warn removed',
+  'moderation.appeal': 'Appeal',
+  'moderation.staffreport': 'Staff report',
+  'moderation.owneroverride': 'Owner override',
+  'leveling.levelup': 'Level up',
+  'leveling.milestone': 'Level milestone',
+  'message.delete': 'Message deleted',
+  'message.edit': 'Message edited',
+  'message.bulkdelete': 'Messages bulk deleted',
+  'role.create': 'Role created',
+  'role.delete': 'Role deleted',
+  'role.update': 'Role updated',
+  'member.join': 'Member joined',
+  'member.leave': 'Member left',
+  'member.namechange': 'Name changed',
+  'reactionrole.add': 'Reaction role added',
+  'reactionrole.remove': 'Reaction role removed',
+  'reactionrole.create': 'Reaction role panel created',
+  'reactionrole.delete': 'Reaction role panel deleted',
+  'reactionrole.update': 'Reaction role panel updated',
+  'giveaway.create': 'Giveaway started',
+  'giveaway.winner': 'Giveaway winner',
+  'giveaway.reroll': 'Giveaway rerolled',
+  'giveaway.delete': 'Giveaway deleted',
+  'counter.update': 'Counter updated',
+  'counter.config': 'Counter settings changed',
+  'application.submit': 'Application submitted',
+  'application.review': 'Application reviewed',
+  'report.file': 'Report filed',
+  'channel.create': 'Channel created',
+  'channel.delete': 'Channel deleted',
+  'channel.update': 'Channel updated',
+  'channel.threadcreate': 'Thread created',
+  'channel.threaddelete': 'Thread deleted',
+  'channel.threadupdate': 'Thread updated',
+  'server.emojicreate': 'Emoji added',
+  'server.emojidelete': 'Emoji deleted',
+  'server.emojiupdate': 'Emoji updated',
+  'server.stickercreate': 'Sticker added',
+  'server.stickerdelete': 'Sticker deleted',
+  'server.stickerupdate': 'Sticker updated',
+  'server.eventcreate': 'Event created',
+  'server.eventdelete': 'Event deleted',
+  'server.eventupdate': 'Event updated',
+  'server.webhookcreate': 'Webhook created',
+  'server.webhookdelete': 'Webhook deleted',
+  'server.webhookupdate': 'Webhook updated',
+  'server.invitecreate': 'Invite created',
+  'server.invitedelete': 'Invite deleted',
+  'server.automodcreate': 'AutoMod rule created',
+  'server.automoddelete': 'AutoMod rule deleted',
+  'server.automodupdate': 'AutoMod rule updated',
 };
 
 const CATEGORY_DESTINATION = {
@@ -387,8 +388,7 @@ export async function logEvent({
 
 function createLogEmbed(guild, eventType, data) {
   const color = data.color ?? EVENT_COLORS[eventType] ?? 0x0099ff;
-  const icon = EVENT_ICONS[eventType] || '📌';
-  const title = data.title || `${icon} ${formatEventType(eventType)}`;
+  const title = data.title || EVENT_TITLES[eventType] || formatEventType(eventType);
 
   const inlineFields = [];
   let description = data.description || '';
@@ -460,7 +460,7 @@ function createLogEmbed(guild, eventType, data) {
 
 function formatEventType(eventType) {
   if (!eventType || typeof eventType !== 'string') {
-    return 'Unknown Event';
+    return 'Log event';
   }
 
   return eventType
@@ -586,4 +586,4 @@ export function resolveApplicationLogChannel(config, roleSettings = {}, appSetti
     || null;
 }
 
-export { EVENT_TYPES, EVENT_COLORS, EVENT_ICONS, LOG_DESTINATIONS };
+export { EVENT_TYPES, EVENT_COLORS, EVENT_TITLES, LOG_DESTINATIONS };

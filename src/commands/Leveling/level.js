@@ -67,7 +67,7 @@ const levelCommand = mergeSubcommands(
         .addSubcommand((subcommand) =>
             subcommand
                 .setName('dashboard')
-                .setDescription('Open the interactive leveling configuration dashboard'),
+                .setDescription('Open the leveling settings'),
         ),
     {
         add: { module: levelAdd, description: 'Add levels to a member' },
@@ -104,7 +104,7 @@ export default {
             const xpMax = interaction.options.getInteger('xp_max') ?? 25;
             const message =
                 interaction.options.getString('message') ??
-                '{user} has leveled up to level {level}!';
+                '{user} is now level {level}.';
             const xpCooldown = interaction.options.getInteger('xp_cooldown') ?? 60;
 
             if (xpMin > xpMax) {

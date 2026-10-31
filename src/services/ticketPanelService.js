@@ -23,15 +23,14 @@ function refused(message, type = ErrorTypes.CONFIGURATION) {
 export function buildTicketPanelPayload(config = {}) {
     return {
         embeds: [new EmbedBuilder()
-            .setTitle('Support Tickets')
+            .setTitle('Support tickets')
             .setDescription(config.ticketPanelMessage || DEFAULT_TICKET_PANEL_MESSAGE)
             .setColor(getColor('info'))],
         components: [new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('create_ticket')
                 .setLabel(config.ticketButtonLabel || DEFAULT_TICKET_BUTTON_LABEL)
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji('📩'),
+                .setStyle(ButtonStyle.Primary),
         )],
     };
 }

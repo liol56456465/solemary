@@ -15,7 +15,7 @@ export default {
         client: thread.client,
         guildId: thread.guild.id,
         eventType: EVENT_TYPES.THREAD_CREATE,
-        data: { title: 'Thread Created', headline: `${thread.toString()} was created`, lines: threadLines(thread), channelId: thread.id, userId: thread.ownerId || null },
+        data: { title: 'Thread created', headline: `${thread.toString()} was created`, lines: threadLines(thread), channelId: thread.id, userId: thread.ownerId || null },
       });
     } catch (error) {
       logger.debug(`Thread create log failed: ${error.message}`);

@@ -60,7 +60,7 @@ test('the DM button carries the case code', () => {
 
 test('fallback line quotes and escapes the reason and offers Keep / Undo', () => {
     const line = contestLine(record(), 'it was **fine**\n@everyone', 'https://discord.com/x');
-    assert.match(line, /^🙋 \*\*Member disputes\*\* · case `k3f9a` · <@111>/);
+    assert.match(line, /^\*\*Member disputes\*\* · case `k3f9a` · <@111>/);
     assert.match(line, /> it was \\\*\\\*fine\\\*\\\*/);
     assert.match(line, /> @everyone/);
     assert.match(line, /\[original card\]/);
@@ -84,12 +84,12 @@ test('a contested card is full and shows the dispute field', () => {
     entry.tier = null;
     assert.equal(cardTier(entry), 'full');
     const field = contestField(entry.contest);
-    assert.equal(field.name, '🙋 Member disputes · case k3f9a');
+    assert.equal(field.name, 'Member disputes · case k3f9a');
     assert.equal(field.value, 'I was \\*\\*quoting\\*\\*');
     entry.tier = 'full';
     const payload = buildCardPayload(entry);
     const fields = payload.embeds[0].toJSON().fields;
-    assert.ok(fields.some((f) => f.name.startsWith('🙋 Member disputes')));
+    assert.ok(fields.some((f) => f.name.startsWith('Member disputes')));
     // Keep / Undo stay available.
     const ids = payload.components.flatMap((row) => row.toJSON().components.map((c) => c.custom_id));
     assert.ok(ids.includes('amreview:keep:k3f9a') && ids.includes('amreview:undo:k3f9a'));

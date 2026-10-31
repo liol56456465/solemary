@@ -232,7 +232,7 @@ test('leveling: patch starts from defaults, concurrent writes survive, role rewa
     const { before, after } = await updateLevelingConfig(client, GUILD, { levelUpChannel: CHANNEL });
     assert.equal(before.enabled, true, 'defaults when nothing stored');
     assert.equal(after.levelUpChannel, CHANNEL);
-    assert.equal(after.levelUpMessage, '{user} has leveled up to level {level}!');
+    assert.equal(after.levelUpMessage, '{user} is now level {level}.');
 
     await Promise.all([
         updateLevelingConfig(client, GUILD, { xpCooldown: 30 }),

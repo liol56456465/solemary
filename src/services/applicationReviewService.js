@@ -20,11 +20,7 @@ export function getApplicationStatusPresentation(statusValue) {
         normalized === 'approved' ? 'Accepted' :
         normalized === 'denied' ? 'Denied' :
         'Unknown';
-    const statusEmoji =
-        normalized === 'pending' ? '🟡' :
-        normalized === 'approved' ? '🟢' :
-        normalized === 'denied' ? '🔴' :
-        '⚪';
+    const statusEmoji = '';
     return { normalized, statusLabel, statusEmoji };
 }
 
@@ -50,7 +46,7 @@ export async function reviewApplicationAndNotify(client, guild, applicationId, {
         const user = await client.users.fetch(application.userId);
         const view = getApplicationStatusPresentation(status);
         const dmEmbed = createEmbed({
-            title: `${view.statusEmoji} Application ${view.statusLabel}`,
+            title: `Application ${view.statusLabel}`,
             description: `Your application for **${application.roleName}** has been **${status}**\n`
                 + `**Note:** ${note}\n\n`
                 + `Use \`/apply status id:${applicationId}\` to view details.`,
@@ -71,7 +67,7 @@ export async function reviewApplicationAndNotify(client, guild, applicationId, {
                 const view = getApplicationStatusPresentation(status);
                 const newEmbed = EmbedBuilder.from(embed)
                     .setColor(getApplicationStatusColor(status))
-                    .spliceFields(0, 1, { name: 'Status', value: `${view.statusEmoji} ${view.statusLabel}` });
+                    .spliceFields(0, 1, { name: 'Status', value: `${view.statusLabel}` });
                 await logMessage.edit({ embeds: [newEmbed], components: [] });
                 logUpdated = true;
             }

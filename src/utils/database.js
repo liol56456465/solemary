@@ -360,23 +360,23 @@ export function normalizeWelcomeConfig(raw = {}) {
     const channelId = base.channelId ?? null;
     const goodbyeChannelId = base.goodbyeChannelId ?? null;
 
-    const welcomeMessage = base.welcomeMessage ?? "Welcome {user} to {server}!";
-    const leaveMessage = base.leaveMessage ?? "{user.tag} has left the server.";
+    const welcomeMessage = base.welcomeMessage ?? "Welcome to {server}, {user}.";
+    const leaveMessage = base.leaveMessage ?? "{user.tag} left the server.";
 
     const welcomeEmbed = base.welcomeEmbed ?? {
-        title: "🎉 Welcome!",
-        description: "Welcome {user} to {server}!",
+        title: "Welcome",
+        description: "Welcome to {server}, {user}.",
         color: getColor("success"),
         thumbnail: true,
-        footer: "Welcome to {server}!"
+        footer: "{server}"
     };
 
     const leaveEmbed = base.leaveEmbed ?? {
-        title: "👋 Goodbye",
-        description: "{user.tag} has left the server.",
+        title: "Goodbye",
+        description: "{user.tag} left the server.",
         color: getColor("error"),
         thumbnail: true,
-        footer: "Goodbye from {server}!"
+        footer: "{server}"
     };
 
     const roleIds = Array.isArray(base.roleIds) ? base.roleIds : [];

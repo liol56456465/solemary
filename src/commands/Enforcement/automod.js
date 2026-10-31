@@ -22,7 +22,7 @@ const RULE_CHOICES = Object.entries(AUTOMOD_RULES)
     .sort(([, a], [, b]) => b.severity - a.severity)
     .map(([key, rule]) => ({ name: rule.label.slice(0, 100), value: key }));
 
-const MODE_LABELS = { on: 'on', monitor: '👀 monitor', off: '⛔ off' };
+const MODE_LABELS = { on: 'on', monitor: 'monitor', off: 'off' };
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -95,7 +95,7 @@ function nativeRuleLine(rule, policies) {
     const notes = [
         rule.enabled ? null : 'disabled',
         blocks ? null : 'does not block messages, so the bot never sees it',
-        timeout ? '⚠️ has a native timeout; the bot mutes with the Muted role, consider removing it' : null,
+        timeout ? 'has a native timeout; the bot mutes with the Muted role, consider removing it' : null,
     ].filter(Boolean);
     return `**${rule.name}** · ${triggerLabel(rule.triggerType)} · \`${rule.id}\`\n`
         + `→ ${POLICY_TEXT[policy]}${stored}, once per ${dedupeMinutes} min per member${notes.length ? `\n-# ${notes.join(' · ')}` : ''}`;
@@ -347,7 +347,7 @@ export default {
             const saved = await setPanic(guildId, { enabled, hours });
             const canPause = interaction.guild.members.me?.permissions.has(PermissionFlagsBits.ManageGuild);
             note = enabled
-                ? `Raid panic mode is **on**: when a join raid starts a lockdown, invites and DMs are paused for **${saved.panic.hours} h** (lifted again by \`/automod lockdown-end\`).${canPause ? '' : '\n⚠️ I don\'t have **Manage Server**, so the pause will fail until I get it.'}`
+                ? `Raid panic mode is **on**: when a join raid starts a lockdown, invites and DMs are paused for **${saved.panic.hours} h** (lifted again by \`/automod lockdown-end\`).${canPause ? '' : '\nI don\'t have **Manage Server**, so the pause will fail until I get it.'}`
                 : 'Raid panic mode is **off**: a lockdown only raises the verification level.';
         } else if (sub === 'exempt') {
             const channel = interaction.options.getChannel('channel');

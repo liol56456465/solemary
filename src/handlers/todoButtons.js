@@ -26,26 +26,26 @@ function buildSharedTodoViewPayload(listData, listId, guild) {
     return {
       embeds: [
         successEmbed(
-          `Shared List (ID: \`${listId}\`)`,
-          `📋 **${escapeUserText(listData.name)}**\n\n` +
-          `👑 **Owner:** ${ownerName}\n` +
-          `👥 **Members:** ${memberList}\n\n` +
-          '*This list is currently empty. Use the "Add Task" button to add tasks!*'
+          `Shared list (ID: \`${listId}\`)`,
+          `**${escapeUserText(listData.name)}**\n\n` +
+          `**Owner:** ${ownerName}\n` +
+          `**Members:** ${memberList}\n\n` +
+          '*This list is empty. Click "Add task" to add one.*'
         )
       ],
       components: [
         new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId(`shared_todo_add_${listId}`)
-            .setLabel('Add Task')
+            .setLabel('Add task')
             .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
             .setCustomId(`shared_todo_complete_${listId}`)
-            .setLabel('Complete Task')
+            .setLabel('Complete task')
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId(`shared_todo_remove_${listId}`)
-            .setLabel('Remove Task')
+            .setLabel('Remove task')
             .setStyle(ButtonStyle.Danger)
         )
       ]
@@ -54,7 +54,7 @@ function buildSharedTodoViewPayload(listData, listId, guild) {
 
   const taskList = tasks
     .map(task =>
-      `${task.completed ? '✅' : '📝'} #${task.id} ${escapeUserText(task.text)} ` +
+      `${task.completed ? 'Done' : 'Open'} · #${task.id} ${escapeUserText(task.text)} ` +
       `\`[${new Date(task.createdAt).toLocaleDateString()}]` +
       (task.completed ? ` • Completed by <@${task.completedBy}>` : '') + '`'
     )
@@ -63,10 +63,10 @@ function buildSharedTodoViewPayload(listData, listId, guild) {
   return {
     embeds: [
       successEmbed(
-        `Shared List (ID: \`${listId}\`)`,
-        `📋 **${escapeUserText(listData.name)}**\n\n` +
-        `👑 **Owner:** ${ownerName}\n` +
-        `👥 **Members:** ${memberList}\n\n` +
+        `Shared list (ID: \`${listId}\`)`,
+        `**${escapeUserText(listData.name)}**\n\n` +
+        `**Owner:** ${ownerName}\n` +
+        `**Members:** ${memberList}\n\n` +
         `**Tasks:**\n${taskList}`
       )
     ],
@@ -74,15 +74,15 @@ function buildSharedTodoViewPayload(listData, listId, guild) {
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`shared_todo_add_${listId}`)
-          .setLabel('Add Task')
+          .setLabel('Add task')
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
           .setCustomId(`shared_todo_complete_${listId}`)
-          .setLabel('Complete Task')
+          .setLabel('Complete task')
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
           .setCustomId(`shared_todo_remove_${listId}`)
-          .setLabel('Remove Task')
+          .setLabel('Remove task')
           .setStyle(ButtonStyle.Danger)
       )
     ]
@@ -132,11 +132,11 @@ const sharedTodoAddHandler = {
     
     const modal = new ModalBuilder()
       .setCustomId(`shared_todo_add_modal:${listId}:${sourceMessageId || ''}`)
-      .setTitle('Add Task to Shared List');
+      .setTitle('Add a task');
 
     const taskInput = new TextInputBuilder()
       .setCustomId('task_text')
-      .setLabel('Enter the task description')
+      .setLabel('Task')
       .setStyle(TextInputStyle.Short)
       .setRequired(true)
       .setMaxLength(200);
@@ -161,14 +161,14 @@ const sharedTodoCompleteHandler = {
     
     const modal = new ModalBuilder()
       .setCustomId(`shared_todo_complete_modal:${listId}:${sourceMessageId || ''}`)
-      .setTitle('Complete Task in Shared List');
+      .setTitle('Complete a task');
 
     const taskIdInput = new TextInputBuilder()
       .setCustomId('task_id')
-      .setLabel('Enter the task ID to complete')
+      .setLabel('Task number')
       .setStyle(TextInputStyle.Short)
       .setRequired(true)
-      .setPlaceholder('e.g., 1, 2, 3');
+      .setPlaceholder('For example 3');
 
     const actionRow = new ActionRowBuilder().addComponents(taskIdInput);
     modal.addComponents(actionRow);
@@ -190,14 +190,14 @@ const sharedTodoRemoveHandler = {
 
     const modal = new ModalBuilder()
       .setCustomId(`shared_todo_remove_modal:${listId}:${sourceMessageId || ''}`)
-      .setTitle('Remove Task from Shared List');
+      .setTitle('Remove a task');
 
     const taskIdInput = new TextInputBuilder()
       .setCustomId('task_id')
-      .setLabel('Enter the task ID to remove')
+      .setLabel('Task number')
       .setStyle(TextInputStyle.Short)
       .setRequired(true)
-      .setPlaceholder('e.g., 1, 2, 3');
+      .setPlaceholder('For example 3');
 
     const actionRow = new ActionRowBuilder().addComponents(taskIdInput);
     modal.addComponents(actionRow);
@@ -217,7 +217,7 @@ const sharedTodoAddModalHandler = {
     try {
       const allowed = await checkRateLimit(`${userId}:shared_todo_add`, 5, 30000);
       if (!allowed) {
-        return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'You are adding tasks too quickly. Please wait and try again.' });
+        return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: "You're going a bit fast. Wait a moment and try again." });
       }
 
       if (!listId || !/^[a-zA-Z0-9_-]{1,64}$/.test(listId)) {
@@ -256,7 +256,7 @@ const sharedTodoAddModalHandler = {
       await refreshSharedTodoMessage(interaction, listId, sourceMessageId);
 
       return interaction.reply({
-        embeds: [successEmbed("Task Added", `Added "${escapeUserText(taskText)}" to the shared list.`)],
+        embeds: [successEmbed("Task added", `Added "${escapeUserText(taskText)}" to the shared list.`)],
         flags: MessageFlags.Ephemeral
       });
 
@@ -278,7 +278,7 @@ const sharedTodoCompleteModalHandler = {
     try {
       const allowed = await checkRateLimit(`${userId}:shared_todo_complete`, 5, 30000);
       if (!allowed) {
-        return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'You are completing tasks too quickly. Please wait and try again.' });
+        return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: "You're going a bit fast. Wait a moment and try again." });
       }
 
       if (!listId || !/^[a-zA-Z0-9_-]{1,64}$/.test(listId)) {
@@ -321,7 +321,7 @@ const sharedTodoCompleteModalHandler = {
       await refreshSharedTodoMessage(interaction, listId, sourceMessageId);
       
       return interaction.reply({
-        embeds: [successEmbed("Task Completed", `Marked "${escapeUserText(task.text)}" as complete!`)],
+        embeds: [successEmbed("Task done", `Marked "${escapeUserText(task.text)}" as done.`)],
         flags: MessageFlags.Ephemeral
       });
 
@@ -343,7 +343,7 @@ const sharedTodoRemoveModalHandler = {
     try {
       const allowed = await checkRateLimit(`${userId}:shared_todo_remove`, 5, 30000);
       if (!allowed) {
-        return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'You are removing tasks too quickly. Please wait and try again.' });
+        return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: "You're going a bit fast. Wait a moment and try again." });
       }
 
       if (!listId || !/^[a-zA-Z0-9_-]{1,64}$/.test(listId)) {
@@ -380,7 +380,7 @@ const sharedTodoRemoveModalHandler = {
       await refreshSharedTodoMessage(interaction, listId, sourceMessageId);
 
       return interaction.reply({
-        embeds: [successEmbed('Task Removed', `Removed "${escapeUserText(removedTask.text)}" from the shared list.`)],
+        embeds: [successEmbed('Task removed', `Removed "${escapeUserText(removedTask.text)}" from the shared list.`)],
         flags: MessageFlags.Ephemeral
       });
     } catch (error) {

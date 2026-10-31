@@ -67,6 +67,6 @@ export async function handleRaidRelease(interaction, client, args) {
     await postModLog(client, 'raid', [
         { name: 'Released by', value: `${by} (${interaction.user.id})` },
         { name: 'Result', value: text },
-    ], { title: '🕊️ Raid joiners released' });
+    ], { title: 'Raid joiners released' });
     return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Raid joiners released', text)] });
 }

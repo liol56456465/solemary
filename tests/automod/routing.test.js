@@ -35,7 +35,7 @@ test('mod log line: one line per action', () => {
         { name: 'Duration', value: '7 days (ends <t:1:F>)' },
         { name: 'DM', value: 'Not delivered' },
     ]);
-    assert.equal(line, '🔨 **Ban** · alice (111) · by Mewvo (automatic) · `k3f9a` alice ban 1 · “Automod: NSFW content” · 7 days (ends <t:1:F>) · DM: Not delivered');
+    assert.equal(line, '**Ban** · alice (111) · by Mewvo (automatic) · `k3f9a` alice ban 1 · “Automod: NSFW content” · 7 days (ends <t:1:F>) · DM: Not delivered');
     assert.ok(!line.includes('\n'));
     assert.ok(!formatModLogLine('warn', [{ name: 'Reason', value: 'a\nb' }]).includes('\n'));
 });
@@ -66,7 +66,7 @@ test('digest: actions with undo rate, hits per rule, busiest channels, memory fo
         now,
     });
     assert.equal(digest.empty, false);
-    assert.match(digest.fields[0].value, /\*\*Spam:\*\* 10 · 4 undone \(40%\) ⚠️/);
+    assert.match(digest.fields[0].value, /\*\*Spam:\*\* 10 · 4 undone \(40%\) · \*\*often corrected\*\*/);
     assert.match(digest.fields[1].value, /^Excessive caps: 2\nSpam: 1 \(1 in monitor mode\)$/);
     assert.match(digest.fields[2].value, /^<#c1>: 2/);
     assert.match(digest.fields[3].value, /2 waiting/);

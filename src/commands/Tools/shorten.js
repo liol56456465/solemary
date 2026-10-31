@@ -47,7 +47,7 @@ export default {
         } catch (error) {
             return replyUserError(interaction, {
                 type: error?.type || ErrorTypes.UNKNOWN,
-                message: error?.userMessage || 'URL shortening failed. Please try again later.',
+                message: error?.userMessage || 'Couldn\'t shorten that link. Try again later.',
             });
         }
 

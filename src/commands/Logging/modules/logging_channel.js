@@ -27,18 +27,18 @@ export default {
 
       if (disable) {
         if (!(await setLogChannel(client, interaction.guildId, destination, null))) {
-          return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: 'Could not clear the log channel. Please try again.' });
+          return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: 'Couldn\'t clear the log channel. Try again.' });
         }
         return InteractionHelper.safeEditReply(interaction, {
           embeds: [successEmbed(
-            'Channel Cleared',
+            'Channel cleared',
             `The **${DESTINATION_LABELS[destination]}** channel has been removed.`,
           )],
         });
       }
 
       if (!channel || channel.type !== ChannelType.GuildText) {
-        return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Please provide a valid text channel.' });
+        return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Pick a text channel.' });
       }
 
       const botPerms = channel.permissionsFor(interaction.guild.members.me);
@@ -47,12 +47,12 @@ export default {
       }
 
       if (!(await setLogChannel(client, interaction.guildId, destination, channel.id))) {
-        return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: 'Could not save the log channel. Please try again.' });
+        return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: 'Couldn\'t save the log channel. Try again.' });
       }
 
       return InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
-          'Channel Updated',
+          'Channel updated',
           `**${DESTINATION_LABELS[destination]}** logs will be sent to ${channel}.\nUse \`/logging dashboard\` to toggle event categories.`,
         )],
       });

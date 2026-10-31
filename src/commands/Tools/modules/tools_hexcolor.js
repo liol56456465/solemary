@@ -27,7 +27,7 @@ export default {
                 } else {
                     hexColor = hexColor.replace('#', '');
                     if (!/^[0-9A-Fa-f]{3,6}$/.test(hexColor)) {
-                        return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Please provide a valid hex code.\n\n**Valid formats:**\n• `#FF5733` (with hash)\n• `FF5733` (without hash)\n• `F57` (3-digit shorthand)\n\n**Invalid:** `#GG5733` (G is not a hex digit)' });
+                        return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'That isn\'t a valid hex code.\n\n**Valid formats:**\n• `#FF5733` (with hash)\n• `FF5733` (without hash)\n• `F57` (3-digit shorthand)\n\n**Invalid:** `#GG5733` (G is not a hex digit)' });
                     }
 
                     if (hexColor.length === 3) {
@@ -49,7 +49,7 @@ export default {
                 const colorName = getColorName(hexColor);
 
                 const embed = successEmbed(
-                    '🎨 Color Information',
+                    'Colour info',
                     `**Hex:** \`${hexColor}\`\n` +
                     `**RGB:** \`rgb(${r}, ${g}, ${b})\`\n` +
                     `**HSL:** \`${rgbToHsl(r, g, b)}\`\n` +
@@ -64,7 +64,7 @@ export default {
 
                 await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
             },
-            'Failed to generate color information. Please try again.',
+            'Couldn\'t get the colour info. Try again.',
             {
                 autoDefer: true,
                 deferOptions: { flags: MessageFlags.Ephemeral }

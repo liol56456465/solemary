@@ -98,10 +98,10 @@ export async function listProbations(guildId, now = Date.now()) {
     return out.sort((a, b) => Number(a.until) - Number(b.until));
 }
 
-/** "⚠️ on probation (rejoined after ban, until <t:…:D>)" */
+/** "on probation (rejoined after ban, until <t:…:D>)" */
 export function probationLabel(record) {
     if (!record) return null;
-    return `⚠️ on probation (rejoined after ban, until <t:${Math.floor(Number(record.until) / 1000)}:D>)`;
+    return `on probation (rejoined after ban, until <t:${Math.floor(Number(record.until) / 1000)}:D>)`;
 }
 
 /** guildMemberAdd in the main server: put a member back from a recent ban on probation. */
@@ -120,7 +120,7 @@ export async function startProbationOnJoin(member, now = Date.now()) {
         { name: 'Ban', value: `\`${ban.endedBan.caseCode}\` (${ban.endedBan.how}, ended <t:${Math.floor(new Date(ban.endedBan.endedAt).getTime() / 1000)}:R>)` },
         { name: 'Until', value: `<t:${Math.floor(record.until / 1000)}:F>` },
         { name: 'Effect', value: 'Automod uses the next step of the ladder for them; no second chance or trusted relaxing. End early with `/automod probation`.' },
-    ], { title: '⚠️ Probation started (rejoined after a ban)' });
+    ], { title: 'Probation started (rejoined after a ban)' });
     return record;
 }
 

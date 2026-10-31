@@ -46,7 +46,7 @@ export default {
       }
       const result = {};
       if (!(await updateIgnoreList(client, interaction.guildId, { action: 'toggle', type: sub, id: target.id }, result))) {
-        return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: 'Could not save the ignore list. Please try again.' });
+        return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: 'Couldn\'t save the ignore list. Try again.' });
       }
       const mention = sub === 'role' ? `<@&${target.id}>` : `<#${target.id}>`;
       const scope = sub === 'role' ? 'members with this role' : 'this channel (and its threads, or the channels in it for a category)';

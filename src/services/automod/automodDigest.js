@@ -38,7 +38,7 @@ export function buildDigest({ stats, hits = [], openCount = 0, raids = 0, starte
     const actionLines = (stats?.byGroup || []).map((row) => {
         const corrected = row.undone + row.changed;
         const rate = row.actions ? Math.round((corrected / row.actions) * 100) : 0;
-        const undo = corrected ? ` · ${row.undone} undone${row.changed ? `, ${row.changed} changed` : ''} (${rate}%)${rate >= UNDO_WARN_RATE ? ' ⚠️' : ''}` : '';
+        const undo = corrected ? ` · ${row.undone} undone${row.changed ? `, ${row.changed} changed` : ''} (${rate}%)${rate >= UNDO_WARN_RATE ? ' · **often corrected**' : ''}` : '';
         return `**${row.label}:** ${row.actions}${undo}`;
     });
 
@@ -66,7 +66,7 @@ export function buildDigest({ stats, hits = [], openCount = 0, raids = 0, starte
         partial
             ? `Hits, channels, open reviews and raids: counted in memory since the bot started ${Math.max(1, Math.round((now - startedAt) / 3600000))} h ago.`
             : 'Hits, channels, open reviews and raids: counted in memory (a restart resets them).',
-        `⚠️ = moderators corrected ${UNDO_WARN_RATE}% or more: the rule may be too strict.`,
+        `Often corrected = moderators corrected ${UNDO_WARN_RATE}% or more, so the rule may be too strict.`,
     ].join(' ');
 
     return { fields, footer, empty: !totalActions && !hits.length && !openCount && !raids };

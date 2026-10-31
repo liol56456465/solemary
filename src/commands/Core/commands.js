@@ -31,7 +31,7 @@ function buildCategoryChoices(client) {
     .sort((a, b) => a.displayName.localeCompare(b.displayName))
     .slice(0, 25)
     .map((category) => ({
-      name: `${category.icon} ${category.displayName}`.slice(0, 100),
+      name: category.displayName.slice(0, 100),
       value: category.key,
     }));
 }
@@ -54,7 +54,7 @@ export default {
     .addSubcommand((subcommand) =>
       subcommand
         .setName('dashboard')
-        .setDescription('Open the interactive command access dashboard'),
+        .setDescription('Turn commands on or off with buttons'),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -235,8 +235,8 @@ export default {
         return InteractionHelper.safeEditReply(interaction, {
           embeds: [
             successEmbed(
-              'Category Disabled',
-              `All **${category.displayName}** commands are now disabled.\nProtected commands remain available.`,
+              'Category disabled',
+              `All **${category.displayName}** commands are now off now.\n\`/commands\` and \`/configwizard\` stay on.`,
             ),
           ],
         });
@@ -244,7 +244,7 @@ export default {
 
       await enableCategory(client, interaction.guildId, category.key);
       return InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed('Category Enabled', `**${category.displayName}** commands are now enabled (except individually disabled commands).`)],
+        embeds: [successEmbed('Category enabled', `**${category.displayName}** commands are on again, except ones you turned off one by one.`)],
       });
     }
 
@@ -252,13 +252,13 @@ export default {
     if (isDisable) {
       await disableCommand(client, interaction.guildId, commandName);
       return InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed('Command Disabled', `\`/${commandName}\` is now disabled in this server.`)],
+        embeds: [successEmbed('Command disabled', `\`/${commandName}\` is now disabled in this server.`)],
       });
     }
 
     await enableCommand(client, interaction.guildId, commandName);
     return InteractionHelper.safeEditReply(interaction, {
-      embeds: [successEmbed('Command Enabled', `\`/${commandName}\` is now enabled in this server.`)],
+      embeds: [successEmbed('Command enabled', `\`/${commandName}\` is now enabled in this server.`)],
     });
   },
 };

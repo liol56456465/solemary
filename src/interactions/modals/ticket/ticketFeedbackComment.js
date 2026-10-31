@@ -21,8 +21,8 @@ export default {
         if (!guildId || !channelId) {
             await InteractionHelper.safeReply(interaction, {
                 embeds: [buildEmbed(
-                    '⚠️ Invalid Feedback Submission',
-                    'This feedback form appears to be malformed.',
+                    'Broken form',
+                    'This feedback form doesn\'t work.',
                     getColor('error'),
                 )],
                 flags: MessageFlags.Ephemeral,
@@ -34,8 +34,8 @@ export default {
         if (!comment) {
             await InteractionHelper.safeReply(interaction, {
                 embeds: [buildEmbed(
-                    '⚠️ Empty Feedback',
-                    'Please enter a comment before submitting your feedback.',
+                    'Empty comment',
+                    'Type a comment first.',
                     getColor('warning'),
                 )],
                 flags: MessageFlags.Ephemeral,
@@ -58,8 +58,8 @@ export default {
         if (!ticketData) {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [buildEmbed(
-                    '⚠️ Ticket Not Found',
-                    'Could not find the ticket associated with this feedback.',
+                    'Ticket not found',
+                    'Couldn\'t find the ticket for this comment.',
                     getColor('error'),
                 )],
             });
@@ -69,8 +69,8 @@ export default {
         if (interaction.user.id !== ticketData.userId) {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [buildEmbed(
-                    '❌ Not Allowed',
-                    'Only the ticket creator can submit feedback for this ticket.',
+                    'Not your ticket',
+                    'Only the person who opened this ticket can comment on it.',
                     getColor('error'),
                 )],
             });
@@ -89,8 +89,8 @@ export default {
             logger.error('ticketFeedbackComment: failed to save feedback', { guildId, channelId, error: err.message });
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [buildEmbed(
-                    '⚠️ Feedback Not Saved',
-                    'Your feedback could not be saved right now. Please try again later.',
+                    'Not saved',
+                    'Couldn\'t save your comment right now. Try again later.',
                     getColor('error'),
                 )],
             });
@@ -113,8 +113,8 @@ export default {
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [buildEmbed(
-                '✅ Feedback Submitted',
-                'Your written feedback has been recorded. Thank you for helping us improve!',
+                'Comment sent',
+                'Thanks, staff will see your comment.',
                 getColor('success'),
             )],
         });

@@ -26,7 +26,7 @@ export default {
               guildId: message.guild.id,
               eventType: EVENT_TYPES.REACTION_ROLE_DELETE,
               data: {
-                title: 'Reaction Role Removed',
+                title: 'Reaction role removed',
                 lines: [
                   formatLogLine('Channel', message.channel ? `${message.channel.name} ${message.channel.toString()}` : 'Unknown'),
                   formatLogLine('Message ID', `\`${message.id}\``),

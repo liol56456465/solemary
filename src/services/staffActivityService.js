@@ -177,7 +177,7 @@ export function formatStatsLine(row) {
 }
 
 export function formatActivityLine(row) {
-    return `${row.inactive ? '⚠️ ' : ''}**${row.username}**: ${row.messages} msgs · ${row.actions} actions · ${row.appeals} appeals · ${row.reviews} reviews · ${row.tickets} tickets`;
+    return `**${row.username}**${row.inactive ? ' (inactive)' : ''}: ${row.messages} msgs · ${row.actions} actions · ${row.appeals} appeals · ${row.reviews} reviews · ${row.tickets} tickets`;
 }
 
 /** Posts last week's staff activity in the mod log and DMs the owner who was inactive. */

@@ -282,8 +282,8 @@ export function diffHasChanges(diff) {
         || diff.changedRoles.length || diff.overwriteChanges.length);
 }
 
-const CHANNEL_ICON = {
-    [ChannelType.GuildCategory]: '📁', [ChannelType.GuildVoice]: '🔊', [ChannelType.GuildStageVoice]: '🎙️', [ChannelType.GuildForum]: '💬',
+const CHANNEL_KIND = {
+    [ChannelType.GuildCategory]: 'category', [ChannelType.GuildVoice]: 'voice', [ChannelType.GuildStageVoice]: 'stage', [ChannelType.GuildForum]: 'forum',
 };
 
 function listOf(items, format, max) {
@@ -296,7 +296,7 @@ export function formatDiff(diff, { max = 15 } = {}) {
     const lines = [];
     if (diff.deletedRoles.length) lines.push(`**Deleted roles (${diff.deletedRoles.length}):** ${listOf(diff.deletedRoles, (r) => `\`${r.name}\``, max)}`);
     if (diff.deletedChannels.length) {
-        lines.push(`**Deleted channels (${diff.deletedChannels.length}):** ${listOf(diff.deletedChannels, (c) => `${CHANNEL_ICON[c.type] || '#'}\`${c.name}\``, max)}`);
+        lines.push(`**Deleted channels (${diff.deletedChannels.length}):** ${listOf(diff.deletedChannels, (c) => (CHANNEL_KIND[c.type] ? `\`${c.name}\` (${CHANNEL_KIND[c.type]})` : `#\`${c.name}\``), max)}`);
     }
     if (diff.everyone) lines.push('**@everyone permissions:** changed');
     if (diff.changedRoles.length) lines.push(`**Role permissions changed (${diff.changedRoles.length}):** ${listOf(diff.changedRoles, (r) => `\`${r.name}\``, max)}`);

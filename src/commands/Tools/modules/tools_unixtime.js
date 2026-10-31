@@ -16,7 +16,7 @@ export default {
                 const unixTimestamp = Math.floor(now.getTime() / 1000);
 
                 const embed = successEmbed(
-                    '⏱️ Current Unix Timestamp',
+                    'Unix timestamp',
                     `**Seconds since Unix Epoch:** \`${unixTimestamp}\`\n` +
                     `**Milliseconds since Unix Epoch:** \`${now.getTime()}\`\n\n` +
                     `**Human-readable (UTC):** ${now.toUTCString()}\n` +
@@ -28,7 +28,7 @@ export default {
                     embeds: [embed],
                 });
             },
-            'Failed to get unix timestamp. Please try again.',
+            'Couldn\'t get the timestamp. Try again.',
             {
                 autoDefer: true,
                 deferOptions: { flags: MessageFlags.Ephemeral }

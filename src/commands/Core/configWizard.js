@@ -31,14 +31,14 @@ const DM_DISABLED_HELP = [
     '1. Right-click this server\'s name (mobile: tap the server name at the top).',
     '2. Open **Privacy Settings**.',
     '3. Turn on **Allow direct messages from server members**.',
-    '4. Click **Start Setup Wizard** again.',
+    '4. Click **Start setup** again.',
 ].join('\n');
 
 async function notifyWizardStarted(buttonInteraction) {
     await buttonInteraction.followUp({
         embeds: [infoEmbed(
-            'Setup Wizard Started',
-            'Check your DMs. I sent you the first setup question there.\n\nAnswer each question in that DM. Type `skip` to keep the current value.',
+            'Setup started',
+            'Check your DMs, the first question is there. Type `skip` to keep a current value.',
         )],
         flags: MessageFlags.Ephemeral,
     }).catch(() => {});
@@ -85,8 +85,8 @@ function getBotPresenceText() {
 function getThemeColorLines() {
     const colors = botConfig.embeds.colors;
     return [
-        `🎨 Primary \`${colors.primary}\` · Success \`${colors.success}\``,
-        `⚠️ Warning \`${colors.warning}\` · Error \`${colors.error}\``,
+        `Primary \`${colors.primary}\` · Success \`${colors.success}\``,
+        `Warning \`${colors.warning}\` · Error \`${colors.error}\``,
     ].join('\n');
 }
 
@@ -94,49 +94,49 @@ function buildDashboardEmbed(config, guild) {
     const setupDone = config.setupWizardCompleted;
 
     return createEmbed({
-        title: '⚙️ Server Configuration',
-        description: `Core settings for **${guild.name}**. Pick an option below or run the setup wizard.`,
+        title: 'Server settings',
+        description: `Basic settings for **${guild.name}**. Pick one below to change it, or run the setup wizard.`,
         color: 'info',
         fields: [
             {
-                name: '⌨️ Server Prefix',
+                name: 'Prefix',
                 value: `\`${config.prefix || getCommandPrefix()}\``,
                 inline: true,
             },
             {
-                name: '🛡️ Moderator Role',
+                name: 'Moderator role',
                 value: formatRoleMention(guild, config.modRole),
                 inline: true,
             },
             {
-                name: '📋 Log Channel',
+                name: 'Log channel',
                 value: formatChannelMention(guild, config.logging?.channels?.audit),
                 inline: true,
             },
             {
-                name: '💚 Bot Status',
+                name: 'Bot status',
                 value: getBotPresenceText(),
                 inline: false,
             },
             {
-                name: '🎨 Embed Theme',
-                value: `${getThemeColorLines()}\n-# Colors are set in bot config and apply globally.`,
+                name: 'Embed colours',
+                value: `${getThemeColorLines()}\n-# Set in the bot config, same for every server.`,
                 inline: false,
             },
             {
-                name: '⚡ Command Access',
-                value: 'Use `/commands dashboard` to enable or disable commands and subcommands.',
+                name: 'Command access',
+                value: 'Use `/commands dashboard` to turn commands on or off.',
                 inline: false,
             },
             {
-                name: `${setupDone ? '✅' : '📝'} Setup`,
+                name: 'Setup',
                 value: setupDone
-                    ? 'Setup wizard completed. Run it again any time to change settings.'
-                    : 'Run the setup wizard to configure your server quickly.',
+                    ? 'Done. You can run the wizard again any time.'
+                    : 'Not done yet. The wizard asks a few questions in DM.',
                 inline: false,
             },
         ],
-        footer: 'Dashboard closes after 10 minutes of inactivity',
+        footer: 'Closes after 10 minutes without use',
     });
 }
 
@@ -144,23 +144,20 @@ function buildSettingsSelect(guildId) {
     return new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
             .setCustomId(`${DASHBOARD_CUSTOM_ID}:${guildId}`)
-            .setPlaceholder('⚙️ Select a setting to edit...')
+            .setPlaceholder('Pick a setting to change')
             .addOptions(
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Server Prefix')
-                    .setDescription('Change the text command prefix')
-                    .setValue('prefix')
-                    .setEmoji('⌨️'),
+                    .setLabel('Prefix')
+                    .setDescription('The prefix for text commands')
+                    .setValue('prefix'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Moderator Role')
+                    .setLabel('Moderator role')
                     .setDescription('Role used for moderation commands')
-                    .setValue('modRole')
-                    .setEmoji('🛡️'),
+                    .setValue('modRole'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Log Channel')
-                    .setDescription('Channel for system log messages')
-                    .setValue('logChannelId')
-                    .setEmoji('📋'),
+                    .setLabel('Log channel')
+                    .setDescription('Where the bot posts its logs')
+                    .setValue('logChannelId'),
             ),
     );
 }
@@ -169,8 +166,7 @@ function buildButtonRow(config, guildId) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`${WIZARD_BUTTON_ID}:${guildId}`)
-            .setLabel(config.setupWizardCompleted ? 'Re-run Setup Wizard' : 'Start Setup Wizard')
-            .setEmoji('📝')
+            .setLabel(config.setupWizardCompleted ? 'Run setup again' : 'Start setup')
             .setStyle(config.setupWizardCompleted ? ButtonStyle.Secondary : ButtonStyle.Success),
     );
 }
@@ -193,7 +189,7 @@ function extractId(value) {
 async function askQuestion(dmChannel, userId, prompt, stepNumber, totalSteps) {
     await dmChannel.send({
         embeds: [createEmbed({
-            title: `Setup Question ${stepNumber}/${totalSteps}`,
+            title: `Setup question ${stepNumber}/${totalSteps}`,
             description: prompt,
             color: 'primary',
         })],
@@ -215,7 +211,7 @@ async function askQuestion(dmChannel, userId, prompt, stepNumber, totalSteps) {
     const answer = collected.first().content.trim();
     if (answer.toLowerCase() === 'cancel') {
         await dmChannel.send({
-            embeds: [infoEmbed('Setup Cancelled', 'Setup wizard stopped. Your saved answers are still applied.')],
+            embeds: [infoEmbed('Setup cancelled', 'Stopped. Anything you already answered is saved.')],
         });
         return { cancelled: true };
     }
@@ -274,7 +270,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
 
     if (activeWizardSessions.has(user.id)) {
         await buttonInteraction.followUp({
-            embeds: [warningEmbed('Setup Already Running', 'You already have a setup wizard open in your DMs. Reply there to continue, or type `cancel` to stop it.')],
+            embeds: [warningEmbed('Setup already running', 'You already have the setup open in your DMs. Reply there, or type `cancel` to stop it.')],
             flags: MessageFlags.Ephemeral,
         }).catch(() => {});
         return;
@@ -346,8 +342,8 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
         try {
             await dmChannel.send({
                 embeds: [createEmbed({
-                    title: '📝 Setup Wizard',
-                    description: 'Answer each question in this DM.\n\n• Type `skip` to keep the current value\n• Type `cancel` to stop the wizard',
+                    title: 'Setup',
+                    description: 'Answer each question here.\n\n• `skip` keeps the current value\n• `cancel` stops the setup',
                     color: 'info',
                 })],
             });
@@ -410,7 +406,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
                 } catch (error) {
                     errors.push(`• ${prompt.key}: ${error.message}`);
                     await dmChannel.send({
-                        embeds: [buildUserErrorEmbed(ErrorTypes.VALIDATION, `${error.message}\n\nPlease reply again with a valid answer, \`skip\`, or \`cancel\`.`)],
+                        embeds: [buildUserErrorEmbed(ErrorTypes.VALIDATION, `${error.message}\n\nReply again, or send \`skip\` or \`cancel\`.`)],
                     });
                 }
             }
@@ -429,19 +425,19 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
         }
 
         const summaryTitle = wizardCancelled
-            ? (Object.keys(changes).length > 0 ? 'Setup Stopped' : 'Setup Cancelled')
-            : (errors.length > 0 ? 'Setup Complete' : 'Setup Complete');
+            ? (Object.keys(changes).length > 0 ? 'Setup stopped' : 'Setup cancelled')
+            : 'Setup done';
 
         const summaryBody = wizardCancelled
             ? (Object.keys(changes).length > 0
                 ? `Setup stopped early. Saved **${Object.keys(changes).length}** setting(s) before stopping.`
-                : 'Setup wizard stopped before any changes were saved.')
+                : 'Stopped before anything was saved.')
             : (Object.keys(changes).length > 0
-                ? `Updated **${Object.keys(changes).length}** setting(s).${errors.length > 0 ? ' Some answers needed retries.' : ''}`
-                : 'No changes were applied.');
+                ? `Updated **${Object.keys(changes).length}** setting(s).${errors.length > 0 ? ' Some answers had to be retried.' : ''}`
+                : 'Nothing was changed.');
 
         const summaryEmbed = createEmbed({
-            title: wizardCancelled ? `⚠️ ${summaryTitle}` : `✅ ${summaryTitle}`,
+            title: summaryTitle,
             description: summaryBody,
             color: wizardCancelled ? 'warning' : (errors.length > 0 ? 'warning' : 'success'),
         });
@@ -470,19 +466,19 @@ async function showSettingModal(selectInteraction, guildId, setting) {
     if (setting === 'logChannelId') {
         const modal = new ModalBuilder()
             .setCustomId(modalCustomId)
-            .setTitle('📋 Update Log Channel');
+            .setTitle('Log channel');
 
         const channelSelect = new ChannelSelectMenuBuilder()
             .setCustomId('log_channel')
-            .setPlaceholder('Select a text channel...')
+            .setPlaceholder('Pick a text channel')
             .setMinValues(1)
             .setMaxValues(1)
             .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
             .setRequired(true);
 
         const channelLabel = new LabelBuilder()
-            .setLabel('Log Channel')
-            .setDescription('Channel where system log messages will be sent')
+            .setLabel('Log channel')
+            .setDescription('Where the bot posts its logs')
             .setChannelSelectMenuComponent(channelSelect);
 
         modal.addLabelComponents(channelLabel);
@@ -493,17 +489,17 @@ async function showSettingModal(selectInteraction, guildId, setting) {
     if (setting === 'modRole') {
         const modal = new ModalBuilder()
             .setCustomId(modalCustomId)
-            .setTitle('🛡️ Update Moderator Role');
+            .setTitle('Moderator role');
 
         const roleSelect = new RoleSelectMenuBuilder()
             .setCustomId('mod_role')
-            .setPlaceholder('Select a moderator role...')
+            .setPlaceholder('Pick a role')
             .setMinValues(1)
             .setMaxValues(1)
             .setRequired(true);
 
         const roleLabel = new LabelBuilder()
-            .setLabel('Moderator Role')
+            .setLabel('Moderator role')
             .setDescription('Role used for moderation commands')
             .setRoleSelectMenuComponent(roleSelect);
 
@@ -514,7 +510,7 @@ async function showSettingModal(selectInteraction, guildId, setting) {
 
     const modal = new ModalBuilder()
         .setCustomId(modalCustomId)
-        .setTitle('Update Server Prefix');
+        .setTitle('Prefix');
 
     const textInput = new TextInputBuilder()
         .setCustomId('value')
@@ -532,7 +528,7 @@ function resolveSettingModalValue(setting, submitted) {
     if (setting === 'logChannelId') {
         const channelId = submitted.fields.getField('log_channel')?.values?.[0];
         if (!channelId) {
-            throw new Error('Please select a log channel.');
+            throw new Error('Pick a log channel.');
         }
         return channelId;
     }
@@ -540,7 +536,7 @@ function resolveSettingModalValue(setting, submitted) {
     if (setting === 'modRole') {
         const roleId = submitted.fields.getField('mod_role')?.values?.[0];
         if (!roleId) {
-            throw new Error('Please select a moderator role.');
+            throw new Error('Pick a moderator role.');
         }
         return roleId;
     }
@@ -587,7 +583,7 @@ async function handleSettingModalSubmit(selectInteraction, rootInteraction, sett
         await ConfigService.updateSetting(client, guildId, setting, value, submitted.user.id);
 
         await submitted.reply({
-            embeds: [successEmbed('Configuration Updated', buildSettingSuccessMessage(setting, value, submitted.guild))],
+            embeds: [successEmbed('Saved', buildSettingSuccessMessage(setting, value, submitted.guild))],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -597,7 +593,7 @@ async function handleSettingModalSubmit(selectInteraction, rootInteraction, sett
         logger.error('Config wizard modal submit error:', error);
         await replyUserError(submitted, {
             type: ErrorTypes.CONFIGURATION,
-            message: error.message || 'Please try again.',
+            message: error.message || 'Try again.',
         }).catch(() => {});
     }
 }
@@ -606,7 +602,7 @@ export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
         .setName('configwizard')
-        .setDescription('Open the server configuration dashboard and setup wizard')
+        .setDescription('Open the server settings and setup wizard')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false),
     category: 'Core',
@@ -672,7 +668,7 @@ export default {
                     logger.error('Config dashboard interaction error:', error);
                     await replyUserError(componentInteraction, {
                         type: ErrorTypes.UNKNOWN,
-                        message: 'Failed to process your selection. Please try again.',
+                        message: 'That didn\'t work. Try again.',
                     }).catch(() => {});
                 }
             });
@@ -680,7 +676,7 @@ export default {
             logger.error('Config command error:', error);
             await replyUserError(interaction, {
                 type: ErrorTypes.CONFIGURATION,
-                message: 'Failed to open configuration dashboard. Please try again.',
+                message: 'Couldn\'t open the settings. Try again.',
             });
         }
     },

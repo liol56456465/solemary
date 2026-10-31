@@ -21,15 +21,14 @@ function refused(message, type = ErrorTypes.CONFIGURATION) {
 export function buildVerificationPanelPayload(cfg = {}) {
     return {
         embeds: [new EmbedBuilder()
-            .setTitle('Server Verification')
+            .setTitle('Server verification')
             .setDescription(cfg.message || botConfig.verification?.defaultMessage || 'Press the button to verify.')
             .setColor(getColor('success'))],
         components: [new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('verify_user')
                 .setLabel(cfg.buttonText || botConfig.verification?.defaultButtonText || 'Verify')
-                .setStyle(ButtonStyle.Success)
-                .setEmoji('✅'),
+                .setStyle(ButtonStyle.Success),
         )],
     };
 }

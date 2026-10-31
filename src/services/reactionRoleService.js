@@ -586,7 +586,6 @@ export async function rebuildLivePanelMessage(guild, panel) {
                         label: r.name.substring(0, 100),
                         description: `Add/remove the ${r.name} role`.substring(0, 100),
                         value: r.id,
-                        emoji: '🎭',
                     })),
                 ),
         );
@@ -680,7 +679,6 @@ export function buildReactionRolePanelPayload(title, description, roles) {
             label: String(role.name).substring(0, 100),
             description: `Add/remove the ${role.name} role`.substring(0, 100),
             value: role.id,
-            emoji: '🎭',
         })));
     const embed = new EmbedBuilder()
         .setTitle(title)
@@ -774,8 +772,8 @@ export async function createReactionRolePanel(client, guild, { channel, title, d
                     { name: 'Title', value: cleanTitle, inline: false },
                     { name: 'Channel', value: `<#${channel.id}>`, inline: true },
                     { name: 'Roles', value: `${roles.length} roles`, inline: true },
-                    { name: 'Role List', value: roles.map((r) => r.toString()).join(','), inline: false },
-                    { name: 'Message Link', value: message.url || message.id, inline: false },
+                    { name: 'Role list', value: roles.map((r) => r.toString()).join(','), inline: false },
+                    { name: 'Message link', value: message.url || message.id, inline: false },
                 ],
             },
         });

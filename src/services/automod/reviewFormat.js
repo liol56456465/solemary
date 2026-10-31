@@ -38,17 +38,17 @@ export const STATUS_COLORS = {
     failed: 0xED4245,  // red: the action did not go through
 };
 
-/** Closing a card: status → [emoji, verb, color]. */
+/** Closing a card: status → [verb, color]. */
 export const CLOSE_STATUS = {
-    kept: ['✅', 'Kept', STATUS_COLORS.kept],
-    applied: ['✅', 'Applied', STATUS_COLORS.kept],
-    changed: ['🔁', 'Changed', STATUS_COLORS.kept],
-    deleted: ['🗑️', 'Message deleted', STATUS_COLORS.kept],
-    approved: ['✅', 'Approved', STATUS_COLORS.kept],
-    undone: ['↩️', 'Undone', STATUS_COLORS.undone],
-    dismissed: ['✖️', 'Dismissed', STATUS_COLORS.undone],
-    denied: ['⛔', 'Denied', STATUS_COLORS.undone],
-    failed: ['⚠️', 'Failed', STATUS_COLORS.failed],
+    kept: ['Kept', STATUS_COLORS.kept],
+    applied: ['Applied', STATUS_COLORS.kept],
+    changed: ['Changed', STATUS_COLORS.kept],
+    deleted: ['Message deleted', STATUS_COLORS.kept],
+    approved: ['Approved', STATUS_COLORS.kept],
+    undone: ['Undone', STATUS_COLORS.undone],
+    dismissed: ['Dismissed', STATUS_COLORS.undone],
+    denied: ['Denied', STATUS_COLORS.undone],
+    failed: ['Failed', STATUS_COLORS.failed],
 };
 
 // Discord allows 100 characters in a customId; "amreview:change:" leaves room for this many codes.
@@ -77,12 +77,6 @@ export function outcomeLabel(step) {
     if (step.type === 'kick') return 'Kicked';
     if (step.type === 'mute') return `Muted ${formatDuration(step.durationMs)}`;
     return step.durationMs ? `Banned ${formatDuration(step.durationMs)}` : 'Permanently banned';
-}
-
-export function stepEmoji(step) {
-    if (step?.type === 'warn') return '🟡';
-    if (step?.type === 'mute') return '🟠';
-    return '🔴';
 }
 
 export function ordinal(n) {
@@ -139,11 +133,12 @@ export function stripLeadingEmoji(title) {
     return String(title || '').replace(LEADING_EMOJI, '');
 }
 
-/** "✅ Kept by Admin · Muted 1 hour · Harassment". `verb` overrides the status verb. */
+/** "Kept by Admin · Muted 1 hour · Harassment". `verb` overrides the status verb. */
 export function closedTitle(title, status, byName, verb = null) {
-    const [emoji, defaultVerb] = CLOSE_STATUS[status] || CLOSE_STATUS.kept;
+    const [defaultVerb] = CLOSE_STATUS[status] || CLOSE_STATUS.kept;
+    // Older cards still start with an emoji; drop it so the closed title stays plain.
     const base = stripLeadingEmoji(title);
-    return truncate(`${emoji} ${verb || defaultVerb} by ${byName}${base ? ` · ${base}` : ''}`, 256);
+    return truncate(`${verb || defaultVerb} by ${byName}${base ? ` · ${base}` : ''}`, 256);
 }
 
 function ruleLabel(entry) {
@@ -167,13 +162,13 @@ export function buttonCodes(entry) {
 
 export function cardTitle(entry) {
     const label = ruleLabel(entry);
-    if (entry.kind === 'report') return '🚩 Member report';
-    if (entry.kind === 'monitor') return `👀 Monitor: would ${stepVerb(entry.suggested)} · ${label}`;
+    if (entry.kind === 'report') return 'Member report';
+    if (entry.kind === 'monitor') return `Monitor: would ${stepVerb(entry.suggested)} · ${label}`;
     const action = latestAction(entry);
     if (!action) return `Automod · ${label}`;
-    if (action.failed) return `❌ Failed to ${stepVerb(action.step)} · ${label}`;
-    if (entry.raid) return `🔴 Kicked (raid joiner) · ${label}`;
-    return `${stepEmoji(action.step)} ${outcomeLabel(action.step)} · ${label}`;
+    if (action.failed) return `Failed to ${stepVerb(action.step)} · ${label}`;
+    if (entry.raid) return `Kicked (raid joiner) · ${label}`;
+    return `${outcomeLabel(action.step)} · ${label}`;
 }
 
 export function cardColor(entry) {
@@ -186,17 +181,17 @@ function whereText(entry) {
     return entry.channelId ? ` in <#${entry.channelId}>` : '';
 }
 
-/** "⚠️ on probation (rejoined after ban, until <t:…:D>)" or null. */
+/** "on probation (rejoined after ban, until <t:…:D>)" or null. */
 export function probationText(entry) {
     return entry.probationUntil
-        ? `⚠️ on probation (rejoined after ban, until <t:${Math.floor(entry.probationUntil / 1000)}:D>)`
+        ? `on probation (rejoined after ban, until <t:${Math.floor(entry.probationUntil / 1000)}:D>)`
         : null;
 }
 
 export function cardDescription(entry) {
     const lines = [`<@${entry.userId}> ${entry.evidence || 'broke a rule'}${whereText(entry)}.`];
     const probation = probationText(entry);
-    if (probation) lines.push(`${probation}: the ladder starts one step higher for them.`);
+    if (probation) lines.push(`On ${probation.slice(3)}: the ladder starts one step higher for them.`);
     const label = ruleLabel(entry);
 
     if (entry.kind === 'report') {
@@ -209,7 +204,7 @@ export function cardDescription(entry) {
         if (entry.offence) lines.push(`${ordinal(entry.offence)} ${label} offence in 30 days.`);
         if (entry.raid) lines.push('They joined during a raid lockdown, so they were kicked instead of the usual punishment.');
         const action = latestAction(entry);
-        if (action?.failed) lines.push(`⚠️ Not applied: ${action.failed}`);
+        if (action?.failed) lines.push(`Not applied: ${action.failed}`);
         if (action?.limitBanCode) lines.push(`This warn reached the warning limit: automatic ban \`${action.limitBanCode}\`.`);
         const earlier = (entry.actions || []).slice(0, -1).filter((a) => a.caseCode);
         if (earlier.length) {
@@ -241,21 +236,21 @@ export function cardFields(entry) {
     return fields;
 }
 
-/** The "🙋 Member disputes" field: the member's own words, markdown escaped. */
+/** The "Member disputes" field: the member's own words, markdown escaped. */
 export function contestField(contest) {
     const reason = escapeMarkdown(String(contest?.reason ?? '').trim()) || '(no reason given)';
     return {
-        name: `🙋 Member disputes${contest?.caseCode ? ` · case ${contest.caseCode}` : ''}`,
+        name: `Member disputes${contest?.caseCode ? ` · case ${contest.caseCode}` : ''}`,
         value: truncate(reason, 1024),
     };
 }
 
-/** "🟡 **Excessive caps** · <@1> · warned · case `k3f9a` · <#2> · 3 messages" */
+/** "**Excessive caps** · <@1> · warned · case `k3f9a` · <#2> · 3 messages" */
 export function compactLine(entry) {
     if (entry.kind === 'note') {
-        // "💬 Second chance · <@1> · Excessive caps · <#2>"
+        // "Second chance · <@1> · Excessive caps · <#2>"
         return [
-            `${entry.note?.emoji || 'ℹ️'} ${entry.note?.title || 'Note'}`,
+            entry.note?.title || 'Note',
             `<@${entry.userId}>`,
             ruleLabel(entry),
             entry.channelId ? `<#${entry.channelId}>` : null,
@@ -266,7 +261,7 @@ export function compactLine(entry) {
     const action = latestAction(entry);
     const codes = caseCodes(entry);
     const parts = [
-        `${stepEmoji(action?.step)} **${ruleLabel(entry)}**`,
+        `**${ruleLabel(entry)}**`,
         `<@${entry.userId}>`,
         action ? outcomeLabel(action.step).toLowerCase() : 'flagged',
         codes.length ? `case${codes.length > 1 ? 's' : ''} ${codes.map((c) => `\`${c}\``).join(' ')}` : null,

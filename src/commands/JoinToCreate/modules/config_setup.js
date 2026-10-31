@@ -38,51 +38,51 @@ export default {
         }
 
         const embed = new EmbedBuilder()
-            .setTitle('Join to Create Configuration')
+            .setTitle('Join to create settings')
             .setDescription(`Configure settings for ${triggerChannel}`)
             .setColor(getColor('info'))
             .addFields(
                 {
-                    name: 'Current Channel Name Template',
+                    name: 'Channel name template',
                     value: `\`${currentConfig.channelOptions?.[triggerChannel.id]?.nameTemplate || currentConfig.channelNameTemplate}\``,
                     inline: false
                 },
                 {
-                    name: 'Current User Limit',
+                    name: 'User limit',
                     value: `${currentConfig.channelOptions?.[triggerChannel.id]?.userLimit || currentConfig.userLimit === 0 ? 'No limit' : currentConfig.userLimit + ' users'}`,
                     inline: true
                 },
                 {
-                    name: 'Current Bitrate',
+                    name: 'Bitrate',
                     value: `${(currentConfig.channelOptions?.[triggerChannel.id]?.bitrate || currentConfig.bitrate) / 1000} kbps`,
                     inline: true
                 }
             )
-            .setFooter({ text: 'Select an option to configure below' })
+            .setFooter({ text: 'Pick what to change below' })
             .setTimestamp();
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`jointocreate_config_${triggerChannel.id}`)
-            .setPlaceholder('Select a configuration option')
+            .setPlaceholder('Pick a setting')
             .addOptions(
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Change Channel Name Template')
+                    .setLabel('Change name template')
                     .setDescription('Modify the template for temporary channel names')
                     .setValue('name_template'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Change User Limit')
+                    .setLabel('Change user limit')
                     .setDescription('Set maximum users per temporary channel')
                     .setValue('user_limit'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Change Bitrate')
+                    .setLabel('Change bitrate')
                     .setDescription('Adjust audio quality for temporary channels')
                     .setValue('bitrate'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Remove This Trigger Channel')
-                    .setDescription('Remove this channel from the Join to Create system')
+                    .setLabel('Remove this trigger channel')
+                    .setDescription('Stop using this channel for join to create')
                     .setValue('remove_trigger'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('View Current Settings')
+                    .setLabel('Show current settings')
                     .setDescription('Show all current configuration details')
                     .setValue('view_settings')
             );
@@ -170,22 +170,22 @@ time: 60000
 
 async function handleNameTemplateChange(interaction, triggerChannel, currentConfig, client) {
     const embed = new EmbedBuilder()
-        .setTitle('Channel Name Template Configuration')
+        .setTitle('Channel name template')
         .setDescription('Please enter the new channel name template.')
         .addFields(
             {
-                name: 'Available Variables',
+                name: 'Variables',
                 value: '• `{username}` - User\'s username\n• `{display_name}` - User\'s display name\n• `{user_tag}` - User\'s tag (User#1234)\n• `{guild_name}` - Server name',
                 inline: false
             },
             {
-                name: 'Current Template',
+                name: 'Current template',
                 value: `\`${currentConfig.channelOptions?.[triggerChannel.id]?.nameTemplate || currentConfig.channelNameTemplate}\``,
                 inline: false
             }
         )
         .setColor(getColor('info'))
-        .setFooter({ text: 'Type your new template in the chat below' });
+        .setFooter({ text: 'Type the new template in chat' });
 
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
@@ -218,7 +218,7 @@ time: 600_000,
             });
 
             await interaction.followUp({
-                embeds: [successEmbed('Template Updated', `Channel name template changed to \`${newTemplate}\``)],
+                embeds: [successEmbed('Template updated', `Channel name template changed to \`${newTemplate}\``)],
                 flags: MessageFlags.Ephemeral,
             });
 
@@ -253,17 +253,17 @@ time: 600_000,
 
 async function handleUserLimitChange(interaction, triggerChannel, currentConfig, client) {
     const embed = new EmbedBuilder()
-        .setTitle('User Limit Configuration')
+        .setTitle('User limit')
         .setDescription('Please enter the new user limit (0-99, where 0 = no limit).')
         .addFields(
             {
-                name: 'Current Limit',
+                name: 'Current limit',
                 value: `${currentConfig.channelOptions?.[triggerChannel.id]?.userLimit || currentConfig.userLimit === 0 ? 'No limit' : currentConfig.userLimit + ' users'}`,
                 inline: false
             }
         )
         .setColor(getColor('info'))
-        .setFooter({ text: 'Type the new limit in the chat below' });
+        .setFooter({ text: 'Type the new limit in chat' });
 
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
@@ -296,7 +296,7 @@ async function handleUserLimitChange(interaction, triggerChannel, currentConfig,
             });
 
             await interaction.followUp({
-                embeds: [successEmbed('Limit Updated', `User limit changed to ${newLimit === 0 ? 'No limit' : newLimit + ' users'}`)],
+                embeds: [successEmbed('Limit updated', `User limit changed to ${newLimit === 0 ? 'No limit' : newLimit + ' users'}`)],
                 flags: MessageFlags.Ephemeral,
             });
 
@@ -331,22 +331,22 @@ async function handleUserLimitChange(interaction, triggerChannel, currentConfig,
 
 async function handleBitrateChange(interaction, triggerChannel, currentConfig, client) {
     const embed = new EmbedBuilder()
-        .setTitle('Bitrate Configuration')
+        .setTitle('Bitrate')
         .setDescription('Please enter the new bitrate in kbps (8-384).')
         .addFields(
             {
-                name: 'Current Bitrate',
+                name: 'Bitrate',
                 value: `${(currentConfig.channelOptions?.[triggerChannel.id]?.bitrate || currentConfig.bitrate) / 1000} kbps`,
                 inline: false
             },
             {
-                name: 'Common Values',
+                name: 'Common values',
                 value: '• 64 kbps - Normal quality\n• 96 kbps - Good quality\n• 128 kbps - High quality\n• 256 kbps - Very high quality',
                 inline: false
             }
         )
         .setColor(getColor('info'))
-        .setFooter({ text: 'Type the new bitrate in the chat below' });
+        .setFooter({ text: 'Type the new bitrate in chat' });
 
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
@@ -379,7 +379,7 @@ async function handleBitrateChange(interaction, triggerChannel, currentConfig, c
             });
 
             await interaction.followUp({
-                embeds: [successEmbed('Bitrate Updated', `Bitrate changed to ${newBitrate} kbps`)],
+                embeds: [successEmbed('Bitrate updated', `Bitrate changed to ${newBitrate} kbps`)],
                 flags: MessageFlags.Ephemeral,
             });
 
@@ -414,15 +414,15 @@ async function handleBitrateChange(interaction, triggerChannel, currentConfig, c
 
 async function handleRemoveTrigger(interaction, triggerChannel, currentConfig, client) {
     const embed = new EmbedBuilder()
-        .setTitle('Remove Trigger Channel')
-        .setDescription(`Are you sure you want to remove ${triggerChannel} from the Join to Create system?`)
+        .setTitle('Remove trigger channel')
+        .setDescription(`Remove ${triggerChannel} from join to create?`)
         .setColor('#ff6600')
-        .setFooter({ text: 'This action cannot be undone' });
+        .setFooter({ text: "This can't be undone" });
 
     const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`confirm_remove_${triggerChannel.id}`)
-            .setLabel('Remove Channel')
+            .setLabel('Remove channel')
             .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
             .setCustomId(`cancel_remove_${triggerChannel.id}`)
@@ -453,7 +453,7 @@ async function handleRemoveTrigger(interaction, triggerChannel, currentConfig, c
                 
                 if (success) {
                     await buttonInteraction.followUp({
-                        embeds: [successEmbed('Channel Removed', `${triggerChannel} has been removed from the Join to Create system.`)],
+                        embeds: [successEmbed('Channel removed', `${triggerChannel} is no longer a join to create channel.`)],
                         flags: MessageFlags.Ephemeral,
                     });
                 } else {
@@ -500,22 +500,22 @@ async function handleViewSettings(interaction, triggerChannel, currentConfig, cl
     const channelConfig = currentConfig.channelOptions?.[triggerChannel.id] || {};
     
     const embed = new EmbedBuilder()
-        .setTitle('Current Settings')
+        .setTitle('Current settings')
         .setDescription(`Configuration for ${triggerChannel}`)
         .setColor(getColor('info'))
         .addFields(
             {
-                name: 'Trigger Channel',
+                name: 'Trigger channel',
                 value: `${triggerChannel} (${triggerChannel.id})`,
                 inline: false
             },
             {
-                name: 'Channel Name Template',
+                name: 'Channel name template',
                 value: `\`${channelConfig.nameTemplate || currentConfig.channelNameTemplate}\``,
                 inline: false
             },
             {
-                name: 'User Limit',
+                name: 'User limit',
                 value: `${channelConfig.userLimit || currentConfig.userLimit === 0 ? 'No limit' : (channelConfig.userLimit || currentConfig.userLimit) + ' users'}`,
                 inline: true
             },
@@ -530,12 +530,12 @@ async function handleViewSettings(interaction, triggerChannel, currentConfig, cl
                 inline: true
             },
             {
-                name: 'System Status',
-                value: currentConfig.enabled ? '✅ Enabled' : '❌ Disabled',
+                name: 'Status',
+                value: currentConfig.enabled ? 'On' : 'Off',
                 inline: true
             },
             {
-                name: 'Active Temporary Channels',
+                name: 'Active temporary channels',
                 value: Object.keys(currentConfig.temporaryChannels || {}).length.toString(),
                 inline: true
             }

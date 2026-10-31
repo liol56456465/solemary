@@ -61,7 +61,7 @@ test('structure diff: a nuke shows deleted roles/channels, permission and overwr
 
     const text = formatDiff(diff);
     assert.match(text, /Deleted roles \(2\):\*\* `Mod`, `VIP`/);
-    assert.match(text, /Deleted channels \(2\):\*\* 📁`Info`, 🔊`voice`/);
+    assert.match(text, /Deleted channels \(2\):\*\* `Info` \(category\), `voice` \(voice\)/);
     assert.match(text, /@everyone permissions:\*\* changed/);
     assert.match(text, /#rules \(@everyone changed\)/);
     assert.match(text, /#general \(Member added\)/);

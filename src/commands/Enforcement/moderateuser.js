@@ -35,7 +35,7 @@ export default {
                 : await guild.members.fetch(targetUser.id).catch(() => null);
             assertCanTarget(guild, interaction.member, targetUser.id, targetMember, 'moderate');
         } catch (error) {
-            panel.content = `⛔ ${error.userMessage || error.message} The panel is read-only.`;
+            panel.content = `${error.userMessage || error.message} The panel is read-only.`;
             panel.components = [];
         }
         await InteractionHelper.safeEditReply(interaction, panel);

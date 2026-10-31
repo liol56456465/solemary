@@ -12,17 +12,14 @@ export const COUNTER_TYPE_CONFIG = {
   members: {
     label: 'Members + Bots',
     baseName: 'Members & Bots',
-    emoji: '👥'
   },
   members_only: {
     label: 'Members Only',
     baseName: 'Members',
-    emoji: '👤'
   },
   bots: {
     label: 'Bots Only',
     baseName: 'Bots',
-    emoji: '🤖'
   }
 };
 
@@ -30,7 +27,6 @@ function getCounterConfig(type) {
   return COUNTER_TYPE_CONFIG[type] || {
     label: 'Unknown',
     baseName: 'Counter',
-    emoji: '❓'
   };
 }
 
@@ -43,7 +39,7 @@ export function getCounterBaseName(type) {
 }
 
 export function getCounterEmoji(type) {
-  return getCounterConfig(type).emoji;
+  return getCounterConfig(type).emoji || '';
 }
 
 export function formatCounterChannelName(type, count) {
@@ -192,7 +188,7 @@ export async function updateCounter(client, guild, counter) {
             guildId: guild.id,
             eventType: EVENT_TYPES.COUNTER_UPDATE,
             data: {
-              title: 'Counter Updated',
+              title: 'Counter updated',
               lines: [
                 formatLogLine('Type', getCounterTypeLabel(type)),
                 formatLogLine('Count', count.toString()),
@@ -309,7 +305,7 @@ export async function createServerCounter(client, guild, { type, channelType = '
     throw createError('Unknown counter type', ErrorTypes.USER_INPUT, 'Unknown counter type.', { type });
   }
   if (!category || category.type !== ChannelType.GuildCategory) {
-    throw createError('Not a category', ErrorTypes.USER_INPUT, 'Please select a valid category for the counter channel.', { type });
+    throw createError('Not a category', ErrorTypes.USER_INPUT, 'Pick a category for the counter channel.', { type });
   }
   const existing = (await getServerCounters(client, guild.id)).find((c) => c.type === type);
   if (existing) {
@@ -344,7 +340,7 @@ export async function createServerCounter(client, guild, { type, channelType = '
   } catch (error) {
     await channel.delete('Counter creation failed during save').catch(() => null);
     if (error.type === ErrorTypes.USER_INPUT) throw error;
-    throw createError('Counter save failed', ErrorTypes.USER_INPUT, 'Failed to save counter data. Please try again.', { type, cause: error.message });
+    throw createError('Counter save failed', ErrorTypes.USER_INPUT, 'Couldn\'t save the counter. Try again.', { type, cause: error.message });
   }
   const renamed = await updateCounter(client, guild, counter);
   return { counter, channel, renamed };

@@ -72,7 +72,7 @@ export default {
     const progressBar = createProgressBar(progress, 20);
 
     const embed = new EmbedBuilder()
-      .setTitle(`${member.displayName}'s Rank`)
+      .setTitle(`${member.displayName}'s rank`)
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .addFields(
         {

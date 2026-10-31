@@ -123,9 +123,9 @@ async function showMyStanding(interaction) {
 
 const MY_APPEAL_STATUS = {
     pending: '⏳ Pending: the administrators have not decided yet',
-    accepted: '✅ Accepted',
-    denied: '❌ Denied',
-    closed: '🔒 Closed',
+    accepted: 'Accepted',
+    denied: 'Denied',
+    closed: 'Closed',
 };
 
 /** The clicking member's own appeals: case, status and dates. Only they see it. */

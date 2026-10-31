@@ -27,11 +27,11 @@ export default {
                         .setRequired(true))
                 .addStringOption(option =>
                     option.setName('image')
-                        .setDescription('URL of the image to include in the goodbye message')
+                        .setDescription('Image URL to add to the message')
                         .setRequired(false))
                 .addBooleanOption(option =>
                     option.setName('ping')
-                        .setDescription('Whether to ping the user in the goodbye message')
+                        .setDescription('Ping the member in the message')
                         .setRequired(false))),
 
     async execute(interaction) {
@@ -89,7 +89,7 @@ export default {
                         title: "Goodbye {user.tag}",
                         description: message,
                         color: getColor('error'),
-                        footer: `Goodbye from ${guild.name}!`,
+                        footer: guild.name,
                         ...(image && { image: { url: image } })
                     }
                 });
@@ -103,14 +103,14 @@ export default {
 
                 const embed = new EmbedBuilder()
                     .setColor(getColor('success'))
-                    .setTitle('Goodbye System Configured')
-                    .setDescription(`Goodbye messages will now be sent to ${channel}`)
+                    .setTitle('Goodbye messages set up')
+                    .setDescription(`Goodbye messages will go to ${channel}.`)
                     .addFields(
-                        { name: 'Message Preview', value: truncateForEmbedField(previewMessage) },
-                        { name: 'Ping User', value: ping ? 'Yes' : 'No' },
-                        { name: 'Status', value: 'Enabled' }
+                        { name: 'Preview', value: truncateForEmbedField(previewMessage) },
+                        { name: 'Ping the member', value: ping ? 'Yes' : 'No' },
+                        { name: 'Status', value: 'On' }
                     )
-                    .setFooter({ text: 'Tip: Use /greet dashboard to customize goodbye settings' });
+                    .setFooter({ text: 'More options in /greet dashboard' });
 
                 if (image) {
                     embed.setImage(image);

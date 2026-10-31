@@ -9,7 +9,7 @@ export default {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('Permission Denied')
+                .setTitle('Not allowed')
                 .setDescription('You need **Manage Server** permissions to configure the birthday channel.');
             return InteractionHelper.safeReply(interaction, {
                 embeds: [embed],
@@ -28,7 +28,7 @@ export default {
                 if (!timezone) {
                     const embed = new EmbedBuilder()
                         .setColor(0xFF0000)
-                        .setTitle('Unknown Time Zone')
+                        .setTitle('Unknown time zone')
                         .setDescription(`\`${timezoneInput}\` is not a known time zone. Use an IANA name such as \`Europe/London\`, \`America/New_York\` or \`UTC\` (the list suggests names as you type).`);
                     return InteractionHelper.safeReply(interaction, {
                         embeds: [embed],
@@ -48,7 +48,7 @@ export default {
                 });
                 const embed = new EmbedBuilder()
                     .setColor(0x00FF00)
-                    .setTitle('Birthday Announcements Enabled')
+                    .setTitle('Birthday announcements on')
                     .setDescription(`Birthday announcements will now be posted in ${channel}.${timezoneLine}`);
                 return InteractionHelper.safeReply(interaction, {
                     embeds: [embed],
@@ -59,7 +59,7 @@ export default {
                 await updateBirthdaySettings(client, guildId, { timezone });
                 const embed = new EmbedBuilder()
                     .setColor(0x00FF00)
-                    .setTitle('Birthday Time Zone Updated')
+                    .setTitle('Time zone updated')
                     .setDescription(timezoneLine.trim());
                 return InteractionHelper.safeReply(interaction, {
                     embeds: [embed],
@@ -69,7 +69,7 @@ export default {
                 await updateBirthdaySettings(client, guildId, { channelId: null });
                 const embed = new EmbedBuilder()
                     .setColor(0xFFFF00)
-                    .setTitle('Birthday Announcements Disabled')
+                    .setTitle('Birthday announcements off')
                     .setDescription('No channel given, so birthday announcements are turned off.');
                 return InteractionHelper.safeReply(interaction, {
                     embeds: [embed],
@@ -80,8 +80,8 @@ export default {
             logger.error('birthday_setchannel error:', error);
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('⚠️ Configuration Error')
-                .setDescription('Could not save the birthday channel configuration.');
+                .setTitle("Couldn't save")
+                .setDescription("The birthday channel wasn't saved. Try again in a moment.");
             return InteractionHelper.safeReply(interaction, {
                 embeds: [embed],
                 flags: MessageFlags.Ephemeral,

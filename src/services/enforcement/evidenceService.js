@@ -91,10 +91,10 @@ export function evidenceLines(rows, freshUrls = new Map(), { excerptMax = 160 } 
             const fresh = freshUrls.get(String(row.id));
             const stored = row.store_channel_id && row.store_message_id ? jumpLink(row.store_channel_id, row.store_message_id) : null;
             const links = [fresh ? `[image](${fresh})` : null, stored ? `[stored](${stored})` : null].filter(Boolean);
-            return `**#${row.id}** 🖼️ ${links.join(' · ') || 'image (stored message missing)'}${note} · ${meta}`;
+            return `**#${row.id}** Image: ${links.join(' · ') || 'image (stored message missing)'}${note} · ${meta}`;
         }
         const excerpt = row.excerpt ? ` ${quote(row.excerpt, excerptMax)}` : '';
-        return `**#${row.id}** 🔗 ${row.url}${excerpt}${note} · ${meta}`;
+        return `**#${row.id}** ${row.url}${excerpt}${note} · ${meta}`;
     });
 }
 

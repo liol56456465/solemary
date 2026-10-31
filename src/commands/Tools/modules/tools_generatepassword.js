@@ -87,7 +87,6 @@ export default {
         }
 
         let strength = 'Weak';
-        let strengthEmoji = '🔴';
         let strengthColor = getColor('error');
 
         const hasLower = /[a-z]/.test(password);
@@ -111,28 +110,24 @@ export default {
         if (hasSymbol) score *= 1.3;
 
         if (score > 80) {
-            strength = 'Very Strong';
-            strengthEmoji = '🟢';
+            strength = 'Very strong';
             strengthColor = getColor('success');
         } else if (score > 60) {
             strength = 'Strong';
-            strengthEmoji = '🟢';
             strengthColor = getColor('success');
         } else if (score > 40) {
             strength = 'Good';
-            strengthEmoji = '🟡';
             strengthColor = getColor('warning');
         } else if (score > 20) {
             strength = 'Weak';
-            strengthEmoji = '🟠';
             strengthColor = getColor('warning');
         }
 
         const embed = successEmbed(
-            '🔑 Generated Password',
+            'Your password',
             `**Password:** ||\`${password}\`||\n` +
             `**Length:** ${password.length} characters\n` +
-            `**Strength:** ${strengthEmoji} ${strength}\n` +
+            `**Strength:** ${strength}\n` +
             `**Contains:** ${hasLower ? 'Lowercase' : ''}${hasUpper ? ', Uppercase' : ''}${hasNumber ? ', Numbers' : ''}${hasSymbol ? ', Symbols' : ''}`
         ).setColor(strengthColor);
 

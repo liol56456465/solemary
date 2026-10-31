@@ -40,7 +40,7 @@ export function secondOpinionPayload(keeperId, codes, cardUrl = null) {
     const shown = buttonCodes.split(',').filter(Boolean);
     const omitted = codes.length - shown.length;
     const embed = createEmbed({
-        title: '🤝 Second opinion?',
+        title: 'Second opinion?',
         description: [
             `Kept by <@${keeperId}>. A second admin can confirm or undo.`,
             `Case${shown.length > 1 ? 's' : ''}: ${shown.map((c) => `\`${c}\``).join(' ')}${omitted > 0 ? ` (+${omitted} older, use \`/case\`)` : ''}`,

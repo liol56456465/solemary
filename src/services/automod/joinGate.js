@@ -129,8 +129,7 @@ export async function clearGateFlag(guildId, userId) {
 }
 
 function gateLine(member, hits, outcome) {
-    const emoji = outcome === 'kicked' ? '👢' : '🚪';
-    return `${emoji} **Join gate** · <@${member.id}> ${member.user.username} (\`${member.id}\`) · ${outcome} · ${hits.map((hit) => hit.reason).join('; ')}`;
+    return `**Join gate** · <@${member.id}> ${member.user.username} (\`${member.id}\`) · ${outcome} · ${hits.map((hit) => hit.reason).join('; ')}`;
 }
 
 export function gateButtons(userId) {
@@ -205,7 +204,7 @@ export async function checkJoinGate(member, { onKick = null } = {}) {
 /** Closes a flag line: no buttons, grey or green, with who closed it and how. */
 export async function closeGateLine(message, outcome) {
     const embed = message.embeds?.[0];
-    const text = embed?.description || '🚪 **Join gate**';
+    const text = embed?.description || '**Join gate**';
     const closed = text.replace(/ · flagged(?: \(kick failed\))?/, ` · ${outcome}`);
     await message.edit({
         embeds: [createEmbed({ description: closed, color: outcome.startsWith('kicked') ? STATUS_COLORS.kept : STATUS_COLORS.undone })],

@@ -18,9 +18,9 @@ const relative = (date) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:R>
 
 const APPEAL_STATUS = {
     pending: '⏳ pending',
-    accepted: '✅ accepted',
-    denied: '❌ denied',
-    closed: '🔒 closed',
+    accepted: 'accepted',
+    denied: 'denied',
+    closed: 'closed',
 };
 
 export async function getMemberStanding(guildId, userId) {

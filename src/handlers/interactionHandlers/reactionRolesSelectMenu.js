@@ -30,7 +30,7 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
             return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
-                        .setDescription('❌ This reaction role message is no longer active.')
+                        .setDescription('This reaction role message is no longer active.')
                         .setColor(getColor('error'))
                 ]
             });
@@ -126,22 +126,22 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
             }
         }
 
-        let description = '🎭 **Roles updated successfully!**\n\n';
+        let description = 'Your roles are updated.\n\n';
 
         if (addedRoles.length > 0) {
-            description += `✅ **Added:** ${addedRoles.map(name => `**${name}**`).join(', ')}\n`;
+            description += `**Added:** ${addedRoles.map(name => `**${name}**`).join(', ')}\n`;
         }
 
         if (removedRoles.length > 0) {
-            description += `❌ **Removed:** ${removedRoles.map(name => `**${name}**`).join(', ')}\n`;
+            description += `**Removed:** ${removedRoles.map(name => `**${name}**`).join(', ')}\n`;
         }
 
         if (addedRoles.length === 0 && removedRoles.length === 0) {
-            description += 'No changes were made to your roles.';
+            description += 'Nothing changed.';
         }
 
         if (skippedRoles.length > 0) {
-            description += `\n⚠️ **Skipped:** ${skippedRoles.length} role${skippedRoles.length !== 1 ? 's' : ''} (permission issues)`;
+            description += `\n**Skipped:** ${skippedRoles.length} role${skippedRoles.length !== 1 ? 's' : ''} (I don't have permission)`;
         }
 
         const responseEmbed = new EmbedBuilder()
@@ -163,17 +163,17 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
                         channelId: interaction.channelId,
                         fields: [
                             {
-                                name: '👤 Member',
+                                name: 'Member',
                                 value: `${member.user.tag} (${member.user.id})`,
                                 inline: false
                             },
                             ...(addedRoles.length > 0 ? [{
-                                name: '✅ Roles Added',
+                                name: 'Roles added',
                                 value: addedRoles.join(', '),
                                 inline: false
                             }] : []),
                             ...(removedRoles.length > 0 ? [{
-                                name: '❌ Roles Removed',
+                                name: 'Roles removed',
                                 value: removedRoles.join(', '),
                                 inline: false
                             }] : [])

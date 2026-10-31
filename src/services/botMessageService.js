@@ -171,9 +171,9 @@ export function buildPollEmbed(question, options, anonymous) {
         description += `${POLL_EMOJIS[index]} ${option}\n`;
     });
     description += anonymous
-        ? '\n*This is an anonymous poll. Votes are not tracked to users.*'
-        : '\n*React with the emoji to vote!*';
-    return successEmbed(`📊 ${anonymous ? 'Anonymous ' : ''}Poll`, description);
+        ? '\n*Anonymous poll: votes aren\'t tied to names.*'
+        : '\n*React with the number to vote.*';
+    return successEmbed(anonymous ? 'Anonymous poll' : 'Poll', description);
 }
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -208,7 +208,7 @@ export const activeCountdowns = new Map();
  */
 export async function startCountdownMessage(guild, { channel, totalSeconds, title = '' } = {}) {
     const seconds = Number(totalSeconds);
-    if (!Number.isInteger(seconds) || seconds <= 0) throw validation('Please specify a duration of at least 1 second.');
+    if (!Number.isInteger(seconds) || seconds <= 0) throw validation('The duration has to be at least 1 second.');
     if (seconds > COUNTDOWN_MAX_SECONDS) throw validation('Countdown cannot be longer than 24 hours.');
     const name = String(title ?? '').trim() || 'Countdown Timer';
     if (name.length > COUNTDOWN_TITLE_MAX) throw validation(`The countdown title is limited to ${COUNTDOWN_TITLE_MAX} characters.`);

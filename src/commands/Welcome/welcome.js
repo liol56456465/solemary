@@ -27,11 +27,11 @@ export default {
                         .setRequired(true))
                 .addStringOption(option =>
                     option.setName('image')
-                        .setDescription('URL of the image to include in the welcome message')
+                        .setDescription('Image URL to add to the message')
                         .setRequired(false))
                 .addBooleanOption(option =>
                     option.setName('ping')
-                        .setDescription('Whether to ping the user in the welcome message')
+                        .setDescription('Ping the member in the message')
                         .setRequired(false))),
 
     async execute(interaction) {
@@ -102,14 +102,14 @@ export default {
 
                 const embed = new EmbedBuilder()
                     .setColor(getColor('success'))
-                    .setTitle('Welcome System Configured')
-                    .setDescription(`Welcome messages will now be sent to ${channel}`)
+                    .setTitle('Welcome messages set up')
+                    .setDescription(`Welcome messages will go to ${channel}.`)
                     .addFields(
-                        { name: 'Message Preview', value: truncateForEmbedField(previewMessage) },
-                        { name: 'Ping User', value: ping ? 'Yes' : 'No' },
-                        { name: 'Status', value: 'Enabled' }
+                        { name: 'Preview', value: truncateForEmbedField(previewMessage) },
+                        { name: 'Ping the member', value: ping ? 'Yes' : 'No' },
+                        { name: 'Status', value: 'On' }
                     )
-                    .setFooter({ text: 'Tip: Use /greet dashboard to customize welcome settings' });
+                    .setFooter({ text: 'More options in /greet dashboard' });
 
                 if (image) {
                     embed.setImage(image);

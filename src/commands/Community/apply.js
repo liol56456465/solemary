@@ -26,11 +26,7 @@ function getApplicationStatusPresentation(statusValue) {
         normalized === 'approved' ? 'Accepted' :
         normalized === 'denied' ? 'Denied' :
         'Unknown';
-    const statusEmoji =
-        normalized === 'pending' ? '🟡' :
-        normalized === 'approved' ? '🟢' :
-        normalized === 'denied' ? '🔴' :
-        '⚪';
+    const statusEmoji = '';
 
     return { normalized, statusLabel, statusEmoji };
 }
@@ -176,8 +172,8 @@ export async function handleApplicationModal(interaction) {
         });
         
         const embed = successEmbed(
-            'Application Submitted',
-            `Your application for **${applicationRole.name}** has been submitted successfully!\n\n` +
+            'Application sent',
+            `Your application for **${applicationRole.name}** was sent to staff.\n\n` +
             `Application ID: \`${application.id}\`\n` +
             `You can check the status with \`/apply status id:${application.id}\``
         );
@@ -197,7 +193,7 @@ export async function handleApplicationModal(interaction) {
                 eventType: EVENT_TYPES.APPLICATION_SUBMIT,
                 channelId: logChannelId,
                 data: {
-                    title: 'Application Submitted',
+                    title: 'New application',
                     lines: [
                         formatLogLine('Applicant', `<@${interaction.user.id}> (${interaction.user.tag})`),
                         formatLogLine('Application', applicationRole.name),
@@ -205,7 +201,7 @@ export async function handleApplicationModal(interaction) {
                         formatLogLine('Application ID', `\`${application.id}\``),
                     ],
                     inlineFields: [
-                        { name: 'Status', value: '🟡 In Progress', inline: true },
+                        { name: 'Status', value: 'In Progress', inline: true },
                     ],
                     author: await resolveUserAuthor(interaction.client, interaction.user.id),
                 },
@@ -367,7 +363,7 @@ async function handleStatus(interaction) {
             title: `Application #${application.id} - ${application.roleName || 'Unknown Role'}`,
             description:
                 `**Application ID:** \`${application.id}\`\n` +
-                `**Status:** ${statusView.statusEmoji} ${statusView.statusLabel}\n` +
+                `**Status:** ${statusView.statusLabel}\n` +
                 `**Submitted:** ${submittedAtDisplay}`
         });
 
@@ -400,10 +396,10 @@ async function handleStatus(interaction) {
             const statusView = getApplicationStatusPresentation(application.status);
 
             embed.addFields({
-                name: `${statusView.statusEmoji} ${application.roleName || 'Unknown Role'} (${statusView.statusLabel})`,
+                name: `${application.roleName || 'Unknown Role'} (${statusView.statusLabel})`,
                 value:
                     `**ID:** \`${application.id}\`\n` +
-                    `**Status:** ${statusView.statusEmoji} ${statusView.statusLabel}\n` +
+                    `**Status:** ${statusView.statusLabel}\n` +
                     `**Submitted:** ${submittedAtDisplay}`,
                 inline: true,
             });

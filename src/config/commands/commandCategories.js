@@ -2,25 +2,9 @@
  * Command category metadata for the command access manager.
  */
 
-export const CATEGORY_ICONS = {
-  Birthday: '🎂',
-  Community: '👥',
-  Core: 'ℹ️',
-  Fun: '🎮',
-  Giveaway: '🎉',
-  JoinToCreate: '🔌',
-  Leveling: '📊',
-  Logging: '📝',
-  Moderation: '🛡️',
-  Reaction_roles: '🎭',
-  Search: '🔍',
-  ServerStats: '📈',
-  Ticket: '🎫',
-  Tools: '🛠️',
-  Utility: '🔧',
-  Verification: '✅',
-  Welcome: '👋',
-};
+// Categories show as plain names (no emoji). Kept as a map so an icon can be
+// added back for one category without touching the callers.
+export const CATEGORY_ICONS = {};
 
 /** Commands that always stay available so admins can recover access. */
 export const PROTECTED_COMMANDS = new Set(['commands', 'configwizard']);
@@ -40,5 +24,5 @@ export function formatCategoryName(rawCategory) {
 }
 
 export function getCategoryIcon(category) {
-  return CATEGORY_ICONS[category] || CATEGORY_ICONS[formatCategoryName(category)] || '📁';
+  return CATEGORY_ICONS[category] || CATEGORY_ICONS[formatCategoryName(category)] || '';
 }

@@ -6,11 +6,11 @@ import { logTicketFeedback } from '../../../utils/ticket/ticketLogging.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 
 const STAR_LABELS = {
-    '1': '⭐ 1: Poor',
-    '2': '⭐ 2: Below Average',
-    '3': '⭐ 3: Average',
-    '4': '⭐ 4: Good',
-    '5': '⭐ 5: Excellent',
+    '1': '1/5 - Bad',
+    '2': '2/5 - Not great',
+    '3': '3/5 - Okay',
+    '4': '4/5 - Good',
+    '5': '5/5 - Great',
 };
 
 const feedbackHandler = {
@@ -24,8 +24,8 @@ const feedbackHandler = {
             await InteractionHelper.safeReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('⚠️ Invalid Feedback Link')
-                        .setDescription('This feedback link appears to be malformed.')
+                        .setTitle('Broken link')
+                        .setDescription('This feedback link doesn\'t work.')
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -51,8 +51,8 @@ const feedbackHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('⚠️ Ticket Not Found')
-                        .setDescription('Could not find the ticket associated with this survey.')
+                        .setTitle('Ticket not found')
+                        .setDescription('Couldn\'t find the ticket for this rating.')
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -64,8 +64,8 @@ const feedbackHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('❌ Not Allowed')
-                        .setDescription('Only the ticket creator can submit feedback for this ticket.')
+                        .setTitle('Not your ticket')
+                        .setDescription('Only the person who opened this ticket can rate it.')
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -77,8 +77,8 @@ const feedbackHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('✅ Already Submitted')
-                        .setDescription(`You already rated this ticket **${STAR_LABELS[String(ticketData.feedback.rating)]}**.\nThank you for your feedback!`)
+                        .setTitle('Already rated')
+                        .setDescription(`You already rated this ticket **${STAR_LABELS[String(ticketData.feedback.rating)]}**.`)
                         .setColor(getColor('success')),
                 ],
                 components: [],
@@ -91,8 +91,8 @@ const feedbackHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('⚠️ Invalid Rating')
-                        .setDescription('Please choose a rating from 1 to 5 stars.')
+                        .setTitle('Invalid rating')
+                        .setDescription('Pick a rating from 1 to 5.')
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -100,7 +100,7 @@ const feedbackHandler = {
             return;
         }
 
-        const ratingLabel = STAR_LABELS[String(rating)] ?? `${rating} stars`;
+        const ratingLabel = STAR_LABELS[String(rating)] ?? `${rating}/5`;
 
         try {
             ticketData.feedback = {
@@ -114,8 +114,8 @@ const feedbackHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('⚠️ Feedback Not Saved')
-                        .setDescription('Your feedback could not be saved right now. Please try again later.')
+                        .setTitle('Not saved')
+                        .setDescription('Couldn\'t save your rating right now. Try again later.')
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -139,10 +139,10 @@ const feedbackHandler = {
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [
                 new EmbedBuilder()
-                    .setTitle('✅ Thanks for your feedback!')
-                    .setDescription(`You rated your support experience **${ratingLabel}**.\n\nYour feedback has been recorded and helps us improve!`)
+                    .setTitle('Rating saved')
+                    .setDescription(`You rated this ticket **${ratingLabel}**.`)
                     .setColor(getColor('success'))
-                    .setFooter({ text: 'Thank you for using our support system.' })
+                    .setFooter({ text: 'Thanks for rating.' })
                     .setTimestamp(),
             ],
             components: [],
@@ -167,8 +167,8 @@ const commentHandler = {
             await interaction.update({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('⚠️ Invalid Feedback Link')
-                        .setDescription('This feedback action appears to be malformed.')
+                        .setTitle('Broken link')
+                        .setDescription('This feedback button doesn\'t work.')
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -178,13 +178,13 @@ const commentHandler = {
 
         const modal = new ModalBuilder()
             .setCustomId(`ticket_feedback_comment_modal:${guildId}:${channelId}`)
-            .setTitle('Add Ticket Feedback');
+            .setTitle('Ticket feedback');
 
         const commentInput = new TextInputBuilder()
             .setCustomId('feedback_comment')
-            .setLabel('Your feedback')
+            .setLabel('Your comment')
             .setStyle(TextInputStyle.Paragraph)
-            .setPlaceholder('Share what went well or how we can improve...')
+            .setPlaceholder('What went well, what could be better?')
             .setRequired(true)
             .setMaxLength(1000);
 
@@ -201,8 +201,8 @@ const declineHandler = {
         await interaction.update({
             embeds: [
                 new EmbedBuilder()
-                    .setTitle('👋 No problem!')
-                    .setDescription('You can always reach out again if you need further support.')
+                    .setTitle('No problem')
+                    .setDescription('Open a new ticket any time you need help.')
                     .setColor(getColor('default')),
             ],
             components: [],

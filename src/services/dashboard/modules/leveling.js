@@ -46,7 +46,7 @@ ${numberInput('xpMax', range.max, { label: 'XP per message: maximum', min: 1, ma
 ${numberInput('xpCooldown', cfg.xpCooldown ?? 60, { label: 'Seconds between XP grants', min: 0, max: 3600 })}
 ${channelPicker(g, 'levelUpChannel', cfg.levelUpChannel || null, { label: 'Level-up channel', perms: PERMS.post, noneLabel: 'where the member chatted' })}
 ${switchInput('announceLevelUp', cfg.announceLevelUp !== false, { label: 'Announce level-ups' })}
-${textArea('levelUpMessage', cfg.levelUpMessage || '{user} has leveled up to level {level}!', { label: 'Level-up message', max: 500, rows: 2 })}</div>`);
+${textArea('levelUpMessage', cfg.levelUpMessage || '{user} is now level {level}.', { label: 'Level-up message', max: 500, rows: 2 })}</div>`);
         const ignoredRows = [
             ...(cfg.ignoredChannels || []).map((id) => ['channel', channelName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', 'Remove', { type: 'channel', id })]),
             ...(cfg.ignoredRoles || []).map((id) => ['role', roleName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', 'Remove', { type: 'role', id })]),
@@ -86,7 +86,7 @@ ${section('Member levels', members, 'Same as /level add, /level remove and /leve
                 xpCooldown: intField(form, 'xpCooldown', { min: 0, max: 3600, label: 'Cooldown' }),
                 levelUpChannel: channelField(ctx.guild, form, 'levelUpChannel', { label: 'Level-up channel' }),
                 announceLevelUp: checkbox(form, 'announceLevelUp'),
-                levelUpMessage: text(form, 'levelUpMessage', 500) || cfg.levelUpMessage || '{user} has leveled up to level {level}!',
+                levelUpMessage: text(form, 'levelUpMessage', 500) || cfg.levelUpMessage || '{user} is now level {level}.',
             }, { ...cfg, xpCooldown: cfg.xpCooldown ?? 60, announceLevelUp: cfg.announceLevelUp !== false, levelUpChannel: cfg.levelUpChannel || null });
             if (min !== range.min || max !== range.max) patch.xpRange = { min, max };
             return update(ctx, patch, 'Leveling settings saved.');

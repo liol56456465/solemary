@@ -87,8 +87,8 @@ test('createPoll: same embed as /poll, no pings, number reactions in order; a re
     assert.equal(reacted, 2);
     assert.deepEqual(channel.reactions, POLL_EMOJIS.slice(0, 2));
     assert.deepEqual(channel.sent[0].allowedMentions, { parse: [] });
-    assert.equal(channel.sent[0].embeds[0].data.title, '📊 Anonymous Poll');
-    assert.match(channel.sent[0].embeds[0].data.description, /^\*\*Pizza @everyone\?\*\*\n\n1️⃣ Yes\n2️⃣ No\n\n\*This is an anonymous poll/);
+    assert.equal(channel.sent[0].embeds[0].data.title, 'Anonymous poll');
+    assert.match(channel.sent[0].embeds[0].data.description, /^\*\*Pizza @everyone\?\*\*\n\n1️⃣ Yes\n2️⃣ No\n\n\*Anonymous poll: votes aren't tied to names/);
 
     const partial = makeChannel({ failReactAt: 1 });
     assert.equal((await createPoll(guild, { channel: partial, question: 'Q', options: ['a', 'b', 'c'], reactDelayMs: 0 })).reacted, 1);

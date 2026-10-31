@@ -98,18 +98,18 @@ function getLogChannelForEventType(config, eventType) {
 }
 
 const TICKET_EVENT_STYLES = {
-  open: { color: 0x5865F2, title: 'Ticket Created' },
-  close: { color: 0xED4245, title: 'Ticket Closed' },
-  delete: { color: 0x8b0000, title: 'Ticket Deleted' },
-  claim: { color: 0x5865F2, title: 'Ticket Claimed' },
-  unclaim: { color: 0xFAA61A, title: 'Ticket Unclaimed' },
-  priority: { color: 0x9b59b6, title: 'Priority Updated' },
-  transcript: { color: 0x57F287, title: 'Transcript Generated' },
-  feedback: { color: 0x57F287, title: 'Feedback Received' },
+  open: { color: 0x5865F2, title: 'Ticket opened' },
+  close: { color: 0xED4245, title: 'Ticket closed' },
+  delete: { color: 0x8b0000, title: 'Ticket deleted' },
+  claim: { color: 0x5865F2, title: 'Ticket claimed' },
+  unclaim: { color: 0xFAA61A, title: 'Ticket unclaimed' },
+  priority: { color: 0x9b59b6, title: 'Priority changed' },
+  transcript: { color: 0x57F287, title: 'Transcript saved' },
+  feedback: { color: 0x57F287, title: 'Ticket feedback' },
 };
 
 async function createTicketLogEmbed(guild, event) {
-  const style = TICKET_EVENT_STYLES[event.type] || { color: 0x95a5a6, title: 'Ticket Event' };
+  const style = TICKET_EVENT_STYLES[event.type] || { color: 0x95a5a6, title: 'Ticket event' };
   const ticketNumber = event.ticketNumber || event.ticketId;
   const ticketRef = ticketNumber ? `#${ticketNumber}` : 'Unknown';
   const channelMention = event.ticketId ? `<#${event.ticketId}>` : null;
@@ -172,9 +172,8 @@ async function createTicketLogEmbed(guild, event) {
       break;
 
     case 'priority': {
-      const priorityEmojis = { none: '⚪', low: '🔵', medium: '🟢', high: '🟡', urgent: '🔴' };
       const priorityLabel = event.priority
-        ? `${priorityEmojis[event.priority] || '⚪'} ${event.priority.charAt(0).toUpperCase()}${event.priority.slice(1)}`
+        ? `${event.priority.charAt(0).toUpperCase()}${event.priority.slice(1)}`
         : 'Unknown';
       author = await resolveUserAuthor(guild.client, event.executorId);
       inlineFields = [
@@ -235,10 +234,9 @@ async function createTicketLogEmbed(guild, event) {
       }
   }
 
-  const titlePrefix = event.type === 'feedback' ? '⭐ ' : '';
   return buildStandardLogEmbed({
     color: style.color,
-    title: `${titlePrefix}${style.title}`,
+    title: style.title,
     inlineFields,
     fields,
     author,

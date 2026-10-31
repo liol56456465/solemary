@@ -119,7 +119,7 @@ export async function importModmailTopicsOnce(guild) {
         await postModLog(guild.client, 'system', [
             { name: 'Not imported', value: disputed.join('\n').slice(0, 1000) },
             { name: 'Why', value: 'Several channels name the same member in their topic, so none is trusted. Close the extra channels by hand; the member can open a new conversation.' },
-        ], { title: '📬 Modmail import: conflicting channels' }).catch(() => {});
+        ], { title: 'Modmail import: conflicting channels' }).catch(() => {});
     }
     await db.set(importFlagKey(guild.id), { at: new Date().toISOString(), imported, disputed: disputed.length });
     logger.info(`Modmail import done in ${guild.id}: ${imported} open channel(s) linked; from now on only modmail_links counts`);

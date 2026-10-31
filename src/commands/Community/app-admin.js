@@ -128,7 +128,7 @@ async function handleSetup(interaction) {
 
     const modal = new ModalBuilder()
         .setCustomId('app_setup_modal')
-        .setTitle('Set Up New Application');
+        .setTitle('Set up new application');
 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('role_id')
@@ -136,7 +136,7 @@ async function handleSetup(interaction) {
         .setRequired(true);
 
     const roleLabel = new LabelBuilder()
-        .setLabel('Application Role')
+        .setLabel('Application role')
         .setDescription('The role that users will be applying for')
         .setRoleSelectMenuComponent(roleSelect);
 
@@ -149,7 +149,7 @@ async function handleSetup(interaction) {
         .setRequired(true);
 
     const appNameLabel = new LabelBuilder()
-        .setLabel('Application Name')
+        .setLabel('Application name')
         .setTextInputComponent(appNameInput);
 
     const q1Input = new TextInputBuilder()
@@ -237,8 +237,8 @@ async function handleSetup(interaction) {
 
     await submitted.reply({
         embeds: [successEmbed(
-            '✅ Application Created',
-            `**${appName}** application has been created for ${role}.\n\nYou can customize the log channel, manager roles, questions, and retention period in the dashboard.`,
+            'Application created',
+            `**${appName}** application has been created for ${role}.\n\nYou can change the log channel, manager roles, questions and retention period in the dashboard.`,
         )],
         flags: ['Ephemeral'],
     });
@@ -371,7 +371,7 @@ async function handleReview(interaction) {
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
             const timeoutEmbed = createEmbed({
-                title: 'Review Timeout',
+                title: 'Review timeout',
                 description: 'The review buttons have timed out.',
                 color: 'warning',
             });
@@ -474,10 +474,10 @@ async function handleList(interaction) {
             : 'Unknown date';
 
         embed.addFields({
-            name: `${statusView.statusEmoji} ${roleName} - ${username}`,
+            name: `${roleName} - ${username}`,
             value:
                 `**ID:** \`${app.id}\`\n` +
-                `**Status:** ${statusView.statusEmoji} ${statusView.statusLabel}\n` +
+                `**Status:** ${statusView.statusLabel}\n` +
                 `**Date:** ${createdAtDisplay}`,
             inline: true,
         });

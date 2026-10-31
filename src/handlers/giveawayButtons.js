@@ -27,7 +27,7 @@ export const giveawayJoinHandler = {
         try {
             
             if (isUserRateLimited(interaction.user.id, interaction.message.id)) {
-                return replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'Please wait a moment before interacting with this giveaway again.' });
+                return replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'Slow down a bit, then try again.' });
             }
 
             await recordUserInteraction(interaction.user.id, interaction.message.id);
@@ -63,7 +63,7 @@ export const giveawayJoinHandler = {
                 const userId = interaction.user.id;
 
                 if (participants.includes(userId)) {
-                    return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'You have already entered this giveaway! 🎉' });
+                    return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: "You're already in this giveaway." });
                 }
 
                 participants.push(userId);
@@ -84,8 +84,8 @@ export const giveawayJoinHandler = {
                 await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         successEmbed(
-                            'Success! You have entered the giveaway! 🎉',
-                            `Good luck! There are now ${participants.length} entry/entries.`
+                            "You're in",
+                            `Good luck. ${participants.length === 1 ? '1 person has' : `${participants.length} people have`} entered so far.`
                         )
                     ],
                 });
@@ -166,7 +166,7 @@ export const giveawayEndHandler = {
             const updatedRow = createGiveawayButtons(true);
 
             await interaction.message.edit({
-                content: '🎉 **GIVEAWAY ENDED** 🎉',
+                content: '**Giveaway ended**',
                 embeds: [updatedEmbed],
                 components: [updatedRow]
             });
@@ -182,19 +182,19 @@ export const giveawayEndHandler = {
                         userId: interaction.user.id,
                         fields: [
                             {
-                                name: '🎁 Prize',
-                                value: giveaway.prize || 'Mystery Prize!',
+                                name: 'Prize',
+                                value: giveaway.prize || 'Unknown',
                                 inline: true
                             },
                             {
-                                name: '🏆 Winners',
+                                name: 'Winners',
                                 value: winners.length > 0 
                                     ? winners.map(id => `<@${id}>`).join(', ')
-                                    : 'No valid entries',
+                                    : 'Nobody entered',
                                 inline: false
                             },
                             {
-                                name: '👥 Total Entries',
+                                name: 'Entries',
                                 value: participants.length.toString(),
                                 inline: true
                             }
@@ -208,8 +208,8 @@ export const giveawayEndHandler = {
             await interaction.reply({
                 embeds: [
                     successEmbed(
-                        `Giveaway Ended ✅`,
-                        `The giveaway has been ended and ${winners.length} winner(s) have been selected!`
+                        'Giveaway ended',
+                        winners.length > 0 ? `Picked ${winners.length} winner${winners.length === 1 ? '' : 's'}.` : 'Nobody entered, so there is no winner.'
                     )
                 ],
                 flags: MessageFlags.Ephemeral
@@ -298,7 +298,7 @@ export const giveawayRerollHandler = {
             const updatedRow = createGiveawayButtons(true);
 
             await interaction.message.edit({
-                content: '🔄 **GIVEAWAY REROLLED** 🔄',
+                content: '**Giveaway rerolled**',
                 embeds: [updatedEmbed],
                 components: [updatedRow]
             });
@@ -314,17 +314,17 @@ export const giveawayRerollHandler = {
                         userId: interaction.user.id,
                         fields: [
                             {
-                                name: '🎁 Prize',
-                                value: giveaway.prize || 'Mystery Prize!',
+                                name: 'Prize',
+                                value: giveaway.prize || 'Unknown',
                                 inline: true
                             },
                             {
-                                name: '🏆 New Winners',
+                                name: 'New winners',
                                 value: newWinners.map(id => `<@${id}>`).join(', '),
                                 inline: false
                             },
                             {
-                                name: '👥 Total Entries',
+                                name: 'Entries',
                                 value: participants.length.toString(),
                                 inline: true
                             }
@@ -338,8 +338,8 @@ export const giveawayRerollHandler = {
             await interaction.reply({
                 embeds: [
                     successEmbed(
-                        'Giveaway Rerolled ✅',
-                        `New winner(s) have been selected!`
+                        'Giveaway rerolled',
+                        'New winners picked.'
                     )
                 ],
                 flags: MessageFlags.Ephemeral
@@ -388,12 +388,12 @@ export const giveawayViewHandler = {
             const winnerIds = Array.isArray(giveaway.winnerIds) ? giveaway.winnerIds : [];
             const winnerMentions = winnerIds.length > 0
                 ? winnerIds.map(id => `<@${id}>`).join(', ')
-                : 'No valid winners were selected for this giveaway.';
+                : 'Nobody won this one.';
 
             await interaction.reply({
                 embeds: [
                     successEmbed(
-                        `Winners for ${giveaway.prize || 'this giveaway'} 🎉`,
+                        `Winners: ${giveaway.prize || 'giveaway'}`,
                         winnerMentions
                     )
                 ],

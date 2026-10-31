@@ -89,7 +89,7 @@ export function buildIncidentReport(incident, cases, { endedByLabel = 'an admini
     const listed = joiners.slice(0, MAX_LISTED_JOINERS).map((id) => `<@${id}>`).join(' ');
     const more = joiners.length > MAX_LISTED_JOINERS ? ` and ${joiners.length - MAX_LISTED_JOINERS} more` : '';
     const panicLine = actions.incidentActions
-        ? `${describePanic(actions.incidentActions)}${actions.incidentActions.applied ? (actions.resumed ? ' → resumed' : ' → ⚠️ could not resume them: lift the pause in Server Settings → Safety Setup') : ''}`
+        ? `${describePanic(actions.incidentActions)}${actions.incidentActions.applied ? (actions.resumed ? ' → resumed' : ' → could not resume them: lift the pause in Server Settings → Safety Setup') : ''}`
         : describePanic(null);
     const did = [
         `**Verification level:** ${actions.raisedVerification ? 'raised to High → restored' : 'not changed'}`,
@@ -98,7 +98,7 @@ export function buildIncidentReport(incident, cases, { endedByLabel = 'an admini
         `**Cases against raid joiners:** ${summarizeCases(cases)}`,
     ].join('\n');
     return {
-        title: '📋 Join raid: incident report',
+        title: 'Join raid: incident report',
         description: [
             `**Triggered:** ${ts(started)} · **ended:** ${ts(ended)} by ${endedByLabel} (${formatDuration(Math.max(ended - started, 60 * 1000))})`,
             `**Raid joiners:** ${joiners.length}${joiners.length ? `\n${listed}${more}` : ''}`,

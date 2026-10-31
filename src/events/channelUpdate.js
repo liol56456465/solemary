@@ -18,7 +18,7 @@ export default {
         client: after.client,
         guildId: after.guild.id,
         eventType: EVENT_TYPES.CHANNEL_UPDATE,
-        data: { title: 'Channel Updated', headline: `${after.toString()} was changed`, lines, channelId: after.id },
+        data: { title: 'Channel updated', headline: `${after.toString()} was changed`, lines, channelId: after.id },
       });
     } catch (error) {
       logger.debug(`Channel update log failed: ${error.message}`);

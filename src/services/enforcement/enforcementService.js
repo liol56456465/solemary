@@ -166,19 +166,19 @@ const MOD_LOG_TITLES = {
     unban: ['Unban', 'success'],
     unmute: ['Unmute', 'success'],
     removewarn: ['Warning removed', 'success'],
-    nocontact: ['🚧 No-contact order', 'warning'],
+    nocontact: ['No-contact order', 'warning'],
     caseedit: ['Case edited', 'secondary'],
     casevoid: ['Case voided', 'secondary'],
     appeal: ['Appeal decided', 'primary'],
-    raid: ['🚨 Join raid', 'error'],
-    staff: ['🛡️ Staff guard', 'error'],
-    massguard: ['🛡️ Mass-action guard', 'error'],
+    raid: ['Join raid', 'error'],
+    staff: ['Staff guard', 'error'],
+    massguard: ['Mass-action guard', 'error'],
     automod: ['Automod', 'primary'],
-    'automod-report': ['📊 Automod report', 'primary'],
-    slowmode: ['🐢 Auto slowmode', 'info'],
-    digest: ['📊 Daily automod digest', 'primary'],
-    system: ['⚙️ Bot problem', 'error'],
-    revert: ['♻️ Server structure reverted', 'success'],
+    'automod-report': ['Automod report', 'primary'],
+    slowmode: ['Auto slowmode', 'info'],
+    digest: ['Daily automod digest', 'primary'],
+    system: ['Bot problem', 'error'],
+    revert: ['Server structure reverted', 'success'],
     dashboard: ['Dashboard change', 'secondary'],
 };
 
@@ -558,7 +558,7 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
         notes.push(`Warning limit reached: automatic ${ban.expires_at ? formatDuration(Number(ban.duration_ms)) : 'permanent'} ban \`${ban.case_code}\` (ladder level ${preview.nextLevel}).`);
     } catch (error) {
         // banWithRecord removed the ban row; the warn and the ladder step stay recorded.
-        notes.push(`⚠️ Warning limit reached but the automatic ban failed: ${error.userMessage || error.message}. Ladder level is now ${preview.nextLevel}; ban manually.`);
+        notes.push(`Warning limit reached, but the automatic ban failed: ${error.userMessage || error.message}. Ladder level is now ${preview.nextLevel}; ban manually.`);
         ban = null;
     }
 

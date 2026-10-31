@@ -137,28 +137,27 @@ export function validateWinnerCount(winnerCount) {
 
 export function createGiveawayEmbed(giveaway, status, winners = []) {
     try {
-        const statusEmoji = status === 'ended' ? '🎉' : status === 'reroll' ? '🔄' : '🎉';
         const isEnded = status === 'ended' || status === 'reroll';
         const color = isEnded ? getColor('giveaway.ended') : getColor('giveaway.active');
         
         const embed = new EmbedBuilder()
-            .setTitle(`${statusEmoji} ${giveaway.prize}`)
-            .setDescription('React with the button below to enter!')
+            .setTitle(String(giveaway.prize))
+            .setDescription(isEnded ? 'This giveaway has ended.' : 'Click Join to enter.')
             .setColor(color)
             .addFields(
-                { name: '👤 Hosted by', value: `<@${giveaway.hostId}>`, inline: true },
-                { name: '🏆 Winners', value: giveaway.winnerCount.toString(), inline: true },
-                { name: '👥 Entries', value: giveaway.participants?.length?.toString() || '0', inline: true }
+                { name: 'Host', value: `<@${giveaway.hostId}>`, inline: true },
+                { name: 'Winners', value: giveaway.winnerCount.toString(), inline: true },
+                { name: 'Entries', value: giveaway.participants?.length?.toString() || '0', inline: true }
             );
 
         if (isEnded) {
             const winnerDisplay = winners.length > 0 
                 ? winners.map(id => `<@${id}>`).join(', ')
-                : 'No valid entries';
-            embed.addFields({ name: '🎯 Winners', value: winnerDisplay, inline: false });
+                : 'Nobody entered';
+            embed.addFields({ name: 'Won by', value: winnerDisplay, inline: false });
         } else {
             const endTime = giveaway.endsAt || giveaway.endTime;
-            embed.addFields({ name: '⏰ Ends', value: `<t:${Math.floor(endTime / 1000)}:R>`, inline: false });
+            embed.addFields({ name: 'Ends', value: `<t:${Math.floor(endTime / 1000)}:R>`, inline: false });
         }
 
         embed.setTimestamp();
@@ -183,12 +182,12 @@ export function createGiveawayButtons(ended = false) {
             row.addComponents(
                 new ButtonBuilder()
                     .setCustomId('giveaway_reroll')
-                    .setLabel('🎲 Reroll')
+                    .setLabel('Reroll')
                     .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false),
                 new ButtonBuilder()
                     .setCustomId('giveaway_view')
-                    .setLabel('👁️ View Winners')
+                    .setLabel('Winners')
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(false)
             );
@@ -196,12 +195,13 @@ export function createGiveawayButtons(ended = false) {
             row.addComponents(
                 new ButtonBuilder()
                     .setCustomId('giveaway_join')
-                    .setLabel('🎉 Join')
+                    .setLabel('Join')
+                    .setEmoji('🎉')
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(false),
                 new ButtonBuilder()
                     .setCustomId('giveaway_end')
-                    .setLabel('🛑 End')
+                    .setLabel('End')
                     .setStyle(ButtonStyle.Danger)
                     .setDisabled(false)
             );
@@ -376,7 +376,7 @@ export async function checkGiveaways(client) {
 
           const winnerMentions = winners.length > 0
             ? winners.map(id => `<@${id}>`).join(', ')
-            : 'No valid entries!';
+            : 'nobody';
 
           const endedEmbed = createGiveawayEmbed(giveaway, 'ended', winners);
 
@@ -400,7 +400,7 @@ export async function checkGiveaways(client) {
           }
 
           if (winners.length > 0) {
-            const winnerAnnouncement = `🎉 Congratulations ${winnerMentions}! You won the **${giveaway.prize || 'giveaway'}**! Please contact <@${giveaway.hostId}> to claim your prize.`;
+            const winnerAnnouncement = `${winnerMentions} won **${giveaway.prize || 'the giveaway'}**. Message <@${giveaway.hostId}> to get your prize.`;
             const winnerPingMsg = await channel.send({ content: winnerAnnouncement });
             giveaway.winnerPingMessageId = winnerPingMsg.id;
             await markGiveawayEnded(client, giveawayId, giveaway);
@@ -415,17 +415,17 @@ export async function checkGiveaways(client) {
                   channelId: channel.id,
                   fields: [
                     {
-                      name: '🎁 Prize',
-                      value: giveaway.prize || 'Mystery Prize!',
+                      name: 'Prize',
+                      value: giveaway.prize || 'Unknown',
                       inline: true
                     },
                     {
-                      name: '🏆 Winners',
+                      name: 'Winners',
                       value: winners.map(id => `<@${id}>`).join(', '),
                       inline: false
                     },
                     {
-                      name: '👥 Entries',
+                      name: 'Entries',
                       value: participants.length.toString(),
                       inline: true
                     }
@@ -436,7 +436,7 @@ export async function checkGiveaways(client) {
               logger.debug('Error logging giveaway winner:', error);
             }
           } else {
-            await channel.send({ content: `The giveaway for **${giveaway.prize}** has ended with no valid entries.` });
+            await channel.send({ content: `The giveaway for **${giveaway.prize}** ended. Nobody entered, so there's no winner.` });
           }
 
           logger.info(`Ended giveaway ${messageId} in guild ${guildId}`);
@@ -536,7 +536,7 @@ export async function endGiveawayNow(client, guildId, messageId, endedBy) {
     await saveGiveaway(client, guildId, updatedGiveaway);
 
     await message.edit({
-      content: '🎉 **GIVEAWAY ENDED** 🎉',
+      content: '**Giveaway ended**',
       embeds: [createGiveawayEmbed(updatedGiveaway, 'ended', winners)],
       components: [createGiveawayButtons(true)],
     });
@@ -544,7 +544,7 @@ export async function endGiveawayNow(client, guildId, messageId, endedBy) {
     if (winners.length > 0) {
       const winnerMentions = winners.map((id) => `<@${id}>`).join(',');
       const winnerPingMsg = await channel.send({
-        content: `🎉 CONGRATULATIONS ${winnerMentions}! You won the **${updatedGiveaway.prize}** giveaway! Please contact the host <@${updatedGiveaway.hostId}> to claim your prize.`,
+        content: `${winnerMentions} won **${updatedGiveaway.prize}**. Message <@${updatedGiveaway.hostId}> to get your prize.`,
       });
       updatedGiveaway.winnerPingMessageId = winnerPingMsg.id;
       await saveGiveaway(client, guildId, updatedGiveaway);
@@ -561,7 +561,7 @@ export async function endGiveawayNow(client, guildId, messageId, endedBy) {
             channelId: channel.id,
             userId: endedBy,
             fields: [
-              { name: 'Prize', value: updatedGiveaway.prize || 'Mystery Prize!', inline: true },
+              { name: 'Prize', value: updatedGiveaway.prize || 'Unknown', inline: true },
               { name: 'Winners', value: winnerMentions, inline: false },
               { name: 'Entries', value: endResult.participantCount.toString(), inline: true },
             ],
@@ -572,7 +572,7 @@ export async function endGiveawayNow(client, guildId, messageId, endedBy) {
       }
     } else {
       await channel.send({
-        content: `The giveaway for **${updatedGiveaway.prize}** has ended with no valid entries.`,
+        content: `The giveaway for **${updatedGiveaway.prize}** ended. Nobody entered, so there's no winner.`,
       });
       logger.info(`Giveaway ended with no winners: ${messageId}`);
     }
@@ -648,7 +648,7 @@ export async function rerollGiveaway(client, guildId, messageId, rerolledBy) {
 
     if (message) {
       await message.edit({
-        content: '🔄 **GIVEAWAY REROLLED** 🔄',
+        content: '**Giveaway rerolled**',
         embeds: [createGiveawayEmbed(updatedGiveaway, 'reroll', newWinners)],
         components: [createGiveawayButtons(true)],
       });
@@ -656,8 +656,8 @@ export async function rerollGiveaway(client, guildId, messageId, rerolledBy) {
 
     const winnerMentions = newWinners.map((id) => `<@${id}>`).join(',');
     const pingContent = message
-      ? `🔄 **REROLL WINNERS** 🔄 CONGRATULATIONS ${winnerMentions}! You are the new winner(s) for the **${giveaway.prize}** giveaway! Please contact the host <@${giveaway.hostId}> to claim your prize.`
-      : `🔄 **GIVEAWAY REROLL** 🔄 New winners for **${giveaway.prize}**: ${winnerMentions}!`;
+      ? `Rerolled: ${winnerMentions} won **${giveaway.prize}** instead. Message <@${giveaway.hostId}> to get your prize.`
+      : `Rerolled **${giveaway.prize}**: ${winnerMentions}`;
 
     const existingPingMsg = giveaway.winnerPingMessageId
       ? await channel.messages.fetch(giveaway.winnerPingMessageId).catch(() => null)
@@ -684,9 +684,9 @@ export async function rerollGiveaway(client, guildId, messageId, rerolledBy) {
           channelId: giveaway.channelId,
           userId: rerolledBy,
           fields: [
-            { name: 'Prize', value: giveaway.prize || 'Mystery Prize!', inline: true },
-            { name: 'New Winners', value: winnerMentions, inline: false },
-            { name: 'Total Entries', value: participants.length.toString(), inline: true },
+            { name: 'Prize', value: giveaway.prize || 'Unknown', inline: true },
+            { name: 'New winners', value: winnerMentions, inline: false },
+            { name: 'Entries', value: participants.length.toString(), inline: true },
           ],
         },
       });
@@ -750,7 +750,7 @@ export async function createGiveaway(client, guild, { channel, duration, winnerC
   };
 
   const message = await channel.send({
-    content: '🎉 **NEW GIVEAWAY** 🎉',
+    content: '**New giveaway**',
     embeds: [createGiveawayEmbed(giveaway, 'active')],
     components: [createGiveawayButtons(false)],
   });

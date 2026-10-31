@@ -13,7 +13,7 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('dashboard')
-                .setDescription('Open the welcome & goodbye configuration dashboard'),
+                .setDescription('Open the welcome and goodbye settings'),
         ),
 
     async execute(interaction, config, client) {

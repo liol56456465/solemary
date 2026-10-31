@@ -33,7 +33,7 @@ export function nextRepostDelay(now, lastPostAt, interval = STICKY_MIN_INTERVAL_
 
 export function buildStickyPayload(content) {
     return {
-        embeds: [createEmbed({ description: content, color: 'primary', footer: { text: '📌 Sticky message' } })],
+        embeds: [createEmbed({ description: content, color: 'primary', footer: { text: 'Sticky message' } })],
         allowedMentions: { parse: [] },
     };
 }
