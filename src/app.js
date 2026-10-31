@@ -180,6 +180,8 @@ class Mewvo extends Client {
 
   startWebServer() {
     const app = express();
+    // Don't advertise the server software in every response.
+    app.disable('x-powered-by');
     // Railway (and similar hosts) sit behind one reverse proxy; trust it so req.ip is the real client.
     app.set('trust proxy', 1);
 
