@@ -645,6 +645,10 @@ const CASES = {
         'mass-action': { form: { massActionLimit: '7', massMuteLimit: '12', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, service: 'updateSettings',
             bad: { form: { massActionLimit: 'x', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, message: /whole number/ } },
         transparency: { form: { enabled: 'true' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
+        'template-add': { form: { name: 'Spam: short mute', action: 'mute', reasonKey: 'spam', duration: '1h' }, service: 'updateSettings',
+            bad: { form: { name: 'No time', action: 'mute', reasonKey: 'spam', duration: '' }, message: /needs a duration/ } },
+        'template-remove': { seed: (s) => { s.registry.enforcementTemplates = [{ name: 'Spam', action: 'warn', reasonKey: 'spam', duration: null }]; }, form: { index: '0' }, service: 'updateSettings',
+            bad: { form: { index: '5' }, message: /gone already/ } },
     },
     automod: {
         enabled: { form: { enabled: 'false' }, service: 'setAutomodEnabled', bad: { form: { enabled: 'maybe' }, message: /on or off/ } },

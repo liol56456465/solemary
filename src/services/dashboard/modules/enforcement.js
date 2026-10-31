@@ -6,7 +6,8 @@ import { ENFORCEMENT_REASONS, enforcementConfig } from '../../../config/enforcem
 import { AUTOMOD_RULES } from '../../../config/automod.js';
 import { formatDuration } from '../../enforcement/format.js';
 import { html } from '../html.js';
-import { PERMS, boolField, channelField, channelPicker, checkbox, numberInput, postForm, roleField, rolePicker, switchInput, text, textInput, toggleForm } from '../forms.js';
+import { InputError, PERMS, boolField, channelField, channelPicker, checkbox, numberInput, postForm, roleField, rolePicker, switchInput, text, textInput, toggleForm } from '../forms.js';
+import { MAX_TEMPLATES, TEMPLATE_ACTIONS, TEMPLATE_NAME_MAX, cleanTemplates, templateLabel } from '../../enforcement/templateService.js';
 import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, section, table, NOTHING } from './common.js';
 
 const KEYS = [
@@ -14,6 +15,7 @@ const KEYS = [
     'openChannelCap', 'mutedRoleId', 'warnRoleIds',
     'supportServerInvite', 'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds', 'staleReportMs',
     'staleAppealReminderMs', 'transparencyReportEnabled', 'independentAppealReview', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
+    'enforcementTemplates',
 ];
 
 function current(ctx) {
@@ -72,6 +74,18 @@ ${numberInput('massActionWindowMinutes', Math.round(v.massActionWindowMs / MINUT
 ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE), { label: 'Block length (minutes)', min: 1, max: 10080 })}
 </div>`);
         const ladder = table(['Level', 'Warn ladder ban'], Object.entries(enforcementConfig.ladderBans).map(([level, ms]) => [level, ms ? formatDuration(ms) : 'permanent']));
+        const templates = Array.isArray(v.enforcementTemplates) ? v.enforcementTemplates : [];
+        const reasonLabel = (key) => ENFORCEMENT_REASONS.find((r) => r.key === key)?.label || key;
+        const templateList = templates.length
+            ? table(['Name', 'Does', 'Reason', ''], templates.map((t, i) => [t.name, templateLabel(t), reasonLabel(t.reasonKey),
+                postForm(ctx, 'enforcement', 'template-remove', html`<input type="hidden" name="index" value="${String(i)}">`, { submit: 'Remove', inline: true, danger: true, confirm: `Remove the template "${t.name}"?` })]))
+            : html`<p class="muted">No templates yet.</p>`;
+        const templateAdd = templates.length >= MAX_TEMPLATES ? html`<p class="muted">You have the maximum of ${MAX_TEMPLATES} templates.</p>` : postForm(ctx, 'enforcement', 'template-add', html`<div class="grid">
+<label>Name<input name="name" maxlength="${TEMPLATE_NAME_MAX}" required placeholder="Spam: short mute"></label>
+<label>Action<select name="action">${TEMPLATE_ACTIONS.map((a) => html`<option value="${a}">${a}</option>`)}</select></label>
+<label>Reason<select name="reasonKey">${ENFORCEMENT_REASONS.map((r) => html`<option value="${r.key}">${r.label}</option>`)}</select></label>
+<label>Duration<input name="duration" maxlength="20" placeholder="1h, 7d, or empty"><span class="hint">Needed for a mute. For a ban, empty means permanent. Ignored for warn and kick.</span></label>
+</div>`, { submit: 'Add template' });
         const reasons = table(['Key', 'Reason', 'Severe'], ENFORCEMENT_REASONS.map((r) => [html`<code>${r.key}</code>`, r.label, r.severe ? 'yes' : 'no']));
         const steps = table(['Rule', 'Steps (1st, 2nd, 3rd+ offence)'], Object.values(AUTOMOD_RULES).map((r) => [r.label, r.steps.map(stepText).join(' → ')]));
         const appealPanels = postForm(ctx, 'enforcement', 'appeal-panels',
@@ -86,6 +100,7 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
 ${section('Channels', channels)}${section('Roles', roles, 'Warning roles are given for 1, 2 and 3+ active warnings.')}
 ${section('Appeals and reports', timings)}${section('Independent appeal review', review, 'Off by default: anyone who may decide appeals can decide any appeal.')}
 ${section('Transparency report', transparency, `Off by default. When on, /transparency on the website shows the monthly number of warnings, mutes, kicks, bans and appeals of this server: counts only, no names, IDs, case codes, reasons or moderators; counts of 1–2 show as “fewer than 3”.${ctx.canAct ? '' : ' Needs Administrator in the main server.'}`)}${section('Mass-action guard', mass, 'A moderator who bans or kicks this many members within the window is blocked from the panel; bot owners get a DM.')}
+${section('Templates', html`${templateList}${templateAdd}`, 'Presets for /enforcements, like "Spam: 1h mute". The panel shows them as a menu under the buttons; picking one goes straight to the confirm step.')}
 ${section('Warn ladder', html`<p class="muted">${enforcementConfig.warnsPerLevel} warnings at level 0 ban; at level 1 and above the first warning bans. Read-only for now.</p>${ladder}`)}
 ${section('Reasons', reasons, 'Read-only for now (the keys are stored with each case).')}
 ${section('Automod steps', steps, 'Read-only for now.')}`;
@@ -102,6 +117,25 @@ ${section('Automod steps', steps, 'Read-only for now.')}`;
                     message: `Appeal panels posted in #${mainChannel.name} and in #${supportChannel.name} of the support server${created ? ' (created)' : ''}.`,
                 };
             },
+        },
+        async 'template-add'(ctx, form) {
+            const list = Array.isArray(current(ctx).enforcementTemplates) ? current(ctx).enforcementTemplates : [];
+            let next;
+            try {
+                next = cleanTemplates([...list, { name: text(form, 'name', TEMPLATE_NAME_MAX + 10), action: text(form, 'action', 10), reasonKey: text(form, 'reasonKey', 40), duration: text(form, 'duration', 20) }]);
+            } catch (error) {
+                throw new InputError(error.userMessage || 'That template is not valid.');
+            }
+            const result = await saveRegistry(ctx, { enforcementTemplates: next }, 'enforcement');
+            return { ...result, message: `Template "${next[next.length - 1].name}" added.` };
+        },
+        async 'template-remove'(ctx, form) {
+            const list = Array.isArray(current(ctx).enforcementTemplates) ? current(ctx).enforcementTemplates : [];
+            const index = Number.parseInt(text(form, 'index', 3), 10);
+            if (!Number.isInteger(index) || !list[index]) throw new InputError('That template is gone already. Reload the page.');
+            const removed = list[index];
+            const result = await saveRegistry(ctx, { enforcementTemplates: list.filter((_, i) => i !== index) }, 'enforcement');
+            return { ...result, message: `Template "${removed.name}" removed.` };
         },
         transparency: {
             admin: true,

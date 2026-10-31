@@ -41,6 +41,8 @@ import { createFlow, getFlow, takeFlow, updateFlow, PANEL_EXPIRED_MESSAGE } from
 import { MAX_LINKS_PER_FORM, messageExcerpt } from '../services/enforcement/evidenceService.js';
 import { dateStamp, stamp, truncate } from '../services/enforcement/format.js';
 import { getActiveOrdersFor, noContactLines } from '../services/enforcement/noContactService.js';
+import { templateLabel, templatePatch, usableTemplates } from '../services/enforcement/templateService.js';
+import { getConfiguredSetting } from '../services/settings/guildSettings.js';
 import {
     ACTION_LABELS, RECORD_ACTIONS, attachFlowEvidence, availableActions, completeFlowDetails, countedWarnsText,
     flowSummary, liftReasonPatch, parseFlowInput, reasonPatch, startFlow,
@@ -177,7 +179,55 @@ export async function buildPanel(guild, moderatorId, targetUser) {
     for (let i = 0; i < buttons.length; i += 5) {
         rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
     }
+    const templates = usableTemplates(readTemplates(), availableActions(state));
+    if (templates.length) {
+        rows.push(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder()
+            .setCustomId(`enfsel:tpl:${moderatorId}:${targetUser.id}`)
+            .setPlaceholder('Or use a template')
+            .addOptions(templates.map(({ index, template }) => ({
+                label: truncate(template.name, 100),
+                value: String(index),
+                description: truncate(`${templateLabel(template)} · ${ENFORCEMENT_REASONS.find((r) => r.key === template.reasonKey)?.label || template.reasonKey}`, 100),
+            })))));
+    }
     return { embeds: [embed], components: rows };
+}
+
+/** The saved templates (enforcementTemplates); none when the setting can't be read. */
+function readTemplates() {
+    try {
+        const list = getConfiguredSetting('enforcementTemplates');
+        return Array.isArray(list) ? list : [];
+    } catch {
+        return [];
+    }
+}
+
+/** A template from the panel: same flow as the buttons, with reason and duration filled in. */
+async function startTemplate(interaction, client, moderatorId, targetId, index) {
+    const template = readTemplates()[Number(index)];
+    await interaction.deferUpdate();
+    const targetUser = await client.users.fetch(targetId).catch(() => null);
+    const state = targetUser ? await getTargetState(interaction.guild, targetId) : null;
+    if (!template || !targetUser || !availableActions(state).includes(template.action)) {
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [createEmbed({ title: 'Template not available', description: 'That template was changed or does not fit this member any more. Run /enforcements again.', color: 'warning' })],
+            components: [],
+        });
+    }
+    const flow = { ...startFlow({ type: template.action, moderatorId, targetUser }), ...templatePatch(template) };
+    const nonce = createFlow(flow);
+    if (RECORD_ACTIONS.has(flow.type)) warmPrecedent(interaction.guildId, flow.reasonKey);
+    const { patch, error, fatal } = await completeFlowDetails({
+        guild: interaction.guild, moderator: interaction.member, targetUser, flow,
+        patch: { durationInput: flow.durationInput, durationMs: flow.durationMs, unappealable: flow.unappealable, evidenceInput: '', evidenceEntries: [] },
+    });
+    if (fatal || error) {
+        takeFlow(nonce);
+        return InteractionHelper.safeEditReply(interaction, { embeds: [stepEmbed(flow, fatal || error)], components: [] });
+    }
+    updateFlow(nonce, patch);
+    return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce));
 }
 
 // ── Flow steps ─────────────────────────────────────────────────────────────
@@ -300,6 +350,7 @@ export function confirmationPayload(flow, moderatorId, nonce) {
             ? `${item.url} ("${truncate(item.excerpt.replace(/\s+/g, ' '), 80)}")`
             : `${item.url}${item.unreadable ? ' (message not readable, link only)' : ''}`)).join('\n')}`);
     }
+    if (flow.templateName) lines.unshift(`**Template:** ${truncate(flow.templateName, 60)}`);
     if (summary.effect) lines.push(`**Effect:** ${summary.effect}`);
     lines.push(...summary.notes);
     // Consistency hints (read-only): similar cases for this reason + the target's ladder.
@@ -469,6 +520,8 @@ export async function handleEnforcementButton(interaction, client, args) {
 export async function handleEnforcementSelect(interaction, client, args) {
     const [step, moderatorId, nonce] = args;
     if (!(await guard(interaction, moderatorId))) return;
+    // Templates carry the target id (no flow yet).
+    if (step === 'tpl') return startTemplate(interaction, client, moderatorId, nonce, interaction.values[0]);
 
     const flow = getFlow(nonce);
     if (!flow) return expired(interaction);

@@ -213,6 +213,20 @@ export const SETTINGS = Object.freeze([
         schema: z.object({ normal: optionalId, pro: optionalId, max: optionalId }).strict(),
         describe: (value) => `${Object.values(value || {}).filter(Boolean).length} of 3 set`,
     },
+    // ── Enforcement templates (/enforcements presets; services/enforcement/templateService.js) ──
+    {
+        // Structural check here; the dashboard saves only lists cleaned by cleanTemplates
+        // (prebuilt reason, parsable duration, unique names).
+        key: 'enforcementTemplates', module: 'enforcement', kind: 'json', guild: 'main', label: 'Enforcement templates',
+        fallback: Object.freeze([]),
+        schema: z.array(z.object({
+            name: z.string().min(1).max(40),
+            action: z.enum(['warn', 'mute', 'kick', 'ban']),
+            reasonKey: z.string().min(1).max(40),
+            duration: z.string().max(20).nullable(),
+        }).strict()).max(10),
+        describe: (value) => `${value?.length || 0} template${value?.length === 1 ? '' : 's'}`,
+    },
     // ── Server rules ──
     {
         key: 'serverRules', module: 'rules', kind: 'json', guild: 'main', label: 'Server rules',
