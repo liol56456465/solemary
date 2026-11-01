@@ -21,7 +21,7 @@ import {
     intField, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
-import { NOTHING, changedOnly, registryValue, saveRegistry, section, table } from './common.js';
+import { NOTHING, changedOnly, registryValue, saveRegistry, section, table, topic } from './common.js';
 import {
     CUSTOM_RULE_ACTIONS, CUSTOM_RULE_NAME_MAX, CUSTOM_RULE_WORDS_MAX, CUSTOM_RULE_WORD_MAX, actionLabel, cleanCustomRules,
     limitForPlan, overLimitIds, resetCustomRulesCache, runningRules,
@@ -285,15 +285,27 @@ ${reviews.length > QUEUE_LISTED ? html`<p class="muted">…and ${reviews.length 
                 p.caseCode ? html`<a href="${path(`/cases/${encodeURIComponent(p.caseCode)}`)}"><code>${p.caseCode}</code></a>${p.how ? ` (${p.how})` : ''}` : '-',
                 buttonForm(ctx, 'automod', 'probation-end', 'End probation', { user: p.userId }, { confirm: 'End this probation now?', canEdit: canAct }),
             ]), 'Nobody is on probation.');
-        const live = html`${lockdown?.active ? section('Raid lockdown', lockdownBody) : ''}
-${section(`Review queue${reviews ? ` (${reviews.length})` : ''}`, queue)}
-${section(`Probation${probations ? ` (${probations.length})` : ''}`, probation, 'Members who came back after a ban ended. Automod is stricter with them for a while: they skip straight to the next punishment step, and get no second chance or trusted-member leniency.')}`;
-        return html`${live}${section('Global mode', top)}${section('Rule modes', rules, `Change single rules. default: does what the main setting above says. on: acts. monitor: only tells staff. off: the rule is not checked. ${HEADS_UP_HELP}`)}
-${section('Custom rules', customRulesSection(ctx, data), 'Your own lists of words and phrases to block. Like the built-in rules, they match whole words, do not care about capital letters, and catch look-alike letters (like 0 for o). A match deletes the message and posts a review card. Warn and mute also add it to the member\'s record (a case). They follow the main automod setting and skip ignored channels. How many you can have depends on the server owner\'s plan.')}
-${section('Channel exceptions', exceptions, 'Turn one rule off, or to watch only, in one channel. For example, allow links in a links channel.')}${section('Ignored channels', exempt, 'Channels where automod checks nothing at all.')}
+        // v6: cards grouped by topic (common.js topic/section).
+        const lockdownCard = section('Raid lockdown', lockdownBody, 'A lockdown starts by itself when many accounts join at once.', { size: 'full' });
+        const live = topic('Right now', 'What is waiting for staff at this moment.', html`${lockdown?.active ? lockdownCard : ''}
+${section(`Review queue${reviews ? ` (${reviews.length})` : ''}`, queue, '', { key: 'review-queue' })}
+${section(`Probation${probations ? ` (${probations.length})` : ''}`, probation, 'Members who came back after a ban ended. Automod is stricter with them for a while: they skip straight to the next punishment step, and get no second chance or trusted-member leniency.', { key: 'probation' })}`);
+        const ruleCards = topic('Rules', 'What automod checks, and what it does when a rule is broken.', html`${section('Global mode', top, 'What every rule does unless you change it below.')}
+${section('Channels and words', channels, 'Where automod talks to staff, and your own blocked words.')}
+${section('Rule modes', rules, `Change single rules. default: does what the main setting above says. on: acts. monitor: only tells staff. off: the rule is not checked. ${HEADS_UP_HELP}`, { size: 'full' })}
+${section('Custom rules', customRulesSection(ctx, data), 'Your own lists of words and phrases to block. Like the built-in rules, they match whole words, do not care about capital letters, and catch look-alike letters (like 0 for o). A match deletes the message and posts a review card. Warn and mute also add it to the member\'s record (a case). They follow the main automod setting and skip ignored channels. How many you can have depends on the server owner\'s plan.', { size: 'full' })}
+${section('Discord AutoMod', native, 'Discord has its own AutoMod built in. When one of its rules blocks a message, Mewvo can also log it or warn the member.', { size: 'full' })}`);
+        // Small switch cards side by side, then the two forms side by side, then the list.
+        const leniency = topic('Exceptions and leniency', 'Where automod looks away, and who gets a softer start.', html`${section('Second chance', secondChance, 'Go easy on a first small slip.')}
+${section('Mood', mood, 'Slowmode makes members wait a few seconds between messages.')}
 ${section('Trusted members', trusted, 'Trusted members skip the rules for small things. Serious rules still apply. To turn this off, pick none and set the level to 0.')}
-${section('Second chance', secondChance)}${section('Mood', mood, 'Slowmode makes members wait a few seconds between messages.')}${section('Panic', panic, 'A raid lockdown starts by itself when many accounts join at once. Panic mode makes it harder for raiders to spread.')}${section('Join gate', joinGate, 'Checks new members as they join. For each check: off does nothing; flag tells staff in the review channel, with Kick and Dismiss buttons; kick removes them and sends a private message saying how to come back.')}
-${section('Discord AutoMod', native, 'Discord has its own AutoMod built in. When one of its rules blocks a message, Mewvo can also log it or warn the member.')}${section('Channels and words', channels, 'Where automod talks to staff, and your own blocked words.')}${lockdown?.active ? '' : section('Raid lockdown', lockdownBody)}${section(days === 1 ? 'Last day' : `Last ${days} days`, stats, '', { key: 'automod-stats' })}`;
+${section('Channel exceptions', exceptions, 'Turn one rule off, or to watch only, in one channel. For example, allow links in a links channel.')}
+${section('Ignored channels', exempt, 'Channels where automod checks nothing at all.')}`);
+        const raids = topic('Raids and new members', 'Checks at the door and what happens when many accounts join at once.', html`${section('Join gate', joinGate, 'Checks new members as they join. For each check: off does nothing; flag tells staff in the review channel, with Kick and Dismiss buttons; kick removes them and sends a private message saying how to come back.')}
+${section('Panic', panic, 'A raid lockdown starts by itself when many accounts join at once. Panic mode makes it harder for raiders to spread.')}
+${lockdown?.active ? '' : lockdownCard}`);
+        const results = topic('Results', 'How often automod acted, and how often staff undid it.', section(days === 1 ? 'Last day' : `Last ${days} days`, stats, '', { key: 'automod-stats', size: 'full' }));
+        return html`${live}${ruleCards}${leniency}${raids}${results}`;
     },
 
     actions: {

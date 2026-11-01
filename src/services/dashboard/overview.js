@@ -194,13 +194,14 @@ const show = (value, text = value) => (value === undefined ? html`<span class="m
 
 /** The newest dashboard changes (audit rows): who, which module and setting, old → new, when. */
 function recentChangesSection(rows) {
-    if (rows === null) return html`<section class="plain-section"><h2>Recent dashboard changes</h2><p class="muted">Could not be loaded just now. Reload the page in a minute.</p></section>`;
+    const link = { href: path('/audit'), text: 'Full audit log' };
+    if (rows === null) return card('Recent dashboard changes', html`<p class="muted">Could not be loaded just now. Reload the page in a minute.</p>`, { className: 'ov-full' });
     const label = (key) => navItems().find((i) => i.key === key)?.label || key;
     const list = rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Page</th><th>Setting</th><th>Old</th><th>New</th></tr></thead><tbody>${rows.map((r) => html`<tr>
 <td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || 'someone'}</td><td>${navItems().some((i) => i.key === r.module) ? html`<a href="${path(`/${r.module}`)}">${label(r.module)}</a>` : label(r.module)}</td>
-<td><code>${r.key}</code></td><td class="value muted">${valueText(r.old)}</td><td class="value">${valueText(r.new)}</td></tr>`)}</tbody></table></div><p><a href="${path('/audit')}">Full audit log</a></p>`
+<td><code>${r.key}</code></td><td class="value muted">${valueText(r.old)}</td><td class="value">${valueText(r.new)}</td></tr>`)}</tbody></table></div>`
         : html`<p class="empty">No dashboard changes yet.</p>`;
-    return html`<section class="plain-section"><h2>Recent dashboard changes</h2>${list}</section>`;
+    return card('Recent dashboard changes', list, { link: rows.length ? link : null, className: 'ov-full' });
 }
 
 /** The Overview page from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
@@ -264,35 +265,51 @@ function needsYou(o, { csrf = '', canEndLockdown = false, limited = false, setup
     return html`${failed ? html`<p class="error" role="alert">Some of this could not be loaded just now. Reload the page in a minute.</p>` : ''}${list}`;
 }
 
-/** A plain section: a heading (with an optional count and link) and its content. */
+/**
+ * An Overview card (v6): bold title (with an optional count) and an optional link on the
+ * right, then its content. `className` places it in the grid (ov-wide: two columns, ov-full: the row).
+ */
 function card(title, body, { link = null, note = null, className = '' } = {}) {
-    return html`<section class="plain-section${className ? ` ${className}` : ''}"><h2>${title}${note ? html` <span class="muted">(${note})</span>` : ''}${link ? html` <a class="section-link" href="${link.href}">${link.text}</a>` : ''}</h2>${body}</section>`;
+    return html`<section class="tile-card ov-card${className ? ` ${className}` : ''}"><header class="card-top card-top-row"><h2>${title}${note ? html` <span class="muted">(${note})</span>` : ''}</h2>${link ? html`<a class="card-link" href="${link.href}">${link.text}</a>` : ''}</header><div class="section-body">${body}</div></section>`;
 }
 
-/** The Overview page (v5) from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
+/** One number tile: label, the number (a link when `href`), one line under it. `undefined` = could not be read. */
+function stat(label, value, sub = '', { href = null } = {}) {
+    const number = value === undefined ? html`<span class="stat-value is-unknown">unavailable</span>`
+        : href ? html`<a class="stat-value" href="${href}">${value}</a>` : html`<span class="stat-value">${value}</span>`;
+    return html`<div class="stat"><p class="stat-label">${label}</p>${number}${sub ? html`<p class="stat-sub">${sub}</p>` : ''}</div>`;
+}
+
+// Quick links: the pages staff open most, each with one plain line (only the ones this level may open).
+const QUICK_LINKS = [
+    ['cases', 'Every warn, mute, kick and ban'], ['users', 'Find a member and act'], ['appeals', 'Requests to lift a punishment'],
+    ['inbox', 'Tickets, reports and modmail'], ['automod', 'Spam, bad words and raids'], ['enforcement', 'How punishments work'],
+    ['audit', 'Who changed which setting'], ['modules', 'Every setting, by module'],
+];
+
+/** The Overview page (v6, cards) from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
 export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [], editEnabled = false, handover = null, canEditHandover = false, flash = null }) {
     // Moderator level (permissions.js): no setup, modules, tickets or audit parts (those pages are Administrator-only).
     const limited = Boolean(access?.allowed) && !allows(access, 'page:modules');
     const todo = o.checklist.filter((item) => !item.done);
     const pendingText = o.pendingAppeals >= PENDING_APPEALS_CAP ? `${PENDING_APPEALS_CAP}+` : o.pendingAppeals;
-    const sanctions = o.activeBans === undefined || o.activeMutes === undefined ? undefined : o.activeBans + o.activeMutes;
     const server = session?.server;
     const name = o.guild?.name || server?.name || 'your server';
     const waiting = (o.pendingAppeals || 0) + (o.openTickets || 0) + (o.lockdown?.active ? 1 : 0);
-    const unknown = 'not available right now';
-    const facts = [
-        o.guild?.memberCount != null ? `${o.guild.memberCount} members${o.joinedThisWeek != null ? `, ${o.joinedThisWeek} joined this week` : ''}` : null,
-        sanctions === undefined ? `banned and muted: ${unknown}` : `${o.activeBans} banned and ${o.activeMutes} muted right now`,
-        o.pendingAppeals === undefined ? `appeals: ${unknown}` : html`<a href="${path('/appeals')}">${pendingText} appeal${o.pendingAppeals === 1 ? '' : 's'} waiting</a>`,
-        o.openTickets === undefined ? `tickets: ${unknown}` : `${o.openTickets} open ticket${o.openTickets === 1 ? '' : 's'}`,
-    ].filter(Boolean);
     const healthy = o.bot.ready && (!o.database || o.database.connected);
     const status = !o.bot.ready ? 'Mewvo is offline: commands and automod are not working right now.'
         : o.database && !o.database.connected ? 'Mewvo is online, but its database is not responding, so some things will not save.'
             : 'Mewvo is online and working.';
     const automodWord = Object.hasOwn(moduleStates, 'automod') ? ` Automod is ${moduleStates.automod ? 'on' : 'off'}.` : '';
-    const head = html`<header class="page-head"><h1>Overview</h1><p class="facts-line">${name}: ${facts.map((f, i) => html`${i ? ' · ' : ''}${f}`)}</p>
-<p class="facts-line"><span class="${healthy ? 'ok-text' : 'bad'}">${status}</span>${automodWord}${o.lockdown?.active ? html` <span class="bad">A raid lockdown is active.</span>` : ''}</p></header>`;
+    const head = html`<header class="page-head"><h1>Overview</h1>
+<p class="facts-line">${name}. <span class="${healthy ? 'ok-text' : 'bad'}">${status}</span>${automodWord}${o.lockdown?.active ? html` <span class="bad">A raid lockdown is active.</span>` : ''}</p></header>`;
+    // The numbers, as four tiles (a word instead of a number when a source failed).
+    const members = o.guild?.memberCount != null ? o.guild.memberCount : undefined;
+    const stats = html`<div class="stat-grid">
+${stat('Members', members, o.joinedThisWeek != null ? `${o.joinedThisWeek} joined this week` : '')}
+${stat('Banned right now', o.activeBans, o.activeMutes === undefined ? '' : `${o.activeMutes} muted right now`, { href: path('/cases?status=active') })}
+${stat('Appeals waiting', o.pendingAppeals === undefined ? undefined : pendingText, o.pendingAppeals === undefined ? '' : o.pendingAppeals ? 'Oldest first under Needs your attention' : 'Nothing to decide', { href: path('/appeals') })}
+${stat('Open tickets', o.openTickets, limited ? '' : 'Answered in their Discord channels')}</div>`;
     // Getting started: every setup step, numbered, open ones first, each with why it matters.
     const done = o.checklist.filter((item) => item.done);
     const guided = todo.length * 2 > o.checklist.length
@@ -308,14 +325,23 @@ ${done.length ? html`<p class="muted">Done: ${done.map((item) => item.label).joi
         ? html`<form method="post" action="${path('/handover')}" class="settings-form handover-form" data-dirty><input type="hidden" name="csrf" value="${session.csrf}">
 <label class="wide">Note<textarea name="text" rows="2" maxlength="1000" placeholder="Keep an eye on #general tonight">${handover?.text || ''}</textarea></label>
 <div class="form-actions"><button class="primary" type="submit">Save note</button><span class="hint">To remove the note, empty the box and save.</span></div></form>` : '';
+    const links = QUICK_LINKS.map(([key, line]) => [navItems().find((i) => i.key === key), line])
+        .filter(([item]) => item && (!access?.allowed || allows(access, `page:${item.key}`)));
+    const quick = html`<ul class="quick-links">${links.map(([item, line]) => html`<li><a href="${path(`/${item.key}`)}">${item.label}</a><span>${line}</span></li>`)}</ul>`;
+    // Rows pair cards of similar height: Needs you + the note, Getting started + the links, the chart + the
+    // latest cases. The grid fills holes (dense), so narrow cards still pair up on two columns.
     const body = html`${head}
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
-${limited || !todo.length ? '' : card('Getting started', steps, { className: 'getting-started' })}
-${card('Needs your attention', needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct), limited, setupSteps: false }), { note: waiting ? `${waiting}` : null })}
-${card('Moderation in the last 7 days', weekChart(o.week), { link: { href: path('/cases'), text: 'See all cases' } })}
-${card('Latest moderation', recentFeed(o.recent), { link: { href: path('/cases'), text: 'See all cases' } })}
+${stats}
+<div class="ov-grid">
+${card('Needs your attention', needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct), limited, setupSteps: false }), { note: waiting ? `${waiting}` : null, className: 'ov-wide needs-you' })}
 ${card('Note for the next shift', html`${note}${noteForm}`)}
-${limited ? '' : recentChangesSection(recentChanges)}`;
+${limited || !todo.length ? '' : card('Getting started', steps, { className: 'ov-wide getting-started' })}
+${links.length ? card('Go to', quick, { className: 'ov-links' }) : ''}
+${card('Moderation in the last 7 days', weekChart(o.week))}
+${card('Latest moderation', recentFeed(o.recent), { link: { href: path('/cases'), text: 'See all cases' }, className: 'ov-wide' })}
+${limited ? '' : recentChangesSection(recentChanges)}
+</div>`;
     return layout({ title: 'Overview', active: 'overview', session, access, moduleStates, body });
 }
 

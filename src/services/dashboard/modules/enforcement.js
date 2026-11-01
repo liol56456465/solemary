@@ -8,7 +8,7 @@ import { formatDuration } from '../../enforcement/format.js';
 import { html } from '../html.js';
 import { InputError, PERMS, boolField, channelField, channelPicker, checkbox, numberInput, postForm, roleField, rolePicker, switchInput, text, textInput, toggleForm } from '../forms.js';
 import { MAX_TEMPLATES, TEMPLATE_ACTIONS, TEMPLATE_NAME_MAX, cleanTemplates, templateLabel } from '../../enforcement/templateService.js';
-import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, section, table, NOTHING } from './common.js';
+import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, section, table, topic, NOTHING } from './common.js';
 
 const KEYS = [
     'adminRequestChannelId', 'modLogChannelId', 'evidenceChannelId', 'appealsCategoryId', 'reportsCategoryId', 'modmailCategoryId',
@@ -102,15 +102,21 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
             label: 'Publish trust card', canEdit: ctx.canEdit && ctx.canAct,
             confirmOff: 'Take the trust card off the website?',
         })}${trustOn ? html`<p class="muted">It is public at <a href="/trust">/trust</a>.</p>` : ''}`;
-        return html`${section('Appeal panels', appealPanels, `Posts the appeal panel here and in the support server, and removes the old ones. You can also do this with /setappeal in Discord.${ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.'}`)}
-${section('Channels', channels)}${section('Roles', roles, 'Warning roles show how many active warnings a member has. Mewvo gives and removes them by itself.')}
-${section('Appeals and reports', timings, 'An appeal is a member asking staff to lift a punishment.')}${section('Independent appeal review', review, 'Off by default, so any staff member who handles appeals can decide any appeal.')}
-${section('Transparency report', transparency, `Off by default. When on, a public page on the Mewvo website (/transparency) shows how many warnings, mutes, kicks, bans and appeals this server had each month. It shows numbers only. No names, IDs, case codes, reasons or moderators. A count of 1 or 2 shows as “fewer than 3”.${ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.'}`)}
-${section('Trust card', trust, `Off by default. When on, a public page on the Mewvo website (/trust) sums up the last 90 days: how fast appeals get a first answer, how many are accepted, how many members are in good standing, and how often members fix a message themselves after an automod heads-up. Numbers only. Counts of 1 or 2 and rates based on fewer than 3 are hidden.${ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.'}`)}${section('Mass-action guard', mass, 'Protects the server if a moderator account is misused. A moderator who punishes too many members in a short time is stopped for a while, and the bot owner gets a private message (DM).')}
-${section('Templates', html`${templateList}${templateAdd}`, 'Ready-made punishments for /enforcements, like "Spam: 1h mute". They show as a menu under the buttons. Picking one skips straight to the last step, where you confirm.')}
-${section('Warn ladder', html`<p class="muted">The warn ladder decides when warnings turn into a ban. A member with no earlier ban is banned at ${enforcementConfig.warnsPerLevel} warnings. After that, each new warning bans them again, for longer each time. You cannot change this here yet.</p>${ladder}`)}
-${section('Reasons', reasons, 'The reasons moderators can pick from. You cannot change them here yet, because each case saves the code of its reason.')}
-${section('Automod steps', steps, 'What automod does when someone breaks the same rule again. You cannot change this here yet.')}`;
+        // v6: cards grouped by topic (common.js topic/section).
+        const adminOnly = ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.';
+        const where = topic('Channels and roles', 'Where Mewvo writes about punishments, and the roles it uses.', html`${section('Channels', channels, 'Logs, evidence and the categories for appeals, reports and modmail.', { size: 'wide' })}
+${section('Roles', roles, 'Warning roles show how many active warnings a member has. Mewvo gives and removes them by itself.', { size: 'full' })}`);
+        const appeals = topic('Appeals', 'How members ask staff to lift a punishment.', html`${section('Appeal panels', appealPanels, `Posts the appeal panel here and in the support server, and removes the old ones. You can also do this with /setappeal in Discord.${adminOnly}`)}
+${section('Independent appeal review', review, 'Off by default, so any staff member who handles appeals can decide any appeal.')}
+${section('Appeals and reports', timings, 'An appeal is a member asking staff to lift a punishment.', { size: 'full' })}`);
+        const safety = topic('Moderator tools and safety', 'Shortcuts for moderators, and a brake if a moderator account is misused.', html`${section('Mass-action guard', mass, 'Protects the server if a moderator account is misused. A moderator who punishes too many members in a short time is stopped for a while, and the bot owner gets a private message (DM).', { size: 'full' })}
+${section('Templates', html`${templateList}${templateAdd}`, 'Ready-made punishments for /enforcements, like "Spam: 1h mute". They show as a menu under the buttons. Picking one skips straight to the last step, where you confirm.', { size: 'wide' })}`);
+        const pages = topic('Public pages', 'Numbers about this server on the Mewvo website. Both are off by default.', html`${section('Transparency report', transparency, ['A monthly count of warnings, mutes, kicks, bans and appeals at /transparency.', `It shows numbers only. No names, IDs, case codes, reasons or moderators. A count of 1 or 2 shows as “fewer than 3”.${adminOnly}`])}
+${section('Trust card', trust, ['A summary of the last 90 days at /trust.', `How fast appeals get a first answer, how many are accepted, how many members are in good standing, and how often members fix a message themselves after an automod heads-up. Numbers only. Counts of 1 or 2 and rates based on fewer than 3 are hidden.${adminOnly}`])}`);
+        const rules = topic('How punishments add up', 'Built in. You cannot change these here yet.', html`${section('Warn ladder', html`<p class="muted">A member with no earlier ban is banned at ${enforcementConfig.warnsPerLevel} warnings. After that, each new warning bans them again, for longer each time.</p>${ladder}`, 'When warnings turn into a ban.', { size: 'normal' })}
+${section('Reasons', reasons, ['The reasons moderators can pick from.', 'They cannot be changed here yet, because each case saves the code of its reason.'], { size: 'normal' })}
+${section('Automod steps', steps, 'What automod does when someone breaks the same rule again.', { size: 'full' })}`);
+        return html`${where}${appeals}${safety}${pages}${rules}`;
     },
 
     actions: {

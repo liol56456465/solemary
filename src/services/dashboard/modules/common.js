@@ -1,8 +1,45 @@
 // common.js — helpers shared by the module pages.
 
-import { html, section, slug } from '../html.js';
+import { html, raw, slug } from '../html.js';
 
-export { section, slug };
+export { slug };
+
+/**
+ * Splits a long help text into its first sentence (shown under the card title) and the
+ * rest (behind "More about this"). Short texts and markup (SafeHtml) stay whole; an array
+ * [line, more] is a hand-written split.
+ */
+export function splitHelp(help) {
+    // A hand-written pair: [short line, the rest].
+    if (Array.isArray(help)) return [help[0] || '', help[1] || ''];
+    if (typeof help !== 'string' || help.length <= 110) return [help, ''];
+    const match = help.match(/^(.{20,}?[.!?:])\s+(?=[A-Z/(“"])/);
+    if (!match) return [help, ''];
+    return [match[1], help.slice(match[0].length)];
+}
+
+/**
+ * A settings card on a module page (v6 layout): bold title, one short line of what it
+ * controls, then its settings (usually its own form with its own Save). Cards sit in a grid
+ * (moduleSettingsPage wraps the page, `topic` wraps a group). options:
+ * { key, size: 'auto' | 'normal' | 'wide' | 'full' }: 'auto' gives a card with a table the full row;
+ * 'wide' is the same (the settings grid has two columns); both lay their fields out in two columns.
+ * `open` / `collapsible` (old collapsible sections) are accepted and ignored: cards are always open.
+ */
+export function section(title, body, help = '', { key = slug(title), size = 'auto' } = {}) {
+    const [line, more] = splitHelp(help);
+    const width = size === 'auto' ? (/<table[\s>]/.test(String(body)) ? 'full' : 'normal') : size;
+    return html`<section class="tile-card section${width === 'normal' ? '' : ` size-${width}`}" id="s-${key}" data-card="${key}"><header class="card-top"><h2 class="card-title">${title}</h2>${line ? html`<p class="card-desc">${line}</p>` : ''}${more ? html`<details class="card-more"><summary>More about this</summary><p>${more}</p></details>` : ''}</header><div class="section-body">${body}</div></section>`;
+}
+
+/**
+ * A group of cards about one topic: a heading with one plain line, then the cards in a grid.
+ * The cards' titles become h3 under the topic's h2.
+ */
+export function topic(title, line, cards, { key = slug(title) } = {}) {
+    const inner = String(html`${cards}`).replace(/<h2 class="card-title">([\s\S]*?)<\/h2>/g, '<h3 class="card-title">$1</h3>');
+    return html`<section class="topic" id="g-${key}"><header class="topic-head"><h2>${title}</h2>${line ? html`<p>${line}</p>` : ''}</header><div class="card-grid">${raw(inner)}</div></section>`;
+}
 import { guildIdFor } from '../../settings/guildSettings.js';
 import { getSettingEntry } from '../../settings/settingsRegistry.js';
 import { InputError, intField } from '../forms.js';

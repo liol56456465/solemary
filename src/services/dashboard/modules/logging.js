@@ -71,8 +71,8 @@ ${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" v
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
         return html`${section('Mod log', html`<p class="muted">The mod log lists every warn, mute, kick and ban. It goes to ${channelName(g, modLogChannelId)}. You can <a href="${path('/enforcement')}">change it on Enforcement &amp; appeals</a>. Ticket logs are set on <a href="${path('/tickets')}">Tickets</a>.</p>`)}
 ${section('Channels', channels, 'Where each kind of log goes. Picking a channel turns logging on.')}
-${section('Events', toggles, 'Pick which things get logged. Open a group to see its events. Unticking the whole group turns every event in it off.')}
-${section('Ignore lists', ignoreForms, 'Nothing is logged from these channels (and their threads), from members with these roles, or from these members. Useful for bot channels or staff areas.')}`;
+${section('Events', toggles, 'Pick which things get logged. Open a group to see its events. Unticking the whole group turns every event in it off.', { size: 'full' })}
+${section('Ignore lists', ignoreForms, 'Nothing is logged from these channels (and their threads), from members with these roles, or from these members. Useful for bot channels or staff areas.', { size: 'full' })}`;
     },
 
     actions: {

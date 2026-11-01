@@ -97,7 +97,7 @@ export function moduleCommandsSection(ctx, moduleKey, snapshot) {
     });
     if (!rows.length) return '';
     return section(`Commands (${rows.length})`, table(['Command', 'Description', 'On'], rows),
-        'The slash commands that belong to this page. A command you turn off only answers with a short notice. The Commands page lists every command.', { open: false, key: 'commands' });
+        'The slash commands that belong to this page. A command you turn off only answers with a short notice. The Commands page lists every command.', { key: 'commands', size: 'full' });
 }
 
 export default {

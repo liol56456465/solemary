@@ -18,7 +18,7 @@
 //   main .flash             "Saved." becomes a toast that closes itself
 //   form[data-dirty]        also shows a Discard / Save bar at the bottom while changed
 //   [data-module-search]    a search box above the module cards
-//   #s-<section> links      open the collapsible section they point to; the one in view is marked
+//   #s-<section> links      open the collapsible section they point to; the topic or card in view is marked
 //   [data-quick-find]       "/" focuses the top bar search
 
 (function () {
@@ -201,7 +201,8 @@
     // The form and its section are marked ("Unsaved changes"); Reset puts the loaded
     // values back and clears the mark; leaving the page asks first.
     const dirty = new Set();
-    const markSection = (form, on) => form.closest('details.section')?.classList.toggle('is-changed', on);
+    // Settings cards (section.tile-card) and the collapsible sections of records pages.
+    const markSection = (form, on) => form.closest('.tile-card, details.section')?.classList.toggle('is-changed', on);
     document.addEventListener('input', (event) => {
         const form = event.target.closest?.('form[data-dirty]');
         if (form && !event.target.classList.contains('select-filter')) {
@@ -464,7 +465,7 @@
         document.body.appendChild(bar);
 
         let current = null;
-        const where = (form) => form.closest('details.section')?.querySelector('summary h2')?.textContent.trim() || '';
+        const where = (form) => form.closest('.tile-card, details.section')?.querySelector('.card-title, summary h2')?.textContent.trim() || '';
         const show = (form) => {
             current = form;
             const place = where(form);
@@ -537,9 +538,9 @@
         if (q && input && !input.value) input.value = q;
     }
 
-    // ── "On this page": mark the section in view (desktop list on the left) ──
+    // ── "On this page": mark the topic or card in view (the row of jump links) ──
     function setupSectionSpy() {
-        const links = [...document.querySelectorAll('.settings-layout > .section-links a[href^="#s-"]')];
+        const links = [...document.querySelectorAll('.settings-layout > .section-links a[href^="#"]')];
         if (!links.length || typeof IntersectionObserver !== 'function') return;
         const byId = new Map(links.map((link) => [link.getAttribute('href').slice(1), link]));
         const visible = new Set();
@@ -588,8 +589,9 @@
         // The page came from the form's POST address; show the module page's own address so a
         // reload does not send the form again (that address answers GET with 404).
         const action = error.closest('form')?.getAttribute('action') || '';
+        const card = error.closest('[id^="s-"]');
         if (window.location.pathname === action && window.history?.replaceState) {
-            window.history.replaceState(null, '', action.replace(/\/[^/]+$/, '') + (details?.id ? `#${details.id}` : ''));
+            window.history.replaceState(null, '', action.replace(/\/[^/]+$/, '') + (card?.id ? `#${card.id}` : ''));
         }
     }
 

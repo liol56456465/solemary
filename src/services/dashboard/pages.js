@@ -245,13 +245,17 @@ ${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || 
 // ── Module (settings) pages ───────────────────────────────────────────────
 
 /**
- * "On this page": links to the collapsible sections of a long settings page (read from
- * the page's own section markup; three or more sections). The script opens the target.
+ * "On this page": jump links above the cards of a settings page. Pages grouped by topic
+ * list their topics (two or more); other pages list their cards (four or more). Titles
+ * are read from the page's own markup (already escaped).
  */
 function sectionLinks(body) {
-    const found = [...String(body).matchAll(/<details class="card section" id="s-([a-z0-9-]+)"[^>]*><summary><h2>([^<]+)<\/h2>/g)];
-    if (found.length < 3) return '';
-    return html`<nav class="section-links" aria-label="On this page"><span class="section-links-label">On this page</span>${found.map(([, key, title]) => html`<a href="#s-${key}">${raw(title)}</a>`)}</nav>`;
+    const text = String(body);
+    const topics = [...text.matchAll(/<section class="topic" id="(g-[a-z0-9-]+)"><header class="topic-head"><h2>([^<]+)<\/h2>/g)];
+    const cards = [...text.matchAll(/<section class="tile-card[^"]*" id="(s-[a-z0-9-]+)"[^>]*><header class="card-top"><h[23] class="card-title">([^<]+)<\/h[23]>/g)];
+    const found = topics.length >= 2 ? topics : cards.length >= 4 ? cards : [];
+    if (!found.length) return '';
+    return html`<nav class="section-links" aria-label="On this page"><span class="section-links-label">On this page</span>${found.map(([, id, title]) => html`<a href="#${id}">${raw(title)}</a>`)}</nav>`;
 }
 
 /**
@@ -297,8 +301,10 @@ ${warnings.length ? html`<ul class="warnings">${warnings.map((w) => html`<li>${w
     const main = state === null ? '' : moduleSwitch({ csrf: session?.csrf, canEdit, module: module.key, action: item.toggle, enabled: state, label: module.label });
     const head = html`<header class="module-header"><span class="module-icon" aria-hidden="true">${icon(module.key)}</span>
 <div class="module-title"><h1>${module.label}</h1>${module.help ? html`<p class="help">${module.help}</p>` : ''}</div>${main ? html`<div class="module-main">${main}</div>` : ''}</header>`;
-    // Desktop: "On this page" as a sticky list on the left, the sections on the right.
+    // v6: "On this page" as a row of jump links, then the cards in a grid (grouped by topic
+    // on the busy pages: each topic has its own grid).
     const links = sectionLinks(body);
-    const page = html`${head}<div class="settings-layout${links ? '' : ' single'}">${links}<div class="settings-main">${notices}${body}</div></div>`;
+    const grouped = String(body).includes('<section class="topic"');
+    const page = html`${head}<div class="settings-layout">${links}<div class="settings-main">${notices}${grouped ? body : html`<div class="card-grid">${body}</div>`}</div></div>`;
     return layout({ title: module.label, active: module.key, session, access, moduleStates, body: page });
 }
