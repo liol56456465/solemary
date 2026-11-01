@@ -51,6 +51,7 @@ import { reviewApplicationAndNotify } from '../applicationReviewService.js';
 import { updateApplicationSettings } from '../applicationSettingsService.js';
 // Community
 import { getCommunitySettings, updateCommunitySettings } from '../community/settingsService.js';
+import { getServerCat } from '../community/catService.js';
 import { starboardSettingsPatch } from '../community/starboardService.js';
 import { listStickies, removeSticky, setSticky } from '../community/stickyService.js';
 import { createTag, deleteTag, listTags } from '../community/tagService.js';
@@ -107,7 +108,7 @@ export const defaultServices = {
     activateCountingGame, disableCountingGame, getCountingGameConfig, resetCountingGame,
     getJoinToCreateConfiguration, removeTriggerChannel, updateChannelConfig,
     getApplicationSettings, updateApplicationSettings, getApplications, reviewApplicationAndNotify,
-    getCommunitySettings, updateCommunitySettings, starboardSettingsPatch, listStickies, removeSticky, setSticky,
+    getServerCat, getCommunitySettings, updateCommunitySettings, starboardSettingsPatch, listStickies, removeSticky, setSticky,
     createTag, deleteTag, listTags, addFeed, listFeeds, removeFeed, listOpenSuggestions, getSuggestion, decideSuggestion,
     disableCategory, disableCommand, enableCategory, enableCommand, getCommandAccessSnapshot, resolveCommandTarget, getCategoryRegistry,
     purgeChannelMessages, lockChannel, unlockChannel,

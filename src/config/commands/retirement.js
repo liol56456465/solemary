@@ -22,7 +22,7 @@ export const OWNER_KIT = new Set([
 const DASHBOARD_PAGE = {
     automod: 'automod', appeals: 'appeals', background: 'users', case: 'cases', enforcements: 'users', Moderate: 'users',
     'Warn for this message': 'users', setappeal: 'enforcement', staff: 'staff', test: 'enforcement',
-    'app-admin': 'applications', community: 'community', suggest: 'community', tag: 'community', commands: 'commands',
+    'app-admin': 'applications', cat: 'leveling', community: 'community', suggest: 'community', tag: 'community', commands: 'commands',
     configwizard: 'commands', birthday: 'birthdays', count: 'counters', serverstats: 'counters', giveaway: 'giveaways',
     jointocreate: 'join-to-create', level: 'leveling', logging: 'logging', report: 'logging', lock: 'channels', unlock: 'channels',
     purge: 'channels', backup: 'overview', reactroles: 'reaction-roles', ticket: 'tickets', canned: 'tickets', modmail: 'tickets',

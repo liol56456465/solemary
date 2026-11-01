@@ -11,7 +11,7 @@
 // transparency, My record) are not copied: their links point to --app-url, where the bot's own
 // web server answers them. Nothing here talks to Discord or a database.
 
-import { mkdir, rm, writeFile, copyFile, readdir } from 'node:fs/promises';
+import { cp, mkdir, rm, writeFile, copyFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -91,8 +91,8 @@ async function main() {
         const css = await get('/site.css');
         await writeFile(path.join(OUT, 'site.css'), css.body);
         const imgSource = path.join(ROOT, 'src/services/site/static/img');
-        await mkdir(path.join(OUT, 'img'), { recursive: true });
-        for (const file of await readdir(imgSource)) await copyFile(path.join(imgSource, file), path.join(OUT, 'img', file));
+        // Subfolders too (img/cat: the server cat pictures).
+        await cp(imgSource, path.join(OUT, 'img'), { recursive: true });
         await copyFile(path.join(imgSource, 'logo.png'), path.join(OUT, 'favicon.png'));
         await copyFile(path.join(imgSource, 'logo.png'), path.join(OUT, 'favicon.ico'));
 

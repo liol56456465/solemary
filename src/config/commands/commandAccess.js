@@ -24,6 +24,8 @@ export const EVERYONE_COMMANDS = new Set([
   // Community
   'apply submit', 'apply status', 'apply list',
   'tag show', 'tag list', 'suggest new',
+  // The server cat (/cat name stays admin)
+  'cat view',
 
   // Birthday (setchannel stays admin)
   'birthday set', 'birthday info', 'birthday list', 'birthday remove', 'birthday next',

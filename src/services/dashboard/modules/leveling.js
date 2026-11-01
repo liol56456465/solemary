@@ -2,16 +2,18 @@
 // ignored channels/roles, role rewards, and (Administrators only) a member's level.
 // Writes go through services/leveling/leveling.js (updateLevelingConfig /
 // setLevelRoleReward are row-locked; addLevels/removeLevels/setUserLevel are the
-// /level add|remove|set functions).
+// /level add|remove|set functions). The server cat's name and growth announcement are
+// registry settings (catName, catAnnounce; saved by the settings service, which audits them).
 
 import { html } from '../html.js';
 import {
     InputError, PERMS, autoRoleField, boolField, buttonForm, channelField, channelName, channelPicker, checkbox,
     switchInput, choiceField, intField, numberInput, postForm, rolePicker, roleName, roleWarnings, selectInput,
-    text, textArea, userIdField,
+    text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
-import { NOTHING, changedOnly, section, table } from './common.js';
+import { NOTHING, changedOnly, registryValue, saveRegistry, section, table } from './common.js';
+import { CAT_NAME_MAX, sanitizeCatName } from '../../community/catModel.js';
 
 const MAX_LEVEL = 1000;
 
@@ -34,10 +36,12 @@ export default {
     help: 'Members earn points (XP) for chatting and go up in level as they collect more. You can post a message when someone levels up and give roles at certain levels. You can also change these with /level dashboard in Discord.',
 
     async load(ctx) {
-        return { cfg: await ctx.services.getLevelingConfig(ctx.client, ctx.guildId) };
+        // The cat is extra: a failed read only shows a note in its section.
+        const cat = await Promise.resolve().then(() => ctx.services.getServerCat(ctx.guildId)).catch(() => null);
+        return { cfg: await ctx.services.getLevelingConfig(ctx.client, ctx.guildId), cat };
     },
 
-    render(ctx, { cfg }) {
+    render(ctx, { cfg, cat }) {
         const g = ctx.guild;
         const range = xpRangeOf(cfg);
         const settings = postForm(ctx, 'leveling', 'settings', html`<div class="grid">
@@ -65,13 +69,46 @@ ${rolePicker(g, 'roleId', null, { label: 'Give this role', optional: false, auto
 ${selectInput('op', 'add', [['add', 'Add levels'], ['remove', 'Remove levels'], ['set', 'Set level']], { label: 'What to do' })}
 ${numberInput('levels', '', { label: 'Levels', min: 0, max: MAX_LEVEL })}</div>`, { submit: 'Apply', canEdit: ctx.canEdit && ctx.canAct })
             : html`<p class="muted">To change a member's level you need the Administrator permission in the main server.</p>`;
+        const catEdit = ctx.canEdit && ctx.canAct;
+        const catNow = cat
+            ? html`<div class="cat-now"><img src="/img/cat/${cat.image}" width="96" height="96" alt="${cat.name}, a ${cat.stage.name.toLowerCase()}, looking ${cat.mood}"><p>${cat.sentence} Stage: ${cat.stage.name}. ${Number(cat.total).toLocaleString('en-US')} messages counted.</p></div>`
+            : html`<p class="muted">The cat could not be loaded right now (the database is not responding). Reload to try again.</p>`;
+        const catName = postForm(ctx, 'leveling', 'cat-name', textInput('catName', registryValue(ctx, 'catName'), {
+            label: 'Name', max: CAT_NAME_MAX, help: 'Letters, numbers and spaces. Other characters are left out.',
+        }), { submit: 'Save name', canEdit: catEdit });
+        const catAnnounce = toggleForm(ctx, 'leveling', 'cat-announce', registryValue(ctx, 'catAnnounce') !== false, {
+            label: 'Post in the level-up channel when the cat grows', canEdit: catEdit,
+        });
+        const catPart = html`${catNow}${catName}${catAnnounce}${ctx.canAct ? '' : html`<p class="muted">You need the Administrator permission in the main server to change the cat.</p>`}`;
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
         return html`${section('XP and messages', settings)}${section('No XP in', ignored, 'Members get no XP in these channels, and members with these roles get none at all. Useful for bot or spam channels.')}
 ${section('Role rewards', rewardTable, 'Members get these roles by themselves when they reach the level. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers.')}
-${section('Member levels', members, 'Change one member\'s level by hand. You can also do this with /level add, /level remove and /level set in Discord.')}`;
+${section('Member levels', members, 'Change one member\'s level by hand. You can also do this with /level add, /level remove and /level set in Discord.')}
+${section('Server cat', catPart, 'The server has a cat that grows as members chat, from Kitten to Legend. Members see it with /cat view and on the website leaderboard. When it grows, Mewvo posts once in the level-up channel (if one is set).')}`;
     },
 
     actions: {
+        'cat-name': {
+            admin: true,
+            async run(ctx, form) {
+                const name = sanitizeCatName(text(form, 'catName', CAT_NAME_MAX));
+                if (!name) throw new InputError('Name: use letters, numbers and spaces.', 400, 'catName');
+                const patch = changedOnly({ catName: name }, { catName: registryValue(ctx, 'catName') });
+                if (!Object.keys(patch).length) return NOTHING;
+                const result = await saveRegistry(ctx, patch, 'leveling');
+                return { ...result, message: `The server cat is now called ${name}.` };
+            },
+        },
+        'cat-announce': {
+            admin: true,
+            async run(ctx, form) {
+                const enabled = boolField(form, 'enabled', 'Cat growth announcement');
+                const patch = changedOnly({ catAnnounce: enabled }, { catAnnounce: registryValue(ctx, 'catAnnounce') !== false });
+                if (!Object.keys(patch).length) return NOTHING;
+                const result = await saveRegistry(ctx, patch, 'leveling');
+                return { ...result, message: `Cat growth posts are ${enabled ? 'on' : 'off'}.` };
+            },
+        },
         async enabled(ctx, form) {
             const enabled = boolField(form, 'enabled', 'Leveling');
             return update(ctx, { enabled }, `Leveling is now ${enabled ? 'on' : 'off'}.`);

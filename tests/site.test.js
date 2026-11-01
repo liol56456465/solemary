@@ -8,7 +8,7 @@ import express from 'express';
 import { PermissionFlagsBits } from 'discord.js';
 import {
     CSS_PATH, INSTALL_PERMISSIONS, LEADERBOARD_PAGE_SIZE, NOINDEX, SECURITY_HEADERS, STYLESHEET, botStatus,
-    createLeaderboardReader, createSite, everyoneCommandGroups, installPermissionBits, installUrl, inviteOrNull,
+    createCatReader, createLeaderboardReader, createSite, everyoneCommandGroups, installPermissionBits, installUrl, inviteOrNull,
     leaderboardPageNumber, publicSiteEnabled, uptimeWords,
 } from '../src/services/site/site.js';
 import { EVERYONE_COMMANDS } from '../src/config/commands/commandAccess.js';
@@ -33,12 +33,12 @@ function fakeCommands() {
 /** A bare app with the real health routes' shape first, then the site (as in app.js). */
 async function serve({
     env = {}, commands = fakeCommands(), dashboardEnabled = true, supportInvite = () => SUPPORT,
-    leaderboard = async () => ({ enabled: true, rows: [] }), status = () => ({ state: 'online', uptimeMs: 3_600_000 }),
+    leaderboard = async () => ({ enabled: true, rows: [] }), status = () => ({ state: 'online', uptimeMs: 3_600_000 }), cat,
 } = {}) {
     const app = express();
     app.get('/health', (req, res) => res.status(200).json({ status: 'healthy' }));
     app.get('/ready', (req, res) => res.status(503).json({ ready: false }));
-    app.use(createSite({ client: { commands }, env: { CLIENT_ID, ...env }, dashboardEnabled, supportInvite, leaderboard, status }));
+    app.use(createSite({ client: { commands }, env: { CLIENT_ID, ...env }, dashboardEnabled, supportInvite, leaderboard, status, cat }));
     const server = await new Promise((resolve) => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
     const base = `http://127.0.0.1:${server.address().port}`;
     const get = async (path) => {
@@ -726,4 +726,67 @@ test('changelog: newest first, plain text, dated sections; the footer links it',
     } finally {
         await site.close();
     }
+});
+
+const CAT = {
+    name: 'Mochi <b>', image: 'young-happy.png', stage: { key: 'young', name: 'Young cat' }, mood: 'happy',
+    sentence: 'Mochi <b> is happy: the server was busier this week.', total: 4321,
+    progress: { fraction: 0.178, toNext: 10679, next: { name: 'Cat' } },
+};
+
+test('leaderboard: the server cat above the table (picture, name, stage, mood, progress), escaped, no inline styles', async () => {
+    const site = await serve({ cat: async () => CAT, leaderboard: async () => ({ enabled: true, rows: [row(1, 'Ann')] }) });
+    try {
+        const res = await site.get('/leaderboard');
+        assert.equal(res.status, 200);
+        assert.ok(res.body.includes('<section class="cat-card" aria-label="The server cat"><img src="/img/cat/young-happy.png" width="128" height="128"'));
+        assert.ok(res.body.includes('<h2>Mochi &lt;b&gt;</h2>'), 'name escaped');
+        assert.ok(res.body.includes('<p>Young cat. Mochi &lt;b&gt; is happy: the server was busier this week.</p>'), 'stage and mood sentence');
+        assert.ok(res.body.includes('<progress class="cat-bar" max="100" value="18"'));
+        assert.ok(res.body.includes('4,321 messages counted. 10,679 more to Cat.'));
+        assert.ok(res.body.indexOf('cat-card') < res.body.indexOf('<table class="board"'), 'above the table');
+        assert.ok(!/<script|\sstyle=|<style/i.test(res.body));
+        assert.ok(STYLESHEET.includes('.cat-card'));
+    } finally { await site.close(); }
+});
+
+test('leaderboard: a failing cat read hides the cat; the leaderboard still shows (200)', async () => {
+    const site = await serve({ cat: async () => { throw new Error('db down'); }, leaderboard: async () => ({ enabled: true, rows: [row(1, 'Ann')] }) });
+    try {
+        const res = await site.get('/leaderboard');
+        assert.equal(res.status, 200);
+        assert.ok(!res.body.includes('cat-card'));
+        assert.ok(res.body.includes('<td class="board-name">Ann</td>'));
+    } finally { await site.close(); }
+    const sync = await serve({ cat: () => { throw new Error('boom'); } });
+    try {
+        assert.equal((await sync.get('/leaderboard')).status, 200, 'a reader that throws at once is also hidden');
+    } finally { await sync.close(); }
+});
+
+test('cat pictures are served from /img/cat/ like the other site images', async () => {
+    const site = await serve();
+    try {
+        const res = await fetch(`${site.base}/img/cat/legend-proud.png`);
+        assert.equal(res.status, 200);
+        assert.equal(res.headers.get('content-type'), 'image/png');
+    } finally { await site.close(); }
+});
+
+test('cat reader: none while the bot is not connected; cached a minute; a failed read is not cached', async () => {
+    let t = 0;
+    let reads = 0;
+    let fail = false;
+    const client = { isReady: () => true };
+    const reader = createCatReader(client, { guildId: () => '1', now: () => t, read: async () => { reads += 1; if (fail) throw new Error('x'); return CAT; } });
+    assert.equal(await createCatReader({ isReady: () => false }, { guildId: () => '1', read: async () => CAT })(), null);
+    assert.equal(await reader(), CAT);
+    await reader();
+    assert.equal(reads, 1, 'cached');
+    t = 61_000;
+    fail = true;
+    await assert.rejects(() => reader());
+    fail = false;
+    assert.equal(await reader(), CAT);
+    assert.equal(reads, 3, 'the failure was not cached');
 });

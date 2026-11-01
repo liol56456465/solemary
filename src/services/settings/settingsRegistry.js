@@ -22,6 +22,7 @@
 // steps stay in code (owner decision 3).
 
 import { z } from 'zod';
+import { CAT_DEFAULT_NAME, CAT_NAME_MAX, isCleanCatName } from '../community/catModel.js';
 
 const MINUTE = 60 * 1000;
 const DAY = 24 * 60 * MINUTE;
@@ -268,6 +269,16 @@ export const SETTINGS = Object.freeze([
             duration: z.string().max(20).nullable(),
         }).strict()).max(10),
         describe: (value) => `${value?.length || 0} template${value?.length === 1 ? '' : 's'}`,
+    },
+    // ── Server cat (services/community/catService.js; Dashboard → Leveling, /cat name) ──
+    {
+        key: 'catName', module: 'leveling', kind: 'string', guild: 'main', label: 'Server cat name', env: null,
+        fallback: CAT_DEFAULT_NAME,
+        schema: z.string().min(1).max(CAT_NAME_MAX).refine(isCleanCatName, 'letters, numbers, spaces and \' - . ! ? only'),
+    },
+    {
+        key: 'catAnnounce', module: 'leveling', kind: 'boolean', guild: 'main',
+        label: 'Announce when the server cat grows', env: null, fallback: true, schema: z.boolean(),
     },
     // ── Server rules ──
     {

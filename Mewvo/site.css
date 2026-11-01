@@ -453,6 +453,14 @@ button.button { cursor: pointer; }
 .board thead th:not(:nth-child(2)) { text-align: right; }
 .board tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); font-weight: 600; }
 .board-name { overflow-wrap: anywhere; font-weight: 500; }
+/* The server cat above the leaderboard: image left, words right; stacks on phones. */
+.cat-card { display: flex; align-items: center; gap: 24px; padding: 16px 24px 16px 16px; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--raised); }
+.cat-card img { flex: none; width: 128px; height: 128px; }
+.cat-card h2 { font-size: 22px; letter-spacing: -0.015em; margin: 0 0 4px; overflow-wrap: anywhere; }
+.cat-card p { margin: 0; color: var(--text-muted); }
+.cat-meta { margin-top: 8px; font-size: 14px; font-variant-numeric: tabular-nums; }
+.cat-bar { display: block; width: 100%; max-width: 320px; height: 8px; margin-top: 12px; accent-color: var(--accent); }
+@media (max-width: 560px) { .cat-card { flex-direction: column; align-items: flex-start; padding: 16px; } }
 .pager { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
 .pager-current { color: var(--text-muted); font-size: 14px; }
 .notice { max-width: 720px; padding: 14px 16px; margin-top: 24px; background: var(--bg-alt); border: 1px solid var(--border); border-left: 3px solid var(--border-strong); border-radius: 8px; }

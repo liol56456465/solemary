@@ -16,6 +16,7 @@ import { planOf } from '../../services/billing/premiumEffects.js';
 import { planName } from '../../services/billing/premiumService.js';
 import { pgConfig } from '../../config/database/postgres.js';
 import { query } from '../../services/enforcement/db.js';
+import { getServerCat } from '../../services/community/catService.js';
 
 const ts = (date, style) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:${style}>`;
 
@@ -37,6 +38,11 @@ export function nextReward(level, roleRewards = {}) {
 }
 
 /** The profile embed fields from plain data. Pure, for tests. */
+/** "Server cat: Mochi, Young cat, happy" from getServerCat's result, or null. Pure. */
+export function catLine(cat) {
+    return cat ? `Server cat: ${cat.name}, ${cat.stage.name}, ${cat.mood}` : null;
+}
+
 export function profileFields({ level, rank, birthday, planId, joinedAt, createdAt, reward = null }) {
     const fields = [];
     if (level) {
@@ -96,10 +102,12 @@ export default {
         const rank = level ? await part('rank', () => rankOf(guildId, target.id)) : null;
         const reward = level ? nextReward(level, leveling?.roleRewards) : null;
         const birthday = await part('birthday', async () => (await getGuildBirthdays(client, guildId))?.[target.id] || null);
+        // The server cat: a read that fails only leaves the line out (logged by part()).
+        const cat = await part('server cat', () => getServerCat(guildId));
 
         const embed = createEmbed({
             title: member.displayName,
-            description: target.id === interaction.user.id ? null : `<@${target.id}>`,
+            description: [target.id === interaction.user.id ? null : `<@${target.id}>`, catLine(cat)].filter(Boolean).join('\n') || null,
             fields: profileFields({ level, rank, reward, birthday, planId: planOf(target.id), joinedAt: member.joinedAt, createdAt: target.createdAt }),
             color: 'primary',
         });

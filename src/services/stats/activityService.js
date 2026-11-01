@@ -81,6 +81,16 @@ export async function activitySeries(guildId, { days = ACTIVITY_DAYS, now = Date
     return [...byDay.values()];
 }
 
+/** Messages of a server still buffered (not written yet): [{ day: 'YYYY-MM-DD', count }]. */
+export function pendingMessages(guildId) {
+    const out = [];
+    for (const [key, count] of pending) {
+        const [g, day] = key.split('|');
+        if (g === String(guildId)) out.push({ day, count });
+    }
+    return out;
+}
+
 /** For tests. */
 export function _pendingActivity() { return pending; }
 
