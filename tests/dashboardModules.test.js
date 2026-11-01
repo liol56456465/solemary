@@ -231,6 +231,11 @@ function makeServices() {
         listCanned: async () => clone(s.canned),
         saveCanned: async (g, name, text) => { record('saveCanned', [name, text]); s.canned[name] = text; },
         removeCanned: async (g, name) => { record('removeCanned', [name]); if (name === 'appeal-received' || !s.canned[name]) return false; delete s.canned[name]; return true; },
+        getServerCat: async () => {
+            if (s.catFails) throw new Error('db down');
+            return { name: svc.getSetting(GUILD, 'catName'), image: 'young-happy.png', stage: { key: 'young', name: 'Young cat' }, mood: 'happy',
+                sentence: `${svc.getSetting(GUILD, 'catName')} is happy: the server was busier this week.`, total: 4321 };
+        },
         getLevelingConfig: async () => clone(s.leveling),
         updateLevelingConfig: async (c, g, patch) => { record('updateLevelingConfig', [patch]); return merge('leveling', patch); },
         setLevelRoleReward: async (c, g, level, roleId) => { record('setLevelRoleReward', [level, roleId]); const before = clone(s.leveling); if (roleId) s.leveling.roleRewards[level] = roleId; else delete s.leveling.roleRewards[level]; return { before, after: clone(s.leveling) }; },
@@ -750,6 +755,8 @@ const CASES = {
         'reward-add': { form: { level: '10', roleId: ROLE_OK2 }, service: 'setLevelRoleReward', bad: { form: { level: '10', roleId: ROLE_HIGH }, message: /not below my highest role/ } },
         'reward-remove': { form: { level: '5' }, service: 'setLevelRoleReward', bad: { form: { level: '0' }, message: /between 1 and 1000/ } },
         member: { form: { userId: MEMBER, op: 'add', levels: '2' }, service: 'addLevels', bad: { form: { userId: STRANGER, op: 'add', levels: '2' }, message: /not in the server/ }, admin: true },
+        'cat-name': { form: { catName: 'Mochi <b>' }, service: 'updateSettings', admin: true, bad: { form: { catName: '@@ <>' }, message: /use letters, numbers and spaces/ } },
+        'cat-announce': { form: { enabled: 'false' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
     },
     verification: {
         setup: { seed: (s) => { s.verification.channelId = null; }, form: { channelId: TEXT, roleId: ROLE_OK2, buttonText: 'Go', message: 'Press it' }, service: 'setupVerification', admin: true,
@@ -2520,4 +2527,34 @@ test('scheduled messages: preview of the message and the next posting times', as
     for (let i = 1; i < runs.length; i += 1) assert.ok(runs[i] > runs[i - 1], 'increasing');
     assert.deepEqual(upcomingRuns({ ...daily, paused: true }), []);
     assert.deepEqual(upcomingRuns({ ...daily, nextRunAt: null }), []);
+});
+
+test('leveling: the Server cat section shows the picture and name; the name is saved cleaned, the switch audited; a failed cat read only shows a note', async () => {
+    const h = await setup();
+    const page = await get(h, 'leveling');
+    assert.equal(page.statusCode, 200);
+    assert.ok(page.body.includes('src="/img/cat/young-happy.png"'), 'cat picture');
+    assert.ok(page.body.includes('name="catName" value="Mewvo"'), 'default name');
+    assert.ok(page.body.includes('action="/dashboard/leveling/cat-announce"'));
+
+    const saved = await post(h, 'leveling', 'cat-name', { catName: '  Mochi @everyone <b> ' });
+    assert.equal(saved.statusCode, 303);
+    assert.equal(h.state.registry.catName, 'Mochi everyone b');
+    assert.equal(h.auditRows.find((r) => r.key === 'catName').new, 'Mochi everyone b');
+    const same = await post(h, 'leveling', 'cat-name', { catName: 'Mochi everyone b' });
+    assert.equal(same.statusCode, 303);
+    assert.equal(h.calls.filter((c) => c.name === 'updateSettings').length, 1, 'unchanged name: nothing saved');
+    const tooLong = await post(h, 'leveling', 'cat-name', { catName: 'x'.repeat(33) });
+    assert.equal(tooLong.statusCode, 400, 'never cut silently');
+
+    await post(h, 'leveling', 'cat-announce', { enabled: 'false' });
+    assert.equal(h.state.registry.catAnnounce, false);
+    assert.ok(h.auditRows.some((r) => r.key === 'catAnnounce' && r.new === false));
+
+    const broken = await setup();
+    broken.state.catFails = true;
+    const fallback = await get(broken, 'leveling');
+    assert.equal(fallback.statusCode, 200, 'the page still renders');
+    assert.match(fallback.body, /The cat could not be loaded right now/);
+    assert.ok(fallback.body.includes('Least XP per message'), 'the rest of the page is there');
 });

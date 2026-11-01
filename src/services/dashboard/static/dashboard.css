@@ -1267,3 +1267,8 @@ details.section .section-help { margin: 0 0 16px; color: var(--fg-2); max-width:
 .setup-start { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .setup-all a, .glossary a, .setup-start a:not(.btn) { text-decoration: underline; }
 .setup-nav .btn { margin: 0; }
+
+/* Leveling → Server cat: the current picture next to its sentence. */
+.cat-now { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+.cat-now img { flex: none; width: 96px; height: 96px; }
+.cat-now p { margin: 0; }

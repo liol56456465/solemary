@@ -9,7 +9,8 @@
 //   GET /faq          questions and answers (pages/faq.js)
 //   GET /commands     the commands every member may use (EVERYONE_COMMANDS + the loaded descriptions)
 //   GET /about        who runs it
-//   GET /leaderboard  the main server's leveling leaderboard, 50 a page (?page=)
+//   GET /leaderboard  the main server's leveling leaderboard, 50 a page (?page=), with the server cat
+//                     above it (hidden when it cannot be read)
 //   GET /rules        the main server's rules, #rule-N anchors (pages/rules.js; 503 when unreadable)
 //   GET /status       Online / Starting / Degraded and the uptime, nothing else
 //   GET /transparency monthly moderation numbers (pages/transparency.js); 404 unless the
@@ -19,7 +20,8 @@
 //   GET /terms        Terms and Conditions (pages/legal.js)
 //   GET /robots.txt   Disallow: / while the site is not public; with the sitemap when it is
 //   GET /sitemap.xml  only when public and PUBLIC_URL is set (absolute URLs need the origin)
-//   GET /img/<file>   the site's images (static/img: dashboard screenshots, the share image)
+//   GET /img/<file>   the site's images (static/img: dashboard screenshots, the share image,
+//                     cat/<stage>-<mood>.png the server cat)
 //   GET /favicon.png  the owner's logo (static/img/logo.png), also at /favicon.ico; site and dashboard link it
 //   GET /site.css     the site's tokens + layout, cached, ?v=<content hash>
 //
@@ -39,6 +41,7 @@ import { commandEntries } from '../../config/commands/retirement.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { getLeaderboard, getLevelingConfig } from '../leveling/leveling.js';
 import { getConfiguredSetting } from '../settings/guildSettings.js';
+import { getServerCat } from '../community/catService.js';
 import { createTransparencyReader } from '../enforcement/transparencyService.js';
 import { logger } from '../../utils/logger.js';
 import {
@@ -201,10 +204,40 @@ export function createLeaderboardReader(client, { guildId = () => enforcementCon
     };
 }
 
+/**
+ * The real server cat reader for the site: () → the main server's cat (getServerCat) or null
+ * while the bot is not connected. Throws on a read error (the page then hides the cat). Cached
+ * for a minute, one promise shared by concurrent views; a failed read is not cached.
+ */
+export function createCatReader(client, { guildId = () => enforcementConfig.mainGuildId, now = () => Date.now(), read = getServerCat } = {}) {
+    let hit = null;
+    return () => {
+        const id = guildId();
+        if (!id || !client?.isReady?.()) return Promise.resolve(null);
+        if (hit && hit.until > now()) return hit.promise;
+        const promise = read(id);
+        hit = { promise, until: now() + LEADERBOARD_CACHE_MS };
+        promise.catch(() => { if (hit?.promise === promise) hit = null; });
+        return promise;
+    };
+}
+
 const formatNumber = (value) => (Number(value) || 0).toLocaleString('en-US');
 
 /** `board` is the reader's result (with one row too many when there is a next page), or null when the read failed. */
-export function leaderboardPage(ctx, { page, board }) {
+/** The server cat card (above the leaderboard), or '' when there is no cat to show. */
+export function catCard(cat) {
+    if (!cat?.stage || !cat.image) return '';
+    const pct = Math.round((cat.progress?.fraction ?? 1) * 100);
+    const next = cat.progress?.next
+        ? html`<progress class="cat-bar" max="100" value="${String(pct)}" aria-label="Growth to ${cat.progress.next.name}">${pct}%</progress>
+<p class="cat-meta">${formatNumber(cat.total)} messages counted. ${formatNumber(cat.progress.toNext)} more to ${cat.progress.next.name}.</p>`
+        : html`<p class="cat-meta">${formatNumber(cat.total)} messages counted. Fully grown.</p>`;
+    return html`<section class="cat-card" aria-label="The server cat"><img src="/img/cat/${cat.image}" width="128" height="128" alt="${cat.name}, a ${cat.stage.name.toLowerCase()}, looking ${cat.mood}">
+<div><h2>${cat.name}</h2><p>${cat.stage.name}. ${cat.sentence}</p>${next}</div></section>`;
+}
+
+export function leaderboardPage(ctx, { page, board, cat = null }) {
     const head = html`<header class="page-head page-head-split"><div><h1>Leaderboard</h1></div>
 <p class="lead">The most active members of the Mewvo server by level and total XP. You earn XP by chatting; members who delete their data with <code>/wipedata</code> are not listed.</p></header>`;
     let content;
@@ -228,7 +261,7 @@ export function leaderboardPage(ctx, { page, board }) {
     return layout(ctx, {
         title: page > 1 ? `Leaderboard, page ${page}` : 'Leaderboard', active: 'leaderboard', path: page > 1 ? `/leaderboard?page=${page}` : '/leaderboard',
         description: 'The Mewvo server leveling leaderboard.',
-        body: html`<div class="wrap page">${head}${content}</div>`,
+        body: html`<div class="wrap page">${head}${catCard(cat)}${content}</div>`,
     });
 }
 
@@ -313,7 +346,7 @@ export function sitemapXml(origin, { transparency = false } = {}) {
 export function createSite({
     client = null, env = process.env, dashboardEnabled = false, memberPortalEnabled = false, memberAccountsEnabled = false, billingEnabled = false, supportInvite = () => null,
     leaderboard = createLeaderboardReader(client), status = () => botStatus(client), rules = () => readPublicRules(env),
-    transparency = defaultTransparency(),
+    transparency = defaultTransparency(), cat = createCatReader(client),
 } = {}) {
     const router = express.Router();
     const publicSite = publicSiteEnabled(env);
@@ -373,14 +406,20 @@ export function createSite({
     // One row more than a page is read, only to know whether there is a next page.
     router.get('/leaderboard', async (req, res) => {
         const number = leaderboardPageNumber(req.query.page);
+        // The cat is extra: a failed read only hides it.
+        const catRead = Promise.resolve().then(() => cat()).catch((error) => {
+            logger.warn(`Site server cat could not be loaded: ${error.message}`);
+            return null;
+        });
         let board = null;
         try {
             board = await leaderboard({ offset: (number - 1) * LEADERBOARD_PAGE_SIZE, limit: LEADERBOARD_PAGE_SIZE + 1 });
         } catch (error) {
             logger.warn(`Site leaderboard could not be loaded: ${error.message}`);
         }
+        const catState = board ? await catRead : null;
         res.set('Cache-Control', 'no-cache');
-        res.status(board ? 200 : 503).type('html').send(leaderboardPage(context(), { page: number, board }));
+        res.status(board ? 200 : 503).type('html').send(leaderboardPage(context(), { page: number, board, cat: catState }));
     });
     // Off: the same 404 as any unknown page. A failed read: 503 with a message, never zeros.
     router.get('/transparency', async (req, res, next) => {
@@ -455,7 +494,7 @@ function defaultTransparency() {
 }
 
 /** Mounts the front site at the root of `app` (after /health, /ready, OAuth and the dashboard). */
-export function registerSite(app, client, { env = process.env, dashboardEnabled = false, memberPortalEnabled = false, memberAccountsEnabled = false, billingEnabled = false, supportInvite, leaderboard, status, rules } = {}) {
-    app.use(createSite({ client, env, dashboardEnabled, memberPortalEnabled, memberAccountsEnabled, billingEnabled, supportInvite, leaderboard, status, rules }));
+export function registerSite(app, client, { env = process.env, dashboardEnabled = false, memberPortalEnabled = false, memberAccountsEnabled = false, billingEnabled = false, supportInvite, leaderboard, status, rules, cat } = {}) {
+    app.use(createSite({ client, env, dashboardEnabled, memberPortalEnabled, memberAccountsEnabled, billingEnabled, supportInvite, leaderboard, status, rules, cat }));
     logger.info(`Front site at / (${publicSiteEnabled(env) ? 'public' : 'not public: noindex, no add button (PUBLIC_SITE_ENABLED)'})`);
 }
