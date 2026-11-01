@@ -134,3 +134,24 @@ test('prune: unconfirmed accounts older than 7 days', { skip }, async () => {
     assert.ok(result.accounts >= 1);
     assert.equal(await store.findById(old.id), null);
 });
+
+test('security review: reset confirms the email and uses up every open link; setPassword too; a pending email blocks nobody', { skip }, async () => {
+    const a = await make(9);
+    const confirm = core.createToken();
+    await store.saveToken({ accountId: a.id, purpose: 'confirm', hash: confirm.hash, email: a.email, ttlMs: 60000 });
+    const reset = core.createToken();
+    await store.saveToken({ accountId: a.id, purpose: 'reset', hash: reset.hash, ttlMs: 60000 });
+    const done = await store.resetPassword(reset.token, 'scrypt$1$1$1$new$hash');
+    assert.ok(done.account.email_confirmed_at, 'the reset link confirmed the email');
+    assert.equal(done.account.password_hash, 'scrypt$1$1$1$new$hash');
+    assert.deepEqual(await store.confirmEmail(confirm.token), { error: 'used' }, 'the old confirm link is used up');
+
+    assert.deepEqual(await store.setPendingEmail(a.id, `pending9@t${runId}.example`), { ok: true });
+    const change = core.createToken();
+    await store.saveToken({ accountId: a.id, purpose: 'email_change', hash: change.hash, email: `pending9@t${runId}.example`, ttlMs: 60000 });
+    const other = await store.createAccount({ username: `acc10_${runId}`, email: `pending9@t${runId}.example`, passwordHash: 'h' });
+    assert.ok(other.account, 'a pending email change does not block a sign-up');
+    await store.setPassword(a.id, 'scrypt$1$1$1$newer$hash');
+    assert.equal((await store.findById(a.id)).pending_email, null);
+    assert.equal(await store.peekToken(change.token, null), null, 'the email change link is used up');
+});
