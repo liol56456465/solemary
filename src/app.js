@@ -33,6 +33,7 @@ import { snapshotMainServer } from './services/structureBackupService.js';
 import { runTicketReminders } from './services/ticketReminderService.js';
 import { tidyStaleAppealChannels } from './services/enforcement/staleAppealService.js';
 import { postWeeklyAutomodReport } from './services/automod/automodReport.js';
+import { postWeeklyDigest } from './services/stats/weeklyDigest.js';
 import { postDailyAutomodDigest } from './services/automod/automodDigest.js';
 import { liftCalmSlowmodes } from './services/automod/autoSlowmode.js';
 import { pollFeeds } from './services/community/feedService.js';
@@ -421,6 +422,7 @@ class Mewvo extends Client {
     cron.schedule('0 9 * * 1', exclusive('weekly_reports', async () => {
       await postWeeklyStaffReport(this);
       await postWeeklyAutomodReport(this);
+      await postWeeklyDigest(this);
     }), { timezone: 'UTC' });
 
     // Expired per-user command cooldowns are dead weight; sweep them every 10 minutes.

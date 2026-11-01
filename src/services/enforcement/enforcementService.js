@@ -175,6 +175,7 @@ const MOD_LOG_TITLES = {
     massguard: ['Mass-action guard', 'error'],
     automod: ['Automod', 'primary'],
     'automod-report': ['Automod report', 'primary'],
+    'server-digest': ['Weekly server digest', 'primary'],
     slowmode: ['Auto slowmode', 'info'],
     digest: ['Daily automod digest', 'primary'],
     system: ['Bot problem', 'error'],
