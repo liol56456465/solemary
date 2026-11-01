@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
-import { MEMBER_SESSION_COOKIE, registerMemberPortal } from '../src/services/site/memberPortal.js';
+import { MEMBER_SESSION_COOKIE, memberAccountsOn, registerMemberPortal } from '../src/services/site/memberPortal.js';
 import { createMemorySessionStore } from '../src/services/dashboard/sessionStore.js';
 import { createSite } from '../src/services/site/site.js';
 import { createMemoryAccountStore } from '../src/services/accounts/memoryAccountStore.js';
@@ -46,7 +46,7 @@ async function serve({ env = ENV, store = createMemoryAccountStore(), accountLim
         env, sessions, data: DATA, fetchImpl, accountStore: store, mailer, hashParams: LOW, accountLimits,
         accountAfter: async (result, from) => { after.push({ result, from }); },
     });
-    app.use(createSite({ client: { commands: null }, env, dashboardEnabled: false, memberPortalEnabled: enabled, supportInvite: () => null }));
+    app.use(createSite({ client: { commands: null }, env, dashboardEnabled: false, memberPortalEnabled: enabled, memberAccountsEnabled: memberAccountsOn(env), supportInvite: () => null }));
     const server = await new Promise((resolve) => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
     const base = `http://127.0.0.1:${server.address().port}`;
     return {
@@ -76,8 +76,9 @@ function browser(app) {
             if (/Max-Age=0/.test(line)) jar.delete(name); else jar.set(name, value);
         }
         const text = await res.text();
-        const match = /name="csrf" value="([^"]+)"/.exec(text);
-        if (match) csrf = match[1];
+        // The page's own form, not the top bar's logout form (which comes first).
+        const all = [...text.matchAll(/name="csrf" value="([^"]+)"/g)];
+        if (all.length) csrf = all[all.length - 1][1];
         return { status: res.status, location: res.headers.get('location'), body: text, headers: res.headers };
     }
     return { request, jar, get csrf() { return csrf; }, set csrf(v) { csrf = v; } };
@@ -116,6 +117,31 @@ async function passwordLogin(b, identifier, password = PASSWORD) {
     await b.request('/me/login-password');
     return b.request('/me/login-password', { form: { identifier, password } });
 }
+
+test('top bar: Log in and Sign up on the website; on /me pages a logged-in member gets a menu instead', async () => {
+    const app = await serve();
+    const b = browser(app);
+    try {
+        const topbar = (body) => body.slice(body.indexOf('<div class="topbar-actions">'), body.indexOf('</header>'));
+        for (const path of ['/', '/features', '/me', '/me/signup']) {
+            const bar = topbar((await b.request(path)).body);
+            assert.ok(bar.includes('<a class="button button-quiet" href="/me">Log in</a>'), `${path}: Log in`);
+            assert.ok(bar.includes('<a class="button" href="/me/signup">Sign up</a>'), `${path}: Sign up`);
+        }
+        await confirmed(app, b);
+        for (const path of ['/me', '/me/account']) {
+            const bar = topbar((await b.request(path)).body);
+            assert.ok(!bar.includes('>Log in<') && !bar.includes('>Sign up<'), `${path}: no Log in / Sign up once logged in`);
+            assert.ok(bar.includes('<summary class="account-chip">'), `${path}: account menu`);
+            assert.ok(bar.includes('cool_cat'), `${path}: the account name`);
+            assert.ok(bar.includes('href="/me/account"') && bar.includes('action="/me/logout"') && /name="csrf" value="[^"]+"/.test(bar), `${path}: settings + logout form`);
+        }
+        // The session cookie is scoped to /me, so the website itself still offers Log in.
+        assert.ok(topbar((await b.request('/')).body).includes('>Log in</a>'));
+    } finally {
+        await app.close();
+    }
+});
 
 test('the whole flow: sign up, confirm, link Discord with the bonus, 1-letter name, 2FA, reset, delete', async () => {
     const app = await serve();

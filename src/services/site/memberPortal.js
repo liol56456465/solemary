@@ -37,6 +37,7 @@
 import express from 'express';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { pgConfig } from '../../config/database/postgres.js';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { logger } from '../../utils/logger.js';
 import { html, formatDate } from '../dashboard/html.js';
 import {
@@ -161,6 +162,11 @@ const time = (value) => (value ? new Date(value).getTime() : NaN);
  * Whether this case can be appealed now, mirroring assertAppealable (appealService.js):
  * { appealable, until (Date|null), text, from (Date|null) }.
  */
+/** True when Mewvo accounts are on and complete (the site then shows "Sign up"). */
+export function memberAccountsOn(env = process.env) {
+    return memberAccountSettings(env, memberPortalSettings(env)).enabled;
+}
+
 export function appealInfo(record, lastAppeal, { now = Date.now(), config = enforcementConfig } = {}) {
     if (record.voided_at) return { appealable: false, text: 'Voided: nothing to appeal' };
     if (record.status === 'revoked') return { appealable: false, text: 'Already lifted' };
@@ -344,7 +350,9 @@ export function createMemberPortal({
     const redeemLimiter = createRateLimiter(limits.redeem || MEMBER_LIMITS.redeem);
     const exportLimiter = createRateLimiter(limits.dataExport || MEMBER_LIMITS.dataExport);
     const linkKey = hmac('mewvo member link v1', key);
-    const ctx = () => ({ ...context(), memberPortal: true, billing: Boolean(premium), accounts: Boolean(accounts) });
+    // Who is logged in, for the top bar of every /me page (set per request by `viewer` below).
+    const viewers = new AsyncLocalStorage();
+    const ctx = () => ({ ...context(), memberPortal: true, billing: Boolean(premium), accounts: Boolean(accounts), viewer: viewers.getStore() || null });
     const send = (res, status, page) => res.status(status).type('html').send(page);
     const fail = (res, status, title, message, options) => send(res, status, messagePage(ctx(), title, message, options));
 
@@ -547,9 +555,26 @@ export function createMemberPortal({
         };
     }
 
+    /**
+     * The top bar's account menu: the logged-in member for this request, or null. Display only:
+     * when the session cannot be read the bar shows "Log in", and the page's own handler reads
+     * the session again and answers 503 as before.
+     */
+    async function viewer(req, res, next) {
+        let session = null;
+        try {
+            session = await readSession(req);
+        } catch (error) {
+            logger.warn(`Member portal: top bar could not read the session: ${error.message}`);
+        }
+        const who = session ? { name: session.username || 'Account', accountId: session.accountId || null, csrf: session.csrf } : null;
+        return viewers.run(who, next);
+    }
+
     function router() {
         const r = express.Router();
         r.use(headers);
+        r.use(viewer);
         r.get('/', limitBy(pageLimiter), safe(index));
         r.get('/login', limitBy(loginLimiter), login);
         r.get('/callback', limitBy(loginLimiter), safe(callback));

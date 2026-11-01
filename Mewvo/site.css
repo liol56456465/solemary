@@ -740,3 +740,26 @@ h2 { font-size: clamp(24px, 2.8vw, 32px); line-height: 1.2; letter-spacing: -0.0
     .cards, .plan-row { grid-template-columns: minmax(0, 1fr); }
     .footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Member top bar: Log in / Sign up, or the logged-in name with a menu (details, no script). */
+.account-menu { position: relative; }
+.account-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 12px 0 6px; border: 1px solid var(--border-control); border-radius: 999px;
+    background: var(--raised); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; list-style: none; white-space: nowrap; }
+.account-chip::-webkit-details-marker { display: none; }
+.account-chip::after { content: ""; width: 6px; height: 6px; margin-left: 2px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: translateY(-2px) rotate(45deg); }
+.account-chip:hover { border-color: var(--border-strong); }
+.account-chip .logo { width: 26px; height: 26px; border-radius: 50%; }
+.account-name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.account-pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 6; min-width: 210px; padding: 6px; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--raised); box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.25); display: grid; }
+.account-pop a, .account-pop button { display: block; width: 100%; padding: 9px 12px; border: 0; border-radius: 8px; background: none; color: var(--text);
+    font: inherit; font-size: 14px; text-align: left; text-decoration: none; cursor: pointer; }
+.account-pop a:hover, .account-pop button:hover { background: var(--bg-alt); color: var(--text); }
+.account-pop form { margin: 4px 0 0; padding-top: 4px; border-top: 1px solid var(--border); }
+@media (max-width: 760px) {
+    .topbar-actions { gap: 6px; }
+    .topbar-actions .button { padding: 0 10px; }
+    /* Brand + Log in + Sign up fit one row; the dashboard stays in the footer. */
+    .topbar-actions .button-quiet[href="/dashboard"]:not(:only-child) { display: none; }
+    .account-name { max-width: 96px; }
+}

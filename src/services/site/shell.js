@@ -147,6 +147,22 @@ ${col('Legal', html`<li><a href="/about"${current('about')}>About</a></li>
 <li><a href="/terms"${current('terms')}>Terms and Conditions</a></li>`)}</div>`;
 }
 
+/**
+ * The way in for members (only when /me is on). Logged out: "Log in" (→ /me, which offers
+ * Discord or a Mewvo account) and "Sign up" when Mewvo accounts are on. Logged in (only /me
+ * pages know: the session cookie is scoped to /me): the name with a menu, no script needed.
+ */
+function memberActions(ctx) {
+    if (!ctx.memberPortal) return '';
+    const v = ctx.viewer;
+    if (!v) {
+        return html`<a class="button button-quiet" href="/me">Log in</a>${ctx.accounts ? html`<a class="button" href="/me/signup">Sign up</a>` : ''}`;
+    }
+    return html`<details class="account-menu"><summary class="account-chip">${LOGO}<span class="account-name">${v.name}</span></summary>
+<div class="account-pop"><a href="/me">My record</a>${v.accountId ? html`<a href="/me/account">Account settings</a>` : ''}${ctx.billing ? html`<a href="/me/billing">Subscription</a>` : ''}
+<form method="post" action="/me/logout"><input type="hidden" name="csrf" value="${v.csrf}"><button type="submit">Log out</button></form></div></details>`;
+}
+
 /** "Add to Discord": only when the site is public and CLIENT_ID is valid. */
 export function addButton(ctx, className = 'button') {
     return ctx.publicSite && ctx.installUrl
@@ -178,7 +194,9 @@ function shareTags(ctx, { title, description, path }) {
  */
 export function layout(ctx, { title, active = null, description = '', refresh = 0, path = null, body }) {
     // The way into the dashboard: a filled button unless "Add to Discord" is shown.
-    const login = ctx.dashboardEnabled ? html`<a class="button${ctx.publicSite && ctx.installUrl ? ' button-quiet' : ''}" href="${DASHBOARD_PATH}">Dashboard</a>` : '';
+    // The dashboard: a filled button unless "Add to Discord" or the member buttons are shown.
+    const quiet = (ctx.publicSite && ctx.installUrl) || ctx.memberPortal;
+    const login = ctx.dashboardEnabled ? html`<a class="button${quiet ? ' button-quiet' : ''}" href="${DASHBOARD_PATH}">Dashboard</a>` : '';
     return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
 <title>${title === 'Mewvo' ? 'Mewvo' : `${title} · Mewvo`}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path })}
@@ -186,7 +204,7 @@ export function layout(ctx, { title, active = null, description = '', refresh = 
 <body><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>Mewvo</span></a>
 <nav class="topnav" aria-label="Main"><ul>${navLinks(ctx, active)}</ul></nav>
-<div class="topbar-actions">${addButton(ctx)}${login}</div></div></header>
+<div class="topbar-actions">${addButton(ctx)}${login}${memberActions(ctx)}</div></div></header>
 <main id="main" tabindex="-1">${body}</main>
 <footer class="footer"><div class="wrap"><div class="footer-top"><div><p class="footer-brand">${LOGO}<span>Mewvo</span></p>
 <p class="footer-text">Discord moderation with case codes, a warning ladder and appeals that reach a person.</p></div>

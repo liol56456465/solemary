@@ -44,7 +44,7 @@ import { loadCommands, registerCommands as registerSlashCommands } from './handl
 import { registerOAuthRoutes } from './services/oauthVerification.js';
 import { registerDashboard } from './services/dashboard/routes.js';
 import { registerSite } from './services/site/site.js';
-import { registerMemberPortal } from './services/site/memberPortal.js';
+import { memberAccountsOn, registerMemberPortal } from './services/site/memberPortal.js';
 import { premiumSettings, premiumStore } from './services/billing/premiumService.js';
 import { loadPremiumCache, runPremiumCron, setGuildOwnerResolver, setPremiumClient } from './services/billing/premiumEffects.js';
 import { finalErrorHandler } from './utils/finalErrorHandler.js';
@@ -315,7 +315,7 @@ class Mewvo extends Client {
     setPremiumClient(this);
     setGuildOwnerResolver((guildId) => this.guilds.cache.get(guildId)?.ownerId || null);
     const memberPortalEnabled = registerMemberPortal(app, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite });
-    registerSite(app, this, { dashboardEnabled, memberPortalEnabled, billingEnabled: premiumSettings().testCheckout, supportInvite: () => enforcementConfig.supportServerInvite });
+    registerSite(app, this, { dashboardEnabled, memberPortalEnabled, memberAccountsEnabled: memberPortalEnabled && memberAccountsOn(), billingEnabled: premiumSettings().testCheckout, supportInvite: () => enforcementConfig.supportServerInvite });
 
     // Last: no stack traces in the browser, whatever NODE_ENV is.
     app.use(finalErrorHandler);

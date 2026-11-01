@@ -166,6 +166,8 @@ test('enabled: "My record" in the top bar of the site; /me without a session is 
         assert.equal(app.memberPortalEnabled, true);
         const home = await app.request('/about');
         assert.ok(home.body.includes('<a href="/me">My record</a>'));
+        assert.ok(home.body.includes('<a class="button button-quiet" href="/me">Log in</a>'), 'Log in in the top bar');
+        assert.ok(!home.body.includes('/me/signup'), 'no Sign up without Mewvo accounts');
         const page = await app.request('/me');
         assert.equal(page.status, 200);
         assert.ok(page.body.includes('href="/me/login"'));
