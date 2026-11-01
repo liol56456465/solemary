@@ -108,6 +108,7 @@ export const ROUTES = [
     ['POST', '/users/:id/unverify', 'member.unverify'],
     ['POST', '/users/:id/notes/add', 'member.notes'],
     ['POST', '/users/:id/notes/remove', 'member.notes'],
+    ['POST', '/cases/bulk', 'case.edit'],
     ['POST', '/cases/:code/edit', 'case.edit'],
     ['POST', '/cases/:code/void', 'case.edit'],
     ['POST', '/cases/:code/evidence/add', 'case.evidence'],

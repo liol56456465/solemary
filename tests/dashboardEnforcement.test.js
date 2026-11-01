@@ -502,6 +502,7 @@ const POSTS = [
     { name: 'case edit', handler: 'caseEdit', params: { code: CODE }, form: { reason: 'better reason' }, bad: { reason: '', duration: 'soon' }, service: 'editCase', audit: 'cases' },
     { name: 'case void', handler: 'caseVoid', params: { code: CODE }, form: { reason: 'mistake', confirm: '1' }, bad: { reason: 'mistake' }, service: 'voidCase', audit: 'cases' },
     { name: 'evidence add', handler: 'evidenceAdd', params: { code: CODE }, form: { link: 'https://x.example/1', note: 'n' }, bad: { link: 'not a link' }, service: 'addEvidence', audit: 'cases', modLog: true },
+    { name: 'case bulk tag', handler: 'caseBulk', params: {}, form: { codes: CODE, action: 'tag-add', tag: 'Scam' }, bad: { codes: CODE, action: 'nope' }, service: 'setCaseTags', audit: 'cases' },
     { name: 'case note', handler: 'caseNote', params: { code: CODE }, form: { text: 'alt of a banned member' }, bad: { text: '  ' }, service: 'addCaseNote', audit: 'cases' },
     { name: 'case tags', handler: 'caseTags', params: { code: CODE }, form: { tags: 'scam, Alt' }, bad: { tags: 'not ok!' }, service: 'setCaseTags', audit: 'cases' },
     { name: 'evidence remove', handler: 'evidenceRemove', params: { code: CODE }, form: { id: '11' }, bad: { id: '1x' }, service: 'removeEvidence', audit: 'cases', modLog: true },
@@ -1331,4 +1332,20 @@ test('member page: timeline section, escaped, newest first; a database error say
     const res = await get(h2, h2.d.enforcement.userPage, { params: { id: TARGET } });
     assert.equal(res.statusCode, 200);
     assert.match(res.body, /timeline could not be loaded/);
+});
+
+test('bulk cases: void needs a reason and the confirm box, at most 10; already voided are skipped; tags at most 25', async () => {
+    const h = await setup();
+    const call = (form) => post(h, h.d.enforcement.caseBulk, { params: {}, form });
+    const noReason = await call({ codes: CODE, action: 'void', confirm: '1' });
+    assert.equal(noReason.statusCode, 400);
+    assert.match(noReason.body, /Give a reason/);
+    const noConfirm = await call({ codes: CODE, action: 'void', reason: 'mistake' });
+    assert.match(noConfirm.body, /Tick the box/);
+    assert.equal(serviceCalls(h, ['voidCase']).length, 0);
+    const ok = await call({ codes: [CODE, CODE], action: 'void', reason: 'mistake', confirm: '1' });
+    assert.equal(ok.statusCode, 303);
+    assert.equal(serviceCalls(h, ['voidCase']).length, 1, 'duplicates count once');
+    const many = await call({ codes: Array.from({ length: 30 }, (_, i) => `zz${String(i).padStart(3, '9')}`), action: 'tag-add', tag: 'x' });
+    assert.ok([400, 404].includes(many.statusCode));
 });

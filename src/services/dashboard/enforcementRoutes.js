@@ -48,7 +48,7 @@ import { NICKNAME_MAX, REASON_MAX, TIMEOUTS, assignableRoles, auditReason, roleP
 import { BULK_ACTIONS, BULK_LIMIT, createJobStore, planBulk } from './bulkActions.js';
 import { BAN_FILTERS, listBans } from './bansData.js';
 import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
-import { html, path, queryString } from './html.js';
+import { html, layout, path, queryString } from './html.js';
 import { isSnowflake } from './security.js';
 import { MODERATOR, mayRun, moderatorActionTypes, requiredLevel } from './permissions.js';
 import { memberHasConfiguredModeratorRole } from '../../utils/permissionGuard.js';
@@ -781,6 +781,70 @@ export function createEnforcementHandlers(core) {
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.evidence' });
 
+    /**
+     * POST /cases/bulk: one action on the ticked cases of the Cases page. Add or remove a tag
+     * (up to 25 cases), or void (up to 10, with a reason and a confirm box: each one lifts what is
+     * still in effect and DMs the member, exactly like voiding one case). Audited per case.
+     */
+    const BULK_TAG_MAX = 25;
+    const BULK_VOID_MAX = 10;
+    const caseBulk = guardedPost(async (req, res) => {
+        const raw = req.body?.codes;
+        const codes = [...new Set((Array.isArray(raw) ? raw : [raw]).map((c) => normalizeCaseCode(String(c || ''))).filter(Boolean))];
+        const action = text(req.body, 'action', 20);
+        if (!codes.length) throw new InputError('Tick at least one case.');
+        if (!['tag-add', 'tag-remove', 'void'].includes(action)) throw new InputError('Choose what to do with the ticked cases.');
+        const records = [];
+        for (const code of codes) {
+            const record = await e.getCaseByCode(code);
+            if (record && record.guild_id === guildId) records.push(record);
+        }
+        if (!records.length) throw new InputError('None of the ticked cases exist in this server any more.');
+        const done = [];
+        const skipped = [];
+        if (action === 'void') {
+            if (records.length > BULK_VOID_MAX) throw new InputError(`Void at most ${BULK_VOID_MAX} cases at once.`);
+            const reason = text(req.body, 'reason', 500);
+            if (!reason) throw new InputError('Give a reason for voiding (the members see it).');
+            if (!text(req.body, 'confirm', 5)) throw new InputError('Tick the box to confirm voiding these cases.');
+            const moderator = await freshModerator(req);
+            const admin = { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username };
+            for (const record of records) {
+                if (record.voided_at) { skipped.push(`${record.case_code} (already voided)`); continue; }
+                try {
+                    await e.voidCase(client, { guildId, caseCode: record.case_code, admin, reason });
+                    await audit(req, 'cases', [{ key: `${record.case_code}.void`, old: null, new: reason }]);
+                    done.push(record.case_code);
+                } catch (error) {
+                    skipped.push(`${record.case_code} (${plainText(error.userMessage || 'not voided')})`);
+                }
+            }
+            await flash(req, `Voided: ${done.join(', ') || 'none'}.${skipped.length ? ` Skipped: ${skipped.join(', ')}.` : ''}`);
+            return res.redirect(303, path('/cases'));
+        }
+        if (records.length > BULK_TAG_MAX) throw new InputError(`Tag at most ${BULK_TAG_MAX} cases at once.`);
+        let tag;
+        try { [tag] = normalizeTags(text(req.body, 'tag', 21)); } catch (error) { throw new InputError(error.userMessage); }
+        if (!tag) throw new InputError('Give a tag, like scam.');
+        for (const record of records) {
+            const before = record.tags || [];
+            const next = action === 'tag-add' ? [...new Set([...before, tag])].sort() : before.filter((t) => t !== tag);
+            if (next.length === before.length && next.every((t, i) => t === before[i])) continue;
+            if (next.length > 10) { skipped.push(`${record.case_code} (already 10 tags)`); continue; }
+            await e.setCaseTags(guildId, record.case_code, next);
+            await audit(req, 'cases', [{ key: `${record.case_code}.tags`, old: before.join(', ') || null, new: next.join(', ') || null }]);
+            done.push(record.case_code);
+        }
+        await flash(req, `${action === 'tag-add' ? 'Tagged' : 'Untagged'} #${tag}: ${done.length} case${done.length === 1 ? '' : 's'}.${skipped.length ? ` Skipped: ${skipped.join(', ')}.` : ''}`);
+        return res.redirect(303, path('/cases'));
+    }, {
+        rerender: (req, res, status, message) => sendHtml(res, status, layout({
+            ...shellOf(req), title: 'Cases', active: 'cases',
+            body: html`<header class="page-head"><h1>Nothing was changed</h1></header><p class="error" role="alert">${message}</p><p><a href="${path('/cases')}">Back to Cases</a></p>`,
+        })),
+        perm: 'case.edit',
+    });
+
     /** Notes and tags on a case (staff-only; caseNotesService.js). */
     const noteError = (error) => (error?.userMessage && !(error instanceof InputError) ? new InputError(error.userMessage) : error);
     const caseNote = guardedPost(async (req, res) => {
@@ -1039,7 +1103,7 @@ export function createEnforcementHandlers(core) {
 
     return {
         users, bans, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, unverify, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
-        caseEdit, caseVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseNote, caseTags, caseActionForms: (args) => caseActionForms(args),
+        caseEdit, caseVoid, caseBulk, evidenceAdd, evidenceUpload, evidenceRemove, caseNote, caseTags, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd,
         staffSections, blockLift, staffWarn, staffRestore, canWrite,

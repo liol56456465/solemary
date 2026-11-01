@@ -539,6 +539,7 @@ export function createDashboard({
         const planId = data.guildPlan ? data.guildPlan(guildId) : 'free';
         return sendHtml(res, 200, casesPage({
             ...shellOf(req), query, rows, total, page, pageSize: CASES_PAGE_SIZE, exportDays: exportWindowDays(planId), canExport: allows(req.dashboard.access, 'case.export'),
+            canBulk: Boolean(settings.editEnabled && allows(req.dashboard.access, 'case.edit')), flash: req.dashboard.flash,
             statusLabel: (row) => caseStatusLabel(row, appealStatuses.get(row.case_code)),
         }));
     }
@@ -976,6 +977,7 @@ export function dashboardRouter(d) {
     router.post('/users/:id/unverify', form, user, safe(en.unverify));
     router.post('/users/:id/notes/add', form, user, safe(en.noteAdd));
     router.post('/users/:id/notes/remove', form, user, safe(en.noteRemove));
+    router.post('/cases/bulk', form, user, safe(en.caseBulk));
     router.post('/cases/:code/edit', form, user, safe(en.caseEdit));
     router.post('/cases/:code/void', form, user, safe(en.caseVoid));
     router.post('/cases/:code/evidence/add', form, user, safe(en.evidenceAdd));

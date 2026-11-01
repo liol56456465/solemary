@@ -69,7 +69,7 @@ ${rows.map((row) => html`<tr><td>${row.label} <span class="muted"><code>${row.ke
  * input: { session, query (raw strings as typed), rows, total, page, pageSize, error,
  * statusLabel(row) }.
  */
-export function casesPage({ session, access = null, moduleStates = {}, query = {}, rows = [], total = 0, page = 0, pageSize = 25, error = null, statusLabel = (r) => r.status, exportDays = null, canExport = false }) {
+export function casesPage({ session, access = null, moduleStates = {}, query = {}, rows = [], total = 0, page = 0, pageSize = 25, error = null, statusLabel = (r) => r.status, exportDays = null, canExport = false, canBulk = false, flash = null }) {
     const pages = Math.max(1, Math.ceil(total / pageSize));
     const keep = { member: query.member, moderator: query.moderator, type: query.type, status: query.status, text: query.text, from: query.from, to: query.to, tag: query.tag };
     const pager = html`<div class="pager">
@@ -93,11 +93,19 @@ ${page + 1 < pages ? html`<a href="/dashboard/cases${queryString({ ...keep, page
 <label>To<input type="date" name="to" value="${query.to || ''}"></label>
 <button class="primary" type="submit">Search</button> <a href="/dashboard/cases">Clear</a>
 </form>
+${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${error ? html`<p class="bad">${error}</p>` : ''}
-${rows.length ? html`<div class="scroll"><table><thead><tr><th>Case</th><th>Type</th><th>Member</th><th>Moderator</th><th>Reason</th><th>Date</th><th>Status</th></tr></thead><tbody>
+${rows.length && canBulk ? html`<form method="post" action="/dashboard/cases/bulk" id="bulk-cases" class="filters bulk-cases"><input type="hidden" name="csrf" value="${session.csrf}">
+<label>With the ticked cases<select name="action"><option value="tag-add">Add a tag</option><option value="tag-remove">Remove a tag</option><option value="void">Void them</option></select></label>
+<label>Tag<input name="tag" maxlength="21" placeholder="scam"></label>
+<label class="wide">Reason (for voiding; the members see it)<input name="reason" maxlength="500"></label>
+<label class="check"><input type="checkbox" name="confirm" value="1"> I want to void the ticked cases</label>
+<button class="primary" type="submit">Apply</button></form>
+<p class="muted">Tags: up to 25 cases at once. Voiding: up to 10, and each member gets the usual DM.</p>` : ''}
+${rows.length ? html`<div class="scroll"><table><thead><tr>${canBulk ? html`<th><span class="sr">Select</span></th>` : ''}<th>Case</th><th>Type</th><th>Member</th><th>Moderator</th><th>Reason</th><th>Date</th><th>Status</th></tr></thead><tbody>
 ${rows.map((row) => {
         const label = statusLabel(row);
-        return html`<tr><td>${caseLink(row.case_code)}</td><td>${typeBadge(row.type)}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td>
+        return html`<tr>${canBulk ? html`<td><input type="checkbox" name="codes" value="${row.case_code}" form="bulk-cases" aria-label="Select case ${row.case_code}"></td>` : ''}<td>${caseLink(row.case_code)}</td><td>${typeBadge(row.type)}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td>
 <td>${row.target_username} <span class="muted">${row.target_user_id}</span></td><td>${row.moderator_username}</td>
 <td>${row.reason}</td><td>${timeTag(row.created_at)}</td><td class="${statusClass(label)}">${label}</td></tr>`;
     })}
