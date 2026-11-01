@@ -798,3 +798,16 @@ test('plain look: no number tiles, rings, card grids, initials badges or big cor
     assert.ok(radius.every((r) => r <= 6), `corner tokens stay small: ${radius}`);
 });
 
+
+test('cases page: saved searches as links (escaped) with delete; save form only when filtered; bulk boxes for admins', () => {
+    const page = casesPage({ session: { username: 'a', csrf: 't' }, query: { tag: 'scam' }, rows: [], total: 0, saved: [{ name: '<x>', query: { tag: 'scam' } }], canSaveSearch: true });
+    assert.ok(page.includes('href="/dashboard/cases?tag=scam">&lt;x&gt;</a>'));
+    assert.ok(page.includes('action="/dashboard/cases/searches/delete"'));
+    assert.ok(page.includes('action="/dashboard/cases/searches/save"'));
+    const plain = casesPage({ session: { username: 'a', csrf: 't' }, query: {}, rows: [], total: 0, saved: [], canSaveSearch: true });
+    assert.ok(!plain.includes('searches/save'), 'nothing to save without filters');
+    const row = { case_code: 'abcde', type: 'warn', target_username: 'm', target_user_id: '1', moderator_username: 'mod', reason: 'r', created_at: new Date(0), status: 'active' };
+    const bulk = casesPage({ session: { username: 'a', csrf: 't' }, query: {}, rows: [row], total: 1, canBulk: true });
+    assert.ok(bulk.includes('form="bulk-cases" aria-label="Select case abcde"'));
+    assert.ok(!casesPage({ session: { username: 'a', csrf: 't' }, query: {}, rows: [row], total: 1 }).includes('bulk-cases'), 'no bulk without the right');
+});

@@ -69,7 +69,7 @@ ${rows.map((row) => html`<tr><td>${row.label} <span class="muted"><code>${row.ke
  * input: { session, query (raw strings as typed), rows, total, page, pageSize, error,
  * statusLabel(row) }.
  */
-export function casesPage({ session, access = null, moduleStates = {}, query = {}, rows = [], total = 0, page = 0, pageSize = 25, error = null, statusLabel = (r) => r.status, exportDays = null, canExport = false, canBulk = false, flash = null }) {
+export function casesPage({ session, access = null, moduleStates = {}, query = {}, rows = [], total = 0, page = 0, pageSize = 25, error = null, statusLabel = (r) => r.status, exportDays = null, canExport = false, canBulk = false, flash = null, saved = [], canSaveSearch = false }) {
     const pages = Math.max(1, Math.ceil(total / pageSize));
     const keep = { member: query.member, moderator: query.moderator, type: query.type, status: query.status, text: query.text, from: query.from, to: query.to, tag: query.tag };
     const pager = html`<div class="pager">
@@ -93,6 +93,8 @@ ${page + 1 < pages ? html`<a href="/dashboard/cases${queryString({ ...keep, page
 <label>To<input type="date" name="to" value="${query.to || ''}"></label>
 <button class="primary" type="submit">Search</button> <a href="/dashboard/cases">Clear</a>
 </form>
+${saved.length ? html`<p class="saved-searches">Saved: ${saved.map((s, i) => html`${i ? ' · ' : ''}<a href="/dashboard/cases${queryString(s.query)}">${s.name}</a>${canSaveSearch ? html` <form method="post" action="/dashboard/cases/searches/delete" class="inline-form"><input type="hidden" name="csrf" value="${session.csrf}"><input type="hidden" name="name" value="${s.name}"><button type="submit" class="link-button" aria-label="Delete saved search ${s.name}">(delete)</button></form>` : ''}`)}</p>` : ''}
+${canSaveSearch && filtered ? html`<form method="post" action="/dashboard/cases/searches/save" class="inline-form save-search"><input type="hidden" name="csrf" value="${session.csrf}">${Object.entries(keep).filter(([, v]) => v).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}<label>Save this search as <input name="name" maxlength="40" required placeholder="e.g. scam this month"></label> <button type="submit">Save</button></form>` : ''}
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${error ? html`<p class="bad">${error}</p>` : ''}
 ${rows.length && canBulk ? html`<form method="post" action="/dashboard/cases/bulk" id="bulk-cases" class="filters bulk-cases"><input type="hidden" name="csrf" value="${session.csrf}">

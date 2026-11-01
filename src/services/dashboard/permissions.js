@@ -81,6 +81,7 @@ export const PERMISSIONS = Object.freeze({
     'page:member-insights': ADMIN,
     'staff.manage': ADMIN, // mass-action blocks, staff warnings, restore (OWNER_IDS checked on top)
     'staff.handover': MODERATOR, // the handover note on the Overview
+    'case.searches': MODERATOR, // saved searches on the Cases page
     'settings.edit': ADMIN, // every module settings form
     // ── Session ──
     'session.logout': MODERATOR,
@@ -109,6 +110,8 @@ export const ROUTES = [
     ['POST', '/users/:id/notes/add', 'member.notes'],
     ['POST', '/users/:id/notes/remove', 'member.notes'],
     ['POST', '/cases/bulk', 'case.edit'],
+    ['POST', '/cases/searches/save', 'case.searches'],
+    ['POST', '/cases/searches/delete', 'case.searches'],
     ['POST', '/cases/:code/edit', 'case.edit'],
     ['POST', '/cases/:code/void', 'case.edit'],
     ['POST', '/cases/:code/evidence/add', 'case.evidence'],

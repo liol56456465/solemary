@@ -213,6 +213,16 @@ export const SETTINGS = Object.freeze([
         schema: z.object({ normal: optionalId, pro: optionalId, max: optionalId }).strict(),
         describe: (value) => `${Object.values(value || {}).filter(Boolean).length} of 3 set`,
     },
+    // ── Saved case searches (Cases page; shared by the staff team) ──
+    {
+        key: 'savedCaseSearches', module: 'cases', kind: 'json', guild: 'main', label: 'Saved case searches',
+        fallback: Object.freeze([]),
+        schema: z.array(z.object({
+            name: z.string().min(1).max(40),
+            query: z.record(z.string(), z.string().max(100)),
+        }).strict()).max(20),
+        describe: (value) => `${value?.length || 0} saved`,
+    },
     // ── Staff handover note (Dashboard Overview; moderators and admins edit it) ──
     {
         key: 'staffHandoverNote', module: 'staff', kind: 'json', guild: 'main', label: 'Staff handover note',

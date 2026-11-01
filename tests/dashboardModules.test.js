@@ -2384,3 +2384,17 @@ test('handover note: on the Overview for moderators and admins; save (audited th
     assert.equal(saves()[1].args[1].staffHandoverNote, null, 'empty clears it');
     assert.equal((await post({ csrf: h.session.csrf, text: 'x'.repeat(1001) })).statusCode, 400);
 });
+
+test('saved case searches: save the current filters, list them as links, delete; checks and limits', async () => {
+    const h = await setup();
+    const post = (action, body, origin = ORIGIN) => run(h, h.d[action], { method: 'POST', params: {}, headers: { cookie: h.cookie, origin }, body, query: {} });
+    const saves = () => h.calls.filter((c) => c.name === 'updateSettings' && c.args[1].savedCaseSearches);
+    assert.equal((await post('searchSave', { csrf: 'x', name: 'Scam', tag: 'scam' })).statusCode, 403);
+    assert.equal((await post('searchSave', { csrf: h.session.csrf, name: 'Nothing' })).statusCode, 400, 'no filters');
+    assert.equal((await post('searchSave', { csrf: h.session.csrf, name: 'Bad', type: 'nuke' })).statusCode, 400, 'invalid filter');
+    const ok = await post('searchSave', { csrf: h.session.csrf, name: 'Scam cases', tag: 'scam', type: 'ban' });
+    assert.equal(ok.statusCode, 303);
+    assert.equal(ok.redirectedTo, '/dashboard/cases?type=ban&tag=scam');
+    assert.deepEqual(saves()[0].args[1].savedCaseSearches, [{ name: 'Scam cases', query: { type: 'ban', tag: 'scam' } }]);
+    assert.equal((await post('searchDelete', { csrf: h.session.csrf, name: 'Nope' })).statusCode, 400);
+});

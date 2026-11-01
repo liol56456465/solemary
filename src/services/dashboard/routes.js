@@ -80,7 +80,7 @@ import { STATS_PERIODS, staffModerationStats } from '../staffActivityService.js'
 import { getConfiguredSetting, listSettingsAudit } from '../settings/guildSettings.js';
 import { createAccessChecker } from './access.js';
 import { OWNER_AREA, allows, routeKey } from './permissions.js';
-import { BASE, THEME_COOKIE, html, messagePage, path, themeFrom } from './html.js';
+import { BASE, THEME_COOKIE, html, messagePage, path, queryString, themeFrom } from './html.js';
 import {
     appealsPage, auditPage, caseDetailPage, casesPage, moduleSettingsPage, statsPage,
 } from './pages.js';
@@ -495,6 +495,49 @@ export function createDashboard({
         }));
     }
 
+    // ── Saved case searches (Cases page) ─────────────────────────────────
+    const SEARCH_KEYS = ['member', 'moderator', 'type', 'status', 'text', 'from', 'to', 'tag'];
+    const savedSearches = () => { try { return getConfiguredSetting('savedCaseSearches', env) || []; } catch { return []; } };
+    function searchGuard(req, res) {
+        if (!postLimiter.allow(req.dashboard.session.idHash)) { res.set('Retry-After', '60'); return fail(res, 429, 'Slow down', 'Too many changes in the last minute. Wait a moment and try again.', req); }
+        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
+        if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
+        if (!allows(req.dashboard.access, 'case.searches')) return fail(res, 403, 'Not allowed', 'This needs a moderator or administrator role.', req);
+        return null;
+    }
+    const saveSearches = (req, list) => services.updateSettings(guildId, { savedCaseSearches: list },
+        { userId: req.dashboard.session.userId, username: req.dashboard.session.username, module: 'cases' }, env);
+
+    async function searchSave(req, res) {
+        const refused = searchGuard(req, res);
+        if (refused) return refused;
+        const name = str(req.body?.name, 60).replace(/\s+/g, ' ').trim();
+        const query = Object.fromEntries(SEARCH_KEYS.map((k) => [k, str(req.body?.[k], 100)]).filter(([, v]) => v));
+        if (!name || name.length > 40) return fail(res, 400, 'Not saved', 'Give the search a name of up to 40 characters.', req);
+        if (!Object.keys(query).length) return fail(res, 400, 'Not saved', 'Filter the cases first, then save the search.', req);
+        try {
+            normalizeSearchFilters({ memberId: query.member, moderatorId: query.moderator, type: query.type, status: query.status, text: query.text, from: query.from, to: query.to, tag: query.tag });
+        } catch (error) {
+            return fail(res, 400, 'Not saved', error.userMessage || 'Those filters are not valid.', req);
+        }
+        const list = savedSearches().filter((s) => s.name.toLowerCase() !== name.toLowerCase());
+        if (list.length >= 20) return fail(res, 400, 'Not saved', 'You can keep 20 saved searches. Delete one first.', req);
+        await saveSearches(req, [...list, { name, query }]);
+        await sessions.setFlash?.(req.dashboard.session.id, `Search "${name}" saved.`);
+        return res.redirect(303, path(`/cases${queryString(query)}`));
+    }
+
+    async function searchDelete(req, res) {
+        const refused = searchGuard(req, res);
+        if (refused) return refused;
+        const name = str(req.body?.name, 60);
+        const list = savedSearches();
+        if (!list.some((s) => s.name === name)) return fail(res, 400, 'Not deleted', 'That saved search is gone already.', req);
+        await saveSearches(req, list.filter((s) => s.name !== name));
+        await sessions.setFlash?.(req.dashboard.session.id, `Search "${name}" deleted.`);
+        return res.redirect(303, path('/cases'));
+    }
+
     /** POST /handover: the staff note on the Overview (moderators and admins); empty text clears it. */
     async function handover(req, res) {
         const session = req.dashboard.session;
@@ -540,6 +583,7 @@ export function createDashboard({
         return sendHtml(res, 200, casesPage({
             ...shellOf(req), query, rows, total, page, pageSize: CASES_PAGE_SIZE, exportDays: exportWindowDays(planId), canExport: allows(req.dashboard.access, 'case.export'),
             canBulk: Boolean(settings.editEnabled && allows(req.dashboard.access, 'case.edit')), flash: req.dashboard.flash,
+            saved: savedSearches(), canSaveSearch: Boolean(settings.editEnabled && allows(req.dashboard.access, 'case.searches')),
             statusLabel: (row) => caseStatusLabel(row, appealStatuses.get(row.case_code)),
         }));
     }
@@ -893,7 +937,7 @@ export function createDashboard({
 
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
-        overview, handover, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme,
+        overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme,
         sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
     };
 }
@@ -978,6 +1022,8 @@ export function dashboardRouter(d) {
     router.post('/users/:id/notes/add', form, user, safe(en.noteAdd));
     router.post('/users/:id/notes/remove', form, user, safe(en.noteRemove));
     router.post('/cases/bulk', form, user, safe(en.caseBulk));
+    router.post('/cases/searches/save', form, user, safe(d.searchSave));
+    router.post('/cases/searches/delete', form, user, safe(d.searchDelete));
     router.post('/cases/:code/edit', form, user, safe(en.caseEdit));
     router.post('/cases/:code/void', form, user, safe(en.caseVoid));
     router.post('/cases/:code/evidence/add', form, user, safe(en.evidenceAdd));

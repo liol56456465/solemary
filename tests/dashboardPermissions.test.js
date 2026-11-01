@@ -65,7 +65,7 @@ test('matrix: every sidebar page has an entry; unknown pages, keys and paths are
 test('matrix: the final Moderator level', () => {
     const moderatorKeys = Object.keys(PERMISSIONS).filter((key) => PERMISSIONS[key] === MODERATOR).sort();
     assert.deepEqual(moderatorKeys, [
-        'action:kick', 'action:mute', 'action:unmute', 'action:warn', 'inbox.close', 'inbox.reply', 'member.action', 'member.timeout',
+        'action:kick', 'action:mute', 'action:unmute', 'action:warn', 'case.searches', 'inbox.close', 'inbox.reply', 'member.action', 'member.timeout',
         'page:appeals', 'page:bans', 'page:cases', 'page:inbox', 'page:nocontact', 'page:overview', 'page:users', 'session.logout', 'staff.handover',
     ]);
     assert.deepEqual(moderatorActionTypes().sort(), ['kick', 'mute', 'unmute', 'warn']);

@@ -1228,3 +1228,7 @@ dl.facts { border-left: 0; border-right: 0; border-radius: 0; background: none; 
 .module-header h1 { font-size: 22px; letter-spacing: 0; }
 .handover-text { margin: 0 0 4px; padding: 8px 12px; border-left: 3px solid var(--border-strong); white-space: pre-wrap; }
 .handover-form { margin-top: 8px; }
+.saved-searches { margin: 8px 0; }
+.saved-searches .inline-form, .save-search { display: inline; }
+.link-button { background: none; border: 0; padding: 0; min-height: 0; color: var(--text-muted); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; }
+.save-search { display: flex; gap: 8px; align-items: center; margin: 8px 0 16px; }
