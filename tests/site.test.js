@@ -494,11 +494,11 @@ test('privacy and terms: dated, linked from the footer, contact via the support 
         for (const path of ['/privacy', '/terms']) {
             const res = await site.get(path);
             assert.equal(res.status, 200);
-            assert.ok(res.body.includes('Last updated <time datetime="2026-10-31">31 October 2026</time>.'), path);
+            assert.ok(res.body.includes('Last updated <time datetime="2026-11-01">1 November 2026</time>.'), path);
             assert.ok(res.body.includes(`<a href="${SUPPORT}" rel="noopener">the support server</a>`), path);
         }
         const privacy = (await site.get('/privacy')).body;
-        for (const fact of ['AES-256-GCM', '60 days', '90 days', '<code>/wipedata</code>', 'never sold', 'PostgreSQL', 'never asks for your email', 'Art. 6(1)(f)', 'data protection authority', 'Automatic decisions', 'Cookies', 'at least 13']) {
+        for (const fact of ['AES-256-GCM', '60 days', '90 days', '<code>/wipedata</code>', 'never sold', 'PostgreSQL', 'never asks for your email', 'scrypt', 'Resend', 'not saved', 'Art. 6(1)(f)', 'data protection authority', 'Automatic decisions', 'Cookies', 'at least 13']) {
             assert.ok(privacy.includes(fact), fact);
         }
         assert.ok(privacy.includes('does not delete moderation records'));
