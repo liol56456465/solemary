@@ -58,7 +58,7 @@ test('every front page renders with the shell, the hashed stylesheet and no inli
     const site = await serve();
     try {
         for (const [path, heading] of [
-            ['/', 'A Discord bot for moderation and appeals'], ['/commands', 'Commands'], ['/about', 'About Mewvo'],
+            ['/', 'A Discord bot for moderation and appeals'], ['/commands', 'Commands'], ['/about', 'About Mewvo'], ['/changelog', 'Changelog'],
             ['/leaderboard', 'Leaderboard'], ['/status', 'Status'], ['/privacy', 'Privacy Policy'], ['/terms', 'Terms and Conditions'],
             ['/features', 'Features'], ['/pricing', 'Plans and prices'], ['/faq', 'Questions and answers'],
             ['/docs', 'Guides'], ['/docs/getting-started', 'Getting started for staff'], ['/docs/warnings', 'How warnings and bans escalate'],
@@ -702,4 +702,28 @@ test('privacy policy: points to Download my data only when My record is on', asy
     const { privacyPage } = await import('../src/services/site/pages/legal.js');
     assert.ok(privacyPage({ memberPortal: true }).includes('<strong>Download my data</strong>'));
     assert.ok(!privacyPage({ memberPortal: false }).includes('Download my data'));
+});
+
+test('changelog: newest first, plain text, dated sections; the footer links it', async () => {
+    const { CHANGELOG } = await import('../src/config/site/changelog.js');
+    const dates = CHANGELOG.map((e) => e.date);
+    assert.deepEqual([...dates].sort().reverse(), dates, 'newest first');
+    for (const entry of CHANGELOG) {
+        assert.match(entry.date, /^\d{4}-\d{2}-\d{2}$/);
+        assert.ok(entry.items.length);
+        for (const item of entry.items) {
+            assert.ok(!/[\u2014\u2013]/.test(item), `no em or en dash: ${item}`);
+            assert.ok(!/\p{Extended_Pictographic}/u.test(item), `no emoji: ${item}`);
+        }
+    }
+    const site = await serve();
+    try {
+        const res = await site.get('/changelog');
+        assert.equal(res.status, 200);
+        assert.ok(res.body.includes(`<time datetime="${dates[0]}">`));
+        assert.ok(res.body.indexOf(dates[0]) < res.body.indexOf(dates[dates.length - 1]));
+        assert.ok((await site.get('/')).body.includes('<a href="/changelog">Changelog</a>'));
+    } finally {
+        await site.close();
+    }
 });

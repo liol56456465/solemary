@@ -72,7 +72,7 @@ async function main() {
         return { status: res.status, body: Buffer.from(await res.arrayBuffer()) };
     };
 
-    const pages = ['/', '/features', '/pricing', '/docs', ...GUIDES.map((g) => `/docs/${g.slug}`), '/faq', '/commands', '/about', '/privacy', '/terms'];
+    const pages = ['/', '/features', '/pricing', '/docs', ...GUIDES.map((g) => `/docs/${g.slug}`), '/faq', '/commands', '/about', '/changelog', '/privacy', '/terms'];
     try {
         await rm(OUT, { recursive: true, force: true });
         await mkdir(OUT, { recursive: true });

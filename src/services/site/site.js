@@ -14,6 +14,7 @@
 //   GET /status       Online / Starting / Degraded and the uptime, nothing else
 //   GET /transparency monthly moderation numbers (pages/transparency.js); 404 unless the
 //                     dashboard setting transparencyReportEnabled is on
+//   GET /changelog    what changed, newest first (pages/changelog.js, config/site/changelog.js)
 //   GET /privacy      Privacy Policy: what is stored, why, how long, rights (pages/legal.js)
 //   GET /terms        Terms and Conditions (pages/legal.js)
 //   GET /robots.txt   Disallow: / while the site is not public; with the sitemap when it is
@@ -50,6 +51,7 @@ import { faqPage } from './pages/faq.js';
 import { GUIDES, docsPage, guidePage } from './pages/docs.js';
 import { transparencyErrorPage, transparencyPage } from './pages/transparency.js';
 import { rulesPage } from './pages/rules.js';
+import { changelogPage } from './pages/changelog.js';
 import { LEGAL_UPDATED, legalContact, privacyPage, termsPage } from './pages/legal.js';
 import { readPublicRules } from '../rules/serverRules.js';
 
@@ -57,7 +59,7 @@ export {
     CSS_PATH, DASHBOARD_PATH, FAVICON_PATH, INSTALL_PERMISSIONS, LOGO, LOGO_PATH, NOINDEX, SECURITY_HEADERS, STYLESHEET, addButton,
     installPermissionBits, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
 } from './shell.js';
-export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, rulesPage, GUIDES };
+export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, rulesPage, changelogPage, GUIDES };
 export { LEGAL_UPDATED, legalContact, privacyPage, termsPage };
 
 const CATEGORY_LABEL = {
@@ -289,7 +291,7 @@ export function notFoundPage(ctx) {
 /** The public pages, for /sitemap.xml (plus /transparency while it is turned on). */
 export const SITEMAP_PATHS = [
     '/', '/features', '/pricing', '/docs', ...GUIDES.map((g) => `/docs/${g.slug}`), '/faq',
-    '/commands', '/leaderboard', '/rules', '/about', '/status', '/privacy', '/terms',
+    '/commands', '/leaderboard', '/rules', '/about', '/changelog', '/status', '/privacy', '/terms',
 ];
 
 export function sitemapXml(origin, { transparency = false } = {}) {
@@ -357,6 +359,7 @@ export function createSite({
     });
     router.get('/commands', page(commandsPage));
     router.get('/about', page(aboutPage));
+    router.get('/changelog', page(changelogPage));
     router.get('/privacy', page(privacyPage));
     router.get('/terms', page(termsPage));
     // Always 200: it is a page about the bot, not a health check (that is /ready).

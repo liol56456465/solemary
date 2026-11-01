@@ -136,6 +136,7 @@ function footerColumns(ctx, active) {
 <li><a href="/rules"${current('rules')}>Rules</a></li>
 <li><a href="/status"${current('status')}>Status</a></li>
 ${ctx.transparency ? html`<li><a href="/transparency"${current('transparency')}>Transparency</a></li>` : ''}
+<li><a href="/changelog"${current('changelog')}>Changelog</a></li>
 <li><a href="/about"${current('about')}>About</a></li>
 ${ctx.dashboardEnabled ? html`<li><a href="${DASHBOARD_PATH}">Dashboard</a></li>` : ''}
 ${ctx.memberPortal ? html`<li><a href="/me"${current('me')}>My record</a></li>` : ''}
