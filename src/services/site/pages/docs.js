@@ -106,7 +106,7 @@ ${dashboardShot({ name: 'cases', alt: 'The Cases page of the Mewvo dashboard: fi
 <div><dt>Bot</dt><dd>All modules, Commands and the Audit log.</dd></div></dl>
 <h2 id="changes">Changes and the audit log</h2>
 <p>Settings are shown as rows; change one and save. Every change is written to the audit log: who changed which setting, from what, to what. Actions such as bans from the Members page use the same rules as the commands, including the DM and the safety checks.</p>
-<p>The dashboard works on phones too, with a tab bar at the bottom, and has ten colour themes in the account menu.</p>`,
+<p>The dashboard works on phones too, with a tab bar at the bottom, and has five themes in the account menu (Light, Dark, Dim, High contrast, or the same as your device).</p>`,
     },
 ];
 
