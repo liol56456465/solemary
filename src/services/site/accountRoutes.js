@@ -344,8 +344,15 @@ export function createAccountHandlers(core) {
         if (!password.ok) return again(400, password.error);
         // 2FA on: Discord stands in for the password, never for the code. Check it before
         // anything changes; a wrong code changes nothing, and five wrong codes end this reset.
+        if (twoStep) {
+            // Same per-account code budget as the login code step, so new resets bring no new guesses.
+            if (!codeLimiter.allow(`login:${account.id}`) || !loginIpLimiter.allow(clientIp(req))) {
+                return tooMany(res, (error) => resetPage(ctx(), { csrf, username: account.username, twoStep, error }));
+            }
+            grant.tries = (grant.tries || 0) + 1; // counted before the check, so parallel posts can't share a try
+            if (grant.tries > RESET_CODE_TRIES || !resets.has(id)) return resetExpired(res);
+        }
         if (twoStep && !(await checkCode(account, str(req.body?.code, 40)))) {
-            grant.tries = (grant.tries || 0) + 1;
             if (grant.tries >= RESET_CODE_TRIES) {
                 resets.delete(id);
                 res.append('Set-Cookie', clearCookie(RESET_COOKIE, cookieOptions));
