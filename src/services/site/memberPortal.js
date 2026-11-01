@@ -28,11 +28,12 @@
 // CLIENT_ID, DISCORD_CLIENT_SECRET, PUBLIC_URL and MAIN_GUILD_ID. Add
 // <PUBLIC_URL>/me/callback under OAuth2 → Redirects in the Discord Developer Portal.
 //
-// Mewvo accounts (MEMBER_ACCOUNTS_ENABLED=true, accountRoutes.js): username + password
-// login on this website. An account session carries accountId and, once Discord is linked,
-// the linked Discord id as userId, so every page below works the same. Before linking,
-// /me shows only "Link your Discord" and the account settings. The Discord link reuses
-// /me/login → /me/callback with a link cookie bound to the state nonce.
+// Mewvo accounts (accountRoutes.js): on with the portal unless MEMBER_ACCOUNTS_ENABLED=false.
+// Username + password login on this website, no email. An account session carries accountId
+// and, once Discord is linked, the linked Discord id as userId, so every page below works the
+// same. Linking is required: until then every page except the link step (/me/link), the
+// callback, logout and delete account redirects to /me/link (forceLink). The Discord link and
+// "Forgot password?" reuse /me/callback, with a link or forgot cookie bound to the state nonce.
 
 import express from 'express';
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -54,7 +55,6 @@ import { premiumSettings, premiumStore } from '../billing/premiumService.js';
 import { ACCOUNT_EXPORT_NOTE, EXPORT_FORMAT, buildDataExport, exportFileName } from '../privacy/dataExport.js';
 import { getFromDb } from '../../utils/database/wrapper.js';
 import { createAccountHandlers, memberAccountSettings } from './accountRoutes.js';
-import { createEmailSender, emailSettings } from '../accounts/emailSender.js';
 import { accountStore as defaultAccountStore } from '../accounts/accountStore.js';
 
 export const MEMBER_BASE = '/me';
@@ -64,6 +64,10 @@ export const MEMBER_STATE_COOKIE = 'mewvo_me_state';
 export const MEMBER_NEXT_COOKIE = 'mewvo_me_next';
 // "This Discord login links the logged-in Mewvo account" (bound to the state nonce).
 export const MEMBER_LINK_COOKIE = 'mewvo_me_link';
+// "This Discord login is for Forgot password?" (bound to the state nonce).
+export const MEMBER_FORGOT_COOKIE = 'mewvo_me_forgot';
+// What an account without Discord may still open (everything else redirects to /me/link).
+const LINK_STEP_OPEN = new Set(['GET /link', 'POST /link', 'GET /callback', 'POST /logout', 'POST /account/delete']);
 export const MEMBER_SESSION_TTL_MS = 60 * 60 * 1000;
 // The label that turns SESSION_SECRET into this page's own signing key.
 const KEY_LABEL = 'mewvo member portal v1';
@@ -350,6 +354,7 @@ export function createMemberPortal({
     const redeemLimiter = createRateLimiter(limits.redeem || MEMBER_LIMITS.redeem);
     const exportLimiter = createRateLimiter(limits.dataExport || MEMBER_LIMITS.dataExport);
     const linkKey = hmac('mewvo member link v1', key);
+    const forgotKey = hmac('mewvo member forgot v1', key);
     // Who is logged in, for the top bar of every /me page (set per request by `viewer` below).
     const viewers = new AsyncLocalStorage();
     const ctx = () => ({ ...context(), memberPortal: true, billing: Boolean(premium), accounts: Boolean(accounts), viewer: viewers.getStore() || null });
@@ -379,13 +384,18 @@ export function createMemberPortal({
         return id ? sessions.get(id) : null;
     }
 
-    /** Discord OAuth. linkAccountId: this login links that Mewvo account (POST /me/link). */
-    function startOAuth(req, res, { linkAccountId = null } = {}) {
+    /**
+     * Discord OAuth. linkAccountId: this login links that Mewvo account (POST /me/link).
+     * forgot: this login is for a password reset (POST /me/forgot).
+     */
+    function startOAuth(req, res, { linkAccountId = null, forgot = false } = {}) {
         const { state, nonce } = createState(key);
         res.append('Set-Cookie', serializeCookie(MEMBER_STATE_COOKIE, nonce, { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
         if (linkAccountId) res.append('Set-Cookie', serializeCookie(MEMBER_LINK_COOKIE, signValue(`${linkAccountId}.${nonce}`, linkKey), { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
         else res.append('Set-Cookie', clearCookie(MEMBER_LINK_COOKIE, cookieOptions));
-        const next = linkAccountId ? MEMBER_BASE : safeNextPath(req.query?.next);
+        if (forgot && !linkAccountId) res.append('Set-Cookie', serializeCookie(MEMBER_FORGOT_COOKIE, signValue(`forgot.${nonce}`, forgotKey), { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
+        else res.append('Set-Cookie', clearCookie(MEMBER_FORGOT_COOKIE, cookieOptions));
+        const next = linkAccountId || forgot ? MEMBER_BASE : safeNextPath(req.query?.next);
         if (next !== MEMBER_BASE) res.append('Set-Cookie', serializeCookie(MEMBER_NEXT_COOKIE, signValue(next, nextKey), { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
         else res.append('Set-Cookie', clearCookie(MEMBER_NEXT_COOKIE, cookieOptions));
         const params = new URLSearchParams({
@@ -408,10 +418,18 @@ export function createMemberPortal({
         return cookies[MEMBER_STATE_COOKIE] && safeEqual(nonce, cookies[MEMBER_STATE_COOKIE]) ? accountId : null;
     }
 
+    /** True when a "Forgot password?" login was started in this browser, bound to the state nonce. */
+    function forgotStarted(cookies) {
+        const value = verifySignedValue(cookies[MEMBER_FORGOT_COOKIE], forgotKey);
+        if (!value?.startsWith('forgot.')) return false;
+        return Boolean(cookies[MEMBER_STATE_COOKIE]) && safeEqual(value.slice('forgot.'.length), cookies[MEMBER_STATE_COOKIE]);
+    }
+
     async function callback(req, res) {
         const cookies = parseCookies(req.headers?.cookie);
         res.append('Set-Cookie', clearCookie(MEMBER_STATE_COOKIE, cookieOptions));
         res.append('Set-Cookie', clearCookie(MEMBER_LINK_COOKIE, cookieOptions));
+        res.append('Set-Cookie', clearCookie(MEMBER_FORGOT_COOKIE, cookieOptions));
         if (req.query?.error) return fail(res, 400, 'Login cancelled', 'You did not authorize the login.', { login: true });
         const code = str(req.query?.code, 200);
         if (!code || !states.consume(str(req.query?.state, 1000), cookies[MEMBER_STATE_COOKIE], key)) {
@@ -442,6 +460,8 @@ export function createMemberPortal({
             }
             return accountHandlers.linkCallback(req, res, { session: current, discordUser: me });
         }
+        // "Forgot password?": no session is made here; the account handlers decide.
+        if (accountHandlers && forgotStarted(cookies)) return accountHandlers.resetCallback(req, res, { discordUser: me });
         // Rotation: whatever member session this browser had is dropped; a fresh id is issued.
         const session = await sessions.rotate(cookieSessionId(req), {
             userId: me.id, username: me.global_name || me.username || me.id, avatar: null,
@@ -456,10 +476,10 @@ export function createMemberPortal({
         const session = await readSession(req);
         if (!session) return send(res, 200, loginPage(ctx()));
         if (!session.userId) {
-            // A Mewvo account without Discord: only "Link your Discord" and settings.
+            // A Mewvo account without Discord: the link step (forceLink normally sends it there first).
             const me = accountHandlers ? await accountHandlers.current(req) : null;
             if (!me) return send(res, 200, loginPage(ctx()));
-            return accountHandlers.linkNeeded(res, me);
+            return res.redirect(303, `${MEMBER_BASE}/link`);
         }
         let view;
         try {
@@ -526,18 +546,21 @@ export function createMemberPortal({
         readSession: readDiscordSession, sessions, settings, ctx, send, store: premium, redeemLimiter, clientIp,
     }) : null;
 
-    // Mewvo accounts (accountRoutes.js): only with MEMBER_ACCOUNTS_ENABLED=true.
+    // Mewvo accounts (accountRoutes.js): on unless MEMBER_ACCOUNTS_ENABLED=false.
     const accountHandlers = accounts ? createAccountHandlers({
-        settings, accountSettings: accounts.settings, store: accounts.store, mailer: accounts.mailer, sessions, ctx, send, clientIp, cookieOptions, key,
+        settings, accountSettings: accounts.settings, store: accounts.store, sessions, ctx, send, clientIp, cookieOptions, key,
         sessionCookie: MEMBER_SESSION_COOKIE, cookieSessionId, readSession, sessionTtlMs: MEMBER_SESSION_TTL_MS,
         startLink: (req, res, accountId) => startOAuth(req, res, { linkAccountId: accountId }),
+        startReset: (req, res) => startOAuth(req, res, { forgot: true }),
         ...(accounts.limits ? { limits: accounts.limits } : {}), ...(accounts.hashParams ? { hashParams: accounts.hashParams } : {}),
         ...(accounts.after ? { after: accounts.after } : {}),
     }) : null;
 
-    async function accountOnlyToLink(req, res, next) {
+    /** Linking Discord is required: an account session without a Discord id only reaches the link step. */
+    async function forceLink(req, res, next) {
+        if (LINK_STEP_OPEN.has(`${req.method} ${req.path}`)) return next();
         const session = await readSession(req);
-        if (session && !session.userId && session.accountId) return res.redirect(303, MEMBER_BASE);
+        if (session?.accountId && !session.userId) return res.redirect(303, `${MEMBER_BASE}/link`);
         return next();
     }
 
@@ -575,6 +598,7 @@ export function createMemberPortal({
         const r = express.Router();
         r.use(headers);
         r.use(viewer);
+        if (accountHandlers) r.use(safe(forceLink));
         r.get('/', limitBy(pageLimiter), safe(index));
         r.get('/login', limitBy(loginLimiter), login);
         r.get('/callback', limitBy(loginLimiter), safe(callback));
@@ -586,20 +610,19 @@ export function createMemberPortal({
             const get = (path, handler) => r.get(path, limitBy(pageLimiter), safe(handler));
             const post = (path, handler) => r.post(path, limitBy(pageLimiter), form, safe(handler));
             get('/signup', a.signupForm); post('/signup', a.signupPost);
-            get('/resend', a.resendForm); post('/resend', a.resendPost);
-            get('/confirm', a.confirmForm); post('/confirm', a.confirmPost);
             get('/login-password', a.loginForm); post('/login-password', a.loginPost);
             get('/login-2fa', a.twoStepForm); post('/login-2fa', a.twoStepPost);
-            get('/forgot', a.forgotForm); post('/forgot', a.forgotPost);
+            get('/forgot', a.forgotForm);
+            // Starts a Discord login, so it shares the login limit too.
+            r.post('/forgot', limitBy(loginLimiter), form, safe(a.forgotPost));
             get('/reset', a.resetForm); post('/reset', a.resetPost);
-            post('/link', a.linkPost);
+            get('/link', a.linkPage); post('/link', a.linkPost);
             get('/linked', a.linked);
             post('/letter', a.letterPost); post('/letter/decline', a.letterDecline);
             get('/account', a.settingsPage);
-            post('/account/password', a.passwordPost); post('/account/email', a.emailPost);
+            post('/account/password', a.passwordPost);
             post('/account/2fa/start', a.twoStepStart); post('/account/2fa/enable', a.twoStepEnable); post('/account/2fa/disable', a.twoStepDisable);
             post('/account/unlink', a.unlinkPost); post('/account/delete', a.deletePost);
-            r.use(['/billing', '/checkout', '/redeem'], safe(accountOnlyToLink));
         }
         if (billing) {
             const form = express.urlencoded({ extended: false, limit: '2kb' });
@@ -623,7 +646,7 @@ export function createMemberPortal({
  */
 export function registerMemberPortal(app, {
     env = process.env, dashboardEnabled = false, supportInvite = () => null, sessions = null, data, fetchImpl, limits, premium,
-    accountStore = null, mailer = null, accountLimits = null, hashParams = null, accountAfter = null,
+    accountStore = null, accountLimits = null, hashParams = null, accountAfter = null,
 } = {}) {
     const settings = memberPortalSettings(env);
     if (!settings.requested) return false;
@@ -643,18 +666,16 @@ export function registerMemberPortal(app, {
         try { support = inviteOrNull(supportInvite()); } catch { support = null; }
         return { ...base, supportInvite: support };
     };
-    // Mewvo accounts: MEMBER_ACCOUNTS_ENABLED=true (off by default).
+    // Mewvo accounts: on with the portal, off only with MEMBER_ACCOUNTS_ENABLED=false.
     const accountSettings = memberAccountSettings(env, settings);
     if (accountSettings.requested && !accountSettings.enabled) logger.error(`Mewvo accounts NOT enabled: ${accountSettings.problems.join('; ')}`);
     const accounts = accountSettings.enabled ? {
         settings: accountSettings,
         store: accountStore || defaultAccountStore,
-        mailer: mailer || createEmailSender(emailSettings(env)),
         ...(accountLimits ? { limits: accountLimits } : {}),
         ...(hashParams ? { hashParams } : {}),
         ...(accountAfter ? { after: accountAfter } : {}),
     } : null;
-    if (accounts && !accounts.mailer.live) logger.warn('Mewvo accounts: RESEND_API_KEY / EMAIL_FROM not set, so emails are only logged, not sent (nobody can confirm an account)');
     const portal = createMemberPortal({
         settings,
         accounts,

@@ -707,13 +707,14 @@ export const tableStatements = [
         failed_at TIMESTAMPTZ
     )`,
 
-    // Mewvo accounts on the website (/me/signup, services/accounts/; schema v7). Username
-    // and email are stored lowercase. Only a scrypt hash of the password, only "confirmed 13+"
-    // (never the birth date), the 2FA secret only encrypted (AES-256-GCM).
+    // Mewvo accounts on the website (/me/signup, services/accounts/; schema v7, no email since v8).
+    // Username stored lowercase. Only a scrypt hash of the password, only "confirmed 13+"
+    // (never the birth date), the 2FA secret only encrypted (AES-256-GCM). email /
+    // pending_email / email_confirmed_at are only set on accounts made before v8.
     `CREATE TABLE IF NOT EXISTS ${t.member_accounts} (
         id BIGSERIAL PRIMARY KEY,
         username VARCHAR(30) NOT NULL UNIQUE,
-        email VARCHAR(254) NOT NULL UNIQUE,
+        email VARCHAR(254) UNIQUE,
         password_hash TEXT NOT NULL,
         age_confirmed_at TIMESTAMPTZ NOT NULL,
         terms_accepted_at TIMESTAMPTZ NOT NULL,
@@ -729,8 +730,9 @@ export const tableStatements = [
         last_login_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
-    // Email confirmation, email change and password reset links: only a SHA-256 hash of the
-    // token, single use (used_at), with an expiry.
+    // Email links from before v8 (confirmation, email change, reset): only a SHA-256 hash of the
+    // token, single use (used_at), with an expiry. Nothing writes this table since v8; the daily
+    // prune empties it.
     `CREATE TABLE IF NOT EXISTS ${t.member_account_tokens} (
         token_hash CHAR(64) PRIMARY KEY,
         account_id BIGINT NOT NULL REFERENCES ${t.member_accounts}(id) ON DELETE CASCADE,
@@ -748,7 +750,7 @@ export const tableStatements = [
         PRIMARY KEY (account_id, code_hash)
     )`,
     // Early-account bonuses, one row per DISCORD account the first time it is linked:
-    // link_number 1..30 may claim a 1-letter username, 1..100 get Pro for 30 days. The row
+    // link_number 1..30 may claim a 1-letter username, 1..100 get Pro for 6 months (183 days). The row
     // stays when the account is deleted or unlinked, so a Discord account never gets a second one.
     `CREATE TABLE IF NOT EXISTS ${t.member_account_bonuses} (
         discord_user_id VARCHAR(20) PRIMARY KEY,
@@ -770,6 +772,9 @@ export const tableStatements = [
     // Website sessions of a Mewvo account: account_id set; user_id (Discord) empty until linked.
     `ALTER TABLE ${t.member_sessions} ADD COLUMN IF NOT EXISTS account_id BIGINT`,
     `ALTER TABLE ${t.member_sessions} ALTER COLUMN user_id DROP NOT NULL`,
+    // Schema v8: accounts without email (username + password, Discord link required). Keeps the
+    // column and its data; UNIQUE allows any number of NULLs.
+    `ALTER TABLE ${t.member_accounts} ALTER COLUMN email DROP NOT NULL`,
 ];
 
 export const indexStatements = [

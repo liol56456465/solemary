@@ -498,10 +498,12 @@ test('privacy and terms: dated, linked from the footer, contact via the support 
             assert.ok(res.body.includes(`<a href="${SUPPORT}" rel="noopener">the support server</a>`), path);
         }
         const privacy = (await site.get('/privacy')).body;
-        for (const fact of ['AES-256-GCM', '60 days', '90 days', '<code>/wipedata</code>', 'never sold', 'PostgreSQL', 'never asks for your email', 'scrypt', 'Resend', 'not saved', 'Art. 6(1)(f)', 'data protection authority', 'Automatic decisions', 'Cookies', 'at least 13']) {
+        for (const fact of ['AES-256-GCM', '60 days', '90 days', '<code>/wipedata</code>', 'never sold', 'PostgreSQL', 'never asks for your email', 'scrypt', 'No email address', 'not saved', 'Art. 6(1)(f)', 'data protection authority', 'Automatic decisions', 'Cookies', 'at least 13']) {
             assert.ok(privacy.includes(fact), fact);
         }
         assert.ok(privacy.includes('does not delete moderation records'));
+        // Accounts have no email (schema v8): no email provider, no email links.
+        assert.ok(!privacy.includes('Resend') && !privacy.includes('Email links'));
         const terms = (await site.get('/terms')).body;
         assert.ok(terms.includes('No payments are taken yet') && terms.includes('Liability') && terms.includes('href="/privacy"'));
         // Footer: status and legal links on every page; Leaderboard also in the top nav.

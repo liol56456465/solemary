@@ -3,13 +3,13 @@
 // (a promise queue stands in for the row locks). The real race test is tests/db/accounts.test.js.
 
 import { PremiumError } from '../billing/premiumService.js';
-import { AccountError, LETTERS, LETTER_CLAIM_LIMIT, bonusFor, sha256Hex, tokenUsable } from './accountCore.js';
-import { UNCONFIRMED_KEEP_MS } from './accountStore.js';
+import { AccountError, LETTERS, LETTER_CLAIM_LIMIT, bonusFor } from './accountCore.js';
+import { UNLINKED_KEEP_MS } from './accountStore.js';
+import { cleanAccountExport } from '../privacy/dataExport.js';
 
 /** grantPro(discordUserId) → premium result ({ subscription, … }) or throws PremiumError. */
 export function createMemoryAccountStore({ now = () => Date.now(), grantPro = async (userId) => ({ subscription: { user_id: userId, plan_id: 'pro' } }) } = {}) {
     const accounts = new Map(); // id → row
-    const tokens = new Map(); // hash → row
     const recovery = new Map(); // id → Map(hash → used_at)
     const bonuses = new Map(); // discord id → row
     let counter = 0;
@@ -24,12 +24,11 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
     }
     const all = () => [...accounts.values()];
 
-    async function createAccount({ username, email, passwordHash }) {
+    async function createAccount({ username, passwordHash }) {
         return locked(async () => {
-            if (all().some((a) => a.email === email)) return { emailTaken: true };
             if (all().some((a) => a.username === username)) throw new AccountError('That username is already taken. Choose another one.', 409, 'username_taken');
             const row = {
-                id: String(nextId++), username, email, password_hash: passwordHash, age_confirmed_at: at(), terms_accepted_at: at(),
+                id: String(nextId++), username, email: null, password_hash: passwordHash, age_confirmed_at: at(), terms_accepted_at: at(),
                 email_confirmed_at: null, pending_email: null, discord_user_id: null, discord_username: null, discord_linked_at: null,
                 totp_secret_enc: null, totp_enabled_at: null, totp_last_step: null, password_changed_at: null, last_login_at: null, created_at: at(),
             };
@@ -42,60 +41,9 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
     async function findByLogin(identifier) {
         const text = String(identifier || '').trim().toLowerCase();
         if (!text) return null;
-        return copy(all().find((a) => (text.includes('@') ? a.email : a.username) === text));
+        return copy(all().find((a) => a.username === text));
     }
-    const findByEmail = async (email) => copy(all().find((a) => a.email === String(email || '').toLowerCase()));
-
-    async function saveToken({ accountId, purpose, hash, email = null, ttlMs }) {
-        return locked(async () => {
-            for (const row of tokens.values()) if (row.account_id === String(accountId) && row.purpose === purpose && !row.used_at) row.used_at = at();
-            const row = { token_hash: hash, account_id: String(accountId), purpose, email, created_at: at(), expires_at: at(now() + ttlMs), used_at: null };
-            tokens.set(hash, row);
-            return copy(row);
-        });
-    }
-
-    async function peekToken(token, purpose) {
-        const row = tokens.get(sha256Hex(token));
-        return tokenUsable(row, purpose, now()).ok ? copy(row) : null;
-    }
-
-    function takeToken(token, purposes) {
-        const row = tokens.get(sha256Hex(token));
-        if (!row || !purposes.includes(row.purpose) || !accounts.has(row.account_id)) return { error: 'missing' };
-        const usable = tokenUsable(row, null, now());
-        if (!usable.ok) return { error: usable.reason };
-        row.used_at = at();
-        return { row };
-    }
-
-    async function confirmEmail(token) {
-        return locked(async () => {
-            const { row, error } = takeToken(token, ['confirm', 'email_change']);
-            if (error) return { error };
-            const account = accounts.get(row.account_id);
-            if (row.purpose === 'confirm') {
-                account.email_confirmed_at = account.email_confirmed_at || at();
-                return { account: copy(account), purpose: 'confirm' };
-            }
-            if (!row.email || account.pending_email !== row.email) return { error: 'used' };
-            if (all().some((a) => a.email === row.email && a.id !== account.id)) return { error: 'email_taken' };
-            const oldEmail = account.email;
-            Object.assign(account, { email: row.email, pending_email: null, email_confirmed_at: at() });
-            return { account: copy(account), purpose: 'email_change', oldEmail };
-        });
-    }
-
-    async function resetPassword(token, passwordHash) {
-        return locked(async () => {
-            const { row, error } = takeToken(token, ['reset']);
-            if (error) return { error };
-            const account = accounts.get(row.account_id);
-            Object.assign(account, { password_hash: passwordHash, password_changed_at: at(), pending_email: null, email_confirmed_at: account.email_confirmed_at || at() });
-            for (const t of tokens.values()) if (t.account_id === account.id && !t.used_at) t.used_at = at();
-            return { account: copy(account) };
-        });
-    }
+    const findByDiscordId = async (discordUserId) => copy(all().find((a) => a.discord_user_id && a.discord_user_id === String(discordUserId || '')));
 
     async function recordLogin(id) {
         const account = accounts.get(String(id));
@@ -105,14 +53,6 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
         const account = accounts.get(String(id));
         if (!account) throw new Error('password update changed no row');
         Object.assign(account, { password_hash: passwordHash, password_changed_at: at(), pending_email: null });
-        for (const t of tokens.values()) if (t.account_id === account.id && !t.used_at) t.used_at = at();
-    }
-    async function setPendingEmail(id, email) {
-        return locked(async () => {
-            if (all().some((a) => a.email === email && a.id !== String(id))) return { emailTaken: true };
-            accounts.get(String(id)).pending_email = email;
-            return { ok: true };
-        });
     }
 
     async function enableTotp(id, { secretEnc, step, codeHashes }) {
@@ -152,6 +92,7 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
             if (account.discord_user_id !== discordUserId) account.discord_linked_at = at();
             Object.assign(account, { discord_user_id: discordUserId, discord_username: discordUsername });
             const existing = bonuses.get(discordUserId);
+            if (existing && !existing.account_id) existing.account_id = account.id;
             if (existing) return { account: copy(account), bonus: { kind: 'repeat', linkNumber: existing.link_number, pro: false, proNote: null, letter: false }, premium: null };
             counter += 1;
             const linkNumber = counter;
@@ -213,32 +154,31 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
     }
     async function deleteAccount(id) {
         for (const bonus of bonuses.values()) if (bonus.account_id === String(id)) bonus.account_id = null;
-        for (const [hash, row] of tokens) if (row.account_id === String(id)) tokens.delete(hash);
         recovery.delete(String(id));
         return accounts.delete(String(id));
     }
     async function prune() {
         let removed = 0;
         for (const [id, a] of accounts) {
-            if (!a.email_confirmed_at && new Date(a.created_at).getTime() <= now() - UNCONFIRMED_KEEP_MS) { await deleteAccount(id); removed += 1; }
+            const everLinked = [...bonuses.values()].some((b) => b.account_id === id);
+            if (!a.discord_user_id && !a.email_confirmed_at && !everLinked && new Date(a.created_at).getTime() <= now() - UNLINKED_KEEP_MS) { await deleteAccount(id); removed += 1; }
         }
         return { accounts: removed, tokens: 0 };
     }
     async function exportOf(accountId) {
         const a = accounts.get(String(accountId));
         if (!a) return null;
-        return {
+        return cleanAccountExport({
             username: a.username, email: a.email, pending_email: a.pending_email, email_confirmed_at: a.email_confirmed_at, age_confirmed_at: a.age_confirmed_at,
             terms_accepted_at: a.terms_accepted_at, discord_user_id: a.discord_user_id, discord_username: a.discord_username, discord_linked_at: a.discord_linked_at,
             two_step_login_on: Boolean(a.totp_enabled_at), totp_enabled_at: a.totp_enabled_at, password_changed_at: a.password_changed_at, last_login_at: a.last_login_at, created_at: a.created_at,
-        };
+        });
     }
 
     return {
-        createAccount, findById, findByLogin, findByEmail, saveToken, peekToken, confirmEmail, resetPassword, recordLogin, setPassword,
-        setPendingEmail, enableTotp, disableTotp, useTotpStep, useRecoveryCode, recoveryCodesLeft, linkDiscord, unlinkDiscord, bonusOf,
+        createAccount, findById, findByLogin, findByDiscordId, recordLogin, setPassword, enableTotp, disableTotp, useTotpStep, useRecoveryCode, recoveryCodesLeft, linkDiscord, unlinkDiscord, bonusOf,
         canClaimLetter, freeLetters, claimLetter, declineLetter, deleteAccount, prune, exportOf,
         // Test helpers.
-        _accounts: accounts, _tokens: tokens, _bonuses: bonuses, setCounter: (n) => { counter = n; },
+        _accounts: accounts, _bonuses: bonuses, setCounter: (n) => { counter = n; },
     };
 }

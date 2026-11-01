@@ -1,6 +1,7 @@
 // accountCore.js — the pure parts of Mewvo accounts on the website (/me/signup …):
-// validation, password hashing (scrypt), one-time tokens, TOTP 2FA (RFC 6238), recovery
-// codes and the encryption of the 2FA secret. No database, no network.
+// validation, password hashing (scrypt), TOTP 2FA (RFC 6238), recovery codes and the
+// encryption of the 2FA secret. No database, no network. Accounts have no email (owner,
+// 2026-11-01): a forgotten password is reset through the linked Discord account.
 //
 // Never log what goes in or out of these functions (passwords, hashes, tokens, codes, secrets).
 
@@ -10,7 +11,6 @@ export const USERNAME_MIN = 2;
 export const USERNAME_MAX = 30;
 export const PASSWORD_MIN = 10;
 export const PASSWORD_MAX = 200;
-export const EMAIL_MAX = 254;
 export const MIN_AGE = 13;
 export const RESERVED_USERNAMES = new Set(['admin', 'mewvo', 'support', 'staff', 'moderator', 'owner', 'system', 'discord', 'root', 'help']);
 /** The names a 1-letter claim can pick: a-z and 0-9. */
@@ -45,23 +45,6 @@ export function validateUsername(input) {
 export function normalizeLetter(input) {
     const value = String(input ?? '').trim().toLowerCase();
     return value.length === 1 && LETTERS.includes(value) ? value : null;
-}
-
-/** An email address, lowercased: { ok, value, error }. Basic shape check only. */
-export function validateEmail(input) {
-    const value = String(input ?? '').trim().toLowerCase();
-    if (!value || value.length > EMAIL_MAX) return { ok: false, error: 'Enter a valid email address.' };
-    const at = value.lastIndexOf('@');
-    const local = value.slice(0, at);
-    const domain = value.slice(at + 1);
-    if (at < 1 || local.length > 64 || /[\s<>"(),;:\\[\]]/.test(value) || value.indexOf('@') !== at) {
-        return { ok: false, error: 'Enter a valid email address.' };
-    }
-    if (!/^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/.test(domain) || domain.split('.').some((part) => part.startsWith('-') || part.endsWith('-'))) {
-        return { ok: false, error: 'Enter a valid email address.' };
-    }
-    if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return { ok: false, error: 'Enter a valid email address.' };
-    return { ok: true, value };
 }
 
 /** A new password: { ok, error }. Length only (10-200); the text itself is never changed. */
@@ -126,7 +109,7 @@ export async function verifyPassword(password, stored) {
 
 let dummyHash = null;
 /**
- * For an unknown username or email: hash a password anyway against a fixed dummy, so the
+ * For an unknown username: hash a password anyway against a fixed dummy, so the
  * answer takes about as long as for a real account. Always false.
  */
 export async function verifyAgainstDummy(password, params = SCRYPT_PARAMS) {
@@ -135,34 +118,8 @@ export async function verifyAgainstDummy(password, params = SCRYPT_PARAMS) {
     return false;
 }
 
-// ── One-time tokens (email links) ─────────────────────────────────────────
-
-export const CONFIRM_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
-export const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
-
 export function sha256Hex(value) {
     return crypto.createHash('sha256').update(String(value)).digest('hex');
-}
-
-/** { token (for the link, 32 random bytes), hash (the only thing stored) }. */
-export function createToken() {
-    const token = crypto.randomBytes(32).toString('base64url');
-    return { token, hash: sha256Hex(token) };
-}
-
-/** A token from a link: base64url of 32 bytes (43 characters), or null. */
-export function cleanToken(value) {
-    const text = String(value ?? '').trim();
-    return /^[A-Za-z0-9_-]{43}$/.test(text) ? text : null;
-}
-
-/** Whether a stored token row can be used now: { ok, reason: 'used' | 'expired' | 'purpose' }. Pure. */
-export function tokenUsable(row, purpose, now = Date.now()) {
-    if (!row) return { ok: false, reason: 'missing' };
-    if (purpose && row.purpose !== purpose) return { ok: false, reason: 'purpose' };
-    if (row.used_at) return { ok: false, reason: 'used' };
-    if (!(new Date(row.expires_at).getTime() > now)) return { ok: false, reason: 'expired' };
-    return { ok: true };
 }
 
 // ── TOTP (RFC 6238 / RFC 4226) ────────────────────────────────────────────
@@ -322,19 +279,17 @@ export function decryptSecret(stored, key) {
 
 export const LETTER_CLAIM_LIMIT = 30;
 export const PRO_BONUS_LIMIT = 100;
-export const PRO_BONUS_DAYS = 30;
+/**
+ * 6 months of Pro (owner, 2026-11-01). The premium store counts whole days (applyTime), not
+ * calendar months, so 6 months is 183 days.
+ */
+export const PRO_BONUS_DAYS = 183;
+/** How the bonus length reads on the pages. */
+export const PRO_BONUS_LABEL = '6 months';
 export const PRO_BONUS_PLAN = 'pro';
 
 /** What the n-th Discord account to link gets: { pro, letter }. Pure. */
 export function bonusFor(linkNumber) {
     const n = Number(linkNumber);
     return { pro: n >= 1 && n <= PRO_BONUS_LIMIT, letter: n >= 1 && n <= LETTER_CLAIM_LIMIT };
-}
-
-/** "j***@example.com" for logs. */
-export function maskEmail(email) {
-    const text = String(email || '');
-    const at = text.lastIndexOf('@');
-    if (at < 1) return '***';
-    return `${text[0]}***${text.slice(at)}`;
 }
