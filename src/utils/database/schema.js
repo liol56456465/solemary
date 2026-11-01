@@ -706,6 +706,70 @@ export const tableStatements = [
         sent_at TIMESTAMPTZ,
         failed_at TIMESTAMPTZ
     )`,
+
+    // Mewvo accounts on the website (/me/signup, services/accounts/; schema v7). Username
+    // and email are stored lowercase. Only a scrypt hash of the password, only "confirmed 13+"
+    // (never the birth date), the 2FA secret only encrypted (AES-256-GCM).
+    `CREATE TABLE IF NOT EXISTS ${t.member_accounts} (
+        id BIGSERIAL PRIMARY KEY,
+        username VARCHAR(30) NOT NULL UNIQUE,
+        email VARCHAR(254) NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        age_confirmed_at TIMESTAMPTZ NOT NULL,
+        terms_accepted_at TIMESTAMPTZ NOT NULL,
+        email_confirmed_at TIMESTAMPTZ,
+        pending_email VARCHAR(254),
+        discord_user_id VARCHAR(20) UNIQUE,
+        discord_username VARCHAR(100),
+        discord_linked_at TIMESTAMPTZ,
+        totp_secret_enc TEXT,
+        totp_enabled_at TIMESTAMPTZ,
+        totp_last_step BIGINT,
+        password_changed_at TIMESTAMPTZ,
+        last_login_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+    // Email confirmation, email change and password reset links: only a SHA-256 hash of the
+    // token, single use (used_at), with an expiry.
+    `CREATE TABLE IF NOT EXISTS ${t.member_account_tokens} (
+        token_hash CHAR(64) PRIMARY KEY,
+        account_id BIGINT NOT NULL REFERENCES ${t.member_accounts}(id) ON DELETE CASCADE,
+        purpose VARCHAR(20) NOT NULL CHECK (purpose IN ('confirm', 'email_change', 'reset')),
+        email VARCHAR(254),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL,
+        used_at TIMESTAMPTZ
+    )`,
+    // 2FA recovery codes, hashed, each usable once.
+    `CREATE TABLE IF NOT EXISTS ${t.member_account_recovery_codes} (
+        account_id BIGINT NOT NULL REFERENCES ${t.member_accounts}(id) ON DELETE CASCADE,
+        code_hash CHAR(64) NOT NULL,
+        used_at TIMESTAMPTZ,
+        PRIMARY KEY (account_id, code_hash)
+    )`,
+    // Early-account bonuses, one row per DISCORD account the first time it is linked:
+    // link_number 1..30 may claim a 1-letter username, 1..100 get Pro for 30 days. The row
+    // stays when the account is deleted or unlinked, so a Discord account never gets a second one.
+    `CREATE TABLE IF NOT EXISTS ${t.member_account_bonuses} (
+        discord_user_id VARCHAR(20) PRIMARY KEY,
+        account_id BIGINT,
+        link_number INTEGER NOT NULL UNIQUE CHECK (link_number > 0),
+        pro_granted_at TIMESTAMPTZ,
+        pro_skip_reason VARCHAR(200),
+        letter_eligible BOOLEAN NOT NULL DEFAULT FALSE,
+        letter_claimed VARCHAR(1) UNIQUE,
+        letter_claimed_at TIMESTAMPTZ,
+        letter_declined_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+    // Race-safe counters (the next link_number): the row is locked with SELECT ... FOR UPDATE.
+    `CREATE TABLE IF NOT EXISTS ${t.member_account_counters} (
+        name VARCHAR(40) PRIMARY KEY,
+        value BIGINT NOT NULL DEFAULT 0
+    )`,
+    // Website sessions of a Mewvo account: account_id set; user_id (Discord) empty until linked.
+    `ALTER TABLE ${t.member_sessions} ADD COLUMN IF NOT EXISTS account_id BIGINT`,
+    `ALTER TABLE ${t.member_sessions} ALTER COLUMN user_id DROP NOT NULL`,
 ];
 
 export const indexStatements = [
@@ -753,6 +817,10 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_dashboard_sessions_expires ON ${t.dashboard_sessions}(expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_sessions_user ON ${t.dashboard_sessions}(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_member_sessions_expires ON ${t.member_sessions}(expires_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_member_sessions_account ON ${t.member_sessions}(account_id) WHERE account_id IS NOT NULL`,
+    `CREATE INDEX IF NOT EXISTS idx_member_accounts_unconfirmed ON ${t.member_accounts}(created_at) WHERE email_confirmed_at IS NULL`,
+    `CREATE INDEX IF NOT EXISTS idx_member_account_tokens_account ON ${t.member_account_tokens}(account_id, purpose)`,
+    `CREATE INDEX IF NOT EXISTS idx_member_account_tokens_expires ON ${t.member_account_tokens}(expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_guild ON ${t.dashboard_audit}(guild_id, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_module ON ${t.dashboard_audit}(guild_id, module, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_audit_user ON ${t.dashboard_audit}(guild_id, user_id, id DESC)`,

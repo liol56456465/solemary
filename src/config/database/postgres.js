@@ -55,6 +55,11 @@ const configuredTables = {
     reminders: 'reminders',
     mod_case_notes: 'mod_case_notes',
     guild_daily_stats: 'guild_daily_stats',
+    member_accounts: 'member_accounts',
+    member_account_tokens: 'member_account_tokens',
+    member_account_recovery_codes: 'member_account_recovery_codes',
+    member_account_bonuses: 'member_account_bonuses',
+    member_account_counters: 'member_account_counters',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -110,6 +115,11 @@ const allowedTableIdentifiers = new Set([
     'reminders',
     'mod_case_notes',
     'guild_daily_stats',
+    'member_accounts',
+    'member_account_tokens',
+    'member_account_recovery_codes',
+    'member_account_bonuses',
+    'member_account_counters',
 ]);
 
 const validatedTables = Object.fromEntries(

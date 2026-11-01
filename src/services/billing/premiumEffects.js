@@ -134,7 +134,8 @@ export function premiumDm(kind, { planId, expiresAt, converted = null, from = nu
     const plan = `Mewvo ${planName(planId)}`;
     const until = `${ts(expiresAt, 'F')} (${ts(expiresAt, 'R')})`;
     if (kind === 'active') {
-        const how = from === 'key' ? 'A key was redeemed on your account.' : from === 'owner' ? 'The bot owner gave you a plan.' : 'Thanks for your purchase (test order).';
+        const how = from === 'key' ? 'A key was redeemed on your account.' : from === 'owner' ? 'The bot owner gave you a plan.'
+            : from === 'bonus' ? 'A bonus for being one of the first 100 Mewvo accounts to link Discord.' : 'Thanks for your purchase (test order).';
         const up = converted ? ` Your remaining ${planName(converted.fromPlanId)} time was converted into ${planName(planId)} time.` : '';
         return `**${plan} is active** until ${until}.\n${how}${up}\nSee it any time with \`/premium status\`.`;
     }
@@ -164,7 +165,7 @@ export function setPremiumClient(client) {
 
 /**
  * Cache + role + DM after a change. result: { subscription, next } from the store; from:
- * 'purchase' | 'key' | 'owner' | 'ended'. Never throws.
+ * 'purchase' | 'key' | 'owner' | 'bonus' | 'ended'. Never throws.
  */
 export async function afterPremiumChange(result, from, { client = premiumClient } = {}) {
     try {
