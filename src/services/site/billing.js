@@ -26,7 +26,7 @@ import { layout } from './shell.js';
 export const TEST_NOTICE = 'No payment provider is connected. Completing a purchase creates a test order; no card is asked for and nobody is charged.';
 const KIND_LABEL = { personal: 'For me', gift: 'Gift' };
 const STATUS_LABEL = { unused: 'Not redeemed yet', redeemed: 'Redeemed', revoked: 'Cancelled', expired: 'Expired (not redeemed)' };
-const SOURCE_TEXT = { key: 'Last added with a key.', purchase: 'Last added with a purchase.', owner: 'Given by the bot owner.' };
+const SOURCE_TEXT = { key: 'Last added with a key.', purchase: 'Last added with a purchase.', owner: 'Given by the bot owner.', bonus: 'Early Mewvo account bonus.' };
 const DAY_MS = 24 * 60 * 60 * 1000;
 const daysText = (ms) => { const d = Math.round(ms / DAY_MS * 10) / 10; return `${d} day${d === 1 ? '' : 's'}`; };
 

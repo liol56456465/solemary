@@ -55,8 +55,8 @@ export const KEY_VALIDITY = [
     { days: 90, label: '90 days' },
     { days: 365, label: '1 year' },
 ];
-/** Ways a plan can be given: 'purchase' | 'key' | 'owner'. */
-export const SUBSCRIPTION_SOURCES = ['purchase', 'key', 'owner'];
+/** Ways a plan can be given: 'purchase' | 'key' | 'owner' | 'bonus' (early Mewvo account). */
+export const SUBSCRIPTION_SOURCES = ['purchase', 'key', 'owner', 'bonus'];
 export const ORDER_KINDS = ['personal', 'gift'];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const truthy = (value) => /^(1|true|yes|on)$/i.test(String(value || '').trim());
@@ -362,8 +362,11 @@ export function createPremiumStore({
         });
     }
 
-    /** Owner: gives a plan straight to an account (same rules as a key). Returns { subscription, previous, next }. */
-    async function grant({ userId, planId, days, actor }) {
+    /**
+     * Owner: gives a plan straight to an account (same rules as a key). Returns { subscription, previous, next }.
+     * source 'bonus': the early-account bonus (services/accounts/accountStore.js), otherwise 'owner'.
+     */
+    async function grant({ userId, planId, days, actor, source = 'owner' }) {
         if (!snowflake.test(String(userId || ''))) throw new PremiumError('Enter a Discord user ID (17–20 digits).');
         if (!paidPlan(planId)) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).');
         if (!KEY_DURATIONS.some((d) => d.days === days)) throw new PremiumError('Choose one of the listed durations.');
@@ -371,7 +374,7 @@ export function createPremiumStore({
         return tx(async (client) => {
             const previous = await lockedSubscription(client, String(userId));
             const next = applyTime(previous, planId, days, now());
-            const subscription = await writeSubscription(client, String(userId), null, next, 'owner');
+            const subscription = await writeSubscription(client, String(userId), null, next, source === 'bonus' ? 'bonus' : 'owner');
             return { subscription, previous, next, actor };
         });
     }

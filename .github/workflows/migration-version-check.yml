@@ -39,8 +39,8 @@ jobs:
       POSTGRES_USER: titanbot
       POSTGRES_PASSWORD: titanbot
       POSTGRES_SSL: "false"
-      SCHEMA_VERSION: "6"
-      SCHEMA_VERSION_LABEL: "baseline-v6"
+      SCHEMA_VERSION: "7"
+      SCHEMA_VERSION_LABEL: "baseline-v7"
 
     steps:
       - name: Checkout

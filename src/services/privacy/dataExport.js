@@ -42,6 +42,12 @@ export const EXPORT_SECTIONS = [
         FROM ${t.premium_keys} WHERE created_by = $1 AND source = 'gift' ORDER BY created_at`],
     ['keysRedeemed', (t) => `SELECT code, plan_id, duration_days, gift_to, gift_message, redeemed_at FROM ${t.premium_keys} WHERE redeemed_by = $1 ORDER BY redeemed_at`],
     ['reminders', (t) => `SELECT text, due_at, created_at, sent_at, guild_id FROM ${t.reminders} WHERE user_id = $1 ORDER BY created_at`],
+    // Mewvo account on the website (schema v7): never the password hash, the 2FA secret or the recovery codes.
+    ['mewvoAccount', (t) => `SELECT username, email, pending_email, email_confirmed_at, age_confirmed_at, terms_accepted_at, discord_user_id, discord_username,
+        discord_linked_at, (totp_enabled_at IS NOT NULL) AS two_step_login_on, totp_enabled_at, password_changed_at, last_login_at, created_at
+        FROM ${t.member_accounts} WHERE discord_user_id = $1`],
+    ['earlyAccountBonus', (t) => `SELECT link_number, pro_granted_at, pro_skip_reason, letter_eligible, letter_claimed, letter_claimed_at, letter_declined_at, created_at
+        FROM ${t.member_account_bonuses} WHERE discord_user_id = $1`],
     ['blocks', (t) => `SELECT reason, created_at, removed_at FROM ${t.bot_blacklist} WHERE kind = 'user' AND target_id = $1 ORDER BY created_at`],
 ];
 
@@ -49,6 +55,10 @@ export const EXPORT_NOTE = 'Everything Mewvo stores about your Discord account, 
     + 'Left out to protect other people or the staff process: staff notes, evidence, case edit history, '
     + 'who reported or redeemed something, and the IP hash itself (only when it was recorded). '
     + 'Moderation channel transcripts live on Discord. To ask for any of this, or to have data corrected or deleted, see /privacy on the website.';
+
+/** The note of the file for a Mewvo account that has no Discord account linked. */
+export const ACCOUNT_EXPORT_NOTE = 'Your Mewvo account on the website. No Discord account is linked, so there is no Discord data to show. '
+    + 'Left out for your safety: the password hash, the two-step login secret and the recovery codes. To ask for more, or to have data corrected or deleted, see /privacy on the website.';
 
 /**
  * Builds the export. `query(text, params)` returns { rows }; `readKey(key)` reads the

@@ -2,7 +2,7 @@
 //
 // Written from what the code stores and does (utils/database/schema.js, oauthVerification.js,
 // verificationGuard.js, wipedataService.js, dashboard/security.js, site/memberPortal.js,
-// billing/premiumService.js, utils/logger.js). Nothing here is invented: when the code changes
+// billing/premiumService.js, accounts/accountStore.js, utils/logger.js). Nothing here is invented: when the code changes
 // what it stores, change this page and LEGAL_UPDATED with it.
 //
 // Who runs Mewvo comes from env, never from the code: LEGAL_OPERATOR (a name) and LEGAL_EMAIL
@@ -12,8 +12,8 @@
 import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
 
-export const LEGAL_UPDATED = '2026-10-31';
-const UPDATED_TEXT = '31 October 2026';
+export const LEGAL_UPDATED = '2026-11-01';
+const UPDATED_TEXT = '1 November 2026';
 
 const EMAIL = /^[^\s@<>"]{1,64}@[a-z0-9.-]{1,190}\.[a-z]{2,}$/i;
 
@@ -64,7 +64,7 @@ ${updatedLine()}
 <h2>In short</h2>
 <ul><li>Mewvo works with Discord IDs (the numbers that identify accounts, servers and channels). Where a record needs a readable name, such as a moderation case, the username at that moment is saved with it.</li>
 <li>Everything is kept in a PostgreSQL database used only by the bot.</li>
-<li>Mewvo never asks for your email address, your password or payment details.</li>
+<li>The bot never asks for your email address, a password or payment details. Only if you choose to create a Mewvo account on this website, Mewvo stores your email address and a one-way hash of your password (see below).</li>
 <li>This website has no analytics, no ads, no tracking and no third-party scripts. It sets cookies only to keep you signed in.</li></ul>
 
 <h2>What is stored, why, and for how long</h2>
@@ -84,7 +84,11 @@ ${row('Joins and leaves', 'Member statistics for the staff team.', '90 days.')}
 ${row('Things you choose to save: birthday, AFK message, suggestions and votes, giveaway entries, to-do items', 'To provide the feature you used.', 'Until you remove them, run /wipedata (where it covers them) or ask.')}
 ${row('Reminders: what you asked to be reminded about, when, and the channel you set it in', 'To send the reminder (by DM, or in that channel if your DMs are closed).', 'Until it is sent, then 30 more days. Delete one any time with /remind delete.')}
 ${row('Plans and keys: your plan, start and end date, test orders (plan, period, amount), keys you bought or redeemed, and a gift’s “to” name and message', 'To give you the plan you chose and send DMs when it starts and ends.', 'As long as you have an account with Mewvo, or until you ask. When real payments start, invoices are kept as long as tax law requires.')}
-${row('Website and dashboard sign-in: a hash of the session ID with your ID, username and avatar', 'To keep you signed in and protect forms against forgery.', '1 hour for “My record”, 12 hours for the staff dashboard.')}
+${row('Mewvo account on this website (only if you create one): username, email address (and a new one while it waits for confirmation), a one-way scrypt hash of your password (never the password itself), that you confirmed you are 13 or older and when (never your date of birth), when you accepted the terms, when your email was confirmed, the linked Discord ID and name, when you last logged in and changed your password', 'To let you log in with a username and password, confirm your email, reset a forgotten password and show your record and plans after you link Discord.', 'Until you delete the account in Account settings. An account whose email is not confirmed within 7 days is deleted automatically.')}
+${row('Two-step login (only if you turn it on): the secret of your authenticator app, encrypted (AES-256-GCM), the last code step used, and one-way hashes of your recovery codes', 'To ask for a code when you log in, and to stop a code from being used twice.', 'Until you turn two-step login off or delete the account.')}
+${row('Email links: one-way hashes of the links we email you (confirm your email, change your email, reset your password), with when they expire and when they were used', 'So each link works only once and only for a short time.', '24 hours (confirm) or 1 hour (reset), then deleted within a day after they expire or are used.')}
+${row('Early-account bonus: for each Discord account the first time it is linked, its number in the order of links, whether the Pro month was given and which 1-letter username it claimed', 'So the first 30 and first 100 links get their bonus and no Discord account gets it twice.', 'Kept with the Discord ID, also after the Mewvo account is deleted or unlinked, so the bonus is not given again. Ask to have it deleted.')}
+${row('Website and dashboard sign-in: a hash of the session ID with your ID, username and avatar (for a Mewvo account: the account and the linked Discord ID)', 'To keep you signed in and protect forms against forgery.', '1 hour for “My record”, 12 hours for the staff dashboard.')}
 ${row('Dashboard audit log: who changed which setting, from what, to what', 'So the staff team can see and undo changes.', 'As long as the server uses Mewvo.')}
 ${row('Blocks: accounts or servers blocked from the bot, with the reason', 'To stop abuse of the bot.', 'As history, also after the block is lifted.')}
 ${row('Technical logs of what the bot did and the errors it hit (they can contain IDs and, rarely, an IP address)', 'To find and fix problems.', '7 days, error logs 14 days.')}
@@ -92,7 +96,7 @@ ${row('Technical logs of what the bot did and the errors it hit (they can contai
 <p>If a server turns on logging, events such as joins, leaves, role changes and edited or deleted messages (including their text) are posted to that server’s staff log channels on Discord. Those posts live on Discord, not in Mewvo’s database.</p>
 
 <h2>Why this is allowed (legal bases)</h2>
-<ul><li><strong>Providing what you use</strong> (GDPR Art. 6(1)(b)): leveling, tickets, modmail, things you save, plans and keys.</li>
+<ul><li><strong>Providing what you use</strong> (GDPR Art. 6(1)(b)): leveling, tickets, modmail, things you save, plans and keys, and your Mewvo account.</li>
 <li><strong>Legitimate interests</strong> (Art. 6(1)(f)): keeping servers safe, enforcing their rules, preventing ban evasion and abuse, and keeping the bot running. You can object to this; see your rights below.</li>
 <li><strong>Legal obligations</strong> (Art. 6(1)(c)): for example, keeping invoices once real payments start.</li></ul>
 
@@ -102,11 +106,12 @@ ${row('Technical logs of what the bot did and the errors it hit (they can contai
 <h2>Who else sees your data</h2>
 <ul><li><strong>Discord</strong>, which the bot runs on. <a href="https://discord.com/privacy" rel="noopener">Discord’s own privacy policy</a> covers what it does with your data.</li>
 <li><strong>The hosting provider</strong> that runs the bot and the <strong>database provider</strong> that stores its data. They process it only to provide their service.</li>
+<li><strong>The email provider</strong> (Resend) that delivers the emails for a Mewvo account (confirm your email, reset your password). It gets your email address and the text of the email, only to deliver it.</li>
 <li><strong>The staff of the server</strong> you are in see the moderation, appeal, ticket and modmail records of that server.</li></ul>
 <p>Some of these providers may process data outside the EU and EEA. Where they do, they rely on the safeguards the GDPR requires, such as the European Commission’s standard contractual clauses. Nothing is sold or given to anyone else, unless the law requires it.</p>
 
 <h2>Cookies</h2>
-<p>The website only sets cookies that are needed to sign in and stay signed in: a session cookie, and short-lived cookies that protect the Discord sign-in step. They are not used for tracking and are deleted when you sign out or when they expire. Because they are strictly necessary, no cookie banner is needed. Your theme choice in the dashboard is a cookie too.</p>
+<p>The website only sets cookies that are needed to sign in and stay signed in: a session cookie, and short-lived cookies that protect the sign-in forms, the Discord sign-in step and the two-step login step. They are not used for tracking and are deleted when you sign out or when they expire. Because they are strictly necessary, no cookie banner is needed. Your theme choice in the dashboard is a cookie too.</p>
 
 <h2>Your rights</h2>
 <p>Under the GDPR you can ask for:</p>
@@ -116,14 +121,15 @@ ${row('Technical logs of what the bot did and the errors it hit (they can contai
 <li>your data to no longer be used for a legitimate interest (objection, Art. 21).</li></ul>
 ${ctx.memberPortal ? html`<p>You can download a copy of your data yourself: log in on <a href="/me">My record</a> and choose <strong>Download my data</strong>. You get a JSON file with everything Mewvo stores about your account, except what would reveal other people, such as staff notes or who reported something.</p>
 ` : ''}<p>To use any of these, ${contactLine(ctx)}. You get an answer within one month. Some safety records, such as an active ban, may be kept for as long as they are still needed to keep a server safe; if so, you are told why.</p>
+<p>If you have a Mewvo account, you can delete it yourself in <strong>Account settings</strong> on the website (your password is needed). This deletes the username, email, password hash and two-step login at once. A plan and the early-account bonus record stay with your Discord account; ask if you want those deleted too.</p>
 <p>You can also delete some data yourself: run <code>/wipedata</code> in a server to delete your levels and XP, your economy balance, your AFK status and your birthday in that server, and your personal to-do list and reminders. It does not delete moderation records, appeals, reports or verification records.</p>
 <p>If you think your data is handled wrongly, you can complain to the data protection authority of the EU country where you live or work, or where the problem happened.</p>
 
 <h2>Children</h2>
-<p>Mewvo is meant for people old enough to use Discord: at least 13, or older where the law of your country says so. It does not knowingly collect data about anyone younger. If you think it has, ${contactLine(ctx)} and it will be deleted.</p>
+<p>Mewvo is meant for people old enough to use Discord: at least 13, or older where the law of your country says so. To create a Mewvo account you enter your date of birth; it is only used to check that you are 13 or older and is not saved. It does not knowingly collect data about anyone younger. If you think it has, ${contactLine(ctx)} and it will be deleted.</p>
 
 <h2>Security</h2>
-<p>Sign-in tokens are encrypted, IP addresses are only stored as keyed hashes, session IDs are only stored as hashes, the database connection uses TLS, and staff permissions are checked again on every action.</p>
+<p>Sign-in tokens are encrypted, IP addresses are only stored as keyed hashes, session IDs are only stored as hashes, passwords only as scrypt hashes, two-step login secrets only encrypted, email links and recovery codes only as hashes, the database connection uses TLS, and staff permissions are checked again on every action.</p>
 
 <h2>Changes</h2>
 <p>When what Mewvo stores changes, this page is updated along with the date at the top. Bigger changes are also announced in ${supportLink(ctx)}.</p></div>`,

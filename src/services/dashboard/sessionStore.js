@@ -8,7 +8,9 @@
 //
 // createMemorySessionStore: same async interface, in memory, for tests.
 //
-// A session: { id, idHash, userId, username, avatar, csrf, flash, createdAt, expiresAt }.
+// A session: { id, idHash, userId, username, avatar, csrf, flash, createdAt, expiresAt, accountId }.
+// accountId: only in member_sessions (a Mewvo account login on /me, schema v7; the store is
+// made with { accounts: true }); userId is then the linked Discord id, or null before linking.
 // `flash` is a one-shot message shown on the next page after a saved form
 // (setFlash(id, text); setFlash(id, null) clears it).
 
@@ -36,8 +38,9 @@ function toSession(id, row) {
     return {
         id,
         idHash: row.id_hash,
-        userId: row.user_id,
+        userId: row.user_id || null,
         username: row.username || row.user_id,
+        accountId: row.account_id != null ? String(row.account_id) : null,
         avatar: row.avatar || null,
         csrf: row.csrf,
         flash: row.flash || null,
@@ -48,7 +51,7 @@ function toSession(id, row) {
 }
 
 /** query(text, params) → { rows }: the enforcement pool helper (throws when the database is down). */
-export function createPgSessionStore({ query, table = 'dashboard_sessions', ttlMs = SESSION_TTL_MS } = {}) {
+export function createPgSessionStore({ query, table = 'dashboard_sessions', ttlMs = SESSION_TTL_MS, accounts = false } = {}) {
     let lastCleanup = 0;
 
     async function cleanup(now = Date.now(), force = false) {
@@ -58,15 +61,25 @@ export function createPgSessionStore({ query, table = 'dashboard_sessions', ttlM
         return rowCount || 0;
     }
 
-    async function create({ userId, username, avatar = null }, now = Date.now()) {
+    async function create({ userId, username, avatar = null, accountId = null }, now = Date.now()) {
         await cleanup(now).catch(() => {});
         const { id, csrf } = newIds();
-        const { rows: [row] } = await query(
-            `INSERT INTO ${table} (id_hash, user_id, username, avatar, csrf, created_at, expires_at, last_seen)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $6) RETURNING *`,
-            [hashSessionId(id), userId, clip(username, 100), clip(avatar, 100), csrf, new Date(now), new Date(now + ttlMs)]
-        );
+        const params = [hashSessionId(id), userId || null, clip(username, 100), clip(avatar, 100), csrf, new Date(now), new Date(now + ttlMs)];
+        const { rows: [row] } = accounts
+            ? await query(
+                `INSERT INTO ${table} (id_hash, user_id, username, avatar, csrf, created_at, expires_at, last_seen, account_id)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $6, $8) RETURNING *`, [...params, accountId || null])
+            : await query(
+                `INSERT INTO ${table} (id_hash, user_id, username, avatar, csrf, created_at, expires_at, last_seen)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $6) RETURNING *`, params);
         return toSession(id, row);
+    }
+
+    /** Ends every session of a Mewvo account (password reset, unlink, delete), except `keepId`. */
+    async function destroyForAccount(accountId, keepId = null) {
+        if (!accounts || !accountId) return 0;
+        const { rowCount } = await query(`DELETE FROM ${table} WHERE account_id = $1 AND id_hash <> $2`, [String(accountId), keepId ? hashSessionId(keepId) : '']);
+        return rowCount || 0;
     }
 
     async function get(id, now = Date.now()) {
@@ -100,17 +113,17 @@ export function createPgSessionStore({ query, table = 'dashboard_sessions', ttlM
         return rowCount > 0;
     }
 
-    return { create, get, destroy, rotate, cleanup, setFlash };
+    return { create, get, destroy, rotate, cleanup, setFlash, destroyForAccount };
 }
 
 export function createMemorySessionStore({ ttlMs = SESSION_TTL_MS } = {}) {
     const rows = new Map(); // idHash → row
 
-    async function create({ userId, username, avatar = null }, now = Date.now()) {
+    async function create({ userId, username, avatar = null, accountId = null }, now = Date.now()) {
         const { id, csrf } = newIds();
         const row = {
-            id_hash: hashSessionId(id), user_id: userId, username: clip(username, 100), avatar: clip(avatar, 100), csrf,
-            created_at: now, expires_at: now + ttlMs, last_seen: now,
+            id_hash: hashSessionId(id), user_id: userId || null, username: clip(username, 100), avatar: clip(avatar, 100), csrf,
+            created_at: now, expires_at: now + ttlMs, last_seen: now, account_id: accountId || null,
         };
         rows.set(row.id_hash, row);
         return toSession(id, row);
@@ -149,7 +162,16 @@ export function createMemorySessionStore({ ttlMs = SESSION_TTL_MS } = {}) {
         return true;
     }
 
-    return { create, get, destroy, rotate, cleanup, setFlash, size: () => rows.size, hashes: () => [...rows.keys()] };
+    async function destroyForAccount(accountId, keepId = null) {
+        let removed = 0;
+        const keep = keepId ? hashSessionId(keepId) : null;
+        for (const [hash, row] of rows) {
+            if (row.account_id && String(row.account_id) === String(accountId) && hash !== keep) { rows.delete(hash); removed += 1; }
+        }
+        return removed;
+    }
+
+    return { create, get, destroy, rotate, cleanup, setFlash, destroyForAccount, size: () => rows.size, hashes: () => [...rows.keys()] };
 }
 
 /**

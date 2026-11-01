@@ -633,3 +633,19 @@ button.button { cursor: pointer; }
 .footer-links a { color: var(--text-muted); }
 .footer-links a[aria-current="page"] { color: var(--text); }
 .footer-legal { margin: 16px 0 0; padding: 0; border: 0; font-size: 13px; color: var(--text-muted); }
+
+/* Mewvo account forms (/me/signup, /me/account …): plain stacked fields. */
+.form-stack { display: grid; gap: 16px; max-width: 440px; margin: 0 0 24px; }
+.form-field { display: grid; gap: 6px; }
+.form-field label { font-size: 14px; color: var(--text-muted); }
+.form-field input { width: 100%; min-height: 40px; padding: 8px 12px; border: 1px solid var(--border-control); border-radius: 8px; background: var(--bg); color: var(--text); font: 15px/1.5 var(--sans); }
+.form-field input:focus-visible, .form-check input:focus-visible, .letter-choice input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.form-hint { margin: 0; font-size: 13px; color: var(--text-muted); }
+.form-check { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; }
+.form-check input { margin-top: 4px; }
+.form-stack p, .form-stack .form-field { margin: 0; }
+.letter-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+.letter-grid legend { padding: 0 4px; font-size: 14px; color: var(--text-muted); }
+.letter-choice { display: inline-flex; align-items: center; gap: 4px; min-width: 52px; min-height: 36px; padding: 0 8px; border: 1px solid var(--border-control); border-radius: 7px; cursor: pointer; }
+.recovery-codes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; padding: 0; list-style: none; }
+.recovery-codes code { font: 16px var(--mono); }
