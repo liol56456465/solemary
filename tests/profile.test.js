@@ -2,7 +2,8 @@
 // is bounded, someone else's profile is admin-only, everyone may see their own.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { profileFields, progressLine } from '../src/commands/Leveling/profile.js';
+import { nextReward, profileFields, progressLine } from '../src/commands/Leveling/profile.js';
+import { getXpForLevel } from '../src/services/leveling/leveling.js';
 import { EVERYONE_COMMANDS } from '../src/config/commands/commandAccess.js';
 
 test('progress line: bounded, 10 blocks', () => {
@@ -21,4 +22,17 @@ test('profile fields: level, rank, birthday, plan and dates; missing parts are l
     const bare = profileFields({ level: null, rank: null, birthday: null, planId: 'free', joinedAt: null, createdAt: new Date(0) });
     assert.deepEqual(bare.map((f) => f.name), ['Account created']);
     assert.ok(EVERYONE_COMMANDS.has('profile'));
+});
+
+test('next reward: the first role reward above the current level and the XP left', () => {
+    const rewards = { 2: 'r2', 5: 'r5', 10: 'r10' };
+    const level = { level: 3, xp: 40, totalXp: 999 };
+    const r = nextReward(level, rewards);
+    assert.equal(r.level, 5);
+    assert.equal(r.roleId, 'r5');
+    assert.equal(r.xp, getXpForLevel(3) - 40 + getXpForLevel(4));
+    assert.equal(nextReward({ level: 10, xp: 0 }, rewards), null, 'nothing above');
+    assert.equal(nextReward(level, {}), null);
+    const fields = profileFields({ level, rank: 1, reward: r, planId: 'free' });
+    assert.match(fields.find((f) => f.name === 'Next reward').value, /^<@&r5> at level 5, \d+ XP to go$/);
 });

@@ -1,4 +1,5 @@
-// /profile [user]: one card with a member's level and XP, rank in the server, birthday,
+// /profile [user]: one card with a member's level and XP, rank in the server, the next level
+// role reward and how much XP is left, birthday,
 // Mewvo plan and when they joined. Everyone may see their own; another member's profile is
 // for administrators (like /rank). Parts that can't be read are left out, never guessed.
 
@@ -25,14 +26,25 @@ export function progressLine(xp, needed, length = 10) {
     return `${'▰'.repeat(filled)}${'▱'.repeat(length - filled)} ${pct}%`;
 }
 
+/** The next role reward above `level` and the XP still needed for it, or null. Pure. */
+export function nextReward(level, roleRewards = {}) {
+    if (!level) return null;
+    const next = Object.keys(roleRewards || {}).map(Number).filter((l) => Number.isInteger(l) && l > level.level && roleRewards[l]).sort((a, b) => a - b)[0];
+    if (!next) return null;
+    let xp = Math.max(0, getXpForLevel(level.level) - level.xp);
+    for (let l = level.level + 1; l < next; l += 1) xp += getXpForLevel(l);
+    return { level: next, roleId: roleRewards[next], xp };
+}
+
 /** The profile embed fields from plain data. Pure, for tests. */
-export function profileFields({ level, rank, birthday, planId, joinedAt, createdAt }) {
+export function profileFields({ level, rank, birthday, planId, joinedAt, createdAt, reward = null }) {
     const fields = [];
     if (level) {
         const needed = getXpForLevel(level.level);
         fields.push({ name: 'Level', value: `**${level.level}** · ${level.xp}/${needed} XP\n${progressLine(level.xp, needed)}`, inline: false });
         fields.push({ name: 'Total XP', value: String(level.totalXp), inline: true });
         if (rank) fields.push({ name: 'Rank', value: `#${rank}`, inline: true });
+        if (reward) fields.push({ name: 'Next reward', value: `<@&${reward.roleId}> at level ${reward.level}, ${reward.xp} XP to go`, inline: false });
     }
     if (birthday) fields.push({ name: 'Birthday', value: `${birthday.day} ${getMonthName(birthday.month)}`, inline: true });
     if (planId && planId !== 'free') fields.push({ name: 'Mewvo plan', value: planName(planId), inline: true });
@@ -82,12 +94,13 @@ export default {
             return { level: d?.level ?? 0, xp: d?.xp ?? 0, totalXp: d?.totalXp ?? 0 };
         }) : null;
         const rank = level ? await part('rank', () => rankOf(guildId, target.id)) : null;
+        const reward = level ? nextReward(level, leveling?.roleRewards) : null;
         const birthday = await part('birthday', async () => (await getGuildBirthdays(client, guildId))?.[target.id] || null);
 
         const embed = createEmbed({
             title: member.displayName,
             description: target.id === interaction.user.id ? null : `<@${target.id}>`,
-            fields: profileFields({ level, rank, birthday, planId: planOf(target.id), joinedAt: member.joinedAt, createdAt: target.createdAt }),
+            fields: profileFields({ level, rank, reward, birthday, planId: planOf(target.id), joinedAt: member.joinedAt, createdAt: target.createdAt }),
             color: 'primary',
         });
         embed.setThumbnail(member.displayAvatarURL({ size: 128 }));
