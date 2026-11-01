@@ -14,7 +14,7 @@ const {
     headsUpStats, noteMessageDeleted, pendingHeadsUpRule, setHeadsUpDepsForTest,
 } = await import('../../src/services/automod/headsUp.js');
 const {
-    HEADS_UP_NEVER, headsUpApplies, headsUpDm, headsUpEnabled, headsUpNotice, privacyHeadsUpDm,
+    HEADS_UP_NEVER, headsUpAllowedFor, headsUpApplies, headsUpDm, headsUpEnabled, headsUpNotice, privacyHeadsUpDm,
 } = await import('../../src/services/automod/policy.js');
 const { normalizeSettings, setHeadsUp } = await import('../../src/services/automod/automodSettings.js');
 
@@ -210,6 +210,17 @@ test('database error reading the heads-up record: the normal action runs', async
     assert.ok(!h.names().includes('sendDm'));
 });
 
+test('a heads-up only when every hit allows one: a never-eligible hit next to an insult acts now', () => {
+    const settings = normalizeSettings({});
+    assert.equal(headsUpAllowedFor([{ rule: 'disrespect' }], settings), true);
+    assert.equal(headsUpAllowedFor([{ rule: 'disrespect' }, { rule: 'sexual' }], settings), true);
+    for (const other of [{ rule: 'mentions' }, { rule: 'scam' }, { rule: 'language', slur: true }, { rule: 'caps' }]) {
+        assert.equal(headsUpAllowedFor([{ rule: 'disrespect' }, other], settings), false, JSON.stringify(other));
+    }
+    assert.equal(headsUpAllowedFor([{ rule: 'disrespect' }], settings, true), false, 'probation');
+    assert.equal(headsUpAllowedFor([], settings), false);
+});
+
 // ── resolution ────────────────────────────────────────────────────────────
 
 test('edit: still breaking the rule keeps waiting; edited clean resolves as fixed', async () => {
@@ -218,7 +229,9 @@ test('edit: still breaking the rule keeps waiting; edited clean resolves as fixe
     await actOn(message, member, disrespect, normalizeSettings({}));
     assert.equal(await checkEditedHeadsUp(message, [{ rule: 'harassment' }]), null, 'insult still there (now counted as harassment)');
     assert.equal(pendingHeadsUpRule(GUILD, 'm1'), 'disrespect');
-    assert.deepEqual(await checkEditedHeadsUp(message, [{ rule: 'disrespect' }, { rule: 'scam' }]), [{ rule: 'scam' }], 'other rules go on');
+    // The edit still insults and also breaks another rule: every hit goes on, so the insult
+    // is acted on too (even when the other rule is only monitored).
+    assert.deepEqual(await checkEditedHeadsUp(message, [{ rule: 'disrespect' }, { rule: 'scam' }]), [{ rule: 'disrespect' }, { rule: 'scam' }], 'all hits go on');
     // That closed the heads-up as acted (the message is dealt with now).
     assert.equal(pendingHeadsUpRule(GUILD, 'm1'), null);
 

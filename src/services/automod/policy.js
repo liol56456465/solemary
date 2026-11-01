@@ -301,6 +301,14 @@ export function headsUpApplies({ hit, settings, probation = false }) {
     return headsUpEnabled(settings, hit.rule);
 }
 
+/**
+ * A heads-up for a message only when EVERY hit allows one: a rule that never gets a
+ * heads-up (scam, mentions, slurs…) next to an insult must not wait behind it.
+ */
+export function headsUpAllowedFor(hits, settings, probation = false) {
+    return Array.isArray(hits) && hits.length > 0 && hits.every((hit) => headsUpApplies({ hit, settings, probation }));
+}
+
 const INSULT_RULES = ['disrespect', 'harassment'];
 const WORDING_RULES = ['sexual', 'language'];
 

@@ -26,7 +26,7 @@ import { getProbation } from './probationService.js';
 import { noteMoodSignals } from './moodService.js';
 import { getUserLevelData } from '../leveling/leveling.js';
 import {
-    hasTrustedRole, headsUpApplies, isTrustedMember, ladderIndex, relaxForTrusted, resolveRuleMode, sameHeadsUpFamily,
+    hasTrustedRole, headsUpAllowedFor, headsUpApplies, isTrustedMember, ladderIndex, relaxForTrusted, resolveRuleMode, sameHeadsUpFamily,
     secondChanceEligible, secondChanceNotice, trustMatters,
 } from './policy.js';
 import { dueHeadsUps, finishHeadsUp, giveHeadsUp, peekHeadsUp, pendingHeadsUpRule, takeHeadsUp } from './headsUp.js';
@@ -532,6 +532,8 @@ export async function moderateMessage(message, { edited = false } = {}) {
         }
 
         let detected = await evaluateMessage(message, member, now);
+        // An edit of a message that already had its heads-up never gets a second one.
+        const hadHeadsUp = edited && Boolean(pendingHeadsUpRule(message.guild.id, message.id));
         if (edited) {
             detected = await checkEditedHeadsUp(message, detected);
             if (detected === null) return false;
@@ -554,7 +556,8 @@ export async function moderateMessage(message, { edited = false } = {}) {
         }
         if (hits.length) {
             handledMessages.add(message.id);
-            return await actOn(message, member, worstHit(hits), settings, probation);
+            const skipHeadsUp = hadHeadsUp || !headsUpAllowedFor(hits, settings, Boolean(probation));
+            return await actOn(message, member, worstHit(hits), settings, probation, { skipHeadsUp });
         }
         if (edited || isStaff(member)) return false;
         return await applyNewMemberLimits(message, member, now);
@@ -567,26 +570,27 @@ export async function moderateMessage(message, { edited = false } = {}) {
 // ── Heads-up first: resolving the wait ────────────────────────────────────────
 
 /**
- * An edit of a message with a waiting heads-up. Still breaking that rule: keep waiting
- * (its hits are dropped; null when nothing else is left, so the caller stops). No longer
- * breaking it: fixed. Other rules the edit breaks go on as usual; if any are left while
- * the heads-up rule still hits, the heads-up is closed as acted (the message is dealt
- * with now). A database error leaves the heads-up for the per-minute check.
+ * An edit of a message with a waiting heads-up. Still breaking only that rule: keep
+ * waiting (null, so the caller stops). No longer breaking it: fixed. Breaking it and
+ * another rule: the heads-up is closed as acted and every hit goes on, the heads-up
+ * rule's included (the caller skips a new heads-up). A database error leaves the
+ * heads-up for the per-minute check.
  */
 export async function checkEditedHeadsUp(message, detected) {
     const rule = pendingHeadsUpRule(message.guild.id, message.id);
     if (!rule) return detected;
     const same = (hit) => sameHeadsUpFamily(hit.rule, rule) && !hit.slur;
     const stillBad = detected.some(same);
-    const rest = stillBad ? detected.filter((hit) => !same(hit)) : detected;
-    if (stillBad && !rest.length) return null;
+    // Still breaking only that rule: keep waiting. Breaking it AND another rule: every hit
+    // goes on (the heads-up rule's included), so it is acted on now, never dropped.
+    if (stillBad && detected.every(same)) return null;
     try {
         const record = await takeHeadsUp(message.guild.id, message.id);
         if (record) await finishHeadsUp(message.client, record, stillBad ? 'acted' : 'edited', stillBad ? 'the edit broke another rule' : null);
     } catch (error) {
         logger.warn(`Automod heads-up for edited message ${message.id} not resolved (${error.message}); the per-minute check retries`);
     }
-    return rest;
+    return detected;
 }
 
 /**
