@@ -1,28 +1,29 @@
 // Mewvo accounts on the website (/me/signup …, src/services/site/accountRoutes.js) end to end
-// on a bare Express app with an in-memory account store, a fake email sender and a fake
-// Discord: sign up → email → confirm → link Discord (bonus) → log in → 2FA → reset → delete,
-// plus CSRF / origin / rate-limit refusals, no account enumeration, and the bonus limits.
+// on a bare Express app with an in-memory account store and a fake Discord. No email at all:
+// sign up (username + password) → forced Discord link (bonus: 6 months of Pro, 1-letter name)
+// → log in → 2FA → "Forgot password?" through a Discord login → delete, plus CSRF / origin /
+// rate-limit refusals, no account enumeration, accounts on by default, and the bonus limits.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
-import { MEMBER_SESSION_COOKIE, memberAccountsOn, registerMemberPortal } from '../src/services/site/memberPortal.js';
+import { MEMBER_FORGOT_COOKIE, MEMBER_SESSION_COOKIE, memberAccountsOn, memberPortalSettings, registerMemberPortal } from '../src/services/site/memberPortal.js';
 import { createMemorySessionStore } from '../src/services/dashboard/sessionStore.js';
 import { createSite } from '../src/services/site/site.js';
 import { createMemoryAccountStore } from '../src/services/accounts/memoryAccountStore.js';
-import { createFakeEmailSender } from '../src/services/accounts/emailSender.js';
 import { base32Decode, totp } from '../src/services/accounts/accountCore.js';
 import { PremiumError } from '../src/services/billing/premiumService.js';
-import { bonusText } from '../src/services/site/accountRoutes.js';
+import { RESET_COOKIE, bonusText, memberAccountSettings } from '../src/services/site/accountRoutes.js';
 
 const ORIGIN = 'https://bot.example';
 const GUILD = '100000000000000001';
 const ENV = {
-    MEMBER_PORTAL_ENABLED: 'true', MEMBER_ACCOUNTS_ENABLED: 'true', SESSION_SECRET: 'y'.repeat(64), CLIENT_ID: '400000000000000004',
+    MEMBER_PORTAL_ENABLED: 'true', SESSION_SECRET: 'y'.repeat(64), CLIENT_ID: '400000000000000004',
     DISCORD_CLIENT_SECRET: 'cs', PUBLIC_URL: ORIGIN, MAIN_GUILD_ID: GUILD, NODE_ENV: 'test',
 };
 const LOW = { N: 1024, r: 8, p: 1 };
 const DISCORD_A = '200000000000000002';
 const DISCORD_B = '300000000000000003';
+const DISCORD_C = '500000000000000005';
 const PASSWORD = 'a long password 1';
 
 const DATA = {
@@ -33,24 +34,23 @@ const DATA = {
 };
 
 const OPEN = { limit: 1000, windowMs: 60000 };
-const ROOMY = { loginIp: OPEN, loginName: OPEN, code: OPEN, signupIp: OPEN, emailIp: OPEN, emailAddress: OPEN };
+const ROOMY = { loginIp: OPEN, loginName: OPEN, code: OPEN, signupIp: OPEN, resetIp: OPEN };
 
 async function serve({ env = ENV, store = createMemoryAccountStore(), accountLimits = ROOMY } = {}) {
     const app = express();
     const sessions = createMemorySessionStore({ ttlMs: 3600 * 1000 });
-    const mailer = createFakeEmailSender();
     const discord = { me: { id: DISCORD_A, username: 'discorda' } };
     const fetchImpl = async (url) => ({ ok: true, status: 200, json: async () => (url.includes('/token') ? { access_token: 't' } : discord.me) });
     const after = [];
     const enabled = registerMemberPortal(app, {
-        env, sessions, data: DATA, fetchImpl, accountStore: store, mailer, hashParams: LOW, accountLimits,
+        env, sessions, data: DATA, fetchImpl, accountStore: store, hashParams: LOW, accountLimits,
         accountAfter: async (result, from) => { after.push({ result, from }); },
     });
-    app.use(createSite({ client: { commands: null }, env, dashboardEnabled: false, memberPortalEnabled: enabled, memberAccountsEnabled: memberAccountsOn(env), supportInvite: () => null }));
+    app.use(createSite({ client: { commands: null }, env, dashboardEnabled: false, memberPortalEnabled: enabled, memberAccountsEnabled: enabled && memberAccountsOn(env), supportInvite: () => null }));
     const server = await new Promise((resolve) => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
     const base = `http://127.0.0.1:${server.address().port}`;
     return {
-        base, store, sessions, mailer, discord, after,
+        base, store, sessions, discord, after,
         close: () => new Promise((resolve) => { server.closeAllConnections?.(); server.close(resolve); }),
     };
 }
@@ -84,38 +84,42 @@ function browser(app) {
     return { request, jar, get csrf() { return csrf; }, set csrf(v) { csrf = v; } };
 }
 
-const linkFrom = (mail, path) => {
-    const match = new RegExp(`${ORIGIN.replace(/\./g, '\\.')}(${path}\\?token=[A-Za-z0-9_-]+)`).exec(mail.text);
-    assert.ok(match, `link ${path} in the email`);
-    return match[1];
-};
-
-async function signup(app, b, { username = 'cool_cat', email = 'cat@example.com', birth = '2000-05-05', password = PASSWORD } = {}) {
+async function signup(app, b, { username = 'cool_cat', birth = '2000-05-05', password = PASSWORD, extra = {} } = {}) {
     await b.request('/me/signup');
-    return b.request('/me/signup', { form: { username, email, password, birth_date: birth, accept: 'yes' } });
+    return b.request('/me/signup', { form: { username, password, birth_date: birth, accept: 'yes', ...extra } });
 }
 
-async function confirmed(app, b, values = {}) {
-    const res = await signup(app, b, values);
-    assert.equal(res.status, 200);
-    const path = linkFrom(app.mailer.last(), '/me/confirm');
-    await b.request(path);
-    const done = await b.request('/me/confirm', { form: { token: new URL(ORIGIN + path).searchParams.get('token'), password: values.password || PASSWORD } });
-    assert.equal(done.status, 303);
-    return done;
-}
-
-async function linkDiscord(app, b) {
-    await b.request('/me');
-    const start = await b.request('/me/link', { form: {} });
+/** Discord's answer for a login started by `start` (a 302 to discord.com with a state). */
+const discordBack = (b, start) => {
     assert.equal(start.status, 302);
+    assert.match(start.location, /^https:\/\/discord\.com\/oauth2\/authorize\?/);
     const state = new URL(start.location).searchParams.get('state');
     return b.request(`/me/callback?code=c&state=${encodeURIComponent(state)}`);
+};
+
+async function linkDiscord(app, b) {
+    await b.request('/me/link');
+    return discordBack(b, await b.request('/me/link', { form: {} }));
+}
+
+/** Signed up and linked (to app.discord.me). */
+async function member(app, b, values = {}) {
+    const res = await signup(app, b, values);
+    assert.equal(res.status, 303);
+    const linked = await linkDiscord(app, b);
+    assert.equal(linked.status, 303);
+    assert.equal(linked.location, '/me/linked');
+    return linked;
 }
 
 async function passwordLogin(b, identifier, password = PASSWORD) {
     await b.request('/me/login-password');
     return b.request('/me/login-password', { form: { identifier, password } });
+}
+
+async function forgot(b) {
+    await b.request('/me/forgot');
+    return discordBack(b, await b.request('/me/forgot', { form: {} }));
 }
 
 test('top bar: Log in and Sign up on the website; on /me pages a logged-in member gets a menu instead', async () => {
@@ -128,7 +132,7 @@ test('top bar: Log in and Sign up on the website; on /me pages a logged-in membe
             assert.ok(bar.includes('<a class="button button-quiet" href="/me">Log in</a>'), `${path}: Log in`);
             assert.ok(bar.includes('<a class="button" href="/me/signup">Sign up</a>'), `${path}: Sign up`);
         }
-        await confirmed(app, b);
+        await member(app, b);
         for (const path of ['/me', '/me/account']) {
             const bar = topbar((await b.request(path)).body);
             assert.ok(!bar.includes('>Log in<') && !bar.includes('>Sign up<'), `${path}: no Log in / Sign up once logged in`);
@@ -143,64 +147,124 @@ test('top bar: Log in and Sign up on the website; on /me pages a logged-in membe
     }
 });
 
-test('the whole flow: sign up, confirm, link Discord with the bonus, 1-letter name, 2FA, reset, delete', async () => {
+test('sign up without email: username + password only, logged in at once, then the link step', async () => {
     const app = await serve();
     const b = browser(app);
     try {
-        // Sign up: "check your email", one email with a confirmation link; the birth date is not kept.
-        const res = await signup(app, b);
-        assert.equal(res.status, 200);
-        assert.match(res.body, /Check your email/);
-        assert.equal(app.mailer.sent.length, 1);
-        assert.equal(app.mailer.sent[0].to, 'cat@example.com');
-        assert.match(app.mailer.sent[0].subject, /Confirm/);
+        const form = await b.request('/me/signup');
+        assert.equal(form.status, 200);
+        assert.doesNotMatch(form.body, /type="email"|name="email"/, 'no email field');
+        assert.match(form.body, /name="username"/);
+        assert.match(form.body, /name="password"/);
+        assert.match(form.body, /name="birth_date"/);
+        assert.match(form.body, /name="accept"/);
+        assert.match(form.body, /No email is needed/);
+        // An email sent anyway is ignored.
+        const res = await signup(app, b, { extra: { email: 'cat@example.com' } });
+        assert.equal(res.status, 303);
+        assert.equal(res.location, '/me/link');
+        assert.ok(b.jar.has(MEMBER_SESSION_COOKIE), 'logged in right after sign-up');
         const [account] = [...app.store._accounts.values()];
         assert.equal(account.username, 'cool_cat');
+        assert.equal(account.email, null);
+        assert.ok(!JSON.stringify(account).includes('cat@example.com'), 'no email stored');
         assert.ok(account.age_confirmed_at instanceof Date);
         assert.ok(!JSON.stringify(account).includes('2000-05-05'), 'the date of birth is never stored');
         assert.ok(account.password_hash.startsWith('scrypt$') && !account.password_hash.includes(PASSWORD));
-        assert.ok(![...app.store._tokens.values()].some((t) => app.mailer.sent[0].text.includes(t.token_hash)), 'only the hash is stored');
+        const step = await b.request('/me/link');
+        assert.equal(step.status, 200);
+        assert.match(step.body, /Link your Discord account/);
+        assert.match(step.body, /Mewvo Pro for 6 months/);
+        assert.doesNotMatch(step.body, /check your (inbox|email)/i);
+        // The email pages are gone.
+        for (const path of ['/me/confirm', '/me/resend']) assert.equal((await browser(app).request(path)).status, 404, path);
+    } finally {
+        await app.close();
+    }
+});
 
-        // Not confirmed yet: the right password still cannot log in.
-        const early = await passwordLogin(b, 'cool_cat');
-        assert.equal(early.status, 403);
-        assert.match(early.body, /not confirmed yet/);
+test('forced Discord link: every page except the link step, callback, logout and delete redirects to /me/link', async () => {
+    const app = await serve();
+    const b = browser(app);
+    try {
+        await signup(app, b);
+        for (const path of ['/me', '/me/account', '/me/data', '/me/linked', '/me/signup', '/me/login-password', '/me/forgot', '/me/reset', '/me/billing', '/me/login', '/me/nope']) {
+            const res = await b.request(path);
+            assert.equal(res.status, 303, path);
+            assert.equal(res.location, '/me/link', path);
+        }
+        await b.request('/me/link');
+        for (const path of ['/me/account/password', '/me/account/2fa/start', '/me/account/unlink', '/me/letter']) {
+            const res = await b.request(path, { form: { password: PASSWORD, new_password: 'another long one' } });
+            assert.equal(res.status, 303, path);
+            assert.equal(res.location, '/me/link', path);
+        }
+        assert.equal(app.store._accounts.get('1').password_hash.includes('another'), false);
+        // The link step itself, logout and delete still work (below), and the link goes through.
+        assert.equal((await b.request('/me/link')).status, 200);
+        const linked = await linkDiscord(app, b);
+        assert.equal(linked.location, '/me/linked');
+        assert.equal((await b.request('/me')).status, 200);
+        assert.equal((await b.request('/me/account')).status, 200);
+        // A Discord-only login (no Mewvo account) is never sent to the link step.
+        const discordOnly = browser(app);
+        app.discord.me = { id: DISCORD_B, username: 'discordb' };
+        const start = await discordOnly.request('/me/login');
+        await discordBack(discordOnly, start);
+        const record = await discordOnly.request('/me');
+        assert.equal(record.status, 200);
+        assert.match(record.body, /Warning ladder/);
+    } finally {
+        await app.close();
+    }
+});
 
-        // Confirm: GET shows a button (link scanners do not use it up), POST confirms and logs in.
-        const path = linkFrom(app.mailer.sent[0], '/me/confirm');
-        const token = new URL(ORIGIN + path).searchParams.get('token');
-        const show = await b.request(path);
-        assert.equal(show.status, 200);
-        assert.match(show.body, /Confirm my email/);
-        assert.match(show.body, /name="password"/, 'a new account is confirmed with its password');
-        const noPassword = await b.request('/me/confirm', { form: { token, password: 'not the password' } });
-        assert.equal(noPassword.status, 401);
-        assert.ok(!b.jar.has(MEMBER_SESSION_COOKIE));
-        const done = await b.request('/me/confirm', { form: { token, password: PASSWORD } });
-        assert.equal(done.status, 303);
-        assert.equal(done.location, '/me');
-        assert.ok(b.jar.has(MEMBER_SESSION_COOKIE));
-        const again = await b.request('/me/confirm', { form: { token, password: PASSWORD } });
-        assert.equal(again.status, 400, 'single use');
+test('logging in to an account without Discord lands on the link step; logout and delete work from there', async () => {
+    const app = await serve();
+    try {
+        const b = browser(app);
+        await signup(app, b);
+        await b.request('/me/link');
+        assert.equal((await b.request('/me/logout', { form: {} })).status, 303);
+        const login = await passwordLogin(b, 'COOL_CAT');
+        assert.equal(login.status, 303);
+        assert.equal(login.location, '/me/link');
+        const step = await b.request('/me/link');
+        assert.match(step.body, /Delete this account/);
+        assert.equal((await b.request('/me/account/delete', { form: { password: 'wrong password!', sure: 'yes' } })).status, 401);
+        assert.match((await b.request('/me/link')).body, /Link your Discord account/);
+        const deleted = await b.request('/me/account/delete', { form: { password: PASSWORD, sure: 'yes' } });
+        assert.equal(deleted.status, 200);
+        assert.match(deleted.body, /Your account was deleted/);
+        assert.equal(app.store._accounts.size, 0);
+        assert.equal(app.sessions.size(), 0);
+    } finally {
+        await app.close();
+    }
+});
 
-        // Without Discord: /me only offers "Link your Discord".
-        const me = await b.request('/me');
-        assert.match(me.body, /Link your Discord account/);
-        assert.doesNotMatch(me.body, /Warning ladder/);
+test('the whole flow: sign up, link Discord with 6 months of Pro, 1-letter name, 2FA, reset through Discord, delete', async () => {
+    const app = await serve();
+    const b = browser(app);
+    try {
+        await signup(app, b);
+        const [account] = [...app.store._accounts.values()];
 
-        // Link Discord: first link → number 1 → Pro month (premium follow-up called) + letter offer.
+        // Link Discord: first link → number 1 → Pro for 6 months (premium follow-up called) + letter offer.
         const linked = await linkDiscord(app, b);
         assert.equal(linked.status, 303);
         assert.equal(linked.location, '/me/linked');
         const result = await b.request('/me/linked');
         assert.match(result.body, /You are number 1 to link/);
-        assert.match(result.body, /Mewvo Pro for 30 days/);
+        assert.match(result.body, /Mewvo Pro for 6 months/);
         assert.match(result.body, /Pick a 1-letter username/);
         assert.equal(app.after.length, 1);
         assert.equal(app.after[0].from, 'bonus');
         const record = await b.request('/me');
         assert.match(record.body, /Warning ladder/);
         assert.match(record.body, /Account settings/);
+        const settings0 = await b.request('/me/account');
+        assert.doesNotMatch(settings0.body, /Change email|name="email"|<dt>Email<\/dt>/, 'no email in settings');
 
         // Claim "q".
         const claim = await b.request('/me/letter', { form: { letter: 'Q' } });
@@ -215,6 +279,7 @@ test('the whole flow: sign up, confirm, link Discord with the bonus, 1-letter na
         assert.match((await b.request('/me')).body, /Log in with a Mewvo account/);
         const login = await passwordLogin(b, 'Q');
         assert.equal(login.status, 303);
+        assert.equal(login.location, '/me');
         assert.match((await b.request('/me')).body, /Warning ladder/);
 
         // 2FA on: the key on the page works, then 8 recovery codes are shown once.
@@ -236,7 +301,7 @@ test('the whole flow: sign up, confirm, link Discord with the bonus, 1-letter na
 
         // Log in again: password, then the code step. The code used to turn 2FA on cannot be reused.
         await b.request('/me/logout', { form: {} });
-        const step1 = await passwordLogin(b, 'cat@example.com');
+        const step1 = await passwordLogin(b, 'q');
         assert.equal(step1.status, 303);
         assert.equal(step1.location, '/me/login-2fa');
         await b.request('/me/login-2fa');
@@ -248,29 +313,28 @@ test('the whole flow: sign up, confirm, link Discord with the bonus, 1-letter na
         assert.equal((await b.request('/me/login-2fa', { form: { code: codes[0] } })).status, 401, 'a recovery code works once');
         assert.equal((await b.request('/me/login-2fa', { form: { code: totp(secret, Date.now() + 30000) } })).status, 303, 'a newer app code works');
 
-        // Forgot password: generic answer, a reset link; resetting ends every session.
+        // Forgot password with 2FA on: Discord login → new password → the code step still asked.
         const other = browser(app);
-        await other.request('/me/forgot');
-        const forgot = await other.request('/me/forgot', { form: { email: 'CAT@example.com' } });
-        assert.match(forgot.body, /If that email has an account/);
-        await waitFor(() => app.mailer.last()?.subject.includes('Reset'));
-        const resetPath = linkFrom(app.mailer.last(), '/me/reset');
-        const resetToken = new URL(ORIGIN + resetPath).searchParams.get('token');
-        assert.equal((await other.request(resetPath)).status, 200);
-        assert.equal((await other.request('/me/reset', { form: { token: resetToken, password: 'short' } })).status, 400);
-        const reset = await other.request('/me/reset', { form: { token: resetToken, password: 'a brand new password' } });
-        assert.equal(reset.status, 200);
+        const back = await forgot(other);
+        assert.equal(back.status, 303);
+        assert.equal(back.location, '/me/reset');
+        assert.match((await other.request('/me/reset')).body, /For the Mewvo account <strong>q<\/strong>/);
+        const reset = await other.request('/me/reset', { form: { password: 'a brand new password' } });
+        assert.equal(reset.status, 303);
+        assert.equal(reset.location, '/me/login-2fa', 'two-step login stays on after a reset');
         assert.match((await b.request('/me')).body, /Log in with Discord/, 'the old session ended');
-        assert.equal((await other.request('/me/reset', { form: { token: resetToken, password: 'another new password' } })).status, 400, 'single use');
+        await other.request('/me/login-2fa');
+        assert.equal((await other.request('/me/login-2fa', { form: { code: codes[1] } })).status, 303);
+        assert.match((await other.request('/me')).body, /Warning ladder/);
         assert.equal((await passwordLogin(b, 'q')).status, 401, 'the old password no longer works');
 
         // Delete: password + code needed; the bonus row stays with the Discord id.
         await passwordLogin(b, 'q', 'a brand new password');
         await b.request('/me/login-2fa');
-        await b.request('/me/login-2fa', { form: { code: codes[1] } });
+        await b.request('/me/login-2fa', { form: { code: codes[2] } });
         await b.request('/me/account');
-        assert.equal((await b.request('/me/account/delete', { form: { password: 'wrong password!', code: codes[2], sure: 'yes' } })).status, 401);
-        const deleted = await b.request('/me/account/delete', { form: { password: 'a brand new password', code: codes[3], sure: 'yes' } });
+        assert.equal((await b.request('/me/account/delete', { form: { password: 'wrong password!', code: codes[3], sure: 'yes' } })).status, 401);
+        const deleted = await b.request('/me/account/delete', { form: { password: 'a brand new password', code: codes[4], sure: 'yes' } });
         assert.equal(deleted.status, 200);
         assert.match(deleted.body, /Your account was deleted/);
         assert.equal(app.store._accounts.size, 0);
@@ -279,57 +343,108 @@ test('the whole flow: sign up, confirm, link Discord with the bonus, 1-letter na
 
         // A new account with the same Discord id gets no second bonus.
         const b2 = browser(app);
-        await confirmed(app, b2, { username: 'second', email: 'second@example.com' });
-        await linkDiscord(app, b2);
+        await member(app, b2, { username: 'second' });
         assert.match((await b2.request('/me/linked')).body, /does not get the early-account bonus again/);
-        assert.equal(app.after.length, 1, 'no second Pro month');
+        assert.equal(app.after.length, 1, 'no second Pro bonus');
+        assert.equal(app.store._bonuses.get(DISCORD_A).account_id, (await app.store.findByLogin('second')).id, 'the bonus row points at the current account again');
     } finally {
         await app.close();
     }
 });
 
-async function waitFor(check, tries = 50) {
-    for (let i = 0; i < tries; i += 1) {
-        if (check()) return;
-        await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-    assert.fail('timed out');
-}
-
-test('no enumeration: login, forgot and sign-up answer the same for known and unknown accounts', async () => {
+test('forgot password through Discord: new password, everyone else logged out, single use, only the linked account', async () => {
     const app = await serve();
     try {
-        await confirmed(app, browser(app));
+        const b = browser(app);
+        await member(app, b);
+        const page = await browser(app).request('/me/forgot');
+        assert.equal(page.status, 200);
+        assert.match(page.body, /Log in with Discord/);
+        assert.doesNotMatch(page.body, /type="email"|name="email"/);
+
+        const other = browser(app);
+        const back = await forgot(other);
+        assert.equal(back.location, '/me/reset');
+        assert.ok(other.jar.has(RESET_COOKIE));
+        assert.ok(!other.jar.has(MEMBER_FORGOT_COOKIE), 'the forgot cookie is cleared by the callback');
+        assert.ok(!other.jar.has(MEMBER_SESSION_COOKIE), 'the Discord login alone does not log in');
+        await other.request('/me/reset');
+        const grantCookie = other.jar.get(RESET_COOKIE);
+        assert.equal((await other.request('/me/reset', { form: { password: 'short' } })).status, 400);
+        const done = await other.request('/me/reset', { form: { password: 'a brand new password' } });
+        assert.equal(done.status, 303);
+        assert.equal(done.location, '/me/account');
+        assert.match((await other.request('/me/account')).body, /Your new password is saved/);
+        assert.match((await b.request('/me')).body, /Log in with Discord/, 'the other session ended');
+        assert.equal((await passwordLogin(browser(app), 'cool_cat')).status, 401, 'old password gone');
+        assert.equal((await passwordLogin(browser(app), 'cool_cat', 'a brand new password')).status, 303);
+        // Single use: the same reset cookie again does nothing.
+        assert.ok(!other.jar.has(RESET_COOKIE), 'cleared after use');
+        other.jar.set(RESET_COOKIE, grantCookie);
+        assert.match((await other.request('/me/reset')).body, /Start again/);
+        assert.notEqual((await other.request('/me/reset', { form: { password: 'third new password' } })).status, 303);
+        assert.equal((await passwordLogin(browser(app), 'cool_cat', 'third new password')).status, 401, 'not changed again');
+
+        // A Discord account without a Mewvo account: told so, nothing changes.
+        app.discord.me = { id: DISCORD_C, username: 'nobody' };
+        const stranger = browser(app);
+        const none = await forgot(stranger);
+        assert.equal(none.status, 404);
+        assert.match(none.body, /No Mewvo account is linked to this Discord account/);
+        assert.ok(!stranger.jar.has(RESET_COOKIE));
+        assert.match((await stranger.request('/me/reset')).body, /Start again/);
+
+        // A plain Discord login (no forgot cookie) is a normal login, never a reset.
+        app.discord.me = { id: DISCORD_A, username: 'discorda' };
+        const plain = browser(app);
+        const login = await discordBack(plain, await plain.request('/me/login'));
+        assert.equal(login.status, 303);
+        assert.equal(login.location, '/me');
+        assert.ok(!plain.jar.has(RESET_COOKIE));
+
+        // The reset form refuses when the account was unlinked after the Discord login.
+        const late = browser(app);
+        await forgot(late);
+        await late.request('/me/reset');
+        await app.store.unlinkDiscord('1');
+        const refused = await late.request('/me/reset', { form: { password: 'yet another password' } });
+        assert.equal(refused.status, 400);
+        assert.match(refused.body, /Start again/);
+    } finally {
+        await app.close();
+    }
+});
+
+test('forgot password refusals: CSRF, another origin, the IP limit', async () => {
+    const app = await serve({ accountLimits: { ...ROOMY, resetIp: { limit: 2, windowMs: 60000 } } });
+    try {
+        const b = browser(app);
+        await b.request('/me/forgot');
+        assert.equal((await b.request('/me/forgot', { form: {}, withCsrf: false })).status, 403);
+        assert.equal((await b.request('/me/forgot', { form: {}, origin: 'https://evil.example' })).status, 403);
+        assert.equal((await b.request('/me/forgot', { form: {} })).status, 302);
+        assert.equal((await b.request('/me/forgot', { form: {} })).status, 302);
+        assert.equal((await b.request('/me/forgot', { form: {} })).status, 429);
+        // The reset form needs the form cookie + same origin too.
+        const c = browser(app);
+        assert.equal((await c.request('/me/reset', { form: { password: 'a brand new password' }, withCsrf: false })).status, 403);
+    } finally {
+        await app.close();
+    }
+});
+
+test('no enumeration: login answers the same for unknown accounts and wrong passwords', async () => {
+    const app = await serve();
+    try {
+        await signup(app, browser(app));
         const b = browser(app);
         const unknown = await passwordLogin(b, 'nobody_here');
         const wrong = await passwordLogin(b, 'cool_cat', 'not the password');
         assert.equal(unknown.status, 401);
         assert.equal(wrong.status, 401);
         const errorOf = (body) => /<p class="error" role="alert">([^<]+)</.exec(body)[1];
-        assert.equal(errorOf(unknown.body), 'Wrong username/email or password.');
+        assert.equal(errorOf(unknown.body), 'Wrong username or password.');
         assert.equal(errorOf(wrong.body), errorOf(unknown.body));
-
-        await b.request('/me/forgot');
-        const known = await b.request('/me/forgot', { form: { email: 'cat@example.com' } });
-        const notKnown = await b.request('/me/forgot', { form: { email: 'ghost@example.com' } });
-        assert.equal(known.status, notKnown.status);
-        assert.equal(known.body, notKnown.body);
-
-        // Sign-up with a taken email: the same "check your email" page, a notice to the owner, no new account.
-        const before = app.mailer.sent.length;
-        const dupe = await signup(app, browser(app), { username: 'someone_new', email: 'cat@example.com' });
-        assert.equal(dupe.status, 200);
-        assert.match(dupe.body, /Check your email/);
-        assert.equal(app.store._accounts.size, 1);
-        await waitFor(() => app.mailer.sent.length > before);
-        assert.match(app.mailer.last().subject, /tried to sign up/);
-        assert.doesNotMatch(app.mailer.last().text, /token=/);
-
-        // Resend: generic too.
-        await b.request('/me/resend');
-        const r1 = await b.request('/me/resend', { form: { email: 'cat@example.com' } });
-        const r2 = await b.request('/me/resend', { form: { email: 'ghost@example.com' } });
-        assert.equal(r1.body, r2.body);
     } finally {
         await app.close();
     }
@@ -338,19 +453,22 @@ test('no enumeration: login, forgot and sign-up answer the same for known and un
 test('sign-up checks: under 13, bad username, reserved name, taken username, terms not accepted', async () => {
     const app = await serve();
     try {
-        const b = browser(app);
+        const b = () => browser(app);
         const today = new Date();
         const young = `${today.getUTCFullYear() - 12}-01-01`;
-        assert.match((await signup(app, b, { birth: young })).body, /at least 13/);
-        assert.match((await signup(app, b, { username: 'a' })).body, /2 to 30 characters/);
-        assert.match((await signup(app, b, { username: 'bad name' })).body, /letters \(a-z\), numbers and underscores/);
-        assert.match((await signup(app, b, { username: 'Support' })).body, /reserved/);
-        await b.request('/me/signup');
-        const noTerms = await b.request('/me/signup', { form: { username: 'okname', email: 'ok@example.com', password: PASSWORD, birth_date: '2000-01-01' } });
+        assert.match((await signup(app, b(), { birth: young })).body, /at least 13/);
+        assert.match((await signup(app, b(), { username: 'a' })).body, /2 to 30 characters/);
+        assert.match((await signup(app, b(), { username: 'x'.repeat(31) })).body, /2 to 30 characters/);
+        assert.match((await signup(app, b(), { username: 'bad name' })).body, /letters \(a-z\), numbers and underscores/);
+        assert.match((await signup(app, b(), { username: 'Support' })).body, /reserved/);
+        assert.match((await signup(app, b(), { password: 'short' })).body, /at least 10 characters/);
+        const c = b();
+        await c.request('/me/signup');
+        const noTerms = await c.request('/me/signup', { form: { username: 'okname', password: PASSWORD, birth_date: '2000-01-01' } });
         assert.equal(noTerms.status, 400);
         assert.equal(app.store._accounts.size, 0);
-        assert.equal((await signup(app, b, { username: 'taken_one' })).status, 200);
-        const taken = await signup(app, b, { username: 'TAKEN_ONE', email: 'other@example.com' });
+        assert.equal((await signup(app, b(), { username: 'taken_one' })).status, 303);
+        const taken = await signup(app, b(), { username: 'TAKEN_ONE' });
         assert.equal(taken.status, 409);
         assert.match(taken.body, /already taken/);
     } finally {
@@ -363,21 +481,28 @@ test('refusals: missing CSRF, another origin, and too many logins', async () => 
     try {
         const b = browser(app);
         await b.request('/me/signup');
-        assert.equal((await b.request('/me/signup', { form: { username: 'x_y', email: 'x@example.com', password: PASSWORD, birth_date: '2000-01-01', accept: 'yes' }, withCsrf: false })).status, 403);
-        assert.equal((await b.request('/me/signup', { form: { username: 'x_y', email: 'x@example.com', password: PASSWORD, birth_date: '2000-01-01', accept: 'yes' }, origin: 'https://evil.example' })).status, 403);
+        const form = { username: 'x_y', password: PASSWORD, birth_date: '2000-01-01', accept: 'yes' };
+        assert.equal((await b.request('/me/signup', { form, withCsrf: false })).status, 403);
+        assert.equal((await b.request('/me/signup', { form, origin: 'https://evil.example' })).status, 403);
         const stranger = browser(app);
         stranger.csrf = b.csrf; // the token without its cookie
         assert.equal((await stranger.request('/me/login-password', { form: { identifier: 'a', password: 'b' } })).status, 403);
         assert.equal(app.store._accounts.size, 0);
 
-        // Logged-in settings forms need the session's token.
+        // The link step and the settings forms need the session's token.
         const c = browser(app);
-        await confirmed(app, c);
-        await c.request('/me/account');
+        await signup(app, c);
+        await c.request('/me/link');
         const good = c.csrf;
         c.csrf = 'wrong';
-        assert.equal((await c.request('/me/account/unlink', { form: {} })).status, 403);
+        assert.equal((await c.request('/me/link', { form: {} })).status, 403);
         c.csrf = good;
+        await linkDiscord(app, c);
+        await c.request('/me/account');
+        const good2 = c.csrf;
+        c.csrf = 'wrong';
+        assert.equal((await c.request('/me/account/unlink', { form: {} })).status, 403);
+        c.csrf = good2;
         assert.equal((await c.request('/me/account/password', { form: { password: PASSWORD, new_password: 'x' }, origin: 'https://evil.example' })).status, 403);
 
         const d = browser(app);
@@ -389,24 +514,27 @@ test('refusals: missing CSRF, another origin, and too many logins', async () => 
     }
 });
 
-test('Discord link rules: one account per Discord id; unlink and relink gets no new bonus; 101st gets nothing', async () => {
+test('Discord link rules: one account per Discord id; unlink sends back to the link step, relink gets no new bonus; 101st gets nothing', async () => {
     const store = createMemoryAccountStore();
     const app = await serve({ store });
     try {
         const a = browser(app);
-        await confirmed(app, a);
-        await linkDiscord(app, a);
+        await member(app, a);
         // The same Discord id on a second account is refused.
         const b = browser(app);
-        await confirmed(app, b, { username: 'other_cat', email: 'other@example.com' });
+        await signup(app, b, { username: 'other_cat' });
         const refused = await linkDiscord(app, b);
         assert.equal(refused.status, 409);
         assert.match(refused.body, /already linked to another Mewvo account/);
+        assert.equal((await b.request('/me')).location, '/me/link', 'still on the link step');
 
-        // Unlink and link again: no second bonus.
+        // Unlink: back to the link step; link again: no second bonus.
         await a.request('/me/account');
-        assert.equal((await a.request('/me/account/unlink', { form: {} })).status, 303);
-        assert.match((await a.request('/me')).body, /Link your Discord account/);
+        const unlinked = await a.request('/me/account/unlink', { form: {} });
+        assert.equal(unlinked.status, 303);
+        assert.equal(unlinked.location, '/me/link');
+        assert.match((await a.request('/me/link')).body, /Your Discord account was unlinked/);
+        assert.equal((await a.request('/me')).location, '/me/link');
         await linkDiscord(app, a);
         assert.match((await a.request('/me/linked')).body, /does not get the early-account bonus again/);
 
@@ -425,58 +553,61 @@ test('Discord link rules: one account per Discord id; unlink and relink gets no 
     }
 });
 
-test('email change: needs the password, confirmed from the new address, old address told', async () => {
+test('download my data: the account fields without any email field, never the password hash or 2FA secret', async () => {
     const app = await serve();
     try {
         const b = browser(app);
-        await confirmed(app, b);
-        await b.request('/me/account');
-        assert.equal((await b.request('/me/account/email', { form: { email: 'new@example.com', password: 'wrong password' } })).status, 401);
-        assert.equal((await b.request('/me/account/email', { form: { email: 'new@example.com', password: PASSWORD } })).status, 303);
-        await waitFor(() => app.mailer.last()?.to === 'new@example.com');
-        const path = linkFrom(app.mailer.last(), '/me/confirm');
-        await b.request(path);
-        const done = await b.request('/me/confirm', { form: { token: new URL(ORIGIN + path).searchParams.get('token') } });
-        assert.match(done.body, /Your email address is now new@example.com/);
-        await waitFor(() => app.mailer.last()?.to === 'cat@example.com');
-        assert.match(app.mailer.last().subject, /email was changed/);
-        assert.equal(await (await app.store.findByLogin('new@example.com')).username, 'cool_cat');
-    } finally {
-        await app.close();
-    }
-});
-
-test('download my data without Discord: the account fields, never the password hash or 2FA secret', async () => {
-    const app = await serve();
-    try {
-        const b = browser(app);
-        await confirmed(app, b);
+        await member(app, b);
         const res = await b.request('/me/data');
         assert.equal(res.status, 200);
         const file = JSON.parse(res.body);
         assert.equal(file.mewvoAccount[0].username, 'cool_cat');
-        assert.equal(file.mewvoAccount[0].email, 'cat@example.com');
+        assert.equal(file.mewvoAccount[0].discord_user_id, DISCORD_A);
+        assert.ok(!('email' in file.mewvoAccount[0]) && !('pending_email' in file.mewvoAccount[0]) && !('email_confirmed_at' in file.mewvoAccount[0]));
         assert.ok(!res.body.includes('scrypt$') && !res.body.includes('password_hash') && !res.body.includes('totp_secret'));
+        // An older account (before schema v8) still sees the email it gave then.
+        app.store._accounts.get('1').email = 'old@example.com';
+        const old = JSON.parse((await b.request('/me/data')).body);
+        assert.equal(old.mewvoAccount[0].email, 'old@example.com');
     } finally {
         await app.close();
     }
 });
 
-test('accounts are off unless MEMBER_ACCOUNTS_ENABLED=true', async () => {
-    const env = { ...ENV };
-    delete env.MEMBER_ACCOUNTS_ENABLED;
-    const app = await serve({ env });
+test('accounts are on by default with the member portal; MEMBER_ACCOUNTS_ENABLED=false turns them off; no email settings needed', async () => {
+    assert.equal(ENV.MEMBER_ACCOUNTS_ENABLED, undefined);
+    assert.equal(ENV.RESEND_API_KEY, undefined);
+    assert.equal(memberAccountsOn(ENV), true);
+    for (const off of ['false', 'FALSE', '0', 'no', 'off']) assert.equal(memberAccountsOn({ ...ENV, MEMBER_ACCOUNTS_ENABLED: off }), false, off);
+    for (const on of ['', 'true', '1']) assert.equal(memberAccountsOn({ ...ENV, MEMBER_ACCOUNTS_ENABLED: on }), true, on);
+    assert.equal(memberAccountsOn({ ...ENV, MEMBER_PORTAL_ENABLED: 'false' }), false, 'never without the portal');
+    const settings = memberAccountSettings(ENV, memberPortalSettings(ENV));
+    assert.deepEqual(settings.problems, []);
+
+    const app = await serve();
     try {
         const b = browser(app);
-        assert.equal((await b.request('/me/signup')).status, 404);
-        assert.equal((await b.request('/me/login-password')).status, 404);
-        assert.doesNotMatch((await b.request('/me')).body, /Mewvo account/);
+        assert.equal((await b.request('/me/signup')).status, 200);
+        assert.equal((await b.request('/me/login-password')).status, 200);
+        assert.match((await b.request('/me')).body, /Log in with a Mewvo account/);
+        assert.match((await b.request('/')).body, /href="\/me\/signup">Sign up</);
     } finally {
         await app.close();
     }
+    const offApp = await serve({ env: { ...ENV, MEMBER_ACCOUNTS_ENABLED: 'false' } });
+    try {
+        const b = browser(offApp);
+        assert.equal((await b.request('/me/signup')).status, 404);
+        assert.equal((await b.request('/me/login-password')).status, 404);
+        assert.equal((await b.request('/me/forgot')).status, 404);
+        assert.doesNotMatch((await b.request('/me')).body, /Mewvo account/);
+        assert.doesNotMatch((await b.request('/')).body, /href="\/me\/signup"/);
+    } finally {
+        await offApp.close();
+    }
 });
 
-test('bonus counting in the store: 30 letters, 100 Pro months, a higher plan is reported, concurrent links for slot 100', async () => {
+test('bonus counting in the store: 30 letters, 100 Pro bonuses of 6 months, a higher plan is reported, concurrent links for slot 100', async () => {
     const granted = [];
     const store = createMemoryAccountStore({
         grantPro: async (userId) => {
@@ -485,7 +616,7 @@ test('bonus counting in the store: 30 letters, 100 Pro months, a higher plan is 
             return { subscription: { user_id: userId } };
         },
     });
-    const make = async (i) => (await store.createAccount({ username: `user_${i}`, email: `u${i}@example.com`, passwordHash: 'h' })).account;
+    const make = async (i) => (await store.createAccount({ username: `user_${i}`, passwordHash: 'h' })).account;
     const results = [];
     for (let i = 1; i <= 98; i += 1) {
         const account = await make(i);
@@ -495,11 +626,13 @@ test('bonus counting in the store: 30 letters, 100 Pro months, a higher plan is 
     assert.equal(results[29].letter, true);
     assert.equal(results[30].letter, false);
     assert.equal(results[97].linkNumber, 98);
+    assert.match(bonusText(results[0]), /Mewvo Pro for 6 months, and you can pick a 1-letter username/);
+    assert.match(bonusText(results[40]), /Mewvo Pro for 6 months\.$/);
     // #99 already has a higher plan: the slot is used, the reason is shown, nothing granted.
     const a99 = await make(99);
     const r99 = (await store.linkDiscord({ accountId: a99.id, discordUserId: '900000000000000099' })).bonus;
     assert.equal(r99.pro, false);
-    assert.match(bonusText(r99), /could not be added: You already have Max/);
+    assert.match(bonusText(r99), /6 months of Pro were due, but they could not be added: You already have Max/);
     // Two links at the same moment for slot 100: exactly one gets it.
     const [x, y] = [await make(100), await make(101)];
     const both = await Promise.all([
@@ -517,60 +650,25 @@ test('bonus counting in the store: 30 letters, 100 Pro months, a higher plan is 
     await assert.rejects(store.claimLetter({ accountId: '2', letter: 'a' }), /just took that letter/);
     await assert.rejects(store.claimLetter({ accountId: '31', letter: 'b' }), /cannot claim/);
     assert.ok(!(await store.freeLetters()).includes('a'));
+    assert.equal((await store.findByDiscordId('900000000000000001')).username, 'a');
+    assert.equal(await store.findByDiscordId('123'), null);
 });
 
-test('prune: unconfirmed accounts older than 7 days are deleted', async () => {
+test('prune: accounts that never linked Discord are deleted after 7 days; linked, unlinked-later and email-confirmed ones stay', async () => {
     let now = Date.now();
     const store = createMemoryAccountStore({ now: () => now });
-    const { account } = await store.createAccount({ username: 'old_one', email: 'old@example.com', passwordHash: 'h' });
-    const { account: kept } = await store.createAccount({ username: 'kept_one', email: 'kept@example.com', passwordHash: 'h' });
-    await store.saveToken({ accountId: kept.id, purpose: 'confirm', hash: 'x'.repeat(64), ttlMs: 1000 });
-    store._accounts.get(kept.id).email_confirmed_at = new Date(now);
+    const { account: never } = await store.createAccount({ username: 'never_linked', passwordHash: 'h' });
+    const { account: linked } = await store.createAccount({ username: 'linked_one', passwordHash: 'h' });
+    const { account: unlinked } = await store.createAccount({ username: 'unlinked_one', passwordHash: 'h' });
+    const { account: legacy } = await store.createAccount({ username: 'legacy_one', passwordHash: 'h' });
+    const { account: fresh } = await store.createAccount({ username: 'fresh_one', passwordHash: 'h' });
+    await store.linkDiscord({ accountId: linked.id, discordUserId: DISCORD_A });
+    await store.linkDiscord({ accountId: unlinked.id, discordUserId: DISCORD_B });
+    await store.unlinkDiscord(unlinked.id);
+    store._accounts.get(legacy.id).email_confirmed_at = new Date(now);
     now += 7 * 24 * 3600 * 1000 + 1;
+    store._accounts.get(fresh.id).created_at = new Date(now);
     assert.deepEqual(await store.prune(), { accounts: 1, tokens: 0 });
-    assert.equal(await store.findById(account.id), null);
-    assert.ok(await store.findById(kept.id));
-});
-
-test('security review fixes: a stranger cannot confirm, the email owner can reset an unconfirmed account, a pending email blocks nobody, a new password ends old links', async () => {
-    const app = await serve();
-    try {
-        // A stranger signs up with someone else's address and their own password.
-        const stranger = browser(app);
-        await signup(app, stranger, { username: 'squatter', email: 'owner@example.com', password: 'stranger password 1' });
-        const confirmPath = linkFrom(app.mailer.last(), '/me/confirm');
-        const confirmToken = new URL(ORIGIN + confirmPath).searchParams.get('token');
-        // The address's owner gets the link but not the password: pressing confirm does nothing.
-        const owner = browser(app);
-        await owner.request(confirmPath);
-        assert.equal((await owner.request('/me/confirm', { form: { token: confirmToken, password: '' } })).status, 401);
-        const account = [...app.store._accounts.values()].find((a) => a.username === 'squatter');
-        assert.equal(account.email_confirmed_at, null);
-        // The owner asks for a reset: a reset link (not a confirm link), which confirms the email and sets their password.
-        await owner.request('/me/forgot');
-        await owner.request('/me/forgot', { form: { email: 'owner@example.com' } });
-        await waitFor(() => app.mailer.sent.some((m) => m.text.includes('/me/reset')));
-        const resetPath = linkFrom(app.mailer.sent.find((m) => m.text.includes('/me/reset')), '/me/reset');
-        await owner.request(resetPath);
-        const reset = await owner.request('/me/reset', { form: { token: new URL(ORIGIN + resetPath).searchParams.get('token'), password: 'owner new password 9' } });
-        assert.ok([200, 303].includes(reset.status), `reset answered ${reset.status}`);
-        const after = app.store._accounts.get(account.id);
-        assert.ok(after.email_confirmed_at, 'the reset link confirmed the email');
-        assert.ok([...app.store._tokens.values()].filter((t) => t.account_id === account.id).every((t) => t.used_at), 'every open link is used up');
-        // The stranger's confirm link and password no longer work.
-        assert.equal((await stranger.request('/me/confirm', { form: { token: confirmToken, password: 'stranger password 1' } })).status, 400);
-        assert.equal((await passwordLogin(stranger, 'squatter', 'stranger password 1')).status, 401);
-        assert.equal((await passwordLogin(owner, 'owner@example.com', 'owner new password 9')).status, 303);
-
-        // A pending (unconfirmed) email change does not block a sign-up with that address.
-        const other = browser(app);
-        await confirmed(app, other, { username: 'other_cat', email: 'other@example.com' });
-        await other.request('/me/account');
-        assert.equal((await other.request('/me/account/email', { form: { email: 'free@example.com', password: PASSWORD } })).status, 303);
-        const third = browser(app);
-        await signup(app, third, { username: 'third_cat', email: 'free@example.com' });
-        assert.ok([...app.store._accounts.values()].some((a) => a.username === 'third_cat' && a.email === 'free@example.com'));
-    } finally {
-        await app.close();
-    }
+    assert.equal(await store.findById(never.id), null);
+    for (const kept of [linked, unlinked, legacy, fresh]) assert.ok(await store.findById(kept.id), kept.username);
 });

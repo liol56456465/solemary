@@ -1,15 +1,15 @@
 // Mewvo accounts, the pure parts (src/services/accounts/accountCore.js): validation, scrypt,
-// tokens, TOTP against the RFC 6238 / RFC 4226 vectors, recovery codes, the 2FA secret at
-// rest, the bonus limits, and the email sender (no network).
+// TOTP against the RFC 6238 / RFC 4226 vectors, recovery codes, the 2FA secret at rest and
+// the bonus limits (6 months of Pro = 183 days). Accounts have no email.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    LETTERS, PRO_BONUS_LIMIT, LETTER_CLAIM_LIMIT, base32Decode, base32Encode, bonusFor, checkAge, cleanToken, createRecoveryCodes, createToken,
-    createTotpSecret, decryptSecret, encryptSecret, hashPassword, hashRecoveryCode, hotp, maskEmail, normalizeLetter, normalizeRecoveryCode,
-    otpauthUri, sha256Hex, tokenUsable, totp, totpEncryptionKey, validateEmail, validatePassword, validateUsername, verifyAgainstDummy,
+    LETTERS, PRO_BONUS_DAYS, PRO_BONUS_LABEL, PRO_BONUS_LIMIT, LETTER_CLAIM_LIMIT, base32Decode, base32Encode, bonusFor, checkAge,
+    createRecoveryCodes, createTotpSecret, decryptSecret, encryptSecret, hashPassword, hashRecoveryCode, hotp, normalizeLetter,
+    normalizeRecoveryCode, otpauthUri, totp, totpEncryptionKey, validatePassword, validateUsername, verifyAgainstDummy,
     verifyPassword, verifyTotp,
 } from '../src/services/accounts/accountCore.js';
-import { createEmailSender } from '../src/services/accounts/emailSender.js';
+import * as core from '../src/services/accounts/accountCore.js';
 
 const LOW = { N: 1024, r: 8, p: 1 };
 
@@ -28,14 +28,6 @@ test('1-letter names: only a-z and 0-9, one character', () => {
     assert.equal(normalizeLetter('7'), '7');
     for (const bad of ['', '_', 'ab', '!', 'é']) assert.equal(normalizeLetter(bad), null, bad);
     assert.equal(LETTERS.length, 36);
-});
-
-test('email: lowercased, basic shape', () => {
-    assert.deepEqual(validateEmail(' Someone@Example.COM '), { ok: true, value: 'someone@example.com' });
-    assert.equal(validateEmail('a.b+tag@sub.example.co').ok, true);
-    for (const bad of ['', 'no-at', '@example.com', 'a@b', 'a@@b.com', 'a b@c.com', 'a@-x.com', 'a@x-.com', '.a@b.com', 'a..b@c.com', `${'a'.repeat(65)}@b.com`, `a@${'b'.repeat(250)}.com`, 'a@b.c', '<a>@b.com']) {
-        assert.equal(validateEmail(bad).ok, false, bad);
-    }
 });
 
 test('password: 10 to 200 characters, kept as typed', () => {
@@ -72,23 +64,6 @@ test('scrypt: random salt, params stored, verify with the right password only', 
     const strong = await hashPassword('default cost works', undefined);
     assert.match(strong, /^scrypt\$32768\$8\$1\$/);
     assert.equal(await verifyPassword('default cost works', strong), true);
-});
-
-test('tokens: 32 random bytes, only the SHA-256 stored, expiry and single use', () => {
-    const { token, hash } = createToken();
-    assert.equal(Buffer.from(token, 'base64url').length, 32);
-    assert.equal(hash, sha256Hex(token));
-    assert.notEqual(createToken().token, token);
-    assert.equal(cleanToken(token), token);
-    assert.equal(cleanToken(`${token}x`), null);
-    assert.equal(cleanToken('../etc'), null);
-    const now = Date.now();
-    const row = { purpose: 'confirm', expires_at: new Date(now + 1000), used_at: null };
-    assert.equal(tokenUsable(row, 'confirm', now).ok, true);
-    assert.equal(tokenUsable(row, 'reset', now).reason, 'purpose');
-    assert.equal(tokenUsable({ ...row, used_at: new Date(now) }, 'confirm', now).reason, 'used');
-    assert.equal(tokenUsable({ ...row, expires_at: new Date(now) }, 'confirm', now).reason, 'expired');
-    assert.equal(tokenUsable(null, 'confirm', now).reason, 'missing');
 });
 
 test('HOTP: the RFC 4226 test vectors', () => {
@@ -176,26 +151,11 @@ test('bonus limits: 1-30 letter + Pro, 31-100 Pro, 101 and later nothing', () =>
     assert.deepEqual(bonusFor(100), { pro: true, letter: false });
     assert.deepEqual(bonusFor(101), { pro: false, letter: false });
     assert.deepEqual(bonusFor(0), { pro: false, letter: false });
+    // 6 months of Pro: the premium store counts whole days, so 183 (not calendar months).
+    assert.equal(PRO_BONUS_DAYS, 183);
+    assert.equal(PRO_BONUS_LABEL, '6 months');
 });
 
-test('email sender: without a key it only logs the masked address and subject; with one it calls Resend', async () => {
-    const lines = [];
-    const logger = { info: (line) => lines.push(line), warn: (line) => lines.push(line) };
-    let called = 0;
-    const off = createEmailSender({ apiKey: '', from: '', fetchImpl: async () => { called += 1; }, logger });
-    assert.deepEqual(await off.send({ to: 'someone@example.com', subject: 'Confirm', text: 'secret link https://x/me/confirm?token=abc' }), { sent: false });
-    assert.equal(called, 0);
-    assert.equal(lines.length, 1);
-    assert.ok(lines[0].includes('s***@example.com') && lines[0].includes('Confirm'));
-    assert.ok(!lines.join(' ').includes('token') && !lines.join(' ').includes('someone@'));
-    const seen = [];
-    const on = createEmailSender({ apiKey: 'test-key', from: 'Mewvo <no-reply@example.com>', logger, fetchImpl: async (url, options) => { seen.push({ url, options }); return { ok: true, status: 200 }; } });
-    assert.deepEqual(await on.send({ to: 'a@example.com', subject: 'S', text: 'T' }), { sent: true });
-    assert.equal(seen[0].url, 'https://api.resend.com/emails');
-    assert.equal(seen[0].options.headers.Authorization, 'Bearer test-key');
-    assert.deepEqual(JSON.parse(seen[0].options.body), { from: 'Mewvo <no-reply@example.com>', to: ['a@example.com'], subject: 'S', text: 'T' });
-    assert.ok(!lines.join(' ').includes('test-key'), 'the key is never logged');
-    const failing = createEmailSender({ apiKey: 'k', from: 'f@example.com', logger, fetchImpl: async () => ({ ok: false, status: 422 }) });
-    await assert.rejects(failing.send({ to: 'a@example.com', subject: 'S', text: 'T' }), /422/);
-    assert.equal(maskEmail('x'), '***');
+test('no email in accounts: no email validation, tokens or mail helpers are exported any more', () => {
+    for (const name of ['validateEmail', 'maskEmail', 'createToken', 'cleanToken', 'tokenUsable', 'EMAIL_MAX']) assert.equal(core[name], undefined, name);
 });

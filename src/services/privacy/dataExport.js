@@ -42,7 +42,8 @@ export const EXPORT_SECTIONS = [
         FROM ${t.premium_keys} WHERE created_by = $1 AND source = 'gift' ORDER BY created_at`],
     ['keysRedeemed', (t) => `SELECT code, plan_id, duration_days, gift_to, gift_message, redeemed_at FROM ${t.premium_keys} WHERE redeemed_by = $1 ORDER BY redeemed_at`],
     ['reminders', (t) => `SELECT text, due_at, created_at, sent_at, guild_id FROM ${t.reminders} WHERE user_id = $1 ORDER BY created_at`],
-    // Mewvo account on the website (schema v7): never the password hash, the 2FA secret or the recovery codes.
+    // Mewvo account on the website: never the password hash, the 2FA secret or the recovery codes.
+    // The email columns only hold something for accounts made before schema v8 (cleanAccountExport).
     ['mewvoAccount', (t) => `SELECT username, email, pending_email, email_confirmed_at, age_confirmed_at, terms_accepted_at, discord_user_id, discord_username,
         discord_linked_at, (totp_enabled_at IS NOT NULL) AS two_step_login_on, totp_enabled_at, password_changed_at, last_login_at, created_at
         FROM ${t.member_accounts} WHERE discord_user_id = $1`],
@@ -60,6 +61,15 @@ export const EXPORT_NOTE = 'Everything Mewvo stores about your Discord account, 
 export const ACCOUNT_EXPORT_NOTE = 'Your Mewvo account on the website. No Discord account is linked, so there is no Discord data to show. '
     + 'Left out for your safety: the password hash, the two-step login secret and the recovery codes. To ask for more, or to have data corrected or deleted, see /privacy on the website.';
 
+/** Email columns of a Mewvo account: only in the file when set (accounts made before v8 had an email; newer ones have none). */
+const ACCOUNT_EMAIL_FIELDS = ['email', 'pending_email', 'email_confirmed_at'];
+export function cleanAccountExport(row) {
+    if (!row) return null;
+    const out = { ...row };
+    for (const field of ACCOUNT_EMAIL_FIELDS) if (out[field] === null || out[field] === undefined) delete out[field];
+    return out;
+}
+
 /**
  * Builds the export. `query(text, params)` returns { rows }; `readKey(key)` reads the
  * key-value store (the to-do list). Any error is thrown: a half export is never served.
@@ -69,7 +79,7 @@ export async function buildDataExport(userId, { query, readKey, tables = pgConfi
     const sections = {};
     for (const [name, sql] of EXPORT_SECTIONS) {
         const result = await query(sql(tables), [String(userId)]);
-        sections[name] = result?.rows || [];
+        sections[name] = name === 'mewvoAccount' ? (result?.rows || []).map(cleanAccountExport) : result?.rows || [];
     }
     const todo = readKey ? await readKey(`todo_${userId}`) : null;
     sections.todoList = todo && typeof todo === 'object' ? todo : null;

@@ -369,7 +369,9 @@ export function createPremiumStore({
     async function grant({ userId, planId, days, actor, source = 'owner' }) {
         if (!snowflake.test(String(userId || ''))) throw new PremiumError('Enter a Discord user ID (17–20 digits).');
         if (!paidPlan(planId)) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).');
-        if (!KEY_DURATIONS.some((d) => d.days === days)) throw new PremiumError('Choose one of the listed durations.');
+        // The early-account bonus has its own length (6 months = 183 days, accountCore.js); the owner picks a listed one.
+        const durationOk = source === 'bonus' ? Number.isInteger(days) && days >= 1 && days <= 366 : KEY_DURATIONS.some((d) => d.days === days);
+        if (!durationOk) throw new PremiumError('Choose one of the listed durations.');
         const { withTransaction: tx } = await db();
         return tx(async (client) => {
             const previous = await lockedSubscription(client, String(userId));

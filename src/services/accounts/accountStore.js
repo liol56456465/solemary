@@ -1,5 +1,8 @@
 // accountStore.js — Mewvo accounts in PostgreSQL (tables member_accounts, member_account_tokens,
-// member_account_recovery_codes, member_account_bonuses, member_account_counters; schema v7).
+// member_account_recovery_codes, member_account_bonuses, member_account_counters; schema v8).
+// Accounts have no email since schema v8 (owner, 2026-11-01): the email column stays for older
+// rows (nullable), nothing writes it. A forgotten password is reset through the linked Discord
+// account (accountRoutes.js); member_account_tokens is no longer written either.
 //
 // Every multi-step change runs in one transaction with the rows it depends on locked.
 // Errors are thrown (database down → the page says nothing was changed); a refusal the
@@ -10,7 +13,7 @@
 //     member_account_counters('discord_links'), locked with SELECT ... FOR UPDATE, so two
 //     links at the same moment wait for each other and can never get the same number
 //     (link_number is also UNIQUE, a second guard).
-//   - 1..30 may claim a 1-letter username once; 1..100 get Mewvo Pro for 30 days through the
+//   - 1..30 may claim a 1-letter username once; 1..100 get Mewvo Pro for 6 months (183 days) through the
 //     premium store, in the SAME transaction (so a slot is never used without the plan, or
 //     the other way round). 101 and later get nothing.
 //   - A Discord id that already has a bonus row (linked before, to this or another account)
@@ -18,11 +21,13 @@
 
 import { pgConfig } from '../../config/database/postgres.js';
 import { createPremiumStore, PremiumError } from '../billing/premiumService.js';
+import { cleanAccountExport } from '../privacy/dataExport.js';
 import {
-    AccountError, LETTERS, LETTER_CLAIM_LIMIT, PRO_BONUS_DAYS, PRO_BONUS_PLAN, bonusFor, sha256Hex, tokenUsable,
+    AccountError, LETTERS, LETTER_CLAIM_LIMIT, PRO_BONUS_DAYS, PRO_BONUS_PLAN, bonusFor,
 } from './accountCore.js';
 
-export const UNCONFIRMED_KEEP_MS = 7 * 24 * 60 * 60 * 1000;
+/** An account that never linked Discord is deleted after 7 days (frees the username). */
+export const UNLINKED_KEEP_MS = 7 * 24 * 60 * 60 * 1000;
 const COUNTER = 'discord_links';
 const SNOWFLAKE = /^\d{17,20}$/;
 
@@ -63,25 +68,16 @@ export function createAccountStore({
         return (await db()).withTransaction(fn);
     }
 
-    /**
-     * A new, unconfirmed account. Returns { account } or { emailTaken: true } (the page then
-     * acts as if it worked, so nobody learns which emails have accounts). A taken username
-     * is an AccountError (usernames are public, so saying so reveals nothing extra).
-     */
-    async function createAccount({ username, email, passwordHash }) {
-        // Only an account's own email blocks a sign-up. A pending email change does not, so nobody
-        // can hold an address they never confirmed.
-        const taken = await q(`SELECT 1 FROM ${A} WHERE email = $1 LIMIT 1`, [email]);
-        if (taken.rows.length) return { emailTaken: true };
+    /** A new account (username + password hash, no email). A taken username is an AccountError. */
+    async function createAccount({ username, passwordHash }) {
         try {
             const { rows: [account] } = await q(
-                `INSERT INTO ${A} (username, email, password_hash, age_confirmed_at, terms_accepted_at, created_at)
-                 VALUES ($1, $2, $3, $4, $4, $4) RETURNING *`, [username, email, passwordHash, at()]);
+                `INSERT INTO ${A} (username, password_hash, age_confirmed_at, terms_accepted_at, created_at)
+                 VALUES ($1, $2, $3, $3, $3) RETURNING *`, [username, passwordHash, at()]);
             if (!account) throw new Error('account insert returned no row');
             return { account };
         } catch (error) {
             if (isUnique(error, 'username')) throw new AccountError('That username is already taken. Choose another one.', 409, 'username_taken');
-            if (isUnique(error, 'email')) return { emailTaken: true };
             throw error;
         }
     }
@@ -92,92 +88,26 @@ export function createAccountStore({
         return row || null;
     }
 
-    /** By username, or by email when it contains "@". Lowercased by the caller. */
+    /** By username (lowercased here). */
     async function findByLogin(identifier) {
         const text = String(identifier || '').trim().toLowerCase();
         if (!text) return null;
-        const column = text.includes('@') ? 'email' : 'username';
-        const { rows: [row] } = await q(`SELECT * FROM ${A} WHERE ${column} = $1`, [text]);
+        const { rows: [row] } = await q(`SELECT * FROM ${A} WHERE username = $1`, [text]);
         return row || null;
     }
 
-    async function findByEmail(email) {
-        const { rows: [row] } = await q(`SELECT * FROM ${A} WHERE email = $1`, [String(email || '').toLowerCase()]);
+    /** The account a Discord id is linked to (password reset through Discord), or null. */
+    async function findByDiscordId(discordUserId) {
+        if (!SNOWFLAKE.test(String(discordUserId || ''))) return null;
+        const { rows: [row] } = await q(`SELECT * FROM ${A} WHERE discord_user_id = $1`, [String(discordUserId)]);
         return row || null;
-    }
-
-    /** Stores a token's hash (older unused ones of the same purpose are marked used). */
-    async function saveToken({ accountId, purpose, hash, email = null, ttlMs }) {
-        return tx(async (client) => {
-            await client.query(`UPDATE ${T} SET used_at = $3 WHERE account_id = $1 AND purpose = $2 AND used_at IS NULL`, [accountId, purpose, at()]);
-            const { rows: [row] } = await client.query(
-                `INSERT INTO ${T} (token_hash, account_id, purpose, email, created_at, expires_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-                [hash, accountId, purpose, email, at(), at(now() + ttlMs)]);
-            if (!row) throw new Error('token insert returned no row');
-            return row;
-        });
-    }
-
-    /** The token row (not used up), for showing a form; null when it cannot be used. */
-    async function peekToken(token, purpose) {
-        const { rows: [row] } = await q(`SELECT * FROM ${T} WHERE token_hash = $1`, [sha256Hex(token)]);
-        return tokenUsable(row, purpose, now()).ok ? row : null;
-    }
-
-    async function lockToken(client, token, purposes) {
-        const { rows: [row] } = await client.query(`SELECT * FROM ${T} WHERE token_hash = $1 FOR UPDATE`, [sha256Hex(token)]);
-        if (!row || !purposes.includes(row.purpose)) return { error: 'missing' };
-        const usable = tokenUsable(row, null, now());
-        if (!usable.ok) return { error: usable.reason };
-        await client.query(`UPDATE ${T} SET used_at = $2 WHERE token_hash = $1`, [row.token_hash, at()]);
-        return { row };
-    }
-
-    /**
-     * A confirmation link (sign-up or a new email): used up and applied in one transaction.
-     * Returns { account, purpose, oldEmail } or { error: 'missing' | 'used' | 'expired' | 'email_taken' }.
-     */
-    async function confirmEmail(token) {
-        return tx(async (client) => {
-            const { row, error } = await lockToken(client, token, ['confirm', 'email_change']);
-            if (error) return { error };
-            const { rows: [account] } = await client.query(`SELECT * FROM ${A} WHERE id = $1 FOR UPDATE`, [row.account_id]);
-            if (!account) return { error: 'missing' };
-            if (row.purpose === 'confirm') {
-                const { rows: [updated] } = await client.query(
-                    `UPDATE ${A} SET email_confirmed_at = COALESCE(email_confirmed_at, $2) WHERE id = $1 RETURNING *`, [account.id, at()]);
-                return { account: updated, purpose: 'confirm' };
-            }
-            if (!row.email || account.pending_email !== row.email) return { error: 'used' };
-            const { rows: clash } = await client.query(`SELECT 1 FROM ${A} WHERE email = $1 AND id <> $2`, [row.email, account.id]);
-            if (clash.length) return { error: 'email_taken' };
-            const { rows: [updated] } = await client.query(
-                `UPDATE ${A} SET email = $2, pending_email = NULL, email_confirmed_at = $3 WHERE id = $1 RETURNING *`, [account.id, row.email, at()]);
-            return { account: updated, purpose: 'email_change', oldEmail: account.email };
-        });
-    }
-
-    /** A reset link: used up, the new password set. { account } or { error }. */
-    async function resetPassword(token, passwordHash) {
-        return tx(async (client) => {
-            const { row, error } = await lockToken(client, token, ['reset']);
-            if (error) return { error };
-            // The link came to this email, so it also confirms it: whoever owns the address can
-            // always take an account back, also one a stranger signed up with it.
-            const { rows: [account] } = await client.query(
-                `UPDATE ${A} SET password_hash = $2, password_changed_at = $3, pending_email = NULL,
-                 email_confirmed_at = COALESCE(email_confirmed_at, $3) WHERE id = $1 RETURNING *`, [row.account_id, passwordHash, at()]);
-            if (!account) return { error: 'missing' };
-            await client.query(`UPDATE ${T} SET used_at = $2 WHERE account_id = $1 AND used_at IS NULL`, [account.id, at()]);
-            return { account };
-        });
     }
 
     async function recordLogin(id) {
         await q(`UPDATE ${A} SET last_login_at = $2 WHERE id = $1`, [id, at()]);
     }
 
-    /** A new password ends every open email link and any email change in progress. */
+    /** A new password (settings, or the reset through Discord). Old email links from before v8 are used up too. */
     async function setPassword(id, passwordHash) {
         return tx(async (client) => {
             const { rowCount } = await client.query(
@@ -185,15 +115,6 @@ export function createAccountStore({
             if (rowCount !== 1) throw new Error('password update changed no row');
             await client.query(`UPDATE ${T} SET used_at = $2 WHERE account_id = $1 AND used_at IS NULL`, [id, at()]);
         });
-    }
-
-    /** Sets pending_email (the new address must still be confirmed). Refuses a taken address. */
-    async function setPendingEmail(id, email) {
-        const { rows: clash } = await q(`SELECT 1 FROM ${A} WHERE email = $1 AND id <> $2`, [email, id]);
-        if (clash.length) return { emailTaken: true };
-        const { rowCount } = await q(`UPDATE ${A} SET pending_email = $2 WHERE id = $1`, [id, email]);
-        if (rowCount !== 1) throw new Error('email update changed no row');
-        return { ok: true };
     }
 
     // ── 2FA ───────────────────────────────────────────────────────────────
@@ -270,6 +191,8 @@ export function createAccountStore({
                         account.discord_user_id === discordUserId && account.discord_linked_at ? account.discord_linked_at : at()]);
                 const { rows: [existing] } = await client.query(`SELECT * FROM ${B} WHERE discord_user_id = $1 FOR UPDATE`, [discordUserId]);
                 if (existing) {
+                    // The Discord id's current account (the bonus account may have been deleted).
+                    if (!existing.account_id) await client.query(`UPDATE ${B} SET account_id = $2 WHERE discord_user_id = $1`, [discordUserId, accountId]);
                     return { account: linked, bonus: { kind: 'repeat', linkNumber: existing.link_number, pro: false, proNote: null, letter: false }, premium: null };
                 }
                 const linkNumber = await nextLinkNumber(client);
@@ -361,26 +284,31 @@ export function createAccountStore({
         });
     }
 
-    /** Daily: unconfirmed accounts older than 7 days, and tokens that expired or were used a day ago. */
+    /**
+     * Daily: accounts older than 7 days that never linked Discord (no Discord id now, and no
+     * bonus row ever pointed at them; accounts confirmed by email before v8 are kept), and
+     * old email-link tokens from before v8.
+     */
     async function prune() {
-        const { rowCount: accounts } = await q(`DELETE FROM ${A} WHERE email_confirmed_at IS NULL AND created_at <= $1`, [at(now() - UNCONFIRMED_KEEP_MS)]);
+        const { rowCount: accounts } = await q(
+            `DELETE FROM ${A} a WHERE a.discord_user_id IS NULL AND a.email_confirmed_at IS NULL AND a.created_at <= $1
+             AND NOT EXISTS (SELECT 1 FROM ${B} b WHERE b.account_id = a.id)`, [at(now() - UNLINKED_KEEP_MS)]);
         const dayAgo = at(now() - 24 * 60 * 60 * 1000);
         const { rowCount: tokens } = await q(`DELETE FROM ${T} WHERE expires_at <= $1 OR used_at <= $1`, [dayAgo]);
         return { accounts: accounts || 0, tokens: tokens || 0 };
     }
 
-    /** "Download my data": the account fields (never the password hash, the 2FA secret or codes). */
+    /** "Download my data": the account fields (never the password hash, the 2FA secret or codes; email fields only when set). */
     async function exportOf(accountId) {
         const { rows: [row] } = await q(
             `SELECT username, email, pending_email, email_confirmed_at, age_confirmed_at, terms_accepted_at, discord_user_id, discord_username,
                     discord_linked_at, (totp_enabled_at IS NOT NULL) AS two_step_login_on, totp_enabled_at, password_changed_at, last_login_at, created_at
              FROM ${A} WHERE id = $1`, [accountId]);
-        return row || null;
+        return cleanAccountExport(row);
     }
 
     return {
-        createAccount, findById, findByLogin, findByEmail, saveToken, peekToken, confirmEmail, resetPassword, recordLogin, setPassword,
-        setPendingEmail, enableTotp, disableTotp, useTotpStep, useRecoveryCode, recoveryCodesLeft, linkDiscord, unlinkDiscord, bonusOf,
+        createAccount, findById, findByLogin, findByDiscordId, recordLogin, setPassword, enableTotp, disableTotp, useTotpStep, useRecoveryCode, recoveryCodesLeft, linkDiscord, unlinkDiscord, bonusOf,
         canClaimLetter, freeLetters, claimLetter, declineLetter, deleteAccount, prune, exportOf,
     };
 }
