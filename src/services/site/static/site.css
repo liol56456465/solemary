@@ -776,7 +776,6 @@ h2 { font-size: clamp(24px, 2.8vw, 32px); line-height: 1.2; letter-spacing: -0.0
 .trust-head { display: flex; align-items: center; justify-content: space-between; gap: 24px 48px; margin-bottom: 40px; }
 .trust-head h1 { margin-bottom: 12px; overflow-wrap: anywhere; }
 .trust-head .lead { margin: 0; }
-.trust-eyebrow { margin: 0 0 8px; font-size: 14px; font-weight: 650; color: var(--accent); }
 .trust-cat { flex: none; margin: 0; display: grid; justify-items: center; gap: 8px; padding: 16px 20px; border: 1px solid var(--border); border-radius: 14px; background: var(--raised); text-align: center; }
 .trust-cat img { width: 128px; height: 128px; }
 .trust-cat figcaption { font-size: 14px; color: var(--text-muted); max-width: 160px; overflow-wrap: anywhere; }

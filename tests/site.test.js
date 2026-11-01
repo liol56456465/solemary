@@ -593,7 +593,7 @@ test('home: a real DM preview, dashboard, ladder, what it does as cards, the pla
         assert.ok(body.includes('€1.99') && body.includes('href="/pricing"'));
         for (const href of ['/docs/warnings', '/docs/appeals', '/docs/using-the-dashboard', '/features#f-automod']) assert.ok(body.includes(`href="${href}"`), href);
         // No template furniture: numbered eyebrows, tick lists, a CTA band, made-up handles.
-        for (const sign of ['section-num', 'section-index', 'class="ticks"', 'class="cta"', 'kicker', 'mira', 'pixelfox', '—']) {
+        for (const sign of ['section-num', 'section-index', 'class="ticks"', 'class="cta"', 'kicker', 'eyebrow', 'mira', 'pixelfox', '—']) {
             assert.ok(!body.includes(sign), sign);
         }
         for (const word of ['Supercharge', 'Unleash', 'Elevate', 'Seamless', 'Next-level', 'Revolutioni', 'Empower', 'trusted by']) {

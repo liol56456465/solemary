@@ -82,7 +82,7 @@ export function trustPage(ctx, card, { cat = null, rules = null } = {}) {
         title: `${view.serverName} trust card`, active: 'trust', path: '/trust', image,
         description: `How ${view.serverName} is moderated: appeal times, appeal results and members in good standing over the last ${view.days} days. Numbers only.`,
         body: html`<div class="wrap page">
-<header class="trust-head"><div><p class="trust-eyebrow">Trust card</p><h1>${view.serverName}</h1>
+<header class="trust-head"><div><h1>${view.serverName}: trust card</h1>
 <p class="lead">How this server was moderated over the last ${view.days} days. Numbers only: no names, no reasons, no moderators.</p></div>${catBlock(cat)}</header>
 ${stats(view)}
 <div class="trust-grid">

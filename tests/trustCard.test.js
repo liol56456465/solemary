@@ -261,7 +261,7 @@ test('on: tiles, how it moderates, rules, cat, footer link, sitemap, cat share i
         assert.equal(page.status, 200);
         assert.equal(page.headers.get('cache-control'), 'no-cache');
         const body = page.body;
-        assert.match(body, /<h1>Mewvo &lt;b&gt;<\/h1>/, 'server name escaped');
+        assert.match(body, /<h1>Mewvo &lt;b&gt;: trust card<\/h1>/, 'server name escaped');
         assert.match(body, /First answer on an appeal<\/dt><dd class="trust-value">5 hours<\/dd>/);
         assert.match(body, /Appeals accepted<\/dt><dd class="trust-value">67%<\/dd>/);
         assert.match(body, /Members in good standing<\/dt><dd class="trust-value">97%<\/dd>/);
