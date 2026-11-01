@@ -790,6 +790,8 @@ dialog.confirm-dialog::backdrop { background: var(--scrim); }
 .scroll, .table-wrap { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--raised); }
 table { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
 th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+/* Rows with a control (a select, a button form) centre their text on it instead of hanging at the top. */
+tr:has(> td > select, > td > form, > td > button, > td > label > input) > td { vertical-align: middle; }
 th {
     position: sticky; top: var(--topbar); z-index: 2; background: var(--surface-2);
     font-size: 12px; font-weight: 600; color: var(--fg-2); white-space: nowrap;
@@ -1228,6 +1230,8 @@ details.section .section-help { margin: 0 0 16px; color: var(--fg-2); max-width:
 .settings-form .grid > label textarea { font-weight: 400; }
 .section-body > .settings-form:last-child .form-actions { justify-content: flex-start; flex-direction: row-reverse; }
 .inline-form select, .add-row select, form select:not([multiple]) { min-width: 220px; }
+/* Filter rows size their own fields (a 220px select overflowed the two-column phone grid). */
+form.filters select:not([multiple]) { min-width: 0; }
 /* Overview and other plain sections: the same simple boxes as the settings pages. */
 .plain-section { border: 1px solid var(--line); border-radius: 6px; padding: 14px 18px 18px; margin: 0 0 16px; background: var(--raised); }
 .plain-section > h2 { font-size: 16px; }
@@ -1265,7 +1269,8 @@ details.section .section-help { margin: 0 0 16px; color: var(--fg-2); max-width:
    width (a container query on the content column, so the sidebar width does not matter).
    Settings stay at 2 columns so forms keep a readable width; the Overview uses 3 when wide.
    A wide or full card takes the whole row and lays its fields out in two columns.
-   Each card: bold title, one short line, its settings, its own Save at the bottom edge.
+   Each card: bold title, one short line, its settings, its own Save under them. Cards in a row
+   keep their own height (align top): a short card never stretches into an empty box.
    The content area sits on --surface and cards on --raised, so cards read as cards in every
    theme. Bolder type: page title 30/800, topic 20/800, card title 16/750, helper text 13 muted. */
 .app { background: var(--surface); }
@@ -1299,7 +1304,7 @@ h1, .page-head h1, .module-title h1, .module-header h1 { font-size: 30px; font-w
 .topic-head { margin: 0 0 14px; }
 .topic-head h2 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.25; }
 .topic-head p { margin: 4px 0 0; font-size: 14px; color: var(--text-muted); max-width: 72ch; }
-.card-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.card-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 @container cards (min-width: 640px) {
     .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .card-grid > .size-wide, .card-grid > .size-full { grid-column: 1 / -1; }
@@ -1356,7 +1361,7 @@ main { container: page / inline-size; }
 a.stat-value:hover { color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
 .stat-value.is-unknown { font-size: 16px; font-weight: 600; letter-spacing: 0; color: var(--text-muted); }
 .stat-sub { margin: 4px 0 0; font-size: 13px; color: var(--text-muted); }
-.ov-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; grid-auto-flow: dense; align-items: stretch; }
+.ov-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; grid-auto-flow: dense; align-items: start; }
 @container page (min-width: 640px) {
     .ov-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .ov-grid > .ov-wide, .ov-grid > .ov-full { grid-column: 1 / -1; }
