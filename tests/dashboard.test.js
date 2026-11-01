@@ -522,12 +522,15 @@ test('overview: status, counts, checklist and recent actions; read-only', async 
     const { cookie } = await login(d);
     const res = await runProtected(d, d.overview, { method: 'GET', headers: { cookie }, query: {} });
     assert.equal(res.statusCode, 200);
-    // One plain line of facts (no number tiles) and one status line.
+    // v6: one status line, then four number tiles (label, number, one line).
     assert.match(res.body, /Mewvo is online and working/);
-    assert.match(res.body, /2 open tickets/);
-    assert.match(res.body, /<a href="\/dashboard\/appeals">3 appeals waiting<\/a>/, 'pending appeals of the main guild');
-    assert.match(res.body, /4 banned and 1 muted right now/);
-    assert.ok(!/metric-value|kpi-num|class="ring"|Welcome back/.test(res.body), 'no number tiles, ring or greeting');
+    assert.match(res.body, /<p class="stat-label">Open tickets<\/p><span class="stat-value">2<\/span>/);
+    assert.match(res.body, /<p class="stat-label">Appeals waiting<\/p><a class="stat-value" href="\/dashboard\/appeals">3<\/a>/, 'pending appeals of the main guild');
+    assert.match(res.body, /<p class="stat-label">Banned right now<\/p><a class="stat-value" href="\/dashboard\/cases\?status=active">4<\/a><p class="stat-sub">1 muted right now<\/p>/);
+    assert.ok(!/metric-value|kpi-num|class="ring"|Welcome back/.test(res.body), 'no old tiles, ring or greeting');
+    // The cards sit in one grid; quick links only to pages this level may open.
+    assert.match(res.body, /<div class="ov-grid">/);
+    assert.match(res.body, /<ul class="quick-links"><li><a href="\/dashboard\/cases">Cases<\/a>/);
     // Needs you: each waiting appeal with a Review button (escaped), then the tickets; the count in the header.
     assert.match(res.body, /<b>Ban appeal from &lt;cat&gt;<\/b><small>Case <code>abc2345<\/code> · cat ban 1<\/small>/);
     assert.ok(res.body.includes('href="/dashboard/appeals/abc2345">Review<span class="sr"> appeal abc2345</span>'));
@@ -556,7 +559,8 @@ test('overview survives failing sources (shows unavailable)', async () => {
     assert.equal(o.activeBans, undefined);
     assert.equal(o.recent, undefined);
     const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
-    assert.match(page, /not available right now/);
+    assert.match(page, /<p class="stat-label">Open tickets<\/p><span class="stat-value is-unknown">unavailable<\/span>/);
+    assert.match(page, /<p class="stat-label">Banned right now<\/p><span class="stat-value is-unknown">unavailable<\/span>/);
     assert.match(page, /Mewvo is offline/);
 });
 
@@ -849,7 +853,7 @@ test('expired dashboard and My record sessions are pruned from both tables', asy
     assert.deepEqual(seen[0].params, [now]);
 });
 
-test('plain look: no number tiles, rings, card grids, initials badges or big corners', async () => {
+test('no old-style tiles, rings, initials badges, arrow links or big corners (v6 cards use their own markup)', async () => {
     const { overviewPage } = await import('../src/services/dashboard/overview.js');
     const { modulesPage } = await import('../src/services/dashboard/modulesPage.js');
     const o = { checklist: [{ label: 'X', done: false, href: '/dashboard/logging', hint: '' }], bot: { ready: true, ping: 1 }, database: { connected: true }, guild: { name: 'G', memberCount: 3 }, recent: [], lockdown: { active: false }, pendingAppeals: 0, openTickets: 0, activeBans: 0, activeMutes: 0, pendingList: [] };

@@ -16,7 +16,7 @@ import {
 import { MAX_UPLOAD_BYTES, sniffImage } from '../multipart.js';
 import { isAllowedImageUrl, isSafeLink } from '../pages.js';
 import { diffSnapshots } from '../audit.js';
-import { NOTHING, changedOnly, section, table } from './common.js';
+import { NOTHING, changedOnly, section, table, topic } from './common.js';
 
 const KEYS = ['enabled', 'channelId', 'welcomeMessage', 'welcomePing', 'dmMessage', 'goodbyeEnabled', 'goodbyeChannelId',
     'leaveMessage', 'goodbyePing', 'roleIds', 'autoRoleDelay', 'joinLogs', 'leaveLogs',
@@ -216,10 +216,14 @@ ${channelPicker(g, 'leaveLogsChannelId', w.leaveLogs?.channelId || null, { label
             { title: '🎉 Welcome!', footer: 'Welcome to <server name>!' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'welcome', images.welcome)}`;
         const goodbyeEmbed = html`${postForm(ctx, 'welcome', 'goodbye-embed', embedFields('goodbye', w.leaveEmbed, goodbyeImageOf(w.leaveEmbed),
             { title: '👋 Goodbye', footer: 'Goodbye from <server name>!' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'goodbye', images.goodbye)}`;
-        return html`${section('Welcome', welcome)}${section('Welcome embed and image', welcomeEmbed, embedHint)}
-${section('Goodbye', goodbye)}${section('Goodbye embed and image', goodbyeEmbed, embedHint)}
-${section('Auto role', roles, 'Every new member gets this role by itself. You can have one: setting a new one replaces the old one. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers. You can also do this with /autorole in Discord.')}
-${section('Join and leave logs', logs, 'A record for staff of who joined and who left, separate from the public messages.')}`;
+        // v6: cards grouped by topic (common.js topic/section).
+        const embedHelp = ['The box around the message: title, colour and an optional picture.', embedHint];
+        return html`${topic('Welcome', 'What Mewvo posts when someone joins.', html`${section('Welcome', welcome, 'The welcome message, where it goes, and an optional private message.', { key: 'welcome' })}
+${section('Welcome embed and image', welcomeEmbed, embedHelp)}`)}
+${topic('Goodbye', 'What Mewvo posts when someone leaves.', html`${section('Goodbye', goodbye, 'The goodbye message and where it goes.', { key: 'goodbye' })}
+${section('Goodbye embed and image', goodbyeEmbed, embedHelp)}`)}
+${topic('New members', 'A starting role, and a record of joins and leaves for staff.', html`${section('Auto role', roles, 'Every new member gets this role by itself. You can have one: setting a new one replaces the old one. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers. You can also do this with /autorole in Discord.', { size: 'normal' })}
+${section('Join and leave logs', logs, 'A record for staff of who joined and who left, separate from the public messages.')}`)}`;
     },
 
     actions: {

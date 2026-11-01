@@ -9,7 +9,7 @@ import {
     multiline, numberInput, postForm, roleField, rolePicker, text, textArea, textInput, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
-import { NOTHING, changedOnly, section, table } from './common.js';
+import { NOTHING, changedOnly, section, table, topic } from './common.js';
 
 export default {
     key: 'tickets',
@@ -66,10 +66,11 @@ ${textInput('reason', '', { label: 'Reason (optional)', max: 200, help: 'Only st
         const cannedAdd = postForm(ctx, 'tickets', 'canned-add', html`<div class="grid">
 ${textInput('name', '', { label: 'Name', max: 32, help: 'Staff type this name to post the answer. Small letters, numbers and - only, like refund-policy.' })}
 ${textArea('text', '', { label: 'Answer', max: CANNED_MAX_LENGTH, rows: 3, help: 'The text Mewvo posts.' })}</div>`, { submit: 'Save answer' });
-        return html`${section('Ticket panel', panel, ctx.canAct ? '' : 'To post the panel you need the Administrator permission in the main server.')}
-${section('Ticket settings', form)}
-${section('Modmail blocked members', html`${table(['User ID', ''], blockedRows, 'Nobody is blocked from modmail.')}<h3>Block a member</h3>${blockForm}`, 'Blocked members cannot start a modmail chat with staff. A chat that is already open stays until staff close it. You can also do this with /modmail block in Discord.')}
-${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${cannedAdd}`, 'Saved answers for questions staff get often. Staff post one in a ticket with /canned send. The built-in answers cannot be deleted, but you can change their text by saving an answer with the same name.')}`;
+        // v6: cards grouped by topic (common.js topic/section).
+        return html`${topic('Tickets', 'The button members press to open a ticket, and where tickets go.', html`${section('Ticket panel', panel, `The message with the button members press.${ctx.canAct ? '' : ' To post the panel you need the Administrator permission in the main server.'}`, { size: 'full' })}
+${section('Ticket settings', form, 'Categories, the staff role, logs and the panel text.', { size: 'wide' })}`)}
+${topic('Modmail and saved answers', 'Who may not message staff, and answers staff post often.', html`${section('Modmail blocked members', html`${table(['User ID', ''], blockedRows, 'Nobody is blocked from modmail.')}<h3>Block a member</h3>${blockForm}`, 'Blocked members cannot start a modmail chat with staff. A chat that is already open stays until staff close it. You can also do this with /modmail block in Discord.', { size: 'normal' })}
+${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${cannedAdd}`, 'Saved answers for questions staff get often. Staff post one in a ticket with /canned send. The built-in answers cannot be deleted, but you can change their text by saving an answer with the same name.', { size: 'normal' })}`)}`;
     },
 
     actions: {

@@ -1361,12 +1361,34 @@ test('module header: the main switch; read-only shows the on/off pill and no for
     assert.ok(!mods.body.includes('class="switch-form"'), 'no switches when editing is off');
 });
 
-test('"On this page" links on long module pages point at existing sections', async () => {
+test('"On this page" links on long module pages point at existing topics or cards', async () => {
     const h = await setup();
     const page = await get(h, 'automod');
-    const links = [...page.body.matchAll(/<a href="#(s-[a-z0-9-]+)">/g)].map((m) => m[1]);
+    // Automod is grouped by topic: the links name the topics (g-…).
+    const links = [...page.body.matchAll(/<a href="#([sg]-[a-z0-9-]+)">/g)].map((m) => m[1]);
     assert.ok(links.length >= 4, links.join());
+    assert.ok(links.every((id) => id.startsWith('g-')), links.join());
     for (const id of links) assert.ok(page.body.includes(`id="${id}"`), id);
+    // Inside a topic the card titles are h3 under the topic's h2.
+    assert.match(page.body, /<section class="topic" id="g-rules"><header class="topic-head"><h2>Rules<\/h2><p>[^<]+<\/p><\/header><div class="card-grid"><section class="tile-card section" id="s-global-mode" data-card="global-mode"><header class="card-top"><h3 class="card-title">Global mode<\/h3>/);
+    // A page without topics lists its cards when it has four or more (Logging: mod log, channels, events, ignore lists).
+    const logging = await get(h, 'logging');
+    const cards = [...logging.body.matchAll(/<a href="#(s-[a-z0-9-]+)">/g)].map((m) => m[1]);
+    assert.ok(cards.length >= 4, cards.join());
+    for (const id of cards) assert.ok(logging.body.includes(`id="${id}"`), id);
+    assert.ok(logging.body.includes('<div class="card-grid"><section class="tile-card section"'), 'ungrouped pages: one grid');
+});
+
+test('settings cards: a long help text shows its first sentence, the rest behind "More about this"; tables take the full row', async () => {
+    const { section, splitHelp } = await import('../src/services/dashboard/modules/common.js');
+    const { html } = await import('../src/services/dashboard/html.js');
+    assert.deepEqual(splitHelp('Short.'), ['Short.', '']);
+    const long = 'Members who came back after a ban ended. Automod is stricter with them for a while: they skip straight to the next punishment step.';
+    assert.deepEqual(splitHelp(long), ['Members who came back after a ban ended.', 'Automod is stricter with them for a while: they skip straight to the next punishment step.']);
+    assert.deepEqual(splitHelp(['Line.', 'More.']), ['Line.', 'More.']);
+    const card = String(section('Probation <b>', html`<div class="scroll"><table></table></div>`, long));
+    assert.ok(card.startsWith('<section class="tile-card section size-full" id="s-probation-b" data-card="probation-b"><header class="card-top"><h2 class="card-title">Probation &lt;b&gt;</h2><p class="card-desc">Members who came back after a ban ended.</p><details class="card-more"><summary>More about this</summary>'), card);
+    assert.ok(String(section('Plain', html`<p>x</p>`)).startsWith('<section class="tile-card section" id="s-plain"'));
 });
 
 test('Overview keeps the full module states (automod etc.) next to the config-based ones', async () => {
@@ -1389,7 +1411,7 @@ test('module pages list their own commands with switches that come back to the m
         ],
     });
     const page = await get(h, 'logging');
-    assert.match(page.body, /<details class="card section" id="s-commands" data-key="commands"><summary><h2>Commands \(1\)<\/h2>/);
+    assert.match(page.body, /<section class="tile-card section size-full" id="s-commands" data-card="commands"><header class="card-top"><h2 class="card-title">Commands \(1\)<\/h2>/);
     assert.match(page.body, /<form method="post" action="\/dashboard\/commands\/command" class="switch-form"><input type="hidden" name="csrf" value="[^"]+">\n<input type="hidden" name="name" value="logging"><input type="hidden" name="enabled" value="false"><input type="hidden" name="back" value="logging">/);
     assert.ok(page.body.includes('Set up &lt;logs&gt;'), 'description escaped');
     const leveling = await get(h, 'leveling');
@@ -1408,12 +1430,12 @@ test('Overview: recent dashboard changes (escaped), linked to the module; unavai
     const h = await setup();
     await post(h, 'automod', 'enabled', { enabled: 'false' });
     const res = await run(h, h.d.overview, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query: {} });
-    assert.match(res.body, /<h2>Recent dashboard changes<\/h2><div class="scroll"><table>/);
+    assert.match(res.body, /<h2>Recent dashboard changes<\/h2><a class="card-link" href="\/dashboard\/audit">Full audit log<\/a><\/header><div class="section-body"><div class="scroll"><table>/);
     assert.match(res.body, /<td>admin&lt;b&gt;<\/td><td><a href="\/dashboard\/automod">Automod<\/a><\/td>\n<td><code>[^<]+<\/code><\/td>/);
     assert.ok(res.body.includes('href="/dashboard/audit">Full audit log'));
     const { overviewPage } = await import('../src/services/dashboard/overview.js');
     const o = { checklist: [], bot: { ready: true, ping: null }, database: null, guild: null, recent: [], lockdown: undefined };
-    assert.match(overviewPage({ session: { username: 'a', csrf: 't' }, overview: o, recentChanges: null }), /Recent dashboard changes<\/h2><p class="muted">Could not be loaded just now/);
+    assert.match(overviewPage({ session: { username: 'a', csrf: 't' }, overview: o, recentChanges: null }), /Recent dashboard changes<\/h2><\/header><div class="section-body"><p class="muted">Could not be loaded just now/);
     assert.match(overviewPage({ session: { username: 'a', csrf: 't' }, overview: o, recentChanges: [] }), /No dashboard changes yet/);
 });
 

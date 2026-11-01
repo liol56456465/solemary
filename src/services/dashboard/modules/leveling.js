@@ -12,7 +12,7 @@ import {
     text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
-import { NOTHING, changedOnly, registryValue, saveRegistry, section, table } from './common.js';
+import { NOTHING, changedOnly, registryValue, saveRegistry, section, table, topic } from './common.js';
 import { CAT_NAME_MAX, sanitizeCatName } from '../../community/catModel.js';
 
 const MAX_LEVEL = 1000;
@@ -81,10 +81,12 @@ ${numberInput('levels', '', { label: 'Levels', min: 0, max: MAX_LEVEL })}</div>`
         });
         const catPart = html`${catNow}${catName}${catAnnounce}${ctx.canAct ? '' : html`<p class="muted">You need the Administrator permission in the main server to change the cat.</p>`}`;
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
-        return html`${section('XP and messages', settings)}${section('No XP in', ignored, 'Members get no XP in these channels, and members with these roles get none at all. Useful for bot or spam channels.')}
-${section('Role rewards', rewardTable, 'Members get these roles by themselves when they reach the level. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers.')}
-${section('Member levels', members, 'Change one member\'s level by hand. You can also do this with /level add, /level remove and /level set in Discord.')}
-${section('Server cat', catPart, 'The server has a cat that grows as members chat, from Kitten to Legend. Members see it with /cat view and on the website leaderboard. When it grows, Mewvo posts once in the level-up channel (if one is set).')}`;
+        // v6: cards grouped by topic (common.js topic/section).
+        return html`${topic('Earning XP', 'How fast members level up, and what Mewvo posts when they do.', html`${section('XP and messages', settings, 'XP per message, the wait between XP, and the level-up message.')}
+${section('No XP in', ignored, 'Members get no XP in these channels, and members with these roles get none at all. Useful for bot or spam channels.', { size: 'normal' })}`)}
+${topic('Rewards and levels', 'Roles for reaching a level, and changing a level by hand.', html`${section('Role rewards', rewardTable, 'Members get these roles by themselves when they reach the level. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers.', { size: 'normal' })}
+${section('Member levels', members, 'Change one member\'s level by hand. You can also do this with /level add, /level remove and /level set in Discord.')}`)}
+${topic('Server cat', 'A cat that grows as members chat, from Kitten to Legend.', section('Server cat', catPart, ['Its name, and whether Mewvo posts when it grows.', 'Members see it with /cat view and on the website leaderboard. When it grows, Mewvo posts once in the level-up channel (if one is set).'], { size: 'full' }))}`;
     },
 
     actions: {

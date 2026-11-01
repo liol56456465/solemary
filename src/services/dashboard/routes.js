@@ -89,6 +89,7 @@ import { collectChecklist, collectOverview, defaultOverviewData, moduleStatesFro
 import { modulesPage } from './modulesPage.js';
 import { MODULES, getAction, getModule } from './modules/index.js';
 import { MODULE_COMMANDS, moduleCommandsSection } from './modules/commands.js';
+import { topic } from './modules/common.js';
 import { defaultServices } from './services.js';
 import { AUDIT_PAGE_SIZE, createAuditStore, recordDashboardChange } from './audit.js';
 import { defaultEnforcement } from './enforcementData.js';
@@ -817,8 +818,13 @@ export function createDashboard({
                 logger.warn(`Dashboard: commands of ${module.key} not shown: ${error.message}`);
             }
         }
+        // A page grouped by topic gets its commands card as one more topic (each topic has its own grid).
+        const rendered = module.render(ctx, data);
+        const commandsPart = commandsSection && String(rendered).includes('<section class="topic"')
+            ? topic('Commands', 'The slash commands that belong to this page.', commandsSection, { key: 'commands' })
+            : commandsSection;
         return sendHtml(res, status, moduleSettingsPage({
-            ...shellOf(req), module, body: html`${module.render(ctx, data)}${commandsSection}`,
+            ...shellOf(req), module, body: html`${rendered}${commandsPart}`,
             flash: req.dashboard.flash, error, errorAction, errorField, warnings, editEnabled: settings.editEnabled,
         }));
     }
