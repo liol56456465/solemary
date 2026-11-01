@@ -505,15 +505,16 @@ async function isTrusted(member, trusted) {
 }
 
 /**
- * The hit actOn handles. With a heads-up possible, a personal-info hit always wins, so
- * the message is deleted at once instead of waiting behind another rule's heads-up.
+ * How a message with hits is handled. Personal info together with another rule: no
+ * heads-up at all, the message is deleted at once and the worst hit is acted on as usual
+ * (personal info never stays up, and the other rule is never downgraded or forgotten).
+ * Otherwise a heads-up only when every hit allows one and the message had none yet.
  */
-export function hitToActOn(hits, skipHeadsUp) {
-    if (!skipHeadsUp) {
-        const privacy = hits.find((hit) => hit.rule === 'privacy');
-        if (privacy) return privacy;
-    }
-    return worstHit(hits);
+export function headsUpPlan(hits, settings, { probation = false, hadHeadsUp = false } = {}) {
+    const rules = new Set(hits.map((hit) => hit.rule));
+    if (rules.has('privacy') && rules.size > 1) return { hit: worstHit(hits), skipHeadsUp: true, deleteFirst: true };
+    const skipHeadsUp = hadHeadsUp || !headsUpAllowedFor(hits, settings, Boolean(probation));
+    return { hit: worstHit(hits), skipHeadsUp, deleteFirst: false };
 }
 
 export function worstHit(hits) {
@@ -568,8 +569,9 @@ export async function moderateMessage(message, { edited = false } = {}) {
         }
         if (hits.length) {
             handledMessages.add(message.id);
-            const skipHeadsUp = hadHeadsUp || !headsUpAllowedFor(hits, settings, Boolean(probation));
-            return await actOn(message, member, hitToActOn(hits, skipHeadsUp), settings, probation, { skipHeadsUp });
+            const plan = headsUpPlan(hits, settings, { probation, hadHeadsUp });
+            if (plan.deleteFirst) await deps.deleteQuietly(message);
+            return await actOn(message, member, plan.hit, settings, probation, { skipHeadsUp: plan.skipHeadsUp });
         }
         if (edited || isStaff(member)) return false;
         return await applyNewMemberLimits(message, member, now);

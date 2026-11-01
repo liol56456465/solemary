@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 process.env.MAIN_GUILD_ID ??= '100000000000000001';
 
 const {
-    actOn, checkEditedHeadsUp, hitToActOn, resetAutomodState, runHeadsUpChecks, setAutomodDepsForTest,
+    actOn, checkEditedHeadsUp, headsUpPlan, resetAutomodState, runHeadsUpChecks, setAutomodDepsForTest,
 } = await import('../../src/services/automod/automodService.js');
 const {
     headsUpStats, noteMessageDeleted, pendingHeadsUpRule, setHeadsUpDepsForTest,
@@ -221,11 +221,21 @@ test('a heads-up only when every hit allows one: a never-eligible hit next to an
     assert.equal(headsUpAllowedFor([], settings), false);
 });
 
-test('personal info next to a worse heads-up hit: the privacy hit is acted on (deleted at once)', () => {
+test('personal info plus another rule: no heads-up, delete at once, act on the worst hit', () => {
+    const settings = normalizeSettings({});
+    const harassment = { rule: 'harassment' };
     const privacy = { rule: 'privacy' };
-    assert.equal(hitToActOn([{ rule: 'harassment' }, privacy], false), privacy);
-    assert.equal(hitToActOn([privacy, { rule: 'sexual' }], false), privacy);
-    assert.equal(hitToActOn([{ rule: 'harassment' }], false).rule, 'harassment');
+    // Mixed: deleted first, the worst hit acted on with no heads-up (no severity downgrade).
+    const mixed = headsUpPlan([harassment, privacy], settings);
+    assert.equal(mixed.deleteFirst, true);
+    assert.equal(mixed.skipHeadsUp, true);
+    assert.equal(mixed.hit.rule, 'harassment');
+    // Personal info alone keeps its own heads-up path (deleted inside it).
+    assert.deepEqual(headsUpPlan([privacy], settings), { hit: privacy, skipHeadsUp: false, deleteFirst: false });
+    // No personal info: unchanged.
+    assert.equal(headsUpPlan([harassment], settings).skipHeadsUp, false);
+    assert.equal(headsUpPlan([harassment], settings, { hadHeadsUp: true }).skipHeadsUp, true);
+    assert.equal(headsUpPlan([harassment, { rule: 'scam' }], settings).skipHeadsUp, true);
 });
 
 test('two messages at the same moment: only one heads-up, the other acts normally', async () => {
