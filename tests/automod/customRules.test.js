@@ -207,6 +207,7 @@ function recordDeps() {
         deleteQuietly: rec('deleteQuietly', null),
         isRaidJoiner: rec('isRaidJoiner', false),
         giveSecondChance: rec('giveSecondChance', false),
+        giveHeadsUp: rec('giveHeadsUp', false),
     });
     return calls;
 }
@@ -229,7 +230,7 @@ test('pipeline, enforce + warn: message deleted, a case with reason key automod:
     const [hit] = applyRuleModes([customHit({ rule: r, word: 'free nitro' })], normalizeSettings({ mode: 'enforce' }));
     assert.equal(hit.mode, 'on');
     assert.equal(await actOn(fakeMessage(), member, hit, normalizeSettings({})), true);
-    assert.deepEqual(names(calls), ['deleteQuietly', 'isRaidJoiner', 'countOffences', 'giveSecondChance', 'applyStep', 'postReviewCard']);
+    assert.deepEqual(names(calls), ['giveHeadsUp', 'deleteQuietly', 'isRaidJoiner', 'countOffences', 'giveSecondChance', 'applyStep', 'postReviewCard']);
     const step = calls.find((c) => c.name === 'applyStep').args[0];
     assert.deepEqual(step.step, { type: 'warn' });
     assert.equal(step.reason, 'Automod: Ads');
@@ -255,7 +256,7 @@ test('pipeline, delete only: message deleted and a card, no case and no offence 
     const calls = recordDeps();
     const hit = { ...customHit({ rule: rule({ name: 'Spoilers', action: 'delete' }), word: 'free nitro' }), mode: 'on' };
     assert.equal(await actOn(fakeMessage(), member, hit, normalizeSettings({})), true);
-    assert.deepEqual(names(calls), ['deleteQuietly', 'isRaidJoiner', 'postReviewCard']);
+    assert.deepEqual(names(calls), ['giveHeadsUp', 'deleteQuietly', 'isRaidJoiner', 'postReviewCard']);
     const card = calls.at(-1).args[0];
     assert.equal(card.deleted, true);
     assert.equal(card.step, undefined);
@@ -286,7 +287,7 @@ test('pipeline: the same rule again within the cooldown only counts on the card'
     await actOn(fakeMessage(), member, hit, normalizeSettings({}));
     calls.length = 0;
     await actOn(fakeMessage(), member, hit, normalizeSettings({}));
-    assert.deepEqual(names(calls), ['deleteQuietly', 'noteRepeatHit']);
+    assert.deepEqual(names(calls), ['giveHeadsUp', 'deleteQuietly', 'noteRepeatHit']);
 });
 
 test('severity: custom rules sit between language and disrespect; worstHit picks across both kinds', () => {

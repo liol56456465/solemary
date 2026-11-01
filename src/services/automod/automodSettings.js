@@ -5,7 +5,9 @@ import { db, getFromDb, setInDb } from '../../utils/database.js';
 import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { clampPanicHours, DEFAULT_PANIC_HOURS, MAX_PANIC_HOURS } from './incidentActions.js';
-import { CHANNEL_RULE_MODES, RULE_MODES, withChannelRule } from './policy.js';
+import {
+    CHANNEL_RULE_MODES, HEADS_UP_NEVER, RULE_MODES, headsUpSettingKey, normalizeHeadsUp, withChannelRule,
+} from './policy.js';
 
 const CACHE_TTL_MS = 30 * 1000;
 const DEFAULT_SETTINGS = Object.freeze({
@@ -23,6 +25,9 @@ const DEFAULT_SETTINGS = Object.freeze({
     trusted: { roleId: null, minLevel: 0 },
     // First small offence: a notice instead of a warning (/automod secondchance).
     secondChance: true,
+    // Heads-up first: rule key (or "custom" for all custom rules) → false to turn it off;
+    // missing = on. Only the rules policy.js HEADS_UP_SETTING_KEYS lists; others are dropped.
+    headsUp: {},
     // Calm-down note + slowmode when a channel heats up (/automod mood).
     moodAlerts: true,
     // Raid panic mode: when a lockdown starts, also pause invites and DMs with
@@ -44,6 +49,7 @@ export function normalizeSettings(stored) {
     const trusted = value.trusted && typeof value.trusted === 'object' ? value.trusted : {};
     value.trusted = { roleId: trusted.roleId || null, minLevel: Math.max(0, Number(trusted.minLevel) || 0) };
     value.secondChance = value.secondChance !== false;
+    value.headsUp = normalizeHeadsUp(value.headsUp);
     value.moodAlerts = value.moodAlerts !== false;
     const panic = value.panic && typeof value.panic === 'object' ? value.panic : {};
     value.panic = { enabled: panic.enabled !== false, hours: clampPanicHours(panic.hours ?? DEFAULT_PANIC_HOURS) };
@@ -202,6 +208,23 @@ export async function setTrusted(guildId, { roleId = undefined, minLevel = undef
 export async function setSecondChance(guildId, enabled) {
     requireBoolean(enabled, 'Second chance');
     return updateAutomodSettings(guildId, { secondChance: enabled });
+}
+
+/**
+ * Heads-up first for one rule (a built-in key from policy.js HEADS_UP_RULES, "custom",
+ * or a "custom-<id>" key, which sets "custom"). Rules that never get a heads-up (scam,
+ * NSFW, ads, mentions, spam, raids) are refused.
+ */
+export async function setHeadsUp(guildId, ruleKey, enabled) {
+    requireBoolean(enabled, 'Heads-up first');
+    const key = headsUpSettingKey(ruleKey);
+    if (!key) {
+        if (typeof ruleKey === 'string' && (HEADS_UP_NEVER.includes(ruleKey) || Object.hasOwn(AUTOMOD_RULES, ruleKey))) {
+            throw userError('Heads-up first is not available for this rule.');
+        }
+        throw userError('Unknown rule.');
+    }
+    return updateAutomodSettings(guildId, (current) => ({ ...current, headsUp: { ...current.headsUp, [key]: enabled } }));
 }
 
 export async function setMoodAlerts(guildId, enabled) {

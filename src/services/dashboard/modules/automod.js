@@ -10,12 +10,14 @@
 // interaction (reviewCards.js handleReviewAction), so the queue here links to each card.
 
 import { AUTOMOD_RULES } from '../../../config/automod.js';
-import { CHANNEL_RULE_MODES, RULE_MODES } from '../../automod/policy.js';
+import {
+    CHANNEL_RULE_MODES, HEADS_UP_CUSTOM_KEY, HEADS_UP_SETTING_KEYS, RULE_MODES, headsUpEnabled, headsUpSettingKey,
+} from '../../automod/policy.js';
 import { JOIN_GATE_ACTIONS, JOIN_GATE_CHECKS, normalizeJoinGate } from '../../automod/joinGate.js';
 import { NATIVE_POLICIES, policyFor } from '../../automod/nativeBridge.js';
 import { formatDate, html, path, queryString, raw, timeTag } from '../html.js';
 import {
-    InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, switchInput, choiceField,
+    InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, checkboxInput, switchInput, choiceField,
     intField, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -130,6 +132,18 @@ async function change(ctx, keys, run, message) {
     return { changes, message: changes.length ? message : 'Nothing changed.' };
 }
 
+/** Heads-up first on/off per setting key (policy.js HEADS_UP_SETTING_KEYS), for the audit diff. */
+function headsUpSnapshot(settings) {
+    return Object.fromEntries(HEADS_UP_SETTING_KEYS.map((key) => [key, settings?.headsUp?.[key] !== false]));
+}
+
+const HEADS_UP_HELP = 'Heads-up first: the first time in 30 days, the member gets a private message and 2 minutes to edit or delete the message, and nothing else happens. Personal info is removed at once without a warning. Scam, NSFW, ads, mass mentions, spam, raids and slurs always act at once.';
+
+function headsUpLine(stats) {
+    if (stats === null) return html`<p class="muted">Heads-up counts could not be read (database).</p>`;
+    return html`<p>Heads-ups in the last 30 days: ${stats.sent} sent, ${stats.fixed} fixed by the member, ${stats.acted} acted on after the wait.</p>`;
+}
+
 function nativeRows(ctx, rules, policies) {
     return rules.map((rule) => {
         const policy = policyFor(policies, rule.id);
@@ -155,17 +169,18 @@ export default {
             nativeRules = null;
         }
         const days = statsDays(ctx.query);
-        const [byRule, stats, lockdown, reviews, probations] = await Promise.all([
+        const [byRule, stats, lockdown, reviews, probations, headsUp] = await Promise.all([
             attempt(() => ctx.services.automodRuleStats(ctx.guildId, days), {}),
             attempt(() => ctx.services.automodStats(ctx.guildId, days), { total: 0, byGroup: [] }),
             // undefined / null = could not be read (shown as such, never as "none").
             attempt(() => ctx.services.getLockdownState(ctx.guildId), undefined),
             attempt(() => ctx.services.collectOpenReviews(ctx.client), null),
             attempt(() => ctx.services.listProbations(ctx.guildId), null),
+            attempt(() => ctx.services.headsUpStats(ctx.guildId, { days: 30 }), null),
         ]);
         const planId = planOfGuild(ctx);
         return {
-            settings, nativeRules, policies, byRule, stats, days, lockdown, reviews, probations,
+            settings, nativeRules, policies, byRule, stats, days, lockdown, reviews, probations, headsUp,
             custom: { rules: storedCustomRules(ctx), limit: limitForPlan(planId), planId },
             registry: {
                 reviewChannelId: registryValue(ctx, 'reviewChannelId'),
@@ -183,10 +198,20 @@ export default {
         const ruleKeys = Object.keys(AUTOMOD_RULES);
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
         const top = html`${postForm(ctx, 'automod', 'mode', html`<div class="grid grid-wide">${selectInput('mode', s.mode, [['enforce', 'Act: delete or warn, then tell staff'], ['monitor', 'Watch only: tell staff, do nothing']], { label: 'What automod does', help: 'Staff are told with a review card: a message in the review channel with buttons to keep or undo what automod did. In watch-only mode the card has an Apply button instead.' })}</div>`)}`;
-        const rules = postForm(ctx, 'automod', 'rules', table(['Rule', 'Mode'], ruleKeys.map((key) => [
-            AUTOMOD_RULES[key].label,
-            selectInput(`rule:${key}`, s.ruleModes[key] || 'default', [['default', `default (${s.mode === 'monitor' ? 'monitor' : 'on'})`], ...RULE_MODES.map((m) => [m, m])], { label: '' }),
-        ])), { submit: 'Save rule modes' });
+        // Heads-up first: a checkbox on the rules that offer it (policy.js); "headsup-form" marks
+        // that the column was on the page, so a missing checkbox means off.
+        const headsUpCell = (key) => (headsUpSettingKey(key)
+            ? checkboxInput(`headsup:${headsUpSettingKey(key)}`, headsUpEnabled(s, key), { label: 'Heads-up first' })
+            : html`<span class="muted">acts at once</span>`);
+        const rules = html`${postForm(ctx, 'automod', 'rules', html`<input type="hidden" name="headsup-form" value="1">${table(['Rule', 'Mode', 'Heads-up first'], [
+            ...ruleKeys.map((key) => [
+                AUTOMOD_RULES[key].label,
+                selectInput(`rule:${key}`, s.ruleModes[key] || 'default', [['default', `default (${s.mode === 'monitor' ? 'monitor' : 'on'})`], ...RULE_MODES.map((m) => [m, m])], { label: '' }),
+                headsUpCell(key),
+            ]),
+            ['Custom rules (all)', html`<span class="muted">see Custom rules</span>`, headsUpCell(HEADS_UP_CUSTOM_KEY)],
+        ])}`, { submit: 'Save rules' })}
+${headsUpLine(data.headsUp)}`;
         const exceptionRows = [];
         for (const [channelId, overrides] of Object.entries(s.channelRules)) {
             for (const [rule, mode] of Object.entries(overrides)) {
@@ -263,7 +288,7 @@ ${reviews.length > QUEUE_LISTED ? html`<p class="muted">…and ${reviews.length 
         const live = html`${lockdown?.active ? section('Raid lockdown', lockdownBody) : ''}
 ${section(`Review queue${reviews ? ` (${reviews.length})` : ''}`, queue)}
 ${section(`Probation${probations ? ` (${probations.length})` : ''}`, probation, 'Members who came back after a ban ended. Automod is stricter with them for a while: they skip straight to the next punishment step, and get no second chance or trusted-member leniency.')}`;
-        return html`${live}${section('Global mode', top)}${section('Rule modes', rules, 'Change single rules. default: does what the main setting above says. on: acts. monitor: only tells staff. off: the rule is not checked.')}
+        return html`${live}${section('Global mode', top)}${section('Rule modes', rules, `Change single rules. default: does what the main setting above says. on: acts. monitor: only tells staff. off: the rule is not checked. ${HEADS_UP_HELP}`)}
 ${section('Custom rules', customRulesSection(ctx, data), 'Your own lists of words and phrases to block. Like the built-in rules, they match whole words, do not care about capital letters, and catch look-alike letters (like 0 for o). A match deletes the message and posts a review card. Warn and mute also add it to the member\'s record (a case). They follow the main automod setting and skip ignored channels. How many you can have depends on the server owner\'s plan.')}
 ${section('Channel exceptions', exceptions, 'Turn one rule off, or to watch only, in one channel. For example, allow links in a links channel.')}${section('Ignored channels', exempt, 'Channels where automod checks nothing at all.')}
 ${section('Trusted members', trusted, 'Trusted members skip the rules for small things. Serious rules still apply. To turn this off, pick none and set the level to 0.')}
@@ -290,8 +315,18 @@ ${section('Discord AutoMod', native, 'Discord has its own AutoMod built in. When
             }
             let after = before;
             for (const [key, mode] of Object.entries(wanted)) after = await ctx.services.setRuleMode(ctx.guildId, key, mode);
-            const changes = diffSnapshots(before.ruleModes, after.ruleModes, null, 'ruleModes.');
-            return { changes, message: changes.length ? 'Rule modes saved.' : 'Nothing changed.' };
+            // Heads-up first (only when the form had the column).
+            if (text(form, 'headsup-form', 5) === '1') {
+                for (const key of HEADS_UP_SETTING_KEYS) {
+                    const wantedOn = checkbox(form, `headsup:${key}`);
+                    if ((after.headsUp?.[key] !== false) !== wantedOn) after = await ctx.services.setHeadsUp(ctx.guildId, key, wantedOn);
+                }
+            }
+            const changes = [
+                ...diffSnapshots(before.ruleModes, after.ruleModes, null, 'ruleModes.'),
+                ...diffSnapshots(headsUpSnapshot(before), headsUpSnapshot(after), null, 'headsUp.'),
+            ];
+            return { changes, message: changes.length ? 'Rules saved.' : 'Nothing changed.' };
         },
         async 'custom-add'(ctx, form) {
             const list = storedCustomRules(ctx);

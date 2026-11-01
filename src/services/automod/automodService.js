@@ -26,8 +26,10 @@ import { getProbation } from './probationService.js';
 import { noteMoodSignals } from './moodService.js';
 import { getUserLevelData } from '../leveling/leveling.js';
 import {
-    hasTrustedRole, isTrustedMember, ladderIndex, relaxForTrusted, resolveRuleMode, secondChanceEligible, secondChanceNotice, trustMatters,
+    hasTrustedRole, headsUpApplies, isTrustedMember, ladderIndex, relaxForTrusted, resolveRuleMode, sameHeadsUpFamily,
+    secondChanceEligible, secondChanceNotice, trustMatters,
 } from './policy.js';
+import { dueHeadsUps, finishHeadsUp, giveHeadsUp, peekHeadsUp, pendingHeadsUpRule, takeHeadsUp } from './headsUp.js';
 import { getFromDb, setInDb } from '../../utils/database.js';
 import { noteRepeatHit, postReviewCard } from './reviewCards.js';
 import * as reasons from './reasons.js';
@@ -345,6 +347,9 @@ const defaultDeps = {
     deleteQuietly: (...args) => deleteQuietly(...args),
     isRaidJoiner: (...args) => isRaidJoiner(...args),
     giveSecondChance: (...args) => giveSecondChance(...args),
+    giveHeadsUp: (...args) => giveHeadsUp(...args),
+    getAutomodSettings: (...args) => getAutomodSettings(...args),
+    getProbation: (...args) => getProbation(...args),
 };
 let deps = { ...defaultDeps };
 
@@ -358,8 +363,12 @@ export function setAutomodDepsForTest(overrides = null) {
  * hits never get here). `probation`: the member's running probation record or null.
  * A custom rule with the delete action has no steps: the message is deleted and the
  * card posted, no case.
+ * Heads-up first (headsUp.js): for the rules policy.headsUpApplies allows, the member's
+ * first hit within 30 days gets a DM and two minutes to fix it instead of the action;
+ * the message then stays (personal info is deleted at once) and is not marked handled,
+ * so an edit is checked again. `skipHeadsUp`: the per-minute check acting after the wait.
  */
-export async function actOn(message, member, hit, settings, probation = null) {
+export async function actOn(message, member, hit, settings, probation = null, { skipHeadsUp = false } = {}) {
     const rule = definitionOf(hit);
     const { guild } = message;
     const targetUser = message.author;
@@ -383,6 +392,15 @@ export async function actOn(message, member, hit, settings, probation = null) {
         const offences = await deps.countOffences(guild.id, targetUser.id, group);
         await deps.postReviewCard({ ...card, monitor: true, suggested: stepFor(offences), offence: offences + 1, deleted: false });
         return false;
+    }
+
+    if (!skipHeadsUp && headsUpApplies({ hit, settings, probation: Boolean(probation) })) {
+        const given = await deps.giveHeadsUp(message, hit, { card, deleteMessage: () => deps.deleteQuietly(message) });
+        if (given === 'pending') {
+            handledMessages.delete(message.id);
+            return false;
+        }
+        if (given === 'removed') return true;
     }
 
     if (rule.deleteMessage) await deps.deleteQuietly(message);
@@ -513,7 +531,11 @@ export async function moderateMessage(message, { edited = false } = {}) {
             lastPrune = now;
         }
 
-        const detected = await evaluateMessage(message, member, now);
+        let detected = await evaluateMessage(message, member, now);
+        if (edited) {
+            detected = await checkEditedHeadsUp(message, detected);
+            if (detected === null) return false;
+        }
         let hits = applyRuleModes(detected, settings, message.channel);
         // Channel mood from the same hits (in memory, no extra reads); runs alongside.
         if (!edited && hits.length) {
@@ -540,6 +562,115 @@ export async function moderateMessage(message, { edited = false } = {}) {
         logger.error(`Automod failed on message ${message?.id}: ${error.message}`, { error });
         return false;
     }
+}
+
+// ── Heads-up first: resolving the wait ────────────────────────────────────────
+
+/**
+ * An edit of a message with a waiting heads-up. Still breaking that rule: keep waiting
+ * (its hits are dropped; null when nothing else is left, so the caller stops). No longer
+ * breaking it: fixed. Other rules the edit breaks go on as usual; if any are left while
+ * the heads-up rule still hits, the heads-up is closed as acted (the message is dealt
+ * with now). A database error leaves the heads-up for the per-minute check.
+ */
+export async function checkEditedHeadsUp(message, detected) {
+    const rule = pendingHeadsUpRule(message.guild.id, message.id);
+    if (!rule) return detected;
+    const same = (hit) => sameHeadsUpFamily(hit.rule, rule) && !hit.slur;
+    const stillBad = detected.some(same);
+    const rest = stillBad ? detected.filter((hit) => !same(hit)) : detected;
+    if (stillBad && !rest.length) return null;
+    try {
+        const record = await takeHeadsUp(message.guild.id, message.id);
+        if (record) await finishHeadsUp(message.client, record, stillBad ? 'acted' : 'edited', stillBad ? 'the edit broke another rule' : null);
+    } catch (error) {
+        logger.warn(`Automod heads-up for edited message ${message.id} not resolved (${error.message}); the per-minute check retries`);
+    }
+    return rest;
+}
+
+/**
+ * Whether a message still breaks the rule of its waiting heads-up, without touching the
+ * spam / harassment history: the hit to act on, or null. `record`: the waiting record.
+ */
+export async function recheckHeadsUp(message, record) {
+    const text = message.content || '';
+    const { rule } = record;
+    const stored = { ...record.hit, rule };
+    if (String(rule).startsWith('custom-')) {
+        const found = findCustomRuleHit(text, message.guildId);
+        return found && customRuleKey(found.rule.id) === rule ? customHit(found) : null;
+    }
+    if (rule === 'disrespect' || rule === 'harassment') {
+        return findInsult(text) && (await targetsOf(message)).length ? stored : null;
+    }
+    if (rule === 'sexual') return findSexualWord(text) ? stored : null;
+    if (rule === 'language') return findSexualWord(text) || findBlockedWord(text) ? stored : null;
+    return null;
+}
+
+async function dropHeadsUp(client, guildId, messageId, why) {
+    logger.warn(`Automod heads-up ${messageId} dropped: ${why}`);
+    const record = await takeHeadsUp(guildId, messageId);
+    if (record) await finishHeadsUp(client, record, 'dropped', why);
+}
+
+async function checkDueHeadsUp(client, { guildId, messageId }) {
+    const record = await peekHeadsUp(guildId, messageId);
+    if (!record) return dropHeadsUp(client, guildId, messageId, 'the waiting record expired');
+    const guild = client.guilds?.cache?.get(guildId);
+    if (!guild) return dropHeadsUp(client, guildId, messageId, 'the bot is not in that server');
+    const channel = guild.channels.cache.get(record.channelId) || await guild.channels.fetch(record.channelId).catch(() => null);
+    if (!channel?.messages?.fetch) return dropHeadsUp(client, guildId, messageId, 'the channel is gone or not readable');
+
+    let message;
+    try {
+        message = await channel.messages.fetch(messageId);
+    } catch (error) {
+        if (error?.code !== 10008) return dropHeadsUp(client, guildId, messageId, `could not read the message (${error.message})`);
+        message = null;
+    }
+    if (!message) {
+        const taken = await takeHeadsUp(guildId, messageId);
+        if (taken) await finishHeadsUp(client, taken, 'deleted');
+        return undefined;
+    }
+
+    const hit = await recheckHeadsUp(message, record);
+    if (!hit) {
+        const taken = await takeHeadsUp(guildId, messageId);
+        if (taken) await finishHeadsUp(client, taken, 'edited');
+        return undefined;
+    }
+    const member = await guild.members.fetch(record.userId).catch(() => null);
+    if (member && isAdministrator(member)) return dropHeadsUp(client, guildId, messageId, 'the member is an administrator now');
+    const settings = await deps.getAutomodSettings(guildId);
+    const [moded] = settings.enabled ? applyRuleModes([hit], settings, channel) : [];
+    // Claim it before acting, so an edit or delete at the same moment cannot resolve it too.
+    const taken = await takeHeadsUp(guildId, messageId);
+    if (!taken) return undefined;
+    if (!moded) return finishHeadsUp(client, taken, 'dropped', 'automod or the rule is off now');
+    const probation = await deps.getProbation(guildId, record.userId).catch(() => null);
+    handledMessages.add(messageId);
+    await actOn(message, member, moded, settings, probation, { skipHeadsUp: true });
+    return finishHeadsUp(client, taken, 'acted');
+}
+
+/**
+ * Per-minute check (app.js cron): every heads-up whose two minutes are over. Message gone
+ * → fixed; edited clean → fixed; still breaking the rule → the usual action (actOn without
+ * the heads-up); channel gone or unreadable → dropped with a warning in the log.
+ */
+export async function runHeadsUpChecks(client, now = Date.now()) {
+    const due = await dueHeadsUps(now);
+    for (const item of due) {
+        try {
+            await checkDueHeadsUp(client, item);
+        } catch (error) {
+            logger.warn(`Automod heads-up check for message ${item.messageId} failed: ${error.message}`);
+        }
+    }
+    return due.length;
 }
 
 /** Test hook: forget all in-memory state. */

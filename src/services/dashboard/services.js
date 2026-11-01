@@ -9,8 +9,9 @@ import { getSetting, updateSettings } from '../settings/guildSettings.js';
 // Automod
 import {
     getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode, setExemptChannel,
-    setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
+    setHeadsUp, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
 } from '../automod/automodSettings.js';
+import { headsUpStats } from '../automod/headsUp.js';
 import { loadNativePolicies, setNativePolicy } from '../automod/nativeBridge.js';
 import { automodStats } from '../automod/automodReport.js';
 import { automodRuleStats } from '../automod/automodTuning.js';
@@ -93,8 +94,8 @@ function updateConfigSetting(client, guildId, key, value, actorId) {
 export const defaultServices = {
     getGuildConfig, updateGuildConfig, getSetting, updateSettings,
     getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode, setExemptChannel,
-    setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
-    loadNativePolicies, setNativePolicy, automodStats, automodRuleStats,
+    setHeadsUp, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
+    loadNativePolicies, setNativePolicy, automodStats, automodRuleStats, headsUpStats,
     endLockdown, getLockdownState, collectOpenReviews, endProbation, listProbations,
     getLoggingStatus, resolveLogChannel, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList,
     addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings, storeWelcomeImage, resolveWelcomeImageUrl,

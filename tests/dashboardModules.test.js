@@ -506,6 +506,8 @@ function makeServices() {
         }),
         setTrusted: automodSet('setTrusted', ({ roleId, minLevel, clear }) => { s.automod.trusted = clear ? { roleId: null, minLevel: 0 } : { roleId: roleId ?? null, minLevel: minLevel ?? 0 }; }),
         setSecondChance: automodSet('setSecondChance', (v) => { s.automod.secondChance = v; }),
+        setHeadsUp: automodSet('setHeadsUp', (rule, v) => { s.automod.headsUp = { ...(s.automod.headsUp || {}), [rule]: v }; }),
+        headsUpStats: async (guildId, opts) => { s.headsUpDays = opts?.days; if (s.headsUpStatsFail) throw new Error('db down'); return { days: opts?.days, sent: 7, fixed: 5, acted: 2 }; },
         setMoodAlerts: automodSet('setMoodAlerts', (v) => { s.automod.moodAlerts = v; }),
         setPanic: automodSet('setPanic', ({ enabled, hours }) => { s.automod.panic = { enabled, hours }; }),
         setJoinGateCheck: automodSet('setJoinGateCheck', (check, action, days) => { s.automod.joinGate = { ...s.automod.joinGate, [check]: action, ...(days ? { ageDays: days } : {}) }; }),
@@ -2120,6 +2122,40 @@ test('tickets: block from modmail (with reason in the audit); already blocked ch
 });
 
 // ── Automod live operations (/automod queue, probation, lockdown-end, stats days) ──
+
+test('Automod heads-up first: a checkbox per eligible rule, 30-day counts, saved and audited with the rule modes', async () => {
+    const h = await setup();
+    const page = await get(h, 'automod');
+    assert.equal(page.statusCode, 200);
+    for (const key of ['disrespect', 'harassment', 'sexual', 'language', 'privacy', 'custom']) {
+        assert.ok(page.body.includes(`name="headsup:${key}" value="1" checked`), key);
+    }
+    for (const key of ['scam', 'nsfw', 'advertising', 'mentions', 'spam', 'impersonation', 'caps']) {
+        assert.ok(!page.body.includes(`name="headsup:${key}"`), key);
+    }
+    assert.ok(page.body.includes('name="headsup-form" value="1"'));
+    assert.match(page.body, /Heads-ups in the last 30 days: 7 sent, 5 fixed by the member, 2 acted on after the wait\./);
+    assert.equal(h.state.headsUpDays, 30);
+
+    // All boxes but harassment and custom posted: those two go off; nothing else changes.
+    const form = { 'headsup-form': '1', 'headsup:disrespect': '1', 'headsup:sexual': '1', 'headsup:language': '1', 'headsup:privacy': '1' };
+    const res = await post(h, 'automod', 'rules', form);
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(h.calls.filter((c) => c.name === 'setHeadsUp').map((c) => c.args), [['harassment', false], ['custom', false]]);
+    assert.deepEqual(h.state.automod.headsUp, { harassment: false, custom: false });
+    const keys = h.auditRows.filter((r) => r.module === 'automod').map((r) => r.key);
+    assert.deepEqual(keys, ['headsUp.harassment', 'headsUp.custom']);
+    const again = await get(h, 'automod');
+    assert.ok(again.body.includes('name="headsup:harassment" value="1">'), 'unchecked now');
+
+    // A form without the column (older page) never touches heads-up.
+    h.calls.length = 0;
+    await post(h, 'automod', 'rules', { 'rule:caps': 'off' });
+    assert.equal(h.calls.filter((c) => c.name === 'setHeadsUp').length, 0);
+
+    h.state.headsUpStatsFail = true;
+    assert.match((await get(h, 'automod')).body, /Heads-up counts could not be read \(database\)\./);
+});
 
 function getWithQuery(h, module, query) {
     return run(h, h.d.modulePage, { method: 'GET', params: { module }, headers: { cookie: h.cookie }, query });

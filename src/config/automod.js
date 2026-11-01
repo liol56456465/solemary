@@ -124,6 +124,17 @@ export const automodConfig = {
     secondChanceRules: ['language'],
     secondChanceWindowMs: 30 * DAY,
     secondChanceNoticeMs: 15 * 1000,
+    // Heads-up first (/automod rules on the dashboard; policy.js has the rule list): the
+    // first hit of a heads-up rule within headsUpSeenMs gets a DM (or a channel notice,
+    // deleted after headsUpNoticeMs) and headsUpGraceMs to edit or delete the message.
+    // The waiting record lives headsUpPendingTtlMs in the key-value store (survives a
+    // restart); a per-minute check acts when it is still there and still breaks the rule.
+    // Sent / fixed / acted counts per day are kept headsUpStatsKeepDays.
+    headsUpSeenMs: 30 * DAY,
+    headsUpGraceMs: 2 * 60 * 1000,
+    headsUpPendingTtlMs: 10 * 60 * 1000,
+    headsUpNoticeMs: 15 * 1000,
+    headsUpStatsKeepDays: 120,
     // Probation: a member who rejoins within probationRecentBanMs of a ban ending
     // (expired, lifted on appeal, voided) is on probation for probationMs. Automod then
     // uses the next step of the ladder (1st offence → 2nd step, …), and trusted-member

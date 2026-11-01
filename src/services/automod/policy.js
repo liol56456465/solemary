@@ -245,3 +245,99 @@ export function withChannelRule(channelRules, channelId, ruleKey, mode) {
     if (Object.keys(forChannel).length) next[channelId] = forChannel; else delete next[channelId];
     return next;
 }
+
+// ── Heads-up first ────────────────────────────────────────────────────────────
+// For the rules below, the first hit within headsUpSeenMs (30 days) is not acted on:
+// the member gets a DM (or a short channel notice) and headsUpGraceMs (2 minutes) to
+// edit or delete the message (services/automod/headsUp.js).
+// Settings: settings.headsUp[<key>] = boolean; a missing key means on.
+// Rule keys (config/automod.js AUTOMOD_RULES):
+//   allowed, default on: disrespect, harassment (insults), sexual, language (only when the
+//                        hit is not a blocked word / slur), privacy (personal info: deleted
+//                        at once, no warning, no case), custom-<id> (every custom rule
+//                        shares one setting, key "custom")
+//   never:               scam, nsfw, advertising (incl. ad bots), mentions, spam,
+//                        impersonation (raids), and language hits with slur: true
+//   not offered:         caps, characters, english (they already get a second chance)
+
+export const HEADS_UP_RULES = ['disrespect', 'harassment', 'sexual', 'language', 'privacy'];
+export const HEADS_UP_CUSTOM_KEY = 'custom';
+export const HEADS_UP_NEVER = ['scam', 'nsfw', 'advertising', 'mentions', 'spam', 'impersonation'];
+/** Keys the heads-up setting accepts (the dashboard lists these). */
+export const HEADS_UP_SETTING_KEYS = [...HEADS_UP_RULES, HEADS_UP_CUSTOM_KEY];
+
+const isCustomRuleKey = (ruleKey) => typeof ruleKey === 'string' && ruleKey.startsWith('custom-');
+
+/** The settings key for a rule: the rule key, or "custom" for every custom rule (and "custom" itself); null when not offered. */
+export function headsUpSettingKey(ruleKey) {
+    if (ruleKey === HEADS_UP_CUSTOM_KEY || isCustomRuleKey(ruleKey)) return HEADS_UP_CUSTOM_KEY;
+    return HEADS_UP_RULES.includes(ruleKey) ? ruleKey : null;
+}
+
+/** settings.headsUp from storage → boolean values for allowed keys only (anything else is dropped). */
+export function normalizeHeadsUp(stored) {
+    const out = {};
+    if (!stored || typeof stored !== 'object') return out;
+    for (const key of HEADS_UP_SETTING_KEYS) {
+        if (typeof stored[key] === 'boolean') out[key] = stored[key];
+    }
+    return out;
+}
+
+/** Whether heads-up is on for a rule (missing = on; never for rules that don't offer it). */
+export function headsUpEnabled(settings, ruleKey) {
+    const key = headsUpSettingKey(ruleKey);
+    if (!key) return false;
+    return settings?.headsUp?.[key] !== false;
+}
+
+/**
+ * Whether this hit gets a heads-up instead of the action (the "had one in the last 30
+ * days" check comes after, in headsUp.js): the rule offers it and it is on, the hit is
+ * not a slur and does not jump to the last step, and the member is not on probation.
+ */
+export function headsUpApplies({ hit, settings, probation = false }) {
+    if (!hit || hit.slur || hit.forceLastStep || probation) return false;
+    return headsUpEnabled(settings, hit.rule);
+}
+
+const INSULT_RULES = ['disrespect', 'harassment'];
+const WORDING_RULES = ['sexual', 'language'];
+
+/** Whether two rule keys are the same kind of hit for a waiting heads-up (an insult can become harassment). */
+export function sameHeadsUpFamily(a, b) {
+    if (a === b) return true;
+    if (INSULT_RULES.includes(a) && INSULT_RULES.includes(b)) return true;
+    return WORDING_RULES.includes(a) && WORDING_RULES.includes(b);
+}
+
+/** "looked like harassment"; a custom rule: 'matched the server rule "Ads"'. */
+function headsUpWhat(ruleKey, ruleLabel = null) {
+    if (isCustomRuleKey(ruleKey)) return `matched the server rule "${ruleLabel || 'Custom rule'}"`;
+    const label = AUTOMOD_RULES[ruleKey]?.label || ruleKey;
+    return `looked like ${label.charAt(0).toLowerCase()}${label.slice(1).toLowerCase()}`;
+}
+
+const where = (channelName, serverName) => `#${channelName || 'a channel'}${serverName ? ` (${serverName})` : ''}`;
+
+/** The DM for a heads-up. Plain wording, no emoji. */
+export function headsUpDm({ ruleKey, ruleLabel = null, channelName, serverName = null, messageUrl = null, graceMinutes = 2 }) {
+    return [
+        `Your message in ${where(channelName, serverName)} ${headsUpWhat(ruleKey, ruleLabel)}. Edit or delete it within ${graceMinutes} minutes and nothing happens.`,
+        messageUrl ? `Message: ${messageUrl}` : null,
+    ].filter(Boolean).join('\n');
+}
+
+/** The channel notice when the DM could not be sent (mentions only the member). */
+export function headsUpNotice({ ruleKey, ruleLabel = null, userId, graceMinutes = 2 }) {
+    return `<@${userId}> Your message ${headsUpWhat(ruleKey, ruleLabel)}. Edit or delete it within ${graceMinutes} minutes and nothing happens.`;
+}
+
+/** Personal info: the message is removed at once, no warning. */
+export function privacyHeadsUpDm({ channelName, serverName = null }) {
+    return `Your message in ${where(channelName, serverName)} was removed because it looked like personal information. No warning this time.`;
+}
+
+export function privacyHeadsUpNotice(userId) {
+    return `<@${userId}> Your message was removed because it looked like personal information. No warning this time.`;
+}

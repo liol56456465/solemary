@@ -3,6 +3,7 @@ import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { logger } from '../utils/logger.js';
 import { getReactionRoleMessage, deleteReactionRoleMessage } from '../services/reactionRoleService.js';
 import { formatLogLine } from '../utils/logging/logEmbeds.js';
+import { noteMessageDeleted } from '../services/automod/headsUp.js';
 
 const MAX_LOGGED_MESSAGE_CONTENT_LENGTH = 1024;
 
@@ -13,6 +14,10 @@ export default {
   async execute(message) {
     try {
       if (!message.guild) return;
+
+      // Automod heads-up first: deleting the flagged message in time fixes it. By id, so
+      // partials count too; only messages with a waiting heads-up touch the database.
+      await noteMessageDeleted(message.client, message.guild.id, message.id);
 
       try {
         const reactionRoleData = await getReactionRoleMessage(message.client, message.guild.id, message.id);

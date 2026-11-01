@@ -37,6 +37,7 @@ import { postWeeklyAutomodReport } from './services/automod/automodReport.js';
 import { postWeeklyDigest } from './services/stats/weeklyDigest.js';
 import { postDailyAutomodDigest } from './services/automod/automodDigest.js';
 import { liftCalmSlowmodes } from './services/automod/autoSlowmode.js';
+import { runHeadsUpChecks } from './services/automod/automodService.js';
 import { pollFeeds } from './services/community/feedService.js';
 import { runDueScheduledMessages } from './services/scheduledMessageService.js';
 import { startAdminConsole } from './console/adminConsole.js';
@@ -412,6 +413,8 @@ class Mewvo extends Client {
     cron.schedule('* * * * *', exclusive('activity_flush', () => flushActivity()));
     cron.schedule('45 3 * * *', exclusive('activity_prune', () => pruneActivity()), { timezone: 'UTC' });
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));
+    // Automod heads-up first: act on messages still breaking the rule after the 2-minute wait (headsUp.js).
+    cron.schedule('* * * * *', exclusive('automod_headsup', () => runHeadsUpChecks(this)));
     // Scheduled and recurring messages (dashboard Messages page).
     cron.schedule('* * * * *', exclusive('scheduled_messages', () => runDueScheduledMessages(this)));
     cron.schedule('*/5 * * * *', exclusive('ticket_reminders', async () => {
