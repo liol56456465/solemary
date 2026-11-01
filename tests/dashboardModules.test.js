@@ -667,6 +667,7 @@ const CASES = {
         'mass-action': { form: { massActionLimit: '7', massMuteLimit: '12', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, service: 'updateSettings',
             bad: { form: { massActionLimit: 'x', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, message: /whole number/ } },
         transparency: { form: { enabled: 'true' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
+        'trust-card': { form: { enabled: 'true' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
         'template-add': { form: { name: 'Spam: short mute', action: 'mute', reasonKey: 'spam', duration: '1h' }, service: 'updateSettings',
             bad: { form: { name: 'No time', action: 'mute', reasonKey: 'spam', duration: '' }, message: /needs a duration/ } },
         'template-remove': { seed: (s) => { s.registry.enforcementTemplates = [{ name: 'Spam', action: 'warn', reasonKey: 'spam', duration: null }]; }, form: { index: '0' }, service: 'updateSettings',
@@ -2333,6 +2334,33 @@ test('transparency report switch: off by default, an administrator turns it on (
     assert.equal(refused.statusCode, 403);
     assert.equal(owner.state.registry.transparencyReportEnabled, undefined);
     assert.ok(!(await get(owner, 'enforcement')).body.includes('aria-label="Publish a monthly transparency report on the website: turn on"'), 'owners see the state only (no switch button)');
+});
+
+test('trust card switch: off by default, an administrator turns it on (saved + audited, link shown), owners without Administrator cannot', async () => {
+    const admin = await setup();
+    const page = await get(admin, 'enforcement');
+    assert.match(page.body, /Trust card/);
+    assert.match(page.body, /action="\/dashboard\/enforcement\/trust-card"/);
+    assert.match(page.body, /aria-label="Publish trust card: turn on"/, 'off by default');
+    assert.ok(!page.body.includes('href="/trust"'), 'no link while off');
+    const res = await post(admin, 'enforcement', 'trust-card', { enabled: 'true' });
+    assert.equal(res.statusCode, 303);
+    assert.equal(admin.state.registry.trustCardEnabled, true);
+    const update = admin.calls.find((c) => c.name === 'updateSettings');
+    assert.deepEqual(update.args[1], { trustCardEnabled: true });
+    assert.equal(update.args[2].userId, ADMIN);
+    assert.ok(admin.auditRows.some((r) => r.key === 'trustCardEnabled' && r.old === false && r.new === true), 'audited old → new');
+    const on = await get(admin, 'enforcement');
+    assert.match(on.body, /aria-label="Publish trust card: turn off"/);
+    assert.match(on.body, /<a href="\/trust">\/trust<\/a>/, 'link to the page while on');
+    const rows = admin.auditRows.length;
+    assert.equal((await post(admin, 'enforcement', 'trust-card', { enabled: 'true' })).statusCode, 303);
+    assert.equal(admin.auditRows.length, rows, 'same value: nothing audited');
+    const owner = await setup({ userId: OWNER });
+    const refused = await post(owner, 'enforcement', 'trust-card', { enabled: 'true' });
+    assert.equal(refused.statusCode, 403);
+    assert.equal(owner.state.registry.trustCardEnabled, undefined);
+    assert.ok(!(await get(owner, 'enforcement')).body.includes('aria-label="Publish trust card: turn on"'), 'owners see the state only');
 });
 
 // ── Rules page ────────────────────────────────────────────────────────────

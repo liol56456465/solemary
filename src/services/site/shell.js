@@ -140,6 +140,7 @@ ${ctx.supportInvite ? html`<li><a href="${ctx.supportInvite}" rel="noopener">Sup
 ${col('Community', html`<li><a href="/leaderboard"${current('leaderboard')}>Leaderboard</a></li>
 <li><a href="/rules"${current('rules')}>Rules</a></li>
 ${ctx.transparency ? html`<li><a href="/transparency"${current('transparency')}>Transparency</a></li>` : ''}
+${ctx.trustCard ? html`<li><a href="/trust"${current('trust')}>Trust card</a></li>` : ''}
 ${ctx.memberPortal ? html`<li><a href="/me"${current('me')}>My record</a></li>` : ''}
 ${ctx.mainInvite ? html`<li><a href="${ctx.mainInvite}" rel="noopener">Our server</a></li>` : ''}`)}
 ${col('Legal', html`<li><a href="/about"${current('about')}>About</a></li>
@@ -172,34 +173,43 @@ export function addButton(ctx, className = 'button') {
 
 const DEFAULT_DESCRIPTION = 'Mewvo is a Discord bot for moderation with case codes, a warning ladder, appeals, automod, tickets and community tools.';
 
-/** canonical + Open Graph / Twitter tags: only with a known origin (PUBLIC_URL), never a guessed host. */
-function shareTags(ctx, { title, description, path }) {
+const DEFAULT_IMAGE = Object.freeze({
+    path: '/img/og.png', width: 1200, height: 630, alt: 'Mewvo: Discord moderation with case codes, a warning ladder and appeals.', large: true,
+});
+
+/**
+ * canonical + Open Graph / Twitter tags: only with a known origin (PUBLIC_URL), never a guessed host.
+ * `image` ({ path, width, height, alt, large }) replaces the default share image (og.png);
+ * `large: false` asks for the small square Twitter card.
+ */
+function shareTags(ctx, { title, description, path, image = null }) {
     if (!ctx.origin || typeof path !== 'string') return '';
     const url = `${ctx.origin}${path}`;
     const fullTitle = title === 'Mewvo' ? 'Mewvo' : `${title} · Mewvo`;
     const text = description || DEFAULT_DESCRIPTION;
-    const image = `${ctx.origin}/img/og.png`;
+    const img = image && typeof image.path === 'string' && image.path.startsWith('/') ? image : DEFAULT_IMAGE;
+    const imageUrl = `${ctx.origin}${img.path}`;
     return html`
 <link rel="canonical" href="${url}">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Mewvo"><meta property="og:title" content="${fullTitle}">
-<meta property="og:description" content="${text}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}">
-<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Mewvo: Discord moderation with case codes, a warning ladder and appeals.">
-<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${fullTitle}"><meta name="twitter:description" content="${text}"><meta name="twitter:image" content="${image}">`;
+<meta property="og:description" content="${text}"><meta property="og:url" content="${url}"><meta property="og:image" content="${imageUrl}">
+<meta property="og:image:width" content="${String(img.width)}"><meta property="og:image:height" content="${String(img.height)}"><meta property="og:image:alt" content="${img.alt}">
+<meta name="twitter:card" content="${img.large === false ? 'summary' : 'summary_large_image'}"><meta name="twitter:title" content="${fullTitle}"><meta name="twitter:description" content="${text}"><meta name="twitter:image" content="${imageUrl}">`;
 }
 
 /**
  * The page shell. `path` (the page's own path, e.g. "/features") turns on the canonical and
  * share tags when PUBLIC_URL is set. `refresh` (seconds) adds a <meta http-equiv="refresh">:
- * the status page reloads itself without a script.
+ * the status page reloads itself without a script. `image` overrides the share image (shareTags).
  */
-export function layout(ctx, { title, active = null, description = '', refresh = 0, path = null, body }) {
+export function layout(ctx, { title, active = null, description = '', refresh = 0, path = null, image = null, body }) {
     // The way into the dashboard: a filled button unless "Add to Discord" is shown.
     // The dashboard: a filled button unless "Add to Discord" or the member buttons are shown.
     const quiet = (ctx.publicSite && ctx.installUrl) || ctx.memberPortal;
     const login = ctx.dashboardEnabled ? html`<a class="button${quiet ? ' button-quiet' : ''}" href="${DASHBOARD_PATH}">Dashboard</a>` : '';
     return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
-<title>${title === 'Mewvo' ? 'Mewvo' : `${title} · Mewvo`}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path })}
+<title>${title === 'Mewvo' ? 'Mewvo' : `${title} · Mewvo`}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path, image })}
 <link rel="icon" href="${FAVICON_PATH}" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"></head>
 <body><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>Mewvo</span></a>

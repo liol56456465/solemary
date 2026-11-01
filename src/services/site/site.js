@@ -15,6 +15,8 @@
 //   GET /status       Online / Starting / Degraded and the uptime, nothing else
 //   GET /transparency monthly moderation numbers (pages/transparency.js); 404 unless the
 //                     dashboard setting transparencyReportEnabled is on
+//   GET /trust        the main server's trust card, a 90-day summary (pages/trust.js); 404 unless
+//                     the dashboard setting trustCardEnabled is on
 //   GET /changelog    what changed, newest first (pages/changelog.js, config/site/changelog.js)
 //   GET /privacy      Privacy Policy: what is stored, why, how long, rights (pages/legal.js)
 //   GET /terms        Terms and Conditions (pages/legal.js)
@@ -43,6 +45,7 @@ import { getLeaderboard, getLevelingConfig } from '../leveling/leveling.js';
 import { getConfiguredSetting } from '../settings/guildSettings.js';
 import { getServerCat } from '../community/catService.js';
 import { createTransparencyReader } from '../enforcement/transparencyService.js';
+import { createTrustCardReader } from '../enforcement/trustCardService.js';
 import { logger } from '../../utils/logger.js';
 import {
     FAVICON_PATH, LOGO_FILE, NOINDEX, SECURITY_HEADERS, STYLESHEET, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
@@ -54,6 +57,7 @@ import { faqPage } from './pages/faq.js';
 import { GUIDES, docsPage, guidePage } from './pages/docs.js';
 import { transparencyErrorPage, transparencyPage } from './pages/transparency.js';
 import { rulesPage } from './pages/rules.js';
+import { trustErrorPage, trustPage } from './pages/trust.js';
 import { changelogPage } from './pages/changelog.js';
 import { LEGAL_UPDATED, legalContact, privacyPage, termsPage } from './pages/legal.js';
 import { readPublicRules } from '../rules/serverRules.js';
@@ -321,15 +325,15 @@ export function notFoundPage(ctx) {
 
 // ── Sitemap ───────────────────────────────────────────────────────────────
 
-/** The public pages, for /sitemap.xml (plus /transparency while it is turned on). */
+/** The public pages, for /sitemap.xml (plus /transparency and /trust while they are turned on). */
 export const SITEMAP_PATHS = [
     '/', '/features', '/pricing', '/docs', ...GUIDES.map((g) => `/docs/${g.slug}`), '/faq',
     '/commands', '/leaderboard', '/rules', '/about', '/changelog', '/status', '/privacy', '/terms',
 ];
 
-export function sitemapXml(origin, { transparency = false } = {}) {
+export function sitemapXml(origin, { transparency = false, trust = false } = {}) {
     const escape = (text) => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-    const paths = transparency ? [...SITEMAP_PATHS, '/transparency'] : SITEMAP_PATHS;
+    const paths = [...SITEMAP_PATHS, ...(transparency ? ['/transparency'] : []), ...(trust ? ['/trust'] : [])];
     const urls = paths.map((path) => `  <url><loc>${escape(`${origin}${path}`)}</loc></url>`).join('\n');
     return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
@@ -341,12 +345,13 @@ export function sitemapXml(origin, { transparency = false } = {}) {
  * starts before the commands load); `support()` the current support invite (a settings getter).
  * `leaderboard({ offset, limit })`, `status()` and `rules()` default to the real readers on `client`;
  * `transparency` is { enabled() → boolean (the dashboard setting, read per request), read() →
- * Promise<report> (cached 10 minutes) }; tests pass fakes.
+ * Promise<report> (cached 10 minutes) }; `trust` is the same shape for the trust card
+ * (read() → readTrustCard's numbers, cached 10 minutes); tests pass fakes.
  */
 export function createSite({
     client = null, env = process.env, dashboardEnabled = false, memberPortalEnabled = false, memberAccountsEnabled = false, billingEnabled = false, supportInvite = () => null,
     leaderboard = createLeaderboardReader(client), status = () => botStatus(client), rules = () => readPublicRules(env),
-    transparency = defaultTransparency(), cat = createCatReader(client),
+    transparency = defaultTransparency(), trust = defaultTrust(client), cat = createCatReader(client),
 } = {}) {
     const router = express.Router();
     const publicSite = publicSiteEnabled(env);
@@ -366,11 +371,14 @@ export function createSite({
     const context = () => {
         let support = null;
         try { support = inviteOrNull(supportInvite()); } catch { support = null; }
-        return { ...base, supportInvite: support, commands: client?.commands || null, transparency: transparencyOn() };
+        return { ...base, supportInvite: support, commands: client?.commands || null, transparency: transparencyOn(), trustCard: trustOn() };
     };
     // A settings read that throws counts as off: the page and its link simply do not appear.
     const transparencyOn = () => {
         try { return transparency?.enabled?.() === true; } catch { return false; }
+    };
+    const trustOn = () => {
+        try { return trust?.enabled?.() === true; } catch { return false; }
     };
 
     router.use((req, res, next) => {
@@ -437,6 +445,29 @@ export function createSite({
         }
         return res.status(200).type('html').send(transparencyPage(context(), report));
     });
+    // Off: the 404 page. The numbers failing: 503. The cat or the rules failing: only that block is left out.
+    router.get('/trust', async (req, res, next) => {
+        if (!trustOn()) return next();
+        const extra = (name, read) => Promise.resolve().then(read).catch((error) => {
+            logger.warn(`Site trust card ${name} could not be loaded: ${error.message}`);
+            return null;
+        });
+        const catRead = extra('cat', () => cat());
+        const rulesRead = extra('rules', () => rules());
+        let card = null;
+        try {
+            card = await trust.read();
+        } catch (error) {
+            logger.warn(`Site trust card could not be loaded: ${error.message}`);
+        }
+        const [catState, rulesState] = await Promise.all([catRead, rulesRead]);
+        res.set('Cache-Control', 'no-cache');
+        if (!card) {
+            res.set('Retry-After', '120');
+            return res.status(503).type('html').send(trustErrorPage(context()));
+        }
+        return res.status(200).type('html').send(trustPage(context(), card, { cat: catState, rules: rulesState }));
+    });
     // A failed read is a 503 page, never an empty list (which would say "no rules").
     router.get('/rules', async (req, res) => {
         let data = null;
@@ -457,7 +488,7 @@ export function createSite({
     if (publicSite && base.origin) {
         router.get('/sitemap.xml', (req, res) => {
             res.set('Cache-Control', 'public, max-age=3600');
-            res.type('application/xml').send(sitemapXml(base.origin, { transparency: transparencyOn() }));
+            res.type('application/xml').send(sitemapXml(base.origin, { transparency: transparencyOn(), trust: trustOn() }));
         });
     }
     // The site's images: dashboard screenshots and the share image. Missing files fall through to the 404 page.
@@ -490,6 +521,14 @@ function defaultTransparency() {
     return {
         enabled: () => getConfiguredSetting('transparencyReportEnabled') === true,
         read: createTransparencyReader({ guildId: () => enforcementConfig.mainGuildId }),
+    };
+}
+
+/** The real trust card source: the main server's dashboard setting and the cached reader. */
+function defaultTrust(client) {
+    return {
+        enabled: () => getConfiguredSetting('trustCardEnabled') === true,
+        read: createTrustCardReader({ guildId: () => enforcementConfig.mainGuildId, client }),
     };
 }
 

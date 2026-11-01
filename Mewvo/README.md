@@ -22,7 +22,7 @@ Plain static files: no build step, no scripts. Generated from the bot's reposito
 - `/privacy`
 - `/terms`
 
-The dashboard, leaderboard, status, server rules, transparency report and "My record" need
+The dashboard, leaderboard, status, server rules, transparency report, trust card and "My record" need
 the running bot, so their links go to **https://app.mewvo.com**.
 
 ## Publish on GitHub Pages with mewvo.com

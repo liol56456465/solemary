@@ -14,7 +14,7 @@ const KEYS = [
     'adminRequestChannelId', 'modLogChannelId', 'evidenceChannelId', 'appealsCategoryId', 'reportsCategoryId', 'modmailCategoryId',
     'openChannelCap', 'mutedRoleId', 'warnRoleIds',
     'supportServerInvite', 'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds', 'staleReportMs',
-    'staleAppealReminderMs', 'transparencyReportEnabled', 'independentAppealReview', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
+    'staleAppealReminderMs', 'transparencyReportEnabled', 'trustCardEnabled', 'independentAppealReview', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
     'enforcementTemplates',
 ];
 
@@ -96,10 +96,17 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
             label: 'Publish a monthly transparency report on the website', canEdit: ctx.canEdit && ctx.canAct,
             confirmOff: 'Take the transparency report off the website?',
         });
+        // Admin-only too: a public summary of how this server moderates (/trust).
+        const trustOn = v.trustCardEnabled === true;
+        const trust = html`${toggleForm(ctx, 'enforcement', 'trust-card', trustOn, {
+            label: 'Publish trust card', canEdit: ctx.canEdit && ctx.canAct,
+            confirmOff: 'Take the trust card off the website?',
+        })}${trustOn ? html`<p class="muted">It is public at <a href="/trust">/trust</a>.</p>` : ''}`;
         return html`${section('Appeal panels', appealPanels, `Posts the appeal panel here and in the support server, and removes the old ones. You can also do this with /setappeal in Discord.${ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.'}`)}
 ${section('Channels', channels)}${section('Roles', roles, 'Warning roles show how many active warnings a member has. Mewvo gives and removes them by itself.')}
 ${section('Appeals and reports', timings, 'An appeal is a member asking staff to lift a punishment.')}${section('Independent appeal review', review, 'Off by default, so any staff member who handles appeals can decide any appeal.')}
-${section('Transparency report', transparency, `Off by default. When on, a public page on the Mewvo website (/transparency) shows how many warnings, mutes, kicks, bans and appeals this server had each month. It shows numbers only. No names, IDs, case codes, reasons or moderators. A count of 1 or 2 shows as “fewer than 3”.${ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.'}`)}${section('Mass-action guard', mass, 'Protects the server if a moderator account is misused. A moderator who punishes too many members in a short time is stopped for a while, and the bot owner gets a private message (DM).')}
+${section('Transparency report', transparency, `Off by default. When on, a public page on the Mewvo website (/transparency) shows how many warnings, mutes, kicks, bans and appeals this server had each month. It shows numbers only. No names, IDs, case codes, reasons or moderators. A count of 1 or 2 shows as “fewer than 3”.${ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.'}`)}
+${section('Trust card', trust, `Off by default. When on, a public page on the Mewvo website (/trust) sums up the last 90 days: how fast appeals get a first answer, how many are accepted, how many members are in good standing, and how often members fix a message themselves after an automod heads-up. Numbers only. Counts of 1 or 2 and rates based on fewer than 3 are hidden.${ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.'}`)}${section('Mass-action guard', mass, 'Protects the server if a moderator account is misused. A moderator who punishes too many members in a short time is stopped for a while, and the bot owner gets a private message (DM).')}
 ${section('Templates', html`${templateList}${templateAdd}`, 'Ready-made punishments for /enforcements, like "Spam: 1h mute". They show as a menu under the buttons. Picking one skips straight to the last step, where you confirm.')}
 ${section('Warn ladder', html`<p class="muted">The warn ladder decides when warnings turn into a ban. A member with no earlier ban is banned at ${enforcementConfig.warnsPerLevel} warnings. After that, each new warning bans them again, for longer each time. You cannot change this here yet.</p>${ladder}`)}
 ${section('Reasons', reasons, 'The reasons moderators can pick from. You cannot change them here yet, because each case saves the code of its reason.')}
@@ -145,6 +152,16 @@ ${section('Automod steps', steps, 'What automod does when someone breaks the sam
                 if (!Object.keys(patch).length) return NOTHING;
                 const result = await saveRegistry(ctx, patch, 'enforcement');
                 return { ...result, message: `The transparency report is ${enabled ? 'on: /transparency is public' : 'off: /transparency is gone from the website'}.` };
+            },
+        },
+        'trust-card': {
+            admin: true,
+            async run(ctx, form) {
+                const enabled = boolField(form, 'enabled', 'Trust card');
+                const patch = changedOnly({ trustCardEnabled: enabled }, current(ctx));
+                if (!Object.keys(patch).length) return NOTHING;
+                const result = await saveRegistry(ctx, patch, 'enforcement');
+                return { ...result, message: `The trust card is ${enabled ? 'on: /trust is public' : 'off: /trust is gone from the website'}.` };
             },
         },
         async channels(ctx, form) {

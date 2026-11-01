@@ -8,7 +8,7 @@
 // The pages are rendered by the real site router (src/services/site/site.js) on 127.0.0.1 with
 // the loaded command list, then saved as <route>/index.html so clean URLs keep working on a
 // static host. Pages that need the running bot (dashboard, leaderboard, status, rules,
-// transparency, My record) are not copied: their links point to --app-url, where the bot's own
+// transparency, trust card, My record) are not copied: their links point to --app-url, where the bot's own
 // web server answers them. Nothing here talks to Discord or a database.
 
 import { cp, mkdir, rm, writeFile, copyFile } from 'node:fs/promises';
@@ -28,7 +28,7 @@ const APP_URL = arg('app-url', 'https://app.mewvo.com').replace(/\/+$/, '');
 const SUPPORT_INVITE = arg('support-invite', 'https://discord.gg/7Ckv9Bt577');
 
 /** Paths served by the bot (need live data or a login): links to them go to APP_URL. */
-export const APP_PATHS = ['dashboard', 'leaderboard', 'status', 'rules', 'transparency', 'me', 'oauth'];
+export const APP_PATHS = ['dashboard', 'leaderboard', 'status', 'rules', 'transparency', 'trust', 'me', 'oauth'];
 
 /** Rewrites root-relative links to the bot's pages so they point at the app's own address. */
 export function pointAppLinksAt(htmlText, appUrl) {
@@ -64,6 +64,7 @@ async function main() {
         status: () => ({ state: 'online', uptimeMs: 0 }),
         rules: async () => null,
         transparency: { enabled: () => false, read: async () => null },
+        trust: { enabled: () => false, read: async () => null },
     }));
     const server = await new Promise((resolve) => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
     const base = `http://127.0.0.1:${server.address().port}`;
@@ -120,7 +121,7 @@ Plain static files: no build step, no scripts. Generated from the bot's reposito
 
 ${pages.map((route) => `- \`${route}\``).join('\n')}
 
-The dashboard, leaderboard, status, server rules, transparency report and "My record" need
+The dashboard, leaderboard, status, server rules, transparency report, trust card and "My record" need
 the running bot, so their links go to **${APP_URL}**.
 
 ## Publish on GitHub Pages with ${host}

@@ -163,6 +163,12 @@ export const SETTINGS = Object.freeze([
         label: 'Publish a monthly transparency report on the website', env: null, fallback: false, schema: z.boolean(),
     },
     {
+        // /trust on the website (services/site/pages/trust.js): a 90-day summary (appeal times and
+        // results, members in good standing, heads-up fix rate). Off until an administrator turns it on.
+        key: 'trustCardEnabled', module: 'appeals', kind: 'boolean', guild: 'main',
+        label: 'Publish a trust card on the website', env: null, fallback: false, schema: z.boolean(),
+    },
+    {
         // On: the moderator who issued a punishment cannot decide its appeal (OWNER_IDS
         // excepted, logged as an owner override). See enforcement/appealReviewer.js.
         key: 'independentAppealReview', module: 'appeals', kind: 'boolean', guild: 'main',

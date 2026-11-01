@@ -771,3 +771,41 @@ h2 { font-size: clamp(24px, 2.8vw, 32px); line-height: 1.2; letter-spacing: -0.0
     .topbar-actions .button-quiet[href="/dashboard"]:not(:only-child) { display: none; }
     .account-name { max-width: 96px; }
 }
+
+/* Trust card (/trust): header with the server cat, four stat tiles, two panels. */
+.trust-head { display: flex; align-items: center; justify-content: space-between; gap: 24px 48px; margin-bottom: 40px; }
+.trust-head h1 { margin-bottom: 12px; overflow-wrap: anywhere; }
+.trust-head .lead { margin: 0; }
+.trust-eyebrow { margin: 0 0 8px; font-size: 14px; font-weight: 650; color: var(--accent); }
+.trust-cat { flex: none; margin: 0; display: grid; justify-items: center; gap: 8px; padding: 16px 20px; border: 1px solid var(--border); border-radius: 14px; background: var(--raised); text-align: center; }
+.trust-cat img { width: 128px; height: 128px; }
+.trust-cat figcaption { font-size: 14px; color: var(--text-muted); max-width: 160px; overflow-wrap: anywhere; }
+.trust-cat figcaption strong, .trust-cat figcaption span { display: block; }
+.trust-cat figcaption strong { color: var(--text); font-size: 16px; }
+.trust-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 0 0 16px; }
+.trust-tile { display: flex; flex-direction: column; padding: 20px 22px; border: 1px solid var(--border); border-radius: 14px; background: var(--raised); }
+.trust-tile dt { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+.trust-tile dd { margin: 0; }
+.trust-tile .trust-note { margin-top: 8px; font-size: 14px; color: var(--text-muted); }
+.trust-value { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; font-variant-numeric: tabular-nums; color: var(--text); }
+.trust-value.trust-none { font-size: 18px; font-weight: 600; letter-spacing: 0; color: var(--text-muted); }
+.trust-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 16px; align-items: start; }
+.trust-panel h2 { font-size: 20px; margin: 0 0 12px; }
+.trust-list { margin: 0 0 16px; padding-left: 20px; display: grid; gap: 8px; }
+.trust-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; margin: 0; }
+.trust-facts > div { padding: 10px 0; border-top: 1px solid var(--border); }
+.trust-facts dt { font-size: 14px; color: var(--text-muted); }
+.trust-facts dd { margin: 2px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.trust-rules { margin: 0 0 12px; padding-left: 24px; display: grid; gap: 6px; }
+.trust-panel .note { margin: 0; }
+.trust-foot { margin-top: 32px; }
+@media (max-width: 1000px) {
+    .trust-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .trust-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+    .trust-head { flex-direction: column; align-items: flex-start; }
+    .trust-cat { grid-template-columns: auto 1fr; justify-items: start; align-items: center; text-align: left; padding: 12px 16px; }
+    .trust-cat img { width: 72px; height: 72px; }
+    .trust-tiles, .trust-facts { grid-template-columns: minmax(0, 1fr); }
+}
