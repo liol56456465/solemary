@@ -16,6 +16,11 @@ import { collectOpenReviews, formatQueue } from '../../services/automod/reviewQu
 import { endProbation, getProbation } from '../../services/automod/probationService.js';
 import { DEFAULT_GATE_DAYS, JOIN_GATE_CHECKS, describeJoinGate, normalizeJoinGate } from '../../services/automod/joinGate.js';
 import { loadNativePolicies, policyFor, setNativePolicy, triggerLabel } from '../../services/automod/nativeBridge.js';
+import { actionLabel, limitForPlan, overLimitIds, resetCustomRulesCache, storedCustomRules } from '../../services/automod/customRules.js';
+import { addRule, editRule, removeRule, toggleRule } from '../../services/automod/customRuleEdits.js';
+import { guildPlan } from '../../services/billing/premiumEffects.js';
+import { planName } from '../../services/billing/premiumService.js';
+import { updateSettings } from '../../services/settings/guildSettings.js';
 import { hasRuleOverride, isRelaxableRule, ruleMode } from '../../services/automod/policy.js';
 
 const RULE_CHOICES = Object.entries(AUTOMOD_RULES)
@@ -23,6 +28,36 @@ const RULE_CHOICES = Object.entries(AUTOMOD_RULES)
     .map(([key, rule]) => ({ name: rule.label.slice(0, 100), value: key }));
 
 const MODE_LABELS = { on: 'on', monitor: 'monitor', off: 'off' };
+
+const CUSTOM_ACTION_CHOICES = [
+    { name: 'delete', value: 'delete' },
+    { name: 'delete + warn', value: 'warn' },
+    { name: 'delete + mute', value: 'mute' },
+];
+
+/** Autocomplete entries for the custom rule names. Pure, for tests. */
+export function customRuleChoices(rules, focused = '') {
+    return (rules || [])
+        .filter((rule) => !focused || rule.name.toLowerCase().includes(focused))
+        .slice(0, 25)
+        .map((rule) => ({ name: `${rule.name} (${actionLabel(rule)}${rule.enabled === false ? ', off' : ''})`.slice(0, 100), value: rule.id }));
+}
+
+/** The /automod custom list text. Pure, for tests. */
+export function customRulesText(rules, limit, plan) {
+    if (!rules.length) {
+        return limit
+            ? `No custom rules yet. Add one with \`/automod custom add\`. The ${plan} plan allows ${limit}.`
+            : 'No custom rules. They come with the Normal, Pro and Max plans, on the server owner\'s plan.';
+    }
+    const over = new Set(overLimitIds(rules, limit));
+    const lines = rules.map((rule) => {
+        const state = rule.enabled === false ? 'off' : over.has(rule.id) ? 'over the plan limit, not running' : 'on';
+        const words = rule.words.join(', ');
+        return `**${rule.name}**: ${actionLabel(rule)}, ${state}\n${words.length > 180 ? `${words.slice(0, 179)}…` : words}`;
+    });
+    return [`${rules.length} rule${rules.length === 1 ? '' : 's'}, up to ${limit} run on the ${plan} plan.`, ...lines].join('\n\n').slice(0, 4000);
+}
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -204,11 +239,31 @@ export default {
                         { name: 'warn (a warning and a review card)', value: 'warn' },
                     ))
                 .addIntegerOption((option) => option.setName('dedupe_minutes').setDescription('At most one action per member and rule in this many minutes (default 10)')
-                    .setMinValue(0).setMaxValue(1440)))),
+                    .setMinValue(0).setMaxValue(1440))))
+        .addSubcommandGroup((group) => group.setName('custom').setDescription('Your own word filters (paid plans)')
+            .addSubcommand((sub) => sub.setName('list').setDescription('List the custom rules'))
+            .addSubcommand((sub) => sub.setName('add').setDescription('Add a custom rule')
+                .addStringOption((option) => option.setName('name').setDescription('Short name').setRequired(true).setMaxLength(40))
+                .addStringOption((option) => option.setName('words').setDescription('Words, comma separated').setRequired(true).setMaxLength(3000))
+                .addStringOption((option) => option.setName('action').setDescription('What happens').setRequired(true).addChoices(...CUSTOM_ACTION_CHOICES))
+                .addStringOption((option) => option.setName('mute_for').setDescription('Mute time, like 1h').setMaxLength(10)))
+            .addSubcommand((sub) => sub.setName('edit').setDescription('Change a rule\'s words or action')
+                .addStringOption((option) => option.setName('name').setDescription('The rule').setRequired(true).setAutocomplete(true))
+                .addStringOption((option) => option.setName('words').setDescription('New words, comma separated (replaces)').setMaxLength(3000))
+                .addStringOption((option) => option.setName('action').setDescription('New action').addChoices(...CUSTOM_ACTION_CHOICES))
+                .addStringOption((option) => option.setName('mute_for').setDescription('Mute time, like 1h').setMaxLength(10)))
+            .addSubcommand((sub) => sub.setName('toggle').setDescription('Turn a rule on or off')
+                .addStringOption((option) => option.setName('name').setDescription('The rule').setRequired(true).setAutocomplete(true))
+                .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
+            .addSubcommand((sub) => sub.setName('remove').setDescription('Remove a rule')
+                .addStringOption((option) => option.setName('name').setDescription('The rule').setRequired(true).setAutocomplete(true)))),
 
     async autocomplete(interaction) {
         if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)) return interaction.respond([]);
         const focused = String(interaction.options.getFocused() || '').toLowerCase();
+        if (interaction.options.getSubcommandGroup(false) === 'custom') {
+            return interaction.respond(customRuleChoices(storedCustomRules(), focused)).catch(() => {});
+        }
         const rules = await interaction.guild.autoModerationRules.fetch().catch(() => null);
         const choices = [...(rules?.values() || [])]
             .filter((rule) => !focused || rule.name.toLowerCase().includes(focused) || rule.id.includes(focused))
@@ -261,6 +316,9 @@ export default {
 
         if (interaction.options.getSubcommandGroup(false) === 'native') {
             return handleNative(interaction, sub);
+        }
+        if (interaction.options.getSubcommandGroup(false) === 'custom') {
+            return handleCustom(interaction, sub);
         }
 
         if (sub === 'probation') {
@@ -364,3 +422,53 @@ export default {
         });
     },
 };
+
+async function handleCustom(interaction, sub) {
+    const guildId = interaction.guildId;
+    const planId = guildPlan(guildId);
+    const plan = planId === 'free' ? 'Free' : planName(planId);
+    const limit = limitForPlan(planId);
+    const list = storedCustomRules();
+    const opt = (name) => interaction.options.getString(name);
+
+    if (sub === 'list') {
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [createEmbed({ title: 'Custom automod rules', description: customRulesText(list, limit, plan), color: 'primary' })],
+            allowedMentions: { parse: [] },
+        });
+    }
+
+    let result;
+    try {
+        if (sub === 'add') {
+            const next = addRule(list, { name: opt('name'), words: opt('words'), action: opt('action'), muteDuration: opt('mute_for') }, { limit, planName: plan });
+            result = { list: next, note: `Custom rule **${next[next.length - 1].name}** added (${actionLabel(next[next.length - 1])}).` };
+        } else if (sub === 'edit') {
+            if (!opt('words') && !opt('action') && !opt('mute_for')) throw userError('Give new words, a new action, or a new mute time.');
+            const { list: next, rule } = editRule(list, opt('name'), { words: opt('words'), action: opt('action'), muteDuration: opt('mute_for') });
+            result = { list: next, note: `Custom rule **${rule.name}** changed: ${actionLabel(rule)}, ${rule.words.length} word${rule.words.length === 1 ? '' : 's'} or phrase${rule.words.length === 1 ? '' : 's'}.` };
+        } else if (sub === 'toggle') {
+            const enabled = interaction.options.getBoolean('enabled');
+            const { list: next, rule, changed } = toggleRule(list, opt('name'), enabled);
+            result = { list: changed ? next : null, note: `Custom rule **${rule.name}** is ${enabled ? 'on' : 'off'}${changed ? '' : ' already'}.` };
+        } else if (sub === 'remove') {
+            const { list: next, rule } = removeRule(list, opt('name'));
+            result = { list: next, note: `Custom rule **${rule.name}** removed.` };
+        }
+    } catch (error) {
+        if (error?.name === 'CustomRuleError' || error?.userMessage) throw userError(error.userMessage || error.message);
+        throw error;
+    }
+    if (!result) throw userError('Unknown option.');
+    if (result.list) {
+        await updateSettings(guildId, { automodCustomRules: result.list }, { userId: interaction.user.id, username: interaction.user.username, module: 'automod' });
+        resetCustomRulesCache();
+    }
+    const fresh = result.list || list;
+    const over = overLimitIds(fresh, limit).length;
+    const extra = over ? `\n${over} turned-on rule${over === 1 ? ' is' : 's are'} over the ${plan} plan limit of ${limit} and ${over === 1 ? 'does' : 'do'} not run.` : '';
+    return InteractionHelper.safeEditReply(interaction, {
+        embeds: [successEmbed('Automod updated', `${result.note}${extra}`)],
+        allowedMentions: { parse: [] },
+    });
+}

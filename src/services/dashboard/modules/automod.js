@@ -24,6 +24,7 @@ import {
     CUSTOM_RULE_ACTIONS, CUSTOM_RULE_NAME_MAX, CUSTOM_RULE_WORDS_MAX, CUSTOM_RULE_WORD_MAX, actionLabel, cleanCustomRules,
     limitForPlan, overLimitIds, resetCustomRulesCache, runningRules,
 } from '../../automod/customRules.js';
+import { editRule } from '../../automod/customRuleEdits.js';
 import { guildPlan as defaultGuildPlan } from '../../billing/premiumEffects.js';
 import { planName } from '../../billing/premiumService.js';
 
@@ -84,7 +85,12 @@ ${textInput('name', '', { label: 'Name', max: CUSTOM_RULE_NAME_MAX, placeholder:
 ${selectInput('action', 'delete', CUSTOM_RULE_ACTIONS.map((a) => [a, a === 'delete' ? 'Delete the message' : a === 'warn' ? 'Delete and warn' : 'Delete and mute']), { label: 'What to do' })}
 ${textInput('muteDuration', '', { label: 'Mute for', max: 20, placeholder: '1h', help: 'Only used for mutes. For example 30m (30 minutes), 1h (one hour) or 1d (one day). At most 28d.' })}
 ${textArea('words', '', { label: 'Words or phrases', rows: 5, max: 4000, help: `Put each word or phrase on its own line. Up to ${CUSTOM_RULE_WORDS_MAX} lines, each up to ${CUSTOM_RULE_WORD_MAX} characters.` })}</div>`, { submit: 'Add rule' });
-    return html`${summary}${list}${add}`;
+    const edit = rules.length ? html`<h3>Change a rule</h3>${rules.map((rule) => html`<details class="rule-edit"><summary>Change "${rule.name}"</summary>
+${postForm(ctx, 'automod', 'custom-edit', html`<input type="hidden" name="id" value="${rule.id}"><div class="grid">
+${selectInput('action', rule.action, CUSTOM_RULE_ACTIONS.map((a) => [a, a === 'delete' ? 'Delete the message' : a === 'warn' ? 'Delete and warn' : 'Delete and mute']), { label: 'What to do' })}
+${textInput('muteDuration', rule.muteDuration || '', { label: 'Mute for', max: 20, placeholder: '1h', help: 'Only used for mutes, like 30m, 1h or 1d.' })}
+${textArea('words', rule.words.join('\n'), { label: 'Words or phrases', rows: 5, max: 4000, help: 'One per line. This replaces the old list.' })}</div>`, { submit: 'Save changes' })}</details>`)}` : '';
+    return html`${summary}${list}${edit}${add}`;
 }
 
 const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : 0);
@@ -306,6 +312,20 @@ ${section('Discord AutoMod', native, 'Discord has its own AutoMod built in. When
             };
             const result = await saveCustomRules(ctx, [...list, rule], 'Custom rule added.');
             return { ...result, message: `Custom rule "${rule.name.replace(/\s+/g, ' ').trim()}" added.` };
+        },
+        async 'custom-edit'(ctx, form) {
+            const rule = customRuleById(ctx, form);
+            let next;
+            try {
+                ({ list: next } = editRule(storedCustomRules(ctx), rule.id, {
+                    words: String(form?.words ?? '').slice(0, 5000),
+                    action: text(form, 'action', 10),
+                    muteDuration: text(form, 'muteDuration', 20),
+                }));
+            } catch (error) {
+                throw new InputError(error.userMessage || 'That custom rule is not valid.');
+            }
+            return saveCustomRules(ctx, next, `Custom rule "${rule.name}" saved.`);
         },
         async 'custom-toggle'(ctx, form) {
             const rule = customRuleById(ctx, form);

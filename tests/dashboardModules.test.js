@@ -678,6 +678,8 @@ const CASES = {
         rules: { form: { 'rule:caps': 'off' }, service: 'setRuleMode', bad: { form: { 'rule:caps': 'loud' }, message: /unknown mode/ } },
         'custom-add': { form: { name: 'Other servers', action: 'mute', muteDuration: '1h', words: 'join my server\nfree nitro' }, service: 'updateSettings',
             bad: { form: { name: 'No time', action: 'mute', muteDuration: '', words: 'bad' }, message: /needs a duration/ } },
+        'custom-edit': { seed: seedCustomRules, form: { id: CUSTOM_A, action: 'warn', words: 'new phrase\nother words' }, service: 'updateSettings',
+            bad: { seed: seedCustomRules, form: { id: CUSTOM_A, action: 'warn', words: '' }, message: /at least one word/ } },
         'custom-toggle': { seed: seedCustomRules, form: { id: CUSTOM_A, enabled: 'false' }, service: 'updateSettings',
             bad: { seed: seedCustomRules, form: { id: 'gone1234', enabled: 'false' }, message: /gone already/ } },
         'custom-remove': { seed: seedCustomRules, form: { id: CUSTOM_A }, service: 'updateSettings',
@@ -2218,6 +2220,10 @@ test('Automod custom rules: list (escaped), add saves a cleaned rule, toggle and
     assert.deepEqual({ ...saved[2], id: 'x' }, { id: 'x', name: 'Links', words: ['bit.ly'], action: 'delete', muteDuration: null, enabled: true });
     assert.match((await h.sessions.get(h.session.id)).flash, /Custom rule "Links" added/);
 
+    assert.ok(page.body.includes('action="/dashboard/automod/custom-edit"'));
+    assert.equal((await post(h, 'automod', 'custom-edit', { id: CUSTOM_B, action: 'mute', muteDuration: '2h', words: 'Promo code\npromo code\nfree gift' })).statusCode, 303);
+    const edited = h.state.registry.automodCustomRules.find((r) => r.id === CUSTOM_B);
+    assert.deepEqual([edited.words, edited.action, edited.muteDuration], [['promo code', 'free gift'], 'mute', '2h']);
     assert.equal((await post(h, 'automod', 'custom-toggle', { id: CUSTOM_B, enabled: 'true' })).statusCode, 303);
     assert.equal(h.state.registry.automodCustomRules.find((r) => r.id === CUSTOM_B).enabled, true);
     assert.equal((await post(h, 'automod', 'custom-remove', { id: CUSTOM_A })).statusCode, 303);
