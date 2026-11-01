@@ -27,6 +27,12 @@
 // Off unless MEMBER_PORTAL_ENABLED=true; refuses (logged) without SESSION_SECRET (≥ 32),
 // CLIENT_ID, DISCORD_CLIENT_SECRET, PUBLIC_URL and MAIN_GUILD_ID. Add
 // <PUBLIC_URL>/me/callback under OAuth2 → Redirects in the Discord Developer Portal.
+//
+// Mewvo accounts (MEMBER_ACCOUNTS_ENABLED=true, accountRoutes.js): username + password
+// login on this website. An account session carries accountId and, once Discord is linked,
+// the linked Discord id as userId, so every page below works the same. Before linking,
+// /me shows only "Link your Discord" and the account settings. The Discord link reuses
+// /me/login → /me/callback with a link cookie bound to the state nonce.
 
 import express from 'express';
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -44,14 +50,19 @@ import { getMemberStanding, nextWarningText } from '../enforcement/standingServi
 import { NOINDEX, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin } from './site.js';
 import { createBillingHandlers } from './billing.js';
 import { premiumSettings, premiumStore } from '../billing/premiumService.js';
-import { buildDataExport, exportFileName } from '../privacy/dataExport.js';
+import { ACCOUNT_EXPORT_NOTE, EXPORT_FORMAT, buildDataExport, exportFileName } from '../privacy/dataExport.js';
 import { getFromDb } from '../../utils/database/wrapper.js';
+import { createAccountHandlers, memberAccountSettings } from './accountRoutes.js';
+import { createEmailSender, emailSettings } from '../accounts/emailSender.js';
+import { accountStore as defaultAccountStore } from '../accounts/accountStore.js';
 
 export const MEMBER_BASE = '/me';
 export const MEMBER_SESSION_COOKIE = 'mewvo_me';
 export const MEMBER_STATE_COOKIE = 'mewvo_me_state';
 // Where to go after login (a /me page, e.g. the checkout someone started logged out).
 export const MEMBER_NEXT_COOKIE = 'mewvo_me_next';
+// "This Discord login links the logged-in Mewvo account" (bound to the state nonce).
+export const MEMBER_LINK_COOKIE = 'mewvo_me_link';
 export const MEMBER_SESSION_TTL_MS = 60 * 60 * 1000;
 // The label that turns SESSION_SECRET into this page's own signing key.
 const KEY_LABEL = 'mewvo member portal v1';
@@ -111,6 +122,7 @@ export function memberPortalSettings(env = process.env) {
         clientSecret: String(env.DISCORD_CLIENT_SECRET || '').trim(),
         signingKey: sessionSecret.length >= MIN_SECRET_LENGTH ? memberSigningKey(sessionSecret) : '',
         redirectUri: publicUrl ? `${publicUrl}${MEMBER_BASE}/callback` : '',
+        publicUrl,
         publicOrigin: null,
         secure: env.NODE_ENV === 'production' || publicUrl.startsWith('https://'),
         mainGuildId: env.MAIN_GUILD_ID !== undefined ? String(env.MAIN_GUILD_ID).trim() : enforcementConfig.mainGuildId,
@@ -253,8 +265,9 @@ export function loginPage(ctx) {
         title: 'My record', active: 'me',
         body: html`<div class="wrap page prose"><h1>My record</h1>
 <p class="lead">See your own moderation record in ${enforcementConfig.serverName}: your warnings, warning-ladder level, any active ban or mute, your cases and your appeals.</p>
-<p><a class="button" href="${MEMBER_BASE}/login">Log in with Discord</a></p>
-<p class="note">Mewvo asks Discord only who you are (the identify permission): no email, no servers, nothing else. You only ever see your own record. The login lasts one hour.</p></div>`,
+<p><a class="button" href="${MEMBER_BASE}/login">Log in with Discord</a>${ctx.accounts ? html` <a class="button button-quiet" href="${MEMBER_BASE}/login-password">Log in with a Mewvo account</a>` : ''}</p>
+<p class="note">Mewvo asks Discord only who you are (the identify permission): no email, no servers, nothing else. You only ever see your own record. The login lasts one hour.</p>
+${ctx.accounts ? html`<p class="note">No Mewvo account yet? <a href="${MEMBER_BASE}/signup">Create one</a> to log in with a username and password.</p>` : ''}</div>`,
     });
 }
 
@@ -268,7 +281,7 @@ export function recordPage(ctx, { session, view }) {
         title: 'My record', active: 'me',
         body: html`<div class="wrap page record"><div class="record-head"><div><h1>My record</h1>
 <p class="lead">Your moderation record in ${enforcementConfig.serverName}, logged in as <strong>${session.username}</strong>. Only you can see this.</p></div>
-<div class="record-links"><a class="button button-quiet" href="${MEMBER_BASE}/data" download>Download my data</a> ${ctx.billing ? html`<a class="button button-quiet" href="${MEMBER_BASE}/billing">Subscription</a> ` : ''}<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">Log out</button></form></div></div>
+<div class="record-links">${session.accountId ? html`<a class="button button-quiet" href="${MEMBER_BASE}/account">Account settings</a> ` : ''}<a class="button button-quiet" href="${MEMBER_BASE}/data" download>Download my data</a> ${ctx.billing ? html`<a class="button button-quiet" href="${MEMBER_BASE}/billing">Subscription</a> ` : ''}<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">Log out</button></form></div></div>
 <ul class="record-summary">
 <li class="feature"><h2>Warnings</h2><p class="record-big">${warn.count} of ${warn.threshold}</p><p>Counted warnings at your level. Warnings do not expire.</p></li>
 <li class="feature"><h2>Warning ladder</h2><p class="record-big">Level ${view.ladder.level} of 3</p><p>${view.ladder.next}</p></li>
@@ -319,7 +332,7 @@ const clientIp = (req) => String(req.ip || req.socket?.remoteAddress || 'unknown
  */
 export function createMemberPortal({
     settings, sessions, data = defaultData, fetchImpl = globalThis.fetch, states = createStateStore(),
-    limits = MEMBER_LIMITS, context = () => ({}), premium = null,
+    limits = MEMBER_LIMITS, context = () => ({}), premium = null, accounts = null,
 }) {
     const key = settings.signingKey;
     // Its own key for the return-path cookie, so it can never stand in for a session cookie.
@@ -330,7 +343,8 @@ export function createMemberPortal({
     const pageLimiter = createRateLimiter(limits.page);
     const redeemLimiter = createRateLimiter(limits.redeem || MEMBER_LIMITS.redeem);
     const exportLimiter = createRateLimiter(limits.dataExport || MEMBER_LIMITS.dataExport);
-    const ctx = () => ({ ...context(), memberPortal: true, billing: Boolean(premium) });
+    const linkKey = hmac('mewvo member link v1', key);
+    const ctx = () => ({ ...context(), memberPortal: true, billing: Boolean(premium), accounts: Boolean(accounts) });
     const send = (res, status, page) => res.status(status).type('html').send(page);
     const fail = (res, status, title, message, options) => send(res, status, messagePage(ctx(), title, message, options));
 
@@ -357,10 +371,13 @@ export function createMemberPortal({
         return id ? sessions.get(id) : null;
     }
 
-    function login(req, res) {
+    /** Discord OAuth. linkAccountId: this login links that Mewvo account (POST /me/link). */
+    function startOAuth(req, res, { linkAccountId = null } = {}) {
         const { state, nonce } = createState(key);
         res.append('Set-Cookie', serializeCookie(MEMBER_STATE_COOKIE, nonce, { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
-        const next = safeNextPath(req.query?.next);
+        if (linkAccountId) res.append('Set-Cookie', serializeCookie(MEMBER_LINK_COOKIE, signValue(`${linkAccountId}.${nonce}`, linkKey), { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
+        else res.append('Set-Cookie', clearCookie(MEMBER_LINK_COOKIE, cookieOptions));
+        const next = linkAccountId ? MEMBER_BASE : safeNextPath(req.query?.next);
         if (next !== MEMBER_BASE) res.append('Set-Cookie', serializeCookie(MEMBER_NEXT_COOKIE, signValue(next, nextKey), { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
         else res.append('Set-Cookie', clearCookie(MEMBER_NEXT_COOKIE, cookieOptions));
         const params = new URLSearchParams({
@@ -369,9 +386,24 @@ export function createMemberPortal({
         return res.redirect(302, `${AUTHORIZE_URL}?${params}`);
     }
 
+    function login(req, res) {
+        return startOAuth(req, res);
+    }
+
+    /** The account id of a link started in this browser, bound to the state nonce; else null. */
+    function linkTarget(cookies) {
+        const value = verifySignedValue(cookies[MEMBER_LINK_COOKIE], linkKey);
+        if (!value) return null;
+        const dot = value.indexOf('.');
+        const accountId = value.slice(0, dot);
+        const nonce = value.slice(dot + 1);
+        return cookies[MEMBER_STATE_COOKIE] && safeEqual(nonce, cookies[MEMBER_STATE_COOKIE]) ? accountId : null;
+    }
+
     async function callback(req, res) {
         const cookies = parseCookies(req.headers?.cookie);
         res.append('Set-Cookie', clearCookie(MEMBER_STATE_COOKIE, cookieOptions));
+        res.append('Set-Cookie', clearCookie(MEMBER_LINK_COOKIE, cookieOptions));
         if (req.query?.error) return fail(res, 400, 'Login cancelled', 'You did not authorize the login.', { login: true });
         const code = str(req.query?.code, 200);
         if (!code || !states.consume(str(req.query?.state, 1000), cookies[MEMBER_STATE_COOKIE], key)) {
@@ -394,6 +426,14 @@ export function createMemberPortal({
             return fail(res, 502, 'Login failed', 'Discord did not confirm the login. Try again.', { login: true });
         }
         if (!isSnowflake(String(me?.id || ''))) return fail(res, 502, 'Login failed', 'Discord did not return a user.', { login: true });
+        const linkAccountId = accountHandlers ? linkTarget(cookies) : null;
+        if (linkAccountId) {
+            const current = await readSession(req);
+            if (!current?.accountId || current.accountId !== linkAccountId) {
+                return fail(res, 400, 'Not linked', 'Log in to your Mewvo account in this browser first, then link Discord again.');
+            }
+            return accountHandlers.linkCallback(req, res, { session: current, discordUser: me });
+        }
         // Rotation: whatever member session this browser had is dropped; a fresh id is issued.
         const session = await sessions.rotate(cookieSessionId(req), {
             userId: me.id, username: me.global_name || me.username || me.id, avatar: null,
@@ -407,6 +447,12 @@ export function createMemberPortal({
     async function index(req, res) {
         const session = await readSession(req);
         if (!session) return send(res, 200, loginPage(ctx()));
+        if (!session.userId) {
+            // A Mewvo account without Discord: only "Link your Discord" and settings.
+            const me = accountHandlers ? await accountHandlers.current(req) : null;
+            if (!me) return send(res, 200, loginPage(ctx()));
+            return accountHandlers.linkNeeded(res, me);
+        }
         let view;
         try {
             // The user id comes from the session only; nothing in the URL is read.
@@ -428,17 +474,25 @@ export function createMemberPortal({
     async function dataExport(req, res) {
         const session = await readSession(req);
         if (!session) return fail(res, 401, 'Log in first', 'Log in with Discord to download your data.', { login: true });
+        if (!session.userId && !session.accountId) return fail(res, 401, 'Log in first', 'Log in to download your data.', { login: true });
         let file;
         try {
-            file = await data.exportData(session.userId);
+            const account = session.accountId && accounts ? await accounts.store.exportOf(session.accountId) : null;
+            if (session.userId) {
+                file = await data.exportData(session.userId);
+                if (account && !file.mewvoAccount?.length) file.mewvoAccount = [account];
+            } else {
+                file = { format: EXPORT_FORMAT, generatedAt: new Date().toISOString(), userId: null, note: ACCOUNT_EXPORT_NOTE, mewvoAccount: account ? [account] : [] };
+            }
         } catch (error) {
-            logger.error(`Member portal: data export of ${session.userId} failed: ${error.message}`);
+            logger.error(`Member portal: data export of ${session.userId || `account ${session.accountId}`} failed: ${error.message}`);
             res.set('Retry-After', '60');
             return fail(res, 503, 'Download unavailable', 'Your data could not be collected because the database is not responding. Try again in a few minutes.');
         }
-        logger.info(`Member portal: ${session.userId} downloaded their data`);
+        const who = session.userId || `account ${session.accountId}`;
+        logger.info(`Member portal: ${who} downloaded their data`);
         res.set('Cache-Control', 'no-store');
-        res.set('Content-Disposition', `attachment; filename="${exportFileName(session.userId)}"`);
+        res.set('Content-Disposition', `attachment; filename="${session.userId ? exportFileName(session.userId) : `mewvo-account-data-${new Date().toISOString().slice(0, 10)}.json`}"`);
         return res.status(200).type('application/json').send(`${JSON.stringify(file, null, 2)}\n`);
     }
 
@@ -458,9 +512,26 @@ export function createMemberPortal({
     }
 
     // Subscriptions (billing.js): only with a premium store (PREMIUM_TEST_CHECKOUT=true).
+    // They need a Discord id: an account session without one is sent to /me (link Discord).
+    const readDiscordSession = async (req) => { const s = await readSession(req); return s?.userId ? s : null; };
     const billing = premium ? createBillingHandlers({
-        readSession, sessions, settings, ctx, send, store: premium, redeemLimiter, clientIp,
+        readSession: readDiscordSession, sessions, settings, ctx, send, store: premium, redeemLimiter, clientIp,
     }) : null;
+
+    // Mewvo accounts (accountRoutes.js): only with MEMBER_ACCOUNTS_ENABLED=true.
+    const accountHandlers = accounts ? createAccountHandlers({
+        settings, accountSettings: accounts.settings, store: accounts.store, mailer: accounts.mailer, sessions, ctx, send, clientIp, cookieOptions, key,
+        sessionCookie: MEMBER_SESSION_COOKIE, cookieSessionId, readSession, sessionTtlMs: MEMBER_SESSION_TTL_MS,
+        startLink: (req, res, accountId) => startOAuth(req, res, { linkAccountId: accountId }),
+        ...(accounts.limits ? { limits: accounts.limits } : {}), ...(accounts.hashParams ? { hashParams: accounts.hashParams } : {}),
+        ...(accounts.after ? { after: accounts.after } : {}),
+    }) : null;
+
+    async function accountOnlyToLink(req, res, next) {
+        const session = await readSession(req);
+        if (session && !session.userId && session.accountId) return res.redirect(303, MEMBER_BASE);
+        return next();
+    }
 
     /** A thrown error (database down while reading the session…) → 503, never a stack trace. */
     function safe(handler) {
@@ -484,6 +555,27 @@ export function createMemberPortal({
         r.get('/callback', limitBy(loginLimiter), safe(callback));
         r.get('/data', limitBy(exportLimiter), safe(dataExport));
         r.post('/logout', limitBy(pageLimiter), express.urlencoded({ extended: false, limit: '2kb' }), safe(logout));
+        if (accountHandlers) {
+            const a = accountHandlers;
+            const form = express.urlencoded({ extended: false, limit: '4kb' });
+            const get = (path, handler) => r.get(path, limitBy(pageLimiter), safe(handler));
+            const post = (path, handler) => r.post(path, limitBy(pageLimiter), form, safe(handler));
+            get('/signup', a.signupForm); post('/signup', a.signupPost);
+            get('/resend', a.resendForm); post('/resend', a.resendPost);
+            get('/confirm', a.confirmForm); post('/confirm', a.confirmPost);
+            get('/login-password', a.loginForm); post('/login-password', a.loginPost);
+            get('/login-2fa', a.twoStepForm); post('/login-2fa', a.twoStepPost);
+            get('/forgot', a.forgotForm); post('/forgot', a.forgotPost);
+            get('/reset', a.resetForm); post('/reset', a.resetPost);
+            post('/link', a.linkPost);
+            get('/linked', a.linked);
+            post('/letter', a.letterPost); post('/letter/decline', a.letterDecline);
+            get('/account', a.settingsPage);
+            post('/account/password', a.passwordPost); post('/account/email', a.emailPost);
+            post('/account/2fa/start', a.twoStepStart); post('/account/2fa/enable', a.twoStepEnable); post('/account/2fa/disable', a.twoStepDisable);
+            post('/account/unlink', a.unlinkPost); post('/account/delete', a.deletePost);
+            r.use(['/billing', '/checkout', '/redeem'], safe(accountOnlyToLink));
+        }
         if (billing) {
             const form = express.urlencoded({ extended: false, limit: '2kb' });
             r.get('/billing', limitBy(pageLimiter), safe(billing.billing));
@@ -497,14 +589,17 @@ export function createMemberPortal({
         return r;
     }
 
-    return { headers, login, callback, index, dataExport, logout, notFound, router, sessions, states, billing };
+    return { headers, login, callback, index, dataExport, logout, notFound, router, sessions, states, billing, accounts: accountHandlers };
 }
 
 /**
  * Mounts /me when MEMBER_PORTAL_ENABLED=true and the configuration is complete.
  * Returns true when mounted (the site then shows the "My record" link).
  */
-export function registerMemberPortal(app, { env = process.env, dashboardEnabled = false, supportInvite = () => null, sessions = null, data, fetchImpl, limits, premium } = {}) {
+export function registerMemberPortal(app, {
+    env = process.env, dashboardEnabled = false, supportInvite = () => null, sessions = null, data, fetchImpl, limits, premium,
+    accountStore = null, mailer = null, accountLimits = null, hashParams = null, accountAfter = null,
+} = {}) {
     const settings = memberPortalSettings(env);
     if (!settings.requested) return false;
     if (!settings.enabled) {
@@ -523,9 +618,22 @@ export function registerMemberPortal(app, { env = process.env, dashboardEnabled 
         try { support = inviteOrNull(supportInvite()); } catch { support = null; }
         return { ...base, supportInvite: support };
     };
+    // Mewvo accounts: MEMBER_ACCOUNTS_ENABLED=true (off by default).
+    const accountSettings = memberAccountSettings(env, settings);
+    if (accountSettings.requested && !accountSettings.enabled) logger.error(`Mewvo accounts NOT enabled: ${accountSettings.problems.join('; ')}`);
+    const accounts = accountSettings.enabled ? {
+        settings: accountSettings,
+        store: accountStore || defaultAccountStore,
+        mailer: mailer || createEmailSender(emailSettings(env)),
+        ...(accountLimits ? { limits: accountLimits } : {}),
+        ...(hashParams ? { hashParams } : {}),
+        ...(accountAfter ? { after: accountAfter } : {}),
+    } : null;
+    if (accounts && !accounts.mailer.live) logger.warn('Mewvo accounts: RESEND_API_KEY / EMAIL_FROM not set, so emails are only logged, not sent (nobody can confirm an account)');
     const portal = createMemberPortal({
         settings,
-        sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.member_sessions, ttlMs: MEMBER_SESSION_TTL_MS }),
+        accounts,
+        sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.member_sessions, ttlMs: MEMBER_SESSION_TTL_MS, accounts: true }),
         context,
         ...(data ? { data } : {}),
         ...(fetchImpl ? { fetchImpl } : {}),
@@ -534,6 +642,6 @@ export function registerMemberPortal(app, { env = process.env, dashboardEnabled 
         premium: premiumSettings(env).testCheckout ? (premium || premiumStore) : null,
     });
     app.use(MEMBER_BASE, portal.router());
-    logger.info(`Member portal enabled at ${MEMBER_BASE} (OAuth redirect ${settings.redirectUri})${portal.billing ? '; subscriptions in TEST CHECKOUT mode (no payments)' : ''}`);
+    logger.info(`Member portal enabled at ${MEMBER_BASE} (OAuth redirect ${settings.redirectUri})${portal.billing ? '; subscriptions in TEST CHECKOUT mode (no payments)' : ''}${portal.accounts ? '; Mewvo accounts on' : ''}`);
     return true;
 }

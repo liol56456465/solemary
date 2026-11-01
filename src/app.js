@@ -21,6 +21,7 @@ import { runRoleRules } from './services/members/roleRuleService.js';
 import { pruneMemberEvents } from './services/members/memberInsightsService.js';
 import { pruneExpiredSessions } from './services/dashboard/sessionStore.js';
 import { reminderStore, runReminders } from './services/reminders/reminderService.js';
+import { accountStore } from './services/accounts/accountStore.js';
 import { remindStaleAppeals } from './services/enforcement/appealStatusService.js';
 import { flushActivity, pruneActivity } from './services/stats/activityService.js';
 import { query as enforcementQuery } from './services/enforcement/db.js';
@@ -401,6 +402,8 @@ class Mewvo extends Client {
     // /remind: send what is due; sent reminders are deleted after 30 days.
     cron.schedule('* * * * *', exclusive('reminders', () => runReminders(this)));
     cron.schedule('40 3 * * *', exclusive('reminders_prune', () => reminderStore.prune()), { timezone: 'UTC' });
+    // Mewvo accounts: unconfirmed after 7 days and old email-link tokens (Privacy Policy).
+    cron.schedule('50 3 * * *', exclusive('member_accounts_prune', () => accountStore.prune()), { timezone: 'UTC' });
     // Appeals still pending after the quiet time: one "still open" DM to the member (staff: staleAppealService).
     cron.schedule('5 * * * *', exclusive('appeal_reminders', () => remindStaleAppeals(this)));
     cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
