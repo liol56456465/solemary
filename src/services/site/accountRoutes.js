@@ -41,6 +41,7 @@ export const FORM_COOKIE = 'mewvo_me_form';
 export const TWO_STEP_COOKIE = 'mewvo_me_2fa';
 export const TWO_STEP_TTL_MS = 5 * 60 * 1000;
 export const RESET_COOKIE = 'mewvo_me_reset';
+const RESET_CODE_TRIES = 5;
 /** How long the new-password form works after the Discord login (single use). */
 export const RESET_TTL_MS = 10 * 60 * 1000;
 const TWO_STEP_MAX_TRIES = 5;
@@ -321,7 +322,7 @@ export function createAccountHandlers(core) {
         if (!found) return resetExpired(res);
         const account = await store.findById(found.grant.accountId);
         if (!account) return resetExpired(res);
-        return page(res, 200, resetPage(ctx(), { csrf: formToken(req, res), username: account.username }));
+        return page(res, 200, resetPage(ctx(), { csrf: formToken(req, res), username: account.username, twoStep: Boolean(account.totp_enabled_at) }));
     }
 
     async function resetPost(req, res) {
@@ -337,15 +338,26 @@ export function createAccountHandlers(core) {
             res.append('Set-Cookie', clearCookie(RESET_COOKIE, cookieOptions));
             return resetExpired(res);
         }
+        const twoStep = Boolean(account.totp_enabled_at);
+        const again = (status, error) => page(res, status, resetPage(ctx(), { csrf, username: account.username, twoStep, error }));
         const password = validatePassword(req.body?.password);
-        if (!password.ok) return page(res, 400, resetPage(ctx(), { csrf, username: account.username, error: password.error }));
+        if (!password.ok) return again(400, password.error);
+        // 2FA on: Discord stands in for the password, never for the code. Check it before
+        // anything changes; a wrong code changes nothing, and five wrong codes end this reset.
+        if (twoStep && !(await checkCode(account, str(req.body?.code, 40)))) {
+            grant.tries = (grant.tries || 0) + 1;
+            if (grant.tries >= RESET_CODE_TRIES) {
+                resets.delete(id);
+                res.append('Set-Cookie', clearCookie(RESET_COOKIE, cookieOptions));
+                return resetExpired(res);
+            }
+            return again(400, 'That code is not right. Enter the 6-digit code from your app or one of your recovery codes.');
+        }
         resets.delete(id);
         res.append('Set-Cookie', clearCookie(RESET_COOKIE, cookieOptions));
         await store.setPassword(account.id, await hashPassword(password.value, hashParams));
         await sessions.destroyForAccount(account.id);
         logger.info(`Member account ${account.id}: password reset through Discord, all sessions ended`);
-        // Two-step login stays: Discord replaces the password, not the code.
-        if (account.totp_enabled_at) return beginTwoStep(res, account);
         const session = await startSession(req, res, account);
         await sessions.setFlash?.(session.id, 'Your new password is saved. Every other login was ended.');
         return res.redirect(303, '/me/account');

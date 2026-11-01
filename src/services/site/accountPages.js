@@ -64,12 +64,13 @@ ${notices({ error })}
 <p class="note">Mewvo asks Discord only who you are. If two-step login is on, you still enter a code from your app after the new password. No Discord account linked? Then the password cannot be reset; <a href="/me/signup">create a new account</a>.</p>`);
 }
 
-export function resetPage(ctx, { csrf, username, error = null }) {
+export function resetPage(ctx, { csrf, username, twoStep = false, error = null }) {
     return page(ctx, 'Choose a new password', html`<h1>Choose a new password</h1>
 ${notices({ error })}
 <p class="lead">For the Mewvo account <strong>${username}</strong>.</p>
 <form class="form-stack" method="post" action="/me/reset">${csrfField(csrf)}
 ${field('rp-password', 'New password', html`<input id="rp-password" name="password" type="password" required minlength="${PASSWORD_MIN}" maxlength="${PASSWORD_MAX}" autocomplete="new-password">`, `At least ${PASSWORD_MIN} characters.`)}
+${twoStep ? field('rp-code', 'Two-step code', html`<input id="rp-code" name="code" type="text" required maxlength="40" autocomplete="one-time-code" inputmode="text">`, 'The 6-digit code from your app, or one of your recovery codes.') : ''}
 <p><button class="button" type="submit">Save the new password</button></p></form>
 <p class="note">Saving ends every other login of this account and logs you in here. This form works for 10 minutes.</p>`);
 }

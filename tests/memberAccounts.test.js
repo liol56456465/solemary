@@ -313,18 +313,26 @@ test('the whole flow: sign up, link Discord with 6 months of Pro, 1-letter name,
         assert.equal((await b.request('/me/login-2fa', { form: { code: codes[0] } })).status, 401, 'a recovery code works once');
         assert.equal((await b.request('/me/login-2fa', { form: { code: totp(secret, Date.now() + 30000) } })).status, 303, 'a newer app code works');
 
-        // Forgot password with 2FA on: Discord login → new password → the code step still asked.
+        // Forgot password with 2FA on: Discord login → the reset form asks for the code before anything changes.
         const other = browser(app);
         const back = await forgot(other);
         assert.equal(back.status, 303);
         assert.equal(back.location, '/me/reset');
-        assert.match((await other.request('/me/reset')).body, /For the Mewvo account <strong>q<\/strong>/);
-        const reset = await other.request('/me/reset', { form: { password: 'a brand new password' } });
+        const form = (await other.request('/me/reset')).body;
+        assert.match(form, /For the Mewvo account <strong>q<\/strong>/);
+        assert.match(form, /name="code"/, 'the reset form asks for the 2FA code');
+        const noCode = await other.request('/me/reset', { form: { password: 'a brand new password' } });
+        assert.equal(noCode.status, 400, 'no code, no reset');
+        assert.equal((await other.request('/me/reset', { form: { password: 'a brand new password', code: '000000' } })).status, 400, 'wrong code, no reset');
+        assert.match((await b.request('/me')).body, /Warning ladder/, 'a refused reset ends no session');
+        assert.equal((await b.request('/me/logout', { form: {} })).status, 303);
+        assert.equal((await passwordLogin(b, 'q')).status, 303, 'a refused reset keeps the old password');
+        await b.request('/me/login-2fa');
+        await b.request('/me/login-2fa', { form: { code: totp(secret, Date.now() + 60000) } });
+        const reset = await other.request('/me/reset', { form: { password: 'a brand new password', code: codes[1] } });
         assert.equal(reset.status, 303);
-        assert.equal(reset.location, '/me/login-2fa', 'two-step login stays on after a reset');
+        assert.equal(reset.location, '/me/account', 'code checked on the form, so no second code step');
         assert.match((await b.request('/me')).body, /Log in with Discord/, 'the old session ended');
-        await other.request('/me/login-2fa');
-        assert.equal((await other.request('/me/login-2fa', { form: { code: codes[1] } })).status, 303);
         assert.match((await other.request('/me')).body, /Warning ladder/);
         assert.equal((await passwordLogin(b, 'q')).status, 401, 'the old password no longer works');
 
