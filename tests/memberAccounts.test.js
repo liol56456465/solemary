@@ -219,6 +219,28 @@ test('forced Discord link: every page except the link step, callback, logout and
     }
 });
 
+test('Link Discord and Forgot password: the page policy lets their forms go on to Discord (Chrome checks form-action on the redirect)', async () => {
+    const app = await serve();
+    try {
+        const b = browser(app);
+        await signup(app, b);
+        const step = await b.request('/me/link');
+        const csp = step.headers.get('content-security-policy');
+        const formAction = csp.split(';').map((d) => d.trim()).find((d) => d.startsWith('form-action'));
+        assert.equal(formAction, "form-action 'self' https://discord.com", 'our forms plus Discord only, no wildcard');
+        const go = await b.request('/me/link', { form: {} });
+        assert.equal(go.status, 302);
+        assert.ok(go.location.startsWith('https://discord.com/'), `the link form redirects to ${go.location}`);
+        const other = browser(app);
+        await other.request('/me/forgot');
+        const reset = await other.request('/me/forgot', { form: {} });
+        assert.ok(reset.location.startsWith('https://discord.com/'), `the forgot form redirects to ${reset.location}`);
+        assert.equal(reset.headers.get('content-security-policy'), csp);
+    } finally {
+        await app.close();
+    }
+});
+
 test('logging in to an account without Discord lands on the link step; logout and delete work from there', async () => {
     const app = await serve();
     try {

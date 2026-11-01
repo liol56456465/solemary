@@ -98,9 +98,11 @@ export function safeNextPath(value) {
 }
 
 export const MEMBER_SECURITY_HEADERS = {
-    // Like the site, plus form-action 'self' for the logout form.
+    // Like the site, plus form-action for our own forms and https://discord.com: "Link Discord" and
+    // "Forgot password?" are POST forms answered with a redirect to Discord's OAuth page, and Chrome
+    // applies form-action to that redirect too (without it the button silently does nothing).
     'Content-Security-Policy': "default-src 'none'; style-src 'self'; script-src 'none'; img-src 'self'; "
-        + "form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+        + "form-action 'self' https://discord.com; frame-ancestors 'none'; base-uri 'none'",
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
     // same-origin: a form POST then carries a real Origin header (no-referrer would send "null").
