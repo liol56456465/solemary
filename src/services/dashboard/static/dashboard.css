@@ -1242,3 +1242,12 @@ details.section .section-help { margin: 0 0 16px; color: var(--fg-2); max-width:
 .settings-form .grid > label textarea { font-weight: 400; }
 .section-body > .settings-form:last-child .form-actions { justify-content: flex-start; flex-direction: row-reverse; }
 .inline-form select, .add-row select, form select:not([multiple]) { min-width: 220px; }
+/* Overview and other plain sections: the same simple boxes as the settings pages. */
+.plain-section { border: 1px solid var(--line); border-radius: 6px; padding: 14px 18px 18px; margin: 0 0 16px; background: var(--raised); }
+.plain-section > h2 { font-size: 16px; }
+.ok-text { color: var(--green); font-weight: 600; }
+.getting-started { border-color: var(--border-strong); }
+.getting-started .checklist { margin: 8px 0; padding-left: 20px; }
+.getting-started .checklist li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 10px 0; border-top: 1px solid var(--line); }
+.getting-started .checklist li:first-child { border-top: 0; }
+.checklist-hint { color: var(--fg-2); font-size: 13px; }

@@ -523,21 +523,21 @@ test('overview: status, counts, checklist and recent actions; read-only', async 
     const res = await runProtected(d, d.overview, { method: 'GET', headers: { cookie }, query: {} });
     assert.equal(res.statusCode, 200);
     // One plain line of facts (no number tiles) and one status line.
-    assert.match(res.body, /Bot online \(42 ms\)/);
+    assert.match(res.body, /Mewvo is online and working/);
     assert.match(res.body, /2 open tickets/);
-    assert.match(res.body, /<a href="\/dashboard\/appeals">3 pending appeals<\/a>/, 'pending appeals of the main guild');
-    assert.match(res.body, /4 active bans, 1 mute/);
+    assert.match(res.body, /<a href="\/dashboard\/appeals">3 appeals waiting<\/a>/, 'pending appeals of the main guild');
+    assert.match(res.body, /4 banned and 1 muted right now/);
     assert.ok(!/metric-value|kpi-num|class="ring"|Welcome back/.test(res.body), 'no number tiles, ring or greeting');
     // Needs you: each waiting appeal with a Review button (escaped), then the tickets; the count in the header.
     assert.match(res.body, /<b>Ban appeal from &lt;cat&gt;<\/b><small>Case <code>abc2345<\/code> · cat ban 1<\/small>/);
     assert.ok(res.body.includes('href="/dashboard/appeals/abc2345">Review<span class="sr"> appeal abc2345</span>'));
     assert.match(res.body, /<b>2 open tickets<\/b>/);
-    assert.match(res.body, /<h2>To do <span class="muted">\(5\)<\/span><\/h2>/, '3 appeals + 2 tickets');
+    assert.match(res.body, /<h2>Needs your attention <span class="muted">\(5\)<\/span><\/h2>/, '3 appeals + 2 tickets');
     assert.match(res.body, /<div class="chart" role="img" aria-label="Enforcement actions per day: [^"]*Today 2">/, 'chart with a text alternative');
     assert.match(res.body, /<div class="bar today"><span class="bar-count">2<\/span><i class="h-10"><\/i>/, 'the busiest day is the full height');
-    assert.match(res.body, /<a class="setup-link" href="\/dashboard\/automod">Set up<span class="sr"> Automod review channel<\/span><\/a>/);
+    assert.match(res.body, /<a class="setup-link btn small" href="\/dashboard\/automod">Set up<span class="sr"> Automod review channel<\/span><\/a>/);
     assert.match(res.body, /<span class="type type-ban"><svg class="icon"[^>]*><use href="#i-nocontact"><\/use><\/svg>Ban<\/span>/, 'action badge with an icon');
-    assert.match(res.body, /<h2>Setup<\/h2>/);
+    assert.match(res.body, /<h2>Getting started<\/h2>/);
     assert.match(res.body, /Mod log channel/);
     assert.match(res.body, /&lt;t&gt;/);
     // Read-only: no POST form besides logout (the top bar search is a GET to /dashboard/modules).
@@ -556,8 +556,8 @@ test('overview survives failing sources (shows unavailable)', async () => {
     assert.equal(o.activeBans, undefined);
     assert.equal(o.recent, undefined);
     const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
-    assert.match(page, /unavailable/);
-    assert.match(page, /Bot offline/);
+    assert.match(page, /not available right now/);
+    assert.match(page, /Mewvo is offline/);
 });
 
 test('getting started lists what is not configured; module states for the sidebar', () => {

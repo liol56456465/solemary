@@ -1362,7 +1362,7 @@ test('Overview keeps the full module states (automod etc.) next to the config-ba
     const res = await run(h, h.d.overview, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query: {} });
     assert.equal(res.statusCode, 200);
     // Automod's state comes from the automod service, not from the guild config.
-    assert.match(res.body, /automod on/, 'status line');
+    assert.match(res.body, /Automod is on/, 'status line');
     assert.ok(!/0 of 0 modules/.test(res.body));
 });
 
@@ -1401,7 +1401,7 @@ test('Overview: recent dashboard changes (escaped), linked to the module; unavai
     assert.ok(res.body.includes('href="/dashboard/audit">Full audit log'));
     const { overviewPage } = await import('../src/services/dashboard/overview.js');
     const o = { checklist: [], bot: { ready: true, ping: null }, database: null, guild: null, recent: [], lockdown: undefined };
-    assert.match(overviewPage({ session: { username: 'a', csrf: 't' }, overview: o, recentChanges: null }), /Recent dashboard changes<\/h2><p class="muted">Unavailable \(database\)/);
+    assert.match(overviewPage({ session: { username: 'a', csrf: 't' }, overview: o, recentChanges: null }), /Recent dashboard changes<\/h2><p class="muted">Could not be loaded just now/);
     assert.match(overviewPage({ session: { username: 'a', csrf: 't' }, overview: o, recentChanges: [] }), /No dashboard changes yet/);
 });
 
@@ -1431,7 +1431,7 @@ test('Overview checklist: progress bar, open items first, done/to-do words for s
         ],
     };
     const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
-    assert.match(page, /1 of 2 steps done\./, 'progress in words (no ring)');
+    assert.match(page, /1 of 2 done\./, 'progress in words (no ring)');
     assert.ok(!page.includes('class="ring"'));
     assert.ok(page.indexOf('Open thing') < page.indexOf('Done: Done thing'), 'open items first');
     assert.ok(page.includes('set it &lt;up&gt;'));
@@ -2436,7 +2436,7 @@ test('bot in this server: not an image refused; below Pro the page says so and e
 test('handover note: on the Overview for moderators and admins; save (audited through updateSettings), clear, CSRF, Origin', async () => {
     const h = await setup();
     const page = await run(h, h.d.overview, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query: {} });
-    assert.match(page.body, /<h2>Staff note<\/h2>/);
+    assert.match(page.body, /<h2>Note for the next shift<\/h2>/);
     assert.match(page.body, /action="\/dashboard\/handover"/);
     const post = (body, origin = ORIGIN) => run(h, h.d.handover, { method: 'POST', params: {}, headers: { cookie: h.cookie, origin }, body, query: {} });
     const saves = () => h.calls.filter((c) => c.name === 'updateSettings');

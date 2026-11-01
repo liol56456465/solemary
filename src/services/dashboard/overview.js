@@ -107,17 +107,17 @@ export function moduleStatesFrom(config, welcome, extra = {}) {
 /** The checklist of things not set up yet: [{ label, done, href, hint }]. */
 export function gettingStarted({ config, welcome, settings, mutedRole }) {
     const items = [
-        { label: 'Mod log channel', done: Boolean(settings.modLogChannelId), href: path('/enforcement'), hint: 'every enforcement action is recorded there; review and alerts fall back to it' },
-        { label: 'Automod review channel', done: Boolean(settings.reviewChannelId), href: path('/automod'), hint: settings.modLogChannelId ? 'uses the mod log until set' : 'automod cards have nowhere to go' },
-        { label: 'Alerts channel', done: Boolean(settings.alertsChannelId), href: path('/automod'), hint: settings.modLogChannelId ? 'uses the mod log until set' : 'raid and guard alerts have nowhere to go' },
-        { label: 'Muted role', done: Boolean(settings.mutedRoleId || mutedRole), href: path('/enforcement'), hint: 'created automatically on the first mute' },
-        { label: 'Appeals category', done: Boolean(settings.appealsCategoryId || config?.ticketCategoryId), href: path('/enforcement'), hint: 'appeal and report channels are opened there' },
-        { label: 'Ticket category', done: Boolean(config?.ticketCategoryId), href: path('/tickets'), hint: 'set up the ticket panel' },
-        { label: 'Ticket staff role', done: Boolean(config?.ticketStaffRoleId), href: path('/tickets'), hint: 'ticket settings' },
-        { label: 'Welcome channel', done: Boolean(welcome?.enabled && welcome?.channelId), href: path('/welcome'), hint: 'Welcome & goodbye' },
-        { label: 'Verification', done: Boolean(config?.verification?.enabled), href: path('/verification'), hint: 'set up the verification panel' },
-        { label: 'Birthday channel', done: Boolean(config?.birthdayChannelId), href: path('/birthdays'), hint: 'Birthdays' },
-        { label: 'Banned role in the support server', done: Boolean(settings.bannedRoleId), href: path('/support'), hint: 'members banned here get it there' },
+        { label: 'Mod log channel', done: Boolean(settings.modLogChannelId), href: path('/enforcement'), hint: 'Mewvo writes every warning, mute, kick and ban there, so your staff can look back later.' },
+        { label: 'Automod review channel', done: Boolean(settings.reviewChannelId), href: path('/automod'), hint: `When automod removes a message, it posts a short report there so staff can keep or undo it.${settings.modLogChannelId ? ' Until you choose one, it uses the mod log.' : ''}` },
+        { label: 'Alerts channel', done: Boolean(settings.alertsChannelId), href: path('/automod'), hint: `For urgent warnings, like a raid (many accounts joining at once).${settings.modLogChannelId ? ' Until you choose one, it uses the mod log.' : ''}` },
+        { label: 'Muted role', done: Boolean(settings.mutedRoleId || mutedRole), href: path('/enforcement'), hint: 'Mewvo creates it by itself the first time someone is muted. You can also pick your own role.' },
+        { label: 'Appeals category', done: Boolean(settings.appealsCategoryId || config?.ticketCategoryId), href: path('/enforcement'), hint: 'When someone asks to have a punishment lifted, Mewvo opens a private channel for it in this category.' },
+        { label: 'Ticket category', done: Boolean(config?.ticketCategoryId), href: path('/tickets'), hint: 'Tickets let members talk to staff privately. Choose the category their channels go in.' },
+        { label: 'Ticket staff role', done: Boolean(config?.ticketStaffRoleId), href: path('/tickets'), hint: 'The role that can see and answer tickets.' },
+        { label: 'Welcome channel', done: Boolean(welcome?.enabled && welcome?.channelId), href: path('/welcome'), hint: 'Mewvo greets new members in this channel.' },
+        { label: 'Verification', done: Boolean(config?.verification?.enabled), href: path('/verification'), hint: 'New members press a button to show they are a real person before they can chat.' },
+        { label: 'Birthday channel', done: Boolean(config?.birthdayChannelId), href: path('/birthdays'), hint: 'Mewvo wishes members a happy birthday there.' },
+        { label: 'Banned role in the support server', done: Boolean(settings.bannedRoleId), href: path('/support'), hint: 'Banned members get this role in your support server, so they can still appeal there.' },
     ];
     return items;
 }
@@ -194,7 +194,7 @@ const show = (value, text = value) => (value === undefined ? html`<span class="m
 
 /** The newest dashboard changes (audit rows): who, which module and setting, old → new, when. */
 function recentChangesSection(rows) {
-    if (rows === null) return html`<section class="plain-section"><h2>Recent dashboard changes</h2><p class="muted">Unavailable (database).</p></section>`;
+    if (rows === null) return html`<section class="plain-section"><h2>Recent dashboard changes</h2><p class="muted">Could not be loaded just now. Reload the page in a minute.</p></section>`;
     const label = (key) => navItems().find((i) => i.key === key)?.label || key;
     const list = rows.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Page</th><th>Setting</th><th>Old</th><th>New</th></tr></thead><tbody>${rows.map((r) => html`<tr>
 <td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || 'someone'}</td><td>${navItems().some((i) => i.key === r.module) ? html`<a href="${path(`/${r.module}`)}">${label(r.module)}</a>` : label(r.module)}</td>
@@ -217,7 +217,7 @@ export function kpi(label, value, sub, { href = null } = {}) {
 
 /** Actions per day as bars (height in 10 % steps: CSS classes, no inline styles), with a text alternative. */
 function weekChart(week) {
-    if (week === undefined) return html`<p class="error" role="alert">The chart could not be loaded (database). Reload the page to try again.</p>`;
+    if (week === undefined) return html`<p class="error" role="alert">The chart could not be loaded just now. Reload the page in a minute.</p>`;
     const max = Math.max(1, ...week.map((d) => d.count));
     const total = week.reduce((sum, d) => sum + d.count, 0);
     const summary = week.map((d) => `${d.label} ${d.count}`).join(', ');
@@ -225,17 +225,9 @@ function weekChart(week) {
 <p class="kpi-sub">${total} action${total === 1 ? '' : 's'} in 7 days (UTC days, /test cases not counted).</p>`;
 }
 
-/** The next open setup steps as a plain list. */
-function setupTile(checklist) {
-    const done = checklist.filter((item) => item.done).length;
-    const todo = checklist.filter((item) => !item.done);
-    if (!todo.length) return html`<p>Everything is set up.</p>`;
-    return html`<p class="muted">${done} of ${checklist.length} steps done.</p><ul class="steps">${todo.slice(0, 4).map((item) => html`<li><span>${item.label}</span> <a href="${item.href}">Set up<span class="sr"> ${item.label}</span></a></li>`)}</ul>${todo.length > 4 ? html`<p><a href="#all-steps">${todo.length - 4} more</a></p>` : ''}`;
-}
-
 /** Recent enforcement actions as a table. */
 function recentFeed(recent) {
-    if (recent === undefined) return html`<p class="error" role="alert">Recent actions could not be loaded (database). Reload the page to try again.</p>`;
+    if (recent === undefined) return html`<p class="error" role="alert">The latest moderation could not be loaded just now. Reload the page in a minute.</p>`;
     if (!recent.length) return html`<p class="empty">No enforcement actions yet. They show up here after the first warn, mute, kick or ban.</p>`;
     return html`<div class="scroll"><table class="feed-table"><thead><tr><th>When</th><th>Action</th><th>Member</th><th>By</th><th>Reason</th><th>Case</th></tr></thead><tbody>${recent.slice(0, 8).map((row) => html`<tr><td>${timeTag(row.created_at)}</td><td>${typeBadge(row.type)}${row.is_test ? html` <span class="muted">(test)</span>` : ''}</td><td>${row.target_username}</td><td>${row.moderator_username}</td><td>${row.reason}</td><td><a href="${path(`/cases/${encodeURIComponent(row.case_code)}`)}"><code>${row.case_code}</code></a></td></tr>`)}</tbody></table></div>`;
 }
@@ -244,7 +236,7 @@ function recentFeed(recent) {
  * "Needs you": what waits for an admin, oldest first, each with one button: pending appeals,
  * open tickets, an active raid lockdown, and the next open setup steps.
  */
-function needsYou(o, { csrf = '', canEndLockdown = false, limited = false } = {}) {
+function needsYou(o, { csrf = '', canEndLockdown = false, limited = false, setupSteps = true } = {}) {
     const items = [];
     if (o.lockdown?.active) {
         // Administrators end it right here (POST /automod/lockdown-end, back to the Overview); others get the link.
@@ -262,14 +254,14 @@ function needsYou(o, { csrf = '', canEndLockdown = false, limited = false } = {}
     if (o.openTickets > 0 && !limited) {
         items.push(html`<li><span class="what"><b>${o.openTickets} open ticket${o.openTickets === 1 ? '' : 's'}</b><small>Answered in their Discord channels</small></span><span></span><a class="btn small" href="${path('/tickets')}">Tickets</a></li>`);
     }
-    for (const step of limited ? [] : o.checklist.filter((item) => !item.done).slice(0, 2)) {
+    for (const step of limited || !setupSteps ? [] : o.checklist.filter((item) => !item.done).slice(0, 2)) {
         items.push(html`<li><span class="what"><b>Set up: ${step.label}</b>${step.hint ? html`<small>${step.hint}</small>` : ''}</span><span></span><a class="btn small" href="${step.href}">Set up<span class="sr"> ${step.label}</span></a></li>`);
     }
     const failed = o.pendingAppeals === undefined || o.openTickets === undefined;
     const list = items.length
         ? html`<ul class="plain queue">${items}</ul>`
-        : html`<p class="empty">Nothing needs you right now.</p>`;
-    return html`${failed ? html`<p class="error" role="alert">Some items could not be loaded (database). Reload the page to try again.</p>` : ''}${list}`;
+        : html`<p class="empty">Nothing needs you right now. Appeals, tickets and raid alerts show up here.</p>`;
+    return html`${failed ? html`<p class="error" role="alert">Some of this could not be loaded just now. Reload the page in a minute.</p>` : ''}${list}`;
 }
 
 /** A plain section: a heading (with an optional count and link) and its content. */
@@ -287,42 +279,40 @@ export function overviewPage({ session, access = null, moduleStates = {}, overvi
     const server = session?.server;
     const name = o.guild?.name || server?.name || 'your server';
     const waiting = (o.pendingAppeals || 0) + (o.openTickets || 0) + (o.lockdown?.active ? 1 : 0);
-    const word = (ok, yes, no) => (ok ? yes : no);
+    const unknown = 'not available right now';
     const facts = [
-        o.guild?.memberCount != null ? `${o.guild.memberCount} members${o.joinedThisWeek != null ? ` (${o.joinedThisWeek} joined this week)` : ''}` : null,
-        sanctions === undefined ? 'sanctions unavailable' : `${o.activeBans} active ban${o.activeBans === 1 ? '' : 's'}, ${o.activeMutes} mute${o.activeMutes === 1 ? '' : 's'}`,
-        o.pendingAppeals === undefined ? 'appeals unavailable' : html`<a href="${path('/appeals')}">${pendingText} pending appeal${o.pendingAppeals === 1 ? '' : 's'}</a>`,
-        o.openTickets === undefined ? 'tickets unavailable' : `${o.openTickets} open ticket${o.openTickets === 1 ? '' : 's'}`,
+        o.guild?.memberCount != null ? `${o.guild.memberCount} members${o.joinedThisWeek != null ? `, ${o.joinedThisWeek} joined this week` : ''}` : null,
+        sanctions === undefined ? `banned and muted: ${unknown}` : `${o.activeBans} banned and ${o.activeMutes} muted right now`,
+        o.pendingAppeals === undefined ? `appeals: ${unknown}` : html`<a href="${path('/appeals')}">${pendingText} appeal${o.pendingAppeals === 1 ? '' : 's'} waiting</a>`,
+        o.openTickets === undefined ? `tickets: ${unknown}` : `${o.openTickets} open ticket${o.openTickets === 1 ? '' : 's'}`,
     ].filter(Boolean);
-    const status = [
-        `Bot ${word(o.bot.ready, `online${o.bot.ping !== null ? ` (${o.bot.ping} ms)` : ''}`, 'offline')}`,
-        `database ${o.database ? word(o.database.connected, 'connected', 'degraded') : 'unknown'}`,
-        Object.hasOwn(moduleStates, 'automod') ? `automod ${word(moduleStates.automod, 'on', 'off')}` : null,
-        o.lockdown?.active ? 'raid lockdown ACTIVE' : null,
-    ].filter(Boolean);
-    const head = html`<header class="page-head"><h1>Overview</h1><p class="facts-line">${name} · ${facts.map((f, i) => html`${i ? ' · ' : ''}${f}`)}</p>
-<p class="facts-line muted"><span class="${o.bot.ready && (!o.database || o.database.connected) ? '' : 'bad'}">${status.join(', ')}.</span></p></header>`;
-    // Full checklist (all steps) at the bottom, open while anything is left.
-    const ordered = [...todo, ...o.checklist.filter((item) => item.done)];
-    const allSteps = html`<ul class="checklist">${ordered.map((item) => html`<li class="${item.done ? 'is-done' : ''}"><span class="checklist-text">${item.done ? 'Done: ' : ''}${item.label}${item.done ? '' : html` <span class="checklist-hint">${item.hint}</span>`}</span>${item.done
-        ? ''
-        : html` <a class="setup-link" href="${item.href}">Set up<span class="sr"> ${item.label}</span></a>`}</li>`)}</ul>`;
+    const healthy = o.bot.ready && (!o.database || o.database.connected);
+    const status = !o.bot.ready ? 'Mewvo is offline: commands and automod are not working right now.'
+        : o.database && !o.database.connected ? 'Mewvo is online, but its database is not responding, so some things will not save.'
+            : 'Mewvo is online and working.';
+    const automodWord = Object.hasOwn(moduleStates, 'automod') ? ` Automod is ${moduleStates.automod ? 'on' : 'off'}.` : '';
+    const head = html`<header class="page-head"><h1>Overview</h1><p class="facts-line">${name}: ${facts.map((f, i) => html`${i ? ' · ' : ''}${f}`)}</p>
+<p class="facts-line"><span class="${healthy ? 'ok-text' : 'bad'}">${status}</span>${automodWord}${o.lockdown?.active ? html` <span class="bad">A raid lockdown is active.</span>` : ''}</p></header>`;
+    // Getting started: every setup step, numbered, open ones first, each with why it matters.
+    const done = o.checklist.filter((item) => item.done);
+    const steps = html`<p class="muted">${done.length} of ${o.checklist.length} done. Each step takes a minute; the link opens the right page.</p>
+<ol class="checklist">${todo.map((item) => html`<li><span class="checklist-text"><b>${item.label}</b><br><span class="checklist-hint">${item.hint}</span></span> <a class="setup-link btn small" href="${item.href}">Set up<span class="sr"> ${item.label}</span></a></li>`)}</ol>
+${done.length ? html`<p class="muted">Done: ${done.map((item) => item.label).join(', ')}.</p>` : ''}`;
     const note = handover?.text
-        ? html`<blockquote class="handover-text">${handover.text}</blockquote><p class="muted">${handover.byName || handover.by}, ${handover.at ? formatDate(new Date(handover.at)) : ''}</p>`
-        : html`<p class="muted">No note. Leave one for the next person on shift.</p>`;
+        ? html`<blockquote class="handover-text">${handover.text}</blockquote><p class="muted">Written by ${handover.byName || handover.by}, ${handover.at ? formatDate(new Date(handover.at)) : ''}</p>`
+        : html`<p class="muted">A short message for whoever moderates next, like "keep an eye on #general tonight". Everyone on staff sees it here.</p>`;
     const noteForm = canEditHandover && session?.csrf
         ? html`<form method="post" action="${path('/handover')}" class="settings-form handover-form" data-dirty><input type="hidden" name="csrf" value="${session.csrf}">
-<label class="wide">Note for the next shift<textarea name="text" rows="3" maxlength="1000" placeholder="e.g. keep an eye on the raid in #general tonight">${handover?.text || ''}</textarea></label>
-<div class="form-actions"><button class="primary" type="submit">Save note</button><span class="hint">Empty and save to clear it.</span></div></form>` : '';
+<label class="wide">Note<textarea name="text" rows="2" maxlength="1000" placeholder="Keep an eye on #general tonight">${handover?.text || ''}</textarea></label>
+<div class="form-actions"><button class="primary" type="submit">Save note</button><span class="hint">To remove the note, empty the box and save.</span></div></form>` : '';
     const body = html`${head}
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
-${card('Staff note', html`${note}${noteForm}`)}
-${card('To do', needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct), limited }), { note: waiting ? `${waiting}` : null })}
-${card('Last 7 days', weekChart(o.week), { link: { href: path('/cases'), text: 'All cases' } })}
-${card('Latest actions', recentFeed(o.recent), { link: { href: path('/cases'), text: 'All cases' } })}
-${limited ? '' : html`${card('Setup', setupTile(o.checklist))}
-${recentChangesSection(recentChanges)}
-<details class="plain-section" id="all-steps" data-key="getting-started"${todo.length ? raw(' open') : ''}><summary><h2>All setup steps${todo.length ? html` <span class="muted">(${todo.length} to do)</span>` : ''}</h2></summary>${allSteps}</details>`}`;
+${limited || !todo.length ? '' : card('Getting started', steps, { className: 'getting-started' })}
+${card('Needs your attention', needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct), limited, setupSteps: false }), { note: waiting ? `${waiting}` : null })}
+${card('Moderation in the last 7 days', weekChart(o.week), { link: { href: path('/cases'), text: 'See all cases' } })}
+${card('Latest moderation', recentFeed(o.recent), { link: { href: path('/cases'), text: 'See all cases' } })}
+${card('Note for the next shift', html`${note}${noteForm}`)}
+${limited ? '' : recentChangesSection(recentChanges)}`;
     return layout({ title: 'Overview', active: 'overview', session, access, moduleStates, body });
 }
 
