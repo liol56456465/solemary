@@ -744,7 +744,7 @@ a.kpi-num:hover { text-decoration: none; color: var(--accent); }
 
 /* "On this page" links on long settings pages. */
 .section-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 16px; }
-.section-links-label { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-2); margin-right: 4px; }
+.section-links-label { font-size: 13px; font-weight: 600; color: var(--fg-2); margin-right: 4px; }
 .section-links a {
     display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 6px;
     background: var(--raised); border: 1px solid var(--border); color: var(--fg-2); font-size: 12px;
@@ -882,25 +882,15 @@ fieldset.events > label.check:first-child { flex-basis: 100%; font-weight: 600; 
 .settings-form .grid { max-width: 720px; }
 /* A settings form that ends its section: the Save row becomes the section footer strip. */
 .section-body > .settings-form:last-child .form-actions {
-    margin: 24px -24px -24px; padding: 12px 24px; border-top: 1px solid var(--line);
-    background: var(--surface-2); border-radius: 0 0 var(--radius) var(--radius);
+    margin: 20px 0 0; padding: 12px 0 0; border-top: 1px solid var(--line); background: none;
 }
 .settings-form > fieldset > button[type="submit"] { margin-top: 16px; }
 form.is-dirty .form-actions::before { content: "Unsaved changes"; margin-right: auto; font-size: 12px; font-weight: 500; color: var(--warn); }
-/* v5 settings rows (tablet and up): one row per setting, its name and hint on the left, the
-   control on the right; switches and wide fields (messages) keep their own rows. */
-@media (min-width: 768px) {
-    .settings-form .grid { display: block; max-width: none; }
-    .settings-form .grid > label:not(.wide):not(.switch-row):not(.check) {
-        display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 340px); column-gap: 32px; row-gap: 2px;
-        align-items: center; padding: 14px 0; border-top: 1px solid var(--line);
-    }
-    .settings-form .grid > label:not(.wide):not(.switch-row):not(.check) > :is(input, select, textarea) { grid-column: 2; grid-row: 1 / span 4; }
-    .settings-form .grid > label:not(.wide):not(.switch-row):not(.check) > :not(input, select, textarea) { grid-column: 1; }
-    .settings-form .grid > label.wide { padding: 14px 0; border-top: 1px solid var(--line); }
-    .settings-form .grid > label.switch-row { border-bottom: 0; padding: 14px 0; }
-    .settings-form .grid > label:first-child:is(*, :not(.wide):not(.switch-row):not(.check)) { border-top: 0; padding-top: 4px; }
-}
+/* Settings: one field under the other, its name above the box and the hint under it
+   (easy to read top to bottom); switches keep their own row. */
+.settings-form .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; max-width: 560px; }
+.settings-form .grid > label.wide { max-width: none; }
+.settings-form .grid > label > .hint { margin-top: 2px; }
 /* A section with unsaved edits says so in its title (the script sets .is-changed). */
 details.section.is-changed > summary h2::after { content: "Unsaved changes"; font-size: 12px; font-weight: 500; color: var(--warn); }
 .form-error { margin: 0 0 16px; }
@@ -1237,3 +1227,18 @@ dl.facts { border-left: 0; border-right: 0; border-radius: 0; background: none; 
 .msg-text { white-space: pre-wrap; margin: 0 0 6px; }
 .msg-embed { margin: 6px 0; padding: 6px 10px; border-left: 3px solid var(--border-strong); background: var(--surface); }
 .msg-embed p { margin: 0 0 4px; }
+
+/* Beginner-friendly settings pages (owner, 2026-11-01): each section is a simple bordered box
+   with its heading, a sentence on what it is for, the fields, and Save inside the box. */
+details.section {
+    border: 1px solid var(--line); border-radius: 6px; padding: 0; margin: 0 0 16px; background: var(--raised);
+}
+details.section > summary { padding: 14px 18px; }
+details.section > summary h2 { font-size: 16px; }
+details.section > .section-body { padding: 0 18px 18px; }
+details.section .section-help { margin: 0 0 16px; color: var(--fg-2); max-width: 70ch; }
+.settings-form .grid > label { font-size: 14px; font-weight: 600; }
+.settings-form .grid > label input, .settings-form .grid > label select { max-width: 420px; font-weight: 400; }
+.settings-form .grid > label textarea { font-weight: 400; }
+.section-body > .settings-form:last-child .form-actions { justify-content: flex-start; flex-direction: row-reverse; }
+.inline-form select, .add-row select, form select:not([multiple]) { min-width: 220px; }
