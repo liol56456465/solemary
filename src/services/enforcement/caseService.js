@@ -174,7 +174,7 @@ export async function getAppealHistory(caseCode) {
 /** One user's own appeals, newest first, with the case they were about. */
 export async function listUserAppeals(userId, limit = 10) {
     const { rows } = await query(
-        `SELECT a.case_code, a.status, a.created_at, a.decided_at, c.type, c.name
+        `SELECT a.case_code, a.status, a.created_at, a.decided_at, a.claimed_at, c.type, c.name
          FROM ${T.appeals} a JOIN ${T.cases} c ON c.case_code = a.case_code
          WHERE a.user_id = $1 AND a.kind = 'appeal' AND NOT c.is_test
          ORDER BY a.created_at DESC LIMIT $2`,

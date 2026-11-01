@@ -123,28 +123,36 @@ async function showMyStanding(interaction) {
 }
 
 const MY_APPEAL_STATUS = {
-    pending: '⏳ Pending: the administrators have not decided yet',
+    pending: 'Waiting for a decision',
     accepted: 'Accepted',
     denied: 'Denied',
     closed: 'Closed',
 };
+
+/** The text of a member's own appeals (the My appeals button and /appeal status). Pure. */
+export function myAppealsText(appeals) {
+    if (!appeals.length) return 'You have not filed any appeals. Press **Appeal** on the appeal panel to file one; you need the case code from the DM you got.';
+    const stamp = (date) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:d>`;
+    return appeals.map((appeal) => {
+        const status = appeal.status === 'pending' && appeal.claimed_at
+            ? 'Waiting for a decision. Someone on the staff team is looking at it.'
+            : (MY_APPEAL_STATUS[appeal.status] ?? appeal.status);
+        return [
+            `**\`${appeal.case_code}\`**: ${appeal.type} (${appeal.name})`,
+            `${status} · filed ${stamp(appeal.created_at)}${appeal.decided_at ? ` · decided ${stamp(appeal.decided_at)}` : ''}`,
+        ].join('\n');
+    }).join('\n\n');
+}
 
 /** The clicking member's own appeals: case, status and dates. Only they see it. */
 async function showMyAppeals(interaction) {
     const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
     if (!deferred) return;
     const appeals = await listUserAppeals(interaction.user.id);
-    const stamp = (date) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:d>`;
-    const lines = appeals.map((appeal) => [
-        `**\`${appeal.case_code}\`**: ${appeal.type} (${appeal.name})`,
-        `${MY_APPEAL_STATUS[appeal.status] ?? appeal.status} · filed ${stamp(appeal.created_at)}${appeal.decided_at ? ` · decided ${stamp(appeal.decided_at)}` : ''}`,
-    ].join('\n'));
     return InteractionHelper.safeEditReply(interaction, {
         embeds: [createEmbed({
             title: 'My appeals',
-            description: lines.length
-                ? lines.join('\n\n')
-                : 'You have not filed any appeals. Press **Appeal** to file one; you need the case code from the DM you got.',
+            description: myAppealsText(appeals),
             color: 'primary',
         })],
     });

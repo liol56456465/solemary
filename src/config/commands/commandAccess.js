@@ -18,6 +18,8 @@ export const EVERYONE_COMMANDS = new Set([
   'premium status', 'premium redeem', 'premium gift',
   // Personal reminders
   'remind me', 'remind list', 'remind delete',
+  // Your own appeals
+  'appeal status',
 
   // Community
   'apply submit', 'apply status', 'apply list',
