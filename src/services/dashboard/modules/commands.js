@@ -17,7 +17,7 @@ export const PREFIX_MAX = 10;
 /** The /configwizard prefix rule: 1–10 characters, no spaces. */
 export function prefixField(form, name = 'prefix') {
     const value = typeof form?.[name] === 'string' ? form[name].trim() : '';
-    if (!value || value.length > PREFIX_MAX || /\s/.test(value)) throw new InputError('Prefix must be 1-10 characters with no spaces.', 400, name);
+    if (!value || value.length > PREFIX_MAX || /\s/.test(value)) throw new InputError('The prefix must be 1 to 10 characters, with no spaces.', 400, name);
     return value;
 }
 
@@ -97,13 +97,13 @@ export function moduleCommandsSection(ctx, moduleKey, snapshot) {
     });
     if (!rows.length) return '';
     return section(`Commands (${rows.length})`, table(['Command', 'Description', 'On'], rows),
-        'Turning a command off makes it answer with a short notice. All commands: the Commands page.', { open: false, key: 'commands' });
+        'The slash commands that belong to this page. A command you turn off only answers with a short notice. The Commands page lists every command.', { open: false, key: 'commands' });
 }
 
 export default {
     key: 'commands',
     label: 'Commands',
-    help: 'Disabled commands answer with a short notice. Protected commands (/commands, /configwizard) cannot be disabled.',
+    help: 'Turn single commands, or whole groups of commands, on or off for this server. A command that is off only answers with a short notice. /commands and /configwizard always stay on, so you cannot lock yourself out.',
 
     async load(ctx) {
         const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
@@ -113,15 +113,15 @@ export default {
     render(ctx, { config, snapshot }) {
         const can = ctx.canEdit && ctx.canAct;
         const botSettings = section('Bot settings', postForm(ctx, 'commands', 'bot-settings', html`<div class="grid">
-${textInput('prefix', config?.prefix || getCommandPrefix(), { label: 'Prefix for text commands', max: PREFIX_MAX, help: '1–10 characters, no spaces.' })}
-${rolePicker(ctx.guild, 'modRole', roleIdOf(config?.modRole), { label: 'Moderator role', assign: false, help: 'Members with this role may use moderation commands, and log in to this dashboard at the Moderator level (view members, cases, appeals; warn, mute, unmute, kick, time out; no bans or settings). Not a role the bot hands out on its own.' })}</div>`, { canEdit: can }),
-        'Same settings as /configwizard.');
+${textInput('prefix', config?.prefix || getCommandPrefix(), { label: 'Prefix for text commands', max: PREFIX_MAX, help: 'Some commands also work in a normal message: type this sign and then the command name, instead of using a slash command. 1 to 10 characters, no spaces.' })}
+${rolePicker(ctx.guild, 'modRole', roleIdOf(config?.modRole), { label: 'Moderator role', assign: false, help: 'Members with this role can use moderation commands. They can also log in to this dashboard as moderators: they see members, cases and appeals, and can warn, mute, unmute, kick and time out. They cannot ban or change settings. Mewvo never gives this role to anyone by itself.' })}</div>`, { canEdit: can }),
+        'Basic settings for how Mewvo works in this server. You can also change these with /configwizard in Discord.');
         const utilities = section('Utilities', postForm(ctx, 'commands', 'shorten', html`<div class="grid">
-${textInput('url', '', { label: 'Link to shorten', max: 2000, type: 'url', placeholder: 'https://example.com/a/long/link' })}
-${textInput('custom', '', { label: 'Custom ending (optional)', max: 30, help: 'Letters, numbers, _ and -.' })}</div>`, { submit: 'Shorten', canEdit: can }),
+${textInput('url', '', { label: 'Link to shorten', max: 2000, type: 'url', placeholder: 'https://example.com/a/long/link', help: 'Turns a long web link into a short one that is easier to share.' })}
+${textInput('custom', '', { label: 'Custom ending (optional)', max: 30, help: 'Choose the last part of the short link yourself. Letters, numbers, _ and - only.' })}</div>`, { submit: 'Shorten', canEdit: can }),
         'Shorten a link with is.gd, as /shorten. The short link is shown at the top of this page.', { open: false });
-        const settingsPart = html`${ctx.canAct ? '' : html`<p class="muted">Bot settings and utilities need Administrator in the main server.</p>`}${botSettings}${utilities}`;
-        if (!snapshot) return html`${settingsPart}${section('Commands', html`<p class="muted">The command list is not loaded yet.</p>`)}`;
+        const settingsPart = html`${ctx.canAct ? '' : html`<p class="muted">To change bot settings and use the utilities here you need the Administrator permission in the main server.</p>`}${botSettings}${utilities}`;
+        if (!snapshot) return html`${settingsPart}${section('Commands', html`<p class="muted">The command list is not loaded yet. Reload the page in a moment.</p>`)}`;
         const categories = snapshot.categories.map((cat) => {
             const disabled = new Set(cat.disabledCommandNames);
             const rows = cat.commands.map((cmd) => {
@@ -138,16 +138,16 @@ ${textInput('custom', '', { label: 'Custom ending (optional)', max: 30, help: 'L
         // what happens to it when admin commands are retired (RETIRE_ADMIN_COMMANDS).
         const entries = commandEntries(ctx.client.commands);
         const retired = adminCommandsRetired();
-        const WHO = { everyone: 'Everyone', 'owner kit': 'Bot owners (emergency kit)', admin: 'Administrators' };
-        const AFTER = { everyone: 'Stays a command', 'owner kit': 'Stays, owners only', admin: 'Dashboard only' };
+        const WHO = { everyone: 'Everyone', 'owner kit': 'Bot owner only (emergency tools)', admin: 'Administrators' };
+        const AFTER = { everyone: 'Stays a command', 'owner kit': 'Stays, bot owner only', admin: 'Dashboard only' };
         const every = html`<p>${retired
-            ? html`<span class="state state-on">Retired</span> Admin commands are retired: only everyone-commands and the owners' emergency kit are registered.`
-            : html`<span class="state state-off">Not retired</span> All commands are registered. Set <code>RETIRE_ADMIN_COMMANDS=true</code> to leave only the everyone-commands and the owners' emergency kit.`}</p>
-${table(['Command', 'What it does', 'Who', 'On the dashboard', 'When retired'], entries.map((e) => [
+            ? html`<span class="state state-on">Retired</span> Admin commands are switched off in Discord. Only the commands for everyone and the bot owner's emergency tools are left. Everything else is done here on the dashboard.`
+            : html`<span class="state state-off">Not retired</span> Every command works in Discord. The bot owner can switch admin commands off, so that only the commands for everyone and the emergency tools stay, and everything else is done on the dashboard.`}</p>
+${table(['Command', 'What it does', 'Who can use it', 'On the dashboard', 'If admin commands are switched off'], entries.map((e) => [
             html`<code>/${e.key}</code>`, e.description, WHO[e.access],
             e.page ? html`<a href="${path(`/${e.page}`)}">${e.page}</a>` : html`<span class="muted">-</span>`,
             AFTER[e.access]]))}
-<p class="muted">Support server too: ${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}. Who may use what is part of the bot's code (read-only).</p>`;
+<p class="muted">Also in the support server: ${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}. Who can use which command is fixed in Mewvo and cannot be changed here.</p>`;
         return html`${settingsPart}${section(`Every command (${entries.length})`, every)}${categories}`;
     },
 

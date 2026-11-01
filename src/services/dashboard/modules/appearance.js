@@ -34,7 +34,7 @@ function requirePlan(ctx) {
 export default {
     key: 'appearance',
     label: 'Bot in this server',
-    help: 'Give Mewvo its own nickname and avatar in this server. Other servers keep the normal ones.',
+    help: 'Give Mewvo its own name and profile picture (avatar) in this server, so it fits your server. Other servers still see the normal ones.',
 
     async load(ctx) {
         const me = ctx.guild?.members?.me || null;
@@ -45,8 +45,8 @@ export default {
         if (!unlocked) {
             return section('Bot in this server', html`<p class="muted">A custom nickname and avatar for Mewvo in this server come with Mewvo Pro and Max, on the server owner's plan. <a href="/pricing">Plans</a></p>`);
         }
-        const nick = postForm(ctx, 'appearance', 'nickname', textInput('nickname', nickname, { label: 'Nickname', max: NICKNAME_MAX, placeholder: 'Mewvo', help: 'Empty: the normal name.' }));
-        const avatar = postForm(ctx, 'appearance', 'avatar', html`<label class="wide">Avatar (PNG, JPEG, GIF or WebP)<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required></label>`,
+        const nick = postForm(ctx, 'appearance', 'nickname', textInput('nickname', nickname, { label: 'Nickname', max: NICKNAME_MAX, placeholder: 'Mewvo', help: 'The name Mewvo shows in this server. Leave empty for the normal name.' }));
+        const avatar = postForm(ctx, 'appearance', 'avatar', html`<label class="wide">Avatar (PNG, JPEG, GIF or WebP picture)<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required></label>`,
             { submit: 'Upload avatar', multipart: true, canEdit: ctx.canEdit && ctx.canAct });
         const reset = hasAvatar ? postForm(ctx, 'appearance', 'avatar-reset', '', { submit: 'Use the normal avatar', danger: true, inline: true, canEdit: ctx.canEdit && ctx.canAct, confirm: 'Go back to the normal avatar in this server?' }) : '';
         return html`${section('Nickname', nick)}${section('Avatar', html`${avatar}${reset}`, hasAvatar ? 'This server has its own avatar now.' : 'This server uses the normal avatar.')}`;
@@ -71,8 +71,8 @@ export default {
             async run(ctx) {
                 requirePlan(ctx);
                 const file = ctx.upload?.file || null;
-                if (!file) throw new InputError('Choose an image file.', 400, 'image');
-                if (file.data.length > MAX_UPLOAD_BYTES) throw new InputError('The image is too large.', 413, 'image');
+                if (!file) throw new InputError('Choose a picture to upload.', 400, 'image');
+                if (file.data.length > MAX_UPLOAD_BYTES) throw new InputError('The picture is too large. Try a smaller file.', 413, 'image');
                 const image = sniffImage(file.data);
                 if (!image) throw new InputError('That file is not a PNG, JPEG, GIF or WebP image.', 400, 'image');
                 await svc(ctx, 'setBotAvatar')(ctx.client, ctx.guildId, `data:${image.type};base64,${file.data.toString('base64')}`);

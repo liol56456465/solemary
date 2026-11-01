@@ -24,12 +24,12 @@ import {
     IMAGE_URL_MAX, MESSAGE_CONTENT_MAX, POLL_MAX_OPTIONS, POLL_OPTION_MAX, POLL_QUESTION_MAX, buildMessageEmbed, colourFromKey, isEmbedImageUrl, noMentions, parseHexColour,
 } from '../../botMessageService.js';
 
-const NO_PINGS = 'Mentions are shown as text but never ping: no @everyone, @here, role or member pings.';
+const NO_PINGS = 'Mentions show as names but never ping anyone. @everyone, @here, roles and members get no notification.';
 
 /** A textarea value: line breaks normalised, trimmed, refused (not cut) over `max`. */
 function longText(form, name, max, label) {
     const value = typeof form?.[name] === 'string' ? form[name].replace(/\r\n?/g, '\n').trim() : '';
-    if (value.length > max) throw new InputError(`${label}: at most ${max} characters (${value.length} entered).`, 400, name);
+    if (value.length > max) throw new InputError(`${label}: at most ${max} characters (you wrote ${value.length}).`, 400, name);
     return value;
 }
 
@@ -46,7 +46,7 @@ function colourField(form) {
     const hex = text(form, 'hex', 7);
     if (hex) {
         const value = parseHexColour(hex);
-        if (value === null) throw new InputError('Colour: use a hex code like #9B59B6, or leave it empty and pick from the list.', 400, 'hex');
+        if (value === null) throw new InputError('Colour: write a colour code like #9B59B6, or leave it empty and pick from the list.', 400, 'hex');
         return value;
     }
     const key = text(form, 'colour', 20) || 'primary';
@@ -58,8 +58,8 @@ function colourField(form) {
 /** Poll options: one per line, blank lines ignored. */
 function pollOptions(form) {
     const options = longText(form, 'options', POLL_MAX_OPTIONS * (POLL_OPTION_MAX + 2), 'Options').split('\n').map((o) => o.trim()).filter(Boolean);
-    if (options.length < 2) throw new InputError('Options: you must provide at least 2 options for the poll (one per line).', 400, 'options');
-    if (options.length > POLL_MAX_OPTIONS) throw new InputError(`Options: a poll has at most ${POLL_MAX_OPTIONS} options (${options.length} entered).`, 400, 'options');
+    if (options.length < 2) throw new InputError('Options: a poll needs at least 2 options, each on its own line.', 400, 'options');
+    if (options.length > POLL_MAX_OPTIONS) throw new InputError(`Options: a poll can have at most ${POLL_MAX_OPTIONS} options (you wrote ${options.length}).`, 400, 'options');
     const long = options.find((o) => o.length > POLL_OPTION_MAX);
     if (long) throw new InputError(`Options: each option is limited to ${POLL_OPTION_MAX} characters.`, 400, 'options');
     return options;
@@ -71,13 +71,13 @@ function messageFields(g, { channelId = null, payload = null } = {}) {
     const hex = Number.isInteger(e.colour) ? `#${e.colour.toString(16).padStart(6, '0').toUpperCase()}` : '';
     const known = hex ? EMBED_COLOURS.find(([, , h]) => h.toUpperCase() === hex) : EMBED_COLOURS[0];
     return html`${channelPicker(g, 'channelId', channelId, { label: 'Channel', perms: PERMS.post, optional: false })}
-${textArea('content', payload?.content || '', { label: 'Message text', max: MESSAGE_CONTENT_MAX, rows: 4, help: `Optional when the embed is filled in. ${NO_PINGS}` })}
-${textInput('title', e.title || '', { label: 'Embed title', max: EMBED_TITLE_MAX })}
-${textArea('description', e.description || '', { label: 'Embed description', max: EMBED_DESCRIPTION_MAX, rows: 6, help: `Discord markdown works. Title, description and footer together: at most ${EMBED_TOTAL_MAX} characters.` })}
-${selectInput('colour', known ? known[0] : 'primary', EMBED_COLOURS.map(([key, label, h]) => [key, `${label} (${h})`]), { label: 'Embed colour' })}
-${textInput('hex', known ? '' : hex, { label: 'Or a hex colour', max: 7, placeholder: '#9B59B6', help: 'When filled in, it replaces the colour above.' })}
-${textInput('imageUrl', e.imageUrl || '', { label: 'Image URL', max: IMAGE_URL_MAX, type: 'url', placeholder: 'https://…', help: 'Optional. A full https:// link to an image.' })}
-${textInput('footer', e.footer || '', { label: 'Embed footer', max: EMBED_FOOTER_MAX, help: 'Optional small text under the embed.' })}`;
+${textArea('content', payload?.content || '', { label: 'Message text', max: MESSAGE_CONTENT_MAX, rows: 4, help: `The normal text of the message. You can leave it empty if you fill in the box below. ${NO_PINGS}` })}
+${textInput('title', e.title || '', { label: 'Box title', max: EMBED_TITLE_MAX, help: 'An embed is a message box with a coloured edge, a bold title and text. Fill in these fields to send one. Leave them empty for a plain message.' })}
+${textArea('description', e.description || '', { label: 'Box text', max: EMBED_DESCRIPTION_MAX, rows: 6, help: `The main text inside the box. Discord formatting works, like **bold**. Title, text and footer together can be at most ${EMBED_TOTAL_MAX} characters.` })}
+${selectInput('colour', known ? known[0] : 'primary', EMBED_COLOURS.map(([key, label, h]) => [key, `${label} (${h})`]), { label: 'Box colour' })}
+${textInput('hex', known ? '' : hex, { label: 'Or a colour code', max: 7, placeholder: '#9B59B6', help: 'A # and six letters or numbers. When filled in, it is used instead of the colour above.' })}
+${textInput('imageUrl', e.imageUrl || '', { label: 'Image link', max: IMAGE_URL_MAX, type: 'url', placeholder: 'https://…', help: 'Optional. A link that starts with https:// and opens a picture. It shows large in the box.' })}
+${textInput('footer', e.footer || '', { label: 'Box footer', max: EMBED_FOOTER_MAX, help: 'Optional small text at the bottom of the box.' })}`;
 }
 
 /**
@@ -94,15 +94,15 @@ function messageFromForm(g, form) {
         footer: text(form, 'footer', EMBED_FOOTER_MAX),
     };
     if (embed.imageUrl && !isEmbedImageUrl(embed.imageUrl)) {
-        throw new InputError('Image URL: must be a full https:// link (http, data: and other links are refused).', 400, 'imageUrl');
+        throw new InputError('Image link: it must start with https://. Other kinds of links are not accepted.', 400, 'imageUrl');
     }
     const hasEmbed = Boolean(embed.title || embed.description || embed.imageUrl || embed.footer);
-    if (!content && !hasEmbed) throw new InputError('Write a message or fill in the embed: there is nothing to post.', 400, 'content');
+    if (!content && !hasEmbed) throw new InputError('There is nothing to post. Write a message or fill in the box.', 400, 'content');
     if (hasEmbed && !embed.title && !embed.description && !embed.imageUrl) {
-        throw new InputError('Embed: add a title, a description or an image (a footer alone is not shown).', 400, 'title');
+        throw new InputError('Box: add a title, text or an image. A footer on its own is not shown.', 400, 'title');
     }
     if (embed.title.length + embed.description.length + embed.footer.length > EMBED_TOTAL_MAX) {
-        throw new InputError(`Embed: title, description and footer together are limited to ${EMBED_TOTAL_MAX} characters.`, 400, 'description');
+        throw new InputError(`Box: title, text and footer together can be at most ${EMBED_TOTAL_MAX} characters.`, 400, 'description');
     }
     const colour = colourField(form);
     return {
@@ -113,7 +113,7 @@ function messageFromForm(g, form) {
 
 // ── Scheduling ────────────────────────────────────────────────────────────
 
-const REPEATS = [['once', 'Once'], ['daily', 'Every day'], ['weekdays', 'On chosen weekdays'], ['hours', 'Every N hours']];
+const REPEATS = [['once', 'Once'], ['daily', 'Every day'], ['weekdays', 'On chosen weekdays'], ['hours', 'Every few hours']];
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -144,24 +144,24 @@ function scheduleFields(row, defaultZone, now = Date.now()) {
     const days = new Set(s.kind === 'weekly' ? s.days : [1, 2, 3, 4, 5]);
     return html`<div class="grid">
 ${selectInput('repeat', repeatOf(row?.schedule), REPEATS, { label: 'Repeat' })}
-${textInput('date', date, { label: 'Date', max: 10, type: 'date', help: 'Once: the day it is posted. Every N hours: the first post.' })}
-${textInput('time', time, { label: 'Time (24-hour)', max: 5, type: 'time' })}
-${numberInput('hours', s.hours || 24, { label: `Every N hours (1–${INTERVAL_MAX_HOURS})`, min: 1, max: INTERVAL_MAX_HOURS, help: 'Only for "Every N hours".' })}
-<label>Time zone<input type="text" name="timezone" value="${zone}" maxlength="64" list="tz-zones" autocomplete="off"><span class="hint">An IANA name such as Europe/Vilnius or UTC. Daylight saving time is handled.</span></label>
-</div><fieldset class="weekdays"><legend>Weekdays (only for "On chosen weekdays")</legend>${DAY_ORDER.map((d) => checkboxInput(`day${d}`, days.has(d), { label: WEEKDAYS[d] }))}</fieldset>`;
+${textInput('date', date, { label: 'Date', max: 10, type: 'date', help: 'For Once, the day it is posted. For Every few hours, the day of the first post.' })}
+${textInput('time', time, { label: 'Time (24-hour clock)', max: 5, type: 'time' })}
+${numberInput('hours', s.hours || 24, { label: 'Hours between posts', min: 1, max: INTERVAL_MAX_HOURS, help: `Only for Every few hours. From 1 to ${INTERVAL_MAX_HOURS}.` })}
+<label>Time zone<input type="text" name="timezone" value="${zone}" maxlength="64" list="tz-zones" autocomplete="off"><span class="hint">Region and city, like Europe/Vilnius, or UTC. Summer and winter time changes are handled for you.</span></label>
+</div><fieldset class="weekdays"><legend>Weekdays (only for On chosen weekdays)</legend>${DAY_ORDER.map((d) => checkboxInput(`day${d}`, days.has(d), { label: WEEKDAYS[d] }))}</fieldset>`;
 }
 
 /** { schedule, timezone } from the posted form; refused when invalid or (from now) never runs. */
 function scheduleFromForm(form, now = Date.now()) {
     const repeat = choiceField(form, 'repeat', REPEATS.map(([key]) => key), 'Repeat');
     const timezone = canonicalTimeZone(text(form, 'timezone', 64) || DEFAULT_TIMEZONE);
-    if (!timezone) throw new InputError('Time zone: not a known time zone. Use an IANA name such as Europe/London or UTC.', 400, 'timezone');
+    if (!timezone) throw new InputError('Time zone: that time zone is not known. Write region and city, like Europe/London, or UTC.', 400, 'timezone');
     const date = text(form, 'date', 10);
     const time = text(form, 'time', 8).slice(0, 5);
     const input = repeat === 'once' ? { kind: 'once', date, time }
         : repeat === 'daily' ? { kind: 'weekly', time, days: [0, 1, 2, 3, 4, 5, 6] }
             : repeat === 'weekdays' ? { kind: 'weekly', time, days: [0, 1, 2, 3, 4, 5, 6].filter((d) => checkbox(form, `day${d}`)) }
-                : { kind: 'interval', date, time, hours: intField(form, 'hours', { min: 1, max: INTERVAL_MAX_HOURS, label: 'Every N hours' }) };
+                : { kind: 'interval', date, time, hours: intField(form, 'hours', { min: 1, max: INTERVAL_MAX_HOURS, label: 'Hours between posts' }) };
     let schedule;
     try {
         schedule = cleanSchedule(input);
@@ -170,7 +170,7 @@ function scheduleFromForm(form, now = Date.now()) {
         const field = /^Date/.test(message) ? 'date' : /^Time/.test(message) ? 'time' : /^Days/.test(message) ? 'day1' : 'repeat';
         throw new InputError(message, 400, field);
     }
-    if (nextRunAfter(schedule, timezone, now) === null) throw new InputError('That time has already passed: pick a time in the future.', 400, 'date');
+    if (nextRunAfter(schedule, timezone, now) === null) throw new InputError('That time has already passed. Pick a time in the future.', 400, 'date');
     return { schedule, timezone };
 }
 
@@ -205,7 +205,7 @@ export function messagePreview(payload) {
     const e = payload?.embed;
     return html`<div class="msg-preview"><p class="muted">Preview</p>${payload?.content ? html`<p class="msg-text">${payload.content}</p>` : ''}${e && (e.title || e.description || e.imageUrl || e.footer)
         ? html`<div class="msg-embed">${e.title ? html`<p><b>${e.title}</b></p>` : ''}${e.description ? html`<p class="msg-text">${e.description}</p>` : ''}${e.imageUrl ? html`<p class="muted">Image: ${e.imageUrl}</p>` : ''}${e.footer ? html`<p class="muted">${e.footer}</p>` : ''}</div>` : ''}
-<p class="muted">Shown as typed: Discord formats **bold**, links and mentions when it posts (mentions never ping).</p></div>`;
+<p class="muted">Shown as you typed it. Discord turns **bold**, links and mentions into formatting when it posts. Mentions never ping.</p></div>`;
 }
 
 /** The next `count` times a scheduled message posts, in its own time zone. Pure. */
@@ -226,11 +226,11 @@ async function sendScheduledTest(client, userId, payload) {
     const embed = payload?.embed && (payload.embed.title || payload.embed.description || payload.embed.imageUrl || payload.embed.footer) ? buildMessageEmbed(payload.embed) : null;
     if (!text && !embed) throw new InputError('This message is empty, so there is nothing to send.');
     const user = await client.users.fetch(userId).catch(() => null);
-    if (!user) throw new InputError('I could not find your Discord account.');
+    if (!user) throw new InputError('Mewvo could not find your Discord account.');
     try {
         await user.send({ ...(text ? { content: text } : {}), ...(embed ? { embeds: [embed] } : {}), allowedMentions: noMentions() });
     } catch {
-        throw new InputError('Your DMs are closed for the bot, so the test could not be sent.');
+        throw new InputError('Your private messages (DMs) are closed for Mewvo, so the test could not be sent. In Discord, allow direct messages from server members and try again.');
     }
 }
 
@@ -258,7 +258,7 @@ ${buttonForm(ctx, 'messages', 'schedule-delete', 'Delete', { id: m.id }, { canEd
     const edits = list.map((m) => html`<details class="sub" id="edit-${m.id}" data-key="scheduled-${m.id}"><summary>Preview and edit #${m.id} · ${describeSchedule(m.schedule)}</summary>
 ${messagePreview(m.payload)}
 <p>${upcomingRuns(m).length ? html`Next posts: ${upcomingRuns(m).map((ms, i) => html`${i ? ', ' : ''}${formatInZone(ms, m.timezone)}`)} <span class="muted">(${m.timezone})</span>` : html`<span class="muted">${m.paused ? 'Paused: it will not post until you resume it.' : 'It will not post again.'}</span>`}</p>
-${buttonForm(ctx, 'messages', 'schedule-test', 'Send me a test', { id: m.id }, { canEdit: can, danger: false })} <span class="muted">A DM to you only, so you can check it before it posts.</span>
+${buttonForm(ctx, 'messages', 'schedule-test', 'Send me a test', { id: m.id }, { canEdit: can, danger: false })} <span class="muted">Sends it only to you as a private message (DM), so you can check it before it posts.</span>
 ${postForm(ctx, 'messages', 'schedule-edit', html`<div class="grid">${messageFields(g, m)}</div>${scheduleFields(m, defaultZone)}`, { submit: 'Save scheduled message', hidden: { id: m.id }, canEdit: can })}</details>`);
     return html`<p>${list.length} of ${planLimit(ctx.guildId, 'scheduled')} scheduled messages.</p>
 ${table(['Message', 'Channel', 'Next run', 'Repeat', 'Last result', 'Status', ''], rows, 'No scheduled messages.')}${edits}`;
@@ -274,7 +274,7 @@ function clock(seconds) {
 export default {
     key: 'messages',
     label: 'Messages',
-    help: 'Post as the bot: a message or embed (now or scheduled, once or repeating), a poll, or a countdown. Replaces /embedbuilder, /poll and /countdown. Typed text never pings anyone. Everything here needs Administrator in the main server.',
+    help: 'Post a message as Mewvo: an announcement right now or later, a message that repeats, a poll, or a countdown. Text you type here never pings anyone. Everything here needs the Administrator permission in the main server.',
 
     async load(ctx) {
         const [config, scheduled] = await Promise.all([
@@ -288,28 +288,28 @@ export default {
         const g = ctx.guild;
         const scheduled = data.scheduled || [];
         const canPost = ctx.canEdit && ctx.canAct;
-        const adminNote = ctx.canAct ? '' : ' Posting needs Administrator in the main server.';
+        const adminNote = ctx.canAct ? '' : ' To post you need the Administrator permission in the main server.';
         const send = postForm(ctx, 'messages', 'send', html`<div class="grid">${messageFields(g)}</div>`, { submit: 'Post message', canEdit: canPost });
         const schedule = postForm(ctx, 'messages', 'schedule', html`<div class="grid">${messageFields(g)}</div>${scheduleFields(null, data.timezone || DEFAULT_TIMEZONE)}`,
             { submit: 'Schedule message', canEdit: canPost });
         const poll = postForm(ctx, 'messages', 'poll', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.poll, optional: false })}
 ${textInput('question', '', { label: 'Question', max: POLL_QUESTION_MAX })}
-${textArea('options', '', { label: `Options (one per line, 2–${POLL_MAX_OPTIONS})`, max: POLL_MAX_OPTIONS * (POLL_OPTION_MAX + 2), rows: 5, help: 'Members vote with the number reactions under the poll.' })}
-${switchInput('anonymous', false, { label: 'Anonymous poll', help: 'Only changes the poll text: reactions always show who voted.' })}</div>`,
+${textArea('options', '', { label: 'Options', max: POLL_MAX_OPTIONS * (POLL_OPTION_MAX + 2), rows: 5, help: `The answers members can vote for, each on its own line. From 2 to ${POLL_MAX_OPTIONS}. Members vote by clicking the number reactions under the poll.` })}
+${switchInput('anonymous', false, { label: 'Anonymous poll', help: 'This only changes the poll text. Anyone can still see who reacted, so votes are not really secret.' })}</div>`,
         { submit: 'Post poll', canEdit: canPost });
         const countdown = postForm(ctx, 'messages', 'countdown', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.post, optional: false })}
-${textInput('title', '', { label: 'Title', max: COUNTDOWN_TITLE_MAX, placeholder: 'Countdown Timer' })}
-${numberInput('minutes', 5, { label: 'Minutes (0–1440)', min: 0, max: 1440 })}
-${numberInput('seconds', 0, { label: 'Seconds (0–59)', min: 0, max: 59 })}</div>`,
+${textInput('title', '', { label: 'Title', max: COUNTDOWN_TITLE_MAX, placeholder: 'Countdown Timer', help: 'What you are counting down to.' })}
+${numberInput('minutes', 5, { label: 'Minutes', min: 0, max: 1440, help: 'From 0 to 1440 (24 hours).' })}
+${numberInput('seconds', 0, { label: 'Seconds', min: 0, max: 59, help: 'From 0 to 59.' })}</div>`,
         { submit: 'Start countdown', canEdit: canPost });
-        return html`${section('Send a message', send, `Same as /embedbuilder: the bot posts the text and/or embed in the channel.${adminNote}`)}
-${section('Schedule a message', schedule, `The same message, posted later: once, every day or on chosen weekdays at a time, or every N hours. Checked once a minute; the bot's permissions are checked again when it posts. After ${FAILURE_LIMIT} failed posts in a row it is paused and the alerts channel is told. At most ${planLimit(ctx.guildId, 'scheduled')} per server (the server owner's plan sets it).${adminNote}`)}
-${section('Scheduled messages', scheduledSection(ctx, scheduled, data.timezone || DEFAULT_TIMEZONE), 'Next run is shown in each message\'s own time zone.')}
+        return html`${section('Send a message', send, `Mewvo posts your text, your box, or both in the channel right away.${adminNote}`)}
+${section('Schedule a message', schedule, `Write a message now and let Mewvo post it later: once, every day, on the weekdays you choose, or every few hours. If posting fails ${FAILURE_LIMIT} times in a row, for example because Mewvo lost access to the channel, it is paused and staff are told in the alerts channel. A server can have up to ${planLimit(ctx.guildId, 'scheduled')}, depending on the server owner's plan.${adminNote}`)}
+${section('Scheduled messages', scheduledSection(ctx, scheduled, data.timezone || DEFAULT_TIMEZONE), 'The next post time is shown in each message\'s own time zone.')}
 <datalist id="tz-zones">${timeZoneList().map((z) => html`<option value="${z}"></option>`)}</datalist>
-${section('Start a poll', poll, `Same as /poll.${adminNote}`)}
-${section('Start a countdown', countdown, `Same as /countdown: up to 24 hours, with Pause and Cancel buttons for Administrators. A bot restart stops running countdowns.${adminNote}`)}`;
+${section('Start a poll', poll, `Ask members a question and let them vote.${adminNote}`)}
+${section('Start a countdown', countdown, `Posts a timer that counts down in the channel, for up to 24 hours. Administrators get Pause and Cancel buttons on it. If the bot restarts, running countdowns stop.${adminNote}`)}`;
     },
 
     actions: {
@@ -427,7 +427,7 @@ ${section('Start a countdown', countdown, `Same as /countdown: up to 24 hours, w
                 const minutes = intField(form, 'minutes', { min: 0, max: 1440, label: 'Minutes', fallback: 0 });
                 const seconds = intField(form, 'seconds', { min: 0, max: 59, label: 'Seconds', fallback: 0 });
                 const totalSeconds = minutes * 60 + seconds;
-                if (totalSeconds <= 0) throw new InputError('Duration: please specify a duration of at least 1 second.', 400, 'minutes');
+                if (totalSeconds <= 0) throw new InputError('Duration: the countdown needs at least 1 second.', 400, 'minutes');
                 if (totalSeconds > COUNTDOWN_MAX_SECONDS) throw new InputError('Duration: a countdown cannot be longer than 24 hours.', 400, 'minutes');
                 const { message, endTime } = await ctx.services.startCountdownMessage(g, { channel, totalSeconds, title });
                 return {

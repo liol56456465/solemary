@@ -20,7 +20,7 @@ function messageIdField(form) {
 export default {
     key: 'reaction-roles',
     label: 'Reaction roles',
-    help: 'Self-assign role panels: members pick roles from a menu under the panel message. Unsafe roles (staff permissions, above my highest role, managed) are refused.',
+    help: 'Let members pick their own roles, like colours, pronouns or games. Mewvo posts a message (a panel) with a menu, and members choose the roles they want from it. Mewvo only offers roles below its own role in the role list, never roles with staff powers, and never roles that belong to another bot or app.',
 
     async load(ctx) {
         return { panels: await ctx.services.getAllReactionRoleMessages(ctx.client, ctx.guildId) };
@@ -32,10 +32,10 @@ export default {
         const create = panels.length >= MAX_PANELS_PER_GUILD
             ? html`<p class="muted">This server has the maximum of ${MAX_PANELS_PER_GUILD} panels. Delete one to create another.</p>`
             : postForm(ctx, 'reaction-roles', 'panel-create', html`<div class="grid">
-${channelPicker(g, 'channelId', null, { label: 'Post in', perms: PERMS.post, optional: false })}
-${textInput('title', '', { label: 'Title', max: PANEL_TITLE_MAX })}
-${textArea('description', '', { label: 'Description', max: PANEL_DESCRIPTION_MAX, rows: 3 })}
-${rolePicker(g, 'roleIds', [], { label: 'Roles (choose up to 25; Ctrl/Cmd-click for several)', autoAssign: true, multiple: true })}</div>`,
+${channelPicker(g, 'channelId', null, { label: 'Post in', perms: PERMS.post, optional: false, help: 'The channel where the panel is posted.' })}
+${textInput('title', '', { label: 'Title', max: PANEL_TITLE_MAX, help: 'For example: Pick your colour.' })}
+${textArea('description', '', { label: 'Description', max: PANEL_DESCRIPTION_MAX, rows: 3, help: 'A few words under the title about what the roles are for.' })}
+${rolePicker(g, 'roleIds', [], { label: 'Roles', autoAssign: true, multiple: true, help: 'Up to 25. To pick more than one, hold Ctrl (Cmd on a Mac) while you click.' })}</div>`,
             { submit: 'Create and post the panel', canEdit: canPost });
         const existing = panels.map((panel) => {
             const roles = Array.isArray(panel.roles) ? panel.roles : Object.values(panel.roles || {});
@@ -47,7 +47,7 @@ ${table(['Role', 'Problems', ''], rows, 'No roles.')}
 ${buttonForm(ctx, 'reaction-roles', 'panel-delete', 'Delete panel', { messageId: panel.messageId }, { confirm: 'Delete this panel and its message in Discord?' })}</div>`;
             return section(`Panel ${panel.messageId}`, body);
         });
-        return html`${section('New panel', create, `Same as /reactroles setup.${ctx.canAct ? '' : ' Posting needs Administrator in the main server.'}`, { open: panels.length === 0 })}
+        return html`${section('New panel', create, `You can also do this with /reactroles setup in Discord.${ctx.canAct ? '' : ' To post a panel you need the Administrator permission in the main server.'}`, { open: panels.length === 0 })}
 ${existing.length ? existing : section('Panels', html`<p class="muted">No reaction role panels yet.</p>`)}`;
     },
 

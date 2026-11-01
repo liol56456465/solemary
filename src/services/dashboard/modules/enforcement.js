@@ -31,7 +31,7 @@ function stepText(step) {
 export default {
     key: 'enforcement',
     label: 'Enforcement & appeals',
-    help: 'Where enforcement actions are logged, which roles mark muted and warned members, and how appeals and the mass-action guard behave. The same settings the bot reads for /enforcements and appeals.',
+    help: 'How punishments (warns, mutes, kicks and bans) work in this server: where they are written down, which roles show that someone is muted or warned, and how members can ask for a punishment to be lifted (an appeal). /enforcements in Discord uses these settings.',
 
     async load(ctx) {
         return { values: current(ctx) };
@@ -41,76 +41,76 @@ export default {
         const g = ctx.guild;
         const warn = v.warnRoleIds || [];
         const channels = postForm(ctx, 'enforcement', 'channels', html`<div class="grid">
-${channelPicker(g, 'modLogChannelId', v.modLogChannelId, { label: 'Mod log channel', perms: PERMS.post, help: 'One line per enforcement action; review and alerts fall back to it.' })}
-${channelPicker(g, 'evidenceChannelId', v.evidenceChannelId, { label: 'Evidence channel', perms: PERMS.postFiles, help: 'Re-hosted evidence images (falls back to the mod log).' })}
-${channelPicker(g, 'adminRequestChannelId', v.adminRequestChannelId, { label: 'Admin request channel', perms: PERMS.post, help: 'Where moderators ask an administrator to act.' })}
-${channelPicker(g, 'appealsCategoryId', v.appealsCategoryId, { label: 'Appeals category', kinds: ['category'], perms: PERMS.category, help: 'Mute and warn appeals. Not set: the /ticket category.' })}
-${channelPicker(g, 'reportsCategoryId', v.reportsCategoryId, { label: 'Staff reports category', kinds: ['category'], perms: PERMS.category, help: 'Not set: the /ticket category.' })}
-${channelPicker(g, 'modmailCategoryId', v.modmailCategoryId, { label: 'Modmail category', kinds: ['category'], perms: PERMS.category, help: 'Not set: the /ticket category.' })}
-${numberInput('openChannelCap', v.openChannelCap, { label: 'Most open staff reports + modmail at once', min: 1, max: 45, help: 'At the limit new ones are refused and staff are alerted. Appeals are never refused.' })}
-${textInput('supportServerInvite', v.supportServerInvite, { label: 'Support server invite', max: 100, placeholder: 'https://discord.gg/…', help: 'Sent to banned members so they can appeal.' })}
+${channelPicker(g, 'modLogChannelId', v.modLogChannelId, { label: 'Mod log channel', perms: PERMS.post, help: 'Mewvo posts one line here for every warn, mute, kick and ban. Staff alerts also go here when no other channel is set.' })}
+${channelPicker(g, 'evidenceChannelId', v.evidenceChannelId, { label: 'Evidence channel', perms: PERMS.postFiles, help: 'Screenshots added to a case are saved here, so they stay even if the original message is deleted. Not set: the mod log channel.' })}
+${channelPicker(g, 'adminRequestChannelId', v.adminRequestChannelId, { label: 'Admin request channel', perms: PERMS.post, help: 'Where moderators ask an administrator to do something they cannot do themselves.' })}
+${channelPicker(g, 'appealsCategoryId', v.appealsCategoryId, { label: 'Appeals category', kinds: ['category'], perms: PERMS.category, help: 'A category is a folder of channels. Each mute or warn appeal gets its own channel in it. Not set: the ticket category.' })}
+${channelPicker(g, 'reportsCategoryId', v.reportsCategoryId, { label: 'Staff reports category', kinds: ['category'], perms: PERMS.category, help: 'Each report about a staff member gets its own channel here. Not set: the ticket category.' })}
+${channelPicker(g, 'modmailCategoryId', v.modmailCategoryId, { label: 'Modmail category', kinds: ['category'], perms: PERMS.category, help: 'When a member messages Mewvo privately and sends it to staff, the chat gets a channel here. Not set: the ticket category.' })}
+${numberInput('openChannelCap', v.openChannelCap, { label: 'Most open reports and modmail', min: 1, max: 45, help: 'How many staff report and modmail channels can be open at the same time. When the limit is reached, new ones are turned away and staff get an alert. Appeals are never turned away.' })}
+${textInput('supportServerInvite', v.supportServerInvite, { label: 'Support server invite', max: 100, placeholder: 'https://discord.gg/…', help: 'A link to your support server. Banned members get it so they can still appeal.' })}
 </div>`);
         const roles = postForm(ctx, 'enforcement', 'roles', html`<div class="grid">
-${rolePicker(g, 'mutedRoleId', v.mutedRoleId, { label: 'Muted role', help: 'Created automatically on the first mute when not set.' })}
-${rolePicker(g, 'warnRole1', warn[0] || null, { label: 'Warning role: 1 warning' })}
-${rolePicker(g, 'warnRole2', warn[1] || null, { label: 'Warning role: 2 warnings' })}
-${rolePicker(g, 'warnRole3', warn[2] || null, { label: 'Warning role: 3+ warnings' })}
+${rolePicker(g, 'mutedRoleId', v.mutedRoleId, { label: 'Muted role', help: 'The role that stops a muted member from talking. If you leave this empty, Mewvo makes one the first time someone is muted.' })}
+${rolePicker(g, 'warnRole1', warn[0] || null, { label: 'Role at 1 warning' })}
+${rolePicker(g, 'warnRole2', warn[1] || null, { label: 'Role at 2 warnings' })}
+${rolePicker(g, 'warnRole3', warn[2] || null, { label: 'Role at 3 or more warnings' })}
 </div>`);
         const timings = postForm(ctx, 'enforcement', 'timings', html`<div class="grid">
-${numberInput('appealWindowDays', Math.round(v.appealWindowMs / DAY), { label: 'Appeal window (days)', min: 1, max: 365 })}
-${numberInput('appealCooldownDays', Math.round(v.appealCooldownMs / DAY), { label: 'Cooldown after a denied appeal (days)', min: 0, max: 90 })}
-${numberInput('rejoinInviteHours', Math.round(v.rejoinInviteMaxAgeSeconds / 3600), { label: 'Rejoin invite lifetime (hours)', min: 1, max: 168 })}
-${numberInput('staleReportDays', Math.round(v.staleReportMs / DAY), { label: 'Close quiet report channels after (days)', min: 1, max: 90 })}
-${numberInput('staleAppealReminderDays', Math.round(v.staleAppealReminderMs / DAY), { label: 'Remind staff about a quiet appeal after (days)', min: 1, max: 90 })}
+${numberInput('appealWindowDays', Math.round(v.appealWindowMs / DAY), { label: 'Time to appeal (days)', min: 1, max: 365, help: 'How long after a punishment a member can still ask for it to be lifted.' })}
+${numberInput('appealCooldownDays', Math.round(v.appealCooldownMs / DAY), { label: 'Wait after a denied appeal (days)', min: 0, max: 90, help: 'If staff say no to an appeal, the member has to wait this long before appealing again. 0 means no wait.' })}
+${numberInput('rejoinInviteHours', Math.round(v.rejoinInviteMaxAgeSeconds / 3600), { label: 'Rejoin link lasts (hours)', min: 1, max: 168, help: 'Kicked members and members whose appeal was accepted get a one-time invite link back. This is how long it works.' })}
+${numberInput('staleReportDays', Math.round(v.staleReportMs / DAY), { label: 'Close quiet reports after (days)', min: 1, max: 90, help: 'A report channel where nobody has written for this long is closed.' })}
+${numberInput('staleAppealReminderDays', Math.round(v.staleAppealReminderMs / DAY), { label: 'Remind about quiet appeals after (days)', min: 1, max: 90, help: 'If an appeal has no decision and no new messages for this long, staff get a reminder and the member is told it is still open.' })}
 </div>`);
         const review = postForm(ctx, 'enforcement', 'appeal-review', switchInput('independentAppealReview', v.independentAppealReview === true, {
-            label: 'Appeals must be decided by someone other than the moderator who issued the punishment',
-            help: 'The issuing moderator cannot Accept or Deny the appeal (buttons, /appeals or here); another staff member has to. Bot owners (OWNER_IDS) may still decide as an emergency override, which is logged. Automatic punishments (warn ladder, automod) are not affected.',
+            label: 'A different moderator decides each appeal',
+            help: 'The moderator who gave the punishment cannot accept or deny the appeal against it. Someone else on the staff has to. The bot owner can still decide in an emergency, and that is logged. Punishments Mewvo gave by itself (automatic warn bans, automod) are not affected.',
         }));
         const mass = postForm(ctx, 'enforcement', 'mass-action', html`<div class="grid">
-${numberInput('massActionLimit', v.massActionLimit, { label: 'Bans/kicks allowed in the window', min: 1, max: 100 })}
-${numberInput('massMuteLimit', v.massMuteLimit, { label: 'Mutes allowed in the window', min: 1, max: 200 })}
-${numberInput('massActionWindowMinutes', Math.round(v.massActionWindowMs / MINUTE), { label: 'Window (minutes)', min: 1, max: 1440 })}
-${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE), { label: 'Block length (minutes)', min: 1, max: 10080 })}
+${numberInput('massActionLimit', v.massActionLimit, { label: 'Bans and kicks allowed', min: 1, max: 100, help: 'How many one moderator can do within the time below.' })}
+${numberInput('massMuteLimit', v.massMuteLimit, { label: 'Mutes allowed', min: 1, max: 200, help: 'Counted separately from bans and kicks.' })}
+${numberInput('massActionWindowMinutes', Math.round(v.massActionWindowMs / MINUTE), { label: 'Within (minutes)', min: 1, max: 1440 })}
+${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE), { label: 'Blocked for (minutes)', min: 1, max: 10080, help: 'How long a moderator who goes over the limit cannot punish anyone.' })}
 </div>`);
-        const ladder = table(['Level', 'Warn ladder ban'], Object.entries(enforcementConfig.ladderBans).map(([level, ms]) => [level, ms ? formatDuration(ms) : 'permanent']));
+        const ladder = table(['Level', 'Ban length'], Object.entries(enforcementConfig.ladderBans).map(([level, ms]) => [level, ms ? formatDuration(ms) : 'permanent']));
         const templates = Array.isArray(v.enforcementTemplates) ? v.enforcementTemplates : [];
         const reasonLabel = (key) => ENFORCEMENT_REASONS.find((r) => r.key === key)?.label || key;
         const templateList = templates.length
-            ? table(['Name', 'Does', 'Reason', ''], templates.map((t, i) => [t.name, templateLabel(t), reasonLabel(t.reasonKey),
+            ? table(['Name', 'What it does', 'Reason', ''], templates.map((t, i) => [t.name, templateLabel(t), reasonLabel(t.reasonKey),
                 postForm(ctx, 'enforcement', 'template-remove', html`<input type="hidden" name="index" value="${String(i)}">`, { submit: 'Remove', inline: true, danger: true, confirm: `Remove the template "${t.name}"?` })]))
             : html`<p class="muted">No templates yet.</p>`;
         const templateAdd = templates.length >= MAX_TEMPLATES ? html`<p class="muted">You have the maximum of ${MAX_TEMPLATES} templates.</p>` : postForm(ctx, 'enforcement', 'template-add', html`<div class="grid">
-<label>Name<input name="name" maxlength="${TEMPLATE_NAME_MAX}" required placeholder="Spam: short mute"></label>
+<label>Name<input name="name" maxlength="${TEMPLATE_NAME_MAX}" required placeholder="Spam: short mute"><span class="hint">The name staff see in the menu.</span></label>
 <label>Action<select name="action">${TEMPLATE_ACTIONS.map((a) => html`<option value="${a}">${a}</option>`)}</select></label>
 <label>Reason<select name="reasonKey">${ENFORCEMENT_REASONS.map((r) => html`<option value="${r.key}">${r.label}</option>`)}</select></label>
-<label>Duration<input name="duration" maxlength="20" placeholder="1h, 7d, or empty"><span class="hint">Needed for a mute. For a ban, empty means permanent. Ignored for warn and kick.</span></label>
+<label>Duration<input name="duration" maxlength="20" placeholder="1h, 7d, or empty"><span class="hint">How long it lasts, for example 1h (one hour) or 7d (seven days). A mute needs one. A ban with no duration is permanent. Warns and kicks ignore it.</span></label>
 </div>`, { submit: 'Add template' });
-        const reasons = table(['Key', 'Reason', 'Severe'], ENFORCEMENT_REASONS.map((r) => [html`<code>${r.key}</code>`, r.label, r.severe ? 'yes' : 'no']));
-        const steps = table(['Rule', 'Steps (1st, 2nd, 3rd+ offence)'], Object.values(AUTOMOD_RULES).map((r) => [r.label, r.steps.map(stepText).join(' → ')]));
+        const reasons = table(['Code', 'Reason', 'Serious'], ENFORCEMENT_REASONS.map((r) => [html`<code>${r.key}</code>`, r.label, r.severe ? 'yes' : 'no']));
+        const steps = table(['Rule', 'What happens (1st, 2nd, 3rd and later time)'], Object.values(AUTOMOD_RULES).map((r) => [r.label, r.steps.map(stepText).join(' → ')]));
         const appealPanels = postForm(ctx, 'enforcement', 'appeal-panels',
-            channelPicker(g, 'channelId', null, { label: 'Main-server panel channel', perms: PERMS.post, optional: false, help: 'The support server panel goes to its #appeals channel (created when missing).' }),
+            channelPicker(g, 'channelId', null, { label: 'Channel for the appeal panel', perms: PERMS.post, optional: false, help: 'The appeal panel is a message with a button members press to appeal. A second panel goes to #appeals in the support server, which Mewvo creates if it does not exist.' }),
             { submit: 'Post the appeal panels', canEdit: ctx.canEdit && ctx.canAct, confirm: 'Post the appeal panels now? Earlier appeal panels in these channels are replaced.' });
         // Admin-only (like the appeal panels): it publishes numbers about the server on the website.
         const transparency = toggleForm(ctx, 'enforcement', 'transparency', v.transparencyReportEnabled === true, {
             label: 'Publish a monthly transparency report on the website', canEdit: ctx.canEdit && ctx.canAct,
             confirmOff: 'Take the transparency report off the website?',
         });
-        return html`${section('Appeal panels', appealPanels, `Same as /setappeal: posts (or replaces) the appeal panel here and in the support server.${ctx.canAct ? '' : ' Needs Administrator in the main server.'}`)}
-${section('Channels', channels)}${section('Roles', roles, 'Warning roles are given for 1, 2 and 3+ active warnings.')}
-${section('Appeals and reports', timings)}${section('Independent appeal review', review, 'Off by default: anyone who may decide appeals can decide any appeal.')}
-${section('Transparency report', transparency, `Off by default. When on, /transparency on the website shows the monthly number of warnings, mutes, kicks, bans and appeals of this server: counts only, no names, IDs, case codes, reasons or moderators; counts of 1–2 show as “fewer than 3”.${ctx.canAct ? '' : ' Needs Administrator in the main server.'}`)}${section('Mass-action guard', mass, 'A moderator who bans or kicks this many members within the window is blocked from the panel; bot owners get a DM.')}
-${section('Templates', html`${templateList}${templateAdd}`, 'Presets for /enforcements, like "Spam: 1h mute". The panel shows them as a menu under the buttons; picking one goes straight to the confirm step.')}
-${section('Warn ladder', html`<p class="muted">${enforcementConfig.warnsPerLevel} warnings at level 0 ban; at level 1 and above the first warning bans. Read-only for now.</p>${ladder}`)}
-${section('Reasons', reasons, 'Read-only for now (the keys are stored with each case).')}
-${section('Automod steps', steps, 'Read-only for now.')}`;
+        return html`${section('Appeal panels', appealPanels, `Posts the appeal panel here and in the support server, and removes the old ones. You can also do this with /setappeal in Discord.${ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.'}`)}
+${section('Channels', channels)}${section('Roles', roles, 'Warning roles show how many active warnings a member has. Mewvo gives and removes them by itself.')}
+${section('Appeals and reports', timings, 'An appeal is a member asking staff to lift a punishment.')}${section('Independent appeal review', review, 'Off by default, so any staff member who handles appeals can decide any appeal.')}
+${section('Transparency report', transparency, `Off by default. When on, a public page on the Mewvo website (/transparency) shows how many warnings, mutes, kicks, bans and appeals this server had each month. It shows numbers only. No names, IDs, case codes, reasons or moderators. A count of 1 or 2 shows as “fewer than 3”.${ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.'}`)}${section('Mass-action guard', mass, 'Protects the server if a moderator account is misused. A moderator who punishes too many members in a short time is stopped for a while, and the bot owner gets a private message (DM).')}
+${section('Templates', html`${templateList}${templateAdd}`, 'Ready-made punishments for /enforcements, like "Spam: 1h mute". They show as a menu under the buttons. Picking one skips straight to the last step, where you confirm.')}
+${section('Warn ladder', html`<p class="muted">The warn ladder decides when warnings turn into a ban. A member with no earlier ban is banned at ${enforcementConfig.warnsPerLevel} warnings. After that, each new warning bans them again, for longer each time. You cannot change this here yet.</p>${ladder}`)}
+${section('Reasons', reasons, 'The reasons moderators can pick from. You cannot change them here yet, because each case saves the code of its reason.')}
+${section('Automod steps', steps, 'What automod does when someone breaks the same rule again. You cannot change this here yet.')}`;
     },
 
     actions: {
         'appeal-panels': {
             admin: true,
             async run(ctx, form) {
-                const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: 'Main-server panel channel' });
+                const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: 'Channel for the appeal panel' });
                 const { mainChannel, supportChannel, created } = await ctx.services.postAppealPanels(ctx.client, ctx.guild, ctx.guild.channels.cache.get(channelId), { reason: `dashboard: ${ctx.actor.username}` });
                 return {
                     changes: [{ key: 'appealPanels', old: null, new: { main: mainChannel.id, support: supportChannel.id } }],
@@ -158,7 +158,7 @@ ${section('Automod steps', steps, 'Read-only for now.')}`;
                 reportsCategoryId: channelField(g, form, 'reportsCategoryId', { kinds: ['category'], label: 'Staff reports category' }),
                 modmailCategoryId: channelField(g, form, 'modmailCategoryId', { kinds: ['category'], label: 'Modmail category' }),
                 // Absent from the form: unchanged (like the other fields of this form).
-                ...(form.openChannelCap !== undefined ? { openChannelCap: durationField(form, 'openChannelCap', 1, { min: 1, max: 45, label: 'Open staff reports + modmail' }) } : {}),
+                ...(form.openChannelCap !== undefined ? { openChannelCap: durationField(form, 'openChannelCap', 1, { min: 1, max: 45, label: 'Most open reports and modmail' }) } : {}),
                 ...(invite ? { supportServerInvite: invite } : {}),
             }, current(ctx));
             if (!Object.keys(patch).length) return NOTHING;
@@ -176,11 +176,11 @@ ${section('Automod steps', steps, 'Read-only for now.')}`;
         },
         async timings(ctx, form) {
             const patch = changedOnly({
-                appealWindowMs: durationField(form, 'appealWindowDays', DAY, { min: 1, max: 365, label: 'Appeal window' }),
-                appealCooldownMs: durationField(form, 'appealCooldownDays', DAY, { min: 0, max: 90, label: 'Appeal cooldown' }),
-                rejoinInviteMaxAgeSeconds: durationField(form, 'rejoinInviteHours', 3600, { min: 1, max: 168, label: 'Rejoin invite lifetime' }),
-                staleReportMs: durationField(form, 'staleReportDays', DAY, { min: 1, max: 90, label: 'Stale report' }),
-                staleAppealReminderMs: durationField(form, 'staleAppealReminderDays', DAY, { min: 1, max: 90, label: 'Stale appeal reminder' }),
+                appealWindowMs: durationField(form, 'appealWindowDays', DAY, { min: 1, max: 365, label: 'Time to appeal' }),
+                appealCooldownMs: durationField(form, 'appealCooldownDays', DAY, { min: 0, max: 90, label: 'Wait after a denied appeal' }),
+                rejoinInviteMaxAgeSeconds: durationField(form, 'rejoinInviteHours', 3600, { min: 1, max: 168, label: 'Rejoin link lasts' }),
+                staleReportMs: durationField(form, 'staleReportDays', DAY, { min: 1, max: 90, label: 'Close quiet reports after' }),
+                staleAppealReminderMs: durationField(form, 'staleAppealReminderDays', DAY, { min: 1, max: 90, label: 'Remind about quiet appeals after' }),
             }, current(ctx));
             if (!Object.keys(patch).length) return NOTHING;
             return saveRegistry(ctx, patch, 'enforcement');
@@ -192,10 +192,10 @@ ${section('Automod steps', steps, 'Read-only for now.')}`;
         },
         async 'mass-action'(ctx, form) {
             const patch = changedOnly({
-                massActionLimit: durationField(form, 'massActionLimit', 1, { min: 1, max: 100, label: 'Bans/kicks allowed' }),
+                massActionLimit: durationField(form, 'massActionLimit', 1, { min: 1, max: 100, label: 'Bans and kicks allowed' }),
                 massMuteLimit: durationField(form, 'massMuteLimit', 1, { min: 1, max: 200, label: 'Mutes allowed' }),
-                massActionWindowMs: durationField(form, 'massActionWindowMinutes', MINUTE, { min: 1, max: 1440, label: 'Window' }),
-                massActionBlockMs: durationField(form, 'massActionBlockMinutes', MINUTE, { min: 1, max: 10080, label: 'Block length' }),
+                massActionWindowMs: durationField(form, 'massActionWindowMinutes', MINUTE, { min: 1, max: 1440, label: 'Within (minutes)' }),
+                massActionBlockMs: durationField(form, 'massActionBlockMinutes', MINUTE, { min: 1, max: 10080, label: 'Blocked for (minutes)' }),
             }, current(ctx));
             if (!Object.keys(patch).length) return NOTHING;
             return saveRegistry(ctx, patch, 'enforcement');

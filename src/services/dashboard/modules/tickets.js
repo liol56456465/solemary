@@ -15,7 +15,7 @@ export default {
     key: 'tickets',
     label: 'Tickets & modmail',
     state: 'tickets',
-    help: 'Support tickets, modmail and saved answers. Set up and post the ticket panel here or with /ticket setup in Discord.',
+    help: 'Tickets let members ask staff for help in a private channel. They press a button on the ticket panel (a message Mewvo posts) and get their own channel that only they and staff can see. Modmail is the same idea through a private message to Mewvo. You can also set this up with /ticket setup in Discord.',
 
     async load(ctx) {
         const [settings, config, canned] = await Promise.all([
@@ -29,32 +29,32 @@ export default {
     render(ctx, { settings: t, blocked, canned }) {
         const g = ctx.guild;
         const form = postForm(ctx, 'tickets', 'settings', html`<div class="grid">
-${channelPicker(g, 'ticketCategoryId', t.ticketCategoryId, { label: 'Open tickets category', kinds: ['category'], perms: PERMS.category })}
-${channelPicker(g, 'ticketClosedCategoryId', t.ticketClosedCategoryId, { label: 'Closed tickets category', kinds: ['category'], perms: PERMS.category })}
-${rolePicker(g, 'ticketStaffRoleId', t.ticketStaffRoleId, { label: 'Ticket staff role', assign: false })}
-${numberInput('maxTicketsPerUser', t.maxTicketsPerUser ?? 3, { label: 'Open tickets per member (1–10)', min: 1, max: 10 })}
-${switchInput('dmOnClose', t.dmOnClose !== false, { label: 'DM the member when a ticket closes' })}
-${channelPicker(g, 'ticketLogsChannelId', t.ticketLogsChannelId, { label: 'Ticket log channel', perms: PERMS.post })}
-${channelPicker(g, 'ticketTranscriptChannelId', t.ticketTranscriptChannelId, { label: 'Transcript channel', perms: PERMS.postFiles })}
-${textInput('ticketButtonLabel', t.ticketButtonLabel || 'Create Ticket', { label: 'Panel button label', max: 80 })}
-${textArea('ticketPanelMessage', t.ticketPanelMessage || '', { label: 'Panel message', max: 2000 })}</div>`);
+${channelPicker(g, 'ticketCategoryId', t.ticketCategoryId, { label: 'Open tickets category', kinds: ['category'], perms: PERMS.category, help: 'A category is a folder of channels. New ticket channels are made in it.' })}
+${channelPicker(g, 'ticketClosedCategoryId', t.ticketClosedCategoryId, { label: 'Closed tickets category', kinds: ['category'], perms: PERMS.category, help: 'Closed tickets are moved here.' })}
+${rolePicker(g, 'ticketStaffRoleId', t.ticketStaffRoleId, { label: 'Ticket staff role', assign: false, help: 'Members with this role can see and answer every ticket.' })}
+${numberInput('maxTicketsPerUser', t.maxTicketsPerUser ?? 3, { label: 'Open tickets per member', min: 1, max: 10, help: 'How many tickets one member can have open at once. From 1 to 10.' })}
+${switchInput('dmOnClose', t.dmOnClose !== false, { label: 'Message the member when their ticket closes', help: 'Sent to them privately (a DM).' })}
+${channelPicker(g, 'ticketLogsChannelId', t.ticketLogsChannelId, { label: 'Ticket log channel', perms: PERMS.post, help: 'Staff get a short line here when a ticket is opened, claimed, closed or deleted.' })}
+${channelPicker(g, 'ticketTranscriptChannelId', t.ticketTranscriptChannelId, { label: 'Transcript channel', perms: PERMS.postFiles, help: 'A transcript is a file with every message from a ticket. Mewvo posts it here when the ticket closes.' })}
+${textInput('ticketButtonLabel', t.ticketButtonLabel || 'Create Ticket', { label: 'Button text', max: 80, help: 'The words on the button members press to open a ticket.' })}
+${textArea('ticketPanelMessage', t.ticketPanelMessage || '', { label: 'Panel message', max: 2000, help: 'The text above the button. Tell members what tickets are for.' })}</div>`);
         const canPost = ctx.canEdit && ctx.canAct;
         const panel = t.ticketPanelChannelId
             ? html`<div class="panel-row"><p>Panel in ${channelName(g, t.ticketPanelChannelId)}${channelWarnings(g, t.ticketPanelChannelId, PERMS.post).map((w) => html` <span class="field-warn">${w}</span>`)}.</p>
 ${buttonForm(ctx, 'tickets', 'panel-publish', 'Update or re-post the panel', {}, { danger: false, canEdit: canPost })}</div>
-<p class="muted">Saving the panel text below does not change the message in Discord until you update the panel.</p>`
-            : html`<p class="warn">No ticket panel yet.</p>${postForm(ctx, 'tickets', 'setup', html`<div class="grid">
-${channelPicker(g, 'panelChannelId', null, { label: 'Post the panel in', perms: PERMS.post, optional: false })}
-${textInput('buttonLabel', 'Create Ticket', { label: 'Button label', max: 80 })}
-${channelPicker(g, 'categoryId', null, { label: 'Open tickets category', kinds: ['category'], perms: PERMS.category, noneLabel: 'a new "Tickets" category' })}
-${channelPicker(g, 'closedCategoryId', null, { label: 'Closed tickets category', kinds: ['category'], perms: PERMS.category })}
-${rolePicker(g, 'staffRoleId', null, { label: 'Ticket staff role', assign: false })}
-${numberInput('maxTicketsPerUser', 3, { label: 'Open tickets per member (1–10)', min: 1, max: 10 })}
-${switchInput('dmOnClose', true, { label: 'DM the member when a ticket closes' })}
+<p class="muted">Saving the panel text below does not change the message already in Discord. Update the panel to show the new text.</p>`
+            : html`<p class="warn">No ticket panel yet. Fill this in to post one.</p>${postForm(ctx, 'tickets', 'setup', html`<div class="grid">
+${channelPicker(g, 'panelChannelId', null, { label: 'Post the panel in', perms: PERMS.post, optional: false, help: 'Pick a channel every member can see.' })}
+${textInput('buttonLabel', 'Create Ticket', { label: 'Button text', max: 80 })}
+${channelPicker(g, 'categoryId', null, { label: 'Open tickets category', kinds: ['category'], perms: PERMS.category, noneLabel: 'a new "Tickets" category', help: 'A category is a folder of channels. New ticket channels are made in it.' })}
+${channelPicker(g, 'closedCategoryId', null, { label: 'Closed tickets category', kinds: ['category'], perms: PERMS.category, help: 'Closed tickets are moved here.' })}
+${rolePicker(g, 'staffRoleId', null, { label: 'Ticket staff role', assign: false, help: 'Members with this role can see and answer every ticket.' })}
+${numberInput('maxTicketsPerUser', 3, { label: 'Open tickets per member', min: 1, max: 10, help: 'From 1 to 10.' })}
+${switchInput('dmOnClose', true, { label: 'Message the member when their ticket closes' })}
 ${textArea('panelMessage', 'Click the button below to create a support ticket.', { label: 'Panel message', max: 2000 })}</div>`, { submit: 'Set up and post the panel', canEdit: canPost })}`;
         const blockForm = postForm(ctx, 'tickets', 'block', html`<div class="grid">
-${textInput('userId', '', { label: 'Member (user ID)', max: 25 })}
-${textInput('reason', '', { label: 'Reason (optional, for the audit log)', max: 200 })}</div>`, { submit: 'Block from modmail', canEdit: ctx.canEdit && ctx.canAct, confirm: 'Block this member from modmail?' })
+${textInput('userId', '', { label: 'Member (user ID)', max: 25, help: 'The long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID.' })}
+${textInput('reason', '', { label: 'Reason (optional)', max: 200, help: 'Only staff see it, in the dashboard history.' })}</div>`, { submit: 'Block from modmail', canEdit: ctx.canEdit && ctx.canAct, confirm: 'Block this member from modmail?' })
         const blockedRows = blocked.map((id) => [html`<code>${id}</code>`, buttonForm(ctx, 'tickets', 'unblock', 'Unblock', { userId: id }, { danger: false })]);
         const cannedRows = Object.entries(canned).sort((a, b) => a[0].localeCompare(b[0])).map(([name, body]) => [
             html`<code>${name}</code>${ctx.services.isBuiltInCanned(name) ? html` <span class="muted">(built-in)</span>` : ''}`,
@@ -64,12 +64,12 @@ ${textInput('reason', '', { label: 'Reason (optional, for the audit log)', max: 
                 : buttonForm(ctx, 'tickets', 'canned-remove', 'Delete', { name }, { confirm: `Delete the saved answer "${name}"?` }),
         ]);
         const cannedAdd = postForm(ctx, 'tickets', 'canned-add', html`<div class="grid">
-${textInput('name', '', { label: 'Name (a-z, 0-9, -)', max: 32 })}
-${textArea('text', '', { label: 'Answer', max: CANNED_MAX_LENGTH, rows: 3 })}</div>`, { submit: 'Save answer' });
-        return html`${section('Ticket panel', panel, ctx.canAct ? '' : 'Posting the panel needs Administrator in the main server.')}
+${textInput('name', '', { label: 'Name', max: 32, help: 'Staff type this name to post the answer. Small letters, numbers and - only, like refund-policy.' })}
+${textArea('text', '', { label: 'Answer', max: CANNED_MAX_LENGTH, rows: 3, help: 'The text Mewvo posts.' })}</div>`, { submit: 'Save answer' });
+        return html`${section('Ticket panel', panel, ctx.canAct ? '' : 'To post the panel you need the Administrator permission in the main server.')}
 ${section('Ticket settings', form)}
-${section('Modmail blocked members', html`${table(['User ID', ''], blockedRows, 'Nobody is blocked from modmail.')}<h3>Block a member</h3>${blockForm}`, 'Blocked members cannot open modmail conversations (like /modmail block). An open conversation stays until staff close it.')}
-${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${cannedAdd}`, 'Staff post them with /canned send. Built-in answers can be replaced (same name) but not deleted.')}`;
+${section('Modmail blocked members', html`${table(['User ID', ''], blockedRows, 'Nobody is blocked from modmail.')}<h3>Block a member</h3>${blockForm}`, 'Blocked members cannot start a modmail chat with staff. A chat that is already open stays until staff close it. You can also do this with /modmail block in Discord.')}
+${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${cannedAdd}`, 'Saved answers for questions staff get often. Staff post one in a ticket with /canned send. The built-in answers cannot be deleted, but you can change their text by saving an answer with the same name.')}`;
     },
 
     actions: {
@@ -77,7 +77,7 @@ ${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${can
             admin: true,
             async run(ctx, form) {
                 const g = ctx.guild;
-                const panelChannelId = channelField(g, form, 'panelChannelId', { optional: false, label: 'Panel channel' });
+                const panelChannelId = channelField(g, form, 'panelChannelId', { optional: false, label: 'Post the panel in' });
                 const { message, settings } = await ctx.services.setupTicketSystem(ctx.client, g, {
                     panelChannel: g.channels.cache.get(panelChannelId),
                     panelMessage: multiline(form, 'panelMessage', 2000),
@@ -149,7 +149,7 @@ ${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${can
         },
         async 'canned-add'(ctx, form) {
             const name = text(form, 'name', 40).toLowerCase();
-            if (!CANNED_NAME.test(name)) throw new InputError('Names use lowercase letters, digits and - (up to 32).');
+            if (!CANNED_NAME.test(name)) throw new InputError('Names can only use small letters, numbers and -, up to 32 characters.');
             const body = multiline(form, 'text', CANNED_MAX_LENGTH + 1);
             if (!body) throw new InputError('The answer cannot be empty.');
             if (body.length > CANNED_MAX_LENGTH) throw new InputError(`Answers are limited to ${CANNED_MAX_LENGTH} characters.`);
@@ -163,7 +163,7 @@ ${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${can
             const before = (await ctx.services.listCanned(ctx.guildId))[name] ?? null;
             const removed = await ctx.services.removeCanned(ctx.guildId, name);
             if (!removed) {
-                throw new InputError(ctx.services.isBuiltInCanned(name) ? `"${name}" is built in and can't be deleted (save the same name to replace its text).` : `There is no saved answer called "${name}".`);
+                throw new InputError(ctx.services.isBuiltInCanned(name) ? `"${name}" is built in and cannot be deleted. To change its text, save an answer with the same name.` : `There is no saved answer called "${name}".`);
             }
             const after = (await ctx.services.listCanned(ctx.guildId))[name] ?? null;
             return { changes: [{ key: `canned.${name}`, old: before, new: after }], message: `Deleted "${name}".` };

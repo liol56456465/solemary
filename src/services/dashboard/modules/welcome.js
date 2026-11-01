@@ -85,10 +85,10 @@ function goodbyeImageOf(leaveEmbed) {
 
 function embedFields(prefix, embed, imageUrl, defaults) {
     return html`<div class="grid">
-${textInput(`${prefix}Title`, embed?.title || '', { label: 'Embed title', max: EMBED_TITLE_MAX, help: `Empty = ${defaults.title}. Placeholders work here.` })}
-${textInput(`${prefix}Color`, colourText(embed?.color), { label: 'Embed colour', max: 7, placeholder: '#57F287', help: 'Hex colour. Empty = the default colour.' })}
-${textInput(`${prefix}Footer`, embed?.footer || '', { label: 'Embed footer', max: EMBED_FOOTER_MAX, help: `Empty = ${defaults.footer}. Placeholders work here.` })}
-${textInput(`${prefix}Image`, imageUrl || '', { label: 'Image link (empty = no image)', max: IMAGE_URL_MAX, type: 'url', placeholder: 'https://example.com/banner.png', help: 'A direct https:// link to a PNG, JPG, GIF or WebP image, shown large under the message. To use a file from your computer, use Upload image below.' })}</div>`;
+${textInput(`${prefix}Title`, embed?.title || '', { label: 'Box title', max: EMBED_TITLE_MAX, help: `The bold line at the top of the box. Leave empty for ${defaults.title}. The same words in curly brackets as in the message work here too.` })}
+${textInput(`${prefix}Color`, colourText(embed?.color), { label: 'Box colour', max: 7, placeholder: '#57F287', help: 'The coloured stripe on the left of the box, as a colour code: # and six letters or numbers, like #57F287 for green. Leave empty for the default colour.' })}
+${textInput(`${prefix}Footer`, embed?.footer || '', { label: 'Box footer', max: EMBED_FOOTER_MAX, help: `Small text at the bottom of the box. Leave empty for ${defaults.footer}. The same words in curly brackets as in the message work here too.` })}
+${textInput(`${prefix}Image`, imageUrl || '', { label: 'Image link', max: IMAGE_URL_MAX, type: 'url', placeholder: 'https://example.com/banner.png', help: 'A link that starts with https:// and opens a PNG, JPG, GIF or WebP picture. It shows large at the bottom of the box. Leave empty for no image. To use a picture from your computer, use Upload an image below.' })}</div>`;
 }
 
 const UPLOAD_MB = Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024);
@@ -103,12 +103,12 @@ function imageBlock(ctx, prefix, image) {
     let current;
     if (!image.url) current = html`<p class="muted">No image.</p>`;
     else if (isAllowedImageUrl(image.fresh)) current = html`<img class="image-preview" src="${image.fresh}" alt="Current ${prefix} image" loading="lazy" referrerpolicy="no-referrer">`;
-    else if (isSafeLink(image.url)) current = html`<p>Current image: <a href="${image.url}" rel="noopener noreferrer" target="_blank">${image.url}</a> <span class="muted">(only images stored on Discord are previewed here)</span></p>`;
+    else if (isSafeLink(image.url)) current = html`<p>Current image: <a href="${image.url}" rel="noopener noreferrer" target="_blank">${image.url}</a> <span class="muted">(only pictures stored on Discord can be shown here)</span></p>`;
     else current = html`<p>Current image: <code>${image.url}</code></p>`;
     const stored = image.ref
-        ? html`<p class="hint">Uploaded file: a copy is kept in ${storedIn ? html`#${storedIn.name}` : html`channel ${image.ref.channelId}`}. Don't delete that message; the ${prefix} message loads the image from it.</p>`
+        ? html`<p class="hint">Uploaded file: a copy is kept in ${storedIn ? html`#${storedIn.name}` : html`channel ${image.ref.channelId}`}. Do not delete that message, because the ${prefix} message loads the picture from it.</p>`
         : '';
-    const upload = postForm(ctx, 'welcome', `${prefix}-image-upload`, html`<div class="grid"><label class="wide">Upload an image (PNG, JPEG, GIF or WebP, up to ${UPLOAD_MB} MB)<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required><span class="hint">Replaces the image link above. The file is posted in the audit log channel so its link keeps working, as with /greet.</span></label></div>`,
+    const upload = postForm(ctx, 'welcome', `${prefix}-image-upload`, html`<div class="grid"><label class="wide">Upload an image (PNG, JPEG, GIF or WebP, up to ${UPLOAD_MB} MB)<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required><span class="hint">Replaces the image link above. Mewvo posts the file in your main log channel and uses it from there, so the picture keeps working. /greet in Discord does the same.</span></label></div>`,
         { submit: 'Upload image', multipart: true, canEdit });
     const remove = image.url ? buttonForm(ctx, 'welcome', `${prefix}-image-remove`, 'Remove image', {}, { confirm: `Remove the ${prefix} image?`, canEdit }) : '';
     return html`<div class="image-current">${current}${stored}</div>${upload}${remove}`;
@@ -141,12 +141,12 @@ async function storeUpload(ctx, prefix, label) {
     const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
     const channelId = ctx.services.resolveLogChannel(config, 'audit');
     if (!channelId) {
-        throw new InputError(`${label}: no audit log channel is set, so the uploaded image has nowhere to be kept. Set one on the Logging page (or use an image link). Nothing was changed.`, 400, field);
+        throw new InputError(`${label}: no main log channel is set, so the uploaded picture has nowhere to be kept. Set one on the Logging page, or use an image link instead. Nothing was changed.`, 400, field);
     }
     const ref = await ctx.services.storeWelcomeImage(ctx.guild, { data: file.data, name: `${prefix}-image.${image.ext}` }, [channelId], prefix);
     if (!ref) {
         const channel = ctx.guild?.channels?.cache?.get(channelId);
-        throw new InputError(`${label}: I could not post the image in the audit log channel (${channel ? `#${channel.name}` : channelId}). I need View Channel, Send Messages and Attach Files there. Nothing was changed.`, 400, field);
+        throw new InputError(`${label}: Mewvo could not post the picture in the main log channel (${channel ? `#${channel.name}` : channelId}). Mewvo needs the View Channel, Send Messages and Attach Files permissions there. Nothing was changed.`, 400, field);
     }
     return ref;
 }
@@ -178,7 +178,7 @@ export default {
     key: 'welcome',
     label: 'Welcome & goodbye',
     state: 'welcome',
-    help: 'Messages when members join and leave (with their embed and image), roles given on join, and join/leave logs. Placeholders: {user}, {user.tag}, {server}, {memberCount}.',
+    help: 'Greet new members with a message when they join, say goodbye when they leave, and give new members a role by themselves. In the messages you can use {user} (mentions the member), {user.tag} (their username, without a mention), {server} (the server name) and {memberCount} (how many members the server has now).',
 
     async load(ctx) {
         const welcome = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
@@ -193,33 +193,33 @@ export default {
         const g = ctx.guild;
         const welcome = html`${toggleForm(ctx, 'welcome', 'welcome-enabled', w.enabled, { label: 'Welcome messages' })}
 ${postForm(ctx, 'welcome', 'welcome', html`<div class="grid">
-${channelPicker(g, 'channelId', w.channelId, { label: 'Welcome channel', perms: PERMS.postFiles })}
-${switchInput('welcomePing', w.welcomePing, { label: 'Ping the member' })}
-${textArea('welcomeMessage', w.welcomeMessage, { label: 'Welcome message', max: 2000 })}
-${textArea('dmMessage', w.dmMessage, { label: 'DM to the new member (empty = none)', max: 2000 })}</div>`)}`;
+${channelPicker(g, 'channelId', w.channelId, { label: 'Welcome channel', perms: PERMS.postFiles, help: 'Where the welcome message is posted.' })}
+${switchInput('welcomePing', w.welcomePing, { label: 'Ping the member', help: 'Mentions them so they get a notification.' })}
+${textArea('welcomeMessage', w.welcomeMessage, { label: 'Welcome message', max: 2000, help: 'For example: Welcome to {server}, {user}. You are member number {memberCount}.' })}
+${textArea('dmMessage', w.dmMessage, { label: 'Private message to the new member', max: 2000, help: 'Sent to them directly (a DM). Leave empty to send nothing.' })}</div>`)}`;
         const goodbye = html`${toggleForm(ctx, 'welcome', 'goodbye-enabled', w.goodbyeEnabled, { label: 'Goodbye messages' })}
 ${postForm(ctx, 'welcome', 'goodbye', html`<div class="grid">
-${channelPicker(g, 'goodbyeChannelId', w.goodbyeChannelId, { label: 'Goodbye channel', perms: PERMS.postFiles })}
-${switchInput('goodbyePing', w.goodbyePing, { label: 'Ping the member' })}
-${textArea('leaveMessage', w.leaveMessage, { label: 'Goodbye message', max: 2000 })}</div>`)}`;
+${channelPicker(g, 'goodbyeChannelId', w.goodbyeChannelId, { label: 'Goodbye channel', perms: PERMS.postFiles, help: 'Where the goodbye message is posted.' })}
+${switchInput('goodbyePing', w.goodbyePing, { label: 'Ping the member', help: 'Mentions them by name in the message.' })}
+${textArea('leaveMessage', w.leaveMessage, { label: 'Goodbye message', max: 2000, help: 'For example: {user.tag} left the server.' })}</div>`)}`;
         const roles = html`${table(['Role', 'Problems', ''], (w.roleIds || []).map((id) => [roleName(g, id), roleWarnings(g, id, { autoAssign: true }).join('; ') || html`<span class="ok">ok</span>`,
             buttonForm(ctx, 'welcome', 'autorole-remove', 'Remove', { roleId: id })]), 'No roles are given on join.')}
-${postForm(ctx, 'welcome', 'autorole-add', rolePicker(g, 'roleId', null, { label: 'Role given on join', optional: false, autoAssign: true, includeManaged: false }), { submit: 'Set', inline: true })}
-${postForm(ctx, 'welcome', 'autorole-delay', html`<div class="grid">${numberInput('autoRoleDelay', w.autoRoleDelay || 0, { label: 'Delay before giving roles (seconds)', min: 0, max: 3600 })}</div>`)}`;
+${postForm(ctx, 'welcome', 'autorole-add', rolePicker(g, 'roleId', null, { label: 'Role for new members', optional: false, autoAssign: true, includeManaged: false }), { submit: 'Set', inline: true })}
+${postForm(ctx, 'welcome', 'autorole-delay', html`<div class="grid">${numberInput('autoRoleDelay', w.autoRoleDelay || 0, { label: 'Wait before giving the role (seconds)', min: 0, max: 3600, help: 'How long Mewvo waits after someone joins. 0 gives it at once.' })}</div>`)}`;
         const logs = postForm(ctx, 'welcome', 'logs', html`<div class="grid">
-${switchInput('joinLogsEnabled', w.joinLogs?.enabled, { label: 'Log joins' })}
+${switchInput('joinLogsEnabled', w.joinLogs?.enabled, { label: 'Log joins', help: 'Post a short line for staff each time someone joins.' })}
 ${channelPicker(g, 'joinLogsChannelId', w.joinLogs?.channelId || null, { label: 'Join log channel', perms: PERMS.post })}
-${switchInput('leaveLogsEnabled', w.leaveLogs?.enabled, { label: 'Log leaves' })}
+${switchInput('leaveLogsEnabled', w.leaveLogs?.enabled, { label: 'Log leaves', help: 'Post a short line for staff each time someone leaves.' })}
 ${channelPicker(g, 'leaveLogsChannelId', w.leaveLogs?.channelId || null, { label: 'Leave log channel', perms: PERMS.post })}</div>`);
-        const embedHint = 'The message above is the embed text. Without Embed Links in the channel, only the text is sent. The image is a link, or a file you upload (kept in the audit log channel so it keeps working).';
+        const embedHint = 'The message is sent inside a box (an embed) with a title, a colour and an optional picture. The message text above goes inside the box. If Mewvo lacks the Embed Links permission in that channel, only the text is sent.';
         const welcomeEmbed = html`${postForm(ctx, 'welcome', 'welcome-embed', embedFields('welcome', w.welcomeEmbed, w.welcomeImage,
             { title: '🎉 Welcome!', footer: 'Welcome to <server name>!' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'welcome', images.welcome)}`;
         const goodbyeEmbed = html`${postForm(ctx, 'welcome', 'goodbye-embed', embedFields('goodbye', w.leaveEmbed, goodbyeImageOf(w.leaveEmbed),
             { title: '👋 Goodbye', footer: 'Goodbye from <server name>!' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'goodbye', images.goodbye)}`;
         return html`${section('Welcome', welcome)}${section('Welcome embed and image', welcomeEmbed, embedHint)}
 ${section('Goodbye', goodbye)}${section('Goodbye embed and image', goodbyeEmbed, embedHint)}
-${section('Auto role', roles, 'One role, as with /autorole: setting a role replaces the current one. Roles with staff permissions or above my highest role are refused.')}
-${section('Join and leave logs', logs)}`;
+${section('Auto role', roles, 'Every new member gets this role by itself. You can have one: setting a new one replaces the old one. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers. You can also do this with /autorole in Discord.')}
+${section('Join and leave logs', logs, 'A record for staff of who joined and who left, separate from the public messages.')}`;
     },
 
     actions: {
@@ -323,7 +323,7 @@ ${section('Join and leave logs', logs)}`;
             },
         },
         async 'autorole-add'(ctx, form) {
-            const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: 'Role' });
+            const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: 'Role for new members' });
             const { before, after, changed } = await ctx.services.addAutoRole(ctx.client, ctx.guildId, roleId);
             if (!changed) return { changes: [], message: 'That role is already given on join.' };
             return { changes: diffSnapshots(before, after, ['roleIds']), message: 'Auto role set.' };
@@ -335,7 +335,7 @@ ${section('Join and leave logs', logs)}`;
             return { changes: diffSnapshots(before, after, ['roleIds']), message: 'Auto role removed.' };
         },
         async 'autorole-delay'(ctx, form) {
-            const autoRoleDelay = intField(form, 'autoRoleDelay', { min: 0, max: 3600, label: 'Delay' });
+            const autoRoleDelay = intField(form, 'autoRoleDelay', { min: 0, max: 3600, label: 'Wait before giving the role' });
             return update(ctx, { autoRoleDelay }, 'Auto role delay saved.');
         },
         async logs(ctx, form) {

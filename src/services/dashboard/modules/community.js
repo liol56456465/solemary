@@ -23,6 +23,7 @@ const clip = (value, max = 120) => {
 };
 
 const OPEN_SUGGESTIONS_SHOWN = 25;
+const TRIGGER_HELP = 'none: only posted with /tag show. word: replies when a message contains the word or phrase below. regex: replies when a message matches a pattern (for advanced users).';
 const STATUS_CHOICES = { approved: 'Approve', denied: 'Deny', considering: 'Under consideration' };
 const STATUS_TEXT = { pending: 'open for votes', considering: 'under consideration', approved: 'approved', denied: 'denied' };
 
@@ -34,10 +35,10 @@ function openSuggestionsSection(ctx, open) {
 <p class="muted">By ${ctx.client?.users?.cache?.get?.(row.user_id)?.username || row.user_id}${row.created_at ? html` on ${formatDate(row.created_at)}` : ''}${row.channel_id ? html` in ${channelName(ctx.guild, row.channel_id)}` : ''}.</p>
 ${postForm(ctx, 'community', 'suggestion-status', html`<div class="grid">
 ${selectInput('status', 'approved', SUGGESTION_STATUSES.map((st) => [st, STATUS_CHOICES[st] || st]), { label: 'Decision' })}
-${textArea('reason', row.status_reason || '', { label: 'Reason (shown on the suggestion and sent to the author)', max: SUGGESTION_REASON_MAX, rows: 2 })}</div>`,
+${textArea('reason', row.status_reason || '', { label: 'Reason', max: SUGGESTION_REASON_MAX, rows: 2, help: 'Shown on the suggestion and sent to the member who made it.' })}</div>`,
         { submit: 'Send decision', hidden: { id: row.id }, canEdit: canDecide })}</details>`);
     return html`${open.length >= OPEN_SUGGESTIONS_SHOWN ? html`<p class="muted">Newest ${OPEN_SUGGESTIONS_SHOWN} shown.</p>` : ''}${blocks}
-${canDecide ? '' : html`<p class="muted">Deciding needs Administrator in the main server.</p>`}`;
+${canDecide ? '' : html`<p class="muted">To decide suggestions you need the Administrator permission in the main server.</p>`}`;
 }
 
 async function updateSettings(ctx, patch, message) {
@@ -50,7 +51,7 @@ async function updateSettings(ctx, patch, message) {
 export default {
     key: 'community',
     label: 'Community',
-    help: 'Suggestions, starboard, sticky messages, tags (saved replies, optionally triggered by a word or pattern) and YouTube feeds.',
+    help: 'Tools that make the server livelier: members can suggest ideas and vote on them, popular messages get a place of honour (the starboard), important notes stay at the bottom of a channel, saved replies answer common questions, and new YouTube videos are announced.',
 
     async load(ctx) {
         return {
@@ -64,45 +65,45 @@ export default {
 
     render(ctx, { settings: s, stickies, tags, feeds, openSuggestions = [] }) {
         const g = ctx.guild;
-        const suggestions = postForm(ctx, 'community', 'suggestions', html`<div class="grid">${channelPicker(g, 'channelId', s.suggestionsChannelId, { label: 'Suggestions channel', perms: PERMS.post, noneLabel: 'off' })}</div>`);
+        const suggestions = postForm(ctx, 'community', 'suggestions', html`<div class="grid">${channelPicker(g, 'channelId', s.suggestionsChannelId, { label: 'Suggestions channel', perms: PERMS.post, noneLabel: 'off', help: 'Where new suggestions are posted for members to vote on.' })}</div>`);
         const starboard = html`${postForm(ctx, 'community', 'starboard', html`<div class="grid">
-${channelPicker(g, 'channelId', s.starboardChannelId, { label: 'Starboard channel', perms: PERMS.post, optional: false })}
-${textInput('emoji', s.starboardEmoji, { label: 'Emoji', max: 64 })}
-${numberInput('threshold', s.starboardThreshold, { label: 'Reactions needed', min: 1, max: STARBOARD_MAX_THRESHOLD })}</div>`, { submit: s.starboardChannelId ? 'Save' : 'Turn on' })}
+${channelPicker(g, 'channelId', s.starboardChannelId, { label: 'Starboard channel', perms: PERMS.post, optional: false, help: 'Where the popular messages are copied to.' })}
+${textInput('emoji', s.starboardEmoji, { label: 'Emoji', max: 64, help: 'The reaction that counts, for example ⭐.' })}
+${numberInput('threshold', s.starboardThreshold, { label: 'Reactions needed', min: 1, max: STARBOARD_MAX_THRESHOLD, help: 'How many of those reactions a message needs before it is copied.' })}</div>`, { submit: s.starboardChannelId ? 'Save' : 'Turn on' })}
 ${s.starboardChannelId ? buttonForm(ctx, 'community', 'starboard-off', 'Turn starboard off') : html`<p class="muted">Starboard is off.</p>`}`;
         const stickyRows = stickies.map((st) => [channelName(g, st.channelId), clip(st.content), buttonForm(ctx, 'community', 'sticky-remove', 'Remove', { channelId: st.channelId }, { confirm: 'Remove this sticky message?' })]);
         const stickyEdits = stickies.map((st) => html`<details class="sub" data-key="sticky-${st.channelId}"><summary>Edit the sticky in ${channelName(g, st.channelId)}</summary>
 ${postForm(ctx, 'community', 'sticky-set', textArea('content', st.content, { label: 'Sticky message', max: STICKY_MAX_LENGTH, rows: 3 }), { submit: 'Save sticky', hidden: { channelId: st.channelId } })}</details>`);
         const sticky = html`${table(['Channel', 'Message', ''], stickyRows, 'No sticky messages.')}${stickyEdits}
 <h3>New sticky</h3>
-${postForm(ctx, 'community', 'sticky-set', html`<div class="grid">${channelPicker(g, 'channelId', null, { label: 'Channel', perms: [...PERMS.post, 'ManageMessages'], optional: false })}
-${textArea('content', '', { label: 'Sticky message (replaces the channel\'s current one)', max: STICKY_MAX_LENGTH, rows: 3 })}</div>`, { submit: 'Set sticky' })}`;
+${postForm(ctx, 'community', 'sticky-set', html`<div class="grid">${channelPicker(g, 'channelId', null, { label: 'Channel', perms: [...PERMS.post, 'ManageMessages'], optional: false, help: 'Mewvo needs the Manage Messages permission here to remove its old copy.' })}
+${textArea('content', '', { label: 'Sticky message', max: STICKY_MAX_LENGTH, rows: 3, help: 'If the channel already has a sticky message, this replaces it.' })}</div>`, { submit: 'Set sticky' })}`;
         const tagRows = tags.map((t) => [html`<code>${t.name}</code>`, clip(t.content), t.triggerKind === 'none' ? '-' : `${t.triggerKind}: ${clip(t.trigger, 40)}`,
             buttonForm(ctx, 'community', 'tag-delete', 'Delete', { name: t.name }, { confirm: `Delete the tag "${t.name}"?` })]);
         const tagEdits = tags.map((t) => html`<details class="sub" data-key="tag-${t.name}"><summary>Edit <code>${t.name}</code></summary>
 ${postForm(ctx, 'community', 'tag-edit', html`<div class="grid">
-${selectInput('triggerKind', t.triggerKind || 'none', TRIGGER_KINDS.map((k) => [k, k]), { label: 'Trigger' })}
-${textInput('trigger', t.trigger || '', { label: 'Trigger word or pattern', max: 200 })}
-${numberInput('cooldownS', t.cooldownS ?? '', { label: 'Cooldown (seconds)', min: 0, max: 86400 })}
-${channelPicker(g, 'allowChannels', t.allowChannels || [], { label: 'Only in these channels (none = everywhere)', kinds: ['text', 'category'], perms: PERMS.post, multiple: true })}
+${selectInput('triggerKind', t.triggerKind || 'none', TRIGGER_KINDS.map((k) => [k, k]), { label: 'Reply by itself', help: TRIGGER_HELP })}
+${textInput('trigger', t.trigger || '', { label: 'Word or pattern', max: 200 })}
+${numberInput('cooldownS', t.cooldownS ?? '', { label: 'Wait between replies (seconds)', min: 0, max: 86400, help: 'After replying in a channel, the tag waits this long before it replies there again.' })}
+${channelPicker(g, 'allowChannels', t.allowChannels || [], { label: 'Only in these channels', kinds: ['text', 'category'], perms: PERMS.post, multiple: true, help: 'Pick none to allow every channel.' })}
 ${channelPicker(g, 'denyChannels', t.denyChannels || [], { label: 'Never in these channels', kinds: ['text', 'category'], perms: [], multiple: true })}
-${textArea('content', t.content, { label: 'Content', max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: 'Save tag', hidden: { name: t.name } })}</details>`);
+${textArea('content', t.content, { label: 'Text', max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: 'Save tag', hidden: { name: t.name } })}</details>`);
         const tagForms = html`${table(['Name', 'Content', 'Trigger', ''], tagRows, 'No tags.')}${tagEdits}
 <h3>New tag</h3>
-${postForm(ctx, 'community', 'tag-create', html`<div class="grid">${textInput('name', '', { label: 'Name (a-z, 0-9, - _)', max: 32 })}
-${selectInput('triggerKind', 'none', TRIGGER_KINDS.map((k) => [k, k]), { label: 'Trigger' })}
-${textInput('trigger', '', { label: 'Trigger word or pattern', max: 200 })}
-${numberInput('cooldownS', '', { label: 'Cooldown (seconds, empty = default)', min: 0, max: 86400 })}
-${textArea('content', '', { label: 'Content', max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: 'Create tag' })}`;
+${postForm(ctx, 'community', 'tag-create', html`<div class="grid">${textInput('name', '', { label: 'Name', max: 32, help: 'Members post the tag with /tag show and this name. Small letters, numbers, - and _ only, like rules or how-to-join.' })}
+${selectInput('triggerKind', 'none', TRIGGER_KINDS.map((k) => [k, k]), { label: 'Reply by itself', help: TRIGGER_HELP })}
+${textInput('trigger', '', { label: 'Word or pattern', max: 200 })}
+${numberInput('cooldownS', '', { label: 'Wait between replies (seconds)', min: 0, max: 86400, help: 'After replying in a channel, the tag waits this long before it replies there again. Leave empty for the default.' })}
+${textArea('content', '', { label: 'Text', max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: 'Create tag' })}`;
         const feedRows = feeds.map((f) => [`#${f.id}`, html`<code>${f.sourceId}</code>`, channelName(g, f.channelId), clip(f.template || 'default message', 60),
             buttonForm(ctx, 'community', 'feed-remove', 'Remove', { id: f.id }, { confirm: 'Remove this feed?' })]);
         const feedForms = html`${table(['Feed', 'YouTube channel', 'Posts in', 'Message', ''], feedRows, 'No feeds.')}
-${postForm(ctx, 'community', 'feed-add', html`<div class="grid">${textInput('source', '', { label: 'YouTube channel ID or URL (UC…)', max: 200 })}
-${channelPicker(g, 'channelId', null, { label: 'Post in', perms: PERMS.post, optional: false })}
-${textArea('template', '', { label: 'Message (empty = default; {author} {title} {url})', max: FEED_TEMPLATE_MAX, rows: 2 })}</div>`, { submit: 'Add feed' })}`;
-        return html`${section('Suggestions', suggestions, '/suggest new posts there; members vote with the buttons.')}
-${section(`Open suggestions (${openSuggestions.length})`, openSuggestionsSection(ctx, openSuggestions), 'Approve or deny closes voting; the suggestion message is updated and the author gets a DM, as with /suggest status.', { key: 'open-suggestions' })}
-${section('Starboard', starboard)}${section('Sticky messages', sticky)}${section('Tags', tagForms)}${section('YouTube feeds', feedForms, 'Checked every 15 minutes.')}`;
+${postForm(ctx, 'community', 'feed-add', html`<div class="grid">${textInput('source', '', { label: 'YouTube channel', max: 200, help: 'The link to the YouTube channel, or its channel ID (it starts with UC).' })}
+${channelPicker(g, 'channelId', null, { label: 'Post in', perms: PERMS.post, optional: false, help: 'Where new videos are announced.' })}
+${textArea('template', '', { label: 'Message', max: FEED_TEMPLATE_MAX, rows: 2, help: 'Leave empty for the default message. You can use {author} (the channel name), {title} (the video title) and {url} (the link to the video).' })}</div>`, { submit: 'Add feed' })}`;
+        return html`${section('Suggestions', suggestions, 'Members share ideas with /suggest new in Discord. Each idea is posted in this channel, and members vote with the buttons under it.')}
+${section(`Open suggestions (${openSuggestions.length})`, openSuggestionsSection(ctx, openSuggestions), 'Approving or denying ends the voting. The suggestion message is updated and the member who made it gets a private message (DM). You can also do this with /suggest status in Discord.', { key: 'open-suggestions' })}
+${section('Starboard', starboard, 'When a message gets enough of one reaction, Mewvo copies it to the starboard channel, so the best moments are easy to find.')}${section('Sticky messages', sticky, 'A sticky message stays at the bottom of a channel. When members write, Mewvo posts it again under their messages, so rules or notes are always easy to see.')}${section('Tags', tagForms, 'Saved answers members can post with /tag show. A tag can also reply by itself when someone writes a certain word.')}${section('YouTube feeds', feedForms, 'Mewvo announces new videos from a YouTube channel. It checks every 15 minutes.')}`;
     },
 
     actions: {
@@ -165,7 +166,7 @@ ${section('Starboard', starboard)}${section('Sticky messages', sticky)}${section
                 content: multiline(form, 'content', TAG_CONTENT_MAX + 1),
                 triggerKind,
                 trigger: triggerKind === 'none' ? null : text(form, 'trigger', 200),
-                cooldownS: intField(form, 'cooldownS', { min: 0, max: 86400, label: 'Cooldown', fallback: null }),
+                cooldownS: intField(form, 'cooldownS', { min: 0, max: 86400, label: 'Wait between replies', fallback: null }),
                 createdBy: ctx.actor.userId,
             });
             return { changes: [{ key: `tag.${tag?.name}`, old: null, new: tag?.content ?? null }], message: `Tag "${tag?.name}" created.` };
@@ -176,14 +177,14 @@ ${section('Starboard', starboard)}${section('Sticky messages', sticky)}${section
             if (!before) throw new InputError('There is no such tag.');
             const triggerKind = choiceField(form, 'triggerKind', TRIGGER_KINDS, 'Trigger');
             const content = multiline(form, 'content', TAG_CONTENT_MAX + 1);
-            if (!content) throw new InputError('The tag content cannot be empty.');
+            if (!content) throw new InputError('The tag text cannot be empty.');
             const next = {
                 content,
                 triggerKind,
                 trigger: triggerKind === 'none' ? null : text(form, 'trigger', 200),
-                cooldownS: intField(form, 'cooldownS', { min: 0, max: 86400, label: 'Cooldown', fallback: before.cooldownS ?? null }),
-                allowChannels: channelListField(ctx.guild, form, 'allowChannels', { label: 'Allowed channel' }),
-                denyChannels: channelListField(ctx.guild, form, 'denyChannels', { label: 'Blocked channel' }),
+                cooldownS: intField(form, 'cooldownS', { min: 0, max: 86400, label: 'Wait between replies', fallback: before.cooldownS ?? null }),
+                allowChannels: channelListField(ctx.guild, form, 'allowChannels', { label: 'Only in these channels' }),
+                denyChannels: channelListField(ctx.guild, form, 'denyChannels', { label: 'Never in these channels' }),
             };
             const current = { content: before.content, triggerKind: before.triggerKind || 'none', trigger: before.trigger ?? null, cooldownS: before.cooldownS ?? null, allowChannels: before.allowChannels || [], denyChannels: before.denyChannels || [] };
             const changed = Object.fromEntries(Object.entries(next).filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(current[k])));
