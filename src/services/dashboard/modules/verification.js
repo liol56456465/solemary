@@ -12,7 +12,7 @@ import {
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, registryValue, saveRegistry, section } from './common.js';
 
-const CRITERIA = [['none', 'Everyone'], ['account_age', 'Account older than N days'], ['server_size', 'Server size']];
+const CRITERIA = [['none', 'Everyone'], ['account_age', 'Accounts older than the days below'], ['server_size', 'Everyone, while the server is still small']];
 
 async function update(ctx, patch, message) {
     if (!Object.keys(patch).length) return NOTHING;
@@ -36,7 +36,7 @@ export default {
     key: 'verification',
     label: 'Verification',
     state: 'verification',
-    help: 'New members press a button (or verify with Discord) to get the verified role; auto-verify gives it on join instead. The two cannot run together.',
+    help: 'Verification keeps bots and raiders out. New members only see the rest of the server after they get the verified role. They get it by pressing a button on the verification panel (a message Mewvo posts) or by signing in with Discord. Auto-verify gives the role as soon as they join instead. You can use one or the other, not both.',
 
     async load(ctx) {
         return {
@@ -53,23 +53,23 @@ export default {
             ? html`<div class="panel-row"><p>Panel in ${channelName(g, v.channelId)}${channelWarnings(g, v.channelId, PERMS.post).map((w) => html` <span class="field-warn">${w}</span>`)}.</p>
 ${buttonForm(ctx, 'verification', 'panel-publish', 'Update or re-post the panel', {}, { danger: false, canEdit: canPost })}</div>`
             : html`<p class="warn">No verification panel yet.</p>${postForm(ctx, 'verification', 'setup', html`<div class="grid">
-${channelPicker(g, 'channelId', null, { label: 'Post the panel in', perms: PERMS.post, optional: false })}
-${rolePicker(g, 'roleId', null, { label: 'Verified role', autoAssign: true, optional: false })}
+${channelPicker(g, 'channelId', null, { label: 'Post the panel in', perms: PERMS.post, optional: false, help: 'Pick a channel new members can see before they are verified.' })}
+${rolePicker(g, 'roleId', null, { label: 'Verified role', autoAssign: true, optional: false, help: 'The role members get once verified. Set your channels so that only this role can see them.' })}
 ${textInput('buttonText', botConfig.verification?.defaultButtonText || 'Verify', { label: 'Button text', max: 80 })}
-${textArea('message', botConfig.verification?.defaultMessage || '', { label: 'Panel message', max: 2000 })}</div>`, { submit: 'Set up and post the panel', canEdit: canPost })}`;
+${textArea('message', botConfig.verification?.defaultMessage || '', { label: 'Panel message', max: 2000, help: 'The text above the button.' })}</div>`, { submit: 'Set up and post the panel', canEdit: canPost })}`;
         const manual = html`${toggleForm(ctx, 'verification', 'enabled', v.enabled === true, { label: 'Verification' })}${panel}
 ${postForm(ctx, 'verification', 'settings', html`<div class="grid">
-${rolePicker(g, 'roleId', v.roleId || null, { label: 'Verified role', autoAssign: true, optional: false })}
+${rolePicker(g, 'roleId', v.roleId || null, { label: 'Verified role', autoAssign: true, optional: false, help: 'The role members get once verified.' })}
 ${textInput('buttonText', v.buttonText || botConfig.verification?.defaultButtonText || 'Verify', { label: 'Button text', max: 80 })}
-${textArea('message', v.message || botConfig.verification?.defaultMessage || '', { label: 'Panel message', max: 2000 })}</div>`)}
-<p class="muted">Saved text shows on the live panel after "Update or re-post the panel".</p>`;
+${textArea('message', v.message || botConfig.verification?.defaultMessage || '', { label: 'Panel message', max: 2000, help: 'The text above the button.' })}</div>`)}
+<p class="muted">Saving does not change the message already in Discord. Press "Update or re-post the panel" to show the new text.</p>`;
         const autoForm = html`${toggleForm(ctx, 'verification', 'auto-enabled', auto.enabled === true, { label: 'Auto-verify' })}
 ${postForm(ctx, 'verification', 'auto', html`<div class="grid">
-${selectInput('criteria', auto.criteria || 'none', CRITERIA, { label: 'Who is auto-verified' })}
-${numberInput('accountAgeDays', auto.accountAgeDays ?? '', { label: 'Account age (days, for "account older than")', min: 1, max: 365 })}
-${rolePicker(g, 'autoRoleId', auto.roleId || null, { label: 'Role given', autoAssign: true, noneLabel: 'the verified role' })}</div>`)}`;
-        const web = postForm(ctx, 'verification', 'redirect', html`<div class="grid">${textInput('verifySuccessRedirect', redirect, { label: 'Page after "Verify with Discord"', max: 500, placeholder: 'https://…' })}</div>`);
-        return html`${section('Verification panel', manual)}${section('Auto-verify', autoForm)}${section('Web verification', web)}`;
+${selectInput('criteria', auto.criteria || 'none', CRITERIA, { label: 'Who is auto-verified', help: 'Members who do not match still have to use the panel.' })}
+${numberInput('accountAgeDays', auto.accountAgeDays ?? '', { label: 'Account older than (days)', min: 1, max: 365, help: 'Only used when you pick accounts older than the days below. New accounts are more often bots.' })}
+${rolePicker(g, 'autoRoleId', auto.roleId || null, { label: 'Role given', autoAssign: true, noneLabel: 'the verified role', help: 'The role auto-verified members get.' })}</div>`)}`;
+        const web = postForm(ctx, 'verification', 'redirect', html`<div class="grid">${textInput('verifySuccessRedirect', redirect, { label: 'Page after "Verify with Discord"', max: 500, placeholder: 'https://…', help: 'The web page members land on after they verify by signing in with Discord. Leave empty for the default page.' })}</div>`);
+        return html`${section('Verification panel', manual)}${section('Auto-verify', autoForm)}${section('Web verification', web, 'Members can also verify on a web page by signing in with their Discord account.')}`;
     },
 
     actions: {
@@ -77,10 +77,10 @@ ${rolePicker(g, 'autoRoleId', auto.roleId || null, { label: 'Role given', autoAs
             admin: true,
             async run(ctx, form) {
                 const g = ctx.guild;
-                const channelId = channelField(g, form, 'channelId', { optional: false, label: 'Panel channel' });
+                const channelId = channelField(g, form, 'channelId', { optional: false, label: 'Post the panel in' });
                 const roleId = autoRoleField(g, form, 'roleId', { optional: false, label: 'Verified role' });
                 const before = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
-                if (before.channelId) throw new InputError('The verification panel is already set up: use "Update or re-post the panel".');
+                if (before.channelId) throw new InputError('The verification panel is already set up. Use "Update or re-post the panel" instead.');
                 const { settings } = await ctx.services.setupVerification(ctx.client, g, {
                     channel: g.channels.cache.get(channelId), role: g.roles.cache.get(roleId),
                     message: text(form, 'message', 2000), buttonText: text(form, 'buttonText', 80),
@@ -105,9 +105,9 @@ ${rolePicker(g, 'autoRoleId', auto.roleId || null, { label: 'Role given', autoAs
             const enabled = boolField(form, 'enabled', 'Verification');
             const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
             if (enabled && v.autoVerify?.enabled) throw new InputError('Auto-verify is on. Turn auto-verify off before turning the verification panel on.');
-            if (enabled && !v.channelId) throw new InputError('The verification panel is not set up yet: set it up first.');
+            if (enabled && !v.channelId) throw new InputError('The verification panel is not set up yet. Set it up first.');
             const result = await update(ctx, { enabled }, `Verification is now ${enabled ? 'on' : 'off'}.`);
-            result.warnings = ['Turning it on or off does not post or remove the panel message: use "Update or re-post the panel" when needed.'];
+            result.warnings = ['Turning it on or off does not post or remove the panel message. Use "Update or re-post the panel" for that.'];
             return result;
         },
         async settings(ctx, form) {
@@ -136,7 +136,7 @@ ${rolePicker(g, 'autoRoleId', auto.roleId || null, { label: 'Role given', autoAs
         async auto(ctx, form) {
             const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
             const criteria = choiceField(form, 'criteria', CRITERIA.map(([c]) => c), 'Criteria');
-            const accountAgeDays = intField(form, 'accountAgeDays', { min: 1, max: 365, label: 'Account age', fallback: null });
+            const accountAgeDays = intField(form, 'accountAgeDays', { min: 1, max: 365, label: 'Account older than (days)', fallback: null });
             ctx.services.validateAutoVerifyCriteria(criteria, accountAgeDays);
             const roleId = autoRoleField(ctx.guild, form, 'autoRoleId', { label: 'Auto-verify role' });
             const patch = changedOnly({ criteria, accountAgeDays: criteria === 'account_age' ? accountAgeDays : null, roleId }, v.autoVerify || {});

@@ -31,7 +31,7 @@ function when(value) {
 export default {
     key: 'giveaways',
     label: 'Giveaways',
-    help: 'Start, end, reroll and delete giveaways. Members enter with the button under the giveaway message. Everything here needs Administrator in the main server.',
+    help: 'Give away a prize to random members. Mewvo posts a giveaway message with a button, members press it to enter, and when time is up Mewvo picks the winners. Reroll picks new winners. Everything here needs the Administrator permission in the main server.',
 
     async load(ctx) {
         const list = await ctx.services.getGuildGiveaways(ctx.client, ctx.guildId);
@@ -49,18 +49,18 @@ export default {
         const endedRows = ended.map((x) => [x.prize || '-', channelName(g, x.channelId), when(x.endedAt), (x.winnerIds || []).map((id) => html`<code>${id}</code> `),
             html`<div class="row-actions">${buttonForm(ctx, 'giveaways', 'reroll', 'Reroll', { messageId: x.messageId }, { canEdit: can, danger: false })}${del(x)}</div>`]);
         const create = postForm(ctx, 'giveaways', 'create', html`<div class="grid">
-${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.post, optional: false })}
-${textInput('prize', '', { label: 'Prize', max: 256 })}
-${textInput('duration', '1d', { label: 'Duration', max: 10, placeholder: '30m, 12h, 3d', help: 'A number and s, m, h or d (10 s to 30 days).' })}
-${numberInput('winners', 1, { label: `Winners (${MIN_WINNERS}–${MAX_WINNERS})`, min: MIN_WINNERS, max: MAX_WINNERS })}</div>`, { submit: 'Start giveaway', canEdit: can });
+${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.post, optional: false, help: 'Where the giveaway message is posted.' })}
+${textInput('prize', '', { label: 'Prize', max: 256, help: 'What the winners get, for example Nitro for one month.' })}
+${textInput('duration', '1d', { label: 'Duration', max: 10, placeholder: '30m, 12h, 3d', help: 'How long members can enter. A number and a letter: s (seconds), m (minutes), h (hours) or d (days). From 10 seconds to 30 days.' })}
+${numberInput('winners', 1, { label: 'Winners', min: MIN_WINNERS, max: MAX_WINNERS, help: `How many members win. From ${MIN_WINNERS} to ${MAX_WINNERS}.` })}</div>`, { submit: 'Start giveaway', canEdit: can });
         const random = postForm(ctx, 'giveaways', 'random-member', html`<div class="grid">
 ${rolePicker(g, 'roleId', null, { label: 'Only members with this role', assign: false, includeManaged: true, noneLabel: 'anyone' })}
-${switchInput('includeBots', false, { label: 'Include bots' })}
-${switchInput('onlineOnly', false, { label: 'Only online members' })}</div>`, { submit: 'Pick a member', canEdit: can });
-        return html`${ctx.canAct ? '' : html`<p class="muted">Giveaways need Administrator in the main server.</p>`}
-${section('Start a giveaway', create, 'Same as /giveaway create: the bot posts the giveaway message in the channel.', { open: active.length === 0 })}
+${switchInput('includeBots', false, { label: 'Include bots', help: 'Off: bot accounts are never picked.' })}
+${switchInput('onlineOnly', false, { label: 'Only online members', help: 'Skip members who show as offline right now.' })}</div>`, { submit: 'Pick a member', canEdit: can });
+        return html`${ctx.canAct ? '' : html`<p class="muted">To run giveaways you need the Administrator permission in the main server.</p>`}
+${section('Start a giveaway', create, 'Mewvo posts the giveaway message in the channel you pick. You can also do this with /giveaway create in Discord.', { open: active.length === 0 })}
 ${section('Active', table(['Prize', 'Channel', 'Ends', 'Entries', 'Winners', ''], activeRows, 'No active giveaways.'))}
-${section('Pick a random member', random, 'Same as /tools randomuser. The pick is shown at the top of this page and kept in the audit log; nothing is posted in Discord.', { open: false })}
+${section('Pick a random member', random, 'Picks one random member, for example for a quick draw. The result shows at the top of this page and is saved in the dashboard history. Nothing is posted in Discord. You can also do this with /tools randomuser in Discord.', { open: false })}
 ${section('Ended (latest 25)', table(['Prize', 'Channel', 'Ended', 'Winners', ''], endedRows, 'No ended giveaways.'), '', { open: false })}`;
     },
 

@@ -43,7 +43,7 @@ function ruleFields(form) {
     if (!title) throw new InputError('A rule needs a title.', 400, 'title');
     if (/[\r\n]/.test(title)) throw new InputError('The title must be one line.', 400, 'title');
     const raw = typeof form?.text === 'string' ? form.text.replace(/\r\n?/g, '\n').trim() : '';
-    if (raw.length > textMax) throw new InputError(`Rule text is too long: at most ${textMax} characters (${raw.length} entered).`, 400, 'text');
+    if (raw.length > textMax) throw new InputError(`Rule text is too long: at most ${textMax} characters (you wrote ${raw.length}).`, 400, 'text');
     return { title, text: raw };
 }
 
@@ -63,7 +63,7 @@ function ruleText(rule) {
 export default {
     key: 'rules',
     label: 'Rules',
-    help: 'The server rules members see on the website, and which reasons point to which rule. A punishment DM for a linked reason names the rule and links to it.',
+    help: 'Write your server rules once. Members can read them on a web page, and when someone is punished, the private message (DM) they get can name the rule they broke and link to it.',
 
     async load(ctx) {
         const { value, links } = current(ctx);
@@ -79,26 +79,26 @@ export default {
         ]);
         const edits = d.rules.map((rule) => html`<details class="sub" data-key="rule-${rule.id}"><summary>Edit rule ${rule.number}: ${clip(rule.title, 60)}</summary>
 ${postForm(ctx, 'rules', 'rule-edit', html`<div class="grid">
-${textInput('title', rule.title, { label: 'Title', max: titleMax })}
-${textArea('text', rule.text, { label: 'Text', max: textMax, rows: 4, help: 'Optional. Line breaks are kept on the website.' })}</div>`, { submit: 'Save rule', hidden: { id: rule.id } })}</details>`);
+${textInput('title', rule.title, { label: 'Title', max: titleMax, help: 'A short name for the rule, on one line.' })}
+${textArea('text', rule.text, { label: 'Text', max: textMax, rows: 4, help: 'Optional. Explain the rule in more detail. Line breaks are kept on the web page.' })}</div>`, { submit: 'Save rule', hidden: { id: rule.id } })}</details>`);
         const full = d.rules.length >= maxRules;
         const add = full
             ? html`<p class="muted">The server has ${maxRules} rules, the most there can be. Delete one to add another.</p>`
             : postForm(ctx, 'rules', 'rule-add', html`<div class="grid">
-${textInput('title', '', { label: 'Title', max: titleMax, placeholder: 'No spam' })}
-${textArea('text', '', { label: 'Text', max: textMax, rows: 4, help: 'Optional. Line breaks are kept on the website.' })}</div>`, { submit: 'Add rule', inline: false });
+${textInput('title', '', { label: 'Title', max: titleMax, placeholder: 'No spam', help: 'A short name for the rule, on one line.' })}
+${textArea('text', '', { label: 'Text', max: textMax, rows: 4, help: 'Optional. Explain the rule in more detail. Line breaks are kept on the web page.' })}</div>`, { submit: 'Add rule', inline: false });
         const choices = [['', 'No rule'], ...d.rules.map((r) => [r.id, `Rule ${r.number}: ${clip(r.title, 60)}`])];
         const links = d.rules.length
             ? postForm(ctx, 'rules', 'links', html`<div class="grid">${ENFORCEMENT_REASONS.map((reason) => selectInput(`link_${reason.key}`, d.links[reason.key] || '', choices, { label: reason.label }))}</div>`)
-            : html`<p class="muted">Add a rule first; then each reason can point to one.</p>`;
+            : html`<p class="muted">Add a rule first. Then each reason can point to one.</p>`;
         const updated = d.updatedAt ? html` Last changed ${formatDate(d.updatedAt)}.` : '';
         const page = d.origin
             ? html` Members see them at <a href="${`${d.origin}/rules`}" rel="noopener">${d.origin}/rules</a>.`
-            : ' Members see them at /rules on the website. PUBLIC_URL is not set, so DMs name the rule without a link.';
-        return html`${section('Rules', html`${table(['No.', 'Rule', ''], rows, 'No rules yet. The website says the server has not published its rules.')}${edits}`,
-            html`${d.rules.length} of ${maxRules}. Numbers follow the order.${updated}${page}`)}
+            : ' Members see them at /rules on the website. The website address is not set up yet, so punishment messages name the rule without a link.';
+        return html`${section('Rules', html`${table(['No.', 'Rule', ''], rows, 'No rules yet. Until you add some, the web page says the server has not published its rules.')}${edits}`,
+            html`${d.rules.length} of ${maxRules} rules. The numbers follow the order in this list.${updated}${page}`)}
 ${section('Add a rule', add)}
-${section('Reasons linked to rules', links, 'For the prebuilt reasons of /enforcements. A punishment with a linked reason names the rule in the member\'s DM ("Rule 3: No spam") with a link to it. Custom reasons never get a rule line.')}`;
+${section('Reasons linked to rules', links, 'Moderators pick a reason when they punish someone with /enforcements. Link a reason to a rule here, and the member\'s private message names that rule, like "Rule 3: No spam", with a link to it. Reasons a moderator types in by hand never name a rule.')}`;
     },
 
     actions: {

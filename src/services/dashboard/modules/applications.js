@@ -19,6 +19,7 @@ import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, section, table } from './common.js';
 
 const PENDING_SHOWN = 25;
+const QUESTIONS_HELP = `One question per line, up to ${MAX_APPLICATION_QUESTIONS}. Leave empty to use the default questions. Add [min:10] at the end of a question to ask for an answer of at least 10 characters.`;
 const REVIEWED_SHOWN = 10;
 const APPLICATION_ID = /^[0-9a-z-]{1,40}$/i;
 const time = (value) => {
@@ -43,12 +44,12 @@ function submittedSection(ctx, { pending, pendingTotal, reviewed }) {
 ${(a.answers || []).length ? html`<dl>${a.answers.map((item, i) => html`<dt>Q${i + 1}: ${item.question}</dt><dd class="value">${item.answer || html`<span class="muted">No answer</span>`}</dd>`)}</dl>` : html`<p class="muted">No answers.</p>`}
 ${postForm(ctx, 'applications', 'review', html`<div class="grid">
 ${selectInput('decision', 'approve', [['approve', 'Approve (gives the role)'], ['deny', 'Deny']], { label: 'Decision' })}
-${textArea('note', '', { label: 'Note to the applicant (optional)', max: REVIEW_NOTE_MAX, rows: 2 })}</div>`,
-        { submit: 'Send decision', hidden: { id: a.id }, canEdit: canReview, confirm: `Send this decision to ${a.username || a.userId}? They get a DM.` })}</details>`);
+${textArea('note', '', { label: 'Note to the applicant (optional)', max: REVIEW_NOTE_MAX, rows: 2, help: 'Sent to them with the decision, for example why.' })}</div>`,
+        { submit: 'Send decision', hidden: { id: a.id }, canEdit: canReview, confirm: `Send this decision to ${a.username || a.userId}? They get a private message (DM).` })}</details>`);
     const reviewedRows = reviewed.map((a) => [a.roleName || 'Unknown role', who(a), pill(a.status === 'approved', a.status === 'approved' ? 'approved' : 'denied', a.status === 'approved' ? 'on' : 'off'),
         a.reviewMessage || '-', a.reviewedAt ? formatDate(a.reviewedAt) : '-']);
     return html`${pendingTotal ? html`<p>${pendingTotal} waiting${pendingTotal > pending.length ? html` (newest ${pending.length} shown)` : ''}.</p>${pendingBlocks}` : html`<p class="muted">No applications are waiting for review.</p>`}
-${canReview ? '' : html`<p class="muted">Reviewing needs Administrator in the main server.</p>`}
+${canReview ? '' : html`<p class="muted">To review applications here you need the Administrator permission in the main server.</p>`}
 <h3>Recently reviewed</h3>${table(['Application', 'Member', 'Decision', 'Note', 'Reviewed'], reviewedRows, 'Nothing reviewed yet.')}`;
 }
 
@@ -63,7 +64,7 @@ export default {
     key: 'applications',
     label: 'Applications',
     state: 'applications',
-    help: 'Staff and role applications. Default questions apply to roles without their own; add "[min:10]" at the end of a question for a minimum answer length.',
+    help: 'Let members apply for a role, like moderator, by answering a few questions with /apply in Discord. Staff read the answers and approve or deny. Approving gives the role.',
 
     async load(ctx) {
         const [s, roles, submitted] = await Promise.all([
@@ -80,30 +81,30 @@ export default {
         const roleBlocks = roles.map((r) => html`<details class="sub" data-key="app-${r.roleId}"><summary>${r.name} · ${roleName(g, r.roleId)} ${pill(r.enabled)}</summary>
 ${postForm(ctx, 'applications', 'role-update', html`<div class="grid">
 ${textInput('name', r.name, { label: 'Name', max: APPLICATION_NAME_MAX })}
-${switchInput('enabled', r.enabled, { label: 'Open for applications' })}
-${channelPicker(g, 'logChannelId', r.logChannelId, { label: 'Log channel for this role', perms: PERMS.post, noneLabel: 'the application log channel' })}
-${textArea('questions', questionText(r.questions), { label: `Questions (one per line, at most ${MAX_APPLICATION_QUESTIONS}; empty = default questions)`, rows: 5, max: 1000 })}</div>`,
+${switchInput('enabled', r.enabled, { label: 'Open for applications', help: 'Off: members cannot apply for this role right now.' })}
+${channelPicker(g, 'logChannelId', r.logChannelId, { label: 'Log channel for this role', perms: PERMS.post, noneLabel: 'the application log channel', help: 'Where new applications for this role are posted for staff.' })}
+${textArea('questions', questionText(r.questions), { label: 'Questions', rows: 5, max: 1000, help: QUESTIONS_HELP })}</div>`,
         { submit: 'Save application', hidden: { roleId: r.roleId } })}
-${postForm(ctx, 'applications', 'role-delete', checkboxInput('confirm', false, { label: `Also delete every application for ${r.name} (required)` }),
+${postForm(ctx, 'applications', 'role-delete', checkboxInput('confirm', false, { label: `Yes, also delete every application members sent for ${r.name}` }),
         { submit: 'Delete application', danger: true, hidden: { roleId: r.roleId }, confirm: `Delete the ${r.name} application and every application submitted for it?` })}</details>`);
         const roleCreate = postForm(ctx, 'applications', 'role-create', html`<div class="grid">
-${rolePicker(g, 'roleId', null, { label: 'Role members apply for', optional: false })}
-${textInput('name', '', { label: 'Name (e.g. Moderator)', max: APPLICATION_NAME_MAX })}
-${textArea('questions', '', { label: `Questions (one per line, at most ${MAX_APPLICATION_QUESTIONS}; empty = default questions)`, rows: 4, max: 1000 })}</div>`, { submit: 'Add application' });
+${rolePicker(g, 'roleId', null, { label: 'Role members apply for', optional: false, help: 'Approved members get this role.' })}
+${textInput('name', '', { label: 'Name', max: APPLICATION_NAME_MAX, help: 'What members see in /apply, for example Moderator.' })}
+${textArea('questions', '', { label: 'Questions', rows: 4, max: 1000, help: QUESTIONS_HELP })}</div>`, { submit: 'Add application' });
         const managers = s.managerRoles || [];
         const settings = postForm(ctx, 'applications', 'settings', html`<div class="grid">
-${channelPicker(g, 'logChannelId', s.logChannelId || null, { label: 'Application log channel', perms: PERMS.post })}
-${numberInput('pendingDays', s.pendingApplicationRetentionDays ?? 30, { label: 'Keep pending applications (days)', min: 1, max: 3650 })}
-${numberInput('reviewedDays', s.reviewedApplicationRetentionDays ?? 14, { label: 'Keep reviewed applications (days)', min: 1, max: 3650 })}</div>`);
+${channelPicker(g, 'logChannelId', s.logChannelId || null, { label: 'Application log channel', perms: PERMS.post, help: 'Where new applications are posted for staff to review.' })}
+${numberInput('pendingDays', s.pendingApplicationRetentionDays ?? 30, { label: 'Keep waiting applications (days)', min: 1, max: 3650, help: 'Applications nobody has decided on are deleted after this long.' })}
+${numberInput('reviewedDays', s.reviewedApplicationRetentionDays ?? 14, { label: 'Keep decided applications (days)', min: 1, max: 3650, help: 'Approved and denied applications are deleted after this long.' })}</div>`);
         const questions = postForm(ctx, 'applications', 'questions', textArea('questions', (s.questions || []).map(formatApplicationQuestionForEditing).join('\n'),
-            { label: `Default questions (one per line, at most ${MAX_APPLICATION_QUESTIONS})`, rows: 6, max: 1000 }));
+            { label: 'Default questions', rows: 6, max: 1000, help: `One question per line, up to ${MAX_APPLICATION_QUESTIONS}. Add [min:10] at the end of a question to ask for an answer of at least 10 characters.` }));
         const managerTable = html`${table(['Role', ''], managers.map((id) => [roleName(g, id), buttonForm(ctx, 'applications', 'manager-remove', 'Remove', { roleId: id })]), 'No manager roles.')}
-${postForm(ctx, 'applications', 'manager-add', rolePicker(g, 'roleId', null, { label: 'Add manager role', optional: false, assign: false }), { submit: 'Add', inline: true })}`;
+${postForm(ctx, 'applications', 'manager-add', rolePicker(g, 'roleId', null, { label: 'Add a manager role', optional: false, assign: false }), { submit: 'Add', inline: true })}`;
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
-        return html`${section(`Submitted applications (${submitted.pendingTotal} waiting)`, submittedSection(ctx, submitted), 'Approving gives the role and DMs the applicant; denying DMs them. The log message is updated, as with /app-admin review.', { key: 'submitted' })}
-${section(`Applications (${roles.length})`, html`${roles.length ? roleBlocks : html`<p class="muted">No applications yet.</p>`}<h3>New application</h3>${roleCreate}`, 'What members can apply for with /apply. Each has its own questions, or uses the default questions.', { key: 'application-roles' })}
-${section('Settings', settings, 'Setting the log channel here also sets the Applications log channel of Logging (as /app-admin does).')}
-${section('Default questions', questions)}${section('Manager roles', managerTable, 'Members with these roles can review applications.')}`;
+        return html`${section(`Submitted applications (${submitted.pendingTotal} waiting)`, submittedSection(ctx, submitted), 'Applications waiting for a decision. Approving gives the role. Either way, the member gets a private message (DM) with the result, and the staff log message is updated. You can also do this with /app-admin review in Discord.', { key: 'submitted' })}
+${section(`Applications (${roles.length})`, html`${roles.length ? roleBlocks : html`<p class="muted">No applications yet.</p>`}<h3>New application</h3>${roleCreate}`, 'The roles members can apply for with /apply. Each one has its own questions, or uses the default questions below.', { key: 'application-roles' })}
+${section('Settings', settings, 'Setting the log channel here also changes the Applications log channel on the Logging page, and the other way round.')}
+${section('Default questions', questions, 'Used for every role that has no questions of its own.')}${section('Manager roles', managerTable, 'Members with these roles can read and decide applications, without being administrators.')}`;
     },
 
     actions: {
@@ -159,7 +160,7 @@ ${section('Default questions', questions)}${section('Manager roles', managerTabl
         async 'role-delete'(ctx, form) {
             const roleId = text(form, 'roleId', 25);
             if (!isSnowflake(roleId)) throw new InputError('Unknown application.');
-            if (!checkbox(form, 'confirm')) throw new InputError('Tick the box to confirm: deleting removes every application for this role.');
+            if (!checkbox(form, 'confirm')) throw new InputError('Tick the box to confirm. Deleting removes every application sent for this role.');
             const { role, deletedApplications } = await ctx.services.deleteApplicationRole(ctx.client, ctx.guildId, roleId);
             return {
                 changes: [{ key: `applications.role.${roleId}`, old: { name: role.name }, new: null }],
@@ -175,8 +176,8 @@ ${section('Default questions', questions)}${section('Manager roles', managerTabl
             const logChannelId = channelField(ctx.guild, form, 'logChannelId', { label: 'Log channel' });
             const patch = changedOnly({
                 logChannelId,
-                pendingApplicationRetentionDays: intField(form, 'pendingDays', { min: 1, max: 3650, label: 'Pending retention' }),
-                reviewedApplicationRetentionDays: intField(form, 'reviewedDays', { min: 1, max: 3650, label: 'Reviewed retention' }),
+                pendingApplicationRetentionDays: intField(form, 'pendingDays', { min: 1, max: 3650, label: 'Keep waiting applications' }),
+                reviewedApplicationRetentionDays: intField(form, 'reviewedDays', { min: 1, max: 3650, label: 'Keep decided applications' }),
             }, s);
             const result = await update(ctx, patch, 'Application settings saved.');
             if (Object.hasOwn(patch, 'logChannelId') && logChannelId) {

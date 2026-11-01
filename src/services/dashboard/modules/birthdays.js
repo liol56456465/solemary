@@ -22,7 +22,7 @@ export default {
     key: 'birthdays',
     label: 'Birthdays',
     state: 'birthdays',
-    help: 'Birthday announcements once per local day in the server time zone, plus an optional role for the day. Members add their birthday with /birthday set.',
+    help: 'Mewvo wishes members a happy birthday in a channel on their birthday, and can give them a special role for that day. Members add their own birthday with /birthday set in Discord.',
 
     load,
 
@@ -30,11 +30,11 @@ export default {
         const g = ctx.guild;
         const status = b.channelId
             ? html`<p>Announcements are <span class="state state-on">on</span>.</p>${buttonForm(ctx, 'birthdays', 'off', 'Turn off (clear the channel)')}`
-            : html`<p>Announcements are <span class="state state-off">off</span>: pick a channel to turn them on.</p>`;
+            : html`<p>Announcements are <span class="state state-off">off</span>. Pick a channel below to turn them on.</p>`;
         const form = postForm(ctx, 'birthdays', 'settings', html`<div class="grid">
-${channelPicker(g, 'channelId', b.channelId, { label: 'Announcement channel', perms: PERMS.post, noneLabel: 'off' })}
-${textInput('timezone', b.timezone, { label: 'Time zone (IANA, e.g. Europe/London)', max: 64 })}
-${rolePicker(g, 'roleId', b.roleId, { label: 'Birthday role (given for the day)', autoAssign: true, noneLabel: 'none' })}</div>`);
+${channelPicker(g, 'channelId', b.channelId, { label: 'Announcement channel', perms: PERMS.post, noneLabel: 'off', help: 'Where the birthday message is posted.' })}
+${textInput('timezone', b.timezone, { label: 'Time zone', max: 64, help: 'Birthdays start at midnight in this time zone. Write it as region and city, like Europe/London or America/New_York.' })}
+${rolePicker(g, 'roleId', b.roleId, { label: 'Birthday role', autoAssign: true, noneLabel: 'none', help: 'Given on the birthday and taken away the next day.' })}</div>`);
         return html`${section('Status', status)}${section('Settings', form)}`;
     },
 

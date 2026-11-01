@@ -669,7 +669,7 @@ const CASES = {
         nickname: { form: { nickname: 'Mewvo Helper' }, service: 'setBotNickname', admin: true,
             bad: { form: { nickname: 'x'.repeat(40) }, message: /at most 32/ } },
         avatar: { form: {}, upload: { file: { field: 'image', filename: 'cat.png', data: PNG } }, service: 'setBotAvatar', admin: true,
-            bad: { form: {}, message: /Choose an image file/ } },
+            bad: { form: {}, message: /Choose a picture to upload/ } },
         'avatar-reset': { form: {}, service: 'setBotAvatar', admin: true },
     },
     automod: {
@@ -734,13 +734,13 @@ const CASES = {
             service: 'updateTicketSettings', bad: { form: { ticketCategoryId: TEXT, maxTicketsPerUser: '3' }, message: /must be a category/ } },
         block: { form: { userId: STRANGER, reason: 'spam' }, service: 'setModmailBlocked', admin: true, bad: { form: { userId: 'abc' }, message: /Discord user ID/ } },
         unblock: { form: { userId: MEMBER }, service: 'setModmailBlocked', bad: { form: { userId: 'me' }, message: /Discord user ID/ } },
-        'canned-add': { form: { name: 'hello', text: 'Hello there' }, service: 'saveCanned', bad: { form: { name: 'Bad Name', text: 'x' }, message: /lowercase letters/ } },
+        'canned-add': { form: { name: 'hello', text: 'Hello there' }, service: 'saveCanned', bad: { form: { name: 'Bad Name', text: 'x' }, message: /small letters, numbers and -/ } },
         'canned-remove': { form: { name: 'mine' }, service: 'removeCanned', bad: { form: { name: 'appeal-received' }, message: /built in/ } },
     },
     leveling: {
         enabled: { form: { enabled: 'false' }, service: 'updateLevelingConfig', bad: { form: { enabled: 'y' }, message: /on or off/ } },
         settings: { form: { xpMin: '10', xpMax: '20', xpCooldown: '30', levelUpChannel: '', announceLevelUp: '1', levelUpMessage: 'gg {user}' }, service: 'updateLevelingConfig',
-            bad: { form: { xpMin: '30', xpMax: '20', xpCooldown: '30' }, message: /less than or equal/ } },
+            bad: { form: { xpMin: '30', xpMax: '20', xpCooldown: '30' }, message: /cannot be more than Most XP/ } },
         'ignore-add': { form: { type: 'channel', id: TEXT }, service: 'updateLevelingConfig', bad: { form: { type: 'role', id: MISSING }, message: /not in the server/ } },
         'ignore-remove': { form: { type: 'channel', id: TEXT2 }, service: 'updateLevelingConfig' },
         'reward-add': { form: { level: '10', roleId: ROLE_OK2 }, service: 'setLevelRoleReward', bad: { form: { level: '10', roleId: ROLE_HIGH }, message: /not below my highest role/ } },
@@ -767,7 +767,7 @@ const CASES = {
     },
     messages: {
         send: { form: { channelId: TEXT, content: 'Hello @everyone', title: 'News', description: 'Line 1\r\nLine 2', colour: 'purple', hex: '', imageUrl: 'https://example.com/a.png', footer: 'Staff' },
-            service: 'postBotMessage', admin: true, bad: { form: { channelId: TEXT, title: 'News', imageUrl: 'http://example.com/a.png' }, message: /https:\/\/ link/ } },
+            service: 'postBotMessage', admin: true, bad: { form: { channelId: TEXT, title: 'News', imageUrl: 'http://example.com/a.png' }, message: /must start with https:\/\// } },
         poll: { form: { channelId: TEXT, question: 'Pizza?', options: 'Yes\r\nNo\r\n\r\nMaybe', anonymous: '1' }, service: 'createPoll', admin: true,
             bad: { form: { channelId: TEXT, question: 'Pizza?', options: 'Only one' }, message: /at least 2 options/ } },
         countdown: { form: { channelId: TEXT, title: 'Launch', minutes: '2', seconds: '30' }, service: 'startCountdownMessage', admin: true,
@@ -849,7 +849,7 @@ const CASES = {
         command: { form: { name: 'joke', enabled: 'false' }, service: 'disableCommand', bad: { form: { name: 'commands', enabled: 'false' }, message: /cannot be disabled/ } },
         category: { form: { key: 'fun', enabled: 'false' }, service: 'disableCategory', bad: { form: { key: 'nope', enabled: 'false' }, message: /Unknown category/ } },
         'bot-settings': { form: { prefix: '?', modRole: ROLE_DANGER }, service: 'updateConfigSetting', admin: true,
-            bad: { form: { prefix: 'two words', modRole: '' }, message: /Prefix must be 1-10 characters with no spaces/ } },
+            bad: { form: { prefix: 'two words', modRole: '' }, message: /The prefix must be 1 to 10 characters, with no spaces/ } },
         shorten: { form: { url: 'https://example.com/a/long/link', custom: '' }, service: 'shortenUrl', admin: true,
             bad: { form: { url: 'example.com' }, message: /Include http/ } },
     },
@@ -1030,7 +1030,7 @@ test('audit rows: registry settings are audited by the settings service (not twi
 test('independent appeal review: off by default, the switch turns it on and off, each change audited', async () => {
     const h = await setup();
     const page = await get(h, 'enforcement');
-    assert.match(page.body, /Appeals must be decided by someone other than the moderator who issued the punishment/);
+    assert.match(page.body, /A different moderator decides each appeal/);
     assert.match(page.body, /name="independentAppealReview" value="1">/, 'rendered unchecked (default off)');
     assert.ok(!/<[^>]*style=/i.test(page.body), 'no inline styles');
 
@@ -1112,10 +1112,10 @@ test('editing off: every page says read-only and has no submit buttons; owners s
     }
     const owner = await setup({ userId: OWNER });
     const giveaways = await get(owner, 'giveaways');
-    assert.match(giveaways.body, /need Administrator/);
+    assert.match(giveaways.body, /need the Administrator permission/);
     assert.ok(!/>End now</.test(giveaways.body), 'no End now button for an owner');
     const leveling = await get(owner, 'leveling');
-    assert.match(leveling.body, /needs Administrator/);
+    assert.match(leveling.body, /need the Administrator permission/);
 });
 
 test('pickers: grouped by category, sorted by name; warnings for missing permissions and unassignable roles', async () => {
@@ -1231,7 +1231,7 @@ test('tickets / verification: setup form while there is no panel, "update or re-
     const owner = await setup({ userId: OWNER });
     owner.state.tickets.ticketPanelChannelId = null;
     const ownerPage = await get(owner, 'tickets');
-    assert.match(ownerPage.body, /Posting the panel needs Administrator/);
+    assert.match(ownerPage.body, /To post the panel you need the Administrator permission/);
     assert.match(ownerPage.body, /action="\/dashboard\/tickets\/setup"[^>]*>[^]*?<fieldset disabled>/);
 });
 
@@ -1518,7 +1518,7 @@ test('channel tools: every action is Administrator-only; an OWNER_IDS user witho
     }
     const owner = await setup({ userId: OWNER });
     const page = await get(owner, 'channels');
-    assert.match(page.body, /need Administrator in the main server/);
+    assert.match(page.body, /need the Administrator permission in the main server/);
     assert.ok(!page.body.includes('>Delete messages<'), 'no purge button for an owner');
 });
 
@@ -1545,7 +1545,7 @@ test('channel tools: purge limits (1–100), confirm box required, user filter, 
     assert.equal(noConfirm.statusCode, 400);
     assert.match(noConfirm.body, /Tick the box/);
     const badUser = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: 'bob', confirm: '1' });
-    assert.match(badUser.body, /must be a Discord user ID/);
+    assert.match(badUser.body, /that is not a user ID/);
     const text = h.guild.channels.cache.get(TEXT);
     assert.deepEqual(text.deletedIds, [], 'nothing deleted by refused forms');
 
@@ -1600,7 +1600,7 @@ test('messages: every action is Administrator-only; the page has the three forms
     const ownerPage = await get(owner, 'messages');
     assert.ok(!/<fieldset>/.test(ownerPage.body.replace(/<fieldset class="weekdays">/g, '')), 'owner: every form disabled');
     assert.ok((ownerPage.body.match(/<fieldset disabled>/g) || []).length >= 4, 'owner: send, schedule, poll and countdown forms disabled');
-    assert.match(ownerPage.body, /Posting needs Administrator/);
+    assert.match(ownerPage.body, /To post you need the Administrator permission/);
 });
 
 test('messages/send: text, embed and colour reach the service; hex colour wins; bad hex and footer-only embeds are refused', async () => {
@@ -1620,13 +1620,13 @@ test('messages/send: text, embed and colour reach the service; hex colour wins; 
     assert.equal(hex.calls.filter((c) => c.name === 'postBotMessage')[1].args[2].colour, 0x00ff00);
 
     for (const [form, message] of [
-        [{ channelId: TEXT, title: 't', hex: 'green' }, /hex code/],
-        [{ channelId: TEXT, footer: 'only a footer' }, /footer alone/],
+        [{ channelId: TEXT, title: 't', hex: 'green' }, /colour code like #9B59B6/],
+        [{ channelId: TEXT, footer: 'only a footer' }, /A footer on its own is not shown/],
         [{ channelId: TEXT }, /nothing to post/],
         [{ channelId: VOICE, content: 'x' }, /must be a text channel/],
         [{ channelId: TEXT, content: 'x'.repeat(2001) }, /at most 2000 characters/],
-        [{ channelId: TEXT, title: 'x', imageUrl: 'javascript:alert(1)' }, /https:\/\/ link/],
-        [{ channelId: TEXT, title: 'x', imageUrl: 'https://user:pw@example.com/a.png' }, /https:\/\/ link/],
+        [{ channelId: TEXT, title: 'x', imageUrl: 'javascript:alert(1)' }, /must start with https:\/\//],
+        [{ channelId: TEXT, title: 'x', imageUrl: 'https://user:pw@example.com/a.png' }, /must start with https:\/\//],
     ]) {
         const r = await setup();
         const res = await post(r, 'messages', 'send', form);
@@ -1678,7 +1678,7 @@ test('messages/schedule: the message and schedule reach the service (zone canoni
     assert.equal(d.payload.embed.title, 'Hello');
 
     for (const [form, message] of [
-        [{ channelId: TEXT, content: 'x', repeat: 'once', date: '2099-01-01', time: '10:00', timezone: 'Mars/Base' }, /not a known time zone/],
+        [{ channelId: TEXT, content: 'x', repeat: 'once', date: '2099-01-01', time: '10:00', timezone: 'Mars/Base' }, /that time zone is not known/],
         [{ channelId: TEXT, content: 'x', repeat: 'hours', date: '2099-01-01', time: '10:00', hours: '500', timezone: 'UTC' }, /between 1 and 168/],
         [{ channelId: TEXT, repeat: 'daily', time: '10:00', timezone: 'UTC' }, /nothing to post/],
         [{ channelId: TEXT, content: 'x', repeat: 'once', date: '2099-02-30', time: '10:00', timezone: 'UTC' }, /Date: use YYYY-MM-DD/],
@@ -1889,7 +1889,7 @@ test('welcome image upload refused: wrong type, too large, no file, no audit cha
     const noChannel = await setup();
     const res = await uploadPost(noChannel, 'welcome-image-upload');
     assert.equal(res.statusCode, 400);
-    assert.match(res.body, /no audit log channel is set/);
+    assert.match(res.body, /no main log channel is set/);
     assert.ok(!noChannel.calls.some((c) => c.name === 'updateWelcomeSettings'));
 
     const cannot = await setup();
@@ -1897,7 +1897,7 @@ test('welcome image upload refused: wrong type, too large, no file, no audit cha
     channel.permissionsFor = () => ({ has: () => false });
     const refused = await uploadPost(cannot, 'welcome-image-upload');
     assert.equal(refused.statusCode, 400);
-    assert.match(refused.body, /could not post the image in the audit log channel \(#general\)/);
+    assert.match(refused.body, /could not post the picture in the main log channel \(#general\)/);
     assert.equal(channel.sent.length, 0);
     assert.ok(!cannot.calls.some((c) => c.name === 'updateWelcomeSettings'));
 
@@ -1986,8 +1986,8 @@ test('bot settings: prefix as /configwizard checks it; moderator role never @eve
     assert.deepEqual(h.calls.filter((c) => c.name === 'updateConfigSetting').slice(2).map((c) => c.args), [['modRole', null]]);
 
     for (const [form, message] of [
-        [{ prefix: '', modRole: '' }, /Prefix must be 1-10/],
-        [{ prefix: 'x'.repeat(11), modRole: '' }, /Prefix must be 1-10/],
+        [{ prefix: '', modRole: '' }, /The prefix must be 1 to 10/],
+        [{ prefix: 'x'.repeat(11), modRole: '' }, /The prefix must be 1 to 10/],
         [{ prefix: '!', modRole: GUILD }, /@everyone/],
         [{ prefix: '!', modRole: ROLE_MANAGED }, /managed/],
         [{ prefix: '!', modRole: ROLE_OK }, /auto role given on join/],
@@ -2069,7 +2069,7 @@ test('applications: approve reports a failed DM and a failed role in the flash; 
     const o = await setup({ userId: OWNER });
     const page = await get(o, 'applications');
     const section = page.body.slice(page.body.indexOf('id="s-submitted"'), page.body.indexOf('id="s-application-roles"'));
-    assert.match(section, /Reviewing needs Administrator/);
+    assert.match(section, /To review applications here you need the Administrator permission/);
     assert.ok(!section.includes('Send decision'), 'no submit button for owners without Administrator');
     assert.equal((await post(o, 'applications', 'review', { id: '1700000000000-abc', decision: 'approve' })).statusCode, 403);
     assert.equal(o.calls.length, 0);
@@ -2134,7 +2134,7 @@ test('Automod page: review queue links to the cards (escaped, Discord links only
     assert.ok(res.body.includes('action="/dashboard/automod/probation-end"'));
     assert.ok(res.body.includes(`name="user" value="${MEMBER}"`));
     assert.ok(res.body.includes('href="/dashboard/cases/abc234x"'));
-    assert.match(res.body, /No lockdown\./);
+    assert.match(res.body, /No lockdown right now\./);
     assert.ok(!res.body.includes('/dashboard/automod/lockdown-end'), 'no End lockdown button without a lockdown');
     assert.equal(h.state.statsDays, 7, 'default 7 days');
     assert.match(res.body, /class="chip is-active" href="\/dashboard\/automod\?days=7" aria-current="page"/);
@@ -2179,7 +2179,7 @@ test('Automod lockdown: active → shown first with End lockdown; ending calls e
     const owner = await setup({ userId: OWNER });
     owner.state.lockdown = { active: true, startedAt: '2026-10-28T10:00:00Z', joinerIds: [] };
     const ownerPage = await get(owner, 'automod');
-    assert.match(ownerPage.body, /Ending a lockdown needs Administrator/);
+    assert.match(ownerPage.body, /To end a lockdown you need the Administrator permission/);
     assert.equal((await post(owner, 'automod', 'lockdown-end', {})).statusCode, 403);
     assert.equal(owner.calls.length, 0);
 });
@@ -2240,7 +2240,7 @@ test('Automod custom rules: list (escaped), add saves a cleaned rule, toggle and
     const free = await setup();
     free.state.plan = 'free';
     const freePage = await get(free, 'automod');
-    assert.match(freePage.body, /Custom rules are part of the Normal, Pro and Max plans/);
+    assert.match(freePage.body, /Custom rules come with the Normal, Pro and Max plans/);
     assert.ok(freePage.body.includes('href="/pricing"'));
     assert.ok(!freePage.body.includes('action="/dashboard/automod/custom-add"'));
     const freeAdd = await post(free, 'automod', 'custom-add', { name: 'X', action: 'warn', words: 'abc' });

@@ -11,7 +11,7 @@ import {
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, registryValue, section, table } from './common.js';
 
-const DESTINATION_LABEL = { audit: 'Audit log (everything else)', applications: 'Applications', reports: 'Reports' };
+const DESTINATION_LABEL = { audit: 'Main log channel (everything else)', applications: 'Applications', reports: 'Reports' };
 const IGNORE_TYPES = { channel: 'channels', role: 'roles', user: 'users' };
 
 /** Event types (strings) grouped by their category prefix. */
@@ -37,7 +37,7 @@ export default {
     key: 'logging',
     label: 'Logging',
     state: 'logging',
-    help: 'Server event logs (messages, members, roles, moderation, …). Same settings as /logging. The mod log (one line per enforcement action) is set on Enforcement & appeals.',
+    help: 'Mewvo writes down what happens in the server in a log channel: deleted and edited messages, members joining and leaving, role changes and more. Staff can look back later. You can also change these with /logging in Discord. The list of punishments (the mod log) is set on Enforcement & appeals.',
 
     async load(ctx) {
         const status = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
@@ -65,14 +65,14 @@ ${types.map((type) => checkboxInput(fieldName(type), events[type] !== false, { l
             ...ignore.users.map((id) => ['user', html`<code>${id}</code>`, buttonForm(ctx, 'logging', 'ignore-remove', 'Remove', { type: 'user', id })]),
         ];
         const ignoreForms = html`${table(['Type', 'Ignored', ''], ignoreRows, 'Nothing is ignored.')}
-<div class="grid">${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'Ignore channel', kinds: ['text', 'voice', 'category', 'forum'], perms: [], optional: false })}`, { submit: 'Add', inline: true })}
-${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="role"><label>Ignore role<select name="id">${roleList(g, { includeManaged: true }).map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>`, { submit: 'Add', inline: true })}
-${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="user"><label>Ignore user ID<input name="id" inputmode="numeric" maxlength="20"></label>`, { submit: 'Add', inline: true })}</div>`;
+<div class="grid">${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'Ignore a channel', kinds: ['text', 'voice', 'category', 'forum'], perms: [], optional: false })}`, { submit: 'Add', inline: true })}
+${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="role"><label>Ignore a role<select name="id">${roleList(g, { includeManaged: true }).map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>`, { submit: 'Add', inline: true })}
+${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="user"><label>Ignore a member (user ID)<input name="id" inputmode="numeric" maxlength="20"><span class="hint">The long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID.</span></label>`, { submit: 'Add', inline: true })}</div>`;
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
-        return html`${section('Mod log', html`<p class="muted">Mod log channel: ${channelName(g, modLogChannelId)}. <a href="${path('/enforcement')}">change on Enforcement &amp; appeals</a>. Ticket logs are set on <a href="${path('/tickets')}">Tickets</a>.</p>`)}
-${section('Channels', channels, 'Setting a channel turns logging on (as /logging does).')}
-${section('Events', toggles, 'Unticking a whole category turns every event in it off.')}
-${section('Ignore lists', ignoreForms, 'Events from these channels (and their threads), roles or users are not logged.')}`;
+        return html`${section('Mod log', html`<p class="muted">The mod log lists every warn, mute, kick and ban. It goes to ${channelName(g, modLogChannelId)}. You can <a href="${path('/enforcement')}">change it on Enforcement &amp; appeals</a>. Ticket logs are set on <a href="${path('/tickets')}">Tickets</a>.</p>`)}
+${section('Channels', channels, 'Where each kind of log goes. Picking a channel turns logging on.')}
+${section('Events', toggles, 'Pick which things get logged. Open a group to see its events. Unticking the whole group turns every event in it off.')}
+${section('Ignore lists', ignoreForms, 'Nothing is logged from these channels (and their threads), from members with these roles, or from these members. Useful for bot channels or staff areas.')}`;
     },
 
     actions: {
@@ -139,7 +139,7 @@ ${section('Ignore lists', ignoreForms, 'Events from these channels (and their th
         async 'ignore-remove'(ctx, form) {
             const type = choiceField(form, 'type', Object.keys(IGNORE_TYPES), 'Type');
             const id = text(form, 'id', 25);
-            if (!/^\d{17,20}$/.test(id)) throw new InputError('Not an ID.');
+            if (!/^\d{17,20}$/.test(id)) throw new InputError('That is not a valid ID (a long number).');
             const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
             const list = before.ignore?.[IGNORE_TYPES[type]] || [];
             if (!list.includes(id)) return { changes: [], message: 'It was not on the list.' };

@@ -24,7 +24,7 @@ const moderatorOf = (ctx) => ({ id: ctx.actor.userId, tag: ctx.actor.username ||
 export default {
     key: 'channels',
     label: 'Channel tools',
-    help: 'Delete recent messages in bulk, and lock or unlock a channel for @everyone (what /purge, /lock and /unlock did).',
+    help: 'Clean up a channel by deleting many recent messages at once, or lock a channel so members cannot write in it for a while, for example during a spam wave.',
 
     async load() {
         return {};
@@ -33,24 +33,24 @@ export default {
     render(ctx) {
         const g = ctx.guild;
         const can = ctx.canEdit && ctx.canAct;
-        const adminNote = ctx.canAct ? '' : ' These tools need Administrator in the main server.';
+        const adminNote = ctx.canAct ? '' : ' To use these tools you need the Administrator permission in the main server.';
         const purge = postForm(ctx, 'channels', 'purge', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: TOOL_PERMS.purge, optional: false })}
-${numberInput('amount', 10, { label: 'Number of messages', min: PURGE_MIN, max: PURGE_MAX, help: `${PURGE_MIN}–${PURGE_MAX}, newest first.` })}
-${textInput('userId', '', { label: 'Only from this user ID (optional)', max: 20, help: 'Searches the newest 100 messages.' })}
-${textInput('reason', '', { label: 'Reason', max: REASON_MAX })}</div>
-${checkboxInput('confirm', false, { label: 'I understand deleted messages cannot be restored (required)' })}`,
+${numberInput('amount', 10, { label: 'Number of messages', min: PURGE_MIN, max: PURGE_MAX, help: `From ${PURGE_MIN} to ${PURGE_MAX}. The newest messages go first.` })}
+${textInput('userId', '', { label: 'Only from this member (optional)', max: 20, help: 'Their user ID: the long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID. Only the newest 100 messages are searched.' })}
+${textInput('reason', '', { label: 'Reason', max: REASON_MAX, help: 'Saved with the action, so other staff know why.' })}</div>
+${checkboxInput('confirm', false, { label: 'I understand that deleted messages cannot be brought back' })}`,
         { submit: 'Delete messages', danger: true, canEdit: can, confirm: 'Delete these messages for good?' });
         const lock = postForm(ctx, 'channels', 'lock', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: TOOL_PERMS.lock, optional: false })}
-${textInput('reason', '', { label: 'Reason', max: REASON_MAX })}</div>`, { submit: 'Lock channel', canEdit: can });
+${textInput('reason', '', { label: 'Reason', max: REASON_MAX, help: 'Saved with the action, so other staff know why.' })}</div>`, { submit: 'Lock channel', canEdit: can });
         const locked = g ? lockedChannels(g, TEXT_TYPES) : [];
         const rows = locked.map((c) => [html`#${c.name}`, c.parentId ? g.channels.cache.get(c.parentId)?.name || '' : html`<span class="muted">none</span>`,
             postForm(ctx, 'channels', 'unlock', textInput('reason', '', { label: '', max: REASON_MAX, placeholder: 'Reason (optional)' }),
                 { inline: true, submit: 'Unlock', secondary: true, canEdit: can, hidden: { channelId: c.id } })]);
-        return html`${section('Purge messages', purge, `Bulk-deletes recent messages. Discord does not bulk-delete messages older than 14 days; those are skipped.${adminNote}`)}
-${section('Lock a channel', lock, `Denies Send Messages for @everyone in the channel. Unlock clears that again, so the channel follows its category.${adminNote}`)}
-${section(`Locked channels (${locked.length})`, table(['Channel', 'Category', ''], rows, 'No channel is locked.'), 'Channels whose own @everyone permission denies Send Messages.')}`;
+        return html`${section('Purge messages', purge, `Deletes many recent messages at once. Discord does not allow this for messages older than 14 days, so those are skipped.${adminNote}`)}
+${section('Lock a channel', lock, `Members can still read the channel but can no longer write in it. Roles that have their own permission in that channel, like staff, still can. Unlocking undoes this, so the channel goes back to the permissions of its category (the folder it is in).${adminNote}`)}
+${section(`Locked channels (${locked.length})`, table(['Channel', 'Category', ''], rows, 'No channel is locked.'), 'Channels where members cannot write right now because the channel itself is locked.')}`;
     },
 
     actions: {
@@ -60,9 +60,9 @@ ${section(`Locked channels (${locked.length})`, table(['Channel', 'Category', ''
                 const channel = channelOf(ctx, form, 'Channel');
                 const amount = intField(form, 'amount', { min: PURGE_MIN, max: PURGE_MAX, label: 'Number of messages' });
                 const fromUserId = text(form, 'userId', 25) || null;
-                if (fromUserId && !isSnowflake(fromUserId)) throw new InputError('Only from this user: must be a Discord user ID (17–20 digits).', 400, 'userId');
+                if (fromUserId && !isSnowflake(fromUserId)) throw new InputError('Only from this member: that is not a user ID. A user ID is a number with 17 to 20 digits.', 400, 'userId');
                 const reason = text(form, 'reason', REASON_MAX);
-                if (!checkbox(form, 'confirm')) throw new InputError('Tick the box to confirm: deleted messages cannot be restored.', 400, 'confirm');
+                if (!checkbox(form, 'confirm')) throw new InputError('Tick the box to confirm. Deleted messages cannot be brought back.', 400, 'confirm');
                 const result = await ctx.services.purgeChannelMessages({
                     client: ctx.client, guild: ctx.guild, channel, amount, fromUserId, moderator: moderatorOf(ctx), reason: auditReason(ctx.actor.username, reason),
                 });

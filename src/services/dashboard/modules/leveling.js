@@ -31,7 +31,7 @@ export default {
     key: 'leveling',
     label: 'Leveling',
     state: 'leveling',
-    help: 'XP for chatting, level-up messages and role rewards. Same settings as /level dashboard. Placeholders in the message: {user}, {level}.',
+    help: 'Members earn points (XP) for chatting and go up in level as they collect more. You can post a message when someone levels up and give roles at certain levels. You can also change these with /level dashboard in Discord.',
 
     async load(ctx) {
         return { cfg: await ctx.services.getLevelingConfig(ctx.client, ctx.guildId) };
@@ -41,34 +41,34 @@ export default {
         const g = ctx.guild;
         const range = xpRangeOf(cfg);
         const settings = postForm(ctx, 'leveling', 'settings', html`<div class="grid">
-${numberInput('xpMin', range.min, { label: 'XP per message: minimum', min: 1, max: 500 })}
-${numberInput('xpMax', range.max, { label: 'XP per message: maximum', min: 1, max: 500 })}
-${numberInput('xpCooldown', cfg.xpCooldown ?? 60, { label: 'Seconds between XP grants', min: 0, max: 3600 })}
-${channelPicker(g, 'levelUpChannel', cfg.levelUpChannel || null, { label: 'Level-up channel', perms: PERMS.post, noneLabel: 'where the member chatted' })}
-${switchInput('announceLevelUp', cfg.announceLevelUp !== false, { label: 'Announce level-ups' })}
-${textArea('levelUpMessage', cfg.levelUpMessage || '{user} is now level {level}.', { label: 'Level-up message', max: 500, rows: 2 })}</div>`);
+${numberInput('xpMin', range.min, { label: 'Least XP per message', min: 1, max: 500, help: 'Each message gives a random amount of XP between these two numbers.' })}
+${numberInput('xpMax', range.max, { label: 'Most XP per message', min: 1, max: 500 })}
+${numberInput('xpCooldown', cfg.xpCooldown ?? 60, { label: 'Wait between XP', min: 0, max: 3600, help: 'A member gets XP for one message at most this often, so spamming does not level them up faster. In seconds.' })}
+${channelPicker(g, 'levelUpChannel', cfg.levelUpChannel || null, { label: 'Level-up channel', perms: PERMS.post, noneLabel: 'where the member chatted', help: 'Where the level-up message is posted.' })}
+${switchInput('announceLevelUp', cfg.announceLevelUp !== false, { label: 'Announce level-ups', help: 'Off: members still level up, but no message is posted.' })}
+${textArea('levelUpMessage', cfg.levelUpMessage || '{user} is now level {level}.', { label: 'Level-up message', max: 500, rows: 2, help: 'You can use {user} (mentions the member) and {level} (their new level).' })}</div>`);
         const ignoredRows = [
             ...(cfg.ignoredChannels || []).map((id) => ['channel', channelName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', 'Remove', { type: 'channel', id })]),
             ...(cfg.ignoredRoles || []).map((id) => ['role', roleName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', 'Remove', { type: 'role', id })]),
         ];
-        const ignored = html`${table(['Type', 'No XP for', ''], ignoredRows, 'XP is earned everywhere.')}
-<div class="grid">${postForm(ctx, 'leveling', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'Channel', perms: [], optional: false })}`, { submit: 'Add', inline: true })}
-${postForm(ctx, 'leveling', 'ignore-add', html`<input type="hidden" name="type" value="role">${rolePicker(g, 'id', null, { label: 'Role', optional: false, assign: false })}`, { submit: 'Add', inline: true })}</div>`;
+        const ignored = html`${table(['Type', 'No XP for', ''], ignoredRows, 'Members earn XP in every channel.')}
+<div class="grid">${postForm(ctx, 'leveling', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'No XP in this channel', perms: [], optional: false })}`, { submit: 'Add', inline: true })}
+${postForm(ctx, 'leveling', 'ignore-add', html`<input type="hidden" name="type" value="role">${rolePicker(g, 'id', null, { label: 'No XP for this role', optional: false, assign: false })}`, { submit: 'Add', inline: true })}</div>`;
         const rewards = Object.entries(cfg.roleRewards || {}).sort((a, b) => Number(a[0]) - Number(b[0]));
         const rewardTable = html`${table(['Level', 'Role', 'Problems', ''], rewards.map(([level, roleId]) => [level, roleName(g, roleId),
             roleWarnings(g, roleId, { autoAssign: true }).join('; ') || html`<span class="ok">ok</span>`,
             buttonForm(ctx, 'leveling', 'reward-remove', 'Remove', { level })]), 'No role rewards.')}
-${postForm(ctx, 'leveling', 'reward-add', html`<div class="grid">${numberInput('level', '', { label: 'Level', min: 1, max: MAX_LEVEL })}
-${rolePicker(g, 'roleId', null, { label: 'Role', optional: false, autoAssign: true })}</div>`, { submit: 'Add reward' })}`;
+${postForm(ctx, 'leveling', 'reward-add', html`<div class="grid">${numberInput('level', '', { label: 'At level', min: 1, max: MAX_LEVEL })}
+${rolePicker(g, 'roleId', null, { label: 'Give this role', optional: false, autoAssign: true })}</div>`, { submit: 'Add reward' })}`;
         const members = ctx.canAct
-            ? postForm(ctx, 'leveling', 'member', html`<div class="grid">${html`<label>Member ID<input name="userId" inputmode="numeric" maxlength="20"></label>`}
-${selectInput('op', 'add', [['add', 'Add levels'], ['remove', 'Remove levels'], ['set', 'Set level']], { label: 'Action' })}
+            ? postForm(ctx, 'leveling', 'member', html`<div class="grid">${html`<label>Member (user ID)<input name="userId" inputmode="numeric" maxlength="20"><span class="hint">The long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID.</span></label>`}
+${selectInput('op', 'add', [['add', 'Add levels'], ['remove', 'Remove levels'], ['set', 'Set level']], { label: 'What to do' })}
 ${numberInput('levels', '', { label: 'Levels', min: 0, max: MAX_LEVEL })}</div>`, { submit: 'Apply', canEdit: ctx.canEdit && ctx.canAct })
-            : html`<p class="muted">Changing a member's level needs Administrator in the main server.</p>`;
+            : html`<p class="muted">To change a member's level you need the Administrator permission in the main server.</p>`;
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
-        return html`${section('XP and messages', settings)}${section('No XP in', ignored)}
-${section('Role rewards', rewardTable, 'Roles with staff permissions or above my highest role are refused (same rule as /level dashboard).')}
-${section('Member levels', members, 'Same as /level add, /level remove and /level set.')}`;
+        return html`${section('XP and messages', settings)}${section('No XP in', ignored, 'Members get no XP in these channels, and members with these roles get none at all. Useful for bot or spam channels.')}
+${section('Role rewards', rewardTable, 'Members get these roles by themselves when they reach the level. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers.')}
+${section('Member levels', members, 'Change one member\'s level by hand. You can also do this with /level add, /level remove and /level set in Discord.')}`;
     },
 
     actions: {
@@ -78,12 +78,12 @@ ${section('Member levels', members, 'Same as /level add, /level remove and /leve
         },
         async settings(ctx, form) {
             const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
-            const min = intField(form, 'xpMin', { min: 1, max: 500, label: 'Minimum XP' });
-            const max = intField(form, 'xpMax', { min: 1, max: 500, label: 'Maximum XP' });
-            if (min > max) throw new InputError('Minimum XP must be less than or equal to maximum XP.');
+            const min = intField(form, 'xpMin', { min: 1, max: 500, label: 'Least XP per message' });
+            const max = intField(form, 'xpMax', { min: 1, max: 500, label: 'Most XP per message' });
+            if (min > max) throw new InputError('Least XP per message cannot be more than Most XP per message.');
             const range = xpRangeOf(cfg);
             const patch = changedOnly({
-                xpCooldown: intField(form, 'xpCooldown', { min: 0, max: 3600, label: 'Cooldown' }),
+                xpCooldown: intField(form, 'xpCooldown', { min: 0, max: 3600, label: 'Wait between XP' }),
                 levelUpChannel: channelField(ctx.guild, form, 'levelUpChannel', { label: 'Level-up channel' }),
                 announceLevelUp: checkbox(form, 'announceLevelUp'),
                 levelUpMessage: text(form, 'levelUpMessage', 500) || cfg.levelUpMessage || '{user} is now level {level}.',
