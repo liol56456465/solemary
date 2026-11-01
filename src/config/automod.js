@@ -168,6 +168,7 @@ export const automodConfig = {
 
 // Per-server settings (guild_settings via services/settings/guildSettings.js): read
 // through getters so callers keep using automodConfig.<key>; env vars only seed them.
-bindSettingGetters(automodConfig, ['reviewChannelId', 'alertsChannelId', 'exemptChannelIds', 'extraBlockedWords']);
+// automodCustomRules: the server's own word filters (services/automod/customRules.js).
+bindSettingGetters(automodConfig, ['reviewChannelId', 'alertsChannelId', 'exemptChannelIds', 'extraBlockedWords', 'automodCustomRules']);
 
 export default automodConfig;

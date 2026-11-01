@@ -18,7 +18,7 @@
 // self-tuning counts (revoke_reason "Automod decision reversed…").
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown } from 'discord.js';
-import { AUTOMOD_RULES } from '../../config/automod.js';
+import { ruleDefinition } from './customRules.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { getFromDb, setInDb } from '../../utils/database.js';
 import { logger } from '../../utils/logger.js';
@@ -112,7 +112,7 @@ export function findCardForCase(record) {
         userId: record.target_user_id,
         group: caseGroup(record),
         at: record.created_at ? new Date(record.created_at).getTime() : null,
-        ruleGroup: (rule) => AUTOMOD_RULES[rule]?.group,
+        ruleGroup: (rule) => ruleDefinition(rule)?.group,
     });
 }
 

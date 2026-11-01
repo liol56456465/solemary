@@ -51,6 +51,7 @@ export const FEATURE_GROUPS = [
         intro: 'Automatic actions that are normal cases, with a person reviewing them.',
         items: [
             ['14 rules', 'Scam links, NSFW, sexual harassment, harassment, personal info, advertising, impersonation, language, disrespect, mass mentions, spam, caps, fancy characters and English only.'],
+            ['Custom rules', 'Your own words and phrases, matched as whole words through the same letter folding. Each rule deletes, warns or mutes, with a review card. On paid plans: 5 on Normal, 25 on Pro, 100 on Max.'],
             ['Punishment steps', 'Each rule has its own steps (for example spam: warn, mute 1 hour, mute 1 day), counted over 30 days. When a message breaks several rules, only the most severe counts.'],
             ['Review cards', 'Every automatic action posts a card for staff with Keep, Undo and Change to….'],
             ['Modes', 'Each rule is on, monitor (card only) or off, globally or per channel. Trusted roles and channel exceptions.'],

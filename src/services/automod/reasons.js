@@ -101,6 +101,11 @@ export function impersonationReason(raw) {
     return 'has a name that imitates staff';
 }
 
+/** A custom rule (customRules.js) matched; the word itself stays in the log. */
+export function customRuleReason(name) {
+    return `used a word or phrase from the custom rule "${String(name || 'Custom rule')}" (hidden)`;
+}
+
 /** "Insulted …" — a phrase as the start of a sentence (queue, digest). */
 export function capitalize(text) {
     const value = String(text || '');

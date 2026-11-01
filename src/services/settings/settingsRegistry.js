@@ -61,6 +61,18 @@ const serverRules = z.object({
 const reasonRuleLinks = z.record(z.string().regex(/^[a-z0-9_]{1,40}$/, 'must be a reason key'), ruleId)
     .refine((links) => Object.keys(links).length <= 50, 'at most 50 links');
 
+// Custom automod rules (services/automod/customRules.js cleans them; limits match it).
+const customRules = z.array(z.object({
+    id: ruleId,
+    name: z.string().trim().min(1, 'a custom rule needs a name').max(40),
+    words: z.array(z.string().min(1).max(60)).min(1, 'a custom rule needs a word').max(50, 'at most 50 words per rule'),
+    action: z.enum(['delete', 'warn', 'mute']),
+    muteDuration: z.string().max(20).nullable(),
+    enabled: z.boolean(),
+}).strict().refine((rule) => rule.action !== 'mute' || Boolean(rule.muteDuration), 'a mute rule needs a duration'))
+    .max(100, 'at most 100 custom rules')
+    .refine((rules) => new Set(rules.map((r) => r.id)).size === rules.length, 'custom rule ids must be unique');
+
 export const SETTING_KINDS = ['channel', 'category', 'role', 'number', 'duration', 'string', 'url', 'boolean', 'list', 'json'];
 
 /** @type {ReadonlyArray<object>} */
@@ -183,6 +195,14 @@ export const SETTINGS = Object.freeze([
         key: 'extraBlockedWords', module: 'automod', kind: 'list', itemKind: 'string', guild: 'main',
         label: 'Extra blocked words (applied after a restart)', env: 'AUTOMOD_EXTRA_WORDS', envUnit: 'csv-lower',
         fallback: [], schema: wordList,
+    },
+    {
+        // Custom word filters (services/automod/customRules.js). Structural check here; the
+        // dashboard saves only lists cleaned by cleanCustomRules. How many run is set by the
+        // server owner's plan (plans.js limits.customRules); rules over it are kept.
+        key: 'automodCustomRules', module: 'automod', kind: 'json', guild: 'main', label: 'Custom automod rules',
+        fallback: Object.freeze([]), schema: customRules,
+        describe: (value) => `${value?.length || 0} custom rule${value?.length === 1 ? '' : 's'}`,
     },
     // ── Verification ──
     {

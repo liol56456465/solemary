@@ -7,9 +7,10 @@
 // Prices are whole euro cents. Yearly = 10 × monthly (two months free). The per-month figure
 // shown for yearly billing is yearly / 12, rounded to the cent.
 //
-// `limits` are LIVE (since 2026-10-31): a server's tags, sticky messages, YouTube feeds and
-// scheduled messages are capped by the plan of the server's OWNER (services/billing/
-// premiumEffects.js, planLimit). Free's numbers are the old fixed limits.
+// `limits` are LIVE (since 2026-10-31): a server's tags, sticky messages, YouTube feeds,
+// scheduled messages and custom automod rules are capped by the plan of the server's OWNER
+// (services/billing/premiumEffects.js, planLimit). Free's numbers are the old fixed limits;
+// custom automod rules are new (Free 0; services/automod/customRules.js).
 //
 // `planned: true` on a perk or a comparison row puts a "Planned" label next to it on the page.
 // Free's values are what the bot does today (limits from the code: tags 100, sticky messages 10,
@@ -23,7 +24,7 @@ export const PLANS = [
         id: 'free',
         name: 'Free',
         monthlyCents: 0,
-        limits: { tags: 100, stickies: 10, feeds: 20, scheduled: 50 },
+        limits: { tags: 100, stickies: 10, feeds: 20, scheduled: 50, customRules: 0 },
         summary: 'Everything Mewvo does today, for one server.',
         perks: [
             { text: 'Enforcement panel, case codes and DMs' },
@@ -38,12 +39,13 @@ export const PLANS = [
         id: 'normal',
         name: 'Normal',
         monthlyCents: 199,
-        limits: { tags: 250, stickies: 25, feeds: 40, scheduled: 100 },
+        limits: { tags: 250, stickies: 25, feeds: 40, scheduled: 100, customRules: 5 },
         summary: 'More room for busy community servers.',
         perks: [
             { text: 'Everything in Free' },
             { text: '250 tags, 25 sticky messages, 40 YouTube feeds' },
             { text: '100 scheduled messages' },
+            { text: '5 custom automod rules' },
             { text: 'Supporter role in the Mewvo server' },
             { text: 'Case export (CSV), last 90 days' },
         ],
@@ -52,12 +54,12 @@ export const PLANS = [
         id: 'pro',
         name: 'Pro',
         monthlyCents: 499,
-        limits: { tags: 500, stickies: 50, feeds: 75, scheduled: 200 },
+        limits: { tags: 500, stickies: 50, feeds: 75, scheduled: 200, customRules: 25 },
         summary: 'For servers with a real staff team.',
         featured: true,
         perks: [
             { text: 'Everything in Normal, with higher limits' },
-            { text: '25 custom automod rules', planned: true },
+            { text: '25 custom automod rules' },
             { text: 'Staff and automod analytics on the dashboard' },
             { text: 'Custom bot name and avatar in your server' },
             { text: 'Full case history export' },
@@ -67,7 +69,7 @@ export const PLANS = [
         id: 'max',
         name: 'Max',
         monthlyCents: 999,
-        limits: { tags: 1000, stickies: 100, feeds: 150, scheduled: 500 },
+        limits: { tags: 1000, stickies: 100, feeds: 150, scheduled: 500, customRules: 100 },
         summary: 'For people who run several servers.',
         perks: [
             { text: 'Everything in Pro' },
@@ -98,7 +100,7 @@ export const COMPARISON = [
         group: 'Automod',
         rows: [
             { label: 'Built-in rules with review cards', values: { free: '14', normal: '14', pro: '14', max: '14' } },
-            { label: 'Custom automod rules', planned: true, values: { free: false, normal: '5', pro: '25', max: '100' } },
+            { label: 'Custom automod rules', values: { free: false, normal: '5', pro: '25', max: '100' } },
         ],
     },
     {
