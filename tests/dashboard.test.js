@@ -797,3 +797,4 @@ test('plain look: no number tiles, rings, card grids, initials badges or big cor
     const radius = css.match(/--radius(?:-[a-z]+)?:\s*(\d+)px/g).map((r) => Number(r.match(/(\d+)px/)[1]));
     assert.ok(radius.every((r) => r <= 6), `corner tokens stay small: ${radius}`);
 });
+

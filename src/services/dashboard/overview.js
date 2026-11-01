@@ -278,7 +278,7 @@ function card(title, body, { link = null, note = null, className = '' } = {}) {
 }
 
 /** The Overview page (v5) from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
-export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [], editEnabled = false }) {
+export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [], editEnabled = false, handover = null, canEditHandover = false, flash = null }) {
     // Moderator level (permissions.js): no setup, modules, tickets or audit parts (those pages are Administrator-only).
     const limited = Boolean(access?.allowed) && !allows(access, 'page:modules');
     const todo = o.checklist.filter((item) => !item.done);
@@ -307,7 +307,16 @@ export function overviewPage({ session, access = null, moduleStates = {}, overvi
     const allSteps = html`<ul class="checklist">${ordered.map((item) => html`<li class="${item.done ? 'is-done' : ''}"><span class="checklist-text">${item.done ? 'Done: ' : ''}${item.label}${item.done ? '' : html` <span class="checklist-hint">${item.hint}</span>`}</span>${item.done
         ? ''
         : html` <a class="setup-link" href="${item.href}">Set up<span class="sr"> ${item.label}</span></a>`}</li>`)}</ul>`;
+    const note = handover?.text
+        ? html`<blockquote class="handover-text">${handover.text}</blockquote><p class="muted">${handover.byName || handover.by}, ${handover.at ? formatDate(new Date(handover.at)) : ''}</p>`
+        : html`<p class="muted">No note. Leave one for the next person on shift.</p>`;
+    const noteForm = canEditHandover && session?.csrf
+        ? html`<form method="post" action="${path('/handover')}" class="settings-form handover-form" data-dirty><input type="hidden" name="csrf" value="${session.csrf}">
+<label class="wide">Note for the next shift<textarea name="text" rows="3" maxlength="1000" placeholder="e.g. keep an eye on the raid in #general tonight">${handover?.text || ''}</textarea></label>
+<div class="form-actions"><button class="primary" type="submit">Save note</button><span class="hint">Empty and save to clear it.</span></div></form>` : '';
     const body = html`${head}
+${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
+${card('Staff note', html`${note}${noteForm}`)}
 ${card('To do', needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct), limited }), { note: waiting ? `${waiting}` : null })}
 ${card('Last 7 days', weekChart(o.week), { link: { href: path('/cases'), text: 'All cases' } })}
 ${card('Latest actions', recentFeed(o.recent), { link: { href: path('/cases'), text: 'All cases' } })}

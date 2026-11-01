@@ -66,7 +66,7 @@ test('matrix: the final Moderator level', () => {
     const moderatorKeys = Object.keys(PERMISSIONS).filter((key) => PERMISSIONS[key] === MODERATOR).sort();
     assert.deepEqual(moderatorKeys, [
         'action:kick', 'action:mute', 'action:unmute', 'action:warn', 'inbox.close', 'inbox.reply', 'member.action', 'member.timeout',
-        'page:appeals', 'page:bans', 'page:cases', 'page:inbox', 'page:nocontact', 'page:overview', 'page:users', 'session.logout',
+        'page:appeals', 'page:bans', 'page:cases', 'page:inbox', 'page:nocontact', 'page:overview', 'page:users', 'session.logout', 'staff.handover',
     ]);
     assert.deepEqual(moderatorActionTypes().sort(), ['kick', 'mute', 'unmute', 'warn']);
     // Admins and owners are not restricted by the table (their existing checks apply); moderators only by it.

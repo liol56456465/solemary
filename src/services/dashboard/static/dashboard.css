@@ -1226,3 +1226,5 @@ dl.facts { border-left: 0; border-right: 0; border-radius: 0; background: none; 
 .server-switch > summary { border-radius: var(--radius); box-shadow: none; }
 .empty { border: 0; background: none; padding: 4px 0; text-align: left; color: var(--text-muted); border-radius: 0; }
 .module-header h1 { font-size: 22px; letter-spacing: 0; }
+.handover-text { margin: 0 0 4px; padding: 8px 12px; border-left: 3px solid var(--border-strong); white-space: pre-wrap; }
+.handover-form { margin-top: 8px; }

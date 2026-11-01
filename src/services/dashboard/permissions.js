@@ -80,6 +80,7 @@ export const PERMISSIONS = Object.freeze({
     'members.rules': ADMIN, // role rules: pages and changes
     'page:member-insights': ADMIN,
     'staff.manage': ADMIN, // mass-action blocks, staff warnings, restore (OWNER_IDS checked on top)
+    'staff.handover': MODERATOR, // the handover note on the Overview
     'settings.edit': ADMIN, // every module settings form
     // ── Session ──
     'session.logout': MODERATOR,
@@ -112,6 +113,7 @@ export const ROUTES = [
     ['POST', '/cases/:code/evidence/add', 'case.evidence'],
     ['POST', '/cases/:code/evidence/upload', 'case.evidence'],
     ['POST', '/cases/:code/evidence/remove', 'case.evidence'],
+    ['POST', '/handover', 'staff.handover'],
     ['POST', '/backup/preview', 'settings.edit'],
     ['POST', '/backup/apply', 'settings.edit'],
     ['POST', '/cases/:code/notes', 'case.evidence'],

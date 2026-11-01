@@ -77,7 +77,7 @@ import { listEvidence, resolveImageUrls } from '../enforcement/evidenceService.j
 import { listPendingAppeals } from '../enforcement/appealService.js';
 import { needsSecondReviewer } from '../enforcement/appealReviewer.js';
 import { STATS_PERIODS, staffModerationStats } from '../staffActivityService.js';
-import { listSettingsAudit } from '../settings/guildSettings.js';
+import { getConfiguredSetting, listSettingsAudit } from '../settings/guildSettings.js';
 import { createAccessChecker } from './access.js';
 import { OWNER_AREA, allows, routeKey } from './permissions.js';
 import { BASE, THEME_COOKIE, html, messagePage, path, themeFrom } from './html.js';
@@ -486,7 +486,28 @@ export function createDashboard({
         const recentChanges = allows(req.dashboard.access, 'page:audit')
             ? await audits.list(guildId, { page: 0, pageSize: RECENT_CHANGES, excludeModules: hiddenAuditModules(req) }).then((r) => r.rows).catch(() => null)
             : [];
-        return sendHtml(res, 200, overviewPage({ ...shellOf(req), overview: result, recentChanges, editEnabled: settings.editEnabled }));
+        let handover = null;
+        try { handover = getConfiguredSetting('staffHandoverNote', env); } catch { handover = null; }
+        return sendHtml(res, 200, overviewPage({
+            ...shellOf(req), overview: result, recentChanges, editEnabled: settings.editEnabled,
+            handover, canEditHandover: Boolean(settings.editEnabled && allows(req.dashboard.access, 'staff.handover')),
+            flash: req.dashboard.flash,
+        }));
+    }
+
+    /** POST /handover: the staff note on the Overview (moderators and admins); empty text clears it. */
+    async function handover(req, res) {
+        const session = req.dashboard.session;
+        if (!postLimiter.allow(session.idHash)) { res.set('Retry-After', '60'); return fail(res, 429, 'Slow down', 'Too many changes in the last minute. Wait a moment and try again.', req); }
+        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
+        if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
+        if (!allows(req.dashboard.access, 'staff.handover')) return fail(res, 403, 'Not allowed', 'This needs a moderator or administrator role.', req);
+        const text = str(req.body?.text, 1200).replace(/\r\n?/g, '\n').trim();
+        if (text.length > 1000) return fail(res, 400, 'Too long', 'Keep the note under 1000 characters.', req);
+        const value = text ? { text, by: session.userId, byName: String(session.username || '').slice(0, 100), at: new Date().toISOString() } : null;
+        await services.updateSettings(guildId, { staffHandoverNote: value }, { userId: session.userId, username: session.username, module: 'staff' }, env);
+        await sessions.setFlash?.(session.id, text ? 'Handover note saved.' : 'Handover note cleared.');
+        return res.redirect(303, path('/overview'));
     }
 
     /** GET /dashboard/modules[?show=on|off]: every module as a card with its switch. */
@@ -871,7 +892,7 @@ export function createDashboard({
 
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
-        overview, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme,
+        overview, handover, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme,
         sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
     };
 }
@@ -963,6 +984,7 @@ export function dashboardRouter(d) {
     router.post('/cases/:code/evidence/upload', user, uploadBody(MAX_UPLOAD_BYTES + 64 * 1024), safe(d.parseUpload), safe(en.evidenceUpload));
     router.post('/backup/preview', user, uploadBody(BACKUP_MAX_BYTES + 16 * 1024), safe(d.parseUpload), safe(d.backupPreview));
     router.post('/backup/apply', form, user, safe(d.backupApply));
+    router.post('/handover', form, user, safe(d.handover));
     router.post('/cases/:code/evidence/remove', form, user, safe(en.evidenceRemove));
     router.post('/cases/:code/notes', form, user, safe(en.caseNote));
     router.post('/cases/:code/tags', form, user, safe(en.caseTags));

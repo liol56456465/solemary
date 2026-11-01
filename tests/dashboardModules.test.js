@@ -2364,3 +2364,23 @@ test('bot in this server: not an image refused; below Pro the page says so and e
     assert.equal(refused.statusCode, 403);
     assert.equal(free.calls.filter((c) => c.name === 'setBotNickname').length, 0);
 });
+
+test('handover note: on the Overview for moderators and admins; save (audited through updateSettings), clear, CSRF, Origin', async () => {
+    const h = await setup();
+    const page = await run(h, h.d.overview, { method: 'GET', params: {}, headers: { cookie: h.cookie }, query: {} });
+    assert.match(page.body, /<h2>Staff note<\/h2>/);
+    assert.match(page.body, /action="\/dashboard\/handover"/);
+    const post = (body, origin = ORIGIN) => run(h, h.d.handover, { method: 'POST', params: {}, headers: { cookie: h.cookie, origin }, body, query: {} });
+    const saves = () => h.calls.filter((c) => c.name === 'updateSettings');
+    assert.equal((await post({ csrf: 'wrong', text: 'x' })).statusCode, 403);
+    assert.equal((await post({ csrf: h.session.csrf, text: 'x' }, 'https://evil.example')).statusCode, 403);
+    assert.equal(saves().length, 0);
+    const ok = await post({ csrf: h.session.csrf, text: '  watch #general  ' });
+    assert.equal(ok.statusCode, 303);
+    const note = saves()[0].args[1].staffHandoverNote;
+    assert.equal(note.text, 'watch #general');
+    assert.equal(note.by, h.session.userId ?? note.by);
+    await post({ csrf: h.session.csrf, text: '' });
+    assert.equal(saves()[1].args[1].staffHandoverNote, null, 'empty clears it');
+    assert.equal((await post({ csrf: h.session.csrf, text: 'x'.repeat(1001) })).statusCode, 400);
+});

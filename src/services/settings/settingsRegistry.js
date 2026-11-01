@@ -213,6 +213,18 @@ export const SETTINGS = Object.freeze([
         schema: z.object({ normal: optionalId, pro: optionalId, max: optionalId }).strict(),
         describe: (value) => `${Object.values(value || {}).filter(Boolean).length} of 3 set`,
     },
+    // ── Staff handover note (Dashboard Overview; moderators and admins edit it) ──
+    {
+        key: 'staffHandoverNote', module: 'staff', kind: 'json', guild: 'main', label: 'Staff handover note',
+        fallback: null,
+        schema: z.object({
+            text: z.string().min(1).max(1000),
+            by: z.string().regex(/^\d{17,20}$/),
+            byName: z.string().max(100),
+            at: z.string().max(40),
+        }).strict().nullable(),
+        describe: (value) => (value?.text ? `${value.text.length} characters` : 'none'),
+    },
     // ── Enforcement templates (/enforcements presets; services/enforcement/templateService.js) ──
     {
         // Structural check here; the dashboard saves only lists cleaned by cleanTemplates
