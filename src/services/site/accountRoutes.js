@@ -42,6 +42,7 @@ const HOUR = 60 * 60 * 1000;
 
 export const ACCOUNT_LIMITS = {
     loginIp: { limit: 10, windowMs: FIFTEEN_MIN },
+    confirmIp: { limit: 10, windowMs: FIFTEEN_MIN }, // password tries on the confirm page
     loginName: { limit: 10, windowMs: FIFTEEN_MIN },
     code: { limit: 10, windowMs: FIFTEEN_MIN },
     signupIp: { limit: 5, windowMs: HOUR },
@@ -125,6 +126,7 @@ export function createAccountHandlers(core) {
     const loginIpLimiter = lim('loginIp');
     const loginNameLimiter = lim('loginName');
     const codeLimiter = lim('code');
+    const confirmLimiter = lim('confirmIp');
     const signupLimiter = lim('signupIp');
     const emailIpLimiter = lim('emailIp');
     const emailAddressLimiter = lim('emailAddress');
@@ -281,6 +283,18 @@ export function createAccountHandlers(core) {
     async function confirmPost(req, res) {
         if (!formOk(req)) return notAllowed(res);
         const token = cleanToken(req.body?.token);
+        // A new account is confirmed only with its password: someone who only has the email
+        // cannot confirm (and then share) an account a stranger signed up with their address.
+        const pending = token ? await store.peekToken(token, null) : null;
+        if (pending?.purpose === 'confirm') {
+            const csrf = formToken(req, res);
+            if (!confirmLimiter.allow(clientIp(req))) return tooMany(res, (error) => confirmPage(ctx(), { csrf, token, purpose: 'confirm', error }));
+            const account = await store.findById(pending.account_id);
+            const ok = account
+                ? await verifyPassword(secretField(req.body?.password), account.password_hash)
+                : await verifyAgainstDummy(secretField(req.body?.password));
+            if (!ok) return page(res, 401, confirmPage(ctx(), { csrf, token, purpose: 'confirm', error: 'That password is not right. Type the password you chose when you signed up.' }));
+        }
         const result = token ? await store.confirmEmail(token) : { error: 'missing' };
         if (result.error === 'email_taken') return page(res, 409, accountMessagePage(ctx(), 'Email already in use', 'That email address now belongs to another account, so it was not changed.', { href: '/me/account', label: 'Account settings' }));
         if (result.error) return page(res, 400, linkInvalidPage(ctx(), 'This confirmation link'));
@@ -384,8 +398,9 @@ export function createAccountHandlers(core) {
             background(async () => {
                 const account = await store.findByEmail(email.value);
                 if (!account) return;
-                if (account.email_confirmed_at) await sendToken(account, 'reset', account.email);
-                else await sendToken(account, 'confirm', account.email);
+                // Also for an unconfirmed account: the reset link confirms the email, so the
+                // address's owner can take over an account someone else made with it.
+                await sendToken(account, 'reset', account.email);
             });
         }
         return page(res, 200, forgotPage(ctx(), { csrf, done: true }));

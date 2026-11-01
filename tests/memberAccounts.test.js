@@ -99,7 +99,7 @@ async function confirmed(app, b, values = {}) {
     assert.equal(res.status, 200);
     const path = linkFrom(app.mailer.last(), '/me/confirm');
     await b.request(path);
-    const done = await b.request('/me/confirm', { form: { token: new URL(ORIGIN + path).searchParams.get('token') } });
+    const done = await b.request('/me/confirm', { form: { token: new URL(ORIGIN + path).searchParams.get('token'), password: values.password || PASSWORD } });
     assert.equal(done.status, 303);
     return done;
 }
@@ -146,11 +146,15 @@ test('the whole flow: sign up, confirm, link Discord with the bonus, 1-letter na
         const show = await b.request(path);
         assert.equal(show.status, 200);
         assert.match(show.body, /Confirm my email/);
-        const done = await b.request('/me/confirm', { form: { token } });
+        assert.match(show.body, /name="password"/, 'a new account is confirmed with its password');
+        const noPassword = await b.request('/me/confirm', { form: { token, password: 'not the password' } });
+        assert.equal(noPassword.status, 401);
+        assert.ok(!b.jar.has(MEMBER_SESSION_COOKIE));
+        const done = await b.request('/me/confirm', { form: { token, password: PASSWORD } });
         assert.equal(done.status, 303);
         assert.equal(done.location, '/me');
         assert.ok(b.jar.has(MEMBER_SESSION_COOKIE));
-        const again = await b.request('/me/confirm', { form: { token } });
+        const again = await b.request('/me/confirm', { form: { token, password: PASSWORD } });
         assert.equal(again.status, 400, 'single use');
 
         // Without Discord: /me only offers "Link your Discord".
@@ -500,4 +504,47 @@ test('prune: unconfirmed accounts older than 7 days are deleted', async () => {
     assert.deepEqual(await store.prune(), { accounts: 1, tokens: 0 });
     assert.equal(await store.findById(account.id), null);
     assert.ok(await store.findById(kept.id));
+});
+
+test('security review fixes: a stranger cannot confirm, the email owner can reset an unconfirmed account, a pending email blocks nobody, a new password ends old links', async () => {
+    const app = await serve();
+    try {
+        // A stranger signs up with someone else's address and their own password.
+        const stranger = browser(app);
+        await signup(app, stranger, { username: 'squatter', email: 'owner@example.com', password: 'stranger password 1' });
+        const confirmPath = linkFrom(app.mailer.last(), '/me/confirm');
+        const confirmToken = new URL(ORIGIN + confirmPath).searchParams.get('token');
+        // The address's owner gets the link but not the password: pressing confirm does nothing.
+        const owner = browser(app);
+        await owner.request(confirmPath);
+        assert.equal((await owner.request('/me/confirm', { form: { token: confirmToken, password: '' } })).status, 401);
+        const account = [...app.store._accounts.values()].find((a) => a.username === 'squatter');
+        assert.equal(account.email_confirmed_at, null);
+        // The owner asks for a reset: a reset link (not a confirm link), which confirms the email and sets their password.
+        await owner.request('/me/forgot');
+        await owner.request('/me/forgot', { form: { email: 'owner@example.com' } });
+        await waitFor(() => app.mailer.sent.some((m) => m.text.includes('/me/reset')));
+        const resetPath = linkFrom(app.mailer.sent.find((m) => m.text.includes('/me/reset')), '/me/reset');
+        await owner.request(resetPath);
+        const reset = await owner.request('/me/reset', { form: { token: new URL(ORIGIN + resetPath).searchParams.get('token'), password: 'owner new password 9' } });
+        assert.ok([200, 303].includes(reset.status), `reset answered ${reset.status}`);
+        const after = app.store._accounts.get(account.id);
+        assert.ok(after.email_confirmed_at, 'the reset link confirmed the email');
+        assert.ok([...app.store._tokens.values()].filter((t) => t.account_id === account.id).every((t) => t.used_at), 'every open link is used up');
+        // The stranger's confirm link and password no longer work.
+        assert.equal((await stranger.request('/me/confirm', { form: { token: confirmToken, password: 'stranger password 1' } })).status, 400);
+        assert.equal((await passwordLogin(stranger, 'squatter', 'stranger password 1')).status, 401);
+        assert.equal((await passwordLogin(owner, 'owner@example.com', 'owner new password 9')).status, 303);
+
+        // A pending (unconfirmed) email change does not block a sign-up with that address.
+        const other = browser(app);
+        await confirmed(app, other, { username: 'other_cat', email: 'other@example.com' });
+        await other.request('/me/account');
+        assert.equal((await other.request('/me/account/email', { form: { email: 'free@example.com', password: PASSWORD } })).status, 303);
+        const third = browser(app);
+        await signup(app, third, { username: 'third_cat', email: 'free@example.com' });
+        assert.ok([...app.store._accounts.values()].some((a) => a.username === 'third_cat' && a.email === 'free@example.com'));
+    } finally {
+        await app.close();
+    }
 });

@@ -52,11 +52,15 @@ ${field('rs-email', 'Email', html`<input id="rs-email" name="email" type="email"
 <p><button class="button" type="submit">Send the email again</button></p></form>`);
 }
 
-export function confirmPage(ctx, { csrf, token, purpose }) {
+export function confirmPage(ctx, { csrf, token, purpose, error = null }) {
+    const signup = purpose !== 'email_change';
     return page(ctx, 'Confirm your email', html`<h1>Confirm your email</h1>
-<p class="lead">${purpose === 'email_change' ? 'Press the button to make this your new email address.' : 'Press the button to confirm your email and log in.'}</p>
-<form method="post" action="/me/confirm">${csrfField(csrf)}<input type="hidden" name="token" value="${token}">
-<button class="button" type="submit">Confirm my email</button></form>`);
+${notices({ error })}
+<p class="lead">${signup ? 'Type the password you chose when you signed up, then press the button to confirm your email and log in.' : 'Press the button to make this your new email address.'}</p>
+<form class="form-stack" method="post" action="/me/confirm">${csrfField(csrf)}<input type="hidden" name="token" value="${token}">
+${signup ? field('cf-password', 'Password', html`<input id="cf-password" name="password" type="password" required maxlength="${PASSWORD_MAX}" autocomplete="current-password">`) : ''}
+<p><button class="button" type="submit">Confirm my email</button></p></form>
+${signup ? html`<p class="note">You did not sign up for Mewvo? Then do not confirm. The account is deleted after 7 days. <a href="/me/forgot">Forgot your password?</a> A reset link also confirms the email.</p>` : ''}`);
 }
 
 export function linkInvalidPage(ctx, what = 'This link') {

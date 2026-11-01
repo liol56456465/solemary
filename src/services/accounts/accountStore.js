@@ -69,7 +69,9 @@ export function createAccountStore({
      * is an AccountError (usernames are public, so saying so reveals nothing extra).
      */
     async function createAccount({ username, email, passwordHash }) {
-        const taken = await q(`SELECT 1 FROM ${A} WHERE email = $1 OR pending_email = $1 LIMIT 1`, [email]);
+        // Only an account's own email blocks a sign-up. A pending email change does not, so nobody
+        // can hold an address they never confirmed.
+        const taken = await q(`SELECT 1 FROM ${A} WHERE email = $1 LIMIT 1`, [email]);
         if (taken.rows.length) return { emailTaken: true };
         try {
             const { rows: [account] } = await q(
@@ -160,10 +162,13 @@ export function createAccountStore({
         return tx(async (client) => {
             const { row, error } = await lockToken(client, token, ['reset']);
             if (error) return { error };
+            // The link came to this email, so it also confirms it: whoever owns the address can
+            // always take an account back, also one a stranger signed up with it.
             const { rows: [account] } = await client.query(
-                `UPDATE ${A} SET password_hash = $2, password_changed_at = $3 WHERE id = $1 RETURNING *`, [row.account_id, passwordHash, at()]);
+                `UPDATE ${A} SET password_hash = $2, password_changed_at = $3, pending_email = NULL,
+                 email_confirmed_at = COALESCE(email_confirmed_at, $3) WHERE id = $1 RETURNING *`, [row.account_id, passwordHash, at()]);
             if (!account) return { error: 'missing' };
-            await client.query(`UPDATE ${T} SET used_at = $2 WHERE account_id = $1 AND purpose = 'reset' AND used_at IS NULL`, [account.id, at()]);
+            await client.query(`UPDATE ${T} SET used_at = $2 WHERE account_id = $1 AND used_at IS NULL`, [account.id, at()]);
             return { account };
         });
     }
@@ -172,14 +177,19 @@ export function createAccountStore({
         await q(`UPDATE ${A} SET last_login_at = $2 WHERE id = $1`, [id, at()]);
     }
 
+    /** A new password ends every open email link and any email change in progress. */
     async function setPassword(id, passwordHash) {
-        const { rowCount } = await q(`UPDATE ${A} SET password_hash = $2, password_changed_at = $3 WHERE id = $1`, [id, passwordHash, at()]);
-        if (rowCount !== 1) throw new Error('password update changed no row');
+        return tx(async (client) => {
+            const { rowCount } = await client.query(
+                `UPDATE ${A} SET password_hash = $2, password_changed_at = $3, pending_email = NULL WHERE id = $1`, [id, passwordHash, at()]);
+            if (rowCount !== 1) throw new Error('password update changed no row');
+            await client.query(`UPDATE ${T} SET used_at = $2 WHERE account_id = $1 AND used_at IS NULL`, [id, at()]);
+        });
     }
 
     /** Sets pending_email (the new address must still be confirmed). Refuses a taken address. */
     async function setPendingEmail(id, email) {
-        const { rows: clash } = await q(`SELECT 1 FROM ${A} WHERE (email = $1 OR pending_email = $1) AND id <> $2`, [email, id]);
+        const { rows: clash } = await q(`SELECT 1 FROM ${A} WHERE email = $1 AND id <> $2`, [email, id]);
         if (clash.length) return { emailTaken: true };
         const { rowCount } = await q(`UPDATE ${A} SET pending_email = $2 WHERE id = $1`, [id, email]);
         if (rowCount !== 1) throw new Error('email update changed no row');

@@ -26,7 +26,7 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
 
     async function createAccount({ username, email, passwordHash }) {
         return locked(async () => {
-            if (all().some((a) => a.email === email || a.pending_email === email)) return { emailTaken: true };
+            if (all().some((a) => a.email === email)) return { emailTaken: true };
             if (all().some((a) => a.username === username)) throw new AccountError('That username is already taken. Choose another one.', 409, 'username_taken');
             const row = {
                 id: String(nextId++), username, email, password_hash: passwordHash, age_confirmed_at: at(), terms_accepted_at: at(),
@@ -91,8 +91,8 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
             const { row, error } = takeToken(token, ['reset']);
             if (error) return { error };
             const account = accounts.get(row.account_id);
-            Object.assign(account, { password_hash: passwordHash, password_changed_at: at() });
-            for (const t of tokens.values()) if (t.account_id === account.id && t.purpose === 'reset' && !t.used_at) t.used_at = at();
+            Object.assign(account, { password_hash: passwordHash, password_changed_at: at(), pending_email: null, email_confirmed_at: account.email_confirmed_at || at() });
+            for (const t of tokens.values()) if (t.account_id === account.id && !t.used_at) t.used_at = at();
             return { account: copy(account) };
         });
     }
@@ -104,11 +104,12 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
     async function setPassword(id, passwordHash) {
         const account = accounts.get(String(id));
         if (!account) throw new Error('password update changed no row');
-        Object.assign(account, { password_hash: passwordHash, password_changed_at: at() });
+        Object.assign(account, { password_hash: passwordHash, password_changed_at: at(), pending_email: null });
+        for (const t of tokens.values()) if (t.account_id === account.id && !t.used_at) t.used_at = at();
     }
     async function setPendingEmail(id, email) {
         return locked(async () => {
-            if (all().some((a) => (a.email === email || a.pending_email === email) && a.id !== String(id))) return { emailTaken: true };
+            if (all().some((a) => a.email === email && a.id !== String(id))) return { emailTaken: true };
             accounts.get(String(id)).pending_email = email;
             return { ok: true };
         });
