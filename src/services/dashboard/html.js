@@ -256,16 +256,13 @@ ${themePicker(theme, back, 'sheet')}<div class="more-foot"><a href="/">${icon('h
 }
 
 // Themes (same tokens and layout, ten palettes): "system" follows the device (Paper or Graphite).
-export const THEMES = ['system', 'nebula', 'ember', 'ocean', 'forest', 'gold', 'graphite', 'sakura', 'sunset', 'arctic', 'paper'];
+export const THEMES = ['system', 'light', 'dark', 'dim', 'contrast'];
 export const THEME_COOKIE = 'mewvo_theme';
-const THEME_LABEL = {
-    system: 'Follow device', nebula: 'Nebula', ember: 'Ember', ocean: 'Ocean', forest: 'Forest', gold: 'Midnight gold',
-    graphite: 'Graphite', sakura: 'Sakura', sunset: 'Sunset', arctic: 'Arctic', paper: 'Paper',
-};
-// Themes from before v5, still in some cookies: the closest new palette.
-const OLD_THEMES = { light: 'paper', white: 'paper', gray: 'graphite', dark: 'graphite', black: 'graphite', sage: 'forest', sand: 'sunset' };
+const THEME_LABEL = { system: 'Same as my device', light: 'Light', dark: 'Dark', dim: 'Dim', contrast: 'High contrast' };
+// Older theme names still in some cookies: the closest of the current ones (others: same as device).
+const OLD_THEMES = { paper: 'light', white: 'light', graphite: 'dark', gray: 'dark', black: 'dark', nebula: 'dark', gold: 'dark', ocean: 'dark', forest: 'dark', ember: 'dark', arctic: 'light', sakura: 'light', sunset: 'light', sand: 'light', sage: 'dark' };
 
-/** The theme saved in the cookie (old names map to the closest palette); anything else follows the device. */
+/** The theme in a cookie value: a current one, an old name mapped to the closest, or 'system'. */
 export function themeFrom(value) {
     if (Object.hasOwn(OLD_THEMES, value)) return OLD_THEMES[value];
     return THEMES.includes(value) ? value : 'system';
@@ -277,9 +274,9 @@ export function themeFrom(value) {
  * swatch of its own theme. `id` keeps the label ids unique (account menu and phone sheet).
  */
 function themePicker(theme, back, id) {
-    return html`<div class="theme-picker"><p class="theme-picker-title" id="theme-${id}">Theme</p><div class="theme-grid" role="radiogroup" aria-labelledby="theme-${id}">${THEMES.map((key) => {
+    return html`<div class="theme-picker"><p class="theme-picker-title" id="theme-${id}">Theme</p><div class="theme-list" role="radiogroup" aria-labelledby="theme-${id}">${THEMES.map((key) => {
         const on = key === theme;
-        return html`<a class="theme-opt sw-${key}${key === 'system' ? ' wide' : ''}" href="${path(`/theme${queryString({ mode: key, next: back })}`)}" role="radio" aria-checked="${on ? 'true' : 'false'}" tabindex="${on ? '0' : '-1'}" data-theme-pick="${key}"><span class="sw" aria-hidden="true"><i class="sw-1"></i><i class="sw-2"></i><i class="sw-3"></i><i class="sw-a"></i></span><span class="theme-name">${THEME_LABEL[key]}<span class="theme-check" aria-hidden="true">✓</span></span></a>`;
+        return html`<a class="theme-opt" href="${path(`/theme${queryString({ mode: key, next: back })}`)}" role="radio" aria-checked="${on ? 'true' : 'false'}" tabindex="${on ? '0' : '-1'}" data-theme-pick="${key}">${THEME_LABEL[key]}</a>`;
     })}</div></div>`;
 }
 

@@ -688,36 +688,36 @@ test('security headers: CSP without unsafe-inline, frame denial, no referrer, no
 // ── Design: theme switch, page shell, collapsible records sections ─────────
 
 test('theme: the cookie sets data-theme on <html> server-side; unknown values mean system (follow the device)', () => {
-    assert.equal(themeFrom('nebula'), 'nebula');
+    assert.equal(themeFrom('dim'), 'dim');
     assert.equal(themeFrom('"><script>'), 'system');
     assert.equal(themeFrom(undefined), 'system');
     const session = { username: 'a', csrf: 't' };
-    assert.match(layout({ title: 'x', session: { ...session, theme: 'nebula' }, body: html`` }), /^<!doctype html><html lang="en" data-theme="nebula">/);
+    assert.match(layout({ title: 'x', session: { ...session, theme: 'dark' }, body: html`` }), /^<!doctype html><html lang="en" data-theme="dark">/);
     assert.match(layout({ title: 'x', session: { ...session, theme: 'nope' }, body: html`` }), /^<!doctype html><html lang="en"><head>/);
     assert.match(layout({ title: 'x', body: html`` }), /^<!doctype html><html lang="en"><head>/, 'pages without a session (login, errors) follow the device');
-    // Cookies from before v5 get the closest new palette.
-    for (const [old, now] of [['light', 'paper'], ['white', 'paper'], ['gray', 'graphite'], ['dark', 'graphite'], ['black', 'graphite'], ['sage', 'forest'], ['sand', 'sunset']]) assert.equal(themeFrom(old), now, old);
-    for (const theme of ['nebula', 'ember', 'ocean', 'forest', 'gold', 'graphite', 'sakura', 'sunset', 'arctic', 'paper']) assert.equal(themeFrom(theme), theme);
-    // The picker: a radio group of plain links (works without JS), back to this page; the current one checked.
-    const page = layout({ title: 'x', active: 'cases', session: { ...session, theme: 'forest', path: '/dashboard/cases?page=2' }, body: html`` });
-    assert.match(page, /^<!doctype html><html lang="en" data-theme="forest">/);
-    const menu = page.slice(page.indexOf('<div class="theme-grid" role="radiogroup" aria-labelledby="theme-menu">'));
+    // Older cookies get the closest current theme.
+    for (const [old, now] of [['paper', 'light'], ['graphite', 'dark'], ['nebula', 'dark'], ['sakura', 'light'], ['white', 'light'], ['black', 'dark']]) assert.equal(themeFrom(old), now, old);
+    for (const theme of ['light', 'dark', 'dim', 'contrast']) assert.equal(themeFrom(theme), theme);
+    // The picker: a radio group of plain word links (works without JS), back to this page; the current one checked.
+    const page = layout({ title: 'x', active: 'cases', session: { ...session, theme: 'dim', path: '/dashboard/cases?page=2' }, body: html`` });
+    assert.match(page, /^<!doctype html><html lang="en" data-theme="dim">/);
+    const menu = page.slice(page.indexOf('<div class="theme-list" role="radiogroup" aria-labelledby="theme-menu">'));
     const options = [...menu.slice(0, menu.indexOf('</div>')).matchAll(/data-theme-pick="([a-z]+)"/g)].map((m) => m[1]);
-    assert.deepEqual(options, ['system', 'nebula', 'ember', 'ocean', 'forest', 'gold', 'graphite', 'sakura', 'sunset', 'arctic', 'paper']);
-    assert.ok(page.includes('href="/dashboard/theme?mode=paper&amp;next=%2Fdashboard%2Fcases%3Fpage%3D2" role="radio" aria-checked="false" tabindex="-1" data-theme-pick="paper"'));
-    assert.match(page, /role="radio" aria-checked="true" tabindex="0" data-theme-pick="forest">/);
+    assert.deepEqual(options, ['system', 'light', 'dark', 'dim', 'contrast']);
+    assert.ok(page.includes('href="/dashboard/theme?mode=light&amp;next=%2Fdashboard%2Fcases%3Fpage%3D2" role="radio" aria-checked="false" tabindex="-1" data-theme-pick="light">Light</a>'));
+    assert.match(page, /role="radio" aria-checked="true" tabindex="0" data-theme-pick="dim">Dim<\/a>/);
     assert.ok(page.includes('aria-labelledby="theme-sheet"'), 'the phone sheet has its own picker');
-    assert.ok(!page.includes('style='), 'swatches use classes (CSP)');
+    assert.ok(!page.includes('style=') && !page.includes('class="sw'), 'no colour swatches');
 });
 
 test('theme: GET /dashboard/theme sets a non-HttpOnly cookie and only redirects inside the dashboard', () => {
     const { d } = makeDashboard();
     const res = fakeRes();
-    d.setTheme({ headers: {}, query: { mode: 'ember', next: '/dashboard/automod' } }, res);
+    d.setTheme({ headers: {}, query: { mode: 'contrast', next: '/dashboard/automod' } }, res);
     assert.equal(res.statusCode, 303);
     assert.equal(res.redirectedTo, '/dashboard/automod');
     const cookie = res.cookies.find((c) => c.startsWith(`${THEME_COOKIE}=`));
-    assert.match(cookie, /^mewvo_theme=ember; Path=\/dashboard; SameSite=Lax; Max-Age=31536000; Secure$/);
+    assert.match(cookie, /^mewvo_theme=contrast; Path=\/dashboard; SameSite=Lax; Max-Age=31536000; Secure$/);
     const bad = fakeRes();
     d.setTheme({ headers: {}, query: { mode: 'x', next: 'https://evil.example/' } }, bad);
     assert.equal(bad.redirectedTo, '/dashboard/overview');

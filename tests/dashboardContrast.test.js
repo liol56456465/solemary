@@ -48,9 +48,9 @@ const PAIRS = [
 
 const named = THEMES.filter((t) => t !== 'system');
 
-test('dashboard themes: 10 themes, each a full token set', () => {
-    assert.deepEqual(named, ['nebula', 'ember', 'ocean', 'forest', 'gold', 'graphite', 'sakura', 'sunset', 'arctic', 'paper']);
-    const keys = Object.keys(tokens(':root[data-theme="paper"]')).sort();
+test('dashboard themes: light, dark, dim and high contrast, each a full token set', () => {
+    assert.deepEqual(named, ['light', 'dark', 'dim', 'contrast']);
+    const keys = Object.keys(tokens(':root[data-theme="light"]')).sort();
     for (const theme of named) assert.deepEqual(Object.keys(tokens(`:root[data-theme="${theme}"]`)).sort(), keys, theme);
 });
 
@@ -65,8 +65,8 @@ for (const theme of named) {
     });
 }
 
-test('dashboard themes: no theme chosen = Paper by day, Graphite at night (same tokens as those themes)', () => {
+test('dashboard themes: no theme chosen = Light by day, Dark at night (same tokens as those themes)', () => {
     const base = tokens(':root');
-    for (const [k, v] of Object.entries(tokens(':root[data-theme="paper"]'))) assert.equal(base[k], v, k);
-    assert.deepEqual(tokens(':root:not([data-theme])'), tokens(':root[data-theme="graphite"]'));
+    for (const [k, v] of Object.entries(tokens(':root[data-theme="light"]'))) assert.equal(base[k], v, k);
+    assert.deepEqual(tokens(':root:not([data-theme])'), tokens(':root[data-theme="dark"]'));
 });
