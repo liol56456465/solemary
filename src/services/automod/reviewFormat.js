@@ -163,7 +163,7 @@ export function buttonCodes(entry) {
 export function cardTitle(entry) {
     const label = ruleLabel(entry);
     if (entry.kind === 'report') return 'Member report';
-    if (entry.kind === 'monitor') return `Monitor: would ${stepVerb(entry.suggested)} · ${label}`;
+    if (entry.kind === 'monitor') return `Monitor: would ${entry.suggested ? stepVerb(entry.suggested) : 'delete the message'} · ${label}`;
     const action = latestAction(entry);
     if (!action) return `Automod · ${label}`;
     if (action.failed) return `Failed to ${stepVerb(action.step)} · ${label}`;

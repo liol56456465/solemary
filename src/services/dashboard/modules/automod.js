@@ -1,4 +1,4 @@
-// automod.js — Automod: global on/off and mode, per-rule modes, channel exceptions,
+// automod.js — Automod: global on/off and mode, per-rule modes, custom rules (by plan), channel exceptions,
 // trusted members, second chance, mood alerts, panic mode, join gate, native AutoMod
 // policies, review/alerts channels — plus the stats (1/7/30 days, ?days=), and the live
 // operations of /automod: the review queue (/automod queue), members on probation
@@ -16,10 +16,76 @@ import { NATIVE_POLICIES, policyFor } from '../../automod/nativeBridge.js';
 import { formatDate, html, path, queryString, raw, timeTag } from '../html.js';
 import {
     InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, switchInput, choiceField,
-    intField, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, toggleForm, userIdField,
+    intField, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, registryValue, saveRegistry, section, table } from './common.js';
+import {
+    CUSTOM_RULE_ACTIONS, CUSTOM_RULE_NAME_MAX, CUSTOM_RULE_WORDS_MAX, CUSTOM_RULE_WORD_MAX, actionLabel, cleanCustomRules,
+    limitForPlan, overLimitIds, resetCustomRulesCache, runningRules,
+} from '../../automod/customRules.js';
+import { guildPlan as defaultGuildPlan } from '../../billing/premiumEffects.js';
+import { planName } from '../../billing/premiumService.js';
+
+/** The server owner's plan (ctx.services.guildPlan in tests). */
+const planOfGuild = (ctx) => (typeof ctx.services?.guildPlan === 'function' ? ctx.services.guildPlan(ctx.guildId) : defaultGuildPlan(ctx.guildId));
+
+function storedCustomRules(ctx) {
+    const value = registryValue(ctx, 'automodCustomRules');
+    return Array.isArray(value) ? value : [];
+}
+
+/** Saves a new custom rule list (cleaned first) and applies it at once. */
+async function saveCustomRules(ctx, next, message) {
+    let clean;
+    try {
+        clean = cleanCustomRules(next);
+    } catch (error) {
+        throw new InputError(error.userMessage || 'That custom rule is not valid.');
+    }
+    const result = await saveRegistry(ctx, { automodCustomRules: clean }, 'automod');
+    resetCustomRulesCache();
+    return { ...result, message };
+}
+
+function customRuleById(ctx, form) {
+    const id = text(form, 'id', 20);
+    const rule = storedCustomRules(ctx).find((r) => r.id === id);
+    if (!rule) throw new InputError('That custom rule is gone already. Reload the page.');
+    return rule;
+}
+
+function customRulesSection(ctx, data) {
+    const { rules, limit, planId } = data.custom;
+    const plan = planId === 'free' ? 'Free' : planName(planId);
+    const pricing = html`<a href="/pricing">See the plans</a>.`;
+    if (!limit && !rules.length) {
+        return html`<p>Custom rules are part of the Normal, Pro and Max plans, on the server owner's plan. This server is on ${plan}. ${pricing}</p>`;
+    }
+    const over = new Set(overLimitIds(rules, limit));
+    const running = runningRules(rules, limit).length;
+    const state = (rule) => {
+        if (rule.enabled === false) return 'off';
+        return over.has(rule.id) ? html`<span class="warn">not running (over the plan's limit)</span>` : 'on';
+    };
+    const list = table(['Name', 'Words', 'Action', 'State', '', ''], rules.map((rule) => [
+        rule.name,
+        String(rule.words.length),
+        actionLabel(rule),
+        state(rule),
+        buttonForm(ctx, 'automod', 'custom-toggle', rule.enabled === false ? 'Turn on' : 'Turn off', { id: rule.id, enabled: rule.enabled === false ? 'true' : 'false' }),
+        buttonForm(ctx, 'automod', 'custom-remove', 'Remove', { id: rule.id }, { confirm: `Remove the custom rule "${rule.name}"?` }),
+    ]), 'No custom rules yet.');
+    const summary = html`<p>${running} of ${limit} custom rule${limit === 1 ? '' : 's'} run on the ${plan} plan.${over.size ? html` ${over.size} turned-on rule${over.size === 1 ? '' : 's'} over the limit ${over.size === 1 ? 'does' : 'do'} not run. Turn some off or remove them, or move to a higher plan. ${pricing}` : ''}</p>`;
+    const add = rules.length >= limit
+        ? html`<p class="muted">This server has ${rules.length} custom rule${rules.length === 1 ? '' : 's'}, the most the ${plan} plan allows. ${limit < 100 ? pricing : ''}</p>`
+        : postForm(ctx, 'automod', 'custom-add', html`<div class="grid">
+${textInput('name', '', { label: 'Name', max: CUSTOM_RULE_NAME_MAX, placeholder: 'Other servers' })}
+${selectInput('action', 'delete', CUSTOM_RULE_ACTIONS.map((a) => [a, a === 'delete' ? 'Delete the message' : a === 'warn' ? 'Delete and warn' : 'Delete and mute']), { label: 'Action' })}
+${textInput('muteDuration', '', { label: 'Mute for', max: 20, placeholder: '1h', help: 'Only for mute: 30m, 1h, 1d (at most 28d).' })}
+${textArea('words', '', { label: `Words or phrases (one per line, at most ${CUSTOM_RULE_WORDS_MAX}, each up to ${CUSTOM_RULE_WORD_MAX} characters)`, rows: 5, max: 4000 })}</div>`, { submit: 'Add rule' });
+    return html`${summary}${list}${add}`;
+}
 
 const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : 0);
 /** Stats periods offered on the page (/automod stats days); 7 is the default. */
@@ -91,8 +157,10 @@ export default {
             attempt(() => ctx.services.collectOpenReviews(ctx.client), null),
             attempt(() => ctx.services.listProbations(ctx.guildId), null),
         ]);
+        const planId = planOfGuild(ctx);
         return {
             settings, nativeRules, policies, byRule, stats, days, lockdown, reviews, probations,
+            custom: { rules: storedCustomRules(ctx), limit: limitForPlan(planId), planId },
             registry: {
                 reviewChannelId: registryValue(ctx, 'reviewChannelId'),
                 alertsChannelId: registryValue(ctx, 'alertsChannelId'),
@@ -190,6 +258,7 @@ ${reviews.length > QUEUE_LISTED ? html`<p class="muted">…and ${reviews.length 
 ${section(`Review queue${reviews ? ` (${reviews.length})` : ''}`, queue)}
 ${section(`Probation${probations ? ` (${probations.length})` : ''}`, probation, 'Members who rejoined after a ban ended: automod uses the next step of the ladder for them, no second chance or trusted relaxing.')}`;
         return html`${live}${section('Global mode', top)}${section('Rule modes', rules, 'default follows the global mode; monitor only posts cards; off ignores the rule.')}
+${section('Custom rules', customRulesSection(ctx, data), 'Your own word and phrase filters. They match whole words, ignore case and see through look-alike letters, like the built-in rules. Every hit deletes the message and posts a review card; warn and mute also make a case. They follow the global mode and the ignored channels. How many run depends on the server owner\'s plan.')}
 ${section('Channel exceptions', exceptions)}${section('Ignored channels', exempt)}
 ${section('Trusted members', trusted, 'Trusted members (the role, or this leveling level) skip the low-severity rules. Pick none and level 0 to clear.')}
 ${section('Second chance', secondChance)}${section('Mood', mood)}${section('Panic', panic)}${section('Join gate', joinGate, 'off / flag (review line with Kick/Dismiss) / kick (DM with how to come back).')}
@@ -217,6 +286,38 @@ ${section('Native AutoMod', native)}${section('Channels and words', channels)}${
             for (const [key, mode] of Object.entries(wanted)) after = await ctx.services.setRuleMode(ctx.guildId, key, mode);
             const changes = diffSnapshots(before.ruleModes, after.ruleModes, null, 'ruleModes.');
             return { changes, message: changes.length ? 'Rule modes saved.' : 'Nothing changed.' };
+        },
+        async 'custom-add'(ctx, form) {
+            const list = storedCustomRules(ctx);
+            const planId = planOfGuild(ctx);
+            const limit = limitForPlan(planId);
+            if (list.length >= limit) {
+                const plan = planId === 'free' ? 'Free' : planName(planId);
+                throw new InputError(limit
+                    ? `This server already has ${list.length} custom rules, the most the ${plan} plan allows. Remove one first.`
+                    : 'Custom rules are part of the Normal, Pro and Max plans, on the server owner\'s plan.');
+            }
+            const rule = {
+                name: text(form, 'name', CUSTOM_RULE_NAME_MAX + 20),
+                action: text(form, 'action', 10),
+                muteDuration: text(form, 'muteDuration', 20),
+                words: String(form?.words ?? '').slice(0, 5000),
+                enabled: true,
+            };
+            const result = await saveCustomRules(ctx, [...list, rule], 'Custom rule added.');
+            return { ...result, message: `Custom rule "${rule.name.replace(/\s+/g, ' ').trim()}" added.` };
+        },
+        async 'custom-toggle'(ctx, form) {
+            const rule = customRuleById(ctx, form);
+            const enabled = boolField(form, 'enabled', 'Custom rule');
+            if ((rule.enabled !== false) === enabled) return NOTHING;
+            const next = storedCustomRules(ctx).map((r) => (r.id === rule.id ? { ...r, enabled } : r));
+            return saveCustomRules(ctx, next, `Custom rule "${rule.name}" is ${enabled ? 'on' : 'off'}.`);
+        },
+        async 'custom-remove'(ctx, form) {
+            const rule = customRuleById(ctx, form);
+            const next = storedCustomRules(ctx).filter((r) => r.id !== rule.id);
+            return saveCustomRules(ctx, next, `Custom rule "${rule.name}" removed.`);
         },
         async 'channel-add'(ctx, form) {
             const channelId = channelField(ctx.guild, form, 'channel', { kinds: ['text', 'category'], optional: false, label: 'Channel' });

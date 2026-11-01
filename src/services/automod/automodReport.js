@@ -4,6 +4,7 @@
 // alerts channel and shown by /automod stats.
 
 import { AUTOMOD_RULES } from '../../config/automod.js';
+import { customGroupLabel } from './customRules.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
@@ -36,7 +37,7 @@ export async function automodStats(guildId, days = 7) {
             [guildId, since]
         ),
     ]);
-    const byGroup = groups.rows.map((row) => ({ ...row, group: row.grp, label: GROUP_LABELS[row.grp] || row.grp }));
+    const byGroup = groups.rows.map((row) => ({ ...row, group: row.grp, label: GROUP_LABELS[row.grp] || customGroupLabel(row.grp) || row.grp }));
     return {
         days,
         total: byGroup.reduce((sum, row) => sum + row.actions, 0),

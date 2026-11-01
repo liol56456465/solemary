@@ -17,7 +17,7 @@
 // ("3 messages", latest excerpt, every case on the buttons) instead of posting another.
 // Grouping lives in memory: after a restart the next hit starts a new card.
 
-import { AUTOMOD_RULES, REVIEW_ACTIONS } from '../../config/automod.js';
+import { REVIEW_ACTIONS } from '../../config/automod.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { Mutex } from '../../utils/mutex.js';
@@ -32,6 +32,7 @@ import {
 } from './reviewFormat.js';
 import { burstKey, findOpenBurst, markClosed, recordHit, registerCard } from './reviewRegistry.js';
 import { switchRuleToMonitor } from './automodTuning.js';
+import { ruleDefinition } from './customRules.js';
 import { restoreIfContested } from './automodContest.js';
 import { canGiveSecondOpinion, secondOpinionPayload, shouldAskSecondOpinion } from './secondOpinion.js';
 
@@ -60,14 +61,14 @@ function actionFrom(p) {
         // Kept so a contested case that staff undo can have its message restored (automodContest.js).
         content: p.content ?? null,
         channelId: p.channelId || null,
-        deleted: Boolean(p.deleted ?? AUTOMOD_RULES[p.rule]?.deleteMessage),
+        deleted: Boolean(p.deleted ?? ruleDefinition(p.rule)?.deleteMessage),
     };
 }
 
 /** Card parameters (see postReviewCard) → the card's state. */
 export function entryFrom(p, now = Date.now()) {
     const kind = p.report ? 'report' : p.note ? 'note' : p.monitor ? 'monitor' : 'action';
-    const rule = AUTOMOD_RULES[p.rule];
+    const rule = ruleDefinition(p.rule);
     const deleted = p.deleted ?? (kind === 'report' ? Boolean(p.report.removed) : kind === 'action' && Boolean(rule?.deleteMessage));
     const entry = {
         rule: p.rule,
@@ -409,14 +410,15 @@ export async function handleReviewAction(interaction, args) {
         if (!choice) throw userError('Pick a punishment from the list.');
         const targetUser = await client.users.fetch(userId).catch(() => null);
         if (!targetUser) throw userError('That user no longer exists.');
-        const label = AUTOMOD_RULES[rule]?.label;
+        const definition = ruleDefinition(rule);
+        const label = definition?.label;
         const result = await executeAction({
             guild,
             moderator: interaction.member,
             targetUser,
             flow: flowFor(choice.step, {
                 reason: label ? `Automod: ${label} (applied by ${by})` : `Reported message (decided by ${by})`,
-                reasonKey: `automod:${AUTOMOD_RULES[rule]?.group || REPORT_RULE}`,
+                reasonKey: `automod:${definition?.group || REPORT_RULE}`,
                 targetUser,
             }),
         });

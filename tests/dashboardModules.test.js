@@ -636,6 +636,16 @@ function seedRules(state) {
     state.registry.serverRules = { rules: [{ id: RULE_A, title: 'No spam', text: 'Do not <b>spam</b>.' }, { id: RULE_B, title: 'Be kind', text: '' }], updatedAt: '2026-10-01T00:00:00.000Z' };
 }
 
+// Custom automod rules: one on, one off, the first with a <b> in its name (escaping).
+const CUSTOM_A = 'cust2345';
+const CUSTOM_B = 'cust6789';
+function seedCustomRules(state) {
+    state.registry.automodCustomRules = [
+        { id: CUSTOM_A, name: 'Ads <b>', words: ['join my server', 'free nitro'], action: 'warn', muteDuration: null, enabled: true },
+        { id: CUSTOM_B, name: 'Spoilers', words: ['ending'], action: 'delete', muteDuration: null, enabled: false },
+    ];
+}
+
 // Valid form, the service it must reach, and an invalid form with the expected message.
 const CASES = {
     enforcement: {
@@ -666,6 +676,12 @@ const CASES = {
         enabled: { form: { enabled: 'false' }, service: 'setAutomodEnabled', bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
         mode: { form: { mode: 'monitor' }, service: 'setAutomodMode', bad: { form: { mode: 'chaos' }, message: /unknown choice/ } },
         rules: { form: { 'rule:caps': 'off' }, service: 'setRuleMode', bad: { form: { 'rule:caps': 'loud' }, message: /unknown mode/ } },
+        'custom-add': { form: { name: 'Other servers', action: 'mute', muteDuration: '1h', words: 'join my server\nfree nitro' }, service: 'updateSettings',
+            bad: { form: { name: 'No time', action: 'mute', muteDuration: '', words: 'bad' }, message: /needs a duration/ } },
+        'custom-toggle': { seed: seedCustomRules, form: { id: CUSTOM_A, enabled: 'false' }, service: 'updateSettings',
+            bad: { seed: seedCustomRules, form: { id: 'gone1234', enabled: 'false' }, message: /gone already/ } },
+        'custom-remove': { seed: seedCustomRules, form: { id: CUSTOM_A }, service: 'updateSettings',
+            bad: { form: { id: CUSTOM_A }, message: /gone already/ } },
         'channel-add': { form: { channel: TEXT, rule: 'caps', mode: 'off' }, service: 'setChannelRuleMode', bad: { form: { channel: VOICE, rule: 'caps', mode: 'off' }, message: /must be a text channel or category/ } },
         'channel-remove': { seed: (s) => { s.automod.channelRules = { [TEXT]: { caps: 'off' } }; }, form: { channel: TEXT, rule: 'caps' }, service: 'setChannelRuleMode', bad: { form: { channel: 'x', rule: 'caps' }, message: /not a channel ID/ } },
         'exempt-add': { form: { channel: TEXT }, service: 'setExemptChannel', bad: { form: { channel: MISSING }, message: /not in the server/ } },
@@ -2181,6 +2197,55 @@ test('Automod probation end: ends it early (audited); a member not on probation 
     assert.equal(h.auditRows.length, 1);
     const owner = await setup({ userId: OWNER });
     assert.equal((await post(owner, 'automod', 'probation-end', { user: MEMBER })).statusCode, 403);
+});
+
+test('Automod custom rules: list (escaped), add saves a cleaned rule, toggle and remove; at the limit or on Free the form is a note with /pricing', async () => {
+    const h = await setup();
+    seedCustomRules(h.state);
+    const page = await get(h, 'automod');
+    assert.match(page.body, /Custom rules/);
+    assert.ok(page.body.includes('Ads &lt;b&gt;'), 'rule name escaped');
+    assert.ok(!page.body.includes('Ads <b>'));
+    assert.match(page.body, /1 of 25 custom rules run on the Pro plan\./);
+    assert.ok(page.body.includes('action="/dashboard/automod/custom-add"'));
+    assert.ok(page.body.includes('action="/dashboard/automod/custom-toggle"'));
+    assert.ok(!/—/.test(page.body.slice(page.body.indexOf('Custom rules'), page.body.indexOf('Channel exceptions'))), 'no em dashes in the section');
+
+    const added = await post(h, 'automod', 'custom-add', { name: '  Links  ', action: 'delete', muteDuration: '5h', words: 'Bit.ly\nbit.ly\n' });
+    assert.equal(added.statusCode, 303);
+    const saved = h.state.registry.automodCustomRules;
+    assert.equal(saved.length, 3);
+    assert.deepEqual({ ...saved[2], id: 'x' }, { id: 'x', name: 'Links', words: ['bit.ly'], action: 'delete', muteDuration: null, enabled: true });
+    assert.match((await h.sessions.get(h.session.id)).flash, /Custom rule "Links" added/);
+
+    assert.equal((await post(h, 'automod', 'custom-toggle', { id: CUSTOM_B, enabled: 'true' })).statusCode, 303);
+    assert.equal(h.state.registry.automodCustomRules.find((r) => r.id === CUSTOM_B).enabled, true);
+    assert.equal((await post(h, 'automod', 'custom-remove', { id: CUSTOM_A })).statusCode, 303);
+    assert.deepEqual(h.state.registry.automodCustomRules.map((r) => r.id).includes(CUSTOM_A), false);
+
+    // Plan dropped to Normal with 7 stored rules: nothing deleted, 5 run, the rest are marked, no add form.
+    const over = await setup();
+    over.state.plan = 'normal';
+    over.state.registry.automodCustomRules = Array.from({ length: 7 }, (_, i) => ({ id: `over${i}aaa`, name: `Rule ${i}`, words: ['abc'], action: 'warn', muteDuration: null, enabled: true }));
+    const overPage = await get(over, 'automod');
+    assert.match(overPage.body, /5 of 5 custom rules run on the Normal plan\. 2 turned-on rules over the limit do not run\./);
+    assert.equal((overPage.body.match(/not running \(over the plan's limit\)/g) || []).length, 2);
+    assert.ok(!overPage.body.includes('action="/dashboard/automod/custom-add"'));
+    assert.ok(overPage.body.includes('href="/pricing"'));
+    const refused = await post(over, 'automod', 'custom-add', { name: 'More', action: 'warn', words: 'abc' });
+    assert.equal(refused.statusCode, 400);
+    assert.match(refused.body, /the most the Normal plan allows/);
+    assert.equal(over.state.registry.automodCustomRules.length, 7);
+
+    const free = await setup();
+    free.state.plan = 'free';
+    const freePage = await get(free, 'automod');
+    assert.match(freePage.body, /Custom rules are part of the Normal, Pro and Max plans/);
+    assert.ok(freePage.body.includes('href="/pricing"'));
+    assert.ok(!freePage.body.includes('action="/dashboard/automod/custom-add"'));
+    const freeAdd = await post(free, 'automod', 'custom-add', { name: 'X', action: 'warn', words: 'abc' });
+    assert.equal(freeAdd.statusCode, 400);
+    assert.equal(free.calls.filter((c) => c.name === 'updateSettings').length, 0);
 });
 
 test('Overview "Needs you": an active lockdown gets an End lockdown form for admins (back to the Overview), a link otherwise', async () => {

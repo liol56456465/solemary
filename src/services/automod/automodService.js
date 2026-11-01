@@ -9,6 +9,10 @@
 // everyone else gets the next step of that rule's ladder (or, when the rule is in
 // monitor mode, nothing but the card) → new-member limits for messages that broke no
 // rule that is on or monitored.
+//
+// The server's custom rules (customRules.js) are one more check: their hits have rule key
+// "custom-<id>" and carry their own definition (label, group "custom:<id>", one step or
+// none for delete-only), so the same path above handles them. They follow the global mode.
 
 import { PermissionFlagsBits } from 'discord.js';
 import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
@@ -27,6 +31,7 @@ import {
 import { getFromDb, setInDb } from '../../utils/database.js';
 import { noteRepeatHit, postReviewCard } from './reviewCards.js';
 import * as reasons from './reasons.js';
+import { customRuleDefinition, customRuleKey, findCustomRuleHit, resetCustomRulesCache, ruleDefinition } from './customRules.js';
 import {
     countMentions,
     detectCrossChannelSpam,
@@ -215,7 +220,27 @@ export async function evaluateMessage(message, member, now = Date.now()) {
     const language = characters ? null : detectNonEnglish(text);
     if (language) hits.push({ rule: 'english', evidence: reasons.englishReason(language), detail: `detected language ${language}` });
 
+    // The server's own word filters (customRules.js; only the rules the owner's plan allows).
+    const custom = findCustomRuleHit(text, message.guildId, now);
+    if (custom) hits.push(customHit(custom));
+
     return hits;
+}
+
+/** A custom rule match ({ rule, word }) → a hit for the pipeline. */
+export function customHit({ rule, word }) {
+    return {
+        rule: customRuleKey(rule.id),
+        evidence: reasons.customRuleReason(rule.name),
+        detail: `custom rule "${rule.name}" matched "${word}"`,
+        definition: customRuleDefinition(rule),
+        ruleLabel: rule.name,
+    };
+}
+
+/** The rule a hit belongs to: a built-in rule, or the custom rule the hit carries. */
+function definitionOf(hit) {
+    return hit.definition || ruleDefinition(hit.rule);
 }
 
 /** In how many channels the newest text was posted within the ad-bot window. */
@@ -239,7 +264,12 @@ async function countOffences(guildId, userId, group) {
 }
 
 /** Runs a punishment step through the normal enforcement path, as the bot. */
-export async function applyStep({ guild, targetUser, step, rule, reason, contestable = false }) {
+/** The case reason_key: "automod:<group>" (custom rules pass their group, "custom:<id>"). */
+export function reasonKeyFor(rule, group = null) {
+    return `automod:${group || AUTOMOD_RULES[rule]?.group || rule}`;
+}
+
+export async function applyStep({ guild, targetUser, step, rule, reason, contestable = false, group = null }) {
     return executeSystemAction({
         guild,
         targetUser,
@@ -247,7 +277,7 @@ export async function applyStep({ guild, targetUser, step, rule, reason, contest
             type: step.type,
             reason,
             reasonSource: 'prebuilt',
-            reasonKey: `automod:${AUTOMOD_RULES[rule]?.group || rule}`,
+            reasonKey: reasonKeyFor(rule, group),
             durationMs: step.durationMs ?? null,
             unappealable: false,
             name: `${targetUser.username} ${step.type}`,
@@ -306,12 +336,31 @@ async function giveSecondChance(message, hit, { settings, offences, card, probat
     return true;
 }
 
+// Side effects of actOn, replaceable in tests (setAutomodDepsForTest).
+const defaultDeps = {
+    countOffences: (...args) => countOffences(...args),
+    applyStep: (...args) => applyStep(...args),
+    postReviewCard: (...args) => postReviewCard(...args),
+    noteRepeatHit: (...args) => noteRepeatHit(...args),
+    deleteQuietly: (...args) => deleteQuietly(...args),
+    isRaidJoiner: (...args) => isRaidJoiner(...args),
+    giveSecondChance: (...args) => giveSecondChance(...args),
+};
+let deps = { ...defaultDeps };
+
+/** Test hook: replace some side effects of actOn (no argument restores all). */
+export function setAutomodDepsForTest(overrides = null) {
+    deps = overrides ? { ...defaultDeps, ...overrides } : { ...defaultDeps };
+}
+
 /**
  * Acts on one hit. `hit.mode` is the rule's effective mode ('on' | 'monitor'; 'off'
  * hits never get here). `probation`: the member's running probation record or null.
+ * A custom rule with the delete action has no steps: the message is deleted and the
+ * card posted, no case.
  */
-async function actOn(message, member, hit, settings, probation = null) {
-    const rule = AUTOMOD_RULES[hit.rule];
+export async function actOn(message, member, hit, settings, probation = null) {
+    const rule = definitionOf(hit);
     const { guild } = message;
     const targetUser = message.author;
     const group = rule.group;
@@ -319,47 +368,59 @@ async function actOn(message, member, hit, settings, probation = null) {
     const card = {
         guild, rule: hit.rule, evidence: hit.evidence, detail: hit.detail, targetUser,
         channelId: message.channelId, messageUrl: message.url, content: excerpt(message), probation,
+        ...(hit.ruleLabel ? { ruleLabel: hit.ruleLabel } : {}),
     };
+    const punishes = rule.steps.length > 0;
     const stepFor = (offences) => rule.steps[ladderIndex({
         offences, stepCount: rule.steps.length, forceLastStep: hit.forceLastStep, probation: Boolean(probation),
     })];
 
     if (hit.mode === 'monitor') {
-        const offences = await countOffences(guild.id, targetUser.id, group);
-        await postReviewCard({ ...card, monitor: true, suggested: stepFor(offences), offence: offences + 1, deleted: false });
+        if (!punishes) {
+            await deps.postReviewCard({ ...card, monitor: true, suggested: null, deleted: false });
+            return false;
+        }
+        const offences = await deps.countOffences(guild.id, targetUser.id, group);
+        await deps.postReviewCard({ ...card, monitor: true, suggested: stepFor(offences), offence: offences + 1, deleted: false });
         return false;
     }
 
-    if (rule.deleteMessage) await deleteQuietly(message);
+    if (rule.deleteMessage) await deps.deleteQuietly(message);
 
     if ((cooldowns.get(cooldownKey) || 0) > Date.now()) {
         // Same rule again right after acting: no new punishment, but the open card counts it.
-        await noteRepeatHit({ ...card, deleted: rule.deleteMessage });
+        await deps.noteRepeatHit({ ...card, deleted: rule.deleteMessage });
         return rule.deleteMessage;
     }
     cooldowns.set(cooldownKey, Date.now() + automodConfig.ruleCooldownMs);
 
     // Read-only decision: on a database error treat them as an ordinary member.
-    if (await isRaidJoiner(guild.id, targetUser.id).catch(() => false)) {
-        if (!rule.deleteMessage) await deleteQuietly(message);
+    if (await deps.isRaidJoiner(guild.id, targetUser.id).catch(() => false)) {
+        if (!rule.deleteMessage) await deps.deleteQuietly(message);
         const step = { type: 'kick' };
-        const result = await applyStep({ guild, targetUser, step, rule: hit.rule, reason: `Automod: ${rule.label} during a join raid` })
+        const result = await deps.applyStep({ guild, targetUser, step, rule: hit.rule, group, reason: `Automod: ${rule.label} during a join raid` })
             .catch((error) => ({ error }));
-        await postReviewCard({ ...card, step, result, raid: true, deleted: true });
+        await deps.postReviewCard({ ...card, step, result, raid: true, deleted: true });
         return true;
     }
 
-    const offences = await countOffences(guild.id, targetUser.id, group);
-    if (await giveSecondChance(message, hit, { settings, offences, card, probation })) return rule.deleteMessage;
+    if (!punishes) {
+        // Delete only: the card lets a moderator apply a punishment if one is needed.
+        await deps.postReviewCard({ ...card, deleted: true });
+        return true;
+    }
+
+    const offences = await deps.countOffences(guild.id, targetUser.id, group);
+    if (await deps.giveSecondChance(message, hit, { settings, offences, card, probation })) return rule.deleteMessage;
     const step = stepFor(offences);
-    const result = await applyStep({
-        guild, targetUser, step, rule: hit.rule, reason: `Automod: ${rule.label}`, contestable: Boolean(rule.deleteMessage),
+    const result = await deps.applyStep({
+        guild, targetUser, step, rule: hit.rule, group, reason: `Automod: ${rule.label}`, contestable: Boolean(rule.deleteMessage),
     })
         .catch((error) => ({ error }));
     if (result.error) {
         logger.warn(`Automod ${hit.rule} on ${targetUser.id}: ${result.error.userMessage || result.error.message}`);
     }
-    await postReviewCard({ ...card, step, result, offence: offences + 1 });
+    await deps.postReviewCard({ ...card, step, result, offence: offences + 1, deleted: Boolean(rule.deleteMessage) });
     return rule.deleteMessage;
 }
 
@@ -426,7 +487,7 @@ async function isTrusted(member, trusted) {
 }
 
 export function worstHit(hits) {
-    return hits.reduce((a, b) => (AUTOMOD_RULES[b.rule].severity > AUTOMOD_RULES[a.rule].severity ? b : a));
+    return hits.reduce((a, b) => (definitionOf(b).severity > definitionOf(a).severity ? b : a));
 }
 
 /**
@@ -485,6 +546,7 @@ export async function moderateMessage(message, { edited = false } = {}) {
 export function resetAutomodState() {
     for (const map of [history, cooldowns, harassment, lastPost, inviteGuilds, levelCache]) map.clear();
     handledMessages.clear();
+    resetCustomRulesCache();
 }
 
 const AUTOMOD_PERMISSIONS = [

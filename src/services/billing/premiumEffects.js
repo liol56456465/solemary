@@ -70,7 +70,7 @@ export function guildPlan(guildId, now = Date.now()) {
     return planOf(ownerId, now);
 }
 
-/** A server's limit for `kind` (tags | stickies | feeds | scheduled). */
+/** A server's limit for `kind` (tags | stickies | feeds | scheduled | customRules). */
 export function planLimit(guildId, kind, now = Date.now()) {
     const plan = PLANS.find((p) => p.id === guildPlan(guildId, now)) || FREE;
     return plan.limits?.[kind] ?? FREE.limits[kind];

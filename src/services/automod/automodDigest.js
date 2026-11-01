@@ -8,7 +8,7 @@
 // (reviewRegistry.js), so after a restart they only cover the time since startup.
 // The footer says so.
 
-import { AUTOMOD_RULES } from '../../config/automod.js';
+import { ruleDefinition } from './customRules.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { isEnforcementDbAvailable } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
@@ -46,7 +46,7 @@ export function buildDigest({ stats, hits = [], openCount = 0, raids = 0, starte
     const monitorByRule = new Map(countBy(hits.filter((hit) => hit.monitor), (hit) => hit.rule));
     const hitLines = byRule.map(([rule, count]) => {
         const monitor = monitorByRule.get(rule);
-        return `${AUTOMOD_RULES[rule]?.label || rule}: ${count}${monitor ? ` (${monitor} in monitor mode)` : ''}`;
+        return `${ruleDefinition(rule)?.label || rule}: ${count}${monitor ? ` (${monitor} in monitor mode)` : ''}`;
     });
     const channelLines = countBy(hits, (hit) => hit.channelId).slice(0, 5)
         .map(([channelId, count]) => `<#${channelId}>: ${count}`);
