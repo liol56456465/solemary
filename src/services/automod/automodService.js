@@ -504,6 +504,18 @@ async function isTrusted(member, trusted) {
     return isTrustedMember({ roleIds, level: cached.level }, trusted);
 }
 
+/**
+ * The hit actOn handles. With a heads-up possible, a personal-info hit always wins, so
+ * the message is deleted at once instead of waiting behind another rule's heads-up.
+ */
+export function hitToActOn(hits, skipHeadsUp) {
+    if (!skipHeadsUp) {
+        const privacy = hits.find((hit) => hit.rule === 'privacy');
+        if (privacy) return privacy;
+    }
+    return worstHit(hits);
+}
+
 export function worstHit(hits) {
     return hits.reduce((a, b) => (definitionOf(b).severity > definitionOf(a).severity ? b : a));
 }
@@ -557,7 +569,7 @@ export async function moderateMessage(message, { edited = false } = {}) {
         if (hits.length) {
             handledMessages.add(message.id);
             const skipHeadsUp = hadHeadsUp || !headsUpAllowedFor(hits, settings, Boolean(probation));
-            return await actOn(message, member, worstHit(hits), settings, probation, { skipHeadsUp });
+            return await actOn(message, member, hitToActOn(hits, skipHeadsUp), settings, probation, { skipHeadsUp });
         }
         if (edited || isStaff(member)) return false;
         return await applyNewMemberLimits(message, member, now);

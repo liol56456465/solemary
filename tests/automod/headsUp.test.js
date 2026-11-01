@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 process.env.MAIN_GUILD_ID ??= '100000000000000001';
 
 const {
-    actOn, checkEditedHeadsUp, resetAutomodState, runHeadsUpChecks, setAutomodDepsForTest,
+    actOn, checkEditedHeadsUp, hitToActOn, resetAutomodState, runHeadsUpChecks, setAutomodDepsForTest,
 } = await import('../../src/services/automod/automodService.js');
 const {
     headsUpStats, noteMessageDeleted, pendingHeadsUpRule, setHeadsUpDepsForTest,
@@ -219,6 +219,25 @@ test('a heads-up only when every hit allows one: a never-eligible hit next to an
     }
     assert.equal(headsUpAllowedFor([{ rule: 'disrespect' }], settings, true), false, 'probation');
     assert.equal(headsUpAllowedFor([], settings), false);
+});
+
+test('personal info next to a worse heads-up hit: the privacy hit is acted on (deleted at once)', () => {
+    const privacy = { rule: 'privacy' };
+    assert.equal(hitToActOn([{ rule: 'harassment' }, privacy], false), privacy);
+    assert.equal(hitToActOn([privacy, { rule: 'sexual' }], false), privacy);
+    assert.equal(hitToActOn([{ rule: 'harassment' }], false).rule, 'harassment');
+});
+
+test('two messages at the same moment: only one heads-up, the other acts normally', async () => {
+    const h = setup();
+    const settings = normalizeSettings({});
+    const results = await Promise.all([
+        actOn(fakeMessage({ id: 'm1' }), member, disrespect, settings),
+        actOn(fakeMessage({ id: 'm2' }), member, disrespect, settings),
+    ]);
+    assert.equal(h.names().filter((n) => n === 'sendDm').length, 1, 'one heads-up DM');
+    assert.equal(h.names().filter((n) => n === 'applyStep').length, 1, 'the other message is acted on');
+    assert.equal(results.length, 2);
 });
 
 // ── resolution ────────────────────────────────────────────────────────────

@@ -26,6 +26,7 @@ import { db, deleteFromDb, getFromDb, setInDb } from '../../utils/database.js';
 import { sendDm } from '../enforcement/enforcementService.js';
 import { isRaidJoiner } from './raidService.js';
 import { closeCard, postReviewCard } from './reviewCards.js';
+import { Mutex } from '../../utils/mutex.js';
 import { headsUpDm, headsUpNotice, privacyHeadsUpDm, privacyHeadsUpNotice } from './policy.js';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -87,7 +88,14 @@ function storedHit(hit) {
  * Returns 'pending' (waiting for the member), 'removed' (personal info: deleted, done)
  * or false (act as usual: already had one, raid joiner, or a database error).
  */
-export async function giveHeadsUp(message, hit, { card, deleteMessage = async () => {} }) {
+export function giveHeadsUp(message, hit, options) {
+    // One at a time per member and rule: two messages at the same moment get one heads-up,
+    // the other is acted on as usual (the "seen" check and write must not interleave).
+    return Mutex.runExclusive(`automod-headsup:${message.guild.id}:${message.author.id}:${hit.rule}`,
+        () => giveHeadsUpNow(message, hit, options));
+}
+
+async function giveHeadsUpNow(message, hit, { card, deleteMessage = async () => {} }) {
     const { guild, author } = message;
     if (await deps.isRaidJoiner(guild.id, author.id).catch(() => false)) return false;
     const now = deps.now();
