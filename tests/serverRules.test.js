@@ -226,3 +226,22 @@ test('sitemap and footer include /rules', async () => {
         assert.ok(footer.includes('<li><a href="/rules">Rules</a></li>'));
     } finally { await site.close(); }
 });
+
+test('DM: a "Your full record" link only when My record is on; dropped first when the DM is too long', async () => {
+    const { recordLine, warnDm } = await import('../src/services/enforcement/dmTemplates.js');
+    assert.equal(recordLine({}), null);
+    assert.equal(recordLine({ MEMBER_PORTAL_ENABLED: 'true', PUBLIC_URL: 'javascript:x' }), null);
+    assert.equal(recordLine({ MEMBER_PORTAL_ENABLED: 'true', PUBLIC_URL: 'https://mewvo.example/' }), 'Your full record: <https://mewvo.example/me>');
+    const saved = { on: process.env.MEMBER_PORTAL_ENABLED, url: process.env.PUBLIC_URL };
+    process.env.MEMBER_PORTAL_ENABLED = 'true';
+    process.env.PUBLIC_URL = 'https://mewvo.example';
+    try {
+        const base = { case_code: 'k7xq2', moderator_username: 'mod', reason: 'Spam', created_at: new Date(0) };
+        assert.ok(warnDm(base, 1).endsWith('Your full record: <https://mewvo.example/me>'));
+        const long = warnDm({ ...base, reason: 'x'.repeat(1990) }, 1);
+        assert.ok(!long.includes('Your full record'), 'dropped rather than going over 2000');
+    } finally {
+        if (saved.on === undefined) delete process.env.MEMBER_PORTAL_ENABLED; else process.env.MEMBER_PORTAL_ENABLED = saved.on;
+        if (saved.url === undefined) delete process.env.PUBLIC_URL; else process.env.PUBLIC_URL = saved.url;
+    }
+});

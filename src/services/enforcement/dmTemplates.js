@@ -1,4 +1,4 @@
-// dmTemplates.js — the DM layouts sent to punished users.
+// dmTemplates.js: the DM layouts sent to punished users.
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -18,6 +18,17 @@ function appealLine(record) {
 // Discord's message content limit: the rule line is dropped rather than going over it.
 const DM_MAX = 2000;
 
+/**
+ * "Your full record: <https://…/me>" when the website's My record page is on
+ * (MEMBER_PORTAL_ENABLED + an http(s) PUBLIC_URL); otherwise nothing. Optional like the rule line.
+ */
+export function recordLine(env = process.env) {
+    if (!/^(1|true|yes|on)$/i.test(String(env.MEMBER_PORTAL_ENABLED || '').trim())) return null;
+    const origin = String(env.PUBLIC_URL || '').trim().replace(/\/+$/, '');
+    if (!/^https?:\/\/[^\s<>]+$/.test(origin)) return null;
+    return `Your full record: <${origin}/me>`;
+}
+
 function common(record) {
     return [
         `By: ${record.moderator_username}`,
@@ -31,7 +42,7 @@ function common(record) {
 /** Joins DM lines; the rule line placeholder is kept only while the DM fits the limit. */
 function finish(lines) {
     const plain = lines.filter((line) => typeof line === 'string');
-    const withRule = lines.map((line) => (typeof line === 'string' ? line : line?.ruleLine || null)).filter(Boolean);
+    const withRule = lines.map((line) => (typeof line === 'string' ? line : line?.ruleLine || line?.optional || null)).filter(Boolean);
     const text = withRule.join('\n');
     return text.length <= DM_MAX ? text : plain.join('\n');
 }
@@ -46,6 +57,7 @@ export function banDm(record) {
         ...common(record),
         duration,
         `Case code: ${record.case_code}`,
+        { optional: recordLine() },
     ];
     if (record.is_auto && !record.unappealable) {
         lines.push('Appealing this code also removes the warning that caused this ban.');
@@ -63,6 +75,7 @@ export function kickDm(record, inviteUrl) {
         ...common(record),
         `Case code: ${record.case_code}`,
         `Rejoin: ${inviteUrl || 'ask a staff member for an invite'}`,
+        { optional: recordLine() },
     ]);
 }
 
@@ -73,6 +86,7 @@ export function muteDm(record) {
         ...common(record),
         `Duration: ${formatDuration(Number(record.duration_ms))}, ends ${stamp(record.expires_at)}`,
         `Case code: ${record.case_code}`,
+        { optional: recordLine() },
     ]);
 }
 
@@ -83,6 +97,7 @@ export function warnDm(record, warnNumber) {
         ...common(record),
         `Case code: ${record.case_code}`,
         `At ${enforcementConfig.warnsPerLevel} warnings you will be banned.`,
+        { optional: recordLine() },
     ]);
 }
 
