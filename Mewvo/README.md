@@ -10,6 +10,7 @@ Plain static files: no build step, no scripts. Generated from the bot's reposito
 - `/features`
 - `/pricing`
 - `/docs`
+- `/docs/setup`
 - `/docs/getting-started`
 - `/docs/warnings`
 - `/docs/appeals`

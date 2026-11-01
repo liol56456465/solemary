@@ -1,4 +1,4 @@
-// docs.js — /docs (the guide hub) and /docs/<slug> (four short guides), written from the
+// docs.js — /docs (the guide hub) and /docs/<slug> (short guides), written from the
 // real behaviour: enforcement/flowBuilder.js, handlers/enforcementPanel.js, config/enforcement.js,
 // enforcement/appealService.js, handlers/appealsHandler.js, dashboard/html.js NAV and CLAUDE.md.
 
@@ -11,6 +11,26 @@ const supportLink = (ctx, text = 'the support server') => (ctx.supportInvite
     : text);
 
 export const GUIDES = [
+    {
+        slug: 'setup', title: 'Set up Mewvo in 10 minutes', minutes: 10,
+        summary: 'For the server owner: the few settings Mewvo needs, in order, on the dashboard.',
+        body: (ctx) => html`<p>You need the <strong>Administrator</strong> permission in the server. Everything below is done on the dashboard, in your browser. You do not need to type any commands.</p>
+<h2 id="open">1. Open the dashboard</h2>
+<p>Go to the <a href="${DASHBOARD_PATH}">dashboard</a> and log in with Discord. Mewvo only asks Discord who you are. It does not see your email or your messages.</p>
+<h2 id="steps">2. Follow "Setup step by step"</h2>
+<p>On the Overview page, press <strong>Set up Mewvo step by step</strong>. It shows one setting at a time, says why it matters, and opens the right page. Skip anything you do not need. The most important three are:</p>
+<ol class="steps-list"><li><strong>Mod log channel</strong>: a staff-only channel where Mewvo writes down every warning, mute, kick and ban.</li>
+<li><strong>Muted role</strong>: Mewvo makes it by itself the first time someone is muted, so you can leave it.</li>
+<li><strong>Appeals category</strong>: where Mewvo opens a private channel when a member asks to have a punishment lifted.</li></ol>
+<h2 id="rules">3. Write your rules</h2>
+<p>On the <strong>Rules</strong> page, add your server rules. They show on a web page, and every punishment message names the rule that was broken.</p>
+<h2 id="automod">4. Check automod</h2>
+<p>On the <strong>Automod</strong> page you choose what automod does. If you are not sure yet, pick <strong>Watch only</strong>: automod then only tells staff what it would have done, and nothing happens to anyone until a staff member agrees. Switch to <strong>Act</strong> when you trust it.</p>
+<h2 id="try">5. Try it on yourself</h2>
+<p>In Discord, run <code>/test</code>. Mewvo sends you the exact message a member would get for a warning or a ban. Nothing is done to anyone.</p>
+<h2 id="next">Next</h2>
+<p>The sidebar shows the main pages. Press <strong>Show all pages</strong> at the bottom to see everything. If a word is new to you, open <strong>Words explained</strong> in the sidebar. Questions? Ask in ${supportLink(ctx)}.</p>`,
+    },
     {
         slug: 'getting-started', title: 'Getting started for staff', minutes: 4,
         summary: 'Who can use what, your first enforcement action, and the commands you’ll use every week.',
