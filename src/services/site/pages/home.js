@@ -1,5 +1,5 @@
 // home.js: the front page. What Mewvo is (with the DM a member gets), the dashboard, the
-// warning ladder, what it does as a grid, the plans as compact cards (as on /pricing), and
+// warning ladder, what it does as a two-column list, the plans as compact cards (as on /pricing), and
 // where to ask.
 // Every claim is from the code or CLAUDE.md. No eyebrow labels, numbering, tick lists or
 // CTA band (owner, 2026-11-01).
@@ -10,14 +10,14 @@ import { DASHBOARD_PATH, addButton, layout } from '../shell.js';
 import { dashboardShot, ladderMock, warnDmMock } from './mockups.js';
 import { planCard } from './pricing.js';
 
-/** The actions: Add to Discord (public) or Join the server, then a docs link and the dashboard. */
+/** The actions: Add to Discord (public) or Join the server, then the docs; the dashboard as a plain link. */
 export function heroActions(ctx, { how = '/docs', howLabel = 'Read the docs', dashboard = true } = {}) {
     const add = addButton(ctx);
     const join = !add && (ctx.mainInvite || ctx.supportInvite)
         ? html`<a class="button" href="${ctx.mainInvite || ctx.supportInvite}" rel="noopener">${ctx.mainInvite ? 'Join the server' : 'Join the support server'}</a>`
         : '';
     const primary = add || join;
-    return html`<p class="hero-actions">${primary}<a class="button${primary ? ' button-quiet' : ''}" href="${how}">${howLabel}</a>${dashboard && ctx.dashboardEnabled ? html`<a class="button button-quiet" href="${DASHBOARD_PATH}">Open the dashboard</a>` : ''}</p>`;
+    return html`<p class="hero-actions">${primary}<a class="button${primary ? ' button-quiet' : ''}" href="${how}">${howLabel}</a></p>${dashboard && ctx.dashboardEnabled ? html`<p class="hero-more">Mewvo already in your server? <a href="${DASHBOARD_PATH}">Open the dashboard</a></p>` : ''}`;
 }
 
 /** What Mewvo does: [anchor id, name, text, link, link text]. */
@@ -53,7 +53,7 @@ ${dashboardShot({ alt: 'The Mewvo dashboard overview: items that need staff, mod
 <section class="block" aria-labelledby="what-title"><div class="wrap">
 <div class="band-head"><h2 id="what-title">What it does</h2>
 <p>Moderation first, with the community tools a server needs next to it. <a href="/features">Every feature</a></p></div>
-<ul class="cards">${WHAT_IT_DOES.map(([id, name, text, href, label]) => html`<li class="card" id="${id}"><h3>${name}</h3><p>${text}</p><a href="${href}">${label}</a></li>`)}</ul>
+<ul class="what-grid">${WHAT_IT_DOES.map(([id, name, text, href, label]) => html`<li id="${id}"><h3>${name}</h3><p>${text}</p><a href="${href}">${label}</a></li>`)}</ul>
 </div></section>
 
 <section class="block" aria-labelledby="pricing-title"><div class="wrap">
@@ -63,9 +63,8 @@ ${dashboardShot({ alt: 'The Mewvo dashboard overview: items that need staff, mod
 </div></section>
 
 <section class="block block-last" aria-labelledby="help-title"><div class="wrap help-row">
-<div><h2 id="help-title">Questions?</h2>
-<p>Start with the guides, or ask in the support server. A person answers.</p></div>
-<p class="hero-actions"><a class="button button-quiet" href="/docs">Docs</a><a class="button button-quiet" href="/faq">Questions and answers</a>${ctx.supportInvite ? html`<a class="button button-quiet" href="${ctx.supportInvite}" rel="noopener">Support server</a>` : ''}</p>
+<h2 id="help-title">Questions?</h2>
+<p>Start with the <a href="/docs">docs</a> or the <a href="/faq">questions and answers</a>.${ctx.supportInvite ? html` Still stuck? Ask in the <a href="${ctx.supportInvite}" rel="noopener">support server</a>; a person answers.` : ''}</p>
 </div></section>`;
     return layout(ctx, {
         title: 'Mewvo', active: 'home', path: '/',

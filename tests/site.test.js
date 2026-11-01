@@ -198,7 +198,10 @@ test('the home page links to the dashboard from the hero', async () => {
     const site = await serve();
     try {
         const body = (await site.get('/')).body;
-        assert.match(body, /<p class="hero-actions">.*<a class="button button-quiet" href="\/dashboard">Open the dashboard<\/a>/s);
+        // At most two buttons in the hero; the dashboard is a plain text link under them.
+        assert.match(body, /<p class="hero-actions">(?:(?!<\/p>).)*<\/p><p class="hero-more">[^<]*<a href="\/dashboard">Open the dashboard<\/a><\/p>/s);
+        const actions = /<p class="hero-actions">((?:(?!<\/p>).)*)<\/p>/s.exec(body)[1];
+        assert.ok((actions.match(/class="button/g) || []).length <= 2, 'at most two hero buttons');
     } finally { await site.close(); }
 });
 
