@@ -387,6 +387,7 @@ function makeServices() {
             row.paused = paused;
             return { before, after: clone(row) };
         },
+        sendScheduledTest: async (client, userId, payload) => { record('sendScheduledTest', [userId, payload]); },
         runScheduledMessageNow: async (guild, id) => {
             record('runScheduledMessageNow', [id]);
             const row = s.scheduled.find((m) => m.id === id);
@@ -764,6 +765,8 @@ const CASES = {
         'schedule-pause': { form: { id: '1', paused: 'true' }, service: 'setScheduledMessagePaused', admin: true,
             bad: { form: { id: '9', paused: 'true' }, message: /no scheduled message #9/ } },
         'schedule-run': { form: { id: '1' }, service: 'runScheduledMessageNow', admin: true,
+            bad: { form: { id: 'x' }, message: /whole number/ } },
+        'schedule-test': { form: { id: '1' }, service: 'sendScheduledTest', admin: true,
             bad: { form: { id: 'x' }, message: /whole number/ } },
         'schedule-delete': { form: { id: '2' }, service: 'deleteScheduledMessage', admin: true,
             bad: { form: { id: '9' }, message: /no scheduled message #9/ } },
@@ -2397,4 +2400,17 @@ test('saved case searches: save the current filters, list them as links, delete;
     assert.equal(ok.redirectedTo, '/dashboard/cases?type=ban&tag=scam');
     assert.deepEqual(saves()[0].args[1].savedCaseSearches, [{ name: 'Scam cases', query: { type: 'ban', tag: 'scam' } }]);
     assert.equal((await post('searchDelete', { csrf: h.session.csrf, name: 'Nope' })).statusCode, 400);
+});
+
+test('scheduled messages: preview of the message and the next posting times', async () => {
+    const { messagePreview, upcomingRuns } = await import('../src/services/dashboard/modules/messages.js');
+    const view = String(messagePreview({ content: 'Hi <b>all</b>', embed: { title: 'News', description: 'Line', imageUrl: '', footer: 'Staff' } }));
+    assert.ok(view.includes('Hi &lt;b&gt;all&lt;/b&gt;'), 'escaped');
+    assert.ok(view.includes('<b>News</b>') && view.includes('Staff'));
+    const daily = { paused: false, nextRunAt: Date.parse('2026-11-02T09:00:00Z'), timezone: 'UTC', schedule: { kind: 'interval', hours: 24, date: '2026-11-02', time: '09:00' } };
+    const runs = upcomingRuns(daily);
+    assert.ok(runs.length >= 1 && runs[0] === daily.nextRunAt);
+    for (let i = 1; i < runs.length; i += 1) assert.ok(runs[i] > runs[i - 1], 'increasing');
+    assert.deepEqual(upcomingRuns({ ...daily, paused: true }), []);
+    assert.deepEqual(upcomingRuns({ ...daily, nextRunAt: null }), []);
 });

@@ -21,7 +21,7 @@ import {
 } from '../../scheduledMessageService.js';
 import {
     COUNTDOWN_MAX_SECONDS, COUNTDOWN_TITLE_MAX, EMBED_COLOURS, EMBED_DESCRIPTION_MAX, EMBED_FOOTER_MAX, EMBED_TITLE_MAX, EMBED_TOTAL_MAX,
-    IMAGE_URL_MAX, MESSAGE_CONTENT_MAX, POLL_MAX_OPTIONS, POLL_OPTION_MAX, POLL_QUESTION_MAX, colourFromKey, isEmbedImageUrl, parseHexColour,
+    IMAGE_URL_MAX, MESSAGE_CONTENT_MAX, POLL_MAX_OPTIONS, POLL_OPTION_MAX, POLL_QUESTION_MAX, buildMessageEmbed, colourFromKey, isEmbedImageUrl, noMentions, parseHexColour,
 } from '../../botMessageService.js';
 
 const NO_PINGS = 'Mentions are shown as text but never ping: no @everyone, @here, role or member pings.';
@@ -200,6 +200,40 @@ function lastResult(m) {
     return html`<span class="muted">Not run yet</span>`;
 }
 
+/** How the message will look: the text as typed and the embed parts, plain (no colours from the message: CSP). */
+export function messagePreview(payload) {
+    const e = payload?.embed;
+    return html`<div class="msg-preview"><p class="muted">Preview</p>${payload?.content ? html`<p class="msg-text">${payload.content}</p>` : ''}${e && (e.title || e.description || e.imageUrl || e.footer)
+        ? html`<div class="msg-embed">${e.title ? html`<p><b>${e.title}</b></p>` : ''}${e.description ? html`<p class="msg-text">${e.description}</p>` : ''}${e.imageUrl ? html`<p class="muted">Image: ${e.imageUrl}</p>` : ''}${e.footer ? html`<p class="muted">${e.footer}</p>` : ''}</div>` : ''}
+<p class="muted">Shown as typed: Discord formats **bold**, links and mentions when it posts (mentions never ping).</p></div>`;
+}
+
+/** The next `count` times a scheduled message posts, in its own time zone. Pure. */
+export function upcomingRuns(m, count = 3) {
+    if (m.paused || m.nextRunAt === null || m.nextRunAt === undefined) return [];
+    const out = [Number(new Date(m.nextRunAt))];
+    while (out.length < count) {
+        const next = nextRunAfter(m.schedule, m.timezone, out[out.length - 1]);
+        if (next === null || next === undefined || next <= out[out.length - 1]) break;
+        out.push(next);
+    }
+    return out;
+}
+
+/** DMs a scheduled message to the admin who asked (Send me a test). Refuses with a readable message. */
+async function sendScheduledTest(client, userId, payload) {
+    const text = String(payload?.content || '').trim();
+    const embed = payload?.embed && (payload.embed.title || payload.embed.description || payload.embed.imageUrl || payload.embed.footer) ? buildMessageEmbed(payload.embed) : null;
+    if (!text && !embed) throw new InputError('This message is empty, so there is nothing to send.');
+    const user = await client.users.fetch(userId).catch(() => null);
+    if (!user) throw new InputError('I could not find your Discord account.');
+    try {
+        await user.send({ ...(text ? { content: text } : {}), ...(embed ? { embeds: [embed] } : {}), allowedMentions: noMentions() });
+    } catch {
+        throw new InputError('Your DMs are closed for the bot, so the test could not be sent.');
+    }
+}
+
 function preview(payload) {
     const textPart = payload?.content || payload?.embed?.title || payload?.embed?.description || '(image)';
     return textPart.length > 80 ? `${textPart.slice(0, 79)}…` : textPart;
@@ -221,7 +255,10 @@ function scheduledSection(ctx, list, defaultZone) {
 ${buttonForm(ctx, 'messages', 'schedule-run', 'Run now', { id: m.id }, { canEdit: can, danger: false, confirm: 'Post this message now?' })}
 ${buttonForm(ctx, 'messages', 'schedule-delete', 'Delete', { id: m.id }, { canEdit: can, confirm: `Delete scheduled message #${m.id}? This cannot be undone.` })}</div>`,
     ]);
-    const edits = list.map((m) => html`<details class="sub" id="edit-${m.id}" data-key="scheduled-${m.id}"><summary>Edit #${m.id} · ${describeSchedule(m.schedule)}</summary>
+    const edits = list.map((m) => html`<details class="sub" id="edit-${m.id}" data-key="scheduled-${m.id}"><summary>Preview and edit #${m.id} · ${describeSchedule(m.schedule)}</summary>
+${messagePreview(m.payload)}
+<p>${upcomingRuns(m).length ? html`Next posts: ${upcomingRuns(m).map((ms, i) => html`${i ? ', ' : ''}${formatInZone(ms, m.timezone)}`)} <span class="muted">(${m.timezone})</span>` : html`<span class="muted">${m.paused ? 'Paused: it will not post until you resume it.' : 'It will not post again.'}</span>`}</p>
+${buttonForm(ctx, 'messages', 'schedule-test', 'Send me a test', { id: m.id }, { canEdit: can, danger: false })} <span class="muted">A DM to you only, so you can check it before it posts.</span>
 ${postForm(ctx, 'messages', 'schedule-edit', html`<div class="grid">${messageFields(g, m)}</div>${scheduleFields(m, defaultZone)}`, { submit: 'Save scheduled message', hidden: { id: m.id }, canEdit: can })}</details>`);
     return html`<p>${list.length} of ${planLimit(ctx.guildId, 'scheduled')} scheduled messages.</p>
 ${table(['Message', 'Channel', 'Next run', 'Repeat', 'Last result', 'Status', ''], rows, 'No scheduled messages.')}${edits}`;
@@ -339,6 +376,18 @@ ${section('Start a countdown', countdown, `Same as /countdown: up to 24 hours, w
                 return {
                     changes: [{ key: `scheduled.${id}.run`, old: null, new: { messageId: message?.id || null, channelId: channel.id } }],
                     message: `Scheduled message #${id} posted in #${channel.name}.`,
+                };
+            },
+        },
+        'schedule-test': {
+            admin: true,
+            async run(ctx, form) {
+                const id = idField(form);
+                const row = findScheduled(await ctx.services.listScheduledMessages(ctx.guildId), id);
+                await (ctx.services.sendScheduledTest || sendScheduledTest)(ctx.client, ctx.actor.userId, row.payload);
+                return {
+                    changes: [{ key: `scheduled.${id}.test`, old: null, new: 'sent to their own DMs' }],
+                    message: `Scheduled message #${id} was sent to your DMs as a test. Nothing was posted in the server.`,
                 };
             },
         },
