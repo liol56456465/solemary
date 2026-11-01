@@ -208,7 +208,7 @@ export function layout(ctx, { title, active = null, description = '', refresh = 
     const quiet = (ctx.publicSite && ctx.installUrl) || ctx.memberPortal;
     const login = ctx.dashboardEnabled ? html`<a class="button${quiet ? ' button-quiet' : ''}" href="${DASHBOARD_PATH}">Dashboard</a>` : '';
     return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
+<meta name="color-scheme" content="dark"><meta name="theme-color" content="#1e1f22">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
 <title>${title === 'Mewvo' ? 'Mewvo' : `${title} · Mewvo`}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path, image })}
 <link rel="icon" href="${FAVICON_PATH}" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"></head>
 <body><a class="skip" href="#main">Skip to content</a>

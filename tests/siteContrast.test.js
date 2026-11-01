@@ -30,16 +30,16 @@ function ratio(a, b) {
 const TEXT = 4.5;
 const UI = 3;
 const PAIRS = [
-    // Page text, links, labels on every page background.
-    ...['bg', 'bg-alt', 'raised'].flatMap((bg) => [['text', bg, TEXT], ['text-muted', bg, TEXT], ['accent', bg, TEXT], ['accent-hover', bg, TEXT]]),
-    ['on-ink', 'ink', TEXT], ['on-ink', 'ink-hover', TEXT], // buttons
-    ['on-brand', 'brand', TEXT], ['on-brand', 'brand-hover', TEXT], // main buttons
-    ['brand', 'bg', UI], ['brand', 'raised', UI], // featured plan border, markers
+    // Page text, links, labels on every page background (dark gray and white only).
+    ...['bg', 'bg-alt', 'raised', 'raised-strong'].flatMap((bg) => [['text', bg, TEXT], ['text-muted', bg, TEXT], ['accent', bg, TEXT], ['accent-hover', bg, TEXT]]),
+    ['on-ink', 'ink', TEXT], ['on-ink', 'ink-hover', TEXT], // skip link
+    ['on-brand', 'brand', TEXT], ['on-brand', 'brand-hover', TEXT], // main buttons: white fill, dark text
+    ['brand', 'bg', UI], ['brand', 'raised', UI], ['brand', 'raised-strong', UI], // featured plan border
+    ['border-strong', 'bg', UI], ['border-strong', 'raised', UI], // quiet button outline
+    ['text', 'accent-soft', TEXT], ['text-muted', 'accent-soft', TEXT], // linked rule highlight
     ['text', 'brand-soft', TEXT], ['text-muted', 'brand-soft', TEXT],
-    ['accent', 'accent-soft', TEXT], // "Planned" labels
-    ['text-muted', 'accent-soft', TEXT],
-    ['border-strong', 'bg', UI], ['border-strong', 'raised', UI], ['accent', 'bg', UI], // focus ring, markers
-    ['ok', 'bg', UI], ['warn', 'bg', UI], ['bad', 'bg', UI], // status dots
+    ['accent', 'bg', UI], ['accent', 'raised', UI], // focus ring, markers
+    ...['bg', 'raised'].flatMap((bg) => [['ok', bg, UI], ['warn', bg, UI], ['bad', bg, UI]]), // status marks
     // Discord mock-ups.
     ['dc-text', 'dc-bg', TEXT], ['dc-head', 'dc-bg', TEXT], ['dc-muted', 'dc-bg', TEXT], ['dc-link', 'dc-bg', TEXT],
     ['dc-text', 'dc-embed', TEXT], ['dc-head', 'dc-embed', TEXT], ['dc-muted', 'dc-embed', TEXT], ['dc-mention', 'dc-embed', TEXT],
@@ -51,8 +51,25 @@ const PAIRS = [
 
 const SCHEMES = { light: ':root {', dark: '@media (prefers-color-scheme: dark)' };
 
-test('site tokens: light and dark define the same set', () => {
+test('site tokens: light and dark define the same set, with the same values (dark gray in both)', () => {
     assert.deepEqual(Object.keys(tokens(SCHEMES.dark)).sort(), Object.keys(tokens(SCHEMES.light)).sort());
+    assert.deepEqual(tokens(SCHEMES.dark), tokens(SCHEMES.light));
+});
+
+test('site tokens: grays and white only, colour just for status and the Discord mock-ups', () => {
+    const coloured = Object.entries(tokens(SCHEMES.light))
+        .filter(([name]) => !name.startsWith('dc-') && !['ok', 'warn', 'bad'].includes(name))
+        .filter(([, hex]) => {
+            const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+            return Math.max(r, g, b) - Math.min(r, g, b) > 12;
+        })
+        .map(([name, hex]) => `${name}: ${hex}`);
+    assert.deepEqual(coloured, []);
+});
+
+test('site stylesheet: no colour written outside the tokens', () => {
+    const rules = css.slice(css.indexOf('/* ── Base ── */'));
+    assert.deepEqual(rules.match(/#[0-9a-f]{3,8}\b/gi) || [], []);
 });
 
 for (const [scheme, marker] of Object.entries(SCHEMES)) {

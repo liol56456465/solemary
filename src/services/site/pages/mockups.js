@@ -74,9 +74,8 @@ ${step('Next warn', 'Permanent ban', 'Appealable for 6 months · level 3', { str
 
 /**
  * The dashboard: real screenshots (rendered locally from the dashboard's own page code with
- * made-up data), light and dark, picked by the device's colour scheme without a script.
+ * made-up data). Always the dark one: the site is dark gray in every colour scheme.
  */
 export function dashboardShot({ name = 'overview', alt, caption = '', eager = false } = {}) {
-    return html`<figure class="shot"><picture><source srcset="/img/screen-${name}-dark.webp" media="(prefers-color-scheme: dark)" type="image/webp">
-<img src="/img/screen-${name}-light.webp" width="1280" height="800" alt="${alt}"${eager ? '' : html` loading="lazy"`} decoding="async"></picture>${caption ? html`<figcaption class="mock-caption">${caption}</figcaption>` : ''}</figure>`;
+    return html`<figure class="shot"><img src="/img/screen-${name}-dark.webp" width="1280" height="800" alt="${alt}"${eager ? '' : html` loading="lazy"`} decoding="async">${caption ? html`<figcaption class="mock-caption">${caption}</figcaption>` : ''}</figure>`;
 }

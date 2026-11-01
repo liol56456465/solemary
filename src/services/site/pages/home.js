@@ -1,12 +1,14 @@
 // home.js: the front page. What Mewvo is (with the DM a member gets), the dashboard, the
-// warning ladder, what it does as a grid, the plans in one row, and where to ask.
+// warning ladder, what it does as a grid, the plans as compact cards (as on /pricing), and
+// where to ask.
 // Every claim is from the code or CLAUDE.md. No eyebrow labels, numbering, tick lists or
 // CTA band (owner, 2026-11-01).
 
 import { html } from '../../dashboard/html.js';
-import { PLANS, euros } from '../../../config/site/plans.js';
+import { PLANS } from '../../../config/site/plans.js';
 import { DASHBOARD_PATH, addButton, layout } from '../shell.js';
 import { dashboardShot, ladderMock, warnDmMock } from './mockups.js';
+import { planCard } from './pricing.js';
 
 /** The actions: Add to Discord (public) or Join the server, then a docs link and the dashboard. */
 export function heroActions(ctx, { how = '/docs', howLabel = 'Read the docs', dashboard = true } = {}) {
@@ -57,7 +59,7 @@ ${dashboardShot({ alt: 'The Mewvo dashboard overview: items that need staff, mod
 <section class="block" aria-labelledby="pricing-title"><div class="wrap">
 <div class="band-head"><h2 id="pricing-title">Free to use</h2>
 <p>Everything above is free. Paid plans only raise limits such as tags and sticky messages. <a href="/pricing">Plans and prices</a></p></div>
-<ul class="plan-row">${PLANS.map((p) => html`<li class="plan-tile${p.featured ? ' is-featured' : ''}"><span class="plan-tile-name">${p.name}</span><span class="plan-tile-price">${p.monthlyCents ? html`${euros(p.monthlyCents)}<span class="per"> / month</span>` : html`€0<span class="per"> / month</span>`}</span><span class="plan-tile-text">${p.summary}</span></li>`)}</ul>
+<ul class="plan-cards plan-cards-compact">${PLANS.map((p) => planCard(ctx, p, { compact: true }))}</ul>
 </div></section>
 
 <section class="block block-last" aria-labelledby="help-title"><div class="wrap help-row">
