@@ -1251,3 +1251,19 @@ details.section .section-help { margin: 0 0 16px; color: var(--fg-2); max-width:
 .getting-started .checklist li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 10px 0; border-top: 1px solid var(--line); }
 .getting-started .checklist li:first-child { border-top: 0; }
 .checklist-hint { color: var(--fg-2); font-size: 13px; }
+
+/* Sidebar: "Show all pages" / "Show only the main pages" (helpPages, html.js navSwitch). */
+.nav-switch { display: block; margin: 8px 12px 0; font-size: 0.875rem; }
+.more-sheet .nav-switch { margin: 8px 0; }
+
+/* Words explained and Setup step by step (helpPages.js). */
+.glossary { margin: 0; }
+.glossary dt { font-weight: 600; margin-top: 12px; }
+.glossary dt:first-child { margin-top: 0; }
+.glossary dd { margin: 2px 0 0; max-width: 70ch; }
+.setup-step h2 { margin-top: 4px; }
+.setup-nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.setup-all a[aria-current="step"] { font-weight: 600; }
+.setup-start { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.setup-all a, .glossary a, .setup-start a:not(.btn) { text-decoration: underline; }
+.setup-nav .btn { margin: 0; }

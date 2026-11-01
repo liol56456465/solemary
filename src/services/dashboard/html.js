@@ -116,23 +116,23 @@ export function icon(name, className = 'icon') {
  */
 export const NAV = [
     { group: 'Moderate', items: [
-        { key: 'overview', label: 'Overview' },
-        { key: 'inbox', label: 'Inbox' },
-        { key: 'users', label: 'Members' },
+        { key: 'overview', main: true, label: 'Overview' },
+        { key: 'inbox', main: true, label: 'Inbox' },
+        { key: 'users', main: true, label: 'Members' },
         { key: 'bans', label: 'Banned' },
-        { key: 'cases', label: 'Cases' },
-        { key: 'appeals', label: 'Appeals' },
+        { key: 'cases', main: true, label: 'Cases' },
+        { key: 'appeals', main: true, label: 'Appeals' },
         { key: 'nocontact', label: 'No-contact' },
         { key: 'staff', label: 'Staff' },
         { key: 'activity', label: 'Activity' },
         { key: 'channels', label: 'Channel tools' },
     ] },
     { group: 'Community', items: [
-        { key: 'tickets', label: 'Tickets & modmail', state: 'tickets', keywords: 'ticket panel, support, modmail, canned answers, saved replies, staff role, transcript, open tickets category, closed tickets category, ticket log channel', summary: 'Members ask staff for help in a private channel.' },
-        { key: 'welcome', label: 'Welcome & goodbye', state: 'welcome', keywords: 'join message, leave message, goodbye, greeting, auto role, autorole, embed, image, banner, colour', summary: 'Greet new members, say goodbye, give a starting role.' },
-        { key: 'leveling', label: 'Leveling', state: 'leveling', toggle: 'enabled', keywords: 'xp, levels, rank, level up message, role rewards, leaderboard, no xp channels', summary: 'Members earn levels for chatting and get roles for them.' },
+        { key: 'tickets', main: true, label: 'Tickets & modmail', state: 'tickets', keywords: 'ticket panel, support, modmail, canned answers, saved replies, staff role, transcript, open tickets category, closed tickets category, ticket log channel', summary: 'Members ask staff for help in a private channel.' },
+        { key: 'welcome', main: true, label: 'Welcome & goodbye', state: 'welcome', keywords: 'join message, leave message, goodbye, greeting, auto role, autorole, embed, image, banner, colour', summary: 'Greet new members, say goodbye, give a starting role.' },
+        { key: 'leveling', main: true, label: 'Leveling', state: 'leveling', toggle: 'enabled', keywords: 'xp, levels, rank, level up message, role rewards, leaderboard, no xp channels', summary: 'Members earn levels for chatting and get roles for them.' },
         { key: 'reaction-roles', label: 'Reaction roles', keywords: 'self roles, role menu, buttons, select menu', summary: 'Menus where members pick their own roles.' },
-        { key: 'messages', label: 'Messages', keywords: 'post as the bot, send message, embed, embed builder, announcement, poll, vote, countdown, timer', summary: 'Post announcements, polls and countdowns as Mewvo.' },
+        { key: 'messages', main: true, label: 'Messages', keywords: 'post as the bot, send message, embed, embed builder, announcement, poll, vote, countdown, timer', summary: 'Post announcements, polls and countdowns as Mewvo.' },
         { key: 'giveaways', label: 'Giveaways', keywords: 'prize, winners, reroll, end giveaway, random member, random user, pick a member', summary: 'Give away prizes to random members.' },
         { key: 'birthdays', label: 'Birthdays', state: 'birthdays', keywords: 'birthday channel, birthday role, timezone', summary: 'Wish members a happy birthday.' },
         { key: 'applications', label: 'Applications', state: 'applications', toggle: 'enabled', keywords: 'apply, staff application, questions, managers', summary: 'Members apply for a role by answering questions.' },
@@ -140,18 +140,20 @@ export const NAV = [
         { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate', keywords: 'temporary voice, voice channels, jtc', summary: 'Voice channels that appear when needed and go away when empty.' },
     ] },
     { group: 'Server setup', items: [
-        { key: 'automod', label: 'Automod', state: 'automod', toggle: 'enabled', keywords: 'spam, links, invites, bad words, raid, lockdown, panic, join gate, trusted, second chance, mood, native automod, slowmode', summary: 'Stops spam, bad words and raids by itself.' },
-        { key: 'enforcement', label: 'Enforcement & appeals', keywords: 'mod log, evidence, muted role, warning roles, appeal window, cooldown, mass-action guard, ladder, reasons, appeal panel, appeals category, reports category, modmail category, alerts channel', summary: 'How warns, mutes and bans work, and how members appeal.' },
+        { key: 'automod', main: true, label: 'Automod', state: 'automod', toggle: 'enabled', keywords: 'spam, links, invites, bad words, raid, lockdown, panic, join gate, trusted, second chance, mood, native automod, slowmode', summary: 'Stops spam, bad words and raids by itself.' },
+        { key: 'enforcement', main: true, label: 'Enforcement & appeals', keywords: 'mod log, evidence, muted role, warning roles, appeal window, cooldown, mass-action guard, ladder, reasons, appeal panel, appeals category, reports category, modmail category, alerts channel', summary: 'How warns, mutes and bans work, and how members appeal.' },
         { key: 'logging', label: 'Logging', state: 'logging', toggle: 'enabled', keywords: 'audit log, message delete, edits, joins, leaves, ignore channels, events', summary: 'A record of what happens in the server, for staff.' },
-        { key: 'verification', label: 'Verification', state: 'verification', keywords: 'verify, captcha, verified role, auto-verify, panel', summary: 'New members confirm they are real before they can chat.' },
+        { key: 'verification', main: true, label: 'Verification', state: 'verification', keywords: 'verify, captcha, verified role, auto-verify, panel', summary: 'New members confirm they are real before they can chat.' },
         { key: 'counters', label: 'Counters', keywords: 'member count, stats channels, counting game', summary: 'Live member counts and a counting game.' },
         { key: 'support', label: 'Support server', keywords: 'banned role, support server, ban appeals category', summary: 'Where banned members can still appeal.' },
-        { key: 'rules', label: 'Rules', keywords: 'server rules, rules page, rule numbers, reasons, rule link, punishment dm', summary: 'Your server rules, shown on a web page and in punishment messages.' },
+        { key: 'rules', main: true, label: 'Rules', keywords: 'server rules, rules page, rule numbers, reasons, rule link, punishment dm', summary: 'Your server rules, shown on a web page and in punishment messages.' },
     ] },
     { group: 'Bot', items: [
-        { key: 'modules', label: 'All modules' },
+        { key: 'setup', main: true, label: 'Setup step by step' },
+        { key: 'help', main: true, label: 'Words explained' },
+        { key: 'modules', main: true, label: 'All modules' },
         { key: 'appearance', label: 'Bot in this server', keywords: 'nickname, avatar, bot name, profile, custom bot', summary: 'Give Mewvo its own name and picture here (Pro and Max).' },
-        { key: 'commands', label: 'Commands', keywords: 'disable command, enable command, categories, permissions, prefix, moderator role, mod role, shorten, short link', summary: 'Turn single commands or groups of commands on or off.' },
+        { key: 'commands', main: true, label: 'Commands', keywords: 'disable command, enable command, categories, permissions, prefix, moderator role, mod role, shorten, short link', summary: 'Turn single commands or groups of commands on or off.' },
         { key: 'audit', label: 'Audit log' },
         { key: 'backup', label: 'Settings backup' },
     ] },
@@ -189,6 +191,35 @@ export function navGroups(session = null, access = null) {
 }
 
 
+// The sidebar shows only the main pages (main: true) unless the viewer chose "all pages"
+// (a cookie, like the theme). The page being viewed is always listed.
+export const NAV_COOKIE = 'mewvo_nav';
+export const navModeFrom = (value) => (value === 'all' ? 'all' : 'main');
+
+/** navGroups trimmed to the main pages (plus `active`) in the 'main' view; Owner stays whole. */
+export function visibleNavGroups(session = null, access = null, active = null) {
+    const groups = navGroups(session, access);
+    if (navModeFrom(session?.navMode) === 'all') return groups;
+    return groups
+        .map((group) => (group === OWNER_NAV ? group : { ...group, items: group.items.filter((item) => item.main || item.key === active) }))
+        .filter((group) => group.items.length);
+}
+
+/** How many pages the 'main' view hides from this viewer (0 in the 'all' view). */
+function hiddenCount(session, access, active) {
+    const all = navGroups(session, access).reduce((n, g) => n + g.items.length, 0);
+    const shown = visibleNavGroups(session, access, active).reduce((n, g) => n + g.items.length, 0);
+    return all - shown;
+}
+
+/** "Show all pages (12 more)" / "Show only the main pages": GET /dashboard/nav, no script needed. */
+function navSwitch(session, access, active, back) {
+    const all = navModeFrom(session?.navMode) === 'all';
+    const hidden = hiddenCount(session, access, active);
+    if (!all && !hidden) return '';
+    return html`<a class="nav-switch" href="${path(`/nav${queryString({ mode: all ? 'main' : 'all', next: back })}`)}">${all ? 'Show only the main pages' : `Show all pages (${hidden} more)`}</a>`;
+}
+
 /** Every sidebar entry, flattened. */
 export function navItems() {
     return NAV.flatMap((item) => (item.group ? item.items : [item]));
@@ -225,7 +256,7 @@ const BRAND_LOGO = raw('<img class="brand-mark" src="/favicon.png" width="32" he
 function sideNav(active, moduleStates, theme, back, session, access) {
     return html`<nav class="side-nav" aria-label="Dashboard"><a class="side-brand" href="${path('/overview')}">${BRAND_LOGO}Mewvo</a>
 ${serverSwitch(session.server)}
-${navGroups(session, access).map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
+${visibleNavGroups(session, access, active).map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
         const state = stateOf(item, moduleStates);
         const on = item.key === active;
         const badge = item.key === 'inbox' && session.inboxCount > 0
@@ -233,6 +264,7 @@ ${navGroups(session, access).map((group) => html`<div class="side-group"><p clas
         return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}><span class="side-text">${item.label}</span>${badge}${state === null ? ''
             : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
     })}</ul></div>`)}
+${navSwitch(session, access, active, back)}
 <div class="side-bottom"><a class="side-site" href="/"><span class="side-text">Mewvo website</span></a>${userMenu(session, access, theme, back)}</div></nav>`;
 }
 
@@ -251,7 +283,8 @@ function tabBar(active, theme, back, session, access) {
     const main = sections(groups).slice(0, 3);
     return html`<nav class="tabbar" aria-label="Sections"><a href="${path('/overview')}"${active === 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon('overview')}<span>Home</span></a>${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key && active !== 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.label === 'Server setup' ? 'Setup' : sec.label}</span></a>`)}
 <details class="more menu-wrap"><summary${current && !main.some((sec) => sec.key === current.key) ? raw(' class="on"') : ''}>${icon('menu')}<span>More</span></summary><div class="more-sheet">
-${sections(groups).map((sec) => html`<p class="more-group">${sec.label}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${item.label}</a>`)}`)}
+${sections(visibleNavGroups(session, access, active)).map((sec) => html`<p class="more-group">${sec.label}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${item.label}</a>`)}`)}
+${navSwitch(session, access, active, back)}
 ${themePicker(theme, back, 'sheet')}<div class="more-foot"><a href="/">${icon('home')}Website</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
 }
 

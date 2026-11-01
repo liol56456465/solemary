@@ -80,7 +80,8 @@ import { STATS_PERIODS, staffModerationStats } from '../staffActivityService.js'
 import { getConfiguredSetting, listSettingsAudit } from '../settings/guildSettings.js';
 import { createAccessChecker } from './access.js';
 import { OWNER_AREA, allows, routeKey } from './permissions.js';
-import { BASE, THEME_COOKIE, html, messagePage, path, queryString, themeFrom } from './html.js';
+import { BASE, NAV_COOKIE, THEME_COOKIE, html, messagePage, navModeFrom, path, queryString, themeFrom } from './html.js';
+import { glossaryPage, setupPage } from './helpPages.js';
 import {
     appealsPage, auditPage, caseDetailPage, casesPage, moduleSettingsPage, statsPage,
 } from './pages.js';
@@ -290,7 +291,7 @@ export function createDashboard({
         // A copy of the session with display-only extras for the page shell. isOwner (live
         // OWNER_IDS check) shows the Owner sidebar group.
         const session = {
-            ...ctx.session, theme: themeOf(req), server: serverInfo(), path: safeBackPath(req.originalUrl || req.url),
+            ...ctx.session, theme: themeOf(req), navMode: navModeFrom(parseCookies(req?.headers?.cookie)[NAV_COOKIE]), server: serverInfo(), path: safeBackPath(req.originalUrl || req.url),
             isOwner: Boolean((owner.isBotOwner || defaultOwnerDeps.isBotOwner)(ctx.session.userId)),
             inboxCount: badge ? badge.peek() : null,
         };
@@ -931,13 +932,29 @@ export function createDashboard({
         return res.redirect(303, safeBackPath(str(req.query?.next, 300)));
     }
 
+    /** GET /dashboard/nav?mode=all|main&next=…: the sidebar shows all pages or the main ones (cookie, like the theme). */
+    function setNav(req, res) {
+        const mode = navModeFrom(str(req.query?.mode, 10));
+        res.append('Set-Cookie', serializeCookie(NAV_COOKIE, mode, { ...cookieOptions, httpOnly: false, maxAgeMs: 365 * 24 * 3600 * 1000 }));
+        return res.redirect(303, safeBackPath(str(req.query?.next, 300)));
+    }
+
+    function help(req, res) {
+        return sendHtml(res, 200, glossaryPage(shellOf(req)));
+    }
+
+    async function setup(req, res) {
+        const steps = await collectChecklist({ client, guildId, data: data.overview || defaultOverviewData }).catch(() => null);
+        return sendHtml(res, 200, setupPage({ ...shellOf(req), steps, query: req.query }));
+    }
+
     function notFound(req, res) {
         return fail(res, 404, 'Not found', 'There is no such page.', req);
     }
 
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
-        overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme,
+        overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, help, setup,
         sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
     };
 }
@@ -999,6 +1016,7 @@ export function dashboardRouter(d) {
     router.use(d.securityHeaders);
     router.get('/static/:file', d.staticFile);
     router.get('/theme', d.limitByIp, d.setTheme);
+    router.get('/nav', d.limitByIp, d.setNav);
     router.get('/', d.limitByIp, safe(d.index));
     router.get('/oauth/callback', d.limitByIp, safe(d.callback));
     router.post('/logout', express.urlencoded({ extended: false, limit: '2kb' }), user, safe(d.logout));
@@ -1109,6 +1127,8 @@ export function dashboardRouter(d) {
     router.get('/backup', user, safe(d.backup));
     router.get('/backup/download', user, safe(d.backupDownload));
     router.get('/audit', user, safe(d.audit));
+    router.get('/help', user, safe(d.help));
+    router.get('/setup', user, safe(d.setup));
     router.get('/:module', user, safe(d.modulePage));
     router.use(user, d.notFound);
     return router;

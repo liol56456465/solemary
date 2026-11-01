@@ -728,6 +728,52 @@ test('theme: GET /dashboard/theme sets a non-HttpOnly cookie and only redirects 
     assert.equal(safeBackPath('/dashboard/cases?member=123&page=2'), '/dashboard/cases?member=123&page=2');
 });
 
+test('nav view: GET /dashboard/nav sets mewvo_nav (all or main) and only redirects inside the dashboard', () => {
+    const { d } = makeDashboard();
+    const res = fakeRes();
+    d.setNav({ headers: {}, query: { mode: 'all', next: '/dashboard/counters' } }, res);
+    assert.equal(res.statusCode, 303);
+    assert.equal(res.redirectedTo, '/dashboard/counters');
+    assert.match(res.cookies.find((c) => c.startsWith('mewvo_nav=')), /^mewvo_nav=all; Path=\/dashboard; SameSite=Lax; Max-Age=31536000; Secure$/);
+    const bad = fakeRes();
+    d.setNav({ headers: {}, query: { mode: '<x>', next: 'https://evil.example/' } }, bad);
+    assert.equal(bad.redirectedTo, '/dashboard/overview');
+    assert.match(bad.cookies[0], /^mewvo_nav=main;/);
+});
+
+test('Words explained and Setup step by step: plain pages, one step at a time, escaped, no em dashes', async () => {
+    const { GLOSSARY, glossaryPage, setupPage, stepNumber } = await import('../src/services/dashboard/helpPages.js');
+    const session = { username: 'a', csrf: 't' };
+    const help = String(glossaryPage({ session }));
+    assert.ok(help.includes('<h1>Words explained</h1>'));
+    for (const g of GLOSSARY) for (const [term, text] of g.words) {
+        assert.ok(!/[\u2014\u2013]/.test(text) && !/\p{Extended_Pictographic}/u.test(text), term);
+        assert.ok(help.includes(`>${term.replace(/&/g, '&amp;')}</dt>`), term);
+    }
+    assert.ok(help.includes('href="/docs/warnings"'), 'website guides keep their path');
+    assert.ok(help.includes('href="/dashboard/appeals"'));
+    assert.match(help, /href="\/dashboard\/help" aria-current="page"/);
+
+    const steps = [
+        { label: 'Mod log channel', done: true, href: '/dashboard/enforcement', hint: 'Why <b>' },
+        { label: 'Welcome channel', done: false, href: '/dashboard/welcome', hint: 'Greets' },
+        { label: 'Birthday channel', done: false, href: '/dashboard/birthdays', hint: 'Wishes' },
+    ];
+    assert.equal(stepNumber({}, steps), 2, 'the first open step');
+    assert.equal(stepNumber({ step: '3' }, steps), 3);
+    assert.equal(stepNumber({ step: '9' }, steps), 2);
+    assert.equal(stepNumber({}, steps.map((x) => ({ ...x, done: true }))), 1);
+    const first = String(setupPage({ session, steps, query: {} }));
+    assert.ok(first.includes('1 of 3 steps done.'));
+    assert.ok(first.includes('Step 2 of 3') && first.includes('<h2>Welcome channel</h2>'));
+    assert.ok(first.includes('<a class="btn primary" href="/dashboard/welcome">Set this up</a>'));
+    assert.ok(first.includes('href="/dashboard/setup?step=1">Back</a>') && first.includes('href="/dashboard/setup?step=3">Skip for now</a>'));
+    const done = String(setupPage({ session, steps, query: { step: '1' } }));
+    assert.ok(done.includes('Open this setting') && done.includes('Next step') && done.includes('Why &lt;b&gt;'));
+    assert.ok(String(setupPage({ session, steps, query: { step: '3' } })).includes('href="/dashboard/overview">Finish</a>'));
+    assert.ok(String(setupPage({ session, steps: null })).includes('could not be loaded'));
+});
+
 test('case page: history, evidence and appeals are collapsible sections (history closed)', () => {
     const page = caseDetailPage({
         session: { username: 'a', csrf: 't' }, statusLabel: 'active',
@@ -740,7 +786,7 @@ test('case page: history, evidence and appeals are collapsible sections (history
 });
 
 test('layout v5: grouped sidebar with every page, breadcrumbs, phone tab bar with a More sheet', () => {
-    const page = layout({ title: 'x', active: 'tickets', session: { username: 'a', csrf: 't', server: { name: 'Cats <3', iconUrl: null } }, body: html`` });
+    const page = layout({ title: 'x', active: 'tickets', session: { username: 'a', csrf: 't', navMode: 'all', server: { name: 'Cats <3', iconUrl: null } }, body: html`` });
     assert.match(page, /<details class="server-switch menu-wrap"><summary aria-label="Server: Cats &lt;3">/);
     assert.ok(page.includes('Only this server can be managed for now.'));
     const side = page.slice(page.indexOf('<nav class="side-nav"'), page.indexOf('</nav>', page.indexOf('<nav class="side-nav"')));
@@ -761,6 +807,26 @@ test('layout v5: grouped sidebar with every page, breadcrumbs, phone tab bar wit
     assert.ok(page.includes('<a class="menu-item menu-link" href="/">'), 'account menu links to the website');
     assert.match(page, /<div class="more-foot"><a href="\/">.*Website<\/a>/, 'phone sheet links to the website');
     assert.ok(page.includes('<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">'));
+});
+
+test('sidebar: only the main pages by default (plus the open one), a switch to show all; the cookie route sets the view', async () => {
+    const { NAV, navItems, visibleNavGroups } = await import('../src/services/dashboard/html.js');
+    const side = (page) => page.slice(page.indexOf('<nav class="side-nav"'), page.indexOf('</nav>', page.indexOf('<nav class="side-nav"')));
+    const main = side(layout({ title: 'x', active: 'overview', session: { username: 'a', csrf: 't' }, body: html`` }));
+    const mainKeys = navItems().filter((i) => i.main).map((i) => i.key);
+    const hidden = navItems().length - mainKeys.length;
+    assert.ok(hidden > 5 && mainKeys.length >= 10, 'the main view is shorter but not empty');
+    for (const item of navItems()) assert.equal(main.includes(`href="/dashboard/${item.key}"`), Boolean(item.main), item.key);
+    assert.ok(main.includes(`>Show all pages (${hidden} more)</a>`));
+    assert.ok(main.includes('href="/dashboard/nav?mode=all&amp;next=%2Fdashboard%2Foverview"'));
+    // The page being viewed is listed even when it is not a main page.
+    const onCounters = side(layout({ title: 'x', active: 'counters', session: { username: 'a', csrf: 't' }, body: html`` }));
+    assert.match(onCounters, /href="\/dashboard\/counters" aria-current="page"/);
+    assert.ok(onCounters.includes(`Show all pages (${hidden - 1} more)`));
+    const all = side(layout({ title: 'x', active: 'overview', session: { username: 'a', csrf: 't', navMode: 'all' }, body: html`` }));
+    for (const item of navItems()) assert.ok(all.includes(`href="/dashboard/${item.key}"`), item.key);
+    assert.ok(all.includes('>Show only the main pages</a>'));
+    assert.deepEqual(visibleNavGroups({}, null, null).map((g) => g.group), NAV.map((g) => g.group));
 });
 
 test('overview week chart: the last 7 UTC days, oldest first, today last, missing days 0', async () => {

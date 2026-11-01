@@ -22,6 +22,8 @@ export const OWNER_AREA = 'owner-area';
 export const PERMISSIONS = Object.freeze({
     // ── Pages (GET; every sidebar entry has one) ──
     'page:overview': MODERATOR,
+    'page:help': MODERATOR, // Words explained
+    'page:setup': ADMIN, // the setup steps open settings pages
     'page:users': MODERATOR, // Members list and member pages
     'page:bans': MODERATOR,
     'page:cases': MODERATOR, // list and case pages (view only)
@@ -156,6 +158,8 @@ export const ROUTES = [
     ['GET', '/audit', 'page:audit'],
     ['GET', '/backup', 'page:backup'],
     ['GET', '/backup/download', 'page:backup'],
+    ['GET', '/help', 'page:help'],
+    ['GET', '/setup', 'page:setup'],
     ['GET', '/:module', (params) => `page:${params.module}`],
 ];
 

@@ -66,7 +66,7 @@ test('matrix: the final Moderator level', () => {
     const moderatorKeys = Object.keys(PERMISSIONS).filter((key) => PERMISSIONS[key] === MODERATOR).sort();
     assert.deepEqual(moderatorKeys, [
         'action:kick', 'action:mute', 'action:unmute', 'action:warn', 'case.searches', 'inbox.close', 'inbox.reply', 'member.action', 'member.timeout',
-        'page:appeals', 'page:bans', 'page:cases', 'page:inbox', 'page:nocontact', 'page:overview', 'page:users', 'session.logout', 'staff.handover',
+        'page:appeals', 'page:bans', 'page:cases', 'page:help', 'page:inbox', 'page:nocontact', 'page:overview', 'page:users', 'session.logout', 'staff.handover',
     ]);
     assert.deepEqual(moderatorActionTypes().sort(), ['kick', 'mute', 'unmute', 'warn']);
     // Admins and owners are not restricted by the table (their existing checks apply); moderators only by it.
@@ -463,11 +463,11 @@ test('moderator: a warn that would trigger the automatic ladder ban is refused (
 
 test('sidebar: a moderator sees only their pages; no "Find a setting"; Administrators see everything', () => {
     const groups = navGroups({}, MOD_DECISION);
-    assert.deepEqual(groups.flatMap((g) => g.items.map((i) => i.key)), ['overview', 'inbox', 'users', 'bans', 'cases', 'appeals', 'nocontact']);
-    assert.deepEqual(groups.map((g) => g.group), ['Moderate'], 'empty groups dropped');
+    assert.deepEqual(groups.flatMap((g) => g.items.map((i) => i.key)), ['overview', 'inbox', 'users', 'bans', 'cases', 'appeals', 'nocontact', 'help']);
+    assert.deepEqual(groups.map((g) => g.group), ['Moderate', 'Bot'], 'empty groups dropped');
     assert.deepEqual(navGroups({ isOwner: true }, OWNER_DECISION).map((g) => g.group), [...NAV.map((g) => g.group), OWNER_NAV.group]);
     assert.equal(navGroups({}, ADMIN_DECISION).flatMap((g) => g.items).length, navItems().length);
-    const session = { username: 'mod', csrf: 't' };
+    const session = { username: 'mod', csrf: 't', navMode: 'all' };
     const page = String(layout({ title: 'x', active: 'users', session, access: MOD_DECISION, body: html`` }));
     for (const item of navItems()) {
         const linked = page.includes(`href="/dashboard/${item.key}"`);

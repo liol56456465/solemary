@@ -295,7 +295,10 @@ export function overviewPage({ session, access = null, moduleStates = {}, overvi
 <p class="facts-line"><span class="${healthy ? 'ok-text' : 'bad'}">${status}</span>${automodWord}${o.lockdown?.active ? html` <span class="bad">A raid lockdown is active.</span>` : ''}</p></header>`;
     // Getting started: every setup step, numbered, open ones first, each with why it matters.
     const done = o.checklist.filter((item) => item.done);
-    const steps = html`<p class="muted">${done.length} of ${o.checklist.length} done. Each step takes a minute; the link opens the right page.</p>
+    const guided = todo.length * 2 > o.checklist.length
+        ? html`<p class="setup-start">New to this? <a class="btn primary" href="${path('/setup')}">Set up Mewvo step by step</a> It goes through the steps below one at a time. <a href="${path('/help')}">What do these words mean?</a></p>`
+        : html`<p class="muted"><a href="${path('/setup')}">One step at a time</a> · <a href="${path('/help')}">What do these words mean?</a></p>`;
+    const steps = html`${guided}<p class="muted">${done.length} of ${o.checklist.length} done. Each step takes a minute; the link opens the right page.</p>
 <ol class="checklist">${todo.map((item) => html`<li><span class="checklist-text"><b>${item.label}</b><br><span class="checklist-hint">${item.hint}</span></span> <a class="setup-link btn small" href="${item.href}">Set up<span class="sr"> ${item.label}</span></a></li>`)}</ol>
 ${done.length ? html`<p class="muted">Done: ${done.map((item) => item.label).join(', ')}.</p>` : ''}`;
     const note = handover?.text
