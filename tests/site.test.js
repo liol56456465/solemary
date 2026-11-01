@@ -520,7 +520,7 @@ test('privacy and terms: dated, linked from the footer, contact via the support 
 
 // ── Redesign: new pages, pricing, share tags, sitemap, images ────────────
 
-test('top bar: Features, Pricing, Docs, Commands, Leaderboard; footer is one plain row of links', async () => {
+test('top bar: Features, Pricing, Docs, Commands, Leaderboard; footer: brand line and link columns', async () => {
     const site = await serve();
     try {
         const body = (await site.get('/features')).body;
@@ -530,7 +530,7 @@ test('top bar: Features, Pricing, Docs, Commands, Leaderboard; footer is one pla
         assert.ok(topnav.includes('<a href="/features" aria-current="page">Features</a>'));
         const footer = body.slice(body.indexOf('<footer'));
         assert.ok(footer.includes('<ul class="footer-links">'));
-        assert.ok(!footer.includes('footer-title') && !footer.includes('footer-brand'), 'no column headings or brand blurb');
+        for (const title of ['Product', 'Help', 'Community', 'Legal']) assert.ok(footer.includes(`<p class="footer-title">${title}</p>`), title);
         assert.ok(footer.includes('<a href="/faq">FAQ</a>') && footer.includes('<a href="/about">About</a>'));
     } finally { await site.close(); }
 });
@@ -578,12 +578,12 @@ test('pricing: names, prices, perks and the comparison come from config/site/pla
     }
 });
 
-test('home: plain layout, a real DM preview, what it does with links, the price in one line', async () => {
+test('home: a real DM preview, dashboard, ladder, what it does as cards, the plans in one row', async () => {
     const site = await serve();
     try {
         const body = (await site.get('/')).body;
         let last = 0;
-        for (const id of ['enforcement', 'ladder', 'appeals', 'automod', 'tickets', 'dashboard', 'community']) {
+        for (const id of ['dashboard', 'ladder', 'enforcement', 'appeals', 'automod', 'tickets', 'logging', 'community']) {
             const at = body.indexOf(`id="${id}"`);
             assert.ok(at > last, `item ${id} in order`);
             last = at;

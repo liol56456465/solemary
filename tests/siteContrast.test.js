@@ -33,6 +33,9 @@ const PAIRS = [
     // Page text, links, labels on every page background.
     ...['bg', 'bg-alt', 'raised'].flatMap((bg) => [['text', bg, TEXT], ['text-muted', bg, TEXT], ['accent', bg, TEXT], ['accent-hover', bg, TEXT]]),
     ['on-ink', 'ink', TEXT], ['on-ink', 'ink-hover', TEXT], // buttons
+    ['on-brand', 'brand', TEXT], ['on-brand', 'brand-hover', TEXT], // main buttons
+    ['brand', 'bg', UI], ['brand', 'raised', UI], // featured plan border, markers
+    ['text', 'brand-soft', TEXT], ['text-muted', 'brand-soft', TEXT],
     ['accent', 'accent-soft', TEXT], // "Planned" labels
     ['text-muted', 'accent-soft', TEXT],
     ['border-strong', 'bg', UI], ['border-strong', 'raised', UI], ['accent', 'bg', UI], // focus ring, markers

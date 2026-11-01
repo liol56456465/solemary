@@ -124,26 +124,27 @@ function navLinks(ctx, active) {
 ${ctx.memberPortal ? html`<li><a href="/me"${current('me')}>My record</a></li>` : ''}`;
 }
 
-/** The footer: one plain row of links (invites only when set). */
+/** The footer: link columns (Product, Help, Community, Legal); invites only when set. */
 function footerColumns(ctx, active) {
     const current = currentIf(active);
-    return html`<ul class="footer-links"><li><a href="/features"${current('features')}>Features</a></li>
+    const col = (title, links) => html`<div><p class="footer-title">${title}</p><ul class="footer-links">${links}</ul></div>`;
+    return html`<div class="footer-cols">${col('Product', html`<li><a href="/features"${current('features')}>Features</a></li>
 <li><a href="/pricing"${current('pricing')}>Pricing</a></li>
 <li><a href="/commands"${current('commands')}>Commands</a></li>
-<li><a href="/leaderboard"${current('leaderboard')}>Leaderboard</a></li>
-<li><a href="/docs"${current('docs')}>Docs</a></li>
-<li><a href="/faq"${current('faq')}>FAQ</a></li>
-<li><a href="/rules"${current('rules')}>Rules</a></li>
-<li><a href="/status"${current('status')}>Status</a></li>
-${ctx.transparency ? html`<li><a href="/transparency"${current('transparency')}>Transparency</a></li>` : ''}
 <li><a href="/changelog"${current('changelog')}>Changelog</a></li>
-<li><a href="/about"${current('about')}>About</a></li>
-${ctx.dashboardEnabled ? html`<li><a href="${DASHBOARD_PATH}">Dashboard</a></li>` : ''}
+${ctx.dashboardEnabled ? html`<li><a href="${DASHBOARD_PATH}">Dashboard</a></li>` : ''}`)}
+${col('Help', html`<li><a href="/docs"${current('docs')}>Docs</a></li>
+<li><a href="/faq"${current('faq')}>FAQ</a></li>
+<li><a href="/status"${current('status')}>Status</a></li>
+${ctx.supportInvite ? html`<li><a href="${ctx.supportInvite}" rel="noopener">Support server</a></li>` : ''}`)}
+${col('Community', html`<li><a href="/leaderboard"${current('leaderboard')}>Leaderboard</a></li>
+<li><a href="/rules"${current('rules')}>Rules</a></li>
+${ctx.transparency ? html`<li><a href="/transparency"${current('transparency')}>Transparency</a></li>` : ''}
 ${ctx.memberPortal ? html`<li><a href="/me"${current('me')}>My record</a></li>` : ''}
-${ctx.mainInvite ? html`<li><a href="${ctx.mainInvite}" rel="noopener">Our server</a></li>` : ''}
-${ctx.supportInvite ? html`<li><a href="${ctx.supportInvite}" rel="noopener">Support server</a></li>` : ''}
+${ctx.mainInvite ? html`<li><a href="${ctx.mainInvite}" rel="noopener">Our server</a></li>` : ''}`)}
+${col('Legal', html`<li><a href="/about"${current('about')}>About</a></li>
 <li><a href="/privacy"${current('privacy')}>Privacy Policy</a></li>
-<li><a href="/terms"${current('terms')}>Terms and Conditions</a></li></ul>`;
+<li><a href="/terms"${current('terms')}>Terms and Conditions</a></li>`)}</div>`;
 }
 
 /** "Add to Discord": only when the site is public and CLIENT_ID is valid. */
@@ -187,7 +188,9 @@ export function layout(ctx, { title, active = null, description = '', refresh = 
 <nav class="topnav" aria-label="Main"><ul>${navLinks(ctx, active)}</ul></nav>
 <div class="topbar-actions">${addButton(ctx)}${login}</div></div></header>
 <main id="main" tabindex="-1">${body}</main>
-<footer class="footer"><div class="wrap"><nav class="footer-nav" aria-label="Footer">${footerColumns(ctx, active)}</nav>
+<footer class="footer"><div class="wrap"><div class="footer-top"><div><p class="footer-brand">${LOGO}<span>Mewvo</span></p>
+<p class="footer-text">Discord moderation with case codes, a warning ladder and appeals that reach a person.</p></div>
+<nav class="footer-nav" aria-label="Footer">${footerColumns(ctx, active)}</nav></div>
 <p class="footer-legal">Mewvo is a Discord bot run by its owner for the Mewvo server. Not affiliated with Discord. Prices are in euros.</p></div></footer>
 </body></html>`.text;
 }
