@@ -20,7 +20,7 @@
 //     never gets a second one.
 
 import { pgConfig } from '../../config/database/postgres.js';
-import { createPremiumStore, PremiumError } from '../billing/premiumService.js';
+import { createPremiumStore, isActive, PremiumError } from '../billing/premiumService.js';
 import { cleanAccountExport } from '../privacy/dataExport.js';
 import {
     AccountError, LETTERS, LETTER_CLAIM_LIMIT, PRO_BONUS_DAYS, PRO_BONUS_PLAN, bonusFor,
@@ -232,6 +232,14 @@ export function createAccountStore({
         return row || null;
     }
 
+    /** The Discord account's running plan (premium_subscriptions row) for Account settings, or null (Free). */
+    async function planOf(discordUserId) {
+        if (!SNOWFLAKE.test(String(discordUserId || ''))) return null;
+        const { rows: [row] } = await q(
+            `SELECT user_id, plan_id, source, started_at, expires_at FROM ${tables.premium_subscriptions} WHERE user_id = $1`, [discordUserId]);
+        return row && row.plan_id && isActive(row, now()) ? row : null;
+    }
+
     /** True when this account may pick a 1-letter name now. */
     function canClaimLetter(bonus, account) {
         return Boolean(bonus && account?.discord_user_id && bonus.discord_user_id === account.discord_user_id
@@ -308,7 +316,7 @@ export function createAccountStore({
     }
 
     return {
-        createAccount, findById, findByLogin, findByDiscordId, recordLogin, setPassword, enableTotp, disableTotp, useTotpStep, useRecoveryCode, recoveryCodesLeft, linkDiscord, unlinkDiscord, bonusOf,
+        createAccount, findById, findByLogin, findByDiscordId, recordLogin, setPassword, enableTotp, disableTotp, useTotpStep, useRecoveryCode, recoveryCodesLeft, linkDiscord, unlinkDiscord, bonusOf, planOf,
         canClaimLetter, freeLetters, claimLetter, declineLetter, deleteAccount, prune, exportOf,
     };
 }

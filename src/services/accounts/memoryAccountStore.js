@@ -3,12 +3,19 @@
 // (a promise queue stands in for the row locks). The real race test is tests/db/accounts.test.js.
 
 import { PremiumError } from '../billing/premiumService.js';
-import { AccountError, LETTERS, LETTER_CLAIM_LIMIT, bonusFor } from './accountCore.js';
+import { AccountError, LETTERS, LETTER_CLAIM_LIMIT, PRO_BONUS_DAYS, bonusFor } from './accountCore.js';
 import { UNLINKED_KEEP_MS } from './accountStore.js';
 import { cleanAccountExport } from '../privacy/dataExport.js';
 
-/** grantPro(discordUserId) → premium result ({ subscription, … }) or throws PremiumError. */
-export function createMemoryAccountStore({ now = () => Date.now(), grantPro = async (userId) => ({ subscription: { user_id: userId, plan_id: 'pro' } }) } = {}) {
+/**
+ * grantPro(discordUserId) → premium result ({ subscription, … }) or throws PremiumError.
+ * The granted subscription is what planOf() returns afterwards; setPlan(id, row|null) sets one for tests.
+ */
+export function createMemoryAccountStore({
+    now = () => Date.now(),
+    grantPro = async (userId) => ({ subscription: { user_id: userId, plan_id: 'pro', source: 'bonus', started_at: new Date(now()), expires_at: new Date(now() + PRO_BONUS_DAYS * 24 * 60 * 60 * 1000) } }),
+} = {}) {
+    const plans = new Map(); // discord id → premium_subscriptions-like row
     const accounts = new Map(); // id → row
     const recovery = new Map(); // id → Map(hash → used_at)
     const bonuses = new Map(); // discord id → row
@@ -102,6 +109,7 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
             if (wins.pro) {
                 try {
                     premium = await grantPro(discordUserId);
+                    if (premium?.subscription) plans.set(String(discordUserId), { ...premium.subscription });
                 } catch (error) {
                     if (!(error instanceof PremiumError)) throw error;
                     proNote = error.userMessage;
@@ -122,6 +130,11 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
         return copy(account);
     }
     const bonusOf = async (discordUserId) => copy(bonuses.get(String(discordUserId)));
+    async function planOf(discordUserId) {
+        const row = plans.get(String(discordUserId));
+        return row?.plan_id && row.expires_at && new Date(row.expires_at).getTime() > now() ? copy(row) : null;
+    }
+    const setPlan = (discordUserId, row) => { if (row) plans.set(String(discordUserId), { user_id: String(discordUserId), ...row }); else plans.delete(String(discordUserId)); };
     function canClaimLetter(bonus, account) {
         return Boolean(bonus && account?.discord_user_id && bonus.discord_user_id === account.discord_user_id
             && bonus.letter_eligible && !bonus.letter_claimed && !bonus.letter_declined_at);
@@ -176,7 +189,7 @@ export function createMemoryAccountStore({ now = () => Date.now(), grantPro = as
     }
 
     return {
-        createAccount, findById, findByLogin, findByDiscordId, recordLogin, setPassword, enableTotp, disableTotp, useTotpStep, useRecoveryCode, recoveryCodesLeft, linkDiscord, unlinkDiscord, bonusOf,
+        createAccount, findById, findByLogin, findByDiscordId, recordLogin, setPassword, enableTotp, disableTotp, useTotpStep, useRecoveryCode, recoveryCodesLeft, linkDiscord, unlinkDiscord, bonusOf, planOf, setPlan,
         canClaimLetter, freeLetters, claimLetter, declineLetter, deleteAccount, prune, exportOf,
         // Test helpers.
         _accounts: accounts, _bonuses: bonuses, setCounter: (n) => { counter = n; },

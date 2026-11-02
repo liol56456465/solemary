@@ -473,7 +473,8 @@ export function createAccountHandlers(core) {
         }
         const recoveryLeft = me.account.totp_enabled_at ? await store.recoveryCodesLeft(me.account.id) : 0;
         const canClaim = Boolean(await letterOffer(me.account));
-        return page(res, status, accountSettingsPage(ctx(), { session: me.session, account: me.account, flash, error, recoveryLeft, canClaim }));
+        const [plan, bonus] = await Promise.all([store.planOf(me.account.discord_user_id), store.bonusOf(me.account.discord_user_id)]);
+        return page(res, status, accountSettingsPage(ctx(), { session: me.session, account: me.account, flash, error, recoveryLeft, canClaim, plan, bonus }));
     }
 
     async function settingsPage(req, res) {

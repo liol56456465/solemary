@@ -3,7 +3,8 @@
 
 import { html, formatDate } from '../dashboard/html.js';
 import { layout } from './shell.js';
-import { MIN_AGE, PASSWORD_MAX, PASSWORD_MIN, PRO_BONUS_LABEL, USERNAME_MAX, USERNAME_MIN } from '../accounts/accountCore.js';
+import { MIN_AGE, PASSWORD_MAX, PASSWORD_MIN, PRO_BONUS_LABEL, PRO_BONUS_LIMIT, USERNAME_MAX, USERNAME_MIN } from '../accounts/accountCore.js';
+import { planName } from '../billing/premiumService.js';
 
 const notices = ({ flash = null, error = null }) => html`${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}${error ? html`<p class="error" role="alert">${error}</p>` : ''}`;
 const csrfField = (token) => html`<input type="hidden" name="csrf" value="${token}">`;
@@ -134,7 +135,46 @@ ${field('ts-code', 'Code from the app', html`<input id="ts-code" name="code" req
 <p class="form-actions"><button class="button" type="submit">Turn on</button><a href="/me/account">Cancel</a></p></form>`);
 }
 
-export function accountSettingsPage(ctx, { session, account, flash = null, error = null, recoveryLeft = 0, canClaim = false }) {
+const DAY_MS = 24 * 60 * 60 * 1000;
+const PLAN_SOURCE = { bonus: 'Early-account bonus', purchase: 'A purchase', key: 'A key', owner: 'Given by the bot owner' };
+
+/** "183 days left" / "1 day left" / "Ends today" (less than a day). Pure. */
+export function daysLeftText(expiresAt, now = Date.now()) {
+    const days = Math.floor((new Date(expiresAt).getTime() - now) / DAY_MS);
+    if (days < 1) return 'Ends today';
+    return `${days} day${days === 1 ? '' : 's'} left`;
+}
+
+/**
+ * The early-account bonus line for Account settings, or null when this Discord account has no
+ * bonus record. bonus: a member_account_bonuses row. Pure.
+ */
+export function bonusStatusText(bonus) {
+    if (!bonus) return null;
+    const n = `Link #${bonus.link_number}`;
+    if (bonus.pro_granted_at) return html`${n}: ${PRO_BONUS_LABEL} of Pro, added ${when(bonus.pro_granted_at)}.`;
+    if (bonus.pro_skip_reason) return `${n}: ${PRO_BONUS_LABEL} of Pro were due but not added. ${bonus.pro_skip_reason}`;
+    if (Number(bonus.link_number) > PRO_BONUS_LIMIT) return `${n}: no Pro bonus (it went to the first ${PRO_BONUS_LIMIT} links).`;
+    return `${n}: no Pro bonus.`;
+}
+
+/** "Your plan" on Account settings: plan (or Free), end date, days left, where it came from, the bonus. */
+function planSection(ctx, { plan, bonus, now }) {
+    const bonusLine = bonusStatusText(bonus);
+    const manage = ctx.billing
+        ? html`<a class="button button-quiet" href="/me/billing">Manage subscription</a>`
+        : html`<a class="button button-quiet" href="/pricing">See plans</a>`;
+    return html`<section class="account-section"><h2>Your plan</h2>
+<dl class="summary-rows account-facts">
+<div><dt>Plan</dt><dd>${plan ? html`<strong>${planName(plan.plan_id)}</strong>` : 'Free'}</dd></div>
+${plan ? html`<div><dt>Active until</dt><dd>${when(plan.expires_at)} <small class="note">(${daysLeftText(plan.expires_at, now)})</small></dd></div>
+${PLAN_SOURCE[plan.source] ? html`<div><dt>Last added by</dt><dd>${PLAN_SOURCE[plan.source]}</dd></div>` : ''}` : ''}
+${bonusLine ? html`<div><dt>Early-account bonus</dt><dd>${bonusLine}</dd></div>` : ''}</dl>
+<p class="form-actions">${manage}</p>
+<p class="note account-foot">The plan belongs to your Discord account, not to this Mewvo account.</p></section>`;
+}
+
+export function accountSettingsPage(ctx, { session, account, flash = null, error = null, recoveryLeft = 0, canClaim = false, plan = null, bonus = null, now = Date.now() }) {
     const twoStep = Boolean(account.totp_enabled_at);
     const pw = (id) => html`<input id="${id}" name="password" type="password" required maxlength="${PASSWORD_MAX}" autocomplete="current-password">`;
     const code = (id) => html`<input id="${id}" name="code" required maxlength="20" autocomplete="one-time-code" autocapitalize="none" spellcheck="false">`;
@@ -149,6 +189,8 @@ ${notices({ flash, error })}
 <div><dt>Created</dt><dd>${when(account.created_at)}</dd></div></dl>
 <div class="form-actions">${canClaim ? html`<a class="button" href="/me/linked">Claim your 1-letter username</a>` : ''}<form method="post" action="/me/account/unlink">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">Unlink Discord</button></form></div>
 <p class="note account-foot">A Mewvo account needs a linked Discord account: after unlinking, you can only link one again (or delete the account). A plan stays with your Discord account. A Discord account gets the early-account bonus only once.</p></section>
+
+${planSection(ctx, { plan, bonus, now })}
 
 <section class="account-section"><h2>Change password</h2>
 <form class="form-stack" method="post" action="/me/account/password">${csrfField(session.csrf)}

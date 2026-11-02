@@ -83,6 +83,14 @@ test('bonuses: two links at the same moment for slot 100 get 100 and 101; 183 da
     const length = new Date(subs[0].expires_at).getTime() - started;
     assert.ok(length > 183 * DAY - 60000 && length < 183 * DAY + 60000, `183 days of Pro (got ${(length / DAY).toFixed(2)} days)`);
 
+    // Account settings reads the running plan back (Your plan); the loser and a bad id have none.
+    const plan = await store.planOf(ids[subs[0].user_id === ids[1] ? 1 : 2]);
+    assert.equal(plan.plan_id, 'pro');
+    assert.equal(plan.source, 'bonus');
+    assert.equal(new Date(plan.expires_at).getTime(), new Date(subs[0].expires_at).getTime());
+    assert.equal(await store.planOf(ids[subs[0].user_id === ids[1] ? 2 : 1]), null);
+    assert.equal(await store.planOf('12345'), null);
+
     // Found by the Discord id (the "Forgot password?" lookup).
     assert.equal((await store.findByDiscordId(ids[1])).id, (winner.account.id));
     assert.equal(await store.findByDiscordId('12345'), null);

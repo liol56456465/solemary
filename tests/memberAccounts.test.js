@@ -13,6 +13,7 @@ import { createMemoryAccountStore } from '../src/services/accounts/memoryAccount
 import { base32Decode, totp } from '../src/services/accounts/accountCore.js';
 import { PremiumError } from '../src/services/billing/premiumService.js';
 import { RESET_COOKIE, bonusText, memberAccountSettings } from '../src/services/site/accountRoutes.js';
+import { bonusStatusText, daysLeftText } from '../src/services/site/accountPages.js';
 
 const ORIGIN = 'https://bot.example';
 const GUILD = '100000000000000001';
@@ -701,4 +702,59 @@ test('prune: accounts that never linked Discord are deleted after 7 days; linked
     assert.deepEqual(await store.prune(), { accounts: 1, tokens: 0 });
     assert.equal(await store.findById(never.id), null);
     for (const kept of [linked, unlinked, legacy, fresh]) assert.ok(await store.findById(kept.id), kept.username);
+});
+
+test('Account settings: Your plan shows the bonus Pro with its end date and days left, then Free when it is gone', async () => {
+    const app = await serve();
+    const b = browser(app);
+    try {
+        await member(app, b);
+        const plan = (body) => body.slice(body.indexOf('<h2>Your plan</h2>'), body.indexOf('<h2>Change password</h2>'));
+        const withPro = plan((await b.request('/me/account')).body);
+        assert.match(withPro, /<dt>Plan<\/dt><dd><strong>Pro<\/strong>/);
+        assert.match(withPro, /<dt>Active until<\/dt><dd><time datetime="[^"]+">[^<]+<\/time> <small class="note">\(18[23] days left\)<\/small>/);
+        assert.match(withPro, /<dt>Last added by<\/dt><dd>Early-account bonus/);
+        assert.match(withPro, /<dt>Early-account bonus<\/dt><dd>Link #1: 6 months of Pro, added <time/);
+        assert.match(withPro, /href="\/pricing">See plans/, 'no test checkout: link to the plans page');
+
+        // A later purchase: the source changes, the bonus line stays.
+        app.store.setPlan(DISCORD_A, { plan_id: 'max', source: 'purchase', expires_at: new Date(Date.now() + 10.5 * 24 * 3600 * 1000) });
+        const bought = plan((await b.request('/me/account')).body);
+        assert.match(bought, /<strong>Max<\/strong>/);
+        assert.match(bought, /\(10 days left\)/);
+        assert.match(bought, /Last added by<\/dt><dd>A purchase/);
+        assert.match(bought, /Link #1: 6 months of Pro/);
+
+        // Ended: Free, no end date.
+        app.store.setPlan(DISCORD_A, { plan_id: 'pro', source: 'bonus', expires_at: new Date(Date.now() - 1000) });
+        const ended = plan((await b.request('/me/account')).body);
+        assert.match(ended, /<dt>Plan<\/dt><dd>Free<\/dd>/);
+        assert.doesNotMatch(ended, /Active until|Last added by/);
+        assert.match(ended, /Link #1: 6 months of Pro/);
+    } finally {
+        await app.close();
+    }
+});
+
+test('Account settings: Your plan without a Pro bonus (slot 101, or a higher plan already running)', async () => {
+    const store = createMemoryAccountStore({
+        grantPro: async () => { throw new PremiumError('You already have Max until 2027-01-01, which is more than Pro.', 409); },
+    });
+    const app = await serve({ store });
+    const b = browser(app);
+    try {
+        await member(app, b);
+        const body = (await b.request('/me/account')).body;
+        assert.match(body, /<dt>Plan<\/dt><dd>Free<\/dd>/);
+        assert.match(body, /Link #1: 6 months of Pro were due but not added\. You already have Max until 2027-01-01/);
+    } finally {
+        await app.close();
+    }
+    assert.equal(bonusStatusText(null), null);
+    assert.equal(bonusStatusText({ link_number: 101 }), 'Link #101: no Pro bonus (it went to the first 100 links).');
+    const now = Date.UTC(2026, 10, 2, 12);
+    const day = 24 * 3600 * 1000;
+    assert.equal(daysLeftText(new Date(now + 183 * day), now), '183 days left');
+    assert.equal(daysLeftText(new Date(now + 1.9 * day), now), '1 day left');
+    assert.equal(daysLeftText(new Date(now + 3600 * 1000), now), 'Ends today');
 });
