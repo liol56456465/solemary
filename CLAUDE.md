@@ -44,7 +44,8 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 
 - `npm start` — production start.
 - `npm run start:test` — test mode (`NODE_ENV=test`, loads `~/.config/mewvo/env.test`).
-- `npm test` — unit tests. `npm run test:db` — DB failure-injection tests (refuses non-local DBs).
+- `npm test` — unit tests. `npm run test:db` — DB failure-injection tests (refuses non-local DBs). Run on Node 22
+  (`nvm use` reads `.nvmrc`; the shell default is 20, where the test globs find nothing). Don't change nvm's default.
 - `npm run migrate` / `migrate:check` / `migrate:status`.
 - `npm run restore:db` / `backup:drill`: a non-local target needs `--confirm-host=<host>` (protects the live DB).
 - Syntax check changed files: `node --check <file>` (runs automatically after Claude edits: `.claude/hooks/node-check.mjs`).
@@ -182,10 +183,9 @@ The one-time proxy IP log line goes in the first deploy and is removed in the ne
 
 **Built and merged on `feature/enforcements`, not yet deployed:** I30 expiry DM, I31 `/case edit|void|history`,
 I32 evidence (`/case evidence`), I33 "Warn for this message" menu, I35 native AutoMod bridge (`/automod native`),
-I36 `/staff stats`, smarter automod, `/community` (tags, suggestions, sticky, starboard, YouTube feeds).
-Not built: scheduled messages. Check `plan.md` for what is pushed/deployed.
+I36 `/staff stats`, smarter automod, `/community` (tags, suggestions, sticky, starboard, feeds), scheduled messages; see plan.md.
 **On `feature/dashboard-members`:** Members page (filters, roles, nickname, timeout, bulk), temporary roles
-(`member_temp_roles`, expiry cron + rejoin re-apply). Needs **SCHEMA_VERSION=3** + `npm run migrate` on deploy.
+(`member_temp_roles`, expiry cron + rejoin re-apply). Schema is now **v8** (`src/config/database/schemaVersion.js`).
 
 **Web dashboard** (our server only; `src/services/dashboard/`, on `feature/enforcements`): server-rendered
 pages, plain CSS + one static script, strict CSP, no SPA. Discord login (`identify`), Administrator re-checked
