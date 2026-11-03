@@ -203,6 +203,7 @@ function makeEnforcement(state) {
         resolveImageUrls: rec('resolveImageUrls', async () => new Map()),
         decideAppeal: rec('decideAppeal', async () => ({ record, dmDelivered: true, label: 'accepted', notes: [] })),
         listActiveNoContactOrders: rec('listActiveNoContactOrders', async () => []),
+        listActiveWatches: rec('listActiveWatches', async () => []),
         addNoContactOrder: rec('addNoContactOrder', async () => ({ order: { id: 8 }, delivered: [true, true] })),
         listMassActionBlocks: rec('listMassActionBlocks', async () => []),
         loadCoverageCounts: rec('loadCoverageCounts', async () => ({ incidents: [], staff: [] })),
@@ -321,14 +322,14 @@ test('moderator: the handlers refuse on their own too (second check behind the r
     const en = h.d.enforcement;
     // Through an allowed route path, but the handler of a forbidden action.
     const handlers = [en.roleAdd, en.roleRemove, en.nickname, en.unverify, en.noteAdd, en.noteRemove, en.bulkPreview, en.bulkExecute,
-        en.caseEdit, en.caseVoid, en.evidenceAdd, en.evidenceRemove, en.appealPreview, en.appealDecide, en.noContactAdd, en.noContactEnd,
+        en.caseEdit, en.caseVoid, en.evidenceAdd, en.evidenceRemove, en.appealPreview, en.appealDecide, en.noContactAdd, en.noContactEnd, en.watchlistEnd,
         en.blockLift, en.staffWarn, en.staffRestore, h.d.moduleAction];
     for (const handler of handlers) {
         const res = await post(h, handler, `/users/${TARGET}/timeout`, { params: { id: TARGET, code: CODE, module: 'automod', action: 'enabled' }, form: { roleId: '600000000000000002', note: 'x' } });
         assert.equal(res.statusCode, 403, handler.name || 'handler');
     }
     assert.equal(h.guild.memberCalls.length, 0);
-    assert.equal(h.calls.filter((c) => ['executeAction', 'addNote', 'editCase', 'decideAppeal', 'addNoContactOrder'].includes(c.name)).length, 0);
+    assert.equal(h.calls.filter((c) => ['executeAction', 'addNote', 'editCase', 'decideAppeal', 'addNoContactOrder', 'endWatch'].includes(c.name)).length, 0);
 });
 
 test('moderator: warn / mute / unmute / kick preview and execute; executeAction gets the fresh role for its own check', async () => {

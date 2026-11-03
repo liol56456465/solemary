@@ -77,6 +77,7 @@ export const PERMISSIONS = Object.freeze({
     'case.export': ADMIN, // Cases → Download CSV (a paid perk on top)
     'appeal.decide': ADMIN,
     'nocontact.edit': ADMIN,
+    'watchlist.edit': ADMIN, // end a watchlist entry (the list is on the No-contact page)
     'inbox.reply': MODERATOR, // modmail / ticket replies from the web
     'inbox.close': MODERATOR,
     'members.rules': ADMIN, // role rules: pages and changes
@@ -128,6 +129,7 @@ export const ROUTES = [
     ['POST', '/appeals/:code/decide', 'appeal.decide'],
     ['POST', '/nocontact/add', 'nocontact.edit'],
     ['POST', '/nocontact/end', 'nocontact.edit'],
+    ['POST', '/watchlist/end', 'watchlist.edit'],
     ['POST', '/staff/blocks/lift', 'staff.manage'],
     ['POST', '/staff/warn', 'staff.manage'],
     ['POST', '/staff/restore', 'staff.manage'],

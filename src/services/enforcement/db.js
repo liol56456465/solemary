@@ -27,6 +27,7 @@ export const T = {
     nativeRules: pgConfig.tables.automod_native_rules,
     raidIncidents: pgConfig.tables.automod_raid_incidents,
     noContact: pgConfig.tables.no_contact_orders,
+    watchlist: pgConfig.tables.mod_watchlist,
 };
 
 export function isEnforcementDbAvailable() {

@@ -142,6 +142,8 @@ function makeEnforcement(overrides = {}) {
         listActiveNoContactOrders: rec('listActiveNoContactOrders', async () => [{ id: 7, user_a: TARGET, user_b: OTHER, until: new Date(Date.now() + 86400000), created_by: ADMIN, reason: 'feud <b>' }]),
         addNoContactOrder: rec('addNoContactOrder', async () => ({ order: { id: 8 }, delivered: [true, true] })),
         endNoContactOrder: rec('endNoContactOrder', async (c, { id }) => (id === 7 ? { order: { id: 7 }, delivered: [true, false] } : null)),
+        listActiveWatches: rec('listActiveWatches', async () => [{ id: 4, user_id: TARGET, until: null, created_at: new Date(Date.now() - 86400000), created_by: ADMIN, reason: 'alt <i>' }]),
+        endWatch: rec('endWatch', async (c, { id }) => (id === 4 ? { id: 4, user_id: TARGET } : null)),
         listMassActionBlocks: rec('listMassActionBlocks', async () => [{ moderatorId: ADMIN, until: new Date(Date.now() + 60000).toISOString(), count: 5, at: new Date().toISOString() }]),
         clearMassActionBlock: rec('clearMassActionBlock', async () => {}),
         loadCoverageCounts: rec('loadCoverageCounts', async () => ({ incidents: [{ hour: '2026-10-26T10:00:00Z', count: 4 }], staff: [{ hour: '2026-10-26T10:00:00Z', count: 1 }] })),
@@ -509,6 +511,7 @@ const POSTS = [
     { name: 'appeal preview', handler: 'appealPreview', params: { code: CODE }, form: { decision: 'accept', note: 'ok' }, bad: { decision: 'maybe' }, service: 'getAppealHistory', status: 200 },
     { name: 'no-contact add', handler: 'noContactAdd', params: {}, form: { user_a: TARGET, user_b: OTHER, days: '7', reason: 'feud' }, bad: { user_a: TARGET, user_b: BOTUSER, days: '7', reason: 'feud' }, service: 'addNoContactOrder', audit: 'nocontact' },
     { name: 'no-contact end', handler: 'noContactEnd', params: {}, form: { id: '7' }, bad: { id: '9' }, service: 'endNoContactOrder', audit: 'nocontact', badCallsService: true },
+    { name: 'watchlist end', handler: 'watchlistEnd', params: {}, form: { id: '4' }, bad: { id: '9' }, service: 'endWatch', audit: 'watchlist', badCallsService: true },
     { name: 'block lift', handler: 'blockLift', params: {}, form: { moderator: OTHER }, bad: { moderator: 'x' }, service: 'clearMassActionBlock', audit: 'massguard', modLog: true, owner: true },
     { name: 'staff warn', handler: 'staffWarn', params: {}, form: { user: TARGET, reason: 'broke admin rule 2' }, bad: { user: TARGET, reason: '' }, service: 'giveStaffWarning', audit: 'staff', owner: true },
     { name: 'staff restore', handler: 'staffRestore', params: {}, form: { user: TARGET }, bad: { user: 'x' }, service: 'restoreStaffRoles', audit: 'staff', owner: true },
@@ -875,6 +878,17 @@ test('no-contact page lists orders with end buttons and the start form', async (
     assert.ok(res.body.includes('feud &lt;b&gt;'));
     assert.ok(res.body.includes('/dashboard/nocontact/end'));
     assert.ok(res.body.includes('/dashboard/nocontact/add'));
+});
+
+test('no-contact page also shows the watchlist card (escaped reason, end button, no end date)', async () => {
+    const h = await setup();
+    const res = await get(h, h.d.enforcement.noContact);
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, /Watchlist \(1\)/);
+    assert.ok(res.body.includes('alt &lt;i&gt;'));
+    assert.ok(!res.body.includes('alt <i>'));
+    assert.ok(res.body.includes('/dashboard/watchlist/end'));
+    assert.ok(res.body.includes('No end date'));
 });
 
 test('result message and plain text: case code, DM, notes; Discord markdown removed', () => {

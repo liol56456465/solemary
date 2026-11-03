@@ -16,6 +16,7 @@ import { precedentHint } from '../enforcement/precedentService.js';
 import {
     addNoContactOrder, endNoContactOrder, getActiveOrdersFor, listActiveNoContactOrders,
 } from '../enforcement/noContactService.js';
+import { endWatch, listActiveWatches } from '../enforcement/watchlistService.js';
 import { clearMassActionBlock, getMassActionBlock, listMassActionBlocks, recentBanKickCount } from '../enforcement/massActionGuard.js';
 import { addNote, listNotes, removeNote } from '../enforcement/staffNotesService.js';
 import { memberStandings } from './membersData.js';
@@ -43,6 +44,8 @@ export const defaultEnforcement = {
     decideAppeal,
     // no-contact orders
     listActiveNoContactOrders, addNoContactOrder, endNoContactOrder,
+    // staff watchlist (shown on the No-contact page)
+    listActiveWatches, endWatch,
     // staff
     listMassActionBlocks, clearMassActionBlock, loadCoverageCounts, getGuildConfig, isBotOwner,
     staffActivityForWeek, giveStaffWarning, listStaffWarnings, restoreStaffRoles, listRemovedStaffRoles,

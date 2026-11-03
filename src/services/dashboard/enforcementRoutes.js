@@ -11,7 +11,8 @@
 //   POST /dashboard/cases/:code/evidence/add|upload|remove   links, or an uploaded image (re-hosted)
 //   GET  /dashboard/appeals/:code                appeal dossier
 //   POST /dashboard/appeals/:code/preview|decide confirm step → decideAppeal
-//   GET  /dashboard/nocontact, POST /dashboard/nocontact/add|end
+//   GET  /dashboard/nocontact (also lists the staff watchlist), POST /dashboard/nocontact/add|end,
+//   POST /dashboard/watchlist/end
 //   POST /dashboard/staff/blocks/lift            OWNER_IDS only (like /staff restore)
 //   POST /dashboard/staff/warn|restore           OWNER_IDS only (/staff warn, /staff restore's roles)
 //
@@ -952,11 +953,11 @@ export function createEnforcementHandlers(core) {
     // ── No-contact orders ────────────────────────────────────────────────
 
     async function renderNoContact(req, res, status = 200, { error = null, values = {} } = {}) {
-        const rows = await e.listActiveNoContactOrders(guildId, 100);
-        const ids = new Set(rows.flatMap((o) => [o.user_a, o.user_b, o.created_by]));
+        const [rows, watchRows] = await Promise.all([e.listActiveNoContactOrders(guildId, 100), e.listActiveWatches(guildId, 100)]);
+        const ids = new Set([...rows.flatMap((o) => [o.user_a, o.user_b, o.created_by]), ...watchRows.flatMap((w) => [w.user_id, w.created_by])]);
         const names = new Map([...ids].map((id) => [id, client.users.cache?.get?.(id)?.username || null]));
         return sendHtml(res, status, noContactPage({
-            ...shellOf(req), rows, names, canWrite: canWrite(req), editEnabled: settings.editEnabled, canAct: req.dashboard.access.canAct,
+            ...shellOf(req), rows, watchRows, names, canWrite: canWrite(req), editEnabled: settings.editEnabled, canAct: req.dashboard.access.canAct,
             flash: status === 200 ? req.dashboard.flash : null, error, values,
         }));
     }
@@ -994,6 +995,19 @@ export function createEnforcementHandlers(core) {
         await flash(req, `No-contact order #${id} ended. ${result.delivered.every(Boolean) ? 'Both members were DMed.' : 'A DM could not be delivered to one of them.'}`);
         return res.redirect(303, path('/nocontact'));
     }, { rerender: rerenderNoContact, perm: 'nocontact.edit' });
+
+    // ── Staff watchlist (listed on the No-contact page; added with /case watch add) ──
+
+    const watchlistEnd = guardedPost(async (req, res) => {
+        const id = text(req.body, 'id', 12);
+        if (!/^\d{1,12}$/.test(id)) throw new InputError('Not a watchlist entry number.');
+        const moderator = await freshModerator(req);
+        const row = await e.endWatch(client, { guildId, id: Number(id), endedBy: { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username } });
+        if (!row) throw new InputError(`There is no active watchlist entry #${id}.`);
+        await audit(req, 'watchlist', [{ key: `watch:${id}`, old: 'active', new: 'ended' }]);
+        await flash(req, `Watchlist entry #${id} ended.`);
+        return res.redirect(303, path('/nocontact'));
+    }, { rerender: rerenderNoContact, perm: 'watchlist.edit' });
 
     // ── Staff ────────────────────────────────────────────────────────────
 
@@ -1105,7 +1119,7 @@ export function createEnforcementHandlers(core) {
         users, bans, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, unverify, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
         caseEdit, caseVoid, caseBulk, evidenceAdd, evidenceUpload, evidenceRemove, caseNote, caseTags, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
-        noContact, noContactAdd, noContactEnd,
+        noContact, noContactAdd, noContactEnd, watchlistEnd,
         staffSections, blockLift, staffWarn, staffRestore, canWrite,
         // Shared with the Inbox (inboxRoutes.js): the same POST checks, fresh Administrator, audit rows, flash.
         guardedPost, freshModerator, audit, flash,

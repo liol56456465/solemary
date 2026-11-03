@@ -150,6 +150,7 @@ export const ENFORCEMENT_AUDIT_MODULES = [
     { key: 'appeal-decisions', label: 'Appeal decisions' },
     { key: 'notes', label: 'Staff notes' },
     { key: 'nocontact', label: 'No-contact orders' },
+    { key: 'watchlist', label: 'Watchlist' },
     { key: 'massguard', label: 'Mass-action guard' },
     { key: 'staff', label: 'Staff discipline' },
     { key: 'owner', label: 'Owner area' },
@@ -1064,6 +1065,7 @@ export function dashboardRouter(d) {
     router.post('/appeals/:code/decide', form, user, safe(en.appealDecide));
     router.post('/nocontact/add', form, user, safe(en.noContactAdd));
     router.post('/nocontact/end', form, user, safe(en.noContactEnd));
+    router.post('/watchlist/end', form, user, safe(en.watchlistEnd));
     router.post('/staff/blocks/lift', form, user, safe(en.blockLift));
     router.post('/staff/warn', form, user, safe(en.staffWarn));
     router.post('/staff/restore', form, user, safe(en.staffRestore));

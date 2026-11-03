@@ -22,6 +22,7 @@ import { enforcementConfig } from '../config/enforcement.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 import { recordMemberEvent } from '../services/members/memberInsightsService.js';
 import { applyRoleRulesToMember } from '../services/members/roleRuleService.js';
+import { alertWatched } from '../services/enforcement/watchlistService.js';
 
 // Welcome messages keep the mentions they had before the client default dropped roles
 // (2026-11-03): users and roles from the admin-written text, never @everyone/@here.
@@ -34,6 +35,18 @@ export default {
   async execute(member) {
     try {
         const { guild, user } = member;
+
+        // Staff watchlist: a watched member joining/rejoining → one mod log line (memory only; never throws).
+        if (!user.bot) {
+            void alertWatched(member.client, {
+                guildId: guild.id,
+                userId: user.id,
+                username: user.username,
+                event: Number.isFinite(user.createdTimestamp)
+                    ? `joined the server (account created <t:${Math.floor(user.createdTimestamp / 1000)}:R>)`
+                    : 'joined the server',
+            });
+        }
 
         // Leaving and rejoining must not shake off an active mute; runs first so
         // nothing later in the join pipeline can skip it.

@@ -22,6 +22,9 @@ import { CaseNoteError, caseNotes, normalizeTags, tagsText } from '../../service
 import {
     addNoContactOrder, endNoContactOrder, listActiveNoContactOrders, NO_CONTACT_MAX_DAYS,
 } from '../../services/enforcement/noContactService.js';
+import {
+    addWatch, endWatch, listActiveWatches, watchListLine, WATCH_MAX_DAYS, WATCH_REASON_MAX,
+} from '../../services/enforcement/watchlistService.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -203,12 +206,56 @@ async function handleNoContact(interaction, client, sub) {
     }
 }
 
+/** /case watch add | list | end — the watched member is never told. */
+async function handleWatch(interaction, client, sub) {
+    const admin = { id: interaction.user.id, username: interaction.user.username };
+
+    if (sub === 'add') {
+        const member = interaction.options.getUser('member', true);
+        const row = await addWatch(client, {
+            guildId: interaction.guildId,
+            userId: member.id,
+            username: member.username,
+            isBot: Boolean(member.bot),
+            days: interaction.options.getInteger('days') ?? null,
+            reason: interaction.options.getString('reason', true),
+            createdBy: admin,
+        });
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [successEmbed(`Watchlist entry #${row.id} added`, [
+                `**${truncate(member.username, 50)}** is on the watchlist ${row.until ? `until <t:${unixOf(row.until)}:f> (<t:${unixOf(row.until)}:R>)` : 'with no end date'}.`,
+                'They are not told. Their joins, new cases and automod hits are posted in the mod log (at most once a minute).',
+            ].join('\n'))],
+        });
+    }
+
+    if (sub === 'list') {
+        const rows = await listActiveWatches(interaction.guildId);
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [createEmbed({
+                title: `Watchlist (${rows.length})`,
+                description: truncate(rows.map(watchListLine).join('\n') || 'Nobody. Add someone with `/case watch add`.', 4096),
+                color: 'primary',
+            })],
+        });
+    }
+
+    if (sub === 'end') {
+        const id = interaction.options.getInteger('id', true);
+        const row = await endWatch(client, { guildId: interaction.guildId, id, endedBy: admin });
+        if (!row) throw userError(`There is no active watchlist entry #${id}. See \`/case watch list\`.`);
+        return InteractionHelper.safeEditReply(interaction, {
+            embeds: [successEmbed(`Watchlist entry #${id} ended`, `<@${row.user_id}> is no longer watched.`)],
+        });
+    }
+}
+
 export default {
     // Registered as a guild command in MAIN_GUILD_ID only. Admin-only (not in commandAccess).
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('case')
-        .setDescription('Search, edit and void cases, manage evidence and history, and no-contact orders')
+        .setDescription('Search, edit and void cases, evidence and history, no-contact orders and the watchlist')
         .addSubcommand((sub) => sub.setName('search').setDescription('Find cases by member, moderator, type, reason, status, date or text')
             .addUserOption((option) => option.setName('member').setDescription('Cases given to this member'))
             .addUserOption((option) => option.setName('moderator').setDescription('Cases given by this moderator'))
@@ -271,6 +318,17 @@ export default {
             .addSubcommand((sub) => sub.setName('list').setDescription('List active no-contact orders'))
             .addSubcommand((sub) => sub.setName('end').setDescription('End a no-contact order early (both are DMed)')
                 .addIntegerOption((option) => option.setName('id').setDescription('Order number (#) from /case nocontact list')
+                    .setRequired(true).setMinValue(1))))
+        .addSubcommandGroup((group) => group.setName('watch').setDescription('Staff watchlist: joins, new cases and automod hits go to the mod log')
+            .addSubcommand((sub) => sub.setName('add').setDescription('Put a member on the watchlist (they are not told)')
+                .addUserOption((option) => option.setName('member').setDescription('The member to watch').setRequired(true))
+                .addStringOption((option) => option.setName('reason').setDescription('Why (staff only)')
+                    .setRequired(true).setMaxLength(WATCH_REASON_MAX))
+                .addIntegerOption((option) => option.setName('days').setDescription('How many days (empty = no end date)')
+                    .setMinValue(1).setMaxValue(WATCH_MAX_DAYS)))
+            .addSubcommand((sub) => sub.setName('list').setDescription('List members on the watchlist'))
+            .addSubcommand((sub) => sub.setName('end').setDescription('Take a member off the watchlist')
+                .addIntegerOption((option) => option.setName('id').setDescription('Entry number (#) from /case watch list')
                     .setRequired(true).setMinValue(1)))),
 
     async execute(interaction, config, client) {
@@ -303,6 +361,10 @@ export default {
 
         if (group === 'nocontact') {
             return handleNoContact(interaction, client, sub);
+        }
+
+        if (group === 'watch') {
+            return handleWatch(interaction, client, sub);
         }
 
         const code = readCode(interaction);

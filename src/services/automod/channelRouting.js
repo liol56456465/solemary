@@ -18,7 +18,7 @@ export const ALERT_KINDS = new Set([
 ]);
 
 /** Enforcement actions: posted in the mod log as one line. */
-export const ACTION_KINDS = new Set(['ban', 'kick', 'mute', 'warn', 'unban', 'unmute', 'removewarn', 'nocontact']);
+export const ACTION_KINDS = new Set(['ban', 'kick', 'mute', 'warn', 'unban', 'unmute', 'removewarn', 'nocontact', 'watch']);
 
 /**
  * Records that always go to the mod log: case edits/voids, appeal decisions and
@@ -66,6 +66,7 @@ const ACTION_LINE = {
     unmute: 'Unmute',
     removewarn: 'Warning removed',
     nocontact: 'No-contact',
+    watch: 'Watchlist',
 };
 
 const oneLine = (text) => String(text ?? '').replace(/\s*\n+\s*/g, ' ').trim();

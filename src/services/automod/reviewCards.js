@@ -35,6 +35,7 @@ import { switchRuleToMonitor } from './automodTuning.js';
 import { ruleDefinition } from './customRules.js';
 import { restoreIfContested } from './automodContest.js';
 import { canGiveSecondOpinion, secondOpinionPayload, shouldAskSecondOpinion } from './secondOpinion.js';
+import { alertWatched } from '../enforcement/watchlistService.js';
 
 export { describeStep };
 
@@ -132,6 +133,19 @@ function logHit(p) {
     if (p.detail) logger.info(`Automod ${p.rule} on ${p.targetUser.id}: ${p.detail}`);
 }
 
+/** Staff watchlist: a watched member tripped automod → one mod log line (memory lookup; never throws). */
+function alertWatchlistHit(p) {
+    if (p.report || !p.guild?.id || !p.targetUser?.id) return;
+    const rule = stripLeadingEmoji(String(p.ruleLabel || p.rule || 'a rule'));
+    const where = p.messageUrl ? ` · [jump to message](${p.messageUrl})` : (p.channelId ? ` in <#${p.channelId}>` : '');
+    void alertWatched(p.guild.client, {
+        guildId: p.guild.id,
+        userId: p.targetUser.id,
+        username: p.targetUser.username,
+        event: `triggered automod (${truncate(rule, 80)})${where}`,
+    });
+}
+
 /**
  * Posts a card, or updates the open card of the same burst. p: { guild, rule, evidence,
  * targetUser, channelId, messageUrl, content, step?, result?, offence?, monitor?, suggested?,
@@ -144,6 +158,7 @@ function logHit(p) {
 export async function postReviewCard(p) {
     logHit(p);
     if (!p.report) recordHit({ rule: p.rule, channelId: p.channelId, monitor: Boolean(p.monitor) });
+    alertWatchlistHit(p);
     const key = entryFrom(p).key;
     const run = async () => {
         const now = Date.now();
@@ -177,6 +192,7 @@ export async function postReviewCard(p) {
 export async function noteRepeatHit(p) {
     logHit(p);
     recordHit({ rule: p.rule, channelId: p.channelId, monitor: false });
+    alertWatchlistHit(p);
     const key = entryFrom(p).key;
     if (!key) return;
     await Mutex.runExclusive(`amcard:${key}`, async () => {

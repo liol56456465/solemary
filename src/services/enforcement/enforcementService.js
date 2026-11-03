@@ -20,6 +20,7 @@ import { enforceMassActionGuard } from './massActionGuard.js';
 import { endTempRoles } from '../members/tempRoleService.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { ACTION_KINDS, channelPurposeFor, formatModLogLine, resolveChannelId } from '../automod/channelRouting.js';
+import { alertWatched } from './watchlistService.js';
 
 export const REQUIRED_BOT_PERMISSIONS = [
     ['BanMembers', 'Ban Members'],
@@ -167,6 +168,7 @@ const MOD_LOG_TITLES = {
     unmute: ['Unmute', 'success'],
     removewarn: ['Warning removed', 'success'],
     nocontact: ['No-contact order', 'warning'],
+    watch: ['Watchlist', 'warning'],
     caseedit: ['Case edited', 'secondary'],
     casevoid: ['Case voided', 'secondary'],
     appeal: ['Appeal decided', 'primary'],
@@ -294,7 +296,23 @@ export async function executeSystemAction({ guild, targetUser, flow }) {
     return runAction({ guild, moderator, targetUser, flow });
 }
 
+const CASE_TYPES = new Set(['ban', 'kick', 'mute', 'warn']);
+
 async function runAction({ guild, moderator, targetUser, flow, guard = null }) {
+    const result = await runActionLocked({ guild, moderator, targetUser, flow, guard });
+    // Staff watchlist: a new case for a watched member → one mod log line (memory lookup; never throws).
+    if (CASE_TYPES.has(flow.type) && result?.record?.case_code) {
+        void alertWatched(guild.client, {
+            guildId: guild.id,
+            userId: targetUser.id,
+            username: targetUser.username,
+            event: `new case \`${result.record.case_code}\` (${flow.type}) by ${moderator?.user?.username || moderator?.id || 'unknown'}`,
+        });
+    }
+    return result;
+}
+
+async function runActionLocked({ guild, moderator, targetUser, flow, guard = null }) {
     return lockFor(guild.id, targetUser.id, async () => {
         if (guard) await guard();
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);

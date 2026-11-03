@@ -29,6 +29,7 @@ import { query as enforcementQuery } from './services/enforcement/db.js';
 import { importModmailTopicsOnce } from './services/modmailLinks.js';
 import { enforcementConfig } from './config/enforcement.js';
 import { expireNoContactOrders } from './services/enforcement/noContactService.js';
+import { expireWatchlist } from './services/enforcement/watchlistService.js';
 import { importLegacyWarnings } from './services/enforcement/warnImportService.js';
 import { flushStaffMessages, postWeeklyStaffReport } from './services/staffActivityService.js';
 import { snapshotMainServer } from './services/structureBackupService.js';
@@ -410,6 +411,7 @@ class Mewvo extends Client {
     // Appeals still pending after the quiet time: one "still open" DM to the member (staff: staleAppealService).
     cron.schedule('5 * * * *', exclusive('appeal_reminders', () => remindStaleAppeals(this)));
     cron.schedule('* * * * *', exclusive('no_contact_expiry', () => expireNoContactOrders(this)));
+    cron.schedule('* * * * *', exclusive('watchlist_expiry', () => expireWatchlist(this)));
     cron.schedule('* * * * *', exclusive('staff_activity_flush', () => flushStaffMessages()));
     // Messages per server per day (Dashboard → Activity), a count only; kept 400 days.
     cron.schedule('* * * * *', exclusive('activity_flush', () => flushActivity()));

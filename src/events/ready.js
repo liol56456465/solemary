@@ -8,6 +8,7 @@ import { reconcileLevelRoles } from "../services/leveling/levelRoleSyncService.j
 import { reconcileBannedRoles } from "../services/enforcement/bannedRoleService.js";
 import { describeAutomodReadiness } from "../services/automod/automodService.js";
 import { loadNoContactOrders } from "../services/enforcement/noContactService.js";
+import { loadWatchlist } from "../services/enforcement/watchlistService.js";
 import { loadCommunityCaches } from "../services/community/index.js";
 import { loadBlacklistWithRetry } from "../services/owner/blacklistService.js";
 import { applyStoredBotState } from "../services/owner/botStateService.js";
@@ -44,6 +45,11 @@ export default {
         return null;
       });
       startupLog(noContactCount == null ? "No-contact orders: not loaded (database unavailable)" : `No-contact orders: ${noContactCount} active`);
+      const watchCount = await loadWatchlist().catch((error) => {
+        logger.error(`Watchlist could not be loaded: ${error.message}`);
+        return null;
+      });
+      startupLog(watchCount == null ? "Watchlist: not loaded (database unavailable)" : `Watchlist: ${watchCount} active`);
       startupLog(`Community: ${await loadCommunityCaches(client)}`);
 
       const reconciliationSummary = await reconcileReactionRoleMessages(client);
