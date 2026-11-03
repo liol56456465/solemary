@@ -1,13 +1,17 @@
 // Level data is kept when a member leaves (owner, 2026-11-03): the leave handler no longer
 // deletes it, and the leaderboard skips members who are known to have left.
 
-import { test } from 'node:test';
+import { beforeEach, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getLeaderboard, getUserLevelData, saveUserLevelData } from '../src/services/leveling/leveling.js';
+import {
+    LEADERBOARD_MAX_OFFSET, getLeaderboard, getUserLevelData, resetLeaderboardLeftCacheForTests, saveUserLevelData,
+} from '../src/services/leveling/leveling.js';
 import { getUserLevelKey } from '../src/utils/database/keys.js';
 import guildMemberRemove from '../src/events/guildMemberRemove.js';
 
 const GUILD = '500000000000000001';
+
+beforeEach(() => resetLeaderboardLeftCacheForTests());
 const id = (n) => `5100000000000000${String(n).padStart(2, '0')}`;
 
 function memoryDb() {
@@ -127,4 +131,24 @@ test('leaving the server keeps the member level data', async () => {
     await guildMemberRemove.execute(member);
     assert.ok(db.store.has(getUserLevelKey(GUILD, userId)), 'level row still stored');
     assert.equal((await getUserLevelData(client, GUILD, userId)).level, 12);
+});
+
+test('leaderboard abuse bounds: at most 2 member fetches per call, leavers remembered, deep pages refused', async () => {
+    // 400 rows, nobody cached or fetchable: without a bound this would be 4 fetches per call.
+    const many = Array.from({ length: 400 }, (_, i) => ({ userId: `53000000000000${String(i).padStart(4, '0')}`, xp: 0, level: 900 - i, totalXp: 900000 - i }));
+    const { guild, fetchCalls } = fakeGuild();
+    const client = clientWith(guild, { postgresRows: many });
+    const page = await getLeaderboard(client, GUILD, 10, 0);
+    assert.equal(fetchCalls.length, 2, 'two fetch batches, then uncached members stay listed');
+    assert.deepEqual(page.map((e) => e.userId), many.slice(200, 210).map((r) => r.userId));
+    // Second call: the first 200 leavers come from memory (no fetch); the next two batches use the budget.
+    await getLeaderboard(client, GUILD, 10, 0);
+    assert.equal(fetchCalls.length, 4);
+    assert.deepEqual(fetchCalls[2], many.slice(200, 300).map((r) => r.userId));
+    // A remembered leaver who rejoined (back in the cache) is shown again.
+    guild.members.cache.set(many[0].userId, { id: many[0].userId, user: { id: many[0].userId, username: 'back' } });
+    assert.equal((await getLeaderboard(client, GUILD, 10, 0))[0].userId, many[0].userId);
+    const before = client.reads.length;
+    assert.deepEqual(await getLeaderboard(client, GUILD, 10, LEADERBOARD_MAX_OFFSET + 10), []);
+    assert.equal(client.reads.length, before, 'a page past the limit reads nothing');
 });

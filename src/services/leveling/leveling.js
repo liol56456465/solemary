@@ -93,6 +93,12 @@ async function readAllLevelRows(client, guildId) {
 // Rows read per step while skipping members who left, and the most rows one page may scan.
 const LEADERBOARD_BATCH = 100;
 const LEADERBOARD_MAX_SCAN = 5000;
+// Abuse bounds: the deepest offset served, the gateway member fetches one call may make (later
+// batches keep uncached members listed), and how long a "has left" result is remembered.
+export const LEADERBOARD_MAX_OFFSET = 490;
+const LEADERBOARD_MAX_FETCHES = 2;
+const LEFT_TTL_MS = 10 * 60 * 1000;
+const knownLeft = new Map(); // guildId:userId → expiry ms
 
 /**
  * One page of the guild leaderboard, read from user_levels (Postgres) in steps of
@@ -121,6 +127,7 @@ export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { 
     if (!Number.isInteger(offset) || offset < 0) {
       offset = 0;
     }
+    if (offset > LEADERBOARD_MAX_OFFSET) return [];
 
     const guild = client.guilds.cache.get(guildId);
     if (!guild) {
@@ -141,9 +148,10 @@ export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { 
 
     const wanted = offset + limit;
     const shown = [];
+    const budget = { fetches: fetchMissing ? LEADERBOARD_MAX_FETCHES : 0 };
     for (let from = 0; shown.length < wanted && from < LEADERBOARD_MAX_SCAN; from += LEADERBOARD_BATCH) {
       const rows = await readRows(LEADERBOARD_BATCH, from);
-      const gone = await membersWhoLeft(guild, rows.map(row => row.userId), fetchMissing);
+      const gone = await membersWhoLeft(guild, rows.map(row => row.userId), budget);
       for (const row of rows) {
         if (!gone.has(row.userId)) shown.push(row);
       }
@@ -171,19 +179,46 @@ export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { 
   }
 }
 
-/** The ids (of userIds) that are not in the guild: uncached and not found by one fetch. */
-async function membersWhoLeft(guild, userIds, fetchMissing) {
-  const missing = userIds.filter(id => !guild.members.cache.has(id));
-  if (!fetchMissing || missing.length === 0) return new Set();
+/**
+ * The ids (of userIds) that are not in the guild: uncached and either remembered as gone
+ * (LEFT_TTL_MS) or not found by one fetch. A fetch uses one unit of `budget.fetches`; with
+ * none left, unknown uncached members stay listed. A rejoined member is in the cache again,
+ * so a remembered "gone" never hides them.
+ */
+async function membersWhoLeft(guild, userIds, budget) {
+  const now = Date.now();
+  const gone = new Set();
+  const unknown = [];
+  for (const id of userIds) {
+    if (guild.members.cache.has(id)) continue;
+    const until = knownLeft.get(`${guild.id}:${id}`);
+    if (until && until > now) gone.add(id);
+    else unknown.push(id);
+  }
+  if (unknown.length === 0 || budget.fetches <= 0) return gone;
+  budget.fetches -= 1;
   try {
-    const found = await guild.members.fetch({ user: missing });
+    const found = await guild.members.fetch({ user: unknown });
     const foundIds = new Set(found?.keys?.() ?? []);
-    for (const id of missing) if (guild.members.cache.has(id)) foundIds.add(id);
-    return new Set(missing.filter(id => !foundIds.has(id)));
+    for (const id of unknown) {
+      if (foundIds.has(id) || guild.members.cache.has(id)) continue;
+      gone.add(id);
+      knownLeft.set(`${guild.id}:${id}`, now + LEFT_TTL_MS);
+    }
+    if (knownLeft.size > 20000) {
+      for (const [key, until] of knownLeft) if (until <= now) knownLeft.delete(key);
+      while (knownLeft.size > 20000) knownLeft.delete(knownLeft.keys().next().value);
+    }
+    return gone;
   } catch (error) {
     logger.warn(`Failed to fetch leaderboard members for guild ${guild.id}: ${error.message}`);
-    return new Set();
+    return gone;
   }
+}
+
+/** For tests: forget remembered leavers. */
+export function resetLeaderboardLeftCacheForTests() {
+  knownLeft.clear();
 }
 
 export function createLeaderboardEmbed(leaderboard, guild) {

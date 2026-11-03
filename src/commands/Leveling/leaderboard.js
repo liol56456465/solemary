@@ -13,6 +13,7 @@ export default {
         .setName('page')
         .setDescription('Page to show (10 members per page)')
         .setMinValue(1)
+        .setMaxValue(50)
         .setRequired(false))
     .setDMPermission(false),
   category: 'Leveling',
