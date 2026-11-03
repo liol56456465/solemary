@@ -9,6 +9,11 @@
 // (plus an optional draft custom rule); a background job reads that history and runs the
 // content checks with the current settings. Nothing is acted on, saved or logged; the
 // result stays in memory for 30 minutes. The page shows idle / running / done / failed.
+// The result lists per rule the messages, members, share of checked messages, a "may be
+// too strict" hint (backtest.js looksTooStrict) and the masked matched words, with
+// one-click fixes: test-run-rule (watch only / off / on, the same setRuleMode writes and
+// audit keys as the Rule modes form, the rule key re-checked on every click), custom-toggle
+// for a custom rule, and custom-add for the draft rule (plan limit and validation as usual).
 //
 // Review cards are decided on the card in Discord: their buttons (keep, undo, change,
 // apply, dismiss, delete) act on the card message and the select menu of that
@@ -16,7 +21,7 @@
 
 import { AUTOMOD_RULES } from '../../../config/automod.js';
 import {
-    CHANNEL_RULE_MODES, HEADS_UP_CUSTOM_KEY, HEADS_UP_SETTING_KEYS, RULE_MODES, headsUpEnabled, headsUpSettingKey,
+    CHANNEL_RULE_MODES, HEADS_UP_CUSTOM_KEY, HEADS_UP_SETTING_KEYS, RULE_MODES, headsUpEnabled, headsUpSettingKey, ruleMode,
 } from '../../automod/policy.js';
 import { JOIN_GATE_ACTIONS, JOIN_GATE_CHECKS, normalizeJoinGate } from '../../automod/joinGate.js';
 import { NATIVE_POLICIES, policyFor } from '../../automod/nativeBridge.js';
@@ -34,6 +39,7 @@ import {
 import { editRule } from '../../automod/customRuleEdits.js';
 import {
     BACKTEST_DAY_CHOICES, BACKTEST_MAX_CHANNELS, BacktestError, DRAFT_KEY, MAX_EXAMPLES, MAX_MESSAGES,
+    STRICT_MIN_HITS, STRICT_MIN_MEMBERS, STRICT_MIN_SHARE,
 } from '../../automod/backtest.js';
 import { guildPlan as defaultGuildPlan } from '../../billing/premiumEffects.js';
 import { planName } from '../../billing/premiumService.js';
@@ -103,6 +109,13 @@ ${textArea('words', rule.words.join('\n'), { label: 'Words or phrases', rows: 5,
     return html`${summary}${list}${edit}${add}`;
 }
 
+/** Writes the changed rule modes ({ ruleKey: mode | 'default' }) one by one; returns the settings after. */
+async function saveRuleModes(ctx, before, wanted) {
+    let after = before;
+    for (const [key, mode] of Object.entries(wanted)) after = await ctx.services.setRuleMode(ctx.guildId, key, mode);
+    return after;
+}
+
 const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : 0);
 /** Stats periods offered on the page (/automod stats days); 7 is the default. */
 export const STATS_DAY_CHOICES = [1, 7, 30];
@@ -169,16 +182,82 @@ ${textArea('draftWords', '', { label: 'Draft rule words (optional)', rows: 3, ma
 ${canAct ? '' : html`<p class="muted">To start a test run you need the Administrator permission in the main server.</p>`}`;
 }
 
-function testRunResult(job) {
+const STRICT_HELP = `"May be too strict" shows when a rule caught at least ${STRICT_MIN_HITS} messages, from at least ${STRICT_MIN_MEMBERS} different members, and at least ${STRICT_MIN_SHARE * 100}% of the checked messages. It is only a hint: members may really break that rule that often. Look at the examples and the matched words before you change anything.`;
+const FIX_HELP = 'The buttons change the rule for the whole server right away, the same as the Rule modes form, and the change is logged. Watch only: staff are told, nothing is deleted. Turn on: the rule follows the main setting. Channel exceptions still apply in their channels.';
+// The modes the one-click buttons may set (test-run-rule).
+const QUICK_MODES = { monitor: 'watch only', off: 'off', default: 'on' };
+
+function sharePct(count, checked) {
+    if (!checked) return '-';
+    const value = (count / checked) * 100;
+    return `${value < 10 ? value.toFixed(1) : Math.round(value)}%`;
+}
+
+const strictNote = (entry) => (entry.mayBeTooStrict ? html`<span class="warn">Catches a lot, may be too strict</span>` : '');
+
+/** A test-run-rule button: the rule key and mode are checked again on the server. */
+function quickRuleButton(ctx, key, mode, label) {
+    const ruleLabel = AUTOMOD_RULES[key].label;
+    const confirm = mode === 'off' ? `Turn off ${ruleLabel} for the whole server?`
+        : mode === 'monitor' ? `Set ${ruleLabel} to watch only for the whole server?`
+            : `Turn on ${ruleLabel} for the whole server? It follows the main setting.`;
+    return buttonForm(ctx, 'automod', 'test-run-rule', label, { rule: key, mode }, { confirm, danger: mode === 'off' });
+}
+
+/** The fix buttons for one result row, from the CURRENT settings (no button for a no-op). */
+function fixButtons(ctx, key, entry, settings, customRules) {
+    if (AUTOMOD_RULES[key]) {
+        const now = ruleMode(settings, key);
+        if (now === 'off') return html`<span class="muted">off now</span>`;
+        return html`${entry.on && now !== 'monitor' ? quickRuleButton(ctx, key, 'monitor', 'Set to watch only') : ''}${quickRuleButton(ctx, key, 'off', 'Turn off')}`;
+    }
+    if (key.startsWith('custom-')) {
+        const rule = customRules.find((r) => `custom-${r.id}` === key);
+        if (!rule) return html`<span class="muted">removed since</span>`;
+        if (rule.enabled === false) return html`<span class="muted">off now</span>`;
+        return buttonForm(ctx, 'automod', 'custom-toggle', 'Turn off', { id: rule.id, enabled: 'false' }, { confirm: `Turn off the custom rule "${rule.name}"?` });
+    }
+    return '';
+}
+
+function wordsCell(entry) {
+    const words = (entry.words || []).map((w, i) => html`${i ? ', ' : ''}<code>${w.word}</code> ${number(w.count)}`);
+    return html`${words}${entry.moreWords ? html` <span class="muted">and ${number(entry.moreWords)} more</span>` : ''}`;
+}
+
+/** "Add this rule" for the draft: posts the cleaned draft to custom-add (same checks and plan limit). */
+function draftAdd(ctx, draft, custom) {
+    if (!draft?.list?.length) return '';
+    const name = String(draft.name || 'Draft rule');
+    const limit = custom?.limit ?? 0;
+    const count = custom?.rules?.length ?? 0;
+    const head = html`<h3>Draft rule</h3><p>"${name}", ${number(draft.list.length)} word${draft.list.length === 1 ? '' : 's'} or phrase${draft.list.length === 1 ? '' : 's'}. It is not saved yet.</p>`;
+    if (!limit) return html`${head}<p class="muted">Custom rules come with the Normal, Pro and Max plans. <a href="/pricing">See the plans</a>.</p>`;
+    if (count >= limit) return html`${head}<p class="muted">This server already has ${count} custom rule${count === 1 ? '' : 's'}, the most its plan allows. Remove one under Custom rules first.</p>`;
+    return html`${head}${buttonForm(ctx, 'automod', 'custom-add', 'Add this rule', { name, action: 'delete', muteDuration: '', words: draft.list.join('\n') }, { confirm: `Add the custom rule "${name}"? It starts deleting matching messages right away. You can change what it does under Custom rules.`, danger: false })}
+<p class="muted">Added as a custom rule that deletes the message. Change it to warn or mute under Custom rules.</p>`;
+}
+
+function testRunResult(ctx, job, data = {}) {
     const r = job.result || {};
     const p = job.params || {};
+    const settings = data.settings || {};
+    const customRules = data.custom?.rules || [];
     const days = p.days === 1 ? 'the last day' : `the last ${p.days} days`;
     const channels = (p.channelIds || []).length;
     const rows = Object.entries(r.byRule || {}).sort((a, b) => b[1].count - a[1].count).map(([key, entry]) => {
         let mode = 'draft, not saved';
         if (key !== DRAFT_KEY) mode = [entry.on ? 'acts' : '', entry.monitor ? 'watch only' : ''].filter(Boolean).join(', ');
-        return [entry.label, number(entry.count), mode];
+        return [entry.label, number(entry.count), number(entry.members), sharePct(entry.count, r.checked), mode, strictNote(entry), fixButtons(ctx, key, entry, settings, customRules)];
     });
+    const offRows = Object.entries(r.offRules || {}).filter(([key]) => AUTOMOD_RULES[key]).sort((a, b) => b[1].count - a[1].count).map(([key, entry]) => [
+        entry.label, number(entry.count), number(entry.members), sharePct(entry.count, r.checked), strictNote(entry),
+        ruleMode(settings, key) === 'off' ? quickRuleButton(ctx, key, 'default', 'Turn on') : html`<span class="muted">on now</span>`,
+    ]);
+    const wordRows = [
+        ...Object.values(r.byRule || {}),
+        ...Object.values(r.offRules || {}).map((entry) => ({ ...entry, label: `${entry.label} (off)` })),
+    ].filter((entry) => entry.words?.length).map((entry) => [entry.label, wordsCell(entry)]);
     const examples = (r.examples || []).map((ex) => [
         ex.at ? timeTag(new Date(ex.at)) : '-',
         html`${ex.author || ex.authorId} <span class="muted">${ex.authorId || ''}</span>`,
@@ -192,12 +271,17 @@ ${r.capped ? html`<p class="warn">Stopped at the limit of ${number(MAX_MESSAGES)
 ${p.automodEnabled ? '' : html`<p class="warn">Automod is off right now. This shows what it would catch with these settings.</p>`}
 ${r.invitesUnchecked ? html`<p class="muted">${number(r.invitesUnchecked)} invite link${r.invitesUnchecked === 1 ? ' was' : 's were'} not looked up (lookup limit reached), so they are not counted.</p>` : ''}
 <p class="muted">${SKIPPED_CHECKS}</p>
-${table(['Rule', 'Messages', 'Mode'], rows, 'No message broke a rule.')}
+${table(['Rule', 'Messages', 'Members', 'Share of checked', 'Mode', 'Note', 'Suggested fix'], rows, 'No message broke a rule.')}
+${offRows.length ? html`<h3>Turned off, but would have caught messages</h3>${table(['Rule', 'Messages', 'Members', 'Share of checked', 'Note', 'Suggested fix'], offRows, '')}` : ''}
+<p class="muted">${STRICT_HELP}</p>
+${rows.length || offRows.length ? html`<p class="muted">${FIX_HELP}</p>` : ''}
+${wordRows.length ? html`<h3>Matched words</h3><p class="muted">How often each word or phrase matched, partly hidden like the examples.</p>${table(['Rule', 'Words'], wordRows, '')}` : ''}
+${draftAdd(ctx, p.draft, data.custom)}
 ${examples.length ? html`<h3>Examples (up to ${MAX_EXAMPLES})</h3>${table(['When', 'Member', 'Channel', 'Rule', 'Excerpt', ''], examples, '')}` : ''}`;
 }
 
 /** The Test run card: idle / running / done / failed, then the form (not while running). */
-function testRunSection(ctx, job) {
+function testRunSection(ctx, job, data) {
     const canAct = Boolean(ctx.canEdit && ctx.canAct);
     const reload = html`<a href="${path('/automod')}#s-test-run">Reload this page</a>`;
     if (job === undefined) {
@@ -212,7 +296,7 @@ ${job.result?.read ? html`<p class="muted">${number(job.result.read)} messages w
 ${testRunForm(ctx, canAct)}`;
     }
     if (job?.status === 'done') {
-        return html`${testRunResult(job)}
+        return html`${testRunResult(ctx, job, data)}
 <h3>Start a new test run</h3><p class="muted">A new run replaces this result. Results are kept for 30 minutes.</p>
 ${testRunForm(ctx, canAct)}`;
     }
@@ -387,7 +471,7 @@ ${section('Ignored channels', exempt, 'Channels where automod checks nothing at 
 ${section('Panic', panic, 'A raid lockdown starts by itself when many accounts join at once. Panic mode makes it harder for raiders to spread.')}
 ${lockdown?.active ? '' : lockdownCard}`);
         const results = topic('Results', 'How often automod acted, and how often staff undid it.', html`${section(days === 1 ? 'Last day' : `Last ${days} days`, stats, '', { key: 'automod-stats', size: 'full' })}
-${section('Test run', testRunSection(ctx, data.backtest), TEST_RUN_HELP, { key: 'test-run', size: 'full' })}`);
+${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, { key: 'test-run', size: 'full' })}`);
         return html`${live}${ruleCards}${leniency}${raids}${results}`;
     },
 
@@ -408,8 +492,7 @@ ${section('Test run', testRunSection(ctx, data.backtest), TEST_RUN_HELP, { key: 
                 if (value !== 'default' && !RULE_MODES.includes(value)) throw new InputError(`${AUTOMOD_RULES[key].label}: unknown mode.`);
                 if ((before.ruleModes[key] || 'default') !== value) wanted[key] = value;
             }
-            let after = before;
-            for (const [key, mode] of Object.entries(wanted)) after = await ctx.services.setRuleMode(ctx.guildId, key, mode);
+            let after = await saveRuleModes(ctx, before, wanted);
             // Heads-up first (only when the form had the column).
             if (text(form, 'headsup-form', 5) === '1') {
                 for (const key of HEADS_UP_SETTING_KEYS) {
@@ -422,6 +505,19 @@ ${section('Test run', testRunSection(ctx, data.backtest), TEST_RUN_HELP, { key: 
                 ...diffSnapshots(headsUpSnapshot(before), headsUpSnapshot(after), null, 'headsUp.'),
             ];
             return { changes, message: changes.length ? 'Rules saved.' : 'Nothing changed.' };
+        },
+        // A one-click fix on the test run result: one rule to watch only, off, or on (default).
+        // The rule key and mode are checked here again, never taken from the stored result.
+        async 'test-run-rule'(ctx, form) {
+            const rule = choiceField(form, 'rule', Object.keys(AUTOMOD_RULES), 'Rule');
+            const mode = choiceField(form, 'mode', Object.keys(QUICK_MODES), 'Mode');
+            const before = await ctx.services.getAutomodSettings(ctx.guildId);
+            const wanted = (before.ruleModes[rule] || 'default') === mode ? {} : { [rule]: mode };
+            const after = await saveRuleModes(ctx, before, wanted);
+            const changes = diffSnapshots(before.ruleModes, after.ruleModes, null, 'ruleModes.');
+            const label = AUTOMOD_RULES[rule].label;
+            const message = mode === 'default' ? `${label} is on. It follows the main setting.` : `${label} is now ${QUICK_MODES[mode]}.`;
+            return { changes, message: changes.length ? message : 'Nothing changed.' };
         },
         async 'custom-add'(ctx, form) {
             const list = storedCustomRules(ctx);

@@ -741,6 +741,7 @@ const CASES = {
         enabled: { form: { enabled: 'false' }, service: 'setAutomodEnabled', bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
         mode: { form: { mode: 'monitor' }, service: 'setAutomodMode', bad: { form: { mode: 'chaos' }, message: /unknown choice/ } },
         rules: { form: { 'rule:caps': 'off' }, service: 'setRuleMode', bad: { form: { 'rule:caps': 'loud' }, message: /unknown mode/ } },
+        'test-run-rule': { form: { rule: 'caps', mode: 'monitor' }, service: 'setRuleMode', bad: { form: { rule: 'nope', mode: 'off' }, message: /Rule: unknown choice/ } },
         'custom-add': { form: { name: 'Other servers', action: 'mute', muteDuration: '1h', words: 'join my server\nfree nitro' }, service: 'updateSettings',
             bad: { form: { name: 'No time', action: 'mute', muteDuration: '', words: 'bad' }, message: /needs a duration/ } },
         'custom-edit': { seed: seedCustomRules, form: { id: CUSTOM_A, action: 'warn', words: 'new phrase\nother words' }, service: 'updateSettings',
@@ -2481,8 +2482,8 @@ test('Automod test run: done shows per-rule counts, masked examples (escaped, Di
     assert.match(card, /Stopped at the limit of 2,000 messages\. Older messages in that time may not have been checked\./);
     assert.match(card, /Automod is off right now/);
     assert.match(card, /Not checked in a test run: Spam/);
-    assert.match(card, /<td>Inappropriate language<\/td><td>2<\/td><td>acts, watch only<\/td>/);
-    assert.match(card, /<td>Draft: Promo<\/td><td>1<\/td><td>draft, not saved<\/td>/);
+    assert.match(card, /<td>Inappropriate language<\/td><td>2<\/td><td>0<\/td><td>0\.1%<\/td><td>acts, watch only<\/td>/);
+    assert.match(card, /<td>Draft: Promo<\/td><td>1<\/td><td>0<\/td><td>0\.1%<\/td><td>draft, not saved<\/td>/);
     assert.ok(card.includes('you f**k &lt;i&gt;'), 'excerpt escaped');
     assert.ok(card.includes('amy&lt;b&gt;'));
     assert.ok(card.includes(`href="https://discord.com/channels/${GUILD}/${TEXT}/800000000000000001"`));
@@ -2499,6 +2500,139 @@ test('Automod test run: done shows per-rule counts, masked examples (escaped, Di
 
     h.state.backtestReadFails = true;
     assert.match(testRunCard((await get(h, 'automod')).body), /The test run state could not be read/);
+});
+
+/** A finished test run with noisy, quiet, custom, off and draft rules (backtest.js result shape). */
+function seedFixableRun(state) {
+    state.backtest = {
+        guildId: GUILD, status: 'done', startedAt: Date.now() - 60000, finishedAt: Date.now(),
+        params: { channelIds: [TEXT], days: 7, automodEnabled: true, draft: { name: 'Promo <b>', words: 2, list: ['promo code', 'buy now'] } },
+        progress: { read: 500 },
+        result: {
+            read: 500, checked: 400, skippedBots: 100, skippedAdmins: 0, hitMessages: 50, capped: false, invitesUnchecked: 0,
+            byRule: {
+                language: { label: 'Inappropriate language', count: 40, members: 6, on: 40, monitor: 0, mayBeTooStrict: true, words: [{ word: 'n***s', count: 30 }, { word: 's<b>t', count: 10 }], moreWords: 2 },
+                caps: { label: 'Excessive caps', count: 3, members: 1, on: 0, monitor: 3, mayBeTooStrict: false },
+                [`custom-${CUSTOM_A}`]: { label: 'Ads <b>', count: 2, members: 2, on: 2, monitor: 0, mayBeTooStrict: false, words: [{ word: 'f*** n***o', count: 2 }], moreWords: 0 },
+                draft: { label: 'Draft: Promo <b>', count: 5, members: 2, on: 0, monitor: 0, draft: true, mayBeTooStrict: false },
+            },
+            offRules: { english: { label: 'English only', count: 12, members: 4, mayBeTooStrict: true } },
+            examples: [],
+            channels: [],
+        },
+        error: null,
+    };
+}
+
+test('Automod test run fixes: members, share and a cautious "may be too strict" note; masked word breakdown; buttons only where they change something', async () => {
+    const h = await setup();
+    seedCustomRules(h.state);
+    h.state.automod.ruleModes = { english: 'off' };
+    seedFixableRun(h.state);
+    const card = testRunCard((await get(h, 'automod')).body);
+    assert.match(card, /<td>Inappropriate language<\/td><td>40<\/td><td>6<\/td><td>10%<\/td><td>acts<\/td><td><span class="warn">Catches a lot, may be too strict<\/span><\/td>/);
+    assert.match(card, /<td>Excessive caps<\/td><td>3<\/td><td>1<\/td><td>0\.8%<\/td><td>watch only<\/td><td><\/td>/);
+    assert.match(card, /at least 10 messages, from at least 3 different members, and at least 2% of the checked messages\. It is only a hint/);
+    assert.ok(!/false positive/i.test(card), 'never claims certainty');
+    assert.ok(!/—/.test(card), 'no em dashes');
+    const button = (rule, mode) => new RegExp(`action="/dashboard/automod/test-run-rule"[^>]*>[^]*?name="rule" value="${rule}">\\s*<input type="hidden" name="mode" value="${mode}">`);
+    const hasButton = (rule, mode) => card.split('</form>').some((form) => button(rule, mode).test(form));
+    // Acting rule: watch only and off. Watch-only rule: off only. Off rule: Turn on (default).
+    assert.ok(hasButton('language', 'monitor') && hasButton('language', 'off'));
+    assert.ok(!hasButton('caps', 'monitor') && hasButton('caps', 'off'));
+    assert.match(card, /<h3>Turned off, but would have caught messages<\/h3>/);
+    assert.ok(hasButton('english', 'default'));
+    assert.match(card, /Turn on English only for the whole server\? It follows the main setting\./);
+    // Custom rule: Turn off through custom-toggle (rule name escaped in the confirm).
+    assert.match(card, new RegExp(`action="/dashboard/automod/custom-toggle"[^>]*data-confirm="Turn off the custom rule &quot;Ads &lt;b&gt;&quot;\\?"[^]*?name="id" value="${CUSTOM_A}">\\s*<input type="hidden" name="enabled" value="false">`));
+    // Word breakdown: the masked words only, escaped, with the rest counted.
+    assert.match(card, /<h3>Matched words<\/h3>/);
+    assert.ok(card.includes('<code>n***s</code> 30, <code>s&lt;b&gt;t</code> 10 <span class="muted">and 2 more</span>'));
+    assert.ok(card.includes('<code>f*** n***o</code> 2'));
+    // Draft: "Add this rule" posts the cleaned draft to custom-add as a delete rule.
+    assert.match(card, /action="\/dashboard\/automod\/custom-add"[^>]*data-confirm="Add the custom rule &quot;Promo &lt;b&gt;&quot;\?/);
+    assert.ok(card.includes('name="name" value="Promo &lt;b&gt;"'));
+    assert.ok(card.includes('name="action" value="delete"'));
+    assert.ok(card.includes('name="words" value="promo code\nbuy now"'));
+
+    // Current settings decide the buttons: language already watch only → no watch-only button.
+    h.state.automod.ruleModes = { language: 'monitor', caps: 'off' };
+    const later = testRunCard((await get(h, 'automod')).body);
+    const laterHas = (rule, mode) => later.split('</form>').some((form) => button(rule, mode).test(form));
+    assert.ok(!laterHas('language', 'monitor') && laterHas('language', 'off'));
+    assert.ok(!laterHas('caps', 'off'));
+    assert.match(later, /<td>Excessive caps<\/td>[^]*?<span class="muted">off now<\/span>/);
+    assert.match(later, /<td>English only<\/td>[^]*?<span class="muted">on now<\/span>/);
+});
+
+test('Automod test run fixes: test-run-rule re-checks the rule and mode, writes through setRuleMode and audits like the Rule modes form; the draft goes through custom-add with its plan limit', async () => {
+    const h = await setup();
+    seedCustomRules(h.state);
+    h.state.automod.ruleModes = { english: 'off' };
+    seedFixableRun(h.state);
+
+    const watch = await post(h, 'automod', 'test-run-rule', { rule: 'language', mode: 'monitor' });
+    assert.equal(watch.statusCode, 303);
+    assert.equal(h.state.automod.ruleModes.language, 'monitor');
+    assert.deepEqual(h.calls.filter((c) => c.name === 'setRuleMode').map((c) => c.args), [['language', 'monitor']]);
+    assert.deepEqual(h.auditRows.filter((r) => r.module === 'automod').map((r) => [r.key, r.old, r.new]), [['ruleModes.language', null, 'monitor']]);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Inappropriate language is now watch only\./);
+
+    // Same again: nothing written, nothing audited.
+    const auditCount = h.auditRows.length;
+    await post(h, 'automod', 'test-run-rule', { rule: 'language', mode: 'monitor' });
+    assert.equal(h.calls.filter((c) => c.name === 'setRuleMode').length, 1);
+    assert.equal(h.auditRows.length, auditCount);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Nothing changed/);
+
+    // Turn on = back to the main setting (the override is removed).
+    await post(h, 'automod', 'test-run-rule', { rule: 'english', mode: 'default' });
+    assert.equal('english' in h.state.automod.ruleModes, false);
+    assert.match((await h.sessions.get(h.session.id)).flash, /English only is on\. It follows the main setting\./);
+    await post(h, 'automod', 'test-run-rule', { rule: 'caps', mode: 'off' });
+    assert.equal(h.state.automod.ruleModes.caps, 'off');
+
+    // Invalid keys and modes are refused, whatever the stored result says.
+    h.calls.length = 0;
+    for (const form of [{ rule: `custom-${CUSTOM_A}`, mode: 'off' }, { rule: 'draft', mode: 'off' }, { rule: '__proto__', mode: 'off' }, { rule: 'caps', mode: 'on' }, { rule: 'caps' }, {}]) {
+        const res = await post(h, 'automod', 'test-run-rule', form);
+        assert.equal(res.statusCode, 400, JSON.stringify(form));
+        assert.match(res.body, /unknown choice/);
+    }
+    assert.equal(h.calls.filter((c) => c.name === 'setRuleMode').length, 0);
+
+    // "Add this rule" posts exactly what the button carries; it lands as a cleaned delete rule.
+    const added = await post(h, 'automod', 'custom-add', { name: 'Promo <b>', action: 'delete', muteDuration: '', words: 'promo code\nbuy now' });
+    assert.equal(added.statusCode, 303);
+    const saved = h.state.registry.automodCustomRules.at(-1);
+    assert.deepEqual([saved.name, saved.words, saved.action, saved.enabled], ['Promo <b>', ['promo code', 'buy now'], 'delete', true]);
+    assert.ok(h.auditRows.some((r) => r.key === 'automodCustomRules'), 'audited by the settings service');
+
+    // At the plan limit: no Add button, a note instead, and custom-add still refuses.
+    const full = await setup();
+    full.state.plan = 'normal';
+    full.state.registry.automodCustomRules = Array.from({ length: 5 }, (_, i) => ({ id: `full${i}aaa`, name: `Rule ${i}`, words: ['abc'], action: 'warn', muteDuration: null, enabled: true }));
+    seedFixableRun(full.state);
+    const fullCard = testRunCard((await get(full, 'automod')).body);
+    assert.ok(!fullCard.includes('action="/dashboard/automod/custom-add"'));
+    assert.match(fullCard, /This server already has 5 custom rules, the most its plan allows/);
+    const refused = await post(full, 'automod', 'custom-add', { name: 'Promo', action: 'delete', muteDuration: '', words: 'promo code\nbuy now' });
+    assert.equal(refused.statusCode, 400);
+    assert.equal(full.state.registry.automodCustomRules.length, 5);
+
+    const free = await setup();
+    free.state.plan = 'free';
+    seedFixableRun(free.state);
+    const freeCard = testRunCard((await get(free, 'automod')).body);
+    assert.ok(!freeCard.includes('action="/dashboard/automod/custom-add"'));
+    assert.match(freeCard, /Custom rules come with the Normal, Pro and Max plans/);
+
+    // Read-only access (editing off): the buttons are disabled.
+    const off = await setup({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } });
+    seedFixableRun(off.state);
+    const offCard = testRunCard((await get(off, 'automod')).body);
+    assert.ok(offCard.includes('action="/dashboard/automod/test-run-rule"'));
+    assert.ok(!/<button type="submit"[^>]*>Turn off<\/button>/.test(offCard), 'no submit buttons without edit rights');
 });
 
 test('Automod test run refusals: too many channels, an ignored channel, a refused start (already running, permissions); OWNER_IDS without Administrator', async () => {

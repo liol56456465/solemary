@@ -13,12 +13,20 @@
 // Jobs live in memory, one per guild at a time (lost on restart); a finished or failed
 // result is kept for RESULT_TTL_MS. The result holds per-rule counts and up to
 // MAX_EXAMPLES examples with a short, masked excerpt (maskExcerpt).
+//
+// Per rule (result.byRule, and result.offRules for built-in rules that are turned off but
+// would have caught messages): messages, distinct members, the matched words of word
+// based rules (masked with maskTerm, top MAX_WORDS_LISTED, never the raw word), and
+// mayBeTooStrict (looksTooStrict: a conservative "catches a lot" hint, never a verdict).
+// The raw words and member ids are counted in this job's closure only and turned into
+// masked words and plain counts when the job ends.
 
 import { PermissionFlagsBits } from 'discord.js';
 import { AUTOMOD_RULES } from '../../config/automod.js';
 import { logger } from '../../utils/logger.js';
 import { isAdministrator } from '../enforcement/enforcementService.js';
 import { applyRuleModes, contentHits, inviteGuildIsForeign } from './automodService.js';
+import { resolveRuleMode, ruleMode } from './policy.js';
 import { CustomRuleError, cleanCustomRule, compileRules, matchCompiled } from './customRules.js';
 import { findBlockedWord, findInsult, findPersonalInfo, findSexualWord, normalizeText } from './filters.js';
 
@@ -36,6 +44,26 @@ const EXCERPT_TOKENS_AFTER = 8;
 const EXCERPT_TOKEN_MAX = 40;
 const DRAFT_ID = 'draftrule';
 export const DRAFT_KEY = 'draft';
+// Matched words listed per rule (the most frequent first); the rest are only counted.
+export const MAX_WORDS_LISTED = 10;
+// looksTooStrict: a rule "may be too strict" only when ALL three hold. Deliberately
+// conservative: a handful of hits, or one member tripping it again and again, is never enough.
+export const STRICT_MIN_HITS = 10;
+export const STRICT_MIN_MEMBERS = 3;
+export const STRICT_MIN_SHARE = 0.02;
+
+/**
+ * Whether a rule's test run count looks high enough to be worth a second look: at least
+ * STRICT_MIN_HITS messages, from at least STRICT_MIN_MEMBERS different members, and at
+ * least STRICT_MIN_SHARE (2%) of the checked messages. A hint only: a rule can catch a lot
+ * because members really do break it often.
+ */
+export function looksTooStrict(entry, checked) {
+    const count = Number(entry?.count) || 0;
+    const members = Number(entry?.members) || 0;
+    const total = Number(checked) || 0;
+    return total > 0 && count >= STRICT_MIN_HITS && members >= STRICT_MIN_MEMBERS && count / total >= STRICT_MIN_SHARE;
+}
 
 /** A refusal or failure meant for the admin (userMessage is plain English). */
 export class BacktestError extends Error {
@@ -56,6 +84,12 @@ export function maskWord(word) {
     if (chars.length <= 1) return '*';
     if (chars.length <= 3) return `${chars[0]}${'*'.repeat(chars.length - 1)}`;
     return `${chars[0]}${'*'.repeat(chars.length - 2)}${chars[chars.length - 1]}`;
+}
+
+/** A matched word or phrase, every part masked like maskWord: "buy followers" -> "b** f*******s". */
+export function maskTerm(term) {
+    const parts = String(term ?? '').trim().split(/\s+/).filter(Boolean);
+    return parts.length ? parts.map(maskWord).join(' ') : '*';
 }
 
 const keyOf = (token) => normalizeText(token).replace(/[^a-z0-9]/g, '');
@@ -198,7 +232,8 @@ export function createBacktestRunner({ now = () => Date.now(), resultTtlMs = RES
             startedBy,
             params: {
                 channelIds: ids, days: Number(days), automodEnabled: Boolean(settings.enabled),
-                draft: draftRule ? { name: draftRule.name, words: draftRule.words.length } : null,
+                // list: the admin's own draft words (cleaned), for "Add this rule" on the result.
+                draft: draftRule ? { name: draftRule.name, words: draftRule.words.length, list: [...draftRule.words] } : null,
             },
             progress: { read: 0 },
             result: null,
@@ -213,12 +248,46 @@ export function createBacktestRunner({ now = () => Date.now(), resultTtlMs = RES
         const cutoff = job.startedAt - job.params.days * DAY_MS;
         const result = {
             read: 0, checked: 0, skippedBots: 0, skippedAdmins: 0, hitMessages: 0, capped: false, invitesUnchecked: 0,
-            byRule: {}, examples: [],
+            byRule: {}, offRules: {}, examples: [],
             channels: channels.map((channel) => ({ id: channel.id, name: channel.name || channel.id, read: 0 })),
         };
         const members = new Map();     // author id → member | null (this job only)
         const invites = new Map();     // invite code → guild id | null (this job only)
         let inviteLookups = 0;
+        // This job only, never in the result: "<bucket>:<rule key>" -> Set of author ids / Map of raw word -> count.
+        const authorsByRule = new Map();
+        const wordsByRule = new Map();
+        const tally = (bucket, key, base, authorId, words) => {
+            const entry = bucket[key] || (bucket[key] = { ...base, count: 0, members: 0 });
+            const id = `${bucket === result.offRules ? 'off' : 'on'}:${key}`;
+            entry.count += 1;
+            const authors = authorsByRule.get(id) || new Set();
+            authorsByRule.set(id, authors);
+            if (authorId) authors.add(authorId);
+            entry.members = authors.size;
+            if (words.length) {
+                const counts = wordsByRule.get(id) || new Map();
+                wordsByRule.set(id, counts);
+                for (const word of new Set(words)) counts.set(word, (counts.get(word) || 0) + 1);
+            }
+            return entry;
+        };
+        // When the job ends: masked word lists and the "may be too strict" hint.
+        const finish = () => {
+            for (const [bucket, prefix] of [[result.byRule, 'on'], [result.offRules, 'off']]) {
+                for (const [key, entry] of Object.entries(bucket)) {
+                    const counts = wordsByRule.get(`${prefix}:${key}`);
+                    if (counts?.size) {
+                        const sorted = [...counts].sort((a, b) => b[1] - a[1]);
+                        entry.words = sorted.slice(0, MAX_WORDS_LISTED).map(([word, count]) => ({ word: maskTerm(word), count }));
+                        entry.moreWords = Math.max(0, sorted.length - MAX_WORDS_LISTED);
+                    }
+                    entry.mayBeTooStrict = looksTooStrict(entry, result.checked);
+                }
+            }
+            authorsByRule.clear();
+            wordsByRule.clear();
+        };
 
         const memberOf = async (message) => {
             const id = message.author.id;
@@ -278,29 +347,55 @@ export function createBacktestRunner({ now = () => Date.now(), resultTtlMs = RES
             result.checked += 1;
             const text = message.content || '';
             let customWord = null;
-            const hits = applyRuleModes(await contentHits(message, member, {
+            const allHits = await contentHits(message, member, {
                 isForeignInvite,
                 matchCustom: (value) => {
                     const found = matchCompiled(value, compiled);
                     customWord = found?.word || null;
                     return found;
                 },
-            }), settings, stream.channel);
+            });
+            const hits = applyRuleModes(allHits, settings, stream.channel);
+            // Built-in rules turned off for the whole server (not just in this channel): what
+            // they would have caught, for "Turn on". Not counted as broken rules.
+            const offHits = allHits.filter((hit) => AUTOMOD_RULES[hit.rule] && ruleMode(settings, hit.rule) === 'off'
+                && resolveRuleMode(settings, hit.rule, stream.channel) === 'off');
             const draftHit = draftCompiled ? matchCompiled(text, draftCompiled) : null;
+            const authorId = message.author?.id || null;
+            // The matched word(s) of word based rules, per hit.
+            const wordsOf = (hit) => {
+                if (hit.rule === 'language') return [hit.slur ? findBlockedWord(text) : findSexualWord(text)].filter(Boolean);
+                if (hit.rule === 'sexual') return [findSexualWord(text)].filter(Boolean);
+                if (hit.rule === 'disrespect') return [findInsult(text)].filter(Boolean);
+                if (hit.ruleLabel) return [customWord].filter(Boolean);
+                return [];
+            };
+            // One count per rule per message (a slur and a sexual word are both "language").
+            const grouped = (list) => {
+                const byKey = new Map();
+                for (const hit of list) {
+                    const group = byKey.get(hit.rule) || { hit, modes: new Set(), words: [] };
+                    group.modes.add(hit.mode);
+                    group.words.push(...wordsOf(hit));
+                    byKey.set(hit.rule, group);
+                }
+                return byKey;
+            };
+            for (const [rule, { words }] of grouped(offHits)) {
+                tally(result.offRules, rule, { label: AUTOMOD_RULES[rule].label }, authorId, words);
+            }
             if (!hits.length && !draftHit) return;
             result.hitMessages += 1;
             const labels = [];
-            for (const hit of hits) {
-                const label = hit.ruleLabel || AUTOMOD_RULES[hit.rule]?.label || hit.rule;
-                const entry = result.byRule[hit.rule] || (result.byRule[hit.rule] = { label, count: 0, on: 0, monitor: 0 });
-                entry.count += 1;
-                entry[hit.mode === 'monitor' ? 'monitor' : 'on'] += 1;
+            for (const [rule, { hit, modes, words }] of grouped(hits)) {
+                const label = hit.ruleLabel || AUTOMOD_RULES[rule]?.label || rule;
+                const entry = tally(result.byRule, rule, { label, on: 0, monitor: 0 }, authorId, words);
+                entry[modes.has('monitor') && !modes.has('on') ? 'monitor' : 'on'] += 1;
                 labels.push(label);
             }
             if (draftHit) {
                 const label = `Draft: ${draftRule.name}`;
-                const entry = result.byRule[DRAFT_KEY] || (result.byRule[DRAFT_KEY] = { label, count: 0, on: 0, monitor: 0, draft: true });
-                entry.count += 1;
+                tally(result.byRule, DRAFT_KEY, { label, on: 0, monitor: 0, draft: true }, authorId, [draftHit.word].filter(Boolean));
                 labels.push(label);
             }
             if (result.examples.length >= MAX_EXAMPLES) return;
@@ -340,10 +435,12 @@ export function createBacktestRunner({ now = () => Date.now(), resultTtlMs = RES
                 await check(message, pick);
             }
             result.capped = result.read >= MAX_MESSAGES && streams.some((stream) => stream.buffer.length || !stream.done);
+            finish();
             job.result = result;
             job.status = 'done';
         } catch (error) {
             job.status = 'failed';
+            finish();
             job.result = result;
             if (error instanceof BacktestError) {
                 job.error = error.userMessage;
