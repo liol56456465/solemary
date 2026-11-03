@@ -176,6 +176,7 @@ export const PERMS = {
     post: ['ViewChannel', 'SendMessages', 'EmbedLinks'],
     postFiles: ['ViewChannel', 'SendMessages', 'EmbedLinks', 'AttachFiles'],
     poll: ['ViewChannel', 'SendMessages', 'EmbedLinks', 'AddReactions', 'ReadMessageHistory'],
+    nativePoll: ['ViewChannel', 'SendMessages', 'SendPolls'],
     read: ['ViewChannel', 'ReadMessageHistory'],
     manage: ['ViewChannel', 'ManageChannels'],
     category: ['ViewChannel', 'ManageChannels'],
@@ -186,6 +187,7 @@ const PERM_LABEL = {
     ViewChannel: 'View Channel', SendMessages: 'Send Messages', EmbedLinks: 'Embed Links', AttachFiles: 'Attach Files',
     ReadMessageHistory: 'Read Message History', ManageChannels: 'Manage Channels', Connect: 'Connect',
     MoveMembers: 'Move Members', ManageMessages: 'Manage Messages', ManageRoles: 'Manage Roles', AddReactions: 'Add Reactions',
+    SendPolls: 'Send Polls',
 };
 
 /** Problems the bot has with a channel: missing, or permissions it lacks there. */
