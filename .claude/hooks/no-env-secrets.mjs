@@ -32,7 +32,8 @@ function globToRegex(glob) {
 
 // The secrets directory outside the repo, after normalize(): ~/.config/mewvo, $HOME/…, /home/x/…
 const SECRET_DIR = /(?:^|[^\w.-])\.config\/mewvo(?=$|[/\s;|&()<>,{}*?[])/g;
-const ENV_FILE_FLAG = /(?:^|\s)--env-file(?:-if-exists)?(?=[=\s]|$)/g;
+// --env-file after any separator (also NODE_OPTIONS=--env-file=…), and Node's loadEnvFile API.
+const ENV_FILE_FLAG = /(?:^|[\s=;|&(:,])--env-file(?:-if-exists)?(?=[=\s]|$)|\bloadEnvFile\b/g;
 
 function secretHits(raw) {
     const text = normalize(raw);
