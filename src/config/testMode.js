@@ -1,4 +1,4 @@
-// testMode.js — isolates a test run (NODE_ENV=test, normally via .env.test).
+// testMode.js — isolates a test run (NODE_ENV=test, normally via ~/.config/mewvo/env.test).
 //
 // Test mode runs a separate TEST bot (its own application and token). It refuses to
 // start with the production bot's CLIENT_ID or token, and never reaches the real servers:
@@ -46,14 +46,28 @@ export function botIdentityErrors(env = process.env) {
         errors.push(`CLIENT_ID is the production Mewvo bot (${PRODUCTION_CLIENT_ID}). Test mode needs the separate test bot's application ID.`);
     }
     if (tokenId === PRODUCTION_CLIENT_ID) {
-        errors.push('DISCORD_TOKEN is the production Mewvo bot\'s token. Put the test bot\'s token in .env.test.');
+        errors.push('DISCORD_TOKEN is the production Mewvo bot\'s token. Put the test bot\'s token in the test env file (~/.config/mewvo/env.test).');
     } else if (tokenId && clientId && tokenId !== clientId) {
         errors.push(`DISCORD_TOKEN belongs to bot ${tokenId}, but CLIENT_ID is ${clientId}. Both must come from the test bot's application.`);
     }
     return errors;
 }
 
-const usedEnvFile = process.execArgv.find((arg) => arg.startsWith('--env-file')) || '';
+/** The file given to `--env-file` / `--env-file-if-exists` (both `=path` and `path` forms), or ''. */
+export function envFileFromExecArgv(execArgv = process.execArgv) {
+    for (let i = 0; i < execArgv.length; i += 1) {
+        const match = /^--env-file(?:-if-exists)?(?:=(.*))?$/.exec(execArgv[i]);
+        if (match) return match[1] ?? execArgv[i + 1] ?? '';
+    }
+    return '';
+}
+
+/** True for the test env file by name, wherever it lives: `.env.test` (repo) or `env.test` (~/.config/mewvo). */
+export function isTestEnvFile(file = '') {
+    return /(^|[/\\])\.?env\.test$/.test(String(file));
+}
+
+const usedEnvFile = envFileFromExecArgv();
 
 export const testMode = {
     enabled: process.env.NODE_ENV === 'test',
@@ -113,8 +127,8 @@ export function validateTestMode() {
     const errors = [];
 
     if (!testMode.enabled) {
-        if (usedEnvFile.includes('.env.test')) {
-            errors.push('Started with .env.test but NODE_ENV is not "test". Set NODE_ENV=test in .env.test.');
+        if (isTestEnvFile(usedEnvFile)) {
+            errors.push(`Started with the test env file (${usedEnvFile}) but NODE_ENV is not "test". Set NODE_ENV=test in that file.`);
         }
         return errors;
     }

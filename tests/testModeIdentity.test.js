@@ -4,7 +4,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { PRODUCTION_CLIENT_ID, botIdentityErrors, tokenBotId } from '../src/config/testMode.js';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { PRODUCTION_CLIENT_ID, botIdentityErrors, tokenBotId, envFileFromExecArgv, isTestEnvFile } from '../src/config/testMode.js';
 
 const TEST_BOT = '1600000000000000001';
 // Fake tokens: the first part is the bot ID in base64, the rest is filler.
@@ -69,4 +72,39 @@ console.log(JSON.stringify(seen));`;
     const run = spawnSync(process.execPath, ['--input-type=module', '-e', script], { env: testEnv(), encoding: 'utf8' });
     assert.equal(run.status, 0, run.stderr);
     assert.deepEqual(JSON.parse(run.stdout.trim().split('\n').pop()), ['MESSAGE_CREATE:dm', 'INTERACTION_CREATE:dm', `MESSAGE_CREATE:${MAIN}`]);
+});
+
+test('the test env file is recognised by name, in the repo or in ~/.config/mewvo', () => {
+    assert.equal(isTestEnvFile('.env.test'), true);
+    assert.equal(isTestEnvFile('/home/u/.config/mewvo/env.test'), true);
+    assert.equal(isTestEnvFile('C:\\Users\\u\\.config\\mewvo\\env.test'), true);
+    assert.equal(isTestEnvFile('/home/u/.config/mewvo/env.prod'), false);
+    assert.equal(isTestEnvFile('.env'), false);
+    assert.equal(isTestEnvFile('my-env.test'), false);
+    assert.equal(isTestEnvFile(''), false);
+    assert.equal(envFileFromExecArgv(['--env-file=/x/env.test']), '/x/env.test');
+    assert.equal(envFileFromExecArgv(['--env-file', '/x/env.test', '--test']), '/x/env.test');
+    assert.equal(envFileFromExecArgv(['--env-file-if-exists=/x/env.test']), '/x/env.test');
+    assert.equal(envFileFromExecArgv(['--test']), '');
+});
+
+test('started with the moved test env file but without NODE_ENV=test: refuses to start (separate process)', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'mewvo-envfile-'));
+    try {
+        const testFile = path.join(dir, 'env.test');
+        const prodFile = path.join(dir, 'env.prod');
+        writeFileSync(testFile, 'LOG_LEVEL=error\n');
+        writeFileSync(prodFile, 'LOG_LEVEL=error\n');
+        const env = { PATH: process.env.PATH, HOME: process.env.HOME };
+        const code = "await import('./src/config/testMode.js'); console.log('STARTED');";
+        const run = spawnSync(process.execPath, [`--env-file=${testFile}`, '--input-type=module', '-e', code], { env, encoding: 'utf8' });
+        assert.equal(run.status, 1, run.stdout + run.stderr);
+        assert.ok(!run.stdout.includes('STARTED'));
+        assert.match(run.stdout + run.stderr, /NODE_ENV is not "test"/);
+        const other = spawnSync(process.execPath, [`--env-file=${prodFile}`, '--input-type=module', '-e', code], { env, encoding: 'utf8' });
+        assert.equal(other.status, 0, other.stdout + other.stderr);
+        assert.match(other.stdout, /STARTED/);
+    } finally {
+        rmSync(dir, { recursive: true, force: true });
+    }
 });

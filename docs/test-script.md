@@ -6,17 +6,20 @@ Tick each line; if a result differs, note the step number and paste the bot's lo
 
 ## 0. One-time setup: the test bot
 
+The test env file lives outside the repo, at `~/.config/mewvo/env.test` (folder `chmod 700`, file `chmod 600`),
+so tools that scan the repo never reach it. Start from `.env.test.example`; the `:test` npm scripts load it.
+
 1. <https://discord.com/developers/applications> → **New Application** → name it `Mewvo Test`.
-2. **Bot** tab → **Reset Token** → copy it into `.env.test` as `DISCORD_TOKEN` (never into chat or git).
+2. **Bot** tab → **Reset Token** → copy it into `~/.config/mewvo/env.test` as `DISCORD_TOKEN` (never into chat or git).
    Turn on **Server Members Intent** and **Message Content Intent** (Presence is not needed).
-3. **General Information** → copy **Application ID** → `.env.test` `CLIENT_ID`.
-4. **OAuth2** → copy **Client Secret** → `.env.test` `DISCORD_CLIENT_SECRET`.
+3. **General Information** → copy **Application ID** → `~/.config/mewvo/env.test` `CLIENT_ID`.
+4. **OAuth2** → copy **Client Secret** → `~/.config/mewvo/env.test` `DISCORD_CLIENT_SECRET`.
    **Redirects** → add both:
    `http://localhost:3100/oauth/callback` (verification) and
    `http://localhost:3100/dashboard/oauth/callback` (dashboard login).
 5. **OAuth2 → URL Generator**: scopes `bot` + `applications.commands`, permission **Administrator**
    (test servers only) → open the URL → add the bot to your **test main** and **test support** servers.
-6. `.env.test`: add the dashboard block from `.env.test.example`; `SESSION_SECRET` = output of `openssl rand -hex 32`.
+6. `~/.config/mewvo/env.test`: add the dashboard block from `.env.test.example`; `SESSION_SECRET` = output of `openssl rand -hex 32`.
    Keep `TEST_GUILD_IDS`, `MAIN_GUILD_ID`, `SUPPORT_GUILD_ID` = the test servers.
 7. Check: `docker start mewvo-test-db` then `npm run test:config` → no errors, `CLIENT_ID` = the test app.
    With the old production values it must refuse: "CLIENT_ID is the production Mewvo bot".

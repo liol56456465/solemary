@@ -1,6 +1,6 @@
-# Local Postgres for testing with .env.test.
+# Local Postgres for testing with the test env file (~/.config/mewvo/env.test).
 #   docker compose -f docker-compose.test.yml up -d
-# Matching .env.test line:
+# Matching line in that file:
 #   POSTGRES_URL=postgresql://mewvo:mewvo@localhost:5433/mewvo_test
 # Port 5433 avoids clashing with a Postgres already running on 5432.
 services:

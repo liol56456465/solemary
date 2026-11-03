@@ -3,7 +3,7 @@
 // throwaway value inside a transaction that is rolled back.
 //
 //   npm run db:check                 (uses POSTGRES_URL from the environment)
-//   node --env-file=.env.test scripts/check-db.js
+//   node --env-file=$HOME/.config/mewvo/env.test scripts/check-db.js
 //
 // Exits 1 if TLS verification fails for a remote host or a check fails.
 

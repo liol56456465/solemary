@@ -14,15 +14,15 @@
     "backup:db": "node scripts/backup.js",
     "restore:db": "node scripts/restore.js",
     "backup:drill": "node scripts/restore-drill.js",
-    "start:test": "node --env-file=.env.test src/app.js",
-    "migrate:test": "node --env-file=.env.test scripts/migrate.js apply",
+    "start:test": "node --env-file=$HOME/.config/mewvo/env.test src/app.js",
+    "migrate:test": "node --env-file=$HOME/.config/mewvo/env.test scripts/migrate.js apply",
     "deploy:commands": "node scripts/deploy-commands.js",
-    "deploy:commands:test": "node --env-file=.env.test scripts/deploy-commands.js",
-    "test:config": "node --env-file=.env.test scripts/test-config.js",
+    "deploy:commands:test": "node --env-file=$HOME/.config/mewvo/env.test scripts/deploy-commands.js",
+    "test:config": "node --env-file=$HOME/.config/mewvo/env.test scripts/test-config.js",
     "test": "node --test tests/",
     "db:check": "node scripts/check-db.js",
     "export:site": "node scripts/export-site.js",
-    "test:db": "node --env-file=.env.test --test --test-concurrency=1 tests/db/"
+    "test:db": "node --env-file=$HOME/.config/mewvo/env.test --test --test-concurrency=1 tests/db/"
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.1",
