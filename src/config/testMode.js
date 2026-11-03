@@ -53,13 +53,19 @@ export function botIdentityErrors(env = process.env) {
     return errors;
 }
 
-/** The file given to `--env-file` / `--env-file-if-exists` (both `=path` and `path` forms), or ''. */
-export function envFileFromExecArgv(execArgv = process.execArgv) {
+/** Every file given to `--env-file` / `--env-file-if-exists` (both `=path` and `path` forms; Node accepts several). */
+export function envFilesFromExecArgv(execArgv = process.execArgv) {
+    const files = [];
     for (let i = 0; i < execArgv.length; i += 1) {
         const match = /^--env-file(?:-if-exists)?(?:=(.*))?$/.exec(execArgv[i]);
-        if (match) return match[1] ?? execArgv[i + 1] ?? '';
+        if (match) files.push(match[1] ?? execArgv[i + 1] ?? '');
     }
-    return '';
+    return files;
+}
+
+/** The first env file, or '' (kept for callers that need one name). */
+export function envFileFromExecArgv(execArgv = process.execArgv) {
+    return envFilesFromExecArgv(execArgv)[0] ?? '';
 }
 
 /** True for the test env file by name, wherever it lives: `.env.test` (repo) or `env.test` (~/.config/mewvo). */
@@ -67,7 +73,7 @@ export function isTestEnvFile(file = '') {
     return /(^|[/\\])\.?env\.test$/.test(String(file));
 }
 
-const usedEnvFile = envFileFromExecArgv();
+const usedEnvFile = envFilesFromExecArgv().find(isTestEnvFile) || envFileFromExecArgv();
 
 export const testMode = {
     enabled: process.env.NODE_ENV === 'test',

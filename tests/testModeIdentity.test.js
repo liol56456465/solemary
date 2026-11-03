@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { PRODUCTION_CLIENT_ID, botIdentityErrors, tokenBotId, envFileFromExecArgv, isTestEnvFile } from '../src/config/testMode.js';
+import { PRODUCTION_CLIENT_ID, botIdentityErrors, tokenBotId, envFileFromExecArgv, envFilesFromExecArgv, isTestEnvFile } from '../src/config/testMode.js';
 
 const TEST_BOT = '1600000000000000001';
 // Fake tokens: the first part is the bot ID in base64, the rest is filler.
@@ -86,6 +86,24 @@ test('the test env file is recognised by name, in the repo or in ~/.config/mewvo
     assert.equal(envFileFromExecArgv(['--env-file', '/x/env.test', '--test']), '/x/env.test');
     assert.equal(envFileFromExecArgv(['--env-file-if-exists=/x/env.test']), '/x/env.test');
     assert.equal(envFileFromExecArgv(['--test']), '');
+    assert.deepEqual(envFilesFromExecArgv(['--env-file=/a/prod', '--env-file', '/x/env.test']), ['/a/prod', '/x/env.test']);
+});
+
+test('several --env-file flags: the guard still sees the test file when it is not the first', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'mewvo-envfile-'));
+    try {
+        const prodFile = path.join(dir, 'env.prod');
+        const testFile = path.join(dir, 'env.test');
+        writeFileSync(prodFile, 'LOG_LEVEL=error\n');
+        writeFileSync(testFile, 'LOG_LEVEL=error\n');
+        const code = "await import('./src/config/testMode.js'); console.log('STARTED');";
+        const run = spawnSync(process.execPath, [`--env-file=${prodFile}`, `--env-file=${testFile}`, '--input-type=module', '-e', code],
+            { env: { PATH: process.env.PATH, HOME: process.env.HOME }, encoding: 'utf8' });
+        assert.equal(run.status, 1, run.stdout + run.stderr);
+        assert.match(run.stdout + run.stderr, /NODE_ENV is not "test"/);
+    } finally {
+        rmSync(dir, { recursive: true, force: true });
+    }
 });
 
 test('started with the moved test env file but without NODE_ENV=test: refuses to start (separate process)', () => {
