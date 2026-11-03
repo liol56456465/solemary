@@ -2,7 +2,7 @@
 // is bounded, someone else's profile is admin-only, everyone may see their own.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { nextReward, profileFields, progressLine } from '../src/commands/Leveling/profile.js';
+import { nextReward, profileFields, progressLine, rankMemberIds, rankQuery } from '../src/commands/Leveling/profile.js';
 import { getXpForLevel } from '../src/services/leveling/leveling.js';
 import { EVERYONE_COMMANDS } from '../src/config/commands/commandAccess.js';
 
@@ -35,4 +35,24 @@ test('next reward: the first role reward above the current level and the XP left
     assert.equal(nextReward(level, {}), null);
     const fields = profileFields({ level, rank: 1, reward: r, planId: 'free' });
     assert.match(fields.find((f) => f.name === 'Next reward').value, /^<@&r5> at level 5, \d+ XP to go$/);
+});
+
+test('profile rank: members only when the member cache is complete, else labelled all-time', () => {
+    const guild = (ids, memberCount) => ({ id: 'g', memberCount, members: { cache: new Map(ids.map((id) => [id, {}])) } });
+    assert.deepEqual(rankMemberIds(guild(['a', 'b'], 2)), ['a', 'b']);
+    assert.equal(rankMemberIds(guild(['a'], 2)), null, 'incomplete cache');
+    assert.equal(rankMemberIds(guild(['a'])), null, 'unknown member count');
+
+    const filtered = rankQuery('user_levels', 'g', 'u', ['a', 'b']);
+    assert.deepEqual(filtered.values, ['g', 'u', ['a', 'b']]);
+    assert.match(filtered.text, /o\.user_id = ANY\(\$3::text\[\]\)/);
+    const all = rankQuery('user_levels', 'g', 'u', null);
+    assert.deepEqual(all.values, ['g', 'u']);
+    assert.ok(!all.text.includes('$3'));
+
+    const level = { level: 4, xp: 30, totalXp: 900 };
+    assert.ok(profileFields({ level, rank: 3, planId: 'free' }).some((f) => f.name === 'Rank'));
+    const allTime = profileFields({ level, rank: 3, rankAllTime: true, planId: 'free' });
+    assert.equal(allTime.find((f) => f.name === 'All-time rank').value, '#3');
+    assert.ok(!allTime.some((f) => f.name === 'Rank'));
 });

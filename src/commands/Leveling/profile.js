@@ -10,7 +10,7 @@ import { logger } from '../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { isBotOwner } from '../../config/bot.js';
 import { hasAdministrator } from '../../utils/commandGate.js';
-import { getLevelingConfig, getUserLevelData, getXpForLevel } from '../../services/leveling/leveling.js';
+import { getLevelingConfig, getUserLevelData, getXpForLevel, memberCacheComplete } from '../../services/leveling/leveling.js';
 import { getGuildBirthdays, getMonthName } from '../../utils/database.js';
 import { planOf } from '../../services/billing/premiumEffects.js';
 import { planName } from '../../services/billing/premiumService.js';
@@ -43,13 +43,15 @@ export function catLine(cat) {
     return cat ? `Server cat: ${cat.name}, ${cat.stage.name}, ${cat.mood}` : null;
 }
 
-export function profileFields({ level, rank, birthday, planId, joinedAt, createdAt, reward = null }) {
+export function profileFields({ level, rank, rankAllTime = false, birthday, planId, joinedAt, createdAt, reward = null }) {
     const fields = [];
     if (level) {
         const needed = getXpForLevel(level.level);
         fields.push({ name: 'Level', value: `**${level.level}** · ${level.xp}/${needed} XP\n${progressLine(level.xp, needed)}`, inline: false });
         fields.push({ name: 'Total XP', value: String(level.totalXp), inline: true });
-        if (rank) fields.push({ name: 'Rank', value: `#${rank}`, inline: true });
+        // "All-time rank" also counts members who left (level data is kept), so it may differ
+        // from /leaderboard, which skips them.
+        if (rank) fields.push({ name: rankAllTime ? 'All-time rank' : 'Rank', value: `#${rank}`, inline: true });
         if (reward) fields.push({ name: 'Next reward', value: `<@&${reward.roleId}> at level ${reward.level}, ${reward.xp} XP to go`, inline: false });
     }
     if (birthday) fields.push({ name: 'Birthday', value: `${birthday.day} ${getMonthName(birthday.month)}`, inline: true });
@@ -59,15 +61,44 @@ export function profileFields({ level, rank, birthday, planId, joinedAt, created
     return fields;
 }
 
-/** 1-based position by total XP, or null. */
-async function rankOf(guildId, userId) {
-    const t = pgConfig.tables.user_levels;
-    const { rows: [row] } = await query(
-        `SELECT 1 + (SELECT COUNT(*) FROM ${t} o WHERE o.guild_id = $1 AND o.total_xp > m.total_xp)::int AS rank
-         FROM ${t} m WHERE m.guild_id = $1 AND m.user_id = $2`,
-        [guildId, userId],
-    );
-    return row ? Number(row.rank) : null;
+// Above this many members the cached ids are not sent to Postgres; the rank is then all-time.
+const RANK_MEMBER_FILTER_MAX = 25_000;
+
+/**
+ * The SQL for rankOf. With memberIds, only those ids are counted above the member (like
+ * /leaderboard, which skips members who left); without, everyone with stored level data. Pure.
+ */
+export function rankQuery(table, guildId, userId, memberIds = null) {
+    if (memberIds) {
+        return {
+            text: `SELECT 1 + (SELECT COUNT(*) FROM ${table} o WHERE o.guild_id = $1 AND o.total_xp > m.total_xp
+                   AND o.user_id = ANY($3::text[]))::int AS rank
+                   FROM ${table} m WHERE m.guild_id = $1 AND m.user_id = $2`,
+            values: [guildId, userId, memberIds],
+        };
+    }
+    return {
+        text: `SELECT 1 + (SELECT COUNT(*) FROM ${table} o WHERE o.guild_id = $1 AND o.total_xp > m.total_xp)::int AS rank
+               FROM ${table} m WHERE m.guild_id = $1 AND m.user_id = $2`,
+        values: [guildId, userId],
+    };
+}
+
+/**
+ * The member ids to rank among: the cached members when the cache is complete (so members who
+ * left are not counted) and small enough to send, else null (all-time rank). Pure.
+ */
+export function rankMemberIds(guild) {
+    if (!memberCacheComplete(guild) || guild.members.cache.size > RANK_MEMBER_FILTER_MAX) return null;
+    return [...guild.members.cache.keys()];
+}
+
+/** 1-based position by total XP as { rank, allTime }, or null. One query. */
+async function rankOf(guild, userId) {
+    const memberIds = rankMemberIds(guild);
+    const { text, values } = rankQuery(pgConfig.tables.user_levels, guild.id, userId, memberIds);
+    const { rows: [row] } = await query(text, values);
+    return row ? { rank: Number(row.rank), allTime: memberIds === null } : null;
 }
 
 export default {
@@ -99,7 +130,7 @@ export default {
             const d = await getUserLevelData(client, guildId, target.id);
             return { level: d?.level ?? 0, xp: d?.xp ?? 0, totalXp: d?.totalXp ?? 0 };
         }) : null;
-        const rank = level ? await part('rank', () => rankOf(guildId, target.id)) : null;
+        const rank = level ? await part('rank', () => rankOf(interaction.guild, target.id)) : null;
         const reward = level ? nextReward(level, leveling?.roleRewards) : null;
         const birthday = await part('birthday', async () => (await getGuildBirthdays(client, guildId))?.[target.id] || null);
         // The server cat: a read that fails only leaves the line out (logged by part()).
@@ -108,7 +139,7 @@ export default {
         const embed = createEmbed({
             title: member.displayName,
             description: [target.id === interaction.user.id ? null : `<@${target.id}>`, catLine(cat)].filter(Boolean).join('\n') || null,
-            fields: profileFields({ level, rank, reward, birthday, planId: planOf(target.id), joinedAt: member.joinedAt, createdAt: target.createdAt }),
+            fields: profileFields({ level, rank: rank?.rank ?? null, rankAllTime: rank?.allTime ?? false, reward, birthday, planId: planOf(target.id), joinedAt: member.joinedAt, createdAt: target.createdAt }),
             color: 'primary',
         });
         embed.setThumbnail(member.displayAvatarURL({ size: 128 }));

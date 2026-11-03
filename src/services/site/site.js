@@ -168,9 +168,12 @@ export function leaderboardPageNumber(value) {
  * leaderboard could not be loaded (503) instead of showing an empty one.
  * Members who ran /wipedata have no user_levels row any more (wipedataService.js deletes
  * getUserLevelKey → postgresDatabase.js deleteStructuredData 'user_level'), so they are not listed.
- * Names: the member's server display name; anyone who left shows as "Former member" (never an ID).
- * Each page is cached for a minute (one promise per page, so concurrent views share a read):
- * getLeaderboard fetches uncached members from the gateway, which an open page must not hammer.
+ * Level data is kept when members leave. With fetchMissing:false getLeaderboard never asks the
+ * gateway for members: when the member cache is complete (memberCacheComplete), uncached ids
+ * are treated as gone and former members are not listed; otherwise uncached members stay
+ * listed and show as "Former member" (never an ID), since they may only be missing from the cache.
+ * Names: the member's server display name.
+ * Each page is cached for a minute (one promise per page, so concurrent views share a read).
  */
 export function createLeaderboardReader(client, { guildId = () => enforcementConfig.mainGuildId, now = () => Date.now() } = {}) {
     const cache = new Map();
@@ -182,7 +185,8 @@ export function createLeaderboardReader(client, { guildId = () => enforcementCon
         if (!guild) throw new Error('the main server is not in the cache');
         const config = await getLevelingConfig(client, id);
         if (!config?.enabled) return { enabled: false, rows: [] };
-        // Cache only: a public page view never makes the bot fetch members from Discord.
+        // Cache only: a public page view never makes the bot fetch members from Discord. With a
+        // complete member cache, members who left are skipped inside getLeaderboard.
         const entries = await getLeaderboard(client, id, limit, offset, { fetchMissing: false });
         return {
             enabled: true,

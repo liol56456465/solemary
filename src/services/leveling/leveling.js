@@ -99,17 +99,36 @@ export const LEADERBOARD_MAX_OFFSET = 490;
 const LEADERBOARD_MAX_FETCHES = 2;
 const LEFT_TTL_MS = 10 * 60 * 1000;
 const knownLeft = new Map(); // guildId:userId → expiry ms
+const MEMBER_FETCH_TIMEOUT_MS = 10_000;
+
+/**
+ * True when the guild's member cache holds every member (cache size >= memberCount), so an id
+ * that is not cached belongs to someone who left. False when memberCount is unknown.
+ * Known limit (accepted): the check counts entries only. After a gateway re-identify, a member
+ * who left during the gap can stay cached while one who joined is not cached yet; the joiner is
+ * then treated as gone until they are cached (any message, interaction or voice join) or the
+ * bot restarts. Rare: it needs a re-identify plus member turnover in that window.
+ */
+export function memberCacheComplete(guild) {
+  const count = guild?.memberCount;
+  const size = guild?.members?.cache?.size;
+  return Number.isInteger(count) && count > 0 && Number.isInteger(size) && size >= count;
+}
 
 /**
  * One page of the guild leaderboard, read from user_levels (Postgres) in steps of
  * LEADERBOARD_BATCH. Level data is kept when a member leaves (owner, 2026-11-03), so members
  * who are known to have left are skipped and ranks count only the members shown.
- * "Known to have left": not in the member cache and not returned by one fetch of the
- * uncached ids. If that fetch fails, or fetchMissing is false, uncached members stay listed
- * with the fallback name (never hidden on a guess).
+ * "Known to have left": not in the member cache, and either the cache is complete
+ * (memberCacheComplete) or one fetch of the uncached ids did not return them. If that fetch
+ * fails, the fetch budget is used up, or fetchMissing is false while the cache is incomplete,
+ * uncached members stay listed with the fallback name (never hidden on a guess).
+ * At most LEADERBOARD_MAX_SCAN (5,000) rows are scanned per call (accepted): if more than that
+ * many stored rows at the top belong to members who left, the page comes back short.
  */
 // fetchMissing: false never asks the gateway for members (the public website: page views must not
-// trigger Discord requests); members not in the cache keep the fallback name.
+// trigger Discord requests); members not in the cache keep the fallback name unless the cache is
+// complete, in which case they are skipped as gone.
 export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { fetchMissing = true } = {}) {
   try {
     
@@ -180,17 +199,19 @@ export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { 
 }
 
 /**
- * The ids (of userIds) that are not in the guild: uncached and either remembered as gone
- * (LEFT_TTL_MS) or not found by one fetch. A fetch uses one unit of `budget.fetches`; with
- * none left, unknown uncached members stay listed. A rejoined member is in the cache again,
- * so a remembered "gone" never hides them.
+ * The ids (of userIds) that are not in the guild: uncached and either the cache is complete,
+ * remembered as gone (LEFT_TTL_MS) or not found by one fetch. A fetch uses one unit of
+ * `budget.fetches`; with none left, unknown uncached members stay listed. A rejoined member is
+ * in the cache again, so a remembered "gone" never hides them.
  */
 async function membersWhoLeft(guild, userIds, budget) {
   const now = Date.now();
   const gone = new Set();
   const unknown = [];
+  const complete = memberCacheComplete(guild);
   for (const id of userIds) {
     if (guild.members.cache.has(id)) continue;
+    if (complete) { gone.add(id); continue; }
     const until = knownLeft.get(`${guild.id}:${id}`);
     if (until && until > now) gone.add(id);
     else unknown.push(id);
@@ -198,7 +219,7 @@ async function membersWhoLeft(guild, userIds, budget) {
   if (unknown.length === 0 || budget.fetches <= 0) return gone;
   budget.fetches -= 1;
   try {
-    const found = await guild.members.fetch({ user: unknown });
+    const found = await guild.members.fetch({ user: unknown, time: MEMBER_FETCH_TIMEOUT_MS });
     const foundIds = new Set(found?.keys?.() ?? []);
     for (const id of unknown) {
       if (foundIds.has(id) || guild.members.cache.has(id)) continue;

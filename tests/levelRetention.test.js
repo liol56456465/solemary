@@ -4,7 +4,7 @@
 import { beforeEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    LEADERBOARD_MAX_OFFSET, getLeaderboard, getUserLevelData, resetLeaderboardLeftCacheForTests, saveUserLevelData,
+    LEADERBOARD_MAX_OFFSET, getLeaderboard, getUserLevelData, memberCacheComplete, resetLeaderboardLeftCacheForTests, saveUserLevelData,
 } from '../src/services/leveling/leveling.js';
 import { getUserLevelKey } from '../src/utils/database/keys.js';
 import guildMemberRemove from '../src/events/guildMemberRemove.js';
@@ -31,16 +31,20 @@ function memoryDb() {
 }
 
 /** A guild whose cache holds `cached`; a fetch finds `fetchable` (or throws when fetchFails). */
-function fakeGuild({ cached = [], fetchable = [], fetchFails = false } = {}) {
+function fakeGuild({ cached = [], fetchable = [], fetchFails = false, memberCount } = {}) {
     const member = (userId) => ({ id: userId, user: { id: userId, username: `user${userId.slice(-2)}` } });
     const cache = new Map(cached.map((userId) => [userId, member(userId)]));
     const fetchCalls = [];
+    const fetchOptions = [];
     const guild = {
         id: GUILD,
+        memberCount,
         members: {
             cache,
-            async fetch({ user }) {
+            async fetch(options) {
+                const { user } = options;
                 fetchCalls.push(user);
+                fetchOptions.push(options);
                 if (fetchFails) throw new Error('gateway down');
                 const found = new Map(user.filter((u) => fetchable.includes(u)).map((u) => [u, member(u)]));
                 for (const [k, v] of found) cache.set(k, v);
@@ -48,7 +52,7 @@ function fakeGuild({ cached = [], fetchable = [], fetchFails = false } = {}) {
             },
         },
     };
-    return { guild, fetchCalls };
+    return { guild, fetchCalls, fetchOptions };
 }
 
 function clientWith(guild, { postgresRows = null } = {}) {
@@ -151,4 +155,30 @@ test('leaderboard abuse bounds: at most 2 member fetches per call, leavers remem
     const before = client.reads.length;
     assert.deepEqual(await getLeaderboard(client, GUILD, 10, LEADERBOARD_MAX_OFFSET + 10), []);
     assert.equal(client.reads.length, before, 'a page past the limit reads nothing');
+});
+
+test('leaderboard: the member fetch has a 10 s timeout', async () => {
+    const { guild, fetchOptions } = fakeGuild({ cached: [id(1)], fetchable: [id(2)] });
+    const client = clientWith(guild, { postgresRows: ROWS.slice(0, 3) });
+    await getLeaderboard(client, GUILD, 10, 0);
+    assert.equal(fetchOptions.length, 1);
+    assert.equal(fetchOptions[0].time, 10_000);
+});
+
+test('leaderboard: with a complete member cache, uncached ids are gone without any fetch (also for the website)', async () => {
+    for (const fetchMissing of [true, false]) {
+        const { guild, fetchCalls } = fakeGuild({ cached: [id(1), id(3)], fetchable: [id(2)], memberCount: 2 });
+        const client = clientWith(guild, { postgresRows: ROWS.slice(0, 3) });
+        const page = await getLeaderboard(client, GUILD, 10, 0, { fetchMissing });
+        assert.deepEqual(page.map((e) => [e.rank, e.userId]), [[1, id(1)], [2, id(3)]], `fetchMissing ${fetchMissing}`);
+        assert.equal(fetchCalls.length, 0);
+    }
+});
+
+test('memberCacheComplete: only when memberCount is known and the cache holds everyone', () => {
+    assert.equal(memberCacheComplete(fakeGuild({ cached: [id(1)], memberCount: 1 }).guild), true);
+    assert.equal(memberCacheComplete(fakeGuild({ cached: [id(1)], memberCount: 2 }).guild), false);
+    assert.equal(memberCacheComplete(fakeGuild({ cached: [id(1)] }).guild), false, 'unknown memberCount');
+    assert.equal(memberCacheComplete(fakeGuild({ memberCount: 0 }).guild), false);
+    assert.equal(memberCacheComplete(null), false);
 });

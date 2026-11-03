@@ -135,11 +135,18 @@ function fakeGuild({ manageRoles = true } = {}) {
             [ROLE_C, role(ROLE_C, 'Level 20', 3)], [ROLE_HIGH, role(ROLE_HIGH, 'Above the bot', 50)], [ROLE_STAFF, role(ROLE_STAFF, 'Staff', 4, ['BanMembers'])]]),
         fetch: async (id) => guild.roles.cache.get(id) || null,
     };
+    guild.memberMap = new Map();
+    guild.fetchCalls = [];
     guild.members = {
         me: { permissions: { has: () => manageRoles }, roles: { highest: { position: 10 } } },
-        fetch: async (id) => guild.memberMap.get(id) || null,
+        cache: guild.memberMap,
+        // No argument: the full member list (fills the cache). With an id: one member.
+        fetch: async (id) => {
+            const all = id === undefined || typeof id === 'object';
+            guild.fetchCalls.push(all ? 'all' : id);
+            return all ? guild.memberMap : guild.memberMap.get(id) || null;
+        },
     };
-    guild.memberMap = new Map();
     guild.channels = { cache: new Map() };
     return guild;
 }
@@ -266,6 +273,44 @@ test('startup reconcile uses the same rule (highest only removes lower rewards)'
     assert.equal(summary.rolesReAwarded, 1);
     assert.equal(summary.rolesRemoved, 1);
     assert.equal(summary.errors, 0);
+});
+
+test('startup reconcile: one full member fetch, former members skipped without a fetch or level read', async () => {
+    const client = fakeClient();
+    await seed(client, { level: 12 });
+    const departed = ['700000000000000001', '700000000000000002', '700000000000000003'];
+    for (const id of departed) await saveUserLevelData(client, GUILD, id, { xp: 0, level: 30, totalXp: 9000 });
+    const guild = fakeGuild();
+    const member = fakeMember(guild, client);
+    client.guilds.cache.set(GUILD, guild);
+    const reads = [];
+    const get = client.db.get.bind(client.db);
+    client.db.get = async (key, d) => { reads.push(key); return get(key, d); };
+    const summary = await reconcileLevelRoles(client);
+    assert.deepEqual(guild.fetchCalls, ['all'], 'one full fetch, no per-id REST');
+    assert.ok(!reads.some((key) => departed.some((id) => key.endsWith(id))), 'no level read for former members');
+    assert.deepEqual(member.roles.added.map((a) => a.id).sort(), [ROLE_A, ROLE_B].sort());
+    assert.equal(summary.skippedGuilds, 0);
+    assert.equal(summary.errors, 0);
+});
+
+test('startup reconcile: a failed or timed-out member fetch skips the guild (no per-id fetches)', async () => {
+    for (const mode of ['fail', 'hang']) {
+        const client = fakeClient();
+        await seed(client, { level: 12 });
+        const guild = fakeGuild();
+        const member = fakeMember(guild, client);
+        guild.members.fetch = async (id) => {
+            guild.fetchCalls.push(id === undefined || typeof id === 'object' ? 'all' : id);
+            if (mode === 'fail') throw new Error('gateway down');
+            return new Promise(() => {});
+        };
+        client.guilds.cache.set(GUILD, guild);
+        const summary = await reconcileLevelRoles(client, null, { fetchTimeoutMs: 20 });
+        assert.deepEqual(guild.fetchCalls, ['all'], mode);
+        assert.equal(summary.skippedGuilds, 1, mode);
+        assert.deepEqual(member.roles.added, [], mode);
+    }
 });
 
 // ── the boost service ─────────────────────────────────────────────────────

@@ -126,9 +126,41 @@ export function roleSyncNote(summary) {
     return note;
 }
 
-export async function reconcileLevelRoles(client, guildId = null) {
+const FULL_FETCH_TIMEOUT_MS = 15_000;
+
+/**
+ * Fills the guild's member cache with one full member fetch. True when it finished within
+ * `timeoutMs`; false when it failed or timed out (the cache may then be partial).
+ */
+async function fillMemberCache(guild, timeoutMs = FULL_FETCH_TIMEOUT_MS) {
+    let timer;
+    const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve('timeout'), timeoutMs); });
+    try {
+        const result = await Promise.race([
+            Promise.resolve().then(() => guild.members.fetch({ time: timeoutMs })).then(() => 'ok', (error) => {
+                logger.warn(`Level role sync: member fetch failed for guild ${guild.id}: ${error.message}`);
+                return 'failed';
+            }),
+            timeout,
+        ]);
+        if (result === 'timeout') logger.warn(`Level role sync: member fetch timed out for guild ${guild.id}`);
+        return result === 'ok';
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+/**
+ * Startup sync of level reward roles. Level data is kept when members leave, so stored ids
+ * include former members: the member cache is filled once (one full fetch, with a timeout) and
+ * only ids present in it are handled, with no per-id Discord request. If that fetch fails or
+ * times out the guild is skipped with a warning (summary.skippedGuilds) and synced next start
+ * or on level-up/rejoin.
+ */
+export async function reconcileLevelRoles(client, guildId = null, { fetchTimeoutMs = FULL_FETCH_TIMEOUT_MS } = {}) {
     const summary = {
         scannedGuilds: 0,
+        skippedGuilds: 0,
         prunedRewardEntries: 0,
         rolesReAwarded: 0,
         rolesRemoved: 0,
@@ -166,13 +198,20 @@ export async function reconcileLevelRoles(client, guildId = null) {
 
             if (Object.keys(rewards).length === 0) continue;
 
+            if (!(await fillMemberCache(guild, fetchTimeoutMs))) {
+                summary.skippedGuilds += 1;
+                logger.warn(`Level role sync skipped for guild ${guild.id}: could not load the member list`);
+                continue;
+            }
+
             const userIds = await listLevelUserIds(client, guild.id);
             const config = { ...cfg, roleRewards: rewards };
 
             for (const userId of userIds) {
-                const levelData = await getUserLevelData(client, guild.id, userId);
-                const member = await guild.members.fetch(userId).catch(() => null);
+                // Former members keep their level data but are not in the cache: skipped, no read.
+                const member = guild.members.cache.get(userId);
                 if (!member) continue;
+                const levelData = await getUserLevelData(client, guild.id, userId);
 
                 // Same per-member rule as rejoin and level-up (respects the reward mode).
                 const result = await syncLevelRolesForMember(client, member, {

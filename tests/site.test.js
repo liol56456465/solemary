@@ -387,10 +387,10 @@ test('leaderboard: leveling turned off says so', async () => {
 });
 
 /** A client shaped like the real one, enough for getLevelingConfig and getLeaderboard. */
-function fakeClient({ ready = true, enabled = true, levels = [], members = {}, failRows = false } = {}) {
+function fakeClient({ ready = true, enabled = true, levels = [], members = {}, failRows = false, memberCount } = {}) {
     const memberCache = new Map(Object.entries(members).map(([id, displayName]) => [id, { displayName, user: { username: displayName } }]));
     let fetches = 0;
-    const guild = { id: '111111111111111111', members: { cache: memberCache, fetch: async () => { fetches += 1; return memberCache; } } };
+    const guild = { id: '111111111111111111', memberCount, members: { cache: memberCache, fetch: async () => { fetches += 1; return memberCache; } } };
     let reads = 0;
     return {
         reads: () => reads,
@@ -434,6 +434,22 @@ test('the real reader: main server only, display names, former members without I
 
     const disabled = createLeaderboardReader(fakeClient({ enabled: false, levels }), { guildId: () => '111111111111111111' });
     assert.deepEqual(await disabled({ offset: 0, limit: 51 }), { enabled: false, rows: [] });
+});
+
+test('the real reader: with a complete member cache, former members are not listed', async () => {
+    const levels = [
+        { userId: '222222222222222222', xp: 10, level: 4, totalXp: 900 },
+        { userId: '333333333333333333', xp: 5, level: 2, totalXp: 300 },
+        { userId: '444444444444444444', xp: 1, level: 1, totalXp: 100 },
+    ];
+    const members = { '222222222222222222': 'Kitty', '444444444444444444': 'Mochi' };
+    const client = fakeClient({ levels, members, memberCount: 2 });
+    const board = await createLeaderboardReader(client, { guildId: () => '111111111111111111' })({ offset: 0, limit: 51 });
+    assert.deepEqual(board.rows, [
+        { rank: 1, name: 'Kitty', level: 4, totalXp: 900 },
+        { rank: 2, name: 'Mochi', level: 1, totalXp: 100 },
+    ]);
+    assert.equal(client.fetches(), 0);
 });
 
 test('the real reader throws (never an empty board) when it cannot read', async () => {
@@ -505,6 +521,10 @@ test('privacy and terms: dated, linked from the footer, contact via the support 
             assert.ok(privacy.includes(fact), fact);
         }
         assert.ok(privacy.includes('does not delete moderation records'));
+        // Levels are kept after leaving (no "server resets levels" feature exists); how to delete them.
+        assert.ok(!privacy.includes('resets levels'));
+        assert.ok(privacy.includes('if you have left and want them deleted'));
+        assert.ok(privacy.includes('or rejoin and run /wipedata'));
         // Accounts have no email (schema v8): no email provider, no email links.
         assert.ok(!privacy.includes('Resend') && !privacy.includes('Email links'));
         const terms = (await site.get('/terms')).body;
