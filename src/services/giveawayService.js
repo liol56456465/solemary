@@ -378,13 +378,6 @@ export async function checkGiveaways(client) {
             ? winners.map(id => `<@${id}>`).join(', ')
             : 'nobody';
 
-          const endedEmbed = createGiveawayEmbed(giveaway, 'ended', winners);
-
-          await message.edit({
-            embeds: [endedEmbed],
-            components: [createGiveawayButtons(true)]
-          });
-
           giveaway.ended = true;
           giveaway.isEnded = true;
           giveaway.winnerIds = winners;
@@ -394,16 +387,31 @@ export async function checkGiveaways(client) {
           giveaway.guildId = giveaway.guildId || guildId;
           giveaway.messageId = giveaway.messageId || messageId;
 
+          // Save the ended state (with winners) before announcing anything. If the save
+          // failed, the next tick would re-pick and ping different winners, so stop here,
+          // announce nothing and let the next tick retry. A thrown DB error does the same.
           const markedSuccess = await markGiveawayEnded(client, giveawayId, giveaway);
           if (!markedSuccess) {
-            logger.warn(`Failed to mark giveaway ${messageId} as ended in database`);
+            logger.error(`Could not mark giveaway ${messageId} as ended; winners not announced, will retry`);
+            return;
           }
+
+          const endedEmbed = createGiveawayEmbed(giveaway, 'ended', winners);
+
+          await message.edit({
+            embeds: [endedEmbed],
+            components: [createGiveawayButtons(true)]
+          }).catch((error) => logger.warn(`Could not edit ended giveaway message ${messageId}: ${error.message}`));
 
           if (winners.length > 0) {
             const winnerAnnouncement = `${winnerMentions} won **${giveaway.prize || 'the giveaway'}**. Message <@${giveaway.hostId}> to get your prize.`;
-            const winnerPingMsg = await channel.send({ content: winnerAnnouncement });
+            const winnerPingMsg = await channel.send({ content: winnerAnnouncement, allowedMentions: { users: [...new Set([...winners, giveaway.hostId].filter(Boolean))] } });
             giveaway.winnerPingMessageId = winnerPingMsg.id;
-            await markGiveawayEnded(client, giveawayId, giveaway);
+            // Only the ping id is new here; the ended state is already saved, so a failed
+            // save is logged without stopping the log event below.
+            const pingSaved = await markGiveawayEnded(client, giveawayId, giveaway)
+              .catch((error) => { logger.warn(`Could not save winner ping id for giveaway ${messageId}: ${error.message}`); return null; });
+            if (pingSaved === false) logger.warn(`Could not save winner ping id for giveaway ${messageId}`);
 
             try {
               await logEvent({
@@ -436,7 +444,7 @@ export async function checkGiveaways(client) {
               logger.debug('Error logging giveaway winner:', error);
             }
           } else {
-            await channel.send({ content: `The giveaway for **${giveaway.prize}** ended. Nobody entered, so there's no winner.` });
+            await channel.send({ content: `The giveaway for **${giveaway.prize}** ended. Nobody entered, so there's no winner.`, allowedMentions: { parse: [] } });
           }
 
           logger.info(`Ended giveaway ${messageId} in guild ${guildId}`);
