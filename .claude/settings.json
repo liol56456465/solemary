@@ -4,7 +4,8 @@
       "Read(/.env)",
       "Read(/.env.test)",
       "Read(/.env.local)",
-      "Read(/.env.*.local)"
+      "Read(/.env.*.local)",
+      "Read(~/.config/mewvo/**)"
     ]
   },
   "hooks": {
