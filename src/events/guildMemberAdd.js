@@ -83,8 +83,9 @@ export default {
             }
         }
 
-        // Rejoin: give back the level reward roles the member earned (by reward mode). Hierarchy
-        // and missing permissions are logged and skipped inside; a DB error only logs here.
+        // Rejoin: level data is kept when a member leaves (guildMemberRemove), so give back the
+        // level reward roles they earned (by reward mode). New members have no level data and get
+        // nothing. Hierarchy and missing permissions are logged and skipped inside; a DB error only logs here.
         if (!user.bot) {
             await syncLevelRolesForMember(member.client, member, { reason: 'Level reward (rejoined)' }).catch((error) => {
                 logger.warn(`Level reward roles not given back to ${member.id}: ${error.message}`);

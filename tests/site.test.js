@@ -497,7 +497,7 @@ test('privacy and terms: dated, linked from the footer, contact via the support 
         for (const path of ['/privacy', '/terms']) {
             const res = await site.get(path);
             assert.equal(res.status, 200);
-            assert.ok(res.body.includes('Last updated <time datetime="2026-11-01">1 November 2026</time>.'), path);
+            assert.ok(res.body.includes('Last updated <time datetime="2026-11-03">3 November 2026</time>.'), path);
             assert.ok(res.body.includes(`<a href="${SUPPORT}" rel="noopener">the support server</a>`), path);
         }
         const privacy = (await site.get('/privacy')).body;
