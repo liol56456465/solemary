@@ -8,38 +8,36 @@ Thank you for your interest in contributing to Mewvo! This guide covers local se
 - New commands or enhancements to existing features
 - Documentation updates
 
-Before starting large features, open an issue or discuss in the [support server](https://discord.gg/8kJBYhTGW9) so we can align on scope and avoid duplicate work.
+Before starting large features, open an issue or discuss in the [support server](https://discord.gg/7Ckv9Bt577) so we can align on scope and avoid duplicate work.
 
 ## Getting Started
 
 ### Prerequisites
 
-- **Node.js 20+** (Docker and CI use Node 20)
-- **PostgreSQL** (recommended for development; the bot can fall back to in-memory storage if PostgreSQL is unavailable)
-- A **Discord bot application** with the intents listed in [README.md](README.md#required-bot-intents)
+- **Node.js 22.12+** (Docker and CI use Node 22; `nvm use` reads `.nvmrc`)
+- **PostgreSQL** on localhost, for the database tests
 
 ### Local Setup
+
+There is no local dev environment for the bot itself: it is never started locally against Discord.
+Discord testing happens on the owner's Replit deployment (see [docs/test-script.md](docs/test-script.md)).
+Locally you run the automated tests only.
 
 1. Fork and clone the repository.
 2. Install dependencies:
    ```bash
    npm install
    ```
-3. Copy the environment file and configure it:
+3. Run the unit tests:
    ```bash
-   cp .env.example .env
+   npm test
    ```
-   At minimum, set `DISCORD_TOKEN`, `CLIENT_ID`, and `GUILD_ID` for single-server development. See [README.md](README.md#manual-installation-steps) for full configuration options.
-4. Verify your database setup (when using PostgreSQL):
+4. Run the database tests against a local Postgres (they skip themselves unless `POSTGRES_URL` points at localhost):
    ```bash
-   npm run migrate:check
+   npm run test:db
    ```
-5. Start the bot:
-   ```bash
-   npm start
-   ```
-
-For Docker-based setup, see [README.md](README.md#docker-deployment-recommended).
+   The npm scripts load their environment from `~/.config/mewvo/`, outside the repo. Never put an env file with
+   real values in the repo folder: the repo is public. `.env.example` lists the variable names with placeholders only.
 
 ## Development Workflow
 
@@ -55,7 +53,7 @@ Use descriptive branch names, for example:
 
 ## Database & Migrations
 
-Mewvo uses PostgreSQL as its primary store. If PostgreSQL is unreachable at startup, the bot can operate in a **degraded in-memory mode**: but that mode is not suitable for production and should not be the only way you test persistence-related changes.
+Mewvo uses PostgreSQL as its store. Production refuses to start without it (unless `ALLOW_MEMORY_DB=true`), and a database error is reported to the user instead of being hidden behind default values.
 
 Useful commands:
 
@@ -67,7 +65,7 @@ Useful commands:
 
 If your change modifies the database schema, update the expected schema version in `.env.example` (`SCHEMA_VERSION`, `SCHEMA_VERSION_LABEL`) and ensure `npm run migrate:check` passes locally.
 
-Test features that read or write guild data with **both** PostgreSQL and the memory fallback when feasible.
+Features that read or write data need a test in `tests/db/` (run with `npm run test:db`), including the database-error path.
 
 ## Code Guidelines
 
@@ -85,7 +83,7 @@ In your PR description, include:
 
 - **What** changed
 - **Why** the change is needed
-- **How to test** it manually (commands, config, or env vars to set)
+- **How to test** it: which automated tests cover it, and the Discord steps to check on Replit
 
 ## Reporting Issues
 
