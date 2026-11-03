@@ -819,6 +819,7 @@ const CASES = {
         'boost-add': { form: { type: 'channel', id: TEXT, multiplier: '1.5' }, service: 'setLevelBoost', bad: { form: { type: 'role', id: ROLE_OK, multiplier: '5.5' }, message: /between 1.1 and 5/ } },
         'boost-remove': { seed: (s) => { s.leveling.roleMultipliers = { [ROLE_OK]: 2 }; }, form: { type: 'role', id: ROLE_OK }, service: 'setLevelBoost' },
         'reward-mode': { form: { rewardMode: 'highest' }, service: 'updateLevelingConfig', bad: { form: { rewardMode: 'all' }, message: /unknown choice/ } },
+        card: { form: { levelUpCard: '1', colour: 'purple', hex: '' }, service: 'updateLevelingConfig', bad: { form: { levelUpCard: '1', hex: '#12' }, message: /colour code like #9B59B6/ } },
         member: { form: { userId: MEMBER, op: 'add', levels: '2' }, service: 'addLevels', bad: { form: { userId: STRANGER, op: 'add', levels: '2' }, message: /not in the server/ }, admin: true },
         'cat-name': { form: { catName: 'Mochi <b>' }, service: 'updateSettings', admin: true, bad: { form: { catName: '@@ <>' }, message: /use letters, numbers and spaces/ } },
         'cat-announce': { form: { enabled: 'false' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
@@ -3248,6 +3249,50 @@ test('leveling: the Server cat section shows the picture and name; the name is s
     assert.equal(fallback.statusCode, 200, 'the page still renders');
     assert.match(fallback.body, /The cat could not be loaded right now/);
     assert.ok(fallback.body.includes('Least XP per message'), 'the rest of the page is there');
+});
+
+test('leveling: the level-up card is off by default; turning it on and picking a colour is saved and audited; a bad colour code is refused', async () => {
+    const h = await setup();
+    const page = await get(h, 'leveling');
+    assert.equal(page.statusCode, 200);
+    assert.ok(page.body.includes('action="/dashboard/leveling/card"'), 'card form');
+    assert.match(page.body, /name="levelUpCard" value="1">/, 'switch is off when nothing is saved');
+    assert.ok(page.body.includes('<option value="primary" selected>'), 'Mewvo blue is the default colour');
+    const cardSection = page.body.match(/id="s-level-up-card"[\s\S]*?<\/section>/)?.[0] || '';
+    assert.ok(cardSection, 'card section is on the page');
+    assert.ok(!/\u2014/.test(cardSection), 'no em dash in the card section');
+
+    // Saving the defaults writes nothing.
+    const same = await post(h, 'leveling', 'card', { colour: 'primary', hex: '' });
+    assert.equal(same.statusCode, 303);
+    assert.equal(h.calls.filter((c) => c.name === 'updateLevelingConfig').length, 0, 'defaults: nothing saved');
+
+    const on = await post(h, 'leveling', 'card', { levelUpCard: '1', colour: 'purple', hex: '' });
+    assert.equal(on.statusCode, 303);
+    assert.equal(h.state.leveling.levelUpCard, true);
+    assert.equal(h.state.leveling.cardAccent, '#9B59B6');
+    assert.ok(h.auditRows.some((r) => r.key === 'leveling.levelUpCard' && r.new === true));
+    assert.ok(h.auditRows.some((r) => r.key === 'leveling.cardAccent' && r.new === '#9B59B6'));
+
+    const custom = await post(h, 'leveling', 'card', { levelUpCard: '1', colour: 'purple', hex: '#12ab34' });
+    assert.equal(custom.statusCode, 303);
+    assert.equal(h.state.leveling.cardAccent, '#12AB34', 'a typed code wins and is stored upper case');
+    const again = await get(h, 'leveling');
+    assert.ok(again.body.includes('value="#12AB34"'), 'custom code shown in the field');
+    assert.match(again.body, /name="levelUpCard" value="1" checked>/, 'switch shows on');
+
+    const writes = h.calls.filter((c) => c.name === 'updateLevelingConfig').length;
+    for (const hex of ['#12', 'red', '#GGGGGG']) {
+        const res = await post(h, 'leveling', 'card', { levelUpCard: '1', hex });
+        assert.equal(res.statusCode, 400, hex);
+        assert.match(res.body, /colour code like #9B59B6/);
+    }
+    const unknown = await post(h, 'leveling', 'card', { levelUpCard: '1', colour: 'rainbow', hex: '' });
+    assert.equal(unknown.statusCode, 400);
+    assert.equal(h.calls.filter((c) => c.name === 'updateLevelingConfig').length, writes, 'refused input: nothing saved');
+
+    await post(h, 'leveling', 'card', { colour: 'purple', hex: '#12AB34' });
+    assert.equal(h.state.leveling.levelUpCard, false, 'switch off is saved');
 });
 
 test('leveling: XP boosts are listed, added and removed with audit rows; bad boosts are refused; the reward mode is saved', async () => {

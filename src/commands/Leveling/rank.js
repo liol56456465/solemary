@@ -6,6 +6,7 @@ import { getUserLevelData, getLevelingConfig, getXpForLevel } from '../../servic
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { hasAdministrator } from '../../utils/commandGate.js';
 import { isBotOwner } from '../../config/bot.js';
+import { CARD_FILE_NAME, cardAvatarUrl, tryLevelCard } from '../../services/leveling/levelCard.js';
 export default {
   data: new SlashCommandBuilder()
     .setName('rank')
@@ -14,6 +15,12 @@ export default {
       option
         .setName('user')
         .setDescription('The user to check the rank of')
+        .setRequired(false)
+    )
+    .addBooleanOption((option) =>
+      option
+        .setName('card')
+        .setDescription('Show the rank as an image card')
         .setRequired(false)
     )
     .setDMPermission(false),
@@ -68,6 +75,25 @@ export default {
 
     // addXp levels a user up once xp reaches getXpForLevel(currentLevel).
     const xpNeeded = getXpForLevel(safeUserData.level);
+
+    // card:true → the image card (same look as the level-up card). If it can't be made
+    // right now (busy or an error), the embed below is shown instead.
+    if (interaction.options.getBoolean('card') === true) {
+      const png = await tryLevelCard({
+        avatarUrl: cardAvatarUrl(member.user),
+        name: member.displayName,
+        serverName: interaction.guild.name,
+        level: safeUserData.level,
+        xp: safeUserData.xp,
+        xpNeeded: safeUserData.level >= 1000 ? 0 : xpNeeded,
+        accent: levelingConfig.cardAccent,
+      });
+      if (png) {
+        await InteractionHelper.safeEditReply(interaction, { files: [{ attachment: png, name: CARD_FILE_NAME }], allowedMentions: { parse: [] } });
+        logger.debug(`Rank card shown for user ${targetUser.id} in guild ${interaction.guildId}`);
+        return;
+      }
+    }
     const progress = xpNeeded > 0 ? Math.floor((safeUserData.xp / xpNeeded) * 100) : 0;
     const progressBar = createProgressBar(progress, 20);
 

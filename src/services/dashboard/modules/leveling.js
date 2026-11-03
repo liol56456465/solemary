@@ -18,12 +18,28 @@ import { CAT_NAME_MAX, sanitizeCatName } from '../../community/catModel.js';
 import { BOOST_MAX, BOOST_MIN, MAX_BOOSTS, TOTAL_MULTIPLIER_CAP, rewardModeOf } from '../../leveling/levelBoosts.js';
 import { roleSyncNote } from '../../leveling/levelRoleSyncService.js';
 import { logger } from '../../../utils/logger.js';
+import { EMBED_COLOURS, colourFromKey, parseHexColour } from '../../botMessageService.js';
+import { cardAccentOf } from '../../leveling/levelCard.js';
 
 const MAX_LEVEL = 1000;
 
 const BOOST_FIELD = { channel: 'channelMultipliers', role: 'roleMultipliers' };
 const REWARD_MODE_CHOICES = [['keep', 'Keep all reward roles'], ['highest', 'Only the highest reward role']];
 const boostText = (value) => `x${Number(value).toFixed(1)}`;
+const hexOf = (value) => `#${value.toString(16).padStart(6, '0').toUpperCase()}`;
+
+/** The card colour from the form: a typed colour code wins, else one of the fixed choices. */
+function cardAccentFromForm(form) {
+    const hex = text(form, 'hex', 7);
+    if (hex) {
+        const value = parseHexColour(hex);
+        if (value === null) throw new InputError('Card colour: write a colour code like #9B59B6, or leave it empty and pick from the list.', 400, 'hex');
+        return hexOf(value);
+    }
+    const value = colourFromKey(text(form, 'colour', 20) || 'primary');
+    if (value === null) throw new InputError('Card colour: unknown choice.', 400, 'colour');
+    return hexOf(value);
+}
 
 const xpRangeOf = (cfg) => ({
     min: cfg.xpRange?.min ?? cfg.xpPerMessage?.min ?? 15,
@@ -59,6 +75,11 @@ ${numberInput('xpCooldown', cfg.xpCooldown ?? 60, { label: 'Wait between XP', mi
 ${channelPicker(g, 'levelUpChannel', cfg.levelUpChannel || null, { label: 'Level-up channel', perms: PERMS.post, noneLabel: 'where the member chatted', help: 'Where the level-up message is posted.' })}
 ${switchInput('announceLevelUp', cfg.announceLevelUp !== false, { label: 'Announce level-ups', help: 'Off: members still level up, but no message is posted.' })}
 ${textArea('levelUpMessage', cfg.levelUpMessage || '{user} is now level {level}.', { label: 'Level-up message', max: 500, rows: 2, help: 'You can use {user} (mentions the member) and {level} (their new level).' })}</div>`);
+        const accent = cardAccentOf(cfg.cardAccent);
+        const knownAccent = EMBED_COLOURS.find(([, , h]) => h.toUpperCase() === accent);
+        const card = postForm(ctx, 'leveling', 'card', html`${switchInput('levelUpCard', cfg.levelUpCard === true, { label: 'Add an image card to level-up messages', help: 'The card shows the member\'s picture and name, the new level, a bar to the next level and the server name. Off: only the text message is posted. If the card cannot be made, the text message is posted on its own.' })}
+<div class="grid">${selectInput('colour', knownAccent ? knownAccent[0] : 'primary', EMBED_COLOURS.map(([key, label, h]) => [key, `${label} (${h})`]), { label: 'Card colour', help: 'Used for the ring around the picture, the level and the bar.' })}
+${textInput('hex', knownAccent ? '' : accent, { label: 'Or a colour code', max: 7, placeholder: '#9B59B6', help: 'A # and six letters or numbers. When filled in, it is used instead of the colour above.' })}</div>`);
         const ignoredRows = [
             ...(cfg.ignoredChannels || []).map((id) => ['channel', channelName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', 'Remove', { type: 'channel', id })]),
             ...(cfg.ignoredRoles || []).map((id) => ['role', roleName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', 'Remove', { type: 'role', id })]),
@@ -103,6 +124,7 @@ ${numberInput('levels', '', { label: 'Levels', min: 0, max: MAX_LEVEL })}</div>`
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
         // v6: cards grouped by topic (common.js topic/section).
         return html`${topic('Earning XP', 'How fast members level up, and what Mewvo posts when they do.', html`${section('XP and messages', settings, 'XP per message, the wait between XP, and the level-up message.')}
+${section('Level-up card', card, ['An image with the level-up message.', 'Members can also see the same card with /rank card:True. Mewvo needs the Attach Files permission in the level-up channel; without it only the text is posted.'])}
 ${section('XP boosts', boosts, [`More XP in some channels or for some roles, from x${BOOST_MIN} to x${BOOST_MAX}.`, `A thread counts as its channel. If a member has several boosted roles, only the highest role boost counts. Channel boost times role boost is never more than x${TOTAL_MULTIPLIER_CAP}.`], { size: 'normal' })}
 ${section('No XP in', ignored, 'Members get no XP in these channels, and members with these roles get none at all. Useful for bot or spam channels.', { size: 'normal' })}`)}
 ${topic('Rewards and levels', 'Roles for reaching a level, and changing a level by hand.', html`${section('Role rewards', rewardTable, 'Members get these roles by themselves when they reach the level. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers.', { size: 'normal' })}
@@ -150,6 +172,14 @@ ${topic('Server cat', 'A cat that grows as members chat, from Kitten to Legend.'
             }, { ...cfg, xpCooldown: cfg.xpCooldown ?? 60, announceLevelUp: cfg.announceLevelUp !== false, levelUpChannel: cfg.levelUpChannel || null });
             if (min !== range.min || max !== range.max) patch.xpRange = { min, max };
             return update(ctx, patch, 'Leveling settings saved.');
+        },
+        async card(ctx, form) {
+            const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
+            const patch = changedOnly({
+                levelUpCard: checkbox(form, 'levelUpCard'),
+                cardAccent: cardAccentFromForm(form),
+            }, { levelUpCard: cfg.levelUpCard === true, cardAccent: cardAccentOf(cfg.cardAccent) });
+            return update(ctx, patch, 'Level-up card settings saved.');
         },
         async 'ignore-add'(ctx, form) {
             const type = choiceField(form, 'type', ['channel', 'role'], 'Type');

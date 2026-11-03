@@ -284,6 +284,9 @@ function defaultLevelingConfig() {
     blacklistedUsers: [],
     roleRewards: {},
     announceLevelUp: true,
+    // Image card with the level-up message (off until an admin turns it on); accent '#RRGGBB'.
+    levelUpCard: false,
+    cardAccent: null,
     xpMultiplier: 1
   };
 }
@@ -407,6 +410,15 @@ function assertLevelingConfigValid(config) {
         'Minimum XP must be less than maximum XP, and both must be positive.'
       );
     }
+  }
+
+  if (config.levelUpCard !== undefined && typeof config.levelUpCard !== 'boolean') {
+    throw validationError('levelUpCard must be true or false', 'The level-up card setting must be on or off.');
+  }
+
+  if (config.cardAccent !== undefined && config.cardAccent !== null
+    && (typeof config.cardAccent !== 'string' || !/^#[0-9A-F]{6}$/i.test(config.cardAccent))) {
+    throw validationError(`Invalid card accent: ${config.cardAccent}`, 'The card colour must be a colour code like #9B59B6.');
   }
 
   if (config.rewardMode !== undefined && config.rewardMode !== null && !REWARD_MODES.includes(config.rewardMode)) {
