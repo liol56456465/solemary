@@ -15,7 +15,7 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
   `.env.example` contains placeholders only. The leak check (gitleaks) must pass before any push:
   pre-push hook `scripts/git-hooks/pre-push` (install: copy to `.git/hooks/`) + CI `.github/workflows/gitleaks.yml`.
   Old, already reset tokens are listed in `.gitleaksignore`; add to it only for verified-dead findings.
-- Never boot locally against the real servers. Test mode only (see "Testing").
+- Never boot the bot locally against the real servers (there is no local dev environment; see "Testing").
 - Ask before any migration that drops or rewrites existing data.
 - Don't rewrite git history (old token leak was handled by resetting the token, not by force-push).
 - Don't "fix" things listed as "done well" in the audit.
@@ -154,8 +154,8 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
   **only** `POSTGRES_URL`; `DATABASE_URL` (Replit's suspended DB) is ignored with a startup warning.
   Neon Free is fine on Autoscale (6.96 of 100 CU-h used on 2026-10-28) but not on a Reserved VM (~182 CU-h/month).
   The planned move is to Supabase free tier (session-mode pooler if IPv6 is unavailable), keeping per-minute polling.
-- **Testing:** `npm run start:test` loads `~/.config/mewvo/env.test` and refuses the production bot (`src/config/testMode.js`);
-  that file still has production values (2026-11-03): set up the test bot first (`docs/test-script.md` §0).
+- **Testing (owner, 2026-11-03):** no separate dev environment or test bot; Discord testing happens on Replit. Locally only
+  `npm test` and `npm run test:db` (local DB); `start:test` refuses the production bot by design (`src/config/testMode.js`).
   Test mode: `TEST_GUILD_IDS` allowlist (other guilds ignored), guild-only command registration
   (global untouched), crons off unless `TEST_ENABLE_CRON=true`, local DB only,
   presence "🛠 Maintenance". It refuses to boot if any test ID equals a real server ID.
