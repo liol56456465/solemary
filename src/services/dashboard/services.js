@@ -71,7 +71,7 @@ import { publishTicketPanel, setupTicketSystem } from '../ticketPanelService.js'
 import { publishVerificationPanel, setupVerification } from '../verificationPanelService.js';
 import { postAppealPanels } from '../enforcement/appealPanelService.js';
 import { createReactionRolePanel } from '../reactionRoleService.js';
-import { createPoll, postBotMessage, startCountdownMessage } from '../botMessageService.js';
+import { createNativePoll, createPoll, endPoll, postBotMessage, startCountdownMessage } from '../botMessageService.js';
 import {
     createScheduledMessage, deleteScheduledMessage, listScheduledMessages, runScheduledMessageNow, setScheduledMessagePaused, updateScheduledMessage,
 } from '../scheduledMessageService.js';
@@ -117,7 +117,7 @@ export const defaultServices = {
     publishTicketPanel, setupTicketSystem, publishVerificationPanel, setupVerification, postAppealPanels,
     createReactionRolePanel, createGiveaway, deleteGiveawayNow, createServerCounter, setupJoinToCreate, editTag,
     createApplicationRole, deleteApplicationRole, listApplicationRoles, updateApplicationRole,
-    postBotMessage, createPoll, startCountdownMessage,
+    postBotMessage, createPoll, createNativePoll, endPoll, startCountdownMessage,
     listScheduledMessages, createScheduledMessage, updateScheduledMessage, setScheduledMessagePaused, runScheduledMessageNow, deleteScheduledMessage,
     updateConfigSetting, pickRandomMember, shortenUrl,
 };

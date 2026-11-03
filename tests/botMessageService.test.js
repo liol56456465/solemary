@@ -5,7 +5,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import {
-    activeCountdowns, assertCanPost, buildMessageEmbed, createPoll, isEmbedImageUrl, parseHexColour, postBotMessage, startCountdownMessage,
+    activeCountdowns, assertCanPost, buildMessageEmbed, buildNativePollPayload, cleanNativePoll, createNativePoll, createPoll, endPoll, isEmbedImageUrl,
+    parseHexColour, parseMessageLink, postBotMessage, startCountdownMessage,
     POLL_EMOJIS,
 } from '../src/services/botMessageService.js';
 
@@ -115,4 +116,134 @@ test('startCountdownMessage: buttons, no pings, registered for the pause/cancel 
     await assert.rejects(startCountdownMessage(guild, { channel, totalSeconds: 0 }), /at least 1 second/);
     await assert.rejects(startCountdownMessage(guild, { channel, totalSeconds: 86401 }), /24 hours/);
     assert.equal(channel.sent.length, 1);
+});
+
+// ── Native Discord polls ──────────────────────────────────────────────────
+
+test('cleanNativePoll: Discord limits (question 300, 2 to 10 answers of 55, 1 to 168 hours), refused not cut', () => {
+    const ok = cleanNativePoll(' Q ', [' a ', '', 'b'], { durationHours: 168, multiSelect: 1 });
+    assert.deepEqual(ok, { question: 'Q', options: ['a', 'b'], durationHours: 168, multiSelect: true });
+    assert.equal(cleanNativePoll('Q', ['a', 'b']).durationHours, 24, 'default 24 hours');
+    assert.equal(cleanNativePoll('Q', ['a', 'b'], { durationHours: null }).durationHours, 24);
+    assert.equal(cleanNativePoll('q'.repeat(300), ['x'.repeat(55), 'b']).question.length, 300);
+    assert.throws(() => cleanNativePoll('q'.repeat(301), ['a', 'b']), /limited to 300/);
+    assert.throws(() => cleanNativePoll('', ['a', 'b']), /needs a question/);
+    assert.throws(() => cleanNativePoll('Q', ['a']), /at least 2 options/);
+    assert.throws(() => cleanNativePoll('Q', Array.from({ length: 11 }, (_, i) => `o${i}`)), /at most 10 options/);
+    assert.throws(() => cleanNativePoll('Q', ['a', 'x'.repeat(56)]), /limited to 55 characters/);
+    for (const bad of [0, 169, 1.5, 'abc', -1]) assert.throws(() => cleanNativePoll('Q', ['a', 'b'], { durationHours: bad }), /1 hour to 168 hours/, String(bad));
+});
+
+test('createNativePoll: the payload sent is a Discord poll (no embed, no reactions, no pings); Send Polls checked first', async () => {
+    const channel = makeChannel();
+    const result = await createNativePoll(guild, { channel, question: 'Pizza @everyone?', options: ['Yes', 'No'], durationHours: 48, multiSelect: true });
+    assert.equal(channel.sent.length, 1);
+    assert.deepEqual(channel.sent[0], {
+        poll: { question: { text: 'Pizza @everyone?' }, answers: [{ text: 'Yes' }, { text: 'No' }], duration: 48, allowMultiselect: true },
+        allowedMentions: { parse: [] },
+    });
+    assert.deepEqual(channel.reactions, [], 'no reactions on a Discord poll');
+    assert.ok(Math.abs(result.endsAt - (Date.now() + 48 * 3600000)) < 5000);
+    assert.equal(buildNativePollPayload(cleanNativePoll('Q', ['a', 'b'])).poll.allowMultiselect, false);
+
+    const noPolls = makeChannel({ denied: ['SendPolls'] });
+    await assert.rejects(createNativePoll(guild, { channel: noPolls, question: 'Q', options: ['a', 'b'] }),
+        (e) => e.type === 'permission' && /missing Send Polls in #general/.test(e.userMessage));
+    assert.equal(noPolls.sent.length, 0);
+    const noReactions = makeChannel({ denied: ['AddReactions', 'EmbedLinks'] });
+    await createNativePoll(guild, { channel: noReactions, question: 'Q', options: ['a', 'b'] });
+    assert.equal(noReactions.sent.length, 1, 'reactions and embeds are not needed');
+    await assert.rejects(createNativePoll(guild, { channel: makeChannel(), question: 'Q', options: ['a', 'x'.repeat(56)] }), /55 characters/);
+    assert.throws(() => assertCanPost(guild, makeChannel({ type: ChannelType.GuildVoice })), /text or announcement/);
+});
+
+test('the anonymous path is still the reaction poll: an embed and number reactions, no Discord poll', async () => {
+    const channel = makeChannel();
+    await createPoll(guild, { channel, question: 'Q', options: ['a', 'b'], anonymous: true, reactDelayMs: 0 });
+    assert.equal(channel.sent[0].poll, undefined);
+    assert.equal(channel.sent[0].embeds.length, 1);
+    assert.deepEqual(channel.reactions, POLL_EMOJIS.slice(0, 2));
+});
+
+test('parseMessageLink: discord.com, ptb, canary and discordapp links; anything else is null', () => {
+    const ids = { guildId: '100000000000000001', channelId: '500000000000000001', messageId: '710000000000000001' };
+    for (const ok of [
+        'https://discord.com/channels/100000000000000001/500000000000000001/710000000000000001',
+        ' https://ptb.discord.com/channels/100000000000000001/500000000000000001/710000000000000001 ',
+        '<https://canary.discordapp.com/channels/100000000000000001/500000000000000001/710000000000000001>',
+    ]) assert.deepEqual(parseMessageLink(ok), ids, ok);
+    for (const bad of ['', null, 'https://evil.com/channels/100000000000000001/500000000000000001/710000000000000001',
+        'https://discord.com/channels/@me/500000000000000001/710000000000000001', 'https://discord.com/channels/1/2/3', '710000000000000001']) {
+        assert.equal(parseMessageLink(bad), null, String(bad));
+    }
+});
+
+const BOT = '999999999999999998';
+const LINK = 'https://discord.com/channels/100000000000000001/500000000000000001/710000000000000001';
+
+/** A guild with one channel holding `message` (or nothing). */
+function pollGuild(message, { denied = [] } = {}) {
+    const channel = {
+        id: '500000000000000001', name: 'general', type: ChannelType.GuildText, isThread: () => false,
+        permissionsFor: () => ({ has: (flag) => !denied.some((name) => PermissionFlagsBits[name] === flag) }),
+        messages: {
+            async fetch(id) {
+                if (!message || id !== '710000000000000001') throw Object.assign(new Error('Unknown Message'), { code: 10008, status: 404 });
+                return message;
+            },
+        },
+    };
+    return {
+        id: '100000000000000001', client: { user: { id: BOT } }, members: { me: { id: BOT } },
+        channels: { cache: new Map([[channel.id, channel]]), fetch: async () => { throw Object.assign(new Error('Unknown Channel'), { code: 10003 }); } },
+    };
+}
+function pollMessage({ author = BOT, poll = true, finalized = false, expires = Date.now() + 3600000 } = {}) {
+    const msg = { id: '710000000000000001', author: { id: author }, ended: 0, poll: null };
+    if (poll) msg.poll = { question: { text: 'Pizza?' }, resultsFinalized: finalized, expiresTimestamp: expires, async end() { msg.ended += 1; return msg; } };
+    return msg;
+}
+
+test('endPoll: ends Mewvo\'s open poll exactly once', async () => {
+    const msg = pollMessage();
+    const { question, channel } = await endPoll(pollGuild(msg), LINK);
+    assert.equal(msg.ended, 1);
+    assert.equal(question, 'Pizza?');
+    assert.equal(channel.name, 'general');
+});
+
+test('endPoll refusals: bad link, other server, gone channel or message, not a poll, already ended, not by the bot, no read access', async () => {
+    const cases = [
+        [pollGuild(pollMessage()), 'not a link', /not a message link/],
+        [pollGuild(pollMessage()), 'https://discord.com/channels/100000000000000999/500000000000000001/710000000000000001', /another server/],
+        [pollGuild(pollMessage()), 'https://discord.com/channels/100000000000000001/500000000000000777/710000000000000001', /could not find the channel/],
+        [pollGuild(null), LINK, /could not find that message/],
+        [pollGuild(pollMessage({ poll: false })), LINK, /not a Discord poll/],
+        [pollGuild(pollMessage({ finalized: true })), LINK, /already ended/],
+        [pollGuild(pollMessage({ expires: Date.now() - 1000 })), LINK, /already ended/],
+        [pollGuild(pollMessage({ author: '300000000000000004' })), LINK, /not posted by Mewvo/],
+        [pollGuild(pollMessage(), { denied: ['ReadMessageHistory'] }), LINK, /missing Read Message History/],
+    ];
+    for (const [g, link, expected] of cases) {
+        const msg = g.channels.cache.get('500000000000000001').messages;
+        await assert.rejects(endPoll(g, link), (e) => expected.test(e.userMessage), String(expected));
+        const fetched = await msg.fetch('710000000000000001').catch(() => null);
+        assert.equal(fetched?.ended ?? 0, 0, `${expected}: nothing ended`);
+    }
+});
+
+test('endPoll: an unexpected Discord error while fetching is not hidden as "not found"', async () => {
+    const g = pollGuild(pollMessage());
+    g.channels.cache.get('500000000000000001').messages.fetch = async () => { throw Object.assign(new Error('Service unavailable'), { status: 503 }); };
+    await assert.rejects(endPoll(g, LINK), /Service unavailable/);
+});
+
+test('endPoll: Missing Access while fetching, and an expiry race in end(), become readable refusals', async () => {
+    const g = pollGuild(pollMessage());
+    g.channels.cache.get('500000000000000001').messages.fetch = async () => { throw Object.assign(new Error('Missing Access'), { code: 50001 }); };
+    await assert.rejects(endPoll(g, LINK), (e) => /no access to that channel or thread/.test(e.userMessage));
+
+    const msg = pollMessage();
+    msg.poll.end = async () => { throw Object.assign(new Error('Poll has already expired.'), { code: 'PollAlreadyExpired' }); };
+    await assert.rejects(endPoll(pollGuild(msg), LINK), (e) => /already ended/.test(e.userMessage));
 });

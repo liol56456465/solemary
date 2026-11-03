@@ -1,5 +1,5 @@
-// botMessageService.js — posting as the bot: a message and/or embed, a reaction poll,
-// a countdown with pause/cancel buttons. Shared by /poll, /countdown and the
+// botMessageService.js — posting as the bot: a message and/or embed, a native Discord
+// poll (and ending one early), a reaction poll, a countdown with pause/cancel buttons. Shared by /poll, /countdown and the
 // dashboard's Messages page, so both post exactly the same thing.
 //
 // Every send uses allowedMentions { parse: [] }: typed text never pings @everyone,
@@ -24,12 +24,25 @@ export const POLL_MAX_OPTIONS = POLL_EMOJIS.length;
 export const POLL_QUESTION_MAX = 300;
 export const POLL_OPTION_MAX = 100;
 
+// Native Discord polls (Discord's poll create request: question text 300, answer text 55,
+// up to 10 answers, duration in hours). Discord allows up to 32 days; the owner chose 7.
+export const NATIVE_POLL_QUESTION_MAX = 300;
+export const NATIVE_POLL_ANSWER_MAX = 55;
+export const NATIVE_POLL_MAX_ANSWERS = 10;
+export const NATIVE_POLL_MIN_HOURS = 1;
+export const NATIVE_POLL_MAX_HOURS = 168;
+export const NATIVE_POLL_DEFAULT_HOURS = 24;
+
 export const COUNTDOWN_MAX_SECONDS = 86400;
 export const COUNTDOWN_TITLE_MAX = 200;
 
 /** Permissions the bot needs in the channel (names of PermissionFlagsBits). */
 export const POST_PERMISSIONS = ['ViewChannel', 'SendMessages', 'EmbedLinks'];
 export const POLL_PERMISSIONS = [...POST_PERMISSIONS, 'AddReactions', 'ReadMessageHistory'];
+/** A native poll needs Send Polls (no embed, no reactions). */
+export const NATIVE_POLL_PERMISSIONS = ['ViewChannel', 'SendMessages', 'SendPolls'];
+/** Ending a poll: the bot has to read the message first. */
+export const END_POLL_PERMISSIONS = ['ViewChannel', 'ReadMessageHistory'];
 
 const hexOf = (value) => `#${Number(getColor(value)).toString(16).padStart(6, '0').toUpperCase()}`;
 
@@ -46,7 +59,7 @@ export const EMBED_COLOURS = [
 
 const PERMISSION_LABELS = {
     ViewChannel: 'View Channel', SendMessages: 'Send Messages', SendMessagesInThreads: 'Send Messages in Threads',
-    EmbedLinks: 'Embed Links', AddReactions: 'Add Reactions', ReadMessageHistory: 'Read Message History',
+    EmbedLinks: 'Embed Links', AddReactions: 'Add Reactions', ReadMessageHistory: 'Read Message History', SendPolls: 'Send Polls',
 };
 
 const POSTABLE_TYPES = new Set([
@@ -197,6 +210,116 @@ export async function createPoll(guild, { channel, question, options, anonymous 
         if (reactDelayMs > 0 && i < poll.options.length - 1) await wait(reactDelayMs);
     }
     return { message, reacted, ...poll };
+}
+
+/**
+ * A native poll's question, 2–10 answers and options, trimmed and checked against
+ * Discord's limits (refused, never cut). `durationHours` 1–168 (default 24).
+ */
+export function cleanNativePoll(question, answers, { durationHours = NATIVE_POLL_DEFAULT_HOURS, multiSelect = false } = {}) {
+    const q = String(question ?? '').trim();
+    if (!q) throw validation('The poll needs a question.');
+    if (q.length > NATIVE_POLL_QUESTION_MAX) throw validation(`The question is limited to ${NATIVE_POLL_QUESTION_MAX} characters.`);
+    const list = (Array.isArray(answers) ? answers : []).map((a) => String(a ?? '').trim()).filter(Boolean);
+    if (list.length < 2) throw validation('You must provide at least 2 options for the poll.');
+    if (list.length > NATIVE_POLL_MAX_ANSWERS) throw validation(`A poll has at most ${NATIVE_POLL_MAX_ANSWERS} options.`);
+    const long = list.find((a) => a.length > NATIVE_POLL_ANSWER_MAX);
+    if (long) throw validation(`Each option of a Discord poll is limited to ${NATIVE_POLL_ANSWER_MAX} characters ("${long.slice(0, 20)}..." has ${long.length}). Shorten it, or use an anonymous poll (up to ${POLL_OPTION_MAX} characters).`);
+    const hours = durationHours === null || durationHours === undefined || durationHours === '' ? NATIVE_POLL_DEFAULT_HOURS : Number(durationHours);
+    if (!Number.isInteger(hours) || hours < NATIVE_POLL_MIN_HOURS || hours > NATIVE_POLL_MAX_HOURS) {
+        throw validation(`The poll can stay open from ${NATIVE_POLL_MIN_HOURS} hour to ${NATIVE_POLL_MAX_HOURS} hours (7 days), in whole hours.`);
+    }
+    return { question: q, options: list, durationHours: hours, multiSelect: Boolean(multiSelect) };
+}
+
+/** The channel.send payload of a native poll (already cleaned). No pings, ever. */
+export function buildNativePollPayload({ question, options, durationHours, multiSelect }) {
+    return {
+        poll: {
+            question: { text: question },
+            answers: options.map((text) => ({ text })),
+            duration: durationHours,
+            allowMultiselect: Boolean(multiSelect),
+        },
+        allowedMentions: noMentions(),
+    };
+}
+
+/**
+ * Posts a native Discord poll. Members vote with Discord's poll buttons, and anyone can
+ * see who voted for what (use createPoll for the reaction poll). Returns
+ * { message, question, options, durationHours, multiSelect, endsAt (ms) }.
+ */
+export async function createNativePoll(guild, { channel, question, options, durationHours = NATIVE_POLL_DEFAULT_HOURS, multiSelect = false } = {}) {
+    const poll = cleanNativePoll(question, options, { durationHours, multiSelect });
+    assertCanPost(guild, channel, NATIVE_POLL_PERMISSIONS);
+    const message = await channel.send(buildNativePollPayload(poll));
+    const endsAt = message?.poll?.expiresTimestamp ?? Date.now() + poll.durationHours * 3600 * 1000;
+    return { message, ...poll, endsAt };
+}
+
+const MESSAGE_LINK_RE = /^<?https?:\/\/(?:(?:ptb|canary)\.)?discord(?:app)?\.com\/channels\/(\d{17,20})\/(\d{17,20})\/(\d{17,20})\/?>?$/i;
+
+/** A Discord message link → { guildId, channelId, messageId }, else null. */
+export function parseMessageLink(text) {
+    const match = MESSAGE_LINK_RE.exec(String(text ?? '').trim());
+    if (!match) return null;
+    const [, guildId, channelId, messageId] = match;
+    return { guildId, channelId, messageId };
+}
+
+const UNKNOWN_MESSAGE = 10008;
+const UNKNOWN_CHANNEL = 10003;
+const MISSING_ACCESS = 50001;
+const MISSING_PERMISSIONS = 50013;
+const noAccess = () => validation('I cannot read that message: I have no access to that channel or thread. The poll was not ended.');
+
+/**
+ * Ends a native poll right away (the "End now" of /poll end and the dashboard). `link` is
+ * the poll message's link. Refuses, with a readable message, a link to another server, a
+ * channel or message that is gone, a message that is not a native poll, a poll Mewvo did not
+ * post (Discord lets a bot end only its own polls) and a poll that already ended.
+ * Returns { message, channel, question }.
+ */
+export async function endPoll(guild, link) {
+    const target = parseMessageLink(link);
+    if (!target) throw validation('That is not a message link. In Discord, right-click the poll (or long-press it), choose Copy Message Link and paste it here.');
+    if (target.guildId !== guild?.id) throw validation('That message is in another server. Only polls in this server can be ended here.');
+    let channel = guild.channels?.cache?.get(target.channelId) ?? null;
+    if (!channel && guild.channels?.fetch) {
+        channel = await guild.channels.fetch(target.channelId).catch((error) => {
+            if (error?.code === UNKNOWN_CHANNEL || error?.status === 404) return null;
+            throw error;
+        });
+    }
+    if (!channel || typeof channel.messages?.fetch !== 'function') throw validation('I could not find the channel of that message. It may have been deleted.');
+    const missing = missingPermissions(guild, channel, END_POLL_PERMISSIONS);
+    if (missing.length) {
+        const text = `I am missing ${missing.join(', ')} in #${channel.name}, so I cannot read that message. The poll was not ended.`;
+        throw createError(`Bot cannot read ${channel.id}: ${missing.join(', ')}`, ErrorTypes.PERMISSION, text, { channelId: channel.id, expected: true });
+    }
+    const message = await channel.messages.fetch(target.messageId).catch((error) => {
+        if (error?.code === UNKNOWN_MESSAGE || error?.status === 404) return null;
+        if (error?.code === MISSING_ACCESS || error?.code === MISSING_PERMISSIONS) throw noAccess();
+        throw error;
+    });
+    if (!message) throw validation('I could not find that message. It may have been deleted.');
+    if (!message.poll) throw validation('That message is not a Discord poll. Reaction polls (the anonymous kind) cannot be ended: delete the message instead if you want to close it.');
+    const botId = guild.client?.user?.id ?? guild.members?.me?.id;
+    if (!botId || message.author?.id !== botId) throw validation('That poll was not posted by Mewvo. Discord only lets Mewvo end its own polls.');
+    const expires = message.poll.expiresTimestamp;
+    if (message.poll.resultsFinalized || (expires !== null && expires !== undefined && expires <= Date.now())) {
+        throw validation('That poll has already ended.');
+    }
+    try {
+        await message.poll.end();
+    } catch (error) {
+        // discord.js refuses an expired poll (PollAlreadyExpired); Discord can also refuse a finalized one.
+        if (error?.code === 'PollAlreadyExpired' || message.poll.resultsFinalized) throw validation('That poll has already ended.');
+        if (error?.code === MISSING_ACCESS || error?.code === MISSING_PERMISSIONS) throw noAccess();
+        throw error;
+    }
+    return { message, channel, question: message.poll.question?.text || '' };
 }
 
 /** Running countdowns by id (the pause/cancel buttons look them up here). */

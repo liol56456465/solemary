@@ -1,5 +1,6 @@
 // messages.js — Messages: post as the bot from the web. A message and/or embed (replaces
-// /embedbuilder), a reaction poll (/poll) and a countdown (/countdown). Everything goes
+// /embedbuilder), a poll (/poll create: a native Discord poll, or the reaction poll when
+// "anonymous" is on), ending a native poll early (/poll end) and a countdown (/countdown). Everything goes
 // through services/botMessageService.js, the same functions /poll and /countdown use:
 // allowedMentions { parse: [] } (typed text never pings) and the bot's permissions in
 // the channel are checked before anything is posted. Administrator only.
@@ -21,7 +22,8 @@ import {
 } from '../../scheduledMessageService.js';
 import {
     COUNTDOWN_MAX_SECONDS, COUNTDOWN_TITLE_MAX, EMBED_COLOURS, EMBED_DESCRIPTION_MAX, EMBED_FOOTER_MAX, EMBED_TITLE_MAX, EMBED_TOTAL_MAX,
-    IMAGE_URL_MAX, MESSAGE_CONTENT_MAX, POLL_MAX_OPTIONS, POLL_OPTION_MAX, POLL_QUESTION_MAX, buildMessageEmbed, colourFromKey, isEmbedImageUrl, noMentions, parseHexColour,
+    IMAGE_URL_MAX, MESSAGE_CONTENT_MAX, NATIVE_POLL_ANSWER_MAX, NATIVE_POLL_DEFAULT_HOURS, NATIVE_POLL_MAX_HOURS, NATIVE_POLL_MIN_HOURS, NATIVE_POLL_QUESTION_MAX,
+    POLL_MAX_OPTIONS, POLL_OPTION_MAX, POLL_QUESTION_MAX, buildMessageEmbed, colourFromKey, isEmbedImageUrl, noMentions, parseHexColour, parseMessageLink,
 } from '../../botMessageService.js';
 
 const NO_PINGS = 'Mentions show as names but never ping anyone. @everyone, @here, roles and members get no notification.';
@@ -55,13 +57,16 @@ function colourField(form) {
     return value;
 }
 
-/** Poll options: one per line, blank lines ignored. */
-function pollOptions(form) {
+/** Poll options: one per line, blank lines ignored; each at most `max` characters. */
+function pollOptions(form, max = POLL_OPTION_MAX) {
     const options = longText(form, 'options', POLL_MAX_OPTIONS * (POLL_OPTION_MAX + 2), 'Options').split('\n').map((o) => o.trim()).filter(Boolean);
     if (options.length < 2) throw new InputError('Options: a poll needs at least 2 options, each on its own line.', 400, 'options');
     if (options.length > POLL_MAX_OPTIONS) throw new InputError(`Options: a poll can have at most ${POLL_MAX_OPTIONS} options (you wrote ${options.length}).`, 400, 'options');
-    const long = options.find((o) => o.length > POLL_OPTION_MAX);
-    if (long) throw new InputError(`Options: each option is limited to ${POLL_OPTION_MAX} characters.`, 400, 'options');
+    const long = options.find((o) => o.length > max);
+    if (long) {
+        const why = max === NATIVE_POLL_ANSWER_MAX ? ' in a Discord poll. Shorten it, or turn on Anonymous poll (up to 100 characters)' : '';
+        throw new InputError(`Options: each option is limited to ${max} characters${why}. "${long.slice(0, 20)}..." has ${long.length}.`, 400, 'options');
+    }
     return options;
 }
 
@@ -293,11 +298,16 @@ export default {
         const schedule = postForm(ctx, 'messages', 'schedule', html`<div class="grid">${messageFields(g)}</div>${scheduleFields(null, data.timezone || DEFAULT_TIMEZONE)}`,
             { submit: 'Schedule message', canEdit: canPost });
         const poll = postForm(ctx, 'messages', 'poll', html`<div class="grid">
-${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.poll, optional: false })}
-${textInput('question', '', { label: 'Question', max: POLL_QUESTION_MAX })}
-${textArea('options', '', { label: 'Options', max: POLL_MAX_OPTIONS * (POLL_OPTION_MAX + 2), rows: 5, help: `The answers members can vote for, each on its own line. From 2 to ${POLL_MAX_OPTIONS}. Members vote by clicking the number reactions under the poll.` })}
-${switchInput('anonymous', false, { label: 'Anonymous poll', help: 'This only changes the poll text. Anyone can still see who reacted, so votes are not really secret.' })}</div>`,
+${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.nativePoll, optional: false })}
+${textInput('question', '', { label: 'Question', max: NATIVE_POLL_QUESTION_MAX })}
+${textArea('options', '', { label: 'Options', max: POLL_MAX_OPTIONS * (POLL_OPTION_MAX + 2), rows: 5, help: `The answers members can vote for, each on its own line. From 2 to ${POLL_MAX_OPTIONS}, each up to ${NATIVE_POLL_ANSWER_MAX} characters (up to ${POLL_OPTION_MAX} for an anonymous poll).` })}
+${numberInput('hours', NATIVE_POLL_DEFAULT_HOURS, { label: 'Open for (hours)', min: NATIVE_POLL_MIN_HOURS, max: NATIVE_POLL_MAX_HOURS, help: `From ${NATIVE_POLL_MIN_HOURS} to ${NATIVE_POLL_MAX_HOURS} hours (7 days). Discord closes the poll and shows the results when the time is up.` })}
+${switchInput('multiSelect', false, { label: 'Allow more than one answer', help: 'Members can pick several options instead of one.' })}
+${switchInput('anonymous', false, { label: 'Anonymous poll', help: 'A Discord poll shows everyone who voted for what. Turn this on to post a number-reaction poll instead: no names on the poll itself, but anyone can still open the reactions and see who reacted. It has no time limit, cannot be ended early, and ignores the two settings above.' })}</div>`,
         { submit: 'Post poll', canEdit: canPost });
+        const endPollForm = postForm(ctx, 'messages', 'poll-end', html`<div class="grid">
+${textInput('link', '', { label: 'Poll message link', max: 200, type: 'url', placeholder: 'https://discord.com/channels/...', help: 'In Discord, right-click the poll (or long-press it on a phone), choose Copy Message Link and paste it here.' })}</div>`,
+        { submit: 'End poll now', canEdit: canPost });
         const countdown = postForm(ctx, 'messages', 'countdown', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.post, optional: false })}
 ${textInput('title', '', { label: 'Title', max: COUNTDOWN_TITLE_MAX, placeholder: 'Countdown Timer', help: 'What you are counting down to.' })}
@@ -308,7 +318,8 @@ ${numberInput('seconds', 0, { label: 'Seconds', min: 0, max: 59, help: 'From 0 t
 ${section('Schedule a message', schedule, `Write a message now and let Mewvo post it later: once, every day, on the weekdays you choose, or every few hours. If posting fails ${FAILURE_LIMIT} times in a row, for example because Mewvo lost access to the channel, it is paused and staff are told in the alerts channel. A server can have up to ${planLimit(ctx.guildId, 'scheduled')}, depending on the server owner's plan.${adminNote}`)}
 ${section('Scheduled messages', scheduledSection(ctx, scheduled, data.timezone || DEFAULT_TIMEZONE), 'The next post time is shown in each message\'s own time zone.')}
 <datalist id="tz-zones">${timeZoneList().map((z) => html`<option value="${z}"></option>`)}</datalist>
-${section('Start a poll', poll, `Ask members a question and let them vote.${adminNote}`)}
+${section('Start a poll', poll, `Ask members a question and let them vote with a Discord poll. Mewvo needs the Send Polls permission in the channel (Add Reactions for an anonymous poll).${adminNote}`)}
+${section('End a poll', endPollForm, `Closes one of Mewvo's Discord polls now, before its time is up, and shows the final results. Discord only lets Mewvo end polls it posted itself.${adminNote}`)}
 ${section('Start a countdown', countdown, `Posts a timer that counts down in the channel, for up to 24 hours. Administrators get Pause and Cancel buttons on it. If the bot restarts, running countdowns stop.${adminNote}`)}`;
     },
 
@@ -405,16 +416,40 @@ ${section('Start a countdown', countdown, `Posts a timer that counts down in the
             admin: true,
             async run(ctx, form) {
                 const g = ctx.guild;
-                const channel = postChannel(g, form, PERMS.poll);
-                const question = text(form, 'question', POLL_QUESTION_MAX);
-                if (!question) throw new InputError('Question: the poll needs a question.', 400, 'question');
-                const options = pollOptions(form);
                 const anonymous = checkbox(form, 'anonymous');
-                const { message, reacted } = await ctx.services.createPoll(g, { channel, question, options, anonymous });
+                const channel = postChannel(g, form, anonymous ? PERMS.poll : PERMS.nativePoll);
+                const question = text(form, 'question', Math.max(POLL_QUESTION_MAX, NATIVE_POLL_QUESTION_MAX));
+                if (!question) throw new InputError('Question: the poll needs a question.', 400, 'question');
+                if (anonymous) {
+                    const options = pollOptions(form, POLL_OPTION_MAX);
+                    const { message, reacted } = await ctx.services.createPoll(g, { channel, question, options, anonymous: true });
+                    return {
+                        changes: [{ key: `poll.${message.id}`, old: null, new: { channelId: channel.id, question, options, anonymous: true } }],
+                        message: `Anonymous reaction poll posted in #${channel.name}.`,
+                        warnings: reacted < options.length ? [`Only ${reacted} of ${options.length} vote reactions could be added: add the rest by hand in Discord.`] : [],
+                    };
+                }
+                const options = pollOptions(form, NATIVE_POLL_ANSWER_MAX);
+                const durationHours = intField(form, 'hours', { min: NATIVE_POLL_MIN_HOURS, max: NATIVE_POLL_MAX_HOURS, label: 'Open for (hours)', fallback: NATIVE_POLL_DEFAULT_HOURS });
+                const multiSelect = checkbox(form, 'multiSelect');
+                const { message, endsAt } = await ctx.services.createNativePoll(g, { channel, question, options, durationHours, multiSelect });
                 return {
-                    changes: [{ key: `poll.${message.id}`, old: null, new: { channelId: channel.id, question, options, anonymous } }],
-                    message: `Poll posted in #${channel.name}.`,
-                    warnings: reacted < options.length ? [`Only ${reacted} of ${options.length} vote reactions could be added: add the rest by hand in Discord.`] : [],
+                    changes: [{ key: `poll.${message.id}`, old: null, new: { channelId: channel.id, question, options, durationHours, multiSelect, anonymous: false } }],
+                    message: `Poll posted in #${channel.name}. It closes ${new Date(endsAt).toISOString().replace('T', ' ').slice(0, 16)} UTC.`,
+                };
+            },
+        },
+        'poll-end': {
+            admin: true,
+            async run(ctx, form) {
+                const link = text(form, 'link', 200);
+                const target = parseMessageLink(link);
+                if (!target) throw new InputError('Poll message link: paste the link from Copy Message Link in Discord, like https://discord.com/channels/...', 400, 'link');
+                if (target.guildId !== ctx.guildId) throw new InputError('Poll message link: that message is in another server.', 400, 'link');
+                const { channel, question } = await ctx.services.endPoll(ctx.guild, link);
+                return {
+                    changes: [{ key: `poll.${target.messageId}.ended`, old: null, new: { channelId: channel.id, question } }],
+                    message: `Poll ended in #${channel.name}. The final results are now shown on it.`,
                 };
             },
         },

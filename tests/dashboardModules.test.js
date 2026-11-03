@@ -31,6 +31,7 @@ const STRANGER = '300000000000000003';
 const MEMBER = '300000000000000004';
 const TEXT = '500000000000000001';
 const TEXT2 = '500000000000000002';
+const POLL_LINK = `https://discord.com/channels/${'100000000000000001'}/${'500000000000000001'}/710000000000000015`;
 const CAT = '500000000000000003';
 const VOICE = '500000000000000004';
 const ROLE_OK = '600000000000000001';
@@ -370,6 +371,15 @@ function makeServices() {
         createPoll: async (guild, { channel, question, options, anonymous }) => {
             record('createPoll', [channel.id, question, options, anonymous]);
             return { message: { id: '710000000000000012' }, reacted: s.pollReactions ?? options.length };
+        },
+        createNativePoll: async (guild, { channel, question, options, durationHours, multiSelect }) => {
+            record('createNativePoll', [channel.id, question, options, durationHours, multiSelect]);
+            return { message: { id: '710000000000000015' }, endsAt: Date.UTC(2026, 10, 4, 12, 0) };
+        },
+        endPoll: async (guild, link) => {
+            record('endPoll', [link]);
+            if (s.endPollError) throw userErr(s.endPollError, 'validation');
+            return { message: { id: '710000000000000016' }, channel: guild.channels.cache.get(TEXT), question: 'Pizza?' };
         },
         listScheduledMessages: async () => clone(s.scheduled),
         createScheduledMessage: async (input) => {
@@ -780,8 +790,10 @@ const CASES = {
     messages: {
         send: { form: { channelId: TEXT, content: 'Hello @everyone', title: 'News', description: 'Line 1\r\nLine 2', colour: 'purple', hex: '', imageUrl: 'https://example.com/a.png', footer: 'Staff' },
             service: 'postBotMessage', admin: true, bad: { form: { channelId: TEXT, title: 'News', imageUrl: 'http://example.com/a.png' }, message: /must start with https:\/\// } },
-        poll: { form: { channelId: TEXT, question: 'Pizza?', options: 'Yes\r\nNo\r\n\r\nMaybe', anonymous: '1' }, service: 'createPoll', admin: true,
+        poll: { form: { channelId: TEXT, question: 'Pizza?', options: 'Yes\r\nNo\r\n\r\nMaybe', hours: '48', multiSelect: '1' }, service: 'createNativePoll', admin: true,
             bad: { form: { channelId: TEXT, question: 'Pizza?', options: 'Only one' }, message: /at least 2 options/ } },
+        'poll-end': { form: { link: POLL_LINK }, service: 'endPoll', admin: true,
+            bad: { form: { link: 'https://example.com/channels/1/2/3' }, message: /Copy Message Link/ } },
         countdown: { form: { channelId: TEXT, title: 'Launch', minutes: '2', seconds: '30' }, service: 'startCountdownMessage', admin: true,
             bad: { form: { channelId: TEXT, minutes: '0', seconds: '0' }, message: /at least 1 second/ } },
         schedule: { form: { channelId: TEXT, content: 'Weekly @everyone', title: '', description: '', colour: 'primary', repeat: 'weekdays', time: '18:30', day1: '1', day5: '1', timezone: 'europe/vilnius' },
@@ -1624,16 +1636,17 @@ test('channel tools: lock then unlock round trip (overwrite, audit reason, log e
 
 test('messages: every action is Administrator-only; the page has the three forms, disabled for OWNER_IDS without Administrator', async () => {
     const module = MODULES.find((m) => m.key === 'messages');
-    for (const name of ['send', 'poll', 'countdown']) assert.equal(getAction(module, name).admin, true, `${name} is admin-only`);
+    for (const name of ['send', 'poll', 'poll-end', 'countdown']) assert.equal(getAction(module, name).admin, true, `${name} is admin-only`);
     const h = await setup();
     const page = await get(h, 'messages');
     assert.equal(page.statusCode, 200);
-    for (const action of ['send', 'poll', 'countdown']) assert.ok(page.body.includes(`action="/dashboard/messages/${action}"`), `${action} form`);
+    for (const action of ['send', 'poll', 'poll-end', 'countdown']) assert.ok(page.body.includes(`action="/dashboard/messages/${action}"`), `${action} form`);
+    assert.match(page.body, /A Discord poll shows everyone who voted for what/, 'the anonymous switch says why it exists');
     assert.match(page.body, /never ping/);
     const owner = await setup({ userId: OWNER });
     const ownerPage = await get(owner, 'messages');
     assert.ok(!/<fieldset>/.test(ownerPage.body.replace(/<fieldset class="weekdays">/g, '')), 'owner: every form disabled');
-    assert.ok((ownerPage.body.match(/<fieldset disabled>/g) || []).length >= 4, 'owner: send, schedule, poll and countdown forms disabled');
+    assert.ok((ownerPage.body.match(/<fieldset disabled>/g) || []).length >= 5, 'owner: send, schedule, poll, end poll and countdown forms disabled');
     assert.match(ownerPage.body, /To post you need the Administrator permission/);
 });
 
@@ -1757,19 +1770,83 @@ test('messages: a channel where the bot lacks a permission is refused clearly, n
     const p = await setup();
     p.guild.members.me.permissionsIn = () => ({ has: (perm) => perm !== PermissionFlagsBits.AddReactions });
     assert.equal((await post(p, 'messages', 'countdown', CASES.messages.countdown.form)).statusCode, 303, 'countdown needs no reactions');
-    const poll = await post(p, 'messages', 'poll', CASES.messages.poll.form);
+    assert.equal((await post(p, 'messages', 'poll', CASES.messages.poll.form)).statusCode, 303, 'a Discord poll needs no reactions');
+    const poll = await post(p, 'messages', 'poll', { ...CASES.messages.poll.form, anonymous: '1' });
     assert.equal(poll.statusCode, 400);
     assert.match(poll.body, /missing Add Reactions/);
     assert.ok(!p.calls.some((c) => c.name === 'createPoll'));
+
+    const n = await setup();
+    n.guild.members.me.permissionsIn = () => ({ has: (perm) => perm !== PermissionFlagsBits.SendPolls });
+    const native = await post(n, 'messages', 'poll', CASES.messages.poll.form);
+    assert.equal(native.statusCode, 400);
+    assert.match(native.body, /missing Send Polls/);
+    assert.ok(!n.calls.some((c) => c.name === 'createNativePoll'));
+    assert.equal((await post(n, 'messages', 'poll', { ...CASES.messages.poll.form, anonymous: '1' })).statusCode, 303, 'a reaction poll needs no Send Polls');
 });
 
-test('messages/poll and countdown: options one per line, anonymous switch, reaction shortfall in the flash; duration limits', async () => {
+test('messages/poll: a Discord poll by default (hours, multiple answers, Discord limits); anonymous keeps the reaction poll', async () => {
     const h = await setup();
-    await post(h, 'messages', 'poll', CASES.messages.poll.form);
+    assert.equal((await post(h, 'messages', 'poll', CASES.messages.poll.form)).statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'createNativePoll').args, [TEXT, 'Pizza?', ['Yes', 'No', 'Maybe'], 48, true]);
+    assert.ok(!h.calls.some((c) => c.name === 'createPoll'));
+    assert.match((await h.sessions.get(h.session.id)).flash, /Poll posted in #general\. It closes 2026-11-04 12:00 UTC/);
+    assert.deepEqual(h.auditRows.find((r) => r.key === 'poll.710000000000000015').new,
+        { channelId: TEXT, question: 'Pizza?', options: ['Yes', 'No', 'Maybe'], durationHours: 48, multiSelect: true, anonymous: false });
+
+    const d = await setup();
+    await post(d, 'messages', 'poll', { channelId: TEXT, question: 'Q', options: 'a\nb' });
+    assert.deepEqual(d.calls.find((c) => c.name === 'createNativePoll').args, [TEXT, 'Q', ['a', 'b'], 24, false], 'defaults: 24 hours, one answer');
+
+    for (const [hours, ok] of [['0', false], ['1', true], ['168', true], ['169', false], ['2.5', false]]) {
+        const x = await setup();
+        const res = await post(x, 'messages', 'poll', { channelId: TEXT, question: 'Q', options: 'a\nb', hours });
+        assert.equal(res.statusCode, ok ? 303 : 400, `hours ${hours}`);
+        if (!ok) assert.match(res.body, /Open for \(hours\)/);
+    }
+    const longOpt = await setup();
+    const tooLong = await post(longOpt, 'messages', 'poll', { channelId: TEXT, question: 'Q', options: `a\n${'x'.repeat(56)}` });
+    assert.equal(tooLong.statusCode, 400);
+    assert.match(tooLong.body, /limited to 55 characters in a Discord poll/);
+    assert.ok(!longOpt.calls.length, 'nothing posted');
+    const anonLong = await setup();
+    await post(anonLong, 'messages', 'poll', { channelId: TEXT, question: 'Q', options: `a\n${'x'.repeat(56)}`, anonymous: '1' });
+    assert.ok(anonLong.calls.some((c) => c.name === 'createPoll'), 'a reaction poll still takes up to 100 characters');
+    const longQ = await setup();
+    const q = await post(longQ, 'messages', 'poll', { channelId: TEXT, question: 'q'.repeat(301), options: 'a\nb' });
+    assert.equal(q.statusCode, 400);
+});
+
+test('messages/poll-end: ends the linked poll; bad links and other servers refused before the service; service refusals shown', async () => {
+    const h = await setup();
+    const res = await post(h, 'messages', 'poll-end', { link: POLL_LINK });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'endPoll').args, [POLL_LINK]);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Poll ended in #general/);
+    assert.deepEqual(h.auditRows.map((r) => r.key), ['poll.710000000000000015.ended']);
+
+    const other = await setup();
+    const elsewhere = await post(other, 'messages', 'poll-end', { link: 'https://discord.com/channels/100000000000000999/500000000000000001/710000000000000015' });
+    assert.equal(elsewhere.statusCode, 400);
+    assert.match(elsewhere.body, /another server/);
+    assert.ok(!other.calls.length);
+
+    const ended = await setup();
+    ended.state.endPollError = 'That poll has already ended.';
+    const again = await post(ended, 'messages', 'poll-end', { link: POLL_LINK });
+    assert.equal(again.statusCode, 400);
+    assert.match(again.body, /already ended/);
+    assert.equal(ended.auditRows.length, 0);
+});
+
+test('messages/poll (anonymous) and countdown: options one per line, reaction shortfall in the flash; duration limits', async () => {
+    const h = await setup();
+    await post(h, 'messages', 'poll', { ...CASES.messages.poll.form, anonymous: '1' });
     assert.deepEqual(h.calls.find((c) => c.name === 'createPoll').args, [TEXT, 'Pizza?', ['Yes', 'No', 'Maybe'], true]);
+    assert.ok(!h.calls.some((c) => c.name === 'createNativePoll'));
     const few = await setup();
     few.state.pollReactions = 1;
-    await post(few, 'messages', 'poll', CASES.messages.poll.form);
+    await post(few, 'messages', 'poll', { ...CASES.messages.poll.form, anonymous: '1' });
     assert.match((await few.sessions.get(few.session.id)).flash, /Only 1 of 3 vote reactions/);
     const many = await setup();
     const res = await post(many, 'messages', 'poll', { channelId: TEXT, question: 'Q', options: Array.from({ length: 11 }, (_, i) => `o${i}`).join('\n') });

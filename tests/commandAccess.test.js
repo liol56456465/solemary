@@ -47,7 +47,7 @@ test('every support-server command exists', async () => {
 });
 
 test('owner decisions stay admin-only', () => {
-    for (const key of ['tools randomuser', 'poll', 'countdown', 'embedbuilder', 'shorten', 'birthday setchannel']) {
+    for (const key of ['tools randomuser', 'poll create', 'poll end', 'countdown', 'embedbuilder', 'shorten', 'birthday setchannel']) {
         assert.equal(EVERYONE_COMMANDS.has(key), false, key);
     }
 });
