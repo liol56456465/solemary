@@ -36,14 +36,12 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 ## Stack
 
 - Node >= 22.12 (LTS; 20 is EOL), ESM (`"type": "module"`), discord.js v14, Express v5, PostgreSQL via `pg`, node-cron, Winston.
-- Music was removed (no Riffy/Lavalink).
-- Web dashboard: server-rendered pages on the same Express server at `/dashboard` (`src/services/dashboard/`).
+- Music was removed (no Riffy/Lavalink). Web dashboard: same Express server, `/dashboard` (`src/services/dashboard/`).
 - Entry: `src/app.js` (`npm start`; `index.js` only imports it). Data flow: `commands → handlers → services → utils`.
 
 ## Commands
 
-- `npm start` — production start.
-- `npm run start:test` — test mode (`NODE_ENV=test`, loads `~/.config/mewvo/env.test`).
+- `npm start` — production start. `npm run start:test` — test mode (`NODE_ENV=test`; see "Testing").
 - `npm test` — unit tests. `npm run test:db` — DB failure-injection tests (refuses non-local DBs). Run on Node 22
   (`nvm use` reads `.nvmrc`; the shell default is 20, where the test globs find nothing). Don't change nvm's default.
 - `npm run migrate` / `migrate:check` / `migrate:status`.
@@ -77,9 +75,7 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 - Non-admins get: "You need the Administrator role… Request a mod/admin role here: <#1527697155643408442>".
 - Commands stay visible (no `default_member_permissions`); the check runs in the dispatcher.
 - `OWNER_IDS` = emergency override; keep it set in production.
-- All commands are registered in the main server only (61 slash + 3 context menus at the last
-  verified boot; limit 100 per server).
-  Prefer subcommands for new features.
+- All commands register in the main server only (61 slash + 3 menus at last boot; limit 100). Prefer subcommands.
 - `RETIRE_ADMIN_COMMANDS=true` (off by default): only everyone-commands + owner-only kit (/enforcements, /automod
   panic|lockdown-end, /staff restore, /backup) are registered; other keys answer with their dashboard page
   (`config/commands/retirement.js`). The Commands page lists all 175 entries and where each lives.
@@ -105,14 +101,14 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
   never blocked; their actions without Administrator are logged as "owner override" (bot log + mod log).
 - `/background` — case history per user (with `name` autocomplete). `/test action user` — sends the exact
   DM preview **to the invoker**, executes nothing, footer "Simulation — no action taken".
+- Watchlist (`mod_watchlist`, v9): `/case watch add|list|end`, mod-log alerts, `/background` line, dashboard card.
 
 ## Warn ladder (per guild + user, never resets)
 
 - Warns 1–2: DM "Warning X of 3". Warn 3 → automatic 7-day ban (level 1).
 - First warn after returning from level 1 → 30-day ban (level 2). Next → permanent ban (level 3),
   appealable for 6 months; after that or after a denied appeal → unappealable.
-- Manual bans don't move the ladder. Remove warn lowers the count.
-- Accepted appeal of a ladder ban lowers the level by 1 (not below 0).
+- Manual bans don't move the ladder. Remove warn lowers the count. Accepted ladder-ban appeal: level −1 (not below 0).
 - Imported legacy warns are history only (`is_imported`), not counted.
 
 ## Appeals and reports
@@ -124,11 +120,9 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
   appeals never capped. One pending appeal per case; 7-day cooldown after a denial.
 - `/appeals code decision:accept|deny note` (main server). Accept lifts what's active and DMs an invite.
 - Staff reports: one open per person, max three per day.
-- Banned role in Support: added on join/ban if an active ban exists, removed when the ban ends/is lifted;
-  reconciled at startup.
+- Banned role in Support: added on join/ban while a ban is active, removed when it ends/is lifted; reconciled at startup.
 - Modmail: DM the bot → "Send to staff" → staff channel; channel↔member link in `modmail_links` only (topic ignored);
-  `//` = internal note;
-  `/modmail close|block|unblock`.
+  `//` = internal note; `/modmail close|block|unblock`.
 
 ## OAuth verification
 
@@ -142,58 +136,39 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
   Empty data may return defaults.
 - Writes succeed or throw; a pg `false` return is an error. Never show success after a failed write.
 - Collections: per-row upsert/delete inside one transaction. Config updates: row-locked or atomic SQL.
-- Pool error clears `isConnected`; recover via a lazy health check with backoff.
+- Pool error clears `isConnected`; recover via a lazy health check with backoff. Remote DB hosts: TLS + cert verification.
 - Production refuses to start without PostgreSQL (`DATABASE_REQUIRED`) unless `ALLOW_MEMORY_DB=true`.
-- Remote DB hosts always use TLS with certificate verification.
 
 ## Environments
 
 - **Production:** Replit deployment, currently on branch `feature/enforcements`. Must run `NODE_ENV=production`
   (`.replit` sets `development` for the workspace; keep the workspace from acting as production).
   `LOG_LEVEL=info` (debug logs message content).
-- **Database:** live DB is the owner's Neon project (PostgreSQL 18, ~10 MB), secret `POSTGRES_URL`. The bot reads
-  **only** `POSTGRES_URL`; `DATABASE_URL` (Replit's suspended DB) is ignored with a startup warning.
-  Neon Free is fine on Autoscale (6.96 of 100 CU-h used on 2026-10-28) but not on a Reserved VM (~182 CU-h/month).
-  The planned move is to Supabase free tier (session-mode pooler if IPv6 is unavailable), keeping per-minute polling.
-- **Testing (owner, 2026-11-03):** no separate dev environment or test bot; Discord testing happens on Replit. Locally only
-  `npm test` and `npm run test:db` (local DB); `start:test` refuses the production bot by design (`src/config/testMode.js`).
-  Test mode: `TEST_GUILD_IDS` allowlist (other guilds ignored), guild-only command registration
-  (global untouched), crons off unless `TEST_ENABLE_CRON=true`, local DB only,
-  presence "🛠 Maintenance". It refuses to boot if any test ID equals a real server ID.
+- **Database:** live DB is the owner's Neon project (PostgreSQL 18), secret `POSTGRES_URL`, the only one the bot reads
+  (Replit's `DATABASE_URL` is ignored with a warning). Planned move: Supabase free tier (details in plan.md).
+- **Testing (owner, 2026-11-03):** no dev environment or test bot; Discord testing happens on Replit
+  (`docs/test-script.md`). Locally only `npm test` and `npm run test:db` (local DB). Test mode (`src/config/testMode.js`)
+  refuses the production bot, real server IDs and non-local DBs; crons off unless `TEST_ENABLE_CRON=true`.
 
 ## Discord gotchas
 
 - Always set `allowedMentions` (no @everyone/@here/role pings from user-supplied text).
 - `permissions.has([...])` requires ALL bits; use `.any()` for "any of".
 - Embed limits: field 1024, description 4096, total 6000. Ack interactions within 3 s.
-- Discord timeouts max out at 28 days (one reason mutes use a role).
-- Global command changes can take up to an hour to show.
+- Discord timeouts max out at 28 days (one reason mutes use a role). Global command changes can take an hour to show.
 
 ## Status and roadmap
 
-**Go-live postponed (owner, 2026-10-28): "don't go live yet".** Dashboard work continues on `feature/dashboard-members`;
-the go-live plan (plan.md) stays prepared.
-
-**Go-live checklist (in order):** Supabase DB live → final deployment secrets (`NODE_ENV=production`,
-`LOG_LEVEL=info`, `POSTGRES_URL`, OAuth values, `APPEALS_CATEGORY_ID` (seeded once into `guild_settings`, then
-edited in the dashboard), `OWNER_IDS`, `BANNED_ROLE_ID`;
-remove `LOG_STREAM_TOKEN`) → OAuth redirect in the Developer Portal → pull/install/republish →
-`/setappeal` → live smoke test on an alt account → merge into `main`, switch Replit to `main`.
-The one-time proxy IP log line goes in the first deploy and is removed in the next.
-
-**Built and merged on `feature/enforcements`, not yet deployed:** I30 expiry DM, I31 `/case edit|void|history`,
-I32 evidence (`/case evidence`), I33 "Warn for this message" menu, I35 native AutoMod bridge (`/automod native`),
-I36 `/staff stats`, smarter automod, `/community` (tags, suggestions, sticky, starboard, feeds), scheduled messages; see plan.md.
-**On `feature/dashboard-members`:** Members page (filters, roles, nickname, timeout, bulk), temporary roles
-(`member_temp_roles`, expiry cron + rejoin re-apply). Schema is now **v8** (`src/config/database/schemaVersion.js`).
-
-**Web dashboard** (our server only; `src/services/dashboard/`, on `feature/enforcements`): server-rendered
-pages, plain CSS + one static script, strict CSP, no SPA. Discord login (`identify`), Administrator re-checked
-on every request (`OWNER_IDS` without Administrator: view + settings only), CSRF + Origin check, audit log.
-Settings in `guild_settings` keyed by `guild_id`; the dashboard calls the same services as the commands.
-Env: `DASHBOARD_ENABLED`, `DASHBOARD_EDIT_ENABLED`, `SESSION_SECRET`; redirect `${PUBLIC_URL}/dashboard/oauth/callback`.
-Design (v5): grouped sidebar (Moderate · Community · Server setup · Bot), settings as rows, Overview "Needs you" first;
-10 palette themes (only colours change; contrast test guards AA); only gradient = body glow. No AI-startup look.
-To view it locally without the bot token, mount `createDashboard` on a bare Express app with the fake guild
-from `tests/dashboardModules.test.js` and the local test DB. Public release, multi-server support and premium
-come only after that.
+- **Go-live postponed (owner, 2026-10-28): "don't go live yet".** Feature list, history and go-live plan: plan.md.
+- **Go-live checklist (in order):** Supabase DB live → final deployment secrets (`NODE_ENV=production`,
+  `LOG_LEVEL=info`, `POSTGRES_URL`, OAuth values, `APPEALS_CATEGORY_ID` (seeded once into `guild_settings`),
+  `OWNER_IDS`, `BANNED_ROLE_ID`; remove `LOG_STREAM_TOKEN`) → OAuth redirect in the Developer Portal →
+  pull/install/republish → `/setappeal` → live smoke test on an alt account → merge into `main`, switch Replit to `main`.
+  The one-time proxy IP log line goes in the first deploy and is removed in the next.
+- **Branches:** work happens on `feature/dashboard-members` (contains `feature/enforcements`); nothing built since the
+  live deploy is deployed yet. Schema is **v9** (`src/config/database/schemaVersion.js`).
+- **Web dashboard** (our server only): server-rendered, plain CSS + one static script, strict CSP, no SPA. Discord
+  login (`identify`); Administrator re-checked per request (`OWNER_IDS` without it: view + settings only); CSRF +
+  Origin check; audit log; settings in `guild_settings`; same services as the commands. Env: `DASHBOARD_ENABLED`,
+  `DASHBOARD_EDIT_ENABLED`, `SESSION_SECRET`; redirect `${PUBLIC_URL}/dashboard/oauth/callback`. Design v5 (10 palette
+  themes, AA contrast test, no AI-startup look). Public release, multi-server support and premium only after go-live.
