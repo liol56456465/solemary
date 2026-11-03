@@ -26,6 +26,28 @@ const { assertAllowlistedIdentifier, quoteIdentifier } = await import('../src/ut
 const { Pool } = pg;
 
 const databaseUrl = process.env.POSTGRES_URL;
+
+// Test runs (npm run migrate:test, or NODE_ENV=test) may only migrate a local Postgres. This script
+// can't import src/config/testMode.js (its import-time checks would also demand the test bot), so
+// the host check is repeated here; same rule as testMode's databaseHosts().
+const TEST_ENV_FILE = /(^|[=/\\])\.?env\.test$/;
+const isTestRun = process.env.NODE_ENV === 'test' || process.execArgv.some((arg) => TEST_ENV_FILE.test(arg));
+if (isTestRun) {
+  let problem = null;
+  try {
+    const url = new URL(databaseUrl || '');
+    const override = ['host', 'hostaddr', 'port', 'user', 'password', 'database', 'dbname'].find((p) => url.searchParams.has(p));
+    if (override) problem = `URL parameter "${override}" is not allowed`;
+    else if (!['localhost', '127.0.0.1', '::1', '[::1]'].includes(url.hostname)) problem = `host is "${url.hostname}"`;
+  } catch {
+    problem = 'POSTGRES_URL is missing or unparseable';
+  }
+  if (problem) {
+    logger.error(`❌ Refusing a test migration: ${problem}. Test runs only migrate a local Postgres (localhost / 127.0.0.1).`);
+    process.exit(1);
+  }
+}
+
 const pool = new Pool({
   connectionString: sanitizeConnectionString(databaseUrl),
   ssl: resolveSslConfig(databaseUrl),
