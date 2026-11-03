@@ -401,8 +401,9 @@ test('leaderboard: one ordered page from user_levels, absolute ranks', { skip },
     for (const [n, level, totalXp] of levels) {
         await db.set(getUserLevelKey(guildB, user(n)), { xp: 10, level, totalXp, lastMessage: 0, rank: 0 });
     }
-    const members = new Map();
-    const guild = { id: guildB, members: { cache: members, fetch: async () => members } };
+    // Everyone is still in the server (members who left are skipped since level data is kept on leave).
+    const members = new Map(levels.map(([n]) => [user(n), { id: user(n), user: { id: user(n), username: `u${n}` } }]));
+    const guild = { id: guildB, memberCount: members.size, members: { cache: members, fetch: async () => members } };
     const fakeClient = { db, guilds: { cache: new Map([[guildB, guild]]) }, users: { cache: new Map() } };
 
     const first = await getLeaderboard(fakeClient, guildB, 2, 0);
