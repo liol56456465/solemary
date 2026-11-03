@@ -6,6 +6,14 @@ import { getColor, botConfig } from '../config/bot.js';
 // No global EmbedBuilder patches: an earlier version stripped every emoji from
 // titles, fields and descriptions and silently dropped footers and timestamps.
 
+// Cuts to at most `max` UTF-16 units without leaving half of an emoji (a lone
+// high surrogate) at the end.
+export function cutText(text, max) {
+  const value = String(text);
+  if (value.length <= max) return value;
+  return value.slice(0, max).replace(/[\uD800-\uDBFF]$/, '');
+}
+
 export function createEmbed({
   title = '',
   description = '',
@@ -21,11 +29,11 @@ export function createEmbed({
   const embed = new EmbedBuilder();
 
   if (title && typeof title === 'string' && title.length > 0) {
-    embed.setTitle(title.substring(0, 256));
+    embed.setTitle(cutText(title, 256));
   }
 
   if (description && typeof description === 'string' && description.length > 0) {
-    embed.setDescription(description.substring(0, 4096));
+    embed.setDescription(cutText(description, 4096));
   }
 
   try {
@@ -40,7 +48,7 @@ export function createEmbed({
     // each field (name 256, value 1024) and stop before the 6000-char total.
     const clamp = (text, max) => {
       const value = String(text);
-      return value.length > max ? `${value.slice(0, max - 1)}…` : value;
+      return value.length > max ? `${cutText(value, max - 1)}…` : value;
     };
     const textOf = (part) => (typeof part === 'string' ? part : part?.text || part?.name || '');
     let budget = 6000 - (embed.data.title?.length || 0) - (embed.data.description?.length || 0)
