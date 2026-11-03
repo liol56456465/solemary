@@ -21,7 +21,7 @@ import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction, isAdministrator } from '../enforcement/enforcementService.js';
 import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
-import { isRaidJoiner } from './raidService.js';
+import { isRaidJoiner, noteIncidentEvent } from './raidService.js';
 import { getProbation } from './probationService.js';
 import { noteMoodSignals } from './moodService.js';
 import { getUserLevelData } from '../leveling/leveling.js';
@@ -385,6 +385,7 @@ const defaultDeps = {
     noteRepeatHit: (...args) => noteRepeatHit(...args),
     deleteQuietly: (...args) => deleteQuietly(...args),
     isRaidJoiner: (...args) => isRaidJoiner(...args),
+    noteIncidentEvent: (...args) => noteIncidentEvent(...args),
     giveSecondChance: (...args) => giveSecondChance(...args),
     giveHeadsUp: (...args) => giveHeadsUp(...args),
     getAutomodSettings: (...args) => getAutomodSettings(...args),
@@ -395,6 +396,16 @@ let deps = { ...defaultDeps };
 /** Test hook: replace some side effects of actOn (no argument restores all). */
 export function setAutomodDepsForTest(overrides = null) {
     deps = overrides ? { ...defaultDeps, ...overrides } : { ...defaultDeps };
+}
+
+/**
+ * Raid timeline: what automod did that left no case (delete only, or a step that failed),
+ * only while a lockdown runs; actions with a case come from mod_cases. Not awaited; never throws.
+ */
+function noteIncident(guildId, userId, detail) {
+    Promise.resolve()
+        .then(() => deps.noteIncidentEvent(guildId, { kind: 'automod', targetId: userId, detail }))
+        .catch((error) => logger.warn(`Raid timeline: automod event failed: ${error.message}`));
 }
 
 /**
@@ -457,12 +468,15 @@ export async function actOn(message, member, hit, settings, probation = null, { 
         const step = { type: 'kick' };
         const result = await deps.applyStep({ guild, targetUser, step, rule: hit.rule, group, reason: `Automod: ${rule.label} during a join raid` })
             .catch((error) => ({ error }));
+        // A kick that worked is a case (merged into the timeline from mod_cases); only a failure is noted.
+        if (result.error) noteIncident(guild.id, targetUser.id, `${hit.ruleLabel || rule.label}: message deleted, kick of a raid joiner failed`);
         await deps.postReviewCard({ ...card, step, result, raid: true, deleted: true });
         return true;
     }
 
     if (!punishes) {
         // Delete only: the card lets a moderator apply a punishment if one is needed.
+        noteIncident(guild.id, targetUser.id, `${hit.ruleLabel || rule.label}: message deleted`);
         await deps.postReviewCard({ ...card, deleted: true });
         return true;
     }
@@ -477,6 +491,7 @@ export async function actOn(message, member, hit, settings, probation = null, { 
     if (result.error) {
         logger.warn(`Automod ${hit.rule} on ${targetUser.id}: ${result.error.userMessage || result.error.message}`);
     }
+    if (result.error) noteIncident(guild.id, targetUser.id, `${hit.ruleLabel || rule.label}: ${rule.deleteMessage ? 'message deleted, ' : ''}${step.type} failed`);
     await deps.postReviewCard({ ...card, step, result, offence: offences + 1, deleted: Boolean(rule.deleteMessage) });
     return rule.deleteMessage;
 }

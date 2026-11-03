@@ -7,7 +7,8 @@ import { successEmbed } from '../utils/embeds.js';
 import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
-import { clearGateFlag, closeGateLine, getGateFlag, kickWithNotice } from '../services/automod/joinGate.js';
+import { clearGateFlag, closeGateLine, gateCheckLabels, getGateFlag, kickWithNotice } from '../services/automod/joinGate.js';
+import { noteIncidentEvent } from '../services/automod/raidService.js';
 import { noteStaffReview } from '../services/staffActivityService.js';
 
 export async function handleJoinGateButton(interaction, client, args) {
@@ -40,6 +41,8 @@ export async function handleJoinGateButton(interaction, client, args) {
         return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'I could not kick them (their role may be above mine, or I lack Kick Members).' });
     }
     await clearGateFlag(interaction.guildId, userId).catch(() => {});
+    // Raid timeline: only while a lockdown runs; never throws.
+    await noteIncidentEvent(interaction.guildId, { kind: 'gate_kick', actorId: admin.id, targetId: userId, detail: `${gateCheckLabels(hits)} (kicked by staff)` });
     await closeGateLine(interaction.message, `kicked by ${admin.username}`);
     return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Kicked', `${member.user.username} was kicked and told why by DM.`)] });
 }

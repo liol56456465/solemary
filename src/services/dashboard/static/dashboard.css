@@ -1146,6 +1146,15 @@ form.filters .wide-filter { flex: 1 1 240px; }
 .timeline li { padding: 8px 0; border-top: 1px solid var(--line); }
 .timeline li:first-child { border-top: 0; }
 
+/* Raid timeline: one row per minute with something in it; quiet minutes folded into one line. */
+.minutes { list-style: none; margin: 0; padding: 0; }
+.minutes > li { padding: 6px 0; border-top: 1px solid var(--line); }
+.minutes > li:first-child { border-top: 0; }
+.minutes summary { cursor: pointer; }
+.minutes .timeline { margin: 6px 0 0 16px; }
+.minutes .timeline li { padding: 4px 0; overflow-wrap: anywhere; }
+.minute-gap { font-size: 13px; font-style: italic; }
+
 
 /* ── Plain look (owner, 2026-11-01: "redo everything that looks AI") ─────────
    A tool, not a product page: no floating cards, no big number tiles, no icon on every

@@ -423,6 +423,33 @@ export const tableStatements = [
         ended_by VARCHAR(20)
     )`,
 
+    // Raid timeline (schema v10, dashboard Moderate → Raid timeline): one row per incident
+    // (a join-raid lockdown), opened when it starts and closed when it ends, and what the
+    // bot and staff did during it as short events (services/automod/incidentTimeline.js).
+    // No message content. At most 2,000 events per incident (event_count, guarded in the
+    // INSERT; dropped_events counts the rest); purged 90 days after the end by a daily cron.
+    // report_id = the automod_raid_incidents row of the incident report, once posted.
+    `CREATE TABLE IF NOT EXISTS ${t.incident_timelines} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        trigger_kind VARCHAR(20) NOT NULL,
+        started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        ended_at TIMESTAMPTZ,
+        ended_by VARCHAR(20),
+        report_id BIGINT,
+        event_count INTEGER NOT NULL DEFAULT 0 CHECK (event_count >= 0),
+        dropped_events INTEGER NOT NULL DEFAULT 0 CHECK (dropped_events >= 0)
+    )`,
+    `CREATE TABLE IF NOT EXISTS ${t.incident_events} (
+        id BIGSERIAL PRIMARY KEY,
+        incident_id BIGINT NOT NULL REFERENCES ${t.incident_timelines}(id) ON DELETE CASCADE,
+        at TIMESTAMPTZ NOT NULL,
+        kind VARCHAR(30) NOT NULL,
+        actor_id VARCHAR(20),
+        target_id VARCHAR(20),
+        detail VARCHAR(200)
+    )`,
+
     // Sticky messages (/community sticky): reposted at the bottom of a channel after
     // members talk there. Held in memory; last_message_id is written on each repost.
     `CREATE TABLE IF NOT EXISTS ${t.sticky_messages} (
@@ -834,6 +861,8 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_reason ON ${t.mod_cases}(guild_id, reason_key, created_at DESC)`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_no_contact_one_open ON ${t.no_contact_orders}(guild_id, user_a, user_b) WHERE ended_at IS NULL`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_mod_watchlist_one_open ON ${t.mod_watchlist}(guild_id, user_id) WHERE ended_at IS NULL`,
+    `CREATE INDEX IF NOT EXISTS idx_incident_timelines_guild ON ${t.incident_timelines}(guild_id, started_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_incident_events_incident ON ${t.incident_events}(incident_id, at, id)`,
     `CREATE INDEX IF NOT EXISTS idx_suggestions_guild ON ${t.suggestions}(guild_id, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_starboard_posts_star ON ${t.starboard_posts}(star_message_id)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_sessions_expires ON ${t.dashboard_sessions}(expires_at)`,

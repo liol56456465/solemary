@@ -14,8 +14,8 @@ import { syncPremiumRole } from '../services/billing/premiumEffects.js';
 import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService.js';
 import { syncWarnRolesQuietly } from '../services/enforcement/warnRoleService.js';
 
-import { noteGateKick, recordJoin } from '../services/automod/raidService.js';
-import { checkJoinGate } from '../services/automod/joinGate.js';
+import { noteGateKick, noteIncidentEvent, recordJoin } from '../services/automod/raidService.js';
+import { checkJoinGate, gateCheckLabels } from '../services/automod/joinGate.js';
 import { checkImpersonation } from '../services/automod/memberChecks.js';
 import { startProbationOnJoin } from '../services/automod/probationService.js';
 import { enforcementConfig } from '../config/enforcement.js';
@@ -71,8 +71,14 @@ export default {
                 await syncPremiumRole(member.client, member.id).catch((error) => logger.warn(`Supporter role not given back to ${member.id}: ${error.message}`));
                 await recordJoin(member).catch((error) => logger.warn(`Raid tracking failed for ${member.id}: ${error.message}`));
                 // Join gate (/automod joingate): a kicked member skips the rest of the pipeline.
+                // Both callbacks only record (raid incident report, raid timeline); neither throws.
                 const gate = await checkJoinGate(member, {
-                    onKick: (userId) => noteGateKick(guild.id, userId).catch((error) => logger.warn(`Could not note join gate kick: ${error.message}`)),
+                    onKick: async (userId, hits) => {
+                        await noteGateKick(guild.id, userId).catch((error) => logger.warn(`Could not note join gate kick: ${error.message}`));
+                        await noteIncidentEvent(guild.id, { kind: 'gate_kick', targetId: userId, detail: gateCheckLabels(hits) });
+                    },
+                    // Not awaited: the rest of the join pipeline must not wait for the timeline.
+                    onFlag: (userId, hits) => { noteIncidentEvent(guild.id, { kind: 'gate_flag', targetId: userId, detail: gateCheckLabels(hits) }); },
                 });
                 if (gate === 'kicked') return;
                 await checkImpersonation(member);

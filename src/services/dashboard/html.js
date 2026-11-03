@@ -125,6 +125,7 @@ export const NAV = [
         { key: 'nocontact', label: 'No-contact' },
         { key: 'staff', label: 'Staff' },
         { key: 'activity', label: 'Activity' },
+        { key: 'incidents', label: 'Raid timeline' },
         { key: 'channels', label: 'Channel tools' },
     ] },
     { group: 'Community', items: [
