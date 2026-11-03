@@ -8,6 +8,7 @@ import { Mutex } from '../../utils/mutex.js';
 import { wrapServiceBoundary } from '../../utils/errorHandler.js';
 import { applyRoleRulesToMember } from '../members/roleRuleService.js';
 import { syncLevelRolesForMember } from './levelRoleSyncService.js';
+import { CARD_FILE_NAME, cardAvatarUrl, tryLevelCard } from './levelCard.js';
 
 /**
  * Award XP to a member. Returns null when XP is skipped (disabled/invalid amount).
@@ -15,7 +16,10 @@ import { syncLevelRolesForMember } from './levelRoleSyncService.js';
  */
 export const addXp = wrapServiceBoundary(async function addXp(client, guild, member, xpToAdd) {
   const lockKey = `leveling:${guild.id}:${member.user.id}`;
-  return await Mutex.runExclusive(lockKey, async () => {
+  // The level-up post is sent after the level is saved and the lock is released, so a slow
+  // card (avatar fetch, upload) never delays the save or other XP for this member.
+  let announcement = null;
+  const result = await Mutex.runExclusive(lockKey, async () => {
     if (!xpToAdd || xpToAdd <= 0) {
       return null;
     }
@@ -47,10 +51,6 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
     }
 
     if (didLevelUp) {
-      if (config.announceLevelUp) {
-        await sendLevelUpAnnouncement(guild, member, levelData, config);
-      }
-
       try {
         await logEvent({
           client,
@@ -93,6 +93,10 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
       });
     }
 
+    if (didLevelUp && config.announceLevelUp) {
+      announcement = { levelData: { ...levelData }, config };
+    }
+
     return {
       level: levelData.level,
       xp: levelData.xp,
@@ -101,13 +105,39 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
       leveledUp: didLevelUp,
     };
   });
+  if (announcement) {
+    await sendLevelUpAnnouncement(guild, member, announcement.levelData, announcement.config);
+  }
+  return result;
 }, {
   service: 'xpSystem',
   operation: 'addXp',
   userMessage: 'Failed to award XP. Please try again.',
 });
 
-async function sendLevelUpAnnouncement(guild, member, levelData, config) {
+/**
+ * The level-up card PNG when the server turned cards on and the bot may attach files there,
+ * else null (the plain text line is sent). Never throws.
+ */
+export async function levelUpCardFor(guild, member, levelData, config, permissions, makeCard = tryLevelCard) {
+  try {
+    if (config?.levelUpCard !== true) return null;
+    if (!permissions?.has?.('AttachFiles')) return null;
+    return await makeCard({
+      avatarUrl: cardAvatarUrl(member.user),
+      name: member.displayName || member.user?.username,
+      serverName: guild.name,
+      level: levelData.level,
+      xp: levelData.xp,
+      xpNeeded: levelData.level >= 1000 ? 0 : getXpForLevel(levelData.level),
+      accent: config.cardAccent,
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function sendLevelUpAnnouncement(guild, member, levelData, config, { makeCard } = {}) {
   try {
     const levelUpChannel = config.levelUpChannel
       ? guild.channels.cache.get(config.levelUpChannel)
@@ -128,6 +158,21 @@ async function sendLevelUpAnnouncement(guild, member, levelData, config) {
       .replace(/{level}/g, levelData.level)
       .replace(/{xp}/g, levelData.xp)
       .replace(/{xpNeeded}/g, getXpForLevel(levelData.level));
+
+    const card = await levelUpCardFor(guild, member, levelData, config, permissions, makeCard);
+    if (card) {
+      // Same mentions as the text line. If the send with the card fails, the text line is sent.
+      const sent = await levelUpChannel.send({ content: message, allowedMentions: { parse: ['users'] }, files: [{ attachment: card, name: CARD_FILE_NAME }] })
+        .then(() => true)
+        .catch((error) => {
+          // Only a clear refusal from Discord (4xx) means nothing was posted. On a network error
+          // or timeout the card may have gone through, so no second post (no duplicate).
+          const refused = Number.isInteger(error?.status) && error.status >= 400 && error.status < 500;
+          logger.warn(`Level-up card not sent in channel ${levelUpChannel.id}${refused ? ', sending text' : ''}: ${error.message}`);
+          return refused ? false : null;
+        });
+      if (sent !== false) return;
+    }
 
     // The template documents {user} and {level} only: ping the member, never a role or @everyone.
     await levelUpChannel.send({ content: message, allowedMentions: { parse: ['users'] } }).catch(error => {

@@ -21,7 +21,11 @@ test('intentional staff-role pings list the role in their own allowedMentions', 
 });
 
 test('level-up messages ping the member only', () => {
-    assert.match(source('src/services/leveling/xpSystem.js'), /levelUpChannel\.send\(\{ content: message, allowedMentions: \{ parse: \['users'\] \} \}\)/);
+    const xp = source('src/services/leveling/xpSystem.js');
+    assert.match(xp, /levelUpChannel\.send\(\{ content: message, allowedMentions: \{ parse: \['users'\] \} \}\)/);
+    // The card send (level-up image card) keeps the same mentions.
+    assert.match(xp, /levelUpChannel\.send\(\{ content: message, allowedMentions: \{ parse: \['users'\] \}, files: \[/);
+    assert.equal((xp.match(/levelUpChannel\.send\(/g) || []).length, 2, 'only the text send and the card send');
 });
 
 test('welcome messages keep users + roles from the admin text, never everyone', () => {
