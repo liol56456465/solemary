@@ -10,6 +10,8 @@
 //   GET  /dashboard/inbox           everything waiting for staff (inboxRoutes.js); /inbox/modmail|ticket/:id read, reply, close
 //   GET  /dashboard/staff           staff moderation stats (/staff stats), weekly activity, discipline (owners)
 //   GET  /dashboard/audit           dashboard changes (old → new), filter by user/module, paged
+//   GET  /dashboard/incidents       raid timeline: join-raid lockdowns of the last 90 days (incidentRoutes.js);
+//                                   /incidents/:id one incident minute by minute (Administrator-only)
 //   GET  /dashboard/<module>        a settings page (modules/*.js): current values + forms
 //   POST /dashboard/<module>/<act>  a settings form: CSRF + same origin + edit switch +
 //                                   access, 30 POSTs/min per session, validated by the
@@ -97,6 +99,7 @@ import { createEnforcementHandlers } from './enforcementRoutes.js';
 import { createInboxBadge, createInboxHandlers } from './inboxRoutes.js';
 import { collectInbox, defaultInboxData } from './inboxData.js';
 import { createMemberToolsHandlers, defaultMemberTools } from './memberToolsRoutes.js';
+import { createIncidentHandlers, defaultIncidents } from './incidentRoutes.js';
 import { createConfirmStore } from './confirmTokens.js';
 import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
 import { InputError, plainText } from './forms.js';
@@ -245,7 +248,7 @@ export function createDashboard({
     services = defaultServices, auditStore = null, modules = MODULES, env = process.env,
     enforcement = defaultEnforcement, confirms = createConfirmStore(), owner = defaultOwnerDeps,
     inbox = defaultInboxData, inboxBadge = false,
-    memberTools = defaultMemberTools,
+    memberTools = defaultMemberTools, incidents = defaultIncidents,
 }) {
     const secret = settings.sessionSecret;
     const guildId = settings.mainGuildId;
@@ -963,6 +966,7 @@ export function createDashboard({
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
         overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, help, setup,
         sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
+        incidents: createIncidentHandlers({ client, guildId, incidents, sendHtml, shellOf, notFound }),
     };
 }
 
@@ -1132,6 +1136,8 @@ export function dashboardRouter(d) {
     router.get('/nocontact', user, safe(en.noContact));
     router.get('/staff', user, safe(d.staff));
     router.get('/activity', user, safe(d.activity));
+    router.get('/incidents', user, safe(d.incidents.list));
+    router.get('/incidents/:id', user, safe(d.incidents.detail));
     router.get('/backup', user, safe(d.backup));
     router.get('/backup/download', user, safe(d.backupDownload));
     router.get('/audit', user, safe(d.audit));

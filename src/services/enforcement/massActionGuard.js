@@ -98,6 +98,14 @@ async function blockModerator(guild, moderator, count, attempted) {
     const what = attempted === 'mute' ? 'mutes' : 'bans/kicks';
     const summary = `${moderator.user?.username ?? moderator.id} (${moderator.id}) made ${count} ${what} within ${windowMinutes} minutes and tried another ${attempted}.`;
     logger.warn(`Mass-action guard in ${guild.id}: ${summary} Blocked until ${until}.`);
+    // Raid timeline (only while a lockdown runs). Imported lazily (raidService → enforcementService → here);
+    // not awaited, never throws: the owner alert below must not wait for it.
+    import('../automod/raidService.js')
+        .then(({ noteIncidentEvent }) => noteIncidentEvent(guild.id, {
+            kind: 'mass_block', actorId: moderator.id,
+            detail: `Blocked for ${Math.round(enforcementConfig.massActionBlockMs / 60000)} minutes after ${count} ${what} within ${windowMinutes} minutes`,
+        }))
+        .catch((error) => logger.warn(`Raid timeline: mass-action event failed: ${error.message}`));
 
     // Imported lazily: enforcementService imports this module.
     const { postModLog } = await import('./enforcementService.js');

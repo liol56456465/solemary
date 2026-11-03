@@ -24,6 +24,7 @@ import { reminderStore, runReminders } from './services/reminders/reminderServic
 import { accountStore } from './services/accounts/accountStore.js';
 import { remindStaleAppeals } from './services/enforcement/appealStatusService.js';
 import { flushActivity, pruneActivity } from './services/stats/activityService.js';
+import { purgeIncidentTimelines } from './services/automod/incidentTimeline.js';
 import { checkCatGrowth } from './services/community/catService.js';
 import { query as enforcementQuery } from './services/enforcement/db.js';
 import { importModmailTopicsOnce } from './services/modmailLinks.js';
@@ -416,6 +417,8 @@ class Mewvo extends Client {
     // Messages per server per day (Dashboard → Activity), a count only; kept 400 days.
     cron.schedule('* * * * *', exclusive('activity_flush', () => flushActivity()));
     cron.schedule('45 3 * * *', exclusive('activity_prune', () => pruneActivity()), { timezone: 'UTC' });
+    // Raid timeline incidents (dashboard Raid timeline) are kept 90 days after they ended.
+    cron.schedule('55 3 * * *', exclusive('incident_timeline_prune', () => purgeIncidentTimelines()), { timezone: 'UTC' });
     // The server cat: posts once in the level-up channel when it grows a stage (never per message).
     cron.schedule('*/5 * * * *', exclusive('server_cat_growth', () => checkCatGrowth(this)));
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));

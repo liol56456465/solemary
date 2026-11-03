@@ -32,6 +32,7 @@ export const PERMISSIONS = Object.freeze({
     'page:inbox': MODERATOR, // staff reports filtered out for moderators (inboxRoutes)
     'page:staff': ADMIN,
     'page:activity': ADMIN,
+    'page:incidents': ADMIN, // Raid timeline: list and one incident (view only)
     'page:channels': ADMIN,
     'page:tickets': ADMIN,
     'page:welcome': ADMIN,
@@ -158,6 +159,8 @@ export const ROUTES = [
     ['GET', '/nocontact', 'page:nocontact'],
     ['GET', '/staff', 'page:staff'],
     ['GET', '/activity', 'page:activity'],
+    ['GET', '/incidents', 'page:incidents'],
+    ['GET', '/incidents/:id', 'page:incidents'],
     ['GET', '/audit', 'page:audit'],
     ['GET', '/backup', 'page:backup'],
     ['GET', '/backup/download', 'page:backup'],

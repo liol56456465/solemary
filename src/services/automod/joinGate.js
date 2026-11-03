@@ -164,11 +164,16 @@ export async function kickWithNotice(member, hits, reason) {
     });
 }
 
+/** The checks a member failed, as labels only (no names or other member text): for the raid timeline. */
+export function gateCheckLabels(hits) {
+    return [...new Set(hits.map((hit) => JOIN_GATE_CHECKS[hit.check]?.label).filter(Boolean))].join('; ');
+}
+
 /**
  * Runs the join gate for a new member of the main server. Never throws.
- * Returns 'kicked' | 'flagged' | null.
+ * Returns 'kicked' | 'flagged' | null. onKick / onFlag(userId, hits) run after the kick or flag.
  */
-export async function checkJoinGate(member, { onKick = null } = {}) {
+export async function checkJoinGate(member, { onKick = null, onFlag = null } = {}) {
     try {
         const { guild, user } = member;
         if (guild.id !== enforcementConfig.mainGuildId || user.bot) return null;
@@ -183,7 +188,7 @@ export async function checkJoinGate(member, { onKick = null } = {}) {
             const kicked = await kickWithNotice(member, hits, `Join gate: ${hits.filter((h) => h.action === 'kick').map((h) => h.reason).join('; ')}`);
             if (kicked) {
                 await postGateLine(member, hits, 'kicked', STATUS_COLORS.kept, false);
-                await onKick?.(member.id);
+                await onKick?.(member.id, hits);
                 return 'kicked';
             }
             // Could not kick (role hierarchy, permissions): fall back to a flag for staff.
@@ -194,6 +199,7 @@ export async function checkJoinGate(member, { onKick = null } = {}) {
                 channelId: message.channelId, messageId: message.id, hits: hits.map(({ check, reason }) => ({ check, reason })), at: Date.now(),
             }, FLAG_TTL_SECONDS).catch((error) => logger.warn(`Could not store join gate flag for ${user.id}: ${error.message}`));
         }
+        await onFlag?.(member.id, hits);
         return 'flagged';
     } catch (error) {
         logger.warn(`Join gate failed for ${member?.id}: ${error.message}`);

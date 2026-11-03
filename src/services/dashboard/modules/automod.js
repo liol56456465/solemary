@@ -346,8 +346,9 @@ ${table(['Rule', 'Actions', 'Undone', 'Changed', 'Undo rate'], rulesStats.map(([
             : lockdown?.active
                 ? html`<p class="warn"><b>A raid lockdown is active</b>${lockdown.startedAt ? html` since ${formatDate(lockdown.startedAt)}` : ''}, ${(lockdown.joinerIds || []).length} raid joiner${(lockdown.joinerIds || []).length === 1 ? '' : 's'}.</p>
 ${buttonForm(ctx, 'automod', 'lockdown-end', 'End lockdown', {}, { confirm: 'End the raid lockdown? The verification level goes back to what it was and paused invites and DMs resume.', canEdit: canAct })}
-${canAct ? '' : html`<p class="muted">To end a lockdown you need the Administrator permission in the main server.</p>`}`
-                : html`<p class="muted">No lockdown right now. One starts by itself when many accounts join at once (a raid).</p>`;
+${canAct ? '' : html`<p class="muted">To end a lockdown you need the Administrator permission in the main server.</p>`}
+<p><a href="${path('/incidents')}">Follow it on the raid timeline</a></p>`
+                : html`<p class="muted">No lockdown right now. One starts by itself when many accounts join at once (a raid). Past raids are on the <a href="${path('/incidents')}">raid timeline</a>.</p>`;
         const reviews = data.reviews;
         const queue = reviews === null
             ? html`<p class="error" role="alert">The review queue could not be read (review channel unavailable).</p>`
