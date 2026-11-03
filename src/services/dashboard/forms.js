@@ -96,6 +96,16 @@ export function intField(form, name, { min, max, label = name, fallback = undefi
     return value;
 }
 
+/** A number in [min, max] with at most `decimals` decimals (a comma counts as the point). */
+export function decimalField(form, name, { min, max, decimals = 1, label = name } = {}) {
+    const raw = text(form, name, 20).replace(',', '.');
+    if (!/^\d+(\.\d+)?$/.test(raw)) throw new InputError(`${label} must be a number, like 1.5.`, 400, name);
+    if ((raw.split('.')[1] || '').length > decimals) throw new InputError(`${label}: use at most ${decimals} decimal${decimals === 1 ? '' : 's'}.`, 400, name);
+    const value = Number(raw);
+    if (value < min || value > max) throw new InputError(`${label} must be between ${min} and ${max}.`, 400, name);
+    return value;
+}
+
 /** One of `choices`; else an InputError. */
 export function choiceField(form, name, choices, label = name) {
     const value = text(form, name, 100);
@@ -297,8 +307,8 @@ export function textInput(name, value, { label, max = 200, help = '', placeholde
     return html`<label>${label}<input type="${type}" name="${name}" value="${value ?? ''}" maxlength="${max}"${placeholder ? html` placeholder="${placeholder}"` : ''}>${help ? html`<span class="hint">${help}</span>` : ''}</label>`;
 }
 
-export function numberInput(name, value, { label, min, max, help = '' } = {}) {
-    return html`<label>${label}<input type="number" name="${name}" value="${value ?? ''}" min="${min}" max="${max}" step="1">${help ? html`<span class="hint">${help}</span>` : ''}</label>`;
+export function numberInput(name, value, { label, min, max, help = '', step = 1 } = {}) {
+    return html`<label>${label}<input type="number" name="${name}" value="${value ?? ''}" min="${min}" max="${max}" step="${step}">${help ? html`<span class="hint">${help}</span>` : ''}</label>`;
 }
 
 export function textArea(name, value, { label, max = 2000, rows = 4, help = '' } = {}) {

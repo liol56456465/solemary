@@ -80,7 +80,11 @@ const LevelingConfigSchema = z.looseObject({
     blacklistedUsers: z.array(z.string()).nullable().optional(),
     roleRewards: z.record(z.string(), z.string()).nullable().optional(),
     announceLevelUp: z.boolean().optional(),
-    xpMultiplier: z.number().nullable().optional()
+    xpMultiplier: z.number().nullable().optional(),
+    // XP boosts and reward mode (services/leveling/levelBoosts.js); bounds checked in the service.
+    channelMultipliers: z.record(z.string(), z.number()).nullable().optional(),
+    roleMultipliers: z.record(z.string(), z.number()).nullable().optional(),
+    rewardMode: z.string().nullable().optional()
 });
 
 export const GuildConfigSchema = z

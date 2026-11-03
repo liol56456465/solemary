@@ -6,7 +6,6 @@ import { resolveWelcomeImageUrl } from '../utils/welcomeImageStore.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { getServerCounters, updateCounter } from '../services/serverstatsService.js';
 import { getGuildBirthdays, deleteBirthday } from '../utils/database.js';
-import { deleteUserLevelData } from '../services/leveling/leveling.js';
 import { keepTempRolesOnLeave } from '../services/members/tempRoleService.js';
 import { logger } from '../utils/logger.js';
 import { enforcementConfig } from '../config/enforcement.js';
@@ -152,13 +151,9 @@ export default {
             logger.warn(`Could not check temporary roles of ${user.id} on leave: ${error.message}`);
         }
 
-        try {
-            await deleteUserLevelData(member.client, guild.id, user.id);
-            logger.debug(`Removed leveling data for user ${user.id} in guild ${guild.id}`);
-        } catch (error) {
-            logger.debug('Error handling leveling data on member leave:', error);
-        }
-        
+        // Level data is kept when a member leaves (owner, 2026-11-03): on rejoin, guildMemberAdd
+        // gives the earned reward roles back. /wipedata still deletes it.
+
     } catch (error) {
         logger.error('Error in guildMemberRemove event:', error);
     }

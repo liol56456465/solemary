@@ -84,7 +84,7 @@ export default {
 
       const levelRoleSummary = await reconcileLevelRoles(client);
       startupLog(
-        `Level role sync: scanned ${levelRoleSummary.scannedGuilds} guilds, pruned ${levelRoleSummary.prunedRewardEntries} stale rewards, re-awarded ${levelRoleSummary.rolesReAwarded} roles, errors ${levelRoleSummary.errors}`
+        `Level role sync: scanned ${levelRoleSummary.scannedGuilds} guilds, pruned ${levelRoleSummary.prunedRewardEntries} stale rewards, re-awarded ${levelRoleSummary.rolesReAwarded} roles, removed ${levelRoleSummary.rolesRemoved} lower rewards, skipped ${levelRoleSummary.rolesSkipped}, errors ${levelRoleSummary.errors}`
       );
     } catch (error) {
       logger.error("Error in ready event:", error);

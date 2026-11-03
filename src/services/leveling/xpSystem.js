@@ -7,6 +7,7 @@ import { formatLogLine } from '../../utils/logging/logEmbeds.js';
 import { Mutex } from '../../utils/mutex.js';
 import { wrapServiceBoundary } from '../../utils/errorHandler.js';
 import { applyRoleRulesToMember } from '../members/roleRuleService.js';
+import { syncLevelRolesForMember } from './levelRoleSyncService.js';
 
 /**
  * Award XP to a member. Returns null when XP is skipped (disabled/invalid amount).
@@ -43,9 +44,6 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
 
       logger.info(`🎉 ${member.user.tag} leveled up to level ${levelData.level} in ${guild.name}`);
 
-      if (config.roleRewards && config.roleRewards[levelData.level]) {
-        await awardRoleReward(guild, member, config.roleRewards[levelData.level], levelData.level);
-      }
     }
 
     if (didLevelUp) {
@@ -76,6 +74,18 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
 
     await saveUserLevelData(client, guild.id, member.user.id, levelData);
 
+    // Reward roles after the level is saved: "keep all" adds every earned role, "highest only"
+    // adds the top one and takes off lower ones. Never throws for Discord errors.
+    if (didLevelUp && config.roleRewards && Object.keys(config.roleRewards).length > 0) {
+      await syncLevelRolesForMember(client, member, {
+        config,
+        level: levelData.level,
+        reason: `Level ${levelData.level} reward`,
+      }).catch((error) => {
+        logger.warn(`Level reward roles not synced for ${member.user.id} in guild ${guild.id}: ${error.message}`);
+      });
+    }
+
     // Role rules with a level trigger (dashboard Members); the 10-minute run catches up on a miss.
     if (didLevelUp) {
       await applyRoleRulesToMember(member, { triggers: ['level_reached'], level: levelData.level }).catch((error) => {
@@ -96,26 +106,6 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
   operation: 'addXp',
   userMessage: 'Failed to award XP. Please try again.',
 });
-
-async function awardRoleReward(guild, member, roleId, level) {
-  try {
-    const role = guild.roles.cache.get(roleId);
-
-    if (!role) {
-      logger.warn(`Role ${roleId} not found for level ${level} reward in guild ${guild.id}`);
-      return;
-    }
-
-    if (member.roles.cache.has(roleId)) {
-      return;
-    }
-
-    await member.roles.add(role, `Level ${level} reward`);
-    logger.info(`✅ Awarded role ${role.name} to ${member.user.tag} for reaching level ${level}`);
-  } catch (error) {
-    logger.error(`Failed to award role reward to ${member.user.id}:`, error);
-  }
-}
 
 async function sendLevelUpAnnouncement(guild, member, levelData, config) {
   try {

@@ -7,7 +7,9 @@ import { updateGuildConfigAtomic } from '../../utils/database/guildConfigStorage
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { addXp } from './xpSystem.js';
 import { getUserLevelKey, getUserLevelPrefix } from '../../utils/database/keys.js';
+import { BOOST_MAX, BOOST_MIN, MAX_BOOSTS, REWARD_MODES, isValidBoost } from './levelBoosts.js';
 
+const SNOWFLAKE = /^\d{17,20}$/;
 const BASE_XP = 100;
 const XP_MULTIPLIER = 1.5;
 const MAX_LEVEL = 1000;
@@ -88,10 +90,17 @@ async function readAllLevelRows(client, guildId) {
   return rows.filter(Boolean);
 }
 
+// Rows read per step while skipping members who left, and the most rows one page may scan.
+const LEADERBOARD_BATCH = 100;
+const LEADERBOARD_MAX_SCAN = 5000;
+
 /**
- * One page of the guild leaderboard. On Postgres this is a single query against
- * user_levels; only the members on the page are looked up (cache first, then one
- * fetch for the rest). Users who left the guild keep their rank and show by ID.
+ * One page of the guild leaderboard, read from user_levels (Postgres) in steps of
+ * LEADERBOARD_BATCH. Level data is kept when a member leaves (owner, 2026-11-03), so members
+ * who are known to have left are skipped and ranks count only the members shown.
+ * "Known to have left": not in the member cache and not returned by one fetch of the
+ * uncached ids. If that fetch fails, or fetchMissing is false, uncached members stay listed
+ * with the fallback name (never hidden on a guess).
  */
 // fetchMissing: false never asks the gateway for members (the public website: page views must not
 // trigger Discord requests); members not in the cache keep the fallback name.
@@ -120,16 +129,27 @@ export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { 
     }
 
     const pg = client.db.rows?.();
-    const page = typeof pg?.topUserLevels === 'function'
-      ? (await pg.topUserLevels(guildId, limit, offset)).map((row, index) => ({ ...row, rank: offset + index + 1 }))
-      : rankLevelRows(await readAllLevelRows(client, guildId), limit, offset);
+    const readRows = typeof pg?.topUserLevels === 'function'
+      ? (count, from) => pg.topUserLevels(guildId, count, from)
+      : (() => {
+          let all = null;
+          return async (count, from) => {
+            all ??= rankLevelRows(await readAllLevelRows(client, guildId), Number.MAX_SAFE_INTEGER, 0);
+            return all.slice(from, from + count);
+          };
+        })();
 
-    const missing = page.map(entry => entry.userId).filter(id => !guild.members.cache.has(id));
-    if (fetchMissing && missing.length > 0) {
-      await guild.members.fetch({ user: missing }).catch(error => {
-        logger.warn(`Failed to fetch leaderboard members for guild ${guildId}:`, error);
-      });
+    const wanted = offset + limit;
+    const shown = [];
+    for (let from = 0; shown.length < wanted && from < LEADERBOARD_MAX_SCAN; from += LEADERBOARD_BATCH) {
+      const rows = await readRows(LEADERBOARD_BATCH, from);
+      const gone = await membersWhoLeft(guild, rows.map(row => row.userId), fetchMissing);
+      for (const row of rows) {
+        if (!gone.has(row.userId)) shown.push(row);
+      }
+      if (rows.length < LEADERBOARD_BATCH) break;
     }
+    const page = shown.slice(offset, wanted).map((row, index) => ({ ...row, rank: offset + index + 1 }));
 
     return page.map(entry => {
       const user = guild.members.cache.get(entry.userId)?.user ?? client.users.cache.get(entry.userId);
@@ -148,6 +168,21 @@ export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { 
       ErrorTypes.DATABASE,
       'Could not fetch the leaderboard at this time.'
     );
+  }
+}
+
+/** The ids (of userIds) that are not in the guild: uncached and not found by one fetch. */
+async function membersWhoLeft(guild, userIds, fetchMissing) {
+  const missing = userIds.filter(id => !guild.members.cache.has(id));
+  if (!fetchMissing || missing.length === 0) return new Set();
+  try {
+    const found = await guild.members.fetch({ user: missing });
+    const foundIds = new Set(found?.keys?.() ?? []);
+    for (const id of missing) if (guild.members.cache.has(id)) foundIds.add(id);
+    return new Set(missing.filter(id => !foundIds.has(id)));
+  } catch (error) {
+    logger.warn(`Failed to fetch leaderboard members for guild ${guild.id}: ${error.message}`);
+    return new Set();
   }
 }
 
@@ -317,6 +352,31 @@ function assertLevelingConfigValid(config) {
       );
     }
   }
+
+  if (config.rewardMode !== undefined && config.rewardMode !== null && !REWARD_MODES.includes(config.rewardMode)) {
+    throw validationError(`Invalid reward mode: ${config.rewardMode}`, 'Reward mode must be "keep all" or "highest only".');
+  }
+
+  for (const field of ['channelMultipliers', 'roleMultipliers']) {
+    const map = config[field];
+    if (map === undefined || map === null) continue;
+    const label = field === 'channelMultipliers' ? 'Channel boosts' : 'Role boosts';
+    if (typeof map !== 'object' || Array.isArray(map)) {
+      throw validationError(`${field} must be an object`, `${label} are not valid.`);
+    }
+    const entries = Object.entries(map);
+    if (entries.length > MAX_BOOSTS) {
+      throw validationError(`${field} has more than ${MAX_BOOSTS} entries`, `${label}: at most ${MAX_BOOSTS}.`);
+    }
+    for (const [id, value] of entries) {
+      if (!SNOWFLAKE.test(id) || !isValidBoost(value)) {
+        throw validationError(
+          `Invalid ${field} entry ${id}: ${value}`,
+          `${label}: each boost must be between ${BOOST_MIN} and ${BOOST_MAX}, with at most one decimal.`
+        );
+      }
+    }
+  }
 }
 
 function wrapSaveError(error, guildId) {
@@ -414,6 +474,43 @@ export async function setLevelRoleReward(client, guildId, level, roleId) {
       }
       return { ...current, roleRewards };
     });
+  } catch (error) {
+    throw wrapSaveError(error, guildId);
+  }
+}
+
+/**
+ * Atomically sets (multiplier) or removes (multiplier === null) one XP boost, leaving the
+ * other boosts as stored. kind: 'channel' or 'role'. Returns { before, after, field }.
+ */
+export async function setLevelBoost(client, guildId, kind, id, multiplier) {
+  try {
+    const field = kind === 'channel' ? 'channelMultipliers' : kind === 'role' ? 'roleMultipliers' : null;
+    if (!guildId || !field) {
+      throw validationError(`Invalid boost kind: ${kind}`, 'A boost is for a channel or a role.');
+    }
+    if (!(typeof id === 'string' && SNOWFLAKE.test(id))) {
+      throw validationError(`Invalid boost target id: ${id}`, `The boosted ${kind} is not valid.`);
+    }
+    if (multiplier !== null && !isValidBoost(multiplier)) {
+      throw validationError(
+        `Invalid boost multiplier: ${multiplier}`,
+        `Boost must be between ${BOOST_MIN} and ${BOOST_MAX}, with at most one decimal.`
+      );
+    }
+    const result = await mutateLevelingConfig(client, guildId, (current) => {
+      const map = { ...(current[field] || {}) };
+      if (multiplier === null) {
+        delete map[id];
+      } else {
+        if (!(id in map) && Object.keys(map).length >= MAX_BOOSTS) {
+          throw validationError(`Too many ${field}`, `At most ${MAX_BOOSTS} ${kind} boosts.`);
+        }
+        map[id] = Math.round(multiplier * 10) / 10;
+      }
+      return { ...current, [field]: map };
+    });
+    return { ...result, field };
   } catch (error) {
     throw wrapSaveError(error, guildId);
   }

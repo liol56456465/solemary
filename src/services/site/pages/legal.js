@@ -12,8 +12,8 @@
 import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
 
-export const LEGAL_UPDATED = '2026-11-01';
-const UPDATED_TEXT = '1 November 2026';
+export const LEGAL_UPDATED = '2026-11-03';
+const UPDATED_TEXT = '3 November 2026';
 
 const EMAIL = /^[^\s@<>"]{1,64}@[a-z0-9.-]{1,190}\.[a-z]{2,}$/i;
 
@@ -72,7 +72,7 @@ ${updatedLine()}
 <caption id="data-title">Each kind of data, the reason for it and how long it is kept.</caption>
 <thead><tr><th scope="col">Data</th><th scope="col">Why</th><th scope="col">Kept</th></tr></thead>
 <tbody>
-${row('Levels: XP, level and when your last message counted', 'To run leveling and the leaderboards you see on Discord and on this website (server display name, level and total XP). The text of your messages is not saved.', 'Until you run /wipedata or the server resets levels.')}
+${row('Levels: XP, level and when your last message counted', 'To run leveling and the leaderboards you see on Discord and on this website (server display name, level and total XP). The text of your messages is not saved.', 'Until you run /wipedata or the server resets levels. Leaving the server does not delete them, so your level and level roles come back if you rejoin.')}
 ${row('Moderation cases: code, type, reason, moderator, time, duration, whether it can be appealed, whether the DM arrived, and the edit history', 'To enforce server rules, to show you why you were punished, and to let decisions be checked and appealed.', 'As long as the server uses Mewvo. A case can be voided but stays on record so that decisions can be reviewed. You can ask for an old case to be removed.')}
 ${row('Evidence attached by staff: message links, a short excerpt of the text, images (re-posted in a staff-only channel)', 'So a case can still be checked if the original message is deleted.', 'With the case.')}
 ${row('Warning ladder step, per server', 'The automatic steps of the warning ladder.', 'With the cases. It is never reset automatically.')}
