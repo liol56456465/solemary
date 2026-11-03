@@ -19,10 +19,10 @@
     "deploy:commands": "node scripts/deploy-commands.js",
     "deploy:commands:test": "node --env-file=$HOME/.config/mewvo/env.test scripts/deploy-commands.js",
     "test:config": "node --env-file=$HOME/.config/mewvo/env.test scripts/test-config.js",
-    "test": "node --test tests/",
+    "test": "node --test \"tests/**/*.test.js\"",
     "db:check": "node scripts/check-db.js",
     "export:site": "node scripts/export-site.js",
-    "test:db": "node --env-file=$HOME/.config/mewvo/env.test --test --test-concurrency=1 tests/db/"
+    "test:db": "node --env-file=$HOME/.config/mewvo/env.test --test --test-concurrency=1 \"tests/db/*.test.js\""
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.1",
@@ -38,7 +38,7 @@
     "zod": "^4.6.7"
   },
   "engines": {
-    "node": ">=20.10.0"
+    "node": ">=22.12.0"
   },
   "overrides": {
     "form-data": "^4.0.6",

@@ -35,7 +35,7 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 
 ## Stack
 
-- Node >= 20.10, ESM (`"type": "module"`), discord.js v14, Express v5, PostgreSQL via `pg`, node-cron, Winston.
+- Node >= 22.12 (LTS; 20 is EOL), ESM (`"type": "module"`), discord.js v14, Express v5, PostgreSQL via `pg`, node-cron, Winston.
 - Music was removed (no Riffy/Lavalink).
 - Web dashboard: server-rendered pages on the same Express server at `/dashboard` (`src/services/dashboard/`).
 - Entry: `src/app.js` (`npm start`; `index.js` only imports it). Data flow: `commands → handlers → services → utils`.
@@ -43,7 +43,7 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 ## Commands
 
 - `npm start` — production start.
-- `npm run start:test` — test mode (`NODE_ENV=test`, loads `.env.test`).
+- `npm run start:test` — test mode (`NODE_ENV=test`, loads `~/.config/mewvo/env.test`).
 - `npm test` — unit tests. `npm run test:db` — DB failure-injection tests (refuses non-local DBs).
 - `npm run migrate` / `migrate:check` / `migrate:status`.
 - `npm run restore:db` / `backup:drill`: a non-local target needs `--confirm-host=<host>` (protects the live DB).
