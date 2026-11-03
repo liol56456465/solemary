@@ -1,32 +1,37 @@
-# Mewvo — full-bot test script (test bot, test servers)
+# Mewvo — full-bot test script
 
-Run with the **test bot** only (`npm run start:test`). The live deployment keeps running:
-the test bot has its own token and sees only `TEST_GUILD_IDS`.
-Tick each line; if a result differs, note the step number and paste the bot's log lines.
+There is no local dev environment and no separate test bot (owner decision, 2026-11-03).
 
-## 0. One-time setup: the test bot
+- **Locally:** only the automated tests in section 0. They never start the bot or touch Discord.
+- **In Discord:** the bot runs on Replit and Ramūnas tests in the real servers with alt accounts.
+  Getting a branch onto Replit (branch switch, pull, republish, secrets) is a production change:
+  only Ramūnas does it, and only after he has OKed it.
 
-The test env file lives outside the repo, at `~/.config/mewvo/env.test` (folder `chmod 700`, file `chmod 600`),
-so tools that scan the repo never reach it. Start from `.env.test.example`; the `:test` npm scripts load it.
+Tick each line. If a result differs, note the step number and paste the bot's log lines from the Replit console.
 
-1. <https://discord.com/developers/applications> → **New Application** → name it `Mewvo Test`.
-2. **Bot** tab → **Reset Token** → copy it into `~/.config/mewvo/env.test` as `DISCORD_TOKEN` (never into chat or git).
-   Turn on **Server Members Intent** and **Message Content Intent** (Presence is not needed).
-3. **General Information** → copy **Application ID** → `~/.config/mewvo/env.test` `CLIENT_ID`.
-4. **OAuth2** → copy **Client Secret** → `~/.config/mewvo/env.test` `DISCORD_CLIENT_SECRET`.
-   **Redirects** → add both:
-   `http://localhost:3100/oauth/callback` (verification) and
-   `http://localhost:3100/dashboard/oauth/callback` (dashboard login).
-5. **OAuth2 → URL Generator**: scopes `bot` + `applications.commands`, permission **Administrator**
-   (test servers only) → open the URL → add the bot to your **test main** and **test support** servers.
-6. `~/.config/mewvo/env.test`: add the dashboard block from `.env.test.example`; `SESSION_SECRET` = output of `openssl rand -hex 32`.
-   Keep `TEST_GUILD_IDS`, `MAIN_GUILD_ID`, `SUPPORT_GUILD_ID` = the test servers.
-7. Check: `docker start mewvo-test-db` then `npm run test:config` → no errors, `CLIENT_ID` = the test app.
-   With the old production values it must refuse: "CLIENT_ID is the production Mewvo bot".
-8. Start: `npm run start:test` → log shows "Discord login successful", presence "🛠 Maintenance".
+## 0. Local checks (before anything goes to Replit)
 
-Accounts: **Admin** = you (Administrator in the test main server). **Alt A**, **Alt B** = two
-non-admin accounts in the test main server (Alt A also joins the test support server when asked).
+Run these on Node 22 (`nvm use` reads `.nvmrc`; on the shell default of Node 20 the test globs find nothing).
+
+1. `npm test`: all unit tests pass.
+2. Start your local Postgres (for example `docker start mewvo-test-db`), then `npm run test:db`: all DB tests pass.
+   These tests skip themselves unless `POSTGRES_URL` points at localhost, so they can never hit the live database.
+   The env file they load lives outside the repo in `~/.config/mewvo/` and holds local values only.
+3. If you changed the schema: `npm run migrate:check` against the local DB.
+
+Do not use `npm run start:test` to log in with the real bot: test mode refuses the production bot by design
+(`src/config/testMode.js`).
+
+## Before testing in Discord
+
+The tests below create real cases, DMs and mod-log lines in the live servers. Use only alt accounts as targets,
+and say in the mod-log channel or staff chat that a test run is going on.
+
+Accounts: **Admin** = you (Administrator in the main server). **Alt A**, **Alt B** = two non-admin accounts in the
+main server (Alt A also joins the support server when asked).
+
+Clean up afterwards: unban/unmute the alts, end watchlist entries, and void test cases with reason "test"
+(`/case void`) so they do not count on the alts' records.
 
 ## 1. Enforcement panel (`/enforcements user:<Alt A>`, as Admin)
 
@@ -63,55 +68,70 @@ non-admin accounts in the test main server (Alt A also joins the test support se
 | 3.4 | `/case evidence remove code:… id:<id>` | Removed from the list |
 | 3.5 | `/case void code:<a warn> reason:"mistake"` | Case voided; Alt A DM'd; ladder steps back (check `/background`) |
 
-## 4. Appeals (test support server)
+## 4. Staff watchlist (`/case watch`)
 
 | # | Do | Expected |
 |---|---|---|
-| 4.1 | Admin: `/setappeal` in the test main server | Appeal panels posted (main + support `#appeals`) with **Appeal**, **My appeals**, **My standing** |
-| 4.2 | Ban Alt A (permanent, appealable); Alt A joins the support server | Alt A gets the **Banned** role there |
-| 4.3 | Alt A: **My standing** | Own warnings, ladder level, next step, appeals (ephemeral) |
-| 4.4 | Alt A: **Appeal** → fill the 3 questions | Private channel in the support appeals category with Alt A added |
-| 4.5 | Alt A: **My appeals** | Shows the appeal as pending |
-| 4.6 | Alt A: Appeal again for the same case | Refused: one pending appeal per case |
-| 4.7 | Admin: `/appeals code:… decision:deny note:"no"` | Alt A DM'd; **My appeals** shows denied; a new appeal within 7 days is refused |
-| 4.8 | Ban Alt B, appeal, `/appeals … decision:accept` | Alt B unbanned, DM with a fresh invite, Banned role removed in support |
-| 4.9 | Mute Alt B, Alt B appeals the mute | Appeal channel opens in the **main** server ticket category |
+| 4.1 | `/case watch add member:Alt B reason:"test" days:1` as **Alt A** | Refused (Administrator only) |
+| 4.2 | Admin: `/case watch add member:Alt B reason:"test" days:1` | Ephemeral confirmation with the end time; Alt B is **not** told |
+| 4.3 | `/case watch add` on yourself or the bot | Refused with a clear message |
+| 4.4 | `/case watch list` | Alt B listed with entry number, reason and end time |
+| 4.5 | `/background user:Alt B` | Shows "On watchlist since … — test" |
+| 4.6 | Alt B leaves and rejoins; wait over a minute, then warn Alt B | One "watch" line in the mod log for the join and one for the new case (alerts are capped at one per member per minute); no pings |
+| 4.7 | Dashboard → No-contact page | Watchlist card lists Alt B; **End** works for Admin (audit log row) |
+| 4.8 | `/case watch end id:<n>` (or after 4.7) | "Watchlist entry #n ended"; Alt B rejoining no longer posts a watch line |
 
-## 5. Modmail and tickets
-
-| # | Do | Expected |
-|---|---|---|
-| 5.1 | Alt A DMs the test bot | Bot asks "Send to staff?" with a **Send to staff** button |
-| 5.2 | Click it | Private staff channel in the ticket category; the message appears there |
-| 5.3 | Staff reply in the channel; then `// internal` | Alt A gets the reply by DM; the `//` note is **not** sent |
-| 5.4 | `/modmail close reason:done` | Channel closed; Alt A told |
-| 5.5 | `/modmail block user:Alt A`, Alt A DMs again | Not forwarded; `/modmail unblock user:Alt A` restores it |
-| 5.6 | `/ticket setup panel_channel:#tickets category:<cat> staff_role:<role>` | Panel posted |
-| 5.7 | Alt B opens a ticket from the panel; staff closes it | Private channel created, then moved/closed; DM on close if enabled |
-
-## 6. Staff
+## 5. Appeals (support server)
 
 | # | Do | Expected |
 |---|---|---|
-| 6.1 | `/staff stats period:30d` | Per-moderator actions, appeals, voided cases |
-| 6.2 | `/staff coverage` | Text heat map of moderation times |
+| 5.1 | Admin: `/setappeal` in the main server | Appeal panels posted (main + support `#appeals`) with **Appeal**, **My appeals**, **My standing**; old panels replaced |
+| 5.2 | Ban Alt A (permanent, appealable); Alt A joins the support server | Alt A gets the **Banned** role there |
+| 5.3 | Alt A: **My standing** | Own warnings, ladder level, next step, appeals (ephemeral) |
+| 5.4 | Alt A: **Appeal** → fill the 3 questions | Private channel in the support appeals category with Alt A added |
+| 5.5 | Alt A: **My appeals** | Shows the appeal as pending |
+| 5.6 | Alt A: Appeal again for the same case | Refused: one pending appeal per case |
+| 5.7 | Admin: `/appeals code:… decision:deny note:"no"` | Alt A DM'd; **My appeals** shows denied; a new appeal within 7 days is refused |
+| 5.8 | Ban Alt B, appeal, `/appeals … decision:accept` | Alt B unbanned, DM with a fresh invite, Banned role removed in support |
+| 5.9 | Mute Alt B, Alt B appeals the mute | Appeal channel opens in the **main** server, staff-only |
 
-## 7. Dashboard with the bot connected — <http://localhost:3100/dashboard>
+## 6. Modmail and tickets
 
 | # | Do | Expected |
 |---|---|---|
-| 7.1 | Open as **Admin** → Log in with Discord | Back on Overview; bot "online", database "connected", your test server's name and icon |
-| 7.2 | Log in as **Alt A** (private window) | 403 "Not allowed" page; no dashboard content |
-| 7.3 | Visit every sidebar page (Overview, Modules, Moderation, Community and Server groups) | Each loads, no "Something went wrong"; active item purple with a bar on the left |
-| 7.4 | Valid save: Tickets & modmail → change "Open tickets per member" → **Save changes** | Section says "Unsaved changes" while editing; then green toast; value kept after reload; Audit log row; one mod-log line in Discord |
-| 7.5 | Same field → change it → **Reset** | Old value back, "Unsaved changes" gone, bottom bar gone; nothing saved |
-| 7.6 | Invalid save: Giveaways → start one in a **voice** channel | "Not saved: … must be a text channel" inside that form; what you typed is still there; nothing posted |
-| 7.7 | Giveaways (or Community → a tag) → **Delete** → dialog | Dialog names the thing; Cancel or Esc closes it and nothing is deleted |
-| 7.8 | Members → Alt A → Warn → confirm page → Confirm | Same DM, case and ladder as the panel (step 1.2); Overview "Active bans/mutes" match the cases |
-| 7.9 | Cases → a case → edit reason; Appeals → accept/deny a pending one | Same results as steps 3.2 / 4.7; action badges with icons, only Ban is red |
-| 7.10 | Modules page | Cards with a state show On / Off and "Needs setup · N to do" in words (Giveaways, Counters… show none); no switches on the cards |
-| 7.11 | Theme switch (top bar); DevTools widths 1440 / 820 / 390 | Cycles system → dark → light, kept after reload; 820 = icon rail, menu button opens the full sidebar; 390 = drawer, Esc closes it |
-| 7.12 | Stop the bot, set `DASHBOARD_EDIT_ENABLED=false`, start, open a settings page | "Read-only" notice; no Save buttons |
-| 7.13 | Log out (user menu) | Logged-out page; `/dashboard/overview` redirects to Discord login |
+| 6.1 | Alt A DMs the bot | Bot asks "Send to staff?" with a **Send to staff** button |
+| 6.2 | Click it | Private staff channel in the modmail category; the message appears there |
+| 6.3 | Staff reply in the channel; then `// internal` | Alt A gets the reply by DM; the `//` note is **not** sent |
+| 6.4 | `/modmail close reason:done` | Channel closed; Alt A told |
+| 6.5 | `/modmail block user:Alt A`, Alt A DMs again | Not forwarded; `/modmail unblock user:Alt A` restores it |
+| 6.6 | `/ticket setup panel_channel:#tickets category:<cat> staff_role:<role>` | Panel posted |
+| 6.7 | Alt B opens a ticket from the panel; staff closes it | Private channel created, then moved/closed; DM on close if enabled |
 
-When done: `Ctrl+C` the test bot. Nothing in the live servers should have changed.
+## 7. Staff
+
+| # | Do | Expected |
+|---|---|---|
+| 7.1 | `/staff stats period:30d` | Per-moderator actions, appeals, voided cases |
+| 7.2 | `/staff coverage` | Text heat map of moderation times |
+
+## 8. Dashboard (`/dashboard` on the Replit URL)
+
+| # | Do | Expected |
+|---|---|---|
+| 8.1 | Open as **Admin** → Log in with Discord | Back on Overview; bot "online", database "connected", the server's name and icon |
+| 8.2 | Log in as **Alt A** (private window) | 403 "Not allowed" page; no dashboard content |
+| 8.3 | Visit every sidebar page (Moderate, Community, Server setup and Bot groups) | Each loads, no "Something went wrong"; active item highlighted with a bar on the left |
+| 8.4 | Valid save: Tickets & modmail → change "Open tickets per member" → **Save changes** | Section says "Unsaved changes" while editing; then green toast; value kept after reload; Audit log row; one mod-log line in Discord |
+| 8.5 | Same field → change it → **Reset** | Old value back, "Unsaved changes" gone, bottom bar gone; nothing saved |
+| 8.6 | Invalid save: Giveaways → start one in a **voice** channel | "Not saved: … must be a text channel" inside that form; what you typed is still there; nothing posted |
+| 8.7 | Giveaways (or Community → a tag) → **Delete** → dialog | Dialog names the thing; Cancel or Esc closes it and nothing is deleted |
+| 8.8 | Members → Alt A → Warn → confirm page → Confirm | Same DM, case and ladder as the panel (step 1.2); Overview "Active bans/mutes" match the cases |
+| 8.9 | Cases → a case → edit reason; Appeals → accept/deny a pending one | Same results as steps 3.2 / 5.7; action badges with icons, only Ban is red |
+| 8.10 | Modules page | Cards with a state show On / Off and "Needs setup · N to do" in words (Giveaways, Counters… show none); no switches on the cards |
+| 8.11 | Theme switch (top bar); browser widths 1440 / 820 / 390 | Cycles system → dark → light, kept after reload; 820 = icon rail, menu button opens the full sidebar; 390 = drawer, Esc closes it |
+| 8.12 | Log out (user menu) | Logged-out page; `/dashboard/overview` redirects to Discord login |
+
+Optional, only if Ramūnas decides to change a deployment secret: with `DASHBOARD_EDIT_ENABLED=false` and a
+republish, settings pages show a "Read-only" notice and no Save buttons. Set it back afterwards.
+
+When done: run the clean-up from "Before testing in Discord".
