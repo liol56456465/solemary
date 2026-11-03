@@ -8,8 +8,10 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 - **No production changes without explicit OK from Ramūnas.** Production = what Replit runs:
   branch switch, pull, republish, deployment secrets. Propose, explain why, wait.
 - Never commit to `main` directly. Work on feature branches; one commit per phase/fix.
+- The repo is **public** (github.com/liol56456465/solemary): anything committed or pushed is world-readable.
 - Never print, log, commit or paste secrets (`DISCORD_TOKEN`, `DISCORD_CLIENT_SECRET`,
-  `OAUTH_TOKEN_KEY`, `SESSION_SECRET`, DB URLs with passwords). `.env` and `.env.test` are gitignored.
+  `OAUTH_TOKEN_KEY`, `SESSION_SECRET`, DB URLs with passwords). Local secrets live outside the repo in
+  `~/.config/mewvo/` (`env.test`, `env.prod`); Claude must not read them (deny rule + `.claude/hooks/no-env-secrets.mjs`).
   `.env.example` contains placeholders only. The leak check (gitleaks) must pass before any push:
   pre-push hook `scripts/git-hooks/pre-push` (install: copy to `.git/hooks/`) + CI `.github/workflows/gitleaks.yml`.
   Old, already reset tokens are listed in `.gitleaksignore`; add to it only for verified-dead findings.
@@ -45,7 +47,9 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 - `npm test` — unit tests. `npm run test:db` — DB failure-injection tests (refuses non-local DBs).
 - `npm run migrate` / `migrate:check` / `migrate:status`.
 - `npm run restore:db` / `backup:drill`: a non-local target needs `--confirm-host=<host>` (protects the live DB).
-- Syntax check changed files: `node --check <file>`.
+- Syntax check changed files: `node --check <file>` (runs automatically after Claude edits: `.claude/hooks/node-check.mjs`).
+- Claude Code: `/schema-change` for any DB schema change, `/deploy-proposal` (Ramūnas runs it) before a deploy,
+  `discord-reviewer` agent before committing bot code. Use the npm scripts, never a direct `--env-file`.
 
 ## Structure (key places)
 
@@ -150,7 +154,8 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
   **only** `POSTGRES_URL`; `DATABASE_URL` (Replit's suspended DB) is ignored with a startup warning.
   Neon Free is fine on Autoscale (6.96 of 100 CU-h used on 2026-10-28) but not on a Reserved VM (~182 CU-h/month).
   The planned move is to Supabase free tier (session-mode pooler if IPv6 is unavailable), keeping per-minute polling.
-- **Testing:** `npm run start:test` uses the production token, so **the Replit deployment must be stopped** while testing.
+- **Testing:** `npm run start:test` loads `~/.config/mewvo/env.test` and refuses the production bot (`src/config/testMode.js`);
+  that file still has production values (2026-11-03): set up the test bot first (`docs/test-script.md` §0).
   Test mode: `TEST_GUILD_IDS` allowlist (other guilds ignored), guild-only command registration
   (global untouched), crons off unless `TEST_ENABLE_CRON=true`, local DB only,
   presence "🛠 Maintenance". It refuses to boot if any test ID equals a real server ID.
