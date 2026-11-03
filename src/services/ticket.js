@@ -199,10 +199,12 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     const staffMention = config.ticketStaffRoleId ? ` <@&${config.ticketStaffRoleId}>` : '';
     const messageContent = `${member.toString()}${staffMention}`;
     
-    const ticketMessage = await channel.send({ 
+    const ticketMessage = await channel.send({
       content: messageContent,
       embeds: [embed],
-      components: [row] 
+      components: [row],
+      // The client default pings no roles; the staff role is pinged here on purpose.
+      allowedMentions: { users: [member.id], roles: config.ticketStaffRoleId ? [config.ticketStaffRoleId] : [] },
     });
 
     await ticketMessage.pin().catch(() => {});

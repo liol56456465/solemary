@@ -13,6 +13,7 @@ import { reapplyTempRolesOnJoin } from '../services/members/tempRoleService.js';
 import { syncPremiumRole } from '../services/billing/premiumEffects.js';
 import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService.js';
 import { syncWarnRolesQuietly } from '../services/enforcement/warnRoleService.js';
+
 import { noteGateKick, recordJoin } from '../services/automod/raidService.js';
 import { checkJoinGate } from '../services/automod/joinGate.js';
 import { checkImpersonation } from '../services/automod/memberChecks.js';
@@ -21,6 +22,10 @@ import { enforcementConfig } from '../config/enforcement.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 import { recordMemberEvent } from '../services/members/memberInsightsService.js';
 import { applyRoleRulesToMember } from '../services/members/roleRuleService.js';
+
+// Welcome messages keep the mentions they had before the client default dropped roles
+// (2026-11-03): users and roles from the admin-written text, never @everyone/@here.
+export const WELCOME_MENTIONS = Object.freeze({ parse: ['users', 'roles'] });
 
 export default {
   name: Events.GuildMemberAdd,
@@ -98,7 +103,9 @@ export default {
 
                 if (!canEmbed) {
                     await channel.send({
-                        content: messageContent ? `${messageContent} ${welcomeMessage}` : welcomeMessage
+                        content: messageContent ? `${messageContent} ${welcomeMessage}` : welcomeMessage,
+                        // Admin-written welcome text may ping a role on purpose (the client default no longer does).
+                        allowedMentions: WELCOME_MENTIONS,
                     });
                 } else {
                     const embed = new EmbedBuilder()
@@ -119,9 +126,10 @@ export default {
                         embed.setImage(welcomeConfig.welcomeEmbed.image.url);
                     }
                     
-                    await channel.send({ 
+                    await channel.send({
                         content: messageContent,
-                        embeds: [embed] 
+                        embeds: [embed],
+                        allowedMentions: WELCOME_MENTIONS,
                     });
                 }
             }

@@ -139,7 +139,8 @@ async function sendLevelUpAnnouncement(guild, member, levelData, config) {
       .replace(/{xp}/g, levelData.xp)
       .replace(/{xpNeeded}/g, getXpForLevel(levelData.level));
 
-    await levelUpChannel.send(message).catch(error => {
+    // The template documents {user} and {level} only: ping the member, never a role or @everyone.
+    await levelUpChannel.send({ content: message, allowedMentions: { parse: ['users'] } }).catch(error => {
       logger.error(`Failed to send level up message in channel ${levelUpChannel.id}:`, error);
     });
   } catch (error) {

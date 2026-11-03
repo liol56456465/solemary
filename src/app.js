@@ -79,9 +79,10 @@ class Mewvo extends Client {
       // DM channels aren't cached; without this partial, DMs (modmail) never arrive.
       // Message + Reaction: reactions, edits and deletes of uncached (older) messages (starboard).
       partials: [Partials.Channel, Partials.Message, Partials.Reaction],
-      // No message may ping @everyone/@here unless it opts in: user text (track
-      // titles, prizes, reports) ends up in bot messages.
-      allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
+      // No message may ping @everyone/@here or a role unless it opts in: user text
+      // (prizes, reports, names) ends up in bot messages. Messages that ping a role on
+      // purpose list it in their own allowedMentions (tickets, modmail, reminders, feeds).
+      allowedMentions: { parse: ['users'], repliedUser: true },
     });
 
     this.config = config;
