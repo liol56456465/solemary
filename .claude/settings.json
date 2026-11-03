@@ -1,9 +1,11 @@
 {
-  "enabledPlugins": {
-    "typescript-lsp@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "stripe@claude-plugins-official": false
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.test)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)"
+    ]
   },
   "hooks": {
     "PreToolUse": [
@@ -15,7 +17,34 @@
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/local-browser-only.mjs\""
           }
         ]
+      },
+      {
+        "matcher": "Bash|Grep|Glob|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/no-env-secrets.mjs\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/node-check.mjs\""
+          }
+        ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "stripe@claude-plugins-official": false,
+    "claude-md-management@claude-plugins-official": true
   }
 }
