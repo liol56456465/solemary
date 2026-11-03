@@ -18,6 +18,7 @@ import { automodRuleStats } from '../automod/automodTuning.js';
 import { endLockdown, getLockdownState } from '../automod/raidService.js';
 import { collectOpenReviews } from '../automod/reviewQueue.js';
 import { endProbation, listProbations } from '../automod/probationService.js';
+import { getAutomodBacktest, startAutomodBacktest } from '../automod/backtest.js';
 // Logging
 import { getLoggingStatus, resolveLogChannel, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList } from '../loggingService.js';
 // Welcome
@@ -98,6 +99,7 @@ export const defaultServices = {
     setHeadsUp, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
     loadNativePolicies, setNativePolicy, automodStats, automodRuleStats, headsUpStats,
     endLockdown, getLockdownState, collectOpenReviews, endProbation, listProbations,
+    startAutomodBacktest, getAutomodBacktest,
     getLoggingStatus, resolveLogChannel, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList,
     addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings, storeWelcomeImage, resolveWelcomeImageUrl,
     getTicketSettings, updateTicketSettings, setModmailBlocked, findModmailChannel, isBuiltInCanned, listCanned, removeCanned, saveCanned,

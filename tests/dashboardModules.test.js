@@ -20,6 +20,7 @@ import { JS_PATH, NAV, moduleItems } from '../src/services/dashboard/html.js';
 import { lockChannel, purgeChannelMessages, unlockChannel } from '../src/services/channelToolsService.js';
 import { resolveLogChannel } from '../src/services/loggingService.js';
 import { storeWelcomeImage } from '../src/utils/welcomeImageStore.js';
+import { BacktestError } from '../src/services/automod/backtest.js';
 
 const ALLOWED_SCRIPT = `<script src="${JS_PATH}" defer></script>`;
 const SECRET = 'x'.repeat(64);
@@ -191,6 +192,17 @@ function makeServices() {
         setNativePolicy: async (guildId, ruleId, policy, dedupe) => { record('setNativePolicy', [ruleId, policy]); s.native.set(ruleId, { policy, dedupeMinutes: dedupe ?? 10 }); return true; },
         automodStats: async () => ({ total: 0, byGroup: [] }),
         automodRuleStats: async (guildId, days) => { s.statsDays = days; return {}; },
+        // Automod test run (backtest.js): s.backtest is the job snapshot; s.backtestRefuse makes start refuse.
+        startAutomodBacktest: (params) => {
+            record('startAutomodBacktest', [params]);
+            if (s.backtestRefuse) throw new BacktestError(s.backtestRefuse);
+            s.backtest = { guildId: params.guild.id, status: 'running', startedAt: Date.now(), finishedAt: null, params: { channelIds: params.channelIds, days: params.days, automodEnabled: true, draft: null }, progress: { read: 0 }, result: null, error: null };
+            return clone(s.backtest);
+        },
+        getAutomodBacktest: () => {
+            if (s.backtestReadFails) throw new Error('state gone');
+            return s.backtest ? clone(s.backtest) : null;
+        },
         getLockdownState: async () => clone(s.lockdown),
         endLockdown: async (guild, admin) => {
             record('endLockdown', [admin]);
@@ -707,6 +719,9 @@ const CASES = {
         'lockdown-end': { seed: (s) => { s.lockdown = { active: true, startedAt: '2026-10-28T10:00:00Z', joinerIds: ['1', '2'] }; }, form: {}, service: 'endLockdown', admin: true,
             bad: { form: {}, message: /no lockdown right now/ } },
         'probation-end': { form: { user: MEMBER }, service: 'endProbation', admin: true, bad: { form: { user: 'x' }, message: /Discord user ID/ } },
+        // Read-only: no audit row, no mod log (readOnly).
+        'test-run': { form: { channels: [TEXT], days: '7' }, service: 'startAutomodBacktest', admin: true, readOnly: true,
+            bad: { form: { channels: [VOICE], days: '7' }, message: /must be a text channel/ } },
     },
     logging: {
         enabled: { form: { enabled: 'true' }, service: 'setLoggingEnabled', bad: { form: { enabled: 'x' }, message: /on or off/ } },
@@ -1007,11 +1022,17 @@ test('every POST action with valid input: service called, audit row, one mod-log
             assert.equal(res.statusCode, 303, `${module.key}/${action} → 303 (got ${res.statusCode}: ${String(res.body).match(/role="alert">([^<]*)/)?.[1] || ''})`);
             assert.equal(res.redirectedTo, `/dashboard/${module.key}`);
             assert.ok(h.calls.some((call) => call.name === c.service), `${module.key}/${action} calls ${c.service}`);
-            assert.ok(h.auditRows.length > 0, `${module.key}/${action} audit row`);
             const modLog = h.calls.filter((call) => call.name === 'postModLog');
-            assert.equal(modLog.length, 1, `${module.key}/${action} one mod-log post`);
-            assert.equal(modLog[0].args[0], 'dashboard');
-            assert.match(modLog[0].args[1].description, new RegExp(`\\(${ADMIN}\\) changed `));
+            if (c.readOnly) {
+                // Changes nothing: no audit row and no mod log line.
+                assert.equal(h.auditRows.length, 0, `${module.key}/${action} no audit row`);
+                assert.equal(modLog.length, 0, `${module.key}/${action} no mod-log post`);
+            } else {
+                assert.ok(h.auditRows.length > 0, `${module.key}/${action} audit row`);
+                assert.equal(modLog.length, 1, `${module.key}/${action} one mod-log post`);
+                assert.equal(modLog[0].args[0], 'dashboard');
+                assert.match(modLog[0].args[1].description, new RegExp(`\\(${ADMIN}\\) changed `));
+            }
             const session = await h.sessions.get(h.session.id);
             assert.ok(session.flash, `${module.key}/${action} flash`);
             // The flash is shown once on the next page, then cleared.
@@ -2265,6 +2286,123 @@ test('Automod probation end: ends it early (audited); a member not on probation 
     assert.equal(h.auditRows.length, 1);
     const owner = await setup({ userId: OWNER });
     assert.equal((await post(owner, 'automod', 'probation-end', { user: MEMBER })).statusCode, 403);
+});
+
+// ── Automod test run (backtest) ──
+
+const testRunCard = (body) => body.slice(body.indexOf('id="s-test-run"'), body.indexOf('</section>', body.indexOf('id="s-test-run"')));
+
+test('Automod test run: idle form; start passes channels, days, settings, running custom rules and the draft; running shows progress and no form', async () => {
+    const h = await setup();
+    seedCustomRules(h.state);
+    const idle = testRunCard((await get(h, 'automod')).body);
+    assert.ok(idle.includes('action="/dashboard/automod/test-run"'));
+    assert.match(idle, /<select name="channels" multiple/);
+    for (const days of ['1', '3', '7']) assert.ok(idle.includes(`<option value="${days}"`), days);
+    assert.ok(idle.includes('name="draftWords"'));
+    assert.ok(!/—/.test(idle), 'no em dashes');
+
+    const res = await post(h, 'automod', 'test-run', { channels: [TEXT], days: '3', draftName: 'Promo', draftWords: 'promo code\nbuy now' });
+    assert.equal(res.statusCode, 303);
+    assert.equal(res.redirectedTo, '/dashboard/automod');
+    const [call] = h.calls.filter((c) => c.name === 'startAutomodBacktest');
+    const params = call.args[0];
+    assert.deepEqual(params.channelIds, [TEXT]);
+    assert.equal(params.days, 3);
+    assert.equal(params.guild.id, GUILD);
+    assert.equal(params.startedBy, ADMIN);
+    assert.deepEqual(params.draft, { name: 'Promo', words: 'promo code\nbuy now' });
+    assert.deepEqual(params.customRules.map((r) => r.id), [CUSTOM_A], 'only rules that run (B is off)');
+    assert.equal(params.settings.mode, 'enforce');
+    assert.equal(h.auditRows.length, 0, 'read only: no audit');
+    assert.ok(!h.calls.some((c) => c.name === 'postModLog'), 'no mod log');
+    assert.match((await h.sessions.get(h.session.id)).flash, /Test run started/);
+
+    // No draft fields → draft null.
+    await post(h, 'automod', 'test-run', { channels: [TEXT], days: '1' });
+    assert.equal(h.calls.filter((c) => c.name === 'startAutomodBacktest')[1].args[0].draft, null);
+
+    h.state.backtest.progress.read = 1234;
+    const running = testRunCard((await get(h, 'automod')).body);
+    assert.match(running, /Test run in progress\.<\/b> 1,234 of at most 2,000 messages read so far/);
+    assert.ok(running.includes('href="/dashboard/automod#s-test-run"'), 'reload hint');
+    assert.ok(!running.includes('action="/dashboard/automod/test-run"'), 'no form while running');
+});
+
+test('Automod test run: done shows per-rule counts, masked examples (escaped, Discord links only), cap and skipped checks; failed shows the error and the form', async () => {
+    const h = await setup();
+    h.state.backtest = {
+        guildId: GUILD, status: 'done', startedAt: Date.now() - 60000, finishedAt: Date.now(),
+        params: { channelIds: [TEXT, TEXT2], days: 7, automodEnabled: false, draft: { name: 'Promo', words: 2 } },
+        progress: { read: 2000 },
+        result: {
+            read: 2000, checked: 1900, skippedBots: 80, skippedAdmins: 20, hitMessages: 3, capped: true, invitesUnchecked: 0,
+            byRule: {
+                language: { label: 'Inappropriate language', count: 2, on: 1, monitor: 1 },
+                draft: { label: 'Draft: Promo', count: 1, on: 0, monitor: 0, draft: true },
+            },
+            examples: [
+                { at: Date.now() - 1000, author: 'amy<b>', authorId: MEMBER, channelId: TEXT, channelName: 'general', url: `https://discord.com/channels/${GUILD}/${TEXT}/800000000000000001`, rules: ['Inappropriate language'], excerpt: 'you f**k <i>' },
+                { at: Date.now() - 2000, author: 'bob', authorId: MEMBER, channelId: TEXT, channelName: 'general', url: 'javascript:alert(1)', rules: ['Draft: Promo'], excerpt: null },
+            ],
+            channels: [],
+        },
+        error: null,
+    };
+    const card = testRunCard((await get(h, 'automod')).body);
+    assert.match(card, /Read 2,000 messages from 2 channels in the last 7 days: 1,900 checked, 80 from bots skipped, 20 from administrators skipped\. 3 messages broke a rule\./);
+    assert.match(card, /Stopped at the limit of 2,000 messages\. Older messages in that time may not have been checked\./);
+    assert.match(card, /Automod is off right now/);
+    assert.match(card, /Not checked in a test run: Spam/);
+    assert.match(card, /<td>Inappropriate language<\/td><td>2<\/td><td>acts, watch only<\/td>/);
+    assert.match(card, /<td>Draft: Promo<\/td><td>1<\/td><td>draft, not saved<\/td>/);
+    assert.ok(card.includes('you f**k &lt;i&gt;'), 'excerpt escaped');
+    assert.ok(card.includes('amy&lt;b&gt;'));
+    assert.ok(card.includes(`href="https://discord.com/channels/${GUILD}/${TEXT}/800000000000000001"`));
+    assert.ok(!card.includes('javascript:'), 'a non-Discord URL is never a link');
+    assert.match(card, /hidden \(the match could not be masked safely\)/);
+    assert.ok(card.includes('action="/dashboard/automod/test-run"'), 'a new run can be started');
+    assert.ok(!/—/.test(card), 'no em dashes');
+
+    h.state.backtest = { ...h.state.backtest, status: 'failed', error: 'I could not read #general: I am missing View Channel or Read Message History there.', result: { read: 120 } };
+    const failed = testRunCard((await get(h, 'automod')).body);
+    assert.match(failed, /class="error" role="alert">The last test run failed: I could not read #general: I am missing View Channel or Read Message History there\./);
+    assert.match(failed, /120 messages were read before it stopped/);
+    assert.ok(failed.includes('action="/dashboard/automod/test-run"'));
+
+    h.state.backtestReadFails = true;
+    assert.match(testRunCard((await get(h, 'automod')).body), /The test run state could not be read/);
+});
+
+test('Automod test run refusals: too many channels, an ignored channel, a refused start (already running, permissions); OWNER_IDS without Administrator', async () => {
+    const h = await setup();
+    const many = Array.from({ length: 21 }, (_, i) => `5000000000000001${String(i).padStart(2, '0')}`);
+    const tooMany = await post(h, 'automod', 'test-run', { channels: many, days: '7' });
+    assert.equal(tooMany.statusCode, 400);
+    assert.match(tooMany.body, /Pick at most 20 channels \(21 picked\)/);
+    const none = await post(h, 'automod', 'test-run', { days: '7' });
+    assert.equal(none.statusCode, 400);
+    assert.match(none.body, /Pick at least one channel/);
+    const badDays = await post(h, 'automod', 'test-run', { channels: [TEXT], days: '30' });
+    assert.equal(badDays.statusCode, 400);
+    // TEXT2 is an ignored channel in the fake settings.
+    const ignored = await post(h, 'automod', 'test-run', { channels: [TEXT, TEXT2], days: '7' });
+    assert.equal(ignored.statusCode, 400);
+    assert.match(ignored.body, /Automod ignores #&lt;script&gt;x&lt;\/script&gt;, so a test run there finds nothing/);
+    assert.equal(h.calls.filter((c) => c.name === 'startAutomodBacktest').length, 0);
+
+    h.state.backtestRefuse = 'A test run is already running. Wait for it to finish, then start a new one.';
+    const busy = await post(h, 'automod', 'test-run', { channels: [TEXT], days: '7' });
+    assert.equal(busy.statusCode, 400);
+    assert.match(busy.body, /A test run is already running/);
+    assert.equal(h.auditRows.length, 0);
+
+    const owner = await setup({ userId: OWNER });
+    const page = testRunCard((await get(owner, 'automod')).body);
+    assert.match(page, /To start a test run you need the Administrator permission/);
+    assert.match(page, /<fieldset disabled>/);
+    assert.equal((await post(owner, 'automod', 'test-run', { channels: [TEXT], days: '7' })).statusCode, 403);
+    assert.equal(owner.calls.length, 0);
 });
 
 test('Automod custom rules: list (escaped), add saves a cleaned rule, toggle and remove; at the limit or on Free the form is a note with /pricing', async () => {

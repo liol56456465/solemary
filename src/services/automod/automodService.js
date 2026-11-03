@@ -103,10 +103,7 @@ async function inviteIsForeign(client, code) {
         const invite = await client.fetchInvite(code).catch(() => null);
         inviteGuilds.set(code, invite?.guild?.id || null);
     }
-    const guildId = inviteGuilds.get(code);
-    // A code that doesn't resolve (expired, mistyped, lookup failed) advertises nothing.
-    if (!guildId) return false;
-    return guildId !== enforcementConfig.mainGuildId && guildId !== enforcementConfig.supportGuildId;
+    return inviteGuildIsForeign(inviteGuilds.get(code));
 }
 
 // Each code costs one API call; more than this in one message is advertising anyway.
@@ -125,17 +122,61 @@ async function targetsOf(message) {
     return [...ids];
 }
 
+/** Whether an invite's guild id points outside our two servers (null: it advertises nothing). */
+export function inviteGuildIsForeign(guildId) {
+    // A code that doesn't resolve (expired, mistyped, lookup failed) advertises nothing.
+    if (!guildId) return false;
+    return guildId !== enforcementConfig.mainGuildId && guildId !== enforcementConfig.supportGuildId;
+}
+
 /**
  * All rules the message breaks: [{ rule, evidence, detail, forceLastStep? }].
  * `evidence` is the plain-English reason shown on the review card (reasons.js); it never
  * repeats a blocked or sexual word. `detail` is the technical match, for the log only.
  * `member` is the author's guild member.
+ *
+ * Live path: records the message in the per-member history (spam, cross-channel) and
+ * counts insults per target (harassment), then builds the hits with collectHits.
  */
 export async function evaluateMessage(message, member, now = Date.now()) {
-    const hits = [];
     const text = message.content || '';
     const key = `${message.guildId}:${message.author.id}`;
     const recent = remember(history, key, { at: now, text: text.trim().toLowerCase(), channelId: message.channelId }, automodConfig.historyWindowMs, now);
+    const timing = {
+        newAccount: now - message.author.createdTimestamp < automodConfig.adBotAccountAgeMs,
+        newJoiner: member?.joinedTimestamp && now - member.joinedTimestamp < automodConfig.adBotJoinAgeMs,
+        crossChannel: detectCrossChannelSpam(recent, now),
+        channelCount: () => crossChannelCount(recent, now),
+        harassmentTimes: (target) => remember(harassment, `${message.guildId}:${message.author.id}:${target}`, now, automodConfig.harassmentWindowMs, now),
+        spam: () => detectSpam(recent, now),
+    };
+    return collectHits(message, member, {
+        isForeignInvite: (code) => inviteIsForeign(message.client, code),
+        matchCustom: (value) => findCustomRuleHit(value, message.guildId, now),
+        timing,
+    });
+}
+
+/**
+ * Content checks only: the hits one message's own content produces, with no history.
+ * Reads and writes none of the live state (history, harassment counts, invite cache,
+ * cooldowns, custom rule cache), so the automod test run (backtest.js) can call it on old
+ * messages. Skipped: spam, the ad-bot pattern (new account or joiner plus invites or the
+ * same text in several channels) and harassment over time (an insult aimed at someone is
+ * always Disrespect here). Everything else gives the same hits as evaluateMessage.
+ * options: { isForeignInvite(code) → Promise<boolean>, matchCustom(text) → { rule, word } | null }.
+ */
+export function contentHits(message, member, { isForeignInvite = async () => false, matchCustom = () => null } = {}) {
+    return collectHits(message, member, { isForeignInvite, matchCustom, timing: null });
+}
+
+/**
+ * Builds the hit list in a fixed order (worstHit keeps the first of equal severity).
+ * `timing`: the live history helpers, or null for content only.
+ */
+async function collectHits(message, member, { isForeignInvite, matchCustom, timing }) {
+    const hits = [];
+    const text = message.content || '';
 
     const scam = findScam(text);
     if (scam) hits.push({ rule: 'scam', evidence: reasons.scamReason(scam), detail: scam });
@@ -149,14 +190,12 @@ export async function evaluateMessage(message, member, now = Date.now()) {
         foreignInvites.push(...inviteCodes);
     } else {
         for (const code of inviteCodes) {
-            if (await inviteIsForeign(message.client, code)) foreignInvites.push(code);
+            if (await isForeignInvite(code)) foreignInvites.push(code);
         }
     }
-    const newAccount = now - message.author.createdTimestamp < automodConfig.adBotAccountAgeMs;
-    const newJoiner = member?.joinedTimestamp && now - member.joinedTimestamp < automodConfig.adBotJoinAgeMs;
-    const crossChannel = detectCrossChannelSpam(recent, now);
-    if ((newAccount || newJoiner) && (foreignInvites.length || crossChannel)) {
-        const channelCount = crossChannelCount(recent, now);
+    if (timing && (timing.newAccount || timing.newJoiner) && (foreignInvites.length || timing.crossChannel)) {
+        const { newAccount } = timing;
+        const channelCount = timing.channelCount();
         hits.push({
             rule: 'advertising',
             evidence: reasons.adBotReason({ newAccount, invite: foreignInvites[0] || null, channelCount }),
@@ -183,8 +222,8 @@ export async function evaluateMessage(message, member, now = Date.now()) {
     }
     if (insult && targets.length) {
         const target = targets[0];
-        const times = remember(harassment, `${message.guildId}:${message.author.id}:${target}`, now, automodConfig.harassmentWindowMs, now);
-        hits.push(times.length >= automodConfig.harassmentRepeats
+        const times = timing ? timing.harassmentTimes(target) : null;
+        hits.push(times && times.length >= automodConfig.harassmentRepeats
             ? {
                 rule: 'harassment',
                 evidence: reasons.harassmentReason(target, times.length, automodConfig.harassmentWindowMs),
@@ -200,7 +239,7 @@ export async function evaluateMessage(message, member, now = Date.now()) {
         hits.push({ rule: 'mentions', evidence: reasons.mentionsReason({ everyone, total: mentions.total }), detail: `${mentions.total} mentions, everyone=${Boolean(mentions.everyone)}` });
     }
 
-    const spam = detectSpam(recent, now);
+    const spam = timing ? timing.spam() : null;
     if (spam) {
         hits.push({
             rule: 'spam',
@@ -223,7 +262,7 @@ export async function evaluateMessage(message, member, now = Date.now()) {
     if (language) hits.push({ rule: 'english', evidence: reasons.englishReason(language), detail: `detected language ${language}` });
 
     // The server's own word filters (customRules.js; only the rules the owner's plan allows).
-    const custom = findCustomRuleHit(text, message.guildId, now);
+    const custom = matchCustom(text);
     if (custom) hits.push(customHit(custom));
 
     return hits;
@@ -689,6 +728,14 @@ export async function runHeadsUpChecks(client, now = Date.now()) {
         }
     }
     return due.length;
+}
+
+/** Test hook: how many entries each live map holds (the test run must not change them). */
+export function automodStateSizes() {
+    return {
+        history: history.size, cooldowns: cooldowns.size, harassment: harassment.size, lastPost: lastPost.size,
+        inviteGuilds: inviteGuilds.size, handledMessages: handledMessages.size, levelCache: levelCache.size,
+    };
 }
 
 /** Test hook: forget all in-memory state. */

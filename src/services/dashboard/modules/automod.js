@@ -5,6 +5,11 @@
 // (/automod probation end) and ending a raid lockdown (/automod lockdown-end). Every
 // change goes through the same services /automod uses (automodSettings.js is row-locked).
 //
+// Test run (backtest.js): an Administrator picks up to 20 text channels and 1, 3 or 7 days
+// (plus an optional draft custom rule); a background job reads that history and runs the
+// content checks with the current settings. Nothing is acted on, saved or logged; the
+// result stays in memory for 30 minutes. The page shows idle / running / done / failed.
+//
 // Review cards are decided on the card in Discord: their buttons (keep, undo, change,
 // apply, dismiss, delete) act on the card message and the select menu of that
 // interaction (reviewCards.js handleReviewAction), so the queue here links to each card.
@@ -17,8 +22,8 @@ import { JOIN_GATE_ACTIONS, JOIN_GATE_CHECKS, normalizeJoinGate } from '../../au
 import { NATIVE_POLICIES, policyFor } from '../../automod/nativeBridge.js';
 import { formatDate, html, path, queryString, raw, timeTag } from '../html.js';
 import {
-    InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, checkboxInput, switchInput, choiceField,
-    intField, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, textInput, toggleForm, userIdField,
+    InputError, PERMS, boolField, buttonForm, channelField, channelListField, channelName, channelPicker, checkbox, checkboxInput, switchInput, choiceField,
+    intField, list, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, registryValue, saveRegistry, section, table, topic } from './common.js';
@@ -27,6 +32,9 @@ import {
     limitForPlan, overLimitIds, resetCustomRulesCache, runningRules,
 } from '../../automod/customRules.js';
 import { editRule } from '../../automod/customRuleEdits.js';
+import {
+    BACKTEST_DAY_CHOICES, BACKTEST_MAX_CHANNELS, BacktestError, DRAFT_KEY, MAX_EXAMPLES, MAX_MESSAGES,
+} from '../../automod/backtest.js';
 import { guildPlan as defaultGuildPlan } from '../../billing/premiumEffects.js';
 import { planName } from '../../billing/premiumService.js';
 
@@ -144,6 +152,73 @@ function headsUpLine(stats) {
     return html`<p>Heads-ups in the last 30 days: ${stats.sent} sent, ${stats.fixed} fixed by the member, ${stats.acted} acted on after the wait.</p>`;
 }
 
+// ── Test run ──────────────────────────────────────────────────────────────
+
+const TEST_RUN_HELP = 'Check recent messages against your current automod settings without acting on anything. Nothing is deleted, nobody gets a message, nothing is saved or logged. Only checks that look at one message at a time run. Spam, the same text posted in many channels, and repeated insults over time are skipped, because they depend on timing. Trusted member leniency is not applied, and administrators are skipped like automod does. Messages from people who have left the server are still checked.';
+const SKIPPED_CHECKS = 'Not checked in a test run: Spam, the ad bot pattern (the same text in many channels from a new account), and harassment over time. An insult aimed at someone counts as Disrespect here.';
+
+const number = (n) => Number(n || 0).toLocaleString('en-US');
+
+function testRunForm(ctx, canAct) {
+    const g = ctx.guild;
+    return html`${postForm(ctx, 'automod', 'test-run', html`<div class="grid">
+${channelPicker(g, 'channels', [], { label: `Channels (up to ${BACKTEST_MAX_CHANNELS})`, kinds: ['text'], perms: PERMS.read, multiple: true, optional: false, help: 'Mewvo needs View Channel and Read Message History in each one.' })}
+${selectInput('days', '7', BACKTEST_DAY_CHOICES.map((n) => [String(n), n === 1 ? 'Last day' : `Last ${n} days`]), { label: 'How far back', help: `At most ${number(MAX_MESSAGES)} messages in total, newest first.` })}
+${textInput('draftName', '', { label: 'Draft rule name (optional)', max: CUSTOM_RULE_NAME_MAX, placeholder: 'Draft rule', help: 'Try a custom rule before you add it. It is not saved.' })}
+${textArea('draftWords', '', { label: 'Draft rule words (optional)', rows: 3, max: 4000, help: `One word or phrase per line, up to ${CUSTOM_RULE_WORDS_MAX}. Matched like custom rules.` })}</div>`, { submit: 'Start test run', canEdit: canAct })}
+${canAct ? '' : html`<p class="muted">To start a test run you need the Administrator permission in the main server.</p>`}`;
+}
+
+function testRunResult(job) {
+    const r = job.result || {};
+    const p = job.params || {};
+    const days = p.days === 1 ? 'the last day' : `the last ${p.days} days`;
+    const channels = (p.channelIds || []).length;
+    const rows = Object.entries(r.byRule || {}).sort((a, b) => b[1].count - a[1].count).map(([key, entry]) => {
+        let mode = 'draft, not saved';
+        if (key !== DRAFT_KEY) mode = [entry.on ? 'acts' : '', entry.monitor ? 'watch only' : ''].filter(Boolean).join(', ');
+        return [entry.label, number(entry.count), mode];
+    });
+    const examples = (r.examples || []).map((ex) => [
+        ex.at ? timeTag(new Date(ex.at)) : '-',
+        html`${ex.author || ex.authorId} <span class="muted">${ex.authorId || ''}</span>`,
+        `#${ex.channelName}`,
+        (ex.rules || []).join(', '),
+        ex.excerpt === null ? html`<span class="muted">hidden (the match could not be masked safely)</span>` : (ex.excerpt || html`<span class="muted">no text</span>`),
+        isDiscordUrl(ex.url) ? html`<a href="${ex.url}" rel="noopener noreferrer" target="_blank">Open</a>` : '',
+    ]);
+    return html`<p>Read ${number(r.read)} message${r.read === 1 ? '' : 's'} from ${channels} channel${channels === 1 ? '' : 's'} in ${days}: ${number(r.checked)} checked, ${number(r.skippedBots)} from bots skipped, ${number(r.skippedAdmins)} from administrators skipped. ${number(r.hitMessages)} message${r.hitMessages === 1 ? '' : 's'} broke a rule.</p>
+${r.capped ? html`<p class="warn">Stopped at the limit of ${number(MAX_MESSAGES)} messages. Older messages in that time may not have been checked.</p>` : ''}
+${p.automodEnabled ? '' : html`<p class="warn">Automod is off right now. This shows what it would catch with these settings.</p>`}
+${r.invitesUnchecked ? html`<p class="muted">${number(r.invitesUnchecked)} invite link${r.invitesUnchecked === 1 ? ' was' : 's were'} not looked up (lookup limit reached), so they are not counted.</p>` : ''}
+<p class="muted">${SKIPPED_CHECKS}</p>
+${table(['Rule', 'Messages', 'Mode'], rows, 'No message broke a rule.')}
+${examples.length ? html`<h3>Examples (up to ${MAX_EXAMPLES})</h3>${table(['When', 'Member', 'Channel', 'Rule', 'Excerpt', ''], examples, '')}` : ''}`;
+}
+
+/** The Test run card: idle / running / done / failed, then the form (not while running). */
+function testRunSection(ctx, job) {
+    const canAct = Boolean(ctx.canEdit && ctx.canAct);
+    const reload = html`<a href="${path('/automod')}#s-test-run">Reload this page</a>`;
+    if (job === undefined) {
+        return html`<p class="error" role="alert">The test run state could not be read. ${reload} to try again.</p>`;
+    }
+    if (job?.status === 'running') {
+        return html`<p role="status"><b>Test run in progress.</b> ${number(job.progress?.read)} of at most ${number(MAX_MESSAGES)} messages read so far, started ${timeTag(new Date(job.startedAt))}. ${reload} to see the progress.</p>`;
+    }
+    if (job?.status === 'failed') {
+        return html`<p class="error" role="alert">The last test run failed: ${job.error || 'unknown error.'}</p>
+${job.result?.read ? html`<p class="muted">${number(job.result.read)} messages were read before it stopped.</p>` : ''}
+${testRunForm(ctx, canAct)}`;
+    }
+    if (job?.status === 'done') {
+        return html`${testRunResult(job)}
+<h3>Start a new test run</h3><p class="muted">A new run replaces this result. Results are kept for 30 minutes.</p>
+${testRunForm(ctx, canAct)}`;
+    }
+    return testRunForm(ctx, canAct);
+}
+
 function nativeRows(ctx, rules, policies) {
     return rules.map((rule) => {
         const policy = policyFor(policies, rule.id);
@@ -179,8 +254,15 @@ export default {
             attempt(() => ctx.services.headsUpStats(ctx.guildId, { days: 30 }), null),
         ]);
         const planId = planOfGuild(ctx);
+        // undefined = could not be read; null = no test run (or its result expired).
+        let backtest = null;
+        try {
+            backtest = typeof ctx.services.getAutomodBacktest === 'function' ? ctx.services.getAutomodBacktest(ctx.guildId) : null;
+        } catch {
+            backtest = undefined;
+        }
         return {
-            settings, nativeRules, policies, byRule, stats, days, lockdown, reviews, probations, headsUp,
+            settings, nativeRules, policies, byRule, stats, days, lockdown, reviews, probations, headsUp, backtest,
             custom: { rules: storedCustomRules(ctx), limit: limitForPlan(planId), planId },
             registry: {
                 reviewChannelId: registryValue(ctx, 'reviewChannelId'),
@@ -304,7 +386,8 @@ ${section('Ignored channels', exempt, 'Channels where automod checks nothing at 
         const raids = topic('Raids and new members', 'Checks at the door and what happens when many accounts join at once.', html`${section('Join gate', joinGate, 'Checks new members as they join. For each check: off does nothing; flag tells staff in the review channel, with Kick and Dismiss buttons; kick removes them and sends a private message saying how to come back.')}
 ${section('Panic', panic, 'A raid lockdown starts by itself when many accounts join at once. Panic mode makes it harder for raiders to spread.')}
 ${lockdown?.active ? '' : lockdownCard}`);
-        const results = topic('Results', 'How often automod acted, and how often staff undid it.', section(days === 1 ? 'Last day' : `Last ${days} days`, stats, '', { key: 'automod-stats', size: 'full' }));
+        const results = topic('Results', 'How often automod acted, and how often staff undid it.', html`${section(days === 1 ? 'Last day' : `Last ${days} days`, stats, '', { key: 'automod-stats', size: 'full' })}
+${section('Test run', testRunSection(ctx, data.backtest), TEST_RUN_HELP, { key: 'test-run', size: 'full' })}`);
         return html`${live}${ruleCards}${leniency}${raids}${results}`;
     },
 
@@ -484,6 +567,36 @@ ${lockdown?.active ? '' : lockdownCard}`);
                     changes: [{ key: `probation:${userId}`, old: { until: new Date(Number(record.until)).toISOString(), caseCode: record.caseCode || null }, new: null }],
                     message: `Probation for ${memberName(ctx.guild, userId) || userId} ended early.`,
                 };
+            },
+        },
+        // Test run: read-only, so nothing is audited (changes: []); Administrator only.
+        'test-run': {
+            admin: true,
+            async run(ctx, form) {
+                const picked = list(form, 'channels', { max: 100 });
+                if (!picked.length) throw new InputError('Pick at least one channel.', 400, 'channels');
+                if (picked.length > BACKTEST_MAX_CHANNELS) throw new InputError(`Pick at most ${BACKTEST_MAX_CHANNELS} channels (${picked.length} picked).`, 400, 'channels');
+                const channelIds = channelListField(ctx.guild, form, 'channels', { kinds: ['text'], label: 'Channel', max: BACKTEST_MAX_CHANNELS });
+                const days = Number(choiceField(form, 'days', BACKTEST_DAY_CHOICES.map(String), 'How far back'));
+                const draftName = text(form, 'draftName', CUSTOM_RULE_NAME_MAX + 20);
+                const draftWords = String(form?.draftWords ?? '').slice(0, 5000);
+                const settings = await ctx.services.getAutomodSettings(ctx.guildId);
+                // Automod checks nothing in ignored channels (automodSettings.isChannelExempt).
+                const ignored = new Set([...(settings.exemptChannelIds || []), ...(registryValue(ctx, 'exemptChannelIds') || [])]);
+                const skipped = channelIds.find((id) => ignored.has(id));
+                if (skipped) throw new InputError(`Automod ignores #${ctx.guild.channels.cache.get(skipped)?.name || skipped}, so a test run there finds nothing. Pick another channel.`, 400, 'channels');
+                const customRules = runningRules(storedCustomRules(ctx), limitForPlan(planOfGuild(ctx)));
+                try {
+                    ctx.services.startAutomodBacktest({
+                        guild: ctx.guild, channelIds, days, settings, customRules,
+                        draft: draftName || draftWords.trim() ? { name: draftName, words: draftWords } : null,
+                        startedBy: ctx.actor.userId,
+                    });
+                } catch (error) {
+                    if (error instanceof BacktestError || error?.name === 'BacktestError') throw new InputError(error.userMessage || error.message, 400, 'channels');
+                    throw error;
+                }
+                return { changes: [], message: 'Test run started. Reload the page in a moment to see the progress.' };
             },
         },
         async channels(ctx, form) {
