@@ -51,6 +51,19 @@ export function computeXpMultiplier(config, { channelId = null, threadParentId =
     return { multiplier, channel, role, global, capped };
 }
 
+/**
+ * The boost a member gets in one place, for showing it (/rank): computeXpMultiplier's result
+ * plus `roleId` (the role whose boost counts, the first one when several tie) and `channelId`
+ * (the boosted channel: a thread's parent), or null when the total is not above x1.
+ */
+export function xpBoostBreakdown(config, { channelId = null, threadParentId = null, roleIds = [] } = {}) {
+    const result = computeXpMultiplier(config, { channelId, threadParentId, roleIds });
+    if (!(result.multiplier > 1)) return null;
+    const roles = config && typeof config === 'object' ? config.roleMultipliers : null;
+    const roleId = result.role > 1 ? (roleIds || []).find((id) => boostOf(roles, id) === result.role) || null : null;
+    return { ...result, roleId, channelId: result.channel > 1 ? (threadParentId || channelId) : null };
+}
+
 /** XP after the multiplier, rounded down (as before). Never less than the base amount. */
 export function applyXpMultiplier(baseXp, multiplier) {
     const base = Math.max(0, Math.floor(Number(baseXp) || 0));

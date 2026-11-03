@@ -205,7 +205,7 @@ test('update: edits the stored messages in place, sends the extra ones, returns 
 test('update: refuses (nothing edited) when a stored message or the channel is gone, or Read Message History is missing', async () => {
     const { guild, channel } = fakeGuild({ missing: ['900000000000000002'] });
     await assert.rejects(updateRulesMessages(guild, { channelId: CHANNEL, messageIds: ['900000000000000001', '900000000000000002'] }, threeMessages()),
-        (e) => /was deleted in #rules\. Use Post to send a new copy/.test(e.userMessage));
+        (e) => /was deleted in #rules\. Use Post on the dashboard, or \/rules post, to send a new copy/.test(e.userMessage));
     assert.equal(channel.edited.length + channel.sent.length + channel.deleted.length, 0);
     await assert.rejects(updateRulesMessages(guild, { channelId: '500000000000000009', messageIds: ['900000000000000001'] }, threeMessages()), /no longer exists/);
     // A fetch error that is not "Unknown Message" is not reported as a deleted message.
@@ -220,4 +220,77 @@ test('update: a failed send removes the new messages it already sent', async () 
     const { guild, channel } = fakeGuild({ failOnSend: 2 });
     await assert.rejects(updateRulesMessages(guild, { channelId: CHANNEL, messageIds: ['900000000000000001'] }, threeMessages()), /Missing Access/);
     assert.deepEqual(channel.deleted, ['910000000000000001']);
+});
+
+// ── the shared flow (dashboard Rules page and /rules) ─────────────────────
+
+const { postAndSaveRules, rulesMessagesFor, rulesPostDesign, serializedRules, updateAndSaveRules } = await import('../src/services/rules/rulesPost.js');
+const fixedNow = () => new Date('2026-11-03T12:00:00.000Z');
+
+test('shared post: posts, then saves { channelId, messageIds, at }; a failed save deletes the post again', async () => {
+    const { guild, channel } = fakeGuild();
+    channel.messages.delete = async (id) => { channel.deleted.push(id); };
+    const saved = [];
+    const { posted } = await postAndSaveRules({ guild, channel, messages: threeMessages(), save: async (p) => { saved.push(p); }, now: fixedNow });
+    assert.deepEqual(posted, { channelId: CHANNEL, messageIds: ['910000000000000001', '910000000000000002', '910000000000000003'], at: '2026-11-03T12:00:00.000Z' });
+    assert.deepEqual(saved, [posted]);
+    assert.deepEqual(channel.deleted, []);
+
+    const failing = fakeGuild();
+    failing.channel.messages.delete = async (id) => { failing.channel.deleted.push(id); };
+    await assert.rejects(postAndSaveRules({ guild: failing.guild, channel: failing.channel, messages: threeMessages(), save: async () => { throw new Error('database not responding'); } }), /database not responding/);
+    assert.deepEqual(failing.channel.deleted.sort(), ['910000000000000001', '910000000000000002', '910000000000000003'], 'nothing left that the settings do not know about');
+});
+
+test('shared post: a refused Discord post never saves', async () => {
+    const { guild, channel } = fakeGuild({ failOnSend: 1 });
+    let saves = 0;
+    await assert.rejects(postAndSaveRules({ guild, channel, messages: threeMessages(), save: async () => { saves += 1; } }), /Missing Access/);
+    assert.equal(saves, 0);
+});
+
+test('shared update: saves the new ids, deletes left-overs only after the save; a failed save deletes only the new messages', async () => {
+    const { guild, channel } = fakeGuild();
+    const order = [];
+    const current = { channelId: CHANNEL, messageIds: ['900000000000000001', '900000000000000002', '900000000000000003'], at: '2026-11-01T00:00:00.000Z' };
+    const result = await updateAndSaveRules({
+        guild, current, messages: threeMessages().slice(0, 1), now: fixedNow,
+        save: async (p) => { order.push(['save', [...channel.deleted]]); assert.deepEqual(p.messageIds, ['900000000000000001']); },
+    });
+    assert.deepEqual(order, [['save', []]], 'nothing deleted before the save');
+    assert.deepEqual(channel.deleted, ['900000000000000002', '900000000000000003']);
+    assert.deepEqual(result.posted, { channelId: CHANNEL, messageIds: ['900000000000000001'], at: '2026-11-03T12:00:00.000Z' });
+    assert.equal(result.previousCount, 3);
+    assert.equal(result.channel, channel);
+
+    const longer = fakeGuild();
+    await assert.rejects(updateAndSaveRules({
+        guild: longer.guild, current: { channelId: CHANNEL, messageIds: ['900000000000000001', '900000000000000002'] }, messages: threeMessages(),
+        save: async () => { throw new Error('database not responding'); },
+    }), /database not responding/);
+    assert.deepEqual(longer.channel.deleted, ['910000000000000001'], 'the extra new message goes, the stored ones stay');
+});
+
+test('shared helpers: design defaults, messages with resolved images, one change at a time', async () => {
+    assert.equal(rulesPostDesign(null).title, 'Server rules');
+    assert.equal(rulesPostDesign(null).posted, null);
+    assert.equal(rulesPostDesign({ title: 'Ours' }).layout, 'list', 'missing keys get defaults');
+    assert.equal(rulesPostDesign({ title: 'Ours' }).title, 'Ours');
+
+    const messages = await rulesMessagesFor({ client: {}, guildId: 'g', rules: [rule(1)], design: design({ banner: { url: 'https://img.example/b.png', ref: null } }), resolve: async () => { throw new Error('not used for links'); } });
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0].embeds[0].data.image.url, 'https://img.example/b.png');
+
+    const log = [];
+    let release;
+    const first = serializedRules(() => new Promise((resolve) => { log.push('first start'); release = () => { log.push('first end'); resolve(); }; }));
+    const second = serializedRules(async () => { log.push('second'); });
+    await new Promise((r) => setImmediate(r));
+    assert.deepEqual(log, ['first start']);
+    release();
+    await Promise.all([first, second]);
+    assert.deepEqual(log, ['first start', 'first end', 'second']);
+    // A failed task does not block the next one.
+    await assert.rejects(serializedRules(async () => { throw new Error('boom'); }), /boom/);
+    assert.equal(await serializedRules(async () => 'next'), 'next');
 });

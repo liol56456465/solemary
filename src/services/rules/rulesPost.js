@@ -17,7 +17,7 @@
 
 import { EmbedBuilder } from 'discord.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
-import { RULES_POST_LIMITS } from '../settings/settingsRegistry.js';
+import { RULES_POST_DEFAULT, RULES_POST_LIMITS } from '../settings/settingsRegistry.js';
 import { isExpiredDiscordCdnUrl } from '../../utils/welcomeImageStore.js';
 import { POST_PERMISSIONS, assertCanPost, colourFromKey, noMentions } from '../botMessageService.js';
 
@@ -207,7 +207,7 @@ export async function postRulesMessages(guild, channel, messages) {
  */
 export async function updateRulesMessages(guild, posted, messages) {
     const channel = guild.channels.cache.get(posted.channelId);
-    if (!channel) throw validation('The channel of the posted rules no longer exists. Post them again.');
+    if (!channel) throw validation('The channel of the posted rules no longer exists. Post them again (Post on the dashboard, or /rules post).');
     // Read Message History: fetching the posted messages by id needs it.
     assertCanPost(guild, channel, permissionsFor(messages, ['ReadMessageHistory']));
     const old = [];
@@ -219,7 +219,7 @@ export async function updateRulesMessages(guild, posted, messages) {
             // 10008 Unknown Message: really deleted. Anything else (network, rate limit) is not.
             if (error?.code !== 10008) throw error;
         }
-        if (!message) throw validation(`One of the posted rules messages was deleted in #${channel.name}. Use Post to send a new copy.`);
+        if (!message) throw validation(`One of the posted rules messages was deleted in #${channel.name}. Use Post on the dashboard, or /rules post, to send a new copy.`);
         old.push(message);
     }
     const ids = [];
@@ -243,4 +243,71 @@ export async function updateRulesMessages(guild, posted, messages) {
         throw error;
     }
     return { channel, ids, added, leftovers: old.slice(messages.length) };
+}
+
+// ── The shared post flow (dashboard Rules page and /rules) ─────────────────
+// Both paths go through these, so they behave the same: one rules change at a time, the
+// stored ids are saved only after Discord accepted the post, a failed save undoes what was
+// sent, and old messages a shorter post no longer needs are deleted only after the save.
+
+const deleteQuietly = (messages) => Promise.all(messages.map((m) => Promise.resolve(m?.delete?.()).catch(() => {})));
+
+let queue = Promise.resolve();
+/** Runs rules changes one at a time (dashboard edits, posts and /rules share this queue). */
+export function serializedRules(task) {
+    const run = queue.then(task, task);
+    queue = run.catch(() => {});
+    return run;
+}
+
+/** The saved post design with the defaults filled in for keys an older value lacks. */
+export function rulesPostDesign(value) {
+    return { ...RULES_POST_DEFAULT, ...(value && typeof value === 'object' ? value : {}) };
+}
+
+/**
+ * The messages for `rules` (numbered) in `design`, with the pictures as they are at post
+ * time (uploads get a fresh link and are attached). `resolve` = resolveWelcomeImageUrl.
+ */
+export async function rulesMessagesFor({ client, guildId, rules, design, resolve }) {
+    const images = await resolveRulesImages(client, guildId, design, resolve);
+    return buildRulesMessages(rules, design, images);
+}
+
+/**
+ * Posts `messages` in `channel`, then `save(posted)` stores the new ids. When the save
+ * fails, the post is deleted again and the error is thrown (the stored ids never point at
+ * a post nobody tracks). `post` defaults to postRulesMessages (a caller may wrap it).
+ * Returns { channel, posted }.
+ */
+export async function postAndSaveRules({ guild, channel, messages, save, post = postRulesMessages, now = () => new Date() }) {
+    const ids = await post(guild, channel, messages);
+    const posted = { channelId: channel.id, messageIds: ids, at: now().toISOString() };
+    try {
+        await save(posted);
+    } catch (error) {
+        await Promise.all(ids.map((id) => Promise.resolve(channel.messages?.delete?.(id)).catch(() => {})));
+        throw error;
+    }
+    return { channel, posted };
+}
+
+/**
+ * Edits the earlier post (`current` = the stored posted value) in place, then
+ * `save(posted)` stores the ids. When the save fails, the extra messages just sent are
+ * deleted and the old ones stay, so the stored ids still match Discord; after a good save
+ * the old messages the shorter post no longer needs are deleted. `update` defaults to
+ * updateRulesMessages. Returns { channel, posted, previousCount }.
+ */
+export async function updateAndSaveRules({ guild, current, messages, save, update = updateRulesMessages, now = () => new Date() }) {
+    const { channel, ids, added = [], leftovers = [] } = await update(guild, current, messages);
+    const posted = { channelId: current.channelId, messageIds: ids, at: now().toISOString() };
+    try {
+        await save(posted);
+    } catch (error) {
+        await deleteQuietly(added);
+        throw error;
+    }
+    await deleteQuietly(leftovers);
+    return { channel, posted, previousCount: current.messageIds.length };
 }

@@ -14,6 +14,7 @@ export const SLASH_ONLY_COMMANDS = new Set([
   'appeals',
   'setappeal',
   'test',
+  'rules',
 ]);
 
 /** Subcommands blocked for every command when invoked via prefix. */
