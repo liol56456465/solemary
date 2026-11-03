@@ -1,10 +1,10 @@
 {
   "permissions": {
     "deny": [
-      "Read(./.env)",
-      "Read(./.env.test)",
-      "Read(./.env.local)",
-      "Read(./.env.*.local)"
+      "Read(/.env)",
+      "Read(/.env.test)",
+      "Read(/.env.local)",
+      "Read(/.env.*.local)"
     ]
   },
   "hooks": {
@@ -23,7 +23,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/no-env-secrets.mjs\""
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/no-env-secrets.mjs\"",
+            "onFailure": "block"
           }
         ]
       }

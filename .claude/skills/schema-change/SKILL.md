@@ -1,7 +1,6 @@
 ---
 name: schema-change
 description: Checklist for adding or changing a PostgreSQL table/column/index in Mewvo (schema.js, table allowlist, SCHEMA_VERSION bump in .env.example and both workflows, migrate + test:db). Use for any database schema change.
-disable-model-invocation: true
 argument-hint: "<what changes, e.g. new table mod_watchlist>"
 ---
 
