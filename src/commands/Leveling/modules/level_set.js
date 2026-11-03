@@ -4,6 +4,7 @@ import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { checkUserPermissions } from '../../../utils/permissionGuard.js';
 import { setUserLevel, getLevelingConfig } from '../../../services/leveling/leveling.js';
 import { createEmbed } from '../../../utils/embeds.js';
+import { roleSyncNote, syncLevelRolesForMember } from '../../../services/leveling/levelRoleSyncService.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 export default {
@@ -64,11 +65,22 @@ export default {
 
     const userData = await setUserLevel(client, interaction.guildId, targetUser.id, newLevel);
 
+    // Reward roles follow the new level (reward mode; roles above the level come off).
+    const roleSync = await syncLevelRolesForMember(client, member, {
+      level: userData.level,
+      removeUnearned: true,
+      reason: `Level changed by ${interaction.user.tag}`,
+    }).catch((error) => {
+      logger.warn(`Level reward roles not synced for ${targetUser.id} in guild ${interaction.guildId}: ${error.message}`);
+      return { added: [], removed: [], skipped: [], errors: 1 };
+    });
+    const roleNote = roleSyncNote(roleSync);
+
     await InteractionHelper.safeEditReply(interaction, {
       embeds: [
         createEmbed({
           title: 'Level set',
-          description: `Set ${targetUser.tag}'s level to **${newLevel}**.\n**Total XP:** ${userData.totalXp}`,
+          description: `Set ${targetUser.tag}'s level to **${newLevel}**.\n**Total XP:** ${userData.totalXp}${roleNote ? `\n${roleNote}` : ''}`,
           color: 'success'
         })
       ]

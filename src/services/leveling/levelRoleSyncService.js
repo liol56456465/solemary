@@ -1,5 +1,8 @@
+import { PermissionFlagsBits } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { getLevelingConfig, getUserLevelData, setLevelRoleReward } from './leveling.js';
+import { planRewardRoles, rewardModeOf } from './levelBoosts.js';
+import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
 
 import { getUserLevelPrefix } from '../../utils/database/keys.js';
 
@@ -25,12 +28,102 @@ async function listLevelUserIds(client, guildId) {
     return [...userIds];
 }
 
-async function tryAwardRole(member, roleId, level) {
-    const role = member.guild.roles.cache.get(roleId) || (await member.guild.roles.fetch(roleId).catch(() => null));
-    if (!role || member.roles.cache.has(roleId)) return false;
+async function resolveRole(guild, roleId) {
+    return guild.roles.cache.get(roleId) || (await guild.roles.fetch?.(roleId).catch(() => null)) || null;
+}
 
-    await member.roles.add(role, `Level ${level} reward (startup sync)`);
-    return true;
+/** Why the bot cannot take this role off a member, or null. */
+function removalProblem(role, me) {
+    if (role.managed) return `${role.name} is managed by an integration`;
+    const highest = me?.roles?.highest;
+    if (!highest || role.position >= highest.position) return `${role.name} is not below my highest role`;
+    return null;
+}
+
+/**
+ * Gives a member the reward roles their level earns and, by reward mode, takes off the ones
+ * they should not hold ("highest only": lower reward roles; removeUnearned: roles above the
+ * level). Role hierarchy and missing Manage Roles are logged and skipped; a failed Discord call
+ * is logged and counted. Never throws for Discord errors. A failed config or level read
+ * (database) throws, so callers catch and log it.
+ *
+ * options: config (leveling config, read when missing), level (read when missing),
+ * removeUnearned (default false), reason (audit log reason).
+ * Returns { added: roleId[], removed: roleId[], skipped: [{roleId, problem}], errors }.
+ */
+export async function syncLevelRolesForMember(client, member, { config = null, level = null, removeUnearned = false, reason = 'Level reward' } = {}) {
+    const summary = { added: [], removed: [], skipped: [], errors: 0 };
+    const guild = member?.guild;
+    if (!guild || member.user?.bot) return summary;
+
+    const cfg = config || (await getLevelingConfig(client, guild.id));
+    if (!cfg || cfg.enabled === false) return summary;
+    if (!cfg.roleRewards || Object.keys(cfg.roleRewards).length === 0) return summary;
+
+    const memberLevel = Number.isFinite(level) ? level : (await getUserLevelData(client, guild.id, member.id)).level;
+    const plan = planRewardRoles({
+        roleRewards: cfg.roleRewards,
+        level: memberLevel,
+        mode: rewardModeOf(cfg),
+        heldRoleIds: [...(member.roles?.cache?.keys?.() || [])],
+        removeUnearned,
+    });
+    if (plan.add.length === 0 && plan.remove.length === 0) return summary;
+
+    const me = guild.members?.me;
+    const canManageRoles = Boolean(me?.permissions?.has?.(PermissionFlagsBits.ManageRoles));
+    const skip = (roleId, problem) => {
+        summary.skipped.push({ roleId, problem });
+        logger.warn(`Level reward role ${roleId} not changed for ${member.id} in guild ${guild.id}: ${problem}`);
+    };
+
+    for (const roleId of plan.add) {
+        const role = await resolveRole(guild, roleId);
+        if (!role) { skip(roleId, 'the role no longer exists'); continue; }
+        if (!canManageRoles) { skip(roleId, 'I am missing the Manage Roles permission'); continue; }
+        const problem = getRoleAssignmentProblem(role, me);
+        if (problem) { skip(roleId, problem.replace(/\*\*/g, '')); continue; }
+        try {
+            await member.roles.add(role, reason);
+            summary.added.push(roleId);
+            logger.info(`Gave level reward role ${role.name} to ${member.id} in guild ${guild.id} (level ${memberLevel})`);
+        } catch (error) {
+            summary.errors += 1;
+            logger.warn(`Could not give level reward role ${roleId} to ${member.id} in guild ${guild.id}: ${error.message}`);
+        }
+    }
+
+    for (const roleId of plan.remove) {
+        const role = await resolveRole(guild, roleId);
+        if (!role) continue;
+        if (!canManageRoles) { skip(roleId, 'I am missing the Manage Roles permission'); continue; }
+        const problem = removalProblem(role, me);
+        if (problem) { skip(roleId, problem); continue; }
+        try {
+            await member.roles.remove(role, reason);
+            summary.removed.push(roleId);
+            logger.info(`Took level reward role ${role.name} from ${member.id} in guild ${guild.id} (level ${memberLevel})`);
+        } catch (error) {
+            summary.errors += 1;
+            logger.warn(`Could not take level reward role ${roleId} from ${member.id} in guild ${guild.id}: ${error.message}`);
+        }
+    }
+
+    return summary;
+}
+
+/** One short line for a command reply or dashboard message; '' when nothing happened. */
+export function roleSyncNote(summary) {
+    if (!summary) return '';
+    const parts = [];
+    if (summary.added.length) parts.push(`gave ${summary.added.length} reward role${summary.added.length === 1 ? '' : 's'}`);
+    if (summary.removed.length) parts.push(`took off ${summary.removed.length} reward role${summary.removed.length === 1 ? '' : 's'}`);
+    let note = parts.length ? `Mewvo ${parts.join(' and ')}.` : '';
+    if (summary.skipped.length || summary.errors) {
+        const first = summary.skipped[0]?.problem;
+        note += `${note ? ' ' : ''}Some reward roles could not be changed${first ? ` (${first})` : ''}. See the bot log.`;
+    }
+    return note;
 }
 
 export async function reconcileLevelRoles(client, guildId = null) {
@@ -38,6 +131,8 @@ export async function reconcileLevelRoles(client, guildId = null) {
         scannedGuilds: 0,
         prunedRewardEntries: 0,
         rolesReAwarded: 0,
+        rolesRemoved: 0,
+        rolesSkipped: 0,
         errors: 0,
     };
 
@@ -72,27 +167,23 @@ export async function reconcileLevelRoles(client, guildId = null) {
             if (Object.keys(rewards).length === 0) continue;
 
             const userIds = await listLevelUserIds(client, guild.id);
+            const config = { ...cfg, roleRewards: rewards };
 
             for (const userId of userIds) {
                 const levelData = await getUserLevelData(client, guild.id, userId);
                 const member = await guild.members.fetch(userId).catch(() => null);
                 if (!member) continue;
 
-                for (const [levelStr, roleId] of Object.entries(rewards)) {
-                    const requiredLevel = Number(levelStr);
-                    if (!Number.isFinite(requiredLevel) || levelData.level < requiredLevel) continue;
-
-                    try {
-                        const awarded = await tryAwardRole(member, roleId, requiredLevel);
-                        if (awarded) summary.rolesReAwarded += 1;
-                    } catch (awardError) {
-                        summary.errors += 1;
-                        logger.warn(
-                            `Could not re-award level ${requiredLevel} role to ${userId} in guild ${guild.id}:`,
-                            awardError.message,
-                        );
-                    }
-                }
+                // Same per-member rule as rejoin and level-up (respects the reward mode).
+                const result = await syncLevelRolesForMember(client, member, {
+                    config,
+                    level: levelData.level,
+                    reason: 'Level reward (startup sync)',
+                });
+                summary.rolesReAwarded += result.added.length;
+                summary.rolesRemoved += result.removed.length;
+                summary.rolesSkipped += result.skipped.length;
+                summary.errors += result.errors;
             }
         } catch (error) {
             summary.errors += 1;

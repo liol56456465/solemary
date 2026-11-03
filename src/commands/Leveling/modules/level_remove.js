@@ -4,6 +4,7 @@ import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { checkUserPermissions } from '../../../utils/permissionGuard.js';
 import { removeLevels, getUserLevelData, getLevelingConfig } from '../../../services/leveling/leveling.js';
 import { createEmbed } from '../../../utils/embeds.js';
+import { roleSyncNote, syncLevelRolesForMember } from '../../../services/leveling/levelRoleSyncService.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 export default {
@@ -73,11 +74,22 @@ export default {
 
     const updatedData = await removeLevels(client, interaction.guildId, targetUser.id, levelsToRemove);
 
+    // Reward roles follow the new level (reward mode; roles above the level come off).
+    const roleSync = await syncLevelRolesForMember(client, member, {
+      level: updatedData.level,
+      removeUnearned: true,
+      reason: `Level changed by ${interaction.user.tag}`,
+    }).catch((error) => {
+      logger.warn(`Level reward roles not synced for ${targetUser.id} in guild ${interaction.guildId}: ${error.message}`);
+      return { added: [], removed: [], skipped: [], errors: 1 };
+    });
+    const roleNote = roleSyncNote(roleSync);
+
     await InteractionHelper.safeEditReply(interaction, {
       embeds: [
         createEmbed({
           title: 'Levels removed',
-          description: `Removed ${levelsToRemove} levels from ${targetUser.tag}.\n**New level:** ${updatedData.level}`,
+          description: `Removed ${levelsToRemove} levels from ${targetUser.tag}.\n**New level:** ${updatedData.level}${roleNote ? `\n${roleNote}` : ''}`,
           color: 'success'
         })
       ]

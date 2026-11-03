@@ -1,5 +1,6 @@
 // leveling.js — Leveling: on/off, XP per message and cooldown, level-up messages,
-// ignored channels/roles, role rewards, and (Administrators only) a member's level.
+// ignored channels/roles, XP boosts (channel and role multipliers), role rewards and the
+// reward mode, and (Administrators only) a member's level (reward roles re-synced after).
 // Writes go through services/leveling/leveling.js (updateLevelingConfig /
 // setLevelRoleReward are row-locked; addLevels/removeLevels/setUserLevel are the
 // /level add|remove|set functions). The server cat's name and growth announcement are
@@ -7,15 +8,22 @@
 
 import { html } from '../html.js';
 import {
-    InputError, PERMS, autoRoleField, boolField, buttonForm, channelField, channelName, channelPicker, checkbox,
+    InputError, PERMS, autoRoleField, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, decimalField, roleField,
     switchInput, choiceField, intField, numberInput, postForm, rolePicker, roleName, roleWarnings, selectInput,
     text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, registryValue, saveRegistry, section, table, topic } from './common.js';
 import { CAT_NAME_MAX, sanitizeCatName } from '../../community/catModel.js';
+import { BOOST_MAX, BOOST_MIN, MAX_BOOSTS, TOTAL_MULTIPLIER_CAP, rewardModeOf } from '../../leveling/levelBoosts.js';
+import { roleSyncNote } from '../../leveling/levelRoleSyncService.js';
+import { logger } from '../../../utils/logger.js';
 
 const MAX_LEVEL = 1000;
+
+const BOOST_FIELD = { channel: 'channelMultipliers', role: 'roleMultipliers' };
+const REWARD_MODE_CHOICES = [['keep', 'Keep all reward roles'], ['highest', 'Only the highest reward role']];
+const boostText = (value) => `x${Number(value).toFixed(1)}`;
 
 const xpRangeOf = (cfg) => ({
     min: cfg.xpRange?.min ?? cfg.xpPerMessage?.min ?? 15,
@@ -58,12 +66,24 @@ ${textArea('levelUpMessage', cfg.levelUpMessage || '{user} is now level {level}.
         const ignored = html`${table(['Type', 'No XP for', ''], ignoredRows, 'Members earn XP in every channel.')}
 <div class="grid">${postForm(ctx, 'leveling', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'No XP in this channel', perms: [], optional: false })}`, { submit: 'Add', inline: true })}
 ${postForm(ctx, 'leveling', 'ignore-add', html`<input type="hidden" name="type" value="role">${rolePicker(g, 'id', null, { label: 'No XP for this role', optional: false, assign: false })}`, { submit: 'Add', inline: true })}</div>`;
+        const boostRows = [
+            ...Object.entries(cfg.channelMultipliers || {}).map(([id, value]) => ['channel', channelName(g, id), boostText(value), buttonForm(ctx, 'leveling', 'boost-remove', 'Remove', { type: 'channel', id })]),
+            ...Object.entries(cfg.roleMultipliers || {}).map(([id, value]) => ['role', roleName(g, id), boostText(value), buttonForm(ctx, 'leveling', 'boost-remove', 'Remove', { type: 'role', id })]),
+        ];
+        const boostInput = numberInput('multiplier', '', { label: 'Boost', min: BOOST_MIN, max: BOOST_MAX, step: 0.1, help: `From ${BOOST_MIN} to ${BOOST_MAX}, like 1.5.` });
+        const boosts = html`${table(['Type', 'Boosted', 'Boost', ''], boostRows, 'No boosts. Every channel and role earns normal XP.')}
+<div class="grid">${postForm(ctx, 'leveling', 'boost-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'Channel', kinds: ['text', 'voice', 'forum'], perms: [], optional: false })}${boostInput}`, { submit: 'Add channel boost' })}
+${postForm(ctx, 'leveling', 'boost-add', html`<input type="hidden" name="type" value="role">${rolePicker(g, 'id', null, { label: 'Role', optional: false, assign: false, includeManaged: true })}${boostInput}`, { submit: 'Add role boost' })}</div>`;
         const rewards = Object.entries(cfg.roleRewards || {}).sort((a, b) => Number(a[0]) - Number(b[0]));
         const rewardTable = html`${table(['Level', 'Role', 'Problems', ''], rewards.map(([level, roleId]) => [level, roleName(g, roleId),
             roleWarnings(g, roleId, { autoAssign: true }).join('; ') || html`<span class="ok">ok</span>`,
             buttonForm(ctx, 'leveling', 'reward-remove', 'Remove', { level })]), 'No role rewards.')}
 ${postForm(ctx, 'leveling', 'reward-add', html`<div class="grid">${numberInput('level', '', { label: 'At level', min: 1, max: MAX_LEVEL })}
-${rolePicker(g, 'roleId', null, { label: 'Give this role', optional: false, autoAssign: true })}</div>`, { submit: 'Add reward' })}`;
+${rolePicker(g, 'roleId', null, { label: 'Give this role', optional: false, autoAssign: true })}</div>`, { submit: 'Add reward' })}
+${postForm(ctx, 'leveling', 'reward-mode', selectInput('rewardMode', rewardModeOf(cfg), REWARD_MODE_CHOICES, {
+            label: 'Reward roles a member keeps',
+            help: 'Keep all: members keep every reward role they reached. Only the highest: when a member reaches a new reward, Mewvo gives that role and takes off the lower reward roles.',
+        }), { submit: 'Save' })}`;
         const members = ctx.canAct
             ? postForm(ctx, 'leveling', 'member', html`<div class="grid">${html`<label>Member (user ID)<input name="userId" inputmode="numeric" maxlength="20"><span class="hint">The long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID.</span></label>`}
 ${selectInput('op', 'add', [['add', 'Add levels'], ['remove', 'Remove levels'], ['set', 'Set level']], { label: 'What to do' })}
@@ -83,6 +103,7 @@ ${numberInput('levels', '', { label: 'Levels', min: 0, max: MAX_LEVEL })}</div>`
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
         // v6: cards grouped by topic (common.js topic/section).
         return html`${topic('Earning XP', 'How fast members level up, and what Mewvo posts when they do.', html`${section('XP and messages', settings, 'XP per message, the wait between XP, and the level-up message.')}
+${section('XP boosts', boosts, [`More XP in some channels or for some roles, from x${BOOST_MIN} to x${BOOST_MAX}.`, `A thread counts as its channel. If a member has several boosted roles, only the highest role boost counts. Channel boost times role boost is never more than x${TOTAL_MULTIPLIER_CAP}.`], { size: 'normal' })}
 ${section('No XP in', ignored, 'Members get no XP in these channels, and members with these roles get none at all. Useful for bot or spam channels.', { size: 'normal' })}`)}
 ${topic('Rewards and levels', 'Roles for reaching a level, and changing a level by hand.', html`${section('Role rewards', rewardTable, 'Members get these roles by themselves when they reach the level. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers.', { size: 'normal' })}
 ${section('Member levels', members, 'Change one member\'s level by hand. You can also do this with /level add, /level remove and /level set in Discord.')}`)}
@@ -151,6 +172,39 @@ ${topic('Server cat', 'A cat that grows as members chat, from Kitten to Legend.'
             if (!list.includes(id)) return { changes: [], message: 'It was not on the list.' };
             return update(ctx, { [field]: list.filter((x) => x !== id) }, 'Removed.');
         },
+        async 'boost-add'(ctx, form) {
+            const type = choiceField(form, 'type', ['channel', 'role'], 'Type');
+            const id = type === 'channel'
+                ? channelField(ctx.guild, form, 'id', { optional: false, kinds: ['text', 'voice', 'forum'], label: 'Channel' })
+                : roleField(ctx.guild, form, 'id', { optional: false, label: 'Role', allowManaged: true });
+            const multiplier = decimalField(form, 'multiplier', { min: BOOST_MIN, max: BOOST_MAX, decimals: 1, label: 'Boost' });
+            const field = BOOST_FIELD[type];
+            const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
+            const current = cfg[field] || {};
+            if (current[id] === multiplier) return { changes: [], message: 'That boost is already set.' };
+            if (!(id in current) && Object.keys(current).length >= MAX_BOOSTS) throw new InputError(`At most ${MAX_BOOSTS} ${type} boosts.`);
+            const { before, after } = await ctx.services.setLevelBoost(ctx.client, ctx.guildId, type, id, multiplier);
+            const changes = diffSnapshots(before?.[field] || {}, after?.[field] || {}, null, `leveling.${field}.`);
+            return { changes, message: `That ${type} now gives ${boostText(multiplier)} XP.` };
+        },
+        async 'boost-remove'(ctx, form) {
+            const type = choiceField(form, 'type', ['channel', 'role'], 'Type');
+            const id = text(form, 'id', 25);
+            const field = BOOST_FIELD[type];
+            const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
+            if (!(id in (cfg[field] || {}))) return { changes: [], message: 'There was no boost for that.' };
+            const { before, after } = await ctx.services.setLevelBoost(ctx.client, ctx.guildId, type, id, null);
+            const changes = diffSnapshots(before?.[field] || {}, after?.[field] || {}, null, `leveling.${field}.`);
+            return { changes, message: 'Boost removed.' };
+        },
+        async 'reward-mode'(ctx, form) {
+            const rewardMode = choiceField(form, 'rewardMode', REWARD_MODE_CHOICES.map(([v]) => v), 'Reward roles a member keeps');
+            const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
+            const patch = changedOnly({ rewardMode }, { rewardMode: rewardModeOf(cfg) });
+            return update(ctx, patch, rewardMode === 'highest'
+                ? 'Members now keep only their highest reward role. It applies to each member when they level up, and to everyone the next time Mewvo restarts.'
+                : 'Members now keep all their reward roles.');
+        },
         async 'reward-add'(ctx, form) {
             const level = intField(form, 'level', { min: 1, max: MAX_LEVEL, label: 'Level' });
             const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: 'Reward role' });
@@ -177,9 +231,17 @@ ${topic('Server cat', 'A cat that grows as members chat, from Kitten to Legend.'
                 else if (op === 'remove') await ctx.services.removeLevels(ctx.client, ctx.guildId, userId, levels);
                 else await ctx.services.setUserLevel(ctx.client, ctx.guildId, userId, levels);
                 const after = await ctx.services.getUserLevelData(ctx.client, ctx.guildId, userId);
+                // Reward roles follow the new level, as with /level add|remove|set.
+                const roleSync = await Promise.resolve()
+                    .then(() => ctx.services.syncLevelRolesForMember(ctx.client, member, { level: after.level, removeUnearned: true, reason: 'Level changed on the dashboard' }))
+                    .catch((error) => {
+                        logger.warn(`Level reward roles not synced for ${userId} in guild ${ctx.guildId}: ${error.message}`);
+                        return { added: [], removed: [], skipped: [], errors: 1 };
+                    });
+                const note = roleSyncNote(roleSync);
                 return {
                     changes: [{ key: `member.${userId}.level`, old: before.level, new: after.level }],
-                    message: `${member.user?.username || userId} is now level ${after.level}.`,
+                    message: `${member.user?.username || userId} is now level ${after.level}.${note ? ` ${note}` : ''}`,
                 };
             },
         },

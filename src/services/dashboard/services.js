@@ -30,8 +30,9 @@ import { findModmailChannel, setModmailBlocked } from '../modmailService.js';
 import { isBuiltInCanned, listCanned, removeCanned, saveCanned } from '../cannedService.js';
 // Leveling
 import {
-    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelRoleReward, setUserLevel, updateLevelingConfig,
+    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelingConfig,
 } from '../leveling/leveling.js';
+import { syncLevelRolesForMember } from '../leveling/levelRoleSyncService.js';
 // Verification
 import { getVerificationSettings, updateVerificationSettings } from '../verificationSettingsService.js';
 import { validateAutoVerifyCriteria } from '../verificationService.js';
@@ -101,7 +102,8 @@ export const defaultServices = {
     getLoggingStatus, resolveLogChannel, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList,
     addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings, storeWelcomeImage, resolveWelcomeImageUrl,
     getTicketSettings, updateTicketSettings, setModmailBlocked, findModmailChannel, isBuiltInCanned, listCanned, removeCanned, saveCanned,
-    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelRoleReward, setUserLevel, updateLevelingConfig,
+    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelingConfig,
+    syncLevelRolesForMember,
     getVerificationSettings, updateVerificationSettings, validateAutoVerifyCriteria,
     addPanelRole, deletePanel, getAllReactionRoleMessages, removePanelRole,
     endGiveawayNow, rerollGiveaway, getGuildGiveaways, updateBirthdaySettings,

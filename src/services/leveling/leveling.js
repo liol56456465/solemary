@@ -7,7 +7,9 @@ import { updateGuildConfigAtomic } from '../../utils/database/guildConfigStorage
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { addXp } from './xpSystem.js';
 import { getUserLevelKey, getUserLevelPrefix } from '../../utils/database/keys.js';
+import { BOOST_MAX, BOOST_MIN, MAX_BOOSTS, REWARD_MODES, isValidBoost } from './levelBoosts.js';
 
+const SNOWFLAKE = /^\d{17,20}$/;
 const BASE_XP = 100;
 const XP_MULTIPLIER = 1.5;
 const MAX_LEVEL = 1000;
@@ -317,6 +319,31 @@ function assertLevelingConfigValid(config) {
       );
     }
   }
+
+  if (config.rewardMode !== undefined && config.rewardMode !== null && !REWARD_MODES.includes(config.rewardMode)) {
+    throw validationError(`Invalid reward mode: ${config.rewardMode}`, 'Reward mode must be "keep all" or "highest only".');
+  }
+
+  for (const field of ['channelMultipliers', 'roleMultipliers']) {
+    const map = config[field];
+    if (map === undefined || map === null) continue;
+    const label = field === 'channelMultipliers' ? 'Channel boosts' : 'Role boosts';
+    if (typeof map !== 'object' || Array.isArray(map)) {
+      throw validationError(`${field} must be an object`, `${label} are not valid.`);
+    }
+    const entries = Object.entries(map);
+    if (entries.length > MAX_BOOSTS) {
+      throw validationError(`${field} has more than ${MAX_BOOSTS} entries`, `${label}: at most ${MAX_BOOSTS}.`);
+    }
+    for (const [id, value] of entries) {
+      if (!SNOWFLAKE.test(id) || !isValidBoost(value)) {
+        throw validationError(
+          `Invalid ${field} entry ${id}: ${value}`,
+          `${label}: each boost must be between ${BOOST_MIN} and ${BOOST_MAX}, with at most one decimal.`
+        );
+      }
+    }
+  }
 }
 
 function wrapSaveError(error, guildId) {
@@ -414,6 +441,43 @@ export async function setLevelRoleReward(client, guildId, level, roleId) {
       }
       return { ...current, roleRewards };
     });
+  } catch (error) {
+    throw wrapSaveError(error, guildId);
+  }
+}
+
+/**
+ * Atomically sets (multiplier) or removes (multiplier === null) one XP boost, leaving the
+ * other boosts as stored. kind: 'channel' or 'role'. Returns { before, after, field }.
+ */
+export async function setLevelBoost(client, guildId, kind, id, multiplier) {
+  try {
+    const field = kind === 'channel' ? 'channelMultipliers' : kind === 'role' ? 'roleMultipliers' : null;
+    if (!guildId || !field) {
+      throw validationError(`Invalid boost kind: ${kind}`, 'A boost is for a channel or a role.');
+    }
+    if (!(typeof id === 'string' && SNOWFLAKE.test(id))) {
+      throw validationError(`Invalid boost target id: ${id}`, `The boosted ${kind} is not valid.`);
+    }
+    if (multiplier !== null && !isValidBoost(multiplier)) {
+      throw validationError(
+        `Invalid boost multiplier: ${multiplier}`,
+        `Boost must be between ${BOOST_MIN} and ${BOOST_MAX}, with at most one decimal.`
+      );
+    }
+    const result = await mutateLevelingConfig(client, guildId, (current) => {
+      const map = { ...(current[field] || {}) };
+      if (multiplier === null) {
+        delete map[id];
+      } else {
+        if (!(id in map) && Object.keys(map).length >= MAX_BOOSTS) {
+          throw validationError(`Too many ${field}`, `At most ${MAX_BOOSTS} ${kind} boosts.`);
+        }
+        map[id] = Math.round(multiplier * 10) / 10;
+      }
+      return { ...current, [field]: map };
+    });
+    return { ...result, field };
   } catch (error) {
     throw wrapSaveError(error, guildId);
   }

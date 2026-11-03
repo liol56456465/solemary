@@ -5,6 +5,7 @@ import { noteStaffMessage } from '../services/staffActivityService.js';
 import { noteMessage } from '../services/stats/activityService.js';
 import { trackChannelActivity } from '../services/automod/autoSlowmode.js';
 import { getLevelingConfig, getUserLevelData } from '../services/leveling/leveling.js';
+import { applyXpMultiplier, computeXpMultiplier } from '../services/leveling/levelBoosts.js';
 import { addXp } from '../services/leveling/xpSystem.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { parsePrefixCommand } from '../utils/prefixParser.js';
@@ -288,10 +289,14 @@ async function handleLeveling(message, client) {
 
     const xpToGive = Math.floor(Math.random() * (safeMaxXP - safeMinXP + 1)) + safeMinXP;
 
-    let finalXP = xpToGive;
-    if (levelingConfig.xpMultiplier && levelingConfig.xpMultiplier > 1) {
-      finalXP = Math.floor(finalXP * levelingConfig.xpMultiplier);
-    }
+    // Channel boost (a thread uses its parent's) x highest role boost x global multiplier, capped at x5.
+    const channel = message.channel;
+    const { multiplier } = computeXpMultiplier(levelingConfig, {
+      channelId: channel?.id,
+      threadParentId: channel?.isThread?.() ? channel.parentId : null,
+      roleIds: message.member?.roles?.cache ? [...message.member.roles.cache.keys()] : [],
+    });
+    const finalXP = applyXpMultiplier(xpToGive, multiplier);
 
     const result = await addXp(client, message.guild, message.member, finalXP);
 

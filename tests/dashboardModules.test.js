@@ -239,6 +239,20 @@ function makeServices() {
         getLevelingConfig: async () => clone(s.leveling),
         updateLevelingConfig: async (c, g, patch) => { record('updateLevelingConfig', [patch]); return merge('leveling', patch); },
         setLevelRoleReward: async (c, g, level, roleId) => { record('setLevelRoleReward', [level, roleId]); const before = clone(s.leveling); if (roleId) s.leveling.roleRewards[level] = roleId; else delete s.leveling.roleRewards[level]; return { before, after: clone(s.leveling) }; },
+        setLevelBoost: async (c, g, kind, id, multiplier) => {
+            record('setLevelBoost', [kind, id, multiplier]);
+            const field = kind === 'channel' ? 'channelMultipliers' : 'roleMultipliers';
+            const before = clone(s.leveling);
+            const map = { ...(s.leveling[field] || {}) };
+            if (multiplier === null) delete map[id]; else map[id] = multiplier;
+            s.leveling[field] = map;
+            return { before, after: clone(s.leveling), field };
+        },
+        syncLevelRolesForMember: async (c, member, options) => {
+            record('syncLevelRolesForMember', [options]);
+            if (s.levelSyncFails) throw new Error('db down');
+            return s.levelSync ?? { added: [], removed: [], skipped: [], errors: 0 };
+        },
         getUserLevelData: async (c, g, id) => ({ level: s.levels[id] ?? 0 }),
         addLevels: async (c, g, id, n) => { record('addLevels', [id, n]); s.levels[id] = (s.levels[id] ?? 0) + n; },
         removeLevels: async (c, g, id, n) => { record('removeLevels', [id, n]); s.levels[id] = Math.max(0, (s.levels[id] ?? 0) - n); },
@@ -755,6 +769,9 @@ const CASES = {
         'ignore-remove': { form: { type: 'channel', id: TEXT2 }, service: 'updateLevelingConfig' },
         'reward-add': { form: { level: '10', roleId: ROLE_OK2 }, service: 'setLevelRoleReward', bad: { form: { level: '10', roleId: ROLE_HIGH }, message: /not below my highest role/ } },
         'reward-remove': { form: { level: '5' }, service: 'setLevelRoleReward', bad: { form: { level: '0' }, message: /between 1 and 1000/ } },
+        'boost-add': { form: { type: 'channel', id: TEXT, multiplier: '1.5' }, service: 'setLevelBoost', bad: { form: { type: 'role', id: ROLE_OK, multiplier: '5.5' }, message: /between 1.1 and 5/ } },
+        'boost-remove': { seed: (s) => { s.leveling.roleMultipliers = { [ROLE_OK]: 2 }; }, form: { type: 'role', id: ROLE_OK }, service: 'setLevelBoost' },
+        'reward-mode': { form: { rewardMode: 'highest' }, service: 'updateLevelingConfig', bad: { form: { rewardMode: 'all' }, message: /unknown choice/ } },
         member: { form: { userId: MEMBER, op: 'add', levels: '2' }, service: 'addLevels', bad: { form: { userId: STRANGER, op: 'add', levels: '2' }, message: /not in the server/ }, admin: true },
         'cat-name': { form: { catName: 'Mochi <b>' }, service: 'updateSettings', admin: true, bad: { form: { catName: '@@ <>' }, message: /use letters, numbers and spaces/ } },
         'cat-announce': { form: { enabled: 'false' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
@@ -2607,4 +2624,81 @@ test('leveling: the Server cat section shows the picture and name; the name is s
     assert.equal(fallback.statusCode, 200, 'the page still renders');
     assert.match(fallback.body, /The cat could not be loaded right now/);
     assert.ok(fallback.body.includes('Least XP per message'), 'the rest of the page is there');
+});
+
+test('leveling: XP boosts are listed, added and removed with audit rows; bad boosts are refused; the reward mode is saved', async () => {
+    const h = await setup();
+    h.state.leveling.channelMultipliers = { [TEXT]: 1.5 };
+    h.state.leveling.roleMultipliers = { [ROLE_MANAGED]: 2 };
+    const page = await get(h, 'leveling');
+    assert.equal(page.statusCode, 200);
+    assert.ok(page.body.includes('action="/dashboard/leveling/boost-add"'), 'add boost forms');
+    assert.ok(page.body.includes('action="/dashboard/leveling/reward-mode"'), 'reward mode form');
+    assert.match(page.body, /x1\.5/);
+    assert.match(page.body, /x2\.0/);
+    assert.ok(page.body.includes('step="0.1"'), 'decimal input');
+    assert.ok(page.body.includes('<option value="keep" selected>'), 'keep all is the default');
+    assert.ok(!/—/.test(page.body.match(/id="s-xp-boosts"[\s\S]*?<\/section>/)?.[0] || ''), 'no em dash in the boosts card');
+
+    // A managed role (e.g. Server Booster) may be boosted; a decimal comma is read as a point.
+    const role = await post(h, 'leveling', 'boost-add', { type: 'role', id: ROLE_OK2, multiplier: '2,5' });
+    assert.equal(role.statusCode, 303);
+    assert.equal(h.state.leveling.roleMultipliers[ROLE_OK2], 2.5);
+    assert.ok(h.auditRows.some((r) => r.key === `leveling.roleMultipliers.${ROLE_OK2}` && r.old === null && r.new === 2.5));
+
+    const changed = await post(h, 'leveling', 'boost-add', { type: 'channel', id: TEXT, multiplier: '3' });
+    assert.equal(changed.statusCode, 303);
+    assert.ok(h.auditRows.some((r) => r.key === `leveling.channelMultipliers.${TEXT}` && r.old === 1.5 && r.new === 3));
+
+    const same = await post(h, 'leveling', 'boost-add', { type: 'channel', id: TEXT, multiplier: '3.0' });
+    assert.equal(same.statusCode, 303);
+    assert.equal(h.calls.filter((c) => c.name === 'setLevelBoost').length, 2, 'unchanged boost: nothing saved');
+
+    for (const [form, message] of [
+        [{ type: 'channel', id: TEXT, multiplier: '1.0' }, /between 1.1 and 5/],
+        [{ type: 'channel', id: TEXT, multiplier: '1.25' }, /at most 1 decimal/],
+        [{ type: 'channel', id: TEXT, multiplier: 'abc' }, /must be a number/],
+        [{ type: 'channel', id: CAT, multiplier: '2' }, /must be a text channel or voice channel or forum/],
+        [{ type: 'role', id: GUILD, multiplier: '2' }, /@everyone/],
+        [{ type: 'role', id: MISSING, multiplier: '2' }, /not in the server/],
+    ]) {
+        const res = await post(h, 'leveling', 'boost-add', form);
+        assert.equal(res.statusCode, 400, JSON.stringify(form));
+        assert.match(res.body, message);
+    }
+
+    const removed = await post(h, 'leveling', 'boost-remove', { type: 'role', id: ROLE_MANAGED });
+    assert.equal(removed.statusCode, 303);
+    assert.equal(h.state.leveling.roleMultipliers[ROLE_MANAGED], undefined);
+    assert.ok(h.auditRows.some((r) => r.key === `leveling.roleMultipliers.${ROLE_MANAGED}` && r.old === 2 && r.new === null));
+    const writes = h.calls.filter((c) => c.name === 'setLevelBoost').length;
+    await post(h, 'leveling', 'boost-remove', { type: 'role', id: ROLE_MANAGED });
+    assert.equal(h.calls.filter((c) => c.name === 'setLevelBoost').length, writes, 'removing a missing boost writes nothing');
+
+    await post(h, 'leveling', 'reward-mode', { rewardMode: 'highest' });
+    assert.equal(h.state.leveling.rewardMode, 'highest');
+    assert.ok(h.auditRows.some((r) => r.key === 'leveling.rewardMode' && r.new === 'highest'));
+    const modeWrites = h.calls.filter((c) => c.name === 'updateLevelingConfig').length;
+    await post(h, 'leveling', 'reward-mode', { rewardMode: 'highest' });
+    assert.equal(h.calls.filter((c) => c.name === 'updateLevelingConfig').length, modeWrites, 'same mode: nothing saved');
+});
+
+test('leveling: changing a member level on the dashboard re-syncs reward roles; a failed sync only adds a note', async () => {
+    const h = await setup();
+    h.state.levelSync = { added: [ROLE_OK], removed: [], skipped: [], errors: 0 };
+    const res = await post(h, 'leveling', 'member', { userId: MEMBER, op: 'set', levels: '7' });
+    assert.equal(res.statusCode, 303);
+    const sync = h.calls.find((c) => c.name === 'syncLevelRolesForMember');
+    assert.ok(sync, 'sync called');
+    assert.equal(sync.args[0].level, 7);
+    assert.equal(sync.args[0].removeUnearned, true);
+    const session = await h.sessions.get(h.session.id);
+    assert.match(JSON.stringify(session), /gave 1 reward role/);
+
+    const broken = await setup();
+    broken.state.levelSyncFails = true;
+    const ok = await post(broken, 'leveling', 'member', { userId: MEMBER, op: 'add', levels: '1' });
+    assert.equal(ok.statusCode, 303, 'the level change still counts');
+    assert.equal(broken.state.levels[MEMBER], 4);
+    assert.match(JSON.stringify(await broken.sessions.get(broken.session.id)), /could not be changed/);
 });

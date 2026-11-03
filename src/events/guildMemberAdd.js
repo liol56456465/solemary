@@ -23,6 +23,7 @@ import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 import { recordMemberEvent } from '../services/members/memberInsightsService.js';
 import { applyRoleRulesToMember } from '../services/members/roleRuleService.js';
 import { alertWatched } from '../services/enforcement/watchlistService.js';
+import { syncLevelRolesForMember } from '../services/leveling/levelRoleSyncService.js';
 
 // Welcome messages keep the mentions they had before the client default dropped roles
 // (2026-11-03): users and roles from the admin-written text, never @everyone/@here.
@@ -81,7 +82,15 @@ export default {
                 await applyRoleRulesToMember(member).catch((error) => logger.warn(`Role rules not applied to ${member.id}: ${error.message}`));
             }
         }
-        
+
+        // Rejoin: give back the level reward roles the member earned (by reward mode). Hierarchy
+        // and missing permissions are logged and skipped inside; a DB error only logs here.
+        if (!user.bot) {
+            await syncLevelRolesForMember(member.client, member, { reason: 'Level reward (rejoined)' }).catch((error) => {
+                logger.warn(`Level reward roles not given back to ${member.id}: ${error.message}`);
+            });
+        }
+
         const config = await getGuildConfig(member.client, guild.id);
         
         const welcomeConfig = await getWelcomeConfig(member.client, guild.id);
