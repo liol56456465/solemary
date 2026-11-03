@@ -407,6 +407,22 @@ export const tableStatements = [
         CHECK (user_a <> user_b)
     )`,
 
+    // Staff watchlist (/case watch): members staff keep an eye on. The member is never
+    // told. A watched member joining, getting a new case or tripping automod posts one
+    // line to the mod log. until NULL = no limit; ended_at is set when staff end it or
+    // once it has expired.
+    `CREATE TABLE IF NOT EXISTS ${t.mod_watchlist} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        reason TEXT NOT NULL,
+        created_by VARCHAR(20) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        until TIMESTAMPTZ,
+        ended_at TIMESTAMPTZ,
+        ended_by VARCHAR(20)
+    )`,
+
     // Sticky messages (/community sticky): reposted at the bottom of a channel after
     // members talk there. Held in memory; last_message_id is written on each repost.
     `CREATE TABLE IF NOT EXISTS ${t.sticky_messages} (
@@ -817,6 +833,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_guild_created ON ${t.mod_cases}(guild_id, created_at DESC, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_cases_reason ON ${t.mod_cases}(guild_id, reason_key, created_at DESC)`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_no_contact_one_open ON ${t.no_contact_orders}(guild_id, user_a, user_b) WHERE ended_at IS NULL`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_mod_watchlist_one_open ON ${t.mod_watchlist}(guild_id, user_id) WHERE ended_at IS NULL`,
     `CREATE INDEX IF NOT EXISTS idx_suggestions_guild ON ${t.suggestions}(guild_id, id DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_starboard_posts_star ON ${t.starboard_posts}(star_message_id)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_sessions_expires ON ${t.dashboard_sessions}(expires_at)`,
