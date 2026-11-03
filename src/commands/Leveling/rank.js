@@ -116,7 +116,7 @@ export default {
 
     // card:true → the image card (same look as the level-up card). If it can't be made
     // right now (busy or an error), the embed below is shown instead.
-    if (interaction.options.getBoolean('card') === true) {
+    if (interaction.options.getBoolean?.('card') === true) {
       const png = await tryLevelCard({
         avatarUrl: cardAvatarUrl(member.user),
         name: member.displayName,
