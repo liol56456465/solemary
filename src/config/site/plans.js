@@ -16,7 +16,11 @@
 // Free's values are what the bot does today (limits from the code: tags 100, sticky messages 10,
 // YouTube feeds 20 per server; src/services/community/*Service.js).
 
+// Display currencies. `prices` on each plan holds the monthly price per currency in cents; the
+// numbers are the same for now (owner, 2026-11-03: EUR for everyone, USD only via a picker that
+// is not built yet). `monthlyCents` stays the EUR price that the rest of the code reads.
 export const CURRENCY = 'EUR';
+export const CURRENCIES = Object.freeze({ EUR: '€', USD: '$' });
 export const YEARLY_MONTHS_CHARGED = 10;
 
 export const PLANS = [
@@ -24,6 +28,7 @@ export const PLANS = [
         id: 'free',
         name: 'Free',
         monthlyCents: 0,
+        prices: { EUR: 0, USD: 0 },
         limits: { tags: 100, stickies: 10, feeds: 20, scheduled: 50, customRules: 0 },
         summary: 'Everything Mewvo does today, for one server.',
         perks: [
@@ -39,6 +44,7 @@ export const PLANS = [
         id: 'normal',
         name: 'Normal',
         monthlyCents: 199,
+        prices: { EUR: 199, USD: 199 },
         limits: { tags: 250, stickies: 25, feeds: 40, scheduled: 100, customRules: 5 },
         summary: 'More room for busy community servers.',
         perks: [
@@ -54,6 +60,7 @@ export const PLANS = [
         id: 'pro',
         name: 'Pro',
         monthlyCents: 499,
+        prices: { EUR: 499, USD: 499 },
         limits: { tags: 500, stickies: 50, feeds: 75, scheduled: 200, customRules: 25 },
         summary: 'For servers with a real staff team.',
         featured: true,
@@ -69,6 +76,7 @@ export const PLANS = [
         id: 'max',
         name: 'Max',
         monthlyCents: 999,
+        prices: { EUR: 999, USD: 999 },
         limits: { tags: 1000, stickies: 100, feeds: 150, scheduled: 500, customRules: 100 },
         summary: 'For people who run several servers.',
         perks: [
@@ -134,9 +142,21 @@ export const PRICING_FAQ = [
     { q: 'What happens to extra tags or feeds if I go back to Free?', a: 'The plan is that nothing is deleted: items over the Free limit stop working until you remove some or upgrade again. This may still change before launch.' },
 ];
 
-/** "€1.99" from cents (always two decimals). */
+/** "€1.99" / "$1.99" from cents (always two decimals). Unknown currencies throw. */
+export function formatPrice(cents, currency = CURRENCY) {
+    const symbol = CURRENCIES[currency];
+    if (!symbol) throw new Error(`Unknown currency: ${currency}`);
+    return `${symbol}${(Math.round(Number(cents) || 0) / 100).toFixed(2)}`;
+}
+
+/** "€1.99" from cents (always two decimals). Kept for existing callers. */
 export function euros(cents) {
-    return `€${(Math.round(Number(cents) || 0) / 100).toFixed(2)}`;
+    return formatPrice(cents, 'EUR');
+}
+
+/** A plan's monthly price in cents for a display currency (falls back to EUR). */
+export function monthlyCentsIn(plan, currency = CURRENCY) {
+    return plan.prices?.[currency] ?? plan.monthlyCents;
 }
 
 /** Yearly price in cents: 10 × monthly. */

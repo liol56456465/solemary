@@ -562,6 +562,21 @@ test('pricing: plan cards side by side with both prices, "Coming soon" never a l
     } finally { await site.close(); }
 });
 
+test('pricing: per-currency price table and formatPrice (EUR stays the shown currency)', async () => {
+    const plans = await import('../src/config/site/plans.js');
+    for (const plan of plans.PLANS) {
+        assert.deepEqual(Object.keys(plan.prices).sort(), ['EUR', 'USD'], plan.id);
+        assert.equal(plan.prices.EUR, plan.monthlyCents, `${plan.id}: monthlyCents must equal the EUR price`);
+        assert.equal(plans.monthlyCentsIn(plan, 'USD'), plan.prices.USD);
+    }
+    assert.equal(plans.CURRENCY, 'EUR');
+    assert.equal(plans.formatPrice(199), '€1.99');
+    assert.equal(plans.formatPrice(199, 'USD'), '$1.99');
+    assert.equal(plans.formatPrice(1990, 'EUR'), plans.euros(1990));
+    assert.equal(plans.formatPrice(0, 'USD'), '$0.00');
+    assert.throws(() => plans.formatPrice(199, 'GBP'), /Unknown currency/);
+});
+
 test('pricing: names, prices, perks and the comparison come from config/site/plans.js', async () => {
     const plans = await import('../src/config/site/plans.js');
     assert.deepEqual(plans.PLANS.map((p) => [p.name, p.monthlyCents]), [['Free', 0], ['Normal', 199], ['Pro', 499], ['Max', 999]]);
