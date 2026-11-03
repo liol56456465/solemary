@@ -33,8 +33,10 @@ import { isAllowedImageUrl, isSafeLink } from '../pages.js';
 import {
     RULES_LIMITS, addRule, deleteRule, editRule, moveRule, numberedRules, pruneLinks,
 } from '../../rules/serverRules.js';
-import { buildRulesMessages, resolveRulesImages } from '../../rules/rulesPost.js';
-import { RULES_POST_DEFAULT, RULES_POST_LIMITS } from '../../settings/settingsRegistry.js';
+import {
+    buildRulesMessages, postAndSaveRules, rulesMessagesFor, rulesPostDesign, serializedRules, updateAndSaveRules,
+} from '../../rules/rulesPost.js';
+import { RULES_POST_LIMITS } from '../../settings/settingsRegistry.js';
 import { EMBED_COLOURS, colourFromKey, parseHexColour } from '../../botMessageService.js';
 import { siteOrigin } from '../../site/shell.js';
 import { logger } from '../../../utils/logger.js';
@@ -51,13 +53,10 @@ const clip = (value, max = 120) => {
 const hexOf = (value) => `#${value.toString(16).padStart(6, '0').toUpperCase()}`;
 const reasonLabel = (key) => ENFORCEMENT_REASONS.find((r) => r.key === key)?.label || key;
 
-// One change at a time: each action reads the list, changes it and writes it back.
-let queue = Promise.resolve();
-function serialized(task) {
-    const run = queue.then(task, task);
-    queue = run.catch(() => {});
-    return run;
-}
+// One change at a time: each action reads the list, changes it and writes it back. The
+// queue is shared with /rules (services/rules/rulesPost.js), so a post from Discord and
+// one from here never overlap.
+const serialized = serializedRules;
 
 function current(ctx) {
     return { value: registryValue(ctx, 'serverRules'), links: registryValue(ctx, 'reasonRuleLinks') || {} };
@@ -65,8 +64,7 @@ function current(ctx) {
 
 /** The saved post design (the defaults filled in for keys an older value lacks). */
 function currentPost(ctx) {
-    const value = registryValue(ctx, 'rulesPost');
-    return { ...RULES_POST_DEFAULT, ...(value && typeof value === 'object' ? value : {}) };
+    return rulesPostDesign(registryValue(ctx, 'rulesPost'));
 }
 
 /** A textarea value: line breaks normalised, trimmed, refused (never cut) over `max`. */
@@ -154,8 +152,7 @@ async function savePost(ctx, next, changes, message) {
 /** The design's messages with the pictures as they are at post time (uploads attached). */
 async function messagesFor(ctx, design) {
     const { rules } = numberedRules(current(ctx).value);
-    const images = await resolveRulesImages(ctx.client, ctx.guildId, design, ctx.services.resolveWelcomeImageUrl);
-    return buildRulesMessages(rules, { ...design, colour: postColour(design) }, images);
+    return rulesMessagesFor({ client: ctx.client, guildId: ctx.guildId, rules, design: { ...design, colour: postColour(design) }, resolve: ctx.services.resolveWelcomeImageUrl });
 }
 
 /** True for errors meant for the admin (refusals with a readable message). */
@@ -375,7 +372,7 @@ ${textInput('consequence', '', { label: 'Consequence', max: consequenceMax, plac
 ${section('Add a rule', add)}
 ${section('Add from the library', library, ['Ready-made rules you can add with one click. You can edit or delete them afterwards like any other rule.', 'Adding a rule also links its reason (used by /enforcements) to it, unless that reason already points to another rule. Rules you already added show as Added.'], { key: 'library' })}
 ${section('Reasons linked to rules', links, 'Moderators pick a reason when they punish someone with /enforcements. Link a reason to a rule here, and the member\'s private message names that rule, like "Rule 3: No spam", with a link to it. The moderator also sees the rule and its consequence before confirming. Reasons a moderator types in by hand never name a rule.')}
-${section('Post to Discord', postSection(ctx, d), ['Post your rules in a Discord channel as a styled message, and update that message when the rules change.', 'Save the design first, check the preview, then post. Posting and updating need Administrator. Mentions in the rules never ping anyone.'], { key: 'post', size: 'full' })}`;
+${section('Post to Discord', postSection(ctx, d), ['Post your rules in a Discord channel as a styled message, and update that message when the rules change.', 'Save the design first, check the preview, then post. Posting and updating need Administrator. Mentions in the rules never ping anyone. In Discord, /rules post, /rules update and /rules preview do the same with this design.'], { key: 'post', size: 'full' })}`;
     },
 
     actions: {
@@ -513,16 +510,13 @@ ${section('Post to Discord', postSection(ctx, d), ['Post your rules in a Discord
                     const channel = ctx.guild.channels.cache.get(design.channelId);
                     if (!channel) throw new InputError('The saved channel no longer exists. Pick another one and save the design. Nothing was posted.', 400, 'channelId');
                     const messages = await messagesFor(ctx, design);
-                    const ids = await discordCall(() => ctx.services.postRulesMessages(ctx.guild, channel, messages), 'Discord refused the post. Nothing was posted.');
-                    const posted = { channelId: channel.id, messageIds: ids, at: new Date().toISOString() };
-                    try {
-                        await saveRegistry(ctx, { rulesPost: { ...design, posted } }, 'rules');
-                    } catch (error) {
-                        // Not saved: remove the post again, so the page never loses track of a post.
-                        await Promise.all(ids.map((id) => Promise.resolve(channel.messages?.delete?.(id)).catch(() => {})));
-                        throw error;
-                    }
-                    const count = ids.length;
+                    // Not saved: the service removes the post again, so the page never loses track of a post.
+                    const { posted } = await postAndSaveRules({
+                        guild: ctx.guild, channel, messages,
+                        post: (guild, ch, msgs) => discordCall(() => ctx.services.postRulesMessages(guild, ch, msgs), 'Discord refused the post. Nothing was posted.'),
+                        save: (next) => saveRegistry(ctx, { rulesPost: { ...design, posted: next } }, 'rules'),
+                    });
+                    const count = posted.messageIds.length;
                     return {
                         changes: [{ key: 'rules post', old: null, new: `posted in #${channel.name} (${count} ${count === 1 ? 'message' : 'messages'})` }],
                         audited: true, message: `The rules were posted in #${channel.name}.`,
@@ -537,18 +531,15 @@ ${section('Post to Discord', postSection(ctx, d), ['Post your rules in a Discord
                     const design = currentPost(ctx);
                     if (!design.posted) throw new InputError('The rules have not been posted yet. Use Post first.');
                     const messages = await messagesFor(ctx, design);
-                    const { channel, ids, added = [], leftovers = [] } = await discordCall(() => ctx.services.updateRulesMessages(ctx.guild, design.posted, messages),
-                        'Discord refused the update. Some messages may already show the new rules. Try Update posted message again.');
-                    const posted = { channelId: design.posted.channelId, messageIds: ids, at: new Date().toISOString() };
-                    try {
-                        await saveRegistry(ctx, { rulesPost: { ...design, posted } }, 'rules');
-                    } catch (error) {
-                        // Not saved: the new extra messages go again, the old ones stay, so the stored ids still match Discord.
-                        await Promise.all(added.map((m) => Promise.resolve(m.delete?.()).catch(() => {})));
-                        throw error;
-                    }
-                    // Saved: only now remove the old messages the shorter post no longer needs.
-                    await Promise.all(leftovers.map((m) => Promise.resolve(m.delete?.()).catch(() => {})));
+                    // Not saved: the new extra messages go again, the old ones stay. Saved: only then
+                    // are the old messages the shorter post no longer needs removed (in the service).
+                    const { channel, posted } = await updateAndSaveRules({
+                        guild: ctx.guild, current: design.posted, messages,
+                        update: (guild, current, msgs) => discordCall(() => ctx.services.updateRulesMessages(guild, current, msgs),
+                            'Discord refused the update. Some messages may already show the new rules. Try Update posted message again.'),
+                        save: (next) => saveRegistry(ctx, { rulesPost: { ...design, posted: next } }, 'rules'),
+                    });
+                    const ids = posted.messageIds;
                     const name = channel?.name ? `#${channel.name}` : 'the channel';
                     return {
                         changes: [{ key: 'rules post', old: `${design.posted.messageIds.length} messages`, new: `updated in ${name} (${ids.length} ${ids.length === 1 ? 'message' : 'messages'})` }],

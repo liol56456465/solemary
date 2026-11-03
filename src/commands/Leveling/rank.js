@@ -1,12 +1,50 @@
-import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags, escapeMarkdown } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { getUserLevelData, getLevelingConfig, getXpForLevel } from '../../services/leveling/leveling.js';
+import { TOTAL_MULTIPLIER_CAP, xpBoostBreakdown } from '../../services/leveling/levelBoosts.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { hasAdministrator } from '../../utils/commandGate.js';
 import { isBotOwner } from '../../config/bot.js';
 import { CARD_FILE_NAME, cardAvatarUrl, tryLevelCard } from '../../services/leveling/levelCard.js';
+
+/**
+ * "x2 (role Booster) in <#channel>" for an xpBoostBreakdown result, or null. With more than
+ * one source each shows its own multiplier. roleName = the boosting role's name. Pure.
+ */
+export function xpBoostLine(boost, { hereId = null, roleName = null } = {}) {
+  if (!boost || !(boost.multiplier > 1)) return null;
+  const sources = [];
+  if (boost.role > 1) sources.push([`role ${roleName ? escapeMarkdown(roleName) : 'boost'}`, boost.role]);
+  if (boost.channel > 1) sources.push(['channel boost', boost.channel]);
+  if (boost.global > 1) sources.push(['server-wide', boost.global]);
+  const parts = sources.length > 1 ? sources.map(([label, value]) => `${label} x${value}`) : sources.map(([label]) => label);
+  if (boost.capped) parts.push(`capped at x${TOTAL_MULTIPLIER_CAP}`);
+  const where = hereId ? ` in <#${hereId}>` : '';
+  return `x${boost.multiplier}${parts.length ? ` (${parts.join(', ')})` : ''}${where}`;
+}
+
+/**
+ * The member's XP boost where the command was run (a thread counts as its parent), or null.
+ * Also null where the member earns no XP at all (ignored channel or role, blacklisted), the
+ * same checks messageCreate makes before it gives XP.
+ */
+export function rankBoostLine(levelingConfig, member, channel) {
+  const roleIds = member?.roles?.cache ? [...member.roles.cache.keys()] : [];
+  if (channel?.id && levelingConfig?.ignoredChannels?.includes(channel.id)) return null;
+  if (levelingConfig?.ignoredRoles?.length && roleIds.some((id) => levelingConfig.ignoredRoles.includes(id))) return null;
+  if (member?.id && levelingConfig?.blacklistedUsers?.includes(member.id)) return null;
+  const boost = xpBoostBreakdown(levelingConfig, {
+    channelId: channel?.id ?? null,
+    threadParentId: channel?.isThread?.() ? channel.parentId : null,
+    roleIds,
+  });
+  if (!boost) return null;
+  const roleName = boost.roleId ? member.roles.cache.get(boost.roleId)?.name ?? null : null;
+  return xpBoostLine(boost, { hereId: channel?.id ?? null, roleName });
+}
+
 export default {
   data: new SlashCommandBuilder()
     .setName('rank')
@@ -124,7 +162,11 @@ export default {
       .setColor('#2ecc71')
       .setTimestamp();
 
-    await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
+    // Shown only when the member's boost here is above x1 (the same math as messageCreate).
+    const boostLine = rankBoostLine(levelingConfig, member, interaction.channel);
+    if (boostLine) embed.addFields({ name: 'XP boost', value: boostLine });
+
+    await InteractionHelper.safeEditReply(interaction, { embeds: [embed], allowedMentions: { parse: [] } });
     logger.debug(`Rank checked for user ${targetUser.id} in guild ${interaction.guildId}`);
   }
 };
