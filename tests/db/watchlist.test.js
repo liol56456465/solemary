@@ -127,3 +127,40 @@ test('watchlist: a database error throws, the cache is kept and nothing is shown
     assert.equal(rows.length, 0, 'nothing was stored');
     assert.equal((await wl.listActiveWatches(guildId)).some((row) => row.id === kept.id), true);
 });
+
+test('watchlist: add/end update the cache even when the reload after them fails', { skip }, async () => {
+    const target = user(21);
+    const realQuery = pgDb.pool.query;
+    // Only the full reload (SELECT … WHERE ended_at IS NULL AND (until …) without a guild filter) fails.
+    pgDb.pool.query = async (text, params) => {
+        if (/^\s*SELECT id, guild_id, user_id, reason, created_at, until FROM mod_watchlist\s+WHERE ended_at IS NULL/.test(String(text))) {
+            throw new Error('simulated reload failure');
+        }
+        return realQuery.call(pgDb.pool, text, params);
+    };
+    try {
+        const added = await wl.addWatch(client, { guildId, userId: target, reason: 'Reload fails', createdBy: admin });
+        assert.equal(wl.getActiveWatch(guildId, target)?.id, Number(added.id), 'alerting starts at once');
+        await wl.endWatch(client, { guildId, id: Number(added.id), endedBy: admin });
+        assert.equal(wl.getActiveWatch(guildId, target), null, 'alerting stops at once');
+    } finally {
+        pgDb.pool.query = realQuery;
+    }
+});
+
+test('watchlist: /background reads the database when the cache never loaded, and throws on a DB error', { skip }, async () => {
+    const target = user(31);
+    const added = await wl.addWatch(client, { guildId, userId: target, reason: 'Cache cold', createdBy: admin });
+    wl.resetWatchlistCacheForTests();
+    assert.equal(wl.isWatchlistCacheLoaded(), false);
+    assert.equal((await wl.getActiveWatchChecked(guildId, target))?.id, Number(added.id));
+    const realQuery = pgDb.pool.query;
+    pgDb.pool.query = async () => { throw new Error('simulated failure'); };
+    try {
+        await assert.rejects(wl.getActiveWatchChecked(guildId, target), /simulated failure/);
+    } finally {
+        pgDb.pool.query = realQuery;
+    }
+    await wl.refreshWatchlistCache();
+    await wl.endWatch(client, { guildId, id: Number(added.id), endedBy: admin });
+});

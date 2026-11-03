@@ -42,6 +42,7 @@ export default {
                 guildId: guild.id,
                 userId: user.id,
                 username: user.username,
+                kind: 'join',
                 event: Number.isFinite(user.createdTimestamp)
                     ? `joined the server (account created <t:${Math.floor(user.createdTimestamp / 1000)}:R>)`
                     : 'joined the server',

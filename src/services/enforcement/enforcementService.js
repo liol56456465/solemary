@@ -306,6 +306,7 @@ async function runAction({ guild, moderator, targetUser, flow, guard = null }) {
             guildId: guild.id,
             userId: targetUser.id,
             username: targetUser.username,
+            kind: 'case',
             event: `new case \`${result.record.case_code}\` (${flow.type}) by ${moderator?.user?.username || moderator?.id || 'unknown'}`,
         });
     }

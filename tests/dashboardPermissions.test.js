@@ -511,3 +511,11 @@ test('role rules and insights are Administrator-only (their paths are not swallo
         assert.equal(requiredLevel(routeKey(method, path)), ADMIN, `${method} ${path}`);
     }
 });
+
+test('watchlist: Administrator-only to view and to end (a moderator may be on it)', () => {
+    assert.equal(mayRun(MOD_DECISION, 'watchlist.view'), false);
+    assert.equal(mayRun(MOD_DECISION, 'watchlist.edit'), false);
+    assert.equal(mayRun(ADMIN_DECISION, 'watchlist.view'), true);
+    // OWNER_IDS without Administrator are view + settings only; the watchlist follows Discord (/case watch is admin-only).
+    assert.equal(mayRun(OWNER_DECISION, 'watchlist.view'), false);
+});

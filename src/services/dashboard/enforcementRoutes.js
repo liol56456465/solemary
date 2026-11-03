@@ -953,11 +953,13 @@ export function createEnforcementHandlers(core) {
     // ── No-contact orders ────────────────────────────────────────────────
 
     async function renderNoContact(req, res, status = 200, { error = null, values = {} } = {}) {
-        const [rows, watchRows] = await Promise.all([e.listActiveNoContactOrders(guildId, 100), e.listActiveWatches(guildId, 100)]);
+        // The watchlist is Administrator-only (like /case watch list): a moderator may be on it.
+        const showWatch = mayRun(req.dashboard.access, 'watchlist.view');
+        const [rows, watchRows] = await Promise.all([e.listActiveNoContactOrders(guildId, 100), showWatch ? e.listActiveWatches(guildId, 100) : []]);
         const ids = new Set([...rows.flatMap((o) => [o.user_a, o.user_b, o.created_by]), ...watchRows.flatMap((w) => [w.user_id, w.created_by])]);
         const names = new Map([...ids].map((id) => [id, client.users.cache?.get?.(id)?.username || null]));
         return sendHtml(res, status, noContactPage({
-            ...shellOf(req), rows, watchRows, names, canWrite: canWrite(req), editEnabled: settings.editEnabled, canAct: req.dashboard.access.canAct,
+            ...shellOf(req), rows, watchRows, showWatch, names, canWrite: canWrite(req), editEnabled: settings.editEnabled, canAct: req.dashboard.access.canAct,
             flash: status === 200 ? req.dashboard.flash : null, error, values,
         }));
     }

@@ -126,3 +126,13 @@ test('/case watch: add (member, reason, optional days), list, end', async () => 
     assert.equal(add[2].max_value, WATCH_MAX_DAYS);
     assert.equal(command.scope, 'main');
 });
+
+test('alert throttle is per kind: a join alert never swallows the ban case that follows', async () => {
+    setWatchlistCacheForTests([row({})]);
+    const { posts, post } = recorder();
+    const now = Date.now();
+    assert.equal(await alertWatched({}, { guildId: G, userId: A, event: 'joined the server', kind: 'join' }, { post, now }), true);
+    assert.equal(await alertWatched({}, { guildId: G, userId: A, event: 'new case `abcde` (ban) by automod', kind: 'case' }, { post, now: now + 5000 }), true);
+    assert.equal(await alertWatched({}, { guildId: G, userId: A, event: 'new case `fghjk` (warn) by mod', kind: 'case' }, { post, now: now + 6000 }), false, 'same kind within a minute');
+    assert.equal(posts.length, 2);
+});

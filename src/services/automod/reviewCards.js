@@ -142,6 +142,7 @@ function alertWatchlistHit(p) {
         guildId: p.guild.id,
         userId: p.targetUser.id,
         username: p.targetUser.username,
+        kind: 'automod',
         event: `triggered automod (${truncate(rule, 80)})${where}`,
     });
 }

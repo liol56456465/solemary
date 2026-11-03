@@ -498,7 +498,7 @@ ${rows.map((w) => html`<tr><td>${w.id}</td><td>${who(w.user_id)}</td><td>${forma
 }
 
 /** rows: listActiveNoContactOrders; names: Map(userId → username). */
-export function noContactPage({ session, access = null, moduleStates = {}, rows = [], watchRows = [], names = new Map(), canWrite = false, flash = null, error = null, editEnabled = true, canAct = true, values = {} }) {
+export function noContactPage({ session, access = null, moduleStates = {}, rows = [], watchRows = [], showWatch = false, names = new Map(), canWrite = false, flash = null, error = null, editEnabled = true, canAct = true, values = {} }) {
     const who = (id) => html`<a href="${userHref(id)}">${names.get(id) || id}</a> <span class="muted">${id}</span>`;
     const body = html`<header class="page-head"><h1>No-contact orders (${rows.length})</h1></header>
 <p class="muted help">Two members may not mention or reply to each other; breaking messages are deleted and logged. Both members are DMed when an order starts and ends.</p>
@@ -512,7 +512,7 @@ ${canWrite ? section('Start an order', actionForm(session.csrf, '/nocontact/add'
 <label>Second member (user ID)<input name="user_b" inputmode="numeric" maxlength="20" required value="${values.user_b || ''}"></label>
 <label>Days<input type="number" name="days" min="1" max="${NO_CONTACT_MAX_DAYS}" step="1" required value="${values.days || ''}"></label>
 <label class="wide">Reason (shown to both members)<input name="reason" maxlength="500" required value="${values.reason || ''}"></label></div>`, { submit: 'Start order' }), '', { key: 'nocontact-start' }) : ''}
-${watchlistSection({ session, rows: watchRows, names, canWrite })}`;
+${showWatch ? watchlistSection({ session, rows: watchRows, names, canWrite }) : ''}`;
     return layout({ title: 'No-contact', active: 'nocontact', session, access, moduleStates, body });
 }
 

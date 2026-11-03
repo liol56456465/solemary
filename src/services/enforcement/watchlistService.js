@@ -5,10 +5,13 @@
 //   - joins or rejoins the server (events/guildMemberAdd.js),
 //   - gets a new mod case (enforcementService.runAction),
 //   - trips automod (automod/reviewCards.js, where a hit is recorded).
-// At most one alert per member per minute.
+// At most one alert per member per minute and per kind (join / case / automod), so a
+// join alert never swallows the ban that follows it.
 //
-// Active entries are held in memory (loaded at startup, reloaded after every change
-// and by the expiry job), so the hot paths never read the database. An entry past
+// Active entries are held in memory (loaded at startup, updated directly by every
+// change, and reloaded after changes and by the expiry job), so the hot paths never
+// read the database. A reload that started before a local change is discarded, so an
+// older snapshot can never undo an add or an end. An entry past
 // its `until` stops alerting at once, even before the expiry job marks it ended.
 // until NULL = no end date (the default).
 
@@ -25,7 +28,8 @@ export const ALERT_COOLDOWN_MS = 60 * 1000;
 // guildId:userId → { id, reason, createdAt (ms), until (ms | null) }
 let byMember = new Map();
 let loaded = false;
-const lastAlerted = new Map(); // guildId:userId → ms
+let changeSeq = 0; // bumped by every local change; a reload that saw an older value is dropped
+const lastAlerted = new Map(); // guildId:userId:kind → ms
 
 function userError(message) {
     return createError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -33,26 +37,42 @@ function userError(message) {
 
 const unix = (ms) => Math.floor(ms / 1000);
 
+function entryOf(row) {
+    return {
+        id: Number(row.id),
+        reason: row.reason,
+        createdAt: new Date(row.created_at).getTime(),
+        until: row.until == null ? null : new Date(row.until).getTime(),
+    };
+}
+
 /** Builds the member → entry index from active rows; pure. */
 export function buildWatchIndex(rows) {
     const index = new Map();
-    for (const row of rows) {
-        index.set(`${row.guild_id}:${row.user_id}`, {
-            id: Number(row.id),
-            reason: row.reason,
-            createdAt: new Date(row.created_at).getTime(),
-            until: row.until == null ? null : new Date(row.until).getTime(),
-        });
-    }
+    for (const row of rows) index.set(`${row.guild_id}:${row.user_id}`, entryOf(row));
     return index;
+}
+
+/** Applies one committed change to the in-memory index right away (no reload needed). */
+function applyLocal(row, { ended }) {
+    const key = `${row.guild_id}:${row.user_id}`;
+    if (ended) {
+        if (byMember.get(key)?.id === Number(row.id)) byMember.delete(key);
+    } else {
+        byMember.set(key, entryOf(row));
+    }
+    changeSeq += 1;
 }
 
 /** Reloads the active entries into memory. Throws (and keeps the old cache) when the database fails. */
 export async function refreshWatchlistCache() {
+    const seenSeq = changeSeq;
     const { rows } = await query(
         `SELECT id, guild_id, user_id, reason, created_at, until FROM ${T.watchlist}
          WHERE ended_at IS NULL AND (until IS NULL OR until > NOW())`
     );
+    // A change committed while this SELECT ran is already in the map; this snapshot may predate it.
+    if (seenSeq !== changeSeq && loaded) return rows.length;
     byMember = buildWatchIndex(rows);
     loaded = true;
     return rows.length;
@@ -76,6 +96,20 @@ export function getActiveWatch(guildId, userId, now = Date.now()) {
     const entry = byMember.get(`${guildId}:${userId}`);
     if (!entry) return null;
     return entry.until == null || entry.until > now ? entry : null;
+}
+
+/**
+ * Like getActiveWatch, but reads the database when the cache never loaded (e.g. the
+ * database was down at startup). Throws when the database fails, never guesses "not watched".
+ */
+export async function getActiveWatchChecked(guildId, userId, now = Date.now()) {
+    if (loaded) return getActiveWatch(guildId, userId, now);
+    const { rows: [row] } = await query(
+        `SELECT id, guild_id, user_id, reason, created_at, until FROM ${T.watchlist}
+         WHERE guild_id = $1 AND user_id = $2 AND ended_at IS NULL AND (until IS NULL OR until > NOW())`,
+        [guildId, userId]
+    );
+    return row ? entryOf(row) : null;
 }
 
 /**
@@ -133,6 +167,7 @@ export async function addWatch(client, { guildId, userId, username = null, isBot
         }
         throw error;
     }
+    applyLocal(row, { ended: false });
     await refreshQuietly();
     await postModLog(client, 'watch', [
         { name: 'User', value: `${username || userId} (${userId})` },
@@ -151,6 +186,7 @@ export async function endWatch(client, { guildId, id, endedBy }) {
         [guildId, id, endedBy.id]
     );
     if (!row) return null;
+    applyLocal(row, { ended: true });
     await refreshQuietly();
     await postModLog(client, 'watch', [
         { name: 'User', value: `<@${row.user_id}> (${row.user_id})` },
@@ -170,6 +206,7 @@ export async function expireWatchlist(client) {
          WHERE ended_at IS NULL AND until IS NOT NULL AND until <= NOW() RETURNING *`
     );
     if (!rows.length) return 0;
+    for (const row of rows) applyLocal(row, { ended: true });
     await refreshQuietly();
     for (const row of rows) {
         await postModLog(client, 'watch', [
@@ -195,9 +232,9 @@ export function watchListLine(row) {
     return `**#${row.id}** <@${row.user_id}> · ${periodText(row)} · by <@${row.created_by}> · ${truncate(row.reason, 120)}`;
 }
 
-/** True (and records the time) when this member may get an alert now; at most one per minute. */
-export function takeAlertSlot(guildId, userId, now = Date.now()) {
-    const key = `${guildId}:${userId}`;
+/** True (and records the time) when this member may get an alert of this kind now; at most one per minute per kind. */
+export function takeAlertSlot(guildId, userId, now = Date.now(), kind = 'event') {
+    const key = `${guildId}:${userId}:${kind}`;
     if (now - (lastAlerted.get(key) ?? -Infinity) < ALERT_COOLDOWN_MS) return false;
     lastAlerted.delete(key);
     lastAlerted.set(key, now);
@@ -211,12 +248,12 @@ export function takeAlertSlot(guildId, userId, now = Date.now()) {
  * the member is not watched (one Map lookup); never throws. Returns true when posted.
  * `post` is for tests.
  */
-export async function alertWatched(client, { guildId, userId, username = null, event }, { post = postModLog, now = Date.now() } = {}) {
+export async function alertWatched(client, { guildId, userId, username = null, event, kind = 'event' }, { post = postModLog, now = Date.now() } = {}) {
     try {
         if (!guildId || !userId) return false;
         const entry = getActiveWatch(guildId, userId, now);
         if (!entry) return false;
-        if (!takeAlertSlot(guildId, userId, now)) return false;
+        if (!takeAlertSlot(guildId, userId, now, kind)) return false;
         await post(client, 'watch', [
             { name: 'User', value: `${username ? `${username} ` : ''}<@${userId}> (${userId})` },
             { name: 'Note', value: event },
@@ -234,5 +271,14 @@ export async function alertWatched(client, { guildId, userId, username = null, e
 export function setWatchlistCacheForTests(rows) {
     byMember = buildWatchIndex(rows);
     loaded = true;
+    changeSeq = 0;
+    lastAlerted.clear();
+}
+
+/** For tests: forget the cache, as if the startup load never succeeded. */
+export function resetWatchlistCacheForTests() {
+    byMember = new Map();
+    loaded = false;
+    changeSeq = 0;
     lastAlerted.clear();
 }

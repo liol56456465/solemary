@@ -78,6 +78,7 @@ export const PERMISSIONS = Object.freeze({
     'appeal.decide': ADMIN,
     'nocontact.edit': ADMIN,
     'watchlist.edit': ADMIN, // end a watchlist entry (the list is on the No-contact page)
+    'watchlist.view': ADMIN, // see the watchlist card; moderators open the No-contact page but must not see it
     'inbox.reply': MODERATOR, // modmail / ticket replies from the web
     'inbox.close': MODERATOR,
     'members.rules': ADMIN, // role rules: pages and changes

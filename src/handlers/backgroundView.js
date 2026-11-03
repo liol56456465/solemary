@@ -17,7 +17,7 @@ import { countCaseEdits } from '../services/enforcement/caseEditService.js';
 import { evidenceDisplay } from '../services/enforcement/evidenceService.js';
 import { dateStamp, formatDuration, stamp, truncate } from '../services/enforcement/format.js';
 import { getActiveOrdersFor, noContactLines } from '../services/enforcement/noContactService.js';
-import { getActiveWatch, watchlistLine } from '../services/enforcement/watchlistService.js';
+import { getActiveWatchChecked, watchlistLine } from '../services/enforcement/watchlistService.js';
 
 const PAGE_SIZE = 6;
 const NOTES_SHOWN = 5;
@@ -135,7 +135,8 @@ export async function buildRecordList(guildId, viewerId, targetUser, page) {
     const noContactField = noContact.length
         ? [{ name: 'Active no-contact orders', value: truncate(noContactLines(noContact).join('\n'), 1024) }]
         : [];
-    const watch = getActiveWatch(guildId, targetUser.id);
+    // Reads the database when the cache never loaded; a database error throws (never "not watched").
+    const watch = await getActiveWatchChecked(guildId, targetUser.id);
     const watchField = watch ? [{ name: 'Watchlist', value: truncate(watchlistLine(watch), 1024) }] : [];
 
     const embed = createEmbed({
