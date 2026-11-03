@@ -19,6 +19,7 @@ import { isNameTaken, nextDefaultName } from './caseService.js';
 import { addEvidence, captureLinks, MAX_LINKS_PER_FORM, parseEvidenceUrls } from './evidenceService.js';
 import { formatDuration, parseDuration, truncate } from './format.js';
 import { memberLadderHint, precedentHint, PRECEDENT_UNAVAILABLE } from './precedentService.js';
+import { ruleHintFor } from '../rules/serverRules.js';
 
 export const ACTION_LABELS = {
     ban: 'Ban',
@@ -221,6 +222,8 @@ export function flowSummary(flow) {
         rows, evidence, effect, notes,
         precedent: record ? flow.precedent || null : null,
         memberHint: record ? flow.memberHint || null : null,
+        // The server rule the prebuilt reason is linked to, and its listed consequence (text only).
+        ruleHint: record && flow.reasonKey ? ruleHintFor(flow.reasonKey) : null,
     };
 }
 

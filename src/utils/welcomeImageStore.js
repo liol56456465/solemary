@@ -37,9 +37,10 @@ export function isExpiredDiscordCdnUrl(url, now = Date.now()) {
  * Re-posts an uploaded image to the first usable storage channel. `attachment` is a
  * Discord attachment ({ url, name }) from /greet, or the checked bytes ({ data, name })
  * from the web dashboard. Returns { channelId, messageId, url } or null when no channel
- * accepted it.
+ * accepted it. `options.content` replaces the welcome/goodbye text of the stored message
+ * (the dashboard Rules page stores its banner and thumbnail this way).
  */
-export async function storeWelcomeImage(guild, attachment, candidateChannelIds, label) {
+export async function storeWelcomeImage(guild, attachment, candidateChannelIds, label, { content = null } = {}) {
   const me = guild.members.me;
   const tried = new Set();
   for (const channelId of candidateChannelIds) {
@@ -53,7 +54,7 @@ export async function storeWelcomeImage(guild, attachment, candidateChannelIds, 
 
     try {
       const message = await channel.send({
-        content: `Stored ${label} image for the welcome & goodbye settings. Please keep this message: the ${label} message loads its image from here.`,
+        content: content || `Stored ${label} image for the welcome & goodbye settings. Please keep this message: the ${label} message loads its image from here.`,
         files: [{ attachment: attachment.data ?? attachment.url, name: attachment.name || 'image.png' }],
         allowedMentions: { parse: [] },
       });

@@ -214,7 +214,7 @@ function makeServices() {
         getWelcomeSettings: async () => clone(s.welcome),
         // The /greet image store itself, on the fake guild (its channel.send is recorded by withImageStore).
         resolveLogChannel,
-        storeWelcomeImage: async (guild, attachment, channelIds, label) => { record('storeWelcomeImage', [attachment, channelIds, label]); return storeWelcomeImage(guild, attachment, channelIds, label); },
+        storeWelcomeImage: async (guild, attachment, channelIds, label, ...options) => { record('storeWelcomeImage', [attachment, channelIds, label, ...options]); return storeWelcomeImage(guild, attachment, channelIds, label, ...options); },
         // Bot in this server (appearance.js): the server owner's plan, and the two Discord calls.
         guildPlan: () => s.plan ?? 'pro',
         setBotNickname: async (guild, nick) => { record('setBotNickname', [nick]); },
@@ -362,6 +362,19 @@ function makeServices() {
             if (!roles.length) throw userErr('The following roles cannot be added: Mods - This role has dangerous permissions', 'validation');
             s.panels.push({ messageId: '710000000000000005', channelId: channel.id, roles: roles.map((r) => r.id) });
             return { message: { id: '710000000000000005' }, roles, rejected: roleIds.length > roles.length ? ['Mods - dangerous'] : [] };
+        },
+        // Rules post (rulesPost.js): records the built messages; s.rulesPostFails makes Discord refuse.
+        postRulesMessages: async (guild, channel, messages) => {
+            record('postRulesMessages', [channel.id, messages]);
+            if (s.rulesPostFails) throw new Error('Missing Access');
+            return messages.map((m, i) => `71000000000000010${i}`);
+        },
+        updateRulesMessages: async (guild, posted, messages) => {
+            record('updateRulesMessages', [posted, messages]);
+            if (s.rulesPostGone) throw userErr('One of the posted rules messages was deleted in #general. Use Post to send a new copy.', 'validation');
+            const message = (id) => ({ id, delete: async () => { s.rulesDeleted = [...(s.rulesDeleted || []), id]; } });
+            const ids = messages.map((m, i) => `71000000000000020${i}`);
+            return { channel: guild.channels.cache.get(posted.channelId), ids, added: ids.map(message), leftovers: (s.rulesLeftovers || []).map(message) };
         },
         postBotMessage: async (guild, { channel, content, embed }) => {
             record('postBotMessage', [channel.id, content, embed]);
@@ -642,6 +655,14 @@ const RULE_B = 'bbbb2222';
 function seedRules(state) {
     state.registry.serverRules = { rules: [{ id: RULE_A, title: 'No spam', text: 'Do not <b>spam</b>.' }, { id: RULE_B, title: 'Be kind', text: '' }], updatedAt: '2026-10-01T00:00:00.000Z' };
 }
+/** Rules plus a saved post design for #general (TEXT); `posted` adds an earlier post. */
+function seedRulesPost(state, { posted = false, banner = null } = {}) {
+    seedRules(state);
+    state.registry.rulesPost = {
+        ...getSettingEntry('rulesPost').fallback, channelId: TEXT, title: 'Our <b>rules</b>', colour: 0x9b59b6, banner,
+        posted: posted ? { channelId: TEXT, messageIds: ['710000000000000090'], at: '2026-10-02T00:00:00.000Z' } : null,
+    };
+}
 
 // Custom automod rules: one on, one off, the first with a <b> in its name (escaping).
 const CUSTOM_A = 'cust2345';
@@ -886,6 +907,18 @@ const CASES = {
             bad: { seed: seedRules, form: { id: RULE_A, direction: 'up' }, message: /already the first/ } },
         links: { seed: seedRules, form: { link_spam: RULE_A }, service: 'updateSettings',
             bad: { seed: seedRules, form: { link_spam: 'zzzz9999' }, message: /no longer exists/ } },
+        'library-add': { form: { key: 'spam' }, service: 'updateSettings', bad: { form: { key: 'nope' }, message: /does not exist/ } },
+        'post-design': { form: { channelId: TEXT, title: 'Rules', colour: 'green', hex: '', intro: 'Hi', footer: 'Bye', layout: 'fields', bannerUrl: '', thumbnailUrl: '' }, service: 'updateSettings',
+            bad: { form: { channelId: TEXT, title: 'Rules', layout: 'list', footer: 'x'.repeat(201) }, message: /Footer is too long: at most 200/ } },
+        'banner-upload': { seed: withImageStore, form: {}, upload: { file: { field: 'image', filename: 'cat.png', data: PNG } }, service: 'storeWelcomeImage', admin: true,
+            bad: { seed: withImageStore, form: {}, message: /Choose an image file/ } },
+        'thumbnail-upload': { seed: withImageStore, form: {}, upload: { file: { field: 'image', filename: 'cat.png', data: PNG } }, service: 'storeWelcomeImage', admin: true,
+            bad: { form: {}, message: /Choose an image file/ } },
+        'banner-remove': { seed: (s) => seedRulesPost(s, { banner: { url: 'https://example.com/b.png', ref: null } }), form: {}, service: 'updateSettings' },
+        'thumbnail-remove': { seed: (s) => { seedRulesPost(s); s.registry.rulesPost.thumbnail = { url: 'https://example.com/t.png', ref: null }; }, form: {}, service: 'updateSettings' },
+        post: { seed: seedRulesPost, form: {}, service: 'postRulesMessages', admin: true, bad: { seed: seedRules, form: {}, message: /Pick a channel in the design/ } },
+        'post-update': { seed: (s) => seedRulesPost(s, { posted: true }), form: {}, service: 'updateRulesMessages', admin: true,
+            bad: { seed: seedRulesPost, form: {}, message: /have not been posted yet/ } },
     },
 };
 
@@ -2458,6 +2491,248 @@ test('rules: links — one select per prebuilt reason; unchanged → "Nothing ch
     assert.deepEqual(h.state.registry.reasonRuleLinks, { spam: RULE_B });
     const line = h.calls.filter((c) => c.name === 'postModLog').at(-1).args[1].description;
     assert.match(line, /reason spam: \(none\) → rule 2: Be kind/);
+});
+
+const sectionOf = (body, title, nextTitle) => body.slice(body.indexOf(`>${title}</h2>`), nextTitle ? body.indexOf(`>${nextTitle}</h2>`) : undefined);
+
+test('rules v2: consequence in the add and edit forms and in the table; too long or two lines refused; edit keeps the library key', async () => {
+    const h = await setup();
+    assert.equal((await post(h, 'rules', 'rule-add', { title: 'No spam', text: 'x', consequence: ' 1-hour <b>mute</b> ' })).statusCode, 303);
+    const stored = h.state.registry.serverRules.rules[0];
+    assert.equal(stored.consequence, '1-hour <b>mute</b>');
+    const page = (await get(h, 'rules')).body;
+    assert.ok(page.includes('<td>1-hour &lt;b&gt;mute&lt;/b&gt;</td>'), 'shown escaped in the table');
+    assert.ok(page.includes('name="consequence" value="1-hour &lt;b&gt;mute&lt;/b&gt;"'), 'edit form prefilled');
+    const long = await post(h, 'rules', 'rule-add', { title: 'X', consequence: 'c'.repeat(101) });
+    assert.equal(long.statusCode, 400);
+    assert.match(long.body, /Consequence is too long: at most 100 characters \(you wrote 101\)/);
+    const twoLines = await post(h, 'rules', 'rule-add', { title: 'X', consequence: 'a\nb' });
+    assert.equal(twoLines.statusCode, 400);
+    assert.match(twoLines.body, /Consequence must be one line/);
+    assert.equal(h.state.registry.serverRules.rules.length, 1, 'nothing saved when refused');
+
+    h.state.registry.serverRules.rules[0].preset = 'spam';
+    assert.equal((await post(h, 'rules', 'rule-edit', { id: stored.id, title: 'No spam', text: 'x', consequence: '' })).statusCode, 303);
+    assert.deepEqual(h.state.registry.serverRules.rules[0], { id: stored.id, title: 'No spam', text: 'x', preset: 'spam' });
+    const modLog = h.calls.filter((c) => c.name === 'postModLog').at(-1).args[1].description;
+    assert.match(modLog, /No spam: x \(consequence: 1-hour <b>mute<\/b>\) → No spam: x/);
+    const same = await post(h, 'rules', 'rule-edit', { id: stored.id, title: 'No spam', text: 'x', consequence: '' });
+    assert.equal(same.statusCode, 303);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Nothing changed/);
+});
+
+test('rules library: Add sets the library key and links its reason only when that reason is free; added ones show as Added; plain English, no em dashes', async () => {
+    const h = await setup();
+    let page = (await get(h, 'rules')).body;
+    const library = sectionOf(page, 'Add from the library', 'Reasons linked to rules');
+    assert.ok(library.includes('Be respectful') && library.includes('Listen to staff'), 'every library rule listed');
+    assert.equal((library.match(/>Add<\/button>/g) || []).length, 14);
+    assert.ok(!/—/.test(library), 'no em dashes');
+
+    assert.equal((await post(h, 'rules', 'library-add', { key: 'spam' })).statusCode, 303);
+    let { rules } = h.state.registry.serverRules;
+    assert.deepEqual(rules[0], { id: rules[0].id, title: 'No spam', text: 'No message floods, walls of emoji, repeated messages or mass mentions.', consequence: 'Warning', preset: 'spam' });
+    assert.deepEqual(h.state.registry.reasonRuleLinks, { spam: rules[0].id });
+    assert.match((await h.sessions.get(h.session.id)).flash, /Rule 1 "No spam" added\. The reason "Spam" now points to it\./);
+
+    // "No swearing" and "No hate speech" share the slurs reason: only the first one links it.
+    await post(h, 'rules', 'library-add', { key: 'swearing' });
+    await post(h, 'rules', 'library-add', { key: 'hate' });
+    rules = h.state.registry.serverRules.rules;
+    assert.equal(h.state.registry.reasonRuleLinks.slurs, rules[1].id, 'a reason already linked is never re-pointed');
+    assert.ok(!/now points/.test((await h.sessions.get(h.session.id)).flash));
+    // A library rule without a reason links nothing.
+    await post(h, 'rules', 'library-add', { key: 'tos' });
+    assert.deepEqual(Object.keys(h.state.registry.reasonRuleLinks).sort(), ['slurs', 'spam']);
+
+    const again = await post(h, 'rules', 'library-add', { key: 'spam' });
+    assert.equal(again.statusCode, 400);
+    assert.match(again.body, /already in your rules/);
+    assert.equal(h.state.registry.serverRules.rules.length, 4);
+
+    page = (await get(h, 'rules')).body;
+    const after = sectionOf(page, 'Add from the library', 'Reasons linked to rules');
+    assert.equal((after.match(/>Added<\/span>/g) || []).length, 4);
+    assert.equal((after.match(/>Add<\/button>/g) || []).length, 10);
+    // A custom rule still works next to library ones.
+    assert.equal((await post(h, 'rules', 'rule-add', { title: 'Custom', text: '' })).statusCode, 303);
+    assert.equal(h.state.registry.serverRules.rules.at(-1).preset, undefined);
+
+    const full = await setup();
+    full.state.registry.serverRules = { rules: Array.from({ length: 30 }, (_, i) => ({ id: `r${String(i).padStart(4, '0')}`, title: `Rule ${i}`, text: '' })), updatedAt: null };
+    const refused = await post(full, 'rules', 'library-add', { key: 'spam' });
+    assert.equal(refused.statusCode, 400);
+    assert.match(refused.body, /already has 30 rules/);
+    assert.ok(!sectionOf((await get(full, 'rules')).body, 'Add from the library', 'Reasons linked to rules').includes('>Add</button>'), 'no Add buttons when full');
+});
+
+test('rules post design: saved as rulesPost; hex colour wins; link checks; preview escaped with the colour edge and the message count', async () => {
+    const h = await setup();
+    seedRules(h.state);
+    let page = (await get(h, 'rules')).body;
+    assert.match(page, /Pick a channel in the design above and save it/);
+    assert.ok(!page.includes('Update posted message'), 'no Update button before a post');
+    const form = { channelId: TEXT, title: 'Our <b>rules</b>', colour: 'green', hex: '#123abc', intro: 'Hello\r\nall', footer: 'Be nice', layout: 'fields', bannerUrl: 'https://example.com/b.png', thumbnailUrl: '' };
+    assert.equal((await post(h, 'rules', 'post-design', form)).statusCode, 303);
+    const saved = h.state.registry.rulesPost;
+    assert.deepEqual(saved, {
+        channelId: TEXT, title: 'Our <b>rules</b>', colour: 0x123abc, intro: 'Hello\nall', footer: 'Be nice', layout: 'fields',
+        banner: { url: 'https://example.com/b.png', ref: null }, thumbnail: null, posted: null,
+    });
+    const modLog = h.calls.filter((c) => c.name === 'postModLog').at(-1).args[1].description;
+    assert.match(modLog, /rules post colour/);
+
+    page = (await get(h, 'rules')).body;
+    const postPart = sectionOf(page, 'Post to Discord');
+    assert.ok(postPart.includes('fill="#123ABC"'), 'colour edge');
+    assert.ok(postPart.includes('<p class="rules-embed-title">Our &lt;b&gt;rules&lt;/b&gt;</p>'), 'title escaped');
+    assert.ok(postPart.includes('Do not &lt;b&gt;spam&lt;/b&gt;.'), 'rule text escaped');
+    assert.ok(postPart.includes('<p class="rules-embed-field-name">1. No spam</p>'), 'one box per rule');
+    assert.ok(postPart.includes('<p class="rules-embed-footer">Be nice</p>'));
+    assert.ok(postPart.includes('Posting needs <strong>1 message</strong>'));
+    assert.ok(postPart.includes('>Post to #general</button>'));
+    assert.ok(postPart.includes('Banner: https://example.com/b.png'), 'a non-Discord picture is named, not loaded (CSP)');
+    assert.ok(!/—/.test(postPart), 'no em dashes');
+    assert.ok(!/\sstyle=/.test(postPart), 'no inline styles');
+
+    // List layout: bold rule titles in one description.
+    await post(h, 'rules', 'post-design', { ...form, layout: 'list' });
+    assert.ok(sectionOf((await get(h, 'rules')).body, 'Post to Discord').includes('<strong>1. No spam</strong>'));
+
+    const bad = await setup();
+    for (const [patch, message] of [
+        [{ bannerUrl: 'http://example.com/b.png' }, /must start with https/],
+        [{ hex: 'blue' }, /colour code like #9B59B6/],
+        [{ layout: 'grid' }, /unknown choice/],
+        [{ title: 'a'.repeat(257) }, /Title is too long: at most 256/],
+        [{ intro: 'i'.repeat(1001) }, /Intro is too long: at most 1000/],
+        [{ channelId: VOICE }, /must be a text channel/],
+    ]) {
+        const res = await post(bad, 'rules', 'post-design', { ...form, ...patch });
+        assert.equal(res.statusCode, 400, JSON.stringify(patch));
+        assert.match(res.body, message);
+    }
+    assert.equal(bad.state.registry.rulesPost, undefined, 'nothing saved');
+});
+
+test('rules post: Post sends the built messages through the service and stores the ids; Discord errors refuse readably; Update edits in place', async () => {
+    const h = await setup();
+    seedRulesPost(h.state);
+    h.state.registry.serverRules.rules[0].consequence = 'Warning';
+    assert.equal((await post(h, 'rules', 'post', {})).statusCode, 303);
+    const [channelId, messages] = h.calls.find((c) => c.name === 'postRulesMessages').args;
+    assert.equal(channelId, TEXT);
+    assert.equal(messages.length, 1);
+    const embed = messages[0].embeds[0].data;
+    assert.equal(embed.title, 'Our <b>rules</b>');
+    assert.equal(embed.color, 0x9b59b6);
+    assert.match(embed.description, /\*\*1\. No spam\*\*\nDo not <b>spam<\/b>\.\n\*Consequence: Warning\*/);
+    assert.deepEqual(h.state.registry.rulesPost.posted.messageIds, ['710000000000000100']);
+    assert.equal(h.state.registry.rulesPost.posted.channelId, TEXT);
+    assert.match((await h.sessions.get(h.session.id)).flash, /The rules were posted in #general/);
+
+    const page = (await get(h, 'rules')).body;
+    assert.ok(page.includes('>Update posted message</button>'));
+    assert.ok(page.includes('data-confirm="Post the rules in #general as a new copy?'), 'posting again warns it makes a new copy');
+
+    assert.equal((await post(h, 'rules', 'post-update', {})).statusCode, 303);
+    const [posted] = h.calls.find((c) => c.name === 'updateRulesMessages').args;
+    assert.deepEqual(posted.messageIds, ['710000000000000100']);
+    assert.deepEqual(h.state.registry.rulesPost.posted.messageIds, ['710000000000000200']);
+    assert.match((await h.sessions.get(h.session.id)).flash, /posted rules in #general were updated/);
+
+    // Left-over old messages are deleted only after the new ids are saved.
+    const shorter = await setup();
+    seedRulesPost(shorter.state, { posted: true });
+    shorter.state.rulesLeftovers = ['710000000000000091'];
+    assert.equal((await post(shorter, 'rules', 'post-update', {})).statusCode, 303);
+    assert.deepEqual(shorter.state.rulesDeleted, ['710000000000000091']);
+    // The save fails: the new messages are removed again, the old ones kept, the stored ids untouched.
+    const saveFails = await setup();
+    seedRulesPost(saveFails.state, { posted: true });
+    saveFails.state.rulesLeftovers = ['710000000000000091'];
+    const realUpdate = saveFails.svc.updateSettings;
+    saveFails.svc.updateSettings = async (...args) => (args[1].rulesPost?.posted ? Promise.reject(new Error('database not responding')) : realUpdate(...args));
+    await assert.rejects(post(saveFails, 'rules', 'post-update', {}), /database not responding/);
+    assert.deepEqual(saveFails.state.rulesDeleted, ['710000000000000200'], 'only the new message deleted');
+    assert.deepEqual(saveFails.state.registry.rulesPost.posted.messageIds, ['710000000000000090']);
+
+    const gone = await setup();
+    seedRulesPost(gone.state, { posted: true });
+    gone.state.rulesPostGone = true;
+    const refused = await post(gone, 'rules', 'post-update', {});
+    assert.equal(refused.statusCode, 400);
+    assert.match(refused.body, /was deleted in #general\. Use Post to send a new copy/);
+    assert.deepEqual(gone.state.registry.rulesPost.posted.messageIds, ['710000000000000090'], 'stored post unchanged');
+
+    const failing = await setup();
+    seedRulesPost(failing.state);
+    failing.state.rulesPostFails = true;
+    const res = await post(failing, 'rules', 'post', {});
+    assert.equal(res.statusCode, 400);
+    assert.match(res.body, /Discord refused the post\. Nothing was posted\. Discord said: Missing Access/);
+    assert.equal(failing.state.registry.rulesPost.posted, null);
+    assert.equal(failing.auditRows.length, 0);
+
+    const empty = await setup();
+    seedRulesPost(empty.state);
+    empty.state.registry.serverRules = { rules: [], updatedAt: null };
+    const none = await post(empty, 'rules', 'post', {});
+    assert.equal(none.statusCode, 400);
+    assert.match(none.body, /no rules to post yet/);
+    assert.ok(!empty.calls.some((c) => c.name === 'postRulesMessages'));
+
+    const missing = await setup();
+    seedRulesPost(missing.state);
+    missing.state.registry.rulesPost.channelId = MISSING;
+    assert.match((await get(missing, 'rules')).body, /The saved channel no longer exists/);
+    assert.match((await post(missing, 'rules', 'post', {})).body, /The saved channel no longer exists/);
+});
+
+test('rules post images: an upload is stored in the log channel with a rules text, saved with its ref, attached at post time; Remove clears it', async () => {
+    const h = await setup();
+    seedRulesPost(h.state);
+    const channel = withImageStore(h.state, h.guild);
+    const res = await post(h, 'rules', 'banner-upload', {}, { upload: { file: { field: 'image', filename: 'cat.png', data: PNG } } });
+    assert.equal(res.statusCode, 303);
+    assert.match(channel.sent[0].content, /^Stored banner for the server rules post \(dashboard Rules page\)/);
+    assert.ok(!/welcome/i.test(channel.sent[0].content), 'not the welcome text');
+    assert.deepEqual(channel.sent[0].allowedMentions, { parse: [] });
+    const banner = h.state.registry.rulesPost.banner;
+    assert.equal(banner.ref.messageId, '800000000000000099');
+    assert.equal(banner.url, banner.ref.url);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Banner uploaded\. A copy is kept in #general/);
+
+    // Saving the design with the same link keeps the stored copy; the preview names the upload.
+    await post(h, 'rules', 'post-design', { channelId: TEXT, title: 'Rules', colour: 'primary', layout: 'list', bannerUrl: banner.url, thumbnailUrl: '' });
+    assert.deepEqual(h.state.registry.rulesPost.banner, banner);
+    assert.ok((await get(h, 'rules')).body.includes('Do not delete that message, because Mewvo loads the picture from it'));
+
+    await post(h, 'rules', 'post', {});
+    const [, messages] = h.calls.find((c) => c.name === 'postRulesMessages').args;
+    assert.deepEqual(messages[0].files, [{ attachment: `${banner.url}&fresh=1`, name: 'rules-banner.png' }]);
+    assert.equal(messages[0].embeds[0].data.image.url, 'attachment://rules-banner.png');
+
+    // A day later the upload's Discord link has expired: saving the design still works (the post loads a fresh link).
+    const expiredUrl = 'https://cdn.discordapp.com/attachments/500000000000000001/800000000000000099/rules-banner-image.png?ex=1&is=1&hm=1';
+    h.state.registry.rulesPost.banner = { url: expiredUrl, ref: { ...banner.ref, url: expiredUrl } };
+    const later = await post(h, 'rules', 'post-design', { channelId: TEXT, title: 'Rules', colour: 'primary', layout: 'list', footer: 'New footer', bannerUrl: expiredUrl, thumbnailUrl: '' });
+    assert.equal(later.statusCode, 303, String(later.body).match(/role="alert">([^<]*)/)?.[1]);
+    assert.equal(h.state.registry.rulesPost.banner.url, expiredUrl);
+    assert.ok(!/attachment links stop working/.test((await h.sessions.get(h.session.id)).flash), 'no link warning for an upload');
+    // A pasted expired Discord link that is not the saved upload is still refused.
+    const pasted = await post(h, 'rules', 'post-design', { channelId: TEXT, title: 'Rules', colour: 'primary', layout: 'list', bannerUrl: expiredUrl.replace('ex=1', 'ex=2'), thumbnailUrl: '' });
+    assert.equal(pasted.statusCode, 400);
+    assert.match(pasted.body, /has expired/);
+
+    assert.equal((await post(h, 'rules', 'banner-remove', {})).statusCode, 303);
+    assert.equal(h.state.registry.rulesPost.banner, null);
+
+    // The welcome store itself still writes its own text.
+    const w = await setup();
+    const wChannel = withImageStore(w.state, w.guild);
+    await post(w, 'welcome', 'welcome-image-upload', {}, { upload: { file: { field: 'image', filename: 'cat.png', data: PNG } } });
+    assert.match(wChannel.sent[0].content, /for the welcome & goodbye settings/);
 });
 
 test('rules: refused without CSRF, with editing off, and for users without access; nothing saved', async () => {

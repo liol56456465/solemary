@@ -2,7 +2,8 @@
 // rule line in punishment DMs, and the pure list operations the dashboard Rules page uses.
 //
 // Storage: two registry settings in guild_settings (settingsRegistry.js), no own table:
-//   serverRules      { rules: [{ id, title, text }], updatedAt }   (order = rule number)
+//   serverRules      { rules: [{ id, title, text, consequence?, preset? }], updatedAt }   (order = rule number)
+//   rulesPost        how the rules are posted in Discord (services/rules/rulesPost.js)
 //   reasonRuleLinks  { <prebuilt reason key>: <rule id> }
 // Reads are synchronous from the settings cache (guildSettings.js), so a DM never waits on
 // the database. Writes go through the settings service (row lock + dashboard_audit rows).
@@ -15,11 +16,13 @@ import { logger } from '../../utils/logger.js';
 
 export { RULES_LIMITS };
 
-/** { rules: [{ id, number, title, text }], updatedAt } from a stored value (or the empty default). */
+/** { rules: [{ id, number, title, text, consequence, preset }], updatedAt } from a stored value (or the empty default). */
 export function numberedRules(value) {
     const rules = Array.isArray(value?.rules) ? value.rules : [];
     return {
-        rules: rules.map((rule, i) => ({ id: rule.id, number: i + 1, title: rule.title, text: rule.text || '' })),
+        rules: rules.map((rule, i) => ({
+            id: rule.id, number: i + 1, title: rule.title, text: rule.text || '', consequence: rule.consequence || '', preset: rule.preset || null,
+        })),
         updatedAt: value?.updatedAt || null,
     };
 }
@@ -50,7 +53,24 @@ export function ruleForReason(reasonKey, env = process.env) {
     const ruleId = readReasonLinks(env)[reasonKey];
     if (!ruleId) return null;
     const rule = readServerRules(env).rules.find((r) => r.id === ruleId);
-    return rule ? { id: rule.id, number: rule.number, title: rule.title } : null;
+    return rule ? { id: rule.id, number: rule.number, title: rule.title, consequence: rule.consequence } : null;
+}
+
+/**
+ * The confirm-step hint for a prebuilt reason linked to a rule: "Rule 2: No swearing.
+ * Listed consequence: 1-hour mute." (or without the second part). Null when the reason is
+ * not linked. Never throws: a hint must not block a punishment.
+ */
+export function ruleHintFor(reasonKey, env = process.env) {
+    try {
+        const rule = lookup(reasonKey, env);
+        if (!rule) return null;
+        const title = String(rule.title).replace(/\s+/g, ' ').trim();
+        return `Rule ${rule.number}: ${title}.${rule.consequence ? ` Listed consequence: ${rule.consequence}.` : ''}`;
+    } catch (error) {
+        logger.warn(`Rule lookup for the confirm hint failed: ${error.message}`);
+        return null;
+    }
 }
 
 /** `${PUBLIC_URL origin}/rules#rule-N`, or null when PUBLIC_URL is not set (no page to link). */
@@ -97,20 +117,25 @@ export function newRuleId(rules = []) {
     return id;
 }
 
-const stored = (value) => (Array.isArray(value?.rules) ? value.rules.map((r) => ({ id: r.id, title: r.title, text: r.text || '' })) : []);
+/** A rule as stored: empty consequence and no preset are left out (the schema has them optional). */
+function storedRule({ id, title, text, consequence, preset }) {
+    return { id, title, text: text || '', ...(consequence ? { consequence } : {}), ...(preset ? { preset } : {}) };
+}
+const stored = (value) => (Array.isArray(value?.rules) ? value.rules.map(storedRule) : []);
 const stamp = (rules, now) => ({ rules, updatedAt: new Date(now).toISOString() });
 
-export function addRule(value, { title, text }, now = Date.now()) {
+export function addRule(value, { title, text, consequence = '', preset = null }, now = Date.now()) {
     const rules = stored(value);
     if (rules.length >= RULES_LIMITS.maxRules) return null;
-    return stamp([...rules, { id: newRuleId(rules), title, text }], now);
+    return stamp([...rules, storedRule({ id: newRuleId(rules), title, text, consequence, preset })], now);
 }
 
-export function editRule(value, id, { title, text }, now = Date.now()) {
+/** Changes title, text and consequence; a library rule keeps its preset key. */
+export function editRule(value, id, { title, text, consequence = '' }, now = Date.now()) {
     const rules = stored(value);
     const index = rules.findIndex((r) => r.id === id);
     if (index === -1) return null;
-    rules[index] = { id, title, text };
+    rules[index] = storedRule({ id, title, text, consequence, preset: rules[index].preset });
     return stamp(rules, now);
 }
 

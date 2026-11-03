@@ -6,8 +6,13 @@ import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
 import {
-    addRule, deleteRule, editRule, moveRule, pruneLinks, readPublicRules, ruleForReason, ruleLineFor, rulesPageUrl, setRuleLookupForTests,
+    addRule, deleteRule, editRule, moveRule, numberedRules, pruneLinks, readPublicRules, ruleForReason, ruleHintFor, ruleLineFor, rulesPageUrl, setRuleLookupForTests,
 } from '../src/services/rules/serverRules.js';
+import { flowSummary } from '../src/services/enforcement/flowBuilder.js';
+import { confirmationPayload } from '../src/handlers/enforcementPanel.js';
+import { actionConfirmPage } from '../src/services/dashboard/enforcementPages.js';
+import { RULES_LIBRARY } from '../src/config/rulesLibrary.js';
+import { ENFORCEMENT_REASONS } from '../src/config/enforcement.js';
 import { banDm, kickDm, muteDm, warnDm } from '../src/services/enforcement/dmTemplates.js';
 import { sendDm } from '../src/services/enforcement/enforcementService.js';
 import { prebuiltReasonFields } from '../src/commands/Owner/test.js';
@@ -107,7 +112,7 @@ test('/test: a reason typed as a prebuilt label or key is saved as that prebuilt
 
 test('ruleForReason reads the settings cache: number, title and id', () => {
     useRules();
-    assert.deepEqual(ruleForReason('spam'), { id: RULE_B, number: 2, title: 'No spam' });
+    assert.deepEqual(ruleForReason('spam'), { id: RULE_B, number: 2, title: 'No spam', consequence: '' });
     assert.equal(ruleForReason('slurs'), null);
     assert.equal(ruleForReason(null), null);
 });
@@ -244,4 +249,88 @@ test('DM: a "Your full record" link only when My record is on; dropped first whe
         if (saved.on === undefined) delete process.env.MEMBER_PORTAL_ENABLED; else process.env.MEMBER_PORTAL_ENABLED = saved.on;
         if (saved.url === undefined) delete process.env.PUBLIC_URL; else process.env.PUBLIC_URL = saved.url;
     }
+});
+
+// ── Consequence, library, confirm hint (Rules tab v2) ─────────────────────
+
+test('consequence and preset: kept by add/edit/numberedRules; empty ones are not stored; edit keeps the preset', () => {
+    const added = addRule(RULES, { title: 'No ads', text: 'x', consequence: 'Warning', preset: 'advertising' });
+    assert.deepEqual(added.rules[2], { id: added.rules[2].id, title: 'No ads', text: 'x', consequence: 'Warning', preset: 'advertising' });
+    const plain = addRule(RULES, { title: 'Plain', text: '' });
+    assert.deepEqual(Object.keys(plain.rules[2]).sort(), ['id', 'text', 'title'], 'no empty consequence or null preset stored');
+    const id = added.rules[2].id;
+    const edited = editRule(added, id, { title: 'No adverts', text: 'y', consequence: '' });
+    assert.deepEqual(edited.rules[2], { id, title: 'No adverts', text: 'y', preset: 'advertising' });
+    assert.equal(validateSetting('serverRules', added).ok, true);
+    const view = numberedRules(added).rules;
+    assert.equal(view[2].consequence, 'Warning');
+    assert.equal(view[2].preset, 'advertising');
+    assert.equal(view[0].consequence, '');
+    assert.equal(view[0].preset, null);
+});
+
+test('schema: consequence ≤ 100 and one line, preset must be a library-style key; rulesPost is validated', () => {
+    const rule = (extra) => ({ rules: [{ id: RULE_A, title: 'ok', text: '', ...extra }], updatedAt: null });
+    assert.equal(validateSetting('serverRules', rule({ consequence: 'x'.repeat(100) })).ok, true);
+    assert.equal(validateSetting('serverRules', rule({ consequence: 'x'.repeat(101) })).ok, false);
+    assert.equal(validateSetting('serverRules', rule({ consequence: 'a\nb' })).ok, false);
+    assert.equal(validateSetting('serverRules', rule({ preset: 'Bad Key' })).ok, false);
+    const post = {
+        channelId: '500000000000000001', title: 'Rules', colour: 0x9b59b6, intro: '', footer: '', layout: 'list', banner: null, thumbnail: null, posted: null,
+    };
+    assert.equal(validateSetting('rulesPost', post).ok, true);
+    assert.equal(validateSetting('rulesPost', { ...post, layout: 'grid' }).ok, false);
+    assert.equal(validateSetting('rulesPost', { ...post, banner: { url: 'http://x.example/a.png', ref: null } }).ok, false, 'https only');
+    assert.equal(validateSetting('rulesPost', { ...post, banner: { url: 'https://x.example/a.png', ref: null } }).ok, true);
+    assert.equal(validateSetting('rulesPost', { ...post, footer: 'x'.repeat(201) }).ok, false);
+    assert.equal(validateSetting('rulesPost', { ...post, posted: { channelId: post.channelId, messageIds: [], at: '2026-10-01T00:00:00Z' } }).ok, false, 'at least one message id');
+});
+
+test('library: 14 rules with unique keys, within the limits; every linked reason is a real prebuilt reason', () => {
+    assert.equal(RULES_LIBRARY.length, 14);
+    assert.equal(new Set(RULES_LIBRARY.map((r) => r.key)).size, 14);
+    const reasons = new Set(ENFORCEMENT_REASONS.map((r) => r.key));
+    for (const entry of RULES_LIBRARY) {
+        assert.ok(entry.title.length <= 80 && entry.text.length <= 1000 && entry.consequence.length <= 100, entry.key);
+        assert.ok(entry.reason === null || reasons.has(entry.reason), `${entry.key}: unknown reason ${entry.reason}`);
+        assert.ok(!/—/.test(entry.title + entry.text + entry.consequence), `${entry.key}: no em dash`);
+        assert.equal(validateSetting('serverRules', { rules: [{ id: RULE_A, title: entry.title, text: entry.text, consequence: entry.consequence, preset: entry.key }], updatedAt: null }).ok, true, entry.key);
+    }
+});
+
+test('ruleHintFor: rule number, title and listed consequence; null when unlinked; a failing lookup never throws', () => {
+    useRules({ rules: { rules: [RULES.rules[0], { ...RULES.rules[1], consequence: '1-hour mute' }], updatedAt: null } });
+    assert.equal(ruleHintFor('spam'), 'Rule 2: No spam. Listed consequence: 1-hour mute.');
+    assert.equal(ruleHintFor('slurs'), null);
+    useRules();
+    assert.equal(ruleHintFor('spam'), 'Rule 2: No spam.');
+    setRuleLookupForTests(() => { throw new Error('cache gone'); });
+    assert.equal(ruleHintFor('spam'), null);
+});
+
+test('confirm step: the rule hint is a -# line in /enforcements and a muted line on the dashboard; record actions with a linked reason only', () => {
+    setRuleLookupForTests((key) => (key === 'spam' ? { id: RULE_B, number: 2, title: 'No <b>spam</b>', consequence: 'Warning' } : null));
+    const flow = { type: 'warn', targetUsername: 'member', targetId: '300000000000000004', reason: 'Spam', reasonKey: 'spam', name: 'x', evidence: [] };
+    const summary = flowSummary(flow);
+    assert.equal(summary.ruleHint, 'Rule 2: No <b>spam</b>. Listed consequence: Warning.');
+    const description = confirmationPayload(flow, '1', 'nonce').embeds[0].data.description;
+    assert.ok(description.split('\n').includes('-# Rule 2: No <b>spam</b>. Listed consequence: Warning.'), description);
+    const page = String(actionConfirmPage({ session: { csrf: 'c', userId: '1', username: 'a' }, userId: flow.targetId, type: 'warn', summary, token: 't', hash: 'h' }));
+    assert.ok(page.includes('<p class="muted">Rule 2: No &lt;b&gt;spam&lt;/b&gt;. Listed consequence: Warning.</p>'), 'escaped, muted');
+    assert.equal(flowSummary({ ...flow, reasonKey: 'harassment' }).ruleHint, null, 'unlinked reason');
+    assert.equal(flowSummary({ ...flow, type: 'unban', reasonKey: 'spam' }).ruleHint, null, 'lift actions have no hint');
+    assert.ok(!confirmationPayload({ ...flow, reasonKey: 'custom' }, '1', 'nonce').embeds[0].data.description.includes('Rule 2'));
+});
+
+test('/rules: the consequence shows under the rule, escaped; no line when a rule has none', async () => {
+    const site = await serve(() => ({ rules: [
+        { id: RULE_A, number: 1, title: 'Be kind', text: 'No insults.', consequence: 'Warning <b>then</b> mute' },
+        { id: RULE_B, number: 2, title: 'No spam', text: '', consequence: '' },
+    ], updatedAt: null }));
+    try {
+        const res = await site.get('/rules');
+        assert.ok(res.body.includes('<p class="rule-consequence"><span class="rule-consequence-label">Consequence:</span> Warning &lt;b&gt;then&lt;/b&gt; mute</p>'));
+        assert.equal(res.body.split('class="rule-consequence"').length, 2, 'only the rule with a consequence');
+        assert.ok(!/\sstyle=|<style/i.test(res.body), 'no inline styles');
+    } finally { await site.close(); }
 });

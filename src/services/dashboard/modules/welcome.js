@@ -130,9 +130,10 @@ async function imageFor(ctx, url, ref, label) {
 /**
  * Re-posts an uploaded image with storeWelcomeImage (the /greet store) into the audit log
  * channel. Returns the stored ref { channelId, messageId, url }; refuses (nothing saved)
- * when the file is not an image or there is no usable storage channel.
+ * when the file is not an image or there is no usable storage channel. `content`: the text
+ * of the stored message when it is not for welcome/goodbye (the Rules page uses this).
  */
-async function storeUpload(ctx, prefix, label) {
+export async function storeUpload(ctx, prefix, label, { content = null } = {}) {
     const field = 'image';
     const file = ctx.upload?.file || null;
     if (!file) throw new InputError('Choose an image file to upload.', 400, field);
@@ -143,7 +144,7 @@ async function storeUpload(ctx, prefix, label) {
     if (!channelId) {
         throw new InputError(`${label}: no main log channel is set, so the uploaded picture has nowhere to be kept. Set one on the Logging page, or use an image link instead. Nothing was changed.`, 400, field);
     }
-    const ref = await ctx.services.storeWelcomeImage(ctx.guild, { data: file.data, name: `${prefix}-image.${image.ext}` }, [channelId], prefix);
+    const ref = await ctx.services.storeWelcomeImage(ctx.guild, { data: file.data, name: `${prefix}-image.${image.ext}` }, [channelId], prefix, ...(content ? [{ content }] : []));
     if (!ref) {
         const channel = ctx.guild?.channels?.cache?.get(channelId);
         throw new InputError(`${label}: Mewvo could not post the picture in the main log channel (${channel ? `#${channel.name}` : channelId}). Mewvo needs the View Channel, Send Messages and Attach Files permissions there. Nothing was changed.`, 400, field);

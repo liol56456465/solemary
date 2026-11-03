@@ -26,7 +26,7 @@ export function rulesPage(ctx, data) {
     } else {
         const updated = updatedOn(data.updatedAt);
         content = html`${updated ? html`<p class="note">Last updated <time datetime="${updated.iso}">${updated.text}</time>.</p>` : ''}
-<ol class="rules-list">${data.rules.map((rule) => html`<li class="rule" id="rule-${rule.number}"><a class="rule-num" href="#rule-${rule.number}" aria-label="Link to rule ${rule.number}">${String(rule.number).padStart(2, '0')}</a><div class="rule-body"><h2 class="rule-title">${rule.title}</h2>${rule.text ? html`<p class="rule-text">${rule.text}</p>` : ''}</div></li>`)}</ol>`;
+<ol class="rules-list">${data.rules.map((rule) => html`<li class="rule" id="rule-${rule.number}"><a class="rule-num" href="#rule-${rule.number}" aria-label="Link to rule ${rule.number}">${String(rule.number).padStart(2, '0')}</a><div class="rule-body"><h2 class="rule-title">${rule.title}</h2>${rule.text ? html`<p class="rule-text">${rule.text}</p>` : ''}${rule.consequence ? html`<p class="rule-consequence"><span class="rule-consequence-label">Consequence:</span> ${rule.consequence}</p>` : ''}</div></li>`)}</ol>`;
     }
     return layout(ctx, {
         title: 'Rules', active: 'rules', path: '/rules',

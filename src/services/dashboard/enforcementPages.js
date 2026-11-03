@@ -390,6 +390,7 @@ ${summary.effect ? html`<dt>Effect</dt><dd>${summary.effect}</dd>` : ''}
 ${summary.notes.map((n) => html`<p>${n}</p>`)}
 ${summary.precedent ? html`<p class="muted">${summary.precedent}</p>` : ''}
 ${summary.memberHint ? html`<p class="muted">${summary.memberHint}</p>` : ''}
+${summary.ruleHint ? html`<p class="muted">${summary.ruleHint}</p>` : ''}
 ${block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(block.until)}; this will be refused.</p>` : ''}
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
 ${actionForm(session.csrf, `/users/${userId}/action/execute`, '', { submit: `Confirm ${ACTION_LABELS[type].toLowerCase()}`, hidden: { token, fh: hash }, danger: true })}</section>`;

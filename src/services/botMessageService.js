@@ -46,7 +46,7 @@ export const EMBED_COLOURS = [
 
 const PERMISSION_LABELS = {
     ViewChannel: 'View Channel', SendMessages: 'Send Messages', SendMessagesInThreads: 'Send Messages in Threads',
-    EmbedLinks: 'Embed Links', AddReactions: 'Add Reactions', ReadMessageHistory: 'Read Message History',
+    EmbedLinks: 'Embed Links', AddReactions: 'Add Reactions', ReadMessageHistory: 'Read Message History', AttachFiles: 'Attach Files',
 };
 
 const POSTABLE_TYPES = new Set([

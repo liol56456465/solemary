@@ -47,13 +47,17 @@ const wordList = z.array(z.string().trim().toLowerCase().min(1).max(64)).max(500
 // Server rules (dashboard Rules page, public /rules, the rule line in punishment DMs).
 // Each rule has a stable id, so moving or deleting rules never re-points a reason link;
 // its number is its position (1-based). updatedAt: when the list last changed (ISO).
-export const RULES_LIMITS = Object.freeze({ maxRules: 30, titleMax: 80, textMax: 1000 });
+// consequence: optional text like "1-hour mute" (display only, it never punishes by itself);
+// preset: the rulesLibrary.js key when the rule was added from the library.
+export const RULES_LIMITS = Object.freeze({ maxRules: 30, titleMax: 80, textMax: 1000, consequenceMax: 100 });
 const ruleId = z.string().regex(/^[a-z0-9]{4,16}$/, 'must be a rule id');
 const serverRules = z.object({
     rules: z.array(z.object({
         id: ruleId,
         title: z.string().trim().min(1, 'a rule needs a title').max(RULES_LIMITS.titleMax).refine((v) => !/[\r\n]/.test(v), 'the title must be one line'),
         text: z.string().trim().max(RULES_LIMITS.textMax),
+        consequence: z.string().trim().max(RULES_LIMITS.consequenceMax).refine((v) => !/[\r\n]/.test(v), 'the consequence must be one line').optional(),
+        preset: z.string().regex(/^[a-z0-9_]{1,40}$/, 'must be a library key').optional(),
     }).strict()).max(RULES_LIMITS.maxRules, `at most ${RULES_LIMITS.maxRules} rules`)
         .refine((rules) => new Set(rules.map((r) => r.id)).size === rules.length, 'rule ids must be unique'),
     updatedAt: z.string().refine((v) => Number.isFinite(Date.parse(v)), 'must be a date').nullable(),
@@ -73,6 +77,42 @@ const customRules = z.array(z.object({
 }).strict().refine((rule) => rule.action !== 'mute' || Boolean(rule.muteDuration), 'a mute rule needs a duration'))
     .max(100, 'at most 100 custom rules')
     .refine((rules) => new Set(rules.map((r) => r.id)).size === rules.length, 'custom rule ids must be unique');
+
+// How the rules are posted in Discord (dashboard Rules page, services/rules/rulesPost.js).
+// An image is a link, or an upload kept in the audit log channel ({ channelId, messageId,
+// url }, utils/welcomeImageStore.js); `posted` = the messages the last post made, for
+// "Update posted message".
+export const RULES_POST_LIMITS = Object.freeze({ titleMax: 256, introMax: 1000, footerMax: 200, maxMessages: 10 });
+const imageRef = z.object({ channelId: snowflake, messageId: snowflake, url: z.string().max(2048) }).strict();
+const rulesImage = z.object({
+    url: z.string().max(2048).refine((value) => {
+        try {
+            return new URL(value).protocol === 'https:';
+        } catch {
+            return false;
+        }
+    }, 'must be an https:// link'),
+    ref: imageRef.nullable(),
+}).strict().nullable();
+const rulesPost = z.object({
+    channelId: optionalId,
+    title: z.string().trim().max(RULES_POST_LIMITS.titleMax),
+    colour: int(0, 0xffffff).nullable(),
+    intro: z.string().trim().max(RULES_POST_LIMITS.introMax),
+    footer: z.string().trim().max(RULES_POST_LIMITS.footerMax),
+    layout: z.enum(['list', 'fields']),
+    banner: rulesImage,
+    thumbnail: rulesImage,
+    posted: z.object({
+        channelId: snowflake,
+        messageIds: z.array(snowflake).min(1).max(RULES_POST_LIMITS.maxMessages),
+        at: z.string().refine((v) => Number.isFinite(Date.parse(v)), 'must be a date'),
+    }).strict().nullable(),
+}).strict();
+export const RULES_POST_DEFAULT = Object.freeze({
+    channelId: null, title: 'Server rules', colour: null, intro: '', footer: '', layout: 'list',
+    banner: null, thumbnail: null, posted: null,
+});
 
 export const SETTING_KINDS = ['channel', 'category', 'role', 'number', 'duration', 'string', 'url', 'boolean', 'list', 'json'];
 
@@ -296,6 +336,11 @@ export const SETTINGS = Object.freeze([
         key: 'reasonRuleLinks', module: 'rules', kind: 'json', guild: 'main', label: 'Reasons linked to rules',
         fallback: Object.freeze({}), schema: reasonRuleLinks,
         describe: (value) => `${Object.keys(value || {}).length} linked`,
+    },
+    {
+        key: 'rulesPost', module: 'rules', kind: 'json', guild: 'main', label: 'Rules post in Discord',
+        fallback: RULES_POST_DEFAULT, schema: rulesPost,
+        describe: (value) => (value?.posted ? `posted in ${value.posted.channelId}` : 'not posted'),
     },
 ].map((entry) => Object.freeze({ sensitive: false, envUnit: null, ...entry })));
 

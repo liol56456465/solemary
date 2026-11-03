@@ -345,6 +345,8 @@ button.button { cursor: pointer; }
 .rule-num:hover { text-decoration: underline; }
 .rule-title { font-size: 20px; font-weight: 800; line-height: 28px; letter-spacing: -0.015em; margin: 0; overflow-wrap: anywhere; }
 .rule-text { color: var(--text-muted); margin: 6px 0 0; white-space: pre-line; overflow-wrap: anywhere; }
+.rule-consequence { margin: 8px 0 0; font-size: 14px; overflow-wrap: anywhere; }
+.rule-consequence-label { font-weight: 700; }
 .rules-appeal { margin-top: 32px; }
 
 /* Commands */

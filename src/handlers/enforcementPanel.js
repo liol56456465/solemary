@@ -356,6 +356,7 @@ export function confirmationPayload(flow, moderatorId, nonce) {
     // Consistency hints (read-only): similar cases for this reason + the target's ladder.
     if (summary.precedent) lines.push(`-# ${summary.precedent}`);
     if (summary.memberHint) lines.push(`-# ${summary.memberHint}`);
+    if (summary.ruleHint) lines.push(`-# ${summary.ruleHint}`);
 
     return {
         embeds: [createEmbed({
