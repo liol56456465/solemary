@@ -14,7 +14,7 @@ const { normalizeSettings } = await import('../../src/services/automod/automodSe
 const { setGuildOwnerResolver, setPremiumCache } = await import('../../src/services/billing/premiumEffects.js');
 const { logger } = await import('../../src/utils/logger.js');
 const {
-    BacktestError, MAX_EXAMPLES, MAX_MESSAGES, cleanDraftRule, createBacktestRunner, maskExcerpt, maskWord,
+    BacktestError, MAX_EXAMPLES, MAX_MESSAGES, cleanDraftRule, createBacktestRunner, looksTooStrict, maskExcerpt, maskTerm, maskWord,
 } = await import('../../src/services/automod/backtest.js');
 
 const DAY = 24 * 3600 * 1000;
@@ -247,7 +247,7 @@ test('job: built-in rules with the current rule modes; examples mask the matched
     const job = runner.get(GUILD);
     assert.equal(job.params.automodEnabled, false);
     assert.deepEqual(Object.keys(job.result.byRule).sort(), ['caps', 'language', 'privacy']);
-    assert.deepEqual(job.result.byRule.privacy, { label: 'Sharing personal info', count: 2, on: 0, monitor: 2 });
+    assert.deepEqual(job.result.byRule.privacy, { label: 'Sharing personal info', count: 2, on: 0, monitor: 2, members: 1, mayBeTooStrict: false });
     assert.equal(job.result.examples[0].excerpt, 'what a n****r move');
     assert.equal(job.result.examples[2].excerpt, 'mail me at [e-mail]');
     assert.ok(!job.result.examples[3].excerpt.includes('7946'), 'digits hidden');
@@ -345,4 +345,86 @@ test('job failures: a missing-permission error names the channel; other errors a
 
     now += 31 * 60 * 1000;
     assert.equal(runner.get(GUILD), null, 'expired after 30 minutes');
+});
+
+// ── noise signal, word breakdown, rules that are off ─────────────────────
+
+test('looksTooStrict: only at 10+ messages AND 3+ members AND 2%+ of the checked messages', () => {
+    assert.equal(looksTooStrict({ count: 10, members: 3 }, 500), true, '2% exactly');
+    assert.equal(looksTooStrict({ count: 9, members: 9 }, 10), false, 'too few messages, however large the share');
+    assert.equal(looksTooStrict({ count: 300, members: 2 }, 400), false, 'one or two members tripping it again and again');
+    assert.equal(looksTooStrict({ count: 10, members: 3 }, 501), false, 'under 2%');
+    assert.equal(looksTooStrict({ count: 10, members: 3 }, 0), false, 'nothing checked');
+    assert.equal(looksTooStrict(null, 100), false);
+});
+
+test('maskTerm masks every part of a word or phrase like maskWord', () => {
+    assert.equal(maskTerm('nigger'), 'n****r');
+    assert.equal(maskTerm('buy followers'), 'b** f*******s');
+    assert.equal(maskTerm('  free   nitro '), 'f**e n***o');
+    assert.equal(maskTerm(''), '*');
+});
+
+test('job: members, one count per rule per message, masked word breakdown, off rules counted apart, the strict hint, the draft words kept for "Add this rule"', async () => {
+    const now = Date.now();
+    const msgs = [];
+    let age = 1000;
+    const add = (content, authorId) => { msgs.push(histMsg('c1', age, content, { authorId, now })); age += 1000; };
+    const people = ['u1', 'u2', 'u3'];
+    for (let i = 0; i < 8; i += 1) add('send nudes', people[i % 3]); // language (sexual word, nobody aimed at)
+    add('n1gg3r', 'u2');
+    add('n1gg3r', 'u2');
+    add('send nudes n1gg3r', 'u3'); // two language hits, one message
+    for (const id of people) add('THIS IS A VERY LOUD MESSAGE FOR EVERYONE', id); // caps is off
+    for (let i = 0; i < 36; i += 1) add('hello', 'u1'); // the draft, one member only
+    const members = Object.fromEntries(people.map((id) => [id, { id, permissions: { has: () => false } }]));
+    const guild = fakeGuild([fakeChannel('c1', 'general', msgs)], { members });
+    const runner = createBacktestRunner({ now: () => now });
+    const settings = normalizeSettings({ enabled: true, mode: 'enforce', ruleModes: { caps: 'off' } });
+    runner.start({ guild, channelIds: ['c1'], days: 1, settings, draft: { name: 'Hello', words: 'hello\nhi there' } });
+    await runner.done(GUILD);
+    const job = runner.get(GUILD);
+    assert.equal(job.status, 'done', job.error);
+    const r = job.result;
+    assert.equal(r.checked, 50);
+    const language = r.byRule.language;
+    assert.equal(language.count, 11, 'the message with two language hits counts once');
+    assert.equal(language.members, 3);
+    assert.deepEqual(language.words, [{ word: 'n***s', count: 9 }, { word: 'n****r', count: 3 }]);
+    assert.equal(language.moreWords, 0);
+    assert.equal(language.mayBeTooStrict, true, '11 messages, 3 members, 22%');
+    // caps is off: not a broken rule, but listed apart for "Turn on".
+    assert.equal(r.byRule.caps, undefined);
+    assert.deepEqual(r.offRules.caps, { label: 'Excessive caps', count: 3, members: 3, mayBeTooStrict: false });
+    assert.equal(r.hitMessages, 11 + 36, 'off rules do not count as broken');
+    const draft = r.byRule.draft;
+    assert.equal(draft.count, 36);
+    assert.equal(draft.members, 1);
+    assert.equal(draft.mayBeTooStrict, false, 'one member only: never "too strict"');
+    assert.deepEqual(draft.words, [{ word: 'h***o', count: 36 }]);
+    assert.deepEqual(job.params.draft, { name: 'Hello', words: 2, list: ['hello', 'hi there'] });
+    // No raw matched word and no member id list anywhere in the result.
+    const json = JSON.stringify(r);
+    for (const word of ['nudes', 'nigger', 'n1gg3r', 'hello']) assert.ok(!json.includes(word), word);
+});
+
+test('job: a failed run still turns its word counts into masked words', async () => {
+    const now = Date.now();
+    const first = histMsg('c1', 1000, 'you n1gg3r', { now });
+    const second = histMsg('c1', 2000, 'later', { now });
+    Object.defineProperty(second, 'mentions', { get() { throw new Error('boom'); } });
+    const guild = fakeGuild([fakeChannel('c1', 'general', [first, second])], { members: { u1: plainMember } });
+    const realWarn = logger.warn;
+    logger.warn = () => {};
+    try {
+        const runner = createBacktestRunner({ now: () => now });
+        runner.start({ guild, channelIds: ['c1'], days: 1, settings: SETTINGS });
+        await runner.done(GUILD);
+        const job = runner.get(GUILD);
+        assert.equal(job.status, 'failed');
+        assert.deepEqual(job.result.byRule.language.words, [{ word: 'n****r', count: 1 }]);
+        assert.ok(!JSON.stringify(job).includes('nigger'));
+    } finally {
+        logger.warn = realWarn;
+    }
 });
