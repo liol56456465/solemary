@@ -18,6 +18,16 @@ export const OWNER_KIT = new Set([
     'backup status', 'backup restore', 'backup snapshot', 'backup snapshots', 'backup diff', 'backup revert', 'backup rebuild',
 ]);
 
+/**
+ * Admin commands that stay commands while retired, for Administrators as usual (owner, 2026-11-04:
+ * "/test is one of the most useful"). Nothing is executed by them, so they need no emergency gate.
+ */
+export const KEPT_ADMIN_COMMANDS = new Set(['test']);
+
+export function isKeptAdminCommand(accessKey) {
+    return Boolean(accessKey) && KEPT_ADMIN_COMMANDS.has(accessKey);
+}
+
 /** Where each retired command lives on the dashboard (by command name; a few subcommands differ). */
 const DASHBOARD_PAGE = {
     automod: 'automod', appeals: 'appeals', background: 'users', case: 'cases', enforcements: 'users', Moderate: 'users',
@@ -54,9 +64,9 @@ export function retiredMessage(accessKey, publicUrl = process.env.PUBLIC_URL || 
         : `This command moved to the dashboard (${page} page).`;
 }
 
-/** True when this key stays registered while retired: everyone-commands and the owner kit. */
+/** True when this key stays registered while retired: everyone-commands, the owner kit and kept admin commands. */
 function keepKey(key) {
-    return EVERYONE_COMMANDS.has(key) || OWNER_KIT.has(key);
+    return EVERYONE_COMMANDS.has(key) || OWNER_KIT.has(key) || KEPT_ADMIN_COMMANDS.has(key);
 }
 
 /**
@@ -91,7 +101,8 @@ export function commandEntries(commands) {
     const add = (key, description) => {
         if (byKey.has(key)) return;
         const access = EVERYONE_COMMANDS.has(key) ? 'everyone' : OWNER_KIT.has(key) ? 'owner kit' : 'admin';
-        byKey.set(key, { key, description: description || '', access, page: access === 'everyone' ? null : dashboardPageFor(key) });
+        const staysCommand = access === 'everyone' || KEPT_ADMIN_COMMANDS.has(key);
+        byKey.set(key, { key, description: description || '', access, page: staysCommand ? null : dashboardPageFor(key) });
     };
     for (const command of commands?.values?.() || []) {
         const json = typeof command?.data?.toJSON === 'function' ? command.data.toJSON() : null;

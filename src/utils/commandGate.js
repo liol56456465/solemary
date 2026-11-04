@@ -20,7 +20,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import { isBotOwner } from '../config/bot.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { isEveryoneCommand, isSupportServerCommand } from '../config/commands/commandAccess.js';
-import { adminCommandsRetired, isOwnerKit, retiredMessage } from '../config/commands/retirement.js';
+import { adminCommandsRetired, isKeptAdminCommand, isOwnerKit, retiredMessage } from '../config/commands/retirement.js';
 import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
 
 export function getAdminRequiredMessage() {
@@ -80,7 +80,7 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
     if (isEveryoneCommand(accessKey)) return { allowed: true };
     // Retired admin commands (RETIRE_ADMIN_COMMANDS): the dashboard does them; the emergency kit
     // is for OWNER_IDS only (an owner without Administrator is still an override, logged).
-    if (adminCommandsRetired()) {
+    if (adminCommandsRetired() && !isKeptAdminCommand(accessKey)) {
         if (isOwnerKit(accessKey) && isBotOwner(userId)) {
             return hasAdministrator({ guild, userId, permissions }) ? { allowed: true } : { allowed: true, ownerOverride: true };
         }

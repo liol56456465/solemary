@@ -142,12 +142,12 @@ ${textInput('custom', '', { label: 'Custom ending (optional)', max: 30, help: 'C
         const WHO = { everyone: 'Everyone', 'owner kit': 'Bot owner only (emergency tools)', admin: 'Administrators' };
         const AFTER = { everyone: 'Stays a command', 'owner kit': 'Stays, bot owner only', admin: 'Dashboard only' };
         const every = html`<p>${retired
-            ? html`<span class="state state-on">Retired</span> Admin commands are switched off in Discord. Only the commands for everyone and the bot owner's emergency tools are left. Everything else is done here on the dashboard.`
-            : html`<span class="state state-off">Not retired</span> Every command works in Discord. The bot owner can switch admin commands off, so that only the commands for everyone and the emergency tools stay, and everything else is done on the dashboard.`}</p>
+            ? html`<span class="state state-on">Retired</span> Admin commands are switched off in Discord. Only the commands for everyone, the bot owner's emergency tools and <code>/test</code> are left. Everything else is done here on the dashboard.`
+            : html`<span class="state state-off">Not retired</span> Every command works in Discord. The bot owner can switch admin commands off, so that only the commands for everyone, the emergency tools and <code>/test</code> stay, and everything else is done on the dashboard.`}</p>
 ${table(['Command', 'What it does', 'Who can use it', 'On the dashboard', 'If admin commands are switched off'], entries.map((e) => [
             html`<code>/${e.key}</code>`, e.description, WHO[e.access],
             e.page ? html`<a href="${path(`/${e.page}`)}">${e.page}</a>` : html`<span class="muted">-</span>`,
-            AFTER[e.access]]))}
+            e.access === 'admin' && !e.page ? 'Stays a command' : AFTER[e.access]]))}
 <p class="muted">Also in the support server: ${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}. Who can use which command is fixed in Mewvo and cannot be changed here.</p>`;
         return html`${settingsPart}${section(`Every command (${entries.length})`, every)}${categories}`;
     },

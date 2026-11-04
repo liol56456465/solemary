@@ -36,6 +36,7 @@ test('registration while retired: admin subcommands stripped, admin-only command
     const todo = { name: 'todo', description: 't', options: [SUB('add'), { type: 2, name: 'share', options: [SUB('create'), SUB('view')] }] };
     assert.deepEqual(retireCommandJson(todo).options.find((o) => o.name === 'share').options.map((o) => o.name), ['create', 'view'], 'groups kept with their everyone subcommands');
     assert.equal(retireCommandJson({ name: 'Moderate', type: 2 }), null, 'admin context menu dropped');
+    assert.equal(retireCommandJson({ name: 'test', description: 't', options: [{ type: 3, name: 'action' }] }).name, 'test', '/test stays registered');
     assert.equal(retireCommandJson({ name: 'Report message', type: 3 }).name, 'Report message');
 });
 
@@ -58,6 +59,9 @@ test('the gate while retired: everyone-commands work, admin keys point to their 
             assert.deepEqual(check('enforcements', member, owner), { allowed: true, ownerOverride: true }, 'kit: owners, logged as override without Administrator');
             assert.deepEqual(check('automod panic', admin, owner), { allowed: true });
             assert.equal(check('automod mode', admin, owner).allowed, false, 'owners too: everything else is on the dashboard');
+            assert.deepEqual(check('test', admin), { allowed: true }, '/test stays a command for admins');
+            assert.equal(check('test', member).allowed, false, '/test is still Administrator-only');
+            assert.notEqual(check('test', member).message, retiredMessage('test'), 'non-admins get the admin refusal, not "moved"');
         });
     } finally {
         botConfig.commands.owners = owners;
