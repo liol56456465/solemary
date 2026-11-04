@@ -50,5 +50,11 @@
       "community": "Сообщество",
       "legal": "Право"
     }
-  }
+  },
+  "language": {
+    "label": "Язык"
+  },
+  "suggestLanguage": "Mewvo также доступен на языке: {language}.",
+  "suggestLanguageDismiss": "Остаться на английском",
+  "legalEnglishOnly": "Эта страница доступна только на английском языке."
 }

@@ -137,7 +137,7 @@ test('picker: links to the same page in each language (current one marked); ?set
     const site = await serve();
     try {
         const page = (await site.get('/de/leaderboard?page=2')).body;
-        assert.ok(page.includes('<details class="lang-menu">') && page.includes('<nav class="footer-langs" aria-label="Language">'));
+        assert.ok(page.includes('<details class="lang-menu">') && page.includes('<nav class="footer-langs" aria-label="Sprache">'), 'picker label in the page language');
         assert.ok(page.includes('href="/fr/leaderboard?page=2&amp;setlang=1" hreflang="fr" lang="fr">Français</a>'));
         assert.ok(page.includes('href="/leaderboard?page=2&amp;setlang=1" hreflang="en" lang="en">English</a>'));
         assert.ok(page.includes('href="/de/leaderboard?page=2&amp;setlang=1" hreflang="de" lang="de" aria-current="true">Deutsch</a>'));
@@ -170,7 +170,7 @@ test('first visit: Accept-Language or the cookie only shows a note in that langu
         assert.ok(first.body.includes('<a class="lang-suggest-dismiss" href="/features?setlang=1">Stay in English</a>'));
         assert.match(first.body, /<html lang="en">/);
         const fallback = await site.get('/', { 'accept-language': 'fr' });
-        assert.ok(fallback.body.includes('lang="en">Mewvo is also available in Français.</a>'), 'untranslated: the English text, tagged en');
+        assert.ok(fallback.body.includes('lang="fr">Mewvo est aussi disponible en Français.</a>'), 'the offer is written in the offered language');
         assert.ok(!(await site.get('/features', { 'accept-language': 'en-US,en' })).body.includes('lang-suggest'));
         assert.ok(!(await site.get('/features')).body.includes('lang-suggest'));
         assert.ok(!(await site.get('/features', { cookie: `${LANG_COOKIE}=en`, 'accept-language': 'de' })).body.includes('lang-suggest'), 'chose English: nothing offered');

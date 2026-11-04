@@ -50,5 +50,11 @@
       "community": "Community",
       "legal": "Rechtliches"
     }
-  }
+  },
+  "language": {
+    "label": "Sprache"
+  },
+  "suggestLanguage": "Mewvo gibt es auch auf {language}.",
+  "suggestLanguageDismiss": "Auf Englisch bleiben",
+  "legalEnglishOnly": "Diese Seite gibt es nur auf Englisch."
 }
