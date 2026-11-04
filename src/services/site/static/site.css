@@ -495,6 +495,15 @@ button.button { cursor: pointer; }
 .gift-fields input { min-height: 40px; }
 .gift-fields textarea { resize: vertical; }
 .gift-fields input:focus-visible, .gift-fields textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* EU checkout: required consent boxes, the test note next to the pay button, the seller facts. */
+.consent { display: grid; gap: 10px; margin: 4px 0 16px; padding: 0; border: 0; }
+.consent-box { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; }
+.consent-box input { flex: none; width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); }
+.test-pay-note { display: inline-block; margin-top: 8px; }
+.checkout-seller { margin-top: 32px; }
+.withdraw-list { display: grid; gap: 12px; padding-left: 0; list-style: none; }
+.withdraw-list .button { margin-top: 6px; }
+.model-form p { margin: 0 0 6px; }
 .gift-message { margin: 12px 0 0; padding: 8px 0 8px 14px; border-left: 3px solid var(--border-strong); color: var(--text); white-space: pre-line; font-size: 16px; }
 .summary-upgrade { color: var(--text) !important; }
 

@@ -183,3 +183,44 @@ test('premium: gift details + 1-year expiry; expired keys refused; upgrade conve
     assert.ok(stats.gifts30 >= 1);
     assert.equal(typeof stats.activeTotal, 'number');
 });
+
+test('premium: consent stored with the order; withdrawal once, own order only, within 14 days, plan time taken back; gift key cancelled', { skip }, async () => {
+    const frank = `7${runId}00000037`;
+    const gina = `7${runId}00000038`;
+    const consent = service.checkoutConsent({ consent_start: 'yes', consent_terms: 'yes', consent_age: 'yes' });
+    try {
+        const first = await store.purchase({ userId: frank, username: 'frank', planId: 'pro', period: 'monthly', kind: 'personal', consent });
+        const second = await store.purchase({ userId: frank, username: 'frank', planId: 'pro', period: 'monthly', kind: 'personal', consent });
+        const gift = await store.purchase({ userId: frank, username: 'frank', planId: 'normal', period: 'monthly', kind: 'gift', consent });
+        const account = await store.accountOf(frank);
+        assert.equal(account.orders.find((o) => o.id === first.order.id).legal.consent.version, service.CONSENT_VERSION, 'consent read back');
+
+        await assert.rejects(store.withdraw({ userId: gina, orderId: first.order.id, name: 'Gina' }), /no such order/, 'not someone else\'s order');
+        // The first order is 15 days old: refused, nothing changes.
+        await pgDb.pool.query("UPDATE premium_orders SET created_at = NOW() - INTERVAL '15 days' WHERE id = $1", [first.order.id]);
+        await assert.rejects(store.withdraw({ userId: frank, orderId: first.order.id, name: 'Frank' }), /withdrawal period for this order ended/);
+        const before = new Date((await store.accountOf(frank)).subscription.expires_at).getTime();
+
+        await pgDb.pool.query("UPDATE premium_orders SET created_at = NOW() - INTERVAL '10 days 2 hours' WHERE id = $1", [second.order.id]);
+        const done = await store.withdraw({ userId: frank, orderId: second.order.id, name: ' Frank  F ' });
+        assert.equal(done.withdrawal.name, 'Frank F');
+        assert.deepEqual([done.withdrawal.usedDays, done.withdrawal.unusedDays, done.withdrawal.refundCents], [10, 20, 333]);
+        assert.equal(done.withdrawal.refundStatus, 'test-not-paid');
+        const after = new Date(done.subscription.expires_at).getTime();
+        assert.ok(Math.abs(after - (before - 20 * DAY)) < 1000, '20 days taken off the plan');
+        await assert.rejects(store.withdraw({ userId: frank, orderId: second.order.id, name: 'Frank' }), /already withdrew/);
+        const reread = (await store.accountOf(frank)).orders.find((o) => o.id === second.order.id);
+        assert.equal(reread.legal.withdrawal.refundCents, 333);
+        assert.equal(reread.legal.consent.version, service.CONSENT_VERSION, 'consent kept next to the withdrawal');
+
+        const g = await store.withdraw({ userId: frank, orderId: gift.order.id, name: 'Frank' });
+        assert.equal(g.withdrawal.refundCents, 199);
+        await assert.rejects(store.redeem({ code: gift.key.code, userId: gina }), /cancelled/, 'the unused gift key is cancelled');
+    } finally {
+        const { rows } = await pgDb.pool.query('SELECT id FROM premium_orders WHERE user_id = ANY($1)', [[frank, gina]]);
+        await pgDb.pool.query('DELETE FROM temp_data WHERE key = ANY($1::text[])', [rows.map((r) => `${service.LEGAL_KEY_PREFIX}${r.id}`)]);
+        await pgDb.pool.query('DELETE FROM premium_keys WHERE created_by = ANY($1)', [[frank, gina]]);
+        await pgDb.pool.query('DELETE FROM premium_orders WHERE user_id = ANY($1)', [[frank, gina]]);
+        await pgDb.pool.query('DELETE FROM premium_subscriptions WHERE user_id = ANY($1)', [[frank, gina]]);
+    }
+});

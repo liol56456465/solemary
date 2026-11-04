@@ -59,6 +59,23 @@ export const KEY_VALIDITY = [
 export const SUBSCRIPTION_SOURCES = ['purchase', 'key', 'owner', 'bonus'];
 export const ORDER_KINDS = ['personal', 'gift'];
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+// ── EU consumer law at checkout (Directive 2011/83/EU) ─────────────────────
+// The three required, unticked checkboxes. The exact wording shown is stored with the order
+// (CONSENT_VERSION + the texts), so a change of wording needs a new version.
+export const CONSENT_VERSION = 'checkout-2026-11-04';
+export const CONSENT_TEXTS = {
+    // Art. 14(3) / 16: an express request to start within the withdrawal period.
+    startNow: 'I want my plan to start now. I understand that if I withdraw within 14 days, I pay for the days already used.',
+    startNowGift: 'I want my gift key now. I understand that if I withdraw within 14 days, I pay for the days already used once the key is redeemed.',
+    terms: 'I accept the Terms and Conditions.',
+    age: "I am 18 or older, or I have my parent's or guardian's permission.",
+};
+/** The withdrawal period in days (Art. 9(1)). */
+export const WITHDRAWAL_DAYS = 14;
+export const WITHDRAWAL_NAME_MAX = 100;
+/** Key-value row (temp_data) per order with { consent, withdrawal }: `premium_order:<id>`. */
+export const LEGAL_KEY_PREFIX = 'premium_order:';
 const truthy = (value) => /^(1|true|yes|on)$/i.test(String(value || '').trim());
 
 export class PremiumError extends Error {
@@ -202,6 +219,73 @@ export function giftDetails({ to = '', message = '' } = {}) {
     return { giftTo: giftTo || null, giftMessage: giftMessage || null };
 }
 
+/**
+ * The consent record for an order from the posted form: { version, at, kind, texts } or a
+ * PremiumError naming what is missing. Every box must be ticked ('yes'). Pure.
+ */
+export function checkoutConsent(body = {}, kind = 'personal', now = Date.now()) {
+    const ticked = (name) => body?.[name] === 'yes';
+    const missing = [];
+    if (!ticked('consent_start')) missing.push(kind === 'gift' ? 'that you want the key now' : 'that you want the plan to start now');
+    if (!ticked('consent_terms')) missing.push('that you accept the Terms');
+    if (!ticked('consent_age')) missing.push('that you are 18 or older or have permission');
+    if (missing.length) throw new PremiumError(`Tick the boxes to confirm ${missing.join(', ')}. Nothing was ordered.`);
+    return {
+        version: CONSENT_VERSION, at: new Date(now).toISOString(), kind,
+        texts: [kind === 'gift' ? CONSENT_TEXTS.startNowGift : CONSENT_TEXTS.startNow, CONSENT_TEXTS.terms, CONSENT_TEXTS.age],
+    };
+}
+
+/** Refund due after a withdrawal: price × unused days / total days, in whole cents. Pure. */
+export function refundDue({ amountCents, totalDays, usedDays }) {
+    if (!Number.isInteger(totalDays) || totalDays < 1) throw new Error('refundDue needs totalDays >= 1');
+    const used = Math.min(Math.max(0, Math.floor(usedDays)), totalDays);
+    return Math.round(amountCents * (totalDays - used) / totalDays);
+}
+
+/**
+ * The last moment a withdrawal is accepted for an order: the end (23:59:59.999 UTC) of the
+ * 14th day after the order day (the day of the order itself does not count, Reg. 1182/71).
+ */
+export function withdrawalDeadline(order) {
+    const d = new Date(order.created_at);
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + WITHDRAWAL_DAYS + 1) - 1);
+}
+
+/** True while the order can still be withdrawn from (in the period, not withdrawn yet). Pure. */
+export function canWithdraw(order, now = Date.now()) {
+    if (!order?.created_at || order.legal?.withdrawal) return false;
+    return now <= withdrawalDeadline(order).getTime();
+}
+
+/**
+ * What a withdrawal costs and gives back. `startedAt` = when the plan time started being used
+ * (personal: the order; gift: the key's redemption, null while unused). Used days are whole
+ * days rounded down (a part day is not charged). Returns { totalDays, usedDays, unusedDays,
+ * refundCents }. Pure.
+ */
+export function withdrawalQuote(order, { startedAt = order.created_at, now = Date.now() } = {}) {
+    const totalDays = PERIODS[order.period]?.days;
+    if (!totalDays) throw new PremiumError('This order cannot be withdrawn online. Contact us instead.');
+    const usedDays = startedAt ? Math.min(totalDays, Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / DAY_MS))) : 0;
+    return { totalDays, usedDays, unusedDays: totalDays - usedDays, refundCents: refundDue({ amountCents: order.amount_cents, totalDays, usedDays }) };
+}
+
+/**
+ * The subscription end after taking an order's unused days back: the unused time of
+ * `orderPlanId`, converted to the current plan at the monthly-price ratio when it changed
+ * since, comes off the end date (never before now). Returns the new end Date, or null when
+ * the subscription is not active. Pure.
+ */
+export function endAfterWithdrawal(subscription, orderPlanId, unusedDays, now = Date.now()) {
+    if (!isActive(subscription, now)) return null;
+    const from = paidPlan(orderPlanId);
+    const to = paidPlan(subscription.plan_id);
+    const ratio = from && to && from.id !== to.id ? from.monthlyCents / to.monthlyCents : 1;
+    const takeMs = Math.floor(unusedDays * DAY_MS * ratio);
+    return new Date(Math.max(now, new Date(subscription.expires_at).getTime() - takeMs));
+}
+
 const clip = (value, max) => String(value ?? '').slice(0, max);
 const snowflake = /^\d{17,20}$/;
 
@@ -219,6 +303,10 @@ export function createPremiumStore({
     const S = tables.premium_subscriptions;
     const O = tables.premium_orders;
     const K = tables.premium_keys;
+    // No column on premium_orders holds consent or withdrawal yet (schema v9): they live in the
+    // key-value table as one JSON row per order, written in the order's own transaction.
+    const T = tables.temp_data;
+    const legalKey = (orderId) => `${LEGAL_KEY_PREFIX}${orderId}`;
     let helpers = null;
     async function db() {
         if (helpers) return helpers;
@@ -266,7 +354,7 @@ export function createPremiumStore({
      * (valid GIFT_KEY_VALID_DAYS) is created. One transaction.
      * Returns { order, subscription|null, previous|null, next|null, key|null }.
      */
-    async function purchase({ userId, username = null, planId, period, kind, giftTo = '', giftMessage = '' }) {
+    async function purchase({ userId, username = null, planId, period, kind, giftTo = '', giftMessage = '', consent = null }) {
         if (!snowflake.test(String(userId || ''))) throw new PremiumError('Log in first.', 401);
         const q = quote({ planId, period, kind });
         const gift = kind === 'gift' ? giftDetails({ to: giftTo, message: giftMessage }) : null;
@@ -284,6 +372,10 @@ export function createPremiumStore({
                  VALUES ($1, $2, $3, $4, $5, $6, 'EUR', TRUE) RETURNING *`,
                 [userId, name, planId, period, kind, q.amountCents]);
             if (!order) throw new Error('order insert returned no row');
+            if (consent) {
+                await client.query(`INSERT INTO ${T} (key, value, expires_at) VALUES ($1, $2, NULL)`, [legalKey(order.id), JSON.stringify({ consent })]);
+                order.legal = { consent };
+            }
             if (kind === 'personal') {
                 const subscription = await writeSubscription(client, userId, name, next, 'purchase');
                 return { order, subscription, previous, next, key: null };
@@ -464,7 +556,78 @@ export function createPremiumStore({
             q(`SELECT * FROM ${O} WHERE user_id = $1 ORDER BY created_at DESC, id DESC LIMIT 50`, [userId]),
             q(`SELECT * FROM ${K} WHERE created_by = $1 AND source = 'gift' ORDER BY created_at DESC LIMIT 50`, [userId]),
         ]);
+        if (orders.length) {
+            const { rows: legal } = await q(`SELECT key, value FROM ${T} WHERE key = ANY($1::text[])`, [orders.map((o) => legalKey(o.id))]);
+            const byKey = new Map(legal.map((r) => [r.key, r.value]));
+            for (const order of orders) order.legal = byKey.get(legalKey(order.id)) || null;
+        }
         return { subscription: isActive(subscription, now()) ? subscription : null, orders, gifts };
+    }
+
+    /**
+     * The online withdrawal (CRD Art. 11a), TEST MODE: { userId, orderId, name }. Only the
+     * buyer's own order, within 14 days, once. Personal: the order's unused days come off the
+     * buyer's plan (all of it when nothing else was added → the plan ends). Gift: an unused key
+     * is cancelled (nothing used); a redeemed key's unused days come off the redeemer's plan.
+     * Records { at, name, usedDays, unusedDays, totalDays, refundCents, refundStatus } on the
+     * order; no money moves. Returns { order, withdrawal, subscription|null, previous|null, affectedUserId|null }.
+     */
+    async function withdraw({ userId, orderId, name }) {
+        if (!snowflake.test(String(userId || ''))) throw new PremiumError('Log in first.', 401);
+        if (!/^\d{1,18}$/.test(String(orderId || ''))) throw new PremiumError('There is no such order on your account.', 404);
+        const fullName = String(name ?? '').trim().replace(/\s+/g, ' ');
+        if (!fullName) throw new PremiumError('Enter your name.');
+        if (fullName.length > WITHDRAWAL_NAME_MAX) throw new PremiumError(`The name is limited to ${WITHDRAWAL_NAME_MAX} characters.`);
+        const { withTransaction: tx } = await db();
+        return tx(async (client) => {
+            const { rows: [order] } = await client.query(`SELECT * FROM ${O} WHERE id = $1 AND user_id = $2 FOR UPDATE`, [String(orderId), String(userId)]);
+            if (!order) throw new PremiumError('There is no such order on your account.', 404);
+            const { rows: [legalRow] } = await client.query(`SELECT value FROM ${T} WHERE key = $1 FOR UPDATE`, [legalKey(order.id)]);
+            const legal = legalRow?.value || {};
+            order.legal = legal;
+            if (legal.withdrawal) throw new PremiumError('You already withdrew from this order.', 409);
+            const t = now();
+            if (!canWithdraw(order, t)) {
+                throw new PremiumError(`The 14-day withdrawal period for this order ended on ${withdrawalDeadline(order).toISOString().slice(0, 10)}.`, 409);
+            }
+            let startedAt = order.created_at;
+            let affectedUserId = order.kind === 'personal' ? String(userId) : null;
+            if (order.kind === 'gift') {
+                const { rows: [key] } = order.key_code
+                    ? await client.query(`SELECT * FROM ${K} WHERE code = $1 FOR UPDATE`, [order.key_code]) : { rows: [] };
+                if (key?.redeemed_at) {
+                    startedAt = key.redeemed_at;
+                    affectedUserId = key.redeemed_by ? String(key.redeemed_by) : null;
+                } else {
+                    startedAt = null;
+                    if (key && !key.revoked_at) await client.query(`UPDATE ${K} SET revoked_at = NOW(), revoked_by = $2 WHERE code = $1`, [key.code, String(userId)]);
+                }
+            }
+            const q = withdrawalQuote(order, { startedAt, now: t });
+            let subscription = null;
+            let previous = null;
+            if (affectedUserId && q.unusedDays > 0) {
+                const { rows: [row] } = await client.query(`SELECT * FROM ${S} WHERE user_id = $1 FOR UPDATE`, [affectedUserId]);
+                const end = endAfterWithdrawal(row, order.plan_id, q.unusedDays, t);
+                if (end) {
+                    previous = row;
+                    const { rows: [updated] } = await client.query(
+                        `UPDATE ${S} SET expires_at = $2, updated_at = NOW() WHERE user_id = $1 RETURNING *`, [affectedUserId, end]);
+                    subscription = updated;
+                }
+            }
+            const withdrawal = {
+                at: at(t).toISOString(), name: fullName, ...q, refundStatus: order.test ? 'test-not-paid' : 'due',
+                planEnded: Boolean(subscription && new Date(subscription.expires_at).getTime() <= t),
+                ack: 'discord-dm+account-page',
+            };
+            const value = { ...legal, withdrawal };
+            await client.query(
+                `INSERT INTO ${T} (key, value, expires_at) VALUES ($1, $2, NULL) ON CONFLICT (key) DO UPDATE SET value = $2, expires_at = NULL`,
+                [legalKey(order.id), JSON.stringify(value)]);
+            order.legal = value;
+            return { order, withdrawal, subscription, previous, affectedUserId };
+        });
     }
 
     /** The cron: active plans ending within `withinMs` that have not had a reminder for this end date. */
@@ -497,7 +660,7 @@ export function createPremiumStore({
 
     return {
         purchase, redeem, peekKey, generateKeys, grant, revokeKey, listKeys, listActiveSubscriptions, listOrders, stats,
-        endSubscription, accountOf, dueReminders, dueEndings, markNotified,
+        endSubscription, accountOf, withdraw, dueReminders, dueEndings, markNotified,
     };
 }
 

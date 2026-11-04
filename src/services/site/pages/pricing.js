@@ -9,7 +9,7 @@ import {
     COMPARISON, PLANS, PRICING_FAQ, YEARLY_MONTHS_CHARGED, euros, yearlyCents,
 } from '../../../config/site/plans.js';
 import { layout } from '../shell.js';
-import { TEST_NOTICE, checkoutHref } from '../billing.js';
+import { TEST_NOTICE, checkoutHref, vatLine } from '../billing.js';
 
 const FREE_MONTHS = 12 - YEARLY_MONTHS_CHARGED;
 const PLANNED = html`<span class="planned">(planned)</span>`;
@@ -74,7 +74,8 @@ ${ctx.billing
         : html`<p class="lead">Everything Mewvo does now is free. Paid plans start when Mewvo opens to other servers; until then nothing can be bought.${ctx.supportInvite ? html` <a href="${ctx.supportInvite}" rel="noopener">Join the support server</a> to hear first.` : ''}</p>`}</header>
 <section aria-labelledby="plans-title"><h2 class="visually-hidden" id="plans-title">Plans</h2>
 <ul class="plan-cards">${PLANS.map((plan) => planCard(ctx, plan))}</ul>
-<p class="note plans-note">Prices in euros. Limits such as tags follow the plan of the server owner. Perks marked (planned) are not built yet and may change before paid plans start.</p></section>
+<p class="note plans-note">Prices in euros. Limits such as tags follow the plan of the server owner. Perks marked (planned) are not built yet and may change before paid plans start.</p>
+${ctx.billing ? html`<p class="note plans-note">Prices are the total you pay. ${vatLine(ctx.legal)} Each purchase is one payment for 30 or 365 days, with no automatic renewal. You can withdraw within 14 days: <a href="/withdrawal">right of withdrawal</a>.</p>` : ''}</section>
 <section class="pricing-section" aria-labelledby="compare-title"><h2 id="compare-title">What each plan includes</h2>${comparisonTable()}</section>
 <section class="pricing-section pricing-faq" aria-labelledby="pricing-faq-title"><h2 id="pricing-faq-title">Questions about pricing</h2>
 <dl class="qa">${faq.map((item) => html`<div><dt>${item.q}</dt><dd>${item.a}</dd></div>`)}</dl>

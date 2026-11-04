@@ -20,6 +20,7 @@
 //   GET /changelog    what changed, newest first (pages/changelog.js, config/site/changelog.js)
 //   GET /privacy      Privacy Policy: what is stored, why, how long, rights (pages/legal.js)
 //   GET /terms        Terms and Conditions (pages/legal.js)
+//   GET /withdrawal   the right of withdrawal, the model form, "Withdraw from contract here" (pages/withdrawal.js)
 //   GET /robots.txt   Disallow: / while the site is not public; with the sitemap when it is
 //   GET /sitemap.xml  only when public and PUBLIC_URL is set (absolute URLs need the origin)
 //   GET /img/<file>   the site's images (static/img: dashboard screenshots, the share image,
@@ -60,6 +61,7 @@ import { rulesPage } from './pages/rules.js';
 import { trustErrorPage, trustPage } from './pages/trust.js';
 import { changelogPage } from './pages/changelog.js';
 import { LEGAL_UPDATED, legalContact, privacyPage, termsPage } from './pages/legal.js';
+import { withdrawalPage } from './pages/withdrawal.js';
 import { readPublicRules } from '../rules/serverRules.js';
 
 export {
@@ -333,7 +335,7 @@ export function notFoundPage(ctx) {
 /** The public pages, for /sitemap.xml (plus /transparency and /trust while they are turned on). */
 export const SITEMAP_PATHS = [
     '/', '/features', '/pricing', '/docs', ...GUIDES.map((g) => `/docs/${g.slug}`), '/faq',
-    '/commands', '/leaderboard', '/rules', '/about', '/changelog', '/status', '/privacy', '/terms',
+    '/commands', '/leaderboard', '/rules', '/about', '/changelog', '/status', '/privacy', '/terms', '/withdrawal',
 ];
 
 export function sitemapXml(origin, { transparency = false, trust = false } = {}) {
@@ -371,7 +373,7 @@ export function createSite({
         installUrl: installUrl(env.CLIENT_ID),
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
         origin: siteOrigin(env),
-        legal: legalContact(env),
+        legal: { ...legalContact(env), vatRegistered: Boolean(String(env.LEGAL_VAT_NO || '').trim()) },
     };
     const context = () => {
         let support = null;
@@ -410,6 +412,7 @@ export function createSite({
     router.get('/changelog', page(changelogPage));
     router.get('/privacy', page(privacyPage));
     router.get('/terms', page(termsPage));
+    router.get('/withdrawal', page(withdrawalPage));
     // Always 200: it is a page about the bot, not a health check (that is /ready).
     router.get('/status', page((ctx) => {
         let current;

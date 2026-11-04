@@ -17,7 +17,8 @@ import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
 import { getConfiguredSetting } from '../settings/guildSettings.js';
-import { isActive, planName } from './premiumService.js';
+import { PERIODS, WITHDRAWAL_DAYS, isActive, planName, withdrawalDeadline } from './premiumService.js';
+import { euros } from '../../config/site/plans.js';
 
 export const REMINDER_BEFORE_MS = 3 * 24 * 60 * 60 * 1000;
 const FREE = PLANS.find((plan) => plan.id === 'free');
@@ -143,6 +144,56 @@ export function premiumDm(kind, { planId, expiresAt, converted = null, from = nu
     return `**${plan} has ended.** Your account is on Free again; nothing was deleted.\nYou can start a plan again from the website (Pricing) or with a key.`;
 }
 
+const euro = (cents) => euros(cents);
+const sellerText = (seller) => [seller?.operator || 'Mewvo', seller?.email || null].filter(Boolean).join(', ');
+
+/**
+ * The order confirmation sent as a Discord DM (CRD Art. 8(7), confirmation on a durable
+ * medium): order, plan, price + VAT line, dates, the consent given, terms version, how to
+ * withdraw. Pure; stays well under Discord's 2000 characters.
+ */
+export function orderConfirmationDm({ order, subscription = null, key = null, origin = '', seller = null, vatText = '', termsVersion = '' }) {
+    const gift = order.kind === 'gift';
+    const created = order.created_at || new Date();
+    const lines = [
+        `**Order confirmation #${order.id}**${order.test ? ' (TEST ORDER: no money was taken)' : ''}`,
+        `Seller: ${sellerText(seller)}${origin ? ` (${origin}/legal)` : ''}`,
+        `Plan: Mewvo ${planName(order.plan_id)}, ${PERIODS[order.period]?.label || order.period} (${PERIODS[order.period]?.days || '?'} days)${gift ? ', as a gift key' : ''}`,
+        `Total: ${euro(order.amount_cents)}. ${vatText}`.trim(),
+        'No automatic renewal: the plan ends unless you buy more time.',
+        `Ordered: ${ts(created, 'F')}`,
+    ];
+    if (!gift && subscription?.expires_at) lines.push(`Your plan runs until ${ts(subscription.expires_at, 'F')}.`);
+    if (gift && key?.code) lines.push(`Gift key: ending ${String(key.code).slice(-4)} (the full key is on your receipt page).`);
+    const consent = order.legal?.consent;
+    if (consent) lines.push(`You confirmed: "${consent.texts?.[0] || ''}" (${consent.version})`);
+    lines.push(`Terms and Conditions version ${termsVersion || '-'}${origin ? `: ${origin}/terms` : ''}`);
+    lines.push(`Right of withdrawal: ${WITHDRAWAL_DAYS} days, until ${ts(withdrawalDeadline({ created_at: created }), 'F')}.${gift ? ' The right is yours as the buyer, not the recipient\'s.' : ''} How: ${origin ? `${origin}/withdrawal` : '/withdrawal'}`);
+    if (origin) lines.push(`Receipt: ${origin}/me/billing/orders/${order.id}`);
+    return lines.join('\n').slice(0, 1900);
+}
+
+/** The acknowledgement of a withdrawal (CRD Art. 11a(4)): its content and date and time. Pure. */
+export function withdrawalAckDm({ order, withdrawal, origin = '', seller = null }) {
+    const lines = [
+        `**We received your withdrawal from order #${order.id}**${order.test ? ' (TEST ORDER)' : ''}`,
+        `Received: ${ts(withdrawal.at, 'F')} (${new Date(withdrawal.at).toISOString().replace('T', ' ').slice(0, 19)} UTC)`,
+        `Name given: ${withdrawal.name}`,
+        `Contract: Mewvo ${planName(order.plan_id)}, ${PERIODS[order.period]?.label || order.period}, ordered ${ts(order.created_at, 'F')}, ${euro(order.amount_cents)}`,
+        'Statement: I withdraw from my contract for this order.',
+        `Days used: ${withdrawal.usedDays} of ${withdrawal.totalDays}. Refund due: ${euro(withdrawal.refundCents)}${withdrawal.refundStatus === 'test-not-paid' ? ' (test order: nothing was charged, so nothing is paid back)' : ', paid back within 14 days with the payment method you used'}.`,
+        `Seller: ${sellerText(seller)}`,
+    ];
+    if (origin) lines.push(`Details: ${origin}/me/billing/orders/${order.id}/withdrawal`);
+    return lines.join('\n').slice(0, 1900);
+}
+
+/** A DM with no pings (allowedMentions none). true when delivered; never throws. */
+export async function sendPremiumDm(userId, content, { client = premiumClient } = {}) {
+    if (!client) return false;
+    return dm(client, userId, content);
+}
+
 async function dm(client, userId, content) {
     try {
         const user = await client.users.fetch(String(userId));
@@ -167,14 +218,14 @@ export function setPremiumClient(client) {
  * Cache + role + DM after a change. result: { subscription, next } from the store; from:
  * 'purchase' | 'key' | 'owner' | 'bonus' | 'ended'. Never throws.
  */
-export async function afterPremiumChange(result, from, { client = premiumClient } = {}) {
+export async function afterPremiumChange(result, from, { client = premiumClient, sendDm = true } = {}) {
     try {
         const row = result?.subscription;
         if (!row) return;
         notePremium(from === 'ended' ? { ...row, expires_at: new Date(0) } : row);
         if (!client) return;
         await syncPremiumRole(client, row.user_id);
-        if (from !== 'ended') await dm(client, row.user_id, premiumDm('active', { planId: row.plan_id, expiresAt: row.expires_at, converted: result.next?.converted || null, from }));
+        if (from !== 'ended' && sendDm) await dm(client, row.user_id, premiumDm('active', { planId: row.plan_id, expiresAt: row.expires_at, converted: result.next?.converted || null, from }));
     } catch (error) {
         logger.warn(`Premium follow-up for ${result?.subscription?.user_id} failed: ${error.message}`);
     }

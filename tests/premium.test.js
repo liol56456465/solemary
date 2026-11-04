@@ -7,9 +7,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
 import {
-    KEY_ALPHABET, PremiumError, applyTime, giftDetails, generateKeyCode, isActive, keyHint, keyStatus, normalizeKeyCode, priceCents, quote,
+    CONSENT_TEXTS, CONSENT_VERSION, KEY_ALPHABET, PremiumError, applyTime, canWithdraw, checkoutConsent, endAfterWithdrawal, giftDetails, generateKeyCode,
+    isActive, keyHint, keyStatus, normalizeKeyCode, priceCents, quote, refundDue, withdrawalDeadline, withdrawalQuote,
 } from '../src/services/billing/premiumService.js';
-import { checkoutChoice } from '../src/services/site/billing.js';
+import { TEST_PAY_NOTE, VAT_TEXT, checkoutChoice, payLabel, vatLine } from '../src/services/site/billing.js';
+import { orderConfirmationDm, sendPremiumDm, setPremiumClient, withdrawalAckDm } from '../src/services/billing/premiumEffects.js';
 import {
     MEMBER_NEXT_COOKIE, MEMBER_SESSION_COOKIE, MEMBER_STATE_COOKIE, registerMemberPortal, safeNextPath,
 } from '../src/services/site/memberPortal.js';
@@ -127,12 +129,12 @@ function memoryStore() {
     };
     return {
         subs, orders, keys,
-        async purchase({ userId, username, planId, period, kind, giftTo, giftMessage }) {
+        async purchase({ userId, username, planId, period, kind, giftTo, giftMessage, consent = null }) {
             const q = quote({ planId, period, kind });
             const gift = kind === 'gift' ? giftDetails({ to: giftTo, message: giftMessage }) : null;
             const next = kind === 'personal' ? applyTime(subs.get(userId), planId, q.days) : null;
             orderId += 1;
-            const order = { id: orderId, user_id: userId, username, plan_id: planId, period, kind, amount_cents: q.amountCents, test: true, created_at: new Date(), key_code: null };
+            const order = { id: orderId, user_id: userId, username, plan_id: planId, period, kind, amount_cents: q.amountCents, test: true, created_at: new Date(), key_code: null, legal: consent ? { consent } : null };
             orders.unshift(order);
             if (next) return { order, subscription: setSub(userId, username, next, 'purchase'), key: null };
             const key = makeKey({ plan_id: planId, duration_days: q.days, source: 'gift', created_by: userId, created_by_username: username, order_id: order.id, gift_to: gift.giftTo, gift_message: gift.giftMessage, expires_at: new Date(Date.now() + 365 * DAY) });
@@ -155,6 +157,30 @@ function memoryStore() {
             const key = keys.get(normalizeKeyCode(code));
             if (!key || keyStatus(key) !== 'unused') return null;
             return { planId: key.plan_id, days: key.duration_days, from: key.created_by_username, giftTo: key.gift_to, giftMessage: key.gift_message, expiresAt: key.expires_at };
+        },
+        // Same rules as the SQL store's withdraw (tests/db/premium.test.js covers the SQL).
+        async withdraw({ userId, orderId, name }) {
+            const order = orders.find((o) => String(o.id) === String(orderId) && o.user_id === userId);
+            if (!order) throw new PremiumError('There is no such order on your account.', 404);
+            if (!String(name || '').trim()) throw new PremiumError('Enter your name.');
+            if (order.legal?.withdrawal) throw new PremiumError('You already withdrew from this order.', 409);
+            if (!canWithdraw(order)) throw new PremiumError('The 14-day withdrawal period for this order ended.', 409);
+            let startedAt = order.created_at;
+            let affected = order.kind === 'personal' ? userId : null;
+            if (order.kind === 'gift') {
+                const key = keys.get(order.key_code);
+                if (key?.redeemed_at) { startedAt = key.redeemed_at; affected = key.redeemed_by; } else { startedAt = null; if (key) key.revoked_at = new Date(); }
+            }
+            const wq = withdrawalQuote(order, { startedAt });
+            let subscription = null;
+            if (affected && wq.unusedDays > 0) {
+                const sub = subs.get(affected);
+                const end = endAfterWithdrawal(sub, order.plan_id, wq.unusedDays);
+                if (end) { sub.expires_at = end; subscription = sub; }
+            }
+            const withdrawal = { at: new Date().toISOString(), name: String(name).trim(), ...wq, refundStatus: 'test-not-paid', planEnded: Boolean(subscription && subscription.expires_at.getTime() <= Date.now()) };
+            order.legal = { ...(order.legal || {}), withdrawal };
+            return { order, withdrawal, subscription, affectedUserId: affected };
         },
         async accountOf(userId) {
             const sub = subs.get(userId);
@@ -214,6 +240,7 @@ async function login(app, user, next = '') {
 }
 
 const csrfOf = (body) => body.match(/name="csrf" value="([^"]+)"/)[1];
+const CONSENT = { consent_start: 'yes', consent_terms: 'yes', consent_age: 'yes' };
 const form = (fields) => new URLSearchParams(fields).toString();
 
 test('pricing: Buy and Gift for monthly and yearly when test checkout is on; "Coming soon" when off', async () => {
@@ -247,14 +274,16 @@ test('checkout logged out → login → back to the same checkout; buying for me
 
         const page = await app.request(location, { cookie });
         assert.ok(page.body.includes('€19.90'), 'yearly Normal price');
-        assert.ok(page.body.includes('Complete test purchase'));
-        assert.ok(page.body.includes('By completing the purchase, you accept the <a href="/terms">Terms and Conditions</a>'));
+        assert.ok(page.body.includes('Order and pay · €19.90'), 'CRD Art. 8(2) button label');
+        assert.ok(page.body.includes('Test mode — no money is taken'), 'test note next to the button');
+        assert.ok(page.body.includes('I accept the <a href="/terms">Terms and Conditions</a>.'));
+        assert.equal((page.body.match(/type="checkbox" name="consent_(start|terms|age)" value="yes" required>/g) || []).length, 3, 'three required, unticked boxes');
         assert.ok(page.body.includes('<a href="/privacy">Privacy Policy</a>'));
         assert.ok((await app.request('/me/billing', { cookie })).body.includes('By redeeming a key, you accept the <a href="/terms">Terms and Conditions</a>'));
         const csrf = csrfOf(page.body);
-        const body = form({ csrf, plan: 'normal', period: 'yearly', for: 'personal' });
+        const body = form({ csrf, plan: 'normal', period: 'yearly', for: 'personal', ...CONSENT });
         assert.equal((await app.request('/me/checkout', { method: 'POST', cookie, body, headers: { origin: 'https://evil.example' } })).status, 403);
-        assert.equal((await app.request('/me/checkout', { method: 'POST', cookie, body: form({ csrf: 'no', plan: 'normal', period: 'yearly', for: 'personal' }), headers: { origin: ORIGIN } })).status, 403);
+        assert.equal((await app.request('/me/checkout', { method: 'POST', cookie, body: form({ csrf: 'no', plan: 'normal', period: 'yearly', for: 'personal', ...CONSENT }), headers: { origin: ORIGIN } })).status, 403);
         assert.equal(app.premium.orders.length, 0, 'refused posts bought nothing');
 
         const bought = await app.request('/me/checkout', { method: 'POST', cookie, body, headers: { origin: ORIGIN } });
@@ -271,13 +300,13 @@ test('checkout logged out → login → back to the same checkout; buying for me
         // Upgrade preview, then the upgrade to Max.
         const preview = await app.request('/me/checkout?plan=max&period=monthly&for=personal', { cookie });
         assert.match(preview.body, /Upgrade: your remaining 365 days of Normal become [\d.]+ days of Max/);
-        const up = await app.request('/me/checkout', { method: 'POST', cookie, body: form({ csrf, plan: 'max', period: 'monthly', for: 'personal' }), headers: { origin: ORIGIN } });
+        const up = await app.request('/me/checkout', { method: 'POST', cookie, body: form({ csrf, plan: 'max', period: 'monthly', for: 'personal', ...CONSENT }), headers: { origin: ORIGIN } });
         assert.equal(up.status, 303);
         assert.equal(app.premium.subs.get(ALICE).plan_id, 'max');
         // A lower plan while Max runs: the checkout says so and a post is refused; nothing bought.
         const lower = await app.request('/me/checkout?plan=normal&period=monthly&for=personal', { cookie });
         assert.match(lower.body, /Not available while your plan runs/);
-        const clash = await app.request('/me/checkout', { method: 'POST', cookie, body: form({ csrf, plan: 'normal', period: 'monthly', for: 'personal' }), headers: { origin: ORIGIN } });
+        const clash = await app.request('/me/checkout', { method: 'POST', cookie, body: form({ csrf, plan: 'normal', period: 'monthly', for: 'personal', ...CONSENT }), headers: { origin: ORIGIN } });
         assert.equal(clash.status, 409);
         assert.ok(clash.body.includes('already have Max'));
         assert.equal(app.premium.orders.length, 2);
@@ -291,7 +320,7 @@ test('gift: the buyer gets a key; another account redeems it once; the buyer see
     try {
         const alice = await login(app, { id: ALICE, username: 'alice' });
         const csrf = csrfOf((await app.request('/me/checkout?plan=pro&period=monthly&for=gift', { cookie: alice.cookie })).body);
-        const bought = await app.request('/me/checkout', { method: 'POST', cookie: alice.cookie, body: form({ csrf, plan: 'pro', period: 'monthly', for: 'gift' }), headers: { origin: ORIGIN } });
+        const bought = await app.request('/me/checkout', { method: 'POST', cookie: alice.cookie, body: form({ csrf, plan: 'pro', period: 'monthly', for: 'gift', ...CONSENT }), headers: { origin: ORIGIN } });
         assert.equal(bought.status, 303);
         assert.equal(app.premium.subs.get(ALICE), undefined, 'a gift does not touch the buyer\'s plan');
         const receipt = await app.request(bought.headers.get('location'), { cookie: alice.cookie });
@@ -352,7 +381,7 @@ test('gift with a name and message: shown on the receipt and as a card on the gi
     try {
         const alice = await login(app, { id: ALICE, username: 'alice', global_name: 'Alice' });
         const csrf = csrfOf((await app.request('/me/checkout?plan=max&period=monthly&for=gift', { cookie: alice.cookie })).body);
-        const post = (fields) => app.request('/me/checkout', { method: 'POST', cookie: alice.cookie, body: form({ csrf, plan: 'max', period: 'monthly', for: 'gift', ...fields }), headers: { origin: ORIGIN } });
+        const post = (fields) => app.request('/me/checkout', { method: 'POST', cookie: alice.cookie, body: form({ csrf, plan: 'max', period: 'monthly', for: 'gift', ...CONSENT, ...fields }), headers: { origin: ORIGIN } });
         const tooLong = await post({ gift_to: 'x'.repeat(51) });
         assert.equal(tooLong.status, 400);
         assert.match(tooLong.body, /limited to 50 characters/);
@@ -380,3 +409,248 @@ test('gift with a name and message: shown on the receipt and as a card on the gi
     }
 });
 
+
+// ── EU consumer law: consent, pre-contract info, withdrawal, confirmations ─
+
+/** A fake bot client that records DMs (users.fetch → send). `fail` = DMs closed. */
+function dmRecorder({ fail = false } = {}) {
+    const sent = [];
+    const client = {
+        guilds: { cache: new Map() },
+        users: { fetch: async (id) => ({ send: async (message) => { if (fail) throw new Error('Cannot send messages to this user'); sent.push({ id, ...message }); } }) },
+    };
+    return { client, sent };
+}
+
+test('consent: all three boxes required ("yes"), recorded with the exact wording and version', () => {
+    const all = { consent_start: 'yes', consent_terms: 'yes', consent_age: 'yes' };
+    const record = checkoutConsent(all, 'personal', Date.UTC(2026, 10, 4, 12));
+    assert.equal(record.version, CONSENT_VERSION);
+    assert.equal(record.at, '2026-11-04T12:00:00.000Z');
+    assert.deepEqual(record.texts, [CONSENT_TEXTS.startNow, CONSENT_TEXTS.terms, CONSENT_TEXTS.age]);
+    assert.equal(CONSENT_TEXTS.startNow, 'I want my plan to start now. I understand that if I withdraw within 14 days, I pay for the days already used.');
+    assert.equal(CONSENT_TEXTS.age, "I am 18 or older, or I have my parent's or guardian's permission.");
+    assert.equal(checkoutConsent(all, 'gift').texts[0], CONSENT_TEXTS.startNowGift);
+    for (const name of Object.keys(all)) {
+        assert.throws(() => checkoutConsent({ ...all, [name]: undefined }), PremiumError, name);
+        assert.throws(() => checkoutConsent({ ...all, [name]: 'on' }), /Nothing was ordered/, `${name} must be exactly yes`);
+    }
+    assert.throws(() => checkoutConsent({}), /start now.*Terms.*18 or older/);
+});
+
+test('pro rata refund: 0 days used → full, half → half, all → nothing; part days are not charged', () => {
+    assert.equal(refundDue({ amountCents: 499, totalDays: 30, usedDays: 0 }), 499);
+    assert.equal(refundDue({ amountCents: 500, totalDays: 30, usedDays: 15 }), 250);
+    assert.equal(refundDue({ amountCents: 4990, totalDays: 365, usedDays: 365 }), 0);
+    assert.equal(refundDue({ amountCents: 499, totalDays: 30, usedDays: 6 }), 399, 'the /withdrawal page example');
+    assert.equal(refundDue({ amountCents: 499, totalDays: 30, usedDays: 99 }), 0, 'clamped');
+    const t0 = Date.UTC(2026, 10, 1);
+    const order = { period: 'monthly', amount_cents: 499, created_at: new Date(t0) };
+    assert.deepEqual(withdrawalQuote(order, { now: t0 + 23 * 3600 * 1000 }), { totalDays: 30, usedDays: 0, unusedDays: 30, refundCents: 499 });
+    assert.deepEqual(withdrawalQuote(order, { now: t0 + 10.5 * DAY }), { totalDays: 30, usedDays: 10, unusedDays: 20, refundCents: 333 });
+    assert.equal(withdrawalQuote(order, { startedAt: null, now: t0 + 10 * DAY }).refundCents, 499, 'unused gift key: nothing used');
+});
+
+test('withdrawal window: 14 days from the order, once; plan time taken back (converted after an upgrade)', () => {
+    const t0 = Date.UTC(2026, 10, 1);
+    const order = { created_at: new Date(t0), legal: null };
+    assert.equal(withdrawalDeadline(order).getTime(), t0 + 15 * DAY - 1, 'end of the 14th day after the order day (UTC)');
+    assert.ok(canWithdraw(order, t0 + 15 * DAY - 1), 'the last moment still counts');
+    assert.ok(!canWithdraw(order, t0 + 15 * DAY));
+    assert.ok(!canWithdraw({ ...order, legal: { withdrawal: { at: 'x' } } }, t0 + DAY), 'not twice');
+    const sub = { plan_id: 'pro', expires_at: new Date(t0 + 30 * DAY) };
+    assert.equal(endAfterWithdrawal(sub, 'pro', 30, t0).getTime(), t0, 'only this order → ends now');
+    assert.equal(endAfterWithdrawal({ ...sub, expires_at: new Date(t0 + 60 * DAY) }, 'pro', 30, t0).getTime(), t0 + 30 * DAY, 'other time stays');
+    const up = endAfterWithdrawal({ plan_id: 'max', expires_at: new Date(t0 + 30 * DAY) }, 'normal', 10, t0).getTime();
+    assert.equal(up, t0 + 30 * DAY - Math.floor(10 * DAY * 199 / 999), 'Normal days converted to Max days');
+    assert.equal(endAfterWithdrawal({ plan_id: 'pro', expires_at: new Date(t0 - 1) }, 'pro', 5, t0), null, 'no active plan');
+});
+
+test('VAT line both ways, button label, test note', () => {
+    assert.equal(vatLine({ vatRegistered: true }), VAT_TEXT.registered);
+    assert.equal(vatLine({ vatRegistered: false }), 'VAT is not charged (the seller is not VAT registered).');
+    assert.equal(vatLine(undefined), VAT_TEXT.notRegistered);
+    assert.equal(payLabel('€4.99'), 'Order and pay · €4.99');
+    assert.equal(TEST_PAY_NOTE, 'Test mode — no money is taken');
+});
+
+test('DM texts: order confirmation and withdrawal acknowledgement carry the details; sent with no pings', async () => {
+    const order = { id: 7, plan_id: 'pro', period: 'monthly', kind: 'personal', amount_cents: 499, test: true, created_at: new Date(Date.UTC(2026, 10, 4)), legal: { consent: checkoutConsent(CONSENT) } };
+    const text = orderConfirmationDm({ order, subscription: { expires_at: new Date(Date.UTC(2026, 11, 4)) }, origin: ORIGIN, seller: { operator: 'R. Example', email: 'hi@example.com' }, vatText: VAT_TEXT.notRegistered, termsVersion: '2026-11-03' });
+    for (const part of ['Order confirmation #7', 'TEST ORDER', 'R. Example, hi@example.com', 'Mewvo Pro, Monthly (30 days)', '€4.99', VAT_TEXT.notRegistered, 'No automatic renewal', 'version 2026-11-03', `${ORIGIN}/withdrawal`, CONSENT_TEXTS.startNow, `<t:${Date.UTC(2026, 10, 19) / 1000 - 1}:F>`]) {
+        assert.ok(text.includes(part), part);
+    }
+    assert.ok(text.length < 2000);
+    const gift = orderConfirmationDm({ order: { ...order, kind: 'gift' }, key: { code: 'MEWVO-2222-2222-ABCD' }, origin: ORIGIN });
+    assert.ok(gift.includes('yours as the buyer') && gift.includes('ending ABCD') && !gift.includes('MEWVO-2222'), 'gift: buyer\'s right, key hint only');
+    const ack = withdrawalAckDm({ order, withdrawal: { at: '2026-11-05T10:00:00.000Z', name: 'Alice A', usedDays: 1, totalDays: 30, refundCents: 482, refundStatus: 'test-not-paid' }, origin: ORIGIN });
+    for (const part of ['received your withdrawal from order #7', '2026-11-05 10:00:00 UTC', 'Alice A', 'Days used: 1 of 30', '€4.82', `${ORIGIN}/me/billing/orders/7/withdrawal`]) assert.ok(ack.includes(part), part);
+
+    const { client, sent } = dmRecorder();
+    assert.equal(await sendPremiumDm(ALICE, 'hello @everyone', { client }), true);
+    assert.deepEqual(sent[0], { id: ALICE, content: 'hello @everyone', allowedMentions: { parse: [] } });
+    assert.equal(await sendPremiumDm(ALICE, 'x', { client: dmRecorder({ fail: true }).client }), false, 'closed DMs: false, no throw');
+    assert.equal(await sendPremiumDm(ALICE, 'x', { client: null }), false);
+});
+
+test('checkout: a missing box is refused on the server, nothing ordered, ticks kept; seller, duration, VAT, no renewal shown', async () => {
+    const app = await serve({ env: { ...ENV, LEGAL_OPERATOR: 'R. Example', LEGAL_EMAIL: 'hi@example.com' } });
+    try {
+        const alice = await login(app, { id: ALICE, username: 'alice' });
+        const page = (await app.request('/me/checkout?plan=pro&period=monthly&for=personal', { cookie: alice.cookie })).body;
+        for (const part of ['R. Example', 'mailto:hi@example.com', 'href="/legal"', '30 days', 'No automatic renewal', VAT_TEXT.notRegistered, 'href="/withdrawal"', CONSENT_TEXTS.startNow]) {
+            assert.ok(page.includes(part), part);
+        }
+        assert.match(page, /I am 18 or older, or I have my parent(&#39;|&#x27;|')s or guardian(&#39;|&#x27;|')s permission\./);
+        assert.ok(page.indexOf('consent_age') < page.indexOf('Order and pay'), 'boxes before the button');
+        const csrf = csrfOf(page);
+        for (const name of Object.keys(CONSENT)) {
+            const fields = { csrf, plan: 'pro', period: 'monthly', for: 'personal', ...CONSENT };
+            delete fields[name];
+            const res = await app.request('/me/checkout', { method: 'POST', cookie: alice.cookie, body: form(fields), headers: { origin: ORIGIN } });
+            assert.equal(res.status, 400, name);
+            assert.match(res.body, /Tick the boxes.*Nothing was ordered/);
+            const kept = Object.keys(CONSENT).filter((n) => n !== name);
+            for (const n of kept) assert.ok(res.body.includes(`name="${n}" value="yes" required checked`), `${n} stays ticked`);
+            assert.ok(!res.body.includes(`name="${name}" value="yes" required checked`), `${name} stays unticked`);
+        }
+        assert.equal(app.premium.orders.length, 0, 'nothing ordered');
+        assert.equal(app.premium.subs.get(ALICE), undefined);
+        const gift = (await app.request('/me/checkout?plan=pro&period=monthly&for=gift', { cookie: alice.cookie })).body;
+        assert.ok(gift.includes('the right of withdrawal is yours as the buyer'));
+    } finally {
+        await app.close();
+    }
+    const vat = await serve({ env: { ...ENV, LEGAL_VAT_NO: 'LT100000000000' } });
+    try {
+        const alice = await login(vat, { id: ALICE, username: 'alice' });
+        const page = (await vat.request('/me/checkout?plan=pro&period=monthly&for=personal', { cookie: alice.cookie })).body;
+        assert.ok(page.includes(VAT_TEXT.registered) && !page.includes(VAT_TEXT.notRegistered), 'VAT registered');
+        assert.ok((await vat.request('/pricing')).body.includes(VAT_TEXT.registered));
+    } finally {
+        await vat.close();
+    }
+});
+
+test('order → confirmation DM (no pings) and consent on the receipt; withdraw: CSRF, own orders only, acknowledgement + DM, plan ends', async () => {
+    const app = await serve();
+    const { client, sent } = dmRecorder();
+    setPremiumClient(client);
+    try {
+        const alice = await login(app, { id: ALICE, username: 'alice' });
+        const csrf = csrfOf((await app.request('/me/checkout?plan=pro&period=monthly&for=personal', { cookie: alice.cookie })).body);
+        const bought = await app.request('/me/checkout', { method: 'POST', cookie: alice.cookie, body: form({ csrf, plan: 'pro', period: 'monthly', for: 'personal', ...CONSENT }), headers: { origin: ORIGIN } });
+        assert.equal(bought.status, 303);
+        assert.equal(sent.length, 1, 'one DM: the confirmation (no separate "active" DM)');
+        assert.deepEqual(sent[0].allowedMentions, { parse: [] });
+        assert.equal(sent[0].id, ALICE);
+        assert.match(sent[0].content, /Order confirmation #1[\s\S]*Mewvo Pro[\s\S]*€4\.99[\s\S]*\/withdrawal/);
+        assert.equal(app.premium.orders[0].legal.consent.version, CONSENT_VERSION, 'consent stored with the order');
+        const receipt = (await app.request('/me/billing/orders/1', { cookie: alice.cookie })).body;
+        assert.ok(receipt.includes('You confirmed') && receipt.includes(CONSENT_VERSION));
+        assert.ok(receipt.includes('Withdraw from contract here'));
+
+        const billing = (await app.request('/me/billing', { cookie: alice.cookie })).body;
+        assert.ok(billing.includes('href="/me/billing/orders/1/withdraw">Withdraw from contract here</a>'));
+        assert.ok((await app.request('/me/withdraw', { cookie: alice.cookie })).body.includes('href="/me/billing/orders/1/withdraw"'));
+        const confirm = await app.request('/me/billing/orders/1/withdraw', { cookie: alice.cookie });
+        assert.equal(confirm.status, 200);
+        assert.ok(confirm.body.includes('>Confirm withdrawal</button>'));
+        assert.ok(confirm.body.includes('value="alice"'), 'name pre-filled, editable');
+        assert.ok(confirm.body.includes('Refund due') && confirm.body.includes('€4.99'));
+
+        const withdraw = (cookie, fields, origin = ORIGIN) => app.request('/me/billing/orders/1/withdraw', { method: 'POST', cookie, body: form(fields), headers: { origin } });
+        assert.equal((await withdraw(alice.cookie, { csrf: 'nope', name: 'Alice' })).status, 403, 'CSRF');
+        assert.equal((await withdraw(alice.cookie, { csrf, name: 'Alice' }, 'https://evil.example')).status, 403, 'origin');
+        const bob = await login(app, { id: BOB, username: 'bob' });
+        const bobCsrf = csrfOf((await app.request('/me/billing', { cookie: bob.cookie })).body);
+        assert.equal((await withdraw(bob.cookie, { csrf: bobCsrf, name: 'Bob' })).status, 404, 'not Bob\'s order');
+        assert.equal((await app.request('/me/billing/orders/1/withdraw', { cookie: bob.cookie })).status, 404);
+        assert.equal((await withdraw(alice.cookie, { csrf, name: '  ' })).status, 400, 'name required');
+        assert.equal(app.premium.orders[0].legal.withdrawal, undefined, 'nothing withdrawn yet');
+        assert.ok(isActive(app.premium.subs.get(ALICE)));
+
+        const done = await withdraw(alice.cookie, { csrf, name: 'Alice Example' });
+        assert.equal(done.status, 303);
+        assert.equal(done.headers.get('location'), '/me/billing/orders/1/withdrawal');
+        assert.ok(!isActive(app.premium.subs.get(ALICE)), 'only order → plan ended');
+        const w = app.premium.orders[0].legal.withdrawal;
+        assert.equal(w.refundCents, 499);
+        assert.equal(w.usedDays, 0);
+        assert.equal(sent.length, 2);
+        assert.deepEqual(sent[1].allowedMentions, { parse: [] });
+        assert.match(sent[1].content, /received your withdrawal from order #1[\s\S]*Alice Example[\s\S]*€4\.99/);
+        const ack = await app.request('/me/billing/orders/1/withdrawal', { cookie: alice.cookie });
+        assert.equal(ack.status, 200);
+        assert.ok(ack.body.includes('We received your withdrawal') && ack.body.includes('Alice Example') && ack.body.includes('UTC'));
+        assert.equal((await app.request('/me/billing/orders/1/withdrawal', { cookie: bob.cookie })).status, 404, 'Bob cannot see it');
+        assert.ok((await app.request('/me/billing', { cookie: alice.cookie })).body.includes('/me/billing/orders/1/withdrawal">Withdrawn</a>'), 'in the order history');
+        const again = await withdraw(alice.cookie, { csrf, name: 'Alice' });
+        assert.equal(again.status, 303, 'second time → the existing acknowledgement');
+        assert.equal(sent.length, 2, 'no second DM');
+    } finally {
+        setPremiumClient(null);
+        await app.close();
+    }
+});
+
+test('withdrawal: after 14 days refused; 10 days in → pro rata; gift key unused → cancelled, full refund; closed DMs warned', async () => {
+    const app = await serve();
+    const { client } = dmRecorder({ fail: true });
+    setPremiumClient(client);
+    try {
+        const alice = await login(app, { id: ALICE, username: 'alice' });
+        const csrf = csrfOf((await app.request('/me/checkout?plan=pro&period=monthly&for=personal', { cookie: alice.cookie })).body);
+        const buy = (kind) => app.request('/me/checkout', { method: 'POST', cookie: alice.cookie, body: form({ csrf, plan: 'pro', period: 'monthly', for: kind, ...CONSENT }), headers: { origin: ORIGIN } });
+        assert.equal((await buy('personal')).status, 303);
+        assert.equal((await buy('personal')).status, 303);
+        assert.equal((await buy('gift')).status, 303);
+        const [giftOrder, second, first] = app.premium.orders;
+        first.created_at = new Date(Date.now() - 15 * DAY);
+        second.created_at = new Date(Date.now() - 10.5 * DAY);
+        const withdraw = (id) => app.request(`/me/billing/orders/${id}/withdraw`, { method: 'POST', cookie: alice.cookie, body: form({ csrf, name: 'Alice' }), headers: { origin: ORIGIN } });
+
+        const billing = (await app.request('/me/billing', { cookie: alice.cookie })).body;
+        assert.ok(!billing.includes(`/me/billing/orders/${first.id}/withdraw"`), 'no button after 14 days');
+        assert.equal((await app.request(`/me/billing/orders/${first.id}/withdraw`, { cookie: alice.cookie })).status, 409);
+        const late = await withdraw(first.id);
+        assert.equal(late.status, 409);
+        assert.match(late.body, /withdrawal period for order #1 ended/);
+        assert.equal(first.legal.withdrawal, undefined);
+
+        const endBefore = app.premium.subs.get(ALICE).expires_at.getTime();
+        assert.equal((await withdraw(second.id)).status, 303);
+        assert.deepEqual([second.legal.withdrawal.usedDays, second.legal.withdrawal.refundCents], [10, 333]);
+        assert.ok(Math.abs(app.premium.subs.get(ALICE).expires_at.getTime() - (endBefore - 20 * DAY)) < 1000, '20 unused days taken off');
+        assert.ok(isActive(app.premium.subs.get(ALICE)), 'the other order\'s time stays');
+        const ack = (await app.request(`/me/billing/orders/${second.id}/withdrawal`, { cookie: alice.cookie })).body;
+        assert.ok(ack.includes('could not be delivered'), 'closed DMs: the page says so');
+
+        assert.equal((await withdraw(giftOrder.id)).status, 303);
+        assert.equal(giftOrder.legal.withdrawal.refundCents, 499);
+        assert.ok(app.premium.keys.get(giftOrder.key_code).revoked_at, 'unused gift key cancelled');
+    } finally {
+        setPremiumClient(null);
+        await app.close();
+    }
+});
+
+test('/withdrawal: rules, model form and email route; "Withdraw from contract here" only while the checkout is on', async () => {
+    const on = await serve({ env: { ...ENV, LEGAL_EMAIL: 'hi@example.com', LEGAL_OPERATOR: 'R. Example' } });
+    const off = await serve({ env: { ...ENV, PREMIUM_TEST_CHECKOUT: 'false' } });
+    try {
+        const page = await on.request('/withdrawal');
+        assert.equal(page.status, 200);
+        for (const part of ['Right of withdrawal', '14 days', 'Model withdrawal form', 'I hereby give notice that I withdraw from my contract', 'To: R. Example, hi@example.com', 'mailto:hi@example.com', 'href="/me/withdraw">Withdraw from contract here</a>', 'belongs to you as the buyer', 'days already used']) {
+            assert.ok(page.body.includes(part), part);
+        }
+        const closed = (await off.request('/withdrawal')).body;
+        assert.ok(closed.includes('Model withdrawal form') && !closed.includes('/me/withdraw'), 'no online button without the checkout');
+        assert.ok(closed.includes('href="/legal"'), 'no email set: points to the legal page');
+        const out = await on.request('/me/withdraw');
+        assert.ok(out.body.includes('/me/login?next=%2Fme%2Fwithdraw'), 'logged out: log in first, then back');
+    } finally {
+        await on.close();
+        await off.close();
+    }
+});
