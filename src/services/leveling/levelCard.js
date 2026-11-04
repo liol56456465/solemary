@@ -65,9 +65,14 @@ export function cardAccentOf(value) {
 // for them, so they would draw as boxes.
 const UNDRAWABLE = new RegExp('[\\p{Extended_Pictographic}\\p{Regional_Indicator}\\u{1F3FB}-\\u{1F3FF}\\u200B-\\u200F\\u2028-\\u202E\\u2060-\\u206F\\uFE00-\\uFE0F\\u{E0000}-\\u{E007F}\\p{Cc}]', 'gu');
 
-/** The text we can draw: no emoji or control characters, single spaces, trimmed. */
+// Scripts the bundled Inter font covers (Latin, Greek, Cyrillic, combining marks) plus common
+// punctuation, digits and currency signs. Anything else (CJK, Arabic, Hangul, Devanagari,
+// symbols like ★) has no glyph and would draw as a "NO GLYPH" box, so it is left out.
+const NOT_IN_FONT = new RegExp('[^\\p{Script=Latin}\\p{Script=Greek}\\p{Script=Cyrillic}\\p{Script=Inherited}\\u0020-\\u007E\\u00A0-\\u00BF\\u00D7\\u00F7\\u2010-\\u205E\\u20A0-\\u20BF\\s]|[\\uFF00-\\uFFEF]', 'gu');
+
+/** The text we can draw: no emoji, control characters or letters the font lacks, single spaces, trimmed. */
 export function drawableText(value, fallback = '') {
-    const cleaned = String(value ?? '').replace(UNDRAWABLE, '').replace(/\s+/g, ' ').trim();
+    const cleaned = String(value ?? '').replace(UNDRAWABLE, '').replace(NOT_IN_FONT, '').replace(/\s+/g, ' ').trim();
     return cleaned || fallback;
 }
 
@@ -106,9 +111,10 @@ async function decodeAvatar(loadImage, avatar) {
 
 /**
  * Draws the card and returns PNG bytes. Throws on a font or render failure (use tryLevelCard
- * in bot code). `avatar` is image bytes or null (placeholder circle).
+ * in bot code). `avatar` is image bytes or null (placeholder circle). `altName` is used
+ * when no character of `name` can be drawn.
  */
-export async function renderLevelCard({ name, serverName, level, xp, xpNeeded, accent, avatar = null }) {
+export async function renderLevelCard({ name, altName = null, serverName, level, xp, xpNeeded, accent, avatar = null }) {
     const lib = await ensureCardFont();
     if (!lib) throw new Error('Level card library or font is not available');
     const { createCanvas, loadImage } = lib;
@@ -118,7 +124,10 @@ export async function renderLevelCard({ name, serverName, level, xp, xpNeeded, a
     const need = Number.isFinite(xpNeeded) && xpNeeded > 0 ? Math.floor(xpNeeded) : 0;
     const have = Number.isFinite(xp) && xp > 0 ? Math.floor(xp) : 0;
     const ratio = atMax ? 1 : (need > 0 ? Math.min(1, have / need) : 0);
-    const displayName = drawableText(name, 'Member');
+    // altName (the username) when nothing of the display name can be drawn (e.g. all CJK).
+    // (Punctuation alone, e.g. '王-王' → '-', counts as nothing left.)
+    const drawnName = drawableText(name);
+    const displayName = /[\p{L}\p{N}]/u.test(drawnName) ? drawnName : drawableText(altName, 'Member');
     const guildName = drawableText(serverName, 'This server');
 
     const canvas = createCanvas(CARD_WIDTH, CARD_HEIGHT);

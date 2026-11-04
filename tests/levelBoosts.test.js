@@ -199,6 +199,26 @@ test('sync: highest only gives the top earned role and takes off lower ones', as
     assert.deepEqual([...member.roles.cache.keys()], [ROLE_B]);
 });
 
+test('sync: highest only never strips the lower earned roles when the top role cannot be given', async () => {
+    // Top reward above the bot (hierarchy): the member keeps ROLE_A instead of ending with none.
+    const client = fakeClient();
+    await seed(client, { rewardMode: 'highest', rewards: { 5: ROLE_A, 10: ROLE_HIGH, 20: ROLE_C }, level: 12 });
+    const member = fakeMember(fakeGuild(), client, [ROLE_A, ROLE_C]);
+    const result = await syncLevelRolesForMember(client, member, { removeUnearned: true });
+    assert.deepEqual(result.added, []);
+    assert.deepEqual(result.removed, [ROLE_C], 'a role above the level still comes off');
+    assert.ok(member.roles.cache.has(ROLE_A), 'the lower earned role is kept');
+    assert.ok(result.skipped.some((s) => s.roleId === ROLE_A));
+
+    // A Discord error on the add: same.
+    const client2 = fakeClient();
+    await seed(client2, { rewardMode: 'highest' });
+    const failing = fakeMember(fakeGuild(), client2, [ROLE_A], { failAdd: true });
+    const failed = await syncLevelRolesForMember(client2, failing);
+    assert.deepEqual(failed.removed, []);
+    assert.ok(failing.roles.cache.has(ROLE_A));
+});
+
 test('sync: roles above the bot, staff roles and missing Manage Roles are skipped and logged, never thrown', async () => {
     const client = fakeClient();
     await seed(client, { rewards: { 1: ROLE_HIGH, 2: ROLE_STAFF, 3: ROLE_A, 4: '400000000000000099' }, level: 5 });

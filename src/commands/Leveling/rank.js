@@ -120,6 +120,7 @@ export default {
       const png = await tryLevelCard({
         avatarUrl: cardAvatarUrl(member.user),
         name: member.displayName,
+        altName: member.user?.username,
         serverName: interaction.guild.name,
         level: safeUserData.level,
         xp: safeUserData.xp,

@@ -126,6 +126,7 @@ export async function levelUpCardFor(guild, member, levelData, config, permissio
     return await makeCard({
       avatarUrl: cardAvatarUrl(member.user),
       name: member.displayName || member.user?.username,
+      altName: member.user?.username,
       serverName: guild.name,
       level: levelData.level,
       xp: levelData.xp,
