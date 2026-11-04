@@ -1,10 +1,12 @@
 // rules.js — /rules: the main server's rules as staff set them on the dashboard Rules page
 // (services/rules/serverRules.js), numbered, each with an anchor (#rule-3) that punishment
 // DMs link to. `data` is the reader's result, or null when it could not be read (503 page,
-// never an empty list that would look like "no rules").
+// never an empty list that would look like "no rules"). Page text: content/site/<lang>/rules.json;
+// the rules themselves are staff data and stay as written.
 
 import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
+import { textOf } from '../i18n.js';
 
 const DATE = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
@@ -16,22 +18,23 @@ function updatedOn(value) {
 }
 
 export function rulesPage(ctx, data) {
-    const head = html`<header class="page-head page-head-split"><div><h1>Server rules</h1></div>
-<p class="lead">The rules of the Mewvo server. When staff warn, mute, kick or ban for one of them, the DM names the rule and links here.</p></header>`;
+    const { t, ti } = textOf(ctx);
+    const head = html`<header class="page-head page-head-split"><div><h1>${t('rules.head.heading')}</h1></div>
+<p class="lead">${t('rules.head.lead')}</p></header>`;
     let content;
     if (!data) {
-        content = html`<p class="notice notice-bad" role="alert">The rules could not be loaded right now. Please try again in a minute.</p>`;
+        content = html`<p class="notice notice-bad" role="alert">${t('rules.state.unavailable')}</p>`;
     } else if (!data.rules.length) {
-        content = html`<p class="notice">This server has not published its rules yet.</p>`;
+        content = html`<p class="notice">${t('rules.state.empty')}</p>`;
     } else {
         const updated = updatedOn(data.updatedAt);
-        content = html`${updated ? html`<p class="note">Last updated <time datetime="${updated.iso}">${updated.text}</time>.</p>` : ''}
-<ol class="rules-list">${data.rules.map((rule) => html`<li class="rule" id="rule-${rule.number}"><a class="rule-num" href="#rule-${rule.number}" aria-label="Link to rule ${rule.number}">${String(rule.number).padStart(2, '0')}</a><div class="rule-body"><h2 class="rule-title">${rule.title}</h2>${rule.text ? html`<p class="rule-text">${rule.text}</p>` : ''}${rule.consequence ? html`<p class="rule-consequence"><span class="rule-consequence-label">Consequence:</span> ${rule.consequence}</p>` : ''}</div></li>`)}</ol>`;
+        content = html`${updated ? html`<p class="note">${ti('rules.list.updated', { date: html`<time datetime="${updated.iso}">${updated.text}</time>` })}</p>` : ''}
+<ol class="rules-list">${data.rules.map((rule) => html`<li class="rule" id="rule-${rule.number}"><a class="rule-num" href="#rule-${rule.number}" aria-label="${t('rules.list.linkLabel', { number: rule.number })}">${String(rule.number).padStart(2, '0')}</a><div class="rule-body"><h2 class="rule-title">${rule.title}</h2>${rule.text ? html`<p class="rule-text">${rule.text}</p>` : ''}${rule.consequence ? html`<p class="rule-consequence"><span class="rule-consequence-label">${t('rules.list.consequenceLabel')}</span> ${rule.consequence}</p>` : ''}</div></li>`)}</ol>`;
     }
     return layout(ctx, {
-        title: 'Rules', active: 'rules', path: '/rules',
-        description: 'The rules of the Mewvo Discord server.',
+        title: t('rules.title'), active: 'rules', path: '/rules',
+        description: t('rules.description'),
         body: html`<div class="wrap page">${head}<div class="rules">${content}
-<p class="note rules-appeal">Punished for a rule you think you did not break? Every DM says whether and how it can be appealed. <a href="/docs/appeals">How appeals work</a>.</p></div></div>`,
+<p class="note rules-appeal">${ti('rules.appeal')}</p></div></div>`,
     });
 }

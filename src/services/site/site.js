@@ -64,7 +64,7 @@ import { trustErrorPage, trustPage } from './pages/trust.js';
 import { changelogPage } from './pages/changelog.js';
 import { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage } from './pages/legal.js';
 import { withdrawalPage } from './pages/withdrawal.js';
-import { DEFAULT_LANG, translator } from './i18n.js';
+import { DEFAULT_LANG, textOf, translator } from './i18n.js';
 import { readPublicRules } from '../rules/serverRules.js';
 
 export {
@@ -74,22 +74,22 @@ export {
 export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, rulesPage, changelogPage, GUIDES };
 export { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage };
 
-const CATEGORY_LABEL = {
-    Core: 'General', Community: 'Community', Leveling: 'Leveling', Fun: 'Fun', Birthday: 'Birthdays',
-    Utility: 'Utility', Tools: 'Tools', Search: 'Search', Verification: 'Verification', Ticket: 'Tickets',
-};
+// Command categories with a label in the catalog (pages.commands.groups.<key>); others show their own name.
 const CATEGORY_ORDER = ['Core', 'Community', 'Leveling', 'Fun', 'Birthday', 'Utility', 'Tools', 'Search', 'Verification', 'Ticket'];
-// Everyone-commands that narrow access inside the command (commandAccess.js header comment).
+const LABELLED_CATEGORIES = new Set([...CATEGORY_ORDER, 'Menus', 'Other']);
+// Everyone-commands that narrow access inside the command (commandAccess.js header comment): the note's catalog key.
 const NARROWED = {
-    claim: 'Ticket staff', priority: 'Ticket staff', 'modmail close': 'Ticket staff',
-    'canned send': 'Ticket staff', 'canned list': 'Ticket staff', close: 'Ticket staff or the ticket opener',
+    claim: 'ticketStaff', priority: 'ticketStaff', 'modmail close': 'ticketStaff',
+    'canned send': 'ticketStaff', 'canned list': 'ticketStaff', close: 'ticketStaffOrOpener',
 };
 
 /**
  * The everyone-commands, grouped by command category: [{ label, items: [{ key, description, slash, note }] }].
- * Descriptions come from the loaded commands; before they are loaded the keys are listed alone.
+ * Descriptions come from the loaded commands (data, not catalog text); before they are loaded the keys are listed alone.
  */
-export function everyoneCommandGroups(commands) {
+export function everyoneCommandGroups(commands, ctx) {
+    const { t } = textOf(ctx);
+    const noteFor = (key) => (NARROWED[key] ? t(`pages.commands.notes.${NARROWED[key]}`) : '');
     const groups = new Map();
     const push = (category, item) => {
         if (!groups.has(category)) groups.set(category, []);
@@ -103,52 +103,52 @@ export function everyoneCommandGroups(commands) {
             if (entry.access !== 'everyone' || seen.has(entry.key)) continue;
             seen.add(entry.key);
             const category = menu ? 'Menus' : (command.category || 'Other');
-            push(category, { key: entry.key, description: menu ? `Right-click ${json.type === 3 ? 'a message' : 'a member'} → Apps → ${entry.key}` : entry.description, slash: !menu, note: NARROWED[entry.key] || '' });
+            const description = menu ? t(json.type === 3 ? 'pages.commands.menu.message' : 'pages.commands.menu.member', { command: entry.key }) : entry.description;
+            push(category, { key: entry.key, description, slash: !menu, note: noteFor(entry.key) });
         }
     }
     if (!seen.size) {
-        for (const key of EVERYONE_COMMANDS) push('Other', { key, description: '', slash: true, note: NARROWED[key] || '' });
+        for (const key of EVERYONE_COMMANDS) push('Other', { key, description: '', slash: true, note: noteFor(key) });
     }
     const rank = (c) => { const i = CATEGORY_ORDER.indexOf(c); return i === -1 ? CATEGORY_ORDER.length + (c === 'Menus' ? 0 : 1) : i; };
     return [...groups.entries()]
         .sort(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b))
         .map(([category, items]) => ({
             key: category.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            label: category === 'Menus' ? 'Right-click menus' : (CATEGORY_LABEL[category] || category.replace(/_/g, ' ')),
+            label: LABELLED_CATEGORIES.has(category) ? t(`pages.commands.groups.${category.toLowerCase()}`) : category.replace(/_/g, ' '),
             items: items.sort((a, b) => a.key.localeCompare(b.key)),
         }));
 }
 
 export function commandsPage(ctx) {
-    const groups = everyoneCommandGroups(ctx.commands);
+    const { t } = textOf(ctx);
+    const groups = everyoneCommandGroups(ctx.commands, ctx);
     return layout(ctx, {
-        title: 'Commands', active: 'commands', path: '/commands',
-        description: 'The Mewvo commands every member can use.',
-        body: html`<div class="wrap page"><header class="page-head page-head-split"><div><h1>Commands</h1></div>
-<p class="lead">The commands every member can use. Staff tools live on the dashboard and need the Administrator role.</p></header>
-${groups.length > 1 ? html`<nav class="jump" aria-label="Command groups"><ul>${groups.map((g) => html`<li><a href="#c-${g.key}">${g.label}</a></li>`)}</ul></nav>` : ''}
+        title: t('pages.commands.title'), active: 'commands', path: '/commands',
+        description: t('pages.commands.description'),
+        body: html`<div class="wrap page"><header class="page-head page-head-split"><div><h1>${t('pages.commands.heading')}</h1></div>
+<p class="lead">${t('pages.commands.lead')}</p></header>
+${groups.length > 1 ? html`<nav class="jump" aria-label="${t('pages.commands.jumpLabel')}"><ul>${groups.map((g) => html`<li><a href="#c-${g.key}">${g.label}</a></li>`)}</ul></nav>` : ''}
 ${groups.map((g) => html`<section class="cmd-group" id="c-${g.key}" aria-labelledby="h-${g.key}"><h2 id="h-${g.key}">${g.label}</h2>
 <dl class="cmd-list">${g.items.map((c) => html`<div class="cmd"><dt><code>${c.slash ? `/${c.key}` : c.key}</code>${c.note ? html` <span class="tag">${c.note}</span>` : ''}</dt><dd>${c.description || ' '}</dd></div>`)}</dl></section>`)}</div>`,
     });
 }
 
 export function aboutPage(ctx) {
+    const { t, ti, tb } = textOf(ctx);
     return layout(ctx, {
-        title: 'About', active: 'about', path: '/about',
-        description: 'About Mewvo, the Discord bot of the Mewvo server.',
-        body: html`<div class="wrap page prose"><h1>About Mewvo</h1>
-<p class="lead">Mewvo is the bot of the Mewvo Discord server, built and run by its owner for that community.</p>
-<h2>How it started</h2>
-<p>Mewvo began as a fork of TitanBot, an open-source (MIT) Discord bot, and has since been rebuilt around the server’s own needs: an enforcement system with case codes and appeals, a warning ladder, automod, tickets and modmail, and a web dashboard for the staff team.</p>
-<h2>How it treats members</h2>
-<ul><li>Every punishment comes with a DM that says what happened, why, until when, and whether and how it can be appealed.</li>
-<li>Staff actions are recorded as cases, so decisions can be reviewed and corrected.</li>
-<li>Verification asks Discord only for your identity and permission to add you to the support server, never your email.</li>
-<li>Members can delete their own data from the bot in a server with <code>/wipedata</code>.</li></ul>
-<h2>Availability</h2>
-<p>${ctx.publicSite ? 'Mewvo can be added to other servers with the button at the top of the page.' : 'For now Mewvo runs only on its own server; it can’t be added to other servers yet.'}</p>
-<h2>Get help</h2>
-<p>${ctx.supportInvite ? html`Questions, appeals or problems: <a href="${ctx.supportInvite}" rel="noopener">join the support server</a>.` : 'Ask the staff team on the Mewvo server.'}</p></div>`,
+        title: t('pages.about.title'), active: 'about', path: '/about',
+        description: t('pages.about.description'),
+        body: html`<div class="wrap page prose"><h1>${t('pages.about.heading')}</h1>
+<p class="lead">${t('pages.about.lead')}</p>
+<h2>${t('pages.about.started.heading')}</h2>
+<p>${t('pages.about.started.text')}</p>
+<h2>${t('pages.about.members.heading')}</h2>
+${tb('pages.about.members.list')}
+<h2>${t('pages.about.availability.heading')}</h2>
+<p>${t(ctx.publicSite ? 'pages.about.availability.public' : 'pages.about.availability.private')}</p>
+<h2>${t('pages.about.help.heading')}</h2>
+<p>${ctx.supportInvite ? ti('pages.about.help.withInvite', { url: ctx.supportInvite }) : t('pages.about.help.withoutInvite')}</p></div>`,
     });
 }
 
@@ -176,7 +176,7 @@ export function leaderboardPageNumber(value) {
  * Level data is kept when members leave. With fetchMissing:false getLeaderboard never asks the
  * gateway for members: when the member cache is complete (memberCacheComplete), uncached ids
  * are treated as gone and former members are not listed; otherwise uncached members stay
- * listed and show as "Former member" (never an ID), since they may only be missing from the cache.
+ * listed with name null, shown as "Former member" (never an ID), since they may only be missing from the cache.
  * Names: the member's server display name.
  * Each page is cached for a minute (one promise per page, so concurrent views share a read).
  */
@@ -197,7 +197,8 @@ export function createLeaderboardReader(client, { guildId = () => enforcementCon
             enabled: true,
             rows: entries.map((entry) => ({
                 rank: entry.rank,
-                name: guild.members.cache.get(entry.userId)?.displayName || 'Former member',
+                // null: the page shows "Former member" in the page's language.
+                name: guild.members.cache.get(entry.userId)?.displayName || null,
                 level: entry.level,
                 totalXp: entry.totalXp,
             })),
@@ -239,43 +240,45 @@ const formatNumber = (value) => (Number(value) || 0).toLocaleString('en-US');
 
 /** `board` is the reader's result (with one row too many when there is a next page), or null when the read failed. */
 /** The server cat card (above the leaderboard), or '' when there is no cat to show. */
-export function catCard(cat) {
+export function catCard(cat, ctx) {
     if (!cat?.stage || !cat.image) return '';
+    const { t } = textOf(ctx);
     const pct = Math.round((cat.progress?.fraction ?? 1) * 100);
     const next = cat.progress?.next
-        ? html`<progress class="cat-bar" max="100" value="${String(pct)}" aria-label="Growth to ${cat.progress.next.name}">${pct}%</progress>
-<p class="cat-meta">${formatNumber(cat.total)} messages counted. ${formatNumber(cat.progress.toNext)} more to ${cat.progress.next.name}.</p>`
-        : html`<p class="cat-meta">${formatNumber(cat.total)} messages counted. Fully grown.</p>`;
-    return html`<section class="cat-card" aria-label="The server cat"><img src="/img/cat/${cat.image}" width="128" height="128" alt="${cat.name}, a ${cat.stage.name.toLowerCase()}, looking ${cat.mood}">
-<div><h2>${cat.name}</h2><p>${cat.stage.name}. ${cat.sentence}</p>${next}</div></section>`;
+        ? html`<progress class="cat-bar" max="100" value="${String(pct)}" aria-label="${t('pages.cat.progressLabel', { next: cat.progress.next.name })}">${t('pages.cat.percent', { pct })}</progress>
+<p class="cat-meta">${t('pages.cat.progress', { total: formatNumber(cat.total), toNext: formatNumber(cat.progress.toNext), next: cat.progress.next.name })}</p>`
+        : html`<p class="cat-meta">${t('pages.cat.grown', { total: formatNumber(cat.total) })}</p>`;
+    return html`<section class="cat-card" aria-label="${t('pages.cat.label')}"><img src="/img/cat/${cat.image}" width="128" height="128" alt="${t('pages.cat.alt', { name: cat.name, stage: cat.stage.name.toLowerCase(), mood: cat.mood })}">
+<div><h2>${cat.name}</h2><p>${t('pages.cat.stageLine', { stage: cat.stage.name, sentence: cat.sentence })}</p>${next}</div></section>`;
 }
 
 export function leaderboardPage(ctx, { page, board, cat = null }) {
-    const head = html`<header class="page-head page-head-split"><div><h1>Leaderboard</h1></div>
-<p class="lead">The most active members of the Mewvo server by level and total XP. You earn XP by chatting; members who delete their data with <code>/wipedata</code> are not listed.</p></header>`;
+    const { t, ti } = textOf(ctx);
+    const head = html`<header class="page-head page-head-split"><div><h1>${t('pages.leaderboard.heading')}</h1></div>
+<p class="lead">${ti('pages.leaderboard.lead')}</p></header>`;
     let content;
     if (!board) {
-        content = html`<p class="notice notice-bad" role="alert">The leaderboard could not be loaded right now. Nothing was changed; please try again in a minute.</p>`;
+        content = html`<p class="notice notice-bad" role="alert">${t('pages.leaderboard.unavailable')}</p>`;
     } else if (!board.enabled) {
-        content = html`<p class="notice">Leveling is turned off on the Mewvo server, so there is no leaderboard right now.</p>`;
+        content = html`<p class="notice">${t('pages.leaderboard.off')}</p>`;
     } else {
         const rows = board.rows.slice(0, LEADERBOARD_PAGE_SIZE);
         // getLeaderboard serves offsets up to LEADERBOARD_MAX_OFFSET only: no Next to an empty page.
         const hasNext = board.rows.length > LEADERBOARD_PAGE_SIZE && page * LEADERBOARD_PAGE_SIZE <= LEADERBOARD_MAX_OFFSET;
         const link = (n, label, rel) => html`<a class="button button-quiet" href="/leaderboard${n > 1 ? `?page=${n}` : ''}" rel="${rel}">${label}</a>`;
         const pager = page > 1 || hasNext
-            ? html`<nav class="pager" aria-label="Leaderboard pages">${page > 1 ? link(page - 1, 'Previous', 'prev') : ''}<span class="pager-current">Page ${page}</span>${hasNext ? link(page + 1, 'Next', 'next') : ''}</nav>`
+            ? html`<nav class="pager" aria-label="${t('pages.leaderboard.pager.label')}">${page > 1 ? link(page - 1, t('pages.leaderboard.pager.previous'), 'prev') : ''}<span class="pager-current">${t('pages.leaderboard.pager.current', { page })}</span>${hasNext ? link(page + 1, t('pages.leaderboard.pager.next'), 'next') : ''}</nav>`
             : '';
         content = rows.length
-            ? html`<div class="table-wrap"><table class="board"><caption class="visually-hidden">Leaderboard, page ${page}</caption>
-<thead><tr><th scope="col">Rank</th><th scope="col">Member</th><th scope="col">Level</th><th scope="col">Total XP</th></tr></thead>
-<tbody>${rows.map((r) => html`<tr><td class="num">${r.rank}</td><td class="board-name">${r.name}</td><td class="num">${r.level}</td><td class="num">${formatNumber(r.totalXp)}</td></tr>`)}</tbody></table></div>${pager}`
-            : html`<p class="notice">${page > 1 ? 'There is nobody on this page.' : 'Nobody has earned XP yet.'}</p>${page > 1 ? html`<p><a class="button button-quiet" href="/leaderboard">Back to the first page</a></p>` : ''}`;
+            ? html`<div class="table-wrap"><table class="board"><caption class="visually-hidden">${t('pages.leaderboard.table.caption', { page })}</caption>
+<thead><tr><th scope="col">${t('pages.leaderboard.table.rank')}</th><th scope="col">${t('pages.leaderboard.table.member')}</th><th scope="col">${t('pages.leaderboard.table.level')}</th><th scope="col">${t('pages.leaderboard.table.totalXp')}</th></tr></thead>
+<tbody>${rows.map((r) => html`<tr><td class="num">${r.rank}</td><td class="board-name">${r.name ?? t('pages.leaderboard.formerMember')}</td><td class="num">${r.level}</td><td class="num">${formatNumber(r.totalXp)}</td></tr>`)}</tbody></table></div>${pager}`
+            : html`<p class="notice">${t(page > 1 ? 'pages.leaderboard.empty.laterPage' : 'pages.leaderboard.empty.firstPage')}</p>${page > 1 ? html`<p><a class="button button-quiet" href="/leaderboard">${t('pages.leaderboard.empty.backToFirst')}</a></p>` : ''}`;
     }
     return layout(ctx, {
-        title: page > 1 ? `Leaderboard, page ${page}` : 'Leaderboard', active: 'leaderboard', path: page > 1 ? `/leaderboard?page=${page}` : '/leaderboard',
-        description: 'The Mewvo server leveling leaderboard.',
-        body: html`<div class="wrap page">${head}${catCard(cat)}${content}</div>`,
+        title: page > 1 ? t('pages.leaderboard.titlePaged', { page }) : t('pages.leaderboard.title'), active: 'leaderboard', path: page > 1 ? `/leaderboard?page=${page}` : '/leaderboard',
+        description: t('pages.leaderboard.description'),
+        body: html`<div class="wrap page">${head}${catCard(cat, ctx)}${content}</div>`,
     });
 }
 
@@ -294,42 +297,42 @@ export function botStatus(client) {
 }
 
 /** "3 days, 4 hours", "12 minutes", "less than a minute": the two largest units. */
-export function uptimeWords(ms) {
+export function uptimeWords(ms, ctx) {
+    const { t } = textOf(ctx);
     const total = Math.floor(Number(ms) / 60000);
-    if (!Number.isFinite(total) || total < 1) return 'less than a minute';
+    if (!Number.isFinite(total) || total < 1) return t('pages.status.uptime.lessThanMinute');
     const units = [['day', Math.floor(total / 1440)], ['hour', Math.floor((total % 1440) / 60)], ['minute', total % 60]];
     const first = units.findIndex(([, n]) => n > 0);
-    return units.slice(first, first + 2).filter(([, n]) => n > 0).map(([unit, n]) => `${n} ${unit}${n === 1 ? '' : 's'}`).join(', ');
+    const words = units.slice(first, first + 2).filter(([, n]) => n > 0)
+        .map(([unit, n]) => t(`pages.status.uptime.${unit}${n === 1 ? 'One' : 'Other'}`, { n }));
+    return words.length > 1 ? t('pages.status.uptime.join', { first: words[0], second: words[1] }) : words[0];
 }
 
-const STATUS_TEXT = {
-    online: { label: 'Online', text: 'Mewvo is running normally.' },
-    starting: { label: 'Starting', text: 'Mewvo is starting or reconnecting to Discord. Commands answer again in a moment.' },
-    degraded: { label: 'Degraded', text: 'Mewvo is connected to Discord but its database is not responding. Commands that read or save data may fail until it recovers.' },
-};
+const STATUS_STATES = new Set(['online', 'starting', 'degraded']);
 
 export function statusPage(ctx, status) {
-    const state = STATUS_TEXT[status?.state] ? status.state : 'degraded';
-    const { label, text } = STATUS_TEXT[state];
+    const { t, ti } = textOf(ctx);
+    const state = STATUS_STATES.has(status?.state) ? status.state : 'degraded';
     const uptime = state !== 'starting' && Number.isFinite(status?.uptimeMs) ? status.uptimeMs : null;
     return layout(ctx, {
-        title: 'Status', active: 'status', refresh: 60, path: '/status',
-        description: 'Whether the Mewvo bot is online.',
-        body: html`<div class="wrap page prose"><h1>Status</h1>
-<p class="status status-${state}"><span class="status-dot" aria-hidden="true"></span>${label}</p>
-<p class="lead">${text}</p>
-${uptime !== null ? html`<p>Up for ${uptimeWords(uptime)}.</p>` : ''}
-<p class="note">This page refreshes every minute.${ctx.supportInvite ? html` Something not working? <a href="${ctx.supportInvite}" rel="noopener">Tell us in the support server</a>.` : ''}</p></div>`,
+        title: t('pages.status.title'), active: 'status', refresh: 60, path: '/status',
+        description: t('pages.status.description'),
+        body: html`<div class="wrap page prose"><h1>${t('pages.status.heading')}</h1>
+<p class="status status-${state}"><span class="status-dot" aria-hidden="true"></span>${t(`pages.status.states.${state}.label`)}</p>
+<p class="lead">${t(`pages.status.states.${state}.text`)}</p>
+${uptime !== null ? html`<p>${t('pages.status.uptime.line', { uptime: uptimeWords(uptime, ctx) })}</p>` : ''}
+<p class="note">${ctx.supportInvite ? ti('pages.status.note.refreshSupport', { url: ctx.supportInvite }) : t('pages.status.note.refresh')}</p></div>`,
     });
 }
 
 // ── Privacy Policy and Terms and Conditions: pages/legal.js ────────────────
 
 export function notFoundPage(ctx) {
+    const { t } = textOf(ctx);
     return layout(ctx, {
-        title: 'Not found',
-        body: html`<div class="wrap page prose"><h1>Page not found</h1><p class="lead">There is no page at this address. It may have moved, or the link has a typo.</p>
-<p class="hero-actions"><a class="button" href="/">Go to the home page</a><a class="button button-quiet" href="/docs">Read the docs</a></p></div>`,
+        title: t('pages.errors.notFound.title'),
+        body: html`<div class="wrap page prose"><h1>${t('pages.errors.notFound.heading')}</h1><p class="lead">${t('pages.errors.notFound.lead')}</p>
+<p class="hero-actions"><a class="button" href="/">${t('pages.errors.notFound.home')}</a><a class="button button-quiet" href="/docs">${t('pages.errors.notFound.docs')}</a></p></div>`,
     });
 }
 
