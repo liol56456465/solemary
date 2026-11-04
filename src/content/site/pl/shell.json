@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "pageTitle": "{title} · Mewvo",
+    "defaultDescription": "Mewvo to bot do moderacji na Discordzie: kody spraw, drabina ostrzeżeń, odwołania, automoderacja, tickety i narzędzia dla społeczności.",
+    "shareImageAlt": "Mewvo: moderacja na Discordzie z kodami spraw, drabiną ostrzeżeń i odwołaniami."
+  },
+  "header": {
+    "skip": "Przejdź do treści",
+    "navLabel": "Menu główne"
+  },
+  "links": {
+    "features": "Funkcje",
+    "pricing": "Cennik",
+    "docs": "Dokumentacja",
+    "commands": "Komendy",
+    "leaderboard": "Ranking",
+    "myRecord": "Moja historia",
+    "changelog": "Lista zmian",
+    "dashboard": "Panel webowy",
+    "faq": "Pytania i odpowiedzi",
+    "status": "Status",
+    "supportServer": "Serwer wsparcia",
+    "rules": "Zasady",
+    "transparency": "Przejrzystość",
+    "trustCard": "Karta zaufania",
+    "ourServer": "Nasz serwer",
+    "about": "O bocie",
+    "privacy": "Polityka prywatności",
+    "terms": "Regulamin",
+    "legalNotice": "Nota prawna",
+    "contact": "Kontakt i zgłoszenia"
+  },
+  "account": {
+    "logIn": "Zaloguj się",
+    "signUp": "Zarejestruj się",
+    "settings": "Ustawienia konta",
+    "subscription": "Subskrypcja",
+    "logOut": "Wyloguj się"
+  },
+  "install": {
+    "addToDiscord": "Dodaj do Discorda"
+  },
+  "footer": {
+    "navLabel": "Stopka",
+    "tagline": "Moderacja na Discordzie z kodami spraw, drabiną ostrzeżeń i odwołaniami, które trafiają do człowieka.",
+    "legalLine": "Mewvo to bot Discorda prowadzony przez swojego właściciela dla serwera Mewvo. Niepowiązany z Discordem. Ceny podane są w euro.",
+    "columns": {
+      "product": "Produkt",
+      "help": "Pomoc",
+      "community": "Społeczność",
+      "legal": "Informacje prawne"
+    }
+  }
+}

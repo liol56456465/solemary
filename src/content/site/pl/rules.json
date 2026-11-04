@@ -1,0 +1,18 @@
+{
+  "title": "Zasady",
+  "description": "Zasady serwera Discord Mewvo.",
+  "head": {
+    "heading": "Zasady serwera",
+    "lead": "Zasady serwera Mewvo. Gdy ekipa ostrzega, wycisza, wyrzuca lub banuje za złamanie jednej z nich, wiadomość prywatna podaje zasadę i link do tej strony."
+  },
+  "state": {
+    "unavailable": "Nie udało się teraz wczytać zasad. Spróbuj ponownie za minutę.",
+    "empty": "Ten serwer nie opublikował jeszcze swoich zasad."
+  },
+  "list": {
+    "updated": "Ostatnia aktualizacja: {date}.",
+    "linkLabel": "Link do zasady {number}",
+    "consequenceLabel": "Konsekwencja:"
+  },
+  "appeal": "Dostałeś karę za zasadę, której według ciebie nie złamałeś? Każda wiadomość prywatna mówi, czy i jak można się odwołać. [Jak działają odwołania](/docs/appeals)."
+}

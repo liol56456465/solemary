@@ -1,0 +1,113 @@
+{
+  "free": {
+    "summary": "Wszystko, co Mewvo robi dzisiaj, dla jednego serwera.",
+    "perks": {
+      "enforcement": "Panel kar, kody spraw i wiadomości prywatne",
+      "ladderAppeals": "Drabina ostrzeżeń i odwołania",
+      "automod": "Automoderacja z 14 regułami i kartami przeglądu",
+      "ticketsDashboard": "Tickety, modmail i panel webowy",
+      "community": "Poziomy, tagi, propozycje, starboard, kanały",
+      "scheduled": "Do 50 zaplanowanych wiadomości"
+    }
+  },
+  "normal": {
+    "summary": "Więcej miejsca dla aktywnych serwerów społecznościowych.",
+    "perks": {
+      "everythingFree": "Wszystko z Free",
+      "limits": "250 tagów, 25 przyklejonych wiadomości, 40 kanałów YouTube",
+      "scheduled": "100 zaplanowanych wiadomości",
+      "customRules": "5 własnych reguł automoderacji",
+      "supporterRole": "Rola wspierającego na serwerze Mewvo",
+      "caseExport": "Eksport spraw (CSV), ostatnie 90 dni"
+    }
+  },
+  "pro": {
+    "summary": "Dla serwerów z prawdziwą ekipą.",
+    "perks": {
+      "everythingNormal": "Wszystko z Normal, z wyższymi limitami",
+      "customRules": "25 własnych reguł automoderacji",
+      "analytics": "Statystyki ekipy i automoderacji w panelu webowym",
+      "customBot": "Własna nazwa i awatar bota na twoim serwerze",
+      "caseExport": "Eksport całej historii spraw"
+    }
+  },
+  "max": {
+    "summary": "Dla osób, które prowadzą kilka serwerów.",
+    "perks": {
+      "everythingPro": "Wszystko z Pro",
+      "oneDashboard": "Jeden panel webowy dla maksymalnie 5 serwerów",
+      "sharedCases": "Wspólna historia spraw na twoich serwerach",
+      "priorityHelp": "Priorytetowa pomoc na serwerze wsparcia",
+      "highestLimits": "Najwyższe limity na wszystko"
+    }
+  },
+  "comparison": {
+    "moderation": {
+      "title": "Moderacja",
+      "rows": {
+        "enforcement": "Panel kar, kody spraw, wiadomości prywatne",
+        "ladderAppeals": "Drabina ostrzeżeń i odwołania",
+        "caseHistory": "Historia spraw",
+        "caseExport": "Eksport spraw (CSV)",
+        "sharedCases": "Wspólne sprawy na wielu serwerach"
+      }
+    },
+    "automod": {
+      "title": "Automoderacja",
+      "rows": {
+        "builtIn": "Wbudowane reguły z kartami przeglądu",
+        "customRules": "Własne reguły automoderacji"
+      }
+    },
+    "community": {
+      "title": "Społeczność",
+      "rows": {
+        "tags": "Tagi",
+        "stickies": "Przyklejone wiadomości",
+        "feeds": "Kanały YouTube",
+        "scheduled": "Zaplanowane wiadomości"
+      }
+    },
+    "dashboard": {
+      "title": "Panel webowy i wsparcie",
+      "rows": {
+        "auditLog": "Panel webowy z dziennikiem zdarzeń",
+        "analytics": "Statystyki ekipy i automoderacji",
+        "customBot": "Własna nazwa i awatar bota",
+        "servers": "Serwery w jednym panelu webowym",
+        "supporterRole": "Rola wspierającego na serwerze Mewvo",
+        "help": "Pomoc na serwerze wsparcia"
+      }
+    },
+    "values": {
+      "keptForGood": "Przechowywana na zawsze",
+      "last90Days": "Ostatnie 90 dni",
+      "fullHistory": "Cała historia",
+      "upTo5": "Do 5",
+      "yes": "Tak",
+      "priority": "Priorytet"
+    }
+  },
+  "faq": {
+    "buyNow": {
+      "q": "Czy mogę teraz kupić plan?",
+      "a": "Nie. Na razie Mewvo działa tylko na własnym serwerze. Płatne plany ruszą, gdy otworzy się na inne serwery; do tego czasu nie da się nic kupić i nikt nie jest obciążany."
+    },
+    "currency": {
+      "q": "W jakiej walucie są ceny?",
+      "a": "W euro. Ceny na tej stronie to planowane ceny miesięczne i roczne."
+    },
+    "cancel": {
+      "q": "Czy mogę anulować plan albo odzyskać pieniądze?",
+      "a": "Plany nie odnawiają się same, więc nie ma czego anulować: plan trwa przez wybrany okres, a potem wraca do Free. Gdy ruszą prawdziwe płatności, będzie można odstąpić od zakupu w ciągu 14 dni. Jeśli poprosiłeś, aby plan zaczął działać od razu, dostaniesz zwrot pieniędzy pomniejszony o już wykorzystane dni. Szczegóły są na stronie o odstąpieniu od umowy."
+    },
+    "freeKeeps": {
+      "q": "Co zostaje w Free?",
+      "a": "Wszystko, co Mewvo robi dzisiaj: kary, drabina ostrzeżeń, odwołania, automoderacja, tickety, modmail, panel webowy i narzędzia dla społeczności. Historia spraw nigdy nie jest usuwana, gdy plan się kończy."
+    },
+    "backToFree": {
+      "q": "Co się stanie z dodatkowymi tagami lub kanałami, jeśli wrócę do Free?",
+      "a": "W planach jest, że nic nie zostanie usunięte: elementy ponad limit Free przestaną działać, dopóki część z nich nie usuniesz albo znów nie podniesiesz planu. To może się jeszcze zmienić przed startem."
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "title": "Pytania i odpowiedzi",
+    "description": "Odpowiedzi o Mewvo: co robi, drabina ostrzeżeń, odwołania, przechowywane dane i jak skontaktować się z ekipą."
+  },
+  "head": {
+    "title": "Pytania i odpowiedzi",
+    "lead": "Krótkie odpowiedzi. Przewodniki krok po kroku znajdziesz w [dokumentacji](/docs)."
+  },
+  "support": {
+    "link": "[serwerze wsparcia]({url})",
+    "text": "serwerze wsparcia"
+  },
+  "about": {
+    "title": "O Mewvo",
+    "whatDoes": {
+      "q": "Co robi Mewvo?",
+      "a": "Moderuje serwer Discord i obsługuje jego funkcje społecznościowe. Ekipa ostrzega, wycisza, wyrzuca i banuje z jednego panelu; każda akcja staje się sprawą z kodem, a członek dostaje wiadomość prywatną z informacją, za co, do kiedy i jak się odwołać. Do tego: drabina ostrzeżeń, odwołania, automoderacja, tickety i modmail, panel webowy, poziomy i inne narzędzia dla społeczności. [Strona z funkcjami](/features) wymienia wszystko."
+    },
+    "notYet": {
+      "q": "Dlaczego nie mogę jeszcze dodać go do swojego serwera?",
+      "a": "Na razie Mewvo jest zbudowany dla serwera Mewvo i działa tylko na nim. Otwarcie go na inne serwery wymaga najpierw więcej pracy, na przykład ustawień i limitów dla każdego serwera. Gdy się otworzy, na tej stronie pojawi się przycisk do dodania go do twojego serwera, a wtedy ruszą też płatne plany z cennika.",
+      "aPublic": "Teraz już możesz: użyj przycisku „Dodaj do Discorda” u góry strony."
+    },
+    "free": {
+      "q": "Czy jest darmowy?",
+      "a": "Tak. Wszystko, co robi dzisiaj, jest darmowe. Płatne plany z wyższymi limitami są planowane na czas, gdy Mewvo otworzy się na inne serwery; zobacz [Cennik](/pricing)."
+    }
+  },
+  "appeals": {
+    "title": "Ostrzeżenia i odwołania",
+    "ladder": {
+      "q": "Jak działa drabina ostrzeżeń?",
+      "a": "Ostrzeżenia 1 i 2 to wiadomość prywatna. Ostrzeżenie 3 to automatyczny ban na 7 dni. Potem kolejne ostrzeżenie to ban na 30 dni, a następne to ban na stałe, od którego można się odwołać przez 6 miesięcy. Drabina nigdy nie resetuje się sama; przyjęte odwołanie od bana z drabiny cofa ją o jeden stopień. [Pełny przewodnik](/docs/warnings)."
+    },
+    "howTo": {
+      "q": "Jak się odwołać?",
+      "a": "Użyj linku z wiadomości prywatnej, którą dostałeś. Naciśnij **Appeal** na panelu odwołań i wpisz, dlaczego kara powinna zostać zdjęta, oraz kod sprawy z wiadomości. Jeśli masz bana, użyj panelu na {support}. Decyzję dostaniesz w wiadomości prywatnej. [Jak działają odwołania](/docs/appeals)."
+    },
+    "lostCode": {
+      "q": "Zgubiłem kod sprawy.",
+      "a": "Naciśnij **My standing** na panelu odwołań: zobaczysz swoje ostrzeżenia oraz aktywny ban lub wyciszenie wraz z kodami.",
+      "aPortal": "Naciśnij **My standing** na panelu odwołań: zobaczysz swoje ostrzeżenia oraz aktywny ban lub wyciszenie wraz z kodami. [Moja historia](/me) na tej stronie pokazuje wszystkie twoje sprawy."
+    },
+    "everyPunishment": {
+      "q": "Czy od każdej kary można się odwołać?",
+      "a": "Od większości tak. Od banów i wyciszeń można się odwołać, dopóki trwają, od ostrzeżeń i wyrzuceń w ciągu 30 dni. Od bana na stałe z drabiny nie można się już odwołać po 6 miesiącach albo po odrzuconym odwołaniu, a ekipa może oznaczyć poważny ban jako niepodlegający odwołaniu. Wiadomość prywatna zawsze mówi, który to przypadek."
+    }
+  },
+  "data": {
+    "title": "Dane i kontakt",
+    "stored": {
+      "q": "Jakie dane przechowuje Mewvo?",
+      "a": "Discord ID, twoje poziomy i XP, sprawy moderacyjne, odwołania i to, co piszesz w formularzach lub ticketach, oraz kilka rzeczy, które sam zapiszesz, na przykład urodziny. Bez e-maila, bez hasła, nigdy nie sprzedajemy danych. [Strona o prywatności](/privacy) ma pełną listę, a `/wipedata` usuwa twoje poziomy, saldo, status AFK i urodziny na tym serwerze, a także twoją listę zadań, przypomnienia i zapisane logowanie przez Discorda. Zapisy moderacji zostają; dlaczego, wyjaśnia strona o prywatności."
+    },
+    "reachStaff": {
+      "q": "Jak skontaktować się z ekipą?",
+      "a": "Na trzy sposoby: napisz do bota w wiadomości prywatnej i wybierz **Send to staff** (modmail), otwórz ticket z panelu ticketów albo zapytaj na {support}. Aby zgłosić członka ekipy, użyj **Report staff** na panelu odwołań na serwerze wsparcia; te zgłoszenia widzą tylko administratorzy."
+    },
+    "down": {
+      "q": "Czy bot nie działa?",
+      "a": "Sprawdź [stronę statusu](/status). Pokazuje, czy bot jest online, i odświeża się co minutę."
+    }
+  }
+}

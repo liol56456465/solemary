@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "description": "Mewvo to bot do moderacji na Discordzie: kody spraw i wiadomości prywatne, trzystopniowa drabina ostrzeżeń, odwołania, które trafiają do człowieka, automoderacja, tickety i narzędzia dla społeczności."
+  },
+  "actions": {
+    "readDocs": "Przeczytaj dokumentację",
+    "joinServer": "Dołącz do serwera",
+    "joinSupportServer": "Dołącz do serwera wsparcia",
+    "openDashboard": "Mewvo jest już na twoim serwerze? [Otwórz panel webowy]({url})"
+  },
+  "hero": {
+    "title": "Bot Discorda do moderacji i odwołań",
+    "lead": "Mewvo ostrzega, wycisza, wyrzuca i banuje z jednego panelu. Członek dostaje wiadomość prywatną z powodem, czasem zakończenia i informacją, jak się odwołać. Twoja ekipa dostaje sprawę z krótkim kodem, którą można później odnaleźć.",
+    "notPublic": "Na razie Mewvo działa na serwerze Mewvo. Nie da się go jeszcze dodać do innych serwerów.",
+    "dmCaption": "Wiadomość prywatna, którą członek dostaje za drugie ostrzeżenie. Ta sama treść co u bota."
+  },
+  "dashboard": {
+    "title": "Wszystko w jednym miejscu",
+    "text": "Członkowie, sprawy, odwołania i wszystkie ustawienia w przeglądarce. Logujesz się przez Discorda; każda zmiana trafia do dziennika zdarzeń. [Przewodnik po panelu webowym](/docs/using-the-dashboard)",
+    "shotAlt": "Przegląd panelu webowego Mewvo: rzeczy, które wymagają uwagi ekipy, moderacja z ostatnich siedmiu dni, stan bota i postęp konfiguracji."
+  },
+  "ladder": {
+    "title": "Te same zasady dla wszystkich",
+    "text": "Ostrzeżenia wspinają się po stałej drabinie, osobno dla każdego członka i serwera. Pierwsze dwa ostrzeżenia to wiadomość prywatna. Trzecie to ban na 7 dni, potem na 30 dni, a potem na stałe. Ręczne bany nie przesuwają drabiny, a przyjęte odwołanie cofa ją o stopień.\n\nCzłonkowie mogą sprawdzić, na którym są stopniu, więc ban nikogo nie zaskoczy. [Jak rosną kary za ostrzeżenia](/docs/warnings)"
+  },
+  "what": {
+    "title": "Co potrafi",
+    "text": "Najpierw moderacja, a obok niej narzędzia, których potrzebuje społeczność. [Wszystkie funkcje](/features)",
+    "items": {
+      "enforcement": {
+        "name": "Moderacja",
+        "text": "Ostrzeżenie, wyciszenie, wyrzucenie i ban z jednego panelu, który najpierw pokazuje historię członka. Każda akcja to sprawa z krótkim kodem, którą ekipa może później edytować, unieważnić lub uzupełnić o dowody.",
+        "link": "Pierwsze kroki"
+      },
+      "appeals": {
+        "name": "Odwołania",
+        "text": "Członkowie odwołują się przez krótki formularz. Odwołania od bana otwierają kanał na serwerze wsparcia, więc działają także po banie, a decyzję podejmuje człowiek z ekipy.",
+        "link": "Jak działają odwołania"
+      },
+      "automod": {
+        "name": "Automoderacja",
+        "text": "Czternaście reguł, od linków oszustów po masowe oznaczenia. Każda automatyczna akcja to zwykła sprawa, a na kanale ekipy pojawia się karta, by ją zachować, cofnąć lub zmienić.",
+        "link": "Reguły automoderacji"
+      },
+      "tickets": {
+        "name": "Tickety i modmail",
+        "text": "Panel ticketów, a członkowie mogą też napisać do bota w wiadomości prywatnej, by skontaktować się z ekipą. Jedno i drugie staje się kanałami na twoim serwerze; linie zaczynające się od // pozostają wewnętrzne.",
+        "link": "Tickety i modmail"
+      },
+      "logging": {
+        "name": "Dzienniki i narzędzia",
+        "text": "Dołączenia, wyjścia, zmiany ról, edytowane i usunięte wiadomości i nie tylko, każde na wybranym przez ciebie kanale. Obok weryfikacja i narzędzia serwera.",
+        "link": "Dzienniki i narzędzia"
+      },
+      "community": {
+        "name": "Narzędzia dla społeczności",
+        "text": "Poziomy, tagi, propozycje, starboard, przyklejone wiadomości, kanały YouTube, role za reakcje, losowania, urodziny, podania, tymczasowe kanały głosowe, wiadomości powitalne.",
+        "link": "Wszystkie narzędzia dla społeczności"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Za darmo",
+    "text": "Wszystko powyżej jest darmowe. Płatne plany tylko podnoszą limity, na przykład tagów i przyklejonych wiadomości. [Plany i ceny](/pricing)"
+  },
+  "help": {
+    "title": "Masz pytania?",
+    "text": "Zacznij od [dokumentacji](/docs) albo [pytań i odpowiedzi](/faq).",
+    "support": "Dalej nie wiesz? Zapytaj na [serwerze wsparcia]({url}); odpowie człowiek."
+  }
+}

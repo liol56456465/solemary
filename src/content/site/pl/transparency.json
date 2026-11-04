@@ -1,0 +1,76 @@
+{
+  "title": "Raport przejrzystości",
+  "description": "Ile ostrzeżeń, wyciszeń, wyrzuceń i banów nałożono na serwerze Mewvo w każdym miesiącu i jak rozstrzygano odwołania. Same liczby.",
+  "head": {
+    "heading": "Raport przejrzystości",
+    "lead": "Jak często ekipa serwera Mewvo ostrzegała, wyciszała, wyrzucała i banowała oraz jak kończyły się odwołania, miesiąc po miesiącu. Same liczby: bez nazw, powodów i moderatorów.",
+    "period": "Od {from} do {to}, w UTC. Aktualizowane najwyżej co 10 minut."
+  },
+  "summary": {
+    "warns": "Ostrzeżenia",
+    "mutes": "Wyciszenia",
+    "kicks": "Wyrzucenia",
+    "bans": "Bany",
+    "appealsReceived": "Otrzymane odwołania",
+    "medianDecision": "Mediana czasu do decyzji w sprawie odwołania"
+  },
+  "table": {
+    "month": "Miesiąc",
+    "total": "Razem",
+    "soFar": "na razie",
+    "notEnoughDecisions": "za mało decyzji"
+  },
+  "actions": {
+    "heading": "Akcje moderacyjne",
+    "intro": "Według miesięcy; bieżący miesiąc do dziś.",
+    "caption": "Akcje moderacyjne według miesięcy, od najstarszych. Ostatni wiersz to suma.",
+    "columns": {
+      "warns": "Ostrzeżenia",
+      "mutes": "Wyciszenia",
+      "kicks": "Wyrzucenia",
+      "bans": "Bany",
+      "ladderBans": "Z banów: automatyczne (drabina ostrzeżeń)",
+      "automod": "Nałożone przez automoderację",
+      "voided": "Unieważnione jako pomyłki"
+    }
+  },
+  "appeals": {
+    "heading": "Odwołania",
+    "intro": "Według miesiąca wysłania odwołania, z jego dzisiejszym wynikiem.",
+    "caption": "Odwołania według miesiąca wysłania, od najstarszych. Ostatni wiersz to suma.",
+    "columns": {
+      "received": "Otrzymane",
+      "accepted": "Przyjęte",
+      "denied": "Odrzucone",
+      "open": "Nadal otwarte",
+      "median": "Mediana czasu do decyzji"
+    }
+  },
+  "how": {
+    "heading": "Jak powstają te liczby",
+    "intro": "Jak działają odwołania, wyjaśnia [przewodnik po odwołaniach](/docs/appeals).",
+    "counted": {
+      "question": "Co jest liczone",
+      "answer": "Każde ostrzeżenie, wyciszenie, wyrzucenie i ban nałożone na serwerze Mewvo, w miesiącu nałożenia (UTC), niezależnie od tego, czy zrobił to moderator, drabina ostrzeżeń czy automoderacja. Automatyczne bany z drabiny i akcje automoderacji są już częścią czterech głównych kolumn; ich własne kolumny pokazują tylko, ile ich było."
+    },
+    "notCounted": {
+      "question": "Co nie jest liczone",
+      "answer": "Symulacje testowe (ekipa podgląda wiadomość; nikomu nic się nie dzieje), ostrzeżenia zaimportowane ze starego bota jako historia oraz zgłoszenia na członków ekipy. Sprawy unieważnione jako pomyłki są pominięte w głównych kolumnach i pokazane osobno w kolumnie „Unieważnione jako pomyłki”, według miesiąca, w którym je nałożono."
+    },
+    "appeals": {
+      "question": "Odwołania",
+      "answer": "Odwołania są liczone w miesiącu wysłania, z ich dzisiejszym wynikiem. Odwołanie od sprawy, którą później unieważniono, nadal się liczy: odwołanie miało miejsce. Odwołania zamknięte bez decyzji są liczone tylko jako otrzymane. Mediana czasu biegnie od wysłania odwołania do decyzji ekipy, dla przyjętych i odrzuconych odwołań z danego miesiąca."
+    },
+    "smallNumbers": {
+      "question": "Małe liczby",
+      "answer": "Aby nie dało się rozpoznać pojedynczych spraw, liczby 1 i 2 są pokazywane jako „mniej niż 3”, a mediana pojawia się tylko wtedy, gdy rozstrzygnięto co najmniej 3 odwołania. Gdy miesiąc w kolumnie jest w ten sposób ukryty, suma zamiast dokładnej liczby podaje „co najmniej”."
+    },
+    "neverShown": {
+      "question": "Czego ta strona nigdy nie pokazuje",
+      "answer": "Nazw, Discord ID, kodów spraw, powodów ani tego, który moderator działał. Tylko liczby."
+    }
+  },
+  "error": {
+    "text": "Nie udało się teraz wczytać raportu, bo baza danych nie odpowiada. Lepiej nie pokazywać liczb niż pokazać błędne; spróbuj ponownie za kilka minut."
+  }
+}

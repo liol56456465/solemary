@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "title": "Dokumentacja",
+    "description": "Krótkie przewodniki po Mewvo: pierwsze kroki dla ekipy, jak rosną kary za ostrzeżenia, jak działają odwołania i jak korzystać z panelu webowego."
+  },
+  "hub": {
+    "title": "Przewodniki",
+    "lead": "Jak działa Mewvo, krok po kroku. Wszystkie komendy dostępne dla członków znajdziesz na stronie [Komendy](/commands)."
+  },
+  "nav": {
+    "crumbs": "Ścieżka nawigacji",
+    "docs": "Dokumentacja",
+    "nextGuide": "Następny przewodnik",
+    "next": "Dalej",
+    "stillQuestions": "Nadal masz pytania?",
+    "readFaq": "Przeczytaj pytania i odpowiedzi"
+  },
+  "support": {
+    "link": "[serwerze wsparcia]({url})",
+    "text": "serwerze wsparcia"
+  },
+  "guides": {
+    "setup": {
+      "title": "Skonfiguruj Mewvo w 10 minut",
+      "summary": "Dla właściciela serwera: kilka ustawień, których potrzebuje Mewvo, po kolei, w panelu webowym.",
+      "intro": "Potrzebujesz uprawnienia **Administrator** na serwerze. Wszystko poniżej robisz w panelu webowym, w przeglądarce. Nie musisz wpisywać żadnych komend.",
+      "open": {
+        "title": "1. Otwórz panel webowy",
+        "text": "Wejdź do [panelu webowego]({dashboard}) i zaloguj się przez Discorda. Mewvo pyta Discorda tylko o to, kim jesteś. Nie widzi twojego e-maila ani twoich wiadomości."
+      },
+      "steps": {
+        "title": "2. Przejdź przez „Setup step by step”",
+        "text": "Na stronie Overview naciśnij **Set up Mewvo step by step**. Kreator pokazuje jedno ustawienie naraz, wyjaśnia, dlaczego jest ważne, i otwiera właściwą stronę. Pomiń wszystko, czego nie potrzebujesz. Trzy najważniejsze to:",
+        "modLog": "**Kanał dziennika moderacji**: kanał tylko dla ekipy, na którym Mewvo zapisuje każde ostrzeżenie, wyciszenie, wyrzucenie i ban.",
+        "mutedRole": "**Rola Muted**: Mewvo tworzy ją sam, gdy ktoś zostanie wyciszony po raz pierwszy, więc możesz ją zostawić.",
+        "appealsCategory": "**Kategoria odwołań**: tu Mewvo otwiera prywatny kanał, gdy członek prosi o zdjęcie kary."
+      },
+      "rules": {
+        "title": "3. Napisz zasady",
+        "text": "Na stronie **Rules** dodaj zasady serwera. Pojawiają się na stronie internetowej, a każda wiadomość o karze podaje złamaną zasadę."
+      },
+      "automod": {
+        "title": "4. Sprawdź automoderację",
+        "text": "Na stronie **Automod** wybierasz, co robi automoderacja. Jeśli nie masz jeszcze pewności, wybierz **Watch only**: wtedy automoderacja tylko mówi ekipie, co by zrobiła, i nikomu nic się nie dzieje, dopóki ktoś z ekipy się nie zgodzi. Przełącz na **Act**, gdy zaczniesz jej ufać."
+      },
+      "try": {
+        "title": "5. Wypróbuj na sobie",
+        "text": "Na Discordzie użyj `/test`. Mewvo wyśle ci dokładnie tę wiadomość, którą członek dostałby za ostrzeżenie lub bana. Nikomu nic się nie dzieje."
+      },
+      "next": {
+        "title": "Dalej",
+        "text": "Pasek boczny pokazuje główne strony. Naciśnij **Show all pages** na dole, aby zobaczyć wszystko. Jeśli jakieś słowo jest dla ciebie nowe, otwórz **Words explained** na pasku bocznym. Pytania? Zapytaj na {support}."
+      }
+    },
+    "gettingStarted": {
+      "title": "Pierwsze kroki dla ekipy",
+      "summary": "Kto może czego używać, twoja pierwsza akcja i komendy, których będziesz używać co tydzień.",
+      "access": {
+        "title": "Kto może co robić",
+        "text": "Codzienne komendy (help, rank, leaderboard, zabawa, listy zadań, zgłoszenia itp.) są dostępne dla każdego członka. Wszystko, co moderuje, zmienia ustawienia, publikuje jako bot, dotyczy innych członków albo przenosi walutę, wymaga roli **Administrator**. Sprawdzenie odbywa się za każdym razem, gdy używasz komendy lub przycisku, a nie tylko przy pierwszym otwarciu.",
+        "denied": "Członkowie bez uprawnienia Administrator, którzy spróbują komendy ekipy, dostają taką informację i wskazanie kanału, na którym mogą poprosić o rolę."
+      },
+      "firstAction": {
+        "title": "Twoja pierwsza akcja",
+        "run": "Użyj `/enforcements user:@member`. Panel pokazuje wiek konta członka, czas na serwerze, liczone ostrzeżenia, poziom na drabinie, aktywną karę i ostatnie sprawy. Widzisz go tylko ty.",
+        "action": "Naciśnij akcję: **Ban**, **Kick**, **Mute** albo **Warn** (lub **Unban**, **Unmute**, **Remove warn**, gdy mają zastosowanie).",
+        "reason": "Wybierz gotowy powód albo **Custom…** i wpisz własny.",
+        "duration": "Przy wyciszeniu podaj czas trwania, np. `30m`, `24h`, `7d` lub `1mo`. Przy banie tak samo albo zostaw puste pole, aby dać bana na stałe.",
+        "confirm": "Sprawdź podsumowanie i naciśnij **Confirm**.",
+        "after": "Członek dostaje wiadomość prywatną, zanim zostanie wyrzucony lub zbanowany. Jeśli wiadomości nie da się dostarczyć, akcja i tak zostaje wykonana, a ty dostajesz o tym informację. Panel wygasa po 15 minutach; jeśli tak się stanie, użyj komendy ponownie."
+      },
+      "everyWeek": {
+        "title": "Komendy, których będziesz używać",
+        "background": "Pełna historia spraw członka.",
+        "case": "Wyszukiwanie spraw, edycja powodu lub czasu trwania, unieważnienie błędnej sprawy, jej historia, dołączanie dowodów.",
+        "appeals": "Przyjmij lub odrzuć odwołanie według kodu sprawy, z notatką.",
+        "test": "Wysyła ci dokładnie tę wiadomość prywatną, którą dostałby członek. Nikomu nic się nie dzieje.",
+        "staff": "Aktywność i statystyki ekipy.",
+        "warnMessage": "Warn for this message",
+        "warnMessageText": "Kliknij wiadomość prawym przyciskiem, potem Aplikacje: ostrzega autora z dołączoną wiadomością."
+      },
+      "limits": {
+        "title": "Limity, które chronią serwer",
+        "text": "Mewvo odmawia działania wobec właściciela serwera, bota, ciebie samego i każdego, czyja najwyższa rola jest równa twojej lub wyższa. Jeśli jeden moderator zbanuje lub wyrzuci więcej niż 5 członków w ciągu 10 minut, zostaje zablokowany na godzinę, a właściciel dostaje o tym informację."
+      }
+    },
+    "warnings": {
+      "title": "Jak rosną kary za ostrzeżenia",
+      "summary": "Drabina ostrzeżeń: trzy ostrzeżenia, potem 7 dni, 30 dni i ban na stałe.",
+      "intro": "Każdy członek ma drabinę na każdym serwerze. Zaczyna się od poziomu 0 bez ostrzeżeń i nigdy nie resetuje się sama.",
+      "steps": {
+        "title": "Stopnie",
+        "first": "**Ostrzeżenia 1 i 2** to wiadomość prywatna: „Ostrzeżenie 1 z 3” i „Ostrzeżenie 2 z 3”.",
+        "third": "**Ostrzeżenie 3** to automatyczny ban na 7 dni. Członek jest teraz na poziomie 1.",
+        "next": "Po powrocie **kolejne ostrzeżenie** to automatyczny ban na 30 dni (poziom 2).",
+        "last": "**Ostrzeżenie po nim** to ban na stałe (poziom 3). Można się od niego odwołać przez 6 miesięcy. Potem albo po odrzuconym odwołaniu nie można się już odwołać."
+      },
+      "dmCaption": "Wiadomość prywatna o automatycznym banie przy ostrzeżeniu 3. Odwołanie od tego kodu usuwa też ostrzeżenie, które go spowodowało.",
+      "changes": {
+        "title": "Co zmienia drabinę",
+        "removeWarn": "Remove warn",
+        "removeWarnText": "Zmniejsza liczbę ostrzeżeń.",
+        "appeal": "Przyjęte odwołanie od bana z drabiny",
+        "appealText": "Obniża poziom o jeden, nigdy poniżej 0.",
+        "manualBan": "Ban nałożony ręcznie",
+        "manualBanText": "Nie przesuwa drabiny.",
+        "void": "Unieważnienie sprawy",
+        "voidText": "Sprawa zostaje w historii, ale już się nie liczy.",
+        "imported": "Zaimportowane stare ostrzeżenia",
+        "importedText": "Pokazywane tylko jako historia. Nie liczą się."
+      },
+      "standing": "Członkowie mogą sprawdzić, na którym są stopniu, przyciskiem **My standing** na panelu odwołań."
+    },
+    "appeals": {
+      "title": "Odwołania: jak działają",
+      "summary": "Gdzie się odwołać, o co pyta formularz, kto decyduje i po jakim czasie można spróbować ponownie.",
+      "where": {
+        "title": "Gdzie się odwołać",
+        "text": "Każda wiadomość prywatna o karze zawiera link do odwołania albo informację, że nie można się odwołać. Panel odwołań ma trzy przyciski: **Appeal**, **My appeals** i **My standing**. Wyciszeni lub ostrzeżeni członkowie korzystają z panelu na głównym serwerze. Zbanowani członkowie korzystają z panelu na {support}, do którego mają dostęp także po banie."
+      },
+      "form": {
+        "title": "Formularz",
+        "why": "Dlaczego kara powinna zostać zdjęta?",
+        "whyText": "Od 20 do 1000 znaków.",
+        "code": "Kod sprawy",
+        "codeText": "Z wiadomości prywatnej, na przykład `k7xq2`.",
+        "more": "Więcej informacji",
+        "moreText": "Opcjonalnie: wszystko, co jeszcze powinna wiedzieć ekipa."
+      },
+      "after": {
+        "title": "Co dalej",
+        "banKick": "**Odwołania od bana i wyrzucenia** otwierają kanał na serwerze wsparcia, do którego zostajesz dodany, aby ekipa mogła zadawać pytania.",
+        "muteWarn": "**Odwołania od wyciszenia i ostrzeżenia** sprawdza ekipa na głównym serwerze.",
+        "decision": "Decydują administratorzy. Decyzję dostajesz w wiadomości prywatnej. Przyjęte odwołanie zdejmuje to, co nadal obowiązuje, a przy banach i wyrzuceniach dołączone jest jednorazowe zaproszenie z powrotem."
+      },
+      "limits": {
+        "title": "Limity",
+        "onePending": "Jedno oczekujące odwołanie na sprawę.",
+        "cooldown": "Po odrzuceniu poczekaj 7 dni, zanim znów odwołasz się od tej samej sprawy.",
+        "window": "Od banów i wyciszeń można się odwołać, dopóki trwają. Od ostrzeżeń i wyrzuceń w ciągu 30 dni.",
+        "unappealable": "Od niektórych spraw nie można się odwołać, na przykład od bana na stałe z drabiny po 6 miesiącach. Mówi o tym wiadomość prywatna."
+      }
+    },
+    "usingTheDashboard": {
+      "title": "Korzystanie z panelu webowego",
+      "summary": "Logowanie, cztery obszary paska bocznego i gdzie zapisywane są zmiany.",
+      "signIn": {
+        "title": "Logowanie",
+        "text": "Otwórz panel webowy i zaloguj się przez Discorda. Mewvo pyta Discorda tylko o to, kim jesteś (`identify`). Potrzebujesz roli z uprawnieniem Administrator na serwerze; jest ono sprawdzane ponownie na każdej stronie i przy każdym zapisie. Serwer może też dać roli moderatorów dostęp do podglądu stron moderacji.",
+        "textLink": "Otwórz [panel webowy]({dashboard}) i zaloguj się przez Discorda. Mewvo pyta Discorda tylko o to, kim jesteś (`identify`). Potrzebujesz roli z uprawnieniem Administrator na serwerze; jest ono sprawdzane ponownie na każdej stronie i przy każdym zapisie. Serwer może też dać roli moderatorów dostęp do podglądu stron moderacji."
+      },
+      "shotAlt": "Strona Cases panelu webowego Mewvo: filtry członka, moderatora, typu, statusu, tekstu i dat nad tabelą spraw z kodem, typem, członkiem, moderatorem, powodem, datą i statusem.",
+      "shotCaption": "Sprawy z wymyślonymi członkami.",
+      "areas": {
+        "title": "Cztery obszary",
+        "moderate": "Moderate",
+        "moderateText": "Overview (co wymaga twojej uwagi w pierwszej kolejności), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff i Channel tools.",
+        "community": "Community",
+        "communityText": "Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community i Join to create.",
+        "setup": "Server setup",
+        "setupText": "Automod, Enforcement and appeals, Logging, Verification, Counters i Support server.",
+        "bot": "Bot",
+        "botText": "All modules, Commands i Audit log."
+      },
+      "changes": {
+        "title": "Zmiany i dziennik zdarzeń",
+        "text": "Ustawienia są pokazane jako wiersze; zmień jedno i zapisz. Każda zmiana trafia do dziennika zdarzeń: kto zmienił które ustawienie, z jakiej wartości i na jaką. Akcje takie jak bany ze strony Members podlegają tym samym zasadom co komendy, w tym wiadomości prywatnej i kontrolom bezpieczeństwa.",
+        "phones": "Panel webowy działa też na telefonach, z paskiem kart na dole, a w menu konta ma pięć motywów (Light, Dark, Dim, High contrast albo taki jak na twoim urządzeniu)."
+      }
+    }
+  }
+}

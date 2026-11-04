@@ -1,0 +1,80 @@
+{
+  "bot": {
+    "appTag": "APP",
+    "timeToday": "Dzisiaj o 14:05"
+  },
+  "dm": {
+    "frameLabel": "Wiadomość prywatna · Mewvo",
+    "appealHere": "**Odwołaj się tutaj:** {invite}",
+    "date": "Data: {date}",
+    "caseCode": "Kod sprawy: {code}",
+    "privacy": "Prywatność: {url}"
+  },
+  "warnDm": {
+    "title": "**Ostrzeżenie 2 z 3 na Mewvo**",
+    "by": "Wystawił: moderator",
+    "reason": "Powód: spam na #general",
+    "dateValue": "czwartek, 29 października 2026 o 14:05",
+    "limit": "Przy 3 ostrzeżeniach dostaniesz bana."
+  },
+  "banDm": {
+    "time": "Sobota o 19:40",
+    "title": "**Ban na Mewvo**",
+    "by": "Wystawił: Mewvo",
+    "reason": "Powód: osiągnięto limit ostrzeżeń",
+    "dateValue": "sobota, 31 października 2026 o 19:40",
+    "duration": "Czas trwania: 7 dni, kończy się {end} {relative}",
+    "endValue": "sobota, 7 listopada 2026 o 19:40",
+    "relativeValue": "(za 7 dni)",
+    "ladderNote": "Odwołanie od tego kodu usuwa też ostrzeżenie, które spowodowało ten ban."
+  },
+  "appealForm": {
+    "frameLabel": "Formularz odwołania · otwiera się przyciskiem Appeal",
+    "title": "Odwołaj się od kary",
+    "reason": {
+      "label": "Dlaczego kara powinna zostać zdjęta?",
+      "help": "Dlaczego ban, wyciszenie lub ostrzeżenie powinno zostać zdjęte?",
+      "example": "Wysłałem ten sam link trzy razy, bo myślałem, że się nie wysłał. Teraz znam tę zasadę i to się nie powtórzy."
+    },
+    "caseCode": {
+      "label": "Kod sprawy",
+      "help": "Z wiadomości prywatnej, którą dostałeś przy karze, np. k7m2qx."
+    },
+    "moreInfo": {
+      "label": "Więcej informacji (opcjonalnie)",
+      "help": "Wszystko, co jeszcze powinni wiedzieć administratorzy."
+    },
+    "cancel": "Anuluj",
+    "submit": "Wyślij"
+  },
+  "ladder": {
+    "frameLabel": "Drabina ostrzeżeń · dla każdego członka na każdym serwerze",
+    "steps": {
+      "warn1": {
+        "key": "Ostrzeżenie 1",
+        "what": "Wiadomość prywatna: „Ostrzeżenie 1 z 3”",
+        "result": "Poziom 0"
+      },
+      "warn2": {
+        "key": "Ostrzeżenie 2",
+        "what": "Wiadomość prywatna: „Ostrzeżenie 2 z 3”",
+        "result": "Poziom 0"
+      },
+      "warn3": {
+        "key": "Ostrzeżenie 3",
+        "what": "Automatyczny ban",
+        "result": "7 dni · poziom 1"
+      },
+      "level2": {
+        "key": "Kolejne ostrzeżenie",
+        "what": "Automatyczny ban",
+        "result": "30 dni · poziom 2"
+      },
+      "level3": {
+        "key": "Kolejne ostrzeżenie",
+        "what": "Ban na stałe",
+        "result": "Odwołanie możliwe przez 6 miesięcy · poziom 3"
+      }
+    }
+  }
+}

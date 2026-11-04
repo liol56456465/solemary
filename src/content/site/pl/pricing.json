@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "title": "Cennik",
+    "description": "Mewvo jest dziś darmowy. Planowane płatne plany: {normal} {normalPrice}, {pro} {proPrice} i {max} {maxPrice} miesięcznie albo dwa miesiące gratis przy płatności rocznej."
+  },
+  "head": {
+    "title": "Plany i ceny",
+    "leadBilling": "Free obejmuje wszystko, co Mewvo robi dzisiaj. Płatne plany dają więcej miejsca i narzędzi; kup plan dla swojego konta albo jako klucz podarunkowy dla kogoś innego. [Masz klucz?](/me/redeem)",
+    "testMode": "**Tryb testowy.** {notice}",
+    "lead": "Wszystko, co Mewvo robi teraz, jest darmowe. Płatne plany ruszą, gdy Mewvo otworzy się na inne serwery; do tego czasu nie da się nic kupić.",
+    "leadSupport": "Wszystko, co Mewvo robi teraz, jest darmowe. Płatne plany ruszą, gdy Mewvo otworzy się na inne serwery; do tego czasu nie da się nic kupić. [Dołącz do serwera wsparcia]({url}), żeby dowiedzieć się pierwszy."
+  },
+  "plans": {
+    "title": "Plany",
+    "note": "Ceny w euro. Limity, na przykład tagów, zależą od planu właściciela serwera. Korzyści oznaczone jako (planowane) nie są jeszcze gotowe i mogą się zmienić przed startem płatnych planów.",
+    "billingNote": "Ceny to łączna kwota do zapłaty. {vat} Każdy zakup to jedna płatność za okres {monthDays} lub {yearDays} dni, bez automatycznego odnowienia. Możesz odstąpić od umowy w ciągu {withdrawalDays} dni: [prawo odstąpienia od umowy](/withdrawal)."
+  },
+  "card": {
+    "planned": "(planowane)",
+    "yearly": "albo {price} rocznie (miesiące gratis: {months})",
+    "freeForGood": "Za darmo na zawsze",
+    "perMonth": "/ miesiąc",
+    "joinServer": "Dołącz do serwera",
+    "joinSupport": "Dołącz do serwera wsparcia",
+    "seeFeatures": "Zobacz wszystkie funkcje",
+    "comingSoon": "Wkrótce",
+    "buyMonth": "Kup miesiąc",
+    "buyYear": "Kup rok",
+    "gift": "W prezencie: [miesiąc]({monthly}) · [rok]({yearly})"
+  },
+  "compare": {
+    "title": "Co zawiera każdy plan",
+    "caption": "Porównanie planów. Wiersze oznaczone jako planowane nie są jeszcze gotowe; kolumna Free to to, co Mewvo robi dzisiaj.",
+    "feature": "Funkcja",
+    "yes": "Tak",
+    "no": "Nie"
+  },
+  "faq": {
+    "title": "Pytania o cennik",
+    "buyNowTest": "Tylko testowo. Zamówienie działa od początku do końca (dla ciebie albo jako klucz podarunkowy), ale żaden operator płatności nie jest podłączony: nikt nie prosi o kartę i nikt nie jest obciążany. Korzyści oznaczone jako planowane nie są jeszcze gotowe.",
+    "more": "Więcej odpowiedzi w [pytaniach i odpowiedziach](/faq)."
+  }
+}

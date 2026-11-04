@@ -1,0 +1,147 @@
+{
+  "commands": {
+    "title": "Komendy",
+    "description": "Komendy Mewvo, których może używać każdy członek.",
+    "heading": "Komendy",
+    "lead": "Komendy, których może używać każdy członek. Narzędzia ekipy są w panelu webowym i wymagają roli z uprawnieniem Administrator.",
+    "jumpLabel": "Grupy komend",
+    "groups": {
+      "core": "Ogólne",
+      "community": "Społeczność",
+      "leveling": "Poziomy",
+      "fun": "Zabawa",
+      "birthday": "Urodziny",
+      "utility": "Przydatne",
+      "tools": "Narzędzia",
+      "search": "Wyszukiwanie",
+      "verification": "Weryfikacja",
+      "ticket": "Tickety",
+      "menus": "Menu pod prawym przyciskiem",
+      "other": "Inne"
+    },
+    "menu": {
+      "message": "Kliknij wiadomość prawym przyciskiem → Aplikacje → {command}",
+      "member": "Kliknij członka prawym przyciskiem → Aplikacje → {command}"
+    },
+    "notes": {
+      "ticketStaff": "Ekipa ticketów",
+      "ticketStaffOrOpener": "Ekipa ticketów albo osoba, która otworzyła ticket"
+    }
+  },
+  "about": {
+    "title": "O bocie",
+    "description": "O Mewvo, bocie Discorda serwera Mewvo.",
+    "heading": "O Mewvo",
+    "lead": "Mewvo to bot serwera Discord Mewvo, zbudowany i prowadzony przez jego właściciela dla tej społeczności.",
+    "started": {
+      "heading": "Jak to się zaczęło",
+      "text": "Mewvo zaczął jako fork TitanBota, bota Discorda o otwartym kodzie (MIT), i od tamtej pory został przebudowany pod potrzeby serwera: system kar z kodami spraw i odwołaniami, drabina ostrzeżeń, automoderacja, tickety i modmail oraz panel webowy dla ekipy."
+    },
+    "members": {
+      "heading": "Jak traktuje członków",
+      "list": "- Każdej karze towarzyszy wiadomość prywatna, która mówi, co się stało, dlaczego, do kiedy oraz czy i jak można się odwołać.\n- Działania ekipy są zapisywane jako sprawy, więc decyzje można sprawdzić i poprawić.\n- Weryfikacja prosi Discorda tylko o twoją tożsamość i zgodę na dodanie cię do serwera wsparcia, nigdy o twój e-mail.\n- Członkowie mogą usunąć swoje dane z bota na serwerze komendą `/wipedata`."
+    },
+    "availability": {
+      "heading": "Dostępność",
+      "public": "Mewvo można dodać do innych serwerów przyciskiem u góry strony.",
+      "private": "Na razie Mewvo działa tylko na własnym serwerze; nie da się go jeszcze dodać do innych serwerów."
+    },
+    "help": {
+      "heading": "Pomoc",
+      "withInvite": "Pytania, odwołania albo problemy: [dołącz do serwera wsparcia]({url}).",
+      "withoutInvite": "Zapytaj ekipę na serwerze Mewvo."
+    }
+  },
+  "status": {
+    "title": "Status",
+    "description": "Czy bot Mewvo jest online.",
+    "heading": "Status",
+    "states": {
+      "online": {
+        "label": "Online",
+        "text": "Mewvo działa normalnie."
+      },
+      "starting": {
+        "label": "Uruchamia się",
+        "text": "Mewvo uruchamia się albo ponownie łączy z Discordem. Komendy za chwilę znów zaczną odpowiadać."
+      },
+      "degraded": {
+        "label": "Działa z problemami",
+        "text": "Mewvo jest połączony z Discordem, ale jego baza danych nie odpowiada. Komendy, które odczytują lub zapisują dane, mogą nie działać, dopóki się nie przywróci."
+      }
+    },
+    "uptime": {
+      "line": "Działa bez przerwy: {uptime}.",
+      "lessThanMinute": "mniej niż minuta",
+      "join": "{first}, {second}",
+      "day": {
+        "one": "{count} dzień",
+        "few": "{count} dni",
+        "many": "{count} dni",
+        "other": "{count} dnia"
+      },
+      "hour": {
+        "one": "{count} godzina",
+        "few": "{count} godziny",
+        "many": "{count} godzin",
+        "other": "{count} godziny"
+      },
+      "minute": {
+        "one": "{count} minuta",
+        "few": "{count} minuty",
+        "many": "{count} minut",
+        "other": "{count} minuty"
+      }
+    },
+    "note": {
+      "refresh": "Ta strona odświeża się co minutę.",
+      "refreshSupport": "Ta strona odświeża się co minutę. Coś nie działa? [Daj nam znać na serwerze wsparcia]({url})."
+    }
+  },
+  "leaderboard": {
+    "title": "Ranking",
+    "titlePaged": "Ranking, strona {page}",
+    "description": "Ranking poziomów serwera Mewvo.",
+    "heading": "Ranking",
+    "lead": "Najbardziej aktywni członkowie serwera Mewvo według poziomu i łącznego XP. XP zdobywasz za pisanie na czacie; członkowie, którzy usunęli swoje dane komendą `/wipedata`, nie są tu pokazywani.",
+    "unavailable": "Nie udało się teraz wczytać rankingu. Nic nie zostało zmienione; spróbuj ponownie za minutę.",
+    "off": "Poziomy są wyłączone na serwerze Mewvo, więc na razie nie ma rankingu.",
+    "empty": {
+      "firstPage": "Nikt jeszcze nie zdobył XP.",
+      "laterPage": "Na tej stronie nikogo nie ma.",
+      "backToFirst": "Wróć na pierwszą stronę"
+    },
+    "pager": {
+      "label": "Strony rankingu",
+      "previous": "Poprzednia",
+      "next": "Następna",
+      "current": "Strona {page}"
+    },
+    "table": {
+      "caption": "Ranking, strona {page}",
+      "rank": "Miejsce",
+      "member": "Członek",
+      "level": "Poziom",
+      "totalXp": "Łączne XP"
+    },
+    "formerMember": "Były członek"
+  },
+  "cat": {
+    "label": "Kot serwera",
+    "alt": "{name}, {stage}, nastrój: {mood}",
+    "stageLine": "{stage}. {sentence}",
+    "progressLabel": "Wzrost do etapu {next}",
+    "percent": "{pct}%",
+    "progress": "Policzone wiadomości: {total}. Do etapu {next} brakuje: {toNext}.",
+    "grown": "Policzone wiadomości: {total}. W pełni dorosły."
+  },
+  "errors": {
+    "notFound": {
+      "title": "Nie znaleziono",
+      "heading": "Nie znaleziono strony",
+      "lead": "Pod tym adresem nie ma strony. Mogła zostać przeniesiona albo w linku jest literówka.",
+      "home": "Przejdź na stronę główną",
+      "docs": "Przeczytaj dokumentację"
+    }
+  }
+}
