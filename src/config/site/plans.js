@@ -2,7 +2,14 @@
 //
 // DRAFT FOR THE OWNER TO EDIT. Nothing here is on sale: paid plans start when Mewvo opens
 // to other servers, and every paid perk below is PLANNED (not built yet) unless the row says
-// otherwise. Change names, prices, perks and the comparison freely; the pages read only this file.
+// otherwise. Change names, prices, perks and the comparison freely; the pages read only this file
+// and its text catalog.
+//
+// Words shown on the website live in the text catalog src/content/site/<lang>/plans.json:
+// `plans.<planId>.summary`, `plans.<planId>.perks.<key>`, `plans.comparison.<group>.title`,
+// `plans.comparison.<group>.rows.<key>`, `plans.comparison.values.<word>` and
+// `plans.faq.<key>.q|a`. This file holds the structure (which perks, rows and questions, in what
+// order), the plan names (product names, also used by the bot's DMs) and the numbers.
 //
 // Prices are whole euro cents. Yearly = 10 × monthly (two months free). The per-month figure
 // shown for yearly billing is yearly / 12, rounded to the cent.
@@ -30,14 +37,13 @@ export const PLANS = [
         monthlyCents: 0,
         prices: { EUR: 0, USD: 0 },
         limits: { tags: 100, stickies: 10, feeds: 20, scheduled: 50, customRules: 0 },
-        summary: 'Everything Mewvo does today, for one server.',
         perks: [
-            { text: 'Enforcement panel, case codes and DMs' },
-            { text: 'Warning ladder and appeals' },
-            { text: 'Automod with 14 rules and review cards' },
-            { text: 'Tickets, modmail and the web dashboard' },
-            { text: 'Leveling, tags, suggestions, starboard, feeds' },
-            { text: 'Up to 50 scheduled messages' },
+            { key: 'enforcement' },
+            { key: 'ladderAppeals' },
+            { key: 'automod' },
+            { key: 'ticketsDashboard' },
+            { key: 'community' },
+            { key: 'scheduled' },
         ],
     },
     {
@@ -46,14 +52,13 @@ export const PLANS = [
         monthlyCents: 199,
         prices: { EUR: 199, USD: 199 },
         limits: { tags: 250, stickies: 25, feeds: 40, scheduled: 100, customRules: 5 },
-        summary: 'More room for busy community servers.',
         perks: [
-            { text: 'Everything in Free' },
-            { text: '250 tags, 25 sticky messages, 40 YouTube feeds' },
-            { text: '100 scheduled messages' },
-            { text: '5 custom automod rules' },
-            { text: 'Supporter role in the Mewvo server' },
-            { text: 'Case export (CSV), last 90 days' },
+            { key: 'everythingFree' },
+            { key: 'limits' },
+            { key: 'scheduled' },
+            { key: 'customRules' },
+            { key: 'supporterRole' },
+            { key: 'caseExport' },
         ],
     },
     {
@@ -62,14 +67,13 @@ export const PLANS = [
         monthlyCents: 499,
         prices: { EUR: 499, USD: 499 },
         limits: { tags: 500, stickies: 50, feeds: 75, scheduled: 200, customRules: 25 },
-        summary: 'For servers with a real staff team.',
         featured: true,
         perks: [
-            { text: 'Everything in Normal, with higher limits' },
-            { text: '25 custom automod rules' },
-            { text: 'Staff and automod analytics on the dashboard' },
-            { text: 'Custom bot name and avatar in your server' },
-            { text: 'Full case history export' },
+            { key: 'everythingNormal' },
+            { key: 'customRules' },
+            { key: 'analytics' },
+            { key: 'customBot' },
+            { key: 'caseExport' },
         ],
     },
     {
@@ -78,69 +82,67 @@ export const PLANS = [
         monthlyCents: 999,
         prices: { EUR: 999, USD: 999 },
         limits: { tags: 1000, stickies: 100, feeds: 150, scheduled: 500, customRules: 100 },
-        summary: 'For people who run several servers.',
         perks: [
-            { text: 'Everything in Pro' },
-            { text: 'One dashboard for up to 5 servers', planned: true },
-            { text: 'Shared case history across your servers', planned: true },
-            { text: 'Priority help in the support server', planned: true },
-            { text: 'Highest limits on everything' },
+            { key: 'everythingPro' },
+            { key: 'oneDashboard', planned: true },
+            { key: 'sharedCases', planned: true },
+            { key: 'priorityHelp', planned: true },
+            { key: 'highestLimits' },
         ],
     },
 ];
 
+/** A comparison cell that is a word from the catalog (plans.comparison.values.<key>). */
+const word = (key) => Object.freeze({ word: key });
+
 /**
- * The comparison table: groups of rows, one value per plan id. `true` = included (a check),
- * `false` / '' = not included (a dash), text = shown as is.
+ * The comparison table: groups of rows, one value per plan id. `true` = included, `false` / '' =
+ * not included, a number = shown as a number in the page's language, word('…') = a catalog word.
+ * Group and row labels: plans.comparison.<group key>.title / .rows.<row key>.
  */
 export const COMPARISON = [
     {
-        group: 'Moderation',
+        key: 'moderation',
         rows: [
-            { label: 'Enforcement panel, case codes, DMs', values: { free: true, normal: true, pro: true, max: true } },
-            { label: 'Warning ladder and appeals', values: { free: true, normal: true, pro: true, max: true } },
-            { label: 'Case history', values: { free: 'Kept for good', normal: 'Kept for good', pro: 'Kept for good', max: 'Kept for good' } },
-            { label: 'Case export (CSV)', values: { free: false, normal: 'Last 90 days', pro: 'Full history', max: 'Full history' } },
-            { label: 'Shared cases across servers', planned: true, values: { free: false, normal: false, pro: false, max: true } },
+            { key: 'enforcement', values: { free: true, normal: true, pro: true, max: true } },
+            { key: 'ladderAppeals', values: { free: true, normal: true, pro: true, max: true } },
+            { key: 'caseHistory', values: { free: word('keptForGood'), normal: word('keptForGood'), pro: word('keptForGood'), max: word('keptForGood') } },
+            { key: 'caseExport', values: { free: false, normal: word('last90Days'), pro: word('fullHistory'), max: word('fullHistory') } },
+            { key: 'sharedCases', planned: true, values: { free: false, normal: false, pro: false, max: true } },
         ],
     },
     {
-        group: 'Automod',
+        key: 'automod',
         rows: [
-            { label: 'Built-in rules with review cards', values: { free: '14', normal: '14', pro: '14', max: '14' } },
-            { label: 'Custom automod rules', values: { free: false, normal: '5', pro: '25', max: '100' } },
+            { key: 'builtIn', values: { free: 14, normal: 14, pro: 14, max: 14 } },
+            { key: 'customRules', values: { free: false, normal: 5, pro: 25, max: 100 } },
         ],
     },
     {
-        group: 'Community',
+        key: 'community',
         rows: [
-            { label: 'Tags', values: { free: '100', normal: '250', pro: '500', max: '1,000' } },
-            { label: 'Sticky messages', values: { free: '10', normal: '25', pro: '50', max: '100' } },
-            { label: 'YouTube feeds', values: { free: '20', normal: '40', pro: '75', max: '150' } },
-            { label: 'Scheduled messages', values: { free: '50', normal: '100', pro: '200', max: '500' } },
+            { key: 'tags', values: { free: 100, normal: 250, pro: 500, max: 1000 } },
+            { key: 'stickies', values: { free: 10, normal: 25, pro: 50, max: 100 } },
+            { key: 'feeds', values: { free: 20, normal: 40, pro: 75, max: 150 } },
+            { key: 'scheduled', values: { free: 50, normal: 100, pro: 200, max: 500 } },
         ],
     },
     {
-        group: 'Dashboard and support',
+        key: 'dashboard',
         rows: [
-            { label: 'Web dashboard with audit log', values: { free: true, normal: true, pro: true, max: true } },
-            { label: 'Staff and automod analytics', values: { free: false, normal: false, pro: true, max: true } },
-            { label: 'Custom bot name and avatar', values: { free: false, normal: false, pro: true, max: true } },
-            { label: 'Servers in one dashboard', planned: true, values: { free: '1', normal: '1', pro: '1', max: 'Up to 5' } },
-            { label: 'Supporter role in the Mewvo server', values: { free: false, normal: true, pro: true, max: true } },
-            { label: 'Help in the support server', planned: true, values: { free: 'Yes', normal: 'Yes', pro: 'Yes', max: 'Priority' } },
+            { key: 'auditLog', values: { free: true, normal: true, pro: true, max: true } },
+            { key: 'analytics', values: { free: false, normal: false, pro: true, max: true } },
+            { key: 'customBot', values: { free: false, normal: false, pro: true, max: true } },
+            { key: 'servers', planned: true, values: { free: 1, normal: 1, pro: 1, max: word('upTo5') } },
+            { key: 'supporterRole', values: { free: false, normal: true, pro: true, max: true } },
+            { key: 'help', planned: true, values: { free: word('yes'), normal: word('yes'), pro: word('yes'), max: word('priority') } },
         ],
     },
 ];
 
-/** Short answers under the plans. Plain text (escaped on the page). */
-export const PRICING_FAQ = [
-    { q: 'Can I buy a plan now?', a: 'No. Mewvo runs only on its own server for now. Paid plans start when it opens to other servers; until then nothing can be bought and nobody is charged.' },
-    { q: 'What currency are prices in?', a: 'Euros. The prices on this page are the planned monthly and yearly prices.' },
-    { q: 'Can I cancel or get my money back?', a: 'Plans don’t renew by themselves, so there is nothing to cancel: a plan runs for the period you chose and then falls back to Free. Once real payments start, you can withdraw from a purchase within 14 days. If you asked for the plan to start right away, you get your money back minus the days you already used. Details are on the Withdrawal page.' },
-    { q: 'What does Free keep?', a: 'Everything Mewvo does today: enforcement, the warning ladder, appeals, automod, tickets, modmail, the dashboard and the community tools. Your case history is never deleted when a plan ends.' },
-    { q: 'What happens to extra tags or feeds if I go back to Free?', a: 'The plan is that nothing is deleted: items over the Free limit stop working until you remove some or upgrade again. This may still change before launch.' },
-];
+/** The questions under the plans, in order: plans.faq.<key>.q / .a (plain text, escaped on the page). */
+export const PRICING_FAQ = ['buyNow', 'currency', 'cancel', 'freeKeeps', 'backToFree'];
+
 
 /** "€1.99" / "$1.99" from cents (always two decimals). Unknown currencies throw. */
 export function formatPrice(cents, currency = CURRENCY) {

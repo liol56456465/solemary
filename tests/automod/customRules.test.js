@@ -20,6 +20,7 @@ const { validateSetting } = await import('../../src/services/settings/settingsRe
 const { entryFrom } = await import('../../src/services/automod/reviewCards.js');
 const { buildCardPayload, cardTitle } = await import('../../src/services/automod/reviewFormat.js');
 const { PLANS, COMPARISON } = await import('../../src/config/site/plans.js');
+const { translator } = await import('../../src/services/site/i18n.js');
 
 const DAY = 24 * 3600 * 1000;
 const GUILD = 'g-custom';
@@ -159,9 +160,11 @@ test('limits by plan: Free 0, Normal 5, Pro 25, Max 100; the pricing row is no l
     assert.deepEqual(['free', 'normal', 'pro', 'max'].map(limitForPlan), [0, 5, 25, 100]);
     assert.equal(limitForPlan('unknown'), 0);
     assert.deepEqual(PLANS.map((p) => p.limits.customRules), [0, 5, 25, 100]);
-    const row = COMPARISON.flatMap((g) => g.rows).find((r) => r.label === 'Custom automod rules');
+    const row = COMPARISON.find((g) => g.key === 'automod').rows.find((r) => r.key === 'customRules');
     assert.equal(row.planned, undefined);
-    assert.ok(!PLANS.flatMap((p) => p.perks).some((perk) => /custom automod/i.test(perk.text) && perk.planned));
+    const { t } = translator('en');
+    assert.equal(t('plans.comparison.automod.rows.customRules'), 'Custom automod rules');
+    assert.ok(!PLANS.flatMap((p) => p.perks.map((perk) => ({ ...perk, text: t(`plans.${p.id}.perks.${perk.key}`) }))).some((perk) => /custom automod/i.test(perk.text) && perk.planned));
 });
 
 test('over the limit: the first N enabled rules run; the rest are kept but do not run', () => {

@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "title": "Pricing",
+    "description": "Mewvo is free today. Planned paid plans: {normal} {normalPrice}, {pro} {proPrice} and {max} {maxPrice} a month, or two months free with yearly billing."
+  },
+  "head": {
+    "title": "Plans and prices",
+    "leadBilling": "Free covers everything Mewvo does today. Paid plans add room and tools; buy one for your account or as a gift key for someone else. [Have a key?](/me/redeem)",
+    "testMode": "**Test mode.** {notice}",
+    "lead": "Everything Mewvo does now is free. Paid plans start when Mewvo opens to other servers; until then nothing can be bought.",
+    "leadSupport": "Everything Mewvo does now is free. Paid plans start when Mewvo opens to other servers; until then nothing can be bought. [Join the support server]({url}) to hear first."
+  },
+  "plans": {
+    "title": "Plans",
+    "note": "Prices in euros. Limits such as tags follow the plan of the server owner. Perks marked (planned) are not built yet and may change before paid plans start.",
+    "billingNote": "Prices are the total you pay. {vat} Each purchase is one payment for {monthDays} or {yearDays} days, with no automatic renewal. You can withdraw within {withdrawalDays} days: [right of withdrawal](/withdrawal)."
+  },
+  "card": {
+    "planned": "(planned)",
+    "yearly": "or {price} a year ({months} months free)",
+    "freeForGood": "Free for good",
+    "perMonth": "/ month",
+    "joinServer": "Join the server",
+    "joinSupport": "Join the support server",
+    "seeFeatures": "See every feature",
+    "comingSoon": "Coming soon",
+    "buyMonth": "Buy a month",
+    "buyYear": "Buy a year",
+    "gift": "As a gift: [a month]({monthly}) · [a year]({yearly})"
+  },
+  "compare": {
+    "title": "What each plan includes",
+    "caption": "Plan comparison. Rows marked planned are not built yet; the Free column is what Mewvo does today.",
+    "feature": "Feature",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "faq": {
+    "title": "Questions about pricing",
+    "buyNowTest": "Only as a test. The checkout works end to end (for you or as a gift key), but no payment provider is connected: no card is asked for and nobody is charged. Perks marked planned are not built yet.",
+    "more": "More answers in the [FAQ](/faq)."
+  }
+}

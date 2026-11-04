@@ -607,8 +607,9 @@ test('pricing: per-currency price table and formatPrice (EUR stays the shown cur
     assert.throws(() => plans.formatPrice(199, 'GBP'), /Unknown currency/);
 });
 
-test('pricing: names, prices, perks and the comparison come from config/site/plans.js', async () => {
+test('pricing: names and prices come from config/site/plans.js, the words from the plans catalog', async () => {
     const plans = await import('../src/config/site/plans.js');
+    const { t } = (await import('../src/services/site/i18n.js')).translator('en');
     assert.deepEqual(plans.PLANS.map((p) => [p.name, p.monthlyCents]), [['Free', 0], ['Normal', 199], ['Pro', 499], ['Max', 999]]);
     assert.deepEqual(plans.PLANS.slice(1).map((p) => plans.euros(plans.yearlyCents(p))), ['€19.90', '€49.90', '€99.90']);
     assert.deepEqual(plans.PLANS.slice(1).map((p) => plans.euros(plans.yearlyPerMonthCents(p))), ['€1.66', '€4.16', '€8.33']);
@@ -623,9 +624,9 @@ test('pricing: names, prices, perks and the comparison come from config/site/pla
         const body = (await site.get('/pricing')).body;
         assert.ok(body.includes('Pro &lt;Test&gt;'), 'name from plans.js, escaped');
         assert.ok(body.includes('€7.77') && body.includes('€77.70'), 'prices from plans.js');
-        for (const plan of plans.PLANS) assert.ok(body.includes(plan.summary), plan.summary);
-        for (const group of plans.COMPARISON) for (const row of group.rows) assert.ok(body.includes(row.label), row.label);
-        for (const item of plans.PRICING_FAQ) assert.ok(body.includes(item.q.replace(/'/g, '&#39;')), item.q);
+        for (const plan of plans.PLANS) assert.ok(body.includes(t(`plans.${plan.id}.summary`)), plan.id);
+        for (const group of plans.COMPARISON) for (const row of group.rows) assert.ok(body.includes(t(`plans.comparison.${group.key}.rows.${row.key}`)), row.key);
+        for (const key of plans.PRICING_FAQ) assert.ok(body.includes(t(`plans.faq.${key}.q`).replace(/'/g, '&#39;')), key);
     } finally {
         Object.assign(pro, saved);
         await site.close();
@@ -853,7 +854,8 @@ test('contact page: DSA points of contact, notice contents, life-or-safety line;
 
 test('pricing FAQ: plans do not renew, withdrawal is explained, no "cancel any time"', async () => {
     const { PRICING_FAQ } = await import('../src/config/site/plans.js');
-    const text = PRICING_FAQ.map((item) => `${item.q} ${item.a}`).join(' ');
+    const { t } = (await import('../src/services/site/i18n.js')).translator('en');
+    const text = PRICING_FAQ.map((key) => `${t(`plans.faq.${key}.q`)} ${t(`plans.faq.${key}.a`)}`).join(' ');
     assert.ok(!/any time/i.test(text));
     assert.ok(text.includes('don’t renew') && text.includes('within 14 days') && text.includes('Withdrawal page'));
 });
