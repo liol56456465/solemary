@@ -30,7 +30,7 @@ and say in the mod-log channel or staff chat that a test run is going on.
 Accounts: **Admin** = you (Administrator in the main server). **Alt A**, **Alt B** = two non-admin accounts in the
 main server (Alt A also joins the support server when asked).
 
-Clean up afterwards: unban/unmute the alts, end watchlist entries, and void test cases with reason "test"
+Clean up afterwards: unban/unmute the alts, lift test cooldowns/timeouts, end watchlist entries, and void test cases with reason "test"
 (`/case void`) so they do not count on the alts' records.
 
 ## 1. Enforcement panel (`/enforcements user:<Alt A>`, as Admin)
@@ -133,5 +133,94 @@ Clean up afterwards: unban/unmute the alts, end watchlist entries, and void test
 
 Optional, only if Ramūnas decides to change a deployment secret: with `DASHBOARD_EDIT_ENABLED=false` and a
 republish, settings pages show a "Read-only" notice and no Save buttons. Set it back afterwards.
+
+## 9. Polls (`/poll`, as Admin; Alt A votes)
+
+| # | Do | Expected |
+|---|---|---|
+| 9.1 | `/poll create question:Pizza? option1:Yes option2:No hours:1` | Native Discord poll posted; private reply shows the closing time (date + relative) and a message link |
+| 9.2 | Alt A votes | Vote counts; Alt A's name is visible in the voter list (normal for Discord polls) |
+| 9.3 | `/poll end message_link:<link from 9.1>`, then the same again | First: "Poll ended…", final results shown. Second: "That poll has already ended." |
+| 9.4 | `/poll create` with an option longer than 55 characters | Refused with the 55-character message; nothing posted |
+| 9.5 | `/poll create question:Q option1:a option2:b anonymous:true hours:5` | Embed with 1️⃣ 2️⃣ reactions; private reply says hours/multiple were ignored |
+| 9.6 | Alt A runs any `/poll` command | "You need the Administrator role…" refusal |
+
+## 10. Rules (dashboard Rules tab + `/rules`)
+
+| # | Do | Expected |
+|---|---|---|
+| 10.1 | Dashboard → Rules: add 3 rules (one from the library), set colour, intro, footer, banner; Save design | Preview shows the post |
+| 10.2 | `/rules preview` | Private copy matching the dashboard preview |
+| 10.3 | `/rules post` (put `@everyone` in one rule text) | Rules posted in the saved channel, **no ping**; dashboard shows "Posted in #… (1 message)" |
+| 10.4 | Edit rule 2 on the dashboard, then `/rules update` | The same message changes in place, no new message |
+| 10.5 | Delete the posted rules message in Discord, then `/rules update` | Refused: "One of the posted rules messages was deleted…"; nothing changed |
+
+## 11. Leveling (dashboard Leveling page; Alt A)
+
+Reward roles A (level 1) and B (level 2) must sit below Mewvo's role.
+
+| # | Do | Expected |
+|---|---|---|
+| 11.1 | Add channel boost ×2 on #general and role boost ×1.5 on a test role; try 5.5 and 1.25 | Both rows listed; 5.5 and 1.25 refused |
+| 11.2 | Give Alt A the test role; Alt A `/rank` in #general, then elsewhere without the role | First: "XP boost x3 (role … x1.5, channel boost x2)". Second: no XP boost field |
+| 11.3 | Reward mode "Keep all": `/levelset Alt A 2` | Reply says 2 reward roles given; Alt A has A and B |
+| 11.4 | Reward mode "Only the highest": `/levelset Alt A 2` | A removed, B stays |
+| 11.5 | Move B above Mewvo's role; `/levelset Alt A 1`, then `2` | Alt A **keeps A** (never left with no reward role); reply mentions roles that couldn't be changed. Move B back |
+| 11.6 | Alt A leaves and rejoins | Level unchanged in `/rank`; earned reward role back within seconds. While gone: not on `/leaderboard`, no rank gaps |
+| 11.7 | Level-up channel set, card off; Alt A levels up | Text-only post, only Alt A pinged |
+| 11.8 | Turn on "Add an image card"; level up again; then nickname 山田太郎 and level up | PNG card with avatar, name, level, bar; with the CJK nickname the card shows the username, **no boxes** |
+| 11.9 | Remove Attach Files from Mewvo in the level-up channel; level up | Text line only, no error |
+| 11.10 | Alt A `/rank card:True`; `/leaderboard page:50`; website `/leaderboard` paging | Card within a few seconds; "no members on page 50…" without error; website never shows a "Next" to an empty page |
+
+## 12. Automod test run and raid timeline (dashboard)
+
+| # | Do | Expected |
+|---|---|---|
+| 12.1 | Automod → Results → Test run: 1 channel, "Last day", Start; start a second run in another tab | "Test run started", then a result; second tab: "A test run is already running…" |
+| 12.2 | Pick a channel where Mewvo lacks Read Message History | Error naming the channel and the missing permission |
+| 12.3 | Post `THIS IS A VERY LOUD MESSAGE FOR EVERYONE`; run again | Excessive caps counted; example has an "Open" jump link |
+| 12.4 | Language rule off; post a caps message with a slur spelled with spaces; run | That example reads "hidden (the match could not be masked safely)"; the slur appears nowhere on the page |
+| 12.5 | Post `mail me at test@example.com` and `+４４ ２０ ７９４６ ０９５８`; run | `[e-mail]` and `+## ## …`; no real digits |
+| 12.6 | Draft words `hello` → run → "Add this rule"; on a result row "Set to watch only" (then set back) | Custom rule created + Audit log row; Rule modes shows watch only + audit row `ruleModes.<rule>` |
+| 12.7 | Check Discord after the runs | No deletions, DMs or mod-log posts from test runs |
+| 12.8 | During a join raid (alts joining fast): Moderate → Raid timeline; end the lockdown; open it again | Listed as "Still running"; after the end: start, joins, cases and end minute by minute (UTC), "Ended by" you |
+| 12.9 | A moderator without Administrator opens `/dashboard/incidents` | 403 |
+| 12.10 | Open a ticket; start a giveaway whose prize contains `<@&role>`, end it | Staff role pinged on the ticket; the giveaway prize does **not** ping the role; winners pinged once, not re-announced next minute |
+
+## 13. Rules quiz at verification (Alt B, not verified)
+
+Setup: verification panel on. Dashboard → Verification → Rules quiz: Q1 "Is spam allowed?" (No / Yes, correct =
+answer 1), Q2 with 3 answers; wait 1 minute; save; turn the quiz on.
+
+| # | Do | Expected |
+|---|---|---|
+| 13.1 | Alt B presses Verify; presses Verify again; clicks a button on the first message | "Rules quiz: question 1 of 2"; then a new question 1; old message: "This quiz expired, click Verify again." |
+| 13.2 | Answer Q1 wrong, Q2 right; press Verify at once | "Not quite — read the rules in #… and try again in 1 minute", no hint which was right; then "try again in 1 minute" |
+| 13.3 | After 1 minute: Verify, answer both right | Normal verification step ("Verify with Discord" link, or the role) |
+| 13.4 | Don't finish the Discord link; press Verify again | Straight to the link, no quiz |
+| 13.5 | Edit Q1's text on the dashboard; Alt B presses Verify | Quiz asked again |
+| 13.6 | "Suggest questions from my rules"; reload without saving | Up to 3 drafts with "Nothing is saved yet"; gone after reload |
+| 13.7 | Remove every question (quiz on); Alt B Verify; then turn the quiz off | Warning "treated as off"; normal verification; off = exactly as before |
+
+## 14. Self-cooldown (`/cooldown`, Alt A)
+
+| # | Do | Expected |
+|---|---|---|
+| 14.1 | `/cooldown duration:1 hour reason:test` → Cancel | Private "Start a cooldown?" with end time and "can't end it early"; Cancel: "No cooldown was started", alt can chat |
+| 14.2 | `/cooldown duration:1 hour`, wait over 5 minutes, click Start | "This expired, run /cooldown again." No timeout |
+| 14.3 | `/cooldown duration:1 hour` → Start cooldown | "Cooldown started … ends on its own <time>"; can't send, react or join voice; timeout icon shown |
+| 14.4 | Admin checks the log channel, Discord audit log, `/background Alt A` | "Self-cooldown started" embed ("Not a moderation case"); audit reason "Self-cooldown via /cooldown"; no new case |
+| 14.5 | Alt A (still timed out) runs `/cooldown duration:1 day` | "You are already in a timeout until <time>", no buttons |
+| 14.6 | Admin lifts the timeout; repeat until 3 cooldowns started; run a 4th | "You have started 3 cooldowns in the last 24 hours…" |
+| 14.7 | Admin runs `/cooldown` | "You have the Administrator permission… can't put a cooldown on you"; nothing applied |
+
+## 15. New domain (only after Ramūnas switches it; see `docs/domain-switch.md`)
+
+| # | Do | Expected |
+|---|---|---|
+| 15.1 | Open `https://app.mewvo.com/health` and the old Replit `/health` | Both answer JSON; the old one is **not** redirected |
+| 15.2 | Log in to the dashboard on the new host | Discord login works; you land on the overview |
+| 15.3 | With `CANONICAL_REDIRECT=true`: open an old Replit page link (e.g. `/leaderboard?page=2`) | Lands on the same page on `app.mewvo.com` |
+| 15.4 | Verify with Discord as Alt B on the new host | OAuth completes, role given |
 
 When done: run the clean-up from "Before testing in Discord".
