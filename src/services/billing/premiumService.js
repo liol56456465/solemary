@@ -219,20 +219,31 @@ export function giftDetails({ to = '', message = '' } = {}) {
     return { giftTo: giftTo || null, giftMessage: giftMessage || null };
 }
 
+/** The consent version for a language: "checkout-2026-11-04/de" (the wording differs per language). */
+export function consentVersion(lang = 'en') {
+    return `${CONSENT_VERSION}/${lang}`;
+}
+const CONSENT_LANG = /^[a-z]{2}(-[A-Z]{2})?$/;
+
 /**
- * The consent record for an order from the posted form: { version, at, kind, texts } or a
+ * The consent record for an order from the posted form: { version, lang, at, kind, texts } or a
  * PremiumError naming what is missing. Every box must be ticked ('yes'). Pure.
+ * `lang` + `texts` are the language and the exact three texts the buyer saw (the site passes them
+ * from its catalog); without them the English CONSENT_TEXTS are stored.
+ * Kept in temp_data premium_order:<id> with the order (no schema change).
  */
-export function checkoutConsent(body = {}, kind = 'personal', now = Date.now()) {
+export function checkoutConsent(body = {}, kind = 'personal', now = Date.now(), { lang = 'en', texts = null } = {}) {
     const ticked = (name) => body?.[name] === 'yes';
     const missing = [];
     if (!ticked('consent_start')) missing.push(kind === 'gift' ? 'that you want the key now' : 'that you want the plan to start now');
     if (!ticked('consent_terms')) missing.push('that you accept the Terms');
     if (!ticked('consent_age')) missing.push('that you are 18 or older or have permission');
     if (missing.length) throw new PremiumError(`Tick the boxes to confirm ${missing.join(', ')}. Nothing was ordered.`);
+    const shown = Array.isArray(texts) && texts.length === 3 && texts.every((x) => typeof x === 'string' && x.trim()) && CONSENT_LANG.test(String(lang));
+    const language = shown ? String(lang) : 'en';
     return {
-        version: CONSENT_VERSION, at: new Date(now).toISOString(), kind,
-        texts: [kind === 'gift' ? CONSENT_TEXTS.startNowGift : CONSENT_TEXTS.startNow, CONSENT_TEXTS.terms, CONSENT_TEXTS.age],
+        version: consentVersion(language), lang: language, at: new Date(now).toISOString(), kind,
+        texts: shown ? [...texts] : [kind === 'gift' ? CONSENT_TEXTS.startNowGift : CONSENT_TEXTS.startNow, CONSENT_TEXTS.terms, CONSENT_TEXTS.age],
     };
 }
 

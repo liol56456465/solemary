@@ -55,7 +55,8 @@ import { premiumSettings, premiumStore } from '../billing/premiumService.js';
 import { ACCOUNT_EXPORT_NOTE, EXPORT_FORMAT, buildDataExport, exportFileName } from '../privacy/dataExport.js';
 import { getFromDb } from '../../utils/database/wrapper.js';
 import { createAccountHandlers, memberAccountSettings } from './accountRoutes.js';
-import { textOf, translator } from './i18n.js';
+import { DEFAULT_LANG, LANG_CODES, textOf, translator } from './i18n.js';
+import { languageCookie, requestLanguage } from './language.js';
 import { accountStore as defaultAccountStore } from '../accounts/accountStore.js';
 
 export const MEMBER_BASE = '/me';
@@ -345,6 +346,11 @@ async function discordFetch(fetchImpl, url, options) {
 }
 
 const str = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
+/** This request's /me path (for the language picker and its redirect): only plain /me/… paths, else /me. */
+function memberPath(req) {
+    const path = `${req.baseUrl || ''}${req.path || ''}`.replace(/(.)\/$/, '$1');
+    return /^\/me(\/[A-Za-z0-9_-]+)*$/.test(path) ? path : MEMBER_BASE;
+}
 const clientIp = (req) => String(req.ip || req.socket?.remoteAddress || 'unknown');
 
 /**
@@ -369,7 +375,17 @@ export function createMemberPortal({
     const forgotKey = hmac('mewvo member forgot v1', key);
     // Who is logged in, for the top bar of every /me page (set per request by `viewer` below).
     const viewers = new AsyncLocalStorage();
-    const ctx = () => ({ ...context(), memberPortal: true, billing: Boolean(premium), accounts: Boolean(accounts), viewer: viewers.getStore() || null });
+    // The page language and path per request (set by `viewer`): /me has no URL prefix, so the
+    // language is the mewvo_lang cookie, else Accept-Language, else English (language.js).
+    const requests = new AsyncLocalStorage();
+    const ctx = () => {
+        const here = requests.getStore() || { lang: DEFAULT_LANG, path: MEMBER_BASE };
+        return {
+            ...context(), ...translator(here.lang), memberPortal: true, billing: Boolean(premium), accounts: Boolean(accounts), viewer: viewers.getStore() || null,
+            // The picker on /me pages reloads the same /me page with ?setlang=<code> (handled in `language` below).
+            languageLink: (code) => `${here.path}?setlang=${encodeURIComponent(code)}`,
+        };
+    };
     const send = (res, status, page) => res.status(status).type('html').send(page);
     // A message page from two keys: portal.errors.<name>.title and .message.
     const fail = (res, status, name, options) => {
@@ -607,13 +623,32 @@ export function createMemberPortal({
         } catch (error) {
             logger.warn(`Member portal: top bar could not read the session: ${error.message}`);
         }
-        const who = session ? { name: session.username || textOf(ctx()).t('portal.viewer.fallbackName'), accountId: session.accountId || null, csrf: session.csrf } : null;
-        return viewers.run(who, next);
+        const here = { lang: requestLanguage(req), path: memberPath(req) };
+        return requests.run(here, () => {
+            const who = session ? { name: session.username || textOf(ctx()).t('portal.viewer.fallbackName'), accountId: session.accountId || null, csrf: session.csrf } : null;
+            return viewers.run(who, next);
+        });
+    }
+
+    /**
+     * ?setlang=<code> on a /me page (the language picker): sets the mewvo_lang cookie and reloads
+     * the same /me page without it. An unknown code is ignored; the target is always this /me path.
+     */
+    function language(req, res, next) {
+        if ((req.method !== 'GET' && req.method !== 'HEAD') || req.query?.setlang === undefined) return next();
+        const code = LANG_CODES.find((c) => c === req.query.setlang);
+        if (code) res.append('Set-Cookie', languageCookie(code, { secure: Boolean(settings.secure) }));
+        const params = new URL(req.originalUrl || '/', 'http://localhost').searchParams;
+        params.delete('setlang');
+        const query = params.toString();
+        res.set('Cache-Control', 'no-store');
+        return res.redirect(302, `${memberPath(req)}${query ? `?${query}` : ''}`);
     }
 
     function router() {
         const r = express.Router();
         r.use(headers);
+        r.use(language);
         r.use(viewer);
         if (accountHandlers) r.use(safe(forceLink));
         r.get('/', limitBy(pageLimiter), safe(index));

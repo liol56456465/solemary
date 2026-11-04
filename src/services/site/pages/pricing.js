@@ -24,7 +24,7 @@ function planActions(ctx, plan) {
         const invite = ctx.mainInvite || ctx.supportInvite;
         return invite
             ? html`<a class="button button-quiet" href="${invite}" rel="noopener">${ctx.mainInvite ? t('pricing.card.joinServer') : t('pricing.card.joinSupport')}</a>`
-            : html`<a class="button button-quiet" href="/features">${t('pricing.card.seeFeatures')}</a>`;
+            : html`<a class="button button-quiet" href="${textOf(ctx).href('/features')}">${t('pricing.card.seeFeatures')}</a>`;
     }
     if (!ctx.billing) return html`<span class="button button-disabled" aria-disabled="true">${t('pricing.card.comingSoon')}</span>`;
     const href = (period, kind) => checkoutHref({ planId: plan.id, period, kind });
@@ -50,10 +50,10 @@ export function planCard(ctx, plan, { compact = false } = {}) {
 }
 
 function cell(ctx, value) {
-    const { t, lang } = textOf(ctx);
+    const { t, fmtNumber } = textOf(ctx);
     if (value === true) return html`<td class="yes">${t('pricing.compare.yes')}</td>`;
     if (value === false || value === '' || value == null) return html`<td class="no">${t('pricing.compare.no')}</td>`;
-    if (typeof value === 'number') return html`<td>${new Intl.NumberFormat(lang || 'en').format(value)}</td>`;
+    if (typeof value === 'number') return html`<td>${fmtNumber(value)}</td>`;
     if (value.word) return html`<td>${t(`plans.comparison.values.${value.word}`)}</td>`;
     return html`<td>${value}</td>`;
 }

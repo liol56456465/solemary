@@ -8,17 +8,15 @@ import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
 import { textOf } from '../i18n.js';
 
-const DATE = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-
 /** "29 October 2026" + the ISO date for <time>, or null for a missing/invalid date. */
-function updatedOn(value) {
+function updatedOn(value, fmtDate) {
     const at = value ? new Date(value) : null;
     if (!at || !Number.isFinite(at.getTime())) return null;
-    return { iso: at.toISOString().slice(0, 10), text: DATE.format(at) };
+    return { iso: at.toISOString().slice(0, 10), text: fmtDate(at) };
 }
 
 export function rulesPage(ctx, data) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, fmtDate } = textOf(ctx);
     const head = html`<header class="page-head page-head-split"><div><h1>${t('rules.head.heading')}</h1></div>
 <p class="lead">${t('rules.head.lead')}</p></header>`;
     let content;
@@ -27,7 +25,7 @@ export function rulesPage(ctx, data) {
     } else if (!data.rules.length) {
         content = html`<p class="notice">${t('rules.state.empty')}</p>`;
     } else {
-        const updated = updatedOn(data.updatedAt);
+        const updated = updatedOn(data.updatedAt, fmtDate);
         content = html`${updated ? html`<p class="note">${ti('rules.list.updated', { date: html`<time datetime="${updated.iso}">${updated.text}</time>` })}</p>` : ''}
 <ol class="rules-list">${data.rules.map((rule) => html`<li class="rule" id="rule-${rule.number}"><a class="rule-num" href="#rule-${rule.number}" aria-label="${t('rules.list.linkLabel', { number: rule.number })}">${String(rule.number).padStart(2, '0')}</a><div class="rule-body"><h2 class="rule-title">${rule.title}</h2>${rule.text ? html`<p class="rule-text">${rule.text}</p>` : ''}${rule.consequence ? html`<p class="rule-consequence"><span class="rule-consequence-label">${t('rules.list.consequenceLabel')}</span> ${rule.consequence}</p>` : ''}</div></li>`)}</ol>`;
     }

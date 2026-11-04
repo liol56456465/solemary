@@ -30,7 +30,11 @@ const FLAGS = [
     { memberPortal: true, billing: true, dashboardEnabled: true, supportInvite: 'https://discord.gg/support1', viewer: { name: 'Ann', accountId: 'a1', csrf: 'x' } },
     { dashboardEnabled: true, supportInvite: 'https://discord.gg/support1' },
     { mainInvite: 'https://discord.gg/main1' },
+    // The language picker, the "also available in" note and the English-only note (language.js / shell.js).
+    { languageLink: (code, path) => `${path}?setlang=${code}`, suggestLang: 'de', englishOnlyFor: 'de' },
 ];
+// Read in the OTHER language (the note is written in the language it offers), not through ctx.
+const OTHER_LANGUAGE_KEYS = ['shell.suggestLanguage', 'shell.legalEnglishOnly'];
 
 function renderAll(ctx) {
     return [
@@ -42,7 +46,9 @@ function renderAll(ctx) {
 
 test('site text: every key the shell, home, features, mockups and changelog use is in the English catalog, and none is unused', () => {
     const { used, ctx } = recording('en');
-    for (const flags of FLAGS) renderAll({ ...flags, ...ctx });
+    const pages = FLAGS.map((flags) => renderAll({ ...flags, ...ctx })).join('\n');
+    assert.ok(pages.includes('class="lang-suggest"') && pages.includes('class="notice lang-note"'), 'the language notes render');
+    for (const key of OTHER_LANGUAGE_KEYS) used.add(key);
     const en = loadCatalogs().get('en');
     for (const key of used) assert.ok(en.has(key), `missing English key ${key}`);
     const owned = [...en.keys()].filter((key) => NAMESPACES.includes(key.split('.')[0]));

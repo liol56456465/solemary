@@ -706,6 +706,26 @@ button.button { cursor: pointer; }
     font: inherit; font-size: 14px; text-align: left; text-decoration: none; cursor: pointer; }
 .account-pop a:hover, .account-pop button:hover { background: var(--bg-alt); color: var(--text); }
 .account-pop form { margin: 4px 0 0; padding-top: 4px; border-top: 1px solid var(--border); }
+
+/* Language picker: a menu in the top bar (details, no script), a plain list in the footer. */
+.lang-menu { position: relative; }
+.lang-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 10px; border: 1px solid var(--border-control); border-radius: 8px;
+    background: none; color: var(--text); font-size: 14px; cursor: pointer; list-style: none; white-space: nowrap; }
+.lang-chip::-webkit-details-marker { display: none; }
+.lang-chip::after { content: ""; width: 6px; height: 6px; margin-left: 2px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: translateY(-2px) rotate(45deg); }
+.lang-chip:hover { border-color: var(--border-strong); }
+.lang-pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 6; min-width: 200px; margin: 0; padding: 6px; list-style: none; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--raised); box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.25); }
+.lang-pop a { display: block; padding: 8px 12px; border-radius: 8px; color: var(--text); font-size: 14px; text-decoration: none; }
+.lang-pop a:hover { background: var(--bg-alt); color: var(--text); }
+.lang-pop a[aria-current], .footer-langs a[aria-current] { font-weight: 700; }
+.footer-langs ul { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 32px 0 0; padding: 0; list-style: none; font-size: 13px; }
+.footer-langs a { color: var(--text-muted); }
+.footer-langs a[aria-current] { color: var(--text); }
+.lang-suggest { border-bottom: 1px solid var(--border); background: var(--bg-alt); font-size: 14px; }
+.lang-suggest p { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 10px 0; }
+.lang-suggest-dismiss { color: var(--text-muted); }
+.lang-note { margin-bottom: 0; }
 @media (max-width: 760px) {
     .topbar-actions { gap: 6px; }
     .topbar-actions .button { padding: 0 10px; }

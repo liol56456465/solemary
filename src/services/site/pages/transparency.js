@@ -12,13 +12,12 @@ import { layout } from '../shell.js';
 import { textOf } from '../i18n.js';
 import { maskCount, maskTotal, medianText } from '../../enforcement/transparencyService.js';
 
-const MONTH_NAME = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const DAY_NAME = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const MONTH_FORMAT = Object.freeze({ month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 const cell = ({ text, masked }, sub = false) => html`<td class="${['num', sub ? 'sub' : '', masked ? 'masked' : ''].filter(Boolean).join(' ')}">${text}</td>`;
 
-function monthLabel(month, t) {
-    return html`${MONTH_NAME.format(month.start)}${month.current ? html` <span class="tag">${t('transparency.table.soFar')}</span>` : ''}`;
+function monthLabel(month, t, fmtDate) {
+    return html`${fmtDate(month.start, MONTH_FORMAT)}${month.current ? html` <span class="tag">${t('transparency.table.soFar')}</span>` : ''}`;
 }
 
 // [report key, label key under transparency.actions.columns, shown as a sub-column]
@@ -26,12 +25,12 @@ const CASE_HEADS = [
     ['warns'], ['mutes'], ['kicks'], ['bans'], ['ladderBans', true], ['automod', true], ['voided', true],
 ];
 
-function casesTable(report, t) {
+function casesTable(report, t, fmtDate) {
     const total = (key) => maskTotal(report.months.map((m) => m.cases[key]));
     return html`<div class="table-wrap" role="region" aria-labelledby="tr-actions" tabindex="0"><table class="report">
 <caption class="visually-hidden">${t('transparency.actions.caption')}</caption>
 <thead><tr><th scope="col">${t('transparency.table.month')}</th>${CASE_HEADS.map(([key]) => html`<th scope="col">${t(`transparency.actions.columns.${key}`)}</th>`)}</tr></thead>
-<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m, t)}</th>${CASE_HEADS.map(([key, sub]) => cell(maskCount(m.cases[key]), sub))}</tr>`)}</tbody>
+<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m, t, fmtDate)}</th>${CASE_HEADS.map(([key, sub]) => cell(maskCount(m.cases[key]), sub))}</tr>`)}</tbody>
 <tfoot><tr><th scope="row">${t('transparency.table.total')}</th>${CASE_HEADS.map(([key, sub]) => cell(total(key), sub))}</tr></tfoot></table></div>`;
 }
 
@@ -42,12 +41,12 @@ function median(appeals, t) {
     return text ? { text, masked: false } : { text: t('transparency.table.notEnoughDecisions'), masked: true };
 }
 
-function appealsTable(report, t) {
+function appealsTable(report, t, fmtDate) {
     const total = (key) => maskTotal(report.months.map((m) => m.appeals[key]));
     return html`<div class="table-wrap" role="region" aria-labelledby="tr-appeals" tabindex="0"><table class="report">
 <caption class="visually-hidden">${t('transparency.appeals.caption')}</caption>
 <thead><tr><th scope="col">${t('transparency.table.month')}</th>${APPEAL_HEADS.map((key) => html`<th scope="col">${t(`transparency.appeals.columns.${key}`)}</th>`)}<th scope="col">${t('transparency.appeals.columns.median')}</th></tr></thead>
-<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m, t)}</th>${APPEAL_HEADS.map((key) => cell(maskCount(m.appeals[key])))}${cell(median(m.appeals, t), true)}</tr>`)}</tbody>
+<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m, t, fmtDate)}</th>${APPEAL_HEADS.map((key) => cell(maskCount(m.appeals[key])))}${cell(median(m.appeals, t), true)}</tr>`)}</tbody>
 <tfoot><tr><th scope="row">${t('transparency.table.total')}</th>${APPEAL_HEADS.map((key) => cell(total(key)))}${cell(median(report.totals.appeals, t), true)}</tr></tfoot></table></div>`;
 }
 
@@ -70,11 +69,11 @@ ${EXPLANATION.map((key) => html`<div><dt>${t(`transparency.how.${key}.question`)
 
 /** The report page; `report` is transparencyService's aggregateReport() result. */
 export function transparencyPage(ctx, report) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, fmtDate } = textOf(ctx);
     const first = report.months[0];
     const generated = report.generatedAt instanceof Date ? report.generatedAt : new Date(report.generatedAt);
-    const from = html`<time datetime="${first.start.toISOString().slice(0, 10)}">${DAY_NAME.format(first.start)}</time>`;
-    const to = html`<time datetime="${generated.toISOString().slice(0, 10)}">${DAY_NAME.format(generated)}</time>`;
+    const from = html`<time datetime="${first.start.toISOString().slice(0, 10)}">${fmtDate(first.start)}</time>`;
+    const to = html`<time datetime="${generated.toISOString().slice(0, 10)}">${fmtDate(generated)}</time>`;
     return layout(ctx, {
         title: t('transparency.title'), active: 'transparency', path: '/transparency',
         description: t('transparency.description'),
@@ -84,9 +83,9 @@ export function transparencyPage(ctx, report) {
 <p class="note">${ti('transparency.head.period', { from, to })}</p>
 ${summary(report, t)}
 <section class="tr-section" aria-labelledby="tr-actions"><h2 id="tr-actions">${t('transparency.actions.heading')}</h2>
-<p>${t('transparency.actions.intro')}</p>${casesTable(report, t)}</section>
+<p>${t('transparency.actions.intro')}</p>${casesTable(report, t, fmtDate)}</section>
 <section class="tr-section" aria-labelledby="tr-appeals"><h2 id="tr-appeals">${t('transparency.appeals.heading')}</h2>
-<p>${t('transparency.appeals.intro')}</p>${appealsTable(report, t)}</section>
+<p>${t('transparency.appeals.intro')}</p>${appealsTable(report, t, fmtDate)}</section>
 <section class="block-tight split split-narrow" aria-labelledby="tr-how"><div class="split-copy"><h2 id="tr-how">${t('transparency.how.heading')}</h2><p>${ti('transparency.how.intro')}</p></div>
 ${explanation(t)}</section></div>`,
     });

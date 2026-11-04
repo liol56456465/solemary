@@ -178,7 +178,7 @@ function planSection(ctx, { plan, bonus, now }) {
     const bonusLine = bonusStatusText(bonus, text);
     const manage = ctx.billing
         ? html`<a class="button button-quiet" href="/me/billing">${t('account.plan.manage')}</a>`
-        : html`<a class="button button-quiet" href="/pricing">${t('account.plan.seePlans')}</a>`;
+        : html`<a class="button button-quiet" href="${textOf(ctx).href('/pricing')}">${t('account.plan.seePlans')}</a>`;
     return html`<section class="account-section"><h2>${t('account.plan.heading')}</h2>
 <dl class="summary-rows account-facts">
 <div><dt>${t('account.plan.plan')}</dt><dd>${plan ? html`<strong>${planName(plan.plan_id)}</strong>` : t('account.plan.free')}</dd></div>
@@ -243,7 +243,7 @@ export function deletedPage(ctx) {
     const { t } = textOf(ctx);
     return page(ctx, t('account.deleted.title'), html`<h1>${t('account.deleted.heading')}</h1>
 <p class="lead">${t('account.deleted.lead')}</p>
-<p class="form-actions"><a class="button" href="/">${t('account.deleted.home')}</a></p>`);
+<p class="form-actions"><a class="button" href="${textOf(ctx).href('/')}">${t('account.deleted.home')}</a></p>`);
 }
 
 export function accountMessagePage(ctx, title, message, { href = '/me', label = null } = {}) {

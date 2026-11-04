@@ -14,7 +14,6 @@ import { enforcementConfig } from '../../../config/enforcement.js';
 import { trustCardView } from '../../enforcement/trustCardService.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DAY_NAME = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 const MAX_ORDINAL = 10;
 
 /** "a 7-day ban" / "a permanent ban" for a ladder level's ban length. */
@@ -61,13 +60,13 @@ function catBlock(cat, t) {
 <figcaption><strong>${cat.name}</strong><span>${cat.stage.name}</span><span>${t('trust.cat.caption')}</span></figcaption></figure>`;
 }
 
-function rulesBlock(rules, t) {
+function rulesBlock(rules, t, href) {
     if (!rules) return '';
     const list = rules.rules?.length
-        ? html`<ol class="trust-rules">${rules.rules.map((r) => html`<li><a href="/rules#rule-${r.number}">${r.title}</a></li>`)}</ol>`
+        ? html`<ol class="trust-rules">${rules.rules.map((r) => html`<li><a href="${href(`/rules#rule-${r.number}`)}">${r.title}</a></li>`)}</ol>`
         : html`<p>${t('trust.rules.empty')}</p>`;
     return html`<section class="card trust-panel" aria-labelledby="trust-rules"><h2 id="trust-rules">${t('trust.rules.heading')}</h2>${list}
-<p class="note"><a href="/rules">${t('trust.rules.readAll')}</a></p></section>`;
+<p class="note"><a href="${href('/rules')}">${t('trust.rules.readAll')}</a></p></section>`;
 }
 
 /**
@@ -75,15 +74,15 @@ function rulesBlock(rules, t) {
  * public rules ({ rules: [{ number, title }] }) or null when they could not be read.
  */
 export function trustPage(ctx, card, { cat = null, rules = null } = {}) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, href, fmtDate } = textOf(ctx);
     const view = trustCardView(card);
     const generated = view.generatedAt instanceof Date ? view.generatedAt : new Date(view.generatedAt);
     const since = view.since instanceof Date ? view.since : new Date(view.since);
     const image = cat?.image
         ? { path: `/img/cat/${cat.image}`, width: 256, height: 256, alt: t('trust.cat.shareAlt', { name: cat.name }), large: false }
         : null;
-    const from = html`<time datetime="${since.toISOString().slice(0, 10)}">${DAY_NAME.format(since)}</time>`;
-    const to = html`<time datetime="${generated.toISOString().slice(0, 10)}">${DAY_NAME.format(generated)}</time>`;
+    const from = html`<time datetime="${since.toISOString().slice(0, 10)}">${fmtDate(since)}</time>`;
+    const to = html`<time datetime="${generated.toISOString().slice(0, 10)}">${fmtDate(generated)}</time>`;
     return layout(ctx, {
         title: t('trust.title', { server: view.serverName }), active: 'trust', path: '/trust', image,
         description: t('trust.description', { server: view.serverName, days: view.days }),
@@ -97,7 +96,7 @@ ${stats(view, t)}
 <li>${t('trust.how.byPerson')}</li>
 <li>${t('trust.how.cases')}</li></ul>
 ${details(view, t)}</section>
-${rulesBlock(rules, t)}
+${rulesBlock(rules, t, href)}
 </div>
 <p class="note trust-foot">${ti(ctx.transparency ? 'trust.foot.periodWithReport' : 'trust.foot.period', { days: view.days, from, to })}</p>
 </div>`,
