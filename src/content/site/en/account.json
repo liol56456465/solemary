@@ -1,0 +1,207 @@
+{
+  "common": {
+    "logIn": "Log in",
+    "logOut": "Log out",
+    "cancel": "Cancel",
+    "back": "Back",
+    "backToRecord": "Back to My record",
+    "accountSettings": "Account settings",
+    "loggedInAs": "Logged in as **{username}**."
+  },
+  "fields": {
+    "username": "Username",
+    "password": "Password",
+    "newPassword": "New password",
+    "passwordHint": "At least {min} characters.",
+    "codeFromApp": "Code from the app",
+    "codeOrRecovery": "Code from the app, or a recovery code"
+  },
+  "signup": {
+    "title": "Create an account",
+    "heading": "Create a Mewvo account",
+    "lead": "With an account you log in to this website with a username and password. No email is needed. Right after you sign up, you link your Discord account once; that is also how you reset a forgotten password.",
+    "usernameHint": "{min} to {max} characters: letters, numbers and underscores only.",
+    "birthDate": "Date of birth",
+    "birthPlaceholder": "YYYY-MM-DD",
+    "birthHint": "You must be at least {age}. We only check your age and save that you are {age} or older, never the date.",
+    "accept": "I accept the [Terms and Conditions](/terms) and the [Privacy Policy](/privacy).",
+    "submit": "Create account",
+    "haveAccount": "Already have an account? [Log in](/me/login-password)."
+  },
+  "login": {
+    "title": "Log in",
+    "heading": "Log in to your Mewvo account",
+    "forgot": "Forgot your password?",
+    "withDiscord": "Log in with Discord instead",
+    "noAccount": "No account yet? [Create an account](/me/signup)"
+  },
+  "twoStep": {
+    "title": "Two-step login",
+    "heading": "Enter your login code",
+    "lead": "Open your authenticator app and enter the 6-digit code for Mewvo. Lost your phone? Enter one of your recovery codes instead.",
+    "code": "Code",
+    "foot": "The code step lasts 5 minutes. After that, [log in again](/me/login-password)."
+  },
+  "forgot": {
+    "title": "Forgot password",
+    "heading": "Forgot your password?",
+    "lead": "Log in with the Discord account that is linked to your Mewvo account. Then you choose a new password.",
+    "submit": "Log in with Discord",
+    "foot": "Mewvo asks Discord only who you are. If two-step login is on, you still enter a code from your app after the new password. No Discord account linked? Then the password cannot be reset; [create a new account](/me/signup)."
+  },
+  "reset": {
+    "title": "Choose a new password",
+    "heading": "Choose a new password",
+    "lead": "For the Mewvo account **{username}**.",
+    "code": "Two-step code",
+    "codeHint": "The 6-digit code from your app, or one of your recovery codes.",
+    "submit": "Save the new password",
+    "foot": "Saving ends every other login of this account and logs you in here. This form works for 10 minutes."
+  },
+  "link": {
+    "title": "Link your Discord",
+    "heading": "Link your Discord account",
+    "lead": "Logged in as **{username}**. One more step: link your Discord account. Your Mewvo account works only once it is linked. The first 100 accounts to link get Mewvo Pro for {bonus}.",
+    "submit": "Link Discord",
+    "foot": "Mewvo asks Discord only who you are (the identify permission): no email, no servers. One Discord account can be linked to one Mewvo account. If you forget your password, you reset it by logging in with this Discord account. An account that never links Discord is deleted after 7 days.",
+    "deleteHeading": "Delete this account"
+  },
+  "letter": {
+    "heading": "Your 1-letter username",
+    "allTaken": "All 1-letter usernames are taken.",
+    "pick": "Pick a 1-letter username",
+    "claim": "Claim this username",
+    "decline": "No thanks, keep my username",
+    "foot": "You can claim a 1-letter username only once. Your current username stops working when you claim one."
+  },
+  "linked": {
+    "title": "Discord linked",
+    "heading": "Your Discord account is linked",
+    "toRecord": "Go to My record"
+  },
+  "linkResult": {
+    "repeat": "Your Discord account is linked. This Discord account was linked to a Mewvo account before, so it does not get the early-account bonus again.",
+    "proAndLetter": "You are number {n} to link a Discord account to Mewvo. You get Mewvo Pro for {bonus}, and you can pick a 1-letter username below.",
+    "pro": "You are number {n} to link a Discord account to Mewvo. You get Mewvo Pro for {bonus}.",
+    "proFailedAndLetter": "You are number {n} to link a Discord account to Mewvo. {bonus} of Pro were due, but they could not be added: {note} You can still pick a 1-letter username below.",
+    "proFailed": "You are number {n} to link a Discord account to Mewvo. {bonus} of Pro were due, but they could not be added: {note}",
+    "letter": "You are number {n} to link a Discord account to Mewvo. You can pick a 1-letter username below.",
+    "none": "You are number {n} to link a Discord account to Mewvo. The early-account bonuses went to the first 100 accounts, so there is no bonus for this one."
+  },
+  "recovery": {
+    "title": "Recovery codes",
+    "heading": "Two-step login is on",
+    "lead": "Save these recovery codes somewhere safe. Each one works once, if you lose your authenticator app. They are shown only now.",
+    "back": "Back to Account settings"
+  },
+  "totp": {
+    "title": "Turn on two-step login",
+    "heading": "Turn on two-step login",
+    "lead": "Add Mewvo to an authenticator app, then enter the 6-digit code it shows.",
+    "stepAdd": "In your authenticator app, choose to add an account by entering a key.",
+    "stepKey": "Enter this key: {key} (time based, 6 digits, 30 seconds).",
+    "stepUri": "Or paste this address, if your app accepts it: {uri}",
+    "submit": "Turn on"
+  },
+  "plan": {
+    "heading": "Your plan",
+    "plan": "Plan",
+    "free": "Free",
+    "activeUntil": "Active until",
+    "lastAddedBy": "Last added by",
+    "bonus": "Early-account bonus",
+    "manage": "Manage subscription",
+    "seePlans": "See plans",
+    "foot": "The plan belongs to your Discord account, not to this Mewvo account.",
+    "endsToday": "Ends today",
+    "dayLeft": "{days} day left",
+    "daysLeft": "{days} days left",
+    "source": {
+      "bonus": "Early-account bonus",
+      "purchase": "A purchase",
+      "key": "A key",
+      "owner": "Given by the bot owner"
+    }
+  },
+  "bonus": {
+    "granted": "Link #{n}: {bonus} of Pro, added {date}.",
+    "skipped": "Link #{n}: {bonus} of Pro were due but not added. {reason}",
+    "tooLate": "Link #{n}: no Pro bonus (it went to the first {limit} links).",
+    "none": "Link #{n}: no Pro bonus."
+  },
+  "settings": {
+    "title": "Account settings",
+    "yourAccount": "Your account",
+    "discord": "Discord",
+    "linked": "Linked",
+    "discordId": "ID {id}",
+    "notLinked": "Not linked",
+    "created": "Created",
+    "claimLetter": "Claim your 1-letter username",
+    "unlink": "Unlink Discord",
+    "unlinkFoot": "A Mewvo account needs a linked Discord account: after unlinking, you can only link one again (or delete the account). A plan stays with your Discord account. A Discord account gets the early-account bonus only once.",
+    "yourData": "Your data",
+    "download": "Download my data"
+  },
+  "password": {
+    "heading": "Change password",
+    "current": "Current password",
+    "newHint": "At least {min} characters. You stay logged in here; other logins end.",
+    "submit": "Change password"
+  },
+  "twoStepSettings": {
+    "heading": "Two-step login",
+    "on": "Two-step login is **on** since {date}. Recovery codes left: {left}.",
+    "off": "Two-step login is **off**. When it is on, you also enter a code from an authenticator app when you log in.",
+    "turnOff": "Turn off two-step login",
+    "turnOn": "Turn on two-step login"
+  },
+  "delete": {
+    "heading": "Delete account",
+    "lead": "This deletes your Mewvo account: username, password and two-step login. It does not delete moderation records or a plan on your Discord account. See the [Privacy Policy](/privacy).",
+    "confirm": "Yes, delete my account.",
+    "submit": "Delete my account"
+  },
+  "deleted": {
+    "title": "Account deleted",
+    "heading": "Your account was deleted",
+    "lead": "Your Mewvo account is gone and you are logged out. A plan on your Discord account stays with it, and moderation records are not affected.",
+    "home": "Home"
+  },
+  "errors": {
+    "tooManyTries": "Too many tries. Wait a few minutes and try again.",
+    "notAllowedTitle": "Not allowed",
+    "notAllowed": "This form did not come from this site, or it was open too long. Go back, reload the page and try again. Nothing was changed.",
+    "tooManySignups": "Too many new accounts from your address. Try again later.",
+    "acceptTerms": "Accept the Terms and Conditions and the Privacy Policy to create an account.",
+    "wrongLogin": "Wrong username or password.",
+    "logInAgainTitle": "Log in again",
+    "codeStepExpired": "The code step expired. Log in again with your password.",
+    "tooManyCodes": "Too many wrong codes. Log in again with your password.",
+    "wrongLoginCode": "That code is not right. Try the newest code from your app.",
+    "resetExpiredTitle": "Start again",
+    "resetExpiredLabel": "Forgot password?",
+    "resetExpired": "This password reset expired or was already used. Choose Forgot password? again and log in with Discord.",
+    "noAccountTitle": "No account found",
+    "noAccount": "No Mewvo account is linked to this Discord account, so there is no password to reset. You can create a new account instead.",
+    "wrongResetCode": "That code is not right. Enter the 6-digit code from your app or one of your recovery codes.",
+    "notLinkedTitle": "Not linked",
+    "pickLetter": "Pick one letter or number.",
+    "wrongCurrentPassword": "The current password is wrong. Nothing was changed.",
+    "wrongSetupCode": "That code is not right. Check the time on your phone and enter the newest code.",
+    "wrongTwoStepOff": "The password or the code is wrong. Two-step login is still on.",
+    "confirmDelete": "Tick the box to confirm that you want to delete your account.",
+    "wrongDeleteWithCode": "The password or the code is wrong. Nothing was deleted.",
+    "wrongDelete": "The password is wrong. Nothing was deleted."
+  },
+  "flash": {
+    "passwordReset": "Your new password is saved. Every other login was ended.",
+    "letterClaimed": "Your username is now {username}. Use it to log in.",
+    "letterDeclined": "You kept the username {username}.",
+    "passwordChanged": "Your password was changed. Other logins were ended.",
+    "twoStepAlreadyOn": "Two-step login is already on.",
+    "twoStepAlreadyOff": "Two-step login is already off.",
+    "twoStepOff": "Two-step login is off.",
+    "unlinked": "Your Discord account was unlinked. Link a Discord account again to keep using your Mewvo account."
+  }
+}
