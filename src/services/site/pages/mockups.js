@@ -35,6 +35,8 @@ function dmParts(ctx) {
         stamp: (text) => html`<span class="dc-stamp">${text}</span>`,
         date: (text) => html`<p>${ti('mockups.dm.date', { date: html`<span class="dc-stamp">${text}</span>` })}</p>`,
         caseCode: (code) => html`<p>${ti('mockups.dm.caseCode', { code: html`<code class="dc-code">${code}</code>` })}</p>`,
+        // Last line of every real punishment DM (dmTemplates.withPrivacyLine, Discord "-#" small text).
+        privacy: html`<p class="dc-sub">${ti('mockups.dm.privacy', { url: html`<span class="dc-link">${ctx.origin || 'https://mewvo.com'}/privacy</span>` })}</p>`,
     };
 }
 
@@ -48,7 +50,8 @@ export function warnDmMock(ctx = {}, { caption = '' } = {}) {
 <p>${t('mockups.warnDm.reason')}</p>
 ${dm.date(t('mockups.warnDm.dateValue'))}
 ${dm.caseCode('k7xq2')}
-<p>${t('mockups.warnDm.limit')}</p>`), { className: 'mock-dm', caption });
+<p>${t('mockups.warnDm.limit')}</p>
+${dm.privacy}`), { className: 'mock-dm', caption });
 }
 
 /** The automatic 7-day ban on the third warning: dmTemplates.banDm for a ladder ban. */
@@ -62,7 +65,8 @@ export function banDmMock(ctx = {}, { caption = '' } = {}) {
 ${dm.date(t('mockups.banDm.dateValue'))}
 <p>${ti('mockups.banDm.duration', { end: dm.stamp(t('mockups.banDm.endValue')), relative: dm.stamp(t('mockups.banDm.relativeValue')) })}</p>
 ${dm.caseCode('w8hd3a')}
-<p>${t('mockups.banDm.ladderNote')}</p>`, { time: t('mockups.banDm.time') }), { className: 'mock-dm', caption });
+<p>${t('mockups.banDm.ladderNote')}</p>
+${dm.privacy}`, { time: t('mockups.banDm.time') }), { className: 'mock-dm', caption });
 }
 
 /** The appeal form: appealsHandler.appealModal. */

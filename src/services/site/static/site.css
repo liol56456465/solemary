@@ -228,6 +228,7 @@ button.button { cursor: pointer; }
 .dc-field { margin-bottom: 16px; }
 .dc-field-label { font-size: 14px; font-weight: 600; color: var(--dc-head); }
 .dc-req { color: var(--dc-danger); }
+.dc-sub { font-size: 12px; color: var(--dc-muted); }
 .dc-field-help { font-size: 13px; color: var(--dc-muted); margin-bottom: 8px !important; }
 .dc-input { min-height: 40px; padding: 9px 12px; border-radius: 8px; background: var(--dc-input); font-size: 15px; }
 .dc-input-tall { min-height: 84px; }

@@ -7,7 +7,8 @@
     "frameLabel": "Direct message · Mewvo",
     "appealHere": "**Appeal here:** {invite}",
     "date": "Date: {date}",
-    "caseCode": "Case code: {code}"
+    "caseCode": "Case code: {code}",
+    "privacy": "Privacy: {url}"
   },
   "warnDm": {
     "title": "**Warning 2 of 3 in Mewvo**",
