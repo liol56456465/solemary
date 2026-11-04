@@ -10,7 +10,7 @@ const PUBLIC_URL = 'https://app.mewvo.com';
 const OLD_HOST = 'meowist--sxexx.replit.app';
 const ON = { PUBLIC_URL, CANONICAL_REDIRECT: 'true', NODE_ENV: 'production' };
 
-const req = (originalUrl, { method = 'GET', hostname = OLD_HOST } = {}) => ({ method, hostname, originalUrl });
+const req = (originalUrl, { method = 'GET', hostname = OLD_HOST, host = hostname } = {}) => ({ method, hostname, headers: { host }, originalUrl });
 const on = canonicalSettings(ON);
 
 test('off by default: no CANONICAL_REDIRECT, or anything but "true"', () => {
@@ -84,6 +84,12 @@ test('the target ignores Host / X-Forwarded-Host: only PUBLIC_URL decides', () =
     assert.equal(redirectTarget(req('/x', { hostname: 'evil.com' }), on), 'https://app.mewvo.com/x');
 });
 
+test('raw Host already canonical: a forged X-Forwarded-Host never makes the page redirect to itself', () => {
+    assert.equal(redirectTarget(req('/x', { hostname: 'evil.com', host: 'app.mewvo.com' }), on), null);
+    assert.equal(redirectTarget(req('/x', { hostname: 'evil.com', host: 'APP.mewvo.com:443' }), on), null);
+    assert.equal(redirectTarget(req('/x', { hostname: 'evil.com', host: '127.0.0.1:5000' }), on), null);
+});
+
 // ── Through Express, with a real Host header ──────────────────────────────
 
 async function withApp(env, run) {
@@ -104,7 +110,7 @@ function send(port, { method = 'GET', path = '/', headers = {} } = {}) {
     return new Promise((resolve, reject) => {
         const request = http.request({ host: '127.0.0.1', port, method, path, headers }, (response) => {
             response.resume();
-            response.on('end', () => resolve({ status: response.statusCode, location: response.headers.location, cache: response.headers['cache-control'] }));
+            response.on('end', () => resolve({ status: response.statusCode, location: response.headers.location, cache: response.headers['cache-control'], vary: response.headers.vary }));
         });
         request.on('error', reject);
         request.end();
@@ -117,7 +123,9 @@ test('express: old host GET → 301 with path and query; POST and callbacks unto
         const get = await send(port, { path: '/docs/appeals?x=1', headers: old });
         assert.equal(get.status, 301);
         assert.equal(get.location, 'https://app.mewvo.com/docs/appeals?x=1');
-        assert.equal(get.cache, 'public, max-age=3600');
+        assert.equal(get.cache, 'private, max-age=3600');
+        assert.match(get.vary || '', /Host/i);
+        assert.match(get.vary || '', /X-Forwarded-Host/i);
 
         assert.equal((await send(port, { method: 'POST', path: '/dashboard/logout', headers: old })).status, 200);
         assert.equal((await send(port, { path: '/dashboard/oauth/callback?code=a&state=b', headers: old })).status, 200);
@@ -129,10 +137,10 @@ test('express: old host GET → 301 with path and query; POST and callbacks unto
         assert.notEqual(sneaky.status, 301);
         assert.equal(sneaky.location, undefined);
 
-        // A forged X-Forwarded-Host can only cause a redirect to PUBLIC_URL itself.
+        // A forged X-Forwarded-Host on the canonical host must not make it redirect to itself (loop / cache poisoning).
         const forged = await send(port, { path: '/x', headers: { host: 'app.mewvo.com', 'x-forwarded-host': 'evil.com' } });
-        assert.equal(forged.status, 301);
-        assert.equal(forged.location, 'https://app.mewvo.com/x');
+        assert.notEqual(forged.status, 301);
+        assert.equal(forged.location, undefined);
     });
 });
 

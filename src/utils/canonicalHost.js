@@ -21,8 +21,18 @@ export const EXEMPT_PATHS = Object.freeze([
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 
-/** Redirect responses may be cached for an hour only, so turning the redirect off (rollback) takes effect soon. */
-const REDIRECT_CACHE_CONTROL = 'public, max-age=3600';
+/**
+ * Browsers may keep the redirect for an hour (so a rollback takes effect soon); shared caches may not
+ * store it at all, because the answer depends on Host / X-Forwarded-Host, which a client can forge.
+ */
+const REDIRECT_CACHE_CONTROL = 'private, max-age=3600';
+
+/** The raw Host header without its port, lowercased ("" when missing). */
+function rawHostName(req) {
+    const host = String(req.headers?.host || '').trim().toLowerCase();
+    if (host.startsWith('[')) return host.slice(0, host.indexOf(']') + 1);
+    return host.split(':', 1)[0];
+}
 
 /** The PUBLIC_URL origin + hostname, or null when it is unset or not http(s). */
 export function canonicalOrigin(publicUrl) {
@@ -52,7 +62,7 @@ function isExemptPath(pathname) {
 
 /**
  * The absolute URL to redirect this request to, or null to let it through.
- * `req` needs method, hostname and originalUrl (or url), as Express provides.
+ * `req` needs method, hostname, headers.host and originalUrl (or url), as Express provides.
  */
 export function redirectTarget(req, settings) {
     if (!settings?.enabled || !settings.origin) return null;
@@ -60,6 +70,11 @@ export function redirectTarget(req, settings) {
 
     const hostname = String(req.hostname || '').trim().toLowerCase();
     if (!hostname || hostname === settings.hostname || LOCAL_HOSTS.has(hostname)) return null;
+    // req.hostname follows X-Forwarded-Host (trust proxy). If the raw Host already is the canonical
+    // host, never redirect: a forged X-Forwarded-Host must not turn the canonical page into a
+    // redirect to itself (a loop, and a poisoned cache entry if anything caches it).
+    const rawHost = rawHostName(req);
+    if (rawHost === settings.hostname || LOCAL_HOSTS.has(rawHost)) return null;
 
     const pathAndQuery = String(req.originalUrl || req.url || '');
     // Exactly one leading "/": "//host" and "/\host" are protocol-relative in browsers.
@@ -85,6 +100,8 @@ export function createCanonicalHostRedirect(env = process.env) {
         const target = settings.enabled ? redirectTarget(req, settings) : null;
         if (!target) return next();
         res.set('Cache-Control', REDIRECT_CACHE_CONTROL);
+        res.vary('Host');
+        res.vary('X-Forwarded-Host');
         return res.redirect(301, target);
     };
     middleware.settings = settings;
