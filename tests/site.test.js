@@ -209,7 +209,7 @@ test('with the add button shown, Dashboard is the quiet button', async () => {
     const site = await serve({ env: { PUBLIC_SITE_ENABLED: 'true' } });
     try {
         const body = (await site.get('/')).body;
-        assert.ok(body.includes('<a class="button button-quiet" href="/dashboard">Dashboard</a>'));
+        assert.ok(body.includes('<a class="button button-quiet topbar-more" href="/dashboard">Dashboard</a>'));
         assert.ok(body.includes('data-add-bot>Add to Discord</a>'));
     } finally { await site.close(); }
 });

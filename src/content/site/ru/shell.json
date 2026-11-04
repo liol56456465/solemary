@@ -40,6 +40,11 @@
   "install": {
     "addToDiscord": "Добавить в Discord"
   },
+  "short": {
+    "dashboard": "Панель",
+    "addToDiscord": "Добавить",
+    "logIn": "Войти"
+  },
   "footer": {
     "navLabel": "Нижнее меню",
     "tagline": "Модерация в Discord с кодами дел, лестницей предупреждений и апелляциями, которые читает живой человек.",

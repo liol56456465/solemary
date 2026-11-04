@@ -40,6 +40,11 @@
   "install": {
     "addToDiscord": "Dodaj do Discorda"
   },
+  "short": {
+    "dashboard": "Panel",
+    "addToDiscord": "Dodaj",
+    "logIn": "Zaloguj"
+  },
   "footer": {
     "navLabel": "Stopka",
     "tagline": "Moderacja na Discordzie z kodami spraw, drabiną ostrzeżeń i odwołaniami, które trafiają do człowieka.",
