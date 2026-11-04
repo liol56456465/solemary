@@ -61,9 +61,11 @@ export default {
                 }
             });
 
-            embed.setFooter({ text: 'Powered by Free Dictionary API' });
+            const credit = wiktionaryCredit(data);
+            embed.addFields({ name: 'Source', value: credit.line, inline: false });
+            embed.setFooter({ text: `${credit.footer} · via Free Dictionary API` });
 
-            await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
+            await InteractionHelper.safeEditReply(interaction, { embeds: [embed], allowedMentions: { parse: [] } });
 
             logger.info('Dictionary definition retrieved', {
                 userId: interaction.user.id,
@@ -93,3 +95,22 @@ export default {
         }
     },
 };
+
+const DEFAULT_LICENSE = { name: 'CC BY-SA 3.0', url: 'https://creativecommons.org/licenses/by-sa/3.0' };
+
+/**
+ * Wiktionary credit for a dictionaryapi.dev entry. The API passes on Wiktionary's licence
+ * (`license: { name, url }`) and the page it used (`sourceUrls`); CC BY-SA needs both shown.
+ */
+export function wiktionaryCredit(entry) {
+    const license = entry?.license?.name ? entry.license : DEFAULT_LICENSE;
+    const safeUrl = (u) => (typeof u === 'string' && /^https:\/\/[^\s<>()]+$/.test(u) ? u : null);
+    const licenseUrl = safeUrl(license.url) || DEFAULT_LICENSE.url;
+    const source = safeUrl(Array.isArray(entry?.sourceUrls) ? entry.sourceUrls[0] : null);
+    const wiktionary = source ? `[Wiktionary](${source})` : 'Wiktionary';
+    const name = String(license.name).replace(/[[\]()]/g, '').slice(0, 40);
+    return {
+        line: `Definitions from ${wiktionary} ([${name}](${licenseUrl}))`.slice(0, 1024),
+        footer: 'Definitions from Wiktionary (CC BY-SA)',
+    };
+}

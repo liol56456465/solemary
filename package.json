@@ -1,7 +1,7 @@
 {
   "name": "mewvo",
-  "version": "2.1.0",
-  "description": "Modular Ultimate Community Bot by Touchpoint Support",
+  "version": "3.0.0",
+  "description": "Mewvo: Discord moderation and community bot with enforcement cases, appeals and a web dashboard",
   "main": "src/app.js",
   "type": "module",
   "scripts": {
