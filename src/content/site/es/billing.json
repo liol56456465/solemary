@@ -1,0 +1,279 @@
+{
+  "test": {
+    "label": "Modo de prueba",
+    "notice": "No hay ningún proveedor de pagos conectado. Completar una compra crea un pedido de prueba; no se pide ninguna tarjeta y no se cobra nada a nadie.",
+    "payNote": "Modo de prueba: no se cobra nada"
+  },
+  "vat": {
+    "registered": "Precio con IVA incluido.",
+    "notRegistered": "No se aplica IVA (el vendedor no está registrado a efectos del IVA)."
+  },
+  "consent": {
+    "legend": "Antes de hacer el pedido",
+    "startNow": "Solicito que mi plan empiece ahora. Entiendo que, si desisto en un plazo de 14 días, pagaré los días ya utilizados.",
+    "startNowGift": "Solicito recibir mi clave de regalo ahora. Entiendo que, si desisto en un plazo de 14 días, pagaré los días ya utilizados una vez canjeada la clave.",
+    "terms": "Acepto los [Términos y condiciones](/terms).",
+    "age": "Tengo 18 años o más, o cuento con el permiso de mi madre, padre o tutor legal."
+  },
+  "common": {
+    "back": "← Suscripción",
+    "backToSubscription": "Volver a Suscripción",
+    "goToSubscription": "Ir a Suscripción",
+    "planLine": "Mewvo {plan}",
+    "planPeriod": "Mewvo {plan} · {period}",
+    "planWithPeriod": "{plan} · {period}",
+    "days": "{count} días",
+    "test": "Prueba",
+    "day": {
+      "one": "{count} día",
+      "many": "{count} días",
+      "other": "{count} días"
+    }
+  },
+  "period": {
+    "monthly": "Mensual",
+    "yearly": "Anual"
+  },
+  "kind": {
+    "personal": "Para mí",
+    "gift": "Regalo"
+  },
+  "keyStatus": {
+    "unused": "Sin canjear",
+    "redeemed": "Canjeada",
+    "revoked": "Anulada",
+    "expired": "Caducada (sin canjear)"
+  },
+  "source": {
+    "key": "Añadido por última vez con una clave.",
+    "purchase": "Añadido por última vez con una compra.",
+    "owner": "Otorgado por el propietario del bot.",
+    "bonus": "Bonificación para las primeras cuentas de Mewvo."
+  },
+  "login": {
+    "title": "Iniciar sesión",
+    "heading": "Inicia sesión para continuar",
+    "reason": {
+      "manage": "Inicia sesión con Discord para gestionar tu suscripción.",
+      "buyPlan": "Inicia sesión con Discord para comprar Mewvo {plan}.",
+      "buyAny": "Inicia sesión con Discord para comprar un plan.",
+      "redeem": "Inicia sesión con Discord para canjear una clave.",
+      "withdraw": "Inicia sesión con Discord para desistir de un pedido."
+    },
+    "privacy": "Mewvo solo le pregunta a Discord quién eres (identify): sin correo electrónico, nada más.",
+    "button": "Iniciar sesión con Discord"
+  },
+  "effect": {
+    "new": "Empieza ahora.",
+    "extend": "Se suma a tu tiempo actual de {plan} (ahora hasta el {until}).",
+    "upgrade": "Mejora: tus {remaining} restantes de {fromPlan} pasan a ser {converted} de {plan} y después se suma el tiempo nuevo."
+  },
+  "checkout": {
+    "title": "Pago",
+    "back": "← Planes",
+    "headingGift": "Regalar Mewvo {plan}",
+    "heading": "Mewvo {plan}",
+    "planLabel": "Plan",
+    "pricePerMonth": "{price}/mes",
+    "pricePerYear": "{price}/año",
+    "billingLabel": "Facturación",
+    "monthsFree": "{months} meses gratis",
+    "forLabel": "Para quién es",
+    "forMe": "Para mí",
+    "forMeSub": "empieza ahora en tu cuenta",
+    "asGift": "Como regalo",
+    "asGiftSub": "recibes una clave para regalar",
+    "includes": "{plan} incluye",
+    "planned": "Previsto",
+    "giftTo": "Para (opcional)",
+    "giftToPlaceholder": "Su nombre",
+    "giftMessage": "Mensaje (opcional)",
+    "giftMessagePlaceholder": "Se muestra al abrir el enlace del regalo",
+    "pay": "Pedir y pagar · {amount}",
+    "blocked": "No disponible mientras tu plan esté activo",
+    "privacyNote": "Cómo se usan tus datos: [Política de privacidad](/privacy). Puedes desistir en un plazo de {days} días: [derecho de desistimiento](/withdrawal).",
+    "privacyNoteGift": "Cómo se usan tus datos: [Política de privacidad](/privacy). Puedes desistir en un plazo de {days} días: [derecho de desistimiento](/withdrawal). En un regalo, el derecho de desistimiento te corresponde a ti como comprador, no a quien lo recibe."
+  },
+  "summary": {
+    "title": "Resumen del pedido",
+    "plan": "Plan",
+    "billing": "Facturación",
+    "billingValue": "{period} ({days} días)",
+    "for": "Para",
+    "forGift": "Una clave de regalo",
+    "forAccount": "Tu cuenta ({username})",
+    "total": "Total",
+    "vatNote": "{vat} Un único pago por {days} días. Sin renovación automática: el plan termina si no compras más tiempo.",
+    "giftNote": "Recibes una clave del tipo MEWVO-XXXX-XXXX-XXXX, válida durante un año. Cualquier persona que inicie sesión en este sitio puede canjearla una vez."
+  },
+  "seller": {
+    "title": "Antes de hacer el pedido",
+    "seller": "Vendedor",
+    "legalDetails": "Datos legales",
+    "whatYouGet": "Qué recibes",
+    "whatYouGetGift": "Mewvo {plan} (la lista de arriba), como clave para regalar",
+    "whatYouGetPersonal": "Mewvo {plan} (la lista de arriba) en tu cuenta de Discord",
+    "duration": "Duración",
+    "durationGift": "{days} días desde que se canjea la clave; sin renovación automática",
+    "durationPersonal": "{days} días desde el pedido; sin renovación automática",
+    "totalPrice": "Precio total",
+    "totalPriceValue": "{amount}. {vat}",
+    "withdrawal": "Desistimiento",
+    "withdrawalValue": "{days} días. Si el plan ya ha empezado, pagas los días utilizados. [Cómo desistir](/withdrawal)"
+  },
+  "withdrawalCell": {
+    "withdrawn": "Desistido",
+    "refundDue": "{date} · reembolso pendiente: {amount}",
+    "refundDueTest": "{date} · reembolso pendiente: {amount} (prueba)",
+    "withdraw": "Desistir del contrato aquí",
+    "until": "hasta el {date}"
+  },
+  "plan": {
+    "title": "Tu plan",
+    "none": "Esta cuenta no tiene ningún plan de pago. [Ver planes](/pricing).",
+    "activeUntil": "Activo hasta el {date}.",
+    "addTime": "Añadir más tiempo"
+  },
+  "redeemForm": {
+    "label": "Clave",
+    "button": "Canjear",
+    "terms": "Al canjear una clave aceptas los [Términos y condiciones](/terms). Cómo se usan tus datos: [Política de privacidad](/privacy)."
+  },
+  "account": {
+    "title": "Suscripción",
+    "lead": "Tu plan de Mewvo, tus claves y tus pedidos, con la sesión iniciada como **{username}**.",
+    "nav": "Mi cuenta",
+    "myRecord": "Mi historial",
+    "plans": "Planes",
+    "redeemTitle": "Canjear una clave",
+    "redeemNote": "Una clave añade su plan y su tiempo a tu cuenta. Mismo plan: se suma a la fecha de fin. Un plan superior convierte el tiempo que te queda.",
+    "giftsTitle": "Claves de regalo que compraste",
+    "giftsKey": "Clave",
+    "giftsPlan": "Plan",
+    "giftsTime": "Tiempo",
+    "giftsBought": "Comprada",
+    "giftsStatus": "Estado",
+    "giftTo": "Para {name}",
+    "noGifts": "Aún no tienes claves de regalo. Elige **Como regalo** al pagar para conseguir una.",
+    "ordersTitle": "Pedidos",
+    "ordersOrder": "Pedido",
+    "ordersDate": "Fecha",
+    "ordersPlan": "Plan",
+    "ordersFor": "Para",
+    "ordersAmount": "Importe",
+    "ordersWithdrawal": "Desistimiento",
+    "receipt": "Recibo",
+    "ordersNote": "Puedes desistir de un pedido en un plazo de {days} días desde la compra. [Derecho de desistimiento](/withdrawal).",
+    "noOrders": "Aún no hay pedidos."
+  },
+  "receipt": {
+    "title": "Pedido n.º {id}",
+    "headingGift": "Tu clave de regalo está lista",
+    "heading": "Gracias, tu plan está activo",
+    "giftKey": "Clave de regalo · {plan}, {days} días",
+    "giftKeyTo": "Clave de regalo · {plan}, {days} días · para {name}",
+    "giveAway": "Regala esta clave a quien quieras. Solo tiene que iniciar sesión en este sitio y canjearla en Suscripción → Canjear una clave, o en Discord con `/premium redeem`.",
+    "redeemBy": "Canjéala antes del {date}.",
+    "status": "Estado: {status}.",
+    "directLink": "Enlace directo: {link}",
+    "order": "Pedido",
+    "date": "Fecha",
+    "account": "Cuenta",
+    "plan": "Plan",
+    "for": "Para",
+    "total": "Total",
+    "totalTest": "{amount} (prueba, no cobrado)",
+    "vat": "IVA",
+    "renewal": "Renovación",
+    "renewalNone": "Ninguna: el plan termina si no compras más tiempo",
+    "confirmed": "Confirmaste",
+    "confirmedMeta": "{date} · {version} · Términos del {terms}",
+    "withdrawal": "Desistimiento",
+    "periodEnded": "El plazo de {days} días ha terminado. [Derecho de desistimiento](/withdrawal)",
+    "giftWithdrawal": "En un regalo, el derecho de desistimiento te corresponde a ti como comprador.",
+    "dmNote": "Esta confirmación también se te envía como mensaje directo de Discord (si tienes abiertos los mensajes directos del bot). Guárdala para tus registros."
+  },
+  "gift": {
+    "fromFor": "Un regalo de {from} para {to}",
+    "from": "Un regalo de {from}",
+    "keyFor": "Una clave de Mewvo para {to}",
+    "key": "Una clave de Mewvo",
+    "plan": "Mewvo {plan} · {days} días",
+    "redeemBy": "Canjéala antes del {date}."
+  },
+  "redeem": {
+    "title": "Canjear una clave",
+    "headingGift": "Te han hecho un regalo",
+    "heading": "Canjear una clave",
+    "lead": "Sesión iniciada como **{username}**. El plan de la clave se añade a esta cuenta."
+  },
+  "orderLine": {
+    "personal": "Mewvo {plan} · {period}",
+    "gift": "Mewvo {plan} · {period} (regalo)"
+  },
+  "withdrawList": {
+    "title": "Desistir de un contrato",
+    "heading": "Desistir del contrato aquí",
+    "lead": "Sesión iniciada como **{username}**. Elige el pedido del que quieres desistir. Puedes desistir en un plazo de {days} días desde el pedido, sin necesidad de indicar el motivo.",
+    "item": "**Pedido {order}**: {line}, {amount}, pedido el {date}.",
+    "button": "Desistir del contrato aquí",
+    "none": "Ningún pedido de esta cuenta está dentro de su plazo de desistimiento de {days} días.",
+    "note": "[Tu derecho de desistimiento](/withdrawal) explica las normas y las otras formas de desistir."
+  },
+  "withdrawConfirm": {
+    "title": "Confirmar el desistimiento",
+    "back": "← Desistir del contrato aquí",
+    "heading": "Desistir del pedido n.º {id}",
+    "name": "Tu nombre",
+    "contract": "Contrato",
+    "contractValue": "Pedido {order}: {line}, {amount}, pedido el {date}",
+    "contractValueTest": "Pedido {order}: {line}, {amount} (prueba), pedido el {date}",
+    "account": "Cuenta",
+    "accountValue": "{username} (Discord)",
+    "ack": "Acuse de recibo",
+    "ackValue": "Se te envía como mensaje directo de Discord y se guarda en esta cuenta, en Suscripción",
+    "daysUsed": "Días utilizados",
+    "daysUsedValue": "{used} de {total}",
+    "refundDue": "Reembolso pendiente",
+    "refundTest": "{amount} (pedido de prueba: no se cobró nada y no se devuelve nada)",
+    "statementPersonal": "Declaración: desisto de mi contrato correspondiente a este pedido. Los días no utilizados se retiran ahora de mi plan.",
+    "statementGift": "Declaración: desisto de mi contrato correspondiente a este pedido. Una clave de regalo sin canjear se anula; si ya se canjeó, sus días no utilizados se retiran de ese plan.",
+    "button": "Confirmar el desistimiento"
+  },
+  "withdrawalAck": {
+    "title": "Desistimiento del pedido n.º {id}",
+    "heading": "Hemos recibido tu desistimiento",
+    "received": "Recibido",
+    "receivedValue": "{date} ({utc} UTC)",
+    "name": "Nombre",
+    "account": "Cuenta",
+    "contract": "Contrato",
+    "statement": "Declaración",
+    "statementValue": "Desisto de mi contrato correspondiente a este pedido.",
+    "daysUsed": "Días utilizados",
+    "daysUsedEnded": "{used} de {total} · el plan ha terminado",
+    "refundDue": "Reembolso pendiente",
+    "dmFailed": "No se pudo entregar el mensaje directo de Discord con este acuse de recibo (puede que tengas los mensajes directos cerrados). Guarda o imprime esta página; también queda guardada en tu cuenta.",
+    "dmNote": "Este acuse de recibo también se te envía como mensaje directo de Discord y queda guardado en tu cuenta."
+  },
+  "errors": {
+    "notAllowed": "No permitido",
+    "purchaseOrigin": "Esta compra no procede de este sitio. No se ha comprado nada.",
+    "redeemOrigin": "Este formulario no procede de este sitio. No se ha canjeado nada.",
+    "withdrawOrigin": "Este formulario no procede de este sitio. No se ha registrado ningún desistimiento.",
+    "notFound": "No encontrado",
+    "noOrder": "No hay ningún pedido así en tu cuenta.",
+    "noWithdrawal": "No hay ningún desistimiento para un pedido así en tu cuenta.",
+    "periodOver": "Plazo de desistimiento terminado",
+    "periodOverText": "El plazo de desistimiento de {days} días del pedido n.º {id} terminó el {date}. Contáctanos si crees que es un error.",
+    "tooManyTries": "Demasiados intentos. Espera un minuto y vuelve a intentarlo."
+  },
+  "flash": {
+    "redeemed": "Clave canjeada: Mewvo {plan}, {days} días añadidos. Activo hasta el {until}.",
+    "redeemedConverted": "Clave canjeada: Mewvo {plan}, {days} días añadidos. Se convirtió el tiempo de {fromPlan} que te quedaba. Activo hasta el {until}."
+  },
+  "planButtons": {
+    "buy": "Comprar {plan}",
+    "gift": "Regalarlo"
+  }
+}

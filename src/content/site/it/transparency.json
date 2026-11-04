@@ -1,0 +1,76 @@
+{
+  "title": "Rapporto sulla trasparenza",
+  "description": "Quanti avvertimenti, silenziamenti, espulsioni e ban ha dato il server Mewvo ogni mese, e come sono stati decisi i ricorsi. Solo numeri.",
+  "head": {
+    "heading": "Rapporto sulla trasparenza",
+    "lead": "Quanto spesso lo staff del server Mewvo ha dato avvertimenti, silenziato, espulso e bannato, e com'è andata con i ricorsi, mese per mese. Solo numeri: niente nomi, niente motivi, niente moderatori.",
+    "period": "Dal {from} al {to}, in UTC. Aggiornato al massimo ogni 10 minuti."
+  },
+  "summary": {
+    "warns": "Avvertimenti",
+    "mutes": "Silenziamenti",
+    "kicks": "Espulsioni",
+    "bans": "Ban",
+    "appealsReceived": "Ricorsi ricevuti",
+    "medianDecision": "Tempo mediano per la decisione su un ricorso"
+  },
+  "table": {
+    "month": "Mese",
+    "total": "Totale",
+    "soFar": "finora",
+    "notEnoughDecisions": "decisioni insufficienti"
+  },
+  "actions": {
+    "heading": "Azioni di moderazione",
+    "intro": "Per mese; il mese in corso fino a oggi.",
+    "caption": "Azioni di moderazione per mese, dalla più vecchia. L'ultima riga è il totale.",
+    "columns": {
+      "warns": "Avvertimenti",
+      "mutes": "Silenziamenti",
+      "kicks": "Espulsioni",
+      "bans": "Ban",
+      "ladderBans": "Dei ban: automatici (scala degli avvertimenti)",
+      "automod": "Dati dall'automod",
+      "voided": "Annullati perché errati"
+    }
+  },
+  "appeals": {
+    "heading": "Ricorsi",
+    "intro": "Per mese di invio del ricorso, con il suo esito a oggi.",
+    "caption": "Ricorsi per mese di invio, dal più vecchio. L'ultima riga è il totale.",
+    "columns": {
+      "received": "Ricevuti",
+      "accepted": "Accolti",
+      "denied": "Respinti",
+      "open": "Ancora aperti",
+      "median": "Tempo mediano per una decisione"
+    }
+  },
+  "how": {
+    "heading": "Come vengono calcolati questi numeri",
+    "intro": "Come funzionano i ricorsi è spiegato nella [guida ai ricorsi](/docs/appeals).",
+    "counted": {
+      "question": "Cosa viene contato",
+      "answer": "Ogni avvertimento, silenziamento, espulsione e ban dato sul server Mewvo, nel mese in cui è stato dato (UTC), che sia stato un moderatore, la scala degli avvertimenti o l'automod. I ban automatici della scala e le azioni dell'automod fanno già parte delle quattro colonne principali; le loro colonne mostrano solo quanti ce ne sono stati."
+    },
+    "notCounted": {
+      "question": "Cosa non viene contato",
+      "answer": "Le simulazioni di prova (lo staff vede l'anteprima di un messaggio; a nessuno succede nulla), gli avvertimenti importati dal vecchio bot come storico e le segnalazioni sullo staff. I casi annullati perché errati sono esclusi dalle colonne principali e mostrati a parte nella colonna «Annullati perché errati», nel mese in cui erano stati dati."
+    },
+    "appeals": {
+      "question": "Ricorsi",
+      "answer": "I ricorsi vengono contati nel mese in cui sono stati inviati, con il loro esito a oggi. Un ricorso su un caso annullato in seguito conta comunque: il ricorso c'è stato. I ricorsi chiusi senza decisione vengono contati solo come ricevuti. Il tempo mediano va dall'invio del ricorso alla decisione dello staff, sui ricorsi accolti e respinti di quel mese."
+    },
+    "smallNumbers": {
+      "question": "Numeri piccoli",
+      "answer": "Per evitare che i singoli casi siano riconoscibili, un conteggio di 1 o 2 viene mostrato come «meno di 3», e una mediana viene mostrata solo quando sono stati decisi almeno 3 ricorsi. Quando un mese di una colonna è nascosto in questo modo, il totale indica «almeno» invece del numero esatto."
+    },
+    "neverShown": {
+      "question": "Cosa questa pagina non mostra mai",
+      "answer": "Nomi, ID Discord, codici caso, motivi o quale moderatore ha agito. Solo numeri."
+    }
+  },
+  "error": {
+    "text": "Al momento non è stato possibile caricare il rapporto perché il database non risponde. Meglio nessun numero che numeri sbagliati; riprova tra qualche minuto."
+  }
+}

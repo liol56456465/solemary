@@ -1,0 +1,279 @@
+{
+  "test": {
+    "label": "Modalità test",
+    "notice": "Nessun fornitore di pagamento è collegato. Completare un acquisto crea un ordine di prova; non viene chiesta nessuna carta e nessuno paga nulla.",
+    "payNote": "Modalità test — non viene addebitato nulla"
+  },
+  "vat": {
+    "registered": "Prezzo IVA inclusa.",
+    "notRegistered": "IVA non applicata (il venditore non è registrato ai fini IVA)."
+  },
+  "consent": {
+    "legend": "Prima di ordinare",
+    "startNow": "Chiedo che il mio piano inizi subito. Prendo atto che, se recedo entro 14 giorni, pago i giorni già utilizzati.",
+    "startNowGift": "Chiedo di ricevere subito la mia chiave regalo. Prendo atto che, se recedo entro 14 giorni, pago i giorni già utilizzati dopo il riscatto della chiave.",
+    "terms": "Accetto i [Termini e condizioni](/terms).",
+    "age": "Ho almeno 18 anni, oppure ho il permesso di un genitore o di chi esercita la responsabilità genitoriale."
+  },
+  "common": {
+    "back": "← Abbonamento",
+    "backToSubscription": "Torna ad Abbonamento",
+    "goToSubscription": "Vai ad Abbonamento",
+    "planLine": "Mewvo {plan}",
+    "planPeriod": "Mewvo {plan} · {period}",
+    "planWithPeriod": "{plan} · {period}",
+    "days": "{count} giorni",
+    "test": "Test",
+    "day": {
+      "one": "{count} giorno",
+      "many": "{count} giorni",
+      "other": "{count} giorni"
+    }
+  },
+  "period": {
+    "monthly": "Mensile",
+    "yearly": "Annuale"
+  },
+  "kind": {
+    "personal": "Per me",
+    "gift": "Regalo"
+  },
+  "keyStatus": {
+    "unused": "Non ancora riscattata",
+    "redeemed": "Riscattata",
+    "revoked": "Annullata",
+    "expired": "Scaduta (non riscattata)"
+  },
+  "source": {
+    "key": "Ultima aggiunta con una chiave.",
+    "purchase": "Ultima aggiunta con un acquisto.",
+    "owner": "Assegnato dal proprietario del bot.",
+    "bonus": "Bonus per i primi account Mewvo."
+  },
+  "login": {
+    "title": "Accedi",
+    "heading": "Accedi per continuare",
+    "reason": {
+      "manage": "Accedi con Discord per gestire il tuo abbonamento.",
+      "buyPlan": "Accedi con Discord per acquistare Mewvo {plan}.",
+      "buyAny": "Accedi con Discord per acquistare un piano.",
+      "redeem": "Accedi con Discord per riscattare una chiave.",
+      "withdraw": "Accedi con Discord per recedere da un ordine."
+    },
+    "privacy": "Mewvo chiede a Discord solo chi sei (identify): niente email, nient'altro.",
+    "button": "Accedi con Discord"
+  },
+  "effect": {
+    "new": "Inizia subito.",
+    "extend": "Si aggiunge al tuo tempo {plan} attuale (ora fino al {until}).",
+    "upgrade": "Upgrade: i tuoi {remaining} rimanenti di {fromPlan} diventano {converted} di {plan}, poi si aggiunge il nuovo tempo."
+  },
+  "checkout": {
+    "title": "Checkout",
+    "back": "← Piani",
+    "headingGift": "Regala Mewvo {plan}",
+    "heading": "Mewvo {plan}",
+    "planLabel": "Piano",
+    "pricePerMonth": "{price}/mese",
+    "pricePerYear": "{price}/anno",
+    "billingLabel": "Fatturazione",
+    "monthsFree": "{months} mesi gratis",
+    "forLabel": "Per chi è",
+    "forMe": "Per me",
+    "forMeSub": "inizia subito sul tuo account",
+    "asGift": "Come regalo",
+    "asGiftSub": "ricevi una chiave da regalare",
+    "includes": "{plan} include",
+    "planned": "In programma",
+    "giftTo": "A (facoltativo)",
+    "giftToPlaceholder": "Il suo nome",
+    "giftMessage": "Messaggio (facoltativo)",
+    "giftMessagePlaceholder": "Mostrato quando apre il link del regalo",
+    "pay": "Ordina e paga · {amount}",
+    "blocked": "Non disponibile mentre il tuo piano è attivo",
+    "privacyNote": "Come vengono usati i tuoi dati: [Informativa sulla privacy](/privacy). Puoi recedere entro {days} giorni: [diritto di recesso](/withdrawal).",
+    "privacyNoteGift": "Come vengono usati i tuoi dati: [Informativa sulla privacy](/privacy). Puoi recedere entro {days} giorni: [diritto di recesso](/withdrawal). Per un regalo, il diritto di recesso spetta a te come acquirente, non a chi lo riceve."
+  },
+  "summary": {
+    "title": "Riepilogo dell'ordine",
+    "plan": "Piano",
+    "billing": "Fatturazione",
+    "billingValue": "{period} ({days} giorni)",
+    "for": "Per",
+    "forGift": "Una chiave regalo",
+    "forAccount": "Il tuo account ({username})",
+    "total": "Totale",
+    "vatNote": "{vat} Un unico pagamento per {days} giorni. Nessun rinnovo automatico: il piano termina se non acquisti altro tempo.",
+    "giftNote": "Ricevi una chiave come MEWVO-XXXX-XXXX-XXXX, valida per un anno. Chiunque acceda a questo sito può riscattarla una volta."
+  },
+  "seller": {
+    "title": "Prima di ordinare",
+    "seller": "Venditore",
+    "legalDetails": "Dati legali",
+    "whatYouGet": "Cosa ricevi",
+    "whatYouGetGift": "Mewvo {plan} (l'elenco qui sopra), come chiave da regalare",
+    "whatYouGetPersonal": "Mewvo {plan} (l'elenco qui sopra) sul tuo account Discord",
+    "duration": "Durata",
+    "durationGift": "{days} giorni dal riscatto della chiave; nessun rinnovo automatico",
+    "durationPersonal": "{days} giorni dall'ordine; nessun rinnovo automatico",
+    "totalPrice": "Prezzo totale",
+    "totalPriceValue": "{amount}. {vat}",
+    "withdrawal": "Recesso",
+    "withdrawalValue": "{days} giorni. Se il piano è già iniziato, paghi i giorni utilizzati. [Come recedere](/withdrawal)"
+  },
+  "withdrawalCell": {
+    "withdrawn": "Recesso esercitato",
+    "refundDue": "{date} · rimborso dovuto {amount}",
+    "refundDueTest": "{date} · rimborso dovuto {amount} (test)",
+    "withdraw": "Recedere dal contratto qui",
+    "until": "fino al {date}"
+  },
+  "plan": {
+    "title": "Il tuo piano",
+    "none": "Nessun piano a pagamento su questo account. [Vedi i piani](/pricing).",
+    "activeUntil": "Attivo fino al {date}.",
+    "addTime": "Aggiungi altro tempo"
+  },
+  "redeemForm": {
+    "label": "Chiave",
+    "button": "Riscatta",
+    "terms": "Riscattando una chiave accetti i [Termini e condizioni](/terms). Come vengono usati i tuoi dati: [Informativa sulla privacy](/privacy)."
+  },
+  "account": {
+    "title": "Abbonamento",
+    "lead": "Il tuo piano Mewvo, le chiavi e gli ordini, con accesso come **{username}**.",
+    "nav": "Il mio account",
+    "myRecord": "Il mio storico",
+    "plans": "Piani",
+    "redeemTitle": "Riscatta una chiave",
+    "redeemNote": "Una chiave aggiunge il suo piano e il suo tempo al tuo account. Stesso piano: si aggiunge alla data di fine. Un piano superiore converte il tempo che ti resta.",
+    "giftsTitle": "Chiavi regalo acquistate",
+    "giftsKey": "Chiave",
+    "giftsPlan": "Piano",
+    "giftsTime": "Tempo",
+    "giftsBought": "Acquistata",
+    "giftsStatus": "Stato",
+    "giftTo": "A {name}",
+    "noGifts": "Ancora nessuna chiave regalo. Scegli **Come regalo** al checkout per riceverne una.",
+    "ordersTitle": "Ordini",
+    "ordersOrder": "Ordine",
+    "ordersDate": "Data",
+    "ordersPlan": "Piano",
+    "ordersFor": "Per",
+    "ordersAmount": "Importo",
+    "ordersWithdrawal": "Recesso",
+    "receipt": "Ricevuta",
+    "ordersNote": "Puoi recedere da un ordine entro {days} giorni dall'acquisto. [Diritto di recesso](/withdrawal).",
+    "noOrders": "Ancora nessun ordine."
+  },
+  "receipt": {
+    "title": "Ordine n. {id}",
+    "headingGift": "La tua chiave regalo è pronta",
+    "heading": "Grazie, il tuo piano è attivo",
+    "giftKey": "Chiave regalo · {plan}, {days} giorni",
+    "giftKeyTo": "Chiave regalo · {plan}, {days} giorni · a {name}",
+    "giveAway": "Regala questa chiave a chi vuoi. Basta accedere a questo sito e riscattarla in Abbonamento → Riscatta una chiave, oppure su Discord con `/premium redeem`.",
+    "redeemBy": "Da riscattare entro il {date}.",
+    "status": "Stato: {status}.",
+    "directLink": "Link diretto: {link}",
+    "order": "Ordine",
+    "date": "Data",
+    "account": "Account",
+    "plan": "Piano",
+    "for": "Per",
+    "total": "Totale",
+    "totalTest": "{amount} (test, non addebitato)",
+    "vat": "IVA",
+    "renewal": "Rinnovo",
+    "renewalNone": "Nessuno: il piano termina se non acquisti altro tempo",
+    "confirmed": "Hai confermato",
+    "confirmedMeta": "{date} · {version} · Termini del {terms}",
+    "withdrawal": "Recesso",
+    "periodEnded": "Il periodo di {days} giorni è terminato. [Diritto di recesso](/withdrawal)",
+    "giftWithdrawal": "Per un regalo, il diritto di recesso spetta a te come acquirente.",
+    "dmNote": "Questa conferma ti viene inviata anche come messaggio diretto su Discord (se hai i messaggi diretti dal bot aperti). Conservala per i tuoi archivi."
+  },
+  "gift": {
+    "fromFor": "Un regalo da {from} per {to}",
+    "from": "Un regalo da {from}",
+    "keyFor": "Una chiave Mewvo per {to}",
+    "key": "Una chiave Mewvo",
+    "plan": "Mewvo {plan} · {days} giorni",
+    "redeemBy": "Da riscattare entro il {date}."
+  },
+  "redeem": {
+    "title": "Riscatta una chiave",
+    "headingGift": "Hai ricevuto un regalo",
+    "heading": "Riscatta una chiave",
+    "lead": "Accesso effettuato come **{username}**. Il piano della chiave viene aggiunto a questo account."
+  },
+  "orderLine": {
+    "personal": "Mewvo {plan} · {period}",
+    "gift": "Mewvo {plan} · {period} (regalo)"
+  },
+  "withdrawList": {
+    "title": "Recedere da un contratto",
+    "heading": "Recedere dal contratto qui",
+    "lead": "Accesso effettuato come **{username}**. Scegli l'ordine da cui vuoi recedere. Puoi recedere entro {days} giorni dall'ordine, senza dover fornire alcuna motivazione.",
+    "item": "**Ordine {order}**: {line}, {amount}, ordinato il {date}.",
+    "button": "Recedere dal contratto qui",
+    "none": "Nessun ordine di questo account rientra nel periodo di recesso di {days} giorni.",
+    "note": "[Il tuo diritto di recesso](/withdrawal) spiega le regole e gli altri modi per recedere."
+  },
+  "withdrawConfirm": {
+    "title": "Conferma il recesso",
+    "back": "← Recedere dal contratto qui",
+    "heading": "Recesso dall'ordine n. {id}",
+    "name": "Il tuo nome",
+    "contract": "Contratto",
+    "contractValue": "Ordine {order}: {line}, {amount}, ordinato il {date}",
+    "contractValueTest": "Ordine {order}: {line}, {amount} (test), ordinato il {date}",
+    "account": "Account",
+    "accountValue": "{username} (Discord)",
+    "ack": "Conferma di ricezione",
+    "ackValue": "Inviata a te come messaggio diretto su Discord e conservata su questo account in Abbonamento",
+    "daysUsed": "Giorni utilizzati",
+    "daysUsedValue": "{used} su {total}",
+    "refundDue": "Rimborso dovuto",
+    "refundTest": "{amount} (ordine di prova: non è stato addebitato nulla, non viene rimborsato nulla)",
+    "statementPersonal": "Dichiarazione: recedo dal mio contratto relativo a questo ordine. I giorni non utilizzati vengono tolti subito dal mio piano.",
+    "statementGift": "Dichiarazione: recedo dal mio contratto relativo a questo ordine. Una chiave regalo non riscattata viene annullata; se è stata riscattata, i suoi giorni non utilizzati vengono tolti da quel piano.",
+    "button": "Conferma il recesso"
+  },
+  "withdrawalAck": {
+    "title": "Recesso dall'ordine n. {id}",
+    "heading": "Abbiamo ricevuto il tuo recesso",
+    "received": "Ricevuto",
+    "receivedValue": "{date} ({utc} UTC)",
+    "name": "Nome",
+    "account": "Account",
+    "contract": "Contratto",
+    "statement": "Dichiarazione",
+    "statementValue": "Recedo dal mio contratto relativo a questo ordine.",
+    "daysUsed": "Giorni utilizzati",
+    "daysUsedEnded": "{used} su {total} · il piano è terminato",
+    "refundDue": "Rimborso dovuto",
+    "dmFailed": "Non è stato possibile consegnare il messaggio diretto su Discord con questa conferma di ricezione (forse hai i messaggi diretti chiusi). Salva o stampa questa pagina; resta comunque sul tuo account.",
+    "dmNote": "Questa conferma di ricezione ti viene inviata anche come messaggio diretto su Discord e resta sul tuo account."
+  },
+  "errors": {
+    "notAllowed": "Non consentito",
+    "purchaseOrigin": "Questo acquisto non proviene da questo sito. Non è stato acquistato nulla.",
+    "redeemOrigin": "Questo modulo non proviene da questo sito. Non è stato riscattato nulla.",
+    "withdrawOrigin": "Questo modulo non proviene da questo sito. Non è stato esercitato alcun recesso.",
+    "notFound": "Non trovato",
+    "noOrder": "Non c'è nessun ordine del genere sul tuo account.",
+    "noWithdrawal": "Non c'è nessun recesso per un ordine del genere sul tuo account.",
+    "periodOver": "Periodo di recesso terminato",
+    "periodOverText": "Il periodo di recesso di {days} giorni per l'ordine n. {id} è terminato il {date}. Contattaci se pensi che sia un errore.",
+    "tooManyTries": "Troppi tentativi. Aspetta un minuto e riprova."
+  },
+  "flash": {
+    "redeemed": "Chiave riscattata: Mewvo {plan}, {days} giorni aggiunti. Attivo fino al {until}.",
+    "redeemedConverted": "Chiave riscattata: Mewvo {plan}, {days} giorni aggiunti. Il tempo {fromPlan} che ti restava è stato convertito. Attivo fino al {until}."
+  },
+  "planButtons": {
+    "buy": "Acquista {plan}",
+    "gift": "Regalalo"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "pageTitle": "{title} · Mewvo",
+    "defaultDescription": "Mewvo es un bot de Discord para moderación con códigos de caso, una escala de advertencias, apelaciones, automod, tickets y herramientas para la comunidad.",
+    "shareImageAlt": "Mewvo: moderación en Discord con códigos de caso, una escala de advertencias y apelaciones."
+  },
+  "header": {
+    "skip": "Ir al contenido",
+    "navLabel": "Principal"
+  },
+  "links": {
+    "features": "Funciones",
+    "pricing": "Precios",
+    "docs": "Guía",
+    "commands": "Comandos",
+    "leaderboard": "Clasificación",
+    "myRecord": "Mi historial",
+    "changelog": "Novedades",
+    "dashboard": "Panel de control",
+    "faq": "Preguntas frecuentes",
+    "status": "Estado",
+    "supportServer": "Servidor de soporte",
+    "rules": "Normas",
+    "transparency": "Transparencia",
+    "trustCard": "Ficha de confianza",
+    "ourServer": "Nuestro servidor",
+    "about": "Acerca de",
+    "privacy": "Política de privacidad",
+    "terms": "Términos y condiciones",
+    "legalNotice": "Aviso legal",
+    "contact": "Contacto y denuncias"
+  },
+  "account": {
+    "logIn": "Iniciar sesión",
+    "signUp": "Registrarse",
+    "settings": "Ajustes de la cuenta",
+    "subscription": "Suscripción",
+    "logOut": "Cerrar sesión"
+  },
+  "install": {
+    "addToDiscord": "Añadir a Discord"
+  },
+  "footer": {
+    "navLabel": "Pie de página",
+    "tagline": "Moderación en Discord con códigos de caso, una escala de advertencias y apelaciones que llegan a una persona.",
+    "legalLine": "Mewvo es un bot de Discord gestionado por su propietario para el servidor de Mewvo. No está afiliado a Discord. Los precios están en euros.",
+    "columns": {
+      "product": "Producto",
+      "help": "Ayuda",
+      "community": "Comunidad",
+      "legal": "Legal"
+    }
+  }
+}

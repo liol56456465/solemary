@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "title": "Domande frequenti",
+    "description": "Risposte su Mewvo: cosa fa, la scala degli avvertimenti, i ricorsi, i dati salvati e come contattare lo staff."
+  },
+  "head": {
+    "title": "Domande e risposte",
+    "lead": "Risposte brevi. Per le guide passo passo, vedi la [guida](/docs)."
+  },
+  "support": {
+    "link": "[server di supporto]({url})",
+    "text": "server di supporto"
+  },
+  "about": {
+    "title": "Su Mewvo",
+    "whatDoes": {
+      "q": "Cosa fa Mewvo?",
+      "a": "Modera un server Discord e gestisce le sue funzioni per la community. Lo staff dà avvertimenti, silenzia, espelle e banna da un unico pannello; ogni azione diventa un caso con un codice e il membro riceve un messaggio diretto che spiega perché, fino a quando e come fare ricorso. Intorno a questo: una scala degli avvertimenti, ricorsi, automod, ticket e modmail, una dashboard web, livelli e altri strumenti per la community. La [pagina delle funzionalità](/features) elenca tutto."
+    },
+    "notYet": {
+      "q": "Perché non posso ancora aggiungerlo al mio server?",
+      "a": "Per ora Mewvo è creato per il server Mewvo e funziona solo lì. Aprirlo ad altri server richiede prima altro lavoro, come impostazioni e limiti per server. Quando si aprirà, su questo sito comparirà un pulsante per aggiungerlo al tuo server, e partiranno anche i piani a pagamento della pagina dei prezzi.",
+      "aPublic": "Ora puoi: usa il pulsante Aggiungi a Discord in cima alla pagina."
+    },
+    "free": {
+      "q": "È gratis?",
+      "a": "Sì. Tutto quello che fa oggi è gratis. I piani a pagamento con limiti più alti sono previsti per quando Mewvo si aprirà ad altri server; vedi [Prezzi](/pricing)."
+    }
+  },
+  "appeals": {
+    "title": "Avvertimenti e ricorsi",
+    "ladder": {
+      "q": "Come funziona la scala degli avvertimenti?",
+      "a": "Gli avvertimenti 1 e 2 sono un messaggio diretto. L'avvertimento 3 è un ban automatico di 7 giorni. Dopo, l'avvertimento successivo è un ban di 30 giorni, e quello dopo ancora un ban permanente contro cui puoi fare ricorso per 6 mesi. La scala non si azzera mai da sola; un ricorso accolto contro un ban della scala la fa scendere di un gradino. [La guida completa](/docs/warnings)."
+    },
+    "howTo": {
+      "q": "Come faccio ricorso?",
+      "a": "Usa il link nel messaggio diretto che hai ricevuto. Premi **Appeal** sul pannello dei ricorsi e scrivi perché la sanzione dovrebbe essere revocata, con il codice caso del messaggio diretto. Se sei bannato, usa il pannello nel {support}. Ricevi la decisione in un messaggio diretto. [Come funzionano i ricorsi](/docs/appeals)."
+    },
+    "lostCode": {
+      "q": "Ho perso il mio codice caso.",
+      "a": "Premi **My standing** sul pannello dei ricorsi: elenca i tuoi avvertimenti e gli eventuali ban o silenziamenti attivi con i loro codici.",
+      "aPortal": "Premi **My standing** sul pannello dei ricorsi: elenca i tuoi avvertimenti e gli eventuali ban o silenziamenti attivi con i loro codici. [Il mio storico](/me) su questo sito mostra tutti i tuoi casi."
+    },
+    "everyPunishment": {
+      "q": "Si può fare ricorso contro ogni sanzione?",
+      "a": "Contro la maggior parte sì. Contro ban e silenziamenti finché durano, contro avvertimenti ed espulsioni entro 30 giorni. Contro un ban permanente della scala non si può più fare ricorso dopo 6 mesi o dopo un ricorso respinto, e lo staff può indicare un ban grave come non impugnabile. Il messaggio diretto dice sempre quale caso è."
+    }
+  },
+  "data": {
+    "title": "Dati e contatti",
+    "stored": {
+      "q": "Quali dati salva Mewvo?",
+      "a": "ID Discord, i tuoi livelli e XP, casi di moderazione, ricorsi e ciò che scrivi nei moduli o nei ticket, più alcune cose che scegli di salvare, come un compleanno. Niente email, niente password, mai venduti. La [pagina sulla privacy](/privacy) ha l'elenco completo, e `/wipedata` elimina i tuoi livelli, il saldo, lo stato AFK e il compleanno in quel server, oltre alla tua lista di cose da fare, ai promemoria e all'accesso Discord salvato. I registri di moderazione restano; il perché è spiegato nella pagina sulla privacy."
+    },
+    "reachStaff": {
+      "q": "Come contatto lo staff?",
+      "a": "In tre modi: scrivi in privato al bot e scegli **Send to staff** (modmail), apri un ticket dal pannello dei ticket, oppure chiedi nel {support}. Per segnalare un membro dello staff, usa **Report staff** sul pannello dei ricorsi nel server di supporto; solo gli amministratori vedono queste segnalazioni."
+    },
+    "down": {
+      "q": "Il bot è offline?",
+      "a": "Controlla la [pagina dello stato](/status). Mostra se il bot è online e si aggiorna ogni minuto."
+    }
+  }
+}

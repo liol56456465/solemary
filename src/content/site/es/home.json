@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "description": "Mewvo es un bot de Discord para moderación con códigos de caso y mensajes directos, una escala de advertencias en tres pasos, apelaciones que llegan a una persona, automod, tickets y herramientas para la comunidad."
+  },
+  "actions": {
+    "readDocs": "Lee la guía",
+    "joinServer": "Únete al servidor",
+    "joinSupportServer": "Únete al servidor de soporte",
+    "openDashboard": "¿Mewvo ya está en tu servidor? [Abre el panel de control]({url})"
+  },
+  "hero": {
+    "title": "Un bot de Discord para moderación y apelaciones",
+    "lead": "Mewvo advierte, silencia, expulsa y banea desde un solo panel. El miembro recibe un mensaje directo con el motivo, la hora de fin y cómo apelar. Tu staff recibe un caso con un código corto para consultarlo más adelante.",
+    "notPublic": "Por ahora Mewvo solo funciona en el servidor de Mewvo. Todavía no se puede añadir a otros servidores.",
+    "dmCaption": "El mensaje directo que recibe un miembro con la segunda advertencia. El mismo texto que envía el bot."
+  },
+  "dashboard": {
+    "title": "Todo en un solo lugar",
+    "text": "Miembros, casos, apelaciones y todos los ajustes en el navegador. Inicia sesión con Discord; cada cambio queda en un registro de auditoría. [Un recorrido por el panel de control](/docs/using-the-dashboard)",
+    "shotAlt": "La vista general del panel de control de Mewvo: elementos que requieren al staff, moderación de los últimos siete días, estado del bot y progreso de la configuración."
+  },
+  "ladder": {
+    "title": "Las mismas normas para todos",
+    "text": "Las advertencias suben por una escala fija por miembro y servidor. Las dos primeras son un mensaje directo. La tercera es un baneo de 7 días, luego de 30 días y luego permanente. Los baneos manuales no la mueven, y una apelación aceptada la baja un escalón.\n\nLos miembros pueden consultar en qué punto están, así que a nadie le sorprende un baneo. [Cómo aumentan las advertencias](/docs/warnings)"
+  },
+  "what": {
+    "title": "Qué hace",
+    "text": "Primero la moderación, junto con las herramientas para la comunidad que un servidor necesita. [Todas las funciones](/features)",
+    "items": {
+      "enforcement": {
+        "name": "Moderación",
+        "text": "Advierte, silencia, expulsa y banea desde un solo panel que primero muestra el historial del miembro. Cada acción es un caso con un código corto que el staff puede editar, anular o al que puede añadir pruebas más adelante.",
+        "link": "Primeros pasos"
+      },
+      "appeals": {
+        "name": "Apelaciones",
+        "text": "Los miembros apelan con un formulario breve. Las apelaciones de baneos abren un canal en el servidor de soporte, así que funcionan incluso después de un baneo, y decide una persona del staff.",
+        "link": "Cómo funcionan las apelaciones"
+      },
+      "automod": {
+        "name": "Automod",
+        "text": "Catorce reglas, desde enlaces de estafa hasta menciones masivas. Cada acción automática es un caso normal, con una tarjeta en el canal del staff para mantenerla, deshacerla o cambiarla.",
+        "link": "Reglas del automod"
+      },
+      "tickets": {
+        "name": "Tickets y modmail",
+        "text": "Un panel de tickets, y los miembros pueden escribir al bot por mensaje directo para contactar con el staff. Ambos se convierten en canales de tu servidor; las líneas que empiezan por // quedan como internas.",
+        "link": "Tickets y modmail"
+      },
+      "logging": {
+        "name": "Registros y herramientas",
+        "text": "Entradas, salidas, cambios de roles, mensajes editados y eliminados y más, cada uno en el canal que elijas. Junto a ello están la verificación y las herramientas del servidor.",
+        "link": "Registros y herramientas"
+      },
+      "community": {
+        "name": "Herramientas para la comunidad",
+        "text": "Niveles, etiquetas, sugerencias, starboard, mensajes fijos, feeds de YouTube, roles por reacción, sorteos, cumpleaños, solicitudes, canales de voz que se crean al entrar, mensajes de bienvenida.",
+        "link": "Todas las herramientas para la comunidad"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Gratis",
+    "text": "Todo lo anterior es gratis. Los planes de pago solo amplían límites, como las etiquetas y los mensajes fijos. [Planes y precios](/pricing)"
+  },
+  "help": {
+    "title": "¿Preguntas?",
+    "text": "Empieza por la [guía](/docs) o por las [preguntas y respuestas](/faq).",
+    "support": "¿Sigues atascado? Pregunta en el [servidor de soporte]({url}); te responde una persona."
+  }
+}

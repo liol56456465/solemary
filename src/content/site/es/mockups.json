@@ -1,0 +1,80 @@
+{
+  "bot": {
+    "appTag": "APP",
+    "timeToday": "hoy a las 14:05"
+  },
+  "dm": {
+    "frameLabel": "Mensaje directo · Mewvo",
+    "appealHere": "**Apela aquí:** {invite}",
+    "date": "Fecha: {date}",
+    "caseCode": "Código de caso: {code}",
+    "privacy": "Privacidad: {url}"
+  },
+  "warnDm": {
+    "title": "**Advertencia 2 de 3 en Mewvo**",
+    "by": "Por: Moderador",
+    "reason": "Motivo: spam en #general",
+    "dateValue": "jueves, 29 de octubre de 2026, 14:05",
+    "limit": "Con 3 advertencias serás baneado."
+  },
+  "banDm": {
+    "time": "sábado a las 19:40",
+    "title": "**Baneado de Mewvo**",
+    "by": "Por: Mewvo",
+    "reason": "Motivo: se alcanzó el límite de advertencias",
+    "dateValue": "sábado, 31 de octubre de 2026, 19:40",
+    "duration": "Duración: 7 días, termina el {end} {relative}",
+    "endValue": "sábado, 7 de noviembre de 2026, 19:40",
+    "relativeValue": "(dentro de 7 días)",
+    "ladderNote": "Apelar este código también elimina la advertencia que causó este baneo."
+  },
+  "appealForm": {
+    "frameLabel": "Formulario de apelación · se abre con el botón Appeal",
+    "title": "Apelar una sanción",
+    "reason": {
+      "label": "¿Por qué debería retirarse?",
+      "help": "¿Por qué deberían quitarte el baneo, el silenciamiento o la advertencia?",
+      "example": "Publiqué el mismo enlace tres veces porque creía que no se había enviado. Ahora conozco la norma y no volverá a pasar."
+    },
+    "caseCode": {
+      "label": "Código de caso",
+      "help": "Del mensaje directo que recibiste con la sanción, p. ej. k7m2qx."
+    },
+    "moreInfo": {
+      "label": "Más información (opcional)",
+      "help": "Cualquier otra cosa que los administradores deban saber."
+    },
+    "cancel": "Cancelar",
+    "submit": "Enviar"
+  },
+  "ladder": {
+    "frameLabel": "Escala de advertencias · por miembro y servidor",
+    "steps": {
+      "warn1": {
+        "key": "Advertencia 1",
+        "what": "Mensaje directo: “Advertencia 1 de 3”",
+        "result": "Nivel 0"
+      },
+      "warn2": {
+        "key": "Advertencia 2",
+        "what": "Mensaje directo: “Advertencia 2 de 3”",
+        "result": "Nivel 0"
+      },
+      "warn3": {
+        "key": "Advertencia 3",
+        "what": "Baneo automático",
+        "result": "7 días · nivel 1"
+      },
+      "level2": {
+        "key": "Siguiente advertencia",
+        "what": "Baneo automático",
+        "result": "30 días · nivel 2"
+      },
+      "level3": {
+        "key": "Siguiente advertencia",
+        "what": "Baneo permanente",
+        "result": "Apelable durante 6 meses · nivel 3"
+      }
+    }
+  }
+}
