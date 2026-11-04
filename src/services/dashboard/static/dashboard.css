@@ -861,6 +861,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 fieldset.events { display: flex; flex-wrap: wrap; gap: 8px 16px; }
 fieldset.weekdays { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
 fieldset.weekdays > legend { font-weight: 600; font-size: 14px; margin-bottom: 8px; padding: 0; }
+fieldset.quiz-slot { margin: 0 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+fieldset.quiz-slot > legend { font-weight: 600; font-size: 14px; margin-bottom: 8px; padding: 0; }
 fieldset.events > label.check:first-child { flex-basis: 100%; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 
 .settings-form { margin: 4px 0 12px; }

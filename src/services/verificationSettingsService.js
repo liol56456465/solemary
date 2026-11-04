@@ -6,7 +6,8 @@ import { z } from 'zod';
 import { getGuildConfig } from './config/guildConfig.js';
 import { validateAutoVerifyCriteria } from './verificationService.js';
 import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
-import { nullableSnowflake, parseSettingsPatch, snowflake, stripUndefined, trimmedText } from '../utils/settingsValidation.js';
+import { nullableSnowflake, parseSettingsPatch, snowflake, stripUndefined, trimmedText, validationError } from '../utils/settingsValidation.js';
+import { QuizPatchSchema, normalizeQuiz } from './verificationQuiz.js';
 
 const LABELS = {
     enabled: 'Verification enabled',
@@ -21,6 +22,10 @@ const LABELS = {
     'autoVerify.accountAgeDays': 'Account age (days)',
     'autoVerify.roleId': 'Auto-verify role',
     'autoVerify.configuredVia': 'Auto-verify source',
+    quiz: 'Rules quiz',
+    'quiz.enabled': 'Rules quiz',
+    'quiz.questions': 'Quiz questions',
+    'quiz.cooldownMinutes': 'Quiz retry wait',
 };
 
 const text = (label, max) =>
@@ -55,6 +60,8 @@ const VerificationPatchSchema = z.strictObject({
     message: text(LABELS.message, 2000).optional(),
     buttonText: trimmedText(LABELS.buttonText, 80).optional(),
     autoVerify: AutoVerifyPatchSchema.optional(),
+    // Rules quiz before verification (services/verificationQuiz.js); merged like autoVerify.
+    quiz: QuizPatchSchema.optional(),
 });
 
 function parsePatch(schema, patch, guildId) {
@@ -78,14 +85,20 @@ export async function getVerificationSettings(client, guildId) {
  * Validates `patch` and merges it into guildConfig.verification under the row
  * lock; a nested `autoVerify` patch is merged into the stored autoVerify.
  * Returns { before, after } (verification objects). Throws TitanBotError(VALIDATION).
+ * `expectQuizQuestions`: refuse (VALIDATION) unless the stored quiz questions still equal
+ * this list, checked under the lock (the dashboard's move/remove of one question).
  */
-export async function updateVerificationSettings(client, guildId, patch) {
+export async function updateVerificationSettings(client, guildId, patch, { expectQuizQuestions } = {}) {
     const parsed = stripUndefined(parsePatch(VerificationPatchSchema, patch, guildId));
     const autoVerifyPatch = parsed.autoVerify ? stripUndefined(parsed.autoVerify) : null;
+    const quizPatch = parsed.quiz ? stripUndefined(parsed.quiz) : null;
     let before;
 
     const saved = await updateGuildConfigAtomic(client, guildId, (current) => {
         before = cloneVerification(current.verification);
+        if (expectQuizQuestions && JSON.stringify(normalizeQuiz(before.quiz).questions) !== JSON.stringify(expectQuizQuestions)) {
+            throw validationError('quiz questions changed concurrently', 'The quiz questions changed in the meantime. Reload the page and try again.', { guildId });
+        }
         const next = { ...before, ...parsed };
         if (autoVerifyPatch) {
             const autoVerify = { ...(before.autoVerify || {}), ...autoVerifyPatch };
@@ -94,6 +107,7 @@ export async function updateVerificationSettings(client, guildId, patch) {
             }
             next.autoVerify = autoVerify;
         }
+        if (quizPatch) next.quiz = { ...(before.quiz || {}), ...quizPatch };
         return { ...current, verification: next };
     }, { operation: 'updateVerificationSettings' });
 
@@ -102,14 +116,16 @@ export async function updateVerificationSettings(client, guildId, patch) {
 
 /**
  * Replaces guildConfig.verification (only that key) under the row lock; used by
- * /verification setup. Returns { before, after }.
+ * /verification setup. The rules quiz is kept unless `verification` has its own.
+ * Returns { before, after }.
  */
 export async function setVerificationSettings(client, guildId, verification) {
     const parsed = stripUndefined(parsePatch(VerificationPatchSchema, verification, guildId));
     let before;
     const saved = await updateGuildConfigAtomic(client, guildId, (current) => {
         before = cloneVerification(current.verification);
-        return { ...current, verification: parsed };
+        const keepQuiz = before.quiz && !('quiz' in parsed) ? { quiz: before.quiz } : {};
+        return { ...current, verification: { ...parsed, ...keepQuiz } };
     }, { operation: 'setVerificationSettings' });
     return { before, after: cloneVerification(saved?.verification) };
 }

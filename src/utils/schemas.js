@@ -55,7 +55,10 @@ const VerificationConfigSchema = z
     roleId: z.string().optional(),
     message: z.string().optional(),
     buttonText: z.string().default('Verify'),
-    autoVerify: AutoVerifyConfigSchema
+    autoVerify: AutoVerifyConfigSchema,
+    // Rules quiz (services/verificationQuiz.js). Lenient on purpose so a stored config always
+    // parses; normalizeQuiz drops what is invalid and writes are checked in the settings service.
+    quiz: z.unknown().optional()
   })
   .optional();
 

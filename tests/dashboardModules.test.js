@@ -274,9 +274,10 @@ function makeServices() {
         updateVerificationSettings: async (c, g, patch) => {
             record('updateVerificationSettings', [patch]);
             const before = clone(s.verification);
-            const { autoVerify, ...rest } = patch;
+            const { autoVerify, quiz, ...rest } = patch;
             Object.assign(s.verification, rest);
             if (autoVerify) Object.assign(s.verification.autoVerify, autoVerify);
+            if (quiz) s.verification.quiz = { ...(s.verification.quiz || {}), ...clone(quiz) };
             return { before, after: clone(s.verification) };
         },
         validateAutoVerifyCriteria: (criteria, days) => {
@@ -685,6 +686,14 @@ function get(h, module) {
     return run(h, h.d.modulePage, { method: 'GET', params: { module }, headers: { cookie: h.cookie }, query: {} });
 }
 
+// Rules quiz (Verification page): two saved questions.
+function seedQuiz(state) {
+    state.verification.quiz = { enabled: true, cooldownMinutes: 5, questions: [
+        { question: 'Q one', answers: ['A', 'B'], correctIndex: 0 },
+        { question: 'Q two', answers: ['C', 'D', 'E'], correctIndex: 2 },
+    ] };
+}
+
 // Server rules (Rules page): two rules, the first with a <b> in its text (escaping).
 const RULE_A = 'aaaa1111';
 const RULE_B = 'bbbb2222';
@@ -834,6 +843,13 @@ const CASES = {
         'auto-enabled': { seed: (s) => { s.welcome.roleIds = []; }, form: { enabled: 'true' }, service: 'updateVerificationSettings', bad: { form: { enabled: 'true' }, message: /auto roles are configured/ } },
         auto: { form: { criteria: 'account_age', accountAgeDays: '7', autoRoleId: '' }, service: 'updateVerificationSettings', bad: { form: { criteria: 'account_age', accountAgeDays: '' }, message: /Account age must be/ } },
         redirect: { form: { verifySuccessRedirect: 'https://example.com/ok' }, service: 'updateSettings', bad: { form: { verifySuccessRedirect: 'javascript:alert(1)' }, message: /https/ } },
+        'quiz-enabled': { form: { enabled: 'true' }, service: 'updateVerificationSettings', bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
+        quiz: { form: { q1: 'Is spam allowed?', q1a1: 'No', q1a2: 'Yes', q1c: '1', cooldownMinutes: '5' }, service: 'updateVerificationSettings',
+            bad: { form: { q1: 'Is spam allowed?', q1a1: 'No', q1c: '1', cooldownMinutes: '5' }, message: /give 2 to 4 answers/ } },
+        'quiz-move': { seed: seedQuiz, form: { index: '0', direction: 'down', question: 'Q one' }, service: 'updateVerificationSettings',
+            bad: { seed: seedQuiz, form: { index: '0', direction: 'up', question: 'Q one' }, message: /already at the top/ } },
+        'quiz-remove': { seed: seedQuiz, form: { index: '1', question: 'Q two' }, service: 'updateVerificationSettings',
+            bad: { seed: seedQuiz, form: { index: '1', question: 'Q one' }, message: /changed in the meantime/ } },
     },
     'reaction-roles': {
         'panel-create': { form: { channelId: TEXT, title: 'Pick roles', description: 'Colours', roleIds: [ROLE_OK, ROLE_OK2] }, service: 'createReactionRolePanel', admin: true,
@@ -3370,4 +3386,64 @@ test('leveling: changing a member level on the dashboard re-syncs reward roles; 
     assert.equal(ok.statusCode, 303, 'the level change still counts');
     assert.equal(broken.state.levels[MEMBER], 4);
     assert.match(JSON.stringify(await broken.sessions.get(broken.session.id)), /could not be changed/);
+});
+
+// ── Rules quiz (Verification page) ────────────────────────────────────────
+
+test('verification / rules quiz: bad questions are refused (400, nothing saved); a valid form maps the correct answer', async () => {
+    const base = { q1: 'Is spam allowed?', q1a1: 'No', q1a2: 'Yes', q1c: '1', cooldownMinutes: '5' };
+    for (const [form, message] of [
+        [{ ...base, q1: 'x'.repeat(151) }, /Too long: at most 150/],
+        [{ ...base, q1a2: 'y'.repeat(81) }, /Too long: at most 80/],
+        [{ ...base, q1c: '3' }, /correct answer \(answer 3\) is empty/],
+        [{ ...base, q1c: '9' }, /correct answer must be between 1 and 4/],
+        [{ ...base, q1a2: 'no' }, /must all be different/],
+        [{ ...base, q1: '' }, /Question 1: write the question/],
+        [{ ...base, cooldownMinutes: '0' }, /between 1 and 60/],
+        [{ ...base, cooldownMinutes: '61' }, /between 1 and 60/],
+    ]) {
+        const h = await setup();
+        const res = await post(h, 'verification', 'quiz', form);
+        assert.equal(res.statusCode, 400, JSON.stringify(form).slice(0, 80));
+        assert.match(res.body, message);
+        assert.ok(!h.calls.some((c) => c.name === 'updateVerificationSettings'), 'nothing saved');
+    }
+    const h = await setup();
+    const res = await post(h, 'verification', 'quiz', { q2: 'Second slot', q2a1: 'One', q2a3: 'Three', q2c: '3', q1: '', cooldownMinutes: '10' });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(h.state.verification.quiz, { questions: [{ question: 'Second slot', answers: ['One', 'Three'], correctIndex: 1 }], cooldownMinutes: 10 });
+});
+
+test('verification / rules quiz: on with no questions warns it is treated as off; moving and removing questions', async () => {
+    const h = await setup();
+    h.state.verification.quiz = { enabled: true, questions: [] };
+    let page = await get(h, 'verification');
+    assert.match(page.body, /no valid questions, so it is treated as off/);
+    assert.match(page.body, /action="\/dashboard\/verification\/quiz"/);
+    seedQuiz(h.state);
+    page = await get(h, 'verification');
+    assert.ok(!/treated as off/.test(page.body));
+    assert.match(page.body, /Right answer: E/);
+    assert.equal((await post(h, 'verification', 'quiz-move', { index: '1', direction: 'up', question: 'Q two' })).statusCode, 303);
+    assert.deepEqual(h.state.verification.quiz.questions.map((q) => q.question), ['Q two', 'Q one']);
+    assert.equal((await post(h, 'verification', 'quiz-remove', { index: '0', question: 'Q two' })).statusCode, 303);
+    assert.deepEqual(h.state.verification.quiz.questions.map((q) => q.question), ['Q one']);
+    assert.equal(h.state.verification.quiz.enabled, true, 'the switch is kept');
+});
+
+test('verification / rules quiz: "Suggest questions from my rules" fills drafts from the rules and saves nothing', async () => {
+    const h = await setup();
+    seedRules(h.state);
+    const page = await run(h, h.d.modulePage, { method: 'GET', params: { module: 'verification' }, headers: { cookie: h.cookie }, query: { quiz: 'suggest' } });
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /2 suggested questions are filled in below/);
+    assert.match(page.body, /name="q1" value="Which of these is a rule here\?"/);
+    assert.match(page.body, /value="No spam"/);
+    assert.match(page.body, /value="Be kind"/);
+    assert.equal(h.calls.filter((c) => c.name === 'updateVerificationSettings').length, 0);
+    assert.equal(h.auditRows.length, 0);
+    // Without rules: a hint instead of drafts.
+    const empty = await setup();
+    const none = await run(empty, empty.d.modulePage, { method: 'GET', params: { module: 'verification' }, headers: { cookie: empty.cookie }, query: { quiz: 'suggest' } });
+    assert.match(none.body, /no server rules to suggest from yet/);
 });
