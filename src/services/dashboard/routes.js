@@ -29,7 +29,8 @@
 //                                   then the same checks as every settings form
 //   POST /dashboard/logout          CSRF token + same-origin check, then back to the website (/)
 //   /dashboard/owner/…              the Owner area (ownerRoutes.js): bot profile, servers, users,
-//                                   blacklist, health + maintenance, command sync, announce.
+//                                   blacklist, health + maintenance, command sync, announce, and
+//                                   the Website editor (websiteRoutes.js: site text and images).
 //                                   OWNER_IDS only (checked live on every request; anyone else
 //                                   gets 404), POSTs also need a login younger than 12 h.
 //   /staff, /staff/*                → 301 /dashboard (the old read-only staff dashboard)
@@ -102,6 +103,8 @@ import { createMemberToolsHandlers, defaultMemberTools } from './memberToolsRout
 import { createIncidentHandlers, defaultIncidents } from './incidentRoutes.js';
 import { createConfirmStore } from './confirmTokens.js';
 import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
+import { createWebsiteHandlers, defaultWebsiteDeps } from './websiteRoutes.js';
+import { IMAGE_MAX_BYTES as SITE_IMAGE_MAX_BYTES } from '../site/siteImages.js';
 import { InputError, plainText } from './forms.js';
 import { MAX_UPLOAD_BYTES, MultipartError, parseMultipart } from './multipart.js';
 import { createPgSessionStore } from './sessionStore.js';
@@ -248,7 +251,7 @@ export function createDashboard({
     services = defaultServices, auditStore = null, modules = MODULES, env = process.env,
     enforcement = defaultEnforcement, confirms = createConfirmStore(), owner = defaultOwnerDeps,
     inbox = defaultInboxData, inboxBadge = false,
-    memberTools = defaultMemberTools, incidents = defaultIncidents,
+    memberTools = defaultMemberTools, incidents = defaultIncidents, website = defaultWebsiteDeps,
 }) {
     const secret = settings.sessionSecret;
     const guildId = settings.mainGuildId;
@@ -287,7 +290,7 @@ export function createDashboard({
 
     /** Owner-area changes are for the bot owners' eyes only (Audit page, Overview). */
     function hiddenAuditModules(req) {
-        return (owner.isBotOwner || defaultOwnerDeps.isBotOwner)(req.dashboard?.session?.userId) ? [] : ['owner'];
+        return (owner.isBotOwner || defaultOwnerDeps.isBotOwner)(req.dashboard?.session?.userId) ? [] : ['owner', 'website'];
     }
 
     function shellOf(req) {
@@ -922,6 +925,8 @@ export function createDashboard({
     const ownerHandlers = createOwnerHandlers({
         client, guildId, settings, sessions, audits, confirms, sendHtml, fail, shellOf, checkPost, postLimiter, owner,
     });
+    // Owner → Website (websiteRoutes.js): the same owner checks, through the owner helpers.
+    const websiteHandlers = createWebsiteHandlers({ sendHtml, fail, helpers: ownerHandlers.helpers, website });
 
     async function logout(req, res) {
         if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'The logout request did not come from this dashboard.', req);
@@ -965,7 +970,7 @@ export function createDashboard({
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
         overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, help, setup,
-        sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
+        sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, website: websiteHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
         incidents: createIncidentHandlers({ client, guildId, incidents, sendHtml, shellOf, notFound }),
     };
 }
@@ -991,13 +996,13 @@ function safe(handler) {
  * express.raw for multipart bodies with a hard limit; a body that is too large (or
  * broken) becomes a plain error page instead of Express's default error output.
  */
-export function uploadBody(limitBytes) {
+export function uploadBody(limitBytes, maxLabel = '8 MB') {
     const raw = express.raw({ type: 'multipart/form-data', limit: limitBytes });
     return (req, res, next) => raw(req, res, (error) => {
         if (!error) return next();
         const tooLarge = error.status === 413 || error.type === 'entity.too.large';
         return res.status(tooLarge ? 413 : 400).type('html')
-            .send(messagePage(tooLarge ? 'Too large' : 'Upload refused', tooLarge ? 'The image is larger than 8 MB.' : 'The upload could not be read.'));
+            .send(messagePage(tooLarge ? 'Too large' : 'Upload refused', tooLarge ? `The image is larger than ${maxLabel}.` : 'The upload could not be read.'));
     });
 }
 
@@ -1104,6 +1109,15 @@ export function dashboardRouter(d) {
     router.post('/owner/premium/roles', ...owner, form, safe(ow.premiumRolesSave));
     router.post('/owner/erase/preview', ...owner, form, safe(ow.erasePreview));
     router.post('/owner/erase', ...owner, form, safe(ow.eraseRun));
+    // Owner → Website: texts up to 5,000 characters (non-Latin text is ~6 bytes per character
+    // url-encoded), images up to 2 MB + form overhead.
+    const wb = d.website;
+    const websiteForm = express.urlencoded({ extended: false, limit: '64kb' });
+    router.post('/owner/website/text/save', ...owner, websiteForm, safe(wb.save));
+    router.post('/owner/website/text/reset', ...owner, form, safe(wb.reset));
+    router.post('/owner/website/text/restore', ...owner, form, safe(wb.restore));
+    router.post('/owner/website/images/:slot/upload', ...owner, uploadBody(SITE_IMAGE_MAX_BYTES + 64 * 1024, '2 MB'), safe(d.parseUpload), safe(wb.imageUpload));
+    router.post('/owner/website/images/:slot/reset', ...owner, form, safe(wb.imageReset));
     router.get('/owner', ...owner, ow.index);
     router.get('/owner/home', ...owner, safe(ow.home));
     router.get('/owner/activity', ...owner, safe(ow.activity));
@@ -1116,6 +1130,10 @@ export function dashboardRouter(d) {
     router.get('/owner/health', ...owner, safe(ow.health));
     router.get('/owner/commands', ...owner, safe(ow.commands));
     router.get('/owner/erase', ...owner, safe(ow.erase));
+    router.get('/owner/website', ...owner, safe(wb.home));
+    router.get('/owner/website/images', ...owner, safe(wb.images));
+    router.get('/owner/website/ns/:ns', ...owner, safe(wb.namespace));
+    router.get('/owner/website/key', ...owner, safe(wb.key));
     router.get('/owner/announce', ...owner, safe(ow.announce));
     router.get('/owner/premium', ...owner, safe(ow.premium));
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).

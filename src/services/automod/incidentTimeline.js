@@ -194,7 +194,7 @@ export function createTimelineStore({ query = dbQuery, tables = pgConfig.tables,
             ),
             query(
                 `SELECT id, user_id, username, module, key, created_at FROM ${tables.dashboard_audit}
-                 WHERE guild_id = $1 AND created_at >= $2 AND created_at <= $3 AND module <> 'owner'
+                 WHERE guild_id = $1 AND created_at >= $2 AND created_at <= $3 AND module <> ALL(ARRAY['owner', 'website'])
                  ORDER BY created_at, id LIMIT $4`,
                 // A minute past the end: "End lockdown" on the dashboard is audited just after it ended.
                 [guildId, new Date(incident.started_at), new Date(to.getTime() + MINUTE_MS), MAX_AUDIT_ROWS + 1],

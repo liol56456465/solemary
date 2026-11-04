@@ -49,6 +49,8 @@ import { loadCommands, registerCommands as registerSlashCommands } from './handl
 import { registerOAuthRoutes } from './services/oauthVerification.js';
 import { registerDashboard } from './services/dashboard/routes.js';
 import { registerSite } from './services/site/site.js';
+import { loadSiteContent } from './services/site/siteContent.js';
+import { loadSiteImages } from './services/site/siteImages.js';
 import { memberAccountsOn, registerMemberPortal } from './services/site/memberPortal.js';
 import { premiumSettings, premiumStore } from './services/billing/premiumService.js';
 import { loadPremiumCache, runPremiumCron, setGuildOwnerResolver, setPremiumClient } from './services/billing/premiumEffects.js';
@@ -130,6 +132,11 @@ class Mewvo extends Client {
       }
       
       await this.loadSettings(dbStatus);
+
+      // The owner's website text and images (dashboard Owner → Website). A DB error is logged and
+      // the site runs on the catalog files and default images (these never throw).
+      await loadSiteContent();
+      await loadSiteImages();
 
       startupLog('Starting web server...');
       this.startWebServer();

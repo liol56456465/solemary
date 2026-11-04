@@ -818,6 +818,41 @@ export const tableStatements = [
     // Schema v8: accounts without email (username + password, Discord link required). Keeps the
     // column and its data; UNIQUE allows any number of NULLs.
     `ALTER TABLE ${t.member_accounts} ALTER COLUMN email DROP NOT NULL`,
+    // Website editor (schema v10, dashboard Owner → Website; services/site/siteContent.js): the
+    // owner's text per language and key (same safe markup as the catalog files). source_hash =
+    // sha256 of the English text when a non-English text was saved (NULL for English), so the
+    // editor can mark a translation "needs update" once the English text changes.
+    `CREATE TABLE IF NOT EXISTS ${t.site_content} (
+        lang VARCHAR(10) NOT NULL,
+        key VARCHAR(200) NOT NULL,
+        text TEXT NOT NULL CHECK (char_length(text) <= 5000),
+        source_hash CHAR(64),
+        updated_by VARCHAR(20) NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (lang, key)
+    )`,
+    // Every change to site_content: old_text NULL = it was the catalog text, new_text NULL = reset.
+    `CREATE TABLE IF NOT EXISTS ${t.site_content_history} (
+        id BIGSERIAL PRIMARY KEY,
+        lang VARCHAR(10) NOT NULL,
+        key VARCHAR(200) NOT NULL,
+        old_text TEXT,
+        new_text TEXT,
+        changed_by VARCHAR(20) NOT NULL,
+        changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+    // Replaced website images (services/site/siteImages.js), re-encoded on upload. In the DB
+    // because Replit's disk is wiped on redeploy. At most 2 MB per image.
+    `CREATE TABLE IF NOT EXISTS ${t.site_images} (
+        slot VARCHAR(40) PRIMARY KEY,
+        mime VARCHAR(40) NOT NULL,
+        width INTEGER NOT NULL CHECK (width > 0),
+        height INTEGER NOT NULL CHECK (height > 0),
+        bytes BYTEA NOT NULL CHECK (octet_length(bytes) <= 2097152),
+        sha256 CHAR(64) NOT NULL,
+        updated_by VARCHAR(20) NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
 ];
 
 export const indexStatements = [
@@ -885,6 +920,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_premium_keys_created_by ON ${t.premium_keys}(created_by, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_premium_keys_created ON ${t.premium_keys}(created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_premium_subscriptions_expires ON ${t.premium_subscriptions}(expires_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_site_content_history_key ON ${t.site_content_history}(lang, key, changed_at DESC)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

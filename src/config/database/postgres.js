@@ -63,6 +63,9 @@ const configuredTables = {
     member_account_recovery_codes: 'member_account_recovery_codes',
     member_account_bonuses: 'member_account_bonuses',
     member_account_counters: 'member_account_counters',
+    site_content: 'site_content',
+    site_content_history: 'site_content_history',
+    site_images: 'site_images',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -126,6 +129,9 @@ const allowedTableIdentifiers = new Set([
     'member_account_recovery_codes',
     'member_account_bonuses',
     'member_account_counters',
+    'site_content',
+    'site_content_history',
+    'site_images',
 ]);
 
 const validatedTables = Object.fromEntries(
