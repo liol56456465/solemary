@@ -29,7 +29,7 @@ function faqItems(ctx) {
         {
             group: 'Data and contact',
             items: [
-                ['What data does Mewvo store?', html`<p>Discord IDs, your levels and XP, moderation cases, appeals and what you write in forms or tickets, and a few things you choose to save, such as a birthday. No email, no password, never sold. The <a href="/privacy">privacy page</a> has the full list, and <code>/wipedata</code> deletes your levels, balance and AFK status.</p>`],
+                ['What data does Mewvo store?', html`<p>Discord IDs, your levels and XP, moderation cases, appeals and what you write in forms or tickets, and a few things you choose to save, such as a birthday. No email, no password, never sold. The <a href="/privacy">privacy page</a> has the full list, and <code>/wipedata</code> deletes your levels, balance, AFK status and birthday in that server, plus your to-do list, reminders and stored Discord login. Moderation records stay; see the privacy page for why.</p>`],
                 ['How do I reach the staff?', html`<p>Three ways: DM the bot and choose <strong>Send to staff</strong> (modmail), open a ticket from the ticket panel, or ask in ${support}. To report a staff member, use <strong>Report staff</strong> on the appeal panel in the support server; only administrators see those reports.</p>`],
                 ['Is the bot down?', html`<p>Check the <a href="/status">status page</a>. It shows whether the bot is online and refreshes every minute.</p>`],
             ],

@@ -6,8 +6,8 @@
 // Columns are picked per table so the file never contains another person's data: no
 // moderator ids, no reporter ids, no other party of a no-contact order, nobody who redeemed
 // a gift key, no other raid joiners. Staff notes and watchlist entries about the member are
-// included with the author shown as "staff"; evidence only as excerpts of the member's own
-// messages. Case edit history, revoke reasons, other people's messages, re-hosted images and
+// included with the author shown as "staff". Evidence excerpts are given on request only (they
+// store a username, not an id). Case edit history, revoke reasons, other people's messages, re-hosted images and
 // the IP hash itself (only when it was seen) are left out. The OAuth token is reported as
 // stored yes/no, never the token. The file says so, and how to ask for more.
 // Every new section is capped at ROW_LIMIT rows.
@@ -49,14 +49,9 @@ export const EXPORT_SECTIONS = [
     ['caseNotes', (t) => `SELECT n.case_code, n.text, 'staff' AS who_wrote, n.created_at FROM ${t.mod_case_notes} n
         JOIN ${t.mod_cases} c ON c.case_code = n.case_code
         WHERE c.target_user_id = $1 AND c.is_test IS NOT TRUE ORDER BY n.created_at LIMIT ${ROW_LIMIT}`],
-    // Evidence excerpts of this member's OWN messages on their cases. An excerpt starts with the author's
-    // username ("name: text", evidenceService.messageExcerpt); only those matching the case's target are
-    // included, so other people's messages and re-hosted images stay out.
-    ['caseEvidenceOwnMessages', (t) => `SELECT e.case_code, e.source_message_url, e.excerpt, e.added_at FROM ${t.mod_case_evidence} e
-        JOIN ${t.mod_cases} c ON c.case_code = e.case_code
-        WHERE c.target_user_id = $1 AND c.is_test IS NOT TRUE AND e.kind = 'link' AND e.excerpt IS NOT NULL
-          AND left(e.excerpt, length(c.target_username) + 2) = c.target_username || ': '
-        ORDER BY e.added_at LIMIT ${ROW_LIMIT}`],
+    // Evidence excerpts are NOT exported: an excerpt stores the author's username, not their Discord
+    // id, so matching on the name could hand over someone else's message (security review 2026-11-04).
+    // Add an author id column to mod_case_evidence first; until then evidence is given on request.
     // Tickets this member opened (who claimed or closed it is left out).
     ['tickets', (t) => `SELECT guild_id, channel_id, data->>'status' AS status, data->>'priority' AS priority, data->>'reason' AS reason,
         data->>'createdAt' AS opened_at, data->>'closedAt' AS closed_at, data->>'closeReason' AS close_reason

@@ -77,7 +77,8 @@ test('data export: the entitled sections return the member\'s rows and leave oth
     const file = await exporter.buildDataExport(me, { query: enforcementDb.query, readKey: async (key) => db.get(key) });
     const text = JSON.stringify(file);
     assert.deepEqual(file.caseNotes.map((n) => [n.case_code, n.text, n.who_wrote]), [[code, 'Was rude in #general', 'staff']]);
-    assert.deepEqual(file.caseEvidenceOwnMessages.map((e) => e.excerpt), ['memyself: my own words']);
+    assert.equal(file.caseEvidenceOwnMessages, undefined, 'evidence excerpts are not exported (username match is unsafe)');
+    assert.ok(!text.includes('my own words'), 'no evidence text in the file');
     assert.equal(file.watchlist.length, 1);
     assert.equal(file.watchlist[0].reason, 'alt suspicion');
     assert.equal(file.noContactOrders.filter((o) => o.guild_id === guildId)[0].reason, 'keep apart');

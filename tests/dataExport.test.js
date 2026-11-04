@@ -45,7 +45,7 @@ test('data export: an error means no file; bad ids refused; file name', async ()
 
 test('data export: the new sections cover what the member is entitled to, bounded and redacted', () => {
     const byName = Object.fromEntries(EXPORT_SECTIONS.map(([name, sql]) => [name, sql(pgConfig.tables)]));
-    for (const name of ['watchlist', 'noContactOrders', 'raidTimelineEvents', 'raidIncidentsJoined', 'caseNotes', 'caseEvidenceOwnMessages', 'tickets', 'giveawayEntries', 'invitesCreated']) {
+    for (const name of ['watchlist', 'noContactOrders', 'raidTimelineEvents', 'raidIncidentsJoined', 'caseNotes', 'tickets', 'giveawayEntries', 'invitesCreated']) {
         assert.ok(byName[name], `${name} section exists`);
         assert.match(byName[name], /LIMIT \d+/, `${name} is bounded`);
     }
@@ -55,8 +55,7 @@ test('data export: the new sections cover what the member is entitled to, bounde
     assert.match(byName.raidIncidentsJoined, /joiner_ids \? \$1/);
     assert.match(byName.caseNotes, /c\.target_user_id = \$1/);
     // Evidence: only link excerpts that start with the case target's own username.
-    assert.match(byName.caseEvidenceOwnMessages, /e\.kind = 'link'/);
-    assert.match(byName.caseEvidenceOwnMessages, /c\.target_username \|\| ': '/);
+    assert.equal(byName.caseEvidenceOwnMessages, undefined, 'evidence is not exported until it stores an author id');
     assert.match(byName.tickets, /data->>'userId' = \$1/);
     assert.match(byName.giveawayEntries, /data->'participants' \? \$1/);
     assert.match(byName.invitesCreated, /inviter_id = \$1/);
