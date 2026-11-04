@@ -49,6 +49,8 @@ export const EVERYONE_COMMANDS = new Set([
   // Utility (wipedata deletes only the caller's own data in this server)
   'wipedata',
   'avatar', 'firstmsg', 'serverinfo', 'userinfo', 'weather', 'report file',
+  // Self-cooldown: a timeout on yourself only (services/members/selfCooldownService.js)
+  'cooldown',
   'todo add', 'todo list', 'todo complete', 'todo remove',
   'todo share create', 'todo share add', 'todo share view', 'todo share addtask', 'todo share remove',
 
