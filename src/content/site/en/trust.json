@@ -1,0 +1,79 @@
+{
+  "title": "{server} trust card",
+  "description": "How {server} is moderated: appeal times, appeal results and members in good standing over the last {days} days. Numbers only.",
+  "head": {
+    "heading": "{server}: trust card",
+    "lead": "How this server was moderated over the last {days} days. Numbers only: no names, no reasons, no moderators."
+  },
+  "noData": "Not enough data yet",
+  "tiles": {
+    "firstAnswer": {
+      "label": "First answer on an appeal",
+      "note": "Median time from sending an appeal until a staff member picks it up or decides it."
+    },
+    "accepted": {
+      "label": "Appeals accepted",
+      "note": "Of {decided} appeals decided."
+    },
+    "goodStanding": {
+      "label": "Members in good standing",
+      "note": "No counted warning, not muted."
+    },
+    "headsUp": {
+      "label": "Fixed after a heads-up",
+      "noteWithRate": "Members fixed {rate} of flagged messages themselves after a heads-up.",
+      "noteNoRate": "How often members fix a flagged message themselves after a heads-up."
+    }
+  },
+  "facts": {
+    "received": "Appeals received",
+    "decided": "Appeals decided",
+    "decisionTime": "Median time to a decision",
+    "casesPerThousand": "Cases per 1,000 members"
+  },
+  "how": {
+    "heading": "How this server moderates",
+    "byPerson": "Every appeal is read and decided by a person on the staff, never by the bot alone.",
+    "cases": "Every warning, mute, kick and ban is recorded as a case with its own code, and the member gets that code in a DM."
+  },
+  "ladder": {
+    "single": "Warnings add up: the {nth} warning brings {first}.",
+    "escalating": "Warnings add up: the {nth} warning brings {first}, and each warning after that ban brings a longer one ({later}).",
+    "then": "{earlier}, then {next}",
+    "banDays": "a {days}-day ban",
+    "banPermanent": "a permanent ban",
+    "ordinals": {
+      "0": "zeroth",
+      "1": "first",
+      "2": "second",
+      "3": "third",
+      "4": "fourth",
+      "5": "fifth",
+      "6": "sixth",
+      "7": "seventh",
+      "8": "eighth",
+      "9": "ninth",
+      "10": "tenth"
+    },
+    "ordinalOther": "{n}th"
+  },
+  "cat": {
+    "alt": "{name}, the server cat, a {stage}, looking {mood}",
+    "caption": "The server cat",
+    "shareAlt": "{name}, the server cat"
+  },
+  "rules": {
+    "heading": "Rules",
+    "empty": "This server has not published its rules yet.",
+    "readAll": "Read the full rules"
+  },
+  "foot": {
+    "period": "Last {days} days, from {from} to {to}. Small numbers are hidden.",
+    "periodWithReport": "Last {days} days, from {from} to {to}. Small numbers are hidden. Full monthly numbers: [Transparency report](/transparency)."
+  },
+  "error": {
+    "title": "Trust card",
+    "heading": "Trust card",
+    "text": "The trust card could not be loaded right now. No numbers are shown rather than wrong ones; please try again in a few minutes."
+  }
+}

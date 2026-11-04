@@ -1,0 +1,76 @@
+{
+  "title": "Transparency report",
+  "description": "How many warnings, mutes, kicks and bans the Mewvo server gave each month, and how appeals were decided. Numbers only.",
+  "head": {
+    "heading": "Transparency report",
+    "lead": "How often staff on the Mewvo server warned, muted, kicked and banned, and how appeals went, month by month. Numbers only: no names, no reasons, no moderators.",
+    "period": "From {from} to {to}, in UTC. Updated at most every 10 minutes."
+  },
+  "summary": {
+    "warns": "Warnings",
+    "mutes": "Mutes",
+    "kicks": "Kicks",
+    "bans": "Bans",
+    "appealsReceived": "Appeals received",
+    "medianDecision": "Median time to an appeal decision"
+  },
+  "table": {
+    "month": "Month",
+    "total": "Total",
+    "soFar": "so far",
+    "notEnoughDecisions": "not enough decisions"
+  },
+  "actions": {
+    "heading": "Moderation actions",
+    "intro": "Per month, the current month so far.",
+    "caption": "Moderation actions per month, oldest first. The last row is the total.",
+    "columns": {
+      "warns": "Warnings",
+      "mutes": "Mutes",
+      "kicks": "Kicks",
+      "bans": "Bans",
+      "ladderBans": "Of the bans: automatic (warning ladder)",
+      "automod": "Given by automod",
+      "voided": "Voided as mistakes"
+    }
+  },
+  "appeals": {
+    "heading": "Appeals",
+    "intro": "By the month the appeal was sent, with its result today.",
+    "caption": "Appeals per month by the month they were sent, oldest first. The last row is the total.",
+    "columns": {
+      "received": "Received",
+      "accepted": "Accepted",
+      "denied": "Denied",
+      "open": "Still open",
+      "median": "Median time to a decision"
+    }
+  },
+  "how": {
+    "heading": "How these numbers are made",
+    "intro": "How appeals work is explained in the [appeals guide](/docs/appeals).",
+    "counted": {
+      "question": "What is counted",
+      "answer": "Every warning, mute, kick and ban given on the Mewvo server, in the month it was given (UTC), whether by a moderator, by the warning ladder or by automod. Automatic ladder bans and automod actions are already part of the four main columns; their own columns only show how many of them there were."
+    },
+    "notCounted": {
+      "question": "What is not counted",
+      "answer": "Test simulations (staff previewing a message; nothing happens to anyone), warnings imported from the old bot as history, and staff reports. Cases voided as mistakes are left out of the main columns and shown on their own in the “Voided as mistakes” column, by the month they were first given."
+    },
+    "appeals": {
+      "question": "Appeals",
+      "answer": "Appeals are counted in the month they were sent, with their result today. An appeal on a case that was later voided still counts: the appeal happened. Appeals that were closed without a decision are counted as received only. The median time runs from sending the appeal to the staff decision, over the accepted and denied appeals of that month."
+    },
+    "smallNumbers": {
+      "question": "Small numbers",
+      "answer": "To keep single cases from being recognised, a count of 1 or 2 is shown as “fewer than 3”, and a median is only shown when at least 3 appeals were decided. When a month in a column is hidden that way, the total says “at least” instead of the exact number."
+    },
+    "neverShown": {
+      "question": "What this page never shows",
+      "answer": "Names, Discord IDs, case codes, reasons or which moderator acted. Only numbers."
+    }
+  },
+  "error": {
+    "text": "The report could not be loaded right now because the database is not responding. No numbers are shown rather than wrong ones; please try again in a few minutes."
+  }
+}

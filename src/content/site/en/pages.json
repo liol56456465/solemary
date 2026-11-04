@@ -1,0 +1,135 @@
+{
+  "commands": {
+    "title": "Commands",
+    "description": "The Mewvo commands every member can use.",
+    "heading": "Commands",
+    "lead": "The commands every member can use. Staff tools live on the dashboard and need the Administrator role.",
+    "jumpLabel": "Command groups",
+    "groups": {
+      "core": "General",
+      "community": "Community",
+      "leveling": "Leveling",
+      "fun": "Fun",
+      "birthday": "Birthdays",
+      "utility": "Utility",
+      "tools": "Tools",
+      "search": "Search",
+      "verification": "Verification",
+      "ticket": "Tickets",
+      "menus": "Right-click menus",
+      "other": "Other"
+    },
+    "menu": {
+      "message": "Right-click a message → Apps → {command}",
+      "member": "Right-click a member → Apps → {command}"
+    },
+    "notes": {
+      "ticketStaff": "Ticket staff",
+      "ticketStaffOrOpener": "Ticket staff or the ticket opener"
+    }
+  },
+  "about": {
+    "title": "About",
+    "description": "About Mewvo, the Discord bot of the Mewvo server.",
+    "heading": "About Mewvo",
+    "lead": "Mewvo is the bot of the Mewvo Discord server, built and run by its owner for that community.",
+    "started": {
+      "heading": "How it started",
+      "text": "Mewvo began as a fork of TitanBot, an open-source (MIT) Discord bot, and has since been rebuilt around the server’s own needs: an enforcement system with case codes and appeals, a warning ladder, automod, tickets and modmail, and a web dashboard for the staff team."
+    },
+    "members": {
+      "heading": "How it treats members",
+      "list": "- Every punishment comes with a DM that says what happened, why, until when, and whether and how it can be appealed.\n- Staff actions are recorded as cases, so decisions can be reviewed and corrected.\n- Verification asks Discord only for your identity and permission to add you to the support server, never your email.\n- Members can delete their own data from the bot in a server with `/wipedata`."
+    },
+    "availability": {
+      "heading": "Availability",
+      "public": "Mewvo can be added to other servers with the button at the top of the page.",
+      "private": "For now Mewvo runs only on its own server; it can’t be added to other servers yet."
+    },
+    "help": {
+      "heading": "Get help",
+      "withInvite": "Questions, appeals or problems: [join the support server]({url}).",
+      "withoutInvite": "Ask the staff team on the Mewvo server."
+    }
+  },
+  "status": {
+    "title": "Status",
+    "description": "Whether the Mewvo bot is online.",
+    "heading": "Status",
+    "states": {
+      "online": {
+        "label": "Online",
+        "text": "Mewvo is running normally."
+      },
+      "starting": {
+        "label": "Starting",
+        "text": "Mewvo is starting or reconnecting to Discord. Commands answer again in a moment."
+      },
+      "degraded": {
+        "label": "Degraded",
+        "text": "Mewvo is connected to Discord but its database is not responding. Commands that read or save data may fail until it recovers."
+      }
+    },
+    "uptime": {
+      "line": "Up for {uptime}.",
+      "lessThanMinute": "less than a minute",
+      "dayOne": "{n} day",
+      "dayOther": "{n} days",
+      "hourOne": "{n} hour",
+      "hourOther": "{n} hours",
+      "minuteOne": "{n} minute",
+      "minuteOther": "{n} minutes",
+      "join": "{first}, {second}"
+    },
+    "note": {
+      "refresh": "This page refreshes every minute.",
+      "refreshSupport": "This page refreshes every minute. Something not working? [Tell us in the support server]({url})."
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "titlePaged": "Leaderboard, page {page}",
+    "description": "The Mewvo server leveling leaderboard.",
+    "heading": "Leaderboard",
+    "lead": "The most active members of the Mewvo server by level and total XP. You earn XP by chatting; members who delete their data with `/wipedata` are not listed.",
+    "unavailable": "The leaderboard could not be loaded right now. Nothing was changed; please try again in a minute.",
+    "off": "Leveling is turned off on the Mewvo server, so there is no leaderboard right now.",
+    "empty": {
+      "firstPage": "Nobody has earned XP yet.",
+      "laterPage": "There is nobody on this page.",
+      "backToFirst": "Back to the first page"
+    },
+    "pager": {
+      "label": "Leaderboard pages",
+      "previous": "Previous",
+      "next": "Next",
+      "current": "Page {page}"
+    },
+    "table": {
+      "caption": "Leaderboard, page {page}",
+      "rank": "Rank",
+      "member": "Member",
+      "level": "Level",
+      "totalXp": "Total XP"
+    },
+    "formerMember": "Former member"
+  },
+  "cat": {
+    "label": "The server cat",
+    "alt": "{name}, a {stage}, looking {mood}",
+    "stageLine": "{stage}. {sentence}",
+    "progressLabel": "Growth to {next}",
+    "percent": "{pct}%",
+    "progress": "{total} messages counted. {toNext} more to {next}.",
+    "grown": "{total} messages counted. Fully grown."
+  },
+  "errors": {
+    "notFound": {
+      "title": "Not found",
+      "heading": "Page not found",
+      "lead": "There is no page at this address. It may have moved, or the link has a typo.",
+      "home": "Go to the home page",
+      "docs": "Read the docs"
+    }
+  }
+}

@@ -1,6 +1,7 @@
 // transparency.js — /transparency: the monthly transparency report of the main server
 // (numbers from services/enforcement/transparencyService.js). Only when an administrator
 // turned it on in the dashboard (Enforcement & appeals); otherwise the route is a 404.
+// Page text: content/site/<lang>/transparency.json.
 //
 // Numbers only: no names, IDs, case codes, reasons or moderators ever reach this page.
 // Counts of 1–2 show as "fewer than 3"; a total over a masked month as "at least N";
@@ -8,6 +9,7 @@
 
 import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
+import { textOf } from '../i18n.js';
 import { maskCount, maskTotal, medianText } from '../../enforcement/transparencyService.js';
 
 const MONTH_NAME = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -15,85 +17,87 @@ const DAY_NAME = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long
 
 const cell = ({ text, masked }, sub = false) => html`<td class="${['num', sub ? 'sub' : '', masked ? 'masked' : ''].filter(Boolean).join(' ')}">${text}</td>`;
 
-function monthLabel(month) {
-    return html`${MONTH_NAME.format(month.start)}${month.current ? html` <span class="tag">so far</span>` : ''}`;
+function monthLabel(month, t) {
+    return html`${MONTH_NAME.format(month.start)}${month.current ? html` <span class="tag">${t('transparency.table.soFar')}</span>` : ''}`;
 }
 
+// [report key, label key under transparency.actions.columns, shown as a sub-column]
 const CASE_HEADS = [
-    ['warns', 'Warnings'], ['mutes', 'Mutes'], ['kicks', 'Kicks'], ['bans', 'Bans'],
-    ['ladderBans', 'Of the bans: automatic (warning ladder)', true], ['automod', 'Given by automod', true], ['voided', 'Voided as mistakes', true],
+    ['warns'], ['mutes'], ['kicks'], ['bans'], ['ladderBans', true], ['automod', true], ['voided', true],
 ];
 
-function casesTable(report) {
+function casesTable(report, t) {
     const total = (key) => maskTotal(report.months.map((m) => m.cases[key]));
     return html`<div class="table-wrap" role="region" aria-labelledby="tr-actions" tabindex="0"><table class="report">
-<caption class="visually-hidden">Moderation actions per month, oldest first. The last row is the total.</caption>
-<thead><tr><th scope="col">Month</th>${CASE_HEADS.map(([, label]) => html`<th scope="col">${label}</th>`)}</tr></thead>
-<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m)}</th>${CASE_HEADS.map(([key, , sub]) => cell(maskCount(m.cases[key]), sub))}</tr>`)}</tbody>
-<tfoot><tr><th scope="row">Total</th>${CASE_HEADS.map(([key, , sub]) => cell(total(key), sub))}</tr></tfoot></table></div>`;
+<caption class="visually-hidden">${t('transparency.actions.caption')}</caption>
+<thead><tr><th scope="col">${t('transparency.table.month')}</th>${CASE_HEADS.map(([key]) => html`<th scope="col">${t(`transparency.actions.columns.${key}`)}</th>`)}</tr></thead>
+<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m, t)}</th>${CASE_HEADS.map(([key, sub]) => cell(maskCount(m.cases[key]), sub))}</tr>`)}</tbody>
+<tfoot><tr><th scope="row">${t('transparency.table.total')}</th>${CASE_HEADS.map(([key, sub]) => cell(total(key), sub))}</tr></tfoot></table></div>`;
 }
 
-const APPEAL_HEADS = [['received', 'Received'], ['accepted', 'Accepted'], ['denied', 'Denied'], ['open', 'Still open']];
+const APPEAL_HEADS = ['received', 'accepted', 'denied', 'open'];
 
-function median(appeals) {
+function median(appeals, t) {
     const text = medianText(appeals.medianHours, appeals.decided);
-    return text ? { text, masked: false } : { text: 'not enough decisions', masked: true };
+    return text ? { text, masked: false } : { text: t('transparency.table.notEnoughDecisions'), masked: true };
 }
 
-function appealsTable(report) {
+function appealsTable(report, t) {
     const total = (key) => maskTotal(report.months.map((m) => m.appeals[key]));
     return html`<div class="table-wrap" role="region" aria-labelledby="tr-appeals" tabindex="0"><table class="report">
-<caption class="visually-hidden">Appeals per month by the month they were sent, oldest first. The last row is the total.</caption>
-<thead><tr><th scope="col">Month</th>${APPEAL_HEADS.map(([, label]) => html`<th scope="col">${label}</th>`)}<th scope="col">Median time to a decision</th></tr></thead>
-<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m)}</th>${APPEAL_HEADS.map(([key]) => cell(maskCount(m.appeals[key])))}${cell(median(m.appeals), true)}</tr>`)}</tbody>
-<tfoot><tr><th scope="row">Total</th>${APPEAL_HEADS.map(([key]) => cell(total(key)))}${cell(median(report.totals.appeals), true)}</tr></tfoot></table></div>`;
+<caption class="visually-hidden">${t('transparency.appeals.caption')}</caption>
+<thead><tr><th scope="col">${t('transparency.table.month')}</th>${APPEAL_HEADS.map((key) => html`<th scope="col">${t(`transparency.appeals.columns.${key}`)}</th>`)}<th scope="col">${t('transparency.appeals.columns.median')}</th></tr></thead>
+<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m, t)}</th>${APPEAL_HEADS.map((key) => cell(maskCount(m.appeals[key])))}${cell(median(m.appeals, t), true)}</tr>`)}</tbody>
+<tfoot><tr><th scope="row">${t('transparency.table.total')}</th>${APPEAL_HEADS.map((key) => cell(total(key)))}${cell(median(report.totals.appeals, t), true)}</tr></tfoot></table></div>`;
 }
 
-function summary(report) {
+function summary(report, t) {
     const total = (pick) => maskTotal(report.months.map(pick));
-    const tile = (label, { text, masked }) => html`<div><dt>${label}</dt><dd${masked ? html` class="tr-small"` : ''}>${text}</dd></div>`;
-    const med = median(report.totals.appeals);
+    const tile = (key, { text, masked }) => html`<div><dt>${t(`transparency.summary.${key}`)}</dt><dd${masked ? html` class="tr-small"` : ''}>${text}</dd></div>`;
+    const med = median(report.totals.appeals, t);
     return html`<dl class="tr-stats">
-${tile('Warnings', total((m) => m.cases.warns))}${tile('Mutes', total((m) => m.cases.mutes))}${tile('Kicks', total((m) => m.cases.kicks))}
-${tile('Bans', total((m) => m.cases.bans))}${tile('Appeals received', total((m) => m.appeals.received))}${tile('Median time to an appeal decision', med)}</dl>`;
+${tile('warns', total((m) => m.cases.warns))}${tile('mutes', total((m) => m.cases.mutes))}${tile('kicks', total((m) => m.cases.kicks))}
+${tile('bans', total((m) => m.cases.bans))}${tile('appealsReceived', total((m) => m.appeals.received))}${tile('medianDecision', med)}</dl>`;
 }
 
-function explanation() {
+const EXPLANATION = ['counted', 'notCounted', 'appeals', 'smallNumbers', 'neverShown'];
+
+function explanation(t) {
     return html`<dl class="qa">
-<div><dt>What is counted</dt><dd>Every warning, mute, kick and ban given on the Mewvo server, in the month it was given (UTC), whether by a moderator, by the warning ladder or by automod. Automatic ladder bans and automod actions are already part of the four main columns; their own columns only show how many of them there were.</dd></div>
-<div><dt>What is not counted</dt><dd>Test simulations (staff previewing a message; nothing happens to anyone), warnings imported from the old bot as history, and staff reports. Cases voided as mistakes are left out of the main columns and shown on their own in the “Voided as mistakes” column, by the month they were first given.</dd></div>
-<div><dt>Appeals</dt><dd>Appeals are counted in the month they were sent, with their result today. An appeal on a case that was later voided still counts: the appeal happened. Appeals that were closed without a decision are counted as received only. The median time runs from sending the appeal to the staff decision, over the accepted and denied appeals of that month.</dd></div>
-<div><dt>Small numbers</dt><dd>To keep single cases from being recognised, a count of 1 or 2 is shown as “fewer than 3”, and a median is only shown when at least 3 appeals were decided. When a month in a column is hidden that way, the total says “at least” instead of the exact number.</dd></div>
-<div><dt>What this page never shows</dt><dd>Names, Discord IDs, case codes, reasons or which moderator acted. Only numbers.</dd></div>
-</dl>`;
+${EXPLANATION.map((key) => html`<div><dt>${t(`transparency.how.${key}.question`)}</dt><dd>${t(`transparency.how.${key}.answer`)}</dd></div>
+`)}</dl>`;
 }
 
 /** The report page; `report` is transparencyService's aggregateReport() result. */
 export function transparencyPage(ctx, report) {
+    const { t, ti } = textOf(ctx);
     const first = report.months[0];
     const generated = report.generatedAt instanceof Date ? report.generatedAt : new Date(report.generatedAt);
+    const from = html`<time datetime="${first.start.toISOString().slice(0, 10)}">${DAY_NAME.format(first.start)}</time>`;
+    const to = html`<time datetime="${generated.toISOString().slice(0, 10)}">${DAY_NAME.format(generated)}</time>`;
     return layout(ctx, {
-        title: 'Transparency report', active: 'transparency', path: '/transparency',
-        description: 'How many warnings, mutes, kicks and bans the Mewvo server gave each month, and how appeals were decided. Numbers only.',
+        title: t('transparency.title'), active: 'transparency', path: '/transparency',
+        description: t('transparency.description'),
         body: html`<div class="wrap page">
-<header class="page-head page-head-split"><div><h1>Transparency report</h1></div>
-<p class="lead">How often staff on the Mewvo server warned, muted, kicked and banned, and how appeals went, month by month. Numbers only: no names, no reasons, no moderators.</p></header>
-<p class="note">From <time datetime="${first.start.toISOString().slice(0, 10)}">${DAY_NAME.format(first.start)}</time> to <time datetime="${generated.toISOString().slice(0, 10)}">${DAY_NAME.format(generated)}</time>, in UTC. Updated at most every 10 minutes.</p>
-${summary(report)}
-<section class="tr-section" aria-labelledby="tr-actions"><h2 id="tr-actions">Moderation actions</h2>
-<p>Per month, the current month so far.</p>${casesTable(report)}</section>
-<section class="tr-section" aria-labelledby="tr-appeals"><h2 id="tr-appeals">Appeals</h2>
-<p>By the month the appeal was sent, with its result today.</p>${appealsTable(report)}</section>
-<section class="block-tight split split-narrow" aria-labelledby="tr-how"><div class="split-copy"><h2 id="tr-how">How these numbers are made</h2><p>How appeals work is explained in the <a href="/docs/appeals">appeals guide</a>.</p></div>
-${explanation()}</section></div>`,
+<header class="page-head page-head-split"><div><h1>${t('transparency.head.heading')}</h1></div>
+<p class="lead">${t('transparency.head.lead')}</p></header>
+<p class="note">${ti('transparency.head.period', { from, to })}</p>
+${summary(report, t)}
+<section class="tr-section" aria-labelledby="tr-actions"><h2 id="tr-actions">${t('transparency.actions.heading')}</h2>
+<p>${t('transparency.actions.intro')}</p>${casesTable(report, t)}</section>
+<section class="tr-section" aria-labelledby="tr-appeals"><h2 id="tr-appeals">${t('transparency.appeals.heading')}</h2>
+<p>${t('transparency.appeals.intro')}</p>${appealsTable(report, t)}</section>
+<section class="block-tight split split-narrow" aria-labelledby="tr-how"><div class="split-copy"><h2 id="tr-how">${t('transparency.how.heading')}</h2><p>${ti('transparency.how.intro')}</p></div>
+${explanation(t)}</section></div>`,
     });
 }
 
 /** The page when the numbers could not be read (503): never zeros instead. */
 export function transparencyErrorPage(ctx) {
+    const { t } = textOf(ctx);
     return layout(ctx, {
-        title: 'Transparency report', active: 'transparency', path: '/transparency',
-        body: html`<div class="wrap page prose"><h1>Transparency report</h1>
-<p class="notice notice-bad" role="alert">The report could not be loaded right now because the database is not responding. No numbers are shown rather than wrong ones; please try again in a few minutes.</p></div>`,
+        title: t('transparency.title'), active: 'transparency', path: '/transparency',
+        body: html`<div class="wrap page prose"><h1>${t('transparency.head.heading')}</h1>
+<p class="notice notice-bad" role="alert">${t('transparency.error.text')}</p></div>`,
     });
 }

@@ -9,7 +9,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import {
     CSS_PATH, INSTALL_PERMISSIONS, LEADERBOARD_PAGE_SIZE, NOINDEX, SECURITY_HEADERS, STYLESHEET, botStatus,
     createCatReader, createLeaderboardReader, createSite, everyoneCommandGroups, installPermissionBits, installUrl, inviteOrNull,
-    leaderboardPageNumber, publicSiteEnabled, uptimeWords,
+    leaderboardPage, leaderboardPageNumber, publicSiteEnabled, uptimeWords,
 } from '../src/services/site/site.js';
 import { EVERYONE_COMMANDS } from '../src/config/commands/commandAccess.js';
 
@@ -429,8 +429,12 @@ test('the real reader: main server only, display names, former members without I
     assert.equal(board.enabled, true);
     assert.deepEqual(board.rows, [
         { rank: 1, name: 'Kitty <3', level: 4, totalXp: 900 },
-        { rank: 2, name: 'Former member', level: 2, totalXp: 300 },
+        { rank: 2, name: null, level: 2, totalXp: 300 },
     ]);
+    // The page puts "Former member" (catalog text) where the reader has no name.
+    const page = String(leaderboardPage({}, { page: 1, board }));
+    assert.ok(page.includes('<td class="board-name">Kitty &lt;3</td>') && page.includes('<td class="board-name">Former member</td>'));
+    assert.ok(!page.includes('333333333333333333'), 'never the ID');
     assert.equal(client.fetches(), 0, 'a page view never asks Discord for members (former member stays uncached)');
     await read({ offset: 0, limit: 51 });
     assert.equal(client.reads(), 1, 'second view within a minute is cached');

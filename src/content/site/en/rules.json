@@ -1,0 +1,18 @@
+{
+  "title": "Rules",
+  "description": "The rules of the Mewvo Discord server.",
+  "head": {
+    "heading": "Server rules",
+    "lead": "The rules of the Mewvo server. When staff warn, mute, kick or ban for one of them, the DM names the rule and links here."
+  },
+  "state": {
+    "unavailable": "The rules could not be loaded right now. Please try again in a minute.",
+    "empty": "This server has not published its rules yet."
+  },
+  "list": {
+    "updated": "Last updated {date}.",
+    "linkLabel": "Link to rule {number}",
+    "consequenceLabel": "Consequence:"
+  },
+  "appeal": "Punished for a rule you think you did not break? Every DM says whether and how it can be appealed. [How appeals work](/docs/appeals)."
+}
