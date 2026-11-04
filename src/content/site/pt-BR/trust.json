@@ -1,0 +1,79 @@
+{
+  "title": "Cartão de confiança de {server}",
+  "description": "Como {server} é moderado: tempos de apelação, resultados das apelações e membros em situação regular nos últimos {days} dias. Só números.",
+  "head": {
+    "heading": "{server}: cartão de confiança",
+    "lead": "Como este servidor foi moderado nos últimos {days} dias. Só números: sem nomes, sem motivos, sem moderadores."
+  },
+  "noData": "Ainda não há dados suficientes",
+  "tiles": {
+    "firstAnswer": {
+      "label": "Primeira resposta a uma apelação",
+      "note": "Tempo mediano entre o envio de uma apelação e o momento em que alguém da equipe a assume ou decide."
+    },
+    "accepted": {
+      "label": "Apelações aceitas",
+      "note": "De {decided} apelações decididas."
+    },
+    "goodStanding": {
+      "label": "Membros em situação regular",
+      "note": "Nenhuma advertência contada, não silenciado."
+    },
+    "headsUp": {
+      "label": "Corrigido após um aviso",
+      "noteWithRate": "Os membros corrigiram sozinhos {rate} das mensagens sinalizadas após um aviso.",
+      "noteNoRate": "Com que frequência os membros corrigem sozinhos uma mensagem sinalizada após um aviso."
+    }
+  },
+  "facts": {
+    "received": "Apelações recebidas",
+    "decided": "Apelações decididas",
+    "decisionTime": "Tempo mediano até uma decisão",
+    "casesPerThousand": "Casos por 1.000 membros"
+  },
+  "how": {
+    "heading": "Como este servidor modera",
+    "byPerson": "Toda apelação é lida e decidida por uma pessoa da equipe, nunca só pelo bot.",
+    "cases": "Toda advertência, silenciamento, expulsão e banimento é registrado como um caso com código próprio, e o membro recebe esse código por mensagem direta."
+  },
+  "ladder": {
+    "single": "As advertências se acumulam: a {nth} advertência traz {first}.",
+    "escalating": "As advertências se acumulam: a {nth} advertência traz {first}, e cada advertência depois desse banimento traz um mais longo ({later}).",
+    "then": "{earlier}, depois {next}",
+    "banDays": "um banimento de {days} dias",
+    "banPermanent": "um banimento permanente",
+    "ordinals": {
+      "0": "0ª",
+      "1": "primeira",
+      "2": "segunda",
+      "3": "terceira",
+      "4": "quarta",
+      "5": "quinta",
+      "6": "sexta",
+      "7": "sétima",
+      "8": "oitava",
+      "9": "nona",
+      "10": "décima"
+    },
+    "ordinalOther": "{n}ª"
+  },
+  "cat": {
+    "alt": "{name}, o gato do servidor ({stage}), parecendo {mood}",
+    "caption": "O gato do servidor",
+    "shareAlt": "{name}, o gato do servidor"
+  },
+  "rules": {
+    "heading": "Regras",
+    "empty": "Este servidor ainda não publicou suas regras.",
+    "readAll": "Ler as regras completas"
+  },
+  "foot": {
+    "period": "Últimos {days} dias, de {from} a {to}. Números pequenos ficam ocultos.",
+    "periodWithReport": "Últimos {days} dias, de {from} a {to}. Números pequenos ficam ocultos. Números mensais completos: [Relatório de transparência](/transparency)."
+  },
+  "error": {
+    "title": "Cartão de confiança",
+    "heading": "Cartão de confiança",
+    "text": "Não foi possível carregar o cartão de confiança agora. Preferimos não mostrar números a mostrar números errados; tente de novo em alguns minutos."
+  }
+}

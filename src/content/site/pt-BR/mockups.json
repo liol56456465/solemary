@@ -1,0 +1,80 @@
+{
+  "bot": {
+    "appTag": "APP",
+    "timeToday": "Hoje às 14:05"
+  },
+  "dm": {
+    "frameLabel": "Mensagem direta · Mewvo",
+    "appealHere": "**Apele aqui:** {invite}",
+    "date": "Data: {date}",
+    "caseCode": "Código do caso: {code}",
+    "privacy": "Privacidade: {url}"
+  },
+  "warnDm": {
+    "title": "**Advertência 2 de 3 no Mewvo**",
+    "by": "Por: Moderador",
+    "reason": "Motivo: Spam em #geral",
+    "dateValue": "quinta-feira, 29 de outubro de 2026 às 14:05",
+    "limit": "Com 3 advertências, você será banido."
+  },
+  "banDm": {
+    "time": "Sábado às 19:40",
+    "title": "**Banido do Mewvo**",
+    "by": "Por: Mewvo",
+    "reason": "Motivo: Atingiu o limite de advertências",
+    "dateValue": "sábado, 31 de outubro de 2026 às 19:40",
+    "duration": "Duração: 7 dias, termina em {end} {relative}",
+    "endValue": "sábado, 7 de novembro de 2026 às 19:40",
+    "relativeValue": "(em 7 dias)",
+    "ladderNote": "Apelar deste código também remove a advertência que causou este banimento."
+  },
+  "appealForm": {
+    "frameLabel": "Formulário de apelação · abre pelo botão Apelar",
+    "title": "Apelar de uma punição",
+    "reason": {
+      "label": "Por que ela deve ser retirada?",
+      "help": "Por que você deve ser desbanido, ter o silenciamento removido ou a advertência retirada?",
+      "example": "Postei o mesmo link três vezes porque achei que não tinha sido enviado. Agora conheço a regra e isso não vai se repetir."
+    },
+    "caseCode": {
+      "label": "Código do caso",
+      "help": "Da mensagem direta que você recebeu quando foi punido, por exemplo k7m2qx."
+    },
+    "moreInfo": {
+      "label": "Mais informações (opcional)",
+      "help": "Qualquer outra coisa que os administradores devam saber."
+    },
+    "cancel": "Cancelar",
+    "submit": "Enviar"
+  },
+  "ladder": {
+    "frameLabel": "Escada de advertências · por membro, por servidor",
+    "steps": {
+      "warn1": {
+        "key": "Advertência 1",
+        "what": "Mensagem direta: “Advertência 1 de 3”",
+        "result": "Nível 0"
+      },
+      "warn2": {
+        "key": "Advertência 2",
+        "what": "Mensagem direta: “Advertência 2 de 3”",
+        "result": "Nível 0"
+      },
+      "warn3": {
+        "key": "Advertência 3",
+        "what": "Banimento automático",
+        "result": "7 dias · nível 1"
+      },
+      "level2": {
+        "key": "Próxima advertência",
+        "what": "Banimento automático",
+        "result": "30 dias · nível 2"
+      },
+      "level3": {
+        "key": "Próxima advertência",
+        "what": "Banimento permanente",
+        "result": "Pode apelar por 6 meses · nível 3"
+      }
+    }
+  }
+}

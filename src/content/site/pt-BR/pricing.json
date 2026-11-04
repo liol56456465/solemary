@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "title": "Preços",
+    "description": "O Mewvo é gratuito hoje. Planos pagos previstos: {normal} {normalPrice}, {pro} {proPrice} e {max} {maxPrice} por mês, ou dois meses grátis no pagamento anual."
+  },
+  "head": {
+    "title": "Planos e preços",
+    "leadBilling": "O Free cobre tudo o que o Mewvo faz hoje. Os planos pagos trazem mais espaço e ferramentas; compre um para a sua conta ou como chave de presente para outra pessoa. [Tem uma chave?](/me/redeem)",
+    "testMode": "**Modo de teste.** {notice}",
+    "lead": "Tudo o que o Mewvo faz agora é gratuito. Os planos pagos começam quando o Mewvo abrir para outros servidores; até lá, nada pode ser comprado.",
+    "leadSupport": "Tudo o que o Mewvo faz agora é gratuito. Os planos pagos começam quando o Mewvo abrir para outros servidores; até lá, nada pode ser comprado. [Entre no servidor de suporte]({url}) para saber primeiro."
+  },
+  "plans": {
+    "title": "Planos",
+    "note": "Preços em euros. Limites como os de tags seguem o plano do dono do servidor. Vantagens marcadas como (previsto) ainda não existem e podem mudar antes do início dos planos pagos.",
+    "billingNote": "Os preços são o total que você paga. {vat} Cada compra é um pagamento único por {monthDays} ou {yearDays} dias, sem renovação automática. Você pode desistir em até {withdrawalDays} dias: [direito de desistência](/withdrawal)."
+  },
+  "card": {
+    "planned": "(previsto)",
+    "yearly": "ou {price} por ano ({months} meses grátis)",
+    "freeForGood": "Grátis para sempre",
+    "perMonth": "/ mês",
+    "joinServer": "Entrar no servidor",
+    "joinSupport": "Entrar no servidor de suporte",
+    "seeFeatures": "Ver todas as funcionalidades",
+    "comingSoon": "Em breve",
+    "buyMonth": "Comprar um mês",
+    "buyYear": "Comprar um ano",
+    "gift": "Como presente: [um mês]({monthly}) · [um ano]({yearly})"
+  },
+  "compare": {
+    "title": "O que cada plano inclui",
+    "caption": "Comparação de planos. Linhas marcadas como previstas ainda não existem; a coluna Free é o que o Mewvo faz hoje.",
+    "feature": "Funcionalidade",
+    "yes": "Sim",
+    "no": "Não"
+  },
+  "faq": {
+    "title": "Perguntas sobre preços",
+    "buyNowTest": "Só como teste. O checkout funciona do início ao fim (para você ou como chave de presente), mas nenhum provedor de pagamento está conectado: nenhum cartão é pedido e ninguém é cobrado. Vantagens marcadas como previstas ainda não existem.",
+    "more": "Mais respostas nas [perguntas frequentes](/faq)."
+  }
+}
