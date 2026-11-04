@@ -343,6 +343,12 @@ test('leaderboard: 50 a page, ?page= reads the right offset, Previous/Next links
         assert.ok(last.body.includes('href="/leaderboard?page=2" rel="prev"'));
         assert.ok(!last.body.includes('rel="next"'), 'last page: no Next');
     } finally { await site.close(); }
+    // getLeaderboard serves offsets up to 490: page 10 (offset 450) is the last one with rows.
+    const deep = await serve({ leaderboard: async ({ offset, limit }) => ({ enabled: true, rows: fullPage(offset + 1, limit) }) });
+    try {
+        assert.ok((await deep.get('/leaderboard?page=9')).body.includes('href="/leaderboard?page=10" rel="next"'));
+        assert.ok(!(await deep.get('/leaderboard?page=10')).body.includes('rel="next"'), 'no Next to an always-empty page 11');
+    } finally { await deep.close(); }
     assert.equal(leaderboardPageNumber(undefined), 1);
     assert.equal(leaderboardPageNumber('0'), 1);
     assert.equal(leaderboardPageNumber('-2'), 1);

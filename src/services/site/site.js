@@ -41,7 +41,7 @@ import { html } from '../dashboard/html.js';
 import { EVERYONE_COMMANDS } from '../../config/commands/commandAccess.js';
 import { commandEntries } from '../../config/commands/retirement.js';
 import { enforcementConfig } from '../../config/enforcement.js';
-import { getLeaderboard, getLevelingConfig } from '../leveling/leveling.js';
+import { LEADERBOARD_MAX_OFFSET, getLeaderboard, getLevelingConfig } from '../leveling/leveling.js';
 import { getConfiguredSetting } from '../settings/guildSettings.js';
 import { getServerCat } from '../community/catService.js';
 import { createTransparencyReader } from '../enforcement/transparencyService.js';
@@ -255,7 +255,8 @@ export function leaderboardPage(ctx, { page, board, cat = null }) {
         content = html`<p class="notice">Leveling is turned off on the Mewvo server, so there is no leaderboard right now.</p>`;
     } else {
         const rows = board.rows.slice(0, LEADERBOARD_PAGE_SIZE);
-        const hasNext = board.rows.length > LEADERBOARD_PAGE_SIZE;
+        // getLeaderboard serves offsets up to LEADERBOARD_MAX_OFFSET only: no Next to an empty page.
+        const hasNext = board.rows.length > LEADERBOARD_PAGE_SIZE && page * LEADERBOARD_PAGE_SIZE <= LEADERBOARD_MAX_OFFSET;
         const link = (n, label, rel) => html`<a class="button button-quiet" href="/leaderboard${n > 1 ? `?page=${n}` : ''}" rel="${rel}">${label}</a>`;
         const pager = page > 1 || hasNext
             ? html`<nav class="pager" aria-label="Leaderboard pages">${page > 1 ? link(page - 1, 'Previous', 'prev') : ''}<span class="pager-current">Page ${page}</span>${hasNext ? link(page + 1, 'Next', 'next') : ''}</nav>`

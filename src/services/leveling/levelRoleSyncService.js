@@ -1,7 +1,7 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { getLevelingConfig, getUserLevelData, setLevelRoleReward } from './leveling.js';
-import { planRewardRoles, rewardModeOf } from './levelBoosts.js';
+import { planRewardRoles, rewardModeOf, sortedRewards } from './levelBoosts.js';
 import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
 
 import { getUserLevelPrefix } from '../../utils/database/keys.js';
@@ -93,7 +93,17 @@ export async function syncLevelRolesForMember(client, member, { config = null, l
         }
     }
 
+    // "Highest only": if the top earned role was not given (missing, above the bot, managed,
+    // a Discord error), the lower earned ones stay, so the member is never left with none.
+    // Roles above the level (removeUnearned) still come off.
+    // (summary.added, not member.roles.cache: discord.js updates the cache only on the gateway event.)
+    const keepEarned = rewardModeOf(cfg) === 'highest'
+        && plan.add.some((id) => !summary.added.includes(id))
+        ? new Set(sortedRewards(cfg.roleRewards).filter(([l]) => l <= memberLevel).map(([, id]) => id))
+        : null;
+
     for (const roleId of plan.remove) {
+        if (keepEarned?.has(roleId)) { skip(roleId, 'kept because the highest reward role could not be given'); continue; }
         const role = await resolveRole(guild, roleId);
         if (!role) continue;
         if (!canManageRoles) { skip(roleId, 'I am missing the Manage Roles permission'); continue; }

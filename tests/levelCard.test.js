@@ -61,6 +61,26 @@ test('drawableText drops emoji and control characters, keeps letters, falls back
     assert.equal(drawableText(null, 'x'), 'x');
 });
 
+test('drawableText drops letters the bundled font has no glyph for (no "NO GLYPH" boxes)', () => {
+    assert.equal(drawableText('山田太郎', 'Member'), 'Member');
+    assert.equal(drawableText('Tiếng Việt مرحبا ★ 김'), 'Tiếng Việt');
+    assert.equal(drawableText('Привет Ελλάδα'), 'Привет Ελλάδα');
+    assert.equal(drawableText('Ｔａｒｏ', 'x'), 'x', 'fullwidth forms are not in the font');
+    assert.equal(drawableText('Zoë (#1) – 5€'), 'Zoë (#1) – 5€');
+});
+
+test('the card falls back to altName (username) when no character of the name can be drawn', async () => {
+    let input;
+    const perms = { has: () => true };
+    const cjk = { ...member, displayName: '山田太郎', user: { ...member.user, username: 'yamada' } };
+    await levelUpCardFor({ name: 'G' }, cjk, { level: 3, xp: 0 }, { levelUpCard: true }, perms, async (i) => { input = i; return null; });
+    assert.equal(input.altName, 'yamada');
+    const png = await renderLevelCard({ name: '山田太郎', altName: 'yamada', serverName: 'S', level: 3, xp: 1, xpNeeded: 100 });
+    assert.ok(Buffer.isBuffer(png) && png.length > 0);
+    const punct = await renderLevelCard({ name: '王-王', altName: 'wang', serverName: 'S', level: 3, xp: 1, xpNeeded: 100 });
+    assert.ok(Buffer.isBuffer(punct) && punct.length > 0);
+});
+
 test('cardAccentOf: a stored colour code, else Mewvo blue', () => {
     assert.equal(cardAccentOf('#9b59b6'), '#9B59B6');
     assert.equal(cardAccentOf(null), DEFAULT_CARD_ACCENT);
