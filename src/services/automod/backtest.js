@@ -28,7 +28,7 @@ import { isAdministrator } from '../enforcement/enforcementService.js';
 import { applyRuleModes, contentHits, inviteGuildIsForeign } from './automodService.js';
 import { resolveRuleMode, ruleMode } from './policy.js';
 import { CustomRuleError, cleanCustomRule, compileRules, matchCompiled } from './customRules.js';
-import { findBlockedWord, findInsult, findPersonalInfo, findSexualWord, normalizeText } from './filters.js';
+import { INVISIBLE_PATTERN, findBlockedWord, findInsult, findPersonalInfo, findSexualWord, normalizeText } from './filters.js';
 
 export const BACKTEST_MAX_CHANNELS = 20;
 export const BACKTEST_DAY_CHOICES = [1, 3, 7];
@@ -104,10 +104,20 @@ const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]{2,}/g;
  */
 export function maskExcerpt(text, terms = [], { hidePersonal = false } = {}) {
     let value = String(text || '').replace(/\s+/g, ' ').trim();
-    if (hidePersonal) value = value.replace(EMAIL, '[e-mail]').replace(/\d/g, '#');
+    // Blocked and sexual words of the whole text are always terms, whichever rule hit: a slur
+    // spelled out ("n i g g e r") or split over words is not caught token by token below, and
+    // must hide the excerpt even when the language rule is off and another rule (caps) hit.
+    const allTerms = [...terms, findBlockedWord(value), findSexualWord(value)];
+    // Folded like findPersonalInfo (NFKC, invisible characters removed) and every digit
+    // (\p{Nd}, not only 0-9), so a full-width phone number or an e-mail with a zero-width
+    // space in it is hidden too.
+    if (hidePersonal) {
+        value = value.normalize('NFKC').replace(INVISIBLE_PATTERN, '').replace(/\s+/g, ' ').trim()
+            .replace(EMAIL, '[e-mail]').replace(/\p{Nd}/gu, '#');
+    }
     if (!value) return '';
     // Per term: its tokens (2+ characters) and its joined-up form (4+ characters).
-    const wanted = terms.filter(Boolean).map((term) => {
+    const wanted = allTerms.filter(Boolean).map((term) => {
         const parts = normalizeText(term).split(/[^a-z0-9]+/).filter((part) => part.length >= 2);
         const joined = parts.join('');
         return { parts: new Set(parts), joined: joined.length >= 4 ? joined : null, found: false };

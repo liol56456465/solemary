@@ -10,6 +10,7 @@ process.env.MAIN_GUILD_ID ??= '100000000000000001';
 const { automodStateSizes, contentHits, evaluateMessage, resetAutomodState } = await import('../../src/services/automod/automodService.js');
 const { findCustomRuleHit, resetCustomRulesCache } = await import('../../src/services/automod/customRules.js');
 const { automodConfig } = await import('../../src/config/automod.js');
+const { findPersonalInfo } = await import('../../src/services/automod/filters.js');
 const { normalizeSettings } = await import('../../src/services/automod/automodSettings.js');
 const { setGuildOwnerResolver, setPremiumCache } = await import('../../src/services/billing/premiumEffects.js');
 const { logger } = await import('../../src/utils/logger.js');
@@ -135,6 +136,34 @@ test('maskWord and maskExcerpt: matched words partly masked, short excerpt, slur
     assert.ok(cut.split(' ').length <= 17);
     assert.equal(maskExcerpt('mail me at a.b@example.com or +44 20 7946 0958', [], { hidePersonal: true }), 'mail me at [e-mail] or +## ## #### ####');
     assert.equal(maskExcerpt('', ['x']), '');
+});
+
+// Bug sweep 2026-11-04: a slur spelled out or split over words, with no term passed (the
+// language rule off, another rule such as caps hit), was shown raw; personal info in
+// full-width digits or with a zero-width space was shown raw although findPersonalInfo saw it.
+test('maskExcerpt: spelled-out slurs hide the excerpt without a term; personal info is folded before hiding', () => {
+    assert.equal(maskExcerpt('YOU ARE A N I G G E R', []), null, 'spelled out, no term: nothing shown');
+    assert.equal(maskExcerpt('just kill yourself lol', []), null, 'split over words, no term: nothing shown');
+    const fullWidth = 'call me +４４ ２０ ７９４６ ０９５８';
+    assert.ok(findPersonalInfo(fullWidth));
+    assert.equal(maskExcerpt(fullWidth, [], { hidePersonal: true }), 'call me +## ## #### ####');
+    const zeroWidth = 'mail john​@example.com';
+    assert.ok(findPersonalInfo(zeroWidth));
+    assert.equal(maskExcerpt(zeroWidth, [], { hidePersonal: true }), 'mail [e-mail]');
+});
+
+test('job: a spelled-out slur in a caps message never shows when the language rule is off', async () => {
+    const now = Date.now();
+    const msgs = [histMsg('c1', 1000, 'HEY EVERYONE YOU ARE ALL A N I G G E R', { now })];
+    const guild = fakeGuild([fakeChannel('c1', 'general', msgs)], { members: { u1: plainMember } });
+    const runner = createBacktestRunner({ now: () => now });
+    runner.start({ guild, channelIds: ['c1'], days: 1, settings: normalizeSettings({ enabled: true, ruleModes: { language: 'off' } }) });
+    await runner.done(GUILD);
+    const job = runner.get(GUILD);
+    assert.equal(job.status, 'done', job.error);
+    assert.ok(job.result.byRule.caps, 'caps hit');
+    assert.equal(job.result.examples[0].excerpt, null, 'excerpt hidden');
+    assert.ok(!JSON.stringify(job).includes('N I G G E R'));
 });
 
 test('cleanDraftRule cleans like a stored custom rule; empty draft → null; bad words → BacktestError', () => {

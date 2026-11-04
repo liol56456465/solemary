@@ -43,7 +43,7 @@ const SEXUAL_WORDS = [
 const LEET = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '@': 'a', '$': 's', '!': 'i', '|': 'i' };
 
 // Characters that render as nothing (or as a blank) and are used to break up words.
-const INVISIBLE_PATTERN = /[­͏؜ᅟᅠ឴឵᠋-᠏​-‏‪-‮⁠-⁯ㅤ︀-️﻿ﾠ\u{E0000}-\u{E007F}]/gu;
+export const INVISIBLE_PATTERN = /[­͏؜ᅟᅠ឴឵᠋-᠏​-‏‪-‮⁠-⁯ㅤ︀-️﻿ﾠ\u{E0000}-\u{E007F}]/gu;
 
 // Look-alike letters NFKD does not fold: Cyrillic, Greek, small capitals, IPA and others.
 const HOMOGLYPHS = {
