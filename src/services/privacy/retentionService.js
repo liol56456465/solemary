@@ -1,0 +1,132 @@
+// retentionService.js — deletes old personal data on a schedule (GDPR Art. 5(1)(e), storage
+// limitation; automatic deletion approved by the owner, 2026-11-04).
+//
+// Rules (each one bounded DELETE, at most BATCH_LIMIT rows per run; a bigger backlog is
+// cleared over the following days):
+//   watchlist     mod_watchlist rows that ended (or ran out) more than 1 year ago
+//   no_contact    no_contact_orders that ended (or ran out) more than 1 year ago
+//   raid_reports  automod_raid_incidents (incident reports) that ended more than 1 year ago
+//   verification_audit  verification_audit rows older than 1 year
+//   verification_ips    IP hashes not seen for 60 days (members with an active main-server
+//                       ban keep theirs; verificationGuard.js)
+// Elsewhere, on their own daily crons in app.js: the raid timeline (incident_timelines and
+// their events, 90 days after the end; incidentTimeline.js), member_events (90 days),
+// website accounts that never linked Discord (accountStore.prune, 7 days).
+// Not touched (retention is a legal question): mod_cases, mod_ladder, mod_appeals, case
+// notes / evidence / edits, staff_warnings, level data, tickets.
+//
+// runRetention runs every rule; one failing rule is logged and the others still run. The
+// summary log line has counts only, never ids.
+
+import { pgConfig } from '../../config/database/postgres.js';
+import { logger } from '../../utils/logger.js';
+import { query as dbQuery } from '../enforcement/db.js';
+import { IP_RETENTION_MS, pruneVerificationIpHashes } from '../verificationGuard.js';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const YEAR_MS = 365 * DAY_MS;
+export const BATCH_LIMIT = 5000;
+
+/** Retention periods, for the privacy policy and the tests. */
+export const RETENTION_DAYS = Object.freeze({
+    watchlist: 365,
+    no_contact: 365,
+    raid_reports: 365,
+    verification_audit: 365,
+    verification_ips: IP_RETENTION_MS / DAY_MS,
+});
+
+/** Daily at 03:30 UTC, and once about 5 minutes after the bot is ready. */
+export const RETENTION_CRON = '30 3 * * *';
+export const RETENTION_STARTUP_DELAY_MS = 5 * 60 * 1000;
+export const RETENTION_JOB = 'privacy_retention';
+
+const cutoff = (now, days) => new Date(now - days * DAY_MS);
+const count = (result) => result?.rowCount || 0;
+
+/** mod_watchlist: ended, or past `until` and never closed, more than a year ago. */
+export async function pruneWatchlist({ query = dbQuery, tables = pgConfig.tables, now = Date.now(), limit = BATCH_LIMIT } = {}) {
+    const t = tables.mod_watchlist;
+    return count(await query(
+        `DELETE FROM ${t} WHERE id IN (
+             SELECT id FROM ${t}
+             WHERE COALESCE(ended_at, until) IS NOT NULL AND COALESCE(ended_at, until) < $1
+             LIMIT $2)`,
+        [cutoff(now, RETENTION_DAYS.watchlist), limit]));
+}
+
+/** no_contact_orders: ended early, or past `until`, more than a year ago. */
+export async function pruneNoContactOrders({ query = dbQuery, tables = pgConfig.tables, now = Date.now(), limit = BATCH_LIMIT } = {}) {
+    const t = tables.no_contact_orders;
+    return count(await query(
+        `DELETE FROM ${t} WHERE id IN (
+             SELECT id FROM ${t} WHERE COALESCE(ended_at, until) < $1 LIMIT $2)`,
+        [cutoff(now, RETENTION_DAYS.no_contact), limit]));
+}
+
+/** automod_raid_incidents (incident reports): ended more than a year ago (ended_at is NOT NULL). */
+export async function pruneRaidIncidents({ query = dbQuery, tables = pgConfig.tables, now = Date.now(), limit = BATCH_LIMIT } = {}) {
+    const t = tables.automod_raid_incidents;
+    return count(await query(
+        `DELETE FROM ${t} WHERE id IN (
+             SELECT id FROM ${t} WHERE COALESCE(ended_at, started_at) < $1 LIMIT $2)`,
+        [cutoff(now, RETENTION_DAYS.raid_reports), limit]));
+}
+
+/** verification_audit: rows older than a year. */
+export async function pruneVerificationAudit({ query = dbQuery, tables = pgConfig.tables, now = Date.now(), limit = BATCH_LIMIT } = {}) {
+    const t = tables.verification_audit;
+    return count(await query(
+        `DELETE FROM ${t} WHERE id IN (
+             SELECT id FROM ${t} WHERE created_at < $1 LIMIT $2)`,
+        [cutoff(now, RETENTION_DAYS.verification_audit), limit]));
+}
+
+/** verification_ips: the guard's own prune (60 days, active bans kept). */
+export async function pruneVerificationIps({ query = dbQuery, now = Date.now(), limit = BATCH_LIMIT } = {}) {
+    return pruneVerificationIpHashes({ q: query, now, limit });
+}
+
+export const RETENTION_RULES = Object.freeze([
+    ['watchlist', pruneWatchlist],
+    ['no_contact', pruneNoContactOrders],
+    ['raid_reports', pruneRaidIncidents],
+    ['verification_audit', pruneVerificationAudit],
+    ['verification_ips', pruneVerificationIps],
+]);
+
+/**
+ * Runs every rule. Returns { counts: { rule: n }, failed: [rule] }; never throws. A failed
+ * rule is logged (warn) and the next one runs. One info line with the counts.
+ */
+export async function runRetention(_client = null, { query = dbQuery, tables = pgConfig.tables, now = Date.now(), rules = RETENTION_RULES } = {}) {
+    const counts = {};
+    const failed = [];
+    for (const [name, rule] of rules) {
+        try {
+            counts[name] = await rule({ query, tables, now });
+        } catch (error) {
+            failed.push(name);
+            logger.warn(`Retention: rule ${name} failed, nothing deleted by it this run: ${error.message}`);
+        }
+    }
+    const parts = Object.entries(counts).map(([name, n]) => `${name}=${n}`);
+    if (failed.length) parts.push(`failed=${failed.join(',')}`);
+    logger.info(`Retention: deleted ${parts.join(' ') || 'nothing'}`);
+    return { counts, failed };
+}
+
+/**
+ * Wires the job: the daily cron and one run RETENTION_STARTUP_DELAY_MS after ready. `wrap` is
+ * app.js's overlap guard (exclusive), so the startup run and the cron never run at once.
+ * whenReady(fn) calls fn once the client is ready. Returns the wrapped job.
+ */
+export function scheduleRetention({ schedule, wrap, run, whenReady, setTimer = setTimeout }) {
+    const job = wrap(RETENTION_JOB, run);
+    schedule(RETENTION_CRON, job, { timezone: 'UTC' });
+    whenReady(() => {
+        const timer = setTimer(job, RETENTION_STARTUP_DELAY_MS);
+        timer?.unref?.();
+    });
+    return job;
+}

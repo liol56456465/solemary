@@ -25,7 +25,7 @@ import { STATUS_COLORS } from './automod/reviewFormat.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 export const MIN_ACCOUNT_AGE_MS = 7 * DAY;
-const IP_RETENTION_MS = 60 * DAY;
+export const IP_RETENTION_MS = 60 * DAY;
 const PRUNE_INTERVAL_MS = DAY;
 
 let lastPrune = 0;
@@ -46,20 +46,34 @@ export function accountAgeMs(userId, now = Date.now()) {
     return now - SnowflakeUtil.timestampFrom(userId);
 }
 
+/**
+ * Deletes IP hashes not seen for IP_RETENTION_MS, except those of members with an active
+ * ban in the main server. At most `limit` rows per call. Returns the count; throws on a
+ * database error. Run daily by the retention job (privacy/retentionService.js) and, at
+ * most once a day, before a verification is checked.
+ */
+export async function pruneVerificationIpHashes({ q = query, now = Date.now(), limit = 5000 } = {}) {
+    const { rowCount } = await q(
+        `DELETE FROM ${T.verificationIps} WHERE ctid IN (
+             SELECT v.ctid FROM ${T.verificationIps} v
+             WHERE v.seen_at < $1
+               AND NOT EXISTS (
+                   SELECT 1 FROM ${T.cases} c
+                   WHERE c.target_user_id = v.user_id AND c.guild_id = $2 AND c.type = 'ban' AND c.is_test = FALSE
+                     AND c.status = ANY($3) AND (c.expires_at IS NULL OR c.expires_at > $4)
+               )
+             LIMIT $5)`,
+        [new Date(now - IP_RETENTION_MS), enforcementConfig.mainGuildId, OPEN_STATUSES, new Date(now), limit]
+    );
+    return rowCount || 0;
+}
+
 async function pruneOldHashes() {
     const now = Date.now();
     if (now - lastPrune < PRUNE_INTERVAL_MS) return;
     lastPrune = now;
-    await query(
-        `DELETE FROM ${T.verificationIps} v
-         WHERE v.seen_at < NOW() - ($1::bigint * INTERVAL '1 millisecond')
-           AND NOT EXISTS (
-               SELECT 1 FROM ${T.cases} c
-               WHERE c.target_user_id = v.user_id AND c.guild_id = $2 AND c.type = 'ban' AND c.is_test = FALSE
-                 AND c.status = ANY($3) AND (c.expires_at IS NULL OR c.expires_at > NOW())
-           )`,
-        [IP_RETENTION_MS, enforcementConfig.mainGuildId, OPEN_STATUSES]
-    ).catch((error) => logger.warn(`Could not prune verification IP hashes: ${error.message}`));
+    await pruneVerificationIpHashes({ now })
+        .catch((error) => logger.warn(`Could not prune verification IP hashes: ${error.message}`));
 }
 
 async function recordIpHash(userId, ipHash) {

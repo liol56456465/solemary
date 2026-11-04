@@ -685,7 +685,7 @@ test('bonus counting in the store: 30 letters, 100 Pro bonuses of 6 months, a hi
     assert.equal(await store.findByDiscordId('123'), null);
 });
 
-test('prune: accounts that never linked Discord are deleted after 7 days; linked, unlinked-later and email-confirmed ones stay', async () => {
+test('prune: accounts that never linked Discord are deleted after 7 days (email-confirmed ones once idle 7 days); linked, unlinked-later and recently used ones stay', async () => {
     let now = Date.now();
     const store = createMemoryAccountStore({ now: () => now });
     const { account: never } = await store.createAccount({ username: 'never_linked', passwordHash: 'h' });
@@ -696,11 +696,15 @@ test('prune: accounts that never linked Discord are deleted after 7 days; linked
     await store.linkDiscord({ accountId: linked.id, discordUserId: DISCORD_A });
     await store.linkDiscord({ accountId: unlinked.id, discordUserId: DISCORD_B });
     await store.unlinkDiscord(unlinked.id);
+    const { account: legacyIdle } = await store.createAccount({ username: 'legacy_idle', passwordHash: 'h' });
     store._accounts.get(legacy.id).email_confirmed_at = new Date(now);
+    store._accounts.get(legacyIdle.id).email_confirmed_at = new Date(now);
     now += 7 * 24 * 3600 * 1000 + 1;
     store._accounts.get(fresh.id).created_at = new Date(now);
-    assert.deepEqual(await store.prune(), { accounts: 1, tokens: 0 });
+    store._accounts.get(legacy.id).last_login_at = new Date(now - 60 * 1000);
+    assert.deepEqual(await store.prune(), { accounts: 2, tokens: 0 });
     assert.equal(await store.findById(never.id), null);
+    assert.equal(await store.findById(legacyIdle.id), null, 'email-confirmed, never linked, no login for 7 days');
     for (const kept of [linked, unlinked, legacy, fresh]) assert.ok(await store.findById(kept.id), kept.username);
 });
 

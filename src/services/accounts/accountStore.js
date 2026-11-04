@@ -294,13 +294,16 @@ export function createAccountStore({
 
     /**
      * Daily: accounts older than 7 days that never linked Discord (no Discord id now, and no
-     * bonus row ever pointed at them; accounts confirmed by email before v8 are kept), and
-     * old email-link tokens from before v8.
+     * bonus row ever pointed at them), and old email-link tokens from before v8. Accounts
+     * confirmed by email before v8 go by the same rule (retention, owner 2026-11-04), but only
+     * once nobody logged in to them for 7 days either, so one still in use is not deleted.
      */
     async function prune() {
+        const cutoff = at(now() - UNLINKED_KEEP_MS);
         const { rowCount: accounts } = await q(
-            `DELETE FROM ${A} a WHERE a.discord_user_id IS NULL AND a.email_confirmed_at IS NULL AND a.created_at <= $1
-             AND NOT EXISTS (SELECT 1 FROM ${B} b WHERE b.account_id = a.id)`, [at(now() - UNLINKED_KEEP_MS)]);
+            `DELETE FROM ${A} a WHERE a.discord_user_id IS NULL AND a.created_at <= $1
+             AND (a.email_confirmed_at IS NULL OR COALESCE(a.last_login_at, a.created_at) <= $1)
+             AND NOT EXISTS (SELECT 1 FROM ${B} b WHERE b.account_id = a.id)`, [cutoff]);
         const dayAgo = at(now() - 24 * 60 * 60 * 1000);
         const { rowCount: tokens } = await q(`DELETE FROM ${T} WHERE expires_at <= $1 OR used_at <= $1`, [dayAgo]);
         return { accounts: accounts || 0, tokens: tokens || 0 };

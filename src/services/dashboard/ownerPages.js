@@ -251,6 +251,7 @@ export function ownerActionText(key, names = new Map()) {
     if ((m = /^premium\.subscriptions\.(\d+)\.grant$/.exec(k))) return `Plan given to user ${m[1]}`;
     if ((m = /^premium\.subscriptions\.(\d+)\.end$/.exec(k))) return `Subscription of user ${m[1]} ended`;
     if ((m = /^privacy\.export\.(\d+)$/.exec(k))) return `Data of user ${m[1]} downloaded`;
+    if ((m = /^privacy\.erase\.([a-z0-9]{5,7})$/.exec(k))) return `Case ${m[1]} erased (privacy request)`;
     return k;
 }
 
