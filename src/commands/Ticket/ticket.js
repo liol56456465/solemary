@@ -42,7 +42,7 @@ export default {
                     option
                         .setName("button_label")
                         .setDescription(
-                            "The label for the ticket creation button (default: Create Ticket)",
+                            "The label for the ticket creation button (default: Open ticket)",
                         )
                         .setRequired(false),
                 )
@@ -130,10 +130,10 @@ export default {
             const categoryChannel = interaction.options.getChannel("category");
             const closedCategoryChannel = interaction.options.getChannel("closed_category");
             const staffRole = interaction.options.getRole("staff_role");
-const panelMessage = interaction.options.getString("panel_message") || "Click the button below to create a support ticket.";
+const panelMessage = interaction.options.getString("panel_message") || "Need help from staff? Press the button below to open a private ticket.";
             const buttonLabel =
                 interaction.options.getString("button_label") ||
-"Create Ticket";
+"Open ticket";
             const maxTicketsPerUser = interaction.options.getInteger("max_tickets_per_user") || 3;
 const dmOnClose = interaction.options.getBoolean("dm_on_close") !== false;
 

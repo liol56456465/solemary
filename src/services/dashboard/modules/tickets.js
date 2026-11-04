@@ -36,7 +36,7 @@ ${numberInput('maxTicketsPerUser', t.maxTicketsPerUser ?? 3, { label: 'Open tick
 ${switchInput('dmOnClose', t.dmOnClose !== false, { label: 'Message the member when their ticket closes', help: 'Sent to them privately (a DM).' })}
 ${channelPicker(g, 'ticketLogsChannelId', t.ticketLogsChannelId, { label: 'Ticket log channel', perms: PERMS.post, help: 'Staff get a short line here when a ticket is opened, claimed, closed or deleted.' })}
 ${channelPicker(g, 'ticketTranscriptChannelId', t.ticketTranscriptChannelId, { label: 'Transcript channel', perms: PERMS.postFiles, help: 'A transcript is a file with every message from a ticket. Mewvo posts it here when the ticket closes.' })}
-${textInput('ticketButtonLabel', t.ticketButtonLabel || 'Create Ticket', { label: 'Button text', max: 80, help: 'The words on the button members press to open a ticket.' })}
+${textInput('ticketButtonLabel', t.ticketButtonLabel || 'Open ticket', { label: 'Button text', max: 80, help: 'The words on the button members press to open a ticket.' })}
 ${textArea('ticketPanelMessage', t.ticketPanelMessage || '', { label: 'Panel message', max: 2000, help: 'The text above the button. Tell members what tickets are for.' })}</div>`);
         const canPost = ctx.canEdit && ctx.canAct;
         const panel = t.ticketPanelChannelId
@@ -45,13 +45,13 @@ ${buttonForm(ctx, 'tickets', 'panel-publish', 'Update or re-post the panel', {},
 <p class="muted">Saving the panel text below does not change the message already in Discord. Update the panel to show the new text.</p>`
             : html`<p class="warn">No ticket panel yet. Fill this in to post one.</p>${postForm(ctx, 'tickets', 'setup', html`<div class="grid">
 ${channelPicker(g, 'panelChannelId', null, { label: 'Post the panel in', perms: PERMS.post, optional: false, help: 'Pick a channel every member can see.' })}
-${textInput('buttonLabel', 'Create Ticket', { label: 'Button text', max: 80 })}
+${textInput('buttonLabel', 'Open ticket', { label: 'Button text', max: 80 })}
 ${channelPicker(g, 'categoryId', null, { label: 'Open tickets category', kinds: ['category'], perms: PERMS.category, noneLabel: 'a new "Tickets" category', help: 'A category is a folder of channels. New ticket channels are made in it.' })}
 ${channelPicker(g, 'closedCategoryId', null, { label: 'Closed tickets category', kinds: ['category'], perms: PERMS.category, help: 'Closed tickets are moved here.' })}
 ${rolePicker(g, 'staffRoleId', null, { label: 'Ticket staff role', assign: false, help: 'Members with this role can see and answer every ticket.' })}
 ${numberInput('maxTicketsPerUser', 3, { label: 'Open tickets per member', min: 1, max: 10, help: 'From 1 to 10.' })}
 ${switchInput('dmOnClose', true, { label: 'Message the member when their ticket closes' })}
-${textArea('panelMessage', 'Click the button below to create a support ticket.', { label: 'Panel message', max: 2000 })}</div>`, { submit: 'Set up and post the panel', canEdit: canPost })}`;
+${textArea('panelMessage', 'Need help from staff? Press the button below to open a private ticket.', { label: 'Panel message', max: 2000 })}</div>`, { submit: 'Set up and post the panel', canEdit: canPost })}`;
         const blockForm = postForm(ctx, 'tickets', 'block', html`<div class="grid">
 ${textInput('userId', '', { label: 'Member (user ID)', max: 25, help: 'The long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID.' })}
 ${textInput('reason', '', { label: 'Reason (optional)', max: 200, help: 'Only staff see it, in the dashboard history.' })}</div>`, { submit: 'Block from modmail', canEdit: ctx.canEdit && ctx.canAct, confirm: 'Block this member from modmail?' })
@@ -117,9 +117,9 @@ ${section('Canned answers', html`${table(['Name', 'Text', ''], cannedRows)}${can
                 dmOnClose: checkbox(form, 'dmOnClose'),
                 ticketLogsChannelId: channelField(g, form, 'ticketLogsChannelId', { label: 'Ticket log channel' }),
                 ticketTranscriptChannelId: channelField(g, form, 'ticketTranscriptChannelId', { label: 'Transcript channel' }),
-                ticketButtonLabel: text(form, 'ticketButtonLabel', 80) || 'Create Ticket',
-                ticketPanelMessage: multiline(form, 'ticketPanelMessage', 2000) || current.ticketPanelMessage || 'Click the button below to create a support ticket.',
-            }, { ...current, dmOnClose: current.dmOnClose !== false, maxTicketsPerUser: current.maxTicketsPerUser ?? 3, ticketButtonLabel: current.ticketButtonLabel || 'Create Ticket' });
+                ticketButtonLabel: text(form, 'ticketButtonLabel', 80) || 'Open ticket',
+                ticketPanelMessage: multiline(form, 'ticketPanelMessage', 2000) || current.ticketPanelMessage || 'Need help from staff? Press the button below to open a private ticket.',
+            }, { ...current, dmOnClose: current.dmOnClose !== false, maxTicketsPerUser: current.maxTicketsPerUser ?? 3, ticketButtonLabel: current.ticketButtonLabel || 'Open ticket' });
             if (!Object.keys(patch).length) return NOTHING;
             const { before, after } = await ctx.services.updateTicketSettings(ctx.client, ctx.guildId, patch);
             return { changes: diffSnapshots(before, after, Object.keys(patch)), message: 'Ticket settings saved.' };

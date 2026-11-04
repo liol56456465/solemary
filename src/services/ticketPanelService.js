@@ -11,8 +11,8 @@ import { getTicketPanelStatus } from '../utils/panelStatus.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { logger } from '../utils/logger.js';
 
-export const DEFAULT_TICKET_PANEL_MESSAGE = 'Click the button below to create a support ticket.';
-export const DEFAULT_TICKET_BUTTON_LABEL = 'Create Ticket';
+export const DEFAULT_TICKET_PANEL_MESSAGE = 'Need help from staff? Press the button below to open a private ticket.';
+export const DEFAULT_TICKET_BUTTON_LABEL = 'Open ticket';
 const PANEL_PERMISSIONS = ['ViewChannel', 'SendMessages', 'EmbedLinks'];
 
 function refused(message, type = ErrorTypes.CONFIGURATION) {

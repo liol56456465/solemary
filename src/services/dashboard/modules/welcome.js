@@ -214,9 +214,9 @@ ${switchInput('leaveLogsEnabled', w.leaveLogs?.enabled, { label: 'Log leaves', h
 ${channelPicker(g, 'leaveLogsChannelId', w.leaveLogs?.channelId || null, { label: 'Leave log channel', perms: PERMS.post })}</div>`);
         const embedHint = 'The message is sent inside a box (an embed) with a title, a colour and an optional picture. The message text above goes inside the box. If Mewvo lacks the Embed Links permission in that channel, only the text is sent.';
         const welcomeEmbed = html`${postForm(ctx, 'welcome', 'welcome-embed', embedFields('welcome', w.welcomeEmbed, w.welcomeImage,
-            { title: '🎉 Welcome!', footer: 'Welcome to <server name>!' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'welcome', images.welcome)}`;
+            { title: '"Welcome"', footer: 'the server name' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'welcome', images.welcome)}`;
         const goodbyeEmbed = html`${postForm(ctx, 'welcome', 'goodbye-embed', embedFields('goodbye', w.leaveEmbed, goodbyeImageOf(w.leaveEmbed),
-            { title: '👋 Goodbye', footer: 'Goodbye from <server name>!' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'goodbye', images.goodbye)}`;
+            { title: '"Goodbye"', footer: 'the server name' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'goodbye', images.goodbye)}`;
         // v6: cards grouped by topic (common.js topic/section).
         const embedHelp = ['The box around the message: title, colour and an optional picture.', embedHint];
         return html`${topic('Welcome', 'What Mewvo posts when someone joins.', html`${section('Welcome', welcome, 'The welcome message, where it goes, and an optional private message.', { key: 'welcome' })}

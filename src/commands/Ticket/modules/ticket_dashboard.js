@@ -103,9 +103,9 @@ function buildDashboardEmbed(config, guild, panelStatus = null, ticketStats = nu
     const closedCategoryChannel = config.ticketClosedCategoryId ? guild.channels.cache.get(config.ticketClosedCategoryId) : null;
     const closedCategory = closedCategoryChannel ? closedCategoryChannel.toString() : '`Not set`';
 
-    const rawMsg = config.ticketPanelMessage || 'Click the button below to create a support ticket.';
+    const rawMsg = config.ticketPanelMessage || 'Need help from staff? Press the button below to open a private ticket.';
     const panelMsg = `\`${rawMsg.length > 60 ? rawMsg.substring(0, 60) + '…' : rawMsg}\``;
-    const btnLabel = `\`${config.ticketButtonLabel || 'Create Ticket'}\``;
+    const btnLabel = `\`${config.ticketButtonLabel || 'Open ticket'}\``;
 
     let panelStatusValue = formatPanelStatusField(panelStatus);
 
@@ -153,7 +153,7 @@ function buildSelectMenu(guildId) {
                 .setValue('panel_message'),
             new StringSelectMenuOptionBuilder()
                 .setLabel('Edit button label')
-                .setDescription('Change the label on the Create Ticket button')
+                .setDescription('Change the label on the ticket button')
                 .setValue('button_label'),
             new StringSelectMenuOptionBuilder()
                 .setLabel('Change open tickets category')
@@ -300,12 +300,12 @@ async function handlePanelMessage(selectInteraction, rootInteraction, guildConfi
                     .setStyle(TextInputStyle.Paragraph)
                     .setValue(
                         guildConfig.ticketPanelMessage ||
-                            'Click the button below to create a support ticket.',
+                            'Need help from staff? Press the button below to open a private ticket.',
                     )
                     .setMaxLength(2000)
                     .setMinLength(1)
                     .setRequired(true)
-                    .setPlaceholder('Click the button below to create a support ticket.'),
+                    .setPlaceholder('Need help from staff? Press the button below to open a private ticket.'),
             ),
         );
 
@@ -354,11 +354,11 @@ async function handleButtonLabel(selectInteraction, rootInteraction, guildConfig
                     .setCustomId('btn_label_input')
                     .setLabel('Button label (max 80 characters)')
                     .setStyle(TextInputStyle.Short)
-                    .setValue(guildConfig.ticketButtonLabel || 'Create Ticket')
+                    .setValue(guildConfig.ticketButtonLabel || 'Open ticket')
                     .setMaxLength(80)
                     .setMinLength(1)
                     .setRequired(true)
-                    .setPlaceholder('Create Ticket'),
+                    .setPlaceholder('Open ticket'),
             ),
         );
 

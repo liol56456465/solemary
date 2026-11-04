@@ -22,6 +22,8 @@ import { successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { TitanBotError, replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { getColor } from '../../config/bot.js';
+import { fillTemplate, messageTemplate, templatesByGroup } from '../../config/messageTemplates.js';
+import { EMBED_COLOURS } from '../../services/botMessageService.js';
 
 const MAX_FIELDS = 25;
 const IDLE_TIMEOUT = 900_000; 
@@ -127,6 +129,10 @@ function buildMainMenu(state) {
         .setCustomId('eb_menu')
         .setPlaceholder('What do you want to change?')
         .addOptions(
+            new StringSelectMenuOptionBuilder()
+                .setLabel('Start from a template')
+                .setDescription('Ready-made announcements, like how to appeal')
+                .setValue('use_template'),
             new StringSelectMenuOptionBuilder()
                 .setLabel('Edit content')
                 .setDescription('Set the title and description')
@@ -343,6 +349,81 @@ async function handleSetColor(selectInteraction, rootInteraction, state) {
         await refreshDashboard(rootInteraction, state);
         } catch (error) {
             logger.warn('Embed builder color picker interaction failed:', error.message);
+        }
+    });
+}
+
+/** The #RRGGBB of an EMBED_COLOURS key (the dashboard's colour list), or null. */
+function templateHex(key) {
+    return EMBED_COLOURS.find(([k]) => k === key)?.[2] || null;
+}
+
+/**
+ * "Start from a template": the same library as the dashboard Messages page
+ * (config/messageTemplates.js). Group first, then the template (a select holds at most
+ * 25 options). Fills title, description and colour; nothing is posted.
+ */
+async function handleTemplate(selectInteraction, rootInteraction, state) {
+    await selectInteraction.deferUpdate().catch(() => {});
+    const groups = templatesByGroup();
+    const groupSelect = new StringSelectMenuBuilder()
+        .setCustomId('eb_tpl_group')
+        .setPlaceholder('Pick a group')
+        .addOptions(groups.slice(0, 25).map((g) => new StringSelectMenuOptionBuilder()
+            .setLabel(g.label)
+            .setValue(g.key)
+            .setDescription(`${g.templates.length} template${g.templates.length === 1 ? '' : 's'}`)));
+
+    const pickerMessage = await selectInteraction.followUp({
+        embeds: [new EmbedBuilder()
+            .setTitle('Start from a template')
+            .setDescription('Pick a group, then a template. It replaces the title, text and colour. Edit it before you post: parts in [square brackets] are for you to fill in.')
+            .setColor(getColor('info'))],
+        components: [new ActionRowBuilder().addComponents(groupSelect)],
+        flags: MessageFlags.Ephemeral,
+    });
+
+    // Tied to this picker's own message, so a second picker opened from the menu never
+    // catches (and double-acknowledges) this one's selects.
+    const filter = (id) => (i) => i.user.id === selectInteraction.user.id && i.customId === id && i.message?.id === pickerMessage?.id;
+    const groupCollector = rootInteraction.channel.createMessageComponentCollector({
+        componentType: ComponentType.StringSelect, filter: filter('eb_tpl_group'), time: 60_000, max: 1,
+    });
+
+    groupCollector.on('collect', async (groupInter) => {
+        try {
+            const group = groups.find((g) => g.key === groupInter.values[0]);
+            if (!group) return groupInter.deferUpdate().catch(() => {});
+            const templateSelect = new StringSelectMenuBuilder()
+                .setCustomId('eb_tpl_pick')
+                .setPlaceholder('Pick a template')
+                .addOptions(group.templates.slice(0, 25).map((t) => new StringSelectMenuOptionBuilder()
+                    .setLabel(t.name.slice(0, 100))
+                    .setValue(t.id)));
+            await groupInter.update({ components: [new ActionRowBuilder().addComponents(templateSelect)] });
+
+            const pickCollector = rootInteraction.channel.createMessageComponentCollector({
+                componentType: ComponentType.StringSelect, filter: filter('eb_tpl_pick'), time: 60_000, max: 1,
+            });
+            pickCollector.on('collect', async (pickInter) => {
+                try {
+                    const template = messageTemplate(pickInter.values[0]);
+                    if (!template) return pickInter.deferUpdate().catch(() => {});
+                    const filled = fillTemplate(template, { server: rootInteraction.guild?.name });
+                    state.title = filled.title || null;
+                    state.description = filled.text.slice(0, 4000) || null;
+                    state.color = templateHex(filled.colour) || state.color;
+                    await pickInter.update({
+                        embeds: [new EmbedBuilder().setTitle('Template loaded').setDescription(`"${template.name}" is in the preview. Use Edit content to change it.`).setColor(getColor('success'))],
+                        components: [],
+                    });
+                    await refreshDashboard(rootInteraction, state);
+                } catch (error) {
+                    logger.warn('Embed builder template pick failed:', error.message);
+                }
+            });
+        } catch (error) {
+            logger.warn('Embed builder template group pick failed:', error.message);
         }
     });
 }
@@ -986,7 +1067,7 @@ async function handlePostEmbed(selectInteraction, rootInteraction, state, guild)
             finalEmbed.setDescription(null);
         }
 
-        await channel.send({ embeds: [finalEmbed] });
+        await channel.send({ embeds: [finalEmbed], allowedMentions: { parse: [] } });
 
         await chanInter.followUp({
             embeds: [successEmbed('Embed posted', `Posted in ${channel}.`)],
@@ -1070,6 +1151,9 @@ export default {
             collector.on('collect', async ci => {
                 try {
                     switch (ci.values[0]) {
+                        case 'use_template':
+                            await handleTemplate(ci, interaction, state);
+                            break;
                         case 'edit_content':
                             await handleEditContent(ci, interaction, state);
                             break;

@@ -333,7 +333,7 @@ export async function startCountdownMessage(guild, { channel, totalSeconds, titl
     const seconds = Number(totalSeconds);
     if (!Number.isInteger(seconds) || seconds <= 0) throw validation('The duration has to be at least 1 second.');
     if (seconds > COUNTDOWN_MAX_SECONDS) throw validation('Countdown cannot be longer than 24 hours.');
-    const name = String(title ?? '').trim() || 'Countdown Timer';
+    const name = String(title ?? '').trim() || 'Countdown';
     if (name.length > COUNTDOWN_TITLE_MAX) throw validation(`The countdown title is limited to ${COUNTDOWN_TITLE_MAX} characters.`);
     assertCanPost(guild, channel, POST_PERMISSIONS);
 
