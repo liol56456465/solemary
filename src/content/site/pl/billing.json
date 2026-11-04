@@ -1,0 +1,280 @@
+{
+  "test": {
+    "label": "Tryb testowy",
+    "notice": "Żaden operator płatności nie jest podłączony. Dokończenie zakupu tworzy zamówienie testowe; nikt nie prosi o kartę i nikt nie jest obciążany.",
+    "payNote": "Tryb testowy — żadne pieniądze nie są pobierane"
+  },
+  "vat": {
+    "registered": "Cena zawiera VAT.",
+    "notRegistered": "VAT nie jest naliczany (sprzedawca nie jest zarejestrowanym podatnikiem VAT)."
+  },
+  "consent": {
+    "legend": "Zanim złożysz zamówienie",
+    "startNow": "Chcę, aby mój plan zaczął działać teraz. Rozumiem, że jeśli odstąpię od umowy w ciągu 14 dni, zapłacę za dni już wykorzystane.",
+    "startNowGift": "Chcę otrzymać klucz podarunkowy teraz. Rozumiem, że jeśli odstąpię od umowy w ciągu 14 dni, zapłacę za dni wykorzystane od aktywacji klucza.",
+    "terms": "Akceptuję [Regulamin](/terms).",
+    "age": "Mam ukończone 18 lat albo mam zgodę rodzica lub opiekuna prawnego."
+  },
+  "common": {
+    "back": "← Subskrypcja",
+    "backToSubscription": "Wróć do subskrypcji",
+    "goToSubscription": "Przejdź do subskrypcji",
+    "planLine": "Mewvo {plan}",
+    "planPeriod": "Mewvo {plan} · {period}",
+    "planWithPeriod": "{plan} · {period}",
+    "days": "Liczba dni: {count}",
+    "test": "Test",
+    "day": {
+      "one": "{count} dzień",
+      "few": "{count} dni",
+      "many": "{count} dni",
+      "other": "{count} dnia"
+    }
+  },
+  "period": {
+    "monthly": "Miesięcznie",
+    "yearly": "Rocznie"
+  },
+  "kind": {
+    "personal": "Dla mnie",
+    "gift": "Prezent"
+  },
+  "keyStatus": {
+    "unused": "Jeszcze nieaktywowany",
+    "redeemed": "Aktywowany",
+    "revoked": "Anulowany",
+    "expired": "Wygasł (nieaktywowany)"
+  },
+  "source": {
+    "key": "Ostatnio dodany kluczem.",
+    "purchase": "Ostatnio dodany zakupem.",
+    "owner": "Przyznany przez właściciela bota.",
+    "bonus": "Bonus dla wczesnych kont Mewvo."
+  },
+  "login": {
+    "title": "Logowanie",
+    "heading": "Zaloguj się, aby kontynuować",
+    "reason": {
+      "manage": "Zaloguj się przez Discorda, aby zarządzać subskrypcją.",
+      "buyPlan": "Zaloguj się przez Discorda, aby kupić Mewvo {plan}.",
+      "buyAny": "Zaloguj się przez Discorda, aby kupić plan.",
+      "redeem": "Zaloguj się przez Discorda, aby aktywować klucz.",
+      "withdraw": "Zaloguj się przez Discorda, aby odstąpić od zamówienia."
+    },
+    "privacy": "Mewvo pyta Discorda tylko o to, kim jesteś (identify): bez e-maila, nic więcej.",
+    "button": "Zaloguj się przez Discorda"
+  },
+  "effect": {
+    "new": "Zaczyna działać teraz.",
+    "extend": "Dodawany do obecnego czasu planu {plan} (teraz do {until}).",
+    "upgrade": "Podwyższenie planu: pozostały czas planu {fromPlan} ({remaining}) zamienia się w czas planu {plan} ({converted}), a potem dodawany jest nowy czas."
+  },
+  "checkout": {
+    "title": "Zamówienie",
+    "back": "← Plany",
+    "headingGift": "Podaruj Mewvo {plan}",
+    "heading": "Mewvo {plan}",
+    "planLabel": "Plan",
+    "pricePerMonth": "{price}/miesiąc",
+    "pricePerYear": "{price}/rok",
+    "billingLabel": "Okres rozliczeniowy",
+    "monthsFree": "Miesiące gratis: {months}",
+    "forLabel": "Dla kogo",
+    "forMe": "Dla mnie",
+    "forMeSub": "zaczyna działać na twoim koncie od razu",
+    "asGift": "W prezencie",
+    "asGiftSub": "dostajesz klucz, który możesz komuś dać",
+    "includes": "{plan} zawiera",
+    "planned": "Planowane",
+    "giftTo": "Dla (opcjonalnie)",
+    "giftToPlaceholder": "Imię odbiorcy",
+    "giftMessage": "Wiadomość (opcjonalnie)",
+    "giftMessagePlaceholder": "Wyświetlana, gdy odbiorca otworzy link do prezentu",
+    "pay": "Zamawiam i płacę · {amount}",
+    "blocked": "Niedostępne, dopóki trwa twój plan",
+    "privacyNote": "Jak wykorzystujemy twoje dane: [Polityka prywatności](/privacy). Możesz odstąpić od umowy w ciągu {days} dni: [prawo odstąpienia od umowy](/withdrawal).",
+    "privacyNoteGift": "Jak wykorzystujemy twoje dane: [Polityka prywatności](/privacy). Możesz odstąpić od umowy w ciągu {days} dni: [prawo odstąpienia od umowy](/withdrawal). W przypadku prezentu prawo odstąpienia od umowy przysługuje tobie jako kupującemu, a nie odbiorcy."
+  },
+  "summary": {
+    "title": "Podsumowanie zamówienia",
+    "plan": "Plan",
+    "billing": "Okres rozliczeniowy",
+    "billingValue": "{period} ({days} dni)",
+    "for": "Dla",
+    "forGift": "Klucz podarunkowy",
+    "forAccount": "Twoje konto ({username})",
+    "total": "Razem",
+    "vatNote": "{vat} Jedna płatność za {days} dni. Bez automatycznego odnowienia: plan się kończy, chyba że dokupisz czas.",
+    "giftNote": "Dostaniesz klucz w rodzaju MEWVO-XXXX-XXXX-XXXX, ważny przez rok. Każdy, kto zaloguje się na tej stronie, może go jednorazowo aktywować."
+  },
+  "seller": {
+    "title": "Zanim złożysz zamówienie",
+    "seller": "Sprzedawca",
+    "legalDetails": "Dane prawne",
+    "whatYouGet": "Co otrzymujesz",
+    "whatYouGetGift": "Mewvo {plan} (lista powyżej) jako klucz, który możesz komuś dać",
+    "whatYouGetPersonal": "Mewvo {plan} (lista powyżej) na twoim koncie Discord",
+    "duration": "Czas trwania",
+    "durationGift": "{days} dni od aktywacji klucza; bez automatycznego odnowienia",
+    "durationPersonal": "{days} dni od złożenia zamówienia; bez automatycznego odnowienia",
+    "totalPrice": "Cena łączna",
+    "totalPriceValue": "{amount}. {vat}",
+    "withdrawal": "Odstąpienie od umowy",
+    "withdrawalValue": "{days} dni. Jeśli plan już zaczął działać, płacisz za wykorzystane dni. [Jak odstąpić od umowy](/withdrawal)"
+  },
+  "withdrawalCell": {
+    "withdrawn": "Odstąpiono",
+    "refundDue": "{date} · należny zwrot {amount}",
+    "refundDueTest": "{date} · należny zwrot {amount} (test)",
+    "withdraw": "Odstąp od umowy tutaj",
+    "until": "do {date}"
+  },
+  "plan": {
+    "title": "Twój plan",
+    "none": "Na tym koncie nie ma płatnego planu. [Zobacz plany](/pricing).",
+    "activeUntil": "Aktywny do {date}.",
+    "addTime": "Dodaj więcej czasu"
+  },
+  "redeemForm": {
+    "label": "Klucz",
+    "button": "Aktywuj",
+    "terms": "Aktywując klucz, akceptujesz [Regulamin](/terms). Jak wykorzystujemy twoje dane: [Polityka prywatności](/privacy)."
+  },
+  "account": {
+    "title": "Subskrypcja",
+    "lead": "Twój plan Mewvo, klucze i zamówienia; zalogowano jako **{username}**.",
+    "nav": "Moje konto",
+    "myRecord": "Moja historia",
+    "plans": "Plany",
+    "redeemTitle": "Aktywuj klucz",
+    "redeemNote": "Klucz dodaje swój plan i czas do twojego konta. Ten sam plan: czas jest dodawany do daty zakończenia. Wyższy plan: twój pozostały czas zostaje przeliczony.",
+    "giftsTitle": "Kupione klucze podarunkowe",
+    "giftsKey": "Klucz",
+    "giftsPlan": "Plan",
+    "giftsTime": "Czas",
+    "giftsBought": "Kupiono",
+    "giftsStatus": "Status",
+    "giftTo": "Dla: {name}",
+    "noGifts": "Nie masz jeszcze kluczy podarunkowych. Wybierz **W prezencie** przy zamówieniu, aby go dostać.",
+    "ordersTitle": "Zamówienia",
+    "ordersOrder": "Zamówienie",
+    "ordersDate": "Data",
+    "ordersPlan": "Plan",
+    "ordersFor": "Dla",
+    "ordersAmount": "Kwota",
+    "ordersWithdrawal": "Odstąpienie od umowy",
+    "receipt": "Potwierdzenie",
+    "ordersNote": "Możesz odstąpić od zamówienia w ciągu {days} dni od zakupu. [Prawo odstąpienia od umowy](/withdrawal).",
+    "noOrders": "Nie masz jeszcze zamówień."
+  },
+  "receipt": {
+    "title": "Zamówienie nr {id}",
+    "headingGift": "Twój klucz podarunkowy jest gotowy",
+    "heading": "Dziękujemy, twój plan jest aktywny",
+    "giftKey": "Klucz podarunkowy · {plan}, {days} dni",
+    "giftKeyTo": "Klucz podarunkowy · {plan}, {days} dni · dla: {name}",
+    "giveAway": "Daj ten klucz komukolwiek. Odbiorca loguje się na tej stronie i aktywuje go w sekcji Subskrypcja → Aktywuj klucz albo na Discordzie komendą `/premium redeem`.",
+    "redeemBy": "Aktywuj do {date}.",
+    "status": "Status: {status}.",
+    "directLink": "Bezpośredni link: {link}",
+    "order": "Zamówienie",
+    "date": "Data",
+    "account": "Konto",
+    "plan": "Plan",
+    "for": "Dla",
+    "total": "Razem",
+    "totalTest": "{amount} (test, nie pobrano opłaty)",
+    "vat": "VAT",
+    "renewal": "Odnowienie",
+    "renewalNone": "Brak: plan się kończy, chyba że dokupisz czas",
+    "confirmed": "Potwierdziłeś",
+    "confirmedMeta": "{date} · {version} · Regulamin z {terms}",
+    "withdrawal": "Odstąpienie od umowy",
+    "periodEnded": "Okres (liczba dni: {days}) minął. [Prawo odstąpienia od umowy](/withdrawal)",
+    "giftWithdrawal": "W przypadku prezentu prawo odstąpienia od umowy przysługuje tobie jako kupującemu.",
+    "dmNote": "To potwierdzenie wysyłamy ci też jako wiadomość prywatną na Discordzie (jeśli masz otwarte wiadomości prywatne od bota). Zachowaj je w swojej dokumentacji."
+  },
+  "gift": {
+    "fromFor": "Prezent od {from} dla {to}",
+    "from": "Prezent od {from}",
+    "keyFor": "Klucz Mewvo dla {to}",
+    "key": "Klucz Mewvo",
+    "plan": "Mewvo {plan} · {days} dni",
+    "redeemBy": "Aktywuj do {date}."
+  },
+  "redeem": {
+    "title": "Aktywuj klucz",
+    "headingGift": "Dostałeś prezent",
+    "heading": "Aktywuj klucz",
+    "lead": "Zalogowano jako **{username}**. Plan z klucza zostanie dodany do tego konta."
+  },
+  "orderLine": {
+    "personal": "Mewvo {plan} · {period}",
+    "gift": "Mewvo {plan} · {period} (prezent)"
+  },
+  "withdrawList": {
+    "title": "Odstąpienie od umowy",
+    "heading": "Odstąp od umowy tutaj",
+    "lead": "Zalogowano jako **{username}**. Wybierz zamówienie, od którego chcesz odstąpić. Możesz odstąpić od umowy w ciągu {days} dni od zamówienia, bez podawania przyczyny.",
+    "item": "**Zamówienie {order}**: {line}, {amount}, zamówiono {date}.",
+    "button": "Odstąp od umowy tutaj",
+    "none": "Na tym koncie nie ma zamówienia, dla którego trwa jeszcze okres na odstąpienie (liczba dni: {days}).",
+    "note": "[Twoje prawo odstąpienia od umowy](/withdrawal) wyjaśnia zasady i inne sposoby odstąpienia."
+  },
+  "withdrawConfirm": {
+    "title": "Potwierdź odstąpienie",
+    "back": "← Odstąp od umowy tutaj",
+    "heading": "Odstąpienie od zamówienia nr {id}",
+    "name": "Twoje imię i nazwisko",
+    "contract": "Umowa",
+    "contractValue": "Zamówienie {order}: {line}, {amount}, zamówiono {date}",
+    "contractValueTest": "Zamówienie {order}: {line}, {amount} (test), zamówiono {date}",
+    "account": "Konto",
+    "accountValue": "{username} (Discord)",
+    "ack": "Potwierdzenie otrzymania",
+    "ackValue": "Wysłane ci jako wiadomość prywatna na Discordzie i przechowywane na tym koncie w sekcji Subskrypcja",
+    "daysUsed": "Wykorzystane dni",
+    "daysUsedValue": "{used} z {total}",
+    "refundDue": "Należny zwrot",
+    "refundTest": "{amount} (zamówienie testowe: nic nie pobrano, nic nie jest zwracane)",
+    "statementPersonal": "Oświadczenie: odstępuję od umowy dotyczącej tego zamówienia. Niewykorzystane dni są teraz odejmowane od mojego planu.",
+    "statementGift": "Oświadczenie: odstępuję od umowy dotyczącej tego zamówienia. Nieaktywowany klucz podarunkowy zostaje anulowany; jeśli został aktywowany, jego niewykorzystane dni są odejmowane od tego planu.",
+    "button": "Potwierdź odstąpienie"
+  },
+  "withdrawalAck": {
+    "title": "Odstąpienie od zamówienia nr {id}",
+    "heading": "Otrzymaliśmy twoje odstąpienie od umowy",
+    "received": "Otrzymano",
+    "receivedValue": "{date} ({utc} UTC)",
+    "name": "Imię i nazwisko",
+    "account": "Konto",
+    "contract": "Umowa",
+    "statement": "Oświadczenie",
+    "statementValue": "Odstępuję od umowy dotyczącej tego zamówienia.",
+    "daysUsed": "Wykorzystane dni",
+    "daysUsedEnded": "{used} z {total} · plan się zakończył",
+    "refundDue": "Należny zwrot",
+    "dmFailed": "Nie udało się dostarczyć wiadomości prywatnej na Discordzie z tym potwierdzeniem (możesz mieć zamknięte wiadomości prywatne). Zapisz lub wydrukuj tę stronę; pozostaje ona też na twoim koncie.",
+    "dmNote": "To potwierdzenie wysyłamy ci też jako wiadomość prywatną na Discordzie i pozostaje ono na twoim koncie."
+  },
+  "errors": {
+    "notAllowed": "Niedozwolone",
+    "purchaseOrigin": "Ten zakup nie pochodził z tej strony. Nic nie zostało kupione.",
+    "redeemOrigin": "Ten formularz nie pochodził z tej strony. Nic nie zostało aktywowane.",
+    "withdrawOrigin": "Ten formularz nie pochodził z tej strony. Nie złożono odstąpienia od umowy.",
+    "notFound": "Nie znaleziono",
+    "noOrder": "Na twoim koncie nie ma takiego zamówienia.",
+    "noWithdrawal": "Na twoim koncie nie ma odstąpienia od takiego zamówienia.",
+    "periodOver": "Okres na odstąpienie minął",
+    "periodOverText": "Okres na odstąpienie (liczba dni: {days}) dla zamówienia nr {id} zakończył się {date}. Skontaktuj się z nami, jeśli uważasz, że to błąd.",
+    "tooManyTries": "Za dużo prób. Poczekaj minutę i spróbuj ponownie."
+  },
+  "flash": {
+    "redeemed": "Klucz aktywowany: Mewvo {plan}, dodano dni: {days}. Aktywny do {until}.",
+    "redeemedConverted": "Klucz aktywowany: Mewvo {plan}, dodano dni: {days}. Twój pozostały czas planu {fromPlan} został przeliczony. Aktywny do {until}."
+  },
+  "planButtons": {
+    "buy": "Kup {plan}",
+    "gift": "Podaruj"
+  }
+}

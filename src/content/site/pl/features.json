@@ -1,0 +1,296 @@
+{
+  "meta": {
+    "description": "Wszystko, co robi Mewvo: kary, drabina ostrzeżeń, odwołania, automoderacja, tickety i modmail, panel webowy oraz narzędzia dla społeczności."
+  },
+  "head": {
+    "title": "Funkcje",
+    "lead": "Wszystko, co Mewvo robi dzisiaj, według obszarów. Nic na tej stronie nie jest planowane ani płatne; co może przyjść z płatnymi planami, zobaczysz w [Cenniku](/pricing).",
+    "indexLabel": "Obszary funkcji"
+  },
+  "groups": {
+    "enforcement": {
+      "title": "Kary",
+      "intro": "Ostrzeżenie, wyciszenie, wyrzucenie i ban z jednego panelu, z zapisem każdej akcji.",
+      "items": {
+        "enforcementsPanel": {
+          "term": "Panel /enforcements",
+          "text": "Pokazuje wiek konta członka, czas na serwerze, liczone ostrzeżenia, poziom na drabinie, aktywne kary i trzy ostatnie sprawy, a potem proponuje tylko te akcje, które mają teraz sens (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
+        },
+        "reasons": {
+          "term": "Powody",
+          "text": "Lista gotowych powodów, z których część oznaczono jako poważne (od poważnego bana domyślnie nie można się odwołać), albo własny powód."
+        },
+        "caseCodes": {
+          "term": "Kody spraw",
+          "text": "Każda akcja dostaje krótki, unikalny kod, np. k7xq2: od 5 do 7 małych liter i cyfr, bez podobnych do siebie znaków 0, o, 1, l oraz i."
+        },
+        "dms": {
+          "term": "Wiadomości prywatne",
+          "text": "Członek dostaje powód, informację, kto działał, datę, czas trwania i zakończenia, kod sprawy oraz sposób odwołania. Wyrzuceni członkowie dostają jednorazowe zaproszenie z powrotem (jedno użycie, 7 dni)."
+        },
+        "mutes": {
+          "term": "Wyciszenia",
+          "text": "Zarządzana rola Muted zamiast przerw (timeout) Discorda, dzięki czemu wyciszenie może trwać dłużej niż 28 dni. Jest stosowana także na nowych kanałach i nadawana ponownie, jeśli członek wyjdzie i wróci."
+        },
+        "safetyChecks": {
+          "term": "Kontrole bezpieczeństwa",
+          "text": "Odmawia działania wobec właściciela serwera, bota, ciebie samego i każdego z równą lub wyższą rolą. Uprawnienie Administrator jest sprawdzane ponownie przy każdym kliknięciu."
+        },
+        "massActionGuard": {
+          "term": "Ochrona przed masowymi akcjami",
+          "text": "Więcej niż 5 banów lub wyrzuceń w ciągu 10 minut przez jednego moderatora blokuje go na godzinę i powiadamia właściciela. Wyciszenia mają własny limit: 10."
+        },
+        "caseTools": {
+          "term": "Narzędzia spraw",
+          "text": "/case edit, void i history, dowody (linki do wiadomości z fragmentem albo obrazy), wyszukiwanie spraw i /background z pełną historią członka."
+        },
+        "warnForMessage": {
+          "term": "Warn for this message",
+          "text": "Kliknij wiadomość prawym przyciskiem, aby ostrzec jej autora z wiadomością dołączoną jako dowód."
+        },
+        "simulation": {
+          "term": "Symulacja",
+          "text": "/test wysyła ci dokładnie tę wiadomość prywatną, którą dostałby członek, niczego nie wykonując."
+        },
+        "noContactOrders": {
+          "term": "Zakazy kontaktu",
+          "text": "Poproś dwóch członków, aby nie kontaktowali się ze sobą do ustalonego czasu. To nie jest kara i nie liczy się jako ostrzeżenie."
+        }
+      }
+    },
+    "ladder": {
+      "title": "Drabina ostrzeżeń",
+      "intro": "Eskalacja, która jest taka sama dla wszystkich i widoczna dla członka.",
+      "items": {
+        "levels": {
+          "term": "Poziomy",
+          "text": "Ostrzeżenia 1 i 2 to wiadomość prywatna. Ostrzeżenie 3 to automatyczny ban na 7 dni (poziom 1). Kolejne ostrzeżenie po nim to ban na 30 dni (poziom 2), a potem ban na stałe (poziom 3)."
+        },
+        "neverResets": {
+          "term": "Nigdy się nie resetuje",
+          "text": "Drabina jest prowadzona dla każdego członka na każdym serwerze i nie zeruje się po cichu z czasem."
+        },
+        "corrections": {
+          "term": "Korekty",
+          "text": "Usunięcie ostrzeżenia zmniejsza ich liczbę. Bany nałożone ręcznie nie przesuwają drabiny. Przyjęte odwołanie od bana z drabiny obniża poziom o jeden."
+        },
+        "level3Appeals": {
+          "term": "Odwołania na poziomie 3",
+          "text": "Od bana na stałe z drabiny można się odwołać przez 6 miesięcy. Potem albo po odrzuconym odwołaniu nie można się już odwołać."
+        },
+        "myStanding": {
+          "term": "My standing",
+          "text": "Członkowie mogą sprawdzić własne ostrzeżenia i to, co spowodowałoby następne, z panelu odwołań albo na stronie Moja historia."
+        }
+      }
+    },
+    "appeals": {
+      "title": "Odwołania i zgłoszenia",
+      "intro": "Droga powrotu, która kończy się decyzją człowieka.",
+      "items": {
+        "appealPanel": {
+          "term": "Panel odwołań",
+          "text": "/setappeal publikuje panel z przyciskami Appeal, My appeals i My standing na głównym serwerze i na serwerze wsparcia."
+        },
+        "appealForm": {
+          "term": "Formularz odwołania",
+          "text": "Dlaczego kara powinna zostać zdjęta, kod sprawy z wiadomości prywatnej i wszystko, co jeszcze powinna wiedzieć ekipa."
+        },
+        "banAndKickAppeals": {
+          "term": "Odwołania od bana i wyrzucenia",
+          "text": "Otwierają kanał na serwerze wsparcia z członkiem w środku, więc rozmowa działa także po banie. Sprawa i historia trafiają na kanał ekipy tylko dla administratorów, z przyciskami Accept i Deny."
+        },
+        "limits": {
+          "term": "Limity",
+          "text": "Jedno oczekujące odwołanie na sprawę i 7 dni przerwy po odrzuceniu. Od banów i wyciszeń można się odwołać, dopóki trwają, od ostrzeżeń i wyrzuceń w ciągu 30 dni."
+        },
+        "decisions": {
+          "term": "Decyzje",
+          "text": "Accept zdejmuje to, co nadal obowiązuje, i wysyła w wiadomości prywatnej jednorazowe zaproszenie z powrotem; Deny powiadamia członka w wiadomości prywatnej. Decydować można też komendą /appeals."
+        },
+        "bannedRole": {
+          "term": "Rola dla zbanowanych",
+          "text": "Członkowie z aktywnym banem dostają rolę na serwerze wsparcia, usuwaną, gdy ban się kończy."
+        },
+        "staffReports": {
+          "term": "Zgłoszenia na ekipę",
+          "text": "Członkowie mogą prywatnie zgłosić członka ekipy. Zgłoszenia widzą tylko administratorzy; jedno otwarte zgłoszenie na osobę i trzy dziennie."
+        }
+      }
+    },
+    "automod": {
+      "title": "Automoderacja i rajdy",
+      "intro": "Automatyczne akcje, które są zwykłymi sprawami, a sprawdza je człowiek.",
+      "items": {
+        "builtInRules": {
+          "term": "14 reguł",
+          "text": "Linki oszustów, NSFW, molestowanie seksualne, nękanie, dane osobowe, reklama, podszywanie się, słownictwo, brak szacunku, masowe oznaczenia, spam, caps lock, ozdobne znaki i tylko angielski."
+        },
+        "customRules": {
+          "term": "Własne reguły",
+          "text": "Twoje własne słowa i frazy, wykrywane jako całe słowa z tym samym sprowadzaniem liter. Każda reguła usuwa, ostrzega lub wycisza, z kartą przeglądu. W płatnych planach: 5 w Normal, 25 w Pro, 100 w Max."
+        },
+        "punishmentSteps": {
+          "term": "Stopnie kar",
+          "text": "Każda reguła ma własne stopnie (np. spam: ostrzeżenie, wyciszenie na 1 godzinę, wyciszenie na 1 dzień), liczone w okresie 30 dni. Gdy wiadomość łamie kilka reguł, liczy się tylko najpoważniejsza."
+        },
+        "reviewCards": {
+          "term": "Karty przeglądu",
+          "text": "Każda automatyczna akcja publikuje dla ekipy kartę z przyciskami Keep, Undo i Change to…."
+        },
+        "modes": {
+          "term": "Tryby",
+          "text": "Każda reguła jest włączona, w trybie obserwacji (tylko karta) albo wyłączona, globalnie lub dla kanału. Zaufane role i wyjątki dla kanałów."
+        },
+        "hardToDodge": {
+          "term": "Trudno obejść",
+          "text": "Tekst jest sprowadzany do zwykłych liter, więc ozdobne czcionki, podobne litery, zalgo i niewidoczne znaki nie pozwalają obejść reguł."
+        },
+        "newMembers": {
+          "term": "Nowi członkowie",
+          "text": "Linki, załączniki i szybkie pisanie są ograniczone przez pierwsze 3 dni członka. Bramka przy dołączaniu może oznaczyć lub wyrzucić nowe konta, które nie przejdą jej kontroli."
+        },
+        "raids": {
+          "term": "Rajdy",
+          "text": "Dziesięć dołączeń w ciągu minuty blokuje serwer: poziom weryfikacji rośnie, zaproszenia i wiadomości prywatne zostają wstrzymane (tryb paniki), a administratorzy dostają powiadomienie. /automod lockdown-end przywraca wszystko i publikuje raport."
+        },
+        "memberReports": {
+          "term": "Zgłoszenia członków",
+          "text": "Gdy 3 członków doda pod wiadomością reakcję z flagą, zostaje ona usunięta i wysłana na kanał przeglądu."
+        },
+        "nativeAutomod": {
+          "term": "Wbudowany AutoMod",
+          "text": "Połączenie z wbudowanymi regułami AutoMod Discorda, aby oba działały razem."
+        }
+      }
+    },
+    "tickets": {
+      "title": "Tickety i modmail",
+      "intro": "Prywatne rozmowy między członkami a ekipą, prowadzone na Discordzie.",
+      "items": {
+        "ticketPanel": {
+          "term": "Panel ticketów",
+          "text": "Członkowie otwierają ticket przyciskiem. Ekipa go przejmuje, ustawia priorytet i odpowiada zapisanymi odpowiedziami."
+        },
+        "transcripts": {
+          "term": "Transkrypcje",
+          "text": "Gdy ticket lub rozmowa w modmailu się zamyka, transkrypcja trafia na kanał tylko dla ekipy."
+        },
+        "modmail": {
+          "term": "Modmail",
+          "text": "Napisz do bota w wiadomości prywatnej i naciśnij Send to staff: rozmowa staje się kanałem ekipy. Linie zaczynające się od // to notatki wewnętrzne."
+        },
+        "modmailCommands": {
+          "term": "Komendy",
+          "text": "/modmail close, block i unblock. Liczba otwartych zgłoszeń i kanałów modmail jest ograniczona, aby zalew wiadomości nie zasypał serwera."
+        }
+      }
+    },
+    "dashboard": {
+      "title": "Panel webowy",
+      "intro": "Ustawienia i moderacja serwera w przeglądarce.",
+      "items": {
+        "signIn": {
+          "term": "Logowanie",
+          "text": "Logowanie przez Discorda (tylko identify). Uprawnienie Administrator jest sprawdzane ponownie przy każdym żądaniu; roli moderatorów można dać dostęp do podglądu stron moderacji."
+        },
+        "moderate": {
+          "term": "Moderacja",
+          "text": "Przegląd tego, co wymaga twojej uwagi, skrzynka odbiorcza, członkowie (filtry, role, pseudonimy, przerwy, akcje zbiorcze), bany, sprawy, odwołania, zakazy kontaktu i aktywność ekipy."
+        },
+        "settings": {
+          "term": "Ustawienia",
+          "text": "Każdy moduł na własnej stronie: tickety, powitania, poziomy, role za reakcje, wiadomości, losowania, urodziny, podania, społeczność, automoderacja, kary, dzienniki, weryfikacja i więcej."
+        },
+        "auditLog": {
+          "term": "Dziennik zdarzeń",
+          "text": "Każda zmiana jest zapisywana: kto zmienił które ustawienie, z jakiej wartości i na jaką."
+        },
+        "temporaryRoles": {
+          "term": "Role tymczasowe",
+          "text": "Nadaj rolę na ustalony czas; zostaje usunięta, gdy czas minie, i nadana ponownie, jeśli członek wróci wcześniej."
+        }
+      }
+    },
+    "community": {
+      "title": "Społeczność",
+      "intro": "Przyjazna strona serwera.",
+      "items": {
+        "leveling": {
+          "term": "Poziomy",
+          "text": "XP za pisanie na czacie, wiadomości o nowym poziomie, role-nagrody, kanały bez XP i publiczny ranking."
+        },
+        "tags": {
+          "term": "Tagi",
+          "text": "Zapisane odpowiedzi, które każdy może przywołać komendą /tag. Do 100 na serwer."
+        },
+        "suggestions": {
+          "term": "Propozycje",
+          "text": "Kanał propozycji z głosowaniem."
+        },
+        "starboard": {
+          "term": "Starboard",
+          "text": "Wiadomości z wystarczającą liczbą gwiazdek są kopiowane na kanał wyróżnień."
+        },
+        "stickyMessages": {
+          "term": "Przyklejone wiadomości",
+          "text": "Utrzymywane na dole kanału. Do 10 na serwer."
+        },
+        "youtubeFeeds": {
+          "term": "Kanały YouTube",
+          "text": "Nowe filmy publikowane na kanale. Do 20 kanałów YouTube."
+        },
+        "reactionRoles": {
+          "term": "Role za reakcje",
+          "text": "Menu do samodzielnego wybierania ról z przyciskami lub listą wyboru."
+        },
+        "giveaways": {
+          "term": "Losowania",
+          "text": "Rozpoczęcie, zakończenie i ponowne losowanie."
+        },
+        "birthdays": {
+          "term": "Urodziny",
+          "text": "Ogłoszenia i rola urodzinowa, ze strefami czasowymi."
+        },
+        "applications": {
+          "term": "Podania",
+          "text": "Podania o role z twoimi własnymi pytaniami."
+        },
+        "joinToCreate": {
+          "term": "Join to create",
+          "text": "Tymczasowe kanały głosowe."
+        },
+        "welcomeAndGoodbye": {
+          "term": "Powitania i pożegnania",
+          "text": "Wiadomości przy dołączeniu i wyjściu, role przy dołączeniu."
+        },
+        "counters": {
+          "term": "Liczniki",
+          "text": "Kanały z liczbą członków i gra w liczenie."
+        }
+      }
+    },
+    "server": {
+      "title": "Dzienniki, weryfikacja i narzędzia",
+      "intro": "Zaplecze techniczne.",
+      "items": {
+        "logging": {
+          "term": "Dzienniki",
+          "text": "Dołączenia, wyjścia, zmiany ról, edytowane i usunięte wiadomości i nie tylko, każde na wybrany przez ciebie kanał, z kanałami ignorowanymi."
+        },
+        "verification": {
+          "term": "Weryfikacja",
+          "text": "Panel weryfikacji albo weryfikacja przy dołączeniu. „Verify with Discord” może też dodać członka do serwera wsparcia, aby wiadomości o odwołaniach nadal do niego docierały."
+        },
+        "postingAsBot": {
+          "term": "Publikowanie jako bot",
+          "text": "Wiadomości, embedy, ankiety i odliczania z panelu webowego lub komendami."
+        },
+        "memberTools": {
+          "term": "Narzędzia dla członków",
+          "text": "Listy zadań (także wspólne), kalkulator i przeliczniki, pogoda, informacje o serwerze i użytkowniku oraz /wipedata, aby usunąć własne poziomy, saldo, status AFK, urodziny i listę zadań."
+        }
+      }
+    }
+  }
+}

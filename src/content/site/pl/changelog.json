@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "description": "Co się zmieniło w Mewvo, od najnowszych."
+  },
+  "head": {
+    "title": "Lista zmian",
+    "lead": "Co się zmieniło w Mewvo, od najnowszych. Zmiana trafia na listę, gdy jest gotowa. Bot na twoim serwerze dostanie ją przy następnej aktualizacji."
+  },
+  "entries": {
+    "2026-11-01": {
+      "customAutomodRules": "Własne reguły automoderacji: dodaj własne słowa i frazy do blokowania komendą /automod custom albo w panelu webowym. Słowa reguły możesz później zmienić. Część planów Normal, Pro i Max.",
+      "remind": "/remind: ustaw przypomnienie dla siebie. Mewvo wyśle je w wiadomości prywatnej albo na kanale, jeśli masz zamknięte wiadomości prywatne.",
+      "profile": "/profile: twój poziom, miejsce w rankingu, następna rola-nagroda, urodziny i plan na jednej karcie.",
+      "appealStatus": "/appeal status: zobacz swoje odwołania i to, czy ktoś z ekipy się nimi zajmuje.",
+      "recordLinkInDms": "Wiadomości prywatne o karach mogą zawierać link do Mojej historii, gdzie widzisz na stronie całą swoją historię.",
+      "gettingStartedList": "Panel webowy: strona Overview zaczyna się od krótkiej listy pierwszych kroków, a każda strona ustawień wyjaśnia swoje opcje prostymi słowami.",
+      "activityPage": "Panel webowy: strona Activity z wiadomościami, dołączeniami i sprawami dziennie z ostatnich 30 dni.",
+      "settingsBackup": "Panel webowy: kopia zapasowa ustawień, którą możesz pobrać i po sprawdzeniu wczytać z powrotem.",
+      "caseNotesAndTags": "Panel webowy: prywatne notatki ekipy i tagi przy sprawach, akcje na wielu sprawach naraz i zapisane wyszukiwania.",
+      "shiftNote": "Panel webowy: notatka dla następnej zmiany ekipy na stronie Overview.",
+      "weeklySummary": "Cotygodniowe podsumowanie serwera w dzienniku moderacji w każdy poniedziałek.",
+      "proMaxBranding": "Pro i Max: Mewvo może używać na twoim serwerze własnego pseudonimu i awatara, a ekipa może pobierać sprawy jako arkusz kalkulacyjny.",
+      "dashboardThemes": "Motywy panelu webowego: Light, Dark, Dim i High contrast."
+    },
+    "2026-10-31": {
+      "legalPages": "Polityka prywatności i Regulamin.",
+      "dataDownload": "Moja historia: pobierz jako plik wszystkie dane, które Mewvo ma o tobie.",
+      "paidPlans": "Płatne plany już coś dają: role wspierających, /premium, prezenty i klucze do aktywacji."
+    },
+    "2026-10-29": {
+      "rename": "Bot nazywa się teraz Mewvo (wcześniej Meowist).",
+      "serverRules": "Zasady serwera na stronie. Wiadomości prywatne o karach podają złamaną zasadę i link do niej.",
+      "independentAppeals": "Odwołania rozstrzyga ktoś inny niż moderator, który nałożył karę.",
+      "myRecord": "Moja historia na stronie: członkowie widzą własną historię moderacji.",
+      "scheduledMessages": "Zaplanowane i powtarzające się wiadomości z panelu webowego.",
+      "inbox": "Panel webowy: Inbox na odwołania, tickety, modmail i przeglądy automoderacji, z odpowiedziami z przeglądarki.",
+      "websitePages": "Strony z rankingiem, statusem, funkcjami, cennikiem, dokumentacją oraz pytaniami i odpowiedziami."
+    },
+    "2026-10-28": {
+      "membersPage": "Panel webowy: strona Members z filtrami, rolami, pseudonimami i przerwami (timeout), także dla wielu członków naraz.",
+      "temporaryRoles": "Role tymczasowe, które same znikają po ustalonym czasie.",
+      "bannedPage": "Panel webowy: strona Banned ze wszystkimi zbanowanymi i powodami.",
+      "channelTools": "Panel webowy: czyszczenie, blokowanie i odblokowywanie kanałów oraz publikowanie wiadomości, ankiet i odliczań jako bot.",
+      "appealsInSupportServer": "Odwołania od bana i wyrzucenia toczą się z członkiem na serwerze wsparcia.",
+      "mutesInMassGuard": "Wyciszenia liczą się do limitu, który nie pozwala jednemu moderatorowi ukarać wielu osób w krótkim czasie."
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "title": "Karta zaufania: {server}",
+  "description": "Jak moderowany jest {server}: czas odpowiedzi na odwołania, ich wyniki i członkowie bez naruszeń w ostatnim okresie (liczba dni: {days}). Same liczby.",
+  "head": {
+    "heading": "{server}: karta zaufania",
+    "lead": "Jak moderowano ten serwer w ostatnim okresie (liczba dni: {days}). Same liczby: bez nazw, powodów i moderatorów."
+  },
+  "noData": "Na razie za mało danych",
+  "tiles": {
+    "firstAnswer": {
+      "label": "Pierwsza odpowiedź na odwołanie",
+      "note": "Mediana czasu od wysłania odwołania do chwili, gdy ktoś z ekipy je podejmie lub rozstrzygnie."
+    },
+    "accepted": {
+      "label": "Przyjęte odwołania",
+      "note": "Spośród rozstrzygniętych odwołań (łącznie: {decided})."
+    },
+    "goodStanding": {
+      "label": "Członkowie bez naruszeń",
+      "note": "Bez liczonego ostrzeżenia, bez wyciszenia."
+    },
+    "headsUp": {
+      "label": "Poprawione po przypomnieniu",
+      "noteWithRate": "Członkowie sami poprawili {rate} oznaczonych wiadomości po przypomnieniu.",
+      "noteNoRate": "Jak często członkowie sami poprawiają oznaczoną wiadomość po przypomnieniu."
+    }
+  },
+  "facts": {
+    "received": "Otrzymane odwołania",
+    "decided": "Rozstrzygnięte odwołania",
+    "decisionTime": "Mediana czasu do decyzji",
+    "casesPerThousand": "Sprawy na 1000 członków"
+  },
+  "how": {
+    "heading": "Jak moderowany jest ten serwer",
+    "byPerson": "Każde odwołanie czyta i rozstrzyga człowiek z ekipy, nigdy sam bot.",
+    "cases": "Każde ostrzeżenie, wyciszenie, wyrzucenie i ban jest zapisywane jako sprawa z własnym kodem, a członek dostaje ten kod w wiadomości prywatnej."
+  },
+  "ladder": {
+    "single": "Ostrzeżenia się sumują: {nth} ostrzeżenie oznacza {first}.",
+    "escalating": "Ostrzeżenia się sumują: {nth} ostrzeżenie oznacza {first}, a każde ostrzeżenie po tym banie oznacza dłuższy ban ({later}).",
+    "then": "{earlier}, potem {next}",
+    "banDays": "ban na {days} dni",
+    "banPermanent": "ban na stałe",
+    "ordinals": {
+      "0": "zerowe",
+      "1": "pierwsze",
+      "2": "drugie",
+      "3": "trzecie",
+      "4": "czwarte",
+      "5": "piąte",
+      "6": "szóste",
+      "7": "siódme",
+      "8": "ósme",
+      "9": "dziewiąte",
+      "10": "dziesiąte"
+    },
+    "ordinalOther": "{n}."
+  },
+  "cat": {
+    "alt": "{name}, kot serwera, {stage}, nastrój: {mood}",
+    "caption": "Kot serwera",
+    "shareAlt": "{name}, kot serwera"
+  },
+  "rules": {
+    "heading": "Zasady",
+    "empty": "Ten serwer nie opublikował jeszcze swoich zasad.",
+    "readAll": "Przeczytaj wszystkie zasady"
+  },
+  "foot": {
+    "period": "Ostatni okres (liczba dni: {days}), od {from} do {to}. Małe liczby są ukryte.",
+    "periodWithReport": "Ostatni okres (liczba dni: {days}), od {from} do {to}. Małe liczby są ukryte. Pełne dane miesięczne: [raport przejrzystości](/transparency)."
+  },
+  "error": {
+    "title": "Karta zaufania",
+    "heading": "Karta zaufania",
+    "text": "Nie udało się teraz wczytać karty zaufania. Lepiej nie pokazywać liczb niż pokazać błędne; spróbuj ponownie za kilka minut."
+  }
+}

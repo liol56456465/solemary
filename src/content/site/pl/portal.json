@@ -1,0 +1,144 @@
+{
+  "caseType": {
+    "ban": "Ban",
+    "kick": "Wyrzucenie",
+    "mute": "Wyciszenie",
+    "warn": "Ostrzeżenie"
+  },
+  "appealStatus": {
+    "pending": "Oczekuje: administratorzy jeszcze nie zdecydowali",
+    "accepted": "Przyjęte",
+    "denied": "Odrzucone",
+    "closed": "Zamknięte"
+  },
+  "appeal": {
+    "voided": "Unieważniona: nie ma od czego się odwołać",
+    "lifted": "Już zdjęta",
+    "unappealable": "Nie można się odwołać",
+    "ended": "Zakończona: nie ma od czego się odwołać",
+    "deadlinePassed": "Termin na odwołanie minął",
+    "windowClosed": "Termin na odwołanie (liczba dni: {days}) minął",
+    "pending": "Odwołanie oczekuje",
+    "deniedRetry": "Odwołanie odrzucone; możesz odwołać się ponownie od",
+    "appealable": "Można się odwołać",
+    "until": "Do {date}",
+    "yes": "Tak"
+  },
+  "status": {
+    "imported": "tylko historia (zaimportowane, nie liczy się)",
+    "voided": "unieważniona: już się nie liczy",
+    "counts": "liczy się teraz",
+    "noLongerCounts": "w historii, już się nie liczy",
+    "onRecord": "w historii"
+  },
+  "login": {
+    "lead": "Zobacz własną historię moderacji na {server}: swoje ostrzeżenia, poziom na drabinie ostrzeżeń, aktywny ban lub wyciszenie, swoje sprawy i odwołania.",
+    "withDiscord": "Zaloguj się przez Discorda",
+    "withAccount": "Zaloguj się kontem Mewvo",
+    "note": "Mewvo pyta Discorda tylko o to, kim jesteś (uprawnienie identify): bez e-maila, bez serwerów, nic więcej. Widzisz zawsze tylko własną historię. Logowanie trwa godzinę.",
+    "signup": "Nie masz jeszcze konta Mewvo? [Załóż je]({href}), aby logować się nazwą użytkownika i hasłem."
+  },
+  "record": {
+    "title": "Moja historia",
+    "lead": "Twoja historia moderacji na {server}, zalogowano jako **{username}**. Widzisz ją tylko ty.",
+    "accountSettings": "Ustawienia konta",
+    "download": "Pobierz moje dane",
+    "subscription": "Subskrypcja",
+    "logOut": "Wyloguj się",
+    "warnings": "Ostrzeżenia",
+    "warningsCount": "{count} z {threshold}",
+    "warningsNote": "Liczone ostrzeżenia na twoim poziomie. Ostrzeżenia nie wygasają.",
+    "ladder": "Drabina ostrzeżeń",
+    "ladderLevel": "Poziom {level} z {max}",
+    "activeNow": "Aktywne teraz",
+    "activeBanEnds": "Ban {code}: kończy się {date}",
+    "activeBanPermanent": "Ban {code}: na stałe",
+    "activeMuteEnds": "Wyciszenie {code}: kończy się {date}",
+    "nothingActive": "Brak aktywnego bana lub wyciszenia.",
+    "cases": "Sprawy",
+    "appeals": "Odwołania",
+    "column": {
+      "case": "Sprawa",
+      "type": "Typ",
+      "reason": "Powód",
+      "by": "Przez",
+      "date": "Data",
+      "ends": "Koniec",
+      "status": "Status",
+      "appeal": "Odwołanie",
+      "filed": "Złożone",
+      "decided": "Rozstrzygnięte"
+    },
+    "permanent": "na stałe",
+    "truncated": "Pokazano twoje najnowsze sprawy (liczba: {count}).",
+    "noCases": "Nie masz żadnych spraw na {server}.",
+    "noAppeals": "Nie złożyłeś żadnych odwołań.",
+    "appealHintInvite": "Odwołaj się z panelu odwołań na Discordzie: [dołącz do serwera wsparcia]({invite}) i naciśnij **Appeal**, podając kod sprawy. Z tej strony nie da się złożyć odwołania.",
+    "appealHint": "Odwołaj się z panelu odwołań na Discordzie, podając kod sprawy. Z tej strony nie da się złożyć odwołania."
+  },
+  "message": {
+    "logInAgain": "Zaloguj się ponownie",
+    "backToRecord": "Wróć do Mojej historii"
+  },
+  "errors": {
+    "slowDown": {
+      "title": "Zwolnij",
+      "message": "Za dużo żądań z twojego adresu. Poczekaj minutę i spróbuj ponownie."
+    },
+    "loginCancelled": {
+      "title": "Logowanie anulowane",
+      "message": "Nie zatwierdziłeś logowania."
+    },
+    "loginExpired": {
+      "title": "Link wygasł",
+      "message": "Ten link do logowania jest nieprawidłowy, wygasł albo został już użyty."
+    },
+    "loginFailed": {
+      "title": "Logowanie nieudane",
+      "message": "Discord nie potwierdził logowania. Spróbuj ponownie."
+    },
+    "noUser": {
+      "title": "Logowanie nieudane",
+      "message": "Discord nie zwrócił użytkownika."
+    },
+    "linkOtherBrowser": {
+      "title": "Nie połączono",
+      "message": "Najpierw zaloguj się do konta Mewvo w tej przeglądarce, a potem ponownie połącz Discorda."
+    },
+    "recordUnavailable": {
+      "title": "Historia niedostępna",
+      "message": "Nie udało się wczytać twojej historii, bo baza danych nie odpowiada. To nie znaczy, że twoja historia jest czysta: spróbuj ponownie za kilka minut."
+    },
+    "downloadLogin": {
+      "title": "Najpierw się zaloguj",
+      "message": "Zaloguj się przez Discorda, aby pobrać swoje dane."
+    },
+    "downloadLoginAccount": {
+      "title": "Najpierw się zaloguj",
+      "message": "Zaloguj się, aby pobrać swoje dane."
+    },
+    "downloadUnavailable": {
+      "title": "Pobieranie niedostępne",
+      "message": "Nie udało się zebrać twoich danych, bo baza danych nie odpowiada. Spróbuj ponownie za kilka minut."
+    },
+    "notLoggedIn": {
+      "title": "Wylogowano",
+      "message": "Nie jesteś zalogowany."
+    },
+    "logoutNotAllowed": {
+      "title": "Niedozwolone",
+      "message": "Żądanie wylogowania nie pochodziło z tej strony."
+    },
+    "notFound": {
+      "title": "Nie znaleziono",
+      "message": "Nie ma takiej strony."
+    },
+    "tryLater": {
+      "title": "Spróbuj później",
+      "message": "Nie udało się wczytać tej strony, bo baza danych nie odpowiada. Nic nie zostało zmienione."
+    }
+  },
+  "viewer": {
+    "fallbackName": "Konto"
+  }
+}

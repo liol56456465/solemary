@@ -1,0 +1,207 @@
+{
+  "common": {
+    "logIn": "Zaloguj się",
+    "logOut": "Wyloguj się",
+    "cancel": "Anuluj",
+    "back": "Wstecz",
+    "backToRecord": "Wróć do Mojej historii",
+    "accountSettings": "Ustawienia konta",
+    "loggedInAs": "Zalogowano jako **{username}**."
+  },
+  "fields": {
+    "username": "Nazwa użytkownika",
+    "password": "Hasło",
+    "newPassword": "Nowe hasło",
+    "passwordHint": "Minimalna liczba znaków: {min}.",
+    "codeFromApp": "Kod z aplikacji",
+    "codeOrRecovery": "Kod z aplikacji albo kod odzyskiwania"
+  },
+  "signup": {
+    "title": "Załóż konto",
+    "heading": "Załóż konto Mewvo",
+    "lead": "Z kontem logujesz się na tę stronę nazwą użytkownika i hasłem. E-mail nie jest potrzebny. Zaraz po rejestracji jeden raz łączysz swoje konto Discord; w ten sam sposób resetujesz zapomniane hasło.",
+    "usernameHint": "Liczba znaków od {min} do {max}: tylko litery, cyfry i podkreślenia.",
+    "birthDate": "Data urodzenia",
+    "birthPlaceholder": "RRRR-MM-DD",
+    "birthHint": "Minimalny wiek: {age}. Sprawdzamy tylko twój wiek i zapisujemy, że masz co najmniej {age}, nigdy samą datę.",
+    "accept": "Akceptuję [Regulamin](/terms) i [Politykę prywatności](/privacy).",
+    "submit": "Załóż konto",
+    "haveAccount": "Masz już konto? [Zaloguj się](/me/login-password)."
+  },
+  "login": {
+    "title": "Logowanie",
+    "heading": "Zaloguj się do konta Mewvo",
+    "forgot": "Nie pamiętasz hasła?",
+    "withDiscord": "Zamiast tego zaloguj się przez Discorda",
+    "noAccount": "Nie masz jeszcze konta? [Załóż konto](/me/signup)"
+  },
+  "twoStep": {
+    "title": "Logowanie dwuetapowe",
+    "heading": "Wpisz kod logowania",
+    "lead": "Otwórz aplikację uwierzytelniającą i wpisz 6-cyfrowy kod dla Mewvo. Zgubiłeś telefon? Wpisz zamiast tego jeden z kodów odzyskiwania.",
+    "code": "Kod",
+    "foot": "Krok z kodem trwa 5 minut. Potem [zaloguj się ponownie](/me/login-password)."
+  },
+  "forgot": {
+    "title": "Zapomniane hasło",
+    "heading": "Nie pamiętasz hasła?",
+    "lead": "Zaloguj się kontem Discord, które jest połączone z twoim kontem Mewvo. Potem wybierzesz nowe hasło.",
+    "submit": "Zaloguj się przez Discorda",
+    "foot": "Mewvo pyta Discorda tylko o to, kim jesteś. Jeśli logowanie dwuetapowe jest włączone, po nowym haśle i tak wpiszesz kod z aplikacji. Nie masz połączonego konta Discord? Wtedy nie da się zresetować hasła; [załóż nowe konto](/me/signup)."
+  },
+  "reset": {
+    "title": "Wybierz nowe hasło",
+    "heading": "Wybierz nowe hasło",
+    "lead": "Dla konta Mewvo **{username}**.",
+    "code": "Kod dwuetapowy",
+    "codeHint": "6-cyfrowy kod z aplikacji albo jeden z twoich kodów odzyskiwania.",
+    "submit": "Zapisz nowe hasło",
+    "foot": "Zapisanie kończy wszystkie inne logowania na to konto i loguje cię tutaj. Ten formularz działa przez 10 minut."
+  },
+  "link": {
+    "title": "Połącz Discorda",
+    "heading": "Połącz swoje konto Discord",
+    "lead": "Zalogowano jako **{username}**. Jeszcze jeden krok: połącz swoje konto Discord. Twoje konto Mewvo działa dopiero po połączeniu. Pierwsze 100 kont, które się połączą, dostaje Mewvo Pro na okres: {bonus}.",
+    "submit": "Połącz Discorda",
+    "foot": "Mewvo pyta Discorda tylko o to, kim jesteś (uprawnienie identify): bez e-maila, bez serwerów. Jedno konto Discord można połączyć z jednym kontem Mewvo. Jeśli zapomnisz hasła, zresetujesz je, logując się tym kontem Discord. Konto, które nigdy nie połączy Discorda, jest usuwane po 7 dniach.",
+    "deleteHeading": "Usuń to konto"
+  },
+  "letter": {
+    "heading": "Twoja jednoliterowa nazwa użytkownika",
+    "allTaken": "Wszystkie jednoliterowe nazwy użytkownika są zajęte.",
+    "pick": "Wybierz jednoliterową nazwę użytkownika",
+    "claim": "Zajmij tę nazwę",
+    "decline": "Nie, dziękuję, zostaw moją nazwę",
+    "foot": "Jednoliterową nazwę użytkownika możesz zająć tylko raz. Twoja obecna nazwa przestanie działać, gdy ją zajmiesz."
+  },
+  "linked": {
+    "title": "Discord połączony",
+    "heading": "Twoje konto Discord jest połączone",
+    "toRecord": "Przejdź do Mojej historii"
+  },
+  "linkResult": {
+    "repeat": "Twoje konto Discord jest połączone. To konto Discord było już wcześniej połączone z kontem Mewvo, więc nie dostaje ponownie bonusu dla wczesnych kont.",
+    "proAndLetter": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Dostajesz Mewvo Pro na okres: {bonus}, a poniżej możesz wybrać jednoliterową nazwę użytkownika.",
+    "pro": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Dostajesz Mewvo Pro na okres: {bonus}.",
+    "proFailedAndLetter": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Należało ci się Pro na okres {bonus}, ale nie udało się go dodać: {note} Poniżej i tak możesz wybrać jednoliterową nazwę użytkownika.",
+    "proFailed": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Należało ci się Pro na okres {bonus}, ale nie udało się go dodać: {note}",
+    "letter": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Poniżej możesz wybrać jednoliterową nazwę użytkownika.",
+    "none": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Bonusy dla wczesnych kont dostało pierwsze 100 kont, więc dla tego nie ma bonusu."
+  },
+  "recovery": {
+    "title": "Kody odzyskiwania",
+    "heading": "Logowanie dwuetapowe jest włączone",
+    "lead": "Zapisz te kody odzyskiwania w bezpiecznym miejscu. Każdy działa raz, jeśli stracisz aplikację uwierzytelniającą. Są pokazywane tylko teraz.",
+    "back": "Wróć do ustawień konta"
+  },
+  "totp": {
+    "title": "Włącz logowanie dwuetapowe",
+    "heading": "Włącz logowanie dwuetapowe",
+    "lead": "Dodaj Mewvo do aplikacji uwierzytelniającej, a potem wpisz 6-cyfrowy kod, który pokaże.",
+    "stepAdd": "W aplikacji uwierzytelniającej wybierz dodanie konta przez wpisanie klucza.",
+    "stepKey": "Wpisz ten klucz: {key} (oparty na czasie, 6 cyfr, 30 sekund).",
+    "stepUri": "Albo wklej ten adres, jeśli aplikacja go przyjmuje: {uri}",
+    "submit": "Włącz"
+  },
+  "plan": {
+    "heading": "Twój plan",
+    "plan": "Plan",
+    "free": "Free",
+    "activeUntil": "Aktywny do",
+    "lastAddedBy": "Ostatnio dodany przez",
+    "bonus": "Bonus dla wczesnych kont",
+    "manage": "Zarządzaj subskrypcją",
+    "seePlans": "Zobacz plany",
+    "foot": "Plan należy do twojego konta Discord, a nie do tego konta Mewvo.",
+    "endsToday": "Kończy się dzisiaj",
+    "dayLeft": "Został {days} dzień",
+    "daysLeft": "Pozostało dni: {days}",
+    "source": {
+      "bonus": "Bonus dla wczesnych kont",
+      "purchase": "Zakup",
+      "key": "Klucz",
+      "owner": "Przyznany przez właściciela bota"
+    }
+  },
+  "bonus": {
+    "granted": "Połączenie nr {n}: Pro na okres {bonus}, dodano {date}.",
+    "skipped": "Połączenie nr {n}: należało się Pro na okres {bonus}, ale go nie dodano. {reason}",
+    "tooLate": "Połączenie nr {n}: bez bonusu Pro (dostały go pierwsze połączenia, łącznie: {limit}).",
+    "none": "Połączenie nr {n}: bez bonusu Pro."
+  },
+  "settings": {
+    "title": "Ustawienia konta",
+    "yourAccount": "Twoje konto",
+    "discord": "Discord",
+    "linked": "Połączony",
+    "discordId": "ID {id}",
+    "notLinked": "Niepołączony",
+    "created": "Utworzono",
+    "claimLetter": "Zajmij jednoliterową nazwę użytkownika",
+    "unlink": "Odłącz Discorda",
+    "unlinkFoot": "Konto Mewvo potrzebuje połączonego konta Discord: po odłączeniu możesz tylko ponownie połączyć konto (albo usunąć konto). Plan zostaje przy twoim koncie Discord. Konto Discord dostaje bonus dla wczesnych kont tylko raz.",
+    "yourData": "Twoje dane",
+    "download": "Pobierz moje dane"
+  },
+  "password": {
+    "heading": "Zmień hasło",
+    "current": "Obecne hasło",
+    "newHint": "Minimalna liczba znaków: {min}. Tutaj pozostaniesz zalogowany; inne logowania zostaną zakończone.",
+    "submit": "Zmień hasło"
+  },
+  "twoStepSettings": {
+    "heading": "Logowanie dwuetapowe",
+    "on": "Logowanie dwuetapowe jest **włączone** od {date}. Pozostałe kody odzyskiwania: {left}.",
+    "off": "Logowanie dwuetapowe jest **wyłączone**. Gdy jest włączone, przy logowaniu wpisujesz też kod z aplikacji uwierzytelniającej.",
+    "turnOff": "Wyłącz logowanie dwuetapowe",
+    "turnOn": "Włącz logowanie dwuetapowe"
+  },
+  "delete": {
+    "heading": "Usuń konto",
+    "lead": "To usuwa twoje konto Mewvo: nazwę użytkownika, hasło i logowanie dwuetapowe. Nie usuwa zapisów moderacji ani planu na twoim koncie Discord. Zobacz [Politykę prywatności](/privacy).",
+    "confirm": "Tak, usuń moje konto.",
+    "submit": "Usuń moje konto"
+  },
+  "deleted": {
+    "title": "Konto usunięte",
+    "heading": "Twoje konto zostało usunięte",
+    "lead": "Twojego konta Mewvo już nie ma i zostałeś wylogowany. Plan na twoim koncie Discord zostaje przy nim, a zapisy moderacji nie są naruszone.",
+    "home": "Strona główna"
+  },
+  "errors": {
+    "tooManyTries": "Za dużo prób. Poczekaj kilka minut i spróbuj ponownie.",
+    "notAllowedTitle": "Niedozwolone",
+    "notAllowed": "Ten formularz nie pochodził z tej strony albo był otwarty zbyt długo. Wróć, odśwież stronę i spróbuj ponownie. Nic nie zostało zmienione.",
+    "tooManySignups": "Za dużo nowych kont z twojego adresu. Spróbuj później.",
+    "acceptTerms": "Zaakceptuj Regulamin i Politykę prywatności, aby założyć konto.",
+    "wrongLogin": "Nieprawidłowa nazwa użytkownika lub hasło.",
+    "logInAgainTitle": "Zaloguj się ponownie",
+    "codeStepExpired": "Czas na wpisanie kodu minął. Zaloguj się ponownie hasłem.",
+    "tooManyCodes": "Za dużo błędnych kodów. Zaloguj się ponownie hasłem.",
+    "wrongLoginCode": "Ten kod jest nieprawidłowy. Spróbuj najnowszego kodu z aplikacji.",
+    "resetExpiredTitle": "Zacznij od nowa",
+    "resetExpiredLabel": "Nie pamiętasz hasła?",
+    "resetExpired": "Ten reset hasła wygasł albo został już użyty. Wybierz ponownie „Nie pamiętasz hasła?” i zaloguj się przez Discorda.",
+    "noAccountTitle": "Nie znaleziono konta",
+    "noAccount": "Z tym kontem Discord nie jest połączone żadne konto Mewvo, więc nie ma hasła do zresetowania. Zamiast tego możesz założyć nowe konto.",
+    "wrongResetCode": "Ten kod jest nieprawidłowy. Wpisz 6-cyfrowy kod z aplikacji albo jeden z kodów odzyskiwania.",
+    "notLinkedTitle": "Nie połączono",
+    "pickLetter": "Wybierz jedną literę lub cyfrę.",
+    "wrongCurrentPassword": "Obecne hasło jest nieprawidłowe. Nic nie zostało zmienione.",
+    "wrongSetupCode": "Ten kod jest nieprawidłowy. Sprawdź czas na telefonie i wpisz najnowszy kod.",
+    "wrongTwoStepOff": "Hasło lub kod jest nieprawidłowe. Logowanie dwuetapowe jest nadal włączone.",
+    "confirmDelete": "Zaznacz pole, aby potwierdzić, że chcesz usunąć konto.",
+    "wrongDeleteWithCode": "Hasło lub kod jest nieprawidłowe. Nic nie zostało usunięte.",
+    "wrongDelete": "Hasło jest nieprawidłowe. Nic nie zostało usunięte."
+  },
+  "flash": {
+    "passwordReset": "Nowe hasło zostało zapisane. Wszystkie inne logowania zostały zakończone.",
+    "letterClaimed": "Twoja nazwa użytkownika to teraz {username}. Używaj jej do logowania.",
+    "letterDeclined": "Zachowałeś nazwę użytkownika {username}.",
+    "passwordChanged": "Hasło zostało zmienione. Inne logowania zostały zakończone.",
+    "twoStepAlreadyOn": "Logowanie dwuetapowe jest już włączone.",
+    "twoStepAlreadyOff": "Logowanie dwuetapowe jest już wyłączone.",
+    "twoStepOff": "Logowanie dwuetapowe jest wyłączone.",
+    "unlinked": "Twoje konto Discord zostało odłączone. Połącz ponownie konto Discord, aby dalej korzystać z konta Mewvo."
+  }
+}
