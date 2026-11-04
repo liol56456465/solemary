@@ -53,6 +53,7 @@ import { premiumSettings, premiumStore } from './services/billing/premiumService
 import { loadPremiumCache, runPremiumCron, setGuildOwnerResolver, setPremiumClient } from './services/billing/premiumEffects.js';
 import { finalErrorHandler } from './utils/finalErrorHandler.js';
 import { isGlobalRateLimitExempt } from './services/dashboard/security.js';
+import { createCanonicalHostRedirect } from './utils/canonicalHost.js';
 import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
@@ -205,6 +206,14 @@ class Mewvo extends Client {
       }
       next();
     });
+
+    // Old address (e.g. *.replit.app) → same page on PUBLIC_URL, GET/HEAD only, health checks
+    // and OAuth callbacks exempt. Off unless CANONICAL_REDIRECT=true (src/utils/canonicalHost.js).
+    const canonicalRedirect = createCanonicalHostRedirect();
+    if (canonicalRedirect.settings.enabled) {
+      startupLog(`Canonical host redirect ON: GET/HEAD on other hosts → ${canonicalRedirect.settings.origin}`);
+    }
+    app.use(canonicalRedirect);
     const configuredPort = Number(this.config.api?.port || process.env.PORT || 3000);
     // A host-provided PORT is the only port the proxy routes to, so never drift off it.
     // Port retry is a local-dev convenience only.
