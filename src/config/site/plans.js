@@ -23,11 +23,35 @@
 // Free's values are what the bot does today (limits from the code: tags 100, sticky messages 10,
 // YouTube feeds 20 per server; src/services/community/*Service.js).
 
-// Display currencies. `prices` on each plan holds the monthly price per currency in cents; the
-// numbers are the same for now (owner, 2026-11-03: EUR for everyone, USD only via a picker that
-// is not built yet). `monthlyCents` stays the EUR price that the rest of the code reads.
+// Currencies. `prices` on each plan holds the monthly price per PAYMENT currency in cents (the
+// numbers are the same for now). `monthlyCents` stays the EUR price that the rest of the code reads.
+// What a buyer pays depends on the page language (owner, 2026-11-05): PAYMENT_CURRENCY_BY_LANG.
+// Polish and Brazilian visitors also see an approximate local amount (DISPLAY_CURRENCY_BY_LANG,
+// ECB rates: services/site/exchangeRates.js), always next to the real charge. Russian shows USD
+// (the ECB publishes no RUB rate). Checkout, receipts and DMs only ever show the payment currency.
 export const CURRENCY = 'EUR';
 export const CURRENCIES = Object.freeze({ EUR: '€', USD: '$' });
+export const PAYMENT_CURRENCIES = Object.freeze(Object.keys(CURRENCIES));
+export const PAYMENT_CURRENCY_BY_LANG = Object.freeze({
+    en: 'USD', ru: 'USD', de: 'EUR', fr: 'EUR', it: 'EUR', pl: 'EUR', es: 'EUR', 'pt-BR': 'USD',
+});
+/** Languages that show an approximate local amount first (whole units), with the real charge next to it. */
+export const DISPLAY_CURRENCY_BY_LANG = Object.freeze({ pl: 'PLN', 'pt-BR': 'BRL' });
+
+/** The currency a buyer pays in for a page language (EUR for an unknown language). */
+export function paymentCurrencyFor(lang) {
+    return PAYMENT_CURRENCY_BY_LANG[lang] || CURRENCY;
+}
+
+/** The currency shown big on the pricing cards (the payment currency unless DISPLAY_CURRENCY_BY_LANG lists one). */
+export function displayCurrencyFor(lang) {
+    return DISPLAY_CURRENCY_BY_LANG[lang] || paymentCurrencyFor(lang);
+}
+
+/** A payment currency from a form or query value, else null. */
+export function paymentCurrency(value) {
+    return PAYMENT_CURRENCIES.includes(value) ? value : null;
+}
 export const YEARLY_MONTHS_CHARGED = 10;
 
 export const PLANS = [
@@ -156,14 +180,14 @@ export function euros(cents) {
     return formatPrice(cents, 'EUR');
 }
 
-/** A plan's monthly price in cents for a display currency (falls back to EUR). */
+/** A plan's monthly price in cents for a payment currency (falls back to EUR). */
 export function monthlyCentsIn(plan, currency = CURRENCY) {
     return plan.prices?.[currency] ?? plan.monthlyCents;
 }
 
-/** Yearly price in cents: 10 × monthly. */
-export function yearlyCents(plan) {
-    return plan.monthlyCents * YEARLY_MONTHS_CHARGED;
+/** Yearly price in cents: 10 × monthly, in a payment currency (EUR by default). */
+export function yearlyCents(plan, currency = CURRENCY) {
+    return monthlyCentsIn(plan, currency) * YEARLY_MONTHS_CHARGED;
 }
 
 /** What a year costs per month, in cents, rounded. */

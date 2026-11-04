@@ -104,6 +104,7 @@
     "forGift": "A gift key",
     "forAccount": "Your account ({username})",
     "total": "Total",
+    "approx": "(approx. {amount})",
     "vatNote": "{vat} One payment for {days} days. No automatic renewal: the plan ends unless you buy more time.",
     "giftNote": "You get a key like MEWVO-XXXX-XXXX-XXXX, valid for a year. Anyone who logs in on this site can redeem it once."
   },
@@ -299,6 +300,7 @@
     "choosePlan": "Choose a paid plan (Normal, Pro or Max).",
     "choosePeriod": "Choose monthly or yearly billing.",
     "chooseKind": "Choose whether this is for you or a gift.",
+    "chooseCurrency": "Choose euros or US dollars.",
     "lowerPlan": "You already have {current} until {until}, which is more than {plan}. A {plan} key or purchase can be used after it ends; nothing was changed.",
     "durationMin": "The duration must be at least one day.",
     "giftToLong": "\"To\" is limited to {max} characters.",

@@ -12,7 +12,12 @@
   },
   "plans": {
     "title": "Formules",
-    "note": "Prix en euros. Les limites comme les tags suivent la formule du propriétaire du serveur. Les avantages marqués (prévu) ne sont pas encore développés et peuvent changer avant le lancement des formules payantes.",
+    "note": "Les limites comme les tags suivent la formule du propriétaire du serveur. Les avantages marqués (prévu) ne sont pas encore développés et peuvent changer avant le lancement des formules payantes.",
+    "currency": {
+      "EUR": "Prix en euros.",
+      "USD": "Prix en dollars américains."
+    },
+    "ratesNote": "Montant approximatif, au taux de la Banque centrale européenne du {date}. Tu paies en {currency}.",
     "billingNote": "Les prix correspondent au montant total que tu paies. {vat} Chaque achat est un paiement unique pour {monthDays} ou {yearDays} jours, sans renouvellement automatique. Tu peux te rétracter dans un délai de {withdrawalDays} jours : [droit de rétractation](/withdrawal)."
   },
   "card": {
@@ -23,6 +28,7 @@
     },
     "freeForGood": "Gratuit pour toujours",
     "perMonth": "/ mois",
+    "youPay": "Tu paies {price}",
     "joinServer": "Rejoindre le serveur",
     "joinSupport": "Rejoindre le serveur d’assistance",
     "seeFeatures": "Voir toutes les fonctionnalités",

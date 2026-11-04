@@ -474,6 +474,7 @@ button.button { cursor: pointer; }
 .summary-rows dd { margin: 0; text-align: right; }
 .summary-total { font-weight: 650; font-size: 18px !important; }
 .summary-total dt { color: var(--text) !important; }
+.summary-approx { font-size: 14px; font-weight: 400; color: var(--text-muted); }
 .summary-pay { width: 100%; min-height: 48px; font-size: 15px; }
 .receipt { max-width: 520px; margin: 32px 0; }
 .key-box { margin: 24px 0; padding: 20px 24px; border: 1px dashed var(--border-strong); border-radius: 12px; background: var(--bg-alt); }
@@ -782,6 +783,9 @@ button.button { cursor: pointer; }
 .plan-card-amount { font-size: clamp(2.4rem, 3.6vw, 3rem); font-weight: 800; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums; color: var(--text); }
 .plan-card-per { font-size: 15px; font-weight: 600; color: var(--text-muted); }
 .plan-card-year { font-size: 13px; color: var(--text-muted); margin: 10px 0 16px; }
+/* Polish / Brazilian cards: the real charge under the approximate local amount (pages/pricing.js). */
+.plan-card-pay { font-size: 15px; font-weight: 650; color: var(--text); margin: 8px 0 0; }
+.plan-card-pay + .plan-card-year { margin-top: 4px; }
 .plan-card-for { font-size: 16px; font-weight: 600; color: var(--text); margin: 0 0 20px; }
 .plan-card-perks { list-style: none; flex: 1 0 auto; margin: 0 0 24px; padding: 0; font-size: 15px; }
 .plan-card-perks li { padding: 10px 0; border-top: 1px solid var(--border); }

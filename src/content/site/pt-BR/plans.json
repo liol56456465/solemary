@@ -95,7 +95,7 @@
     },
     "currency": {
       "q": "Em que moeda estão os preços?",
-      "a": "Em euros. Os preços desta página são os preços mensais e anuais previstos."
+      "a": "Você paga em dólares americanos ou em euros, conforme o idioma do site: em dólares em inglês, português e russo, em euros em alemão, francês, italiano, espanhol e polonês. As páginas em polonês e português também mostram um valor aproximado em złoty ou reais, com base na cotação do Banco Central Europeu; o pagamento e o recibo sempre mostram quanto você paga de verdade. Os preços desta página são os preços mensais e anuais previstos."
     },
     "cancel": {
       "q": "Posso cancelar ou receber meu dinheiro de volta?",

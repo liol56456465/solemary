@@ -60,6 +60,7 @@ import { createCanonicalHostRedirect } from './utils/canonicalHost.js';
 import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
+import { refreshRates } from './services/site/exchangeRates.js';
 
 class Mewvo extends Client {
   constructor() {
@@ -436,6 +437,11 @@ class Mewvo extends Client {
     cron.schedule('45 3 * * *', exclusive('activity_prune', () => pruneActivity()), { timezone: 'UTC' });
     // Raid timeline incidents (dashboard Raid timeline) are kept 90 days after they ended.
     cron.schedule('55 3 * * *', exclusive('incident_timeline_prune', () => purgeIncidentTimelines()), { timezone: 'UTC' });
+    // ECB reference rates for the approximate złoty / real prices on /pricing (payment stays EUR/USD):
+    // once now (not awaited; the bundled fallback rates are used until it lands) and daily after the
+    // ECB publishes (~16:00 CET). A failure keeps the previous rates (services/site/exchangeRates.js).
+    exclusive('exchange_rates', () => refreshRates())();
+    cron.schedule('30 15 * * *', exclusive('exchange_rates', () => refreshRates()), { timezone: 'UTC' });
     // Retention (GDPR storage limitation): old watchlist, no-contact, raid-report and verification
     // data, daily at 03:30 UTC and once ~5 minutes after ready (privacy/retentionService.js).
     scheduleRetention({

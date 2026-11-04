@@ -179,7 +179,7 @@ test('premium: gift details + 1-year expiry; expired keys refused; upgrade conve
 
     const stats = await store.stats();
     assert.ok(stats.orders30 >= 2);
-    assert.ok(stats.cents30 >= 199 + 999);
+    assert.ok(stats.amounts30.EUR >= 199 + 999, "orders without a currency are EUR");
     assert.ok(stats.gifts30 >= 1);
     assert.equal(typeof stats.activeTotal, 'number');
 });

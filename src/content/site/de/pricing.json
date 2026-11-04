@@ -12,7 +12,12 @@
   },
   "plans": {
     "title": "Pläne",
-    "note": "Preise in Euro. Limits wie Tags richten sich nach dem Plan des Server-Eigentümers. Mit (geplant) markierte Vorteile sind noch nicht gebaut und können sich bis zum Start der Bezahlpläne ändern.",
+    "note": "Limits wie Tags richten sich nach dem Plan des Server-Eigentümers. Mit (geplant) markierte Vorteile sind noch nicht gebaut und können sich bis zum Start der Bezahlpläne ändern.",
+    "currency": {
+      "EUR": "Preise in Euro.",
+      "USD": "Preise in US-Dollar."
+    },
+    "ratesNote": "Ungefähr, nach dem Kurs der Europäischen Zentralbank vom {date}. Du zahlst in {currency}.",
     "billingNote": "Die Preise sind der Gesamtbetrag, den du zahlst. {vat} Jeder Kauf ist eine einmalige Zahlung für {monthDays} oder {yearDays} Tage, ohne automatische Verlängerung. Du kannst innerhalb von {withdrawalDays} Tagen widerrufen: [Widerrufsrecht](/withdrawal)."
   },
   "card": {
@@ -23,6 +28,7 @@
     },
     "freeForGood": "Dauerhaft kostenlos",
     "perMonth": "/ Monat",
+    "youPay": "Du zahlst {price}",
     "joinServer": "Dem Server beitreten",
     "joinSupport": "Dem Support-Server beitreten",
     "seeFeatures": "Alle Funktionen ansehen",

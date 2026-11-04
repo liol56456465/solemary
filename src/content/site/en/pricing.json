@@ -12,7 +12,12 @@
   },
   "plans": {
     "title": "Plans",
-    "note": "Prices in euros. Limits such as tags follow the plan of the server owner. Perks marked (planned) are not built yet and may change before paid plans start.",
+    "note": "Limits such as tags follow the plan of the server owner. Perks marked (planned) are not built yet and may change before paid plans start.",
+    "currency": {
+      "EUR": "Prices in euros.",
+      "USD": "Prices in US dollars."
+    },
+    "ratesNote": "Approximate, based on the European Central Bank rate of {date}. You pay in {currency}.",
     "billingNote": "Prices are the total you pay. {vat} Each purchase is one payment for {monthDays} or {yearDays} days, with no automatic renewal. You can withdraw within {withdrawalDays} days: [right of withdrawal](/withdrawal)."
   },
   "card": {
@@ -23,6 +28,7 @@
     },
     "freeForGood": "Free for good",
     "perMonth": "/ month",
+    "youPay": "You pay {price}",
     "joinServer": "Join the server",
     "joinSupport": "Join the support server",
     "seeFeatures": "See every feature",

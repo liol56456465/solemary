@@ -17,8 +17,8 @@ import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
 import { getConfiguredSetting } from '../settings/guildSettings.js';
-import { PERIODS, WITHDRAWAL_DAYS, isActive, planName, withdrawalDeadline } from './premiumService.js';
-import { euros } from '../../config/site/plans.js';
+import { PERIODS, WITHDRAWAL_DAYS, isActive, orderCurrency, planName, withdrawalDeadline } from './premiumService.js';
+import { formatPrice } from '../../config/site/plans.js';
 
 export const REMINDER_BEFORE_MS = 3 * 24 * 60 * 60 * 1000;
 const FREE = PLANS.find((plan) => plan.id === 'free');
@@ -144,7 +144,8 @@ export function premiumDm(kind, { planId, expiresAt, converted = null, from = nu
     return `**${plan} has ended.** Your account is on Free again; nothing was deleted.\nYou can start a plan again from the website (Pricing) or with a key.`;
 }
 
-const euro = (cents) => euros(cents);
+/** An amount in the order's own payment currency (never an approximation). */
+const price = (order, cents) => formatPrice(cents, orderCurrency(order));
 const sellerText = (seller) => [seller?.operator || 'Mewvo', seller?.email || null].filter(Boolean).join(', ');
 
 /**
@@ -159,7 +160,7 @@ export function orderConfirmationDm({ order, subscription = null, key = null, or
         `**Order confirmation #${order.id}**${order.test ? ' (TEST ORDER: no money was taken)' : ''}`,
         `Seller: ${sellerText(seller)}${origin ? ` (${origin}/legal)` : ''}`,
         `Plan: Mewvo ${planName(order.plan_id)}, ${PERIODS[order.period]?.label || order.period} (${PERIODS[order.period]?.days || '?'} days)${gift ? ', as a gift key' : ''}`,
-        `Total: ${euro(order.amount_cents)}. ${vatText}`.trim(),
+        `Total: ${price(order, order.amount_cents)}. ${vatText}`.trim(),
         'No automatic renewal: the plan ends unless you buy more time.',
         `Ordered: ${ts(created, 'F')}`,
     ];
@@ -179,9 +180,9 @@ export function withdrawalAckDm({ order, withdrawal, origin = '', seller = null 
         `**We received your withdrawal from order #${order.id}**${order.test ? ' (TEST ORDER)' : ''}`,
         `Received: ${ts(withdrawal.at, 'F')} (${new Date(withdrawal.at).toISOString().replace('T', ' ').slice(0, 19)} UTC)`,
         `Name given: ${withdrawal.name}`,
-        `Contract: Mewvo ${planName(order.plan_id)}, ${PERIODS[order.period]?.label || order.period}, ordered ${ts(order.created_at, 'F')}, ${euro(order.amount_cents)}`,
+        `Contract: Mewvo ${planName(order.plan_id)}, ${PERIODS[order.period]?.label || order.period}, ordered ${ts(order.created_at, 'F')}, ${price(order, order.amount_cents)}`,
         'Statement: I withdraw from my contract for this order.',
-        `Days used: ${withdrawal.usedDays} of ${withdrawal.totalDays}. Refund due: ${euro(withdrawal.refundCents)}${withdrawal.refundStatus === 'test-not-paid' ? ' (test order: nothing was charged, so nothing is paid back)' : ', paid back within 14 days with the payment method you used'}.`,
+        `Days used: ${withdrawal.usedDays} of ${withdrawal.totalDays}. Refund due: ${price(order, withdrawal.refundCents)}${withdrawal.refundStatus === 'test-not-paid' ? ' (test order: nothing was charged, so nothing is paid back)' : ', paid back within 14 days with the payment method you used'}.`,
         `Seller: ${sellerText(seller)}`,
     ];
     if (origin) lines.push(`Details: ${origin}/me/billing/orders/${order.id}/withdrawal`);

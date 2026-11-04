@@ -12,9 +12,9 @@ import { ACTIVITY_TEXT_MAX, STATUSES } from '../owner/botStateService.js';
 import { BLACKLIST_REASON_MAX } from '../owner/blacklistService.js';
 import { countedWarnsText } from '../enforcement/flowBuilder.js';
 import {
-    KEY_DURATIONS, KEY_VALIDITY, MAX_KEYS_PER_BATCH, NOTE_MAX, PAID_PLANS, PERIODS, keyStatus, planName,
+    KEY_DURATIONS, KEY_VALIDITY, MAX_KEYS_PER_BATCH, NOTE_MAX, PAID_PLANS, PERIODS, keyStatus, orderCurrency, planName,
 } from '../billing/premiumService.js';
-import { euros } from '../../config/site/plans.js';
+import { euros, formatPrice } from '../../config/site/plans.js';
 
 export const USERNAME_MAX = 32;
 export const ABOUT_MAX = 400;
@@ -463,7 +463,7 @@ export function premiumPage({
     const body = html`<header class="page-head"><h1>Premium keys</h1><p class="muted">Create keys for Normal, Pro or Max. Anyone who logs in on the website (My record → Subscription) can redeem a key once; it adds the plan and time to their account. Same plan: the time is added to the end date. Test mode only: no payments are connected.</p></header>
 ${notices({ flash, error, editEnabled })}
 ${testCheckout ? '' : html`<p class="notice">Redeeming and the checkout are off: set <code>PREMIUM_TEST_CHECKOUT=true</code> (and <code>MEMBER_PORTAL_ENABLED=true</code>) to turn them on. Keys created now still work once it is on.</p>`}
-${stats ? html`<dl class="facts">${kpi('Active plans', stats.activeTotal, PAID_PLANS.map((p) => `${p.name} ${stats.active[p.id] || 0}`).join(' · '))}${kpi('Test orders, 30 days', stats.orders30, `${stats.gifts30} gift${stats.gifts30 === 1 ? '' : 's'}`)}${kpi('Test amount, 30 days', euros(stats.cents30), 'not charged')}${kpi('Unused keys', keys?.counts?.unused ?? '-', `${keys?.counts?.expired ?? 0} expired`)}</dl>` : ''}
+${stats ? html`<dl class="facts">${kpi('Active plans', stats.activeTotal, PAID_PLANS.map((p) => `${p.name} ${stats.active[p.id] || 0}`).join(' · '))}${kpi('Test orders, 30 days', stats.orders30, `${stats.gifts30} gift${stats.gifts30 === 1 ? '' : 's'}`)}${kpi('Test amount, 30 days', Object.entries(stats.amounts30 || {}).map(([cur, cents]) => formatPrice(cents, cur)).join(' · ') || euros(0), 'not charged')}${kpi('Unused keys', keys?.counts?.unused ?? '-', `${keys?.counts?.expired ?? 0} expired`)}</dl>` : ''}
 ${created.length ? html`<section class="card"><h2>New keys (${created.length})</h2><p class="muted">${planName(created[0].plan_id)}, ${created[0].duration_days} days each. They also stay in the list below.</p>
 <textarea class="key-output" readonly rows="${Math.min(created.length, 12)}" aria-label="New keys, one per line">${created.map((k) => k.code).join('\n')}</textarea></section>` : ''}
 <section class="card"><h2>Create keys</h2>${actionForm(csrf, '/owner/premium/generate', html`<div class="grid">
@@ -496,7 +496,7 @@ ${subscriptions.map((sub) => html`<tr><td>${who(sub.user_id, sub.username)}</td>
 <section class="card"><h2>Recent test orders</h2>
 ${orders === null ? html`<p class="error" role="alert">The orders could not be loaded (database).</p>`
         : orders.length ? html`<div class="scroll"><table><thead><tr><th>Order</th><th>When</th><th>Account</th><th>Plan</th><th>For</th><th>Amount</th></tr></thead><tbody>
-${orders.map((o) => html`<tr><td><code>#${o.id}</code></td><td>${timeTag(o.created_at)}</td><td>${who(o.user_id, o.username)}</td><td>${planName(o.plan_id)} · ${PERIODS[o.period]?.label || o.period}</td><td>${o.kind === 'gift' ? 'Gift' : 'Own account'}</td><td>${euros(o.amount_cents)}${o.test ? ' (test)' : ''}</td></tr>`)}
+${orders.map((o) => html`<tr><td><code>#${o.id}</code></td><td>${timeTag(o.created_at)}</td><td>${who(o.user_id, o.username)}</td><td>${planName(o.plan_id)} · ${PERIODS[o.period]?.label || o.period}</td><td>${o.kind === 'gift' ? 'Gift' : 'Own account'}</td><td>${formatPrice(o.amount_cents, orderCurrency(o))}${o.test ? ' (test)' : ''}</td></tr>`)}
 </tbody></table></div>` : html`<p class="empty">No orders yet.</p>`}</section>`;
     return shell({ title: 'Premium keys', active: 'owner/premium', session, access, moduleStates, body });
 }

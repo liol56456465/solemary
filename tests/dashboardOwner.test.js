@@ -178,7 +178,7 @@ function fakePremium({ fail = false } = {}) {
         },
         revokeKey: async (code) => { const k = keys.find((row) => row.code === code && !row.revoked_at && !row.redeemed_at); if (!k) return null; k.revoked_at = new Date(); return k; },
         endSubscription: async (userId) => { const i = subs.findIndex((row) => row.user_id === userId); return i === -1 ? null : subs.splice(i, 1)[0]; },
-        stats: async () => { guard(); return { active: { pro: 1 }, activeTotal: 1, orders30: 2, cents30: 998, gifts30: 1 }; },
+        stats: async () => { guard(); return { active: { pro: 1 }, activeTotal: 1, orders30: 2, amounts30: { EUR: 499, USD: 499 }, gifts30: 1 }; },
         grant: async ({ userId, planId, days }) => {
             if (planId === 'normal') { const { PremiumError } = await import('../src/services/billing/premiumService.js'); throw new PremiumError('You already have Max until 2027-01-01, which is more than Normal.', 409); }
             const row = { user_id: userId, plan_id: planId, started_at: new Date(), expires_at: new Date(Date.now() + days * 86400000), source: 'owner' };
@@ -902,7 +902,7 @@ test('premium: stats tiles; give a plan (follow-up + audit); a refused grant re-
     const h = await setup({ premium });
     const page = await get(h, h.ow.premium);
     assert.match(page.body, /Active plans/);
-    assert.match(page.body, /€9\.98/);
+    assert.match(page.body, /€4\.99 · \$4\.99/, 'test amounts per currency, never added together');
     const ok = await post(h, h.ow.premiumGrant, { form: { user: '300000000000000041', grant_plan: 'max', grant_days: '30' } });
     assert.equal(ok.statusCode, 303);
     assert.ok(premium.subs.some((s) => s.user_id === '300000000000000041' && s.plan_id === 'max'));

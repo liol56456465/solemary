@@ -95,7 +95,7 @@
     },
     "currency": {
       "q": "What currency are prices in?",
-      "a": "Euros. The prices on this page are the planned monthly and yearly prices."
+      "a": "You pay in US dollars or euros, depending on the language of this site: US dollars in English, Portuguese and Russian, euros in German, French, Italian, Spanish and Polish. The Polish and Portuguese pages also show an approximate amount in złoty or reais, based on the European Central Bank rate; the order summary and the receipt always show what you actually pay. The prices on this page are the planned monthly and yearly prices."
     },
     "cancel": {
       "q": "Can I cancel or get my money back?",

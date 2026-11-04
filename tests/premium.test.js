@@ -130,12 +130,12 @@ function memoryStore() {
     };
     return {
         subs, orders, keys,
-        async purchase({ userId, username, planId, period, kind, giftTo, giftMessage, consent = null }) {
-            const q = quote({ planId, period, kind });
+        async purchase({ userId, username, planId, period, kind, currency, giftTo, giftMessage, consent = null }) {
+            const q = quote({ planId, period, kind, currency });
             const gift = kind === 'gift' ? giftDetails({ to: giftTo, message: giftMessage }) : null;
             const next = kind === 'personal' ? applyTime(subs.get(userId), planId, q.days) : null;
             orderId += 1;
-            const order = { id: orderId, user_id: userId, username, plan_id: planId, period, kind, amount_cents: q.amountCents, test: true, created_at: new Date(), key_code: null, legal: consent ? { consent } : null };
+            const order = { id: orderId, user_id: userId, username, plan_id: planId, period, kind, amount_cents: q.amountCents, currency: q.currency, test: true, created_at: new Date(), key_code: null, legal: consent ? { consent } : null };
             orders.unshift(order);
             if (next) return { order, subscription: setSub(userId, username, next, 'purchase'), key: null };
             const key = makeKey({ plan_id: planId, duration_days: q.days, source: 'gift', created_by: userId, created_by_username: username, order_id: order.id, gift_to: gift.giftTo, gift_message: gift.giftMessage, expires_at: new Date(Date.now() + 365 * DAY) });
@@ -274,8 +274,10 @@ test('checkout logged out → login → back to the same checkout; buying for me
         assert.equal(location, '/me/checkout?plan=normal&period=yearly&for=personal');
 
         const page = await app.request(location, { cookie });
-        assert.ok(page.body.includes('€19.90'), 'yearly Normal price');
-        assert.ok(page.body.includes('Order and pay · €19.90'), 'CRD Art. 8(2) button label');
+        assert.ok(page.body.includes('$19.90'), 'yearly Normal price (English: USD)');
+        assert.ok(page.body.includes('Order and pay · $19.90'), 'CRD Art. 8(2) button label');
+        assert.ok(page.body.includes('<input type="hidden" name="cur" value="USD">'), 'the currency shown is the one posted');
+        assert.ok(!page.body.includes('approx.'), 'no approximation in English');
         assert.ok(page.body.includes('Test mode — no money is taken'), 'test note next to the button');
         assert.ok(page.body.includes('I accept the <a href="/terms">Terms and Conditions</a>.'));
         assert.equal((page.body.match(/type="checkbox" name="consent_(start|terms|age)" value="yes" required>/g) || []).length, 3, 'three required, unticked boxes');
@@ -292,7 +294,8 @@ test('checkout logged out → login → back to the same checkout; buying for me
         assert.equal(bought.headers.get('location'), '/me/billing/orders/1');
         const receipt = await app.request('/me/billing/orders/1', { cookie });
         assert.ok(receipt.body.includes('your plan is active'));
-        assert.ok(receipt.body.includes('€19.90 (test, not charged)'));
+        assert.ok(receipt.body.includes('$19.90 (test, not charged)'));
+        assert.equal(app.premium.orders[0].currency, 'USD', 'the order stores the payment currency');
         const billing = await app.request('/me/billing', { cookie });
         assert.ok(billing.body.includes('Normal'));
         assert.ok(billing.body.includes('Active until'));
@@ -600,7 +603,7 @@ test('order → confirmation DM (no pings) and consent on the receipt; withdraw:
         assert.equal(sent.length, 1, 'one DM: the confirmation (no separate "active" DM)');
         assert.deepEqual(sent[0].allowedMentions, { parse: [] });
         assert.equal(sent[0].id, ALICE);
-        assert.match(sent[0].content, /Order confirmation #1[\s\S]*Mewvo Pro[\s\S]*€4\.99[\s\S]*\/withdrawal/);
+        assert.match(sent[0].content, /Order confirmation #1[\s\S]*Mewvo Pro[\s\S]*\$4\.99[\s\S]*\/withdrawal/);
         assert.equal(app.premium.orders[0].legal.consent.version, `${CONSENT_VERSION}/en`, 'consent stored with the order');
         const receipt = (await app.request('/me/billing/orders/1', { cookie: alice.cookie })).body;
         assert.ok(receipt.includes('You confirmed') && receipt.includes(CONSENT_VERSION));
@@ -613,7 +616,7 @@ test('order → confirmation DM (no pings) and consent on the receipt; withdraw:
         assert.equal(confirm.status, 200);
         assert.ok(confirm.body.includes('>Confirm withdrawal</button>'));
         assert.ok(confirm.body.includes('value="alice"'), 'name pre-filled, editable');
-        assert.ok(confirm.body.includes('Refund due') && confirm.body.includes('€4.99'));
+        assert.ok(confirm.body.includes('Refund due') && confirm.body.includes('$4.99'));
 
         const withdraw = (cookie, fields, origin = ORIGIN) => app.request('/me/billing/orders/1/withdraw', { method: 'POST', cookie, body: form(fields), headers: { origin } });
         assert.equal((await withdraw(alice.cookie, { csrf: 'nope', name: 'Alice' })).status, 403, 'CSRF');
@@ -635,7 +638,7 @@ test('order → confirmation DM (no pings) and consent on the receipt; withdraw:
         assert.equal(w.usedDays, 0);
         assert.equal(sent.length, 2);
         assert.deepEqual(sent[1].allowedMentions, { parse: [] });
-        assert.match(sent[1].content, /received your withdrawal from order #1[\s\S]*Alice Example[\s\S]*€4\.99/);
+        assert.match(sent[1].content, /received your withdrawal from order #1[\s\S]*Alice Example[\s\S]*\$4\.99/);
         const ack = await app.request('/me/billing/orders/1/withdrawal', { cookie: alice.cookie });
         assert.equal(ack.status, 200);
         assert.ok(ack.body.includes('We received your withdrawal') && ack.body.includes('Alice Example') && ack.body.includes('UTC'));
