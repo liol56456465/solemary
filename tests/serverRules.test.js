@@ -288,9 +288,9 @@ test('schema: consequence ≤ 100 and one line, preset must be a library-style k
     assert.equal(validateSetting('rulesPost', { ...post, posted: { channelId: post.channelId, messageIds: [], at: '2026-10-01T00:00:00Z' } }).ok, false, 'at least one message id');
 });
 
-test('library: 14 rules with unique keys, within the limits; every linked reason is a real prebuilt reason', () => {
-    assert.equal(RULES_LIBRARY.length, 14);
-    assert.equal(new Set(RULES_LIBRARY.map((r) => r.key)).size, 14);
+test('library: 22 rules with unique keys, within the limits; every linked reason is a real prebuilt reason', () => {
+    assert.equal(RULES_LIBRARY.length, 22);
+    assert.equal(new Set(RULES_LIBRARY.map((r) => r.key)).size, 22);
     const reasons = new Set(ENFORCEMENT_REASONS.map((r) => r.key));
     for (const entry of RULES_LIBRARY) {
         assert.ok(entry.title.length <= 80 && entry.text.length <= 1000 && entry.consequence.length <= 100, entry.key);

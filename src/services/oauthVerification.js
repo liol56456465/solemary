@@ -235,7 +235,7 @@ export function registerOAuthRoutes(app, client) {
                 if (assessment.hold) {
                     await holdForStaff(client, state.guildId, me.id, assessment.reasons);
                     return send(202, 'Waiting for approval',
-                        'Thanks! A staff member needs to approve your verification first. You will get a DM when it is done.', '#fee75c',
+                        'Thanks. A staff member needs to approve your verification first. You will get a DM when it is done.', '#fee75c',
                         { note: privacyNoteHtml() });
                 }
             }

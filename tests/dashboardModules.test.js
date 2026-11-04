@@ -1739,6 +1739,40 @@ test('messages: every action is Administrator-only; the page has the three forms
     assert.match(ownerPage.body, /To post you need the Administrator permission/);
 });
 
+test('messages: Start from a template is a grouped GET picker; ?template= fills Send and Schedule (escaped, server name); posting it goes through the normal send', async () => {
+    const h = await setup();
+    const page = (await get(h, 'messages')).body;
+    const picker = page.slice(page.indexOf('id="s-start-from-a-template"'), page.indexOf('id="s-send-a-message"'));
+    assert.match(picker, /<form method="get" action="\/dashboard\/messages#s-send-a-message"/, 'a plain GET form, no script');
+    assert.ok(!/<script|onclick|onchange/i.test(picker), 'no inline JS (CSP)');
+    assert.ok((picker.match(/<optgroup /g) || []).length >= 5, 'grouped');
+    assert.ok((picker.match(/<option value="/g) || []).length >= 40, 'at least 40 templates');
+    assert.match(picker, /<optgroup label="Support server"><option value="appeal-overview">How to appeal \(all punishments\)<\/option>/);
+    assert.ok(!/ selected/.test(picker), 'nothing chosen yet');
+
+    const filled = (await run(h, h.d.modulePage, { method: 'GET', params: { module: 'messages' }, headers: { cookie: h.cookie }, query: { template: 'support-welcome' } }));
+    assert.equal(filled.statusCode, 200);
+    assert.match(filled.body, /<option value="support-welcome" selected>/);
+    assert.match(filled.body, /Template "Welcome to the support server" is filled in below/);
+    // Both forms get the box title with the server name, escaped ("Main <b>").
+    assert.equal((filled.body.match(/name="title" value="Welcome to Main &lt;b&gt;"/g) || []).length, 2, 'Send and Schedule prefilled');
+    assert.ok(!filled.body.includes('Welcome to Main <b>'), 'server name escaped');
+    assert.match(filled.body, /This server is for help with appeals, reports and questions\./);
+
+    const unknown = await run(h, h.d.modulePage, { method: 'GET', params: { module: 'messages' }, headers: { cookie: h.cookie }, query: { template: '<x>' } });
+    assert.equal(unknown.statusCode, 200);
+    assert.match(unknown.body, /That template does not exist/);
+    assert.ok(!unknown.body.includes('<x>'));
+
+    // The admin edits the filled text and posts it: the normal send action, no pings.
+    const res = await post(h, 'messages', 'send', { channelId: TEXT, title: 'Welcome to Main', description: 'This server is for help with appeals.\r\nEdited.', colour: 'primary' });
+    assert.equal(res.statusCode, 303);
+    const [, content, embed] = h.calls.find((c) => c.name === 'postBotMessage').args;
+    assert.equal(content, '');
+    assert.equal(embed.title, 'Welcome to Main');
+    assert.equal(embed.description, 'This server is for help with appeals.\nEdited.');
+});
+
 test('messages/send: text, embed and colour reach the service; hex colour wins; bad hex and footer-only embeds are refused', async () => {
     const h = await setup();
     assert.equal((await post(h, 'messages', 'send', CASES.messages.send.form)).statusCode, 303);
@@ -2909,12 +2943,12 @@ test('rules library: Add sets the library key and links its reason only when tha
     let page = (await get(h, 'rules')).body;
     const library = sectionOf(page, 'Add from the library', 'Reasons linked to rules');
     assert.ok(library.includes('Be respectful') && library.includes('Listen to staff'), 'every library rule listed');
-    assert.equal((library.match(/>Add<\/button>/g) || []).length, 14);
+    assert.equal((library.match(/>Add<\/button>/g) || []).length, 22);
     assert.ok(!/—/.test(library), 'no em dashes');
 
     assert.equal((await post(h, 'rules', 'library-add', { key: 'spam' })).statusCode, 303);
     let { rules } = h.state.registry.serverRules;
-    assert.deepEqual(rules[0], { id: rules[0].id, title: 'No spam', text: 'No message floods, walls of emoji, repeated messages or mass mentions.', consequence: 'Warning', preset: 'spam' });
+    assert.deepEqual(rules[0], { id: rules[0].id, title: 'No spam', text: 'No message floods, walls of emoji, copy-paste chains or mass mentions.', consequence: 'Message removed and a warning, then a 1-hour mute. Spam bots are banned', preset: 'spam' });
     assert.deepEqual(h.state.registry.reasonRuleLinks, { spam: rules[0].id });
     assert.match((await h.sessions.get(h.session.id)).flash, /Rule 1 "No spam" added\. The reason "Spam" now points to it\./);
 
@@ -2936,7 +2970,7 @@ test('rules library: Add sets the library key and links its reason only when tha
     page = (await get(h, 'rules')).body;
     const after = sectionOf(page, 'Add from the library', 'Reasons linked to rules');
     assert.equal((after.match(/>Added<\/span>/g) || []).length, 4);
-    assert.equal((after.match(/>Add<\/button>/g) || []).length, 10);
+    assert.equal((after.match(/>Add<\/button>/g) || []).length, 18);
     // A custom rule still works next to library ones.
     assert.equal((await post(h, 'rules', 'rule-add', { title: 'Custom', text: '' })).statusCode, 303);
     assert.equal(h.state.registry.serverRules.rules.at(-1).preset, undefined);

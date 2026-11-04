@@ -47,7 +47,7 @@ export default {
 
         const minutes = interaction.options.getInteger("minutes") || 0;
         const seconds = interaction.options.getInteger("seconds") || 0;
-        const title = interaction.options.getString("title") || "Countdown Timer";
+        const title = interaction.options.getString("title") || "Countdown";
 
         const totalSeconds = minutes * 60 + seconds;
 

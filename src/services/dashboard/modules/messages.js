@@ -8,8 +8,14 @@
 // Scheduled and recurring messages (services/scheduledMessageService.js): the same text
 // and/or embed, posted later by the once-a-minute cron with postBotMessage, once, on
 // chosen weekdays at a time, or every N hours, in an IANA time zone.
+//
+// Templates (config/messageTemplates.js): "Start from a template" is a plain GET form
+// (?template=<id>, no script: CSP). The chosen template fills the Send and Schedule forms
+// (box title, box text, colour, {server} = the server name); nothing is posted until the
+// admin presses Post or Schedule, so posting goes through the same checks as typed text.
 
-import { html, timeTag } from '../html.js';
+import { html, path, raw, timeTag } from '../html.js';
+import { fillTemplate, messageTemplate, templatesByGroup } from '../../../config/messageTemplates.js';
 import {
     InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, channelWarnings, checkbox, checkboxInput, choiceField, intField, numberInput,
     pill, postForm, selectInput, switchInput, text, textArea, textInput,
@@ -114,6 +120,32 @@ function messageFromForm(g, form) {
         channel, content, embed: hasEmbed ? { ...embed, colour } : null,
         audit: { channelId: channel.id, content: content || null, embed: hasEmbed ? { ...embed, colour: `#${colour.toString(16).padStart(6, '0')}` } : null },
     };
+}
+
+// ── Templates ─────────────────────────────────────────────────────────────
+
+/**
+ * The template asked for in ?template=, filled for this server: { template, payload } or
+ * null. An unknown id gives { unknown: true } so the page can say so (nothing is filled).
+ */
+export function chosenTemplate(query, serverName) {
+    const id = typeof query?.template === 'string' ? query.template.trim().slice(0, 60) : '';
+    if (!id) return null;
+    const template = messageTemplate(id);
+    if (!template) return { unknown: true };
+    const filled = fillTemplate(template, { server: serverName });
+    return { template, payload: { content: '', embed: { title: filled.title, description: filled.text, colour: colourFromKey(filled.colour) } } };
+}
+
+/** The grouped template list (a GET form, no script) and, when one is chosen, what to do next. */
+function templatePicker(chosen) {
+    const current = chosen?.template?.id || '';
+    const note = chosen?.unknown
+        ? html`<p class="warn">That template does not exist (any more). Pick one from the list.</p>`
+        : chosen ? html`<p class="ok">Template "${chosen.template.name}" is filled in below, in Send a message and in Schedule a message. Replace the parts in [square brackets], check the text, then post or schedule it. Nothing is posted until you press the button.</p>` : '';
+    return html`${note}<form method="get" action="${path('/messages')}#s-send-a-message" class="settings-form"><div class="grid">
+<label>Template<select name="template">${templatesByGroup().map((g) => html`<optgroup label="${g.label}">${g.templates.map((t) => html`<option value="${t.id}"${t.id === current ? raw(' selected') : ''}>${t.name}</option>`)}</optgroup>`)}</select><span class="hint">Ready-made texts for common announcements. Where a text names the server, this server's name is filled in. Parts in [square brackets] are for you to fill in.</span></label></div>
+<div class="form-actions"><button type="submit" class="secondary">Use this template</button></div></form>`;
 }
 
 // ── Scheduling ────────────────────────────────────────────────────────────
@@ -294,8 +326,10 @@ export default {
         const scheduled = data.scheduled || [];
         const canPost = ctx.canEdit && ctx.canAct;
         const adminNote = ctx.canAct ? '' : ' To post you need the Administrator permission in the main server.';
-        const send = postForm(ctx, 'messages', 'send', html`<div class="grid">${messageFields(g)}</div>`, { submit: 'Post message', canEdit: canPost });
-        const schedule = postForm(ctx, 'messages', 'schedule', html`<div class="grid">${messageFields(g)}</div>${scheduleFields(null, data.timezone || DEFAULT_TIMEZONE)}`,
+        const chosen = chosenTemplate(ctx.query, g?.name);
+        const prefill = chosen?.payload ? { payload: chosen.payload } : {};
+        const send = postForm(ctx, 'messages', 'send', html`<div class="grid">${messageFields(g, prefill)}</div>`, { submit: 'Post message', canEdit: canPost });
+        const schedule = postForm(ctx, 'messages', 'schedule', html`<div class="grid">${messageFields(g, prefill)}</div>${scheduleFields(null, data.timezone || DEFAULT_TIMEZONE)}`,
             { submit: 'Schedule message', canEdit: canPost });
         const poll = postForm(ctx, 'messages', 'poll', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.nativePoll, optional: false })}
@@ -310,11 +344,12 @@ ${textInput('link', '', { label: 'Poll message link', max: 200, type: 'url', pla
         { submit: 'End poll now', canEdit: canPost });
         const countdown = postForm(ctx, 'messages', 'countdown', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.post, optional: false })}
-${textInput('title', '', { label: 'Title', max: COUNTDOWN_TITLE_MAX, placeholder: 'Countdown Timer', help: 'What you are counting down to.' })}
+${textInput('title', '', { label: 'Title', max: COUNTDOWN_TITLE_MAX, placeholder: 'Countdown', help: 'What you are counting down to.' })}
 ${numberInput('minutes', 5, { label: 'Minutes', min: 0, max: 1440, help: 'From 0 to 1440 (24 hours).' })}
 ${numberInput('seconds', 0, { label: 'Seconds', min: 0, max: 59, help: 'From 0 to 59.' })}</div>`,
         { submit: 'Start countdown', canEdit: canPost });
-        return html`${section('Send a message', send, `Mewvo posts your text, your box, or both in the channel right away.${adminNote}`)}
+        return html`${section('Start from a template', templatePicker(chosen), 'Pick a ready-made announcement, like how to appeal or a scam warning. It fills in the forms below so you can edit it before posting.')}
+${section('Send a message', send, `Mewvo posts your text, your box, or both in the channel right away.${adminNote}`)}
 ${section('Schedule a message', schedule, `Write a message now and let Mewvo post it later: once, every day, on the weekdays you choose, or every few hours. If posting fails ${FAILURE_LIMIT} times in a row, for example because Mewvo lost access to the channel, it is paused and staff are told in the alerts channel. A server can have up to ${planLimit(ctx.guildId, 'scheduled')}, depending on the server owner's plan.${adminNote}`)}
 ${section('Scheduled messages', scheduledSection(ctx, scheduled, data.timezone || DEFAULT_TIMEZONE), 'The next post time is shown in each message\'s own time zone.')}
 <datalist id="tz-zones">${timeZoneList().map((z) => html`<option value="${z}"></option>`)}</datalist>
@@ -458,7 +493,7 @@ ${section('Start a countdown', countdown, `Posts a timer that counts down in the
             async run(ctx, form) {
                 const g = ctx.guild;
                 const channel = postChannel(g, form, PERMS.post);
-                const title = text(form, 'title', COUNTDOWN_TITLE_MAX) || 'Countdown Timer';
+                const title = text(form, 'title', COUNTDOWN_TITLE_MAX) || 'Countdown';
                 const minutes = intField(form, 'minutes', { min: 0, max: 1440, label: 'Minutes', fallback: 0 });
                 const seconds = intField(form, 'seconds', { min: 0, max: 59, label: 'Seconds', fallback: 0 });
                 const totalSeconds = minutes * 60 + seconds;

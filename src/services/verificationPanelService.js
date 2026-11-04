@@ -22,7 +22,7 @@ export function buildVerificationPanelPayload(cfg = {}) {
     return {
         embeds: [new EmbedBuilder()
             .setTitle('Server verification')
-            .setDescription(cfg.message || botConfig.verification?.defaultMessage || 'Press the button to verify.')
+            .setDescription(cfg.message || botConfig.verification?.defaultMessage || 'Press the button below to get access to the rest of the server.')
             .setColor(getColor('success'))],
         components: [new ActionRowBuilder().addComponents(
             new ButtonBuilder()

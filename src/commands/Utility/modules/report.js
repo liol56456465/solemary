@@ -36,8 +36,8 @@ export default {
         }
 
         const ownerMention = interaction.guild.ownerId
-            ? `<@${interaction.guild.ownerId}> New report!`
-            : 'New report!';
+            ? `<@${interaction.guild.ownerId}> New report`
+            : 'New report';
 
         const sent = await logEvent({
             client,
@@ -66,7 +66,7 @@ export default {
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
                 title: 'Report Submitted',
-                description: `Your report against **${targetUser.tag}** has been successfully filed and sent to the moderation team. Thank you!`,
+                description: `Your report against **${targetUser.tag}** was sent to the moderators. Thanks for letting us know.`,
             })],
         });
 
