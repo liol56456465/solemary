@@ -232,6 +232,30 @@ export function watchListLine(row) {
     return `**#${row.id}** <@${row.user_id}> · ${periodText(row)} · by <@${row.created_by}> · ${truncate(row.reason, 120)}`;
 }
 
+/**
+ * The /case watch list embed description: whole lines only, at most `max` characters, with
+ * "…and N more" when they do not all fit (25 long lines would pass 4096 and get cut mid-line,
+ * hiding entries and breaking a mention). Pure.
+ */
+export function watchListDescription(rows, max = 4096) {
+    if (!rows.length) return 'Nobody. Add someone with `/case watch add`.';
+    const out = [];
+    let length = 0;
+    for (let i = 0; i < rows.length; i += 1) {
+        const line = watchListLine(rows[i]);
+        const more = `…and ${rows.length - i} more`;
+        const reserve = i < rows.length - 1 ? more.length + 1 : 0;
+        const sep = out.length ? 1 : 0;
+        if (length + sep + line.length + reserve > max) {
+            out.push(more);
+            break;
+        }
+        out.push(line);
+        length += sep + line.length;
+    }
+    return out.join('\n');
+}
+
 /** True (and records the time) when this member may get an alert of this kind now; at most one per minute per kind. */
 export function takeAlertSlot(guildId, userId, now = Date.now(), kind = 'event') {
     const key = `${guildId}:${userId}:${kind}`;
