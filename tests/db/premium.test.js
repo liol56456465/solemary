@@ -193,7 +193,7 @@ test('premium: consent stored with the order; withdrawal once, own order only, w
         const second = await store.purchase({ userId: frank, username: 'frank', planId: 'pro', period: 'monthly', kind: 'personal', consent });
         const gift = await store.purchase({ userId: frank, username: 'frank', planId: 'normal', period: 'monthly', kind: 'gift', consent });
         const account = await store.accountOf(frank);
-        assert.equal(account.orders.find((o) => o.id === first.order.id).legal.consent.version, service.CONSENT_VERSION, 'consent read back');
+        assert.equal(account.orders.find((o) => o.id === first.order.id).legal.consent.version, service.consentVersion('en'), 'consent read back (version includes the language)');
 
         await assert.rejects(store.withdraw({ userId: gina, orderId: first.order.id, name: 'Gina' }), /no such order/, 'not someone else\'s order');
         // The first order is 15 days old: refused, nothing changes.
@@ -211,7 +211,7 @@ test('premium: consent stored with the order; withdrawal once, own order only, w
         await assert.rejects(store.withdraw({ userId: frank, orderId: second.order.id, name: 'Frank' }), /already withdrew/);
         const reread = (await store.accountOf(frank)).orders.find((o) => o.id === second.order.id);
         assert.equal(reread.legal.withdrawal.refundCents, 333);
-        assert.equal(reread.legal.consent.version, service.CONSENT_VERSION, 'consent kept next to the withdrawal');
+        assert.equal(reread.legal.consent.version, service.consentVersion('en'), 'consent kept next to the withdrawal');
 
         const g = await store.withdraw({ userId: frank, orderId: gift.order.id, name: 'Frank' });
         assert.equal(g.withdrawal.refundCents, 199);
