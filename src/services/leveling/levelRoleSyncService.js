@@ -194,8 +194,17 @@ export async function reconcileLevelRoles(client, guildId = null, { fetchTimeout
 
 
             for (const [level, roleId] of Object.entries(rewards)) {
-                const role =
-                    guild.roles.cache.get(roleId) || (await guild.roles.fetch(roleId).catch(() => null));
+                // discord.js returns null only for Unknown Role; any other failure (outage, rate
+                // limit) throws, and then the reward must stay in the config.
+                let role = guild.roles.cache.get(roleId);
+                if (!role) {
+                    try {
+                        role = await guild.roles.fetch(roleId);
+                    } catch (error) {
+                        logger.warn(`Could not check level ${level} reward role ${roleId} in guild ${guild.id}; keeping it: ${error?.message || error}`);
+                        continue;
+                    }
+                }
                 if (!role) {
                     delete rewards[level];
                     await setLevelRoleReward(client, guild.id, level, null);

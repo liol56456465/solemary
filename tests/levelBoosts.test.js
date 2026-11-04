@@ -295,6 +295,26 @@ test('startup reconcile uses the same rule (highest only removes lower rewards)'
     assert.equal(summary.errors, 0);
 });
 
+test('startup reconcile: a Discord error on the role check keeps the reward; only Unknown Role (null) prunes it', async () => {
+    const GONE = '400000000000000099';
+    const FLAKY = '400000000000000098';
+    const client = fakeClient();
+    await seed(client, { rewards: { 5: ROLE_A, 30: GONE, 40: FLAKY }, level: 12 });
+    const guild = fakeGuild();
+    guild.roles.fetch = async (id) => {
+        if (id === FLAKY) throw Object.assign(new Error('Service Unavailable'), { status: 503 });
+        return guild.roles.cache.get(id) || null;
+    };
+    fakeMember(guild, client);
+    client.guilds.cache.set(GUILD, guild);
+    const summary = await reconcileLevelRoles(client);
+    assert.equal(summary.prunedRewardEntries, 1, 'only the unknown role');
+    const rewards = (await getLevelingConfig(client, GUILD)).roleRewards;
+    assert.equal(rewards[30], undefined, 'Unknown Role pruned');
+    assert.equal(rewards[40], FLAKY, 'kept after a Discord error');
+    assert.equal(rewards[5], ROLE_A);
+});
+
 test('startup reconcile: one full member fetch, former members skipped without a fetch or level read', async () => {
     const client = fakeClient();
     await seed(client, { level: 12 });
