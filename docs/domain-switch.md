@@ -159,7 +159,7 @@ Only after step 6 passed. Replit secret `CANONICAL_REDIRECT=true`, republish.
 
 - Log line `Canonical host redirect ON: GET/HEAD on other hosts → https://app.mewvo.com`.
 - `curl -sSI 'https://meowist--sxexx.replit.app/leaderboard?page=2'` → `301`,
-  `location: https://app.mewvo.com/leaderboard?page=2`, `cache-control: public, max-age=3600`.
+  `location: https://app.mewvo.com/leaderboard?page=2`, `cache-control: private, max-age=3600`.
 - `curl -sS https://meowist--sxexx.replit.app/health` → JSON, **no** redirect (health checks stay put).
 - `curl -sSI 'https://meowist--sxexx.replit.app/dashboard/oauth/callback'` → not a 301 (callbacks are exempt).
 - `curl -sSI https://app.mewvo.com/` → `200`, no redirect loop.
