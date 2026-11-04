@@ -137,7 +137,7 @@ export const COMPARISON = [
 export const PRICING_FAQ = [
     { q: 'Can I buy a plan now?', a: 'No. Mewvo runs only on its own server for now. Paid plans start when it opens to other servers; until then nothing can be bought and nobody is charged.' },
     { q: 'What currency are prices in?', a: 'Euros. The prices on this page are the planned monthly and yearly prices.' },
-    { q: 'Can I cancel?', a: 'Yes, any time. A paid plan is meant to run until the end of the period you paid for and then fall back to Free.' },
+    { q: 'Can I cancel or get my money back?', a: 'Plans don’t renew by themselves, so there is nothing to cancel: a plan runs for the period you chose and then falls back to Free. Once real payments start, you can withdraw from a purchase within 14 days. If you asked for the plan to start right away, you get your money back minus the days you already used. Details are on the Withdrawal page.' },
     { q: 'What does Free keep?', a: 'Everything Mewvo does today: enforcement, the warning ladder, appeals, automod, tickets, modmail, the dashboard and the community tools. Your case history is never deleted when a plan ends.' },
     { q: 'What happens to extra tags or feeds if I go back to Free?', a: 'The plan is that nothing is deleted: items over the Free limit stop working until you remove some or upgrade again. This may still change before launch.' },
 ];

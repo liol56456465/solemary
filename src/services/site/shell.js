@@ -145,7 +145,9 @@ ${ctx.memberPortal ? html`<li><a href="/me"${current('me')}>My record</a></li>` 
 ${ctx.mainInvite ? html`<li><a href="${ctx.mainInvite}" rel="noopener">Our server</a></li>` : ''}`)}
 ${col('Legal', html`<li><a href="/about"${current('about')}>About</a></li>
 <li><a href="/privacy"${current('privacy')}>Privacy Policy</a></li>
-<li><a href="/terms"${current('terms')}>Terms and Conditions</a></li>`)}</div>`;
+<li><a href="/terms"${current('terms')}>Terms and Conditions</a></li>
+<li><a href="/legal"${current('legal')}>Legal notice</a></li>
+<li><a href="/contact"${current('contact')}>Contact and reports</a></li>`)}</div>`;
 }
 
 /**

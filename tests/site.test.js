@@ -519,11 +519,11 @@ test('privacy and terms: dated, linked from the footer, contact via the support 
         for (const path of ['/privacy', '/terms']) {
             const res = await site.get(path);
             assert.equal(res.status, 200);
-            assert.ok(res.body.includes('Last updated <time datetime="2026-11-03">3 November 2026</time>.'), path);
+            assert.ok(res.body.includes('Last updated <time datetime="2026-11-04">4 November 2026</time>.'), path);
             assert.ok(res.body.includes(`<a href="${SUPPORT}" rel="noopener">the support server</a>`), path);
         }
         const privacy = (await site.get('/privacy')).body;
-        for (const fact of ['AES-256-GCM', '60 days', '90 days', '<code>/wipedata</code>', 'never sold', 'PostgreSQL', 'never asks for your email', 'scrypt', 'No email address', 'not saved', 'Art. 6(1)(f)', 'data protection authority', 'Automatic decisions', 'Cookies', 'at least 13']) {
+        for (const fact of ['AES-256-GCM', '60 days', '90 days', '<code>/wipedata</code>', 'never sold', 'PostgreSQL', 'never asks for your email', 'scrypt', 'No email address', 'not saved', 'Art. 6(1)(f)', 'data protection authority', 'Automatic decisions', 'Cookies', 'at least 13', 'at least 14']) {
             assert.ok(privacy.includes(fact), fact);
         }
         assert.ok(privacy.includes('does not delete moderation records'));
@@ -753,6 +753,105 @@ test('privacy policy: points to Download my data only when My record is on', asy
     const { privacyPage } = await import('../src/services/site/pages/legal.js');
     assert.ok(privacyPage({ memberPortal: true }).includes('<strong>Download my data</strong>'));
     assert.ok(!privacyPage({ memberPortal: false }).includes('Download my data'));
+});
+
+// ── Legal pages: privacy matches the code, fairer terms, legal notice, DSA contact ──
+
+const ODR = /ec\.europa\.eu\/consumers\/odr|online dispute resolution platform/i;
+
+test('privacy policy: authority, processors, transfers, lookups, retention, every cookie', async () => {
+    const { privacyPage } = await import('../src/services/site/pages/legal.js');
+    const page = privacyPage({ legal: {} });
+    for (const fact of [
+        'Valstybinė duomenų apsaugos inspekcija', 'href="https://vdai.lrv.lt"', 'Art. 77', 'Art. 22(3)',
+        'The text of your messages is never stored', 'message IDs and message lengths, never message text', '7 days, error logs 14 days', 'log store',
+        'Replit', 'Neon', 'independent controller', 'Data Privacy Framework', 'Standard Contractual Clauses',
+        'is.gd', 'OpenStreetMap Nominatim', 'MET Norway', 'api.met.no', 'dictionaryapi.dev', 'dummyimage.com',
+        'Staff watchlist', 'Deleted 1 year after the entry ends', 'No-contact orders', 'Deleted 1 year after the order ends',
+        'Raid records: 1 year', 'Raid timelines: 90 days', 'Verification history', '1 year.', 'only for Mewvo’s own servers',
+        'a person on the staff team decides', 'erase it or remove your name and ID', 'your stored Discord login token', 'at least 14',
+    ]) assert.ok(page.includes(fact), fact);
+    for (const cookie of ['mewvo_dash', 'mewvo_dash_state', 'mewvo_me', 'mewvo_me_state', 'mewvo_me_next', 'mewvo_me_link', 'mewvo_me_forgot', 'mewvo_me_form', 'mewvo_me_2fa', 'mewvo_me_reset', 'mewvo_theme', 'mewvo_nav']) {
+        assert.ok(page.includes(`<code>${cookie}</code>`), cookie);
+    }
+    assert.ok(page.includes('depending on the region chosen'), 'no DB_REGION_LABEL: the general line');
+    assert.ok(!page.includes('If you can’t reach the support server'), 'no email: no email line for banned people');
+    const withEnv = privacyPage({ legal: { dbRegion: 'EU (Frankfurt)', email: 'privacy@mewvo.example' } });
+    assert.ok(withEnv.includes('The database runs in this region: EU (Frankfurt).'));
+    assert.ok(withEnv.includes('because you are banned, email <a href="mailto:privacy@mewvo.example">'));
+    assert.ok(!ODR.test(page));
+});
+
+test('terms: consumer rights, withdrawal, Lithuanian law, VVTAT, no ODR link, explicit acceptance of changes', async () => {
+    const { termsPage } = await import('../src/services/site/pages/legal.js');
+    const page = termsPage({ legal: {} });
+    for (const fact of [
+        'Valstybinė vartotojų teisių apsaugos tarnyba', 'href="https://vvtat.lrv.lt"', 'governed by Lithuanian law', 'courts where you live',
+        'href="/withdrawal"', 'within 14 days', 'minus the days you already used',
+        'This does not limit your legal rights as a consumer, including if a paid plan does not work as described',
+        'except for refunds the law requires', 'at least 18 years old, or with the permission of a parent or guardian', 'at least 14 years old',
+        'just continuing to use Mewvo does not count as accepting', 'refund for the time left',
+        'Content moderation', 'Server staff decide, not Mewvo', 'bot blocklist', 'Automated tools', 'Human review', 'href="/contact"',
+    ]) assert.ok(page.includes(fact), fact);
+    assert.ok(!page.includes('If you keep using Mewvo after that'));
+    assert.ok(!/lost data or lost profits/.test(page), 'lost data is excluded for the free features only');
+    assert.ok(!ODR.test(page));
+});
+
+test('legal notice: placeholder without env, every detail with env, VAT line rules, values escaped', async () => {
+    const site = await serve();
+    try {
+        const res = await site.get('/legal');
+        assert.equal(res.status, 200);
+        assert.ok(res.body.includes('<h1>Legal notice</h1>'));
+        assert.ok(res.body.includes('Operator details are being added'));
+        assert.ok(!res.body.includes('Not VAT registered'), 'VAT status unknown without an operator');
+    } finally { await site.close(); }
+    const full = await serve({ env: { LEGAL_OPERATOR: 'Vardenis Pavardenis', LEGAL_EMAIL: 'hello@mewvo.example', LEGAL_ADDRESS: 'Gatvė 1, <b>Vilnius</b>', LEGAL_REG_NO: '123456', LEGAL_VAT_NO: 'LT100000000000' } });
+    try {
+        const body = (await full.get('/legal')).body;
+        for (const fact of ['Vardenis Pavardenis, a private individual', 'Gatvė 1, &lt;b&gt;Vilnius&lt;/b&gt;', '123456', 'LT100000000000', 'href="mailto:hello@mewvo.example"', 'Lithuania']) {
+            assert.ok(body.includes(fact), fact);
+        }
+        assert.ok(!body.includes('Operator details are being added') && !body.includes('<b>Vilnius'));
+    } finally { await full.close(); }
+    const noVat = await serve({ env: { LEGAL_OPERATOR: 'Vardenis Pavardenis' } });
+    try {
+        const body = (await noVat.get('/legal')).body;
+        assert.ok(body.includes('Not VAT registered'));
+        assert.ok(body.includes('Being added'), 'missing address still says so');
+    } finally { await noVat.close(); }
+});
+
+test('contact page: DSA points of contact, notice contents, life-or-safety line; footer and sitemap list the new pages', async () => {
+    const site = await serve({ env: { LEGAL_EMAIL: 'dsa@mewvo.example', PUBLIC_SITE_ENABLED: 'true', PUBLIC_URL: 'https://mewvo.example' } });
+    try {
+        const res = await site.get('/contact');
+        assert.equal(res.status, 200);
+        for (const fact of ['Art. 11', 'Art. 12', 'Art. 16', 'Art. 18', 'English or Lithuanian', 'href="mailto:dsa@mewvo.example"',
+            'Where it is', 'Why it is illegal', 'Your name and email address', 'child sexual abuse material', 'in good faith', '112', 'read and answered by a person']) {
+            assert.ok(res.body.includes(fact), fact);
+        }
+        const footer = res.body.slice(res.body.indexOf('<footer'));
+        for (const link of ['<a href="/privacy">Privacy Policy</a>', '<a href="/terms">Terms and Conditions</a>', '<a href="/legal">Legal notice</a>', '<a href="/contact" aria-current="page">Contact and reports</a>']) {
+            assert.ok(footer.includes(link), link);
+        }
+        const map = (await site.get('/sitemap.xml')).body;
+        assert.ok(map.includes('<loc>https://mewvo.example/legal</loc>') && map.includes('<loc>https://mewvo.example/contact</loc>'));
+    } finally { await site.close(); }
+    const noEmail = await serve();
+    try {
+        const body = (await noEmail.get('/contact')).body;
+        assert.ok(body.includes('An email address for this is being added'));
+        assert.ok(body.includes(`<a href="${SUPPORT}" rel="noopener">the support server</a>`));
+    } finally { await noEmail.close(); }
+});
+
+test('pricing FAQ: plans do not renew, withdrawal is explained, no "cancel any time"', async () => {
+    const { PRICING_FAQ } = await import('../src/config/site/plans.js');
+    const text = PRICING_FAQ.map((item) => `${item.q} ${item.a}`).join(' ');
+    assert.ok(!/any time/i.test(text));
+    assert.ok(text.includes('don’t renew') && text.includes('within 14 days') && text.includes('Withdrawal page'));
 });
 
 test('changelog: newest first, plain text, dated sections; the footer links it', async () => {

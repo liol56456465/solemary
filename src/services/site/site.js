@@ -20,6 +20,8 @@
 //   GET /changelog    what changed, newest first (pages/changelog.js, config/site/changelog.js)
 //   GET /privacy      Privacy Policy: what is stored, why, how long, rights (pages/legal.js)
 //   GET /terms        Terms and Conditions (pages/legal.js)
+//   GET /legal        Legal notice: who provides Mewvo (LEGAL_* env; pages/legal.js)
+//   GET /contact      DSA points of contact and illegal-content reports (pages/legal.js)
 //   GET /robots.txt   Disallow: / while the site is not public; with the sitemap when it is
 //   GET /sitemap.xml  only when public and PUBLIC_URL is set (absolute URLs need the origin)
 //   GET /img/<file>   the site's images (static/img: dashboard screenshots, the share image,
@@ -59,7 +61,7 @@ import { transparencyErrorPage, transparencyPage } from './pages/transparency.js
 import { rulesPage } from './pages/rules.js';
 import { trustErrorPage, trustPage } from './pages/trust.js';
 import { changelogPage } from './pages/changelog.js';
-import { LEGAL_UPDATED, legalContact, privacyPage, termsPage } from './pages/legal.js';
+import { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage } from './pages/legal.js';
 import { readPublicRules } from '../rules/serverRules.js';
 
 export {
@@ -67,7 +69,7 @@ export {
     installPermissionBits, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
 } from './shell.js';
 export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, rulesPage, changelogPage, GUIDES };
-export { LEGAL_UPDATED, legalContact, privacyPage, termsPage };
+export { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage };
 
 const CATEGORY_LABEL = {
     Core: 'General', Community: 'Community', Leveling: 'Leveling', Fun: 'Fun', Birthday: 'Birthdays',
@@ -333,7 +335,7 @@ export function notFoundPage(ctx) {
 /** The public pages, for /sitemap.xml (plus /transparency and /trust while they are turned on). */
 export const SITEMAP_PATHS = [
     '/', '/features', '/pricing', '/docs', ...GUIDES.map((g) => `/docs/${g.slug}`), '/faq',
-    '/commands', '/leaderboard', '/rules', '/about', '/changelog', '/status', '/privacy', '/terms',
+    '/commands', '/leaderboard', '/rules', '/about', '/changelog', '/status', '/privacy', '/terms', '/legal', '/contact',
 ];
 
 export function sitemapXml(origin, { transparency = false, trust = false } = {}) {
@@ -410,6 +412,8 @@ export function createSite({
     router.get('/changelog', page(changelogPage));
     router.get('/privacy', page(privacyPage));
     router.get('/terms', page(termsPage));
+    router.get('/legal', page(legalNoticePage));
+    router.get('/contact', page(contactPage));
     // Always 200: it is a page about the bot, not a health check (that is /ready).
     router.get('/status', page((ctx) => {
         let current;
