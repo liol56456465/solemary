@@ -3,7 +3,7 @@
 Mewvo is a Discord bot for moderation and community servers: enforcement cases with a warn ladder,
 appeals, reports, modmail, levels and utility commands, plus a web dashboard for server admins.
 
-Fork of [TitanBot](https://github.com/codebymitch) by codebymitch (MIT) — see [LICENSE](LICENSE).
+Fork of [TitanBot](https://github.com/codebymitch/TitanBot) by codebymitch (MIT) — see [LICENSE](LICENSE).
 
 ## Running the tests
 
