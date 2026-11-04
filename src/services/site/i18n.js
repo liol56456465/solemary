@@ -122,6 +122,8 @@ export function hasKey(lang, key) {
  */
 export function pluralKey(lang, key, count) {
     const code = isLanguage(lang) ? lang : DEFAULT_LANG;
+    // An exact ".zero" form wins for 0 when a language has one (pt-BR says "0 dias", CLDR's "one" would give "0 dia").
+    if (Number(count) === 0 && hasKey(code, `${key}.zero`)) return `${key}.zero`;
     const category = new Intl.PluralRules(code).select(Number(count));
     return hasKey(code, `${key}.${category}`) ? `${key}.${category}` : `${key}.other`;
 }
@@ -288,7 +290,10 @@ export function translator(lang = DEFAULT_LANG, { href = null } = {}) {
         ti: (key, params) => translateInline(code, key, params, options),
         tb: (key, params) => translateBlock(code, key, params, options),
         /** Plural plain text: tp('billing.common.day', 3) → "3 days" ({count} is filled in). */
-        tp: (key, count, params = {}) => translate(code, pluralKey(code, key, count), { count, ...params }),
+        // {count} is written the language's way ("1,5" in German); English keeps the plain number, as before.
+        tp: (key, count, params = {}) => translate(code, pluralKey(code, key, count), {
+            count: code === DEFAULT_LANG ? count : formatNumberIn(code, count, { maximumFractionDigits: 1 }), ...params,
+        }),
         /** A site link that keeps the page's language: href('/features') → '/de/features'. */
         href: link,
         fmtDate: (value, opts) => formatDateIn(code, value, opts),

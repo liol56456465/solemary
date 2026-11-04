@@ -77,17 +77,20 @@
       "day": {
         "one": "{count} dia",
         "many": "{count} dias",
-        "other": "{count} dias"
+        "other": "{count} dias",
+        "zero": "{count} dias"
       },
       "hour": {
         "one": "{count} hora",
         "many": "{count} horas",
-        "other": "{count} horas"
+        "other": "{count} horas",
+        "zero": "{count} horas"
       },
       "minute": {
         "one": "{count} minuto",
         "many": "{count} minutos",
-        "other": "{count} minutos"
+        "other": "{count} minutos",
+        "zero": "{count} minutos"
       }
     },
     "note": {

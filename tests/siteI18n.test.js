@@ -91,10 +91,26 @@ test('plurals follow each language\'s rules; params work inside code spans', () 
         assert.equal(ru.tp('x.day', 3), '3 дня');
         assert.equal(ru.tp('x.day', 5), '5 дней');
         assert.equal(ru.tp('x.day', 21), '21 день');
-        assert.equal(ru.tp('x.day', 1.5), '1.5 дня', 'fractions use "other"');
+        assert.equal(ru.tp('x.day', 1.5), '1,5 дня', 'fractions use "other", written the Russian way');
         assert.equal(pl.tp('x.day', 22), '22 dni');
         assert.equal(translator('de').tp('x.day', 2), '2 days', 'missing language falls back to English forms');
         assert.equal(String(en.ti('x.code', { id: '<7>' })), 'Use <code>#&lt;7&gt;</code> here');
+        assert.equal(pl.tp('x.day', 1.5), '1,5 dnia', 'count written the language\'s way');
+        assert.equal(en.tp('x.day', 1.5), '1.5 days');
+    } finally { setCatalogsForTest(null); }
+});
+
+test('an exact ".zero" form wins for 0 (pt-BR "0 dias")', () => {
+    setCatalogsForTest(new Map([
+        ['en', new Map([['x.day.one', '{count} day'], ['x.day.other', '{count} days']])],
+        ['pt-BR', new Map([['x.day.zero', '{count} dias'], ['x.day.one', '{count} dia'], ['x.day.other', '{count} dias']])],
+    ]));
+    try {
+        const pt = translator('pt-BR');
+        assert.equal(pt.tp('x.day', 0), '0 dias');
+        assert.equal(pt.tp('x.day', 1), '1 dia');
+        assert.equal(pt.tp('x.day', 1.5), '1,5 dia');
+        assert.equal(translator('en').tp('x.day', 0), '0 days', 'no zero form: CLDR rules');
     } finally { setCatalogsForTest(null); }
 });
 

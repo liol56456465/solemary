@@ -27,7 +27,8 @@
     "day": {
       "one": "{count} dia",
       "many": "{count} dias",
-      "other": "{count} dias"
+      "other": "{count} dias",
+      "zero": "{count} dias"
     }
   },
   "period": {
