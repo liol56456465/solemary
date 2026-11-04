@@ -64,6 +64,7 @@ import { trustErrorPage, trustPage } from './pages/trust.js';
 import { changelogPage } from './pages/changelog.js';
 import { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage } from './pages/legal.js';
 import { withdrawalPage } from './pages/withdrawal.js';
+import { DEFAULT_LANG, translator } from './i18n.js';
 import { readPublicRules } from '../rules/serverRules.js';
 
 export {
@@ -380,7 +381,8 @@ export function createSite({
     const context = () => {
         let support = null;
         try { support = inviteOrNull(supportInvite()); } catch { support = null; }
-        return { ...base, supportInvite: support, commands: client?.commands || null, transparency: transparencyOn(), trustCard: trustOn() };
+        // Text comes from the catalog (i18n.js); pages read it with ctx.t / ctx.ti / ctx.tb.
+        return { ...base, ...translator(DEFAULT_LANG), supportInvite: support, commands: client?.commands || null, transparency: transparencyOn(), trustCard: trustOn() };
     };
     // A settings read that throws counts as off: the page and its link simply do not appear.
     const transparencyOn = () => {
