@@ -108,6 +108,7 @@
     "forGift": "Klucz podarunkowy",
     "forAccount": "Twoje konto ({username})",
     "total": "Razem",
+    "approx": "(ok. {amount})",
     "vatNote": "{vat} Jedna płatność za {days} dni. Bez automatycznego odnowienia: plan się kończy, chyba że dokupisz czas.",
     "giftNote": "Dostaniesz klucz w rodzaju MEWVO-XXXX-XXXX-XXXX, ważny przez rok. Każdy, kto zaloguje się na tej stronie, może go jednorazowo aktywować."
   },
@@ -315,6 +316,7 @@
     "choosePlan": "Wybierz płatny plan (Normal, Pro lub Max).",
     "choosePeriod": "Wybierz płatność miesięczną lub roczną.",
     "chooseKind": "Wybierz, czy to dla ciebie, czy na prezent.",
+    "chooseCurrency": "Wybierz euro lub dolary amerykańskie.",
     "lowerPlan": "Masz już {current} do {until}, a to więcej niż {plan}. Klucza lub zakupu {plan} można użyć po jego zakończeniu; nic nie zostało zmienione.",
     "durationMin": "Okres musi wynosić co najmniej jeden dzień.",
     "giftToLong": "Pole „Dla” może mieć maksymalnie {max} znaków.",

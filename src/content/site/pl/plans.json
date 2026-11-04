@@ -95,7 +95,7 @@
     },
     "currency": {
       "q": "W jakiej walucie są ceny?",
-      "a": "W euro. Ceny na tej stronie to planowane ceny miesięczne i roczne."
+      "a": "Płacisz w dolarach amerykańskich albo w euro, zależnie od języka strony: w dolarach po angielsku, portugalsku i rosyjsku, w euro po niemiecku, francusku, włosku, hiszpańsku i polsku. Strony po polsku i portugalsku pokazują też przybliżoną kwotę w złotych lub realach, według kursu Europejskiego Banku Centralnego; zamówienie i potwierdzenie zawsze pokazują, ile naprawdę płacisz. Ceny na tej stronie to planowane ceny miesięczne i roczne."
     },
     "cancel": {
       "q": "Czy mogę anulować plan albo odzyskać pieniądze?",

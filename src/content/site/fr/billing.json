@@ -104,6 +104,7 @@
     "forGift": "Une clé cadeau",
     "forAccount": "Ton compte ({username})",
     "total": "Total",
+    "approx": "(environ {amount})",
     "vatNote": "{vat} Un paiement pour {days} jours. Pas de renouvellement automatique : la formule prend fin si tu n’achètes pas de durée supplémentaire.",
     "giftNote": "Tu reçois une clé du type MEWVO-XXXX-XXXX-XXXX, valable un an. Toute personne qui se connecte à ce site peut l’utiliser une fois."
   },
@@ -299,6 +300,7 @@
     "choosePlan": "Choisis une formule payante (Normal, Pro ou Max).",
     "choosePeriod": "Choisis une facturation mensuelle ou annuelle.",
     "chooseKind": "Choisis si c’est pour toi ou pour offrir.",
+    "chooseCurrency": "Choisis euros ou dollars américains.",
     "lowerPlan": "Tu as déjà {current} jusqu’au {until}, ce qui est plus que {plan}. Une clé ou un achat {plan} pourra être utilisé après la fin ; rien n’a été modifié.",
     "durationMin": "La durée doit être d’au moins un jour.",
     "giftToLong": "« Pour » est limité à {max} caractères.",

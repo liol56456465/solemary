@@ -95,7 +95,7 @@
     },
     "currency": {
       "q": "Dans quelle devise sont les prix ?",
-      "a": "En euros. Les prix de cette page sont les prix mensuels et annuels prévus."
+      "a": "Tu paies en dollars américains ou en euros, selon la langue du site : en dollars américains en anglais, portugais et russe, en euros en allemand, français, italien, espagnol et polonais. Les pages en polonais et en portugais affichent aussi un montant approximatif en zlotys ou en réais, au taux de la Banque centrale européenne ; la page de commande et le reçu indiquent toujours ce que tu paies vraiment. Les prix de cette page sont les prix mensuels et annuels prévus."
     },
     "cancel": {
       "q": "Puis-je résilier ou être remboursé ?",

@@ -95,7 +95,7 @@
     },
     "currency": {
       "q": "In che valuta sono i prezzi?",
-      "a": "In euro. I prezzi di questa pagina sono i prezzi mensili e annuali previsti."
+      "a": "Paghi in dollari statunitensi o in euro, a seconda della lingua del sito: in dollari statunitensi in inglese, portoghese e russo, in euro in tedesco, francese, italiano, spagnolo e polacco. Le pagine in polacco e in portoghese mostrano anche un importo indicativo in złoty o in real, al tasso della Banca centrale europea; il pagamento e la ricevuta mostrano sempre quanto paghi davvero. I prezzi di questa pagina sono i prezzi mensili e annuali previsti."
     },
     "cancel": {
       "q": "Posso disdire o farmi rimborsare?",

@@ -12,7 +12,12 @@
   },
   "plans": {
     "title": "Planos",
-    "note": "Preços em euros. Limites como os de tags seguem o plano do dono do servidor. Vantagens marcadas como (previsto) ainda não existem e podem mudar antes do início dos planos pagos.",
+    "note": "Limites como os de tags seguem o plano do dono do servidor. Vantagens marcadas como (previsto) ainda não existem e podem mudar antes do início dos planos pagos.",
+    "currency": {
+      "EUR": "Preços em euros.",
+      "USD": "Preços em dólares americanos."
+    },
+    "ratesNote": "Valores em reais são aproximados, com base na cotação do Banco Central Europeu de {date}. Você paga em {currency}.",
     "billingNote": "Os preços são o total que você paga. {vat} Cada compra é um pagamento único por {monthDays} ou {yearDays} dias, sem renovação automática. Você pode desistir em até {withdrawalDays} dias: [direito de desistência](/withdrawal)."
   },
   "card": {
@@ -25,6 +30,7 @@
     },
     "freeForGood": "Grátis para sempre",
     "perMonth": "/ mês",
+    "youPay": "Você paga {price}",
     "joinServer": "Entrar no servidor",
     "joinSupport": "Entrar no servidor de suporte",
     "seeFeatures": "Ver todas as funcionalidades",

@@ -575,7 +575,10 @@ test('pricing: plan cards side by side with both prices, "Coming soon" never a l
     try {
         const body = (await site.get('/pricing')).body;
         const main = body.slice(body.indexOf('<main'), body.indexOf('</main>'));
-        for (const price of ['€0', '€1.99', '€4.99', '€9.99', '€19.90', '€49.90', '€99.90']) assert.ok(main.includes(price), price);
+        // English pays in US dollars (since 2026-11-05; the numbers are the same as in euros).
+        for (const price of ['$0', '$1.99', '$4.99', '$9.99', '$19.90', '$49.90', '$99.90']) assert.ok(main.includes(price), price);
+        assert.ok(!main.includes('€') && !main.includes('≈'), 'no euros and no approximations in English');
+        assert.ok(main.includes('Prices in US dollars.'));
         assert.ok(main.includes('2 months free'));
         assert.ok(main.includes('<ul class="plan-cards">'));
         assert.equal((main.match(/<li class="plan-card[ "]/g) || []).length, 4, 'one card per plan in plans.js');
@@ -592,7 +595,7 @@ test('pricing: plan cards side by side with both prices, "Coming soon" never a l
     } finally { await site.close(); }
 });
 
-test('pricing: per-currency price table and formatPrice (EUR stays the shown currency)', async () => {
+test('pricing: per-currency price table and formatPrice (EUR stays the default currency)', async () => {
     const plans = await import('../src/config/site/plans.js');
     for (const plan of plans.PLANS) {
         assert.deepEqual(Object.keys(plan.prices).sort(), ['EUR', 'USD'], plan.id);
@@ -616,14 +619,15 @@ test('pricing: names and prices come from config/site/plans.js, the words from t
     const source = readFileSync(new URL('../src/config/site/plans.js', import.meta.url), 'utf8');
     assert.match(source.slice(0, 400), /DRAFT FOR THE OWNER TO EDIT/);
     const pro = plans.PLANS.find((p) => p.id === 'pro');
-    const saved = { name: pro.name, monthlyCents: pro.monthlyCents };
+    const saved = { name: pro.name, monthlyCents: pro.monthlyCents, prices: pro.prices };
     pro.name = 'Pro <Test>';
     pro.monthlyCents = 777;
+    pro.prices = { EUR: 777, USD: 777 };
     const site = await serve();
     try {
         const body = (await site.get('/pricing')).body;
         assert.ok(body.includes('Pro &lt;Test&gt;'), 'name from plans.js, escaped');
-        assert.ok(body.includes('€7.77') && body.includes('€77.70'), 'prices from plans.js');
+        assert.ok(body.includes('$7.77') && body.includes('$77.70'), 'prices from plans.js (English: USD)');
         for (const plan of plans.PLANS) assert.ok(body.includes(t(`plans.${plan.id}.summary`)), plan.id);
         for (const group of plans.COMPARISON) for (const row of group.rows) assert.ok(body.includes(t(`plans.comparison.${group.key}.rows.${row.key}`)), row.key);
         for (const key of plans.PRICING_FAQ) assert.ok(body.includes(t(`plans.faq.${key}.q`).replace(/'/g, '&#39;')), key);
@@ -645,7 +649,7 @@ test('home: a real DM preview, dashboard, ladder, what it does as cards, the pla
         }
         assert.ok(body.includes('Warning 2 of 3 in Mewvo') && body.includes('At 3 warnings you will be banned.'), 'warnDm wording');
         assert.ok(body.includes(`<span class="dc-link">${SUPPORT}</span>`), 'the real support invite in the DM preview');
-        assert.ok(body.includes('€1.99') && body.includes('href="/pricing"'));
+        assert.ok(body.includes('$1.99') && body.includes('href="/pricing"'));
         assert.ok(body.includes('<ul class="plan-cards plan-cards-compact">') && !body.includes('plan-card-perks'), 'compact plan cards, perks on /pricing only');
         for (const href of ['/docs/warnings', '/docs/appeals', '/docs/using-the-dashboard', '/features#f-automod']) assert.ok(body.includes(`href="${href}"`), href);
         // No template furniture: numbered eyebrows, tick lists, a CTA band, made-up handles.

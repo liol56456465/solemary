@@ -104,6 +104,7 @@
     "forGift": "Einen Geschenk-Key",
     "forAccount": "Dein Konto ({username})",
     "total": "Gesamt",
+    "approx": "(ca. {amount})",
     "vatNote": "{vat} Eine Zahlung für {days} Tage. Keine automatische Verlängerung: Der Plan endet, wenn du keine weitere Laufzeit kaufst.",
     "giftNote": "Du bekommst einen Key wie MEWVO-XXXX-XXXX-XXXX, ein Jahr lang gültig. Jede Person, die sich auf dieser Website anmeldet, kann ihn einmal einlösen."
   },
@@ -299,6 +300,7 @@
     "choosePlan": "Wähle einen bezahlten Plan (Normal, Pro oder Max).",
     "choosePeriod": "Wähle monatliche oder jährliche Zahlung.",
     "chooseKind": "Wähle, ob das für dich oder ein Geschenk ist.",
+    "chooseCurrency": "Wähle Euro oder US-Dollar.",
     "lowerPlan": "Du hast schon {current} bis {until}, und das ist mehr als {plan}. Ein {plan}-Key oder -Kauf kann nach dem Ende genutzt werden; es wurde nichts geändert.",
     "durationMin": "Die Dauer muss mindestens einen Tag betragen.",
     "giftToLong": "„An“ darf höchstens {max} Zeichen lang sein.",

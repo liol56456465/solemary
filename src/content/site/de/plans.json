@@ -95,7 +95,7 @@
     },
     "currency": {
       "q": "In welcher Währung sind die Preise?",
-      "a": "In Euro. Die Preise auf dieser Seite sind die geplanten Monats- und Jahrespreise."
+      "a": "Du zahlst in US-Dollar oder Euro, je nach Sprache der Website: US-Dollar auf Englisch, Portugiesisch und Russisch, Euro auf Deutsch, Französisch, Italienisch, Spanisch und Polnisch. Die polnische und die portugiesische Seite zeigen zusätzlich einen ungefähren Betrag in Złoty oder Real, nach dem Kurs der Europäischen Zentralbank; Kasse und Beleg zeigen immer, was du wirklich zahlst. Die Preise auf dieser Seite sind die geplanten Monats- und Jahrespreise."
     },
     "cancel": {
       "q": "Kann ich kündigen oder mein Geld zurückbekommen?",

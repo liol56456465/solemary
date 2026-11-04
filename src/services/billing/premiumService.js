@@ -24,7 +24,7 @@
 // Every multi-step change runs in one transaction with the key / subscription row locked.
 
 import { randomInt } from 'node:crypto';
-import { PLANS, euros, yearlyCents } from '../../config/site/plans.js';
+import { CURRENCY, PLANS, formatPrice, monthlyCentsIn, paymentCurrency, yearlyCents } from '../../config/site/plans.js';
 import { pgConfig } from '../../config/database/postgres.js';
 
 export const KEY_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
@@ -113,21 +113,30 @@ export function planName(planId) {
     return PLANS.find((plan) => plan.id === planId)?.name || String(planId || '');
 }
 
-/** Price in cents for a paid plan and period, or null when either is unknown. */
-export function priceCents(planId, period) {
-    const plan = paidPlan(planId);
-    if (!plan || !PERIODS[period]) return null;
-    return period === 'yearly' ? yearlyCents(plan) : plan.monthlyCents;
+/** An order's payment currency (orders from before 2026-11-05 and rows without one: EUR, the column default). */
+export function orderCurrency(order) {
+    return paymentCurrency(String(order?.currency ?? '').trim()) || CURRENCY;
 }
 
-/** The order summary for checkout: { plan, period, kind, days, amountCents, amountText } or a PremiumError. */
-export function quote({ planId, period, kind }) {
+/** Price in cents for a paid plan and period in a payment currency (EUR by default), or null when unknown. */
+export function priceCents(planId, period, currency = CURRENCY) {
+    const plan = paidPlan(planId);
+    if (!plan || !PERIODS[period] || !paymentCurrency(currency)) return null;
+    return period === 'yearly' ? yearlyCents(plan, currency) : monthlyCentsIn(plan, currency);
+}
+
+/**
+ * The order summary for checkout: { plan, period, kind, currency, days, amountCents, amountText }
+ * or a PremiumError. `currency` is the payment currency (EUR or USD; default EUR); amountText is English.
+ */
+export function quote({ planId, period, kind, currency = CURRENCY }) {
     const plan = paidPlan(planId);
     if (!plan) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).', 400, 'choosePlan');
     if (!PERIODS[period]) throw new PremiumError('Choose monthly or yearly billing.', 400, 'choosePeriod');
     if (!ORDER_KINDS.includes(kind)) throw new PremiumError('Choose whether this is for you or a gift.', 400, 'chooseKind');
-    const amountCents = priceCents(planId, period);
-    return { plan, period, kind, days: PERIODS[period].days, amountCents, amountText: euros(amountCents) };
+    if (!paymentCurrency(currency)) throw new PremiumError('Choose euros or US dollars.', 400, 'chooseCurrency');
+    const amountCents = priceCents(planId, period, currency);
+    return { plan, period, kind, currency, days: PERIODS[period].days, amountCents, amountText: formatPrice(amountCents, currency) };
 }
 
 /** A new random key: MEWVO-XXXX-XXXX-XXXX. `pick(n)` returns 0…n-1 (crypto by default). */
@@ -377,9 +386,9 @@ export function createPremiumStore({
      * (valid GIFT_KEY_VALID_DAYS) is created. One transaction.
      * Returns { order, subscription|null, previous|null, next|null, key|null }.
      */
-    async function purchase({ userId, username = null, planId, period, kind, giftTo = '', giftMessage = '', consent = null }) {
+    async function purchase({ userId, username = null, planId, period, kind, currency = CURRENCY, giftTo = '', giftMessage = '', consent = null }) {
         if (!snowflake.test(String(userId || ''))) throw new PremiumError('Log in first.', 401, 'logInFirst');
-        const q = quote({ planId, period, kind });
+        const q = quote({ planId, period, kind, currency });
         const gift = kind === 'gift' ? giftDetails({ to: giftTo, message: giftMessage }) : null;
         const name = username ? clip(username, 100) : null;
         const { withTransaction: tx } = await db();
@@ -392,8 +401,8 @@ export function createPremiumStore({
             }
             const { rows: [order] } = await client.query(
                 `INSERT INTO ${O} (user_id, username, plan_id, period, kind, amount_cents, currency, test)
-                 VALUES ($1, $2, $3, $4, $5, $6, 'EUR', TRUE) RETURNING *`,
-                [userId, name, planId, period, kind, q.amountCents]);
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE) RETURNING *`,
+                [userId, name, planId, period, kind, q.amountCents, q.currency]);
             if (!order) throw new Error('order insert returned no row');
             if (consent) {
                 await client.query(`INSERT INTO ${T} (key, value, expires_at) VALUES ($1, $2, NULL)`, [legalKey(order.id), JSON.stringify({ consent })]);
@@ -545,19 +554,21 @@ export function createPremiumStore({
         return rows;
     }
 
-    /** Owner: numbers for the Premium page: active per plan, orders and amount in the last 30 days. */
+    /** Owner: numbers for the Premium page: active per plan, orders and amount per currency in the last 30 days. */
     async function stats() {
         const { query: q } = await db();
         const since = at(now() - 30 * DAY_MS);
-        const [{ rows: perPlan }, { rows: [orders] }] = await Promise.all([
+        const [{ rows: perPlan }, { rows: [orders] }, { rows: amounts }] = await Promise.all([
             q(`SELECT plan_id, COUNT(*)::int AS n FROM ${S} WHERE expires_at > $1 GROUP BY plan_id`, [at(now())]),
-            q(`SELECT COUNT(*)::int AS n, COALESCE(SUM(amount_cents), 0)::int AS cents,
+            q(`SELECT COUNT(*)::int AS n,
                       COUNT(*) FILTER (WHERE kind = 'gift')::int AS gifts FROM ${O} WHERE created_at > $1`, [since]),
+            q(`SELECT currency, COALESCE(SUM(amount_cents), 0)::int AS cents FROM ${O} WHERE created_at > $1 GROUP BY currency ORDER BY currency`, [since]),
         ]);
         return {
             active: Object.fromEntries(perPlan.map((r) => [r.plan_id, r.n])),
             activeTotal: perPlan.reduce((sum, r) => sum + r.n, 0),
-            orders30: orders?.n || 0, cents30: orders?.cents || 0, gifts30: orders?.gifts || 0,
+            // Per currency (EUR and USD orders are never added together): { EUR: cents, USD: cents }.
+            orders30: orders?.n || 0, amounts30: Object.fromEntries(amounts.map((r) => [String(r.currency).trim(), r.cents])), gifts30: orders?.gifts || 0,
         };
     }
 

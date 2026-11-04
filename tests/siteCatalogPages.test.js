@@ -21,13 +21,13 @@ const NAMESPACES = ['pricing', 'faq', 'docs', 'plans', 'billing'];
 const DAY = 86400000;
 const iso = (ms) => new Date(ms).toISOString();
 
-/** A page context whose t/ti/tb record every key they are asked for. */
-function recordingCtx(used, extra = {}) {
-    const en = translator('en');
+/** A page context whose t/ti/tb record every key they are asked for (English unless `lang`). */
+function recordingCtx(used, extra = {}, lang = 'en') {
+    const en = translator(lang);
     const wrap = (fn) => (key, params) => { used.add(key); return fn(key, params); };
     const forms = (key) => { for (const c of PLURAL_CATEGORIES) if (hasKey('en', `${key}.${c}`)) used.add(`${key}.${c}`); };
     return {
-        ...extra, lang: 'en', t: wrap(en.t), ti: wrap(en.ti), tb: wrap(en.tb),
+        ...extra, lang, t: wrap(en.t), ti: wrap(en.ti), tb: wrap(en.tb),
         tp: (key, count, params) => { forms(key); return en.tp(key, count, params); },
         tpi: (key, count, params) => { forms(key); return en.tpi(key, count, params); },
     };
@@ -84,6 +84,11 @@ function renderAll(used) {
         billing.checkoutEffect({ plan_id: 'normal', expires_at: iso(now + 1.5 * DAY) }, { planId: 'normal' }, now, ctx);
         const params = { max: 100, date: '2026-01-01', count: 14, current: 'Max', until: '2026-01-01', plan: 'Pro', missing: ['start', 'startGift', 'terms', 'age'] };
         for (const code of PREMIUM_CODES) pages.push(billing.premiumErrorText(new PremiumError('English', 400, code, params), ctx));
+    }
+    // Keys only other languages reach: the EUR note (German), the approximate złoty amounts (Polish).
+    for (const lang of ['de', 'pl']) {
+        const ctx = recordingCtx(used, { billing: true, memberPortal: true, legal }, lang);
+        pages.push(pricingPage(ctx), billing.checkoutPage(ctx, { session, choice: { planId: 'pro', period: 'monthly', kind: 'personal' } }));
     }
     return { pages, session, order, oldOrder, withdrawn };
 }

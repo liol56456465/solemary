@@ -28,10 +28,10 @@
 // CONSENT_TEXTS in premiumService.js, which is what is stored with the order (a test checks it).
 
 import { html, formatDate } from '../dashboard/html.js';
-import { YEARLY_MONTHS_CHARGED, euros } from '../../config/site/plans.js';
+import { YEARLY_MONTHS_CHARGED, paymentCurrency, paymentCurrencyFor } from '../../config/site/plans.js';
 import {
     CONSENT_TEXTS, GIFT_MESSAGE_MAX, GIFT_TO_MAX, PAID_PLANS, PERIODS, PremiumError, WITHDRAWAL_DAYS, WITHDRAWAL_NAME_MAX,
-    canWithdraw, checkoutConsent, conversion, keyStatus, normalizeKeyCode, planName, priceCents, quote, withdrawalDeadline, withdrawalQuote,
+    canWithdraw, checkoutConsent, conversion, keyStatus, normalizeKeyCode, orderCurrency, planName, priceCents, quote, withdrawalDeadline, withdrawalQuote,
 } from '../billing/premiumService.js';
 import { afterPremiumChange, orderConfirmationDm, sendPremiumDm, withdrawalAckDm } from '../billing/premiumEffects.js';
 import { LEGAL_UPDATED } from './pages/legal.js';
@@ -39,6 +39,7 @@ import { isSameOrigin, safeEqual } from '../dashboard/security.js';
 import { logger } from '../../utils/logger.js';
 import { layout } from './shell.js';
 import { DEFAULT_LANG, LANG_CODES, hasKey, textOf, translate } from './i18n.js';
+import { approxLocal, money } from './currency.js';
 
 /** The test-mode notice in the page's language (English without a ctx). */
 export const testNotice = (ctx = null) => textOf(ctx).t('billing.test.notice');
@@ -97,18 +98,28 @@ const SOURCES = ['key', 'purchase', 'owner', 'bonus'];
 const str = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
 const pick = (value, allowed, fallback) => (allowed.includes(value) ? value : fallback);
 
-/** A checkout query from the address bar, with safe defaults. Pure. */
+/**
+ * A checkout query from the address bar, with safe defaults. Pure. `cur` (EUR or USD) is the payment
+ * currency the pricing page showed; without it the checkout uses the page language's currency.
+ */
 export function checkoutChoice(q = {}) {
+    const currency = paymentCurrency(str(q.cur, 3));
     return {
         planId: pick(str(q.plan, 20), PAID_PLANS.map((p) => p.id), (PAID_PLANS.find((p) => p.featured) || PAID_PLANS[0]).id),
         period: pick(str(q.period, 10), Object.keys(PERIODS), 'monthly'),
         kind: pick(str(q.for, 10), ['personal', 'gift'], 'personal'),
+        ...(currency ? { currency } : {}),
     };
 }
 
-export function checkoutHref({ planId, period, kind }) {
-    return `/me/checkout?${new URLSearchParams({ plan: planId, period, for: kind })}`;
+export function checkoutHref({ planId, period, kind, currency = null }) {
+    return `/me/checkout?${new URLSearchParams({ plan: planId, period, for: kind, ...(currency ? { cur: currency } : {}) })}`;
 }
+
+/** The payment currency of a checkout: the one the link carried, else the page language's. */
+const checkoutCurrency = (choice, lang) => choice.currency || paymentCurrencyFor(lang);
+/** A real amount of an order in the page's language, in the order's own currency (never approximated). */
+const orderMoney = (ctx, order, cents) => money(textOf(ctx).lang, cents, orderCurrency(order));
 
 function when(value) {
     const date = value ? new Date(value) : null;
@@ -161,9 +172,13 @@ export function checkoutEffect(current, choice, now = Date.now(), ctx = null) {
     }
 }
 
-export function checkoutPage(ctx, { session, choice, current = null, values = {}, error = null }) {
-    const { t, ti, tp } = textOf(ctx);
-    const q = quote(choice);
+export function checkoutPage(ctx, { session, choice: picked, current = null, values = {}, error = null }) {
+    const { t, ti, tp, lang } = textOf(ctx);
+    const choice = { ...picked, currency: checkoutCurrency(picked, lang) };
+    const quoted = quote(choice);
+    // The real total in the payment currency; only here an approximate local amount may follow it.
+    const q = { ...quoted, amountText: money(lang, quoted.amountCents, quoted.currency) };
+    const approx = approxLocal(lang, quoted.amountCents, quoted.currency);
     const effect = choice.kind === 'personal' ? checkoutEffect(current, choice, Date.now(), ctx) : null;
     const others = (patch) => checkoutHref({ ...choice, ...patch });
     const gift = choice.kind === 'gift';
@@ -174,7 +189,7 @@ export function checkoutPage(ctx, { session, choice, current = null, values = {}
 <header class="page-head"><h1>${t(gift ? 'billing.checkout.headingGift' : 'billing.checkout.heading', { plan: q.plan.name })}</h1></header>
 ${testBanner(t)}${notices({ error })}
 <div class="checkout"><div class="checkout-options">
-${seg(t('billing.checkout.planLabel'), PAID_PLANS.map((p) => ({ label: p.name, sub: t(perKey, { price: euros(priceCents(p.id, choice.period)) }), href: others({ planId: p.id }), current: p.id === choice.planId })))}
+${seg(t('billing.checkout.planLabel'), PAID_PLANS.map((p) => ({ label: p.name, sub: t(perKey, { price: money(lang, priceCents(p.id, choice.period, choice.currency), choice.currency) }), href: others({ planId: p.id }), current: p.id === choice.planId })))}
 ${seg(t('billing.checkout.billingLabel'), Object.entries(PERIODS).map(([id, p]) => ({
         label: periodLabel(t, id), sub: id === 'yearly' ? tp('billing.checkout.monthsFree', 12 - YEARLY_MONTHS_CHARGED) : tp('billing.common.day', p.days), href: others({ period: id }), current: id === choice.period,
     })))}
@@ -189,14 +204,14 @@ ${seg(t('billing.checkout.forLabel'), [
 <div><dt>${t('billing.summary.plan')}</dt><dd>${t('billing.common.planLine', { plan: q.plan.name })}</dd></div>
 <div><dt>${t('billing.summary.billing')}</dt><dd>${t('billing.summary.billingValue', { period: periodLabel(t, choice.period), days: q.days })}</dd></div>
 <div><dt>${t('billing.summary.for')}</dt><dd>${gift ? t('billing.summary.forGift') : t('billing.summary.forAccount', { username: session.username })}</dd></div>
-<div class="summary-total"><dt>${t('billing.summary.total')}</dt><dd>${q.amountText}</dd></div></dl>
+<div class="summary-total"><dt>${t('billing.summary.total')}</dt><dd>${q.amountText}${approx ? html` <small class="summary-approx">${t('billing.summary.approx', { amount: approx.text })}</small>` : ''}</dd></div></dl>
 <p class="note summary-vat">${t('billing.summary.vatNote', { vat: vatLine(ctx.legal, ctx), days: q.days })}</p>
 <p class="note${effect?.kind === 'upgrade' ? ' summary-upgrade' : ''}">${gift
         ? t('billing.summary.giftNote')
         : effect.text}</p>
 ${effect?.kind === 'blocked' ? html`<p class="button button-disabled summary-pay" aria-disabled="true">${t('billing.checkout.blocked')}</p>`
         : html`<form method="post" action="/me/checkout"><input type="hidden" name="csrf" value="${session.csrf}">
-<input type="hidden" name="plan" value="${choice.planId}"><input type="hidden" name="period" value="${choice.period}"><input type="hidden" name="for" value="${choice.kind}"><input type="hidden" name="lang" value="${textOf(ctx).lang}">
+<input type="hidden" name="plan" value="${choice.planId}"><input type="hidden" name="period" value="${choice.period}"><input type="hidden" name="for" value="${choice.kind}"><input type="hidden" name="cur" value="${choice.currency}"><input type="hidden" name="lang" value="${lang}">
 ${gift ? html`<div class="gift-fields"><label for="gift-to">${t('billing.checkout.giftTo')}</label><input id="gift-to" name="gift_to" maxlength="${GIFT_TO_MAX}" autocomplete="off" value="${values.giftTo || ''}" placeholder="${t('billing.checkout.giftToPlaceholder')}">
 <label for="gift-message">${t('billing.checkout.giftMessage')}</label><textarea id="gift-message" name="gift_message" maxlength="${GIFT_MESSAGE_MAX}" rows="3" placeholder="${t('billing.checkout.giftMessagePlaceholder')}">${values.giftMessage || ''}</textarea></div>` : ''}
 <fieldset class="consent"><legend class="seg-label">${t('billing.consent.legend')}</legend>
@@ -246,7 +261,7 @@ function withdrawalCell(ctx, order, now = Date.now()) {
     const { t, ti } = textOf(ctx);
     const w = order.legal?.withdrawal;
     if (w) {
-        return html`<a href="/me/billing/orders/${order.id}/withdrawal">${t('billing.withdrawalCell.withdrawn')}</a><br><small class="note">${ti(w.refundStatus === 'test-not-paid' ? 'billing.withdrawalCell.refundDueTest' : 'billing.withdrawalCell.refundDue', { date: when(w.at), amount: euros(w.refundCents) })}</small>`;
+        return html`<a href="/me/billing/orders/${order.id}/withdrawal">${t('billing.withdrawalCell.withdrawn')}</a><br><small class="note">${ti(w.refundStatus === 'test-not-paid' ? 'billing.withdrawalCell.refundDueTest' : 'billing.withdrawalCell.refundDue', { date: when(w.at), amount: orderMoney(ctx, order, w.refundCents) })}</small>`;
     }
     if (canWithdraw(order, now)) {
         return html`<a href="/me/billing/orders/${order.id}/withdraw">${t('billing.withdrawalCell.withdraw')}</a><br><small class="note">${ti('billing.withdrawalCell.until', { date: when(withdrawalDeadline(order)) })}</small>`;
@@ -290,7 +305,7 @@ ${gifts.length ? html`<div class="table-wrap" role="region" aria-labelledby="gif
         : html`<p>${ti('billing.account.noGifts')}</p>`}
 <h2 id="orders-title">${t('billing.account.ordersTitle')}</h2>
 ${orders.length ? html`<div class="table-wrap" role="region" aria-labelledby="orders-title" tabindex="0"><table class="record-table"><thead><tr><th scope="col">${t('billing.account.ordersOrder')}</th><th scope="col">${t('billing.account.ordersDate')}</th><th scope="col">${t('billing.account.ordersPlan')}</th><th scope="col">${t('billing.account.ordersFor')}</th><th scope="col">${t('billing.account.ordersAmount')}</th><th scope="col">${t('billing.account.ordersWithdrawal')}</th><th scope="col"></th></tr></thead>
-<tbody>${orders.map((o) => html`<tr><td><code>#${o.id}</code></td><td>${when(o.created_at)}</td><td>${t('billing.common.planWithPeriod', { plan: planName(o.plan_id), period: periodLabel(t, o.period) })}</td><td>${kindLabel(t, o.kind)}</td><td>${euros(o.amount_cents)}${o.test ? html` <span class="planned">${t('billing.common.test')}</span>` : ''}</td><td>${withdrawalCell(ctx, o)}</td><td><a href="/me/billing/orders/${o.id}">${t('billing.account.receipt')}</a></td></tr>`)}</tbody></table></div>
+<tbody>${orders.map((o) => html`<tr><td><code>#${o.id}</code></td><td>${when(o.created_at)}</td><td>${t('billing.common.planWithPeriod', { plan: planName(o.plan_id), period: periodLabel(t, o.period) })}</td><td>${kindLabel(t, o.kind)}</td><td>${orderMoney(ctx, o, o.amount_cents)}${o.test ? html` <span class="planned">${t('billing.common.test')}</span>` : ''}</td><td>${withdrawalCell(ctx, o)}</td><td><a href="/me/billing/orders/${o.id}">${t('billing.account.receipt')}</a></td></tr>`)}</tbody></table></div>
 <p class="note">${ti('billing.account.ordersNote', { days: WITHDRAWAL_DAYS })}</p>`
         : html`<p>${t('billing.account.noOrders')}</p>`}</div>`,
     });
@@ -316,7 +331,7 @@ ${redeemLink ? html`<p class="note">${ti('billing.receipt.directLink', { link: h
 <div><dt>${t('billing.receipt.account')}</dt><dd>${session.username}</dd></div>
 <div><dt>${t('billing.receipt.plan')}</dt><dd>${t('billing.common.planPeriod', { plan: planName(order.plan_id), period: periodLabel(t, order.period) })}</dd></div>
 <div><dt>${t('billing.receipt.for')}</dt><dd>${kindLabel(t, order.kind)}</dd></div>
-<div class="summary-total"><dt>${t('billing.receipt.total')}</dt><dd>${order.test ? t('billing.receipt.totalTest', { amount: euros(order.amount_cents) }) : euros(order.amount_cents)}</dd></div>
+<div class="summary-total"><dt>${t('billing.receipt.total')}</dt><dd>${order.test ? t('billing.receipt.totalTest', { amount: orderMoney(ctx, order, order.amount_cents) }) : orderMoney(ctx, order, order.amount_cents)}</dd></div>
 <div><dt>${t('billing.receipt.vat')}</dt><dd>${vatLine(ctx.legal, ctx)}</dd></div>
 <div><dt>${t('billing.receipt.renewal')}</dt><dd>${t('billing.receipt.renewalNone')}</dd></div>
 ${order.legal?.consent ? html`<div><dt>${t('billing.receipt.confirmed')}</dt><dd>${order.legal.consent.texts.map((text) => html`${text}<br>`)}<small class="note">${ti('billing.receipt.confirmedMeta', { date: when(order.legal.consent.at), version: order.legal.consent.version, terms: LEGAL_UPDATED })}</small></dd></div>` : ''}
@@ -363,7 +378,7 @@ export function withdrawListPage(ctx, { session, orders, now = Date.now() }) {
 <h1>${t('billing.withdrawList.heading')}</h1>
 <p class="lead">${tpi('billing.withdrawList.lead', WITHDRAWAL_DAYS, { username: session.username })}</p>
 ${testBanner(t)}
-${open.length ? html`<ul class="withdraw-list">${open.map((o) => html`<li>${ti('billing.withdrawList.item', { order: orderCode(o), line: orderLine(t, o), amount: euros(o.amount_cents), date: when(o.created_at) })} <a class="button" href="/me/billing/orders/${o.id}/withdraw">${t('billing.withdrawList.button')}</a></li>`)}</ul>`
+${open.length ? html`<ul class="withdraw-list">${open.map((o) => html`<li>${ti('billing.withdrawList.item', { order: orderCode(o), line: orderLine(t, o), amount: orderMoney(ctx, o, o.amount_cents), date: when(o.created_at) })} <a class="button" href="/me/billing/orders/${o.id}/withdraw">${t('billing.withdrawList.button')}</a></li>`)}</ul>`
         : html`<p>${t('billing.withdrawList.none', { days: WITHDRAWAL_DAYS })}</p>`}
 <p class="note">${ti('billing.withdrawList.note')}</p></div>`,
     });
@@ -372,7 +387,7 @@ ${open.length ? html`<ul class="withdraw-list">${open.map((o) => html`<li>${ti('
 /** Step 2 (CRD Art. 11a(2)–(3)): name, which contract, where the acknowledgement goes → "Confirm withdrawal". */
 export function withdrawConfirmPage(ctx, { session, order, quote: wq, name = '', error = null }) {
     const { t, ti } = textOf(ctx);
-    const contract = { order: orderCode(order), line: orderLine(t, order), amount: euros(order.amount_cents), date: when(order.created_at) };
+    const contract = { order: orderCode(order), line: orderLine(t, order), amount: orderMoney(ctx, order, order.amount_cents), date: when(order.created_at) };
     return layout(ctx, {
         title: t('billing.withdrawConfirm.title'), active: 'me',
         body: html`<div class="wrap page prose"><a class="back-link" href="/me/withdraw">${t('billing.withdrawConfirm.back')}</a>
@@ -385,7 +400,7 @@ ${testBanner(t)}${notices({ error })}
 <div><dt>${t('billing.withdrawConfirm.account')}</dt><dd>${t('billing.withdrawConfirm.accountValue', { username: session.username })}</dd></div>
 <div><dt>${t('billing.withdrawConfirm.ack')}</dt><dd>${t('billing.withdrawConfirm.ackValue')}</dd></div>
 <div><dt>${t('billing.withdrawConfirm.daysUsed')}</dt><dd>${t('billing.withdrawConfirm.daysUsedValue', { used: wq.usedDays, total: wq.totalDays })}</dd></div>
-<div class="summary-total"><dt>${t('billing.withdrawConfirm.refundDue')}</dt><dd>${order.test ? t('billing.withdrawConfirm.refundTest', { amount: euros(wq.refundCents) }) : euros(wq.refundCents)}</dd></div></dl>
+<div class="summary-total"><dt>${t('billing.withdrawConfirm.refundDue')}</dt><dd>${order.test ? t('billing.withdrawConfirm.refundTest', { amount: orderMoney(ctx, order, wq.refundCents) }) : orderMoney(ctx, order, wq.refundCents)}</dd></div></dl>
 <p>${t(order.kind === 'personal' ? 'billing.withdrawConfirm.statementPersonal' : 'billing.withdrawConfirm.statementGift')}</p>
 <p><button class="button" type="submit">${t('billing.withdrawConfirm.button')}</button></p></form></div>`,
     });
@@ -404,10 +419,10 @@ ${testBanner(t)}
 <div><dt>${t('billing.withdrawalAck.received')}</dt><dd>${ti('billing.withdrawalAck.receivedValue', { date: when(w.at), utc: new Date(w.at).toISOString().replace('T', ' ').slice(0, 19) })}</dd></div>
 <div><dt>${t('billing.withdrawalAck.name')}</dt><dd>${w.name}</dd></div>
 <div><dt>${t('billing.withdrawalAck.account')}</dt><dd>${session.username}</dd></div>
-<div><dt>${t('billing.withdrawalAck.contract')}</dt><dd>${ti('billing.withdrawConfirm.contractValue', { order: orderCode(order), line: orderLine(t, order), amount: euros(order.amount_cents), date: when(order.created_at) })}</dd></div>
+<div><dt>${t('billing.withdrawalAck.contract')}</dt><dd>${ti('billing.withdrawConfirm.contractValue', { order: orderCode(order), line: orderLine(t, order), amount: orderMoney(ctx, order, order.amount_cents), date: when(order.created_at) })}</dd></div>
 <div><dt>${t('billing.withdrawalAck.statement')}</dt><dd>${t('billing.withdrawalAck.statementValue')}</dd></div>
 <div><dt>${t('billing.withdrawalAck.daysUsed')}</dt><dd>${t(w.planEnded ? 'billing.withdrawalAck.daysUsedEnded' : 'billing.withdrawConfirm.daysUsedValue', { used: w.usedDays, total: w.totalDays })}</dd></div>
-<div class="summary-total"><dt>${t('billing.withdrawalAck.refundDue')}</dt><dd>${w.refundStatus === 'test-not-paid' ? t('billing.withdrawConfirm.refundTest', { amount: euros(w.refundCents) }) : euros(w.refundCents)}</dd></div></dl>
+<div class="summary-total"><dt>${t('billing.withdrawalAck.refundDue')}</dt><dd>${w.refundStatus === 'test-not-paid' ? t('billing.withdrawConfirm.refundTest', { amount: orderMoney(ctx, order, w.refundCents) }) : orderMoney(ctx, order, w.refundCents)}</dd></div></dl>
 ${dmDelivered === false ? html`<p class="error" role="alert">${t('billing.withdrawalAck.dmFailed')}</p>`
         : html`<p class="note">${t('billing.withdrawalAck.dmNote')}</p>`}
 <p><a class="button" href="/me/billing">${t('billing.common.goToSubscription')}</a></p></div>`,
@@ -477,7 +492,9 @@ export function createBillingHandlers(core) {
             // The language the buyer saw: the form's own field (the page they ticked), else this request's.
             const consentLang = LANG_CODES.find((code) => code === req.body?.lang) || textOf(ctx()).lang;
             const consent = checkoutConsent(req.body, choice.kind, Date.now(), { lang: consentLang, texts: consentTexts(consentLang, choice.kind) });
-            const result = await store.purchase({ userId: session.userId, username: session.username, ...choice, giftTo: values.giftTo, giftMessage: values.giftMessage, consent });
+            // The currency the checkout showed (its hidden field), else the language's: never a rate.
+            const currency = checkoutCurrency(choice, consentLang);
+            const result = await store.purchase({ userId: session.userId, username: session.username, ...choice, currency, giftTo: values.giftTo, giftMessage: values.giftMessage, consent });
             const { order } = result;
             logger.info(`Premium test order #${order.id}: ${session.userId} ${choice.kind} ${choice.planId}/${choice.period} (consent ${consent.version})`);
             // The confirmation DM replaces the plain "plan is active" DM for website orders.
