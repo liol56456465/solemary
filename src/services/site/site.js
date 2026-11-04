@@ -298,13 +298,13 @@ export function botStatus(client) {
 
 /** "3 days, 4 hours", "12 minutes", "less than a minute": the two largest units. */
 export function uptimeWords(ms, ctx) {
-    const { t } = textOf(ctx);
+    const { t, tp } = textOf(ctx);
     const total = Math.floor(Number(ms) / 60000);
     if (!Number.isFinite(total) || total < 1) return t('pages.status.uptime.lessThanMinute');
     const units = [['day', Math.floor(total / 1440)], ['hour', Math.floor((total % 1440) / 60)], ['minute', total % 60]];
     const first = units.findIndex(([, n]) => n > 0);
     const words = units.slice(first, first + 2).filter(([, n]) => n > 0)
-        .map(([unit, n]) => t(`pages.status.uptime.${unit}${n === 1 ? 'One' : 'Other'}`, { n }));
+        .map(([unit, n]) => tp(`pages.status.uptime.${unit}`, n));
     return words.length > 1 ? t('pages.status.uptime.join', { first: words[0], second: words[1] }) : words[0];
 }
 

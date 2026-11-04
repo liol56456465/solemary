@@ -4,7 +4,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadCatalogs, translator } from '../src/services/site/i18n.js';
+import { loadCatalogs, translator, PLURAL_CATEGORIES, hasKey } from '../src/services/site/i18n.js';
 
 const { pricingPage, planCard } = await import('../src/services/site/pages/pricing.js');
 const { faqPage } = await import('../src/services/site/pages/faq.js');
@@ -21,7 +21,7 @@ const iso = (ms) => new Date(ms).toISOString();
 function recordingCtx(used, extra = {}) {
     const en = translator('en');
     const wrap = (fn) => (key, params) => { used.add(key); return fn(key, params); };
-    return { ...extra, lang: 'en', t: wrap(en.t), ti: wrap(en.ti), tb: wrap(en.tb) };
+    return { ...extra, lang: 'en', t: wrap(en.t), ti: wrap(en.ti), tb: wrap(en.tb), tp: (key, count, params) => { for (const c of PLURAL_CATEGORIES) if (hasKey('en', `${key}.${c}`)) used.add(`${key}.${c}`); return en.tp(key, count, params); } };
 }
 
 function renderAll(used) {

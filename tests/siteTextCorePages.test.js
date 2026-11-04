@@ -4,7 +4,7 @@
 // transparency, trust) is read by some state of these pages: no hardcoded leftovers, no dead keys.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadCatalogs, translator } from '../src/services/site/i18n.js';
+import { loadCatalogs, translator, PLURAL_CATEGORIES, hasKey } from '../src/services/site/i18n.js';
 import {
     aboutPage, catCard, commandsPage, everyoneCommandGroups, leaderboardPage, notFoundPage, statusPage, uptimeWords,
 } from '../src/services/site/site.js';
@@ -22,7 +22,7 @@ function recordingContext(used, extra = {}) {
     const wrap = (fn) => (key, params) => { used.add(key); return fn(key, params); };
     return {
         publicSite: false, dashboardEnabled: true, installUrl: null, origin: null, supportInvite: SUPPORT, commands: null,
-        transparency: false, trustCard: true, ...extra, lang: 'en', t: wrap(en.t), ti: wrap(en.ti), tb: wrap(en.tb),
+        transparency: false, trustCard: true, ...extra, lang: 'en', t: wrap(en.t), ti: wrap(en.ti), tb: wrap(en.tb), tp: (key, count, params) => { for (const c of PLURAL_CATEGORIES) if (hasKey('en', `${key}.${c}`)) used.add(`${key}.${c}`); return en.tp(key, count, params); },
     };
 }
 

@@ -109,6 +109,23 @@ function paramText(params, name) {
     return params[name];
 }
 
+export const PLURAL_CATEGORIES = Object.freeze(['zero', 'one', 'two', 'few', 'many', 'other']);
+
+/** True when the key exists for this language (catalog, owner edit or English fallback). */
+export function hasKey(lang, key) {
+    try { lookup(lang, key); return true; } catch { return false; }
+}
+
+/**
+ * The plural form of a key for a number: "x.day" → "x.day.few" in Russian for 3, "x.day.one" in English
+ * for 1; falls back to "<key>.other". The count is also available as {count}.
+ */
+export function pluralKey(lang, key, count) {
+    const code = isLanguage(lang) ? lang : DEFAULT_LANG;
+    const category = new Intl.PluralRules(code).select(Number(count));
+    return hasKey(code, `${key}.${category}`) ? `${key}.${category}` : `${key}.other`;
+}
+
 /** Plain text with {params} filled in (SafeHtml params are inserted as their text). */
 export function translate(lang, key, params) {
     return lookup(lang, key).replace(TOKEN, (_, name) => String(paramText(params, name)));
@@ -143,7 +160,10 @@ function renderInline(escaped, params, key) {
         return `${keep(`<a href="${href}"${external}>`)}${text}${keep('</a>')}`;
     });
     // escapeHtml turned ` into &#96;.
-    s = s.replace(/&#96;((?:(?!&#96;)[^\n])+)&#96;/g, (_, code) => keep(`<code>${code}</code>`));
+    s = s.replace(/&#96;((?:(?!&#96;)[^\n])+)&#96;/g, (_, code) => keep(`<code>${code.replace(TOKEN, (__, name) => {
+        const value = paramText(params, name);
+        return value && typeof value === 'object' && 'text' in value ? escapeHtml(String(value.text)) : escapeHtml(value);
+    })}</code>`));
     s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
     s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
     s = s.replace(TOKEN, (_, name) => {
@@ -180,6 +200,8 @@ export function translator(lang = DEFAULT_LANG) {
         t: (key, params) => translate(code, key, params),
         ti: (key, params) => translateInline(code, key, params),
         tb: (key, params) => translateBlock(code, key, params),
+        /** Plural plain text: tp('billing.common.day', 3) → "3 days" ({count} is filled in). */
+        tp: (key, count, params = {}) => translate(code, pluralKey(code, key, count), { count, ...params }),
     };
 }
 
@@ -190,7 +212,7 @@ export function placeholdersOf(text) {
 
 /** The translator for a page context: its own t/ti/tb, else one for ctx.lang (tests pass bare contexts). */
 export function textOf(ctx) {
-    return ctx && typeof ctx.t === 'function' && typeof ctx.ti === 'function' && typeof ctx.tb === 'function'
+    return ctx && typeof ctx.t === 'function' && typeof ctx.ti === 'function' && typeof ctx.tb === 'function' && typeof ctx.tp === 'function'
         ? ctx
         : translator(ctx?.lang);
 }

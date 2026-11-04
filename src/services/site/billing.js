@@ -65,9 +65,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // Session flash marker: the withdrawal acknowledgement DM was not delivered (shown once on the ack page).
 // Compared, not translated: the ack page shows billing.withdrawalAck.dmFailed instead.
 const WITHDRAWAL_DM_FAILED = 'The withdrawal acknowledgement DM could not be delivered.';
-const daysText = (t, ms) => {
+const daysText = (tp, ms) => {
     const d = Math.round(ms / DAY_MS * 10) / 10;
-    return t(d === 1 ? 'billing.common.dayOne' : 'billing.common.dayOther', { count: String(d) });
+    return tp('billing.common.day', d);
 };
 const periodLabel = (t, period) => (PERIODS[period] ? t(`billing.period.${period}`) : period);
 const kindLabel = (t, kind) => (kind === 'personal' || kind === 'gift' ? t(`billing.kind.${kind}`) : kind);
@@ -122,7 +122,7 @@ export function loginNeededPage(ctx, next, reason = 'manage', params = {}) {
  * PremiumError's message from premiumService.js (English).
  */
 export function checkoutEffect(current, choice, now = Date.now(), ctx = null) {
-    const { t } = textOf(ctx);
+    const { t, tp } = textOf(ctx);
     if (!current) return { kind: 'new', text: t('billing.effect.new') };
     if (current.plan_id === choice.planId) {
         return { kind: 'extend', text: t('billing.effect.extend', { plan: planName(current.plan_id), until: new Date(current.expires_at).toISOString().slice(0, 10) }) };
@@ -132,7 +132,7 @@ export function checkoutEffect(current, choice, now = Date.now(), ctx = null) {
         return {
             kind: 'upgrade',
             text: t('billing.effect.upgrade', {
-                remaining: daysText(t, c.remainingMs), fromPlan: planName(c.fromPlanId), converted: daysText(t, c.convertedMs), plan: planName(choice.planId),
+                remaining: daysText(tp, c.remainingMs), fromPlan: planName(c.fromPlanId), converted: daysText(tp, c.convertedMs), plan: planName(choice.planId),
             }),
         };
     } catch (error) {

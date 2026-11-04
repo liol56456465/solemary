@@ -4,7 +4,7 @@
 // holds no key the pages no longer use.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadCatalogs, translator } from '../src/services/site/i18n.js';
+import { loadCatalogs, translator, PLURAL_CATEGORIES, hasKey } from '../src/services/site/i18n.js';
 import { addButton, installUrl, layout } from '../src/services/site/shell.js';
 import { heroActions, homePage } from '../src/services/site/pages/home.js';
 import { featuresPage } from '../src/services/site/pages/features.js';
@@ -18,7 +18,7 @@ function recording(lang = 'en') {
     const base = translator(lang);
     const used = new Set();
     const wrap = (fn) => (key, params) => { used.add(key); return fn(key, params); };
-    return { used, ctx: { lang: base.lang, t: wrap(base.t), ti: wrap(base.ti), tb: wrap(base.tb) } };
+    return { used, ctx: { lang: base.lang, t: wrap(base.t), ti: wrap(base.ti), tb: wrap(base.tb), tp: (key, count, params) => { for (const c of PLURAL_CATEGORIES) if (hasKey('en', `${key}.${c}`)) used.add(`${key}.${c}`); return base.tp(key, count, params); } } };
 }
 
 const FLAGS = [

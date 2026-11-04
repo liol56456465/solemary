@@ -22,10 +22,12 @@
     "planLine": "Mewvo {plan}",
     "planPeriod": "Mewvo {plan} · {period}",
     "planWithPeriod": "{plan} · {period}",
-    "dayOne": "{count} day",
-    "dayOther": "{count} days",
     "days": "{count} days",
-    "test": "Test"
+    "test": "Test",
+    "day": {
+      "one": "{count} day",
+      "other": "{count} days"
+    }
   },
   "period": {
     "monthly": "Monthly",

@@ -75,6 +75,29 @@ test('textOf: bare test contexts get an English translator', () => {
     assert.equal(textOf({ lang: 'fr' }).lang, 'fr');
 });
 
+test('plurals follow each language\'s rules; params work inside code spans', () => {
+    setCatalogsForTest(new Map([
+        ['en', new Map([['x.day.one', '{count} day'], ['x.day.other', '{count} days'], ['x.code', 'Use `#{id}` here']])],
+        ['ru', new Map([['x.day.one', '{count} день'], ['x.day.few', '{count} дня'], ['x.day.many', '{count} дней'], ['x.day.other', '{count} дня']])],
+        ['pl', new Map([['x.day.one', '{count} dzień'], ['x.day.few', '{count} dni'], ['x.day.many', '{count} dni'], ['x.day.other', '{count} dnia']])],
+    ]));
+    try {
+        const en = translator('en');
+        const ru = translator('ru');
+        const pl = translator('pl');
+        assert.equal(en.tp('x.day', 1), '1 day');
+        assert.equal(en.tp('x.day', 5), '5 days');
+        assert.equal(ru.tp('x.day', 1), '1 день');
+        assert.equal(ru.tp('x.day', 3), '3 дня');
+        assert.equal(ru.tp('x.day', 5), '5 дней');
+        assert.equal(ru.tp('x.day', 21), '21 день');
+        assert.equal(ru.tp('x.day', 1.5), '1.5 дня', 'fractions use "other"');
+        assert.equal(pl.tp('x.day', 22), '22 dni');
+        assert.equal(translator('de').tp('x.day', 2), '2 days', 'missing language falls back to English forms');
+        assert.equal(String(en.ti('x.code', { id: '<7>' })), 'Use <code>#&lt;7&gt;</code> here');
+    } finally { setCatalogsForTest(null); }
+});
+
 test('isSafeHref', () => {
     for (const ok of ['/docs', '/', '#top', 'https://a.b/c', 'mailto:a@b.c']) assert.equal(isSafeHref(ok), true, ok);
     for (const bad of ['//x.y', 'http://a.b', 'javascript:x', 'data:text/html,1', ' /x', 'https://a b']) assert.equal(isSafeHref(bad), false, bad);
@@ -87,8 +110,13 @@ test('real catalogs: every language only has keys English has, with the same {pa
     for (const { code } of LANGUAGES) {
         if (code === 'en') continue;
         for (const [key, text] of all.get(code)) {
-            assert.ok(en.has(key), `${code}: ${key} is not an English key`);
-            assert.deepEqual(placeholdersOf(text), placeholdersOf(en.get(key)), `${code}: ${key} placeholders`);
+            // Plural forms English doesn't have (Russian "few"/"many") are fine when English has "<base>.other".
+            const plural = key.match(/^(.*)\.(zero|one|two|few|many|other)$/);
+            const reference = en.has(key) ? key : plural && en.has(`${plural[1]}.other`) ? `${plural[1]}.other` : null;
+            assert.ok(reference, `${code}: ${key} is not an English key`);
+            const allowed = new Set([...placeholdersOf(en.get(reference)), 'count']);
+            for (const name of placeholdersOf(text)) assert.ok(allowed.has(name), `${code}: ${key} uses unknown {${name}}`);
+            if (!plural) assert.deepEqual(placeholdersOf(text), placeholdersOf(en.get(reference)), `${code}: ${key} placeholders`);
         }
     }
 });

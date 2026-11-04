@@ -73,13 +73,19 @@
     "uptime": {
       "line": "Up for {uptime}.",
       "lessThanMinute": "less than a minute",
-      "dayOne": "{n} day",
-      "dayOther": "{n} days",
-      "hourOne": "{n} hour",
-      "hourOther": "{n} hours",
-      "minuteOne": "{n} minute",
-      "minuteOther": "{n} minutes",
-      "join": "{first}, {second}"
+      "join": "{first}, {second}",
+      "day": {
+        "one": "{count} day",
+        "other": "{count} days"
+      },
+      "hour": {
+        "one": "{count} hour",
+        "other": "{count} hours"
+      },
+      "minute": {
+        "one": "{count} minute",
+        "other": "{count} minutes"
+      }
     },
     "note": {
       "refresh": "This page refreshes every minute.",
