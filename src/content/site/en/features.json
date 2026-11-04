@@ -1,0 +1,296 @@
+{
+  "meta": {
+    "description": "Everything Mewvo does: enforcement, the warning ladder, appeals, automod, tickets and modmail, the web dashboard and community tools."
+  },
+  "head": {
+    "title": "Features",
+    "lead": "Everything Mewvo does today, grouped by area. Nothing on this page is planned or paid; for what may come with paid plans, see [Pricing](/pricing).",
+    "indexLabel": "Feature areas"
+  },
+  "groups": {
+    "enforcement": {
+      "title": "Enforcement",
+      "intro": "Warn, mute, kick and ban from one panel, with a record for every action.",
+      "items": {
+        "enforcementsPanel": {
+          "term": "/enforcements panel",
+          "text": "Shows the member’s account age, time in the server, counted warnings, ladder level, active punishments and last three cases, then offers only the actions that make sense right now (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
+        },
+        "reasons": {
+          "term": "Reasons",
+          "text": "A list of prebuilt reasons, some marked severe (a severe ban is unappealable by default), or a custom reason."
+        },
+        "caseCodes": {
+          "term": "Case codes",
+          "text": "Every action gets a short, unique code such as k7xq2: 5 to 7 lowercase letters and digits, without the look-alikes 0, o, 1, l and i."
+        },
+        "dms": {
+          "term": "DMs",
+          "text": "The member gets the reason, who acted, the date, the duration and end time, the case code and how to appeal. Kicked members get a one-time invite back (one use, 7 days)."
+        },
+        "mutes": {
+          "term": "Mutes",
+          "text": "A managed Muted role instead of Discord timeouts, so mutes can last longer than 28 days. It is applied to new channels too and re-applied if the member leaves and rejoins."
+        },
+        "safetyChecks": {
+          "term": "Safety checks",
+          "text": "Refuses the server owner, the bot, yourself and anyone with an equal or higher role. The Administrator role is checked again on every click."
+        },
+        "massActionGuard": {
+          "term": "Mass-action guard",
+          "text": "More than 5 bans or kicks in 10 minutes by one moderator blocks them for an hour and alerts the owner. Mutes have their own limit of 10."
+        },
+        "caseTools": {
+          "term": "Case tools",
+          "text": "/case edit, void and history, evidence (message links with an excerpt, or images), case search, and /background for a member’s full history."
+        },
+        "warnForMessage": {
+          "term": "Warn for this message",
+          "text": "Right-click a message to warn its author with the message attached as evidence."
+        },
+        "simulation": {
+          "term": "Simulation",
+          "text": "/test sends you the exact DM a member would get, without doing anything."
+        },
+        "noContactOrders": {
+          "term": "No-contact orders",
+          "text": "Ask two members not to contact each other until a set time. It is not a punishment and doesn’t count as a warning."
+        }
+      }
+    },
+    "ladder": {
+      "title": "Warning ladder",
+      "intro": "Escalation that is the same for everyone and visible to the member.",
+      "items": {
+        "levels": {
+          "term": "Levels",
+          "text": "Warnings 1 and 2 are a DM. Warning 3 is an automatic 7-day ban (level 1). The next warning after that is a 30-day ban (level 2), then a permanent ban (level 3)."
+        },
+        "neverResets": {
+          "term": "Never resets",
+          "text": "The ladder is kept per member and per server and doesn’t quietly reset over time."
+        },
+        "corrections": {
+          "term": "Corrections",
+          "text": "Removing a warning lowers the count. Bans given by hand don’t move the ladder. An accepted appeal of a ladder ban lowers the level by one."
+        },
+        "level3Appeals": {
+          "term": "Level 3 appeals",
+          "text": "A permanent ladder ban can be appealed for 6 months. After that, or after a denied appeal, it can’t be appealed."
+        },
+        "myStanding": {
+          "term": "My standing",
+          "text": "Members can check their own warnings and what the next one would do, from the appeal panel or the My record page."
+        }
+      }
+    },
+    "appeals": {
+      "title": "Appeals and reports",
+      "intro": "A way back that ends with a decision by a person.",
+      "items": {
+        "appealPanel": {
+          "term": "Appeal panel",
+          "text": "/setappeal posts the panel with Appeal, My appeals and My standing buttons, in the main server and the support server."
+        },
+        "appealForm": {
+          "term": "Appeal form",
+          "text": "Why it should be lifted, the case code from the DM, and anything else staff should know."
+        },
+        "banAndKickAppeals": {
+          "term": "Ban and kick appeals",
+          "text": "Open a channel in the support server with the member in it, so the conversation works after a ban. The case and history go to an admin-only staff channel with Accept and Deny."
+        },
+        "limits": {
+          "term": "Limits",
+          "text": "One pending appeal per case and 7 days before trying again after a denial. Bans and mutes can be appealed while active, warnings and kicks within 30 days."
+        },
+        "decisions": {
+          "term": "Decisions",
+          "text": "Accept lifts what is still active and DMs a one-time invite back; Deny DMs the member. /appeals decides from a command too."
+        },
+        "bannedRole": {
+          "term": "Banned role",
+          "text": "Members with an active ban get a role in the support server, removed when the ban ends."
+        },
+        "staffReports": {
+          "term": "Staff reports",
+          "text": "Members can report a staff member privately. Only administrators see reports; one open report per person and three a day."
+        }
+      }
+    },
+    "automod": {
+      "title": "Automod and raids",
+      "intro": "Automatic actions that are normal cases, with a person reviewing them.",
+      "items": {
+        "builtInRules": {
+          "term": "14 rules",
+          "text": "Scam links, NSFW, sexual harassment, harassment, personal info, advertising, impersonation, language, disrespect, mass mentions, spam, caps, fancy characters and English only."
+        },
+        "customRules": {
+          "term": "Custom rules",
+          "text": "Your own words and phrases, matched as whole words through the same letter folding. Each rule deletes, warns or mutes, with a review card. On paid plans: 5 on Normal, 25 on Pro, 100 on Max."
+        },
+        "punishmentSteps": {
+          "term": "Punishment steps",
+          "text": "Each rule has its own steps (for example spam: warn, mute 1 hour, mute 1 day), counted over 30 days. When a message breaks several rules, only the most severe counts."
+        },
+        "reviewCards": {
+          "term": "Review cards",
+          "text": "Every automatic action posts a card for staff with Keep, Undo and Change to…."
+        },
+        "modes": {
+          "term": "Modes",
+          "text": "Each rule is on, monitor (card only) or off, globally or per channel. Trusted roles and channel exceptions."
+        },
+        "hardToDodge": {
+          "term": "Hard to dodge",
+          "text": "Text is folded back to plain letters, so fancy fonts, look-alike letters, zalgo and invisible characters don’t get around the rules."
+        },
+        "newMembers": {
+          "term": "New members",
+          "text": "Links, attachments and fast posting are limited for a member’s first 3 days. A join gate can flag or kick new accounts that fail its checks."
+        },
+        "raids": {
+          "term": "Raids",
+          "text": "Ten joins in a minute locks the server down: the verification level goes up, invites and DMs pause (panic mode) and admins are alerted. /automod lockdown-end restores everything and posts a report."
+        },
+        "memberReports": {
+          "term": "Member reports",
+          "text": "When 3 members react to a message with the flag emoji, it is removed and sent to the review channel."
+        },
+        "nativeAutomod": {
+          "term": "Native AutoMod",
+          "text": "A bridge to Discord’s built-in AutoMod rules, so both work together."
+        }
+      }
+    },
+    "tickets": {
+      "title": "Tickets and modmail",
+      "intro": "Private conversations between members and staff, kept in Discord.",
+      "items": {
+        "ticketPanel": {
+          "term": "Ticket panel",
+          "text": "Members open a ticket from a button. Staff claim it, set a priority and answer with saved replies."
+        },
+        "transcripts": {
+          "term": "Transcripts",
+          "text": "When a ticket or modmail conversation closes, a transcript goes to a staff-only channel."
+        },
+        "modmail": {
+          "term": "Modmail",
+          "text": "DM the bot and press Send to staff: the conversation becomes a staff channel. Lines starting with // are internal notes."
+        },
+        "modmailCommands": {
+          "term": "Commands",
+          "text": "/modmail close, block and unblock. Open reports and modmail channels are capped so a flood can’t bury the server."
+        }
+      }
+    },
+    "dashboard": {
+      "title": "Web dashboard",
+      "intro": "The server’s settings and moderation in the browser.",
+      "items": {
+        "signIn": {
+          "term": "Sign-in",
+          "text": "Log in with Discord (identify only). Administrator is checked again on every request; a moderator role can be given view access to the moderation pages."
+        },
+        "moderate": {
+          "term": "Moderate",
+          "text": "Overview with what needs you, an inbox, members (filters, roles, nicknames, timeouts, bulk actions), bans, cases, appeals, no-contact orders and staff activity."
+        },
+        "settings": {
+          "term": "Settings",
+          "text": "Every module on its own page: tickets, welcome, leveling, reaction roles, messages, giveaways, birthdays, applications, community, automod, enforcement, logging, verification and more."
+        },
+        "auditLog": {
+          "term": "Audit log",
+          "text": "Every change is recorded: who changed which setting, from what, to what."
+        },
+        "temporaryRoles": {
+          "term": "Temporary roles",
+          "text": "Give a role for a set time; it is removed when the time is up and re-applied if the member rejoins early."
+        }
+      }
+    },
+    "community": {
+      "title": "Community",
+      "intro": "The friendly side of the server.",
+      "items": {
+        "leveling": {
+          "term": "Leveling",
+          "text": "XP for chatting, level-up messages, role rewards, channels without XP and a public leaderboard."
+        },
+        "tags": {
+          "term": "Tags",
+          "text": "Saved answers anyone can call up with /tag. Up to 100 per server."
+        },
+        "suggestions": {
+          "term": "Suggestions",
+          "text": "A suggestions channel with votes."
+        },
+        "starboard": {
+          "term": "Starboard",
+          "text": "Messages with enough stars are copied to a highlights channel."
+        },
+        "stickyMessages": {
+          "term": "Sticky messages",
+          "text": "Kept at the bottom of a channel. Up to 10 per server."
+        },
+        "youtubeFeeds": {
+          "term": "YouTube feeds",
+          "text": "New uploads posted to a channel. Up to 20 feeds."
+        },
+        "reactionRoles": {
+          "term": "Reaction roles",
+          "text": "Self-assign role menus with buttons or a select menu."
+        },
+        "giveaways": {
+          "term": "Giveaways",
+          "text": "Start, end and reroll."
+        },
+        "birthdays": {
+          "term": "Birthdays",
+          "text": "Announcements and a birthday role, with time zones."
+        },
+        "applications": {
+          "term": "Applications",
+          "text": "Role applications with your own questions."
+        },
+        "joinToCreate": {
+          "term": "Join to create",
+          "text": "Temporary voice channels."
+        },
+        "welcomeAndGoodbye": {
+          "term": "Welcome and goodbye",
+          "text": "Join and leave messages, roles on join."
+        },
+        "counters": {
+          "term": "Counters",
+          "text": "Member count channels and a counting game."
+        }
+      }
+    },
+    "server": {
+      "title": "Logging, verification and tools",
+      "intro": "The plumbing.",
+      "items": {
+        "logging": {
+          "term": "Logging",
+          "text": "Joins, leaves, role changes, edited and deleted messages and more, each to the channel you choose, with ignored channels."
+        },
+        "verification": {
+          "term": "Verification",
+          "text": "A verify panel or verification on join. “Verify with Discord” can also add the member to the support server so appeal messages still reach them."
+        },
+        "postingAsBot": {
+          "term": "Posting as the bot",
+          "text": "Messages, embeds, polls and countdowns from the dashboard or commands."
+        },
+        "memberTools": {
+          "term": "Member tools",
+          "text": "To-do lists (also shared), a calculator and converters, weather, server and user info, and /wipedata to delete your own levels, balance, AFK status, birthday and to-do list."
+        }
+      }
+    }
+  }
+}

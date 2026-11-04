@@ -1,18 +1,28 @@
-// changelog.js: /changelog, what changed in Mewvo (config/site/changelog.js), newest first.
+// changelog.js: /changelog, what changed in Mewvo (config/site/changelog.js for the order,
+// content/site/<lang>/changelog.json for the text), newest first.
 
 import { html } from '../../dashboard/html.js';
+import { textOf } from '../i18n.js';
 import { layout } from '../shell.js';
-import { CHANGELOG } from '../../../config/site/changelog.js';
+import { CHANGELOG, changelogKey } from '../../../config/site/changelog.js';
 
-const DATE = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+// English dates read "1 November 2026" (en-GB); other languages use their own locale.
+const DATES = new Map();
+function dateFormat(lang) {
+    const locale = !lang || lang === 'en' ? 'en-GB' : lang;
+    if (!DATES.has(locale)) DATES.set(locale, new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }));
+    return DATES.get(locale);
+}
 
 export function changelogPage(ctx, entries = CHANGELOG) {
+    const { t, lang } = textOf(ctx);
+    const date = dateFormat(lang);
     return layout(ctx, {
-        title: 'Changelog', active: 'changelog', path: '/changelog',
-        description: 'What changed in Mewvo, newest first.',
-        body: html`<div class="wrap page prose"><h1>Changelog</h1>
-<p class="lead">What changed in Mewvo, newest first. A change is listed when it is finished. The bot in your server gets it at its next update.</p>
-${entries.map((entry) => html`<section class="changelog-entry" id="d-${entry.date}"><h2><time datetime="${entry.date}">${DATE.format(new Date(`${entry.date}T00:00:00Z`))}</time></h2>
-<ul>${entry.items.map((item) => html`<li>${item}</li>`)}</ul></section>`)}</div>`,
+        title: t('changelog.head.title'), active: 'changelog', path: '/changelog',
+        description: t('changelog.meta.description'),
+        body: html`<div class="wrap page prose"><h1>${t('changelog.head.title')}</h1>
+<p class="lead">${t('changelog.head.lead')}</p>
+${entries.map((entry) => html`<section class="changelog-entry" id="d-${entry.date}"><h2><time datetime="${entry.date}">${date.format(new Date(`${entry.date}T00:00:00Z`))}</time></h2>
+<ul>${entry.items.map((item) => html`<li>${t(changelogKey(entry.date, item))}</li>`)}</ul></section>`)}</div>`,
     });
 }
