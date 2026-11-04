@@ -1,8 +1,10 @@
 // accountPages.js — the pages of Mewvo accounts on the website (/me/signup, /me/login-password,
 // /me/account …). Plain HTML forms that work without JavaScript. Pure: (ctx, values) → page.
+// Text: src/content/site/<lang>/account.json (textOf(ctx); English without a language).
 
 import { html, formatDate } from '../dashboard/html.js';
 import { layout } from './shell.js';
+import { textOf, translator } from './i18n.js';
 import { MIN_AGE, PASSWORD_MAX, PASSWORD_MIN, PRO_BONUS_LABEL, PRO_BONUS_LIMIT, USERNAME_MAX, USERNAME_MIN } from '../accounts/accountCore.js';
 import { planName } from '../billing/premiumService.js';
 
@@ -23,212 +25,228 @@ function page(ctx, title, body) {
 const field = (id, label, input, hint = '') => html`<div class="form-field"><label for="${id}">${label}</label>${input}${hint ? html`<p class="form-hint" id="${id}-hint">${hint}</p>` : ''}</div>`;
 
 export function signupPage(ctx, { csrf, values = {}, error = null }) {
-    return page(ctx, 'Create an account', html`<h1>Create a Mewvo account</h1>
-<p class="lead">With an account you log in to this website with a username and password. No email is needed. Right after you sign up, you link your Discord account once; that is also how you reset a forgotten password.</p>
+    const { t, ti } = textOf(ctx);
+    return page(ctx, t('account.signup.title'), html`<h1>${t('account.signup.heading')}</h1>
+<p class="lead">${t('account.signup.lead')}</p>
 ${notices({ error })}
 <form class="form-stack" method="post" action="/me/signup">${csrfField(csrf)}
-${field('su-username', 'Username', html`<input id="su-username" name="username" required minlength="${USERNAME_MIN}" maxlength="${USERNAME_MAX}" pattern="[A-Za-z0-9_]+" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="su-username-hint" value="${values.username || ''}">`,
-        `${USERNAME_MIN} to ${USERNAME_MAX} characters: letters, numbers and underscores only.`)}
-${field('su-password', 'Password', html`<input id="su-password" name="password" type="password" required minlength="${PASSWORD_MIN}" maxlength="${PASSWORD_MAX}" autocomplete="new-password" aria-describedby="su-password-hint">`,
-        `At least ${PASSWORD_MIN} characters.`)}
-${field('su-birth', 'Date of birth', html`<input id="su-birth" name="birth_date" type="date" required aria-describedby="su-birth-hint" placeholder="YYYY-MM-DD">`,
-        `You must be at least ${MIN_AGE}. We only check your age and save that you are ${MIN_AGE} or older, never the date.`)}
-<div class="form-check"><input id="su-accept" name="accept" type="checkbox" value="yes" required><label for="su-accept">I accept the <a href="/terms">Terms and Conditions</a> and the <a href="/privacy">Privacy Policy</a>.</label></div>
-<p class="form-actions"><button class="button" type="submit">Create account</button></p></form>
-<p class="note account-foot">Already have an account? <a href="/me/login-password">Log in</a>.</p>`);
+${field('su-username', t('account.fields.username'), html`<input id="su-username" name="username" required minlength="${USERNAME_MIN}" maxlength="${USERNAME_MAX}" pattern="[A-Za-z0-9_]+" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="su-username-hint" value="${values.username || ''}">`,
+        t('account.signup.usernameHint', { min: USERNAME_MIN, max: USERNAME_MAX }))}
+${field('su-password', t('account.fields.password'), html`<input id="su-password" name="password" type="password" required minlength="${PASSWORD_MIN}" maxlength="${PASSWORD_MAX}" autocomplete="new-password" aria-describedby="su-password-hint">`,
+        t('account.fields.passwordHint', { min: PASSWORD_MIN }))}
+${field('su-birth', t('account.signup.birthDate'), html`<input id="su-birth" name="birth_date" type="date" required aria-describedby="su-birth-hint" placeholder="${t('account.signup.birthPlaceholder')}">`,
+        t('account.signup.birthHint', { age: MIN_AGE }))}
+<div class="form-check"><input id="su-accept" name="accept" type="checkbox" value="yes" required><label for="su-accept">${ti('account.signup.accept')}</label></div>
+<p class="form-actions"><button class="button" type="submit">${t('account.signup.submit')}</button></p></form>
+<p class="note account-foot">${ti('account.signup.haveAccount')}</p>`);
 }
 
 export function passwordLoginPage(ctx, { csrf, identifier = '', error = null, flash = null }) {
-    return page(ctx, 'Log in', html`<h1>Log in to your Mewvo account</h1>
+    const { t, ti } = textOf(ctx);
+    return page(ctx, t('account.login.title'), html`<h1>${t('account.login.heading')}</h1>
 ${notices({ flash, error })}
 <form class="form-stack" method="post" action="/me/login-password">${csrfField(csrf)}
-${field('li-id', 'Username', html`<input id="li-id" name="identifier" required maxlength="${USERNAME_MAX}" autocomplete="username" autocapitalize="none" spellcheck="false" value="${identifier}">`)}
-${field('li-password', 'Password', html`<input id="li-password" name="password" type="password" required maxlength="${PASSWORD_MAX}" autocomplete="current-password">`)}
-<p class="form-actions"><button class="button" type="submit">Log in</button><a href="/me/forgot">Forgot your password?</a></p></form>
-<ul class="account-links"><li><a href="/me/login">Log in with Discord instead</a></li><li>No account yet? <a href="/me/signup">Create an account</a></li></ul>`);
+${field('li-id', t('account.fields.username'), html`<input id="li-id" name="identifier" required maxlength="${USERNAME_MAX}" autocomplete="username" autocapitalize="none" spellcheck="false" value="${identifier}">`)}
+${field('li-password', t('account.fields.password'), html`<input id="li-password" name="password" type="password" required maxlength="${PASSWORD_MAX}" autocomplete="current-password">`)}
+<p class="form-actions"><button class="button" type="submit">${t('account.common.logIn')}</button><a href="/me/forgot">${t('account.login.forgot')}</a></p></form>
+<ul class="account-links"><li><a href="/me/login">${t('account.login.withDiscord')}</a></li><li>${ti('account.login.noAccount')}</li></ul>`);
 }
 
 export function twoStepPage(ctx, { csrf, error = null }) {
-    return page(ctx, 'Two-step login', html`<h1>Enter your login code</h1>
-<p class="lead">Open your authenticator app and enter the 6-digit code for Mewvo. Lost your phone? Enter one of your recovery codes instead.</p>
+    const { t, ti } = textOf(ctx);
+    return page(ctx, t('account.twoStep.title'), html`<h1>${t('account.twoStep.heading')}</h1>
+<p class="lead">${t('account.twoStep.lead')}</p>
 ${notices({ error })}
 <form class="form-stack" method="post" action="/me/login-2fa">${csrfField(csrf)}
-${field('tf-code', 'Code', html`<input id="tf-code" name="code" required maxlength="20" autocomplete="one-time-code" inputmode="text" autocapitalize="none" spellcheck="false">`)}
-<p class="form-actions"><button class="button" type="submit">Log in</button></p></form>
-<p class="note account-foot">The code step lasts 5 minutes. After that, <a href="/me/login-password">log in again</a>.</p>`);
+${field('tf-code', t('account.twoStep.code'), html`<input id="tf-code" name="code" required maxlength="20" autocomplete="one-time-code" inputmode="text" autocapitalize="none" spellcheck="false">`)}
+<p class="form-actions"><button class="button" type="submit">${t('account.common.logIn')}</button></p></form>
+<p class="note account-foot">${ti('account.twoStep.foot')}</p>`);
 }
 
 export function forgotPage(ctx, { csrf, error = null }) {
-    return page(ctx, 'Forgot password', html`<h1>Forgot your password?</h1>
+    const { t, ti } = textOf(ctx);
+    return page(ctx, t('account.forgot.title'), html`<h1>${t('account.forgot.heading')}</h1>
 ${notices({ error })}
-<p class="lead">Log in with the Discord account that is linked to your Mewvo account. Then you choose a new password.</p>
+<p class="lead">${t('account.forgot.lead')}</p>
 <form class="form-stack" method="post" action="/me/forgot">${csrfField(csrf)}
-<p class="form-actions"><button class="button" type="submit">Log in with Discord</button></p></form>
-<p class="note account-foot">Mewvo asks Discord only who you are. If two-step login is on, you still enter a code from your app after the new password. No Discord account linked? Then the password cannot be reset; <a href="/me/signup">create a new account</a>.</p>`);
+<p class="form-actions"><button class="button" type="submit">${t('account.forgot.submit')}</button></p></form>
+<p class="note account-foot">${ti('account.forgot.foot')}</p>`);
 }
 
 export function resetPage(ctx, { csrf, username, twoStep = false, error = null }) {
-    return page(ctx, 'Choose a new password', html`<h1>Choose a new password</h1>
+    const { t, ti } = textOf(ctx);
+    return page(ctx, t('account.reset.title'), html`<h1>${t('account.reset.heading')}</h1>
 ${notices({ error })}
-<p class="lead">For the Mewvo account <strong>${username}</strong>.</p>
+<p class="lead">${ti('account.reset.lead', { username })}</p>
 <form class="form-stack" method="post" action="/me/reset">${csrfField(csrf)}
-${field('rp-password', 'New password', html`<input id="rp-password" name="password" type="password" required minlength="${PASSWORD_MIN}" maxlength="${PASSWORD_MAX}" autocomplete="new-password">`, `At least ${PASSWORD_MIN} characters.`)}
-${twoStep ? field('rp-code', 'Two-step code', html`<input id="rp-code" name="code" type="text" required maxlength="40" autocomplete="one-time-code" inputmode="text">`, 'The 6-digit code from your app, or one of your recovery codes.') : ''}
-<p class="form-actions"><button class="button" type="submit">Save the new password</button></p></form>
-<p class="note account-foot">Saving ends every other login of this account and logs you in here. This form works for 10 minutes.</p>`);
+${field('rp-password', t('account.fields.newPassword'), html`<input id="rp-password" name="password" type="password" required minlength="${PASSWORD_MIN}" maxlength="${PASSWORD_MAX}" autocomplete="new-password">`, t('account.fields.passwordHint', { min: PASSWORD_MIN }))}
+${twoStep ? field('rp-code', t('account.reset.code'), html`<input id="rp-code" name="code" type="text" required maxlength="40" autocomplete="one-time-code" inputmode="text">`, t('account.reset.codeHint')) : ''}
+<p class="form-actions"><button class="button" type="submit">${t('account.reset.submit')}</button></p></form>
+<p class="note account-foot">${t('account.reset.foot')}</p>`);
 }
 
 export function doneLoginPage(ctx, title, message) {
-    return page(ctx, title, html`<h1>${title}</h1><p class="lead">${message}</p><p class="form-actions"><a class="button" href="/me/login-password">Log in</a></p>`);
+    const { t } = textOf(ctx);
+    return page(ctx, title, html`<h1>${title}</h1><p class="lead">${message}</p><p class="form-actions"><a class="button" href="/me/login-password">${t('account.common.logIn')}</a></p>`);
 }
 
 export function linkDiscordPage(ctx, { session, account, flash = null, error = null }) {
+    const { t, ti } = textOf(ctx);
     const twoStep = Boolean(account.totp_enabled_at);
-    return page(ctx, 'Link your Discord', html`<h1>Link your Discord account</h1>
+    return page(ctx, t('account.link.title'), html`<h1>${t('account.link.heading')}</h1>
 ${notices({ flash, error })}
-<p class="lead">Logged in as <strong>${account.username}</strong>. One more step: link your Discord account. Your Mewvo account works only once it is linked. The first 100 accounts to link get Mewvo Pro for ${PRO_BONUS_LABEL}.</p>
-<div class="form-actions"><form method="post" action="/me/link">${csrfField(session.csrf)}<button class="button" type="submit">Link Discord</button></form>
-<form method="post" action="/me/logout">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">Log out</button></form></div>
-<p class="note account-foot">Mewvo asks Discord only who you are (the identify permission): no email, no servers. One Discord account can be linked to one Mewvo account. If you forget your password, you reset it by logging in with this Discord account. An account that never links Discord is deleted after 7 days.</p>
+<p class="lead">${ti('account.link.lead', { username: account.username, bonus: PRO_BONUS_LABEL })}</p>
+<div class="form-actions"><form method="post" action="/me/link">${csrfField(session.csrf)}<button class="button" type="submit">${t('account.link.submit')}</button></form>
+<form method="post" action="/me/logout">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">${t('account.common.logOut')}</button></form></div>
+<p class="note account-foot">${t('account.link.foot')}</p>
 
-<section class="account-section"><h2>Delete this account</h2>
+<section class="account-section"><h2>${t('account.link.deleteHeading')}</h2>
 <form class="form-stack" method="post" action="/me/account/delete">${csrfField(session.csrf)}
-${field('dl-password', 'Password', html`<input id="dl-password" name="password" type="password" required maxlength="${PASSWORD_MAX}" autocomplete="current-password">`)}
-${twoStep ? field('dl-code', 'Code from the app, or a recovery code', html`<input id="dl-code" name="code" required maxlength="20" autocomplete="one-time-code" autocapitalize="none" spellcheck="false">`) : ''}
-<div class="form-check"><input id="dl-sure" name="sure" type="checkbox" value="yes" required><label for="dl-sure">Yes, delete my account.</label></div>
-<p class="form-actions"><button class="button button-danger" type="submit">Delete my account</button></p></form></section>`);
+${field('dl-password', t('account.fields.password'), html`<input id="dl-password" name="password" type="password" required maxlength="${PASSWORD_MAX}" autocomplete="current-password">`)}
+${twoStep ? field('dl-code', t('account.fields.codeOrRecovery'), html`<input id="dl-code" name="code" required maxlength="20" autocomplete="one-time-code" autocapitalize="none" spellcheck="false">`) : ''}
+<div class="form-check"><input id="dl-sure" name="sure" type="checkbox" value="yes" required><label for="dl-sure">${t('account.delete.confirm')}</label></div>
+<p class="form-actions"><button class="button button-danger" type="submit">${t('account.delete.submit')}</button></p></form></section>`);
 }
 
-function letterForm(session, letters) {
-    if (!letters.length) return html`<p>All 1-letter usernames are taken.</p>`;
+function letterForm(t, session, letters) {
+    if (!letters.length) return html`<p>${t('account.letter.allTaken')}</p>`;
     return html`<form method="post" action="/me/letter">${csrfField(session.csrf)}
-<fieldset class="letter-grid"><legend>Pick a 1-letter username</legend><div class="letter-tiles">${letters.map((letter, i) => html`<label class="letter-choice"><input type="radio" name="letter" value="${letter}"${i === 0 ? html` required` : ''}><span>${letter}</span></label>`)}</div></fieldset>
-<p class="form-actions"><button class="button" type="submit">Claim this username</button></p></form>
-<form class="letter-decline" method="post" action="/me/letter/decline">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">No thanks, keep my username</button></form>
-<p class="note account-foot">You can claim a 1-letter username only once. Your current username stops working when you claim one.</p>`;
+<fieldset class="letter-grid"><legend>${t('account.letter.pick')}</legend><div class="letter-tiles">${letters.map((letter, i) => html`<label class="letter-choice"><input type="radio" name="letter" value="${letter}"${i === 0 ? html` required` : ''}><span>${letter}</span></label>`)}</div></fieldset>
+<p class="form-actions"><button class="button" type="submit">${t('account.letter.claim')}</button></p></form>
+<form class="letter-decline" method="post" action="/me/letter/decline">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">${t('account.letter.decline')}</button></form>
+<p class="note account-foot">${t('account.letter.foot')}</p>`;
 }
 
 export function linkedPage(ctx, { session, account, flash, offer = null }) {
-    return page(ctx, 'Discord linked', html`<h1>Your Discord account is linked</h1>
+    const { t, ti } = textOf(ctx);
+    return page(ctx, t('account.linked.title'), html`<h1>${t('account.linked.heading')}</h1>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
-${offer ? html`<section class="account-section"><h2>Your 1-letter username</h2>${letterForm(session, offer.letters)}</section>` : ''}
-<section class="account-section"><p class="form-actions"><a class="button${offer ? ' button-quiet' : ''}" href="/me">Go to My record</a><a class="button button-quiet" href="/me/account">Account settings</a></p>
-<p class="note">Logged in as <strong>${account.username}</strong>.</p></section>`);
+${offer ? html`<section class="account-section"><h2>${t('account.letter.heading')}</h2>${letterForm(t, session, offer.letters)}</section>` : ''}
+<section class="account-section"><p class="form-actions"><a class="button${offer ? ' button-quiet' : ''}" href="/me">${t('account.linked.toRecord')}</a><a class="button button-quiet" href="/me/account">${t('account.common.accountSettings')}</a></p>
+<p class="note">${ti('account.common.loggedInAs', { username: account.username })}</p></section>`);
 }
 
 export function recoveryCodesPage(ctx, { codes }) {
-    return page(ctx, 'Recovery codes', html`<h1>Two-step login is on</h1>
-<p class="lead">Save these recovery codes somewhere safe. Each one works once, if you lose your authenticator app. They are shown only now.</p>
+    const { t } = textOf(ctx);
+    return page(ctx, t('account.recovery.title'), html`<h1>${t('account.recovery.heading')}</h1>
+<p class="lead">${t('account.recovery.lead')}</p>
 <ul class="recovery-codes">${codes.map((code) => html`<li><code>${code}</code></li>`)}</ul>
-<p class="form-actions"><a class="button" href="/me/account">Back to Account settings</a></p>`);
+<p class="form-actions"><a class="button" href="/me/account">${t('account.recovery.back')}</a></p>`);
 }
 
 export function totpSetupPage(ctx, { session, pending, secretText, uri, error = null }) {
-    return page(ctx, 'Turn on two-step login', html`<h1>Turn on two-step login</h1>
-<p class="lead">Add Mewvo to an authenticator app, then enter the 6-digit code it shows.</p>
+    const { t, ti } = textOf(ctx);
+    return page(ctx, t('account.totp.title'), html`<h1>${t('account.totp.heading')}</h1>
+<p class="lead">${t('account.totp.lead')}</p>
 ${notices({ error })}
-<ol class="account-steps"><li>In your authenticator app, choose to add an account by entering a key.</li>
-<li>Enter this key: <code class="key-code">${secretText}</code> (time based, 6 digits, 30 seconds).</li>
-<li>Or paste this address, if your app accepts it: <code class="key-link">${uri}</code></li></ol>
+<ol class="account-steps"><li>${t('account.totp.stepAdd')}</li>
+<li>${ti('account.totp.stepKey', { key: html`<code class="key-code">${secretText}</code>` })}</li>
+<li>${ti('account.totp.stepUri', { uri: html`<code class="key-link">${uri}</code>` })}</li></ol>
 <form class="form-stack" method="post" action="/me/account/2fa/enable">${csrfField(session.csrf)}<input type="hidden" name="pending" value="${pending}">
-${field('ts-code', 'Code from the app', html`<input id="ts-code" name="code" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code">`)}
-<p class="form-actions"><button class="button" type="submit">Turn on</button><a href="/me/account">Cancel</a></p></form>`);
+${field('ts-code', t('account.fields.codeFromApp'), html`<input id="ts-code" name="code" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code">`)}
+<p class="form-actions"><button class="button" type="submit">${t('account.totp.submit')}</button><a href="/me/account">${t('account.common.cancel')}</a></p></form>`);
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const PLAN_SOURCE = { bonus: 'Early-account bonus', purchase: 'A purchase', key: 'A key', owner: 'Given by the bot owner' };
+// Where the plan came from (premium source → key under account.plan.source).
+const PLAN_SOURCES = new Set(['bonus', 'purchase', 'key', 'owner']);
 
 /** "183 days left" / "1 day left" / "Ends today" (less than a day). Pure. */
-export function daysLeftText(expiresAt, now = Date.now()) {
+export function daysLeftText(expiresAt, now = Date.now(), { t } = translator()) {
     const days = Math.floor((new Date(expiresAt).getTime() - now) / DAY_MS);
-    if (days < 1) return 'Ends today';
-    return `${days} day${days === 1 ? '' : 's'} left`;
+    if (days < 1) return t('account.plan.endsToday');
+    return t(days === 1 ? 'account.plan.dayLeft' : 'account.plan.daysLeft', { days });
 }
 
 /**
  * The early-account bonus line for Account settings, or null when this Discord account has no
  * bonus record. bonus: a member_account_bonuses row. Pure.
  */
-export function bonusStatusText(bonus) {
+export function bonusStatusText(bonus, { t, ti } = translator()) {
     if (!bonus) return null;
-    const n = `Link #${bonus.link_number}`;
-    if (bonus.pro_granted_at) return html`${n}: ${PRO_BONUS_LABEL} of Pro, added ${when(bonus.pro_granted_at)}.`;
-    if (bonus.pro_skip_reason) return `${n}: ${PRO_BONUS_LABEL} of Pro were due but not added. ${bonus.pro_skip_reason}`;
-    if (Number(bonus.link_number) > PRO_BONUS_LIMIT) return `${n}: no Pro bonus (it went to the first ${PRO_BONUS_LIMIT} links).`;
-    return `${n}: no Pro bonus.`;
+    const n = bonus.link_number;
+    if (bonus.pro_granted_at) return ti('account.bonus.granted', { n, bonus: PRO_BONUS_LABEL, date: when(bonus.pro_granted_at) });
+    if (bonus.pro_skip_reason) return t('account.bonus.skipped', { n, bonus: PRO_BONUS_LABEL, reason: bonus.pro_skip_reason });
+    if (Number(bonus.link_number) > PRO_BONUS_LIMIT) return t('account.bonus.tooLate', { n, limit: PRO_BONUS_LIMIT });
+    return t('account.bonus.none', { n });
 }
 
 /** "Your plan" on Account settings: plan (or Free), end date, days left, where it came from, the bonus. */
 function planSection(ctx, { plan, bonus, now }) {
-    const bonusLine = bonusStatusText(bonus);
+    const text = textOf(ctx);
+    const { t } = text;
+    const bonusLine = bonusStatusText(bonus, text);
     const manage = ctx.billing
-        ? html`<a class="button button-quiet" href="/me/billing">Manage subscription</a>`
-        : html`<a class="button button-quiet" href="/pricing">See plans</a>`;
-    return html`<section class="account-section"><h2>Your plan</h2>
+        ? html`<a class="button button-quiet" href="/me/billing">${t('account.plan.manage')}</a>`
+        : html`<a class="button button-quiet" href="/pricing">${t('account.plan.seePlans')}</a>`;
+    return html`<section class="account-section"><h2>${t('account.plan.heading')}</h2>
 <dl class="summary-rows account-facts">
-<div><dt>Plan</dt><dd>${plan ? html`<strong>${planName(plan.plan_id)}</strong>` : 'Free'}</dd></div>
-${plan ? html`<div><dt>Active until</dt><dd>${when(plan.expires_at)} <small class="note">(${daysLeftText(plan.expires_at, now)})</small></dd></div>
-${PLAN_SOURCE[plan.source] ? html`<div><dt>Last added by</dt><dd>${PLAN_SOURCE[plan.source]}</dd></div>` : ''}` : ''}
-${bonusLine ? html`<div><dt>Early-account bonus</dt><dd>${bonusLine}</dd></div>` : ''}</dl>
+<div><dt>${t('account.plan.plan')}</dt><dd>${plan ? html`<strong>${planName(plan.plan_id)}</strong>` : t('account.plan.free')}</dd></div>
+${plan ? html`<div><dt>${t('account.plan.activeUntil')}</dt><dd>${when(plan.expires_at)} <small class="note">(${daysLeftText(plan.expires_at, now, text)})</small></dd></div>
+${PLAN_SOURCES.has(plan.source) ? html`<div><dt>${t('account.plan.lastAddedBy')}</dt><dd>${t(`account.plan.source.${plan.source}`)}</dd></div>` : ''}` : ''}
+${bonusLine ? html`<div><dt>${t('account.plan.bonus')}</dt><dd>${bonusLine}</dd></div>` : ''}</dl>
 <p class="form-actions">${manage}</p>
-<p class="note account-foot">The plan belongs to your Discord account, not to this Mewvo account.</p></section>`;
+<p class="note account-foot">${t('account.plan.foot')}</p></section>`;
 }
 
 export function accountSettingsPage(ctx, { session, account, flash = null, error = null, recoveryLeft = 0, canClaim = false, plan = null, bonus = null, now = Date.now() }) {
+    const { t, ti } = textOf(ctx);
     const twoStep = Boolean(account.totp_enabled_at);
     const pw = (id) => html`<input id="${id}" name="password" type="password" required maxlength="${PASSWORD_MAX}" autocomplete="current-password">`;
     const code = (id) => html`<input id="${id}" name="code" required maxlength="20" autocomplete="one-time-code" autocapitalize="none" spellcheck="false">`;
     return layout(ctx, {
-        title: 'Account settings', active: 'me',
-        body: html`<div class="wrap page"><div class="account account-settings"><h1>Account settings</h1>
+        title: t('account.settings.title'), active: 'me',
+        body: html`<div class="wrap page"><div class="account account-settings"><h1>${t('account.settings.title')}</h1>
 ${notices({ flash, error })}
-<section class="account-section"><h2>Your account</h2>
+<section class="account-section"><h2>${t('account.settings.yourAccount')}</h2>
 <dl class="summary-rows account-facts">
-<div><dt>Username</dt><dd>${account.username}</dd></div>
-<div><dt>Discord</dt><dd>${account.discord_user_id ? html`${account.discord_username || 'Linked'} <small class="note">(ID ${account.discord_user_id})</small>` : 'Not linked'}</dd></div>
-<div><dt>Created</dt><dd>${when(account.created_at)}</dd></div></dl>
-<div class="form-actions">${canClaim ? html`<a class="button" href="/me/linked">Claim your 1-letter username</a>` : ''}<form method="post" action="/me/account/unlink">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">Unlink Discord</button></form></div>
-<p class="note account-foot">A Mewvo account needs a linked Discord account: after unlinking, you can only link one again (or delete the account). A plan stays with your Discord account. A Discord account gets the early-account bonus only once.</p></section>
+<div><dt>${t('account.fields.username')}</dt><dd>${account.username}</dd></div>
+<div><dt>${t('account.settings.discord')}</dt><dd>${account.discord_user_id ? html`${account.discord_username || t('account.settings.linked')} <small class="note">(${t('account.settings.discordId', { id: account.discord_user_id })})</small>` : t('account.settings.notLinked')}</dd></div>
+<div><dt>${t('account.settings.created')}</dt><dd>${when(account.created_at)}</dd></div></dl>
+<div class="form-actions">${canClaim ? html`<a class="button" href="/me/linked">${t('account.settings.claimLetter')}</a>` : ''}<form method="post" action="/me/account/unlink">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">${t('account.settings.unlink')}</button></form></div>
+<p class="note account-foot">${t('account.settings.unlinkFoot')}</p></section>
 
 ${planSection(ctx, { plan, bonus, now })}
 
-<section class="account-section"><h2>Change password</h2>
+<section class="account-section"><h2>${t('account.password.heading')}</h2>
 <form class="form-stack" method="post" action="/me/account/password">${csrfField(session.csrf)}
-${field('cp-current', 'Current password', pw('cp-current'))}
-${field('cp-new', 'New password', html`<input id="cp-new" name="new_password" type="password" required minlength="${PASSWORD_MIN}" maxlength="${PASSWORD_MAX}" autocomplete="new-password">`, `At least ${PASSWORD_MIN} characters. You stay logged in here; other logins end.`)}
-<p class="form-actions"><button class="button" type="submit">Change password</button></p></form></section>
+${field('cp-current', t('account.password.current'), pw('cp-current'))}
+${field('cp-new', t('account.fields.newPassword'), html`<input id="cp-new" name="new_password" type="password" required minlength="${PASSWORD_MIN}" maxlength="${PASSWORD_MAX}" autocomplete="new-password">`, t('account.password.newHint', { min: PASSWORD_MIN }))}
+<p class="form-actions"><button class="button" type="submit">${t('account.password.submit')}</button></p></form></section>
 
-<section class="account-section"><h2>Two-step login</h2>
+<section class="account-section"><h2>${t('account.twoStepSettings.heading')}</h2>
 ${twoStep
-        ? html`<p>Two-step login is <strong>on</strong> since ${when(account.totp_enabled_at)}. Recovery codes left: ${recoveryLeft}.</p>
+        ? html`<p>${ti('account.twoStepSettings.on', { date: when(account.totp_enabled_at), left: recoveryLeft })}</p>
 <form class="form-stack" method="post" action="/me/account/2fa/disable">${csrfField(session.csrf)}
-${field('td-password', 'Password', pw('td-password'))}
-${field('td-code', 'Code from the app, or a recovery code', code('td-code'))}
-<p class="form-actions"><button class="button button-quiet" type="submit">Turn off two-step login</button></p></form>`
-        : html`<p>Two-step login is <strong>off</strong>. When it is on, you also enter a code from an authenticator app when you log in.</p>
-<form method="post" action="/me/account/2fa/start">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">Turn on two-step login</button></form>`}</section>
+${field('td-password', t('account.fields.password'), pw('td-password'))}
+${field('td-code', t('account.fields.codeOrRecovery'), code('td-code'))}
+<p class="form-actions"><button class="button button-quiet" type="submit">${t('account.twoStepSettings.turnOff')}</button></p></form>`
+        : html`<p>${ti('account.twoStepSettings.off')}</p>
+<form method="post" action="/me/account/2fa/start">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">${t('account.twoStepSettings.turnOn')}</button></form>`}</section>
 
-<section class="account-section"><h2>Your data</h2>
-<p class="form-actions"><a class="button button-quiet" href="/me/data" download>Download my data</a></p></section>
+<section class="account-section"><h2>${t('account.settings.yourData')}</h2>
+<p class="form-actions"><a class="button button-quiet" href="/me/data" download>${t('account.settings.download')}</a></p></section>
 
-<section class="account-section"><h2>Delete account</h2>
-<p>This deletes your Mewvo account: username, password and two-step login. It does not delete moderation records or a plan on your Discord account. See the <a href="/privacy">Privacy Policy</a>.</p>
+<section class="account-section"><h2>${t('account.delete.heading')}</h2>
+<p>${ti('account.delete.lead')}</p>
 <form class="form-stack" method="post" action="/me/account/delete">${csrfField(session.csrf)}
-${field('da-password', 'Password', pw('da-password'))}
-${twoStep ? field('da-code', 'Code from the app, or a recovery code', code('da-code')) : ''}
-<div class="form-check"><input id="da-sure" name="sure" type="checkbox" value="yes" required><label for="da-sure">Yes, delete my account.</label></div>
-<p class="form-actions"><button class="button button-danger" type="submit">Delete my account</button></p></form></section>
+${field('da-password', t('account.fields.password'), pw('da-password'))}
+${twoStep ? field('da-code', t('account.fields.codeOrRecovery'), code('da-code')) : ''}
+<div class="form-check"><input id="da-sure" name="sure" type="checkbox" value="yes" required><label for="da-sure">${t('account.delete.confirm')}</label></div>
+<p class="form-actions"><button class="button button-danger" type="submit">${t('account.delete.submit')}</button></p></form></section>
 
-<section class="account-section"><form method="post" action="/me/logout">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">Log out</button></form></section></div></div>`,
+<section class="account-section"><form method="post" action="/me/logout">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">${t('account.common.logOut')}</button></form></section></div></div>`,
     });
 }
 
 export function deletedPage(ctx) {
-    return page(ctx, 'Account deleted', html`<h1>Your account was deleted</h1>
-<p class="lead">Your Mewvo account is gone and you are logged out. A plan on your Discord account stays with it, and moderation records are not affected.</p>
-<p class="form-actions"><a class="button" href="/">Home</a></p>`);
+    const { t } = textOf(ctx);
+    return page(ctx, t('account.deleted.title'), html`<h1>${t('account.deleted.heading')}</h1>
+<p class="lead">${t('account.deleted.lead')}</p>
+<p class="form-actions"><a class="button" href="/">${t('account.deleted.home')}</a></p>`);
 }
 
-export function accountMessagePage(ctx, title, message, { href = '/me', label = 'Back to My record' } = {}) {
-    return page(ctx, title, html`<h1>${title}</h1><p class="lead">${message}</p><p class="form-actions"><a class="button" href="${href}">${label}</a></p>`);
+export function accountMessagePage(ctx, title, message, { href = '/me', label = null } = {}) {
+    const { t } = textOf(ctx);
+    return page(ctx, title, html`<h1>${title}</h1><p class="lead">${message}</p><p class="form-actions"><a class="button" href="${href}">${label ?? t('account.common.backToRecord')}</a></p>`);
 }

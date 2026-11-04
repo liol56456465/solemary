@@ -55,6 +55,7 @@ import { premiumSettings, premiumStore } from '../billing/premiumService.js';
 import { ACCOUNT_EXPORT_NOTE, EXPORT_FORMAT, buildDataExport, exportFileName } from '../privacy/dataExport.js';
 import { getFromDb } from '../../utils/database/wrapper.js';
 import { createAccountHandlers, memberAccountSettings } from './accountRoutes.js';
+import { textOf, translator } from './i18n.js';
 import { accountStore as defaultAccountStore } from '../accounts/accountStore.js';
 
 export const MEMBER_BASE = '/me';
@@ -154,13 +155,12 @@ export function memberPortalSettings(env = process.env) {
 // ── The record: raw rows → a view with only member-safe fields ─────────────
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const TYPE_LABEL = { ban: 'Ban', kick: 'Kick', mute: 'Mute', warn: 'Warning' };
-const APPEAL_STATUS = {
-    pending: 'Pending: the administrators have not decided yet',
-    accepted: 'Accepted',
-    denied: 'Denied',
-    closed: 'Closed',
-};
+// Labels shown to the member: keys portal.caseType.<type> and portal.appealStatus.<status>
+// (an unknown value is shown as it is).
+const CASE_TYPES = new Set(['ban', 'kick', 'mute', 'warn']);
+const APPEAL_STATUSES = new Set(['pending', 'accepted', 'denied', 'closed']);
+const typeLabel = (t, type) => (CASE_TYPES.has(type) ? t(`portal.caseType.${type}`) : type);
+const appealStatusLabel = (t, status) => (APPEAL_STATUSES.has(status) ? t(`portal.appealStatus.${status}`) : status);
 
 const time = (value) => (value ? new Date(value).getTime() : NaN);
 
@@ -173,38 +173,39 @@ export function memberAccountsOn(env = process.env) {
     return memberAccountSettings(env, memberPortalSettings(env)).enabled;
 }
 
-export function appealInfo(record, lastAppeal, { now = Date.now(), config = enforcementConfig } = {}) {
-    if (record.voided_at) return { appealable: false, text: 'Voided: nothing to appeal' };
-    if (record.status === 'revoked') return { appealable: false, text: 'Already lifted' };
-    if (record.unappealable) return { appealable: false, text: 'Cannot be appealed' };
+export function appealInfo(record, lastAppeal, { now = Date.now(), config = enforcementConfig, text: { t } = translator() } = {}) {
+    if (record.voided_at) return { appealable: false, text: t('portal.appeal.voided') };
+    if (record.status === 'revoked') return { appealable: false, text: t('portal.appeal.lifted') };
+    if (record.unappealable) return { appealable: false, text: t('portal.appeal.unappealable') };
     let until = null;
     if (record.type === 'ban' || record.type === 'mute') {
         const inEffect = OPEN_STATUSES.includes(record.status) && (!record.expires_at || time(record.expires_at) > now);
-        if (!inEffect) return { appealable: false, text: 'Ended: nothing to appeal' };
-        if (record.appeal_deadline && time(record.appeal_deadline) <= now) return { appealable: false, text: 'The appeal window has closed' };
+        if (!inEffect) return { appealable: false, text: t('portal.appeal.ended') };
+        if (record.appeal_deadline && time(record.appeal_deadline) <= now) return { appealable: false, text: t('portal.appeal.deadlinePassed') };
         until = record.appeal_deadline || record.expires_at || null;
     } else {
         const end = time(record.created_at) + config.appealWindowMs;
-        if (!(end > now)) return { appealable: false, text: `The appeal window (${Math.round(config.appealWindowMs / DAY_MS)} days) has closed` };
+        if (!(end > now)) return { appealable: false, text: t('portal.appeal.windowClosed', { days: Math.round(config.appealWindowMs / DAY_MS) }) };
         until = new Date(end);
     }
-    if (lastAppeal?.status === 'pending') return { appealable: false, text: 'Appeal pending' };
+    if (lastAppeal?.status === 'pending') return { appealable: false, text: t('portal.appeal.pending') };
     if (lastAppeal?.status === 'denied' && lastAppeal.decided_at) {
         const retry = time(lastAppeal.decided_at) + config.appealCooldownMs;
-        if (retry > now) return { appealable: false, text: 'Appeal denied; you can appeal again from', from: new Date(retry) };
+        if (retry > now) return { appealable: false, text: t('portal.appeal.deniedRetry'), from: new Date(retry) };
     }
-    return { appealable: true, until: until ? new Date(until) : null, text: 'Can be appealed' };
+    return { appealable: true, until: until ? new Date(until) : null, text: t('portal.appeal.appealable') };
 }
 
 /** A member-facing status: caseStatusLabel, with plainer words for warnings and kicks. */
-function memberStatus(record, countedCodes, appealStatus) {
-    if (record.is_imported) return 'history only (imported, does not count)';
+function memberStatus(t, record, countedCodes, appealStatus) {
+    if (record.is_imported) return t('portal.status.imported');
     const label = caseStatusLabel(record, appealStatus);
-    if (label === 'voided') return 'voided: no longer counts';
+    if (label === 'voided') return t('portal.status.voided');
     if (record.status === 'active' && record.type === 'warn') {
-        return countedCodes.has(record.case_code) ? 'counts now' : 'on record, no longer counts';
+        return t(countedCodes.has(record.case_code) ? 'portal.status.counts' : 'portal.status.noLongerCounts');
     }
-    if (record.status === 'active' && record.type === 'kick') return 'on record';
+    if (record.status === 'active' && record.type === 'kick') return t('portal.status.onRecord');
+    // caseStatusLabel's own wording (caseService.js; not in the website catalog yet).
     return label;
 }
 
@@ -212,7 +213,8 @@ function memberStatus(record, countedCodes, appealStatus) {
  * The page's view model from the service results. Only these fields reach the page, so no
  * internal column can leak by accident. Pure, for tests.
  */
-export function buildRecordView({ standing, cases, appeals, now = Date.now(), config = enforcementConfig }) {
+export function buildRecordView({ standing, cases, appeals, now = Date.now(), config = enforcementConfig, text = translator() }) {
+    const { t } = text;
     const rows = (cases || []).filter((row) => !row.is_test);
     const codes = new Set(rows.map((row) => row.case_code));
     const ownAppeals = (appeals || []).filter((appeal) => codes.has(appeal.case_code));
@@ -234,19 +236,19 @@ export function buildRecordView({ standing, cases, appeals, now = Date.now(), co
         activeMute: active(standing.activeMute),
         cases: rows.map((row) => ({
             code: row.case_code,
-            type: TYPE_LABEL[row.type] || row.type,
+            type: typeLabel(t, row.type),
             reason: row.reason,
             by: row.moderator_username,
             createdAt: row.created_at,
             endsAt: row.type === 'ban' || row.type === 'mute' ? row.expires_at || null : null,
             permanent: row.type === 'ban' && !row.expires_at,
-            status: memberStatus(row, counted, latest.get(row.case_code)),
-            appeal: appealInfo(row, lastBlocking.get(row.case_code), { now, config }),
+            status: memberStatus(t, row, counted, latest.get(row.case_code)),
+            appeal: appealInfo(row, lastBlocking.get(row.case_code), { now, config, text }),
         })),
         appeals: ownAppeals.map((appeal) => ({
             code: appeal.case_code,
-            type: TYPE_LABEL[appeal.type] || appeal.type,
-            status: APPEAL_STATUS[appeal.status] || appeal.status,
+            type: typeLabel(t, appeal.type),
+            status: appealStatusLabel(t, appeal.status),
             filedAt: appeal.created_at,
             decidedAt: appeal.decided_at || null,
         })),
@@ -261,62 +263,70 @@ function when(value) {
     return date && !Number.isNaN(date.getTime()) ? html`<time datetime="${date.toISOString()}">${formatDate(date)}</time>` : '-';
 }
 
-function appealCell(appeal) {
-    if (appeal.appealable) return appeal.until ? html`Until ${when(appeal.until)}` : 'Yes';
+function appealCell({ t, ti }, appeal) {
+    if (appeal.appealable) return appeal.until ? ti('portal.appeal.until', { date: when(appeal.until) }) : t('portal.appeal.yes');
     return appeal.from ? html`${appeal.text} ${when(appeal.from)}` : appeal.text;
 }
 
-function appealHint(ctx) {
+function appealHint({ ti }, ctx) {
     return ctx.supportInvite
-        ? html`<p class="note">Appeal from the appeal panel in Discord: <a href="${ctx.supportInvite}" rel="noopener">join the support server</a> and press <strong>Appeal</strong> with the case code. Nothing can be appealed from this page.</p>`
-        : html`<p class="note">Appeal from the appeal panel in Discord with the case code. Nothing can be appealed from this page.</p>`;
+        ? html`<p class="note">${ti('portal.record.appealHintInvite', { invite: ctx.supportInvite })}</p>`
+        : html`<p class="note">${ti('portal.record.appealHint')}</p>`;
 }
 
 export function loginPage(ctx) {
+    const { t, ti } = textOf(ctx);
     return layout(ctx, {
-        title: 'My record', active: 'me',
-        body: html`<div class="wrap page prose"><h1>My record</h1>
-<p class="lead">See your own moderation record in ${enforcementConfig.serverName}: your warnings, warning-ladder level, any active ban or mute, your cases and your appeals.</p>
-<p><a class="button" href="${MEMBER_BASE}/login">Log in with Discord</a>${ctx.accounts ? html` <a class="button button-quiet" href="${MEMBER_BASE}/login-password">Log in with a Mewvo account</a>` : ''}</p>
-<p class="note">Mewvo asks Discord only who you are (the identify permission): no email, no servers, nothing else. You only ever see your own record. The login lasts one hour.</p>
-${ctx.accounts ? html`<p class="note">No Mewvo account yet? <a href="${MEMBER_BASE}/signup">Create one</a> to log in with a username and password.</p>` : ''}</div>`,
+        title: t('portal.record.title'), active: 'me',
+        body: html`<div class="wrap page prose"><h1>${t('portal.record.title')}</h1>
+<p class="lead">${t('portal.login.lead', { server: enforcementConfig.serverName })}</p>
+<p><a class="button" href="${MEMBER_BASE}/login">${t('portal.login.withDiscord')}</a>${ctx.accounts ? html` <a class="button button-quiet" href="${MEMBER_BASE}/login-password">${t('portal.login.withAccount')}</a>` : ''}</p>
+<p class="note">${t('portal.login.note')}</p>
+${ctx.accounts ? html`<p class="note">${ti('portal.login.signup', { href: `${MEMBER_BASE}/signup` })}</p>` : ''}</div>`,
     });
 }
 
 export function recordPage(ctx, { session, view }) {
+    const text = textOf(ctx);
+    const { t, ti } = text;
     const warn = view.warnings;
+    const code = (value) => html`<code>${value}</code>`;
     const activeRows = [
-        view.activeBan ? html`<li>Ban <code>${view.activeBan.code}</code>: ${view.activeBan.endsAt ? html`ends ${when(view.activeBan.endsAt)}` : 'permanent'}</li>` : '',
-        view.activeMute ? html`<li>Mute <code>${view.activeMute.code}</code>: ends ${when(view.activeMute.endsAt)}</li>` : '',
+        view.activeBan ? html`<li>${view.activeBan.endsAt
+            ? ti('portal.record.activeBanEnds', { code: code(view.activeBan.code), date: when(view.activeBan.endsAt) })
+            : ti('portal.record.activeBanPermanent', { code: code(view.activeBan.code) })}</li>` : '',
+        view.activeMute ? html`<li>${ti('portal.record.activeMuteEnds', { code: code(view.activeMute.code), date: when(view.activeMute.endsAt) })}</li>` : '',
     ].filter(Boolean);
+    const col = (key) => html`<th scope="col">${t(`portal.record.column.${key}`)}</th>`;
     return layout(ctx, {
-        title: 'My record', active: 'me',
-        body: html`<div class="wrap page record"><div class="record-head"><div><h1>My record</h1>
-<p class="lead">Your moderation record in ${enforcementConfig.serverName}, logged in as <strong>${session.username}</strong>. Only you can see this.</p></div>
-<div class="record-links">${session.accountId ? html`<a class="button button-quiet" href="${MEMBER_BASE}/account">Account settings</a> ` : ''}<a class="button button-quiet" href="${MEMBER_BASE}/data" download>Download my data</a> ${ctx.billing ? html`<a class="button button-quiet" href="${MEMBER_BASE}/billing">Subscription</a> ` : ''}<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">Log out</button></form></div></div>
+        title: t('portal.record.title'), active: 'me',
+        body: html`<div class="wrap page record"><div class="record-head"><div><h1>${t('portal.record.title')}</h1>
+<p class="lead">${ti('portal.record.lead', { server: enforcementConfig.serverName, username: session.username })}</p></div>
+<div class="record-links">${session.accountId ? html`<a class="button button-quiet" href="${MEMBER_BASE}/account">${t('portal.record.accountSettings')}</a> ` : ''}<a class="button button-quiet" href="${MEMBER_BASE}/data" download>${t('portal.record.download')}</a> ${ctx.billing ? html`<a class="button button-quiet" href="${MEMBER_BASE}/billing">${t('portal.record.subscription')}</a> ` : ''}<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">${t('portal.record.logOut')}</button></form></div></div>
 <ul class="record-summary">
-<li class="feature"><h2>Warnings</h2><p class="record-big">${warn.count} of ${warn.threshold}</p><p>Counted warnings at your level. Warnings do not expire.</p></li>
-<li class="feature"><h2>Warning ladder</h2><p class="record-big">Level ${view.ladder.level} of 3</p><p>${view.ladder.next}</p></li>
-<li class="feature"><h2>Active now</h2>${activeRows.length ? html`<ul class="record-active">${activeRows}</ul>` : html`<p>No active ban or mute.</p>`}</li>
+<li class="feature"><h2>${t('portal.record.warnings')}</h2><p class="record-big">${t('portal.record.warningsCount', { count: warn.count, threshold: warn.threshold })}</p><p>${t('portal.record.warningsNote')}</p></li>
+<li class="feature"><h2>${t('portal.record.ladder')}</h2><p class="record-big">${t('portal.record.ladderLevel', { level: view.ladder.level, max: 3 })}</p><p>${view.ladder.next}</p></li>
+<li class="feature"><h2>${t('portal.record.activeNow')}</h2>${activeRows.length ? html`<ul class="record-active">${activeRows}</ul>` : html`<p>${t('portal.record.nothingActive')}</p>`}</li>
 </ul>
-<h2 id="cases-title">Cases</h2>
-${view.cases.length ? html`<div class="table-wrap" role="region" aria-labelledby="cases-title" tabindex="0"><table class="record-table"><thead><tr><th scope="col">Case</th><th scope="col">Type</th><th scope="col">Reason</th><th scope="col">By</th><th scope="col">Date</th><th scope="col">Ends</th><th scope="col">Status</th><th scope="col">Appeal</th></tr></thead>
-<tbody>${view.cases.map((c) => html`<tr><td><code>${c.code}</code></td><td>${c.type}</td><td>${c.reason}</td><td>${c.by}</td><td>${when(c.createdAt)}</td><td>${c.permanent ? 'permanent' : when(c.endsAt)}</td><td>${c.status}</td><td>${appealCell(c.appeal)}</td></tr>`)}</tbody></table></div>
-${view.truncated ? html`<p class="note">Showing your newest ${view.cases.length} cases.</p>` : ''}`
-        : html`<p>You have no cases in ${enforcementConfig.serverName}.</p>`}
-<h2 id="appeals-title">Appeals</h2>
-${view.appeals.length ? html`<div class="table-wrap" role="region" aria-labelledby="appeals-title" tabindex="0"><table class="record-table"><thead><tr><th scope="col">Case</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Filed</th><th scope="col">Decided</th></tr></thead>
+<h2 id="cases-title">${t('portal.record.cases')}</h2>
+${view.cases.length ? html`<div class="table-wrap" role="region" aria-labelledby="cases-title" tabindex="0"><table class="record-table"><thead><tr>${col('case')}${col('type')}${col('reason')}${col('by')}${col('date')}${col('ends')}${col('status')}${col('appeal')}</tr></thead>
+<tbody>${view.cases.map((c) => html`<tr><td><code>${c.code}</code></td><td>${c.type}</td><td>${c.reason}</td><td>${c.by}</td><td>${when(c.createdAt)}</td><td>${c.permanent ? t('portal.record.permanent') : when(c.endsAt)}</td><td>${c.status}</td><td>${appealCell(text, c.appeal)}</td></tr>`)}</tbody></table></div>
+${view.truncated ? html`<p class="note">${t('portal.record.truncated', { count: view.cases.length })}</p>` : ''}`
+        : html`<p>${t('portal.record.noCases', { server: enforcementConfig.serverName })}</p>`}
+<h2 id="appeals-title">${t('portal.record.appeals')}</h2>
+${view.appeals.length ? html`<div class="table-wrap" role="region" aria-labelledby="appeals-title" tabindex="0"><table class="record-table"><thead><tr>${col('case')}${col('type')}${col('status')}${col('filed')}${col('decided')}</tr></thead>
 <tbody>${view.appeals.map((a) => html`<tr><td><code>${a.code}</code></td><td>${a.type}</td><td>${a.status}</td><td>${when(a.filedAt)}</td><td>${when(a.decidedAt)}</td></tr>`)}</tbody></table></div>`
-        : html`<p>You have not filed any appeals.</p>`}
-${appealHint(ctx)}</div>`,
+        : html`<p>${t('portal.record.noAppeals')}</p>`}
+${appealHint(text, ctx)}</div>`,
     });
 }
 
 function messagePage(ctx, title, message, { login = false } = {}) {
+    const { t } = textOf(ctx);
     return layout(ctx, {
         title, active: 'me',
         body: html`<div class="wrap page prose"><h1>${title}</h1><p class="lead">${message}</p>
-<p><a class="button" href="${login ? `${MEMBER_BASE}/login` : MEMBER_BASE}">${login ? 'Log in again' : 'Back to My record'}</a></p></div>`,
+<p><a class="button" href="${login ? `${MEMBER_BASE}/login` : MEMBER_BASE}">${t(login ? 'portal.message.logInAgain' : 'portal.message.backToRecord')}</a></p></div>`,
     });
 }
 
@@ -361,7 +371,12 @@ export function createMemberPortal({
     const viewers = new AsyncLocalStorage();
     const ctx = () => ({ ...context(), memberPortal: true, billing: Boolean(premium), accounts: Boolean(accounts), viewer: viewers.getStore() || null });
     const send = (res, status, page) => res.status(status).type('html').send(page);
-    const fail = (res, status, title, message, options) => send(res, status, messagePage(ctx(), title, message, options));
+    // A message page from two keys: portal.errors.<name>.title and .message.
+    const fail = (res, status, name, options) => {
+        const page = ctx();
+        const { t } = textOf(page);
+        return send(res, status, messagePage(page, t(`portal.errors.${name}.title`), t(`portal.errors.${name}.message`), options));
+    };
 
     function headers(req, res, next) {
         res.set(MEMBER_SECURITY_HEADERS);
@@ -373,7 +388,7 @@ export function createMemberPortal({
         return (req, res, next) => {
             if (limiter.allow(clientIp(req))) return next();
             res.set('Retry-After', '60');
-            return fail(res, 429, 'Slow down', 'Too many requests from your address. Wait a minute and try again.');
+            return fail(res, 429, 'slowDown');
         };
     }
 
@@ -432,10 +447,10 @@ export function createMemberPortal({
         res.append('Set-Cookie', clearCookie(MEMBER_STATE_COOKIE, cookieOptions));
         res.append('Set-Cookie', clearCookie(MEMBER_LINK_COOKIE, cookieOptions));
         res.append('Set-Cookie', clearCookie(MEMBER_FORGOT_COOKIE, cookieOptions));
-        if (req.query?.error) return fail(res, 400, 'Login cancelled', 'You did not authorize the login.', { login: true });
+        if (req.query?.error) return fail(res, 400, 'loginCancelled', { login: true });
         const code = str(req.query?.code, 200);
         if (!code || !states.consume(str(req.query?.state, 1000), cookies[MEMBER_STATE_COOKIE], key)) {
-            return fail(res, 400, 'Login expired', 'This login link is invalid, expired or already used.', { login: true });
+            return fail(res, 400, 'loginExpired', { login: true });
         }
         let me;
         try {
@@ -451,14 +466,14 @@ export function createMemberPortal({
             me = await discordFetch(fetchImpl, ME_URL, { headers: { Authorization: `Bearer ${token.access_token}` } });
         } catch (error) {
             logger.warn(`Member portal login failed: ${error.message}`);
-            return fail(res, 502, 'Login failed', 'Discord did not confirm the login. Try again.', { login: true });
+            return fail(res, 502, 'loginFailed', { login: true });
         }
-        if (!isSnowflake(String(me?.id || ''))) return fail(res, 502, 'Login failed', 'Discord did not return a user.', { login: true });
+        if (!isSnowflake(String(me?.id || ''))) return fail(res, 502, 'noUser', { login: true });
         const linkAccountId = accountHandlers ? linkTarget(cookies) : null;
         if (linkAccountId) {
             const current = await readSession(req);
             if (!current?.accountId || current.accountId !== linkAccountId) {
-                return fail(res, 400, 'Not linked', 'Log in to your Mewvo account in this browser first, then link Discord again.');
+                return fail(res, 400, 'linkOtherBrowser');
             }
             return accountHandlers.linkCallback(req, res, { session: current, discordUser: me });
         }
@@ -491,11 +506,11 @@ export function createMemberPortal({
                 data.listCasesForUser(guildId, session.userId, { limit: CASE_LIMIT }),
                 data.listUserAppeals(session.userId, APPEAL_LIMIT),
             ]);
-            view = buildRecordView({ standing, cases: cases?.rows || [], appeals });
+            view = buildRecordView({ standing, cases: cases?.rows || [], appeals, text: textOf(ctx()) });
         } catch (error) {
             logger.error(`Member portal: record of ${session.userId} could not be loaded: ${error.message}`);
             res.set('Retry-After', '60');
-            return fail(res, 503, 'Record unavailable', 'Your record could not be loaded because the database is not responding. This does not mean your record is clean: try again in a few minutes.');
+            return fail(res, 503, 'recordUnavailable');
         }
         return send(res, 200, recordPage(ctx(), { session, view }));
     }
@@ -503,8 +518,8 @@ export function createMemberPortal({
     /** GET /me/data: the member's own data as a JSON download (id from the session only). */
     async function dataExport(req, res) {
         const session = await readSession(req);
-        if (!session) return fail(res, 401, 'Log in first', 'Log in with Discord to download your data.', { login: true });
-        if (!session.userId && !session.accountId) return fail(res, 401, 'Log in first', 'Log in to download your data.', { login: true });
+        if (!session) return fail(res, 401, 'downloadLogin', { login: true });
+        if (!session.userId && !session.accountId) return fail(res, 401, 'downloadLoginAccount', { login: true });
         let file;
         try {
             const account = session.accountId && accounts ? await accounts.store.exportOf(session.accountId) : null;
@@ -517,7 +532,7 @@ export function createMemberPortal({
         } catch (error) {
             logger.error(`Member portal: data export of ${session.userId || `account ${session.accountId}`} failed: ${error.message}`);
             res.set('Retry-After', '60');
-            return fail(res, 503, 'Download unavailable', 'Your data could not be collected because the database is not responding. Try again in a few minutes.');
+            return fail(res, 503, 'downloadUnavailable');
         }
         const who = session.userId || `account ${session.accountId}`;
         logger.info(`Member portal: ${who} downloaded their data`);
@@ -528,9 +543,9 @@ export function createMemberPortal({
 
     async function logout(req, res) {
         const session = await readSession(req);
-        if (!session) return fail(res, 401, 'Logged out', 'You are not logged in.', { login: true });
+        if (!session) return fail(res, 401, 'notLoggedIn', { login: true });
         if (!isSameOrigin(req, settings.publicOrigin) || !safeEqual(str(req.body?.csrf, 100), session.csrf)) {
-            return fail(res, 403, 'Not allowed', 'The logout request did not come from this page.');
+            return fail(res, 403, 'logoutNotAllowed');
         }
         await sessions.destroy(session.id);
         res.append('Set-Cookie', clearCookie(MEMBER_SESSION_COOKIE, cookieOptions));
@@ -538,7 +553,7 @@ export function createMemberPortal({
     }
 
     function notFound(req, res) {
-        return fail(res, 404, 'Not found', 'There is no such page.');
+        return fail(res, 404, 'notFound');
     }
 
     // Subscriptions (billing.js): only with a premium store (PREMIUM_TEST_CHECKOUT=true).
@@ -575,7 +590,7 @@ export function createMemberPortal({
                 logger.error(`Member portal ${req.method} ${req.path} failed: ${error.message}`);
                 if (res.headersSent) return undefined;
                 res.set('Retry-After', '60');
-                return fail(res, 503, 'Try again later', 'This page could not be loaded because the database is not responding. Nothing was changed.');
+                return fail(res, 503, 'tryLater');
             }
         };
     }
@@ -592,7 +607,7 @@ export function createMemberPortal({
         } catch (error) {
             logger.warn(`Member portal: top bar could not read the session: ${error.message}`);
         }
-        const who = session ? { name: session.username || 'Account', accountId: session.accountId || null, csrf: session.csrf } : null;
+        const who = session ? { name: session.username || textOf(ctx()).t('portal.viewer.fallbackName'), accountId: session.accountId || null, csrf: session.csrf } : null;
         return viewers.run(who, next);
     }
 

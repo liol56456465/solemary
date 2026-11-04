@@ -36,6 +36,7 @@ import {
     accountMessagePage, accountSettingsPage, deletedPage, doneLoginPage, forgotPage, linkDiscordPage, linkedPage, passwordLoginPage,
     recoveryCodesPage, resetPage, signupPage, totpSetupPage, twoStepPage,
 } from './accountPages.js';
+import { textOf, translator } from './i18n.js';
 
 export const FORM_COOKIE = 'mewvo_me_form';
 export const TWO_STEP_COOKIE = 'mewvo_me_2fa';
@@ -79,17 +80,15 @@ export function memberAccountSettings(env = process.env, portal = null) {
 }
 
 /** The text shown after linking Discord, honest about what this link got. Pure. */
-export function bonusText(bonus) {
-    if (!bonus || bonus.kind === 'repeat') {
-        return 'Your Discord account is linked. This Discord account was linked to a Mewvo account before, so it does not get the early-account bonus again.';
-    }
-    const n = `You are number ${bonus.linkNumber} to link a Discord account to Mewvo.`;
-    if (bonus.pro && bonus.letter) return `${n} You get Mewvo Pro for ${PRO_BONUS_LABEL}, and you can pick a 1-letter username below.`;
-    if (bonus.pro) return `${n} You get Mewvo Pro for ${PRO_BONUS_LABEL}.`;
-    if (bonus.proNote && bonus.letter) return `${n} ${PRO_BONUS_LABEL} of Pro were due, but they could not be added: ${bonus.proNote} You can still pick a 1-letter username below.`;
-    if (bonus.proNote) return `${n} ${PRO_BONUS_LABEL} of Pro were due, but they could not be added: ${bonus.proNote}`;
-    if (bonus.letter) return `${n} You can pick a 1-letter username below.`;
-    return `${n} The early-account bonuses went to the first 100 accounts, so there is no bonus for this one.`;
+export function bonusText(bonus, { t } = translator()) {
+    if (!bonus || bonus.kind === 'repeat') return t('account.linkResult.repeat');
+    const params = { n: bonus.linkNumber, bonus: PRO_BONUS_LABEL, note: bonus.proNote };
+    if (bonus.pro && bonus.letter) return t('account.linkResult.proAndLetter', params);
+    if (bonus.pro) return t('account.linkResult.pro', params);
+    if (bonus.proNote && bonus.letter) return t('account.linkResult.proFailedAndLetter', params);
+    if (bonus.proNote) return t('account.linkResult.proFailed', params);
+    if (bonus.letter) return t('account.linkResult.letter', params);
+    return t('account.linkResult.none', params);
 }
 
 
@@ -117,7 +116,9 @@ export function createAccountHandlers(core) {
     const challenges = new Map(); // id → { accountId, expiresAt, tries }
     const resets = new Map(); // id → { accountId, discordUserId, expiresAt }
     const page = (res, status, html) => send(res, status, html);
-    const tooMany = (res, render) => { res.set('Retry-After', '60'); return page(res, 429, render('Too many tries. Wait a few minutes and try again.')); };
+    // Text for flash messages and errors, in the page's language (account.json).
+    const t = (k, params) => textOf(ctx()).t(k, params);
+    const tooMany = (res, render) => { res.set('Retry-After', '60'); return page(res, 429, render(t('account.errors.tooManyTries'))); };
     const home = (account) => (account.discord_user_id ? '/me' : '/me/link');
 
     // ── CSRF before login: a signed double-submit cookie ─────────────────
@@ -134,7 +135,7 @@ export function createAccountHandlers(core) {
         return Boolean(cookie) && isSameOrigin(req, settings.publicOrigin) && safeEqual(str(req.body?.csrf, 100), cookie);
     }
     const sessionOk = (req, session) => isSameOrigin(req, settings.publicOrigin) && safeEqual(str(req.body?.csrf, 100), session.csrf);
-    const notAllowed = (res) => page(res, 403, accountMessagePage(ctx(), 'Not allowed', 'This form did not come from this site, or it was open too long. Go back, reload the page and try again. Nothing was changed.'));
+    const notAllowed = (res) => page(res, 403, accountMessagePage(ctx(), t('account.errors.notAllowedTitle'), t('account.errors.notAllowed')));
 
     async function startSession(req, res, account) {
         const session = await sessions.rotate(cookieSessionId(req), { userId: account.discord_user_id || null, username: account.username, accountId: account.id });
@@ -189,14 +190,14 @@ export function createAccountHandlers(core) {
         const csrf = formToken(req, res);
         const values = { username: str(req.body?.username, 60) };
         const again = (status, error) => page(res, status, signupPage(ctx(), { csrf, values, error }));
-        if (!signupLimiter.allow(clientIp(req))) { res.set('Retry-After', '600'); return again(429, 'Too many new accounts from your address. Try again later.'); }
+        if (!signupLimiter.allow(clientIp(req))) { res.set('Retry-After', '600'); return again(429, t('account.errors.tooManySignups')); }
         const username = validateUsername(values.username);
         if (!username.ok) return again(400, username.error);
         const password = validatePassword(req.body?.password);
         if (!password.ok) return again(400, password.error);
         const age = checkAge(req.body?.birth_date);
         if (!age.ok) return again(400, age.error);
-        if (req.body?.accept !== 'yes') return again(400, 'Accept the Terms and Conditions and the Privacy Policy to create an account.');
+        if (req.body?.accept !== 'yes') return again(400, t('account.errors.acceptTerms'));
         const passwordHash = await hashPassword(password.value, hashParams);
         let created;
         try {
@@ -222,7 +223,7 @@ export function createAccountHandlers(core) {
         const csrf = formToken(req, res);
         const identifier = str(req.body?.identifier, 300).toLowerCase();
         const password = secretField(req.body?.password);
-        const wrong = (status = 401) => page(res, status, passwordLoginPage(ctx(), { csrf, identifier, error: 'Wrong username or password.' }));
+        const wrong = (status = 401) => page(res, status, passwordLoginPage(ctx(), { csrf, identifier, error: t('account.errors.wrongLogin') }));
         const ipOk = loginIpLimiter.allow(clientIp(req));
         const nameOk = loginNameLimiter.allow(identifier || '-');
         if (!ipOk || !nameOk) return tooMany(res, (error) => passwordLoginPage(ctx(), { csrf, identifier, error }));
@@ -254,7 +255,7 @@ export function createAccountHandlers(core) {
         if (!formOk(req)) return notAllowed(res);
         const csrf = formToken(req, res);
         const found = challengeOf(req);
-        if (!found) return page(res, 400, doneLoginPage(ctx(), 'Log in again', 'The code step expired. Log in again with your password.'));
+        if (!found) return page(res, 400, doneLoginPage(ctx(), t('account.errors.logInAgainTitle'), t('account.errors.codeStepExpired')));
         const { id, challenge } = found;
         if (!codeLimiter.allow(`login:${challenge.accountId}`) || !loginIpLimiter.allow(clientIp(req))) {
             return tooMany(res, (error) => twoStepPage(ctx(), { csrf, error }));
@@ -266,9 +267,9 @@ export function createAccountHandlers(core) {
             if (challenge.tries >= TWO_STEP_MAX_TRIES) {
                 challenges.delete(id);
                 res.append('Set-Cookie', clearCookie(TWO_STEP_COOKIE, cookieOptions));
-                return page(res, 401, doneLoginPage(ctx(), 'Log in again', 'Too many wrong codes. Log in again with your password.'));
+                return page(res, 401, doneLoginPage(ctx(), t('account.errors.logInAgainTitle'), t('account.errors.tooManyCodes')));
             }
-            return page(res, 401, twoStepPage(ctx(), { csrf, error: 'That code is not right. Try the newest code from your app.' }));
+            return page(res, 401, twoStepPage(ctx(), { csrf, error: t('account.errors.wrongLoginCode') }));
         }
         challenges.delete(id);
         res.append('Set-Cookie', clearCookie(TWO_STEP_COOKIE, cookieOptions));
@@ -295,8 +296,8 @@ export function createAccountHandlers(core) {
         if (!grant || grant.expiresAt <= Date.now()) return null;
         return { id, grant };
     }
-    const resetExpired = (res) => page(res, 400, accountMessagePage(ctx(), 'Start again',
-        'This password reset expired or was already used. Choose Forgot password? again and log in with Discord.', { href: '/me/forgot', label: 'Forgot password?' }));
+    const resetExpired = (res) => page(res, 400, accountMessagePage(ctx(), t('account.errors.resetExpiredTitle'),
+        t('account.errors.resetExpired'), { href: '/me/forgot', label: t('account.errors.resetExpiredLabel') }));
 
     /**
      * Called by the portal's OAuth callback in reset mode, with the Discord user who just
@@ -305,8 +306,8 @@ export function createAccountHandlers(core) {
     async function resetCallback(req, res, { discordUser }) {
         const account = await store.findByDiscordId(String(discordUser.id));
         if (!account) {
-            return page(res, 404, accountMessagePage(ctx(), 'No account found',
-                'No Mewvo account is linked to this Discord account, so there is no password to reset. You can create a new account instead.', { href: '/me/signup', label: 'Create an account' }));
+            return page(res, 404, accountMessagePage(ctx(), t('account.errors.noAccountTitle'),
+                t('account.errors.noAccount'), { href: '/me/signup', label: t('account.signup.title') }));
         }
         const id = crypto.randomBytes(24).toString('base64url');
         const now = Date.now();
@@ -358,7 +359,7 @@ export function createAccountHandlers(core) {
                 res.append('Set-Cookie', clearCookie(RESET_COOKIE, cookieOptions));
                 return resetExpired(res);
             }
-            return again(400, 'That code is not right. Enter the 6-digit code from your app or one of your recovery codes.');
+            return again(400, t('account.errors.wrongResetCode'));
         }
         resets.delete(id);
         res.append('Set-Cookie', clearCookie(RESET_COOKIE, cookieOptions));
@@ -366,7 +367,7 @@ export function createAccountHandlers(core) {
         await sessions.destroyForAccount(account.id);
         logger.info(`Member account ${account.id}: password reset through Discord, all sessions ended`);
         const session = await startSession(req, res, account);
-        await sessions.setFlash?.(session.id, 'Your new password is saved. Every other login was ended.');
+        await sessions.setFlash?.(session.id, t('account.flash.passwordReset'));
         return res.redirect(303, '/me/account');
     }
 
@@ -407,14 +408,14 @@ export function createAccountHandlers(core) {
             result = await store.linkDiscord({ accountId: session.accountId, discordUserId: String(discordUser.id), discordUsername: discordUser.global_name || discordUser.username || null });
         } catch (error) {
             if (!(error instanceof AccountError)) throw error;
-            return page(res, error.status, accountMessagePage(ctx(), 'Not linked', error.userMessage, { href: '/me/link', label: 'Back' }));
+            return page(res, error.status, accountMessagePage(ctx(), t('account.errors.notLinkedTitle'), error.userMessage, { href: '/me/link', label: t('account.common.back') }));
         }
         if (result.premium) await after(result.premium, 'bonus');
         const { account, bonus } = result;
         logger.info(`Member account ${account.id}: linked Discord ${account.discord_user_id} (${bonus.kind === 'new' ? `link #${bonus.linkNumber}${bonus.pro ? ', Pro bonus' : ''}${bonus.letter ? ', letter claim' : ''}` : 'linked before, no bonus'})`);
         const fresh = await sessions.rotate(session.id, { userId: account.discord_user_id, username: account.username, accountId: account.id });
         res.append('Set-Cookie', serializeCookie(sessionCookie, signValue(fresh.id, key), { ...cookieOptions, maxAgeMs: sessionTtlMs }));
-        await sessions.setFlash?.(fresh.id, bonusText(bonus));
+        await sessions.setFlash?.(fresh.id, bonusText(bonus, textOf(ctx())));
         return res.redirect(303, '/me/linked');
     }
 
@@ -438,13 +439,13 @@ export function createAccountHandlers(core) {
         if (!me) return toLogin(res);
         if (!sessionOk(req, me.session)) return notAllowed(res);
         const letter = normalizeLetter(req.body?.letter);
-        if (!letter) return page(res, 400, linkedPage(ctx(), { session: me.session, account: me.account, flash: 'Pick one letter or number.', offer: await letterOffer(me.account) }));
+        if (!letter) return page(res, 400, linkedPage(ctx(), { session: me.session, account: me.account, flash: t('account.errors.pickLetter'), offer: await letterOffer(me.account) }));
         try {
             const account = await store.claimLetter({ accountId: me.account.id, letter });
             logger.info(`Member account ${account.id}: claimed a 1-letter username`);
             const fresh = await sessions.rotate(me.session.id, { userId: account.discord_user_id, username: account.username, accountId: account.id });
             res.append('Set-Cookie', serializeCookie(sessionCookie, signValue(fresh.id, key), { ...cookieOptions, maxAgeMs: sessionTtlMs }));
-            await sessions.setFlash?.(fresh.id, `Your username is now ${account.username}. Use it to log in.`);
+            await sessions.setFlash?.(fresh.id, t('account.flash.letterClaimed', { username: account.username }));
             return res.redirect(303, '/me/account');
         } catch (error) {
             if (!(error instanceof AccountError)) throw error;
@@ -457,7 +458,7 @@ export function createAccountHandlers(core) {
         if (!me) return toLogin(res);
         if (!sessionOk(req, me.session)) return notAllowed(res);
         await store.declineLetter(me.account.id);
-        await sessions.setFlash?.(me.session.id, `You kept the username ${me.account.username}.`);
+        await sessions.setFlash?.(me.session.id, t('account.flash.letterDeclined', { username: me.account.username }));
         return res.redirect(303, '/me/account');
     }
 
@@ -491,7 +492,7 @@ export function createAccountHandlers(core) {
         if (!sessionOk(req, me.session)) { notAllowed(res); return null; }
         if (!codeLimiter.allow(`settings:${me.account.id}`)) {
             res.set('Retry-After', '60');
-            await renderSettings(res, me, 429, { error: 'Too many tries. Wait a few minutes and try again.' });
+            await renderSettings(res, me, 429, { error: t('account.errors.tooManyTries') });
             return null;
         }
         return me;
@@ -505,19 +506,19 @@ export function createAccountHandlers(core) {
     async function passwordPost(req, res) {
         const me = await settingsGuard(req, res);
         if (!me) return undefined;
-        if (!(await verifyPassword(secretField(req.body?.password), me.account.password_hash))) return renderSettings(res, me, 401, { error: 'The current password is wrong. Nothing was changed.' });
+        if (!(await verifyPassword(secretField(req.body?.password), me.account.password_hash))) return renderSettings(res, me, 401, { error: t('account.errors.wrongCurrentPassword') });
         const next = validatePassword(req.body?.new_password);
         if (!next.ok) return renderSettings(res, me, 400, { error: next.error });
         await store.setPassword(me.account.id, await hashPassword(next.value, hashParams));
         await sessions.destroyForAccount(me.account.id, me.session.id);
         logger.info(`Member account ${me.account.id}: password changed, other sessions ended`);
-        return flashBack(res, me, 'Your password was changed. Other logins were ended.');
+        return flashBack(res, me, t('account.flash.passwordChanged'));
     }
 
     async function twoStepStart(req, res) {
         const me = await settingsGuard(req, res);
         if (!me) return undefined;
-        if (me.account.totp_enabled_at) return flashBack(res, me, 'Two-step login is already on.');
+        if (me.account.totp_enabled_at) return flashBack(res, me, t('account.flash.twoStepAlreadyOn'));
         const secret = createTotpSecret();
         return page(res, 200, setupView(me, secret));
     }
@@ -531,13 +532,13 @@ export function createAccountHandlers(core) {
     async function twoStepEnable(req, res) {
         const me = await settingsGuard(req, res);
         if (!me) return undefined;
-        if (me.account.totp_enabled_at) return flashBack(res, me, 'Two-step login is already on.');
+        if (me.account.totp_enabled_at) return flashBack(res, me, t('account.flash.twoStepAlreadyOn'));
         const plain = decryptSecret(str(req.body?.pending, 400), totpKey)?.toString('utf8') || '';
         const [owner, base32] = plain.split(':');
         if (owner !== String(me.account.id) || !base32) return notAllowed(res);
         const secret = base32Decode(base32);
         const step = verifyTotp(secret, str(req.body?.code, 20));
-        if (step === null) return page(res, 400, setupView(me, secret, 'That code is not right. Check the time on your phone and enter the newest code.'));
+        if (step === null) return page(res, 400, setupView(me, secret, t('account.errors.wrongSetupCode')));
         const codes = createRecoveryCodes();
         await store.enableTotp(me.account.id, { secretEnc: encryptSecret(secret, totpKey), step, codeHashes: codes.map(hashRecoveryCode) });
         logger.info(`Member account ${me.account.id}: two-step login turned on`);
@@ -547,13 +548,13 @@ export function createAccountHandlers(core) {
     async function twoStepDisable(req, res) {
         const me = await settingsGuard(req, res);
         if (!me) return undefined;
-        if (!me.account.totp_enabled_at) return flashBack(res, me, 'Two-step login is already off.');
+        if (!me.account.totp_enabled_at) return flashBack(res, me, t('account.flash.twoStepAlreadyOff'));
         const passwordOk = await verifyPassword(secretField(req.body?.password), me.account.password_hash);
         const codeOk = passwordOk && await checkCode(me.account, str(req.body?.code, 40));
-        if (!codeOk) return renderSettings(res, me, 401, { error: 'The password or the code is wrong. Two-step login is still on.' });
+        if (!codeOk) return renderSettings(res, me, 401, { error: t('account.errors.wrongTwoStepOff') });
         await store.disableTotp(me.account.id);
         logger.info(`Member account ${me.account.id}: two-step login turned off`);
-        return flashBack(res, me, 'Two-step login is off.');
+        return flashBack(res, me, t('account.flash.twoStepOff'));
     }
 
     async function unlinkPost(req, res) {
@@ -565,17 +566,17 @@ export function createAccountHandlers(core) {
         const fresh = await sessions.rotate(me.session.id, { userId: null, username: me.account.username, accountId: me.account.id });
         res.append('Set-Cookie', serializeCookie(sessionCookie, signValue(fresh.id, key), { ...cookieOptions, maxAgeMs: sessionTtlMs }));
         logger.info(`Member account ${me.account.id}: Discord unlinked`);
-        await sessions.setFlash?.(fresh.id, 'Your Discord account was unlinked. Link a Discord account again to keep using your Mewvo account.');
+        await sessions.setFlash?.(fresh.id, t('account.flash.unlinked'));
         return res.redirect(303, '/me/link');
     }
 
     async function deletePost(req, res) {
         const me = await settingsGuard(req, res);
         if (!me) return undefined;
-        if (req.body?.sure !== 'yes') return renderSettings(res, me, 400, { error: 'Tick the box to confirm that you want to delete your account.' });
+        if (req.body?.sure !== 'yes') return renderSettings(res, me, 400, { error: t('account.errors.confirmDelete') });
         let ok = await verifyPassword(secretField(req.body?.password), me.account.password_hash);
         if (ok && me.account.totp_enabled_at) ok = await checkCode(me.account, str(req.body?.code, 40));
-        if (!ok) return renderSettings(res, me, 401, { error: me.account.totp_enabled_at ? 'The password or the code is wrong. Nothing was deleted.' : 'The password is wrong. Nothing was deleted.' });
+        if (!ok) return renderSettings(res, me, 401, { error: t(me.account.totp_enabled_at ? 'account.errors.wrongDeleteWithCode' : 'account.errors.wrongDelete') });
         await store.deleteAccount(me.account.id);
         await sessions.destroyForAccount(me.account.id);
         await sessions.destroy(me.session.id);
