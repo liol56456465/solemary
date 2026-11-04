@@ -17,6 +17,7 @@ import {
 } from '../src/services/site/memberPortal.js';
 import { createMemorySessionStore } from '../src/services/dashboard/sessionStore.js';
 import { createSite } from '../src/services/site/site.js';
+import { setContentOverrides } from '../src/services/site/i18n.js';
 
 const DAY = 24 * 3600 * 1000;
 const ORIGIN = 'https://bot.example';
@@ -425,7 +426,8 @@ function dmRecorder({ fail = false } = {}) {
 test('consent: all three boxes required ("yes"), recorded with the exact wording and version', () => {
     const all = { consent_start: 'yes', consent_terms: 'yes', consent_age: 'yes' };
     const record = checkoutConsent(all, 'personal', Date.UTC(2026, 10, 4, 12));
-    assert.equal(record.version, CONSENT_VERSION);
+    assert.equal(record.version, `${CONSENT_VERSION}/en`);
+    assert.equal(record.lang, 'en');
     assert.equal(record.at, '2026-11-04T12:00:00.000Z');
     assert.deepEqual(record.texts, [CONSENT_TEXTS.startNow, CONSENT_TEXTS.terms, CONSENT_TEXTS.age]);
     assert.equal(CONSENT_TEXTS.startNow, 'I want my plan to start now. I understand that if I withdraw within 14 days, I pay for the days already used.');
@@ -532,6 +534,60 @@ test('checkout: a missing box is refused on the server, nothing ordered, ticks k
     }
 });
 
+test('/me language: mewvo_lang cookie, else Accept-Language, else English; ?setlang on /me; links to public pages keep the prefix', async () => {
+    const app = await serve();
+    try {
+        assert.match((await app.request('/me')).body, /<html lang="en">/);
+        assert.match((await app.request('/me', { headers: { 'accept-language': 'pl-PL,pl;q=0.9' } })).body, /<html lang="pl">/);
+        const de = (await app.request('/me', { cookie: 'mewvo_lang=de', headers: { 'accept-language': 'pl' } })).body;
+        assert.match(de, /<html lang="de">/, 'the cookie wins');
+        assert.ok(de.includes('href="/de/features"'), 'the shell links to the German public pages');
+        assert.ok(de.includes('href="/me?setlang=fr" hreflang="fr"'), 'the picker reloads the same /me page');
+        assert.match((await app.request('/me', { cookie: 'mewvo_lang=<b>', headers: { 'accept-language': '<b>' } })).body, /<html lang="en">/);
+        const set = await app.request('/me/billing?setlang=it&x=1');
+        assert.equal(set.status, 302);
+        assert.equal(set.headers.get('location'), '/me/billing?x=1');
+        assert.match(set.cookies[0], /^mewvo_lang=it; Path=\/; Max-Age=31536000; HttpOnly; SameSite=Lax; Secure$/);
+        const bad = await app.request('/me?setlang=xx');
+        assert.equal(bad.headers.get('location'), '/me');
+        assert.equal(bad.cookies.length, 0, 'an unknown language sets nothing');
+    } finally {
+        await app.close();
+    }
+});
+
+test('checkout consent: the language the buyer saw and the exact texts shown in it are stored with the order', async () => {
+    const app = await serve();
+    const GERMAN = {
+        'billing.consent.startNow': 'Mein Plan soll jetzt beginnen.',
+        'billing.consent.terms': 'Ich akzeptiere die [AGB](/terms).',
+        'billing.consent.age': 'Ich bin 18 oder älter.',
+    };
+    setContentOverrides((lang, key) => (lang === 'de' ? GERMAN[key] ?? null : null));
+    try {
+        const alice = await login(app, { id: ALICE, username: 'alice' });
+        const page = (await app.request('/me/checkout?plan=pro&period=monthly&for=personal', { cookie: `${alice.cookie}; mewvo_lang=de` })).body;
+        assert.ok(page.includes('<input type="hidden" name="lang" value="de">'));
+        assert.ok(page.includes('Mein Plan soll jetzt beginnen.') && page.includes('href="/de/terms"'));
+        const csrf = csrfOf(page);
+        const bought = await app.request('/me/checkout', { method: 'POST', cookie: alice.cookie, body: form({ csrf, plan: 'pro', period: 'monthly', for: 'personal', lang: 'de', ...CONSENT }), headers: { origin: ORIGIN } });
+        assert.equal(bought.status, 303);
+        const consent = app.premium.orders[0].legal.consent;
+        assert.equal(consent.lang, 'de');
+        assert.equal(consent.version, `${CONSENT_VERSION}/de`);
+        assert.deepEqual(consent.texts, ['Mein Plan soll jetzt beginnen.', 'Ich akzeptiere die AGB.', 'Ich bin 18 oder älter.']);
+        // A forged language falls back to the request's (here English, no cookie): never stored raw.
+        const csrf2 = csrfOf((await app.request('/me/checkout?plan=pro&period=monthly&for=personal', { cookie: alice.cookie })).body);
+        await app.request('/me/checkout', { method: 'POST', cookie: alice.cookie, body: form({ csrf: csrf2, plan: 'pro', period: 'monthly', for: 'personal', lang: '<x>', ...CONSENT }), headers: { origin: ORIGIN } });
+        const second = app.premium.orders[0].legal.consent;
+        assert.equal(second.lang, 'en');
+        assert.deepEqual(second.texts, [CONSENT_TEXTS.startNow, CONSENT_TEXTS.terms, CONSENT_TEXTS.age]);
+    } finally {
+        setContentOverrides(null);
+        await app.close();
+    }
+});
+
 test('order → confirmation DM (no pings) and consent on the receipt; withdraw: CSRF, own orders only, acknowledgement + DM, plan ends', async () => {
     const app = await serve();
     const { client, sent } = dmRecorder();
@@ -545,7 +601,7 @@ test('order → confirmation DM (no pings) and consent on the receipt; withdraw:
         assert.deepEqual(sent[0].allowedMentions, { parse: [] });
         assert.equal(sent[0].id, ALICE);
         assert.match(sent[0].content, /Order confirmation #1[\s\S]*Mewvo Pro[\s\S]*€4\.99[\s\S]*\/withdrawal/);
-        assert.equal(app.premium.orders[0].legal.consent.version, CONSENT_VERSION, 'consent stored with the order');
+        assert.equal(app.premium.orders[0].legal.consent.version, `${CONSENT_VERSION}/en`, 'consent stored with the order');
         const receipt = (await app.request('/me/billing/orders/1', { cookie: alice.cookie })).body;
         assert.ok(receipt.includes('You confirmed') && receipt.includes(CONSENT_VERSION));
         assert.ok(receipt.includes('Withdraw from contract here'));

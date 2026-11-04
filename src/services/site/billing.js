@@ -30,7 +30,7 @@
 import { html, formatDate } from '../dashboard/html.js';
 import { YEARLY_MONTHS_CHARGED, euros } from '../../config/site/plans.js';
 import {
-    GIFT_MESSAGE_MAX, GIFT_TO_MAX, PAID_PLANS, PERIODS, PremiumError, WITHDRAWAL_DAYS, WITHDRAWAL_NAME_MAX,
+    CONSENT_TEXTS, GIFT_MESSAGE_MAX, GIFT_TO_MAX, PAID_PLANS, PERIODS, PremiumError, WITHDRAWAL_DAYS, WITHDRAWAL_NAME_MAX,
     canWithdraw, checkoutConsent, conversion, keyStatus, normalizeKeyCode, planName, priceCents, quote, withdrawalDeadline, withdrawalQuote,
 } from '../billing/premiumService.js';
 import { afterPremiumChange, orderConfirmationDm, sendPremiumDm, withdrawalAckDm } from '../billing/premiumEffects.js';
@@ -38,7 +38,7 @@ import { LEGAL_UPDATED } from './pages/legal.js';
 import { isSameOrigin, safeEqual } from '../dashboard/security.js';
 import { logger } from '../../utils/logger.js';
 import { layout } from './shell.js';
-import { DEFAULT_LANG, textOf, translate } from './i18n.js';
+import { DEFAULT_LANG, LANG_CODES, textOf, translate } from './i18n.js';
 
 /** The test-mode notice in the page's language (English without a ctx). */
 export const testNotice = (ctx = null) => textOf(ctx).t('billing.test.notice');
@@ -150,7 +150,7 @@ export function checkoutPage(ctx, { session, choice, current = null, values = {}
     const perKey = choice.period === 'yearly' ? 'billing.checkout.pricePerYear' : 'billing.checkout.pricePerMonth';
     return layout(ctx, {
         title: t('billing.checkout.title'), active: 'me',
-        body: html`<div class="wrap page"><a class="back-link" href="/pricing">${t('billing.checkout.back')}</a>
+        body: html`<div class="wrap page"><a class="back-link" href="${textOf(ctx).href('/pricing')}">${t('billing.checkout.back')}</a>
 <header class="page-head"><h1>${t(gift ? 'billing.checkout.headingGift' : 'billing.checkout.heading', { plan: q.plan.name })}</h1></header>
 ${testBanner(t)}${notices({ error })}
 <div class="checkout"><div class="checkout-options">
@@ -176,7 +176,7 @@ ${seg(t('billing.checkout.forLabel'), [
         : effect.text}</p>
 ${effect?.kind === 'blocked' ? html`<p class="button button-disabled summary-pay" aria-disabled="true">${t('billing.checkout.blocked')}</p>`
         : html`<form method="post" action="/me/checkout"><input type="hidden" name="csrf" value="${session.csrf}">
-<input type="hidden" name="plan" value="${choice.planId}"><input type="hidden" name="period" value="${choice.period}"><input type="hidden" name="for" value="${choice.kind}">
+<input type="hidden" name="plan" value="${choice.planId}"><input type="hidden" name="period" value="${choice.period}"><input type="hidden" name="for" value="${choice.kind}"><input type="hidden" name="lang" value="${textOf(ctx).lang}">
 ${gift ? html`<div class="gift-fields"><label for="gift-to">${t('billing.checkout.giftTo')}</label><input id="gift-to" name="gift_to" maxlength="${GIFT_TO_MAX}" autocomplete="off" value="${values.giftTo || ''}" placeholder="${t('billing.checkout.giftToPlaceholder')}">
 <label for="gift-message">${t('billing.checkout.giftMessage')}</label><textarea id="gift-message" name="gift_message" maxlength="${GIFT_MESSAGE_MAX}" rows="3" placeholder="${t('billing.checkout.giftMessagePlaceholder')}">${values.giftMessage || ''}</textarea></div>` : ''}
 <fieldset class="consent"><legend class="seg-label">${t('billing.consent.legend')}</legend>
@@ -187,6 +187,20 @@ ${consentBox('consent_age', t('billing.consent.age'), values.consent?.age)}</fie
 <p class="note">${ti(gift ? 'billing.checkout.privacyNoteGift' : 'billing.checkout.privacyNote', { days: WITHDRAWAL_DAYS })}</p></aside></div>
 ${sellerInfo(ctx, q, gift)}</div>`,
     });
+}
+
+/**
+ * The three consent texts exactly as the checkout showed them in `lang` (plain text: a link keeps
+ * its words, markup marks are dropped), in the order checkoutConsent stores them. English is
+ * CONSENT_TEXTS itself (a test keeps the catalog equal to it).
+ */
+export function consentTexts(lang, kind = 'personal') {
+    const gift = kind === 'gift';
+    if (!LANG_CODES.includes(lang) || lang === DEFAULT_LANG) {
+        return [gift ? CONSENT_TEXTS.startNowGift : CONSENT_TEXTS.startNow, CONSENT_TEXTS.terms, CONSENT_TEXTS.age];
+    }
+    const plain = (key) => translate(lang, key).replace(/\[([^\]\n]+)\]\([^)\s]+\)/g, '$1').replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/`([^`\n]+)`/g, '$1');
+    return [plain(gift ? 'billing.consent.startNowGift' : 'billing.consent.startNow'), plain('billing.consent.terms'), plain('billing.consent.age')];
 }
 
 /** One required, unticked checkbox (ticked again only when the form comes back with an error). */
@@ -200,7 +214,7 @@ function sellerInfo(ctx, q, gift) {
     const legal = ctx.legal || {};
     return html`<section class="checkout-seller" aria-labelledby="seller-title"><h2 id="seller-title">${t('billing.seller.title')}</h2>
 <dl class="summary-rows">
-<div><dt>${t('billing.seller.seller')}</dt><dd>${legal.operator || 'Mewvo'}${legal.email ? html`, <a href="mailto:${legal.email}">${legal.email}</a>` : ''} · <a href="/legal">${t('billing.seller.legalDetails')}</a></dd></div>
+<div><dt>${t('billing.seller.seller')}</dt><dd>${legal.operator || 'Mewvo'}${legal.email ? html`, <a href="mailto:${legal.email}">${legal.email}</a>` : ''} · <a href="${textOf(ctx).href('/legal')}">${t('billing.seller.legalDetails')}</a></dd></div>
 <div><dt>${t('billing.seller.whatYouGet')}</dt><dd>${t(gift ? 'billing.seller.whatYouGetGift' : 'billing.seller.whatYouGetPersonal', { plan: q.plan.name })}</dd></div>
 <div><dt>${t('billing.seller.duration')}</dt><dd>${t(gift ? 'billing.seller.durationGift' : 'billing.seller.durationPersonal', { days: q.days })}</dd></div>
 <div><dt>${t('billing.seller.totalPrice')}</dt><dd>${t('billing.seller.totalPriceValue', { amount: q.amountText, vat: vatLine(legal, ctx) })}</dd></div>
@@ -246,7 +260,7 @@ export function billingPage(ctx, { session, account, flash = null, error = null,
         title: t('billing.account.title'), active: 'me',
         body: html`<div class="wrap page record"><div class="record-head"><div><h1>${t('billing.account.title')}</h1>
 <p class="lead">${ti('billing.account.lead', { username: session.username })}</p></div>
-<nav class="record-links" aria-label="${t('billing.account.nav')}"><a class="button button-quiet" href="/me">${t('billing.account.myRecord')}</a> <a class="button" href="/pricing">${t('billing.account.plans')}</a></nav></div>
+<nav class="record-links" aria-label="${t('billing.account.nav')}"><a class="button button-quiet" href="/me">${t('billing.account.myRecord')}</a> <a class="button" href="${textOf(ctx).href('/pricing')}">${t('billing.account.plans')}</a></nav></div>
 ${testBanner(t)}${notices({ flash, error })}
 <ul class="record-summary">${subscriptionCard(ctx, subscription)}
 <li class="feature"><h2>${t('billing.account.redeemTitle')}</h2>${redeemForm(ctx, session, code)}<p class="note">${t('billing.account.redeemNote')}</p></li></ul>
@@ -440,7 +454,9 @@ export function createBillingHandlers(core) {
         };
         try {
             // Checked before anything is written: no order without all three boxes ticked.
-            const consent = checkoutConsent(req.body, choice.kind);
+            // The language the buyer saw: the form's own field (the page they ticked), else this request's.
+            const consentLang = LANG_CODES.find((code) => code === req.body?.lang) || textOf(ctx()).lang;
+            const consent = checkoutConsent(req.body, choice.kind, Date.now(), { lang: consentLang, texts: consentTexts(consentLang, choice.kind) });
             const result = await store.purchase({ userId: session.userId, username: session.username, ...choice, giftTo: values.giftTo, giftMessage: values.giftMessage, consent });
             const { order } = result;
             logger.info(`Premium test order #${order.id}: ${session.userId} ${choice.kind} ${choice.planId}/${choice.period} (consent ${consent.version})`);

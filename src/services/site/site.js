@@ -64,7 +64,10 @@ import { trustErrorPage, trustPage } from './pages/trust.js';
 import { changelogPage } from './pages/changelog.js';
 import { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage } from './pages/legal.js';
 import { withdrawalPage } from './pages/withdrawal.js';
-import { DEFAULT_LANG, textOf, translator } from './i18n.js';
+import {
+    DEFAULT_LANG, LANGUAGES, isEnglishOnlyPath, isLanguage, localizePath, textOf, translator,
+} from './i18n.js';
+import { languageRouting, pickerHref, suggestedLanguage } from './language.js';
 import { readPublicRules } from '../rules/serverRules.js';
 
 export {
@@ -236,13 +239,11 @@ export function createCatReader(client, { guildId = () => enforcementConfig.main
     };
 }
 
-const formatNumber = (value) => (Number(value) || 0).toLocaleString('en-US');
-
 /** `board` is the reader's result (with one row too many when there is a next page), or null when the read failed. */
 /** The server cat card (above the leaderboard), or '' when there is no cat to show. */
 export function catCard(cat, ctx) {
     if (!cat?.stage || !cat.image) return '';
-    const { t } = textOf(ctx);
+    const { t, fmtNumber: formatNumber } = textOf(ctx);
     const pct = Math.round((cat.progress?.fraction ?? 1) * 100);
     const next = cat.progress?.next
         ? html`<progress class="cat-bar" max="100" value="${String(pct)}" aria-label="${t('pages.cat.progressLabel', { next: cat.progress.next.name })}">${t('pages.cat.percent', { pct })}</progress>
@@ -253,7 +254,7 @@ export function catCard(cat, ctx) {
 }
 
 export function leaderboardPage(ctx, { page, board, cat = null }) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, href, fmtNumber: formatNumber } = textOf(ctx);
     const head = html`<header class="page-head page-head-split"><div><h1>${t('pages.leaderboard.heading')}</h1></div>
 <p class="lead">${ti('pages.leaderboard.lead')}</p></header>`;
     let content;
@@ -265,7 +266,7 @@ export function leaderboardPage(ctx, { page, board, cat = null }) {
         const rows = board.rows.slice(0, LEADERBOARD_PAGE_SIZE);
         // getLeaderboard serves offsets up to LEADERBOARD_MAX_OFFSET only: no Next to an empty page.
         const hasNext = board.rows.length > LEADERBOARD_PAGE_SIZE && page * LEADERBOARD_PAGE_SIZE <= LEADERBOARD_MAX_OFFSET;
-        const link = (n, label, rel) => html`<a class="button button-quiet" href="/leaderboard${n > 1 ? `?page=${n}` : ''}" rel="${rel}">${label}</a>`;
+        const link = (n, label, rel) => html`<a class="button button-quiet" href="${href(`/leaderboard${n > 1 ? `?page=${n}` : ''}`)}" rel="${rel}">${label}</a>`;
         const pager = page > 1 || hasNext
             ? html`<nav class="pager" aria-label="${t('pages.leaderboard.pager.label')}">${page > 1 ? link(page - 1, t('pages.leaderboard.pager.previous'), 'prev') : ''}<span class="pager-current">${t('pages.leaderboard.pager.current', { page })}</span>${hasNext ? link(page + 1, t('pages.leaderboard.pager.next'), 'next') : ''}</nav>`
             : '';
@@ -273,7 +274,7 @@ export function leaderboardPage(ctx, { page, board, cat = null }) {
             ? html`<div class="table-wrap"><table class="board"><caption class="visually-hidden">${t('pages.leaderboard.table.caption', { page })}</caption>
 <thead><tr><th scope="col">${t('pages.leaderboard.table.rank')}</th><th scope="col">${t('pages.leaderboard.table.member')}</th><th scope="col">${t('pages.leaderboard.table.level')}</th><th scope="col">${t('pages.leaderboard.table.totalXp')}</th></tr></thead>
 <tbody>${rows.map((r) => html`<tr><td class="num">${r.rank}</td><td class="board-name">${r.name ?? t('pages.leaderboard.formerMember')}</td><td class="num">${r.level}</td><td class="num">${formatNumber(r.totalXp)}</td></tr>`)}</tbody></table></div>${pager}`
-            : html`<p class="notice">${t(page > 1 ? 'pages.leaderboard.empty.laterPage' : 'pages.leaderboard.empty.firstPage')}</p>${page > 1 ? html`<p><a class="button button-quiet" href="/leaderboard">${t('pages.leaderboard.empty.backToFirst')}</a></p>` : ''}`;
+            : html`<p class="notice">${t(page > 1 ? 'pages.leaderboard.empty.laterPage' : 'pages.leaderboard.empty.firstPage')}</p>${page > 1 ? html`<p><a class="button button-quiet" href="${href('/leaderboard')}">${t('pages.leaderboard.empty.backToFirst')}</a></p>` : ''}`;
     }
     return layout(ctx, {
         title: page > 1 ? t('pages.leaderboard.titlePaged', { page }) : t('pages.leaderboard.title'), active: 'leaderboard', path: page > 1 ? `/leaderboard?page=${page}` : '/leaderboard',
@@ -328,11 +329,11 @@ ${uptime !== null ? html`<p>${t('pages.status.uptime.line', { uptime: uptimeWord
 // ── Privacy Policy and Terms and Conditions: pages/legal.js ────────────────
 
 export function notFoundPage(ctx) {
-    const { t } = textOf(ctx);
+    const { t, href } = textOf(ctx);
     return layout(ctx, {
         title: t('pages.errors.notFound.title'),
         body: html`<div class="wrap page prose"><h1>${t('pages.errors.notFound.heading')}</h1><p class="lead">${t('pages.errors.notFound.lead')}</p>
-<p class="hero-actions"><a class="button" href="/">${t('pages.errors.notFound.home')}</a><a class="button button-quiet" href="/docs">${t('pages.errors.notFound.docs')}</a></p></div>`,
+<p class="hero-actions"><a class="button" href="${href('/')}">${t('pages.errors.notFound.home')}</a><a class="button button-quiet" href="${href('/docs')}">${t('pages.errors.notFound.docs')}</a></p></div>`,
     });
 }
 
@@ -347,7 +348,12 @@ export const SITEMAP_PATHS = [
 export function sitemapXml(origin, { transparency = false, trust = false } = {}) {
     const escape = (text) => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;');
     const paths = [...SITEMAP_PATHS, ...(transparency ? ['/transparency'] : []), ...(trust ? ['/trust'] : [])];
-    const urls = paths.map((path) => `  <url><loc>${escape(`${origin}${path}`)}</loc></url>`).join('\n');
+    // Every page in every language (English first, then the others per page); legal pages in English only.
+    const all = [
+        ...paths,
+        ...LANGUAGES.filter((l) => l.code !== DEFAULT_LANG).flatMap((l) => paths.filter((p) => !isEnglishOnlyPath(p)).map((p) => localizePath(l.code, p))),
+    ];
+    const urls = all.map((path) => `  <url><loc>${escape(`${origin}${path}`)}</loc></url>`).join('\n');
     return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 
@@ -381,11 +387,23 @@ export function createSite({
         origin: siteOrigin(env),
         legal: { ...legalContact(env), vatRegistered: Boolean(String(env.LEGAL_VAT_NO || '').trim()) },
     };
-    const context = () => {
+    const context = (req = null) => {
         let support = null;
         try { support = inviteOrNull(supportInvite()); } catch { support = null; }
-        // Text comes from the catalog (i18n.js); pages read it with ctx.t / ctx.ti / ctx.tb.
-        return { ...base, ...translator(DEFAULT_LANG), supportInvite: support, commands: client?.commands || null, transparency: transparencyOn(), trustCard: trustOn() };
+        // The URL's language (language.js strips /de/ etc. and sets req.siteLang; always one of LANG_CODES).
+        const lang = isLanguage(req?.siteLang) ? req.siteLang : DEFAULT_LANG;
+        // Legal pages are English only: English text and <html lang="en">, links keep the visitor's prefix.
+        const englishOnly = Boolean(req) && isEnglishOnlyPath(req.path);
+        const href = (path) => localizePath(lang, path);
+        // Text comes from the catalog (i18n.js); pages read it with ctx.t / ctx.ti / ctx.tb, links with ctx.href.
+        return {
+            ...base, ...translator(englishOnly ? DEFAULT_LANG : lang, { href }), supportInvite: support, commands: client?.commands || null, transparency: transparencyOn(), trustCard: trustOn(),
+            urlLang: lang,
+            englishOnlyFor: englishOnly && lang !== DEFAULT_LANG ? lang : null,
+            // Only unprefixed pages offer another language (never a redirect).
+            suggestLang: req && !req.siteLang ? suggestedLanguage(req) : null,
+            languageLink: req ? (code, path) => pickerHref(code, path) : undefined,
+        };
     };
     // A settings read that throws counts as off: the page and its link simply do not appear.
     const transparencyOn = () => {
@@ -400,9 +418,13 @@ export function createSite({
         if (!publicSite) res.set('X-Robots-Tag', NOINDEX);
         next();
     });
+    // /de/features → the /features route with req.siteLang = 'de'; /en/… → 301; ?setlang=1 → cookie + 302.
+    router.use(languageRouting);
+    // Under a prefix only pages exist: /de/img/…, /de/site.css, /de/robots.txt and the like are the 404 page.
+    const unprefixedOnly = (req, res, next) => (req.siteLang ? notFound(req, res) : next());
     const page = (render) => (req, res) => {
         res.set('Cache-Control', 'no-cache');
-        res.status(200).type('html').send(render(context()));
+        res.status(200).type('html').send(render(context(req)));
     };
     router.get('/', page(homePage));
     router.get('/features', page(featuresPage));
@@ -444,7 +466,7 @@ export function createSite({
         }
         const catState = board ? await catRead : null;
         res.set('Cache-Control', 'no-cache');
-        res.status(board ? 200 : 503).type('html').send(leaderboardPage(context(), { page: number, board, cat: catState }));
+        res.status(board ? 200 : 503).type('html').send(leaderboardPage(context(req), { page: number, board, cat: catState }));
     });
     // Off: the same 404 as any unknown page. A failed read: 503 with a message, never zeros.
     router.get('/transparency', async (req, res, next) => {
@@ -458,9 +480,9 @@ export function createSite({
         res.set('Cache-Control', 'no-cache');
         if (!report) {
             res.set('Retry-After', '120');
-            return res.status(503).type('html').send(transparencyErrorPage(context()));
+            return res.status(503).type('html').send(transparencyErrorPage(context(req)));
         }
-        return res.status(200).type('html').send(transparencyPage(context(), report));
+        return res.status(200).type('html').send(transparencyPage(context(req), report));
     });
     // Off: the 404 page. The numbers failing: 503. The cat or the rules failing: only that block is left out.
     router.get('/trust', async (req, res, next) => {
@@ -481,9 +503,9 @@ export function createSite({
         res.set('Cache-Control', 'no-cache');
         if (!card) {
             res.set('Retry-After', '120');
-            return res.status(503).type('html').send(trustErrorPage(context()));
+            return res.status(503).type('html').send(trustErrorPage(context(req)));
         }
-        return res.status(200).type('html').send(trustPage(context(), card, { cat: catState, rules: rulesState }));
+        return res.status(200).type('html').send(trustPage(context(req), card, { cat: catState, rules: rulesState }));
     });
     // A failed read is a 503 page, never an empty list (which would say "no rules").
     router.get('/rules', async (req, res) => {
@@ -494,8 +516,9 @@ export function createSite({
             logger.warn(`Site rules could not be loaded: ${error.message}`);
         }
         res.set('Cache-Control', 'no-cache');
-        res.status(data ? 200 : 503).type('html').send(rulesPage(context(), data));
+        res.status(data ? 200 : 503).type('html').send(rulesPage(context(req), data));
     });
+    router.use(unprefixedOnly);
     router.get('/robots.txt', (req, res) => {
         res.set('Cache-Control', 'no-cache');
         const sitemap = publicSite && base.origin ? `Sitemap: ${base.origin}/sitemap.xml\n` : '';
@@ -526,11 +549,12 @@ export function createSite({
         res.status(200).type('text/css').send(STYLESHEET);
     });
     // Last: any other GET is a plain 404 page (the API and dashboard routes are registered before).
-    router.get(/.*/, (req, res) => {
-        res.set('Cache-Control', 'no-cache');
-        res.status(404).type('html').send(notFoundPage(context()));
-    });
+    router.get(/.*/, notFound);
     return router;
+    function notFound(req, res) {
+        res.set('Cache-Control', 'no-cache');
+        res.status(404).type('html').send(notFoundPage(context(req)));
+    }
 }
 
 /** The real transparency source: the main server's dashboard setting and the cached report reader. */

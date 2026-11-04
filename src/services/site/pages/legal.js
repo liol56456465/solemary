@@ -178,6 +178,7 @@ ${row(html`<code>mewvo_me_2fa</code>`, 'Remembers that the password step is done
 ${row(html`<code>mewvo_me_reset</code>`, 'Lets you set a new password after the Discord check.', '10 minutes.')}
 ${row(html`<code>mewvo_theme</code>`, 'Remembers the light or dark theme you chose in the dashboard. Set only when you click it.', '1 year.')}
 ${row(html`<code>mewvo_nav</code>`, 'Remembers whether the dashboard sidebar shows all pages. Set only when you click it.', '1 year.')}
+${row(html`<code>mewvo_lang</code>`, 'Remembers the website language you chose in the language picker. Set only when you click it.', '1 year.')}
 </tbody></table></div>
 
 <h2>Your rights</h2>

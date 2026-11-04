@@ -139,19 +139,19 @@ export function guideText(ctx, guide) {
 }
 
 export function docsPage(ctx) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, href } = textOf(ctx);
     return layout(ctx, {
         title: t('docs.meta.title'), active: 'docs', path: '/docs',
         description: t('docs.meta.description'),
         body: html`<div class="wrap page">
 <header class="page-head page-head-split"><div><h1>${t('docs.hub.title')}</h1></div>
 <p class="lead">${ti('docs.hub.lead')}</p></header>
-<ol class="guide-list">${GUIDES.map((g) => { const g2 = guideText(ctx, g); return html`<li><a class="guide" href="/docs/${g.slug}"><span class="guide-text"><span class="guide-title">${g2.title}</span><span class="guide-summary">${g2.summary}</span></span></a></li>`; })}</ol></div>`,
+<ol class="guide-list">${GUIDES.map((g) => { const g2 = guideText(ctx, g); return html`<li><a class="guide" href="${href(`/docs/${g.slug}`)}"><span class="guide-text"><span class="guide-title">${g2.title}</span><span class="guide-summary">${g2.summary}</span></span></a></li>`; })}</ol></div>`,
     });
 }
 
 export function guidePage(ctx, guide) {
-    const { t } = textOf(ctx);
+    const { t, href } = textOf(ctx);
     const index = GUIDES.indexOf(guide);
     const next = GUIDES[index + 1] || null;
     const { title, summary } = guideText(ctx, guide);
@@ -159,9 +159,9 @@ export function guidePage(ctx, guide) {
         title, active: 'docs', path: `/docs/${guide.slug}`,
         description: summary,
         body: html`<div class="wrap page"><div class="doc">
-<nav class="crumbs" aria-label="${t('docs.nav.crumbs')}"><a href="/docs">${t('docs.nav.docs')}</a><span aria-hidden="true">/</span><span>${title}</span></nav>
+<nav class="crumbs" aria-label="${t('docs.nav.crumbs')}"><a href="${href('/docs')}">${t('docs.nav.docs')}</a><span aria-hidden="true">/</span><span>${title}</span></nav>
 <header class="doc-head"><h1>${title}</h1><p class="lead">${summary}</p></header>
 <div class="prose doc-body">${guide.body(ctx)}</div>
-<nav class="doc-next" aria-label="${t('docs.nav.nextGuide')}">${next ? html`<a href="/docs/${next.slug}"><span class="doc-next-label">${t('docs.nav.next')}</span>${guideText(ctx, next).title}</a>` : html`<a href="/faq"><span class="doc-next-label">${t('docs.nav.stillQuestions')}</span>${t('docs.nav.readFaq')}</a>`}</nav></div></div>`,
+<nav class="doc-next" aria-label="${t('docs.nav.nextGuide')}">${next ? html`<a href="${href(`/docs/${next.slug}`)}"><span class="doc-next-label">${t('docs.nav.next')}</span>${guideText(ctx, next).title}</a>` : html`<a href="${href('/faq')}"><span class="doc-next-label">${t('docs.nav.stillQuestions')}</span>${t('docs.nav.readFaq')}</a>`}</nav></div></div>`,
     });
 }

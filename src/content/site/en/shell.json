@@ -37,6 +37,12 @@
     "subscription": "Subscription",
     "logOut": "Log out"
   },
+  "language": {
+    "label": "Language"
+  },
+  "suggestLanguage": "Mewvo is also available in {language}.",
+  "suggestLanguageDismiss": "Stay in English",
+  "legalEnglishOnly": "This page is only available in English.",
   "install": {
     "addToDiscord": "Add to Discord"
   },

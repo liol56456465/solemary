@@ -13,13 +13,13 @@ import { planCard } from './pricing.js';
 
 /** The actions: Add to Discord (public) or Join the server, then the docs; the dashboard as a plain link. */
 export function heroActions(ctx, { how = '/docs', howLabel = null, dashboard = true } = {}) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, href } = textOf(ctx);
     const add = addButton(ctx);
     const join = !add && (ctx.mainInvite || ctx.supportInvite)
         ? html`<a class="button" href="${ctx.mainInvite || ctx.supportInvite}" rel="noopener">${t(ctx.mainInvite ? 'home.actions.joinServer' : 'home.actions.joinSupportServer')}</a>`
         : '';
     const primary = add || join;
-    return html`<p class="hero-actions">${primary}<a class="button${primary ? ' button-quiet' : ''}" href="${how}">${howLabel ?? t('home.actions.readDocs')}</a></p>${dashboard && ctx.dashboardEnabled ? html`<p class="hero-more">${ti('home.actions.openDashboard', { url: DASHBOARD_PATH })}</p>` : ''}`;
+    return html`<p class="hero-actions">${primary}<a class="button${primary ? ' button-quiet' : ''}" href="${href(how)}">${howLabel ?? t('home.actions.readDocs')}</a></p>${dashboard && ctx.dashboardEnabled ? html`<p class="hero-more">${ti('home.actions.openDashboard', { url: DASHBOARD_PATH })}</p>` : ''}`;
 }
 
 /** What Mewvo does: [anchor id (also the key under home.what.items), link]. */
@@ -33,8 +33,8 @@ const WHAT_IT_DOES = [
 ];
 
 export function homePage(ctx) {
-    const { t, ti, tb } = textOf(ctx);
-    const item = (id, part) => t(`home.what.items.${id}.${part}`);
+    const { t, ti, tb, href } = textOf(ctx);
+    const item =(id, part) => t(`home.what.items.${id}.${part}`);
     const body = html`<section class="hero"><div class="wrap hero-grid">
 <div class="hero-copy"><h1>${t('home.hero.title')}</h1>
 <p class="lead">${t('home.hero.lead')}</p>
@@ -56,7 +56,7 @@ ${tb('home.ladder.text')}</div>
 <section class="block" aria-labelledby="what-title"><div class="wrap">
 <div class="band-head"><h2 id="what-title">${t('home.what.title')}</h2>
 <p>${ti('home.what.text')}</p></div>
-<ul class="what-grid">${WHAT_IT_DOES.map(([id, href]) => html`<li id="${id}"><h3>${item(id, 'name')}</h3><p>${item(id, 'text')}</p><a href="${href}">${item(id, 'link')}</a></li>`)}</ul>
+<ul class="what-grid">${WHAT_IT_DOES.map(([id, link]) => html`<li id="${id}"><h3>${item(id, 'name')}</h3><p>${item(id, 'text')}</p><a href="${href(link)}">${item(id, 'link')}</a></li>`)}</ul>
 </div></section>
 
 <section class="block" aria-labelledby="pricing-title"><div class="wrap">

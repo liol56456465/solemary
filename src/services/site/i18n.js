@@ -138,8 +138,8 @@ export function isSafeHref(href) {
 
 const PLACEHOLDER = (i) => `\u0000${i}\u0000`;
 
-/** Escapes, then applies inline markup and fills params. Returns an HTML string. */
-function renderInline(escaped, params, key) {
+/** Escapes, then applies inline markup and fills params. Returns an HTML string. `rewrite` (optional) maps site paths ("/features" → "/de/features"). */
+function renderInline(escaped, params, key, rewrite = null) {
     const stash = [];
     const keep = (htmlText) => {
         stash.push(htmlText);
@@ -148,7 +148,7 @@ function renderInline(escaped, params, key) {
     let s = escaped;
     // Links first, so their text can still hold bold/italic/code.
     s = s.replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, (_, text, target) => {
-        const href = target.replace(TOKEN, (__, name) => {
+        let href = target.replace(TOKEN, (__, name) => {
             const value = paramText(params, name);
             if (value && typeof value === 'object') throw new Error(`i18n: {${name}} in a link target of "${key}" must be plain text`);
             return escapeHtml(value);
@@ -156,6 +156,10 @@ function renderInline(escaped, params, key) {
         // escapeHtml turned & into &amp; — compare against the unescaped form for the safety check.
         const plain = href.replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
         if (!isSafeHref(plain)) return text;
+        if (rewrite && plain.startsWith('/')) {
+            const localized = rewrite(plain);
+            if (localized !== plain && isSafeHref(localized)) href = escapeHtml(localized);
+        }
         const external = /^https:/.test(plain) ? ' rel="noopener"' : '';
         return `${keep(`<a href="${href}"${external}>`)}${text}${keep('</a>')}`;
     });
@@ -175,34 +179,128 @@ function renderInline(escaped, params, key) {
 }
 
 /** Inline markup → SafeHtml. */
-export function translateInline(lang, key, params) {
-    return raw(renderInline(escapeHtml(lookup(lang, key)), params, key));
+export function translateInline(lang, key, params, { rewrite = null } = {}) {
+    return raw(renderInline(escapeHtml(lookup(lang, key)), params, key, rewrite));
 }
 
 /** Block markup (paragraphs, "- " lists, <br>) → SafeHtml. */
-export function translateBlock(lang, key, params) {
+export function translateBlock(lang, key, params, { rewrite = null } = {}) {
     const blocks = escapeHtml(lookup(lang, key)).replace(/\r\n/g, '\n').split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
     const out = blocks.map((block) => {
         const lines = block.split('\n');
         if (lines.every((line) => /^- /.test(line))) {
-            return `<ul>${lines.map((line) => `<li>${renderInline(line.slice(2), params, key)}</li>`).join('')}</ul>`;
+            return `<ul>${lines.map((line) => `<li>${renderInline(line.slice(2), params, key, rewrite)}</li>`).join('')}</ul>`;
         }
-        return `<p>${lines.map((line) => renderInline(line, params, key)).join('<br>')}</p>`;
+        return `<p>${lines.map((line) => renderInline(line, params, key, rewrite)).join('<br>')}</p>`;
     });
     return raw(out.join('\n'));
 }
 
-/** The functions a page context carries for one language. */
-export function translator(lang = DEFAULT_LANG) {
+// ── Language URLs ───────────────────────────────────────────────────────────
+// Every public page also answers under /<prefix>/… (site.js strips the prefix). Only these paths
+// get a prefix; /dashboard, /me, /oauth, /img, the stylesheet and external links never do.
+
+/** The translatable public pages (plus /docs/<slug>). */
+export const PAGE_PATHS = Object.freeze([
+    '/', '/features', '/pricing', '/faq', '/docs', '/commands', '/about', '/changelog', '/leaderboard', '/rules', '/status',
+    '/transparency', '/trust', '/privacy', '/terms', '/legal', '/contact', '/withdrawal',
+]);
+/** Pages that exist in English only (owner decision): /de/privacy shows the English page with a note. */
+export const ENGLISH_ONLY_PATHS = Object.freeze(['/privacy', '/terms', '/legal', '/contact', '/withdrawal']);
+const PAGE_SET = new Set(PAGE_PATHS);
+const ENGLISH_ONLY_SET = new Set(ENGLISH_ONLY_PATHS);
+
+/** "/features/" → "/features"; "/" stays "/". */
+export function normalizePagePath(pathname) {
+    const text = String(pathname || '');
+    return text.length > 1 && text.endsWith('/') ? text.slice(0, -1) : text;
+}
+
+/** True for a public page path (no query): "/features", "/docs/appeals", "/" (a trailing slash is allowed). */
+export function isPagePath(pathname) {
+    const path = normalizePagePath(pathname);
+    return PAGE_SET.has(path) || /^\/docs\/[a-z0-9-]{1,64}$/.test(path);
+}
+
+export function isEnglishOnlyPath(pathname) {
+    return ENGLISH_ONLY_SET.has(normalizePagePath(pathname));
+}
+
+/** The language for a URL prefix ("pt-br" → the pt-BR entry), or null. English has no prefix. */
+export function languageByPrefix(prefix) {
+    return LANGUAGES.find((l) => l.prefix && l.prefix === prefix) || null;
+}
+
+export function prefixOf(lang) {
+    return LANGUAGES.find((l) => l.code === lang)?.prefix || '';
+}
+
+/**
+ * A site link in a language: "/features" → "/de/features", "/" → "/de/", "/leaderboard?page=2" →
+ * "/de/leaderboard?page=2". English, non-page paths ("/dashboard", "/me", "/img/…"), "#…",
+ * external and protocol-relative links come back unchanged.
+ */
+export function localizePath(lang, href) {
+    if (typeof href !== 'string' || !href.startsWith('/') || href.startsWith('//')) return href;
+    const prefix = prefixOf(lang);
+    if (!prefix) return href;
+    const cut = href.search(/[?#]/);
+    const pathname = cut === -1 ? href : href.slice(0, cut);
+    const rest = cut === -1 ? '' : href.slice(cut);
+    if (!isPagePath(pathname)) return href;
+    return pathname === '/' ? `/${prefix}/${rest}` : `/${prefix}${pathname}${rest}`;
+}
+
+// ── Dates and numbers ─────────────────────────────────────────────────────
+// English keeps the formats the pages always had: en-GB dates ("1 November 2026"), en-US numbers ("12,345").
+const FORMATS = new Map();
+const DEFAULT_DATE = Object.freeze({ day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+function cachedFormat(kind, locale, opts) {
+    const id = `${kind}|${locale}|${JSON.stringify(opts)}`;
+    if (!FORMATS.has(id)) FORMATS.set(id, kind === 'date' ? new Intl.DateTimeFormat(locale, opts) : new Intl.NumberFormat(locale, opts));
+    return FORMATS.get(id);
+}
+
+/** A date in the language ("1 November 2026" / "1. November 2026"); '' for a missing or invalid date. */
+export function formatDateIn(lang, value, opts = DEFAULT_DATE) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (value == null || Number.isNaN(date.getTime())) return '';
+    return cachedFormat('date', isLanguage(lang) && lang !== DEFAULT_LANG ? lang : 'en-GB', opts).format(date);
+}
+
+/** A number with the language's grouping ("12,345" / "12.345"); not a number → 0. */
+export function formatNumberIn(lang, n, opts = {}) {
+    return cachedFormat('number', isLanguage(lang) && lang !== DEFAULT_LANG ? lang : 'en-US', opts).format(Number(n) || 0);
+}
+
+/**
+ * The functions a page context carries for one language. `href` maps site paths for links
+ * (default: the same language's prefix); catalog links ([text](/path)) go through it too, so a
+ * translation never needs to write a prefix.
+ */
+export function translator(lang = DEFAULT_LANG, { href = null } = {}) {
     const code = isLanguage(lang) ? lang : DEFAULT_LANG;
+    const link = typeof href === 'function' ? href : (path) => localizePath(code, path);
+    const options = { rewrite: link };
     return {
         lang: code,
         t: (key, params) => translate(code, key, params),
-        ti: (key, params) => translateInline(code, key, params),
-        tb: (key, params) => translateBlock(code, key, params),
+        ti: (key, params) => translateInline(code, key, params, options),
+        tb: (key, params) => translateBlock(code, key, params, options),
         /** Plural plain text: tp('billing.common.day', 3) → "3 days" ({count} is filled in). */
         tp: (key, count, params = {}) => translate(code, pluralKey(code, key, count), { count, ...params }),
+        /** A site link that keeps the page's language: href('/features') → '/de/features'. */
+        href: link,
+        fmtDate: (value, opts) => formatDateIn(code, value, opts),
+        fmtNumber: (n, opts) => formatNumberIn(code, n, opts),
     };
+}
+
+/** True when this language itself has the key (its catalog or an owner edit), not only the English fallback. */
+export function translatedIn(lang, key) {
+    if (!isLanguage(lang)) return false;
+    const edited = overrides ? overrides(lang, key) : null;
+    return typeof edited === 'string' || catalogsNow().get(lang)?.has(key) === true;
 }
 
 /** Every key in a catalog map, for tests (placeholders per key). */
@@ -210,9 +308,14 @@ export function placeholdersOf(text) {
     return [...String(text).matchAll(TOKEN)].map((m) => m[1]).sort();
 }
 
-/** The translator for a page context: its own t/ti/tb, else one for ctx.lang (tests pass bare contexts). */
+/**
+ * The translator for a page context: its own t/ti/tb/tp (+ href, fmtDate, fmtNumber), else one for
+ * ctx.lang (tests pass bare contexts). A context with its own text functions but without the link
+ * and format helpers gets those of ctx.lang added.
+ */
 export function textOf(ctx) {
-    return ctx && typeof ctx.t === 'function' && typeof ctx.ti === 'function' && typeof ctx.tb === 'function' && typeof ctx.tp === 'function'
-        ? ctx
-        : translator(ctx?.lang);
+    const own = ctx && typeof ctx.t === 'function' && typeof ctx.ti === 'function' && typeof ctx.tb === 'function' && typeof ctx.tp === 'function';
+    if (own && typeof ctx.href === 'function' && typeof ctx.fmtDate === 'function' && typeof ctx.fmtNumber === 'function') return ctx;
+    const base = translator(ctx?.lang);
+    return own ? { ...base, ...ctx, href: ctx.href || base.href, fmtDate: ctx.fmtDate || base.fmtDate, fmtNumber: ctx.fmtNumber || base.fmtNumber } : base;
 }
