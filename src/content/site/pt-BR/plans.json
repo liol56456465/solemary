@@ -1,0 +1,113 @@
+{
+  "free": {
+    "summary": "Tudo o que o Mewvo faz hoje, para um servidor.",
+    "perks": {
+      "enforcement": "Painel de punições, códigos de caso e mensagens diretas",
+      "ladderAppeals": "Escada de advertências e apelações",
+      "automod": "Automod com 14 regras e cartões de revisão",
+      "ticketsDashboard": "Tickets, modmail e o painel web",
+      "community": "Níveis, tags, sugestões, starboard, feeds",
+      "scheduled": "Até 50 mensagens agendadas"
+    }
+  },
+  "normal": {
+    "summary": "Mais espaço para servidores de comunidade movimentados.",
+    "perks": {
+      "everythingFree": "Tudo do Free",
+      "limits": "250 tags, 25 mensagens fixas, 40 feeds do YouTube",
+      "scheduled": "100 mensagens agendadas",
+      "customRules": "5 regras personalizadas de automod",
+      "supporterRole": "Cargo de apoiador no servidor Mewvo",
+      "caseExport": "Exportação de casos (CSV), últimos 90 dias"
+    }
+  },
+  "pro": {
+    "summary": "Para servidores com uma equipe de verdade.",
+    "perks": {
+      "everythingNormal": "Tudo do Normal, com limites maiores",
+      "customRules": "25 regras personalizadas de automod",
+      "analytics": "Estatísticas da equipe e do automod no painel",
+      "customBot": "Nome e avatar personalizados do bot no seu servidor",
+      "caseExport": "Exportação do histórico completo de casos"
+    }
+  },
+  "max": {
+    "summary": "Para quem administra vários servidores.",
+    "perks": {
+      "everythingPro": "Tudo do Pro",
+      "oneDashboard": "Um painel para até 5 servidores",
+      "sharedCases": "Histórico de casos compartilhado entre os seus servidores",
+      "priorityHelp": "Ajuda prioritária no servidor de suporte",
+      "highestLimits": "Os limites mais altos em tudo"
+    }
+  },
+  "comparison": {
+    "moderation": {
+      "title": "Moderação",
+      "rows": {
+        "enforcement": "Painel de punições, códigos de caso, mensagens diretas",
+        "ladderAppeals": "Escada de advertências e apelações",
+        "caseHistory": "Histórico de casos",
+        "caseExport": "Exportação de casos (CSV)",
+        "sharedCases": "Casos compartilhados entre servidores"
+      }
+    },
+    "automod": {
+      "title": "Automod",
+      "rows": {
+        "builtIn": "Regras prontas com cartões de revisão",
+        "customRules": "Regras personalizadas de automod"
+      }
+    },
+    "community": {
+      "title": "Comunidade",
+      "rows": {
+        "tags": "Tags",
+        "stickies": "Mensagens fixas",
+        "feeds": "Feeds do YouTube",
+        "scheduled": "Mensagens agendadas"
+      }
+    },
+    "dashboard": {
+      "title": "Painel e suporte",
+      "rows": {
+        "auditLog": "Painel web com registro de auditoria",
+        "analytics": "Estatísticas da equipe e do automod",
+        "customBot": "Nome e avatar personalizados do bot",
+        "servers": "Servidores em um só painel",
+        "supporterRole": "Cargo de apoiador no servidor Mewvo",
+        "help": "Ajuda no servidor de suporte"
+      }
+    },
+    "values": {
+      "keptForGood": "Guardado para sempre",
+      "last90Days": "Últimos 90 dias",
+      "fullHistory": "Histórico completo",
+      "upTo5": "Até 5",
+      "yes": "Sim",
+      "priority": "Prioritária"
+    }
+  },
+  "faq": {
+    "buyNow": {
+      "q": "Posso comprar um plano agora?",
+      "a": "Não. Por enquanto, o Mewvo funciona só no próprio servidor. Os planos pagos começam quando ele abrir para outros servidores; até lá, nada pode ser comprado e ninguém é cobrado."
+    },
+    "currency": {
+      "q": "Em que moeda estão os preços?",
+      "a": "Em euros. Os preços desta página são os preços mensais e anuais previstos."
+    },
+    "cancel": {
+      "q": "Posso cancelar ou receber meu dinheiro de volta?",
+      "a": "Os planos não se renovam sozinhos, então não há nada para cancelar: um plano dura o período que você escolheu e depois volta para o Free. Quando os pagamentos reais começarem, você poderá desistir de uma compra em até 14 dias. Se você pediu que o plano começasse imediatamente, recebe o dinheiro de volta descontados os dias que já usou. Os detalhes estão na página de desistência."
+    },
+    "freeKeeps": {
+      "q": "O que o Free mantém?",
+      "a": "Tudo o que o Mewvo faz hoje: punições, a escada de advertências, apelações, automod, tickets, modmail, o painel e as ferramentas para a comunidade. O seu histórico de casos nunca é apagado quando um plano termina."
+    },
+    "backToFree": {
+      "q": "O que acontece com tags ou feeds extras se eu voltar para o Free?",
+      "a": "A ideia é que nada seja apagado: itens acima do limite do Free param de funcionar até você remover alguns ou fazer upgrade de novo. Isso ainda pode mudar antes do lançamento."
+    }
+  }
+}

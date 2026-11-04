@@ -1,0 +1,18 @@
+{
+  "title": "Regras",
+  "description": "As regras do servidor Mewvo no Discord.",
+  "head": {
+    "heading": "Regras do servidor",
+    "lead": "As regras do servidor Mewvo. Quando a equipe adverte, silencia, expulsa ou bane por uma delas, a mensagem direta cita a regra e traz um link para cá."
+  },
+  "state": {
+    "unavailable": "Não foi possível carregar as regras agora. Tente de novo em um minuto.",
+    "empty": "Este servidor ainda não publicou suas regras."
+  },
+  "list": {
+    "updated": "Última atualização: {date}.",
+    "linkLabel": "Link para a regra {number}",
+    "consequenceLabel": "Consequência:"
+  },
+  "appeal": "Foi punido por uma regra que você acha que não quebrou? Toda mensagem direta diz se e como é possível apelar. [Como funcionam as apelações](/docs/appeals)."
+}

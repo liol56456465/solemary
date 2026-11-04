@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "title": "Perguntas frequentes",
+    "description": "Respostas sobre o Mewvo: o que ele faz, a escada de advertências, apelações, dados armazenados e como falar com a equipe."
+  },
+  "head": {
+    "title": "Perguntas e respostas",
+    "lead": "Respostas curtas. Para guias passo a passo, veja a [documentação](/docs)."
+  },
+  "support": {
+    "link": "[o servidor de suporte]({url})",
+    "text": "o servidor de suporte"
+  },
+  "about": {
+    "title": "Sobre o Mewvo",
+    "whatDoes": {
+      "q": "O que o Mewvo faz?",
+      "a": "Ele modera um servidor do Discord e cuida das funcionalidades de comunidade. A equipe adverte, silencia, expulsa e bane a partir de um único painel; cada ação vira um caso com um código, e o membro recebe uma mensagem direta dizendo por quê, até quando e como apelar. Em volta disso: uma escada de advertências, apelações, automod, tickets e modmail, um painel web, níveis e outras ferramentas para a comunidade. A [página de funcionalidades](/features) lista tudo."
+    },
+    "notYet": {
+      "q": "Por que ainda não posso adicioná-lo ao meu servidor?",
+      "a": "Por enquanto, o Mewvo é feito para o servidor Mewvo e funciona só nele. Abri-lo para outros servidores exige mais trabalho antes, como configurações e limites por servidor. Quando ele abrir, um botão para adicioná-lo ao seu servidor vai aparecer neste site, e os planos pagos da página de preços também começam nessa hora.",
+      "aPublic": "Agora você pode: use o botão Adicionar ao Discord no topo da página."
+    },
+    "free": {
+      "q": "É gratuito?",
+      "a": "Sim. Tudo o que ele faz hoje é gratuito. Planos pagos com limites maiores estão previstos para quando o Mewvo abrir para outros servidores; veja [Preços](/pricing)."
+    }
+  },
+  "appeals": {
+    "title": "Advertências e apelações",
+    "ladder": {
+      "q": "Como funciona a escada de advertências?",
+      "a": "As advertências 1 e 2 são uma mensagem direta. A advertência 3 é um banimento automático de 7 dias. Depois disso, a próxima advertência é um banimento de 30 dias, e a seguinte, um banimento permanente do qual se pode apelar por 6 meses. A escada nunca zera sozinha; uma apelação aceita de um banimento da escada a faz descer um degrau. [O guia completo](/docs/warnings)."
+    },
+    "howTo": {
+      "q": "Como faço para apelar?",
+      "a": "Use o link da mensagem direta que você recebeu. Clique em **Appeal** (Apelar) no painel de apelações e informe por que a punição deve ser retirada e o código do caso da mensagem direta. Se você estiver banido, use o painel em {support}. Você recebe a decisão por mensagem direta. [Como funcionam as apelações](/docs/appeals)."
+    },
+    "lostCode": {
+      "q": "Perdi o código do meu caso.",
+      "a": "Clique em **My standing** (Minha situação) no painel de apelações: ele lista as suas advertências e qualquer banimento ou silenciamento ativo, com os códigos.",
+      "aPortal": "Clique em **My standing** (Minha situação) no painel de apelações: ele lista as suas advertências e qualquer banimento ou silenciamento ativo, com os códigos. [Meu histórico](/me) neste site mostra todos os seus casos."
+    },
+    "everyPunishment": {
+      "q": "É possível apelar de qualquer punição?",
+      "a": "Da maioria, sim. Banimentos e silenciamentos podem ser apelados enquanto durarem; advertências e expulsões, em até 30 dias. Um banimento permanente da escada deixa de poder ser apelado após 6 meses ou após uma apelação negada, e a equipe pode marcar um banimento grave como sem direito a apelação. A mensagem direta sempre diz qual é o caso."
+    }
+  },
+  "data": {
+    "title": "Dados e contato",
+    "stored": {
+      "q": "Que dados o Mewvo armazena?",
+      "a": "IDs do Discord, seus níveis e XP, casos de moderação, apelações e o que você escreve em formulários ou tickets, além de algumas coisas que você escolhe salvar, como um aniversário. Nenhum e-mail, nenhuma senha, nunca vendidos. A [página de privacidade](/privacy) tem a lista completa, e `/wipedata` apaga seus níveis, saldo, status AFK e aniversário naquele servidor, além da sua lista de tarefas, lembretes e login do Discord armazenado. Os registros de moderação ficam; veja o motivo na página de privacidade."
+    },
+    "reachStaff": {
+      "q": "Como falo com a equipe?",
+      "a": "De três formas: mande uma mensagem direta ao bot e escolha **Send to staff** (Enviar para a equipe) (modmail), abra um ticket pelo painel de tickets ou pergunte em {support}. Para denunciar alguém da equipe, use **Report staff** (Denunciar membro da equipe) no painel de apelações do servidor de suporte; só os administradores veem essas denúncias."
+    },
+    "down": {
+      "q": "O bot está fora do ar?",
+      "a": "Veja a [página de status](/status). Ela mostra se o bot está online e atualiza a cada minuto."
+    }
+  }
+}

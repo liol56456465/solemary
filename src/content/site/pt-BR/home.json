@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "description": "Mewvo é um bot de moderação para Discord com códigos de caso e mensagens diretas, uma escada de advertências em três etapas, apelações analisadas por uma pessoa, automod, tickets e ferramentas para a comunidade."
+  },
+  "actions": {
+    "readDocs": "Ler a documentação",
+    "joinServer": "Entrar no servidor",
+    "joinSupportServer": "Entrar no servidor de suporte",
+    "openDashboard": "O Mewvo já está no seu servidor? [Abra o painel]({url})"
+  },
+  "hero": {
+    "title": "Um bot de Discord para moderação e apelações",
+    "lead": "O Mewvo adverte, silencia, expulsa e bane a partir de um único painel. O membro recebe uma mensagem direta com o motivo, o horário de término e como apelar. A sua equipe recebe um caso com um código curto para consultar depois.",
+    "notPublic": "Por enquanto, o Mewvo funciona no servidor Mewvo. Ainda não é possível adicioná-lo a outros servidores.",
+    "dmCaption": "A mensagem direta que um membro recebe na segunda advertência. Mesmo texto do bot."
+  },
+  "dashboard": {
+    "title": "Tudo em um só lugar",
+    "text": "Membros, casos, apelações e todas as configurações no navegador. Entre com o Discord; toda alteração fica em um registro de auditoria. [Um tour pelo painel](/docs/using-the-dashboard)",
+    "shotAlt": "A visão geral do painel do Mewvo: itens que precisam da equipe, moderação dos últimos sete dias, saúde do bot e progresso da configuração."
+  },
+  "ladder": {
+    "title": "As mesmas regras para todos",
+    "text": "As advertências sobem uma escada fixa por membro e por servidor. As duas primeiras são uma mensagem direta. A terceira é um banimento de 7 dias, depois 30 dias, depois permanente. Banimentos manuais não a movem, e uma apelação aceita a faz descer um degrau.\n\nOs membros podem ver em que ponto estão, então ninguém é pego de surpresa por um banimento. [Como as advertências aumentam](/docs/warnings)"
+  },
+  "what": {
+    "title": "O que ele faz",
+    "text": "Moderação em primeiro lugar, com as ferramentas de comunidade de que um servidor precisa ao lado. [Todas as funcionalidades](/features)",
+    "items": {
+      "enforcement": {
+        "name": "Moderação",
+        "text": "Advirta, silencie, expulse e bana a partir de um único painel que mostra primeiro o histórico do membro. Cada ação é um caso com um código curto que a equipe pode editar, anular ou complementar com provas depois.",
+        "link": "Primeiros passos"
+      },
+      "appeals": {
+        "name": "Apelações",
+        "text": "Os membros apelam com um formulário curto. Apelações de banimento abrem um canal no servidor de suporte, então funcionam mesmo depois de um banimento, e uma pessoa da equipe decide.",
+        "link": "Como funcionam as apelações"
+      },
+      "automod": {
+        "name": "Automod",
+        "text": "Catorze regras, de links de golpe a menções em massa. Cada ação automática é um caso normal, com um cartão no canal da equipe para mantê-la, desfazê-la ou alterá-la.",
+        "link": "Regras do automod"
+      },
+      "tickets": {
+        "name": "Tickets e modmail",
+        "text": "Um painel de tickets, e os membros podem mandar mensagem direta ao bot para falar com a equipe. Ambos viram canais no seu servidor; linhas que começam com // ficam internas.",
+        "link": "Tickets e modmail"
+      },
+      "logging": {
+        "name": "Registros e ferramentas",
+        "text": "Entradas, saídas, mudanças de cargo, mensagens editadas e excluídas e mais, cada um no canal que você escolher. Verificação e ferramentas do servidor ficam ao lado.",
+        "link": "Registros e ferramentas"
+      },
+      "community": {
+        "name": "Ferramentas para a comunidade",
+        "text": "Níveis, tags, sugestões, starboard, mensagens fixas, feeds do YouTube, cargos por reação, sorteios, aniversários, candidaturas, canais de voz criados ao entrar, mensagens de boas-vindas.",
+        "link": "Todas as ferramentas para a comunidade"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Gratuito",
+    "text": "Tudo acima é gratuito. Os planos pagos só aumentam limites como os de tags e mensagens fixas. [Planos e preços](/pricing)"
+  },
+  "help": {
+    "title": "Dúvidas?",
+    "text": "Comece pela [documentação](/docs) ou pelas [perguntas e respostas](/faq).",
+    "support": "Ainda com dúvidas? Pergunte no [servidor de suporte]({url}); uma pessoa responde."
+  }
+}

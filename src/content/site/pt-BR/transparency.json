@@ -1,0 +1,76 @@
+{
+  "title": "Relatório de transparência",
+  "description": "Quantas advertências, silenciamentos, expulsões e banimentos o servidor Mewvo aplicou a cada mês, e como as apelações foram decididas. Só números.",
+  "head": {
+    "heading": "Relatório de transparência",
+    "lead": "Com que frequência a equipe do servidor Mewvo advertiu, silenciou, expulsou e baniu, e como foram as apelações, mês a mês. Só números: sem nomes, sem motivos, sem moderadores.",
+    "period": "De {from} a {to}, em UTC. Atualizado no máximo a cada 10 minutos."
+  },
+  "summary": {
+    "warns": "Advertências",
+    "mutes": "Silenciamentos",
+    "kicks": "Expulsões",
+    "bans": "Banimentos",
+    "appealsReceived": "Apelações recebidas",
+    "medianDecision": "Tempo mediano até a decisão de uma apelação"
+  },
+  "table": {
+    "month": "Mês",
+    "total": "Total",
+    "soFar": "até agora",
+    "notEnoughDecisions": "decisões insuficientes"
+  },
+  "actions": {
+    "heading": "Ações de moderação",
+    "intro": "Por mês; o mês atual, até agora.",
+    "caption": "Ações de moderação por mês, das mais antigas para as mais recentes. A última linha é o total.",
+    "columns": {
+      "warns": "Advertências",
+      "mutes": "Silenciamentos",
+      "kicks": "Expulsões",
+      "bans": "Banimentos",
+      "ladderBans": "Dos banimentos: automáticos (escada de advertências)",
+      "automod": "Aplicados pelo automod",
+      "voided": "Anulados por engano"
+    }
+  },
+  "appeals": {
+    "heading": "Apelações",
+    "intro": "Pelo mês em que a apelação foi enviada, com o resultado de hoje.",
+    "caption": "Apelações por mês de envio, das mais antigas para as mais recentes. A última linha é o total.",
+    "columns": {
+      "received": "Recebidas",
+      "accepted": "Aceitas",
+      "denied": "Negadas",
+      "open": "Ainda abertas",
+      "median": "Tempo mediano até uma decisão"
+    }
+  },
+  "how": {
+    "heading": "Como estes números são calculados",
+    "intro": "O funcionamento das apelações está explicado no [guia de apelações](/docs/appeals).",
+    "counted": {
+      "question": "O que é contado",
+      "answer": "Toda advertência, silenciamento, expulsão e banimento aplicado no servidor Mewvo, no mês em que foi aplicado (UTC), seja por um moderador, pela escada de advertências ou pelo automod. Banimentos automáticos da escada e ações do automod já fazem parte das quatro colunas principais; as colunas próprias deles só mostram quantos foram."
+    },
+    "notCounted": {
+      "question": "O que não é contado",
+      "answer": "Simulações de teste (a equipe pré-visualizando uma mensagem; nada acontece com ninguém), advertências importadas do bot antigo como histórico e denúncias contra a equipe. Casos anulados por engano ficam fora das colunas principais e aparecem à parte na coluna “Anulados por engano”, pelo mês em que foram aplicados pela primeira vez."
+    },
+    "appeals": {
+      "question": "Apelações",
+      "answer": "As apelações são contadas no mês em que foram enviadas, com o resultado de hoje. Uma apelação sobre um caso que depois foi anulado continua contando: a apelação aconteceu. Apelações encerradas sem decisão contam apenas como recebidas. O tempo mediano vai do envio da apelação até a decisão da equipe, considerando as apelações aceitas e negadas daquele mês."
+    },
+    "smallNumbers": {
+      "question": "Números pequenos",
+      "answer": "Para que casos individuais não possam ser reconhecidos, uma contagem de 1 ou 2 aparece como “menos de 3”, e uma mediana só aparece quando pelo menos 3 apelações foram decididas. Quando um mês de uma coluna fica oculto assim, o total diz “pelo menos” em vez do número exato."
+    },
+    "neverShown": {
+      "question": "O que esta página nunca mostra",
+      "answer": "Nomes, IDs do Discord, códigos de caso, motivos ou qual moderador agiu. Só números."
+    }
+  },
+  "error": {
+    "text": "Não foi possível carregar o relatório agora porque o banco de dados não está respondendo. Preferimos não mostrar números a mostrar números errados; tente de novo em alguns minutos."
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "description": "O que mudou no Mewvo, das novidades mais recentes para as mais antigas."
+  },
+  "head": {
+    "title": "Novidades",
+    "lead": "O que mudou no Mewvo, das mais recentes para as mais antigas. Uma mudança entra na lista quando está pronta. O bot no seu servidor a recebe na próxima atualização."
+  },
+  "entries": {
+    "2026-11-01": {
+      "customAutomodRules": "Regras personalizadas de automod: adicione suas próprias palavras e frases para bloquear, com /automod custom ou no painel. Você pode mudar as palavras de uma regra depois. Faz parte dos planos Normal, Pro e Max.",
+      "remind": "/remind: crie um lembrete para você. O Mewvo o envia por mensagem direta, ou no canal se as suas mensagens diretas estiverem fechadas.",
+      "profile": "/profile: seu nível, posição, próxima recompensa de cargo, aniversário e plano em um só cartão.",
+      "appealStatus": "/appeal status: veja suas apelações e se alguém da equipe está analisando.",
+      "recordLinkInDms": "Mensagens diretas de punição podem trazer um link para Meu histórico, onde você vê seu histórico completo no site.",
+      "gettingStartedList": "Painel: a página Overview (visão geral) começa com uma pequena lista de primeiros passos, e cada página de configurações explica suas opções em palavras simples.",
+      "activityPage": "Painel: uma página Activity (atividade) com mensagens, entradas e casos por dia nos últimos 30 dias.",
+      "settingsBackup": "Painel: um backup das configurações que você pode baixar e carregar de volta após uma verificação.",
+      "caseNotesAndTags": "Painel: notas privadas da equipe e tags nos casos, ações em vários casos de uma vez e pesquisas salvas.",
+      "shiftNote": "Painel: uma nota para o próximo turno da equipe na página Overview.",
+      "weeklySummary": "Um resumo semanal do servidor no registro de moderação toda segunda-feira.",
+      "proMaxBranding": "Pro e Max: o Mewvo pode usar apelido e avatar próprios no seu servidor, e a equipe pode baixar os casos como planilha.",
+      "dashboardThemes": "Temas do painel: Claro, Escuro, Penumbra e Alto contraste."
+    },
+    "2026-10-31": {
+      "legalPages": "Política de Privacidade e Termos e Condições.",
+      "dataDownload": "Meu histórico: baixe em um arquivo todos os dados que o Mewvo tem sobre você.",
+      "paidPlans": "Os planos pagos agora fazem algo: cargos de apoiador, /premium, presentes e chaves de resgate."
+    },
+    "2026-10-29": {
+      "rename": "O bot agora se chama Mewvo (antes era Meowist).",
+      "serverRules": "Regras do servidor no site. As mensagens diretas de punição citam a regra quebrada e trazem um link para ela.",
+      "independentAppeals": "As apelações são decididas por alguém que não seja o moderador que aplicou a punição.",
+      "myRecord": "Meu histórico no site: os membros podem ver o próprio histórico de moderação.",
+      "scheduledMessages": "Mensagens agendadas e recorrentes pelo painel.",
+      "inbox": "Painel: uma Inbox (caixa de entrada) para apelações, tickets, modmail e revisões do automod, com respostas pela web.",
+      "websitePages": "Páginas no site para a classificação, o status, as funcionalidades, os preços, a documentação e as perguntas frequentes."
+    },
+    "2026-10-28": {
+      "membersPage": "Painel: uma página Members (membros) com filtros, cargos, apelidos e castigos, também para vários membros de uma vez.",
+      "temporaryRoles": "Cargos temporários que são retirados sozinhos depois de um tempo definido.",
+      "bannedPage": "Painel: uma página Banned (banidos) com todos que estão banidos e o motivo.",
+      "channelTools": "Painel: limpe, tranque e destranque canais, e publique mensagens, enquetes e contagens regressivas como o bot.",
+      "appealsInSupportServer": "Apelações de banimento e expulsão conversam com o membro no servidor de suporte.",
+      "mutesInMassGuard": "Silenciamentos contam para o limite que impede um moderador de punir muitas pessoas em pouco tempo."
+    }
+  }
+}
