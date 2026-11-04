@@ -23,7 +23,7 @@ import {
     addNoContactOrder, endNoContactOrder, listActiveNoContactOrders, NO_CONTACT_MAX_DAYS,
 } from '../../services/enforcement/noContactService.js';
 import {
-    addWatch, endWatch, listActiveWatches, watchListLine, WATCH_MAX_DAYS, WATCH_REASON_MAX,
+    addWatch, endWatch, listActiveWatches, watchListDescription, WATCH_MAX_DAYS, WATCH_REASON_MAX,
 } from '../../services/enforcement/watchlistService.js';
 
 function userError(message) {
@@ -234,7 +234,7 @@ async function handleWatch(interaction, client, sub) {
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
                 title: `Watchlist (${rows.length})`,
-                description: truncate(rows.map(watchListLine).join('\n') || 'Nobody. Add someone with `/case watch add`.', 4096),
+                description: watchListDescription(rows),
                 color: 'primary',
             })],
         });

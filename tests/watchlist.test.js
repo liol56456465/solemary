@@ -110,6 +110,23 @@ test('lines: /background shows since + reason; /case watch list shows period, au
         `**#5** <@${A}> · since <t:${created}:R> · no end date · by <@${MOD}> · alt`);
 });
 
+test('/case watch list: 25 long entries fit 4096 with whole lines and "…and N more" (never cut mid-line)', async () => {
+    const { watchListDescription } = await import('../src/services/enforcement/watchlistService.js');
+    const rows = Array.from({ length: 25 }, (_, i) => ({
+        id: String(1000 + i), user_id: `2000000000000000${String(i).padStart(2, '0')}`, created_by: MOD,
+        created_at: hourAgo, until: future, reason: 'r'.repeat(500),
+    }));
+    const text = watchListDescription(rows);
+    assert.ok(text.length <= 4096, `length ${text.length}`);
+    const lines = text.split('\n');
+    const shown = lines.filter((line) => line.startsWith('**#'));
+    assert.ok(shown.length < 25, 'not everything fits');
+    for (const line of shown) assert.equal(line, watchListLine(rows[shown.indexOf(line)]), 'whole lines only');
+    assert.equal(lines.at(-1), `…and ${25 - shown.length} more`);
+    assert.equal(watchListDescription(rows.slice(0, 2)).split('\n').length, 2, 'short lists unchanged');
+    assert.match(watchListDescription([]), /^Nobody\./);
+});
+
 test('expiry job: does nothing without the database', async () => {
     assert.equal(await expireWatchlist({}), 0);
 });
