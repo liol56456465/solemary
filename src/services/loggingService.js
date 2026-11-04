@@ -47,6 +47,7 @@ const EVENT_TYPES = {
   MEMBER_JOIN: 'member.join',
   MEMBER_LEAVE: 'member.leave',
   MEMBER_NAME_CHANGE: 'member.namechange',
+  MEMBER_SELF_COOLDOWN: 'member.selfcooldown',
 
   REACTION_ROLE_ADD: 'reactionrole.add',
   REACTION_ROLE_REMOVE: 'reactionrole.remove',
@@ -123,6 +124,7 @@ const EVENT_COLORS = {
   'member.join': 0x2ecc71,
   'member.leave': 0xe74c3c,
   'member.namechange': 0x3498db,
+  'member.selfcooldown': 0x95a5a6,
   'reactionrole.add': 0x2ecc71,
   'reactionrole.remove': 0xe74c3c,
   'reactionrole.create': 0x3498db,
@@ -192,6 +194,7 @@ const EVENT_TITLES = {
   'member.join': 'Member joined',
   'member.leave': 'Member left',
   'member.namechange': 'Name changed',
+  'member.selfcooldown': 'Self-cooldown started',
   'reactionrole.add': 'Reaction role added',
   'reactionrole.remove': 'Reaction role removed',
   'reactionrole.create': 'Reaction role panel created',
