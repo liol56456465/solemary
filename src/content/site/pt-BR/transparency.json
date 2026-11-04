@@ -72,5 +72,24 @@
   },
   "error": {
     "text": "Não foi possível carregar o relatório agora porque o banco de dados não está respondendo. Preferimos não mostrar números a mostrar números errados; tente de novo em alguns minutos."
+  },
+  "mask": {
+    "fewer": "menos de {n}",
+    "atLeast": "pelo menos {n}"
+  },
+  "median": {
+    "underHour": "menos de uma hora",
+    "hours": {
+      "zero": "{count} horas",
+      "one": "{count} hora",
+      "many": "{count} horas",
+      "other": "{count} horas"
+    },
+    "days": {
+      "zero": "{count} dias",
+      "one": "{count} dia",
+      "many": "{count} dias",
+      "other": "{count} dias"
+    }
   }
 }

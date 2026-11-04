@@ -47,15 +47,15 @@ import {
 } from '../dashboard/security.js';
 import { createPgSessionStore } from '../dashboard/sessionStore.js';
 import { query } from '../enforcement/db.js';
-import { OPEN_STATUSES, caseStatusLabel, listCasesForUser, listUserAppeals } from '../enforcement/caseService.js';
-import { getMemberStanding, nextWarningText } from '../enforcement/standingService.js';
+import { OPEN_STATUSES, caseStatusCode, caseStatusLabel, listCasesForUser, listUserAppeals } from '../enforcement/caseService.js';
+import { getMemberStanding, nextWarningSteps } from '../enforcement/standingService.js';
 import { NOINDEX, installUrl, inviteOrNull, layout, legalContact, publicSiteEnabled, siteOrigin } from './site.js';
 import { createBillingHandlers } from './billing.js';
 import { premiumSettings, premiumStore } from '../billing/premiumService.js';
 import { ACCOUNT_EXPORT_NOTE, EXPORT_FORMAT, buildDataExport, exportFileName } from '../privacy/dataExport.js';
 import { getFromDb } from '../../utils/database/wrapper.js';
 import { createAccountHandlers, memberAccountSettings } from './accountRoutes.js';
-import { DEFAULT_LANG, LANG_CODES, textOf, translator } from './i18n.js';
+import { DEFAULT_LANG, LANG_CODES, hasKey, textOf, translator } from './i18n.js';
 import { languageCookie, requestLanguage } from './language.js';
 import { accountStore as defaultAccountStore } from '../accounts/accountStore.js';
 
@@ -174,7 +174,8 @@ export function memberAccountsOn(env = process.env) {
     return memberAccountSettings(env, memberPortalSettings(env)).enabled;
 }
 
-export function appealInfo(record, lastAppeal, { now = Date.now(), config = enforcementConfig, text: { t } = translator() } = {}) {
+export function appealInfo(record, lastAppeal, { now = Date.now(), config = enforcementConfig, text = translator() } = {}) {
+    const { t } = text;
     if (record.voided_at) return { appealable: false, text: t('portal.appeal.voided') };
     if (record.status === 'revoked') return { appealable: false, text: t('portal.appeal.lifted') };
     if (record.unappealable) return { appealable: false, text: t('portal.appeal.unappealable') };
@@ -186,7 +187,7 @@ export function appealInfo(record, lastAppeal, { now = Date.now(), config = enfo
         until = record.appeal_deadline || record.expires_at || null;
     } else {
         const end = time(record.created_at) + config.appealWindowMs;
-        if (!(end > now)) return { appealable: false, text: t('portal.appeal.windowClosed', { days: Math.round(config.appealWindowMs / DAY_MS) }) };
+        if (!(end > now)) return { appealable: false, text: text.tp('portal.appeal.windowClosed', Math.round(config.appealWindowMs / DAY_MS)) };
         until = new Date(end);
     }
     if (lastAppeal?.status === 'pending') return { appealable: false, text: t('portal.appeal.pending') };
@@ -197,17 +198,45 @@ export function appealInfo(record, lastAppeal, { now = Date.now(), config = enfo
     return { appealable: true, until: until ? new Date(until) : null, text: t('portal.appeal.appealable') };
 }
 
-/** A member-facing status: caseStatusLabel, with plainer words for warnings and kicks. */
+/** A member-facing status: caseStatusCode in the page's language, with plainer words for warnings and kicks. */
 function memberStatus(t, record, countedCodes, appealStatus) {
     if (record.is_imported) return t('portal.status.imported');
-    const label = caseStatusLabel(record, appealStatus);
-    if (label === 'voided') return t('portal.status.voided');
+    const code = caseStatusCode(record, appealStatus);
+    if (code === 'voided') return t('portal.status.voided');
     if (record.status === 'active' && record.type === 'warn') {
         return t(countedCodes.has(record.case_code) ? 'portal.status.counts' : 'portal.status.noLongerCounts');
     }
     if (record.status === 'active' && record.type === 'kick') return t('portal.status.onRecord');
-    // caseStatusLabel's own wording (caseService.js; not in the website catalog yet).
-    return label;
+    // portal.status.case.<code>; an unknown status keeps caseStatusLabel's English words.
+    return /^[a-zA-Z]+$/.test(code) && hasKey('en', `portal.status.case.${code}`) ? t(`portal.status.case.${code}`) : caseStatusLabel(record, appealStatus);
+}
+
+const DURATION_UNITS = [['month', 30 * DAY_MS], ['day', DAY_MS], ['hour', 60 * 60 * 1000], ['minute', 60 * 1000]];
+
+/** A ban length like enforcement/format.js formatDuration ("7 days", "1 month"), in the page's language; null = permanent. */
+export function banLengthText(ms, { t, tp }) {
+    if (ms == null) return t('portal.next.permanent');
+    const parts = [];
+    let rest = ms;
+    for (const [unit, size] of DURATION_UNITS) {
+        const count = Math.floor(rest / size);
+        if (count > 0) {
+            parts.push(tp(`portal.duration.${unit}`, count));
+            rest -= count * size;
+        }
+    }
+    return parts.slice(0, 2).join(' ') || t('portal.duration.lessThanMinute');
+}
+
+/** What the next warning would do (standingService nextWarningSteps), in the page's language. */
+export function nextWarningWords(ladder, text = translator()) {
+    const { t, tp } = text;
+    const step = nextWarningSteps(ladder);
+    const ban = banLengthText(step.banMs, text);
+    if (step.escalates) return t('portal.next.limit', { ban, level: step.nextLevel });
+    const first = t('portal.next.warning', { number: step.warnNumber, threshold: step.threshold });
+    const after = step.left === 1 ? t('portal.next.afterOne', { ban }) : tp('portal.next.afterMore', step.left, { ban });
+    return `${first} ${after}`;
 }
 
 /**
@@ -232,7 +261,7 @@ export function buildRecordView({ standing, cases, appeals, now = Date.now(), co
     const active = (record) => (record ? { code: record.case_code, endsAt: record.expires_at || null } : null);
     return {
         warnings: { count: Number(ladder.warns_since_level) || 0, threshold },
-        ladder: { level: Number(ladder.level) || 0, next: nextWarningText(ladder) },
+        ladder: { level: Number(ladder.level) || 0, next: nextWarningWords(ladder, text) },
         activeBan: active(standing.activeBan),
         activeMute: active(standing.activeMute),
         cases: rows.map((row) => ({
@@ -312,7 +341,7 @@ export function recordPage(ctx, { session, view }) {
 <h2 id="cases-title">${t('portal.record.cases')}</h2>
 ${view.cases.length ? html`<div class="table-wrap" role="region" aria-labelledby="cases-title" tabindex="0"><table class="record-table"><thead><tr>${col('case')}${col('type')}${col('reason')}${col('by')}${col('date')}${col('ends')}${col('status')}${col('appeal')}</tr></thead>
 <tbody>${view.cases.map((c) => html`<tr><td><code>${c.code}</code></td><td>${c.type}</td><td>${c.reason}</td><td>${c.by}</td><td>${when(c.createdAt)}</td><td>${c.permanent ? t('portal.record.permanent') : when(c.endsAt)}</td><td>${c.status}</td><td>${appealCell(text, c.appeal)}</td></tr>`)}</tbody></table></div>
-${view.truncated ? html`<p class="note">${t('portal.record.truncated', { count: view.cases.length })}</p>` : ''}`
+${view.truncated ? html`<p class="note">${text.tp('portal.record.truncated', view.cases.length)}</p>` : ''}`
         : html`<p>${t('portal.record.noCases', { server: enforcementConfig.serverName })}</p>`}
 <h2 id="appeals-title">${t('portal.record.appeals')}</h2>
 ${view.appeals.length ? html`<div class="table-wrap" role="region" aria-labelledby="appeals-title" tabindex="0"><table class="record-table"><thead><tr>${col('case')}${col('type')}${col('status')}${col('filed')}${col('decided')}</tr></thead>

@@ -109,16 +109,16 @@ test('readTransparencyReport: two queries from the first report month; any error
 // ── Masking ───────────────────────────────────────────────────────────────
 
 test('small numbers: 1 and 2 are hidden, totals over a hidden month say "at least", medians need 3 decisions', () => {
-    assert.deepEqual(maskCount(0), { text: '0', masked: false });
-    assert.deepEqual(maskCount(1), { text: 'fewer than 3', masked: true });
-    assert.deepEqual(maskCount(2), { text: 'fewer than 3', masked: true });
-    assert.deepEqual(maskCount(3), { text: '3', masked: false });
-    assert.deepEqual(maskCount(1234), { text: '1,234', masked: false });
-    assert.deepEqual(maskTotal([5, 4, 0]), { text: '9', masked: false });
-    assert.deepEqual(maskTotal([5, 2, 0]), { text: 'at least 6', masked: true }, 'the 2 cannot be worked out');
-    assert.deepEqual(maskTotal([5, 1, 0]), { text: 'at least 6', masked: true }, 'same text for 1 and 2');
-    assert.deepEqual(maskTotal([1, 1, 0]), { text: 'fewer than 3', masked: true });
-    assert.deepEqual(maskTotal([0, 0]), { text: '0', masked: false });
+    assert.deepEqual(maskCount(0), { text: '0', masked: false, kind: 'number', value: 0 });
+    assert.deepEqual(maskCount(1), { text: 'fewer than 3', masked: true, kind: 'fewer', value: 3 });
+    assert.deepEqual(maskCount(2), { text: 'fewer than 3', masked: true, kind: 'fewer', value: 3 });
+    assert.deepEqual(maskCount(3), { text: '3', masked: false, kind: 'number', value: 3 });
+    assert.deepEqual(maskCount(1234), { text: '1,234', masked: false, kind: 'number', value: 1234 });
+    assert.deepEqual(maskTotal([5, 4, 0]), { text: '9', masked: false, kind: 'number', value: 9 });
+    assert.deepEqual(maskTotal([5, 2, 0]), { text: 'at least 6', masked: true, kind: 'atLeast', value: 6 }, 'the 2 cannot be worked out');
+    assert.deepEqual(maskTotal([5, 1, 0]), { text: 'at least 6', masked: true, kind: 'atLeast', value: 6 }, 'same text for 1 and 2');
+    assert.deepEqual(maskTotal([1, 1, 0]), { text: 'fewer than 3', masked: true, kind: 'fewer', value: 3 });
+    assert.deepEqual(maskTotal([0, 0]), { text: '0', masked: false, kind: 'number', value: 0 });
     assert.equal(medianText(30, 2), null);
     assert.equal(medianText(null, 5), null);
     assert.equal(medianText(0.4, 3), 'under an hour');

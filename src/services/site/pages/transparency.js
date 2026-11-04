@@ -10,11 +10,32 @@
 import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
 import { textOf } from '../i18n.js';
-import { maskCount, maskTotal, medianText } from '../../enforcement/transparencyService.js';
+import { maskCount, maskTotal, medianParts } from '../../enforcement/transparencyService.js';
 
 const MONTH_FORMAT = Object.freeze({ month: 'long', year: 'numeric', timeZone: 'UTC' });
 
+/**
+ * A masked count (maskCount / maskTotal) in the page's language: the number, "fewer than 3" or
+ * "at least N" (transparency.mask.*). Without a kind (older callers): its English text.
+ */
+export function maskedText(mask, { t, fmtNumber }) {
+    if (!mask) return '';
+    if (mask.kind === 'fewer') return t('transparency.mask.fewer', { n: fmtNumber(mask.value) });
+    if (mask.kind === 'atLeast') return t('transparency.mask.atLeast', { n: fmtNumber(mask.value) });
+    if (mask.kind === 'number') return fmtNumber(mask.value);
+    return mask.text;
+}
+
+/** A median (medianParts) in the page's language: "under an hour", "5 hours", "3.5 days"; null when hidden. */
+export function medianWords(parts, { t, tp }) {
+    if (!parts) return null;
+    if (parts.unit === 'underHour') return t('transparency.median.underHour');
+    return tp(parts.unit === 'hours' ? 'transparency.median.hours' : 'transparency.median.days', parts.value);
+}
+
 const cell = ({ text, masked }, sub = false) => html`<td class="${['num', sub ? 'sub' : '', masked ? 'masked' : ''].filter(Boolean).join(' ')}">${text}</td>`;
+/** A cell for a masked count, in the page's language. */
+const countCell = (mask, text, sub = false) => cell({ text: maskedText(mask, text), masked: mask.masked }, sub);
 
 function monthLabel(month, t, fmtDate) {
     return html`${fmtDate(month.start, MONTH_FORMAT)}${month.current ? html` <span class="tag">${t('transparency.table.soFar')}</span>` : ''}`;
@@ -25,35 +46,41 @@ const CASE_HEADS = [
     ['warns'], ['mutes'], ['kicks'], ['bans'], ['ladderBans', true], ['automod', true], ['voided', true],
 ];
 
-function casesTable(report, t, fmtDate) {
+function casesTable(report, text) {
+    const { t, fmtDate } = text;
     const total = (key) => maskTotal(report.months.map((m) => m.cases[key]));
     return html`<div class="table-wrap" role="region" aria-labelledby="tr-actions" tabindex="0"><table class="report">
 <caption class="visually-hidden">${t('transparency.actions.caption')}</caption>
 <thead><tr><th scope="col">${t('transparency.table.month')}</th>${CASE_HEADS.map(([key]) => html`<th scope="col">${t(`transparency.actions.columns.${key}`)}</th>`)}</tr></thead>
-<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m, t, fmtDate)}</th>${CASE_HEADS.map(([key, sub]) => cell(maskCount(m.cases[key]), sub))}</tr>`)}</tbody>
-<tfoot><tr><th scope="row">${t('transparency.table.total')}</th>${CASE_HEADS.map(([key, sub]) => cell(total(key), sub))}</tr></tfoot></table></div>`;
+<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m, t, fmtDate)}</th>${CASE_HEADS.map(([key, sub]) => countCell(maskCount(m.cases[key]), text, sub))}</tr>`)}</tbody>
+<tfoot><tr><th scope="row">${t('transparency.table.total')}</th>${CASE_HEADS.map(([key, sub]) => countCell(total(key), text, sub))}</tr></tfoot></table></div>`;
 }
 
 const APPEAL_HEADS = ['received', 'accepted', 'denied', 'open'];
 
-function median(appeals, t) {
-    const text = medianText(appeals.medianHours, appeals.decided);
-    return text ? { text, masked: false } : { text: t('transparency.table.notEnoughDecisions'), masked: true };
+function median(appeals, text) {
+    const words = medianWords(medianParts(appeals.medianHours, appeals.decided), text);
+    return words ? { text: words, masked: false } : { text: text.t('transparency.table.notEnoughDecisions'), masked: true };
 }
 
-function appealsTable(report, t, fmtDate) {
+function appealsTable(report, text) {
+    const { t, fmtDate } = text;
     const total = (key) => maskTotal(report.months.map((m) => m.appeals[key]));
     return html`<div class="table-wrap" role="region" aria-labelledby="tr-appeals" tabindex="0"><table class="report">
 <caption class="visually-hidden">${t('transparency.appeals.caption')}</caption>
 <thead><tr><th scope="col">${t('transparency.table.month')}</th>${APPEAL_HEADS.map((key) => html`<th scope="col">${t(`transparency.appeals.columns.${key}`)}</th>`)}<th scope="col">${t('transparency.appeals.columns.median')}</th></tr></thead>
-<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m, t, fmtDate)}</th>${APPEAL_HEADS.map((key) => cell(maskCount(m.appeals[key])))}${cell(median(m.appeals, t), true)}</tr>`)}</tbody>
-<tfoot><tr><th scope="row">${t('transparency.table.total')}</th>${APPEAL_HEADS.map((key) => cell(total(key)))}${cell(median(report.totals.appeals, t), true)}</tr></tfoot></table></div>`;
+<tbody>${report.months.map((m) => html`<tr><th scope="row">${monthLabel(m, t, fmtDate)}</th>${APPEAL_HEADS.map((key) => countCell(maskCount(m.appeals[key]), text))}${cell(median(m.appeals, text), true)}</tr>`)}</tbody>
+<tfoot><tr><th scope="row">${t('transparency.table.total')}</th>${APPEAL_HEADS.map((key) => countCell(total(key), text))}${cell(median(report.totals.appeals, text), true)}</tr></tfoot></table></div>`;
 }
 
-function summary(report, t) {
-    const total = (pick) => maskTotal(report.months.map(pick));
+function summary(report, words) {
+    const { t } = words;
+    const total = (pick) => {
+        const mask = maskTotal(report.months.map(pick));
+        return { text: maskedText(mask, words), masked: mask.masked };
+    };
     const tile = (key, { text, masked }) => html`<div><dt>${t(`transparency.summary.${key}`)}</dt><dd${masked ? html` class="tr-small"` : ''}>${text}</dd></div>`;
-    const med = median(report.totals.appeals, t);
+    const med = median(report.totals.appeals, words);
     return html`<dl class="tr-stats">
 ${tile('warns', total((m) => m.cases.warns))}${tile('mutes', total((m) => m.cases.mutes))}${tile('kicks', total((m) => m.cases.kicks))}
 ${tile('bans', total((m) => m.cases.bans))}${tile('appealsReceived', total((m) => m.appeals.received))}${tile('medianDecision', med)}</dl>`;
@@ -69,7 +96,8 @@ ${EXPLANATION.map((key) => html`<div><dt>${t(`transparency.how.${key}.question`)
 
 /** The report page; `report` is transparencyService's aggregateReport() result. */
 export function transparencyPage(ctx, report) {
-    const { t, ti, fmtDate } = textOf(ctx);
+    const text = textOf(ctx);
+    const { t, ti, fmtDate } = text;
     const first = report.months[0];
     const generated = report.generatedAt instanceof Date ? report.generatedAt : new Date(report.generatedAt);
     const from = html`<time datetime="${first.start.toISOString().slice(0, 10)}">${fmtDate(first.start)}</time>`;
@@ -81,11 +109,11 @@ export function transparencyPage(ctx, report) {
 <header class="page-head page-head-split"><div><h1>${t('transparency.head.heading')}</h1></div>
 <p class="lead">${t('transparency.head.lead')}</p></header>
 <p class="note">${ti('transparency.head.period', { from, to })}</p>
-${summary(report, t)}
+${summary(report, text)}
 <section class="tr-section" aria-labelledby="tr-actions"><h2 id="tr-actions">${t('transparency.actions.heading')}</h2>
-<p>${t('transparency.actions.intro')}</p>${casesTable(report, t, fmtDate)}</section>
+<p>${t('transparency.actions.intro')}</p>${casesTable(report, text)}</section>
 <section class="tr-section" aria-labelledby="tr-appeals"><h2 id="tr-appeals">${t('transparency.appeals.heading')}</h2>
-<p>${t('transparency.appeals.intro')}</p>${appealsTable(report, t, fmtDate)}</section>
+<p>${t('transparency.appeals.intro')}</p>${appealsTable(report, text)}</section>
 <section class="block-tight split split-narrow" aria-labelledby="tr-how"><div class="split-copy"><h2 id="tr-how">${t('transparency.how.heading')}</h2><p>${ti('transparency.how.intro')}</p></div>
 ${explanation(t)}</section></div>`,
     });

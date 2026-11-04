@@ -12,7 +12,7 @@
     "title": "Um bot de Discord para moderação e apelações",
     "lead": "O Mewvo adverte, silencia, expulsa e bane a partir de um único painel. O membro recebe uma mensagem direta com o motivo, o horário de término e como apelar. A sua equipe recebe um caso com um código curto para consultar depois.",
     "notPublic": "Por enquanto, o Mewvo funciona no servidor Mewvo. Ainda não é possível adicioná-lo a outros servidores.",
-    "dmCaption": "A mensagem direta que um membro recebe na segunda advertência. Mesmo texto do bot."
+    "dmCaption": "A mensagem direta que um membro recebe na segunda advertência (o Mewvo a envia em inglês)."
   },
   "dashboard": {
     "title": "Tudo em um só lugar",

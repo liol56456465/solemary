@@ -22,7 +22,6 @@
     "planLine": "Mewvo {plan}",
     "planPeriod": "Mewvo {plan} · {period}",
     "planWithPeriod": "{plan} · {period}",
-    "days": "{count} días",
     "test": "Prueba",
     "day": {
       "one": "{count} día",
@@ -77,7 +76,11 @@
     "pricePerMonth": "{price}/mes",
     "pricePerYear": "{price}/año",
     "billingLabel": "Facturación",
-    "monthsFree": "{months} meses gratis",
+    "monthsFree": {
+      "one": "{count} mes gratis",
+      "many": "{count} meses gratis",
+      "other": "{count} meses gratis"
+    },
     "forLabel": "Para quién es",
     "forMe": "Para mí",
     "forMeSub": "empieza ahora en tu cuenta",
@@ -114,8 +117,16 @@
     "whatYouGetGift": "Mewvo {plan} (la lista de arriba), como clave para regalar",
     "whatYouGetPersonal": "Mewvo {plan} (la lista de arriba) en tu cuenta de Discord",
     "duration": "Duración",
-    "durationGift": "{days} días desde que se canjea la clave; sin renovación automática",
-    "durationPersonal": "{days} días desde el pedido; sin renovación automática",
+    "durationGift": {
+      "one": "{count} día desde que se canjea la clave; sin renovación automática",
+      "many": "{count} días desde que se canjea la clave; sin renovación automática",
+      "other": "{count} días desde que se canjea la clave; sin renovación automática"
+    },
+    "durationPersonal": {
+      "one": "{count} día desde el pedido; sin renovación automática",
+      "many": "{count} días desde el pedido; sin renovación automática",
+      "other": "{count} días desde el pedido; sin renovación automática"
+    },
     "totalPrice": "Precio total",
     "totalPriceValue": "{amount}. {vat}",
     "withdrawal": "Desistimiento",
@@ -170,8 +181,16 @@
     "title": "Pedido n.º {id}",
     "headingGift": "Tu clave de regalo está lista",
     "heading": "Gracias, tu plan está activo",
-    "giftKey": "Clave de regalo · {plan}, {days} días",
-    "giftKeyTo": "Clave de regalo · {plan}, {days} días · para {name}",
+    "giftKey": {
+      "one": "Clave de regalo · {plan}, {count} día",
+      "many": "Clave de regalo · {plan}, {count} días",
+      "other": "Clave de regalo · {plan}, {count} días"
+    },
+    "giftKeyTo": {
+      "one": "Clave de regalo · {plan}, {count} día · para {name}",
+      "many": "Clave de regalo · {plan}, {count} días · para {name}",
+      "other": "Clave de regalo · {plan}, {count} días · para {name}"
+    },
     "giveAway": "Regala esta clave a quien quieras. Solo tiene que iniciar sesión en este sitio y canjearla en Suscripción → Canjear una clave, o en Discord con `/premium redeem`.",
     "redeemBy": "Canjéala antes del {date}.",
     "status": "Estado: {status}.",
@@ -189,7 +208,11 @@
     "confirmed": "Confirmaste",
     "confirmedMeta": "{date} · {version} · Términos del {terms}",
     "withdrawal": "Desistimiento",
-    "periodEnded": "El plazo de {days} días ha terminado. [Derecho de desistimiento](/withdrawal)",
+    "periodEnded": {
+      "one": "El plazo de {count} día ha terminado. [Derecho de desistimiento](/withdrawal)",
+      "many": "El plazo de {count} días ha terminado. [Derecho de desistimiento](/withdrawal)",
+      "other": "El plazo de {count} días ha terminado. [Derecho de desistimiento](/withdrawal)"
+    },
     "giftWithdrawal": "En un regalo, el derecho de desistimiento te corresponde a ti como comprador.",
     "dmNote": "Esta confirmación también se te envía como mensaje directo de Discord (si tienes abiertos los mensajes directos del bot). Guárdala para tus registros."
   },
@@ -214,7 +237,11 @@
   "withdrawList": {
     "title": "Desistir de un contrato",
     "heading": "Desistir del contrato aquí",
-    "lead": "Sesión iniciada como **{username}**. Elige el pedido del que quieres desistir. Puedes desistir en un plazo de {days} días desde el pedido, sin necesidad de indicar el motivo.",
+    "lead": {
+      "one": "Sesión iniciada como **{username}**. Elige el pedido del que quieres desistir. Puedes desistir en un plazo de {count} día desde el pedido, sin necesidad de indicar el motivo.",
+      "many": "Sesión iniciada como **{username}**. Elige el pedido del que quieres desistir. Puedes desistir en un plazo de {count} días desde el pedido, sin necesidad de indicar el motivo.",
+      "other": "Sesión iniciada como **{username}**. Elige el pedido del que quieres desistir. Puedes desistir en un plazo de {count} días desde el pedido, sin necesidad de indicar el motivo."
+    },
     "item": "**Pedido {order}**: {line}, {amount}, pedido el {date}.",
     "button": "Desistir del contrato aquí",
     "none": "Ningún pedido de esta cuenta está dentro de su plazo de desistimiento de {days} días.",
@@ -275,5 +302,37 @@
   "planButtons": {
     "buy": "Comprar {plan}",
     "gift": "Regalarlo"
+  },
+  "errorCodes": {
+    "choosePlan": "Elige un plan de pago (Normal, Pro o Max).",
+    "choosePeriod": "Elige facturación mensual o anual.",
+    "chooseKind": "Elige si es para ti o un regalo.",
+    "lowerPlan": "Ya tienes {current} hasta el {until}, que es más que {plan}. Una clave o compra de {plan} se puede usar cuando termine; no se ha cambiado nada.",
+    "durationMin": "La duración debe ser de al menos un día.",
+    "giftToLong": "«Para» admite como máximo {max} caracteres.",
+    "giftMessageLong": "El mensaje admite como máximo {max} caracteres.",
+    "consentMissing": "Marca las casillas para confirmar {items}. No se ha pedido nada.",
+    "consentItems": {
+      "start": "que quieres que el plan empiece ahora",
+      "startGift": "que quieres la clave ahora",
+      "terms": "que aceptas los Términos",
+      "age": "que tienes 18 años o más o cuentas con permiso"
+    },
+    "notWithdrawable": "No se puede desistir de este pedido en línea. Contáctanos.",
+    "logInFirst": "Inicia sesión primero.",
+    "notAKey": "Eso no es una clave de Mewvo. Las claves son así: MEWVO-ABCD-EFGH-JKMN.",
+    "keyMissing": "Esa clave no existe. Revisa que no tenga errores.",
+    "keyRevoked": "Esa clave se canceló y no se puede usar.",
+    "keyUsed": "Esa clave ya se ha usado.",
+    "keyExpired": "Esa clave caducó el {date}.",
+    "noSuchOrder": "No hay ningún pedido así en tu cuenta.",
+    "enterName": "Escribe tu nombre.",
+    "nameLong": "El nombre admite como máximo {max} caracteres.",
+    "alreadyWithdrawn": "Ya desististe de este pedido.",
+    "withdrawalEnded": {
+      "one": "El plazo de desistimiento de {count} día de este pedido terminó el {date}.",
+      "many": "El plazo de desistimiento de {count} días de este pedido terminó el {date}.",
+      "other": "El plazo de desistimiento de {count} días de este pedido terminó el {date}."
+    }
   }
 }

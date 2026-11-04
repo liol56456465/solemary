@@ -78,11 +78,18 @@ export const WITHDRAWAL_NAME_MAX = 100;
 export const LEGAL_KEY_PREFIX = 'premium_order:';
 const truthy = (value) => /^(1|true|yes|on)$/i.test(String(value || '').trim());
 
+/**
+ * A refusal the member can read. userMessage: plain English (logs, the dashboard, Discord). code +
+ * params: a stable id the website shows as billing.errorCodes.<code> in the page's language
+ * (params are numbers, plan names and dates only, never user input). No code: the English text.
+ */
 export class PremiumError extends Error {
-    constructor(message, status = 400) {
+    constructor(message, status = 400, code = null, params = {}) {
         super(message);
         this.name = 'PremiumError';
         this.userMessage = message;
+        this.code = code;
+        this.params = params;
         this.type = 'validation';
         this.status = status;
     }
@@ -116,9 +123,9 @@ export function priceCents(planId, period) {
 /** The order summary for checkout: { plan, period, kind, days, amountCents, amountText } or a PremiumError. */
 export function quote({ planId, period, kind }) {
     const plan = paidPlan(planId);
-    if (!plan) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).');
-    if (!PERIODS[period]) throw new PremiumError('Choose monthly or yearly billing.');
-    if (!ORDER_KINDS.includes(kind)) throw new PremiumError('Choose whether this is for you or a gift.');
+    if (!plan) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).', 400, 'choosePlan');
+    if (!PERIODS[period]) throw new PremiumError('Choose monthly or yearly billing.', 400, 'choosePeriod');
+    if (!ORDER_KINDS.includes(kind)) throw new PremiumError('Choose whether this is for you or a gift.', 400, 'chooseKind');
     const amountCents = priceCents(planId, period);
     return { plan, period, kind, days: PERIODS[period].days, amountCents, amountText: euros(amountCents) };
 }
@@ -179,9 +186,11 @@ export function conversion(current, planId, now = Date.now()) {
     if (!isActive(current, now) || current.plan_id === planId) return null;
     const from = paidPlan(current.plan_id);
     const to = paidPlan(planId);
-    if (!to) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).');
+    if (!to) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).', 400, 'choosePlan');
     if (from && planRank(planId) < planRank(current.plan_id)) {
-        throw new PremiumError(`You already have ${planName(current.plan_id)} until ${new Date(current.expires_at).toISOString().slice(0, 10)}, which is more than ${planName(planId)}. A ${planName(planId)} key or purchase can be used after it ends; nothing was changed.`, 409);
+        const until = new Date(current.expires_at).toISOString().slice(0, 10);
+        throw new PremiumError(`You already have ${planName(current.plan_id)} until ${until}, which is more than ${planName(planId)}. A ${planName(planId)} key or purchase can be used after it ends; nothing was changed.`, 409,
+            'lowerPlan', { current: planName(current.plan_id), until, plan: planName(planId) });
     }
     const remainingMs = new Date(current.expires_at).getTime() - now;
     // A plan that is no longer for sale converts 1:1.
@@ -196,7 +205,7 @@ export function conversion(current, planId, now = Date.now()) {
  * upgrade (remaining time converted, then the days added). Lower plan → PremiumError.
  */
 export function applyTime(current, planId, days, now = Date.now()) {
-    if (!Number.isInteger(days) || days < 1) throw new PremiumError('The duration must be at least one day.');
+    if (!Number.isInteger(days) || days < 1) throw new PremiumError('The duration must be at least one day.', 400, 'durationMin');
     if (isActive(current, now)) {
         if (current.plan_id === planId) {
             return {
@@ -214,8 +223,8 @@ export function applyTime(current, planId, days, now = Date.now()) {
 export function giftDetails({ to = '', message = '' } = {}) {
     const giftTo = String(to ?? '').trim();
     const giftMessage = String(message ?? '').trim().replace(/\r\n?/g, '\n');
-    if (giftTo.length > GIFT_TO_MAX) throw new PremiumError(`"To" is limited to ${GIFT_TO_MAX} characters.`);
-    if (giftMessage.length > GIFT_MESSAGE_MAX) throw new PremiumError(`The message is limited to ${GIFT_MESSAGE_MAX} characters.`);
+    if (giftTo.length > GIFT_TO_MAX) throw new PremiumError(`"To" is limited to ${GIFT_TO_MAX} characters.`, 400, 'giftToLong', { max: GIFT_TO_MAX });
+    if (giftMessage.length > GIFT_MESSAGE_MAX) throw new PremiumError(`The message is limited to ${GIFT_MESSAGE_MAX} characters.`, 400, 'giftMessageLong', { max: GIFT_MESSAGE_MAX });
     return { giftTo: giftTo || null, giftMessage: giftMessage || null };
 }
 
@@ -234,11 +243,14 @@ const CONSENT_LANG = /^[a-z]{2}(-[A-Z]{2})?$/;
  */
 export function checkoutConsent(body = {}, kind = 'personal', now = Date.now(), { lang = 'en', texts = null } = {}) {
     const ticked = (name) => body?.[name] === 'yes';
+    // [id for the website (billing.errorCodes.consentItems.<id>), English words]
     const missing = [];
-    if (!ticked('consent_start')) missing.push(kind === 'gift' ? 'that you want the key now' : 'that you want the plan to start now');
-    if (!ticked('consent_terms')) missing.push('that you accept the Terms');
-    if (!ticked('consent_age')) missing.push('that you are 18 or older or have permission');
-    if (missing.length) throw new PremiumError(`Tick the boxes to confirm ${missing.join(', ')}. Nothing was ordered.`);
+    if (!ticked('consent_start')) missing.push(kind === 'gift' ? ['startGift', 'that you want the key now'] : ['start', 'that you want the plan to start now']);
+    if (!ticked('consent_terms')) missing.push(['terms', 'that you accept the Terms']);
+    if (!ticked('consent_age')) missing.push(['age', 'that you are 18 or older or have permission']);
+    if (missing.length) {
+        throw new PremiumError(`Tick the boxes to confirm ${missing.map(([, words]) => words).join(', ')}. Nothing was ordered.`, 400, 'consentMissing', { missing: missing.map(([id]) => id) });
+    }
     const shown = Array.isArray(texts) && texts.length === 3 && texts.every((x) => typeof x === 'string' && x.trim()) && CONSENT_LANG.test(String(lang));
     const language = shown ? String(lang) : 'en';
     return {
@@ -277,7 +289,7 @@ export function canWithdraw(order, now = Date.now()) {
  */
 export function withdrawalQuote(order, { startedAt = order.created_at, now = Date.now() } = {}) {
     const totalDays = PERIODS[order.period]?.days;
-    if (!totalDays) throw new PremiumError('This order cannot be withdrawn online. Contact us instead.');
+    if (!totalDays) throw new PremiumError('This order cannot be withdrawn online. Contact us instead.', 400, 'notWithdrawable');
     const usedDays = startedAt ? Math.min(totalDays, Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / DAY_MS))) : 0;
     return { totalDays, usedDays, unusedDays: totalDays - usedDays, refundCents: refundDue({ amountCents: order.amount_cents, totalDays, usedDays }) };
 }
@@ -366,7 +378,7 @@ export function createPremiumStore({
      * Returns { order, subscription|null, previous|null, next|null, key|null }.
      */
     async function purchase({ userId, username = null, planId, period, kind, giftTo = '', giftMessage = '', consent = null }) {
-        if (!snowflake.test(String(userId || ''))) throw new PremiumError('Log in first.', 401);
+        if (!snowflake.test(String(userId || ''))) throw new PremiumError('Log in first.', 401, 'logInFirst');
         const q = quote({ planId, period, kind });
         const gift = kind === 'gift' ? giftDetails({ to: giftTo, message: giftMessage }) : null;
         const name = username ? clip(username, 100) : null;
@@ -403,18 +415,21 @@ export function createPremiumStore({
 
     /** Redeems a key for userId. Returns { key, subscription, previous, next }. Refusals throw PremiumError. */
     async function redeem({ code, userId, username = null }) {
-        if (!snowflake.test(String(userId || ''))) throw new PremiumError('Log in first.', 401);
+        if (!snowflake.test(String(userId || ''))) throw new PremiumError('Log in first.', 401, 'logInFirst');
         const normalized = normalizeKeyCode(code);
-        if (!normalized) throw new PremiumError('That is not a Mewvo key. Keys look like MEWVO-ABCD-EFGH-JKMN.');
+        if (!normalized) throw new PremiumError('That is not a Mewvo key. Keys look like MEWVO-ABCD-EFGH-JKMN.', 400, 'notAKey');
         const name = username ? clip(username, 100) : null;
         const { withTransaction: tx } = await db();
         return tx(async (client) => {
             const { rows: [key] } = await client.query(`SELECT * FROM ${K} WHERE code = $1 FOR UPDATE`, [normalized]);
-            if (!key) throw new PremiumError('That key does not exist. Check it for typos.', 404);
+            if (!key) throw new PremiumError('That key does not exist. Check it for typos.', 404, 'keyMissing');
             const status = keyStatus(key, now());
-            if (status === 'revoked') throw new PremiumError('That key was cancelled and cannot be used.', 409);
-            if (status === 'redeemed') throw new PremiumError('That key has already been used.', 409);
-            if (status === 'expired') throw new PremiumError(`That key expired on ${new Date(key.expires_at).toISOString().slice(0, 10)}.`, 409);
+            if (status === 'revoked') throw new PremiumError('That key was cancelled and cannot be used.', 409, 'keyRevoked');
+            if (status === 'redeemed') throw new PremiumError('That key has already been used.', 409, 'keyUsed');
+            if (status === 'expired') {
+                const date = new Date(key.expires_at).toISOString().slice(0, 10);
+                throw new PremiumError(`That key expired on ${date}.`, 409, 'keyExpired', { date });
+            }
             const previous = await lockedSubscription(client, userId);
             const next = applyTime(previous, key.plan_id, key.duration_days, now());
             const subscription = await writeSubscription(client, userId, name, next, 'key');
@@ -445,7 +460,7 @@ export function createPremiumStore({
 
     /** Owner: `count` keys of planId for `days`, redeemable for `validDays` (0 = never). */
     async function generateKeys({ planId, days, count = 1, note = '', validDays = 0, actor }) {
-        if (!paidPlan(planId)) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).');
+        if (!paidPlan(planId)) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).', 400, 'choosePlan');
         if (!KEY_DURATIONS.some((d) => d.days === days)) throw new PremiumError('Choose one of the listed durations.');
         if (!KEY_VALIDITY.some((v) => v.days === validDays)) throw new PremiumError('Choose how long the keys can be redeemed.');
         if (!Number.isInteger(count) || count < 1 || count > MAX_KEYS_PER_BATCH) throw new PremiumError(`Create between 1 and ${MAX_KEYS_PER_BATCH} keys at a time.`);
@@ -471,7 +486,7 @@ export function createPremiumStore({
      */
     async function grant({ userId, planId, days, actor, source = 'owner' }) {
         if (!snowflake.test(String(userId || ''))) throw new PremiumError('Enter a Discord user ID (17–20 digits).');
-        if (!paidPlan(planId)) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).');
+        if (!paidPlan(planId)) throw new PremiumError('Choose a paid plan (Normal, Pro or Max).', 400, 'choosePlan');
         // The early-account bonus has its own length (6 months = 183 days, accountCore.js); the owner picks a listed one.
         const durationOk = source === 'bonus' ? Number.isInteger(days) && days >= 1 && days <= 366 : KEY_DURATIONS.some((d) => d.days === days);
         if (!durationOk) throw new PremiumError('Choose one of the listed durations.');
@@ -584,22 +599,23 @@ export function createPremiumStore({
      * order; no money moves. Returns { order, withdrawal, subscription|null, previous|null, affectedUserId|null }.
      */
     async function withdraw({ userId, orderId, name }) {
-        if (!snowflake.test(String(userId || ''))) throw new PremiumError('Log in first.', 401);
-        if (!/^\d{1,18}$/.test(String(orderId || ''))) throw new PremiumError('There is no such order on your account.', 404);
+        if (!snowflake.test(String(userId || ''))) throw new PremiumError('Log in first.', 401, 'logInFirst');
+        if (!/^\d{1,18}$/.test(String(orderId || ''))) throw new PremiumError('There is no such order on your account.', 404, 'noSuchOrder');
         const fullName = String(name ?? '').trim().replace(/\s+/g, ' ');
-        if (!fullName) throw new PremiumError('Enter your name.');
-        if (fullName.length > WITHDRAWAL_NAME_MAX) throw new PremiumError(`The name is limited to ${WITHDRAWAL_NAME_MAX} characters.`);
+        if (!fullName) throw new PremiumError('Enter your name.', 400, 'enterName');
+        if (fullName.length > WITHDRAWAL_NAME_MAX) throw new PremiumError(`The name is limited to ${WITHDRAWAL_NAME_MAX} characters.`, 400, 'nameLong', { max: WITHDRAWAL_NAME_MAX });
         const { withTransaction: tx } = await db();
         return tx(async (client) => {
             const { rows: [order] } = await client.query(`SELECT * FROM ${O} WHERE id = $1 AND user_id = $2 FOR UPDATE`, [String(orderId), String(userId)]);
-            if (!order) throw new PremiumError('There is no such order on your account.', 404);
+            if (!order) throw new PremiumError('There is no such order on your account.', 404, 'noSuchOrder');
             const { rows: [legalRow] } = await client.query(`SELECT value FROM ${T} WHERE key = $1 FOR UPDATE`, [legalKey(order.id)]);
             const legal = legalRow?.value || {};
             order.legal = legal;
-            if (legal.withdrawal) throw new PremiumError('You already withdrew from this order.', 409);
+            if (legal.withdrawal) throw new PremiumError('You already withdrew from this order.', 409, 'alreadyWithdrawn');
             const t = now();
             if (!canWithdraw(order, t)) {
-                throw new PremiumError(`The 14-day withdrawal period for this order ended on ${withdrawalDeadline(order).toISOString().slice(0, 10)}.`, 409);
+                const date = withdrawalDeadline(order).toISOString().slice(0, 10);
+                throw new PremiumError(`The ${WITHDRAWAL_DAYS}-day withdrawal period for this order ended on ${date}.`, 409, 'withdrawalEnded', { count: WITHDRAWAL_DAYS, date });
             }
             let startedAt = order.created_at;
             let affectedUserId = order.kind === 'personal' ? String(userId) : null;

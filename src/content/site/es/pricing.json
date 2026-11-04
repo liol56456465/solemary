@@ -17,7 +17,11 @@
   },
   "card": {
     "planned": "(previsto)",
-    "yearly": "o {price} al año ({months} meses gratis)",
+    "yearly": {
+      "one": "o {price} al año ({count} mes gratis)",
+      "many": "o {price} al año ({count} meses gratis)",
+      "other": "o {price} al año ({count} meses gratis)"
+    },
     "freeForGood": "Gratis para siempre",
     "perMonth": "/ mes",
     "joinServer": "Únete al servidor",

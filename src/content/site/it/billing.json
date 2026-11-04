@@ -22,7 +22,6 @@
     "planLine": "Mewvo {plan}",
     "planPeriod": "Mewvo {plan} · {period}",
     "planWithPeriod": "{plan} · {period}",
-    "days": "{count} giorni",
     "test": "Test",
     "day": {
       "one": "{count} giorno",
@@ -77,7 +76,11 @@
     "pricePerMonth": "{price}/mese",
     "pricePerYear": "{price}/anno",
     "billingLabel": "Fatturazione",
-    "monthsFree": "{months} mesi gratis",
+    "monthsFree": {
+      "one": "{count} mese gratis",
+      "many": "{count} mesi gratis",
+      "other": "{count} mesi gratis"
+    },
     "forLabel": "Per chi è",
     "forMe": "Per me",
     "forMeSub": "inizia subito sul tuo account",
@@ -114,8 +117,16 @@
     "whatYouGetGift": "Mewvo {plan} (l'elenco qui sopra), come chiave da regalare",
     "whatYouGetPersonal": "Mewvo {plan} (l'elenco qui sopra) sul tuo account Discord",
     "duration": "Durata",
-    "durationGift": "{days} giorni dal riscatto della chiave; nessun rinnovo automatico",
-    "durationPersonal": "{days} giorni dall'ordine; nessun rinnovo automatico",
+    "durationGift": {
+      "one": "{count} giorno dal riscatto della chiave; nessun rinnovo automatico",
+      "many": "{count} giorni dal riscatto della chiave; nessun rinnovo automatico",
+      "other": "{count} giorni dal riscatto della chiave; nessun rinnovo automatico"
+    },
+    "durationPersonal": {
+      "one": "{count} giorno dall'ordine; nessun rinnovo automatico",
+      "many": "{count} giorni dall'ordine; nessun rinnovo automatico",
+      "other": "{count} giorni dall'ordine; nessun rinnovo automatico"
+    },
     "totalPrice": "Prezzo totale",
     "totalPriceValue": "{amount}. {vat}",
     "withdrawal": "Recesso",
@@ -170,8 +181,16 @@
     "title": "Ordine n. {id}",
     "headingGift": "La tua chiave regalo è pronta",
     "heading": "Grazie, il tuo piano è attivo",
-    "giftKey": "Chiave regalo · {plan}, {days} giorni",
-    "giftKeyTo": "Chiave regalo · {plan}, {days} giorni · a {name}",
+    "giftKey": {
+      "one": "Chiave regalo · {plan}, {count} giorno",
+      "many": "Chiave regalo · {plan}, {count} giorni",
+      "other": "Chiave regalo · {plan}, {count} giorni"
+    },
+    "giftKeyTo": {
+      "one": "Chiave regalo · {plan}, {count} giorno · a {name}",
+      "many": "Chiave regalo · {plan}, {count} giorni · a {name}",
+      "other": "Chiave regalo · {plan}, {count} giorni · a {name}"
+    },
     "giveAway": "Regala questa chiave a chi vuoi. Basta accedere a questo sito e riscattarla in Abbonamento → Riscatta una chiave, oppure su Discord con `/premium redeem`.",
     "redeemBy": "Da riscattare entro il {date}.",
     "status": "Stato: {status}.",
@@ -189,7 +208,11 @@
     "confirmed": "Hai confermato",
     "confirmedMeta": "{date} · {version} · Termini del {terms}",
     "withdrawal": "Recesso",
-    "periodEnded": "Il periodo di {days} giorni è terminato. [Diritto di recesso](/withdrawal)",
+    "periodEnded": {
+      "one": "Il periodo di {count} giorno è terminato. [Diritto di recesso](/withdrawal)",
+      "many": "Il periodo di {count} giorni è terminato. [Diritto di recesso](/withdrawal)",
+      "other": "Il periodo di {count} giorni è terminato. [Diritto di recesso](/withdrawal)"
+    },
     "giftWithdrawal": "Per un regalo, il diritto di recesso spetta a te come acquirente.",
     "dmNote": "Questa conferma ti viene inviata anche come messaggio diretto su Discord (se hai i messaggi diretti dal bot aperti). Conservala per i tuoi archivi."
   },
@@ -214,7 +237,11 @@
   "withdrawList": {
     "title": "Recedere da un contratto",
     "heading": "Recedere dal contratto qui",
-    "lead": "Accesso effettuato come **{username}**. Scegli l'ordine da cui vuoi recedere. Puoi recedere entro {days} giorni dall'ordine, senza dover fornire alcuna motivazione.",
+    "lead": {
+      "one": "Accesso effettuato come **{username}**. Scegli l'ordine da cui vuoi recedere. Puoi recedere entro {count} giorno dall'ordine, senza dover fornire alcuna motivazione.",
+      "many": "Accesso effettuato come **{username}**. Scegli l'ordine da cui vuoi recedere. Puoi recedere entro {count} giorni dall'ordine, senza dover fornire alcuna motivazione.",
+      "other": "Accesso effettuato come **{username}**. Scegli l'ordine da cui vuoi recedere. Puoi recedere entro {count} giorni dall'ordine, senza dover fornire alcuna motivazione."
+    },
     "item": "**Ordine {order}**: {line}, {amount}, ordinato il {date}.",
     "button": "Recedere dal contratto qui",
     "none": "Nessun ordine di questo account rientra nel periodo di recesso di {days} giorni.",
@@ -275,5 +302,37 @@
   "planButtons": {
     "buy": "Acquista {plan}",
     "gift": "Regalalo"
+  },
+  "errorCodes": {
+    "choosePlan": "Scegli un piano a pagamento (Normal, Pro o Max).",
+    "choosePeriod": "Scegli la fatturazione mensile o annuale.",
+    "chooseKind": "Scegli se è per te o un regalo.",
+    "lowerPlan": "Hai già {current} fino al {until}, che è più di {plan}. Una chiave o un acquisto {plan} si può usare dopo la scadenza; non è stato cambiato nulla.",
+    "durationMin": "La durata deve essere di almeno un giorno.",
+    "giftToLong": "\"A\" può avere al massimo {max} caratteri.",
+    "giftMessageLong": "Il messaggio può avere al massimo {max} caratteri.",
+    "consentMissing": "Spunta le caselle per confermare {items}. Non è stato ordinato nulla.",
+    "consentItems": {
+      "start": "che vuoi che il piano inizi subito",
+      "startGift": "che vuoi la chiave subito",
+      "terms": "che accetti i Termini e condizioni",
+      "age": "che hai almeno 18 anni o hai il permesso"
+    },
+    "notWithdrawable": "Non è possibile recedere da questo ordine online. Contattaci.",
+    "logInFirst": "Prima accedi.",
+    "notAKey": "Questa non è una chiave Mewvo. Le chiavi sono così: MEWVO-ABCD-EFGH-JKMN.",
+    "keyMissing": "Questa chiave non esiste. Controlla che non ci siano errori di battitura.",
+    "keyRevoked": "Questa chiave è stata annullata e non si può usare.",
+    "keyUsed": "Questa chiave è già stata usata.",
+    "keyExpired": "Questa chiave è scaduta il {date}.",
+    "noSuchOrder": "Non c'è nessun ordine del genere sul tuo account.",
+    "enterName": "Inserisci il tuo nome.",
+    "nameLong": "Il nome può avere al massimo {max} caratteri.",
+    "alreadyWithdrawn": "Hai già esercitato il recesso da questo ordine.",
+    "withdrawalEnded": {
+      "one": "Il periodo di recesso di {count} giorno per questo ordine è terminato il {date}.",
+      "many": "Il periodo di recesso di {count} giorni per questo ordine è terminato il {date}.",
+      "other": "Il periodo di recesso di {count} giorni per questo ordine è terminato il {date}."
+    }
   }
 }

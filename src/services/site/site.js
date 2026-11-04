@@ -69,6 +69,7 @@ import { withdrawalPage } from './pages/withdrawal.js';
 import {
     DEFAULT_LANG, LANGUAGES, isEnglishOnlyPath, isLanguage, localizePath, textOf, translator,
 } from './i18n.js';
+import { catStageWords, catWords } from './catWords.js';
 import { languageRouting, pickerHref, suggestedLanguage } from './language.js';
 import { readPublicRules } from '../rules/serverRules.js';
 
@@ -246,13 +247,15 @@ export function createCatReader(client, { guildId = () => enforcementConfig.main
 export function catCard(cat, ctx) {
     if (!cat?.stage || !cat.image) return '';
     const { t, fmtNumber: formatNumber } = textOf(ctx);
+    const words = catWords(cat, t);
     const pct = Math.round((cat.progress?.fraction ?? 1) * 100);
+    const nextName = cat.progress?.next ? catStageWords(cat.progress.next, t).name : '';
     const next = cat.progress?.next
-        ? html`<progress class="cat-bar" max="100" value="${String(pct)}" aria-label="${t('pages.cat.progressLabel', { next: cat.progress.next.name })}">${t('pages.cat.percent', { pct })}</progress>
-<p class="cat-meta">${t('pages.cat.progress', { total: formatNumber(cat.total), toNext: formatNumber(cat.progress.toNext), next: cat.progress.next.name })}</p>`
+        ? html`<progress class="cat-bar" max="100" value="${String(pct)}" aria-label="${t('pages.cat.progressLabel', { next: nextName })}">${t('pages.cat.percent', { pct })}</progress>
+<p class="cat-meta">${t('pages.cat.progress', { total: formatNumber(cat.total), toNext: formatNumber(cat.progress.toNext), next: nextName })}</p>`
         : html`<p class="cat-meta">${t('pages.cat.grown', { total: formatNumber(cat.total) })}</p>`;
-    return html`<section class="cat-card" aria-label="${t('pages.cat.label')}"><img src="/img/cat/${cat.image}" width="128" height="128" alt="${t('pages.cat.alt', { name: cat.name, stage: cat.stage.name.toLowerCase(), mood: cat.mood })}">
-<div><h2>${cat.name}</h2><p>${t('pages.cat.stageLine', { stage: cat.stage.name, sentence: cat.sentence })}</p>${next}</div></section>`;
+    return html`<section class="cat-card" aria-label="${t('pages.cat.label')}"><img src="/img/cat/${cat.image}" width="128" height="128" alt="${t('pages.cat.alt', { name: cat.name, stage: words.stage.inText, mood: words.mood })}">
+<div><h2>${cat.name}</h2><p>${t('pages.cat.stageLine', { stage: words.stage.name, sentence: words.sentence })}</p>${next}</div></section>`;
 }
 
 export function leaderboardPage(ctx, { page, board, cat = null }) {

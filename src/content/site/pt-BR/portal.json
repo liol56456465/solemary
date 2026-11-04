@@ -17,7 +17,12 @@
     "unappealable": "Não é possível apelar",
     "ended": "Encerrado: não há do que apelar",
     "deadlinePassed": "O prazo para apelar terminou",
-    "windowClosed": "O prazo para apelar ({days} dias) terminou",
+    "windowClosed": {
+      "zero": "O prazo para apelar ({count} dias) terminou",
+      "one": "O prazo para apelar ({count} dia) terminou",
+      "many": "O prazo para apelar ({count} dias) terminou",
+      "other": "O prazo para apelar ({count} dias) terminou"
+    },
     "pending": "Apelação pendente",
     "deniedRetry": "Apelação negada; você pode apelar de novo a partir de",
     "appealable": "É possível apelar",
@@ -29,7 +34,16 @@
     "voided": "anulado: não conta mais",
     "counts": "conta agora",
     "noLongerCounts": "registrado, não conta mais",
-    "onRecord": "registrado"
+    "onRecord": "registrado",
+    "case": {
+      "liftedByAppeal": "retirado por apelação",
+      "reversed": "revertido por um moderador",
+      "lifted": "retirado",
+      "appealPending": "apelação pendente",
+      "expired": "expirado",
+      "activeAppealDenied": "ativo, apelação negada",
+      "active": "ativo"
+    }
   },
   "login": {
     "lead": "Veja o seu próprio histórico de moderação em {server}: suas advertências, o nível na escada de advertências, qualquer banimento ou silenciamento ativo, seus casos e suas apelações.",
@@ -70,7 +84,12 @@
       "decided": "Decidida"
     },
     "permanent": "permanente",
-    "truncated": "Mostrando os seus {count} casos mais recentes.",
+    "truncated": {
+      "zero": "Mostrando os seus {count} casos mais recentes.",
+      "one": "Mostrando o seu caso mais recente.",
+      "many": "Mostrando os seus {count} casos mais recentes.",
+      "other": "Mostrando os seus {count} casos mais recentes."
+    },
     "noCases": "Você não tem casos em {server}.",
     "noAppeals": "Você não enviou nenhuma apelação.",
     "appealHintInvite": "Apele pelo painel de apelações no Discord: [entre no servidor de suporte]({invite}) e clique em **Appeal** (Apelar) com o código do caso. Não é possível apelar por esta página.",
@@ -140,5 +159,44 @@
   },
   "viewer": {
     "fallbackName": "Conta"
+  },
+  "next": {
+    "warning": "Seria a advertência {number} de {threshold}.",
+    "afterOne": "A próxima depois dela significaria um banimento automático ({ban}).",
+    "afterMore": {
+      "zero": "Mais {count} depois dela significariam um banimento automático ({ban}).",
+      "one": "Mais {count} depois dela significaria um banimento automático ({ban}).",
+      "many": "Mais {count} depois dela significariam um banimento automático ({ban}).",
+      "other": "Mais {count} depois dela significariam um banimento automático ({ban})."
+    },
+    "limit": "Chegaria ao limite de advertências: um banimento automático ({ban}, nível {level} da escada).",
+    "permanent": "permanente"
+  },
+  "duration": {
+    "month": {
+      "zero": "{count} meses",
+      "one": "{count} mês",
+      "many": "{count} meses",
+      "other": "{count} meses"
+    },
+    "day": {
+      "zero": "{count} dias",
+      "one": "{count} dia",
+      "many": "{count} dias",
+      "other": "{count} dias"
+    },
+    "hour": {
+      "zero": "{count} horas",
+      "one": "{count} hora",
+      "many": "{count} horas",
+      "other": "{count} horas"
+    },
+    "minute": {
+      "zero": "{count} minutos",
+      "one": "{count} minuto",
+      "many": "{count} minutos",
+      "other": "{count} minutos"
+    },
+    "lessThanMinute": "menos de um minuto"
   }
 }

@@ -1,9 +1,15 @@
 {
   "title": "Vertrauenskarte von {server}",
-  "description": "Wie {server} moderiert wird: Einspruchszeiten, Einspruchsergebnisse und Mitglieder mit weißer Weste in den letzten {days} Tagen. Nur Zahlen.",
+  "description": {
+    "one": "Wie {server} moderiert wird: Einspruchszeiten, Einspruchsergebnisse und Mitglieder mit weißer Weste in dem letzten {count} Tag. Nur Zahlen.",
+    "other": "Wie {server} moderiert wird: Einspruchszeiten, Einspruchsergebnisse und Mitglieder mit weißer Weste in den letzten {count} Tagen. Nur Zahlen."
+  },
   "head": {
     "heading": "{server}: Vertrauenskarte",
-    "lead": "Wie dieser Server in den letzten {days} Tagen moderiert wurde. Nur Zahlen: keine Namen, keine Gründe, keine Moderatoren."
+    "lead": {
+      "one": "Wie dieser Server in dem letzten {count} Tag moderiert wurde. Nur Zahlen: keine Namen, keine Gründe, keine Moderatoren.",
+      "other": "Wie dieser Server in den letzten {count} Tagen moderiert wurde. Nur Zahlen: keine Namen, keine Gründe, keine Moderatoren."
+    }
   },
   "noData": "Noch nicht genug Daten",
   "tiles": {
@@ -40,7 +46,10 @@
     "single": "Verwarnungen summieren sich: Die {nth} Verwarnung bringt {first}.",
     "escalating": "Verwarnungen summieren sich: Die {nth} Verwarnung bringt {first}, und jede Verwarnung nach diesem Bann bringt einen längeren ({later}).",
     "then": "{earlier}, dann {next}",
-    "banDays": "einen {days}-Tage-Bann",
+    "banDays": {
+      "one": "einen Bann für {count} Tag",
+      "other": "einen {count}-Tage-Bann"
+    },
     "banPermanent": "einen permanenten Bann",
     "ordinals": {
       "0": "nullte",
@@ -58,7 +67,7 @@
     "ordinalOther": "{n}."
   },
   "cat": {
-    "alt": "{name}, die Serverkatze ({stage}, {mood})",
+    "alt": "{name}, die Serverkatze ({stage}), wirkt {mood}",
     "caption": "Die Serverkatze",
     "shareAlt": "{name}, die Serverkatze"
   },
@@ -68,8 +77,14 @@
     "readAll": "Alle Regeln lesen"
   },
   "foot": {
-    "period": "Letzte {days} Tage, vom {from} bis {to}. Kleine Zahlen werden ausgeblendet.",
-    "periodWithReport": "Letzte {days} Tage, vom {from} bis {to}. Kleine Zahlen werden ausgeblendet. Vollständige Monatszahlen: [Transparenzbericht](/transparency)."
+    "period": {
+      "one": "Letzter {count} Tag, vom {from} bis {to}. Kleine Zahlen werden ausgeblendet.",
+      "other": "Letzte {count} Tage, vom {from} bis {to}. Kleine Zahlen werden ausgeblendet."
+    },
+    "periodWithReport": {
+      "one": "Letzter {count} Tag, vom {from} bis {to}. Kleine Zahlen werden ausgeblendet. Vollständige Monatszahlen: [Transparenzbericht](/transparency).",
+      "other": "Letzte {count} Tage, vom {from} bis {to}. Kleine Zahlen werden ausgeblendet. Vollständige Monatszahlen: [Transparenzbericht](/transparency)."
+    }
   },
   "error": {
     "title": "Vertrauenskarte",

@@ -38,7 +38,7 @@ import { LEGAL_UPDATED } from './pages/legal.js';
 import { isSameOrigin, safeEqual } from '../dashboard/security.js';
 import { logger } from '../../utils/logger.js';
 import { layout } from './shell.js';
-import { DEFAULT_LANG, LANG_CODES, textOf, translate } from './i18n.js';
+import { DEFAULT_LANG, LANG_CODES, hasKey, textOf, translate } from './i18n.js';
 
 /** The test-mode notice in the page's language (English without a ctx). */
 export const testNotice = (ctx = null) => textOf(ctx).t('billing.test.notice');
@@ -69,6 +69,26 @@ const daysText = (tp, ms) => {
     const d = Math.round(ms / DAY_MS * 10) / 10;
     return tp('billing.common.day', d);
 };
+/**
+ * A PremiumError in the page's language: billing.errorCodes.<code> with the error's params (numbers,
+ * plan names, dates; never what the visitor typed). An error without a known code: its English text.
+ */
+export function premiumErrorText(error, ctx = null) {
+    const { t, tp } = textOf(ctx);
+    const code = typeof error?.code === 'string' && /^[a-zA-Z]+$/.test(error.code) ? error.code : '';
+    const key = `billing.errorCodes.${code}`;
+    const params = error?.params || {};
+    if (code === 'consentMissing') {
+        const items = (Array.isArray(params.missing) ? params.missing : [])
+            .filter((id) => /^[a-zA-Z]+$/.test(id) && hasKey('en', `billing.errorCodes.consentItems.${id}`))
+            .map((id) => t(`billing.errorCodes.consentItems.${id}`));
+        return items.length ? t(key, { items: items.join(', ') }) : String(error?.userMessage ?? '');
+    }
+    if (code && hasKey('en', `${key}.other`)) return tp(key, params.count, params);
+    if (code && hasKey('en', key)) return t(key, params);
+    return String(error?.userMessage ?? '');
+}
+
 const periodLabel = (t, period) => (PERIODS[period] ? t(`billing.period.${period}`) : period);
 const kindLabel = (t, kind) => (kind === 'personal' || kind === 'gift' ? t(`billing.kind.${kind}`) : kind);
 const statusLabel = (t, status) => t(`billing.keyStatus.${status}`);
@@ -119,7 +139,7 @@ export function loginNeededPage(ctx, next, reason = 'manage', params = {}) {
 /**
  * What buying this for yourself does to the current plan: { kind: 'new' | 'extend' | 'upgrade' |
  * 'blocked', text }. Pure. Text in ctx's language (English without one); a 'blocked' text is the
- * PremiumError's message from premiumService.js (English).
+ * PremiumError from premiumService.js (premiumErrorText).
  */
 export function checkoutEffect(current, choice, now = Date.now(), ctx = null) {
     const { t, tp } = textOf(ctx);
@@ -136,13 +156,13 @@ export function checkoutEffect(current, choice, now = Date.now(), ctx = null) {
             }),
         };
     } catch (error) {
-        if (error instanceof PremiumError) return { kind: 'blocked', text: error.userMessage };
+        if (error instanceof PremiumError) return { kind: 'blocked', text: premiumErrorText(error, ctx) };
         throw error;
     }
 }
 
 export function checkoutPage(ctx, { session, choice, current = null, values = {}, error = null }) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, tp } = textOf(ctx);
     const q = quote(choice);
     const effect = choice.kind === 'personal' ? checkoutEffect(current, choice, Date.now(), ctx) : null;
     const others = (patch) => checkoutHref({ ...choice, ...patch });
@@ -156,7 +176,7 @@ ${testBanner(t)}${notices({ error })}
 <div class="checkout"><div class="checkout-options">
 ${seg(t('billing.checkout.planLabel'), PAID_PLANS.map((p) => ({ label: p.name, sub: t(perKey, { price: euros(priceCents(p.id, choice.period)) }), href: others({ planId: p.id }), current: p.id === choice.planId })))}
 ${seg(t('billing.checkout.billingLabel'), Object.entries(PERIODS).map(([id, p]) => ({
-        label: periodLabel(t, id), sub: id === 'yearly' ? t('billing.checkout.monthsFree', { months: 12 - YEARLY_MONTHS_CHARGED }) : t('billing.common.days', { count: p.days }), href: others({ period: id }), current: id === choice.period,
+        label: periodLabel(t, id), sub: id === 'yearly' ? tp('billing.checkout.monthsFree', 12 - YEARLY_MONTHS_CHARGED) : tp('billing.common.day', p.days), href: others({ period: id }), current: id === choice.period,
     })))}
 ${seg(t('billing.checkout.forLabel'), [
         { label: t('billing.checkout.forMe'), sub: t('billing.checkout.forMeSub'), href: others({ kind: 'personal' }), current: !gift },
@@ -210,13 +230,13 @@ function consentBox(name, label, checked = false) {
 
 /** Who sells (CRD Art. 6(1)(b)–(c)) and the key facts, under the order summary. */
 function sellerInfo(ctx, q, gift) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, tp } = textOf(ctx);
     const legal = ctx.legal || {};
     return html`<section class="checkout-seller" aria-labelledby="seller-title"><h2 id="seller-title">${t('billing.seller.title')}</h2>
 <dl class="summary-rows">
 <div><dt>${t('billing.seller.seller')}</dt><dd>${legal.operator || 'Mewvo'}${legal.email ? html`, <a href="mailto:${legal.email}">${legal.email}</a>` : ''} · <a href="${textOf(ctx).href('/legal')}">${t('billing.seller.legalDetails')}</a></dd></div>
 <div><dt>${t('billing.seller.whatYouGet')}</dt><dd>${t(gift ? 'billing.seller.whatYouGetGift' : 'billing.seller.whatYouGetPersonal', { plan: q.plan.name })}</dd></div>
-<div><dt>${t('billing.seller.duration')}</dt><dd>${t(gift ? 'billing.seller.durationGift' : 'billing.seller.durationPersonal', { days: q.days })}</dd></div>
+<div><dt>${t('billing.seller.duration')}</dt><dd>${tp(gift ? 'billing.seller.durationGift' : 'billing.seller.durationPersonal', q.days)}</dd></div>
 <div><dt>${t('billing.seller.totalPrice')}</dt><dd>${t('billing.seller.totalPriceValue', { amount: q.amountText, vat: vatLine(legal, ctx) })}</dd></div>
 <div><dt>${t('billing.seller.withdrawal')}</dt><dd>${ti('billing.seller.withdrawalValue', { days: WITHDRAWAL_DAYS })}</dd></div></dl></section>`;
 }
@@ -254,7 +274,7 @@ function redeemForm(ctx, session, code = '') {
 }
 
 export function billingPage(ctx, { session, account, flash = null, error = null, code = '' }) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, tp } = textOf(ctx);
     const { subscription, orders, gifts } = account;
     return layout(ctx, {
         title: t('billing.account.title'), active: 'me',
@@ -266,7 +286,7 @@ ${testBanner(t)}${notices({ flash, error })}
 <li class="feature"><h2>${t('billing.account.redeemTitle')}</h2>${redeemForm(ctx, session, code)}<p class="note">${t('billing.account.redeemNote')}</p></li></ul>
 <h2 id="gifts-title">${t('billing.account.giftsTitle')}</h2>
 ${gifts.length ? html`<div class="table-wrap" role="region" aria-labelledby="gifts-title" tabindex="0"><table class="record-table"><thead><tr><th scope="col">${t('billing.account.giftsKey')}</th><th scope="col">${t('billing.account.giftsPlan')}</th><th scope="col">${t('billing.account.giftsTime')}</th><th scope="col">${t('billing.account.giftsBought')}</th><th scope="col">${t('billing.account.giftsStatus')}</th></tr></thead>
-<tbody>${gifts.map((k) => html`<tr><td><code class="key-code">${k.code}</code>${k.gift_to ? html`<br><small class="note">${t('billing.account.giftTo', { name: k.gift_to })}</small>` : ''}</td><td>${planName(k.plan_id)}</td><td>${t('billing.common.days', { count: k.duration_days })}</td><td>${when(k.created_at)}</td><td>${statusLabel(t, keyStatus(k))}${k.redeemed_at ? html`<br><small class="note">${when(k.redeemed_at)}</small>` : ''}</td></tr>`)}</tbody></table></div>`
+<tbody>${gifts.map((k) => html`<tr><td><code class="key-code">${k.code}</code>${k.gift_to ? html`<br><small class="note">${t('billing.account.giftTo', { name: k.gift_to })}</small>` : ''}</td><td>${planName(k.plan_id)}</td><td>${tp('billing.common.day', k.duration_days)}</td><td>${when(k.created_at)}</td><td>${statusLabel(t, keyStatus(k))}${k.redeemed_at ? html`<br><small class="note">${when(k.redeemed_at)}</small>` : ''}</td></tr>`)}</tbody></table></div>`
         : html`<p>${ti('billing.account.noGifts')}</p>`}
 <h2 id="orders-title">${t('billing.account.ordersTitle')}</h2>
 ${orders.length ? html`<div class="table-wrap" role="region" aria-labelledby="orders-title" tabindex="0"><table class="record-table"><thead><tr><th scope="col">${t('billing.account.ordersOrder')}</th><th scope="col">${t('billing.account.ordersDate')}</th><th scope="col">${t('billing.account.ordersPlan')}</th><th scope="col">${t('billing.account.ordersFor')}</th><th scope="col">${t('billing.account.ordersAmount')}</th><th scope="col">${t('billing.account.ordersWithdrawal')}</th><th scope="col"></th></tr></thead>
@@ -277,10 +297,10 @@ ${orders.length ? html`<div class="table-wrap" role="region" aria-labelledby="or
 }
 
 export function receiptPage(ctx, { session, order, key = null }) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, tp, tpi } = textOf(ctx);
     const gift = order.kind === 'gift';
     const redeemLink = key && ctx.origin ? `${ctx.origin}/me/redeem?${new URLSearchParams({ code: key.code })}` : null;
-    const giftKeyLabel = key ? t(key.gift_to ? 'billing.receipt.giftKeyTo' : 'billing.receipt.giftKey', { plan: planName(key.plan_id), days: key.duration_days, name: key.gift_to || '' }) : '';
+    const giftKeyLabel = key ? tp(key.gift_to ? 'billing.receipt.giftKeyTo' : 'billing.receipt.giftKey', key.duration_days, { plan: planName(key.plan_id), name: key.gift_to || '' }) : '';
     return layout(ctx, {
         title: t('billing.receipt.title', { id: order.id }), active: 'me',
         body: html`<div class="wrap page prose"><a class="back-link" href="/me/billing">${t('billing.common.back')}</a>
@@ -300,7 +320,7 @@ ${redeemLink ? html`<p class="note">${ti('billing.receipt.directLink', { link: h
 <div><dt>${t('billing.receipt.vat')}</dt><dd>${vatLine(ctx.legal, ctx)}</dd></div>
 <div><dt>${t('billing.receipt.renewal')}</dt><dd>${t('billing.receipt.renewalNone')}</dd></div>
 ${order.legal?.consent ? html`<div><dt>${t('billing.receipt.confirmed')}</dt><dd>${order.legal.consent.texts.map((text) => html`${text}<br>`)}<small class="note">${ti('billing.receipt.confirmedMeta', { date: when(order.legal.consent.at), version: order.legal.consent.version, terms: LEGAL_UPDATED })}</small></dd></div>` : ''}
-<div><dt>${t('billing.receipt.withdrawal')}</dt><dd>${withdrawalCell(ctx, order) || ti('billing.receipt.periodEnded', { days: WITHDRAWAL_DAYS })}${gift ? html`<br><small class="note">${t('billing.receipt.giftWithdrawal')}</small>` : ''}</dd></div></dl>
+<div><dt>${t('billing.receipt.withdrawal')}</dt><dd>${withdrawalCell(ctx, order) || tpi('billing.receipt.periodEnded', WITHDRAWAL_DAYS)}${gift ? html`<br><small class="note">${t('billing.receipt.giftWithdrawal')}</small>` : ''}</dd></div></dl>
 <p class="note">${t('billing.receipt.dmNote')}</p>
 <p><a class="button" href="/me/billing">${t('billing.common.goToSubscription')}</a></p></div>`,
     });
@@ -335,13 +355,13 @@ const orderCode = (order) => html`<code>#${order.id}</code>`;
 
 /** "Withdraw from contract here": the member's orders still inside their 14 days. */
 export function withdrawListPage(ctx, { session, orders, now = Date.now() }) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, tpi } = textOf(ctx);
     const open = orders.filter((o) => canWithdraw(o, now));
     return layout(ctx, {
         title: t('billing.withdrawList.title'), active: 'me',
         body: html`<div class="wrap page prose"><a class="back-link" href="/me/billing">${t('billing.common.back')}</a>
 <h1>${t('billing.withdrawList.heading')}</h1>
-<p class="lead">${ti('billing.withdrawList.lead', { username: session.username, days: WITHDRAWAL_DAYS })}</p>
+<p class="lead">${tpi('billing.withdrawList.lead', WITHDRAWAL_DAYS, { username: session.username })}</p>
 ${testBanner(t)}
 ${open.length ? html`<ul class="withdraw-list">${open.map((o) => html`<li>${ti('billing.withdrawList.item', { order: orderCode(o), line: orderLine(t, o), amount: euros(o.amount_cents), date: when(o.created_at) })} <a class="button" href="/me/billing/orders/${o.id}/withdraw">${t('billing.withdrawList.button')}</a></li>`)}</ul>`
         : html`<p>${t('billing.withdrawList.none', { days: WITHDRAWAL_DAYS })}</p>`}
@@ -471,7 +491,7 @@ export function createBillingHandlers(core) {
         } catch (error) {
             if (!(error instanceof PremiumError)) throw error;
             const { subscription } = await store.accountOf(session.userId);
-            return send(res, error.status === 409 ? 409 : 400, checkoutPage(ctx(), { session, choice, current: subscription, values, error: error.userMessage }));
+            return send(res, error.status === 409 ? 409 : 400, checkoutPage(ctx(), { session, choice, current: subscription, values, error: premiumErrorText(error, ctx()) }));
         }
     }
 
@@ -518,7 +538,7 @@ export function createBillingHandlers(core) {
             return res.redirect(303, '/me/billing');
         } catch (error) {
             if (!(error instanceof PremiumError)) throw error;
-            return renderBilling(res, session, error.status === 409 ? 409 : 400, { error: error.userMessage, code });
+            return renderBilling(res, session, error.status === 409 ? 409 : 400, { error: premiumErrorText(error, ctx()), code });
         }
     }
 
@@ -588,7 +608,7 @@ export function createBillingHandlers(core) {
             if (!order) return fail(res, 404, 'notFound', 'noOrder');
             if (!canWithdraw(order)) return withdrawGone(res, order);
             const wq = withdrawalQuote(order, { startedAt: await startedAtOf(session, order) });
-            return send(res, error.status === 409 ? 409 : 400, withdrawConfirmPage(ctx(), { session, order, quote: wq, name, error: error.userMessage }));
+            return send(res, error.status === 409 ? 409 : 400, withdrawConfirmPage(ctx(), { session, order, quote: wq, name, error: premiumErrorText(error, ctx()) }));
         }
     }
 

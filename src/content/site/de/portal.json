@@ -17,7 +17,10 @@
     "unappealable": "Kein Einspruch möglich",
     "ended": "Beendet: kein Einspruch nötig",
     "deadlinePassed": "Die Einspruchsfrist ist abgelaufen",
-    "windowClosed": "Die Einspruchsfrist ({days} Tage) ist abgelaufen",
+    "windowClosed": {
+      "one": "Die Einspruchsfrist ({count} Tag) ist abgelaufen",
+      "other": "Die Einspruchsfrist ({count} Tage) ist abgelaufen"
+    },
     "pending": "Einspruch ausstehend",
     "deniedRetry": "Einspruch abgelehnt; erneuter Einspruch möglich ab",
     "appealable": "Einspruch möglich",
@@ -29,7 +32,16 @@
     "voided": "annulliert: zählt nicht mehr",
     "counts": "zählt aktuell",
     "noLongerCounts": "in der Akte, zählt nicht mehr",
-    "onRecord": "in der Akte"
+    "onRecord": "in der Akte",
+    "case": {
+      "liftedByAppeal": "per Einspruch aufgehoben",
+      "reversed": "von einem Moderator rückgängig gemacht",
+      "lifted": "aufgehoben",
+      "appealPending": "Einspruch ausstehend",
+      "expired": "abgelaufen",
+      "activeAppealDenied": "aktiv, Einspruch abgelehnt",
+      "active": "aktiv"
+    }
   },
   "login": {
     "lead": "Sieh deine eigene Moderationsakte auf {server}: deine Verwarnungen, deine Stufe auf der Verwarnungsleiter, aktive Banns oder Stummschaltungen, deine Fälle und deine Einsprüche.",
@@ -70,7 +82,10 @@
       "decided": "Entschieden"
     },
     "permanent": "permanent",
-    "truncated": "Es werden deine neuesten {count} Fälle angezeigt.",
+    "truncated": {
+      "one": "Es wird dein neuester Fall angezeigt.",
+      "other": "Es werden deine neuesten {count} Fälle angezeigt."
+    },
     "noCases": "Du hast keine Fälle auf {server}.",
     "noAppeals": "Du hast keine Einsprüche eingereicht.",
     "appealHintInvite": "Einspruch legst du über das Einspruchs-Panel in Discord ein: [Tritt dem Support-Server bei]({invite}) und drück **Appeal** mit dem Fallcode. Auf dieser Seite ist kein Einspruch möglich.",
@@ -140,5 +155,34 @@
   },
   "viewer": {
     "fallbackName": "Konto"
+  },
+  "next": {
+    "warning": "Es wäre Verwarnung {number} von {threshold}.",
+    "afterOne": "Die nächste danach würde einen automatischen Bann bedeuten ({ban}).",
+    "afterMore": {
+      "one": "Noch {count} weitere danach würde einen automatischen Bann bedeuten ({ban}).",
+      "other": "Noch {count} weitere danach würden einen automatischen Bann bedeuten ({ban})."
+    },
+    "limit": "Damit wäre das Verwarnungslimit erreicht: ein automatischer Bann ({ban}, Leiterstufe {level}).",
+    "permanent": "permanent"
+  },
+  "duration": {
+    "month": {
+      "one": "{count} Monat",
+      "other": "{count} Monate"
+    },
+    "day": {
+      "one": "{count} Tag",
+      "other": "{count} Tage"
+    },
+    "hour": {
+      "one": "{count} Stunde",
+      "other": "{count} Stunden"
+    },
+    "minute": {
+      "one": "{count} Minute",
+      "other": "{count} Minuten"
+    },
+    "lessThanMinute": "weniger als eine Minute"
   }
 }

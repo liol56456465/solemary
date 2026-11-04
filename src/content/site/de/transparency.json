@@ -72,5 +72,20 @@
   },
   "error": {
     "text": "Der Bericht konnte gerade nicht geladen werden, weil die Datenbank nicht antwortet. Lieber keine Zahlen als falsche; bitte versuch es in ein paar Minuten noch einmal."
+  },
+  "mask": {
+    "fewer": "weniger als {n}",
+    "atLeast": "mindestens {n}"
+  },
+  "median": {
+    "underHour": "unter einer Stunde",
+    "hours": {
+      "one": "{count} Stunde",
+      "other": "{count} Stunden"
+    },
+    "days": {
+      "one": "{count} Tag",
+      "other": "{count} Tage"
+    }
   }
 }

@@ -34,16 +34,31 @@ export async function getMemberStanding(guildId, userId) {
     return { ladder, warns, activeBan, activeMute, appeals };
 }
 
-/** What the next warning would do, in plain words. */
-export function nextWarningText(ladder) {
+/**
+ * What the next warning would do, as data (the website words it in the page's language):
+ * { escalates: false, warnNumber, threshold, left, banMs } or { escalates: true, banMs, nextLevel }.
+ * banMs null = permanent.
+ */
+export function nextWarningSteps(ladder) {
     const step = previewWarn(ladder);
     if (!step.escalates) {
-        const left = step.threshold - step.warnNumber;
-        return `It would be warning ${step.warnNumber} of ${step.threshold}. `
-            + `${left === 1 ? 'The one after it' : `${left} more after it`} would mean an automatic ban `
-            + `(${banLength(enforcementConfig.ladderBans[Math.min(ladder.level + 1, 3)])}).`;
+        return {
+            escalates: false, warnNumber: step.warnNumber, threshold: step.threshold, left: step.threshold - step.warnNumber,
+            banMs: enforcementConfig.ladderBans[Math.min(ladder.level + 1, 3)] ?? null,
+        };
     }
-    return `It would reach the warning limit: an automatic ban (${banLength(step.banDurationMs)}, ladder level ${step.nextLevel}).`;
+    return { escalates: true, banMs: step.banDurationMs ?? null, nextLevel: step.nextLevel };
+}
+
+/** What the next warning would do, in plain words (English: Discord, dashboard). */
+export function nextWarningText(ladder) {
+    const step = nextWarningSteps(ladder);
+    if (!step.escalates) {
+        return `It would be warning ${step.warnNumber} of ${step.threshold}. `
+            + `${step.left === 1 ? 'The one after it' : `${step.left} more after it`} would mean an automatic ban `
+            + `(${banLength(step.banMs)}).`;
+    }
+    return `It would reach the warning limit: an automatic ban (${banLength(step.banMs)}, ladder level ${step.nextLevel}).`;
 }
 
 function banLength(ms) {

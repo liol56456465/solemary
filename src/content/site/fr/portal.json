@@ -17,7 +17,10 @@
     "unappealable": "Sans appel possible",
     "ended": "Terminé : rien à contester",
     "deadlinePassed": "Le délai d’appel est écoulé",
-    "windowClosed": "Le délai d’appel ({days} jours) est écoulé",
+    "windowClosed": {
+      "one": "Le délai d’appel ({count} jour) est écoulé",
+      "other": "Le délai d’appel ({count} jours) est écoulé"
+    },
     "pending": "Appel en attente",
     "deniedRetry": "Appel refusé ; tu peux refaire appel à partir du",
     "appealable": "Appel possible",
@@ -29,7 +32,16 @@
     "voided": "annulé : ne compte plus",
     "counts": "compte actuellement",
     "noLongerCounts": "au dossier, ne compte plus",
-    "onRecord": "au dossier"
+    "onRecord": "au dossier",
+    "case": {
+      "liftedByAppeal": "levé après appel",
+      "reversed": "annulé par un modérateur",
+      "lifted": "levé",
+      "appealPending": "appel en attente",
+      "expired": "expiré",
+      "activeAppealDenied": "actif, appel refusé",
+      "active": "actif"
+    }
   },
   "login": {
     "lead": "Consulte ton propre dossier de modération sur {server} : tes avertissements, ton niveau sur l’échelle d’avertissements, tout bannissement ou mise en sourdine en cours, tes dossiers et tes appels.",
@@ -70,7 +82,10 @@
       "decided": "Tranché"
     },
     "permanent": "définitif",
-    "truncated": "Affichage de tes {count} dossiers les plus récents.",
+    "truncated": {
+      "one": "Affichage de ton dossier le plus récent.",
+      "other": "Affichage de tes {count} dossiers les plus récents."
+    },
     "noCases": "Tu n’as aucun dossier sur {server}.",
     "noAppeals": "Tu n’as déposé aucun appel.",
     "appealHintInvite": "Fais appel depuis le panneau d’appel sur Discord : [rejoins le serveur d’assistance]({invite}) et appuie sur **Appeal** avec le code du dossier. Aucun appel n’est possible depuis cette page.",
@@ -140,5 +155,34 @@
   },
   "viewer": {
     "fallbackName": "Compte"
+  },
+  "next": {
+    "warning": "Ce serait l’avertissement {number} sur {threshold}.",
+    "afterOne": "Le suivant entraînerait un bannissement automatique ({ban}).",
+    "afterMore": {
+      "one": "Encore {count} après celui-ci entraînerait un bannissement automatique ({ban}).",
+      "other": "Encore {count} après celui-ci entraîneraient un bannissement automatique ({ban})."
+    },
+    "limit": "Ce serait la limite d’avertissements : un bannissement automatique ({ban}, niveau {level} de l’échelle).",
+    "permanent": "définitif"
+  },
+  "duration": {
+    "month": {
+      "one": "{count} mois",
+      "other": "{count} mois"
+    },
+    "day": {
+      "one": "{count} jour",
+      "other": "{count} jours"
+    },
+    "hour": {
+      "one": "{count} heure",
+      "other": "{count} heures"
+    },
+    "minute": {
+      "one": "{count} minute",
+      "other": "{count} minutes"
+    },
+    "lessThanMinute": "moins d’une minute"
   }
 }

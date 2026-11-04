@@ -72,5 +72,24 @@
   },
   "error": {
     "text": "Nie udało się teraz wczytać raportu, bo baza danych nie odpowiada. Lepiej nie pokazywać liczb niż pokazać błędne; spróbuj ponownie za kilka minut."
+  },
+  "mask": {
+    "fewer": "mniej niż {n}",
+    "atLeast": "co najmniej {n}"
+  },
+  "median": {
+    "underHour": "poniżej godziny",
+    "hours": {
+      "one": "{count} godzina",
+      "few": "{count} godziny",
+      "many": "{count} godzin",
+      "other": "{count} godziny"
+    },
+    "days": {
+      "one": "{count} dzień",
+      "few": "{count} dni",
+      "many": "{count} dni",
+      "other": "{count} dnia"
+    }
   }
 }

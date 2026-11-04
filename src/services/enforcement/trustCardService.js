@@ -19,7 +19,7 @@
 // Reads throw on any database error (the page answers 503); the cached reader never keeps a failure.
 
 import { query, T } from './db.js';
-import { SMALL_COUNT, maskCount, medianText } from './transparencyService.js';
+import { SMALL_COUNT, maskCount, medianParts, medianText } from './transparencyService.js';
 
 export const TRUST_DAYS = 90;
 export const MIN_MEMBERS = 10;
@@ -153,13 +153,19 @@ export function goodStandingText(memberCount, flagged) {
     return `${bad > 0 ? Math.floor(pct) : 100}%`;
 }
 
-/** Cases per 1,000 members ("4.2", "18"), or null under MIN_MEMBERS or with 1–2 cases. */
-export function casesPerThousandText(cases, memberCount) {
+/** Cases per 1,000 members as a number (4.2, 18: one decimal under 10), or null under MIN_MEMBERS or with 1–2 cases. */
+export function casesPerThousand(cases, memberCount) {
     const members = int(memberCount);
     const count = int(cases);
     if (members < MIN_MEMBERS || (count > 0 && count < SMALL_COUNT)) return null;
     const rate = (count / members) * 1000;
-    return rate < 10 ? (Math.round(rate * 10) / 10).toLocaleString('en-US') : Math.round(rate).toLocaleString('en-US');
+    return rate < 10 ? Math.round(rate * 10) / 10 : Math.round(rate);
+}
+
+/** Cases per 1,000 members ("4.2", "18", English number format), or null under MIN_MEMBERS or with 1–2 cases. */
+export function casesPerThousandText(cases, memberCount) {
+    const value = casesPerThousand(cases, memberCount);
+    return value === null ? null : value.toLocaleString('en-US');
 }
 
 /** The page's view of readTrustCard's numbers: every value already masked or null (hidden). */
@@ -174,9 +180,13 @@ export function trustCardView(card) {
         decided: maskCount(a.accepted + a.denied),
         firstAnswer: medianText(a.medianFirstHours, a.answered),
         decisionTime: medianText(a.medianDecisionHours, a.decided),
+        // The same medians as data, for the website's own words ({ unit, value } or null).
+        firstAnswerParts: medianParts(a.medianFirstHours, a.answered),
+        decisionTimeParts: medianParts(a.medianDecisionHours, a.decided),
         successRate: rateText(a.accepted, a.accepted + a.denied),
         goodStanding: goodStandingText(card.memberCount, card.flagged),
         casesPerThousand: casesPerThousandText(card.cases, card.memberCount),
+        casesPerThousandValue: casesPerThousand(card.cases, card.memberCount),
         headsUpRate: rateText(card.headsUp.fixed, card.headsUp.fixed + card.headsUp.acted),
     };
 }

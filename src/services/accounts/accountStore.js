@@ -125,7 +125,7 @@ export function createAccountStore({
             const { rowCount } = await client.query(
                 `UPDATE ${A} SET totp_secret_enc = $2, totp_enabled_at = $3, totp_last_step = $4 WHERE id = $1 AND totp_enabled_at IS NULL`,
                 [id, secretEnc, at(), step]);
-            if (rowCount !== 1) throw new AccountError('Two-step login is already on.', 409);
+            if (rowCount !== 1) throw new AccountError('Two-step login is already on.', 409, 'two_step_on');
             await client.query(`DELETE FROM ${R} WHERE account_id = $1`, [id]);
             for (const hash of codeHashes) await client.query(`INSERT INTO ${R} (account_id, code_hash) VALUES ($1, $2)`, [id, hash]);
         });
@@ -175,7 +175,7 @@ export function createAccountStore({
      * has another Discord id.
      */
     async function linkDiscord({ accountId, discordUserId, discordUsername = null }) {
-        if (!SNOWFLAKE.test(String(discordUserId || ''))) throw new AccountError('Discord did not return a user.', 502);
+        if (!SNOWFLAKE.test(String(discordUserId || ''))) throw new AccountError('Discord did not return a user.', 502, 'no_discord_user');
         try {
             return await tx(async (client) => {
                 const { rows: [account] } = await client.query(`SELECT * FROM ${A} WHERE id = $1 FOR UPDATE`, [accountId]);
@@ -258,7 +258,7 @@ export function createAccountStore({
         try {
             return await tx(async (client) => {
                 const { rows: [account] } = await client.query(`SELECT * FROM ${A} WHERE id = $1 FOR UPDATE`, [accountId]);
-                if (!account?.discord_user_id) throw new AccountError('Link your Discord account first.', 409);
+                if (!account?.discord_user_id) throw new AccountError('Link your Discord account first.', 409, 'link_first');
                 const { rows: [bonus] } = await client.query(`SELECT * FROM ${B} WHERE discord_user_id = $1 FOR UPDATE`, [account.discord_user_id]);
                 if (!canClaimLetter(bonus, account)) throw new AccountError('This account cannot claim a 1-letter username.', 409, 'not_eligible');
                 const { rows: [count] } = await client.query(`SELECT COUNT(*)::int AS n FROM ${B} WHERE letter_claimed IS NOT NULL`, []);

@@ -122,12 +122,46 @@
   },
   "cat": {
     "label": "Le chat du serveur",
-    "alt": "{name} ({stage}, {mood})",
+    "alt": "{name} ({stage}), l’air {mood}",
     "stageLine": "{stage}. {sentence}",
     "progressLabel": "Croissance jusqu’à {next}",
     "percent": "{pct} %",
     "progress": "{total} messages comptés. Encore {toNext} jusqu’à {next}.",
-    "grown": "{total} messages comptés. Adulte."
+    "grown": "{total} messages comptés. Adulte.",
+    "stages": {
+      "kitten": {
+        "name": "Chaton",
+        "inText": "chaton"
+      },
+      "young": {
+        "name": "Jeune chat",
+        "inText": "jeune chat"
+      },
+      "cat": {
+        "name": "Chat",
+        "inText": "chat"
+      },
+      "big": {
+        "name": "Grand chat",
+        "inText": "grand chat"
+      },
+      "legend": {
+        "name": "Légende",
+        "inText": "légende"
+      }
+    },
+    "moods": {
+      "scared": "effrayé",
+      "proud": "fier",
+      "happy": "content",
+      "sleepy": "endormi"
+    },
+    "sentences": {
+      "scared": "{name} a peur : le serveur est verrouillé à cause d’un raid.",
+      "proud": "{name} est fier : il a passé un stade aujourd’hui.",
+      "happy": "{name} est content : le serveur a été plus actif cette semaine.",
+      "sleepy": "{name} a sommeil : le serveur a été plus calme cette semaine."
+    }
   },
   "errors": {
     "notFound": {

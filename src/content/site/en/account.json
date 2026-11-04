@@ -114,8 +114,10 @@
     "seePlans": "See plans",
     "foot": "The plan belongs to your Discord account, not to this Mewvo account.",
     "endsToday": "Ends today",
-    "dayLeft": "{days} day left",
-    "daysLeft": "{days} days left",
+    "daysLeft": {
+      "one": "{count} day left",
+      "other": "{count} days left"
+    },
     "source": {
       "bonus": "Early-account bonus",
       "purchase": "A purchase",
@@ -126,8 +128,15 @@
   "bonus": {
     "granted": "Link #{n}: {bonus} of Pro, added {date}.",
     "skipped": "Link #{n}: {bonus} of Pro were due but not added. {reason}",
-    "tooLate": "Link #{n}: no Pro bonus (it went to the first {limit} links).",
-    "none": "Link #{n}: no Pro bonus."
+    "tooLate": {
+      "one": "Link #{n}: no Pro bonus (it went to the first link).",
+      "other": "Link #{n}: no Pro bonus (it went to the first {count} links)."
+    },
+    "none": "Link #{n}: no Pro bonus.",
+    "months": {
+      "one": "{count} month",
+      "other": "{count} months"
+    }
   },
   "settings": {
     "title": "Account settings",
@@ -203,5 +212,26 @@
     "twoStepAlreadyOff": "Two-step login is already off.",
     "twoStepOff": "Two-step login is off.",
     "unlinked": "Your Discord account was unlinked. Link a Discord account again to keep using your Mewvo account."
+  },
+  "errorCodes": {
+    "usernameLength": "The username must be {min} to {max} characters long.",
+    "usernameChars": "The username can only use letters (a-z), numbers and underscores.",
+    "usernameNoLetter": "The username needs at least one letter or number.",
+    "usernameReserved": "That username is reserved. Choose another one.",
+    "passwordShort": "The password must be at least {min} characters long.",
+    "passwordLong": "The password can be at most {max} characters long.",
+    "birthMissing": "Enter your date of birth.",
+    "birthInvalid": "Enter a real date of birth.",
+    "tooYoung": "You must be at least {age} years old to create an account.",
+    "usernameTaken": "That username is already taken. Choose another one.",
+    "twoStepOn": "Two-step login is already on.",
+    "noDiscordUser": "Discord did not return a user.",
+    "missing": "This account no longer exists.",
+    "hasOther": "This account is already linked to another Discord account. Unlink it first in Account settings.",
+    "linkedElsewhere": "That Discord account is already linked to another Mewvo account.",
+    "linkFirst": "Link your Discord account first.",
+    "notEligible": "This account cannot claim a 1-letter username.",
+    "allClaimed": "All 1-letter usernames have been claimed.",
+    "letterTaken": "Someone else just took that letter. Choose another one."
   }
 }

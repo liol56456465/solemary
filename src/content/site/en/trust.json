@@ -1,9 +1,15 @@
 {
   "title": "{server} trust card",
-  "description": "How {server} is moderated: appeal times, appeal results and members in good standing over the last {days} days. Numbers only.",
+  "description": {
+    "one": "How {server} is moderated: appeal times, appeal results and members in good standing over the last {count} day. Numbers only.",
+    "other": "How {server} is moderated: appeal times, appeal results and members in good standing over the last {count} days. Numbers only."
+  },
   "head": {
     "heading": "{server}: trust card",
-    "lead": "How this server was moderated over the last {days} days. Numbers only: no names, no reasons, no moderators."
+    "lead": {
+      "one": "How this server was moderated over the last {count} day. Numbers only: no names, no reasons, no moderators.",
+      "other": "How this server was moderated over the last {count} days. Numbers only: no names, no reasons, no moderators."
+    }
   },
   "noData": "Not enough data yet",
   "tiles": {
@@ -40,7 +46,10 @@
     "single": "Warnings add up: the {nth} warning brings {first}.",
     "escalating": "Warnings add up: the {nth} warning brings {first}, and each warning after that ban brings a longer one ({later}).",
     "then": "{earlier}, then {next}",
-    "banDays": "a {days}-day ban",
+    "banDays": {
+      "one": "a {count}-day ban",
+      "other": "a {count}-day ban"
+    },
     "banPermanent": "a permanent ban",
     "ordinals": {
       "0": "zeroth",
@@ -68,8 +77,14 @@
     "readAll": "Read the full rules"
   },
   "foot": {
-    "period": "Last {days} days, from {from} to {to}. Small numbers are hidden.",
-    "periodWithReport": "Last {days} days, from {from} to {to}. Small numbers are hidden. Full monthly numbers: [Transparency report](/transparency)."
+    "period": {
+      "one": "Last {count} day, from {from} to {to}. Small numbers are hidden.",
+      "other": "Last {count} days, from {from} to {to}. Small numbers are hidden."
+    },
+    "periodWithReport": {
+      "one": "Last {count} day, from {from} to {to}. Small numbers are hidden. Full monthly numbers: [Transparency report](/transparency).",
+      "other": "Last {count} days, from {from} to {to}. Small numbers are hidden. Full monthly numbers: [Transparency report](/transparency)."
+    }
   },
   "error": {
     "title": "Trust card",

@@ -127,7 +127,41 @@
     "progressLabel": "Growth to {next}",
     "percent": "{pct}%",
     "progress": "{total} messages counted. {toNext} more to {next}.",
-    "grown": "{total} messages counted. Fully grown."
+    "grown": "{total} messages counted. Fully grown.",
+    "stages": {
+      "kitten": {
+        "name": "Kitten",
+        "inText": "kitten"
+      },
+      "young": {
+        "name": "Young cat",
+        "inText": "young cat"
+      },
+      "cat": {
+        "name": "Cat",
+        "inText": "cat"
+      },
+      "big": {
+        "name": "Big cat",
+        "inText": "big cat"
+      },
+      "legend": {
+        "name": "Legend",
+        "inText": "legend"
+      }
+    },
+    "moods": {
+      "scared": "scared",
+      "proud": "proud",
+      "happy": "happy",
+      "sleepy": "sleepy"
+    },
+    "sentences": {
+      "scared": "{name} is scared: the server is in raid lockdown.",
+      "proud": "{name} is proud: it grew a stage today.",
+      "happy": "{name} is happy: the server was busier this week.",
+      "sleepy": "{name} is sleepy: the server was quieter this week."
+    }
   },
   "errors": {
     "notFound": {

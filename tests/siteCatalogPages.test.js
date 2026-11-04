@@ -11,7 +11,11 @@ const { faqPage } = await import('../src/services/site/pages/faq.js');
 const { docsPage, guidePage, GUIDES } = await import('../src/services/site/pages/docs.js');
 const billing = await import('../src/services/site/billing.js');
 const { PLANS } = await import('../src/config/site/plans.js');
-const { CONSENT_TEXTS } = await import('../src/services/billing/premiumService.js');
+const { CONSENT_TEXTS, PremiumError } = await import('../src/services/billing/premiumService.js');
+const { readFileSync } = await import('node:fs');
+/** Every PremiumError code premiumService.js throws (new PremiumError(…, status, 'code' …)). */
+const PREMIUM_CODES = [...new Set([...readFileSync(new URL('../src/services/billing/premiumService.js', import.meta.url), 'utf8')
+    .matchAll(/new PremiumError\([\s\S]*?, \d{3},\s*'([a-zA-Z]+)'/g)].map((m) => m[1]))];
 
 const NAMESPACES = ['pricing', 'faq', 'docs', 'plans', 'billing'];
 const DAY = 86400000;
@@ -21,7 +25,12 @@ const iso = (ms) => new Date(ms).toISOString();
 function recordingCtx(used, extra = {}) {
     const en = translator('en');
     const wrap = (fn) => (key, params) => { used.add(key); return fn(key, params); };
-    return { ...extra, lang: 'en', t: wrap(en.t), ti: wrap(en.ti), tb: wrap(en.tb), tp: (key, count, params) => { for (const c of PLURAL_CATEGORIES) if (hasKey('en', `${key}.${c}`)) used.add(`${key}.${c}`); return en.tp(key, count, params); } };
+    const forms = (key) => { for (const c of PLURAL_CATEGORIES) if (hasKey('en', `${key}.${c}`)) used.add(`${key}.${c}`); };
+    return {
+        ...extra, lang: 'en', t: wrap(en.t), ti: wrap(en.ti), tb: wrap(en.tb),
+        tp: (key, count, params) => { forms(key); return en.tp(key, count, params); },
+        tpi: (key, count, params) => { forms(key); return en.tpi(key, count, params); },
+    };
 }
 
 function renderAll(used) {
@@ -73,6 +82,8 @@ function renderAll(used) {
         for (const o of [withdrawn, withdrawnPaid]) for (const dmDelivered of [null, false]) pages.push(billing.withdrawalAckPage(ctx, { session, order: o, dmDelivered }));
         billing.checkoutEffect({ plan_id: 'normal', expires_at: iso(now + DAY) }, { planId: 'max' }, now, ctx);
         billing.checkoutEffect({ plan_id: 'normal', expires_at: iso(now + 1.5 * DAY) }, { planId: 'normal' }, now, ctx);
+        const params = { max: 100, date: '2026-01-01', count: 14, current: 'Max', until: '2026-01-01', plan: 'Pro', missing: ['start', 'startGift', 'terms', 'age'] };
+        for (const code of PREMIUM_CODES) pages.push(billing.premiumErrorText(new PremiumError('English', 400, code, params), ctx));
     }
     return { pages, session, order, oldOrder, withdrawn };
 }

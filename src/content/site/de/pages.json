@@ -122,12 +122,46 @@
   },
   "cat": {
     "label": "Die Serverkatze",
-    "alt": "{name} ({stage}, {mood})",
+    "alt": "{name} ({stage}) wirkt {mood}",
     "stageLine": "{stage}. {sentence}",
     "progressLabel": "Wachstum bis {next}",
     "percent": "{pct} %",
     "progress": "{total} Nachrichten gezählt. Noch {toNext} bis {next}.",
-    "grown": "{total} Nachrichten gezählt. Ausgewachsen."
+    "grown": "{total} Nachrichten gezählt. Ausgewachsen.",
+    "stages": {
+      "kitten": {
+        "name": "Kätzchen",
+        "inText": "Kätzchen"
+      },
+      "young": {
+        "name": "Junge Katze",
+        "inText": "junge Katze"
+      },
+      "cat": {
+        "name": "Katze",
+        "inText": "Katze"
+      },
+      "big": {
+        "name": "Große Katze",
+        "inText": "große Katze"
+      },
+      "legend": {
+        "name": "Legende",
+        "inText": "Legende"
+      }
+    },
+    "moods": {
+      "scared": "verängstigt",
+      "proud": "stolz",
+      "happy": "glücklich",
+      "sleepy": "schläfrig"
+    },
+    "sentences": {
+      "scared": "{name} hat Angst: Der Server ist wegen eines Raids gesperrt.",
+      "proud": "{name} ist stolz: heute eine Stufe weitergewachsen.",
+      "happy": "{name} ist glücklich: Auf dem Server war diese Woche mehr los.",
+      "sleepy": "{name} ist schläfrig: Auf dem Server war diese Woche weniger los."
+    }
   },
   "errors": {
     "notFound": {

@@ -158,9 +158,11 @@ test('view: 1–2 counts become "fewer than 3", rates and medians under 3 are hi
     assert.equal(full.casesPerThousand, '70');
     assert.equal(full.headsUpRate, '80%');
     const small = trustCardView(SMALL_CARD);
-    assert.deepEqual(small.received, { text: 'fewer than 3', masked: true });
-    assert.deepEqual(small.decided, { text: 'fewer than 3', masked: true });
-    for (const key of ['firstAnswer', 'decisionTime', 'successRate', 'casesPerThousand', 'headsUpRate']) assert.equal(small[key], null, key);
+    assert.deepEqual(small.received, { text: 'fewer than 3', masked: true, kind: 'fewer', value: 3 });
+    assert.deepEqual(small.decided, { text: 'fewer than 3', masked: true, kind: 'fewer', value: 3 });
+    for (const key of ['firstAnswer', 'decisionTime', 'successRate', 'casesPerThousand', 'headsUpRate', 'firstAnswerParts', 'decisionTimeParts', 'casesPerThousandValue']) assert.equal(small[key], null, key);
+    assert.deepEqual(full.firstAnswerParts, { unit: 'hours', value: 5 });
+    assert.equal(full.casesPerThousandValue, 70);
 });
 
 test('ladder sentence comes from the enforcement config', () => {

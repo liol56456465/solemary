@@ -1,9 +1,19 @@
 {
   "title": "Cartão de confiança de {server}",
-  "description": "Como {server} é moderado: tempos de apelação, resultados das apelações e membros em situação regular nos últimos {days} dias. Só números.",
+  "description": {
+    "zero": "Como {server} é moderado: tempos de apelação, resultados das apelações e membros em situação regular nos últimos {count} dias. Só números.",
+    "one": "Como {server} é moderado: tempos de apelação, resultados das apelações e membros em situação regular no último {count} dia. Só números.",
+    "many": "Como {server} é moderado: tempos de apelação, resultados das apelações e membros em situação regular nos últimos {count} dias. Só números.",
+    "other": "Como {server} é moderado: tempos de apelação, resultados das apelações e membros em situação regular nos últimos {count} dias. Só números."
+  },
   "head": {
     "heading": "{server}: cartão de confiança",
-    "lead": "Como este servidor foi moderado nos últimos {days} dias. Só números: sem nomes, sem motivos, sem moderadores."
+    "lead": {
+      "zero": "Como este servidor foi moderado nos últimos {count} dias. Só números: sem nomes, sem motivos, sem moderadores.",
+      "one": "Como este servidor foi moderado no último {count} dia. Só números: sem nomes, sem motivos, sem moderadores.",
+      "many": "Como este servidor foi moderado nos últimos {count} dias. Só números: sem nomes, sem motivos, sem moderadores.",
+      "other": "Como este servidor foi moderado nos últimos {count} dias. Só números: sem nomes, sem motivos, sem moderadores."
+    }
   },
   "noData": "Ainda não há dados suficientes",
   "tiles": {
@@ -40,7 +50,12 @@
     "single": "As advertências se acumulam: a {nth} advertência traz {first}.",
     "escalating": "As advertências se acumulam: a {nth} advertência traz {first}, e cada advertência depois desse banimento traz um mais longo ({later}).",
     "then": "{earlier}, depois {next}",
-    "banDays": "um banimento de {days} dias",
+    "banDays": {
+      "zero": "um banimento de {count} dias",
+      "one": "um banimento de {count} dia",
+      "many": "um banimento de {count} dias",
+      "other": "um banimento de {count} dias"
+    },
     "banPermanent": "um banimento permanente",
     "ordinals": {
       "0": "0ª",
@@ -68,8 +83,18 @@
     "readAll": "Ler as regras completas"
   },
   "foot": {
-    "period": "Últimos {days} dias, de {from} a {to}. Números pequenos ficam ocultos.",
-    "periodWithReport": "Últimos {days} dias, de {from} a {to}. Números pequenos ficam ocultos. Números mensais completos: [Relatório de transparência](/transparency)."
+    "period": {
+      "zero": "Últimos {count} dias, de {from} a {to}. Números pequenos ficam ocultos.",
+      "one": "Último {count} dia, de {from} a {to}. Números pequenos ficam ocultos.",
+      "many": "Últimos {count} dias, de {from} a {to}. Números pequenos ficam ocultos.",
+      "other": "Últimos {count} dias, de {from} a {to}. Números pequenos ficam ocultos."
+    },
+    "periodWithReport": {
+      "zero": "Últimos {count} dias, de {from} a {to}. Números pequenos ficam ocultos. Números mensais completos: [Relatório de transparência](/transparency).",
+      "one": "Último {count} dia, de {from} a {to}. Números pequenos ficam ocultos. Números mensais completos: [Relatório de transparência](/transparency).",
+      "many": "Últimos {count} dias, de {from} a {to}. Números pequenos ficam ocultos. Números mensais completos: [Relatório de transparência](/transparency).",
+      "other": "Últimos {count} dias, de {from} a {to}. Números pequenos ficam ocultos. Números mensais completos: [Relatório de transparência](/transparency)."
+    }
   },
   "error": {
     "title": "Cartão de confiança",

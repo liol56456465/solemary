@@ -233,3 +233,216 @@ test('dates and numbers: English exactly as before (en-GB dates, en-US numbers);
     assert.ok(rulesPage(translator('de'), rules).includes('<time datetime="2026-11-01">1. November 2026</time>'));
     assert.ok(changelogPage(translator('fr'), [{ date: '2026-11-01', items: [] }]).includes('1 novembre 2026'));
 });
+
+// ── The last English fragments: bonus, days, the cat, errors, transparency words, plurals ──
+
+const accountPages = await import('../src/services/site/accountPages.js');
+const { PRO_BONUS_LABEL, AccountError, validateUsername, validatePassword, checkAge } = await import('../src/services/accounts/accountCore.js');
+const billingSite = await import('../src/services/site/billing.js');
+const premium = await import('../src/services/billing/premiumService.js');
+const { catCard } = await import('../src/services/site/site.js');
+const { CAT_STAGES, moodSentence, stageProgress } = await import('../src/services/community/catModel.js');
+const { trustPage, ladderSentence } = await import('../src/services/site/pages/trust.js');
+const { maskedText, medianWords } = await import('../src/services/site/pages/transparency.js');
+const transparency = await import('../src/services/enforcement/transparencyService.js');
+const portal = await import('../src/services/site/memberPortal.js');
+const { caseStatusLabel } = await import('../src/services/enforcement/caseService.js');
+const { nextWarningText } = await import('../src/services/enforcement/standingService.js');
+const { planCard } = await import('../src/services/site/pages/pricing.js');
+const { PLANS } = await import('../src/config/site/plans.js');
+const { homePage } = await import('../src/services/site/pages/home.js');
+const { featuresPage } = await import('../src/services/site/pages/features.js');
+const { hasKey } = await import('../src/services/site/i18n.js');
+
+const en = translator('en');
+const de = translator('de');
+const ru = translator('ru');
+const DAY_MS = 86_400_000;
+
+test('the early-account bonus length is a plural key: "6 months" in English, translated elsewhere', () => {
+    assert.equal(accountPages.bonusLength(en), PRO_BONUS_LABEL);
+    assert.equal(accountPages.bonusLength(de), '6 Monate');
+    assert.equal(accountPages.bonusLength(ru), '6 месяцев');
+    const page = (text) => String(accountPages.linkDiscordPage(text, { session: { csrf: 'c' }, account: { username: 'ana' } }));
+    assert.match(page(en), /get Mewvo Pro for 6 months\./);
+    assert.match(page(de), /bekommen Mewvo Pro für 6 Monate\./);
+    assert.match(page(ru), /получают Mewvo Pro на 6 месяцев\./);
+    assert.equal(accountPages.bonusStatusText({ link_number: 300 }, ru), 'Привязка №300: без бонуса Pro (его получили первые 100 привязок).');
+    assert.equal(accountPages.bonusStatusText({ link_number: 300 }, en), 'Link #300: no Pro bonus (it went to the first 100 links).');
+});
+
+test('days left: one plural key (account.plan.daysLeft) with each language\'s forms', () => {
+    const now = Date.UTC(2026, 10, 1);
+    const left = (text, days) => accountPages.daysLeftText(now + (days + 0.5) * DAY_MS, now, text);
+    assert.deepEqual([1, 3].map((d) => left(en, d)), ['1 day left', '3 days left']);
+    assert.deepEqual([1, 3].map((d) => left(de, d)), ['Noch 1 Tag', 'Noch 3 Tage']);
+    assert.deepEqual([1, 3, 5, 21].map((d) => left(ru, d)), ['Остался 1 день', 'Осталось 3 дня', 'Осталось 5 дней', 'Остался 21 день']);
+    assert.equal(hasKey('en', 'account.plan.dayLeft'), false, 'the old pair is gone');
+});
+
+test('billing.common.days is gone: day counts use the plural billing.common.day', () => {
+    assert.equal(hasKey('en', 'billing.common.days'), false);
+    assert.equal(en.tp('billing.common.day', 30), '30 days');
+    assert.equal(ru.tp('billing.common.day', 30), '30 дней');
+    const keys = String(billingSite.billingPage(ru, { session: { username: 'a', csrf: 'c' }, account: { subscription: null, orders: [], gifts: [{ code: 'MEWVO-A', plan_id: 'pro', duration_days: 31, created_at: new Date(), expires_at: null }] } }));
+    assert.match(keys, /<td>31 день<\/td>/);
+});
+
+test('the server cat on the website: stage, mood and sentence in the page\'s language; English unchanged', () => {
+    const cat = (i, mood) => ({ name: 'Mochi', stage: CAT_STAGES[i], mood, sentence: moodSentence('Mochi', mood), total: CAT_STAGES[i].min, progress: stageProgress(CAT_STAGES[i].min, i), image: 'x.png' });
+    const card = (text, c) => String(catCard(c, text));
+    assert.match(card(en, cat(1, 'happy')), /alt="Mochi, a young cat, looking happy"/);
+    assert.match(card(en, cat(1, 'happy')), /<p>Young cat\. Mochi is happy: the server was busier this week\.<\/p>/);
+    assert.match(card(de, cat(1, 'happy')), /alt="Mochi \(junge Katze\) wirkt glücklich"/);
+    assert.match(card(de, cat(1, 'happy')), /<p>Junge Katze\. Mochi ist glücklich: /);
+    assert.match(card(de, cat(1, 'happy')), /Noch 13\.000 bis Katze\./);
+    assert.match(card(ru, cat(0, 'sleepy')), /alt="Mochi, котёнок, выглядит сонным"/);
+    assert.match(card(ru, cat(0, 'scared')), /<p>Котёнок\. Mochi напуган: /);
+    // An unknown mood or stage (no key) keeps the English words; the bot's own sentence stays English.
+    assert.match(card(de, { ...cat(1, 'happy'), mood: 'grumpy', sentence: 'Mochi is grumpy.' }), /Mochi is grumpy\./);
+    assert.equal(moodSentence('Mochi', 'proud'), 'Mochi is proud: it grew a stage today.');
+    const trust = String(trustPage(ru, TRUST_CARD, { cat: cat(2, 'proud') }));
+    assert.match(trust, /alt="Mochi, кот сервера \(кот\), выглядит гордым"/);
+    assert.match(trust, /<span>Кот<\/span>/);
+});
+
+test('premium period labels on pages come from billing.period.*', () => {
+    const page = String(billingSite.checkoutPage(de, { session: { username: 'a', csrf: 'c' }, choice: { planId: 'pro', period: 'yearly', kind: 'personal' } }));
+    assert.match(page, />Jährlich</);
+    assert.match(page, />Monatlich</);
+    assert.doesNotMatch(page, />Yearly<|>Monthly</);
+});
+
+test('account errors on website forms: stable codes, English text unchanged, translated by code', () => {
+    const results = [validateUsername('a'), validateUsername('a b'), validateUsername('___'), validateUsername('admin'), validatePassword('short'),
+        validatePassword('x'.repeat(201)), checkAge(''), checkAge('2020-02-31'), checkAge('2020-01-01', new Date('2026-11-01'))];
+    for (const r of results) {
+        assert.equal(r.ok, false);
+        assert.match(r.code, /^[a-zA-Z]+$/);
+        assert.equal(accountPages.accountErrorText(r, en), r.error, r.code);
+        assert.notEqual(accountPages.accountErrorText(r, de), r.error, `${r.code} is translated`);
+    }
+    assert.equal(accountPages.accountErrorText(validatePassword('short'), de), 'Das Passwort muss mindestens 10 Zeichen lang sein.');
+    assert.equal(accountPages.accountErrorText(checkAge('2020-01-01', new Date('2026-11-01')), ru), 'Чтобы создать аккаунт, вам должно быть не меньше 14 лет.');
+    const taken = new AccountError('That username is already taken. Choose another one.', 409, 'username_taken');
+    assert.equal(accountPages.accountErrorText(taken, en), taken.userMessage);
+    assert.equal(accountPages.accountErrorText(taken, de), 'Dieser Benutzername ist schon vergeben. Wähle einen anderen.');
+    assert.equal(accountPages.accountErrorText(new AccountError('Odd.', 400, 'nothing_known'), de), 'Odd.', 'unknown code → English text');
+});
+
+test('PremiumError on checkout pages: English text unchanged, translated by code', () => {
+    const caught = (fn) => { try { fn(); } catch (error) { return error; } throw new Error('no error'); };
+    const errors = [
+        caught(() => premium.quote({ planId: 'none', period: 'monthly', kind: 'personal' })),
+        caught(() => premium.quote({ planId: 'pro', period: 'weekly', kind: 'personal' })),
+        caught(() => premium.quote({ planId: 'pro', period: 'monthly', kind: 'x' })),
+        caught(() => premium.conversion({ plan_id: 'max', expires_at: new Date(Date.now() + DAY_MS) }, 'pro')),
+        caught(() => premium.giftDetails({ to: 'x'.repeat(500) })),
+        caught(() => premium.giftDetails({ message: 'x'.repeat(5000) })),
+        caught(() => premium.checkoutConsent({}, 'personal')),
+        caught(() => premium.checkoutConsent({ consent_terms: 'yes' }, 'gift')),
+        caught(() => premium.applyTime(null, 'pro', 0)),
+        caught(() => premium.withdrawalQuote({ period: 'weekly' })),
+    ];
+    for (const error of errors) {
+        assert.ok(error instanceof premium.PremiumError);
+        assert.match(error.code, /^[a-zA-Z]+$/);
+        assert.equal(billingSite.premiumErrorText(error, en), error.userMessage, error.code);
+        assert.notEqual(billingSite.premiumErrorText(error, de), error.userMessage, `${error.code} is translated`);
+    }
+    assert.equal(billingSite.premiumErrorText(errors[0], de), 'Wähle einen bezahlten Plan (Normal, Pro oder Max).');
+    assert.equal(billingSite.premiumErrorText(errors[7], ru),
+        'Отметьте флажки, чтобы подтвердить: вы хотите получить ключ сейчас, вам 18 лет или больше или у вас есть разрешение. Ничего не заказано.');
+    const ended = new premium.PremiumError('The 14-day withdrawal period for this order ended on 2026-11-01.', 409, 'withdrawalEnded', { count: 14, date: '2026-11-01' });
+    assert.equal(billingSite.premiumErrorText(ended, en), ended.userMessage);
+    assert.equal(billingSite.premiumErrorText(ended, ru), 'Срок отказа от этого заказа (14 дней) истёк 2026-11-01.');
+    assert.equal(billingSite.premiumErrorText(new premium.PremiumError('Owner only.'), de), 'Owner only.', 'no code → English text');
+    const blocked = billingSite.checkoutEffect({ plan_id: 'max', expires_at: new Date(Date.now() + DAY_MS) }, { planId: 'pro' }, Date.now(), de);
+    assert.equal(blocked.kind, 'blocked');
+    assert.match(blocked.text, /^Du hast schon Max bis /);
+});
+
+test('My record: case status and the next warning in the page\'s language; English as caseStatusLabel / nextWarningText', () => {
+    const rows = [
+        { status: 'revoked', revoke_reason: 'Appeal accepted' }, { status: 'revoked', revoke_reason: 'Automod decision' }, { status: 'revoked' },
+        { status: 'appeal_pending' }, { status: 'active', expires_at: new Date(Date.now() - 1000) }, { status: 'expired' },
+    ].map((r, i) => ({ case_code: `c${i}`, type: 'ban', created_at: new Date(), reason: 'r', ...r }));
+    const view = (text, ladder = { level: 0, warns_since_level: 0 }) => portal.buildRecordView({ standing: { ladder, warns: [] }, cases: rows, appeals: [], text });
+    assert.deepEqual(view(en).cases.map((c) => c.status), rows.map((r) => caseStatusLabel(r)));
+    assert.deepEqual(view(ru).cases.map((c) => c.status), ['снято по апелляции', 'отменено модератором', 'снято', 'апелляция на рассмотрении', 'истекло', 'истекло']);
+    assert.equal(portal.buildRecordView({ standing: { warns: [] }, cases: [rows[0]], appeals: [{ case_code: 'c0', status: 'denied', type: 'ban', created_at: new Date() }], text: de }).cases[0].status, 'per Einspruch aufgehoben');
+    for (const ladder of [{ level: 0, warns_since_level: 0 }, { level: 0, warns_since_level: 1 }, { level: 0, warns_since_level: 2 }, { level: 1, warns_since_level: 0 }, { level: 2, warns_since_level: 0 }, { level: 3, warns_since_level: 0 }]) {
+        assert.equal(portal.nextWarningWords(ladder, en), nextWarningText(ladder));
+    }
+    assert.equal(portal.nextWarningWords({ level: 0, warns_since_level: 0 }, de), 'Es wäre Verwarnung 1 von 3. Noch 2 weitere danach würden einen automatischen Bann bedeuten (7 Tage).');
+    assert.equal(portal.nextWarningWords({ level: 1, warns_since_level: 0 }, ru), 'Это будет предел предупреждений: автоматический бан (1 месяц, уровень лестницы 2).');
+    assert.equal(portal.nextWarningWords({ level: 2, warns_since_level: 0 }, ru), 'Это будет предел предупреждений: автоматический бан (навсегда, уровень лестницы 3).');
+    assert.equal(portal.banLengthText(DAY_MS + 3_600_000, ru), '1 день 1 час');
+});
+
+test('transparency words: masked counts and medians in the page\'s language; English as the service', () => {
+    for (const values of [[0], [1], [2], [3, 0], [1234], [5, 2, 0], [1, 1, 0]]) {
+        const mask = transparency.maskTotal(values);
+        assert.equal(maskedText(mask, en), mask.text, String(values));
+    }
+    assert.equal(maskedText(transparency.maskCount(2), de), 'weniger als 3');
+    assert.equal(maskedText(transparency.maskTotal([5, 2, 0]), ru), 'не меньше 6');
+    assert.equal(maskedText(transparency.maskCount(1234), de), '1.234');
+    for (const hours of [0.2, 1, 1.4, 5, 47.4, 48, 80, 240]) {
+        assert.equal(medianWords(transparency.medianParts(hours, 3), en), transparency.medianText(hours, 3), String(hours));
+    }
+    assert.equal(medianWords(transparency.medianParts(0.5, 3), de), 'unter einer Stunde');
+    assert.equal(medianWords(transparency.medianParts(5, 3), ru), '5 часов');
+    assert.equal(medianWords(transparency.medianParts(50, 3), ru), '2,1 дня');
+    assert.equal(medianWords(transparency.medianParts(5, 2), ru), null);
+});
+
+const TRUST_CARD = {
+    days: 90, since: new Date('2026-08-03T12:00:00Z'), generatedAt: new Date('2026-11-01T12:00:00Z'), serverName: 'Mewvo', memberCount: 200,
+    appeals: { received: 2, accepted: 4, denied: 2, answered: 7, decided: 6, medianFirstHours: 5.2, medianDecisionHours: 50 }, cases: 1000, flagged: 6, headsUp: { fixed: 8, acted: 2 },
+};
+
+test('number + noun sentences are plural keys (pricing, trust, portal, account, billing)', () => {
+    const pro = PLANS.find((p) => p.id === 'pro');
+    assert.match(String(planCard(en, pro)), /a year \(2 months free\)/);
+    assert.match(String(planCard(de, pro)), /im Jahr \(2 Monate gratis\)/);
+    assert.match(String(planCard(ru, pro)), /в год \(2 месяца бесплатно\)/);
+    assert.equal(ladderSentence({ warnsPerLevel: 3, ladderBans: { 1: 7 * DAY_MS, 2: 21 * DAY_MS, 3: null } }, ru),
+        'Предупреждения накапливаются: третье предупреждение означает бан на 7 дней, а каждое предупреждение после этого бана — более долгий бан (бан на 21 день, затем бан навсегда).');
+    const trustRu = String(trustPage(ru, TRUST_CARD));
+    assert.match(trustRu, /Последние 90 дней, с /);
+    assert.match(trustRu, /за последние 90 дней\./);
+    assert.match(trustRu, /<dd>меньше 3<\/dd>/, 'masked count in Russian');
+    assert.match(trustRu, /<dd>5 часов<\/dd>|5 часов/);
+    assert.match(trustRu, /<dd>5\s000<\/dd>/, 'cases per 1,000 members written the Russian way');
+    const trustDe = String(trustPage(de, TRUST_CARD));
+    assert.match(trustDe, /Letzte 90 Tage, vom /);
+    assert.match(String(trustPage(en, TRUST_CARD)), /<dd>5,000<\/dd>/);
+    const old = { case_code: 'k', type: 'kick', status: 'active', created_at: new Date(Date.now() - 100 * DAY_MS), reason: 'r' };
+    const view = (text) => portal.buildRecordView({ standing: { warns: [] }, cases: Array.from({ length: 201 }, (_, i) => ({ ...old, case_code: `k${i}` })), appeals: [], text });
+    assert.equal(view(ru).cases[0].appeal.text, 'Срок подачи апелляции (30 дней) истёк');
+    assert.equal(view(de).cases[0].appeal.text, 'Die Einspruchsfrist (30 Tage) ist abgelaufen');
+    const session = { username: 'ana', csrf: 'c' };
+    assert.match(String(portal.recordPage(de, { session, view: view(de) })), /Es werden deine neuesten 201 Fälle angezeigt\./);
+    assert.match(String(portal.recordPage(ru, { session, view: view(ru) })), /Показаны ваши последние 201 дело\./);
+    assert.match(String(portal.recordPage(en, { session, view: view(en) })), /Showing your newest 201 cases\./);
+    const order = { id: 7, kind: 'gift', plan_id: 'pro', period: 'yearly', amount_cents: 4990, created_at: new Date(Date.now() - 40 * DAY_MS), legal: null };
+    const key = { code: 'MEWVO-A', plan_id: 'pro', duration_days: 1, gift_to: null, created_at: new Date(), expires_at: null };
+    const receiptRu = String(billingSite.receiptPage(ru, { session, order, key }));
+    assert.match(receiptRu, /Подарочный ключ · Pro, 1 день/);
+    assert.match(receiptRu, /Срок в 14 дней истёк\./);
+    assert.match(String(billingSite.receiptPage(de, { session, order, key: { ...key, duration_days: 365 } })), /Geschenk-Key · Pro, 365 Tage/);
+    assert.match(String(billingSite.receiptPage(en, { session, order, key })), /The 14-day period ended\./);
+    assert.match(String(billingSite.withdrawListPage(ru, { session, orders: [] })), /в течение 14 дней после заказа/);
+    const checkoutRu = String(billingSite.checkoutPage(ru, { session, choice: { planId: 'pro', period: 'yearly', kind: 'gift' } }));
+    assert.match(checkoutRu, /2 месяца бесплатно/);
+    assert.match(checkoutRu, /365 дней с момента активации ключа/);
+    assert.match(String(billingSite.checkoutPage(de, { session, choice: { planId: 'pro', period: 'monthly', kind: 'personal' } })), /30 Tage ab der Bestellung/);
+});
+
+test('home DM caption: English unchanged; translations say the bot sends the DM in English', () => {
+    assert.match(String(homePage(en)), /Same wording as the bot\./);
+    assert.match(String(homePage(de)), /Mewvo schickt sie auf Englisch/);
+    assert.match(String(homePage(ru)), /Mewvo отправляет его на английском/);
+    for (const { code } of LANGUAGES) assert.match(String(featuresPage(translator(code))), /Change to…</, `${code}: no doubled full stop`);
+});

@@ -125,12 +125,46 @@
   },
   "cat": {
     "label": "Il gatto del server",
-    "alt": "{name} ({stage}), umore: {mood}",
+    "alt": "{name} ({stage}), con l'aria {mood}",
     "stageLine": "{stage}. {sentence}",
     "progressLabel": "Crescita verso {next}",
     "percent": "{pct}%",
     "progress": "{total} messaggi contati. Ne mancano {toNext} per {next}.",
-    "grown": "{total} messaggi contati. Completamente cresciuto."
+    "grown": "{total} messaggi contati. Completamente cresciuto.",
+    "stages": {
+      "kitten": {
+        "name": "Gattino",
+        "inText": "gattino"
+      },
+      "young": {
+        "name": "Giovane gatto",
+        "inText": "giovane gatto"
+      },
+      "cat": {
+        "name": "Gatto",
+        "inText": "gatto"
+      },
+      "big": {
+        "name": "Gattone",
+        "inText": "gattone"
+      },
+      "legend": {
+        "name": "Leggenda",
+        "inText": "leggenda"
+      }
+    },
+    "moods": {
+      "scared": "spaventato",
+      "proud": "orgoglioso",
+      "happy": "felice",
+      "sleepy": "assonnato"
+    },
+    "sentences": {
+      "scared": "{name} ha paura: il server è in blocco per un raid.",
+      "proud": "{name} è orgoglioso: oggi è cresciuto di uno stadio.",
+      "happy": "{name} è felice: questa settimana il server è stato più attivo.",
+      "sleepy": "{name} ha sonno: questa settimana il server è stato più tranquillo."
+    }
   },
   "errors": {
     "notFound": {

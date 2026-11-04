@@ -22,7 +22,6 @@
     "planLine": "Mewvo {plan}",
     "planPeriod": "Mewvo {plan} · {period}",
     "planWithPeriod": "{plan} · {period}",
-    "days": "{count} jours",
     "test": "Test",
     "day": {
       "one": "{count} jour",
@@ -76,7 +75,10 @@
     "pricePerMonth": "{price}/mois",
     "pricePerYear": "{price}/an",
     "billingLabel": "Facturation",
-    "monthsFree": "{months} mois offerts",
+    "monthsFree": {
+      "one": "{count} mois offert",
+      "other": "{count} mois offerts"
+    },
     "forLabel": "Pour qui",
     "forMe": "Pour moi",
     "forMeSub": "commence maintenant sur ton compte",
@@ -113,8 +115,14 @@
     "whatYouGetGift": "Mewvo {plan} (la liste ci-dessus), sous forme de clé à offrir",
     "whatYouGetPersonal": "Mewvo {plan} (la liste ci-dessus) sur ton compte Discord",
     "duration": "Durée",
-    "durationGift": "{days} jours à partir de l’utilisation de la clé ; pas de renouvellement automatique",
-    "durationPersonal": "{days} jours à partir de la commande ; pas de renouvellement automatique",
+    "durationGift": {
+      "one": "{count} jour à partir de l’utilisation de la clé ; pas de renouvellement automatique",
+      "other": "{count} jours à partir de l’utilisation de la clé ; pas de renouvellement automatique"
+    },
+    "durationPersonal": {
+      "one": "{count} jour à partir de la commande ; pas de renouvellement automatique",
+      "other": "{count} jours à partir de la commande ; pas de renouvellement automatique"
+    },
     "totalPrice": "Prix total",
     "totalPriceValue": "{amount}. {vat}",
     "withdrawal": "Rétractation",
@@ -169,8 +177,14 @@
     "title": "Commande n° {id}",
     "headingGift": "Ta clé cadeau est prête",
     "heading": "Merci, ta formule est active",
-    "giftKey": "Clé cadeau · {plan}, {days} jours",
-    "giftKeyTo": "Clé cadeau · {plan}, {days} jours · pour {name}",
+    "giftKey": {
+      "one": "Clé cadeau · {plan}, {count} jour",
+      "other": "Clé cadeau · {plan}, {count} jours"
+    },
+    "giftKeyTo": {
+      "one": "Clé cadeau · {plan}, {count} jour · pour {name}",
+      "other": "Clé cadeau · {plan}, {count} jours · pour {name}"
+    },
     "giveAway": "Donne cette clé à qui tu veux. La personne se connecte à ce site et l’utilise sous Abonnement → Utiliser une clé, ou sur Discord avec `/premium redeem`.",
     "redeemBy": "À utiliser avant le {date}.",
     "status": "Statut : {status}.",
@@ -188,7 +202,10 @@
     "confirmed": "Tu as confirmé",
     "confirmedMeta": "{date} · {version} · Conditions du {terms}",
     "withdrawal": "Rétractation",
-    "periodEnded": "Le délai de {days} jours est écoulé. [Droit de rétractation](/withdrawal)",
+    "periodEnded": {
+      "one": "Le délai de {count} jour est écoulé. [Droit de rétractation](/withdrawal)",
+      "other": "Le délai de {count} jours est écoulé. [Droit de rétractation](/withdrawal)"
+    },
     "giftWithdrawal": "Pour un cadeau, le droit de rétractation t’appartient en tant qu’acheteur.",
     "dmNote": "Cette confirmation t’est aussi envoyée en message privé sur Discord (si tes messages privés du bot sont ouverts). Conserve-la pour tes archives."
   },
@@ -213,7 +230,10 @@
   "withdrawList": {
     "title": "Se rétracter d’un contrat",
     "heading": "Se rétracter du contrat ici",
-    "lead": "Connecté en tant que **{username}**. Choisis la commande dont tu veux te rétracter. Tu peux te rétracter dans un délai de {days} jours après la commande, sans avoir à donner de motif.",
+    "lead": {
+      "one": "Connecté en tant que **{username}**. Choisis la commande dont tu veux te rétracter. Tu peux te rétracter dans un délai de {count} jour après la commande, sans avoir à donner de motif.",
+      "other": "Connecté en tant que **{username}**. Choisis la commande dont tu veux te rétracter. Tu peux te rétracter dans un délai de {count} jours après la commande, sans avoir à donner de motif."
+    },
     "item": "**Commande {order}** : {line}, {amount}, commandée le {date}.",
     "button": "Se rétracter du contrat ici",
     "none": "Aucune commande de ce compte n’est dans son délai de rétractation de {days} jours.",
@@ -274,5 +294,36 @@
   "planButtons": {
     "buy": "Acheter {plan}",
     "gift": "L’offrir"
+  },
+  "errorCodes": {
+    "choosePlan": "Choisis une formule payante (Normal, Pro ou Max).",
+    "choosePeriod": "Choisis une facturation mensuelle ou annuelle.",
+    "chooseKind": "Choisis si c’est pour toi ou pour offrir.",
+    "lowerPlan": "Tu as déjà {current} jusqu’au {until}, ce qui est plus que {plan}. Une clé ou un achat {plan} pourra être utilisé après la fin ; rien n’a été modifié.",
+    "durationMin": "La durée doit être d’au moins un jour.",
+    "giftToLong": "« Pour » est limité à {max} caractères.",
+    "giftMessageLong": "Le message est limité à {max} caractères.",
+    "consentMissing": "Coche les cases pour confirmer {items}. Rien n’a été commandé.",
+    "consentItems": {
+      "start": "que tu veux que la formule commence maintenant",
+      "startGift": "que tu veux la clé maintenant",
+      "terms": "que tu acceptes les Conditions générales",
+      "age": "que tu as 18 ans ou plus ou que tu as l’autorisation"
+    },
+    "notWithdrawable": "Il n’est pas possible de se rétracter de cette commande en ligne. Contacte-nous.",
+    "logInFirst": "Connecte-toi d’abord.",
+    "notAKey": "Ce n’est pas une clé Mewvo. Les clés ressemblent à MEWVO-ABCD-EFGH-JKMN.",
+    "keyMissing": "Cette clé n’existe pas. Vérifie qu’il n’y a pas de faute de frappe.",
+    "keyRevoked": "Cette clé a été annulée et ne peut pas être utilisée.",
+    "keyUsed": "Cette clé a déjà été utilisée.",
+    "keyExpired": "Cette clé a expiré le {date}.",
+    "noSuchOrder": "Cette commande n’existe pas sur ton compte.",
+    "enterName": "Indique ton nom.",
+    "nameLong": "Le nom est limité à {max} caractères.",
+    "alreadyWithdrawn": "Tu t’es déjà rétracté de cette commande.",
+    "withdrawalEnded": {
+      "one": "Le délai de rétractation de {count} jour pour cette commande a pris fin le {date}.",
+      "other": "Le délai de rétractation de {count} jours pour cette commande a pris fin le {date}."
+    }
   }
 }
