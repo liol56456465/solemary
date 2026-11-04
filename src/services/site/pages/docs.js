@@ -1,136 +1,167 @@
 // docs.js — /docs (the guide hub) and /docs/<slug> (short guides), written from the
 // real behaviour: enforcement/flowBuilder.js, handlers/enforcementPanel.js, config/enforcement.js,
 // enforcement/appealService.js, handlers/appealsHandler.js, dashboard/html.js NAV and CLAUDE.md.
+// Text: content/site/<lang>/docs.json (docs.guides.<key>.title / .summary / sections). The page
+// structure (headings with ids, lists, mockups) stays here; each paragraph or item is one key.
 
 import { html } from '../../dashboard/html.js';
 import { DASHBOARD_PATH, layout } from '../shell.js';
+import { textOf } from '../i18n.js';
 import { appealFormMock, banDmMock, dashboardShot, ladderMock } from './mockups.js';
 
-const supportLink = (ctx, text = 'the support server') => (ctx.supportInvite
-    ? html`<a href="${ctx.supportInvite}" rel="noopener">${text}</a>`
-    : text);
+const support = (ctx) => {
+    const { t, ti } = textOf(ctx);
+    return ctx.supportInvite ? ti('docs.support.link', { url: ctx.supportInvite }) : t('docs.support.text');
+};
 
 export const GUIDES = [
     {
-        slug: 'setup', title: 'Set up Mewvo in 10 minutes', minutes: 10,
-        summary: 'For the server owner: the few settings Mewvo needs, in order, on the dashboard.',
-        body: (ctx) => html`<p>You need the <strong>Administrator</strong> permission in the server. Everything below is done on the dashboard, in your browser. You do not need to type any commands.</p>
-<h2 id="open">1. Open the dashboard</h2>
-<p>Go to the <a href="${DASHBOARD_PATH}">dashboard</a> and log in with Discord. Mewvo only asks Discord who you are. It does not see your email or your messages.</p>
-<h2 id="steps">2. Follow "Setup step by step"</h2>
-<p>On the Overview page, press <strong>Set up Mewvo step by step</strong>. It shows one setting at a time, says why it matters, and opens the right page. Skip anything you do not need. The most important three are:</p>
-<ol class="steps-list"><li><strong>Mod log channel</strong>: a staff-only channel where Mewvo writes down every warning, mute, kick and ban.</li>
-<li><strong>Muted role</strong>: Mewvo makes it by itself the first time someone is muted, so you can leave it.</li>
-<li><strong>Appeals category</strong>: where Mewvo opens a private channel when a member asks to have a punishment lifted.</li></ol>
-<h2 id="rules">3. Write your rules</h2>
-<p>On the <strong>Rules</strong> page, add your server rules. They show on a web page, and every punishment message names the rule that was broken.</p>
-<h2 id="automod">4. Check automod</h2>
-<p>On the <strong>Automod</strong> page you choose what automod does. If you are not sure yet, pick <strong>Watch only</strong>: automod then only tells staff what it would have done, and nothing happens to anyone until a staff member agrees. Switch to <strong>Act</strong> when you trust it.</p>
-<h2 id="try">5. Try it on yourself</h2>
-<p>In Discord, run <code>/test</code>. Mewvo sends you the exact message a member would get for a warning or a ban. Nothing is done to anyone.</p>
-<h2 id="next">Next</h2>
-<p>The sidebar shows the main pages. Press <strong>Show all pages</strong> at the bottom to see everything. If a word is new to you, open <strong>Words explained</strong> in the sidebar. Questions? Ask in ${supportLink(ctx)}.</p>`,
+        slug: 'setup', key: 'setup', minutes: 10,
+        body: (ctx) => {
+            const { t, ti } = textOf(ctx);
+            const k = (key) => `docs.guides.setup.${key}`;
+            return html`<p>${ti(k('intro'))}</p>
+<h2 id="open">${t(k('open.title'))}</h2>
+<p>${ti(k('open.text'), { dashboard: DASHBOARD_PATH })}</p>
+<h2 id="steps">${t(k('steps.title'))}</h2>
+<p>${ti(k('steps.text'))}</p>
+<ol class="steps-list"><li>${ti(k('steps.modLog'))}</li>
+<li>${ti(k('steps.mutedRole'))}</li>
+<li>${ti(k('steps.appealsCategory'))}</li></ol>
+<h2 id="rules">${t(k('rules.title'))}</h2>
+<p>${ti(k('rules.text'))}</p>
+<h2 id="automod">${t(k('automod.title'))}</h2>
+<p>${ti(k('automod.text'))}</p>
+<h2 id="try">${t(k('try.title'))}</h2>
+<p>${ti(k('try.text'))}</p>
+<h2 id="next">${t(k('next.title'))}</h2>
+<p>${ti(k('next.text'), { support: support(ctx) })}</p>`;
+        },
     },
     {
-        slug: 'getting-started', title: 'Getting started for staff', minutes: 4,
-        summary: 'Who can use what, your first enforcement action, and the commands you’ll use every week.',
-        body: (ctx) => html`<h2 id="access">Who can do what</h2>
-<p>Everyday commands (help, rank, leaderboard, fun, to-do lists, reports and so on) are open to every member. Anything that moderates, changes settings, posts as the bot, affects other members or moves currency needs the <strong>Administrator</strong> role. The check runs every time a command or button is used, not only when it is first opened.</p>
-<p>Members without Administrator who try a staff command are told so and pointed to the channel where they can request a role.</p>
-<h2 id="first-action">Your first action</h2>
-<ol class="steps-list"><li>Run <code>/enforcements user:@member</code>. The panel shows the member’s account age, time in the server, counted warnings, ladder level, any active punishment and their last cases. Only you can see it.</li>
-<li>Press the action: <strong>Ban</strong>, <strong>Kick</strong>, <strong>Mute</strong> or <strong>Warn</strong> (or <strong>Unban</strong>, <strong>Unmute</strong>, <strong>Remove warn</strong> when they apply).</li>
-<li>Choose a prebuilt reason or <strong>Custom…</strong> and type one.</li>
-<li>For a mute, give a duration such as <code>30m</code>, <code>24h</code>, <code>7d</code> or <code>1mo</code>. For a ban, the same, or leave it blank for a permanent ban.</li>
-<li>Check the summary and press <strong>Confirm</strong>.</li></ol>
-<p>The member gets a DM before a kick or ban happens. If the DM can’t be delivered, the action still goes ahead and you are told. The panel expires after 15 minutes; run the command again if it does.</p>
-<h2 id="every-week">Commands you’ll use</h2>
-<dl class="ref-list"><div><dt><code>/background</code></dt><dd>A member’s full case history.</dd></div>
-<div><dt><code>/case</code></dt><dd>Search cases, edit a reason or duration, void a mistaken case, see its history, attach evidence.</dd></div>
-<div><dt><code>/appeals</code></dt><dd>Accept or deny an appeal by case code, with a note.</dd></div>
-<div><dt><code>/test</code></dt><dd>Sends you the exact DM a member would get. Nothing is done to anyone.</dd></div>
-<div><dt><code>/staff</code></dt><dd>Staff activity and stats.</dd></div>
-<div><dt>Warn for this message</dt><dd>Right-click a message, then Apps: warns the author with the message attached.</dd></div></dl>
-<h2 id="limits">Limits that protect the server</h2>
-<p>Mewvo refuses to act on the server owner, the bot, yourself, or anyone whose highest role is equal to or above yours. If one moderator bans or kicks more than 5 members in 10 minutes, they are blocked for an hour and the owner is told.</p>`,
+        slug: 'getting-started', key: 'gettingStarted', minutes: 4,
+        body: (ctx) => {
+            const { t, ti } = textOf(ctx);
+            const k = (key) => `docs.guides.gettingStarted.${key}`;
+            return html`<h2 id="access">${t(k('access.title'))}</h2>
+<p>${ti(k('access.text'))}</p>
+<p>${ti(k('access.denied'))}</p>
+<h2 id="first-action">${t(k('firstAction.title'))}</h2>
+<ol class="steps-list"><li>${ti(k('firstAction.run'))}</li>
+<li>${ti(k('firstAction.action'))}</li>
+<li>${ti(k('firstAction.reason'))}</li>
+<li>${ti(k('firstAction.duration'))}</li>
+<li>${ti(k('firstAction.confirm'))}</li></ol>
+<p>${ti(k('firstAction.after'))}</p>
+<h2 id="every-week">${t(k('everyWeek.title'))}</h2>
+<dl class="ref-list"><div><dt><code>/background</code></dt><dd>${ti(k('everyWeek.background'))}</dd></div>
+<div><dt><code>/case</code></dt><dd>${ti(k('everyWeek.case'))}</dd></div>
+<div><dt><code>/appeals</code></dt><dd>${ti(k('everyWeek.appeals'))}</dd></div>
+<div><dt><code>/test</code></dt><dd>${ti(k('everyWeek.test'))}</dd></div>
+<div><dt><code>/staff</code></dt><dd>${ti(k('everyWeek.staff'))}</dd></div>
+<div><dt>${t(k('everyWeek.warnMessage'))}</dt><dd>${ti(k('everyWeek.warnMessageText'))}</dd></div></dl>
+<h2 id="limits">${t(k('limits.title'))}</h2>
+<p>${ti(k('limits.text'))}</p>`;
+        },
     },
     {
-        slug: 'warnings', title: 'How warnings and bans escalate', minutes: 3,
-        summary: 'The warning ladder: three warnings, then 7 days, 30 days and a permanent ban.',
-        body: (ctx) => html`<p>Every member has a ladder in each server. It starts at level 0 with no warnings, and it never resets on its own.</p>
+        slug: 'warnings', key: 'warnings', minutes: 3,
+        body: (ctx) => {
+            const { t, ti } = textOf(ctx);
+            const k = (key) => `docs.guides.warnings.${key}`;
+            const ref = (term) => html`<div><dt>${t(k(`changes.${term}`))}</dt><dd>${ti(k(`changes.${term}Text`))}</dd></div>`;
+            return html`<p>${ti(k('intro'))}</p>
 ${ladderMock()}
-<h2 id="steps">The steps</h2>
-<ol class="steps-list"><li><strong>Warnings 1 and 2</strong> are a DM: “Warning 1 of 3” and “Warning 2 of 3”.</li>
-<li><strong>Warning 3</strong> is an automatic 7-day ban. The member is now at level 1.</li>
-<li>After they return, the <strong>next warning</strong> is an automatic 30-day ban (level 2).</li>
-<li>The <strong>warning after that</strong> is a permanent ban (level 3). It can be appealed for 6 months. After that, or after a denied appeal, it can no longer be appealed.</li></ol>
-${banDmMock(ctx, { caption: 'The DM for the automatic ban at warning 3. Appealing this code also removes the warning that caused it.' })}
-<h2 id="what-changes">What changes the ladder</h2>
-<dl class="ref-list"><div><dt>Remove warn</dt><dd>Lowers the warning count.</dd></div>
-<div><dt>Accepted appeal of a ladder ban</dt><dd>Lowers the level by one, never below 0.</dd></div>
-<div><dt>A ban given by hand</dt><dd>Does not move the ladder.</dd></div>
-<div><dt>Voiding a case</dt><dd>The case stays on record but no longer counts.</dd></div>
-<div><dt>Imported old warnings</dt><dd>Shown as history only. They don’t count.</dd></div></dl>
-<p>Members can check where they are with <strong>My standing</strong> on the appeal panel.</p>`,
+<h2 id="steps">${t(k('steps.title'))}</h2>
+<ol class="steps-list"><li>${ti(k('steps.first'))}</li>
+<li>${ti(k('steps.third'))}</li>
+<li>${ti(k('steps.next'))}</li>
+<li>${ti(k('steps.last'))}</li></ol>
+${banDmMock(ctx, { caption: t(k('dmCaption')) })}
+<h2 id="what-changes">${t(k('changes.title'))}</h2>
+<dl class="ref-list">${ref('removeWarn')}
+${ref('appeal')}
+${ref('manualBan')}
+${ref('void')}
+${ref('imported')}</dl>
+<p>${ti(k('standing'))}</p>`;
+        },
     },
     {
-        slug: 'appeals', title: 'Appeals: how they work', minutes: 3,
-        summary: 'Where to appeal, what the form asks, who decides and how long it takes to try again.',
-        body: (ctx) => html`<h2 id="where">Where to appeal</h2>
-<p>Every punishment DM has the appeal link, or says it can’t be appealed. The appeal panel has three buttons: <strong>Appeal</strong>, <strong>My appeals</strong> and <strong>My standing</strong>. Muted or warned members use the panel in the main server. Banned members use the one in ${supportLink(ctx)}, which they can still reach after a ban.</p>
+        slug: 'appeals', key: 'appeals', minutes: 3,
+        body: (ctx) => {
+            const { t, ti } = textOf(ctx);
+            const k = (key) => `docs.guides.appeals.${key}`;
+            const ref = (term) => html`<div><dt>${t(k(`form.${term}`))}</dt><dd>${ti(k(`form.${term}Text`))}</dd></div>`;
+            return html`<h2 id="where">${t(k('where.title'))}</h2>
+<p>${ti(k('where.text'), { support: support(ctx) })}</p>
 ${appealFormMock()}
-<h2 id="form">The form</h2>
-<dl class="ref-list"><div><dt>Why should it be lifted?</dt><dd>At least 20 characters, at most 1000.</dd></div>
-<div><dt>Case code</dt><dd>From the DM, for example <code>k7xq2</code>.</dd></div>
-<div><dt>More info</dt><dd>Optional, anything else staff should know.</dd></div></dl>
-<h2 id="after">What happens next</h2>
-<ul><li><strong>Ban and kick appeals</strong> open a channel in the support server with you in it, so staff can ask questions.</li>
-<li><strong>Mute and warning appeals</strong> are reviewed by staff in the main server.</li>
-<li>The administrators decide. You get the decision by DM. An accepted appeal lifts what is still active and, for bans and kicks, comes with a one-time invite back.</li></ul>
-<h2 id="limits">Limits</h2>
-<ul><li>One pending appeal per case.</li>
-<li>After a denial, wait 7 days before appealing the same case again.</li>
-<li>Bans and mutes can be appealed while they last. Warnings and kicks within 30 days.</li>
-<li>Some cases can’t be appealed, for example a permanent ladder ban after 6 months. The DM says so.</li></ul>`,
+<h2 id="form">${t(k('form.title'))}</h2>
+<dl class="ref-list">${ref('why')}
+${ref('code')}
+${ref('more')}</dl>
+<h2 id="after">${t(k('after.title'))}</h2>
+<ul><li>${ti(k('after.banKick'))}</li>
+<li>${ti(k('after.muteWarn'))}</li>
+<li>${ti(k('after.decision'))}</li></ul>
+<h2 id="limits">${t(k('limits.title'))}</h2>
+<ul><li>${ti(k('limits.onePending'))}</li>
+<li>${ti(k('limits.cooldown'))}</li>
+<li>${ti(k('limits.window'))}</li>
+<li>${ti(k('limits.unappealable'))}</li></ul>`;
+        },
     },
     {
-        slug: 'using-the-dashboard', title: 'Using the dashboard', minutes: 3,
-        summary: 'Signing in, the four areas of the sidebar, and where changes are recorded.',
-        body: (ctx) => html`<h2 id="sign-in">Signing in</h2>
-<p>${ctx.dashboardEnabled ? html`Open <a href="${DASHBOARD_PATH}">the dashboard</a>` : 'Open the dashboard'} and log in with Discord. Mewvo only asks Discord who you are (<code>identify</code>). You need the Administrator role in the server; it is checked again on every page and every save. A server can also give a moderator role view access to the moderation pages.</p>
-${dashboardShot({ name: 'cases', alt: 'The Cases page of the Mewvo dashboard: filters for member, moderator, type, status, text and dates above a table of cases with code, type, member, moderator, reason, date and status.', caption: 'Cases, with made-up members.' })}
-<h2 id="areas">The four areas</h2>
-<dl class="ref-list"><div><dt>Moderate</dt><dd>Overview (what needs you first), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff and Channel tools.</dd></div>
-<div><dt>Community</dt><dd>Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community and Join to create.</dd></div>
-<div><dt>Server setup</dt><dd>Automod, Enforcement and appeals, Logging, Verification, Counters and the Support server.</dd></div>
-<div><dt>Bot</dt><dd>All modules, Commands and the Audit log.</dd></div></dl>
-<h2 id="changes">Changes and the audit log</h2>
-<p>Settings are shown as rows; change one and save. Every change is written to the audit log: who changed which setting, from what, to what. Actions such as bans from the Members page use the same rules as the commands, including the DM and the safety checks.</p>
-<p>The dashboard works on phones too, with a tab bar at the bottom, and has five themes in the account menu (Light, Dark, Dim, High contrast, or the same as your device).</p>`,
+        slug: 'using-the-dashboard', key: 'usingTheDashboard', minutes: 3,
+        body: (ctx) => {
+            const { t, ti } = textOf(ctx);
+            const k = (key) => `docs.guides.usingTheDashboard.${key}`;
+            const ref = (term) => html`<div><dt>${t(k(`areas.${term}`))}</dt><dd>${ti(k(`areas.${term}Text`))}</dd></div>`;
+            return html`<h2 id="sign-in">${t(k('signIn.title'))}</h2>
+<p>${ctx.dashboardEnabled ? ti(k('signIn.textLink'), { dashboard: DASHBOARD_PATH }) : ti(k('signIn.text'))}</p>
+${dashboardShot({ name: 'cases', alt: t(k('shotAlt')), caption: t(k('shotCaption')) })}
+<h2 id="areas">${t(k('areas.title'))}</h2>
+<dl class="ref-list">${ref('moderate')}
+${ref('community')}
+${ref('setup')}
+${ref('bot')}</dl>
+<h2 id="changes">${t(k('changes.title'))}</h2>
+<p>${ti(k('changes.text'))}</p>
+<p>${ti(k('changes.phones'))}</p>`;
+        },
     },
 ];
 
+/** A guide's title and summary in the page's language. */
+export function guideText(ctx, guide) {
+    const { t } = textOf(ctx);
+    return { title: t(`docs.guides.${guide.key}.title`), summary: t(`docs.guides.${guide.key}.summary`) };
+}
+
 export function docsPage(ctx) {
+    const { t, ti } = textOf(ctx);
     return layout(ctx, {
-        title: 'Docs', active: 'docs', path: '/docs',
-        description: 'Short guides to Mewvo: getting started for staff, how warnings escalate, how appeals work and using the dashboard.',
+        title: t('docs.meta.title'), active: 'docs', path: '/docs',
+        description: t('docs.meta.description'),
         body: html`<div class="wrap page">
-<header class="page-head page-head-split"><div><h1>Guides</h1></div>
-<p class="lead">How Mewvo works, step by step. For every command members can use, see <a href="/commands">Commands</a>.</p></header>
-<ol class="guide-list">${GUIDES.map((g) => html`<li><a class="guide" href="/docs/${g.slug}"><span class="guide-text"><span class="guide-title">${g.title}</span><span class="guide-summary">${g.summary}</span></span></a></li>`)}</ol></div>`,
+<header class="page-head page-head-split"><div><h1>${t('docs.hub.title')}</h1></div>
+<p class="lead">${ti('docs.hub.lead')}</p></header>
+<ol class="guide-list">${GUIDES.map((g) => { const g2 = guideText(ctx, g); return html`<li><a class="guide" href="/docs/${g.slug}"><span class="guide-text"><span class="guide-title">${g2.title}</span><span class="guide-summary">${g2.summary}</span></span></a></li>`; })}</ol></div>`,
     });
 }
 
 export function guidePage(ctx, guide) {
+    const { t } = textOf(ctx);
     const index = GUIDES.indexOf(guide);
     const next = GUIDES[index + 1] || null;
+    const { title, summary } = guideText(ctx, guide);
     return layout(ctx, {
-        title: guide.title, active: 'docs', path: `/docs/${guide.slug}`,
-        description: guide.summary,
+        title, active: 'docs', path: `/docs/${guide.slug}`,
+        description: summary,
         body: html`<div class="wrap page"><div class="doc">
-<nav class="crumbs" aria-label="Breadcrumb"><a href="/docs">Docs</a><span aria-hidden="true">/</span><span>${guide.title}</span></nav>
-<header class="doc-head"><h1>${guide.title}</h1><p class="lead">${guide.summary}</p></header>
+<nav class="crumbs" aria-label="${t('docs.nav.crumbs')}"><a href="/docs">${t('docs.nav.docs')}</a><span aria-hidden="true">/</span><span>${title}</span></nav>
+<header class="doc-head"><h1>${title}</h1><p class="lead">${summary}</p></header>
 <div class="prose doc-body">${guide.body(ctx)}</div>
-<nav class="doc-next" aria-label="Next guide">${next ? html`<a href="/docs/${next.slug}"><span class="doc-next-label">Next</span>${next.title}</a>` : html`<a href="/faq"><span class="doc-next-label">Still have questions?</span>Read the FAQ</a>`}</nav></div></div>`,
+<nav class="doc-next" aria-label="${t('docs.nav.nextGuide')}">${next ? html`<a href="/docs/${next.slug}"><span class="doc-next-label">${t('docs.nav.next')}</span>${guideText(ctx, next).title}</a>` : html`<a href="/faq"><span class="doc-next-label">${t('docs.nav.stillQuestions')}</span>${t('docs.nav.readFaq')}</a>`}</nav></div></div>`,
     });
 }

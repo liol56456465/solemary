@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "title": "Docs",
+    "description": "Short guides to Mewvo: getting started for staff, how warnings escalate, how appeals work and using the dashboard."
+  },
+  "hub": {
+    "title": "Guides",
+    "lead": "How Mewvo works, step by step. For every command members can use, see [Commands](/commands)."
+  },
+  "nav": {
+    "crumbs": "Breadcrumb",
+    "docs": "Docs",
+    "nextGuide": "Next guide",
+    "next": "Next",
+    "stillQuestions": "Still have questions?",
+    "readFaq": "Read the FAQ"
+  },
+  "support": {
+    "link": "[the support server]({url})",
+    "text": "the support server"
+  },
+  "guides": {
+    "setup": {
+      "title": "Set up Mewvo in 10 minutes",
+      "summary": "For the server owner: the few settings Mewvo needs, in order, on the dashboard.",
+      "intro": "You need the **Administrator** permission in the server. Everything below is done on the dashboard, in your browser. You do not need to type any commands.",
+      "open": {
+        "title": "1. Open the dashboard",
+        "text": "Go to the [dashboard]({dashboard}) and log in with Discord. Mewvo only asks Discord who you are. It does not see your email or your messages."
+      },
+      "steps": {
+        "title": "2. Follow \"Setup step by step\"",
+        "text": "On the Overview page, press **Set up Mewvo step by step**. It shows one setting at a time, says why it matters, and opens the right page. Skip anything you do not need. The most important three are:",
+        "modLog": "**Mod log channel**: a staff-only channel where Mewvo writes down every warning, mute, kick and ban.",
+        "mutedRole": "**Muted role**: Mewvo makes it by itself the first time someone is muted, so you can leave it.",
+        "appealsCategory": "**Appeals category**: where Mewvo opens a private channel when a member asks to have a punishment lifted."
+      },
+      "rules": {
+        "title": "3. Write your rules",
+        "text": "On the **Rules** page, add your server rules. They show on a web page, and every punishment message names the rule that was broken."
+      },
+      "automod": {
+        "title": "4. Check automod",
+        "text": "On the **Automod** page you choose what automod does. If you are not sure yet, pick **Watch only**: automod then only tells staff what it would have done, and nothing happens to anyone until a staff member agrees. Switch to **Act** when you trust it."
+      },
+      "try": {
+        "title": "5. Try it on yourself",
+        "text": "In Discord, run `/test`. Mewvo sends you the exact message a member would get for a warning or a ban. Nothing is done to anyone."
+      },
+      "next": {
+        "title": "Next",
+        "text": "The sidebar shows the main pages. Press **Show all pages** at the bottom to see everything. If a word is new to you, open **Words explained** in the sidebar. Questions? Ask in {support}."
+      }
+    },
+    "gettingStarted": {
+      "title": "Getting started for staff",
+      "summary": "Who can use what, your first enforcement action, and the commands you’ll use every week.",
+      "access": {
+        "title": "Who can do what",
+        "text": "Everyday commands (help, rank, leaderboard, fun, to-do lists, reports and so on) are open to every member. Anything that moderates, changes settings, posts as the bot, affects other members or moves currency needs the **Administrator** role. The check runs every time a command or button is used, not only when it is first opened.",
+        "denied": "Members without Administrator who try a staff command are told so and pointed to the channel where they can request a role."
+      },
+      "firstAction": {
+        "title": "Your first action",
+        "run": "Run `/enforcements user:@member`. The panel shows the member’s account age, time in the server, counted warnings, ladder level, any active punishment and their last cases. Only you can see it.",
+        "action": "Press the action: **Ban**, **Kick**, **Mute** or **Warn** (or **Unban**, **Unmute**, **Remove warn** when they apply).",
+        "reason": "Choose a prebuilt reason or **Custom…** and type one.",
+        "duration": "For a mute, give a duration such as `30m`, `24h`, `7d` or `1mo`. For a ban, the same, or leave it blank for a permanent ban.",
+        "confirm": "Check the summary and press **Confirm**.",
+        "after": "The member gets a DM before a kick or ban happens. If the DM can’t be delivered, the action still goes ahead and you are told. The panel expires after 15 minutes; run the command again if it does."
+      },
+      "everyWeek": {
+        "title": "Commands you’ll use",
+        "background": "A member’s full case history.",
+        "case": "Search cases, edit a reason or duration, void a mistaken case, see its history, attach evidence.",
+        "appeals": "Accept or deny an appeal by case code, with a note.",
+        "test": "Sends you the exact DM a member would get. Nothing is done to anyone.",
+        "staff": "Staff activity and stats.",
+        "warnMessage": "Warn for this message",
+        "warnMessageText": "Right-click a message, then Apps: warns the author with the message attached."
+      },
+      "limits": {
+        "title": "Limits that protect the server",
+        "text": "Mewvo refuses to act on the server owner, the bot, yourself, or anyone whose highest role is equal to or above yours. If one moderator bans or kicks more than 5 members in 10 minutes, they are blocked for an hour and the owner is told."
+      }
+    },
+    "warnings": {
+      "title": "How warnings and bans escalate",
+      "summary": "The warning ladder: three warnings, then 7 days, 30 days and a permanent ban.",
+      "intro": "Every member has a ladder in each server. It starts at level 0 with no warnings, and it never resets on its own.",
+      "steps": {
+        "title": "The steps",
+        "first": "**Warnings 1 and 2** are a DM: “Warning 1 of 3” and “Warning 2 of 3”.",
+        "third": "**Warning 3** is an automatic 7-day ban. The member is now at level 1.",
+        "next": "After they return, the **next warning** is an automatic 30-day ban (level 2).",
+        "last": "The **warning after that** is a permanent ban (level 3). It can be appealed for 6 months. After that, or after a denied appeal, it can no longer be appealed."
+      },
+      "dmCaption": "The DM for the automatic ban at warning 3. Appealing this code also removes the warning that caused it.",
+      "changes": {
+        "title": "What changes the ladder",
+        "removeWarn": "Remove warn",
+        "removeWarnText": "Lowers the warning count.",
+        "appeal": "Accepted appeal of a ladder ban",
+        "appealText": "Lowers the level by one, never below 0.",
+        "manualBan": "A ban given by hand",
+        "manualBanText": "Does not move the ladder.",
+        "void": "Voiding a case",
+        "voidText": "The case stays on record but no longer counts.",
+        "imported": "Imported old warnings",
+        "importedText": "Shown as history only. They don’t count."
+      },
+      "standing": "Members can check where they are with **My standing** on the appeal panel."
+    },
+    "appeals": {
+      "title": "Appeals: how they work",
+      "summary": "Where to appeal, what the form asks, who decides and how long it takes to try again.",
+      "where": {
+        "title": "Where to appeal",
+        "text": "Every punishment DM has the appeal link, or says it can’t be appealed. The appeal panel has three buttons: **Appeal**, **My appeals** and **My standing**. Muted or warned members use the panel in the main server. Banned members use the one in {support}, which they can still reach after a ban."
+      },
+      "form": {
+        "title": "The form",
+        "why": "Why should it be lifted?",
+        "whyText": "At least 20 characters, at most 1000.",
+        "code": "Case code",
+        "codeText": "From the DM, for example `k7xq2`.",
+        "more": "More info",
+        "moreText": "Optional, anything else staff should know."
+      },
+      "after": {
+        "title": "What happens next",
+        "banKick": "**Ban and kick appeals** open a channel in the support server with you in it, so staff can ask questions.",
+        "muteWarn": "**Mute and warning appeals** are reviewed by staff in the main server.",
+        "decision": "The administrators decide. You get the decision by DM. An accepted appeal lifts what is still active and, for bans and kicks, comes with a one-time invite back."
+      },
+      "limits": {
+        "title": "Limits",
+        "onePending": "One pending appeal per case.",
+        "cooldown": "After a denial, wait 7 days before appealing the same case again.",
+        "window": "Bans and mutes can be appealed while they last. Warnings and kicks within 30 days.",
+        "unappealable": "Some cases can’t be appealed, for example a permanent ladder ban after 6 months. The DM says so."
+      }
+    },
+    "usingTheDashboard": {
+      "title": "Using the dashboard",
+      "summary": "Signing in, the four areas of the sidebar, and where changes are recorded.",
+      "signIn": {
+        "title": "Signing in",
+        "text": "Open the dashboard and log in with Discord. Mewvo only asks Discord who you are (`identify`). You need the Administrator role in the server; it is checked again on every page and every save. A server can also give a moderator role view access to the moderation pages.",
+        "textLink": "Open [the dashboard]({dashboard}) and log in with Discord. Mewvo only asks Discord who you are (`identify`). You need the Administrator role in the server; it is checked again on every page and every save. A server can also give a moderator role view access to the moderation pages."
+      },
+      "shotAlt": "The Cases page of the Mewvo dashboard: filters for member, moderator, type, status, text and dates above a table of cases with code, type, member, moderator, reason, date and status.",
+      "shotCaption": "Cases, with made-up members.",
+      "areas": {
+        "title": "The four areas",
+        "moderate": "Moderate",
+        "moderateText": "Overview (what needs you first), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff and Channel tools.",
+        "community": "Community",
+        "communityText": "Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community and Join to create.",
+        "setup": "Server setup",
+        "setupText": "Automod, Enforcement and appeals, Logging, Verification, Counters and the Support server.",
+        "bot": "Bot",
+        "botText": "All modules, Commands and the Audit log."
+      },
+      "changes": {
+        "title": "Changes and the audit log",
+        "text": "Settings are shown as rows; change one and save. Every change is written to the audit log: who changed which setting, from what, to what. Actions such as bans from the Members page use the same rules as the commands, including the DM and the safety checks.",
+        "phones": "The dashboard works on phones too, with a tab bar at the bottom, and has five themes in the account menu (Light, Dark, Dim, High contrast, or the same as your device)."
+      }
+    }
+  }
+}

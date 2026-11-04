@@ -1,0 +1,113 @@
+{
+  "free": {
+    "summary": "Everything Mewvo does today, for one server.",
+    "perks": {
+      "enforcement": "Enforcement panel, case codes and DMs",
+      "ladderAppeals": "Warning ladder and appeals",
+      "automod": "Automod with 14 rules and review cards",
+      "ticketsDashboard": "Tickets, modmail and the web dashboard",
+      "community": "Leveling, tags, suggestions, starboard, feeds",
+      "scheduled": "Up to 50 scheduled messages"
+    }
+  },
+  "normal": {
+    "summary": "More room for busy community servers.",
+    "perks": {
+      "everythingFree": "Everything in Free",
+      "limits": "250 tags, 25 sticky messages, 40 YouTube feeds",
+      "scheduled": "100 scheduled messages",
+      "customRules": "5 custom automod rules",
+      "supporterRole": "Supporter role in the Mewvo server",
+      "caseExport": "Case export (CSV), last 90 days"
+    }
+  },
+  "pro": {
+    "summary": "For servers with a real staff team.",
+    "perks": {
+      "everythingNormal": "Everything in Normal, with higher limits",
+      "customRules": "25 custom automod rules",
+      "analytics": "Staff and automod analytics on the dashboard",
+      "customBot": "Custom bot name and avatar in your server",
+      "caseExport": "Full case history export"
+    }
+  },
+  "max": {
+    "summary": "For people who run several servers.",
+    "perks": {
+      "everythingPro": "Everything in Pro",
+      "oneDashboard": "One dashboard for up to 5 servers",
+      "sharedCases": "Shared case history across your servers",
+      "priorityHelp": "Priority help in the support server",
+      "highestLimits": "Highest limits on everything"
+    }
+  },
+  "comparison": {
+    "moderation": {
+      "title": "Moderation",
+      "rows": {
+        "enforcement": "Enforcement panel, case codes, DMs",
+        "ladderAppeals": "Warning ladder and appeals",
+        "caseHistory": "Case history",
+        "caseExport": "Case export (CSV)",
+        "sharedCases": "Shared cases across servers"
+      }
+    },
+    "automod": {
+      "title": "Automod",
+      "rows": {
+        "builtIn": "Built-in rules with review cards",
+        "customRules": "Custom automod rules"
+      }
+    },
+    "community": {
+      "title": "Community",
+      "rows": {
+        "tags": "Tags",
+        "stickies": "Sticky messages",
+        "feeds": "YouTube feeds",
+        "scheduled": "Scheduled messages"
+      }
+    },
+    "dashboard": {
+      "title": "Dashboard and support",
+      "rows": {
+        "auditLog": "Web dashboard with audit log",
+        "analytics": "Staff and automod analytics",
+        "customBot": "Custom bot name and avatar",
+        "servers": "Servers in one dashboard",
+        "supporterRole": "Supporter role in the Mewvo server",
+        "help": "Help in the support server"
+      }
+    },
+    "values": {
+      "keptForGood": "Kept for good",
+      "last90Days": "Last 90 days",
+      "fullHistory": "Full history",
+      "upTo5": "Up to 5",
+      "yes": "Yes",
+      "priority": "Priority"
+    }
+  },
+  "faq": {
+    "buyNow": {
+      "q": "Can I buy a plan now?",
+      "a": "No. Mewvo runs only on its own server for now. Paid plans start when it opens to other servers; until then nothing can be bought and nobody is charged."
+    },
+    "currency": {
+      "q": "What currency are prices in?",
+      "a": "Euros. The prices on this page are the planned monthly and yearly prices."
+    },
+    "cancel": {
+      "q": "Can I cancel or get my money back?",
+      "a": "Plans don’t renew by themselves, so there is nothing to cancel: a plan runs for the period you chose and then falls back to Free. Once real payments start, you can withdraw from a purchase within 14 days. If you asked for the plan to start right away, you get your money back minus the days you already used. Details are on the Withdrawal page."
+    },
+    "freeKeeps": {
+      "q": "What does Free keep?",
+      "a": "Everything Mewvo does today: enforcement, the warning ladder, appeals, automod, tickets, modmail, the dashboard and the community tools. Your case history is never deleted when a plan ends."
+    },
+    "backToFree": {
+      "q": "What happens to extra tags or feeds if I go back to Free?",
+      "a": "The plan is that nothing is deleted: items over the Free limit stop working until you remove some or upgrade again. This may still change before launch."
+    }
+  }
+}
