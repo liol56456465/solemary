@@ -49,7 +49,7 @@ import { createPgSessionStore } from '../dashboard/sessionStore.js';
 import { query } from '../enforcement/db.js';
 import { OPEN_STATUSES, caseStatusLabel, listCasesForUser, listUserAppeals } from '../enforcement/caseService.js';
 import { getMemberStanding, nextWarningText } from '../enforcement/standingService.js';
-import { NOINDEX, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin } from './site.js';
+import { NOINDEX, installUrl, inviteOrNull, layout, legalContact, publicSiteEnabled, siteOrigin } from './site.js';
 import { createBillingHandlers } from './billing.js';
 import { premiumSettings, premiumStore } from '../billing/premiumService.js';
 import { ACCOUNT_EXPORT_NOTE, EXPORT_FORMAT, buildDataExport, exportFileName } from '../privacy/dataExport.js';
@@ -634,6 +634,11 @@ export function createMemberPortal({
             r.post('/checkout', limitBy(pageLimiter), form, safe(billing.checkoutPost));
             r.get('/redeem', limitBy(pageLimiter), safe(billing.redeemForm));
             r.post('/redeem', limitBy(pageLimiter), form, safe(billing.redeemPost));
+            // Online withdrawal (CRD Art. 11a): list → confirm → acknowledgement.
+            r.get('/withdraw', limitBy(pageLimiter), safe(billing.withdrawList));
+            r.get('/billing/orders/:id/withdraw', limitBy(pageLimiter), safe(billing.withdrawForm));
+            r.post('/billing/orders/:id/withdraw', limitBy(pageLimiter), form, safe(billing.withdrawPost));
+            r.get('/billing/orders/:id/withdrawal', limitBy(pageLimiter), safe(billing.withdrawalAck));
         }
         r.use(notFound);
         return r;
@@ -662,6 +667,8 @@ export function registerMemberPortal(app, {
         installUrl: installUrl(env.CLIENT_ID),
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
         origin: siteOrigin(env),
+        // Seller identity + VAT status for the checkout, receipts and DMs (billing.js).
+        legal: { ...legalContact(env), vatRegistered: Boolean(String(env.LEGAL_VAT_NO || '').trim()) },
     };
     const context = () => {
         let support = null;
