@@ -16,8 +16,14 @@ npm test
 
 ## Privacy and terms
 
+Both are pages of the bot's website, at `/privacy` and `/terms` on whatever address `PUBLIC_URL` is
+(today the Replit address; `https://mewvo.com` after the domain switch, see `docs/domain-switch.md`):
+
 - Privacy Policy: <https://meowist--sxexx.replit.app/privacy>
 - Terms and Conditions: <https://meowist--sxexx.replit.app/terms>
+
+The Replit address keeps working after the switch (it redirects to the new domain), so these links
+do not break; update them to `https://mewvo.com/...` once that domain is live.
 
 ## Third-party data
 

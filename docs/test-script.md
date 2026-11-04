@@ -218,9 +218,9 @@ answer 1), Q2 with 3 answers; wait 1 minute; save; turn the quiz on.
 
 | # | Do | Expected |
 |---|---|---|
-| 15.1 | Open `https://app.mewvo.com/health` and the old Replit `/health` | Both answer JSON; the old one is **not** redirected |
+| 15.1 | Open `https://mewvo.com/health` and the old Replit `/health` | Both answer JSON; the old one is **not** redirected |
 | 15.2 | Log in to the dashboard on the new host | Discord login works; you land on the overview |
-| 15.3 | With `CANONICAL_REDIRECT=true`: open an old Replit page link (e.g. `/leaderboard?page=2`) | Lands on the same page on `app.mewvo.com` |
+| 15.3 | With `CANONICAL_REDIRECT=true`: open an old Replit page link (e.g. `/leaderboard?page=2`) | Lands on the same page on `mewvo.com`; `https://www.mewvo.com/` lands on `https://mewvo.com/` |
 | 15.4 | Verify with Discord as Alt B on the new host | OAuth completes, role given |
 
 When done: run the clean-up from "Before testing in Discord".
