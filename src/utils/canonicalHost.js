@@ -1,5 +1,5 @@
 // canonicalHost.js — sends browsers that reach the app on an old address (for example the
-// *.replit.app host after the move to app.mewvo.com) to the same page on PUBLIC_URL.
+// *.replit.app host after the move to mewvo.com, or www.mewvo.com) to the same page on PUBLIC_URL.
 //
 // Off unless CANONICAL_REDIRECT=true. Even then it does nothing when:
 //   - PUBLIC_URL is unset or not an http(s) URL, or NODE_ENV=test;
