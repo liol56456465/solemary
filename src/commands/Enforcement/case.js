@@ -9,7 +9,7 @@ import { isEnforcementDbAvailable } from '../../services/enforcement/db.js';
 import {
     describeDuration, editCase, getCaseEdits, parseEditDuration, searchCases, voidCase,
 } from '../../services/enforcement/caseEditService.js';
-import { dateStamp, normalizeCaseCode, stamp, truncate } from '../../services/enforcement/format.js';
+import { dateStamp, fitWholeLines, normalizeCaseCode, stamp, truncate } from '../../services/enforcement/format.js';
 import {
     addEvidence, addImageEvidence, captureLinks, evidenceDisplay, evidenceLines, fitLines, listEvidence, NOTE_MAX,
     parseEvidenceUrls, removeEvidence, resolveImageUrls,
@@ -187,7 +187,7 @@ async function handleNoContact(interaction, client, sub) {
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
                 title: `Active no-contact orders (${rows.length})`,
-                description: truncate(lines.join('\n') || 'None. Start one with `/case nocontact add`.', 4096),
+                description: lines.length ? fitWholeLines(lines) : 'None. Start one with `/case nocontact add`.',
                 color: 'primary',
             })],
         });

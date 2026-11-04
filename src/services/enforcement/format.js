@@ -92,3 +92,25 @@ export function truncate(text, max) {
     const value = String(text ?? '');
     return value.length > max ? `${value.slice(0, max - 1)}…` : value;
 }
+
+/**
+ * Joins whole lines up to `max` characters (embed description: 4096). Never cuts a line (or a
+ * mention) in half; when lines don't fit, the last one is "…and N more".
+ */
+export function fitWholeLines(lines, max = 4096) {
+    const out = [];
+    let length = 0;
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        const more = `…and ${lines.length - i} more`;
+        const reserve = i < lines.length - 1 ? more.length + 1 : 0;
+        const sep = out.length ? 1 : 0;
+        if (length + sep + line.length + reserve > max) {
+            out.push(more);
+            break;
+        }
+        out.push(line);
+        length += sep + line.length;
+    }
+    return out.join('\n');
+}

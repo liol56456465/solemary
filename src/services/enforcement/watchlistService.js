@@ -19,7 +19,7 @@ import { logger } from '../../utils/logger.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { query, T, isUniqueViolation, isEnforcementDbAvailable } from './db.js';
 import { postModLog } from './enforcementService.js';
-import { truncate } from './format.js';
+import { fitWholeLines, truncate } from './format.js';
 
 export const WATCH_MAX_DAYS = 365;
 export const WATCH_REASON_MAX = 500;
@@ -239,21 +239,7 @@ export function watchListLine(row) {
  */
 export function watchListDescription(rows, max = 4096) {
     if (!rows.length) return 'Nobody. Add someone with `/case watch add`.';
-    const out = [];
-    let length = 0;
-    for (let i = 0; i < rows.length; i += 1) {
-        const line = watchListLine(rows[i]);
-        const more = `…and ${rows.length - i} more`;
-        const reserve = i < rows.length - 1 ? more.length + 1 : 0;
-        const sep = out.length ? 1 : 0;
-        if (length + sep + line.length + reserve > max) {
-            out.push(more);
-            break;
-        }
-        out.push(line);
-        length += sep + line.length;
-    }
-    return out.join('\n');
+    return fitWholeLines(rows.map(watchListLine), max);
 }
 
 /** True (and records the time) when this member may get an alert of this kind now; at most one per minute per kind. */

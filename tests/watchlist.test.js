@@ -153,3 +153,17 @@ test('alert throttle is per kind: a join alert never swallows the ban case that 
     assert.equal(await alertWatched({}, { guildId: G, userId: A, event: 'new case `fghjk` (warn) by mod', kind: 'case' }, { post, now: now + 6000 }), false, 'same kind within a minute');
     assert.equal(posts.length, 2);
 });
+
+test('fitWholeLines: whole lines only, "…and N more" when they do not fit (no-contact list uses it too)', async () => {
+    const { fitWholeLines: fitLines } = await import('../src/services/enforcement/format.js');
+    const lines = Array.from({ length: 30 }, (_, i) => `**#${i}** <@${'1'.repeat(18)}> ↔ <@${'2'.repeat(18)}> · ${'r'.repeat(200)}`);
+    const text = fitLines(lines);
+    assert.ok(text.length <= 4096);
+    const out = text.split('\n');
+    const last = out.at(-1);
+    assert.match(last, /^…and \d+ more$/);
+    assert.equal(out.length - 1 + Number(last.match(/\d+/)[0]), 30);
+    for (const line of out.slice(0, -1)) assert.ok(lines.includes(line), 'no cut lines');
+    assert.equal(fitLines(['a', 'b']), 'a\nb');
+    assert.equal(fitLines([]), '');
+});

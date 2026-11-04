@@ -14,7 +14,7 @@ import { enforcementConfig } from '../../config/enforcement.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { query, T } from './db.js';
-import { dateStamp, truncate } from './format.js';
+import { dateStamp, fitWholeLines, truncate } from './format.js';
 
 export const EXCERPT_MAX = 500;
 export const NOTE_MAX = 300;
@@ -100,22 +100,7 @@ export function evidenceLines(rows, freshUrls = new Map(), { excerptMax = 160 } 
 
 /** Joins lines into one embed field value (≤ max), noting how many were left out. */
 export function fitLines(lines, max = 1024) {
-    const out = [];
-    let length = 0;
-    for (let i = 0; i < lines.length; i += 1) {
-        const line = truncate(lines[i], 400);
-        const more = `…and ${lines.length - i} more`;
-        // Keep room for the "…and N more" marker unless this is the last line.
-        const reserve = i < lines.length - 1 ? more.length + 1 : 0;
-        const sep = out.length ? 1 : 0;
-        if (length + sep + line.length + reserve > max) {
-            out.push(more);
-            break;
-        }
-        out.push(line);
-        length += sep + line.length;
-    }
-    return out.join('\n');
+    return fitWholeLines(lines.map((line) => truncate(line, 400)), max);
 }
 
 // ── Database ───────────────────────────────────────────────────────────────
