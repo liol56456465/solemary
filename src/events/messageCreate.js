@@ -54,7 +54,8 @@ export default {
       trackChannelActivity(message).catch((error) => logger.warn(`Auto slowmode tracking failed: ${error.message}`));
       noteStickyActivity(message);
 
-      logger.debug(`Message received from ${message.author.tag}: ${message.content}`);
+      // Never log the message text (member data); id, channel and length only.
+      logger.debug(`Message received: id=${message.id} channel=${message.channelId} length=${message.content?.length ?? 0}`);
 
       const countingProcessed = await handleCountingGame(message, client);
       if (countingProcessed) {

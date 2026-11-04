@@ -4,6 +4,7 @@ import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { verifyUser } from '../../services/verificationService.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { isOAuthVerificationEnabled } from '../../services/oauthVerification.js';
+import { directVerifyPrivacyNote } from '../../utils/privacyNotice.js';
 import { buildOAuthVerifyReply } from '../../handlers/verificationButtons.js';
 import { quizGate } from '../../services/verificationQuiz.js';
 
@@ -52,7 +53,7 @@ export default {
         await InteractionHelper.safeReply(interaction, {
             embeds: [successEmbed(
                 "Verified",
-                `You're verified and got the **${result.roleName}** role.`
+                `You're verified and got the **${result.roleName}** role.\n\n-# ${directVerifyPrivacyNote()}`
             )],
             flags: MessageFlags.Ephemeral
         });

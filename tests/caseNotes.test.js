@@ -27,10 +27,16 @@ test('search: a tag filter becomes "= ANY(tags)" and survives the result-page to
     assert.throws(() => normalizeSearchFilters({ tag: 'drop table' }));
 });
 
-test('tags and notes are staff-only: not in the member data export', () => {
+test('tags stay staff-only; notes are exported only in caseNotes, without the author', () => {
     for (const [name, sql] of EXPORT_SECTIONS) {
         const text = sql(pgConfig.tables);
-        assert.ok(!/\btags\b/.test(text.slice(0, text.indexOf(' FROM '))), `${name} selects tags`);
-        assert.ok(!text.includes('mod_case_notes'), `${name} reads notes`);
+        const selected = text.slice(0, text.indexOf(' FROM '));
+        assert.ok(!/\btags\b/.test(selected), `${name} selects tags`);
+        if (name === 'caseNotes') {
+            assert.ok(text.includes('mod_case_notes'));
+            assert.ok(!selected.includes('author_id') && !selected.includes('author_username'), 'note author left out');
+        } else {
+            assert.ok(!text.includes('mod_case_notes'), `${name} reads notes`);
+        }
     }
 });

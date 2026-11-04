@@ -11,7 +11,8 @@ export const USERNAME_MIN = 2;
 export const USERNAME_MAX = 30;
 export const PASSWORD_MIN = 10;
 export const PASSWORD_MAX = 200;
-export const MIN_AGE = 13;
+// 14: the age of digital consent in Lithuania (owner decision; GDPR Art. 8).
+export const MIN_AGE = 14;
 export const RESERVED_USERNAMES = new Set(['admin', 'mewvo', 'support', 'staff', 'moderator', 'owner', 'system', 'discord', 'root', 'help']);
 /** The names a 1-letter claim can pick: a-z and 0-9. */
 export const LETTERS = 'abcdefghijklmnopqrstuvwxyz0123456789'.split('');
@@ -57,7 +58,7 @@ export function validatePassword(input) {
 
 /**
  * The age check from a date of birth (YYYY-MM-DD, as an <input type="date"> sends it):
- * { ok, error }. 13 or older on today's UTC date. The date itself is never stored.
+ * { ok, error }. MIN_AGE (14) or older on today's UTC date. The date itself is never stored.
  */
 export function checkAge(input, now = new Date()) {
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(input ?? '').trim());

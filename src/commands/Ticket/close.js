@@ -54,7 +54,8 @@ export default {
             channelId: interaction.channel.id,
             channelName: interaction.channel.name,
             guildId: interaction.guildId,
-            reason: reason,
+            // Free text; the log gets its length only.
+            reasonLength: reason ? String(reason).length : 0,
             commandName: 'close'
         });
     },

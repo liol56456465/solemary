@@ -2,7 +2,7 @@
 // On whenever the member portal is on, unless MEMBER_ACCOUNTS_ENABLED=false. No email at all
 // (owner, 2026-11-01): an account is a username and a password, and Discord must be linked.
 //
-//   GET/POST /me/signup            username, password, date of birth (13+), terms; then the link step
+//   GET/POST /me/signup            username, password, date of birth (14+), terms; then the link step
 //   GET/POST /me/login-password    username + password (an unlinked account lands on the link step)
 //   GET/POST /me/login-2fa         the code step when two-step login is on
 //   GET/POST /me/forgot            "Forgot password?": POST starts a Discord login in reset mode

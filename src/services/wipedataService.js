@@ -1,8 +1,10 @@
 // wipedataService.js: what /wipedata deletes, in one place (the Privacy Policy points here).
 //
 // A member's own data in one server: levels and XP, economy balance, AFK status, birthday,
-// plus their personal to-do list (it is not per server). Moderation, appeal, report and
-// verification records are safety records and are not touched.
+// plus their personal to-do list and reminders (not per server), and the encrypted Discord
+// login token stored by "Verify with Discord" (oauth:tokens:<userId>; without it the bot can
+// no longer add them to the support server). Moderation, appeal, report and verification
+// records are safety records and are not touched.
 //
 // Each item is deleted on its own; the result says which ones failed, so the reply never
 // claims success after a failed delete (data layer rule).
@@ -25,7 +27,11 @@ export const WIPE_ITEMS = [
     { id: 'birthday', label: 'Birthday' },
     { id: 'todo', label: 'Personal to-do list' },
     { id: 'reminders', label: 'Reminders' },
+    { id: 'oauth', label: 'Stored Discord login token (from Verify with Discord)' },
 ];
+
+/** The key-value key of the member's encrypted OAuth tokens (oauthVerification.js). */
+export const oauthTokenKey = (userId) => `oauth:tokens:${userId}`;
 
 const ID = /^\d{17,20}$/;
 
@@ -52,6 +58,7 @@ export async function wipeMemberData(client, guildId, userId, { removeBirthday =
         birthday: () => removeBirthday(client, guildId, userId),
         todo: () => deleteKey(`todo_${userId}`),
         reminders: () => removeReminders(userId),
+        oauth: () => deleteKey(oauthTokenKey(userId)),
     };
 
     const deleted = [];

@@ -57,7 +57,8 @@ const { combine, timestamp, printf, colorize, errors, json } = format;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const validLogLevels = new Set(['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly']);
-const defaultLogLevel = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+// Most to least severe; a higher index logs more.
+const LEVEL_ORDER = ['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly'];
 const logLevelAliases = {
   warning: 'warn',
   warnings: 'warn',
@@ -65,16 +66,39 @@ const logLevelAliases = {
   err: 'error',
   information: 'info',
 };
-const rawRequestedLogLevel = process.env.LOG_LEVEL?.toLowerCase().trim();
-const requestedLogLevel = logLevelAliases[rawRequestedLogLevel] || rawRequestedLogLevel;
 
-const resolvedLogLevel = validLogLevels.has(requestedLogLevel)
-  ? requestedLogLevel
-  : defaultLogLevel;
+/**
+ * Picks the log level from NODE_ENV and LOG_LEVEL. Production never logs more
+ * than "info": debug lines can carry member data, so a debug request is clamped
+ * and a one-time warning is returned for startup.
+ */
+export function resolveLogLevel({ nodeEnv, logLevel } = {}) {
+  const isProduction = nodeEnv === 'production';
+  const defaultLevel = isProduction ? 'info' : 'debug';
+  const raw = typeof logLevel === 'string' ? logLevel.toLowerCase().trim() : '';
+  const requested = logLevelAliases[raw] || raw;
 
-const pendingInvalidLevelWarning = requestedLogLevel && !validLogLevels.has(requestedLogLevel)
-  ? `[logger] Invalid LOG_LEVEL "${process.env.LOG_LEVEL}". Falling back to "${defaultLogLevel}".`
-  : null;
+  if (requested && !validLogLevels.has(requested)) {
+    return {
+      level: defaultLevel,
+      warning: `[logger] Invalid LOG_LEVEL "${logLevel}". Falling back to "${defaultLevel}".`,
+    };
+  }
+
+  const level = requested || defaultLevel;
+  if (isProduction && LEVEL_ORDER.indexOf(level) > LEVEL_ORDER.indexOf('info')) {
+    return {
+      level: 'info',
+      warning: `[logger] LOG_LEVEL "${level}" is not allowed in production (it can log member data). Using "info".`,
+    };
+  }
+  return { level, warning: null };
+}
+
+const { level: resolvedLogLevel, warning: pendingInvalidLevelWarning } = resolveLogLevel({
+  nodeEnv: process.env.NODE_ENV,
+  logLevel: process.env.LOG_LEVEL,
+});
 
 const shouldPromoteUserFacingLogs = process.env.NODE_ENV === 'production' && resolvedLogLevel === 'warn';
 

@@ -40,6 +40,7 @@ test('wipedata: own levels, AFK, birthday and to-do are deleted; another member 
         await db.set(keys.getAFKKey(guildId, user), { reason: 'lunch', timestamp: Date.now() });
         await database.setBirthday(client, guildId, user, 3, 14);
         await db.set(`todo_${user}`, { tasks: [{ id: 1, text: 'x' }] });
+        await db.set(`oauth:tokens:${user}`, { scope: 'identify guilds.join', tokens: 'encrypted' });
     }
     assert.equal(await db.exists(keys.getUserLevelKey(guildId, me)), true, 'level row stored');
     assert.equal(await db.exists(keys.getAFKKey(guildId, me)), true, 'AFK row stored');
@@ -50,6 +51,8 @@ test('wipedata: own levels, AFK, birthday and to-do are deleted; another member 
     assert.equal(await db.exists(keys.getUserLevelKey(guildId, me)), false);
     assert.equal(await db.exists(keys.getAFKKey(guildId, me)), false);
     assert.equal(await db.exists(`todo_${me}`), false);
+    assert.equal(await db.exists(`oauth:tokens:${me}`), false, 'my OAuth token is gone');
+    assert.equal(await db.exists(`oauth:tokens:${other}`), true, 'the other member keeps theirs');
     const birthdays = await database.getGuildBirthdays(client, guildId);
     assert.equal(birthdays[me], undefined, 'my birthday is gone');
     assert.deepEqual(birthdays[other], { month: 3, day: 14 }, 'the other member keeps theirs');
@@ -60,4 +63,5 @@ test('wipedata: own levels, AFK, birthday and to-do are deleted; another member 
     const again = await wipe.wipeMemberData(client, guildId, me);
     assert.deepEqual(again.failed, []);
     await db.delete(`todo_${other}`);
+    await db.delete(`oauth:tokens:${other}`);
 });

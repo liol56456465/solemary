@@ -4,6 +4,10 @@
 // One restore runs at a time. Members are added one by one; discord.js waits out
 // Discord's rate limits. Members with an active ban in the main server are skipped.
 // Progress is shown by editing one message; the owner gets a DM summary at the end.
+//
+// Purpose limit (privacy): members authorized guilds.join to be kept in Mewvo's own
+// servers, so a restore only goes into the main server, the support server, or a server
+// listed in MEMBER_RESTORE_GUILD_IDS (comma-separated; e.g. a replacement main server).
 
 import { enforcementConfig } from '../config/enforcement.js';
 import { logger } from '../utils/logger.js';
@@ -20,6 +24,24 @@ export function getRestoreState() {
     return running;
 }
 
+const SNOWFLAKE = /^\d{17,20}$/;
+
+/** The servers a restore may target: main + support guild, plus MEMBER_RESTORE_GUILD_IDS. */
+export function allowedRestoreGuildIds(config = enforcementConfig, env = process.env) {
+    const extra = String(env.MEMBER_RESTORE_GUILD_IDS || '').split(',').map((id) => id.trim());
+    return new Set([config.mainGuildId, config.supportGuildId, ...extra]
+        .map((id) => String(id || '').trim())
+        .filter((id) => SNOWFLAKE.test(id)));
+}
+
+/** Why a restore into `guildId` is refused, or null when it is one of Mewvo's own servers. */
+export function restoreRefusal(guildId, config = enforcementConfig, env = process.env) {
+    if (allowedRestoreGuildIds(config, env).has(String(guildId || ''))) return null;
+    return 'Members can only be restored into Mewvo\'s own servers (the main server and the support server). '
+        + 'They verified to be kept in those, not added elsewhere. For a replacement server, add its ID to '
+        + 'MEMBER_RESTORE_GUILD_IDS and restart the bot.';
+}
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** How many members could be restored, and how many of them are in this guild already. */
@@ -34,6 +56,8 @@ export async function backupSummary(guild) {
  * Resolves with { added, already, skippedBanned, noToken, failed, total }.
  */
 export async function restoreMembers(client, target, report) {
+    const refusal = restoreRefusal(target?.id);
+    if (refusal) throw new Error(refusal);
     if (running) throw new Error(`A restore into ${running.guildId} is already running (${running.done}/${running.total}).`);
     // Claim the slot before the first await, or two quick restores both get past the check.
     running = { guildId: target.id, startedAt: Date.now(), done: 0, total: 0 };

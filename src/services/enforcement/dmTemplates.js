@@ -4,6 +4,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { dateStamp, formatDuration, stamp } from './format.js';
 import { ruleLineFor } from '../rules/serverRules.js';
+import { privacyUrl } from '../../utils/privacyNotice.js';
 
 const { serverName } = enforcementConfig;
 // Read on every use: a per-server setting that can change at runtime.
@@ -17,6 +18,17 @@ function appealLine(record) {
 
 // Discord's message content limit: the rule line is dropped rather than going over it.
 const DM_MAX = 2000;
+
+/**
+ * Adds "Privacy: <PUBLIC_URL/privacy>" as the last line when PUBLIC_URL is set and the
+ * DM still fits the limit; otherwise the DM is returned unchanged.
+ */
+export function withPrivacyLine(text, env = process.env) {
+    const url = privacyUrl(env);
+    if (!url) return text;
+    const out = `${text}\n-# Privacy: <${url}>`;
+    return out.length <= DM_MAX ? out : text;
+}
 
 /**
  * "Your full record: <https://…/me>" when the website's My record page is on
@@ -44,7 +56,7 @@ function finish(lines) {
     const plain = lines.filter((line) => typeof line === 'string');
     const withRule = lines.map((line) => (typeof line === 'string' ? line : line?.ruleLine || line?.optional || null)).filter(Boolean);
     const text = withRule.join('\n');
-    return text.length <= DM_MAX ? text : plain.join('\n');
+    return withPrivacyLine(text.length <= DM_MAX ? text : plain.join('\n'));
 }
 
 export function banDm(record) {
@@ -102,15 +114,15 @@ export function warnDm(record, warnNumber) {
 }
 
 export function appealAcceptedDm(adminUsername, inviteUrl) {
-    return [
+    return withPrivacyLine([
         '**Appeal accepted**',
         `By: ${adminUsername}`,
         inviteUrl || 'Ask a staff member in the support server for an invite back.',
-    ].join('\n');
+    ].join('\n'));
 }
 
 export function appealDeniedDm() {
-    return `**Appeal denied.** If you think this is a mistake, appeal again here:\n${invite()}`;
+    return withPrivacyLine(`**Appeal denied.** If you think this is a mistake, appeal again here:\n${invite()}`);
 }
 
 /**
@@ -118,21 +130,21 @@ export function appealDeniedDm() {
  * `inviteUrl` is a one-time invite back to the server (null when none could be made).
  */
 export function banEndedDm(record, inviteUrl, { early = false } = {}) {
-    return [
+    return withPrivacyLine([
         `**Your ban from ${serverName} has ended**`,
         early ? 'A moderator lifted it early.' : 'It expired.',
         record?.case_code ? `Case code: ${record.case_code}` : null,
         `Rejoin: ${inviteUrl || `ask for an invite in the support server: ${invite()}`}`,
-    ].filter(Boolean).join('\n');
+    ].filter(Boolean).join('\n'));
 }
 
 /** Sent when a mute ends: on expiry, or early when a moderator unmutes. */
 export function muteEndedDm(record, { early = false } = {}) {
-    return [
+    return withPrivacyLine([
         `**Your mute in ${serverName} has ended**`,
         early ? 'A moderator lifted it early. You can talk again.' : 'It expired. You can talk again.',
         record?.case_code ? `Case code: ${record.case_code}` : null,
-    ].filter(Boolean).join('\n');
+    ].filter(Boolean).join('\n'));
 }
 
 /**
@@ -140,33 +152,33 @@ export function muteEndedDm(record, { early = false } = {}) {
  * the user. `inviteUrl` is set when the void lifted a ban.
  */
 export function caseVoidedDm(record, reason, inviteUrl = null) {
-    return [
+    return withPrivacyLine([
         `**A ${record.type} on your record in ${serverName} was voided**`,
         `Case code: ${record.case_code}`,
         `Reason: ${reason}`,
         'It no longer counts against you.',
         inviteUrl ? `You were unbanned. Rejoin: ${inviteUrl}` : null,
-    ].filter(Boolean).join('\n');
+    ].filter(Boolean).join('\n'));
 }
 
 /** Sent to both members when staff start a no-contact order. `other` is the other member (or null). */
 export function noContactStartedDm(order, other) {
     const otherName = other ? `**${other.username}**` : 'another member';
-    return [
+    return withPrivacyLine([
         `**No-contact order in ${serverName}**`,
         `Staff have asked you and ${otherName} not to contact each other until ${stamp(order.until)}.`,
         'Until then, do not mention or reply to them in the server: those messages are removed.',
         `Reason: ${order.reason}`,
         'This is not a punishment and does not count as a warning.',
-    ].join('\n');
+    ].join('\n'));
 }
 
 /** Sent to both members when a no-contact order ends (early by staff, or it expired). */
 export function noContactEndedDm(order, other, { early = false } = {}) {
-    return [
+    return withPrivacyLine([
         `**Your no-contact order in ${serverName} has ended**`,
         `${early ? 'Staff ended it early.' : 'It expired.'} You may contact ${other ? `**${other.username}**` : 'the other member'} again.`,
-    ].join('\n');
+    ].join('\n'));
 }
 
 /**

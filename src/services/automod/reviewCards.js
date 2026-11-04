@@ -130,7 +130,8 @@ function scheduleRender(entry) {
 }
 
 function logHit(p) {
-    if (p.detail) logger.info(`Automod ${p.rule} on ${p.targetUser.id}: ${p.detail}`);
+    // The detail quotes the member's message (words, personal data); keep it out of the logs.
+    logger.info(`Automod ${p.rule} on ${p.targetUser.id}`);
 }
 
 /** Staff watchlist: a watched member tripped automod → one mod log line (memory lookup; never throws). */

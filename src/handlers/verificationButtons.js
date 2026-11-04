@@ -6,6 +6,7 @@ import { quizGate } from '../services/verificationQuiz.js';
 import { handleInteractionError, replyUserError, ErrorTypes } from '../utils/errorHandler.js';
 import { logger } from '../utils/logger.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
+import { directVerifyPrivacyNote, oauthVerifyPrivacyNote } from '../utils/privacyNotice.js';
 
 /** The private reply with the "Verify with Discord" link (OAuth verification). */
 export function buildOAuthVerifyReply(guildId, userId) {
@@ -13,6 +14,7 @@ export function buildOAuthVerifyReply(guildId, userId) {
         embeds: [infoEmbed(
             'Verify with Discord',
             'Press the button below and authorize the bot with your Discord account. You get the role as soon as you have authorized.\n\n-# The link only works for you and expires in 10 minutes.'
+            + `\n-# ${oauthVerifyPrivacyNote()}`
         )],
         components: [new ActionRowBuilder().addComponents(
             new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Verify with Discord').setURL(buildVerifyUrl(guildId, userId)),
@@ -58,7 +60,7 @@ export async function continueVerification(interaction, client, { source = 'butt
     return await InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
             "Verified",
-            `You're verified and got the **${result.roleName}** role. Welcome in.`
+            `You're verified and got the **${result.roleName}** role. Welcome in.\n\n-# ${directVerifyPrivacyNote()}`
         )],
         components: [],
     });

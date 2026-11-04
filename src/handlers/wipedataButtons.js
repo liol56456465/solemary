@@ -36,7 +36,8 @@ const wipedataConfirmHandler = {
         return;
       }
       await interaction.editReply({
-        embeds: [successEmbed('Your data was deleted', `Deleted in this server: ${deleted.map(label).join(', ')}.\n\n`
+        embeds: [successEmbed('Your data was deleted', `Deleted: ${deleted.map(label).join(', ')}.\n`
+          + 'Levels, balance, AFK and birthday in this server; to-do list, reminders and the stored login token everywhere.\n\n'
           + 'Moderation, appeal, report and verification records are kept, because they are the server\'s safety records. '
           + 'See the Privacy Policy for how to ask about those.')],
         components: [],

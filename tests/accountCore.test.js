@@ -38,16 +38,18 @@ test('password: 10 to 200 characters, kept as typed', () => {
     assert.equal(validatePassword(undefined).ok, false);
 });
 
-test('age: 13 or older on today\'s UTC date; the birthday itself counts', () => {
+test('age: 14 or older on today\'s UTC date; the birthday itself counts', () => {
     const now = new Date('2026-11-01T12:00:00Z');
-    assert.equal(checkAge('2013-11-01', now).ok, true, 'turns 13 today');
-    assert.equal(checkAge('2013-11-02', now).ok, false, 'turns 13 tomorrow');
-    assert.match(checkAge('2013-11-02', now).error, /at least 13/);
+    assert.equal(core.MIN_AGE, 14, 'Lithuania\'s age of digital consent');
+    assert.equal(checkAge('2012-11-01', now).ok, true, 'turns 14 today');
+    assert.equal(checkAge('2012-11-02', now).ok, false, 'turns 14 tomorrow');
+    assert.match(checkAge('2012-11-02', now).error, /at least 14/);
+    assert.equal(checkAge('2013-11-01', now).ok, false, '13 is too young now');
     assert.equal(checkAge('1990-02-28', now).ok, true);
     for (const bad of ['', '2013-02-30', '13/11/2000', '2030-01-01', '1800-01-01', 'yesterday']) assert.equal(checkAge(bad, now).ok, false, bad);
-    // Just after midnight UTC on the 13th birthday.
-    assert.equal(checkAge('2010-03-05', new Date('2023-03-05T00:00:01Z')).ok, true);
-    assert.equal(checkAge('2010-03-05', new Date('2023-03-04T23:59:59Z')).ok, false);
+    // Just after midnight UTC on the 14th birthday.
+    assert.equal(checkAge('2010-03-05', new Date('2024-03-05T00:00:01Z')).ok, true);
+    assert.equal(checkAge('2010-03-05', new Date('2024-03-04T23:59:59Z')).ok, false);
 });
 
 test('scrypt: random salt, params stored, verify with the right password only', async () => {
