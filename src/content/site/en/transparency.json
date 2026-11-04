@@ -72,5 +72,20 @@
   },
   "error": {
     "text": "The report could not be loaded right now because the database is not responding. No numbers are shown rather than wrong ones; please try again in a few minutes."
+  },
+  "mask": {
+    "fewer": "fewer than {n}",
+    "atLeast": "at least {n}"
+  },
+  "median": {
+    "underHour": "under an hour",
+    "hours": {
+      "one": "{count} hour",
+      "other": "{count} hours"
+    },
+    "days": {
+      "one": "{count} day",
+      "other": "{count} days"
+    }
   }
 }

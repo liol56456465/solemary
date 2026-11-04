@@ -1,9 +1,17 @@
 {
   "title": "Ficha de confianza de {server}",
-  "description": "Cómo se modera {server}: tiempos de las apelaciones, resultados de las apelaciones y miembros sin sanciones en los últimos {days} días. Solo cifras.",
+  "description": {
+    "one": "Cómo se modera {server}: tiempos de las apelaciones, resultados de las apelaciones y miembros sin sanciones en el último {count} día. Solo cifras.",
+    "many": "Cómo se modera {server}: tiempos de las apelaciones, resultados de las apelaciones y miembros sin sanciones en los últimos {count} días. Solo cifras.",
+    "other": "Cómo se modera {server}: tiempos de las apelaciones, resultados de las apelaciones y miembros sin sanciones en los últimos {count} días. Solo cifras."
+  },
   "head": {
     "heading": "{server}: ficha de confianza",
-    "lead": "Cómo se moderó este servidor en los últimos {days} días. Solo cifras: sin nombres, sin motivos, sin moderadores."
+    "lead": {
+      "one": "Cómo se moderó este servidor en el último {count} día. Solo cifras: sin nombres, sin motivos, sin moderadores.",
+      "many": "Cómo se moderó este servidor en los últimos {count} días. Solo cifras: sin nombres, sin motivos, sin moderadores.",
+      "other": "Cómo se moderó este servidor en los últimos {count} días. Solo cifras: sin nombres, sin motivos, sin moderadores."
+    }
   },
   "noData": "Aún no hay datos suficientes",
   "tiles": {
@@ -40,7 +48,11 @@
     "single": "Las advertencias se acumulan: la {nth} advertencia supone {first}.",
     "escalating": "Las advertencias se acumulan: la {nth} advertencia supone {first}, y cada advertencia posterior a ese baneo supone uno más largo ({later}).",
     "then": "{earlier}, luego {next}",
-    "banDays": "un baneo de {days} días",
+    "banDays": {
+      "one": "un baneo de {count} día",
+      "many": "un baneo de {count} días",
+      "other": "un baneo de {count} días"
+    },
     "banPermanent": "un baneo permanente",
     "ordinals": {
       "0": "0.ª",
@@ -58,7 +70,7 @@
     "ordinalOther": "{n}.ª"
   },
   "cat": {
-    "alt": "{name}, el gato del servidor ({stage}), estado de ánimo: {mood}",
+    "alt": "{name}, el gato del servidor ({stage}), parece {mood}",
     "caption": "El gato del servidor",
     "shareAlt": "{name}, el gato del servidor"
   },
@@ -68,8 +80,16 @@
     "readAll": "Leer todas las normas"
   },
   "foot": {
-    "period": "Últimos {days} días, del {from} al {to}. Las cifras pequeñas están ocultas.",
-    "periodWithReport": "Últimos {days} días, del {from} al {to}. Las cifras pequeñas están ocultas. Cifras mensuales completas: [Informe de transparencia](/transparency)."
+    "period": {
+      "one": "Último {count} día, del {from} al {to}. Las cifras pequeñas están ocultas.",
+      "many": "Últimos {count} días, del {from} al {to}. Las cifras pequeñas están ocultas.",
+      "other": "Últimos {count} días, del {from} al {to}. Las cifras pequeñas están ocultas."
+    },
+    "periodWithReport": {
+      "one": "Último {count} día, del {from} al {to}. Las cifras pequeñas están ocultas. Cifras mensuales completas: [Informe de transparencia](/transparency).",
+      "many": "Últimos {count} días, del {from} al {to}. Las cifras pequeñas están ocultas. Cifras mensuales completas: [Informe de transparencia](/transparency).",
+      "other": "Últimos {count} días, del {from} al {to}. Las cifras pequeñas están ocultas. Cifras mensuales completas: [Informe de transparencia](/transparency)."
+    }
   },
   "error": {
     "title": "Ficha de confianza",

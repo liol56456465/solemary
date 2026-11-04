@@ -204,16 +204,31 @@ export async function getLatestAppealStatusesForCases(caseCodes) {
     return new Map(rows.map((row) => [row.case_code, row.status]));
 }
 
-/** A short status for history lists: lifted by appeal, appeal pending, expired, … */
-export function caseStatusLabel(row, appealStatus = null) {
+/**
+ * A stable id for a case's status: voided, liftedByAppeal, reversed, lifted, appealPending,
+ * expired, activeAppealDenied, or the row's own status (active, expired). The website shows
+ * portal.status.case.<code> in the page's language; caseStatusLabel is the English words.
+ */
+export function caseStatusCode(row, appealStatus = null) {
     if (row.voided_at) return 'voided';
     if (row.status === 'revoked') {
-        if (row.revoke_reason?.startsWith('Appeal accepted')) return 'lifted by appeal';
-        if (row.revoke_reason?.startsWith('Automod decision')) return 'reversed by a moderator';
+        if (row.revoke_reason?.startsWith('Appeal accepted')) return 'liftedByAppeal';
+        if (row.revoke_reason?.startsWith('Automod decision')) return 'reversed';
         return 'lifted';
     }
-    if (row.status === 'appeal_pending') return 'appeal pending';
+    if (row.status === 'appeal_pending') return 'appealPending';
     if (row.status === 'active' && row.expires_at && new Date(row.expires_at) <= new Date()) return 'expired';
-    if (row.status === 'active' && appealStatus === 'denied') return 'active, appeal denied';
+    if (row.status === 'active' && appealStatus === 'denied') return 'activeAppealDenied';
     return row.status;
+}
+
+const CASE_STATUS_WORDS = Object.freeze({
+    voided: 'voided', liftedByAppeal: 'lifted by appeal', reversed: 'reversed by a moderator', lifted: 'lifted',
+    appealPending: 'appeal pending', activeAppealDenied: 'active, appeal denied',
+});
+
+/** A short status for history lists: lifted by appeal, appeal pending, expired, … (English). */
+export function caseStatusLabel(row, appealStatus = null) {
+    const code = caseStatusCode(row, appealStatus);
+    return Object.hasOwn(CASE_STATUS_WORDS, code) ? CASE_STATUS_WORDS[code] : code;
 }

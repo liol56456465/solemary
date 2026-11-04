@@ -12,7 +12,7 @@
     "title": "Bot Discorda do moderacji i odwołań",
     "lead": "Mewvo ostrzega, wycisza, wyrzuca i banuje z jednego panelu. Członek dostaje wiadomość prywatną z powodem, czasem zakończenia i informacją, jak się odwołać. Twoja ekipa dostaje sprawę z krótkim kodem, którą można później odnaleźć.",
     "notPublic": "Na razie Mewvo działa na serwerze Mewvo. Nie da się go jeszcze dodać do innych serwerów.",
-    "dmCaption": "Wiadomość prywatna, którą członek dostaje za drugie ostrzeżenie. Ta sama treść co u bota."
+    "dmCaption": "Wiadomość prywatna, którą członek dostaje za drugie ostrzeżenie (Mewvo wysyła ją po angielsku)."
   },
   "dashboard": {
     "title": "Wszystko w jednym miejscu",

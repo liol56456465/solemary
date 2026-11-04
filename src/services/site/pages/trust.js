@@ -10,6 +10,8 @@
 import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
 import { textOf } from '../i18n.js';
+import { catWords } from '../catWords.js';
+import { maskedText, medianWords } from './transparency.js';
 import { enforcementConfig } from '../../../config/enforcement.js';
 import { trustCardView } from '../../enforcement/trustCardService.js';
 
@@ -17,16 +19,17 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_ORDINAL = 10;
 
 /** "a 7-day ban" / "a permanent ban" for a ladder level's ban length. */
-function banWords(ms, t) {
+function banWords(ms, { t, tp }) {
     if (!ms) return t('trust.ladder.banPermanent');
-    return t('trust.ladder.banDays', { days: Math.round(ms / DAY_MS) });
+    return tp('trust.ladder.banDays', Math.round(ms / DAY_MS));
 }
 
 /** The warning ladder in one sentence, from config/enforcement.js. */
 export function ladderSentence(config = enforcementConfig, ctx) {
-    const { t } = textOf(ctx);
+    const text = textOf(ctx);
+    const { t } = text;
     const levels = Object.keys(config.ladderBans).map(Number).sort((a, b) => a - b);
-    const [first, ...rest] = levels.map((level) => banWords(config.ladderBans[level], t));
+    const [first, ...rest] = levels.map((level) => banWords(config.ladderBans[level], text));
     const n = config.warnsPerLevel;
     const nth = Number.isInteger(n) && n >= 0 && n <= MAX_ORDINAL ? t(`trust.ladder.ordinals.${n}`) : t('trust.ladder.ordinalOther', { n });
     if (!rest.length) return t('trust.ladder.single', { nth, first });
@@ -38,26 +41,29 @@ function tile(t, label, value, note) {
     return html`<div class="trust-tile"><dt>${label}</dt><dd class="trust-value${value ? '' : ' trust-none'}">${value || t('trust.noData')}</dd><dd class="trust-note">${note}</dd></div>`;
 }
 
-function stats(view, t) {
+function stats(view, text) {
+    const { t } = text;
     return html`<dl class="trust-tiles">
-${tile(t, t('trust.tiles.firstAnswer.label'), view.firstAnswer, t('trust.tiles.firstAnswer.note'))}
-${tile(t, t('trust.tiles.accepted.label'), view.successRate, t('trust.tiles.accepted.note', { decided: view.decided.text }))}
+${tile(t, t('trust.tiles.firstAnswer.label'), medianWords(view.firstAnswerParts, text), t('trust.tiles.firstAnswer.note'))}
+${tile(t, t('trust.tiles.accepted.label'), view.successRate, t('trust.tiles.accepted.note', { decided: maskedText(view.decided, text) }))}
 ${tile(t, t('trust.tiles.goodStanding.label'), view.goodStanding, t('trust.tiles.goodStanding.note'))}
 ${tile(t, t('trust.tiles.headsUp.label'), view.headsUpRate, view.headsUpRate ? t('trust.tiles.headsUp.noteWithRate', { rate: view.headsUpRate }) : t('trust.tiles.headsUp.noteNoRate'))}
 </dl>`;
 }
 
-function details(view, t) {
+function details(view, text) {
+    const { t } = text;
     const row = (key, value) => html`<div><dt>${t(`trust.facts.${key}`)}</dt><dd>${value || t('trust.noData')}</dd></div>`;
     return html`<dl class="trust-facts">
-${row('received', view.received.text)}${row('decided', view.decided.text)}
-${row('decisionTime', view.decisionTime)}${row('casesPerThousand', view.casesPerThousand)}</dl>`;
+${row('received', maskedText(view.received, text))}${row('decided', maskedText(view.decided, text))}
+${row('decisionTime', medianWords(view.decisionTimeParts, text))}${row('casesPerThousand', view.casesPerThousandValue == null ? null : text.fmtNumber(view.casesPerThousandValue))}</dl>`;
 }
 
 function catBlock(cat, t) {
     if (!cat?.stage || !cat.image) return '';
-    return html`<figure class="trust-cat"><img src="/img/cat/${cat.image}" width="128" height="128" alt="${t('trust.cat.alt', { name: cat.name, stage: cat.stage.name.toLowerCase(), mood: cat.mood })}">
-<figcaption><strong>${cat.name}</strong><span>${cat.stage.name}</span><span>${t('trust.cat.caption')}</span></figcaption></figure>`;
+    const words = catWords(cat, t);
+    return html`<figure class="trust-cat"><img src="/img/cat/${cat.image}" width="128" height="128" alt="${t('trust.cat.alt', { name: cat.name, stage: words.stage.inText, mood: words.mood })}">
+<figcaption><strong>${cat.name}</strong><span>${words.stage.name}</span><span>${t('trust.cat.caption')}</span></figcaption></figure>`;
 }
 
 function rulesBlock(rules, t, href) {
@@ -74,7 +80,8 @@ function rulesBlock(rules, t, href) {
  * public rules ({ rules: [{ number, title }] }) or null when they could not be read.
  */
 export function trustPage(ctx, card, { cat = null, rules = null } = {}) {
-    const { t, ti, href, fmtDate } = textOf(ctx);
+    const text = textOf(ctx);
+    const { t, tp, tpi, href, fmtDate } = text;
     const view = trustCardView(card);
     const generated = view.generatedAt instanceof Date ? view.generatedAt : new Date(view.generatedAt);
     const since = view.since instanceof Date ? view.since : new Date(view.since);
@@ -85,20 +92,20 @@ export function trustPage(ctx, card, { cat = null, rules = null } = {}) {
     const to = html`<time datetime="${generated.toISOString().slice(0, 10)}">${fmtDate(generated)}</time>`;
     return layout(ctx, {
         title: t('trust.title', { server: view.serverName }), active: 'trust', path: '/trust', image,
-        description: t('trust.description', { server: view.serverName, days: view.days }),
+        description: tp('trust.description', view.days, { server: view.serverName }),
         body: html`<div class="wrap page">
 <header class="trust-head"><div><h1>${t('trust.head.heading', { server: view.serverName })}</h1>
-<p class="lead">${t('trust.head.lead', { days: view.days })}</p></div>${catBlock(cat, t)}</header>
-${stats(view, t)}
+<p class="lead">${tp('trust.head.lead', view.days)}</p></div>${catBlock(cat, t)}</header>
+${stats(view, text)}
 <div class="trust-grid">
 <section class="card trust-panel" aria-labelledby="trust-how"><h2 id="trust-how">${t('trust.how.heading')}</h2>
 <ul class="trust-list"><li>${ladderSentence(enforcementConfig, ctx)}</li>
 <li>${t('trust.how.byPerson')}</li>
 <li>${t('trust.how.cases')}</li></ul>
-${details(view, t)}</section>
+${details(view, text)}</section>
 ${rulesBlock(rules, t, href)}
 </div>
-<p class="note trust-foot">${ti(ctx.transparency ? 'trust.foot.periodWithReport' : 'trust.foot.period', { days: view.days, from, to })}</p>
+<p class="note trust-foot">${tpi(ctx.transparency ? 'trust.foot.periodWithReport' : 'trust.foot.period', view.days, { from, to })}</p>
 </div>`,
     });
 }

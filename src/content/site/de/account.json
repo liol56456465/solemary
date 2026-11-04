@@ -114,8 +114,10 @@
     "seePlans": "Pläne ansehen",
     "foot": "Der Plan gehört zu deinem Discord-Konto, nicht zu diesem Mewvo-Konto.",
     "endsToday": "Endet heute",
-    "dayLeft": "Noch {days} Tag",
-    "daysLeft": "Noch {days} Tage",
+    "daysLeft": {
+      "one": "Noch {count} Tag",
+      "other": "Noch {count} Tage"
+    },
     "source": {
       "bonus": "Frühstarter-Bonus",
       "purchase": "Ein Kauf",
@@ -126,8 +128,15 @@
   "bonus": {
     "granted": "Verknüpfung #{n}: {bonus} Pro, hinzugefügt am {date}.",
     "skipped": "Verknüpfung #{n}: {bonus} Pro standen zu, wurden aber nicht hinzugefügt. {reason}",
-    "tooLate": "Verknüpfung #{n}: kein Pro-Bonus (er ging an die ersten {limit} Verknüpfungen).",
-    "none": "Verknüpfung #{n}: kein Pro-Bonus."
+    "tooLate": {
+      "one": "Verknüpfung #{n}: kein Pro-Bonus (er ging an die erste Verknüpfung).",
+      "other": "Verknüpfung #{n}: kein Pro-Bonus (er ging an die ersten {count} Verknüpfungen)."
+    },
+    "none": "Verknüpfung #{n}: kein Pro-Bonus.",
+    "months": {
+      "one": "{count} Monat",
+      "other": "{count} Monate"
+    }
   },
   "settings": {
     "title": "Kontoeinstellungen",
@@ -203,5 +212,26 @@
     "twoStepAlreadyOff": "Die Zwei-Faktor-Anmeldung ist bereits aus.",
     "twoStepOff": "Die Zwei-Faktor-Anmeldung ist aus.",
     "unlinked": "Die Verknüpfung deines Discord-Kontos wurde aufgehoben. Verknüpfe wieder ein Discord-Konto, um dein Mewvo-Konto weiter zu nutzen."
+  },
+  "errorCodes": {
+    "usernameLength": "Der Benutzername muss {min} bis {max} Zeichen lang sein.",
+    "usernameChars": "Der Benutzername darf nur Buchstaben (a-z), Zahlen und Unterstriche enthalten.",
+    "usernameNoLetter": "Der Benutzername braucht mindestens einen Buchstaben oder eine Zahl.",
+    "usernameReserved": "Dieser Benutzername ist reserviert. Wähle einen anderen.",
+    "passwordShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
+    "passwordLong": "Das Passwort darf höchstens {max} Zeichen lang sein.",
+    "birthMissing": "Gib dein Geburtsdatum ein.",
+    "birthInvalid": "Gib ein echtes Geburtsdatum ein.",
+    "tooYoung": "Du musst mindestens {age} Jahre alt sein, um ein Konto zu erstellen.",
+    "usernameTaken": "Dieser Benutzername ist schon vergeben. Wähle einen anderen.",
+    "twoStepOn": "Die Zwei-Faktor-Anmeldung ist schon aktiv.",
+    "noDiscordUser": "Discord hat keinen Benutzer zurückgegeben.",
+    "missing": "Dieses Konto gibt es nicht mehr.",
+    "hasOther": "Dieses Konto ist schon mit einem anderen Discord-Konto verknüpft. Hebe die Verknüpfung zuerst in den Kontoeinstellungen auf.",
+    "linkedElsewhere": "Dieses Discord-Konto ist schon mit einem anderen Mewvo-Konto verknüpft.",
+    "linkFirst": "Verknüpfe zuerst dein Discord-Konto.",
+    "notEligible": "Dieses Konto kann keinen Benutzernamen mit 1 Zeichen bekommen.",
+    "allClaimed": "Alle Benutzernamen mit 1 Zeichen sind schon vergeben.",
+    "letterTaken": "Jemand anderes hat dieses Zeichen gerade genommen. Wähle ein anderes."
   }
 }

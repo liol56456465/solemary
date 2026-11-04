@@ -64,7 +64,7 @@ export function createMemoryAccountStore({
 
     async function enableTotp(id, { secretEnc, step, codeHashes }) {
         const account = accounts.get(String(id));
-        if (account.totp_enabled_at) throw new AccountError('Two-step login is already on.', 409);
+        if (account.totp_enabled_at) throw new AccountError('Two-step login is already on.', 409, 'two_step_on');
         Object.assign(account, { totp_secret_enc: secretEnc, totp_enabled_at: at(), totp_last_step: step });
         recovery.set(String(id), new Map(codeHashes.map((hash) => [hash, null])));
     }
@@ -146,7 +146,7 @@ export function createMemoryAccountStore({
     async function claimLetter({ accountId, letter }) {
         return locked(async () => {
             const account = accounts.get(String(accountId));
-            if (!account?.discord_user_id) throw new AccountError('Link your Discord account first.', 409);
+            if (!account?.discord_user_id) throw new AccountError('Link your Discord account first.', 409, 'link_first');
             const bonus = bonuses.get(account.discord_user_id);
             if (!canClaimLetter(bonus, account)) throw new AccountError('This account cannot claim a 1-letter username.', 409, 'not_eligible');
             if ([...bonuses.values()].filter((b) => b.letter_claimed).length >= LETTER_CLAIM_LIMIT) throw new AccountError('All 1-letter usernames have been claimed.', 409, 'all_claimed');

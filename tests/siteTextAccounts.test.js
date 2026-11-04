@@ -21,13 +21,28 @@ const DYNAMIC = {
     'portal.appealStatus.': ['pending', 'accepted', 'denied', 'closed'],
     'account.plan.source.': ['bonus', 'purchase', 'key', 'owner'],
     'portal.record.column.': ['case', 'type', 'reason', 'by', 'date', 'ends', 'status', 'appeal', 'filed', 'decided'],
+    // accountErrorText: codes from accountCore validation and AccountError (snake_case → camelCase).
+    'account.errorCodes.': ['usernameLength', 'usernameChars', 'usernameNoLetter', 'usernameReserved', 'passwordShort', 'passwordLong', 'birthMissing',
+        'birthInvalid', 'tooYoung', 'usernameTaken', 'twoStepOn', 'noDiscordUser', 'missing', 'hasOther', 'linkedElsewhere', 'linkFirst', 'notEligible',
+        'allClaimed', 'letterTaken'],
+    // caseStatusCode (caseService.js) shown as portal.status.case.<code>.
+    'portal.status.case.': ['liftedByAppeal', 'reversed', 'lifted', 'appealPending', 'expired', 'activeAppealDenied', 'active'],
+    'portal.duration.': ['month', 'day', 'hour', 'minute', 'lessThanMinute'],
 };
+const PLURAL_FORMS = ['zero', 'one', 'two', 'few', 'many', 'other'];
 
 function usedKeys() {
     const keys = new Set([...SOURCE.matchAll(/\bt[ib]?\(\s*'((?:account|portal)\.[a-zA-Z.]+)'/g)].map((m) => m[1]));
     // t(cond ? 'a' : 'b')
     for (const m of SOURCE.matchAll(/'((?:account|portal)\.[a-zA-Z]+\.[a-zA-Z.]+)'/g)) keys.add(m[1]);
     for (const [prefix, ends] of Object.entries(DYNAMIC)) for (const end of ends) keys.add(prefix + end);
+    // A plural key (tp/tpi) is stored as <key>.one / .other …: the code names the base.
+    for (const key of [...keys]) {
+        if (!english.has(key) && english.has(`${key}.other`)) {
+            keys.delete(key);
+            for (const form of PLURAL_FORMS) if (english.has(`${key}.${form}`)) keys.add(`${key}.${form}`);
+        }
+    }
     return keys;
 }
 

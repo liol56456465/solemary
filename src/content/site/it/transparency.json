@@ -72,5 +72,22 @@
   },
   "error": {
     "text": "Al momento non è stato possibile caricare il rapporto perché il database non risponde. Meglio nessun numero che numeri sbagliati; riprova tra qualche minuto."
+  },
+  "mask": {
+    "fewer": "meno di {n}",
+    "atLeast": "almeno {n}"
+  },
+  "median": {
+    "underHour": "meno di un'ora",
+    "hours": {
+      "one": "{count} ora",
+      "many": "{count} ore",
+      "other": "{count} ore"
+    },
+    "days": {
+      "one": "{count} giorno",
+      "many": "{count} giorni",
+      "other": "{count} giorni"
+    }
   }
 }

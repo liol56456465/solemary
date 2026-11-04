@@ -114,8 +114,11 @@
     "seePlans": "Ver planes",
     "foot": "El plan pertenece a tu cuenta de Discord, no a esta cuenta de Mewvo.",
     "endsToday": "Termina hoy",
-    "dayLeft": "Queda {days} día",
-    "daysLeft": "Quedan {days} días",
+    "daysLeft": {
+      "one": "Queda {count} día",
+      "many": "Quedan {count} días",
+      "other": "Quedan {count} días"
+    },
     "source": {
       "bonus": "Bonificación para las primeras cuentas",
       "purchase": "Una compra",
@@ -126,8 +129,17 @@
   "bonus": {
     "granted": "Vinculación n.º {n}: {bonus} de Pro, añadidos el {date}.",
     "skipped": "Vinculación n.º {n}: te correspondían {bonus} de Pro, pero no se añadieron. {reason}",
-    "tooLate": "Vinculación n.º {n}: sin bonificación Pro (fue para las {limit} primeras vinculaciones).",
-    "none": "Vinculación n.º {n}: sin bonificación Pro."
+    "tooLate": {
+      "one": "Vinculación n.º {n}: sin bonificación Pro (fue para la primera vinculación).",
+      "many": "Vinculación n.º {n}: sin bonificación Pro (fue para las {count} primeras vinculaciones).",
+      "other": "Vinculación n.º {n}: sin bonificación Pro (fue para las {count} primeras vinculaciones)."
+    },
+    "none": "Vinculación n.º {n}: sin bonificación Pro.",
+    "months": {
+      "one": "{count} mes",
+      "many": "{count} meses",
+      "other": "{count} meses"
+    }
   },
   "settings": {
     "title": "Ajustes de la cuenta",
@@ -203,5 +215,26 @@
     "twoStepAlreadyOff": "El inicio de sesión en dos pasos ya está desactivado.",
     "twoStepOff": "El inicio de sesión en dos pasos está desactivado.",
     "unlinked": "Tu cuenta de Discord se ha desvinculado. Vuelve a vincular una cuenta de Discord para seguir usando tu cuenta de Mewvo."
+  },
+  "errorCodes": {
+    "usernameLength": "El nombre de usuario debe tener entre {min} y {max} caracteres.",
+    "usernameChars": "El nombre de usuario solo puede usar letras (a-z), números y guiones bajos.",
+    "usernameNoLetter": "El nombre de usuario necesita al menos una letra o un número.",
+    "usernameReserved": "Ese nombre de usuario está reservado. Elige otro.",
+    "passwordShort": "La contraseña debe tener al menos {min} caracteres.",
+    "passwordLong": "La contraseña puede tener como máximo {max} caracteres.",
+    "birthMissing": "Introduce tu fecha de nacimiento.",
+    "birthInvalid": "Introduce una fecha de nacimiento real.",
+    "tooYoung": "Debes tener al menos {age} años para crear una cuenta.",
+    "usernameTaken": "Ese nombre de usuario ya está ocupado. Elige otro.",
+    "twoStepOn": "El inicio de sesión en dos pasos ya está activado.",
+    "noDiscordUser": "Discord no devolvió ningún usuario.",
+    "missing": "Esta cuenta ya no existe.",
+    "hasOther": "Esta cuenta ya está vinculada a otra cuenta de Discord. Desvincúlala primero en los ajustes de la cuenta.",
+    "linkedElsewhere": "Esa cuenta de Discord ya está vinculada a otra cuenta de Mewvo.",
+    "linkFirst": "Vincula primero tu cuenta de Discord.",
+    "notEligible": "Esta cuenta no puede reclamar un nombre de usuario de 1 letra.",
+    "allClaimed": "Ya se han reclamado todos los nombres de usuario de 1 letra.",
+    "letterTaken": "Otra persona acaba de quedarse con esa letra. Elige otra."
   }
 }

@@ -72,5 +72,20 @@
   },
   "error": {
     "text": "Impossible de charger le rapport pour le moment, car la base de données ne répond pas. Mieux vaut aucun chiffre que des chiffres faux ; réessaie dans quelques minutes."
+  },
+  "mask": {
+    "fewer": "moins de {n}",
+    "atLeast": "au moins {n}"
+  },
+  "median": {
+    "underHour": "moins d’une heure",
+    "hours": {
+      "one": "{count} heure",
+      "other": "{count} heures"
+    },
+    "days": {
+      "one": "{count} jour",
+      "other": "{count} jours"
+    }
   }
 }

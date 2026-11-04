@@ -154,11 +154,14 @@ export async function readTransparencyReport(guildId, { now = new Date(), run = 
 
 // ── Display helpers (pure) ────────────────────────────────────────────────
 
-/** { text, masked }: 0 and 3+ as the number, 1–2 as "fewer than 3". */
+/**
+ * { text, masked, kind, value }: 0 and 3+ as the number, 1–2 as "fewer than 3". kind ('number',
+ * 'fewer', 'atLeast') + value let the website word it in the page's language; text is English.
+ */
 export function maskCount(n) {
     const value = int(n);
-    if (value > 0 && value < SMALL_COUNT) return { text: `fewer than ${SMALL_COUNT}`, masked: true };
-    return { text: value.toLocaleString('en-US'), masked: false };
+    if (value > 0 && value < SMALL_COUNT) return { text: `fewer than ${SMALL_COUNT}`, masked: true, kind: 'fewer', value: SMALL_COUNT };
+    return { text: value.toLocaleString('en-US'), masked: false, kind: 'number', value };
 }
 
 /**
@@ -168,25 +171,33 @@ export function maskCount(n) {
 export function maskTotal(values) {
     const counts = values.map(int);
     const total = counts.reduce((a, b) => a + b, 0);
-    if (total > 0 && total < SMALL_COUNT) return { text: `fewer than ${SMALL_COUNT}`, masked: true };
+    if (total > 0 && total < SMALL_COUNT) return { text: `fewer than ${SMALL_COUNT}`, masked: true, kind: 'fewer', value: SMALL_COUNT };
     const hidden = counts.filter((n) => n > 0 && n < SMALL_COUNT);
-    if (!hidden.length) return { text: total.toLocaleString('en-US'), masked: false };
+    if (!hidden.length) return { text: total.toLocaleString('en-US'), masked: false, kind: 'number', value: total };
     const floor = total - hidden.reduce((a, b) => a + b, 0) + hidden.length;
-    return { text: `at least ${floor.toLocaleString('en-US')}`, masked: true };
+    return { text: `at least ${floor.toLocaleString('en-US')}`, masked: true, kind: 'atLeast', value: floor };
 }
 
-/** "5 hours", "3.5 days", "under an hour"; null when fewer than 3 appeals were decided. */
-export function medianText(medianHours, decided) {
+/**
+ * The median as { unit: 'underHour' | 'hours' | 'days', value } (for the website's own words),
+ * or null when fewer than 3 appeals were decided.
+ */
+export function medianParts(medianHours, decided) {
     if (int(decided) < SMALL_COUNT || medianHours === null || medianHours === undefined) return null;
     const h = Number(medianHours);
     if (!Number.isFinite(h)) return null;
-    if (h < 1) return 'under an hour';
-    if (h < 48) {
-        const rounded = Math.round(h);
-        return `${rounded} hour${rounded === 1 ? '' : 's'}`;
-    }
-    const days = Math.round((h / 24) * 10) / 10;
-    return `${days} days`;
+    if (h < 1) return { unit: 'underHour', value: null };
+    if (h < 48) return { unit: 'hours', value: Math.round(h) };
+    return { unit: 'days', value: Math.round((h / 24) * 10) / 10 };
+}
+
+/** "5 hours", "3.5 days", "under an hour" (English); null when fewer than 3 appeals were decided. */
+export function medianText(medianHours, decided) {
+    const parts = medianParts(medianHours, decided);
+    if (!parts) return null;
+    if (parts.unit === 'underHour') return 'under an hour';
+    if (parts.unit === 'hours') return `${parts.value} hour${parts.value === 1 ? '' : 's'}`;
+    return `${parts.value} days`;
 }
 
 /**

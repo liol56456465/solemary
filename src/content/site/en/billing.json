@@ -22,7 +22,6 @@
     "planLine": "Mewvo {plan}",
     "planPeriod": "Mewvo {plan} · {period}",
     "planWithPeriod": "{plan} · {period}",
-    "days": "{count} days",
     "test": "Test",
     "day": {
       "one": "{count} day",
@@ -76,7 +75,10 @@
     "pricePerMonth": "{price}/month",
     "pricePerYear": "{price}/year",
     "billingLabel": "Billing",
-    "monthsFree": "{months} months free",
+    "monthsFree": {
+      "one": "{count} month free",
+      "other": "{count} months free"
+    },
     "forLabel": "Who is it for",
     "forMe": "For me",
     "forMeSub": "starts on your account now",
@@ -113,8 +115,14 @@
     "whatYouGetGift": "Mewvo {plan} (the list above), as a key you can give away",
     "whatYouGetPersonal": "Mewvo {plan} (the list above) on your Discord account",
     "duration": "Duration",
-    "durationGift": "{days} days from when the key is redeemed; no automatic renewal",
-    "durationPersonal": "{days} days from the order; no automatic renewal",
+    "durationGift": {
+      "one": "{count} day from when the key is redeemed; no automatic renewal",
+      "other": "{count} days from when the key is redeemed; no automatic renewal"
+    },
+    "durationPersonal": {
+      "one": "{count} day from the order; no automatic renewal",
+      "other": "{count} days from the order; no automatic renewal"
+    },
     "totalPrice": "Total price",
     "totalPriceValue": "{amount}. {vat}",
     "withdrawal": "Withdrawal",
@@ -169,8 +177,14 @@
     "title": "Order #{id}",
     "headingGift": "Your gift key is ready",
     "heading": "Thanks, your plan is active",
-    "giftKey": "Gift key · {plan}, {days} days",
-    "giftKeyTo": "Gift key · {plan}, {days} days · to {name}",
+    "giftKey": {
+      "one": "Gift key · {plan}, {count} day",
+      "other": "Gift key · {plan}, {count} days"
+    },
+    "giftKeyTo": {
+      "one": "Gift key · {plan}, {count} day · to {name}",
+      "other": "Gift key · {plan}, {count} days · to {name}"
+    },
     "giveAway": "Give this key to anyone. They log in on this site and redeem it under Subscription → Redeem a key, or in Discord with `/premium redeem`.",
     "redeemBy": "Redeem by {date}.",
     "status": "Status: {status}.",
@@ -188,7 +202,10 @@
     "confirmed": "You confirmed",
     "confirmedMeta": "{date} · {version} · Terms of {terms}",
     "withdrawal": "Withdrawal",
-    "periodEnded": "The {days}-day period ended. [Right of withdrawal](/withdrawal)",
+    "periodEnded": {
+      "one": "The {count}-day period ended. [Right of withdrawal](/withdrawal)",
+      "other": "The {count}-day period ended. [Right of withdrawal](/withdrawal)"
+    },
     "giftWithdrawal": "For a gift, the right of withdrawal is yours as the buyer.",
     "dmNote": "This confirmation is also sent to you as a Discord DM (when your DMs from the bot are open). Keep it for your records."
   },
@@ -213,7 +230,10 @@
   "withdrawList": {
     "title": "Withdraw from a contract",
     "heading": "Withdraw from contract here",
-    "lead": "Logged in as **{username}**. Choose the order you want to withdraw from. You can withdraw within {days} days of the order, without giving a reason.",
+    "lead": {
+      "one": "Logged in as **{username}**. Choose the order you want to withdraw from. You can withdraw within {count} day of the order, without giving a reason.",
+      "other": "Logged in as **{username}**. Choose the order you want to withdraw from. You can withdraw within {count} days of the order, without giving a reason."
+    },
     "item": "**Order {order}**: {line}, {amount}, ordered {date}.",
     "button": "Withdraw from contract here",
     "none": "No order on this account is inside its {days}-day withdrawal period.",
@@ -274,5 +294,36 @@
   "planButtons": {
     "buy": "Buy {plan}",
     "gift": "Gift it"
+  },
+  "errorCodes": {
+    "choosePlan": "Choose a paid plan (Normal, Pro or Max).",
+    "choosePeriod": "Choose monthly or yearly billing.",
+    "chooseKind": "Choose whether this is for you or a gift.",
+    "lowerPlan": "You already have {current} until {until}, which is more than {plan}. A {plan} key or purchase can be used after it ends; nothing was changed.",
+    "durationMin": "The duration must be at least one day.",
+    "giftToLong": "\"To\" is limited to {max} characters.",
+    "giftMessageLong": "The message is limited to {max} characters.",
+    "consentMissing": "Tick the boxes to confirm {items}. Nothing was ordered.",
+    "consentItems": {
+      "start": "that you want the plan to start now",
+      "startGift": "that you want the key now",
+      "terms": "that you accept the Terms",
+      "age": "that you are 18 or older or have permission"
+    },
+    "notWithdrawable": "This order cannot be withdrawn online. Contact us instead.",
+    "logInFirst": "Log in first.",
+    "notAKey": "That is not a Mewvo key. Keys look like MEWVO-ABCD-EFGH-JKMN.",
+    "keyMissing": "That key does not exist. Check it for typos.",
+    "keyRevoked": "That key was cancelled and cannot be used.",
+    "keyUsed": "That key has already been used.",
+    "keyExpired": "That key expired on {date}.",
+    "noSuchOrder": "There is no such order on your account.",
+    "enterName": "Enter your name.",
+    "nameLong": "The name is limited to {max} characters.",
+    "alreadyWithdrawn": "You already withdrew from this order.",
+    "withdrawalEnded": {
+      "one": "The {count}-day withdrawal period for this order ended on {date}.",
+      "other": "The {count}-day withdrawal period for this order ended on {date}."
+    }
   }
 }

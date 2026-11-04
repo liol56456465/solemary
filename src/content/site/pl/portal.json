@@ -17,7 +17,12 @@
     "unappealable": "Nie można się odwołać",
     "ended": "Zakończona: nie ma od czego się odwołać",
     "deadlinePassed": "Termin na odwołanie minął",
-    "windowClosed": "Termin na odwołanie (liczba dni: {days}) minął",
+    "windowClosed": {
+      "one": "Termin na odwołanie ({count} dzień) minął",
+      "few": "Termin na odwołanie ({count} dni) minął",
+      "many": "Termin na odwołanie ({count} dni) minął",
+      "other": "Termin na odwołanie ({count} dnia) minął"
+    },
     "pending": "Odwołanie oczekuje",
     "deniedRetry": "Odwołanie odrzucone; możesz odwołać się ponownie od",
     "appealable": "Można się odwołać",
@@ -29,7 +34,16 @@
     "voided": "unieważniona: już się nie liczy",
     "counts": "liczy się teraz",
     "noLongerCounts": "w historii, już się nie liczy",
-    "onRecord": "w historii"
+    "onRecord": "w historii",
+    "case": {
+      "liftedByAppeal": "zdjęta po odwołaniu",
+      "reversed": "cofnięta przez moderatora",
+      "lifted": "zdjęta",
+      "appealPending": "odwołanie oczekuje",
+      "expired": "wygasła",
+      "activeAppealDenied": "aktywna, odwołanie odrzucone",
+      "active": "aktywna"
+    }
   },
   "login": {
     "lead": "Zobacz własną historię moderacji na {server}: swoje ostrzeżenia, poziom na drabinie ostrzeżeń, aktywny ban lub wyciszenie, swoje sprawy i odwołania.",
@@ -70,7 +84,12 @@
       "decided": "Rozstrzygnięte"
     },
     "permanent": "na stałe",
-    "truncated": "Pokazano twoje najnowsze sprawy (liczba: {count}).",
+    "truncated": {
+      "one": "Pokazano twoją najnowszą sprawę.",
+      "few": "Pokazano twoje {count} najnowsze sprawy.",
+      "many": "Pokazano twoich {count} najnowszych spraw.",
+      "other": "Pokazano twoje {count} najnowsze sprawy."
+    },
     "noCases": "Nie masz żadnych spraw na {server}.",
     "noAppeals": "Nie złożyłeś żadnych odwołań.",
     "appealHintInvite": "Odwołaj się z panelu odwołań na Discordzie: [dołącz do serwera wsparcia]({invite}) i naciśnij **Appeal**, podając kod sprawy. Z tej strony nie da się złożyć odwołania.",
@@ -140,5 +159,44 @@
   },
   "viewer": {
     "fallbackName": "Konto"
+  },
+  "next": {
+    "warning": "Byłoby to ostrzeżenie {number} z {threshold}.",
+    "afterOne": "Następne po nim oznaczałoby automatyczny ban ({ban}).",
+    "afterMore": {
+      "one": "Jeszcze {count} po nim oznaczałoby automatyczny ban ({ban}).",
+      "few": "Jeszcze {count} po nim oznaczałyby automatyczny ban ({ban}).",
+      "many": "Jeszcze {count} po nim oznaczałoby automatyczny ban ({ban}).",
+      "other": "Jeszcze {count} po nim oznaczałoby automatyczny ban ({ban})."
+    },
+    "limit": "Osiągnięto by limit ostrzeżeń: automatyczny ban ({ban}, poziom drabiny {level}).",
+    "permanent": "na stałe"
+  },
+  "duration": {
+    "month": {
+      "one": "{count} miesiąc",
+      "few": "{count} miesiące",
+      "many": "{count} miesięcy",
+      "other": "{count} miesiąca"
+    },
+    "day": {
+      "one": "{count} dzień",
+      "few": "{count} dni",
+      "many": "{count} dni",
+      "other": "{count} dnia"
+    },
+    "hour": {
+      "one": "{count} godzina",
+      "few": "{count} godziny",
+      "many": "{count} godzin",
+      "other": "{count} godziny"
+    },
+    "minute": {
+      "one": "{count} minuta",
+      "few": "{count} minuty",
+      "many": "{count} minut",
+      "other": "{count} minuty"
+    },
+    "lessThanMinute": "mniej niż minuta"
   }
 }

@@ -114,8 +114,10 @@
     "seePlans": "Voir les formules",
     "foot": "La formule appartient à ton compte Discord, pas à ce compte Mewvo.",
     "endsToday": "Se termine aujourd’hui",
-    "dayLeft": "{days} jour restant",
-    "daysLeft": "{days} jours restants",
+    "daysLeft": {
+      "one": "{count} jour restant",
+      "other": "{count} jours restants"
+    },
     "source": {
       "bonus": "Bonus des premiers comptes",
       "purchase": "Un achat",
@@ -126,8 +128,15 @@
   "bonus": {
     "granted": "Association n° {n} : {bonus} de Pro, ajoutés le {date}.",
     "skipped": "Association n° {n} : {bonus} de Pro étaient dus, mais n’ont pas été ajoutés. {reason}",
-    "tooLate": "Association n° {n} : pas de bonus Pro (il est allé aux {limit} premières associations).",
-    "none": "Association n° {n} : pas de bonus Pro."
+    "tooLate": {
+      "one": "Association n° {n} : pas de bonus Pro (il est allé à la première association).",
+      "other": "Association n° {n} : pas de bonus Pro (il est allé aux {count} premières associations)."
+    },
+    "none": "Association n° {n} : pas de bonus Pro.",
+    "months": {
+      "one": "{count} mois",
+      "other": "{count} mois"
+    }
   },
   "settings": {
     "title": "Paramètres du compte",
@@ -203,5 +212,26 @@
     "twoStepAlreadyOff": "La connexion en deux étapes est déjà désactivée.",
     "twoStepOff": "La connexion en deux étapes est désactivée.",
     "unlinked": "Ton compte Discord a été dissocié. Associe de nouveau un compte Discord pour continuer à utiliser ton compte Mewvo."
+  },
+  "errorCodes": {
+    "usernameLength": "Le nom d’utilisateur doit faire entre {min} et {max} caractères.",
+    "usernameChars": "Le nom d’utilisateur ne peut contenir que des lettres (a-z), des chiffres et des tirets bas.",
+    "usernameNoLetter": "Le nom d’utilisateur doit contenir au moins une lettre ou un chiffre.",
+    "usernameReserved": "Ce nom d’utilisateur est réservé. Choisis-en un autre.",
+    "passwordShort": "Le mot de passe doit faire au moins {min} caractères.",
+    "passwordLong": "Le mot de passe peut faire au plus {max} caractères.",
+    "birthMissing": "Indique ta date de naissance.",
+    "birthInvalid": "Indique une vraie date de naissance.",
+    "tooYoung": "Tu dois avoir au moins {age} ans pour créer un compte.",
+    "usernameTaken": "Ce nom d’utilisateur est déjà pris. Choisis-en un autre.",
+    "twoStepOn": "La connexion en deux étapes est déjà activée.",
+    "noDiscordUser": "Discord n’a renvoyé aucun utilisateur.",
+    "missing": "Ce compte n’existe plus.",
+    "hasOther": "Ce compte est déjà associé à un autre compte Discord. Retire d’abord l’association dans les paramètres du compte.",
+    "linkedElsewhere": "Ce compte Discord est déjà associé à un autre compte Mewvo.",
+    "linkFirst": "Associe d’abord ton compte Discord.",
+    "notEligible": "Ce compte ne peut pas obtenir de nom d’utilisateur d’un caractère.",
+    "allClaimed": "Tous les noms d’utilisateur d’un caractère ont été pris.",
+    "letterTaken": "Quelqu’un d’autre vient de prendre ce caractère. Choisis-en un autre."
   }
 }

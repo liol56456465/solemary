@@ -275,6 +275,9 @@ export function formatNumberIn(lang, n, opts = {}) {
     return cachedFormat('number', isLanguage(lang) && lang !== DEFAULT_LANG ? lang : 'en-US', opts).format(Number(n) || 0);
 }
 
+// {count} is written the language's way ("1,5" in German); English keeps the plain number, as before.
+const countText = (code, count) => (code === DEFAULT_LANG ? count : formatNumberIn(code, count, { maximumFractionDigits: 1 }));
+
 /**
  * The functions a page context carries for one language. `href` maps site paths for links
  * (default: the same language's prefix); catalog links ([text](/path)) go through it too, so a
@@ -290,10 +293,9 @@ export function translator(lang = DEFAULT_LANG, { href = null } = {}) {
         ti: (key, params) => translateInline(code, key, params, options),
         tb: (key, params) => translateBlock(code, key, params, options),
         /** Plural plain text: tp('billing.common.day', 3) → "3 days" ({count} is filled in). */
-        // {count} is written the language's way ("1,5" in German); English keeps the plain number, as before.
-        tp: (key, count, params = {}) => translate(code, pluralKey(code, key, count), {
-            count: code === DEFAULT_LANG ? count : formatNumberIn(code, count, { maximumFractionDigits: 1 }), ...params,
-        }),
+        tp: (key, count, params = {}) => translate(code, pluralKey(code, key, count), { count: countText(code, count), ...params }),
+        /** Plural inline markup → SafeHtml (like ti): tpi('billing.receipt.periodEnded', 14). */
+        tpi: (key, count, params = {}) => translateInline(code, pluralKey(code, key, count), { count: countText(code, count), ...params }, options),
         /** A site link that keeps the page's language: href('/features') → '/de/features'. */
         href: link,
         fmtDate: (value, opts) => formatDateIn(code, value, opts),
@@ -314,13 +316,13 @@ export function placeholdersOf(text) {
 }
 
 /**
- * The translator for a page context: its own t/ti/tb/tp (+ href, fmtDate, fmtNumber), else one for
+ * The translator for a page context: its own t/ti/tb/tp (+ tpi, href, fmtDate, fmtNumber), else one for
  * ctx.lang (tests pass bare contexts). A context with its own text functions but without the link
  * and format helpers gets those of ctx.lang added.
  */
 export function textOf(ctx) {
     const own = ctx && typeof ctx.t === 'function' && typeof ctx.ti === 'function' && typeof ctx.tb === 'function' && typeof ctx.tp === 'function';
-    if (own && typeof ctx.href === 'function' && typeof ctx.fmtDate === 'function' && typeof ctx.fmtNumber === 'function') return ctx;
+    if (own && typeof ctx.tpi === 'function' && typeof ctx.href === 'function' && typeof ctx.fmtDate === 'function' && typeof ctx.fmtNumber === 'function') return ctx;
     const base = translator(ctx?.lang);
-    return own ? { ...base, ...ctx, href: ctx.href || base.href, fmtDate: ctx.fmtDate || base.fmtDate, fmtNumber: ctx.fmtNumber || base.fmtNumber } : base;
+    return own ? { ...base, ...ctx, tpi: ctx.tpi || base.tpi, href: ctx.href || base.href, fmtDate: ctx.fmtDate || base.fmtDate, fmtNumber: ctx.fmtNumber || base.fmtNumber } : base;
 }

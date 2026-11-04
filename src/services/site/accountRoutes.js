@@ -26,14 +26,14 @@ import crypto from 'node:crypto';
 import { afterPremiumChange } from '../billing/premiumEffects.js';
 import { logger } from '../../utils/logger.js';
 import {
-    AccountError, MIN_AGE, PRO_BONUS_LABEL, SCRYPT_PARAMS, base32Decode, base32Encode, checkAge,
+    AccountError, MIN_AGE, SCRYPT_PARAMS, base32Decode, base32Encode, checkAge,
     createRecoveryCodes, createTotpSecret, decryptSecret, encryptSecret, groupedBase32, hashPassword, hashRecoveryCode,
     normalizeLetter, normalizeRecoveryCode, otpauthUri, totpEncryptionKey, validatePassword, validateUsername,
     verifyAgainstDummy, verifyPassword, verifyTotp,
 } from '../accounts/accountCore.js';
 import { clearCookie, createRateLimiter, hmac, isSameOrigin, parseCookies, safeEqual, serializeCookie, signValue, verifySignedValue } from '../dashboard/security.js';
 import {
-    accountMessagePage, accountSettingsPage, deletedPage, doneLoginPage, forgotPage, linkDiscordPage, linkedPage, passwordLoginPage,
+    accountErrorText, accountMessagePage, accountSettingsPage, bonusLength, deletedPage, doneLoginPage, forgotPage, linkDiscordPage, linkedPage, passwordLoginPage,
     recoveryCodesPage, resetPage, signupPage, totpSetupPage, twoStepPage,
 } from './accountPages.js';
 import { textOf, translator } from './i18n.js';
@@ -80,9 +80,10 @@ export function memberAccountSettings(env = process.env, portal = null) {
 }
 
 /** The text shown after linking Discord, honest about what this link got. Pure. */
-export function bonusText(bonus, { t } = translator()) {
+export function bonusText(bonus, text = translator()) {
+    const { t } = text;
     if (!bonus || bonus.kind === 'repeat') return t('account.linkResult.repeat');
-    const params = { n: bonus.linkNumber, bonus: PRO_BONUS_LABEL, note: bonus.proNote };
+    const params = { n: bonus.linkNumber, bonus: bonusLength(text), note: bonus.proNote };
     if (bonus.pro && bonus.letter) return t('account.linkResult.proAndLetter', params);
     if (bonus.pro) return t('account.linkResult.pro', params);
     if (bonus.proNote && bonus.letter) return t('account.linkResult.proFailedAndLetter', params);
@@ -118,6 +119,8 @@ export function createAccountHandlers(core) {
     const page = (res, status, html) => send(res, status, html);
     // Text for flash messages and errors, in the page's language (account.json).
     const t = (k, params) => textOf(ctx()).t(k, params);
+    // A validation result or AccountError in the page's language (English text when no code fits).
+    const errorText = (error) => accountErrorText(error, textOf(ctx()));
     const tooMany = (res, render) => { res.set('Retry-After', '60'); return page(res, 429, render(t('account.errors.tooManyTries'))); };
     const home = (account) => (account.discord_user_id ? '/me' : '/me/link');
 
@@ -192,18 +195,18 @@ export function createAccountHandlers(core) {
         const again = (status, error) => page(res, status, signupPage(ctx(), { csrf, values, error }));
         if (!signupLimiter.allow(clientIp(req))) { res.set('Retry-After', '600'); return again(429, t('account.errors.tooManySignups')); }
         const username = validateUsername(values.username);
-        if (!username.ok) return again(400, username.error);
+        if (!username.ok) return again(400, errorText(username));
         const password = validatePassword(req.body?.password);
-        if (!password.ok) return again(400, password.error);
+        if (!password.ok) return again(400, errorText(password));
         const age = checkAge(req.body?.birth_date);
-        if (!age.ok) return again(400, age.error);
+        if (!age.ok) return again(400, errorText(age));
         if (req.body?.accept !== 'yes') return again(400, t('account.errors.acceptTerms'));
         const passwordHash = await hashPassword(password.value, hashParams);
         let created;
         try {
             created = await store.createAccount({ username: username.value, passwordHash });
         } catch (error) {
-            if (error instanceof AccountError) return again(error.status, error.userMessage);
+            if (error instanceof AccountError) return again(error.status, errorText(error));
             throw error;
         }
         logger.info(`Member account created: account ${created.account.id} (Discord not linked yet)`);
@@ -342,7 +345,7 @@ export function createAccountHandlers(core) {
         const twoStep = Boolean(account.totp_enabled_at);
         const again = (status, error) => page(res, status, resetPage(ctx(), { csrf, username: account.username, twoStep, error }));
         const password = validatePassword(req.body?.password);
-        if (!password.ok) return again(400, password.error);
+        if (!password.ok) return again(400, errorText(password));
         // 2FA on: Discord stands in for the password, never for the code. Check it before
         // anything changes; a wrong code changes nothing, and five wrong codes end this reset.
         if (twoStep) {
@@ -408,7 +411,7 @@ export function createAccountHandlers(core) {
             result = await store.linkDiscord({ accountId: session.accountId, discordUserId: String(discordUser.id), discordUsername: discordUser.global_name || discordUser.username || null });
         } catch (error) {
             if (!(error instanceof AccountError)) throw error;
-            return page(res, error.status, accountMessagePage(ctx(), t('account.errors.notLinkedTitle'), error.userMessage, { href: '/me/link', label: t('account.common.back') }));
+            return page(res, error.status, accountMessagePage(ctx(), t('account.errors.notLinkedTitle'), errorText(error), { href: '/me/link', label: t('account.common.back') }));
         }
         if (result.premium) await after(result.premium, 'bonus');
         const { account, bonus } = result;
@@ -449,7 +452,7 @@ export function createAccountHandlers(core) {
             return res.redirect(303, '/me/account');
         } catch (error) {
             if (!(error instanceof AccountError)) throw error;
-            return page(res, error.status, linkedPage(ctx(), { session: me.session, account: me.account, flash: error.userMessage, offer: await letterOffer(me.account) }));
+            return page(res, error.status, linkedPage(ctx(), { session: me.session, account: me.account, flash: errorText(error), offer: await letterOffer(me.account) }));
         }
     }
 
@@ -508,7 +511,7 @@ export function createAccountHandlers(core) {
         if (!me) return undefined;
         if (!(await verifyPassword(secretField(req.body?.password), me.account.password_hash))) return renderSettings(res, me, 401, { error: t('account.errors.wrongCurrentPassword') });
         const next = validatePassword(req.body?.new_password);
-        if (!next.ok) return renderSettings(res, me, 400, { error: next.error });
+        if (!next.ok) return renderSettings(res, me, 400, { error: errorText(next) });
         await store.setPassword(me.account.id, await hashPassword(next.value, hashParams));
         await sessions.destroyForAccount(me.account.id, me.session.id);
         logger.info(`Member account ${me.account.id}: password changed, other sessions ended`);

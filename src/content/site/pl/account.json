@@ -61,7 +61,7 @@
   "link": {
     "title": "Połącz Discorda",
     "heading": "Połącz swoje konto Discord",
-    "lead": "Zalogowano jako **{username}**. Jeszcze jeden krok: połącz swoje konto Discord. Twoje konto Mewvo działa dopiero po połączeniu. Pierwsze 100 kont, które się połączą, dostaje Mewvo Pro na okres: {bonus}.",
+    "lead": "Zalogowano jako **{username}**. Jeszcze jeden krok: połącz swoje konto Discord. Twoje konto Mewvo działa dopiero po połączeniu. Pierwsze 100 kont, które się połączą, dostaje Mewvo Pro na {bonus}.",
     "submit": "Połącz Discorda",
     "foot": "Mewvo pyta Discorda tylko o to, kim jesteś (uprawnienie identify): bez e-maila, bez serwerów. Jedno konto Discord można połączyć z jednym kontem Mewvo. Jeśli zapomnisz hasła, zresetujesz je, logując się tym kontem Discord. Konto, które nigdy nie połączy Discorda, jest usuwane po 7 dniach.",
     "deleteHeading": "Usuń to konto"
@@ -81,10 +81,10 @@
   },
   "linkResult": {
     "repeat": "Twoje konto Discord jest połączone. To konto Discord było już wcześniej połączone z kontem Mewvo, więc nie dostaje ponownie bonusu dla wczesnych kont.",
-    "proAndLetter": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Dostajesz Mewvo Pro na okres: {bonus}, a poniżej możesz wybrać jednoliterową nazwę użytkownika.",
-    "pro": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Dostajesz Mewvo Pro na okres: {bonus}.",
-    "proFailedAndLetter": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Należało ci się Pro na okres {bonus}, ale nie udało się go dodać: {note} Poniżej i tak możesz wybrać jednoliterową nazwę użytkownika.",
-    "proFailed": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Należało ci się Pro na okres {bonus}, ale nie udało się go dodać: {note}",
+    "proAndLetter": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Dostajesz Mewvo Pro na {bonus}, a poniżej możesz wybrać jednoliterową nazwę użytkownika.",
+    "pro": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Dostajesz Mewvo Pro na {bonus}.",
+    "proFailedAndLetter": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Należało ci się Pro na {bonus}, ale nie udało się go dodać: {note} Poniżej i tak możesz wybrać jednoliterową nazwę użytkownika.",
+    "proFailed": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Należało ci się Pro na {bonus}, ale nie udało się go dodać: {note}",
     "letter": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Poniżej możesz wybrać jednoliterową nazwę użytkownika.",
     "none": "Twój numer wśród osób, które połączyły konto Discord z Mewvo: {n}. Bonusy dla wczesnych kont dostało pierwsze 100 kont, więc dla tego nie ma bonusu."
   },
@@ -114,8 +114,12 @@
     "seePlans": "Zobacz plany",
     "foot": "Plan należy do twojego konta Discord, a nie do tego konta Mewvo.",
     "endsToday": "Kończy się dzisiaj",
-    "dayLeft": "Został {days} dzień",
-    "daysLeft": "Pozostało dni: {days}",
+    "daysLeft": {
+      "one": "Został {count} dzień",
+      "few": "Zostały {count} dni",
+      "many": "Zostało {count} dni",
+      "other": "Zostało {count} dnia"
+    },
     "source": {
       "bonus": "Bonus dla wczesnych kont",
       "purchase": "Zakup",
@@ -124,10 +128,21 @@
     }
   },
   "bonus": {
-    "granted": "Połączenie nr {n}: Pro na okres {bonus}, dodano {date}.",
-    "skipped": "Połączenie nr {n}: należało się Pro na okres {bonus}, ale go nie dodano. {reason}",
-    "tooLate": "Połączenie nr {n}: bez bonusu Pro (dostały go pierwsze połączenia, łącznie: {limit}).",
-    "none": "Połączenie nr {n}: bez bonusu Pro."
+    "granted": "Połączenie nr {n}: Pro na {bonus}, dodano {date}.",
+    "skipped": "Połączenie nr {n}: należało się Pro na {bonus}, ale go nie dodano. {reason}",
+    "tooLate": {
+      "one": "Połączenie nr {n}: bez bonusu Pro (dostało go pierwsze połączenie).",
+      "few": "Połączenie nr {n}: bez bonusu Pro (dostały go pierwsze {count} połączenia).",
+      "many": "Połączenie nr {n}: bez bonusu Pro (dostało go pierwszych {count} połączeń).",
+      "other": "Połączenie nr {n}: bez bonusu Pro (dostały go pierwsze {count} połączenia)."
+    },
+    "none": "Połączenie nr {n}: bez bonusu Pro.",
+    "months": {
+      "one": "{count} miesiąc",
+      "few": "{count} miesiące",
+      "many": "{count} miesięcy",
+      "other": "{count} miesiąca"
+    }
   },
   "settings": {
     "title": "Ustawienia konta",
@@ -203,5 +218,26 @@
     "twoStepAlreadyOff": "Logowanie dwuetapowe jest już wyłączone.",
     "twoStepOff": "Logowanie dwuetapowe jest wyłączone.",
     "unlinked": "Twoje konto Discord zostało odłączone. Połącz ponownie konto Discord, aby dalej korzystać z konta Mewvo."
+  },
+  "errorCodes": {
+    "usernameLength": "Nazwa użytkownika musi mieć od {min} do {max} znaków.",
+    "usernameChars": "Nazwa użytkownika może zawierać tylko litery (a-z), cyfry i podkreślenia.",
+    "usernameNoLetter": "Nazwa użytkownika musi zawierać co najmniej jedną literę lub cyfrę.",
+    "usernameReserved": "Ta nazwa użytkownika jest zarezerwowana. Wybierz inną.",
+    "passwordShort": "Hasło musi mieć co najmniej {min} znaków.",
+    "passwordLong": "Hasło może mieć maksymalnie {max} znaków.",
+    "birthMissing": "Podaj datę urodzenia.",
+    "birthInvalid": "Podaj prawdziwą datę urodzenia.",
+    "tooYoung": "Aby założyć konto, musisz mieć co najmniej {age} lat.",
+    "usernameTaken": "Ta nazwa użytkownika jest już zajęta. Wybierz inną.",
+    "twoStepOn": "Logowanie dwuetapowe jest już włączone.",
+    "noDiscordUser": "Discord nie zwrócił użytkownika.",
+    "missing": "To konto już nie istnieje.",
+    "hasOther": "To konto jest już połączone z innym kontem Discord. Najpierw rozłącz je w ustawieniach konta.",
+    "linkedElsewhere": "To konto Discord jest już połączone z innym kontem Mewvo.",
+    "linkFirst": "Najpierw połącz swoje konto Discord.",
+    "notEligible": "To konto nie może dostać jednoliterowej nazwy użytkownika.",
+    "allClaimed": "Wszystkie jednoliterowe nazwy użytkownika zostały już zajęte.",
+    "letterTaken": "Ktoś inny właśnie zajął tę literę. Wybierz inną."
   }
 }

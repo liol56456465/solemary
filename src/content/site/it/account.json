@@ -114,8 +114,11 @@
     "seePlans": "Vedi i piani",
     "foot": "Il piano appartiene al tuo account Discord, non a questo account Mewvo.",
     "endsToday": "Termina oggi",
-    "dayLeft": "Manca {days} giorno",
-    "daysLeft": "Mancano {days} giorni",
+    "daysLeft": {
+      "one": "Manca {count} giorno",
+      "many": "Mancano {count} giorni",
+      "other": "Mancano {count} giorni"
+    },
     "source": {
       "bonus": "Bonus per i primi account",
       "purchase": "Un acquisto",
@@ -126,8 +129,17 @@
   "bonus": {
     "granted": "Collegamento n. {n}: {bonus} di Pro, aggiunti il {date}.",
     "skipped": "Collegamento n. {n}: ti spettavano {bonus} di Pro, ma non sono stati aggiunti. {reason}",
-    "tooLate": "Collegamento n. {n}: nessun bonus Pro (è andato ai primi {limit} collegamenti).",
-    "none": "Collegamento n. {n}: nessun bonus Pro."
+    "tooLate": {
+      "one": "Collegamento n. {n}: nessun bonus Pro (è andato al primo collegamento).",
+      "many": "Collegamento n. {n}: nessun bonus Pro (è andato ai primi {count} collegamenti).",
+      "other": "Collegamento n. {n}: nessun bonus Pro (è andato ai primi {count} collegamenti)."
+    },
+    "none": "Collegamento n. {n}: nessun bonus Pro.",
+    "months": {
+      "one": "{count} mese",
+      "many": "{count} mesi",
+      "other": "{count} mesi"
+    }
   },
   "settings": {
     "title": "Impostazioni account",
@@ -203,5 +215,26 @@
     "twoStepAlreadyOff": "L'accesso in due passaggi è già disattivato.",
     "twoStepOff": "L'accesso in due passaggi è disattivato.",
     "unlinked": "Il tuo account Discord è stato scollegato. Collega di nuovo un account Discord per continuare a usare il tuo account Mewvo."
+  },
+  "errorCodes": {
+    "usernameLength": "Il nome utente deve avere da {min} a {max} caratteri.",
+    "usernameChars": "Il nome utente può contenere solo lettere (a-z), numeri e trattini bassi.",
+    "usernameNoLetter": "Il nome utente deve contenere almeno una lettera o un numero.",
+    "usernameReserved": "Questo nome utente è riservato. Scegline un altro.",
+    "passwordShort": "La password deve avere almeno {min} caratteri.",
+    "passwordLong": "La password può avere al massimo {max} caratteri.",
+    "birthMissing": "Inserisci la tua data di nascita.",
+    "birthInvalid": "Inserisci una data di nascita reale.",
+    "tooYoung": "Devi avere almeno {age} anni per creare un account.",
+    "usernameTaken": "Questo nome utente è già in uso. Scegline un altro.",
+    "twoStepOn": "L'accesso in due passaggi è già attivo.",
+    "noDiscordUser": "Discord non ha restituito un utente.",
+    "missing": "Questo account non esiste più.",
+    "hasOther": "Questo account è già collegato a un altro account Discord. Scollegalo prima nelle impostazioni account.",
+    "linkedElsewhere": "Questo account Discord è già collegato a un altro account Mewvo.",
+    "linkFirst": "Collega prima il tuo account Discord.",
+    "notEligible": "Questo account non può ottenere un nome utente di 1 lettera.",
+    "allClaimed": "Tutti i nomi utente di 1 lettera sono già stati presi.",
+    "letterTaken": "Qualcun altro ha appena preso quella lettera. Scegline un'altra."
   }
 }

@@ -4,8 +4,8 @@
 
 import { html, formatDate } from '../dashboard/html.js';
 import { layout } from './shell.js';
-import { textOf, translator } from './i18n.js';
-import { MIN_AGE, PASSWORD_MAX, PASSWORD_MIN, PRO_BONUS_LABEL, PRO_BONUS_LIMIT, USERNAME_MAX, USERNAME_MIN } from '../accounts/accountCore.js';
+import { hasKey, textOf, translator } from './i18n.js';
+import { MIN_AGE, PASSWORD_MAX, PASSWORD_MIN, PRO_BONUS_LIMIT, PRO_BONUS_MONTHS, USERNAME_MAX, USERNAME_MIN } from '../accounts/accountCore.js';
 import { planName } from '../billing/premiumService.js';
 
 const notices = ({ flash = null, error = null }) => html`${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}${error ? html`<p class="error" role="alert">${error}</p>` : ''}`;
@@ -20,6 +20,22 @@ function when(value) {
 // the left edge of the fields.
 function page(ctx, title, body) {
     return layout(ctx, { title, active: 'me', body: html`<div class="wrap page"><div class="account">${body}</div></div>` });
+}
+
+/** The early-account bonus length in the page's language ("6 months"). */
+export const bonusLength = ({ tp } = translator()) => tp('account.bonus.months', PRO_BONUS_MONTHS);
+
+/**
+ * A refusal from accountCore/accountStore in the page's language: a validation result
+ * ({ code, params, error }) or an AccountError ({ code, userMessage }). Known code →
+ * account.errorCodes.<code> (snake_case codes become camelCase keys); otherwise the English text.
+ * Params are the module's own limits (numbers), never what the visitor typed.
+ */
+export function accountErrorText(error, { t } = translator()) {
+    const english = error?.userMessage ?? error?.error ?? '';
+    const code = typeof error?.code === 'string' ? error.code.replace(/_([a-z])/g, (_, c) => c.toUpperCase()) : '';
+    const key = `account.errorCodes.${code}`;
+    return /^[a-zA-Z]+$/.test(code) && hasKey('en', key) ? t(key, error.params || {}) : english;
 }
 
 const field = (id, label, input, hint = '') => html`<div class="form-field"><label for="${id}">${label}</label>${input}${hint ? html`<p class="form-hint" id="${id}-hint">${hint}</p>` : ''}</div>`;
@@ -91,11 +107,12 @@ export function doneLoginPage(ctx, title, message) {
 }
 
 export function linkDiscordPage(ctx, { session, account, flash = null, error = null }) {
-    const { t, ti } = textOf(ctx);
+    const text = textOf(ctx);
+    const { t, ti } = text;
     const twoStep = Boolean(account.totp_enabled_at);
     return page(ctx, t('account.link.title'), html`<h1>${t('account.link.heading')}</h1>
 ${notices({ flash, error })}
-<p class="lead">${ti('account.link.lead', { username: account.username, bonus: PRO_BONUS_LABEL })}</p>
+<p class="lead">${ti('account.link.lead', { username: account.username, bonus: bonusLength(text) })}</p>
 <div class="form-actions"><form method="post" action="/me/link">${csrfField(session.csrf)}<button class="button" type="submit">${t('account.link.submit')}</button></form>
 <form method="post" action="/me/logout">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">${t('account.common.logOut')}</button></form></div>
 <p class="note account-foot">${t('account.link.foot')}</p>
@@ -152,22 +169,24 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const PLAN_SOURCES = new Set(['bonus', 'purchase', 'key', 'owner']);
 
 /** "183 days left" / "1 day left" / "Ends today" (less than a day). Pure. */
-export function daysLeftText(expiresAt, now = Date.now(), { t } = translator()) {
+export function daysLeftText(expiresAt, now = Date.now(), { t, tp } = translator()) {
     const days = Math.floor((new Date(expiresAt).getTime() - now) / DAY_MS);
     if (days < 1) return t('account.plan.endsToday');
-    return t(days === 1 ? 'account.plan.dayLeft' : 'account.plan.daysLeft', { days });
+    return tp('account.plan.daysLeft', days);
 }
 
 /**
  * The early-account bonus line for Account settings, or null when this Discord account has no
  * bonus record. bonus: a member_account_bonuses row. Pure.
  */
-export function bonusStatusText(bonus, { t, ti } = translator()) {
+export function bonusStatusText(bonus, text = translator()) {
+    const { t, ti, tp } = text;
     if (!bonus) return null;
     const n = bonus.link_number;
-    if (bonus.pro_granted_at) return ti('account.bonus.granted', { n, bonus: PRO_BONUS_LABEL, date: when(bonus.pro_granted_at) });
-    if (bonus.pro_skip_reason) return t('account.bonus.skipped', { n, bonus: PRO_BONUS_LABEL, reason: bonus.pro_skip_reason });
-    if (Number(bonus.link_number) > PRO_BONUS_LIMIT) return t('account.bonus.tooLate', { n, limit: PRO_BONUS_LIMIT });
+    if (bonus.pro_granted_at) return ti('account.bonus.granted', { n, bonus: bonusLength(text), date: when(bonus.pro_granted_at) });
+    // pro_skip_reason is stored text (English, from the premium store).
+    if (bonus.pro_skip_reason) return t('account.bonus.skipped', { n, bonus: bonusLength(text), reason: bonus.pro_skip_reason });
+    if (Number(bonus.link_number) > PRO_BONUS_LIMIT) return tp('account.bonus.tooLate', PRO_BONUS_LIMIT, { n });
     return t('account.bonus.none', { n });
 }
 

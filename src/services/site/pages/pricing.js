@@ -38,9 +38,9 @@ function planActions(ctx, plan) {
  * and the button. The home page shows the compact cards in one row.
  */
 export function planCard(ctx, plan, { compact = false } = {}) {
-    const { t } = textOf(ctx);
+    const { t, tp } = textOf(ctx);
     const year = plan.monthlyCents
-        ? html`<p class="plan-card-year">${t('pricing.card.yearly', { price: euros(yearlyCents(plan)), months: FREE_MONTHS })}</p>`
+        ? html`<p class="plan-card-year">${tp('pricing.card.yearly', FREE_MONTHS, { price: euros(yearlyCents(plan)) })}</p>`
         : html`<p class="plan-card-year">${t('pricing.card.freeForGood')}</p>`;
     return html`<li class="plan-card${plan.featured ? ' is-featured' : ''}"><h3 class="plan-card-name">${plan.name}</h3>
 <p class="plan-card-price"><span class="plan-card-amount">${plan.monthlyCents ? euros(plan.monthlyCents) : '€0'}</span><span class="plan-card-per">${t('pricing.card.perMonth')}</span></p>${year}

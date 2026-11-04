@@ -72,5 +72,22 @@
   },
   "error": {
     "text": "No se ha podido cargar el informe en este momento porque la base de datos no responde. Preferimos no mostrar cifras a mostrar cifras incorrectas; vuelve a intentarlo en unos minutos."
+  },
+  "mask": {
+    "fewer": "menos de {n}",
+    "atLeast": "al menos {n}"
+  },
+  "median": {
+    "underHour": "menos de una hora",
+    "hours": {
+      "one": "{count} hora",
+      "many": "{count} horas",
+      "other": "{count} horas"
+    },
+    "days": {
+      "one": "{count} día",
+      "many": "{count} días",
+      "other": "{count} días"
+    }
   }
 }

@@ -12,9 +12,12 @@ import { rulesPage } from '../src/services/site/pages/rules.js';
 import { transparencyErrorPage, transparencyPage } from '../src/services/site/pages/transparency.js';
 import { ladderSentence, trustErrorPage, trustPage } from '../src/services/site/pages/trust.js';
 import { aggregateReport } from '../src/services/enforcement/transparencyService.js';
+import { CAT_MOODS, CAT_STAGES, moodSentence, stageProgress } from '../src/services/community/catModel.js';
 
 const NAMESPACES = ['pages', 'rules', 'transparency', 'trust'];
 const SUPPORT = 'https://discord.gg/7Ckv9Bt577';
+
+const forms = (used, key) => { for (const c of PLURAL_CATEGORIES) if (hasKey('en', `${key}.${c}`)) used.add(`${key}.${c}`); };
 
 /** A page context whose t/ti/tb record every key they are asked for. */
 function recordingContext(used, extra = {}) {
@@ -22,7 +25,9 @@ function recordingContext(used, extra = {}) {
     const wrap = (fn) => (key, params) => { used.add(key); return fn(key, params); };
     return {
         publicSite: false, dashboardEnabled: true, installUrl: null, origin: null, supportInvite: SUPPORT, commands: null,
-        transparency: false, trustCard: true, ...extra, lang: 'en', t: wrap(en.t), ti: wrap(en.ti), tb: wrap(en.tb), tp: (key, count, params) => { for (const c of PLURAL_CATEGORIES) if (hasKey('en', `${key}.${c}`)) used.add(`${key}.${c}`); return en.tp(key, count, params); },
+        transparency: false, trustCard: true, ...extra, lang: 'en', t: wrap(en.t), ti: wrap(en.ti), tb: wrap(en.tb),
+        tp: (key, count, params) => { forms(used, key); return en.tp(key, count, params); },
+        tpi: (key, count, params) => { forms(used, key); return en.tpi(key, count, params); },
     };
 }
 
@@ -55,6 +60,10 @@ function renderEverything(used) {
         leaderboardPage(ctx(), { page: 3, board: { enabled: true, rows: [] } }),
         leaderboardPage(ctx(), { page: 2, board: { enabled: true, rows: [row(51, 'Ann'), row(52, null), ...Array.from({ length: 50 }, (_, i) => row(53 + i, 'x'))] }, cat: CAT }),
         catCard({ ...CAT, progress: { fraction: 1, toNext: 0, next: null } }, ctx()),
+        // Every stage and mood the cat model has, as getServerCat builds them.
+        ...CAT_STAGES.flatMap((stage, i) => CAT_MOODS.map((mood) => catCard({
+            name: 'Mochi', stage, mood, sentence: moodSentence('Mochi', mood), total: stage.min, progress: stageProgress(stage.min, i), image: `${stage.key}-${mood}.png`,
+        }, ctx()))),
     );
     out.push(
         rulesPage(ctx(), null),
@@ -68,7 +77,15 @@ function renderEverything(used) {
             { month: null, is_total: true, received: 2, accepted: 1, denied: 0, open: 1, decided: 1, median_hours: 0.5 },
         ],
     }, new Date('2026-10-29T13:00:00Z'));
-    out.push(transparencyPage(ctx({ transparency: true }), report), transparencyErrorPage(ctx()));
+    // A masked month under a shown total ("at least"), medians under an hour and in days.
+    const report2 = aggregateReport({
+        caseRows: [{ month: '2026-05', warns: 12, mutes: 1, kicks: 2, bans: 5, ladder_bans: 2, automod: 6, voided: 1 }, { month: '2026-06', warns: 4, mutes: 3, kicks: 0, bans: 0, ladder_bans: 0, automod: 0, voided: 0 }],
+        appealRows: [
+            { month: '2026-09', is_total: false, received: 5, accepted: 3, denied: 2, open: 0, decided: 5, median_hours: 0.5 },
+            { month: null, is_total: true, received: 5, accepted: 3, denied: 2, open: 0, decided: 5, median_hours: 100 },
+        ],
+    }, new Date('2026-10-29T13:00:00Z'));
+    out.push(transparencyPage(ctx({ transparency: true }), report), transparencyPage(ctx({ transparency: true }), report2), transparencyErrorPage(ctx()));
     const card = {
         days: 90, since: new Date('2026-08-03T12:00:00Z'), generatedAt: new Date('2026-11-01T12:00:00Z'), serverName: 'Mewvo', memberCount: 200,
         appeals: { received: 9, accepted: 4, denied: 2, answered: 7, decided: 6, medianFirstHours: 5.2, medianDecisionHours: 30.4 }, cases: 14, flagged: 6, headsUp: { fixed: 8, acted: 2 },
@@ -78,6 +95,7 @@ function renderEverything(used) {
     out.push(
         trustPage(ctx(), card, { cat, rules: { rules: [{ number: 1, title: 'No spam' }] } }),
         trustPage(ctx({ transparency: true }), small, { cat: null, rules: { rules: [] } }),
+        trustPage(ctx(), { ...card, days: 1 }, {}),
         trustErrorPage(ctx()),
     );
     for (let warns = 0; warns <= 11; warns += 1) out.push(ladderSentence({ warnsPerLevel: warns, ladderBans: { 1: 86_400_000 } }, ctx()));

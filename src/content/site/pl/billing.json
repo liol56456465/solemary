@@ -22,7 +22,6 @@
     "planLine": "Mewvo {plan}",
     "planPeriod": "Mewvo {plan} · {period}",
     "planWithPeriod": "{plan} · {period}",
-    "days": "Liczba dni: {count}",
     "test": "Test",
     "day": {
       "one": "{count} dzień",
@@ -78,7 +77,12 @@
     "pricePerMonth": "{price}/miesiąc",
     "pricePerYear": "{price}/rok",
     "billingLabel": "Okres rozliczeniowy",
-    "monthsFree": "Miesiące gratis: {months}",
+    "monthsFree": {
+      "one": "{count} miesiąc gratis",
+      "few": "{count} miesiące gratis",
+      "many": "{count} miesięcy gratis",
+      "other": "{count} miesiąca gratis"
+    },
     "forLabel": "Dla kogo",
     "forMe": "Dla mnie",
     "forMeSub": "zaczyna działać na twoim koncie od razu",
@@ -115,8 +119,18 @@
     "whatYouGetGift": "Mewvo {plan} (lista powyżej) jako klucz, który możesz komuś dać",
     "whatYouGetPersonal": "Mewvo {plan} (lista powyżej) na twoim koncie Discord",
     "duration": "Czas trwania",
-    "durationGift": "{days} dni od aktywacji klucza; bez automatycznego odnowienia",
-    "durationPersonal": "{days} dni od złożenia zamówienia; bez automatycznego odnowienia",
+    "durationGift": {
+      "one": "{count} dzień od aktywacji klucza; bez automatycznego odnowienia",
+      "few": "{count} dni od aktywacji klucza; bez automatycznego odnowienia",
+      "many": "{count} dni od aktywacji klucza; bez automatycznego odnowienia",
+      "other": "{count} dnia od aktywacji klucza; bez automatycznego odnowienia"
+    },
+    "durationPersonal": {
+      "one": "{count} dzień od złożenia zamówienia; bez automatycznego odnowienia",
+      "few": "{count} dni od złożenia zamówienia; bez automatycznego odnowienia",
+      "many": "{count} dni od złożenia zamówienia; bez automatycznego odnowienia",
+      "other": "{count} dnia od złożenia zamówienia; bez automatycznego odnowienia"
+    },
     "totalPrice": "Cena łączna",
     "totalPriceValue": "{amount}. {vat}",
     "withdrawal": "Odstąpienie od umowy",
@@ -171,8 +185,18 @@
     "title": "Zamówienie nr {id}",
     "headingGift": "Twój klucz podarunkowy jest gotowy",
     "heading": "Dziękujemy, twój plan jest aktywny",
-    "giftKey": "Klucz podarunkowy · {plan}, {days} dni",
-    "giftKeyTo": "Klucz podarunkowy · {plan}, {days} dni · dla: {name}",
+    "giftKey": {
+      "one": "Klucz podarunkowy · {plan}, {count} dzień",
+      "few": "Klucz podarunkowy · {plan}, {count} dni",
+      "many": "Klucz podarunkowy · {plan}, {count} dni",
+      "other": "Klucz podarunkowy · {plan}, {count} dnia"
+    },
+    "giftKeyTo": {
+      "one": "Klucz podarunkowy · {plan}, {count} dzień · dla: {name}",
+      "few": "Klucz podarunkowy · {plan}, {count} dni · dla: {name}",
+      "many": "Klucz podarunkowy · {plan}, {count} dni · dla: {name}",
+      "other": "Klucz podarunkowy · {plan}, {count} dnia · dla: {name}"
+    },
     "giveAway": "Daj ten klucz komukolwiek. Odbiorca loguje się na tej stronie i aktywuje go w sekcji Subskrypcja → Aktywuj klucz albo na Discordzie komendą `/premium redeem`.",
     "redeemBy": "Aktywuj do {date}.",
     "status": "Status: {status}.",
@@ -190,7 +214,12 @@
     "confirmed": "Potwierdziłeś",
     "confirmedMeta": "{date} · {version} · Regulamin z {terms}",
     "withdrawal": "Odstąpienie od umowy",
-    "periodEnded": "Okres (liczba dni: {days}) minął. [Prawo odstąpienia od umowy](/withdrawal)",
+    "periodEnded": {
+      "one": "Okres {count} dnia minął. [Prawo odstąpienia od umowy](/withdrawal)",
+      "few": "Okres {count} dni minął. [Prawo odstąpienia od umowy](/withdrawal)",
+      "many": "Okres {count} dni minął. [Prawo odstąpienia od umowy](/withdrawal)",
+      "other": "Okres {count} dnia minął. [Prawo odstąpienia od umowy](/withdrawal)"
+    },
     "giftWithdrawal": "W przypadku prezentu prawo odstąpienia od umowy przysługuje tobie jako kupującemu.",
     "dmNote": "To potwierdzenie wysyłamy ci też jako wiadomość prywatną na Discordzie (jeśli masz otwarte wiadomości prywatne od bota). Zachowaj je w swojej dokumentacji."
   },
@@ -215,7 +244,12 @@
   "withdrawList": {
     "title": "Odstąpienie od umowy",
     "heading": "Odstąp od umowy tutaj",
-    "lead": "Zalogowano jako **{username}**. Wybierz zamówienie, od którego chcesz odstąpić. Możesz odstąpić od umowy w ciągu {days} dni od zamówienia, bez podawania przyczyny.",
+    "lead": {
+      "one": "Zalogowano jako **{username}**. Wybierz zamówienie, od którego chcesz odstąpić. Możesz odstąpić od umowy w ciągu {count} dnia od zamówienia, bez podawania przyczyny.",
+      "few": "Zalogowano jako **{username}**. Wybierz zamówienie, od którego chcesz odstąpić. Możesz odstąpić od umowy w ciągu {count} dni od zamówienia, bez podawania przyczyny.",
+      "many": "Zalogowano jako **{username}**. Wybierz zamówienie, od którego chcesz odstąpić. Możesz odstąpić od umowy w ciągu {count} dni od zamówienia, bez podawania przyczyny.",
+      "other": "Zalogowano jako **{username}**. Wybierz zamówienie, od którego chcesz odstąpić. Możesz odstąpić od umowy w ciągu {count} dnia od zamówienia, bez podawania przyczyny."
+    },
     "item": "**Zamówienie {order}**: {line}, {amount}, zamówiono {date}.",
     "button": "Odstąp od umowy tutaj",
     "none": "Na tym koncie nie ma zamówienia, dla którego trwa jeszcze okres na odstąpienie (liczba dni: {days}).",
@@ -276,5 +310,38 @@
   "planButtons": {
     "buy": "Kup {plan}",
     "gift": "Podaruj"
+  },
+  "errorCodes": {
+    "choosePlan": "Wybierz płatny plan (Normal, Pro lub Max).",
+    "choosePeriod": "Wybierz płatność miesięczną lub roczną.",
+    "chooseKind": "Wybierz, czy to dla ciebie, czy na prezent.",
+    "lowerPlan": "Masz już {current} do {until}, a to więcej niż {plan}. Klucza lub zakupu {plan} można użyć po jego zakończeniu; nic nie zostało zmienione.",
+    "durationMin": "Okres musi wynosić co najmniej jeden dzień.",
+    "giftToLong": "Pole „Dla” może mieć maksymalnie {max} znaków.",
+    "giftMessageLong": "Wiadomość może mieć maksymalnie {max} znaków.",
+    "consentMissing": "Zaznacz pola, aby potwierdzić: {items}. Nic nie zostało zamówione.",
+    "consentItems": {
+      "start": "chcesz, aby plan zaczął działać teraz",
+      "startGift": "chcesz otrzymać klucz teraz",
+      "terms": "akceptujesz Regulamin",
+      "age": "masz ukończone 18 lat albo masz zgodę"
+    },
+    "notWithdrawable": "Od tego zamówienia nie można odstąpić online. Skontaktuj się z nami.",
+    "logInFirst": "Najpierw się zaloguj.",
+    "notAKey": "To nie jest klucz Mewvo. Klucze wyglądają tak: MEWVO-ABCD-EFGH-JKMN.",
+    "keyMissing": "Taki klucz nie istnieje. Sprawdź, czy nie ma literówek.",
+    "keyRevoked": "Ten klucz został anulowany i nie można go użyć.",
+    "keyUsed": "Ten klucz został już użyty.",
+    "keyExpired": "Ten klucz wygasł {date}.",
+    "noSuchOrder": "Na twoim koncie nie ma takiego zamówienia.",
+    "enterName": "Podaj swoje imię i nazwisko.",
+    "nameLong": "Imię i nazwisko może mieć maksymalnie {max} znaków.",
+    "alreadyWithdrawn": "Już odstąpiono od tego zamówienia.",
+    "withdrawalEnded": {
+      "one": "Okres {count} dnia na odstąpienie od tego zamówienia zakończył się {date}.",
+      "few": "Okres {count} dni na odstąpienie od tego zamówienia zakończył się {date}.",
+      "many": "Okres {count} dni na odstąpienie od tego zamówienia zakończył się {date}.",
+      "other": "Okres {count} dnia na odstąpienie od tego zamówienia zakończył się {date}."
+    }
   }
 }

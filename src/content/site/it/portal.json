@@ -17,7 +17,11 @@
     "unappealable": "Ricorso non possibile",
     "ended": "Terminato: niente contro cui fare ricorso",
     "deadlinePassed": "Il periodo per fare ricorso è chiuso",
-    "windowClosed": "Il periodo per fare ricorso ({days} giorni) è chiuso",
+    "windowClosed": {
+      "one": "Il periodo per fare ricorso ({count} giorno) è chiuso",
+      "many": "Il periodo per fare ricorso ({count} giorni) è chiuso",
+      "other": "Il periodo per fare ricorso ({count} giorni) è chiuso"
+    },
     "pending": "Ricorso in attesa",
     "deniedRetry": "Ricorso respinto; puoi fare di nuovo ricorso dal",
     "appealable": "Ricorso possibile",
@@ -29,7 +33,16 @@
     "voided": "annullato: non conta più",
     "counts": "conta ora",
     "noLongerCounts": "registrato, non conta più",
-    "onRecord": "registrato"
+    "onRecord": "registrato",
+    "case": {
+      "liftedByAppeal": "revocato con ricorso",
+      "reversed": "annullato da un moderatore",
+      "lifted": "revocato",
+      "appealPending": "ricorso in attesa",
+      "expired": "scaduto",
+      "activeAppealDenied": "attivo, ricorso respinto",
+      "active": "attivo"
+    }
   },
   "login": {
     "lead": "Vedi il tuo storico di moderazione in {server}: i tuoi avvertimenti, il livello nella scala degli avvertimenti, eventuali ban o silenziamenti attivi, i tuoi casi e i tuoi ricorsi.",
@@ -70,7 +83,11 @@
       "decided": "Deciso"
     },
     "permanent": "permanente",
-    "truncated": "Vengono mostrati i tuoi {count} casi più recenti.",
+    "truncated": {
+      "one": "Viene mostrato il tuo caso più recente.",
+      "many": "Vengono mostrati i tuoi {count} casi più recenti.",
+      "other": "Vengono mostrati i tuoi {count} casi più recenti."
+    },
     "noCases": "Non hai casi in {server}.",
     "noAppeals": "Non hai presentato nessun ricorso.",
     "appealHintInvite": "Fai ricorso dal pannello dei ricorsi su Discord: [entra nel server di supporto]({invite}) e premi **Appeal** con il codice caso. Da questa pagina non puoi fare ricorso.",
@@ -140,5 +157,39 @@
   },
   "viewer": {
     "fallbackName": "Account"
+  },
+  "next": {
+    "warning": "Sarebbe l'avvertimento {number} su {threshold}.",
+    "afterOne": "Quello successivo porterebbe a un ban automatico ({ban}).",
+    "afterMore": {
+      "one": "Ancora {count} dopo questo porterebbe a un ban automatico ({ban}).",
+      "many": "Ancora {count} dopo questo porterebbero a un ban automatico ({ban}).",
+      "other": "Ancora {count} dopo questo porterebbero a un ban automatico ({ban})."
+    },
+    "limit": "Raggiungeresti il limite di avvertimenti: un ban automatico ({ban}, livello {level} della scala).",
+    "permanent": "permanente"
+  },
+  "duration": {
+    "month": {
+      "one": "{count} mese",
+      "many": "{count} mesi",
+      "other": "{count} mesi"
+    },
+    "day": {
+      "one": "{count} giorno",
+      "many": "{count} giorni",
+      "other": "{count} giorni"
+    },
+    "hour": {
+      "one": "{count} ora",
+      "many": "{count} ore",
+      "other": "{count} ore"
+    },
+    "minute": {
+      "one": "{count} minuto",
+      "many": "{count} minuti",
+      "other": "{count} minuti"
+    },
+    "lessThanMinute": "meno di un minuto"
   }
 }

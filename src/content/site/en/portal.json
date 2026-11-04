@@ -17,7 +17,10 @@
     "unappealable": "Cannot be appealed",
     "ended": "Ended: nothing to appeal",
     "deadlinePassed": "The appeal window has closed",
-    "windowClosed": "The appeal window ({days} days) has closed",
+    "windowClosed": {
+      "one": "The appeal window ({count} day) has closed",
+      "other": "The appeal window ({count} days) has closed"
+    },
     "pending": "Appeal pending",
     "deniedRetry": "Appeal denied; you can appeal again from",
     "appealable": "Can be appealed",
@@ -29,7 +32,16 @@
     "voided": "voided: no longer counts",
     "counts": "counts now",
     "noLongerCounts": "on record, no longer counts",
-    "onRecord": "on record"
+    "onRecord": "on record",
+    "case": {
+      "liftedByAppeal": "lifted by appeal",
+      "reversed": "reversed by a moderator",
+      "lifted": "lifted",
+      "appealPending": "appeal pending",
+      "expired": "expired",
+      "activeAppealDenied": "active, appeal denied",
+      "active": "active"
+    }
   },
   "login": {
     "lead": "See your own moderation record in {server}: your warnings, warning-ladder level, any active ban or mute, your cases and your appeals.",
@@ -70,7 +82,10 @@
       "decided": "Decided"
     },
     "permanent": "permanent",
-    "truncated": "Showing your newest {count} cases.",
+    "truncated": {
+      "one": "Showing your newest {count} case.",
+      "other": "Showing your newest {count} cases."
+    },
     "noCases": "You have no cases in {server}.",
     "noAppeals": "You have not filed any appeals.",
     "appealHintInvite": "Appeal from the appeal panel in Discord: [join the support server]({invite}) and press **Appeal** with the case code. Nothing can be appealed from this page.",
@@ -98,5 +113,34 @@
   },
   "viewer": {
     "fallbackName": "Account"
+  },
+  "next": {
+    "warning": "It would be warning {number} of {threshold}.",
+    "afterOne": "The one after it would mean an automatic ban ({ban}).",
+    "afterMore": {
+      "one": "{count} more after it would mean an automatic ban ({ban}).",
+      "other": "{count} more after it would mean an automatic ban ({ban})."
+    },
+    "limit": "It would reach the warning limit: an automatic ban ({ban}, ladder level {level}).",
+    "permanent": "permanent"
+  },
+  "duration": {
+    "month": {
+      "one": "{count} month",
+      "other": "{count} months"
+    },
+    "day": {
+      "one": "{count} day",
+      "other": "{count} days"
+    },
+    "hour": {
+      "one": "{count} hour",
+      "other": "{count} hours"
+    },
+    "minute": {
+      "one": "{count} minute",
+      "other": "{count} minutes"
+    },
+    "lessThanMinute": "less than a minute"
   }
 }

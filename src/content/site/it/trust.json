@@ -1,9 +1,17 @@
 {
   "title": "Scheda di fiducia di {server}",
-  "description": "Come viene moderato {server}: tempi dei ricorsi, esiti dei ricorsi e membri in regola negli ultimi {days} giorni. Solo numeri.",
+  "description": {
+    "one": "Come viene moderato {server}: tempi dei ricorsi, esiti dei ricorsi e membri in regola nell'ultimo {count} giorno. Solo numeri.",
+    "many": "Come viene moderato {server}: tempi dei ricorsi, esiti dei ricorsi e membri in regola negli ultimi {count} giorni. Solo numeri.",
+    "other": "Come viene moderato {server}: tempi dei ricorsi, esiti dei ricorsi e membri in regola negli ultimi {count} giorni. Solo numeri."
+  },
   "head": {
     "heading": "{server}: scheda di fiducia",
-    "lead": "Come è stato moderato questo server negli ultimi {days} giorni. Solo numeri: niente nomi, niente motivi, niente moderatori."
+    "lead": {
+      "one": "Come è stato moderato questo server nell'ultimo {count} giorno. Solo numeri: niente nomi, niente motivi, niente moderatori.",
+      "many": "Come è stato moderato questo server negli ultimi {count} giorni. Solo numeri: niente nomi, niente motivi, niente moderatori.",
+      "other": "Come è stato moderato questo server negli ultimi {count} giorni. Solo numeri: niente nomi, niente motivi, niente moderatori."
+    }
   },
   "noData": "Dati ancora insufficienti",
   "tiles": {
@@ -40,7 +48,11 @@
     "single": "Gli avvertimenti si sommano: il {nth} avvertimento comporta {first}.",
     "escalating": "Gli avvertimenti si sommano: il {nth} avvertimento comporta {first}, e ogni avvertimento dopo quel ban ne comporta uno più lungo ({later}).",
     "then": "{earlier}, poi {next}",
-    "banDays": "un ban di {days} giorni",
+    "banDays": {
+      "one": "un ban di {count} giorno",
+      "many": "un ban di {count} giorni",
+      "other": "un ban di {count} giorni"
+    },
     "banPermanent": "un ban permanente",
     "ordinals": {
       "0": "zeresimo",
@@ -58,7 +70,7 @@
     "ordinalOther": "{n}º"
   },
   "cat": {
-    "alt": "{name}, il gatto del server ({stage}), umore: {mood}",
+    "alt": "{name}, il gatto del server ({stage}), con l'aria {mood}",
     "caption": "Il gatto del server",
     "shareAlt": "{name}, il gatto del server"
   },
@@ -68,8 +80,16 @@
     "readAll": "Leggi tutte le regole"
   },
   "foot": {
-    "period": "Ultimi {days} giorni, dal {from} al {to}. I numeri piccoli sono nascosti.",
-    "periodWithReport": "Ultimi {days} giorni, dal {from} al {to}. I numeri piccoli sono nascosti. Numeri mensili completi: [Rapporto sulla trasparenza](/transparency)."
+    "period": {
+      "one": "Ultimo {count} giorno, dal {from} al {to}. I numeri piccoli sono nascosti.",
+      "many": "Ultimi {count} giorni, dal {from} al {to}. I numeri piccoli sono nascosti.",
+      "other": "Ultimi {count} giorni, dal {from} al {to}. I numeri piccoli sono nascosti."
+    },
+    "periodWithReport": {
+      "one": "Ultimo {count} giorno, dal {from} al {to}. I numeri piccoli sono nascosti. Numeri mensili completi: [Rapporto sulla trasparenza](/transparency).",
+      "many": "Ultimi {count} giorni, dal {from} al {to}. I numeri piccoli sono nascosti. Numeri mensili completi: [Rapporto sulla trasparenza](/transparency).",
+      "other": "Ultimi {count} giorni, dal {from} al {to}. I numeri piccoli sono nascosti. Numeri mensili completi: [Rapporto sulla trasparenza](/transparency)."
+    }
   },
   "error": {
     "title": "Scheda di fiducia",

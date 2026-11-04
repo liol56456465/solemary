@@ -128,12 +128,46 @@
   },
   "cat": {
     "label": "Kot serwera",
-    "alt": "{name}, {stage}, nastrój: {mood}",
+    "alt": "{name}, {stage}, wygląda na {mood}",
     "stageLine": "{stage}. {sentence}",
     "progressLabel": "Wzrost do etapu {next}",
     "percent": "{pct}%",
     "progress": "Policzone wiadomości: {total}. Do etapu {next} brakuje: {toNext}.",
-    "grown": "Policzone wiadomości: {total}. W pełni dorosły."
+    "grown": "Policzone wiadomości: {total}. W pełni dorosły.",
+    "stages": {
+      "kitten": {
+        "name": "Kociak",
+        "inText": "kociak"
+      },
+      "young": {
+        "name": "Młody kot",
+        "inText": "młody kot"
+      },
+      "cat": {
+        "name": "Kot",
+        "inText": "kot"
+      },
+      "big": {
+        "name": "Duży kot",
+        "inText": "duży kot"
+      },
+      "legend": {
+        "name": "Legenda",
+        "inText": "legenda"
+      }
+    },
+    "moods": {
+      "scared": "przestraszonego",
+      "proud": "dumnego",
+      "happy": "szczęśliwego",
+      "sleepy": "śpiącego"
+    },
+    "sentences": {
+      "scared": "{name} się boi: serwer jest zablokowany z powodu rajdu.",
+      "proud": "{name} jest dumny: dziś wszedł na kolejny etap.",
+      "happy": "{name} jest szczęśliwy: w tym tygodniu na serwerze było więcej ruchu.",
+      "sleepy": "{name} jest śpiący: w tym tygodniu na serwerze było spokojniej."
+    }
   },
   "errors": {
     "notFound": {

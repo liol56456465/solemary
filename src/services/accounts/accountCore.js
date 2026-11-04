@@ -18,7 +18,10 @@ export const RESERVED_USERNAMES = new Set(['admin', 'mewvo', 'support', 'staff',
 export const LETTERS = 'abcdefghijklmnopqrstuvwxyz0123456789'.split('');
 
 export class AccountError extends Error {
-    /** userMessage: plain text that is safe to show on the page. */
+    /**
+     * userMessage: plain English text that is safe to show (logs, other callers). code: a stable
+     * id; the website shows account.errorCodes.<code> in the page's language when it has one.
+     */
     constructor(userMessage, status = 400, code = 'invalid') {
         super(userMessage);
         this.name = 'AccountError';
@@ -34,11 +37,11 @@ export class AccountError extends Error {
 export function validateUsername(input) {
     const value = String(input ?? '').trim().toLowerCase();
     if (value.length < USERNAME_MIN || value.length > USERNAME_MAX) {
-        return { ok: false, error: `The username must be ${USERNAME_MIN} to ${USERNAME_MAX} characters long.` };
+        return { ok: false, code: 'usernameLength', params: { min: USERNAME_MIN, max: USERNAME_MAX }, error: `The username must be ${USERNAME_MIN} to ${USERNAME_MAX} characters long.` };
     }
-    if (!/^[a-z0-9_]+$/.test(value)) return { ok: false, error: 'The username can only use letters (a-z), numbers and underscores.' };
-    if (/^_+$/.test(value)) return { ok: false, error: 'The username needs at least one letter or number.' };
-    if (RESERVED_USERNAMES.has(value)) return { ok: false, error: 'That username is reserved. Choose another one.' };
+    if (!/^[a-z0-9_]+$/.test(value)) return { ok: false, code: 'usernameChars', error: 'The username can only use letters (a-z), numbers and underscores.' };
+    if (/^_+$/.test(value)) return { ok: false, code: 'usernameNoLetter', error: 'The username needs at least one letter or number.' };
+    if (RESERVED_USERNAMES.has(value)) return { ok: false, code: 'usernameReserved', error: 'That username is reserved. Choose another one.' };
     return { ok: true, value };
 }
 
@@ -51,8 +54,8 @@ export function normalizeLetter(input) {
 /** A new password: { ok, error }. Length only (10-200); the text itself is never changed. */
 export function validatePassword(input) {
     const value = typeof input === 'string' ? input : '';
-    if (value.length < PASSWORD_MIN) return { ok: false, error: `The password must be at least ${PASSWORD_MIN} characters long.` };
-    if (value.length > PASSWORD_MAX) return { ok: false, error: `The password can be at most ${PASSWORD_MAX} characters long.` };
+    if (value.length < PASSWORD_MIN) return { ok: false, code: 'passwordShort', params: { min: PASSWORD_MIN }, error: `The password must be at least ${PASSWORD_MIN} characters long.` };
+    if (value.length > PASSWORD_MAX) return { ok: false, code: 'passwordLong', params: { max: PASSWORD_MAX }, error: `The password can be at most ${PASSWORD_MAX} characters long.` };
     return { ok: true, value };
 }
 
@@ -62,17 +65,17 @@ export function validatePassword(input) {
  */
 export function checkAge(input, now = new Date()) {
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(input ?? '').trim());
-    if (!match) return { ok: false, error: 'Enter your date of birth.' };
+    if (!match) return { ok: false, code: 'birthMissing', error: 'Enter your date of birth.' };
     const [year, month, day] = match.slice(1).map(Number);
     const date = new Date(Date.UTC(year, month - 1, day));
     if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
-        return { ok: false, error: 'Enter a real date of birth.' };
+        return { ok: false, code: 'birthInvalid', error: 'Enter a real date of birth.' };
     }
     const today = { y: now.getUTCFullYear(), m: now.getUTCMonth() + 1, d: now.getUTCDate() };
-    if (year < today.y - 130 || date.getTime() > now.getTime()) return { ok: false, error: 'Enter a real date of birth.' };
+    if (year < today.y - 130 || date.getTime() > now.getTime()) return { ok: false, code: 'birthInvalid', error: 'Enter a real date of birth.' };
     let age = today.y - year;
     if (today.m < month || (today.m === month && today.d < day)) age -= 1;
-    if (age < MIN_AGE) return { ok: false, error: `You must be at least ${MIN_AGE} years old to create an account.` };
+    if (age < MIN_AGE) return { ok: false, code: 'tooYoung', params: { age: MIN_AGE }, error: `You must be at least ${MIN_AGE} years old to create an account.` };
     return { ok: true };
 }
 
@@ -285,8 +288,10 @@ export const PRO_BONUS_LIMIT = 100;
  * calendar months, so 6 months is 183 days.
  */
 export const PRO_BONUS_DAYS = 183;
-/** How the bonus length reads on the pages. */
-export const PRO_BONUS_LABEL = '6 months';
+/** The bonus length in months, for the pages (the website writes it with the plural key account.bonus.months). */
+export const PRO_BONUS_MONTHS = 6;
+/** How the bonus length reads in English (logs, other callers). */
+export const PRO_BONUS_LABEL = `${PRO_BONUS_MONTHS} months`;
 export const PRO_BONUS_PLAN = 'pro';
 
 /** What the n-th Discord account to link gets: { pro, letter }. Pure. */

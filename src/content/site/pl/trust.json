@@ -1,9 +1,19 @@
 {
   "title": "Karta zaufania: {server}",
-  "description": "Jak moderowany jest {server}: czas odpowiedzi na odwołania, ich wyniki i członkowie bez naruszeń w ostatnim okresie (liczba dni: {days}). Same liczby.",
+  "description": {
+    "one": "Jak moderowany jest {server}: czas odpowiedzi na odwołania, ich wyniki i członkowie bez naruszeń w ostatnim {count} dniu. Same liczby.",
+    "few": "Jak moderowany jest {server}: czas odpowiedzi na odwołania, ich wyniki i członkowie bez naruszeń w ostatnich {count} dniach. Same liczby.",
+    "many": "Jak moderowany jest {server}: czas odpowiedzi na odwołania, ich wyniki i członkowie bez naruszeń w ostatnich {count} dniach. Same liczby.",
+    "other": "Jak moderowany jest {server}: czas odpowiedzi na odwołania, ich wyniki i członkowie bez naruszeń w ostatnich {count} dnia. Same liczby."
+  },
   "head": {
     "heading": "{server}: karta zaufania",
-    "lead": "Jak moderowano ten serwer w ostatnim okresie (liczba dni: {days}). Same liczby: bez nazw, powodów i moderatorów."
+    "lead": {
+      "one": "Jak moderowano ten serwer w ostatnim {count} dniu. Same liczby: bez nazw, powodów i moderatorów.",
+      "few": "Jak moderowano ten serwer w ostatnich {count} dniach. Same liczby: bez nazw, powodów i moderatorów.",
+      "many": "Jak moderowano ten serwer w ostatnich {count} dniach. Same liczby: bez nazw, powodów i moderatorów.",
+      "other": "Jak moderowano ten serwer w ostatnich {count} dnia. Same liczby: bez nazw, powodów i moderatorów."
+    }
   },
   "noData": "Na razie za mało danych",
   "tiles": {
@@ -40,7 +50,12 @@
     "single": "Ostrzeżenia się sumują: {nth} ostrzeżenie oznacza {first}.",
     "escalating": "Ostrzeżenia się sumują: {nth} ostrzeżenie oznacza {first}, a każde ostrzeżenie po tym banie oznacza dłuższy ban ({later}).",
     "then": "{earlier}, potem {next}",
-    "banDays": "ban na {days} dni",
+    "banDays": {
+      "one": "ban na {count} dzień",
+      "few": "ban na {count} dni",
+      "many": "ban na {count} dni",
+      "other": "ban na {count} dnia"
+    },
     "banPermanent": "ban na stałe",
     "ordinals": {
       "0": "zerowe",
@@ -58,7 +73,7 @@
     "ordinalOther": "{n}."
   },
   "cat": {
-    "alt": "{name}, kot serwera, {stage}, nastrój: {mood}",
+    "alt": "{name}, kot serwera ({stage}), wygląda na {mood}",
     "caption": "Kot serwera",
     "shareAlt": "{name}, kot serwera"
   },
@@ -68,8 +83,18 @@
     "readAll": "Przeczytaj wszystkie zasady"
   },
   "foot": {
-    "period": "Ostatni okres (liczba dni: {days}), od {from} do {to}. Małe liczby są ukryte.",
-    "periodWithReport": "Ostatni okres (liczba dni: {days}), od {from} do {to}. Małe liczby są ukryte. Pełne dane miesięczne: [raport przejrzystości](/transparency)."
+    "period": {
+      "one": "Ostatni {count} dzień, od {from} do {to}. Małe liczby są ukryte.",
+      "few": "Ostatnie {count} dni, od {from} do {to}. Małe liczby są ukryte.",
+      "many": "Ostatnie {count} dni, od {from} do {to}. Małe liczby są ukryte.",
+      "other": "Ostatnie {count} dnia, od {from} do {to}. Małe liczby są ukryte."
+    },
+    "periodWithReport": {
+      "one": "Ostatni {count} dzień, od {from} do {to}. Małe liczby są ukryte. Pełne dane miesięczne: [raport przejrzystości](/transparency).",
+      "few": "Ostatnie {count} dni, od {from} do {to}. Małe liczby są ukryte. Pełne dane miesięczne: [raport przejrzystości](/transparency).",
+      "many": "Ostatnie {count} dni, od {from} do {to}. Małe liczby są ukryte. Pełne dane miesięczne: [raport przejrzystości](/transparency).",
+      "other": "Ostatnie {count} dnia, od {from} do {to}. Małe liczby są ukryte. Pełne dane miesięczne: [raport przejrzystości](/transparency)."
+    }
   },
   "error": {
     "title": "Karta zaufania",
