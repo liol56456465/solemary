@@ -131,7 +131,7 @@ test('top bar: Log in and Sign up on the website; on /me pages a logged-in membe
         for (const path of ['/', '/features', '/me', '/me/signup']) {
             const bar = topbar((await b.request(path)).body);
             assert.ok(bar.includes('<a class="button button-quiet" href="/me">Log in</a>'), `${path}: Log in`);
-            assert.ok(bar.includes('<a class="button" href="/me/signup">Sign up</a>'), `${path}: Sign up`);
+            assert.ok(bar.includes('<a class="button topbar-more" href="/me/signup">Sign up</a>'), `${path}: Sign up`);
         }
         await member(app, b);
         for (const path of ['/me', '/me/account']) {

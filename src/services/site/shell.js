@@ -165,11 +165,73 @@ function memberActions(ctx) {
     const { t } = textOf(ctx);
     const v = ctx.viewer;
     if (!v) {
-        return html`<a class="button button-quiet" href="/me">${t('shell.account.logIn')}</a>${ctx.accounts ? html`<a class="button" href="/me/signup">${t('shell.account.signUp')}</a>` : ''}`;
+        // Phones keep "Log in" (short label); "Sign up" is one tap further, on the log-in page.
+        return html`${topButton('button button-quiet', '/me', t('shell.account.logIn'), t('shell.short.logIn'))}${ctx.accounts ? html`<a class="button topbar-more" href="/me/signup">${t('shell.account.signUp')}</a>` : ''}`;
     }
     return html`<details class="account-menu"><summary class="account-chip">${LOGO}<span class="account-name">${v.name}</span></summary>
 <div class="account-pop"><a href="/me">${t('shell.links.myRecord')}</a>${v.accountId ? html`<a href="/me/account">${t('shell.account.settings')}</a>` : ''}${ctx.billing ? html`<a href="/me/billing">${t('shell.account.subscription')}</a>` : ''}
 <form method="post" action="/me/logout"><input type="hidden" name="csrf" value="${v.csrf}"><button type="submit">${t('shell.account.logOut')}</button></form></div></details>`;
+}
+
+/**
+ * A top-bar button. With a different short label (shell.short.*) both are in the link: phones show
+ * the short one (aria-hidden) and keep the full one for screen readers (site.css, .label-long).
+ */
+function topButton(className, href, label, short, extra = '') {
+    if (!short || short === label) return html`<a class="${className}" href="${href}"${raw(extra)}>${label}</a>`;
+    return html`<a class="${className}" href="${href}"${raw(extra)}><span class="label-long">${label}</span><span class="label-short" aria-hidden="true">${short}</span></a>`;
+}
+
+// Rough widths (px) of the top-bar parts from the label lengths, in a wide system font (the layout
+// checker's Linux font is one of the widest; Segoe UI, SF and Roboto are narrower). Only used to pick
+// when the menu moves to its own row; scripts/site-layout-check.js checks the result in a browser.
+const BAR = {
+    brand: 106, gap: 32, actionGap: 8, navChar: 9.8, navPad: 24, buttonChar: 9.4, buttonPad: 30,
+    chip: 140, pickerShort: 64, pickerChar: 7.4, pickerPad: 44,
+};
+const shortCode = (code) => code.slice(0, 2).toUpperCase();
+
+/**
+ * The top bar's actions (picker, Add to Discord, Dashboard, member buttons) and the class that says
+ * up to which width the menu sits on its own row below the brand: topbar-stack-1000 (one row above
+ * 1000px), topbar-stack-1180 (one row above 1180px, where the picker shows its full name) or
+ * topbar-stack-all (always two rows: long labels or many buttons). Phones (≤ 760px) always use two
+ * rows and keep the picker and one button: the member one, else Add to Discord, else the dashboard
+ * (.topbar-more is hidden there). Next to the member buttons the dashboard only fits on wide
+ * screens (.topbar-wide); it is in the footer too.
+ */
+function topbarParts(ctx, here, navLabels) {
+    const { t } = textOf(ctx);
+    const member = Boolean(ctx.memberPortal);
+    const add = Boolean(ctx.publicSite && ctx.installUrl);
+    // The dashboard: a filled button unless "Add to Discord" or the member buttons are shown.
+    const quiet = add || member;
+    const dashClass = `button${quiet ? ' button-quiet' : ''}${member ? ' topbar-wide' : add ? ' topbar-more' : ''}`;
+    const dashboard = ctx.dashboardEnabled ? topButton(dashClass, DASHBOARD_PATH, t('shell.links.dashboard'), t('shell.short.dashboard')) : '';
+    const addLink = add
+        ? topButton(`button${member ? ' topbar-more' : ''}`, ctx.installUrl, t('shell.install.addToDiscord'), t('shell.short.addToDiscord'), ' rel="noopener" data-add-bot')
+        : '';
+    const actions = html`${languagePicker(ctx, here, 'header')}${addLink}${dashboard}${memberActions(ctx)}`;
+
+    // The one-row estimate (without and with the wide-screen extras).
+    const code = ctx.urlLang || textOf(ctx).lang || DEFAULT_LANG;
+    const current = LANGUAGES.find((l) => l.code === code) || LANGUAGES[0];
+    const chars = (label) => [...String(label)].length;
+    const button = (label) => chars(label) * BAR.buttonChar + BAR.buttonPad;
+    const nav = navLabels.reduce((sum, label) => sum + chars(label) * BAR.navChar + BAR.navPad, 0);
+    const actionsWidth = (wide) => {
+        const list = [];
+        if (typeof ctx.languageLink === 'function') list.push(wide ? chars(current.name) * BAR.pickerChar + BAR.pickerPad : BAR.pickerShort);
+        if (add) list.push(button(t('shell.install.addToDiscord')));
+        if (ctx.dashboardEnabled && (wide || !member)) list.push(button(t('shell.links.dashboard')));
+        if (member && ctx.viewer) list.push(BAR.chip);
+        if (member && !ctx.viewer) list.push(button(t('shell.account.logIn')), ...(ctx.accounts ? [button(t('shell.account.signUp'))] : []));
+        return list.reduce((a, b) => a + b, 0) + Math.max(0, list.length - 1) * BAR.actionGap;
+    };
+    const row = (wide) => BAR.brand + BAR.gap + nav + BAR.gap + actionsWidth(wide);
+    // The page content is 48px narrower than the window (the .wrap padding).
+    const stack = row(false) <= 1000 - 48 ? 'topbar-stack-1000' : row(true) <= 1180 - 48 ? 'topbar-stack-1180' : 'topbar-stack-all';
+    return { actions, stack };
 }
 
 /** "Add to Discord": only when the site is public and CLIENT_ID is valid. */
@@ -230,7 +292,8 @@ function languagePicker(ctx, path, place) {
     const current = LANGUAGES.find((l) => l.code === currentCode) || LANGUAGES[0];
     const items = LANGUAGES.map((l) => html`<li><a href="${ctx.languageLink(l.code, path)}" hreflang="${l.code}" lang="${l.code}"${l.code === current.code ? raw(' aria-current="true"') : ''}>${l.name}</a></li>`);
     if (place === 'header') {
-        return html`<details class="lang-menu"><summary class="lang-chip"><span class="visually-hidden">${t('shell.language.label')}: </span><span lang="${current.code}">${current.name}</span></summary>
+        // Below 1181px the chip shows the short code ("DE"); the full name stays for screen readers.
+        return html`<details class="lang-menu"><summary class="lang-chip"><span class="visually-hidden">${t('shell.language.label')}: </span><span class="lang-chip-full" lang="${current.code}">${current.name}</span><span class="lang-chip-short" aria-hidden="true">${shortCode(current.code)}</span></summary>
 <ul class="lang-pop">${items}</ul></details>`;
     }
     return html`<nav class="footer-langs" aria-label="${t('shell.language.label')}"><ul>${items}</ul></nav>`;
@@ -266,21 +329,19 @@ function englishOnlyNote(ctx) {
  * the status page reloads itself without a script. `image` overrides the share image (shareTags).
  */
 export function layout(ctx, { title, active = null, description = '', refresh = 0, path = null, image = null, body }) {
-    // The way into the dashboard: a filled button unless "Add to Discord" is shown.
-    // The dashboard: a filled button unless "Add to Discord" or the member buttons are shown.
     const { t, lang, href } = textOf(ctx);
     const brand = t('common.brand');
     const here = typeof path === 'string' ? path : '/';
-    const quiet = (ctx.publicSite && ctx.installUrl) || ctx.memberPortal;
-    const login = ctx.dashboardEnabled ? html`<a class="button${quiet ? ' button-quiet' : ''}" href="${DASHBOARD_PATH}">${t('shell.links.dashboard')}</a>` : '';
+    const navLabels = ['features', 'pricing', 'docs', 'commands', 'leaderboard', ...(ctx.memberPortal ? ['myRecord'] : [])].map((key) => t(`shell.links.${key}`));
+    const bar = topbarParts(ctx, here, navLabels);
     return html`<!doctype html><html lang="${lang || 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark"><meta name="theme-color" content="#1e1f22">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
 <title>${fullTitle(ctx, title)}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path, image })}
 <link rel="icon" href="${FAVICON_PATH}" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"></head>
 <body><a class="skip" href="#main">${t('shell.header.skip')}</a>
-<header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="${href('/')}"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>${brand}</span></a>
+<header class="topbar ${bar.stack}"><div class="wrap topbar-inner"><a class="brand" href="${href('/')}"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>${brand}</span></a>
 <nav class="topnav" aria-label="${t('shell.header.navLabel')}"><ul>${navLinks(ctx, active)}</ul></nav>
-<div class="topbar-actions">${languagePicker(ctx, here, 'header')}${addButton(ctx)}${login}${memberActions(ctx)}</div></div></header>${languageSuggestion(ctx, here)}
+<div class="topbar-actions">${bar.actions}</div></div></header>${languageSuggestion(ctx, here)}
 <main id="main" tabindex="-1">${englishOnlyNote(ctx)}${body}</main>
 <footer class="footer"><div class="wrap"><div class="footer-top"><div><p class="footer-brand">${LOGO}<span>${brand}</span></p>
 <p class="footer-text">${t('shell.footer.tagline')}</p></div>

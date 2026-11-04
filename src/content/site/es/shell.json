@@ -40,6 +40,11 @@
   "install": {
     "addToDiscord": "Añadir a Discord"
   },
+  "short": {
+    "dashboard": "Panel",
+    "addToDiscord": "Añadir",
+    "logIn": "Entrar"
+  },
   "footer": {
     "navLabel": "Pie de página",
     "tagline": "Moderación en Discord con códigos de caso, una escala de advertencias y apelaciones que llegan a una persona.",

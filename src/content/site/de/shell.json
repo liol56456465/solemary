@@ -40,6 +40,11 @@
   "install": {
     "addToDiscord": "Zu Discord hinzufügen"
   },
+  "short": {
+    "dashboard": "Dashboard",
+    "addToDiscord": "Hinzufügen",
+    "logIn": "Anmelden"
+  },
   "footer": {
     "navLabel": "Fußzeile",
     "tagline": "Discord-Moderation mit Fallcodes, einer Verwarnungsleiter und Einsprüchen, die bei einem Menschen ankommen.",

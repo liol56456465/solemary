@@ -46,6 +46,11 @@
   "install": {
     "addToDiscord": "Add to Discord"
   },
+  "short": {
+    "dashboard": "Dashboard",
+    "addToDiscord": "Add to Discord",
+    "logIn": "Log in"
+  },
   "footer": {
     "navLabel": "Footer",
     "tagline": "Discord moderation with case codes, a warning ladder and appeals that reach a person.",

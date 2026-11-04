@@ -40,6 +40,11 @@
   "install": {
     "addToDiscord": "Adicionar ao Discord"
   },
+  "short": {
+    "dashboard": "Painel",
+    "addToDiscord": "Adicionar",
+    "logIn": "Entrar"
+  },
   "footer": {
     "navLabel": "Rodapé",
     "tagline": "Moderação no Discord com códigos de caso, uma escada de advertências e apelações analisadas por uma pessoa.",

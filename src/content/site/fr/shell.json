@@ -40,6 +40,11 @@
   "install": {
     "addToDiscord": "Ajouter à Discord"
   },
+  "short": {
+    "dashboard": "Panneau",
+    "addToDiscord": "Ajouter",
+    "logIn": "Connexion"
+  },
   "footer": {
     "navLabel": "Pied de page",
     "tagline": "La modération Discord avec codes de dossier, échelle d’avertissements et des appels lus par une vraie personne.",

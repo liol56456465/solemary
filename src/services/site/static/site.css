@@ -155,8 +155,10 @@ strong { font-weight: 700; }
 
 /* ── Buttons: white fill with dark text for the main action, outlined for the rest ── */
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px; border-radius: 8px;
-    background: var(--brand); color: var(--on-brand); border: 1px solid var(--brand); font: inherit; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap;
-    transition: background-color 120ms ease, border-color 120ms ease; }
+    background: var(--brand); color: var(--on-brand); border: 1px solid var(--brand); font: inherit; font-size: 15px; font-weight: 700; text-decoration: none;
+    transition: background-color 120ms ease, border-color 120ms ease;
+    /* Long translated labels wrap inside the button (centred, balanced lines) instead of leaving it. */
+    padding-top: 8px; padding-bottom: 8px; line-height: 1.25; text-align: center; text-wrap: balance; overflow-wrap: break-word; }
 .button:hover { background: var(--brand-hover); border-color: var(--brand-hover); color: var(--on-brand); }
 .button-quiet { background: transparent; color: var(--text); border-color: var(--border-strong); }
 .button-quiet:hover { background: var(--raised); color: var(--text); border-color: var(--text); }
@@ -730,8 +732,6 @@ button.button { cursor: pointer; }
 @media (max-width: 760px) {
     .topbar-actions { gap: 6px; }
     .topbar-actions .button { padding: 0 10px; }
-    /* Brand + Log in + Sign up fit one row; the dashboard stays in the footer. */
-    .topbar-actions .button-quiet[href="/dashboard"]:not(:only-child) { display: none; }
     .account-name { max-width: 96px; }
 }
 
@@ -809,3 +809,59 @@ button.button { cursor: pointer; }
     .plan-cards { grid-template-columns: minmax(0, 1fr); }
     .pricing-section { margin-top: 56px; }
 }
+
+/* ── Every language (2026-11-05): long translated words and labels ──
+   Checked in a browser for all pages × 8 languages × 360–1280px by scripts/site-layout-check.js;
+   the key rules are guarded by tests/siteLayoutCss.test.js. */
+
+/* Top bar. shell.js picks when the menu moves to its own row below the brand from the label
+   lengths: .topbar-stack-1000 / -1180 / -all. Phones (≤ 760px) always use two rows and keep the
+   picker (short code) and one button with its short label. */
+.brand, .topbar-actions { flex: none; }
+.topbar-actions { align-items: center; }
+.topbar-actions .button, .lang-chip, .account-chip { white-space: nowrap; }
+.label-short, .lang-chip-short { display: none; }
+.topbar-actions .topbar-wide { display: none; }
+@media (min-width: 1181px) { .topbar-actions .topbar-wide { display: inline-flex; } }
+@media (max-width: 1180px) {
+    .lang-chip-full { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .lang-chip-short { display: inline; font-weight: 600; }
+}
+.topbar-stack-all .topbar-inner { flex-wrap: wrap; row-gap: 0; padding-top: 8px; }
+.topbar-stack-all .topnav { order: 3; flex-basis: 100%; margin: 0 -10px; padding-bottom: 6px; }
+.topbar-stack-all .topnav ul { flex-wrap: wrap; }
+@media (max-width: 1180px) {
+    .topbar-stack-1180 .topbar-inner { flex-wrap: wrap; row-gap: 0; padding-top: 8px; }
+    .topbar-stack-1180 .topnav { order: 3; flex-basis: 100%; margin: 0 -10px; padding-bottom: 6px; }
+    .topbar-stack-1180 .topnav ul { flex-wrap: wrap; }
+}
+@media (max-width: 1000px) {
+    .topbar-stack-1000 .topbar-inner { flex-wrap: wrap; row-gap: 0; padding-top: 8px; }
+    .topbar-stack-1000 .topnav { order: 3; flex-basis: 100%; margin: 0 -10px; padding-bottom: 6px; }
+    .topbar-stack-1000 .topnav ul { flex-wrap: wrap; }
+}
+/* Tablets: a slightly tighter menu so the longest translations stay on one line. */
+@media (min-width: 761px) and (max-width: 1000px) { .topbar .topnav a { padding: 0 8px; font-size: 14px; } }
+@media (max-width: 760px) {
+    /* Phones: the menu is one row that scrolls sideways (as before), whatever the stack class. */
+    .topbar .topbar-inner { flex-wrap: wrap; gap: 0 16px; padding-top: 8px; }
+    .topbar .topnav { order: 3; flex-basis: 100%; margin: 0 -16px; padding: 0 8px 6px; overflow-x: auto; scrollbar-width: none; }
+    .topbar .topnav ul { flex-wrap: nowrap; }
+    .topbar-actions .topbar-more { display: none; }
+    .topbar-actions .label-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .topbar-actions .label-short { display: inline; }
+    /* The picker's menu opens under the right edge of the bar, never off the screen. */
+    .topbar-actions { position: relative; }
+    .topbar-actions .lang-menu { position: static; }
+}
+
+/* Long compound words (German, Polish, Russian …): hyphenate headings, labels and table cells in
+   the translated pages, and let narrow boxes break a word that still does not fit. English keeps
+   its look. */
+html:not([lang="en"]) :is(h1, h2, h3, .guide-title, .plan-card-name, th, td, dt, .footer-links a, .button, .seg a, .form-field label) { hyphens: auto; hyphenate-limit-chars: 12 5 5; }
+.footer-links a, .tag, .summary-rows dt, .summary-rows dd, .seg a, .form-field label, .consent-box label, .ref-list dt, .record-table td, .account-facts dt { overflow-wrap: anywhere; }
+.tag { white-space: normal; max-width: 100%; }
+.test-pay-note { white-space: normal; }
+.consent, .form-stack, .form-field { min-width: 0; }
+.ladder-step { grid-template-columns: 96px minmax(0, 1fr) fit-content(45%); }
+@media (max-width: 760px) { .ladder-step { grid-template-columns: 80px minmax(0, 1fr); } }
