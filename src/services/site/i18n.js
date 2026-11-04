@@ -2,8 +2,9 @@
 //
 // Text lives in src/content/site/<lang>/<namespace>.json (nested objects; key "home.hero.title" is
 // home.json → { "hero": { "title": "…" } }). English is complete; other languages fall back to
-// English key by key. The owner's Website editor (later) can override any key per language through
-// setContentOverrides(); overrides use the same markup, so they are just as safe.
+// English key by key. The owner's Website editor (dashboard Owner → Website, siteContent.js) can
+// override any key per language through setContentOverrides(); overrides use the same markup, so
+// they are just as safe.
 //
 // Three ways to read a key (all escape everything; nothing in a catalog can inject HTML):
 //   t(key, params)   plain text (a string; html`` escapes it again, harmlessly)
@@ -17,6 +18,7 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { escapeHtml, raw } from '../dashboard/html.js';
+import { logger } from '../../utils/logger.js';
 
 /** Website languages: code, URL prefix ('' = no prefix), the name shown in the picker. */
 export const LANGUAGES = Object.freeze([
@@ -91,15 +93,51 @@ export function isLanguage(code) {
  * the editor marks that translation "needs update" instead.) Unknown key throws.
  */
 export function lookup(lang, key) {
+    return lookupSource(lang, key).text;
+}
+
+/** lookup() plus whether the text is an owner edit: { text, edited }. */
+function lookupSource(lang, key) {
     const code = isLanguage(lang) ? lang : DEFAULT_LANG;
     const all = catalogsNow();
     const edited = (c) => {
         const value = overrides ? overrides(c, key) : null;
         return typeof value === 'string' ? value : undefined;
     };
-    const text = edited(code) ?? all.get(code)?.get(key) ?? edited(DEFAULT_LANG) ?? all.get(DEFAULT_LANG)?.get(key);
+    const candidates = [[edited(code), true], [all.get(code)?.get(key), false], [edited(DEFAULT_LANG), true], [all.get(DEFAULT_LANG)?.get(key), false]];
+    const found = candidates.find(([text]) => text !== undefined);
+    if (!found) throw new Error(`i18n: missing key "${key}"`);
+    return { text: found[0], edited: found[1] };
+}
+
+/** The catalog text without owner edits (own language, else English). */
+function catalogFallback(lang, key) {
+    const code = isLanguage(lang) ? lang : DEFAULT_LANG;
+    const all = catalogsNow();
+    const text = all.get(code)?.get(key) ?? all.get(DEFAULT_LANG)?.get(key);
     if (text === undefined) throw new Error(`i18n: missing key "${key}"`);
     return text;
+}
+
+const brokenEdits = new Set();
+/**
+ * Renders a key; when an owner edit cannot be rendered with the params the page passes (e.g. an
+ * edit made before a code change removed a {param}), the catalog text is used instead, so a page
+ * never breaks because of an edit. Logged once per language + key.
+ */
+function renderSafely(lang, key, render) {
+    const { text, edited } = lookupSource(lang, key);
+    if (!edited) return render(text);
+    try {
+        return render(text);
+    } catch (error) {
+        const id = `${lang}|${key}`;
+        if (!brokenEdits.has(id)) {
+            brokenEdits.add(id);
+            logger.warn(`i18n: the owner's text for ${id} cannot be shown (${error.message}); using the catalog text`);
+        }
+        return render(catalogFallback(lang, key));
+    }
 }
 
 const TOKEN = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
@@ -130,7 +168,7 @@ export function pluralKey(lang, key, count) {
 
 /** Plain text with {params} filled in (SafeHtml params are inserted as their text). */
 export function translate(lang, key, params) {
-    return lookup(lang, key).replace(TOKEN, (_, name) => String(paramText(params, name)));
+    return renderSafely(lang, key, (text) => text.replace(TOKEN, (_, name) => String(paramText(params, name))));
 }
 
 /** True for hrefs a catalog may link to. */
@@ -182,12 +220,11 @@ function renderInline(escaped, params, key, rewrite = null) {
 
 /** Inline markup → SafeHtml. */
 export function translateInline(lang, key, params, { rewrite = null } = {}) {
-    return raw(renderInline(escapeHtml(lookup(lang, key)), params, key, rewrite));
+    return raw(renderSafely(lang, key, (text) => renderInline(escapeHtml(text), params, key, rewrite)));
 }
 
-/** Block markup (paragraphs, "- " lists, <br>) → SafeHtml. */
-export function translateBlock(lang, key, params, { rewrite = null } = {}) {
-    const blocks = escapeHtml(lookup(lang, key)).replace(/\r\n/g, '\n').split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+function renderBlock(text, params, key, rewrite) {
+    const blocks = escapeHtml(text).replace(/\r\n/g, '\n').split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
     const out = blocks.map((block) => {
         const lines = block.split('\n');
         if (lines.every((line) => /^- /.test(line))) {
@@ -195,7 +232,33 @@ export function translateBlock(lang, key, params, { rewrite = null } = {}) {
         }
         return `<p>${lines.map((line) => renderInline(line, params, key, rewrite)).join('<br>')}</p>`;
     });
-    return raw(out.join('\n'));
+    return out.join('\n');
+}
+
+/** Block markup (paragraphs, "- " lists, <br>) → SafeHtml. */
+export function translateBlock(lang, key, params, { rewrite = null } = {}) {
+    return raw(renderSafely(lang, key, (text) => renderBlock(text, params, key, rewrite)));
+}
+
+/**
+ * The Website editor's preview: a text that is not saved yet, rendered with the block markup
+ * (the widest of the three; inline-only keys look the same apart from paragraphs). Every
+ * {param} shows as its own name. Same escaping as the live site. Throws like a page would
+ * (e.g. a broken param).
+ */
+export function previewMarkup(text, key = 'preview') {
+    const params = Object.fromEntries(placeholdersOf(text).map((name) => [name, `{${name}}`]));
+    return raw(renderBlock(String(text), params, key, null));
+}
+
+/** The catalog file text of a key in one language (no owner edits), or undefined. */
+export function catalogText(lang, key) {
+    return catalogsNow().get(lang)?.get(key);
+}
+
+/** Every key of a language's catalog files (no owner edits), in file order. */
+export function catalogKeys(lang) {
+    return [...(catalogsNow().get(lang)?.keys() || [])];
 }
 
 // ── Language URLs ───────────────────────────────────────────────────────────

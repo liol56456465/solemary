@@ -674,7 +674,7 @@ test('every image has alt text and a size; the image files are small and served 
         const og = await site.get('/img/og.png');
         assert.equal(og.status, 200);
         assert.match(og.headers.get('content-type'), /^image\/png/);
-        assert.equal(og.headers.get('cache-control'), 'public, max-age=604800');
+        assert.equal(og.headers.get('cache-control'), 'public, max-age=300', 'replaceable (Owner → Website → Images): 5 minutes');
         assert.equal(og.headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
         assert.equal((await site.get('/img/screen-overview-light.webp')).headers.get('content-type'), 'image/webp');
         assert.equal((await site.get('/img/nope.png')).status, 404);

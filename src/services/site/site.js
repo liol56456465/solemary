@@ -26,7 +26,8 @@
 //   GET /robots.txt   Disallow: / while the site is not public; with the sitemap when it is
 //   GET /sitemap.xml  only when public and PUBLIC_URL is set (absolute URLs need the origin)
 //   GET /img/<file>   the site's images (static/img: dashboard screenshots, the share image,
-//                     cat/<stage>-<mood>.png the server cat)
+//                     cat/<stage>-<mood>.png the server cat); a replaced image (Owner → Website →
+//                     Images) is served from the database copy at the same path
 //   GET /favicon.png  the owner's logo (static/img/logo.png), also at /favicon.ico; site and dashboard link it
 //   GET /site.css     the site's tokens + layout, cached, ?v=<content hash>
 //
@@ -39,6 +40,7 @@
 // The shell (layout, headers, install link, stylesheet) is in shell.js and re-exported here.
 
 import { fileURLToPath } from 'node:url';
+import { serveSlotImage, serveUploadedLogo, staticImageCacheControl } from './siteImages.js';
 import express from 'express';
 import { html } from '../dashboard/html.js';
 import { EVERYONE_COMMANDS } from '../../config/commands/commandAccess.js';
@@ -531,14 +533,18 @@ export function createSite({
             res.type('application/xml').send(sitemapXml(base.origin, { transparency: transparencyOn(), trust: trustOn() }));
         });
     }
-    // The site's images: dashboard screenshots and the share image. Missing files fall through to the 404 page.
+    // The site's images: dashboard screenshots, the share image, the logo. An image the owner replaced
+    // (dashboard Owner → Website → Images, siteImages.js) is served from memory at the same path; the
+    // replaceable files are cached 5 minutes, the rest a week. Missing files fall through to the 404 page.
+    router.use('/img', serveSlotImage);
     router.use('/img', express.static(fileURLToPath(new URL('./static/img/', import.meta.url)), {
         index: false, dotfiles: 'ignore', redirect: false, fallthrough: true,
-        setHeaders: (res) => res.set('Cache-Control', 'public, max-age=604800'),
+        setHeaders: (res, filePath) => res.set('Cache-Control', staticImageCacheControl(filePath)),
     }));
-    // The browser-tab icon is the owner's logo PNG. /favicon.ico serves it too (browsers ask for
-    // that path on their own; PNG content is accepted there).
+    // The browser-tab icon is the owner's logo PNG (or the replaced logo). /favicon.ico serves it too
+    // (browsers ask for that path on their own; PNG content is accepted there).
     const favicon = (req, res) => {
+        if (serveUploadedLogo(req, res)) return;
         res.set('Cache-Control', 'public, max-age=86400');
         res.status(200).type('image/png').sendFile(fileURLToPath(LOGO_FILE));
     };

@@ -26,6 +26,8 @@
 //   POST /dashboard/owner/premium/grant|roles           give a plan to a user ID; supporter roles per plan
 //   GET  /dashboard/owner/erase, POST …/preview|erase   erase one case for a privacy request (anonymise an
 //                                                       active ladder warn, delete anything else; caseErase.js)
+//   /dashboard/owner/website/…                         the Website editor (websiteRoutes.js): site text per
+//                                                       language and the replaceable images (audit module 'website')
 //
 // Access: every request checks isBotOwner(session user) live (not the cached access
 // decision); anyone else gets the normal 404 page. POSTs also need: 30/min per session,
@@ -446,9 +448,9 @@ export function createOwnerHandlers(core) {
         return next();
     }
 
-    async function audit(req, changes) {
-        await audits.writeRows(guildId, actorOf(req), AUDIT_MODULE, changes)
-            .catch((error) => logger.error(`Dashboard audit write failed (owner): ${error.message}`));
+    async function audit(req, changes, module = AUDIT_MODULE) {
+        await audits.writeRows(guildId, actorOf(req), module, changes)
+            .catch((error) => logger.error(`Dashboard audit write failed (${module}): ${error.message}`));
     }
 
     async function flash(req, message) {
@@ -1177,5 +1179,7 @@ export function createOwnerHandlers(core) {
         health, maintenance, commands, registerPreview, register, announce, announcePreview, announceSend,
         premium, premiumGenerate, premiumRevoke, premiumEnd, premiumGrant, premiumRolesSave,
         erase, erasePreview, eraseRun,
+        // For other Owner pages built on the same checks (websiteRoutes.js).
+        helpers: { ownerPost, audit, flash, takeFlash, page, actorOf, notFound, isOwner },
     };
 }
