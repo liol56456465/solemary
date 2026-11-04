@@ -1,0 +1,79 @@
+{
+  "title": "Carte de confiance de {server}",
+  "description": "Comment {server} est modéré : délais des appels, résultats des appels et membres en règle sur les {days} derniers jours. Uniquement des chiffres.",
+  "head": {
+    "heading": "{server} : carte de confiance",
+    "lead": "Comment ce serveur a été modéré sur les {days} derniers jours. Uniquement des chiffres : pas de noms, pas de raisons, pas de modérateurs."
+  },
+  "noData": "Pas encore assez de données",
+  "tiles": {
+    "firstAnswer": {
+      "label": "Première réponse à un appel",
+      "note": "Délai médian entre l’envoi d’un appel et sa prise en charge ou sa décision par un membre de l’équipe."
+    },
+    "accepted": {
+      "label": "Appels acceptés",
+      "note": "Sur {decided} appels tranchés."
+    },
+    "goodStanding": {
+      "label": "Membres en règle",
+      "note": "Aucun avertissement comptabilisé, pas en sourdine."
+    },
+    "headsUp": {
+      "label": "Corrigé après un rappel",
+      "noteWithRate": "Les membres ont corrigé eux-mêmes {rate} des messages signalés après un rappel.",
+      "noteNoRate": "À quelle fréquence les membres corrigent eux-mêmes un message signalé après un rappel."
+    }
+  },
+  "facts": {
+    "received": "Appels reçus",
+    "decided": "Appels tranchés",
+    "decisionTime": "Délai médian jusqu’à la décision",
+    "casesPerThousand": "Dossiers pour 1 000 membres"
+  },
+  "how": {
+    "heading": "Comment ce serveur modère",
+    "byPerson": "Chaque appel est lu et tranché par une personne de l’équipe, jamais par le bot seul.",
+    "cases": "Chaque avertissement, mise en sourdine, expulsion et bannissement est enregistré comme un dossier avec son propre code, et le membre reçoit ce code en message privé."
+  },
+  "ladder": {
+    "single": "Les avertissements s’additionnent : le {nth} avertissement entraîne {first}.",
+    "escalating": "Les avertissements s’additionnent : le {nth} avertissement entraîne {first}, et chaque avertissement après ce bannissement en entraîne un plus long ({later}).",
+    "then": "{earlier}, puis {next}",
+    "banDays": "un bannissement de {days} jours",
+    "banPermanent": "un bannissement définitif",
+    "ordinals": {
+      "0": "zéroième",
+      "1": "premier",
+      "2": "deuxième",
+      "3": "troisième",
+      "4": "quatrième",
+      "5": "cinquième",
+      "6": "sixième",
+      "7": "septième",
+      "8": "huitième",
+      "9": "neuvième",
+      "10": "dixième"
+    },
+    "ordinalOther": "{n}e"
+  },
+  "cat": {
+    "alt": "{name}, le chat du serveur ({stage}, {mood})",
+    "caption": "Le chat du serveur",
+    "shareAlt": "{name}, le chat du serveur"
+  },
+  "rules": {
+    "heading": "Règles",
+    "empty": "Ce serveur n’a pas encore publié ses règles.",
+    "readAll": "Lire toutes les règles"
+  },
+  "foot": {
+    "period": "{days} derniers jours, du {from} au {to}. Les petits nombres sont masqués.",
+    "periodWithReport": "{days} derniers jours, du {from} au {to}. Les petits nombres sont masqués. Chiffres mensuels complets : [Rapport de transparence](/transparency)."
+  },
+  "error": {
+    "title": "Carte de confiance",
+    "heading": "Carte de confiance",
+    "text": "Impossible de charger la carte de confiance pour le moment. Mieux vaut aucun chiffre que des chiffres faux ; réessaie dans quelques minutes."
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "title": "Transparenzbericht",
+  "description": "Wie viele Verwarnungen, Stummschaltungen, Kicks und Banns der Mewvo-Server pro Monat vergeben hat und wie über Einsprüche entschieden wurde. Nur Zahlen.",
+  "head": {
+    "heading": "Transparenzbericht",
+    "lead": "Wie oft das Team auf dem Mewvo-Server verwarnt, stummgeschaltet, gekickt und gebannt hat und wie Einsprüche ausgingen, Monat für Monat. Nur Zahlen: keine Namen, keine Gründe, keine Moderatoren.",
+    "period": "Vom {from} bis {to}, in UTC. Höchstens alle 10 Minuten aktualisiert."
+  },
+  "summary": {
+    "warns": "Verwarnungen",
+    "mutes": "Stummschaltungen",
+    "kicks": "Kicks",
+    "bans": "Banns",
+    "appealsReceived": "Eingegangene Einsprüche",
+    "medianDecision": "Mittlere Zeit bis zur Entscheidung über einen Einspruch"
+  },
+  "table": {
+    "month": "Monat",
+    "total": "Gesamt",
+    "soFar": "bisher",
+    "notEnoughDecisions": "zu wenige Entscheidungen"
+  },
+  "actions": {
+    "heading": "Moderationsaktionen",
+    "intro": "Pro Monat, der laufende Monat bis heute.",
+    "caption": "Moderationsaktionen pro Monat, die ältesten zuerst. Die letzte Zeile ist die Summe.",
+    "columns": {
+      "warns": "Verwarnungen",
+      "mutes": "Stummschaltungen",
+      "kicks": "Kicks",
+      "bans": "Banns",
+      "ladderBans": "Davon Banns: automatisch (Verwarnungsleiter)",
+      "automod": "Durch Automod vergeben",
+      "voided": "Als Fehler annulliert"
+    }
+  },
+  "appeals": {
+    "heading": "Einsprüche",
+    "intro": "Nach dem Monat, in dem der Einspruch gesendet wurde, mit seinem heutigen Ergebnis.",
+    "caption": "Einsprüche pro Monat nach dem Monat, in dem sie gesendet wurden, die ältesten zuerst. Die letzte Zeile ist die Summe.",
+    "columns": {
+      "received": "Eingegangen",
+      "accepted": "Angenommen",
+      "denied": "Abgelehnt",
+      "open": "Noch offen",
+      "median": "Mittlere Zeit bis zur Entscheidung"
+    }
+  },
+  "how": {
+    "heading": "Wie diese Zahlen entstehen",
+    "intro": "Wie Einsprüche funktionieren, erklärt die [Anleitung zu Einsprüchen](/docs/appeals).",
+    "counted": {
+      "question": "Was gezählt wird",
+      "answer": "Jede Verwarnung, Stummschaltung, jeder Kick und Bann auf dem Mewvo-Server, in dem Monat, in dem er vergeben wurde (UTC), egal ob durch einen Moderator, die Verwarnungsleiter oder Automod. Automatische Leiter-Banns und Automod-Aktionen sind bereits in den vier Hauptspalten enthalten; ihre eigenen Spalten zeigen nur, wie viele es davon gab."
+    },
+    "notCounted": {
+      "question": "Was nicht gezählt wird",
+      "answer": "Testsimulationen (das Team sieht sich eine Nachricht vorab an; niemandem passiert etwas), aus dem alten Bot als Verlauf importierte Verwarnungen und Meldungen über Teammitglieder. Als Fehler annullierte Fälle fehlen in den Hauptspalten und erscheinen separat in der Spalte „Als Fehler annulliert“, nach dem Monat, in dem sie ursprünglich vergeben wurden."
+    },
+    "appeals": {
+      "question": "Einsprüche",
+      "answer": "Einsprüche werden in dem Monat gezählt, in dem sie gesendet wurden, mit ihrem heutigen Ergebnis. Ein Einspruch gegen einen Fall, der später annulliert wurde, zählt trotzdem: Der Einspruch hat stattgefunden. Ohne Entscheidung geschlossene Einsprüche zählen nur als eingegangen. Die mittlere Zeit läuft vom Absenden des Einspruchs bis zur Entscheidung des Teams, über die angenommenen und abgelehnten Einsprüche des Monats."
+    },
+    "smallNumbers": {
+      "question": "Kleine Zahlen",
+      "answer": "Damit einzelne Fälle nicht erkennbar sind, wird eine Anzahl von 1 oder 2 als „weniger als 3“ angezeigt, und ein Median erscheint nur, wenn über mindestens 3 Einsprüche entschieden wurde. Ist ein Monat in einer Spalte so ausgeblendet, steht in der Summe „mindestens“ statt der genauen Zahl."
+    },
+    "neverShown": {
+      "question": "Was diese Seite nie zeigt",
+      "answer": "Namen, Discord-IDs, Fallcodes, Gründe oder welcher Moderator gehandelt hat. Nur Zahlen."
+    }
+  },
+  "error": {
+    "text": "Der Bericht konnte gerade nicht geladen werden, weil die Datenbank nicht antwortet. Lieber keine Zahlen als falsche; bitte versuch es in ein paar Minuten noch einmal."
+  }
+}

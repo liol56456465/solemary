@@ -1,0 +1,18 @@
+{
+  "title": "Regeln",
+  "description": "Die Regeln des Mewvo-Discord-Servers.",
+  "head": {
+    "heading": "Serverregeln",
+    "lead": "Die Regeln des Mewvo-Servers. Wenn das Team wegen einer davon verwarnt, stummschaltet, kickt oder bannt, nennt die Direktnachricht die Regel und verlinkt hierher."
+  },
+  "state": {
+    "unavailable": "Die Regeln konnten gerade nicht geladen werden. Bitte versuch es in einer Minute noch einmal.",
+    "empty": "Dieser Server hat seine Regeln noch nicht veröffentlicht."
+  },
+  "list": {
+    "updated": "Zuletzt aktualisiert: {date}.",
+    "linkLabel": "Link zu Regel {number}",
+    "consequenceLabel": "Folge:"
+  },
+  "appeal": "Für eine Regel bestraft, die du deiner Meinung nach nicht gebrochen hast? Jede Direktnachricht sagt, ob und wie du Einspruch einlegen kannst. [So funktionieren Einsprüche](/docs/appeals)."
+}

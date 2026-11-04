@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "description": "Mewvo ist ein Discord-Bot für Moderation mit Fallcodes und Direktnachrichten, einer dreistufigen Verwarnungsleiter, Einsprüchen, die bei einem Menschen ankommen, Automod, Tickets und Community-Tools."
+  },
+  "actions": {
+    "readDocs": "Doku lesen",
+    "joinServer": "Dem Server beitreten",
+    "joinSupportServer": "Dem Support-Server beitreten",
+    "openDashboard": "Mewvo ist schon auf deinem Server? [Dashboard öffnen]({url})"
+  },
+  "hero": {
+    "title": "Ein Discord-Bot für Moderation und Einsprüche",
+    "lead": "Mewvo verwarnt, schaltet stumm, kickt und bannt über ein einziges Panel. Das Mitglied bekommt eine Direktnachricht mit dem Grund, dem Ende und wie es Einspruch einlegen kann. Dein Team bekommt einen Fall mit einem kurzen Code, den es später nachschlagen kann.",
+    "notPublic": "Mewvo läuft vorerst nur auf dem Mewvo-Server. Zu anderen Servern kann er noch nicht hinzugefügt werden.",
+    "dmCaption": "Die Direktnachricht, die ein Mitglied bei einer zweiten Verwarnung bekommt. Derselbe Wortlaut wie beim Bot."
+  },
+  "dashboard": {
+    "title": "Alles an einem Ort",
+    "text": "Mitglieder, Fälle, Einsprüche und jede Einstellung im Browser. Melde dich mit Discord an; jede Änderung landet in einem Audit-Log. [Eine Tour durchs Dashboard](/docs/using-the-dashboard)",
+    "shotAlt": "Die Übersicht im Mewvo-Dashboard: Punkte, die das Team erledigen muss, Moderation der letzten sieben Tage, Bot-Zustand und Einrichtungsfortschritt."
+  },
+  "ladder": {
+    "title": "Dieselben Regeln für alle",
+    "text": "Verwarnungen steigen pro Mitglied und Server eine feste Leiter hinauf. Die ersten zwei sind eine Direktnachricht. Die dritte ist ein 7-Tage-Bann, dann 30 Tage, dann permanent. Manuelle Banns verändern sie nicht, und ein angenommener Einspruch setzt sie eine Stufe zurück.\n\nMitglieder können nachsehen, wo sie stehen, damit niemand von einem Bann überrascht wird. [Wie Verwarnungen eskalieren](/docs/warnings)"
+  },
+  "what": {
+    "title": "Was er kann",
+    "text": "Zuerst Moderation, daneben die Community-Tools, die ein Server braucht. [Alle Funktionen](/features)",
+    "items": {
+      "enforcement": {
+        "name": "Moderation",
+        "text": "Verwarnen, stummschalten, kicken und bannen über ein Panel, das zuerst den Verlauf des Mitglieds zeigt. Jede Aktion ist ein Fall mit kurzem Code, den das Team später bearbeiten, annullieren oder um Beweise ergänzen kann.",
+        "link": "Erste Schritte"
+      },
+      "appeals": {
+        "name": "Einsprüche",
+        "text": "Mitglieder legen über ein kurzes Formular Einspruch ein. Einsprüche gegen Banns öffnen einen Kanal auf dem Support-Server, damit sie auch nach einem Bann funktionieren, und ein Mensch aus dem Team entscheidet.",
+        "link": "So funktionieren Einsprüche"
+      },
+      "automod": {
+        "name": "Automod",
+        "text": "Vierzehn Regeln, von Betrugslinks bis zu Massenerwähnungen. Jede automatische Aktion ist ein normaler Fall, mit einer Karte im Teamkanal, um sie beizubehalten, rückgängig zu machen oder zu ändern.",
+        "link": "Automod-Regeln"
+      },
+      "tickets": {
+        "name": "Tickets und Modmail",
+        "text": "Ein Ticket-Panel, und Mitglieder können dem Bot eine Direktnachricht schreiben, um das Team zu erreichen. Beides wird zu Kanälen auf deinem Server; Zeilen, die mit // beginnen, bleiben intern.",
+        "link": "Tickets und Modmail"
+      },
+      "logging": {
+        "name": "Logs und Werkzeuge",
+        "text": "Beitritte, Austritte, Rollenänderungen, bearbeitete und gelöschte Nachrichten und mehr, jeweils im Kanal deiner Wahl. Verifizierung und Server-Werkzeuge gibt es gleich daneben.",
+        "link": "Logs und Werkzeuge"
+      },
+      "community": {
+        "name": "Community-Tools",
+        "text": "Level, Tags, Vorschläge, Starboard, Sticky-Nachrichten, YouTube-Feeds, Reaktionsrollen, Gewinnspiele, Geburtstage, Bewerbungen, Join-to-Create-Sprachkanäle, Willkommensnachrichten.",
+        "link": "Alle Community-Tools"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Kostenlos nutzbar",
+    "text": "Alles oben ist kostenlos. Bezahlpläne erhöhen nur Limits wie Tags und Sticky-Nachrichten. [Pläne und Preise](/pricing)"
+  },
+  "help": {
+    "title": "Fragen?",
+    "text": "Fang mit der [Doku](/docs) oder den [Fragen und Antworten](/faq) an.",
+    "support": "Kommst du nicht weiter? Frag auf dem [Support-Server]({url}); ein Mensch antwortet."
+  }
+}

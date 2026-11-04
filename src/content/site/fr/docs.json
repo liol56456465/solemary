@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "title": "Documentation",
+    "description": "De courts guides sur Mewvo : premiers pas pour l’équipe, comment les avertissements s’aggravent, comment fonctionnent les appels et comment utiliser le tableau de bord."
+  },
+  "hub": {
+    "title": "Guides",
+    "lead": "Comment fonctionne Mewvo, étape par étape. Pour toutes les commandes que les membres peuvent utiliser, consulte [Commandes](/commands)."
+  },
+  "nav": {
+    "crumbs": "Fil d’Ariane",
+    "docs": "Documentation",
+    "nextGuide": "Guide suivant",
+    "next": "Suivant",
+    "stillQuestions": "Encore des questions ?",
+    "readFaq": "Lire la FAQ"
+  },
+  "support": {
+    "link": "[le serveur d’assistance]({url})",
+    "text": "le serveur d’assistance"
+  },
+  "guides": {
+    "setup": {
+      "title": "Configurer Mewvo en 10 minutes",
+      "summary": "Pour le propriétaire du serveur : les quelques paramètres dont Mewvo a besoin, dans l’ordre, dans le tableau de bord.",
+      "intro": "Tu as besoin de la permission **Administrateur** sur le serveur. Tout ce qui suit se fait dans le tableau de bord, dans ton navigateur. Tu n’as aucune commande à taper.",
+      "open": {
+        "title": "1. Ouvre le tableau de bord",
+        "text": "Va sur le [tableau de bord]({dashboard}) et connecte-toi avec Discord. Mewvo demande seulement à Discord qui tu es. Il ne voit ni ton e-mail ni tes messages."
+      },
+      "steps": {
+        "title": "2. Suis « Setup step by step »",
+        "text": "Sur la page Overview, appuie sur **Set up Mewvo step by step**. Il affiche un paramètre à la fois, explique pourquoi il compte et ouvre la bonne page. Passe tout ce dont tu n’as pas besoin. Les trois plus importants sont :",
+        "modLog": "**Mod log channel** : un salon réservé à l’équipe où Mewvo consigne chaque avertissement, mise en sourdine, expulsion et bannissement.",
+        "mutedRole": "**Muted role** : Mewvo le crée lui-même la première fois que quelqu’un est mis en sourdine, tu peux donc le laisser tel quel.",
+        "appealsCategory": "**Appeals category** : l’endroit où Mewvo ouvre un salon privé quand un membre demande la levée d’une sanction."
+      },
+      "rules": {
+        "title": "3. Rédige tes règles",
+        "text": "Sur la page **Rules**, ajoute les règles de ton serveur. Elles s’affichent sur une page web, et chaque message de sanction cite la règle enfreinte."
+      },
+      "automod": {
+        "title": "4. Vérifie l’automod",
+        "text": "Sur la page **Automod**, tu choisis ce que fait l’automod. Si tu n’es pas encore sûr, choisis **Watch only** : l’automod se contente alors d’indiquer à l’équipe ce qu’il aurait fait, et rien n’arrive à personne tant qu’un membre de l’équipe n’a pas approuvé. Passe à **Act** quand tu lui fais confiance."
+      },
+      "try": {
+        "title": "5. Essaie sur toi-même",
+        "text": "Sur Discord, lance `/test`. Mewvo t’envoie exactement le message qu’un membre recevrait pour un avertissement ou un bannissement. Rien n’est fait à personne."
+      },
+      "next": {
+        "title": "Ensuite",
+        "text": "La barre latérale affiche les pages principales. Appuie sur **Show all pages** en bas pour tout voir. Si un mot t’est inconnu, ouvre **Words explained** dans la barre latérale. Des questions ? Demande sur {support}."
+      }
+    },
+    "gettingStarted": {
+      "title": "Premiers pas pour l’équipe",
+      "summary": "Qui peut utiliser quoi, ta première action de modération et les commandes que tu utiliseras chaque semaine.",
+      "access": {
+        "title": "Qui peut faire quoi",
+        "text": "Les commandes du quotidien (aide, rang, classement, divertissement, listes de tâches, signalements, etc.) sont ouvertes à tous les membres. Tout ce qui modère, modifie des paramètres, publie en tant que bot, concerne d’autres membres ou déplace de la monnaie nécessite le rôle **Administrateur**. La vérification a lieu à chaque utilisation d’une commande ou d’un bouton, pas seulement à la première ouverture.",
+        "denied": "Les membres sans le rôle Administrateur qui essaient une commande de l’équipe en sont informés et sont redirigés vers le salon où ils peuvent demander un rôle."
+      },
+      "firstAction": {
+        "title": "Ta première action",
+        "run": "Lance `/enforcements user:@member`. Le panneau affiche l’âge du compte du membre, son ancienneté sur le serveur, ses avertissements comptabilisés, son niveau sur l’échelle, toute sanction en cours et ses derniers dossiers. Toi seul peux le voir.",
+        "action": "Appuie sur l’action : **Ban**, **Kick**, **Mute** ou **Warn** (ou **Unban**, **Unmute**, **Remove warn** quand c’est pertinent).",
+        "reason": "Choisis une raison prédéfinie ou **Custom…** et saisis-en une.",
+        "duration": "Pour une mise en sourdine, indique une durée comme `30m`, `24h`, `7d` ou `1mo`. Pour un bannissement, pareil, ou laisse vide pour un bannissement définitif.",
+        "confirm": "Vérifie le récapitulatif et appuie sur **Confirm**.",
+        "after": "Le membre reçoit un message privé avant que l’expulsion ou le bannissement n’ait lieu. Si le message privé ne peut pas être remis, l’action a quand même lieu et tu en es informé. Le panneau expire au bout de 15 minutes ; relance alors la commande."
+      },
+      "everyWeek": {
+        "title": "Les commandes que tu utiliseras",
+        "background": "L’historique complet des dossiers d’un membre.",
+        "case": "Rechercher des dossiers, modifier une raison ou une durée, annuler un dossier créé par erreur, voir son historique, joindre des preuves.",
+        "appeals": "Accepter ou refuser un appel par code de dossier, avec une note.",
+        "test": "T’envoie exactement le message privé qu’un membre recevrait. Rien n’est fait à personne.",
+        "staff": "Activité et statistiques de l’équipe.",
+        "warnMessage": "Warn for this message",
+        "warnMessageText": "Clic droit sur un message, puis Applications : avertit l’auteur, avec le message joint."
+      },
+      "limits": {
+        "title": "Des limites qui protègent le serveur",
+        "text": "Mewvo refuse d’agir contre le propriétaire du serveur, le bot, toi-même ou toute personne dont le rôle le plus élevé est égal ou supérieur au tien. Si un modérateur bannit ou expulse plus de 5 membres en 10 minutes, il est bloqué pendant une heure et le propriétaire est prévenu."
+      }
+    },
+    "warnings": {
+      "title": "Comment les avertissements et les bannissements s’aggravent",
+      "summary": "L’échelle d’avertissements : trois avertissements, puis 7 jours, 30 jours et un bannissement définitif.",
+      "intro": "Chaque membre a une échelle sur chaque serveur. Elle commence au niveau 0 sans avertissement et ne se réinitialise jamais d’elle-même.",
+      "steps": {
+        "title": "Les étapes",
+        "first": "**Les avertissements 1 et 2** sont un message privé : « Avertissement 1 sur 3 » et « Avertissement 2 sur 3 ».",
+        "third": "**L’avertissement 3** entraîne un bannissement automatique de 7 jours. Le membre est maintenant au niveau 1.",
+        "next": "Après son retour, l’**avertissement suivant** entraîne un bannissement automatique de 30 jours (niveau 2).",
+        "last": "L’**avertissement d’après** entraîne un bannissement définitif (niveau 3). On peut en faire appel pendant 6 mois. Ensuite, ou après un appel refusé, l’appel n’est plus possible."
+      },
+      "dmCaption": "Le message privé du bannissement automatique au 3e avertissement. Faire appel de ce code retire aussi l’avertissement qui l’a causé.",
+      "changes": {
+        "title": "Ce qui fait bouger l’échelle",
+        "removeWarn": "Retirer un avertissement",
+        "removeWarnText": "Réduit le nombre d’avertissements.",
+        "appeal": "Appel accepté contre un bannissement de l’échelle",
+        "appealText": "Baisse le niveau d’un cran, jamais en dessous de 0.",
+        "manualBan": "Un bannissement donné à la main",
+        "manualBanText": "Ne fait pas bouger l’échelle.",
+        "void": "Annuler un dossier",
+        "voidText": "Le dossier reste dans l’historique mais ne compte plus.",
+        "imported": "Anciens avertissements importés",
+        "importedText": "Affichés uniquement comme historique. Ils ne comptent pas."
+      },
+      "standing": "Les membres peuvent voir où ils en sont avec **My standing** dans le panneau d’appel."
+    },
+    "appeals": {
+      "title": "Les appels : comment ça marche",
+      "summary": "Où faire appel, ce que demande le formulaire, qui décide et combien de temps attendre avant de réessayer.",
+      "where": {
+        "title": "Où faire appel",
+        "text": "Chaque message privé de sanction contient le lien d’appel, ou indique que la sanction est sans appel. Le panneau d’appel a trois boutons : **Appeal**, **My appeals** et **My standing**. Les membres mis en sourdine ou avertis utilisent le panneau du serveur principal. Les membres bannis utilisent celui de {support}, qu’ils peuvent encore atteindre après un bannissement."
+      },
+      "form": {
+        "title": "Le formulaire",
+        "why": "Pourquoi devrait-elle être levée ?",
+        "whyText": "Au moins 20 caractères, au plus 1000.",
+        "code": "Code du dossier",
+        "codeText": "Dans le message privé, par exemple `k7xq2`.",
+        "more": "Plus d’infos",
+        "moreText": "Facultatif, tout ce que l’équipe devrait savoir d’autre."
+      },
+      "after": {
+        "title": "Ce qui se passe ensuite",
+        "banKick": "**Les appels de bannissement et d’expulsion** ouvrent un salon sur le serveur d’assistance avec toi dedans, pour que l’équipe puisse poser des questions.",
+        "muteWarn": "**Les appels de mise en sourdine et d’avertissement** sont examinés par l’équipe sur le serveur principal.",
+        "decision": "Les administrateurs décident. Tu reçois la décision en message privé. Un appel accepté lève ce qui est encore en cours et, pour les bannissements et les expulsions, s’accompagne d’une invitation à usage unique pour revenir."
+      },
+      "limits": {
+        "title": "Limites",
+        "onePending": "Un seul appel en attente par dossier.",
+        "cooldown": "Après un refus, attends 7 jours avant de faire de nouveau appel pour le même dossier.",
+        "window": "On peut faire appel des bannissements et des mises en sourdine tant qu’ils durent. Des avertissements et des expulsions dans les 30 jours.",
+        "unappealable": "Certains dossiers sont sans appel, par exemple un bannissement définitif de l’échelle après 6 mois. Le message privé le précise."
+      }
+    },
+    "usingTheDashboard": {
+      "title": "Utiliser le tableau de bord",
+      "summary": "La connexion, les quatre zones de la barre latérale et l’endroit où les modifications sont enregistrées.",
+      "signIn": {
+        "title": "Se connecter",
+        "text": "Ouvre le tableau de bord et connecte-toi avec Discord. Mewvo demande seulement à Discord qui tu es (`identify`). Tu as besoin du rôle Administrateur sur le serveur ; il est revérifié sur chaque page et à chaque enregistrement. Un serveur peut aussi donner à un rôle de modérateur un accès en lecture aux pages de modération.",
+        "textLink": "Ouvre [le tableau de bord]({dashboard}) et connecte-toi avec Discord. Mewvo demande seulement à Discord qui tu es (`identify`). Tu as besoin du rôle Administrateur sur le serveur ; il est revérifié sur chaque page et à chaque enregistrement. Un serveur peut aussi donner à un rôle de modérateur un accès en lecture aux pages de modération."
+      },
+      "shotAlt": "La page Cases du tableau de bord Mewvo : des filtres par membre, modérateur, type, statut, texte et dates au-dessus d’un tableau de dossiers avec code, type, membre, modérateur, raison, date et statut.",
+      "shotCaption": "Les dossiers, avec des membres fictifs.",
+      "areas": {
+        "title": "Les quatre zones",
+        "moderate": "Moderate",
+        "moderateText": "Overview (ce qui t’attend en premier), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff et Channel tools.",
+        "community": "Community",
+        "communityText": "Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community et Join to create.",
+        "setup": "Server setup",
+        "setupText": "Automod, Enforcement and appeals, Logging, Verification, Counters et Support server.",
+        "bot": "Bot",
+        "botText": "All modules, Commands et Audit log."
+      },
+      "changes": {
+        "title": "Les modifications et le journal d’audit",
+        "text": "Les paramètres s’affichent sous forme de lignes ; modifie-en un et enregistre. Chaque modification est inscrite dans le journal d’audit : qui a modifié quel paramètre, de quelle valeur à quelle valeur. Les actions comme les bannissements depuis la page Members suivent les mêmes règles que les commandes, y compris le message privé et les contrôles de sécurité.",
+        "phones": "Le tableau de bord fonctionne aussi sur téléphone, avec une barre d’onglets en bas, et propose cinq thèmes dans le menu du compte (Light, Dark, Dim, High contrast, ou comme ton appareil)."
+      }
+    }
+  }
+}

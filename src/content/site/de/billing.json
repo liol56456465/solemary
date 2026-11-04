@@ -1,0 +1,278 @@
+{
+  "test": {
+    "label": "Testmodus",
+    "notice": "Es ist kein Zahlungsanbieter angebunden. Ein abgeschlossener Kauf erzeugt eine Testbestellung; es wird keine Karte abgefragt und niemandem etwas berechnet.",
+    "payNote": "Testmodus – es wird kein Geld abgebucht"
+  },
+  "vat": {
+    "registered": "Preis inklusive MwSt.",
+    "notRegistered": "Es wird keine MwSt. berechnet (der Verkäufer ist nicht umsatzsteuerlich registriert)."
+  },
+  "consent": {
+    "legend": "Vor deiner Bestellung",
+    "startNow": "Ich möchte, dass mein Plan sofort beginnt. Mir ist bekannt, dass ich bei einem Widerruf innerhalb von 14 Tagen für die bereits genutzten Tage zahle.",
+    "startNowGift": "Ich möchte meinen Geschenk-Key sofort erhalten. Mir ist bekannt, dass ich bei einem Widerruf innerhalb von 14 Tagen für die Tage zahle, die nach dem Einlösen des Keys bereits genutzt wurden.",
+    "terms": "Ich akzeptiere die [Allgemeinen Geschäftsbedingungen](/terms).",
+    "age": "Ich bin mindestens 18 Jahre alt oder habe die Erlaubnis meiner Eltern oder meines Vormunds."
+  },
+  "common": {
+    "back": "← Abo",
+    "backToSubscription": "Zurück zum Abo",
+    "goToSubscription": "Zum Abo",
+    "planLine": "Mewvo {plan}",
+    "planPeriod": "Mewvo {plan} · {period}",
+    "planWithPeriod": "{plan} · {period}",
+    "days": "{count} Tage",
+    "test": "Test",
+    "day": {
+      "one": "{count} Tag",
+      "other": "{count} Tage"
+    }
+  },
+  "period": {
+    "monthly": "Monatlich",
+    "yearly": "Jährlich"
+  },
+  "kind": {
+    "personal": "Für mich",
+    "gift": "Geschenk"
+  },
+  "keyStatus": {
+    "unused": "Noch nicht eingelöst",
+    "redeemed": "Eingelöst",
+    "revoked": "Storniert",
+    "expired": "Abgelaufen (nicht eingelöst)"
+  },
+  "source": {
+    "key": "Zuletzt mit einem Key hinzugefügt.",
+    "purchase": "Zuletzt mit einem Kauf hinzugefügt.",
+    "owner": "Vom Bot-Inhaber vergeben.",
+    "bonus": "Frühstarter-Bonus für Mewvo-Konten."
+  },
+  "login": {
+    "title": "Anmelden",
+    "heading": "Melde dich an, um fortzufahren",
+    "reason": {
+      "manage": "Melde dich mit Discord an, um dein Abo zu verwalten.",
+      "buyPlan": "Melde dich mit Discord an, um Mewvo {plan} zu kaufen.",
+      "buyAny": "Melde dich mit Discord an, um einen Plan zu kaufen.",
+      "redeem": "Melde dich mit Discord an, um einen Key einzulösen.",
+      "withdraw": "Melde dich mit Discord an, um eine Bestellung zu widerrufen."
+    },
+    "privacy": "Mewvo fragt bei Discord nur, wer du bist (identify): keine E-Mail, sonst nichts.",
+    "button": "Mit Discord anmelden"
+  },
+  "effect": {
+    "new": "Beginnt sofort.",
+    "extend": "Wird zu deiner aktuellen {plan}-Laufzeit hinzugefügt (derzeit bis {until}).",
+    "upgrade": "Upgrade: Deine verbleibenden {remaining} {fromPlan} werden zu {converted} {plan}, dann wird die neue Laufzeit hinzugefügt."
+  },
+  "checkout": {
+    "title": "Kasse",
+    "back": "← Pläne",
+    "headingGift": "Mewvo {plan} verschenken",
+    "heading": "Mewvo {plan}",
+    "planLabel": "Plan",
+    "pricePerMonth": "{price}/Monat",
+    "pricePerYear": "{price}/Jahr",
+    "billingLabel": "Abrechnung",
+    "monthsFree": "{months} Monate gratis",
+    "forLabel": "Für wen ist es",
+    "forMe": "Für mich",
+    "forMeSub": "beginnt sofort auf deinem Konto",
+    "asGift": "Als Geschenk",
+    "asGiftSub": "du bekommst einen Key zum Verschenken",
+    "includes": "{plan} enthält",
+    "planned": "Geplant",
+    "giftTo": "An (optional)",
+    "giftToPlaceholder": "Name der Person",
+    "giftMessage": "Nachricht (optional)",
+    "giftMessagePlaceholder": "Wird angezeigt, wenn der Geschenklink geöffnet wird",
+    "pay": "Zahlungspflichtig bestellen · {amount}",
+    "blocked": "Nicht verfügbar, solange dein Plan läuft",
+    "privacyNote": "Wie deine Daten verwendet werden: [Datenschutzerklärung](/privacy). Du kannst innerhalb von {days} Tagen widerrufen: [Widerrufsrecht](/withdrawal).",
+    "privacyNoteGift": "Wie deine Daten verwendet werden: [Datenschutzerklärung](/privacy). Du kannst innerhalb von {days} Tagen widerrufen: [Widerrufsrecht](/withdrawal). Bei einem Geschenk steht das Widerrufsrecht dir als Käufer zu, nicht der beschenkten Person."
+  },
+  "summary": {
+    "title": "Bestellübersicht",
+    "plan": "Plan",
+    "billing": "Abrechnung",
+    "billingValue": "{period} ({days} Tage)",
+    "for": "Für",
+    "forGift": "Einen Geschenk-Key",
+    "forAccount": "Dein Konto ({username})",
+    "total": "Gesamt",
+    "vatNote": "{vat} Eine Zahlung für {days} Tage. Keine automatische Verlängerung: Der Plan endet, wenn du keine weitere Laufzeit kaufst.",
+    "giftNote": "Du bekommst einen Key wie MEWVO-XXXX-XXXX-XXXX, ein Jahr lang gültig. Jede Person, die sich auf dieser Website anmeldet, kann ihn einmal einlösen."
+  },
+  "seller": {
+    "title": "Vor deiner Bestellung",
+    "seller": "Verkäufer",
+    "legalDetails": "Rechtliche Angaben",
+    "whatYouGet": "Was du bekommst",
+    "whatYouGetGift": "Mewvo {plan} (die Liste oben) als Key, den du verschenken kannst",
+    "whatYouGetPersonal": "Mewvo {plan} (die Liste oben) auf deinem Discord-Konto",
+    "duration": "Laufzeit",
+    "durationGift": "{days} Tage ab dem Einlösen des Keys; keine automatische Verlängerung",
+    "durationPersonal": "{days} Tage ab der Bestellung; keine automatische Verlängerung",
+    "totalPrice": "Gesamtpreis",
+    "totalPriceValue": "{amount}. {vat}",
+    "withdrawal": "Widerruf",
+    "withdrawalValue": "{days} Tage. Wenn der Plan bereits begonnen hat, zahlst du für die genutzten Tage. [So widerrufst du](/withdrawal)"
+  },
+  "withdrawalCell": {
+    "withdrawn": "Widerrufen",
+    "refundDue": "{date} · Erstattungsbetrag {amount}",
+    "refundDueTest": "{date} · Erstattungsbetrag {amount} (Test)",
+    "withdraw": "Vertrag hier widerrufen",
+    "until": "bis {date}"
+  },
+  "plan": {
+    "title": "Dein Plan",
+    "none": "Kein Bezahlplan auf diesem Konto. [Pläne ansehen](/pricing).",
+    "activeUntil": "Aktiv bis {date}.",
+    "addTime": "Weitere Laufzeit hinzufügen"
+  },
+  "redeemForm": {
+    "label": "Key",
+    "button": "Einlösen",
+    "terms": "Mit dem Einlösen eines Keys akzeptierst du die [Allgemeinen Geschäftsbedingungen](/terms). Wie deine Daten verwendet werden: [Datenschutzerklärung](/privacy)."
+  },
+  "account": {
+    "title": "Abo",
+    "lead": "Dein Mewvo-Plan, deine Keys und Bestellungen, angemeldet als **{username}**.",
+    "nav": "Mein Konto",
+    "myRecord": "Meine Akte",
+    "plans": "Pläne",
+    "redeemTitle": "Einen Key einlösen",
+    "redeemNote": "Ein Key fügt deinem Konto seinen Plan und seine Laufzeit hinzu. Gleicher Plan: wird an das Enddatum angehängt. Ein höherer Plan rechnet deine verbleibende Laufzeit um.",
+    "giftsTitle": "Gekaufte Geschenk-Keys",
+    "giftsKey": "Key",
+    "giftsPlan": "Plan",
+    "giftsTime": "Laufzeit",
+    "giftsBought": "Gekauft",
+    "giftsStatus": "Status",
+    "giftTo": "An {name}",
+    "noGifts": "Noch keine Geschenk-Keys. Wähle an der Kasse **Als Geschenk**, um einen zu bekommen.",
+    "ordersTitle": "Bestellungen",
+    "ordersOrder": "Bestellung",
+    "ordersDate": "Datum",
+    "ordersPlan": "Plan",
+    "ordersFor": "Für",
+    "ordersAmount": "Betrag",
+    "ordersWithdrawal": "Widerruf",
+    "receipt": "Beleg",
+    "ordersNote": "Du kannst eine Bestellung innerhalb von {days} Tagen nach dem Kauf widerrufen. [Widerrufsrecht](/withdrawal).",
+    "noOrders": "Noch keine Bestellungen."
+  },
+  "receipt": {
+    "title": "Bestellung #{id}",
+    "headingGift": "Dein Geschenk-Key ist bereit",
+    "heading": "Danke, dein Plan ist aktiv",
+    "giftKey": "Geschenk-Key · {plan}, {days} Tage",
+    "giftKeyTo": "Geschenk-Key · {plan}, {days} Tage · an {name}",
+    "giveAway": "Gib diesen Key an wen du willst. Die Person meldet sich auf dieser Website an und löst ihn unter Abo → Einen Key einlösen ein, oder in Discord mit `/premium redeem`.",
+    "redeemBy": "Einzulösen bis {date}.",
+    "status": "Status: {status}.",
+    "directLink": "Direktlink: {link}",
+    "order": "Bestellung",
+    "date": "Datum",
+    "account": "Konto",
+    "plan": "Plan",
+    "for": "Für",
+    "total": "Gesamt",
+    "totalTest": "{amount} (Test, nicht berechnet)",
+    "vat": "MwSt.",
+    "renewal": "Verlängerung",
+    "renewalNone": "Keine: Der Plan endet, wenn du keine weitere Laufzeit kaufst",
+    "confirmed": "Von dir bestätigt",
+    "confirmedMeta": "{date} · {version} · AGB vom {terms}",
+    "withdrawal": "Widerruf",
+    "periodEnded": "Die {days}-tägige Frist ist abgelaufen. [Widerrufsrecht](/withdrawal)",
+    "giftWithdrawal": "Bei einem Geschenk steht das Widerrufsrecht dir als Käufer zu.",
+    "dmNote": "Diese Bestätigung wird dir auch als Discord-Direktnachricht geschickt (wenn deine Direktnachrichten vom Bot offen sind). Bewahre sie für deine Unterlagen auf."
+  },
+  "gift": {
+    "fromFor": "Ein Geschenk von {from} für {to}",
+    "from": "Ein Geschenk von {from}",
+    "keyFor": "Ein Mewvo-Key für {to}",
+    "key": "Ein Mewvo-Key",
+    "plan": "Mewvo {plan} · {days} Tage",
+    "redeemBy": "Einzulösen bis {date}."
+  },
+  "redeem": {
+    "title": "Einen Key einlösen",
+    "headingGift": "Du hast ein Geschenk bekommen",
+    "heading": "Einen Key einlösen",
+    "lead": "Angemeldet als **{username}**. Der Plan des Keys wird diesem Konto hinzugefügt."
+  },
+  "orderLine": {
+    "personal": "Mewvo {plan} · {period}",
+    "gift": "Mewvo {plan} · {period} (Geschenk)"
+  },
+  "withdrawList": {
+    "title": "Einen Vertrag widerrufen",
+    "heading": "Vertrag hier widerrufen",
+    "lead": "Angemeldet als **{username}**. Wähle die Bestellung, die du widerrufen möchtest. Du kannst innerhalb von {days} Tagen nach der Bestellung ohne Angabe von Gründen widerrufen.",
+    "item": "**Bestellung {order}**: {line}, {amount}, bestellt am {date}.",
+    "button": "Vertrag hier widerrufen",
+    "none": "Keine Bestellung auf diesem Konto liegt innerhalb ihrer {days}-tägigen Widerrufsfrist.",
+    "note": "[Dein Widerrufsrecht](/withdrawal) erklärt die Regeln und die anderen Wege, den Widerruf zu erklären."
+  },
+  "withdrawConfirm": {
+    "title": "Widerruf bestätigen",
+    "back": "← Vertrag hier widerrufen",
+    "heading": "Bestellung #{id} widerrufen",
+    "name": "Dein Name",
+    "contract": "Vertrag",
+    "contractValue": "Bestellung {order}: {line}, {amount}, bestellt am {date}",
+    "contractValueTest": "Bestellung {order}: {line}, {amount} (Test), bestellt am {date}",
+    "account": "Konto",
+    "accountValue": "{username} (Discord)",
+    "ack": "Eingangsbestätigung",
+    "ackValue": "Wird dir als Discord-Direktnachricht geschickt und auf diesem Konto unter Abo gespeichert",
+    "daysUsed": "Genutzte Tage",
+    "daysUsedValue": "{used} von {total}",
+    "refundDue": "Erstattungsbetrag",
+    "refundTest": "{amount} (Testbestellung: Es wurde nichts berechnet, es wird nichts zurückgezahlt)",
+    "statementPersonal": "Erklärung: Hiermit widerrufe ich meinen Vertrag über diese Bestellung. Die nicht genutzten Tage werden jetzt von meinem Plan abgezogen.",
+    "statementGift": "Erklärung: Hiermit widerrufe ich meinen Vertrag über diese Bestellung. Ein nicht eingelöster Geschenk-Key wird storniert; wurde er eingelöst, werden seine nicht genutzten Tage von diesem Plan abgezogen.",
+    "button": "Widerruf bestätigen"
+  },
+  "withdrawalAck": {
+    "title": "Widerruf der Bestellung #{id}",
+    "heading": "Wir haben deinen Widerruf erhalten",
+    "received": "Eingegangen",
+    "receivedValue": "{date} ({utc} UTC)",
+    "name": "Name",
+    "account": "Konto",
+    "contract": "Vertrag",
+    "statement": "Erklärung",
+    "statementValue": "Hiermit widerrufe ich meinen Vertrag über diese Bestellung.",
+    "daysUsed": "Genutzte Tage",
+    "daysUsedEnded": "{used} von {total} · der Plan ist beendet",
+    "refundDue": "Erstattungsbetrag",
+    "dmFailed": "Die Discord-Direktnachricht mit dieser Eingangsbestätigung konnte nicht zugestellt werden (deine Direktnachrichten sind möglicherweise geschlossen). Speichere oder drucke diese Seite; sie bleibt auch auf deinem Konto gespeichert.",
+    "dmNote": "Diese Eingangsbestätigung wird dir auch als Discord-Direktnachricht geschickt und bleibt auf deinem Konto gespeichert."
+  },
+  "errors": {
+    "notAllowed": "Nicht erlaubt",
+    "purchaseOrigin": "Dieser Kauf kam nicht von dieser Website. Es wurde nichts gekauft.",
+    "redeemOrigin": "Dieses Formular kam nicht von dieser Website. Es wurde nichts eingelöst.",
+    "withdrawOrigin": "Dieses Formular kam nicht von dieser Website. Es wurde nichts widerrufen.",
+    "notFound": "Nicht gefunden",
+    "noOrder": "Diese Bestellung gibt es auf deinem Konto nicht.",
+    "noWithdrawal": "Für diese Bestellung gibt es auf deinem Konto keinen Widerruf.",
+    "periodOver": "Widerrufsfrist abgelaufen",
+    "periodOverText": "Die {days}-tägige Widerrufsfrist für die Bestellung #{id} ist am {date} abgelaufen. Kontaktiere uns, wenn du denkst, dass das nicht stimmt.",
+    "tooManyTries": "Zu viele Versuche. Warte eine Minute und versuch es noch einmal."
+  },
+  "flash": {
+    "redeemed": "Key eingelöst: Mewvo {plan}, {days} Tage hinzugefügt. Aktiv bis {until}.",
+    "redeemedConverted": "Key eingelöst: Mewvo {plan}, {days} Tage hinzugefügt. Deine verbleibende {fromPlan}-Laufzeit wurde umgerechnet. Aktiv bis {until}."
+  },
+  "planButtons": {
+    "buy": "{plan} kaufen",
+    "gift": "Verschenken"
+  }
+}

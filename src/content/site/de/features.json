@@ -1,0 +1,296 @@
+{
+  "meta": {
+    "description": "Alles, was Mewvo kann: Moderation, die Verwarnungsleiter, Einsprüche, Automod, Tickets und Modmail, das Web-Dashboard und Community-Tools."
+  },
+  "head": {
+    "title": "Funktionen",
+    "lead": "Alles, was Mewvo heute kann, nach Bereichen geordnet. Nichts auf dieser Seite ist geplant oder kostenpflichtig; was mit Bezahlplänen kommen könnte, steht unter [Preise](/pricing).",
+    "indexLabel": "Funktionsbereiche"
+  },
+  "groups": {
+    "enforcement": {
+      "title": "Moderation",
+      "intro": "Verwarnen, stummschalten, kicken und bannen über ein Panel, mit einem Eintrag für jede Aktion.",
+      "items": {
+        "enforcementsPanel": {
+          "term": "Panel /enforcements",
+          "text": "Zeigt Kontoalter des Mitglieds, Zeit auf dem Server, gezählte Verwarnungen, Stufe auf der Leiter, aktive Strafen und die letzten drei Fälle und bietet dann nur die Aktionen an, die gerade sinnvoll sind (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
+        },
+        "reasons": {
+          "term": "Gründe",
+          "text": "Eine Liste vorgefertigter Gründe, manche als schwer markiert (gegen einen schweren Bann ist standardmäßig kein Einspruch möglich), oder ein eigener Grund."
+        },
+        "caseCodes": {
+          "term": "Fallcodes",
+          "text": "Jede Aktion bekommt einen kurzen, eindeutigen Code wie k7xq2: 5 bis 7 Kleinbuchstaben und Ziffern, ohne die verwechselbaren Zeichen 0, o, 1, l und i."
+        },
+        "dms": {
+          "term": "Direktnachrichten",
+          "text": "Das Mitglied bekommt den Grund, wer gehandelt hat, das Datum, die Dauer und das Ende, den Fallcode und wie es Einspruch einlegen kann. Gekickte Mitglieder bekommen eine einmalige Einladung zurück (eine Nutzung, 7 Tage)."
+        },
+        "mutes": {
+          "term": "Stummschaltungen",
+          "text": "Eine verwaltete Muted-Rolle statt Discord-Timeouts, damit Stummschaltungen länger als 28 Tage dauern können. Sie wird auch auf neue Kanäle angewendet und erneut vergeben, wenn das Mitglied den Server verlässt und wieder beitritt."
+        },
+        "safetyChecks": {
+          "term": "Sicherheitsprüfungen",
+          "text": "Lehnt den Server-Eigentümer, den Bot, dich selbst und alle mit gleich hoher oder höherer Rolle ab. Die Administrator-Rolle wird bei jedem Klick erneut geprüft."
+        },
+        "massActionGuard": {
+          "term": "Schutz vor Massenaktionen",
+          "text": "Mehr als 5 Banns oder Kicks in 10 Minuten durch einen Moderator sperren ihn für eine Stunde und alarmieren den Eigentümer. Für Stummschaltungen gilt ein eigenes Limit von 10."
+        },
+        "caseTools": {
+          "term": "Fallwerkzeuge",
+          "text": "/case edit, void und history, Beweise (Nachrichtenlinks mit Auszug oder Bilder), Fallsuche und /background für den vollständigen Verlauf eines Mitglieds."
+        },
+        "warnForMessage": {
+          "term": "Warn for this message",
+          "text": "Rechtsklick auf eine Nachricht, um die Person, die sie geschrieben hat, zu verwarnen, mit der Nachricht als Beweis im Anhang."
+        },
+        "simulation": {
+          "term": "Simulation",
+          "text": "/test schickt dir genau die Direktnachricht, die ein Mitglied bekommen würde, ohne etwas auszuführen."
+        },
+        "noContactOrders": {
+          "term": "Kontaktverbote",
+          "text": "Bitte zwei Mitglieder, bis zu einem festgelegten Zeitpunkt keinen Kontakt zueinander aufzunehmen. Das ist keine Strafe und zählt nicht als Verwarnung."
+        }
+      }
+    },
+    "ladder": {
+      "title": "Verwarnungsleiter",
+      "intro": "Eine Eskalation, die für alle gleich und für das Mitglied sichtbar ist.",
+      "items": {
+        "levels": {
+          "term": "Stufen",
+          "text": "Verwarnung 1 und 2 sind eine Direktnachricht. Verwarnung 3 ist ein automatischer 7-Tage-Bann (Stufe 1). Die nächste Verwarnung danach ist ein 30-Tage-Bann (Stufe 2), dann ein permanenter Bann (Stufe 3)."
+        },
+        "neverResets": {
+          "term": "Kein Zurücksetzen",
+          "text": "Die Leiter wird pro Mitglied und pro Server geführt und setzt sich nicht stillschweigend mit der Zeit zurück."
+        },
+        "corrections": {
+          "term": "Korrekturen",
+          "text": "Das Entfernen einer Verwarnung senkt die Anzahl. Manuell verhängte Banns verändern die Leiter nicht. Ein angenommener Einspruch gegen einen Leiter-Bann senkt die Stufe um eins."
+        },
+        "level3Appeals": {
+          "term": "Einsprüche auf Stufe 3",
+          "text": "Gegen einen permanenten Leiter-Bann ist 6 Monate lang Einspruch möglich. Danach, oder nach einem abgelehnten Einspruch, nicht mehr."
+        },
+        "myStanding": {
+          "term": "My standing",
+          "text": "Mitglieder können ihre eigenen Verwarnungen und die Folge der nächsten nachsehen, im Einspruchs-Panel oder auf der Seite Meine Akte."
+        }
+      }
+    },
+    "appeals": {
+      "title": "Einsprüche und Meldungen",
+      "intro": "Ein Weg zurück, der mit der Entscheidung eines Menschen endet.",
+      "items": {
+        "appealPanel": {
+          "term": "Einspruchs-Panel",
+          "text": "/setappeal postet das Panel mit den Buttons Appeal, My appeals und My standing, auf dem Hauptserver und dem Support-Server."
+        },
+        "appealForm": {
+          "term": "Einspruchsformular",
+          "text": "Warum die Strafe aufgehoben werden sollte, der Fallcode aus der Direktnachricht und alles, was das Team sonst noch wissen sollte."
+        },
+        "banAndKickAppeals": {
+          "term": "Einsprüche gegen Banns und Kicks",
+          "text": "Öffnen einen Kanal auf dem Support-Server mit dem Mitglied darin, damit das Gespräch auch nach einem Bann funktioniert. Fall und Verlauf gehen in einen Teamkanal nur für Administratoren, mit Accept und Deny."
+        },
+        "limits": {
+          "term": "Limits",
+          "text": "Ein offener Einspruch pro Fall und 7 Tage Wartezeit nach einer Ablehnung. Gegen Banns und Stummschaltungen ist Einspruch möglich, solange sie aktiv sind, gegen Verwarnungen und Kicks innerhalb von 30 Tagen."
+        },
+        "decisions": {
+          "term": "Entscheidungen",
+          "text": "Accept hebt auf, was noch aktiv ist, und schickt per Direktnachricht eine einmalige Einladung zurück; Deny benachrichtigt das Mitglied per Direktnachricht. Mit /appeals geht die Entscheidung auch per Befehl."
+        },
+        "bannedRole": {
+          "term": "Bann-Rolle",
+          "text": "Mitglieder mit aktivem Bann bekommen eine Rolle auf dem Support-Server, die entfernt wird, wenn der Bann endet."
+        },
+        "staffReports": {
+          "term": "Meldungen über das Team",
+          "text": "Mitglieder können ein Teammitglied privat melden. Nur Administratoren sehen die Meldungen; eine offene Meldung pro Person und drei pro Tag."
+        }
+      }
+    },
+    "automod": {
+      "title": "Automod und Raids",
+      "intro": "Automatische Aktionen, die normale Fälle sind, und ein Mensch prüft sie.",
+      "items": {
+        "builtInRules": {
+          "term": "14 Regeln",
+          "text": "Betrugslinks, NSFW, sexuelle Belästigung, Belästigung, persönliche Daten, Werbung, Identitätsdiebstahl, Sprache, Respektlosigkeit, Massenerwähnungen, Spam, Großbuchstaben, Zierschriften und Nur Englisch."
+        },
+        "customRules": {
+          "term": "Eigene Regeln",
+          "text": "Deine eigenen Wörter und Ausdrücke, als ganze Wörter erkannt, mit derselben Buchstabennormalisierung. Jede Regel löscht, verwarnt oder schaltet stumm, mit einer Prüfkarte. In den Bezahlplänen: 5 bei Normal, 25 bei Pro, 100 bei Max."
+        },
+        "punishmentSteps": {
+          "term": "Strafstufen",
+          "text": "Jede Regel hat eigene Stufen (zum Beispiel Spam: Verwarnung, 1 Stunde stumm, 1 Tag stumm), gezählt über 30 Tage. Verstößt eine Nachricht gegen mehrere Regeln, zählt nur die schwerste."
+        },
+        "reviewCards": {
+          "term": "Prüfkarten",
+          "text": "Jede automatische Aktion postet eine Karte für das Team mit Keep, Undo und Change to…."
+        },
+        "modes": {
+          "term": "Modi",
+          "text": "Jede Regel ist an, im Beobachtungsmodus (nur Karte) oder aus, global oder pro Kanal. Vertrauenswürdige Rollen und Kanalausnahmen."
+        },
+        "hardToDodge": {
+          "term": "Schwer zu umgehen",
+          "text": "Text wird auf normale Buchstaben zurückgeführt, sodass Zierschriften, ähnlich aussehende Buchstaben, Zalgo und unsichtbare Zeichen die Regeln nicht umgehen."
+        },
+        "newMembers": {
+          "term": "Neue Mitglieder",
+          "text": "Links, Anhänge und schnelles Posten sind in den ersten 3 Tagen eines Mitglieds begrenzt. Eine Beitrittsschranke kann neue Konten, die ihre Prüfungen nicht bestehen, markieren oder kicken."
+        },
+        "raids": {
+          "term": "Raids",
+          "text": "Zehn Beitritte in einer Minute sperren den Server: Die Verifizierungsstufe steigt, Einladungen und Direktnachrichten werden pausiert (Panikmodus) und die Administratoren werden alarmiert. /automod lockdown-end stellt alles wieder her und postet einen Bericht."
+        },
+        "memberReports": {
+          "term": "Meldungen von Mitgliedern",
+          "text": "Wenn 3 Mitglieder mit dem Flaggen-Emoji auf eine Nachricht reagieren, wird sie entfernt und an den Prüfkanal geschickt."
+        },
+        "nativeAutomod": {
+          "term": "Discord-AutoMod",
+          "text": "Eine Brücke zu den eingebauten AutoMod-Regeln von Discord, damit beide zusammenarbeiten."
+        }
+      }
+    },
+    "tickets": {
+      "title": "Tickets und Modmail",
+      "intro": "Private Gespräche zwischen Mitgliedern und Team, direkt in Discord.",
+      "items": {
+        "ticketPanel": {
+          "term": "Ticket-Panel",
+          "text": "Mitglieder öffnen ein Ticket über einen Button. Das Team übernimmt es, setzt eine Priorität und antwortet mit gespeicherten Antworten."
+        },
+        "transcripts": {
+          "term": "Transkripte",
+          "text": "Wenn ein Ticket oder ein Modmail-Gespräch geschlossen wird, geht ein Transkript in einen Kanal nur für das Team."
+        },
+        "modmail": {
+          "term": "Modmail",
+          "text": "Schreib dem Bot eine Direktnachricht und drück Send to staff: Das Gespräch wird zu einem Teamkanal. Zeilen, die mit // beginnen, sind interne Notizen."
+        },
+        "modmailCommands": {
+          "term": "Befehle",
+          "text": "/modmail close, block und unblock. Offene Meldungs- und Modmail-Kanäle sind begrenzt, damit eine Flut den Server nicht zuschüttet."
+        }
+      }
+    },
+    "dashboard": {
+      "title": "Web-Dashboard",
+      "intro": "Die Einstellungen und die Moderation des Servers im Browser.",
+      "items": {
+        "signIn": {
+          "term": "Anmeldung",
+          "text": "Anmeldung mit Discord (nur identify). Administrator wird bei jeder Anfrage erneut geprüft; eine Moderatorrolle kann Lesezugriff auf die Moderationsseiten bekommen."
+        },
+        "moderate": {
+          "term": "Moderieren",
+          "text": "Eine Übersicht mit dem, was dich braucht, ein Posteingang, Mitglieder (Filter, Rollen, Spitznamen, Timeouts, Sammelaktionen), Banns, Fälle, Einsprüche, Kontaktverbote und Teamaktivität."
+        },
+        "settings": {
+          "term": "Einstellungen",
+          "text": "Jedes Modul auf einer eigenen Seite: Tickets, Willkommen, Level, Reaktionsrollen, Nachrichten, Gewinnspiele, Geburtstage, Bewerbungen, Community, Automod, Moderation, Logs, Verifizierung und mehr."
+        },
+        "auditLog": {
+          "term": "Audit-Log",
+          "text": "Jede Änderung wird festgehalten: wer welche Einstellung von was auf was geändert hat."
+        },
+        "temporaryRoles": {
+          "term": "Temporäre Rollen",
+          "text": "Vergib eine Rolle für eine festgelegte Zeit; sie wird nach Ablauf entfernt und erneut vergeben, wenn das Mitglied vorher wieder beitritt."
+        }
+      }
+    },
+    "community": {
+      "title": "Community",
+      "intro": "Die freundliche Seite des Servers.",
+      "items": {
+        "leveling": {
+          "term": "Level",
+          "text": "XP fürs Chatten, Level-up-Nachrichten, Rollenbelohnungen, Kanäle ohne XP und eine öffentliche Bestenliste."
+        },
+        "tags": {
+          "term": "Tags",
+          "text": "Gespeicherte Antworten, die alle mit /tag abrufen können. Bis zu 100 pro Server."
+        },
+        "suggestions": {
+          "term": "Vorschläge",
+          "text": "Ein Vorschlagskanal mit Abstimmungen."
+        },
+        "starboard": {
+          "term": "Starboard",
+          "text": "Nachrichten mit genug Sternen werden in einen Highlight-Kanal kopiert."
+        },
+        "stickyMessages": {
+          "term": "Sticky-Nachrichten",
+          "text": "Bleiben ganz unten in einem Kanal. Bis zu 10 pro Server."
+        },
+        "youtubeFeeds": {
+          "term": "YouTube-Feeds",
+          "text": "Neue Uploads werden in einem Kanal gepostet. Bis zu 20 Feeds."
+        },
+        "reactionRoles": {
+          "term": "Reaktionsrollen",
+          "text": "Rollenmenüs zur Selbstvergabe mit Buttons oder einem Auswahlmenü."
+        },
+        "giveaways": {
+          "term": "Gewinnspiele",
+          "text": "Starten, beenden und neu auslosen."
+        },
+        "birthdays": {
+          "term": "Geburtstage",
+          "text": "Ankündigungen und eine Geburtstagsrolle, mit Zeitzonen."
+        },
+        "applications": {
+          "term": "Bewerbungen",
+          "text": "Bewerbungen für Rollen mit deinen eigenen Fragen."
+        },
+        "joinToCreate": {
+          "term": "Join to Create",
+          "text": "Temporäre Sprachkanäle."
+        },
+        "welcomeAndGoodbye": {
+          "term": "Willkommen und Abschied",
+          "text": "Beitritts- und Austrittsnachrichten, Rollen beim Beitritt."
+        },
+        "counters": {
+          "term": "Zähler",
+          "text": "Kanäle mit Mitgliederzahl und ein Zählspiel."
+        }
+      }
+    },
+    "server": {
+      "title": "Logs, Verifizierung und Werkzeuge",
+      "intro": "Die Technik im Hintergrund.",
+      "items": {
+        "logging": {
+          "term": "Logs",
+          "text": "Beitritte, Austritte, Rollenänderungen, bearbeitete und gelöschte Nachrichten und mehr, jeweils in den Kanal deiner Wahl, mit ignorierten Kanälen."
+        },
+        "verification": {
+          "term": "Verifizierung",
+          "text": "Ein Verifizierungs-Panel oder Verifizierung beim Beitritt. „Verify with Discord“ kann das Mitglied außerdem zum Support-Server hinzufügen, damit Einspruchsnachrichten es weiterhin erreichen."
+        },
+        "postingAsBot": {
+          "term": "Als Bot posten",
+          "text": "Nachrichten, Embeds, Umfragen und Countdowns aus dem Dashboard oder per Befehl."
+        },
+        "memberTools": {
+          "term": "Werkzeuge für Mitglieder",
+          "text": "To-do-Listen (auch gemeinsame), ein Rechner und Umrechner, Wetter, Server- und Benutzerinfos und /wipedata, um deine eigenen Level, dein Guthaben, deinen AFK-Status, Geburtstag und deine To-do-Liste zu löschen."
+        }
+      }
+    }
+  }
+}

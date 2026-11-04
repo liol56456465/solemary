@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "description": "Mewvo est un bot Discord de modération avec codes de dossier et messages privés, une échelle d’avertissements en trois étapes, des appels lus par une vraie personne, l’automod, des tickets et des outils communautaires."
+  },
+  "actions": {
+    "readDocs": "Lire la documentation",
+    "joinServer": "Rejoindre le serveur",
+    "joinSupportServer": "Rejoindre le serveur d’assistance",
+    "openDashboard": "Mewvo est déjà sur ton serveur ? [Ouvre le tableau de bord]({url})"
+  },
+  "hero": {
+    "title": "Un bot Discord pour la modération et les appels",
+    "lead": "Mewvo avertit, met en sourdine, expulse et bannit depuis un seul panneau. Le membre reçoit un message privé avec la raison, la date de fin et la façon de faire appel. Ton équipe obtient un dossier avec un code court à retrouver plus tard.",
+    "notPublic": "Pour l’instant, Mewvo fonctionne uniquement sur le serveur Mewvo. Il ne peut pas encore être ajouté à d’autres serveurs.",
+    "dmCaption": "Le message privé qu’un membre reçoit pour un deuxième avertissement. Même texte que le bot."
+  },
+  "dashboard": {
+    "title": "Tout au même endroit",
+    "text": "Membres, dossiers, appels et chaque paramètre dans le navigateur. Connecte-toi avec Discord ; chaque modification est inscrite dans un journal d’audit. [Visite du tableau de bord](/docs/using-the-dashboard)",
+    "shotAlt": "La vue d’ensemble du tableau de bord Mewvo : éléments qui attendent l’équipe, modération des sept derniers jours, état du bot et progression de la configuration."
+  },
+  "ladder": {
+    "title": "Les mêmes règles pour tout le monde",
+    "text": "Les avertissements gravissent une échelle fixe par membre et par serveur. Les deux premiers sont un message privé. Le troisième entraîne un bannissement de 7 jours, puis 30 jours, puis définitif. Les bannissements manuels ne la font pas bouger, et un appel accepté la fait redescendre d’un cran.\n\nLes membres peuvent voir où ils en sont, pour que personne ne soit surpris par un bannissement. [Comment les avertissements s’aggravent](/docs/warnings)"
+  },
+  "what": {
+    "title": "Ce qu’il fait",
+    "text": "La modération d’abord, avec à côté les outils communautaires dont un serveur a besoin. [Toutes les fonctionnalités](/features)",
+    "items": {
+      "enforcement": {
+        "name": "Modération",
+        "text": "Avertir, mettre en sourdine, expulser et bannir depuis un panneau qui affiche d’abord l’historique du membre. Chaque action est un dossier avec un code court que l’équipe peut modifier, annuler ou compléter de preuves plus tard.",
+        "link": "Premiers pas"
+      },
+      "appeals": {
+        "name": "Appels",
+        "text": "Les membres font appel avec un court formulaire. Les appels de bannissement ouvrent un salon sur le serveur d’assistance, pour fonctionner même après un bannissement, et une personne de l’équipe décide.",
+        "link": "Comment fonctionnent les appels"
+      },
+      "automod": {
+        "name": "Automod",
+        "text": "Quatorze règles, des liens d’arnaque aux mentions en masse. Chaque action automatique est un dossier normal, avec une carte dans le salon de l’équipe pour la garder, l’annuler ou la modifier.",
+        "link": "Règles de l’automod"
+      },
+      "tickets": {
+        "name": "Tickets et modmail",
+        "text": "Un panneau de tickets, et les membres peuvent envoyer un message privé au bot pour joindre l’équipe. Les deux deviennent des salons sur ton serveur ; les lignes commençant par // restent internes.",
+        "link": "Tickets et modmail"
+      },
+      "logging": {
+        "name": "Journaux et outils",
+        "text": "Arrivées, départs, changements de rôles, messages modifiés et supprimés et plus encore, chacun dans le salon de ton choix. La vérification et les outils de serveur se trouvent juste à côté.",
+        "link": "Journaux et outils"
+      },
+      "community": {
+        "name": "Outils communautaires",
+        "text": "Niveaux, tags, suggestions, starboard, messages épinglés en bas, flux YouTube, rôles par réaction, giveaways, anniversaires, candidatures, salons vocaux à création automatique, messages de bienvenue.",
+        "link": "Tous les outils communautaires"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Gratuit",
+    "text": "Tout ce qui précède est gratuit. Les formules payantes ne font que relever des limites comme les tags et les messages épinglés en bas. [Formules et tarifs](/pricing)"
+  },
+  "help": {
+    "title": "Des questions ?",
+    "text": "Commence par la [documentation](/docs) ou les [questions et réponses](/faq).",
+    "support": "Toujours bloqué ? Demande sur le [serveur d’assistance]({url}) ; une vraie personne répond."
+  }
+}

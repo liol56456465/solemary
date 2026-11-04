@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "title": "Tarifs",
+    "description": "Mewvo est gratuit aujourd’hui. Formules payantes prévues : {normal} {normalPrice}, {pro} {proPrice} et {max} {maxPrice} par mois, ou deux mois offerts en paiement annuel."
+  },
+  "head": {
+    "title": "Formules et tarifs",
+    "leadBilling": "Free couvre tout ce que Mewvo fait aujourd’hui. Les formules payantes ajoutent de la place et des outils ; achète-en une pour ton compte ou comme clé cadeau pour quelqu’un d’autre. [Tu as une clé ?](/me/redeem)",
+    "testMode": "**Mode test.** {notice}",
+    "lead": "Tout ce que Mewvo fait aujourd’hui est gratuit. Les formules payantes commenceront quand Mewvo s’ouvrira à d’autres serveurs ; d’ici là, rien ne peut être acheté.",
+    "leadSupport": "Tout ce que Mewvo fait aujourd’hui est gratuit. Les formules payantes commenceront quand Mewvo s’ouvrira à d’autres serveurs ; d’ici là, rien ne peut être acheté. [Rejoins le serveur d’assistance]({url}) pour l’apprendre en premier."
+  },
+  "plans": {
+    "title": "Formules",
+    "note": "Prix en euros. Les limites comme les tags suivent la formule du propriétaire du serveur. Les avantages marqués (prévu) ne sont pas encore développés et peuvent changer avant le lancement des formules payantes.",
+    "billingNote": "Les prix correspondent au montant total que tu paies. {vat} Chaque achat est un paiement unique pour {monthDays} ou {yearDays} jours, sans renouvellement automatique. Tu peux te rétracter dans un délai de {withdrawalDays} jours : [droit de rétractation](/withdrawal)."
+  },
+  "card": {
+    "planned": "(prévu)",
+    "yearly": "ou {price} par an ({months} mois offerts)",
+    "freeForGood": "Gratuit pour toujours",
+    "perMonth": "/ mois",
+    "joinServer": "Rejoindre le serveur",
+    "joinSupport": "Rejoindre le serveur d’assistance",
+    "seeFeatures": "Voir toutes les fonctionnalités",
+    "comingSoon": "Bientôt disponible",
+    "buyMonth": "Acheter un mois",
+    "buyYear": "Acheter un an",
+    "gift": "En cadeau : [un mois]({monthly}) · [un an]({yearly})"
+  },
+  "compare": {
+    "title": "Ce que comprend chaque formule",
+    "caption": "Comparaison des formules. Les lignes marquées prévu ne sont pas encore développées ; la colonne Free correspond à ce que Mewvo fait aujourd’hui.",
+    "feature": "Fonctionnalité",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "faq": {
+    "title": "Questions sur les tarifs",
+    "buyNowTest": "Uniquement à titre de test. Le paiement fonctionne de bout en bout (pour toi ou comme clé cadeau), mais aucun prestataire de paiement n’est connecté : aucune carte n’est demandée et personne n’est débité. Les avantages marqués prévu ne sont pas encore développés.",
+    "more": "Plus de réponses dans la [FAQ](/faq)."
+  }
+}

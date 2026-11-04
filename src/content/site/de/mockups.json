@@ -1,0 +1,80 @@
+{
+  "bot": {
+    "appTag": "APP",
+    "timeToday": "Heute um 14:05"
+  },
+  "dm": {
+    "frameLabel": "Direktnachricht · Mewvo",
+    "appealHere": "**Hier Einspruch einlegen:** {invite}",
+    "date": "Datum: {date}",
+    "caseCode": "Fallcode: {code}",
+    "privacy": "Datenschutz: {url}"
+  },
+  "warnDm": {
+    "title": "**Verwarnung 2 von 3 in Mewvo**",
+    "by": "Von: Moderator",
+    "reason": "Grund: Spam in #general",
+    "dateValue": "Donnerstag, 29. Oktober 2026 um 14:05",
+    "limit": "Bei 3 Verwarnungen wirst du gebannt."
+  },
+  "banDm": {
+    "time": "Samstag um 19:40",
+    "title": "**Von Mewvo gebannt**",
+    "by": "Von: Mewvo",
+    "reason": "Grund: Verwarnungslimit erreicht",
+    "dateValue": "Samstag, 31. Oktober 2026 um 19:40",
+    "duration": "Dauer: 7 Tage, endet {end} {relative}",
+    "endValue": "Samstag, 7. November 2026 um 19:40",
+    "relativeValue": "(in 7 Tagen)",
+    "ladderNote": "Ein Einspruch gegen diesen Code entfernt auch die Verwarnung, die diesen Bann ausgelöst hat."
+  },
+  "appealForm": {
+    "frameLabel": "Einspruchsformular · öffnet sich über den Einspruch-Button",
+    "title": "Einspruch gegen eine Strafe",
+    "reason": {
+      "label": "Warum sollte sie aufgehoben werden?",
+      "help": "Warum sollten Bann, Stummschaltung oder Verwarnung aufgehoben werden?",
+      "example": "Ich habe denselben Link dreimal gepostet, weil ich dachte, er wurde nicht gesendet. Jetzt kenne ich die Regel und es passiert nicht wieder."
+    },
+    "caseCode": {
+      "label": "Fallcode",
+      "help": "Aus der Direktnachricht, die du bei der Strafe bekommen hast, z. B. k7m2qx."
+    },
+    "moreInfo": {
+      "label": "Weitere Infos (optional)",
+      "help": "Alles, was die Administratoren sonst noch wissen sollten."
+    },
+    "cancel": "Abbrechen",
+    "submit": "Absenden"
+  },
+  "ladder": {
+    "frameLabel": "Verwarnungsleiter · pro Mitglied, pro Server",
+    "steps": {
+      "warn1": {
+        "key": "Verwarnung 1",
+        "what": "Direktnachricht: „Verwarnung 1 von 3“",
+        "result": "Stufe 0"
+      },
+      "warn2": {
+        "key": "Verwarnung 2",
+        "what": "Direktnachricht: „Verwarnung 2 von 3“",
+        "result": "Stufe 0"
+      },
+      "warn3": {
+        "key": "Verwarnung 3",
+        "what": "Automatischer Bann",
+        "result": "7 Tage · Stufe 1"
+      },
+      "level2": {
+        "key": "Nächste Verwarnung",
+        "what": "Automatischer Bann",
+        "result": "30 Tage · Stufe 2"
+      },
+      "level3": {
+        "key": "Nächste Verwarnung",
+        "what": "Permanenter Bann",
+        "result": "6 Monate lang anfechtbar · Stufe 3"
+      }
+    }
+  }
+}

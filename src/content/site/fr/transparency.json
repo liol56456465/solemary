@@ -1,0 +1,76 @@
+{
+  "title": "Rapport de transparence",
+  "description": "Combien d’avertissements, de mises en sourdine, d’expulsions et de bannissements le serveur Mewvo a donnés chaque mois, et comment les appels ont été tranchés. Uniquement des chiffres.",
+  "head": {
+    "heading": "Rapport de transparence",
+    "lead": "À quelle fréquence l’équipe du serveur Mewvo a averti, mis en sourdine, expulsé et banni, et comment se sont terminés les appels, mois par mois. Uniquement des chiffres : pas de noms, pas de raisons, pas de modérateurs.",
+    "period": "Du {from} au {to}, en UTC. Mis à jour au plus toutes les 10 minutes."
+  },
+  "summary": {
+    "warns": "Avertissements",
+    "mutes": "Mises en sourdine",
+    "kicks": "Expulsions",
+    "bans": "Bannissements",
+    "appealsReceived": "Appels reçus",
+    "medianDecision": "Délai médian avant la décision sur un appel"
+  },
+  "table": {
+    "month": "Mois",
+    "total": "Total",
+    "soFar": "jusqu’ici",
+    "notEnoughDecisions": "pas assez de décisions"
+  },
+  "actions": {
+    "heading": "Actions de modération",
+    "intro": "Par mois, le mois en cours jusqu’à aujourd’hui.",
+    "caption": "Actions de modération par mois, de la plus ancienne à la plus récente. La dernière ligne est le total.",
+    "columns": {
+      "warns": "Avertissements",
+      "mutes": "Mises en sourdine",
+      "kicks": "Expulsions",
+      "bans": "Bannissements",
+      "ladderBans": "Dont bannissements automatiques (échelle d’avertissements)",
+      "automod": "Donnés par l’automod",
+      "voided": "Annulés comme erreurs"
+    }
+  },
+  "appeals": {
+    "heading": "Appels",
+    "intro": "Selon le mois d’envoi de l’appel, avec son résultat à ce jour.",
+    "caption": "Appels par mois d’envoi, du plus ancien au plus récent. La dernière ligne est le total.",
+    "columns": {
+      "received": "Reçus",
+      "accepted": "Acceptés",
+      "denied": "Refusés",
+      "open": "Encore ouverts",
+      "median": "Délai médian avant la décision"
+    }
+  },
+  "how": {
+    "heading": "Comment ces chiffres sont calculés",
+    "intro": "Le fonctionnement des appels est expliqué dans le [guide des appels](/docs/appeals).",
+    "counted": {
+      "question": "Ce qui est compté",
+      "answer": "Chaque avertissement, mise en sourdine, expulsion et bannissement donné sur le serveur Mewvo, dans le mois où il a été donné (UTC), que ce soit par un modérateur, par l’échelle d’avertissements ou par l’automod. Les bannissements automatiques de l’échelle et les actions de l’automod font déjà partie des quatre colonnes principales ; leurs propres colonnes indiquent seulement combien il y en a eu."
+    },
+    "notCounted": {
+      "question": "Ce qui n’est pas compté",
+      "answer": "Les simulations de test (l’équipe prévisualise un message ; il n’arrive rien à personne), les avertissements importés de l’ancien bot comme historique, et les signalements visant l’équipe. Les dossiers annulés comme erreurs sont exclus des colonnes principales et apparaissent à part dans la colonne « Annulés comme erreurs », selon le mois où ils ont été donnés à l’origine."
+    },
+    "appeals": {
+      "question": "Appels",
+      "answer": "Les appels sont comptés dans le mois où ils ont été envoyés, avec leur résultat à ce jour. Un appel sur un dossier annulé par la suite compte quand même : l’appel a eu lieu. Les appels clos sans décision sont comptés uniquement comme reçus. Le délai médian va de l’envoi de l’appel à la décision de l’équipe, sur les appels acceptés et refusés du mois."
+    },
+    "smallNumbers": {
+      "question": "Petits nombres",
+      "answer": "Pour éviter qu’on reconnaisse un cas isolé, un nombre de 1 ou 2 est affiché comme « moins de 3 », et une médiane n’apparaît que si au moins 3 appels ont été tranchés. Quand un mois est masqué de cette façon dans une colonne, le total indique « au moins » au lieu du nombre exact."
+    },
+    "neverShown": {
+      "question": "Ce que cette page ne montre jamais",
+      "answer": "Les noms, les identifiants Discord, les codes de dossier, les raisons ou le modérateur qui a agi. Uniquement des chiffres."
+    }
+  },
+  "error": {
+    "text": "Impossible de charger le rapport pour le moment, car la base de données ne répond pas. Mieux vaut aucun chiffre que des chiffres faux ; réessaie dans quelques minutes."
+  }
+}

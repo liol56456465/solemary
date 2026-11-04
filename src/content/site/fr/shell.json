@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "pageTitle": "{title} · Mewvo",
+    "defaultDescription": "Mewvo est un bot Discord de modération avec codes de dossier, échelle d’avertissements, appels, automod, tickets et outils communautaires.",
+    "shareImageAlt": "Mewvo : modération Discord avec codes de dossier, échelle d’avertissements et appels."
+  },
+  "header": {
+    "skip": "Aller au contenu",
+    "navLabel": "Principal"
+  },
+  "links": {
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "docs": "Docs",
+    "commands": "Commandes",
+    "leaderboard": "Classement",
+    "myRecord": "Mon dossier",
+    "changelog": "Nouveautés",
+    "dashboard": "Tableau de bord",
+    "faq": "FAQ",
+    "status": "Statut",
+    "supportServer": "Serveur d’assistance",
+    "rules": "Règles",
+    "transparency": "Transparence",
+    "trustCard": "Carte de confiance",
+    "ourServer": "Notre serveur",
+    "about": "À propos",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions générales",
+    "legalNotice": "Mentions légales",
+    "contact": "Contact et signalements"
+  },
+  "account": {
+    "logIn": "Se connecter",
+    "signUp": "S’inscrire",
+    "settings": "Paramètres du compte",
+    "subscription": "Abonnement",
+    "logOut": "Se déconnecter"
+  },
+  "install": {
+    "addToDiscord": "Ajouter à Discord"
+  },
+  "footer": {
+    "navLabel": "Pied de page",
+    "tagline": "La modération Discord avec codes de dossier, échelle d’avertissements et des appels lus par une vraie personne.",
+    "legalLine": "Mewvo est un bot Discord géré par son propriétaire pour le serveur Mewvo. Non affilié à Discord. Prix en euros.",
+    "columns": {
+      "product": "Produit",
+      "help": "Aide",
+      "community": "Communauté",
+      "legal": "Mentions légales"
+    }
+  }
+}

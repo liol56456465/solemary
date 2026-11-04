@@ -1,0 +1,80 @@
+{
+  "bot": {
+    "appTag": "APP",
+    "timeToday": "Aujourd’hui à 14:05"
+  },
+  "dm": {
+    "frameLabel": "Message privé · Mewvo",
+    "appealHere": "**Faire appel ici :** {invite}",
+    "date": "Date : {date}",
+    "caseCode": "Code du dossier : {code}",
+    "privacy": "Confidentialité : {url}"
+  },
+  "warnDm": {
+    "title": "**Avertissement 2 sur 3 dans Mewvo**",
+    "by": "Par : Modérateur",
+    "reason": "Raison : spam dans #general",
+    "dateValue": "jeudi 29 octobre 2026 à 14:05",
+    "limit": "À 3 avertissements, tu seras banni."
+  },
+  "banDm": {
+    "time": "Samedi à 19:40",
+    "title": "**Banni de Mewvo**",
+    "by": "Par : Mewvo",
+    "reason": "Raison : limite d’avertissements atteinte",
+    "dateValue": "samedi 31 octobre 2026 à 19:40",
+    "duration": "Durée : 7 jours, se termine le {end} {relative}",
+    "endValue": "samedi 7 novembre 2026 à 19:40",
+    "relativeValue": "(dans 7 jours)",
+    "ladderNote": "Faire appel de ce code retire aussi l’avertissement qui a causé ce bannissement."
+  },
+  "appealForm": {
+    "frameLabel": "Formulaire d’appel · s’ouvre avec le bouton Faire appel",
+    "title": "Faire appel d’une sanction",
+    "reason": {
+      "label": "Pourquoi devrait-elle être levée ?",
+      "help": "Pourquoi ton bannissement, ta mise en sourdine ou ton avertissement devrait-il être levé ?",
+      "example": "J’ai posté le même lien trois fois parce que je pensais qu’il n’était pas parti. Je connais la règle maintenant et ça ne se reproduira pas."
+    },
+    "caseCode": {
+      "label": "Code du dossier",
+      "help": "Dans le message privé reçu lors de ta sanction, par ex. k7m2qx."
+    },
+    "moreInfo": {
+      "label": "Plus d’infos (facultatif)",
+      "help": "Tout ce que les administrateurs devraient savoir d’autre."
+    },
+    "cancel": "Annuler",
+    "submit": "Envoyer"
+  },
+  "ladder": {
+    "frameLabel": "Échelle d’avertissements · par membre, par serveur",
+    "steps": {
+      "warn1": {
+        "key": "Avertissement 1",
+        "what": "Message privé : « Avertissement 1 sur 3 »",
+        "result": "Niveau 0"
+      },
+      "warn2": {
+        "key": "Avertissement 2",
+        "what": "Message privé : « Avertissement 2 sur 3 »",
+        "result": "Niveau 0"
+      },
+      "warn3": {
+        "key": "Avertissement 3",
+        "what": "Bannissement automatique",
+        "result": "7 jours · niveau 1"
+      },
+      "level2": {
+        "key": "Avertissement suivant",
+        "what": "Bannissement automatique",
+        "result": "30 jours · niveau 2"
+      },
+      "level3": {
+        "key": "Avertissement suivant",
+        "what": "Bannissement définitif",
+        "result": "Appel possible pendant 6 mois · niveau 3"
+      }
+    }
+  }
+}

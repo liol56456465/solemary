@@ -1,0 +1,144 @@
+{
+  "caseType": {
+    "ban": "Bannissement",
+    "kick": "Expulsion",
+    "mute": "Mise en sourdine",
+    "warn": "Avertissement"
+  },
+  "appealStatus": {
+    "pending": "En attente : les administrateurs n’ont pas encore décidé",
+    "accepted": "Accepté",
+    "denied": "Refusé",
+    "closed": "Clos"
+  },
+  "appeal": {
+    "voided": "Annulé : rien à contester",
+    "lifted": "Déjà levé",
+    "unappealable": "Sans appel possible",
+    "ended": "Terminé : rien à contester",
+    "deadlinePassed": "Le délai d’appel est écoulé",
+    "windowClosed": "Le délai d’appel ({days} jours) est écoulé",
+    "pending": "Appel en attente",
+    "deniedRetry": "Appel refusé ; tu peux refaire appel à partir du",
+    "appealable": "Appel possible",
+    "until": "Jusqu’au {date}",
+    "yes": "Oui"
+  },
+  "status": {
+    "imported": "historique uniquement (importé, ne compte pas)",
+    "voided": "annulé : ne compte plus",
+    "counts": "compte actuellement",
+    "noLongerCounts": "au dossier, ne compte plus",
+    "onRecord": "au dossier"
+  },
+  "login": {
+    "lead": "Consulte ton propre dossier de modération sur {server} : tes avertissements, ton niveau sur l’échelle d’avertissements, tout bannissement ou mise en sourdine en cours, tes dossiers et tes appels.",
+    "withDiscord": "Se connecter avec Discord",
+    "withAccount": "Se connecter avec un compte Mewvo",
+    "note": "Mewvo demande seulement à Discord qui tu es (l’autorisation identify) : pas d’e-mail, pas de serveurs, rien d’autre. Tu ne vois jamais que ton propre dossier. La connexion dure une heure.",
+    "signup": "Pas encore de compte Mewvo ? [Crée-en un]({href}) pour te connecter avec un nom d’utilisateur et un mot de passe."
+  },
+  "record": {
+    "title": "Mon dossier",
+    "lead": "Ton dossier de modération sur {server}, connecté en tant que **{username}**. Toi seul peux le voir.",
+    "accountSettings": "Paramètres du compte",
+    "download": "Télécharger mes données",
+    "subscription": "Abonnement",
+    "logOut": "Se déconnecter",
+    "warnings": "Avertissements",
+    "warningsCount": "{count} sur {threshold}",
+    "warningsNote": "Avertissements comptabilisés à ton niveau. Les avertissements n’expirent pas.",
+    "ladder": "Échelle d’avertissements",
+    "ladderLevel": "Niveau {level} sur {max}",
+    "activeNow": "En cours",
+    "activeBanEnds": "Bannissement {code} : se termine le {date}",
+    "activeBanPermanent": "Bannissement {code} : définitif",
+    "activeMuteEnds": "Mise en sourdine {code} : se termine le {date}",
+    "nothingActive": "Aucun bannissement ni mise en sourdine en cours.",
+    "cases": "Dossiers",
+    "appeals": "Appels",
+    "column": {
+      "case": "Dossier",
+      "type": "Type",
+      "reason": "Raison",
+      "by": "Par",
+      "date": "Date",
+      "ends": "Fin",
+      "status": "Statut",
+      "appeal": "Appel",
+      "filed": "Déposé",
+      "decided": "Tranché"
+    },
+    "permanent": "définitif",
+    "truncated": "Affichage de tes {count} dossiers les plus récents.",
+    "noCases": "Tu n’as aucun dossier sur {server}.",
+    "noAppeals": "Tu n’as déposé aucun appel.",
+    "appealHintInvite": "Fais appel depuis le panneau d’appel sur Discord : [rejoins le serveur d’assistance]({invite}) et appuie sur **Appeal** avec le code du dossier. Aucun appel n’est possible depuis cette page.",
+    "appealHint": "Fais appel depuis le panneau d’appel sur Discord avec le code du dossier. Aucun appel n’est possible depuis cette page."
+  },
+  "message": {
+    "logInAgain": "Se reconnecter",
+    "backToRecord": "Retour à Mon dossier"
+  },
+  "errors": {
+    "slowDown": {
+      "title": "Doucement",
+      "message": "Trop de requêtes depuis ton adresse. Attends une minute et réessaie."
+    },
+    "loginCancelled": {
+      "title": "Connexion annulée",
+      "message": "Tu n’as pas autorisé la connexion."
+    },
+    "loginExpired": {
+      "title": "Connexion expirée",
+      "message": "Ce lien de connexion est invalide, expiré ou déjà utilisé."
+    },
+    "loginFailed": {
+      "title": "Échec de la connexion",
+      "message": "Discord n’a pas confirmé la connexion. Réessaie."
+    },
+    "noUser": {
+      "title": "Échec de la connexion",
+      "message": "Discord n’a renvoyé aucun utilisateur."
+    },
+    "linkOtherBrowser": {
+      "title": "Non associé",
+      "message": "Connecte-toi d’abord à ton compte Mewvo dans ce navigateur, puis associe à nouveau Discord."
+    },
+    "recordUnavailable": {
+      "title": "Dossier indisponible",
+      "message": "Ton dossier n’a pas pu être chargé, car la base de données ne répond pas. Cela ne veut pas dire que ton dossier est vierge : réessaie dans quelques minutes."
+    },
+    "downloadLogin": {
+      "title": "Connecte-toi d’abord",
+      "message": "Connecte-toi avec Discord pour télécharger tes données."
+    },
+    "downloadLoginAccount": {
+      "title": "Connecte-toi d’abord",
+      "message": "Connecte-toi pour télécharger tes données."
+    },
+    "downloadUnavailable": {
+      "title": "Téléchargement indisponible",
+      "message": "Tes données n’ont pas pu être rassemblées, car la base de données ne répond pas. Réessaie dans quelques minutes."
+    },
+    "notLoggedIn": {
+      "title": "Déconnecté",
+      "message": "Tu n’es pas connecté."
+    },
+    "logoutNotAllowed": {
+      "title": "Non autorisé",
+      "message": "La demande de déconnexion ne provient pas de cette page."
+    },
+    "notFound": {
+      "title": "Introuvable",
+      "message": "Cette page n’existe pas."
+    },
+    "tryLater": {
+      "title": "Réessaie plus tard",
+      "message": "Cette page n’a pas pu être chargée, car la base de données ne répond pas. Rien n’a été modifié."
+    }
+  },
+  "viewer": {
+    "fallbackName": "Compte"
+  }
+}
