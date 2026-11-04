@@ -2,73 +2,76 @@
 // warning ladder, what it does as a two-column list, the plans as compact cards (as on /pricing), and
 // where to ask.
 // Every claim is from the code or CLAUDE.md. No eyebrow labels, numbering, tick lists or
-// CTA band (owner, 2026-11-01).
+// CTA band (owner, 2026-11-01). Text: src/content/site/<lang>/home.json.
 
 import { html } from '../../dashboard/html.js';
 import { PLANS } from '../../../config/site/plans.js';
+import { textOf } from '../i18n.js';
 import { DASHBOARD_PATH, addButton, layout } from '../shell.js';
 import { dashboardShot, ladderMock, warnDmMock } from './mockups.js';
 import { planCard } from './pricing.js';
 
 /** The actions: Add to Discord (public) or Join the server, then the docs; the dashboard as a plain link. */
-export function heroActions(ctx, { how = '/docs', howLabel = 'Read the docs', dashboard = true } = {}) {
+export function heroActions(ctx, { how = '/docs', howLabel = null, dashboard = true } = {}) {
+    const { t, ti } = textOf(ctx);
     const add = addButton(ctx);
     const join = !add && (ctx.mainInvite || ctx.supportInvite)
-        ? html`<a class="button" href="${ctx.mainInvite || ctx.supportInvite}" rel="noopener">${ctx.mainInvite ? 'Join the server' : 'Join the support server'}</a>`
+        ? html`<a class="button" href="${ctx.mainInvite || ctx.supportInvite}" rel="noopener">${t(ctx.mainInvite ? 'home.actions.joinServer' : 'home.actions.joinSupportServer')}</a>`
         : '';
     const primary = add || join;
-    return html`<p class="hero-actions">${primary}<a class="button${primary ? ' button-quiet' : ''}" href="${how}">${howLabel}</a></p>${dashboard && ctx.dashboardEnabled ? html`<p class="hero-more">Mewvo already in your server? <a href="${DASHBOARD_PATH}">Open the dashboard</a></p>` : ''}`;
+    return html`<p class="hero-actions">${primary}<a class="button${primary ? ' button-quiet' : ''}" href="${how}">${howLabel ?? t('home.actions.readDocs')}</a></p>${dashboard && ctx.dashboardEnabled ? html`<p class="hero-more">${ti('home.actions.openDashboard', { url: DASHBOARD_PATH })}</p>` : ''}`;
 }
 
-/** What Mewvo does: [anchor id, name, text, link, link text]. */
+/** What Mewvo does: [anchor id (also the key under home.what.items), link]. */
 const WHAT_IT_DOES = [
-    ['enforcement', 'Moderation', 'Warn, mute, kick and ban from one panel that shows the member’s history first. Every action is a case with a short code that staff can edit, void or add evidence to later.', '/docs/getting-started', 'Getting started'],
-    ['appeals', 'Appeals', 'Members appeal with a short form. Ban appeals open a channel in the support server, so they work even after a ban, and a person on the staff team decides.', '/docs/appeals', 'How appeals work'],
-    ['automod', 'Automod', 'Fourteen rules, from scam links to mass mentions. Each automatic action is a normal case, with a card in the staff channel to keep, undo or change it.', '/features#f-automod', 'Automod rules'],
-    ['tickets', 'Tickets and modmail', 'A ticket panel, and members can DM the bot to reach staff. Both become channels in your server; lines starting with // stay internal.', '/features#f-tickets', 'Tickets and modmail'],
-    ['logging', 'Logging and tools', 'Joins, leaves, role changes, edited and deleted messages and more, each in the channel you choose. Verification and server tools sit next to it.', '/features#f-server', 'Logging and tools'],
-    ['community', 'Community tools', 'Leveling, tags, suggestions, starboard, sticky messages, YouTube feeds, reaction roles, giveaways, birthdays, applications, join-to-create voice channels, welcome messages.', '/features#f-community', 'All community tools'],
+    ['enforcement', '/docs/getting-started'],
+    ['appeals', '/docs/appeals'],
+    ['automod', '/features#f-automod'],
+    ['tickets', '/features#f-tickets'],
+    ['logging', '/features#f-server'],
+    ['community', '/features#f-community'],
 ];
 
 export function homePage(ctx) {
+    const { t, ti, tb } = textOf(ctx);
+    const item = (id, part) => t(`home.what.items.${id}.${part}`);
     const body = html`<section class="hero"><div class="wrap hero-grid">
-<div class="hero-copy"><h1>A Discord bot for moderation and appeals</h1>
-<p class="lead">Mewvo warns, mutes, kicks and bans from one panel. The member gets a DM with the reason, the end time and how to appeal. Your staff get a case with a short code they can look up later.</p>
+<div class="hero-copy"><h1>${t('home.hero.title')}</h1>
+<p class="lead">${t('home.hero.lead')}</p>
 ${heroActions(ctx)}
-${ctx.publicSite ? '' : html`<p class="note">Mewvo runs on the Mewvo server for now. It can’t be added to other servers yet.</p>`}</div>
-<div class="hero-visual">${warnDmMock(ctx, { caption: 'The DM a member gets for a second warning. Same wording as the bot.' })}</div></div></section>
+${ctx.publicSite ? '' : html`<p class="note">${t('home.hero.notPublic')}</p>`}</div>
+<div class="hero-visual">${warnDmMock(ctx, { caption: t('home.hero.dmCaption') })}</div></div></section>
 
 <section class="band" id="dashboard" aria-labelledby="dash-title"><div class="wrap">
-<div class="band-head"><h2 id="dash-title">Everything in one place</h2>
-<p>Members, cases, appeals and every setting in the browser. Sign in with Discord; every change is in an audit log. <a href="/docs/using-the-dashboard">A tour of the dashboard</a></p></div>
-${dashboardShot({ alt: 'The Mewvo dashboard overview: items that need staff, moderation over the last seven days, bot health and setup progress.' })}
+<div class="band-head"><h2 id="dash-title">${t('home.dashboard.title')}</h2>
+<p>${ti('home.dashboard.text')}</p></div>
+${dashboardShot({ alt: t('home.dashboard.shotAlt') })}
 </div></section>
 
 <section class="block" id="ladder" aria-labelledby="ladder-title"><div class="wrap split-2">
-<div class="split-copy"><h2 id="ladder-title">The same rules for everyone</h2>
-<p>Warnings climb a fixed ladder per member and server. Two warnings are a DM. The third is a 7-day ban, then 30 days, then permanent. Manual bans don’t move it, and an accepted appeal moves it back down a step.</p>
-<p>Members can check where they stand, so nobody is surprised by a ban. <a href="/docs/warnings">How warnings escalate</a></p></div>
-<div class="split-visual">${ladderMock()}</div></div></section>
+<div class="split-copy"><h2 id="ladder-title">${t('home.ladder.title')}</h2>
+${tb('home.ladder.text')}</div>
+<div class="split-visual">${ladderMock(ctx)}</div></div></section>
 
 <section class="block" aria-labelledby="what-title"><div class="wrap">
-<div class="band-head"><h2 id="what-title">What it does</h2>
-<p>Moderation first, with the community tools a server needs next to it. <a href="/features">Every feature</a></p></div>
-<ul class="what-grid">${WHAT_IT_DOES.map(([id, name, text, href, label]) => html`<li id="${id}"><h3>${name}</h3><p>${text}</p><a href="${href}">${label}</a></li>`)}</ul>
+<div class="band-head"><h2 id="what-title">${t('home.what.title')}</h2>
+<p>${ti('home.what.text')}</p></div>
+<ul class="what-grid">${WHAT_IT_DOES.map(([id, href]) => html`<li id="${id}"><h3>${item(id, 'name')}</h3><p>${item(id, 'text')}</p><a href="${href}">${item(id, 'link')}</a></li>`)}</ul>
 </div></section>
 
 <section class="block" aria-labelledby="pricing-title"><div class="wrap">
-<div class="band-head"><h2 id="pricing-title">Free to use</h2>
-<p>Everything above is free. Paid plans only raise limits such as tags and sticky messages. <a href="/pricing">Plans and prices</a></p></div>
+<div class="band-head"><h2 id="pricing-title">${t('home.pricing.title')}</h2>
+<p>${ti('home.pricing.text')}</p></div>
 <ul class="plan-cards plan-cards-compact">${PLANS.map((p) => planCard(ctx, p, { compact: true }))}</ul>
 </div></section>
 
 <section class="block block-last" aria-labelledby="help-title"><div class="wrap help-row">
-<h2 id="help-title">Questions?</h2>
-<p>Start with the <a href="/docs">docs</a> or the <a href="/faq">questions and answers</a>.${ctx.supportInvite ? html` Still stuck? Ask in the <a href="${ctx.supportInvite}" rel="noopener">support server</a>; a person answers.` : ''}</p>
+<h2 id="help-title">${t('home.help.title')}</h2>
+<p>${ti('home.help.text')}${ctx.supportInvite ? html` ${ti('home.help.support', { url: ctx.supportInvite })}` : ''}</p>
 </div></section>`;
     return layout(ctx, {
-        title: 'Mewvo', active: 'home', path: '/',
-        description: 'Mewvo is a Discord bot for moderation with case codes and DMs, a three-step warning ladder, appeals that reach a person, automod, tickets and community tools.',
+        title: t('common.brand'), active: 'home', path: '/',
+        description: t('home.meta.description'),
         body,
     });
 }

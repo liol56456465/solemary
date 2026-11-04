@@ -855,13 +855,16 @@ test('pricing FAQ: plans do not renew, withdrawal is explained, no "cancel any t
 });
 
 test('changelog: newest first, plain text, dated sections; the footer links it', async () => {
-    const { CHANGELOG } = await import('../src/config/site/changelog.js');
+    const { CHANGELOG, changelogKey } = await import('../src/config/site/changelog.js');
+    const { t } = (await import('../src/services/site/i18n.js')).translator('en');
     const dates = CHANGELOG.map((e) => e.date);
     assert.deepEqual([...dates].sort().reverse(), dates, 'newest first');
     for (const entry of CHANGELOG) {
         assert.match(entry.date, /^\d{4}-\d{2}-\d{2}$/);
         assert.ok(entry.items.length);
-        for (const item of entry.items) {
+        for (const key of entry.items) {
+            // The text is in the catalog (content/site/en/changelog.json); the config keeps the order.
+            const item = t(changelogKey(entry.date, key));
             assert.ok(!/[\u2014\u2013]/.test(item), `no em or en dash: ${item}`);
             assert.ok(!/\p{Extended_Pictographic}/u.test(item), `no emoji: ${item}`);
         }

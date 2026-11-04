@@ -1,0 +1,79 @@
+{
+  "bot": {
+    "appTag": "APP",
+    "timeToday": "Today at 14:05"
+  },
+  "dm": {
+    "frameLabel": "Direct message · Mewvo",
+    "appealHere": "**Appeal here:** {invite}",
+    "date": "Date: {date}",
+    "caseCode": "Case code: {code}"
+  },
+  "warnDm": {
+    "title": "**Warning 2 of 3 in Mewvo**",
+    "by": "By: Moderator",
+    "reason": "Reason: Spam in #general",
+    "dateValue": "Thursday, 29 October 2026 at 14:05",
+    "limit": "At 3 warnings you will be banned."
+  },
+  "banDm": {
+    "time": "Saturday at 19:40",
+    "title": "**Banned from Mewvo**",
+    "by": "By: Mewvo",
+    "reason": "Reason: Reached warning limit",
+    "dateValue": "Saturday, 31 October 2026 at 19:40",
+    "duration": "Duration: 7 days, ends {end} {relative}",
+    "endValue": "Saturday, 7 November 2026 at 19:40",
+    "relativeValue": "(in 7 days)",
+    "ladderNote": "Appealing this code also removes the warning that caused this ban."
+  },
+  "appealForm": {
+    "frameLabel": "Appeal form · opens from the Appeal button",
+    "title": "Appeal a punishment",
+    "reason": {
+      "label": "Why should it be lifted?",
+      "help": "Why should you be unbanned, unmuted or unwarned?",
+      "example": "I posted the same link three times because I thought it had not sent. I know the rule now and it won’t happen again."
+    },
+    "caseCode": {
+      "label": "Case code",
+      "help": "From the DM you got when you were punished, e.g. k7m2qx."
+    },
+    "moreInfo": {
+      "label": "More info (optional)",
+      "help": "Anything else the administrators should know."
+    },
+    "cancel": "Cancel",
+    "submit": "Submit"
+  },
+  "ladder": {
+    "frameLabel": "Warning ladder · per member, per server",
+    "steps": {
+      "warn1": {
+        "key": "Warn 1",
+        "what": "DM: “Warning 1 of 3”",
+        "result": "Level 0"
+      },
+      "warn2": {
+        "key": "Warn 2",
+        "what": "DM: “Warning 2 of 3”",
+        "result": "Level 0"
+      },
+      "warn3": {
+        "key": "Warn 3",
+        "what": "Automatic ban",
+        "result": "7 days · level 1"
+      },
+      "level2": {
+        "key": "Next warn",
+        "what": "Automatic ban",
+        "result": "30 days · level 2"
+      },
+      "level3": {
+        "key": "Next warn",
+        "what": "Permanent ban",
+        "result": "Appealable for 6 months · level 3"
+      }
+    }
+  }
+}

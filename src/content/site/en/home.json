@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "description": "Mewvo is a Discord bot for moderation with case codes and DMs, a three-step warning ladder, appeals that reach a person, automod, tickets and community tools."
+  },
+  "actions": {
+    "readDocs": "Read the docs",
+    "joinServer": "Join the server",
+    "joinSupportServer": "Join the support server",
+    "openDashboard": "Mewvo already in your server? [Open the dashboard]({url})"
+  },
+  "hero": {
+    "title": "A Discord bot for moderation and appeals",
+    "lead": "Mewvo warns, mutes, kicks and bans from one panel. The member gets a DM with the reason, the end time and how to appeal. Your staff get a case with a short code they can look up later.",
+    "notPublic": "Mewvo runs on the Mewvo server for now. It can’t be added to other servers yet.",
+    "dmCaption": "The DM a member gets for a second warning. Same wording as the bot."
+  },
+  "dashboard": {
+    "title": "Everything in one place",
+    "text": "Members, cases, appeals and every setting in the browser. Sign in with Discord; every change is in an audit log. [A tour of the dashboard](/docs/using-the-dashboard)",
+    "shotAlt": "The Mewvo dashboard overview: items that need staff, moderation over the last seven days, bot health and setup progress."
+  },
+  "ladder": {
+    "title": "The same rules for everyone",
+    "text": "Warnings climb a fixed ladder per member and server. Two warnings are a DM. The third is a 7-day ban, then 30 days, then permanent. Manual bans don’t move it, and an accepted appeal moves it back down a step.\n\nMembers can check where they stand, so nobody is surprised by a ban. [How warnings escalate](/docs/warnings)"
+  },
+  "what": {
+    "title": "What it does",
+    "text": "Moderation first, with the community tools a server needs next to it. [Every feature](/features)",
+    "items": {
+      "enforcement": {
+        "name": "Moderation",
+        "text": "Warn, mute, kick and ban from one panel that shows the member’s history first. Every action is a case with a short code that staff can edit, void or add evidence to later.",
+        "link": "Getting started"
+      },
+      "appeals": {
+        "name": "Appeals",
+        "text": "Members appeal with a short form. Ban appeals open a channel in the support server, so they work even after a ban, and a person on the staff team decides.",
+        "link": "How appeals work"
+      },
+      "automod": {
+        "name": "Automod",
+        "text": "Fourteen rules, from scam links to mass mentions. Each automatic action is a normal case, with a card in the staff channel to keep, undo or change it.",
+        "link": "Automod rules"
+      },
+      "tickets": {
+        "name": "Tickets and modmail",
+        "text": "A ticket panel, and members can DM the bot to reach staff. Both become channels in your server; lines starting with // stay internal.",
+        "link": "Tickets and modmail"
+      },
+      "logging": {
+        "name": "Logging and tools",
+        "text": "Joins, leaves, role changes, edited and deleted messages and more, each in the channel you choose. Verification and server tools sit next to it.",
+        "link": "Logging and tools"
+      },
+      "community": {
+        "name": "Community tools",
+        "text": "Leveling, tags, suggestions, starboard, sticky messages, YouTube feeds, reaction roles, giveaways, birthdays, applications, join-to-create voice channels, welcome messages.",
+        "link": "All community tools"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Free to use",
+    "text": "Everything above is free. Paid plans only raise limits such as tags and sticky messages. [Plans and prices](/pricing)"
+  },
+  "help": {
+    "title": "Questions?",
+    "text": "Start with the [docs](/docs) or the [questions and answers](/faq).",
+    "support": "Still stuck? Ask in the [support server]({url}); a person answers."
+  }
+}

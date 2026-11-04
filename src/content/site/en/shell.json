@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "pageTitle": "{title} · Mewvo",
+    "defaultDescription": "Mewvo is a Discord bot for moderation with case codes, a warning ladder, appeals, automod, tickets and community tools.",
+    "shareImageAlt": "Mewvo: Discord moderation with case codes, a warning ladder and appeals."
+  },
+  "header": {
+    "skip": "Skip to content",
+    "navLabel": "Main"
+  },
+  "links": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "docs": "Docs",
+    "commands": "Commands",
+    "leaderboard": "Leaderboard",
+    "myRecord": "My record",
+    "changelog": "Changelog",
+    "dashboard": "Dashboard",
+    "faq": "FAQ",
+    "status": "Status",
+    "supportServer": "Support server",
+    "rules": "Rules",
+    "transparency": "Transparency",
+    "trustCard": "Trust card",
+    "ourServer": "Our server",
+    "about": "About",
+    "privacy": "Privacy Policy",
+    "terms": "Terms and Conditions",
+    "legalNotice": "Legal notice",
+    "contact": "Contact and reports"
+  },
+  "account": {
+    "logIn": "Log in",
+    "signUp": "Sign up",
+    "settings": "Account settings",
+    "subscription": "Subscription",
+    "logOut": "Log out"
+  },
+  "install": {
+    "addToDiscord": "Add to Discord"
+  },
+  "footer": {
+    "navLabel": "Footer",
+    "tagline": "Discord moderation with case codes, a warning ladder and appeals that reach a person.",
+    "legalLine": "Mewvo is a Discord bot run by its owner for the Mewvo server. Not affiliated with Discord. Prices are in euros.",
+    "columns": {
+      "product": "Product",
+      "help": "Help",
+      "community": "Community",
+      "legal": "Legal"
+    }
+  }
+}

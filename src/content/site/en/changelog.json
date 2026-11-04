@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "description": "What changed in Mewvo, newest first."
+  },
+  "head": {
+    "title": "Changelog",
+    "lead": "What changed in Mewvo, newest first. A change is listed when it is finished. The bot in your server gets it at its next update."
+  },
+  "entries": {
+    "2026-11-01": {
+      "customAutomodRules": "Custom automod rules: add your own words and phrases to block, with /automod custom or on the dashboard. You can change the words of a rule later. Part of the Normal, Pro and Max plans.",
+      "remind": "/remind: set a reminder for yourself. Mewvo sends it to you in a DM, or in the channel if your DMs are closed.",
+      "profile": "/profile: your level, rank, next role reward, birthday and plan on one card.",
+      "appealStatus": "/appeal status: see your appeals and whether someone on staff is looking at them.",
+      "recordLinkInDms": "Punishment DMs can link to My record, where you see your full record on the website.",
+      "gettingStartedList": "Dashboard: the Overview page starts with a short getting-started list, and every settings page explains its options in plain words.",
+      "activityPage": "Dashboard: an Activity page with messages, joins and cases per day for the last 30 days.",
+      "settingsBackup": "Dashboard: a settings backup you can download and load back after a check.",
+      "caseNotesAndTags": "Dashboard: private staff notes and tags on cases, actions on many cases at once, and saved searches.",
+      "shiftNote": "Dashboard: a note for the next staff shift on the Overview page.",
+      "weeklySummary": "A weekly summary of the server in the mod log every Monday.",
+      "proMaxBranding": "Pro and Max: Mewvo can use its own nickname and avatar in your server, and staff can download cases as a spreadsheet.",
+      "dashboardThemes": "Dashboard themes: Light, Dark, Dim and High contrast."
+    },
+    "2026-10-31": {
+      "legalPages": "Privacy Policy and Terms and Conditions.",
+      "dataDownload": "My record: download all the data Mewvo has about you as a file.",
+      "paidPlans": "Paid plans now do something: supporter roles, /premium, gifts and redeem keys."
+    },
+    "2026-10-29": {
+      "rename": "The bot is now called Mewvo (it was Meowist).",
+      "serverRules": "Server rules on the website. Punishment DMs name the rule that was broken and link to it.",
+      "independentAppeals": "Appeals are decided by someone other than the moderator who gave the punishment.",
+      "myRecord": "My record on the website: members can see their own moderation record.",
+      "scheduledMessages": "Scheduled and repeating messages from the dashboard.",
+      "inbox": "Dashboard: an Inbox for appeals, tickets, modmail and automod reviews, with replies from the web.",
+      "websitePages": "Website pages for the leaderboard, status, features, pricing, docs and FAQ."
+    },
+    "2026-10-28": {
+      "membersPage": "Dashboard: a Members page with filters, roles, nicknames and timeouts, also for many members at once.",
+      "temporaryRoles": "Temporary roles that are taken away by themselves after a set time.",
+      "bannedPage": "Dashboard: a Banned page with everyone who is banned and why.",
+      "channelTools": "Dashboard: purge, lock and unlock channels, and post messages, polls and countdowns as the bot.",
+      "appealsInSupportServer": "Ban and kick appeals talk with the member in the support server.",
+      "mutesInMassGuard": "Mutes count toward the limit that stops one moderator from punishing many people in a short time."
+    }
+  }
+}
