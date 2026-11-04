@@ -1,0 +1,207 @@
+{
+  "common": {
+    "logIn": "Iniciar sesión",
+    "logOut": "Cerrar sesión",
+    "cancel": "Cancelar",
+    "back": "Atrás",
+    "backToRecord": "Volver a Mi historial",
+    "accountSettings": "Ajustes de la cuenta",
+    "loggedInAs": "Sesión iniciada como **{username}**."
+  },
+  "fields": {
+    "username": "Nombre de usuario",
+    "password": "Contraseña",
+    "newPassword": "Nueva contraseña",
+    "passwordHint": "Al menos {min} caracteres.",
+    "codeFromApp": "Código de la aplicación",
+    "codeOrRecovery": "Código de la aplicación o un código de recuperación"
+  },
+  "signup": {
+    "title": "Crear una cuenta",
+    "heading": "Crea una cuenta de Mewvo",
+    "lead": "Con una cuenta inicias sesión en este sitio con nombre de usuario y contraseña. No hace falta correo electrónico. Justo después de registrarte, vinculas tu cuenta de Discord una vez; así también restableces una contraseña olvidada.",
+    "usernameHint": "De {min} a {max} caracteres: solo letras, números y guiones bajos.",
+    "birthDate": "Fecha de nacimiento",
+    "birthPlaceholder": "AAAA-MM-DD",
+    "birthHint": "Debes tener al menos {age} años. Solo comprobamos tu edad y guardamos que tienes {age} años o más, nunca la fecha.",
+    "accept": "Acepto los [Términos y condiciones](/terms) y la [Política de privacidad](/privacy).",
+    "submit": "Crear cuenta",
+    "haveAccount": "¿Ya tienes una cuenta? [Inicia sesión](/me/login-password)."
+  },
+  "login": {
+    "title": "Iniciar sesión",
+    "heading": "Inicia sesión en tu cuenta de Mewvo",
+    "forgot": "¿Olvidaste tu contraseña?",
+    "withDiscord": "Iniciar sesión con Discord",
+    "noAccount": "¿Aún no tienes cuenta? [Crea una cuenta](/me/signup)"
+  },
+  "twoStep": {
+    "title": "Inicio de sesión en dos pasos",
+    "heading": "Introduce tu código de inicio de sesión",
+    "lead": "Abre tu aplicación de autenticación e introduce el código de 6 dígitos de Mewvo. ¿Perdiste el teléfono? Introduce uno de tus códigos de recuperación.",
+    "code": "Código",
+    "foot": "El paso del código dura 5 minutos. Después, [vuelve a iniciar sesión](/me/login-password)."
+  },
+  "forgot": {
+    "title": "Contraseña olvidada",
+    "heading": "¿Olvidaste tu contraseña?",
+    "lead": "Inicia sesión con la cuenta de Discord vinculada a tu cuenta de Mewvo. Después eliges una contraseña nueva.",
+    "submit": "Iniciar sesión con Discord",
+    "foot": "Mewvo solo le pregunta a Discord quién eres. Si el inicio de sesión en dos pasos está activado, después de la nueva contraseña tendrás que introducir igualmente un código de tu aplicación. ¿No tienes ninguna cuenta de Discord vinculada? Entonces no se puede restablecer la contraseña; [crea una cuenta nueva](/me/signup)."
+  },
+  "reset": {
+    "title": "Elige una contraseña nueva",
+    "heading": "Elige una contraseña nueva",
+    "lead": "Para la cuenta de Mewvo **{username}**.",
+    "code": "Código de dos pasos",
+    "codeHint": "El código de 6 dígitos de tu aplicación o uno de tus códigos de recuperación.",
+    "submit": "Guardar la contraseña nueva",
+    "foot": "Al guardar se cierran todas las demás sesiones de esta cuenta y se inicia sesión aquí. Este formulario funciona durante 10 minutos."
+  },
+  "link": {
+    "title": "Vincula tu Discord",
+    "heading": "Vincula tu cuenta de Discord",
+    "lead": "Sesión iniciada como **{username}**. Un paso más: vincula tu cuenta de Discord. Tu cuenta de Mewvo solo funciona cuando está vinculada. Las primeras 100 cuentas que se vinculen reciben Mewvo Pro durante {bonus}.",
+    "submit": "Vincular Discord",
+    "foot": "Mewvo solo le pregunta a Discord quién eres (el permiso identify): sin correo electrónico, sin servidores. Una cuenta de Discord se puede vincular a una sola cuenta de Mewvo. Si olvidas tu contraseña, la restableces iniciando sesión con esta cuenta de Discord. Una cuenta que nunca vincula Discord se elimina a los 7 días.",
+    "deleteHeading": "Eliminar esta cuenta"
+  },
+  "letter": {
+    "heading": "Tu nombre de usuario de 1 letra",
+    "allTaken": "Todos los nombres de usuario de 1 letra están ocupados.",
+    "pick": "Elige un nombre de usuario de 1 letra",
+    "claim": "Quedarme con este nombre de usuario",
+    "decline": "No, gracias, mantengo mi nombre de usuario",
+    "foot": "Solo puedes reclamar un nombre de usuario de 1 letra una vez. Tu nombre de usuario actual deja de funcionar cuando reclamas uno."
+  },
+  "linked": {
+    "title": "Discord vinculado",
+    "heading": "Tu cuenta de Discord está vinculada",
+    "toRecord": "Ir a Mi historial"
+  },
+  "linkResult": {
+    "repeat": "Tu cuenta de Discord está vinculada. Esta cuenta de Discord ya estuvo vinculada a una cuenta de Mewvo, así que no vuelve a recibir la bonificación para las primeras cuentas.",
+    "proAndLetter": "Eres la persona número {n} en vincular una cuenta de Discord a Mewvo. Recibes Mewvo Pro durante {bonus} y abajo puedes elegir un nombre de usuario de 1 letra.",
+    "pro": "Eres la persona número {n} en vincular una cuenta de Discord a Mewvo. Recibes Mewvo Pro durante {bonus}.",
+    "proFailedAndLetter": "Eres la persona número {n} en vincular una cuenta de Discord a Mewvo. Te correspondían {bonus} de Pro, pero no se pudieron añadir: {note} Aun así, abajo puedes elegir un nombre de usuario de 1 letra.",
+    "proFailed": "Eres la persona número {n} en vincular una cuenta de Discord a Mewvo. Te correspondían {bonus} de Pro, pero no se pudieron añadir: {note}",
+    "letter": "Eres la persona número {n} en vincular una cuenta de Discord a Mewvo. Abajo puedes elegir un nombre de usuario de 1 letra.",
+    "none": "Eres la persona número {n} en vincular una cuenta de Discord a Mewvo. Las bonificaciones para las primeras cuentas fueron para las 100 primeras, así que esta no tiene bonificación."
+  },
+  "recovery": {
+    "title": "Códigos de recuperación",
+    "heading": "El inicio de sesión en dos pasos está activado",
+    "lead": "Guarda estos códigos de recuperación en un lugar seguro. Cada uno funciona una vez, si pierdes tu aplicación de autenticación. Solo se muestran ahora.",
+    "back": "Volver a Ajustes de la cuenta"
+  },
+  "totp": {
+    "title": "Activar el inicio de sesión en dos pasos",
+    "heading": "Activa el inicio de sesión en dos pasos",
+    "lead": "Añade Mewvo a una aplicación de autenticación y luego introduce el código de 6 dígitos que muestra.",
+    "stepAdd": "En tu aplicación de autenticación, elige añadir una cuenta introduciendo una clave.",
+    "stepKey": "Introduce esta clave: {key} (basada en el tiempo, 6 dígitos, 30 segundos).",
+    "stepUri": "O pega esta dirección, si tu aplicación la acepta: {uri}",
+    "submit": "Activar"
+  },
+  "plan": {
+    "heading": "Tu plan",
+    "plan": "Plan",
+    "free": "Free",
+    "activeUntil": "Activo hasta",
+    "lastAddedBy": "Añadido por última vez con",
+    "bonus": "Bonificación para las primeras cuentas",
+    "manage": "Gestionar la suscripción",
+    "seePlans": "Ver planes",
+    "foot": "El plan pertenece a tu cuenta de Discord, no a esta cuenta de Mewvo.",
+    "endsToday": "Termina hoy",
+    "dayLeft": "Queda {days} día",
+    "daysLeft": "Quedan {days} días",
+    "source": {
+      "bonus": "Bonificación para las primeras cuentas",
+      "purchase": "Una compra",
+      "key": "Una clave",
+      "owner": "Otorgado por el propietario del bot"
+    }
+  },
+  "bonus": {
+    "granted": "Vinculación n.º {n}: {bonus} de Pro, añadidos el {date}.",
+    "skipped": "Vinculación n.º {n}: te correspondían {bonus} de Pro, pero no se añadieron. {reason}",
+    "tooLate": "Vinculación n.º {n}: sin bonificación Pro (fue para las {limit} primeras vinculaciones).",
+    "none": "Vinculación n.º {n}: sin bonificación Pro."
+  },
+  "settings": {
+    "title": "Ajustes de la cuenta",
+    "yourAccount": "Tu cuenta",
+    "discord": "Discord",
+    "linked": "Vinculada",
+    "discordId": "ID {id}",
+    "notLinked": "Sin vincular",
+    "created": "Creada",
+    "claimLetter": "Reclama tu nombre de usuario de 1 letra",
+    "unlink": "Desvincular Discord",
+    "unlinkFoot": "Una cuenta de Mewvo necesita una cuenta de Discord vinculada: después de desvincularla, solo puedes vincular otra (o eliminar la cuenta). El plan se queda con tu cuenta de Discord. Una cuenta de Discord recibe la bonificación para las primeras cuentas una sola vez.",
+    "yourData": "Tus datos",
+    "download": "Descargar mis datos"
+  },
+  "password": {
+    "heading": "Cambiar la contraseña",
+    "current": "Contraseña actual",
+    "newHint": "Al menos {min} caracteres. Aquí sigues con la sesión iniciada; las demás sesiones se cierran.",
+    "submit": "Cambiar la contraseña"
+  },
+  "twoStepSettings": {
+    "heading": "Inicio de sesión en dos pasos",
+    "on": "El inicio de sesión en dos pasos está **activado** desde el {date}. Códigos de recuperación restantes: {left}.",
+    "off": "El inicio de sesión en dos pasos está **desactivado**. Cuando está activado, al iniciar sesión también introduces un código de una aplicación de autenticación.",
+    "turnOff": "Desactivar el inicio de sesión en dos pasos",
+    "turnOn": "Activar el inicio de sesión en dos pasos"
+  },
+  "delete": {
+    "heading": "Eliminar la cuenta",
+    "lead": "Esto elimina tu cuenta de Mewvo: nombre de usuario, contraseña e inicio de sesión en dos pasos. No elimina los registros de moderación ni un plan de tu cuenta de Discord. Consulta la [Política de privacidad](/privacy).",
+    "confirm": "Sí, eliminar mi cuenta.",
+    "submit": "Eliminar mi cuenta"
+  },
+  "deleted": {
+    "title": "Cuenta eliminada",
+    "heading": "Tu cuenta se ha eliminado",
+    "lead": "Tu cuenta de Mewvo ya no existe y se ha cerrado tu sesión. Un plan de tu cuenta de Discord se queda con ella, y los registros de moderación no se ven afectados.",
+    "home": "Inicio"
+  },
+  "errors": {
+    "tooManyTries": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+    "notAllowedTitle": "No permitido",
+    "notAllowed": "Este formulario no procede de este sitio o estuvo abierto demasiado tiempo. Vuelve atrás, recarga la página e inténtalo de nuevo. No se ha cambiado nada.",
+    "tooManySignups": "Demasiadas cuentas nuevas desde tu dirección. Inténtalo más tarde.",
+    "acceptTerms": "Acepta los Términos y condiciones y la Política de privacidad para crear una cuenta.",
+    "wrongLogin": "Nombre de usuario o contraseña incorrectos.",
+    "logInAgainTitle": "Vuelve a iniciar sesión",
+    "codeStepExpired": "El paso del código ha caducado. Vuelve a iniciar sesión con tu contraseña.",
+    "tooManyCodes": "Demasiados códigos incorrectos. Vuelve a iniciar sesión con tu contraseña.",
+    "wrongLoginCode": "Ese código no es correcto. Prueba el código más reciente de tu aplicación.",
+    "resetExpiredTitle": "Empieza de nuevo",
+    "resetExpiredLabel": "¿Olvidaste tu contraseña?",
+    "resetExpired": "Este restablecimiento de contraseña ha caducado o ya se usó. Elige de nuevo ¿Olvidaste tu contraseña? e inicia sesión con Discord.",
+    "noAccountTitle": "No se encontró ninguna cuenta",
+    "noAccount": "No hay ninguna cuenta de Mewvo vinculada a esta cuenta de Discord, así que no hay contraseña que restablecer. En su lugar, puedes crear una cuenta nueva.",
+    "wrongResetCode": "Ese código no es correcto. Introduce el código de 6 dígitos de tu aplicación o uno de tus códigos de recuperación.",
+    "notLinkedTitle": "Sin vincular",
+    "pickLetter": "Elige una letra o un número.",
+    "wrongCurrentPassword": "La contraseña actual es incorrecta. No se ha cambiado nada.",
+    "wrongSetupCode": "Ese código no es correcto. Comprueba la hora de tu teléfono e introduce el código más reciente.",
+    "wrongTwoStepOff": "La contraseña o el código son incorrectos. El inicio de sesión en dos pasos sigue activado.",
+    "confirmDelete": "Marca la casilla para confirmar que quieres eliminar tu cuenta.",
+    "wrongDeleteWithCode": "La contraseña o el código son incorrectos. No se ha eliminado nada.",
+    "wrongDelete": "La contraseña es incorrecta. No se ha eliminado nada."
+  },
+  "flash": {
+    "passwordReset": "Tu nueva contraseña se ha guardado. Se cerraron todas las demás sesiones.",
+    "letterClaimed": "Ahora tu nombre de usuario es {username}. Úsalo para iniciar sesión.",
+    "letterDeclined": "Has mantenido el nombre de usuario {username}.",
+    "passwordChanged": "Tu contraseña se ha cambiado. Se cerraron las demás sesiones.",
+    "twoStepAlreadyOn": "El inicio de sesión en dos pasos ya está activado.",
+    "twoStepAlreadyOff": "El inicio de sesión en dos pasos ya está desactivado.",
+    "twoStepOff": "El inicio de sesión en dos pasos está desactivado.",
+    "unlinked": "Tu cuenta de Discord se ha desvinculado. Vuelve a vincular una cuenta de Discord para seguir usando tu cuenta de Mewvo."
+  }
+}

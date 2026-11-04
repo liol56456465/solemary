@@ -1,0 +1,76 @@
+{
+  "title": "Informe de transparencia",
+  "description": "Cuántas advertencias, silenciamientos, expulsiones y baneos aplicó el servidor de Mewvo cada mes y cómo se resolvieron las apelaciones. Solo cifras.",
+  "head": {
+    "heading": "Informe de transparencia",
+    "lead": "Con qué frecuencia el staff del servidor de Mewvo advirtió, silenció, expulsó y baneó, y cómo fueron las apelaciones, mes a mes. Solo cifras: sin nombres, sin motivos, sin moderadores.",
+    "period": "Del {from} al {to}, en UTC. Se actualiza como máximo cada 10 minutos."
+  },
+  "summary": {
+    "warns": "Advertencias",
+    "mutes": "Silenciamientos",
+    "kicks": "Expulsiones",
+    "bans": "Baneos",
+    "appealsReceived": "Apelaciones recibidas",
+    "medianDecision": "Tiempo mediano hasta la decisión de una apelación"
+  },
+  "table": {
+    "month": "Mes",
+    "total": "Total",
+    "soFar": "hasta ahora",
+    "notEnoughDecisions": "no hay suficientes decisiones"
+  },
+  "actions": {
+    "heading": "Acciones de moderación",
+    "intro": "Por mes; el mes en curso, hasta hoy.",
+    "caption": "Acciones de moderación por mes, de la más antigua a la más reciente. La última fila es el total.",
+    "columns": {
+      "warns": "Advertencias",
+      "mutes": "Silenciamientos",
+      "kicks": "Expulsiones",
+      "bans": "Baneos",
+      "ladderBans": "De los baneos: automáticos (escala de advertencias)",
+      "automod": "Aplicadas por el automod",
+      "voided": "Anuladas por error"
+    }
+  },
+  "appeals": {
+    "heading": "Apelaciones",
+    "intro": "Por el mes en que se envió la apelación, con su resultado a día de hoy.",
+    "caption": "Apelaciones por mes de envío, de la más antigua a la más reciente. La última fila es el total.",
+    "columns": {
+      "received": "Recibidas",
+      "accepted": "Aceptadas",
+      "denied": "Denegadas",
+      "open": "Aún abiertas",
+      "median": "Tiempo mediano hasta una decisión"
+    }
+  },
+  "how": {
+    "heading": "Cómo se calculan estas cifras",
+    "intro": "Cómo funcionan las apelaciones se explica en la [guía de apelaciones](/docs/appeals).",
+    "counted": {
+      "question": "Qué se cuenta",
+      "answer": "Cada advertencia, silenciamiento, expulsión y baneo aplicado en el servidor de Mewvo, en el mes en que se aplicó (UTC), ya sea por un moderador, por la escala de advertencias o por el automod. Los baneos automáticos de la escala y las acciones del automod ya forman parte de las cuatro columnas principales; sus propias columnas solo muestran cuántos hubo."
+    },
+    "notCounted": {
+      "question": "Qué no se cuenta",
+      "answer": "Las simulaciones de prueba (el staff ve la vista previa de un mensaje; a nadie le pasa nada), las advertencias importadas del bot anterior como historial y las denuncias sobre el staff. Los casos anulados por error quedan fuera de las columnas principales y se muestran aparte en la columna «Anuladas por error», en el mes en que se aplicaron."
+    },
+    "appeals": {
+      "question": "Apelaciones",
+      "answer": "Las apelaciones se cuentan en el mes en que se enviaron, con su resultado a día de hoy. Una apelación sobre un caso que luego se anuló sigue contando: la apelación existió. Las apelaciones cerradas sin decisión solo se cuentan como recibidas. El tiempo mediano va desde el envío de la apelación hasta la decisión del staff, sobre las apelaciones aceptadas y denegadas de ese mes."
+    },
+    "smallNumbers": {
+      "question": "Cifras pequeñas",
+      "answer": "Para que no se puedan reconocer casos concretos, un recuento de 1 o 2 se muestra como «menos de 3», y una mediana solo se muestra cuando se resolvieron al menos 3 apelaciones. Cuando un mes de una columna se oculta así, el total indica «al menos» en lugar de la cifra exacta."
+    },
+    "neverShown": {
+      "question": "Lo que esta página nunca muestra",
+      "answer": "Nombres, ID de Discord, códigos de caso, motivos o qué moderador actuó. Solo cifras."
+    }
+  },
+  "error": {
+    "text": "No se ha podido cargar el informe en este momento porque la base de datos no responde. Preferimos no mostrar cifras a mostrar cifras incorrectas; vuelve a intentarlo en unos minutos."
+  }
+}

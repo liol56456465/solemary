@@ -1,0 +1,80 @@
+{
+  "bot": {
+    "appTag": "APP",
+    "timeToday": "Oggi alle 14:05"
+  },
+  "dm": {
+    "frameLabel": "Messaggio diretto · Mewvo",
+    "appealHere": "**Fai ricorso qui:** {invite}",
+    "date": "Data: {date}",
+    "caseCode": "Codice caso: {code}",
+    "privacy": "Privacy: {url}"
+  },
+  "warnDm": {
+    "title": "**Avvertimento 2 di 3 in Mewvo**",
+    "by": "Da: Moderatore",
+    "reason": "Motivo: spam in #general",
+    "dateValue": "giovedì 29 ottobre 2026 alle 14:05",
+    "limit": "A 3 avvertimenti verrai bannato."
+  },
+  "banDm": {
+    "time": "Sabato alle 19:40",
+    "title": "**Bannato da Mewvo**",
+    "by": "Da: Mewvo",
+    "reason": "Motivo: limite di avvertimenti raggiunto",
+    "dateValue": "sabato 31 ottobre 2026 alle 19:40",
+    "duration": "Durata: 7 giorni, termina {end} {relative}",
+    "endValue": "sabato 7 novembre 2026 alle 19:40",
+    "relativeValue": "(tra 7 giorni)",
+    "ladderNote": "Fare ricorso con questo codice rimuove anche l'avvertimento che ha causato questo ban."
+  },
+  "appealForm": {
+    "frameLabel": "Modulo di ricorso · si apre dal pulsante Appeal",
+    "title": "Fai ricorso contro una sanzione",
+    "reason": {
+      "label": "Perché dovrebbe essere revocata?",
+      "help": "Perché dovresti essere sbannato, non più silenziato o perdere l'avvertimento?",
+      "example": "Ho inviato lo stesso link tre volte perché pensavo che non fosse partito. Ora conosco la regola e non succederà più."
+    },
+    "caseCode": {
+      "label": "Codice caso",
+      "help": "Dal messaggio diretto che hai ricevuto con la sanzione, ad es. k7m2qx."
+    },
+    "moreInfo": {
+      "label": "Altre informazioni (facoltativo)",
+      "help": "Qualsiasi altra cosa che gli amministratori dovrebbero sapere."
+    },
+    "cancel": "Annulla",
+    "submit": "Invia"
+  },
+  "ladder": {
+    "frameLabel": "Scala degli avvertimenti · per membro, per server",
+    "steps": {
+      "warn1": {
+        "key": "Avvertimento 1",
+        "what": "Messaggio diretto: “Avvertimento 1 di 3”",
+        "result": "Livello 0"
+      },
+      "warn2": {
+        "key": "Avvertimento 2",
+        "what": "Messaggio diretto: “Avvertimento 2 di 3”",
+        "result": "Livello 0"
+      },
+      "warn3": {
+        "key": "Avvertimento 3",
+        "what": "Ban automatico",
+        "result": "7 giorni · livello 1"
+      },
+      "level2": {
+        "key": "Avvertimento successivo",
+        "what": "Ban automatico",
+        "result": "30 giorni · livello 2"
+      },
+      "level3": {
+        "key": "Avvertimento successivo",
+        "what": "Ban permanente",
+        "result": "Ricorso possibile per 6 mesi · livello 3"
+      }
+    }
+  }
+}

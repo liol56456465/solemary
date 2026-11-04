@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "description": "Mewvo è un bot Discord per la moderazione con codici caso e messaggi diretti, una scala degli avvertimenti in tre passi, ricorsi che arrivano a una persona, automod, ticket e strumenti per la community."
+  },
+  "actions": {
+    "readDocs": "Leggi la guida",
+    "joinServer": "Entra nel server",
+    "joinSupportServer": "Entra nel server di supporto",
+    "openDashboard": "Mewvo è già nel tuo server? [Apri la dashboard]({url})"
+  },
+  "hero": {
+    "title": "Un bot Discord per moderazione e ricorsi",
+    "lead": "Mewvo dà avvertimenti, silenzia, espelle e banna da un unico pannello. Il membro riceve un messaggio diretto con il motivo, la scadenza e come fare ricorso. Il tuo staff riceve un caso con un codice breve da ritrovare in seguito.",
+    "notPublic": "Per ora Mewvo funziona solo sul server Mewvo. Non può ancora essere aggiunto ad altri server.",
+    "dmCaption": "Il messaggio diretto che un membro riceve al secondo avvertimento. Stesso testo del bot."
+  },
+  "dashboard": {
+    "title": "Tutto in un unico posto",
+    "text": "Membri, casi, ricorsi e tutte le impostazioni nel browser. Accedi con Discord; ogni modifica finisce in un registro di controllo. [Un giro della dashboard](/docs/using-the-dashboard)",
+    "shotAlt": "La panoramica della dashboard di Mewvo: elementi che richiedono lo staff, moderazione degli ultimi sette giorni, stato del bot e avanzamento della configurazione."
+  },
+  "ladder": {
+    "title": "Le stesse regole per tutti",
+    "text": "Gli avvertimenti salgono una scala fissa per membro e per server. I primi due sono un messaggio diretto. Il terzo è un ban di 7 giorni, poi 30 giorni, poi permanente. I ban manuali non la spostano, e un ricorso accolto la fa scendere di un gradino.\n\nI membri possono vedere a che punto sono, così nessuno viene sorpreso da un ban. [Come aumentano gli avvertimenti](/docs/warnings)"
+  },
+  "what": {
+    "title": "Cosa fa",
+    "text": "Prima di tutto la moderazione, affiancata dagli strumenti per la community di cui un server ha bisogno. [Tutte le funzionalità](/features)",
+    "items": {
+      "enforcement": {
+        "name": "Moderazione",
+        "text": "Avvertimenti, silenziamenti, espulsioni e ban da un unico pannello che mostra prima lo storico del membro. Ogni azione è un caso con un codice breve che lo staff può modificare, annullare o a cui può aggiungere prove in seguito.",
+        "link": "Per iniziare"
+      },
+      "appeals": {
+        "name": "Ricorsi",
+        "text": "I membri fanno ricorso con un breve modulo. I ricorsi contro i ban aprono un canale nel server di supporto, così funzionano anche dopo un ban, e decide una persona dello staff.",
+        "link": "Come funzionano i ricorsi"
+      },
+      "automod": {
+        "name": "Automod",
+        "text": "Quattordici regole, dai link truffa alle menzioni di massa. Ogni azione automatica è un caso normale, con una scheda nel canale dello staff per confermarla, annullarla o modificarla.",
+        "link": "Regole dell'automod"
+      },
+      "tickets": {
+        "name": "Ticket e modmail",
+        "text": "Un pannello per i ticket, e i membri possono scrivere in privato al bot per contattare lo staff. Entrambi diventano canali nel tuo server; le righe che iniziano con // restano interne.",
+        "link": "Ticket e modmail"
+      },
+      "logging": {
+        "name": "Log e strumenti",
+        "text": "Ingressi, uscite, modifiche ai ruoli, messaggi modificati ed eliminati e altro, ognuno nel canale che scegli. Accanto ci sono la verifica e gli strumenti per il server.",
+        "link": "Log e strumenti"
+      },
+      "community": {
+        "name": "Strumenti per la community",
+        "text": "Livelli, tag, suggerimenti, starboard, messaggi fissi, feed di YouTube, ruoli a reazione, giveaway, compleanni, candidature, canali vocali creati all'ingresso, messaggi di benvenuto.",
+        "link": "Tutti gli strumenti per la community"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Gratis da usare",
+    "text": "Tutto quello che c'è qui sopra è gratis. I piani a pagamento alzano solo dei limiti, come tag e messaggi fissi. [Piani e prezzi](/pricing)"
+  },
+  "help": {
+    "title": "Domande?",
+    "text": "Inizia dalla [guida](/docs) o dalle [domande e risposte](/faq).",
+    "support": "Ancora bloccato? Chiedi nel [server di supporto]({url}); risponde una persona."
+  }
+}

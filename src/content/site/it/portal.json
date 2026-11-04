@@ -1,0 +1,144 @@
+{
+  "caseType": {
+    "ban": "Ban",
+    "kick": "Espulsione",
+    "mute": "Silenziamento",
+    "warn": "Avvertimento"
+  },
+  "appealStatus": {
+    "pending": "In attesa: gli amministratori non hanno ancora deciso",
+    "accepted": "Accolto",
+    "denied": "Respinto",
+    "closed": "Chiuso"
+  },
+  "appeal": {
+    "voided": "Annullato: niente contro cui fare ricorso",
+    "lifted": "Già revocato",
+    "unappealable": "Ricorso non possibile",
+    "ended": "Terminato: niente contro cui fare ricorso",
+    "deadlinePassed": "Il periodo per fare ricorso è chiuso",
+    "windowClosed": "Il periodo per fare ricorso ({days} giorni) è chiuso",
+    "pending": "Ricorso in attesa",
+    "deniedRetry": "Ricorso respinto; puoi fare di nuovo ricorso dal",
+    "appealable": "Ricorso possibile",
+    "until": "Fino al {date}",
+    "yes": "Sì"
+  },
+  "status": {
+    "imported": "solo storico (importato, non conta)",
+    "voided": "annullato: non conta più",
+    "counts": "conta ora",
+    "noLongerCounts": "registrato, non conta più",
+    "onRecord": "registrato"
+  },
+  "login": {
+    "lead": "Vedi il tuo storico di moderazione in {server}: i tuoi avvertimenti, il livello nella scala degli avvertimenti, eventuali ban o silenziamenti attivi, i tuoi casi e i tuoi ricorsi.",
+    "withDiscord": "Accedi con Discord",
+    "withAccount": "Accedi con un account Mewvo",
+    "note": "Mewvo chiede a Discord solo chi sei (il permesso identify): niente email, niente server, nient'altro. Vedi sempre e solo il tuo storico. L'accesso dura un'ora.",
+    "signup": "Non hai ancora un account Mewvo? [Creane uno]({href}) per accedere con nome utente e password."
+  },
+  "record": {
+    "title": "Il mio storico",
+    "lead": "Il tuo storico di moderazione in {server}, con accesso come **{username}**. Solo tu puoi vederlo.",
+    "accountSettings": "Impostazioni account",
+    "download": "Scarica i miei dati",
+    "subscription": "Abbonamento",
+    "logOut": "Esci",
+    "warnings": "Avvertimenti",
+    "warningsCount": "{count} su {threshold}",
+    "warningsNote": "Avvertimenti conteggiati al tuo livello. Gli avvertimenti non scadono.",
+    "ladder": "Scala degli avvertimenti",
+    "ladderLevel": "Livello {level} di {max}",
+    "activeNow": "Attivo ora",
+    "activeBanEnds": "Ban {code}: termina il {date}",
+    "activeBanPermanent": "Ban {code}: permanente",
+    "activeMuteEnds": "Silenziamento {code}: termina il {date}",
+    "nothingActive": "Nessun ban o silenziamento attivo.",
+    "cases": "Casi",
+    "appeals": "Ricorsi",
+    "column": {
+      "case": "Caso",
+      "type": "Tipo",
+      "reason": "Motivo",
+      "by": "Da",
+      "date": "Data",
+      "ends": "Termina",
+      "status": "Stato",
+      "appeal": "Ricorso",
+      "filed": "Presentato",
+      "decided": "Deciso"
+    },
+    "permanent": "permanente",
+    "truncated": "Vengono mostrati i tuoi {count} casi più recenti.",
+    "noCases": "Non hai casi in {server}.",
+    "noAppeals": "Non hai presentato nessun ricorso.",
+    "appealHintInvite": "Fai ricorso dal pannello dei ricorsi su Discord: [entra nel server di supporto]({invite}) e premi **Appeal** con il codice caso. Da questa pagina non puoi fare ricorso.",
+    "appealHint": "Fai ricorso dal pannello dei ricorsi su Discord con il codice caso. Da questa pagina non puoi fare ricorso."
+  },
+  "message": {
+    "logInAgain": "Accedi di nuovo",
+    "backToRecord": "Torna a Il mio storico"
+  },
+  "errors": {
+    "slowDown": {
+      "title": "Rallenta",
+      "message": "Troppe richieste dal tuo indirizzo. Aspetta un minuto e riprova."
+    },
+    "loginCancelled": {
+      "title": "Accesso annullato",
+      "message": "Non hai autorizzato l'accesso."
+    },
+    "loginExpired": {
+      "title": "Accesso scaduto",
+      "message": "Questo link di accesso non è valido, è scaduto o è già stato usato."
+    },
+    "loginFailed": {
+      "title": "Accesso non riuscito",
+      "message": "Discord non ha confermato l'accesso. Riprova."
+    },
+    "noUser": {
+      "title": "Accesso non riuscito",
+      "message": "Discord non ha restituito un utente."
+    },
+    "linkOtherBrowser": {
+      "title": "Non collegato",
+      "message": "Prima accedi al tuo account Mewvo in questo browser, poi collega di nuovo Discord."
+    },
+    "recordUnavailable": {
+      "title": "Storico non disponibile",
+      "message": "Non è stato possibile caricare il tuo storico perché il database non risponde. Questo non significa che il tuo storico sia pulito: riprova tra qualche minuto."
+    },
+    "downloadLogin": {
+      "title": "Prima accedi",
+      "message": "Accedi con Discord per scaricare i tuoi dati."
+    },
+    "downloadLoginAccount": {
+      "title": "Prima accedi",
+      "message": "Accedi per scaricare i tuoi dati."
+    },
+    "downloadUnavailable": {
+      "title": "Download non disponibile",
+      "message": "Non è stato possibile raccogliere i tuoi dati perché il database non risponde. Riprova tra qualche minuto."
+    },
+    "notLoggedIn": {
+      "title": "Disconnesso",
+      "message": "Non hai effettuato l'accesso."
+    },
+    "logoutNotAllowed": {
+      "title": "Non consentito",
+      "message": "La richiesta di uscita non proviene da questa pagina."
+    },
+    "notFound": {
+      "title": "Non trovata",
+      "message": "Questa pagina non esiste."
+    },
+    "tryLater": {
+      "title": "Riprova più tardi",
+      "message": "Non è stato possibile caricare questa pagina perché il database non risponde. Non è stato modificato nulla."
+    }
+  },
+  "viewer": {
+    "fallbackName": "Account"
+  }
+}

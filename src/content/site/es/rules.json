@@ -1,0 +1,18 @@
+{
+  "title": "Normas",
+  "description": "Las normas del servidor de Discord de Mewvo.",
+  "head": {
+    "heading": "Normas del servidor",
+    "lead": "Las normas del servidor de Mewvo. Cuando el staff advierte, silencia, expulsa o banea por una de ellas, el mensaje directo indica la norma y enlaza aquí."
+  },
+  "state": {
+    "unavailable": "No se han podido cargar las normas en este momento. Vuelve a intentarlo en un minuto.",
+    "empty": "Este servidor aún no ha publicado sus normas."
+  },
+  "list": {
+    "updated": "Última actualización: {date}.",
+    "linkLabel": "Enlace a la norma {number}",
+    "consequenceLabel": "Consecuencia:"
+  },
+  "appeal": "¿Te sancionaron por una norma que crees que no incumpliste? Cada mensaje directo indica si se puede apelar y cómo. [Cómo funcionan las apelaciones](/docs/appeals)."
+}

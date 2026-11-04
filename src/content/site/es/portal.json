@@ -1,0 +1,144 @@
+{
+  "caseType": {
+    "ban": "Baneo",
+    "kick": "Expulsión",
+    "mute": "Silenciamiento",
+    "warn": "Advertencia"
+  },
+  "appealStatus": {
+    "pending": "Pendiente: los administradores aún no han decidido",
+    "accepted": "Aceptada",
+    "denied": "Denegada",
+    "closed": "Cerrada"
+  },
+  "appeal": {
+    "voided": "Anulado: no hay nada que apelar",
+    "lifted": "Ya retirado",
+    "unappealable": "No se puede apelar",
+    "ended": "Terminado: no hay nada que apelar",
+    "deadlinePassed": "El plazo para apelar ha terminado",
+    "windowClosed": "El plazo para apelar ({days} días) ha terminado",
+    "pending": "Apelación pendiente",
+    "deniedRetry": "Apelación denegada; puedes volver a apelar a partir del",
+    "appealable": "Se puede apelar",
+    "until": "Hasta el {date}",
+    "yes": "Sí"
+  },
+  "status": {
+    "imported": "solo historial (importado, no cuenta)",
+    "voided": "anulado: ya no cuenta",
+    "counts": "cuenta ahora",
+    "noLongerCounts": "registrado, ya no cuenta",
+    "onRecord": "registrado"
+  },
+  "login": {
+    "lead": "Consulta tu propio historial de moderación en {server}: tus advertencias, tu nivel en la escala de advertencias, cualquier baneo o silenciamiento activo, tus casos y tus apelaciones.",
+    "withDiscord": "Iniciar sesión con Discord",
+    "withAccount": "Iniciar sesión con una cuenta de Mewvo",
+    "note": "Mewvo solo le pregunta a Discord quién eres (el permiso identify): sin correo electrónico, sin servidores, nada más. Solo ves tu propio historial. La sesión dura una hora.",
+    "signup": "¿Aún no tienes una cuenta de Mewvo? [Crea una]({href}) para iniciar sesión con nombre de usuario y contraseña."
+  },
+  "record": {
+    "title": "Mi historial",
+    "lead": "Tu historial de moderación en {server}, con la sesión iniciada como **{username}**. Solo tú puedes verlo.",
+    "accountSettings": "Ajustes de la cuenta",
+    "download": "Descargar mis datos",
+    "subscription": "Suscripción",
+    "logOut": "Cerrar sesión",
+    "warnings": "Advertencias",
+    "warningsCount": "{count} de {threshold}",
+    "warningsNote": "Advertencias contadas en tu nivel. Las advertencias no caducan.",
+    "ladder": "Escala de advertencias",
+    "ladderLevel": "Nivel {level} de {max}",
+    "activeNow": "Activo ahora",
+    "activeBanEnds": "Baneo {code}: termina el {date}",
+    "activeBanPermanent": "Baneo {code}: permanente",
+    "activeMuteEnds": "Silenciamiento {code}: termina el {date}",
+    "nothingActive": "Ningún baneo ni silenciamiento activo.",
+    "cases": "Casos",
+    "appeals": "Apelaciones",
+    "column": {
+      "case": "Caso",
+      "type": "Tipo",
+      "reason": "Motivo",
+      "by": "Por",
+      "date": "Fecha",
+      "ends": "Termina",
+      "status": "Estado",
+      "appeal": "Apelación",
+      "filed": "Presentada",
+      "decided": "Resuelta"
+    },
+    "permanent": "permanente",
+    "truncated": "Se muestran tus {count} casos más recientes.",
+    "noCases": "No tienes casos en {server}.",
+    "noAppeals": "No has presentado ninguna apelación.",
+    "appealHintInvite": "Apela desde el panel de apelaciones de Discord: [únete al servidor de soporte]({invite}) y pulsa **Appeal** con el código de caso. Desde esta página no se puede apelar.",
+    "appealHint": "Apela desde el panel de apelaciones de Discord con el código de caso. Desde esta página no se puede apelar."
+  },
+  "message": {
+    "logInAgain": "Volver a iniciar sesión",
+    "backToRecord": "Volver a Mi historial"
+  },
+  "errors": {
+    "slowDown": {
+      "title": "Más despacio",
+      "message": "Demasiadas solicitudes desde tu dirección. Espera un minuto y vuelve a intentarlo."
+    },
+    "loginCancelled": {
+      "title": "Inicio de sesión cancelado",
+      "message": "No autorizaste el inicio de sesión."
+    },
+    "loginExpired": {
+      "title": "Inicio de sesión caducado",
+      "message": "Este enlace de inicio de sesión no es válido, ha caducado o ya se usó."
+    },
+    "loginFailed": {
+      "title": "Error al iniciar sesión",
+      "message": "Discord no confirmó el inicio de sesión. Vuelve a intentarlo."
+    },
+    "noUser": {
+      "title": "Error al iniciar sesión",
+      "message": "Discord no devolvió ningún usuario."
+    },
+    "linkOtherBrowser": {
+      "title": "Sin vincular",
+      "message": "Primero inicia sesión en tu cuenta de Mewvo en este navegador y luego vuelve a vincular Discord."
+    },
+    "recordUnavailable": {
+      "title": "Historial no disponible",
+      "message": "No se pudo cargar tu historial porque la base de datos no responde. Esto no significa que tu historial esté limpio: vuelve a intentarlo en unos minutos."
+    },
+    "downloadLogin": {
+      "title": "Primero inicia sesión",
+      "message": "Inicia sesión con Discord para descargar tus datos."
+    },
+    "downloadLoginAccount": {
+      "title": "Primero inicia sesión",
+      "message": "Inicia sesión para descargar tus datos."
+    },
+    "downloadUnavailable": {
+      "title": "Descarga no disponible",
+      "message": "No se pudieron reunir tus datos porque la base de datos no responde. Vuelve a intentarlo en unos minutos."
+    },
+    "notLoggedIn": {
+      "title": "Sesión cerrada",
+      "message": "No has iniciado sesión."
+    },
+    "logoutNotAllowed": {
+      "title": "No permitido",
+      "message": "La solicitud de cierre de sesión no procede de esta página."
+    },
+    "notFound": {
+      "title": "No encontrada",
+      "message": "Esta página no existe."
+    },
+    "tryLater": {
+      "title": "Vuelve a intentarlo más tarde",
+      "message": "No se pudo cargar esta página porque la base de datos no responde. No se ha cambiado nada."
+    }
+  },
+  "viewer": {
+    "fallbackName": "Cuenta"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "title": "Ficha de confianza de {server}",
+  "description": "Cómo se modera {server}: tiempos de las apelaciones, resultados de las apelaciones y miembros sin sanciones en los últimos {days} días. Solo cifras.",
+  "head": {
+    "heading": "{server}: ficha de confianza",
+    "lead": "Cómo se moderó este servidor en los últimos {days} días. Solo cifras: sin nombres, sin motivos, sin moderadores."
+  },
+  "noData": "Aún no hay datos suficientes",
+  "tiles": {
+    "firstAnswer": {
+      "label": "Primera respuesta a una apelación",
+      "note": "Tiempo mediano desde que se envía una apelación hasta que un miembro del staff la asume o la resuelve."
+    },
+    "accepted": {
+      "label": "Apelaciones aceptadas",
+      "note": "De {decided} apelaciones resueltas."
+    },
+    "goodStanding": {
+      "label": "Miembros sin sanciones",
+      "note": "Ninguna advertencia contada, sin silenciamiento."
+    },
+    "headsUp": {
+      "label": "Corregidos tras un aviso",
+      "noteWithRate": "Los miembros corrigieron por sí mismos el {rate} de los mensajes señalados tras un aviso.",
+      "noteNoRate": "Con qué frecuencia los miembros corrigen por sí mismos un mensaje señalado tras un aviso."
+    }
+  },
+  "facts": {
+    "received": "Apelaciones recibidas",
+    "decided": "Apelaciones resueltas",
+    "decisionTime": "Tiempo mediano hasta una decisión",
+    "casesPerThousand": "Casos por cada 1000 miembros"
+  },
+  "how": {
+    "heading": "Cómo modera este servidor",
+    "byPerson": "Cada apelación la lee y la resuelve una persona del staff, nunca el bot por sí solo.",
+    "cases": "Cada advertencia, silenciamiento, expulsión y baneo se registra como un caso con su propio código, y el miembro recibe ese código por mensaje directo."
+  },
+  "ladder": {
+    "single": "Las advertencias se acumulan: la {nth} advertencia supone {first}.",
+    "escalating": "Las advertencias se acumulan: la {nth} advertencia supone {first}, y cada advertencia posterior a ese baneo supone uno más largo ({later}).",
+    "then": "{earlier}, luego {next}",
+    "banDays": "un baneo de {days} días",
+    "banPermanent": "un baneo permanente",
+    "ordinals": {
+      "0": "0.ª",
+      "1": "primera",
+      "2": "segunda",
+      "3": "tercera",
+      "4": "cuarta",
+      "5": "quinta",
+      "6": "sexta",
+      "7": "séptima",
+      "8": "octava",
+      "9": "novena",
+      "10": "décima"
+    },
+    "ordinalOther": "{n}.ª"
+  },
+  "cat": {
+    "alt": "{name}, el gato del servidor ({stage}), estado de ánimo: {mood}",
+    "caption": "El gato del servidor",
+    "shareAlt": "{name}, el gato del servidor"
+  },
+  "rules": {
+    "heading": "Normas",
+    "empty": "Este servidor aún no ha publicado sus normas.",
+    "readAll": "Leer todas las normas"
+  },
+  "foot": {
+    "period": "Últimos {days} días, del {from} al {to}. Las cifras pequeñas están ocultas.",
+    "periodWithReport": "Últimos {days} días, del {from} al {to}. Las cifras pequeñas están ocultas. Cifras mensuales completas: [Informe de transparencia](/transparency)."
+  },
+  "error": {
+    "title": "Ficha de confianza",
+    "heading": "Ficha de confianza",
+    "text": "No se ha podido cargar la ficha de confianza en este momento. Preferimos no mostrar cifras a mostrar cifras incorrectas; vuelve a intentarlo en unos minutos."
+  }
+}

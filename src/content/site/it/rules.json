@@ -1,0 +1,18 @@
+{
+  "title": "Regole",
+  "description": "Le regole del server Discord di Mewvo.",
+  "head": {
+    "heading": "Regole del server",
+    "lead": "Le regole del server Mewvo. Quando lo staff dà un avvertimento, silenzia, espelle o banna per una di queste, il messaggio diretto indica la regola e rimanda qui."
+  },
+  "state": {
+    "unavailable": "Al momento non è stato possibile caricare le regole. Riprova tra un minuto.",
+    "empty": "Questo server non ha ancora pubblicato le sue regole."
+  },
+  "list": {
+    "updated": "Ultimo aggiornamento: {date}.",
+    "linkLabel": "Link alla regola {number}",
+    "consequenceLabel": "Conseguenza:"
+  },
+  "appeal": "Sei stato punito per una regola che pensi di non aver violato? Ogni messaggio diretto indica se e come puoi fare ricorso. [Come funzionano i ricorsi](/docs/appeals)."
+}

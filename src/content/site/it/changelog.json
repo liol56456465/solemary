@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "description": "Cosa è cambiato in Mewvo, dal più recente."
+  },
+  "head": {
+    "title": "Novità",
+    "lead": "Cosa è cambiato in Mewvo, dal più recente. Una modifica compare qui quando è completata. Il bot nel tuo server la riceve con il prossimo aggiornamento."
+  },
+  "entries": {
+    "2026-11-01": {
+      "customAutomodRules": "Regole automod personalizzate: aggiungi parole e frasi da bloccare con /automod custom o dalla dashboard. Puoi cambiare le parole di una regola in seguito. Incluse nei piani Normal, Pro e Max.",
+      "remind": "/remind: imposta un promemoria per te. Mewvo te lo invia in un messaggio diretto, o nel canale se hai i messaggi diretti chiusi.",
+      "profile": "/profile: livello, posizione in classifica, prossimo ruolo premio, compleanno e piano in un'unica scheda.",
+      "appealStatus": "/appeal status: vedi i tuoi ricorsi e se qualcuno dello staff li sta esaminando.",
+      "recordLinkInDms": "I messaggi diretti delle sanzioni possono rimandare a Il mio storico, dove vedi tutto il tuo storico sul sito.",
+      "gettingStartedList": "Dashboard: la pagina Panoramica inizia con una breve lista per iniziare, e ogni pagina delle impostazioni spiega le opzioni con parole semplici.",
+      "activityPage": "Dashboard: una pagina Attività con messaggi, ingressi e casi al giorno degli ultimi 30 giorni.",
+      "settingsBackup": "Dashboard: un backup delle impostazioni da scaricare e ricaricare dopo un controllo.",
+      "caseNotesAndTags": "Dashboard: note private e tag dello staff sui casi, azioni su più casi insieme e ricerche salvate.",
+      "shiftNote": "Dashboard: una nota per il turno successivo dello staff nella pagina Panoramica.",
+      "weeklySummary": "Un riepilogo settimanale del server nel registro di moderazione ogni lunedì.",
+      "proMaxBranding": "Pro e Max: Mewvo può usare un suo nickname e avatar nel tuo server, e lo staff può scaricare i casi come foglio di calcolo.",
+      "dashboardThemes": "Temi della dashboard: Chiaro, Scuro, Attenuato e Contrasto elevato."
+    },
+    "2026-10-31": {
+      "legalPages": "Informativa sulla privacy e Termini e condizioni.",
+      "dataDownload": "Il mio storico: scarica in un file tutti i dati che Mewvo ha su di te.",
+      "paidPlans": "I piani a pagamento ora fanno qualcosa: ruoli da sostenitore, /premium, regali e chiavi da riscattare."
+    },
+    "2026-10-29": {
+      "rename": "Il bot ora si chiama Mewvo (prima era Meowist).",
+      "serverRules": "Regole del server sul sito. I messaggi diretti delle sanzioni indicano la regola violata e rimandano a essa.",
+      "independentAppeals": "I ricorsi vengono decisi da una persona diversa dal moderatore che ha dato la sanzione.",
+      "myRecord": "Il mio storico sul sito: i membri possono vedere il proprio storico di moderazione.",
+      "scheduledMessages": "Messaggi programmati e ricorrenti dalla dashboard.",
+      "inbox": "Dashboard: una Posta in arrivo per ricorsi, ticket, modmail e revisioni dell'automod, con risposte dal web.",
+      "websitePages": "Pagine del sito per classifica, stato, funzionalità, prezzi, guida e domande frequenti."
+    },
+    "2026-10-28": {
+      "membersPage": "Dashboard: una pagina Membri con filtri, ruoli, nickname e timeout, anche per più membri insieme.",
+      "temporaryRoles": "Ruoli temporanei che vengono tolti da soli dopo un tempo stabilito.",
+      "bannedPage": "Dashboard: una pagina Bannati con tutti quelli che sono bannati e il motivo.",
+      "channelTools": "Dashboard: svuota, blocca e sblocca canali, e pubblica messaggi, sondaggi e conti alla rovescia come il bot.",
+      "appealsInSupportServer": "I ricorsi contro ban ed espulsioni dialogano con il membro nel server di supporto.",
+      "mutesInMassGuard": "I silenziamenti contano per il limite che impedisce a un moderatore di sanzionare molte persone in poco tempo."
+    }
+  }
+}

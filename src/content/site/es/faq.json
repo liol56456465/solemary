@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "title": "Preguntas frecuentes",
+    "description": "Respuestas sobre Mewvo: qué hace, la escala de advertencias, las apelaciones, los datos guardados y cómo contactar con el staff."
+  },
+  "head": {
+    "title": "Preguntas y respuestas",
+    "lead": "Respuestas breves. Para guías paso a paso, consulta la [guía](/docs)."
+  },
+  "support": {
+    "link": "[el servidor de soporte]({url})",
+    "text": "el servidor de soporte"
+  },
+  "about": {
+    "title": "Sobre Mewvo",
+    "whatDoes": {
+      "q": "¿Qué hace Mewvo?",
+      "a": "Modera un servidor de Discord y gestiona sus funciones para la comunidad. El staff advierte, silencia, expulsa y banea desde un solo panel; cada acción se convierte en un caso con un código y el miembro recibe un mensaje directo que explica por qué, hasta cuándo y cómo apelar. Alrededor de eso: una escala de advertencias, apelaciones, automod, tickets y modmail, un panel de control web, niveles y otras herramientas para la comunidad. La [página de funciones](/features) lo enumera todo."
+    },
+    "notYet": {
+      "q": "¿Por qué todavía no puedo añadirlo a mi servidor?",
+      "a": "Por ahora Mewvo está hecho para el servidor de Mewvo y solo funciona ahí. Abrirlo a otros servidores requiere antes más trabajo, como ajustes y límites por servidor. Cuando se abra, aparecerá en este sitio un botón para añadirlo a tu servidor, y entonces también empezarán los planes de pago de la página de precios.",
+      "aPublic": "Ya puedes: usa el botón Añadir a Discord de la parte superior de la página."
+    },
+    "free": {
+      "q": "¿Es gratis?",
+      "a": "Sí. Todo lo que hace hoy es gratis. Los planes de pago con límites más altos están previstos para cuando Mewvo se abra a otros servidores; consulta [Precios](/pricing)."
+    }
+  },
+  "appeals": {
+    "title": "Advertencias y apelaciones",
+    "ladder": {
+      "q": "¿Cómo funciona la escala de advertencias?",
+      "a": "Las advertencias 1 y 2 son un mensaje directo. La advertencia 3 es un baneo automático de 7 días. Después, la siguiente advertencia es un baneo de 30 días, y la siguiente, un baneo permanente que se puede apelar durante 6 meses. La escala nunca se reinicia sola; una apelación aceptada de un baneo de la escala la baja un escalón. [La guía completa](/docs/warnings)."
+    },
+    "howTo": {
+      "q": "¿Cómo apelo?",
+      "a": "Usa el enlace del mensaje directo que recibiste. Pulsa **Appeal** en el panel de apelaciones y escribe por qué debería retirarse la sanción y el código de caso del mensaje directo. Si estás baneado, usa el panel que hay en {support}. Recibes la decisión por mensaje directo. [Cómo funcionan las apelaciones](/docs/appeals)."
+    },
+    "lostCode": {
+      "q": "He perdido mi código de caso.",
+      "a": "Pulsa **My standing** en el panel de apelaciones: muestra tus advertencias y cualquier baneo o silenciamiento activo con sus códigos.",
+      "aPortal": "Pulsa **My standing** en el panel de apelaciones: muestra tus advertencias y cualquier baneo o silenciamiento activo con sus códigos. [Mi historial](/me) en este sitio muestra todos tus casos."
+    },
+    "everyPunishment": {
+      "q": "¿Se puede apelar cualquier sanción?",
+      "a": "La mayoría, sí. Los baneos y silenciamientos se pueden apelar mientras duran; las advertencias y expulsiones, en un plazo de 30 días. Un baneo permanente de la escala deja de ser apelable a los 6 meses o tras una apelación denegada, y el staff puede marcar un baneo grave como no apelable. El mensaje directo siempre indica cuál es el caso."
+    }
+  },
+  "data": {
+    "title": "Datos y contacto",
+    "stored": {
+      "q": "¿Qué datos guarda Mewvo?",
+      "a": "ID de Discord, tus niveles y XP, casos de moderación, apelaciones y lo que escribes en formularios o tickets, además de algunas cosas que decides guardar, como un cumpleaños. Sin correo electrónico, sin contraseña, nunca se venden. La [página de privacidad](/privacy) tiene la lista completa, y `/wipedata` elimina tus niveles, tu saldo, tu estado AFK y tu cumpleaños en ese servidor, además de tu lista de tareas, tus recordatorios y tu inicio de sesión de Discord guardado. Los registros de moderación se conservan; la página de privacidad explica por qué."
+    },
+    "reachStaff": {
+      "q": "¿Cómo contacto con el staff?",
+      "a": "De tres formas: escribe al bot por mensaje directo y elige **Send to staff** (modmail), abre un ticket desde el panel de tickets o pregunta en {support}. Para denunciar a un miembro del staff, usa **Report staff** en el panel de apelaciones del servidor de soporte; solo los administradores ven esas denuncias."
+    },
+    "down": {
+      "q": "¿El bot está caído?",
+      "a": "Consulta la [página de estado](/status). Muestra si el bot está en línea y se actualiza cada minuto."
+    }
+  }
+}

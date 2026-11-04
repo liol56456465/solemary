@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "title": "Guida",
+    "description": "Brevi guide a Mewvo: primi passi per lo staff, come aumentano gli avvertimenti, come funzionano i ricorsi e come usare la dashboard."
+  },
+  "hub": {
+    "title": "Guide",
+    "lead": "Come funziona Mewvo, passo dopo passo. Per tutti i comandi che i membri possono usare, vedi [Comandi](/commands)."
+  },
+  "nav": {
+    "crumbs": "Percorso",
+    "docs": "Guida",
+    "nextGuide": "Guida successiva",
+    "next": "Avanti",
+    "stillQuestions": "Hai ancora domande?",
+    "readFaq": "Leggi le domande frequenti"
+  },
+  "support": {
+    "link": "[server di supporto]({url})",
+    "text": "server di supporto"
+  },
+  "guides": {
+    "setup": {
+      "title": "Configura Mewvo in 10 minuti",
+      "summary": "Per il proprietario del server: le poche impostazioni di cui Mewvo ha bisogno, in ordine, nella dashboard.",
+      "intro": "Ti serve il permesso **Amministratore** nel server. Tutto quello che segue si fa nella dashboard, dal browser. Non devi scrivere nessun comando.",
+      "open": {
+        "title": "1. Apri la dashboard",
+        "text": "Vai alla [dashboard]({dashboard}) e accedi con Discord. Mewvo chiede a Discord solo chi sei. Non vede la tua email né i tuoi messaggi."
+      },
+      "steps": {
+        "title": "2. Segui \"Setup step by step\"",
+        "text": "Nella pagina Panoramica, premi **Set up Mewvo step by step**. Mostra un'impostazione alla volta, spiega perché conta e apre la pagina giusta. Salta quello che non ti serve. Le tre più importanti sono:",
+        "modLog": "**Mod log channel** (canale del registro di moderazione): un canale riservato allo staff dove Mewvo annota ogni avvertimento, silenziamento, espulsione e ban.",
+        "mutedRole": "**Muted role**: Mewvo lo crea da solo la prima volta che qualcuno viene silenziato, quindi puoi lasciarlo così.",
+        "appealsCategory": "**Appeals category** (categoria dei ricorsi): dove Mewvo apre un canale privato quando un membro chiede di revocare una sanzione."
+      },
+      "rules": {
+        "title": "3. Scrivi le tue regole",
+        "text": "Nella pagina **Rules**, aggiungi le regole del tuo server. Compaiono in una pagina web, e ogni messaggio di sanzione indica la regola violata."
+      },
+      "automod": {
+        "title": "4. Controlla l'automod",
+        "text": "Nella pagina **Automod** scegli cosa fa l'automod. Se non sei ancora sicuro, scegli **Watch only** (solo osservazione): l'automod dice solo allo staff cosa avrebbe fatto, e a nessuno succede nulla finché un membro dello staff non è d'accordo. Passa ad **Act** quando ti fidi."
+      },
+      "try": {
+        "title": "5. Provalo su di te",
+        "text": "Su Discord, usa `/test`. Mewvo ti invia esattamente il messaggio che un membro riceverebbe per un avvertimento o un ban. A nessuno succede nulla."
+      },
+      "next": {
+        "title": "E poi",
+        "text": "La barra laterale mostra le pagine principali. Premi **Show all pages** in fondo per vedere tutto. Se una parola ti è nuova, apri **Words explained** nella barra laterale. Domande? Chiedi nel {support}."
+      }
+    },
+    "gettingStarted": {
+      "title": "Primi passi per lo staff",
+      "summary": "Chi può usare cosa, la tua prima sanzione e i comandi che userai ogni settimana.",
+      "access": {
+        "title": "Chi può fare cosa",
+        "text": "I comandi di tutti i giorni (help, posizione, classifica, divertimento, liste di cose da fare, segnalazioni e così via) sono aperti a tutti i membri. Tutto ciò che modera, cambia impostazioni, pubblica come il bot, riguarda altri membri o sposta valuta richiede il ruolo **Amministratore**. Il controllo avviene ogni volta che si usa un comando o un pulsante, non solo quando viene aperto.",
+        "denied": "I membri senza Amministratore che provano un comando dello staff vengono avvisati e indirizzati al canale dove possono richiedere un ruolo."
+      },
+      "firstAction": {
+        "title": "La tua prima azione",
+        "run": "Usa `/enforcements user:@member`. Il pannello mostra l'età dell'account del membro, da quanto è nel server, gli avvertimenti conteggiati, il livello nella scala, eventuali sanzioni attive e i suoi ultimi casi. Solo tu puoi vederlo.",
+        "action": "Premi l'azione: **Ban**, **Kick**, **Mute** o **Warn** (oppure **Unban**, **Unmute**, **Remove warn** quando servono).",
+        "reason": "Scegli un motivo predefinito oppure **Custom…** e scrivine uno.",
+        "duration": "Per un silenziamento, indica una durata come `30m`, `24h`, `7d` o `1mo`. Per un ban vale lo stesso, oppure lascia vuoto per un ban permanente.",
+        "confirm": "Controlla il riepilogo e premi **Confirm**.",
+        "after": "Il membro riceve un messaggio diretto prima che avvenga un'espulsione o un ban. Se il messaggio diretto non può essere consegnato, l'azione viene eseguita comunque e te lo comunichiamo. Il pannello scade dopo 15 minuti; in quel caso usa di nuovo il comando."
+      },
+      "everyWeek": {
+        "title": "I comandi che userai",
+        "background": "Lo storico completo dei casi di un membro.",
+        "case": "Cerca casi, modifica un motivo o una durata, annulla un caso sbagliato, vedi la sua cronologia, allega prove.",
+        "appeals": "Accogli o respingi un ricorso tramite codice caso, con una nota.",
+        "test": "Ti invia esattamente il messaggio diretto che riceverebbe un membro. A nessuno succede nulla.",
+        "staff": "Attività e statistiche dello staff.",
+        "warnMessage": "Warn for this message",
+        "warnMessageText": "Tasto destro su un messaggio, poi App: dà un avvertimento all'autore con il messaggio allegato."
+      },
+      "limits": {
+        "title": "Limiti che proteggono il server",
+        "text": "Mewvo si rifiuta di agire sul proprietario del server, sul bot, su te stesso o su chiunque abbia il ruolo più alto uguale o superiore al tuo. Se un moderatore banna o espelle più di 5 membri in 10 minuti, viene bloccato per un'ora e il proprietario viene avvisato."
+      }
+    },
+    "warnings": {
+      "title": "Come aumentano avvertimenti e ban",
+      "summary": "La scala degli avvertimenti: tre avvertimenti, poi 7 giorni, 30 giorni e un ban permanente.",
+      "intro": "Ogni membro ha una scala in ogni server. Parte dal livello 0 senza avvertimenti e non si azzera mai da sola.",
+      "steps": {
+        "title": "I gradini",
+        "first": "**Gli avvertimenti 1 e 2** sono un messaggio diretto: “Avvertimento 1 di 3” e “Avvertimento 2 di 3”.",
+        "third": "**L'avvertimento 3** è un ban automatico di 7 giorni. Il membro ora è al livello 1.",
+        "next": "Dopo il suo ritorno, l'**avvertimento successivo** è un ban automatico di 30 giorni (livello 2).",
+        "last": "L'**avvertimento dopo ancora** è un ban permanente (livello 3). Si può fare ricorso per 6 mesi. Dopo, o dopo un ricorso respinto, non si può più fare ricorso."
+      },
+      "dmCaption": "Il messaggio diretto per il ban automatico al terzo avvertimento. Fare ricorso con questo codice rimuove anche l'avvertimento che lo ha causato.",
+      "changes": {
+        "title": "Cosa cambia la scala",
+        "removeWarn": "Rimozione di un avvertimento",
+        "removeWarnText": "Abbassa il numero di avvertimenti.",
+        "appeal": "Ricorso accolto contro un ban della scala",
+        "appealText": "Abbassa il livello di uno, mai sotto 0.",
+        "manualBan": "Un ban dato a mano",
+        "manualBanText": "Non sposta la scala.",
+        "void": "Annullare un caso",
+        "voidText": "Il caso resta registrato ma non conta più.",
+        "imported": "Vecchi avvertimenti importati",
+        "importedText": "Mostrati solo come storico. Non contano."
+      },
+      "standing": "I membri possono vedere a che punto sono con **My standing** sul pannello dei ricorsi."
+    },
+    "appeals": {
+      "title": "Ricorsi: come funzionano",
+      "summary": "Dove fare ricorso, cosa chiede il modulo, chi decide e quanto aspettare per riprovare.",
+      "where": {
+        "title": "Dove fare ricorso",
+        "text": "Ogni messaggio diretto di sanzione contiene il link per il ricorso, oppure dice che non si può fare ricorso. Il pannello dei ricorsi ha tre pulsanti: **Appeal**, **My appeals** e **My standing**. I membri silenziati o avvertiti usano il pannello nel server principale. I membri bannati usano quello nel {support}, che possono raggiungere anche dopo un ban."
+      },
+      "form": {
+        "title": "Il modulo",
+        "why": "Perché dovrebbe essere revocata?",
+        "whyText": "Almeno 20 caratteri, al massimo 1000.",
+        "code": "Codice caso",
+        "codeText": "Dal messaggio diretto, per esempio `k7xq2`.",
+        "more": "Altre informazioni",
+        "moreText": "Facoltativo, qualsiasi altra cosa che lo staff dovrebbe sapere."
+      },
+      "after": {
+        "title": "Cosa succede dopo",
+        "banKick": "**I ricorsi contro ban ed espulsioni** aprono un canale nel server di supporto in cui ci sei anche tu, così lo staff può farti domande.",
+        "muteWarn": "**I ricorsi contro silenziamenti e avvertimenti** vengono esaminati dallo staff nel server principale.",
+        "decision": "Decidono gli amministratori. Ricevi la decisione in un messaggio diretto. Un ricorso accolto revoca ciò che è ancora attivo e, per ban ed espulsioni, arriva con un invito monouso per rientrare."
+      },
+      "limits": {
+        "title": "Limiti",
+        "onePending": "Un solo ricorso in attesa per caso.",
+        "cooldown": "Dopo un rifiuto, aspetta 7 giorni prima di fare di nuovo ricorso per lo stesso caso.",
+        "window": "Contro ban e silenziamenti si può fare ricorso finché durano. Contro avvertimenti ed espulsioni entro 30 giorni.",
+        "unappealable": "Contro alcuni casi non si può fare ricorso, per esempio un ban permanente della scala dopo 6 mesi. Il messaggio diretto lo indica."
+      }
+    },
+    "usingTheDashboard": {
+      "title": "Usare la dashboard",
+      "summary": "L'accesso, le quattro aree della barra laterale e dove vengono registrate le modifiche.",
+      "signIn": {
+        "title": "Accesso",
+        "text": "Apri la dashboard e accedi con Discord. Mewvo chiede a Discord solo chi sei (`identify`). Ti serve il ruolo Amministratore nel server; viene controllato di nuovo a ogni pagina e a ogni salvataggio. Un server può anche dare a un ruolo di moderatore l'accesso in sola lettura alle pagine di moderazione.",
+        "textLink": "Apri [la dashboard]({dashboard}) e accedi con Discord. Mewvo chiede a Discord solo chi sei (`identify`). Ti serve il ruolo Amministratore nel server; viene controllato di nuovo a ogni pagina e a ogni salvataggio. Un server può anche dare a un ruolo di moderatore l'accesso in sola lettura alle pagine di moderazione."
+      },
+      "shotAlt": "La pagina Casi della dashboard di Mewvo: filtri per membro, moderatore, tipo, stato, testo e date sopra una tabella di casi con codice, tipo, membro, moderatore, motivo, data e stato.",
+      "shotCaption": "Casi, con membri inventati.",
+      "areas": {
+        "title": "Le quattro aree",
+        "moderate": "Moderazione",
+        "moderateText": "Panoramica (cosa ti serve per primo), Posta in arrivo, Membri, Bannati, Casi, Ricorsi, Nessun contatto, Staff e Strumenti dei canali.",
+        "community": "Community",
+        "communityText": "Ticket e modmail, Benvenuto e congedo, Livelli, Ruoli a reazione, Messaggi, Giveaway, Compleanni, Candidature, Community e Entra per creare.",
+        "setup": "Configurazione del server",
+        "setupText": "Automod, Sanzioni e ricorsi, Log, Verifica, Contatori e il Server di supporto.",
+        "bot": "Bot",
+        "botText": "Tutti i moduli, Comandi e il Registro di controllo."
+      },
+      "changes": {
+        "title": "Modifiche e registro di controllo",
+        "text": "Le impostazioni sono mostrate come righe; cambiane una e salva. Ogni modifica viene scritta nel registro di controllo: chi ha cambiato quale impostazione, da cosa e a cosa. Azioni come i ban dalla pagina Membri seguono le stesse regole dei comandi, compresi il messaggio diretto e i controlli di sicurezza.",
+        "phones": "La dashboard funziona anche sui telefoni, con una barra delle schede in basso, e ha cinque temi nel menu dell'account (Chiaro, Scuro, Attenuato, Contrasto elevato o lo stesso del tuo dispositivo)."
+      }
+    }
+  }
+}

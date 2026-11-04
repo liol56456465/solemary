@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "description": "Qué ha cambiado en Mewvo, de lo más reciente a lo más antiguo."
+  },
+  "head": {
+    "title": "Novedades",
+    "lead": "Qué ha cambiado en Mewvo, de lo más reciente a lo más antiguo. Un cambio aparece aquí cuando está terminado. El bot de tu servidor lo recibe en su próxima actualización."
+  },
+  "entries": {
+    "2026-11-01": {
+      "customAutomodRules": "Reglas de automod personalizadas: añade tus propias palabras y frases para bloquear, con /automod custom o en el panel de control. Puedes cambiar las palabras de una regla más adelante. Incluido en los planes Normal, Pro y Max.",
+      "remind": "/remind: crea un recordatorio para ti. Mewvo te lo envía por mensaje directo, o en el canal si tienes los mensajes directos cerrados.",
+      "profile": "/profile: tu nivel, tu posición, tu próxima recompensa de rol, tu cumpleaños y tu plan en una sola tarjeta.",
+      "appealStatus": "/appeal status: consulta tus apelaciones y si alguien del staff las está revisando.",
+      "recordLinkInDms": "Los mensajes directos de sanción pueden enlazar a Mi historial, donde ves tu historial completo en el sitio web.",
+      "gettingStartedList": "Panel de control: la página Vista general empieza con una breve lista de primeros pasos, y cada página de ajustes explica sus opciones con palabras sencillas.",
+      "activityPage": "Panel de control: una página Actividad con mensajes, entradas y casos por día de los últimos 30 días.",
+      "settingsBackup": "Panel de control: una copia de seguridad de los ajustes que puedes descargar y volver a cargar tras una revisión.",
+      "caseNotesAndTags": "Panel de control: notas privadas y etiquetas del staff en los casos, acciones sobre muchos casos a la vez y búsquedas guardadas.",
+      "shiftNote": "Panel de control: una nota para el siguiente turno del staff en la página Vista general.",
+      "weeklySummary": "Un resumen semanal del servidor en el registro de moderación cada lunes.",
+      "proMaxBranding": "Pro y Max: Mewvo puede usar su propio apodo y avatar en tu servidor, y el staff puede descargar los casos como hoja de cálculo.",
+      "dashboardThemes": "Temas del panel de control: Claro, Oscuro, Atenuado y Alto contraste."
+    },
+    "2026-10-31": {
+      "legalPages": "Política de privacidad y Términos y condiciones.",
+      "dataDownload": "Mi historial: descarga en un archivo todos los datos que Mewvo tiene sobre ti.",
+      "paidPlans": "Los planes de pago ya hacen algo: roles de colaborador, /premium, regalos y claves para canjear."
+    },
+    "2026-10-29": {
+      "rename": "El bot ahora se llama Mewvo (antes era Meowist).",
+      "serverRules": "Normas del servidor en el sitio web. Los mensajes directos de sanción indican la norma incumplida y enlazan a ella.",
+      "independentAppeals": "Las apelaciones las decide una persona distinta del moderador que puso la sanción.",
+      "myRecord": "Mi historial en el sitio web: los miembros pueden ver su propio historial de moderación.",
+      "scheduledMessages": "Mensajes programados y periódicos desde el panel de control.",
+      "inbox": "Panel de control: una Bandeja de entrada para apelaciones, tickets, modmail y revisiones del automod, con respuestas desde la web.",
+      "websitePages": "Páginas web para la clasificación, el estado, las funciones, los precios, la guía y las preguntas frecuentes."
+    },
+    "2026-10-28": {
+      "membersPage": "Panel de control: una página Miembros con filtros, roles, apodos y aislamientos temporales, también para muchos miembros a la vez.",
+      "temporaryRoles": "Roles temporales que se retiran solos después de un tiempo fijado.",
+      "bannedPage": "Panel de control: una página Baneados con todas las personas baneadas y el motivo.",
+      "channelTools": "Panel de control: vacía, bloquea y desbloquea canales, y publica mensajes, encuestas y cuentas atrás como el bot.",
+      "appealsInSupportServer": "Las apelaciones de baneos y expulsiones se hablan con el miembro en el servidor de soporte.",
+      "mutesInMassGuard": "Los silenciamientos cuentan para el límite que impide que un moderador sancione a muchas personas en poco tiempo."
+    }
+  }
+}

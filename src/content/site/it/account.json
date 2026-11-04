@@ -1,0 +1,207 @@
+{
+  "common": {
+    "logIn": "Accedi",
+    "logOut": "Esci",
+    "cancel": "Annulla",
+    "back": "Indietro",
+    "backToRecord": "Torna a Il mio storico",
+    "accountSettings": "Impostazioni account",
+    "loggedInAs": "Accesso effettuato come **{username}**."
+  },
+  "fields": {
+    "username": "Nome utente",
+    "password": "Password",
+    "newPassword": "Nuova password",
+    "passwordHint": "Almeno {min} caratteri.",
+    "codeFromApp": "Codice dall'app",
+    "codeOrRecovery": "Codice dall'app o un codice di recupero"
+  },
+  "signup": {
+    "title": "Crea un account",
+    "heading": "Crea un account Mewvo",
+    "lead": "Con un account accedi a questo sito con nome utente e password. Non serve un'email. Subito dopo la registrazione colleghi una volta il tuo account Discord; è anche il modo per reimpostare una password dimenticata.",
+    "usernameHint": "Da {min} a {max} caratteri: solo lettere, numeri e trattini bassi.",
+    "birthDate": "Data di nascita",
+    "birthPlaceholder": "AAAA-MM-GG",
+    "birthHint": "Devi avere almeno {age} anni. Controlliamo solo la tua età e salviamo che hai {age} anni o più, mai la data.",
+    "accept": "Accetto i [Termini e condizioni](/terms) e l'[Informativa sulla privacy](/privacy).",
+    "submit": "Crea account",
+    "haveAccount": "Hai già un account? [Accedi](/me/login-password)."
+  },
+  "login": {
+    "title": "Accedi",
+    "heading": "Accedi al tuo account Mewvo",
+    "forgot": "Password dimenticata?",
+    "withDiscord": "Accedi invece con Discord",
+    "noAccount": "Non hai ancora un account? [Crea un account](/me/signup)"
+  },
+  "twoStep": {
+    "title": "Accesso in due passaggi",
+    "heading": "Inserisci il codice di accesso",
+    "lead": "Apri la tua app di autenticazione e inserisci il codice a 6 cifre per Mewvo. Hai perso il telefono? Inserisci invece uno dei tuoi codici di recupero.",
+    "code": "Codice",
+    "foot": "Il passaggio del codice dura 5 minuti. Dopo, [accedi di nuovo](/me/login-password)."
+  },
+  "forgot": {
+    "title": "Password dimenticata",
+    "heading": "Hai dimenticato la password?",
+    "lead": "Accedi con l'account Discord collegato al tuo account Mewvo. Poi scegli una nuova password.",
+    "submit": "Accedi con Discord",
+    "foot": "Mewvo chiede a Discord solo chi sei. Se l'accesso in due passaggi è attivo, dopo la nuova password inserisci comunque un codice dalla tua app. Nessun account Discord collegato? Allora la password non può essere reimpostata; [crea un nuovo account](/me/signup)."
+  },
+  "reset": {
+    "title": "Scegli una nuova password",
+    "heading": "Scegli una nuova password",
+    "lead": "Per l'account Mewvo **{username}**.",
+    "code": "Codice dei due passaggi",
+    "codeHint": "Il codice a 6 cifre dalla tua app o uno dei tuoi codici di recupero.",
+    "submit": "Salva la nuova password",
+    "foot": "Salvando chiudi tutti gli altri accessi a questo account e accedi qui. Questo modulo funziona per 10 minuti."
+  },
+  "link": {
+    "title": "Collega Discord",
+    "heading": "Collega il tuo account Discord",
+    "lead": "Accesso effettuato come **{username}**. Ancora un passaggio: collega il tuo account Discord. Il tuo account Mewvo funziona solo dopo il collegamento. I primi 100 account che si collegano ricevono Mewvo Pro per {bonus}.",
+    "submit": "Collega Discord",
+    "foot": "Mewvo chiede a Discord solo chi sei (il permesso identify): niente email, niente server. Un account Discord può essere collegato a un solo account Mewvo. Se dimentichi la password, la reimposti accedendo con questo account Discord. Un account che non collega mai Discord viene eliminato dopo 7 giorni.",
+    "deleteHeading": "Elimina questo account"
+  },
+  "letter": {
+    "heading": "Il tuo nome utente di 1 lettera",
+    "allTaken": "Tutti i nomi utente di 1 lettera sono già presi.",
+    "pick": "Scegli un nome utente di 1 lettera",
+    "claim": "Prendi questo nome utente",
+    "decline": "No grazie, tengo il mio nome utente",
+    "foot": "Puoi prendere un nome utente di 1 lettera una sola volta. Quando lo prendi, il tuo nome utente attuale smette di funzionare."
+  },
+  "linked": {
+    "title": "Discord collegato",
+    "heading": "Il tuo account Discord è collegato",
+    "toRecord": "Vai a Il mio storico"
+  },
+  "linkResult": {
+    "repeat": "Il tuo account Discord è collegato. Questo account Discord era già stato collegato a un account Mewvo, quindi non riceve di nuovo il bonus per i primi account.",
+    "proAndLetter": "Sei il numero {n} a collegare un account Discord a Mewvo. Ricevi Mewvo Pro per {bonus} e qui sotto puoi scegliere un nome utente di 1 lettera.",
+    "pro": "Sei il numero {n} a collegare un account Discord a Mewvo. Ricevi Mewvo Pro per {bonus}.",
+    "proFailedAndLetter": "Sei il numero {n} a collegare un account Discord a Mewvo. Ti spettavano {bonus} di Pro, ma non è stato possibile aggiungerli: {note} Qui sotto puoi comunque scegliere un nome utente di 1 lettera.",
+    "proFailed": "Sei il numero {n} a collegare un account Discord a Mewvo. Ti spettavano {bonus} di Pro, ma non è stato possibile aggiungerli: {note}",
+    "letter": "Sei il numero {n} a collegare un account Discord a Mewvo. Qui sotto puoi scegliere un nome utente di 1 lettera.",
+    "none": "Sei il numero {n} a collegare un account Discord a Mewvo. I bonus per i primi account sono andati ai primi 100 account, quindi per questo non c'è bonus."
+  },
+  "recovery": {
+    "title": "Codici di recupero",
+    "heading": "L'accesso in due passaggi è attivo",
+    "lead": "Salva questi codici di recupero in un posto sicuro. Ognuno funziona una volta, se perdi la tua app di autenticazione. Vengono mostrati solo ora.",
+    "back": "Torna a Impostazioni account"
+  },
+  "totp": {
+    "title": "Attiva l'accesso in due passaggi",
+    "heading": "Attiva l'accesso in due passaggi",
+    "lead": "Aggiungi Mewvo a un'app di autenticazione, poi inserisci il codice a 6 cifre che mostra.",
+    "stepAdd": "Nella tua app di autenticazione, scegli di aggiungere un account inserendo una chiave.",
+    "stepKey": "Inserisci questa chiave: {key} (basata sul tempo, 6 cifre, 30 secondi).",
+    "stepUri": "Oppure incolla questo indirizzo, se la tua app lo accetta: {uri}",
+    "submit": "Attiva"
+  },
+  "plan": {
+    "heading": "Il tuo piano",
+    "plan": "Piano",
+    "free": "Free",
+    "activeUntil": "Attivo fino al",
+    "lastAddedBy": "Ultima aggiunta da",
+    "bonus": "Bonus per i primi account",
+    "manage": "Gestisci abbonamento",
+    "seePlans": "Vedi i piani",
+    "foot": "Il piano appartiene al tuo account Discord, non a questo account Mewvo.",
+    "endsToday": "Termina oggi",
+    "dayLeft": "Manca {days} giorno",
+    "daysLeft": "Mancano {days} giorni",
+    "source": {
+      "bonus": "Bonus per i primi account",
+      "purchase": "Un acquisto",
+      "key": "Una chiave",
+      "owner": "Assegnato dal proprietario del bot"
+    }
+  },
+  "bonus": {
+    "granted": "Collegamento n. {n}: {bonus} di Pro, aggiunti il {date}.",
+    "skipped": "Collegamento n. {n}: ti spettavano {bonus} di Pro, ma non sono stati aggiunti. {reason}",
+    "tooLate": "Collegamento n. {n}: nessun bonus Pro (è andato ai primi {limit} collegamenti).",
+    "none": "Collegamento n. {n}: nessun bonus Pro."
+  },
+  "settings": {
+    "title": "Impostazioni account",
+    "yourAccount": "Il tuo account",
+    "discord": "Discord",
+    "linked": "Collegato",
+    "discordId": "ID {id}",
+    "notLinked": "Non collegato",
+    "created": "Creato",
+    "claimLetter": "Prendi il tuo nome utente di 1 lettera",
+    "unlink": "Scollega Discord",
+    "unlinkFoot": "Un account Mewvo ha bisogno di un account Discord collegato: dopo lo scollegamento puoi solo collegarne di nuovo uno (o eliminare l'account). Un piano resta con il tuo account Discord. Un account Discord riceve il bonus per i primi account una sola volta.",
+    "yourData": "I tuoi dati",
+    "download": "Scarica i miei dati"
+  },
+  "password": {
+    "heading": "Cambia password",
+    "current": "Password attuale",
+    "newHint": "Almeno {min} caratteri. Qui resti connesso; gli altri accessi vengono chiusi.",
+    "submit": "Cambia password"
+  },
+  "twoStepSettings": {
+    "heading": "Accesso in due passaggi",
+    "on": "L'accesso in due passaggi è **attivo** dal {date}. Codici di recupero rimasti: {left}.",
+    "off": "L'accesso in due passaggi è **disattivato**. Quando è attivo, all'accesso inserisci anche un codice da un'app di autenticazione.",
+    "turnOff": "Disattiva l'accesso in due passaggi",
+    "turnOn": "Attiva l'accesso in due passaggi"
+  },
+  "delete": {
+    "heading": "Elimina account",
+    "lead": "Questo elimina il tuo account Mewvo: nome utente, password e accesso in due passaggi. Non elimina i registri di moderazione né un piano sul tuo account Discord. Vedi l'[Informativa sulla privacy](/privacy).",
+    "confirm": "Sì, elimina il mio account.",
+    "submit": "Elimina il mio account"
+  },
+  "deleted": {
+    "title": "Account eliminato",
+    "heading": "Il tuo account è stato eliminato",
+    "lead": "Il tuo account Mewvo non esiste più e sei uscito. Un piano sul tuo account Discord resta lì, e i registri di moderazione non cambiano.",
+    "home": "Home"
+  },
+  "errors": {
+    "tooManyTries": "Troppi tentativi. Aspetta qualche minuto e riprova.",
+    "notAllowedTitle": "Non consentito",
+    "notAllowed": "Questo modulo non proviene da questo sito, oppure è rimasto aperto troppo a lungo. Torna indietro, ricarica la pagina e riprova. Non è stato modificato nulla.",
+    "tooManySignups": "Troppi nuovi account dal tuo indirizzo. Riprova più tardi.",
+    "acceptTerms": "Accetta i Termini e condizioni e l'Informativa sulla privacy per creare un account.",
+    "wrongLogin": "Nome utente o password errati.",
+    "logInAgainTitle": "Accedi di nuovo",
+    "codeStepExpired": "Il passaggio del codice è scaduto. Accedi di nuovo con la tua password.",
+    "tooManyCodes": "Troppi codici errati. Accedi di nuovo con la tua password.",
+    "wrongLoginCode": "Il codice non è corretto. Prova il codice più recente della tua app.",
+    "resetExpiredTitle": "Ricomincia",
+    "resetExpiredLabel": "Password dimenticata?",
+    "resetExpired": "Questa reimpostazione della password è scaduta o è già stata usata. Scegli di nuovo Password dimenticata? e accedi con Discord.",
+    "noAccountTitle": "Nessun account trovato",
+    "noAccount": "Nessun account Mewvo è collegato a questo account Discord, quindi non c'è nessuna password da reimpostare. Puoi invece creare un nuovo account.",
+    "wrongResetCode": "Il codice non è corretto. Inserisci il codice a 6 cifre della tua app o uno dei tuoi codici di recupero.",
+    "notLinkedTitle": "Non collegato",
+    "pickLetter": "Scegli una lettera o un numero.",
+    "wrongCurrentPassword": "La password attuale è errata. Non è stato modificato nulla.",
+    "wrongSetupCode": "Il codice non è corretto. Controlla l'ora sul telefono e inserisci il codice più recente.",
+    "wrongTwoStepOff": "La password o il codice sono errati. L'accesso in due passaggi è ancora attivo.",
+    "confirmDelete": "Spunta la casella per confermare che vuoi eliminare il tuo account.",
+    "wrongDeleteWithCode": "La password o il codice sono errati. Non è stato eliminato nulla.",
+    "wrongDelete": "La password è errata. Non è stato eliminato nulla."
+  },
+  "flash": {
+    "passwordReset": "La tua nuova password è salvata. Tutti gli altri accessi sono stati chiusi.",
+    "letterClaimed": "Ora il tuo nome utente è {username}. Usalo per accedere.",
+    "letterDeclined": "Hai tenuto il nome utente {username}.",
+    "passwordChanged": "La tua password è stata cambiata. Gli altri accessi sono stati chiusi.",
+    "twoStepAlreadyOn": "L'accesso in due passaggi è già attivo.",
+    "twoStepAlreadyOff": "L'accesso in due passaggi è già disattivato.",
+    "twoStepOff": "L'accesso in due passaggi è disattivato.",
+    "unlinked": "Il tuo account Discord è stato scollegato. Collega di nuovo un account Discord per continuare a usare il tuo account Mewvo."
+  }
+}

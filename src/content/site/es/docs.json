@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "title": "Guía",
+    "description": "Guías breves de Mewvo: primeros pasos para el staff, cómo aumentan las advertencias, cómo funcionan las apelaciones y cómo usar el panel de control."
+  },
+  "hub": {
+    "title": "Guías",
+    "lead": "Cómo funciona Mewvo, paso a paso. Para todos los comandos que pueden usar los miembros, consulta [Comandos](/commands)."
+  },
+  "nav": {
+    "crumbs": "Ruta de navegación",
+    "docs": "Guía",
+    "nextGuide": "Siguiente guía",
+    "next": "Siguiente",
+    "stillQuestions": "¿Aún tienes preguntas?",
+    "readFaq": "Lee las preguntas frecuentes"
+  },
+  "support": {
+    "link": "[el servidor de soporte]({url})",
+    "text": "el servidor de soporte"
+  },
+  "guides": {
+    "setup": {
+      "title": "Configura Mewvo en 10 minutos",
+      "summary": "Para el propietario del servidor: los pocos ajustes que necesita Mewvo, en orden, en el panel de control.",
+      "intro": "Necesitas el permiso de **Administrador** en el servidor. Todo lo que sigue se hace en el panel de control, desde el navegador. No tienes que escribir ningún comando.",
+      "open": {
+        "title": "1. Abre el panel de control",
+        "text": "Ve al [panel de control]({dashboard}) e inicia sesión con Discord. Mewvo solo le pregunta a Discord quién eres. No ve tu correo electrónico ni tus mensajes."
+      },
+      "steps": {
+        "title": "2. Sigue \"Setup step by step\"",
+        "text": "En la página Vista general, pulsa **Set up Mewvo step by step**. Muestra un ajuste cada vez, explica por qué importa y abre la página correcta. Sáltate lo que no necesites. Los tres más importantes son:",
+        "modLog": "**Mod log channel** (canal del registro de moderación): un canal solo para el staff donde Mewvo anota cada advertencia, silenciamiento, expulsión y baneo.",
+        "mutedRole": "**Muted role**: Mewvo lo crea por sí solo la primera vez que alguien es silenciado, así que puedes dejarlo tal cual.",
+        "appealsCategory": "**Appeals category** (categoría de apelaciones): donde Mewvo abre un canal privado cuando un miembro pide que se retire una sanción."
+      },
+      "rules": {
+        "title": "3. Escribe tus normas",
+        "text": "En la página **Rules**, añade las normas de tu servidor. Se muestran en una página web, y cada mensaje de sanción indica la norma incumplida."
+      },
+      "automod": {
+        "title": "4. Revisa el automod",
+        "text": "En la página **Automod** eliges qué hace el automod. Si aún no lo tienes claro, elige **Watch only** (solo observar): así el automod solo le dice al staff qué habría hecho, y a nadie le pasa nada hasta que un miembro del staff lo apruebe. Cambia a **Act** cuando confíes en él."
+      },
+      "try": {
+        "title": "5. Pruébalo contigo",
+        "text": "En Discord, usa `/test`. Mewvo te envía exactamente el mensaje que recibiría un miembro por una advertencia o un baneo. A nadie le pasa nada."
+      },
+      "next": {
+        "title": "Y después",
+        "text": "La barra lateral muestra las páginas principales. Pulsa **Show all pages** abajo para verlo todo. Si una palabra es nueva para ti, abre **Words explained** en la barra lateral. ¿Preguntas? Pregunta en {support}."
+      }
+    },
+    "gettingStarted": {
+      "title": "Primeros pasos para el staff",
+      "summary": "Quién puede usar qué, tu primera sanción y los comandos que usarás cada semana.",
+      "access": {
+        "title": "Quién puede hacer qué",
+        "text": "Los comandos de todos los días (ayuda, posición, clasificación, diversión, listas de tareas, denuncias, etc.) están abiertos a todos los miembros. Todo lo que modera, cambia ajustes, publica como el bot, afecta a otros miembros o mueve moneda requiere el rol de **Administrador**. La comprobación se hace cada vez que se usa un comando o un botón, no solo al abrirlo.",
+        "denied": "A los miembros sin Administrador que prueban un comando del staff se les avisa y se les indica el canal donde pueden pedir un rol."
+      },
+      "firstAction": {
+        "title": "Tu primera acción",
+        "run": "Usa `/enforcements user:@member`. El panel muestra la antigüedad de la cuenta del miembro, el tiempo que lleva en el servidor, las advertencias contadas, el nivel en la escala, cualquier sanción activa y sus últimos casos. Solo tú puedes verlo.",
+        "action": "Pulsa la acción: **Ban**, **Kick**, **Mute** o **Warn** (o **Unban**, **Unmute**, **Remove warn** cuando correspondan).",
+        "reason": "Elige un motivo predefinido o **Custom…** y escribe uno.",
+        "duration": "Para un silenciamiento, indica una duración como `30m`, `24h`, `7d` o `1mo`. Para un baneo, lo mismo, o déjalo en blanco para un baneo permanente.",
+        "confirm": "Revisa el resumen y pulsa **Confirm**.",
+        "after": "El miembro recibe un mensaje directo antes de que se produzca una expulsión o un baneo. Si no se puede entregar el mensaje directo, la acción se realiza igualmente y se te avisa. El panel caduca a los 15 minutos; si pasa, vuelve a usar el comando."
+      },
+      "everyWeek": {
+        "title": "Comandos que usarás",
+        "background": "El historial completo de casos de un miembro.",
+        "case": "Busca casos, edita un motivo o una duración, anula un caso erróneo, consulta su historial, adjunta pruebas.",
+        "appeals": "Acepta o deniega una apelación por código de caso, con una nota.",
+        "test": "Te envía exactamente el mensaje directo que recibiría un miembro. A nadie le pasa nada.",
+        "staff": "Actividad y estadísticas del staff.",
+        "warnMessage": "Warn for this message",
+        "warnMessageText": "Clic derecho en un mensaje y luego Aplicaciones: advierte al autor con el mensaje adjunto."
+      },
+      "limits": {
+        "title": "Límites que protegen el servidor",
+        "text": "Mewvo se niega a actuar sobre el propietario del servidor, el bot, ti mismo o cualquier persona cuyo rol más alto sea igual o superior al tuyo. Si un moderador banea o expulsa a más de 5 miembros en 10 minutos, queda bloqueado durante una hora y se avisa al propietario."
+      }
+    },
+    "warnings": {
+      "title": "Cómo aumentan las advertencias y los baneos",
+      "summary": "La escala de advertencias: tres advertencias y luego 7 días, 30 días y un baneo permanente.",
+      "intro": "Cada miembro tiene una escala en cada servidor. Empieza en el nivel 0 sin advertencias y nunca se reinicia sola.",
+      "steps": {
+        "title": "Los escalones",
+        "first": "**Las advertencias 1 y 2** son un mensaje directo: “Advertencia 1 de 3” y “Advertencia 2 de 3”.",
+        "third": "**La advertencia 3** es un baneo automático de 7 días. El miembro pasa al nivel 1.",
+        "next": "Cuando vuelve, la **siguiente advertencia** es un baneo automático de 30 días (nivel 2).",
+        "last": "La **advertencia después de esa** es un baneo permanente (nivel 3). Se puede apelar durante 6 meses. Pasado ese plazo, o tras una apelación denegada, ya no se puede apelar."
+      },
+      "dmCaption": "El mensaje directo del baneo automático en la advertencia 3. Apelar este código también elimina la advertencia que lo causó.",
+      "changes": {
+        "title": "Qué cambia la escala",
+        "removeWarn": "Quitar una advertencia",
+        "removeWarnText": "Reduce el número de advertencias.",
+        "appeal": "Apelación aceptada de un baneo de la escala",
+        "appealText": "Baja el nivel en uno, nunca por debajo de 0.",
+        "manualBan": "Un baneo aplicado a mano",
+        "manualBanText": "No mueve la escala.",
+        "void": "Anular un caso",
+        "voidText": "El caso sigue registrado, pero ya no cuenta.",
+        "imported": "Advertencias antiguas importadas",
+        "importedText": "Solo se muestran como historial. No cuentan."
+      },
+      "standing": "Los miembros pueden consultar en qué punto están con **My standing** en el panel de apelaciones."
+    },
+    "appeals": {
+      "title": "Apelaciones: cómo funcionan",
+      "summary": "Dónde apelar, qué pide el formulario, quién decide y cuánto esperar para volver a intentarlo.",
+      "where": {
+        "title": "Dónde apelar",
+        "text": "Cada mensaje directo de sanción incluye el enlace para apelar o indica que no se puede apelar. El panel de apelaciones tiene tres botones: **Appeal**, **My appeals** y **My standing**. Los miembros silenciados o advertidos usan el panel del servidor principal. Los miembros baneados usan el que hay en {support}, al que pueden seguir accediendo después de un baneo."
+      },
+      "form": {
+        "title": "El formulario",
+        "why": "¿Por qué debería retirarse?",
+        "whyText": "Al menos 20 caracteres y como máximo 1000.",
+        "code": "Código de caso",
+        "codeText": "Del mensaje directo, por ejemplo `k7xq2`.",
+        "more": "Más información",
+        "moreText": "Opcional: cualquier otra cosa que el staff deba saber."
+      },
+      "after": {
+        "title": "Qué pasa después",
+        "banKick": "**Las apelaciones de baneos y expulsiones** abren un canal en el servidor de soporte contigo dentro, para que el staff pueda hacerte preguntas.",
+        "muteWarn": "**Las apelaciones de silenciamientos y advertencias** las revisa el staff en el servidor principal.",
+        "decision": "Deciden los administradores. Recibes la decisión por mensaje directo. Una apelación aceptada retira lo que siga activo y, en baneos y expulsiones, incluye una invitación de un solo uso para volver."
+      },
+      "limits": {
+        "title": "Límites",
+        "onePending": "Una sola apelación pendiente por caso.",
+        "cooldown": "Tras una denegación, espera 7 días antes de volver a apelar el mismo caso.",
+        "window": "Los baneos y silenciamientos se pueden apelar mientras duran. Las advertencias y expulsiones, en un plazo de 30 días.",
+        "unappealable": "Algunos casos no se pueden apelar, por ejemplo un baneo permanente de la escala pasados 6 meses. El mensaje directo lo indica."
+      }
+    },
+    "usingTheDashboard": {
+      "title": "Usar el panel de control",
+      "summary": "Iniciar sesión, las cuatro áreas de la barra lateral y dónde se registran los cambios.",
+      "signIn": {
+        "title": "Iniciar sesión",
+        "text": "Abre el panel de control e inicia sesión con Discord. Mewvo solo le pregunta a Discord quién eres (`identify`). Necesitas el rol de Administrador en el servidor; se vuelve a comprobar en cada página y cada vez que guardas. Un servidor también puede dar a un rol de moderador acceso de solo lectura a las páginas de moderación.",
+        "textLink": "Abre [el panel de control]({dashboard}) e inicia sesión con Discord. Mewvo solo le pregunta a Discord quién eres (`identify`). Necesitas el rol de Administrador en el servidor; se vuelve a comprobar en cada página y cada vez que guardas. Un servidor también puede dar a un rol de moderador acceso de solo lectura a las páginas de moderación."
+      },
+      "shotAlt": "La página Casos del panel de control de Mewvo: filtros por miembro, moderador, tipo, estado, texto y fechas sobre una tabla de casos con código, tipo, miembro, moderador, motivo, fecha y estado.",
+      "shotCaption": "Casos, con miembros inventados.",
+      "areas": {
+        "title": "Las cuatro áreas",
+        "moderate": "Moderación",
+        "moderateText": "Vista general (lo que te necesita primero), Bandeja de entrada, Miembros, Baneados, Casos, Apelaciones, Sin contacto, Staff y Herramientas de canales.",
+        "community": "Comunidad",
+        "communityText": "Tickets y modmail, Bienvenida y despedida, Niveles, Roles por reacción, Mensajes, Sorteos, Cumpleaños, Solicitudes, Comunidad y Entrar para crear.",
+        "setup": "Configuración del servidor",
+        "setupText": "Automod, Sanciones y apelaciones, Registros, Verificación, Contadores y el Servidor de soporte.",
+        "bot": "Bot",
+        "botText": "Todos los módulos, Comandos y el Registro de auditoría."
+      },
+      "changes": {
+        "title": "Cambios y registro de auditoría",
+        "text": "Los ajustes se muestran como filas; cambia uno y guarda. Cada cambio se anota en el registro de auditoría: quién cambió qué ajuste, de qué valor a cuál. Las acciones como los baneos desde la página Miembros siguen las mismas normas que los comandos, incluidos el mensaje directo y las comprobaciones de seguridad.",
+        "phones": "El panel de control también funciona en el móvil, con una barra de pestañas abajo, y tiene cinco temas en el menú de la cuenta (Claro, Oscuro, Atenuado, Alto contraste o el mismo que tu dispositivo)."
+      }
+    }
+  }
+}
