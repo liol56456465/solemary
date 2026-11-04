@@ -27,6 +27,7 @@ import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
 import { linkModmailChannel, linkedChannelId, linkedUserId, unlinkModmailChannel } from './modmailLinks.js';
 import { withOpenChannelSlot } from './openChannelCap.js';
+import { privacyUrl } from '../utils/privacyNotice.js';
 
 const NOTE_PREFIX = '//';
 const MAX_MESSAGE = 2000;
@@ -34,6 +35,12 @@ const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // Discord's upload limit for bots in
 const NO_MENTIONS = { parse: [] };
 
 const opening = new Set(); // userIds with a channel being created right now
+
+/** "-# Privacy: <url>" under member-facing modmail messages, or '' without PUBLIC_URL. */
+function privacySuffix() {
+    const url = privacyUrl();
+    return url ? `\n-# Privacy: <${url}>` : '';
+}
 
 export const MODMAIL_BUTTONS = { open: 'modmail_open', cancel: 'modmail_cancel', close: 'modmail_close' };
 
@@ -180,7 +187,7 @@ export async function handleModmailDm(message, client) {
 
     if (!(await checkRateLimit(`modmail:prompt:${userId}`, 3, 60_000))) return;
     await message.reply({
-        content: 'Do you want to send this message to the Mewvo staff? They will reply here in DMs.',
+        content: `Do you want to send this message to the Mewvo staff? They will reply here in DMs.${privacySuffix()}`,
         components: [promptRow(message.id)],
         allowedMentions: NO_MENTIONS,
     }).catch((error) => logger.warn(`Modmail prompt failed for ${userId}: ${error.message}`));
@@ -262,7 +269,7 @@ export async function openModmail(client, user, dmChannel, messageId) {
         await relay(channel, `**${user.username}:**`, original);
         await original.react('✅').catch(() => {});
         logger.info(`Modmail opened for ${user.id} in ${channel.id}`);
-        return 'Sent to staff. They will reply here; anything else you send here goes to them too.';
+        return `Sent to staff. They will reply here; anything else you send here goes to them too.${privacySuffix()}`;
     } finally {
         opening.delete(user.id);
     }

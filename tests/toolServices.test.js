@@ -62,6 +62,8 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
         [`guild:${g}:leveling:users:${me}`, { xp: 5 }],
         [`guild:${g}:afk:${me}`, { reason: 'x' }],
         [`todo_${me}`, { tasks: [] }],
+        [`oauth:tokens:${me}`, { tokens: 'encrypted' }],
+        [`oauth:tokens:${me}9`, { tokens: 'encrypted' }],
         [`guild:${g}:leveling:users:${me}9`, { xp: 9 }],
     ]);
     const db = { exists: async (k) => store.has(k), delete: async (k) => store.delete(k) };
@@ -70,7 +72,8 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
     const result = await wipeMemberData({ db }, g, me, { removeBirthday: async (_c, guild, user) => { birthdays.push(`${guild}:${user}`); }, removeReminders: async (user) => { reminders.push(user); } });
     assert.deepEqual(result.deleted, WIPE_ITEMS.map((i) => i.id));
     assert.deepEqual(result.failed, []);
-    assert.deepEqual([...store.keys()], [`guild:${g}:leveling:users:${me}9`], 'another member with a longer id is untouched');
+    assert.deepEqual([...store.keys()], [`oauth:tokens:${me}9`, `guild:${g}:leveling:users:${me}9`], 'another member with a longer id is untouched');
+    assert.ok(result.deleted.includes('oauth'), 'the stored OAuth token is deleted too');
     assert.deepEqual(birthdays, [`${g}:${me}`], 'the birthday row is removed (it was never deleted before)');
     assert.deepEqual(reminders, [me], 'reminders too');
 
@@ -79,7 +82,7 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
     assert.deepEqual(partial.failed.map((f) => f.id), ['afk', 'birthday']);
     assert.ok(partial.deleted.includes('levels'));
     const silentFail = await wipeMemberData({ db: { exists: async () => true, delete: async () => false } }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {} });
-    assert.ok(silentFail.failed.length === 4, 'a false from delete is an error');
+    assert.ok(silentFail.failed.length === 5, 'a false from delete is an error');
     await assert.rejects(wipeMemberData({ db }, 'x', me), /bad ids/);
 });
 

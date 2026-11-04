@@ -751,7 +751,7 @@ export const tableStatements = [
     )`,
 
     // Mewvo accounts on the website (/me/signup, services/accounts/; schema v7, no email since v8).
-    // Username stored lowercase. Only a scrypt hash of the password, only "confirmed 13+"
+    // Username stored lowercase. Only a scrypt hash of the password, only "confirmed old enough" (MIN_AGE)
     // (never the birth date), the 2FA secret only encrypted (AES-256-GCM). email /
     // pending_email / email_confirmed_at are only set on accounts made before v8.
     `CREATE TABLE IF NOT EXISTS ${t.member_accounts} (

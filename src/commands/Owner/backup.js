@@ -4,7 +4,7 @@ import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { enforcementConfig } from '../../config/enforcement.js';
-import { backupSummary, getRestoreState, restoreMembers } from '../../services/memberBackupService.js';
+import { backupSummary, getRestoreState, restoreMembers, restoreRefusal } from '../../services/memberBackupService.js';
 import {
     diffAgainstLive, getSnapshot, isBackupOwner, listSnapshots, rebuildFromSnapshot, takeSnapshot,
 } from '../../services/structureBackupService.js';
@@ -123,7 +123,7 @@ export default {
                         main ? `**Of them in the main server now:** ${inGuild}` : '**Main server:** not reachable',
                         state ? `**Restore running:** ${state.done}/${state.total} into \`${state.guildId}\`` : null,
                         '',
-                        'Restore with `/backup restore server_id:<id>`. The bot must be in that server with **Create Invite**. Members with an active ban are skipped.',
+                        'Restore with `/backup restore server_id:<id>`. Only the main server, the support server or one in MEMBER_RESTORE_GUILD_IDS. The bot must be in that server with **Create Invite**. Members with an active ban are skipped.',
                     ].filter((line) => line !== null).join('\n'),
                     color: 'primary',
                 })],
@@ -131,6 +131,8 @@ export default {
         }
 
         const serverId = interaction.options.getString('server_id').trim();
+        const refusal = restoreRefusal(serverId);
+        if (refusal) throw userError(refusal);
         const target = client.guilds.cache.get(serverId);
         if (!target) throw userError('I am not in that server. Invite the bot there first.');
         if (!target.members.me?.permissions.has(PermissionFlagsBits.CreateInstantInvite)) {

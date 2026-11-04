@@ -5,14 +5,18 @@
 //
 // Columns are picked per table so the file never contains another person's data: no
 // moderator ids, no reporter ids, no other party of a no-contact order, nobody who redeemed
-// a gift key. Staff notes, evidence, case edit history and revoke reasons are left out (as
-// on My record), and so is the IP hash itself (only when it was seen). The file says so,
-// and how to ask for more.
+// a gift key, no other raid joiners. Staff notes and watchlist entries about the member are
+// included with the author shown as "staff"; evidence only as excerpts of the member's own
+// messages. Case edit history, revoke reasons, other people's messages, re-hosted images and
+// the IP hash itself (only when it was seen) are left out. The OAuth token is reported as
+// stored yes/no, never the token. The file says so, and how to ask for more.
+// Every new section is capped at ROW_LIMIT rows.
 
 import { pgConfig } from '../../config/database/postgres.js';
 
 export const EXPORT_FORMAT = 'mewvo-data-export-v1';
 const ID = /^\d{17,20}$/;
+const ROW_LIMIT = 5000;
 
 /** Each section: [name, sql builder (tables) → text, uses $1 = user id]. */
 export const EXPORT_SECTIONS = [
@@ -32,7 +36,37 @@ export const EXPORT_SECTIONS = [
     ['verification', (t) => `SELECT guild_id, action, source, created_at FROM ${t.verification_audit} WHERE user_id = $1 ORDER BY created_at`],
     ['verificationIpHashSeen', (t) => `SELECT seen_at FROM ${t.verification_ips} WHERE user_id = $1 ORDER BY seen_at`],
     ['joinsAndLeaves', (t) => `SELECT guild_id, kind, created_at FROM ${t.member_events} WHERE user_id = $1 ORDER BY created_at`],
-    ['noContactOrders', (t) => `SELECT guild_id, until, created_at, ended_at FROM ${t.no_contact_orders} WHERE user_a = $1 OR user_b = $1 ORDER BY created_at`],
+    // The reason is about this member too; the other party and the staff member are left out.
+    ['noContactOrders', (t) => `SELECT guild_id, reason, until, created_at, ended_at FROM ${t.no_contact_orders} WHERE user_a = $1 OR user_b = $1 ORDER BY created_at LIMIT ${ROW_LIMIT}`],
+    // Staff watchlist entries about this member (the member is never told otherwise); who added it is "staff".
+    ['watchlist', (t) => `SELECT guild_id, reason, 'staff' AS who_added, created_at, until, ended_at FROM ${t.mod_watchlist} WHERE user_id = $1 ORDER BY created_at LIMIT ${ROW_LIMIT}`],
+    // Raid timeline events where this member is the target (detail is a short label, no message text); the actor is left out.
+    ['raidTimelineEvents', (t) => `SELECT incident_id, at, kind, detail FROM ${t.incident_events} WHERE target_id = $1 ORDER BY at LIMIT ${ROW_LIMIT}`],
+    // Raid incident reports that list this member as a joiner: only the incident and its dates, not the other joiners.
+    ['raidIncidentsJoined', (t) => `SELECT id AS incident_id, guild_id, started_at, ended_at, released_at FROM ${t.automod_raid_incidents}
+        WHERE joiner_ids ? $1 ORDER BY started_at LIMIT ${ROW_LIMIT}`],
+    // Staff notes on this member's own cases: the text is their personal data (CJEU C-434/16 Nowak); the author is "staff".
+    ['caseNotes', (t) => `SELECT n.case_code, n.text, 'staff' AS who_wrote, n.created_at FROM ${t.mod_case_notes} n
+        JOIN ${t.mod_cases} c ON c.case_code = n.case_code
+        WHERE c.target_user_id = $1 AND c.is_test IS NOT TRUE ORDER BY n.created_at LIMIT ${ROW_LIMIT}`],
+    // Evidence excerpts of this member's OWN messages on their cases. An excerpt starts with the author's
+    // username ("name: text", evidenceService.messageExcerpt); only those matching the case's target are
+    // included, so other people's messages and re-hosted images stay out.
+    ['caseEvidenceOwnMessages', (t) => `SELECT e.case_code, e.source_message_url, e.excerpt, e.added_at FROM ${t.mod_case_evidence} e
+        JOIN ${t.mod_cases} c ON c.case_code = e.case_code
+        WHERE c.target_user_id = $1 AND c.is_test IS NOT TRUE AND e.kind = 'link' AND e.excerpt IS NOT NULL
+          AND left(e.excerpt, length(c.target_username) + 2) = c.target_username || ': '
+        ORDER BY e.added_at LIMIT ${ROW_LIMIT}`],
+    // Tickets this member opened (who claimed or closed it is left out).
+    ['tickets', (t) => `SELECT guild_id, channel_id, data->>'status' AS status, data->>'priority' AS priority, data->>'reason' AS reason,
+        data->>'createdAt' AS opened_at, data->>'closedAt' AS closed_at, data->>'closeReason' AS close_reason
+        FROM ${t.tickets} WHERE data->>'userId' = $1 ORDER BY created_at LIMIT ${ROW_LIMIT}`],
+    // Giveaways this member entered, and whether they won (no other entrants).
+    ['giveawayEntries', (t) => `SELECT guild_id, message_id, data->>'prize' AS prize, ends_at, created_at,
+        COALESCE(data->'winnerIds' ? $1, FALSE) AS won
+        FROM ${t.giveaways} WHERE data->'participants' ? $1 ORDER BY created_at LIMIT ${ROW_LIMIT}`],
+    // Invite codes this member created (invitees are not stored in this table).
+    ['invitesCreated', (t) => `SELECT guild_id, invite_code, uses, created_at FROM ${t.invite_tracking} WHERE inviter_id = $1 ORDER BY created_at LIMIT ${ROW_LIMIT}`],
     ['staffWarnings', (t) => `SELECT guild_id, reason, given_by_username, created_at, expires_at FROM ${t.staff_warnings} WHERE user_id = $1 ORDER BY created_at`],
     ['staffActivity', (t) => `SELECT guild_id, week_start, messages, reviews, tickets FROM ${t.staff_activity} WHERE user_id = $1 ORDER BY week_start`],
     ['dashboardChanges', (t) => `SELECT guild_id, module, key, old, new, created_at FROM ${t.dashboard_audit} WHERE user_id = $1 ORDER BY created_at`],
@@ -53,8 +87,11 @@ export const EXPORT_SECTIONS = [
 ];
 
 export const EXPORT_NOTE = 'Everything Mewvo stores about your Discord account, in every server that uses it. '
-    + 'Left out to protect other people or the staff process: staff notes, evidence, case edit history, '
-    + 'who reported or redeemed something, and the IP hash itself (only when it was recorded). '
+    + 'Staff notes and watchlist entries about you are included, with the author shown as "staff". '
+    + 'Evidence is included only as excerpts of your own messages. '
+    + 'Left out to protect other people or the staff process: who wrote a note or took an action, other people\'s messages and images, '
+    + 'case edit history, who reported or redeemed something, the other member of a no-contact order, other raid joiners, '
+    + 'the IP hash itself (only when it was recorded) and the login token itself (only whether one is stored). '
     + 'Moderation channel transcripts live on Discord. To ask for any of this, or to have data corrected or deleted, see /privacy on the website.';
 
 /** The note of the file for a Mewvo account that has no Discord account linked. */
@@ -83,6 +120,9 @@ export async function buildDataExport(userId, { query, readKey, tables = pgConfi
     }
     const todo = readKey ? await readKey(`todo_${userId}`) : null;
     sections.todoList = todo && typeof todo === 'object' ? todo : null;
+    // Only whether a token is stored: the encrypted token itself is never in the file.
+    const oauth = readKey ? await readKey(`oauth:tokens:${userId}`) : null;
+    sections.oauthTokenStored = Boolean(oauth && typeof oauth === 'object');
     return {
         format: EXPORT_FORMAT,
         generatedAt: now().toISOString(),

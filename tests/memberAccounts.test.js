@@ -481,13 +481,13 @@ test('no enumeration: login answers the same for unknown accounts and wrong pass
     }
 });
 
-test('sign-up checks: under 13, bad username, reserved name, taken username, terms not accepted', async () => {
+test('sign-up checks: under 14, bad username, reserved name, taken username, terms not accepted', async () => {
     const app = await serve();
     try {
         const b = () => browser(app);
         const today = new Date();
-        const young = `${today.getUTCFullYear() - 12}-01-01`;
-        assert.match((await signup(app, b(), { birth: young })).body, /at least 13/);
+        const young = `${today.getUTCFullYear() - 13}-12-31`; // 12 or 13: under MIN_AGE (14)
+        assert.match((await signup(app, b(), { birth: young })).body, /at least 14/);
         assert.match((await signup(app, b(), { username: 'a' })).body, /2 to 30 characters/);
         assert.match((await signup(app, b(), { username: 'x'.repeat(31) })).body, /2 to 30 characters/);
         assert.match((await signup(app, b(), { username: 'bad name' })).body, /letters \(a-z\), numbers and underscores/);

@@ -242,9 +242,11 @@ test('DM: a "Your full record" link only when My record is on; dropped first whe
     process.env.PUBLIC_URL = 'https://mewvo.example';
     try {
         const base = { case_code: 'k7xq2', moderator_username: 'mod', reason: 'Spam', created_at: new Date(0) };
-        assert.ok(warnDm(base, 1).endsWith('Your full record: <https://mewvo.example/me>'));
+        // The privacy line comes last (PUBLIC_URL is set), right after the record line.
+        assert.ok(warnDm(base, 1).endsWith('Your full record: <https://mewvo.example/me>\n-# Privacy: <https://mewvo.example/privacy>'));
         const long = warnDm({ ...base, reason: 'x'.repeat(1990) }, 1);
         assert.ok(!long.includes('Your full record'), 'dropped rather than going over 2000');
+        assert.ok(!long.includes('Privacy:'), 'the privacy line is dropped too rather than going over 2000');
     } finally {
         if (saved.on === undefined) delete process.env.MEMBER_PORTAL_ENABLED; else process.env.MEMBER_PORTAL_ENABLED = saved.on;
         if (saved.url === undefined) delete process.env.PUBLIC_URL; else process.env.PUBLIC_URL = saved.url;

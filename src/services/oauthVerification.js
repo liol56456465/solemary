@@ -22,6 +22,7 @@ import { verifyUser } from './verificationService.js';
 import { assessVerification, postVerificationHold } from './verificationGuard.js';
 import { getGuildConfig } from './config/guildConfig.js';
 import { getConfiguredSetting } from './settings/guildSettings.js';
+import { oauthVerifyPrivacyNote, privacyUrl } from '../utils/privacyNotice.js';
 
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
 const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
@@ -163,11 +164,21 @@ async function storeTokens(userId, token) {
     });
 }
 
-function errorPage(title, message, accent = '#ed4245') {
+const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/** The privacy line on a callback page: the sentence, plus a link when PUBLIC_URL is set. */
+export function privacyNoteHtml(env = process.env) {
+    const sentence = escapeHtml(oauthVerifyPrivacyNote({}));
+    const url = privacyUrl(env);
+    return url ? `${sentence} <a href="${escapeHtml(url)}">Privacy Policy</a>` : sentence;
+}
+
+export function errorPage(title, message, accent = '#ed4245', { note = null } = {}) {
     return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1e1f22;color:#f2f3f5;font:16px/1.5 system-ui,sans-serif}
-main{max-width:420px;padding:32px 24px;text-align:center}h1{color:${accent};font-size:22px;margin:0 0 8px}p{margin:0;color:#b5bac1}</style></head>
-<body><main><h1>${title}</h1><p>${message}</p></main></body></html>`;
+main{max-width:420px;padding:32px 24px;text-align:center}h1{color:${accent};font-size:22px;margin:0 0 8px}p{margin:0;color:#b5bac1}
+p.note{margin-top:16px;font-size:13px}a{color:#c9cdfb}</style></head>
+<body><main><h1>${title}</h1><p>${message}</p>${note ? `<p class="note">${note}</p>` : ''}</main></body></html>`;
 }
 
 async function isAlreadyVerified(client, guildId, userId) {
@@ -200,7 +211,7 @@ export function registerOAuthRoutes(app, client) {
 
     app.get('/oauth/callback', async (req, res) => {
         res.set('Cache-Control', 'no-store');
-        const send = (status, title, message, accent) => res.status(status).type('html').send(errorPage(title, message, accent));
+        const send = (status, title, message, accent, options) => res.status(status).type('html').send(errorPage(title, message, accent, options));
 
         if (req.query.error) {
             return send(400, 'Verification cancelled', 'You did not authorize the bot. Go back to Discord and press Verify again if you want to verify.');
@@ -224,7 +235,8 @@ export function registerOAuthRoutes(app, client) {
                 if (assessment.hold) {
                     await holdForStaff(client, state.guildId, me.id, assessment.reasons);
                     return send(202, 'Waiting for approval',
-                        'Thanks! A staff member needs to approve your verification first. You will get a DM when it is done.', '#fee75c');
+                        'Thanks! A staff member needs to approve your verification first. You will get a DM when it is done.', '#fee75c',
+                        { note: privacyNoteHtml() });
                 }
             }
 
