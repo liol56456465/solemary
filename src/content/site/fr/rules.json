@@ -1,0 +1,18 @@
+{
+  "title": "Règles",
+  "description": "Les règles du serveur Discord Mewvo.",
+  "head": {
+    "heading": "Règles du serveur",
+    "lead": "Les règles du serveur Mewvo. Quand l’équipe avertit, met en sourdine, expulse ou bannit pour l’une d’elles, le message privé cite la règle et renvoie ici."
+  },
+  "state": {
+    "unavailable": "Impossible de charger les règles pour le moment. Réessaie dans une minute.",
+    "empty": "Ce serveur n’a pas encore publié ses règles."
+  },
+  "list": {
+    "updated": "Dernière mise à jour : {date}.",
+    "linkLabel": "Lien vers la règle {number}",
+    "consequenceLabel": "Conséquence :"
+  },
+  "appeal": "Sanctionné pour une règle que tu penses ne pas avoir enfreinte ? Chaque message privé indique si et comment tu peux faire appel. [Comment fonctionnent les appels](/docs/appeals)."
+}

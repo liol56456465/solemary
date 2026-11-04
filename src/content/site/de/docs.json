@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "title": "Doku",
+    "description": "Kurze Anleitungen zu Mewvo: erste Schritte für das Team, wie Verwarnungen eskalieren, wie Einsprüche funktionieren und wie du das Dashboard nutzt."
+  },
+  "hub": {
+    "title": "Anleitungen",
+    "lead": "Wie Mewvo funktioniert, Schritt für Schritt. Alle Befehle, die Mitglieder nutzen können, findest du unter [Befehle](/commands)."
+  },
+  "nav": {
+    "crumbs": "Brotkrümelnavigation",
+    "docs": "Doku",
+    "nextGuide": "Nächste Anleitung",
+    "next": "Weiter",
+    "stillQuestions": "Noch Fragen?",
+    "readFaq": "Zu den FAQ"
+  },
+  "support": {
+    "link": "[dem Support-Server]({url})",
+    "text": "dem Support-Server"
+  },
+  "guides": {
+    "setup": {
+      "title": "Mewvo in 10 Minuten einrichten",
+      "summary": "Für den Server-Eigentümer: die wenigen Einstellungen, die Mewvo braucht, der Reihe nach, im Dashboard.",
+      "intro": "Du brauchst die Berechtigung **Administrator** auf dem Server. Alles Folgende erledigst du im Dashboard, in deinem Browser. Du musst keine Befehle eintippen.",
+      "open": {
+        "title": "1. Öffne das Dashboard",
+        "text": "Geh zum [Dashboard]({dashboard}) und melde dich mit Discord an. Mewvo fragt bei Discord nur, wer du bist. Deine E-Mail und deine Nachrichten sieht es nicht."
+      },
+      "steps": {
+        "title": "2. Folge „Setup step by step“",
+        "text": "Drück auf der Übersichtsseite auf **Set up Mewvo step by step**. Es zeigt eine Einstellung nach der anderen, erklärt, warum sie wichtig ist, und öffnet die richtige Seite. Überspring alles, was du nicht brauchst. Die wichtigsten drei sind:",
+        "modLog": "**Mod log channel**: ein Kanal nur für das Team, in dem Mewvo jede Verwarnung, Stummschaltung, jeden Kick und Bann festhält.",
+        "mutedRole": "**Muted role**: Mewvo erstellt sie selbst, wenn zum ersten Mal jemand stummgeschaltet wird, du kannst sie also so lassen.",
+        "appealsCategory": "**Appeals category**: wo Mewvo einen privaten Kanal öffnet, wenn ein Mitglied darum bittet, eine Strafe aufzuheben."
+      },
+      "rules": {
+        "title": "3. Schreib deine Regeln",
+        "text": "Füge auf der Seite **Rules** deine Serverregeln hinzu. Sie erscheinen auf einer Webseite, und jede Strafnachricht nennt die Regel, die gebrochen wurde."
+      },
+      "automod": {
+        "title": "4. Prüf den Automod",
+        "text": "Auf der Seite **Automod** legst du fest, was der Automod tut. Wenn du dir noch nicht sicher bist, wähle **Watch only**: Dann meldet der Automod dem Team nur, was er getan hätte, und niemandem passiert etwas, bis ein Teammitglied zustimmt. Wechsle zu **Act**, wenn du ihm vertraust."
+      },
+      "try": {
+        "title": "5. Probier es an dir selbst aus",
+        "text": "Führe in Discord `/test` aus. Mewvo schickt dir genau die Nachricht, die ein Mitglied bei einer Verwarnung oder einem Bann bekommen würde. Niemandem passiert etwas."
+      },
+      "next": {
+        "title": "Wie es weitergeht",
+        "text": "Die Seitenleiste zeigt die wichtigsten Seiten. Drück unten auf **Show all pages**, um alles zu sehen. Wenn dir ein Begriff neu ist, öffne **Words explained** in der Seitenleiste. Fragen? Frag auf {support}."
+      }
+    },
+    "gettingStarted": {
+      "title": "Erste Schritte für das Team",
+      "summary": "Wer was nutzen darf, deine erste Moderationsaktion und die Befehle, die du jede Woche brauchst.",
+      "access": {
+        "title": "Wer was darf",
+        "text": "Alltägliche Befehle (Hilfe, Rang, Bestenliste, Spaß, To-do-Listen, Meldungen usw.) stehen allen Mitgliedern offen. Alles, was moderiert, Einstellungen ändert, als Bot postet, andere Mitglieder betrifft oder Währung bewegt, braucht die Rolle **Administrator**. Die Prüfung läuft bei jeder Nutzung eines Befehls oder Buttons, nicht nur beim ersten Öffnen.",
+        "denied": "Mitglieder ohne Administrator, die einen Teambefehl versuchen, bekommen einen Hinweis und werden zu dem Kanal geschickt, in dem sie eine Rolle beantragen können."
+      },
+      "firstAction": {
+        "title": "Deine erste Aktion",
+        "run": "Führe `/enforcements user:@member` aus. Das Panel zeigt das Kontoalter des Mitglieds, seine Zeit auf dem Server, gezählte Verwarnungen, die Stufe auf der Leiter, aktive Strafen und seine letzten Fälle. Nur du kannst es sehen.",
+        "action": "Drück die Aktion: **Ban**, **Kick**, **Mute** oder **Warn** (oder **Unban**, **Unmute**, **Remove warn**, wenn zutreffend).",
+        "reason": "Wähle einen vorgefertigten Grund oder **Custom…** und tipp einen ein.",
+        "duration": "Gib für eine Stummschaltung eine Dauer an, etwa `30m`, `24h`, `7d` oder `1mo`. Für einen Bann genauso, oder lass das Feld leer für einen permanenten Bann.",
+        "confirm": "Prüf die Zusammenfassung und drück **Confirm**.",
+        "after": "Das Mitglied bekommt eine Direktnachricht, bevor der Kick oder Bann ausgeführt wird. Kann die Direktnachricht nicht zugestellt werden, wird die Aktion trotzdem ausgeführt und du bekommst Bescheid. Das Panel läuft nach 15 Minuten ab; führe den Befehl dann einfach erneut aus."
+      },
+      "everyWeek": {
+        "title": "Befehle, die du brauchst",
+        "background": "Der vollständige Fallverlauf eines Mitglieds.",
+        "case": "Fälle suchen, Grund oder Dauer bearbeiten, einen irrtümlichen Fall annullieren, seinen Verlauf sehen, Beweise anhängen.",
+        "appeals": "Einen Einspruch per Fallcode annehmen oder ablehnen, mit einer Notiz.",
+        "test": "Schickt dir genau die Direktnachricht, die ein Mitglied bekommen würde. Niemandem passiert etwas.",
+        "staff": "Aktivität und Statistiken des Teams.",
+        "warnMessage": "Warn for this message",
+        "warnMessageText": "Rechtsklick auf eine Nachricht, dann Apps: verwarnt die Person, die sie geschrieben hat, mit der Nachricht im Anhang."
+      },
+      "limits": {
+        "title": "Limits, die den Server schützen",
+        "text": "Mewvo handelt nicht gegen den Server-Eigentümer, den Bot, dich selbst oder jemanden, dessen höchste Rolle gleich hoch oder höher ist als deine. Bannt oder kickt ein Moderator mehr als 5 Mitglieder in 10 Minuten, wird er für eine Stunde gesperrt und der Eigentümer wird informiert."
+      }
+    },
+    "warnings": {
+      "title": "Wie Verwarnungen und Banns eskalieren",
+      "summary": "Die Verwarnungsleiter: drei Verwarnungen, dann 7 Tage, 30 Tage und ein permanenter Bann.",
+      "intro": "Jedes Mitglied hat auf jedem Server eine eigene Leiter. Sie beginnt auf Stufe 0 ohne Verwarnungen und wird nie von selbst zurückgesetzt.",
+      "steps": {
+        "title": "Die Stufen",
+        "first": "**Verwarnung 1 und 2** sind eine Direktnachricht: „Verwarnung 1 von 3“ und „Verwarnung 2 von 3“.",
+        "third": "**Verwarnung 3** ist ein automatischer 7-Tage-Bann. Das Mitglied ist jetzt auf Stufe 1.",
+        "next": "Nach der Rückkehr ist die **nächste Verwarnung** ein automatischer 30-Tage-Bann (Stufe 2).",
+        "last": "Die **Verwarnung danach** ist ein permanenter Bann (Stufe 3). Dagegen ist 6 Monate lang Einspruch möglich. Danach, oder nach einem abgelehnten Einspruch, nicht mehr."
+      },
+      "dmCaption": "Die Direktnachricht zum automatischen Bann bei Verwarnung 3. Ein Einspruch gegen diesen Code entfernt auch die Verwarnung, die ihn ausgelöst hat.",
+      "changes": {
+        "title": "Was die Leiter verändert",
+        "removeWarn": "Verwarnung entfernen",
+        "removeWarnText": "Senkt die Zahl der Verwarnungen.",
+        "appeal": "Angenommener Einspruch gegen einen Leiter-Bann",
+        "appealText": "Senkt die Stufe um eins, nie unter 0.",
+        "manualBan": "Ein manuell verhängter Bann",
+        "manualBanText": "Verändert die Leiter nicht.",
+        "void": "Einen Fall annullieren",
+        "voidText": "Der Fall bleibt in der Akte, zählt aber nicht mehr.",
+        "imported": "Importierte alte Verwarnungen",
+        "importedText": "Werden nur als Verlauf angezeigt. Sie zählen nicht."
+      },
+      "standing": "Mitglieder können mit **My standing** im Einspruchs-Panel nachsehen, wo sie stehen."
+    },
+    "appeals": {
+      "title": "Einsprüche: So funktionieren sie",
+      "summary": "Wo du Einspruch einlegst, was das Formular fragt, wer entscheidet und wann du es erneut versuchen kannst.",
+      "where": {
+        "title": "Wo du Einspruch einlegst",
+        "text": "Jede Direktnachricht zu einer Strafe enthält den Einspruchslink oder sagt, dass kein Einspruch möglich ist. Das Einspruchs-Panel hat drei Buttons: **Appeal**, **My appeals** und **My standing**. Stummgeschaltete oder verwarnte Mitglieder nutzen das Panel auf dem Hauptserver. Gebannte Mitglieder nutzen das auf {support}, das sie auch nach einem Bann noch erreichen."
+      },
+      "form": {
+        "title": "Das Formular",
+        "why": "Warum sollte sie aufgehoben werden?",
+        "whyText": "Mindestens 20, höchstens 1000 Zeichen.",
+        "code": "Fallcode",
+        "codeText": "Aus der Direktnachricht, zum Beispiel `k7xq2`.",
+        "more": "Weitere Infos",
+        "moreText": "Optional, alles, was das Team sonst noch wissen sollte."
+      },
+      "after": {
+        "title": "Was danach passiert",
+        "banKick": "**Einsprüche gegen Banns und Kicks** öffnen einen Kanal auf dem Support-Server, in dem du dabei bist, damit das Team Fragen stellen kann.",
+        "muteWarn": "**Einsprüche gegen Stummschaltungen und Verwarnungen** prüft das Team auf dem Hauptserver.",
+        "decision": "Die Administratoren entscheiden. Die Entscheidung bekommst du per Direktnachricht. Ein angenommener Einspruch hebt auf, was noch aktiv ist, und bei Banns und Kicks gibt es eine einmalige Einladung zurück."
+      },
+      "limits": {
+        "title": "Limits",
+        "onePending": "Ein offener Einspruch pro Fall.",
+        "cooldown": "Nach einer Ablehnung wartest du 7 Tage, bevor du erneut Einspruch gegen denselben Fall einlegst.",
+        "window": "Gegen Banns und Stummschaltungen ist Einspruch möglich, solange sie laufen. Gegen Verwarnungen und Kicks innerhalb von 30 Tagen.",
+        "unappealable": "Gegen manche Fälle ist kein Einspruch möglich, zum Beispiel gegen einen permanenten Leiter-Bann nach 6 Monaten. Die Direktnachricht sagt das."
+      }
+    },
+    "usingTheDashboard": {
+      "title": "Das Dashboard nutzen",
+      "summary": "Anmelden, die vier Bereiche der Seitenleiste und wo Änderungen festgehalten werden.",
+      "signIn": {
+        "title": "Anmelden",
+        "text": "Öffne das Dashboard und melde dich mit Discord an. Mewvo fragt bei Discord nur, wer du bist (`identify`). Du brauchst die Administrator-Rolle auf dem Server; sie wird auf jeder Seite und bei jedem Speichern erneut geprüft. Ein Server kann einer Moderatorrolle außerdem Lesezugriff auf die Moderationsseiten geben.",
+        "textLink": "Öffne [das Dashboard]({dashboard}) und melde dich mit Discord an. Mewvo fragt bei Discord nur, wer du bist (`identify`). Du brauchst die Administrator-Rolle auf dem Server; sie wird auf jeder Seite und bei jedem Speichern erneut geprüft. Ein Server kann einer Moderatorrolle außerdem Lesezugriff auf die Moderationsseiten geben."
+      },
+      "shotAlt": "Die Seite Cases im Mewvo-Dashboard: Filter für Mitglied, Moderator, Art, Status, Text und Datum über einer Tabelle mit Fällen mit Code, Art, Mitglied, Moderator, Grund, Datum und Status.",
+      "shotCaption": "Fälle, mit erfundenen Mitgliedern.",
+      "areas": {
+        "title": "Die vier Bereiche",
+        "moderate": "Moderate",
+        "moderateText": "Overview (was dich zuerst braucht), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff und Channel tools.",
+        "community": "Community",
+        "communityText": "Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community und Join to create.",
+        "setup": "Server setup",
+        "setupText": "Automod, Enforcement and appeals, Logging, Verification, Counters und Support server.",
+        "bot": "Bot",
+        "botText": "All modules, Commands und Audit log."
+      },
+      "changes": {
+        "title": "Änderungen und das Audit-Log",
+        "text": "Einstellungen werden als Zeilen angezeigt; ändere eine und speichere. Jede Änderung wird ins Audit-Log geschrieben: wer welche Einstellung von was auf was geändert hat. Aktionen wie Banns von der Seite Members folgen denselben Regeln wie die Befehle, einschließlich Direktnachricht und Sicherheitsprüfungen.",
+        "phones": "Das Dashboard funktioniert auch auf dem Handy, mit einer Tab-Leiste unten, und hat im Kontomenü fünf Designs (Light, Dark, Dim, High contrast oder wie dein Gerät)."
+      }
+    }
+  }
+}

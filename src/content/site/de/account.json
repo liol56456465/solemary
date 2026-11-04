@@ -1,0 +1,207 @@
+{
+  "common": {
+    "logIn": "Anmelden",
+    "logOut": "Abmelden",
+    "cancel": "Abbrechen",
+    "back": "Zurück",
+    "backToRecord": "Zurück zu Meine Akte",
+    "accountSettings": "Kontoeinstellungen",
+    "loggedInAs": "Angemeldet als **{username}**."
+  },
+  "fields": {
+    "username": "Benutzername",
+    "password": "Passwort",
+    "newPassword": "Neues Passwort",
+    "passwordHint": "Mindestens {min} Zeichen.",
+    "codeFromApp": "Code aus der App",
+    "codeOrRecovery": "Code aus der App oder ein Wiederherstellungscode"
+  },
+  "signup": {
+    "title": "Konto erstellen",
+    "heading": "Ein Mewvo-Konto erstellen",
+    "lead": "Mit einem Konto meldest du dich auf dieser Website mit Benutzername und Passwort an. Eine E-Mail ist nicht nötig. Direkt nach der Registrierung verknüpfst du einmal dein Discord-Konto; darüber setzt du auch ein vergessenes Passwort zurück.",
+    "usernameHint": "{min} bis {max} Zeichen: nur Buchstaben, Zahlen und Unterstriche.",
+    "birthDate": "Geburtsdatum",
+    "birthPlaceholder": "JJJJ-MM-TT",
+    "birthHint": "Du musst mindestens {age} sein. Wir prüfen nur dein Alter und speichern, dass du {age} oder älter bist, nie das Datum.",
+    "accept": "Ich akzeptiere die [Allgemeinen Geschäftsbedingungen](/terms) und die [Datenschutzerklärung](/privacy).",
+    "submit": "Konto erstellen",
+    "haveAccount": "Du hast schon ein Konto? [Anmelden](/me/login-password)."
+  },
+  "login": {
+    "title": "Anmelden",
+    "heading": "Bei deinem Mewvo-Konto anmelden",
+    "forgot": "Passwort vergessen?",
+    "withDiscord": "Stattdessen mit Discord anmelden",
+    "noAccount": "Noch kein Konto? [Konto erstellen](/me/signup)"
+  },
+  "twoStep": {
+    "title": "Zwei-Faktor-Anmeldung",
+    "heading": "Gib deinen Anmeldecode ein",
+    "lead": "Öffne deine Authentifizierungs-App und gib den 6-stelligen Code für Mewvo ein. Handy verloren? Gib stattdessen einen deiner Wiederherstellungscodes ein.",
+    "code": "Code",
+    "foot": "Der Code-Schritt gilt 5 Minuten. Danach [melde dich erneut an](/me/login-password)."
+  },
+  "forgot": {
+    "title": "Passwort vergessen",
+    "heading": "Passwort vergessen?",
+    "lead": "Melde dich mit dem Discord-Konto an, das mit deinem Mewvo-Konto verknüpft ist. Danach wählst du ein neues Passwort.",
+    "submit": "Mit Discord anmelden",
+    "foot": "Mewvo fragt bei Discord nur, wer du bist. Wenn die Zwei-Faktor-Anmeldung aktiv ist, gibst du nach dem neuen Passwort trotzdem einen Code aus deiner App ein. Kein Discord-Konto verknüpft? Dann kann das Passwort nicht zurückgesetzt werden; [erstelle ein neues Konto](/me/signup)."
+  },
+  "reset": {
+    "title": "Neues Passwort wählen",
+    "heading": "Neues Passwort wählen",
+    "lead": "Für das Mewvo-Konto **{username}**.",
+    "code": "Zwei-Faktor-Code",
+    "codeHint": "Der 6-stellige Code aus deiner App oder einer deiner Wiederherstellungscodes.",
+    "submit": "Neues Passwort speichern",
+    "foot": "Beim Speichern werden alle anderen Anmeldungen dieses Kontos beendet und du wirst hier angemeldet. Dieses Formular funktioniert 10 Minuten lang."
+  },
+  "link": {
+    "title": "Discord verknüpfen",
+    "heading": "Verknüpfe dein Discord-Konto",
+    "lead": "Angemeldet als **{username}**. Noch ein Schritt: Verknüpfe dein Discord-Konto. Dein Mewvo-Konto funktioniert erst, wenn es verknüpft ist. Die ersten 100 Konten, die sich verknüpfen, bekommen Mewvo Pro für {bonus}.",
+    "submit": "Discord verknüpfen",
+    "foot": "Mewvo fragt bei Discord nur, wer du bist (die Berechtigung identify): keine E-Mail, keine Server. Ein Discord-Konto kann mit einem Mewvo-Konto verknüpft werden. Wenn du dein Passwort vergisst, setzt du es zurück, indem du dich mit diesem Discord-Konto anmeldest. Ein Konto, das nie mit Discord verknüpft wird, wird nach 7 Tagen gelöscht.",
+    "deleteHeading": "Dieses Konto löschen"
+  },
+  "letter": {
+    "heading": "Dein Benutzername mit 1 Zeichen",
+    "allTaken": "Alle Benutzernamen mit 1 Zeichen sind vergeben.",
+    "pick": "Wähle einen Benutzernamen mit 1 Zeichen",
+    "claim": "Diesen Benutzernamen sichern",
+    "decline": "Nein danke, meinen Benutzernamen behalten",
+    "foot": "Einen Benutzernamen mit 1 Zeichen kannst du nur einmal sichern. Dein aktueller Benutzername funktioniert dann nicht mehr."
+  },
+  "linked": {
+    "title": "Discord verknüpft",
+    "heading": "Dein Discord-Konto ist verknüpft",
+    "toRecord": "Zu Meine Akte"
+  },
+  "linkResult": {
+    "repeat": "Dein Discord-Konto ist verknüpft. Dieses Discord-Konto war schon einmal mit einem Mewvo-Konto verknüpft, daher bekommt es den Frühstarter-Bonus nicht noch einmal.",
+    "proAndLetter": "Du hast als {n}. Person ein Discord-Konto mit Mewvo verknüpft. Du bekommst Mewvo Pro für {bonus} und kannst unten einen Benutzernamen mit 1 Zeichen wählen.",
+    "pro": "Du hast als {n}. Person ein Discord-Konto mit Mewvo verknüpft. Du bekommst Mewvo Pro für {bonus}.",
+    "proFailedAndLetter": "Du hast als {n}. Person ein Discord-Konto mit Mewvo verknüpft. Dir stehen {bonus} Pro zu, aber sie konnten nicht hinzugefügt werden: {note} Du kannst unten trotzdem einen Benutzernamen mit 1 Zeichen wählen.",
+    "proFailed": "Du hast als {n}. Person ein Discord-Konto mit Mewvo verknüpft. Dir stehen {bonus} Pro zu, aber sie konnten nicht hinzugefügt werden: {note}",
+    "letter": "Du hast als {n}. Person ein Discord-Konto mit Mewvo verknüpft. Du kannst unten einen Benutzernamen mit 1 Zeichen wählen.",
+    "none": "Du hast als {n}. Person ein Discord-Konto mit Mewvo verknüpft. Die Frühstarter-Boni gingen an die ersten 100 Konten, daher gibt es für dieses keinen Bonus."
+  },
+  "recovery": {
+    "title": "Wiederherstellungscodes",
+    "heading": "Die Zwei-Faktor-Anmeldung ist aktiv",
+    "lead": "Bewahre diese Wiederherstellungscodes sicher auf. Jeder funktioniert einmal, falls du deine Authentifizierungs-App verlierst. Sie werden nur jetzt angezeigt.",
+    "back": "Zurück zu den Kontoeinstellungen"
+  },
+  "totp": {
+    "title": "Zwei-Faktor-Anmeldung aktivieren",
+    "heading": "Zwei-Faktor-Anmeldung aktivieren",
+    "lead": "Füge Mewvo zu einer Authentifizierungs-App hinzu und gib dann den 6-stelligen Code ein, den sie anzeigt.",
+    "stepAdd": "Wähle in deiner Authentifizierungs-App, ein Konto durch Eingabe eines Schlüssels hinzuzufügen.",
+    "stepKey": "Gib diesen Schlüssel ein: {key} (zeitbasiert, 6 Ziffern, 30 Sekunden).",
+    "stepUri": "Oder füge diese Adresse ein, wenn deine App sie annimmt: {uri}",
+    "submit": "Aktivieren"
+  },
+  "plan": {
+    "heading": "Dein Plan",
+    "plan": "Plan",
+    "free": "Free",
+    "activeUntil": "Aktiv bis",
+    "lastAddedBy": "Zuletzt hinzugefügt durch",
+    "bonus": "Frühstarter-Bonus",
+    "manage": "Abo verwalten",
+    "seePlans": "Pläne ansehen",
+    "foot": "Der Plan gehört zu deinem Discord-Konto, nicht zu diesem Mewvo-Konto.",
+    "endsToday": "Endet heute",
+    "dayLeft": "Noch {days} Tag",
+    "daysLeft": "Noch {days} Tage",
+    "source": {
+      "bonus": "Frühstarter-Bonus",
+      "purchase": "Ein Kauf",
+      "key": "Ein Key",
+      "owner": "Vom Bot-Inhaber vergeben"
+    }
+  },
+  "bonus": {
+    "granted": "Verknüpfung #{n}: {bonus} Pro, hinzugefügt am {date}.",
+    "skipped": "Verknüpfung #{n}: {bonus} Pro standen zu, wurden aber nicht hinzugefügt. {reason}",
+    "tooLate": "Verknüpfung #{n}: kein Pro-Bonus (er ging an die ersten {limit} Verknüpfungen).",
+    "none": "Verknüpfung #{n}: kein Pro-Bonus."
+  },
+  "settings": {
+    "title": "Kontoeinstellungen",
+    "yourAccount": "Dein Konto",
+    "discord": "Discord",
+    "linked": "Verknüpft",
+    "discordId": "ID {id}",
+    "notLinked": "Nicht verknüpft",
+    "created": "Erstellt",
+    "claimLetter": "Sichere dir deinen Benutzernamen mit 1 Zeichen",
+    "unlink": "Discord-Verknüpfung aufheben",
+    "unlinkFoot": "Ein Mewvo-Konto braucht ein verknüpftes Discord-Konto: Nach dem Aufheben kannst du nur wieder eins verknüpfen (oder das Konto löschen). Ein Plan bleibt bei deinem Discord-Konto. Ein Discord-Konto bekommt den Frühstarter-Bonus nur einmal.",
+    "yourData": "Deine Daten",
+    "download": "Meine Daten herunterladen"
+  },
+  "password": {
+    "heading": "Passwort ändern",
+    "current": "Aktuelles Passwort",
+    "newHint": "Mindestens {min} Zeichen. Hier bleibst du angemeldet; andere Anmeldungen werden beendet.",
+    "submit": "Passwort ändern"
+  },
+  "twoStepSettings": {
+    "heading": "Zwei-Faktor-Anmeldung",
+    "on": "Die Zwei-Faktor-Anmeldung ist seit {date} **aktiv**. Verbleibende Wiederherstellungscodes: {left}.",
+    "off": "Die Zwei-Faktor-Anmeldung ist **aus**. Wenn sie aktiv ist, gibst du beim Anmelden zusätzlich einen Code aus einer Authentifizierungs-App ein.",
+    "turnOff": "Zwei-Faktor-Anmeldung deaktivieren",
+    "turnOn": "Zwei-Faktor-Anmeldung aktivieren"
+  },
+  "delete": {
+    "heading": "Konto löschen",
+    "lead": "Damit wird dein Mewvo-Konto gelöscht: Benutzername, Passwort und Zwei-Faktor-Anmeldung. Moderationsakten und ein Plan auf deinem Discord-Konto werden nicht gelöscht. Siehe [Datenschutzerklärung](/privacy).",
+    "confirm": "Ja, mein Konto löschen.",
+    "submit": "Mein Konto löschen"
+  },
+  "deleted": {
+    "title": "Konto gelöscht",
+    "heading": "Dein Konto wurde gelöscht",
+    "lead": "Dein Mewvo-Konto ist weg und du bist abgemeldet. Ein Plan auf deinem Discord-Konto bleibt dort, und Moderationsakten sind nicht betroffen.",
+    "home": "Startseite"
+  },
+  "errors": {
+    "tooManyTries": "Zu viele Versuche. Warte ein paar Minuten und versuch es noch einmal.",
+    "notAllowedTitle": "Nicht erlaubt",
+    "notAllowed": "Dieses Formular kam nicht von dieser Website oder war zu lange geöffnet. Geh zurück, lade die Seite neu und versuch es noch einmal. Es wurde nichts geändert.",
+    "tooManySignups": "Zu viele neue Konten von deiner Adresse. Versuch es später noch einmal.",
+    "acceptTerms": "Akzeptiere die Allgemeinen Geschäftsbedingungen und die Datenschutzerklärung, um ein Konto zu erstellen.",
+    "wrongLogin": "Falscher Benutzername oder falsches Passwort.",
+    "logInAgainTitle": "Erneut anmelden",
+    "codeStepExpired": "Der Code-Schritt ist abgelaufen. Melde dich erneut mit deinem Passwort an.",
+    "tooManyCodes": "Zu viele falsche Codes. Melde dich erneut mit deinem Passwort an.",
+    "wrongLoginCode": "Dieser Code stimmt nicht. Versuch den neuesten Code aus deiner App.",
+    "resetExpiredTitle": "Neu beginnen",
+    "resetExpiredLabel": "Passwort vergessen?",
+    "resetExpired": "Diese Passwortzurücksetzung ist abgelaufen oder wurde bereits benutzt. Wähle erneut „Passwort vergessen?“ und melde dich mit Discord an.",
+    "noAccountTitle": "Kein Konto gefunden",
+    "noAccount": "Mit diesem Discord-Konto ist kein Mewvo-Konto verknüpft, daher gibt es kein Passwort zum Zurücksetzen. Du kannst stattdessen ein neues Konto erstellen.",
+    "wrongResetCode": "Dieser Code stimmt nicht. Gib den 6-stelligen Code aus deiner App oder einen deiner Wiederherstellungscodes ein.",
+    "notLinkedTitle": "Nicht verknüpft",
+    "pickLetter": "Wähle einen Buchstaben oder eine Ziffer.",
+    "wrongCurrentPassword": "Das aktuelle Passwort ist falsch. Es wurde nichts geändert.",
+    "wrongSetupCode": "Dieser Code stimmt nicht. Prüf die Uhrzeit auf deinem Handy und gib den neuesten Code ein.",
+    "wrongTwoStepOff": "Das Passwort oder der Code ist falsch. Die Zwei-Faktor-Anmeldung ist weiterhin aktiv.",
+    "confirmDelete": "Setz das Häkchen, um zu bestätigen, dass du dein Konto löschen möchtest.",
+    "wrongDeleteWithCode": "Das Passwort oder der Code ist falsch. Es wurde nichts gelöscht.",
+    "wrongDelete": "Das Passwort ist falsch. Es wurde nichts gelöscht."
+  },
+  "flash": {
+    "passwordReset": "Dein neues Passwort ist gespeichert. Alle anderen Anmeldungen wurden beendet.",
+    "letterClaimed": "Dein Benutzername ist jetzt {username}. Nutze ihn zum Anmelden.",
+    "letterDeclined": "Du hast den Benutzernamen {username} behalten.",
+    "passwordChanged": "Dein Passwort wurde geändert. Andere Anmeldungen wurden beendet.",
+    "twoStepAlreadyOn": "Die Zwei-Faktor-Anmeldung ist bereits aktiv.",
+    "twoStepAlreadyOff": "Die Zwei-Faktor-Anmeldung ist bereits aus.",
+    "twoStepOff": "Die Zwei-Faktor-Anmeldung ist aus.",
+    "unlinked": "Die Verknüpfung deines Discord-Kontos wurde aufgehoben. Verknüpfe wieder ein Discord-Konto, um dein Mewvo-Konto weiter zu nutzen."
+  }
+}

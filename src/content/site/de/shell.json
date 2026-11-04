@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "pageTitle": "{title} · Mewvo",
+    "defaultDescription": "Mewvo ist ein Discord-Bot für Moderation mit Fallcodes, einer Verwarnungsleiter, Einsprüchen, Automod, Tickets und Community-Tools.",
+    "shareImageAlt": "Mewvo: Discord-Moderation mit Fallcodes, einer Verwarnungsleiter und Einsprüchen."
+  },
+  "header": {
+    "skip": "Zum Inhalt springen",
+    "navLabel": "Hauptmenü"
+  },
+  "links": {
+    "features": "Funktionen",
+    "pricing": "Preise",
+    "docs": "Doku",
+    "commands": "Befehle",
+    "leaderboard": "Bestenliste",
+    "myRecord": "Meine Akte",
+    "changelog": "Änderungen",
+    "dashboard": "Dashboard",
+    "faq": "FAQ",
+    "status": "Status",
+    "supportServer": "Support-Server",
+    "rules": "Regeln",
+    "transparency": "Transparenz",
+    "trustCard": "Vertrauenskarte",
+    "ourServer": "Unser Server",
+    "about": "Über uns",
+    "privacy": "Datenschutzerklärung",
+    "terms": "Allgemeine Geschäftsbedingungen",
+    "legalNotice": "Impressum",
+    "contact": "Kontakt und Meldungen"
+  },
+  "account": {
+    "logIn": "Anmelden",
+    "signUp": "Registrieren",
+    "settings": "Kontoeinstellungen",
+    "subscription": "Abo",
+    "logOut": "Abmelden"
+  },
+  "install": {
+    "addToDiscord": "Zu Discord hinzufügen"
+  },
+  "footer": {
+    "navLabel": "Fußzeile",
+    "tagline": "Discord-Moderation mit Fallcodes, einer Verwarnungsleiter und Einsprüchen, die bei einem Menschen ankommen.",
+    "legalLine": "Mewvo ist ein Discord-Bot, den sein Inhaber für den Mewvo-Server betreibt. Nicht mit Discord verbunden. Preise in Euro.",
+    "columns": {
+      "product": "Produkt",
+      "help": "Hilfe",
+      "community": "Community",
+      "legal": "Rechtliches"
+    }
+  }
+}

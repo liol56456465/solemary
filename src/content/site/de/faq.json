@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "title": "FAQ",
+    "description": "Antworten zu Mewvo: was er kann, die Verwarnungsleiter, Einsprüche, gespeicherte Daten und wie du das Team erreichst."
+  },
+  "head": {
+    "title": "Fragen und Antworten",
+    "lead": "Kurze Antworten. Schritt-für-Schritt-Anleitungen findest du in der [Doku](/docs)."
+  },
+  "support": {
+    "link": "[dem Support-Server]({url})",
+    "text": "dem Support-Server"
+  },
+  "about": {
+    "title": "Über Mewvo",
+    "whatDoes": {
+      "q": "Was macht Mewvo?",
+      "a": "Er moderiert einen Discord-Server und betreibt dessen Community-Funktionen. Das Team verwarnt, schaltet stumm, kickt und bannt über ein Panel; jede Aktion wird zu einem Fall mit Code, und das Mitglied bekommt eine Direktnachricht mit dem Grund, der Dauer und wie es Einspruch einlegen kann. Drumherum: eine Verwarnungsleiter, Einsprüche, Automod, Tickets und Modmail, ein Web-Dashboard, Level und weitere Community-Tools. Die [Funktionsseite](/features) listet alles auf."
+    },
+    "notYet": {
+      "q": "Warum kann ich ihn noch nicht zu meinem Server hinzufügen?",
+      "a": "Mewvo ist vorerst nur für den Mewvo-Server gebaut und läuft nur dort. Für andere Server braucht es zuerst noch Arbeit, etwa Einstellungen und Limits pro Server. Sobald er geöffnet wird, erscheint auf dieser Seite ein Button, um ihn hinzuzufügen, und dann starten auch die Bezahlpläne auf der Preisseite.",
+      "aPublic": "Jetzt geht es: Nutze den Button „Zu Discord hinzufügen“ oben auf der Seite."
+    },
+    "free": {
+      "q": "Ist er kostenlos?",
+      "a": "Ja. Alles, was er heute kann, ist kostenlos. Bezahlpläne mit höheren Limits sind für die Zeit geplant, wenn Mewvo für andere Server geöffnet wird; siehe [Preise](/pricing)."
+    }
+  },
+  "appeals": {
+    "title": "Verwarnungen und Einsprüche",
+    "ladder": {
+      "q": "Wie funktioniert die Verwarnungsleiter?",
+      "a": "Verwarnung 1 und 2 sind eine Direktnachricht. Verwarnung 3 ist ein automatischer 7-Tage-Bann. Danach ist die nächste Verwarnung ein 30-Tage-Bann und die übernächste ein permanenter Bann, gegen den 6 Monate lang Einspruch möglich ist. Die Leiter wird nie von selbst zurückgesetzt; ein angenommener Einspruch gegen einen Leiter-Bann setzt sie um eine Stufe zurück. [Die vollständige Anleitung](/docs/warnings)."
+    },
+    "howTo": {
+      "q": "Wie lege ich Einspruch ein?",
+      "a": "Nutze den Link in der Direktnachricht, die du bekommen hast. Drück im Einspruchs-Panel auf **Appeal**, gib an, warum die Strafe aufgehoben werden sollte, und trag den Fallcode aus der Direktnachricht ein. Wenn du gebannt bist, nutze das Panel auf {support}. Die Entscheidung bekommst du per Direktnachricht. [So funktionieren Einsprüche](/docs/appeals)."
+    },
+    "lostCode": {
+      "q": "Ich habe meinen Fallcode verloren.",
+      "a": "Drück im Einspruchs-Panel auf **My standing**: Dort stehen deine Verwarnungen und jeder aktive Bann oder jede aktive Stummschaltung mit ihren Codes.",
+      "aPortal": "Drück im Einspruchs-Panel auf **My standing**: Dort stehen deine Verwarnungen und jeder aktive Bann oder jede aktive Stummschaltung mit ihren Codes. [Meine Akte](/me) auf dieser Website zeigt alle deine Fälle."
+    },
+    "everyPunishment": {
+      "q": "Kann man gegen jede Strafe Einspruch einlegen?",
+      "a": "Gegen die meisten. Gegen Banns und Stummschaltungen geht das, solange sie laufen, gegen Verwarnungen und Kicks innerhalb von 30 Tagen. Gegen einen permanenten Leiter-Bann ist nach 6 Monaten oder nach einem abgelehnten Einspruch kein Einspruch mehr möglich, und das Team kann einen schweren Bann als unanfechtbar markieren. Die Direktnachricht sagt immer, was gilt."
+    }
+  },
+  "data": {
+    "title": "Daten und Kontakt",
+    "stored": {
+      "q": "Welche Daten speichert Mewvo?",
+      "a": "Discord-IDs, deine Level und XP, Moderationsfälle, Einsprüche und was du in Formulare oder Tickets schreibst, sowie ein paar Dinge, die du selbst speicherst, etwa einen Geburtstag. Keine E-Mail, kein Passwort, niemals verkauft. Die [Datenschutzseite](/privacy) enthält die vollständige Liste, und `/wipedata` löscht deine Level, dein Guthaben, deinen AFK-Status und Geburtstag auf diesem Server sowie deine To-do-Liste, Erinnerungen und gespeicherte Discord-Anmeldung. Moderationsakten bleiben bestehen; warum, steht auf der Datenschutzseite."
+    },
+    "reachStaff": {
+      "q": "Wie erreiche ich das Team?",
+      "a": "Auf drei Wegen: Schreib dem Bot eine Direktnachricht und wähle **Send to staff** (Modmail), öffne ein Ticket über das Ticket-Panel oder frag auf {support}. Um ein Teammitglied zu melden, nutze **Report staff** im Einspruchs-Panel auf dem Support-Server; nur Administratoren sehen diese Meldungen."
+    },
+    "down": {
+      "q": "Ist der Bot offline?",
+      "a": "Sieh auf der [Statusseite](/status) nach. Sie zeigt, ob der Bot online ist, und aktualisiert sich jede Minute."
+    }
+  }
+}

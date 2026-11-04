@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "title": "FAQ",
+    "description": "Réponses sur Mewvo : ce qu’il fait, l’échelle d’avertissements, les appels, les données stockées et comment joindre l’équipe."
+  },
+  "head": {
+    "title": "Questions et réponses",
+    "lead": "Des réponses courtes. Pour des guides pas à pas, consulte la [documentation](/docs)."
+  },
+  "support": {
+    "link": "[le serveur d’assistance]({url})",
+    "text": "le serveur d’assistance"
+  },
+  "about": {
+    "title": "À propos de Mewvo",
+    "whatDoes": {
+      "q": "Que fait Mewvo ?",
+      "a": "Il modère un serveur Discord et fait tourner ses fonctionnalités communautaires. L’équipe avertit, met en sourdine, expulse et bannit depuis un seul panneau ; chaque action devient un dossier avec un code, et le membre reçoit un message privé indiquant pourquoi, jusqu’à quand et comment faire appel. Autour de ça : une échelle d’avertissements, des appels, l’automod, des tickets et le modmail, un tableau de bord web, les niveaux et d’autres outils communautaires. La [page des fonctionnalités](/features) liste tout."
+    },
+    "notYet": {
+      "q": "Pourquoi je ne peux pas encore l’ajouter à mon serveur ?",
+      "a": "Pour l’instant, Mewvo est conçu pour le serveur Mewvo et ne fonctionne que là. L’ouvrir à d’autres serveurs demande encore du travail, comme des paramètres et des limites par serveur. À l’ouverture, un bouton pour l’ajouter à ton serveur apparaîtra sur ce site, et les formules payantes de la page des tarifs commenceront aussi à ce moment-là.",
+      "aPublic": "Maintenant, c’est possible : utilise le bouton Ajouter à Discord en haut de la page."
+    },
+    "free": {
+      "q": "Est-ce gratuit ?",
+      "a": "Oui. Tout ce qu’il fait aujourd’hui est gratuit. Des formules payantes avec des limites plus élevées sont prévues pour l’ouverture de Mewvo à d’autres serveurs ; voir les [Tarifs](/pricing)."
+    }
+  },
+  "appeals": {
+    "title": "Avertissements et appels",
+    "ladder": {
+      "q": "Comment fonctionne l’échelle d’avertissements ?",
+      "a": "Les avertissements 1 et 2 sont un message privé. L’avertissement 3 entraîne un bannissement automatique de 7 jours. Ensuite, l’avertissement suivant donne un bannissement de 30 jours, et le suivant un bannissement définitif dont on peut faire appel pendant 6 mois. L’échelle ne se réinitialise jamais d’elle-même ; un appel accepté contre un bannissement de l’échelle la fait redescendre d’un niveau. [Le guide complet](/docs/warnings)."
+    },
+    "howTo": {
+      "q": "Comment faire appel ?",
+      "a": "Utilise le lien du message privé que tu as reçu. Appuie sur **Appeal** dans le panneau d’appel, explique pourquoi la sanction devrait être levée et saisis le code du dossier indiqué dans le message privé. Si tu es banni, utilise le panneau sur {support}. Tu reçois la décision en message privé. [Comment fonctionnent les appels](/docs/appeals)."
+    },
+    "lostCode": {
+      "q": "J’ai perdu mon code de dossier.",
+      "a": "Appuie sur **My standing** dans le panneau d’appel : il liste tes avertissements et tout bannissement ou mise en sourdine en cours, avec leurs codes.",
+      "aPortal": "Appuie sur **My standing** dans le panneau d’appel : il liste tes avertissements et tout bannissement ou mise en sourdine en cours, avec leurs codes. [Mon dossier](/me) sur ce site affiche tous tes dossiers."
+    },
+    "everyPunishment": {
+      "q": "Peut-on faire appel de toutes les sanctions ?",
+      "a": "De la plupart. On peut faire appel des bannissements et des mises en sourdine tant qu’ils durent, des avertissements et des expulsions dans les 30 jours. Un bannissement définitif de l’échelle n’est plus contestable après 6 mois ou après un appel refusé, et l’équipe peut marquer un bannissement grave comme sans appel. Le message privé indique toujours ce qui s’applique."
+    }
+  },
+  "data": {
+    "title": "Données et contact",
+    "stored": {
+      "q": "Quelles données Mewvo stocke-t-il ?",
+      "a": "Les identifiants Discord, tes niveaux et ton XP, les dossiers de modération, les appels et ce que tu écris dans les formulaires ou les tickets, ainsi que quelques éléments que tu choisis d’enregistrer, comme un anniversaire. Pas d’e-mail, pas de mot de passe, jamais revendu. La [page de confidentialité](/privacy) donne la liste complète, et `/wipedata` supprime tes niveaux, ton solde, ton statut AFK et ton anniversaire sur ce serveur, ainsi que ta liste de tâches, tes rappels et ta connexion Discord enregistrée. Les dossiers de modération restent ; la page de confidentialité explique pourquoi."
+    },
+    "reachStaff": {
+      "q": "Comment joindre l’équipe ?",
+      "a": "De trois façons : envoie un message privé au bot et choisis **Send to staff** (modmail), ouvre un ticket depuis le panneau de tickets, ou demande sur {support}. Pour signaler un membre de l’équipe, utilise **Report staff** dans le panneau d’appel du serveur d’assistance ; seuls les administrateurs voient ces signalements."
+    },
+    "down": {
+      "q": "Le bot est-il hors ligne ?",
+      "a": "Consulte la [page de statut](/status). Elle indique si le bot est en ligne et se rafraîchit chaque minute."
+    }
+  }
+}

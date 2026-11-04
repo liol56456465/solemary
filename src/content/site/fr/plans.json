@@ -1,0 +1,113 @@
+{
+  "free": {
+    "summary": "Tout ce que Mewvo fait aujourd’hui, pour un serveur.",
+    "perks": {
+      "enforcement": "Panneau de modération, codes de dossier et messages privés",
+      "ladderAppeals": "Échelle d’avertissements et appels",
+      "automod": "Automod avec 14 règles et cartes de vérification",
+      "ticketsDashboard": "Tickets, modmail et le tableau de bord web",
+      "community": "Niveaux, tags, suggestions, starboard, flux",
+      "scheduled": "Jusqu’à 50 messages programmés"
+    }
+  },
+  "normal": {
+    "summary": "Plus de place pour les serveurs communautaires animés.",
+    "perks": {
+      "everythingFree": "Tout ce qu’inclut Free",
+      "limits": "250 tags, 25 messages épinglés en bas, 40 flux YouTube",
+      "scheduled": "100 messages programmés",
+      "customRules": "5 règles d’automod personnalisées",
+      "supporterRole": "Rôle de soutien sur le serveur Mewvo",
+      "caseExport": "Export des dossiers (CSV), 90 derniers jours"
+    }
+  },
+  "pro": {
+    "summary": "Pour les serveurs avec une vraie équipe de modération.",
+    "perks": {
+      "everythingNormal": "Tout ce qu’inclut Normal, avec des limites plus élevées",
+      "customRules": "25 règles d’automod personnalisées",
+      "analytics": "Statistiques de l’équipe et de l’automod dans le tableau de bord",
+      "customBot": "Nom et avatar du bot personnalisés sur ton serveur",
+      "caseExport": "Export de tout l’historique des dossiers"
+    }
+  },
+  "max": {
+    "summary": "Pour celles et ceux qui gèrent plusieurs serveurs.",
+    "perks": {
+      "everythingPro": "Tout ce qu’inclut Pro",
+      "oneDashboard": "Un seul tableau de bord pour 5 serveurs maximum",
+      "sharedCases": "Historique des dossiers partagé entre tes serveurs",
+      "priorityHelp": "Aide prioritaire sur le serveur d’assistance",
+      "highestLimits": "Les limites les plus élevées partout"
+    }
+  },
+  "comparison": {
+    "moderation": {
+      "title": "Modération",
+      "rows": {
+        "enforcement": "Panneau de modération, codes de dossier, messages privés",
+        "ladderAppeals": "Échelle d’avertissements et appels",
+        "caseHistory": "Historique des dossiers",
+        "caseExport": "Export des dossiers (CSV)",
+        "sharedCases": "Dossiers partagés entre serveurs"
+      }
+    },
+    "automod": {
+      "title": "Automod",
+      "rows": {
+        "builtIn": "Règles intégrées avec cartes de vérification",
+        "customRules": "Règles d’automod personnalisées"
+      }
+    },
+    "community": {
+      "title": "Communauté",
+      "rows": {
+        "tags": "Tags",
+        "stickies": "Messages épinglés en bas",
+        "feeds": "Flux YouTube",
+        "scheduled": "Messages programmés"
+      }
+    },
+    "dashboard": {
+      "title": "Tableau de bord et assistance",
+      "rows": {
+        "auditLog": "Tableau de bord web avec journal d’audit",
+        "analytics": "Statistiques de l’équipe et de l’automod",
+        "customBot": "Nom et avatar du bot personnalisés",
+        "servers": "Serveurs dans un seul tableau de bord",
+        "supporterRole": "Rôle de soutien sur le serveur Mewvo",
+        "help": "Aide sur le serveur d’assistance"
+      }
+    },
+    "values": {
+      "keptForGood": "Conservé pour toujours",
+      "last90Days": "90 derniers jours",
+      "fullHistory": "Historique complet",
+      "upTo5": "Jusqu’à 5",
+      "yes": "Oui",
+      "priority": "Prioritaire"
+    }
+  },
+  "faq": {
+    "buyNow": {
+      "q": "Puis-je acheter une formule maintenant ?",
+      "a": "Non. Pour l’instant, Mewvo ne fonctionne que sur son propre serveur. Les formules payantes commenceront quand il s’ouvrira à d’autres serveurs ; d’ici là, rien ne peut être acheté et personne n’est débité."
+    },
+    "currency": {
+      "q": "Dans quelle devise sont les prix ?",
+      "a": "En euros. Les prix de cette page sont les prix mensuels et annuels prévus."
+    },
+    "cancel": {
+      "q": "Puis-je résilier ou être remboursé ?",
+      "a": "Les formules ne se renouvellent pas d’elles-mêmes, il n’y a donc rien à résilier : une formule dure la période choisie, puis revient à Free. Dès que les vrais paiements commenceront, tu pourras te rétracter d’un achat dans un délai de 14 jours. Si tu as demandé que la formule commence immédiatement, tu es remboursé déduction faite des jours déjà utilisés. Les détails figurent sur la page Rétractation."
+    },
+    "freeKeeps": {
+      "q": "Que garde Free ?",
+      "a": "Tout ce que Mewvo fait aujourd’hui : la modération, l’échelle d’avertissements, les appels, l’automod, les tickets, le modmail, le tableau de bord et les outils communautaires. Ton historique des dossiers n’est jamais supprimé à la fin d’une formule."
+    },
+    "backToFree": {
+      "q": "Que deviennent les tags ou flux en trop si je reviens à Free ?",
+      "a": "Le principe prévu est que rien ne soit supprimé : les éléments au-delà de la limite Free cessent de fonctionner jusqu’à ce que tu en retires ou que tu repasses à une formule supérieure. Cela peut encore changer avant le lancement."
+    }
+  }
+}

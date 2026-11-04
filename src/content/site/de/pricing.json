@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "title": "Preise",
+    "description": "Mewvo ist heute kostenlos. Geplante Bezahlpläne: {normal} {normalPrice}, {pro} {proPrice} und {max} {maxPrice} im Monat, oder zwei Monate gratis bei jährlicher Zahlung."
+  },
+  "head": {
+    "title": "Pläne und Preise",
+    "leadBilling": "Free deckt alles ab, was Mewvo heute kann. Bezahlpläne bringen mehr Platz und Werkzeuge; kauf einen für dein Konto oder als Geschenk-Key für jemand anderen. [Hast du einen Key?](/me/redeem)",
+    "testMode": "**Testmodus.** {notice}",
+    "lead": "Alles, was Mewvo jetzt kann, ist kostenlos. Bezahlpläne starten, wenn Mewvo für andere Server geöffnet wird; bis dahin kann nichts gekauft werden.",
+    "leadSupport": "Alles, was Mewvo jetzt kann, ist kostenlos. Bezahlpläne starten, wenn Mewvo für andere Server geöffnet wird; bis dahin kann nichts gekauft werden. [Tritt dem Support-Server bei]({url}), um es als Erstes zu erfahren."
+  },
+  "plans": {
+    "title": "Pläne",
+    "note": "Preise in Euro. Limits wie Tags richten sich nach dem Plan des Server-Eigentümers. Mit (geplant) markierte Vorteile sind noch nicht gebaut und können sich bis zum Start der Bezahlpläne ändern.",
+    "billingNote": "Die Preise sind der Gesamtbetrag, den du zahlst. {vat} Jeder Kauf ist eine einmalige Zahlung für {monthDays} oder {yearDays} Tage, ohne automatische Verlängerung. Du kannst innerhalb von {withdrawalDays} Tagen widerrufen: [Widerrufsrecht](/withdrawal)."
+  },
+  "card": {
+    "planned": "(geplant)",
+    "yearly": "oder {price} im Jahr ({months} Monate gratis)",
+    "freeForGood": "Dauerhaft kostenlos",
+    "perMonth": "/ Monat",
+    "joinServer": "Dem Server beitreten",
+    "joinSupport": "Dem Support-Server beitreten",
+    "seeFeatures": "Alle Funktionen ansehen",
+    "comingSoon": "Demnächst",
+    "buyMonth": "Einen Monat kaufen",
+    "buyYear": "Ein Jahr kaufen",
+    "gift": "Als Geschenk: [ein Monat]({monthly}) · [ein Jahr]({yearly})"
+  },
+  "compare": {
+    "title": "Was jeder Plan enthält",
+    "caption": "Planvergleich. Als geplant markierte Zeilen sind noch nicht gebaut; die Spalte Free zeigt, was Mewvo heute kann.",
+    "feature": "Funktion",
+    "yes": "Ja",
+    "no": "Nein"
+  },
+  "faq": {
+    "title": "Fragen zu den Preisen",
+    "buyNowTest": "Nur als Test. Der Bezahlvorgang funktioniert von Anfang bis Ende (für dich oder als Geschenk-Key), aber es ist kein Zahlungsanbieter angebunden: Es wird keine Karte abgefragt und niemandem etwas berechnet. Als geplant markierte Vorteile sind noch nicht gebaut.",
+    "more": "Mehr Antworten in den [FAQ](/faq)."
+  }
+}

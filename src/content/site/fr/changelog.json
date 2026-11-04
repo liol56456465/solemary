@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "description": "Ce qui a changé dans Mewvo, du plus récent au plus ancien."
+  },
+  "head": {
+    "title": "Nouveautés",
+    "lead": "Ce qui a changé dans Mewvo, du plus récent au plus ancien. Un changement apparaît ici une fois terminé. Le bot de ton serveur le reçoit à sa prochaine mise à jour."
+  },
+  "entries": {
+    "2026-11-01": {
+      "customAutomodRules": "Règles d’automod personnalisées : ajoute tes propres mots et expressions à bloquer, avec /automod custom ou depuis le tableau de bord. Tu peux modifier les mots d’une règle plus tard. Inclus dans les formules Normal, Pro et Max.",
+      "remind": "/remind : crée un rappel pour toi-même. Mewvo te l’envoie en message privé, ou dans le salon si tes messages privés sont fermés.",
+      "profile": "/profile : ton niveau, ton rang, ta prochaine récompense de rôle, ton anniversaire et ta formule sur une seule carte.",
+      "appealStatus": "/appeal status : consulte tes appels et vois si quelqu’un de l’équipe les examine.",
+      "recordLinkInDms": "Les messages privés de sanction peuvent renvoyer vers Mon dossier, où tu vois ton dossier complet sur le site.",
+      "gettingStartedList": "Tableau de bord : la page Vue d’ensemble commence par une courte liste de premiers pas, et chaque page de paramètres explique ses options en termes simples.",
+      "activityPage": "Tableau de bord : une page Activité avec les messages, arrivées et dossiers par jour sur les 30 derniers jours.",
+      "settingsBackup": "Tableau de bord : une sauvegarde des paramètres à télécharger et à recharger après vérification.",
+      "caseNotesAndTags": "Tableau de bord : notes privées de l’équipe et tags sur les dossiers, actions sur plusieurs dossiers à la fois et recherches enregistrées.",
+      "shiftNote": "Tableau de bord : une note pour la prochaine équipe de garde sur la page Vue d’ensemble.",
+      "weeklySummary": "Un résumé hebdomadaire du serveur dans le journal de modération chaque lundi.",
+      "proMaxBranding": "Pro et Max : Mewvo peut utiliser son propre pseudo et son propre avatar sur ton serveur, et l’équipe peut télécharger les dossiers sous forme de tableur.",
+      "dashboardThemes": "Thèmes du tableau de bord : Light, Dark, Dim et High contrast."
+    },
+    "2026-10-31": {
+      "legalPages": "Politique de confidentialité et Conditions générales.",
+      "dataDownload": "Mon dossier : télécharge sous forme de fichier toutes les données que Mewvo détient sur toi.",
+      "paidPlans": "Les formules payantes servent désormais à quelque chose : rôles de soutien, /premium, cadeaux et clés à utiliser."
+    },
+    "2026-10-29": {
+      "rename": "Le bot s’appelle désormais Mewvo (auparavant Meowist).",
+      "serverRules": "Les règles du serveur sur le site. Les messages privés de sanction citent la règle enfreinte et renvoient vers elle.",
+      "independentAppeals": "Les appels sont tranchés par quelqu’un d’autre que le modérateur qui a donné la sanction.",
+      "myRecord": "Mon dossier sur le site : les membres peuvent voir leur propre dossier de modération.",
+      "scheduledMessages": "Messages programmés et récurrents depuis le tableau de bord.",
+      "inbox": "Tableau de bord : une boîte de réception pour les appels, tickets, modmail et vérifications de l’automod, avec réponses depuis le web.",
+      "websitePages": "Pages du site pour le classement, le statut, les fonctionnalités, les tarifs, la documentation et la FAQ."
+    },
+    "2026-10-28": {
+      "membersPage": "Tableau de bord : une page Membres avec filtres, rôles, pseudos et exclusions temporaires, aussi pour plusieurs membres à la fois.",
+      "temporaryRoles": "Des rôles temporaires retirés automatiquement après une durée définie.",
+      "bannedPage": "Tableau de bord : une page Banned avec toutes les personnes bannies et la raison.",
+      "channelTools": "Tableau de bord : purger, verrouiller et déverrouiller des salons, et publier des messages, sondages et comptes à rebours en tant que bot.",
+      "appealsInSupportServer": "Les appels de bannissement et d’expulsion se déroulent avec le membre sur le serveur d’assistance.",
+      "mutesInMassGuard": "Les mises en sourdine comptent dans la limite qui empêche un modérateur de sanctionner beaucoup de personnes en peu de temps."
+    }
+  }
+}

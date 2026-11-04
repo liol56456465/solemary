@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "description": "Was sich an Mewvo geändert hat, das Neueste zuerst."
+  },
+  "head": {
+    "title": "Änderungen",
+    "lead": "Was sich an Mewvo geändert hat, das Neueste zuerst. Eine Änderung steht hier, sobald sie fertig ist. Der Bot auf deinem Server bekommt sie beim nächsten Update."
+  },
+  "entries": {
+    "2026-11-01": {
+      "customAutomodRules": "Eigene Automod-Regeln: Füge eigene Wörter und Ausdrücke zum Blockieren hinzu, mit /automod custom oder im Dashboard. Die Wörter einer Regel kannst du später ändern. Teil der Pläne Normal, Pro und Max.",
+      "remind": "/remind: Stell dir eine Erinnerung. Mewvo schickt sie dir per Direktnachricht, oder im Kanal, wenn deine Direktnachrichten geschlossen sind.",
+      "profile": "/profile: dein Level, Rang, nächste Rollenbelohnung, Geburtstag und Plan auf einer Karte.",
+      "appealStatus": "/appeal status: Sieh deine Einsprüche und ob sich jemand aus dem Team sie gerade ansieht.",
+      "recordLinkInDms": "Direktnachrichten zu Strafen können auf Meine Akte verlinken, wo du deine komplette Akte auf der Website siehst.",
+      "gettingStartedList": "Dashboard: Die Übersichtsseite beginnt mit einer kurzen Liste für den Einstieg, und jede Einstellungsseite erklärt ihre Optionen in einfachen Worten.",
+      "activityPage": "Dashboard: eine Aktivitätsseite mit Nachrichten, Beitritten und Fällen pro Tag für die letzten 30 Tage.",
+      "settingsBackup": "Dashboard: ein Backup der Einstellungen, das du herunterladen und nach einer Prüfung wieder einspielen kannst.",
+      "caseNotesAndTags": "Dashboard: private Teamnotizen und Tags an Fällen, Aktionen für viele Fälle auf einmal und gespeicherte Suchen.",
+      "shiftNote": "Dashboard: eine Notiz für die nächste Teamschicht auf der Übersichtsseite.",
+      "weeklySummary": "Jeden Montag eine Wochenzusammenfassung des Servers im Mod-Log.",
+      "proMaxBranding": "Pro und Max: Mewvo kann auf deinem Server einen eigenen Spitznamen und Avatar nutzen, und das Team kann Fälle als Tabelle herunterladen.",
+      "dashboardThemes": "Dashboard-Designs: Light, Dark, Dim und High contrast."
+    },
+    "2026-10-31": {
+      "legalPages": "Datenschutzerklärung und Allgemeine Geschäftsbedingungen.",
+      "dataDownload": "Meine Akte: Lade alle Daten, die Mewvo über dich hat, als Datei herunter.",
+      "paidPlans": "Bezahlpläne bewirken jetzt etwas: Supporter-Rollen, /premium, Geschenke und Einlöse-Keys."
+    },
+    "2026-10-29": {
+      "rename": "Der Bot heißt jetzt Mewvo (vorher Meowist).",
+      "serverRules": "Serverregeln auf der Website. Direktnachrichten zu Strafen nennen die gebrochene Regel und verlinken darauf.",
+      "independentAppeals": "Über Einsprüche entscheidet jemand anderes als der Moderator, der die Strafe verhängt hat.",
+      "myRecord": "Meine Akte auf der Website: Mitglieder können ihre eigene Moderationsakte sehen.",
+      "scheduledMessages": "Geplante und wiederkehrende Nachrichten aus dem Dashboard.",
+      "inbox": "Dashboard: ein Posteingang für Einsprüche, Tickets, Modmail und Automod-Prüfungen, mit Antworten aus dem Web.",
+      "websitePages": "Website-Seiten für Bestenliste, Status, Funktionen, Preise, Doku und FAQ."
+    },
+    "2026-10-28": {
+      "membersPage": "Dashboard: eine Mitgliederseite mit Filtern, Rollen, Spitznamen und Timeouts, auch für viele Mitglieder auf einmal.",
+      "temporaryRoles": "Temporäre Rollen, die nach einer festgelegten Zeit von selbst entfernt werden.",
+      "bannedPage": "Dashboard: eine Banned-Seite mit allen, die gebannt sind, und dem Grund.",
+      "channelTools": "Dashboard: Kanäle leeren, sperren und entsperren sowie Nachrichten, Umfragen und Countdowns als Bot posten.",
+      "appealsInSupportServer": "Einsprüche gegen Banns und Kicks laufen im Gespräch mit dem Mitglied auf dem Support-Server.",
+      "mutesInMassGuard": "Stummschaltungen zählen zum Limit, das einen Moderator daran hindert, viele Leute in kurzer Zeit zu bestrafen."
+    }
+  }
+}

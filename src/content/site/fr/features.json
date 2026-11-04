@@ -1,0 +1,296 @@
+{
+  "meta": {
+    "description": "Tout ce que fait Mewvo : la modération, l’échelle d’avertissements, les appels, l’automod, les tickets et le modmail, le tableau de bord web et les outils communautaires."
+  },
+  "head": {
+    "title": "Fonctionnalités",
+    "lead": "Tout ce que Mewvo fait aujourd’hui, regroupé par domaine. Rien sur cette page n’est prévu ou payant ; pour ce qui pourrait venir avec les formules payantes, consulte les [Tarifs](/pricing).",
+    "indexLabel": "Domaines de fonctionnalités"
+  },
+  "groups": {
+    "enforcement": {
+      "title": "Modération",
+      "intro": "Avertir, mettre en sourdine, expulser et bannir depuis un seul panneau, avec une trace de chaque action.",
+      "items": {
+        "enforcementsPanel": {
+          "term": "Panneau /enforcements",
+          "text": "Affiche l’âge du compte du membre, son ancienneté sur le serveur, ses avertissements comptabilisés, son niveau sur l’échelle, ses sanctions en cours et ses trois derniers dossiers, puis ne propose que les actions pertinentes à ce moment (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
+        },
+        "reasons": {
+          "term": "Raisons",
+          "text": "Une liste de raisons prédéfinies, dont certaines marquées graves (un bannissement grave est sans appel par défaut), ou une raison personnalisée."
+        },
+        "caseCodes": {
+          "term": "Codes de dossier",
+          "text": "Chaque action reçoit un code court et unique comme k7xq2 : de 5 à 7 lettres minuscules et chiffres, sans les caractères qui se ressemblent 0, o, 1, l et i."
+        },
+        "dms": {
+          "term": "Messages privés",
+          "text": "Le membre reçoit la raison, qui a agi, la date, la durée et la date de fin, le code du dossier et la façon de faire appel. Les membres expulsés reçoivent une invitation à usage unique pour revenir (une utilisation, 7 jours)."
+        },
+        "mutes": {
+          "term": "Mises en sourdine",
+          "text": "Un rôle Muted géré par le bot au lieu des exclusions temporaires de Discord, pour que les mises en sourdine puissent durer plus de 28 jours. Il s’applique aussi aux nouveaux salons et est réappliqué si le membre quitte le serveur puis revient."
+        },
+        "safetyChecks": {
+          "term": "Contrôles de sécurité",
+          "text": "Refuse d’agir contre le propriétaire du serveur, le bot, toi-même et toute personne ayant un rôle égal ou supérieur. Le rôle Administrateur est revérifié à chaque clic."
+        },
+        "massActionGuard": {
+          "term": "Protection contre les actions en masse",
+          "text": "Plus de 5 bannissements ou expulsions en 10 minutes par un même modérateur le bloquent pendant une heure et alertent le propriétaire. Les mises en sourdine ont leur propre limite de 10."
+        },
+        "caseTools": {
+          "term": "Outils de dossier",
+          "text": "/case edit, void et history, preuves (liens de messages avec extrait, ou images), recherche de dossiers, et /background pour l’historique complet d’un membre."
+        },
+        "warnForMessage": {
+          "term": "Warn for this message",
+          "text": "Clic droit sur un message pour avertir son auteur, avec le message joint comme preuve."
+        },
+        "simulation": {
+          "term": "Simulation",
+          "text": "/test t’envoie exactement le message privé qu’un membre recevrait, sans rien exécuter."
+        },
+        "noContactOrders": {
+          "term": "Interdictions de contact",
+          "text": "Demande à deux membres de ne pas se contacter jusqu’à une date fixée. Ce n’est pas une sanction et cela ne compte pas comme un avertissement."
+        }
+      }
+    },
+    "ladder": {
+      "title": "Échelle d’avertissements",
+      "intro": "Une gradation identique pour tout le monde et visible par le membre.",
+      "items": {
+        "levels": {
+          "term": "Niveaux",
+          "text": "Les avertissements 1 et 2 sont un message privé. L’avertissement 3 entraîne un bannissement automatique de 7 jours (niveau 1). L’avertissement suivant entraîne un bannissement de 30 jours (niveau 2), puis un bannissement définitif (niveau 3)."
+        },
+        "neverResets": {
+          "term": "Jamais réinitialisée",
+          "text": "L’échelle est tenue par membre et par serveur et ne se réinitialise pas discrètement avec le temps."
+        },
+        "corrections": {
+          "term": "Corrections",
+          "text": "Retirer un avertissement réduit le nombre. Les bannissements donnés à la main ne font pas bouger l’échelle. Un appel accepté contre un bannissement de l’échelle baisse le niveau d’un cran."
+        },
+        "level3Appeals": {
+          "term": "Appels au niveau 3",
+          "text": "On peut faire appel d’un bannissement définitif de l’échelle pendant 6 mois. Ensuite, ou après un appel refusé, l’appel n’est plus possible."
+        },
+        "myStanding": {
+          "term": "My standing",
+          "text": "Les membres peuvent consulter leurs propres avertissements et ce qu’entraînerait le prochain, depuis le panneau d’appel ou la page Mon dossier."
+        }
+      }
+    },
+    "appeals": {
+      "title": "Appels et signalements",
+      "intro": "Un chemin de retour qui se termine par la décision d’une personne.",
+      "items": {
+        "appealPanel": {
+          "term": "Panneau d’appel",
+          "text": "/setappeal publie le panneau avec les boutons Appeal, My appeals et My standing, sur le serveur principal et sur le serveur d’assistance."
+        },
+        "appealForm": {
+          "term": "Formulaire d’appel",
+          "text": "Pourquoi la sanction devrait être levée, le code du dossier indiqué dans le message privé, et tout ce que l’équipe devrait savoir d’autre."
+        },
+        "banAndKickAppeals": {
+          "term": "Appels de bannissement et d’expulsion",
+          "text": "Ouvrent un salon sur le serveur d’assistance avec le membre dedans, pour que la conversation fonctionne après un bannissement. Le dossier et l’historique vont dans un salon de l’équipe réservé aux administrateurs, avec Accept et Deny."
+        },
+        "limits": {
+          "term": "Limites",
+          "text": "Un seul appel en attente par dossier et 7 jours d’attente après un refus. On peut faire appel des bannissements et des mises en sourdine tant qu’ils sont en cours, des avertissements et des expulsions dans les 30 jours."
+        },
+        "decisions": {
+          "term": "Décisions",
+          "text": "Accept lève ce qui est encore en cours et envoie en message privé une invitation à usage unique pour revenir ; Deny prévient le membre en message privé. /appeals permet aussi de décider par commande."
+        },
+        "bannedRole": {
+          "term": "Rôle Banni",
+          "text": "Les membres dont le bannissement est en cours reçoivent un rôle sur le serveur d’assistance, retiré à la fin du bannissement."
+        },
+        "staffReports": {
+          "term": "Signalements visant l’équipe",
+          "text": "Les membres peuvent signaler un membre de l’équipe en privé. Seuls les administrateurs voient les signalements ; un signalement ouvert par personne et trois par jour."
+        }
+      }
+    },
+    "automod": {
+      "title": "Automod et raids",
+      "intro": "Des actions automatiques qui sont des dossiers normaux, examinés par une personne.",
+      "items": {
+        "builtInRules": {
+          "term": "14 règles",
+          "text": "Liens d’arnaque, NSFW, harcèlement sexuel, harcèlement, informations personnelles, publicité, usurpation d’identité, langage, manque de respect, mentions en masse, spam, majuscules, caractères fantaisie et anglais uniquement."
+        },
+        "customRules": {
+          "term": "Règles personnalisées",
+          "text": "Tes propres mots et expressions, reconnus comme mots entiers grâce à la même normalisation des lettres. Chaque règle supprime, avertit ou met en sourdine, avec une carte de vérification. Dans les formules payantes : 5 avec Normal, 25 avec Pro, 100 avec Max."
+        },
+        "punishmentSteps": {
+          "term": "Paliers de sanction",
+          "text": "Chaque règle a ses propres paliers (par exemple pour le spam : avertissement, sourdine 1 heure, sourdine 1 jour), comptés sur 30 jours. Quand un message enfreint plusieurs règles, seule la plus grave compte."
+        },
+        "reviewCards": {
+          "term": "Cartes de vérification",
+          "text": "Chaque action automatique publie une carte pour l’équipe avec Keep, Undo et Change to…."
+        },
+        "modes": {
+          "term": "Modes",
+          "text": "Chaque règle est activée, en surveillance (carte uniquement) ou désactivée, globalement ou par salon. Rôles de confiance et exceptions par salon."
+        },
+        "hardToDodge": {
+          "term": "Difficile à contourner",
+          "text": "Le texte est ramené à des lettres simples, pour que les polices fantaisie, les lettres qui se ressemblent, le zalgo et les caractères invisibles ne contournent pas les règles."
+        },
+        "newMembers": {
+          "term": "Nouveaux membres",
+          "text": "Les liens, les pièces jointes et les messages rapides sont limités pendant les 3 premiers jours d’un membre. Un filtre d’arrivée peut signaler ou expulser les nouveaux comptes qui échouent à ses contrôles."
+        },
+        "raids": {
+          "term": "Raids",
+          "text": "Dix arrivées en une minute verrouillent le serveur : le niveau de vérification augmente, les invitations et les messages privés sont suspendus (mode panique) et les administrateurs sont alertés. /automod lockdown-end rétablit tout et publie un rapport."
+        },
+        "memberReports": {
+          "term": "Signalements des membres",
+          "text": "Quand 3 membres réagissent à un message avec l’emoji drapeau, il est retiré et envoyé dans le salon de vérification."
+        },
+        "nativeAutomod": {
+          "term": "AutoMod de Discord",
+          "text": "Un pont vers les règles AutoMod intégrées à Discord, pour que les deux fonctionnent ensemble."
+        }
+      }
+    },
+    "tickets": {
+      "title": "Tickets et modmail",
+      "intro": "Des conversations privées entre les membres et l’équipe, gardées dans Discord.",
+      "items": {
+        "ticketPanel": {
+          "term": "Panneau de tickets",
+          "text": "Les membres ouvrent un ticket avec un bouton. L’équipe le prend en charge, définit une priorité et répond avec des réponses enregistrées."
+        },
+        "transcripts": {
+          "term": "Transcriptions",
+          "text": "Quand un ticket ou une conversation modmail est fermé, une transcription est envoyée dans un salon réservé à l’équipe."
+        },
+        "modmail": {
+          "term": "Modmail",
+          "text": "Envoie un message privé au bot et appuie sur Send to staff : la conversation devient un salon de l’équipe. Les lignes commençant par // sont des notes internes."
+        },
+        "modmailCommands": {
+          "term": "Commandes",
+          "text": "/modmail close, block et unblock. Le nombre de salons de signalement et de modmail ouverts est plafonné pour qu’un afflux ne submerge pas le serveur."
+        }
+      }
+    },
+    "dashboard": {
+      "title": "Tableau de bord web",
+      "intro": "Les paramètres et la modération du serveur dans le navigateur.",
+      "items": {
+        "signIn": {
+          "term": "Connexion",
+          "text": "Connexion avec Discord (identify uniquement). Le rôle Administrateur est revérifié à chaque requête ; un rôle de modérateur peut recevoir un accès en lecture aux pages de modération."
+        },
+        "moderate": {
+          "term": "Modérer",
+          "text": "Une vue d’ensemble de ce qui t’attend, une boîte de réception, les membres (filtres, rôles, pseudos, exclusions temporaires, actions groupées), les bannissements, les dossiers, les appels, les interdictions de contact et l’activité de l’équipe."
+        },
+        "settings": {
+          "term": "Paramètres",
+          "text": "Chaque module sur sa propre page : tickets, bienvenue, niveaux, rôles par réaction, messages, giveaways, anniversaires, candidatures, communauté, automod, modération, journaux, vérification et plus encore."
+        },
+        "auditLog": {
+          "term": "Journal d’audit",
+          "text": "Chaque modification est enregistrée : qui a modifié quel paramètre, de quelle valeur à quelle valeur."
+        },
+        "temporaryRoles": {
+          "term": "Rôles temporaires",
+          "text": "Attribue un rôle pour une durée définie ; il est retiré à la fin du délai et réappliqué si le membre revient avant."
+        }
+      }
+    },
+    "community": {
+      "title": "Communauté",
+      "intro": "Le côté convivial du serveur.",
+      "items": {
+        "leveling": {
+          "term": "Niveaux",
+          "text": "De l’XP pour les discussions, des messages de passage de niveau, des récompenses de rôle, des salons sans XP et un classement public."
+        },
+        "tags": {
+          "term": "Tags",
+          "text": "Des réponses enregistrées que tout le monde peut afficher avec /tag. Jusqu’à 100 par serveur."
+        },
+        "suggestions": {
+          "term": "Suggestions",
+          "text": "Un salon de suggestions avec votes."
+        },
+        "starboard": {
+          "term": "Starboard",
+          "text": "Les messages avec assez d’étoiles sont copiés dans un salon de moments forts."
+        },
+        "stickyMessages": {
+          "term": "Messages épinglés en bas",
+          "text": "Restent en bas d’un salon. Jusqu’à 10 par serveur."
+        },
+        "youtubeFeeds": {
+          "term": "Flux YouTube",
+          "text": "Les nouvelles vidéos sont publiées dans un salon. Jusqu’à 20 flux."
+        },
+        "reactionRoles": {
+          "term": "Rôles par réaction",
+          "text": "Des menus de rôles en libre-service avec des boutons ou un menu déroulant."
+        },
+        "giveaways": {
+          "term": "Giveaways",
+          "text": "Lancer, terminer et refaire un tirage."
+        },
+        "birthdays": {
+          "term": "Anniversaires",
+          "text": "Annonces et rôle d’anniversaire, avec fuseaux horaires."
+        },
+        "applications": {
+          "term": "Candidatures",
+          "text": "Des candidatures pour des rôles avec tes propres questions."
+        },
+        "joinToCreate": {
+          "term": "Salons vocaux à création automatique",
+          "text": "Des salons vocaux temporaires."
+        },
+        "welcomeAndGoodbye": {
+          "term": "Bienvenue et au revoir",
+          "text": "Messages d’arrivée et de départ, rôles à l’arrivée."
+        },
+        "counters": {
+          "term": "Compteurs",
+          "text": "Des salons affichant le nombre de membres et un jeu de comptage."
+        }
+      }
+    },
+    "server": {
+      "title": "Journaux, vérification et outils",
+      "intro": "La mécanique en coulisses.",
+      "items": {
+        "logging": {
+          "term": "Journaux",
+          "text": "Arrivées, départs, changements de rôles, messages modifiés et supprimés et plus encore, chacun dans le salon de ton choix, avec des salons ignorés."
+        },
+        "verification": {
+          "term": "Vérification",
+          "text": "Un panneau de vérification ou une vérification à l’arrivée. « Verify with Discord » peut aussi ajouter le membre au serveur d’assistance, pour que les messages d’appel lui parviennent toujours."
+        },
+        "postingAsBot": {
+          "term": "Publier en tant que bot",
+          "text": "Messages, embeds, sondages et comptes à rebours depuis le tableau de bord ou par commande."
+        },
+        "memberTools": {
+          "term": "Outils pour les membres",
+          "text": "Listes de tâches (aussi partagées), une calculatrice et des convertisseurs, la météo, des infos sur le serveur et les utilisateurs, et /wipedata pour supprimer tes propres niveaux, ton solde, ton statut AFK, ton anniversaire et ta liste de tâches."
+        }
+      }
+    }
+  }
+}

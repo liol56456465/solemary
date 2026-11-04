@@ -1,0 +1,144 @@
+{
+  "caseType": {
+    "ban": "Bann",
+    "kick": "Kick",
+    "mute": "Stummschaltung",
+    "warn": "Verwarnung"
+  },
+  "appealStatus": {
+    "pending": "Ausstehend: Die Administratoren haben noch nicht entschieden",
+    "accepted": "Angenommen",
+    "denied": "Abgelehnt",
+    "closed": "Geschlossen"
+  },
+  "appeal": {
+    "voided": "Annulliert: kein Einspruch nötig",
+    "lifted": "Bereits aufgehoben",
+    "unappealable": "Kein Einspruch möglich",
+    "ended": "Beendet: kein Einspruch nötig",
+    "deadlinePassed": "Die Einspruchsfrist ist abgelaufen",
+    "windowClosed": "Die Einspruchsfrist ({days} Tage) ist abgelaufen",
+    "pending": "Einspruch ausstehend",
+    "deniedRetry": "Einspruch abgelehnt; erneuter Einspruch möglich ab",
+    "appealable": "Einspruch möglich",
+    "until": "Bis {date}",
+    "yes": "Ja"
+  },
+  "status": {
+    "imported": "nur Verlauf (importiert, zählt nicht)",
+    "voided": "annulliert: zählt nicht mehr",
+    "counts": "zählt aktuell",
+    "noLongerCounts": "in der Akte, zählt nicht mehr",
+    "onRecord": "in der Akte"
+  },
+  "login": {
+    "lead": "Sieh deine eigene Moderationsakte auf {server}: deine Verwarnungen, deine Stufe auf der Verwarnungsleiter, aktive Banns oder Stummschaltungen, deine Fälle und deine Einsprüche.",
+    "withDiscord": "Mit Discord anmelden",
+    "withAccount": "Mit einem Mewvo-Konto anmelden",
+    "note": "Mewvo fragt bei Discord nur, wer du bist (die Berechtigung identify): keine E-Mail, keine Server, sonst nichts. Du siehst immer nur deine eigene Akte. Die Anmeldung gilt eine Stunde.",
+    "signup": "Noch kein Mewvo-Konto? [Erstelle eins]({href}), um dich mit Benutzername und Passwort anzumelden."
+  },
+  "record": {
+    "title": "Meine Akte",
+    "lead": "Deine Moderationsakte auf {server}, angemeldet als **{username}**. Nur du kannst sie sehen.",
+    "accountSettings": "Kontoeinstellungen",
+    "download": "Meine Daten herunterladen",
+    "subscription": "Abo",
+    "logOut": "Abmelden",
+    "warnings": "Verwarnungen",
+    "warningsCount": "{count} von {threshold}",
+    "warningsNote": "Gezählte Verwarnungen auf deiner Stufe. Verwarnungen laufen nicht ab.",
+    "ladder": "Verwarnungsleiter",
+    "ladderLevel": "Stufe {level} von {max}",
+    "activeNow": "Aktuell aktiv",
+    "activeBanEnds": "Bann {code}: endet {date}",
+    "activeBanPermanent": "Bann {code}: permanent",
+    "activeMuteEnds": "Stummschaltung {code}: endet {date}",
+    "nothingActive": "Kein aktiver Bann und keine aktive Stummschaltung.",
+    "cases": "Fälle",
+    "appeals": "Einsprüche",
+    "column": {
+      "case": "Fall",
+      "type": "Art",
+      "reason": "Grund",
+      "by": "Von",
+      "date": "Datum",
+      "ends": "Endet",
+      "status": "Status",
+      "appeal": "Einspruch",
+      "filed": "Eingereicht",
+      "decided": "Entschieden"
+    },
+    "permanent": "permanent",
+    "truncated": "Es werden deine neuesten {count} Fälle angezeigt.",
+    "noCases": "Du hast keine Fälle auf {server}.",
+    "noAppeals": "Du hast keine Einsprüche eingereicht.",
+    "appealHintInvite": "Einspruch legst du über das Einspruchs-Panel in Discord ein: [Tritt dem Support-Server bei]({invite}) und drück **Appeal** mit dem Fallcode. Auf dieser Seite ist kein Einspruch möglich.",
+    "appealHint": "Einspruch legst du mit dem Fallcode über das Einspruchs-Panel in Discord ein. Auf dieser Seite ist kein Einspruch möglich."
+  },
+  "message": {
+    "logInAgain": "Erneut anmelden",
+    "backToRecord": "Zurück zu Meine Akte"
+  },
+  "errors": {
+    "slowDown": {
+      "title": "Langsamer, bitte",
+      "message": "Zu viele Anfragen von deiner Adresse. Warte eine Minute und versuch es noch einmal."
+    },
+    "loginCancelled": {
+      "title": "Anmeldung abgebrochen",
+      "message": "Du hast die Anmeldung nicht autorisiert."
+    },
+    "loginExpired": {
+      "title": "Anmeldung abgelaufen",
+      "message": "Dieser Anmeldelink ist ungültig, abgelaufen oder wurde bereits benutzt."
+    },
+    "loginFailed": {
+      "title": "Anmeldung fehlgeschlagen",
+      "message": "Discord hat die Anmeldung nicht bestätigt. Versuch es noch einmal."
+    },
+    "noUser": {
+      "title": "Anmeldung fehlgeschlagen",
+      "message": "Discord hat keinen Benutzer zurückgegeben."
+    },
+    "linkOtherBrowser": {
+      "title": "Nicht verknüpft",
+      "message": "Melde dich zuerst in diesem Browser bei deinem Mewvo-Konto an und verknüpfe Discord dann erneut."
+    },
+    "recordUnavailable": {
+      "title": "Akte nicht verfügbar",
+      "message": "Deine Akte konnte nicht geladen werden, weil die Datenbank nicht antwortet. Das heißt nicht, dass deine Akte leer ist: Versuch es in ein paar Minuten noch einmal."
+    },
+    "downloadLogin": {
+      "title": "Zuerst anmelden",
+      "message": "Melde dich mit Discord an, um deine Daten herunterzuladen."
+    },
+    "downloadLoginAccount": {
+      "title": "Zuerst anmelden",
+      "message": "Melde dich an, um deine Daten herunterzuladen."
+    },
+    "downloadUnavailable": {
+      "title": "Download nicht verfügbar",
+      "message": "Deine Daten konnten nicht gesammelt werden, weil die Datenbank nicht antwortet. Versuch es in ein paar Minuten noch einmal."
+    },
+    "notLoggedIn": {
+      "title": "Abgemeldet",
+      "message": "Du bist nicht angemeldet."
+    },
+    "logoutNotAllowed": {
+      "title": "Nicht erlaubt",
+      "message": "Die Abmeldeanfrage kam nicht von dieser Seite."
+    },
+    "notFound": {
+      "title": "Nicht gefunden",
+      "message": "Diese Seite gibt es nicht."
+    },
+    "tryLater": {
+      "title": "Später erneut versuchen",
+      "message": "Diese Seite konnte nicht geladen werden, weil die Datenbank nicht antwortet. Es wurde nichts geändert."
+    }
+  },
+  "viewer": {
+    "fallbackName": "Konto"
+  }
+}

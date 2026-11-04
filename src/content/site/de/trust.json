@@ -1,0 +1,79 @@
+{
+  "title": "Vertrauenskarte von {server}",
+  "description": "Wie {server} moderiert wird: Einspruchszeiten, Einspruchsergebnisse und Mitglieder mit weißer Weste in den letzten {days} Tagen. Nur Zahlen.",
+  "head": {
+    "heading": "{server}: Vertrauenskarte",
+    "lead": "Wie dieser Server in den letzten {days} Tagen moderiert wurde. Nur Zahlen: keine Namen, keine Gründe, keine Moderatoren."
+  },
+  "noData": "Noch nicht genug Daten",
+  "tiles": {
+    "firstAnswer": {
+      "label": "Erste Antwort auf einen Einspruch",
+      "note": "Mittlere Zeit (Median) vom Absenden eines Einspruchs, bis ein Teammitglied ihn übernimmt oder entscheidet."
+    },
+    "accepted": {
+      "label": "Angenommene Einsprüche",
+      "note": "Von {decided} entschiedenen Einsprüchen."
+    },
+    "goodStanding": {
+      "label": "Mitglieder mit weißer Weste",
+      "note": "Keine gezählte Verwarnung, nicht stummgeschaltet."
+    },
+    "headsUp": {
+      "label": "Nach einem Hinweis korrigiert",
+      "noteWithRate": "Mitglieder haben {rate} der markierten Nachrichten nach einem Hinweis selbst korrigiert.",
+      "noteNoRate": "Wie oft Mitglieder eine markierte Nachricht nach einem Hinweis selbst korrigieren."
+    }
+  },
+  "facts": {
+    "received": "Eingegangene Einsprüche",
+    "decided": "Entschiedene Einsprüche",
+    "decisionTime": "Mittlere Zeit bis zur Entscheidung",
+    "casesPerThousand": "Fälle pro 1.000 Mitglieder"
+  },
+  "how": {
+    "heading": "Wie dieser Server moderiert",
+    "byPerson": "Jeder Einspruch wird von einem Menschen aus dem Team gelesen und entschieden, nie vom Bot allein.",
+    "cases": "Jede Verwarnung, Stummschaltung, jeder Kick und Bann wird als Fall mit eigenem Code festgehalten, und das Mitglied bekommt diesen Code per Direktnachricht."
+  },
+  "ladder": {
+    "single": "Verwarnungen summieren sich: Die {nth} Verwarnung bringt {first}.",
+    "escalating": "Verwarnungen summieren sich: Die {nth} Verwarnung bringt {first}, und jede Verwarnung nach diesem Bann bringt einen längeren ({later}).",
+    "then": "{earlier}, dann {next}",
+    "banDays": "einen {days}-Tage-Bann",
+    "banPermanent": "einen permanenten Bann",
+    "ordinals": {
+      "0": "nullte",
+      "1": "erste",
+      "2": "zweite",
+      "3": "dritte",
+      "4": "vierte",
+      "5": "fünfte",
+      "6": "sechste",
+      "7": "siebte",
+      "8": "achte",
+      "9": "neunte",
+      "10": "zehnte"
+    },
+    "ordinalOther": "{n}."
+  },
+  "cat": {
+    "alt": "{name}, die Serverkatze ({stage}, {mood})",
+    "caption": "Die Serverkatze",
+    "shareAlt": "{name}, die Serverkatze"
+  },
+  "rules": {
+    "heading": "Regeln",
+    "empty": "Dieser Server hat seine Regeln noch nicht veröffentlicht.",
+    "readAll": "Alle Regeln lesen"
+  },
+  "foot": {
+    "period": "Letzte {days} Tage, vom {from} bis {to}. Kleine Zahlen werden ausgeblendet.",
+    "periodWithReport": "Letzte {days} Tage, vom {from} bis {to}. Kleine Zahlen werden ausgeblendet. Vollständige Monatszahlen: [Transparenzbericht](/transparency)."
+  },
+  "error": {
+    "title": "Vertrauenskarte",
+    "heading": "Vertrauenskarte",
+    "text": "Die Vertrauenskarte konnte gerade nicht geladen werden. Lieber keine Zahlen als falsche; bitte versuch es in ein paar Minuten noch einmal."
+  }
+}

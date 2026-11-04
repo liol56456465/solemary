@@ -1,0 +1,113 @@
+{
+  "free": {
+    "summary": "Alles, was Mewvo heute kann, für einen Server.",
+    "perks": {
+      "enforcement": "Moderations-Panel, Fallcodes und Direktnachrichten",
+      "ladderAppeals": "Verwarnungsleiter und Einsprüche",
+      "automod": "Automod mit 14 Regeln und Prüfkarten",
+      "ticketsDashboard": "Tickets, Modmail und das Web-Dashboard",
+      "community": "Level, Tags, Vorschläge, Starboard, Feeds",
+      "scheduled": "Bis zu 50 geplante Nachrichten"
+    }
+  },
+  "normal": {
+    "summary": "Mehr Platz für belebte Community-Server.",
+    "perks": {
+      "everythingFree": "Alles aus Free",
+      "limits": "250 Tags, 25 Sticky-Nachrichten, 40 YouTube-Feeds",
+      "scheduled": "100 geplante Nachrichten",
+      "customRules": "5 eigene Automod-Regeln",
+      "supporterRole": "Supporter-Rolle auf dem Mewvo-Server",
+      "caseExport": "Fallexport (CSV), letzte 90 Tage"
+    }
+  },
+  "pro": {
+    "summary": "Für Server mit einem echten Team.",
+    "perks": {
+      "everythingNormal": "Alles aus Normal, mit höheren Limits",
+      "customRules": "25 eigene Automod-Regeln",
+      "analytics": "Team- und Automod-Statistiken im Dashboard",
+      "customBot": "Eigener Bot-Name und Avatar auf deinem Server",
+      "caseExport": "Export des gesamten Fallverlaufs"
+    }
+  },
+  "max": {
+    "summary": "Für Leute, die mehrere Server betreiben.",
+    "perks": {
+      "everythingPro": "Alles aus Pro",
+      "oneDashboard": "Ein Dashboard für bis zu 5 Server",
+      "sharedCases": "Gemeinsamer Fallverlauf über deine Server",
+      "priorityHelp": "Bevorzugte Hilfe auf dem Support-Server",
+      "highestLimits": "Die höchsten Limits für alles"
+    }
+  },
+  "comparison": {
+    "moderation": {
+      "title": "Moderation",
+      "rows": {
+        "enforcement": "Moderations-Panel, Fallcodes, Direktnachrichten",
+        "ladderAppeals": "Verwarnungsleiter und Einsprüche",
+        "caseHistory": "Fallverlauf",
+        "caseExport": "Fallexport (CSV)",
+        "sharedCases": "Gemeinsame Fälle über Server hinweg"
+      }
+    },
+    "automod": {
+      "title": "Automod",
+      "rows": {
+        "builtIn": "Eingebaute Regeln mit Prüfkarten",
+        "customRules": "Eigene Automod-Regeln"
+      }
+    },
+    "community": {
+      "title": "Community",
+      "rows": {
+        "tags": "Tags",
+        "stickies": "Sticky-Nachrichten",
+        "feeds": "YouTube-Feeds",
+        "scheduled": "Geplante Nachrichten"
+      }
+    },
+    "dashboard": {
+      "title": "Dashboard und Support",
+      "rows": {
+        "auditLog": "Web-Dashboard mit Audit-Log",
+        "analytics": "Team- und Automod-Statistiken",
+        "customBot": "Eigener Bot-Name und Avatar",
+        "servers": "Server in einem Dashboard",
+        "supporterRole": "Supporter-Rolle auf dem Mewvo-Server",
+        "help": "Hilfe auf dem Support-Server"
+      }
+    },
+    "values": {
+      "keptForGood": "Dauerhaft gespeichert",
+      "last90Days": "Letzte 90 Tage",
+      "fullHistory": "Gesamter Verlauf",
+      "upTo5": "Bis zu 5",
+      "yes": "Ja",
+      "priority": "Bevorzugt"
+    }
+  },
+  "faq": {
+    "buyNow": {
+      "q": "Kann ich jetzt einen Plan kaufen?",
+      "a": "Nein. Mewvo läuft vorerst nur auf seinem eigenen Server. Bezahlpläne starten, wenn er für andere Server geöffnet wird; bis dahin kann nichts gekauft werden und niemandem wird etwas berechnet."
+    },
+    "currency": {
+      "q": "In welcher Währung sind die Preise?",
+      "a": "In Euro. Die Preise auf dieser Seite sind die geplanten Monats- und Jahrespreise."
+    },
+    "cancel": {
+      "q": "Kann ich kündigen oder mein Geld zurückbekommen?",
+      "a": "Pläne verlängern sich nicht automatisch, daher gibt es nichts zu kündigen: Ein Plan läuft für den gewählten Zeitraum und fällt danach auf Free zurück. Sobald echte Zahlungen starten, kannst du einen Kauf innerhalb von 14 Tagen widerrufen. Wenn du verlangt hast, dass der Plan sofort beginnt, bekommst du dein Geld abzüglich der bereits genutzten Tage zurück. Einzelheiten stehen auf der Seite zum Widerruf."
+    },
+    "freeKeeps": {
+      "q": "Was bleibt bei Free?",
+      "a": "Alles, was Mewvo heute kann: Moderation, die Verwarnungsleiter, Einsprüche, Automod, Tickets, Modmail, das Dashboard und die Community-Tools. Dein Fallverlauf wird nie gelöscht, wenn ein Plan endet."
+    },
+    "backToFree": {
+      "q": "Was passiert mit zusätzlichen Tags oder Feeds, wenn ich zu Free zurückkehre?",
+      "a": "Geplant ist, dass nichts gelöscht wird: Einträge über dem Free-Limit funktionieren nicht mehr, bis du einige entfernst oder wieder upgradest. Das kann sich bis zum Start noch ändern."
+    }
+  }
+}

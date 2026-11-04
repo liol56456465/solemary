@@ -1,0 +1,278 @@
+{
+  "test": {
+    "label": "Mode test",
+    "notice": "Aucun prestataire de paiement n’est connecté. Finaliser un achat crée une commande de test ; aucune carte n’est demandée et personne n’est débité.",
+    "payNote": "Mode test – aucun argent n’est prélevé"
+  },
+  "vat": {
+    "registered": "Prix TTC (TVA incluse).",
+    "notRegistered": "TVA non appliquée (le vendeur n’est pas immatriculé à la TVA)."
+  },
+  "consent": {
+    "legend": "Avant de commander",
+    "startNow": "Je veux que ma formule commence maintenant. Je comprends que si j’exerce mon droit de rétractation dans les 14 jours, je paie les jours déjà utilisés.",
+    "startNowGift": "Je veux recevoir ma clé cadeau maintenant. Je comprends que si j’exerce mon droit de rétractation dans les 14 jours, je paie les jours déjà utilisés une fois la clé utilisée.",
+    "terms": "J’accepte les [Conditions générales](/terms).",
+    "age": "J’ai 18 ans ou plus, ou j’ai l’autorisation de mon parent ou de mon tuteur légal."
+  },
+  "common": {
+    "back": "← Abonnement",
+    "backToSubscription": "Retour à l’abonnement",
+    "goToSubscription": "Aller à l’abonnement",
+    "planLine": "Mewvo {plan}",
+    "planPeriod": "Mewvo {plan} · {period}",
+    "planWithPeriod": "{plan} · {period}",
+    "days": "{count} jours",
+    "test": "Test",
+    "day": {
+      "one": "{count} jour",
+      "other": "{count} jours"
+    }
+  },
+  "period": {
+    "monthly": "Mensuel",
+    "yearly": "Annuel"
+  },
+  "kind": {
+    "personal": "Pour moi",
+    "gift": "Cadeau"
+  },
+  "keyStatus": {
+    "unused": "Pas encore utilisée",
+    "redeemed": "Utilisée",
+    "revoked": "Annulée",
+    "expired": "Expirée (non utilisée)"
+  },
+  "source": {
+    "key": "Dernier ajout avec une clé.",
+    "purchase": "Dernier ajout avec un achat.",
+    "owner": "Offert par le propriétaire du bot.",
+    "bonus": "Bonus des premiers comptes Mewvo."
+  },
+  "login": {
+    "title": "Se connecter",
+    "heading": "Connecte-toi pour continuer",
+    "reason": {
+      "manage": "Connecte-toi avec Discord pour gérer ton abonnement.",
+      "buyPlan": "Connecte-toi avec Discord pour acheter Mewvo {plan}.",
+      "buyAny": "Connecte-toi avec Discord pour acheter une formule.",
+      "redeem": "Connecte-toi avec Discord pour utiliser une clé.",
+      "withdraw": "Connecte-toi avec Discord pour te rétracter d’une commande."
+    },
+    "privacy": "Mewvo demande seulement à Discord qui tu es (identify) : pas d’e-mail, rien d’autre.",
+    "button": "Se connecter avec Discord"
+  },
+  "effect": {
+    "new": "Commence maintenant.",
+    "extend": "Ajouté à ta durée {plan} actuelle (actuellement jusqu’au {until}).",
+    "upgrade": "Passage à une formule supérieure : tes {remaining} restants de {fromPlan} deviennent {converted} de {plan}, puis la nouvelle durée est ajoutée."
+  },
+  "checkout": {
+    "title": "Paiement",
+    "back": "← Formules",
+    "headingGift": "Offrir Mewvo {plan}",
+    "heading": "Mewvo {plan}",
+    "planLabel": "Formule",
+    "pricePerMonth": "{price}/mois",
+    "pricePerYear": "{price}/an",
+    "billingLabel": "Facturation",
+    "monthsFree": "{months} mois offerts",
+    "forLabel": "Pour qui",
+    "forMe": "Pour moi",
+    "forMeSub": "commence maintenant sur ton compte",
+    "asGift": "En cadeau",
+    "asGiftSub": "tu reçois une clé à offrir",
+    "includes": "{plan} comprend",
+    "planned": "Prévu",
+    "giftTo": "Pour (facultatif)",
+    "giftToPlaceholder": "Son nom",
+    "giftMessage": "Message (facultatif)",
+    "giftMessagePlaceholder": "Affiché à l’ouverture du lien cadeau",
+    "pay": "Commander avec obligation de paiement · {amount}",
+    "blocked": "Indisponible tant que ta formule est en cours",
+    "privacyNote": "Utilisation de tes données : [Politique de confidentialité](/privacy). Tu peux te rétracter dans un délai de {days} jours : [droit de rétractation](/withdrawal).",
+    "privacyNoteGift": "Utilisation de tes données : [Politique de confidentialité](/privacy). Tu peux te rétracter dans un délai de {days} jours : [droit de rétractation](/withdrawal). Pour un cadeau, le droit de rétractation t’appartient en tant qu’acheteur, pas au destinataire."
+  },
+  "summary": {
+    "title": "Récapitulatif de la commande",
+    "plan": "Formule",
+    "billing": "Facturation",
+    "billingValue": "{period} ({days} jours)",
+    "for": "Pour",
+    "forGift": "Une clé cadeau",
+    "forAccount": "Ton compte ({username})",
+    "total": "Total",
+    "vatNote": "{vat} Un paiement pour {days} jours. Pas de renouvellement automatique : la formule prend fin si tu n’achètes pas de durée supplémentaire.",
+    "giftNote": "Tu reçois une clé du type MEWVO-XXXX-XXXX-XXXX, valable un an. Toute personne qui se connecte à ce site peut l’utiliser une fois."
+  },
+  "seller": {
+    "title": "Avant de commander",
+    "seller": "Vendeur",
+    "legalDetails": "Informations légales",
+    "whatYouGet": "Ce que tu reçois",
+    "whatYouGetGift": "Mewvo {plan} (la liste ci-dessus), sous forme de clé à offrir",
+    "whatYouGetPersonal": "Mewvo {plan} (la liste ci-dessus) sur ton compte Discord",
+    "duration": "Durée",
+    "durationGift": "{days} jours à partir de l’utilisation de la clé ; pas de renouvellement automatique",
+    "durationPersonal": "{days} jours à partir de la commande ; pas de renouvellement automatique",
+    "totalPrice": "Prix total",
+    "totalPriceValue": "{amount}. {vat}",
+    "withdrawal": "Rétractation",
+    "withdrawalValue": "{days} jours. Si la formule a déjà commencé, tu paies les jours utilisés. [Comment te rétracter](/withdrawal)"
+  },
+  "withdrawalCell": {
+    "withdrawn": "Rétractation exercée",
+    "refundDue": "{date} · remboursement dû : {amount}",
+    "refundDueTest": "{date} · remboursement dû : {amount} (test)",
+    "withdraw": "Se rétracter du contrat ici",
+    "until": "jusqu’au {date}"
+  },
+  "plan": {
+    "title": "Ta formule",
+    "none": "Aucune formule payante sur ce compte. [Voir les formules](/pricing).",
+    "activeUntil": "Active jusqu’au {date}.",
+    "addTime": "Ajouter de la durée"
+  },
+  "redeemForm": {
+    "label": "Clé",
+    "button": "Utiliser",
+    "terms": "En utilisant une clé, tu acceptes les [Conditions générales](/terms). Utilisation de tes données : [Politique de confidentialité](/privacy)."
+  },
+  "account": {
+    "title": "Abonnement",
+    "lead": "Ta formule Mewvo, tes clés et tes commandes, connecté en tant que **{username}**.",
+    "nav": "Mon compte",
+    "myRecord": "Mon dossier",
+    "plans": "Formules",
+    "redeemTitle": "Utiliser une clé",
+    "redeemNote": "Une clé ajoute sa formule et sa durée à ton compte. Même formule : ajoutée à la date de fin. Une formule supérieure convertit ta durée restante.",
+    "giftsTitle": "Clés cadeaux achetées",
+    "giftsKey": "Clé",
+    "giftsPlan": "Formule",
+    "giftsTime": "Durée",
+    "giftsBought": "Achetée le",
+    "giftsStatus": "Statut",
+    "giftTo": "Pour {name}",
+    "noGifts": "Pas encore de clé cadeau. Choisis **En cadeau** lors du paiement pour en obtenir une.",
+    "ordersTitle": "Commandes",
+    "ordersOrder": "Commande",
+    "ordersDate": "Date",
+    "ordersPlan": "Formule",
+    "ordersFor": "Pour",
+    "ordersAmount": "Montant",
+    "ordersWithdrawal": "Rétractation",
+    "receipt": "Reçu",
+    "ordersNote": "Tu peux te rétracter d’une commande dans un délai de {days} jours après l’achat. [Droit de rétractation](/withdrawal).",
+    "noOrders": "Pas encore de commande."
+  },
+  "receipt": {
+    "title": "Commande n° {id}",
+    "headingGift": "Ta clé cadeau est prête",
+    "heading": "Merci, ta formule est active",
+    "giftKey": "Clé cadeau · {plan}, {days} jours",
+    "giftKeyTo": "Clé cadeau · {plan}, {days} jours · pour {name}",
+    "giveAway": "Donne cette clé à qui tu veux. La personne se connecte à ce site et l’utilise sous Abonnement → Utiliser une clé, ou sur Discord avec `/premium redeem`.",
+    "redeemBy": "À utiliser avant le {date}.",
+    "status": "Statut : {status}.",
+    "directLink": "Lien direct : {link}",
+    "order": "Commande",
+    "date": "Date",
+    "account": "Compte",
+    "plan": "Formule",
+    "for": "Pour",
+    "total": "Total",
+    "totalTest": "{amount} (test, non débité)",
+    "vat": "TVA",
+    "renewal": "Renouvellement",
+    "renewalNone": "Aucun : la formule prend fin si tu n’achètes pas de durée supplémentaire",
+    "confirmed": "Tu as confirmé",
+    "confirmedMeta": "{date} · {version} · Conditions du {terms}",
+    "withdrawal": "Rétractation",
+    "periodEnded": "Le délai de {days} jours est écoulé. [Droit de rétractation](/withdrawal)",
+    "giftWithdrawal": "Pour un cadeau, le droit de rétractation t’appartient en tant qu’acheteur.",
+    "dmNote": "Cette confirmation t’est aussi envoyée en message privé sur Discord (si tes messages privés du bot sont ouverts). Conserve-la pour tes archives."
+  },
+  "gift": {
+    "fromFor": "Un cadeau de {from} pour {to}",
+    "from": "Un cadeau de {from}",
+    "keyFor": "Une clé Mewvo pour {to}",
+    "key": "Une clé Mewvo",
+    "plan": "Mewvo {plan} · {days} jours",
+    "redeemBy": "À utiliser avant le {date}."
+  },
+  "redeem": {
+    "title": "Utiliser une clé",
+    "headingGift": "Tu as reçu un cadeau",
+    "heading": "Utiliser une clé",
+    "lead": "Connecté en tant que **{username}**. La formule de la clé est ajoutée à ce compte."
+  },
+  "orderLine": {
+    "personal": "Mewvo {plan} · {period}",
+    "gift": "Mewvo {plan} · {period} (cadeau)"
+  },
+  "withdrawList": {
+    "title": "Se rétracter d’un contrat",
+    "heading": "Se rétracter du contrat ici",
+    "lead": "Connecté en tant que **{username}**. Choisis la commande dont tu veux te rétracter. Tu peux te rétracter dans un délai de {days} jours après la commande, sans avoir à donner de motif.",
+    "item": "**Commande {order}** : {line}, {amount}, commandée le {date}.",
+    "button": "Se rétracter du contrat ici",
+    "none": "Aucune commande de ce compte n’est dans son délai de rétractation de {days} jours.",
+    "note": "[Ton droit de rétractation](/withdrawal) explique les règles et les autres moyens de te rétracter."
+  },
+  "withdrawConfirm": {
+    "title": "Confirmer la rétractation",
+    "back": "← Se rétracter du contrat ici",
+    "heading": "Rétractation de la commande n° {id}",
+    "name": "Ton nom",
+    "contract": "Contrat",
+    "contractValue": "Commande {order} : {line}, {amount}, commandée le {date}",
+    "contractValueTest": "Commande {order} : {line}, {amount} (test), commandée le {date}",
+    "account": "Compte",
+    "accountValue": "{username} (Discord)",
+    "ack": "Accusé de réception",
+    "ackValue": "Envoyé en message privé sur Discord et conservé sur ce compte sous Abonnement",
+    "daysUsed": "Jours utilisés",
+    "daysUsedValue": "{used} sur {total}",
+    "refundDue": "Remboursement dû",
+    "refundTest": "{amount} (commande de test : rien n’a été débité, rien n’est remboursé)",
+    "statementPersonal": "Déclaration : je me rétracte de mon contrat pour cette commande. Les jours non utilisés sont retirés de ma formule dès maintenant.",
+    "statementGift": "Déclaration : je me rétracte de mon contrat pour cette commande. Une clé cadeau non utilisée est annulée ; si elle a été utilisée, ses jours non utilisés sont retirés de la formule concernée.",
+    "button": "Confirmer la rétractation"
+  },
+  "withdrawalAck": {
+    "title": "Rétractation de la commande n° {id}",
+    "heading": "Nous avons reçu ta rétractation",
+    "received": "Reçue le",
+    "receivedValue": "{date} ({utc} UTC)",
+    "name": "Nom",
+    "account": "Compte",
+    "contract": "Contrat",
+    "statement": "Déclaration",
+    "statementValue": "Je me rétracte de mon contrat pour cette commande.",
+    "daysUsed": "Jours utilisés",
+    "daysUsedEnded": "{used} sur {total} · la formule a pris fin",
+    "refundDue": "Remboursement dû",
+    "dmFailed": "Le message privé Discord contenant cet accusé de réception n’a pas pu être remis (tes messages privés sont peut-être fermés). Enregistre ou imprime cette page ; elle reste aussi sur ton compte.",
+    "dmNote": "Cet accusé de réception t’est aussi envoyé en message privé sur Discord et reste sur ton compte."
+  },
+  "errors": {
+    "notAllowed": "Non autorisé",
+    "purchaseOrigin": "Cet achat ne provient pas de ce site. Rien n’a été acheté.",
+    "redeemOrigin": "Ce formulaire ne provient pas de ce site. Rien n’a été utilisé.",
+    "withdrawOrigin": "Ce formulaire ne provient pas de ce site. Aucune rétractation n’a été enregistrée.",
+    "notFound": "Introuvable",
+    "noOrder": "Cette commande n’existe pas sur ton compte.",
+    "noWithdrawal": "Il n’y a pas de rétractation pour cette commande sur ton compte.",
+    "periodOver": "Délai de rétractation écoulé",
+    "periodOverText": "Le délai de rétractation de {days} jours pour la commande n° {id} a pris fin le {date}. Contacte-nous si tu penses que c’est une erreur.",
+    "tooManyTries": "Trop de tentatives. Attends une minute et réessaie."
+  },
+  "flash": {
+    "redeemed": "Clé utilisée : Mewvo {plan}, {days} jours ajoutés. Active jusqu’au {until}.",
+    "redeemedConverted": "Clé utilisée : Mewvo {plan}, {days} jours ajoutés. Ta durée {fromPlan} restante a été convertie. Active jusqu’au {until}."
+  },
+  "planButtons": {
+    "buy": "Acheter {plan}",
+    "gift": "L’offrir"
+  }
+}
