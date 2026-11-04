@@ -174,7 +174,9 @@ export function createMemoryAccountStore({
         let removed = 0;
         for (const [id, a] of accounts) {
             const everLinked = [...bonuses.values()].some((b) => b.account_id === id);
-            if (!a.discord_user_id && !a.email_confirmed_at && !everLinked && new Date(a.created_at).getTime() <= now() - UNLINKED_KEEP_MS) { await deleteAccount(id); removed += 1; }
+            const cutoff = now() - UNLINKED_KEEP_MS;
+            const idle = !a.email_confirmed_at || new Date(a.last_login_at || a.created_at).getTime() <= cutoff;
+            if (!a.discord_user_id && idle && !everLinked && new Date(a.created_at).getTime() <= cutoff) { await deleteAccount(id); removed += 1; }
         }
         return { accounts: removed, tokens: 0 };
     }

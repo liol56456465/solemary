@@ -1102,6 +1102,8 @@ export function dashboardRouter(d) {
     router.post('/owner/premium/end', ...owner, form, safe(ow.premiumEnd));
     router.post('/owner/premium/grant', ...owner, form, safe(ow.premiumGrant));
     router.post('/owner/premium/roles', ...owner, form, safe(ow.premiumRolesSave));
+    router.post('/owner/erase/preview', ...owner, form, safe(ow.erasePreview));
+    router.post('/owner/erase', ...owner, form, safe(ow.eraseRun));
     router.get('/owner', ...owner, ow.index);
     router.get('/owner/home', ...owner, safe(ow.home));
     router.get('/owner/activity', ...owner, safe(ow.activity));
@@ -1113,6 +1115,7 @@ export function dashboardRouter(d) {
     router.get('/owner/blacklist', ...owner, safe(ow.blacklist));
     router.get('/owner/health', ...owner, safe(ow.health));
     router.get('/owner/commands', ...owner, safe(ow.commands));
+    router.get('/owner/erase', ...owner, safe(ow.erase));
     router.get('/owner/announce', ...owner, safe(ow.announce));
     router.get('/owner/premium', ...owner, safe(ow.premium));
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).

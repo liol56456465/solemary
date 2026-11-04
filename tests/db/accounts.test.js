@@ -158,19 +158,23 @@ test('1-letter claim (link number 1-30 only), deletion keeps the bonus row, acco
     assert.equal(String((await store.bonusOf(ids[4])).account_id), String(b.id));
 });
 
-test('prune: accounts that never linked Discord, older than 7 days; linked, unlinked-later and email-confirmed ones stay', { skip }, async () => {
+test('prune: accounts that never linked Discord, older than 7 days (email-confirmed ones once idle 7 days); linked, unlinked-later and recently used ones stay', { skip }, async () => {
     const old = await make(7);
     const linked = await make(8);
     const legacy = await make(9);
     const unlinked = await make(10);
+    const legacyIdle = await make(13);
     await store.linkDiscord({ accountId: linked.id, discordUserId: ids[5] });
-    await pgDb.pool.query('UPDATE member_accounts SET email_confirmed_at = NOW() WHERE id = $1', [legacy.id]);
+    await pgDb.pool.query('UPDATE member_accounts SET email_confirmed_at = NOW() WHERE id = ANY($1)', [[legacy.id, legacyIdle.id]]);
+    await pgDb.pool.query(`UPDATE member_accounts SET last_login_at = NOW() - INTERVAL '1 day' WHERE id = $1`, [legacy.id]);
+    await pgDb.pool.query(`UPDATE member_accounts SET last_login_at = NOW() - INTERVAL '8 days' WHERE id = $1`, [legacyIdle.id]);
     await pgDb.pool.query('UPDATE member_account_bonuses SET account_id = $2 WHERE discord_user_id = $1', [ids[5], linked.id]);
     // "unlinked": had the bonus row of an earlier link, Discord removed since.
     await pgDb.pool.query(`INSERT INTO member_account_bonuses (discord_user_id, account_id, link_number) VALUES ($1, $2, (SELECT COALESCE(MAX(link_number), 0) + 1000 FROM member_account_bonuses))`, [ids[0], unlinked.id]);
-    await pgDb.pool.query(`UPDATE member_accounts SET created_at = NOW() - INTERVAL '8 days' WHERE id = ANY($1)`, [[old.id, linked.id, legacy.id, unlinked.id]]);
+    await pgDb.pool.query(`UPDATE member_accounts SET created_at = NOW() - INTERVAL '9 days' WHERE id = ANY($1)`, [[old.id, linked.id, legacy.id, unlinked.id, legacyIdle.id]]);
     const result = await store.prune();
-    assert.ok(result.accounts >= 1);
+    assert.ok(result.accounts >= 2);
     assert.equal(await store.findById(old.id), null);
+    assert.equal(await store.findById(legacyIdle.id), null, 'email-confirmed, never linked, idle 8 days');
     for (const kept of [linked, legacy, unlinked]) assert.ok(await store.findById(kept.id), kept.username);
 });

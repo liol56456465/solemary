@@ -25,6 +25,7 @@ import { accountStore } from './services/accounts/accountStore.js';
 import { remindStaleAppeals } from './services/enforcement/appealStatusService.js';
 import { flushActivity, pruneActivity } from './services/stats/activityService.js';
 import { purgeIncidentTimelines } from './services/automod/incidentTimeline.js';
+import { runRetention, scheduleRetention } from './services/privacy/retentionService.js';
 import { checkCatGrowth } from './services/community/catService.js';
 import { query as enforcementQuery } from './services/enforcement/db.js';
 import { importModmailTopicsOnce } from './services/modmailLinks.js';
@@ -428,6 +429,14 @@ class Mewvo extends Client {
     cron.schedule('45 3 * * *', exclusive('activity_prune', () => pruneActivity()), { timezone: 'UTC' });
     // Raid timeline incidents (dashboard Raid timeline) are kept 90 days after they ended.
     cron.schedule('55 3 * * *', exclusive('incident_timeline_prune', () => purgeIncidentTimelines()), { timezone: 'UTC' });
+    // Retention (GDPR storage limitation): old watchlist, no-contact, raid-report and verification
+    // data, daily at 03:30 UTC and once ~5 minutes after ready (privacy/retentionService.js).
+    scheduleRetention({
+      schedule: (expression, job, options) => cron.schedule(expression, job, options),
+      wrap: exclusive,
+      run: () => runRetention(this),
+      whenReady: (fn) => (this.isReady() ? fn() : this.once(Events.ClientReady, () => fn())),
+    });
     // The server cat: posts once in the level-up channel when it grows a stage (never per message).
     cron.schedule('*/5 * * * *', exclusive('server_cat_growth', () => checkCatGrowth(this)));
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));

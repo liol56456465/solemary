@@ -24,12 +24,14 @@
 //   GET  /dashboard/owner/premium[?status=]             premium keys (test checkout), subscriptions, orders
 //   POST /dashboard/owner/premium/generate|revoke|end   create keys, cancel an unused key, end a subscription
 //   POST /dashboard/owner/premium/grant|roles           give a plan to a user ID; supporter roles per plan
+//   GET  /dashboard/owner/erase, POST …/preview|erase   erase one case for a privacy request (anonymise an
+//                                                       active ladder warn, delete anything else; caseErase.js)
 //
 // Access: every request checks isBotOwner(session user) live (not the cached access
 // decision); anyone else gets the normal 404 page. POSTs also need: 30/min per session,
 // same origin + CSRF, DASHBOARD_EDIT_ENABLED, and a login younger than 12 hours. Every
 // change writes a dashboard_audit row (module 'owner'). Leaving a server, announcing and
-// re-registering commands need a one-time confirm token (5 minutes, this session) plus a tick-box.
+// re-registering commands and erasing a case need a one-time confirm token (5 minutes, this session) plus a tick-box.
 
 import { ChannelType, PermissionFlagsBits, SnowflakeUtil } from 'discord.js';
 import { readFileSync } from 'node:fs';
@@ -59,7 +61,10 @@ import { KEY_DURATIONS, KEY_VALIDITY, MAX_KEYS_PER_BATCH, keyHint, premiumSettin
 import { afterPremiumChange, tierRoles } from '../billing/premiumEffects.js';
 import { updateSettings } from '../settings/guildSettings.js';
 import { buildDataExport, exportFileName } from '../privacy/dataExport.js';
-import { query } from '../enforcement/db.js';
+import { query, withTransaction } from '../enforcement/db.js';
+import { deleteEvidenceMessages, eraseCase, previewCaseErase } from '../privacy/caseErase.js';
+import { normalizeCaseCode } from '../enforcement/format.js';
+import { eraseConfirmPage, erasePage } from './ownerErasePages.js';
 import { getFromDb } from '../../utils/database/wrapper.js';
 import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
 import {
@@ -416,6 +421,10 @@ export const defaultOwnerDeps = {
     savePremiumRoles: (guildId, value, actor) => updateSettings(guildId, { premiumRoleIds: value }, { ...actor, module: 'owner' }),
     // A data request that came by email or in the support server (Privacy Policy, GDPR Art. 15).
     exportUserData: (userId) => buildDataExport(userId, { query, readKey: (key) => getFromDb(key, null) }),
+    // Erase a case for a privacy request (GDPR Art. 17); runs only on the owner's confirm.
+    previewCaseErase: (code) => previewCaseErase(code, { query }),
+    eraseCase: (code) => eraseCase(code, { withTransaction }),
+    deleteEvidenceMessages,
 };
 
 // ── Handlers ──────────────────────────────────────────────────────────────
@@ -1108,6 +1117,58 @@ export function createOwnerHandlers(core) {
         return res.redirect(303, path('/owner/premium'));
     }, { rerender: rerenderPremium });
 
+    // ── Erase a case (privacy request) ───────────────────────────────────
+
+    const ERASE_UNAVAILABLE = 'The database is not responding. Nothing was changed; try again in a few minutes.';
+
+    async function renderErase(req, res, status = 200, error = null) {
+        let code = '';
+        try { code = text(req.body, 'code', 10); } catch { code = ''; }
+        return sendHtml(res, status, erasePage({ ...page(req), flash: takeFlash(req), error, code }));
+    }
+
+    const erase = (req, res) => renderErase(req, res);
+
+    const erasePreview = ownerPost(async (req, res) => {
+        const raw = text(req.body, 'code', 10);
+        let preview;
+        try {
+            preview = await o.previewCaseErase(raw);
+        } catch (error) {
+            logger.error(`Owner case erase preview failed: ${error.message}`);
+            return fail(res, 503, 'Database unavailable', ERASE_UNAVAILABLE, req);
+        }
+        if (preview.refusal) throw new InputError(preview.refusal);
+        const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: `erase:${preview.code}`, payload: { code: preview.code } });
+        return sendHtml(res, 200, eraseConfirmPage({ ...page(req), preview, token, hash }));
+    }, { rerender: renderErase });
+
+    const eraseRun = ownerPost(async (req, res) => {
+        const code = normalizeCaseCode(text(req.body, 'code', 10));
+        if (!code) throw new InputError('That is not a case code (5 to 7 letters and digits).');
+        const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: `erase:${code}`, hash: text(req.body, 'fh', 100) });
+        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; start again.');
+        if (text(req.body, 'confirm', 5) !== '1') throw new InputError('Tick the box to confirm. Nothing was done; start again.');
+        let result;
+        try {
+            result = await o.eraseCase(code);
+        } catch (error) {
+            logger.error(`Owner case erase of ${code} failed (rolled back): ${error.message}`);
+            return fail(res, 503, 'Database unavailable', ERASE_UNAVAILABLE, req);
+        }
+        if (result.refusal) throw new InputError(result.refusal);
+        const images = await o.deleteEvidenceMessages(client, result.evidenceMessages);
+        const done = result.mode === 'anonymise' ? 'anonymised' : 'deleted';
+        // No case content in the audit row: only what was done.
+        await audit(req, [{ key: `privacy.erase.${code}`, old: { type: result.type, guildId: result.guildId }, new: done }]);
+        logger.warn(`Dashboard owner ${req.dashboard.session.userId} erased case ${code} (${done})`);
+        const imageText = result.evidenceMessages.length
+            ? ` Evidence images in Discord: ${images.deleted} deleted${images.failed ? `, ${images.failed} could not be deleted (remove them in the evidence channel)` : ''}.`
+            : '';
+        await flash(req, `Case ${code} ${done}.${imageText}`);
+        return res.redirect(303, path('/owner/erase'));
+    }, { rerender: renderErase });
+
     const index = (req, res) => res.redirect(302, path('/owner/home'));
 
     return {
@@ -1115,5 +1176,6 @@ export function createOwnerHandlers(core) {
         servers, server, invite, leavePreview, leave, users, userData, blacklist, blacklistAdd, blacklistRemove,
         health, maintenance, commands, registerPreview, register, announce, announcePreview, announceSend,
         premium, premiumGenerate, premiumRevoke, premiumEnd, premiumGrant, premiumRolesSave,
+        erase, erasePreview, eraseRun,
     };
 }
