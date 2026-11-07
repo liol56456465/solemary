@@ -157,7 +157,7 @@ export default {
             .setMaxLength(20))
         .addBooleanOption((option) => option
             .setName('unappealable')
-            .setDescription('Ban only: preview an unappealable ban')),
+            .setDescription('Ban only: preview a ban they cannot appeal')),
 
     async execute(interaction) {
         if (interaction.guildId !== enforcementConfig.mainGuildId) {

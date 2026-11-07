@@ -206,7 +206,7 @@ export async function setTrusted(guildId, { roleId = undefined, minLevel = undef
 }
 
 export async function setSecondChance(guildId, enabled) {
-    requireBoolean(enabled, 'Second chance');
+    requireBoolean(enabled, 'Friendly notice for a first small offence');
     return updateAutomodSettings(guildId, { secondChance: enabled });
 }
 
@@ -216,11 +216,11 @@ export async function setSecondChance(guildId, enabled) {
  * NSFW, ads, mentions, spam, raids) are refused.
  */
 export async function setHeadsUp(guildId, ruleKey, enabled) {
-    requireBoolean(enabled, 'Heads-up first');
+    requireBoolean(enabled, 'Warn privately first');
     const key = headsUpSettingKey(ruleKey);
     if (!key) {
         if (typeof ruleKey === 'string' && (HEADS_UP_NEVER.includes(ruleKey) || Object.hasOwn(AUTOMOD_RULES, ruleKey))) {
-            throw userError('Heads-up first is not available for this rule.');
+            throw userError('Warn privately first (2 min to fix) is not available for this rule.');
         }
         throw userError('Unknown rule.');
     }

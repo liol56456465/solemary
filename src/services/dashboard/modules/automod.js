@@ -158,11 +158,11 @@ function headsUpSnapshot(settings) {
     return Object.fromEntries(HEADS_UP_SETTING_KEYS.map((key) => [key, settings?.headsUp?.[key] !== false]));
 }
 
-const HEADS_UP_HELP = 'Heads-up first: the first time in 30 days, the member gets a private message and 2 minutes to edit or delete the message, and nothing else happens. Personal info is removed at once without a warning. Scam, NSFW, ads, mass mentions, spam, raids and slurs always act at once.';
+const HEADS_UP_HELP = 'Warn privately first (2 min to fix): the first time in 30 days, the member gets a private message and 2 minutes to edit or delete the message, and nothing else happens. Personal info is removed at once without a warning. Scam, NSFW, ads, mass mentions, spam, raids and slurs always act at once.';
 
 function headsUpLine(stats) {
-    if (stats === null) return html`<p class="muted">Heads-up counts could not be read (database).</p>`;
-    return html`<p>Heads-ups in the last 30 days: ${stats.sent} sent, ${stats.fixed} fixed by the member, ${stats.acted} acted on after the wait.</p>`;
+    if (stats === null) return html`<p class="muted">The private first warning counts could not be read (database).</p>`;
+    return html`<p>Private first warnings in the last 30 days: ${stats.sent} sent, ${stats.fixed} fixed by the member, ${stats.acted} acted on after the wait.</p>`;
 }
 
 // ── Test run ──────────────────────────────────────────────────────────────
@@ -183,9 +183,12 @@ ${canAct ? '' : html`<p class="muted">To start a test run you need the Administr
 }
 
 const STRICT_HELP = `"May be too strict" shows when a rule caught at least ${STRICT_MIN_HITS} messages, from at least ${STRICT_MIN_MEMBERS} different members, and at least ${STRICT_MIN_SHARE * 100}% of the checked messages. It is only a hint: members may really break that rule that often. Look at the examples and the matched words before you change anything.`;
-const FIX_HELP = 'The buttons change the rule for the whole server right away, the same as the Rule modes form, and the change is logged. Watch only: staff are told, nothing is deleted. Turn on: the rule follows the main setting. Channel exceptions still apply in their channels.';
+const FIX_HELP = 'The buttons change the rule for the whole server right away, the same as the Rule modes form, and the change is logged. Report only (don\'t delete): staff are told, nothing is deleted. Turn on: the rule follows the main setting. Channel exceptions still apply in their channels.';
 // The modes the one-click buttons may set (test-run-rule).
-const QUICK_MODES = { monitor: 'watch only', off: 'off', default: 'on' };
+const QUICK_MODES = { monitor: "report only (don't delete)", off: 'off', default: 'on' };
+// What people see for a rule mode value (the values stay: policy.js RULE_MODES, CHANNEL_RULE_MODES).
+const MODE_WORDS = { on: 'on', monitor: "report only (don't delete)", off: 'off' };
+const modeWord = (mode) => MODE_WORDS[mode] || mode;
 
 function sharePct(count, checked) {
     if (!checked) return '-';
@@ -199,7 +202,7 @@ const strictNote = (entry) => (entry.mayBeTooStrict ? html`<span class="warn">Ca
 function quickRuleButton(ctx, key, mode, label) {
     const ruleLabel = AUTOMOD_RULES[key].label;
     const confirm = mode === 'off' ? `Turn off ${ruleLabel} for the whole server?`
-        : mode === 'monitor' ? `Set ${ruleLabel} to watch only for the whole server?`
+        : mode === 'monitor' ? `Set ${ruleLabel} to report only (don't delete) for the whole server?`
             : `Turn on ${ruleLabel} for the whole server? It follows the main setting.`;
     return buttonForm(ctx, 'automod', 'test-run-rule', label, { rule: key, mode }, { confirm, danger: mode === 'off' });
 }
@@ -209,7 +212,7 @@ function fixButtons(ctx, key, entry, settings, customRules) {
     if (AUTOMOD_RULES[key]) {
         const now = ruleMode(settings, key);
         if (now === 'off') return html`<span class="muted">off now</span>`;
-        return html`${entry.on && now !== 'monitor' ? quickRuleButton(ctx, key, 'monitor', 'Set to watch only') : ''}${quickRuleButton(ctx, key, 'off', 'Turn off')}`;
+        return html`${entry.on && now !== 'monitor' ? quickRuleButton(ctx, key, 'monitor', "Set to report only (don't delete)") : ''}${quickRuleButton(ctx, key, 'off', 'Turn off')}`;
     }
     if (key.startsWith('custom-')) {
         const rule = customRules.find((r) => `custom-${r.id}` === key);
@@ -247,7 +250,7 @@ function testRunResult(ctx, job, data = {}) {
     const channels = (p.channelIds || []).length;
     const rows = Object.entries(r.byRule || {}).sort((a, b) => b[1].count - a[1].count).map(([key, entry]) => {
         let mode = 'draft, not saved';
-        if (key !== DRAFT_KEY) mode = [entry.on ? 'acts' : '', entry.monitor ? 'watch only' : ''].filter(Boolean).join(', ');
+        if (key !== DRAFT_KEY) mode = [entry.on ? 'acts' : '', entry.monitor ? "report only (don't delete)" : ''].filter(Boolean).join(', ');
         return [entry.label, number(entry.count), number(entry.members), sharePct(entry.count, r.checked), mode, strictNote(entry), fixButtons(ctx, key, entry, settings, customRules)];
     });
     const offRows = Object.entries(r.offRules || {}).filter(([key]) => AUTOMOD_RULES[key]).sort((a, b) => b[1].count - a[1].count).map(([key, entry]) => [
@@ -363,16 +366,16 @@ export default {
         const gate = normalizeJoinGate(s.joinGate);
         const ruleKeys = Object.keys(AUTOMOD_RULES);
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
-        const top = html`${postForm(ctx, 'automod', 'mode', html`<div class="grid grid-wide">${selectInput('mode', s.mode, [['enforce', 'Act: delete or warn, then tell staff'], ['monitor', 'Watch only: tell staff, do nothing']], { label: 'What automod does', help: 'Staff are told with a review card: a message in the review channel with buttons to keep or undo what automod did. In watch-only mode the card has an Apply button instead.' })}</div>`)}`;
+        const top = html`${postForm(ctx, 'automod', 'mode', html`<div class="grid grid-wide">${selectInput('mode', s.mode, [['enforce', 'Act: delete or warn, then tell staff'], ['monitor', "Report only (don't delete): tell staff, do nothing"]], { label: 'What automod does', help: 'Staff are told with a review card: a message in the review channel with buttons to keep or undo what automod did. In report only (don\'t delete) mode the card has an Apply button instead.' })}</div>`)}`;
         // Heads-up first: a checkbox on the rules that offer it (policy.js); "headsup-form" marks
         // that the column was on the page, so a missing checkbox means off.
         const headsUpCell = (key) => (headsUpSettingKey(key)
-            ? checkboxInput(`headsup:${headsUpSettingKey(key)}`, headsUpEnabled(s, key), { label: 'Heads-up first' })
+            ? checkboxInput(`headsup:${headsUpSettingKey(key)}`, headsUpEnabled(s, key), { label: 'Warn privately first (2 min to fix)' })
             : html`<span class="muted">acts at once</span>`);
-        const rules = html`${postForm(ctx, 'automod', 'rules', html`<input type="hidden" name="headsup-form" value="1">${table(['Rule', 'Mode', 'Heads-up first'], [
+        const rules = html`${postForm(ctx, 'automod', 'rules', html`<input type="hidden" name="headsup-form" value="1">${table(['Rule', 'Mode', 'Warn privately first (2 min to fix)'], [
             ...ruleKeys.map((key) => [
                 AUTOMOD_RULES[key].label,
-                selectInput(`rule:${key}`, s.ruleModes[key] || 'default', [['default', `default (${s.mode === 'monitor' ? 'monitor' : 'on'})`], ...RULE_MODES.map((m) => [m, m])], { label: '' }),
+                selectInput(`rule:${key}`, s.ruleModes[key] || 'default', [['default', `default (${modeWord(s.mode === 'monitor' ? 'monitor' : 'on')})`], ...RULE_MODES.map((m) => [m, modeWord(m)])], { label: '' }),
                 headsUpCell(key),
             ]),
             ['Custom rules (all)', html`<span class="muted">see Custom rules</span>`, headsUpCell(HEADS_UP_CUSTOM_KEY)],
@@ -381,21 +384,21 @@ ${headsUpLine(data.headsUp)}`;
         const exceptionRows = [];
         for (const [channelId, overrides] of Object.entries(s.channelRules)) {
             for (const [rule, mode] of Object.entries(overrides)) {
-                exceptionRows.push([channelName(g, channelId), AUTOMOD_RULES[rule]?.label || rule, mode,
+                exceptionRows.push([channelName(g, channelId), AUTOMOD_RULES[rule]?.label || rule, modeWord(mode),
                     buttonForm(ctx, 'automod', 'channel-remove', 'Remove', { channel: channelId, rule })]);
             }
         }
         const exceptions = html`${table(['Channel or category', 'Rule', 'Mode', ''], exceptionRows, 'No per-channel rule exceptions.')}
 ${postForm(ctx, 'automod', 'channel-add', html`<div class="grid">${channelPicker(g, 'channel', null, { label: 'Channel or category', kinds: ['text', 'category'], perms: PERMS.read, optional: false, help: 'A category is a folder of channels. Picking one covers every channel in it.' })}
 ${selectInput('rule', ruleKeys[0], ruleKeys.map((k) => [k, AUTOMOD_RULES[k].label]), { label: 'Rule' })}
-${selectInput('mode', 'off', CHANNEL_RULE_MODES.map((m) => [m, m]), { label: 'Mode there', help: 'off: the rule is skipped there. monitor: staff are told, nothing is deleted.' })}</div>`, { submit: 'Add exception' })}`;
+${selectInput('mode', 'off', CHANNEL_RULE_MODES.map((m) => [m, modeWord(m)]), { label: 'Mode there', help: "off: the rule is skipped there. report only (don't delete): staff are told, nothing is deleted." })}</div>`, { submit: 'Add exception' })}`;
         const exempt = html`${table(['Channel', ''], s.exemptChannelIds.map((id) => [channelName(g, id), buttonForm(ctx, 'automod', 'exempt-remove', 'Remove', { channel: id })]), 'Automod checks every channel.')}
 ${postForm(ctx, 'automod', 'exempt-add', channelPicker(g, 'channel', null, { label: 'Ignore this channel', kinds: ['text', 'category'], perms: PERMS.read, optional: false, help: 'Automod does not check any messages here.' }), { submit: 'Add', inline: true })}
 ${data.registry.exemptChannelIds.length ? html`<p class="muted">Also ignored (set by the bot owner outside the dashboard): ${data.registry.exemptChannelIds.map((id, i) => html`${i ? ', ' : ''}${channelName(g, id)}`)}</p>` : ''}`;
         const trusted = postForm(ctx, 'automod', 'trusted', html`<div class="grid">
 ${rolePicker(g, 'roleId', s.trusted.roleId, { label: 'Trusted role', assign: false, noneLabel: 'none', help: 'Members with this role are trusted.' })}
 ${numberInput('minLevel', s.trusted.minLevel, { label: 'Or from level', min: 0, max: 1000, help: 'Members at this leveling level or higher are trusted too. 0 turns this off.' })}</div>`);
-        const secondChance = html`${toggleForm(ctx, 'automod', 'second-chance', s.secondChance, { label: 'Second chance: a friendly notice instead of a warning for a first small slip' })}
+        const secondChance = html`${toggleForm(ctx, 'automod', 'second-chance', s.secondChance, { label: 'Friendly notice for a first small offence: a short notice instead of a warning' })}
 `;
         const mood = toggleForm(ctx, 'automod', 'mood', s.moodAlerts, { label: 'Mood alerts: when a channel gets heated, post a calm-down note and slow the chat for a short time' });
         const panic = html`
@@ -445,28 +448,28 @@ ${reviews.length > QUEUE_LISTED ? html`<p class="muted">…and ${reviews.length 
 <p class="muted">Review cards waiting for staff: the ones posted since the bot last started, and the last 50 messages in the review channel that still have buttons. Short lines for small things are not listed. You decide on each card in Discord with its buttons (Keep, Undo, Change, Dismiss).</p>`;
         const probations = data.probations;
         const probation = probations === null
-            ? html`<p class="error" role="alert">Probations could not be read (database). Reload the page to try again.</p>`
+            ? html`<p class="error" role="alert">Extra-watch periods could not be read (database). Reload the page to try again.</p>`
             : table(['Member', 'Until', 'Ban', ''], probations.map((p) => [
                 html`<a href="${path(`/users/${encodeURIComponent(p.userId)}`)}">${memberName(g, p.userId) || p.userId}</a> <span class="muted">${p.userId}</span>`,
                 formatDate(new Date(Number(p.until))),
                 p.caseCode ? html`<a href="${path(`/cases/${encodeURIComponent(p.caseCode)}`)}"><code>${p.caseCode}</code></a>${p.how ? ` (${p.how})` : ''}` : '-',
-                buttonForm(ctx, 'automod', 'probation-end', 'End probation', { user: p.userId }, { confirm: 'End this probation now?', canEdit: canAct }),
-            ]), 'Nobody is on probation.');
+                buttonForm(ctx, 'automod', 'probation-end', 'End extra-watch period', { user: p.userId }, { confirm: 'End this extra-watch period now?', canEdit: canAct }),
+            ]), 'Nobody is in an extra-watch period after a ban.');
         // v6: cards grouped by topic (common.js topic/section).
         const lockdownCard = section('Raid lockdown', lockdownBody, 'A lockdown starts by itself when many accounts join at once.', { size: 'full' });
         const live = topic('Right now', 'What is waiting for staff at this moment.', html`${lockdown?.active ? lockdownCard : ''}
 ${section(`Review queue${reviews ? ` (${reviews.length})` : ''}`, queue, '', { key: 'review-queue' })}
-${section(`Probation${probations ? ` (${probations.length})` : ''}`, probation, 'Members who came back after a ban ended. Automod is stricter with them for a while: they skip straight to the next punishment step, and get no second chance or trusted-member leniency.', { key: 'probation' })}`);
+${section(`Extra-watch period after a ban${probations ? ` (${probations.length})` : ''}`, probation, 'Members who came back after a ban ended. Automod is stricter with them for a while: they skip straight to the next punishment step, and get no friendly notice or trusted-member leniency.', { key: 'probation' })}`);
         const ruleCards = topic('Rules', 'What automod checks, and what it does when a rule is broken.', html`${section('Global mode', top, 'What every rule does unless you change it below.')}
 ${section('Channels and words', channels, 'Where automod talks to staff, and your own blocked words.')}
-${section('Rule modes', rules, `Change single rules. default: does what the main setting above says. on: acts. monitor: only tells staff. off: the rule is not checked. ${HEADS_UP_HELP}`, { size: 'full' })}
+${section('Rule modes', rules, `Change single rules. default: does what the main setting above says. on: acts. report only (don't delete): only tells staff. off: the rule is not checked. ${HEADS_UP_HELP}`, { size: 'full' })}
 ${section('Custom rules', customRulesSection(ctx, data), 'Your own lists of words and phrases to block. Like the built-in rules, they match whole words, do not care about capital letters, and catch look-alike letters (like 0 for o). A match deletes the message and posts a review card. Warn and mute also add it to the member\'s record (a case). They follow the main automod setting and skip ignored channels. How many you can have depends on the server owner\'s plan.', { size: 'full' })}
 ${section('Discord AutoMod', native, 'Discord has its own AutoMod built in. When one of its rules blocks a message, Mewvo can also log it or warn the member.', { size: 'full' })}`);
         // Small switch cards side by side, then the two forms side by side, then the list.
-        const leniency = topic('Exceptions and leniency', 'Where automod looks away, and who gets a softer start.', html`${section('Second chance', secondChance, 'Go easy on a first small slip.')}
+        const leniency = topic('Exceptions and leniency', 'Where automod looks away, and who gets a softer start.', html`${section('Friendly notice for a first small offence', secondChance, 'Go easy on a first small slip.')}
 ${section('Mood', mood, 'Slowmode makes members wait a few seconds between messages.')}
 ${section('Trusted members', trusted, 'Trusted members skip the rules for small things. Serious rules still apply. To turn this off, pick none and set the level to 0.')}
-${section('Channel exceptions', exceptions, 'Turn one rule off, or to watch only, in one channel. For example, allow links in a links channel.')}
+${section('Channel exceptions', exceptions, "Turn one rule off, or to report only (don't delete), in one channel. For example, allow links in a links channel.")}
 ${section('Ignored channels', exempt, 'Channels where automod checks nothing at all.')}`);
         const raids = topic('Raids and new members', 'Checks at the door and what happens when many accounts join at once.', html`${section('Join gate', joinGate, 'Checks new members as they join. For each check: off does nothing; flag tells staff in the review channel, with Kick and Dismiss buttons; kick removes them and sends a private message saying how to come back.')}
 ${section('Panic', panic, 'A raid lockdown starts by itself when many accounts join at once. Panic mode makes it harder for raiders to spread.')}
@@ -483,7 +486,7 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
         },
         async mode(ctx, form) {
             const mode = choiceField(form, 'mode', ['enforce', 'monitor'], 'Mode');
-            return change(ctx, ['mode'], () => ctx.services.setAutomodMode(ctx.guildId, mode), `Global mode: ${mode}.`);
+            return change(ctx, ['mode'], () => ctx.services.setAutomodMode(ctx.guildId, mode), `Global mode: ${mode === 'monitor' ? "Report only (don't delete)" : 'Act'}.`);
         },
         async rules(ctx, form) {
             const before = await ctx.services.getAutomodSettings(ctx.guildId);
@@ -598,8 +601,8 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
             return change(ctx, ['trusted'], () => ctx.services.setTrusted(ctx.guildId, clear ? { clear: true } : { roleId, minLevel }), 'Trusted members saved.');
         },
         async 'second-chance'(ctx, form) {
-            const enabled = boolField(form, 'enabled', 'Second chance');
-            return change(ctx, ['secondChance'], () => ctx.services.setSecondChance(ctx.guildId, enabled), `Second chance is ${enabled ? 'on' : 'off'}.`);
+            const enabled = boolField(form, 'enabled', 'Friendly notice for a first small offence');
+            return change(ctx, ['secondChance'], () => ctx.services.setSecondChance(ctx.guildId, enabled), `Friendly notice for a first small offence is ${enabled ? 'on' : 'off'}.`);
         },
         async mood(ctx, form) {
             const enabled = boolField(form, 'enabled', 'Mood alerts');
@@ -659,10 +662,10 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
             async run(ctx, form) {
                 const userId = userIdField(form, 'user', 'Member');
                 const record = await ctx.services.endProbation(ctx.guildId, userId);
-                if (!record) throw new InputError('That member is not on probation.');
+                if (!record) throw new InputError('That member is not in an extra-watch period.');
                 return {
                     changes: [{ key: `probation:${userId}`, old: { until: new Date(Number(record.until)).toISOString(), caseCode: record.caseCode || null }, new: null }],
-                    message: `Probation for ${memberName(ctx.guild, userId) || userId} ended early.`,
+                    message: `Extra-watch period for ${memberName(ctx.guild, userId) || userId} ended early.`,
                 };
             },
         },

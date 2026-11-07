@@ -756,7 +756,14 @@ test('Words explained and Setup step by step: plain pages, one step at a time, e
     assert.ok(help.includes('<h1>Words explained</h1>'));
     for (const g of GLOSSARY) for (const [term, text] of g.words) {
         assert.ok(!/[\u2014\u2013]/.test(text) && !/\p{Extended_Pictographic}/u.test(text), term);
-        assert.ok(help.includes(`>${term.replace(/&/g, '&amp;')}</dt>`), term);
+        assert.ok(help.includes(`>${escapeHtml(term)}</dt>`), term);
+    }
+    // The plain words from the new-user audit are all explained (2026-11-05).
+    const terms = GLOSSARY.flatMap((g) => g.words.map(([term]) => term));
+    for (const term of ['Remove case', 'Lifted early', 'Warning stage', 'Can they appeal?', 'What staff usually gave for this reason',
+        'Record so far', 'Extra-watch period after a ban', 'Warn privately first (2 min to fix)', 'Friendly notice for a first small offence',
+        "Report only (don't delete)", 'Keep apart', 'Safety limit: too many bans or kicks in 10 minutes', 'Show what changed']) {
+        assert.ok(terms.includes(term), `glossary has ${term}`);
     }
     assert.ok(help.includes('href="/docs/warnings"'), 'website guides keep their path');
     assert.ok(help.includes('href="/dashboard/appeals"'));

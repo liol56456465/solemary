@@ -31,7 +31,7 @@
       "bans": "Bannissements",
       "ladderBans": "Dont bannissements automatiques (échelle d’avertissements)",
       "automod": "Donnés par l’automod",
-      "voided": "Annulés comme erreurs"
+      "voided": "Retirés comme erreurs"
     }
   },
   "appeals": {
@@ -55,11 +55,11 @@
     },
     "notCounted": {
       "question": "Ce qui n’est pas compté",
-      "answer": "Les simulations de test (l’équipe prévisualise un message ; il n’arrive rien à personne), les avertissements importés de l’ancien bot comme historique, et les signalements visant l’équipe. Les dossiers annulés comme erreurs sont exclus des colonnes principales et apparaissent à part dans la colonne « Annulés comme erreurs », selon le mois où ils ont été donnés à l’origine."
+      "answer": "Les simulations de test (l’équipe prévisualise un message ; il n’arrive rien à personne), les avertissements importés de l’ancien bot comme historique, et les signalements visant l’équipe. Les dossiers retirés comme erreurs sont exclus des colonnes principales et apparaissent à part dans la colonne « Retirés comme erreurs », selon le mois où ils ont été donnés à l’origine."
     },
     "appeals": {
       "question": "Appels",
-      "answer": "Les appels sont comptés dans le mois où ils ont été envoyés, avec leur résultat à ce jour. Un appel sur un dossier annulé par la suite compte quand même : l’appel a eu lieu. Les appels clos sans décision sont comptés uniquement comme reçus. Le délai médian va de l’envoi de l’appel à la décision de l’équipe, sur les appels acceptés et refusés du mois."
+      "answer": "Les appels sont comptés dans le mois où ils ont été envoyés, avec leur résultat à ce jour. Un appel sur un dossier retiré par la suite comme erreur compte quand même : l’appel a eu lieu. Les appels clos sans décision sont comptés uniquement comme reçus. Le délai médian va de l’envoi de l’appel à la décision de l’équipe, sur les appels acceptés et refusés du mois."
     },
     "smallNumbers": {
       "question": "Petits nombres",

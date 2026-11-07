@@ -29,7 +29,7 @@
     "items": {
       "enforcement": {
         "name": "Moderación",
-        "text": "Advierte, silencia, expulsa y banea desde un solo panel que primero muestra el historial del miembro. Cada acción es un caso con un código corto que el staff puede editar, anular o al que puede añadir pruebas más adelante.",
+        "text": "Advierte, silencia, expulsa y banea desde un solo panel que primero muestra el historial del miembro. Cada acción es un caso con un código corto que el staff puede editar, quitar si fue un error o al que puede añadir pruebas más adelante.",
         "link": "Primeros pasos"
       },
       "appeals": {

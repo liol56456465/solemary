@@ -114,7 +114,7 @@ export async function buildRecordFlow({ guild, moderator, moderatorId, targetUse
     if (!isKnownReasonKey(reasonKey)) throw new InputError('Choose a reason.');
     Object.assign(flow, reasonPatch(flow, reasonKey));
     const choice = text(form, 'unappealable', 10) || 'default';
-    if (!['default', 'yes', 'no'].includes(choice)) throw new InputError('Appealable: unknown choice.');
+    if (!['default', 'yes', 'no'].includes(choice)) throw new InputError('Can they appeal: unknown choice.');
     const parsed = parseFlowInput(flow, {
         customReason: reasonKey === CUSTOM_REASON_KEY ? text(form, 'custom_reason', 500) : '',
         durationInput: text(form, 'duration', 20),
@@ -140,7 +140,7 @@ export function voidEffect(record) {
     const lift = {
         ban: 'The member is unbanned (and gets an invite back).',
         mute: 'The member is unmuted.',
-        warn: 'The warning stops counting on the warn ladder; a ban it caused is lifted.',
+        warn: 'The warning stops counting toward the warning stages; a ban it caused is lifted.',
         kick: 'There is nothing to lift for a kick; the case is marked as a mistake.',
     }[record.type] || 'What is still in effect is lifted.';
     return `${lift} ${dm}`;
@@ -620,7 +620,7 @@ export function createEnforcementHandlers(core) {
         const owner = e.isBotOwner(req.dashboard.session.userId);
         let guardLeft = Infinity;
         if ((action === 'kick' || action === 'ban') && !owner) {
-            if (await e.getMassActionBlock(guildId, req.dashboard.session.userId)) throw new InputError('You are blocked by the mass-action guard; nothing was done.');
+            if (await e.getMassActionBlock(guildId, req.dashboard.session.userId)) throw new InputError('You are blocked by the safety limit (too many bans or kicks in 10 minutes); nothing was done.');
             guardLeft = Math.max(0, enforcementConfig.massActionLimit - await e.recentBanKickCount(guildId, req.dashboard.session.userId));
         }
         const plan = planBulk({ guild, members, action, role, timeoutKey, actorId: req.dashboard.session.userId, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me, guardLeft });
@@ -751,27 +751,27 @@ export function createEnforcementHandlers(core) {
         if (!text(req.body, 'token', 100)) {
             const reason = text(req.body, 'reason', 500);
             if (!reason) throw new InputError('The reason cannot be empty.');
-            if (record.voided_at) throw new InputError(`Case ${record.case_code} is already voided.`);
+            if (record.voided_at) throw new InputError(`Case ${record.case_code} is already removed.`);
             await freshModerator(req);
             const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: `void:${record.case_code}`, payload: { caseCode: record.case_code, reason } });
             return sendHtml(res, 200, confirmPage({
-                ...shellOf(req), active: 'cases', title: `Void ${record.case_code}`, heading: `Confirm: void case ${record.case_code}`,
+                ...shellOf(req), active: 'cases', title: `Remove ${record.case_code}`, heading: `Confirm: remove case ${record.case_code}`,
                 rows: [
                     { label: 'Case', value: `${record.case_code} · ${record.type} · ${record.name}` },
                     { label: 'Member', value: `${record.target_username} (${record.target_user_id})` },
                     { label: 'Reason (shown to the member)', value: reason },
                     { label: 'Effect', value: voidEffect(record) },
                 ],
-                actionPath: `/cases/${record.case_code}/void`, hidden: { token, fh: hash }, submit: 'Void case', cancelHref: path(`/cases/${record.case_code}`),
+                actionPath: `/cases/${record.case_code}/void`, hidden: { token, fh: hash }, submit: 'Remove case', cancelHref: path(`/cases/${record.case_code}`),
             }));
         }
         const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: `void:${record.case_code}`, hash: text(req.body, 'fh', 100) });
-        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; void the case again.');
+        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; remove the case again.');
         const moderator = await freshModerator(req);
         const admin = { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username };
         const { record: voided, notes, dmDelivered } = await e.voidCase(client, { guildId, caseCode: record.case_code, admin, reason: payload.reason });
         await audit(req, 'cases', [{ key: `${record.case_code}.void`, old: null, new: payload.reason }]);
-        await flash(req, [`Case ${voided.case_code} voided.`, ...notes, `DM to the member: ${dmDelivered ? 'delivered' : 'not delivered'}.`].join(' '));
+        await flash(req, [`Case ${voided.case_code} removed (it no longer counts).`, ...notes, `DM to the member: ${dmDelivered ? 'delivered' : 'not delivered'}.`].join(' '));
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.edit' });
 
@@ -846,21 +846,21 @@ export function createEnforcementHandlers(core) {
         const done = [];
         const skipped = [];
         if (action === 'void') {
-            if (records.length > BULK_VOID_MAX) throw new InputError(`Void at most ${BULK_VOID_MAX} cases at once.`);
+            if (records.length > BULK_VOID_MAX) throw new InputError(`Remove at most ${BULK_VOID_MAX} cases at once.`);
             const reason = text(req.body, 'reason', 500);
-            if (!reason) throw new InputError('Give a reason for voiding (the members see it).');
+            if (!reason) throw new InputError('Give a reason for removing them (the members see it).');
             await freshModerator(req);
             const open = records.filter((r) => !r.voided_at);
-            if (!open.length) throw new InputError('Every ticked case is already voided.');
+            if (!open.length) throw new InputError('Every ticked case is already removed.');
             const payload = { codes: open.map((r) => r.case_code), reason };
             const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'cases:void', payload });
             const already = records.filter((r) => r.voided_at).map((r) => r.case_code);
             return sendHtml(res, 200, confirmPage({
-                ...shellOf(req), active: 'cases', title: 'Void cases', heading: `Confirm: void ${open.length} case${open.length === 1 ? '' : 's'}`,
+                ...shellOf(req), active: 'cases', title: 'Remove cases', heading: `Confirm: remove ${open.length} case${open.length === 1 ? '' : 's'}`,
                 rows: [{ label: 'Reason (shown to the members)', value: reason }],
-                list: { title: `Will be voided (${open.length})`, items: open.map((r) => `${r.case_code} · ${r.type} · ${r.target_username} (${r.target_user_id}): ${voidEffect(r)}`) },
-                notes: already.length ? [`Skipped, already voided: ${already.join(', ')}.`] : [],
-                actionPath: '/cases/bulk/void', hidden: { token, fh: hash }, submit: `Void ${open.length} case${open.length === 1 ? '' : 's'}`, cancelHref: path('/cases'),
+                list: { title: `Will be removed (${open.length})`, items: open.map((r) => `${r.case_code} · ${r.type} · ${r.target_username} (${r.target_user_id}): ${voidEffect(r)}`) },
+                notes: already.length ? [`Skipped, already removed: ${already.join(', ')}.`] : [],
+                actionPath: '/cases/bulk/void', hidden: { token, fh: hash }, submit: `Remove ${open.length} case${open.length === 1 ? '' : 's'}`, cancelHref: path('/cases'),
             }));
         }
         if (records.length > BULK_TAG_MAX) throw new InputError(`Tag at most ${BULK_TAG_MAX} cases at once.`);
@@ -891,16 +891,16 @@ export function createEnforcementHandlers(core) {
         for (const code of payload.codes) {
             const record = await e.getCaseByCode(code);
             if (!record || record.guild_id !== guildId) { skipped.push(`${code} (no longer exists)`); continue; }
-            if (record.voided_at) { skipped.push(`${code} (already voided)`); continue; }
+            if (record.voided_at) { skipped.push(`${code} (already removed)`); continue; }
             try {
                 await e.voidCase(client, { guildId, caseCode: code, admin, reason: payload.reason });
                 await audit(req, 'cases', [{ key: `${code}.void`, old: null, new: payload.reason }]);
                 done.push(code);
             } catch (error) {
-                skipped.push(`${code} (${plainText(error.userMessage || 'not voided')})`);
+                skipped.push(`${code} (${plainText(error.userMessage || 'not removed')})`);
             }
         }
-        await flash(req, `Voided: ${done.join(', ') || 'none'}.${skipped.length ? ` Skipped: ${skipped.join(', ')}.` : ''}`);
+        await flash(req, `Removed: ${done.join(', ') || 'none'}.${skipped.length ? ` Skipped: ${skipped.join(', ')}.` : ''}`);
         return res.redirect(303, path('/cases'));
     }, { rerender: bulkCasesError, perm: 'case.edit' });
 
@@ -1039,13 +1039,13 @@ export function createEnforcementHandlers(core) {
         if (!reason) throw new InputError('A reason is required.');
         const [a, b] = await Promise.all([client.users.fetch(userA).catch(() => null), client.users.fetch(userB).catch(() => null)]);
         if (!a || !b) throw new InputError('One of those IDs is not a Discord user.');
-        if (a.bot || b.bot) throw new InputError('No-contact orders are between members, not bots.');
+        if (a.bot || b.bot) throw new InputError('Keep-apart orders are between members, not bots.');
         const moderator = await freshModerator(req);
         const { order, delivered } = await e.addNoContactOrder(client, {
             guildId, userA, userB, days, reason, createdBy: { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username },
         });
         await audit(req, 'nocontact', [{ key: `order:${order.id}`, old: null, new: { userA, userB, days, reason } }]);
-        await flash(req, `No-contact order #${order.id} started between ${a.username} and ${b.username}. ${delivered.every(Boolean) ? 'Both members were DMed.' : 'A DM could not be delivered to one of them.'}`);
+        await flash(req, `Keep-apart order #${order.id} started between ${a.username} and ${b.username}. ${delivered.every(Boolean) ? 'Both members were DMed.' : 'A DM could not be delivered to one of them.'}`);
         return res.redirect(303, path('/nocontact'));
     }, { rerender: rerenderNoContact, perm: 'nocontact.edit' });
 
@@ -1054,9 +1054,9 @@ export function createEnforcementHandlers(core) {
         if (!/^\d{1,12}$/.test(id)) throw new InputError('Not an order number.');
         const moderator = await freshModerator(req);
         const result = await e.endNoContactOrder(client, { guildId, id: Number(id), endedBy: { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username } });
-        if (!result) throw new InputError(`There is no active no-contact order #${id}.`);
+        if (!result) throw new InputError(`There is no active keep-apart order #${id}.`);
         await audit(req, 'nocontact', [{ key: `order:${id}`, old: 'active', new: 'ended' }]);
-        await flash(req, `No-contact order #${id} ended. ${result.delivered.every(Boolean) ? 'Both members were DMed.' : 'A DM could not be delivered to one of them.'}`);
+        await flash(req, `Keep-apart order #${id} ended. ${result.delivered.every(Boolean) ? 'Both members were DMed.' : 'A DM could not be delivered to one of them.'}`);
         return res.redirect(303, path('/nocontact'));
     }, { rerender: rerenderNoContact, perm: 'nocontact.edit' });
 
@@ -1137,8 +1137,8 @@ export function createEnforcementHandlers(core) {
         const block = await e.getMassActionBlock(guildId, moderatorId);
         if (!block) throw new InputError('That moderator is not blocked.');
         await e.clearMassActionBlock(guildId, moderatorId);
-        await audit(req, 'massguard', [{ key: `block:${moderatorId}`, old: block.until, new: null }], { modLog: true, label: 'Mass-action guard' });
-        await flash(req, `Mass-action block lifted for ${client.users.cache?.get?.(moderatorId)?.username || moderatorId}.`);
+        await audit(req, 'massguard', [{ key: `block:${moderatorId}`, old: block.until, new: null }], { modLog: true, label: 'Safety limit (bans/kicks)' });
+        await flash(req, `Safety limit block lifted for ${client.users.cache?.get?.(moderatorId)?.username || moderatorId}.`);
         return res.redirect(303, path('/staff'));
     }, { rerender: rerenderStaff, need: 'owner', perm: 'staff.manage' });
 

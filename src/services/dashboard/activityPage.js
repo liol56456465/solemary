@@ -23,12 +23,12 @@ export function analyticsSection({ analytics = null, locked = false, days = 30 }
     const ruleName = (key) => AUTOMOD_RULES[String(key).replace(/^automod:/, '')]?.label || String(key).replace(/^automod:/, '');
     const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : '-');
     return html`<section class="card"><h2>Cases per moderator <span class="muted">· last ${days} days</span></h2>
-${analytics.moderators.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Total</th><th>Bans</th><th>Kicks</th><th>Mutes</th><th>Warns</th><th>Voided</th></tr></thead><tbody>
+${analytics.moderators.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Total</th><th>Bans</th><th>Kicks</th><th>Mutes</th><th>Warns</th><th>Removed</th></tr></thead><tbody>
 ${analytics.moderators.map((m) => html`<tr><td>${m.name}</td><td>${m.total}</td><td>${m.ban}</td><td>${m.kick}</td><td>${m.mute}</td><td>${m.warn}</td><td>${m.voided}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">No cases by people in this time.</p>`}</section>
 <section class="card"><h2>Automod rules <span class="muted">· last ${days} days</span></h2>
 ${analytics.rules.length ? html`<div class="scroll"><table><thead><tr><th>Rule</th><th>Actions</th><th>Undone</th><th>Undone share</th></tr></thead><tbody>
 ${analytics.rules.map((r) => html`<tr><td>${ruleName(r.key)}</td><td>${r.total}</td><td>${r.undone}</td><td>${pct(r.undone, r.total)}</td></tr>`)}</tbody></table></div>
-<p class="muted">A rule that is undone often may be too strict: consider monitor mode for it.</p>` : html`<p class="muted">Automod took no action in this time.</p>`}</section>`;
+<p class="muted">A rule that is undone often may be too strict: consider Report only (don't delete) for it.</p>` : html`<p class="muted">Automod took no action in this time.</p>`}</section>`;
 }
 
 export function totals(series) {

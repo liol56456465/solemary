@@ -25,8 +25,8 @@ export async function memberTimeline(guildId, userId, { limit = TIMELINE_LIMIT, 
     for (const r of events.rows) out.push({ at: new Date(r.created_at), kind: r.kind, text: r.kind === 'join' ? 'Joined the server' : 'Left the server' });
     for (const r of cases.rows) {
         out.push({ at: new Date(r.created_at), kind: 'case', code: r.case_code, text: `${r.type} by ${r.is_auto ? 'automod or the ladder' : r.moderator_username}: ${r.reason}` });
-        if (r.voided_at) out.push({ at: new Date(r.voided_at), kind: 'voided', code: r.case_code, text: `${r.type} voided` });
-        else if (r.revoked_at) out.push({ at: new Date(r.revoked_at), kind: 'lifted', code: r.case_code, text: `${r.type} lifted` });
+        if (r.voided_at) out.push({ at: new Date(r.voided_at), kind: 'voided', code: r.case_code, text: `${r.type} removed (a mistake)` });
+        else if (r.revoked_at) out.push({ at: new Date(r.revoked_at), kind: 'lifted', code: r.case_code, text: `${r.type} lifted early` });
     }
     for (const r of appeals.rows) {
         if (r.kind === 'report' && !includeReports) continue; // second guard, after the SQL filter

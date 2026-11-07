@@ -53,7 +53,7 @@ test('titles state the outcome', () => {
     assert.equal(cardTitle(entryFrom(params({ rule: 'nsfw', step: ban(7 * DAY) }))), 'Banned 7 days · NSFW content');
     assert.equal(cardTitle(entryFrom(params({ rule: 'harassment', step: mute(HOUR) }))), 'Muted 1 hour · Harassment');
     assert.equal(cardTitle(entryFrom(params({ rule: 'scam', step: ban(null) }))), 'Permanently banned · Scam or phishing link');
-    assert.equal(cardTitle(entryFrom(params({ rule: 'spam', monitor: true, suggested: mute(HOUR) }))), 'Monitor: would mute 1 hour · Spam');
+    assert.equal(cardTitle(entryFrom(params({ rule: 'spam', monitor: true, suggested: mute(HOUR) }))), "Report only (don't delete): would mute 1 hour · Spam");
     assert.equal(cardTitle(entryFrom(params({ report: { reporter: 'bob', messageId: '1' } }))), 'Member report');
     assert.equal(cardTitle(entryFrom(params({ result: { error: new Error('x') } }))), 'Failed to warn · Excessive caps');
     assert.equal(outcomeLabel(warn), 'Warned');

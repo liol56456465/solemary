@@ -12,7 +12,7 @@
     "closed": "Closed"
   },
   "appeal": {
-    "voided": "Voided: nothing to appeal",
+    "voided": "Removed (a mistake): nothing to appeal",
     "lifted": "Already lifted",
     "unappealable": "Cannot be appealed",
     "ended": "Ended: nothing to appeal",
@@ -29,14 +29,14 @@
   },
   "status": {
     "imported": "history only (imported, does not count)",
-    "voided": "voided: no longer counts",
+    "voided": "removed (a mistake): no longer counts",
     "counts": "counts now",
     "noLongerCounts": "on record, no longer counts",
     "onRecord": "on record",
     "case": {
       "liftedByAppeal": "lifted by appeal",
       "reversed": "reversed by a moderator",
-      "lifted": "lifted",
+      "lifted": "lifted early",
       "appealPending": "appeal pending",
       "expired": "expired",
       "activeAppealDenied": "active, appeal denied",
@@ -44,7 +44,7 @@
     }
   },
   "login": {
-    "lead": "See your own moderation record in {server}: your warnings, warning-ladder level, any active ban or mute, your cases and your appeals.",
+    "lead": "See your own moderation record in {server}: your warnings, warning stage, any active ban or mute, your cases and your appeals.",
     "withDiscord": "Log in with Discord",
     "withAccount": "Log in with a Mewvo account",
     "note": "Mewvo asks Discord only who you are (the identify permission): no email, no servers, nothing else. You only ever see your own record. The login lasts one hour.",
@@ -121,7 +121,7 @@
       "one": "{count} more after it would mean an automatic ban ({ban}).",
       "other": "{count} more after it would mean an automatic ban ({ban})."
     },
-    "limit": "It would reach the warning limit: an automatic ban ({ban}, ladder level {level}).",
+    "limit": "It would reach the warning limit: an automatic ban ({ban}, warning stage {level} of 3).",
     "permanent": "permanent"
   },
   "duration": {

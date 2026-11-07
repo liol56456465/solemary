@@ -65,7 +65,7 @@ const ACTION_LINE = {
     unban: 'Unban',
     unmute: 'Unmute',
     removewarn: 'Warning removed',
-    nocontact: 'No-contact',
+    nocontact: 'Keep apart',
     watch: 'Watchlist',
 };
 

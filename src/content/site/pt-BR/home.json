@@ -29,7 +29,7 @@
     "items": {
       "enforcement": {
         "name": "Moderação",
-        "text": "Advirta, silencie, expulse e bana a partir de um único painel que mostra primeiro o histórico do membro. Cada ação é um caso com um código curto que a equipe pode editar, anular ou complementar com provas depois.",
+        "text": "Advirta, silencie, expulse e bana a partir de um único painel que mostra primeiro o histórico do membro. Cada ação é um caso com um código curto que a equipe pode editar, remover se foi um engano ou complementar com provas depois.",
         "link": "Primeiros passos"
       },
       "appeals": {

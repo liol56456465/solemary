@@ -31,7 +31,7 @@
       "bans": "Banns",
       "ladderBans": "Davon Banns: automatisch (Verwarnungsleiter)",
       "automod": "Durch Automod vergeben",
-      "voided": "Als Fehler annulliert"
+      "voided": "Als Fehler entfernt"
     }
   },
   "appeals": {
@@ -55,11 +55,11 @@
     },
     "notCounted": {
       "question": "Was nicht gezählt wird",
-      "answer": "Testsimulationen (das Team sieht sich eine Nachricht vorab an; niemandem passiert etwas), aus dem alten Bot als Verlauf importierte Verwarnungen und Meldungen über Teammitglieder. Als Fehler annullierte Fälle fehlen in den Hauptspalten und erscheinen separat in der Spalte „Als Fehler annulliert“, nach dem Monat, in dem sie ursprünglich vergeben wurden."
+      "answer": "Testsimulationen (das Team sieht sich eine Nachricht vorab an; niemandem passiert etwas), aus dem alten Bot als Verlauf importierte Verwarnungen und Meldungen über Teammitglieder. Als Fehler entfernte Fälle fehlen in den Hauptspalten und erscheinen separat in der Spalte „Als Fehler entfernt“, nach dem Monat, in dem sie ursprünglich vergeben wurden."
     },
     "appeals": {
       "question": "Einsprüche",
-      "answer": "Einsprüche werden in dem Monat gezählt, in dem sie gesendet wurden, mit ihrem heutigen Ergebnis. Ein Einspruch gegen einen Fall, der später annulliert wurde, zählt trotzdem: Der Einspruch hat stattgefunden. Ohne Entscheidung geschlossene Einsprüche zählen nur als eingegangen. Die mittlere Zeit läuft vom Absenden des Einspruchs bis zur Entscheidung des Teams, über die angenommenen und abgelehnten Einsprüche des Monats."
+      "answer": "Einsprüche werden in dem Monat gezählt, in dem sie gesendet wurden, mit ihrem heutigen Ergebnis. Ein Einspruch gegen einen Fall, der später als Fehler entfernt wurde, zählt trotzdem: Der Einspruch hat stattgefunden. Ohne Entscheidung geschlossene Einsprüche zählen nur als eingegangen. Die mittlere Zeit läuft vom Absenden des Einspruchs bis zur Entscheidung des Teams, über die angenommenen und abgelehnten Einsprüche des Monats."
     },
     "smallNumbers": {
       "question": "Kleine Zahlen",

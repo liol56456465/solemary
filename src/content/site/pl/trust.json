@@ -30,9 +30,9 @@
       "note": "Bez liczonego ostrzeżenia, bez wyciszenia."
     },
     "headsUp": {
-      "label": "Poprawione po przypomnieniu",
-      "noteWithRate": "Członkowie sami poprawili {rate} oznaczonych wiadomości po przypomnieniu.",
-      "noteNoRate": "Jak często członkowie sami poprawiają oznaczoną wiadomość po przypomnieniu."
+      "label": "Poprawione po prywatnym przypomnieniu",
+      "noteWithRate": "Członkowie sami poprawili {rate} oznaczonych wiadomości po prywatnym przypomnieniu.",
+      "noteNoRate": "Jak często członkowie sami poprawiają oznaczoną wiadomość po prywatnym przypomnieniu."
     }
   },
   "facts": {

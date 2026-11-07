@@ -39,8 +39,8 @@
     },
     "lostCode": {
       "q": "Zgubiłem kod sprawy.",
-      "a": "Naciśnij **My standing** na panelu odwołań: zobaczysz swoje ostrzeżenia oraz aktywny ban lub wyciszenie wraz z kodami.",
-      "aPortal": "Naciśnij **My standing** na panelu odwołań: zobaczysz swoje ostrzeżenia oraz aktywny ban lub wyciszenie wraz z kodami. [Moja historia](/me) na tej stronie pokazuje wszystkie twoje sprawy."
+      "a": "Naciśnij **My record** na panelu odwołań: zobaczysz swoje ostrzeżenia oraz aktywny ban lub wyciszenie wraz z kodami.",
+      "aPortal": "Naciśnij **My record** na panelu odwołań: zobaczysz swoje ostrzeżenia oraz aktywny ban lub wyciszenie wraz z kodami. [Moja historia](/me) na tej stronie pokazuje wszystkie twoje sprawy."
     },
     "everyPunishment": {
       "q": "Czy od każdej kary można się odwołać?",

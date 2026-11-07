@@ -14,7 +14,7 @@
       "items": {
         "enforcementsPanel": {
           "term": "Painel /enforcements",
-          "text": "Mostra a idade da conta do membro, o tempo no servidor, as advertências contadas, o nível na escada, as punições ativas e os três últimos casos, e oferece só as ações que fazem sentido no momento (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
+          "text": "Mostra a idade da conta do membro, o tempo no servidor, as advertências contadas, a etapa de advertência (0 a 3), as punições ativas e os três últimos casos, e oferece só as ações que fazem sentido no momento (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
         },
         "reasons": {
           "term": "Motivos",
@@ -37,12 +37,12 @@
           "text": "Recusa o dono do servidor, o bot, você mesmo e qualquer pessoa com cargo igual ou superior. O cargo de Administrador é verificado de novo a cada clique."
         },
         "massActionGuard": {
-          "term": "Proteção contra ações em massa",
+          "term": "Limite de segurança: banimentos ou expulsões demais em 10 minutos",
           "text": "Mais de 5 banimentos ou expulsões em 10 minutos pelo mesmo moderador o bloqueiam por uma hora e alertam o dono. Os silenciamentos têm um limite próprio de 10."
         },
         "caseTools": {
           "term": "Ferramentas de casos",
-          "text": "/case edit, void e history, provas (links de mensagens com um trecho, ou imagens), pesquisa de casos e /background para o histórico completo de um membro."
+          "text": "/case edit, void (remover um caso aplicado por engano) e history, provas (links de mensagens com um trecho, ou imagens), pesquisa de casos e /background para o histórico completo de um membro."
         },
         "warnForMessage": {
           "term": "Warn for this message",
@@ -53,7 +53,7 @@
           "text": "/test envia a você exatamente a mensagem direta que um membro receberia, sem fazer nada."
         },
         "noContactOrders": {
-          "term": "Ordens de não contato",
+          "term": "Manter separados",
           "text": "Peça a dois membros que não entrem em contato um com o outro até um horário definido. Não é uma punição e não conta como advertência."
         }
       }
@@ -79,7 +79,7 @@
           "text": "É possível apelar de um banimento permanente da escada por 6 meses. Depois disso, ou após uma apelação negada, não é mais possível apelar."
         },
         "myStanding": {
-          "term": "My standing (minha situação)",
+          "term": "My record (meu histórico)",
           "text": "Os membros podem ver as próprias advertências e o que a próxima causaria, pelo painel de apelações ou pela página Meu histórico."
         }
       }
@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Painel de apelações",
-          "text": "/setappeal publica o painel com os botões Appeal, My appeals e My standing, no servidor principal e no servidor de suporte."
+          "text": "/setappeal publica o painel com os botões Appeal, My appeals e My record, no servidor principal e no servidor de suporte."
         },
         "appealForm": {
           "term": "Formulário de apelação",
@@ -140,7 +140,7 @@
         },
         "modes": {
           "term": "Modos",
-          "text": "Cada regra fica ativada, em monitoramento (só o cartão) ou desativada, no servidor todo ou por canal. Cargos confiáveis e exceções por canal."
+          "text": "Cada regra fica ativada, em “só avisar (não apagar)” ou desativada, no servidor todo ou por canal. Cargos confiáveis e exceções por canal."
         },
         "hardToDodge": {
           "term": "Difícil de burlar",
@@ -196,7 +196,7 @@
         },
         "moderate": {
           "term": "Moderar",
-          "text": "Visão geral com o que precisa de você, uma caixa de entrada, membros (filtros, cargos, apelidos, castigos, ações em massa), banimentos, casos, apelações, ordens de não contato e atividade da equipe."
+          "text": "Visão geral com o que precisa de você, uma caixa de entrada, membros (filtros, cargos, apelidos, castigos, ações em massa), banimentos, casos, apelações, “Manter separados” e atividade da equipe."
         },
         "settings": {
           "term": "Configurações",

@@ -163,7 +163,7 @@ async function handleNoContact(interaction, client, sub) {
     if (sub === 'add') {
         const userA = interaction.options.getUser('user_a', true);
         const userB = interaction.options.getUser('user_b', true);
-        if (userA.bot || userB.bot) throw userError('No-contact orders are between members, not bots.');
+        if (userA.bot || userB.bot) throw userError('Keep-apart orders are between members, not bots.');
         const { order, delivered } = await addNoContactOrder(client, {
             guildId: interaction.guildId,
             userA: userA.id,
@@ -173,7 +173,7 @@ async function handleNoContact(interaction, client, sub) {
             createdBy: admin,
         });
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed(`No-contact order #${order.id} started`, [
+            embeds: [successEmbed(`Keep-apart order #${order.id} started`, [
                 `**${userA.username}** and **${userB.username}** may not mention or reply to each other until <t:${unixOf(order.until)}:f> (<t:${unixOf(order.until)}:R>).`,
                 'Breaking messages are deleted and logged in the mod log.',
                 dmNote(delivered),
@@ -186,7 +186,7 @@ async function handleNoContact(interaction, client, sub) {
         const lines = rows.map((row) => `**#${row.id}** <@${row.user_a}> ↔ <@${row.user_b}> · until <t:${unixOf(row.until)}:f> · by <@${row.created_by}> · ${truncate(row.reason, 120)}`);
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
-                title: `Active no-contact orders (${rows.length})`,
+                title: `Keep apart: active orders (${rows.length})`,
                 description: lines.length ? fitWholeLines(lines) : 'None. Start one with `/case nocontact add`.',
                 color: 'primary',
             })],
@@ -196,9 +196,9 @@ async function handleNoContact(interaction, client, sub) {
     if (sub === 'end') {
         const id = interaction.options.getInteger('id', true);
         const result = await endNoContactOrder(client, { guildId: interaction.guildId, id, endedBy: admin });
-        if (!result) throw userError(`There is no active no-contact order #${id}. See \`/case nocontact list\`.`);
+        if (!result) throw userError(`There is no active keep-apart order #${id}. See \`/case nocontact list\`.`);
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed(`No-contact order #${id} ended`, [
+            embeds: [successEmbed(`Keep-apart order #${id} ended`, [
                 `<@${result.order.user_a}> and <@${result.order.user_b}> may contact each other again.`,
                 dmNote(result.delivered),
             ].join('\n'))],
@@ -255,7 +255,7 @@ export default {
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('case')
-        .setDescription('Search, edit and void cases, evidence and history, no-contact orders and the watchlist')
+        .setDescription('Search, edit and remove cases, evidence and history, keep-apart orders and the watchlist')
         .addSubcommand((sub) => sub.setName('search').setDescription('Find cases by member, moderator, type, reason, status, date or text')
             .addUserOption((option) => option.setName('member').setDescription('Cases given to this member'))
             .addUserOption((option) => option.setName('moderator').setDescription('Cases given by this moderator'))
@@ -263,7 +263,7 @@ export default {
                 .addChoices(...SEARCH_TYPES.map((type) => ({ name: type, value: type }))))
             .addStringOption((option) => option.setName('reason_key').setDescription('Prebuilt reason (or custom)')
                 .setAutocomplete(true).setMaxLength(50))
-            .addStringOption((option) => option.setName('status').setDescription('active, ended, revoked (lifted early) or voided')
+            .addStringOption((option) => option.setName('status').setDescription('active, ended, revoked (lifted early) or voided (removed as a mistake)')
                 .addChoices(...SEARCH_STATUSES.map((status) => ({ name: status, value: status }))))
             .addStringOption((option) => option.setName('from').setDescription('Given on or after (YYYY-MM-DD, UTC)')
                 .setMinLength(10).setMaxLength(10))
@@ -280,7 +280,7 @@ export default {
                 .setMaxLength(20)))
         .addSubcommand((sub) => sub.setName('void').setDescription('Mark a case as a mistake: lift it and stop it counting')
             .addStringOption(codeOption)
-            .addStringOption((option) => option.setName('reason').setDescription('Why it is voided (shown to the user)')
+            .addStringOption((option) => option.setName('reason').setDescription('Why it is removed as a mistake (shown to the user)')
                 .setRequired(true).setMaxLength(500)))
         .addSubcommand((sub) => sub.setName('history').setDescription("Show a case's edit history and evidence")
             .addStringOption(codeOption))
@@ -307,16 +307,16 @@ export default {
                 .addStringOption(codeOption)
                 .addIntegerOption((option) => option.setName('id').setDescription('Evidence number (#) from /case evidence list')
                     .setRequired(true).setMinValue(1))))
-        .addSubcommandGroup((group) => group.setName('nocontact').setDescription('No-contact orders: two members may not mention or reply to each other')
-            .addSubcommand((sub) => sub.setName('add').setDescription('Start a no-contact order between two members (both are DMed)')
+        .addSubcommandGroup((group) => group.setName('nocontact').setDescription('Keep apart: two members may not mention or reply to each other')
+            .addSubcommand((sub) => sub.setName('add').setDescription('Keep two members apart: start an order (both are DMed)')
                 .addUserOption((option) => option.setName('user_a').setDescription('First member').setRequired(true))
                 .addUserOption((option) => option.setName('user_b').setDescription('Second member').setRequired(true))
                 .addIntegerOption((option) => option.setName('days').setDescription('How many days it lasts')
                     .setRequired(true).setMinValue(1).setMaxValue(NO_CONTACT_MAX_DAYS))
                 .addStringOption((option) => option.setName('reason').setDescription('Why (shown to both members)')
                     .setRequired(true).setMaxLength(500)))
-            .addSubcommand((sub) => sub.setName('list').setDescription('List active no-contact orders'))
-            .addSubcommand((sub) => sub.setName('end').setDescription('End a no-contact order early (both are DMed)')
+            .addSubcommand((sub) => sub.setName('list').setDescription('List active keep-apart orders'))
+            .addSubcommand((sub) => sub.setName('end').setDescription('End a keep-apart order early (both are DMed)')
                 .addIntegerOption((option) => option.setName('id').setDescription('Order number (#) from /case nocontact list')
                     .setRequired(true).setMinValue(1))))
         .addSubcommandGroup((group) => group.setName('watch').setDescription('Staff watchlist: joins, new cases and automod hits go to the mod log')
@@ -408,7 +408,7 @@ export default {
                 guildId: interaction.guildId, caseCode: code, admin, reason,
             });
             return InteractionHelper.safeEditReply(interaction, {
-                embeds: [successEmbed(`Case \`${record.case_code}\` voided`, truncate([
+                embeds: [successEmbed(`Case \`${record.case_code}\` removed (it no longer counts)`, truncate([
                     `${record.type} on **${record.target_username}** no longer counts.`,
                     ...notes,
                     `DM to user: ${dmDelivered ? 'delivered' : 'not delivered'}.`,
@@ -427,7 +427,7 @@ export default {
                 return `${dateStamp(edit.edited_at)} · **${edit.edited_by_username}**: ${what}`;
             });
             if (record.voided_at) {
-                lines.unshift(`**Voided** ${dateStamp(record.voided_at)} by \`${record.voided_by}\`: ${truncate(record.void_reason || '', 300)}`);
+                lines.unshift(`**Removed (a mistake)** ${dateStamp(record.voided_at)} by \`${record.voided_by}\`: ${truncate(record.void_reason || '', 300)}`);
             }
             const evidence = await evidenceDisplay(client, code);
             const noteCount = await caseNotes.countNotes(code);
@@ -466,7 +466,7 @@ export default {
         if (focused.name !== 'code') return interaction.respond([]);
         const rows = await searchCases(interaction.guildId, focused.value);
         await interaction.respond(rows.map((row) => ({
-            name: truncate(`${row.case_code}: ${row.name} (${row.type}, ${row.target_username})${row.voided_at ? ' · voided' : ''}`, 100),
+            name: truncate(`${row.case_code}: ${row.name} (${row.type}, ${row.target_username})${row.voided_at ? ' · removed' : ''}`, 100),
             value: row.case_code,
         })));
     },

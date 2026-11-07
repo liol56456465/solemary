@@ -31,7 +31,7 @@
       "bans": "Bany",
       "ladderBans": "Z banów: automatyczne (drabina ostrzeżeń)",
       "automod": "Nałożone przez automoderację",
-      "voided": "Unieważnione jako pomyłki"
+      "voided": "Usunięte jako pomyłki"
     }
   },
   "appeals": {
@@ -55,11 +55,11 @@
     },
     "notCounted": {
       "question": "Co nie jest liczone",
-      "answer": "Symulacje testowe (ekipa podgląda wiadomość; nikomu nic się nie dzieje), ostrzeżenia zaimportowane ze starego bota jako historia oraz zgłoszenia na członków ekipy. Sprawy unieważnione jako pomyłki są pominięte w głównych kolumnach i pokazane osobno w kolumnie „Unieważnione jako pomyłki”, według miesiąca, w którym je nałożono."
+      "answer": "Symulacje testowe (ekipa podgląda wiadomość; nikomu nic się nie dzieje), ostrzeżenia zaimportowane ze starego bota jako historia oraz zgłoszenia na członków ekipy. Sprawy usunięte jako pomyłki są pominięte w głównych kolumnach i pokazane osobno w kolumnie „Usunięte jako pomyłki”, według miesiąca, w którym je nałożono."
     },
     "appeals": {
       "question": "Odwołania",
-      "answer": "Odwołania są liczone w miesiącu wysłania, z ich dzisiejszym wynikiem. Odwołanie od sprawy, którą później unieważniono, nadal się liczy: odwołanie miało miejsce. Odwołania zamknięte bez decyzji są liczone tylko jako otrzymane. Mediana czasu biegnie od wysłania odwołania do decyzji ekipy, dla przyjętych i odrzuconych odwołań z danego miesiąca."
+      "answer": "Odwołania są liczone w miesiącu wysłania, z ich dzisiejszym wynikiem. Odwołanie od sprawy, którą później usunięto jako pomyłkę, nadal się liczy: odwołanie miało miejsce. Odwołania zamknięte bez decyzji są liczone tylko jako otrzymane. Mediana czasu biegnie od wysłania odwołania do decyzji ekipy, dla przyjętych i odrzuconych odwołań z danego miesiąca."
     },
     "smallNumbers": {
       "question": "Małe liczby",

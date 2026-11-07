@@ -41,14 +41,14 @@ export default {
         .addSubcommand((sub) => sub.setName('activity').setDescription('What each staff member did this week or last week')
             .addStringOption((option) => option.setName('week').setDescription('Which week')
                 .addChoices({ name: 'this week', value: 'this' }, { name: 'last week', value: 'last' })))
-        .addSubcommand((sub) => sub.setName('stats').setDescription('Admins: moderation stats per moderator (actions, appeals, voided cases)')
+        .addSubcommand((sub) => sub.setName('stats').setDescription('Admins: moderation stats per moderator (actions, appeals, removed cases)')
             .addUserOption((option) => option.setName('moderator').setDescription('Only this moderator'))
             .addStringOption((option) => option.setName('period').setDescription('Time period (default: 30 days)')
                 .addChoices(...Object.entries(STATS_PERIODS).map(([value, { label }]) => ({ name: label, value })))))
         .addSubcommand((sub) => sub.setName('coverage').setDescription('Admins: when incidents happen vs when staff are active (weekday × hour)')
             .addStringOption((option) => option.setName('period').setDescription('Time period (default: 7 days)')
                 .addChoices({ name: 'last 7 days', value: '7d' }, { name: 'last 30 days', value: '30d' })))
-        .addSubcommand((sub) => sub.setName('restore').setDescription('Give back removed staff roles and lift a mass-action panel block')
+        .addSubcommand((sub) => sub.setName('restore').setDescription('Give back removed staff roles and lift a safety limit block (too many bans/kicks)')
             .addUserOption((option) => option.setName('user').setDescription('Staff member').setRequired(true))),
 
     async execute(interaction) {
@@ -75,7 +75,7 @@ export default {
                 embeds: [createEmbed({
                     title: truncate(`Moderation stats${moderator ? `, ${moderator.username}` : ''}, ${label}`, 256),
                     description: truncate(rows.length
-                        ? `${rows.map(formatStatsLine).join('\n')}\n\n-# Cases they created (test and automatic cases left out; voided cases are not in the totals). Appeals: decided in this period on their cases.`
+                        ? `${rows.map(formatStatsLine).join('\n')}\n\n-# Cases they created (test and automatic cases left out; removed cases are not in the totals). Appeals: decided in this period on their cases.`
                         : empty, 4096),
                     color: 'primary',
                 })],

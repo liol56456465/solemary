@@ -29,7 +29,7 @@
     "items": {
       "enforcement": {
         "name": "Moderation",
-        "text": "Warn, mute, kick and ban from one panel that shows the member’s history first. Every action is a case with a short code that staff can edit, void or add evidence to later.",
+        "text": "Warn, mute, kick and ban from one panel that shows the member’s history first. Every action is a case with a short code that staff can edit, remove if it was a mistake, or add evidence to later.",
         "link": "Getting started"
       },
       "appeals": {

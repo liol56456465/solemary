@@ -27,7 +27,7 @@ const RULE_CHOICES = Object.entries(AUTOMOD_RULES)
     .sort(([, a], [, b]) => b.severity - a.severity)
     .map(([key, rule]) => ({ name: rule.label.slice(0, 100), value: key }));
 
-const MODE_LABELS = { on: 'on', monitor: 'monitor', off: 'off' };
+const MODE_LABELS = { on: 'on', monitor: "report only (don't delete)", off: 'off' };
 
 const CUSTOM_ACTION_CHOICES = [
     { name: 'delete', value: 'delete' },
@@ -63,10 +63,10 @@ function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
 }
 
-/** "<#1>: English only off, Excessive caps monitor; <#2>: …" */
+/** "<#1>: English only off, Excessive caps report only (don't delete); <#2>: …" */
 function channelExceptions(settings) {
     const parts = Object.entries(settings.channelRules || {}).map(([channelId, rules]) => {
-        const list = Object.entries(rules).map(([rule, mode]) => `${AUTOMOD_RULES[rule]?.label || rule} ${mode}`);
+        const list = Object.entries(rules).map(([rule, mode]) => `${AUTOMOD_RULES[rule]?.label || rule} ${MODE_LABELS[mode] || mode}`);
         return list.length ? `<#${channelId}>: ${list.join(', ')}` : null;
     }).filter(Boolean);
     return parts.length ? parts.join('; ') : 'none';
@@ -98,12 +98,12 @@ async function statusEmbed(guildId) {
         title: 'Automod',
         description: [
             `**Status:** ${settings.enabled ? 'on' : 'off'}`,
-            `**Mode:** ${settings.mode === 'monitor' ? 'monitor (cards only, nothing is done)' : 'enforce (acts, then posts a review card)'}`,
+            `**Mode:** ${settings.mode === 'monitor' ? "report only (don't delete): review cards only, nothing is done" : 'enforce (acts, then posts a review card)'}`,
             `**Lockdown:** ${lockdown?.active ? `active since <t:${Math.floor(new Date(lockdown.startedAt).getTime() / 1000)}:R>, ${lockdown.joinerIds.length} raid joiner(s)` : 'off'}`,
             `**Exempt channels:** ${exempt.length ? exempt.map((id) => `<#${id}>`).join(', ') : 'none'}`,
             `**Channel exceptions:** ${channelExceptions(settings)}`,
             `**Trusted members** (skip ${relaxedRuleLabels()}): ${trustedText(settings.trusted)}`,
-            `**Second chance** (first small offence: a notice, no warning): ${settings.secondChance ? 'on' : 'off'}`,
+            `**Friendly notice for a first small offence** (a notice, no warning): ${settings.secondChance ? 'on' : 'off'}`,
             `**Mood alerts** (calm-down note + slowmode in heated channels): ${settings.moodAlerts ? 'on' : 'off'}`,
             `**Join gate** (new members): ${describeJoinGate(settings.joinGate)}`,
             `**Raid panic mode** (lockdown also pauses invites and DMs): ${settings.panic.enabled ? `on, for ${settings.panic.hours} h` : 'off'}`,
@@ -175,39 +175,39 @@ export default {
         .addSubcommand((sub) => sub.setName('status').setDescription('Show the automod settings and punishments'))
         .addSubcommand((sub) => sub.setName('enable').setDescription('Turn automod on or off')
             .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
-        .addSubcommand((sub) => sub.setName('mode').setDescription('Global mode: enforce (act automatically) or monitor (only review cards)')
+        .addSubcommand((sub) => sub.setName('mode').setDescription("Global mode: enforce (act automatically) or report only (don't delete): review cards only")
             .addStringOption((option) => option.setName('mode').setDescription('Mode').setRequired(true)
-                .addChoices({ name: 'enforce', value: 'enforce' }, { name: 'monitor', value: 'monitor' })))
-        .addSubcommand((sub) => sub.setName('rule').setDescription('Set one rule to on, monitor or off (default: follow the global mode)')
+                .addChoices({ name: 'enforce', value: 'enforce' }, { name: "report only (don't delete)", value: 'monitor' })))
+        .addSubcommand((sub) => sub.setName('rule').setDescription("Set one rule to on, report only (don't delete) or off (default: follow the global mode)")
             .addStringOption((option) => option.setName('rule').setDescription('Rule').setRequired(true).addChoices(...RULE_CHOICES))
             .addStringOption((option) => option.setName('mode').setDescription('Mode for this rule').setRequired(true)
                 .addChoices(
                     { name: 'on (act and post a card)', value: 'on' },
-                    { name: 'monitor (card only)', value: 'monitor' },
+                    { name: "report only (don't delete): review card only", value: 'monitor' },
                     { name: 'off (ignore this rule)', value: 'off' },
                     { name: 'default (follow the global mode)', value: 'default' },
                 )))
-        .addSubcommand((sub) => sub.setName('channel').setDescription('Turn one rule off or to monitor in one channel or category (e.g. English only in #international)')
+        .addSubcommand((sub) => sub.setName('channel').setDescription("Set one rule to off or report only (don't delete) in one channel or category")
             .addChannelOption((option) => option.setName('channel').setDescription('Channel or category').setRequired(true)
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildCategory, ChannelType.GuildVoice))
             .addStringOption((option) => option.setName('rule').setDescription('Rule').setRequired(true).addChoices(...RULE_CHOICES))
             .addStringOption((option) => option.setName('mode').setDescription('Mode in this channel').setRequired(true)
                 .addChoices(
                     { name: 'off (ignore this rule here)', value: 'off' },
-                    { name: 'monitor (card only here)', value: 'monitor' },
+                    { name: "report only (don't delete): review card only here", value: 'monitor' },
                     { name: 'default (remove the exception)', value: 'default' },
                 )))
         .addSubcommand((sub) => sub.setName('trusted').setDescription('Members with this role or level skip the low-severity rules (caps, characters, English only)')
             .addRoleOption((option) => option.setName('role').setDescription('Trusted role'))
             .addIntegerOption((option) => option.setName('min_level').setDescription('Or at least this leveling level (0 = no level criterion)').setMinValue(0).setMaxValue(1000))
             .addBooleanOption((option) => option.setName('clear').setDescription('Remove the trusted role and level')))
-        .addSubcommand((sub) => sub.setName('secondchance').setDescription('First small offence in 30 days: a notice instead of a warning')
+        .addSubcommand((sub) => sub.setName('secondchance').setDescription('Friendly notice for a first small offence in 30 days, instead of a warning')
             .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
         .addSubcommand((sub) => sub.setName('mood').setDescription('Calm-down note and brief slowmode when a channel heats up')
             .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
-        .addSubcommand((sub) => sub.setName('probation').setDescription('Show or end a member\'s probation (rejoined after a ban)')
+        .addSubcommand((sub) => sub.setName('probation').setDescription('Show or end a member\'s extra-watch period after a ban (they rejoined)')
             .addUserOption((option) => option.setName('user').setDescription('Member').setRequired(true))
-            .addBooleanOption((option) => option.setName('end').setDescription('End the probation now')))
+            .addBooleanOption((option) => option.setName('end').setDescription('End the extra-watch period now')))
         .addSubcommand((sub) => sub.setName('exempt').setDescription('Add or remove a channel automod ignores completely (all rules)')
             .addChannelOption((option) => option.setName('channel').setDescription('Channel or category').setRequired(true)
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildCategory)))
@@ -327,11 +327,11 @@ export default {
             const record = end ? await endProbation(guildId, user.id) : await getProbation(guildId, user.id);
             const until = record ? `<t:${Math.floor(Number(record.until) / 1000)}:F>` : null;
             let text;
-            if (end) text = record ? `Probation for <@${user.id}> ended early (it ran until ${until}).` : `<@${user.id}> was not on probation.`;
-            else if (record) text = `<@${user.id}> is on probation until ${until}${record.caseCode ? ` (ban \`${record.caseCode}\` ${record.how || 'ended'})` : ''}. Automod uses the next step of the ladder for them. End it with \`end: true\`.`;
-            else text = `<@${user.id}> is not on probation.`;
+            if (end) text = record ? `The extra-watch period for <@${user.id}> ended early (it ran until ${until}).` : `<@${user.id}> was not in an extra-watch period.`;
+            else if (record) text = `<@${user.id}> is in an extra-watch period after a ban until ${until}${record.caseCode ? ` (ban \`${record.caseCode}\` ${record.how || 'ended'})` : ''}. Automod uses the next step of the ladder for them. End it with \`end: true\`.`;
+            else text = `<@${user.id}> is not in an extra-watch period.`;
             return InteractionHelper.safeEditReply(interaction, {
-                embeds: [end && record ? successEmbed('Probation ended', text) : createEmbed({ title: 'Probation', description: text, color: record ? 'warning' : 'primary' })],
+                embeds: [end && record ? successEmbed('Extra-watch period ended', text) : createEmbed({ title: 'Extra-watch period after a ban', description: text, color: record ? 'warning' : 'primary' })],
             });
         }
 
@@ -343,7 +343,7 @@ export default {
             const mode = interaction.options.getString('mode');
             await setAutomodMode(guildId, mode);
             note = mode === 'monitor'
-                ? 'Monitor mode: automod only posts review cards; nothing is deleted or punished until you apply it. Rules with their own mode (`/automod rule`) keep it.'
+                ? "Report only (don't delete) mode: automod only posts review cards; nothing is deleted or punished until you apply it. Rules with their own mode (`/automod rule`) keep it."
                 : 'Enforce mode: automod deletes and punishes automatically and posts a review card for every decision. Rules with their own mode (`/automod rule`) keep it.';
         } else if (sub === 'rule') {
             const rule = interaction.options.getString('rule');
@@ -352,7 +352,7 @@ export default {
             const label = AUTOMOD_RULES[rule].label;
             note = mode === 'default'
                 ? `**${label}** follows the global mode again.`
-                : `**${label}** is now **${mode}**${mode === 'monitor' ? ': cards only, nothing is done until you apply it' : mode === 'off' ? ': automod ignores it' : ''}.`;
+                : `**${label}** is now **${MODE_LABELS[mode] || mode}**${mode === 'monitor' ? ': cards only, nothing is done until you apply it' : mode === 'off' ? ': automod ignores it' : ''}.`;
         } else if (sub === 'channel') {
             const channel = interaction.options.getChannel('channel');
             const rule = interaction.options.getString('rule');
@@ -361,7 +361,7 @@ export default {
             const label = AUTOMOD_RULES[rule].label;
             note = mode === 'default'
                 ? `**${label}** in <#${channel.id}> follows the rule's normal mode again.`
-                : `**${label}** is **${mode}** in <#${channel.id}>${channel.type === ChannelType.GuildCategory ? ' and the channels in it' : ''} (threads included).`;
+                : `**${label}** is **${MODE_LABELS[mode] || mode}** in <#${channel.id}>${channel.type === ChannelType.GuildCategory ? ' and the channels in it' : ''} (threads included).`;
         } else if (sub === 'trusted') {
             const role = interaction.options.getRole('role');
             const minLevel = interaction.options.getInteger('min_level');
@@ -381,8 +381,8 @@ export default {
             const enabled = interaction.options.getBoolean('enabled');
             await setSecondChance(guildId, enabled);
             note = enabled
-                ? 'Second chance is **on**: a member\'s first offence in 30 days on caps, characters, English only or mild language (no slurs) gets a short notice instead of a warning.'
-                : 'Second chance is **off**: every offence gets the usual punishment.';
+                ? 'Friendly notice for a first small offence is **on**: a member\'s first offence in 30 days on caps, characters, English only or mild language (no slurs) gets a short notice instead of a warning.'
+                : 'Friendly notice for a first small offence is **off**: every offence gets the usual punishment.';
         } else if (sub === 'mood') {
             const enabled = interaction.options.getBoolean('enabled');
             await setMoodAlerts(guildId, enabled);

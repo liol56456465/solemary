@@ -14,7 +14,7 @@
       "items": {
         "enforcementsPanel": {
           "term": "Panel /enforcements",
-          "text": "Zeigt Kontoalter des Mitglieds, Zeit auf dem Server, gezählte Verwarnungen, Stufe auf der Leiter, aktive Strafen und die letzten drei Fälle und bietet dann nur die Aktionen an, die gerade sinnvoll sind (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
+          "text": "Zeigt Kontoalter des Mitglieds, Zeit auf dem Server, gezählte Verwarnungen, Verwarnungsstufe (0 bis 3), aktive Strafen und die letzten drei Fälle und bietet dann nur die Aktionen an, die gerade sinnvoll sind (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
         },
         "reasons": {
           "term": "Gründe",
@@ -37,12 +37,12 @@
           "text": "Lehnt den Server-Eigentümer, den Bot, dich selbst und alle mit gleich hoher oder höherer Rolle ab. Die Administrator-Rolle wird bei jedem Klick erneut geprüft."
         },
         "massActionGuard": {
-          "term": "Schutz vor Massenaktionen",
+          "term": "Sicherheitslimit: zu viele Banns oder Kicks in 10 Minuten",
           "text": "Mehr als 5 Banns oder Kicks in 10 Minuten durch einen Moderator sperren ihn für eine Stunde und alarmieren den Eigentümer. Für Stummschaltungen gilt ein eigenes Limit von 10."
         },
         "caseTools": {
           "term": "Fallwerkzeuge",
-          "text": "/case edit, void und history, Beweise (Nachrichtenlinks mit Auszug oder Bilder), Fallsuche und /background für den vollständigen Verlauf eines Mitglieds."
+          "text": "/case edit, void (irrtümlichen Fall entfernen) und history, Beweise (Nachrichtenlinks mit Auszug oder Bilder), Fallsuche und /background für den vollständigen Verlauf eines Mitglieds."
         },
         "warnForMessage": {
           "term": "Warn for this message",
@@ -53,7 +53,7 @@
           "text": "/test schickt dir genau die Direktnachricht, die ein Mitglied bekommen würde, ohne etwas auszuführen."
         },
         "noContactOrders": {
-          "term": "Kontaktverbote",
+          "term": "Auseinanderhalten",
           "text": "Bitte zwei Mitglieder, bis zu einem festgelegten Zeitpunkt keinen Kontakt zueinander aufzunehmen. Das ist keine Strafe und zählt nicht als Verwarnung."
         }
       }
@@ -79,7 +79,7 @@
           "text": "Gegen einen permanenten Leiter-Bann ist 6 Monate lang Einspruch möglich. Danach, oder nach einem abgelehnten Einspruch, nicht mehr."
         },
         "myStanding": {
-          "term": "My standing",
+          "term": "My record",
           "text": "Mitglieder können ihre eigenen Verwarnungen und die Folge der nächsten nachsehen, im Einspruchs-Panel oder auf der Seite Meine Akte."
         }
       }
@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Einspruchs-Panel",
-          "text": "/setappeal postet das Panel mit den Buttons Appeal, My appeals und My standing, auf dem Hauptserver und dem Support-Server."
+          "text": "/setappeal postet das Panel mit den Buttons Appeal, My appeals und My record, auf dem Hauptserver und dem Support-Server."
         },
         "appealForm": {
           "term": "Einspruchsformular",
@@ -140,7 +140,7 @@
         },
         "modes": {
           "term": "Modi",
-          "text": "Jede Regel ist an, im Beobachtungsmodus (nur Karte) oder aus, global oder pro Kanal. Vertrauenswürdige Rollen und Kanalausnahmen."
+          "text": "Jede Regel ist an, auf „nur melden (nicht löschen)“ oder aus, global oder pro Kanal. Vertrauenswürdige Rollen und Kanalausnahmen."
         },
         "hardToDodge": {
           "term": "Schwer zu umgehen",
@@ -196,7 +196,7 @@
         },
         "moderate": {
           "term": "Moderieren",
-          "text": "Eine Übersicht mit dem, was dich braucht, ein Posteingang, Mitglieder (Filter, Rollen, Spitznamen, Timeouts, Sammelaktionen), Banns, Fälle, Einsprüche, Kontaktverbote und Teamaktivität."
+          "text": "Eine Übersicht mit dem, was dich braucht, ein Posteingang, Mitglieder (Filter, Rollen, Spitznamen, Timeouts, Sammelaktionen), Banns, Fälle, Einsprüche, Auseinanderhalten und Teamaktivität."
         },
         "settings": {
           "term": "Einstellungen",

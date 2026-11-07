@@ -41,7 +41,7 @@
       },
       "automod": {
         "title": "4. Confira o automod",
-        "text": "Na página **Automod**, você escolhe o que o automod faz. Se ainda não tiver certeza, escolha **Watch only** (só observar): assim o automod só conta para a equipe o que teria feito, e nada acontece com ninguém até alguém da equipe concordar. Mude para **Act** (agir) quando confiar nele."
+        "text": "Na página **Automod**, você escolhe o que o automod faz. Se ainda não tiver certeza, escolha **Report only (don't delete)**: assim o automod só conta para a equipe o que teria feito, e nada acontece com ninguém até alguém da equipe concordar. Mude para **Act** (agir) quando confiar nele."
       },
       "try": {
         "title": "5. Teste em você mesmo",
@@ -62,7 +62,7 @@
       },
       "firstAction": {
         "title": "Sua primeira ação",
-        "run": "Use `/enforcements user:@member`. O painel mostra a idade da conta do membro, o tempo no servidor, as advertências contadas, o nível na escada, qualquer punição ativa e os últimos casos. Só você pode vê-lo.",
+        "run": "Use `/enforcements user:@member`. O painel mostra a idade da conta do membro, o tempo no servidor, as advertências contadas, a etapa de advertência (0 a 3), qualquer punição ativa e os últimos casos. Só você pode vê-lo.",
         "action": "Clique na ação: **Ban** (banir), **Kick** (expulsar), **Mute** (silenciar) ou **Warn** (advertir) (ou **Unban**, **Unmute**, **Remove warn** quando se aplicarem).",
         "reason": "Escolha um motivo pronto ou **Custom…** e digite um.",
         "duration": "Para um silenciamento, informe uma duração como `30m`, `24h`, `7d` ou `1mo`. Para um banimento, o mesmo, ou deixe em branco para um banimento permanente.",
@@ -72,7 +72,7 @@
       "everyWeek": {
         "title": "Comandos que você vai usar",
         "background": "O histórico completo de casos de um membro.",
-        "case": "Pesquise casos, edite um motivo ou uma duração, anule um caso aplicado por engano, veja o histórico dele, anexe provas.",
+        "case": "Pesquise casos, edite um motivo ou uma duração, remova um caso aplicado por engano (ele deixa de contar), veja o histórico dele, anexe provas.",
         "appeals": "Aceite ou negue uma apelação pelo código do caso, com uma nota.",
         "test": "Envia a você exatamente a mensagem direta que um membro receberia. Nada é feito com ninguém.",
         "staff": "Atividade e estatísticas da equipe.",
@@ -104,19 +104,19 @@
         "appealText": "Diminui o nível em um, nunca abaixo de 0.",
         "manualBan": "Um banimento aplicado manualmente",
         "manualBanText": "Não move a escada.",
-        "void": "Anular um caso",
-        "voidText": "O caso continua registrado, mas não conta mais.",
+        "void": "Remover um caso",
+        "voidText": "Para um caso aplicado por engano. O caso continua registrado, mas não conta mais.",
         "imported": "Advertências antigas importadas",
         "importedText": "Aparecem só como histórico. Não contam."
       },
-      "standing": "Os membros podem ver em que ponto estão com **My standing** (minha situação) no painel de apelações."
+      "standing": "Os membros podem ver em que ponto estão com **My record** (meu histórico) no painel de apelações."
     },
     "appeals": {
       "title": "Apelações: como funcionam",
       "summary": "Onde apelar, o que o formulário pergunta, quem decide e quanto tempo esperar para tentar de novo.",
       "where": {
         "title": "Onde apelar",
-        "text": "Toda mensagem direta de punição traz o link para apelar ou diz que não é possível apelar. O painel de apelações tem três botões: **Appeal** (apelar), **My appeals** (minhas apelações) e **My standing** (minha situação). Membros silenciados ou advertidos usam o painel do servidor principal. Membros banidos usam o de {support}, que continua acessível depois de um banimento."
+        "text": "Toda mensagem direta de punição traz o link para apelar ou diz que não é possível apelar. O painel de apelações tem três botões: **Appeal** (apelar), **My appeals** (minhas apelações) e **My record** (meu histórico). Membros silenciados ou advertidos usam o painel do servidor principal. Membros banidos usam o de {support}, que continua acessível depois de um banimento."
       },
       "form": {
         "title": "O formulário",
@@ -154,7 +154,7 @@
       "areas": {
         "title": "As quatro áreas",
         "moderate": "Moderate (moderar)",
-        "moderateText": "Overview (o que precisa de você primeiro), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff e Channel tools.",
+        "moderateText": "Overview (o que precisa de você primeiro), Inbox, Members, Banned, Cases, Appeals, Keep apart, Staff e Channel tools.",
         "community": "Community (comunidade)",
         "communityText": "Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community e Join to create.",
         "setup": "Server setup (configuração do servidor)",

@@ -41,7 +41,7 @@
       },
       "automod": {
         "title": "4. Sprawdź automoderację",
-        "text": "Na stronie **Automod** wybierasz, co robi automoderacja. Jeśli nie masz jeszcze pewności, wybierz **Watch only**: wtedy automoderacja tylko mówi ekipie, co by zrobiła, i nikomu nic się nie dzieje, dopóki ktoś z ekipy się nie zgodzi. Przełącz na **Act**, gdy zaczniesz jej ufać."
+        "text": "Na stronie **Automod** wybierasz, co robi automoderacja. Jeśli nie masz jeszcze pewności, wybierz **Report only (don't delete)**: wtedy automoderacja tylko mówi ekipie, co by zrobiła, i nikomu nic się nie dzieje, dopóki ktoś z ekipy się nie zgodzi. Przełącz na **Act**, gdy zaczniesz jej ufać."
       },
       "try": {
         "title": "5. Wypróbuj na sobie",
@@ -62,7 +62,7 @@
       },
       "firstAction": {
         "title": "Twoja pierwsza akcja",
-        "run": "Użyj `/enforcements user:@member`. Panel pokazuje wiek konta członka, czas na serwerze, liczone ostrzeżenia, poziom na drabinie, aktywną karę i ostatnie sprawy. Widzisz go tylko ty.",
+        "run": "Użyj `/enforcements user:@member`. Panel pokazuje wiek konta członka, czas na serwerze, liczone ostrzeżenia, etap ostrzeżeń (0–3), aktywną karę i ostatnie sprawy. Widzisz go tylko ty.",
         "action": "Naciśnij akcję: **Ban**, **Kick**, **Mute** albo **Warn** (lub **Unban**, **Unmute**, **Remove warn**, gdy mają zastosowanie).",
         "reason": "Wybierz gotowy powód albo **Custom…** i wpisz własny.",
         "duration": "Przy wyciszeniu podaj czas trwania, np. `30m`, `24h`, `7d` lub `1mo`. Przy banie tak samo albo zostaw puste pole, aby dać bana na stałe.",
@@ -72,7 +72,7 @@
       "everyWeek": {
         "title": "Komendy, których będziesz używać",
         "background": "Pełna historia spraw członka.",
-        "case": "Wyszukiwanie spraw, edycja powodu lub czasu trwania, unieważnienie błędnej sprawy, jej historia, dołączanie dowodów.",
+        "case": "Wyszukiwanie spraw, edycja powodu lub czasu trwania, usunięcie błędnej sprawy (przestaje się liczyć), jej historia, dołączanie dowodów.",
         "appeals": "Przyjmij lub odrzuć odwołanie według kodu sprawy, z notatką.",
         "test": "Wysyła ci dokładnie tę wiadomość prywatną, którą dostałby członek. Nikomu nic się nie dzieje.",
         "staff": "Aktywność i statystyki ekipy.",
@@ -104,19 +104,19 @@
         "appealText": "Obniża poziom o jeden, nigdy poniżej 0.",
         "manualBan": "Ban nałożony ręcznie",
         "manualBanText": "Nie przesuwa drabiny.",
-        "void": "Unieważnienie sprawy",
-        "voidText": "Sprawa zostaje w historii, ale już się nie liczy.",
+        "void": "Usunięcie sprawy",
+        "voidText": "Dla sprawy nałożonej przez pomyłkę. Sprawa zostaje w historii, ale już się nie liczy.",
         "imported": "Zaimportowane stare ostrzeżenia",
         "importedText": "Pokazywane tylko jako historia. Nie liczą się."
       },
-      "standing": "Członkowie mogą sprawdzić, na którym są stopniu, przyciskiem **My standing** na panelu odwołań."
+      "standing": "Członkowie mogą sprawdzić, na którym są stopniu, przyciskiem **My record** na panelu odwołań."
     },
     "appeals": {
       "title": "Odwołania: jak działają",
       "summary": "Gdzie się odwołać, o co pyta formularz, kto decyduje i po jakim czasie można spróbować ponownie.",
       "where": {
         "title": "Gdzie się odwołać",
-        "text": "Każda wiadomość prywatna o karze zawiera link do odwołania albo informację, że nie można się odwołać. Panel odwołań ma trzy przyciski: **Appeal**, **My appeals** i **My standing**. Wyciszeni lub ostrzeżeni członkowie korzystają z panelu na głównym serwerze. Zbanowani członkowie korzystają z panelu na {support}, do którego mają dostęp także po banie."
+        "text": "Każda wiadomość prywatna o karze zawiera link do odwołania albo informację, że nie można się odwołać. Panel odwołań ma trzy przyciski: **Appeal**, **My appeals** i **My record**. Wyciszeni lub ostrzeżeni członkowie korzystają z panelu na głównym serwerze. Zbanowani członkowie korzystają z panelu na {support}, do którego mają dostęp także po banie."
       },
       "form": {
         "title": "Formularz",
@@ -154,7 +154,7 @@
       "areas": {
         "title": "Cztery obszary",
         "moderate": "Moderate",
-        "moderateText": "Overview (co wymaga twojej uwagi w pierwszej kolejności), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff i Channel tools.",
+        "moderateText": "Overview (co wymaga twojej uwagi w pierwszej kolejności), Inbox, Members, Banned, Cases, Appeals, Keep apart, Staff i Channel tools.",
         "community": "Community",
         "communityText": "Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community i Join to create.",
         "setup": "Server setup",

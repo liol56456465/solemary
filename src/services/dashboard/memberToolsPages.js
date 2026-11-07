@@ -173,7 +173,7 @@ ${noRoles ? (noRoles.rows.length ? html`<ul class="skip-list">${noRoles.rows.map
         : html`<p class="muted">The bot cannot see the main server right now.</p>`}</section>`;
     const kinds = (r) => [['warns', 'warn'], ['mutes', 'mute'], ['kicks', 'kick'], ['bans', 'ban']].filter(([k]) => r[k]).map(([k, w]) => `${r[k]} ${w}${r[k] === 1 ? '' : 's'}`).join(', ');
     const offendersCard = html`<section class="card"><h2>Repeat offenders (last ${OFFENDER_DAYS} days)</h2>
-<p class="muted">Members with two or more cases (voided, imported and test cases left out).</p>
+<p class="muted">Members with two or more cases (removed, imported and test cases left out).</p>
 ${offenders ? (offenders.length ? html`<div class="table-wrap"><table><thead><tr><th>Member</th><th>Cases</th><th>Last</th></tr></thead><tbody>${offenders.map((r) => html`<tr><td><a href="${userHref(r.userId)}">${r.username}</a> <small class="muted">${r.userId}</small></td><td>${r.cases}<br><small class="muted">${kinds(r)}</small></td><td class="nowrap">${formatDate(r.lastAt)}</td></tr>`)}</tbody></table></div>` : html`<p class="empty">Nobody has two or more cases in the last ${OFFENDER_DAYS} days.</p>`)
         : html`<p class="error" role="alert">${offendersError || 'Could not be loaded.'}</p>`}</section>`;
     const inactiveCard = html`<section class="card"><h2>Inactive members (no XP for ${INACTIVE_DAYS}+ days)</h2>

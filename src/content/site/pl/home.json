@@ -29,7 +29,7 @@
     "items": {
       "enforcement": {
         "name": "Moderacja",
-        "text": "Ostrzeżenie, wyciszenie, wyrzucenie i ban z jednego panelu, który najpierw pokazuje historię członka. Każda akcja to sprawa z krótkim kodem, którą ekipa może później edytować, unieważnić lub uzupełnić o dowody.",
+        "text": "Ostrzeżenie, wyciszenie, wyrzucenie i ban z jednego panelu, który najpierw pokazuje historię członka. Każda akcja to sprawa z krótkim kodem, którą ekipa może później edytować, usunąć, jeśli była pomyłką, lub uzupełnić o dowody.",
         "link": "Pierwsze kroki"
       },
       "appeals": {

@@ -153,10 +153,10 @@ export function muteEndedDm(record, { early = false } = {}) {
  */
 export function caseVoidedDm(record, reason, inviteUrl = null) {
     return withPrivacyLine([
-        `**A ${record.type} on your record in ${serverName} was voided**`,
+        `**A ${record.type} on your record in ${serverName} was removed**`,
         `Case code: ${record.case_code}`,
         `Reason: ${reason}`,
-        'It no longer counts against you.',
+        'Staff removed it as a mistake. It no longer counts against you.',
         inviteUrl ? `You were unbanned. Rejoin: ${inviteUrl}` : null,
     ].filter(Boolean).join('\n'));
 }
@@ -165,7 +165,7 @@ export function caseVoidedDm(record, reason, inviteUrl = null) {
 export function noContactStartedDm(order, other) {
     const otherName = other ? `**${other.username}**` : 'another member';
     return withPrivacyLine([
-        `**No-contact order in ${serverName}**`,
+        `**Keep apart: an order in ${serverName}**`,
         `Staff have asked you and ${otherName} not to contact each other until ${stamp(order.until)}.`,
         'Until then, do not mention or reply to them in the server: those messages are removed.',
         `Reason: ${order.reason}`,
@@ -176,7 +176,7 @@ export function noContactStartedDm(order, other) {
 /** Sent to both members when a no-contact order ends (early by staff, or it expired). */
 export function noContactEndedDm(order, other, { early = false } = {}) {
     return withPrivacyLine([
-        `**Your no-contact order in ${serverName} has ended**`,
+        `**Your keep-apart order in ${serverName} has ended**`,
         `${early ? 'Staff ended it early.' : 'It expired.'} You may contact ${other ? `**${other.username}**` : 'the other member'} again.`,
     ].join('\n'));
 }

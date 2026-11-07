@@ -39,8 +39,8 @@
     },
     "lostCode": {
       "q": "He perdido mi código de caso.",
-      "a": "Pulsa **My standing** en el panel de apelaciones: muestra tus advertencias y cualquier baneo o silenciamiento activo con sus códigos.",
-      "aPortal": "Pulsa **My standing** en el panel de apelaciones: muestra tus advertencias y cualquier baneo o silenciamiento activo con sus códigos. [Mi historial](/me) en este sitio muestra todos tus casos."
+      "a": "Pulsa **My record** en el panel de apelaciones: muestra tus advertencias y cualquier baneo o silenciamiento activo con sus códigos.",
+      "aPortal": "Pulsa **My record** en el panel de apelaciones: muestra tus advertencias y cualquier baneo o silenciamiento activo con sus códigos. [Mi historial](/me) en este sitio muestra todos tus casos."
     },
     "everyPunishment": {
       "q": "¿Se puede apelar cualquier sanción?",

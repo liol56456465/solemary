@@ -61,5 +61,5 @@ test('search view text: filters summary and a result row', () => {
         case_code: 'abcde', name: 'kit warn 1', type: 'warn', target_username: 'kit', moderator_username: 'mod',
         created_at: new Date('2025-01-02T00:00:00Z'), status: 'revoked', voided_at: new Date(),
     });
-    assert.equal(line, '`abcde` **kit warn 1** · warn · kit · by mod · <t:1735776000:d> · voided');
+    assert.equal(line, '`abcde` **kit warn 1** · warn · kit · by mod · <t:1735776000:d> · removed (a mistake)');
 });

@@ -39,8 +39,8 @@
     },
     "lostCode": {
       "q": "J’ai perdu mon code de dossier.",
-      "a": "Appuie sur **My standing** dans le panneau d’appel : il liste tes avertissements et tout bannissement ou mise en sourdine en cours, avec leurs codes.",
-      "aPortal": "Appuie sur **My standing** dans le panneau d’appel : il liste tes avertissements et tout bannissement ou mise en sourdine en cours, avec leurs codes. [Mon dossier](/me) sur ce site affiche tous tes dossiers."
+      "a": "Appuie sur **My record** dans le panneau d’appel : il liste tes avertissements et tout bannissement ou mise en sourdine en cours, avec leurs codes.",
+      "aPortal": "Appuie sur **My record** dans le panneau d’appel : il liste tes avertissements et tout bannissement ou mise en sourdine en cours, avec leurs codes. [Mon dossier](/me) sur ce site affiche tous tes dossiers."
     },
     "everyPunishment": {
       "q": "Peut-on faire appel de toutes les sanctions ?",

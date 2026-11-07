@@ -7,6 +7,7 @@
 import { ENFORCEMENT_REASONS, CUSTOM_REASON_KEY } from '../../config/enforcement.js';
 import { ACTION_LABELS, RECORD_ACTIONS, countedWarnsText } from '../enforcement/flowBuilder.js';
 import { nextWarningText } from '../enforcement/standingService.js';
+import { ladderStageLabel, ladderStageShort } from '../enforcement/format.js';
 import { caseStatusLabel } from '../enforcement/caseService.js';
 import { MAX_LINKS_PER_FORM, NOTE_MAX as EVIDENCE_NOTE_MAX } from '../enforcement/evidenceService.js';
 import { NO_CONTACT_MAX_DAYS } from '../enforcement/noContactService.js';
@@ -145,7 +146,7 @@ export function bansPage({ session, access = null, moduleStates = {}, list, filt
     const pageLink = (page, label) => html`<a class="btn" href="${path(`/bans${queryString({ ...keep, page: page || '' })}`)}">${label}</a>`;
     const kind = (row) => {
         if (!row.record) return html`<span class="muted">no case (banned outside the bot)</span>`;
-        const ladder = row.record.is_auto ? html` <span class="muted">· warn ladder level ${row.record.ladder_level_after}</span>` : '';
+        const ladder = row.record.is_auto ? html` <span class="muted">· ${ladderStageLabel(row.record.ladder_level_after)}</span>` : '';
         return row.permanent ? html`Permanent${ladder}` : html`Until ${formatDate(row.record.expires_at)}${ladder}`;
     };
     const rows = list?.rows || [];
@@ -183,7 +184,7 @@ function standingSection(view) {
     const pending = [...appealStatuses].filter(([, status]) => status === 'pending').map(([code]) => code);
     return html`<dl>
 <dt>Counted warns</dt><dd>${countedWarnsText(ladder)}${countedWarns.length ? html` · ${countedWarns.map((w, i) => html`${i ? ', ' : ''}${caseLink(w.case_code)}`)}` : ''}</dd>
-<dt>Ladder level</dt><dd>${ladder.level} of 3</dd>
+<dt>Warning stage</dt><dd>${ladderStageShort(ladder.level)}</dd>
 <dt>Next warning</dt><dd>${nextWarningText(ladder)}</dd>
 <dt>Active punishment</dt><dd>${active.length ? active.map((a, i) => html`${i ? '; ' : ''}${a}`) : 'none'}</dd>
 <dt>Pending appeals</dt><dd>${pending.length ? pending.map((code, i) => html`${i ? ', ' : ''}<a href="${path(`/appeals/${encodeURIComponent(code)}`)}"><code>${code}</code></a>`) : 'none'}</dd>
@@ -205,7 +206,7 @@ function memberHeader(view, now) {
     return html`<header class="member-header">${avatar}<div class="member-title"><h1>${user.username}${user.bot ? html` <span class="tag">bot</span>` : ''}</h1>
 <p class="muted"><span class="nowrap">ID ${user.id}</span><span class="nowrap">${joined}</span></p></div>
 <ul class="member-facts"><li><span class="label">Counted warns</span><span class="value">${countedWarnsText(ladder)}</span></li>
-<li><span class="label">Ladder level</span><span class="value">${ladder.level} of 3</span></li>
+<li><span class="label">Warning stage</span><span class="value">${ladderStageShort(ladder.level)}</span></li>
 <li><span class="label">Active</span><span class="value">${active === 'None' ? active : html`<span class="dot dot-bad" aria-hidden="true"></span>${active}`}</span></li></ul></header>`;
 }
 
@@ -246,7 +247,7 @@ ${['q', 'joined', 'state', 'sort'].map((k) => html`<input type="hidden" name="${
 <label class="only-ban">Ban length<input name="duration" maxlength="20" placeholder="e.g. 7d, 1mo, permanent"></label>
 <label class="only-plain">Reason (optional, Discord audit log)<input name="reason" maxlength="${REASON_MAX}"></label>
 </div>
-<p class="muted">Nothing happens yet: the next page shows exactly who will be changed and who is skipped, and why. At most ${BULK_LIMIT} members; kicks and bans only as many as the mass-action guard still allows.</p>
+<p class="muted">Nothing happens yet: the next page shows exactly who will be changed and who is skipped, and why. At most ${BULK_LIMIT} members; kicks and bans only as many as the safety limit (too many bans or kicks in 10 minutes) still allows.</p>
 <div class="form-actions"><button type="submit" class="primary">Preview</button></div></form>`;
 }
 
@@ -259,7 +260,7 @@ export function bulkPreviewPage({ session, access = null, moduleStates = {}, act
     const body = html`<a class="back" href="${path('/users')}">← Members</a>
 <header class="page-head"><h1>${what}: ${plan.run.length} member${plan.run.length === 1 ? '' : 's'}</h1><p class="muted">Check the list. Nothing has been changed yet.</p></header>
 ${precedent ? html`<p class="muted">${precedent}</p>` : ''}
-${destructive && Number.isFinite(guardLeft) ? html`<p class="notice">The mass-action guard allows ${guardLeft} more ban${guardLeft === 1 ? '' : 's'}/kick${guardLeft === 1 ? '' : 's'} in this 10-minute window; members beyond that are skipped.</p>` : ''}
+${destructive && Number.isFinite(guardLeft) ? html`<p class="notice">The safety limit (too many bans or kicks in 10 minutes) allows ${guardLeft} more ban${guardLeft === 1 ? '' : 's'}/kick${guardLeft === 1 ? '' : 's'} in this 10-minute window; members beyond that are skipped.</p>` : ''}
 <section class="card"><h2>Will be changed (${plan.run.length})</h2>${plan.run.length ? html`<ul class="name-list">${plan.run.map((m) => html`<li><a href="${userHref(m.id)}">${m.name}</a></li>`)}</ul>` : html`<p class="empty">Nobody: every selected member is skipped.</p>`}</section>
 ${plan.skipped.length ? html`<section class="card"><h2>Skipped (${plan.skipped.length})</h2><ul class="skip-list">${plan.skipped.map((m) => html`<li><a href="${userHref(m.id)}">${m.name}</a><span class="muted">${m.why}</span></li>`)}</ul></section>` : ''}
 ${plan.run.length ? html`<section class="card confirm-card"><p class="muted">Runs one member at a time (Discord rate limits); you can leave the page and come back to the progress.${destructive ? ' Every member gets the same DM and case as a single action.' : ''} This confirmation works once and expires in 5 minutes.</p>
@@ -332,11 +333,11 @@ function precedentSection(view) {
     return html`<form class="filters" method="get" action="${userHref(view.user.id)}">
 <label>How was this reason handled before?<select name="reason">${option('', 'choose a reason', !reasonKey)}${ENFORCEMENT_REASONS.map((r) => option(r.key, r.label, r.key === reasonKey))}</select></label>
 <button type="submit">Show</button></form>
-${reasonKey ? html`<p>${view.precedent || html`<span class="muted">No precedent available for this reason.</span>`}</p>` : ''}`;
+${reasonKey ? html`<p>${view.precedent || html`<span class="muted">No earlier cases with this reason to compare.</span>`}</p>` : ''}`;
 }
 
 function reasonFields(type, values = {}) {
-    return html`<label>Reason<select name="reason" required>${ENFORCEMENT_REASONS.map((r) => option(r.key, `${r.label}${type === 'ban' && r.severe ? ' (severe: unappealable by default)' : ''}`, values.reason === r.key))}${option(CUSTOM_REASON_KEY, 'Custom…', values.reason === CUSTOM_REASON_KEY)}</select></label>
+    return html`<label>Reason<select name="reason" required>${ENFORCEMENT_REASONS.map((r) => option(r.key, `${r.label}${type === 'ban' && r.severe ? ' (severe: cannot be appealed by default)' : ''}`, values.reason === r.key))}${option(CUSTOM_REASON_KEY, 'Custom…', values.reason === CUSTOM_REASON_KEY)}</select></label>
 <label>Custom reason<input name="custom_reason" maxlength="500" value="${values.custom_reason || ''}"><span class="hint">Only used with "Custom…".</span></label>`;
 }
 
@@ -354,7 +355,7 @@ function actionBlock(view, type, csrf, values = {}) {
     if (RECORD_ACTIONS.has(type)) {
         fields = html`<div class="grid">${reasonFields(type, values)}
 ${type === 'ban' || type === 'mute' ? durationField(type, values.duration || '') : ''}
-${type === 'ban' ? html`<label>Appealable<select name="unappealable">${option('default', 'default (severe reasons: no)', !values.unappealable || values.unappealable === 'default')}${option('no', 'yes, appealable', values.unappealable === 'no')}${option('yes', 'no, unappealable', values.unappealable === 'yes')}</select></label>` : ''}
+${type === 'ban' ? html`<label>Can they appeal?<select name="unappealable">${option('default', 'Default (severe reasons: No)', !values.unappealable || values.unappealable === 'default')}${option('no', 'Yes', values.unappealable === 'no')}${option('yes', 'No', values.unappealable === 'yes')}</select></label>` : ''}
 <label>Name (optional)<input name="name" maxlength="100" value="${values.name || ''}"><span class="hint">Default: ${view.user.username} ${type} &lt;n&gt;</span></label>
 <label class="wide">Evidence (message links, optional)<textarea name="evidence" rows="2" maxlength="1000">${values.evidence || ''}</textarea><span class="hint">Up to ${MAX_LINKS_PER_FORM} links, one per line. Their text is saved now. Images can be uploaded on the case page afterwards.</span></label></div>`;
     } else {
@@ -391,13 +392,13 @@ ${memberHeader(view, now)}
 ${notices({ flash, error, editEnabled, canAct: canAct || limited || can.timeout })}
 ${editEnabled && !canAct && (limited || can.timeout) ? html`<p class="notice">Moderator: you can ${[...actions.map((t) => ACTION_LABELS[t].toLowerCase()), ...(can.timeout ? ['time out'] : [])].join(', ')} here. Ban, unban, roles, nickname and notes need Administrator.</p>` : ''}
 ${section('Profile', profileSection(view.user, view.member, now), '', { key: 'member-profile', open: false })}
-${section('Standing', standingSection(view), '', { key: 'member-standing' })}
+${section('Record so far', standingSection(view), '', { key: 'member-standing' })}
 ${view.member ? section(`Roles (${view.member.roles.length}), nickname and timeout`, memberEditSection(view, can, session.csrf), '', { key: 'member-roles' }) : ''}
-${(view.noContact || []).length ? section('No-contact orders', noContactSection(view.noContact, view.noContactNames), '', { key: 'member-nocontact' }) : ''}
-${section('Actions', html`${view.block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(view.block.until)}; actions will be refused.</p>` : ''}
+${(view.noContact || []).length ? section('Keep apart', noContactSection(view.noContact, view.noContactNames), '', { key: 'member-nocontact' }) : ''}
+${section('Actions', html`${view.block ? html`<p class="error">You are blocked by the safety limit (too many bans or kicks in 10 minutes) until ${formatDate(view.block.until)}; actions will be refused.</p>` : ''}
 ${canWrite || limited ? (actions.length ? html`<p class="muted">Same actions, DMs, ladder and checks as /enforcements. Each one shows a confirmation first.</p>${actions.map((type) => actionBlock(view, type, session.csrf, values.type === type ? values : {}))}` : html`<p class="muted">No actions available.</p>`)
         : html`<p class="muted">Available: ${view.actions.map((t) => ACTION_LABELS[t]).join(', ') || 'none'}.</p>`}`, '', { key: 'member-actions' })}
-${section('Precedent', precedentSection(view), '', { key: 'member-precedent', open: Boolean(view.precedentReason) })}
+${section('What staff usually gave for this reason', precedentSection(view), '', { key: 'member-precedent', open: Boolean(view.precedentReason) })}
 ${section('Timeline', timelineSection(view.timeline), '', { key: 'member-timeline', open: false })}
 ${section(`Case history (${view.casesTotal || 0})`, casesSection(view), '', { key: 'member-cases', open: false })}
 ${section(`Staff notes (${(view.notes || []).length})`, notesSection(view, may('member.notes'), session.csrf), '', { key: 'member-notes' })}`;
@@ -418,7 +419,7 @@ ${summary.notes.map((n) => html`<p>${n}</p>`)}
 ${summary.precedent ? html`<p class="muted">${summary.precedent}</p>` : ''}
 ${summary.memberHint ? html`<p class="muted">${summary.memberHint}</p>` : ''}
 ${summary.ruleHint ? html`<p class="muted">${summary.ruleHint}</p>` : ''}
-${block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(block.until)}; this will be refused.</p>` : ''}
+${block ? html`<p class="error">You are blocked by the safety limit (too many bans or kicks in 10 minutes) until ${formatDate(block.until)}; this will be refused.</p>` : ''}
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
 ${confirmButtons(session.csrf, `/users/${userId}/action/execute`, { submit: `Confirm ${ACTION_LABELS[type].toLowerCase()}`, hidden: { token, fh: hash }, cancelHref: userHref(userId) })}</section>`;
     return layout({ title: `Confirm ${ACTION_LABELS[type]}`, active: 'users', session, access, moduleStates, body });
@@ -434,13 +435,13 @@ export function caseActions({ record, evidence = [], csrf, canWrite, flash = nul
     const top = notices({ flash, error, editEnabled, canAct, actLabel: 'change cases' });
     if (!canWrite) return { top, bottom: '' };
     const bottom = html`<h2>Change this case</h2>
-${record.voided_at ? html`<p class="muted">Voided cases can no longer be edited.</p>` : html`<div class="card"><h3>Edit</h3>
+${record.voided_at ? html`<p class="muted">Removed cases can no longer be edited.</p>` : html`<div class="card"><h3>Edit</h3>
 ${actionForm(csrf, `/cases/${code}/edit`, html`<div class="grid"><label class="wide">New reason<input name="reason" maxlength="500" value="${record.reason}"></label>
 ${timed ? html`<label>New duration<input name="duration" maxlength="20" list="durations-edit" placeholder="unchanged"><span class="hint">Total from when it was given, e.g. 7d, 1mo${record.type === 'ban' ? ', permanent' : ''}.</span></label>
 <datalist id="durations-edit">${DURATION_CHOICES.map((d) => html`<option value="${d}"></option>`)}${record.type === 'ban' ? html`<option value="permanent"></option>` : ''}</datalist>` : ''}</div>`, { submit: 'Save changes' })}</div>
-<div class="card"><h3>Void</h3><p class="muted">Marks the case as a mistake: lifts what is still in effect (unban, unmute, warning removed, ladder stepped back) and DMs the member the reason.</p>
+<div class="card"><h3>Remove case</h3><p class="muted">For a case given by mistake: it stops counting. This lifts what is still in effect (unban, unmute, warning removed, warning stage stepped back) and DMs the member the reason. The case stays on record, marked Removed.</p>
 ${actionForm(csrf, `/cases/${code}/void`, html`<label class="wide">Reason (shown to the member)<input name="reason" maxlength="500" required></label>
-<p class="muted">Nothing happens yet: the next page shows what will be lifted, and you confirm there.</p>`, { submit: 'Void case…', danger: true })}</div>`}
+<p class="muted">Nothing happens yet: the next page shows what will be lifted, and you confirm there.</p>`, { submit: 'Remove case…', danger: true })}</div>`}
 <div class="card"><h3>Evidence</h3>
 ${actionForm(csrf, `/cases/${code}/evidence/add`, html`<div class="grid"><label class="wide">Link (e.g. a Discord message link: its text is saved)<input name="link" maxlength="500" required></label>
 <label class="wide">Note (optional)<input name="note" maxlength="${EVIDENCE_NOTE_MAX}"></label></div>`, { submit: 'Add evidence' })}
@@ -474,7 +475,7 @@ ${r.is_test ? html`<p class="notice">Test case created with /test: nothing was e
 <dt>Given by</dt><dd>${r.moderator_username}${r.is_auto ? ' (automatic, warn ladder)' : ''} · ${formatDate(r.created_at)}</dd>
 ${review.required ? html`<dt>Independent review</dt><dd class="warn">Issued by ${review.issuer}, so it needs a second reviewer</dd>` : ''}
 ${r.type === 'ban' || r.type === 'mute' ? html`<dt>Ends</dt><dd>${r.expires_at ? formatDate(r.expires_at) : 'permanent'}</dd>` : ''}
-${ladder ? html`<dt>Warn ladder</dt><dd>level ${ladder.level}, ${ladder.warns_since_level} counted warn(s)</dd>` : ''}
+${ladder ? html`<dt>Warn ladder</dt><dd>${ladderStageLabel(ladder.level)}, ${ladder.warns_since_level} counted warn(s)</dd>` : ''}
 </dl>
 ${appeal ? html`<h2>Appeal (${appeal.status}) · filed ${formatDate(appeal.created_at)} · waiting ${formatAge(appeal.created_at, now)}</h2>
 <dl>${answers.length ? answers.map((a) => html`<dt>${a.label}</dt><dd class="value">${a.value}</dd>`) : html`<dt>Answers</dt><dd class="muted">none</dd>`}</dl>` : html`<p class="muted">No appeal on this case.</p>`}
@@ -507,7 +508,7 @@ export function appealConfirmPage({ session, access = null, moduleStates = {}, r
 <section class="card confirm-card"><dl><dt>Member</dt><dd>${record.target_username} <span class="muted">${record.target_user_id}</span></dd>
 <dt>Case</dt><dd>${typeBadge(record.type)} · ${record.name}</dd>
 <dt>Note</dt><dd>${note || '-'}</dd>
-<dt>Effect</dt><dd>${effect}${!accept && record.is_auto && record.ladder_level_after === 3 ? ' This level-3 ladder ban becomes unappealable.' : ''}</dd></dl>
+<dt>Effect</dt><dd>${effect}${!accept && record.is_auto && record.ladder_level_after === 3 ? ' This stage-3 warning ban can then no longer be appealed.' : ''}</dd></dl>
 <p class="muted">The appeal channel gets the decision and is deleted 10 seconds later (its transcript goes to the mod log). This confirmation works once and expires in 5 minutes.</p>
 ${confirmButtons(session.csrf, `/appeals/${record.case_code}/decide`, { submit: accept ? 'Accept appeal' : 'Deny appeal', hidden: { token, fh: hash }, danger: !accept, cancelHref: path(`/appeals/${encodeURIComponent(record.case_code)}`) })}</section>`;
     return layout({ title: `Confirm appeal ${record.case_code}`, active: 'appeals', session, access, moduleStates, body });
@@ -534,8 +535,8 @@ function noContactMember(name, label, values, guild) {
 /** rows: listActiveNoContactOrders; names: Map(userId → username). */
 export function noContactPage({ session, access = null, moduleStates = {}, rows = [], watchRows = [], showWatch = false, names = new Map(), canWrite = false, flash = null, error = null, editEnabled = true, canAct = true, values = {}, guild = null }) {
     const who = (id) => html`<a href="${userHref(id)}">${names.get(id) || id}</a> <span class="muted">${id}</span>`;
-    const body = html`<header class="page-head"><h1>No-contact orders (${rows.length})</h1></header>
-<p class="muted help">Two members may not mention or reply to each other; breaking messages are deleted and logged. Both members are DMed when an order starts and ends.</p>
+    const body = html`<header class="page-head"><h1>Keep apart (${rows.length})</h1></header>
+<p class="muted help">Keep two members apart: they may not mention or reply to each other; breaking messages are deleted and logged. Both members are DMed when an order starts and ends.</p>
 ${notices({ flash, error, editEnabled, canAct, actLabel: 'start or end orders' })}
 ${section(`Active orders (${rows.length})`, html`${rows.length ? html`<div class="scroll"><table><thead><tr><th>#</th><th>Members</th><th>Until</th><th>By</th><th>Reason</th><th></th></tr></thead><tbody>
 ${rows.map((o) => html`<tr><td>${o.id}</td><td>${who(o.user_a)} ↔ ${who(o.user_b)}</td><td>${formatDate(o.until)}</td><td>${names.get(o.created_by) || o.created_by}</td><td class="value">${o.reason}</td>
@@ -547,7 +548,7 @@ ${noContactMember('user_b', 'Second member', values, guild)}
 <label>Days<input type="number" name="days" min="1" max="${NO_CONTACT_MAX_DAYS}" step="1" required value="${values.days || ''}"></label>
 <label class="wide">Reason (shown to both members)<input name="reason" maxlength="500" required value="${values.reason || ''}"></label></div>`, { submit: 'Start order' }), '', { key: 'nocontact-start' }) : ''}
 ${showWatch ? watchlistSection({ session, rows: watchRows, names, canWrite }) : ''}`;
-    return layout({ title: 'No-contact', active: 'nocontact', session, access, moduleStates, body });
+    return layout({ title: 'Keep apart', active: 'nocontact', session, access, moduleStates, body });
 }
 
 // ── Staff: coverage heatmap and mass-action blocks ────────────────────────
@@ -571,7 +572,7 @@ ${report.gaps.length ? html`<ol>${report.gaps.map((slot) => html`<li>${slotLabel
 
 /** blocks: listMassActionBlocks; names: Map(id → username); canLift: OWNER_IDS (like /staff restore). */
 export function blocksSection({ blocks = [], names = new Map(), canLift = false, csrf, editEnabled = true }) {
-    return section(`Mass-action guard blocks (${blocks.length})`, html`${blocks.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Blocked until</th><th>Bans/kicks</th><th>Since</th><th></th></tr></thead><tbody>
+    return section(`Safety limit blocks (${blocks.length})`, html`${blocks.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Blocked until</th><th>Bans/kicks</th><th>Since</th><th></th></tr></thead><tbody>
 ${blocks.map((b) => html`<tr><td>${names.get(b.moderatorId) || b.moderatorId} <span class="muted">${b.moderatorId}</span></td><td>${formatDate(b.until)}</td><td>${b.count ?? '-'}</td><td>${formatDate(b.at)}</td>
 <td>${canLift && editEnabled ? actionForm(csrf, '/staff/blocks/lift', '', { submit: 'Lift block', hidden: { moderator: b.moderatorId }, inline: true, danger: true }) : ''}</td></tr>`)}
 </tbody></table></div>${canLift ? '' : html`<p class="muted">Only the bot owners can lift a block (like /staff restore).</p>`}` : html`<p class="muted">Nobody is blocked.</p>`}`, '', { key: 'staff-blocks' });
@@ -642,5 +643,5 @@ ${lookupBody}
 <h3>Removed staff roles</h3>
 ${removedBody}
 ${restoreById}
-<p class="muted">Restoring gives back the saved roles the bot can still manage. A mass-action panel block is lifted separately (Mass-action guard blocks).</p>`, '', { key: 'staff-discipline' });
+<p class="muted">Restoring gives back the saved roles the bot can still manage. A safety limit block (too many bans or kicks in 10 minutes) is lifted separately (Safety limit blocks).</p>`, '', { key: 'staff-discipline' });
 }

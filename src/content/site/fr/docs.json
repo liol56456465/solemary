@@ -41,7 +41,7 @@
       },
       "automod": {
         "title": "4. Vérifie l’automod",
-        "text": "Sur la page **Automod**, tu choisis ce que fait l’automod. Si tu n’es pas encore sûr, choisis **Watch only** : l’automod se contente alors d’indiquer à l’équipe ce qu’il aurait fait, et rien n’arrive à personne tant qu’un membre de l’équipe n’a pas approuvé. Passe à **Act** quand tu lui fais confiance."
+        "text": "Sur la page **Automod**, tu choisis ce que fait l’automod. Si tu n’es pas encore sûr, choisis **Report only (don't delete)** : l’automod se contente alors d’indiquer à l’équipe ce qu’il aurait fait, et rien n’arrive à personne tant qu’un membre de l’équipe n’a pas approuvé. Passe à **Act** quand tu lui fais confiance."
       },
       "try": {
         "title": "5. Essaie sur toi-même",
@@ -62,7 +62,7 @@
       },
       "firstAction": {
         "title": "Ta première action",
-        "run": "Lance `/enforcements user:@member`. Le panneau affiche l’âge du compte du membre, son ancienneté sur le serveur, ses avertissements comptabilisés, son niveau sur l’échelle, toute sanction en cours et ses derniers dossiers. Toi seul peux le voir.",
+        "run": "Lance `/enforcements user:@member`. Le panneau affiche l’âge du compte du membre, son ancienneté sur le serveur, ses avertissements comptabilisés, son palier d’avertissement (0 à 3), toute sanction en cours et ses derniers dossiers. Toi seul peux le voir.",
         "action": "Appuie sur l’action : **Ban**, **Kick**, **Mute** ou **Warn** (ou **Unban**, **Unmute**, **Remove warn** quand c’est pertinent).",
         "reason": "Choisis une raison prédéfinie ou **Custom…** et saisis-en une.",
         "duration": "Pour une mise en sourdine, indique une durée comme `30m`, `24h`, `7d` ou `1mo`. Pour un bannissement, pareil, ou laisse vide pour un bannissement définitif.",
@@ -72,7 +72,7 @@
       "everyWeek": {
         "title": "Les commandes que tu utiliseras",
         "background": "L’historique complet des dossiers d’un membre.",
-        "case": "Rechercher des dossiers, modifier une raison ou une durée, annuler un dossier créé par erreur, voir son historique, joindre des preuves.",
+        "case": "Rechercher des dossiers, modifier une raison ou une durée, retirer un dossier créé par erreur (il ne compte plus), voir son historique, joindre des preuves.",
         "appeals": "Accepter ou refuser un appel par code de dossier, avec une note.",
         "test": "T’envoie exactement le message privé qu’un membre recevrait. Rien n’est fait à personne.",
         "staff": "Activité et statistiques de l’équipe.",
@@ -104,19 +104,19 @@
         "appealText": "Baisse le niveau d’un cran, jamais en dessous de 0.",
         "manualBan": "Un bannissement donné à la main",
         "manualBanText": "Ne fait pas bouger l’échelle.",
-        "void": "Annuler un dossier",
-        "voidText": "Le dossier reste dans l’historique mais ne compte plus.",
+        "void": "Retirer un dossier",
+        "voidText": "Pour un dossier donné par erreur. Le dossier reste dans l’historique mais ne compte plus.",
         "imported": "Anciens avertissements importés",
         "importedText": "Affichés uniquement comme historique. Ils ne comptent pas."
       },
-      "standing": "Les membres peuvent voir où ils en sont avec **My standing** dans le panneau d’appel."
+      "standing": "Les membres peuvent voir où ils en sont avec **My record** dans le panneau d’appel."
     },
     "appeals": {
       "title": "Les appels : comment ça marche",
       "summary": "Où faire appel, ce que demande le formulaire, qui décide et combien de temps attendre avant de réessayer.",
       "where": {
         "title": "Où faire appel",
-        "text": "Chaque message privé de sanction contient le lien d’appel, ou indique que la sanction est sans appel. Le panneau d’appel a trois boutons : **Appeal**, **My appeals** et **My standing**. Les membres mis en sourdine ou avertis utilisent le panneau du serveur principal. Les membres bannis utilisent celui de {support}, qu’ils peuvent encore atteindre après un bannissement."
+        "text": "Chaque message privé de sanction contient le lien d’appel, ou indique que la sanction est sans appel. Le panneau d’appel a trois boutons : **Appeal**, **My appeals** et **My record**. Les membres mis en sourdine ou avertis utilisent le panneau du serveur principal. Les membres bannis utilisent celui de {support}, qu’ils peuvent encore atteindre après un bannissement."
       },
       "form": {
         "title": "Le formulaire",
@@ -154,7 +154,7 @@
       "areas": {
         "title": "Les quatre zones",
         "moderate": "Moderate",
-        "moderateText": "Overview (ce qui t’attend en premier), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff et Channel tools.",
+        "moderateText": "Overview (ce qui t’attend en premier), Inbox, Members, Banned, Cases, Appeals, Keep apart, Staff et Channel tools.",
         "community": "Community",
         "communityText": "Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community et Join to create.",
         "setup": "Server setup",

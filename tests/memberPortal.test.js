@@ -323,7 +323,7 @@ test('the record: only the logged-in member, member-safe fields, test cases left
         assert.ok(body.includes('&lt;b&gt;Spam&lt;/b&gt;'), 'reason escaped');
         assert.ok(body.includes('ModAlice'), 'the moderator name, as the DM shows it');
         assert.ok(body.includes('counts now'));
-        assert.ok(body.includes('voided: no longer counts'));
+        assert.ok(body.includes('removed (a mistake): no longer counts'));
         assert.ok(body.includes('history only (imported, does not count)'));
         assert.ok(body.includes('Appeal pending'));
         assert.ok(body.includes('Pending: the administrators have not decided yet'));

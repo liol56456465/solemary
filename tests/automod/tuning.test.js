@@ -58,7 +58,7 @@ test('tuning suggestion: >= 30% corrected over >= 10 actions, enforced rules, on
 
 test('tuning suggestion text and button', () => {
     assert.equal(formatTuningSuggestion({ rule: 'caps', actions: 20, corrected: 9, undone: 9, changed: 0 }),
-        'Excessive caps: 9 of 20 undone in 14 days, switch to monitor?');
+        "Excessive caps: 9 of 20 undone in 14 days, switch to report only (don't delete)?");
     assert.match(formatTuningSuggestion({ rule: 'caps', actions: 20, corrected: 9, undone: 7, changed: 2 }), /undone or changed/);
     const [row] = tuningComponents('caps');
     const json = row.toJSON();

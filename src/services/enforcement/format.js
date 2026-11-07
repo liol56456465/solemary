@@ -51,6 +51,33 @@ export function parseDuration(input) {
     return total;
 }
 
+// The warn-ladder ban for each level, the same as enforcementConfig.ladderBans (a test
+// checks they match; format.js does not import the config); null = permanent.
+export const LADDER_STAGE_BANS = Object.freeze({ 1: 7 * 24 * 60 * 60 * 1000, 2: 30 * 24 * 60 * 60 * 1000, 3: null });
+
+/**
+ * The warn-ladder level in plain words: "warning stage 1 of 3 (7-day ban)".
+ * Level 0 is "warning stage 0 of 3 (no warning ban yet)". `bans` maps level → ban length.
+ */
+export function ladderStage(level, bans = LADDER_STAGE_BANS) {
+    return `warning stage ${ladderStageShort(level, bans)}`;
+}
+
+/** "1 of 3 (7-day ban)": for a place already labelled "Warning stage". */
+export function ladderStageShort(level, bans = LADDER_STAGE_BANS) {
+    const n = Math.max(0, Math.min(3, Number(level) || 0));
+    if (n === 0) return '0 of 3 (no warning ban yet)';
+    const ms = bans[n];
+    const ban = ms == null ? 'permanent ban' : `${Math.round(ms / (24 * 60 * 60 * 1000))}-day ban`;
+    return `${n} of 3 (${ban})`;
+}
+
+/** ladderStage with a capital first letter, for labels and the start of a line. */
+export function ladderStageLabel(level, bans) {
+    const text = ladderStage(level, bans);
+    return text[0].toUpperCase() + text.slice(1);
+}
+
 export function formatDuration(ms) {
     if (ms == null) {
         return 'Permanent';

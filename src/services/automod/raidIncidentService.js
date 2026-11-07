@@ -118,7 +118,7 @@ export function releaseRow(incidentId, disabled = false) {
 export function formatReleaseResult(result) {
     return [
         `**${result.clean}** raid joiner(s) broke no rule${result.offenders ? `; **${result.offenders}** with a case stay as they are` : ''}.`,
-        `Probation ended: ${result.probationEnded} · join-gate flags closed: ${result.flagsCleared}`
+        `Extra-watch periods ended: ${result.probationEnded} · join-gate flags closed: ${result.flagsCleared}`
             + `${result.notInServer ? ` · no longer in the server: ${result.notInServer}` : ''}`,
         result.probationEnded || result.flagsCleared ? null : 'Nothing else was held against them.',
     ].filter(Boolean).join('\n');

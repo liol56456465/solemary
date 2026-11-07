@@ -41,7 +41,7 @@
       },
       "automod": {
         "title": "4. Revisa el automod",
-        "text": "En la página **Automod** eliges qué hace el automod. Si aún no lo tienes claro, elige **Watch only** (solo observar): así el automod solo le dice al staff qué habría hecho, y a nadie le pasa nada hasta que un miembro del staff lo apruebe. Cambia a **Act** cuando confíes en él."
+        "text": "En la página **Automod** eliges qué hace el automod. Si aún no lo tienes claro, elige **Report only (don't delete)**: así el automod solo le dice al staff qué habría hecho, y a nadie le pasa nada hasta que un miembro del staff lo apruebe. Cambia a **Act** cuando confíes en él."
       },
       "try": {
         "title": "5. Pruébalo contigo",
@@ -62,7 +62,7 @@
       },
       "firstAction": {
         "title": "Tu primera acción",
-        "run": "Usa `/enforcements user:@member`. El panel muestra la antigüedad de la cuenta del miembro, el tiempo que lleva en el servidor, las advertencias contadas, el nivel en la escala, cualquier sanción activa y sus últimos casos. Solo tú puedes verlo.",
+        "run": "Usa `/enforcements user:@member`. El panel muestra la antigüedad de la cuenta del miembro, el tiempo que lleva en el servidor, las advertencias contadas, la etapa de advertencia (0 a 3), cualquier sanción activa y sus últimos casos. Solo tú puedes verlo.",
         "action": "Pulsa la acción: **Ban**, **Kick**, **Mute** o **Warn** (o **Unban**, **Unmute**, **Remove warn** cuando correspondan).",
         "reason": "Elige un motivo predefinido o **Custom…** y escribe uno.",
         "duration": "Para un silenciamiento, indica una duración como `30m`, `24h`, `7d` o `1mo`. Para un baneo, lo mismo, o déjalo en blanco para un baneo permanente.",
@@ -72,7 +72,7 @@
       "everyWeek": {
         "title": "Comandos que usarás",
         "background": "El historial completo de casos de un miembro.",
-        "case": "Busca casos, edita un motivo o una duración, anula un caso erróneo, consulta su historial, adjunta pruebas.",
+        "case": "Busca casos, edita un motivo o una duración, quita un caso erróneo (deja de contar), consulta su historial, adjunta pruebas.",
         "appeals": "Acepta o deniega una apelación por código de caso, con una nota.",
         "test": "Te envía exactamente el mensaje directo que recibiría un miembro. A nadie le pasa nada.",
         "staff": "Actividad y estadísticas del staff.",
@@ -104,19 +104,19 @@
         "appealText": "Baja el nivel en uno, nunca por debajo de 0.",
         "manualBan": "Un baneo aplicado a mano",
         "manualBanText": "No mueve la escala.",
-        "void": "Anular un caso",
-        "voidText": "El caso sigue registrado, pero ya no cuenta.",
+        "void": "Quitar un caso",
+        "voidText": "Para un caso aplicado por error. El caso sigue registrado, pero ya no cuenta.",
         "imported": "Advertencias antiguas importadas",
         "importedText": "Solo se muestran como historial. No cuentan."
       },
-      "standing": "Los miembros pueden consultar en qué punto están con **My standing** en el panel de apelaciones."
+      "standing": "Los miembros pueden consultar en qué punto están con **My record** en el panel de apelaciones."
     },
     "appeals": {
       "title": "Apelaciones: cómo funcionan",
       "summary": "Dónde apelar, qué pide el formulario, quién decide y cuánto esperar para volver a intentarlo.",
       "where": {
         "title": "Dónde apelar",
-        "text": "Cada mensaje directo de sanción incluye el enlace para apelar o indica que no se puede apelar. El panel de apelaciones tiene tres botones: **Appeal**, **My appeals** y **My standing**. Los miembros silenciados o advertidos usan el panel del servidor principal. Los miembros baneados usan el que hay en {support}, al que pueden seguir accediendo después de un baneo."
+        "text": "Cada mensaje directo de sanción incluye el enlace para apelar o indica que no se puede apelar. El panel de apelaciones tiene tres botones: **Appeal**, **My appeals** y **My record**. Los miembros silenciados o advertidos usan el panel del servidor principal. Los miembros baneados usan el que hay en {support}, al que pueden seguir accediendo después de un baneo."
       },
       "form": {
         "title": "El formulario",
@@ -154,7 +154,7 @@
       "areas": {
         "title": "Las cuatro áreas",
         "moderate": "Moderación",
-        "moderateText": "Vista general (lo que te necesita primero), Bandeja de entrada, Miembros, Baneados, Casos, Apelaciones, Sin contacto, Staff y Herramientas de canales.",
+        "moderateText": "Vista general (lo que te necesita primero), Bandeja de entrada, Miembros, Baneados, Casos, Apelaciones, Mantener separados, Staff y Herramientas de canales.",
         "community": "Comunidad",
         "communityText": "Tickets y modmail, Bienvenida y despedida, Niveles, Roles por reacción, Mensajes, Sorteos, Cumpleaños, Solicitudes, Comunidad y Entrar para crear.",
         "setup": "Configuración del servidor",

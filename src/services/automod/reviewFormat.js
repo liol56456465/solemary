@@ -163,7 +163,7 @@ export function buttonCodes(entry) {
 export function cardTitle(entry) {
     const label = ruleLabel(entry);
     if (entry.kind === 'report') return 'Member report';
-    if (entry.kind === 'monitor') return `Monitor: would ${entry.suggested ? stepVerb(entry.suggested) : 'delete the message'} · ${label}`;
+    if (entry.kind === 'monitor') return `Report only (don't delete): would ${entry.suggested ? stepVerb(entry.suggested) : 'delete the message'} · ${label}`;
     const action = latestAction(entry);
     if (!action) return `Automod · ${label}`;
     if (action.failed) return `Failed to ${stepVerb(action.step)} · ${label}`;
@@ -181,17 +181,17 @@ function whereText(entry) {
     return entry.channelId ? ` in <#${entry.channelId}>` : '';
 }
 
-/** "on probation (rejoined after ban, until <t:…:D>)" or null. */
+/** "in an extra-watch period after a ban (rejoined, until <t:…:D>)" or null. */
 export function probationText(entry) {
     return entry.probationUntil
-        ? `on probation (rejoined after ban, until <t:${Math.floor(entry.probationUntil / 1000)}:D>)`
+        ? `in an extra-watch period after a ban (rejoined, until <t:${Math.floor(entry.probationUntil / 1000)}:D>)`
         : null;
 }
 
 export function cardDescription(entry) {
     const lines = [`<@${entry.userId}> ${entry.evidence || 'broke a rule'}${whereText(entry)}.`];
     const probation = probationText(entry);
-    if (probation) lines.push(`On ${probation.slice(3)}: the ladder starts one step higher for them.`);
+    if (probation) lines.push(`In ${probation.slice(3)}: the ladder starts one step higher for them.`);
     const label = ruleLabel(entry);
 
     if (entry.kind === 'report') {
@@ -199,7 +199,7 @@ export function cardDescription(entry) {
         lines.push('Punish the author below, or dismiss the report.');
     } else if (entry.kind === 'monitor') {
         if (entry.offence) lines.push(`${ordinal(entry.offence)} ${label} offence in 30 days.`);
-        lines.push('Nothing was done (monitor mode). Pick a punishment below to apply it.');
+        lines.push("Nothing was done (report only (don't delete) mode). Pick a punishment below to apply it.");
     } else {
         if (entry.offence) lines.push(`${ordinal(entry.offence)} ${label} offence in 30 days.`);
         if (entry.raid) lines.push('They joined during a raid lockdown, so they were kicked instead of the usual punishment.');

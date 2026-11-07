@@ -46,7 +46,7 @@ export function buildDigest({ stats, hits = [], openCount = 0, raids = 0, starte
     const monitorByRule = new Map(countBy(hits.filter((hit) => hit.monitor), (hit) => hit.rule));
     const hitLines = byRule.map(([rule, count]) => {
         const monitor = monitorByRule.get(rule);
-        return `${ruleDefinition(rule)?.label || rule}: ${count}${monitor ? ` (${monitor} in monitor mode)` : ''}`;
+        return `${ruleDefinition(rule)?.label || rule}: ${count}${monitor ? ` (${monitor} only reported, not deleted)` : ''}`;
     });
     const channelLines = countBy(hits, (hit) => hit.channelId).slice(0, 5)
         .map(([channelId, count]) => `<#${channelId}>: ${count}`);

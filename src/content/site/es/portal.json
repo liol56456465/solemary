@@ -12,7 +12,7 @@
     "closed": "Cerrada"
   },
   "appeal": {
-    "voided": "Anulado: no hay nada que apelar",
+    "voided": "Quitado (fue un error): no hay nada que apelar",
     "lifted": "Ya retirado",
     "unappealable": "No se puede apelar",
     "ended": "Terminado: no hay nada que apelar",
@@ -30,14 +30,14 @@
   },
   "status": {
     "imported": "solo historial (importado, no cuenta)",
-    "voided": "anulado: ya no cuenta",
+    "voided": "quitado (fue un error): ya no cuenta",
     "counts": "cuenta ahora",
     "noLongerCounts": "registrado, ya no cuenta",
     "onRecord": "registrado",
     "case": {
       "liftedByAppeal": "levantado por apelación",
       "reversed": "revertido por un moderador",
-      "lifted": "levantado",
+      "lifted": "levantado antes de tiempo",
       "appealPending": "apelación pendiente",
       "expired": "expirado",
       "activeAppealDenied": "activo, apelación rechazada",
@@ -45,7 +45,7 @@
     }
   },
   "login": {
-    "lead": "Consulta tu propio historial de moderación en {server}: tus advertencias, tu nivel en la escala de advertencias, cualquier baneo o silenciamiento activo, tus casos y tus apelaciones.",
+    "lead": "Consulta tu propio historial de moderación en {server}: tus advertencias, tu etapa de advertencia, cualquier baneo o silenciamiento activo, tus casos y tus apelaciones.",
     "withDiscord": "Iniciar sesión con Discord",
     "withAccount": "Iniciar sesión con una cuenta de Mewvo",
     "note": "Mewvo solo le pregunta a Discord quién eres (el permiso identify): sin correo electrónico, sin servidores, nada más. Solo ves tu propio historial. La sesión dura una hora.",
@@ -166,7 +166,7 @@
       "many": "{count} más después de esta supondrían un baneo automático ({ban}).",
       "other": "{count} más después de esta supondrían un baneo automático ({ban})."
     },
-    "limit": "Alcanzaría el límite de advertencias: un baneo automático ({ban}, nivel {level} de la escala).",
+    "limit": "Alcanzaría el límite de advertencias: un baneo automático ({ban}, etapa de advertencia {level} de 3).",
     "permanent": "permanente"
   },
   "duration": {

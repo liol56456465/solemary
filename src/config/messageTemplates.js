@@ -92,7 +92,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         '2. Paste the case code from the warning DM.',
         '3. Say why the warning should be removed.',
         '',
-        'If the appeal is accepted, the warning is removed and no longer counts toward a ban. Press My standing on the panel to see how many warnings you have right now.',
+        'If the appeal is accepted, the warning is removed and no longer counts toward a ban. Press My record on the panel to see how many warnings you have right now.',
     ].join('\n'), 'yellow'),
     T('appeal-honest', 'support', 'Tips for a good appeal', 'Before you appeal', [
         'A few things that help your appeal:',

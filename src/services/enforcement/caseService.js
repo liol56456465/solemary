@@ -223,7 +223,7 @@ export function caseStatusCode(row, appealStatus = null) {
 }
 
 const CASE_STATUS_WORDS = Object.freeze({
-    voided: 'voided', liftedByAppeal: 'lifted by appeal', reversed: 'reversed by a moderator', lifted: 'lifted',
+    voided: 'removed (a mistake)', liftedByAppeal: 'lifted by appeal', reversed: 'reversed by a moderator', lifted: 'lifted early',
     appealPending: 'appeal pending', activeAppealDenied: 'active, appeal denied',
 });
 

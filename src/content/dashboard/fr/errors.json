@@ -21,7 +21,7 @@
   "loggedOut": "Déconnecté",
   "loggedOutText": "Ta session est terminée. Ouvre {base} pour te reconnecter.",
   "notAllowed": "Non autorisé",
-  "moderatorOnly": "Il faut la permission Administrateur sur le serveur principal. En tant que modérateur, tu peux utiliser Vue d’ensemble, Membres, Bannis, Dossiers, Appels et Interdictions de contact, et avertir, mettre en sourdine, retirer la sourdine, exclure temporairement ou expulser des membres.",
+  "moderatorOnly": "Il faut la permission Administrateur sur le serveur principal. En tant que modérateur, tu peux utiliser Vue d’ensemble, Membres, Bannis, Dossiers, Appels et Tenir à distance, et avertir, mettre en sourdine, retirer la sourdine, exclure temporairement ou expulser des membres.",
   "csrf": "Ce formulaire ne vient pas de ce tableau de bord (jeton de sécurité ou origine non conforme). Recharge la page et réessaie.",
   "needsAdmin": "Il faut la permission Administrateur sur le serveur principal.",
   "needsStaffRole": "Il faut un rôle de modérateur ou d’administrateur.",

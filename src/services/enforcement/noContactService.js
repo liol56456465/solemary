@@ -116,7 +116,7 @@ export async function enforceNoContact(message) {
         });
         const other = message.client.users.cache.get(order.otherId);
         const notice = await message.channel.send({
-            content: `<@${message.author.id}> you have a no-contact order with **${other ? truncate(other.username, 50) : 'that member'}** `
+            content: `<@${message.author.id}> staff asked you to keep apart from **${other ? truncate(other.username, 50) : 'that member'}** `
                 + `until <t:${Math.floor(order.until / 1000)}:f>. Don't mention or reply to them${deleted ? '; your message was removed' : ''}.`,
             allowedMentions: { users: [message.author.id], parse: [] },
         }).catch(() => null);
@@ -184,7 +184,7 @@ export async function addNoContactOrder(client, { guildId, userA, userB, days, r
                 `SELECT id FROM ${T.noContact} WHERE guild_id = $1 AND user_a = $2 AND user_b = $3 AND ended_at IS NULL`,
                 [guildId, a, b]
             );
-            throw userError(`These two already have an active no-contact order (#${open?.id ?? '?'}). End it first to change it.`);
+            throw userError(`These two already have an active keep-apart order (#${open?.id ?? '?'}). End it first to change it.`);
         }
         throw error;
     }

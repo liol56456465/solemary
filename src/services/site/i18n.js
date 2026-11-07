@@ -20,7 +20,7 @@
 
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { escapeHtml, raw } from '../dashboard/safeHtml.js';
+import { SafeHtml, escapeHtml, raw } from '../dashboard/safeHtml.js';
 import { logger } from '../../utils/logger.js';
 
 /** Website languages: code, URL prefix ('' = no prefix), the name shown in the picker. */
@@ -86,6 +86,12 @@ export function isSafeHref(href) {
 
 const PLACEHOLDER = (i) => `\u0000${i}\u0000`;
 
+// A param's text for inline markup: only a real SafeHtml (html``, raw) is trusted as markup. Any
+// other value, including a look-alike object with a .text property, is escaped (an object with
+// .text by its text, so it reads the same as before).
+const isSafeHtml = (value) => value instanceof SafeHtml;
+const plainParam = (value) => (value && typeof value === 'object' && 'text' in value ? String(value.text) : value);
+
 /** Escapes, then applies inline markup and fills params. Returns an HTML string. `rewrite` (optional) maps site paths ("/features" → "/de/features"). */
 function renderInline(escaped, params, key, rewrite = null) {
     const stash = [];
@@ -114,13 +120,13 @@ function renderInline(escaped, params, key, rewrite = null) {
     // escapeHtml turned ` into &#96;.
     s = s.replace(/&#96;((?:(?!&#96;)[^\n])+)&#96;/g, (_, code) => keep(`<code>${code.replace(TOKEN, (__, name) => {
         const value = paramText(params, name);
-        return value && typeof value === 'object' && 'text' in value ? escapeHtml(String(value.text)) : escapeHtml(value);
+        return escapeHtml(plainParam(value));
     })}</code>`));
     s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
     s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
     s = s.replace(TOKEN, (_, name) => {
         const value = paramText(params, name);
-        return value && typeof value === 'object' && 'text' in value ? String(value) : escapeHtml(value);
+        return isSafeHtml(value) ? value.text : escapeHtml(plainParam(value));
     });
     // eslint-disable-next-line no-control-regex
     return s.replace(/\u0000(\d+)\u0000/g, (_, i) => stash[Number(i)]);

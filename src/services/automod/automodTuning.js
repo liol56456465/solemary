@@ -42,7 +42,7 @@ export async function automodRuleStats(guildId, days = automodConfig.tuningWindo
 export function tuningComponents(rule) {
     return [new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(`amreview:tune:${rule}`)
-            .setLabel(`Switch ${AUTOMOD_RULES[rule]?.label || rule} to monitor`.slice(0, 80)).setStyle(ButtonStyle.Primary),
+            .setLabel(`Switch ${AUTOMOD_RULES[rule]?.label || rule} to report only (don't delete)`.slice(0, 80)).setStyle(ButtonStyle.Primary),
         new ButtonBuilder().setCustomId('amreview:dismiss').setLabel('Dismiss').setStyle(ButtonStyle.Secondary),
     )];
 }
@@ -86,7 +86,7 @@ export async function postTuningSuggestions(client, now = Date.now()) {
                 title: 'Automod tuning suggestion',
                 description: [
                     `**${formatTuningSuggestion(suggestion)}**`,
-                    `Moderators reversed or changed ${Math.round(suggestion.rate * 100)}% of this rule's automatic decisions. In monitor mode it only posts review cards; nothing is deleted or punished until someone applies it.`,
+                    `Moderators reversed or changed ${Math.round(suggestion.rate * 100)}% of this rule's automatic decisions. In report only (don't delete) mode it only posts review cards; nothing is deleted or punished until someone applies it.`,
                     'Change it back any time with `/automod rule`.',
                 ].join('\n'),
                 color: 'warning',
@@ -111,5 +111,5 @@ export async function switchRuleToMonitor(guildId, rule) {
         return { changed: false, text: `${AUTOMOD_RULES[rule].label} is already ${before}.` };
     }
     await updateAutomodSettings(guildId, (current) => ({ ...current, ruleModes: { ...current.ruleModes, [rule]: 'monitor' } }));
-    return { changed: true, text: `${AUTOMOD_RULES[rule].label} is now in monitor mode.` };
+    return { changed: true, text: `${AUTOMOD_RULES[rule].label} is now report only (don't delete).` };
 }

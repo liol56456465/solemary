@@ -14,11 +14,11 @@
       "items": {
         "enforcementsPanel": {
           "term": "/enforcements panel",
-          "text": "Shows the member’s account age, time in the server, counted warnings, ladder level, active punishments and last three cases, then offers only the actions that make sense right now (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
+          "text": "Shows the member’s account age, time in the server, counted warnings, warning stage (0 to 3), active punishments and last three cases, then offers only the actions that make sense right now (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
         },
         "reasons": {
           "term": "Reasons",
-          "text": "A list of prebuilt reasons, some marked severe (a severe ban is unappealable by default), or a custom reason."
+          "text": "A list of prebuilt reasons, some marked severe (a severe ban can’t be appealed by default), or a custom reason."
         },
         "caseCodes": {
           "term": "Case codes",
@@ -37,12 +37,12 @@
           "text": "Refuses the server owner, the bot, yourself and anyone with an equal or higher role. The Administrator role is checked again on every click."
         },
         "massActionGuard": {
-          "term": "Mass-action guard",
+          "term": "Safety limit: too many bans or kicks in 10 minutes",
           "text": "More than 5 bans or kicks in 10 minutes by one moderator blocks them for an hour and alerts the owner. Mutes have their own limit of 10."
         },
         "caseTools": {
           "term": "Case tools",
-          "text": "/case edit, void and history, evidence (message links with an excerpt, or images), case search, and /background for a member’s full history."
+          "text": "/case edit, void (remove a case given by mistake) and history, evidence (message links with an excerpt, or images), case search, and /background for a member’s full history."
         },
         "warnForMessage": {
           "term": "Warn for this message",
@@ -53,7 +53,7 @@
           "text": "/test sends you the exact DM a member would get, without doing anything."
         },
         "noContactOrders": {
-          "term": "No-contact orders",
+          "term": "Keep apart",
           "text": "Ask two members not to contact each other until a set time. It is not a punishment and doesn’t count as a warning."
         }
       }
@@ -79,7 +79,7 @@
           "text": "A permanent ladder ban can be appealed for 6 months. After that, or after a denied appeal, it can’t be appealed."
         },
         "myStanding": {
-          "term": "My standing",
+          "term": "My record",
           "text": "Members can check their own warnings and what the next one would do, from the appeal panel or the My record page."
         }
       }
@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Appeal panel",
-          "text": "/setappeal posts the panel with Appeal, My appeals and My standing buttons, in the main server and the support server."
+          "text": "/setappeal posts the panel with Appeal, My appeals and My record buttons, in the main server and the support server."
         },
         "appealForm": {
           "term": "Appeal form",
@@ -140,7 +140,7 @@
         },
         "modes": {
           "term": "Modes",
-          "text": "Each rule is on, monitor (card only) or off, globally or per channel. Trusted roles and channel exceptions."
+          "text": "Each rule is on, report only (don't delete) or off, globally or per channel. Trusted roles and channel exceptions."
         },
         "hardToDodge": {
           "term": "Hard to dodge",
@@ -196,7 +196,7 @@
         },
         "moderate": {
           "term": "Moderate",
-          "text": "Overview with what needs you, an inbox, members (filters, roles, nicknames, timeouts, bulk actions), bans, cases, appeals, no-contact orders and staff activity."
+          "text": "Overview with what needs you, an inbox, members (filters, roles, nicknames, timeouts, bulk actions), bans, cases, appeals, Keep apart (two members who must leave each other alone) and staff activity."
         },
         "settings": {
           "term": "Settings",

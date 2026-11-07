@@ -41,7 +41,7 @@
       },
       "automod": {
         "title": "4. Check automod",
-        "text": "On the **Automod** page you choose what automod does. If you are not sure yet, pick **Watch only**: automod then only tells staff what it would have done, and nothing happens to anyone until a staff member agrees. Switch to **Act** when you trust it."
+        "text": "On the **Automod** page you choose what automod does. If you are not sure yet, pick **Report only (don't delete)**: automod then only tells staff what it would have done, and nothing happens to anyone until a staff member agrees. Switch to **Act** when you trust it."
       },
       "try": {
         "title": "5. Try it on yourself",
@@ -62,7 +62,7 @@
       },
       "firstAction": {
         "title": "Your first action",
-        "run": "Run `/enforcements user:@member`. The panel shows the member’s account age, time in the server, counted warnings, ladder level, any active punishment and their last cases. Only you can see it.",
+        "run": "Run `/enforcements user:@member`. The panel shows the member’s account age, time in the server, counted warnings, warning stage (0 to 3), any active punishment and their last cases. Only you can see it.",
         "action": "Press the action: **Ban**, **Kick**, **Mute** or **Warn** (or **Unban**, **Unmute**, **Remove warn** when they apply).",
         "reason": "Choose a prebuilt reason or **Custom…** and type one.",
         "duration": "For a mute, give a duration such as `30m`, `24h`, `7d` or `1mo`. For a ban, the same, or leave it blank for a permanent ban.",
@@ -72,7 +72,7 @@
       "everyWeek": {
         "title": "Commands you’ll use",
         "background": "A member’s full case history.",
-        "case": "Search cases, edit a reason or duration, void a mistaken case, see its history, attach evidence.",
+        "case": "Search cases, edit a reason or duration, remove a case given by mistake (it stops counting), see its history, attach evidence.",
         "appeals": "Accept or deny an appeal by case code, with a note.",
         "test": "Sends you the exact DM a member would get. Nothing is done to anyone.",
         "staff": "Staff activity and stats.",
@@ -104,19 +104,19 @@
         "appealText": "Lowers the level by one, never below 0.",
         "manualBan": "A ban given by hand",
         "manualBanText": "Does not move the ladder.",
-        "void": "Voiding a case",
-        "voidText": "The case stays on record but no longer counts.",
+        "void": "Remove case",
+        "voidText": "For a case given by mistake. It stays on record but no longer counts.",
         "imported": "Imported old warnings",
         "importedText": "Shown as history only. They don’t count."
       },
-      "standing": "Members can check where they are with **My standing** on the appeal panel."
+      "standing": "Members can check where they are with **My record** on the appeal panel."
     },
     "appeals": {
       "title": "Appeals: how they work",
       "summary": "Where to appeal, what the form asks, who decides and how long it takes to try again.",
       "where": {
         "title": "Where to appeal",
-        "text": "Every punishment DM has the appeal link, or says it can’t be appealed. The appeal panel has three buttons: **Appeal**, **My appeals** and **My standing**. Muted or warned members use the panel in the main server. Banned members use the one in {support}, which they can still reach after a ban."
+        "text": "Every punishment DM has the appeal link, or says it can’t be appealed. The appeal panel has three buttons: **Appeal**, **My appeals** and **My record**. Muted or warned members use the panel in the main server. Banned members use the one in {support}, which they can still reach after a ban."
       },
       "form": {
         "title": "The form",
@@ -154,7 +154,7 @@
       "areas": {
         "title": "The four areas",
         "moderate": "Moderate",
-        "moderateText": "Overview (what needs you first), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff and Channel tools.",
+        "moderateText": "Overview (what needs you first), Inbox, Members, Banned, Cases, Appeals, Keep apart, Staff and Channel tools.",
         "community": "Community",
         "communityText": "Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community and Join to create.",
         "setup": "Server setup",

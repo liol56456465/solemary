@@ -134,7 +134,7 @@ async function demote(guild, member, why, { nuke = false } = {}) {
         { name: 'Why', value: why },
         { name: 'Removed roles', value: removed.map((role) => role.name).join(', ') || 'none' },
         ...(kept.length ? [{ name: 'Could not remove (above my role)', value: kept.map((role) => role.name).join(', ') }] : []),
-        { name: 'Restore', value: nuke ? '`/staff restore` · damage: **Show diff**, then `/backup revert`' : '`/staff restore`' },
+        { name: 'Restore', value: nuke ? '`/staff restore` · damage: **Show what changed**, then `/backup revert`' : '`/staff restore`' },
     ];
     if (nuke) await postAlert(guild.client, 'staff', { title: 'Staff roles removed', fields, components: [showDiffRow()] });
     else await postModLog(guild.client, 'staff', fields, { title: 'Staff roles removed' });

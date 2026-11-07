@@ -364,7 +364,7 @@ export async function handleReviewAction(interaction, args) {
         const [rule] = rest;
         const result = await switchRuleToMonitor(guild.id, rule);
         await closeCard(message, result.changed ? `${result.text} Switched by ${by}; undo with \`/automod rule\`.` : result.text,
-            result.changed ? { status: 'applied', by, verb: 'Switched to monitor' } : { status: 'dismissed', by, verb: 'Closed' });
+            result.changed ? { status: 'applied', by, verb: "Switched to report only (don't delete)" } : { status: 'dismissed', by, verb: 'Closed' });
         return result.text;
     }
 

@@ -45,11 +45,11 @@ test('every card for a member on probation is marked', () => {
     };
     const stamp = `<t:${Math.floor(until / 1000)}:D>`;
     const compact = buildCardPayload(entryFrom({ ...base, step: { type: 'warn' }, result: { record: { case_code: 'abc1234' } } }));
-    assert.match(compact.content, new RegExp(` · on probation \\(rejoined after ban, until ${stamp}\\)`));
+    assert.match(compact.content, new RegExp(` · in an extra-watch period after a ban \\(rejoined, until ${stamp}\\)`));
     const full = buildCardPayload(entryFrom({ ...base, monitor: true, suggested: { type: 'mute', durationMs: 3600000 } }));
-    assert.match(full.embeds[0].data.description, /On probation \(rejoined after ban/);
+    assert.match(full.embeds[0].data.description, /In an extra-watch period after a ban \(rejoined/);
     const note = buildCardPayload(entryFrom({ ...base, note: { title: 'Second chance' } }));
-    assert.match(note.content, /on probation/);
+    assert.match(note.content, /extra-watch period/);
     const plain = buildCardPayload(entryFrom({ ...base, probation: null, step: { type: 'warn' }, result: { record: { case_code: 'abc1234' } } }));
-    assert.doesNotMatch(plain.content, /probation/);
+    assert.doesNotMatch(plain.content, /extra-watch/);
 });

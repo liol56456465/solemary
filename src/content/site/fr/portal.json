@@ -12,7 +12,7 @@
     "closed": "Clos"
   },
   "appeal": {
-    "voided": "Annulé : rien à contester",
+    "voided": "Retiré (une erreur) : rien à contester",
     "lifted": "Déjà levé",
     "unappealable": "Sans appel possible",
     "ended": "Terminé : rien à contester",
@@ -29,14 +29,14 @@
   },
   "status": {
     "imported": "historique uniquement (importé, ne compte pas)",
-    "voided": "annulé : ne compte plus",
+    "voided": "retiré (une erreur) : ne compte plus",
     "counts": "compte actuellement",
     "noLongerCounts": "au dossier, ne compte plus",
     "onRecord": "au dossier",
     "case": {
       "liftedByAppeal": "levé après appel",
       "reversed": "annulé par un modérateur",
-      "lifted": "levé",
+      "lifted": "levé avant la fin",
       "appealPending": "appel en attente",
       "expired": "expiré",
       "activeAppealDenied": "actif, appel refusé",
@@ -44,7 +44,7 @@
     }
   },
   "login": {
-    "lead": "Consulte ton propre dossier de modération sur {server} : tes avertissements, ton niveau sur l’échelle d’avertissements, tout bannissement ou mise en sourdine en cours, tes dossiers et tes appels.",
+    "lead": "Consulte ton propre dossier de modération sur {server} : tes avertissements, ton palier d’avertissement, tout bannissement ou mise en sourdine en cours, tes dossiers et tes appels.",
     "withDiscord": "Se connecter avec Discord",
     "withAccount": "Se connecter avec un compte Mewvo",
     "note": "Mewvo demande seulement à Discord qui tu es (l’autorisation identify) : pas d’e-mail, pas de serveurs, rien d’autre. Tu ne vois jamais que ton propre dossier. La connexion dure une heure.",
@@ -163,7 +163,7 @@
       "one": "Encore {count} après celui-ci entraînerait un bannissement automatique ({ban}).",
       "other": "Encore {count} après celui-ci entraîneraient un bannissement automatique ({ban})."
     },
-    "limit": "Ce serait la limite d’avertissements : un bannissement automatique ({ban}, niveau {level} de l’échelle).",
+    "limit": "Ce serait la limite d’avertissements : un bannissement automatique ({ban}, palier d’avertissement {level} sur 3).",
     "permanent": "définitif"
   },
   "duration": {

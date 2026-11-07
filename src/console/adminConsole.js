@@ -126,7 +126,7 @@ async function showCases(client, args) {
     if (!userId) return out('  usage: cases <user>');
     const { rows, total } = await listCasesForUser(enforcementConfig.mainGuildId, userId, { limit: 15 });
     const ladder = await getLadder(enforcementConfig.mainGuildId, userId);
-    out(`  ${total} record(s) · ladder level ${ladder.level} · counted warns ${ladder.warns_since_level}`);
+    out(`  ${total} record(s) · warning stage ${ladder.level} of 3 · counted warns ${ladder.warns_since_level}`);
     for (const row of rows) {
         const duration = row.type === 'ban' || row.type === 'mute'
             ? ` · ${row.expires_at ? formatDuration(Number(row.duration_ms)) : 'permanent'}` : '';

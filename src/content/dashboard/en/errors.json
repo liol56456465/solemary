@@ -21,7 +21,7 @@
   "loggedOut": "Logged out",
   "loggedOutText": "Your session has ended. Open {base} to log in again.",
   "notAllowed": "Not allowed",
-  "moderatorOnly": "This needs Administrator in the main server. As a moderator you can use Overview, Members, Banned, Cases, Appeals and No-contact, and warn, mute, unmute, time out or kick members.",
+  "moderatorOnly": "This needs Administrator in the main server. As a moderator you can use Overview, Members, Banned, Cases, Appeals and Keep apart, and warn, mute, unmute, time out or kick members.",
   "csrf": "This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.",
   "needsAdmin": "This needs Administrator in the main server.",
   "needsStaffRole": "This needs a moderator or administrator role.",

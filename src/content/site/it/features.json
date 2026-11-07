@@ -14,7 +14,7 @@
       "items": {
         "enforcementsPanel": {
           "term": "Pannello /enforcements",
-          "text": "Mostra l'età dell'account del membro, da quanto è nel server, gli avvertimenti conteggiati, il livello nella scala, le sanzioni attive e gli ultimi tre casi, poi offre solo le azioni che hanno senso in quel momento (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
+          "text": "Mostra l'età dell'account del membro, da quanto è nel server, gli avvertimenti conteggiati, la fase di avvertimento (da 0 a 3), le sanzioni attive e gli ultimi tre casi, poi offre solo le azioni che hanno senso in quel momento (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
         },
         "reasons": {
           "term": "Motivi",
@@ -37,12 +37,12 @@
           "text": "Rifiuta il proprietario del server, il bot, te stesso e chiunque abbia un ruolo uguale o superiore. Il ruolo Amministratore viene controllato di nuovo a ogni clic."
         },
         "massActionGuard": {
-          "term": "Protezione dalle azioni di massa",
+          "term": "Limite di sicurezza: troppi ban o espulsioni in 10 minuti",
           "text": "Più di 5 ban o espulsioni in 10 minuti da parte di un moderatore lo bloccano per un'ora e avvisano il proprietario. I silenziamenti hanno un loro limite di 10."
         },
         "caseTools": {
           "term": "Strumenti per i casi",
-          "text": "/case edit, void e history, prove (link a messaggi con un estratto, o immagini), ricerca dei casi e /background per lo storico completo di un membro."
+          "text": "/case edit, void (rimuovere un caso sbagliato) e history, prove (link a messaggi con un estratto, o immagini), ricerca dei casi e /background per lo storico completo di un membro."
         },
         "warnForMessage": {
           "term": "Warn for this message",
@@ -53,7 +53,7 @@
           "text": "/test ti invia esattamente il messaggio diretto che riceverebbe un membro, senza fare nulla."
         },
         "noContactOrders": {
-          "term": "Ordini di non contatto",
+          "term": "Tenere separati",
           "text": "Chiedi a due membri di non contattarsi fino a un certo momento. Non è una sanzione e non conta come avvertimento."
         }
       }
@@ -79,7 +79,7 @@
           "text": "Contro un ban permanente della scala si può fare ricorso per 6 mesi. Dopo, o dopo un ricorso respinto, non si può più fare ricorso."
         },
         "myStanding": {
-          "term": "My standing",
+          "term": "My record",
           "text": "I membri possono vedere i propri avvertimenti e cosa comporterebbe il prossimo, dal pannello dei ricorsi o dalla pagina Il mio storico."
         }
       }
@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Pannello dei ricorsi",
-          "text": "/setappeal pubblica il pannello con i pulsanti Appeal, My appeals e My standing, nel server principale e nel server di supporto."
+          "text": "/setappeal pubblica il pannello con i pulsanti Appeal, My appeals e My record, nel server principale e nel server di supporto."
         },
         "appealForm": {
           "term": "Modulo di ricorso",
@@ -140,7 +140,7 @@
         },
         "modes": {
           "term": "Modalità",
-          "text": "Ogni regola è attiva, in osservazione (solo scheda) o disattivata, ovunque o per canale. Ruoli fidati ed eccezioni per canale."
+          "text": "Ogni regola è attiva, in «solo segnalazione (non elimina)» o disattivata, ovunque o per canale. Ruoli fidati ed eccezioni per canale."
         },
         "hardToDodge": {
           "term": "Difficile da aggirare",
@@ -196,7 +196,7 @@
         },
         "moderate": {
           "term": "Moderazione",
-          "text": "Panoramica con ciò che richiede la tua attenzione, posta in arrivo, membri (filtri, ruoli, nickname, timeout, azioni di gruppo), ban, casi, ricorsi, ordini di non contatto e attività dello staff."
+          "text": "Panoramica con ciò che richiede la tua attenzione, posta in arrivo, membri (filtri, ruoli, nickname, timeout, azioni di gruppo), ban, casi, ricorsi, «Tenere separati» e attività dello staff."
         },
         "settings": {
           "term": "Impostazioni",

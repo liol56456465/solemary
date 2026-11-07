@@ -47,6 +47,22 @@ test('inline markup is safe: escaped text, allowed links only, no script', () =>
     } finally { setCatalogsForTest(null); }
 });
 
+test('inline markup: only a real SafeHtml is trusted; a look-alike { text } object is escaped', () => {
+    setCatalogsForTest(new Map([['en', new Map([['a.plain', 'Hello {name}'], ['a.code', 'Run `{cmd}`'], ['a.block', '- {name}']])]]));
+    try {
+        const { ti, tb } = translator('en');
+        const fake = { text: '<script>alert(1)</script>' };
+        assert.equal(String(ti('a.plain', { name: fake })), 'Hello &lt;script&gt;alert(1)&lt;/script&gt;');
+        assert.equal(String(tb('a.block', { name: fake })), '<ul><li>&lt;script&gt;alert(1)&lt;/script&gt;</li></ul>');
+        assert.equal(String(ti('a.code', { cmd: fake })), 'Run <code>&lt;script&gt;alert(1)&lt;/script&gt;</code>');
+        // A fake toString() cannot smuggle markup either.
+        const sneaky = { text: 'x', toString: () => '<img src=x onerror=alert(1)>' };
+        assert.equal(String(ti('a.plain', { name: sneaky })), 'Hello x');
+        // A real SafeHtml still goes in as markup.
+        assert.equal(String(ti('a.plain', { name: html`<b>ok</b>` })), 'Hello <b>ok</b>');
+    } finally { setCatalogsForTest(null); }
+});
+
 test('block markup: paragraphs, <br>, lists', () => {
     setCatalogsForTest(fixture());
     try {

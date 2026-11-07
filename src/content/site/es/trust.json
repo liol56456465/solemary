@@ -28,9 +28,9 @@
       "note": "Ninguna advertencia contada, sin silenciamiento."
     },
     "headsUp": {
-      "label": "Corregidos tras un aviso",
-      "noteWithRate": "Los miembros corrigieron por sí mismos el {rate} de los mensajes señalados tras un aviso.",
-      "noteNoRate": "Con qué frecuencia los miembros corrigen por sí mismos un mensaje señalado tras un aviso."
+      "label": "Corregidos tras un aviso privado",
+      "noteWithRate": "Los miembros corrigieron por sí mismos el {rate} de los mensajes señalados tras un aviso privado.",
+      "noteNoRate": "Con qué frecuencia los miembros corrigen por sí mismos un mensaje señalado tras un aviso privado."
     }
   },
   "facts": {

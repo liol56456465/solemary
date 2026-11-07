@@ -369,14 +369,14 @@ test('My record: case status and the next warning in the page\'s language; Engli
     ].map((r, i) => ({ case_code: `c${i}`, type: 'ban', created_at: new Date(), reason: 'r', ...r }));
     const view = (text, ladder = { level: 0, warns_since_level: 0 }) => portal.buildRecordView({ standing: { ladder, warns: [] }, cases: rows, appeals: [], text });
     assert.deepEqual(view(en).cases.map((c) => c.status), rows.map((r) => caseStatusLabel(r)));
-    assert.deepEqual(view(ru).cases.map((c) => c.status), ['снято по апелляции', 'отменено модератором', 'снято', 'апелляция на рассмотрении', 'истекло', 'истекло']);
+    assert.deepEqual(view(ru).cases.map((c) => c.status), ['снято по апелляции', 'отменено модератором', 'снято досрочно', 'апелляция на рассмотрении', 'истекло', 'истекло']);
     assert.equal(portal.buildRecordView({ standing: { warns: [] }, cases: [rows[0]], appeals: [{ case_code: 'c0', status: 'denied', type: 'ban', created_at: new Date() }], text: de }).cases[0].status, 'per Einspruch aufgehoben');
     for (const ladder of [{ level: 0, warns_since_level: 0 }, { level: 0, warns_since_level: 1 }, { level: 0, warns_since_level: 2 }, { level: 1, warns_since_level: 0 }, { level: 2, warns_since_level: 0 }, { level: 3, warns_since_level: 0 }]) {
         assert.equal(portal.nextWarningWords(ladder, en), nextWarningText(ladder));
     }
     assert.equal(portal.nextWarningWords({ level: 0, warns_since_level: 0 }, de), 'Es wäre Verwarnung 1 von 3. Noch 2 weitere danach würden einen automatischen Bann bedeuten (7 Tage).');
-    assert.equal(portal.nextWarningWords({ level: 1, warns_since_level: 0 }, ru), 'Это будет предел предупреждений: автоматический бан (1 месяц, уровень лестницы 2).');
-    assert.equal(portal.nextWarningWords({ level: 2, warns_since_level: 0 }, ru), 'Это будет предел предупреждений: автоматический бан (навсегда, уровень лестницы 3).');
+    assert.equal(portal.nextWarningWords({ level: 1, warns_since_level: 0 }, ru), 'Это будет предел предупреждений: автоматический бан (1 месяц, ступень предупреждений 2 из 3).');
+    assert.equal(portal.nextWarningWords({ level: 2, warns_since_level: 0 }, ru), 'Это будет предел предупреждений: автоматический бан (навсегда, ступень предупреждений 3 из 3).');
     assert.equal(portal.banLengthText(DAY_MS + 3_600_000, ru), '1 день 1 час');
 });
 

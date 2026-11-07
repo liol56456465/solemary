@@ -41,7 +41,7 @@
       },
       "automod": {
         "title": "4. Prüf den Automod",
-        "text": "Auf der Seite **Automod** legst du fest, was der Automod tut. Wenn du dir noch nicht sicher bist, wähle **Watch only**: Dann meldet der Automod dem Team nur, was er getan hätte, und niemandem passiert etwas, bis ein Teammitglied zustimmt. Wechsle zu **Act**, wenn du ihm vertraust."
+        "text": "Auf der Seite **Automod** legst du fest, was der Automod tut. Wenn du dir noch nicht sicher bist, wähle **Report only (don't delete)**: Dann meldet der Automod dem Team nur, was er getan hätte, und niemandem passiert etwas, bis ein Teammitglied zustimmt. Wechsle zu **Act**, wenn du ihm vertraust."
       },
       "try": {
         "title": "5. Probier es an dir selbst aus",
@@ -62,7 +62,7 @@
       },
       "firstAction": {
         "title": "Deine erste Aktion",
-        "run": "Führe `/enforcements user:@member` aus. Das Panel zeigt das Kontoalter des Mitglieds, seine Zeit auf dem Server, gezählte Verwarnungen, die Stufe auf der Leiter, aktive Strafen und seine letzten Fälle. Nur du kannst es sehen.",
+        "run": "Führe `/enforcements user:@member` aus. Das Panel zeigt das Kontoalter des Mitglieds, seine Zeit auf dem Server, gezählte Verwarnungen, die Verwarnungsstufe (0 bis 3), aktive Strafen und seine letzten Fälle. Nur du kannst es sehen.",
         "action": "Drück die Aktion: **Ban**, **Kick**, **Mute** oder **Warn** (oder **Unban**, **Unmute**, **Remove warn**, wenn zutreffend).",
         "reason": "Wähle einen vorgefertigten Grund oder **Custom…** und tipp einen ein.",
         "duration": "Gib für eine Stummschaltung eine Dauer an, etwa `30m`, `24h`, `7d` oder `1mo`. Für einen Bann genauso, oder lass das Feld leer für einen permanenten Bann.",
@@ -72,7 +72,7 @@
       "everyWeek": {
         "title": "Befehle, die du brauchst",
         "background": "Der vollständige Fallverlauf eines Mitglieds.",
-        "case": "Fälle suchen, Grund oder Dauer bearbeiten, einen irrtümlichen Fall annullieren, seinen Verlauf sehen, Beweise anhängen.",
+        "case": "Fälle suchen, Grund oder Dauer bearbeiten, einen irrtümlichen Fall entfernen (er zählt dann nicht mehr), seinen Verlauf sehen, Beweise anhängen.",
         "appeals": "Einen Einspruch per Fallcode annehmen oder ablehnen, mit einer Notiz.",
         "test": "Schickt dir genau die Direktnachricht, die ein Mitglied bekommen würde. Niemandem passiert etwas.",
         "staff": "Aktivität und Statistiken des Teams.",
@@ -104,19 +104,19 @@
         "appealText": "Senkt die Stufe um eins, nie unter 0.",
         "manualBan": "Ein manuell verhängter Bann",
         "manualBanText": "Verändert die Leiter nicht.",
-        "void": "Einen Fall annullieren",
-        "voidText": "Der Fall bleibt in der Akte, zählt aber nicht mehr.",
+        "void": "Einen Fall entfernen",
+        "voidText": "Für einen Fall, der ein Fehler war. Der Fall bleibt in der Akte, zählt aber nicht mehr.",
         "imported": "Importierte alte Verwarnungen",
         "importedText": "Werden nur als Verlauf angezeigt. Sie zählen nicht."
       },
-      "standing": "Mitglieder können mit **My standing** im Einspruchs-Panel nachsehen, wo sie stehen."
+      "standing": "Mitglieder können mit **My record** im Einspruchs-Panel nachsehen, wo sie stehen."
     },
     "appeals": {
       "title": "Einsprüche: So funktionieren sie",
       "summary": "Wo du Einspruch einlegst, was das Formular fragt, wer entscheidet und wann du es erneut versuchen kannst.",
       "where": {
         "title": "Wo du Einspruch einlegst",
-        "text": "Jede Direktnachricht zu einer Strafe enthält den Einspruchslink oder sagt, dass kein Einspruch möglich ist. Das Einspruchs-Panel hat drei Buttons: **Appeal**, **My appeals** und **My standing**. Stummgeschaltete oder verwarnte Mitglieder nutzen das Panel auf dem Hauptserver. Gebannte Mitglieder nutzen das auf {support}, das sie auch nach einem Bann noch erreichen."
+        "text": "Jede Direktnachricht zu einer Strafe enthält den Einspruchslink oder sagt, dass kein Einspruch möglich ist. Das Einspruchs-Panel hat drei Buttons: **Appeal**, **My appeals** und **My record**. Stummgeschaltete oder verwarnte Mitglieder nutzen das Panel auf dem Hauptserver. Gebannte Mitglieder nutzen das auf {support}, das sie auch nach einem Bann noch erreichen."
       },
       "form": {
         "title": "Das Formular",
@@ -154,7 +154,7 @@
       "areas": {
         "title": "Die vier Bereiche",
         "moderate": "Moderate",
-        "moderateText": "Overview (was dich zuerst braucht), Inbox, Members, Banned, Cases, Appeals, No-contact, Staff und Channel tools.",
+        "moderateText": "Overview (was dich zuerst braucht), Inbox, Members, Banned, Cases, Appeals, Keep apart, Staff und Channel tools.",
         "community": "Community",
         "communityText": "Tickets and modmail, Welcome and goodbye, Leveling, Reaction roles, Messages, Giveaways, Birthdays, Applications, Community und Join to create.",
         "setup": "Server setup",

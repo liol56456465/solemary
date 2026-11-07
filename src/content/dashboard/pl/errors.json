@@ -21,7 +21,7 @@
   "loggedOut": "Wylogowano",
   "loggedOutText": "Twoja sesja się zakończyła. Otwórz {base}, aby zalogować się ponownie.",
   "notAllowed": "Niedozwolone",
-  "moderatorOnly": "To wymaga uprawnienia Administrator na głównym serwerze. Jako moderator możesz korzystać ze stron Przegląd, Członkowie, Zbanowani, Sprawy, Odwołania i Zakazy kontaktu oraz ostrzegać, wyciszać, cofać wyciszenie, dawać przerwy (timeout) i wyrzucać członków.",
+  "moderatorOnly": "To wymaga uprawnienia Administrator na głównym serwerze. Jako moderator możesz korzystać ze stron Przegląd, Członkowie, Zbanowani, Sprawy, Odwołania i Rozdzielenie oraz ostrzegać, wyciszać, cofać wyciszenie, dawać przerwy (timeout) i wyrzucać członków.",
   "csrf": "Ten formularz nie pochodzi z tego panelu (niezgodny token bezpieczeństwa lub pochodzenie). Odśwież stronę i spróbuj ponownie.",
   "needsAdmin": "To wymaga uprawnienia Administrator na głównym serwerze.",
   "needsStaffRole": "To wymaga roli moderatora lub administratora.",
