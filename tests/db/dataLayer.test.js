@@ -72,6 +72,10 @@ before(async () => {
     await db.initialize();
     assert.equal(db.getConnectionType(), 'postgresql');
     instrument(pgDb.pool);
+    // These per-run guilds are not home servers: read their (empty) settings rows the way the bot
+    // does (refreshGuildSettings), so they resolve to the neutral defaults instead of throwing.
+    const { refreshGuildSettings } = await import('../../src/services/settings/guildSettings.js');
+    await Promise.all([guildA, guildB].map((id) => refreshGuildSettings(id)));
     client = { db };
     ({ updateGuildConfig, getGuildConfig } = await import('../../src/services/config/guildConfig.js'));
     ({ setBirthday, getGuildBirthdays, registerTemporaryChannel, getJoinToCreateConfig } = await import('../../src/utils/database.js'));
@@ -217,7 +221,7 @@ test('outage: a failed health check makes everything throw until the database is
 
 test('mass-action guard: the ban after the limit is refused, the moderator blocked, owners alerted', { skip }, async () => {
     const { enforceMassActionGuard, getMassActionBlock, clearMassActionBlock } = await import('../../src/services/enforcement/massActionGuard.js');
-    const { enforcementConfig } = await import('../../src/config/enforcement.js');
+    const { resolveSetting } = await import('../../src/services/settings/guildSettings.js');
     const moderatorId = user(900);
     const dms = [];
     const fakeClient = {
@@ -227,7 +231,7 @@ test('mass-action guard: the ban after the limit is refused, the moderator block
     const guild = { id: guildA, name: 'Test guild', client: fakeClient };
     const moderator = { id: moderatorId, user: { username: 'rogue' } };
     try {
-        for (let i = 0; i < enforcementConfig.massActionLimit; i++) {
+        for (let i = 0; i < resolveSetting(guildA, 'massActionLimit'); i++) { // guildA's own limit (the generic default)
             await pgDb.pool.query(
                 `INSERT INTO mod_cases (guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username, type, name, reason, prebuilt_or_custom)
                  VALUES ($1, $2, $3, 'x', $4, 'rogue', $5, $2, 'r', 'custom')`,
@@ -251,8 +255,8 @@ test('mass-action guard: the ban after the limit is refused, the moderator block
 
 test('mass-action guard: mutes have their own, higher limit (MASS_MUTE_LIMIT, default 10); same block and owner DM', { skip }, async () => {
     const { enforceMassActionGuard, getMassActionBlock, clearMassActionBlock, recentBanKickCount } = await import('../../src/services/enforcement/massActionGuard.js');
-    const { enforcementConfig } = await import('../../src/config/enforcement.js');
-    assert.equal(enforcementConfig.massMuteLimit, 10);
+    const { resolveSetting } = await import('../../src/services/settings/guildSettings.js');
+    assert.equal(resolveSetting(guildA, 'massMuteLimit'), 10, 'guildA stored nothing: the generic default');
     const moderatorId = user(930);
     const dms = [];
     const guild = { id: guildA, name: 'Test guild', client: { guilds: { cache: new Map() }, users: { fetch: async (id) => ({ send: async (msg) => dms.push({ id, msg }) }) } } };
