@@ -394,7 +394,7 @@ test('invite rules: vanity URL shown; the button only for that server\'s owner o
     }
 });
 
-test('leave: refused for the main and support server; other servers need the token and the tick-box', async () => {
+test('leave: refused for the main and support server; other servers need the confirm page token (Confirm / Cancel)', async () => {
     assert.equal(canLeaveGuild(MAIN, [MAIN, SUPPORT]), false);
     assert.equal(canLeaveGuild(SUPPORT, [MAIN, SUPPORT]), false);
     assert.equal(canLeaveGuild(OTHER_GUILD, [MAIN, SUPPORT]), true);
@@ -402,22 +402,26 @@ test('leave: refused for the main and support server; other servers need the tok
     for (const id of [MAIN, SUPPORT]) {
         assert.ok(!(await get(h, h.ow.server, { params: { id } })).body.includes('Leave server…'));
         assert.equal((await post(h, h.ow.leavePreview, { params: { id } })).statusCode, 403);
-        assert.equal((await post(h, h.ow.leave, { params: { id }, form: { token: 'x', fh: 'y', confirm: '1' } })).statusCode, 403);
+        assert.equal((await post(h, h.ow.leave, { params: { id }, form: { token: 'x', fh: 'y' } })).statusCode, 403);
         assert.equal(h.guilds.get(id).left, 0);
     }
     const preview = await post(h, h.ow.leavePreview, { params: { id: OTHER_GUILD } });
     assert.equal(preview.statusCode, 200);
     const { token, fh } = tokenOf(preview.body);
     assert.ok(token && fh);
-    const noTick = await post(h, h.ow.leave, { params: { id: OTHER_GUILD }, form: { token, fh } });
-    assert.equal(noTick.statusCode, 400);
+    assert.ok(!preview.body.includes('type="checkbox"'), 'no tick box any more');
+    assert.ok(preview.body.includes(`<a class="btn" href="/dashboard/owner/servers/${OTHER_GUILD}">Cancel</a>`), 'Cancel goes back');
+    const noToken = await post(h, h.ow.leave, { params: { id: OTHER_GUILD }, form: {} });
+    assert.equal(noToken.statusCode, 400);
+    const badToken = await post(h, h.ow.leave, { params: { id: OTHER_GUILD }, form: { token: 'x'.repeat(32), fh } });
+    assert.equal(badToken.statusCode, 400);
     assert.equal(h.guilds.get(OTHER_GUILD).left, 0);
-    const again = tokenOf((await post(h, h.ow.leavePreview, { params: { id: OTHER_GUILD } })).body);
-    const done = await post(h, h.ow.leave, { params: { id: OTHER_GUILD }, form: { ...again, confirm: '1' } });
+    const again = { token, fh };
+    const done = await post(h, h.ow.leave, { params: { id: OTHER_GUILD }, form: { ...again } });
     assert.equal(done.statusCode, 303);
     assert.equal(h.guilds.get(OTHER_GUILD).left, 1);
     assert.equal(h.auditRows.at(-1).key, `servers.${OTHER_GUILD}.leave`);
-    const reused = await post(h, h.ow.leave, { params: { id: OTHER_GUILD }, form: { ...again, confirm: '1' } });
+    const reused = await post(h, h.ow.leave, { params: { id: OTHER_GUILD }, form: { ...again } });
     assert.equal(reused.statusCode, 400, 'a token works once');
 });
 
@@ -432,7 +436,11 @@ test('announce: preview lists targets and skipped servers; send posts with menti
     assert.match(preview.body, /no log channel configured/);
     assert.equal(h.guilds.get(MAIN).sent.length, 0, 'nothing sent before confirming');
     const { token, fh } = tokenOf(preview.body);
-    const sent = await post(h, h.ow.announceSend, { form: { token, fh, confirm: '1' } });
+    assert.ok(!preview.body.includes('type="checkbox"'), 'no tick box any more');
+    assert.ok(preview.body.includes('<a class="btn" href="/dashboard/owner/announce">Cancel</a>'));
+    assert.equal((await post(h, h.ow.announceSend, { form: {} })).statusCode, 400, 'no token → refused');
+    assert.equal(h.guilds.get(MAIN).sent.length, 0, 'nothing sent without the token');
+    const sent = await post(h, h.ow.announceSend, { form: { token, fh } });
     assert.equal(sent.statusCode, 200);
     assert.match(sent.body, /Posted \(2\)/);
     for (const id of [MAIN, OTHER_GUILD]) {
@@ -792,10 +800,10 @@ test('command sync page: counts, mismatches by name, errors never shown as "in s
     assert.ok(!err.includes('In sync') && !err.includes('Out of sync'));
 });
 
-test('command re-register: owner POST checks, token + tick-box, the injected registration runs once and is audited', async () => {
+test('command re-register: owner POST checks, confirm page token, the injected registration runs once and is audited', async () => {
     const admin = await setup({ userId: ADMIN });
     assert.equal((await post(admin, admin.ow.registerPreview)).statusCode, 404);
-    assert.equal((await post(admin, admin.ow.register, { form: { token: 'x', fh: 'y', confirm: '1' } })).statusCode, 404);
+    assert.equal((await post(admin, admin.ow.register, { form: { token: 'x', fh: 'y' } })).statusCode, 404);
     const stale = await setup({ createdAt: Date.now() - OWNER_SESSION_MAX_AGE_MS - 60000 });
     assert.equal((await post(stale, stale.ow.registerPreview)).statusCode, 401);
     const off = await setup({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } });
@@ -809,23 +817,24 @@ test('command re-register: owner POST checks, token + tick-box, the injected reg
     assert.ok(preview.body.includes('Confirm: re-register commands in the main server'));
     assert.ok(!/<style|style=|<script/i.test(preview.body.replace(ALLOWED_SCRIPT, '')));
     const { token, fh } = tokenOf(preview.body);
-    const noTick = await post(h, h.ow.register, { form: { token, fh } });
-    assert.equal(noTick.statusCode, 400);
-    assert.ok(!h.calls.some((c) => c.name === 'registerMainCommands'), 'nothing registered without the tick-box');
+    assert.ok(!preview.body.includes('type="checkbox"'), 'no tick box any more');
+    const wrongHash = await post(h, h.ow.register, { form: { token, fh: 'nope' } });
+    assert.equal(wrongHash.statusCode, 400);
+    assert.ok(!h.calls.some((c) => c.name === 'registerMainCommands'), 'nothing registered with a wrong hash (and the token is gone)');
 
     const again = tokenOf((await post(h, h.ow.registerPreview)).body);
-    const done = await post(h, h.ow.register, { form: { ...again, confirm: '1' } });
+    const done = await post(h, h.ow.register, { form: { ...again } });
     assert.equal(done.statusCode, 303);
     assert.equal(done.redirectedTo, '/dashboard/owner/commands');
     assert.equal(h.calls.filter((c) => c.name === 'registerMainCommands').length, 1);
     assert.deepEqual(h.auditRows.map((r) => [r.module, r.key, r.old, r.new]), [['owner', 'commands.register', { count: 3 }, { count: 3, retired: false }]]);
-    const reused = await post(h, h.ow.register, { form: { ...again, confirm: '1' } });
+    const reused = await post(h, h.ow.register, { form: { ...again } });
     assert.equal(reused.statusCode, 400, 'a token works once');
     assert.equal(h.calls.filter((c) => c.name === 'registerMainCommands').length, 1);
 
     const failing = await setup({ registerMainCommands: async () => { throw new Error('Missing Access'); } });
     const t = tokenOf((await post(failing, failing.ow.registerPreview)).body);
-    const failed = await post(failing, failing.ow.register, { form: { ...t, confirm: '1' } });
+    const failed = await post(failing, failing.ow.register, { form: { ...t } });
     assert.equal(failed.statusCode, 400);
     assert.match(failed.body, /Registration failed; the main server(&#39;|&#x27;|')s list was not changed: Missing Access/);
     assert.equal(failing.auditRows.length, 0, 'a failed registration is not audited as done');

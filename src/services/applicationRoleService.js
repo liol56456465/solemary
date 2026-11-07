@@ -150,6 +150,11 @@ export async function updateApplicationRole(client, guildId, roleId, changes = {
  */
 export async function deleteApplicationRole(client, guildId, roleId, { deleteApplications = true } = {}) {
     requireDb(client);
+    // Read every application of this role first (all of them, not the newest 50): a read error
+    // stops here, before anything is removed, instead of leaving orphaned applications behind.
+    const applications = deleteApplications
+        ? (await getApplications(client, guildId, { limit: Infinity })).filter((app) => app.roleId === roleId)
+        : [];
     let removed = null;
     await client.db.update(getApplicationRolesKey(guildId), (current) => {
         const roles = listOf(current);
@@ -159,12 +164,9 @@ export async function deleteApplicationRole(client, guildId, roleId, { deleteApp
     }, []);
     await client.db.delete(getApplicationRoleSettingsKey(guildId, roleId)).catch(() => {});
     let deletedApplications = 0;
-    if (deleteApplications) {
-        const applications = (await getApplications(client, guildId).catch(() => [])).filter((app) => app.roleId === roleId);
-        for (const app of applications) {
-            await deleteApplication(client, guildId, app.id, app.userId);
-            deletedApplications += 1;
-        }
+    for (const app of applications) {
+        await deleteApplication(client, guildId, app.id, app.userId);
+        deletedApplications += 1;
     }
     logger.info('Application role removed', { guildId, roleId, deletedApplications });
     return { role: removed, deletedApplications };

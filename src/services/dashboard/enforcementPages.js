@@ -49,6 +49,32 @@ ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" v
 <fieldset${enabled ? '' : raw(' disabled')}>${fields}${enabled && submit !== null ? html`<button type="submit" class="${danger ? 'danger' : secondary ? 'secondary' : 'primary'}">${submit}</button>` : ''}</fieldset></form>`;
 }
 
+/**
+ * The buttons of a confirm page: [Confirm] posts the one-time token back, [Cancel] is a
+ * link back (a plain GET, so it never changes anything).
+ */
+export function confirmButtons(csrf, actionPath, { submit, hidden = {}, danger = true, cancelHref }) {
+    return html`<form method="post" action="${path(actionPath)}" class="settings-form confirm-form"><input type="hidden" name="csrf" value="${csrf}">
+${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}
+<div class="buttons"><button type="submit" class="${danger ? 'danger' : 'primary'}">${submit}</button> <a class="btn" href="${cancelHref}">Cancel</a></div></form>`;
+}
+
+/**
+ * A confirm page: what will happen (rows of label/value, an optional list, notes), then
+ * [Confirm] [Cancel]. Used where a tick box or a typed word used to stand in for this step.
+ * rows: [{ label, value }]; list: { title, items: [text] } | null; notes: [text].
+ */
+export function confirmPage({ session, access = null, moduleStates = {}, active = null, title, heading, rows = [], list = null, notes = [], actionPath, hidden = {}, submit, danger = true, cancelHref }) {
+    const body = html`<p><a href="${cancelHref}">← Back (cancel)</a></p>
+<h1>${heading}</h1>
+<section class="card confirm-card">${rows.length ? html`<dl>${rows.map((row) => html`<dt>${row.label}</dt><dd>${row.value}</dd>`)}</dl>` : ''}
+${list ? html`<h2>${list.title}</h2><ul class="name-list">${list.items.map((item) => html`<li>${item}</li>`)}</ul>` : ''}
+${notes.map((n) => html`<p class="muted">${n}</p>`)}
+<p class="muted">Nothing has changed yet. This confirmation works once and expires in 5 minutes.</p>
+${confirmButtons(session.csrf, actionPath, { submit, hidden, danger, cancelHref })}</section>`;
+    return layout({ title, active, session, access, moduleStates, body });
+}
+
 function option(value, label, selected = false) {
     return html`<option value="${value}"${selected ? raw(' selected') : ''}>${label}</option>`;
 }
@@ -235,8 +261,8 @@ ${precedent ? html`<p class="muted">${precedent}</p>` : ''}
 ${destructive && Number.isFinite(guardLeft) ? html`<p class="notice">The mass-action guard allows ${guardLeft} more ban${guardLeft === 1 ? '' : 's'}/kick${guardLeft === 1 ? '' : 's'} in this 10-minute window; members beyond that are skipped.</p>` : ''}
 <section class="card"><h2>Will be changed (${plan.run.length})</h2>${plan.run.length ? html`<ul class="name-list">${plan.run.map((m) => html`<li><a href="${userHref(m.id)}">${m.name}</a></li>`)}</ul>` : html`<p class="empty">Nobody: every selected member is skipped.</p>`}</section>
 ${plan.skipped.length ? html`<section class="card"><h2>Skipped (${plan.skipped.length})</h2><ul class="skip-list">${plan.skipped.map((m) => html`<li><a href="${userHref(m.id)}">${m.name}</a><span class="muted">${m.why}</span></li>`)}</ul></section>` : ''}
-${plan.run.length ? actionForm(session.csrf, '/users/bulk/execute', html`<p class="muted">Runs one member at a time (Discord rate limits); you can leave the page and come back to the progress.${destructive ? ' Every member gets the same DM and case as a single action.' : ''}</p>`,
-        { submit: verb, hidden: { token, fh: hash }, danger: destructive, confirm: destructive ? `${verb}?` : '' }) : ''}`;
+${plan.run.length ? html`<section class="card confirm-card"><p class="muted">Runs one member at a time (Discord rate limits); you can leave the page and come back to the progress.${destructive ? ' Every member gets the same DM and case as a single action.' : ''} This confirmation works once and expires in 5 minutes.</p>
+${confirmButtons(session.csrf, '/users/bulk/execute', { submit: verb, hidden: { token, fh: hash }, danger: destructive, cancelHref: path('/users') })}</section>` : ''}`;
     return layout({ title: `Bulk: ${what}`, active: 'users', session, access, moduleStates, body });
 }
 
@@ -393,7 +419,7 @@ ${summary.memberHint ? html`<p class="muted">${summary.memberHint}</p>` : ''}
 ${summary.ruleHint ? html`<p class="muted">${summary.ruleHint}</p>` : ''}
 ${block ? html`<p class="error">You are blocked by the mass-action guard until ${formatDate(block.until)}; this will be refused.</p>` : ''}
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
-${actionForm(session.csrf, `/users/${userId}/action/execute`, '', { submit: `Confirm ${ACTION_LABELS[type].toLowerCase()}`, hidden: { token, fh: hash }, danger: true })}</section>`;
+${confirmButtons(session.csrf, `/users/${userId}/action/execute`, { submit: `Confirm ${ACTION_LABELS[type].toLowerCase()}`, hidden: { token, fh: hash }, cancelHref: userHref(userId) })}</section>`;
     return layout({ title: `Confirm ${ACTION_LABELS[type]}`, active: 'users', session, access, moduleStates, body });
 }
 
@@ -413,7 +439,7 @@ ${timed ? html`<label>New duration<input name="duration" maxlength="20" list="du
 <datalist id="durations-edit">${DURATION_CHOICES.map((d) => html`<option value="${d}"></option>`)}${record.type === 'ban' ? html`<option value="permanent"></option>` : ''}</datalist>` : ''}</div>`, { submit: 'Save changes' })}</div>
 <div class="card"><h3>Void</h3><p class="muted">Marks the case as a mistake: lifts what is still in effect (unban, unmute, warning removed, ladder stepped back) and DMs the member the reason.</p>
 ${actionForm(csrf, `/cases/${code}/void`, html`<label class="wide">Reason (shown to the member)<input name="reason" maxlength="500" required></label>
-<label class="check"><input type="checkbox" name="confirm" value="1" required> I want to void ${code}</label>`, { submit: 'Void case', danger: true })}</div>`}
+<p class="muted">Nothing happens yet: the next page shows what will be lifted, and you confirm there.</p>`, { submit: 'Void case…', danger: true })}</div>`}
 <div class="card"><h3>Evidence</h3>
 ${actionForm(csrf, `/cases/${code}/evidence/add`, html`<div class="grid"><label class="wide">Link (e.g. a Discord message link: its text is saved)<input name="link" maxlength="500" required></label>
 <label class="wide">Note (optional)<input name="note" maxlength="${EVIDENCE_NOTE_MAX}"></label></div>`, { submit: 'Add evidence' })}
@@ -482,7 +508,7 @@ export function appealConfirmPage({ session, access = null, moduleStates = {}, r
 <dt>Note</dt><dd>${note || '-'}</dd>
 <dt>Effect</dt><dd>${effect}${!accept && record.is_auto && record.ladder_level_after === 3 ? ' This level-3 ladder ban becomes unappealable.' : ''}</dd></dl>
 <p class="muted">The appeal channel gets the decision and is deleted 10 seconds later (its transcript goes to the mod log). This confirmation works once and expires in 5 minutes.</p>
-${actionForm(session.csrf, `/appeals/${record.case_code}/decide`, '', { submit: accept ? 'Accept appeal' : 'Deny appeal', hidden: { token, fh: hash }, danger: !accept })}</section>`;
+${confirmButtons(session.csrf, `/appeals/${record.case_code}/decide`, { submit: accept ? 'Accept appeal' : 'Deny appeal', hidden: { token, fh: hash }, danger: !accept, cancelHref: path(`/appeals/${encodeURIComponent(record.case_code)}`) })}</section>`;
     return layout({ title: `Confirm appeal ${record.case_code}`, active: 'appeals', session, access, moduleStates, body });
 }
 

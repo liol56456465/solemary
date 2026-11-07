@@ -102,9 +102,8 @@ ${rows.length && canBulk ? html`<form method="post" action="/dashboard/cases/bul
 <label>With the ticked cases<select name="action"><option value="tag-add">Add a tag</option><option value="tag-remove">Remove a tag</option><option value="void">Void them</option></select></label>
 <label>Tag<input name="tag" maxlength="21" placeholder="scam"></label>
 <label class="wide">Reason (for voiding; the members see it)<input name="reason" maxlength="500"></label>
-<label class="check"><input type="checkbox" name="confirm" value="1"> I want to void the ticked cases</label>
 <button class="primary" type="submit">Apply</button></form>
-<p class="muted">Tags: up to 25 cases at once. Voiding: up to 10, and each member gets the usual DM.</p>` : ''}
+<p class="muted">Tags: up to 25 cases at once. Voiding: up to 10, and each member gets the usual DM. Voiding shows a confirm page first.</p>` : ''}
 ${rows.length ? html`<div class="scroll"><table><thead><tr>${canBulk ? html`<th><span class="sr">Select</span></th>` : ''}<th>Case</th><th>Type</th><th>Member</th><th>Moderator</th><th>Reason</th><th>Date</th><th>Status</th></tr></thead><tbody>
 ${rows.map((row) => {
         const label = statusLabel(row);

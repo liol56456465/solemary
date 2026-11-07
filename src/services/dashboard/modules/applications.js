@@ -12,7 +12,7 @@ import { APPLICATION_NAME_MAX } from '../../applicationRoleService.js';
 import { REVIEW_NOTE_MAX } from '../../applicationReviewService.js';
 import { formatDate, html } from '../html.js';
 import {
-    InputError, PERMS, boolField, buttonForm, channelField, channelPicker, checkbox, checkboxInput, choiceField, switchInput, intField, isSnowflake, multiline,
+    InputError, PERMS, boolField, buttonForm, channelField, channelPicker, checkbox, choiceField, switchInput, intField, isSnowflake, multiline,
     numberInput, pill, postForm, roleField, rolePicker, roleName, selectInput, text, textArea, textInput,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -85,8 +85,8 @@ ${switchInput('enabled', r.enabled, { label: 'Open for applications', help: 'Off
 ${channelPicker(g, 'logChannelId', r.logChannelId, { label: 'Log channel for this role', perms: PERMS.post, noneLabel: 'the application log channel', help: 'Where new applications for this role are posted for staff.' })}
 ${textArea('questions', questionText(r.questions), { label: 'Questions', rows: 5, max: 1000, help: QUESTIONS_HELP })}</div>`,
         { submit: 'Save application', hidden: { roleId: r.roleId } })}
-${postForm(ctx, 'applications', 'role-delete', checkboxInput('confirm', false, { label: `Yes, also delete every application members sent for ${r.name}` }),
-        { submit: 'Delete application', danger: true, hidden: { roleId: r.roleId }, confirm: `Delete the ${r.name} application and every application submitted for it?` })}</details>`);
+${postForm(ctx, 'applications', 'role-delete', html`<p class="muted">Deleting also removes every application members sent for ${r.name}. The next page shows how many, and you confirm there.</p>`,
+        { submit: 'Delete application…', danger: true, hidden: { roleId: r.roleId } })}</details>`);
         const roleCreate = postForm(ctx, 'applications', 'role-create', html`<div class="grid">
 ${rolePicker(g, 'roleId', null, { label: 'Role members apply for', optional: false, help: 'Approved members get this role.' })}
 ${textInput('name', '', { label: 'Name', max: APPLICATION_NAME_MAX, help: 'What members see in /apply, for example Moderator.' })}
@@ -157,15 +157,36 @@ ${section('Default questions', questions, 'Used for every role that has no quest
             const { before, after } = await ctx.services.updateApplicationRole(ctx.client, ctx.guildId, roleId, patch);
             return { changes: diffSnapshots(before, after, Object.keys(patch), `applications.role.${roleId}.`), message: `Application "${after?.name || name}" saved.` };
         },
-        async 'role-delete'(ctx, form) {
-            const roleId = text(form, 'roleId', 25);
-            if (!isSnowflake(roleId)) throw new InputError('Unknown application.');
-            if (!checkbox(form, 'confirm')) throw new InputError('Tick the box to confirm. Deleting removes every application sent for this role.');
-            const { role, deletedApplications } = await ctx.services.deleteApplicationRole(ctx.client, ctx.guildId, roleId);
-            return {
-                changes: [{ key: `applications.role.${roleId}`, old: { name: role.name }, new: null }],
-                message: `Application "${role.name}" deleted with ${deletedApplications} submitted application(s).`,
-            };
+        'role-delete': {
+            // Two steps (routes.js): confirm() names the application and how many submitted
+            // applications go with it; run() only gets the form back with the one-time token.
+            async confirm(ctx, form) {
+                const roleId = text(form, 'roleId', 25);
+                if (!isSnowflake(roleId)) throw new InputError('Unknown application.');
+                const roles = await ctx.services.listApplicationRoles(ctx.client, ctx.guildId);
+                const current = roles.find((r) => r.roleId === roleId);
+                if (!current) throw new InputError('That application role no longer exists.');
+                // getApplications also clears expired applications (as on every read, e.g. this page).
+                const sent = (await ctx.services.getApplications(ctx.client, ctx.guildId, { limit: Infinity }) || []).filter((a) => a.roleId === roleId).length;
+                return {
+                    heading: `Confirm: delete the ${current.name} application`,
+                    rows: [
+                        { label: 'Application', value: `${current.name} (role @${ctx.guild.roles.cache.get(roleId)?.name || roleId})` },
+                        { label: 'Submitted applications', value: String(sent) },
+                        { label: 'Effect', value: `The application is removed from /apply and every application members sent for it is deleted. This cannot be undone. The role itself stays.` },
+                    ],
+                    submit: 'Delete application',
+                };
+            },
+            async run(ctx, form) {
+                const roleId = text(form, 'roleId', 25);
+                if (!isSnowflake(roleId)) throw new InputError('Unknown application.');
+                const { role, deletedApplications } = await ctx.services.deleteApplicationRole(ctx.client, ctx.guildId, roleId);
+                return {
+                    changes: [{ key: `applications.role.${roleId}`, old: { name: role.name }, new: null }],
+                    message: `Application "${role.name}" deleted with ${deletedApplications} submitted application(s).`,
+                };
+            },
         },
         async enabled(ctx, form) {
             const enabled = boolField(form, 'enabled', 'Applications');

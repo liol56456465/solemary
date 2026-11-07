@@ -81,7 +81,7 @@ test('erase: in the Owner nav; non-owners get 404 on the page and the POSTs', as
     const h = await setup({ userId: ADMIN });
     assert.equal((await get(h, h.ow.erase)).statusCode, 404);
     assert.equal((await post(h, h.ow.erasePreview, { form: { code: 'abcdefg' } })).statusCode, 404);
-    assert.equal((await post(h, h.ow.eraseRun, { form: { code: 'abcdefg', token: 'x', fh: 'y', confirm: '1' } })).statusCode, 404);
+    assert.equal((await post(h, h.ow.eraseRun, { form: { code: 'abcdefg', token: 'x', fh: 'y' } })).statusCode, 404);
     assert.deepEqual(h.calls, []);
 });
 
@@ -92,7 +92,7 @@ test('erase: wrong origin or CSRF → 403, nothing read or changed', async () =>
     assert.deepEqual(h.calls, []);
 });
 
-test('erase: form → confirm page naming the case → tick-box + one-time token → erased and audited without content', async () => {
+test('erase: form → confirm page naming the case → Confirm with the one-time token → erased and audited without content', async () => {
     const h = await setup();
     const page = await get(h, h.ow.erase);
     assert.equal(page.statusCode, 200);
@@ -105,28 +105,33 @@ test('erase: form → confirm page naming the case → tick-box + one-time token
     assert.match(preview.body, /300000000000000001/);
     assert.match(preview.body, /Posted &lt;b&gt;her&lt;\/b&gt; address/, 'escaped');
     assert.match(preview.body, /stays as a counted row/);
-    assert.match(preview.body, /Anonymise the case/);
+    assert.match(preview.body, /Anonymise case abcdefg for good/);
+    assert.match(preview.body, /This cannot be undone/, 'strong wording kept');
+    assert.ok(!preview.body.includes('type="checkbox"'), 'no tick box any more');
+    assert.ok(preview.body.includes('<a class="btn" href="/dashboard/owner/erase">Cancel</a>'));
     const { token, fh } = tokenOf(preview.body);
     assert.ok(token && fh);
 
-    const noTick = await post(h, h.ow.eraseRun, { form: { code: 'abcdefg', token, fh } });
-    assert.equal(noTick.statusCode, 400);
+    const noToken = await post(h, h.ow.eraseRun, { form: { code: 'abcdefg' } });
+    assert.equal(noToken.statusCode, 400);
+    const expired = await post(h, h.ow.eraseRun, { form: { code: 'abcdefg', token, fh: 'wrong' } });
+    assert.equal(expired.statusCode, 400, 'a wrong hash is refused (and uses the token up)');
     assert.ok(!h.calls.some(([name]) => name === 'erase'));
 
     const fresh = tokenOf((await post(h, h.ow.erasePreview, { form: { code: 'abcdefg' } })).body);
-    const otherCode = await post(h, h.ow.eraseRun, { form: { code: 'bbbbbbb', ...fresh, confirm: '1' } });
+    const otherCode = await post(h, h.ow.eraseRun, { form: { code: 'bbbbbbb', ...fresh } });
     assert.equal(otherCode.statusCode, 400, 'the token is bound to the case');
     assert.ok(!h.calls.some(([name]) => name === 'erase'));
 
     const again = tokenOf((await post(h, h.ow.erasePreview, { form: { code: 'abcdefg' } })).body);
-    const done = await post(h, h.ow.eraseRun, { form: { code: 'abcdefg', ...again, confirm: '1' } });
+    const done = await post(h, h.ow.eraseRun, { form: { code: 'abcdefg', ...again } });
     assert.equal(done.statusCode, 303);
     assert.match(done.redirectedTo, /\/owner\/erase$/);
     assert.deepEqual(h.calls.filter(([name]) => name !== 'preview'), [['erase', 'abcdefg'], ['images', 1]]);
     assert.deepEqual(h.auditRows.at(-1), { module: 'owner', key: 'privacy.erase.abcdefg', old: { type: 'warn', guildId: CASE.guild_id }, new: 'anonymised' });
     assert.ok(!JSON.stringify(h.auditRows).includes('address'), 'no case content in the audit log');
 
-    const reused = await post(h, h.ow.eraseRun, { form: { code: 'abcdefg', ...again, confirm: '1' } });
+    const reused = await post(h, h.ow.eraseRun, { form: { code: 'abcdefg', ...again } });
     assert.equal(reused.statusCode, 400, 'a token works once');
     assert.equal(h.calls.filter(([name]) => name === 'erase').length, 1);
 });
@@ -145,7 +150,7 @@ test('erase: a refusal re-renders the form with the reason; a database error →
 
     const failing = await setup({ erase: () => { throw new Error('connection refused'); } });
     const t = tokenOf((await post(failing, failing.ow.erasePreview, { form: { code: 'abcdefg' } })).body);
-    const res2 = await post(failing, failing.ow.eraseRun, { form: { code: 'abcdefg', ...t, confirm: '1' } });
+    const res2 = await post(failing, failing.ow.eraseRun, { form: { code: 'abcdefg', ...t } });
     assert.equal(res2.statusCode, 503);
     assert.equal(failing.auditRows.length, 0, 'no audit row for a failed erase');
     assert.ok(!failing.calls.some(([name]) => name === 'images'));

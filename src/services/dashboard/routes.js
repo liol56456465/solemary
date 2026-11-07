@@ -107,6 +107,7 @@ import { collectInbox, defaultInboxData } from './inboxData.js';
 import { createMemberToolsHandlers, defaultMemberTools } from './memberToolsRoutes.js';
 import { createIncidentHandlers, defaultIncidents } from './incidentRoutes.js';
 import { createConfirmStore } from './confirmTokens.js';
+import { confirmPage } from './enforcementPages.js';
 import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
 import { createWebsiteHandlers, defaultWebsiteDeps } from './websiteRoutes.js';
 import { IMAGE_MAX_BYTES as SITE_IMAGE_MAX_BYTES } from '../site/siteImages.js';
@@ -893,15 +894,34 @@ export function createDashboard({
         }
         const ctx = contextFor(req);
         if (!ctx.guild) return failT(res, 503, 'serverUnavailable', 'serverUnavailableText', req);
+        const actionName = str(req.params?.action, 40);
         let result;
         try {
-            result = await action.run(ctx, req.body || {});
+            let form = req.body || {};
+            if (action.confirm) {
+                // Two steps: the first POST checks the form and shows what will happen; only the
+                // confirm page's one-time token (this session, this action, 5 minutes) runs it,
+                // with the form stored at the first step. run() validates everything again.
+                const subject = `module:${module.key}/${actionName}`;
+                if (!str(form.token, 100)) {
+                    const preview = await action.confirm(ctx, form);
+                    const { csrf: _csrf, token: _token, fh: _fh, ...stored } = form;
+                    const { token, hash } = confirms.issue({ session: session.idHash, subject, payload: stored });
+                    return sendHtml(res, 200, confirmPage({
+                        ...shellOf(req), active: module.key, title: preview.heading, heading: preview.heading, rows: preview.rows || [], notes: preview.notes || [],
+                        actionPath: `/${module.key}/${actionName}`, hidden: { token, fh: hash }, submit: preview.submit, cancelHref: path(`/${module.key}`),
+                    }));
+                }
+                form = confirms.consume(str(form.token, 100), { session: session.idHash, subject, hash: str(form.fh, 100) });
+                if (!form) throw new InputError('This confirmation expired or was already used. Nothing was done; fill in the form again.');
+            }
+            result = await action.run(ctx, form);
         } catch (error) {
             if (isInputError(error)) {
                 const message = plainText(error.userMessage || error.message);
                 logger.info(`Dashboard ${module.key}/${req.params.action} refused for ${session.userId}: ${message}`);
                 return renderModule(req, res, module, error.status === 403 ? 403 : 400, {
-                    error: message, errorAction: str(req.params?.action, 40), errorField: typeof error.field === 'string' ? error.field : null,
+                    error: message, errorAction: actionName, errorField: typeof error.field === 'string' ? error.field : null,
                 });
             }
             throw error;
@@ -1092,6 +1112,7 @@ export function dashboardRouter(d) {
     router.post('/users/:id/notes/add', form, user, safe(en.noteAdd));
     router.post('/users/:id/notes/remove', form, user, safe(en.noteRemove));
     router.post('/cases/bulk', form, user, safe(en.caseBulk));
+    router.post('/cases/bulk/void', form, user, safe(en.caseBulkVoid));
     router.post('/cases/searches/save', form, user, safe(d.searchSave));
     router.post('/cases/searches/delete', form, user, safe(d.searchDelete));
     router.post('/cases/:code/edit', form, user, safe(en.caseEdit));
