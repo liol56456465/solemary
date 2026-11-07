@@ -77,20 +77,34 @@ test('runRetention: a failing rule is logged and the others still run; the summa
 });
 
 test('the rules: one bounded DELETE each, cutoff and limit as parameters', async () => {
-    assert.deepEqual(RETENTION_RULES.map(([name]) => name), ['watchlist', 'no_contact', 'raid_reports', 'verification_audit', 'verification_ips']);
+    assert.deepEqual(RETENTION_RULES.map(([name]) => name), ['watchlist', 'no_contact', 'raid_reports', 'verification_audit', 'verification_ips', 'oauth_verified_guilds']);
     const now = Date.parse('2026-11-04T03:30:00Z');
+    const expectedDays = { verification_ips: 60, oauth_verified_guilds: 1 };
     for (const [name, rule] of RETENTION_RULES) {
         const seen = [];
         const n = await rule({ query: async (text, params) => { seen.push({ text, params }); return { rowCount: 3 }; }, now, limit: 7 });
-        assert.equal(n, 3, name);
-        assert.equal(seen.length, 1, `${name}: one statement`);
-        assert.match(seen[0].text, /^\s*DELETE FROM/, name);
-        assert.match(seen[0].text, /LIMIT \$\d/, `${name}: bounded`);
-        assert.ok(seen[0].params.includes(7), `${name}: limit passed`);
+        // verification_ips: the pre-v12 table, then the per-server table (v12) with what is left of the limit.
+        const statements = name === 'verification_ips' ? 2 : 1;
+        assert.equal(n, 3 * statements, name);
+        assert.equal(seen.length, statements, `${name}: ${statements} statement(s)`);
+        seen.forEach((statement, i) => {
+            assert.match(statement.text, /^\s*DELETE FROM/, name);
+            assert.match(statement.text, /LIMIT \$\d/, `${name}: bounded`);
+            assert.ok(statement.params.includes(i === 0 ? 7 : 4), `${name}: limit passed`);
+        });
         const cutoff = seen[0].params.find((p) => p instanceof Date);
         const days = Math.round((now - cutoff.getTime()) / 86_400_000);
-        assert.equal(days, name === 'verification_ips' ? 60 : 365, name);
+        assert.equal(days, expectedDays[name] ?? 365, name);
     }
+});
+
+test('verification_ips: a full first batch leaves the per-server table for the next run', async () => {
+    const seen = [];
+    const n = await RETENTION_RULES.find(([name]) => name === 'verification_ips')[1]({
+        query: async (text) => { seen.push(text); return { rowCount: 7 }; }, now: Date.now(), limit: 7,
+    });
+    assert.equal(n, 7);
+    assert.equal(seen.length, 1);
 });
 
 test('erasePlan: active ladder warn → anonymise; everything else → delete; pending appeal / ban or mute in force → refused', () => {

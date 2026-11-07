@@ -3,7 +3,8 @@
 // A verification is held for staff instead of going through when:
 //   - the Discord account is younger than MIN_ACCOUNT_AGE_MS, or
 //   - it comes from the same network (IP hash) as a member with an active ban in the
-//     main server: a likely ban-evasion alt.
+//     same server: a likely ban-evasion alt. Per server since v12 (guardScope): Mewvo's own
+//     servers share their history, any other server only sees its own.
 // Staff get a card with Approve / Deny; the user sees a "waiting for approval" page.
 //
 // Privacy: only an HMAC of the IP is stored (keyed with OAUTH_TOKEN_KEY, or the client
@@ -47,25 +48,51 @@ export function accountAgeMs(userId, now = Date.now()) {
 }
 
 /**
- * Deletes IP hashes not seen for IP_RETENTION_MS, except those of members with an active
- * ban in the main server. At most `limit` rows per call. Returns the count; throws on a
- * database error. Run daily by the retention job (privacy/retentionService.js) and, at
- * most once a day, before a verification is checked.
+ * Whose network history a verification in `guildId` is compared with (multi-server B1).
+ * Mewvo's own servers (main + support) share theirs, as before v12; any other server only
+ * sees its own rows and its own bans, so one server's verification never reveals or holds
+ * members of another. `legacy`: also read verification_ips (pre-v12 rows, all from home servers).
  */
-export async function pruneVerificationIpHashes({ q = query, now = Date.now(), limit = 5000 } = {}) {
-    const { rowCount } = await q(
+export function guardScope(guildId, config = enforcementConfig) {
+    const id = String(guildId || '');
+    const home = [...new Set([config.mainGuildId, config.supportGuildId].map((g) => String(g || '')).filter(Boolean))];
+    if (id && home.includes(id)) return { guildIds: home, legacy: true };
+    return { guildIds: id ? [id] : [], legacy: false };
+}
+
+/**
+ * Deletes IP hashes not seen for IP_RETENTION_MS, except those of members with an active
+ * ban in the row's server (home rows: in any of Mewvo's own servers; pre-v12 rows in
+ * verification_ips are home rows). At most `limit` rows per call, both tables together.
+ * Returns the count; throws on a database error. Run daily by the retention job
+ * (privacy/retentionService.js) and, at most once a day, before a verification is checked.
+ */
+export async function pruneVerificationIpHashes({ q = query, now = Date.now(), limit = 5000, config = enforcementConfig } = {}) {
+    const homeIds = guardScope(config.mainGuildId || config.supportGuildId, config).guildIds;
+    const activeBan = (alias, guildCondition) => `NOT EXISTS (
+                   SELECT 1 FROM ${T.cases} c
+                   WHERE c.target_user_id = ${alias}.user_id AND ${guildCondition} AND c.type = 'ban' AND c.is_test = FALSE
+                     AND c.status = ANY($3) AND (c.expires_at IS NULL OR c.expires_at > $4)
+               )`;
+    const cutoffAt = new Date(now - IP_RETENTION_MS);
+    const legacy = await q(
         `DELETE FROM ${T.verificationIps} WHERE ctid IN (
              SELECT v.ctid FROM ${T.verificationIps} v
-             WHERE v.seen_at < $1
-               AND NOT EXISTS (
-                   SELECT 1 FROM ${T.cases} c
-                   WHERE c.target_user_id = v.user_id AND c.guild_id = $2 AND c.type = 'ban' AND c.is_test = FALSE
-                     AND c.status = ANY($3) AND (c.expires_at IS NULL OR c.expires_at > $4)
-               )
+             WHERE v.seen_at < $1 AND ${activeBan('v', 'c.guild_id = ANY($2)')}
              LIMIT $5)`,
-        [new Date(now - IP_RETENTION_MS), enforcementConfig.mainGuildId, OPEN_STATUSES, new Date(now), limit]
+        [cutoffAt, homeIds, OPEN_STATUSES, new Date(now), limit]
     );
-    return rowCount || 0;
+    const removed = legacy?.rowCount || 0;
+    if (removed >= limit) return removed;
+    const scoped = await q(
+        `DELETE FROM ${T.verificationGuildIps} WHERE ctid IN (
+             SELECT v.ctid FROM ${T.verificationGuildIps} v
+             WHERE v.seen_at < $1
+               AND ${activeBan('v', '(c.guild_id = v.guild_id OR (v.guild_id = ANY($2) AND c.guild_id = ANY($2)))')}
+             LIMIT $5)`,
+        [cutoffAt, homeIds, OPEN_STATUSES, new Date(now), limit - removed]
+    );
+    return removed + (scoped?.rowCount || 0);
 }
 
 async function pruneOldHashes() {
@@ -76,36 +103,46 @@ async function pruneOldHashes() {
         .catch((error) => logger.warn(`Could not prune verification IP hashes: ${error.message}`));
 }
 
-async function recordIpHash(userId, ipHash) {
-    await query(
-        `INSERT INTO ${T.verificationIps} (user_id, ip_hash, seen_at) VALUES ($1, $2, NOW())
-         ON CONFLICT (user_id, ip_hash) DO UPDATE SET seen_at = NOW()`,
-        [userId, ipHash]
+/** Records that `userId` verified in `guildId` from this network (per server since v12). */
+export async function recordIpHash(guildId, userId, ipHash, { q = query } = {}) {
+    await q(
+        `INSERT INTO ${T.verificationGuildIps} (guild_id, user_id, ip_hash, seen_at) VALUES ($1, $2, $3, NOW())
+         ON CONFLICT (guild_id, ip_hash, user_id) DO UPDATE SET seen_at = NOW()`,
+        [guildId, userId, ipHash]
     );
 }
 
-/** Other members seen on this network who have an active ban: [{ user_id, case_code, target_username }]. */
-async function bannedOnSameNetwork(userId, ipHash) {
-    const { rows } = await query(
-        `SELECT DISTINCT ON (v.user_id) v.user_id, c.case_code, c.target_username
-         FROM ${T.verificationIps} v
-         JOIN ${T.cases} c ON c.target_user_id = v.user_id
-         WHERE v.ip_hash = $1 AND v.user_id <> $2
-           AND c.guild_id = $3 AND c.type = 'ban' AND c.is_test = FALSE
+/**
+ * Other members seen on this network in this server (its scope, guardScope) who have an active
+ * ban there: [{ user_id, case_code, target_username }]. Throws on a database error.
+ */
+export async function bannedOnSameNetwork(guildId, userId, ipHash, { q = query, config = enforcementConfig } = {}) {
+    const scope = guardScope(guildId, config);
+    if (!scope.guildIds.length) return [];
+    const { rows } = await q(
+        `WITH seen AS (
+             SELECT user_id FROM ${T.verificationGuildIps} WHERE ip_hash = $1 AND user_id <> $2 AND guild_id = ANY($3)
+             UNION
+             SELECT user_id FROM ${T.verificationIps} WHERE $5 AND ip_hash = $1 AND user_id <> $2
+         )
+         SELECT DISTINCT ON (s.user_id) s.user_id, c.case_code, c.target_username
+         FROM seen s
+         JOIN ${T.cases} c ON c.target_user_id = s.user_id
+         WHERE c.guild_id = ANY($3) AND c.type = 'ban' AND c.is_test = FALSE
            AND c.status = ANY($4) AND (c.expires_at IS NULL OR c.expires_at > NOW())
-         ORDER BY v.user_id, c.created_at DESC
+         ORDER BY s.user_id, c.created_at DESC
          LIMIT 5`,
-        [ipHash, userId, enforcementConfig.mainGuildId, OPEN_STATUSES]
+        [ipHash, userId, scope.guildIds, OPEN_STATUSES, scope.legacy]
     );
     return rows;
 }
 
 /**
- * Records where this verification came from and decides whether staff must approve it.
- * Returns { hold: boolean, reasons: string[] }. Never throws: if the checks can't run
- * (no database), verification goes through as before.
+ * Records where this verification in `guildId` came from and decides whether staff must
+ * approve it. Returns { hold: boolean, reasons: string[] }. Never throws: if the checks can't
+ * run (no database), verification goes through as before.
  */
-export async function assessVerification(userId, ip) {
+export async function assessVerification(guildId, userId, ip) {
     const reasons = [];
     const age = accountAgeMs(userId);
     if (age < MIN_ACCOUNT_AGE_MS) {
@@ -113,16 +150,16 @@ export async function assessVerification(userId, ip) {
     }
 
     const ipHash = hashIp(ip);
-    if (ipHash && isEnforcementDbAvailable()) {
+    if (ipHash && guildId && isEnforcementDbAvailable()) {
         try {
             await pruneOldHashes();
-            await recordIpHash(userId, ipHash);
-            const matches = await bannedOnSameNetwork(userId, ipHash);
+            await recordIpHash(guildId, userId, ipHash);
+            const matches = await bannedOnSameNetwork(guildId, userId, ipHash);
             for (const match of matches) {
                 reasons.push(`Same network as banned member ${match.target_username} (\`${match.user_id}\`, ban \`${match.case_code}\`)`);
             }
         } catch (error) {
-            logger.warn(`Verification network check failed for ${userId}: ${error.message}`);
+            logger.warn(`Verification network check failed for ${userId} in ${guildId}: ${error.message}`);
         }
     }
     return { hold: reasons.length > 0, reasons };
