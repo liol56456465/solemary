@@ -37,6 +37,7 @@
 
 import express from 'express';
 import { enforcementConfig } from '../../config/enforcement.js';
+import { resolveSetting } from '../settings/guildSettings.js';
 import { pgConfig } from '../../config/database/postgres.js';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { logger } from '../../utils/logger.js';
@@ -174,8 +175,21 @@ export function memberAccountsOn(env = process.env) {
     return memberAccountSettings(env, memberPortalSettings(env)).enabled;
 }
 
-export function appealInfo(record, lastAppeal, { now = Date.now(), config = enforcementConfig, text = translator() } = {}) {
+/**
+ * The appeal settings of the server a case belongs to (multi-server B0b): its appeal window and
+ * cooldown via resolveSetting. The website only shows the main server's cases, so this is the
+ * main server's values today; another server would get its own, never the main server's.
+ */
+export function appealConfigFor(guildId) {
+    return {
+        appealWindowMs: resolveSetting(guildId, 'appealWindowMs'),
+        appealCooldownMs: resolveSetting(guildId, 'appealCooldownMs'),
+    };
+}
+
+export function appealInfo(record, lastAppeal, { now = Date.now(), config, text = translator() } = {}) {
     const { t } = text;
+    config = config || appealConfigFor(record.guild_id);
     if (record.voided_at) return { appealable: false, text: t('portal.appeal.voided') };
     if (record.status === 'revoked') return { appealable: false, text: t('portal.appeal.lifted') };
     if (record.unappealable) return { appealable: false, text: t('portal.appeal.unappealable') };
@@ -243,7 +257,8 @@ export function nextWarningWords(ladder, text = translator()) {
  * The page's view model from the service results. Only these fields reach the page, so no
  * internal column can leak by accident. Pure, for tests.
  */
-export function buildRecordView({ standing, cases, appeals, now = Date.now(), config = enforcementConfig, text = translator() }) {
+export function buildRecordView({ standing, cases, appeals, now = Date.now(), config, text = translator() }) {
+    // `config` (tests) overrides every case; without it each case uses its own server's appeal settings.
     const { t } = text;
     const rows = (cases || []).filter((row) => !row.is_test);
     const codes = new Set(rows.map((row) => row.case_code));
@@ -257,7 +272,7 @@ export function buildRecordView({ standing, cases, appeals, now = Date.now(), co
     }
     const counted = new Set((standing.warns || []).map((warn) => warn.case_code));
     const ladder = standing.ladder || { level: 0, warns_since_level: 0 };
-    const threshold = ladder.level === 0 ? config.warnsPerLevel : 1;
+    const threshold = ladder.level === 0 ? (config?.warnsPerLevel ?? enforcementConfig.warnsPerLevel) : 1;
     const active = (record) => (record ? { code: record.case_code, endsAt: record.expires_at || null } : null);
     return {
         warnings: { count: Number(ladder.warns_since_level) || 0, threshold },

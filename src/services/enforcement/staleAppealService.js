@@ -16,6 +16,7 @@ import { logger } from '../../utils/logger.js';
 import { getGuildConfig } from '../config/guildConfig.js';
 import { generateTranscript } from '../ticket.js';
 import { isEnforcementDbAvailable, query, T } from './db.js';
+import { SettingsUnavailableError, guildIdFor, isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
 
 const DECIDED_GRACE_MS = 10 * 60 * 1000; // the normal delayed delete gets this long first
 const reminderKey = (appealId) => `appeals:stale-reminded:${appealId}`;
@@ -47,7 +48,7 @@ async function closeWithTranscript(client, guild, channel, row, why) {
     logger.info(`Closed ${row.kind} channel ${channel.id} (${why})`);
 }
 
-async function remindStaff(client, guild, channel, row) {
+async function remindStaff(client, guild, channel, row, reminderMs) {
     if (await db.get(reminderKey(row.id), null)) return;
     // Ban/kick appeal: remind in the main-server staff channel, not where the appellant reads.
     if (row.staff_channel_id) {
@@ -57,7 +58,7 @@ async function remindStaff(client, guild, channel, row) {
     }
     const config = await getGuildConfig(client, guild.id);
     const staffRoleId = config.ticketStaffRoleId;
-    const days = Math.round(enforcementConfig.staleAppealReminderMs / 86400000);
+    const days = Math.round(reminderMs / 86400000);
     await channel.send({
         content: `${staffRoleId ? `<@&${staffRoleId}> ` : ''}This appeal (\`${row.case_code}\`) has had no activity for ${days} days and is still waiting for a decision. Use the Accept / Deny buttons above or \`/appeals\`.`,
         allowedMentions: { roles: staffRoleId ? [staffRoleId] : [] },
@@ -67,33 +68,47 @@ async function remindStaff(client, guild, channel, row) {
 
 export async function tidyStaleAppealChannels(client) {
     if (!isEnforcementDbAvailable()) return;
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
-    if (!guild) return;
+    // Home rows (main/support) are tidied in the main server with its settings, as before; any
+    // other server's rows in that server with its own settings. A server whose settings cannot
+    // be read is skipped for this run.
+    const mainGuild = client.guilds.cache.get(enforcementConfig.mainGuildId) || null;
 
     const { rows } = await query(
-        `SELECT id, kind, case_code, user_id, status, channel_id, channel_guild_id, staff_channel_id, decided_at FROM ${T.appeals}
+        `SELECT id, kind, case_code, user_id, guild_id, status, channel_id, channel_guild_id, staff_channel_id, decided_at FROM ${T.appeals}
          WHERE channel_id IS NOT NULL AND created_at > NOW() - INTERVAL '90 days'
          ORDER BY created_at`,
     );
     const now = Date.now();
+    const skipped = new Set();
     for (const row of rows) {
+        const home = isHomeGuild(row.guild_id);
+        const guild = home ? mainGuild : client.guilds.cache.get(row.guild_id);
+        if (!guild || skipped.has(guild.id)) continue;
         const channelGuild = row.channel_guild_id ? client.guilds.cache.get(row.channel_guild_id) : guild;
         const channel = channelGuild?.channels.cache.get(row.channel_id);
         if (!channel) continue;
         try {
+            const settingsGuildId = home ? guildIdFor('main') || guild.id : guild.id;
             const idleMs = now - lastActivity(channel);
             if (row.kind === 'report') {
-                if (idleMs >= enforcementConfig.staleReportMs) {
-                    await closeWithTranscript(client, guild, channel, row, `no messages for ${Math.round(enforcementConfig.staleReportMs / 86400000)} days`);
+                const staleReportMs = resolveSetting(settingsGuildId, 'staleReportMs');
+                if (idleMs >= staleReportMs) {
+                    await closeWithTranscript(client, guild, channel, row, `no messages for ${Math.round(staleReportMs / 86400000)} days`);
                 }
             } else if (row.status === 'pending') {
-                if (idleMs >= enforcementConfig.staleAppealReminderMs) await remindStaff(client, guild, channel, row);
+                const reminderMs = resolveSetting(settingsGuildId, 'staleAppealReminderMs');
+                if (idleMs >= reminderMs) await remindStaff(client, guild, channel, row, reminderMs);
             } else if (row.decided_at && now - new Date(row.decided_at).getTime() >= DECIDED_GRACE_MS) {
                 await closeWithTranscript(client, guild, channel, row, `appeal already ${row.status}`);
                 const staffChannel = row.staff_channel_id ? guild.channels.cache.get(row.staff_channel_id) : null;
                 if (staffChannel) await closeWithTranscript(client, guild, staffChannel, row, `appeal already ${row.status}`);
             }
         } catch (error) {
+            if (error instanceof SettingsUnavailableError) {
+                skipped.add(guild.id);
+                logger.warn(`Stale appeal/report channels of guild ${guild.id} skipped this run: ${error.message}`);
+                continue;
+            }
             logger.warn(`Stale ${row.kind} channel ${row.channel_id} could not be tidied: ${error.message}`);
         }
     }

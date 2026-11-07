@@ -17,9 +17,9 @@ const id = (prefix, n) => `${prefix}${runId}${String(n).padStart(8, '0')}`;
 const ALPHA = 'abcdefghjkmnpqrstuvwxyz23456789';
 let seq = Number(runId) * 7;
 const caseCode = () => { let out = ''; let x = (seq += 13); for (let i = 0; i < 7; i += 1) { out += ALPHA[x % ALPHA.length]; x = Math.floor(x / ALPHA.length); } return out; };
-let pgDb, appeals, enforcementConfig;
+let pgDb, appeals, enforcementConfig, settings;
 let n = 100; // channel numbers, unique across all fake worlds in this file
-const saved = {};
+const OTHER_GUILD = id('5', 1); // not a home server
 
 before(async () => {
     if (skip) return;
@@ -28,13 +28,16 @@ before(async () => {
     await db.initialize();
     ({ enforcementConfig } = await import('../../src/config/enforcement.js'));
     appeals = await import('../../src/services/enforcement/appealService.js');
-    saved.appeals = enforcementConfig.appealsCategoryId;
-    enforcementConfig.appealsCategoryId = id('7', 1);
+    settings = await import('../../src/services/settings/guildSettings.js');
+    // The appeals category is read per server (resolveSetting), so it is set in the main
+    // server's cached settings row instead of pinned on enforcementConfig.
+    settings.setSettingsCacheForTests(enforcementConfig.mainGuildId, { appealsCategoryId: id('7', 1) });
 });
 
 after(async () => {
     if (skip) return;
-    enforcementConfig.appealsCategoryId = saved.appeals;
+    settings.setSettingsCacheForTests(enforcementConfig.mainGuildId, null);
+    settings.setSettingsCacheForTests(OTHER_GUILD, null);
     enforcementConfig.supportAppealsCategoryId = undefined;
     await pgDb.pool.query(`DELETE FROM mod_appeals WHERE user_id LIKE $1`, [`6${runId}%`]);
     await pgDb.pool.query(`DELETE FROM mod_cases WHERE target_user_id LIKE $1`, [`6${runId}%`]);
@@ -89,12 +92,12 @@ function world({ appellantInSupport = true, appellantIsSupportAdmin = false } = 
     return { client, main, support, sent, dms };
 }
 
-async function insertCase(type, target, extra = {}) {
+async function insertCase(type, target, { guildId = enforcementConfig.mainGuildId } = {}) {
     const code = caseCode();
     await pgDb.pool.query(
         `INSERT INTO mod_cases (guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username, type, name, reason, prebuilt_or_custom, status)
          VALUES ($1, $2, $3, 'appellant', $4, 'secretmod', $5, $6, 'Spam', 'prebuilt', 'active')`,
-        [enforcementConfig.mainGuildId, code, target, id("6", 999), type, `appellant ${type} ${code}`]);
+        [guildId, code, target, id("6", 999), type, `appellant ${type} ${code}`]);
     return code;
 }
 
@@ -181,4 +184,81 @@ test('decision on a support appeal: the appellant sees no admin name or note; th
     const inStaff = text(w.sent.filter((s) => s.where === staffChannel).map((s) => s.payload));
     assert.match(inStaff, /secretadmin/);
     assert.match(inStaff, /repeat offender/);
+});
+
+// ── Another (non-home) server: never a channel in Mewvo's main or Support server ──
+
+function withOtherGuild(w, categoryId) {
+    const other = { id: OTHER_GUILD, created: [], client: w.client };
+    other.channels = {
+        cache: new Map(),
+        fetch: async (cid) => other.channels.cache.get(cid) || (categoryId && cid === categoryId ? { id: cid, type: ChannelType.GuildCategory } : null),
+        create: async (options) => {
+            const channel = { id: id('8', (n += 1)), guild: other, ...options, send: async (payload) => { w.sent.push({ where: channel, payload }); return payload; }, messages: { fetch: async () => new Map() } };
+            other.channels.cache.set(channel.id, channel);
+            other.created.push(channel);
+            return channel;
+        },
+    };
+    w.client.guilds.cache.set(other.id, other);
+    // Its guild config reads fine and has no /ticket category.
+    w.client.db = { get: async (key, fallback) => fallback };
+    return other;
+}
+
+test('non-home ban appeal without an appeals category: stored, no channel anywhere (dashboard / web form only)', { skip }, async () => {
+    enforcementConfig.supportAppealsCategoryId = id('7', 2);
+    settings.setSettingsCacheForTests(OTHER_GUILD, {}); // its settings were read: nothing stored
+    const w = world();
+    const other = withOtherGuild(w, null);
+    const user = { id: id('6', 11), username: 'appellant' };
+    const code = await insertCase('ban', user.id, { guildId: OTHER_GUILD });
+    const res = await appeals.submitAppeal({ client: w.client, user, caseCode: code, answers: { reason: 'Please unban me, I learned my lesson' } });
+    assert.equal(res.channel, null);
+    assert.equal(res.staffChannel, null);
+    assert.equal(res.storedOnly, true);
+    assert.equal(w.main.created.length + w.support.created.length + other.created.length, 0, 'no channel in main, support or the server itself');
+    const { rows: [row] } = await pgDb.pool.query(`SELECT guild_id, status, channel_id, channel_guild_id, staff_channel_id FROM mod_appeals WHERE case_code = $1`, [code]);
+    assert.deepEqual(row, { guild_id: OTHER_GUILD, status: 'pending', channel_id: null, channel_guild_id: null, staff_channel_id: null });
+    const { rows: [kase] } = await pgDb.pool.query(`SELECT status FROM mod_cases WHERE case_code = $1`, [code]);
+    assert.equal(kase.status, 'appeal_pending');
+
+    // Its guild config cannot be read: an error, never a silent store-only appeal.
+    const w2 = world();
+    withOtherGuild(w2, null);
+    delete w2.client.db;
+    const user2 = { id: id('6', 14), username: 'appellant' };
+    const code2 = await insertCase('ban', user2.id, { guildId: OTHER_GUILD });
+    await assert.rejects(appeals.submitAppeal({ client: w2.client, user: user2, caseCode: code2, answers: { reason: 'Please unban me, I learned my lesson' } }),
+        { message: 'Database client unavailable for guild config' });
+    const { rows: none } = await pgDb.pool.query(`SELECT 1 FROM mod_appeals WHERE case_code = $1`, [code2]);
+    assert.equal(none.length, 0, 'nothing stored');
+});
+
+test('non-home kick appeal with its own appeals category: staff channel in that server only, never in Support', { skip }, async () => {
+    enforcementConfig.supportAppealsCategoryId = id('7', 2);
+    settings.setSettingsCacheForTests(OTHER_GUILD, { appealsCategoryId: id('7', 3) });
+    const w = world();
+    const other = withOtherGuild(w, id('7', 3));
+    const user = { id: id('6', 12), username: 'appellant' };
+    const code = await insertCase('kick', user.id, { guildId: OTHER_GUILD });
+    const { channel, staffChannel } = await appeals.submitAppeal({ client: w.client, user, caseCode: code, answers: { reason: 'It was a misunderstanding, please' } });
+    assert.equal(staffChannel.guild.id, OTHER_GUILD);
+    assert.equal(staffChannel.parent, id('7', 3), 'in its own appeals category');
+    assert.equal(channel, staffChannel, 'no separate Support conversation');
+    assert.equal(w.main.created.length + w.support.created.length, 0, "nothing in Mewvo's servers");
+    assert.equal(other.created.length, 1);
+    const { rows: [row] } = await pgDb.pool.query(`SELECT guild_id, channel_guild_id, staff_channel_id FROM mod_appeals WHERE case_code = $1`, [code]);
+    assert.deepEqual(row, { guild_id: OTHER_GUILD, channel_guild_id: OTHER_GUILD, staff_channel_id: null });
+});
+
+test('non-home appeal: its own appeal window, not the main server\'s', { skip }, async () => {
+    settings.setSettingsCacheForTests(OTHER_GUILD, { appealWindowMs: 86400000 });
+    const user = { id: id('6', 13), username: 'appellant' };
+    const code = await insertCase('warn', user.id, { guildId: OTHER_GUILD });
+    await pgDb.pool.query(`UPDATE mod_cases SET created_at = NOW() - INTERVAL '3 days' WHERE case_code = $1`, [code]);
+    const record = (await pgDb.pool.query(`SELECT * FROM mod_cases WHERE case_code = $1`, [code])).rows[0];
+    await assert.rejects(appeals.assertAppealable(record, user.id), /within 1 day\./);
+    settings.setSettingsCacheForTests(OTHER_GUILD, null);
+    await assert.rejects(appeals.assertAppealable(record, user.id), { name: 'SettingsUnavailableError' }, 'unknown settings: an error, never defaults');
 });

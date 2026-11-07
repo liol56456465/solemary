@@ -5,7 +5,7 @@ import { isLocalDatabaseUrl } from '../helpers/localDb.js';
 
 const url = process.env.POSTGRES_URL || '';
 const skip = isLocalDatabaseUrl(url) ? false : 'needs POSTGRES_URL on localhost (npm run test:db)';
-let pgDb, svc;
+let pgDb, svc, settings;
 const runId = String(Date.now()).slice(-9);
 const guild = `5${runId}00000071`;
 const member = `5${runId}00000072`;
@@ -17,12 +17,16 @@ before(async () => {
     const { db } = await import('../../src/utils/database/wrapper.js');
     await db.initialize();
     svc = await import('../../src/services/enforcement/appealStatusService.js');
+    // A non-home server: its own quiet time (1 day) from its settings row (multi-server B0b).
+    settings = await import('../../src/services/settings/guildSettings.js');
+    settings.setSettingsCacheForTests(guild, { staleAppealReminderMs: 24 * 60 * 60 * 1000 });
     await pgDb.pool.query(`INSERT INTO mod_cases (guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username, type, name, reason, prebuilt_or_custom, reason_key)
         VALUES ($1, $2, $3, 'm', '1', 'mod', 'warn', 'm warn 1', 'Spam', 'prebuilt', 'spam')`, [guild, code, member]);
     await pgDb.pool.query(`INSERT INTO mod_appeals (kind, case_code, user_id, username, guild_id, created_at) VALUES ('appeal', $1, $2, 'm', $3, NOW() - INTERVAL '3 days')`, [code, member, guild]);
 });
 after(async () => {
     if (skip) return;
+    settings.setSettingsCacheForTests(guild, null);
     await pgDb.pool.query('DELETE FROM mod_appeals WHERE case_code = $1', [code]);
     await pgDb.pool.query('DELETE FROM mod_cases WHERE case_code = $1', [code]);
     await pgDb.disconnect();

@@ -10,7 +10,10 @@ import { isLocalDatabaseUrl } from '../helpers/localDb.js';
 const skip = isLocalDatabaseUrl(process.env.POSTGRES_URL || '') ? false : 'needs POSTGRES_URL on localhost (npm run test:db)';
 const runId = String(Date.now()).slice(-9);
 const reporter = `6${runId}00000088`;
-let pgDb, appeals, enforcementConfig, savedCategory;
+let pgDb, appeals, enforcementConfig, settings;
+const pinned = {};
+// Main-server settings are read per server (resolveSetting): set them in its cached row.
+const pin = (patch) => { Object.assign(pinned, patch); settings.setSettingsCacheForTests(enforcementConfig.mainGuildId, { ...pinned }); };
 
 before(async () => {
     if (skip) return;
@@ -19,14 +22,13 @@ before(async () => {
     await db.initialize();
     ({ enforcementConfig } = await import('../../src/config/enforcement.js'));
     appeals = await import('../../src/services/enforcement/appealService.js');
-    savedCategory = enforcementConfig.appealsCategoryId;
-    enforcementConfig.appealsCategoryId = `7${runId}00000005`;
+    settings = await import('../../src/services/settings/guildSettings.js');
+    pin({ appealsCategoryId: `7${runId}00000005` });
 });
 
 after(async () => {
     if (skip) return;
-    enforcementConfig.appealsCategoryId = savedCategory;
-    enforcementConfig.openChannelCap = undefined;
+    settings.setSettingsCacheForTests(enforcementConfig.mainGuildId, null);
     await pgDb.pool.query(`DELETE FROM mod_appeals WHERE guild_id = $1 AND user_id LIKE $2`, [enforcementConfig.mainGuildId, `6${runId}%`]);
     await pgDb.pool.query(`DELETE FROM mod_cases WHERE guild_id = $1 AND target_user_id LIKE $2`, [enforcementConfig.mainGuildId, `6${runId}%`]);
     await pgDb.pool.query(`DELETE FROM modmail_links WHERE guild_id = $1 AND user_id LIKE $2`, [enforcementConfig.mainGuildId, `6${runId}%`]);
@@ -67,7 +69,7 @@ test('open-channel cap: reports + modmail together; at the cap a report is refus
     const cap = await import('../../src/services/openChannelCap.js');
     const links = await import('../../src/services/modmailLinks.js');
     cap.resetOpenChannelCapForTests();
-    enforcementConfig.openChannelCap = 2;
+    pin({ openChannelCap: 2 });
     // One open report (someone else) and one open modmail conversation: 2 of 2.
     const other = `6${runId}00000090`;
     const reportChannel = await guild.channels.create({ name: 'report-other' });
@@ -91,14 +93,14 @@ test('open-channel cap: reports + modmail together; at the cap a report is refus
     assert.deepEqual(await cap.withOpenChannelSlot(guild, 'modmail conversation', async () => 'opened', { now: now + 1, alert }), { refused: cap.CAP_REFUSAL });
     assert.deepEqual(await cap.withOpenChannelSlot(guild, 'modmail conversation', async () => 'opened', { now: now + 2, alert }), { refused: cap.CAP_REFUSAL });
     assert.ok(alerts.length <= 1, 'at most one alert an hour');
-    enforcementConfig.openChannelCap = 3;
+    pin({ openChannelCap: 3 });
     assert.equal(await cap.withOpenChannelSlot(guild, 'modmail conversation', async () => 'opened', { alert }), 'opened', 'under the cap: opens');
 });
 
 test('open-channel cap: an appeal still opens while reports + modmail are at the cap', { skip }, async () => {
     const { guild, client, created } = fakeMain();
     const links = await import('../../src/services/modmailLinks.js');
-    enforcementConfig.openChannelCap = 1;
+    pin({ openChannelCap: 1 });
     const modmailChannel = await guild.channels.create({ name: 'modmail-y' });
     await links.linkModmailChannel(guild.id, modmailChannel.id, `6${runId}00000093`);
     const member = `6${runId}00000094`;

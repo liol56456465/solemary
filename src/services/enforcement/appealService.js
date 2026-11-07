@@ -29,11 +29,30 @@ import { dateStamp, formatDuration, ladderStage, ladderStageShort, stamp, trunca
 import { evidenceDisplay } from './evidenceService.js';
 import { checkAppealReviewer, needsSecondReviewer } from './appealReviewer.js';
 import { recordOwnerOverride } from '../ownerOverride.js';
+import { guildIdFor, isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
 
 const UNKNOWN_BAN = 10026;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function userError(message) {
     return createError(message, ErrorTypes.VALIDATION, message, { expected: true });
+}
+
+/**
+ * The server whose appeal settings apply to a case. Home cases (main or support server) read
+ * the main server's settings, exactly as before multi-server; any other server reads its own
+ * (resolveSetting: its stored value or the neutral default, never Mewvo's).
+ */
+function appealSettingsGuild(guildId) {
+    return isHomeGuild(guildId) ? guildIdFor('main') || guildId : guildId;
+}
+
+/**
+ * The server an appeal's staff channel and appeal row belong to: the main server for home
+ * cases (as before), the case's own server otherwise, never one of Mewvo's servers.
+ */
+export function appealStaffGuildId(record) {
+    return isHomeGuild(record.guild_id) ? enforcementConfig.mainGuildId : record.guild_id;
 }
 
 function isStillInEffect(record) {
@@ -62,8 +81,12 @@ export async function assertAppealable(record, userId) {
         if (record.appeal_deadline && new Date(record.appeal_deadline).getTime() <= now) {
             throw userError('The appeal window for this ban has closed.');
         }
-    } else if (now - new Date(record.created_at).getTime() > enforcementConfig.appealWindowMs) {
-        throw userError(`${record.type === 'kick' ? 'Kicks' : 'Warnings'} can only be appealed within 30 days.`);
+    } else {
+        const windowMs = resolveSetting(appealSettingsGuild(record.guild_id), 'appealWindowMs');
+        if (now - new Date(record.created_at).getTime() > windowMs) {
+            const days = Math.round(windowMs / DAY_MS);
+            throw userError(`${record.type === 'kick' ? 'Kicks' : 'Warnings'} can only be appealed within ${days} day${days === 1 ? '' : 's'}.`);
+        }
     }
 
     const { rows } = await query(
@@ -77,7 +100,7 @@ export async function assertAppealable(record, userId) {
         throw userError('You already have a pending appeal for this case. You will get a DM with the decision.');
     }
     if (last?.status === 'denied') {
-        const retryAt = new Date(last.decided_at).getTime() + enforcementConfig.appealCooldownMs;
+        const retryAt = new Date(last.decided_at).getTime() + resolveSetting(appealSettingsGuild(record.guild_id), 'appealCooldownMs');
         if (retryAt > now) {
             throw userError(`Your last appeal for this case was denied. You can appeal again <t:${Math.floor(retryAt / 1000)}:R>.`);
         }
@@ -112,29 +135,42 @@ async function fetchCategory(guild, categoryId) {
     return category?.type === ChannelType.GuildCategory ? category : null;
 }
 
-/** Where appeals open in the main server: their own category, else the /ticket category. */
-export async function getAppealsCategory(mainGuild) {
-    const config = await getGuildConfig(mainGuild.client, mainGuild.id).catch(() => ({}));
-    return await fetchCategory(mainGuild, enforcementConfig.appealsCategoryId)
-        || fetchCategory(mainGuild, config?.ticketCategoryId);
+/**
+ * The server's guild config for the /ticket category fallback. Home servers keep the old
+ * behaviour (a failed read means "no ticket category"); for any other server a failed read
+ * throws, so a database error never quietly turns an appeal into store-only.
+ */
+async function ticketConfig(guild) {
+    return getGuildConfig(guild.client, guild.id).catch((error) => {
+        if (!isHomeGuild(guild.id)) throw error;
+        return {};
+    });
 }
 
-/** Where staff reports open: their own category, else the /ticket category, else the appeals one. */
-export async function getReportsCategory(mainGuild) {
-    const config = await getGuildConfig(mainGuild.client, mainGuild.id).catch(() => ({}));
-    return await fetchCategory(mainGuild, enforcementConfig.reportsCategoryId)
-        || await fetchCategory(mainGuild, config?.ticketCategoryId)
-        || fetchCategory(mainGuild, enforcementConfig.appealsCategoryId);
+/** Where appeals open in this server: its own appeals category, else its /ticket category. */
+export async function getAppealsCategory(guild) {
+    const config = await ticketConfig(guild);
+    return await fetchCategory(guild, resolveSetting(guild.id, 'appealsCategoryId'))
+        || fetchCategory(guild, config?.ticketCategoryId);
+}
+
+/** Where staff reports open in this server: its own category, else the /ticket category, else the appeals one. */
+export async function getReportsCategory(guild) {
+    const config = await ticketConfig(guild);
+    return await fetchCategory(guild, resolveSetting(guild.id, 'reportsCategoryId'))
+        || await fetchCategory(guild, config?.ticketCategoryId)
+        || fetchCategory(guild, resolveSetting(guild.id, 'appealsCategoryId'));
 }
 
 function channelName(name) {
     return name.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 90);
 }
 
-/** An admin-only channel in the main server, in the appeals category (or the one findCategory picks). */
-async function createPrivateChannel(client, name, reason, findCategory = getAppealsCategory) {
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
-    if (!guild) throw configError('Main guild unavailable for appeals');
+/**
+ * An admin-only channel in `guild` (the main server for home cases and reports), in the appeals
+ * category (or the one findCategory picks).
+ */
+async function createPrivateChannel(guild, name, reason, findCategory = getAppealsCategory) {
     const category = await findCategory(guild);
     if (!category) throw configError('No category for this channel in the main server: set it in the dashboard (Enforcement & appeals) or set the /ticket category');
     return guild.channels.create({
@@ -378,8 +414,17 @@ export async function listPendingAppeals(limit = 20, guildId = enforcementConfig
 // the support server, Discord refuses), the appeal still opens staff-only: never lost.
 const SUPPORT_APPEAL_TYPES = new Set(['ban', 'kick']);
 
+/** Shown where the appeal channel would be when another server has no appeals category. */
+export const STORE_ONLY_NOTE = 'No appeal channel: this server has no appeals category (or ticket category) set. '
+    + 'The appeal is saved; decide it in the dashboard (Appeals), or set an appeals category so new appeals get a channel.';
+
 async function openSupportAppealChannel(client, record, user) {
     if (!SUPPORT_APPEAL_TYPES.has(record.type)) return null;
+    // Home-only (multi-server B0b): Mewvo's Support server hosts appeals of Mewvo's own servers
+    // only. Another server's ban/kick appeal never opens a channel there; batch 4 adds the
+    // per-server choice ("Mewvo support" or "our own server"). supportAppealsCategoryId is
+    // therefore always the Support server's own (home) value.
+    if (!isHomeGuild(record.guild_id)) return null;
     const supportGuild = client.guilds.cache.get(enforcementConfig.supportGuildId);
     if (!supportGuild) return null;
     const category = await fetchCategory(supportGuild, enforcementConfig.supportAppealsCategoryId);
@@ -447,8 +492,14 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
     const record = await getCaseByCode(caseCode);
     return Mutex.runExclusive(`appeal:${caseCode}`, async () => {
         await assertAppealable(record, user.id);
-        const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
-        if (!guild) throw configError('Main guild unavailable for appeals');
+        // Home cases: the main server, as before. Another server's case: that server only; when it
+        // has no appeals (or ticket) category, or the bot is not in it, the appeal is stored
+        // without a channel and handled from the dashboard / web form.
+        const home = isHomeGuild(record.guild_id);
+        const staffGuildId = appealStaffGuildId(record);
+        const guild = client.guilds.cache.get(staffGuildId) || null;
+        if (home && !guild) throw configError('Main guild unavailable for appeals');
+        const storeOnly = !home && !(guild && await getAppealsCategory(guild));
 
         let appeal;
         try {
@@ -456,7 +507,7 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
                 const { rows } = await client.query(
                     `INSERT INTO ${T.appeals} (kind, case_code, user_id, username, guild_id, body)
                      VALUES ('appeal', $1, $2, $3, $4, $5) RETURNING *`,
-                    [record.case_code, user.id, user.username, guild.id, JSON.stringify(answers)]
+                    [record.case_code, user.id, user.username, staffGuildId, JSON.stringify(answers)]
                 );
                 await client.query(
                     `UPDATE ${T.cases} SET status = 'appeal_pending' WHERE id = $1 AND status = 'active'`,
@@ -471,15 +522,35 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
             throw error;
         }
 
-        // Always an admin-only staff channel in the main server; ban/kick also a conversation
-        // channel with the appellant in the support server.
+        if (storeOnly) {
+            const where = guild ? 'it has no appeals category or ticket category' : 'the bot is not in that server';
+            logger.warn(`Appeal ${record.case_code} of guild ${record.guild_id} stored without a channel: ${where}`);
+            await logEvent({
+                client,
+                guildId: staffGuildId,
+                eventType: EVENT_TYPES.MODERATION_APPEAL,
+                data: {
+                    userId: user.id,
+                    fields: [
+                        { name: 'Appeal submitted', value: `\`${record.case_code}\` · ${record.name}` },
+                        { name: 'User', value: `${user.username} (${user.id})` },
+                        { name: 'Channel', value: STORE_ONLY_NOTE },
+                    ],
+                },
+            }).catch(() => {});
+            return { record, channel: null, staffChannel: null, storedOnly: true };
+        }
+
+        // Always an admin-only staff channel (the main server for home cases, the case's own server
+        // otherwise); ban/kick appeals of home cases also get a conversation channel with the
+        // appellant in the support server.
         let channel;
         let staffChannel;
         let channelGuildId;
         let support = null;
         try {
             support = await openSupportAppealChannel(client, record, user);
-            staffChannel = await createPrivateChannel(client, `appeal-${record.case_code}`, `Appeal ${record.case_code}`);
+            staffChannel = await createPrivateChannel(guild, `appeal-${record.case_code}`, `Appeal ${record.case_code}`);
             channel = support?.channel || staffChannel;
             channelGuildId = support?.guildId || guild.id;
         } catch (error) {
@@ -526,7 +597,7 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
 
         await logEvent({
             client,
-            guildId: enforcementConfig.mainGuildId,
+            guildId: staffGuildId,
             eventType: EVENT_TYPES.MODERATION_APPEAL,
             data: {
                 userId: user.id,
@@ -577,7 +648,7 @@ async function openStaffReport({ client, guild, user, staffMember, details, proo
         );
         const created = rows[0];
         try {
-            const opened = await createPrivateChannel(client, `report-${user.username}`, 'Staff report', getReportsCategory);
+            const opened = await createPrivateChannel(guild, `report-${user.username}`, 'Staff report', getReportsCategory);
             await query(`UPDATE ${T.appeals} SET channel_id = $2 WHERE id = $1`, [created.id, opened.id]);
             return { report: created, channel: opened };
         } catch (error) {
@@ -608,7 +679,7 @@ async function openStaffReport({ client, guild, user, staffMember, details, proo
 
     await logEvent({
         client,
-        guildId: enforcementConfig.mainGuildId,
+        guildId: guild.id,
         eventType: EVENT_TYPES.MODERATION_STAFF_REPORT,
         data: {
             userId: user.id,
@@ -892,6 +963,10 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
         if (!record.is_test || transcript) {
             await postModLog(client, 'appeal', logFields, {
                 title: `Appeal ${label}${record.is_test ? ' (test case)' : ''}`,
+                // The main server for home cases (as before), the case's own server otherwise.
+                // postModLog reads this option once multi-server batch 2 is merged; until then it
+                // still posts to the main server's mod log.
+                guildId: appealStaffGuildId(record),
                 files: [
                     ...(transcript ? [new AttachmentBuilder(transcript.buffer, { name: `appeal-${record.case_code}.html` })] : []),
                     ...(staffTranscript ? [new AttachmentBuilder(staffTranscript.buffer, { name: `appeal-${record.case_code}-staff.html` })] : []),
