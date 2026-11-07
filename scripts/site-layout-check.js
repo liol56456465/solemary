@@ -2,10 +2,13 @@
 // a headless browser and lists layout problems: the page scrolling sideways, boxes whose content
 // overflows them, clipped text, a top bar that wraps onto extra rows or whose parts overlap, words
 // glued to a link / <strong> / <code> without a space, overlapping neighbours, and picker menus
-// that leave the screen. Localhost only.
+// that leave the screen. Below 768px wide or 500px high it emulates a touch phone and also checks the viewport tag, tap
+// targets under 44px (links inside a sentence excepted; check boxes need a label), form fields with
+// text under 16px (iOS zooms the page in) and fixed/sticky bars covering more than a quarter of the
+// screen. Localhost only.
 //
-//   node scripts/site-layout-check.js                       all pages × 8 languages × 360 390 768 1024 1280
-//   node scripts/site-layout-check.js --pages home,pricing --langs de,fr --widths 390,1280
+//   node scripts/site-layout-check.js                       all pages × 8 languages × 320 360 390 414 740x360 844x390 768 1024 1280
+//   node scripts/site-layout-check.js --pages home,pricing --langs de,fr --widths 390,740x360,1280
 //   node scripts/site-layout-check.js --shots <dir>         also writes a PNG per page/lang/width (viewport,
 //                                                           or --full for the whole page, capped at 6000 px)
 //   node scripts/site-layout-check.js --json <file>         the raw findings as JSON
@@ -68,8 +71,8 @@ const { installUrl } = await import('../src/services/site/shell.js');
 const { GUIDES } = await import('../src/services/site/pages/docs.js');
 const { LANGUAGES, localizePath, translator } = await import('../src/services/site/i18n.js');
 const { loginPage, recordPage } = await import('../src/services/site/memberPortal.js');
-const { signupPage, passwordLoginPage, forgotPage, accountSettingsPage } = await import('../src/services/site/accountPages.js');
-const { checkoutPage, billingPage, redeemPage } = await import('../src/services/site/billing.js');
+const { signupPage, passwordLoginPage, forgotPage, twoStepPage, resetPage, accountSettingsPage } = await import('../src/services/site/accountPages.js');
+const { checkoutPage, billingPage, redeemPage, receiptPage, withdrawListPage, withdrawConfirmPage } = await import('../src/services/site/billing.js');
 const { aggregateReport } = await import('../src/services/enforcement/transparencyService.js');
 refuseRemoteDb();
 
@@ -165,8 +168,9 @@ const ACCOUNT = { username: 'ari_cozy', discord_user_id: SESSION.userId, discord
 const BILLING = {
     subscription: { plan_id: 'pro', expires_at: new Date(NOW + 60 * DAY), source: 'purchase' },
     orders: [{ id: 41, created_at: ago(3 * DAY), plan_id: 'pro', period: 'monthly', kind: 'personal', amount_cents: 499, test: true, legal: null }],
-    gifts: [{ code: 'MEWVO-AB12-CD34-EF56', gift_to: 'Mika', plan_id: 'plus', duration_days: 30, created_at: ago(2 * DAY), redeemed_at: null }],
+    gifts: [{ code: 'MEWVO-AB12-CD34-EF56', gift_to: 'Mika', plan_id: 'normal', duration_days: 30, created_at: ago(2 * DAY), redeemed_at: null }],
 };
+const GIFT_ORDER = { id: 42, created_at: ago(DAY), plan_id: 'normal', period: 'yearly', kind: 'gift', amount_cents: 2990, test: true, legal: null };
 const MEMBER_PAGES = {
     login: (ctx) => loginPage({ ...ctx, viewer: null }),
     signup: (ctx) => signupPage({ ...ctx, viewer: null }, { csrf: 'x' }),
@@ -175,9 +179,14 @@ const MEMBER_PAGES = {
     record: (ctx) => recordPage(ctx, { session: SESSION, view: RECORD_VIEW }),
     account: (ctx) => accountSettingsPage(ctx, { session: SESSION, account: ACCOUNT, recoveryLeft: 8, canClaim: true, plan: { plan_id: 'pro', expires_at: new Date(NOW + 60 * DAY), source: 'purchase' }, now: NOW }),
     checkout: (ctx) => checkoutPage(ctx, { session: SESSION, choice: { planId: 'pro', period: 'monthly', kind: 'personal' } }),
-    'checkout-gift': (ctx) => checkoutPage(ctx, { session: SESSION, choice: { planId: 'plus', period: 'yearly', kind: 'gift' } }),
+    'checkout-gift': (ctx) => checkoutPage(ctx, { session: SESSION, choice: { planId: 'normal', period: 'yearly', kind: 'gift' } }),
     billing: (ctx) => billingPage(ctx, { session: SESSION, account: BILLING }),
     redeem: (ctx) => redeemPage(ctx, { session: SESSION }),
+    'two-step': (ctx) => twoStepPage({ ...ctx, viewer: null }, { csrf: 'x' }),
+    reset: (ctx) => resetPage({ ...ctx, viewer: null }, { csrf: 'x', username: 'ari_cozy', twoStep: true }),
+    receipt: (ctx) => receiptPage(ctx, { session: SESSION, order: { ...GIFT_ORDER }, key: { code: 'MEWVO-AB12-CD34-EF56', gift_to: 'Mika', gift_message: 'Happy birthday!', plan_id: 'normal', duration_days: 365, expires_at: new Date(NOW + 365 * DAY), redeemed_at: null } }),
+    withdraw: (ctx) => withdrawListPage(ctx, { session: SESSION, orders: [{ ...BILLING.orders[0] }, { ...GIFT_ORDER }], now: NOW }),
+    'withdraw-confirm': (ctx) => withdrawConfirmPage(ctx, { session: SESSION, order: { ...BILLING.orders[0] }, quote: { usedDays: 3, totalDays: 30, refundCents: 449 } }),
 };
 
 async function startServer(profile, commands) {
@@ -226,11 +235,16 @@ const wantPages = list(arg('--pages'));
 const wantLangs = list(arg('--langs'));
 const PAGES = wantPages ? ALL_PAGES.filter((p) => wantPages.includes(p.name) || wantPages.includes(p.name.replace('~basic', '')) || wantPages.includes(p.name.replace('~basic', '*'))) : ALL_PAGES;
 const LANGS = LANGUAGES.map((l) => l.code).filter((c) => !wantLangs || wantLangs.includes(c) || wantLangs.includes(c.toLowerCase()));
-const WIDTHS = (list(arg('--widths')) || ['360', '390', '768', '1024', '1280']).map(Number);
+// A width (height 900) or WIDTHxHEIGHT; below 768px wide or 500px high the browser emulates a touch phone (mobile
+// viewport, touch events, pointer: coarse). 740x360 and 844x390 are phones held sideways.
+const VIEWPORTS = (list(arg('--widths')) || ['320', '360', '390', '414', '740x360', '844x390', '768', '1024', '1280']).map((v) => {
+    const [width, height = 900] = v.split('x').map(Number);
+    return { width, height, label: v, phone: width < 768 || height <= 500 };
+});
 const MOBILE_MAX = 760; // the CSS breakpoint where the top bar becomes two rows
 
 // ── the in-page check (runs in the browser; must be self-contained) ────────
-function inPageCheck({ mobileMax }) {
+function inPageCheck({ mobileMax, phone }) {
     const out = [];
     const vw = document.documentElement.clientWidth;
     const describe = (el) => {
@@ -349,14 +363,55 @@ function inPageCheck({ mobileMax }) {
         if (nextInline && after && WORD.test(own.slice(-1)) && WORD.test(after[0])) add('glued', el, `no space after: "…${own.slice(-12)}|${after.slice(0, 12)}…"`);
     }
 
-    // 6. The picker and account menus, opened: inside the screen, nothing cut off.
+    // 6. Phones (touch emulation): the viewport tag, tap targets, field text that makes iOS zoom in,
+    //    and bars that stay on screen.
+    const meta = document.querySelector('meta[name="viewport"]')?.content || '';
+    if (!/width=device-width/.test(meta) || /user-scalable\s*=\s*(no|0)|maximum-scale\s*=\s*1(\.0*)?(\D|$)/.test(meta)) add('viewport-meta', null, `viewport "${meta}"`);
+    const MIN_TAP = 44;
+    // A link inside running text (a sentence around it) is exempt (WCAG 2.5.8 "inline").
+    const inText = (el) => {
+        if (getComputedStyle(el).display !== 'inline') return false;
+        const block = el.parentElement?.closest('p, li, dd, td, th, label, figcaption, blockquote, small, span:not([class])');
+        return Boolean(block) && block.textContent.replace(/\s+/g, '').length > el.textContent.replace(/\s+/g, '').length + 2;
+    };
+    const labelled = (el) => el.closest('label') || (el.id && document.querySelector(`label[for="${CSS.escape(el.id)}"]`));
+    const tapCheck = (el) => {
+        if (hiddenEl(el) || el.closest('.mock, .skip')) return;
+        const r = el.getBoundingClientRect();
+        if (el.matches('input[type="checkbox"], input[type="radio"]')) {
+            if (!labelled(el)) add('tap-target', el, `${el.type} without a label to tap`);
+            return;
+        }
+        if (inText(el)) return;
+        if (r.height < MIN_TAP - 0.5 || r.width < 24) add('tap-target', el, `${Math.round(r.width)}×${Math.round(r.height)}px (under ${MIN_TAP}px high)`);
+    };
+    if (phone) {
+        for (const el of document.querySelectorAll('a[href], button, summary, select, textarea, input:not([type="hidden"])')) tapCheck(el);
+        for (const el of document.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea')) {
+            if (hiddenEl(el)) continue;
+            const size = parseFloat(getComputedStyle(el).fontSize);
+            if (size < 16) add('input-zoom', el, `field text ${size}px: iOS zooms in below 16px`);
+        }
+        // Fixed / sticky bars: together at most a quarter of the screen.
+        let covered = 0;
+        for (const el of document.body.querySelectorAll('*')) {
+            const pos = getComputedStyle(el).position;
+            if ((pos === 'fixed' || pos === 'sticky') && !hiddenEl(el) && el.parentElement === document.body) covered += el.getBoundingClientRect().height;
+        }
+        if (covered > innerHeight * 0.25) add('fixed-cover', null, `fixed/sticky bars ${Math.round(covered)}px of a ${innerHeight}px screen`);
+    }
+
+    // 7. The picker and account menus, opened: inside the screen, nothing cut off.
     for (const menu of document.querySelectorAll('.lang-menu, .account-menu')) {
         if (hiddenEl(menu)) continue;
         menu.open = true;
         const pop = menu.querySelector('.lang-pop, .account-pop');
         const r = pop.getBoundingClientRect();
         if (r.left < -0.5 || r.right > vw + 0.5) add('menu-offscreen', pop, `menu spans ${Math.round(r.left)}–${Math.round(r.right)}px of ${vw}px`);
-        for (const item of pop.querySelectorAll('a, button')) if (item.scrollWidth > item.clientWidth + 1) add('overflow', item, `menu item ${item.scrollWidth}px in ${item.clientWidth}px`);
+        for (const item of pop.querySelectorAll('a, button')) {
+            if (item.scrollWidth > item.clientWidth + 1) add('overflow', item, `menu item ${item.scrollWidth}px in ${item.clientWidth}px`);
+            if (phone) tapCheck(item);
+        }
         menu.open = false;
     }
     return out;
@@ -412,7 +467,10 @@ async function launchBrowser() {
         const l = (msg) => { if (msg.method === method && msg.sessionId === sessionId) { clearTimeout(timer); listeners.delete(l); resolve(msg.params); } };
         listeners.add(l);
     });
-    const close = () => { try { ws.close(); } catch { /* gone */ } proc.kill('SIGKILL'); rmSync(profile, { recursive: true, force: true }); };
+    const close = () => { try { ws.close(); } catch { /* gone */ } proc.kill('SIGKILL');
+        // Chromium can still be writing its profile for a moment after the kill (ENOTEMPTY): retry, never crash the report.
+        try { rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }); } catch { /* a temp folder left behind */ }
+    };
     return { send, waitFor, close };
 }
 
@@ -422,13 +480,18 @@ async function openTab(browser) {
     await browser.send('Page.enable', {}, sessionId);
     await browser.send('Runtime.enable', {}, sessionId);
     await browser.send('Network.enable', {}, sessionId);
+    let size = '';
     let width = 0;
     return {
         async visit(url, { viewport, acceptLanguage = null }) {
             if (new URL(url).hostname !== HOST) throw new Error(`Local pages only: ${url}`);
-            if (viewport !== width) {
-                await browser.send('Emulation.setDeviceMetricsOverride', { width: viewport, height: 900, deviceScaleFactor: 1, mobile: viewport < 768 }, sessionId);
-                width = viewport;
+            if (viewport.label !== size) {
+                const { phone } = viewport;
+                await browser.send('Emulation.setDeviceMetricsOverride', { width: viewport.width, height: viewport.height, deviceScaleFactor: 1, mobile: phone }, sessionId);
+                await browser.send('Emulation.setTouchEmulationEnabled', phone ? { enabled: true, maxTouchPoints: 5 } : { enabled: false }, sessionId);
+                await browser.send('Emulation.setEmitTouchEventsForMouse', { enabled: phone, configuration: 'mobile' }, sessionId);
+                size = viewport.label;
+                width = viewport.width;
             }
             await browser.send('Network.setExtraHTTPHeaders', { headers: acceptLanguage ? { 'Accept-Language': acceptLanguage } : {} }, sessionId);
             await browser.send('Network.clearBrowserCookies', {}, sessionId);
@@ -469,7 +532,7 @@ async function main() {
     for (const page of PAGES) {
         for (const lang of LANGS) {
             if (page.acceptLanguage && lang === 'en') continue;
-            for (const width of WIDTHS) jobs.push({ page, lang, width });
+            for (const viewport of VIEWPORTS) jobs.push({ page, lang, viewport, width: viewport.label });
         }
     }
     const findings = [];
@@ -481,8 +544,8 @@ async function main() {
             const job = jobs[next]; next += 1;
             const url = originOf(job.page.profile) + job.page.url(job.lang);
             try {
-                await tab.visit(url, { viewport: job.width, acceptLanguage: job.page.acceptLanguage ? job.lang : null });
-                const issues = await tab.evaluate(inPageCheck.toString(), { mobileMax: MOBILE_MAX });
+                await tab.visit(url, { viewport: job.viewport, acceptLanguage: job.page.acceptLanguage ? job.lang : null });
+                const issues = await tab.evaluate(inPageCheck.toString(), { mobileMax: MOBILE_MAX, phone: job.viewport.phone });
                 for (const issue of issues) findings.push({ page: job.page.name, lang: job.lang, width: job.width, ...issue });
                 if (shots) await tab.screenshot(path.join(shots, `${job.page.name}-${job.lang}-${job.width}.png`), process.argv.includes('--full'));
             } catch (error) {
