@@ -6,12 +6,13 @@
 //   { id, name, words: [..], action: 'delete' | 'warn' | 'mute', muteDuration ('1h', mute only), enabled }
 // Rules beyond the plan's limit are kept, they just don't run: the first N enabled rules run.
 //
-// Matching never uses staff-supplied regular expressions. Message and words go through
-// the same normalizeText as the built-in rules (look-alike letters, fancy fonts, zalgo,
-// invisible characters, leetspeak), are split into tokens of a-z and 0-9, and a word or
-// phrase matches when its tokens appear in a row: case-insensitive and whole words only
-// ("ass" does not match "class"). Letters spelled out one by one ("b a d") are joined
-// back up like the built-in blocked words. Work per message is capped.
+// Matching never uses staff-supplied regular expressions. Words and phrases go through the
+// same obfuscation-resistant matcher as the built-in word lists (wordMatcher.js: look-alike
+// letters, fancy fonts, zalgo, invisible characters, leetspeak, separators between letters,
+// letters spelled out across spaces, stretched letters, common misspellings, hidden letters
+// like "sc*m"). Whole words only ("ass" does not match "class"); a phrase matches when its
+// words appear in a row. The built-in allow list keeps variants off ordinary words in other
+// languages, but never the word as listed. Work per message is capped by the matcher.
 //
 // A hit goes through the normal automod pipeline (automodService.js) with rule key
 // "custom-<id>": global monitor mode (card only), ignored channels, administrators and
@@ -24,7 +25,8 @@ import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
 import { PLANS } from '../../config/site/plans.js';
 import { parseDuration } from '../enforcement/format.js';
 import { planLimit } from '../billing/premiumEffects.js';
-import { foldText, joinSpelledOutLetters, normalizeText } from './filters.js';
+import { foldText, normalizeText } from './filters.js';
+import { compileWords, matchWords } from './wordMatcher.js';
 
 export const CUSTOM_RULE_ACTIONS = ['delete', 'warn', 'mute'];
 export const CUSTOM_RULES_MAX = 100;        // the highest plan limit; the setting's schema allows this many
@@ -39,8 +41,6 @@ const ID_LENGTH = 8;
 
 // Work caps per message.
 const TEXT_MAX = 4000;
-const TOKENS_MAX = 1500;
-const COMPARISONS_MAX = 100000;
 
 export const CUSTOM_RULE_PREFIX = 'custom-';
 // Between Inappropriate language (60) and Disrespect (50): when a message breaks several
@@ -68,17 +68,6 @@ const splitTokens = (value) => value.split(/[^a-z0-9]+/).filter(Boolean);
 /** The tokens a text is matched on: normalized like the built-in rules, split on anything but a-z and 0-9. */
 export function tokensOf(text) {
     return splitTokens(normalizeText(text));
-}
-
-/**
- * The token streams a message is checked against: the normalized text (leetspeak read as
- * letters) and the same without the leetspeak step, so punctuation next to a word ("bad!",
- * where "!" would read as "i") does not hide it.
- */
-function messageStreams(text) {
-    const leet = tokensOf(text);
-    const plain = splitTokens(foldText(text).replace(/(.)\1{2,}/g, '$1$1'));
-    return leet.join(' ') === plain.join(' ') ? [leet] : [leet, plain];
 }
 
 /** Splits the form text (one per line, or comma-separated) into words. */
@@ -247,24 +236,27 @@ export function customGroupLabel(group, rules = null) {
 // ── Matching ──────────────────────────────────────────────────────────────
 
 /**
- * Compiles running rules into lookup tables: first token → phrases, and the joined-up
- * form of each phrase (for letters spelled out one by one).
+ * Compiles running rules into one word list for the matcher (wordMatcher.js): every word
+ * and phrase of every rule, tagged with its rule's index. Compiled once per guild and cached
+ * (compiledForGuild), so a message costs hash lookups, not a pass per word.
  */
 export function compileRules(rules) {
-    const byFirst = new Map();
-    const compact = new Map();
+    const entries = [];
+    const seen = new Set();
     rules.forEach((rule, index) => {
         for (const word of rule.words || []) {
             const tokens = tokensOf(word).slice(0, WORD_TOKENS_MAX);
             if (!tokens.length) continue;
-            const entry = { tokens, index, word };
-            if (!byFirst.has(tokens[0])) byFirst.set(tokens[0], []);
-            byFirst.get(tokens[0]).push(entry);
-            const joined = tokens.join('');
-            if (joined.length >= 3 && !compact.has(joined)) compact.set(joined, entry);
+            const key = `${index}:${tokens.join(' ')}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            // The matcher reads the word itself (look-alikes, leetspeak); `word` stays as stored.
+            entries.push({ word, index });
         }
     });
-    return { rules, byFirst, compact };
+    // allow: ordinary words the generated variants would hit ("çok" for "cock", Dutch "kunt")
+    // stay out; the word exactly as the server listed it is always caught.
+    return { rules, words: compileWords(entries, { allow: true }) };
 }
 
 /** Of two matched rules, the one that decides: the harsher action, else the earlier rule. */
@@ -278,30 +270,11 @@ function better(compiled, a, b) {
 
 /** The rule a text breaks: { rule, word } or null. Pure. */
 export function matchCompiled(text, compiled) {
-    if (!compiled?.rules?.length) return null;
+    if (!compiled?.rules?.length || !compiled.words) return null;
     const value = String(text || '').slice(0, TEXT_MAX);
     if (!value.trim()) return null;
     let best = null;
-    let work = 0;
-    outer:
-    for (const stream of messageStreams(value)) {
-        const tokens = stream.slice(0, TOKENS_MAX);
-        for (let i = 0; i < tokens.length; i += 1) {
-            const candidates = compiled.byFirst.get(tokens[i]);
-            if (!candidates) continue;
-            for (const entry of candidates) {
-                work += entry.tokens.length;
-                if (work > COMPARISONS_MAX) break outer;
-                let ok = i + entry.tokens.length <= tokens.length;
-                for (let k = 1; ok && k < entry.tokens.length; k += 1) ok = tokens[i + k] === entry.tokens[k];
-                if (ok) best = better(compiled, best, entry);
-            }
-        }
-    }
-    for (const joined of joinSpelledOutLetters(value)) {
-        const entry = compiled.compact.get(joined);
-        if (entry) best = better(compiled, best, entry);
-    }
+    for (const hit of matchWords(value, compiled.words)) best = better(compiled, best, hit.entry);
     return best ? { rule: compiled.rules[best.index], word: best.word } : null;
 }
 
@@ -323,13 +296,25 @@ export function resetCustomRulesCache() {
 export function compiledForGuild(guildId, now = Date.now()) {
     const cached = compiledCache.get(guildId);
     if (cached && now - cached.at < CACHE_MS) return cached.compiled;
-    let compiled;
+    let running = [];
     try {
-        compiled = compileRules(runningRules(storedCustomRules(), customRuleLimit(guildId)));
+        running = runningRules(storedCustomRules(), customRuleLimit(guildId));
     } catch {
-        compiled = compileRules([]);
+        running = [];
     }
-    compiledCache.set(guildId, { at: now, compiled });
+    // Compiling a big list takes a moment: only redo it when the running rules changed.
+    const key = JSON.stringify(running);
+    let compiled = cached && cached.key === key ? cached.compiled : null;
+    if (!compiled) {
+        try {
+            compiled = compileRules(running);
+        } catch {
+            // Not cached under the rules' key: the next refresh tries again.
+            compiledCache.set(guildId, { at: now, key: null, compiled: compileRules([]) });
+            return compiledCache.get(guildId).compiled;
+        }
+    }
+    compiledCache.set(guildId, { at: now, key, compiled });
     return compiled;
 }
 

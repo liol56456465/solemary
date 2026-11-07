@@ -7,8 +7,8 @@ import assert from 'node:assert/strict';
 process.env.MAIN_GUILD_ID ??= '100000000000000001';
 
 const {
-    CustomRuleError, cleanCustomRule, cleanCustomRules, cleanWords, customGroupLabel, customRuleDefinition, findCustomRuleHit,
-    limitForPlan, matchCustomRules, overLimitIds, resetCustomRulesCache, ruleDefinition, runningRules,
+    CustomRuleError, cleanCustomRule, cleanCustomRules, cleanWords, compileRules, customGroupLabel, customRuleDefinition, findCustomRuleHit,
+    limitForPlan, matchCompiled, matchCustomRules, overLimitIds, resetCustomRulesCache, ruleDefinition, runningRules,
 } = await import('../../src/services/automod/customRules.js');
 const {
     actOn, applyRuleModes, customHit, evaluateMessage, reasonKeyFor, resetAutomodState, setAutomodDepsForTest, worstHit,
@@ -90,16 +90,27 @@ test('no regex injection: special characters in words are literal, pathological 
     assert.ok(matchCustomRules('a b', rules), 'the punctuation just separates words');
     assert.equal(matchCustomRules('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!', rules), null);
     const big = Array.from({ length: 100 }, (_, i) => rule({ id: `r${String(i).padStart(4, '0')}`, name: `R${i}`, words: Array.from({ length: 50 }, (_, j) => `w${i}x${j} aa aa aa aa`) }));
-    const text = 'aa '.repeat(1333);
-    // Best of 3 rounds of 5 checks (about 250 ms each when idle): a busy machine during the full
-    // test run slows single rounds, but catastrophic backtracking would blow past any round.
+    // Best of 3 rounds: a busy machine during the full test run slows single rounds, but
+    // catastrophic backtracking would blow past any round. Compiling 5000 phrases (about
+    // 200 ms when idle) happens once per change of a server's rules (compiledForGuild), so it
+    // is timed on its own; matching (a few ms when idle) runs per message. Distinct texts:
+    // the matcher remembers recent texts.
+    const compileRounds = [];
+    let compiled = null;
+    for (let r = 0; r < 3; r += 1) {
+        const start = performance.now();
+        compiled = compileRules(big);
+        compileRounds.push(Math.round(performance.now() - start));
+    }
+    assert.ok(Math.min(...compileRounds) < 2000, `compiling 5000 phrases took ${compileRounds.join(' / ')} ms`);
     const rounds = [];
     for (let r = 0; r < 3; r += 1) {
         const start = performance.now();
-        for (let i = 0; i < 5; i += 1) matchCustomRules(text, big);
+        for (let i = 0; i < 5; i += 1) matchCompiled(`${'aa '.repeat(1333)}${r}${i}`, compiled);
         rounds.push(Math.round(performance.now() - start));
     }
-    assert.ok(Math.min(...rounds) < 2000, `5 worst-case checks took ${rounds.join(' / ')} ms`);
+    assert.ok(Math.min(...rounds) < 500, `5 worst-case checks took ${rounds.join(' / ')} ms`);
+    assert.equal(matchCompiled(`${'aa '.repeat(600)} w7x2 aa aa aa aa`, compiled)?.word, 'w7x2 aa aa aa aa');
 });
 
 test('matching: the harsher action decides, then the earlier rule', () => {

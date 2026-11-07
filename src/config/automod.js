@@ -167,7 +167,7 @@ export const automodConfig = {
     cardExcerptChars: 300,
     // exemptChannelIds (AUTOMOD_EXEMPT_CHANNEL_IDS: ignored entirely, in addition to
     // /automod exempt) and extraBlockedWords (AUTOMOD_EXTRA_WORDS, for the language filter;
-    // compiled once at startup) are per-server settings: see below.
+    // recompiled when the setting changes) are per-server settings: see below.
 
     // Staff guard: an admin doing this much within the window loses their staff roles.
     guardWindowMs: 10 * 60 * 1000,

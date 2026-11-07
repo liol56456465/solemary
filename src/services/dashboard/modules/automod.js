@@ -413,7 +413,7 @@ ${numberInput('dedupeMinutes', '', { label: 'Act once per member every (minutes)
         const channels = postForm(ctx, 'automod', 'channels', html`<div class="grid">
 ${channelPicker(g, 'reviewChannelId', data.registry.reviewChannelId, { label: 'Review channel', help: 'Where staff see review cards, member reports and verifications waiting for a check. Not set: the mod log channel.' })}
 ${channelPicker(g, 'alertsChannelId', data.registry.alertsChannelId, { label: 'Alerts channel', help: 'Where Mewvo warns staff about raids and other urgent things, and posts summaries. Not set: the mod log channel.' })}
-${textArea('extraBlockedWords', data.registry.extraBlockedWords.join('\n'), { label: 'Extra blocked words', rows: 4, max: 20000, help: 'Added to the built-in bad word list. Put each word on its own line. They start working after the bot restarts.' })}</div>`);
+${textArea('extraBlockedWords', data.registry.extraBlockedWords.join('\n'), { label: 'Extra blocked words', rows: 4, max: 20000, help: 'Added to the built-in bad word list. Put each word on its own line. Look-alike letters, symbols and spacing are caught too.' })}</div>`);
         const rulesStats = Object.entries(data.byRule).sort((a, b) => b[1].actions - a[1].actions);
         const days = data.days || DEFAULT_STATS_DAYS;
         const dayChips = html`<nav class="chips" aria-label="Stats period">${STATS_DAY_CHOICES.map((n) => html`<a class="chip${n === days ? ' is-active' : ''}" href="${path(`/automod${queryString({ days: n })}`)}"${n === days ? raw(' aria-current="page"') : ''}>${n === 1 ? '1 day' : `${n} days`}</a>`)}</nav>`;

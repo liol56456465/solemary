@@ -240,7 +240,7 @@ export const SETTINGS = Object.freeze([
     },
     {
         key: 'extraBlockedWords', module: 'automod', kind: 'list', itemKind: 'string', guild: 'main',
-        label: 'Extra blocked words (applied after a restart)', env: 'AUTOMOD_EXTRA_WORDS', envUnit: 'csv-lower',
+        label: 'Extra blocked words', env: 'AUTOMOD_EXTRA_WORDS', envUnit: 'csv-lower',
         fallback: [], schema: wordList,
     },
     {
