@@ -29,7 +29,7 @@ export async function getMemberStanding(guildId, userId) {
         getCountedWarns(guildId, userId, ladder.level),
         getActiveCase(guildId, userId, 'ban'),
         getActiveCase(guildId, userId, 'mute'),
-        listUserAppeals(userId, 5),
+        listUserAppeals(userId, 5, { guildId }),
     ]);
     return { ladder, warns, activeBan, activeMute, appeals };
 }

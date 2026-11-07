@@ -257,7 +257,7 @@ test('non-home kick appeal with its own appeals category: staff channel in that 
 
     // The main server cannot decide it; its own server can, and the closing note names no /appeals.
     await assert.rejects(appeals.decideAppeal({ client: w.client, admin: { id: id('6', 998), username: 'admin' }, caseCode: code, decision: 'deny', note: null, callerGuildId: w.main.id }),
-        (error) => error.userMessage === 'That case belongs to another server.');
+        (error) => /^No case with code `\w+` in this server\.$/.test(error.userMessage)); // B1: another server's code reads as unknown
     const { rows: [still] } = await pgDb.pool.query(`SELECT status FROM mod_appeals WHERE case_code = $1`, [code]);
     assert.equal(still.status, 'pending', 'nothing decided from the main server');
     w.sent.length = 0;

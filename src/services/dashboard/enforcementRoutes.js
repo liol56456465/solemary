@@ -389,7 +389,7 @@ export function createEnforcementHandlers(core) {
         const state = await e.getTargetState(guild, userId);
         const [{ rows: cases, total }, appealStatuses, countedWarns, notes, block, precedent] = await Promise.all([
             e.listCasesForUser(guildId, userId, { limit: RECENT_CASES }),
-            e.getLatestAppealStatuses(userId),
+            e.getLatestAppealStatuses(userId, guildId),
             e.getCountedWarns(guildId, userId, state.ladder.level),
             e.listNotes(guildId, userId),
             e.getMassActionBlock(guildId, req.dashboard.session.userId).catch(() => null),
@@ -761,7 +761,7 @@ export function createEnforcementHandlers(core) {
     /** Loads the case of the URL in the main server, or throws a 404-ish InputError. */
     async function caseOf(req) {
         const code = caseCodeParam(req);
-        const record = code ? await e.getCaseByCode(code) : null;
+        const record = code ? await e.getCaseByCode(code, guildId) : null;
         if (!record || record.guild_id !== guildId) throw new InputError(textOf(req).t('moderation.case.noCase'), 404);
         return record;
     }
@@ -889,7 +889,7 @@ export function createEnforcementHandlers(core) {
         if (!['tag-add', 'tag-remove', 'void'].includes(action)) throw new InputError(tr.t('moderation.cases.chooseAction'));
         const records = [];
         for (const code of codes) {
-            const record = await e.getCaseByCode(code);
+            const record = await e.getCaseByCode(code, guildId);
             if (record && record.guild_id === guildId) records.push(record);
         }
         if (!records.length) throw new InputError(tr.t('moderation.cases.noneExist'));
@@ -941,7 +941,7 @@ export function createEnforcementHandlers(core) {
         const skipped = [];
         const tr = textOf(req);
         for (const code of payload.codes) {
-            const record = await e.getCaseByCode(code);
+            const record = await e.getCaseByCode(code, guildId);
             if (!record || record.guild_id !== guildId) { skipped.push(tr.t('moderation.cases.goneItem', { code })); continue; }
             if (record.voided_at) { skipped.push(tr.t('moderation.cases.removedItem', { code })); continue; }
             try {
@@ -994,7 +994,7 @@ export function createEnforcementHandlers(core) {
 
     async function renderAppeal(req, res, status = 200, { error = null } = {}) {
         const code = caseCodeParam(req);
-        const record = code ? await e.getCaseByCode(code) : null;
+        const record = code ? await e.getCaseByCode(code, guildId) : null;
         if (!record || record.guild_id !== guildId) return fail(res, 404, textOf(req).t('errors.notFound'), textOf(req).t('moderation.case.noCase'), req);
         const [appeals, { rows: otherRows, total }, ladder, evidenceRows] = await Promise.all([
             e.getAppealHistory(code),
@@ -1030,7 +1030,7 @@ export function createEnforcementHandlers(core) {
 
     const appealPreview = guardedPost(async (req, res) => {
         const code = caseCodeParam(req);
-        const record = code ? await e.getCaseByCode(code) : null;
+        const record = code ? await e.getCaseByCode(code, guildId) : null;
         if (!record || record.guild_id !== guildId) throw new InputError(textOf(req).t('moderation.case.noCase'), 404);
         const decision = text(req.body, 'decision', 10);
         if (decision !== 'accept' && decision !== 'deny') throw new InputError(textOf(req).t('moderation.appeal.chooseDecision'));
