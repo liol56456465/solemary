@@ -9,20 +9,22 @@
 //   - Cases with no human moderator (warn-ladder bans, automod and other bot actions:
 //     is_auto, or the bot's own id as moderator) never conflict.
 //
-// Pure apart from the settings cache read: no database, no Discord calls.
+// Pure apart from the settings cache read: no database, no Discord calls. A non-home server
+// whose settings could not be read throws (SettingsUnavailableError) instead of assuming off.
 
 import { isBotOwner } from '../../config/bot.js';
-import { getSetting } from '../settings/guildSettings.js';
+import { resolveSetting } from '../settings/guildSettings.js';
 
 export const SECOND_REVIEWER_MESSAGE = 'You issued this punishment, so another staff member has to decide this appeal.';
 
-/** The setting for the case's server. Never throws (an unknown guild → the default, off). */
+/**
+ * The setting for the case's server (resolveSetting: only that server's own value, never the
+ * main server's). No guild → off. Throws SettingsUnavailableError when a non-home server's
+ * settings could not be read: the decision is refused then, never decided on a guessed "off".
+ */
 export function isIndependentReviewOn(guildId) {
-    try {
-        return getSetting(guildId, 'independentAppealReview') === true;
-    } catch {
-        return false;
-    }
+    if (!guildId) return false;
+    return resolveSetting(String(guildId), 'independentAppealReview') === true;
 }
 
 /** True when a person (not the bot, not the warn ladder) issued the case. */

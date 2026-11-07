@@ -14,6 +14,7 @@ import { enforcementConfig } from '../../config/enforcement.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { query, T } from './db.js';
+import { isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
 import { dateStamp, fitWholeLines, truncate } from './format.js';
 
 export const EXCERPT_MAX = 500;
@@ -187,25 +188,29 @@ export async function captureLinks(guild, entries, { prefetched = new Map() } = 
     }));
 }
 
-async function evidenceChannel(client) {
-    const channelId = enforcementConfig.evidenceChannelId || enforcementConfig.modLogChannelId;
+/** The case server's evidence channel (else its mod log); null when it has none or it is gone. */
+async function evidenceChannel(client, guildId) {
+    const channelId = resolveSetting(guildId, 'evidenceChannelId') || resolveSetting(guildId, 'modLogChannelId');
     if (!channelId) return null;
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
+    const guild = client.guilds.cache.get(guildId);
     const channel = guild && (guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null));
     return channel?.isTextBased?.() ? channel : null;
 }
 
 /**
- * Re-hosts an image attachment in the evidence channel and records it.
- * Returns the evidence row. The stored message is removed again if the insert fails.
+ * Re-hosts an image attachment in the evidence channel of the case's server (`guildId`) and
+ * records it. Returns the evidence row. The stored message is removed again if the insert fails.
  */
-export async function addImageEvidence(client, caseCode, attachment, { note = null, addedBy }) {
+export async function addImageEvidence(client, caseCode, attachment, { note = null, addedBy, guildId }) {
     if (!String(attachment?.contentType || '').startsWith('image/')) {
         throw userError('The attachment must be an image (PNG, JPG, GIF, WebP).');
     }
-    const channel = await evidenceChannel(client);
+    if (!guildId) throw new TypeError('addImageEvidence needs the guildId of the case');
+    const channel = await evidenceChannel(client, guildId);
     if (!channel) {
-        throw userError('No evidence channel is set up (EVIDENCE_CHANNEL_ID or MOD_LOG_CHANNEL_ID), so the image cannot be stored.');
+        throw userError(isHomeGuild(guildId)
+            ? 'No evidence channel is set up (EVIDENCE_CHANNEL_ID or MOD_LOG_CHANNEL_ID), so the image cannot be stored.'
+            : 'Evidence images are not set up in this server: set an evidence or mod log channel in the dashboard first, then add the image again.');
     }
 
     let stored;

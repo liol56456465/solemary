@@ -159,14 +159,15 @@ test('image evidence: re-hosted in the evidence channel, shown with a fresh URL,
         guilds: { cache: new Map([[mainGuild.id, mainGuild]]) },
         channels: { cache: new Map([[channelId, store]]), fetch: async () => null },
     };
-    const saved = { main: enforcementConfig.mainGuildId, evidence: enforcementConfig.evidenceChannelId };
-    enforcementConfig.mainGuildId = mainGuild.id;
-    enforcementConfig.evidenceChannelId = channelId;
+    // The case server's own evidence channel (resolveSetting reads the settings cache, not the config getters).
+    const { setSettingsCacheForTests } = await import('../../src/services/settings/guildSettings.js');
+    setSettingsCacheForTests(mainGuild.id, { evidenceChannelId: channelId });
+    const guildId = mainGuild.id;
     try {
-        await assert.rejects(addImageEvidence(client, record.case_code, { contentType: 'application/pdf', url: 'https://cdn/x.pdf', name: 'x.pdf' }, { addedBy: mod }), /must be an image/);
+        await assert.rejects(addImageEvidence(client, record.case_code, { contentType: 'application/pdf', url: 'https://cdn/x.pdf', name: 'x.pdf' }, { addedBy: mod, guildId }), /must be an image/);
 
         const row = await addImageEvidence(client, record.case_code,
-            { contentType: 'image/png', url: 'https://cdn.discordapp.com/attachments/old.png', name: 'shot.png' }, { note: 'dm screenshot', addedBy: mod });
+            { contentType: 'image/png', url: 'https://cdn.discordapp.com/attachments/old.png', name: 'shot.png' }, { note: 'dm screenshot', addedBy: mod, guildId });
         assert.equal(row.kind, 'image');
         assert.equal(row.store_channel_id, channelId);
         assert.equal(row.note, 'dm screenshot');
@@ -185,12 +186,11 @@ test('image evidence: re-hosted in the evidence channel, shown with a fresh URL,
         assert.match(noClient.field.value, /\[stored\]\(https:\/\/discord\.com\/channels\//);
 
         // A case that does not exist: the uploaded copy is deleted again.
-        await assert.rejects(addImageEvidence(client, 'zzzzzzz', { contentType: 'image/png', url: 'https://cdn/y.png', name: 'y.png' }, { addedBy: mod }), /No case/);
+        await assert.rejects(addImageEvidence(client, 'zzzzzzz', { contentType: 'image/png', url: 'https://cdn/y.png', name: 'y.png' }, { addedBy: mod, guildId }), /No case/);
         assert.equal(store.sent[1].message.deleted, true);
         assert.equal((await listEvidence(record.case_code)).length, 1);
     } finally {
-        enforcementConfig.mainGuildId = saved.main;
-        enforcementConfig.evidenceChannelId = saved.evidence;
+        setSettingsCacheForTests(mainGuild.id, null);
     }
 });
 

@@ -9,12 +9,12 @@
 // DM and the alerts channel gets an entry. The block is stored with a TTL, so a restart
 // doesn't lift it; /staff restore lifts it early.
 
-import { enforcementConfig } from '../../config/enforcement.js';
 import { botConfig, isBotOwner } from '../../config/bot.js';
 import { db } from '../../utils/database/wrapper.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { query, T } from './db.js';
+import { resolveSetting } from '../settings/guildSettings.js';
 
 
 const blockKey = (guildId, moderatorId) => `enforcement:massguard:${guildId}:${moderatorId}`;
@@ -55,7 +55,7 @@ export async function clearMassActionBlock(guildId, moderatorId) {
  * the same transaction as the warn, so both rows carry the same NOW() (transaction start time):
  * that is what ties the ban to the moderator's warn.
  */
-export async function recentBanKickCount(guildId, moderatorId, windowMs = enforcementConfig.massActionWindowMs) {
+export async function recentBanKickCount(guildId, moderatorId, windowMs = resolveSetting(guildId, 'massActionWindowMs')) {
     const { rows } = await query(
         `SELECT COUNT(*)::int AS n FROM ${T.cases} c
          WHERE c.guild_id = $1 AND NOT c.is_test
@@ -71,7 +71,7 @@ export async function recentBanKickCount(guildId, moderatorId, windowMs = enforc
 }
 
 /** Mutes this moderator recorded within the window (test cases excluded). */
-export async function recentMuteCount(guildId, moderatorId, windowMs = enforcementConfig.massActionWindowMs) {
+export async function recentMuteCount(guildId, moderatorId, windowMs = resolveSetting(guildId, 'massActionWindowMs')) {
     const { rows } = await query(
         `SELECT COUNT(*)::int AS n FROM ${T.cases}
          WHERE guild_id = $1 AND moderator_id = $2 AND type = 'mute' AND NOT is_test
@@ -90,11 +90,13 @@ async function alertOwners(client, text) {
 }
 
 async function blockModerator(guild, moderator, count, attempted) {
-    const until = new Date(Date.now() + enforcementConfig.massActionBlockMs).toISOString();
+    // This server's own limits (resolveSetting: a non-home server never gets the main server's values).
+    const blockMs = resolveSetting(guild.id, 'massActionBlockMs');
+    const until = new Date(Date.now() + blockMs).toISOString();
     const block = { until, count, attempted, at: new Date().toISOString() };
-    await db.set(blockKey(guild.id, moderator.id), block, Math.ceil(enforcementConfig.massActionBlockMs / 1000));
+    await db.set(blockKey(guild.id, moderator.id), block, Math.ceil(blockMs / 1000));
 
-    const windowMinutes = Math.round(enforcementConfig.massActionWindowMs / 60000);
+    const windowMinutes = Math.round(resolveSetting(guild.id, 'massActionWindowMs') / 60000);
     const what = attempted === 'mute' ? 'mutes' : 'bans/kicks';
     const summary = `${moderator.user?.username ?? moderator.id} (${moderator.id}) made ${count} ${what} within ${windowMinutes} minutes and tried another ${attempted}.`;
     logger.warn(`Mass-action guard in ${guild.id}: ${summary} Blocked until ${until}.`);
@@ -103,7 +105,7 @@ async function blockModerator(guild, moderator, count, attempted) {
     import('../automod/raidService.js')
         .then(({ noteIncidentEvent }) => noteIncidentEvent(guild.id, {
             kind: 'mass_block', actorId: moderator.id,
-            detail: `Blocked for ${Math.round(enforcementConfig.massActionBlockMs / 60000)} minutes after ${count} ${what} within ${windowMinutes} minutes`,
+            detail: `Blocked for ${Math.round(blockMs / 60000)} minutes after ${count} ${what} within ${windowMinutes} minutes`,
         }))
         .catch((error) => logger.warn(`Raid timeline: mass-action event failed: ${error.message}`));
 
@@ -114,7 +116,7 @@ async function blockModerator(guild, moderator, count, attempted) {
         { name: 'What happened', value: summary },
         { name: 'Blocked until', value: `<t:${Math.floor(Date.parse(until) / 1000)}:f>` },
         { name: 'Lift early', value: '`/staff restore`' },
-    ], { title: `Safety limit: too many ${what} in ${windowMinutes} minutes, moderator blocked` });
+    ], { title: `Safety limit: too many ${what} in ${windowMinutes} minutes, moderator blocked`, guildId: guild.id });
     await alertOwners(guild.client, `**Safety limit (too many ${what} in ${windowMinutes} minutes) in ${guild.name}.** ${summary} Their panel access is blocked until <t:${Math.floor(Date.parse(until) / 1000)}:f>. Lift it early with \`/staff restore\`.`);
     return block;
 }
@@ -132,10 +134,10 @@ export async function enforceMassActionGuard(guild, moderator, actionType) {
     let limit;
     if (actionType === 'ban' || actionType === 'kick') {
         count = await recentBanKickCount(guild.id, moderator.id);
-        limit = enforcementConfig.massActionLimit;
+        limit = resolveSetting(guild.id, 'massActionLimit');
     } else if (actionType === 'mute') {
         count = await recentMuteCount(guild.id, moderator.id);
-        limit = enforcementConfig.massMuteLimit;
+        limit = resolveSetting(guild.id, 'massMuteLimit');
     } else {
         return;
     }
