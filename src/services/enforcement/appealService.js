@@ -897,7 +897,7 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
                     await db.query(`UPDATE ${T.cases} SET unappealable = TRUE WHERE id = $1`, [record.id]);
                 }
             });
-            if (appellant) dmDelivered = await sendDm(appellant, appealDeniedDm({ lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }) }));
+            if (appellant) dmDelivered = await sendDm(appellant, appealDeniedDm({ guildId: record.guild_id, lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }) }));
         }
 
         await query(
