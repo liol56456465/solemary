@@ -7,14 +7,15 @@ import { cardTitle } from './reviewFormat.js';
 import { getCard, openCards } from './reviewRegistry.js';
 import { reviewChannel } from './reviewCards.js';
 import { truncate } from '../enforcement/format.js';
+import { enforcementConfig } from '../../config/enforcement.js';
 
 const SCAN_LIMIT = 50;
 const MAX_LISTED = 20;
 
-/** [{ title, url, at, count }] newest first. */
-export async function collectOpenReviews(client) {
+/** [{ title, url, at, count }] newest first. `guildId`: whose review channel is scanned (default: main). */
+export async function collectOpenReviews(client, guildId = enforcementConfig.mainGuildId) {
     const items = openCards().map((entry) => ({ title: cardTitle(entry), url: entry.url, at: entry.firstAt, count: entry.count }));
-    const channel = await reviewChannel(client).catch(() => null);
+    const channel = await reviewChannel(client, guildId).catch(() => null);
     const recent = channel ? await channel.messages.fetch({ limit: SCAN_LIMIT }).catch(() => null) : null;
     for (const message of recent?.values() || []) {
         if (message.author?.id !== client.user.id || !message.components?.length || !message.embeds?.length) continue;

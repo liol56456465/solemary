@@ -197,7 +197,7 @@ export async function postWeeklyStaffReport(client) {
     await postModLog(client, 'staff', [
         { name: `Week of ${start}`, value: lines.join('\n').slice(0, 1024) || 'No staff' },
         { name: 'Inactive', value: inactive.length ? inactive.map((row) => `<@${row.userId}>`).join(', ') : 'Nobody', inline: false },
-    ], { title: 'Weekly staff activity' });
+    ], { guildId: guild.id, title: 'Weekly staff activity' });
 
     if (inactive.length) {
         const owner = await guild.fetchOwner().catch(() => null);

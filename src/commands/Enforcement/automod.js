@@ -3,10 +3,10 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { enforcementConfig } from '../../config/enforcement.js';
-import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
+import { AUTOMOD_RULES } from '../../config/automod.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
 import {
-    getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode,
+    exemptChannelIdsOf, getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode,
     setExemptChannel, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
 } from '../../services/automod/automodSettings.js';
 import { endLockdown, getLockdownState } from '../../services/automod/raidService.js';
@@ -86,7 +86,7 @@ function trustedText(trusted) {
 async function statusEmbed(guildId) {
     const settings = await getAutomodSettings(guildId);
     const lockdown = await getLockdownState(guildId);
-    const exempt = [...new Set([...automodConfig.exemptChannelIds, ...settings.exemptChannelIds])];
+    const exempt = exemptChannelIdsOf(guildId, settings);
     const rules = Object.entries(AUTOMOD_RULES)
         .sort(([, a], [, b]) => b.severity - a.severity)
         .map(([key, rule]) => {
@@ -262,7 +262,7 @@ export default {
         if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)) return interaction.respond([]);
         const focused = String(interaction.options.getFocused() || '').toLowerCase();
         if (interaction.options.getSubcommandGroup(false) === 'custom') {
-            return interaction.respond(customRuleChoices(storedCustomRules(), focused)).catch(() => {});
+            return interaction.respond(customRuleChoices(storedCustomRules(interaction.guildId), focused)).catch(() => {});
         }
         const rules = await interaction.guild.autoModerationRules.fetch().catch(() => null);
         const choices = [...(rules?.values() || [])]
@@ -303,7 +303,7 @@ export default {
         }
 
         if (sub === 'queue') {
-            const items = await collectOpenReviews(interaction.client);
+            const items = await collectOpenReviews(interaction.client, interaction.guildId);
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [createEmbed({
                     title: `Review queue: ${items.length} open`,
@@ -428,7 +428,7 @@ async function handleCustom(interaction, sub) {
     const planId = guildPlan(guildId);
     const plan = planId === 'free' ? 'Free' : planName(planId);
     const limit = limitForPlan(planId);
-    const list = storedCustomRules();
+    const list = storedCustomRules(guildId);
     const opt = (name) => interaction.options.getString(name);
 
     if (sub === 'list') {

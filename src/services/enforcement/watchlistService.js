@@ -174,7 +174,7 @@ export async function addWatch(client, { guildId, userId, username = null, isBot
         { name: 'Moderator', value: `${createdBy.username} (${createdBy.id})` },
         { name: 'Note', value: `added to the watchlist (#${row.id}), ${row.until ? `until <t:${unix(new Date(row.until).getTime())}:f>` : 'no end date'}` },
         { name: 'Reason', value: row.reason },
-    ]);
+    ], { guildId });
     return row;
 }
 
@@ -192,7 +192,7 @@ export async function endWatch(client, { guildId, id, endedBy }) {
         { name: 'User', value: `<@${row.user_id}> (${row.user_id})` },
         { name: 'Moderator', value: `${endedBy.username} (${endedBy.id})` },
         { name: 'Note', value: `watchlist entry #${row.id} ended` },
-    ]);
+    ], { guildId });
     return row;
 }
 
@@ -212,7 +212,7 @@ export async function expireWatchlist(client) {
         await postModLog(client, 'watch', [
             { name: 'User', value: `<@${row.user_id}> (${row.user_id})` },
             { name: 'Note', value: `watchlist entry #${row.id} expired` },
-        ]);
+        ], { guildId: row.guild_id });
     }
     return rows.length;
 }
@@ -269,7 +269,7 @@ export async function alertWatched(client, { guildId, userId, username = null, e
             { name: 'Note', value: event },
             { name: 'Watched for', value: truncate(entry.reason, 300) },
             { name: 'Entry', value: `#${entry.id}` },
-        ]);
+        ], { guildId });
         return true;
     } catch (error) {
         logger.warn(`Watchlist alert failed: ${error.message}`);

@@ -3,6 +3,7 @@
 
 import { db, getFromDb, setInDb } from '../../utils/database.js';
 import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
+import { guildSetting } from '../settings/guildScoped.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { clampPanicHours, DEFAULT_PANIC_HOURS, MAX_PANIC_HOURS } from './incidentActions.js';
 import {
@@ -87,9 +88,19 @@ export async function updateAutomodSettings(guildId, patch) {
     return value;
 }
 
+/**
+ * Exempt channels of a server: /automod exempt plus the server's exemptChannelIds setting
+ * (home servers: the main server's AUTOMOD_EXEMPT_CHANNEL_IDS, as before; others: only their
+ * own). Throws SettingsUnavailableError for another server whose settings could not be read.
+ */
+export function exemptChannelIdsOf(guildId, settings) {
+    const configured = guildSetting(guildId, 'exemptChannelIds', automodConfig);
+    return [...new Set([...(Array.isArray(configured) ? configured : []), ...(settings?.exemptChannelIds || [])])];
+}
+
 export async function isChannelExempt(guildId, channel) {
     const settings = await getAutomodSettings(guildId);
-    const ids = new Set([...automodConfig.exemptChannelIds, ...settings.exemptChannelIds]);
+    const ids = new Set(exemptChannelIdsOf(guildId, settings));
     // A thread follows its parent channel.
     return ids.has(channel.id) || Boolean(channel.parentId && ids.has(channel.parentId) && channel.isThread?.());
 }

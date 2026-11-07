@@ -16,14 +16,14 @@ test('post kinds are routed by purpose', () => {
 
 test('review and alerts fall back to the mod log; all three when set', () => {
     const all = { reviewChannelId: 'R', alertsChannelId: 'A', modLogChannelId: 'M' };
-    assert.equal(resolveChannelId('review', all), 'R');
-    assert.equal(resolveChannelId('alerts', all), 'A');
-    assert.equal(resolveChannelId('modlog', all), 'M');
+    assert.equal(resolveChannelId(null, 'review', all), 'R');
+    assert.equal(resolveChannelId(null, 'alerts', all), 'A');
+    assert.equal(resolveChannelId(null, 'modlog', all), 'M');
     const onlyModLog = { reviewChannelId: null, alertsChannelId: null, modLogChannelId: 'M' };
-    assert.equal(resolveChannelId('review', onlyModLog), 'M');
-    assert.equal(resolveChannelId('alerts', onlyModLog), 'M');
-    assert.equal(resolveChannelId('modlog', onlyModLog), 'M');
-    assert.equal(resolveChannelId('alerts', { modLogChannelId: null }), null);
+    assert.equal(resolveChannelId(null, 'review', onlyModLog), 'M');
+    assert.equal(resolveChannelId(null, 'alerts', onlyModLog), 'M');
+    assert.equal(resolveChannelId(null, 'modlog', onlyModLog), 'M');
+    assert.equal(resolveChannelId(null, 'alerts', { modLogChannelId: null }), null);
 });
 
 test('mod log line: one line per action', () => {

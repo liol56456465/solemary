@@ -8,9 +8,14 @@
 //
 // review and alerts fall back to the mod log channel, so a server with only
 // MOD_LOG_CHANNEL_ID set still gets everything in one place.
+//
+// Per server (multi-server B0b): the home servers (main + support) post in the main
+// server's channels, as before. Any other server only ever posts in its own channels;
+// one that has none set is skipped quietly.
 
 import { automodConfig } from '../../config/automod.js';
 import { enforcementConfig } from '../../config/enforcement.js';
+import { guildSetting, isSettingsUnavailable, noteSettingsUnavailable, usesHomeValues } from '../settings/guildScoped.js';
 
 /** postModLog kinds that are alerts rather than a record of an enforcement action. */
 export const ALERT_KINDS = new Set([
@@ -32,26 +37,46 @@ export function channelPurposeFor(kind) {
     return ALERT_KINDS.has(kind) ? 'alerts' : 'modlog';
 }
 
-/** The channel id for a purpose, with the fallbacks applied. `ids` is for tests. */
-export function resolveChannelId(purpose, ids = currentChannelIds()) {
+/**
+ * The channel id for a purpose in one server, with the fallbacks applied. `ids` is for tests.
+ * Home servers: the main server's channels (as before). Any other server: only its own
+ * stored channels (null when not set); throws SettingsUnavailableError when they could not be read.
+ */
+export function resolveChannelId(guildId, purpose, ids = currentChannelIds(guildId)) {
     const modLog = ids.modLogChannelId || null;
     if (purpose === 'review') return ids.reviewChannelId || modLog;
     if (purpose === 'alerts') return ids.alertsChannelId || modLog;
     return modLog;
 }
 
-export function currentChannelIds() {
+export function currentChannelIds(guildId) {
     return {
-        reviewChannelId: automodConfig.reviewChannelId,
-        alertsChannelId: automodConfig.alertsChannelId,
-        modLogChannelId: enforcementConfig.modLogChannelId,
+        reviewChannelId: guildSetting(guildId, 'reviewChannelId', automodConfig),
+        alertsChannelId: guildSetting(guildId, 'alertsChannelId', automodConfig),
+        modLogChannelId: guildSetting(guildId, 'modLogChannelId', enforcementConfig),
     };
 }
 
-/** A text channel in the main server for a purpose, or null. */
-export async function fetchStaffChannel(client, purpose) {
-    const channelId = resolveChannelId(purpose);
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
+/** The server staff posts for `guildId` go to: the main server for a home server, else that server. */
+export function staffGuildId(guildId) {
+    return usesHomeValues(guildId) ? enforcementConfig.mainGuildId : guildId;
+}
+
+/**
+ * A text channel for a purpose in the server's staff guild (the main server for a home
+ * server, else the server itself), or null. A server whose settings could not be read gets
+ * null too (logged once in a while): the post is skipped, never sent somewhere else.
+ */
+export async function fetchStaffChannel(client, guildId, purpose) {
+    let channelId;
+    try {
+        channelId = resolveChannelId(guildId, purpose);
+    } catch (error) {
+        if (!isSettingsUnavailable(error)) throw error;
+        noteSettingsUnavailable(guildId, `staff ${purpose} post`);
+        return null;
+    }
+    const guild = client.guilds.cache.get(staffGuildId(guildId));
     if (!channelId || !guild) return null;
     const channel = guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null);
     return channel?.isTextBased?.() ? channel : null;

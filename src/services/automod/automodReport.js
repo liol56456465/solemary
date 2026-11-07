@@ -69,5 +69,5 @@ export async function postWeeklyAutomodReport(client) {
         { name: `Last 7 days: ${stats.total} action(s)`, value: text.rules.slice(0, 1024) },
         { name: 'Most actions against', value: text.offenders.slice(0, 1024) },
         { name: 'Note', value: text.footer },
-    ], { title: 'Weekly automod report' });
+    ], { guildId: enforcementConfig.mainGuildId, title: 'Weekly automod report' });
 }

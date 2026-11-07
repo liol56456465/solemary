@@ -84,7 +84,7 @@ export async function handleBackupRevert(interaction, client, args) {
                 { name: 'Snapshot', value: `#${snapshot.id} (${dateStamp(snapshot.created_at)})` },
                 { name: 'By', value: `${owner.username} (${owner.id})` },
                 { name: 'Result', value: summary.slice(0, 1024) },
-            ]);
+            ], { guildId: guild.id });
         })
         .catch(async (error) => {
             logger.error(`Revert of ${guild.id} stopped: ${error.message}`);

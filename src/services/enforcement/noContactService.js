@@ -130,7 +130,7 @@ export async function enforceNoContact(message) {
                 { name: 'User', value: `${message.author.username} (${message.author.id})` },
                 { name: 'Note', value: `${deleted ? 'message removed' : 'message could NOT be removed'}: ${how} <@${order.otherId}> in <#${message.channel.id}>` },
                 { name: 'Order', value: `#${order.id}` },
-            ]);
+            ], { guildId: message.guildId });
         }
         return deleted;
     } catch (error) {
@@ -196,7 +196,7 @@ export async function addNoContactOrder(client, { guildId, userA, userB, days, r
         { name: 'Moderator', value: `${createdBy.username} (${createdBy.id})` },
         { name: 'Note', value: `order #${row.id} started, until <t:${Math.floor(new Date(row.until).getTime() / 1000)}:f>` },
         { name: 'Reason', value: row.reason },
-    ]);
+    ], { guildId });
     return { order: row, delivered };
 }
 
@@ -214,7 +214,7 @@ export async function endNoContactOrder(client, { guildId, id, endedBy }) {
         { name: 'User', value: pairLabel(a, b, row) },
         { name: 'Moderator', value: `${endedBy.username} (${endedBy.id})` },
         { name: 'Note', value: `order #${row.id} ended early` },
-    ]);
+    ], { guildId });
     return { order: row, delivered };
 }
 
@@ -234,7 +234,7 @@ export async function expireNoContactOrders(client) {
             await postModLog(client, 'nocontact', [
                 { name: 'User', value: pairLabel(a, b, row) },
                 { name: 'Note', value: `order #${row.id} expired` },
-            ]);
+            ], { guildId: row.guild_id });
         }
     }
     return rows.length;

@@ -19,7 +19,8 @@ const {
 } = await import('../../src/services/automod/backtest.js');
 
 const DAY = 24 * 3600 * 1000;
-const GUILD = 'g-backtest';
+// The main server: the rules and words below are pinned on the main-server config (automodConfig).
+const GUILD = process.env.MAIN_GUILD_ID;
 const OWNER = '200000000000000009';
 const FOREIGN = '900000000000000001';
 const VIEW = 1n << 10n;
