@@ -1,6 +1,7 @@
 // common.js — helpers shared by the module pages.
 
-import { html, raw, slug } from '../html.js';
+import { html, raw, slug, unsavedAttr } from '../html.js';
+import { currentText } from '../language.js';
 
 export { slug };
 
@@ -29,7 +30,7 @@ export function splitHelp(help) {
 export function section(title, body, help = '', { key = slug(title), size = 'auto' } = {}) {
     const [line, more] = splitHelp(help);
     const width = size === 'auto' ? (/<table[\s>]/.test(String(body)) ? 'full' : 'normal') : size;
-    return html`<section class="tile-card section${width === 'normal' ? '' : ` size-${width}`}" id="s-${key}" data-card="${key}"><header class="card-top"><h2 class="card-title">${title}</h2>${line ? html`<p class="card-desc">${line}</p>` : ''}${more ? html`<details class="card-more"><summary>More about this</summary><p>${more}</p></details>` : ''}</header><div class="section-body">${body}</div></section>`;
+    return html`<section class="tile-card section${width === 'normal' ? '' : ` size-${width}`}" id="s-${key}" data-card="${key}"><header class="card-top"><h2 class="card-title"${unsavedAttr()}>${title}</h2>${line ? html`<p class="card-desc">${line}</p>` : ''}${more ? html`<details class="card-more"><summary>${currentText().t('frame.module.more')}</summary><p>${more}</p></details>` : ''}</header><div class="section-body">${body}</div></section>`;
 }
 
 /**
@@ -37,7 +38,7 @@ export function section(title, body, help = '', { key = slug(title), size = 'aut
  * The cards' titles become h3 under the topic's h2.
  */
 export function topic(title, line, cards, { key = slug(title) } = {}) {
-    const inner = String(html`${cards}`).replace(/<h2 class="card-title">([\s\S]*?)<\/h2>/g, '<h3 class="card-title">$1</h3>');
+    const inner = String(html`${cards}`).replace(/<h2 class="card-title"([^>]*)>([\s\S]*?)<\/h2>/g, '<h3 class="card-title"$1>$2</h3>');
     return html`<section class="topic" id="g-${key}"><header class="topic-head"><h2>${title}</h2>${line ? html`<p>${line}</p>` : ''}</header><div class="card-grid">${raw(inner)}</div></section>`;
 }
 import { guildIdFor } from '../../settings/guildSettings.js';
@@ -49,7 +50,7 @@ export const HOUR = 60 * MINUTE;
 export const DAY = 24 * HOUR;
 
 /** A plain table: headers + rows of cells (SafeHtml or text). */
-export function table(headers, rows, empty = 'None.') {
+export function table(headers, rows, empty = currentText().t('frame.module.none')) {
     if (!rows.length) return html`<p class="muted">${empty}</p>`;
     return html`<div class="scroll"><table><thead><tr>${headers.map((h) => html`<th>${h}</th>`)}</tr></thead><tbody>
 ${rows.map((cells) => html`<tr>${cells.map((c) => html`<td>${c}</td>`)}</tr>`)}</tbody></table></div>`;

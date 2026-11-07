@@ -1,0 +1,82 @@
+{
+  "page": {
+    "help": "Turn single commands, or whole groups of commands, on or off for this server. A command that is off only answers with a short notice. /commands and /configwizard always stay on, so you cannot lock yourself out."
+  },
+  "bot": {
+    "title": "Bot settings",
+    "help": "Basic settings for how Mewvo works in this server. You can also change these with /configwizard in Discord.",
+    "prefix": "Prefix for text commands",
+    "prefixHelp": "Some commands also work in a normal message: type this sign and then the command name, instead of using a slash command. 1 to 10 characters, no spaces.",
+    "modRole": "Moderator role",
+    "modRoleHelp": "Members with this role can use moderation commands. They can also log in to this dashboard as moderators: they see members, cases and appeals, and can warn, mute, unmute, kick and time out. They cannot ban or change settings. Mewvo never gives this role to anyone by itself.",
+    "needsAdmin": "To change bot settings and use the utilities here you need the Administrator permission in the main server.",
+    "saved": "Bot settings saved.",
+    "nothing": "Nothing changed.",
+    "prefixRule": "The prefix must be 1 to 10 characters, with no spaces.",
+    "modRoleAuto": "Moderator role: @{role} is {where}, so everyone who gets it would become a moderator. Pick a staff-only role.",
+    "where": {
+      "autoRole": "the auto role given on join",
+      "verification": "the verification role",
+      "autoVerify": "the auto-verify role",
+      "levelReward": "a level reward",
+      "reactionRole": "a reaction role"
+    }
+  },
+  "utilities": {
+    "title": "Utilities",
+    "help": "Shorten a link with is.gd, as /shorten. The short link is shown at the top of this page.",
+    "url": "Link to shorten",
+    "urlHelp": "Turns a long web link into a short one that is easier to share.",
+    "custom": "Custom ending (optional)",
+    "customHelp": "Choose the last part of the short link yourself. Letters, numbers, _ and - only.",
+    "submit": "Shorten",
+    "result": "Short link: {short} (for {url})"
+  },
+  "list": {
+    "title": "Commands",
+    "notLoaded": "The command list is not loaded yet. Reload the page in a moment.",
+    "command": "Command",
+    "description": "Description",
+    "state": "State",
+    "on": "On",
+    "protected": "protected",
+    "categoryOff": "category off",
+    "categoryIsOff": "category {name} is off",
+    "count": "{on}/{total} on.",
+    "turnCategoryOn": "Turn category on",
+    "turnCategoryOff": "Turn category off",
+    "offSuffix": "{name} (off)",
+    "moduleTitle": "Commands ({count})",
+    "moduleHelp": "The slash commands that belong to this page. A command you turn off only answers with a short notice. The Commands page lists every command.",
+    "topicLine": "The slash commands that belong to this page."
+  },
+  "every": {
+    "title": "Every command ({count})",
+    "retired": "Retired",
+    "retiredText": "Admin commands are switched off in Discord. Only the commands for everyone, the bot owner's emergency tools and {test} are left. Everything else is done here on the dashboard.",
+    "notRetired": "Not retired",
+    "notRetiredText": "Every command works in Discord. The bot owner can switch admin commands off, so that only the commands for everyone, the emergency tools and {test} stay, and everything else is done on the dashboard.",
+    "whatItDoes": "What it does",
+    "who": "Who can use it",
+    "onDashboard": "On the dashboard",
+    "ifRetired": "If admin commands are switched off",
+    "whoEveryone": "Everyone",
+    "whoOwnerKit": "Bot owner only (emergency tools)",
+    "whoAdmin": "Administrators",
+    "afterEveryone": "Stays a command",
+    "afterOwnerKit": "Stays, bot owner only",
+    "afterAdmin": "Dashboard only",
+    "support": "Also in the support server: {list}. Who can use which command is fixed in Mewvo and cannot be changed here."
+  },
+  "action": {
+    "unknownCommand": "Unknown command: /{name}.",
+    "cannotDisable": "/{name} cannot be disabled.",
+    "commandOn": "/{name} is now on.",
+    "commandOff": "/{name} is now off.",
+    "unknownCategory": "Unknown category.",
+    "categoryOn": "{name} is now on.",
+    "categoryOff": "{name} is now off.",
+    "commandLabel": "Command",
+    "categoryLabel": "Category"
+  }
+}

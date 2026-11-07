@@ -11,13 +11,17 @@ import { getCommandPrefix } from '../../../config/bot.js';
 import { html, path } from '../html.js';
 import { InputError, boolField, buttonForm, moduleSwitch, postForm, rolePicker, roleField, text, textInput } from '../forms.js';
 import { section, table } from './common.js';
+import { currentText, textFor } from '../language.js';
+
+// Words: src/content/dashboard/<lang>/commands.json (command names and descriptions come from the
+// commands themselves and stay as they are).
 
 export const PREFIX_MAX = 10;
 
 /** The /configwizard prefix rule: 1–10 characters, no spaces. */
 export function prefixField(form, name = 'prefix') {
     const value = typeof form?.[name] === 'string' ? form[name].trim() : '';
-    if (!value || value.length > PREFIX_MAX || /\s/.test(value)) throw new InputError('The prefix must be 1 to 10 characters, with no spaces.', 400, name);
+    if (!value || value.length > PREFIX_MAX || /\s/.test(value)) throw new InputError(currentText().t('commands.bot.prefixRule'), 400, name);
     return value;
 }
 
@@ -41,11 +45,12 @@ async function autoAssignedRoles(ctx) {
         ctx.services.getLevelingConfig(ctx.client, ctx.guildId),
         ctx.services.getAllReactionRoleMessages(ctx.client, ctx.guildId),
     ]);
-    for (const id of welcome?.roleIds || []) add(id, 'the auto role given on join');
-    add(verification?.roleId, 'the verification role');
-    add(verification?.autoVerify?.roleId, 'the auto-verify role');
-    for (const id of Object.values(leveling?.roleRewards || {})) add(id, 'a level reward');
-    for (const panel of Array.isArray(panels) ? panels : []) for (const id of panel.roles || []) add(typeof id === 'string' ? id : id?.id, 'a reaction role');
+    const where = (key) => textFor(ctx).t(`commands.bot.where.${key}`);
+    for (const id of welcome?.roleIds || []) add(id, where('autoRole'));
+    add(verification?.roleId, where('verification'));
+    add(verification?.autoVerify?.roleId, where('autoVerify'));
+    for (const id of Object.values(leveling?.roleRewards || {})) add(id, where('levelReward'));
+    for (const panel of Array.isArray(panels) ? panels : []) for (const id of panel.roles || []) add(typeof id === 'string' ? id : id?.id, where('reactionRole'));
     return out;
 }
 
@@ -82,6 +87,7 @@ export const MODULE_COMMANDS = {
 export function moduleCommandsSection(ctx, moduleKey, snapshot) {
     const names = MODULE_COMMANDS[moduleKey];
     if (!names || !snapshot) return '';
+    const tr = textFor(ctx);
     const found = new Map();
     for (const cat of snapshot.categories) {
         const disabled = new Set(cat.disabledCommandNames);
@@ -91,14 +97,14 @@ export function moduleCommandsSection(ctx, moduleKey, snapshot) {
     }
     const rows = names.filter((name) => found.has(name)).map((name) => {
         const { cmd, cat, on } = found.get(name);
-        const control = cmd.protected ? html`<span class="muted">protected</span>`
-            : cat.categoryDisabled ? html`<span class="muted">category ${cat.displayName} is off</span>`
-                : moduleSwitch({ csrf: ctx.csrf, canEdit: ctx.canEdit, module: 'commands', action: 'command', enabled: on, label: `/${cmd.name}`, back: moduleKey, hidden: { name: cmd.name } });
+        const control = cmd.protected ? html`<span class="muted">${tr.t('commands.list.protected')}</span>`
+            : cat.categoryDisabled ? html`<span class="muted">${tr.t('commands.list.categoryIsOff', { name: cat.displayName })}</span>`
+                : moduleSwitch({ csrf: ctx.csrf, canEdit: ctx.canEdit, module: 'commands', action: 'command', enabled: on, label: `/${cmd.name}`, back: moduleKey, hidden: { name: cmd.name }, lang: tr.lang });
         return [html`<code>${/\s/.test(cmd.name) ? cmd.name : `/${cmd.name}`}</code>`, cmd.description || '', control];
     });
     if (!rows.length) return '';
-    return section(`Commands (${rows.length})`, table(['Command', 'Description', 'On'], rows),
-        'The slash commands that belong to this page. A command you turn off only answers with a short notice. The Commands page lists every command.', { key: 'commands', size: 'full' });
+    return section(tr.t('commands.list.moduleTitle', { count: tr.fmtNumber(rows.length) }), table([tr.t('commands.list.command'), tr.t('commands.list.description'), tr.t('commands.list.on')], rows),
+        tr.t('commands.list.moduleHelp'), { key: 'commands', size: 'full' });
 }
 
 export default {
@@ -112,44 +118,47 @@ export default {
     },
 
     render(ctx, { config, snapshot }) {
+        const tr = textFor(ctx);
+        const t = (key, params) => tr.t(`commands.${key}`, params);
         const can = ctx.canEdit && ctx.canAct;
-        const botSettings = section('Bot settings', postForm(ctx, 'commands', 'bot-settings', html`<div class="grid">
-${textInput('prefix', config?.prefix || getCommandPrefix(), { label: 'Prefix for text commands', max: PREFIX_MAX, help: 'Some commands also work in a normal message: type this sign and then the command name, instead of using a slash command. 1 to 10 characters, no spaces.' })}
-${rolePicker(ctx.guild, 'modRole', roleIdOf(config?.modRole), { label: 'Moderator role', assign: false, help: 'Members with this role can use moderation commands. They can also log in to this dashboard as moderators: they see members, cases and appeals, and can warn, mute, unmute, kick and time out. They cannot ban or change settings. Mewvo never gives this role to anyone by itself.' })}</div>`, { canEdit: can }),
-        'Basic settings for how Mewvo works in this server. You can also change these with /configwizard in Discord.');
-        const utilities = section('Utilities', postForm(ctx, 'commands', 'shorten', html`<div class="grid">
-${textInput('url', '', { label: 'Link to shorten', max: 2000, type: 'url', placeholder: 'https://example.com/a/long/link', help: 'Turns a long web link into a short one that is easier to share.' })}
-${textInput('custom', '', { label: 'Custom ending (optional)', max: 30, help: 'Choose the last part of the short link yourself. Letters, numbers, _ and - only.' })}</div>`, { submit: 'Shorten', canEdit: can }),
-        'Shorten a link with is.gd, as /shorten. The short link is shown at the top of this page.', { open: false });
-        const settingsPart = html`${ctx.canAct ? '' : html`<p class="muted">To change bot settings and use the utilities here you need the Administrator permission in the main server.</p>`}${botSettings}${utilities}`;
-        if (!snapshot) return html`${settingsPart}${section('Commands', html`<p class="muted">The command list is not loaded yet. Reload the page in a moment.</p>`)}`;
+        const botSettings = section(t('bot.title'), postForm(ctx, 'commands', 'bot-settings', html`<div class="grid">
+${textInput('prefix', config?.prefix || getCommandPrefix(), { label: t('bot.prefix'), max: PREFIX_MAX, help: t('bot.prefixHelp') })}
+${rolePicker(ctx.guild, 'modRole', roleIdOf(config?.modRole), { label: t('bot.modRole'), assign: false, help: t('bot.modRoleHelp') })}</div>`, { canEdit: can }),
+        t('bot.help'));
+        const utilities = section(t('utilities.title'), postForm(ctx, 'commands', 'shorten', html`<div class="grid">
+${textInput('url', '', { label: t('utilities.url'), max: 2000, type: 'url', placeholder: 'https://example.com/a/long/link', help: t('utilities.urlHelp') })}
+${textInput('custom', '', { label: t('utilities.custom'), max: 30, help: t('utilities.customHelp') })}</div>`, { submit: t('utilities.submit'), canEdit: can }),
+        t('utilities.help'), { open: false });
+        const settingsPart = html`${ctx.canAct ? '' : html`<p class="muted">${t('bot.needsAdmin')}</p>`}${botSettings}${utilities}`;
+        if (!snapshot) return html`${settingsPart}${section(t('list.title'), html`<p class="muted">${t('list.notLoaded')}</p>`)}`;
         const categories = snapshot.categories.map((cat) => {
             const disabled = new Set(cat.disabledCommandNames);
             const rows = cat.commands.map((cmd) => {
                 const on = !disabled.has(cmd.name);
                 return [html`<code>/${cmd.name}</code>`, cmd.description,
-                    html`<span class="state ${on ? 'state-on' : 'state-off'}">${on ? 'on' : 'off'}</span>`,
-                    cmd.protected || cat.categoryDisabled ? html`<span class="muted">${cmd.protected ? 'protected' : 'category off'}</span>`
-                        : buttonForm(ctx, 'commands', 'command', on ? 'Turn off' : 'Turn on', { name: cmd.name, enabled: on ? 'false' : 'true' }, { danger: on })];
+                    html`<span class="state ${on ? 'state-on' : 'state-off'}">${tr.t(on ? 'forms.pillOn' : 'forms.pillOff')}</span>`,
+                    cmd.protected || cat.categoryDisabled ? html`<span class="muted">${cmd.protected ? t('list.protected') : t('list.categoryOff')}</span>`
+                        : buttonForm(ctx, 'commands', 'command', tr.t(on ? 'forms.turnOff' : 'forms.turnOn'), { name: cmd.name, enabled: on ? 'false' : 'true' }, { danger: on })];
             });
-            const header = html`<p>${cat.enabledCount}/${cat.totalCount} on. ${buttonForm(ctx, 'commands', 'category', cat.categoryDisabled ? 'Turn category on' : 'Turn category off', { key: cat.key, enabled: cat.categoryDisabled ? 'true' : 'false' }, { danger: !cat.categoryDisabled })}</p>`;
-            return section(`${cat.displayName}${cat.categoryDisabled ? ' (off)' : ''}`, html`${header}${table(['Command', 'Description', 'State', ''], rows)}`);
+            const header = html`<p>${t('list.count', { on: tr.fmtNumber(cat.enabledCount), total: tr.fmtNumber(cat.totalCount) })} ${buttonForm(ctx, 'commands', 'category', cat.categoryDisabled ? t('list.turnCategoryOn') : t('list.turnCategoryOff'), { key: cat.key, enabled: cat.categoryDisabled ? 'true' : 'false' }, { danger: !cat.categoryDisabled })}</p>`;
+            return section(cat.categoryDisabled ? t('list.offSuffix', { name: cat.displayName }) : cat.displayName, html`${header}${table([t('list.command'), t('list.description'), t('list.state'), ''], rows)}`);
         });
         // Every command and subcommand: who may use it, where its job is on the dashboard, and
         // what happens to it when admin commands are retired (RETIRE_ADMIN_COMMANDS).
         const entries = commandEntries(ctx.client.commands);
         const retired = adminCommandsRetired();
-        const WHO = { everyone: 'Everyone', 'owner kit': 'Bot owner only (emergency tools)', admin: 'Administrators' };
-        const AFTER = { everyone: 'Stays a command', 'owner kit': 'Stays, bot owner only', admin: 'Dashboard only' };
+        const WHO = { everyone: t('every.whoEveryone'), 'owner kit': t('every.whoOwnerKit'), admin: t('every.whoAdmin') };
+        const AFTER = { everyone: t('every.afterEveryone'), 'owner kit': t('every.afterOwnerKit'), admin: t('every.afterAdmin') };
+        const test = html`<code>/test</code>`;
         const every = html`<p>${retired
-            ? html`<span class="state state-on">Retired</span> Admin commands are switched off in Discord. Only the commands for everyone, the bot owner's emergency tools and <code>/test</code> are left. Everything else is done here on the dashboard.`
-            : html`<span class="state state-off">Not retired</span> Every command works in Discord. The bot owner can switch admin commands off, so that only the commands for everyone, the emergency tools and <code>/test</code> stay, and everything else is done on the dashboard.`}</p>
-${table(['Command', 'What it does', 'Who can use it', 'On the dashboard', 'If admin commands are switched off'], entries.map((e) => [
+            ? html`<span class="state state-on">${t('every.retired')}</span> ${tr.tx('commands.every.retiredText', { test })}`
+            : html`<span class="state state-off">${t('every.notRetired')}</span> ${tr.tx('commands.every.notRetiredText', { test })}`}</p>
+${table([t('list.command'), t('every.whatItDoes'), t('every.who'), t('every.onDashboard'), t('every.ifRetired')], entries.map((e) => [
             html`<code>/${e.key}</code>`, e.description, WHO[e.access],
             e.page ? html`<a href="${path(`/${e.page}`)}">${e.page}</a>` : html`<span class="muted">-</span>`,
-            e.access === 'admin' && !e.page ? 'Stays a command' : AFTER[e.access]]))}
-<p class="muted">Also in the support server: ${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}. Who can use which command is fixed in Mewvo and cannot be changed here.</p>`;
-        return html`${settingsPart}${section(`Every command (${entries.length})`, every)}${categories}`;
+            e.access === 'admin' && !e.page ? t('every.afterEveryone') : AFTER[e.access]]))}
+<p class="muted">${tr.tx('commands.every.support', { list: html`${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}` })}</p>`;
+        return html`${settingsPart}${section(t('every.title', { count: tr.fmtNumber(entries.length) }), every)}${categories}`;
     },
 
     actions: {
@@ -157,10 +166,11 @@ ${table(['Command', 'What it does', 'Who can use it', 'On the dashboard', 'If ad
             admin: true,
             async run(ctx, form) {
                 const prefix = prefixField(form);
-                const modRole = roleField(ctx.guild, form, 'modRole', { label: 'Moderator role' });
+                const tr = textFor(ctx);
+                const modRole = roleField(ctx.guild, form, 'modRole', { label: tr.t('commands.bot.modRole') });
                 if (modRole) {
                     const where = (await autoAssignedRoles(ctx)).get(modRole);
-                    if (where) throw new InputError(`Moderator role: @${ctx.guild.roles.cache.get(modRole)?.name || modRole} is ${where}, so everyone who gets it would become a moderator. Pick a staff-only role.`, 400, 'modRole');
+                    if (where) throw new InputError(tr.t('commands.bot.modRoleAuto', { role: ctx.guild.roles.cache.get(modRole)?.name || modRole, where }), 400, 'modRole');
                 }
                 const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
                 const current = { prefix: config.prefix || getCommandPrefix(), modRole: roleIdOf(config.modRole) };
@@ -170,7 +180,7 @@ ${table(['Command', 'What it does', 'Who can use it', 'On the dashboard', 'If ad
                     await ctx.services.updateConfigSetting(ctx.client, ctx.guildId, key, value, ctx.actor.userId);
                     changes.push({ key, old: current[key] ?? null, new: value ?? null });
                 }
-                return { changes, message: changes.length ? 'Bot settings saved.' : 'Nothing changed.' };
+                return { changes, message: tr.t(changes.length ? 'commands.bot.saved' : 'commands.bot.nothing') };
             },
         },
         shorten: {
@@ -188,34 +198,36 @@ ${table(['Command', 'What it does', 'Who can use it', 'On the dashboard', 'If ad
                 }
                 return {
                     changes: [{ key: 'shortLink', old: null, new: { url, shortUrl } }],
-                    message: `Short link: ${shortUrl} (for ${url})`,
+                    message: textFor(ctx).t('commands.utilities.result', { short: shortUrl, url }),
                 };
             },
         },
         async command(ctx, form) {
+            const tr = textFor(ctx);
             const name = text(form, 'name', 100).toLowerCase();
-            const enabled = boolField(form, 'enabled', 'Command');
+            const enabled = boolField(form, 'enabled', tr.t('commands.action.commandLabel'));
             const target = ctx.services.resolveCommandTarget(ctx.client, name);
-            if (!target) throw new InputError(`Unknown command: /${name}.`);
-            if (!enabled && target.protected) throw new InputError(`/${name} cannot be disabled.`);
+            if (!target) throw new InputError(tr.t('commands.action.unknownCommand', { name }));
+            if (!enabled && target.protected) throw new InputError(tr.t('commands.action.cannotDisable', { name }));
             const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
             const wasDisabled = Boolean(config.disabledCommands?.[name]);
             if (enabled) await ctx.services.enableCommand(ctx.client, ctx.guildId, name);
             else await ctx.services.disableCommand(ctx.client, ctx.guildId, name);
             const changes = wasDisabled === !enabled ? [] : [{ key: `disabledCommands.${name}`, old: wasDisabled, new: !enabled }];
-            return { changes, message: `/${name} is now ${enabled ? 'on' : 'off'}.` };
+            return { changes, message: tr.t(enabled ? 'commands.action.commandOn' : 'commands.action.commandOff', { name }) };
         },
         async category(ctx, form) {
+            const tr = textFor(ctx);
             const key = normalizeCategoryKey(text(form, 'key', 60));
-            const enabled = boolField(form, 'enabled', 'Category');
+            const enabled = boolField(form, 'enabled', tr.t('commands.action.categoryLabel'));
             const category = ctx.services.getCategoryRegistry(ctx.client, key);
-            if (!category) throw new InputError('Unknown category.');
+            if (!category) throw new InputError(tr.t('commands.action.unknownCategory'));
             const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
             const wasDisabled = Boolean(config.disabledCategories?.[key]);
             if (enabled) await ctx.services.enableCategory(ctx.client, ctx.guildId, key);
             else await ctx.services.disableCategory(ctx.client, ctx.guildId, key);
             const changes = wasDisabled === !enabled ? [] : [{ key: `disabledCategories.${key}`, old: wasDisabled, new: !enabled }];
-            return { changes, message: `${category.displayName} is now ${enabled ? 'on' : 'off'}.` };
+            return { changes, message: tr.t(enabled ? 'commands.action.categoryOn' : 'commands.action.categoryOff', { name: category.displayName }) };
         },
     },
 };

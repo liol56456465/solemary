@@ -1,0 +1,158 @@
+{
+  "title": "{title} · painel do Mewvo",
+  "skip": "Pular para o conteúdo",
+  "unsaved": "Alterações não salvas",
+  "nav": {
+    "label": "Painel",
+    "website": "Site do Mewvo",
+    "waiting": "aguardando",
+    "showMain": "Mostrar só as páginas principais",
+    "showAll": {
+      "zero": "Mostrar todas as páginas (mais {count})",
+      "one": "Mostrar todas as páginas (mais {count})",
+      "many": "Mostrar todas as páginas (mais {count})",
+      "other": "Mostrar todas as páginas (mais {count})"
+    },
+    "groups": {
+      "moderate": "Moderação",
+      "community": "Comunidade",
+      "serverSetup": "Configuração do servidor",
+      "bot": "Bot",
+      "owner": "Dono"
+    },
+    "items": {
+      "overview": "Visão geral",
+      "inbox": "Caixa de entrada",
+      "users": "Membros",
+      "bans": "Banidos",
+      "cases": "Casos",
+      "appeals": "Apelações",
+      "nocontact": "Não contato",
+      "staff": "Equipe",
+      "activity": "Atividade",
+      "incidents": "Linha do tempo de raids",
+      "channels": "Ferramentas de canal",
+      "tickets": "Tickets e modmail",
+      "welcome": "Boas-vindas e despedidas",
+      "leveling": "Níveis",
+      "reaction-roles": "Cargos por reação",
+      "messages": "Mensagens",
+      "giveaways": "Sorteios",
+      "birthdays": "Aniversários",
+      "applications": "Candidaturas",
+      "community": "Comunidade",
+      "join-to-create": "Entrar para criar",
+      "automod": "Automod",
+      "enforcement": "Punições e apelações",
+      "logging": "Registros",
+      "verification": "Verificação",
+      "counters": "Contadores",
+      "support": "Servidor de suporte",
+      "rules": "Regras",
+      "setup": "Configuração passo a passo",
+      "help": "Glossário",
+      "modules": "Todos os módulos",
+      "appearance": "O bot neste servidor",
+      "commands": "Comandos",
+      "audit": "Registro de auditoria",
+      "backup": "Backup das configurações",
+      "owner_home": "Visão geral do dono",
+      "owner_profile": "Perfil do bot",
+      "owner_servers": "Servidores",
+      "owner_users": "Usuários",
+      "owner_blacklist": "Lista de bloqueio",
+      "owner_premium": "Chaves premium",
+      "owner_health": "Saúde",
+      "owner_commands": "Sincronizar comandos",
+      "owner_announce": "Anunciar",
+      "owner_erase": "Apagar um caso",
+      "owner_website": "Site",
+      "owner_activity": "Atividade do dono"
+    }
+  },
+  "state": {
+    "on": "ativado",
+    "off": "desativado"
+  },
+  "action": {
+    "ban": "Banir",
+    "kick": "Expulsar",
+    "mute": "Silenciar",
+    "warn": "Advertir"
+  },
+  "tabbar": {
+    "label": "Seções",
+    "home": "Início",
+    "setup": "Configurar",
+    "more": "Mais",
+    "website": "Site"
+  },
+  "top": {
+    "find": "Buscar uma configuração",
+    "findPlaceholder": "Buscar uma configuração…"
+  },
+  "language": {
+    "title": "Idioma",
+    "label": "Idioma: {name}"
+  },
+  "theme": {
+    "title": "Tema",
+    "inUse": "(em uso)",
+    "system": "Igual ao meu dispositivo",
+    "light": "Claro",
+    "dark": "Escuro",
+    "dim": "Penumbra",
+    "contrast": "Alto contraste"
+  },
+  "server": {
+    "label": "Servidor: {name}",
+    "sub": "Servidor principal · em gerenciamento",
+    "note": "Por enquanto, só este servidor pode ser gerenciado."
+  },
+  "user": {
+    "label": "Conta: {name}",
+    "logout": "Sair",
+    "level": {
+      "moderator": "Moderador",
+      "ownerView": "Visualização e configurações (dono do bot)",
+      "administrator": "Administrador"
+    }
+  },
+  "message": {
+    "backOverview": "Voltar para a Visão geral",
+    "backHome": "Voltar para a página inicial"
+  },
+  "module": {
+    "readOnly": "Somente leitura: a edição pelo painel está desativada (DASHBOARD_EDIT_ENABLED não é true). Use os comandos do bot ou peça ao dono que a ative.",
+    "onThisPage": "Nesta página",
+    "notSaved": "Não salvo: {message}",
+    "more": "Saiba mais",
+    "none": "Nenhum."
+  },
+  "pager": {
+    "label": "Páginas",
+    "previous": "← Anterior",
+    "next": "Próxima →",
+    "pageOf": "Página {page} de {pages}"
+  },
+  "script": {
+    "filter": "Digite para filtrar…",
+    "filterLabel": "Filtrar a lista abaixo",
+    "cancel": "Cancelar",
+    "continue": "Continuar",
+    "saving": "Salvando…",
+    "copy": "Copiar",
+    "copyLabel": "Copiar {name}",
+    "copied": "Copiado",
+    "copyFailed": "Não foi possível copiar",
+    "justNow": "agora mesmo",
+    "underMinute": "em menos de um minuto",
+    "dismiss": "Fechar",
+    "unsaved": "Alterações não salvas",
+    "unsavedIn": "Alterações não salvas em {place}",
+    "discard": "Descartar",
+    "save": "Salvar alterações",
+    "searchModules": "Buscar módulos…",
+    "noModule": "Nenhum módulo encontrado."
+  }
+}

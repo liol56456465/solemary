@@ -1,0 +1,188 @@
+{
+  "unavailable": "unavailable",
+  "yourServer": "your server",
+  "status": {
+    "offline": "Mewvo is offline: commands and automod are not working right now.",
+    "dbDown": "Mewvo is online, but its database is not responding, so some things will not save.",
+    "ok": "Mewvo is online and working.",
+    "automodOn": "Automod is on.",
+    "automodOff": "Automod is off.",
+    "lockdown": "A raid lockdown is active."
+  },
+  "stats": {
+    "members": "Members",
+    "joined": "{count} joined this week",
+    "banned": "Banned right now",
+    "muted": "{count} muted right now",
+    "appeals": "Appeals waiting",
+    "appealsOldest": "Oldest first under Needs your attention",
+    "appealsNone": "Nothing to decide",
+    "tickets": "Open tickets",
+    "ticketsWhere": "Answered in their Discord channels"
+  },
+  "cards": {
+    "needs": "Needs your attention",
+    "note": "Note for the next shift",
+    "start": "Getting started",
+    "goTo": "Go to",
+    "week": "Moderation in the last 7 days",
+    "latest": "Latest moderation",
+    "allCases": "See all cases",
+    "changes": "Recent dashboard changes",
+    "fullAudit": "Full audit log"
+  },
+  "table": {
+    "when": "When",
+    "who": "Who",
+    "page": "Page",
+    "setting": "Setting",
+    "old": "Old",
+    "new": "New",
+    "action": "Action",
+    "member": "Member",
+    "by": "By",
+    "reason": "Reason",
+    "case": "Case",
+    "someone": "someone",
+    "test": "(test)"
+  },
+  "changes": {
+    "failed": "Could not be loaded just now. Reload the page in a minute.",
+    "empty": "No dashboard changes yet."
+  },
+  "chart": {
+    "failed": "The chart could not be loaded just now. Reload the page in a minute.",
+    "label": "Enforcement actions per day: {summary}",
+    "today": "Today",
+    "total": {
+      "one": "{count} action in 7 days (UTC days, /test cases not counted).",
+      "other": "{count} actions in 7 days (UTC days, /test cases not counted)."
+    }
+  },
+  "feed": {
+    "failed": "The latest moderation could not be loaded just now. Reload the page in a minute.",
+    "empty": "No enforcement actions yet. They show up here after the first warn, mute, kick or ban."
+  },
+  "needs": {
+    "endConfirm": "End the raid lockdown? The verification level goes back to what it was and paused invites and DMs resume.",
+    "endLockdown": "End lockdown",
+    "lockdown": "Raid lockdown is active",
+    "since": "Since {date}",
+    "heldAtDoor": "New members are held at the door",
+    "appealFrom": "Appeal from {name}",
+    "typedAppealFrom": {
+      "ban": "Ban appeal from {name}",
+      "kick": "Kick appeal from {name}",
+      "mute": "Mute appeal from {name}",
+      "warn": "Warn appeal from {name}"
+    },
+    "case": "Case {code}",
+    "testCase": "test case",
+    "review": "Review",
+    "reviewLabel": "appeal {code}",
+    "moreAppeals": {
+      "one": "{count} more appeal waiting",
+      "other": "{count} more appeals waiting"
+    },
+    "allAppeals": "All appeals",
+    "openTickets": {
+      "one": "{count} open ticket",
+      "other": "{count} open tickets"
+    },
+    "ticketsWhere": "Answered in their Discord channels",
+    "tickets": "Tickets",
+    "setUpStep": "Set up: {label}",
+    "setUp": "Set up",
+    "failed": "Some of this could not be loaded just now. Reload the page in a minute.",
+    "empty": "Nothing needs you right now. Appeals, tickets and raid alerts show up here."
+  },
+  "start": {
+    "new": "New to this?",
+    "button": "Set up Mewvo step by step",
+    "after": "It goes through the steps below one at a time.",
+    "words": "What do these words mean?",
+    "oneStep": "One step at a time",
+    "progress": "{done} of {total} done. Each step takes a minute; the link opens the right page.",
+    "done": "Done: {list}."
+  },
+  "handover": {
+    "writtenBy": "Written by {name}, {date}",
+    "empty": "A short message for whoever moderates next, like \"keep an eye on #general tonight\". Everyone on staff sees it here.",
+    "label": "Note",
+    "placeholder": "Keep an eye on #general tonight",
+    "save": "Save note",
+    "hint": "To remove the note, empty the box and save.",
+    "saved": "Handover note saved.",
+    "cleared": "Handover note cleared."
+  },
+  "quick": {
+    "cases": "Every warn, mute, kick and ban",
+    "users": "Find a member and act",
+    "appeals": "Requests to lift a punishment",
+    "inbox": "Tickets, reports and modmail",
+    "automod": "Spam, bad words and raids",
+    "enforcement": "How punishments work",
+    "audit": "Who changed which setting",
+    "modules": "Every setting, by module"
+  },
+  "setup": {
+    "fallback": "Until you choose one, it uses the mod log.",
+    "modLog": {
+      "label": "Mod log channel",
+      "hint": "Mewvo writes every warning, mute, kick and ban there, so your staff can look back later."
+    },
+    "review": {
+      "label": "Automod review channel",
+      "hint": "When automod removes a message, it posts a short report there so staff can keep or undo it."
+    },
+    "alerts": {
+      "label": "Alerts channel",
+      "hint": "For urgent warnings, like a raid (many accounts joining at once)."
+    },
+    "muted": {
+      "label": "Muted role",
+      "hint": "Mewvo creates it by itself the first time someone is muted. You can also pick your own role."
+    },
+    "appeals": {
+      "label": "Appeals category",
+      "hint": "When someone asks to have a punishment lifted, Mewvo opens a private channel for it in this category."
+    },
+    "ticketCategory": {
+      "label": "Ticket category",
+      "hint": "Tickets let members talk to staff privately. Choose the category their channels go in."
+    },
+    "ticketStaff": {
+      "label": "Ticket staff role",
+      "hint": "The role that can see and answer tickets."
+    },
+    "welcome": {
+      "label": "Welcome channel",
+      "hint": "Mewvo greets new members in this channel."
+    },
+    "verification": {
+      "label": "Verification",
+      "hint": "New members press a button to show they are a real person before they can chat."
+    },
+    "birthdays": {
+      "label": "Birthday channel",
+      "hint": "Mewvo wishes members a happy birthday there."
+    },
+    "bannedRole": {
+      "label": "Banned role in the support server",
+      "hint": "Banned members get this role in your support server, so they can still appeal there."
+    }
+  },
+  "value": {
+    "notFound": "{id} (not found)",
+    "hidden": "hidden",
+    "notSet": "not set",
+    "none": "none",
+    "words": {
+      "one": "{count} word",
+      "other": "{count} words"
+    },
+    "on": "on",
+    "off": "off",
+    "set": "set"
+  }
+}

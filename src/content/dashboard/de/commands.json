@@ -1,0 +1,82 @@
+{
+  "page": {
+    "help": "Schalte einzelne Befehle oder ganze Befehlsgruppen für diesen Server an oder aus. Ein ausgeschalteter Befehl antwortet nur mit einem kurzen Hinweis. /commands und /configwizard bleiben immer an, damit du dich nicht aussperren kannst."
+  },
+  "bot": {
+    "title": "Bot-Einstellungen",
+    "help": "Grundeinstellungen dafür, wie Mewvo auf diesem Server arbeitet. Du kannst sie auch mit /configwizard in Discord ändern.",
+    "prefix": "Präfix für Textbefehle",
+    "prefixHelp": "Manche Befehle funktionieren auch in einer normalen Nachricht: Tipp dieses Zeichen und dann den Befehlsnamen, statt einen Slash-Befehl zu nutzen. 1 bis 10 Zeichen, keine Leerzeichen.",
+    "modRole": "Moderatorrolle",
+    "modRoleHelp": "Mitglieder mit dieser Rolle können Moderationsbefehle nutzen. Sie können sich außerdem als Moderatoren in diesem Dashboard anmelden: Sie sehen Mitglieder, Fälle und Einsprüche und können verwarnen, stummschalten, die Stummschaltung aufheben, kicken und Timeouts geben. Sie können nicht bannen und keine Einstellungen ändern. Mewvo gibt diese Rolle nie von selbst an jemanden.",
+    "needsAdmin": "Um Bot-Einstellungen zu ändern und die Werkzeuge hier zu nutzen, brauchst du die Berechtigung Administrator auf dem Hauptserver.",
+    "saved": "Bot-Einstellungen gespeichert.",
+    "nothing": "Nichts geändert.",
+    "prefixRule": "Das Präfix muss 1 bis 10 Zeichen lang sein, ohne Leerzeichen.",
+    "modRoleAuto": "Moderatorrolle: @{role} ist {where}, also würde jeder, der sie bekommt, zum Moderator. Wähle eine Rolle nur für das Team.",
+    "where": {
+      "autoRole": "die automatische Rolle beim Beitritt",
+      "verification": "die Verifizierungsrolle",
+      "autoVerify": "die Rolle für automatische Verifizierung",
+      "levelReward": "eine Level-Belohnung",
+      "reactionRole": "eine Reaktionsrolle"
+    }
+  },
+  "utilities": {
+    "title": "Werkzeuge",
+    "help": "Kürze einen Link mit is.gd, wie mit /shorten. Der kurze Link erscheint oben auf dieser Seite.",
+    "url": "Zu kürzender Link",
+    "urlHelp": "Macht aus einem langen Weblink einen kurzen, der sich leichter teilen lässt.",
+    "custom": "Eigenes Ende (optional)",
+    "customHelp": "Wähle den letzten Teil des kurzen Links selbst. Nur Buchstaben, Ziffern, _ und -.",
+    "submit": "Kürzen",
+    "result": "Kurzer Link: {short} (für {url})"
+  },
+  "list": {
+    "title": "Befehle",
+    "notLoaded": "Die Befehlsliste ist noch nicht geladen. Lade die Seite gleich neu.",
+    "command": "Befehl",
+    "description": "Beschreibung",
+    "state": "Status",
+    "on": "An",
+    "protected": "geschützt",
+    "categoryOff": "Kategorie aus",
+    "categoryIsOff": "Kategorie {name} ist aus",
+    "count": "{on}/{total} an.",
+    "turnCategoryOn": "Kategorie einschalten",
+    "turnCategoryOff": "Kategorie ausschalten",
+    "offSuffix": "{name} (aus)",
+    "moduleTitle": "Befehle ({count})",
+    "moduleHelp": "Die Slash-Befehle, die zu dieser Seite gehören. Ein Befehl, den du ausschaltest, antwortet nur mit einem kurzen Hinweis. Die Seite Befehle listet jeden Befehl auf.",
+    "topicLine": "Die Slash-Befehle, die zu dieser Seite gehören."
+  },
+  "every": {
+    "title": "Alle Befehle ({count})",
+    "retired": "Abgeschaltet",
+    "retiredText": "Admin-Befehle sind in Discord abgeschaltet. Übrig sind nur die Befehle für alle, die Notfallwerkzeuge des Bot-Inhabers und {test}. Alles andere erledigst du hier im Dashboard.",
+    "notRetired": "Nicht abgeschaltet",
+    "notRetiredText": "Jeder Befehl funktioniert in Discord. Der Bot-Inhaber kann Admin-Befehle abschalten, sodass nur die Befehle für alle, die Notfallwerkzeuge und {test} bleiben und alles andere im Dashboard erledigt wird.",
+    "whatItDoes": "Was er tut",
+    "who": "Wer ihn nutzen kann",
+    "onDashboard": "Im Dashboard",
+    "ifRetired": "Wenn Admin-Befehle abgeschaltet sind",
+    "whoEveryone": "Alle",
+    "whoOwnerKit": "Nur Bot-Inhaber (Notfallwerkzeuge)",
+    "whoAdmin": "Administratoren",
+    "afterEveryone": "Bleibt ein Befehl",
+    "afterOwnerKit": "Bleibt, nur Bot-Inhaber",
+    "afterAdmin": "Nur im Dashboard",
+    "support": "Auch auf dem Support-Server: {list}. Wer welchen Befehl nutzen kann, ist in Mewvo fest eingestellt und lässt sich hier nicht ändern."
+  },
+  "action": {
+    "unknownCommand": "Unbekannter Befehl: /{name}.",
+    "cannotDisable": "/{name} kann nicht ausgeschaltet werden.",
+    "commandOn": "/{name} ist jetzt an.",
+    "commandOff": "/{name} ist jetzt aus.",
+    "unknownCategory": "Unbekannte Kategorie.",
+    "categoryOn": "{name} ist jetzt an.",
+    "categoryOff": "{name} ist jetzt aus.",
+    "commandLabel": "Befehl",
+    "categoryLabel": "Kategorie"
+  }
+}

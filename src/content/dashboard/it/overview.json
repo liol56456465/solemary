@@ -1,0 +1,192 @@
+{
+  "unavailable": "non disponibile",
+  "yourServer": "il tuo server",
+  "status": {
+    "offline": "Mewvo è offline: i comandi e l'automod non funzionano in questo momento.",
+    "dbDown": "Mewvo è online, ma il suo database non risponde, quindi alcune cose non verranno salvate.",
+    "ok": "Mewvo è online e funziona.",
+    "automodOn": "L'automod è attivo.",
+    "automodOff": "L'automod è disattivato.",
+    "lockdown": "È attivo un blocco per raid."
+  },
+  "stats": {
+    "members": "Membri",
+    "joined": "{count} entrati questa settimana",
+    "banned": "Bannati ora",
+    "muted": "{count} silenziati ora",
+    "appeals": "Ricorsi in attesa",
+    "appealsOldest": "I più vecchi per primi in “Richiede la tua attenzione”",
+    "appealsNone": "Niente da decidere",
+    "tickets": "Ticket aperti",
+    "ticketsWhere": "Risposte nei rispettivi canali Discord"
+  },
+  "cards": {
+    "needs": "Richiede la tua attenzione",
+    "note": "Nota per il prossimo turno",
+    "start": "Primi passi",
+    "goTo": "Vai a",
+    "week": "Moderazione negli ultimi 7 giorni",
+    "latest": "Ultime azioni di moderazione",
+    "allCases": "Vedi tutti i casi",
+    "changes": "Modifiche recenti alla dashboard",
+    "fullAudit": "Registro di controllo completo"
+  },
+  "table": {
+    "when": "Quando",
+    "who": "Chi",
+    "page": "Pagina",
+    "setting": "Impostazione",
+    "old": "Prima",
+    "new": "Dopo",
+    "action": "Azione",
+    "member": "Membro",
+    "by": "Da",
+    "reason": "Motivo",
+    "case": "Caso",
+    "someone": "qualcuno",
+    "test": "(test)"
+  },
+  "changes": {
+    "failed": "Non è stato possibile caricarle in questo momento. Ricarica la pagina tra un minuto.",
+    "empty": "Ancora nessuna modifica alla dashboard."
+  },
+  "chart": {
+    "failed": "Non è stato possibile caricare il grafico in questo momento. Ricarica la pagina tra un minuto.",
+    "label": "Sanzioni al giorno: {summary}",
+    "today": "Oggi",
+    "total": {
+      "one": "{count} azione in 7 giorni (giorni UTC, casi /test esclusi).",
+      "many": "{count} azioni in 7 giorni (giorni UTC, casi /test esclusi).",
+      "other": "{count} azioni in 7 giorni (giorni UTC, casi /test esclusi)."
+    }
+  },
+  "feed": {
+    "failed": "Non è stato possibile caricare le ultime azioni di moderazione in questo momento. Ricarica la pagina tra un minuto.",
+    "empty": "Ancora nessuna sanzione. Compaiono qui dopo il primo avvertimento, silenziamento, espulsione o ban."
+  },
+  "needs": {
+    "endConfirm": "Terminare il blocco per raid? Il livello di verifica torna com'era e inviti e messaggi diretti sospesi riprendono.",
+    "endLockdown": "Termina il blocco",
+    "lockdown": "Il blocco per raid è attivo",
+    "since": "Dal {date}",
+    "heldAtDoor": "I nuovi membri vengono trattenuti all'ingresso",
+    "appealFrom": "Ricorso di {name}",
+    "typedAppealFrom": {
+      "ban": "Ricorso contro un ban di {name}",
+      "kick": "Ricorso contro un'espulsione di {name}",
+      "mute": "Ricorso contro un silenziamento di {name}",
+      "warn": "Ricorso contro un avvertimento di {name}"
+    },
+    "case": "Caso {code}",
+    "testCase": "caso di test",
+    "review": "Esamina",
+    "reviewLabel": "ricorso {code}",
+    "moreAppeals": {
+      "one": "{count} altro ricorso in attesa",
+      "many": "Altri {count} ricorsi in attesa",
+      "other": "Altri {count} ricorsi in attesa"
+    },
+    "allAppeals": "Tutti i ricorsi",
+    "openTickets": {
+      "one": "{count} ticket aperto",
+      "many": "{count} ticket aperti",
+      "other": "{count} ticket aperti"
+    },
+    "ticketsWhere": "Risposte nei rispettivi canali Discord",
+    "tickets": "Ticket",
+    "setUpStep": "Configura: {label}",
+    "setUp": "Configura",
+    "failed": "Non è stato possibile caricare parte di queste informazioni in questo momento. Ricarica la pagina tra un minuto.",
+    "empty": "Per ora non c'è niente che richieda il tuo intervento. Qui compaiono ricorsi, ticket e avvisi di raid."
+  },
+  "start": {
+    "new": "Sei alle prime armi?",
+    "button": "Configura Mewvo passo passo",
+    "after": "Ti guida nei passaggi qui sotto, uno alla volta.",
+    "words": "Cosa significano queste parole?",
+    "oneStep": "Un passo alla volta",
+    "progress": "{done} di {total} completati. Ogni passaggio richiede un minuto; il link apre la pagina giusta.",
+    "done": "Completati: {list}."
+  },
+  "handover": {
+    "writtenBy": "Scritta da {name}, {date}",
+    "empty": "Un breve messaggio per chi modera dopo di te, come “tieni d'occhio #general stasera”. Tutto lo staff lo vede qui.",
+    "label": "Nota",
+    "placeholder": "Tieni d'occhio #general stasera",
+    "save": "Salva la nota",
+    "hint": "Per rimuovere la nota, svuota il campo e salva.",
+    "saved": "Nota di passaggio salvata.",
+    "cleared": "Nota di passaggio rimossa."
+  },
+  "quick": {
+    "cases": "Ogni avvertimento, silenziamento, espulsione e ban",
+    "users": "Trova un membro e agisci",
+    "appeals": "Richieste di revoca di una sanzione",
+    "inbox": "Ticket, segnalazioni e modmail",
+    "automod": "Spam, parole vietate e raid",
+    "enforcement": "Come funzionano le sanzioni",
+    "audit": "Chi ha cambiato quale impostazione",
+    "modules": "Tutte le impostazioni, per modulo"
+  },
+  "setup": {
+    "fallback": "Finché non ne scegli uno, usa il registro di moderazione.",
+    "modLog": {
+      "label": "Canale del registro di moderazione",
+      "hint": "Mewvo vi annota ogni avvertimento, silenziamento, espulsione e ban, così lo staff può ricontrollarli in seguito."
+    },
+    "review": {
+      "label": "Canale di revisione dell'automod",
+      "hint": "Quando l'automod rimuove un messaggio, vi pubblica un breve rapporto, così lo staff può confermare o annullare."
+    },
+    "alerts": {
+      "label": "Canale degli avvisi",
+      "hint": "Per gli avvisi urgenti, come un raid (molti account che entrano tutti insieme)."
+    },
+    "muted": {
+      "label": "Ruolo Muted",
+      "hint": "Mewvo lo crea da solo la prima volta che qualcuno viene silenziato. Puoi anche scegliere un tuo ruolo."
+    },
+    "appeals": {
+      "label": "Categoria dei ricorsi",
+      "hint": "Quando qualcuno chiede di revocare una sanzione, Mewvo apre un canale privato in questa categoria."
+    },
+    "ticketCategory": {
+      "label": "Categoria dei ticket",
+      "hint": "I ticket permettono ai membri di parlare in privato con lo staff. Scegli la categoria in cui vanno i loro canali."
+    },
+    "ticketStaff": {
+      "label": "Ruolo dello staff dei ticket",
+      "hint": "Il ruolo che può vedere i ticket e rispondere."
+    },
+    "welcome": {
+      "label": "Canale di benvenuto",
+      "hint": "Mewvo saluta i nuovi membri in questo canale."
+    },
+    "verification": {
+      "label": "Verifica",
+      "hint": "I nuovi membri premono un pulsante per dimostrare di essere una persona reale prima di poter scrivere."
+    },
+    "birthdays": {
+      "label": "Canale dei compleanni",
+      "hint": "Mewvo vi fa gli auguri di buon compleanno ai membri."
+    },
+    "bannedRole": {
+      "label": "Ruolo per i bannati nel server di supporto",
+      "hint": "I membri bannati ricevono questo ruolo nel tuo server di supporto, così possono comunque fare ricorso lì."
+    }
+  },
+  "value": {
+    "notFound": "{id} (non trovato)",
+    "hidden": "nascosto",
+    "notSet": "non impostato",
+    "none": "nessuno",
+    "words": {
+      "one": "{count} parola",
+      "many": "{count} parole",
+      "other": "{count} parole"
+    },
+    "on": "attivo",
+    "off": "disattivato",
+    "set": "impostato"
+  }
+}

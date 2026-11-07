@@ -1,0 +1,188 @@
+{
+  "unavailable": "nicht verfügbar",
+  "yourServer": "dein Server",
+  "status": {
+    "offline": "Mewvo ist offline: Befehle und Automod funktionieren gerade nicht.",
+    "dbDown": "Mewvo ist online, aber seine Datenbank antwortet nicht, deshalb wird manches nicht gespeichert.",
+    "ok": "Mewvo ist online und funktioniert.",
+    "automodOn": "Automod ist an.",
+    "automodOff": "Automod ist aus.",
+    "lockdown": "Eine Raid-Sperre ist aktiv."
+  },
+  "stats": {
+    "members": "Mitglieder",
+    "joined": "{count} diese Woche beigetreten",
+    "banned": "Gerade gebannt",
+    "muted": "{count} gerade stummgeschaltet",
+    "appeals": "Offene Einsprüche",
+    "appealsOldest": "Die ältesten zuerst unter „Braucht dich“",
+    "appealsNone": "Nichts zu entscheiden",
+    "tickets": "Offene Tickets",
+    "ticketsWhere": "Beantwortet in ihren Discord-Kanälen"
+  },
+  "cards": {
+    "needs": "Braucht dich",
+    "note": "Notiz für die nächste Schicht",
+    "start": "Erste Schritte",
+    "goTo": "Gehe zu",
+    "week": "Moderation in den letzten 7 Tagen",
+    "latest": "Neueste Moderation",
+    "allCases": "Alle Fälle ansehen",
+    "changes": "Letzte Änderungen im Dashboard",
+    "fullAudit": "Vollständiges Audit-Log"
+  },
+  "table": {
+    "when": "Wann",
+    "who": "Wer",
+    "page": "Seite",
+    "setting": "Einstellung",
+    "old": "Alt",
+    "new": "Neu",
+    "action": "Aktion",
+    "member": "Mitglied",
+    "by": "Von",
+    "reason": "Grund",
+    "case": "Fall",
+    "someone": "jemand",
+    "test": "(Test)"
+  },
+  "changes": {
+    "failed": "Konnte gerade nicht geladen werden. Lade die Seite in einer Minute neu.",
+    "empty": "Noch keine Änderungen im Dashboard."
+  },
+  "chart": {
+    "failed": "Das Diagramm konnte gerade nicht geladen werden. Lade die Seite in einer Minute neu.",
+    "label": "Strafaktionen pro Tag: {summary}",
+    "today": "Heute",
+    "total": {
+      "one": "{count} Aktion in 7 Tagen (UTC-Tage, /test-Fälle nicht mitgezählt).",
+      "other": "{count} Aktionen in 7 Tagen (UTC-Tage, /test-Fälle nicht mitgezählt)."
+    }
+  },
+  "feed": {
+    "failed": "Die neueste Moderation konnte gerade nicht geladen werden. Lade die Seite in einer Minute neu.",
+    "empty": "Noch keine Strafaktionen. Sie erscheinen hier nach der ersten Verwarnung, Stummschaltung, dem ersten Kick oder Bann."
+  },
+  "needs": {
+    "endConfirm": "Die Raid-Sperre beenden? Die Verifizierungsstufe geht auf den vorherigen Wert zurück, und pausierte Einladungen und Direktnachrichten laufen wieder.",
+    "endLockdown": "Sperre beenden",
+    "lockdown": "Raid-Sperre ist aktiv",
+    "since": "Seit {date}",
+    "heldAtDoor": "Neue Mitglieder warten an der Tür",
+    "appealFrom": "Einspruch von {name}",
+    "typedAppealFrom": {
+      "ban": "Einspruch gegen Bann von {name}",
+      "kick": "Einspruch gegen Kick von {name}",
+      "mute": "Einspruch gegen Stummschaltung von {name}",
+      "warn": "Einspruch gegen Verwarnung von {name}"
+    },
+    "case": "Fall {code}",
+    "testCase": "Testfall",
+    "review": "Prüfen",
+    "reviewLabel": "Einspruch {code}",
+    "moreAppeals": {
+      "one": "{count} weiterer Einspruch wartet",
+      "other": "{count} weitere Einsprüche warten"
+    },
+    "allAppeals": "Alle Einsprüche",
+    "openTickets": {
+      "one": "{count} offenes Ticket",
+      "other": "{count} offene Tickets"
+    },
+    "ticketsWhere": "Beantwortet in ihren Discord-Kanälen",
+    "tickets": "Tickets",
+    "setUpStep": "Einrichten: {label}",
+    "setUp": "Einrichten",
+    "failed": "Einiges davon konnte gerade nicht geladen werden. Lade die Seite in einer Minute neu.",
+    "empty": "Gerade braucht dich nichts. Einsprüche, Tickets und Raid-Warnungen erscheinen hier."
+  },
+  "start": {
+    "new": "Neu hier?",
+    "button": "Mewvo Schritt für Schritt einrichten",
+    "after": "Es geht die Schritte unten einzeln mit dir durch.",
+    "words": "Was bedeuten diese Begriffe?",
+    "oneStep": "Ein Schritt nach dem anderen",
+    "progress": "{done} von {total} erledigt. Jeder Schritt dauert eine Minute; der Link öffnet die richtige Seite.",
+    "done": "Erledigt: {list}."
+  },
+  "handover": {
+    "writtenBy": "Geschrieben von {name}, {date}",
+    "empty": "Eine kurze Nachricht für die Person, die als Nächstes moderiert, etwa „heute Abend #general im Auge behalten“. Das ganze Team sieht sie hier.",
+    "label": "Notiz",
+    "placeholder": "Heute Abend #general im Auge behalten",
+    "save": "Notiz speichern",
+    "hint": "Um die Notiz zu entfernen, leere das Feld und speichere.",
+    "saved": "Übergabenotiz gespeichert.",
+    "cleared": "Übergabenotiz entfernt."
+  },
+  "quick": {
+    "cases": "Jede Verwarnung, Stummschaltung, jeder Kick und Bann",
+    "users": "Ein Mitglied finden und handeln",
+    "appeals": "Anträge, eine Strafe aufzuheben",
+    "inbox": "Tickets, Meldungen und Modmail",
+    "automod": "Spam, verbotene Wörter und Raids",
+    "enforcement": "Wie Strafen funktionieren",
+    "audit": "Wer welche Einstellung geändert hat",
+    "modules": "Jede Einstellung, nach Modul"
+  },
+  "setup": {
+    "fallback": "Bis du einen wählst, wird das Mod-Log verwendet.",
+    "modLog": {
+      "label": "Mod-Log-Kanal",
+      "hint": "Mewvo hält dort jede Verwarnung, Stummschaltung, jeden Kick und Bann fest, damit dein Team später nachsehen kann."
+    },
+    "review": {
+      "label": "Automod-Prüfkanal",
+      "hint": "Wenn der Automod eine Nachricht entfernt, postet er dort einen kurzen Bericht, damit das Team sie behalten oder die Aktion rückgängig machen kann."
+    },
+    "alerts": {
+      "label": "Warnkanal",
+      "hint": "Für dringende Warnungen, etwa bei einem Raid (viele Konten treten gleichzeitig bei)."
+    },
+    "muted": {
+      "label": "Muted-Rolle",
+      "hint": "Mewvo erstellt sie selbst, wenn zum ersten Mal jemand stummgeschaltet wird. Du kannst auch eine eigene Rolle wählen."
+    },
+    "appeals": {
+      "label": "Einspruchskategorie",
+      "hint": "Wenn jemand darum bittet, eine Strafe aufzuheben, öffnet Mewvo dafür einen privaten Kanal in dieser Kategorie."
+    },
+    "ticketCategory": {
+      "label": "Ticket-Kategorie",
+      "hint": "Über Tickets können Mitglieder privat mit dem Team sprechen. Wähle die Kategorie, in die ihre Kanäle kommen."
+    },
+    "ticketStaff": {
+      "label": "Ticket-Teamrolle",
+      "hint": "Die Rolle, die Tickets sehen und beantworten kann."
+    },
+    "welcome": {
+      "label": "Willkommenskanal",
+      "hint": "Mewvo begrüßt neue Mitglieder in diesem Kanal."
+    },
+    "verification": {
+      "label": "Verifizierung",
+      "hint": "Neue Mitglieder drücken einen Button, um zu zeigen, dass sie ein echter Mensch sind, bevor sie schreiben können."
+    },
+    "birthdays": {
+      "label": "Geburtstagskanal",
+      "hint": "Mewvo gratuliert Mitgliedern dort zum Geburtstag."
+    },
+    "bannedRole": {
+      "label": "Bann-Rolle auf dem Support-Server",
+      "hint": "Gebannte Mitglieder bekommen diese Rolle auf deinem Support-Server, damit sie dort weiterhin Einspruch einlegen können."
+    }
+  },
+  "value": {
+    "notFound": "{id} (nicht gefunden)",
+    "hidden": "verborgen",
+    "notSet": "nicht festgelegt",
+    "none": "keine",
+    "words": {
+      "one": "{count} Wort",
+      "other": "{count} Wörter"
+    },
+    "on": "an",
+    "off": "aus",
+    "set": "festgelegt"
+  }
+}

@@ -20,9 +20,19 @@
 //   [data-module-search]    a search box above the module cards
 //   #s-<section> links      open the collapsible section they point to; the topic or card in view is marked
 //   [data-quick-find]       "/" focuses the top bar search
+//   body[data-ui-text]      the words above in the page's language (JSON from the catalog, frame.script.*);
+//                           without it (English pages) the built-in English words are used
 
 (function () {
     'use strict';
+
+    // The page's words (layout(): <body data-ui-text>, only on non-English pages).
+    const UI = (() => {
+        try { return JSON.parse(document.body?.dataset.uiText || '{}') || {}; } catch { return {}; }
+    })();
+    const say = (key, english, params = {}) => String(typeof UI[key] === 'string' ? UI[key] : english)
+        .replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match));
+    const LANG = document.documentElement.lang || 'en';
 
     const store = {
         get(key) {
@@ -83,8 +93,8 @@
         const input = document.createElement('input');
         input.type = 'search';
         input.className = 'select-filter';
-        input.placeholder = 'Type to filter…';
-        input.setAttribute('aria-label', 'Filter the list below');
+        input.placeholder = say('filter', 'Type to filter…');
+        input.setAttribute('aria-label', say('filterLabel', 'Filter the list below'));
         input.autocomplete = 'off';
         select.parentNode.insertBefore(input, select);
         input.addEventListener('input', () => {
@@ -113,7 +123,7 @@
     // the focus, so Enter or Escape never confirms by accident.
     function askConfirm(form, submitter) {
         const button = submitter || form.querySelector('button[type="submit"]');
-        const action = button?.textContent.trim() || 'Continue';
+        const action = button?.textContent.trim() || say('continue', 'Continue');
         if (typeof HTMLDialogElement !== 'function') return Promise.resolve(window.confirm(form.dataset.confirm));
         return new Promise((resolve) => {
             const dialog = document.createElement('dialog');
@@ -138,7 +148,7 @@
             const cancel = document.createElement('button');
             cancel.type = 'button';
             cancel.className = 'secondary';
-            cancel.textContent = 'Cancel';
+            cancel.textContent = say('cancel', 'Cancel');
             const ok = document.createElement('button');
             ok.type = 'button';
             ok.className = button?.classList.contains('danger') ? 'danger is-filled' : 'primary';
@@ -181,7 +191,7 @@
             // Loading state, and no double submits; undone if the user comes back (bfcache).
             button.dataset.label = button.textContent;
             button.setAttribute('aria-busy', 'true');
-            if (/^save/i.test(button.textContent.trim())) button.textContent = 'Saving…';
+            if (/^save/i.test(button.textContent.trim()) || button.hasAttribute('data-save')) button.textContent = say('saving', 'Saving…');
             window.setTimeout(() => { button.disabled = true; }, 0);
         }
     }, true);
@@ -234,18 +244,18 @@
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'copy';
-        button.textContent = 'Copy';
-        button.setAttribute('aria-label', `Copy ${element.dataset.copy}`);
+        button.textContent = say('copy', 'Copy');
+        button.setAttribute('aria-label', say('copyLabel', 'Copy {name}', { name: element.dataset.copy }));
         button.addEventListener('click', async (event) => {
             event.preventDefault();
             event.stopPropagation();
             try {
                 await navigator.clipboard.writeText(element.dataset.copy);
-                button.textContent = 'Copied';
+                button.textContent = say('copied', 'Copied');
             } catch {
-                button.textContent = 'Copy failed';
+                button.textContent = say('copyFailed', 'Copy failed');
             }
-            window.setTimeout(() => { button.textContent = 'Copy'; }, 1500);
+            window.setTimeout(() => { button.textContent = say('copy', 'Copy'); }, 1500);
         });
         element.insertAdjacentElement('afterend', button);
     }
@@ -255,9 +265,15 @@
     function relative(date) {
         const seconds = Math.round((date.getTime() - Date.now()) / 1000);
         const abs = Math.abs(seconds);
-        if (abs < 60) return seconds >= 0 ? 'in under a minute' : 'just now';
+        if (abs < 60) return seconds >= 0 ? say('underMinute', 'in under a minute') : say('justNow', 'just now');
         const [unit, size] = units.find(([, s]) => abs >= s) || units[units.length - 1];
         const n = Math.floor(abs / size);
+        if (LANG !== 'en' && typeof Intl.RelativeTimeFormat === 'function') {
+            try {
+                const name = { d: 'day', h: 'hour', min: 'minute' }[unit];
+                return new Intl.RelativeTimeFormat(LANG, { style: 'short' }).format(seconds >= 0 ? n : -n, name);
+            } catch { /* unknown locale: English below */ }
+        }
         return seconds >= 0 ? `in ${n} ${unit}` : `${n} ${unit} ago`;
     }
     function updateTimes() {
@@ -424,7 +440,7 @@
             const close = document.createElement('button');
             close.type = 'button';
             close.className = 'toast-close';
-            close.setAttribute('aria-label', 'Dismiss');
+            close.setAttribute('aria-label', say('dismiss', 'Dismiss'));
             close.textContent = '×';
             const dismiss = () => {
                 flash.classList.add('is-leaving');
@@ -449,18 +465,18 @@
         const bar = document.createElement('div');
         bar.className = 'save-bar';
         bar.setAttribute('role', 'region');
-        bar.setAttribute('aria-label', 'Unsaved changes');
+        bar.setAttribute('aria-label', say('unsaved', 'Unsaved changes'));
         bar.hidden = true;
         const text = document.createElement('span');
         text.className = 'save-bar-text';
         const discard = document.createElement('button');
         discard.type = 'button';
         discard.className = 'secondary';
-        discard.textContent = 'Discard';
+        discard.textContent = say('discard', 'Discard');
         const save = document.createElement('button');
         save.type = 'button';
         save.className = 'primary';
-        save.textContent = 'Save changes';
+        save.textContent = say('save', 'Save changes');
         bar.append(text, discard, save);
         document.body.appendChild(bar);
 
@@ -469,7 +485,7 @@
         const show = (form) => {
             current = form;
             const place = where(form);
-            text.textContent = place ? `Unsaved changes in ${place}` : 'Unsaved changes';
+            text.textContent = place ? say('unsavedIn', 'Unsaved changes in {place}', { place }) : say('unsaved', 'Unsaved changes');
             bar.hidden = false;
             document.body.classList.add('has-save-bar');
         };
@@ -507,12 +523,12 @@
         if (!slot || !grid) return;
         const input = document.createElement('input');
         input.type = 'search';
-        input.placeholder = 'Search modules…';
-        input.setAttribute('aria-label', 'Search modules');
+        input.placeholder = say('searchModules', 'Search modules…');
+        input.setAttribute('aria-label', say('searchModules', 'Search modules…').replace(/…$/, ''));
         input.autocomplete = 'off';
         const none = document.createElement('p');
         none.className = 'empty';
-        none.textContent = 'No module matches.';
+        none.textContent = say('noModule', 'No module matches.');
         none.hidden = true;
         grid.insertAdjacentElement('afterend', none);
         slot.appendChild(input);

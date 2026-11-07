@@ -1,0 +1,192 @@
+{
+  "unavailable": "indisponible",
+  "yourServer": "ton serveur",
+  "status": {
+    "offline": "Mewvo est hors ligne : les commandes et l’automod ne fonctionnent pas en ce moment.",
+    "dbDown": "Mewvo est en ligne, mais sa base de données ne répond pas : certaines choses ne seront pas enregistrées.",
+    "ok": "Mewvo est en ligne et fonctionne.",
+    "automodOn": "L’automod est activé.",
+    "automodOff": "L’automod est désactivé.",
+    "lockdown": "Un verrouillage anti-raid est en cours."
+  },
+  "stats": {
+    "members": "Membres",
+    "joined": "Arrivées cette semaine : {count}",
+    "banned": "Bannis en ce moment",
+    "muted": "{count} en sourdine en ce moment",
+    "appeals": "Appels en attente",
+    "appealsOldest": "Les plus anciens d’abord, sous À traiter",
+    "appealsNone": "Rien à décider",
+    "tickets": "Tickets ouverts",
+    "ticketsWhere": "Traités dans leurs salons Discord"
+  },
+  "cards": {
+    "needs": "À traiter",
+    "note": "Note pour la prochaine équipe",
+    "start": "Premiers pas",
+    "goTo": "Aller à",
+    "week": "Modération des 7 derniers jours",
+    "latest": "Dernières actions de modération",
+    "allCases": "Voir tous les dossiers",
+    "changes": "Modifications récentes du tableau de bord",
+    "fullAudit": "Journal d’audit complet"
+  },
+  "table": {
+    "when": "Quand",
+    "who": "Qui",
+    "page": "Page",
+    "setting": "Paramètre",
+    "old": "Avant",
+    "new": "Après",
+    "action": "Action",
+    "member": "Membre",
+    "by": "Par",
+    "reason": "Raison",
+    "case": "Dossier",
+    "someone": "quelqu’un",
+    "test": "(test)"
+  },
+  "changes": {
+    "failed": "Impossible de charger les modifications pour le moment. Recharge la page dans une minute.",
+    "empty": "Aucune modification du tableau de bord pour l’instant."
+  },
+  "chart": {
+    "failed": "Le graphique n’a pas pu être chargé pour le moment. Recharge la page dans une minute.",
+    "label": "Actions de modération par jour : {summary}",
+    "today": "Aujourd’hui",
+    "total": {
+      "one": "{count} action en 7 jours (jours UTC, dossiers /test non comptés).",
+      "many": "{count} actions en 7 jours (jours UTC, dossiers /test non comptés).",
+      "other": "{count} actions en 7 jours (jours UTC, dossiers /test non comptés)."
+    }
+  },
+  "feed": {
+    "failed": "Les dernières actions de modération n’ont pas pu être chargées pour le moment. Recharge la page dans une minute.",
+    "empty": "Aucune action de modération pour l’instant. Elles apparaissent ici dès le premier avertissement, mise en sourdine, expulsion ou bannissement."
+  },
+  "needs": {
+    "endConfirm": "Mettre fin au verrouillage anti-raid ? Le niveau de vérification revient à ce qu’il était, et les invitations et messages privés suspendus reprennent.",
+    "endLockdown": "Lever le verrouillage",
+    "lockdown": "Le verrouillage anti-raid est en cours",
+    "since": "Depuis le {date}",
+    "heldAtDoor": "Les nouveaux membres sont retenus à l’entrée",
+    "appealFrom": "Appel de {name}",
+    "typedAppealFrom": {
+      "ban": "Appel de bannissement de {name}",
+      "kick": "Appel d’expulsion de {name}",
+      "mute": "Appel de mise en sourdine de {name}",
+      "warn": "Appel d’avertissement de {name}"
+    },
+    "case": "Dossier {code}",
+    "testCase": "dossier de test",
+    "review": "Examiner",
+    "reviewLabel": "appel {code}",
+    "moreAppeals": {
+      "one": "{count} autre appel en attente",
+      "many": "{count} autres appels en attente",
+      "other": "{count} autres appels en attente"
+    },
+    "allAppeals": "Tous les appels",
+    "openTickets": {
+      "one": "{count} ticket ouvert",
+      "many": "{count} tickets ouverts",
+      "other": "{count} tickets ouverts"
+    },
+    "ticketsWhere": "Traités dans leurs salons Discord",
+    "tickets": "Tickets",
+    "setUpStep": "Configurer : {label}",
+    "setUp": "Configurer",
+    "failed": "Une partie de ces éléments n’a pas pu être chargée pour le moment. Recharge la page dans une minute.",
+    "empty": "Rien ne t’attend pour le moment. Les appels, les tickets et les alertes de raid apparaissent ici."
+  },
+  "start": {
+    "new": "Tu débutes ?",
+    "button": "Configurer Mewvo pas à pas",
+    "after": "Il passe en revue les étapes ci-dessous une par une.",
+    "words": "Que veulent dire ces mots ?",
+    "oneStep": "Une étape à la fois",
+    "progress": "{done} sur {total} terminées. Chaque étape prend une minute ; le lien ouvre la bonne page.",
+    "done": "Terminé : {list}."
+  },
+  "handover": {
+    "writtenBy": "Écrit par {name}, {date}",
+    "empty": "Un court message pour la personne qui modère ensuite, comme « garde un œil sur #general ce soir ». Toute l’équipe le voit ici.",
+    "label": "Note",
+    "placeholder": "Garde un œil sur #general ce soir",
+    "save": "Enregistrer la note",
+    "hint": "Pour supprimer la note, vide le champ et enregistre.",
+    "saved": "Note de relève enregistrée.",
+    "cleared": "Note de relève supprimée."
+  },
+  "quick": {
+    "cases": "Chaque avertissement, mise en sourdine, expulsion et bannissement",
+    "users": "Trouver un membre et agir",
+    "appeals": "Demandes de levée d’une sanction",
+    "inbox": "Tickets, signalements et modmail",
+    "automod": "Spam, gros mots et raids",
+    "enforcement": "Comment fonctionnent les sanctions",
+    "audit": "Qui a modifié quel paramètre",
+    "modules": "Tous les paramètres, par module"
+  },
+  "setup": {
+    "fallback": "Tant que tu n’en choisis pas, il utilise le journal de modération.",
+    "modLog": {
+      "label": "Salon du journal de modération",
+      "hint": "Mewvo y consigne chaque avertissement, mise en sourdine, expulsion et bannissement, pour que ton équipe puisse s’y référer plus tard."
+    },
+    "review": {
+      "label": "Salon de vérification de l’automod",
+      "hint": "Quand l’automod supprime un message, il y publie un court rapport pour que l’équipe puisse le garder ou l’annuler."
+    },
+    "alerts": {
+      "label": "Salon des alertes",
+      "hint": "Pour les avertissements urgents, comme un raid (beaucoup de comptes qui arrivent en même temps)."
+    },
+    "muted": {
+      "label": "Rôle Muted",
+      "hint": "Mewvo le crée lui-même la première fois que quelqu’un est mis en sourdine. Tu peux aussi choisir ton propre rôle."
+    },
+    "appeals": {
+      "label": "Catégorie des appels",
+      "hint": "Quand quelqu’un demande la levée d’une sanction, Mewvo ouvre un salon privé pour cela dans cette catégorie."
+    },
+    "ticketCategory": {
+      "label": "Catégorie des tickets",
+      "hint": "Les tickets permettent aux membres de parler à l’équipe en privé. Choisis la catégorie où vont leurs salons."
+    },
+    "ticketStaff": {
+      "label": "Rôle de l’équipe des tickets",
+      "hint": "Le rôle qui peut voir les tickets et y répondre."
+    },
+    "welcome": {
+      "label": "Salon de bienvenue",
+      "hint": "Mewvo accueille les nouveaux membres dans ce salon."
+    },
+    "verification": {
+      "label": "Vérification",
+      "hint": "Les nouveaux membres appuient sur un bouton pour montrer qu’ils sont de vraies personnes avant de pouvoir discuter."
+    },
+    "birthdays": {
+      "label": "Salon des anniversaires",
+      "hint": "Mewvo y souhaite un joyeux anniversaire aux membres."
+    },
+    "bannedRole": {
+      "label": "Rôle Banni sur le serveur d’assistance",
+      "hint": "Les membres bannis reçoivent ce rôle sur ton serveur d’assistance, pour pouvoir quand même y faire appel."
+    }
+  },
+  "value": {
+    "notFound": "{id} (introuvable)",
+    "hidden": "masqué",
+    "notSet": "non défini",
+    "none": "aucun",
+    "words": {
+      "one": "{count} mot",
+      "many": "{count} mots",
+      "other": "{count} mots"
+    },
+    "on": "activé",
+    "off": "désactivé",
+    "set": "défini"
+  }
+}
