@@ -88,6 +88,10 @@ before(async () => {
     ({ db } = await import('../../src/utils/database/wrapper.js'));
     await db.initialize();
     assert.equal(db.getConnectionType(), 'postgresql');
+    // These per-run guilds are not home servers: read their (empty) settings rows the way the bot
+    // does (refreshGuildSettings), so they resolve to the neutral defaults instead of throwing.
+    const { refreshGuildSettings } = await import('../../src/services/settings/guildSettings.js');
+    await refreshGuildSettings(guildId);
 });
 
 after(async () => {
