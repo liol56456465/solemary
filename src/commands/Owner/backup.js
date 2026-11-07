@@ -119,11 +119,11 @@ export default {
                 embeds: [createEmbed({
                     title: 'Member backup',
                     description: [
-                        `**Restorable members:** ${stored} (verified with "Verify with Discord")`,
+                        `**Restorable into Mewvo's own servers:** ${stored} (verified there with "Verify with Discord")`,
                         main ? `**Of them in the main server now:** ${inGuild}` : '**Main server:** not reachable',
                         state ? `**Restore running:** ${state.done}/${state.total} into \`${state.guildId}\`` : null,
                         '',
-                        'Restore with `/backup restore server_id:<id>`. Only the main server, the support server or one in MEMBER_RESTORE_GUILD_IDS. The bot must be in that server with **Create Invite**. Members with an active ban are skipped.',
+                        'Restore with `/backup restore server_id:<id>`. Only the main server, the support server or one in MEMBER_RESTORE_GUILD_IDS, and only members who verified in Mewvo\'s own servers (a verification in another server never counts). The bot must be in that server with **Create Invite**. Members with an active ban are skipped.',
                     ].filter((line) => line !== null).join('\n'),
                     color: 'primary',
                 })],
@@ -142,7 +142,7 @@ export default {
 
         const { stored } = await backupSummary(target);
         await InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed('Restore started', `Adding up to **${stored}** members to **${target.name}**. This message updates as it goes, and you get a DM when it is done.`)],
+            embeds: [successEmbed('Restore started', `Adding up to **${stored}** members who verified for **${target.name}**. This message updates as it goes, and you get a DM when it is done.`)],
         });
 
         const owner = interaction.user;

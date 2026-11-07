@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { infoEmbed, successEmbed } from '../utils/embeds.js';
-import { verifyUser } from '../services/verificationService.js';
+import { verificationSetupProblem, verifyUser } from '../services/verificationService.js';
 import { buildVerifyUrl, isOAuthVerificationEnabled } from '../services/oauthVerification.js';
 import { quizGate } from '../services/verificationQuiz.js';
 import { handleInteractionError, replyUserError, ErrorTypes } from '../utils/errorHandler.js';
@@ -32,6 +32,9 @@ export async function continueVerification(interaction, client, { source = 'butt
     const userId = interaction.user.id;
 
     if (isOAuthVerificationEnabled()) {
+        // This server's own setup decides, before the member authorizes anything.
+        const problem = await verificationSetupProblem(client, guild.id);
+        if (problem) return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: problem });
         return await InteractionHelper.safeEditReply(interaction, buildOAuthVerifyReply(guild.id, userId));
     }
 

@@ -21,6 +21,7 @@ import { logger } from '../../utils/logger.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { deleteFromDb, getFromDb, setInDb } from '../../utils/database.js';
 import { MIN_ACCOUNT_AGE_MS } from '../verificationGuard.js';
+import { hasVerifiedIn } from '../oauthVerification.js';
 import { formatDuration } from '../enforcement/format.js';
 import { getAutomodSettings } from './automodSettings.js';
 import { reviewChannel } from './reviewCards.js';
@@ -181,8 +182,10 @@ export async function checkJoinGate(member, { onKick = null, onFlag = null } = {
         if (!settings.enabled) return null;
         const { action, hits } = evaluateJoinGate(user, settings.joinGate);
         if (action === 'off') return null;
-        // Verified with "Verify with Discord" before: already passed the verification guard.
-        if (await getFromDb(`oauth:tokens:${user.id}`, null).catch(() => null)) return null;
+        // Verified with "Verify with Discord" in one of Mewvo's own servers before: already passed the
+        // verification guard there. A verification in another server does not count here (multi-server B1).
+        const homeIds = [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId].filter(Boolean);
+        if (await hasVerifiedIn(user.id, homeIds).catch(() => false)) return null;
 
         if (action === 'kick') {
             const kicked = await kickWithNotice(member, hits, `Join gate: ${hits.filter((h) => h.action === 'kick').map((h) => h.reason).join('; ')}`);

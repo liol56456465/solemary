@@ -335,6 +335,34 @@ export const tableStatements = [
         PRIMARY KEY (user_id, ip_hash)
     )`,
 
+    // Schema v12 (multi-server B1): the same IP hashes, per server. Duplicate-IP / alt checks only
+    // compare rows of the same server, so one server's verification never reveals or blocks members
+    // of another. Since v12 every new row goes here; verification_ips above is no longer written and
+    // its rows (all from before v12, so all from Mewvo's own servers) are read as home-server rows
+    // until the 60-day retention empties it. A separate table, not a guild_id column: the old
+    // PRIMARY KEY (user_id, ip_hash) allows one row per user and network, not one per server.
+    `CREATE TABLE IF NOT EXISTS ${t.verification_guild_ips} (
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        ip_hash VARCHAR(64) NOT NULL,
+        seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (guild_id, ip_hash, user_id)
+    )`,
+
+    // Schema v12 (multi-server B1): which servers a member authorized "Verify with Discord" in
+    // (authorized_at) and was verified in (verified_at; NULL while held for staff or after a deny).
+    // The guilds.join tokens themselves stay in the key-value store (oauth:tokens:<userId>, encrypted);
+    // a member restore into a server only uses the tokens of members verified there. A token with no
+    // rows here was stored before v12 and counts as verified in Mewvo's own servers (they all came
+    // from there); since v12 the row is written before the token, so new tokens always have one.
+    `CREATE TABLE IF NOT EXISTS ${t.oauth_verified_guilds} (
+        user_id VARCHAR(20) NOT NULL,
+        guild_id VARCHAR(20) NOT NULL,
+        authorized_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        verified_at TIMESTAMPTZ,
+        PRIMARY KEY (user_id, guild_id)
+    )`,
+
     // Weekly staff activity counters (messages, review decisions, tickets claimed);
     // moderation actions are counted from mod_cases instead.
     `CREATE TABLE IF NOT EXISTS ${t.staff_activity} (
@@ -912,6 +940,9 @@ export const indexStatements = [
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_mod_appeals_one_pending ON ${t.mod_appeals}(case_code) WHERE status = 'pending' AND kind = 'appeal'`,
     `CREATE INDEX IF NOT EXISTS idx_staff_warnings_user ON ${t.staff_warnings}(guild_id, user_id, expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_verification_ips_hash ON ${t.verification_ips}(ip_hash)`,
+    `CREATE INDEX IF NOT EXISTS idx_verification_guild_ips_user ON ${t.verification_guild_ips}(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_verification_guild_ips_seen ON ${t.verification_guild_ips}(seen_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_oauth_verified_guilds_guild ON ${t.oauth_verified_guilds}(guild_id)`,
     `CREATE INDEX IF NOT EXISTS idx_server_snapshots_guild ON ${t.server_snapshots}(guild_id, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_appeals_case ON ${t.mod_appeals}(case_code, decided_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_mod_case_edits_case ON ${t.mod_case_edits}(case_code, edited_at DESC)`,

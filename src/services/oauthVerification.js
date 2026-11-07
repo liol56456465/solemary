@@ -6,7 +6,8 @@
 // GET /oauth/callback; the bot exchanges the code, checks the authorizing account is
 // the one that pressed Verify, gives the verified role, stores the OAuth tokens
 // encrypted (AES-256-GCM with OAUTH_TOKEN_KEY) so guilds.join can be used later, and
-// sends the browser on to the Mewvo invite (VERIFY_SUCCESS_REDIRECT; another server: only the
+// records which server the authorization was given in (oauth_verified_guilds, schema v12: a
+// member restore only uses it for that server), and sends the browser on to the Mewvo invite (VERIFY_SUCCESS_REDIRECT; another server: only the
 // link it stored, else a "You are verified" page — successRedirectFor). Accounts under
 // 7 days old and likely ban-evasion alts are held for staff approval instead
 // (see verificationGuard.js).
@@ -19,13 +20,16 @@ import crypto from 'crypto';
 import { logger } from '../utils/logger.js';
 import { Routes } from 'discord.js';
 import { getFromDb, setInDb, deleteFromDb, db } from '../utils/database.js';
-import { verifyUser } from './verificationService.js';
+import { verificationSetupProblem, verifyUser } from './verificationService.js';
+import { query, T } from './enforcement/db.js';
+import { enforcementConfig } from '../config/enforcement.js';
 import { assessVerification, postVerificationHold } from './verificationGuard.js';
 import { getGuildConfig } from './config/guildConfig.js';
 import { getConfiguredSetting, isHomeGuild, resolveSetting } from './settings/guildSettings.js';
 import { oauthVerifyPrivacyNote, privacyUrl } from '../utils/privacyNotice.js';
 
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
+const TOKEN_KEY_PREFIX = 'oauth:tokens:';
 const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
 const ME_URL = 'https://discord.com/api/v10/users/@me';
 const SCOPES = ['identify', 'guilds.join'];
@@ -238,16 +242,32 @@ export function registerOAuthRoutes(app, client) {
         try {
             // Read first: a server whose settings cannot be read fails here, before anything changed.
             const redirect = successRedirectFor(state.guildId);
+            // That server's own verification must be set up, before anything is stored.
+            const problem = await verificationSetupProblem(client, state.guildId);
+            if (problem) return send(409, 'Verification is not set up', escapeHtml(problem.replace(/`/g, '')));
             const token = await exchangeCode(req.query.code);
             const me = await discordFetch(ME_URL, { headers: { Authorization: `Bearer ${token.access_token}` } });
             if (me.id !== state.userId) {
                 return send(403, 'Wrong account', 'You authorized with a different Discord account than the one that pressed Verify. Log in with the right account and try again.');
             }
 
-            await storeTokens(me.id, token).catch((error) => logger.error(`Could not store OAuth tokens for ${me.id}: ${error.message}`));
+            // The server comes first: a token is only stored once the server it was given in is
+            // recorded, so a stored token always says where it may be used (member restore).
+            // If the stored token cannot even be read, nothing is recorded or stored: the rows could not
+            // be kept consistent with it (a pre-v12 token would lose its home server, stale rows could stay).
+            const hadToken = await getFromDb(`${TOKEN_KEY_PREFIX}${me.id}`, null).then(Boolean, () => null);
+            const recorded = hadToken !== null && await recordAuthorization(me.id, state.guildId, { hadToken })
+                .then(() => true, (error) => {
+                    logger.error(`Could not record the OAuth authorization of ${me.id} in ${state.guildId}; token not stored: ${error.message}`);
+                    return false;
+                });
+            if (hadToken === null) logger.error(`Could not read the stored OAuth token of ${me.id}; authorization in ${state.guildId} not recorded, token not stored`);
+            if (recorded) {
+                await storeTokens(me.id, token).catch((error) => logger.error(`Could not store OAuth tokens for ${me.id}: ${error.message}`));
+            }
 
             if (!(await isAlreadyVerified(client, state.guildId, me.id))) {
-                const assessment = await assessVerification(me.id, req.ip);
+                const assessment = await assessVerification(state.guildId, me.id, req.ip);
                 if (assessment.hold) {
                     await holdForStaff(client, state.guildId, me.id, assessment.reasons);
                     return send(202, 'Waiting for approval',
@@ -257,6 +277,10 @@ export function registerOAuthRoutes(app, client) {
             }
 
             await verifyUser(client, state.guildId, me.id, { source: 'oauth', moderatorId: null });
+            if (recorded) {
+                await markVerifiedIn(me.id, state.guildId)
+                    .catch((error) => logger.error(`Could not record the verification of ${me.id} in ${state.guildId}: ${error.message}`));
+            }
             if (redirect) return res.redirect(303, redirect);
             return send(200, 'You are verified', 'Thanks. You can close this page and go back to Discord.', '#57f287',
                 { note: privacyNoteHtml() });
@@ -269,14 +293,91 @@ export function registerOAuthRoutes(app, client) {
     logger.info('OAuth verification enabled at /oauth/callback');
 }
 
-// ── Member backup (guilds.join) ───────────────────────────────────────────
+// ── Where each member verified (schema v12, multi-server B1) ──────────────
 
-const TOKEN_KEY_PREFIX = 'oauth:tokens:';
+/**
+ * Records that `userId` authorized "Verify with Discord" in `guildId` (verified_at stays as it
+ * was: markVerifiedIn sets it once they are verified). `hadToken` (true / false / null = unknown):
+ *   - true: if the stored token is from before v12 (no rows yet), that authorization came from
+ *     Mewvo's own servers, so `homeGuildId` is recorded as verified first and keeps counting there;
+ *   - false: no token is stored, so rows left from an earlier, deleted token no longer apply and
+ *     are removed (a fresh authorization only covers this server);
+ *   - null: the token could not be read; existing rows are left alone.
+ * Throws on a database error.
+ */
+export async function recordAuthorization(userId, guildId, { hadToken = null, homeGuildId = enforcementConfig.mainGuildId, q = query } = {}) {
+    if (hadToken === false) {
+        await q(`DELETE FROM ${T.oauthVerifiedGuilds} WHERE user_id = $1`, [userId]);
+    }
+    if (hadToken === true && homeGuildId) {
+        await q(
+            `INSERT INTO ${T.oauthVerifiedGuilds} (user_id, guild_id, authorized_at, verified_at)
+             SELECT $1::varchar, $2::varchar, NOW(), NOW()
+             WHERE NOT EXISTS (SELECT 1 FROM ${T.oauthVerifiedGuilds} WHERE user_id = $1::varchar)
+             ON CONFLICT (user_id, guild_id) DO NOTHING`,
+            [userId, homeGuildId]
+        );
+    }
+    await q(
+        `INSERT INTO ${T.oauthVerifiedGuilds} (user_id, guild_id, authorized_at) VALUES ($1, $2, NOW())
+         ON CONFLICT (user_id, guild_id) DO UPDATE SET authorized_at = NOW()`,
+        [userId, guildId]
+    );
+}
+
+/** Marks the member as verified in `guildId` (they authorized there first). Returns whether a row changed; throws on a database error. */
+export async function markVerifiedIn(userId, guildId, { q = query } = {}) {
+    const { rowCount } = await q(
+        `UPDATE ${T.oauthVerifiedGuilds} SET verified_at = NOW() WHERE user_id = $1 AND guild_id = $2`,
+        [userId, guildId]
+    );
+    return rowCount > 0;
+}
+
+/** Deletes the member's rows (with their token: /wipedata). Throws on a database error. */
+export async function forgetVerifiedGuilds(userId, { q = query } = {}) {
+    await q(`DELETE FROM ${T.oauthVerifiedGuilds} WHERE user_id = $1`, [userId]);
+}
+
+/**
+ * The servers each of `userIds` was verified in: Map userId → Set(guildId). A user with no rows at
+ * all is missing from the map (token from before v12); a user with rows but no verified one has an
+ * empty Set. Throws on a database error.
+ */
+export async function verifiedGuildsOf(userIds, { q = query } = {}) {
+    const result = new Map();
+    if (!userIds.length) return result;
+    const { rows } = await q(
+        `SELECT user_id, guild_id, verified_at FROM ${T.oauthVerifiedGuilds} WHERE user_id = ANY($1::varchar[])`,
+        [userIds]
+    );
+    for (const row of rows) {
+        if (!result.has(row.user_id)) result.set(row.user_id, new Set());
+        if (row.verified_at) result.get(row.user_id).add(row.guild_id);
+    }
+    return result;
+}
+
+/**
+ * Whether the member verified with "Verify with Discord" in one of `guildIds` (a stored token is
+ * required). A token from before v12 counts for `homeIds` (Mewvo's own servers) only. Throws on a
+ * database error.
+ */
+export async function hasVerifiedIn(userId, guildIds, { homeIds = [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId], q = query } = {}) {
+    if (!(await getFromDb(`${TOKEN_KEY_PREFIX}${userId}`, null))) return false;
+    const verified = (await verifiedGuildsOf([userId], { q })).get(userId);
+    const wanted = guildIds.map(String);
+    if (!verified) return wanted.some((id) => homeIds.map(String).includes(id));
+    return wanted.some((id) => verified.has(id));
+}
+
+// ── Member backup (guilds.join) ───────────────────────────────────────────
 const REFRESH_MARGIN_MS = 60 * 1000;
 
 /** User ids with stored OAuth tokens. */
 export async function listStoredTokenUsers() {
-    const keys = await db.list(TOKEN_KEY_PREFIX).catch(() => []);
+    // A database error throws (never "nobody stored"): a restore must not report 0 on an outage.
+    const keys = await db.list(TOKEN_KEY_PREFIX);
     return keys.map((key) => key.slice(TOKEN_KEY_PREFIX.length)).filter((id) => /^\d{17,20}$/.test(id));
 }
 
@@ -332,8 +433,10 @@ async function usableAccessToken(userId) {
         return fresh.access_token;
     } catch (error) {
         if (error.status === 400 || error.status === 401) {
-            // invalid_grant: the user removed the app's access; the tokens are useless now.
+            // invalid_grant: the user removed the app's access; the tokens are useless now, and so is
+            // the list of servers they were given in.
             await deleteFromDb(`${TOKEN_KEY_PREFIX}${userId}`);
+            await forgetVerifiedGuilds(userId).catch((cleanup) => logger.warn(`Could not delete the verified servers of ${userId}: ${cleanup.message}`));
             return null;
         }
         throw error;
