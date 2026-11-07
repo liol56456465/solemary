@@ -1,0 +1,138 @@
+{
+  "page": {
+    "help": "Deixe os membros se candidatarem a um cargo, como moderador, respondendo a algumas perguntas com /apply no Discord. A equipe lê as respostas e aprova ou recusa. Aprovar dá o cargo."
+  },
+  "submitted": {
+    "title": {
+      "one": "Candidaturas recebidas ({count} aguardando)",
+      "many": "Candidaturas recebidas ({count} aguardando)",
+      "other": "Candidaturas recebidas ({count} aguardando)"
+    },
+    "help": "Candidaturas aguardando uma decisão. Aprovar dá o cargo. De qualquer forma, o membro recebe uma mensagem privada (DM) com o resultado, e a mensagem de registro da equipe é atualizada. Você também pode fazer isso com /app-admin review no Discord.",
+    "unknownUser": "usuário desconhecido",
+    "unknownRole": "Cargo desconhecido",
+    "unknownDate": "data desconhecida",
+    "appliedFor": "{who} se candidatou a {role}.",
+    "id": "ID {id}",
+    "question": "P{number}: {question}",
+    "noAnswer": "Sem resposta",
+    "noAnswers": "Sem respostas.",
+    "approve": "Aprovar (dá o cargo)",
+    "deny": "Recusar",
+    "decision": "Decisão",
+    "note": "Nota para o candidato (opcional)",
+    "noteHelp": "Enviada junto com a decisão, por exemplo explicando o porquê.",
+    "submit": "Enviar decisão",
+    "confirm": "Enviar esta decisão para {name}? A pessoa recebe uma mensagem privada (DM).",
+    "approved": "aprovada",
+    "denied": "recusada",
+    "waiting": {
+      "one": "{count} aguardando.",
+      "many": "{count} aguardando.",
+      "other": "{count} aguardando."
+    },
+    "waitingShown": {
+      "one": "{count} aguardando (mostrando as {shown} mais recentes).",
+      "many": "{count} aguardando (mostrando as {shown} mais recentes).",
+      "other": "{count} aguardando (mostrando as {shown} mais recentes)."
+    },
+    "none": "Nenhuma candidatura aguardando análise.",
+    "needsAdmin": "Para analisar candidaturas aqui, você precisa da permissão de Administrador neste servidor.",
+    "recent": "Analisadas recentemente",
+    "application": "Candidatura",
+    "member": "Membro",
+    "noteColumn": "Nota",
+    "reviewed": "Analisada",
+    "nothingReviewed": "Nada analisado ainda."
+  },
+  "roles": {
+    "title": "Candidaturas ({count})",
+    "help": "Os cargos a que os membros podem se candidatar com /apply. Cada um tem as próprias perguntas ou usa as perguntas padrão abaixo.",
+    "empty": "Ainda não há candidaturas.",
+    "new": "Nova candidatura",
+    "name": "Nome",
+    "nameHelp": "O que os membros veem em /apply, por exemplo Moderator.",
+    "open": "Aberta a candidaturas",
+    "openHelp": "Desativado: os membros não podem se candidatar a este cargo agora.",
+    "logChannel": "Canal de registro deste cargo",
+    "logChannelNone": "o canal de registro de candidaturas",
+    "logChannelHelp": "Onde as novas candidaturas para este cargo são publicadas para a equipe.",
+    "questions": "Perguntas",
+    "questionsHelp": "Uma pergunta por linha, até {max}. Deixe vazio para usar as perguntas padrão. Adicione [min:10] no fim de uma pergunta para pedir uma resposta de pelo menos 10 caracteres.",
+    "save": "Salvar candidatura",
+    "deleteText": "Apagar também remove todas as candidaturas que os membros enviaram para {name}. A próxima página mostra quantas são, e você confirma lá.",
+    "delete": "Apagar candidatura…",
+    "role": "Cargo a que os membros se candidatam",
+    "roleHelp": "Membros aprovados recebem este cargo.",
+    "add": "Adicionar candidatura"
+  },
+  "settings": {
+    "title": "Configurações",
+    "help": "Definir o canal de registro aqui também muda o canal de registro de candidaturas na página Registros, e vice-versa.",
+    "logChannel": "Canal de registro de candidaturas",
+    "logChannelHelp": "Onde as novas candidaturas são publicadas para a equipe analisar.",
+    "pendingDays": "Manter candidaturas aguardando (dias)",
+    "pendingDaysHelp": "Candidaturas sem decisão são apagadas depois desse tempo.",
+    "reviewedDays": "Manter candidaturas decididas (dias)",
+    "reviewedDaysHelp": "Candidaturas aprovadas e recusadas são apagadas depois desse tempo."
+  },
+  "questions": {
+    "title": "Perguntas padrão",
+    "help": "Usadas para todo cargo que não tem perguntas próprias.",
+    "label": "Perguntas padrão",
+    "labelHelp": "Uma pergunta por linha, até {max}. Adicione [min:10] no fim de uma pergunta para pedir uma resposta de pelo menos 10 caracteres."
+  },
+  "managers": {
+    "title": "Cargos gestores",
+    "help": "Membros com esses cargos podem ler e decidir candidaturas sem serem administradores.",
+    "role": "Cargo",
+    "remove": "Remover",
+    "empty": "Nenhum cargo gestor.",
+    "addLabel": "Adicionar um cargo gestor",
+    "add": "Adicionar"
+  },
+  "confirm": {
+    "heading": "Confirmar: apagar a candidatura {name}",
+    "application": "Candidatura",
+    "applicationValue": "{name} (cargo @{role})",
+    "submitted": "Candidaturas recebidas",
+    "effect": "Efeito",
+    "effectText": "A candidatura é removida de /apply e todas as candidaturas que os membros enviaram para ela são apagadas. Isso não pode ser desfeito. O cargo em si continua.",
+    "submit": "Apagar candidatura"
+  },
+  "action": {
+    "unknown": "Candidatura desconhecida.",
+    "noteTooLong": "A nota pode ter no máximo {max} caracteres.",
+    "theApplicant": "o candidato",
+    "theRole": "o cargo",
+    "notDmed": "Não foi possível enviar DM para {name}.",
+    "roleNotGiven": "Não foi possível dar o cargo (confira minha permissão Gerenciar cargos e a ordem dos cargos).",
+    "statusApproved": "aprovada",
+    "statusDenied": "recusada",
+    "reviewed": "Candidatura de {name} para {role}: {status}.",
+    "reviewedGiven": "Candidatura de {name} para {role}: {status}. O cargo foi dado.",
+    "roleLabel": "Cargo",
+    "added": "Candidatura “{name}” adicionada.",
+    "emptyName": "O nome da candidatura não pode ficar vazio.",
+    "roleGone": "Esse cargo de candidatura não existe mais.",
+    "logChannelLabel": "Canal de registro",
+    "saved": "Candidatura “{name}” salva.",
+    "deleted": {
+      "one": "Candidatura “{name}” apagada junto com {count} candidatura recebida.",
+      "many": "Candidatura “{name}” apagada junto com {count} candidaturas recebidas.",
+      "other": "Candidatura “{name}” apagada junto com {count} candidaturas recebidas."
+    },
+    "moduleLabel": "Candidaturas",
+    "nowOn": "As candidaturas agora estão ativadas.",
+    "nowOff": "As candidaturas agora estão desativadas.",
+    "pendingDaysLabel": "Manter candidaturas aguardando",
+    "reviewedDaysLabel": "Manter candidaturas decididas",
+    "settingsSaved": "Configurações de candidaturas salvas.",
+    "questionsSaved": "Perguntas padrão salvas.",
+    "managerLabel": "Cargo gestor",
+    "alreadyManager": "Já é um cargo gestor.",
+    "managerAdded": "Cargo gestor adicionado.",
+    "notManager": "Esse cargo não é um cargo gestor.",
+    "managerRemoved": "Cargo gestor removido."
+  }
+}

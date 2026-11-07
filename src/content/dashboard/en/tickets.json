@@ -1,0 +1,94 @@
+{
+  "page": {
+    "help": "Tickets let members ask staff for help in a private channel. They press a button on the ticket panel (a message Mewvo posts) and get their own channel that only they and staff can see. Modmail is the same idea through a private message to Mewvo. You can also set this up with /ticket setup in Discord."
+  },
+  "topic": {
+    "tickets": "Tickets",
+    "ticketsLine": "The button members press to open a ticket, and where tickets go.",
+    "modmail": "Modmail and saved answers",
+    "modmailLine": "Who may not message staff, and answers staff post often."
+  },
+  "panel": {
+    "title": "Ticket panel",
+    "help": "The message with the button members press.",
+    "helpNoAdmin": "The message with the button members press. To post the panel you need the Administrator permission in this server.",
+    "postedIn": "Panel in {channel}{warnings}.",
+    "republish": "Update or re-post the panel",
+    "textNote": "Saving the panel text below does not change the message already in Discord. Update the panel to show the new text.",
+    "none": "No ticket panel yet. Fill this in to post one.",
+    "postIn": "Post the panel in",
+    "postInHelp": "Pick a channel every member can see.",
+    "newCategory": "a new \"Tickets\" category",
+    "submit": "Set up and post the panel"
+  },
+  "settings": {
+    "title": "Ticket settings",
+    "help": "Categories, the staff role, logs and the panel text.",
+    "openCategory": "Open tickets category",
+    "openCategoryHelp": "A category is a folder of channels. New ticket channels are made in it.",
+    "closedCategory": "Closed tickets category",
+    "closedCategoryHelp": "Closed tickets are moved here.",
+    "staffRole": "Ticket staff role",
+    "staffRoleHelp": "Members with this role can see and answer every ticket.",
+    "maxPerUser": "Open tickets per member",
+    "maxPerUserHelp": "How many tickets one member can have open at once. From 1 to 10.",
+    "maxRange": "From 1 to 10.",
+    "dmOnClose": "Message the member when their ticket closes",
+    "dmOnCloseHelp": "Sent to them privately (a DM).",
+    "logChannel": "Ticket log channel",
+    "logChannelHelp": "Staff get a short line here when a ticket is opened, claimed, closed or deleted.",
+    "transcriptChannel": "Transcript channel",
+    "transcriptChannelHelp": "A transcript is a file with every message from a ticket. Mewvo posts it here when the ticket closes.",
+    "buttonText": "Button text",
+    "buttonTextHelp": "The words on the button members press to open a ticket.",
+    "panelMessage": "Panel message",
+    "panelMessageHelp": "The text above the button. Tell members what tickets are for."
+  },
+  "blocked": {
+    "title": "Modmail blocked members",
+    "help": "Blocked members cannot start a modmail chat with staff. A chat that is already open stays until staff close it. You can also do this with /modmail block in Discord.",
+    "userId": "User ID",
+    "empty": "Nobody is blocked from modmail.",
+    "heading": "Block a member",
+    "member": "Member",
+    "reason": "Reason (optional)",
+    "reasonHelp": "Only staff see it, in the dashboard history.",
+    "submit": "Block from modmail",
+    "confirm": "Block this member from modmail?",
+    "unblock": "Unblock"
+  },
+  "canned": {
+    "title": "Canned answers",
+    "help": "Saved answers for questions staff get often. Staff post one in a ticket with /canned send. The built-in answers cannot be deleted, but you can change their text by saving an answer with the same name.",
+    "name": "Name",
+    "text": "Text",
+    "builtIn": "(built-in)",
+    "delete": "Delete",
+    "confirmDelete": "Delete the saved answer \"{name}\"?",
+    "nameHelp": "Staff type this name to post the answer. Small letters, numbers and - only, like refund-policy.",
+    "answer": "Answer",
+    "answerHelp": "The text Mewvo posts.",
+    "submit": "Save answer",
+    "saved": "Saved \"{name}\".",
+    "deleted": "Deleted \"{name}\".",
+    "error": {
+      "name": "Names can only use small letters, numbers and -, up to 32 characters.",
+      "empty": "The answer cannot be empty.",
+      "tooLong": "Answers are limited to {max} characters.",
+      "unknown": "Unknown answer.",
+      "builtIn": "\"{name}\" is built in and cannot be deleted. To change its text, save an answer with the same name.",
+      "noSuch": "There is no saved answer called \"{name}\"."
+    }
+  },
+  "action": {
+    "setUp": "Ticket system set up: the panel is posted.",
+    "panelReposted": "The panel was missing: a new one is posted.",
+    "panelUpdated": "The live panel now shows the saved text.",
+    "settingsSaved": "Ticket settings saved.",
+    "alreadyBlocked": "That member is already blocked from modmail.",
+    "blocked": "{user} can no longer use modmail.",
+    "blockedOpen": "{user} can no longer use modmail. Their open conversation #{channel} stays until you close it.",
+    "notBlocked": "That member was not blocked.",
+    "unblocked": "Unblocked from modmail."
+  }
+}

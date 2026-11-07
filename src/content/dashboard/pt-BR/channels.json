@@ -1,0 +1,68 @@
+{
+  "page": {
+    "help": "Limpe um canal apagando muitas mensagens recentes de uma vez, ou tranque um canal para que os membros não possam escrever nele por um tempo, por exemplo durante uma onda de spam."
+  },
+  "adminNote": " Para usar essas ferramentas, você precisa da permissão de Administrador neste servidor.",
+  "field": {
+    "channel": "Canal",
+    "reason": "Motivo",
+    "reasonHelp": "Salvo com a ação, para que o resto da equipe saiba o porquê."
+  },
+  "purge": {
+    "title": "Apagar mensagens",
+    "help": "Apaga muitas mensagens recentes de uma vez. O Discord não permite isso para mensagens com mais de 14 dias, então elas são puladas.",
+    "amount": "Número de mensagens",
+    "amountHelp": "De {min} a {max}. As mensagens mais novas vão primeiro.",
+    "fromUser": "Só deste membro (opcional)",
+    "fromUserHelp": "Só as 100 mensagens mais novas são pesquisadas.",
+    "nothingYet": "Nada é apagado ainda: a próxima página mostra o que será apagado, e você confirma lá.",
+    "submit": "Apagar mensagens…",
+    "badUser": "Só deste membro: isso não é um ID de usuário. Digite um nome e escolha um membro, use “Encontrar um membro” ou cole um ID de usuário (17 a 20 dígitos).",
+    "missingPerms": "Falta ao Mewvo {perms} em #{channel}, então ele não pode apagar mensagens lá. Nada foi alterado."
+  },
+  "lock": {
+    "title": "Trancar um canal",
+    "help": "Os membros ainda podem ler o canal, mas não podem mais escrever nele. Cargos que têm permissão própria nesse canal, como a equipe, ainda podem. Destrancar desfaz isso: o canal volta às permissões da sua categoria (a pasta em que ele está).",
+    "submit": "Trancar canal"
+  },
+  "locked": {
+    "title": "Canais trancados ({count})",
+    "category": "Categoria",
+    "noCategory": "nenhuma",
+    "reasonPlaceholder": "Motivo (opcional)",
+    "unlock": "Destrancar",
+    "empty": "Nenhum canal está trancado.",
+    "help": "Canais em que os membros não podem escrever agora porque o próprio canal está trancado."
+  },
+  "confirm": {
+    "heading": "Confirmar: apagar mensagens em #{channel}",
+    "messages": "Mensagens",
+    "fromUser": {
+      "one": "Até {count} das mensagens mais novas de {who} (só as 100 mais novas são pesquisadas)",
+      "many": "Até {count} das mensagens mais novas de {who} (só as 100 mais novas são pesquisadas)",
+      "other": "Até {count} das mensagens mais novas de {who} (só as 100 mais novas são pesquisadas)"
+    },
+    "newest": {
+      "one": "A mais nova ({count})",
+      "many": "As {count} mais novas",
+      "other": "As {count} mais novas"
+    },
+    "effect": "Efeito",
+    "effectText": "As mensagens são apagadas para sempre e não podem ser recuperadas. Mensagens com mais de 14 dias são puladas.",
+    "submit": "Apagar mensagens"
+  },
+  "action": {
+    "skippedOld": {
+      "one": "{count} mensagem tinha mais de 14 dias e foi pulada.",
+      "many": "{count} mensagens tinham mais de 14 dias e foram puladas.",
+      "other": "{count} mensagens tinham mais de 14 dias e foram puladas."
+    },
+    "deleted": {
+      "one": "{count} mensagem apagada em #{channel}.",
+      "many": "{count} mensagens apagadas em #{channel}.",
+      "other": "{count} mensagens apagadas em #{channel}."
+    },
+    "locked": "#{channel} está trancado.",
+    "unlocked": "#{channel} está destrancado."
+  }
+}

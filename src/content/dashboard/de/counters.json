@@ -1,0 +1,56 @@
+{
+  "page": {
+    "help": "Zähler sind Kanäle, deren Name eine Live-Zahl zeigt, etwa „Members: 1234“. Mewvo aktualisiert sie alle 15 Minuten. Das Zählspiel ist ein Kanal, in dem Mitglieder gemeinsam hochzählen, eine Zahl pro Nachricht."
+  },
+  "list": {
+    "title": "Server-Statistik-Zähler",
+    "help": "Mewvo erstellt den Kanal für dich. Das geht auch mit /serverstats create in Discord.",
+    "helpNoAdmin": "Mewvo erstellt den Kanal für dich. Das geht auch mit /serverstats create in Discord. Um Kanäle zu erstellen, brauchst du die Berechtigung Administrator auf diesem Server.",
+    "id": "ID",
+    "channel": "Kanal",
+    "type": "Art",
+    "empty": "Noch keine Zähler.",
+    "change": "Ändern",
+    "delete": "Zähler und Kanal löschen",
+    "deleteConfirm": "Diesen Zähler und seinen Kanal löschen?"
+  },
+  "create": {
+    "title": "Neuer Zähler",
+    "counts": "Was er zählt",
+    "channelType": "Kanalart",
+    "channelTypeHelp": "Ein Sprachkanal ist die übliche Wahl: Er steht in der Liste und zeigt die Zahl.",
+    "voice": "Sprachkanal (zeigt nur den Namen)",
+    "text": "Textkanal",
+    "category": "In Kategorie",
+    "categoryHelp": "Eine Kategorie ist ein Ordner für Kanäle. Der Zählerkanal wird darin erstellt.",
+    "submit": "Zähler erstellen",
+    "allUsed": "Jede Art von Zähler wird schon genutzt. Du kannst von jeder Art einen haben."
+  },
+  "counting": {
+    "title": "Zählspiel",
+    "help": "Mitglieder schreiben abwechselnd die nächste Zahl. Wenn du das Spiel hier startest oder neu startest, werden der Zählstand und die Bestenliste zurückgesetzt. Das geht auch mit /count setup in Discord.",
+    "label": "Zählspiel:",
+    "details": "in {channel} · {system} · nächste Zahl {next} · beste Serie {best}",
+    "channel": "Zählkanal",
+    "channelHelp": "Nimm einen Kanal nur zum Zählen.",
+    "system": "Zahlensystem",
+    "systemHelp": "Wie die Zahlen geschrieben werden. Dezimal (normale Zahlen) ist die übliche Wahl.",
+    "restart": "In diesem Kanal neu starten (zurück auf 1)",
+    "reset": "Auf 1 zurücksetzen",
+    "resetConfirm": "Das Zählspiel auf 1 zurücksetzen?"
+  },
+  "action": {
+    "unknown": "Unbekannter Zähler.",
+    "countsLabel": "Zählt",
+    "channelKindLabel": "Kanalart",
+    "created": "Zähler erstellt: {channel}.",
+    "renameLater": "Der Kanalname wird beim nächsten geplanten Durchlauf aktualisiert.",
+    "updated": "Zähler aktualisiert.",
+    "renameFailed": "Der Kanal konnte gerade nicht umbenannt werden; er wird beim nächsten geplanten Durchlauf aktualisiert.",
+    "deleted": "Zähler gelöscht.",
+    "deleteFailed": "Der Zählerkanal konnte nicht gelöscht werden (Berechtigungen?).",
+    "started": "Zählspiel bei 1 gestartet.",
+    "reset": "Es wird wieder ab 1 gezählt.",
+    "off": "Das Zählspiel ist aus."
+  }
+}

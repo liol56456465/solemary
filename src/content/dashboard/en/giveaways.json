@@ -1,0 +1,68 @@
+{
+  "page": {
+    "help": "Give away a prize to random members. Mewvo posts a giveaway message with a button, members press it to enter, and when time is up Mewvo picks the winners. Reroll picks new winners. Everything here needs the Administrator permission in this server."
+  },
+  "needsAdmin": "To run giveaways you need the Administrator permission in this server.",
+  "create": {
+    "title": "Start a giveaway",
+    "help": "Mewvo posts the giveaway message in the channel you pick. You can also do this with /giveaway create in Discord.",
+    "channel": "Channel",
+    "channelHelp": "Where the giveaway message is posted.",
+    "prize": "Prize",
+    "prizeHelp": "What the winners get, for example Nitro for one month.",
+    "duration": "Duration",
+    "durationHelp": "How long members can enter. A number and a letter: s (seconds), m (minutes), h (hours) or d (days). From 10 seconds to 30 days.",
+    "winners": "Winners",
+    "winnersHelp": "How many members win. From {min} to {max}.",
+    "submit": "Start giveaway"
+  },
+  "active": {
+    "title": "Active",
+    "empty": "No active giveaways."
+  },
+  "ended": {
+    "title": "Ended (latest 25)",
+    "empty": "No ended giveaways."
+  },
+  "list": {
+    "prize": "Prize",
+    "channel": "Channel",
+    "ends": "Ends",
+    "ended": "Ended",
+    "entries": "Entries",
+    "winners": "Winners",
+    "endNow": "End now",
+    "endConfirm": "End this giveaway now and pick the winners?",
+    "reroll": "Reroll",
+    "delete": "Delete",
+    "deleteConfirm": "Delete the \"{prize}\" giveaway and its message?",
+    "giveawayWord": "giveaway"
+  },
+  "random": {
+    "title": "Pick a random member",
+    "help": "Picks one random member, for example for a quick draw. The result shows at the top of this page and is saved in the dashboard history. Nothing is posted in Discord. You can also do this with /tools randomuser in Discord.",
+    "role": "Only members with this role",
+    "roleLabel": "Role",
+    "anyone": "anyone",
+    "bots": "Include bots",
+    "botsHelp": "Off: bot accounts are never picked.",
+    "online": "Only online members",
+    "onlineHelp": "Skip members who show as offline right now.",
+    "submit": "Pick a member"
+  },
+  "error": {
+    "unknown": "Unknown giveaway."
+  },
+  "action": {
+    "picked": {
+      "one": "Picked @{name} ({id}) from {count} matching member.",
+      "other": "Picked @{name} ({id}) from {count} matching members."
+    },
+    "started": "Giveaway for \"{prize}\" started; it ends in {duration}.",
+    "ended": "Giveaway ended: {winners} winner(s) from {entries} entries.",
+    "rerolled": "Rerolled: {winners} new winner(s).",
+    "channelGone": "The channel is gone, so nothing was announced.",
+    "deletedWithMessage": "Giveaway \"{prize}\" deleted with its message.",
+    "deletedMessageGone": "Giveaway \"{prize}\" deleted (its message was already gone)."
+  }
+}

@@ -1,0 +1,222 @@
+{
+  "page": {
+    "help": "Poste eine Nachricht als Mewvo: eine Ankündigung jetzt oder später, eine Nachricht, die sich wiederholt, eine Umfrage oder einen Countdown. Was du hier tippst, pingt niemanden an. Für alles hier brauchst du die Berechtigung Administrator auf diesem Server."
+  },
+  "adminNote": "Zum Posten brauchst du die Berechtigung Administrator auf diesem Server.",
+  "fields": {
+    "channel": "Kanal",
+    "content": "Nachrichtentext",
+    "contentHelp": "Der normale Text der Nachricht. Du kannst ihn leer lassen, wenn du die Box unten ausfüllst. Erwähnungen erscheinen als Namen, pingen aber niemanden an. @everyone, @here, Rollen und Mitglieder bekommen keine Benachrichtigung.",
+    "title": "Box-Titel",
+    "titleHelp": "Ein Embed ist eine Nachrichtenbox mit farbigem Rand, fettem Titel und Text. Fülle diese Felder aus, um eins zu senden. Lass sie leer für eine einfache Nachricht.",
+    "description": "Box-Text",
+    "descriptionHelp": "Der Haupttext in der Box. Discord-Formatierung funktioniert, etwa **fett**. Titel, Text und Fußzeile dürfen zusammen höchstens {max} Zeichen lang sein.",
+    "embedDescription": "Embed-Beschreibung",
+    "colour": "Box-Farbe",
+    "hex": "Oder ein Farbcode",
+    "hexHelp": "Ein # und sechs Buchstaben oder Ziffern. Wenn ausgefüllt, wird er statt der Farbe oben verwendet.",
+    "imageUrl": "Bildlink",
+    "imageUrlHelp": "Optional. Ein Link, der mit https:// beginnt und ein Bild öffnet. Es wird groß in der Box gezeigt.",
+    "footer": "Box-Fußzeile",
+    "footerHelp": "Optionaler kleiner Text unten in der Box."
+  },
+  "colour": {
+    "primary": "Mewvo-Blau",
+    "purple": "Lila",
+    "blurple": "Discord-Blurple",
+    "green": "Grün",
+    "yellow": "Gelb",
+    "red": "Rot",
+    "grey": "Grau"
+  },
+  "template": {
+    "title": "Mit einer Vorlage beginnen",
+    "help": "Wähle eine fertige Ankündigung, etwa wie man Einspruch einlegt oder eine Betrugswarnung. Sie füllt die Formulare unten aus, sodass du sie vor dem Posten bearbeiten kannst.",
+    "unknown": "Diese Vorlage gibt es nicht (mehr). Wähle eine aus der Liste.",
+    "filled": "Die Vorlage „{name}“ ist unten eingetragen, in „Nachricht senden“ und in „Nachricht planen“. Ersetze die Teile in [eckigen Klammern], prüfe den Text und poste oder plane ihn dann. Es wird nichts gepostet, bevor du den Button drückst.",
+    "label": "Vorlage",
+    "hint": "Fertige Texte für häufige Ankündigungen. Wo ein Text den Server nennt, ist der Name dieses Servers eingetragen. Teile in [eckigen Klammern] füllst du selbst aus.",
+    "use": "Diese Vorlage nutzen"
+  },
+  "send": {
+    "title": "Nachricht senden",
+    "help": "Mewvo postet deinen Text, deine Box oder beides sofort im Kanal.",
+    "submit": "Nachricht posten"
+  },
+  "repeat": {
+    "once": "Einmal",
+    "daily": "Jeden Tag",
+    "weekdays": "An gewählten Wochentagen",
+    "hours": "Alle paar Stunden"
+  },
+  "when": {
+    "once": "Einmal am {date} um {time}",
+    "daily": "Jeden Tag um {time}",
+    "weekdays": "{days} um {time}",
+    "interval": {
+      "one": "Alle {count} Std. ab {date} {time}",
+      "other": "Alle {count} Stunden ab {date} {time}"
+    },
+    "unknown": "Unbekannter Zeitplan"
+  },
+  "schedule": {
+    "title": "Nachricht planen",
+    "help": {
+      "one": "Schreib jetzt eine Nachricht und lass Mewvo sie später posten: einmal, jeden Tag, an gewählten Wochentagen oder alle paar Stunden. Wenn das Posten {count}-mal hintereinander fehlschlägt, etwa weil Mewvo keinen Zugriff mehr auf den Kanal hat, wird sie pausiert und das Team im Alarmkanal informiert. Ein Server kann bis zu {limit} haben, je nach Plan des Serverbesitzers.",
+      "other": "Schreib jetzt eine Nachricht und lass Mewvo sie später posten: einmal, jeden Tag, an gewählten Wochentagen oder alle paar Stunden. Wenn das Posten {count}-mal hintereinander fehlschlägt, etwa weil Mewvo keinen Zugriff mehr auf den Kanal hat, wird sie pausiert und das Team im Alarmkanal informiert. Ein Server kann bis zu {limit} haben, je nach Plan des Serverbesitzers."
+    },
+    "submit": "Nachricht planen",
+    "repeat": "Wiederholen",
+    "date": "Datum",
+    "dateHelp": "Bei „Einmal“ der Tag, an dem gepostet wird. Bei „Alle paar Stunden“ der Tag des ersten Posts.",
+    "time": "Uhrzeit (24 Stunden)",
+    "hours": "Stunden zwischen Posts",
+    "hoursHelp": "Nur für „Alle paar Stunden“. Von 1 bis {max}.",
+    "timezone": "Zeitzone",
+    "timezoneHelp": "Region und Stadt, etwa Europe/Berlin, oder UTC. Sommer- und Winterzeit werden automatisch berücksichtigt.",
+    "weekdays": "Wochentage (nur für „An gewählten Wochentagen“)"
+  },
+  "scheduled": {
+    "title": "Geplante Nachrichten",
+    "help": "Die nächste Postzeit wird in der eigenen Zeitzone jeder Nachricht angezeigt.",
+    "count": {
+      "one": "{used} von {count} geplanten Nachricht.",
+      "other": "{used} von {count} geplanten Nachrichten."
+    },
+    "colMessage": "Nachricht",
+    "colChannel": "Kanal",
+    "colNext": "Nächster Lauf",
+    "colRepeat": "Wiederholung",
+    "colLast": "Letztes Ergebnis",
+    "colStatus": "Status",
+    "empty": "Keine geplanten Nachrichten.",
+    "imageOnly": "(Bild)",
+    "pillPaused": "pausiert",
+    "pillDone": "fertig",
+    "pillActive": "aktiv",
+    "failures": {
+      "one": "({failed} von {count} Fehlversuch)",
+      "other": "({failed} von {count} Fehlversuchen)"
+    },
+    "posted": "Gepostet {time}",
+    "notRun": "Noch nicht gelaufen",
+    "resume": "Fortsetzen",
+    "pause": "Pausieren",
+    "runNow": "Jetzt posten",
+    "runConfirm": "Diese Nachricht jetzt posten?",
+    "delete": "Löschen",
+    "deleteConfirm": "Geplante Nachricht #{id} löschen? Das kann nicht rückgängig gemacht werden.",
+    "editSummary": "Vorschau und Bearbeiten #{id} · {schedule}",
+    "nextPosts": "Nächste Posts: {times}",
+    "pausedNote": "Pausiert: Sie wird erst gepostet, wenn du sie fortsetzt.",
+    "doneNote": "Sie wird nicht mehr gepostet.",
+    "test": "Test an mich",
+    "testNote": "Schickt sie nur an dich als private Nachricht (DM), damit du sie vor dem Posten prüfen kannst.",
+    "save": "Geplante Nachricht speichern",
+    "idLabel": "Geplante Nachricht",
+    "pausedLabel": "Pausiert"
+  },
+  "preview": {
+    "title": "Vorschau",
+    "image": "Bild: {url}",
+    "note": "So angezeigt, wie du es getippt hast. Discord macht beim Posten aus **fett**, Links und Erwähnungen Formatierung. Erwähnungen pingen nie."
+  },
+  "poll": {
+    "title": "Umfrage starten",
+    "help": "Stell den Mitgliedern eine Frage und lass sie mit einer Discord-Umfrage abstimmen. Mewvo braucht dafür die Berechtigung Umfragen erstellen im Kanal (Reaktionen hinzufügen für eine anonyme Umfrage).",
+    "question": "Frage",
+    "options": "Antworten",
+    "optionsHelp": "Die Antworten, für die Mitglieder stimmen können, jede in einer eigenen Zeile. 2 bis {max}, jede bis zu {answerMax} Zeichen (bis zu {anonymousMax} bei einer anonymen Umfrage).",
+    "hours": "Offen für (Stunden)",
+    "hoursHelp": "{min} bis {max} Stunden (7 Tage). Discord schließt die Umfrage und zeigt die Ergebnisse, wenn die Zeit um ist.",
+    "multiSelect": "Mehr als eine Antwort erlauben",
+    "multiSelectHelp": "Mitglieder können mehrere Antworten statt einer wählen.",
+    "anonymous": "Anonyme Umfrage",
+    "anonymousHelp": "Eine Discord-Umfrage zeigt allen, wer wofür gestimmt hat. Schalte das ein, um stattdessen eine Umfrage mit Zahlen-Reaktionen zu posten: keine Namen auf der Umfrage selbst, aber jeder kann die Reaktionen öffnen und sehen, wer reagiert hat. Sie hat kein Zeitlimit, kann nicht früher beendet werden und ignoriert die beiden Einstellungen oben.",
+    "submit": "Umfrage posten"
+  },
+  "endPoll": {
+    "title": "Umfrage beenden",
+    "help": "Schließt eine von Mewvos Discord-Umfragen jetzt, bevor ihre Zeit um ist, und zeigt die Endergebnisse. Discord lässt Mewvo nur Umfragen beenden, die Mewvo selbst gepostet hat.",
+    "loadFailed": "Die offenen Umfragen konnten nicht geladen werden. Du kannst eine Umfrage trotzdem unten über ihren Link beenden.",
+    "noQuestion": "(keine Frage)",
+    "end": "Beenden",
+    "confirm": "Diese Umfrage jetzt beenden? Die Endergebnisse werden gezeigt und niemand kann mehr abstimmen.",
+    "colQuestion": "Frage",
+    "colChannel": "Kanal",
+    "colCloses": "Endet",
+    "empty": "Mewvo hat keine offenen Umfragen auf diesem Server.",
+    "note": "Zeigt Umfragen, die in den letzten 7 Tagen aus dem Dashboard gepostet wurden, und Umfragen mit /poll seit dem letzten Neustart von Mewvo.",
+    "notePartial": "Zeigt Umfragen, die in den letzten 7 Tagen aus dem Dashboard gepostet wurden, und Umfragen mit /poll seit dem letzten Neustart von Mewvo. Der Dashboard-Verlauf konnte gerade nicht gelesen werden, daher fehlen vielleicht einige Umfragen.",
+    "byLink": "Eine Umfrage fehlt in der Liste? Beende sie über ihren Link",
+    "link": "Link zur Umfrage-Nachricht",
+    "linkHelp": "Klicke in Discord mit rechts auf die Umfrage (oder halte sie auf dem Handy gedrückt), wähle Nachrichtenlink kopieren und füge ihn hier ein.",
+    "submit": "Jetzt beenden"
+  },
+  "countdown": {
+    "sectionTitle": "Countdown starten",
+    "help": "Postet einen Timer, der im Kanal herunterzählt, bis zu 24 Stunden. Administratoren bekommen darauf Buttons zum Pausieren und Abbrechen. Wenn der Bot neu startet, stoppen laufende Countdowns.",
+    "title": "Titel",
+    "placeholder": "Countdown",
+    "titleHelp": "Worauf du herunterzählst.",
+    "minutes": "Minuten",
+    "minutesHelp": "0 bis {max} (24 Stunden).",
+    "seconds": "Sekunden",
+    "secondsHelp": "0 bis 59.",
+    "submit": "Countdown starten"
+  },
+  "clock": {
+    "hours": "{n} Std.",
+    "minutes": "{n} Min.",
+    "seconds": "{n} Sek."
+  },
+  "error": {
+    "tooLong": "{label}: höchstens {max} Zeichen (du hast {length} geschrieben).",
+    "channel": "Kanal: {problems}. Es wurde nichts gepostet.",
+    "colourCode": "Farbe: Schreib einen Farbcode wie #9B59B6 oder lass das Feld leer und wähle aus der Liste.",
+    "colourChoice": "Farbe: unbekannte Auswahl.",
+    "optionsFew": "Antworten: Eine Umfrage braucht mindestens 2 Antworten, jede in einer eigenen Zeile.",
+    "optionsMany": {
+      "one": "Antworten: Eine Umfrage kann höchstens {count} Antwort haben (du hast {written} geschrieben).",
+      "other": "Antworten: Eine Umfrage kann höchstens {count} Antworten haben (du hast {written} geschrieben)."
+    },
+    "optionLong": "Antworten: Jede Antwort darf höchstens {max} Zeichen lang sein. „{start}...“ hat {length}.",
+    "optionLongNative": "Antworten: In einer Discord-Umfrage darf jede Antwort höchstens {max} Zeichen lang sein. Kürze sie oder schalte Anonyme Umfrage ein (bis zu 100 Zeichen). „{start}...“ hat {length}.",
+    "imageUrl": "Bildlink: Er muss mit https:// beginnen. Andere Links werden nicht angenommen.",
+    "empty": "Es gibt nichts zu posten. Schreib eine Nachricht oder fülle die Box aus.",
+    "footerOnly": "Box: Füge einen Titel, Text oder ein Bild hinzu. Eine Fußzeile allein wird nicht angezeigt.",
+    "boxTooLong": "Box: Titel, Text und Fußzeile dürfen zusammen höchstens {max} Zeichen lang sein.",
+    "timezone": "Zeitzone: Diese Zeitzone ist unbekannt. Schreib Region und Stadt, etwa Europe/Berlin, oder UTC.",
+    "past": "Diese Zeit ist schon vorbei. Wähle eine Zeit in der Zukunft.",
+    "noScheduled": "Es gibt keine geplante Nachricht #{id}.",
+    "testEmpty": "Diese Nachricht ist leer, es gibt also nichts zu senden.",
+    "testNoUser": "Mewvo konnte dein Discord-Konto nicht finden.",
+    "testDmClosed": "Deine Direktnachrichten (DMs) sind für Mewvo geschlossen, daher konnte der Test nicht gesendet werden. Erlaube in Discord Direktnachrichten von Servermitgliedern und versuch es noch einmal.",
+    "noQuestion": "Frage: Die Umfrage braucht eine Frage.",
+    "pollLink": "Link zur Umfrage-Nachricht: Füge den Link aus Nachrichtenlink kopieren in Discord ein, etwa https://discord.com/channels/...",
+    "pollOtherServer": "Link zur Umfrage-Nachricht: Diese Nachricht ist auf einem anderen Server.",
+    "countdownShort": "Dauer: Der Countdown braucht mindestens 1 Sekunde.",
+    "countdownLong": "Dauer: Ein Countdown kann nicht länger als 24 Stunden sein."
+  },
+  "action": {
+    "posted": "In #{channel} gepostet.",
+    "scheduled": "Geplante Nachricht #{id} für #{channel} gespeichert: {schedule} ({zone}). Erster Post {time}.",
+    "edited": "Geplante Nachricht #{id} gespeichert. Nächster Post {time} ({zone}).",
+    "editedPaused": "Geplante Nachricht #{id} gespeichert. Nächster Post nach dem Fortsetzen.",
+    "alreadyPaused": "Geplante Nachricht #{id} ist schon pausiert.",
+    "alreadyRunning": "Geplante Nachricht #{id} läuft schon.",
+    "paused": "Geplante Nachricht #{id} pausiert.",
+    "resumed": "Geplante Nachricht #{id} fortgesetzt. Nächster Post {time} ({zone}).",
+    "ran": "Geplante Nachricht #{id} in #{channel} gepostet.",
+    "tested": "Geplante Nachricht #{id} wurde dir als Test per DM geschickt. Auf dem Server wurde nichts gepostet.",
+    "deleted": "Geplante Nachricht #{id} gelöscht.",
+    "anonymousPosted": "Anonyme Reaktions-Umfrage in #{channel} gepostet.",
+    "reactionsMissing": {
+      "one": "Nur {added} von {count} Abstimmungs-Reaktion konnte hinzugefügt werden: Füge den Rest in Discord von Hand hinzu.",
+      "other": "Nur {added} von {count} Abstimmungs-Reaktionen konnten hinzugefügt werden: Füge den Rest in Discord von Hand hinzu."
+    },
+    "pollPosted": "Umfrage in #{channel} gepostet. Sie endet {time}.",
+    "pollEnded": "Umfrage in #{channel} beendet. Die Endergebnisse sind jetzt darauf zu sehen.",
+    "countdownStarted": "Countdown in #{channel} gestartet: {duration}."
+  }
+}

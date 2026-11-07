@@ -1,0 +1,69 @@
+{
+  "page": {
+    "help": "Sorteie um prêmio entre membros aleatórios. O Mewvo publica uma mensagem de sorteio com um botão, os membros clicam nele para participar e, quando o tempo acaba, o Mewvo escolhe os vencedores. Sortear de novo escolhe novos vencedores. Tudo aqui precisa da permissão de Administrador neste servidor."
+  },
+  "needsAdmin": "Para fazer sorteios, você precisa da permissão de Administrador neste servidor.",
+  "create": {
+    "title": "Começar um sorteio",
+    "help": "O Mewvo publica a mensagem do sorteio no canal que você escolher. Também dá para fazer isso com /giveaway create no Discord.",
+    "channel": "Canal",
+    "channelHelp": "Onde a mensagem do sorteio é publicada.",
+    "prize": "Prêmio",
+    "prizeHelp": "O que os vencedores ganham, por exemplo Nitro por um mês.",
+    "duration": "Duração",
+    "durationHelp": "Por quanto tempo os membros podem participar. Um número e uma letra: s (segundos), m (minutos), h (horas) ou d (dias). De 10 segundos a 30 dias.",
+    "winners": "Vencedores",
+    "winnersHelp": "Quantos membros ganham. De {min} a {max}.",
+    "submit": "Começar sorteio"
+  },
+  "active": {
+    "title": "Em andamento",
+    "empty": "Nenhum sorteio em andamento."
+  },
+  "ended": {
+    "title": "Encerrados (últimos 25)",
+    "empty": "Nenhum sorteio encerrado."
+  },
+  "list": {
+    "prize": "Prêmio",
+    "channel": "Canal",
+    "ends": "Termina",
+    "ended": "Encerrado",
+    "entries": "Participantes",
+    "winners": "Vencedores",
+    "endNow": "Encerrar agora",
+    "endConfirm": "Encerrar este sorteio agora e escolher os vencedores?",
+    "reroll": "Sortear de novo",
+    "delete": "Excluir",
+    "deleteConfirm": "Excluir o sorteio “{prize}” e a mensagem dele?",
+    "giveawayWord": "sorteio"
+  },
+  "random": {
+    "title": "Escolher um membro aleatório",
+    "help": "Escolhe um membro aleatório, por exemplo para um sorteio rápido. O resultado aparece no topo desta página e fica salvo no histórico do painel. Nada é publicado no Discord. Também dá para fazer isso com /tools randomuser no Discord.",
+    "role": "Só membros com este cargo",
+    "roleLabel": "Cargo",
+    "anyone": "qualquer um",
+    "bots": "Incluir bots",
+    "botsHelp": "Desligado: contas de bots nunca são escolhidas.",
+    "online": "Só membros online",
+    "onlineHelp": "Pula membros que aparecem offline agora.",
+    "submit": "Escolher um membro"
+  },
+  "error": {
+    "unknown": "Sorteio desconhecido."
+  },
+  "action": {
+    "picked": {
+      "one": "Escolhido @{name} ({id}) entre {count} membro compatível.",
+      "many": "Escolhido @{name} ({id}) entre {count} de membros compatíveis.",
+      "other": "Escolhido @{name} ({id}) entre {count} membros compatíveis."
+    },
+    "started": "Sorteio de “{prize}” começou; termina em {duration}.",
+    "ended": "Sorteio encerrado: {winners} vencedor(es) entre {entries} participantes.",
+    "rerolled": "Sorteado de novo: {winners} novo(s) vencedor(es).",
+    "channelGone": "O canal não existe mais, então nada foi anunciado.",
+    "deletedWithMessage": "Sorteio “{prize}” excluído junto com a mensagem.",
+    "deletedMessageGone": "Sorteio “{prize}” excluído (a mensagem dele já tinha sumido)."
+  }
+}

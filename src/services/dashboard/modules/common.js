@@ -1,7 +1,7 @@
 // common.js — helpers shared by the module pages.
 
 import { html, raw, slug, unsavedAttr } from '../html.js';
-import { currentText } from '../language.js';
+import { currentText, textFor } from '../language.js';
 
 export { slug };
 
@@ -69,7 +69,7 @@ export async function saveRegistry(ctx, patch, module) {
     const byGuild = new Map();
     for (const [key, value] of Object.entries(patch)) {
         const guildId = registryGuildId(key, ctx.env);
-        if (!guildId) throw new InputError(`${getSettingEntry(key).label}: the server for this setting is not configured.`);
+        if (!guildId) throw new InputError(textFor(ctx).t('common.serverNotConfigured', { label: getSettingEntry(key).label }));
         if (!byGuild.has(guildId)) byGuild.set(guildId, {});
         byGuild.get(guildId)[key] = value;
     }
@@ -100,5 +100,8 @@ export function changedOnly(patch, current) {
     return out;
 }
 
-/** "Nothing changed." result. */
-export const NOTHING = Object.freeze({ changes: [], message: 'Nothing changed.' });
+/** "Nothing changed." result (the message in the running request's language). */
+export const NOTHING = Object.freeze({
+    changes: [],
+    get message() { return currentText().t('errors.nothingChanged'); },
+});

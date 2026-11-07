@@ -1,0 +1,94 @@
+{
+  "page": {
+    "help": "Os tickets permitem que os membros peçam ajuda à equipe em um canal privado. Eles apertam um botão no painel de tickets (uma mensagem que o Mewvo publica) e ganham um canal próprio que só eles e a equipe veem. O modmail é a mesma ideia por mensagem privada ao Mewvo. Você também pode configurar isso com /ticket setup no Discord."
+  },
+  "topic": {
+    "tickets": "Tickets",
+    "ticketsLine": "O botão que os membros apertam para abrir um ticket, e para onde vão os tickets.",
+    "modmail": "Modmail e respostas salvas",
+    "modmailLine": "Quem não pode escrever para a equipe, e respostas que a equipe publica com frequência."
+  },
+  "panel": {
+    "title": "Painel de tickets",
+    "help": "A mensagem com o botão que os membros apertam.",
+    "helpNoAdmin": "A mensagem com o botão que os membros apertam. Para publicar o painel, você precisa da permissão Administrador neste servidor.",
+    "postedIn": "Painel em {channel}{warnings}.",
+    "republish": "Atualizar ou republicar o painel",
+    "textNote": "Salvar o texto do painel abaixo não muda a mensagem que já está no Discord. Atualize o painel para mostrar o texto novo.",
+    "none": "Ainda não há painel de tickets. Preencha isto para publicar um.",
+    "postIn": "Publicar o painel em",
+    "postInHelp": "Escolha um canal que todos os membros possam ver.",
+    "newCategory": "uma nova categoria \"Tickets\"",
+    "submit": "Configurar e publicar o painel"
+  },
+  "settings": {
+    "title": "Configurações de tickets",
+    "help": "Categorias, o cargo da equipe, logs e o texto do painel.",
+    "openCategory": "Categoria de tickets abertos",
+    "openCategoryHelp": "Uma categoria é uma pasta de canais. Os novos canais de ticket são criados nela.",
+    "closedCategory": "Categoria de tickets fechados",
+    "closedCategoryHelp": "Os tickets fechados são movidos para cá.",
+    "staffRole": "Cargo da equipe de tickets",
+    "staffRoleHelp": "Membros com este cargo veem e respondem todos os tickets.",
+    "maxPerUser": "Tickets abertos por membro",
+    "maxPerUserHelp": "Quantos tickets um membro pode ter abertos ao mesmo tempo. De 1 a 10.",
+    "maxRange": "De 1 a 10.",
+    "dmOnClose": "Avisar o membro quando o ticket dele for fechado",
+    "dmOnCloseHelp": "Enviado em privado (por DM).",
+    "logChannel": "Canal de log de tickets",
+    "logChannelHelp": "A equipe recebe aqui uma linha curta quando um ticket é aberto, assumido, fechado ou excluído.",
+    "transcriptChannel": "Canal de transcrições",
+    "transcriptChannelHelp": "Uma transcrição é um arquivo com todas as mensagens de um ticket. O Mewvo publica aqui quando o ticket é fechado.",
+    "buttonText": "Texto do botão",
+    "buttonTextHelp": "As palavras no botão que os membros apertam para abrir um ticket.",
+    "panelMessage": "Mensagem do painel",
+    "panelMessageHelp": "O texto acima do botão. Diga aos membros para que servem os tickets."
+  },
+  "blocked": {
+    "title": "Membros bloqueados no modmail",
+    "help": "Membros bloqueados não podem iniciar uma conversa de modmail com a equipe. Uma conversa que já está aberta continua até a equipe fechá-la. Você também pode fazer isso com /modmail block no Discord.",
+    "userId": "ID de usuário",
+    "empty": "Ninguém está bloqueado no modmail.",
+    "heading": "Bloquear um membro",
+    "member": "Membro",
+    "reason": "Motivo (opcional)",
+    "reasonHelp": "Só a equipe vê, no histórico do painel.",
+    "submit": "Bloquear no modmail",
+    "confirm": "Bloquear este membro no modmail?",
+    "unblock": "Desbloquear"
+  },
+  "canned": {
+    "title": "Respostas salvas",
+    "help": "Respostas salvas para perguntas que a equipe recebe com frequência. A equipe publica uma em um ticket com /canned send. As respostas embutidas não podem ser excluídas, mas você pode mudar o texto delas salvando uma resposta com o mesmo nome.",
+    "name": "Nome",
+    "text": "Texto",
+    "builtIn": "(embutida)",
+    "delete": "Excluir",
+    "confirmDelete": "Excluir a resposta salva \"{name}\"?",
+    "nameHelp": "A equipe digita este nome para publicar a resposta. Só letras minúsculas, números e -, como refund-policy.",
+    "answer": "Resposta",
+    "answerHelp": "O texto que o Mewvo publica.",
+    "submit": "Salvar resposta",
+    "saved": "\"{name}\" salva.",
+    "deleted": "\"{name}\" excluída.",
+    "error": {
+      "name": "Os nomes só podem usar letras minúsculas, números e -, até 32 caracteres.",
+      "empty": "A resposta não pode ficar vazia.",
+      "tooLong": "As respostas têm limite de {max} caracteres.",
+      "unknown": "Resposta desconhecida.",
+      "builtIn": "\"{name}\" é embutida e não pode ser excluída. Para mudar o texto, salve uma resposta com o mesmo nome.",
+      "noSuch": "Não há nenhuma resposta salva chamada \"{name}\"."
+    }
+  },
+  "action": {
+    "setUp": "Sistema de tickets configurado: o painel foi publicado.",
+    "panelReposted": "O painel estava faltando: um novo foi publicado.",
+    "panelUpdated": "O painel no Discord agora mostra o texto salvo.",
+    "settingsSaved": "Configurações de tickets salvas.",
+    "alreadyBlocked": "Esse membro já está bloqueado no modmail.",
+    "blocked": "{user} não pode mais usar o modmail.",
+    "blockedOpen": "{user} não pode mais usar o modmail. A conversa aberta #{channel} continua até você fechá-la.",
+    "notBlocked": "Esse membro não estava bloqueado.",
+    "unblocked": "Desbloqueado no modmail."
+  }
+}

@@ -1,0 +1,234 @@
+{
+  "page": {
+    "help": "Publikuj wiadomości jako Mewvo: ogłoszenie teraz albo później, wiadomość, która się powtarza, ankietę lub odliczanie. Tekst wpisany tutaj nigdy nikogo nie pinguje. Do wszystkiego tutaj potrzebujesz uprawnienia Administrator na tym serwerze."
+  },
+  "adminNote": "Aby publikować, potrzebujesz uprawnienia Administrator na tym serwerze.",
+  "fields": {
+    "channel": "Kanał",
+    "content": "Tekst wiadomości",
+    "contentHelp": "Zwykły tekst wiadomości. Możesz zostawić go pustym, jeśli wypełnisz ramkę poniżej. Wzmianki pokazują się jako nazwy, ale nikogo nie pingują. @everyone, @here, role i członkowie nie dostają powiadomień.",
+    "title": "Tytuł ramki",
+    "titleHelp": "Embed to ramka wiadomości z kolorowym brzegiem, pogrubionym tytułem i tekstem. Wypełnij te pola, aby go wysłać. Zostaw je puste dla zwykłej wiadomości.",
+    "description": "Tekst ramki",
+    "descriptionHelp": "Główny tekst w ramce. Formatowanie Discorda działa, np. **pogrubienie**. Tytuł, tekst i stopka razem mogą mieć maksymalnie {max} znaków.",
+    "embedDescription": "Opis embeda",
+    "colour": "Kolor ramki",
+    "hex": "Albo kod koloru",
+    "hexHelp": "Znak # i sześć liter lub cyfr. Jeśli jest wpisany, zastępuje kolor powyżej.",
+    "imageUrl": "Link do obrazka",
+    "imageUrlHelp": "Opcjonalnie. Link, który zaczyna się od https:// i otwiera obrazek. Pokazuje się duży w ramce.",
+    "footer": "Stopka ramki",
+    "footerHelp": "Opcjonalny mały tekst na dole ramki."
+  },
+  "colour": {
+    "primary": "Niebieski Mewvo",
+    "purple": "Fioletowy",
+    "blurple": "Discord blurple",
+    "green": "Zielony",
+    "yellow": "Żółty",
+    "red": "Czerwony",
+    "grey": "Szary"
+  },
+  "template": {
+    "title": "Zacznij od szablonu",
+    "help": "Wybierz gotowe ogłoszenie, np. jak złożyć odwołanie albo ostrzeżenie przed oszustwem. Wypełni formularze poniżej, więc możesz je poprawić przed publikacją.",
+    "unknown": "Ten szablon nie istnieje (już). Wybierz jeden z listy.",
+    "filled": "Szablon „{name}” jest wpisany poniżej, w „Wyślij wiadomość” i w „Zaplanuj wiadomość”. Zastąp części w [nawiasach kwadratowych], sprawdź tekst, a potem go opublikuj albo zaplanuj. Nic nie zostanie opublikowane, dopóki nie klikniesz przycisku.",
+    "label": "Szablon",
+    "hint": "Gotowe teksty do częstych ogłoszeń. Gdzie tekst wymienia serwer, wpisana jest nazwa tego serwera. Części w [nawiasach kwadratowych] uzupełniasz sam.",
+    "use": "Użyj szablonu"
+  },
+  "send": {
+    "title": "Wyślij wiadomość",
+    "help": "Mewvo od razu publikuje na kanale twój tekst, twoją ramkę albo oba.",
+    "submit": "Opublikuj"
+  },
+  "repeat": {
+    "once": "Raz",
+    "daily": "Codziennie",
+    "weekdays": "W wybrane dni tygodnia",
+    "hours": "Co kilka godzin"
+  },
+  "when": {
+    "once": "Raz, {date} o {time}",
+    "daily": "Codziennie o {time}",
+    "weekdays": "{days} o {time}",
+    "interval": {
+      "one": "Co {count} godzinę od {date} {time}",
+      "few": "Co {count} godziny od {date} {time}",
+      "many": "Co {count} godzin od {date} {time}",
+      "other": "Co {count} godziny od {date} {time}"
+    },
+    "unknown": "Nieznany harmonogram"
+  },
+  "schedule": {
+    "title": "Zaplanuj wiadomość",
+    "help": {
+      "one": "Napisz wiadomość teraz, a Mewvo opublikuje ją później: raz, codziennie, w wybrane dni tygodnia albo co kilka godzin. Jeśli publikacja nie uda się {count} raz z rzędu, np. bo Mewvo stracił dostęp do kanału, wiadomość zostaje wstrzymana, a ekipa dostaje informację na kanale alertów. Serwer może mieć do {limit}, zależnie od planu właściciela serwera.",
+      "few": "Napisz wiadomość teraz, a Mewvo opublikuje ją później: raz, codziennie, w wybrane dni tygodnia albo co kilka godzin. Jeśli publikacja nie uda się {count} razy z rzędu, np. bo Mewvo stracił dostęp do kanału, wiadomość zostaje wstrzymana, a ekipa dostaje informację na kanale alertów. Serwer może mieć do {limit}, zależnie od planu właściciela serwera.",
+      "many": "Napisz wiadomość teraz, a Mewvo opublikuje ją później: raz, codziennie, w wybrane dni tygodnia albo co kilka godzin. Jeśli publikacja nie uda się {count} razy z rzędu, np. bo Mewvo stracił dostęp do kanału, wiadomość zostaje wstrzymana, a ekipa dostaje informację na kanale alertów. Serwer może mieć do {limit}, zależnie od planu właściciela serwera.",
+      "other": "Napisz wiadomość teraz, a Mewvo opublikuje ją później: raz, codziennie, w wybrane dni tygodnia albo co kilka godzin. Jeśli publikacja nie uda się {count} razy z rzędu, np. bo Mewvo stracił dostęp do kanału, wiadomość zostaje wstrzymana, a ekipa dostaje informację na kanale alertów. Serwer może mieć do {limit}, zależnie od planu właściciela serwera."
+    },
+    "submit": "Zaplanuj",
+    "repeat": "Powtarzanie",
+    "date": "Data",
+    "dateHelp": "Dla „Raz” dzień publikacji. Dla „Co kilka godzin” dzień pierwszej publikacji.",
+    "time": "Godzina (zegar 24 h)",
+    "hours": "Godziny między publikacjami",
+    "hoursHelp": "Tylko dla „Co kilka godzin”. Od 1 do {max}.",
+    "timezone": "Strefa czasowa",
+    "timezoneHelp": "Region i miasto, np. Europe/Warsaw, albo UTC. Zmiana czasu na letni i zimowy jest uwzględniana automatycznie.",
+    "weekdays": "Dni tygodnia (tylko dla „W wybrane dni tygodnia”)"
+  },
+  "scheduled": {
+    "title": "Zaplanowane wiadomości",
+    "help": "Czas następnej publikacji jest pokazany w strefie czasowej danej wiadomości.",
+    "count": {
+      "one": "{used} z {count} zaplanowanej wiadomości.",
+      "few": "{used} z {count} zaplanowanych wiadomości.",
+      "many": "{used} z {count} zaplanowanych wiadomości.",
+      "other": "{used} z {count} zaplanowanych wiadomości."
+    },
+    "colMessage": "Wiadomość",
+    "colChannel": "Kanał",
+    "colNext": "Następna",
+    "colRepeat": "Powtarzanie",
+    "colLast": "Ostatni wynik",
+    "colStatus": "Stan",
+    "empty": "Brak zaplanowanych wiadomości.",
+    "imageOnly": "(obrazek)",
+    "pillPaused": "wstrzymana",
+    "pillDone": "zakończona",
+    "pillActive": "aktywna",
+    "failures": {
+      "one": "({failed} z {count} błędu)",
+      "few": "({failed} z {count} błędów)",
+      "many": "({failed} z {count} błędów)",
+      "other": "({failed} z {count} błędów)"
+    },
+    "posted": "Opublikowano {time}",
+    "notRun": "Jeszcze nie uruchomiona",
+    "resume": "Wznów",
+    "pause": "Wstrzymaj",
+    "runNow": "Uruchom",
+    "runConfirm": "Opublikować tę wiadomość teraz?",
+    "delete": "Usuń",
+    "deleteConfirm": "Usunąć zaplanowaną wiadomość #{id}? Tego nie da się cofnąć.",
+    "editSummary": "Podgląd i edycja #{id} · {schedule}",
+    "nextPosts": "Następne publikacje: {times}",
+    "pausedNote": "Wstrzymana: nie zostanie opublikowana, dopóki jej nie wznowisz.",
+    "doneNote": "Nie zostanie już opublikowana.",
+    "test": "Wyślij mi test",
+    "testNote": "Wysyła ją tylko do ciebie jako prywatną wiadomość (DM), żebyś mógł ją sprawdzić przed publikacją.",
+    "save": "Zapisz",
+    "idLabel": "Zaplanowana wiadomość",
+    "pausedLabel": "Wstrzymana"
+  },
+  "preview": {
+    "title": "Podgląd",
+    "image": "Obrazek: {url}",
+    "note": "Pokazane tak, jak wpisano. Przy publikacji Discord zamienia **pogrubienie**, linki i wzmianki na formatowanie. Wzmianki nigdy nie pingują."
+  },
+  "poll": {
+    "title": "Utwórz ankietę",
+    "help": "Zadaj członkom pytanie i pozwól im głosować w ankiecie Discorda. Mewvo potrzebuje na kanale uprawnienia Tworzenie ankiet (Dodawanie reakcji dla anonimowej ankiety).",
+    "question": "Pytanie",
+    "options": "Odpowiedzi",
+    "optionsHelp": "Odpowiedzi, na które członkowie mogą głosować, każda w osobnej linii. Od 2 do {max}, każda do {answerMax} znaków (do {anonymousMax} w anonimowej ankiecie).",
+    "hours": "Otwarta przez (godziny)",
+    "hoursHelp": "Od {min} do {max} godzin (7 dni). Gdy czas minie, Discord zamyka ankietę i pokazuje wyniki.",
+    "multiSelect": "Pozwól na kilka odpowiedzi",
+    "multiSelectHelp": "Członkowie mogą wybrać kilka odpowiedzi zamiast jednej.",
+    "anonymous": "Anonimowa ankieta",
+    "anonymousHelp": "Ankieta Discorda pokazuje wszystkim, kto na co głosował. Włącz to, aby zamiast niej opublikować ankietę z reakcjami-cyframi: na samej ankiecie nie ma nazw, ale każdy może otworzyć reakcje i zobaczyć, kto zareagował. Nie ma limitu czasu, nie można jej zakończyć wcześniej i ignoruje dwa ustawienia powyżej.",
+    "submit": "Opublikuj ankietę"
+  },
+  "endPoll": {
+    "title": "Zakończ ankietę",
+    "help": "Zamyka teraz jedną z ankiet Mewvo na Discordzie, przed upływem czasu, i pokazuje końcowe wyniki. Discord pozwala Mewvo kończyć tylko ankiety, które sam opublikował.",
+    "loadFailed": "Nie udało się wczytać otwartych ankiet. Ankietę nadal możesz zakończyć przez jej link poniżej.",
+    "noQuestion": "(bez pytania)",
+    "end": "Zakończ",
+    "confirm": "Zakończyć tę ankietę teraz? Pokażą się końcowe wyniki i nikt nie będzie mógł już głosować.",
+    "colQuestion": "Pytanie",
+    "colChannel": "Kanał",
+    "colCloses": "Koniec",
+    "empty": "Mewvo nie ma otwartych ankiet na tym serwerze.",
+    "note": "Pokazuje ankiety opublikowane z panelu w ostatnich 7 dniach oraz ankiety z /poll od ostatniego restartu Mewvo.",
+    "notePartial": "Pokazuje ankiety opublikowane z panelu w ostatnich 7 dniach oraz ankiety z /poll od ostatniego restartu Mewvo. Nie udało się teraz odczytać historii panelu, więc może brakować niektórych ankiet.",
+    "byLink": "Ankiety nie ma na liście? Zakończ ją przez link",
+    "link": "Link do wiadomości z ankietą",
+    "linkHelp": "Na Discordzie kliknij ankietę prawym przyciskiem (albo przytrzymaj ją na telefonie), wybierz Kopiuj link do wiadomości i wklej go tutaj.",
+    "submit": "Zakończ teraz"
+  },
+  "countdown": {
+    "sectionTitle": "Uruchom odliczanie",
+    "help": "Publikuje na kanale minutnik, który odlicza do 24 godzin. Administratorzy dostają na nim przyciski Wstrzymaj i Anuluj. Jeśli bot się zrestartuje, trwające odliczania się zatrzymują.",
+    "title": "Tytuł",
+    "placeholder": "Odliczanie",
+    "titleHelp": "Do czego odliczasz.",
+    "minutes": "Minuty",
+    "minutesHelp": "Od 0 do {max} (24 godziny).",
+    "seconds": "Sekundy",
+    "secondsHelp": "Od 0 do 59.",
+    "submit": "Uruchom odliczanie"
+  },
+  "clock": {
+    "hours": "{n} godz.",
+    "minutes": "{n} min",
+    "seconds": "{n} s"
+  },
+  "error": {
+    "tooLong": "{label}: maksymalnie {max} znaków (wpisano {length}).",
+    "channel": "Kanał: {problems}. Nic nie zostało opublikowane.",
+    "colourCode": "Kolor: wpisz kod koloru, np. #9B59B6, albo zostaw puste i wybierz z listy.",
+    "colourChoice": "Kolor: nieznany wybór.",
+    "optionsFew": "Odpowiedzi: ankieta potrzebuje co najmniej 2 odpowiedzi, każdej w osobnej linii.",
+    "optionsMany": {
+      "one": "Odpowiedzi: ankieta może mieć maksymalnie {count} odpowiedź (wpisano {written}).",
+      "few": "Odpowiedzi: ankieta może mieć maksymalnie {count} odpowiedzi (wpisano {written}).",
+      "many": "Odpowiedzi: ankieta może mieć maksymalnie {count} odpowiedzi (wpisano {written}).",
+      "other": "Odpowiedzi: ankieta może mieć maksymalnie {count} odpowiedzi (wpisano {written})."
+    },
+    "optionLong": "Odpowiedzi: każda odpowiedź może mieć maksymalnie {max} znaków. „{start}...” ma {length}.",
+    "optionLongNative": "Odpowiedzi: w ankiecie Discorda każda odpowiedź może mieć maksymalnie {max} znaków. Skróć ją albo włącz Anonimową ankietę (do 100 znaków). „{start}...” ma {length}.",
+    "imageUrl": "Link do obrazka: musi zaczynać się od https://. Inne linki nie są przyjmowane.",
+    "empty": "Nie ma czego opublikować. Napisz wiadomość albo wypełnij ramkę.",
+    "footerOnly": "Ramka: dodaj tytuł, tekst albo obrazek. Sama stopka się nie pokazuje.",
+    "boxTooLong": "Ramka: tytuł, tekst i stopka razem mogą mieć maksymalnie {max} znaków.",
+    "timezone": "Strefa czasowa: ta strefa czasowa jest nieznana. Wpisz region i miasto, np. Europe/Warsaw, albo UTC.",
+    "past": "Ten czas już minął. Wybierz czas w przyszłości.",
+    "noScheduled": "Nie ma zaplanowanej wiadomości #{id}.",
+    "testEmpty": "Ta wiadomość jest pusta, więc nie ma czego wysłać.",
+    "testNoUser": "Mewvo nie mógł znaleźć twojego konta Discord.",
+    "testDmClosed": "Twoje prywatne wiadomości (DM) są zamknięte dla Mewvo, więc testu nie dało się wysłać. Na Discordzie zezwól na wiadomości bezpośrednie od członków serwera i spróbuj ponownie.",
+    "noQuestion": "Pytanie: ankieta potrzebuje pytania.",
+    "pollLink": "Link do wiadomości z ankietą: wklej link z Kopiuj link do wiadomości na Discordzie, np. https://discord.com/channels/...",
+    "pollOtherServer": "Link do wiadomości z ankietą: ta wiadomość jest na innym serwerze.",
+    "countdownShort": "Czas: odliczanie musi trwać co najmniej 1 sekundę.",
+    "countdownLong": "Czas: odliczanie nie może trwać dłużej niż 24 godziny."
+  },
+  "action": {
+    "posted": "Opublikowano na #{channel}.",
+    "scheduled": "Zaplanowana wiadomość #{id} zapisana dla #{channel}: {schedule} ({zone}). Pierwsza publikacja {time}.",
+    "edited": "Zaplanowana wiadomość #{id} zapisana. Następna publikacja {time} ({zone}).",
+    "editedPaused": "Zaplanowana wiadomość #{id} zapisana. Następna publikacja po wznowieniu.",
+    "alreadyPaused": "Zaplanowana wiadomość #{id} jest już wstrzymana.",
+    "alreadyRunning": "Zaplanowana wiadomość #{id} już działa.",
+    "paused": "Zaplanowana wiadomość #{id} wstrzymana.",
+    "resumed": "Zaplanowana wiadomość #{id} wznowiona. Następna publikacja {time} ({zone}).",
+    "ran": "Zaplanowana wiadomość #{id} opublikowana na #{channel}.",
+    "tested": "Zaplanowana wiadomość #{id} została wysłana do ciebie w DM jako test. Na serwerze nic nie opublikowano.",
+    "deleted": "Zaplanowana wiadomość #{id} usunięta.",
+    "anonymousPosted": "Anonimowa ankieta z reakcjami opublikowana na #{channel}.",
+    "reactionsMissing": {
+      "one": "Udało się dodać tylko {added} z {count} reakcji do głosowania: dodaj resztę ręcznie na Discordzie.",
+      "few": "Udało się dodać tylko {added} z {count} reakcji do głosowania: dodaj resztę ręcznie na Discordzie.",
+      "many": "Udało się dodać tylko {added} z {count} reakcji do głosowania: dodaj resztę ręcznie na Discordzie.",
+      "other": "Udało się dodać tylko {added} z {count} reakcji do głosowania: dodaj resztę ręcznie na Discordzie."
+    },
+    "pollPosted": "Ankieta opublikowana na #{channel}. Zamyka się {time}.",
+    "pollEnded": "Ankieta na #{channel} zakończona. Pokazuje teraz końcowe wyniki.",
+    "countdownStarted": "Odliczanie uruchomione na #{channel}: {duration}."
+  }
+}

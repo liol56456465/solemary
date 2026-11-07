@@ -1,0 +1,56 @@
+{
+  "page": {
+    "help": "Counters are channels whose name shows a live number, like \"Members: 1234\". Mewvo updates them every 15 minutes. The counting game is a channel where members count up together, one number per message."
+  },
+  "list": {
+    "title": "Server stats counters",
+    "help": "Mewvo makes the channel for you. You can also do this with /serverstats create in Discord.",
+    "helpNoAdmin": "Mewvo makes the channel for you. You can also do this with /serverstats create in Discord. To create channels you need the Administrator permission in this server.",
+    "id": "ID",
+    "channel": "Channel",
+    "type": "Type",
+    "empty": "No counters yet.",
+    "change": "Change",
+    "delete": "Delete counter and channel",
+    "deleteConfirm": "Delete this counter and its channel?"
+  },
+  "create": {
+    "title": "New counter",
+    "counts": "What it counts",
+    "channelType": "Channel type",
+    "channelTypeHelp": "A voice channel is the usual choice: it sits in the list and shows the number.",
+    "voice": "Voice channel (shows only the name)",
+    "text": "Text channel",
+    "category": "In category",
+    "categoryHelp": "A category is a folder of channels. The counter channel is made in it.",
+    "submit": "Create counter",
+    "allUsed": "Every kind of counter is already in use. You can have one of each."
+  },
+  "counting": {
+    "title": "Counting game",
+    "help": "Members take turns writing the next number. Starting or restarting the game here resets the count and the leaderboard. You can also do this with /count setup in Discord.",
+    "label": "Counting game:",
+    "details": "in {channel} · {system} · next number {next} · best streak {best}",
+    "channel": "Counting channel",
+    "channelHelp": "Use a channel just for counting.",
+    "system": "Number system",
+    "systemHelp": "How the numbers are written. Decimal (normal numbers) is the usual choice.",
+    "restart": "Start again in this channel (count goes back to 1)",
+    "reset": "Reset the count to 1",
+    "resetConfirm": "Reset the counting game to 1?"
+  },
+  "action": {
+    "unknown": "Unknown counter.",
+    "countsLabel": "Counts",
+    "channelKindLabel": "Channel kind",
+    "created": "Counter created: {channel}.",
+    "renameLater": "The channel name updates on the next scheduled run.",
+    "updated": "Counter updated.",
+    "renameFailed": "The channel could not be renamed now; it updates on the next scheduled run.",
+    "deleted": "Counter deleted.",
+    "deleteFailed": "The counter channel could not be deleted (permissions?).",
+    "started": "Counting game started at 1.",
+    "reset": "The count starts again at 1.",
+    "off": "Counting game is off."
+  }
+}

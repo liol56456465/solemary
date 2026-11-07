@@ -1,0 +1,129 @@
+{
+  "page": {
+    "help": "La verificación mantiene fuera a bots y raiders. Los nuevos miembros solo ven el resto del servidor cuando reciben el rol de verificado. Lo consiguen pulsando un botón del panel de verificación (un mensaje que publica Mewvo) o iniciando sesión con Discord. La verificación automática, en cambio, da el rol nada más entrar. Puedes usar una u otra, no las dos."
+  },
+  "panel": {
+    "title": "Panel de verificación",
+    "toggle": "Verificación",
+    "in": "Panel en {channel}.",
+    "publish": "Actualizar o volver a publicar el panel",
+    "none": "Aún no hay panel de verificación.",
+    "channel": "Publicar el panel en",
+    "channelHelp": "Elige un canal que los nuevos miembros vean antes de estar verificados.",
+    "role": "Rol de verificado",
+    "roleSetupHelp": "El rol que reciben los miembros al verificarse. Configura tus canales para que solo este rol pueda verlos.",
+    "roleHelp": "El rol que reciben los miembros al verificarse.",
+    "buttonText": "Texto del botón",
+    "message": "Mensaje del panel",
+    "messageHelp": "El texto encima del botón.",
+    "setup": "Configurar y publicar el panel",
+    "savingNote": "Guardar no cambia el mensaje que ya está en Discord. Pulsa \"Actualizar o volver a publicar el panel\" para mostrar el texto nuevo."
+  },
+  "quiz": {
+    "title": "Cuestionario de normas",
+    "help": {
+      "one": "Antes de verificarse, los miembros responden como máximo {count} pregunta sobre tus normas. Tienen que acertar todas; tras un fallo esperan antes de volver a intentarlo, y no se les dice qué respuesta estaba mal. Quien aprueba pasa al paso normal de verificación. Desactivado por defecto.",
+      "many": "Antes de verificarse, los miembros responden hasta {count} preguntas sobre tus normas. Tienen que acertar todas; tras un fallo esperan antes de volver a intentarlo, y no se les dice qué respuesta estaba mal. Quien aprueba pasa al paso normal de verificación. Desactivado por defecto.",
+      "other": "Antes de verificarse, los miembros responden hasta {count} preguntas sobre tus normas. Tienen que acertar todas; tras un fallo esperan antes de volver a intentarlo, y no se les dice qué respuesta estaba mal. Quien aprueba pasa al paso normal de verificación. Desactivado por defecto."
+    },
+    "toggle": "Cuestionario de normas",
+    "questionN": "Pregunta {n}",
+    "question": "Pregunta",
+    "placeholder": "¿Cuál de estas es una norma aquí?",
+    "answerN": "Respuesta {n}",
+    "answerOptional": "Respuesta {n} (opcional)",
+    "correct": "Respuesta correcta",
+    "rightAnswer": "Respuesta correcta: {answer}",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "remove": "Quitar",
+    "empty": "Aún no hay preguntas.",
+    "suggest": "Sugerir preguntas a partir de mis normas",
+    "cooldown": "Espera tras un fallo (minutos)",
+    "cooldownHelp": {
+      "one": "De {min} a {count} minuto.",
+      "many": "De {min} a {count} minutos.",
+      "other": "De {min} a {count} minutos."
+    },
+    "submit": "Guardar preguntas",
+    "slotsNote": "Los huecos vacíos se omiten; vacía un hueco para quitar esa pregunta. Las respuestas se muestran cada vez en orden aleatorio.",
+    "warnNoQuestions": "El cuestionario está activado pero no tiene preguntas válidas, así que cuenta como desactivado: no se pregunta nada a los miembros. Añade una pregunta abajo.",
+    "warnInvalid": {
+      "one": "{count} pregunta guardada no es válida y se omite. Vuelve a guardar las preguntas para arreglarlo.",
+      "many": "{count} preguntas guardadas no son válidas y se omiten. Vuelve a guardar las preguntas para arreglarlo.",
+      "other": "{count} preguntas guardadas no son válidas y se omiten. Vuelve a guardar las preguntas para arreglarlo."
+    },
+    "warnPanelOff": "El panel de verificación está desactivado, así que nadie recibe el cuestionario hasta que se active.",
+    "suggestFull": {
+      "one": "La {count} pregunta ya está usada. Quítala para recibir una sugerencia.",
+      "many": "Las {count} preguntas están usadas. Quita una para recibir una sugerencia.",
+      "other": "Las {count} preguntas están usadas. Quita una para recibir una sugerencia."
+    },
+    "suggestNoRules": "Aún no hay normas del servidor de las que sugerir. Añádelas primero en la página Normas.",
+    "suggested": {
+      "one": "Abajo se ha rellenado {count} pregunta sugerida. Todavía no se ha guardado nada: revísala, edítala y pulsa Guardar preguntas.",
+      "many": "Abajo se han rellenado {count} preguntas sugeridas. Todavía no se ha guardado nada: revísalas, edítalas y pulsa Guardar preguntas.",
+      "other": "Abajo se han rellenado {count} preguntas sugeridas. Todavía no se ha guardado nada: revísalas, edítalas y pulsa Guardar preguntas."
+    }
+  },
+  "auto": {
+    "title": "Verificación automática",
+    "toggle": "Verificación automática",
+    "criteria": "Quién se verifica automáticamente",
+    "criteriaHelp": "Quien no cumpla tendrá que usar el panel.",
+    "criteriaNone": "Todos",
+    "criteriaAge": "Cuentas más antiguas que los días de abajo",
+    "criteriaSmall": "Todos, mientras el servidor siga siendo pequeño",
+    "criteriaLabel": "Criterio",
+    "age": "Cuenta con más de (días)",
+    "ageHelp": "Solo se usa si eliges cuentas más antiguas que los días de abajo. Las cuentas nuevas son bots con más frecuencia.",
+    "role": "Rol que se da",
+    "roleNone": "el rol de verificado",
+    "roleHelp": "El rol que reciben los miembros verificados automáticamente.",
+    "roleLabel": "Rol de verificación automática"
+  },
+  "web": {
+    "title": "Verificación web",
+    "help": "Los miembros también pueden verificarse en una página web iniciando sesión con su cuenta de Discord.",
+    "page": "Página tras \"Verificar con Discord\"",
+    "pageHelp": "La página web a la que llegan los miembros tras verificarse iniciando sesión con Discord. Déjalo vacío para la página predeterminada."
+  },
+  "action": {
+    "setUp": "Verificación configurada: el panel está publicado y la verificación está activada.",
+    "posted": "Faltaba el panel: se ha publicado uno nuevo.",
+    "updated": "El panel publicado ahora muestra el texto guardado.",
+    "on": "La verificación ahora está activada.",
+    "off": "La verificación ahora está desactivada.",
+    "toggleNote": "Activarla o desactivarla no publica ni quita el mensaje del panel. Para eso usa \"Actualizar o volver a publicar el panel\".",
+    "saved": "Ajustes de verificación guardados.",
+    "autoOn": "La verificación automática ahora está activada.",
+    "autoOff": "La verificación automática ahora está desactivada.",
+    "autoSaved": "Ajustes de verificación automática guardados.",
+    "quizOn": "El cuestionario de normas ahora está activado.",
+    "quizOff": "El cuestionario de normas ahora está desactivado.",
+    "quizEmpty": "Aún no tiene preguntas, así que cuenta como desactivado hasta que añadas una.",
+    "quizSaved": "Cuestionario de normas guardado.",
+    "quizNowEmpty": "El cuestionario está activado pero ahora no tiene preguntas, así que cuenta como desactivado.",
+    "directionLabel": "Dirección",
+    "movedUp": "Pregunta subida.",
+    "movedDown": "Pregunta bajada.",
+    "removed": "Pregunta quitada."
+  },
+  "error": {
+    "noQuestion": "{label}: escribe la pregunta o vacía sus respuestas para quitarla.",
+    "answerCount": "{label}: pon de {min} a {max} respuestas.",
+    "correctLabel": "{label}: respuesta correcta",
+    "correctEmpty": "{label}: la respuesta correcta (respuesta {answer}) está vacía.",
+    "quizChanged": "Las preguntas del cuestionario han cambiado mientras tanto. Recarga la página y vuelve a intentarlo.",
+    "alreadySetUp": "El panel de verificación ya está configurado. Usa \"Actualizar o volver a publicar el panel\".",
+    "autoIsOn": "La verificación automática está activada. Desactívala antes de activar el panel de verificación.",
+    "notSetUp": "El panel de verificación aún no está configurado. Configúralo primero.",
+    "buttonEmpty": "El texto del botón no puede estar vacío.",
+    "messageEmpty": "El mensaje del panel no puede estar vacío.",
+    "blockPanel": "el panel de verificación está activado",
+    "blockAutoRoles": "hay roles automáticos configurados (Bienvenida y despedida)",
+    "blocked": "Para activar la verificación automática, primero desactiva: {list}.",
+    "atTop": "Esa pregunta ya está arriba del todo.",
+    "atBottom": "Esa pregunta ya está abajo del todo."
+  }
+}

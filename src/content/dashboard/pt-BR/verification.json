@@ -1,0 +1,129 @@
+{
+  "page": {
+    "help": "A verificação mantém bots e raiders do lado de fora. Novos membros só veem o resto do servidor depois de receber o cargo de verificado. Eles recebem ao apertar um botão no painel de verificação (uma mensagem que o Mewvo publica) ou ao entrar com o Discord. A verificação automática, em vez disso, dá o cargo assim que a pessoa entra. Você pode usar um ou outro, não os dois."
+  },
+  "panel": {
+    "title": "Painel de verificação",
+    "toggle": "Verificação",
+    "in": "Painel em {channel}.",
+    "publish": "Atualizar ou republicar o painel",
+    "none": "Ainda não há painel de verificação.",
+    "channel": "Publicar o painel em",
+    "channelHelp": "Escolha um canal que os novos membros veem antes de serem verificados.",
+    "role": "Cargo de verificado",
+    "roleSetupHelp": "O cargo que os membros recebem depois de verificados. Configure seus canais para que só esse cargo possa vê-los.",
+    "roleHelp": "O cargo que os membros recebem depois de verificados.",
+    "buttonText": "Texto do botão",
+    "message": "Mensagem do painel",
+    "messageHelp": "O texto acima do botão.",
+    "setup": "Configurar e publicar o painel",
+    "savingNote": "Salvar não muda a mensagem que já está no Discord. Aperte \"Atualizar ou republicar o painel\" para mostrar o texto novo."
+  },
+  "quiz": {
+    "title": "Quiz das regras",
+    "help": {
+      "one": "Antes de serem verificados, os membros respondem até {count} pergunta sobre suas regras. Eles precisam acertar todas; depois de um erro, esperam antes de tentar de novo, e não ficam sabendo qual resposta estava errada. Quem passa segue para a etapa normal de verificação. Desligado por padrão.",
+      "many": "Antes de serem verificados, os membros respondem até {count} perguntas sobre suas regras. Eles precisam acertar todas; depois de um erro, esperam antes de tentar de novo, e não ficam sabendo qual resposta estava errada. Quem passa segue para a etapa normal de verificação. Desligado por padrão.",
+      "other": "Antes de serem verificados, os membros respondem até {count} perguntas sobre suas regras. Eles precisam acertar todas; depois de um erro, esperam antes de tentar de novo, e não ficam sabendo qual resposta estava errada. Quem passa segue para a etapa normal de verificação. Desligado por padrão."
+    },
+    "toggle": "Quiz das regras",
+    "questionN": "Pergunta {n}",
+    "question": "Pergunta",
+    "placeholder": "Qual destas é uma regra aqui?",
+    "answerN": "Resposta {n}",
+    "answerOptional": "Resposta {n} (opcional)",
+    "correct": "Resposta certa",
+    "rightAnswer": "Resposta certa: {answer}",
+    "moveUp": "Subir",
+    "moveDown": "Descer",
+    "remove": "Remover",
+    "empty": "Ainda não há perguntas.",
+    "suggest": "Sugerir perguntas a partir das minhas regras",
+    "cooldown": "Espera depois de um erro (minutos)",
+    "cooldownHelp": {
+      "one": "De {min} a {count} minuto.",
+      "many": "De {min} a {count} minutos.",
+      "other": "De {min} a {count} minutos."
+    },
+    "submit": "Salvar perguntas",
+    "slotsNote": "Espaços de pergunta vazios são ignorados; limpe um espaço para remover aquela pergunta. As respostas aparecem em ordem aleatória a cada vez.",
+    "warnNoQuestions": "O quiz está ligado, mas não tem perguntas válidas, então conta como desligado: nada é perguntado aos membros. Adicione uma pergunta abaixo.",
+    "warnInvalid": {
+      "one": "{count} pergunta salva não é válida e é ignorada. Salve as perguntas de novo para corrigir isso.",
+      "many": "{count} perguntas salvas não são válidas e são ignoradas. Salve as perguntas de novo para corrigir isso.",
+      "other": "{count} perguntas salvas não são válidas e são ignoradas. Salve as perguntas de novo para corrigir isso."
+    },
+    "warnPanelOff": "O painel de verificação está desligado, então ninguém recebe o quiz até ele ser ligado.",
+    "suggestFull": {
+      "one": "A {count} pergunta já está usada. Remova-a para receber uma sugestão.",
+      "many": "Todas as {count} perguntas estão usadas. Remova uma para receber uma sugestão.",
+      "other": "Todas as {count} perguntas estão usadas. Remova uma para receber uma sugestão."
+    },
+    "suggestNoRules": "Ainda não há regras do servidor para sugerir. Adicione-as primeiro na página Regras.",
+    "suggested": {
+      "one": "{count} pergunta sugerida foi preenchida abaixo. Nada foi salvo ainda: confira, edite e depois aperte Salvar perguntas.",
+      "many": "{count} perguntas sugeridas foram preenchidas abaixo. Nada foi salvo ainda: confira, edite e depois aperte Salvar perguntas.",
+      "other": "{count} perguntas sugeridas foram preenchidas abaixo. Nada foi salvo ainda: confira, edite e depois aperte Salvar perguntas."
+    }
+  },
+  "auto": {
+    "title": "Verificação automática",
+    "toggle": "Verificação automática",
+    "criteria": "Quem é verificado automaticamente",
+    "criteriaHelp": "Quem não se encaixa ainda precisa usar o painel.",
+    "criteriaNone": "Todos",
+    "criteriaAge": "Contas mais antigas que os dias abaixo",
+    "criteriaSmall": "Todos, enquanto o servidor ainda é pequeno",
+    "criteriaLabel": "Critério",
+    "age": "Conta com mais de (dias)",
+    "ageHelp": "Só é usado quando você escolhe contas mais antigas que os dias abaixo. Contas novas são bots com mais frequência.",
+    "role": "Cargo dado",
+    "roleNone": "o cargo de verificado",
+    "roleHelp": "O cargo que os membros verificados automaticamente recebem.",
+    "roleLabel": "Cargo da verificação automática"
+  },
+  "web": {
+    "title": "Verificação pela web",
+    "help": "Os membros também podem se verificar numa página web, entrando com a conta do Discord.",
+    "page": "Página depois de \"Verificar com o Discord\"",
+    "pageHelp": "A página web para onde os membros vão depois de se verificar entrando com o Discord. Deixe vazio para a página padrão."
+  },
+  "action": {
+    "setUp": "Verificação configurada: o painel foi publicado e a verificação está ligada.",
+    "posted": "O painel estava faltando: um novo foi publicado.",
+    "updated": "O painel publicado agora mostra o texto salvo.",
+    "on": "A verificação agora está ligada.",
+    "off": "A verificação agora está desligada.",
+    "toggleNote": "Ligar ou desligar não publica nem remove a mensagem do painel. Para isso, use \"Atualizar ou republicar o painel\".",
+    "saved": "Configurações de verificação salvas.",
+    "autoOn": "A verificação automática agora está ligada.",
+    "autoOff": "A verificação automática agora está desligada.",
+    "autoSaved": "Configurações da verificação automática salvas.",
+    "quizOn": "O quiz das regras agora está ligado.",
+    "quizOff": "O quiz das regras agora está desligado.",
+    "quizEmpty": "Ele ainda não tem perguntas, então conta como desligado até você adicionar uma.",
+    "quizSaved": "Quiz das regras salvo.",
+    "quizNowEmpty": "O quiz está ligado, mas agora não tem perguntas, então conta como desligado.",
+    "directionLabel": "Direção",
+    "movedUp": "Pergunta movida para cima.",
+    "movedDown": "Pergunta movida para baixo.",
+    "removed": "Pergunta removida."
+  },
+  "error": {
+    "noQuestion": "{label}: escreva a pergunta ou limpe as respostas dela para removê-la.",
+    "answerCount": "{label}: dê de {min} a {max} respostas.",
+    "correctLabel": "{label}: resposta certa",
+    "correctEmpty": "{label}: a resposta certa (resposta {answer}) está vazia.",
+    "quizChanged": "As perguntas do quiz mudaram enquanto isso. Recarregue a página e tente de novo.",
+    "alreadySetUp": "O painel de verificação já está configurado. Use \"Atualizar ou republicar o painel\".",
+    "autoIsOn": "A verificação automática está ligada. Desligue-a antes de ligar o painel de verificação.",
+    "notSetUp": "O painel de verificação ainda não está configurado. Configure-o primeiro.",
+    "buttonEmpty": "O texto do botão não pode ficar vazio.",
+    "messageEmpty": "A mensagem do painel não pode ficar vazia.",
+    "blockPanel": "o painel de verificação está ligado",
+    "blockAutoRoles": "há cargos automáticos configurados (Boas-vindas e despedidas)",
+    "blocked": "Para ligar a verificação automática, primeiro desligue: {list}.",
+    "atTop": "Essa pergunta já está no topo.",
+    "atBottom": "Essa pergunta já está no fim."
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "page": {
+    "help": "Regala un premio a membri scelti a caso. Mewvo pubblica un messaggio di giveaway con un pulsante, i membri lo premono per partecipare e, allo scadere del tempo, Mewvo sceglie i vincitori. Riestrai sceglie nuovi vincitori. Per tutto qui serve il permesso Amministratore in questo server."
+  },
+  "needsAdmin": "Per gestire i giveaway ti serve il permesso Amministratore in questo server.",
+  "create": {
+    "title": "Avvia un giveaway",
+    "help": "Mewvo pubblica il messaggio di giveaway nel canale che scegli. Puoi farlo anche con /giveaway create su Discord.",
+    "channel": "Canale",
+    "channelHelp": "Dove viene pubblicato il messaggio di giveaway.",
+    "prize": "Premio",
+    "prizeHelp": "Cosa ricevono i vincitori, per esempio Nitro per un mese.",
+    "duration": "Durata",
+    "durationHelp": "Per quanto tempo i membri possono partecipare. Un numero e una lettera: s (secondi), m (minuti), h (ore) o d (giorni). Da 10 secondi a 30 giorni.",
+    "winners": "Vincitori",
+    "winnersHelp": "Quanti membri vincono. Da {min} a {max}.",
+    "submit": "Avvia giveaway"
+  },
+  "active": {
+    "title": "In corso",
+    "empty": "Nessun giveaway in corso."
+  },
+  "ended": {
+    "title": "Terminati (ultimi 25)",
+    "empty": "Nessun giveaway terminato."
+  },
+  "list": {
+    "prize": "Premio",
+    "channel": "Canale",
+    "ends": "Fine",
+    "ended": "Terminato",
+    "entries": "Partecipanti",
+    "winners": "Vincitori",
+    "endNow": "Termina ora",
+    "endConfirm": "Terminare ora questo giveaway e scegliere i vincitori?",
+    "reroll": "Riestrai",
+    "delete": "Elimina",
+    "deleteConfirm": "Eliminare il giveaway «{prize}» e il suo messaggio?",
+    "giveawayWord": "giveaway"
+  },
+  "random": {
+    "title": "Scegli un membro a caso",
+    "help": "Sceglie un membro a caso, per esempio per un'estrazione veloce. Il risultato appare in cima a questa pagina e viene salvato nella cronologia della dashboard. Su Discord non viene pubblicato nulla. Puoi farlo anche con /tools randomuser su Discord.",
+    "role": "Solo membri con questo ruolo",
+    "roleLabel": "Ruolo",
+    "anyone": "chiunque",
+    "bots": "Includi i bot",
+    "botsHelp": "Disattivato: gli account dei bot non vengono mai scelti.",
+    "online": "Solo membri online",
+    "onlineHelp": "Salta i membri che ora risultano offline.",
+    "submit": "Scegli un membro"
+  },
+  "error": {
+    "unknown": "Giveaway sconosciuto."
+  },
+  "action": {
+    "picked": {
+      "one": "Scelto @{name} ({id}) tra {count} membro adatto.",
+      "many": "Scelto @{name} ({id}) tra {count} di membri adatti.",
+      "other": "Scelto @{name} ({id}) tra {count} membri adatti."
+    },
+    "started": "Giveaway per «{prize}» avviato; termina tra {duration}.",
+    "ended": "Giveaway terminato: vincitori {winners}, partecipanti {entries}.",
+    "rerolled": "Nuova estrazione: nuovi vincitori {winners}.",
+    "channelGone": "Il canale non esiste più, quindi non è stato annunciato nulla.",
+    "deletedWithMessage": "Giveaway «{prize}» eliminato insieme al suo messaggio.",
+    "deletedMessageGone": "Giveaway «{prize}» eliminato (il suo messaggio non c'era già più)."
+  }
+}

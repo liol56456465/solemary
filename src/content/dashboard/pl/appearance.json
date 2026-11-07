@@ -1,0 +1,35 @@
+{
+  "page": {
+    "help": "Nadaj Mewvo własną nazwę i zdjęcie profilowe (awatar) na tym serwerze, żeby pasował do Twojego serwera. Inne serwery nadal widzą zwykłe."
+  },
+  "title": "Bot na tym serwerze",
+  "locked": "Własny pseudonim i awatar Mewvo na tym serwerze są w Mewvo Pro i Max, według planu właściciela serwera.",
+  "plans": "Plany",
+  "nickname": {
+    "title": "Pseudonim",
+    "label": "Pseudonim",
+    "help": "Nazwa, którą Mewvo pokazuje na tym serwerze. Zostaw puste, aby użyć zwykłej nazwy."
+  },
+  "avatar": {
+    "title": "Awatar",
+    "label": "Awatar (obraz PNG, JPEG, GIF lub WebP)",
+    "upload": "Prześlij awatar",
+    "reset": "Zwykły awatar",
+    "resetConfirm": "Wrócić do zwykłego awatara na tym serwerze?",
+    "own": "Ten serwer ma teraz własny awatar.",
+    "normal": "Ten serwer używa zwykłego awatara."
+  },
+  "error": {
+    "plan": "Własna nazwa i awatar bota na Twoim serwerze są w Mewvo Pro i Max, według planu właściciela serwera.",
+    "tooLong": "Pseudonim może mieć najwyżej {max} znaków.",
+    "choose": "Wybierz obraz do przesłania.",
+    "tooLarge": "Obraz jest za duży. Spróbuj mniejszego pliku.",
+    "notImage": "Ten plik nie jest obrazem PNG, JPEG, GIF ani WebP."
+  },
+  "action": {
+    "renamed": "Mewvo nazywa się tu teraz „{nick}”.",
+    "normalName": "Mewvo znów używa tu swojej zwykłej nazwy.",
+    "avatarSet": "Mewvo ma teraz własny awatar na tym serwerze. Discord może potrzebować minuty, żeby go pokazać.",
+    "avatarReset": "Mewvo znów używa tu swojego zwykłego awatara."
+  }
+}

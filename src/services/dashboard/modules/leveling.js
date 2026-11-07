@@ -20,24 +20,31 @@ import { roleSyncNote } from '../../leveling/levelRoleSyncService.js';
 import { logger } from '../../../utils/logger.js';
 import { EMBED_COLOURS, colourFromKey, parseHexColour } from '../../botMessageService.js';
 import { cardAccentOf } from '../../leveling/levelCard.js';
+import { textFor } from '../language.js';
+
+// Words: src/content/dashboard/<lang>/leveling.json. The cat's sentence, stage and mood come from
+// community/catModel.js and the role-sync note from leveling/levelRoleSyncService.js (English).
+// The default level-up message is stored config posted in Discord and stays as it is.
 
 const MAX_LEVEL = 1000;
+/** Audit keys: "leveling.<config key>" (not catalog keys). */
+const AUDIT = 'leveling.';
 
 const BOOST_FIELD = { channel: 'channelMultipliers', role: 'roleMultipliers' };
-const REWARD_MODE_CHOICES = [['keep', 'Keep all reward roles'], ['highest', 'Only the highest reward role']];
+const REWARD_MODES = ['keep', 'highest'];
 const boostText = (value) => `x${Number(value).toFixed(1)}`;
 const hexOf = (value) => `#${value.toString(16).padStart(6, '0').toUpperCase()}`;
 
 /** The card colour from the form: a typed colour code wins, else one of the fixed choices. */
-function cardAccentFromForm(form) {
+function cardAccentFromForm(form, tr) {
     const hex = text(form, 'hex', 7);
     if (hex) {
         const value = parseHexColour(hex);
-        if (value === null) throw new InputError('Card colour: write a colour code like #9B59B6, or leave it empty and pick from the list.', 400, 'hex');
+        if (value === null) throw new InputError(tr.t('leveling.error.cardHex'), 400, 'hex');
         return hexOf(value);
     }
     const value = colourFromKey(text(form, 'colour', 20) || 'primary');
-    if (value === null) throw new InputError('Card colour: unknown choice.', 400, 'colour');
+    if (value === null) throw new InputError(tr.t('leveling.error.cardColour'), 400, 'colour');
     return hexOf(value);
 }
 
@@ -49,8 +56,8 @@ const xpRangeOf = (cfg) => ({
 async function update(ctx, patch, message) {
     if (!Object.keys(patch).length) return NOTHING;
     const { before, after } = await ctx.services.updateLevelingConfig(ctx.client, ctx.guildId, patch);
-    const changes = diffSnapshots(before, after, Object.keys(patch), 'leveling.');
-    return { changes, message: changes.length ? message : 'Nothing changed.' };
+    const changes = diffSnapshots(before, after, Object.keys(patch), AUDIT);
+    return { changes, message: changes.length ? message : textFor(ctx).t('leveling.action.nothing') };
 }
 
 export default {
@@ -66,196 +73,217 @@ export default {
     },
 
     render(ctx, { cfg, cat }) {
+        const tr = textFor(ctx);
         const g = ctx.guild;
         const range = xpRangeOf(cfg);
+        const typeName = (type) => tr.t(type === 'channel' ? 'leveling.type.channel' : 'leveling.type.role');
         const settings = postForm(ctx, 'leveling', 'settings', html`<div class="grid">
-${numberInput('xpMin', range.min, { label: 'Least XP per message', min: 1, max: 500, help: 'Each message gives a random amount of XP between these two numbers.' })}
-${numberInput('xpMax', range.max, { label: 'Most XP per message', min: 1, max: 500 })}
-${numberInput('xpCooldown', cfg.xpCooldown ?? 60, { label: 'Wait between XP', min: 0, max: 3600, help: 'A member gets XP for one message at most this often, so spamming does not level them up faster. In seconds.' })}
-${channelPicker(g, 'levelUpChannel', cfg.levelUpChannel || null, { label: 'Level-up channel', perms: PERMS.post, noneLabel: 'where the member chatted', help: 'Where the level-up message is posted.' })}
-${switchInput('announceLevelUp', cfg.announceLevelUp !== false, { label: 'Announce level-ups', help: 'Off: members still level up, but no message is posted.' })}
-${textArea('levelUpMessage', cfg.levelUpMessage || '{user} is now level {level}.', { label: 'Level-up message', max: 500, rows: 2, help: 'You can use {user} (mentions the member) and {level} (their new level).' })}</div>`);
+${numberInput('xpMin', range.min, { label: tr.t('leveling.xp.min'), min: 1, max: 500, help: tr.t('leveling.xp.minHelp') })}
+${numberInput('xpMax', range.max, { label: tr.t('leveling.xp.max'), min: 1, max: 500 })}
+${numberInput('xpCooldown', cfg.xpCooldown ?? 60, { label: tr.t('leveling.xp.cooldown'), min: 0, max: 3600, help: tr.t('leveling.xp.cooldownHelp') })}
+${channelPicker(g, 'levelUpChannel', cfg.levelUpChannel || null, { label: tr.t('leveling.xp.channel'), perms: PERMS.post, noneLabel: tr.t('leveling.xp.channelNone'), help: tr.t('leveling.xp.channelHelp') })}
+${switchInput('announceLevelUp', cfg.announceLevelUp !== false, { label: tr.t('leveling.xp.announce'), help: tr.t('leveling.xp.announceHelp') })}
+${textArea('levelUpMessage', cfg.levelUpMessage || '{user} is now level {level}.', { label: tr.t('leveling.xp.message'), max: 500, rows: 2, help: tr.t('leveling.xp.messageHelp', { user: '{user}', level: '{level}' }) })}</div>`);
         const accent = cardAccentOf(cfg.cardAccent);
         const knownAccent = EMBED_COLOURS.find(([, , h]) => h.toUpperCase() === accent);
-        const card = postForm(ctx, 'leveling', 'card', html`${switchInput('levelUpCard', cfg.levelUpCard === true, { label: 'Add an image card to level-up messages', help: 'The card shows the member\'s picture and name, the new level, a bar to the next level and the server name. Off: only the text message is posted. If the card cannot be made, the text message is posted on its own.' })}
-<div class="grid">${selectInput('colour', knownAccent ? knownAccent[0] : 'primary', EMBED_COLOURS.map(([key, label, h]) => [key, `${label} (${h})`]), { label: 'Card colour', help: 'Used for the ring around the picture, the level and the bar.' })}
-${textInput('hex', knownAccent ? '' : accent, { label: 'Or a colour code', max: 7, placeholder: '#9B59B6', help: 'A # and six letters or numbers. When filled in, it is used instead of the colour above.' })}</div>`);
+        const colourLabel = (key, label) => (tr.has(`leveling.colours.${key}`) ? tr.t(`leveling.colours.${key}`) : label);
+        const card = postForm(ctx, 'leveling', 'card', html`${switchInput('levelUpCard', cfg.levelUpCard === true, { label: tr.t('leveling.card.toggle'), help: tr.t('leveling.card.toggleHelp') })}
+<div class="grid">${selectInput('colour', knownAccent ? knownAccent[0] : 'primary', EMBED_COLOURS.map(([key, label, h]) => [key, `${colourLabel(key, label)} (${h})`]), { label: tr.t('leveling.card.colour'), help: tr.t('leveling.card.colourHelp') })}
+${textInput('hex', knownAccent ? '' : accent, { label: tr.t('leveling.card.hex'), max: 7, placeholder: '#9B59B6', help: tr.t('leveling.card.hexHelp') })}</div>`);
+        const remove = tr.t('leveling.remove');
+        const add = tr.t('leveling.add');
         const ignoredRows = [
-            ...(cfg.ignoredChannels || []).map((id) => ['channel', channelName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', 'Remove', { type: 'channel', id })]),
-            ...(cfg.ignoredRoles || []).map((id) => ['role', roleName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', 'Remove', { type: 'role', id })]),
+            ...(cfg.ignoredChannels || []).map((id) => [typeName('channel'), channelName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', remove, { type: 'channel', id })]),
+            ...(cfg.ignoredRoles || []).map((id) => [typeName('role'), roleName(g, id), buttonForm(ctx, 'leveling', 'ignore-remove', remove, { type: 'role', id })]),
         ];
-        const ignored = html`${table(['Type', 'No XP for', ''], ignoredRows, 'Members earn XP in every channel.')}
-<div class="grid">${postForm(ctx, 'leveling', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'No XP in this channel', perms: [], optional: false })}`, { submit: 'Add', inline: true })}
-${postForm(ctx, 'leveling', 'ignore-add', html`<input type="hidden" name="type" value="role">${rolePicker(g, 'id', null, { label: 'No XP for this role', optional: false, assign: false })}`, { submit: 'Add', inline: true })}</div>`;
+        const ignored = html`${table([tr.t('leveling.ignored.type'), tr.t('leveling.ignored.noXpFor'), ''], ignoredRows, tr.t('leveling.ignored.empty'))}
+<div class="grid">${postForm(ctx, 'leveling', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: tr.t('leveling.ignored.addChannel'), perms: [], optional: false })}`, { submit: add, inline: true })}
+${postForm(ctx, 'leveling', 'ignore-add', html`<input type="hidden" name="type" value="role">${rolePicker(g, 'id', null, { label: tr.t('leveling.ignored.addRole'), optional: false, assign: false })}`, { submit: add, inline: true })}</div>`;
         const boostRows = [
-            ...Object.entries(cfg.channelMultipliers || {}).map(([id, value]) => ['channel', channelName(g, id), boostText(value), buttonForm(ctx, 'leveling', 'boost-remove', 'Remove', { type: 'channel', id })]),
-            ...Object.entries(cfg.roleMultipliers || {}).map(([id, value]) => ['role', roleName(g, id), boostText(value), buttonForm(ctx, 'leveling', 'boost-remove', 'Remove', { type: 'role', id })]),
+            ...Object.entries(cfg.channelMultipliers || {}).map(([id, value]) => [typeName('channel'), channelName(g, id), boostText(value), buttonForm(ctx, 'leveling', 'boost-remove', remove, { type: 'channel', id })]),
+            ...Object.entries(cfg.roleMultipliers || {}).map(([id, value]) => [typeName('role'), roleName(g, id), boostText(value), buttonForm(ctx, 'leveling', 'boost-remove', remove, { type: 'role', id })]),
         ];
-        const boostInput = numberInput('multiplier', '', { label: 'Boost', min: BOOST_MIN, max: BOOST_MAX, step: 0.1, help: `From ${BOOST_MIN} to ${BOOST_MAX}, like 1.5.` });
-        const boosts = html`${table(['Type', 'Boosted', 'Boost', ''], boostRows, 'No boosts. Every channel and role earns normal XP.')}
-<div class="grid">${postForm(ctx, 'leveling', 'boost-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'Channel', kinds: ['text', 'voice', 'forum'], perms: [], optional: false })}${boostInput}`, { submit: 'Add channel boost' })}
-${postForm(ctx, 'leveling', 'boost-add', html`<input type="hidden" name="type" value="role">${rolePicker(g, 'id', null, { label: 'Role', optional: false, assign: false, includeManaged: true })}${boostInput}`, { submit: 'Add role boost' })}</div>`;
+        const boostRange = { min: tr.fmtNumber(BOOST_MIN), max: tr.fmtNumber(BOOST_MAX) };
+        const boostInput = numberInput('multiplier', '', { label: tr.t('leveling.boosts.boost'), min: BOOST_MIN, max: BOOST_MAX, step: 0.1, help: tr.t('leveling.boosts.boostHelp', { ...boostRange, example: tr.fmtNumber(1.5) }) });
+        const boosts = html`${table([tr.t('leveling.ignored.type'), tr.t('leveling.boosts.boosted'), tr.t('leveling.boosts.boost'), ''], boostRows, tr.t('leveling.boosts.empty'))}
+<div class="grid">${postForm(ctx, 'leveling', 'boost-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: tr.t('leveling.boosts.channel'), kinds: ['text', 'voice', 'forum'], perms: [], optional: false })}${boostInput}`, { submit: tr.t('leveling.boosts.addChannel') })}
+${postForm(ctx, 'leveling', 'boost-add', html`<input type="hidden" name="type" value="role">${rolePicker(g, 'id', null, { label: tr.t('leveling.boosts.role'), optional: false, assign: false, includeManaged: true })}${boostInput}`, { submit: tr.t('leveling.boosts.addRole') })}</div>`;
         const rewards = Object.entries(cfg.roleRewards || {}).sort((a, b) => Number(a[0]) - Number(b[0]));
-        const rewardTable = html`${table(['Level', 'Role', 'Problems', ''], rewards.map(([level, roleId]) => [level, roleName(g, roleId),
-            roleWarnings(g, roleId, { autoAssign: true }).join('; ') || html`<span class="ok">ok</span>`,
-            buttonForm(ctx, 'leveling', 'reward-remove', 'Remove', { level })]), 'No role rewards.')}
-${postForm(ctx, 'leveling', 'reward-add', html`<div class="grid">${numberInput('level', '', { label: 'At level', min: 1, max: MAX_LEVEL })}
-${rolePicker(g, 'roleId', null, { label: 'Give this role', optional: false, autoAssign: true })}</div>`, { submit: 'Add reward' })}
-${postForm(ctx, 'leveling', 'reward-mode', selectInput('rewardMode', rewardModeOf(cfg), REWARD_MODE_CHOICES, {
-            label: 'Reward roles a member keeps',
-            help: 'Keep all: members keep every reward role they reached. Only the highest: when a member reaches a new reward, Mewvo gives that role and takes off the lower reward roles.',
-        }), { submit: 'Save' })}`;
+        const rewardTable = html`${table([tr.t('leveling.rewards.level'), tr.t('leveling.rewards.role'), tr.t('leveling.rewards.problems'), ''], rewards.map(([level, roleId]) => [level, roleName(g, roleId),
+            roleWarnings(g, roleId, { autoAssign: true }).join('; ') || html`<span class="ok">${tr.t('leveling.rewards.ok')}</span>`,
+            buttonForm(ctx, 'leveling', 'reward-remove', remove, { level })]), tr.t('leveling.rewards.empty'))}
+${postForm(ctx, 'leveling', 'reward-add', html`<div class="grid">${numberInput('level', '', { label: tr.t('leveling.rewards.atLevel'), min: 1, max: MAX_LEVEL })}
+${rolePicker(g, 'roleId', null, { label: tr.t('leveling.rewards.giveRole'), optional: false, autoAssign: true })}</div>`, { submit: tr.t('leveling.rewards.add') })}
+${postForm(ctx, 'leveling', 'reward-mode', selectInput('rewardMode', rewardModeOf(cfg), REWARD_MODES.map((mode) => [mode, tr.t(`leveling.rewards.mode.${mode}`)]), {
+            label: tr.t('leveling.rewards.modeLabel'),
+            help: tr.t('leveling.rewards.modeHelp'),
+        }), { submit: tr.t('leveling.rewards.modeSubmit'), reset: true })}`;
         const members = ctx.canAct
-            ? postForm(ctx, 'leveling', 'member', html`<div class="grid">${html`<label>Member (user ID)<input name="userId" inputmode="numeric" maxlength="20"><span class="hint">The long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID.</span></label>`}
-${selectInput('op', 'add', [['add', 'Add levels'], ['remove', 'Remove levels'], ['set', 'Set level']], { label: 'What to do' })}
-${numberInput('levels', '', { label: 'Levels', min: 0, max: MAX_LEVEL })}</div>`, { submit: 'Apply', canEdit: ctx.canEdit && ctx.canAct })
-            : html`<p class="muted">To change a member's level you need the Administrator permission in this server.</p>`;
+            ? postForm(ctx, 'leveling', 'member', html`<div class="grid">${html`<label>${tr.t('leveling.member.userId')}<input name="userId" inputmode="numeric" maxlength="20"><span class="hint">${tr.t('leveling.member.userIdHelp')}</span></label>`}
+${selectInput('op', 'add', [['add', tr.t('leveling.member.op.add')], ['remove', tr.t('leveling.member.op.remove')], ['set', tr.t('leveling.member.op.set')]], { label: tr.t('leveling.member.opLabel') })}
+${numberInput('levels', '', { label: tr.t('leveling.member.levels'), min: 0, max: MAX_LEVEL })}</div>`, { submit: tr.t('leveling.member.apply'), canEdit: ctx.canEdit && ctx.canAct })
+            : html`<p class="muted">${tr.tx('leveling.member.needsAdmin')}</p>`;
         const catEdit = ctx.canEdit && ctx.canAct;
+        // English keeps the en-US grouping it always showed ("12,345").
+        const catTotal = cat ? (tr.lang === 'en' ? Number(cat.total).toLocaleString('en-US') : tr.fmtNumber(Number(cat.total))) : '';
         const catNow = cat
-            ? html`<div class="cat-now"><img src="/img/cat/${cat.image}" width="96" height="96" alt="${cat.name}, a ${cat.stage.name.toLowerCase()}, looking ${cat.mood}"><p>${cat.sentence} Stage: ${cat.stage.name}. ${Number(cat.total).toLocaleString('en-US')} messages counted.</p></div>`
-            : html`<p class="muted">The cat could not be loaded right now (the database is not responding). Reload to try again.</p>`;
+            ? html`<div class="cat-now"><img src="/img/cat/${cat.image}" width="96" height="96" alt="${tr.t('leveling.cat.alt', { name: cat.name, stage: cat.stage.name.toLowerCase(), mood: cat.mood })}"><p>${tr.tp('leveling.cat.now', Number(cat.total) || 0, { sentence: cat.sentence, stage: cat.stage.name, total: catTotal })}</p></div>`
+            : html`<p class="muted">${tr.t('leveling.cat.notLoaded')}</p>`;
         const catName = postForm(ctx, 'leveling', 'cat-name', textInput('catName', registryValue(ctx, 'catName'), {
-            label: 'Name', max: CAT_NAME_MAX, help: 'Letters, numbers and spaces. Other characters are left out.',
-        }), { submit: 'Save name', canEdit: catEdit });
+            label: tr.t('leveling.cat.name'), max: CAT_NAME_MAX, help: tr.t('leveling.cat.nameHelp'),
+        }), { submit: tr.t('leveling.cat.saveName'), canEdit: catEdit, reset: true });
         const catAnnounce = toggleForm(ctx, 'leveling', 'cat-announce', registryValue(ctx, 'catAnnounce') !== false, {
-            label: 'Post in the level-up channel when the cat grows', canEdit: catEdit,
+            label: tr.t('leveling.cat.announce'), canEdit: catEdit,
         });
-        const catPart = html`${catNow}${catName}${catAnnounce}${ctx.canAct ? '' : html`<p class="muted">You need the Administrator permission in this server to change the cat.</p>`}`;
+        const catPart = html`${catNow}${catName}${catAnnounce}${ctx.canAct ? '' : html`<p class="muted">${tr.t('leveling.cat.needsAdmin')}</p>`}`;
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
-        // v6: cards grouped by topic (common.js topic/section).
-        return html`${topic('Earning XP', 'How fast members level up, and what Mewvo posts when they do.', html`${section('XP and messages', settings, 'XP per message, the wait between XP, and the level-up message.')}
-${section('Level-up card', card, ['An image with the level-up message.', 'Members can also see the same card with /rank card:True. Mewvo needs the Attach Files permission in the level-up channel; without it only the text is posted.'])}
-${section('XP boosts', boosts, [`More XP in some channels or for some roles, from x${BOOST_MIN} to x${BOOST_MAX}.`, `A thread counts as its channel. If a member has several boosted roles, only the highest role boost counts. Channel boost times role boost is never more than x${TOTAL_MULTIPLIER_CAP}.`], { size: 'normal' })}
-${section('No XP in', ignored, 'Members get no XP in these channels, and members with these roles get none at all. Useful for bot or spam channels.', { size: 'normal' })}`)}
-${topic('Rewards and levels', 'Roles for reaching a level, and changing a level by hand.', html`${section('Role rewards', rewardTable, 'Members get these roles by themselves when they reach the level. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers.', { size: 'normal' })}
-${section('Member levels', members, 'Change one member\'s level by hand. You can also do this with /level add, /level remove and /level set in Discord.')}`)}
-${topic('Server cat', 'A cat that grows as members chat, from Kitten to Legend.', section('Server cat', catPart, ['Its name, and whether Mewvo posts when it grows.', 'Members see it with /cat view and on the website leaderboard. When it grows, Mewvo posts once in the level-up channel (if one is set).'], { size: 'full' }))}`;
+        // v6: cards grouped by topic (common.js topic/section). Keys: the English titles' slugs (stable ids in every language).
+        return html`${topic(tr.t('leveling.topic.earning'), tr.t('leveling.topic.earningLine'), html`${section(tr.t('leveling.xp.title'), settings, tr.t('leveling.xp.help'), { key: 'xp-and-messages' })}
+${section(tr.t('leveling.card.title'), card, [tr.t('leveling.card.help'), tr.t('leveling.card.more')], { key: 'level-up-card' })}
+${section(tr.t('leveling.boosts.title'), boosts, [tr.t('leveling.boosts.help', boostRange), tr.t('leveling.boosts.more', { cap: tr.fmtNumber(TOTAL_MULTIPLIER_CAP) })], { key: 'xp-boosts', size: 'normal' })}
+${section(tr.t('leveling.ignored.title'), ignored, tr.t('leveling.ignored.help'), { key: 'no-xp-in', size: 'normal' })}`, { key: 'earning-xp' })}
+${topic(tr.t('leveling.topic.rewards'), tr.t('leveling.topic.rewardsLine'), html`${section(tr.t('leveling.rewards.title'), rewardTable, tr.t('leveling.rewards.help'), { key: 'role-rewards', size: 'normal' })}
+${section(tr.t('leveling.member.title'), members, tr.t('leveling.member.help'), { key: 'member-levels' })}`, { key: 'rewards-and-levels' })}
+${topic(tr.t('leveling.topic.cat'), tr.t('leveling.topic.catLine'), section(tr.t('leveling.cat.title'), catPart, [tr.t('leveling.cat.help'), tr.t('leveling.cat.more')], { key: 'server-cat', size: 'full' }), { key: 'server-cat' })}`;
     },
 
     actions: {
         'cat-name': {
             admin: true,
             async run(ctx, form) {
+                const tr = textFor(ctx);
                 const name = sanitizeCatName(text(form, 'catName', CAT_NAME_MAX));
-                if (!name) throw new InputError('Name: use letters, numbers and spaces.', 400, 'catName');
+                if (!name) throw new InputError(tr.t('leveling.error.catName'), 400, 'catName');
                 const patch = changedOnly({ catName: name }, { catName: registryValue(ctx, 'catName') });
                 if (!Object.keys(patch).length) return NOTHING;
                 const result = await saveRegistry(ctx, patch, 'leveling');
-                return { ...result, message: `The server cat is now called ${name}.` };
+                return { ...result, message: tr.t('leveling.action.catNamed', { name }) };
             },
         },
         'cat-announce': {
             admin: true,
             async run(ctx, form) {
-                const enabled = boolField(form, 'enabled', 'Cat growth announcement');
+                const tr = textFor(ctx);
+                const enabled = boolField(form, 'enabled', tr.t('leveling.action.catAnnounceLabel'));
                 const patch = changedOnly({ catAnnounce: enabled }, { catAnnounce: registryValue(ctx, 'catAnnounce') !== false });
                 if (!Object.keys(patch).length) return NOTHING;
                 const result = await saveRegistry(ctx, patch, 'leveling');
-                return { ...result, message: `Cat growth posts are ${enabled ? 'on' : 'off'}.` };
+                return { ...result, message: tr.t(enabled ? 'leveling.action.catPostsOn' : 'leveling.action.catPostsOff') };
             },
         },
         async enabled(ctx, form) {
-            const enabled = boolField(form, 'enabled', 'Leveling');
-            return update(ctx, { enabled }, `Leveling is now ${enabled ? 'on' : 'off'}.`);
+            const tr = textFor(ctx);
+            const enabled = boolField(form, 'enabled', tr.t('leveling.action.enabledLabel'));
+            return update(ctx, { enabled }, tr.t(enabled ? 'leveling.action.enabledOn' : 'leveling.action.enabledOff'));
         },
         async settings(ctx, form) {
+            const tr = textFor(ctx);
             const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
-            const min = intField(form, 'xpMin', { min: 1, max: 500, label: 'Least XP per message' });
-            const max = intField(form, 'xpMax', { min: 1, max: 500, label: 'Most XP per message' });
-            if (min > max) throw new InputError('Least XP per message cannot be more than Most XP per message.');
+            const min = intField(form, 'xpMin', { min: 1, max: 500, label: tr.t('leveling.xp.min') });
+            const max = intField(form, 'xpMax', { min: 1, max: 500, label: tr.t('leveling.xp.max') });
+            if (min > max) throw new InputError(tr.t('leveling.error.minMax'));
             const range = xpRangeOf(cfg);
             const patch = changedOnly({
-                xpCooldown: intField(form, 'xpCooldown', { min: 0, max: 3600, label: 'Wait between XP' }),
-                levelUpChannel: channelField(ctx.guild, form, 'levelUpChannel', { label: 'Level-up channel' }),
+                xpCooldown: intField(form, 'xpCooldown', { min: 0, max: 3600, label: tr.t('leveling.xp.cooldown') }),
+                levelUpChannel: channelField(ctx.guild, form, 'levelUpChannel', { label: tr.t('leveling.xp.channel') }),
                 announceLevelUp: checkbox(form, 'announceLevelUp'),
                 levelUpMessage: text(form, 'levelUpMessage', 500) || cfg.levelUpMessage || '{user} is now level {level}.',
             }, { ...cfg, xpCooldown: cfg.xpCooldown ?? 60, announceLevelUp: cfg.announceLevelUp !== false, levelUpChannel: cfg.levelUpChannel || null });
             if (min !== range.min || max !== range.max) patch.xpRange = { min, max };
-            return update(ctx, patch, 'Leveling settings saved.');
+            return update(ctx, patch, tr.t('leveling.action.settingsSaved'));
         },
         async card(ctx, form) {
+            const tr = textFor(ctx);
             const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
             const patch = changedOnly({
                 levelUpCard: checkbox(form, 'levelUpCard'),
-                cardAccent: cardAccentFromForm(form),
+                cardAccent: cardAccentFromForm(form, tr),
             }, { levelUpCard: cfg.levelUpCard === true, cardAccent: cardAccentOf(cfg.cardAccent) });
-            return update(ctx, patch, 'Level-up card settings saved.');
+            return update(ctx, patch, tr.t('leveling.action.cardSaved'));
         },
         async 'ignore-add'(ctx, form) {
-            const type = choiceField(form, 'type', ['channel', 'role'], 'Type');
+            const tr = textFor(ctx);
+            const type = choiceField(form, 'type', ['channel', 'role'], tr.t('leveling.ignored.type'));
             const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
             const field = type === 'channel' ? 'ignoredChannels' : 'ignoredRoles';
             const id = type === 'channel'
-                ? channelField(ctx.guild, form, 'id', { optional: false, kinds: ['text', 'voice', 'forum'], label: 'Channel' })
+                ? channelField(ctx.guild, form, 'id', { optional: false, kinds: ['text', 'voice', 'forum'], label: tr.t('leveling.boosts.channel') })
                 : text(form, 'id', 25);
-            if (type === 'role' && !ctx.guild?.roles?.cache?.get(id)) throw new InputError('Role: that role is not in the server.');
+            if (type === 'role' && !ctx.guild?.roles?.cache?.get(id)) throw new InputError(tr.t('leveling.error.roleMissing'));
             const list = cfg[field] || [];
-            if (list.includes(id)) return { changes: [], message: 'Already on the list.' };
-            return update(ctx, { [field]: [...list, id] }, 'No XP there from now on.');
+            if (list.includes(id)) return { changes: [], message: tr.t('leveling.action.alreadyListed') };
+            return update(ctx, { [field]: [...list, id] }, tr.t('leveling.action.ignoreAdded'));
         },
         async 'ignore-remove'(ctx, form) {
-            const type = choiceField(form, 'type', ['channel', 'role'], 'Type');
+            const tr = textFor(ctx);
+            const type = choiceField(form, 'type', ['channel', 'role'], tr.t('leveling.ignored.type'));
             const id = text(form, 'id', 25);
             const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
             const field = type === 'channel' ? 'ignoredChannels' : 'ignoredRoles';
             const list = cfg[field] || [];
-            if (!list.includes(id)) return { changes: [], message: 'It was not on the list.' };
-            return update(ctx, { [field]: list.filter((x) => x !== id) }, 'Removed.');
+            if (!list.includes(id)) return { changes: [], message: tr.t('leveling.action.notListed') };
+            return update(ctx, { [field]: list.filter((x) => x !== id) }, tr.t('leveling.action.removed'));
         },
         async 'boost-add'(ctx, form) {
-            const type = choiceField(form, 'type', ['channel', 'role'], 'Type');
+            const tr = textFor(ctx);
+            const type = choiceField(form, 'type', ['channel', 'role'], tr.t('leveling.ignored.type'));
             const id = type === 'channel'
-                ? channelField(ctx.guild, form, 'id', { optional: false, kinds: ['text', 'voice', 'forum'], label: 'Channel' })
-                : roleField(ctx.guild, form, 'id', { optional: false, label: 'Role', allowManaged: true });
-            const multiplier = decimalField(form, 'multiplier', { min: BOOST_MIN, max: BOOST_MAX, decimals: 1, label: 'Boost' });
+                ? channelField(ctx.guild, form, 'id', { optional: false, kinds: ['text', 'voice', 'forum'], label: tr.t('leveling.boosts.channel') })
+                : roleField(ctx.guild, form, 'id', { optional: false, label: tr.t('leveling.boosts.role'), allowManaged: true });
+            const multiplier = decimalField(form, 'multiplier', { min: BOOST_MIN, max: BOOST_MAX, decimals: 1, label: tr.t('leveling.boosts.boost') });
             const field = BOOST_FIELD[type];
             const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
             const current = cfg[field] || {};
-            if (current[id] === multiplier) return { changes: [], message: 'That boost is already set.' };
-            if (!(id in current) && Object.keys(current).length >= MAX_BOOSTS) throw new InputError(`At most ${MAX_BOOSTS} ${type} boosts.`);
+            if (current[id] === multiplier) return { changes: [], message: tr.t('leveling.action.boostSame') };
+            if (!(id in current) && Object.keys(current).length >= MAX_BOOSTS) {
+                throw new InputError(tr.tp(type === 'channel' ? 'leveling.error.maxChannelBoosts' : 'leveling.error.maxRoleBoosts', MAX_BOOSTS));
+            }
             const { before, after } = await ctx.services.setLevelBoost(ctx.client, ctx.guildId, type, id, multiplier);
-            const changes = diffSnapshots(before?.[field] || {}, after?.[field] || {}, null, `leveling.${field}.`);
-            return { changes, message: `That ${type} now gives ${boostText(multiplier)} XP.` };
+            const changes = diffSnapshots(before?.[field] || {}, after?.[field] || {}, null, `${AUDIT}${field}.`);
+            return { changes, message: tr.t(type === 'channel' ? 'leveling.action.channelBoostSet' : 'leveling.action.roleBoostSet', { boost: boostText(multiplier) }) };
         },
         async 'boost-remove'(ctx, form) {
-            const type = choiceField(form, 'type', ['channel', 'role'], 'Type');
+            const tr = textFor(ctx);
+            const type = choiceField(form, 'type', ['channel', 'role'], tr.t('leveling.ignored.type'));
             const id = text(form, 'id', 25);
             const field = BOOST_FIELD[type];
             const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
-            if (!(id in (cfg[field] || {}))) return { changes: [], message: 'There was no boost for that.' };
+            if (!(id in (cfg[field] || {}))) return { changes: [], message: tr.t('leveling.action.noBoost') };
             const { before, after } = await ctx.services.setLevelBoost(ctx.client, ctx.guildId, type, id, null);
-            const changes = diffSnapshots(before?.[field] || {}, after?.[field] || {}, null, `leveling.${field}.`);
-            return { changes, message: 'Boost removed.' };
+            const changes = diffSnapshots(before?.[field] || {}, after?.[field] || {}, null, `${AUDIT}${field}.`);
+            return { changes, message: tr.t('leveling.action.boostRemoved') };
         },
         async 'reward-mode'(ctx, form) {
-            const rewardMode = choiceField(form, 'rewardMode', REWARD_MODE_CHOICES.map(([v]) => v), 'Reward roles a member keeps');
+            const tr = textFor(ctx);
+            const rewardMode = choiceField(form, 'rewardMode', REWARD_MODES, tr.t('leveling.rewards.modeLabel'));
             const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
             const patch = changedOnly({ rewardMode }, { rewardMode: rewardModeOf(cfg) });
-            return update(ctx, patch, rewardMode === 'highest'
-                ? 'Members now keep only their highest reward role. It applies to each member when they level up, and to everyone the next time Mewvo restarts.'
-                : 'Members now keep all their reward roles.');
+            return update(ctx, patch, tr.t(rewardMode === 'highest' ? 'leveling.action.modeHighest' : 'leveling.action.modeKeep'));
         },
         async 'reward-add'(ctx, form) {
-            const level = intField(form, 'level', { min: 1, max: MAX_LEVEL, label: 'Level' });
-            const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: 'Reward role' });
+            const tr = textFor(ctx);
+            const level = intField(form, 'level', { min: 1, max: MAX_LEVEL, label: tr.t('leveling.rewards.level') });
+            const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: tr.t('leveling.rewards.rewardRole') });
             const { before, after } = await ctx.services.setLevelRoleReward(ctx.client, ctx.guildId, level, roleId);
-            const changes = diffSnapshots(before?.roleRewards || {}, after?.roleRewards || {}, null, 'leveling.roleRewards.');
-            return { changes, message: `Level ${level} now gives that role.` };
+            const changes = diffSnapshots(before?.roleRewards || {}, after?.roleRewards || {}, null, `${AUDIT}roleRewards.`);
+            return { changes, message: tr.t('leveling.action.rewardAdded', { level: tr.fmtNumber(level) }) };
         },
         async 'reward-remove'(ctx, form) {
-            const level = intField(form, 'level', { min: 1, max: MAX_LEVEL, label: 'Level' });
+            const tr = textFor(ctx);
+            const level = intField(form, 'level', { min: 1, max: MAX_LEVEL, label: tr.t('leveling.rewards.level') });
             const { before, after } = await ctx.services.setLevelRoleReward(ctx.client, ctx.guildId, level, null);
-            const changes = diffSnapshots(before?.roleRewards || {}, after?.roleRewards || {}, null, 'leveling.roleRewards.');
-            return { changes, message: changes.length ? `Removed the level ${level} reward.` : 'There was no reward for that level.' };
+            const changes = diffSnapshots(before?.roleRewards || {}, after?.roleRewards || {}, null, `${AUDIT}roleRewards.`);
+            return { changes, message: changes.length ? tr.t('leveling.action.rewardRemoved', { level: tr.fmtNumber(level) }) : tr.t('leveling.action.noReward') };
         },
         member: {
             admin: true,
             async run(ctx, form) {
-                const userId = userIdField(form, 'userId', 'Member ID');
-                const op = choiceField(form, 'op', ['add', 'remove', 'set'], 'Action');
-                const levels = intField(form, 'levels', { min: op === 'set' ? 0 : 1, max: MAX_LEVEL, label: 'Levels' });
+                const tr = textFor(ctx);
+                const userId = userIdField(form, 'userId', tr.t('leveling.member.memberId'));
+                const op = choiceField(form, 'op', ['add', 'remove', 'set'], tr.t('leveling.member.actionLabel'));
+                const levels = intField(form, 'levels', { min: op === 'set' ? 0 : 1, max: MAX_LEVEL, label: tr.t('leveling.member.levels') });
                 const member = await ctx.guild?.members?.fetch?.(userId).catch(() => null);
-                if (!member) throw new InputError('That member is not in the server.');
+                if (!member) throw new InputError(tr.t('leveling.error.memberMissing'));
                 const before = await ctx.services.getUserLevelData(ctx.client, ctx.guildId, userId);
                 if (op === 'add') await ctx.services.addLevels(ctx.client, ctx.guildId, userId, levels);
                 else if (op === 'remove') await ctx.services.removeLevels(ctx.client, ctx.guildId, userId, levels);
@@ -269,9 +297,10 @@ ${topic('Server cat', 'A cat that grows as members chat, from Kitten to Legend.'
                         return { added: [], removed: [], skipped: [], errors: 1 };
                     });
                 const note = roleSyncNote(roleSync);
+                const done = tr.t('leveling.action.memberDone', { name: member.user?.username || userId, level: tr.fmtNumber(after.level) });
                 return {
                     changes: [{ key: `member.${userId}.level`, old: before.level, new: after.level }],
-                    message: `${member.user?.username || userId} is now level ${after.level}.${note ? ` ${note}` : ''}`,
+                    message: `${done}${note ? ` ${note}` : ''}`,
                 };
             },
         },

@@ -1,0 +1,53 @@
+{
+  "page": {
+    "help": "Let members pick their own roles, like colours, pronouns or games. Mewvo posts a message (a panel) with a menu, and members choose the roles they want from it. Mewvo only offers roles below its own role in the role list, never roles with staff powers, and never roles that belong to another bot or app."
+  },
+  "create": {
+    "title": "New panel",
+    "help": "You can also do this with /reactroles setup in Discord.",
+    "needsAdmin": " To post a panel you need the Administrator permission in this server.",
+    "max": "This server has the maximum of {count} panels. Delete one to create another.",
+    "postIn": "Post in",
+    "postInHelp": "The channel where the panel is posted.",
+    "titleLabel": "Title",
+    "titleHelp": "For example: Pick your colour.",
+    "description": "Description",
+    "descriptionHelp": "A few words under the title about what the roles are for.",
+    "roles": "Roles",
+    "rolesHelp": "Up to 25. To pick more than one, hold Ctrl (Cmd on a Mac) while you click.",
+    "submit": "Create and post the panel"
+  },
+  "panel": {
+    "title": "Panel {id}",
+    "info": "In {channel} · message {message} · {count}/25 roles",
+    "ok": "ok",
+    "remove": "Remove",
+    "role": "Role",
+    "problems": "Problems",
+    "noRoles": "No roles.",
+    "addRole": "Add role",
+    "add": "Add",
+    "delete": "Delete panel",
+    "deleteConfirm": "Delete this panel and its message in Discord?"
+  },
+  "panels": {
+    "title": "Panels",
+    "empty": "No reaction role panels yet."
+  },
+  "action": {
+    "unknownPanel": "Unknown panel.",
+    "chooseRole": "Choose at least one role.",
+    "posted": {
+      "one": "Panel posted with {count} role(s).",
+      "other": "Panel posted with {count} role(s)."
+    },
+    "skipped": "Skipped: {list}",
+    "roleMissing": "Role: that role is not in the server.",
+    "roleAdded": "Role added to the panel.",
+    "unknownRole": "Unknown role.",
+    "lastRole": "That was the last role: the panel was deleted.",
+    "roleRemoved": "Role removed from the panel.",
+    "panelGone": "That panel no longer exists.",
+    "panelDeleted": "Panel deleted."
+  }
+}

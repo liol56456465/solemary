@@ -1,0 +1,59 @@
+{
+  "page": {
+    "help": "Mewvo note dans un salon de journal ce qui se passe sur le serveur : messages supprimés et modifiés, arrivées et départs de membres, changements de rôles et plus encore. L’équipe peut y revenir plus tard. Tu peux aussi modifier ces réglages avec /logging dans Discord. La liste des sanctions (le journal de modération) se règle sur Sanctions et appels."
+  },
+  "modLog": {
+    "title": "Journal de modération",
+    "text": "Le journal de modération liste chaque avertissement, mute, kick et ban. Il est publié dans {channel}. Tu peux {change}. Les journaux des tickets se règlent sur {tickets}.",
+    "change": "le changer sur Sanctions et appels",
+    "tickets": "Tickets et modmail"
+  },
+  "channels": {
+    "title": "Salons",
+    "help": "Où va chaque type de journal. Choisir un salon active la journalisation.",
+    "audit": "Salon de journal principal (tout le reste)",
+    "applications": "Candidatures",
+    "reports": "Signalements",
+    "submit": "Enregistrer les salons"
+  },
+  "events": {
+    "title": "Événements",
+    "help": "Choisis ce qui est journalisé. Ouvre un groupe pour voir ses événements. Décocher le groupe entier désactive tous ses événements.",
+    "count": "{on}/{total} événements activés",
+    "categoryOff": "catégorie désactivée",
+    "whole": "{category} (catégorie entière)",
+    "submit": "Enregistrer les événements"
+  },
+  "ignore": {
+    "title": "Listes d’exclusion",
+    "help": "Rien n’est journalisé depuis ces salons (et leurs fils), pour les membres ayant ces rôles, ni pour ces membres. Pratique pour les salons de bots ou les espaces de l’équipe.",
+    "type": "Type",
+    "ignored": "Exclu",
+    "empty": "Rien n’est exclu.",
+    "typeChannel": "salon",
+    "typeRole": "rôle",
+    "typeUser": "utilisateur",
+    "remove": "Retirer",
+    "add": "Ajouter",
+    "channel": "Exclure un salon",
+    "role": "Exclure un rôle",
+    "member": "Exclure un membre"
+  },
+  "action": {
+    "label": "Journalisation",
+    "on": "La journalisation est maintenant activée.",
+    "off": "La journalisation est maintenant désactivée.",
+    "channelsSaved": "Salons de journal enregistrés.",
+    "eventsSaved": "Journalisation des événements enregistrée.",
+    "channelLabel": "Salon",
+    "userIdLabel": "ID utilisateur",
+    "roleMissing": "Rôle : ce rôle n’est pas sur le serveur.",
+    "already": "Déjà exclu.",
+    "ignoringChannel": "Ce salon est maintenant exclu des journaux.",
+    "ignoringRole": "Ce rôle est maintenant exclu des journaux.",
+    "ignoringUser": "Cet utilisateur est maintenant exclu des journaux.",
+    "badId": "Ce n’est pas un ID valide (un long nombre).",
+    "notListed": "Ce n’était pas dans la liste.",
+    "removed": "Retiré de la liste d’exclusion."
+  }
+}

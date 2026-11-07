@@ -1,0 +1,124 @@
+{
+  "page": {
+    "help": "Verification keeps bots and raiders out. New members only see the rest of the server after they get the verified role. They get it by pressing a button on the verification panel (a message Mewvo posts) or by signing in with Discord. Auto-verify gives the role as soon as they join instead. You can use one or the other, not both."
+  },
+  "panel": {
+    "title": "Verification panel",
+    "toggle": "Verification",
+    "in": "Panel in {channel}.",
+    "publish": "Update or re-post the panel",
+    "none": "No verification panel yet.",
+    "channel": "Post the panel in",
+    "channelHelp": "Pick a channel new members can see before they are verified.",
+    "role": "Verified role",
+    "roleSetupHelp": "The role members get once verified. Set your channels so that only this role can see them.",
+    "roleHelp": "The role members get once verified.",
+    "buttonText": "Button text",
+    "message": "Panel message",
+    "messageHelp": "The text above the button.",
+    "setup": "Set up and post the panel",
+    "savingNote": "Saving does not change the message already in Discord. Press \"Update or re-post the panel\" to show the new text."
+  },
+  "quiz": {
+    "title": "Rules quiz",
+    "help": {
+      "one": "Before members get verified, they answer up to {count} question about your rules. They need every answer right; after a wrong try they wait before trying again, and they are not told which answer was wrong. Members who pass go on to the normal verification step. Off by default.",
+      "other": "Before members get verified, they answer up to {count} questions about your rules. They need every answer right; after a wrong try they wait before trying again, and they are not told which answer was wrong. Members who pass go on to the normal verification step. Off by default."
+    },
+    "toggle": "Rules quiz",
+    "questionN": "Question {n}",
+    "question": "Question",
+    "placeholder": "Which of these is a rule here?",
+    "answerN": "Answer {n}",
+    "answerOptional": "Answer {n} (optional)",
+    "correct": "Correct answer",
+    "rightAnswer": "Right answer: {answer}",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "remove": "Remove",
+    "empty": "No questions yet.",
+    "suggest": "Suggest questions from my rules",
+    "cooldown": "Wait after a wrong try (minutes)",
+    "cooldownHelp": {
+      "one": "{min} to {count} minute.",
+      "other": "{min} to {count} minutes."
+    },
+    "submit": "Save questions",
+    "slotsNote": "Empty question slots are skipped; clear a slot to remove that question. The answers are shown in a random order each time.",
+    "warnNoQuestions": "The quiz is on but has no valid questions, so it is treated as off: members are not asked anything. Add a question below.",
+    "warnInvalid": {
+      "one": "{count} stored question is not valid and skipped. Save the questions again to clean this up.",
+      "other": "{count} stored questions are not valid and skipped. Save the questions again to clean this up."
+    },
+    "warnPanelOff": "The verification panel is off, so nobody gets the quiz until it is on.",
+    "suggestFull": {
+      "one": "All {count} question is used. Remove one to get a suggestion.",
+      "other": "All {count} questions are used. Remove one to get a suggestion."
+    },
+    "suggestNoRules": "There are no server rules to suggest from yet. Add them on the Rules page first.",
+    "suggested": {
+      "one": "{count} suggested question is filled in below. Nothing is saved yet: check them, edit them, then press Save questions.",
+      "other": "{count} suggested questions are filled in below. Nothing is saved yet: check them, edit them, then press Save questions."
+    }
+  },
+  "auto": {
+    "title": "Auto-verify",
+    "toggle": "Auto-verify",
+    "criteria": "Who is auto-verified",
+    "criteriaHelp": "Members who do not match still have to use the panel.",
+    "criteriaNone": "Everyone",
+    "criteriaAge": "Accounts older than the days below",
+    "criteriaSmall": "Everyone, while the server is still small",
+    "criteriaLabel": "Criteria",
+    "age": "Account older than (days)",
+    "ageHelp": "Only used when you pick accounts older than the days below. New accounts are more often bots.",
+    "role": "Role given",
+    "roleNone": "the verified role",
+    "roleHelp": "The role auto-verified members get.",
+    "roleLabel": "Auto-verify role"
+  },
+  "web": {
+    "title": "Web verification",
+    "help": "Members can also verify on a web page by signing in with their Discord account.",
+    "page": "Page after \"Verify with Discord\"",
+    "pageHelp": "The web page members land on after they verify by signing in with Discord. Leave empty for the default page."
+  },
+  "action": {
+    "setUp": "Verification set up: the panel is posted and verification is on.",
+    "posted": "The panel was missing: a new one is posted.",
+    "updated": "The live panel now shows the saved text.",
+    "on": "Verification is now on.",
+    "off": "Verification is now off.",
+    "toggleNote": "Turning it on or off does not post or remove the panel message. Use \"Update or re-post the panel\" for that.",
+    "saved": "Verification settings saved.",
+    "autoOn": "Auto-verify is now on.",
+    "autoOff": "Auto-verify is now off.",
+    "autoSaved": "Auto-verify settings saved.",
+    "quizOn": "The rules quiz is now on.",
+    "quizOff": "The rules quiz is now off.",
+    "quizEmpty": "It has no questions yet, so it is treated as off until you add one.",
+    "quizSaved": "Rules quiz saved.",
+    "quizNowEmpty": "The quiz is on but has no questions now, so it is treated as off.",
+    "directionLabel": "Direction",
+    "movedUp": "Question moved up.",
+    "movedDown": "Question moved down.",
+    "removed": "Question removed."
+  },
+  "error": {
+    "noQuestion": "{label}: write the question, or clear its answers to remove it.",
+    "answerCount": "{label}: give {min} to {max} answers.",
+    "correctLabel": "{label}: correct answer",
+    "correctEmpty": "{label}: the correct answer (answer {answer}) is empty.",
+    "quizChanged": "The quiz questions changed in the meantime. Reload the page and try again.",
+    "alreadySetUp": "The verification panel is already set up. Use \"Update or re-post the panel\" instead.",
+    "autoIsOn": "Auto-verify is on. Turn auto-verify off before turning the verification panel on.",
+    "notSetUp": "The verification panel is not set up yet. Set it up first.",
+    "buttonEmpty": "Button text cannot be empty.",
+    "messageEmpty": "The panel message cannot be empty.",
+    "blockPanel": "the verification panel is on",
+    "blockAutoRoles": "auto roles are configured (Welcome & goodbye)",
+    "blocked": "To turn auto-verify on, first turn off: {list}.",
+    "atTop": "That question is already at the top.",
+    "atBottom": "That question is already at the bottom."
+  }
+}

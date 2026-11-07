@@ -1,0 +1,59 @@
+{
+  "page": {
+    "help": "Mewvo anota en un canal de registro lo que pasa en el servidor: mensajes borrados y editados, miembros que entran y salen, cambios de roles y más. El staff puede revisarlo después. También puedes cambiarlo con /logging en Discord. La lista de sanciones (el registro de moderación) se configura en Sanciones y apelaciones."
+  },
+  "modLog": {
+    "title": "Registro de moderación",
+    "text": "El registro de moderación lista cada advertencia, silencio, expulsión y baneo. Va a {channel}. Puedes {change}. Los registros de tickets se configuran en {tickets}.",
+    "change": "cambiarlo en Sanciones y apelaciones",
+    "tickets": "Tickets y modmail"
+  },
+  "channels": {
+    "title": "Canales",
+    "help": "A dónde va cada tipo de registro. Elegir un canal activa el registro.",
+    "audit": "Canal de registro principal (todo lo demás)",
+    "applications": "Solicitudes",
+    "reports": "Reportes",
+    "submit": "Guardar canales"
+  },
+  "events": {
+    "title": "Eventos",
+    "help": "Elige qué se registra. Abre un grupo para ver sus eventos. Desmarcar el grupo entero desactiva todos sus eventos.",
+    "count": "{on}/{total} eventos activados",
+    "categoryOff": "categoría desactivada",
+    "whole": "{category} (categoría entera)",
+    "submit": "Guardar eventos"
+  },
+  "ignore": {
+    "title": "Listas de exclusión",
+    "help": "No se registra nada de estos canales (ni de sus hilos), de los miembros con estos roles ni de estos miembros. Útil para canales de bots o zonas del staff.",
+    "type": "Tipo",
+    "ignored": "Excluido",
+    "empty": "No hay nada excluido.",
+    "typeChannel": "canal",
+    "typeRole": "rol",
+    "typeUser": "usuario",
+    "remove": "Quitar",
+    "add": "Añadir",
+    "channel": "Excluir un canal",
+    "role": "Excluir un rol",
+    "member": "Excluir un miembro"
+  },
+  "action": {
+    "label": "Registro",
+    "on": "El registro ahora está activado.",
+    "off": "El registro ahora está desactivado.",
+    "channelsSaved": "Canales de registro guardados.",
+    "eventsSaved": "Registro de eventos guardado.",
+    "channelLabel": "Canal",
+    "userIdLabel": "ID de usuario",
+    "roleMissing": "Rol: ese rol no está en el servidor.",
+    "already": "Ya está excluido.",
+    "ignoringChannel": "Ese canal ahora se excluye de los registros.",
+    "ignoringRole": "Ese rol ahora se excluye de los registros.",
+    "ignoringUser": "Ese usuario ahora se excluye de los registros.",
+    "badId": "Eso no es un ID válido (un número largo).",
+    "notListed": "No estaba en la lista.",
+    "removed": "Quitado de la lista de exclusión."
+  }
+}

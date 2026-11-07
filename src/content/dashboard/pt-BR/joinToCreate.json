@@ -1,0 +1,45 @@
+{
+  "page": {
+    "help": "Os membros ganham um canal de voz próprio quando precisam. Quando alguém entra no canal gatilho, o Mewvo cria um canal de voz novo para a pessoa e a move para lá. O canal é excluído de novo quando fica vazio."
+  },
+  "status": {
+    "title": "Status",
+    "text": "Entrar para criar: {state} (fica ativado enquanto houver um canal gatilho)."
+  },
+  "triggers": {
+    "title": "Gatilhos",
+    "channel": "Canal gatilho",
+    "temporary": "Canais temporários",
+    "empty": "Ainda não há gatilhos.",
+    "remove": "Remover gatilho",
+    "removeConfirm": "Parar de usar este canal como gatilho? O canal em si é mantido."
+  },
+  "add": {
+    "title": "Novo gatilho",
+    "help": "O Mewvo cria um canal de voz chamado \"Join to Create\". Você também pode fazer isso com /jointocreate setup no Discord.",
+    "helpNoAdmin": "O Mewvo cria um canal de voz chamado \"Join to Create\". Você também pode fazer isso com /jointocreate setup no Discord. Para isso você precisa da permissão Administrador neste servidor.",
+    "oneOnly": "Um servidor pode ter um canal gatilho. Remova o atual para criar um novo.",
+    "submit": "Criar canal gatilho"
+  },
+  "fields": {
+    "name": "Nome do canal",
+    "nameHelp": "O nome de cada canal novo. Você pode usar {username} (o nome de usuário do membro), {displayName} (o nome dele neste servidor), {guildName} (o nome do servidor) e {channelName} (o nome do canal gatilho).",
+    "userLimit": "Máximo de pessoas no canal",
+    "userLimitHelp": "0 significa sem limite.",
+    "bitrate": "Qualidade do som (kbps)",
+    "bitrateShort": "Qualidade do som",
+    "bitrateHelp": "A qualidade do som no canal de voz. Mais alta soa melhor, mas precisa de uma conexão mais rápida. 64 é o normal. Servidores impulsionados permitem valores mais altos.",
+    "category": "Categoria",
+    "categoryNone": "sem categoria",
+    "categoryHelp": "Uma categoria é uma pasta de canais. O canal gatilho é criado nela."
+  },
+  "error": {
+    "unknownTrigger": "Canal gatilho desconhecido.",
+    "nameEmpty": "O nome do canal não pode ficar vazio."
+  },
+  "action": {
+    "created": "Canal gatilho \"{name}\" criado.",
+    "saved": "Configurações do gatilho salvas.",
+    "removed": "Gatilho removido (o canal de voz em si é mantido)."
+  }
+}

@@ -1,0 +1,228 @@
+{
+  "page": {
+    "help": "Publique uma mensagem como Mewvo: um anúncio agora ou depois, uma mensagem que se repete, uma enquete ou uma contagem regressiva. O texto que você digita aqui nunca menciona ninguém. Tudo aqui exige a permissão Administrador neste servidor."
+  },
+  "adminNote": "Para publicar, você precisa da permissão Administrador neste servidor.",
+  "fields": {
+    "channel": "Canal",
+    "content": "Texto da mensagem",
+    "contentHelp": "O texto normal da mensagem. Você pode deixá-lo vazio se preencher o quadro abaixo. Menções aparecem como nomes, mas nunca notificam ninguém. @everyone, @here, cargos e membros não recebem notificação.",
+    "title": "Título do quadro",
+    "titleHelp": "Um embed é um quadro de mensagem com uma borda colorida, um título em negrito e texto. Preencha estes campos para enviar um. Deixe-os vazios para uma mensagem simples.",
+    "description": "Texto do quadro",
+    "descriptionHelp": "O texto principal dentro do quadro. A formatação do Discord funciona, como **negrito**. Título, texto e rodapé juntos podem ter no máximo {max} caracteres.",
+    "embedDescription": "Descrição do embed",
+    "colour": "Cor do quadro",
+    "hex": "Ou um código de cor",
+    "hexHelp": "Um # e seis letras ou números. Quando preenchido, é usado no lugar da cor acima.",
+    "imageUrl": "Link da imagem",
+    "imageUrlHelp": "Opcional. Um link que começa com https:// e abre uma imagem. Ela aparece grande no quadro.",
+    "footer": "Rodapé do quadro",
+    "footerHelp": "Texto pequeno opcional no fim do quadro."
+  },
+  "colour": {
+    "primary": "Azul Mewvo",
+    "purple": "Roxo",
+    "blurple": "Blurple do Discord",
+    "green": "Verde",
+    "yellow": "Amarelo",
+    "red": "Vermelho",
+    "grey": "Cinza"
+  },
+  "template": {
+    "title": "Começar de um modelo",
+    "help": "Escolha um anúncio pronto, como explicar como recorrer ou um aviso de golpe. Ele preenche os formulários abaixo para você editar antes de publicar.",
+    "unknown": "Esse modelo não existe (mais). Escolha um da lista.",
+    "filled": "O modelo \"{name}\" foi preenchido abaixo, em Enviar uma mensagem e em Agendar uma mensagem. Troque as partes entre [colchetes], confira o texto e depois publique ou agende. Nada é publicado até você apertar o botão.",
+    "label": "Modelo",
+    "hint": "Textos prontos para anúncios comuns. Onde um texto cita o servidor, o nome deste servidor é preenchido. As partes entre [colchetes] são para você preencher.",
+    "use": "Usar este modelo"
+  },
+  "send": {
+    "title": "Enviar uma mensagem",
+    "help": "O Mewvo publica seu texto, seu quadro ou os dois no canal na hora.",
+    "submit": "Publicar mensagem"
+  },
+  "repeat": {
+    "once": "Uma vez",
+    "daily": "Todo dia",
+    "weekdays": "Nos dias escolhidos",
+    "hours": "A cada poucas horas"
+  },
+  "when": {
+    "once": "Uma vez em {date} às {time}",
+    "daily": "Todo dia às {time}",
+    "weekdays": "{days} às {time}",
+    "interval": {
+      "one": "A cada {count} hora a partir de {date} {time}",
+      "many": "A cada {count} horas a partir de {date} {time}",
+      "other": "A cada {count} horas a partir de {date} {time}"
+    },
+    "unknown": "Agendamento desconhecido"
+  },
+  "schedule": {
+    "title": "Agendar uma mensagem",
+    "help": {
+      "one": "Escreva uma mensagem agora e deixe o Mewvo publicá-la depois: uma vez, todo dia, nos dias da semana que você escolher ou a cada poucas horas. Se a publicação falhar {count} vez seguida, por exemplo porque o Mewvo perdeu o acesso ao canal, ela é pausada e a equipe é avisada no canal de alertas. Um servidor pode ter até {limit}, dependendo do plano do dono do servidor.",
+      "many": "Escreva uma mensagem agora e deixe o Mewvo publicá-la depois: uma vez, todo dia, nos dias da semana que você escolher ou a cada poucas horas. Se a publicação falhar {count} vezes seguidas, por exemplo porque o Mewvo perdeu o acesso ao canal, ela é pausada e a equipe é avisada no canal de alertas. Um servidor pode ter até {limit}, dependendo do plano do dono do servidor.",
+      "other": "Escreva uma mensagem agora e deixe o Mewvo publicá-la depois: uma vez, todo dia, nos dias da semana que você escolher ou a cada poucas horas. Se a publicação falhar {count} vezes seguidas, por exemplo porque o Mewvo perdeu o acesso ao canal, ela é pausada e a equipe é avisada no canal de alertas. Um servidor pode ter até {limit}, dependendo do plano do dono do servidor."
+    },
+    "submit": "Agendar mensagem",
+    "repeat": "Repetir",
+    "date": "Data",
+    "dateHelp": "Para Uma vez, o dia em que é publicada. Para A cada poucas horas, o dia da primeira publicação.",
+    "time": "Hora (formato 24 h)",
+    "hours": "Horas entre publicações",
+    "hoursHelp": "Só para A cada poucas horas. De 1 a {max}.",
+    "timezone": "Fuso horário",
+    "timezoneHelp": "Região e cidade, como America/Sao_Paulo, ou UTC. As mudanças de horário de verão são tratadas automaticamente.",
+    "weekdays": "Dias da semana (só para Nos dias escolhidos)"
+  },
+  "scheduled": {
+    "title": "Mensagens agendadas",
+    "help": "O horário da próxima publicação aparece no fuso horário de cada mensagem.",
+    "count": {
+      "one": "{used} de {count} mensagem agendada.",
+      "many": "{used} de {count} mensagens agendadas.",
+      "other": "{used} de {count} mensagens agendadas."
+    },
+    "colMessage": "Mensagem",
+    "colChannel": "Canal",
+    "colNext": "Próxima vez",
+    "colRepeat": "Repetir",
+    "colLast": "Último resultado",
+    "colStatus": "Status",
+    "empty": "Nenhuma mensagem agendada.",
+    "imageOnly": "(imagem)",
+    "pillPaused": "pausada",
+    "pillDone": "concluída",
+    "pillActive": "ativa",
+    "failures": {
+      "one": "({failed} de {count} falha)",
+      "many": "({failed} de {count} falhas)",
+      "other": "({failed} de {count} falhas)"
+    },
+    "posted": "Publicada {time}",
+    "notRun": "Ainda não executada",
+    "resume": "Retomar",
+    "pause": "Pausar",
+    "runNow": "Publicar agora",
+    "runConfirm": "Publicar esta mensagem agora?",
+    "delete": "Excluir",
+    "deleteConfirm": "Excluir a mensagem agendada #{id}? Isso não pode ser desfeito.",
+    "editSummary": "Prévia e edição #{id} · {schedule}",
+    "nextPosts": "Próximas publicações: {times}",
+    "pausedNote": "Pausada: não será publicada até você retomá-la.",
+    "doneNote": "Não será publicada de novo.",
+    "test": "Me enviar um teste",
+    "testNote": "Envia só para você como mensagem privada (DM), para você conferir antes de ser publicada.",
+    "save": "Salvar mensagem agendada",
+    "idLabel": "Mensagem agendada",
+    "pausedLabel": "Pausada"
+  },
+  "preview": {
+    "title": "Prévia",
+    "image": "Imagem: {url}",
+    "note": "Mostrado como você digitou. Ao publicar, o Discord transforma **negrito**, links e menções em formatação. Menções nunca notificam."
+  },
+  "poll": {
+    "title": "Criar uma enquete",
+    "help": "Faça uma pergunta aos membros e deixe-os votar com uma enquete do Discord. O Mewvo precisa da permissão Criar enquetes no canal (Adicionar reações para uma enquete anônima).",
+    "question": "Pergunta",
+    "options": "Opções",
+    "optionsHelp": "As respostas em que os membros podem votar, uma por linha. De 2 a {max}, cada uma com até {answerMax} caracteres (até {anonymousMax} em uma enquete anônima).",
+    "hours": "Aberta por (horas)",
+    "hoursHelp": "De {min} a {max} horas (7 dias). O Discord fecha a enquete e mostra os resultados quando o tempo acaba.",
+    "multiSelect": "Permitir mais de uma resposta",
+    "multiSelectHelp": "Os membros podem escolher várias opções em vez de uma.",
+    "anonymous": "Enquete anônima",
+    "anonymousHelp": "Uma enquete do Discord mostra a todos quem votou em quê. Ative isto para publicar no lugar uma enquete com reações numeradas: sem nomes na enquete em si, mas qualquer pessoa ainda pode abrir as reações e ver quem reagiu. Ela não tem limite de tempo, não pode ser encerrada antes e ignora as duas configurações acima.",
+    "submit": "Publicar enquete"
+  },
+  "endPoll": {
+    "title": "Encerrar uma enquete",
+    "help": "Fecha agora uma das enquetes do Mewvo no Discord, antes do fim do tempo, e mostra os resultados finais. O Discord só deixa o Mewvo encerrar enquetes que ele mesmo publicou.",
+    "loadFailed": "Não foi possível carregar as enquetes abertas. Você ainda pode encerrar uma enquete pelo link abaixo.",
+    "noQuestion": "(sem pergunta)",
+    "end": "Encerrar",
+    "confirm": "Encerrar esta enquete agora? Os resultados finais são mostrados e ninguém pode mais votar.",
+    "colQuestion": "Pergunta",
+    "colChannel": "Canal",
+    "colCloses": "Fecha",
+    "empty": "O Mewvo não tem enquetes abertas neste servidor.",
+    "note": "Lista enquetes publicadas pelo painel nos últimos 7 dias e enquetes publicadas com /poll desde o último reinício do Mewvo.",
+    "notePartial": "Lista enquetes publicadas pelo painel nos últimos 7 dias e enquetes publicadas com /poll desde o último reinício do Mewvo. Não foi possível ler o histórico do painel agora, então algumas enquetes podem estar faltando.",
+    "byLink": "Uma enquete não está na lista? Encerre pelo link",
+    "link": "Link da mensagem da enquete",
+    "linkHelp": "No Discord, clique com o botão direito na enquete (ou toque e segure no celular), escolha Copiar link da mensagem e cole aqui.",
+    "submit": "Encerrar agora"
+  },
+  "countdown": {
+    "sectionTitle": "Iniciar uma contagem regressiva",
+    "help": "Publica um cronômetro que conta para trás no canal, por até 24 horas. Administradores ganham botões de Pausar e Cancelar nele. Se o bot reiniciar, as contagens em andamento param.",
+    "title": "Título",
+    "placeholder": "Contagem regressiva",
+    "titleHelp": "Para o que é a contagem.",
+    "minutes": "Minutos",
+    "minutesHelp": "De 0 a {max} (24 horas).",
+    "seconds": "Segundos",
+    "secondsHelp": "De 0 a 59.",
+    "submit": "Iniciar contagem"
+  },
+  "clock": {
+    "hours": "{n} h",
+    "minutes": "{n} min",
+    "seconds": "{n} s"
+  },
+  "error": {
+    "tooLong": "{label}: no máximo {max} caracteres (você escreveu {length}).",
+    "channel": "Canal: {problems}. Nada foi publicado.",
+    "colourCode": "Cor: escreva um código de cor como #9B59B6, ou deixe vazio e escolha na lista.",
+    "colourChoice": "Cor: opção desconhecida.",
+    "optionsFew": "Opções: uma enquete precisa de pelo menos 2 opções, cada uma em sua própria linha.",
+    "optionsMany": {
+      "one": "Opções: uma enquete pode ter no máximo {count} opção (você escreveu {written}).",
+      "many": "Opções: uma enquete pode ter no máximo {count} opções (você escreveu {written}).",
+      "other": "Opções: uma enquete pode ter no máximo {count} opções (você escreveu {written})."
+    },
+    "optionLong": "Opções: cada opção tem limite de {max} caracteres. \"{start}...\" tem {length}.",
+    "optionLongNative": "Opções: em uma enquete do Discord, cada opção tem limite de {max} caracteres. Encurte ou ative Enquete anônima (até 100 caracteres). \"{start}...\" tem {length}.",
+    "imageUrl": "Link da imagem: precisa começar com https://. Outros tipos de link não são aceitos.",
+    "empty": "Não há nada para publicar. Escreva uma mensagem ou preencha o quadro.",
+    "footerOnly": "Quadro: adicione um título, texto ou uma imagem. Um rodapé sozinho não aparece.",
+    "boxTooLong": "Quadro: título, texto e rodapé juntos podem ter no máximo {max} caracteres.",
+    "timezone": "Fuso horário: esse fuso horário não é conhecido. Escreva região e cidade, como America/Sao_Paulo, ou UTC.",
+    "past": "Esse horário já passou. Escolha um horário no futuro.",
+    "noScheduled": "Não há mensagem agendada #{id}.",
+    "testEmpty": "Esta mensagem está vazia, então não há nada para enviar.",
+    "testNoUser": "O Mewvo não encontrou sua conta do Discord.",
+    "testDmClosed": "Suas mensagens privadas (DMs) estão fechadas para o Mewvo, então o teste não pôde ser enviado. No Discord, permita mensagens diretas de membros do servidor e tente de novo.",
+    "noQuestion": "Pergunta: a enquete precisa de uma pergunta.",
+    "pollLink": "Link da mensagem da enquete: cole o link de Copiar link da mensagem no Discord, como https://discord.com/channels/...",
+    "pollOtherServer": "Link da mensagem da enquete: essa mensagem está em outro servidor.",
+    "countdownShort": "Duração: a contagem precisa de pelo menos 1 segundo.",
+    "countdownLong": "Duração: uma contagem não pode passar de 24 horas."
+  },
+  "action": {
+    "posted": "Publicado em #{channel}.",
+    "scheduled": "Mensagem agendada #{id} salva para #{channel}: {schedule} ({zone}). Primeira publicação {time}.",
+    "edited": "Mensagem agendada #{id} salva. Próxima publicação {time} ({zone}).",
+    "editedPaused": "Mensagem agendada #{id} salva. Próxima publicação quando for retomada.",
+    "alreadyPaused": "A mensagem agendada #{id} já está pausada.",
+    "alreadyRunning": "A mensagem agendada #{id} já está ativa.",
+    "paused": "Mensagem agendada #{id} pausada.",
+    "resumed": "Mensagem agendada #{id} retomada. Próxima publicação {time} ({zone}).",
+    "ran": "Mensagem agendada #{id} publicada em #{channel}.",
+    "tested": "A mensagem agendada #{id} foi enviada para sua DM como teste. Nada foi publicado no servidor.",
+    "deleted": "Mensagem agendada #{id} excluída.",
+    "anonymousPosted": "Enquete anônima com reações publicada em #{channel}.",
+    "reactionsMissing": {
+      "one": "Só foi possível adicionar {added} de {count} reação de voto: adicione o resto à mão no Discord.",
+      "many": "Só foi possível adicionar {added} de {count} reações de voto: adicione o resto à mão no Discord.",
+      "other": "Só foi possível adicionar {added} de {count} reações de voto: adicione o resto à mão no Discord."
+    },
+    "pollPosted": "Enquete publicada em #{channel}. Ela fecha em {time}.",
+    "pollEnded": "Enquete encerrada em #{channel}. Os resultados finais agora aparecem nela.",
+    "countdownStarted": "Contagem regressiva iniciada em #{channel}: {duration}."
+  }
+}

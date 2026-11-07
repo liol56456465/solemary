@@ -89,7 +89,7 @@ test('the catalog files are the same namespaces in every language', () => {
 });
 
 test('every catalog key the frame code names exists in English', () => {
-    const files = ['html.js', 'forms.js', 'overview.js', 'pages.js', 'routes.js', 'modules/commands.js', 'modules/common.js'];
+    const files = ['html.js', 'forms.js', 'overview.js', 'pages.js', 'routes.js', 'modules/appearance.js', 'modules/applications.js', 'modules/automod.js', 'modules/birthdays.js', 'modules/channels.js', 'modules/commands.js', 'modules/common.js', 'modules/community.js', 'modules/counters.js', 'modules/enforcement.js', 'modules/giveaways.js', 'modules/joinToCreate.js', 'modules/leveling.js', 'modules/logging.js', 'modules/messages.js', 'modules/reactionRoles.js', 'modules/rules.js', 'modules/support.js', 'modules/tickets.js', 'modules/verification.js', 'modules/welcome.js'];
     const prefixes = NAMESPACES.join('|');
     const found = new Set();
     for (const file of files) {

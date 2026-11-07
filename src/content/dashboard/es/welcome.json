@@ -1,0 +1,130 @@
+{
+  "page": {
+    "helpText": "Saluda a los nuevos miembros con un mensaje cuando entran, despídete cuando se van y dales automáticamente un rol. En los mensajes puedes usar {user} (menciona al miembro), {user.tag} (su nombre de usuario, sin mención), {server} (el nombre del servidor) y {memberCount} (cuántos miembros tiene ahora el servidor)."
+  },
+  "join": {
+    "topic": "Bienvenida",
+    "topicLine": "Lo que Mewvo publica cuando alguien entra.",
+    "title": "Bienvenida",
+    "help": "El mensaje de bienvenida, dónde se publica y un mensaje privado opcional.",
+    "toggle": "Mensajes de bienvenida",
+    "channel": "Canal de bienvenida",
+    "channelHelp": "Dónde se publica el mensaje de bienvenida.",
+    "ping": "Mencionar al miembro",
+    "pingHelp": "Lo menciona para que reciba una notificación.",
+    "message": "Mensaje de bienvenida",
+    "messageHelp": "Por ejemplo: Bienvenido a {server}, {user}. Eres el miembro número {memberCount}.",
+    "dm": "Mensaje privado al nuevo miembro",
+    "dmHelp": "Se le envía directamente (un MD). Déjalo vacío para no enviar nada."
+  },
+  "leave": {
+    "topic": "Despedida",
+    "topicLine": "Lo que Mewvo publica cuando alguien se va.",
+    "title": "Despedida",
+    "help": "El mensaje de despedida y dónde se publica.",
+    "toggle": "Mensajes de despedida",
+    "channel": "Canal de despedida",
+    "channelHelp": "Dónde se publica el mensaje de despedida.",
+    "ping": "Mencionar al miembro",
+    "pingHelp": "Lo menciona por su nombre en el mensaje.",
+    "message": "Mensaje de despedida",
+    "messageHelp": "Por ejemplo: {user.tag} ha salido del servidor."
+  },
+  "embed": {
+    "welcomeTitle": "Embed e imagen de bienvenida",
+    "goodbyeTitle": "Embed e imagen de despedida",
+    "help": "El recuadro alrededor del mensaje: título, color y una imagen opcional.",
+    "helpMore": "El mensaje se envía dentro de un recuadro (un embed) con título, color y una imagen opcional. El texto del mensaje de arriba va dentro del recuadro. Si Mewvo no tiene el permiso Insertar enlaces en ese canal, solo se envía el texto.",
+    "title": "Título del recuadro",
+    "titleHelp": "La línea en negrita arriba del recuadro. Déjalo vacío para \"{title}\". Las mismas palabras entre llaves que en el mensaje también funcionan aquí.",
+    "colour": "Color del recuadro",
+    "colourHelp": "La franja de color a la izquierda del recuadro, como código de color: # y seis letras o números, como #57F287 para verde. Déjalo vacío para el color predeterminado.",
+    "footer": "Pie del recuadro",
+    "footerHelp": "Texto pequeño abajo del recuadro. Déjalo vacío para el nombre del servidor. Las mismas palabras entre llaves que en el mensaje también funcionan aquí.",
+    "image": "Enlace de la imagen",
+    "imageHelp": "Un enlace que empieza por https:// y abre una imagen PNG, JPG, GIF o WebP. Se muestra grande abajo del recuadro. Déjalo vacío para no poner imagen. Para usar una imagen de tu ordenador, usa Subir una imagen más abajo.",
+    "welcomeImage": "Imagen de bienvenida",
+    "goodbyeImage": "Imagen de despedida",
+    "embedColour": "Color del embed"
+  },
+  "image": {
+    "none": "Sin imagen.",
+    "welcomeAlt": "Imagen de bienvenida actual",
+    "goodbyeAlt": "Imagen de despedida actual",
+    "current": "Imagen actual: {link}",
+    "onlyDiscord": "(aquí solo se pueden mostrar imágenes guardadas en Discord)",
+    "channelId": "el canal {id}",
+    "welcomeStored": "Archivo subido: se guarda una copia en {where}. No borres ese mensaje, porque el mensaje de bienvenida carga la imagen desde ahí.",
+    "goodbyeStored": "Archivo subido: se guarda una copia en {where}. No borres ese mensaje, porque el mensaje de despedida carga la imagen desde ahí.",
+    "uploadLabel": "Subir una imagen (PNG, JPEG, GIF o WebP, hasta {mb} MB)",
+    "uploadHint": "Sustituye el enlace de la imagen de arriba. Mewvo publica el archivo en tu canal de registro principal y lo usa desde ahí, para que la imagen siga funcionando. /greet en Discord hace lo mismo.",
+    "upload": "Subir imagen",
+    "remove": "Quitar imagen",
+    "welcomeConfirm": "¿Quitar la imagen de bienvenida?",
+    "goodbyeConfirm": "¿Quitar la imagen de despedida?"
+  },
+  "members": {
+    "topic": "Nuevos miembros",
+    "topicLine": "Un rol inicial y un registro de entradas y salidas para el staff."
+  },
+  "autoRole": {
+    "title": "Rol automático",
+    "help": "Cada nuevo miembro recibe este rol automáticamente. Puedes tener uno: poner uno nuevo reemplaza al anterior. Mewvo solo puede dar roles por debajo del suyo en la lista de roles y no da roles con poderes de staff. También puedes hacerlo con /autorole en Discord.",
+    "role": "Rol",
+    "problems": "Problemas",
+    "ok": "ok",
+    "remove": "Quitar",
+    "none": "No se da ningún rol al entrar.",
+    "pick": "Rol para nuevos miembros",
+    "set": "Poner",
+    "delay": "Espera antes de dar el rol (segundos)",
+    "delayLabel": "Espera antes de dar el rol",
+    "delayHelp": "Cuánto espera Mewvo después de que alguien entra. 0 lo da al instante."
+  },
+  "logs": {
+    "title": "Registros de entradas y salidas",
+    "help": "Un registro para el staff de quién entró y quién salió, aparte de los mensajes públicos.",
+    "joins": "Registrar entradas",
+    "joinsHelp": "Publica una línea corta para el staff cada vez que alguien entra.",
+    "joinChannel": "Canal del registro de entradas",
+    "leaves": "Registrar salidas",
+    "leavesHelp": "Publica una línea corta para el staff cada vez que alguien sale.",
+    "leaveChannel": "Canal del registro de salidas"
+  },
+  "action": {
+    "welcomeOn": "Los mensajes de bienvenida están activados.",
+    "welcomeOff": "Los mensajes de bienvenida están desactivados.",
+    "goodbyeOn": "Los mensajes de despedida están activados.",
+    "goodbyeOff": "Los mensajes de despedida están desactivados.",
+    "welcomeSaved": "Ajustes de bienvenida guardados.",
+    "goodbyeSaved": "Ajustes de despedida guardados.",
+    "welcomeEmbedSaved": "Embed de bienvenida guardado.",
+    "goodbyeEmbedSaved": "Embed de despedida guardado.",
+    "welcomeUploaded": "Imagen de bienvenida subida.",
+    "goodbyeUploaded": "Imagen de despedida subida.",
+    "welcomeUploadedNote": "Imagen de bienvenida subida. Se guarda una copia en {where}; no borres ese mensaje, el mensaje de bienvenida carga la imagen desde ahí.",
+    "goodbyeUploadedNote": "Imagen de despedida subida. Se guarda una copia en {where}; no borres ese mensaje, el mensaje de despedida carga la imagen desde ahí.",
+    "auditChannel": "el canal del registro de auditoría",
+    "welcomeImageRemoved": "Imagen de bienvenida quitada.",
+    "goodbyeImageRemoved": "Imagen de despedida quitada.",
+    "autoRoleAlready": "Ese rol ya se da al entrar.",
+    "autoRoleSet": "Rol automático puesto.",
+    "autoRoleNotSet": "Ese rol no era un rol automático.",
+    "autoRoleRemoved": "Rol automático quitado.",
+    "delaySaved": "Espera del rol automático guardada.",
+    "logsSaved": "Registros de entradas y salidas guardados."
+  },
+  "error": {
+    "colour": "{label} debe ser un color hexadecimal como #57F287.",
+    "badLink": "{label}: no es un enlace válido.",
+    "https": "{label} debe empezar por https://.",
+    "expiredLink": "{label}: ese enlace de archivo adjunto de Discord ha caducado. Sube el archivo de imagen más abajo o usa un enlace de imagen permanente.",
+    "chooseFile": "Elige un archivo de imagen para subir.",
+    "notImage": "Ese archivo no es una imagen PNG, JPEG, GIF o WebP.",
+    "noLogChannel": "{label}: no hay canal de registro principal, así que la imagen subida no tiene dónde guardarse. Pon uno en la página Registros o usa un enlace de imagen. No se ha cambiado nada.",
+    "cannotPost": "{label}: Mewvo no pudo publicar la imagen en el canal de registro principal ({channel}). Mewvo necesita ahí los permisos Ver canal, Enviar mensajes y Adjuntar archivos. No se ha cambiado nada."
+  },
+  "warn": {
+    "discordLink": "{label}: los enlaces de archivos adjuntos de Discord dejan de funcionar al cabo de un día. Para una imagen duradera, sube el archivo más abajo (Subir imagen) o usa un alojamiento de imágenes permanente."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "page": {
+    "help": "Mewvo souhaite un joyeux anniversaire aux membres dans un salon le jour de leur anniversaire, et peut leur donner un rôle spécial pour la journée. Les membres ajoutent eux-mêmes leur anniversaire avec /birthday set sur Discord."
+  },
+  "status": {
+    "title": "État",
+    "on": "Annonces : {state}.",
+    "off": "Annonces : {state}. Choisis un salon ci-dessous pour les activer.",
+    "turnOff": "Désactiver (vider le salon)"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "channel": "Salon des annonces",
+    "channelNone": "désactivé",
+    "channelHelp": "Où le message d’anniversaire est publié.",
+    "timezone": "Fuseau horaire",
+    "timezoneHelp": "Les anniversaires commencent à minuit dans ce fuseau horaire. Écris-le sous la forme région/ville, comme Europe/Paris ou America/New_York.",
+    "role": "Rôle d’anniversaire",
+    "roleNone": "aucun",
+    "roleHelp": "Donné le jour de l’anniversaire et retiré le lendemain."
+  },
+  "action": {
+    "saved": "Paramètres des anniversaires enregistrés.",
+    "off": "Les annonces d’anniversaire sont désactivées."
+  }
+}

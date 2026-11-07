@@ -1,0 +1,54 @@
+{
+  "page": {
+    "help": "Laisse les membres choisir eux-mêmes leurs rôles, comme des couleurs, des pronoms ou des jeux. Mewvo publie un message (un panneau) avec un menu, et les membres y choisissent les rôles qu’ils veulent. Mewvo ne propose que des rôles placés sous son propre rôle dans la liste des rôles, jamais des rôles avec des pouvoirs d’équipe, et jamais des rôles qui appartiennent à un autre bot ou à une application."
+  },
+  "create": {
+    "title": "Nouveau panneau",
+    "help": "Tu peux aussi le faire avec /reactroles setup dans Discord.",
+    "needsAdmin": " Pour publier un panneau, il te faut la permission Administrateur sur ce serveur.",
+    "max": "Ce serveur a déjà le maximum de {count} panneaux. Supprimes-en un pour en créer un autre.",
+    "postIn": "Publier dans",
+    "postInHelp": "Le salon où le panneau est publié.",
+    "titleLabel": "Titre",
+    "titleHelp": "Par exemple : Choisis ta couleur.",
+    "description": "Description",
+    "descriptionHelp": "Quelques mots sous le titre pour dire à quoi servent les rôles.",
+    "roles": "Rôles",
+    "rolesHelp": "Jusqu’à 25. Pour en choisir plusieurs, maintiens Ctrl (Cmd sur Mac) en cliquant.",
+    "submit": "Créer et publier le panneau"
+  },
+  "panel": {
+    "title": "Panneau {id}",
+    "info": "Dans {channel} · message {message} · {count}/25 rôles",
+    "ok": "ok",
+    "remove": "Retirer",
+    "role": "Rôle",
+    "problems": "Problèmes",
+    "noRoles": "Aucun rôle.",
+    "addRole": "Ajouter un rôle",
+    "add": "Ajouter",
+    "delete": "Supprimer le panneau",
+    "deleteConfirm": "Supprimer ce panneau et son message dans Discord ?"
+  },
+  "panels": {
+    "title": "Panneaux",
+    "empty": "Aucun panneau de rôles par réaction pour l’instant."
+  },
+  "action": {
+    "unknownPanel": "Panneau inconnu.",
+    "chooseRole": "Choisis au moins un rôle.",
+    "posted": {
+      "one": "Panneau publié avec {count} rôle.",
+      "many": "Panneau publié avec {count} rôles.",
+      "other": "Panneau publié avec {count} rôles."
+    },
+    "skipped": "Ignorés : {list}",
+    "roleMissing": "Rôle : ce rôle n’est pas sur le serveur.",
+    "roleAdded": "Rôle ajouté au panneau.",
+    "unknownRole": "Rôle inconnu.",
+    "lastRole": "C’était le dernier rôle : le panneau a été supprimé.",
+    "roleRemoved": "Rôle retiré du panneau.",
+    "panelGone": "Ce panneau n’existe plus.",
+    "panelDeleted": "Panneau supprimé."
+  }
+}

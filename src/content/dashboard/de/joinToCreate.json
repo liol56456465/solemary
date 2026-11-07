@@ -1,0 +1,45 @@
+{
+  "page": {
+    "help": "Mitglieder bekommen einen eigenen Sprachkanal, wenn sie einen brauchen. Wenn jemand den Auslöser-Kanal betritt, erstellt Mewvo einen neuen Sprachkanal und verschiebt die Person hinein. Sobald der Kanal leer ist, wird er wieder gelöscht."
+  },
+  "status": {
+    "title": "Status",
+    "text": "Join-to-Create ist {state} (an, solange es einen Auslöser-Kanal gibt)."
+  },
+  "triggers": {
+    "title": "Auslöser",
+    "channel": "Auslöser-Kanal",
+    "temporary": "Temporäre Kanäle",
+    "empty": "Noch keine Auslöser.",
+    "remove": "Auslöser entfernen",
+    "removeConfirm": "Diesen Kanal nicht mehr als Auslöser nutzen? Der Kanal selbst bleibt."
+  },
+  "add": {
+    "title": "Neuer Auslöser",
+    "help": "Mewvo erstellt einen Sprachkanal namens „Join to Create“. Das geht auch mit /jointocreate setup in Discord.",
+    "helpNoAdmin": "Mewvo erstellt einen Sprachkanal namens „Join to Create“. Das geht auch mit /jointocreate setup in Discord. Dafür brauchst du die Berechtigung Administrator auf diesem Server.",
+    "oneOnly": "Ein Server kann einen Auslöser-Kanal haben. Entferne den aktuellen, um einen neuen zu erstellen.",
+    "submit": "Auslöser-Kanal erstellen"
+  },
+  "fields": {
+    "name": "Kanalname",
+    "nameHelp": "Der Name jedes neuen Kanals. Du kannst {username} (der Nutzername des Mitglieds), {displayName} (sein Name auf diesem Server), {guildName} (der Servername) und {channelName} (der Name des Auslöser-Kanals) verwenden.",
+    "userLimit": "Höchstens Personen im Kanal",
+    "userLimitHelp": "0 heißt: kein Limit.",
+    "bitrate": "Tonqualität (kbps)",
+    "bitrateShort": "Tonqualität",
+    "bitrateHelp": "Tonqualität im Sprachkanal. Höher klingt besser, braucht aber eine schnellere Verbindung. 64 ist normal. Geboostete Server erlauben höhere Werte.",
+    "category": "Kategorie",
+    "categoryNone": "keine Kategorie",
+    "categoryHelp": "Eine Kategorie ist ein Ordner für Kanäle. Der Auslöser-Kanal wird darin erstellt."
+  },
+  "error": {
+    "unknownTrigger": "Unbekannter Auslöser-Kanal.",
+    "nameEmpty": "Der Kanalname darf nicht leer sein."
+  },
+  "action": {
+    "created": "Auslöser-Kanal „{name}“ erstellt.",
+    "saved": "Auslöser-Einstellungen gespeichert.",
+    "removed": "Auslöser entfernt (der Sprachkanal selbst bleibt)."
+  }
+}

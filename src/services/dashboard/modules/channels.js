@@ -12,6 +12,9 @@ import {
     InputError, channelField, channelPicker, intField, isSnowflake, numberInput, postForm, text, textInput,
 } from '../forms.js';
 import { section, table } from './common.js';
+import { textFor } from '../language.js';
+
+// Words: src/content/dashboard/<lang>/channels.json.
 
 const TEXT_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
 
@@ -22,11 +25,12 @@ function channelOf(ctx, form, label) {
 
 /** The purge form, checked: { channel, amount, fromUserId, reason }. */
 function purgeForm(ctx, form) {
-    const channel = channelOf(ctx, form, 'Channel');
-    const amount = intField(form, 'amount', { min: PURGE_MIN, max: PURGE_MAX, label: 'Number of messages' });
+    const tr = textFor(ctx);
+    const channel = channelOf(ctx, form, tr.t('channels.field.channel'));
+    const amount = intField(form, 'amount', { min: PURGE_MIN, max: PURGE_MAX, label: tr.t('channels.purge.amount') });
     const typed = text(form, 'userId', 40);
     const fromUserId = typed ? parseUserRef(typed) : null;
-    if (typed && !fromUserId) throw new InputError('Only from this member: that is not a user ID. Type a name and choose a member, use Find a member, or paste a user ID (17 to 20 digits).', 400, 'userId');
+    if (typed && !fromUserId) throw new InputError(tr.t('channels.purge.badUser'), 400, 'userId');
     return { channel, amount, fromUserId, reason: text(form, 'reason', REASON_MAX) };
 }
 
@@ -43,44 +47,47 @@ export default {
 
     render(ctx) {
         const g = ctx.guild;
+        const tr = textFor(ctx);
         const can = ctx.canEdit && ctx.canAct;
-        const adminNote = ctx.canAct ? '' : ' To use these tools you need the Administrator permission in this server.';
+        const adminNote = ctx.canAct ? '' : tr.t('channels.adminNote');
         const purge = postForm(ctx, 'channels', 'purge', html`<div class="grid">
-${channelPicker(g, 'channelId', null, { label: 'Channel', perms: TOOL_PERMS.purge, optional: false })}
-${numberInput('amount', 10, { label: 'Number of messages', min: PURGE_MIN, max: PURGE_MAX, help: `From ${PURGE_MIN} to ${PURGE_MAX}. The newest messages go first.` })}
-${memberField({ name: 'userId', label: 'Only from this member (optional)', value: pickedFromQuery(ctx.query, 'purge_user'), pick: 'purge_user', back: path('/channels'), anchor: 'purge-messages', bans: true, guild: g, help: 'Only the newest 100 messages are searched.' })}
-${textInput('reason', '', { label: 'Reason', max: REASON_MAX, help: 'Saved with the action, so other staff know why.' })}</div>
-<p class="muted">Nothing is deleted yet: the next page shows what will be deleted, and you confirm there.</p>`,
-        { submit: 'Delete messages…', danger: true, canEdit: can });
+${channelPicker(g, 'channelId', null, { label: tr.t('channels.field.channel'), perms: TOOL_PERMS.purge, optional: false })}
+${numberInput('amount', 10, { label: tr.t('channels.purge.amount'), min: PURGE_MIN, max: PURGE_MAX, help: tr.t('channels.purge.amountHelp', { min: tr.fmtNumber(PURGE_MIN), max: tr.fmtNumber(PURGE_MAX) }) })}
+${memberField({ name: 'userId', label: tr.t('channels.purge.fromUser'), value: pickedFromQuery(ctx.query, 'purge_user'), pick: 'purge_user', back: path('/channels'), anchor: 'purge-messages', bans: true, guild: g, help: tr.t('channels.purge.fromUserHelp') })}
+${textInput('reason', '', { label: tr.t('channels.field.reason'), max: REASON_MAX, help: tr.t('channels.field.reasonHelp') })}</div>
+<p class="muted">${tr.tx('channels.purge.nothingYet')}</p>`,
+        { submit: tr.t('channels.purge.submit'), danger: true, canEdit: can });
         const lock = postForm(ctx, 'channels', 'lock', html`<div class="grid">
-${channelPicker(g, 'channelId', null, { label: 'Channel', perms: TOOL_PERMS.lock, optional: false })}
-${textInput('reason', '', { label: 'Reason', max: REASON_MAX, help: 'Saved with the action, so other staff know why.' })}</div>`, { submit: 'Lock channel', canEdit: can });
+${channelPicker(g, 'channelId', null, { label: tr.t('channels.field.channel'), perms: TOOL_PERMS.lock, optional: false })}
+${textInput('reason', '', { label: tr.t('channels.field.reason'), max: REASON_MAX, help: tr.t('channels.field.reasonHelp') })}</div>`, { submit: tr.t('channels.lock.submit'), canEdit: can });
         const locked = g ? lockedChannels(g, TEXT_TYPES) : [];
-        const rows = locked.map((c) => [html`#${c.name}`, c.parentId ? g.channels.cache.get(c.parentId)?.name || '' : html`<span class="muted">none</span>`,
-            postForm(ctx, 'channels', 'unlock', textInput('reason', '', { label: '', max: REASON_MAX, placeholder: 'Reason (optional)' }),
-                { inline: true, submit: 'Unlock', secondary: true, canEdit: can, hidden: { channelId: c.id } })]);
-        return html`${section('Purge messages', purge, `Deletes many recent messages at once. Discord does not allow this for messages older than 14 days, so those are skipped.${adminNote}`)}
-${section('Lock a channel', lock, `Members can still read the channel but can no longer write in it. Roles that have their own permission in that channel, like staff, still can. Unlocking undoes this, so the channel goes back to the permissions of its category (the folder it is in).${adminNote}`)}
-${section(`Locked channels (${locked.length})`, table(['Channel', 'Category', ''], rows, 'No channel is locked.'), 'Channels where members cannot write right now because the channel itself is locked.')}`;
+        const rows = locked.map((c) => [html`#${c.name}`, c.parentId ? g.channels.cache.get(c.parentId)?.name || '' : html`<span class="muted">${tr.t('channels.locked.noCategory')}</span>`,
+            postForm(ctx, 'channels', 'unlock', textInput('reason', '', { label: '', max: REASON_MAX, placeholder: tr.t('channels.locked.reasonPlaceholder') }),
+                { inline: true, submit: tr.t('channels.locked.unlock'), secondary: true, canEdit: can, hidden: { channelId: c.id } })]);
+        // Explicit keys: the card ids stay the English slugs in every language.
+        return html`${section(tr.t('channels.purge.title'), purge, `${tr.t('channels.purge.help')}${adminNote}`, { key: 'purge-messages' })}
+${section(tr.t('channels.lock.title'), lock, `${tr.t('channels.lock.help')}${adminNote}`, { key: 'lock-a-channel' })}
+${section(tr.t('channels.locked.title', { count: tr.fmtNumber(locked.length) }), table([tr.t('channels.field.channel'), tr.t('channels.locked.category'), ''], rows, tr.t('channels.locked.empty')), tr.t('channels.locked.help'), { key: `locked-channels-${locked.length}` })}`;
     },
 
     actions: {
         purge: {
             admin: true,
             async confirm(ctx, form) {
+                const tr = textFor(ctx);
                 const { channel, amount, fromUserId, reason } = purgeForm(ctx, form);
                 const missing = missingBotPerms(ctx.guild, channel, TOOL_PERMS.purge);
-                if (missing.length) throw new InputError(`Mewvo is missing ${missing.join(', ')} in #${channel.name}, so it cannot delete messages there. Nothing was changed.`);
+                if (missing.length) throw new InputError(tr.t('channels.purge.missingPerms', { perms: missing.join(', '), channel: channel.name }));
                 const who = fromUserId ? (ctx.guild.members?.cache?.get(fromUserId)?.user?.username || fromUserId) : null;
                 return {
-                    heading: `Confirm: delete messages in #${channel.name}`,
+                    heading: tr.t('channels.confirm.heading', { channel: channel.name }),
                     rows: [
-                        { label: 'Channel', value: `#${channel.name}` },
-                        { label: 'Messages', value: fromUserId ? `Up to ${amount} of the newest messages from ${who} (only the newest 100 are searched)` : `The newest ${amount}` },
-                        { label: 'Reason', value: reason || '-' },
-                        { label: 'Effect', value: 'The messages are deleted for good and cannot be brought back. Messages older than 14 days are skipped.' },
+                        { label: tr.t('channels.field.channel'), value: `#${channel.name}` },
+                        { label: tr.t('channels.confirm.messages'), value: fromUserId ? tr.tp('channels.confirm.fromUser', amount, { who }) : tr.tp('channels.confirm.newest', amount) },
+                        { label: tr.t('channels.field.reason'), value: reason || '-' },
+                        { label: tr.t('channels.confirm.effect'), value: tr.t('channels.confirm.effectText') },
                     ],
-                    submit: 'Delete messages',
+                    submit: tr.t('channels.confirm.submit'),
                 };
             },
             async run(ctx, form) {
@@ -88,10 +95,11 @@ ${section(`Locked channels (${locked.length})`, table(['Channel', 'Category', ''
                 const result = await ctx.services.purgeChannelMessages({
                     client: ctx.client, guild: ctx.guild, channel, amount, fromUserId, moderator: moderatorOf(ctx), reason: auditReason(ctx.actor.username, reason),
                 });
-                const warnings = result.skippedOld ? [`${result.skippedOld} message${result.skippedOld === 1 ? ' was' : 's were'} older than 14 days and skipped.`] : [];
+                const tr = textFor(ctx);
+                const warnings = result.skippedOld ? [tr.tp('channels.action.skippedOld', result.skippedOld)] : [];
                 return {
                     changes: [{ key: `purge.${channel.id}`, old: null, new: { deleted: result.deleted, requested: amount, fromUserId, reason: reason || null } }],
-                    message: `Deleted ${result.deleted} message${result.deleted === 1 ? '' : 's'} in #${channel.name}.`,
+                    message: tr.tp('channels.action.deleted', result.deleted, { channel: channel.name }),
                     warnings,
                 };
             },
@@ -99,19 +107,19 @@ ${section(`Locked channels (${locked.length})`, table(['Channel', 'Category', ''
         lock: {
             admin: true,
             async run(ctx, form) {
-                const channel = channelOf(ctx, form, 'Channel');
+                const channel = channelOf(ctx, form, textFor(ctx).t('channels.field.channel'));
                 const reason = text(form, 'reason', REASON_MAX);
                 await ctx.services.lockChannel({ client: ctx.client, guild: ctx.guild, channel, moderator: moderatorOf(ctx), auditReason: auditReason(ctx.actor.username, reason) });
-                return { changes: [{ key: `lock.${channel.id}`, old: false, new: true }], message: `#${channel.name} is locked.` };
+                return { changes: [{ key: `lock.${channel.id}`, old: false, new: true }], message: textFor(ctx).t('channels.action.locked', { channel: channel.name }) };
             },
         },
         unlock: {
             admin: true,
             async run(ctx, form) {
-                const channel = channelOf(ctx, form, 'Channel');
+                const channel = channelOf(ctx, form, textFor(ctx).t('channels.field.channel'));
                 const reason = text(form, 'reason', REASON_MAX);
                 await ctx.services.unlockChannel({ client: ctx.client, guild: ctx.guild, channel, moderator: moderatorOf(ctx), auditReason: auditReason(ctx.actor.username, reason) });
-                return { changes: [{ key: `lock.${channel.id}`, old: true, new: false }], message: `#${channel.name} is unlocked.` };
+                return { changes: [{ key: `lock.${channel.id}`, old: true, new: false }], message: textFor(ctx).t('channels.action.unlocked', { channel: channel.name }) };
             },
         },
     },

@@ -1,0 +1,222 @@
+{
+  "page": {
+    "help": "Post a message as Mewvo: an announcement right now or later, a message that repeats, a poll, or a countdown. Text you type here never pings anyone. Everything here needs the Administrator permission in this server."
+  },
+  "adminNote": "To post you need the Administrator permission in this server.",
+  "fields": {
+    "channel": "Channel",
+    "content": "Message text",
+    "contentHelp": "The normal text of the message. You can leave it empty if you fill in the box below. Mentions show as names but never ping anyone. @everyone, @here, roles and members get no notification.",
+    "title": "Box title",
+    "titleHelp": "An embed is a message box with a coloured edge, a bold title and text. Fill in these fields to send one. Leave them empty for a plain message.",
+    "description": "Box text",
+    "descriptionHelp": "The main text inside the box. Discord formatting works, like **bold**. Title, text and footer together can be at most {max} characters.",
+    "embedDescription": "Embed description",
+    "colour": "Box colour",
+    "hex": "Or a colour code",
+    "hexHelp": "A # and six letters or numbers. When filled in, it is used instead of the colour above.",
+    "imageUrl": "Image link",
+    "imageUrlHelp": "Optional. A link that starts with https:// and opens a picture. It shows large in the box.",
+    "footer": "Box footer",
+    "footerHelp": "Optional small text at the bottom of the box."
+  },
+  "colour": {
+    "primary": "Mewvo blue",
+    "purple": "Purple",
+    "blurple": "Discord blurple",
+    "green": "Green",
+    "yellow": "Yellow",
+    "red": "Red",
+    "grey": "Grey"
+  },
+  "template": {
+    "title": "Start from a template",
+    "help": "Pick a ready-made announcement, like how to appeal or a scam warning. It fills in the forms below so you can edit it before posting.",
+    "unknown": "That template does not exist (any more). Pick one from the list.",
+    "filled": "Template \"{name}\" is filled in below, in Send a message and in Schedule a message. Replace the parts in [square brackets], check the text, then post or schedule it. Nothing is posted until you press the button.",
+    "label": "Template",
+    "hint": "Ready-made texts for common announcements. Where a text names the server, this server's name is filled in. Parts in [square brackets] are for you to fill in.",
+    "use": "Use this template"
+  },
+  "send": {
+    "title": "Send a message",
+    "help": "Mewvo posts your text, your box, or both in the channel right away.",
+    "submit": "Post message"
+  },
+  "repeat": {
+    "once": "Once",
+    "daily": "Every day",
+    "weekdays": "On chosen weekdays",
+    "hours": "Every few hours"
+  },
+  "when": {
+    "once": "Once on {date} at {time}",
+    "daily": "Every day at {time}",
+    "weekdays": "{days} at {time}",
+    "interval": {
+      "one": "Every {count} hour from {date} {time}",
+      "other": "Every {count} hours from {date} {time}"
+    },
+    "unknown": "Unknown schedule"
+  },
+  "schedule": {
+    "title": "Schedule a message",
+    "help": {
+      "one": "Write a message now and let Mewvo post it later: once, every day, on the weekdays you choose, or every few hours. If posting fails {count} time in a row, for example because Mewvo lost access to the channel, it is paused and staff are told in the alerts channel. A server can have up to {limit}, depending on the server owner's plan.",
+      "other": "Write a message now and let Mewvo post it later: once, every day, on the weekdays you choose, or every few hours. If posting fails {count} times in a row, for example because Mewvo lost access to the channel, it is paused and staff are told in the alerts channel. A server can have up to {limit}, depending on the server owner's plan."
+    },
+    "submit": "Schedule message",
+    "repeat": "Repeat",
+    "date": "Date",
+    "dateHelp": "For Once, the day it is posted. For Every few hours, the day of the first post.",
+    "time": "Time (24-hour clock)",
+    "hours": "Hours between posts",
+    "hoursHelp": "Only for Every few hours. From 1 to {max}.",
+    "timezone": "Time zone",
+    "timezoneHelp": "Region and city, like Europe/Vilnius, or UTC. Summer and winter time changes are handled for you.",
+    "weekdays": "Weekdays (only for On chosen weekdays)"
+  },
+  "scheduled": {
+    "title": "Scheduled messages",
+    "help": "The next post time is shown in each message's own time zone.",
+    "count": {
+      "one": "{used} of {count} scheduled messages.",
+      "other": "{used} of {count} scheduled messages."
+    },
+    "colMessage": "Message",
+    "colChannel": "Channel",
+    "colNext": "Next run",
+    "colRepeat": "Repeat",
+    "colLast": "Last result",
+    "colStatus": "Status",
+    "empty": "No scheduled messages.",
+    "imageOnly": "(image)",
+    "pillPaused": "paused",
+    "pillDone": "done",
+    "pillActive": "active",
+    "failures": {
+      "one": "({failed} of {count} failures)",
+      "other": "({failed} of {count} failures)"
+    },
+    "posted": "Posted {time}",
+    "notRun": "Not run yet",
+    "resume": "Resume",
+    "pause": "Pause",
+    "runNow": "Run now",
+    "runConfirm": "Post this message now?",
+    "delete": "Delete",
+    "deleteConfirm": "Delete scheduled message #{id}? This cannot be undone.",
+    "editSummary": "Preview and edit #{id} · {schedule}",
+    "nextPosts": "Next posts: {times}",
+    "pausedNote": "Paused: it will not post until you resume it.",
+    "doneNote": "It will not post again.",
+    "test": "Send me a test",
+    "testNote": "Sends it only to you as a private message (DM), so you can check it before it posts.",
+    "save": "Save scheduled message",
+    "idLabel": "Scheduled message",
+    "pausedLabel": "Paused"
+  },
+  "preview": {
+    "title": "Preview",
+    "image": "Image: {url}",
+    "note": "Shown as you typed it. Discord turns **bold**, links and mentions into formatting when it posts. Mentions never ping."
+  },
+  "poll": {
+    "title": "Start a poll",
+    "help": "Ask members a question and let them vote with a Discord poll. Mewvo needs the Send Polls permission in the channel (Add Reactions for an anonymous poll).",
+    "question": "Question",
+    "options": "Options",
+    "optionsHelp": "The answers members can vote for, each on its own line. From 2 to {max}, each up to {answerMax} characters (up to {anonymousMax} for an anonymous poll).",
+    "hours": "Open for (hours)",
+    "hoursHelp": "From {min} to {max} hours (7 days). Discord closes the poll and shows the results when the time is up.",
+    "multiSelect": "Allow more than one answer",
+    "multiSelectHelp": "Members can pick several options instead of one.",
+    "anonymous": "Anonymous poll",
+    "anonymousHelp": "A Discord poll shows everyone who voted for what. Turn this on to post a number-reaction poll instead: no names on the poll itself, but anyone can still open the reactions and see who reacted. It has no time limit, cannot be ended early, and ignores the two settings above.",
+    "submit": "Post poll"
+  },
+  "endPoll": {
+    "title": "End a poll",
+    "help": "Closes one of Mewvo's Discord polls now, before its time is up, and shows the final results. Discord only lets Mewvo end polls it posted itself.",
+    "loadFailed": "The open polls could not be loaded. You can still end a poll by its link below.",
+    "noQuestion": "(no question)",
+    "end": "End poll",
+    "confirm": "End this poll now? The final results are shown and nobody can vote any more.",
+    "colQuestion": "Question",
+    "colChannel": "Channel",
+    "colCloses": "Closes",
+    "empty": "Mewvo has no open polls in this server.",
+    "note": "Lists polls posted from the dashboard in the last 7 days and polls posted with /poll since Mewvo last restarted.",
+    "notePartial": "Lists polls posted from the dashboard in the last 7 days and polls posted with /poll since Mewvo last restarted. The dashboard history could not be read just now, so some polls may be missing.",
+    "byLink": "A poll is not in the list? End it by its link",
+    "link": "Poll message link",
+    "linkHelp": "In Discord, right-click the poll (or long-press it on a phone), choose Copy Message Link and paste it here.",
+    "submit": "End poll now"
+  },
+  "countdown": {
+    "sectionTitle": "Start a countdown",
+    "help": "Posts a timer that counts down in the channel, for up to 24 hours. Administrators get Pause and Cancel buttons on it. If the bot restarts, running countdowns stop.",
+    "title": "Title",
+    "placeholder": "Countdown",
+    "titleHelp": "What you are counting down to.",
+    "minutes": "Minutes",
+    "minutesHelp": "From 0 to {max} (24 hours).",
+    "seconds": "Seconds",
+    "secondsHelp": "From 0 to 59.",
+    "submit": "Start countdown"
+  },
+  "clock": {
+    "hours": "{n} h",
+    "minutes": "{n} min",
+    "seconds": "{n} s"
+  },
+  "error": {
+    "tooLong": "{label}: at most {max} characters (you wrote {length}).",
+    "channel": "Channel: {problems}. Nothing was posted.",
+    "colourCode": "Colour: write a colour code like #9B59B6, or leave it empty and pick from the list.",
+    "colourChoice": "Colour: unknown choice.",
+    "optionsFew": "Options: a poll needs at least 2 options, each on its own line.",
+    "optionsMany": {
+      "one": "Options: a poll can have at most {count} options (you wrote {written}).",
+      "other": "Options: a poll can have at most {count} options (you wrote {written})."
+    },
+    "optionLong": "Options: each option is limited to {max} characters. \"{start}...\" has {length}.",
+    "optionLongNative": "Options: each option is limited to {max} characters in a Discord poll. Shorten it, or turn on Anonymous poll (up to 100 characters). \"{start}...\" has {length}.",
+    "imageUrl": "Image link: it must start with https://. Other kinds of links are not accepted.",
+    "empty": "There is nothing to post. Write a message or fill in the box.",
+    "footerOnly": "Box: add a title, text or an image. A footer on its own is not shown.",
+    "boxTooLong": "Box: title, text and footer together can be at most {max} characters.",
+    "timezone": "Time zone: that time zone is not known. Write region and city, like Europe/London, or UTC.",
+    "past": "That time has already passed. Pick a time in the future.",
+    "noScheduled": "There is no scheduled message #{id}.",
+    "testEmpty": "This message is empty, so there is nothing to send.",
+    "testNoUser": "Mewvo could not find your Discord account.",
+    "testDmClosed": "Your private messages (DMs) are closed for Mewvo, so the test could not be sent. In Discord, allow direct messages from server members and try again.",
+    "noQuestion": "Question: the poll needs a question.",
+    "pollLink": "Poll message link: paste the link from Copy Message Link in Discord, like https://discord.com/channels/...",
+    "pollOtherServer": "Poll message link: that message is in another server.",
+    "countdownShort": "Duration: the countdown needs at least 1 second.",
+    "countdownLong": "Duration: a countdown cannot be longer than 24 hours."
+  },
+  "action": {
+    "posted": "Posted in #{channel}.",
+    "scheduled": "Scheduled message #{id} saved for #{channel}: {schedule} ({zone}). First post {time}.",
+    "edited": "Scheduled message #{id} saved. Next post {time} ({zone}).",
+    "editedPaused": "Scheduled message #{id} saved. Next post when resumed.",
+    "alreadyPaused": "Scheduled message #{id} is already paused.",
+    "alreadyRunning": "Scheduled message #{id} is already running.",
+    "paused": "Scheduled message #{id} paused.",
+    "resumed": "Scheduled message #{id} resumed. Next post {time} ({zone}).",
+    "ran": "Scheduled message #{id} posted in #{channel}.",
+    "tested": "Scheduled message #{id} was sent to your DMs as a test. Nothing was posted in the server.",
+    "deleted": "Scheduled message #{id} deleted.",
+    "anonymousPosted": "Anonymous reaction poll posted in #{channel}.",
+    "reactionsMissing": {
+      "one": "Only {added} of {count} vote reactions could be added: add the rest by hand in Discord.",
+      "other": "Only {added} of {count} vote reactions could be added: add the rest by hand in Discord."
+    },
+    "pollPosted": "Poll posted in #{channel}. It closes {time}.",
+    "pollEnded": "Poll ended in #{channel}. The final results are now shown on it.",
+    "countdownStarted": "Countdown started in #{channel}: {duration}."
+  }
+}

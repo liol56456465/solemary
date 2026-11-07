@@ -1,0 +1,94 @@
+{
+  "page": {
+    "help": "Tickety pozwalają członkom prosić ekipę o pomoc na prywatnym kanale. Klikają przycisk w panelu ticketów (wiadomości, którą publikuje Mewvo) i dostają własny kanał, który widzą tylko oni i ekipa. Modmail działa tak samo, ale przez prywatną wiadomość do Mewvo. Możesz to też ustawić na Discordzie komendą /ticket setup."
+  },
+  "topic": {
+    "tickets": "Tickety",
+    "ticketsLine": "Przycisk, którym członkowie otwierają ticket, i gdzie trafiają tickety.",
+    "modmail": "Modmail i zapisane odpowiedzi",
+    "modmailLine": "Kto nie może pisać do ekipy oraz odpowiedzi, które ekipa często wysyła."
+  },
+  "panel": {
+    "title": "Panel ticketów",
+    "help": "Wiadomość z przyciskiem, który klikają członkowie.",
+    "helpNoAdmin": "Wiadomość z przyciskiem, który klikają członkowie. Aby opublikować panel, potrzebujesz uprawnienia Administrator na tym serwerze.",
+    "postedIn": "Panel na {channel}{warnings}.",
+    "republish": "Zaktualizuj lub opublikuj ponownie",
+    "textNote": "Zapisanie tekstu panelu poniżej nie zmienia wiadomości, która już jest na Discordzie. Zaktualizuj panel, aby pokazać nowy tekst.",
+    "none": "Nie ma jeszcze panelu ticketów. Wypełnij to, aby go opublikować.",
+    "postIn": "Opublikuj panel na",
+    "postInHelp": "Wybierz kanał, który widzi każdy członek.",
+    "newCategory": "nowa kategoria „Tickets”",
+    "submit": "Ustaw i opublikuj panel"
+  },
+  "settings": {
+    "title": "Ustawienia ticketów",
+    "help": "Kategorie, rola ekipy, dzienniki i tekst panelu.",
+    "openCategory": "Kategoria otwartych ticketów",
+    "openCategoryHelp": "Kategoria to folder na kanały. Nowe kanały ticketów powstają w niej.",
+    "closedCategory": "Kategoria zamkniętych ticketów",
+    "closedCategoryHelp": "Zamknięte tickety są tu przenoszone.",
+    "staffRole": "Rola ekipy ticketów",
+    "staffRoleHelp": "Członkowie z tą rolą widzą każdy ticket i mogą w nim odpowiadać.",
+    "maxPerUser": "Otwarte tickety na członka",
+    "maxPerUserHelp": "Ile ticketów jeden członek może mieć otwartych naraz. Od 1 do 10.",
+    "maxRange": "Od 1 do 10.",
+    "dmOnClose": "Napisz do członka, gdy jego ticket zostanie zamknięty",
+    "dmOnCloseHelp": "Wysyłane prywatnie (jako DM).",
+    "logChannel": "Kanał dziennika ticketów",
+    "logChannelHelp": "Ekipa dostaje tu krótką linijkę, gdy ticket zostanie otwarty, przejęty, zamknięty lub usunięty.",
+    "transcriptChannel": "Kanał transkrypcji",
+    "transcriptChannelHelp": "Transkrypcja to plik ze wszystkimi wiadomościami z ticketu. Mewvo publikuje go tutaj, gdy ticket się zamyka.",
+    "buttonText": "Tekst przycisku",
+    "buttonTextHelp": "Słowa na przycisku, którym członkowie otwierają ticket.",
+    "panelMessage": "Wiadomość panelu",
+    "panelMessageHelp": "Tekst nad przyciskiem. Napisz członkom, do czego służą tickety."
+  },
+  "blocked": {
+    "title": "Zablokowani w modmailu",
+    "help": "Zablokowani członkowie nie mogą zacząć rozmowy w modmailu z ekipą. Rozmowa, która jest już otwarta, zostaje, dopóki ekipa jej nie zamknie. Możesz to też zrobić na Discordzie komendą /modmail block.",
+    "userId": "ID użytkownika",
+    "empty": "Nikt nie jest zablokowany w modmailu.",
+    "heading": "Zablokuj członka",
+    "member": "Członek",
+    "reason": "Powód (opcjonalnie)",
+    "reasonHelp": "Widzi go tylko ekipa, w historii panelu.",
+    "submit": "Zablokuj w modmailu",
+    "confirm": "Zablokować tego członka w modmailu?",
+    "unblock": "Odblokuj"
+  },
+  "canned": {
+    "title": "Zapisane odpowiedzi",
+    "help": "Gotowe odpowiedzi na pytania, które ekipa często dostaje. Ekipa wysyła je w tickecie komendą /canned send. Wbudowanych odpowiedzi nie można usunąć, ale możesz zmienić ich tekst, zapisując odpowiedź o tej samej nazwie.",
+    "name": "Nazwa",
+    "text": "Tekst",
+    "builtIn": "(wbudowana)",
+    "delete": "Usuń",
+    "confirmDelete": "Usunąć zapisaną odpowiedź „{name}”?",
+    "nameHelp": "Ekipa wpisuje tę nazwę, aby wysłać odpowiedź. Tylko małe litery, cyfry i -, np. refund-policy.",
+    "answer": "Odpowiedź",
+    "answerHelp": "Tekst, który publikuje Mewvo.",
+    "submit": "Zapisz odpowiedź",
+    "saved": "Zapisano „{name}”.",
+    "deleted": "Usunięto „{name}”.",
+    "error": {
+      "name": "Nazwy mogą mieć tylko małe litery, cyfry i -, maksymalnie 32 znaki.",
+      "empty": "Odpowiedź nie może być pusta.",
+      "tooLong": "Odpowiedź może mieć maksymalnie {max} znaków.",
+      "unknown": "Nieznana odpowiedź.",
+      "builtIn": "„{name}” jest wbudowana i nie można jej usunąć. Aby zmienić jej tekst, zapisz odpowiedź o tej samej nazwie.",
+      "noSuch": "Nie ma zapisanej odpowiedzi o nazwie „{name}”."
+    }
+  },
+  "action": {
+    "setUp": "System ticketów gotowy: panel jest opublikowany.",
+    "panelReposted": "Panelu brakowało: opublikowano nowy.",
+    "panelUpdated": "Panel na Discordzie pokazuje teraz zapisany tekst.",
+    "settingsSaved": "Ustawienia ticketów zapisane.",
+    "alreadyBlocked": "Ten członek jest już zablokowany w modmailu.",
+    "blocked": "{user} nie może już korzystać z modmaila.",
+    "blockedOpen": "{user} nie może już korzystać z modmaila. Otwarta rozmowa #{channel} zostaje, dopóki jej nie zamkniesz.",
+    "notBlocked": "Ten członek nie był zablokowany.",
+    "unblocked": "Odblokowano w modmailu."
+  }
+}

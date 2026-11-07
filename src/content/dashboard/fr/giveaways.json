@@ -1,0 +1,69 @@
+{
+  "page": {
+    "help": "Fais gagner un prix à des membres tirés au sort. Mewvo publie un message de giveaway avec un bouton, les membres appuient dessus pour participer, et quand le temps est écoulé, Mewvo choisit les gagnants. Retirer au sort choisit de nouveaux gagnants. Tout ici demande la permission Administrateur sur ce serveur."
+  },
+  "needsAdmin": "Pour lancer des giveaways, il te faut la permission Administrateur sur ce serveur.",
+  "create": {
+    "title": "Lancer un giveaway",
+    "help": "Mewvo publie le message de giveaway dans le salon que tu choisis. Tu peux aussi le faire avec /giveaway create sur Discord.",
+    "channel": "Salon",
+    "channelHelp": "Où le message de giveaway est publié.",
+    "prize": "Prix",
+    "prizeHelp": "Ce que gagnent les gagnants, par exemple Nitro pour un mois.",
+    "duration": "Durée",
+    "durationHelp": "Combien de temps les membres peuvent participer. Un nombre et une lettre : s (secondes), m (minutes), h (heures) ou d (jours). De 10 secondes à 30 jours.",
+    "winners": "Gagnants",
+    "winnersHelp": "Combien de membres gagnent. De {min} à {max}.",
+    "submit": "Lancer le giveaway"
+  },
+  "active": {
+    "title": "En cours",
+    "empty": "Aucun giveaway en cours."
+  },
+  "ended": {
+    "title": "Terminés (les 25 derniers)",
+    "empty": "Aucun giveaway terminé."
+  },
+  "list": {
+    "prize": "Prix",
+    "channel": "Salon",
+    "ends": "Fin",
+    "ended": "Terminé le",
+    "entries": "Participations",
+    "winners": "Gagnants",
+    "endNow": "Terminer",
+    "endConfirm": "Terminer ce giveaway maintenant et choisir les gagnants ?",
+    "reroll": "Retirer au sort",
+    "delete": "Supprimer",
+    "deleteConfirm": "Supprimer le giveaway « {prize} » et son message ?",
+    "giveawayWord": "giveaway"
+  },
+  "random": {
+    "title": "Choisir un membre au hasard",
+    "help": "Choisit un membre au hasard, par exemple pour un tirage rapide. Le résultat s’affiche en haut de cette page et est enregistré dans l’historique du tableau de bord. Rien n’est publié sur Discord. Tu peux aussi le faire avec /tools randomuser sur Discord.",
+    "role": "Seulement les membres avec ce rôle",
+    "roleLabel": "Rôle",
+    "anyone": "tout le monde",
+    "bots": "Inclure les bots",
+    "botsHelp": "Désactivé : les comptes de bots ne sont jamais choisis.",
+    "online": "Seulement les membres en ligne",
+    "onlineHelp": "Ignore les membres qui apparaissent hors ligne en ce moment.",
+    "submit": "Choisir un membre"
+  },
+  "error": {
+    "unknown": "Giveaway inconnu."
+  },
+  "action": {
+    "picked": {
+      "one": "@{name} ({id}) choisi parmi {count} membre correspondant.",
+      "many": "@{name} ({id}) choisi parmi {count} de membres correspondants.",
+      "other": "@{name} ({id}) choisi parmi {count} membres correspondants."
+    },
+    "started": "Giveaway pour « {prize} » lancé ; il se termine dans {duration}.",
+    "ended": "Giveaway terminé : {winners} gagnant(s) parmi {entries} participations.",
+    "rerolled": "Nouveau tirage : {winners} nouveau(x) gagnant(s).",
+    "channelGone": "Le salon n’existe plus, donc rien n’a été annoncé.",
+    "deletedWithMessage": "Giveaway « {prize} » supprimé avec son message.",
+    "deletedMessageGone": "Giveaway « {prize} » supprimé (son message avait déjà disparu)."
+  }
+}

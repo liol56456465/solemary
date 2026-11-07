@@ -1,0 +1,134 @@
+{
+  "page": {
+    "help": "Let members apply for a role, like moderator, by answering a few questions with /apply in Discord. Staff read the answers and approve or deny. Approving gives the role."
+  },
+  "submitted": {
+    "title": {
+      "one": "Submitted applications ({count} waiting)",
+      "other": "Submitted applications ({count} waiting)"
+    },
+    "help": "Applications waiting for a decision. Approving gives the role. Either way, the member gets a private message (DM) with the result, and the staff log message is updated. You can also do this with /app-admin review in Discord.",
+    "unknownUser": "unknown user",
+    "unknownRole": "Unknown role",
+    "unknownDate": "unknown date",
+    "appliedFor": "{who} applied for {role}.",
+    "id": "ID {id}",
+    "question": "Q{number}: {question}",
+    "noAnswer": "No answer",
+    "noAnswers": "No answers.",
+    "approve": "Approve (gives the role)",
+    "deny": "Deny",
+    "decision": "Decision",
+    "note": "Note to the applicant (optional)",
+    "noteHelp": "Sent to them with the decision, for example why.",
+    "submit": "Send decision",
+    "confirm": "Send this decision to {name}? They get a private message (DM).",
+    "approved": "approved",
+    "denied": "denied",
+    "waiting": {
+      "one": "{count} waiting.",
+      "other": "{count} waiting."
+    },
+    "waitingShown": {
+      "one": "{count} waiting (newest {shown} shown).",
+      "other": "{count} waiting (newest {shown} shown)."
+    },
+    "none": "No applications are waiting for review.",
+    "needsAdmin": "To review applications here you need the Administrator permission in this server.",
+    "recent": "Recently reviewed",
+    "application": "Application",
+    "member": "Member",
+    "noteColumn": "Note",
+    "reviewed": "Reviewed",
+    "nothingReviewed": "Nothing reviewed yet."
+  },
+  "roles": {
+    "title": "Applications ({count})",
+    "help": "The roles members can apply for with /apply. Each one has its own questions, or uses the default questions below.",
+    "empty": "No applications yet.",
+    "new": "New application",
+    "name": "Name",
+    "nameHelp": "What members see in /apply, for example Moderator.",
+    "open": "Open for applications",
+    "openHelp": "Off: members cannot apply for this role right now.",
+    "logChannel": "Log channel for this role",
+    "logChannelNone": "the application log channel",
+    "logChannelHelp": "Where new applications for this role are posted for staff.",
+    "questions": "Questions",
+    "questionsHelp": "One question per line, up to {max}. Leave empty to use the default questions. Add [min:10] at the end of a question to ask for an answer of at least 10 characters.",
+    "save": "Save application",
+    "deleteText": "Deleting also removes every application members sent for {name}. The next page shows how many, and you confirm there.",
+    "delete": "Delete application…",
+    "role": "Role members apply for",
+    "roleHelp": "Approved members get this role.",
+    "add": "Add application"
+  },
+  "settings": {
+    "title": "Settings",
+    "help": "Setting the log channel here also changes the Applications log channel on the Logging page, and the other way round.",
+    "logChannel": "Application log channel",
+    "logChannelHelp": "Where new applications are posted for staff to review.",
+    "pendingDays": "Keep waiting applications (days)",
+    "pendingDaysHelp": "Applications nobody has decided on are deleted after this long.",
+    "reviewedDays": "Keep decided applications (days)",
+    "reviewedDaysHelp": "Approved and denied applications are deleted after this long."
+  },
+  "questions": {
+    "title": "Default questions",
+    "help": "Used for every role that has no questions of its own.",
+    "label": "Default questions",
+    "labelHelp": "One question per line, up to {max}. Add [min:10] at the end of a question to ask for an answer of at least 10 characters."
+  },
+  "managers": {
+    "title": "Manager roles",
+    "help": "Members with these roles can read and decide applications, without being administrators.",
+    "role": "Role",
+    "remove": "Remove",
+    "empty": "No manager roles.",
+    "addLabel": "Add a manager role",
+    "add": "Add"
+  },
+  "confirm": {
+    "heading": "Confirm: delete the {name} application",
+    "application": "Application",
+    "applicationValue": "{name} (role @{role})",
+    "submitted": "Submitted applications",
+    "effect": "Effect",
+    "effectText": "The application is removed from /apply and every application members sent for it is deleted. This cannot be undone. The role itself stays.",
+    "submit": "Delete application"
+  },
+  "action": {
+    "unknown": "Unknown application.",
+    "noteTooLong": "The note is limited to {max} characters.",
+    "theApplicant": "the applicant",
+    "theRole": "the role",
+    "notDmed": "{name} could not be DMed.",
+    "roleNotGiven": "The role could not be given (check my Manage Roles permission and the role order).",
+    "statusApproved": "approved",
+    "statusDenied": "denied",
+    "reviewed": "Application of {name} for {role} {status}.",
+    "reviewedGiven": "Application of {name} for {role} {status}. The role was given.",
+    "roleLabel": "Role",
+    "added": "Application \"{name}\" added.",
+    "emptyName": "The application name cannot be empty.",
+    "roleGone": "That application role no longer exists.",
+    "logChannelLabel": "Log channel",
+    "saved": "Application \"{name}\" saved.",
+    "deleted": {
+      "one": "Application \"{name}\" deleted with {count} submitted application(s).",
+      "other": "Application \"{name}\" deleted with {count} submitted application(s)."
+    },
+    "moduleLabel": "Applications",
+    "nowOn": "Applications are now on.",
+    "nowOff": "Applications are now off.",
+    "pendingDaysLabel": "Keep waiting applications",
+    "reviewedDaysLabel": "Keep decided applications",
+    "settingsSaved": "Application settings saved.",
+    "questionsSaved": "Default questions saved.",
+    "managerLabel": "Manager role",
+    "alreadyManager": "Already a manager role.",
+    "managerAdded": "Manager role added.",
+    "notManager": "That role is not a manager role.",
+    "managerRemoved": "Manager role removed."
+  }
+}

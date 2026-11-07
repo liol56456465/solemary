@@ -1,0 +1,130 @@
+{
+  "page": {
+    "helpText": "Begrüße neue Mitglieder mit einer Nachricht, wenn sie beitreten, verabschiede sie, wenn sie gehen, und gib neuen Mitgliedern automatisch eine Rolle. In den Nachrichten kannst du {user} (erwähnt das Mitglied), {user.tag} (der Nutzername, ohne Erwähnung), {server} (der Servername) und {memberCount} (wie viele Mitglieder der Server jetzt hat) verwenden."
+  },
+  "join": {
+    "topic": "Willkommen",
+    "topicLine": "Was Mewvo postet, wenn jemand beitritt.",
+    "title": "Willkommen",
+    "help": "Die Willkommensnachricht, wohin sie geht, und eine optionale private Nachricht.",
+    "toggle": "Willkommensnachrichten",
+    "channel": "Willkommenskanal",
+    "channelHelp": "Wo die Willkommensnachricht gepostet wird.",
+    "ping": "Mitglied erwähnen",
+    "pingHelp": "Erwähnt das Mitglied, damit es eine Benachrichtigung bekommt.",
+    "message": "Willkommensnachricht",
+    "messageHelp": "Zum Beispiel: Willkommen auf {server}, {user}. Du bist Mitglied Nummer {memberCount}.",
+    "dm": "Private Nachricht an das neue Mitglied",
+    "dmHelp": "Wird direkt an das Mitglied geschickt (eine DM). Leer lassen, um nichts zu schicken."
+  },
+  "leave": {
+    "topic": "Abschied",
+    "topicLine": "Was Mewvo postet, wenn jemand geht.",
+    "title": "Abschied",
+    "help": "Die Abschiedsnachricht und wohin sie geht.",
+    "toggle": "Abschiedsnachrichten",
+    "channel": "Abschiedskanal",
+    "channelHelp": "Wo die Abschiedsnachricht gepostet wird.",
+    "ping": "Mitglied erwähnen",
+    "pingHelp": "Erwähnt das Mitglied in der Nachricht mit Namen.",
+    "message": "Abschiedsnachricht",
+    "messageHelp": "Zum Beispiel: {user.tag} hat den Server verlassen."
+  },
+  "embed": {
+    "welcomeTitle": "Willkommens-Embed und Bild",
+    "goodbyeTitle": "Abschieds-Embed und Bild",
+    "help": "Der Kasten um die Nachricht: Titel, Farbe und ein optionales Bild.",
+    "helpMore": "Die Nachricht wird in einem Kasten (einem Embed) mit Titel, Farbe und optionalem Bild gesendet. Der Nachrichtentext von oben steht im Kasten. Fehlt Mewvo in diesem Kanal die Berechtigung Links einbetten, wird nur der Text gesendet.",
+    "title": "Kastentitel",
+    "titleHelp": "Die fette Zeile oben im Kasten. Leer lassen für „{title}“. Dieselben Wörter in geschweiften Klammern wie in der Nachricht funktionieren auch hier.",
+    "colour": "Kastenfarbe",
+    "colourHelp": "Der farbige Streifen links am Kasten, als Farbcode: # und sechs Buchstaben oder Ziffern, etwa #57F287 für Grün. Leer lassen für die Standardfarbe.",
+    "footer": "Kastenfußzeile",
+    "footerHelp": "Kleiner Text unten im Kasten. Leer lassen für den Servernamen. Dieselben Wörter in geschweiften Klammern wie in der Nachricht funktionieren auch hier.",
+    "image": "Bildlink",
+    "imageHelp": "Ein Link, der mit https:// beginnt und ein PNG-, JPG-, GIF- oder WebP-Bild öffnet. Es erscheint groß unten im Kasten. Leer lassen für kein Bild. Für ein Bild von deinem Computer nutze unten „Bild hochladen“.",
+    "welcomeImage": "Willkommensbild",
+    "goodbyeImage": "Abschiedsbild",
+    "embedColour": "Embed-Farbe"
+  },
+  "image": {
+    "none": "Kein Bild.",
+    "welcomeAlt": "Aktuelles Willkommensbild",
+    "goodbyeAlt": "Aktuelles Abschiedsbild",
+    "current": "Aktuelles Bild: {link}",
+    "onlyDiscord": "(hier können nur Bilder angezeigt werden, die auf Discord gespeichert sind)",
+    "channelId": "Kanal {id}",
+    "welcomeStored": "Hochgeladene Datei: Eine Kopie liegt in {where}. Lösch diese Nachricht nicht, denn die Willkommensnachricht lädt das Bild von dort.",
+    "goodbyeStored": "Hochgeladene Datei: Eine Kopie liegt in {where}. Lösch diese Nachricht nicht, denn die Abschiedsnachricht lädt das Bild von dort.",
+    "uploadLabel": "Bild hochladen (PNG, JPEG, GIF oder WebP, bis {mb} MB)",
+    "uploadHint": "Ersetzt den Bildlink oben. Mewvo postet die Datei in deinem Haupt-Log-Kanal und nutzt sie von dort, damit das Bild weiter funktioniert. /greet in Discord macht dasselbe.",
+    "upload": "Bild hochladen",
+    "remove": "Bild entfernen",
+    "welcomeConfirm": "Willkommensbild entfernen?",
+    "goodbyeConfirm": "Abschiedsbild entfernen?"
+  },
+  "members": {
+    "topic": "Neue Mitglieder",
+    "topicLine": "Eine Startrolle und ein Protokoll von Beitritten und Abgängen für das Team."
+  },
+  "autoRole": {
+    "title": "Automatische Rolle",
+    "help": "Jedes neue Mitglied bekommt diese Rolle automatisch. Es gibt eine: Eine neue ersetzt die alte. Mewvo kann nur Rollen unter seiner eigenen Rolle in der Rollenliste vergeben und vergibt keine Rollen mit Teamrechten. Das geht auch mit /autorole in Discord.",
+    "role": "Rolle",
+    "problems": "Probleme",
+    "ok": "ok",
+    "remove": "Entfernen",
+    "none": "Beim Beitritt wird keine Rolle vergeben.",
+    "pick": "Rolle für neue Mitglieder",
+    "set": "Festlegen",
+    "delay": "Warten, bevor die Rolle vergeben wird (Sekunden)",
+    "delayLabel": "Warten, bevor die Rolle vergeben wird",
+    "delayHelp": "Wie lange Mewvo nach dem Beitritt wartet. 0 vergibt sie sofort."
+  },
+  "logs": {
+    "title": "Beitritts- und Abgangs-Logs",
+    "help": "Ein Protokoll für das Team, wer beigetreten ist und wer gegangen ist, getrennt von den öffentlichen Nachrichten.",
+    "joins": "Beitritte loggen",
+    "joinsHelp": "Bei jedem Beitritt eine kurze Zeile für das Team posten.",
+    "joinChannel": "Kanal für Beitritts-Logs",
+    "leaves": "Abgänge loggen",
+    "leavesHelp": "Bei jedem Abgang eine kurze Zeile für das Team posten.",
+    "leaveChannel": "Kanal für Abgangs-Logs"
+  },
+  "action": {
+    "welcomeOn": "Willkommensnachrichten sind an.",
+    "welcomeOff": "Willkommensnachrichten sind aus.",
+    "goodbyeOn": "Abschiedsnachrichten sind an.",
+    "goodbyeOff": "Abschiedsnachrichten sind aus.",
+    "welcomeSaved": "Willkommenseinstellungen gespeichert.",
+    "goodbyeSaved": "Abschiedseinstellungen gespeichert.",
+    "welcomeEmbedSaved": "Willkommens-Embed gespeichert.",
+    "goodbyeEmbedSaved": "Abschieds-Embed gespeichert.",
+    "welcomeUploaded": "Willkommensbild hochgeladen.",
+    "goodbyeUploaded": "Abschiedsbild hochgeladen.",
+    "welcomeUploadedNote": "Willkommensbild hochgeladen. Eine Kopie liegt in {where}; lösch diese Nachricht nicht, die Willkommensnachricht lädt das Bild von dort.",
+    "goodbyeUploadedNote": "Abschiedsbild hochgeladen. Eine Kopie liegt in {where}; lösch diese Nachricht nicht, die Abschiedsnachricht lädt das Bild von dort.",
+    "auditChannel": "dem Audit-Log-Kanal",
+    "welcomeImageRemoved": "Willkommensbild entfernt.",
+    "goodbyeImageRemoved": "Abschiedsbild entfernt.",
+    "autoRoleAlready": "Diese Rolle wird beim Beitritt schon vergeben.",
+    "autoRoleSet": "Automatische Rolle festgelegt.",
+    "autoRoleNotSet": "Diese Rolle war keine automatische Rolle.",
+    "autoRoleRemoved": "Automatische Rolle entfernt.",
+    "delaySaved": "Wartezeit der automatischen Rolle gespeichert.",
+    "logsSaved": "Beitritts- und Abgangs-Logs gespeichert."
+  },
+  "error": {
+    "colour": "{label} muss ein Hex-Farbcode sein, etwa #57F287.",
+    "badLink": "{label}: kein gültiger Link.",
+    "https": "{label} muss mit https:// beginnen.",
+    "expiredLink": "{label}: Dieser Discord-Anhangslink ist abgelaufen. Lade die Bilddatei stattdessen unten hoch oder nutze einen dauerhaften Bildlink.",
+    "chooseFile": "Wähle eine Bilddatei zum Hochladen.",
+    "notImage": "Diese Datei ist kein PNG-, JPEG-, GIF- oder WebP-Bild.",
+    "noLogChannel": "{label}: Es ist kein Haupt-Log-Kanal festgelegt, also kann das hochgeladene Bild nirgends aufbewahrt werden. Leg einen auf der Seite Logs fest oder nutze stattdessen einen Bildlink. Es wurde nichts geändert.",
+    "cannotPost": "{label}: Mewvo konnte das Bild nicht im Haupt-Log-Kanal ({channel}) posten. Mewvo braucht dort die Berechtigungen Kanäle ansehen, Nachrichten senden und Dateien anhängen. Es wurde nichts geändert."
+  },
+  "warn": {
+    "discordLink": "{label}: Discord-Anhangslinks funktionieren nach etwa einem Tag nicht mehr. Für ein dauerhaftes Bild lade die Datei unten hoch (Bild hochladen) oder nutze einen dauerhaften Bild-Host."
+  }
+}

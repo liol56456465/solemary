@@ -1,0 +1,26 @@
+{
+  "page": {
+    "help": "Mewvo fa gli auguri ai membri in un canale nel giorno del loro compleanno e può dare loro un ruolo speciale per quel giorno. I membri aggiungono da soli il proprio compleanno con /birthday set su Discord."
+  },
+  "status": {
+    "title": "Stato",
+    "on": "Annunci: {state}.",
+    "off": "Annunci: {state}. Scegli un canale qui sotto per attivarli.",
+    "turnOff": "Disattiva (togli il canale)"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "channel": "Canale degli annunci",
+    "channelNone": "disattivato",
+    "channelHelp": "Dove viene pubblicato il messaggio di auguri.",
+    "timezone": "Fuso orario",
+    "timezoneHelp": "I compleanni iniziano a mezzanotte in questo fuso orario. Scrivilo come regione e città, come Europe/Rome o America/New_York.",
+    "role": "Ruolo del compleanno",
+    "roleNone": "nessuno",
+    "roleHelp": "Assegnato nel giorno del compleanno e tolto il giorno dopo."
+  },
+  "action": {
+    "saved": "Impostazioni dei compleanni salvate.",
+    "off": "Gli annunci di compleanno sono disattivati."
+  }
+}

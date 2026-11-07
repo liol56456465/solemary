@@ -1,0 +1,441 @@
+{
+  "page": {
+    "help": "O Automod acompanha as mensagens e as entradas no servidor principal e age sozinho contra spam, palavrões, links indesejados e raids, para a equipe não precisar pegar tudo. Você também pode mudar isso com /automod no Discord."
+  },
+  "ruleNames": {
+    "scam": "Link de golpe ou phishing",
+    "nsfw": "Conteúdo NSFW",
+    "sexual": "Assédio ou referências sexuais",
+    "harassment": "Assédio",
+    "privacy": "Compartilhar informações pessoais",
+    "advertising": "Divulgação sem permissão",
+    "impersonation": "Falsidade ideológica ou engano",
+    "language": "Linguagem inadequada",
+    "disrespect": "Desrespeito ou drama",
+    "mentions": "Menções em massa",
+    "spam": "Spam",
+    "caps": "Excesso de maiúsculas",
+    "characters": "Caracteres não ingleses ou fontes estilizadas",
+    "english": "Só inglês"
+  },
+  "common": {
+    "rule": "Regra",
+    "mode": "Modo",
+    "remove": "Remover",
+    "open": "Abrir"
+  },
+  "mode": {
+    "on": "ativada",
+    "monitor": "só avisar (não apagar)",
+    "off": "desativada"
+  },
+  "period": {
+    "lastDay": "Último dia",
+    "lastDays": {
+      "one": "Último {count} dia",
+      "many": "Últimos {count} dias",
+      "other": "Últimos {count} dias"
+    },
+    "theLastDay": "o último dia",
+    "inLastDay": "no último dia",
+    "inLastDays": {
+      "one": "no último {count} dia",
+      "many": "nos últimos {count} dias",
+      "other": "nos últimos {count} dias"
+    },
+    "oneDay": "1 dia",
+    "days": {
+      "one": "{count} dia",
+      "many": "{count} dias",
+      "other": "{count} dias"
+    }
+  },
+  "topics": {
+    "now": "Agora",
+    "nowLine": "O que está esperando a equipe neste momento.",
+    "rules": "Regras",
+    "rulesLine": "O que o Automod verifica e o que ele faz quando uma regra é quebrada.",
+    "leniency": "Exceções e tolerância",
+    "leniencyLine": "Onde o Automod faz vista grossa e quem começa com mais calma.",
+    "raids": "Raids e membros novos",
+    "raidsLine": "As verificações na entrada e o que acontece quando muitas contas entram ao mesmo tempo.",
+    "results": "Resultados",
+    "resultsLine": "Quantas vezes o Automod agiu e quantas vezes a equipe desfez."
+  },
+  "global": {
+    "title": "Modo geral",
+    "help": "O que cada regra faz, a não ser que você mude abaixo.",
+    "label": "O que o Automod faz",
+    "labelHelp": "A equipe fica sabendo por um cartão de revisão: uma mensagem no canal de revisão com botões para manter ou desfazer o que o Automod fez. No modo “só avisar (não apagar)”, o cartão tem um botão Apply no lugar.",
+    "enforce": "Agir: apagar ou advertir e depois avisar a equipe",
+    "monitor": "Só avisar (não apagar): avisar a equipe, mais nada"
+  },
+  "channels": {
+    "title": "Canais e palavras",
+    "help": "Onde o Automod fala com a equipe, e as suas próprias palavras bloqueadas.",
+    "review": "Canal de revisão",
+    "reviewHelp": "Onde a equipe vê os cartões de revisão, as denúncias de membros e as verificações esperando conferência. Não definido: o canal do registro de moderação.",
+    "alerts": "Canal de alertas",
+    "alertsHelp": "Onde o Mewvo avisa a equipe sobre raids e outras urgências, e publica resumos. Não definido: o canal do registro de moderação.",
+    "words": "Palavras bloqueadas extras",
+    "wordsHelp": "Somadas à lista embutida de palavrões. Coloque cada palavra em uma linha. Letras parecidas, símbolos e espaços também são detectados."
+  },
+  "rules": {
+    "title": "Modos das regras",
+    "help": "Mude regras individuais. default: faz o que diz a configuração principal acima. ativada: age. só avisar (não apagar): só avisa a equipe. desativada: a regra não é verificada. Avisar no privado primeiro (2 min para corrigir): na primeira vez em 30 dias, o membro recebe uma mensagem privada e 2 minutos para editar ou apagar a mensagem, e nada mais acontece. Informações pessoais são removidas na hora, sem aviso. Golpes, NSFW, divulgação, menções em massa, spam, raids e ofensas sempre agem na hora.",
+    "headsUp": "Avisar no privado primeiro (2 min para corrigir)",
+    "actsAtOnce": "age na hora",
+    "defaultOption": "default ({mode})",
+    "customAll": "Regras personalizadas (todas)",
+    "seeCustom": "veja Regras personalizadas",
+    "save": "Salvar regras",
+    "headsUpUnreadable": "Não foi possível ler as contagens de primeiros avisos privados (banco de dados).",
+    "headsUpCounts": "Primeiros avisos privados nos últimos 30 dias: {sent} enviados, {fixed} corrigidos pelo membro, {acted} punidos depois da espera."
+  },
+  "custom": {
+    "title": "Regras personalizadas",
+    "help": "Suas próprias listas de palavras e frases para bloquear. Como as regras embutidas, elas reconhecem palavras inteiras, não ligam para maiúsculas e pegam letras parecidas (como 0 no lugar de o). Uma correspondência apaga a mensagem e publica um cartão de revisão. Advertir e silenciar também registram no histórico do membro (um caso). Elas seguem a configuração principal do Automod e pulam os canais ignorados. Quantas você pode ter depende do plano do dono do servidor.",
+    "seePlans": "Ver os planos",
+    "noPlan": "As regras personalizadas vêm com os planos Normal, Pro e Max. Vale o plano do dono do servidor. Este servidor está no {plan}. {pricing}",
+    "stateOn": "ativada",
+    "stateOff": "desativada",
+    "overLimit": "não está rodando (acima do limite do plano)",
+    "colName": "Nome",
+    "colWords": "Palavras",
+    "colAction": "Ação",
+    "colState": "Estado",
+    "actionDelete": "Apagar",
+    "actionWarn": "Advertir",
+    "actionMute": "Silenciar {duration}",
+    "removeConfirm": "Remover a regra personalizada “{name}”?",
+    "empty": "Ainda não há regras personalizadas.",
+    "running": {
+      "one": "{running} de {count} regra personalizada roda no plano {plan}.",
+      "many": "{running} de {count} regras personalizadas rodam no plano {plan}.",
+      "other": "{running} de {count} regras personalizadas rodam no plano {plan}."
+    },
+    "overLimitCount": {
+      "one": "{count} regra ativada acima do limite não roda. Desative ou remova algumas, ou passe para um plano maior.",
+      "many": "{count} regras ativadas acima do limite não rodam. Desative ou remova algumas, ou passe para um plano maior.",
+      "other": "{count} regras ativadas acima do limite não rodam. Desative ou remova algumas, ou passe para um plano maior."
+    },
+    "atLimit": {
+      "one": "Este servidor tem {count} regra personalizada, o máximo que o plano {plan} permite.",
+      "many": "Este servidor tem {count} regras personalizadas, o máximo que o plano {plan} permite.",
+      "other": "Este servidor tem {count} regras personalizadas, o máximo que o plano {plan} permite."
+    },
+    "name": "Nome",
+    "namePlaceholder": "Outros servidores",
+    "nameHelp": "Um nome para você diferenciar suas regras.",
+    "whatToDo": "O que fazer",
+    "do": {
+      "delete": "Apagar a mensagem",
+      "warn": "Apagar e advertir",
+      "mute": "Apagar e silenciar"
+    },
+    "muteFor": "Silenciar por",
+    "muteForHelp": "Só usado para silenciamentos. Por exemplo 30m (30 minutos), 1h (uma hora) ou 1d (um dia). No máximo 28d.",
+    "muteForHelpShort": "Só usado para silenciamentos, como 30m, 1h ou 1d.",
+    "words": "Palavras ou frases",
+    "wordsHelp": "Coloque cada palavra ou frase em uma linha. Até {lines} linhas, cada uma com até {chars} caracteres.",
+    "wordsHelpEdit": "Uma por linha. Isso substitui a lista antiga.",
+    "add": "Adicionar regra",
+    "changeTitle": "Mudar uma regra",
+    "changeRule": "Mudar “{name}”",
+    "ruleLabel": "Regra personalizada",
+    "invalid": "Essa regra personalizada não é válida.",
+    "gone": "Essa regra personalizada não existe mais. Recarregue a página."
+  },
+  "native": {
+    "title": "AutoMod do Discord",
+    "help": "O Discord tem um AutoMod embutido. Quando uma das regras dele bloqueia uma mensagem, o Mewvo também pode registrar isso ou advertir o membro.",
+    "unreadable": "Não foi possível ler as regras do AutoMod do Discord. Para isso, o Mewvo precisa da permissão “Gerenciar servidor”.",
+    "rule": "Regra do Discord",
+    "policy": "O que o Mewvo faz",
+    "policyLabel": "Comportamento",
+    "once": "No máximo uma vez por membro a cada",
+    "minutes": "{count} min",
+    "empty": "Este servidor não tem regras do AutoMod do Discord. Você cria no Discord, em Configurações do servidor, AutoMod.",
+    "policyHelp": "ignorar: nada. registrar: uma linha curta no canal de revisão. advertir: uma advertência e um cartão de revisão.",
+    "dedupe": "Agir uma vez por membro a cada (minutos)",
+    "dedupeHelp": "Outros bloqueios do mesmo membro nesse tempo só são contados. Deixe em branco para manter o valor atual.",
+    "submit": "Definir comportamento",
+    "policies": {
+      "ignore": "ignorar",
+      "log": "registrar",
+      "warn": "advertir"
+    }
+  },
+  "secondChance": {
+    "title": "Aviso amigável na primeira infração leve",
+    "help": "Pegue leve com um primeiro deslize pequeno.",
+    "label": "Aviso amigável na primeira infração leve: um aviso curto em vez de uma advertência"
+  },
+  "mood": {
+    "title": "Clima",
+    "help": "O modo lento faz os membros esperarem alguns segundos entre as mensagens.",
+    "label": "Alertas de clima: quando um canal esquenta, publicar uma mensagem para acalmar e deixar o chat mais lento por um tempo",
+    "alerts": "Alertas de clima"
+  },
+  "trusted": {
+    "title": "Membros confiáveis",
+    "help": "Membros confiáveis pulam as regras de coisas pequenas. As regras sérias continuam valendo. Para desativar, escolha nenhum e coloque o nível em 0.",
+    "role": "Cargo confiável",
+    "none": "nenhum",
+    "roleHelp": "Membros com este cargo são confiáveis.",
+    "minLevel": "Ou a partir do nível",
+    "minLevelHelp": "Membros neste nível ou acima também são confiáveis. 0 desativa isso."
+  },
+  "exceptions": {
+    "title": "Exceções por canal",
+    "help": "Desative uma regra, ou coloque em “só avisar (não apagar)”, em um canal. Por exemplo, permita links em um canal de links.",
+    "channel": "Canal ou categoria",
+    "channelHelp": "Uma categoria é uma pasta de canais. Escolher uma cobre todos os canais dentro dela.",
+    "empty": "Não há exceções de regras por canal.",
+    "modeThere": "Modo nesse canal",
+    "modeThereHelp": "desativada: a regra é pulada ali. só avisar (não apagar): a equipe é avisada, nada é apagado.",
+    "add": "Adicionar exceção"
+  },
+  "exempt": {
+    "title": "Canais ignorados",
+    "help": "Canais em que o Automod não verifica nada.",
+    "channel": "Canal",
+    "empty": "O Automod verifica todos os canais.",
+    "ignore": "Ignorar este canal",
+    "ignoreHelp": "O Automod não verifica nenhuma mensagem aqui.",
+    "add": "Adicionar",
+    "alsoIgnored": "Também ignorados (definidos pelo dono do bot fora do painel): {channels}"
+  },
+  "gate": {
+    "title": "Filtro de entrada",
+    "help": "Verifica os membros novos quando entram. Para cada verificação: desativado não faz nada; sinalizar avisa a equipe no canal de revisão, com os botões Kick e Dismiss; expulsar remove a pessoa e manda uma mensagem privada explicando como voltar.",
+    "ageDays": "Conta nova = mais nova que (dias)",
+    "checks": {
+      "avatar": "Sem foto de perfil",
+      "links": "Link ou convite no nome",
+      "botname": "Nome de usuário que parece gerado",
+      "age": "Conta nova"
+    },
+    "actions": {
+      "off": "desativado",
+      "flag": "sinalizar",
+      "kick": "expulsar"
+    }
+  },
+  "panic": {
+    "title": "Pânico",
+    "help": "Um bloqueio contra raid começa sozinho quando muitas contas entram ao mesmo tempo. O modo pânico dificulta que os raiders se espalhem.",
+    "label": "Modo pânico: parar convites novos e mensagens privadas entre membros quando começa um bloqueio contra raid",
+    "hours": "Parar por (horas)"
+  },
+  "stats": {
+    "period": "Período das estatísticas",
+    "total": {
+      "one": "{count} ação automática em {period}.",
+      "many": "{count} ações automáticas em {period}.",
+      "other": "{count} ações automáticas em {period}."
+    },
+    "undoHint": "Se a equipe desfaz 30% ou mais das ações de uma regra, a regra provavelmente está rígida demais.",
+    "actions": "Ações",
+    "undone": "Desfeitas",
+    "changed": "Mudadas",
+    "undoRate": "Taxa de desfazer",
+    "empty": "Nenhuma ação do Automod."
+  },
+  "lockdown": {
+    "title": "Bloqueio contra raid",
+    "help": "Um bloqueio começa sozinho quando muitas contas entram ao mesmo tempo.",
+    "unreadable": "Não foi possível ler o estado do bloqueio (banco de dados). Recarregue a página para tentar de novo.",
+    "active": "Há um bloqueio contra raid ativo",
+    "since": "desde {date}",
+    "joiners": {
+      "one": "{count} entrada do raid",
+      "many": "{count} entradas do raid",
+      "other": "{count} entradas do raid"
+    },
+    "end": "Encerrar bloqueio",
+    "endConfirm": "Encerrar o bloqueio contra raid? O nível de verificação volta ao que era e os convites e mensagens diretas pausados voltam a funcionar.",
+    "needsAdmin": "Para encerrar um bloqueio, você precisa da permissão Administrador neste servidor.",
+    "follow": "Acompanhar na linha do tempo de raids",
+    "none": "Nenhum bloqueio agora. Ele começa sozinho quando muitas contas entram ao mesmo tempo (um raid). Os raids anteriores estão na {timeline}.",
+    "timelineLink": "linha do tempo de raids"
+  },
+  "queue": {
+    "title": "Fila de revisão",
+    "titleCount": "Fila de revisão ({count})",
+    "unreadable": "Não foi possível ler a fila de revisão (canal de revisão indisponível).",
+    "colCard": "Cartão",
+    "colSince": "Desde",
+    "colMessages": "Mensagens",
+    "card": "Cartão de revisão",
+    "empty": "Nada está esperando revisão.",
+    "more": "…e mais {count}.",
+    "help": "Cartões de revisão esperando a equipe: os publicados desde a última vez que o bot iniciou, e as últimas 50 mensagens do canal de revisão que ainda têm botões. Linhas curtas sobre coisas pequenas não aparecem. Você decide cada cartão no Discord com os botões dele (Keep, Undo, Change, Dismiss)."
+  },
+  "probation": {
+    "title": "Vigilância extra depois de um banimento",
+    "titleCount": "Vigilância extra depois de um banimento ({count})",
+    "help": "Membros que voltaram depois que um banimento terminou. O Automod fica mais rígido com eles por um tempo: eles pulam direto para a próxima etapa de punição e não recebem o aviso amigável nem a tolerância de membro confiável.",
+    "unreadable": "Não foi possível ler os períodos de vigilância extra (banco de dados). Recarregue a página para tentar de novo.",
+    "colMember": "Membro",
+    "colUntil": "Até",
+    "colBan": "Banimento",
+    "end": "Encerrar vigilância",
+    "endConfirm": "Encerrar agora esta vigilância extra?",
+    "empty": "Ninguém está em vigilância extra depois de um banimento."
+  },
+  "testRun": {
+    "title": "Teste",
+    "help": "Confira as mensagens recentes com as suas configurações atuais do Automod, sem agir em nada. Nada é apagado, ninguém recebe mensagem, nada é salvo ou registrado. Só rodam as verificações que olham uma mensagem por vez. Spam, o mesmo texto em vários canais e ofensas repetidas ao longo do tempo são pulados, porque dependem do ritmo. A tolerância para membros confiáveis não é aplicada, e os administradores são pulados como o Automod faz. As mensagens de quem saiu do servidor também são verificadas.",
+    "channels": "Canais (até {max})",
+    "channelsHelp": "O Mewvo precisa de “Ver canal” e “Ver histórico de mensagens” em cada um.",
+    "howFarBack": "Até quando voltar",
+    "howFarBackHelp": "No máximo {max} mensagens no total, as mais novas primeiro.",
+    "draftName": "Nome da regra de rascunho (opcional)",
+    "draftDefault": "Regra de rascunho",
+    "draftNameHelp": "Teste uma regra personalizada antes de adicionar. Ela não é salva.",
+    "draftWordsLabel": "Palavras da regra de rascunho (opcional)",
+    "draftWordsHelp": "Uma palavra ou frase por linha, até {max}. Detectadas como nas regras personalizadas.",
+    "start": "Iniciar teste",
+    "needsAdmin": "Para iniciar um teste, você precisa da permissão Administrador neste servidor.",
+    "strictHelp": "“Talvez rígida demais” aparece quando uma regra pegou pelo menos {hits} mensagens, de pelo menos {members} membros diferentes, e pelo menos {share}% das mensagens verificadas. É só uma dica: os membros podem mesmo quebrar essa regra com essa frequência. Veja os exemplos e as palavras encontradas antes de mudar qualquer coisa.",
+    "fixHelp": "Os botões mudam a regra para o servidor todo na hora, igual ao formulário Modos das regras, e a mudança é registrada. Só avisar (não apagar): a equipe é avisada, nada é apagado. Ativar: a regra segue a configuração principal. As exceções por canal continuam valendo nos canais delas.",
+    "skippedChecks": "Não verificados em um teste: spam, o padrão de bot de divulgação (o mesmo texto em vários canais vindo de uma conta nova) e assédio ao longo do tempo. Uma ofensa dirigida a alguém conta aqui como desrespeito.",
+    "strictNote": "Pega muito, talvez rígida demais",
+    "moreWords": "e mais {more}",
+    "draftTitle": "Regra de rascunho",
+    "draftLabel": "Rascunho: {name}",
+    "draftWords": {
+      "one": "{count} palavra ou frase",
+      "many": "{count} palavras ou frases",
+      "other": "{count} palavras ou frases"
+    },
+    "draftHead": "“{name}”, {words}. Ainda não foi salva.",
+    "draftNoPlan": "As regras personalizadas vêm com os planos Normal, Pro e Max.",
+    "draftAtLimit": {
+      "one": "Este servidor já tem {count} regra personalizada, o máximo que o plano dele permite. Remova uma em Regras personalizadas primeiro.",
+      "many": "Este servidor já tem {count} regras personalizadas, o máximo que o plano dele permite. Remova uma em Regras personalizadas primeiro.",
+      "other": "Este servidor já tem {count} regras personalizadas, o máximo que o plano dele permite. Remova uma em Regras personalizadas primeiro."
+    },
+    "draftAdd": "Adicionar esta regra",
+    "draftAddConfirm": "Adicionar a regra personalizada “{name}”? Ela começa a apagar as mensagens que combinarem na hora. Você pode mudar o que ela faz em Regras personalizadas.",
+    "draftAddNote": "Adicionada como regra personalizada que apaga a mensagem. Em Regras personalizadas você pode mudar para advertir ou silenciar.",
+    "modeDraft": "rascunho, não salvo",
+    "modeActs": "age",
+    "offSuffix": "{rule} (desativada)",
+    "excerptHidden": "oculto (não foi possível esconder a correspondência com segurança)",
+    "noText": "sem texto",
+    "summary": "{read} {from} {period}: {checked} verificadas, {bots} de bots puladas, {admins} de administradores puladas. {hits}",
+    "readMessages": {
+      "one": "Lida {count} mensagem",
+      "many": "Lidas {count} mensagens",
+      "other": "Lidas {count} mensagens"
+    },
+    "fromChannels": {
+      "one": "de {count} canal",
+      "many": "de {count} canais",
+      "other": "de {count} canais"
+    },
+    "hitMessages": {
+      "one": "{count} mensagem quebrou uma regra.",
+      "many": "{count} mensagens quebraram uma regra.",
+      "other": "{count} mensagens quebraram uma regra."
+    },
+    "capped": "Parou no limite de {max} mensagens. Mensagens mais antigas desse período podem não ter sido verificadas.",
+    "automodOff": "O Automod está desativado agora. Isto mostra o que ele pegaria com estas configurações.",
+    "invitesUnchecked": {
+      "one": "{count} link de convite não foi consultado (limite de consultas atingido), então não é contado.",
+      "many": "{count} links de convite não foram consultados (limite de consultas atingido), então não são contados.",
+      "other": "{count} links de convite não foram consultados (limite de consultas atingido), então não são contados."
+    },
+    "colRule": "Regra",
+    "colMessages": "Mensagens",
+    "colMembers": "Membros",
+    "colShare": "Parte das verificadas",
+    "colMode": "Modo",
+    "colNote": "Observação",
+    "colFix": "Correção sugerida",
+    "noHits": "Nenhuma mensagem quebrou uma regra.",
+    "offTitle": "Desativadas, mas teriam pegado mensagens",
+    "wordsTitle": "Palavras encontradas",
+    "wordsHelp": "Quantas vezes cada palavra ou frase foi encontrada, em parte oculta como nos exemplos.",
+    "colWords": "Palavras",
+    "examplesTitle": "Exemplos (até {max})",
+    "colWhen": "Quando",
+    "colMember": "Membro",
+    "colChannel": "Canal",
+    "colExcerpt": "Trecho",
+    "reload": "Recarregue esta página",
+    "stateUnreadable": "Não foi possível ler o estado do teste. {reload} para tentar de novo.",
+    "inProgress": "Teste em andamento.",
+    "progress": "{read} de no máximo {max} mensagens lidas até agora, iniciado {started}. {reload} para ver o progresso.",
+    "failed": "O último teste falhou: {error}",
+    "unknownError": "erro desconhecido.",
+    "readBeforeStop": {
+      "one": "{count} mensagem foi lida antes de parar.",
+      "many": "{count} mensagens foram lidas antes de parar.",
+      "other": "{count} mensagens foram lidas antes de parar."
+    },
+    "newTitle": "Iniciar um novo teste",
+    "newHelp": "Um novo teste substitui este resultado. Os resultados ficam guardados por 30 minutos."
+  },
+  "fix": {
+    "offNow": "desativada agora",
+    "onNow": "ativada agora",
+    "removedSince": "removida desde então",
+    "setMonitor": "Só avisar",
+    "confirmOff": "Desativar {rule} no servidor todo?",
+    "confirmMonitor": "Colocar {rule} em “só avisar (não apagar)” no servidor todo?",
+    "confirmOn": "Ativar {rule} no servidor todo? Ela segue a configuração principal.",
+    "confirmCustomOff": "Desativar a regra personalizada “{name}”?"
+  },
+  "error": {
+    "unknownMode": "{rule}: modo desconhecido.",
+    "customAtLimit": {
+      "one": "Este servidor já tem {count} regra personalizada, o máximo que o plano {plan} permite. Remova uma primeiro.",
+      "many": "Este servidor já tem {count} regras personalizadas, o máximo que o plano {plan} permite. Remova uma primeiro.",
+      "other": "Este servidor já tem {count} regras personalizadas, o máximo que o plano {plan} permite. Remova uma primeiro."
+    },
+    "customNoPlan": "As regras personalizadas fazem parte dos planos Normal, Pro e Max, pelo plano do dono do servidor.",
+    "pickNative": "Escolha uma regra do AutoMod do Discord na lista.",
+    "nativeGone": "Essa regra do AutoMod do Discord não existe mais.",
+    "noLockdown": "Não há nenhum bloqueio agora.",
+    "noProbation": "Esse membro não está em vigilância extra.",
+    "pickChannel": "Escolha pelo menos um canal.",
+    "tooManyChannels": "Escolha no máximo {max} canais ({picked} escolhidos).",
+    "ignoredChannel": "O Automod ignora #{channel}, então um teste ali não encontra nada. Escolha outro canal."
+  },
+  "action": {
+    "automodOn": "O Automod está ativado.",
+    "automodOff": "O Automod está desativado.",
+    "modeEnforce": "Modo geral: agir.",
+    "modeMonitor": "Modo geral: só avisar (não apagar).",
+    "rulesSaved": "Regras salvas.",
+    "quickOn": "{rule} está ativada. Ela segue a configuração principal.",
+    "quickMonitor": "{rule} agora está em só avisar (não apagar).",
+    "quickOff": "{rule} agora está desativada.",
+    "customAdded": "Regra personalizada adicionada.",
+    "customAddedName": "Regra personalizada “{name}” adicionada.",
+    "customSaved": "Regra personalizada “{name}” salva.",
+    "customOn": "A regra personalizada “{name}” está ativada.",
+    "customOff": "A regra personalizada “{name}” está desativada.",
+    "customRemoved": "Regra personalizada “{name}” removida.",
+    "exceptionSaved": "Exceção de canal salva.",
+    "exceptionRemoved": "Exceção de canal removida.",
+    "exemptAdded": "O Automod agora ignora esse canal.",
+    "exemptRemoved": "O Automod volta a verificar esse canal.",
+    "trustedSaved": "Membros confiáveis salvos.",
+    "secondChanceOn": "O aviso amigável na primeira infração leve está ativado.",
+    "secondChanceOff": "O aviso amigável na primeira infração leve está desativado.",
+    "moodOn": "Os alertas de clima estão ativados.",
+    "moodOff": "Os alertas de clima estão desativados.",
+    "panicOn": "O modo pânico está ativado.",
+    "panicOff": "O modo pânico está desativado.",
+    "panicNoPerm": "Eu não tenho “Gerenciar servidor”, então pausar convites e mensagens diretas vai falhar até eu receber essa permissão.",
+    "gateSaved": "Filtro de entrada salvo.",
+    "nativeSaved": "Regra do Discord “{name}” atualizada.",
+    "lockdownEnded": "Bloqueio encerrado. O nível de verificação voltou ao que era, e os convites e mensagens diretas pausados voltaram a funcionar.",
+    "probationEnded": "A vigilância extra de {member} terminou antes da hora.",
+    "testRunStarted": "Teste iniciado. Recarregue a página daqui a pouco para ver o progresso."
+  }
+}

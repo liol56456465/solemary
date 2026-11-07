@@ -1,0 +1,134 @@
+{
+  "page": {
+    "help": "Lass Mitglieder sich für eine Rolle bewerben, etwa als Moderator, indem sie mit /apply in Discord ein paar Fragen beantworten. Das Team liest die Antworten und nimmt an oder lehnt ab. Annehmen gibt die Rolle."
+  },
+  "submitted": {
+    "title": {
+      "one": "Eingegangene Bewerbungen ({count} wartet)",
+      "other": "Eingegangene Bewerbungen ({count} warten)"
+    },
+    "help": "Bewerbungen, die auf eine Entscheidung warten. Annehmen gibt die Rolle. So oder so bekommt das Mitglied eine Direktnachricht (DM) mit dem Ergebnis, und die Log-Nachricht für das Team wird aktualisiert. Das geht auch mit /app-admin review in Discord.",
+    "unknownUser": "unbekannter Nutzer",
+    "unknownRole": "Unbekannte Rolle",
+    "unknownDate": "unbekanntes Datum",
+    "appliedFor": "{who} hat sich für {role} beworben.",
+    "id": "ID {id}",
+    "question": "F{number}: {question}",
+    "noAnswer": "Keine Antwort",
+    "noAnswers": "Keine Antworten.",
+    "approve": "Annehmen (gibt die Rolle)",
+    "deny": "Ablehnen",
+    "decision": "Entscheidung",
+    "note": "Notiz an den Bewerber (optional)",
+    "noteHelp": "Wird mit der Entscheidung geschickt, zum Beispiel warum.",
+    "submit": "Entscheidung senden",
+    "confirm": "Diese Entscheidung an {name} senden? Die Person bekommt eine Direktnachricht (DM).",
+    "approved": "angenommen",
+    "denied": "abgelehnt",
+    "waiting": {
+      "one": "{count} wartet.",
+      "other": "{count} warten."
+    },
+    "waitingShown": {
+      "one": "{count} wartet (die neuesten {shown} werden angezeigt).",
+      "other": "{count} warten (die neuesten {shown} werden angezeigt)."
+    },
+    "none": "Keine Bewerbungen warten auf Prüfung.",
+    "needsAdmin": "Um Bewerbungen hier zu prüfen, brauchst du die Berechtigung Administrator auf diesem Server.",
+    "recent": "Zuletzt geprüft",
+    "application": "Bewerbung",
+    "member": "Mitglied",
+    "noteColumn": "Notiz",
+    "reviewed": "Geprüft",
+    "nothingReviewed": "Noch nichts geprüft."
+  },
+  "roles": {
+    "title": "Bewerbungen ({count})",
+    "help": "Die Rollen, für die sich Mitglieder mit /apply bewerben können. Jede hat eigene Fragen oder nutzt die Standardfragen unten.",
+    "empty": "Noch keine Bewerbungen.",
+    "new": "Neue Bewerbung",
+    "name": "Name",
+    "nameHelp": "Was Mitglieder in /apply sehen, zum Beispiel Moderator.",
+    "open": "Offen für Bewerbungen",
+    "openHelp": "Aus: Mitglieder können sich gerade nicht für diese Rolle bewerben.",
+    "logChannel": "Log-Kanal für diese Rolle",
+    "logChannelNone": "der Bewerbungs-Log-Kanal",
+    "logChannelHelp": "Wo neue Bewerbungen für diese Rolle für das Team gepostet werden.",
+    "questions": "Fragen",
+    "questionsHelp": "Eine Frage pro Zeile, bis zu {max}. Leer lassen, um die Standardfragen zu nutzen. Füg [min:10] am Ende einer Frage hinzu, um eine Antwort mit mindestens 10 Zeichen zu verlangen.",
+    "save": "Bewerbung speichern",
+    "deleteText": "Beim Löschen werden auch alle Bewerbungen entfernt, die Mitglieder für {name} geschickt haben. Die nächste Seite zeigt, wie viele, und dort bestätigst du.",
+    "delete": "Bewerbung löschen…",
+    "role": "Rolle, für die man sich bewirbt",
+    "roleHelp": "Angenommene Mitglieder bekommen diese Rolle.",
+    "add": "Bewerbung hinzufügen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "help": "Den Log-Kanal hier festzulegen ändert auch den Bewerbungs-Log-Kanal auf der Seite Logs, und umgekehrt.",
+    "logChannel": "Bewerbungs-Log-Kanal",
+    "logChannelHelp": "Wo neue Bewerbungen zur Prüfung für das Team gepostet werden.",
+    "pendingDays": "Wartende Bewerbungen behalten (Tage)",
+    "pendingDaysHelp": "Bewerbungen, über die niemand entschieden hat, werden nach dieser Zeit gelöscht.",
+    "reviewedDays": "Entschiedene Bewerbungen behalten (Tage)",
+    "reviewedDaysHelp": "Angenommene und abgelehnte Bewerbungen werden nach dieser Zeit gelöscht."
+  },
+  "questions": {
+    "title": "Standardfragen",
+    "help": "Gilt für jede Rolle, die keine eigenen Fragen hat.",
+    "label": "Standardfragen",
+    "labelHelp": "Eine Frage pro Zeile, bis zu {max}. Füg [min:10] am Ende einer Frage hinzu, um eine Antwort mit mindestens 10 Zeichen zu verlangen."
+  },
+  "managers": {
+    "title": "Verwalterrollen",
+    "help": "Mitglieder mit diesen Rollen können Bewerbungen lesen und entscheiden, ohne Administratoren zu sein.",
+    "role": "Rolle",
+    "remove": "Entfernen",
+    "empty": "Keine Verwalterrollen.",
+    "addLabel": "Verwalterrolle hinzufügen",
+    "add": "Hinzufügen"
+  },
+  "confirm": {
+    "heading": "Bestätigen: die Bewerbung {name} löschen",
+    "application": "Bewerbung",
+    "applicationValue": "{name} (Rolle @{role})",
+    "submitted": "Eingegangene Bewerbungen",
+    "effect": "Folge",
+    "effectText": "Die Bewerbung wird aus /apply entfernt und jede Bewerbung, die Mitglieder dafür geschickt haben, wird gelöscht. Das lässt sich nicht rückgängig machen. Die Rolle selbst bleibt.",
+    "submit": "Bewerbung löschen"
+  },
+  "action": {
+    "unknown": "Unbekannte Bewerbung.",
+    "noteTooLong": "Die Notiz darf höchstens {max} Zeichen lang sein.",
+    "theApplicant": "der Bewerber",
+    "theRole": "die Rolle",
+    "notDmed": "{name} konnte nicht per DM benachrichtigt werden.",
+    "roleNotGiven": "Die Rolle konnte nicht vergeben werden (prüf meine Berechtigung Rollen verwalten und die Reihenfolge der Rollen).",
+    "statusApproved": "angenommen",
+    "statusDenied": "abgelehnt",
+    "reviewed": "Bewerbung von {name} für {role} {status}.",
+    "reviewedGiven": "Bewerbung von {name} für {role} {status}. Die Rolle wurde vergeben.",
+    "roleLabel": "Rolle",
+    "added": "Bewerbung „{name}“ hinzugefügt.",
+    "emptyName": "Der Name der Bewerbung darf nicht leer sein.",
+    "roleGone": "Diese Bewerbungsrolle gibt es nicht mehr.",
+    "logChannelLabel": "Log-Kanal",
+    "saved": "Bewerbung „{name}“ gespeichert.",
+    "deleted": {
+      "one": "Bewerbung „{name}“ mit {count} eingegangenen Bewerbung gelöscht.",
+      "other": "Bewerbung „{name}“ mit {count} eingegangenen Bewerbungen gelöscht."
+    },
+    "moduleLabel": "Bewerbungen",
+    "nowOn": "Bewerbungen sind jetzt an.",
+    "nowOff": "Bewerbungen sind jetzt aus.",
+    "pendingDaysLabel": "Wartende Bewerbungen behalten",
+    "reviewedDaysLabel": "Entschiedene Bewerbungen behalten",
+    "settingsSaved": "Bewerbungseinstellungen gespeichert.",
+    "questionsSaved": "Standardfragen gespeichert.",
+    "managerLabel": "Verwalterrolle",
+    "alreadyManager": "Das ist schon eine Verwalterrolle.",
+    "managerAdded": "Verwalterrolle hinzugefügt.",
+    "notManager": "Diese Rolle ist keine Verwalterrolle.",
+    "managerRemoved": "Verwalterrolle entfernt."
+  }
+}

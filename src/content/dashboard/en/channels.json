@@ -1,0 +1,64 @@
+{
+  "page": {
+    "help": "Clean up a channel by deleting many recent messages at once, or lock a channel so members cannot write in it for a while, for example during a spam wave."
+  },
+  "adminNote": " To use these tools you need the Administrator permission in this server.",
+  "field": {
+    "channel": "Channel",
+    "reason": "Reason",
+    "reasonHelp": "Saved with the action, so other staff know why."
+  },
+  "purge": {
+    "title": "Purge messages",
+    "help": "Deletes many recent messages at once. Discord does not allow this for messages older than 14 days, so those are skipped.",
+    "amount": "Number of messages",
+    "amountHelp": "From {min} to {max}. The newest messages go first.",
+    "fromUser": "Only from this member (optional)",
+    "fromUserHelp": "Only the newest 100 messages are searched.",
+    "nothingYet": "Nothing is deleted yet: the next page shows what will be deleted, and you confirm there.",
+    "submit": "Delete messages…",
+    "badUser": "Only from this member: that is not a user ID. Type a name and choose a member, use Find a member, or paste a user ID (17 to 20 digits).",
+    "missingPerms": "Mewvo is missing {perms} in #{channel}, so it cannot delete messages there. Nothing was changed."
+  },
+  "lock": {
+    "title": "Lock a channel",
+    "help": "Members can still read the channel but can no longer write in it. Roles that have their own permission in that channel, like staff, still can. Unlocking undoes this, so the channel goes back to the permissions of its category (the folder it is in).",
+    "submit": "Lock channel"
+  },
+  "locked": {
+    "title": "Locked channels ({count})",
+    "category": "Category",
+    "noCategory": "none",
+    "reasonPlaceholder": "Reason (optional)",
+    "unlock": "Unlock",
+    "empty": "No channel is locked.",
+    "help": "Channels where members cannot write right now because the channel itself is locked."
+  },
+  "confirm": {
+    "heading": "Confirm: delete messages in #{channel}",
+    "messages": "Messages",
+    "fromUser": {
+      "one": "Up to {count} of the newest messages from {who} (only the newest 100 are searched)",
+      "other": "Up to {count} of the newest messages from {who} (only the newest 100 are searched)"
+    },
+    "newest": {
+      "one": "The newest {count}",
+      "other": "The newest {count}"
+    },
+    "effect": "Effect",
+    "effectText": "The messages are deleted for good and cannot be brought back. Messages older than 14 days are skipped.",
+    "submit": "Delete messages"
+  },
+  "action": {
+    "skippedOld": {
+      "one": "{count} message was older than 14 days and skipped.",
+      "other": "{count} messages were older than 14 days and skipped."
+    },
+    "deleted": {
+      "one": "Deleted {count} message in #{channel}.",
+      "other": "Deleted {count} messages in #{channel}."
+    },
+    "locked": "#{channel} is locked.",
+    "unlocked": "#{channel} is unlocked."
+  }
+}

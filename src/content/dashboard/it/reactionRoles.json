@@ -1,0 +1,54 @@
+{
+  "page": {
+    "help": "Lascia che i membri scelgano da soli i propri ruoli, come colori, pronomi o giochi. Mewvo pubblica un messaggio (un pannello) con un menu, e i membri scelgono lì i ruoli che vogliono. Mewvo offre solo ruoli sotto il proprio ruolo nell’elenco dei ruoli, mai ruoli con poteri da staff e mai ruoli che appartengono a un altro bot o a un’app."
+  },
+  "create": {
+    "title": "Nuovo pannello",
+    "help": "Puoi farlo anche con /reactroles setup su Discord.",
+    "needsAdmin": " Per pubblicare un pannello ti serve il permesso Amministratore in questo server.",
+    "max": "Questo server ha già il massimo di {count} pannelli. Eliminane uno per crearne un altro.",
+    "postIn": "Pubblica in",
+    "postInHelp": "Il canale in cui viene pubblicato il pannello.",
+    "titleLabel": "Titolo",
+    "titleHelp": "Per esempio: Scegli il tuo colore.",
+    "description": "Descrizione",
+    "descriptionHelp": "Qualche parola sotto il titolo per dire a cosa servono i ruoli.",
+    "roles": "Ruoli",
+    "rolesHelp": "Fino a 25. Per sceglierne più di uno, tieni premuto Ctrl (Cmd su Mac) mentre clicchi.",
+    "submit": "Crea e pubblica il pannello"
+  },
+  "panel": {
+    "title": "Pannello {id}",
+    "info": "In {channel} · messaggio {message} · {count}/25 ruoli",
+    "ok": "ok",
+    "remove": "Rimuovi",
+    "role": "Ruolo",
+    "problems": "Problemi",
+    "noRoles": "Nessun ruolo.",
+    "addRole": "Aggiungi ruolo",
+    "add": "Aggiungi",
+    "delete": "Elimina pannello",
+    "deleteConfirm": "Eliminare questo pannello e il suo messaggio su Discord?"
+  },
+  "panels": {
+    "title": "Pannelli",
+    "empty": "Ancora nessun pannello di ruoli a reazione."
+  },
+  "action": {
+    "unknownPanel": "Pannello sconosciuto.",
+    "chooseRole": "Scegli almeno un ruolo.",
+    "posted": {
+      "one": "Pannello pubblicato con {count} ruolo.",
+      "many": "Pannello pubblicato con {count} ruoli.",
+      "other": "Pannello pubblicato con {count} ruoli."
+    },
+    "skipped": "Saltati: {list}",
+    "roleMissing": "Ruolo: quel ruolo non è nel server.",
+    "roleAdded": "Ruolo aggiunto al pannello.",
+    "unknownRole": "Ruolo sconosciuto.",
+    "lastRole": "Era l’ultimo ruolo: il pannello è stato eliminato.",
+    "roleRemoved": "Ruolo rimosso dal pannello.",
+    "panelGone": "Quel pannello non esiste più.",
+    "panelDeleted": "Pannello eliminato."
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "page": {
+    "help": "I membri ricevono un canale vocale tutto loro quando ne hanno bisogno. Quando qualcuno entra nel canale di attivazione, Mewvo crea un nuovo canale vocale per lui e lo sposta lì. Il canale viene eliminato di nuovo quando è vuoto."
+  },
+  "status": {
+    "title": "Stato",
+    "text": "Entra per creare: {state} (è attivo finché c'è un canale di attivazione)."
+  },
+  "triggers": {
+    "title": "Canali di attivazione",
+    "channel": "Canale di attivazione",
+    "temporary": "Canali temporanei",
+    "empty": "Ancora nessun canale di attivazione.",
+    "remove": "Rimuovi attivazione",
+    "removeConfirm": "Smettere di usare questo canale come attivazione? Il canale stesso resta."
+  },
+  "add": {
+    "title": "Nuovo canale di attivazione",
+    "help": "Mewvo crea un canale vocale chiamato \"Join to Create\". Puoi farlo anche con /jointocreate setup su Discord.",
+    "helpNoAdmin": "Mewvo crea un canale vocale chiamato \"Join to Create\". Puoi farlo anche con /jointocreate setup su Discord. Per farlo ti serve il permesso Amministratore in questo server.",
+    "oneOnly": "Un server può avere un solo canale di attivazione. Rimuovi quello attuale per crearne uno nuovo.",
+    "submit": "Crea canale di attivazione"
+  },
+  "fields": {
+    "name": "Nome del canale",
+    "nameHelp": "Il nome di ogni nuovo canale. Puoi usare {username} (il nome utente del membro), {displayName} (il suo nome in questo server), {guildName} (il nome del server) e {channelName} (il nome del canale di attivazione).",
+    "userLimit": "Massimo di persone nel canale",
+    "userLimitHelp": "0 significa nessun limite.",
+    "bitrate": "Qualità audio (kbps)",
+    "bitrateShort": "Qualità audio",
+    "bitrateHelp": "La qualità audio nel canale vocale. Più alta suona meglio ma richiede una connessione più veloce. 64 è normale. I server potenziati permettono valori più alti.",
+    "category": "Categoria",
+    "categoryNone": "nessuna categoria",
+    "categoryHelp": "Una categoria è una cartella di canali. Il canale di attivazione viene creato lì."
+  },
+  "error": {
+    "unknownTrigger": "Canale di attivazione sconosciuto.",
+    "nameEmpty": "Il nome del canale non può essere vuoto."
+  },
+  "action": {
+    "created": "Canale di attivazione \"{name}\" creato.",
+    "saved": "Impostazioni del canale di attivazione salvate.",
+    "removed": "Attivazione rimossa (il canale vocale stesso resta)."
+  }
+}

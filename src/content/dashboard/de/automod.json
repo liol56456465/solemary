@@ -1,0 +1,425 @@
+{
+  "page": {
+    "help": "Automod überwacht Nachrichten und Beitritte im Hauptserver und geht selbst gegen Spam, Schimpfwörter, unerwünschte Links und Raids vor, damit das Team nicht alles selbst erwischen muss. Du kannst das auch mit /automod in Discord ändern."
+  },
+  "ruleNames": {
+    "scam": "Betrugs- oder Phishing-Link",
+    "nsfw": "NSFW-Inhalte",
+    "sexual": "Sexuelle Belästigung oder Anspielungen",
+    "harassment": "Belästigung",
+    "privacy": "Persönliche Daten teilen",
+    "advertising": "Unerlaubte Werbung",
+    "impersonation": "Identitätsdiebstahl oder Täuschung",
+    "language": "Unangemessene Sprache",
+    "disrespect": "Respektlosigkeit oder Drama",
+    "mentions": "Massenerwähnungen",
+    "spam": "Spam",
+    "caps": "Zu viele Großbuchstaben",
+    "characters": "Nicht-englische Zeichen oder Zierschriften",
+    "english": "Nur Englisch"
+  },
+  "common": {
+    "rule": "Regel",
+    "mode": "Modus",
+    "remove": "Entfernen",
+    "open": "Öffnen"
+  },
+  "mode": {
+    "on": "an",
+    "monitor": "nur melden (nicht löschen)",
+    "off": "aus"
+  },
+  "period": {
+    "lastDay": "Letzter Tag",
+    "lastDays": {
+      "one": "Letzter {count} Tag",
+      "other": "Letzte {count} Tage"
+    },
+    "theLastDay": "dem letzten Tag",
+    "inLastDay": "am letzten Tag",
+    "inLastDays": {
+      "one": "im letzten {count} Tag",
+      "other": "in den letzten {count} Tagen"
+    },
+    "oneDay": "1 Tag",
+    "days": {
+      "one": "{count} Tag",
+      "other": "{count} Tage"
+    }
+  },
+  "topics": {
+    "now": "Gerade jetzt",
+    "nowLine": "Was in diesem Moment auf das Team wartet.",
+    "rules": "Regeln",
+    "rulesLine": "Was Automod prüft und was passiert, wenn eine Regel verletzt wird.",
+    "leniency": "Ausnahmen und Nachsicht",
+    "leniencyLine": "Wo Automod wegschaut und wer einen sanfteren Start bekommt.",
+    "raids": "Raids und neue Mitglieder",
+    "raidsLine": "Prüfungen beim Beitritt und was passiert, wenn viele Konten auf einmal beitreten.",
+    "results": "Ergebnisse",
+    "resultsLine": "Wie oft Automod eingegriffen hat und wie oft das Team es rückgängig gemacht hat."
+  },
+  "global": {
+    "title": "Globaler Modus",
+    "help": "Was jede Regel tut, wenn du es unten nicht änderst.",
+    "label": "Was Automod tut",
+    "labelHelp": "Das Team wird mit einer Prüfkarte informiert: einer Nachricht im Prüfkanal mit Buttons, um die Aktion von Automod zu behalten oder rückgängig zu machen. Im Modus „nur melden (nicht löschen)“ hat die Karte stattdessen einen Apply-Button.",
+    "enforce": "Eingreifen: löschen oder verwarnen, dann das Team informieren",
+    "monitor": "Nur melden (nicht löschen): das Team informieren, sonst nichts"
+  },
+  "channels": {
+    "title": "Kanäle und Wörter",
+    "help": "Wo Automod mit dem Team spricht, und deine eigenen gesperrten Wörter.",
+    "review": "Prüfkanal",
+    "reviewHelp": "Hier sieht das Team Prüfkarten, Meldungen von Mitgliedern und Verifizierungen, die auf eine Prüfung warten. Nicht gesetzt: der Mod-Log-Kanal.",
+    "alerts": "Alarmkanal",
+    "alertsHelp": "Hier warnt Mewvo das Team vor Raids und anderen dringenden Dingen und postet Zusammenfassungen. Nicht gesetzt: der Mod-Log-Kanal.",
+    "words": "Zusätzliche gesperrte Wörter",
+    "wordsHelp": "Werden zur eingebauten Schimpfwortliste hinzugefügt. Schreib jedes Wort in eine eigene Zeile. Ähnlich aussehende Buchstaben, Symbole und Leerzeichen werden auch erkannt."
+  },
+  "rules": {
+    "title": "Regelmodi",
+    "help": "Einzelne Regeln ändern. default: macht, was die Haupteinstellung oben sagt. an: greift ein. nur melden (nicht löschen): informiert nur das Team. aus: die Regel wird nicht geprüft. Zuerst privat warnen (2 Min. zum Beheben): Beim ersten Mal in 30 Tagen bekommt das Mitglied eine private Nachricht und 2 Minuten, um die Nachricht zu bearbeiten oder zu löschen, sonst passiert nichts. Persönliche Daten werden sofort ohne Warnung entfernt. Betrug, NSFW, Werbung, Massenerwähnungen, Spam, Raids und Beleidigungen greifen immer sofort.",
+    "headsUp": "Zuerst privat warnen (2 Min. zum Beheben)",
+    "actsAtOnce": "greift sofort",
+    "defaultOption": "default ({mode})",
+    "customAll": "Eigene Regeln (alle)",
+    "seeCustom": "siehe Eigene Regeln",
+    "save": "Regeln speichern",
+    "headsUpUnreadable": "Die Zahlen der privaten ersten Warnungen konnten nicht gelesen werden (Datenbank).",
+    "headsUpCounts": "Private erste Warnungen in den letzten 30 Tagen: {sent} gesendet, {fixed} vom Mitglied behoben, {acted} nach der Wartezeit geahndet."
+  },
+  "custom": {
+    "title": "Eigene Regeln",
+    "help": "Deine eigenen Listen mit Wörtern und Ausdrücken, die gesperrt werden. Wie die eingebauten Regeln erkennen sie ganze Wörter, achten nicht auf Groß- und Kleinschreibung und erkennen ähnlich aussehende Buchstaben (wie 0 für o). Ein Treffer löscht die Nachricht und postet eine Prüfkarte. Verwarnen und Stummschalten tragen es zusätzlich in die Akte des Mitglieds ein (ein Fall). Sie folgen der Haupteinstellung von Automod und überspringen ignorierte Kanäle. Wie viele du haben kannst, hängt vom Plan des Serverinhabers ab.",
+    "seePlans": "Zu den Plänen",
+    "noPlan": "Eigene Regeln gibt es mit den Plänen Normal, Pro und Max. Es zählt der Plan des Serverinhabers. Dieser Server hat {plan}. {pricing}",
+    "stateOn": "an",
+    "stateOff": "aus",
+    "overLimit": "läuft nicht (über dem Limit des Plans)",
+    "colName": "Name",
+    "colWords": "Wörter",
+    "colAction": "Aktion",
+    "colState": "Status",
+    "actionDelete": "Löschen",
+    "actionWarn": "Verwarnen",
+    "actionMute": "Stumm {duration}",
+    "removeConfirm": "Die eigene Regel „{name}“ entfernen?",
+    "empty": "Noch keine eigenen Regeln.",
+    "running": {
+      "one": "{running} von {count} eigenen Regel läuft im Plan {plan}.",
+      "other": "{running} von {count} eigenen Regeln laufen im Plan {plan}."
+    },
+    "overLimitCount": {
+      "one": "{count} eingeschaltete Regel über dem Limit läuft nicht. Schalte welche aus, entferne sie oder wechsle zu einem höheren Plan.",
+      "other": "{count} eingeschaltete Regeln über dem Limit laufen nicht. Schalte welche aus, entferne sie oder wechsle zu einem höheren Plan."
+    },
+    "atLimit": {
+      "one": "Dieser Server hat {count} eigene Regel, das Maximum im Plan {plan}.",
+      "other": "Dieser Server hat {count} eigene Regeln, das Maximum im Plan {plan}."
+    },
+    "name": "Name",
+    "namePlaceholder": "Andere Server",
+    "nameHelp": "Ein Name, damit du deine Regeln auseinanderhalten kannst.",
+    "whatToDo": "Was passieren soll",
+    "do": {
+      "delete": "Nachricht löschen",
+      "warn": "Löschen und verwarnen",
+      "mute": "Löschen und stummschalten"
+    },
+    "muteFor": "Stumm für",
+    "muteForHelp": "Nur fürs Stummschalten. Zum Beispiel 30m (30 Minuten), 1h (eine Stunde) oder 1d (ein Tag). Höchstens 28d.",
+    "muteForHelpShort": "Nur fürs Stummschalten, etwa 30m, 1h oder 1d.",
+    "words": "Wörter oder Ausdrücke",
+    "wordsHelp": "Schreib jedes Wort oder jeden Ausdruck in eine eigene Zeile. Bis zu {lines} Zeilen mit je bis zu {chars} Zeichen.",
+    "wordsHelpEdit": "Einer pro Zeile. Das ersetzt die alte Liste.",
+    "add": "Regel hinzufügen",
+    "changeTitle": "Eine Regel ändern",
+    "changeRule": "„{name}“ ändern",
+    "ruleLabel": "Eigene Regel",
+    "invalid": "Diese eigene Regel ist nicht gültig.",
+    "gone": "Diese eigene Regel gibt es nicht mehr. Lade die Seite neu."
+  },
+  "native": {
+    "title": "Discord-AutoMod",
+    "help": "Discord hat einen eigenen AutoMod eingebaut. Wenn eine seiner Regeln eine Nachricht blockiert, kann Mewvo das zusätzlich loggen oder das Mitglied verwarnen.",
+    "unreadable": "Die AutoMod-Regeln von Discord konnten nicht gelesen werden. Mewvo braucht dafür die Berechtigung „Server verwalten“.",
+    "rule": "Discord-Regel",
+    "policy": "Was Mewvo tut",
+    "policyLabel": "Verhalten",
+    "once": "Höchstens einmal pro Mitglied alle",
+    "minutes": "{count} Min.",
+    "empty": "Dieser Server hat keine AutoMod-Regeln von Discord. Du legst sie in Discord unter Servereinstellungen, AutoMod an.",
+    "policyHelp": "ignorieren: nichts. loggen: eine kurze Zeile im Prüfkanal. verwarnen: eine Verwarnung und eine Prüfkarte.",
+    "dedupe": "Einmal pro Mitglied handeln alle (Minuten)",
+    "dedupeHelp": "Weitere Blockierungen desselben Mitglieds in dieser Zeit werden nur gezählt. Leer lassen, um den aktuellen Wert zu behalten.",
+    "submit": "Verhalten setzen",
+    "policies": {
+      "ignore": "ignorieren",
+      "log": "loggen",
+      "warn": "verwarnen"
+    }
+  },
+  "secondChance": {
+    "title": "Freundlicher Hinweis beim ersten kleinen Verstoß",
+    "help": "Sei nachsichtig bei einem ersten kleinen Ausrutscher.",
+    "label": "Freundlicher Hinweis beim ersten kleinen Verstoß: ein kurzer Hinweis statt einer Verwarnung"
+  },
+  "mood": {
+    "title": "Stimmung",
+    "help": "Der langsame Modus lässt Mitglieder ein paar Sekunden zwischen Nachrichten warten.",
+    "label": "Stimmungswarnungen: Wenn es in einem Kanal hitzig wird, eine beruhigende Nachricht posten und den Chat kurz verlangsamen",
+    "alerts": "Stimmungswarnungen"
+  },
+  "trusted": {
+    "title": "Vertrauenswürdige Mitglieder",
+    "help": "Vertrauenswürdige Mitglieder überspringen die Regeln für Kleinigkeiten. Ernste Regeln gelten weiter. Zum Ausschalten wähle keine und setze das Level auf 0.",
+    "role": "Vertrauenswürdige Rolle",
+    "none": "keine",
+    "roleHelp": "Mitglieder mit dieser Rolle gelten als vertrauenswürdig.",
+    "minLevel": "Oder ab Level",
+    "minLevelHelp": "Mitglieder ab diesem Level im Levelsystem gelten auch als vertrauenswürdig. 0 schaltet das aus."
+  },
+  "exceptions": {
+    "title": "Kanalausnahmen",
+    "help": "Eine Regel in einem Kanal ausschalten oder auf „nur melden (nicht löschen)“ stellen. Zum Beispiel Links in einem Link-Kanal erlauben.",
+    "channel": "Kanal oder Kategorie",
+    "channelHelp": "Eine Kategorie ist ein Ordner mit Kanälen. Wenn du eine wählst, gilt es für jeden Kanal darin.",
+    "empty": "Keine Regelausnahmen für einzelne Kanäle.",
+    "modeThere": "Modus dort",
+    "modeThereHelp": "aus: die Regel wird dort übersprungen. nur melden (nicht löschen): das Team wird informiert, nichts wird gelöscht.",
+    "add": "Ausnahme hinzufügen"
+  },
+  "exempt": {
+    "title": "Ignorierte Kanäle",
+    "help": "Kanäle, in denen Automod gar nichts prüft.",
+    "channel": "Kanal",
+    "empty": "Automod prüft jeden Kanal.",
+    "ignore": "Diesen Kanal ignorieren",
+    "ignoreHelp": "Automod prüft hier keine Nachrichten.",
+    "add": "Hinzufügen",
+    "alsoIgnored": "Ebenfalls ignoriert (vom Bot-Inhaber außerhalb des Dashboards gesetzt): {channels}"
+  },
+  "gate": {
+    "title": "Beitrittsschranke",
+    "help": "Prüft neue Mitglieder beim Beitritt. Für jede Prüfung: aus tut nichts; markieren informiert das Team im Prüfkanal, mit Kick- und Dismiss-Buttons; kicken entfernt sie und schickt eine private Nachricht, wie sie zurückkommen können.",
+    "ageDays": "Neues Konto heißt jünger als (Tage)",
+    "checks": {
+      "avatar": "Kein Profilbild",
+      "links": "Link oder Einladung im Namen",
+      "botname": "Automatisch wirkender Benutzername",
+      "age": "Neues Konto"
+    },
+    "actions": {
+      "off": "aus",
+      "flag": "markieren",
+      "kick": "kicken"
+    }
+  },
+  "panic": {
+    "title": "Panik",
+    "help": "Eine Raid-Sperre startet von selbst, wenn viele Konten auf einmal beitreten. Der Panikmodus macht es Raidern schwerer, sich auszubreiten.",
+    "label": "Panikmodus: neue Einladungen und Direktnachrichten zwischen Mitgliedern stoppen, wenn eine Raid-Sperre startet",
+    "hours": "Stoppen für (Stunden)"
+  },
+  "stats": {
+    "period": "Zeitraum der Statistik",
+    "total": {
+      "one": "{count} automatische Aktion in {period}.",
+      "other": "{count} automatische Aktionen in {period}."
+    },
+    "undoHint": "Wenn das Team 30 % oder mehr der Aktionen einer Regel rückgängig macht, ist die Regel wahrscheinlich zu streng.",
+    "actions": "Aktionen",
+    "undone": "Rückgängig",
+    "changed": "Geändert",
+    "undoRate": "Rückgängig-Quote",
+    "empty": "Keine Automod-Aktionen."
+  },
+  "lockdown": {
+    "title": "Raid-Sperre",
+    "help": "Eine Sperre startet von selbst, wenn viele Konten auf einmal beitreten.",
+    "unreadable": "Der Status der Sperre konnte nicht gelesen werden (Datenbank). Lade die Seite neu, um es noch einmal zu versuchen.",
+    "active": "Eine Raid-Sperre ist aktiv",
+    "since": "seit {date}",
+    "joiners": {
+      "one": "{count} Raid-Beitritt",
+      "other": "{count} Raid-Beitritte"
+    },
+    "end": "Sperre beenden",
+    "endConfirm": "Die Raid-Sperre beenden? Die Verifizierungsstufe geht zurück auf den alten Wert, und pausierte Einladungen und Direktnachrichten laufen wieder.",
+    "needsAdmin": "Um eine Sperre zu beenden, brauchst du die Berechtigung Administrator auf diesem Server.",
+    "follow": "Auf der Raid-Zeitleiste verfolgen",
+    "none": "Gerade keine Sperre. Eine startet von selbst, wenn viele Konten auf einmal beitreten (ein Raid). Frühere Raids stehen auf der {timeline}.",
+    "timelineLink": "Raid-Zeitleiste"
+  },
+  "queue": {
+    "title": "Prüfwarteschlange",
+    "titleCount": "Prüfwarteschlange ({count})",
+    "unreadable": "Die Prüfwarteschlange konnte nicht gelesen werden (Prüfkanal nicht erreichbar).",
+    "colCard": "Karte",
+    "colSince": "Seit",
+    "colMessages": "Nachrichten",
+    "card": "Prüfkarte",
+    "empty": "Nichts wartet auf eine Prüfung.",
+    "more": "…und {count} weitere.",
+    "help": "Prüfkarten, die auf das Team warten: die seit dem letzten Start des Bots gepostet wurden, und die letzten 50 Nachrichten im Prüfkanal, die noch Buttons haben. Kurze Zeilen für Kleinigkeiten stehen nicht hier. Du entscheidest über jede Karte in Discord mit ihren Buttons (Keep, Undo, Change, Dismiss)."
+  },
+  "probation": {
+    "title": "Extra-Beobachtung nach einem Bann",
+    "titleCount": "Extra-Beobachtung nach einem Bann ({count})",
+    "help": "Mitglieder, die nach dem Ende eines Banns zurückgekommen sind. Automod ist eine Zeit lang strenger mit ihnen: Sie springen direkt zur nächsten Strafstufe und bekommen keinen freundlichen Hinweis und keine Nachsicht als vertrauenswürdiges Mitglied.",
+    "unreadable": "Die Extra-Beobachtungen konnten nicht gelesen werden (Datenbank). Lade die Seite neu, um es noch einmal zu versuchen.",
+    "colMember": "Mitglied",
+    "colUntil": "Bis",
+    "colBan": "Bann",
+    "end": "Extra-Beobachtung beenden",
+    "endConfirm": "Diese Extra-Beobachtung jetzt beenden?",
+    "empty": "Niemand ist nach einem Bann in Extra-Beobachtung."
+  },
+  "testRun": {
+    "title": "Testlauf",
+    "help": "Prüf neue Nachrichten mit deinen aktuellen Automod-Einstellungen, ohne etwas zu tun. Nichts wird gelöscht, niemand bekommt eine Nachricht, nichts wird gespeichert oder geloggt. Es laufen nur Prüfungen, die eine Nachricht für sich ansehen. Spam, derselbe Text in vielen Kanälen und wiederholte Beleidigungen über längere Zeit werden übersprungen, weil sie vom Timing abhängen. Die Nachsicht für vertrauenswürdige Mitglieder gilt nicht, und Administratoren werden wie bei Automod übersprungen. Nachrichten von Leuten, die den Server verlassen haben, werden trotzdem geprüft.",
+    "channels": "Kanäle (bis zu {max})",
+    "channelsHelp": "Mewvo braucht in jedem davon „Kanäle ansehen“ und „Nachrichtenverlauf anzeigen“.",
+    "howFarBack": "Wie weit zurück",
+    "howFarBackHelp": "Insgesamt höchstens {max} Nachrichten, die neuesten zuerst.",
+    "draftName": "Name der Entwurfsregel (optional)",
+    "draftDefault": "Entwurfsregel",
+    "draftNameHelp": "Probier eine eigene Regel aus, bevor du sie hinzufügst. Sie wird nicht gespeichert.",
+    "draftWordsLabel": "Wörter der Entwurfsregel (optional)",
+    "draftWordsHelp": "Ein Wort oder Ausdruck pro Zeile, bis zu {max}. Erkannt wie bei eigenen Regeln.",
+    "start": "Testlauf starten",
+    "needsAdmin": "Um einen Testlauf zu starten, brauchst du die Berechtigung Administrator auf diesem Server.",
+    "strictHelp": "„Vielleicht zu streng“ erscheint, wenn eine Regel mindestens {hits} Nachrichten von mindestens {members} verschiedenen Mitgliedern erwischt hat, und mindestens {share} % der geprüften Nachrichten. Das ist nur ein Hinweis: Mitglieder brechen diese Regel vielleicht wirklich so oft. Sieh dir die Beispiele und die erkannten Wörter an, bevor du etwas änderst.",
+    "fixHelp": "Die Buttons ändern die Regel sofort für den ganzen Server, genau wie das Formular Regelmodi, und die Änderung wird geloggt. Nur melden (nicht löschen): das Team wird informiert, nichts wird gelöscht. Einschalten: die Regel folgt der Haupteinstellung. Kanalausnahmen gelten in ihren Kanälen weiter.",
+    "skippedChecks": "In einem Testlauf nicht geprüft: Spam, das Werbebot-Muster (derselbe Text in vielen Kanälen von einem neuen Konto) und Belästigung über längere Zeit. Eine Beleidigung gegen jemanden zählt hier als Respektlosigkeit.",
+    "strictNote": "Erwischt viel, vielleicht zu streng",
+    "moreWords": "und {more} weitere",
+    "draftTitle": "Entwurfsregel",
+    "draftLabel": "Entwurf: {name}",
+    "draftWords": {
+      "one": "{count} Wort oder Ausdruck",
+      "other": "{count} Wörter oder Ausdrücke"
+    },
+    "draftHead": "„{name}“, {words}. Noch nicht gespeichert.",
+    "draftNoPlan": "Eigene Regeln gibt es mit den Plänen Normal, Pro und Max.",
+    "draftAtLimit": {
+      "one": "Dieser Server hat schon {count} eigene Regel, das Maximum seines Plans. Entferne zuerst eine unter Eigene Regeln.",
+      "other": "Dieser Server hat schon {count} eigene Regeln, das Maximum seines Plans. Entferne zuerst eine unter Eigene Regeln."
+    },
+    "draftAdd": "Diese Regel hinzufügen",
+    "draftAddConfirm": "Die eigene Regel „{name}“ hinzufügen? Sie löscht passende Nachrichten ab sofort. Was sie tut, kannst du unter Eigene Regeln ändern.",
+    "draftAddNote": "Wird als eigene Regel hinzugefügt, die die Nachricht löscht. Unter Eigene Regeln kannst du auf Verwarnen oder Stummschalten umstellen.",
+    "modeDraft": "Entwurf, nicht gespeichert",
+    "modeActs": "greift ein",
+    "offSuffix": "{rule} (aus)",
+    "excerptHidden": "verborgen (der Treffer ließ sich nicht sicher unkenntlich machen)",
+    "noText": "kein Text",
+    "summary": "{read} {from} {period}: {checked} geprüft, {bots} von Bots übersprungen, {admins} von Administratoren übersprungen. {hits}",
+    "readMessages": {
+      "one": "{count} Nachricht gelesen",
+      "other": "{count} Nachrichten gelesen"
+    },
+    "fromChannels": {
+      "one": "aus {count} Kanal",
+      "other": "aus {count} Kanälen"
+    },
+    "hitMessages": {
+      "one": "{count} Nachricht hat gegen eine Regel verstoßen.",
+      "other": "{count} Nachrichten haben gegen eine Regel verstoßen."
+    },
+    "capped": "Beim Limit von {max} Nachrichten angehalten. Ältere Nachrichten aus dieser Zeit wurden vielleicht nicht geprüft.",
+    "automodOff": "Automod ist gerade aus. Das hier zeigt, was er mit diesen Einstellungen erwischen würde.",
+    "invitesUnchecked": {
+      "one": "{count} Einladungslink wurde nicht nachgeschlagen (Abfragelimit erreicht) und wird daher nicht gezählt.",
+      "other": "{count} Einladungslinks wurden nicht nachgeschlagen (Abfragelimit erreicht) und werden daher nicht gezählt."
+    },
+    "colRule": "Regel",
+    "colMessages": "Nachrichten",
+    "colMembers": "Mitglieder",
+    "colShare": "Anteil der geprüften",
+    "colMode": "Modus",
+    "colNote": "Hinweis",
+    "colFix": "Vorschlag",
+    "noHits": "Keine Nachricht hat gegen eine Regel verstoßen.",
+    "offTitle": "Ausgeschaltet, hätte aber Nachrichten erwischt",
+    "wordsTitle": "Erkannte Wörter",
+    "wordsHelp": "Wie oft jedes Wort oder jeder Ausdruck erkannt wurde, teilweise verborgen wie die Beispiele.",
+    "colWords": "Wörter",
+    "examplesTitle": "Beispiele (bis zu {max})",
+    "colWhen": "Wann",
+    "colMember": "Mitglied",
+    "colChannel": "Kanal",
+    "colExcerpt": "Auszug",
+    "reload": "Lade diese Seite neu",
+    "stateUnreadable": "Der Status des Testlaufs konnte nicht gelesen werden. {reload}, um es noch einmal zu versuchen.",
+    "inProgress": "Testlauf läuft.",
+    "progress": "Bisher {read} von höchstens {max} Nachrichten gelesen, gestartet {started}. {reload}, um den Fortschritt zu sehen.",
+    "failed": "Der letzte Testlauf ist fehlgeschlagen: {error}",
+    "unknownError": "unbekannter Fehler.",
+    "readBeforeStop": {
+      "one": "{count} Nachricht wurde gelesen, bevor er angehalten hat.",
+      "other": "{count} Nachrichten wurden gelesen, bevor er angehalten hat."
+    },
+    "newTitle": "Neuen Testlauf starten",
+    "newHelp": "Ein neuer Lauf ersetzt dieses Ergebnis. Ergebnisse bleiben 30 Minuten erhalten."
+  },
+  "fix": {
+    "offNow": "jetzt aus",
+    "onNow": "jetzt an",
+    "removedSince": "inzwischen entfernt",
+    "setMonitor": "Auf nur melden stellen",
+    "confirmOff": "{rule} für den ganzen Server ausschalten?",
+    "confirmMonitor": "{rule} für den ganzen Server auf „nur melden (nicht löschen)“ stellen?",
+    "confirmOn": "{rule} für den ganzen Server einschalten? Die Regel folgt der Haupteinstellung.",
+    "confirmCustomOff": "Die eigene Regel „{name}“ ausschalten?"
+  },
+  "error": {
+    "unknownMode": "{rule}: unbekannter Modus.",
+    "customAtLimit": {
+      "one": "Dieser Server hat schon {count} eigene Regel, das Maximum im Plan {plan}. Entferne zuerst eine.",
+      "other": "Dieser Server hat schon {count} eigene Regeln, das Maximum im Plan {plan}. Entferne zuerst eine."
+    },
+    "customNoPlan": "Eigene Regeln gehören zu den Plänen Normal, Pro und Max, nach dem Plan des Serverinhabers.",
+    "pickNative": "Wähle eine AutoMod-Regel von Discord aus der Liste.",
+    "nativeGone": "Diese AutoMod-Regel von Discord gibt es nicht mehr.",
+    "noLockdown": "Gerade gibt es keine Sperre.",
+    "noProbation": "Dieses Mitglied ist nicht in Extra-Beobachtung.",
+    "pickChannel": "Wähle mindestens einen Kanal.",
+    "tooManyChannels": "Wähle höchstens {max} Kanäle ({picked} gewählt).",
+    "ignoredChannel": "Automod ignoriert #{channel}, ein Testlauf findet dort also nichts. Wähle einen anderen Kanal."
+  },
+  "action": {
+    "automodOn": "Automod ist jetzt an.",
+    "automodOff": "Automod ist jetzt aus.",
+    "modeEnforce": "Globaler Modus: Eingreifen.",
+    "modeMonitor": "Globaler Modus: Nur melden (nicht löschen).",
+    "rulesSaved": "Regeln gespeichert.",
+    "quickOn": "{rule} ist an. Die Regel folgt der Haupteinstellung.",
+    "quickMonitor": "{rule} steht jetzt auf „nur melden (nicht löschen)“.",
+    "quickOff": "{rule} ist jetzt aus.",
+    "customAdded": "Eigene Regel hinzugefügt.",
+    "customAddedName": "Eigene Regel „{name}“ hinzugefügt.",
+    "customSaved": "Eigene Regel „{name}“ gespeichert.",
+    "customOn": "Eigene Regel „{name}“ ist an.",
+    "customOff": "Eigene Regel „{name}“ ist aus.",
+    "customRemoved": "Eigene Regel „{name}“ entfernt.",
+    "exceptionSaved": "Kanalausnahme gespeichert.",
+    "exceptionRemoved": "Kanalausnahme entfernt.",
+    "exemptAdded": "Automod ignoriert diesen Kanal jetzt.",
+    "exemptRemoved": "Automod prüft diesen Kanal wieder.",
+    "trustedSaved": "Vertrauenswürdige Mitglieder gespeichert.",
+    "secondChanceOn": "Der freundliche Hinweis beim ersten kleinen Verstoß ist an.",
+    "secondChanceOff": "Der freundliche Hinweis beim ersten kleinen Verstoß ist aus.",
+    "moodOn": "Stimmungswarnungen sind an.",
+    "moodOff": "Stimmungswarnungen sind aus.",
+    "panicOn": "Der Panikmodus ist an.",
+    "panicOff": "Der Panikmodus ist aus.",
+    "panicNoPerm": "Mir fehlt „Server verwalten“, deshalb klappt das Pausieren von Einladungen und Direktnachrichten erst, wenn ich die Berechtigung bekomme.",
+    "gateSaved": "Beitrittsschranke gespeichert.",
+    "nativeSaved": "Discord-Regel „{name}“ aktualisiert.",
+    "lockdownEnded": "Sperre beendet. Die Verifizierungsstufe ist wieder wie vorher, und pausierte Einladungen und Direktnachrichten laufen wieder.",
+    "probationEnded": "Extra-Beobachtung für {member} vorzeitig beendet.",
+    "testRunStarted": "Testlauf gestartet. Lade die Seite gleich neu, um den Fortschritt zu sehen."
+  }
+}

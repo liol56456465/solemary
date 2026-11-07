@@ -1,0 +1,130 @@
+{
+  "page": {
+    "helpText": "Greet new members with a message when they join, say goodbye when they leave, and give new members a role by themselves. In the messages you can use {user} (mentions the member), {user.tag} (their username, without a mention), {server} (the server name) and {memberCount} (how many members the server has now)."
+  },
+  "join": {
+    "topic": "Welcome",
+    "topicLine": "What Mewvo posts when someone joins.",
+    "title": "Welcome",
+    "help": "The welcome message, where it goes, and an optional private message.",
+    "toggle": "Welcome messages",
+    "channel": "Welcome channel",
+    "channelHelp": "Where the welcome message is posted.",
+    "ping": "Ping the member",
+    "pingHelp": "Mentions them so they get a notification.",
+    "message": "Welcome message",
+    "messageHelp": "For example: Welcome to {server}, {user}. You are member number {memberCount}.",
+    "dm": "Private message to the new member",
+    "dmHelp": "Sent to them directly (a DM). Leave empty to send nothing."
+  },
+  "leave": {
+    "topic": "Goodbye",
+    "topicLine": "What Mewvo posts when someone leaves.",
+    "title": "Goodbye",
+    "help": "The goodbye message and where it goes.",
+    "toggle": "Goodbye messages",
+    "channel": "Goodbye channel",
+    "channelHelp": "Where the goodbye message is posted.",
+    "ping": "Ping the member",
+    "pingHelp": "Mentions them by name in the message.",
+    "message": "Goodbye message",
+    "messageHelp": "For example: {user.tag} left the server."
+  },
+  "embed": {
+    "welcomeTitle": "Welcome embed and image",
+    "goodbyeTitle": "Goodbye embed and image",
+    "help": "The box around the message: title, colour and an optional picture.",
+    "helpMore": "The message is sent inside a box (an embed) with a title, a colour and an optional picture. The message text above goes inside the box. If Mewvo lacks the Embed Links permission in that channel, only the text is sent.",
+    "title": "Box title",
+    "titleHelp": "The bold line at the top of the box. Leave empty for \"{title}\". The same words in curly brackets as in the message work here too.",
+    "colour": "Box colour",
+    "colourHelp": "The coloured stripe on the left of the box, as a colour code: # and six letters or numbers, like #57F287 for green. Leave empty for the default colour.",
+    "footer": "Box footer",
+    "footerHelp": "Small text at the bottom of the box. Leave empty for the server name. The same words in curly brackets as in the message work here too.",
+    "image": "Image link",
+    "imageHelp": "A link that starts with https:// and opens a PNG, JPG, GIF or WebP picture. It shows large at the bottom of the box. Leave empty for no image. To use a picture from your computer, use Upload an image below.",
+    "welcomeImage": "Welcome image",
+    "goodbyeImage": "Goodbye image",
+    "embedColour": "Embed colour"
+  },
+  "image": {
+    "none": "No image.",
+    "welcomeAlt": "Current welcome image",
+    "goodbyeAlt": "Current goodbye image",
+    "current": "Current image: {link}",
+    "onlyDiscord": "(only pictures stored on Discord can be shown here)",
+    "channelId": "channel {id}",
+    "welcomeStored": "Uploaded file: a copy is kept in {where}. Do not delete that message, because the welcome message loads the picture from it.",
+    "goodbyeStored": "Uploaded file: a copy is kept in {where}. Do not delete that message, because the goodbye message loads the picture from it.",
+    "uploadLabel": "Upload an image (PNG, JPEG, GIF or WebP, up to {mb} MB)",
+    "uploadHint": "Replaces the image link above. Mewvo posts the file in your main log channel and uses it from there, so the picture keeps working. /greet in Discord does the same.",
+    "upload": "Upload image",
+    "remove": "Remove image",
+    "welcomeConfirm": "Remove the welcome image?",
+    "goodbyeConfirm": "Remove the goodbye image?"
+  },
+  "members": {
+    "topic": "New members",
+    "topicLine": "A starting role, and a record of joins and leaves for staff."
+  },
+  "autoRole": {
+    "title": "Auto role",
+    "help": "Every new member gets this role by itself. You can have one: setting a new one replaces the old one. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers. You can also do this with /autorole in Discord.",
+    "role": "Role",
+    "problems": "Problems",
+    "ok": "ok",
+    "remove": "Remove",
+    "none": "No roles are given on join.",
+    "pick": "Role for new members",
+    "set": "Set",
+    "delay": "Wait before giving the role (seconds)",
+    "delayLabel": "Wait before giving the role",
+    "delayHelp": "How long Mewvo waits after someone joins. 0 gives it at once."
+  },
+  "logs": {
+    "title": "Join and leave logs",
+    "help": "A record for staff of who joined and who left, separate from the public messages.",
+    "joins": "Log joins",
+    "joinsHelp": "Post a short line for staff each time someone joins.",
+    "joinChannel": "Join log channel",
+    "leaves": "Log leaves",
+    "leavesHelp": "Post a short line for staff each time someone leaves.",
+    "leaveChannel": "Leave log channel"
+  },
+  "action": {
+    "welcomeOn": "Welcome messages are on.",
+    "welcomeOff": "Welcome messages are off.",
+    "goodbyeOn": "Goodbye messages are on.",
+    "goodbyeOff": "Goodbye messages are off.",
+    "welcomeSaved": "Welcome settings saved.",
+    "goodbyeSaved": "Goodbye settings saved.",
+    "welcomeEmbedSaved": "Welcome embed saved.",
+    "goodbyeEmbedSaved": "Goodbye embed saved.",
+    "welcomeUploaded": "Welcome image uploaded.",
+    "goodbyeUploaded": "Goodbye image uploaded.",
+    "welcomeUploadedNote": "Welcome image uploaded. A copy is kept in {where}; don't delete that message, the welcome message loads the image from it.",
+    "goodbyeUploadedNote": "Goodbye image uploaded. A copy is kept in {where}; don't delete that message, the goodbye message loads the image from it.",
+    "auditChannel": "the audit log channel",
+    "welcomeImageRemoved": "Welcome image removed.",
+    "goodbyeImageRemoved": "Goodbye image removed.",
+    "autoRoleAlready": "That role is already given on join.",
+    "autoRoleSet": "Auto role set.",
+    "autoRoleNotSet": "That role was not an auto role.",
+    "autoRoleRemoved": "Auto role removed.",
+    "delaySaved": "Auto role delay saved.",
+    "logsSaved": "Join and leave logs saved."
+  },
+  "error": {
+    "colour": "{label} must be a hex colour like #57F287.",
+    "badLink": "{label}: not a valid link.",
+    "https": "{label} must start with https://.",
+    "expiredLink": "{label}: that Discord attachment link has expired. Upload the image file below instead, or use a permanent image link.",
+    "chooseFile": "Choose an image file to upload.",
+    "notImage": "That file is not a PNG, JPEG, GIF or WebP image.",
+    "noLogChannel": "{label}: no main log channel is set, so the uploaded picture has nowhere to be kept. Set one on the Logging page, or use an image link instead. Nothing was changed.",
+    "cannotPost": "{label}: Mewvo could not post the picture in the main log channel ({channel}). Mewvo needs the View Channel, Send Messages and Attach Files permissions there. Nothing was changed."
+  },
+  "warn": {
+    "discordLink": "{label}: Discord attachment links stop working after about a day. For a lasting image, upload the file below (Upload image) or use a permanent image host."
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "page": {
+    "help": "Liczniki to kanały, których nazwa pokazuje aktualną liczbę, np. „Members: 1234”. Mewvo aktualizuje je co 15 minut. Gra w liczenie to kanał, w którym członkowie razem liczą w górę, jedna liczba na wiadomość."
+  },
+  "list": {
+    "title": "Liczniki statystyk serwera",
+    "help": "Mewvo sam tworzy kanał. Możesz to też zrobić komendą /serverstats create w Discordzie.",
+    "helpNoAdmin": "Mewvo sam tworzy kanał. Możesz to też zrobić komendą /serverstats create w Discordzie. Do tworzenia kanałów potrzebujesz uprawnienia Administrator na tym serwerze.",
+    "id": "ID",
+    "channel": "Kanał",
+    "type": "Typ",
+    "empty": "Nie ma jeszcze liczników.",
+    "change": "Zmień",
+    "delete": "Usuń licznik i kanał",
+    "deleteConfirm": "Usunąć ten licznik i jego kanał?"
+  },
+  "create": {
+    "title": "Nowy licznik",
+    "counts": "Co liczy",
+    "channelType": "Typ kanału",
+    "channelTypeHelp": "Zwykle wybiera się kanał głosowy: stoi na liście i pokazuje liczbę.",
+    "voice": "Kanał głosowy (pokazuje tylko nazwę)",
+    "text": "Kanał tekstowy",
+    "category": "W kategorii",
+    "categoryHelp": "Kategoria to folder kanałów. Kanał licznika powstaje w niej.",
+    "submit": "Utwórz licznik",
+    "allUsed": "Każdy rodzaj licznika jest już używany. Możesz mieć po jednym z każdego."
+  },
+  "counting": {
+    "title": "Gra w liczenie",
+    "help": "Członkowie po kolei piszą następną liczbę. Uruchomienie lub ponowne uruchomienie gry tutaj zeruje licznik i ranking. Możesz to też zrobić komendą /count setup w Discordzie.",
+    "label": "Gra w liczenie:",
+    "details": "w {channel} · {system} · następna liczba {next} · najlepsza seria {best}",
+    "channel": "Kanał do liczenia",
+    "channelHelp": "Użyj kanału tylko do liczenia.",
+    "system": "System liczbowy",
+    "systemHelp": "Jak zapisywane są liczby. Dziesiętny (zwykłe liczby) to typowy wybór.",
+    "restart": "Zacznij od nowa tutaj (od 1)",
+    "reset": "Wyzeruj do 1",
+    "resetConfirm": "Wyzerować grę w liczenie do 1?"
+  },
+  "action": {
+    "unknown": "Nieznany licznik.",
+    "countsLabel": "Co liczy",
+    "channelKindLabel": "Typ kanału",
+    "created": "Utworzono licznik: {channel}.",
+    "renameLater": "Nazwa kanału zaktualizuje się przy następnym zaplanowanym przebiegu.",
+    "updated": "Zaktualizowano licznik.",
+    "renameFailed": "Nie udało się teraz zmienić nazwy kanału; zaktualizuje się przy następnym zaplanowanym przebiegu.",
+    "deleted": "Usunięto licznik.",
+    "deleteFailed": "Nie udało się usunąć kanału licznika (uprawnienia?).",
+    "started": "Gra w liczenie zaczęła się od 1.",
+    "reset": "Liczenie zaczyna się znowu od 1.",
+    "off": "Gra w liczenie jest wyłączona."
+  }
+}

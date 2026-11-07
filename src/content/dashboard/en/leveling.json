@@ -1,0 +1,173 @@
+{
+  "page": {
+    "help": "Members earn points (XP) for chatting and go up in level as they collect more. You can post a message when someone levels up and give roles at certain levels. You can also change these with /level dashboard in Discord."
+  },
+  "topic": {
+    "earning": "Earning XP",
+    "earningLine": "How fast members level up, and what Mewvo posts when they do.",
+    "rewards": "Rewards and levels",
+    "rewardsLine": "Roles for reaching a level, and changing a level by hand.",
+    "cat": "Server cat",
+    "catLine": "A cat that grows as members chat, from Kitten to Legend."
+  },
+  "add": "Add",
+  "remove": "Remove",
+  "type": {
+    "channel": "channel",
+    "role": "role"
+  },
+  "colours": {
+    "primary": "Mewvo blue",
+    "purple": "Purple",
+    "blurple": "Discord blurple",
+    "green": "Green",
+    "yellow": "Yellow",
+    "red": "Red",
+    "grey": "Grey"
+  },
+  "xp": {
+    "title": "XP and messages",
+    "help": "XP per message, the wait between XP, and the level-up message.",
+    "min": "Least XP per message",
+    "minHelp": "Each message gives a random amount of XP between these two numbers.",
+    "max": "Most XP per message",
+    "cooldown": "Wait between XP",
+    "cooldownHelp": "A member gets XP for one message at most this often, so spamming does not level them up faster. In seconds.",
+    "channel": "Level-up channel",
+    "channelNone": "where the member chatted",
+    "channelHelp": "Where the level-up message is posted.",
+    "announce": "Announce level-ups",
+    "announceHelp": "Off: members still level up, but no message is posted.",
+    "message": "Level-up message",
+    "messageHelp": "You can use {user} (mentions the member) and {level} (their new level)."
+  },
+  "card": {
+    "title": "Level-up card",
+    "help": "An image with the level-up message.",
+    "more": "Members can also see the same card with /rank card:True. Mewvo needs the Attach Files permission in the level-up channel; without it only the text is posted.",
+    "toggle": "Add an image card to level-up messages",
+    "toggleHelp": "The card shows the member's picture and name, the new level, a bar to the next level and the server name. Off: only the text message is posted. If the card cannot be made, the text message is posted on its own.",
+    "colour": "Card colour",
+    "colourHelp": "Used for the ring around the picture, the level and the bar.",
+    "hex": "Or a colour code",
+    "hexHelp": "A # and six letters or numbers. When filled in, it is used instead of the colour above."
+  },
+  "boosts": {
+    "title": "XP boosts",
+    "help": "More XP in some channels or for some roles, from x{min} to x{max}.",
+    "more": "A thread counts as its channel. If a member has several boosted roles, only the highest role boost counts. Channel boost times role boost is never more than x{cap}.",
+    "boost": "Boost",
+    "boostHelp": "From {min} to {max}, like {example}.",
+    "boosted": "Boosted",
+    "empty": "No boosts. Every channel and role earns normal XP.",
+    "channel": "Channel",
+    "role": "Role",
+    "addChannel": "Add channel boost",
+    "addRole": "Add role boost"
+  },
+  "ignored": {
+    "title": "No XP in",
+    "help": "Members get no XP in these channels, and members with these roles get none at all. Useful for bot or spam channels.",
+    "type": "Type",
+    "noXpFor": "No XP for",
+    "empty": "Members earn XP in every channel.",
+    "addChannel": "No XP in this channel",
+    "addRole": "No XP for this role"
+  },
+  "rewards": {
+    "title": "Role rewards",
+    "help": "Members get these roles by themselves when they reach the level. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers.",
+    "level": "Level",
+    "role": "Role",
+    "problems": "Problems",
+    "ok": "ok",
+    "empty": "No role rewards.",
+    "atLevel": "At level",
+    "giveRole": "Give this role",
+    "rewardRole": "Reward role",
+    "add": "Add reward",
+    "modeLabel": "Reward roles a member keeps",
+    "modeHelp": "Keep all: members keep every reward role they reached. Only the highest: when a member reaches a new reward, Mewvo gives that role and takes off the lower reward roles.",
+    "mode": {
+      "keep": "Keep all reward roles",
+      "highest": "Only the highest reward role"
+    },
+    "modeSubmit": "Save"
+  },
+  "member": {
+    "title": "Member levels",
+    "help": "Change one member's level by hand. You can also do this with /level add, /level remove and /level set in Discord.",
+    "userId": "Member (user ID)",
+    "userIdHelp": "The long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID.",
+    "opLabel": "What to do",
+    "op": {
+      "add": "Add levels",
+      "remove": "Remove levels",
+      "set": "Set level"
+    },
+    "levels": "Levels",
+    "apply": "Apply",
+    "needsAdmin": "To change a member's level you need the Administrator permission in this server.",
+    "memberId": "Member ID",
+    "actionLabel": "Action"
+  },
+  "cat": {
+    "title": "Server cat",
+    "help": "Its name, and whether Mewvo posts when it grows.",
+    "more": "Members see it with /cat view and on the website leaderboard. When it grows, Mewvo posts once in the level-up channel (if one is set).",
+    "alt": "{name}, a {stage}, looking {mood}",
+    "now": {
+      "one": "{sentence} Stage: {stage}. {total} messages counted.",
+      "other": "{sentence} Stage: {stage}. {total} messages counted."
+    },
+    "notLoaded": "The cat could not be loaded right now (the database is not responding). Reload to try again.",
+    "name": "Name",
+    "nameHelp": "Letters, numbers and spaces. Other characters are left out.",
+    "saveName": "Save name",
+    "announce": "Post in the level-up channel when the cat grows",
+    "needsAdmin": "You need the Administrator permission in this server to change the cat."
+  },
+  "error": {
+    "cardHex": "Card colour: write a colour code like #9B59B6, or leave it empty and pick from the list.",
+    "cardColour": "Card colour: unknown choice.",
+    "minMax": "Least XP per message cannot be more than Most XP per message.",
+    "roleMissing": "Role: that role is not in the server.",
+    "maxChannelBoosts": {
+      "one": "At most {count} channel boost.",
+      "other": "At most {count} channel boosts."
+    },
+    "maxRoleBoosts": {
+      "one": "At most {count} role boost.",
+      "other": "At most {count} role boosts."
+    },
+    "memberMissing": "That member is not in the server.",
+    "catName": "Name: use letters, numbers and spaces."
+  },
+  "action": {
+    "nothing": "Nothing changed.",
+    "catNamed": "The server cat is now called {name}.",
+    "catAnnounceLabel": "Cat growth announcement",
+    "catPostsOn": "Cat growth posts are on.",
+    "catPostsOff": "Cat growth posts are off.",
+    "enabledLabel": "Leveling",
+    "enabledOn": "Leveling is now on.",
+    "enabledOff": "Leveling is now off.",
+    "settingsSaved": "Leveling settings saved.",
+    "cardSaved": "Level-up card settings saved.",
+    "alreadyListed": "Already on the list.",
+    "ignoreAdded": "No XP there from now on.",
+    "notListed": "It was not on the list.",
+    "removed": "Removed.",
+    "boostSame": "That boost is already set.",
+    "channelBoostSet": "That channel now gives {boost} XP.",
+    "roleBoostSet": "That role now gives {boost} XP.",
+    "noBoost": "There was no boost for that.",
+    "boostRemoved": "Boost removed.",
+    "modeHighest": "Members now keep only their highest reward role. It applies to each member when they level up, and to everyone the next time Mewvo restarts.",
+    "modeKeep": "Members now keep all their reward roles.",
+    "rewardAdded": "Level {level} now gives that role.",
+    "rewardRemoved": "Removed the level {level} reward.",
+    "noReward": "There was no reward for that level.",
+    "memberDone": "{name} is now level {level}."
+  }
+}

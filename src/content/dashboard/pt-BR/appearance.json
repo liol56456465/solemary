@@ -1,0 +1,35 @@
+{
+  "page": {
+    "help": "Dê ao Mewvo um nome e uma foto de perfil (avatar) próprios neste servidor, para combinar com o seu servidor. Os outros servidores continuam vendo os normais."
+  },
+  "title": "O bot neste servidor",
+  "locked": "Um apelido e um avatar personalizados para o Mewvo neste servidor vêm com o Mewvo Pro e o Max, pelo plano do dono do servidor.",
+  "plans": "Planos",
+  "nickname": {
+    "title": "Apelido",
+    "label": "Apelido",
+    "help": "O nome que o Mewvo mostra neste servidor. Deixe em branco para o nome normal."
+  },
+  "avatar": {
+    "title": "Avatar",
+    "label": "Avatar (imagem PNG, JPEG, GIF ou WebP)",
+    "upload": "Enviar avatar",
+    "reset": "Usar o avatar normal",
+    "resetConfirm": "Voltar ao avatar normal neste servidor?",
+    "own": "Este servidor agora tem um avatar próprio.",
+    "normal": "Este servidor usa o avatar normal."
+  },
+  "error": {
+    "plan": "Um nome e um avatar do bot personalizados no seu servidor vêm com o Mewvo Pro e o Max, pelo plano do dono do servidor.",
+    "tooLong": "Apelidos têm no máximo {max} caracteres.",
+    "choose": "Escolha uma imagem para enviar.",
+    "tooLarge": "A imagem é grande demais. Tente um arquivo menor.",
+    "notImage": "Esse arquivo não é uma imagem PNG, JPEG, GIF ou WebP."
+  },
+  "action": {
+    "renamed": "Agora o Mewvo se chama “{nick}” aqui.",
+    "normalName": "O Mewvo voltou a usar o nome normal aqui.",
+    "avatarSet": "O Mewvo agora tem um avatar próprio neste servidor. O Discord pode levar um minuto para mostrar.",
+    "avatarReset": "O Mewvo voltou a usar o avatar normal aqui."
+  }
+}

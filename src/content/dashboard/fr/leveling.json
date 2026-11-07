@@ -1,0 +1,176 @@
+{
+  "page": {
+    "help": "Les membres gagnent des points (XP) en discutant et montent de niveau à mesure qu’ils en accumulent. Tu peux publier un message quand quelqu’un monte de niveau et donner des rôles à certains niveaux. Tu peux aussi modifier tout ça avec /level dashboard sur Discord."
+  },
+  "topic": {
+    "earning": "Gagner de l’XP",
+    "earningLine": "À quelle vitesse les membres montent de niveau, et ce que Mewvo publie quand ça arrive.",
+    "rewards": "Récompenses et niveaux",
+    "rewardsLine": "Des rôles pour un niveau atteint, et changer un niveau à la main.",
+    "cat": "Chat du serveur",
+    "catLine": "Un chat qui grandit à mesure que les membres discutent, de Kitten à Legend."
+  },
+  "add": "Ajouter",
+  "remove": "Retirer",
+  "type": {
+    "channel": "salon",
+    "role": "rôle"
+  },
+  "colours": {
+    "primary": "Bleu Mewvo",
+    "purple": "Violet",
+    "blurple": "Blurple Discord",
+    "green": "Vert",
+    "yellow": "Jaune",
+    "red": "Rouge",
+    "grey": "Gris"
+  },
+  "xp": {
+    "title": "XP et messages",
+    "help": "L’XP par message, l’attente entre deux gains d’XP et le message de passage de niveau.",
+    "min": "XP minimum par message",
+    "minHelp": "Chaque message rapporte une quantité d’XP au hasard entre ces deux nombres.",
+    "max": "XP maximum par message",
+    "cooldown": "Attente entre deux gains d’XP",
+    "cooldownHelp": "Un membre gagne de l’XP pour un message au plus à cette fréquence, donc spammer ne fait pas monter de niveau plus vite. En secondes.",
+    "channel": "Salon des passages de niveau",
+    "channelNone": "là où le membre a écrit",
+    "channelHelp": "Où le message de passage de niveau est publié.",
+    "announce": "Annoncer les passages de niveau",
+    "announceHelp": "Désactivé : les membres montent quand même de niveau, mais aucun message n’est publié.",
+    "message": "Message de passage de niveau",
+    "messageHelp": "Tu peux utiliser {user} (mentionne le membre) et {level} (son nouveau niveau)."
+  },
+  "card": {
+    "title": "Carte de niveau",
+    "help": "Une image avec le message de passage de niveau.",
+    "more": "Les membres peuvent aussi voir la même carte avec /rank card:True. Mewvo a besoin de la permission Joindre des fichiers dans le salon des passages de niveau ; sans elle, seul le texte est publié.",
+    "toggle": "Ajouter une carte image aux messages de passage de niveau",
+    "toggleHelp": "La carte montre la photo et le nom du membre, le nouveau niveau, une barre jusqu’au niveau suivant et le nom du serveur. Désactivé : seul le message texte est publié. Si la carte ne peut pas être créée, le message texte est publié seul.",
+    "colour": "Couleur de la carte",
+    "colourHelp": "Utilisée pour l’anneau autour de la photo, le niveau et la barre.",
+    "hex": "Ou un code couleur",
+    "hexHelp": "Un # suivi de six lettres ou chiffres. S’il est rempli, il remplace la couleur ci-dessus."
+  },
+  "boosts": {
+    "title": "Boosts d’XP",
+    "help": "Plus d’XP dans certains salons ou pour certains rôles, de x{min} à x{max}.",
+    "more": "Un fil compte comme son salon. Si un membre a plusieurs rôles boostés, seul le boost de rôle le plus élevé compte. Le boost de salon multiplié par le boost de rôle ne dépasse jamais x{cap}.",
+    "boost": "Boost",
+    "boostHelp": "De {min} à {max}, par exemple {example}.",
+    "boosted": "Boosté",
+    "empty": "Aucun boost. Chaque salon et chaque rôle rapportent l’XP normale.",
+    "channel": "Salon",
+    "role": "Rôle",
+    "addChannel": "Ajouter un boost de salon",
+    "addRole": "Ajouter un boost de rôle"
+  },
+  "ignored": {
+    "title": "Pas d’XP dans",
+    "help": "Les membres ne gagnent pas d’XP dans ces salons, et les membres qui ont ces rôles n’en gagnent pas du tout. Pratique pour les salons de bots ou de spam.",
+    "type": "Type",
+    "noXpFor": "Pas d’XP pour",
+    "empty": "Les membres gagnent de l’XP dans tous les salons.",
+    "addChannel": "Pas d’XP dans ce salon",
+    "addRole": "Pas d’XP pour ce rôle"
+  },
+  "rewards": {
+    "title": "Rôles en récompense",
+    "help": "Les membres reçoivent ces rôles d’eux-mêmes quand ils atteignent le niveau. Mewvo ne peut donner que des rôles placés sous son propre rôle dans la liste des rôles, et il ne donne pas de rôles avec des pouvoirs de staff.",
+    "level": "Niveau",
+    "role": "Rôle",
+    "problems": "Problèmes",
+    "ok": "ok",
+    "empty": "Aucun rôle en récompense.",
+    "atLevel": "Au niveau",
+    "giveRole": "Donner ce rôle",
+    "rewardRole": "Rôle en récompense",
+    "add": "Ajouter la récompense",
+    "modeLabel": "Rôles en récompense qu’un membre garde",
+    "modeHelp": "Tout garder : les membres gardent chaque rôle en récompense atteint. Seulement le plus haut : quand un membre atteint une nouvelle récompense, Mewvo donne ce rôle et retire les rôles en récompense plus bas.",
+    "mode": {
+      "keep": "Garder tous les rôles en récompense",
+      "highest": "Seulement le rôle en récompense le plus haut"
+    },
+    "modeSubmit": "Enregistrer"
+  },
+  "member": {
+    "title": "Niveaux des membres",
+    "help": "Change le niveau d’un membre à la main. Tu peux aussi le faire avec /level add, /level remove et /level set sur Discord.",
+    "userId": "Membre (identifiant)",
+    "userIdHelp": "Le long nombre qui identifie un membre. Sur Discord, active le Mode développeur, fais un clic droit sur le membre et choisis Copier l’identifiant de l’utilisateur.",
+    "opLabel": "Que faire",
+    "op": {
+      "add": "Ajouter des niveaux",
+      "remove": "Retirer des niveaux",
+      "set": "Définir le niveau"
+    },
+    "levels": "Niveaux",
+    "apply": "Appliquer",
+    "needsAdmin": "Pour changer le niveau d’un membre, il te faut la permission Administrateur sur ce serveur.",
+    "memberId": "Identifiant du membre",
+    "actionLabel": "Action"
+  },
+  "cat": {
+    "title": "Chat du serveur",
+    "help": "Son nom, et si Mewvo publie un message quand il grandit.",
+    "more": "Les membres le voient avec /cat view et dans le classement du site. Quand il grandit, Mewvo publie une fois dans le salon des passages de niveau (s’il y en a un).",
+    "alt": "{name}, stade {stage}, humeur : {mood}",
+    "now": {
+      "one": "{sentence} Stade : {stage}. {total} message compté.",
+      "many": "{sentence} Stade : {stage}. {total} de messages comptés.",
+      "other": "{sentence} Stade : {stage}. {total} messages comptés."
+    },
+    "notLoaded": "Le chat n’a pas pu être chargé pour l’instant (la base de données ne répond pas). Recharge la page pour réessayer.",
+    "name": "Nom",
+    "nameHelp": "Lettres, chiffres et espaces. Les autres caractères sont retirés.",
+    "saveName": "Enregistrer le nom",
+    "announce": "Publier dans le salon des passages de niveau quand le chat grandit",
+    "needsAdmin": "Il te faut la permission Administrateur sur ce serveur pour modifier le chat."
+  },
+  "error": {
+    "cardHex": "Couleur de la carte : écris un code couleur comme #9B59B6, ou laisse vide et choisis dans la liste.",
+    "cardColour": "Couleur de la carte : choix inconnu.",
+    "minMax": "L’XP minimum par message ne peut pas dépasser l’XP maximum par message.",
+    "roleMissing": "Rôle : ce rôle n’est pas sur le serveur.",
+    "maxChannelBoosts": {
+      "one": "{count} boost de salon au maximum.",
+      "many": "{count} de boosts de salon au maximum.",
+      "other": "{count} boosts de salon au maximum."
+    },
+    "maxRoleBoosts": {
+      "one": "{count} boost de rôle au maximum.",
+      "many": "{count} de boosts de rôle au maximum.",
+      "other": "{count} boosts de rôle au maximum."
+    },
+    "memberMissing": "Ce membre n’est pas sur le serveur.",
+    "catName": "Nom : utilise des lettres, des chiffres et des espaces."
+  },
+  "action": {
+    "nothing": "Rien n’a changé.",
+    "catNamed": "Le chat du serveur s’appelle maintenant {name}.",
+    "catAnnounceLabel": "Annonce de croissance du chat",
+    "catPostsOn": "Les messages de croissance du chat sont activés.",
+    "catPostsOff": "Les messages de croissance du chat sont désactivés.",
+    "enabledLabel": "Niveaux",
+    "enabledOn": "Les niveaux sont maintenant activés.",
+    "enabledOff": "Les niveaux sont maintenant désactivés.",
+    "settingsSaved": "Paramètres des niveaux enregistrés.",
+    "cardSaved": "Paramètres de la carte de niveau enregistrés.",
+    "alreadyListed": "Déjà dans la liste.",
+    "ignoreAdded": "Désormais, aucune XP à cet endroit.",
+    "notListed": "Ce n’était pas dans la liste.",
+    "removed": "Retiré.",
+    "boostSame": "Ce boost est déjà défini.",
+    "channelBoostSet": "Ce salon rapporte maintenant {boost} d’XP.",
+    "roleBoostSet": "Ce rôle rapporte maintenant {boost} d’XP.",
+    "noBoost": "Il n’y avait pas de boost pour ça.",
+    "boostRemoved": "Boost retiré.",
+    "modeHighest": "Les membres ne gardent maintenant que leur rôle en récompense le plus haut. Ça s’applique à chaque membre à son prochain passage de niveau, et à tout le monde au prochain redémarrage de Mewvo.",
+    "modeKeep": "Les membres gardent maintenant tous leurs rôles en récompense.",
+    "rewardAdded": "Le niveau {level} donne maintenant ce rôle.",
+    "rewardRemoved": "La récompense du niveau {level} a été retirée.",
+    "noReward": "Il n’y avait pas de récompense pour ce niveau.",
+    "memberDone": "{name} est maintenant niveau {level}."
+  }
+}

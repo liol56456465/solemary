@@ -1,0 +1,124 @@
+{
+  "page": {
+    "help": "Verifizierung hält Bots und Raider fern. Neue Mitglieder sehen den Rest des Servers erst, wenn sie die Verifiziert-Rolle haben. Die bekommen sie, indem sie einen Button im Verifizierungs-Panel drücken (eine Nachricht, die Mewvo postet) oder sich mit Discord anmelden. Automatische Verifizierung gibt die Rolle stattdessen direkt beim Beitritt. Du kannst das eine oder das andere nutzen, nicht beides."
+  },
+  "panel": {
+    "title": "Verifizierungs-Panel",
+    "toggle": "Verifizierung",
+    "in": "Panel in {channel}.",
+    "publish": "Panel aktualisieren oder neu posten",
+    "none": "Noch kein Verifizierungs-Panel.",
+    "channel": "Panel posten in",
+    "channelHelp": "Wähle einen Kanal, den neue Mitglieder schon vor der Verifizierung sehen.",
+    "role": "Verifiziert-Rolle",
+    "roleSetupHelp": "Die Rolle, die Mitglieder nach der Verifizierung bekommen. Stell deine Kanäle so ein, dass nur diese Rolle sie sieht.",
+    "roleHelp": "Die Rolle, die Mitglieder nach der Verifizierung bekommen.",
+    "buttonText": "Button-Text",
+    "message": "Panel-Nachricht",
+    "messageHelp": "Der Text über dem Button.",
+    "setup": "Panel einrichten und posten",
+    "savingNote": "Speichern ändert die Nachricht, die schon in Discord steht, nicht. Drück „Panel aktualisieren oder neu posten“, um den neuen Text zu zeigen."
+  },
+  "quiz": {
+    "title": "Regel-Quiz",
+    "help": {
+      "one": "Bevor Mitglieder verifiziert werden, beantworten sie bis zu {count} Frage zu deinen Regeln. Jede Antwort muss stimmen; nach einem falschen Versuch warten sie, bevor sie es erneut versuchen, und erfahren nicht, welche Antwort falsch war. Wer besteht, kommt zum normalen Verifizierungsschritt. Standardmäßig aus.",
+      "other": "Bevor Mitglieder verifiziert werden, beantworten sie bis zu {count} Fragen zu deinen Regeln. Jede Antwort muss stimmen; nach einem falschen Versuch warten sie, bevor sie es erneut versuchen, und erfahren nicht, welche Antwort falsch war. Wer besteht, kommt zum normalen Verifizierungsschritt. Standardmäßig aus."
+    },
+    "toggle": "Regel-Quiz",
+    "questionN": "Frage {n}",
+    "question": "Frage",
+    "placeholder": "Welche davon ist hier eine Regel?",
+    "answerN": "Antwort {n}",
+    "answerOptional": "Antwort {n} (optional)",
+    "correct": "Richtige Antwort",
+    "rightAnswer": "Richtige Antwort: {answer}",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "remove": "Entfernen",
+    "empty": "Noch keine Fragen.",
+    "suggest": "Fragen aus meinen Regeln vorschlagen",
+    "cooldown": "Wartezeit nach falschem Versuch (Minuten)",
+    "cooldownHelp": {
+      "one": "{min} bis {count} Minute.",
+      "other": "{min} bis {count} Minuten."
+    },
+    "submit": "Fragen speichern",
+    "slotsNote": "Leere Fragefelder werden übersprungen; leere ein Feld, um die Frage zu entfernen. Die Antworten werden jedes Mal in zufälliger Reihenfolge gezeigt.",
+    "warnNoQuestions": "Das Quiz ist an, hat aber keine gültigen Fragen, deshalb gilt es als aus: Mitglieder werden nichts gefragt. Füge unten eine Frage hinzu.",
+    "warnInvalid": {
+      "one": "{count} gespeicherte Frage ist ungültig und wird übersprungen. Speichere die Fragen erneut, um das zu bereinigen.",
+      "other": "{count} gespeicherte Fragen sind ungültig und werden übersprungen. Speichere die Fragen erneut, um das zu bereinigen."
+    },
+    "warnPanelOff": "Das Verifizierungs-Panel ist aus, deshalb bekommt niemand das Quiz, bis es an ist.",
+    "suggestFull": {
+      "one": "Die {count} Frage ist belegt. Entferne sie, um einen Vorschlag zu bekommen.",
+      "other": "Alle {count} Fragen sind belegt. Entferne eine, um einen Vorschlag zu bekommen."
+    },
+    "suggestNoRules": "Es gibt noch keine Serverregeln für Vorschläge. Füge sie zuerst auf der Seite Regeln hinzu.",
+    "suggested": {
+      "one": "{count} vorgeschlagene Frage ist unten eingetragen. Noch ist nichts gespeichert: Prüf sie, bearbeite sie und drück dann Fragen speichern.",
+      "other": "{count} vorgeschlagene Fragen sind unten eingetragen. Noch ist nichts gespeichert: Prüf sie, bearbeite sie und drück dann Fragen speichern."
+    }
+  },
+  "auto": {
+    "title": "Automatische Verifizierung",
+    "toggle": "Automatische Verifizierung",
+    "criteria": "Wer automatisch verifiziert wird",
+    "criteriaHelp": "Wer nicht passt, muss weiter das Panel nutzen.",
+    "criteriaNone": "Alle",
+    "criteriaAge": "Konten, die älter sind als die Tage unten",
+    "criteriaSmall": "Alle, solange der Server noch klein ist",
+    "criteriaLabel": "Kriterium",
+    "age": "Konto älter als (Tage)",
+    "ageHelp": "Nur genutzt, wenn du Konten älter als die Tage unten wählst. Neue Konten sind öfter Bots.",
+    "role": "Vergebene Rolle",
+    "roleNone": "die Verifiziert-Rolle",
+    "roleHelp": "Die Rolle, die automatisch verifizierte Mitglieder bekommen.",
+    "roleLabel": "Rolle für automatische Verifizierung"
+  },
+  "web": {
+    "title": "Web-Verifizierung",
+    "help": "Mitglieder können sich auch auf einer Webseite verifizieren, indem sie sich mit ihrem Discord-Konto anmelden.",
+    "page": "Seite nach „Mit Discord verifizieren“",
+    "pageHelp": "Die Webseite, auf der Mitglieder landen, nachdem sie sich mit Discord verifiziert haben. Leer lassen für die Standardseite."
+  },
+  "action": {
+    "setUp": "Verifizierung eingerichtet: Das Panel ist gepostet und die Verifizierung ist an.",
+    "posted": "Das Panel fehlte: Ein neues ist gepostet.",
+    "updated": "Das Live-Panel zeigt jetzt den gespeicherten Text.",
+    "on": "Verifizierung ist jetzt an.",
+    "off": "Verifizierung ist jetzt aus.",
+    "toggleNote": "Ein- oder Ausschalten postet oder entfernt die Panel-Nachricht nicht. Nutze dafür „Panel aktualisieren oder neu posten“.",
+    "saved": "Verifizierungseinstellungen gespeichert.",
+    "autoOn": "Automatische Verifizierung ist jetzt an.",
+    "autoOff": "Automatische Verifizierung ist jetzt aus.",
+    "autoSaved": "Einstellungen der automatischen Verifizierung gespeichert.",
+    "quizOn": "Das Regel-Quiz ist jetzt an.",
+    "quizOff": "Das Regel-Quiz ist jetzt aus.",
+    "quizEmpty": "Es hat noch keine Fragen, deshalb gilt es als aus, bis du eine hinzufügst.",
+    "quizSaved": "Regel-Quiz gespeichert.",
+    "quizNowEmpty": "Das Quiz ist an, hat aber jetzt keine Fragen, deshalb gilt es als aus.",
+    "directionLabel": "Richtung",
+    "movedUp": "Frage nach oben verschoben.",
+    "movedDown": "Frage nach unten verschoben.",
+    "removed": "Frage entfernt."
+  },
+  "error": {
+    "noQuestion": "{label}: Schreib die Frage oder leere ihre Antworten, um sie zu entfernen.",
+    "answerCount": "{label}: Gib {min} bis {max} Antworten an.",
+    "correctLabel": "{label}: richtige Antwort",
+    "correctEmpty": "{label}: Die richtige Antwort (Antwort {answer}) ist leer.",
+    "quizChanged": "Die Quizfragen haben sich inzwischen geändert. Lade die Seite neu und versuch es noch einmal.",
+    "alreadySetUp": "Das Verifizierungs-Panel ist schon eingerichtet. Nutze stattdessen „Panel aktualisieren oder neu posten“.",
+    "autoIsOn": "Automatische Verifizierung ist an. Schalte sie aus, bevor du das Verifizierungs-Panel einschaltest.",
+    "notSetUp": "Das Verifizierungs-Panel ist noch nicht eingerichtet. Richte es zuerst ein.",
+    "buttonEmpty": "Der Button-Text darf nicht leer sein.",
+    "messageEmpty": "Die Panel-Nachricht darf nicht leer sein.",
+    "blockPanel": "das Verifizierungs-Panel ist an",
+    "blockAutoRoles": "automatische Rollen sind eingerichtet (Willkommen & Abschied)",
+    "blocked": "Um die automatische Verifizierung einzuschalten, schalte zuerst aus: {list}.",
+    "atTop": "Diese Frage ist schon ganz oben.",
+    "atBottom": "Diese Frage ist schon ganz unten."
+  }
+}

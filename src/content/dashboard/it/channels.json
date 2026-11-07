@@ -1,0 +1,68 @@
+{
+  "page": {
+    "help": "Ripulisci un canale eliminando molti messaggi recenti in una volta, oppure blocca un canale così che i membri non possano scriverci per un po’, per esempio durante un’ondata di spam."
+  },
+  "adminNote": " Per usare questi strumenti ti serve il permesso Amministratore in questo server.",
+  "field": {
+    "channel": "Canale",
+    "reason": "Motivo",
+    "reasonHelp": "Salvato con l’azione, così il resto dello staff sa perché."
+  },
+  "purge": {
+    "title": "Elimina messaggi",
+    "help": "Elimina molti messaggi recenti in una volta. Discord non lo permette per i messaggi più vecchi di 14 giorni, quindi quelli vengono saltati.",
+    "amount": "Numero di messaggi",
+    "amountHelp": "Da {min} a {max}. Si parte dai messaggi più recenti.",
+    "fromUser": "Solo da questo membro (facoltativo)",
+    "fromUserHelp": "Vengono cercati solo i 100 messaggi più recenti.",
+    "nothingYet": "Non viene ancora eliminato niente: la pagina successiva mostra cosa verrà eliminato, e lì confermi.",
+    "submit": "Elimina messaggi…",
+    "badUser": "Solo da questo membro: non è un ID utente. Scrivi un nome e scegli un membro, usa «Trova un membro» oppure incolla un ID utente (da 17 a 20 cifre).",
+    "missingPerms": "A Mewvo manca {perms} in #{channel}, quindi non può eliminare messaggi lì. Non è stato cambiato niente."
+  },
+  "lock": {
+    "title": "Blocca un canale",
+    "help": "I membri possono ancora leggere il canale ma non possono più scriverci. I ruoli che hanno un proprio permesso in quel canale, come lo staff, possono ancora farlo. Sbloccare annulla tutto: il canale torna ai permessi della sua categoria (la cartella in cui si trova).",
+    "submit": "Blocca canale"
+  },
+  "locked": {
+    "title": "Canali bloccati ({count})",
+    "category": "Categoria",
+    "noCategory": "nessuna",
+    "reasonPlaceholder": "Motivo (facoltativo)",
+    "unlock": "Sblocca",
+    "empty": "Nessun canale è bloccato.",
+    "help": "I canali in cui i membri non possono scrivere in questo momento perché il canale stesso è bloccato."
+  },
+  "confirm": {
+    "heading": "Conferma: elimina messaggi in #{channel}",
+    "messages": "Messaggi",
+    "fromUser": {
+      "one": "Fino a {count} dei messaggi più recenti di {who} (vengono cercati solo i 100 più recenti)",
+      "many": "Fino a {count} dei messaggi più recenti di {who} (vengono cercati solo i 100 più recenti)",
+      "other": "Fino a {count} dei messaggi più recenti di {who} (vengono cercati solo i 100 più recenti)"
+    },
+    "newest": {
+      "one": "Il più recente ({count})",
+      "many": "I {count} più recenti",
+      "other": "I {count} più recenti"
+    },
+    "effect": "Effetto",
+    "effectText": "I messaggi vengono eliminati per sempre e non si possono recuperare. I messaggi più vecchi di 14 giorni vengono saltati.",
+    "submit": "Elimina messaggi"
+  },
+  "action": {
+    "skippedOld": {
+      "one": "{count} messaggio era più vecchio di 14 giorni ed è stato saltato.",
+      "many": "{count} messaggi erano più vecchi di 14 giorni e sono stati saltati.",
+      "other": "{count} messaggi erano più vecchi di 14 giorni e sono stati saltati."
+    },
+    "deleted": {
+      "one": "{count} messaggio eliminato in #{channel}.",
+      "many": "{count} messaggi eliminati in #{channel}.",
+      "other": "{count} messaggi eliminati in #{channel}."
+    },
+    "locked": "#{channel} è bloccato.",
+    "unlocked": "#{channel} è sbloccato."
+  }
+}

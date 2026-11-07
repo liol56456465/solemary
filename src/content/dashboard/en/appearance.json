@@ -1,0 +1,35 @@
+{
+  "page": {
+    "help": "Give Mewvo its own name and profile picture (avatar) in this server, so it fits your server. Other servers still see the normal ones."
+  },
+  "title": "Bot in this server",
+  "locked": "A custom nickname and avatar for Mewvo in this server come with Mewvo Pro and Max, on the server owner's plan.",
+  "plans": "Plans",
+  "nickname": {
+    "title": "Nickname",
+    "label": "Nickname",
+    "help": "The name Mewvo shows in this server. Leave empty for the normal name."
+  },
+  "avatar": {
+    "title": "Avatar",
+    "label": "Avatar (PNG, JPEG, GIF or WebP picture)",
+    "upload": "Upload avatar",
+    "reset": "Use the normal avatar",
+    "resetConfirm": "Go back to the normal avatar in this server?",
+    "own": "This server has its own avatar now.",
+    "normal": "This server uses the normal avatar."
+  },
+  "error": {
+    "plan": "A custom bot name and avatar in your server come with Mewvo Pro and Max, on the server owner's plan.",
+    "tooLong": "Nicknames are at most {max} characters.",
+    "choose": "Choose a picture to upload.",
+    "tooLarge": "The picture is too large. Try a smaller file.",
+    "notImage": "That file is not a PNG, JPEG, GIF or WebP image."
+  },
+  "action": {
+    "renamed": "Mewvo is now called \"{nick}\" here.",
+    "normalName": "Mewvo uses its normal name here again.",
+    "avatarSet": "Mewvo has its own avatar in this server now. Discord can take a minute to show it.",
+    "avatarReset": "Mewvo uses its normal avatar here again."
+  }
+}

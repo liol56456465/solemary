@@ -1,0 +1,130 @@
+{
+  "page": {
+    "helpText": "Receba novos membros com uma mensagem quando eles entram, se despeça quando saem e dê automaticamente um cargo aos novos membros. Nas mensagens você pode usar {user} (menciona o membro), {user.tag} (o nome de usuário dele, sem mencionar), {server} (o nome do servidor) e {memberCount} (quantos membros o servidor tem agora)."
+  },
+  "join": {
+    "topic": "Boas-vindas",
+    "topicLine": "O que o Mewvo publica quando alguém entra.",
+    "title": "Boas-vindas",
+    "help": "A mensagem de boas-vindas, onde ela é publicada e uma mensagem privada opcional.",
+    "toggle": "Mensagens de boas-vindas",
+    "channel": "Canal de boas-vindas",
+    "channelHelp": "Onde a mensagem de boas-vindas é publicada.",
+    "ping": "Mencionar o membro",
+    "pingHelp": "Menciona o membro para ele receber uma notificação.",
+    "message": "Mensagem de boas-vindas",
+    "messageHelp": "Por exemplo: Bem-vindo ao {server}, {user}. Você é o membro número {memberCount}.",
+    "dm": "Mensagem privada para o novo membro",
+    "dmHelp": "Enviada diretamente para ele (uma DM). Deixe vazio para não enviar nada."
+  },
+  "leave": {
+    "topic": "Despedida",
+    "topicLine": "O que o Mewvo publica quando alguém sai.",
+    "title": "Despedida",
+    "help": "A mensagem de despedida e onde ela é publicada.",
+    "toggle": "Mensagens de despedida",
+    "channel": "Canal de despedida",
+    "channelHelp": "Onde a mensagem de despedida é publicada.",
+    "ping": "Mencionar o membro",
+    "pingHelp": "Menciona o membro pelo nome na mensagem.",
+    "message": "Mensagem de despedida",
+    "messageHelp": "Por exemplo: {user.tag} saiu do servidor."
+  },
+  "embed": {
+    "welcomeTitle": "Embed e imagem de boas-vindas",
+    "goodbyeTitle": "Embed e imagem de despedida",
+    "help": "A caixa em volta da mensagem: título, cor e uma imagem opcional.",
+    "helpMore": "A mensagem é enviada dentro de uma caixa (um embed) com título, cor e uma imagem opcional. O texto da mensagem acima vai dentro da caixa. Se o Mewvo não tiver a permissão Inserir links nesse canal, só o texto é enviado.",
+    "title": "Título da caixa",
+    "titleHelp": "A linha em negrito no topo da caixa. Deixe vazio para \"{title}\". As mesmas palavras entre chaves da mensagem funcionam aqui também.",
+    "colour": "Cor da caixa",
+    "colourHelp": "A faixa colorida à esquerda da caixa, como código de cor: # e seis letras ou números, como #57F287 para verde. Deixe vazio para a cor padrão.",
+    "footer": "Rodapé da caixa",
+    "footerHelp": "Texto pequeno na parte de baixo da caixa. Deixe vazio para o nome do servidor. As mesmas palavras entre chaves da mensagem funcionam aqui também.",
+    "image": "Link da imagem",
+    "imageHelp": "Um link que começa com https:// e abre uma imagem PNG, JPG, GIF ou WebP. Ela aparece grande na parte de baixo da caixa. Deixe vazio para não ter imagem. Para usar uma imagem do seu computador, use Enviar uma imagem abaixo.",
+    "welcomeImage": "Imagem de boas-vindas",
+    "goodbyeImage": "Imagem de despedida",
+    "embedColour": "Cor do embed"
+  },
+  "image": {
+    "none": "Sem imagem.",
+    "welcomeAlt": "Imagem de boas-vindas atual",
+    "goodbyeAlt": "Imagem de despedida atual",
+    "current": "Imagem atual: {link}",
+    "onlyDiscord": "(só imagens guardadas no Discord podem ser mostradas aqui)",
+    "channelId": "o canal {id}",
+    "welcomeStored": "Arquivo enviado: uma cópia fica em {where}. Não apague essa mensagem, porque a mensagem de boas-vindas carrega a imagem de lá.",
+    "goodbyeStored": "Arquivo enviado: uma cópia fica em {where}. Não apague essa mensagem, porque a mensagem de despedida carrega a imagem de lá.",
+    "uploadLabel": "Enviar uma imagem (PNG, JPEG, GIF ou WebP, até {mb} MB)",
+    "uploadHint": "Substitui o link da imagem acima. O Mewvo publica o arquivo no seu canal de registro principal e usa de lá, para que a imagem continue funcionando. /greet no Discord faz o mesmo.",
+    "upload": "Enviar imagem",
+    "remove": "Remover imagem",
+    "welcomeConfirm": "Remover a imagem de boas-vindas?",
+    "goodbyeConfirm": "Remover a imagem de despedida?"
+  },
+  "members": {
+    "topic": "Novos membros",
+    "topicLine": "Um cargo inicial e um registro de entradas e saídas para a equipe."
+  },
+  "autoRole": {
+    "title": "Cargo automático",
+    "help": "Todo novo membro recebe este cargo automaticamente. Você pode ter um: definir um novo substitui o antigo. O Mewvo só pode dar cargos abaixo do próprio cargo na lista de cargos e não dá cargos com poderes de equipe. Você também pode fazer isso com /autorole no Discord.",
+    "role": "Cargo",
+    "problems": "Problemas",
+    "ok": "ok",
+    "remove": "Remover",
+    "none": "Nenhum cargo é dado ao entrar.",
+    "pick": "Cargo para novos membros",
+    "set": "Definir",
+    "delay": "Espera antes de dar o cargo (segundos)",
+    "delayLabel": "Espera antes de dar o cargo",
+    "delayHelp": "Quanto tempo o Mewvo espera depois que alguém entra. 0 dá na hora."
+  },
+  "logs": {
+    "title": "Registros de entradas e saídas",
+    "help": "Um registro para a equipe de quem entrou e quem saiu, separado das mensagens públicas.",
+    "joins": "Registrar entradas",
+    "joinsHelp": "Publica uma linha curta para a equipe toda vez que alguém entra.",
+    "joinChannel": "Canal do registro de entradas",
+    "leaves": "Registrar saídas",
+    "leavesHelp": "Publica uma linha curta para a equipe toda vez que alguém sai.",
+    "leaveChannel": "Canal do registro de saídas"
+  },
+  "action": {
+    "welcomeOn": "As mensagens de boas-vindas estão ativadas.",
+    "welcomeOff": "As mensagens de boas-vindas estão desativadas.",
+    "goodbyeOn": "As mensagens de despedida estão ativadas.",
+    "goodbyeOff": "As mensagens de despedida estão desativadas.",
+    "welcomeSaved": "Configurações de boas-vindas salvas.",
+    "goodbyeSaved": "Configurações de despedida salvas.",
+    "welcomeEmbedSaved": "Embed de boas-vindas salvo.",
+    "goodbyeEmbedSaved": "Embed de despedida salvo.",
+    "welcomeUploaded": "Imagem de boas-vindas enviada.",
+    "goodbyeUploaded": "Imagem de despedida enviada.",
+    "welcomeUploadedNote": "Imagem de boas-vindas enviada. Uma cópia fica em {where}; não apague essa mensagem, a mensagem de boas-vindas carrega a imagem de lá.",
+    "goodbyeUploadedNote": "Imagem de despedida enviada. Uma cópia fica em {where}; não apague essa mensagem, a mensagem de despedida carrega a imagem de lá.",
+    "auditChannel": "o canal do registro de auditoria",
+    "welcomeImageRemoved": "Imagem de boas-vindas removida.",
+    "goodbyeImageRemoved": "Imagem de despedida removida.",
+    "autoRoleAlready": "Esse cargo já é dado ao entrar.",
+    "autoRoleSet": "Cargo automático definido.",
+    "autoRoleNotSet": "Esse cargo não era um cargo automático.",
+    "autoRoleRemoved": "Cargo automático removido.",
+    "delaySaved": "Espera do cargo automático salva.",
+    "logsSaved": "Registros de entradas e saídas salvos."
+  },
+  "error": {
+    "colour": "{label} deve ser uma cor hexadecimal como #57F287.",
+    "badLink": "{label}: não é um link válido.",
+    "https": "{label} deve começar com https://.",
+    "expiredLink": "{label}: esse link de anexo do Discord expirou. Envie o arquivo de imagem abaixo ou use um link de imagem permanente.",
+    "chooseFile": "Escolha um arquivo de imagem para enviar.",
+    "notImage": "Esse arquivo não é uma imagem PNG, JPEG, GIF ou WebP.",
+    "noLogChannel": "{label}: nenhum canal de registro principal está definido, então a imagem enviada não tem onde ficar guardada. Defina um na página Registros ou use um link de imagem. Nada foi alterado.",
+    "cannotPost": "{label}: o Mewvo não conseguiu publicar a imagem no canal de registro principal ({channel}). O Mewvo precisa das permissões Ver canal, Enviar mensagens e Anexar arquivos lá. Nada foi alterado."
+  },
+  "warn": {
+    "discordLink": "{label}: links de anexos do Discord param de funcionar depois de mais ou menos um dia. Para uma imagem duradoura, envie o arquivo abaixo (Enviar imagem) ou use um serviço de hospedagem de imagens permanente."
+  }
+}

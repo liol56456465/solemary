@@ -6,6 +6,10 @@
 // utils/welcomeImageStore.js (storeWelcomeImage) into the audit log channel and saved as
 // { channelId, messageId, url }, so the join/leave events fetch a fresh link from that
 // message (Discord attachment links expire after about a day).
+//
+// Words: src/content/dashboard/<lang>/welcome.json. The exported helpers (colourField,
+// imageUrlField, storeUpload) are used by the Rules page too: their texts stay in the welcome
+// namespace and use the request's language (currentText()).
 
 import { html } from '../html.js';
 import { isExpiredDiscordCdnUrl } from '../../../utils/welcomeImageStore.js';
@@ -16,7 +20,8 @@ import {
 import { MAX_UPLOAD_BYTES, sniffImage } from '../multipart.js';
 import { isAllowedImageUrl, isSafeLink } from '../pages.js';
 import { diffSnapshots } from '../audit.js';
-import { NOTHING, changedOnly, section, table, topic } from './common.js';
+import { currentText, textFor } from '../language.js';
+import { changedOnly, section, table, topic } from './common.js';
 
 const KEYS = ['enabled', 'channelId', 'welcomeMessage', 'welcomePing', 'dmMessage', 'goodbyeEnabled', 'goodbyeChannelId',
     'leaveMessage', 'goodbyePing', 'roleIds', 'autoRoleDelay', 'joinLogs', 'leaveLogs',
@@ -29,12 +34,21 @@ export const IMAGE_URL_MAX = 2048;
 const HEX_COLOUR = /^#?([0-9a-f]{6})$/i;
 const DISCORD_CDN = /(^|\.)(discordapp\.(com|net)|discord\.com)$/i;
 
+// The message placeholders shown as they are typed ({user} …), not filled in by the translator.
+const TOKENS = Object.freeze({ user: '{user}', server: '{server}', memberCount: '{memberCount}' });
+
+// Texts that differ only by welcome / goodbye.
+const IMAGE_TEXT = {
+    welcome: { alt: 'welcome.image.welcomeAlt', stored: 'welcome.image.welcomeStored', confirm: 'welcome.image.welcomeConfirm', uploaded: 'welcome.action.welcomeUploaded', uploadedNote: 'welcome.action.welcomeUploadedNote' },
+    goodbye: { alt: 'welcome.image.goodbyeAlt', stored: 'welcome.image.goodbyeStored', confirm: 'welcome.image.goodbyeConfirm', uploaded: 'welcome.action.goodbyeUploaded', uploadedNote: 'welcome.action.goodbyeUploadedNote' },
+};
+
 /** '#RRGGBB' (or RRGGBB) → the number embeds store; '' → null (the default colour). */
 export function colourField(form, name, label) {
     const raw = text(form, name, 7);
     if (!raw) return null;
     const match = raw.match(HEX_COLOUR);
-    if (!match) throw new InputError(`${label} must be a hex colour like #57F287.`, 400, name);
+    if (!match) throw new InputError(currentText().t('welcome.error.colour', { label }), 400, name);
     return parseInt(match[1], 16);
 }
 
@@ -51,18 +65,19 @@ export function colourText(value) {
  * link is refused; a fresh one is accepted with a warning (it stops working in about a day).
  */
 export function imageUrlField(form, name, label) {
+    const tr = currentText();
     const raw = text(form, name, IMAGE_URL_MAX);
     if (!raw) return { url: null, warning: null };
     let parsed;
     try {
         parsed = new URL(raw);
     } catch {
-        throw new InputError(`${label}: not a valid link.`, 400, name);
+        throw new InputError(tr.t('welcome.error.badLink', { label }), 400, name);
     }
-    if (parsed.protocol !== 'https:') throw new InputError(`${label} must start with https://.`, 400, name);
-    if (isExpiredDiscordCdnUrl(raw)) throw new InputError(`${label}: that Discord attachment link has expired. Upload the image file below instead, or use a permanent image link.`, 400, name);
+    if (parsed.protocol !== 'https:') throw new InputError(tr.t('welcome.error.https', { label }), 400, name);
+    if (isExpiredDiscordCdnUrl(raw)) throw new InputError(tr.t('welcome.error.expiredLink', { label }), 400, name);
     const warning = DISCORD_CDN.test(parsed.hostname) && parsed.searchParams.has('ex')
-        ? `${label}: Discord attachment links stop working after about a day. For a lasting image, upload the file below (Upload image) or use a permanent image host.`
+        ? tr.t('welcome.warn.discordLink', { label })
         : null;
     return { url: raw, warning };
 }
@@ -83,12 +98,13 @@ function goodbyeImageOf(leaveEmbed) {
     return typeof image === 'string' ? image : image?.url || '';
 }
 
-function embedFields(prefix, embed, imageUrl, defaults) {
+// `defaultTitle`: the title Mewvo posts when none is set ("Welcome" / "Goodbye", as the bot writes it).
+function embedFields(tr, prefix, embed, imageUrl, defaultTitle) {
     return html`<div class="grid">
-${textInput(`${prefix}Title`, embed?.title || '', { label: 'Box title', max: EMBED_TITLE_MAX, help: `The bold line at the top of the box. Leave empty for ${defaults.title}. The same words in curly brackets as in the message work here too.` })}
-${textInput(`${prefix}Color`, colourText(embed?.color), { label: 'Box colour', max: 7, placeholder: '#57F287', help: 'The coloured stripe on the left of the box, as a colour code: # and six letters or numbers, like #57F287 for green. Leave empty for the default colour.' })}
-${textInput(`${prefix}Footer`, embed?.footer || '', { label: 'Box footer', max: EMBED_FOOTER_MAX, help: `Small text at the bottom of the box. Leave empty for ${defaults.footer}. The same words in curly brackets as in the message work here too.` })}
-${textInput(`${prefix}Image`, imageUrl || '', { label: 'Image link', max: IMAGE_URL_MAX, type: 'url', placeholder: 'https://example.com/banner.png', help: 'A link that starts with https:// and opens a PNG, JPG, GIF or WebP picture. It shows large at the bottom of the box. Leave empty for no image. To use a picture from your computer, use Upload an image below.' })}</div>`;
+${textInput(`${prefix}Title`, embed?.title || '', { label: tr.t('welcome.embed.title'), max: EMBED_TITLE_MAX, help: tr.t('welcome.embed.titleHelp', { title: defaultTitle }) })}
+${textInput(`${prefix}Color`, colourText(embed?.color), { label: tr.t('welcome.embed.colour'), max: 7, placeholder: '#57F287', help: tr.t('welcome.embed.colourHelp') })}
+${textInput(`${prefix}Footer`, embed?.footer || '', { label: tr.t('welcome.embed.footer'), max: EMBED_FOOTER_MAX, help: tr.t('welcome.embed.footerHelp') })}
+${textInput(`${prefix}Image`, imageUrl || '', { label: tr.t('welcome.embed.image'), max: IMAGE_URL_MAX, type: 'url', placeholder: 'https://example.com/banner.png', help: tr.t('welcome.embed.imageHelp') })}</div>`;
 }
 
 const UPLOAD_MB = Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024);
@@ -98,19 +114,21 @@ const UPLOAD_MB = Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024);
  * the link), the upload form and Remove image. `image`: { url, fresh, ref } from load().
  */
 function imageBlock(ctx, prefix, image) {
+    const tr = textFor(ctx);
+    const words = IMAGE_TEXT[prefix];
     const canEdit = ctx.canEdit && ctx.canAct;
     const storedIn = image.ref ? ctx.guild?.channels?.cache?.get(image.ref.channelId) : null;
     let current;
-    if (!image.url) current = html`<p class="muted">No image.</p>`;
-    else if (isAllowedImageUrl(image.fresh)) current = html`<img class="image-preview" src="${image.fresh}" alt="Current ${prefix} image" loading="lazy" referrerpolicy="no-referrer">`;
-    else if (isSafeLink(image.url)) current = html`<p>Current image: <a href="${image.url}" rel="noopener noreferrer" target="_blank">${image.url}</a> <span class="muted">(only pictures stored on Discord can be shown here)</span></p>`;
-    else current = html`<p>Current image: <code>${image.url}</code></p>`;
+    if (!image.url) current = html`<p class="muted">${tr.t('welcome.image.none')}</p>`;
+    else if (isAllowedImageUrl(image.fresh)) current = html`<img class="image-preview" src="${image.fresh}" alt="${tr.t(words.alt)}" loading="lazy" referrerpolicy="no-referrer">`;
+    else if (isSafeLink(image.url)) current = html`<p>${tr.tx('welcome.image.current', { link: html`<a href="${image.url}" rel="noopener noreferrer" target="_blank">${image.url}</a>` })} <span class="muted">${tr.t('welcome.image.onlyDiscord')}</span></p>`;
+    else current = html`<p>${tr.tx('welcome.image.current', { link: html`<code>${image.url}</code>` })}</p>`;
     const stored = image.ref
-        ? html`<p class="hint">Uploaded file: a copy is kept in ${storedIn ? html`#${storedIn.name}` : html`channel ${image.ref.channelId}`}. Do not delete that message, because the ${prefix} message loads the picture from it.</p>`
+        ? html`<p class="hint">${tr.tx(words.stored, { where: storedIn ? html`#${storedIn.name}` : tr.t('welcome.image.channelId', { id: image.ref.channelId }) })}</p>`
         : '';
-    const upload = postForm(ctx, 'welcome', `${prefix}-image-upload`, html`<div class="grid"><label class="wide">Upload an image (PNG, JPEG, GIF or WebP, up to ${UPLOAD_MB} MB)<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required><span class="hint">Replaces the image link above. Mewvo posts the file in your main log channel and uses it from there, so the picture keeps working. /greet in Discord does the same.</span></label></div>`,
-        { submit: 'Upload image', multipart: true, canEdit });
-    const remove = image.url ? buttonForm(ctx, 'welcome', `${prefix}-image-remove`, 'Remove image', {}, { confirm: `Remove the ${prefix} image?`, canEdit }) : '';
+    const upload = postForm(ctx, 'welcome', `${prefix}-image-upload`, html`<div class="grid"><label class="wide">${tr.tx('welcome.image.uploadLabel', { mb: tr.fmtNumber(UPLOAD_MB) })}<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required><span class="hint">${tr.tx('welcome.image.uploadHint')}</span></label></div>`,
+        { submit: tr.t('welcome.image.upload'), multipart: true, canEdit });
+    const remove = image.url ? buttonForm(ctx, 'welcome', `${prefix}-image-remove`, tr.t('welcome.image.remove'), {}, { confirm: tr.t(words.confirm), canEdit }) : '';
     return html`<div class="image-current">${current}${stored}</div>${upload}${remove}`;
 }
 
@@ -134,20 +152,21 @@ async function imageFor(ctx, url, ref, label) {
  * of the stored message when it is not for welcome/goodbye (the Rules page uses this).
  */
 export async function storeUpload(ctx, prefix, label, { content = null } = {}) {
+    const tr = currentText();
     const field = 'image';
     const file = ctx.upload?.file || null;
-    if (!file) throw new InputError('Choose an image file to upload.', 400, field);
+    if (!file) throw new InputError(tr.t('welcome.error.chooseFile'), 400, field);
     const image = sniffImage(file.data);
-    if (!image) throw new InputError('That file is not a PNG, JPEG, GIF or WebP image.', 400, field);
+    if (!image) throw new InputError(tr.t('welcome.error.notImage'), 400, field);
     const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
     const channelId = ctx.services.resolveLogChannel(config, 'audit');
     if (!channelId) {
-        throw new InputError(`${label}: no main log channel is set, so the uploaded picture has nowhere to be kept. Set one on the Logging page, or use an image link instead. Nothing was changed.`, 400, field);
+        throw new InputError(tr.t('welcome.error.noLogChannel', { label }), 400, field);
     }
     const ref = await ctx.services.storeWelcomeImage(ctx.guild, { data: file.data, name: `${prefix}-image.${image.ext}` }, [channelId], prefix, ...(content ? [{ content }] : []));
     if (!ref) {
         const channel = ctx.guild?.channels?.cache?.get(channelId);
-        throw new InputError(`${label}: Mewvo could not post the picture in the main log channel (${channel ? `#${channel.name}` : channelId}). Mewvo needs the View Channel, Send Messages and Attach Files permissions there. Nothing was changed.`, 400, field);
+        throw new InputError(tr.t('welcome.error.cannotPost', { label, channel: channel ? `#${channel.name}` : channelId }), 400, field);
     }
     return ref;
 }
@@ -163,16 +182,23 @@ async function saveStored(ctx, ref, patch, message) {
     }
 }
 
-function storedNote(ctx, ref, prefix) {
+/** "<Welcome> image uploaded. A copy is kept in #channel; …" in the request's language. */
+function uploadedMessage(ctx, ref, prefix) {
+    const tr = textFor(ctx);
     const channel = ctx.guild?.channels?.cache?.get(ref.channelId);
-    return `A copy is kept in ${channel ? `#${channel.name}` : 'the audit log channel'}; don't delete that message, the ${prefix} message loads the image from it.`;
+    return tr.t(IMAGE_TEXT[prefix].uploadedNote, { where: channel ? `#${channel.name}` : tr.t('welcome.action.auditChannel') });
+}
+
+/** "Nothing changed." in the request's language. */
+function nothing(ctx) {
+    return { changes: [], message: textFor(ctx).t('errors.nothingChanged') };
 }
 
 async function update(ctx, patch, message) {
-    if (!Object.keys(patch).length) return NOTHING;
+    if (!Object.keys(patch).length) return nothing(ctx);
     const { before, after } = await ctx.services.updateWelcomeSettings(ctx.client, ctx.guildId, patch);
     const changes = diffSnapshots(before, after, Object.keys(patch).filter((k) => KEYS.includes(k)));
-    return { changes, message: changes.length ? message : 'Nothing changed.' };
+    return { changes, message: changes.length ? message : textFor(ctx).t('errors.nothingChanged') };
 }
 
 export default {
@@ -191,99 +217,105 @@ export default {
     },
 
     render(ctx, { welcome: w, images = { welcome: { url: null }, goodbye: { url: null } } }) {
+        const tr = textFor(ctx);
         const g = ctx.guild;
-        const welcome = html`${toggleForm(ctx, 'welcome', 'welcome-enabled', w.enabled, { label: 'Welcome messages' })}
+        const welcome = html`${toggleForm(ctx, 'welcome', 'welcome-enabled', w.enabled, { label: tr.t('welcome.join.toggle') })}
 ${postForm(ctx, 'welcome', 'welcome', html`<div class="grid">
-${channelPicker(g, 'channelId', w.channelId, { label: 'Welcome channel', perms: PERMS.postFiles, help: 'Where the welcome message is posted.' })}
-${switchInput('welcomePing', w.welcomePing, { label: 'Ping the member', help: 'Mentions them so they get a notification.' })}
-${textArea('welcomeMessage', w.welcomeMessage, { label: 'Welcome message', max: 2000, help: 'For example: Welcome to {server}, {user}. You are member number {memberCount}.' })}
-${textArea('dmMessage', w.dmMessage, { label: 'Private message to the new member', max: 2000, help: 'Sent to them directly (a DM). Leave empty to send nothing.' })}</div>`)}`;
-        const goodbye = html`${toggleForm(ctx, 'welcome', 'goodbye-enabled', w.goodbyeEnabled, { label: 'Goodbye messages' })}
+${channelPicker(g, 'channelId', w.channelId, { label: tr.t('welcome.join.channel'), perms: PERMS.postFiles, help: tr.t('welcome.join.channelHelp') })}
+${switchInput('welcomePing', w.welcomePing, { label: tr.t('welcome.join.ping'), help: tr.t('welcome.join.pingHelp') })}
+${textArea('welcomeMessage', w.welcomeMessage, { label: tr.t('welcome.join.message'), max: 2000, help: tr.t('welcome.join.messageHelp', TOKENS) })}
+${textArea('dmMessage', w.dmMessage, { label: tr.t('welcome.join.dm'), max: 2000, help: tr.t('welcome.join.dmHelp') })}</div>`)}`;
+        const goodbye = html`${toggleForm(ctx, 'welcome', 'goodbye-enabled', w.goodbyeEnabled, { label: tr.t('welcome.leave.toggle') })}
 ${postForm(ctx, 'welcome', 'goodbye', html`<div class="grid">
-${channelPicker(g, 'goodbyeChannelId', w.goodbyeChannelId, { label: 'Goodbye channel', perms: PERMS.postFiles, help: 'Where the goodbye message is posted.' })}
-${switchInput('goodbyePing', w.goodbyePing, { label: 'Ping the member', help: 'Mentions them by name in the message.' })}
-${textArea('leaveMessage', w.leaveMessage, { label: 'Goodbye message', max: 2000, help: 'For example: {user.tag} left the server.' })}</div>`)}`;
-        const roles = html`${table(['Role', 'Problems', ''], (w.roleIds || []).map((id) => [roleName(g, id), roleWarnings(g, id, { autoAssign: true }).join('; ') || html`<span class="ok">ok</span>`,
-            buttonForm(ctx, 'welcome', 'autorole-remove', 'Remove', { roleId: id })]), 'No roles are given on join.')}
-${postForm(ctx, 'welcome', 'autorole-add', rolePicker(g, 'roleId', null, { label: 'Role for new members', optional: false, autoAssign: true, includeManaged: false }), { submit: 'Set', inline: true })}
-${postForm(ctx, 'welcome', 'autorole-delay', html`<div class="grid">${numberInput('autoRoleDelay', w.autoRoleDelay || 0, { label: 'Wait before giving the role (seconds)', min: 0, max: 3600, help: 'How long Mewvo waits after someone joins. 0 gives it at once.' })}</div>`)}`;
+${channelPicker(g, 'goodbyeChannelId', w.goodbyeChannelId, { label: tr.t('welcome.leave.channel'), perms: PERMS.postFiles, help: tr.t('welcome.leave.channelHelp') })}
+${switchInput('goodbyePing', w.goodbyePing, { label: tr.t('welcome.leave.ping'), help: tr.t('welcome.leave.pingHelp') })}
+${textArea('leaveMessage', w.leaveMessage, { label: tr.t('welcome.leave.message'), max: 2000, help: tr.t('welcome.leave.messageHelp') })}</div>`)}`;
+        const roles = html`${table([tr.t('welcome.autoRole.role'), tr.t('welcome.autoRole.problems'), ''], (w.roleIds || []).map((id) => [roleName(g, id), roleWarnings(g, id, { autoAssign: true }).join('; ') || html`<span class="ok">${tr.t('welcome.autoRole.ok')}</span>`,
+            buttonForm(ctx, 'welcome', 'autorole-remove', tr.t('welcome.autoRole.remove'), { roleId: id })]), tr.t('welcome.autoRole.none'))}
+${postForm(ctx, 'welcome', 'autorole-add', rolePicker(g, 'roleId', null, { label: tr.t('welcome.autoRole.pick'), optional: false, autoAssign: true, includeManaged: false }), { submit: tr.t('welcome.autoRole.set'), inline: true })}
+${postForm(ctx, 'welcome', 'autorole-delay', html`<div class="grid">${numberInput('autoRoleDelay', w.autoRoleDelay || 0, { label: tr.t('welcome.autoRole.delay'), min: 0, max: 3600, help: tr.t('welcome.autoRole.delayHelp') })}</div>`)}`;
         const logs = postForm(ctx, 'welcome', 'logs', html`<div class="grid">
-${switchInput('joinLogsEnabled', w.joinLogs?.enabled, { label: 'Log joins', help: 'Post a short line for staff each time someone joins.' })}
-${channelPicker(g, 'joinLogsChannelId', w.joinLogs?.channelId || null, { label: 'Join log channel', perms: PERMS.post })}
-${switchInput('leaveLogsEnabled', w.leaveLogs?.enabled, { label: 'Log leaves', help: 'Post a short line for staff each time someone leaves.' })}
-${channelPicker(g, 'leaveLogsChannelId', w.leaveLogs?.channelId || null, { label: 'Leave log channel', perms: PERMS.post })}</div>`);
-        const embedHint = 'The message is sent inside a box (an embed) with a title, a colour and an optional picture. The message text above goes inside the box. If Mewvo lacks the Embed Links permission in that channel, only the text is sent.';
-        const welcomeEmbed = html`${postForm(ctx, 'welcome', 'welcome-embed', embedFields('welcome', w.welcomeEmbed, w.welcomeImage,
-            { title: '"Welcome"', footer: 'the server name' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'welcome', images.welcome)}`;
-        const goodbyeEmbed = html`${postForm(ctx, 'welcome', 'goodbye-embed', embedFields('goodbye', w.leaveEmbed, goodbyeImageOf(w.leaveEmbed),
-            { title: '"Goodbye"', footer: 'the server name' }), { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'goodbye', images.goodbye)}`;
-        // v6: cards grouped by topic (common.js topic/section).
-        const embedHelp = ['The box around the message: title, colour and an optional picture.', embedHint];
-        return html`${topic('Welcome', 'What Mewvo posts when someone joins.', html`${section('Welcome', welcome, 'The welcome message, where it goes, and an optional private message.', { key: 'welcome' })}
-${section('Welcome embed and image', welcomeEmbed, embedHelp)}`)}
-${topic('Goodbye', 'What Mewvo posts when someone leaves.', html`${section('Goodbye', goodbye, 'The goodbye message and where it goes.', { key: 'goodbye' })}
-${section('Goodbye embed and image', goodbyeEmbed, embedHelp)}`)}
-${topic('New members', 'A starting role, and a record of joins and leaves for staff.', html`${section('Auto role', roles, 'Every new member gets this role by itself. You can have one: setting a new one replaces the old one. Mewvo can only give roles below its own role in the role list, and it will not give roles with staff powers. You can also do this with /autorole in Discord.', { size: 'normal' })}
-${section('Join and leave logs', logs, 'A record for staff of who joined and who left, separate from the public messages.')}`)}`;
+${switchInput('joinLogsEnabled', w.joinLogs?.enabled, { label: tr.t('welcome.logs.joins'), help: tr.t('welcome.logs.joinsHelp') })}
+${channelPicker(g, 'joinLogsChannelId', w.joinLogs?.channelId || null, { label: tr.t('welcome.logs.joinChannel'), perms: PERMS.post })}
+${switchInput('leaveLogsEnabled', w.leaveLogs?.enabled, { label: tr.t('welcome.logs.leaves'), help: tr.t('welcome.logs.leavesHelp') })}
+${channelPicker(g, 'leaveLogsChannelId', w.leaveLogs?.channelId || null, { label: tr.t('welcome.logs.leaveChannel'), perms: PERMS.post })}</div>`);
+        const welcomeEmbed = html`${postForm(ctx, 'welcome', 'welcome-embed', embedFields(tr, 'welcome', w.welcomeEmbed, w.welcomeImage, 'Welcome'),
+            { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'welcome', images.welcome)}`;
+        const goodbyeEmbed = html`${postForm(ctx, 'welcome', 'goodbye-embed', embedFields(tr, 'goodbye', w.leaveEmbed, goodbyeImageOf(w.leaveEmbed), 'Goodbye'),
+            { canEdit: ctx.canEdit && ctx.canAct })}${imageBlock(ctx, 'goodbye', images.goodbye)}`;
+        // v6: cards grouped by topic (common.js topic/section). Keys: the English titles' slugs.
+        const embedHelp = [tr.t('welcome.embed.help'), tr.t('welcome.embed.helpMore')];
+        return html`${topic(tr.t('welcome.join.topic'), tr.t('welcome.join.topicLine'), html`${section(tr.t('welcome.join.title'), welcome, tr.t('welcome.join.help'), { key: 'welcome' })}
+${section(tr.t('welcome.embed.welcomeTitle'), welcomeEmbed, embedHelp, { key: 'welcome-embed-and-image' })}`, { key: 'welcome' })}
+${topic(tr.t('welcome.leave.topic'), tr.t('welcome.leave.topicLine'), html`${section(tr.t('welcome.leave.title'), goodbye, tr.t('welcome.leave.help'), { key: 'goodbye' })}
+${section(tr.t('welcome.embed.goodbyeTitle'), goodbyeEmbed, embedHelp, { key: 'goodbye-embed-and-image' })}`, { key: 'goodbye' })}
+${topic(tr.t('welcome.members.topic'), tr.t('welcome.members.topicLine'), html`${section(tr.t('welcome.autoRole.title'), roles, tr.t('welcome.autoRole.help'), { key: 'auto-role', size: 'normal' })}
+${section(tr.t('welcome.logs.title'), logs, tr.t('welcome.logs.help'), { key: 'join-and-leave-logs' })}`, { key: 'new-members' })}`;
     },
 
     actions: {
         async 'welcome-enabled'(ctx, form) {
-            const enabled = boolField(form, 'enabled', 'Welcome messages');
-            return update(ctx, { enabled }, `Welcome messages are ${enabled ? 'on' : 'off'}.`);
+            const tr = textFor(ctx);
+            const enabled = boolField(form, 'enabled', tr.t('welcome.join.toggle'));
+            return update(ctx, { enabled }, tr.t(enabled ? 'welcome.action.welcomeOn' : 'welcome.action.welcomeOff'));
         },
         async 'goodbye-enabled'(ctx, form) {
-            const goodbyeEnabled = boolField(form, 'enabled', 'Goodbye messages');
-            return update(ctx, { goodbyeEnabled }, `Goodbye messages are ${goodbyeEnabled ? 'on' : 'off'}.`);
+            const tr = textFor(ctx);
+            const goodbyeEnabled = boolField(form, 'enabled', tr.t('welcome.leave.toggle'));
+            return update(ctx, { goodbyeEnabled }, tr.t(goodbyeEnabled ? 'welcome.action.goodbyeOn' : 'welcome.action.goodbyeOff'));
         },
         async welcome(ctx, form) {
+            const tr = textFor(ctx);
             const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
             return update(ctx, changedOnly({
-                channelId: channelField(ctx.guild, form, 'channelId', { label: 'Welcome channel' }),
+                channelId: channelField(ctx.guild, form, 'channelId', { label: tr.t('welcome.join.channel') }),
                 welcomePing: checkbox(form, 'welcomePing'),
                 welcomeMessage: text(form, 'welcomeMessage', 2000) || current.welcomeMessage,
                 dmMessage: text(form, 'dmMessage', 2000),
-            }, current), 'Welcome settings saved.');
+            }, current), tr.t('welcome.action.welcomeSaved'));
         },
         async goodbye(ctx, form) {
+            const tr = textFor(ctx);
             const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
             return update(ctx, changedOnly({
-                goodbyeChannelId: channelField(ctx.guild, form, 'goodbyeChannelId', { label: 'Goodbye channel' }),
+                goodbyeChannelId: channelField(ctx.guild, form, 'goodbyeChannelId', { label: tr.t('welcome.leave.channel') }),
                 goodbyePing: checkbox(form, 'goodbyePing'),
                 leaveMessage: text(form, 'leaveMessage', 2000) || current.leaveMessage,
-            }, current), 'Goodbye settings saved.');
+            }, current), tr.t('welcome.action.goodbyeSaved'));
         },
         'welcome-embed': {
             admin: true,
             async run(ctx, form) {
+                const tr = textFor(ctx);
                 const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
-                const { url, warning } = imageUrlField(form, 'welcomeImage', 'Welcome image');
+                const { url, warning } = imageUrlField(form, 'welcomeImage', tr.t('welcome.embed.welcomeImage'));
                 const welcomeEmbed = embedWith(current.welcomeEmbed, {
                     title: text(form, 'welcomeTitle', EMBED_TITLE_MAX),
                     footer: text(form, 'welcomeFooter', EMBED_FOOTER_MAX),
-                    color: colourField(form, 'welcomeColor', 'Embed colour'),
+                    color: colourField(form, 'welcomeColor', tr.t('welcome.embed.embedColour')),
                 });
                 // A stored upload (see welcomeImageStore.js) is kept only while its link is the one saved.
                 const welcomeImageRef = url && current.welcomeImageRef?.url === url ? current.welcomeImageRef : null;
-                const result = await update(ctx, changedOnly({ welcomeEmbed, welcomeImage: url, welcomeImageRef }, current), 'Welcome embed saved.');
+                const result = await update(ctx, changedOnly({ welcomeEmbed, welcomeImage: url, welcomeImageRef }, current), tr.t('welcome.action.welcomeEmbedSaved'));
                 return warning && result.changes.length ? { ...result, warnings: [warning] } : result;
             },
         },
         'goodbye-embed': {
             admin: true,
             async run(ctx, form) {
+                const tr = textFor(ctx);
                 const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
-                const { url, warning } = imageUrlField(form, 'goodbyeImage', 'Goodbye image');
+                const { url, warning } = imageUrlField(form, 'goodbyeImage', tr.t('welcome.embed.goodbyeImage'));
                 const leaveEmbed = embedWith(current.leaveEmbed, {
                     title: text(form, 'goodbyeTitle', EMBED_TITLE_MAX),
                     footer: text(form, 'goodbyeFooter', EMBED_FOOTER_MAX),
-                    color: colourField(form, 'goodbyeColor', 'Embed colour'),
+                    color: colourField(form, 'goodbyeColor', tr.t('welcome.embed.embedColour')),
                 });
                 // The goodbye image lives in leaveEmbed.image (as /greet saves it).
                 if (url) leaveEmbed.image = url;
                 else delete leaveEmbed.image;
                 const goodbyeImageRef = url && current.goodbyeImageRef?.url === url ? current.goodbyeImageRef : null;
-                const result = await update(ctx, changedOnly({ leaveEmbed, goodbyeImageRef }, current), 'Goodbye embed saved.');
+                const result = await update(ctx, changedOnly({ leaveEmbed, goodbyeImageRef }, current), tr.t('welcome.action.goodbyeEmbedSaved'));
                 return warning && result.changes.length ? { ...result, warnings: [warning] } : result;
             },
         },
@@ -293,21 +325,23 @@ ${section('Join and leave logs', logs, 'A record for staff of who joined and who
             admin: true,
             upload: true,
             async run(ctx) {
+                const tr = textFor(ctx);
                 const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
-                const ref = await storeUpload(ctx, 'welcome', 'Welcome image');
-                const result = await saveStored(ctx, ref, changedOnly({ welcomeImage: ref.url, welcomeImageRef: ref }, current), 'Welcome image uploaded.');
-                return { ...result, message: `Welcome image uploaded. ${storedNote(ctx, ref, 'welcome')}` };
+                const ref = await storeUpload(ctx, 'welcome', tr.t('welcome.embed.welcomeImage'));
+                const result = await saveStored(ctx, ref, changedOnly({ welcomeImage: ref.url, welcomeImageRef: ref }, current), tr.t(IMAGE_TEXT.welcome.uploaded));
+                return { ...result, message: uploadedMessage(ctx, ref, 'welcome') };
             },
         },
         'goodbye-image-upload': {
             admin: true,
             upload: true,
             async run(ctx) {
+                const tr = textFor(ctx);
                 const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
-                const ref = await storeUpload(ctx, 'goodbye', 'Goodbye image');
+                const ref = await storeUpload(ctx, 'goodbye', tr.t('welcome.embed.goodbyeImage'));
                 const leaveEmbed = { ...(current.leaveEmbed && typeof current.leaveEmbed === 'object' ? current.leaveEmbed : {}), image: ref.url };
-                const result = await saveStored(ctx, ref, changedOnly({ leaveEmbed, goodbyeImageRef: ref }, current), 'Goodbye image uploaded.');
-                return { ...result, message: `Goodbye image uploaded. ${storedNote(ctx, ref, 'goodbye')}` };
+                const result = await saveStored(ctx, ref, changedOnly({ leaveEmbed, goodbyeImageRef: ref }, current), tr.t(IMAGE_TEXT.goodbye.uploaded));
+                return { ...result, message: uploadedMessage(ctx, ref, 'goodbye') };
             },
         },
         // Remove: no image (as /greet with an empty link). The stored copy's message is kept.
@@ -315,7 +349,7 @@ ${section('Join and leave logs', logs, 'A record for staff of who joined and who
             admin: true,
             async run(ctx) {
                 const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
-                return update(ctx, changedOnly({ welcomeImage: null, welcomeImageRef: null }, current), 'Welcome image removed.');
+                return update(ctx, changedOnly({ welcomeImage: null, welcomeImageRef: null }, current), textFor(ctx).t('welcome.action.welcomeImageRemoved'));
             },
         },
         'goodbye-image-remove': {
@@ -324,31 +358,35 @@ ${section('Join and leave logs', logs, 'A record for staff of who joined and who
                 const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
                 const leaveEmbed = { ...(current.leaveEmbed && typeof current.leaveEmbed === 'object' ? current.leaveEmbed : {}) };
                 delete leaveEmbed.image;
-                return update(ctx, changedOnly({ leaveEmbed, goodbyeImageRef: null }, current), 'Goodbye image removed.');
+                return update(ctx, changedOnly({ leaveEmbed, goodbyeImageRef: null }, current), textFor(ctx).t('welcome.action.goodbyeImageRemoved'));
             },
         },
         async 'autorole-add'(ctx, form) {
-            const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: 'Role for new members' });
+            const tr = textFor(ctx);
+            const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: tr.t('welcome.autoRole.pick') });
             const { before, after, changed } = await ctx.services.addAutoRole(ctx.client, ctx.guildId, roleId);
-            if (!changed) return { changes: [], message: 'That role is already given on join.' };
-            return { changes: diffSnapshots(before, after, ['roleIds']), message: 'Auto role set.' };
+            if (!changed) return { changes: [], message: tr.t('welcome.action.autoRoleAlready') };
+            return { changes: diffSnapshots(before, after, ['roleIds']), message: tr.t('welcome.action.autoRoleSet') };
         },
         async 'autorole-remove'(ctx, form) {
+            const tr = textFor(ctx);
             const roleId = text(form, 'roleId', 25);
             const { before, after, changed } = await ctx.services.removeAutoRole(ctx.client, ctx.guildId, roleId);
-            if (!changed) return { changes: [], message: 'That role was not an auto role.' };
-            return { changes: diffSnapshots(before, after, ['roleIds']), message: 'Auto role removed.' };
+            if (!changed) return { changes: [], message: tr.t('welcome.action.autoRoleNotSet') };
+            return { changes: diffSnapshots(before, after, ['roleIds']), message: tr.t('welcome.action.autoRoleRemoved') };
         },
         async 'autorole-delay'(ctx, form) {
-            const autoRoleDelay = intField(form, 'autoRoleDelay', { min: 0, max: 3600, label: 'Wait before giving the role' });
-            return update(ctx, { autoRoleDelay }, 'Auto role delay saved.');
+            const tr = textFor(ctx);
+            const autoRoleDelay = intField(form, 'autoRoleDelay', { min: 0, max: 3600, label: tr.t('welcome.autoRole.delayLabel') });
+            return update(ctx, { autoRoleDelay }, tr.t('welcome.action.delaySaved'));
         },
         async logs(ctx, form) {
+            const tr = textFor(ctx);
             const current = await ctx.services.getWelcomeSettings(ctx.client, ctx.guildId);
             return update(ctx, changedOnly({
-                joinLogs: { enabled: checkbox(form, 'joinLogsEnabled'), channelId: channelField(ctx.guild, form, 'joinLogsChannelId', { label: 'Join log channel' }) },
-                leaveLogs: { enabled: checkbox(form, 'leaveLogsEnabled'), channelId: channelField(ctx.guild, form, 'leaveLogsChannelId', { label: 'Leave log channel' }) },
-            }, current), 'Join and leave logs saved.');
+                joinLogs: { enabled: checkbox(form, 'joinLogsEnabled'), channelId: channelField(ctx.guild, form, 'joinLogsChannelId', { label: tr.t('welcome.logs.joinChannel') }) },
+                leaveLogs: { enabled: checkbox(form, 'leaveLogsEnabled'), channelId: channelField(ctx.guild, form, 'leaveLogsChannelId', { label: tr.t('welcome.logs.leaveChannel') }) },
+            }, current), tr.t('welcome.action.logsSaved'));
         },
     },
 };

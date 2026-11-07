@@ -1,0 +1,142 @@
+{
+  "page": {
+    "help": "Pozwól członkom składać podania o rolę, na przykład moderatora, odpowiadając na kilka pytań przez /apply w Discordzie. Ekipa czyta odpowiedzi i przyjmuje lub odrzuca. Przyjęcie nadaje rolę."
+  },
+  "submitted": {
+    "title": {
+      "one": "Złożone podania ({count} czeka)",
+      "few": "Złożone podania ({count} czekają)",
+      "many": "Złożone podania ({count} czeka)",
+      "other": "Złożone podania ({count} czeka)"
+    },
+    "help": "Podania czekające na decyzję. Przyjęcie nadaje rolę. W obu przypadkach członek dostaje prywatną wiadomość (DM) z wynikiem, a wiadomość w dzienniku ekipy zostaje zaktualizowana. Możesz to też zrobić przez /app-admin review w Discordzie.",
+    "unknownUser": "nieznany użytkownik",
+    "unknownRole": "Nieznana rola",
+    "unknownDate": "nieznana data",
+    "appliedFor": "{who} złożył(a) podanie o {role}.",
+    "id": "ID {id}",
+    "question": "P{number}: {question}",
+    "noAnswer": "Brak odpowiedzi",
+    "noAnswers": "Brak odpowiedzi.",
+    "approve": "Przyjmij (nadaje rolę)",
+    "deny": "Odrzuć",
+    "decision": "Decyzja",
+    "note": "Notatka dla kandydata (opcjonalnie)",
+    "noteHelp": "Wysyłana razem z decyzją, na przykład z uzasadnieniem.",
+    "submit": "Wyślij decyzję",
+    "confirm": "Wysłać tę decyzję do {name}? Ta osoba dostanie prywatną wiadomość (DM).",
+    "approved": "przyjęte",
+    "denied": "odrzucone",
+    "waiting": {
+      "one": "Czeka: {count}.",
+      "few": "Czekają: {count}.",
+      "many": "Czeka: {count}.",
+      "other": "Czeka: {count}."
+    },
+    "waitingShown": {
+      "one": "Czeka: {count} (pokazano {shown} najnowszych).",
+      "few": "Czekają: {count} (pokazano {shown} najnowszych).",
+      "many": "Czeka: {count} (pokazano {shown} najnowszych).",
+      "other": "Czeka: {count} (pokazano {shown} najnowszych)."
+    },
+    "none": "Żadne podanie nie czeka na rozpatrzenie.",
+    "needsAdmin": "Aby rozpatrywać tu podania, potrzebujesz uprawnienia Administrator na tym serwerze.",
+    "recent": "Ostatnio rozpatrzone",
+    "application": "Podanie",
+    "member": "Członek",
+    "noteColumn": "Notatka",
+    "reviewed": "Rozpatrzone",
+    "nothingReviewed": "Nic jeszcze nie rozpatrzono."
+  },
+  "roles": {
+    "title": "Podania ({count})",
+    "help": "Role, o które członkowie mogą składać podania przez /apply. Każda ma własne pytania albo korzysta z domyślnych pytań poniżej.",
+    "empty": "Nie ma jeszcze podań.",
+    "new": "Nowe podanie",
+    "name": "Nazwa",
+    "nameHelp": "Co członkowie widzą w /apply, na przykład Moderator.",
+    "open": "Przyjmuje podania",
+    "openHelp": "Wyłączone: członkowie nie mogą teraz składać podań o tę rolę.",
+    "logChannel": "Kanał dziennika dla tej roli",
+    "logChannelNone": "kanał dziennika podań",
+    "logChannelHelp": "Gdzie nowe podania o tę rolę są publikowane dla ekipy.",
+    "questions": "Pytania",
+    "questionsHelp": "Jedno pytanie w wierszu, do {max}. Zostaw puste, aby użyć domyślnych pytań. Dodaj [min:10] na końcu pytania, aby wymagać odpowiedzi o długości co najmniej 10 znaków.",
+    "save": "Zapisz podanie",
+    "deleteText": "Usunięcie usuwa też wszystkie podania, które członkowie wysłali o {name}. Następna strona pokazuje, ile ich jest, i tam potwierdzasz.",
+    "delete": "Usuń podanie…",
+    "role": "Rola, o którą się ubiegają",
+    "roleHelp": "Przyjęci członkowie dostają tę rolę.",
+    "add": "Dodaj podanie"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "help": "Ustawienie tu kanału dziennika zmienia też kanał dziennika podań na stronie Dzienniki, i odwrotnie.",
+    "logChannel": "Kanał dziennika podań",
+    "logChannelHelp": "Gdzie nowe podania są publikowane do rozpatrzenia przez ekipę.",
+    "pendingDays": "Przechowuj czekające podania (dni)",
+    "pendingDaysHelp": "Podania, o których nikt nie zdecydował, są usuwane po tym czasie.",
+    "reviewedDays": "Przechowuj rozpatrzone podania (dni)",
+    "reviewedDaysHelp": "Przyjęte i odrzucone podania są usuwane po tym czasie."
+  },
+  "questions": {
+    "title": "Domyślne pytania",
+    "help": "Używane dla każdej roli bez własnych pytań.",
+    "label": "Domyślne pytania",
+    "labelHelp": "Jedno pytanie w wierszu, do {max}. Dodaj [min:10] na końcu pytania, aby wymagać odpowiedzi o długości co najmniej 10 znaków."
+  },
+  "managers": {
+    "title": "Role zarządzające",
+    "help": "Członkowie z tymi rolami mogą czytać podania i o nich decydować, nie będąc administratorami.",
+    "role": "Rola",
+    "remove": "Usuń",
+    "empty": "Brak ról zarządzających.",
+    "addLabel": "Dodaj rolę zarządzającą",
+    "add": "Dodaj"
+  },
+  "confirm": {
+    "heading": "Potwierdź: usuń podanie {name}",
+    "application": "Podanie",
+    "applicationValue": "{name} (rola @{role})",
+    "submitted": "Złożone podania",
+    "effect": "Skutek",
+    "effectText": "Podanie zostaje usunięte z /apply, a każde podanie wysłane na nie przez członków zostaje skasowane. Tego nie da się cofnąć. Sama rola zostaje.",
+    "submit": "Usuń podanie"
+  },
+  "action": {
+    "unknown": "Nieznane podanie.",
+    "noteTooLong": "Notatka może mieć najwyżej {max} znaków.",
+    "theApplicant": "kandydat",
+    "theRole": "rolę",
+    "notDmed": "Nie udało się wysłać DM do {name}.",
+    "roleNotGiven": "Nie udało się nadać roli (sprawdź moje uprawnienie Zarządzanie rolami i kolejność ról).",
+    "statusApproved": "przyjęte",
+    "statusDenied": "odrzucone",
+    "reviewed": "Podanie {name} o {role}: {status}.",
+    "reviewedGiven": "Podanie {name} o {role}: {status}. Rola została nadana.",
+    "roleLabel": "Rola",
+    "added": "Dodano podanie „{name}”.",
+    "emptyName": "Nazwa podania nie może być pusta.",
+    "roleGone": "Ta rola podań już nie istnieje.",
+    "logChannelLabel": "Kanał dziennika",
+    "saved": "Zapisano podanie „{name}”.",
+    "deleted": {
+      "one": "Usunięto podanie „{name}” razem z {count} złożonym podaniem.",
+      "few": "Usunięto podanie „{name}” razem z {count} złożonymi podaniami.",
+      "many": "Usunięto podanie „{name}” razem z {count} złożonymi podaniami.",
+      "other": "Usunięto podanie „{name}” razem z {count} złożonego podania."
+    },
+    "moduleLabel": "Podania",
+    "nowOn": "Podania są teraz włączone.",
+    "nowOff": "Podania są teraz wyłączone.",
+    "pendingDaysLabel": "Przechowuj czekające podania",
+    "reviewedDaysLabel": "Przechowuj rozpatrzone podania",
+    "settingsSaved": "Ustawienia podań zapisane.",
+    "questionsSaved": "Domyślne pytania zapisane.",
+    "managerLabel": "Rola zarządzająca",
+    "alreadyManager": "To już jest rola zarządzająca.",
+    "managerAdded": "Dodano rolę zarządzającą.",
+    "notManager": "Ta rola nie jest rolą zarządzającą.",
+    "managerRemoved": "Usunięto rolę zarządzającą."
+  }
+}

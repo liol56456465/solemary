@@ -1,0 +1,189 @@
+{
+  "page": {
+    "help": "Comment les sanctions (avertissements, mutes, expulsions et bannissements) fonctionnent sur ce serveur : où elles sont notées, quels rôles montrent qu’un membre est muet ou averti, et comment les membres peuvent demander la levée d’une sanction (un appel). /enforcements dans Discord utilise ces paramètres."
+  },
+  "adminOnly": " Il te faut la permission Administrateur sur ce serveur pour cela.",
+  "action": {
+    "warn": "avertissement",
+    "mute": "mute",
+    "kick": "expulsion",
+    "ban": "bannissement"
+  },
+  "unit": {
+    "month": {
+      "one": "{count} mois",
+      "many": "{count} mois",
+      "other": "{count} mois"
+    },
+    "day": {
+      "one": "{count} jour",
+      "many": "{count} jours",
+      "other": "{count} jours"
+    },
+    "hour": {
+      "one": "{count} heure",
+      "many": "{count} heures",
+      "other": "{count} heures"
+    },
+    "minute": {
+      "one": "{count} minute",
+      "many": "{count} minutes",
+      "other": "{count} minutes"
+    },
+    "lessThanMinute": "moins d’une minute"
+  },
+  "topic": {
+    "where": "Salons et rôles",
+    "whereLine": "Où Mewvo écrit au sujet des sanctions, et les rôles qu’il utilise.",
+    "appeals": "Appels",
+    "appealsLine": "Comment les membres demandent à l’équipe de lever une sanction.",
+    "safety": "Outils de modération et sécurité",
+    "safetyLine": "Des raccourcis pour les modérateurs, et un frein si un compte de modérateur est utilisé à mauvais escient.",
+    "pages": "Pages publiques",
+    "pagesLine": "Des chiffres sur ce serveur sur le site de Mewvo. Les deux sont désactivées par défaut.",
+    "rules": "Comment les sanctions s’additionnent",
+    "rulesLine": "Intégré. Tu ne peux pas encore modifier cela ici."
+  },
+  "channels": {
+    "title": "Salons",
+    "help": "Journaux, preuves et catégories pour les appels, les signalements et le modmail.",
+    "modLog": "Salon du journal de modération",
+    "modLogHelp": "Mewvo publie ici une ligne pour chaque avertissement, mute, expulsion et bannissement. Les alertes de l’équipe arrivent aussi ici si aucun autre salon n’est défini.",
+    "evidence": "Salon des preuves",
+    "evidenceHelp": "Les captures d’écran ajoutées à un dossier sont enregistrées ici, pour qu’elles restent même si le message d’origine est supprimé. Non défini : le salon du journal de modération.",
+    "adminRequest": "Salon des demandes aux admins",
+    "adminRequestHelp": "Où les modérateurs demandent à un administrateur de faire ce qu’ils ne peuvent pas faire eux-mêmes.",
+    "appealsCategory": "Catégorie des appels",
+    "appealsCategoryHelp": "Une catégorie est un dossier de salons. Chaque appel contre un mute ou un avertissement y obtient son propre salon. Non défini : la catégorie des tickets.",
+    "reportsCategory": "Catégorie des signalements d’équipe",
+    "reportsCategoryHelp": "Chaque signalement concernant un membre de l’équipe obtient ici son propre salon. Non défini : la catégorie des tickets.",
+    "modmailCategory": "Catégorie du modmail",
+    "modmailCategoryHelp": "Quand un membre écrit à Mewvo en privé et l’envoie à l’équipe, la conversation obtient un salon ici. Non défini : la catégorie des tickets.",
+    "openCap": "Maximum de signalements et modmails ouverts",
+    "openCapHelp": "Combien de salons de signalement d’équipe et de modmail peuvent être ouverts en même temps. Quand la limite est atteinte, les nouveaux sont refusés et l’équipe reçoit une alerte. Les appels ne sont jamais refusés.",
+    "invite": "Invitation au serveur de support",
+    "inviteHelp": "Un lien vers ton serveur de support. Les membres bannis le reçoivent pour pouvoir quand même faire appel."
+  },
+  "roles": {
+    "title": "Rôles",
+    "help": "Les rôles d’avertissement montrent combien d’avertissements actifs un membre a. Mewvo les donne et les retire tout seul.",
+    "muted": "Rôle muet",
+    "mutedHelp": "Le rôle qui empêche un membre muet de parler. Si tu laisses vide, Mewvo en crée un la première fois que quelqu’un est rendu muet.",
+    "warn1": "Rôle à 1 avertissement",
+    "warn2": "Rôle à 2 avertissements",
+    "warn3": "Rôle à 3 avertissements ou plus",
+    "warnRoleN": "Rôle d’avertissement {number}"
+  },
+  "timings": {
+    "title": "Appels et signalements",
+    "help": "Un appel, c’est un membre qui demande à l’équipe de lever une sanction.",
+    "window": "Délai pour faire appel (jours)",
+    "windowLabel": "Délai pour faire appel",
+    "windowHelp": "Combien de temps après une sanction un membre peut encore demander sa levée.",
+    "cooldown": "Attente après un appel refusé (jours)",
+    "cooldownLabel": "Attente après un appel refusé",
+    "cooldownHelp": "Si l’équipe refuse un appel, le membre doit attendre ce temps avant de refaire appel. 0 veut dire aucune attente.",
+    "rejoin": "Durée du lien de retour (heures)",
+    "rejoinLabel": "Durée du lien de retour",
+    "rejoinHelp": "Les membres expulsés et ceux dont l’appel a été accepté reçoivent un lien d’invitation à usage unique. Voici combien de temps il fonctionne.",
+    "staleReport": "Fermer les signalements inactifs après (jours)",
+    "staleReportLabel": "Fermer les signalements inactifs après",
+    "staleReportHelp": "Un salon de signalement où personne n’a écrit depuis ce temps est fermé.",
+    "staleAppeal": "Rappel pour les appels inactifs après (jours)",
+    "staleAppealLabel": "Rappel pour les appels inactifs après",
+    "staleAppealHelp": "Si un appel n’a ni décision ni nouveau message depuis ce temps, l’équipe reçoit un rappel et le membre apprend qu’il est toujours ouvert."
+  },
+  "review": {
+    "title": "Examen indépendant des appels",
+    "help": "Désactivé par défaut : tout membre de l’équipe qui traite les appels peut décider de n’importe quel appel.",
+    "label": "Un autre modérateur décide de chaque appel",
+    "labelHelp": "Le modérateur qui a donné la sanction ne peut pas accepter ni refuser l’appel contre elle. Quelqu’un d’autre de l’équipe doit le faire. Le propriétaire du bot peut quand même décider en cas d’urgence, et c’est enregistré. Les sanctions que Mewvo a données tout seul (bannissements automatiques par avertissements, automod) ne sont pas concernées."
+  },
+  "mass": {
+    "title": "Limite de sécurité : trop de bannissements ou d’expulsions en peu de temps",
+    "help": "Protège le serveur si un compte de modérateur est utilisé à mauvais escient (par défaut : plus de 5 bannissements ou expulsions en 10 minutes). Un modérateur qui sanctionne trop de membres en peu de temps est arrêté un moment, et le propriétaire du bot reçoit un message privé (MP).",
+    "limit": "Bannissements et expulsions autorisés",
+    "limitHelp": "Combien un modérateur peut en faire dans le temps ci-dessous.",
+    "muteLimit": "Mutes autorisés",
+    "muteLimitHelp": "Comptés à part des bannissements et des expulsions.",
+    "window": "En (minutes)",
+    "block": "Bloqué pendant (minutes)",
+    "blockHelp": "Combien de temps un modérateur qui dépasse la limite ne peut sanctionner personne."
+  },
+  "templates": {
+    "title": "Modèles",
+    "help": "Des sanctions toutes prêtes pour /enforcements, comme « Spam : mute 1h ». Elles apparaissent comme un menu sous les boutons. En choisir une mène directement à la dernière étape, où tu confirmes.",
+    "name": "Nom",
+    "whatItDoes": "Ce qu’il fait",
+    "reason": "Raison",
+    "remove": "Retirer",
+    "removeConfirm": "Retirer le modèle « {name} » ?",
+    "empty": "Aucun modèle pour l’instant.",
+    "max": "Tu as atteint le maximum de {count} modèles.",
+    "namePlaceholder": "Spam : mute court",
+    "nameHint": "Le nom que l’équipe voit dans le menu.",
+    "action": "Action",
+    "duration": "Durée",
+    "durationPlaceholder": "1h, 7d ou vide",
+    "durationHint": "Combien de temps ça dure, par exemple 1h (une heure) ou 7d (sept jours). Un mute en a besoin. Un bannissement sans durée est définitif. Les avertissements et expulsions l’ignorent.",
+    "add": "Ajouter le modèle",
+    "muteFor": "mute {duration}",
+    "banFor": "bannissement {duration}",
+    "banPermanent": "bannissement définitif"
+  },
+  "panels": {
+    "title": "Panneaux d’appel",
+    "help": "Publie le panneau d’appel ici et sur le serveur de support, et retire les anciens. Tu peux aussi le faire avec /setappeal dans Discord.",
+    "channel": "Salon du panneau d’appel",
+    "channelHelp": "Le panneau d’appel est un message avec un bouton sur lequel les membres appuient pour faire appel. Un second panneau va dans #appeals sur le serveur de support ; Mewvo crée ce salon s’il n’existe pas.",
+    "submit": "Publier les panneaux d’appel",
+    "confirm": "Publier les panneaux d’appel maintenant ? Les anciens panneaux de ces salons sont remplacés."
+  },
+  "pages": {
+    "transparencyTitle": "Rapport de transparence",
+    "transparencyHelp": "Un décompte mensuel des avertissements, mutes, expulsions, bannissements et appels sur /transparency.",
+    "transparencyMore": "Il ne montre que des chiffres. Aucun nom, ID, code de dossier, raison ni modérateur. Un nombre de 1 ou 2 s’affiche « moins de 3 ».",
+    "transparencyToggle": "Publier un rapport de transparence mensuel sur le site",
+    "transparencyOff": "Retirer le rapport de transparence du site ?",
+    "trustTitle": "Carte de confiance",
+    "trustHelp": "Un résumé des 90 derniers jours sur /trust.",
+    "trustMore": "La vitesse à laquelle les appels reçoivent une première réponse, combien sont acceptés, combien de membres sont en règle, et combien de fois des membres corrigent eux-mêmes un message après un premier avertissement privé de l’automod. Des chiffres seulement. Les nombres de 1 ou 2 et les taux basés sur moins de 3 sont masqués.",
+    "trustToggle": "Publier la carte de confiance",
+    "trustOff": "Retirer la carte de confiance du site ?",
+    "trustPublic": "Elle est publique sur {link}."
+  },
+  "rules": {
+    "ladderTitle": "Échelle d’avertissements",
+    "ladderHelp": "Quand les avertissements deviennent un bannissement.",
+    "ladderText": "Un membre sans bannissement antérieur est banni à {count} avertissements. Ensuite, chaque nouvel avertissement le bannit à nouveau, plus longtemps à chaque fois.",
+    "level": "Niveau",
+    "banLength": "Durée du bannissement",
+    "permanent": "définitif",
+    "reasonsTitle": "Raisons",
+    "reasonsHelp": "Les raisons parmi lesquelles les modérateurs peuvent choisir.",
+    "reasonsMore": "Elles ne peuvent pas encore être modifiées ici, car chaque dossier enregistre le code de sa raison.",
+    "code": "Code",
+    "reason": "Raison",
+    "serious": "Grave",
+    "yes": "oui",
+    "no": "non",
+    "stepsTitle": "Étapes de l’automod",
+    "stepsHelp": "Ce que fait l’automod quand quelqu’un enfreint à nouveau la même règle.",
+    "rule": "Règle",
+    "whatHappens": "Ce qui se passe (1re, 2e, 3e fois et suivantes)",
+    "stepPermanent": "{type} (définitif)",
+    "stepFor": "{type} {duration}"
+  },
+  "result": {
+    "panelsPosted": "Panneaux d’appel publiés dans #{main} et dans #{support} du serveur de support.",
+    "panelsPostedCreated": "Panneaux d’appel publiés dans #{main} et dans #{support} du serveur de support (créé).",
+    "templateInvalid": "Ce modèle n’est pas valide.",
+    "templateAdded": "Modèle « {name} » ajouté.",
+    "templateGone": "Ce modèle a déjà disparu. Recharge la page.",
+    "templateRemoved": "Modèle « {name} » retiré.",
+    "transparencyOn": "Le rapport de transparence est activé : /transparency est public.",
+    "transparencyOff": "Le rapport de transparence est désactivé : /transparency a disparu du site.",
+    "trustOn": "La carte de confiance est activée : /trust est public.",
+    "trustOff": "La carte de confiance est désactivée : /trust a disparu du site."
+  }
+}

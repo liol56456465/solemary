@@ -1,0 +1,185 @@
+{
+  "page": {
+    "help": "Wie Strafen (Verwarnungen, Stummschaltungen, Kicks und Banns) auf diesem Server funktionieren: wo sie festgehalten werden, welche Rollen zeigen, dass jemand stummgeschaltet oder verwarnt ist, und wie Mitglieder darum bitten können, eine Strafe aufzuheben (ein Einspruch). /enforcements in Discord nutzt diese Einstellungen."
+  },
+  "adminOnly": " Dafür brauchst du die Berechtigung Administrator auf diesem Server.",
+  "action": {
+    "warn": "Verwarnung",
+    "mute": "Stummschaltung",
+    "kick": "Kick",
+    "ban": "Bann"
+  },
+  "unit": {
+    "month": {
+      "one": "{count} Monat",
+      "other": "{count} Monate"
+    },
+    "day": {
+      "one": "{count} Tag",
+      "other": "{count} Tage"
+    },
+    "hour": {
+      "one": "{count} Stunde",
+      "other": "{count} Stunden"
+    },
+    "minute": {
+      "one": "{count} Minute",
+      "other": "{count} Minuten"
+    },
+    "lessThanMinute": "weniger als eine Minute"
+  },
+  "topic": {
+    "where": "Kanäle und Rollen",
+    "whereLine": "Wo Mewvo über Strafen schreibt, und die Rollen, die es nutzt.",
+    "appeals": "Einsprüche",
+    "appealsLine": "Wie Mitglieder das Team bitten, eine Strafe aufzuheben.",
+    "safety": "Moderationswerkzeuge und Sicherheit",
+    "safetyLine": "Abkürzungen für Moderatoren und eine Bremse, falls ein Moderatorkonto missbraucht wird.",
+    "pages": "Öffentliche Seiten",
+    "pagesLine": "Zahlen über diesen Server auf der Mewvo-Website. Beide sind standardmäßig aus.",
+    "rules": "Wie sich Strafen aufbauen",
+    "rulesLine": "Fest eingebaut. Du kannst das hier noch nicht ändern."
+  },
+  "channels": {
+    "title": "Kanäle",
+    "help": "Logs, Beweise und die Kategorien für Einsprüche, Meldungen und Modmail.",
+    "modLog": "Mod-Log-Kanal",
+    "modLogHelp": "Mewvo postet hier eine Zeile für jede Verwarnung, Stummschaltung, jeden Kick und Bann. Team-Alarme landen auch hier, wenn kein anderer Kanal festgelegt ist.",
+    "evidence": "Beweiskanal",
+    "evidenceHelp": "Screenshots, die zu einem Fall hinzugefügt werden, werden hier gespeichert, damit sie bleiben, auch wenn die ursprüngliche Nachricht gelöscht wird. Nicht festgelegt: der Mod-Log-Kanal.",
+    "adminRequest": "Kanal für Admin-Anfragen",
+    "adminRequestHelp": "Wo Moderatoren einen Administrator um etwas bitten, das sie selbst nicht dürfen.",
+    "appealsCategory": "Kategorie für Einsprüche",
+    "appealsCategoryHelp": "Eine Kategorie ist ein Ordner mit Kanälen. Jeder Einspruch gegen eine Stummschaltung oder Verwarnung bekommt darin einen eigenen Kanal. Nicht festgelegt: die Ticket-Kategorie.",
+    "reportsCategory": "Kategorie für Team-Meldungen",
+    "reportsCategoryHelp": "Jede Meldung über ein Teammitglied bekommt hier einen eigenen Kanal. Nicht festgelegt: die Ticket-Kategorie.",
+    "modmailCategory": "Modmail-Kategorie",
+    "modmailCategoryHelp": "Wenn ein Mitglied Mewvo privat schreibt und es ans Team schickt, bekommt der Chat hier einen Kanal. Nicht festgelegt: die Ticket-Kategorie.",
+    "openCap": "Höchstens offene Meldungen und Modmails",
+    "openCapHelp": "Wie viele Kanäle für Team-Meldungen und Modmail gleichzeitig offen sein können. Ist die Grenze erreicht, werden neue abgewiesen und das Team bekommt einen Alarm. Einsprüche werden nie abgewiesen.",
+    "invite": "Einladung zum Support-Server",
+    "inviteHelp": "Ein Link zu deinem Support-Server. Gebannte Mitglieder bekommen ihn, damit sie trotzdem Einspruch einlegen können."
+  },
+  "roles": {
+    "title": "Rollen",
+    "help": "Verwarnungsrollen zeigen, wie viele aktive Verwarnungen ein Mitglied hat. Mewvo vergibt und entfernt sie selbst.",
+    "muted": "Stummschaltungsrolle",
+    "mutedHelp": "Die Rolle, die ein stummgeschaltetes Mitglied am Schreiben und Sprechen hindert. Lässt du das leer, erstellt Mewvo eine, sobald zum ersten Mal jemand stummgeschaltet wird.",
+    "warn1": "Rolle bei 1 Verwarnung",
+    "warn2": "Rolle bei 2 Verwarnungen",
+    "warn3": "Rolle ab 3 Verwarnungen",
+    "warnRoleN": "Verwarnungsrolle {number}"
+  },
+  "timings": {
+    "title": "Einsprüche und Meldungen",
+    "help": "Ein Einspruch ist die Bitte eines Mitglieds an das Team, eine Strafe aufzuheben.",
+    "window": "Zeit für einen Einspruch (Tage)",
+    "windowLabel": "Zeit für einen Einspruch",
+    "windowHelp": "Wie lange nach einer Strafe ein Mitglied noch bitten kann, sie aufzuheben.",
+    "cooldown": "Wartezeit nach abgelehntem Einspruch (Tage)",
+    "cooldownLabel": "Wartezeit nach abgelehntem Einspruch",
+    "cooldownHelp": "Lehnt das Team einen Einspruch ab, muss das Mitglied so lange warten, bevor es erneut Einspruch einlegt. 0 heißt keine Wartezeit.",
+    "rejoin": "Rückkehr-Link gilt (Stunden)",
+    "rejoinLabel": "Rückkehr-Link gilt",
+    "rejoinHelp": "Gekickte Mitglieder und Mitglieder mit angenommenem Einspruch bekommen einen einmaligen Einladungslink zurück. So lange funktioniert er.",
+    "staleReport": "Ruhige Meldungen schließen nach (Tagen)",
+    "staleReportLabel": "Ruhige Meldungen schließen nach",
+    "staleReportHelp": "Ein Meldungskanal, in dem so lange niemand geschrieben hat, wird geschlossen.",
+    "staleAppeal": "An ruhige Einsprüche erinnern nach (Tagen)",
+    "staleAppealLabel": "An ruhige Einsprüche erinnern nach",
+    "staleAppealHelp": "Hat ein Einspruch so lange keine Entscheidung und keine neuen Nachrichten, bekommt das Team eine Erinnerung und das Mitglied erfährt, dass er noch offen ist."
+  },
+  "review": {
+    "title": "Unabhängige Prüfung von Einsprüchen",
+    "help": "Standardmäßig aus, sodass jedes Teammitglied, das Einsprüche bearbeitet, über jeden Einspruch entscheiden kann.",
+    "label": "Ein anderer Moderator entscheidet jeden Einspruch",
+    "labelHelp": "Der Moderator, der die Strafe gegeben hat, kann den Einspruch dagegen weder annehmen noch ablehnen. Das muss jemand anderes aus dem Team tun. Der Bot-Inhaber kann im Notfall trotzdem entscheiden, und das wird protokolliert. Strafen, die Mewvo selbst gegeben hat (automatische Verwarnungsbanns, Automod), sind nicht betroffen."
+  },
+  "mass": {
+    "title": "Sicherheitslimit: zu viele Banns oder Kicks in kurzer Zeit",
+    "help": "Schützt den Server, falls ein Moderatorkonto missbraucht wird (Standard: mehr als 5 Banns oder Kicks in 10 Minuten). Ein Moderator, der in kurzer Zeit zu viele Mitglieder bestraft, wird eine Weile gestoppt, und der Bot-Inhaber bekommt eine Direktnachricht (DM).",
+    "limit": "Erlaubte Banns und Kicks",
+    "limitHelp": "Wie viele ein Moderator in der Zeit unten machen darf.",
+    "muteLimit": "Erlaubte Stummschaltungen",
+    "muteLimitHelp": "Getrennt von Banns und Kicks gezählt.",
+    "window": "Innerhalb von (Minuten)",
+    "block": "Gesperrt für (Minuten)",
+    "blockHelp": "Wie lange ein Moderator, der das Limit überschreitet, niemanden bestrafen kann."
+  },
+  "templates": {
+    "title": "Vorlagen",
+    "help": "Fertige Strafen für /enforcements, etwa „Spam: 1h Stummschaltung“. Sie erscheinen als Menü unter den Buttons. Wählst du eine, springst du direkt zum letzten Schritt, wo du bestätigst.",
+    "name": "Name",
+    "whatItDoes": "Was sie tut",
+    "reason": "Grund",
+    "remove": "Entfernen",
+    "removeConfirm": "Die Vorlage „{name}“ entfernen?",
+    "empty": "Noch keine Vorlagen.",
+    "max": "Du hast schon die höchstens möglichen {count} Vorlagen.",
+    "namePlaceholder": "Spam: kurze Stummschaltung",
+    "nameHint": "Der Name, den das Team im Menü sieht.",
+    "action": "Aktion",
+    "duration": "Dauer",
+    "durationPlaceholder": "1h, 7d oder leer",
+    "durationHint": "Wie lange sie dauert, zum Beispiel 1h (eine Stunde) oder 7d (sieben Tage). Eine Stummschaltung braucht eine Dauer. Ein Bann ohne Dauer ist permanent. Verwarnungen und Kicks ignorieren sie.",
+    "add": "Vorlage hinzufügen",
+    "muteFor": "Stummschaltung {duration}",
+    "banFor": "Bann {duration}",
+    "banPermanent": "permanenter Bann"
+  },
+  "panels": {
+    "title": "Einspruchs-Panels",
+    "help": "Postet das Einspruchs-Panel hier und auf dem Support-Server und entfernt die alten. Das geht auch mit /setappeal in Discord.",
+    "channel": "Kanal für das Einspruchs-Panel",
+    "channelHelp": "Das Einspruchs-Panel ist eine Nachricht mit einem Button, über den Mitglieder Einspruch einlegen. Ein zweites Panel kommt in #appeals auf dem Support-Server; Mewvo erstellt den Kanal, falls es ihn nicht gibt.",
+    "submit": "Einspruchs-Panels posten",
+    "confirm": "Einspruchs-Panels jetzt posten? Frühere Einspruchs-Panels in diesen Kanälen werden ersetzt."
+  },
+  "pages": {
+    "transparencyTitle": "Transparenzbericht",
+    "transparencyHelp": "Eine monatliche Zählung von Verwarnungen, Stummschaltungen, Kicks, Banns und Einsprüchen unter /transparency.",
+    "transparencyMore": "Er zeigt nur Zahlen. Keine Namen, IDs, Fallcodes, Gründe oder Moderatoren. Eine Anzahl von 1 oder 2 erscheint als „weniger als 3“.",
+    "transparencyToggle": "Monatlichen Transparenzbericht auf der Website veröffentlichen",
+    "transparencyOff": "Den Transparenzbericht von der Website nehmen?",
+    "trustTitle": "Vertrauenskarte",
+    "trustHelp": "Eine Zusammenfassung der letzten 90 Tage unter /trust.",
+    "trustMore": "Wie schnell Einsprüche eine erste Antwort bekommen, wie viele angenommen werden, wie viele Mitglieder einen guten Stand haben und wie oft Mitglieder eine Nachricht selbst korrigieren, nachdem Automod sie zuerst privat gewarnt hat. Nur Zahlen. Anzahlen von 1 oder 2 und Quoten, die auf weniger als 3 beruhen, werden ausgeblendet.",
+    "trustToggle": "Vertrauenskarte veröffentlichen",
+    "trustOff": "Die Vertrauenskarte von der Website nehmen?",
+    "trustPublic": "Sie ist öffentlich unter {link}."
+  },
+  "rules": {
+    "ladderTitle": "Verwarnungsleiter",
+    "ladderHelp": "Wann aus Verwarnungen ein Bann wird.",
+    "ladderText": "Ein Mitglied ohne früheren Bann wird bei {count} Verwarnungen gebannt. Danach bannt jede neue Verwarnung es erneut, jedes Mal länger.",
+    "level": "Stufe",
+    "banLength": "Bann-Dauer",
+    "permanent": "permanent",
+    "reasonsTitle": "Gründe",
+    "reasonsHelp": "Die Gründe, aus denen Moderatoren wählen können.",
+    "reasonsMore": "Sie lassen sich hier noch nicht ändern, weil jeder Fall den Code seines Grundes speichert.",
+    "code": "Code",
+    "reason": "Grund",
+    "serious": "Schwer",
+    "yes": "ja",
+    "no": "nein",
+    "stepsTitle": "Automod-Stufen",
+    "stepsHelp": "Was Automod tut, wenn jemand dieselbe Regel erneut bricht.",
+    "rule": "Regel",
+    "whatHappens": "Was passiert (1., 2., 3. und weitere Male)",
+    "stepPermanent": "{type} (permanent)",
+    "stepFor": "{type} {duration}"
+  },
+  "result": {
+    "panelsPosted": "Einspruchs-Panels in #{main} und in #{support} auf dem Support-Server gepostet.",
+    "panelsPostedCreated": "Einspruchs-Panels in #{main} und in #{support} auf dem Support-Server gepostet (erstellt).",
+    "templateInvalid": "Diese Vorlage ist nicht gültig.",
+    "templateAdded": "Vorlage „{name}“ hinzugefügt.",
+    "templateGone": "Diese Vorlage ist schon weg. Lade die Seite neu.",
+    "templateRemoved": "Vorlage „{name}“ entfernt.",
+    "transparencyOn": "Der Transparenzbericht ist an: /transparency ist öffentlich.",
+    "transparencyOff": "Der Transparenzbericht ist aus: /transparency ist nicht mehr auf der Website.",
+    "trustOn": "Die Vertrauenskarte ist an: /trust ist öffentlich.",
+    "trustOff": "Die Vertrauenskarte ist aus: /trust ist nicht mehr auf der Website."
+  }
+}

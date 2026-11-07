@@ -1,0 +1,45 @@
+{
+  "page": {
+    "help": "Członkowie dostają własny kanał głosowy, kiedy go potrzebują. Gdy ktoś wejdzie na kanał wyzwalający, Mewvo tworzy dla niego nowy kanał głosowy i przenosi go tam. Gdy kanał opustoszeje, jest znowu usuwany."
+  },
+  "status": {
+    "title": "Stan",
+    "text": "Join to create: {state} (działa, dopóki jest kanał wyzwalający)."
+  },
+  "triggers": {
+    "title": "Wyzwalacze",
+    "channel": "Kanał wyzwalający",
+    "temporary": "Kanały tymczasowe",
+    "empty": "Nie ma jeszcze wyzwalaczy.",
+    "remove": "Usuń wyzwalacz",
+    "removeConfirm": "Przestać używać tego kanału jako wyzwalacza? Sam kanał zostanie."
+  },
+  "add": {
+    "title": "Nowy wyzwalacz",
+    "help": "Mewvo tworzy kanał głosowy o nazwie „Join to Create”. Możesz to też zrobić na Discordzie komendą /jointocreate setup.",
+    "helpNoAdmin": "Mewvo tworzy kanał głosowy o nazwie „Join to Create”. Możesz to też zrobić na Discordzie komendą /jointocreate setup. Potrzebujesz do tego uprawnienia Administrator na tym serwerze.",
+    "oneOnly": "Serwer może mieć jeden kanał wyzwalający. Usuń obecny, aby utworzyć nowy.",
+    "submit": "Utwórz kanał wyzwalający"
+  },
+  "fields": {
+    "name": "Nazwa kanału",
+    "nameHelp": "Nazwa każdego nowego kanału. Możesz użyć {username} (nazwa użytkownika członka), {displayName} (jego nazwa na tym serwerze), {guildName} (nazwa serwera) i {channelName} (nazwa kanału wyzwalającego).",
+    "userLimit": "Maks. osób na kanale",
+    "userLimitHelp": "0 oznacza brak limitu.",
+    "bitrate": "Jakość dźwięku (kb/s)",
+    "bitrateShort": "Jakość dźwięku",
+    "bitrateHelp": "Jakość dźwięku na kanale głosowym. Wyższa brzmi lepiej, ale wymaga szybszego łącza. 64 to wartość normalna. Serwery z boostem pozwalają na wyższe wartości.",
+    "category": "Kategoria",
+    "categoryNone": "bez kategorii",
+    "categoryHelp": "Kategoria to folder na kanały. Kanał wyzwalający powstaje w niej."
+  },
+  "error": {
+    "unknownTrigger": "Nieznany kanał wyzwalający.",
+    "nameEmpty": "Nazwa kanału nie może być pusta."
+  },
+  "action": {
+    "created": "Utworzono kanał wyzwalający „{name}”.",
+    "saved": "Ustawienia wyzwalacza zapisane.",
+    "removed": "Wyzwalacz usunięty (sam kanał głosowy zostaje)."
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "page": {
+    "help": "Członkowie zdobywają punkty (XP) za pisanie i awansują na wyższe poziomy, gdy zbierają ich więcej. Możesz publikować wiadomość, gdy ktoś awansuje, i dawać role na wybranych poziomach. Możesz to też zmienić komendą /level dashboard w Discordzie."
+  },
+  "topic": {
+    "earning": "Zdobywanie XP",
+    "earningLine": "Jak szybko członkowie awansują i co Mewvo wtedy publikuje.",
+    "rewards": "Nagrody i poziomy",
+    "rewardsLine": "Role za osiągnięty poziom i ręczna zmiana poziomu.",
+    "cat": "Kot serwera",
+    "catLine": "Kot, który rośnie, gdy członkowie piszą, od Kitten do Legend."
+  },
+  "add": "Dodaj",
+  "remove": "Usuń",
+  "type": {
+    "channel": "kanał",
+    "role": "rola"
+  },
+  "colours": {
+    "primary": "Niebieski Mewvo",
+    "purple": "Fioletowy",
+    "blurple": "Blurple Discorda",
+    "green": "Zielony",
+    "yellow": "Żółty",
+    "red": "Czerwony",
+    "grey": "Szary"
+  },
+  "xp": {
+    "title": "XP i wiadomości",
+    "help": "XP za wiadomość, odstęp między przyznaniem XP i wiadomość o awansie.",
+    "min": "Najmniej XP za wiadomość",
+    "minHelp": "Każda wiadomość daje losową liczbę XP między tymi dwiema liczbami.",
+    "max": "Najwięcej XP za wiadomość",
+    "cooldown": "Odstęp między XP",
+    "cooldownHelp": "Członek dostaje XP za wiadomość najwyżej tak często, więc spam nie przyspiesza awansu. W sekundach.",
+    "channel": "Kanał awansów",
+    "channelNone": "tam, gdzie pisał członek",
+    "channelHelp": "Gdzie publikowana jest wiadomość o awansie.",
+    "announce": "Ogłaszaj awanse",
+    "announceHelp": "Wyłączone: członkowie nadal awansują, ale żadna wiadomość nie jest publikowana.",
+    "message": "Wiadomość o awansie",
+    "messageHelp": "Możesz użyć {user} (oznacza członka) i {level} (jego nowy poziom)."
+  },
+  "card": {
+    "title": "Karta awansu",
+    "help": "Obrazek dołączony do wiadomości o awansie.",
+    "more": "Członkowie mogą zobaczyć tę samą kartę komendą /rank card:True. Mewvo potrzebuje uprawnienia Załączanie plików w kanale awansów; bez niego publikowany jest tylko tekst.",
+    "toggle": "Dodawaj kartę z obrazkiem do wiadomości o awansie",
+    "toggleHelp": "Karta pokazuje zdjęcie i nazwę członka, nowy poziom, pasek do następnego poziomu i nazwę serwera. Wyłączone: publikowana jest tylko wiadomość tekstowa. Jeśli karty nie da się utworzyć, wiadomość tekstowa jest publikowana sama.",
+    "colour": "Kolor karty",
+    "colourHelp": "Dla obwódki wokół zdjęcia, poziomu i paska.",
+    "hex": "Albo kod koloru",
+    "hexHelp": "Znak # i sześć liter lub cyfr. Jeśli jest wpisany, zastępuje kolor powyżej."
+  },
+  "boosts": {
+    "title": "Mnożniki XP",
+    "help": "Więcej XP w niektórych kanałach lub dla niektórych ról, od x{min} do x{max}.",
+    "more": "Wątek liczy się jak jego kanał. Jeśli członek ma kilka ról z mnożnikiem, liczy się tylko najwyższy mnożnik roli. Mnożnik kanału razy mnożnik roli nigdy nie przekracza x{cap}.",
+    "boost": "Mnożnik",
+    "boostHelp": "Od {min} do {max}, np. {example}.",
+    "boosted": "Dla",
+    "empty": "Brak mnożników. Każdy kanał i każda rola dają zwykłe XP.",
+    "channel": "Kanał",
+    "role": "Rola",
+    "addChannel": "Dodaj dla kanału",
+    "addRole": "Dodaj dla roli"
+  },
+  "ignored": {
+    "title": "Bez XP",
+    "help": "W tych kanałach członkowie nie dostają XP, a członkowie z tymi rolami nie dostają go wcale. Przydatne dla kanałów botów lub spamu.",
+    "type": "Typ",
+    "noXpFor": "Bez XP dla",
+    "empty": "Członkowie dostają XP w każdym kanale.",
+    "addChannel": "Bez XP w tym kanale",
+    "addRole": "Bez XP dla tej roli"
+  },
+  "rewards": {
+    "title": "Role w nagrodę",
+    "help": "Członkowie dostają te role sami, gdy osiągną poziom. Mewvo może dawać tylko role poniżej własnej roli na liście ról i nie daje ról z uprawnieniami ekipy.",
+    "level": "Poziom",
+    "role": "Rola",
+    "problems": "Problemy",
+    "ok": "ok",
+    "empty": "Brak ról w nagrodę.",
+    "atLevel": "Na poziomie",
+    "giveRole": "Daj tę rolę",
+    "rewardRole": "Rola w nagrodę",
+    "add": "Dodaj nagrodę",
+    "modeLabel": "Które role w nagrodę zostają członkowi",
+    "modeHelp": "Wszystkie: członkowie zachowują każdą zdobytą rolę w nagrodę. Tylko najwyższa: gdy członek zdobędzie nową nagrodę, Mewvo daje tę rolę i zabiera niższe role w nagrodę.",
+    "mode": {
+      "keep": "Zachowaj wszystkie role w nagrodę",
+      "highest": "Tylko najwyższa rola w nagrodę"
+    },
+    "modeSubmit": "Zapisz"
+  },
+  "member": {
+    "title": "Poziomy członków",
+    "help": "Zmień ręcznie poziom jednego członka. Możesz to też zrobić komendami /level add, /level remove i /level set w Discordzie.",
+    "userId": "Członek (ID użytkownika)",
+    "userIdHelp": "Długa liczba, która identyfikuje członka. W Discordzie włącz Tryb dewelopera, kliknij członka prawym przyciskiem i wybierz Kopiuj ID użytkownika.",
+    "opLabel": "Co zrobić",
+    "op": {
+      "add": "Dodaj poziomy",
+      "remove": "Odejmij poziomy",
+      "set": "Ustaw poziom"
+    },
+    "levels": "Poziomy",
+    "apply": "Zastosuj",
+    "needsAdmin": "Aby zmienić poziom członka, potrzebujesz uprawnienia Administrator na tym serwerze.",
+    "memberId": "ID członka",
+    "actionLabel": "Działanie"
+  },
+  "cat": {
+    "title": "Kot serwera",
+    "help": "Jego imię i to, czy Mewvo publikuje wiadomość, gdy rośnie.",
+    "more": "Członkowie widzą go komendą /cat view i w rankingu na stronie. Gdy rośnie, Mewvo publikuje raz w kanale awansów (jeśli jest ustawiony).",
+    "alt": "{name}, etap {stage}, nastrój: {mood}",
+    "now": {
+      "one": "{sentence} Etap: {stage}. Policzono {total} wiadomość.",
+      "few": "{sentence} Etap: {stage}. Policzono {total} wiadomości.",
+      "many": "{sentence} Etap: {stage}. Policzono {total} wiadomości.",
+      "other": "{sentence} Etap: {stage}. Policzono {total} wiadomości."
+    },
+    "notLoaded": "Nie udało się teraz wczytać kota (baza danych nie odpowiada). Odśwież stronę, aby spróbować ponownie.",
+    "name": "Imię",
+    "nameHelp": "Litery, cyfry i spacje. Inne znaki są pomijane.",
+    "saveName": "Zapisz imię",
+    "announce": "Publikuj w kanale awansów, gdy kot rośnie",
+    "needsAdmin": "Aby zmienić kota, potrzebujesz uprawnienia Administrator na tym serwerze."
+  },
+  "error": {
+    "cardHex": "Kolor karty: wpisz kod koloru, np. #9B59B6, albo zostaw puste i wybierz z listy.",
+    "cardColour": "Kolor karty: nieznany wybór.",
+    "minMax": "Najmniej XP za wiadomość nie może być więcej niż najwięcej XP za wiadomość.",
+    "roleMissing": "Rola: tej roli nie ma na serwerze.",
+    "maxChannelBoosts": {
+      "one": "Najwyżej {count} mnożnik dla kanałów.",
+      "few": "Najwyżej {count} mnożniki dla kanałów.",
+      "many": "Najwyżej {count} mnożników dla kanałów.",
+      "other": "Najwyżej {count} mnożnika dla kanałów."
+    },
+    "maxRoleBoosts": {
+      "one": "Najwyżej {count} mnożnik dla ról.",
+      "few": "Najwyżej {count} mnożniki dla ról.",
+      "many": "Najwyżej {count} mnożników dla ról.",
+      "other": "Najwyżej {count} mnożnika dla ról."
+    },
+    "memberMissing": "Tego członka nie ma na serwerze.",
+    "catName": "Imię: użyj liter, cyfr i spacji."
+  },
+  "action": {
+    "nothing": "Nic się nie zmieniło.",
+    "catNamed": "Kot serwera nazywa się teraz {name}.",
+    "catAnnounceLabel": "Ogłoszenie o wzroście kota",
+    "catPostsOn": "Wiadomości o wzroście kota są włączone.",
+    "catPostsOff": "Wiadomości o wzroście kota są wyłączone.",
+    "enabledLabel": "Poziomy",
+    "enabledOn": "Poziomy są teraz włączone.",
+    "enabledOff": "Poziomy są teraz wyłączone.",
+    "settingsSaved": "Zapisano ustawienia poziomów.",
+    "cardSaved": "Zapisano ustawienia karty awansu.",
+    "alreadyListed": "Już jest na liście.",
+    "ignoreAdded": "Od teraz nie ma tam XP.",
+    "notListed": "Tego nie było na liście.",
+    "removed": "Usunięto.",
+    "boostSame": "Ten mnożnik jest już ustawiony.",
+    "channelBoostSet": "Ten kanał daje teraz {boost} XP.",
+    "roleBoostSet": "Ta rola daje teraz {boost} XP.",
+    "noBoost": "Nie było na to mnożnika.",
+    "boostRemoved": "Usunięto mnożnik.",
+    "modeHighest": "Członkowie zachowują teraz tylko najwyższą rolę w nagrodę. Dotyczy to każdego członka przy awansie, a wszystkich przy następnym restarcie Mewvo.",
+    "modeKeep": "Członkowie zachowują teraz wszystkie swoje role w nagrodę.",
+    "rewardAdded": "Poziom {level} daje teraz tę rolę.",
+    "rewardRemoved": "Usunięto nagrodę za poziom {level}.",
+    "noReward": "Za ten poziom nie było nagrody.",
+    "memberDone": "{name} ma teraz poziom {level}."
+  }
+}

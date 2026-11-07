@@ -1,0 +1,56 @@
+{
+  "page": {
+    "help": "I contatori sono canali il cui nome mostra un numero in tempo reale, come \"Members: 1234\". Mewvo li aggiorna ogni 15 minuti. Il gioco del conteggio è un canale in cui i membri contano insieme, un numero per messaggio."
+  },
+  "list": {
+    "title": "Contatori delle statistiche del server",
+    "help": "Mewvo crea il canale per te. Puoi farlo anche con /serverstats create in Discord.",
+    "helpNoAdmin": "Mewvo crea il canale per te. Puoi farlo anche con /serverstats create in Discord. Per creare canali ti serve il permesso Amministratore in questo server.",
+    "id": "ID",
+    "channel": "Canale",
+    "type": "Tipo",
+    "empty": "Ancora nessun contatore.",
+    "change": "Cambia",
+    "delete": "Elimina contatore e canale",
+    "deleteConfirm": "Eliminare questo contatore e il suo canale?"
+  },
+  "create": {
+    "title": "Nuovo contatore",
+    "counts": "Cosa conta",
+    "channelType": "Tipo di canale",
+    "channelTypeHelp": "Di solito si sceglie un canale vocale: sta nell'elenco e mostra il numero.",
+    "voice": "Canale vocale (mostra solo il nome)",
+    "text": "Canale testuale",
+    "category": "Nella categoria",
+    "categoryHelp": "Una categoria è una cartella di canali. Il canale del contatore viene creato lì.",
+    "submit": "Crea contatore",
+    "allUsed": "Ogni tipo di contatore è già in uso. Puoi averne uno per tipo."
+  },
+  "counting": {
+    "title": "Gioco del conteggio",
+    "help": "I membri scrivono a turno il numero successivo. Avviare o riavviare il gioco qui azzera il conteggio e la classifica. Puoi farlo anche con /count setup in Discord.",
+    "label": "Gioco del conteggio:",
+    "details": "in {channel} · {system} · prossimo numero {next} · serie migliore {best}",
+    "channel": "Canale del conteggio",
+    "channelHelp": "Usa un canale solo per contare.",
+    "system": "Sistema numerico",
+    "systemHelp": "Come vengono scritti i numeri. Decimale (numeri normali) è la scelta abituale.",
+    "restart": "Ricomincia in questo canale (si torna a 1)",
+    "reset": "Riporta il conteggio a 1",
+    "resetConfirm": "Riportare il gioco del conteggio a 1?"
+  },
+  "action": {
+    "unknown": "Contatore sconosciuto.",
+    "countsLabel": "Conta",
+    "channelKindLabel": "Tipo di canale",
+    "created": "Contatore creato: {channel}.",
+    "renameLater": "Il nome del canale si aggiorna al prossimo giro programmato.",
+    "updated": "Contatore aggiornato.",
+    "renameFailed": "Ora non è stato possibile rinominare il canale; si aggiorna al prossimo giro programmato.",
+    "deleted": "Contatore eliminato.",
+    "deleteFailed": "Non è stato possibile eliminare il canale del contatore (permessi?).",
+    "started": "Gioco del conteggio avviato da 1.",
+    "reset": "Il conteggio riparte da 1.",
+    "off": "Il gioco del conteggio è disattivato."
+  }
+}

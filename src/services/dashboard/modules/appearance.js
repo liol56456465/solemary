@@ -8,6 +8,9 @@ import { InputError, postForm, text, textInput } from '../forms.js';
 import { MAX_UPLOAD_BYTES, sniffImage } from '../multipart.js';
 import { section } from './common.js';
 import { guildPlan as defaultGuildPlan } from '../../billing/premiumEffects.js';
+import { textFor } from '../language.js';
+
+// Words: src/content/dashboard/<lang>/appearance.json.
 
 export const NICKNAME_MAX = 32;
 const PAID = new Set(['pro', 'max']);
@@ -27,7 +30,7 @@ const svc = (ctx, name) => (typeof ctx.services?.[name] === 'function' ? ctx.ser
 
 function requirePlan(ctx) {
     if (!PAID.has(svc(ctx, 'guildPlan')(ctx.guildId))) {
-        throw new InputError('A custom bot name and avatar in your server come with Mewvo Pro and Max, on the server owner\'s plan.', 403);
+        throw new InputError(textFor(ctx).t('appearance.error.plan'), 403);
     }
 }
 
@@ -42,14 +45,16 @@ export default {
     },
 
     render(ctx, { nickname, hasAvatar, unlocked }) {
+        const tr = textFor(ctx);
+        // Card ids: the slugs of the English titles, as before.
         if (!unlocked) {
-            return section('Bot in this server', html`<p class="muted">A custom nickname and avatar for Mewvo in this server come with Mewvo Pro and Max, on the server owner's plan. <a href="/pricing">Plans</a></p>`);
+            return section(tr.t('appearance.title'), html`<p class="muted">${tr.tx('appearance.locked')} <a href="/pricing">${tr.t('appearance.plans')}</a></p>`, '', { key: 'bot-in-this-server' });
         }
-        const nick = postForm(ctx, 'appearance', 'nickname', textInput('nickname', nickname, { label: 'Nickname', max: NICKNAME_MAX, placeholder: 'Mewvo', help: 'The name Mewvo shows in this server. Leave empty for the normal name.' }));
-        const avatar = postForm(ctx, 'appearance', 'avatar', html`<label class="wide">Avatar (PNG, JPEG, GIF or WebP picture)<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required></label>`,
-            { submit: 'Upload avatar', multipart: true, canEdit: ctx.canEdit && ctx.canAct });
-        const reset = hasAvatar ? postForm(ctx, 'appearance', 'avatar-reset', '', { submit: 'Use the normal avatar', danger: true, inline: true, canEdit: ctx.canEdit && ctx.canAct, confirm: 'Go back to the normal avatar in this server?' }) : '';
-        return html`${section('Nickname', nick)}${section('Avatar', html`${avatar}${reset}`, hasAvatar ? 'This server has its own avatar now.' : 'This server uses the normal avatar.')}`;
+        const nick = postForm(ctx, 'appearance', 'nickname', textInput('nickname', nickname, { label: tr.t('appearance.nickname.label'), max: NICKNAME_MAX, placeholder: 'Mewvo', help: tr.t('appearance.nickname.help') }));
+        const avatar = postForm(ctx, 'appearance', 'avatar', html`<label class="wide">${tr.t('appearance.avatar.label')}<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" required></label>`,
+            { submit: tr.t('appearance.avatar.upload'), multipart: true, canEdit: ctx.canEdit && ctx.canAct });
+        const reset = hasAvatar ? postForm(ctx, 'appearance', 'avatar-reset', '', { submit: tr.t('appearance.avatar.reset'), danger: true, inline: true, canEdit: ctx.canEdit && ctx.canAct, confirm: tr.t('appearance.avatar.resetConfirm') }) : '';
+        return html`${section(tr.t('appearance.nickname.title'), nick, '', { key: 'nickname' })}${section(tr.t('appearance.avatar.title'), html`${avatar}${reset}`, tr.t(hasAvatar ? 'appearance.avatar.own' : 'appearance.avatar.normal'), { key: 'avatar' })}`;
     },
 
     actions: {
@@ -58,11 +63,12 @@ export default {
             async run(ctx, form) {
                 requirePlan(ctx);
                 const nick = text(form, 'nickname', NICKNAME_MAX + 10).replace(/\s+/g, ' ').trim();
-                if (nick.length > NICKNAME_MAX) throw new InputError(`Nicknames are at most ${NICKNAME_MAX} characters.`, 400, 'nickname');
+                const tr = textFor(ctx);
+                if (nick.length > NICKNAME_MAX) throw new InputError(tr.t('appearance.error.tooLong', { max: tr.fmtNumber(NICKNAME_MAX) }), 400, 'nickname');
                 const old = ctx.guild.members.me?.nickname || null;
-                if ((old || '') === nick) return { changes: [], message: 'Nothing changed.' };
+                if ((old || '') === nick) return { changes: [], message: tr.t('errors.nothingChanged') };
                 await svc(ctx, 'setBotNickname')(ctx.guild, nick || null, `dashboard: ${ctx.actor.username}`);
-                return { changes: [{ key: 'botNickname', old, new: nick || null }], message: nick ? `Mewvo is now called "${nick}" here.` : 'Mewvo uses its normal name here again.' };
+                return { changes: [{ key: 'botNickname', old, new: nick || null }], message: nick ? tr.t('appearance.action.renamed', { nick }) : tr.t('appearance.action.normalName') };
             },
         },
         avatar: {
@@ -70,13 +76,14 @@ export default {
             upload: true,
             async run(ctx) {
                 requirePlan(ctx);
+                const tr = textFor(ctx);
                 const file = ctx.upload?.file || null;
-                if (!file) throw new InputError('Choose a picture to upload.', 400, 'image');
-                if (file.data.length > MAX_UPLOAD_BYTES) throw new InputError('The picture is too large. Try a smaller file.', 413, 'image');
+                if (!file) throw new InputError(tr.t('appearance.error.choose'), 400, 'image');
+                if (file.data.length > MAX_UPLOAD_BYTES) throw new InputError(tr.t('appearance.error.tooLarge'), 413, 'image');
                 const image = sniffImage(file.data);
-                if (!image) throw new InputError('That file is not a PNG, JPEG, GIF or WebP image.', 400, 'image');
+                if (!image) throw new InputError(tr.t('appearance.error.notImage'), 400, 'image');
                 await svc(ctx, 'setBotAvatar')(ctx.client, ctx.guildId, `data:${image.type};base64,${file.data.toString('base64')}`);
-                return { changes: [{ key: 'botAvatar', old: null, new: 'uploaded' }], message: 'Mewvo has its own avatar in this server now. Discord can take a minute to show it.' };
+                return { changes: [{ key: 'botAvatar', old: null, new: 'uploaded' }], message: tr.t('appearance.action.avatarSet') };
             },
         },
         'avatar-reset': {
@@ -84,7 +91,7 @@ export default {
             async run(ctx) {
                 requirePlan(ctx);
                 await svc(ctx, 'setBotAvatar')(ctx.client, ctx.guildId, null);
-                return { changes: [{ key: 'botAvatar', old: 'uploaded', new: null }], message: 'Mewvo uses its normal avatar here again.' };
+                return { changes: [{ key: 'botAvatar', old: 'uploaded', new: null }], message: textFor(ctx).t('appearance.action.avatarReset') };
             },
         },
     },

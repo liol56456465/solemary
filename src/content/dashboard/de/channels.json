@@ -1,0 +1,64 @@
+{
+  "page": {
+    "help": "Räum einen Kanal auf, indem du viele neue Nachrichten auf einmal löschst, oder sperr einen Kanal, damit Mitglieder eine Weile nicht darin schreiben können, zum Beispiel während einer Spamwelle."
+  },
+  "adminNote": " Um diese Werkzeuge zu nutzen, brauchst du die Berechtigung Administrator auf diesem Server.",
+  "field": {
+    "channel": "Kanal",
+    "reason": "Grund",
+    "reasonHelp": "Wird mit der Aktion gespeichert, damit das übrige Team weiß, warum."
+  },
+  "purge": {
+    "title": "Nachrichten löschen",
+    "help": "Löscht viele neue Nachrichten auf einmal. Discord erlaubt das nicht für Nachrichten, die älter als 14 Tage sind, deshalb werden sie übersprungen.",
+    "amount": "Anzahl der Nachrichten",
+    "amountHelp": "Von {min} bis {max}. Die neuesten Nachrichten zuerst.",
+    "fromUser": "Nur von diesem Mitglied (optional)",
+    "fromUserHelp": "Nur die neuesten 100 Nachrichten werden durchsucht.",
+    "nothingYet": "Noch wird nichts gelöscht: Die nächste Seite zeigt, was gelöscht wird, und dort bestätigst du.",
+    "submit": "Nachrichten löschen…",
+    "badUser": "Nur von diesem Mitglied: Das ist keine Nutzer-ID. Tipp einen Namen und wähl ein Mitglied, nutze „Mitglied suchen“ oder füg eine Nutzer-ID ein (17 bis 20 Ziffern).",
+    "missingPerms": "Mewvo fehlt {perms} in #{channel}, deshalb kann es dort keine Nachrichten löschen. Es wurde nichts geändert."
+  },
+  "lock": {
+    "title": "Kanal sperren",
+    "help": "Mitglieder können den Kanal weiter lesen, aber nicht mehr darin schreiben. Rollen mit eigener Berechtigung in diesem Kanal, etwa das Team, können es weiterhin. Entsperren macht das rückgängig: Der Kanal bekommt wieder die Berechtigungen seiner Kategorie (des Ordners, in dem er liegt).",
+    "submit": "Kanal sperren"
+  },
+  "locked": {
+    "title": "Gesperrte Kanäle ({count})",
+    "category": "Kategorie",
+    "noCategory": "keine",
+    "reasonPlaceholder": "Grund (optional)",
+    "unlock": "Entsperren",
+    "empty": "Kein Kanal ist gesperrt.",
+    "help": "Kanäle, in denen Mitglieder gerade nicht schreiben können, weil der Kanal selbst gesperrt ist."
+  },
+  "confirm": {
+    "heading": "Bestätigen: Nachrichten in #{channel} löschen",
+    "messages": "Nachrichten",
+    "fromUser": {
+      "one": "Bis zu {count} der neuesten Nachrichten von {who} (nur die neuesten 100 werden durchsucht)",
+      "other": "Bis zu {count} der neuesten Nachrichten von {who} (nur die neuesten 100 werden durchsucht)"
+    },
+    "newest": {
+      "one": "Die neueste {count}",
+      "other": "Die neuesten {count}"
+    },
+    "effect": "Folge",
+    "effectText": "Die Nachrichten werden endgültig gelöscht und lassen sich nicht wiederherstellen. Nachrichten, die älter als 14 Tage sind, werden übersprungen.",
+    "submit": "Nachrichten löschen"
+  },
+  "action": {
+    "skippedOld": {
+      "one": "{count} Nachricht war älter als 14 Tage und wurde übersprungen.",
+      "other": "{count} Nachrichten waren älter als 14 Tage und wurden übersprungen."
+    },
+    "deleted": {
+      "one": "{count} Nachricht in #{channel} gelöscht.",
+      "other": "{count} Nachrichten in #{channel} gelöscht."
+    },
+    "locked": "#{channel} ist gesperrt.",
+    "unlocked": "#{channel} ist entsperrt."
+  }
+}

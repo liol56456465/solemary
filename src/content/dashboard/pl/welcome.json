@@ -1,0 +1,130 @@
+{
+  "page": {
+    "helpText": "Witaj nowych członków wiadomością, gdy dołączają, żegnaj ich, gdy odchodzą, i automatycznie dawaj nowym członkom rolę. W wiadomościach możesz używać {user} (oznacza członka), {user.tag} (jego nazwa użytkownika, bez oznaczenia), {server} (nazwa serwera) i {memberCount} (ilu członków ma teraz serwer)."
+  },
+  "join": {
+    "topic": "Powitanie",
+    "topicLine": "Co Mewvo publikuje, gdy ktoś dołącza.",
+    "title": "Powitanie",
+    "help": "Wiadomość powitalna, gdzie trafia, i opcjonalna wiadomość prywatna.",
+    "toggle": "Wiadomości powitalne",
+    "channel": "Kanał powitań",
+    "channelHelp": "Gdzie publikowana jest wiadomość powitalna.",
+    "ping": "Oznacz członka",
+    "pingHelp": "Oznacza go, żeby dostał powiadomienie.",
+    "message": "Wiadomość powitalna",
+    "messageHelp": "Na przykład: Witaj na {server}, {user}. Jesteś członkiem numer {memberCount}.",
+    "dm": "Prywatna wiadomość do nowego członka",
+    "dmHelp": "Wysyłana bezpośrednio do niego (DM). Zostaw puste, żeby nic nie wysyłać."
+  },
+  "leave": {
+    "topic": "Pożegnanie",
+    "topicLine": "Co Mewvo publikuje, gdy ktoś odchodzi.",
+    "title": "Pożegnanie",
+    "help": "Wiadomość pożegnalna i gdzie trafia.",
+    "toggle": "Wiadomości pożegnalne",
+    "channel": "Kanał pożegnań",
+    "channelHelp": "Gdzie publikowana jest wiadomość pożegnalna.",
+    "ping": "Oznacz członka",
+    "pingHelp": "Oznacza go z nazwy w wiadomości.",
+    "message": "Wiadomość pożegnalna",
+    "messageHelp": "Na przykład: {user.tag} opuścił serwer."
+  },
+  "embed": {
+    "welcomeTitle": "Embed i obraz powitania",
+    "goodbyeTitle": "Embed i obraz pożegnania",
+    "help": "Ramka wokół wiadomości: tytuł, kolor i opcjonalny obraz.",
+    "helpMore": "Wiadomość jest wysyłana w ramce (embedzie) z tytułem, kolorem i opcjonalnym obrazem. Tekst wiadomości z góry trafia do ramki. Jeśli Mewvo nie ma w tym kanale uprawnienia Osadzanie linków, wysyłany jest tylko tekst.",
+    "title": "Tytuł ramki",
+    "titleHelp": "Pogrubiona linia na górze ramki. Zostaw puste, żeby było „{title}”. Te same słowa w nawiasach klamrowych co w wiadomości działają też tutaj.",
+    "colour": "Kolor ramki",
+    "colourHelp": "Kolorowy pasek z lewej strony ramki, jako kod koloru: # i sześć liter lub cyfr, np. #57F287 dla zielonego. Zostaw puste dla koloru domyślnego.",
+    "footer": "Stopka ramki",
+    "footerHelp": "Mały tekst na dole ramki. Zostaw puste, żeby była nazwa serwera. Te same słowa w nawiasach klamrowych co w wiadomości działają też tutaj.",
+    "image": "Link do obrazu",
+    "imageHelp": "Link, który zaczyna się od https:// i otwiera obraz PNG, JPG, GIF lub WebP. Wyświetla się duży na dole ramki. Zostaw puste, jeśli nie chcesz obrazu. Aby użyć obrazu z komputera, użyj poniżej opcji Prześlij obraz.",
+    "welcomeImage": "Obraz powitania",
+    "goodbyeImage": "Obraz pożegnania",
+    "embedColour": "Kolor embedu"
+  },
+  "image": {
+    "none": "Brak obrazu.",
+    "welcomeAlt": "Obecny obraz powitania",
+    "goodbyeAlt": "Obecny obraz pożegnania",
+    "current": "Obecny obraz: {link}",
+    "onlyDiscord": "(tutaj można pokazać tylko obrazy zapisane na Discordzie)",
+    "channelId": "kanale {id}",
+    "welcomeStored": "Przesłany plik: kopia jest przechowywana w {where}. Nie usuwaj tej wiadomości, bo wiadomość powitalna pobiera z niej obraz.",
+    "goodbyeStored": "Przesłany plik: kopia jest przechowywana w {where}. Nie usuwaj tej wiadomości, bo wiadomość pożegnalna pobiera z niej obraz.",
+    "uploadLabel": "Prześlij obraz (PNG, JPEG, GIF lub WebP, do {mb} MB)",
+    "uploadHint": "Zastępuje link do obrazu powyżej. Mewvo publikuje plik w głównym kanale dziennika i używa go stamtąd, więc obraz działa dalej. /greet w Discordzie robi to samo.",
+    "upload": "Prześlij obraz",
+    "remove": "Usuń obraz",
+    "welcomeConfirm": "Usunąć obraz powitania?",
+    "goodbyeConfirm": "Usunąć obraz pożegnania?"
+  },
+  "members": {
+    "topic": "Nowi członkowie",
+    "topicLine": "Rola na start i zapis dołączeń i odejść dla ekipy."
+  },
+  "autoRole": {
+    "title": "Autorola",
+    "help": "Każdy nowy członek dostaje tę rolę automatycznie. Może być jedna: ustawienie nowej zastępuje starą. Mewvo może dawać tylko role poniżej własnej roli na liście ról i nie daje ról z uprawnieniami ekipy. Możesz to też zrobić komendą /autorole w Discordzie.",
+    "role": "Rola",
+    "problems": "Problemy",
+    "ok": "ok",
+    "remove": "Usuń",
+    "none": "Przy dołączeniu nie jest dawana żadna rola.",
+    "pick": "Rola dla nowych członków",
+    "set": "Ustaw",
+    "delay": "Czekaj przed daniem roli (sekundy)",
+    "delayLabel": "Czekaj przed daniem roli",
+    "delayHelp": "Jak długo Mewvo czeka po dołączeniu. 0 daje ją od razu."
+  },
+  "logs": {
+    "title": "Dziennik dołączeń i odejść",
+    "help": "Zapis dla ekipy, kto dołączył, a kto odszedł, oddzielnie od publicznych wiadomości.",
+    "joins": "Zapisuj dołączenia",
+    "joinsHelp": "Publikuj krótką linię dla ekipy za każdym razem, gdy ktoś dołącza.",
+    "joinChannel": "Kanał dziennika dołączeń",
+    "leaves": "Zapisuj odejścia",
+    "leavesHelp": "Publikuj krótką linię dla ekipy za każdym razem, gdy ktoś odchodzi.",
+    "leaveChannel": "Kanał dziennika odejść"
+  },
+  "action": {
+    "welcomeOn": "Wiadomości powitalne są włączone.",
+    "welcomeOff": "Wiadomości powitalne są wyłączone.",
+    "goodbyeOn": "Wiadomości pożegnalne są włączone.",
+    "goodbyeOff": "Wiadomości pożegnalne są wyłączone.",
+    "welcomeSaved": "Zapisano ustawienia powitania.",
+    "goodbyeSaved": "Zapisano ustawienia pożegnania.",
+    "welcomeEmbedSaved": "Zapisano embed powitania.",
+    "goodbyeEmbedSaved": "Zapisano embed pożegnania.",
+    "welcomeUploaded": "Przesłano obraz powitania.",
+    "goodbyeUploaded": "Przesłano obraz pożegnania.",
+    "welcomeUploadedNote": "Przesłano obraz powitania. Kopia jest przechowywana w {where}; nie usuwaj tej wiadomości, wiadomość powitalna pobiera z niej obraz.",
+    "goodbyeUploadedNote": "Przesłano obraz pożegnania. Kopia jest przechowywana w {where}; nie usuwaj tej wiadomości, wiadomość pożegnalna pobiera z niej obraz.",
+    "auditChannel": "kanale dziennika zdarzeń",
+    "welcomeImageRemoved": "Usunięto obraz powitania.",
+    "goodbyeImageRemoved": "Usunięto obraz pożegnania.",
+    "autoRoleAlready": "Ta rola jest już dawana przy dołączeniu.",
+    "autoRoleSet": "Ustawiono autorolę.",
+    "autoRoleNotSet": "Ta rola nie była autorolą.",
+    "autoRoleRemoved": "Usunięto autorolę.",
+    "delaySaved": "Zapisano opóźnienie autoroli.",
+    "logsSaved": "Zapisano dziennik dołączeń i odejść."
+  },
+  "error": {
+    "colour": "{label} musi być kolorem szesnastkowym, np. #57F287.",
+    "badLink": "{label}: to nie jest prawidłowy link.",
+    "https": "{label} musi zaczynać się od https://.",
+    "expiredLink": "{label}: ten link do załącznika Discorda wygasł. Prześlij zamiast tego plik obrazu poniżej albo użyj stałego linku do obrazu.",
+    "chooseFile": "Wybierz plik obrazu do przesłania.",
+    "notImage": "Ten plik nie jest obrazem PNG, JPEG, GIF ani WebP.",
+    "noLogChannel": "{label}: nie ustawiono głównego kanału dziennika, więc przesłanego obrazu nie ma gdzie przechować. Ustaw go na stronie Dzienniki albo użyj linku do obrazu. Nic nie zmieniono.",
+    "cannotPost": "{label}: Mewvo nie mógł opublikować obrazu w głównym kanale dziennika ({channel}). Mewvo potrzebuje tam uprawnień Wyświetlanie kanałów, Wysyłanie wiadomości i Załączanie plików. Nic nie zmieniono."
+  },
+  "warn": {
+    "discordLink": "{label}: linki do załączników Discorda przestają działać po około dniu. Aby obraz działał trwale, prześlij plik poniżej (Prześlij obraz) albo użyj stałego hostingu obrazów."
+  }
+}

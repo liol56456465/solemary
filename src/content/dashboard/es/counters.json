@@ -1,0 +1,56 @@
+{
+  "page": {
+    "help": "Los contadores son canales cuyo nombre muestra un número en directo, como \"Members: 1234\". Mewvo los actualiza cada 15 minutos. El juego de contar es un canal donde los miembros cuentan juntos, un número por mensaje."
+  },
+  "list": {
+    "title": "Contadores de estadísticas del servidor",
+    "help": "Mewvo crea el canal por ti. También puedes hacerlo con /serverstats create en Discord.",
+    "helpNoAdmin": "Mewvo crea el canal por ti. También puedes hacerlo con /serverstats create en Discord. Para crear canales necesitas el permiso de Administrador en este servidor.",
+    "id": "ID",
+    "channel": "Canal",
+    "type": "Tipo",
+    "empty": "Aún no hay contadores.",
+    "change": "Cambiar",
+    "delete": "Borrar contador y canal",
+    "deleteConfirm": "¿Borrar este contador y su canal?"
+  },
+  "create": {
+    "title": "Nuevo contador",
+    "counts": "Qué cuenta",
+    "channelType": "Tipo de canal",
+    "channelTypeHelp": "Lo habitual es un canal de voz: queda en la lista y muestra el número.",
+    "voice": "Canal de voz (solo muestra el nombre)",
+    "text": "Canal de texto",
+    "category": "En la categoría",
+    "categoryHelp": "Una categoría es una carpeta de canales. El canal del contador se crea dentro.",
+    "submit": "Crear contador",
+    "allUsed": "Ya se usan todos los tipos de contador. Puedes tener uno de cada."
+  },
+  "counting": {
+    "title": "Juego de contar",
+    "help": "Los miembros escriben por turnos el siguiente número. Iniciar o reiniciar el juego aquí pone a cero la cuenta y la clasificación. También puedes hacerlo con /count setup en Discord.",
+    "label": "Juego de contar:",
+    "details": "en {channel} · {system} · siguiente número {next} · mejor racha {best}",
+    "channel": "Canal para contar",
+    "channelHelp": "Usa un canal solo para contar.",
+    "system": "Sistema numérico",
+    "systemHelp": "Cómo se escriben los números. Decimal (números normales) es lo habitual.",
+    "restart": "Empezar de nuevo en este canal (vuelve a 1)",
+    "reset": "Volver a 1",
+    "resetConfirm": "¿Volver el juego de contar a 1?"
+  },
+  "action": {
+    "unknown": "Contador desconocido.",
+    "countsLabel": "Cuenta",
+    "channelKindLabel": "Tipo de canal",
+    "created": "Contador creado: {channel}.",
+    "renameLater": "El nombre del canal se actualiza en la próxima ejecución programada.",
+    "updated": "Contador actualizado.",
+    "renameFailed": "Ahora no se pudo renombrar el canal; se actualiza en la próxima ejecución programada.",
+    "deleted": "Contador borrado.",
+    "deleteFailed": "No se pudo borrar el canal del contador (¿permisos?).",
+    "started": "Juego de contar iniciado en 1.",
+    "reset": "La cuenta vuelve a empezar en 1.",
+    "off": "El juego de contar está desactivado."
+  }
+}

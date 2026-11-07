@@ -1,0 +1,425 @@
+{
+  "page": {
+    "help": "Automod watches messages and joins in the main server and acts on spam, bad words, unwanted links and raids by itself, so staff do not have to catch everything. You can also change these with /automod in Discord."
+  },
+  "ruleNames": {
+    "scam": "Scam or phishing link",
+    "nsfw": "NSFW content",
+    "sexual": "Sexual harassment or references",
+    "harassment": "Harassment",
+    "privacy": "Sharing personal info",
+    "advertising": "Unauthorized advertising",
+    "impersonation": "Impersonation or deception",
+    "language": "Inappropriate language",
+    "disrespect": "Disrespect or drama",
+    "mentions": "Mass mentions",
+    "spam": "Spam",
+    "caps": "Excessive caps",
+    "characters": "Non-English characters or fancy fonts",
+    "english": "English only"
+  },
+  "common": {
+    "rule": "Rule",
+    "mode": "Mode",
+    "remove": "Remove",
+    "open": "Open"
+  },
+  "mode": {
+    "on": "on",
+    "monitor": "report only (don't delete)",
+    "off": "off"
+  },
+  "period": {
+    "lastDay": "Last day",
+    "lastDays": {
+      "one": "Last {count} day",
+      "other": "Last {count} days"
+    },
+    "theLastDay": "the last day",
+    "inLastDay": "in the last day",
+    "inLastDays": {
+      "one": "in the last {count} day",
+      "other": "in the last {count} days"
+    },
+    "oneDay": "1 day",
+    "days": {
+      "one": "{count} day",
+      "other": "{count} days"
+    }
+  },
+  "topics": {
+    "now": "Right now",
+    "nowLine": "What is waiting for staff at this moment.",
+    "rules": "Rules",
+    "rulesLine": "What automod checks, and what it does when a rule is broken.",
+    "leniency": "Exceptions and leniency",
+    "leniencyLine": "Where automod looks away, and who gets a softer start.",
+    "raids": "Raids and new members",
+    "raidsLine": "Checks at the door and what happens when many accounts join at once.",
+    "results": "Results",
+    "resultsLine": "How often automod acted, and how often staff undid it."
+  },
+  "global": {
+    "title": "Global mode",
+    "help": "What every rule does unless you change it below.",
+    "label": "What automod does",
+    "labelHelp": "Staff are told with a review card: a message in the review channel with buttons to keep or undo what automod did. In report only (don't delete) mode the card has an Apply button instead.",
+    "enforce": "Act: delete or warn, then tell staff",
+    "monitor": "Report only (don't delete): tell staff, do nothing"
+  },
+  "channels": {
+    "title": "Channels and words",
+    "help": "Where automod talks to staff, and your own blocked words.",
+    "review": "Review channel",
+    "reviewHelp": "Where staff see review cards, member reports and verifications waiting for a check. Not set: the mod log channel.",
+    "alerts": "Alerts channel",
+    "alertsHelp": "Where Mewvo warns staff about raids and other urgent things, and posts summaries. Not set: the mod log channel.",
+    "words": "Extra blocked words",
+    "wordsHelp": "Added to the built-in bad word list. Put each word on its own line. Look-alike letters, symbols and spacing are caught too."
+  },
+  "rules": {
+    "title": "Rule modes",
+    "help": "Change single rules. default: does what the main setting above says. on: acts. report only (don't delete): only tells staff. off: the rule is not checked. Warn privately first (2 min to fix): the first time in 30 days, the member gets a private message and 2 minutes to edit or delete the message, and nothing else happens. Personal info is removed at once without a warning. Scam, NSFW, ads, mass mentions, spam, raids and slurs always act at once.",
+    "headsUp": "Warn privately first (2 min to fix)",
+    "actsAtOnce": "acts at once",
+    "defaultOption": "default ({mode})",
+    "customAll": "Custom rules (all)",
+    "seeCustom": "see Custom rules",
+    "save": "Save rules",
+    "headsUpUnreadable": "The private first warning counts could not be read (database).",
+    "headsUpCounts": "Private first warnings in the last 30 days: {sent} sent, {fixed} fixed by the member, {acted} acted on after the wait."
+  },
+  "custom": {
+    "title": "Custom rules",
+    "help": "Your own lists of words and phrases to block. Like the built-in rules, they match whole words, do not care about capital letters, and catch look-alike letters (like 0 for o). A match deletes the message and posts a review card. Warn and mute also add it to the member's record (a case). They follow the main automod setting and skip ignored channels. How many you can have depends on the server owner's plan.",
+    "seePlans": "See the plans",
+    "noPlan": "Custom rules come with the Normal, Pro and Max plans. The server owner's plan counts. This server is on {plan}. {pricing}",
+    "stateOn": "on",
+    "stateOff": "off",
+    "overLimit": "not running (over the plan's limit)",
+    "colName": "Name",
+    "colWords": "Words",
+    "colAction": "Action",
+    "colState": "State",
+    "actionDelete": "Delete",
+    "actionWarn": "Warn",
+    "actionMute": "Mute {duration}",
+    "removeConfirm": "Remove the custom rule \"{name}\"?",
+    "empty": "No custom rules yet.",
+    "running": {
+      "one": "{running} of {count} custom rule run on the {plan} plan.",
+      "other": "{running} of {count} custom rules run on the {plan} plan."
+    },
+    "overLimitCount": {
+      "one": "{count} turned-on rule over the limit does not run. Turn some off or remove them, or move to a higher plan.",
+      "other": "{count} turned-on rules over the limit do not run. Turn some off or remove them, or move to a higher plan."
+    },
+    "atLimit": {
+      "one": "This server has {count} custom rule, the most the {plan} plan allows.",
+      "other": "This server has {count} custom rules, the most the {plan} plan allows."
+    },
+    "name": "Name",
+    "namePlaceholder": "Other servers",
+    "nameHelp": "A name so you can tell your rules apart.",
+    "whatToDo": "What to do",
+    "do": {
+      "delete": "Delete the message",
+      "warn": "Delete and warn",
+      "mute": "Delete and mute"
+    },
+    "muteFor": "Mute for",
+    "muteForHelp": "Only used for mutes. For example 30m (30 minutes), 1h (one hour) or 1d (one day). At most 28d.",
+    "muteForHelpShort": "Only used for mutes, like 30m, 1h or 1d.",
+    "words": "Words or phrases",
+    "wordsHelp": "Put each word or phrase on its own line. Up to {lines} lines, each up to {chars} characters.",
+    "wordsHelpEdit": "One per line. This replaces the old list.",
+    "add": "Add rule",
+    "changeTitle": "Change a rule",
+    "changeRule": "Change \"{name}\"",
+    "ruleLabel": "Custom rule",
+    "invalid": "That custom rule is not valid.",
+    "gone": "That custom rule is gone already. Reload the page."
+  },
+  "native": {
+    "title": "Discord AutoMod",
+    "help": "Discord has its own AutoMod built in. When one of its rules blocks a message, Mewvo can also log it or warn the member.",
+    "unreadable": "Could not read Discord's own AutoMod rules. Mewvo needs the Manage Server permission for that.",
+    "rule": "Discord rule",
+    "policy": "What Mewvo does",
+    "policyLabel": "Policy",
+    "once": "At most once per member every",
+    "minutes": "{count} min",
+    "empty": "This server has no Discord AutoMod rules. You make them in Discord under Server Settings, AutoMod.",
+    "policyHelp": "ignore: nothing. log: a short line in the review channel. warn: a warning and a review card.",
+    "dedupe": "Act once per member every (minutes)",
+    "dedupeHelp": "More blocks by the same member in this time are only counted. Leave empty to keep the current value.",
+    "submit": "Set policy",
+    "policies": {
+      "ignore": "ignore",
+      "log": "log",
+      "warn": "warn"
+    }
+  },
+  "secondChance": {
+    "title": "Friendly notice for a first small offence",
+    "help": "Go easy on a first small slip.",
+    "label": "Friendly notice for a first small offence: a short notice instead of a warning"
+  },
+  "mood": {
+    "title": "Mood",
+    "help": "Slowmode makes members wait a few seconds between messages.",
+    "label": "Mood alerts: when a channel gets heated, post a calm-down note and slow the chat for a short time",
+    "alerts": "Mood alerts"
+  },
+  "trusted": {
+    "title": "Trusted members",
+    "help": "Trusted members skip the rules for small things. Serious rules still apply. To turn this off, pick none and set the level to 0.",
+    "role": "Trusted role",
+    "none": "none",
+    "roleHelp": "Members with this role are trusted.",
+    "minLevel": "Or from level",
+    "minLevelHelp": "Members at this leveling level or higher are trusted too. 0 turns this off."
+  },
+  "exceptions": {
+    "title": "Channel exceptions",
+    "help": "Turn one rule off, or to report only (don't delete), in one channel. For example, allow links in a links channel.",
+    "channel": "Channel or category",
+    "channelHelp": "A category is a folder of channels. Picking one covers every channel in it.",
+    "empty": "No per-channel rule exceptions.",
+    "modeThere": "Mode there",
+    "modeThereHelp": "off: the rule is skipped there. report only (don't delete): staff are told, nothing is deleted.",
+    "add": "Add exception"
+  },
+  "exempt": {
+    "title": "Ignored channels",
+    "help": "Channels where automod checks nothing at all.",
+    "channel": "Channel",
+    "empty": "Automod checks every channel.",
+    "ignore": "Ignore this channel",
+    "ignoreHelp": "Automod does not check any messages here.",
+    "add": "Add",
+    "alsoIgnored": "Also ignored (set by the bot owner outside the dashboard): {channels}"
+  },
+  "gate": {
+    "title": "Join gate",
+    "help": "Checks new members as they join. For each check: off does nothing; flag tells staff in the review channel, with Kick and Dismiss buttons; kick removes them and sends a private message saying how to come back.",
+    "ageDays": "New account means younger than (days)",
+    "checks": {
+      "avatar": "No profile picture",
+      "links": "Link or invite in their name",
+      "botname": "Generated-looking username",
+      "age": "New account"
+    },
+    "actions": {
+      "off": "off",
+      "flag": "flag",
+      "kick": "kick"
+    }
+  },
+  "panic": {
+    "title": "Panic",
+    "help": "A raid lockdown starts by itself when many accounts join at once. Panic mode makes it harder for raiders to spread.",
+    "label": "Panic mode: stop new invites and private messages between members when a raid lockdown starts",
+    "hours": "Stop them for (hours)"
+  },
+  "stats": {
+    "period": "Stats period",
+    "total": {
+      "one": "{count} automatic action in {period}.",
+      "other": "{count} automatic actions in {period}."
+    },
+    "undoHint": "If staff undo 30% or more of a rule's actions, the rule is probably too strict.",
+    "actions": "Actions",
+    "undone": "Undone",
+    "changed": "Changed",
+    "undoRate": "Undo rate",
+    "empty": "No automod actions."
+  },
+  "lockdown": {
+    "title": "Raid lockdown",
+    "help": "A lockdown starts by itself when many accounts join at once.",
+    "unreadable": "The lockdown state could not be read (database). Reload the page to try again.",
+    "active": "A raid lockdown is active",
+    "since": "since {date}",
+    "joiners": {
+      "one": "{count} raid joiner",
+      "other": "{count} raid joiners"
+    },
+    "end": "End lockdown",
+    "endConfirm": "End the raid lockdown? The verification level goes back to what it was and paused invites and DMs resume.",
+    "needsAdmin": "To end a lockdown you need the Administrator permission in this server.",
+    "follow": "Follow it on the raid timeline",
+    "none": "No lockdown right now. One starts by itself when many accounts join at once (a raid). Past raids are on the {timeline}.",
+    "timelineLink": "raid timeline"
+  },
+  "queue": {
+    "title": "Review queue",
+    "titleCount": "Review queue ({count})",
+    "unreadable": "The review queue could not be read (review channel unavailable).",
+    "colCard": "Card",
+    "colSince": "Since",
+    "colMessages": "Messages",
+    "card": "Review card",
+    "empty": "Nothing is waiting for review.",
+    "more": "…and {count} more.",
+    "help": "Review cards waiting for staff: the ones posted since the bot last started, and the last 50 messages in the review channel that still have buttons. Short lines for small things are not listed. You decide on each card in Discord with its buttons (Keep, Undo, Change, Dismiss)."
+  },
+  "probation": {
+    "title": "Extra-watch period after a ban",
+    "titleCount": "Extra-watch period after a ban ({count})",
+    "help": "Members who came back after a ban ended. Automod is stricter with them for a while: they skip straight to the next punishment step, and get no friendly notice or trusted-member leniency.",
+    "unreadable": "Extra-watch periods could not be read (database). Reload the page to try again.",
+    "colMember": "Member",
+    "colUntil": "Until",
+    "colBan": "Ban",
+    "end": "End extra-watch period",
+    "endConfirm": "End this extra-watch period now?",
+    "empty": "Nobody is in an extra-watch period after a ban."
+  },
+  "testRun": {
+    "title": "Test run",
+    "help": "Check recent messages against your current automod settings without acting on anything. Nothing is deleted, nobody gets a message, nothing is saved or logged. Only checks that look at one message at a time run. Spam, the same text posted in many channels, and repeated insults over time are skipped, because they depend on timing. Trusted member leniency is not applied, and administrators are skipped like automod does. Messages from people who have left the server are still checked.",
+    "channels": "Channels (up to {max})",
+    "channelsHelp": "Mewvo needs View Channel and Read Message History in each one.",
+    "howFarBack": "How far back",
+    "howFarBackHelp": "At most {max} messages in total, newest first.",
+    "draftName": "Draft rule name (optional)",
+    "draftDefault": "Draft rule",
+    "draftNameHelp": "Try a custom rule before you add it. It is not saved.",
+    "draftWordsLabel": "Draft rule words (optional)",
+    "draftWordsHelp": "One word or phrase per line, up to {max}. Matched like custom rules.",
+    "start": "Start test run",
+    "needsAdmin": "To start a test run you need the Administrator permission in this server.",
+    "strictHelp": "\"May be too strict\" shows when a rule caught at least {hits} messages, from at least {members} different members, and at least {share}% of the checked messages. It is only a hint: members may really break that rule that often. Look at the examples and the matched words before you change anything.",
+    "fixHelp": "The buttons change the rule for the whole server right away, the same as the Rule modes form, and the change is logged. Report only (don't delete): staff are told, nothing is deleted. Turn on: the rule follows the main setting. Channel exceptions still apply in their channels.",
+    "skippedChecks": "Not checked in a test run: Spam, the ad bot pattern (the same text in many channels from a new account), and harassment over time. An insult aimed at someone counts as Disrespect here.",
+    "strictNote": "Catches a lot, may be too strict",
+    "moreWords": "and {more} more",
+    "draftTitle": "Draft rule",
+    "draftLabel": "Draft: {name}",
+    "draftWords": {
+      "one": "{count} word or phrase",
+      "other": "{count} words or phrases"
+    },
+    "draftHead": "\"{name}\", {words}. It is not saved yet.",
+    "draftNoPlan": "Custom rules come with the Normal, Pro and Max plans.",
+    "draftAtLimit": {
+      "one": "This server already has {count} custom rule, the most its plan allows. Remove one under Custom rules first.",
+      "other": "This server already has {count} custom rules, the most its plan allows. Remove one under Custom rules first."
+    },
+    "draftAdd": "Add this rule",
+    "draftAddConfirm": "Add the custom rule \"{name}\"? It starts deleting matching messages right away. You can change what it does under Custom rules.",
+    "draftAddNote": "Added as a custom rule that deletes the message. Change it to warn or mute under Custom rules.",
+    "modeDraft": "draft, not saved",
+    "modeActs": "acts",
+    "offSuffix": "{rule} (off)",
+    "excerptHidden": "hidden (the match could not be masked safely)",
+    "noText": "no text",
+    "summary": "{read} {from} {period}: {checked} checked, {bots} from bots skipped, {admins} from administrators skipped. {hits}",
+    "readMessages": {
+      "one": "Read {count} message",
+      "other": "Read {count} messages"
+    },
+    "fromChannels": {
+      "one": "from {count} channel",
+      "other": "from {count} channels"
+    },
+    "hitMessages": {
+      "one": "{count} message broke a rule.",
+      "other": "{count} messages broke a rule."
+    },
+    "capped": "Stopped at the limit of {max} messages. Older messages in that time may not have been checked.",
+    "automodOff": "Automod is off right now. This shows what it would catch with these settings.",
+    "invitesUnchecked": {
+      "one": "{count} invite link was not looked up (lookup limit reached), so they are not counted.",
+      "other": "{count} invite links were not looked up (lookup limit reached), so they are not counted."
+    },
+    "colRule": "Rule",
+    "colMessages": "Messages",
+    "colMembers": "Members",
+    "colShare": "Share of checked",
+    "colMode": "Mode",
+    "colNote": "Note",
+    "colFix": "Suggested fix",
+    "noHits": "No message broke a rule.",
+    "offTitle": "Turned off, but would have caught messages",
+    "wordsTitle": "Matched words",
+    "wordsHelp": "How often each word or phrase matched, partly hidden like the examples.",
+    "colWords": "Words",
+    "examplesTitle": "Examples (up to {max})",
+    "colWhen": "When",
+    "colMember": "Member",
+    "colChannel": "Channel",
+    "colExcerpt": "Excerpt",
+    "reload": "Reload this page",
+    "stateUnreadable": "The test run state could not be read. {reload} to try again.",
+    "inProgress": "Test run in progress.",
+    "progress": "{read} of at most {max} messages read so far, started {started}. {reload} to see the progress.",
+    "failed": "The last test run failed: {error}",
+    "unknownError": "unknown error.",
+    "readBeforeStop": {
+      "one": "{count} messages were read before it stopped.",
+      "other": "{count} messages were read before it stopped."
+    },
+    "newTitle": "Start a new test run",
+    "newHelp": "A new run replaces this result. Results are kept for 30 minutes."
+  },
+  "fix": {
+    "offNow": "off now",
+    "onNow": "on now",
+    "removedSince": "removed since",
+    "setMonitor": "Set to report only (don't delete)",
+    "confirmOff": "Turn off {rule} for the whole server?",
+    "confirmMonitor": "Set {rule} to report only (don't delete) for the whole server?",
+    "confirmOn": "Turn on {rule} for the whole server? It follows the main setting.",
+    "confirmCustomOff": "Turn off the custom rule \"{name}\"?"
+  },
+  "error": {
+    "unknownMode": "{rule}: unknown mode.",
+    "customAtLimit": {
+      "one": "This server already has {count} custom rules, the most the {plan} plan allows. Remove one first.",
+      "other": "This server already has {count} custom rules, the most the {plan} plan allows. Remove one first."
+    },
+    "customNoPlan": "Custom rules are part of the Normal, Pro and Max plans, on the server owner's plan.",
+    "pickNative": "Pick a Discord AutoMod rule from the list.",
+    "nativeGone": "That Discord AutoMod rule no longer exists.",
+    "noLockdown": "There is no lockdown right now.",
+    "noProbation": "That member is not in an extra-watch period.",
+    "pickChannel": "Pick at least one channel.",
+    "tooManyChannels": "Pick at most {max} channels ({picked} picked).",
+    "ignoredChannel": "Automod ignores #{channel}, so a test run there finds nothing. Pick another channel."
+  },
+  "action": {
+    "automodOn": "Automod is now on.",
+    "automodOff": "Automod is now off.",
+    "modeEnforce": "Global mode: Act.",
+    "modeMonitor": "Global mode: Report only (don't delete).",
+    "rulesSaved": "Rules saved.",
+    "quickOn": "{rule} is on. It follows the main setting.",
+    "quickMonitor": "{rule} is now report only (don't delete).",
+    "quickOff": "{rule} is now off.",
+    "customAdded": "Custom rule added.",
+    "customAddedName": "Custom rule \"{name}\" added.",
+    "customSaved": "Custom rule \"{name}\" saved.",
+    "customOn": "Custom rule \"{name}\" is on.",
+    "customOff": "Custom rule \"{name}\" is off.",
+    "customRemoved": "Custom rule \"{name}\" removed.",
+    "exceptionSaved": "Channel exception saved.",
+    "exceptionRemoved": "Channel exception removed.",
+    "exemptAdded": "Automod now ignores that channel.",
+    "exemptRemoved": "Automod checks that channel again.",
+    "trustedSaved": "Trusted members saved.",
+    "secondChanceOn": "Friendly notice for a first small offence is on.",
+    "secondChanceOff": "Friendly notice for a first small offence is off.",
+    "moodOn": "Mood alerts are on.",
+    "moodOff": "Mood alerts are off.",
+    "panicOn": "Panic mode is on.",
+    "panicOff": "Panic mode is off.",
+    "panicNoPerm": "I don't have Manage Server, so pausing invites and DMs will fail until I get it.",
+    "gateSaved": "Join gate saved.",
+    "nativeSaved": "Discord rule \"{name}\" updated.",
+    "lockdownEnded": "Lockdown ended. The verification level is back to what it was, and paused invites and DMs are resumed.",
+    "probationEnded": "Extra-watch period for {member} ended early.",
+    "testRunStarted": "Test run started. Reload the page in a moment to see the progress."
+  }
+}
