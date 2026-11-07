@@ -501,9 +501,13 @@ test('static files: the script is served as text/javascript; nothing else is ser
     const csp = SECURITY_HEADERS['Content-Security-Policy'];
     assert.match(csp, /script-src 'self'/);
     assert.ok(!/unsafe-inline|unsafe-eval/.test(csp));
-    // The script never talks to the network and never evaluates strings.
+    // The script never evaluates strings or writes HTML; its only network read is the member
+    // type-ahead: one fetch, of a URL checked against the same-origin search path.
     const source = readFileSync(new URL('../src/services/dashboard/static/dashboard.js', import.meta.url), 'utf8');
-    assert.ok(!/\bfetch\(|XMLHttpRequest|eval\(|new Function|innerHTML|document\.write/.test(source));
+    assert.ok(!/XMLHttpRequest|eval\(|new Function|innerHTML|document\.write|sendBeacon|WebSocket|EventSource/.test(source));
+    assert.equal((source.match(/\bfetch\(/g) || []).length, 1, 'one fetch only');
+    assert.ok(source.includes("const MEMBER_SEARCH_PATH = /^\\/dashboard\\/members\\/search\\.json(\\?bans=1)?$/;"), 'the fetched URL is pinned to the search path');
+    assert.match(csp, /connect-src 'self'/);
 });
 
 test('overview: status, counts, checklist and recent actions; read-only', async () => {

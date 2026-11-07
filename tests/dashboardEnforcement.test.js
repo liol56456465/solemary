@@ -1363,3 +1363,42 @@ test('bulk cases: void needs a reason and the confirm box, at most 10; already v
     const many = await call({ codes: Array.from({ length: 30 }, (_, i) => `zz${String(i).padStart(3, '9')}`), action: 'tag-add', tag: 'x' });
     assert.ok([400, 404].includes(many.statusCode));
 });
+
+// ── Member fields instead of typed user IDs (memberSearch.js) ────────────
+
+test('no-contact: member fields with Find a member; picks come back in the query and keep the other member; mentions accepted', async () => {
+    const h = await setup();
+    const page = await get(h, h.d.enforcement.noContact);
+    assert.ok(!page.body.includes('(user ID)'), 'no "user ID" labels');
+    for (const name of ['user_a', 'user_b']) {
+        assert.ok(page.body.includes(`name="${name}" value="" maxlength="40"`), name);
+        assert.ok(page.body.includes(`href="/dashboard/members/search?for=${name}&amp;back=%2Fdashboard%2Fnocontact&amp;at=nocontact-start"`), `${name}: Find link`);
+    }
+    assert.ok(page.body.includes('data-member-search="/dashboard/members/search.json"'));
+    const picked = await get(h, h.d.enforcement.noContact, { query: { user_a: TARGET, user_b: 'junk"><b>' } });
+    assert.ok(picked.body.includes(`name="user_a" value="${TARGET}"`));
+    assert.match(picked.body, /Picked: <b>Nick&lt;b&gt;<\/b> \(@target&lt;script&gt;\)/, 'who the ID is, escaped');
+    assert.ok(picked.body.includes(`href="/dashboard/members/search?for=user_b&amp;back=%2Fdashboard%2Fnocontact%3Fuser_a%3D${TARGET}`), 'the second Find keeps the first pick');
+    assert.ok(!picked.body.includes('junk'), 'only IDs are taken from the query');
+
+    const res = await post(h, h.d.enforcement.noContactAdd, { form: { user_a: `<@${TARGET}>`, user_b: `<@!${OTHER}>`, days: '7', reason: 'feud' } });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual([serviceCalls(h, ['addNoContactOrder'])[0].args[1].userA, serviceCalls(h, ['addNoContactOrder'])[0].args[1].userB], [TARGET, OTHER]);
+    const typed = await post(await setup(), h.d.enforcement.noContactAdd, { form: { user_a: 'target', user_b: OTHER, days: '7', reason: 'feud' } });
+    assert.equal(typed.statusCode, 400);
+    assert.match(typed.body, /Find a member/);
+});
+
+test('staff discipline: member fields for warn, warnings lookup and restore (owners); picks and mentions accepted', async () => {
+    const owner = await setup({ userId: OWNER, admins: new Set([ADMIN, OWNER]) });
+    const page = await get(owner, owner.d.staff, { query: { warn_user: OTHER, restore_user: TARGET } });
+    assert.ok(page.body.includes(`name="user" value="${OTHER}"`), 'warn: the picked member');
+    assert.ok(page.body.includes(`name="user" value="${TARGET}"`), 'restore: the picked member');
+    for (const pick of ['warn_user', 'warnings', 'restore_user']) assert.ok(page.body.includes(`/dashboard/members/search?for=${pick}&amp;back=%2Fdashboard%2Fstaff`), pick);
+    assert.ok(page.body.includes('list="staff-members"'), 'the staff list stays as suggestions');
+    const lookup = await get(owner, owner.d.staff, { query: { warnings: `<@${TARGET}>` } });
+    assert.match(lookup.body, /Staff warnings: target&lt;script&gt;/);
+    const warned = await post(owner, owner.d.enforcement.staffWarn, { form: { user: `<@${TARGET}>`, reason: 'x' } });
+    assert.equal(warned.statusCode, 303);
+    assert.equal(serviceCalls(owner, ['giveStaffWarning'])[0].args[1].id, TARGET);
+});

@@ -179,9 +179,9 @@ export function autoRoleField(guild, form, name, { optional = true, label = name
     return id;
 }
 
-/** A Discord user id typed in a form. */
+/** A Discord user id from a form: picked with "Find a member", pasted, or an @mention (<@id> / <@!id>). */
 export function userIdField(form, name, label = name) {
-    const raw = text(form, name, 25);
+    const raw = text(form, name, 40).replace(/^<@!?(\d{17,20})>$/, '$1');
     if (!isSnowflake(raw)) throw new InputError(ft().t('forms.error.userId', { label }), 400, name);
     return raw;
 }

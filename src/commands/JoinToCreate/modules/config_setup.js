@@ -11,6 +11,7 @@ import {
     ButtonStyle
 } from 'discord.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { SETTING_KINDS, buildSettingsModal } from './settingsModal.js';
 import { successEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../../utils/errorHandler.js';
@@ -103,21 +104,22 @@ time: 60000
         });
 
         collector.on('collect', async (selectInteraction) => {
-            await selectInteraction.deferUpdate();
-
             const selectedOption = selectInteraction.values[0];
+
+            // Name template, user limit, bitrate: a modal is the first answer (no defer before it,
+            // no await before it either, so it opens within 3 s). The submit is handled by the
+            // `jtcset` modal handler (settingsModal.js): expiry, Administrator re-check, validation.
+            if (Object.hasOwn(SETTING_KINDS, selectedOption)) {
+                await selectInteraction.showModal(buildSettingsModal(SETTING_KINDS[selectedOption], triggerChannel.id, currentConfig)).catch((error) => {
+                    logger.warn('Join to Create settings modal could not be shown', { error: error.message });
+                });
+                return;
+            }
+
+            await selectInteraction.deferUpdate();
 
             try {
                 switch (selectedOption) {
-                    case 'name_template':
-                        await handleNameTemplateChange(selectInteraction, triggerChannel, currentConfig, client);
-                        break;
-                    case 'user_limit':
-                        await handleUserLimitChange(selectInteraction, triggerChannel, currentConfig, client);
-                        break;
-                    case 'bitrate':
-                        await handleBitrateChange(selectInteraction, triggerChannel, currentConfig, client);
-                        break;
                     case 'remove_trigger':
                         await handleRemoveTrigger(selectInteraction, triggerChannel, currentConfig, client);
                         break;
@@ -167,250 +169,6 @@ time: 60000
         }
     }
 };
-
-async function handleNameTemplateChange(interaction, triggerChannel, currentConfig, client) {
-    const embed = new EmbedBuilder()
-        .setTitle('Channel name template')
-        .setDescription('Please enter the new channel name template.')
-        .addFields(
-            {
-                name: 'Variables',
-                value: '• `{username}` - User\'s username\n• `{display_name}` - User\'s display name\n• `{user_tag}` - User\'s tag (User#1234)\n• `{guild_name}` - Server name',
-                inline: false
-            },
-            {
-                name: 'Current template',
-                value: `\`${currentConfig.channelOptions?.[triggerChannel.id]?.nameTemplate || currentConfig.channelNameTemplate}\``,
-                inline: false
-            }
-        )
-        .setColor(getColor('info'))
-        .setFooter({ text: 'Type the new template in chat' });
-
-    await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
-
-    const collector = interaction.channel.createMessageCollector({
-        filter: (m) => m.author.id === interaction.user.id,
-time: 600_000,
-        max: 1
-    });
-
-    collector.on('collect', async (message) => {
-        try {
-            const newTemplate = message.content.trim();
-            
-            if (!newTemplate || newTemplate.length > 100) {
-                await replyUserError(interaction, {
-                    type: ErrorTypes.VALIDATION,
-                    message: 'Template must be between 1 and 100 characters.'
-                });
-                return;
-            }
-
-            const channelOptions = currentConfig.channelOptions || {};
-            channelOptions[triggerChannel.id] = {
-                ...channelOptions[triggerChannel.id],
-                nameTemplate: newTemplate
-            };
-
-            await updateJoinToCreateConfig(client, interaction.guild.id, {
-                channelOptions: channelOptions
-            });
-
-            await interaction.followUp({
-                embeds: [successEmbed('Template updated', `Channel name template changed to \`${newTemplate}\``)],
-                flags: MessageFlags.Ephemeral,
-            });
-
-            await message.delete().catch(() => {});
-        } catch (error) {
-            if (error instanceof TitanBotError) {
-                logger.debug(`Template validation error: ${error.message}`);
-            } else {
-                logger.error('Template update error:', error);
-            }
-            
-            const errorMessage = error instanceof TitanBotError
-                ? error.userMessage || 'Could not update the channel name template.'
-                : 'Could not update the channel name template.';
-                
-            await replyUserError(interaction, {
-                type: ErrorTypes.CONFIGURATION,
-                message: errorMessage
-            }).catch(() => {});
-        }
-    });
-
-    collector.on('end', (collected, reason) => {
-        if (reason === 'time') {
-            replyUserError(interaction, {
-                type: ErrorTypes.RATE_LIMIT,
-                message: 'No response received. Template update cancelled.'
-            }).catch(() => {});
-        }
-    });
-}
-
-async function handleUserLimitChange(interaction, triggerChannel, currentConfig, client) {
-    const embed = new EmbedBuilder()
-        .setTitle('User limit')
-        .setDescription('Please enter the new user limit (0-99, where 0 = no limit).')
-        .addFields(
-            {
-                name: 'Current limit',
-                value: `${currentConfig.channelOptions?.[triggerChannel.id]?.userLimit || currentConfig.userLimit === 0 ? 'No limit' : currentConfig.userLimit + ' users'}`,
-                inline: false
-            }
-        )
-        .setColor(getColor('info'))
-        .setFooter({ text: 'Type the new limit in chat' });
-
-    await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
-
-    const collector = interaction.channel.createMessageCollector({
-        filter: (m) => m.author.id === interaction.user.id && /^\d+$/.test(m.content.trim()),
-        time: 600_000,
-        max: 1
-    });
-
-    collector.on('collect', async (message) => {
-        try {
-            const newLimit = parseInt(message.content.trim());
-            
-            if (newLimit < 0 || newLimit > 99) {
-                await replyUserError(interaction, {
-                    type: ErrorTypes.VALIDATION,
-                    message: 'User limit must be between 0 and 99.'
-                });
-                return;
-            }
-
-            const channelOptions = currentConfig.channelOptions || {};
-            channelOptions[triggerChannel.id] = {
-                ...channelOptions[triggerChannel.id],
-                userLimit: newLimit
-            };
-
-            await updateJoinToCreateConfig(client, interaction.guild.id, {
-                channelOptions: channelOptions
-            });
-
-            await interaction.followUp({
-                embeds: [successEmbed('Limit updated', `User limit changed to ${newLimit === 0 ? 'No limit' : newLimit + ' users'}`)],
-                flags: MessageFlags.Ephemeral,
-            });
-
-            await message.delete().catch(() => {});
-        } catch (error) {
-            if (error instanceof TitanBotError) {
-                logger.debug(`User limit validation error: ${error.message}`);
-            } else {
-                logger.error('User limit update error:', error);
-            }
-            
-            const errorMessage = error instanceof TitanBotError
-                ? error.userMessage || 'Could not update the user limit.'
-                : 'Could not update the user limit.';
-                
-            await replyUserError(interaction, {
-                type: ErrorTypes.CONFIGURATION,
-                message: errorMessage
-            }).catch(() => {});
-        }
-    });
-
-    collector.on('end', (collected, reason) => {
-        if (reason === 'time') {
-            replyUserError(interaction, {
-                type: ErrorTypes.RATE_LIMIT,
-                message: 'No valid response received. Update cancelled.'
-            }).catch(() => {});
-        }
-    });
-}
-
-async function handleBitrateChange(interaction, triggerChannel, currentConfig, client) {
-    const embed = new EmbedBuilder()
-        .setTitle('Bitrate')
-        .setDescription('Please enter the new bitrate in kbps (8-384).')
-        .addFields(
-            {
-                name: 'Bitrate',
-                value: `${(currentConfig.channelOptions?.[triggerChannel.id]?.bitrate || currentConfig.bitrate) / 1000} kbps`,
-                inline: false
-            },
-            {
-                name: 'Common values',
-                value: '• 64 kbps - Normal quality\n• 96 kbps - Good quality\n• 128 kbps - High quality\n• 256 kbps - Very high quality',
-                inline: false
-            }
-        )
-        .setColor(getColor('info'))
-        .setFooter({ text: 'Type the new bitrate in chat' });
-
-    await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
-
-    const collector = interaction.channel.createMessageCollector({
-        filter: (m) => m.author.id === interaction.user.id && /^\d+$/.test(m.content.trim()),
-        time: 600_000,
-        max: 1
-    });
-
-    collector.on('collect', async (message) => {
-        try {
-            const newBitrate = parseInt(message.content.trim());
-            
-            if (newBitrate < 8 || newBitrate > 384) {
-                await replyUserError(interaction, {
-                    type: ErrorTypes.VALIDATION,
-                    message: 'Bitrate must be between 8 and 384 kbps.'
-                });
-                return;
-            }
-
-            const channelOptions = currentConfig.channelOptions || {};
-            channelOptions[triggerChannel.id] = {
-                ...channelOptions[triggerChannel.id],
-                bitrate: newBitrate * 1000
-            };
-
-            await updateJoinToCreateConfig(client, interaction.guild.id, {
-                channelOptions: channelOptions
-            });
-
-            await interaction.followUp({
-                embeds: [successEmbed('Bitrate updated', `Bitrate changed to ${newBitrate} kbps`)],
-                flags: MessageFlags.Ephemeral,
-            });
-
-            await message.delete().catch(() => {});
-        } catch (error) {
-            if (error instanceof TitanBotError) {
-                logger.debug(`Bitrate validation error: ${error.message}`);
-            } else {
-                logger.error('Bitrate update error:', error);
-            }
-            
-            const errorMessage = error instanceof TitanBotError
-                ? error.userMessage || 'Could not update the bitrate.'
-                : 'Could not update the bitrate.';
-                
-            await replyUserError(interaction, {
-                type: ErrorTypes.CONFIGURATION,
-                message: errorMessage
-            }).catch(() => {});
-        }
-    });
-
-    collector.on('end', (collected, reason) => {
-        if (reason === 'time') {
-            replyUserError(interaction, {
-                type: ErrorTypes.RATE_LIMIT,
-                message: 'No valid response received. Update cancelled.'
-            }).catch(() => {});
-        }
-    });
-}
 
 async function handleRemoveTrigger(interaction, triggerChannel, currentConfig, client) {
     const embed = new EmbedBuilder()

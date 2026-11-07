@@ -18,7 +18,7 @@ import { html, path, raw, timeTag } from '../html.js';
 import { fillTemplate, messageTemplate, templatesByGroup } from '../../../config/messageTemplates.js';
 import {
     InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, channelWarnings, checkbox, checkboxInput, choiceField, intField, numberInput,
-    pill, postForm, selectInput, switchInput, text, textArea, textInput,
+    isSnowflake, pill, postForm, selectInput, switchInput, text, textArea, textInput,
 } from '../forms.js';
 import { section, table } from './common.js';
 import { planLimit } from '../../billing/premiumEffects.js';
@@ -301,6 +301,21 @@ ${postForm(ctx, 'messages', 'schedule-edit', html`<div class="grid">${messageFie
 ${table(['Message', 'Channel', 'Next run', 'Repeat', 'Last result', 'Status', ''], rows, 'No scheduled messages.')}${edits}`;
 }
 
+/** "End a poll": Mewvo's open Discord polls (pollList.js), an End button each. */
+function openPollList(ctx, openPolls, canPost) {
+    if (openPolls === null) return html`<p class="warn">The open polls could not be loaded. You can still end a poll by its link below.</p>`;
+    const polls = openPolls?.polls || [];
+    const rows = polls.map((p) => [
+        p.question || html`<span class="muted">(no question)</span>`,
+        html`#${p.channelName}`,
+        p.endsAt ? timeTag(p.endsAt) : html`<span class="muted">-</span>`,
+        buttonForm(ctx, 'messages', 'poll-end', 'End poll', { channelId: p.channelId, messageId: p.messageId },
+            { canEdit: canPost, confirm: 'End this poll now? The final results are shown and nobody can vote any more.' }),
+    ]);
+    return html`${table(['Question', 'Channel', 'Closes', ''], rows, 'Mewvo has no open polls in this server.')}
+<p class="muted">Lists polls posted from the dashboard in the last 7 days and polls posted with /poll since Mewvo last restarted.${openPolls?.partial ? ' The dashboard history could not be read just now, so some polls may be missing.' : ''}</p>`;
+}
+
 function clock(seconds) {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -318,7 +333,11 @@ export default {
             ctx.services.getGuildConfig(ctx.client, ctx.guildId),
             ctx.services.listScheduledMessages(ctx.guildId),
         ]);
-        return { scheduled, timezone: canonicalTimeZone(config?.birthdayTimezone) || DEFAULT_TIMEZONE };
+        // Mewvo's open Discord polls for "End a poll" (pollList.js); null = could not be loaded.
+        const openPolls = typeof ctx.services.openPollsFor === 'function'
+            ? await ctx.services.openPollsFor(ctx.guild, ctx.guildId).catch(() => null)
+            : { polls: [], partial: false };
+        return { scheduled, timezone: canonicalTimeZone(config?.birthdayTimezone) || DEFAULT_TIMEZONE, openPolls };
     },
 
     render(ctx, data = {}) {
@@ -339,9 +358,11 @@ ${numberInput('hours', NATIVE_POLL_DEFAULT_HOURS, { label: 'Open for (hours)', m
 ${switchInput('multiSelect', false, { label: 'Allow more than one answer', help: 'Members can pick several options instead of one.' })}
 ${switchInput('anonymous', false, { label: 'Anonymous poll', help: 'A Discord poll shows everyone who voted for what. Turn this on to post a number-reaction poll instead: no names on the poll itself, but anyone can still open the reactions and see who reacted. It has no time limit, cannot be ended early, and ignores the two settings above.' })}</div>`,
         { submit: 'Post poll', canEdit: canPost });
-        const endPollForm = postForm(ctx, 'messages', 'poll-end', html`<div class="grid">
+        const endPollForm = html`${openPollList(ctx, data.openPolls, canPost)}
+<details class="sub" data-key="poll-end-link"><summary>A poll is not in the list? End it by its link</summary>
+${postForm(ctx, 'messages', 'poll-end', html`<div class="grid">
 ${textInput('link', '', { label: 'Poll message link', max: 200, type: 'url', placeholder: 'https://discord.com/channels/...', help: 'In Discord, right-click the poll (or long-press it on a phone), choose Copy Message Link and paste it here.' })}</div>`,
-        { submit: 'End poll now', canEdit: canPost });
+        { submit: 'End poll now', canEdit: canPost })}</details>`;
         const countdown = postForm(ctx, 'messages', 'countdown', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: PERMS.post, optional: false })}
 ${textInput('title', '', { label: 'Title', max: COUNTDOWN_TITLE_MAX, placeholder: 'Countdown', help: 'What you are counting down to.' })}
@@ -477,7 +498,12 @@ ${section('Start a countdown', countdown, `Posts a timer that counts down in the
         'poll-end': {
             admin: true,
             async run(ctx, form) {
-                const link = text(form, 'link', 200);
+                // The End button of the open-polls list sends the channel and message; the link field a link.
+                // Either way endPoll re-checks everything (this server, a native poll, Mewvo's, still open).
+                const channelId = text(form, 'channelId', 25);
+                const messageId = text(form, 'messageId', 25);
+                const picked = isSnowflake(channelId) && isSnowflake(messageId);
+                const link = picked ? `https://discord.com/channels/${ctx.guildId}/${channelId}/${messageId}` : text(form, 'link', 200);
                 const target = parseMessageLink(link);
                 if (!target) throw new InputError('Poll message link: paste the link from Copy Message Link in Discord, like https://discord.com/channels/...', 400, 'link');
                 if (target.guildId !== ctx.guildId) throw new InputError('Poll message link: that message is in another server.', 400, 'link');

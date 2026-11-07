@@ -9,6 +9,7 @@ import {
     choiceField, postForm, roleName, text, userIdField, roleList,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
+import { memberField, pickedFromQuery } from '../memberSearch.js';
 import { NOTHING, registryValue, section, table } from './common.js';
 
 const DESTINATION_LABEL = { audit: 'Main log channel (everything else)', applications: 'Applications', reports: 'Reports' };
@@ -67,7 +68,7 @@ ${types.map((type) => checkboxInput(fieldName(type), events[type] !== false, { l
         const ignoreForms = html`${table(['Type', 'Ignored', ''], ignoreRows, 'Nothing is ignored.')}
 <div class="grid">${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'Ignore a channel', kinds: ['text', 'voice', 'category', 'forum'], perms: [], optional: false })}`, { submit: 'Add', inline: true })}
 ${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="role"><label>Ignore a role<select name="id">${roleList(g, { includeManaged: true }).map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>`, { submit: 'Add', inline: true })}
-${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="user"><label>Ignore a member (user ID)<input name="id" inputmode="numeric" maxlength="20"><span class="hint">The long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID.</span></label>`, { submit: 'Add', inline: true })}</div>`;
+${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="user">${memberField({ name: 'id', label: 'Ignore a member', value: pickedFromQuery(ctx.query, 'ignore_user'), required: true, pick: 'ignore_user', back: path('/logging'), anchor: 'ignore-lists', guild: g })}`, { submit: 'Add', inline: true })}</div>`;
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
         return html`${section('Mod log', html`<p class="muted">The mod log lists every warn, mute, kick and ban. It goes to ${channelName(g, modLogChannelId)}. You can <a href="${path('/enforcement')}">change it on Enforcement &amp; appeals</a>. Ticket logs are set on <a href="${path('/tickets')}">Tickets</a>.</p>`)}
 ${section('Channels', channels, 'Where each kind of log goes. Picking a channel turns logging on.')}

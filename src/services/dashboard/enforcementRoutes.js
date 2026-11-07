@@ -51,6 +51,7 @@ import { BAN_FILTERS, listBans } from './bansData.js';
 import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
 import { html, layout, path, queryString } from './html.js';
 import { isSnowflake } from './security.js';
+import { parseUserRef } from './memberSearch.js';
 import { MODERATOR, mayRun, moderatorActionTypes, requiredLevel } from './permissions.js';
 import { memberHasConfiguredModeratorRole } from '../../utils/permissionGuard.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
@@ -960,17 +961,21 @@ export function createEnforcementHandlers(core) {
         const names = new Map([...ids].map((id) => [id, client.users.cache?.get?.(id)?.username || null]));
         return sendHtml(res, status, noContactPage({
             ...shellOf(req), rows, watchRows, showWatch, names, canWrite: canWrite(req), editEnabled: settings.editEnabled, canAct: req.dashboard.access.canAct,
-            flash: status === 200 ? req.dashboard.flash : null, error, values,
+            flash: status === 200 ? req.dashboard.flash : null, error, values, guild: guildOf(),
         }));
     }
 
-    const noContact = (req, res) => renderNoContact(req, res);
+    // GET: members picked with "Find a member" come back as ?user_a= / ?user_b=.
+    const noContact = (req, res) => renderNoContact(req, res, 200, {
+        values: Object.fromEntries(['user_a', 'user_b'].map((k) => [k, parseUserRef(queryText(req.query, k, 25)) || ''])),
+    });
     const rerenderNoContact = (req, res, status, message) => renderNoContact(req, res, status, { error: message, values: { ...(req.body || {}), csrf: undefined } });
 
     const noContactAdd = guardedPost(async (req, res) => {
-        const userA = text(req.body, 'user_a', 25);
-        const userB = text(req.body, 'user_b', 25);
-        if (!isSnowflake(userA) || !isSnowflake(userB)) throw new InputError('Both members must be Discord user IDs (17–20 digits).');
+        // A picked member (ID), a pasted ID or an @mention.
+        const userA = parseUserRef(text(req.body, 'user_a', 40));
+        const userB = parseUserRef(text(req.body, 'user_b', 40));
+        if (!userA || !userB) throw new InputError('Pick both members (type a name and choose one, or use Find a member), or paste their Discord user IDs.');
         const days = Number(text(req.body, 'days', 4));
         if (!Number.isInteger(days) || days < 1 || days > NO_CONTACT_MAX_DAYS) throw new InputError(`Days must be between 1 and ${NO_CONTACT_MAX_DAYS}.`);
         const reason = text(req.body, 'reason', 500);
@@ -1032,7 +1037,7 @@ export function createEnforcementHandlers(core) {
         if (week === 'last') weekDate.setUTCDate(weekDate.getUTCDate() - 7);
         const start = weekStart(weekDate);
         const owner = isOwner(req);
-        const lookupId = owner ? queryText(req.query, 'warnings', 25) : '';
+        const lookupId = owner ? parseUserRef(queryText(req.query, 'warnings', 40)) || '' : '';
         const guild = guildOf();
         const [config, counts, blocks, activity, removed, warnings] = await Promise.all([
             e.getGuildConfig(client, guildId).catch(() => null),
@@ -1061,6 +1066,7 @@ export function createEnforcementHandlers(core) {
                 staff: (activity || []).map((r) => ({ userId: r.userId, username: r.username })),
                 lookup: warnings === undefined ? null : { userId: lookupId, name: userName(lookupId), rows: warnings },
                 removed, roleNames, names: removedNames, warnLimit: automodConfig.staffWarnLimit, keep: { ...keep, week: week === 'last' ? 'last' : undefined },
+                guild, picked: { warn: parseUserRef(queryText(req.query, 'warn_user', 25)) || '', restore: parseUserRef(queryText(req.query, 'restore_user', 25)) || '' },
             }),
             blocksSection({ blocks, names, canLift: owner, csrf: req.dashboard.session.csrf, editEnabled: settings.editEnabled }),
         ];
@@ -1085,8 +1091,8 @@ export function createEnforcementHandlers(core) {
     // /staff warn: OWNER_IDS only, like the command. The service DMs the member, posts the
     // mod-log line and removes the staff roles at the limit; here only the audit row.
     const staffWarn = guardedPost(async (req, res) => {
-        const userId = text(req.body, 'user', 25);
-        if (!isSnowflake(userId)) throw new InputError('Staff member must be a Discord user ID (17–20 digits).');
+        const userId = parseUserRef(text(req.body, 'user', 40)) || '';
+        if (!isSnowflake(userId)) throw new InputError('Staff member: pick a member (type a name and choose one, or use Find a member), or paste their Discord user ID.');
         const reason = text(req.body, 'reason', 500);
         if (!reason) throw new InputError('A reason is required (which admin rule they broke).');
         const guild = guildOf();
@@ -1105,8 +1111,8 @@ export function createEnforcementHandlers(core) {
 
     // /staff restore (the roles part; a mass-action block is lifted with blockLift). OWNER_IDS only.
     const staffRestore = guardedPost(async (req, res) => {
-        const userId = text(req.body, 'user', 25);
-        if (!isSnowflake(userId)) throw new InputError('Staff member must be a Discord user ID (17–20 digits).');
+        const userId = parseUserRef(text(req.body, 'user', 40)) || '';
+        if (!isSnowflake(userId)) throw new InputError('Staff member: pick a member (type a name and choose one, or use Find a member), or paste their Discord user ID.');
         const roles = await e.restoreStaffRoles(guildOf(), userId, ownerActor(req));
         if (!roles) throw new InputError('No removed staff roles are saved for that user (or they are not in the server).');
         await audit(req, 'staff', [{ key: `roles:${userId}`, old: 'removed', new: roles.map((role) => role.name) }]);

@@ -6,7 +6,8 @@
 import { ChannelType } from 'discord.js';
 import { PURGE_MAX, PURGE_MIN, TOOL_PERMS, lockedChannels } from '../../channelToolsService.js';
 import { auditReason, REASON_MAX } from '../memberActions.js';
-import { html } from '../html.js';
+import { html, path } from '../html.js';
+import { memberField, parseUserRef, pickedFromQuery } from '../memberSearch.js';
 import {
     InputError, channelField, channelPicker, checkbox, checkboxInput, intField, isSnowflake, numberInput, postForm, text, textInput,
 } from '../forms.js';
@@ -37,7 +38,7 @@ export default {
         const purge = postForm(ctx, 'channels', 'purge', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: TOOL_PERMS.purge, optional: false })}
 ${numberInput('amount', 10, { label: 'Number of messages', min: PURGE_MIN, max: PURGE_MAX, help: `From ${PURGE_MIN} to ${PURGE_MAX}. The newest messages go first.` })}
-${textInput('userId', '', { label: 'Only from this member (optional)', max: 20, help: 'Their user ID: the long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID. Only the newest 100 messages are searched.' })}
+${memberField({ name: 'userId', label: 'Only from this member (optional)', value: pickedFromQuery(ctx.query, 'purge_user'), pick: 'purge_user', back: path('/channels'), anchor: 'purge-messages', bans: true, guild: g, help: 'Only the newest 100 messages are searched.' })}
 ${textInput('reason', '', { label: 'Reason', max: REASON_MAX, help: 'Saved with the action, so other staff know why.' })}</div>
 ${checkboxInput('confirm', false, { label: 'I understand that deleted messages cannot be brought back' })}`,
         { submit: 'Delete messages', danger: true, canEdit: can, confirm: 'Delete these messages for good?' });
@@ -59,8 +60,9 @@ ${section(`Locked channels (${locked.length})`, table(['Channel', 'Category', ''
             async run(ctx, form) {
                 const channel = channelOf(ctx, form, 'Channel');
                 const amount = intField(form, 'amount', { min: PURGE_MIN, max: PURGE_MAX, label: 'Number of messages' });
-                const fromUserId = text(form, 'userId', 25) || null;
-                if (fromUserId && !isSnowflake(fromUserId)) throw new InputError('Only from this member: that is not a user ID. A user ID is a number with 17 to 20 digits.', 400, 'userId');
+                const typed = text(form, 'userId', 40);
+                const fromUserId = typed ? parseUserRef(typed) : null;
+                if (typed && !fromUserId) throw new InputError('Only from this member: that is not a user ID. Type a name and choose a member, use Find a member, or paste a user ID (17 to 20 digits).', 400, 'userId');
                 const reason = text(form, 'reason', REASON_MAX);
                 if (!checkbox(form, 'confirm')) throw new InputError('Tick the box to confirm. Deleted messages cannot be brought back.', 400, 'confirm');
                 const result = await ctx.services.purgeChannelMessages({

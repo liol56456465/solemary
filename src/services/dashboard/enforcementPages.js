@@ -19,6 +19,7 @@ import { BAN_FILTERS } from './bansData.js';
 import { NICKNAME_MAX, REASON_MAX, TIMEOUTS } from './memberActions.js';
 import { BULK_ACTIONS, BULK_LIMIT } from './bulkActions.js';
 import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
+import { memberField, parseUserRef } from './memberSearch.js';
 
 export const DURATION_CHOICES = ['30m', '1h', '6h', '12h', '1d', '3d', '7d', '14d', '1mo', '3mo'];
 
@@ -498,8 +499,14 @@ ${rows.map((w) => html`<tr><td>${w.id}</td><td>${who(w.user_id)}</td><td>${forma
 </tbody></table></div>` : html`<p class="empty">Nobody is on the watchlist.</p>`}`, '', { key: 'watchlist-active' });
 }
 
+/** A member field of "Start an order": "Find a member" comes back here with the other member kept. */
+function noContactMember(name, label, values, guild) {
+    const keep = Object.fromEntries(['user_a', 'user_b'].map((k) => [k, parseUserRef(String(values[k] || '')) || undefined]));
+    return memberField({ name, label, value: values[name] || '', required: true, back: path(`/nocontact${queryString(keep)}`), anchor: 'nocontact-start', guild });
+}
+
 /** rows: listActiveNoContactOrders; names: Map(userId → username). */
-export function noContactPage({ session, access = null, moduleStates = {}, rows = [], watchRows = [], showWatch = false, names = new Map(), canWrite = false, flash = null, error = null, editEnabled = true, canAct = true, values = {} }) {
+export function noContactPage({ session, access = null, moduleStates = {}, rows = [], watchRows = [], showWatch = false, names = new Map(), canWrite = false, flash = null, error = null, editEnabled = true, canAct = true, values = {}, guild = null }) {
     const who = (id) => html`<a href="${userHref(id)}">${names.get(id) || id}</a> <span class="muted">${id}</span>`;
     const body = html`<header class="page-head"><h1>No-contact orders (${rows.length})</h1></header>
 <p class="muted help">Two members may not mention or reply to each other; breaking messages are deleted and logged. Both members are DMed when an order starts and ends.</p>
@@ -509,8 +516,8 @@ ${rows.map((o) => html`<tr><td>${o.id}</td><td>${who(o.user_a)} ↔ ${who(o.user
 <td>${canWrite ? actionForm(session.csrf, '/nocontact/end', '', { submit: 'End now', hidden: { id: String(o.id) }, inline: true, danger: true }) : ''}</td></tr>`)}
 </tbody></table></div>` : html`<p class="empty">No active orders.</p>`}`, '', { key: 'nocontact-active' })}
 ${canWrite ? section('Start an order', actionForm(session.csrf, '/nocontact/add', html`<div class="grid">
-<label>First member (user ID)<input name="user_a" inputmode="numeric" maxlength="20" required value="${values.user_a || ''}"></label>
-<label>Second member (user ID)<input name="user_b" inputmode="numeric" maxlength="20" required value="${values.user_b || ''}"></label>
+${noContactMember('user_a', 'First member', values, guild)}
+${noContactMember('user_b', 'Second member', values, guild)}
 <label>Days<input type="number" name="days" min="1" max="${NO_CONTACT_MAX_DAYS}" step="1" required value="${values.days || ''}"></label>
 <label class="wide">Reason (shown to both members)<input name="reason" maxlength="500" required value="${values.reason || ''}"></label></div>`, { submit: 'Start order' }), '', { key: 'nocontact-start' }) : ''}
 ${showWatch ? watchlistSection({ session, rows: watchRows, names, canWrite }) : ''}`;
@@ -573,19 +580,21 @@ ${rows.map((r) => html`<tr><td><a href="${userHref(r.userId)}">${r.username}</a>
  */
 export function disciplineSection({
     isOwner = false, csrf, editEnabled = true, staff = [], lookup = null, removed = [], roleNames = new Map(), names = new Map(),
-    warnLimit = 3, keep = {}, now = Date.now(),
+    warnLimit = 3, keep = {}, now = Date.now(), guild = null, picked = {},
 }) {
     if (!isOwner) {
         return section('Staff discipline', html`<p class="muted">Only the bot owners can warn staff members, see their staff warnings or give back removed staff roles (like /staff warn, warnings and restore).</p>`, '', { key: 'staff-discipline' });
     }
     const canWrite = Boolean(editEnabled);
     const who = (id) => html`<a href="${userHref(id)}">${names.get(id) || id}</a> <span class="muted">${id}</span>`;
+    // "Find a member" comes back to the staff page with the same filters; picked: { warn, restore } from its query.
+    const staffBack = path(`/staff${queryString(Object.fromEntries(Object.entries(keep).filter(([, v]) => v && /^[A-Za-z0-9_-]+$/.test(String(v)))))}`);
     const warnForm = actionForm(csrf, '/staff/warn', html`<div class="grid">
-<label>Staff member (user ID)<input name="user" inputmode="numeric" maxlength="20" required list="staff-members" value="${lookup?.userId || ''}"></label>
+${memberField({ name: 'user', label: 'Staff member', value: picked.warn || lookup?.userId || '', required: true, pick: 'warn_user', back: staffBack, anchor: 'staff-discipline', guild, list: 'staff-members' })}
 <datalist id="staff-members">${staff.map((m) => html`<option value="${m.userId}">${m.username}</option>`)}</datalist>
 <label class="wide">Reason: which admin rule they broke (sent to them)<input name="reason" maxlength="500" required></label></div>`, { submit: 'Give staff warning', enabled: canWrite, confirm: `Give this staff member a warning? At ${warnLimit} active warnings their staff roles are removed.` });
     const lookupForm = html`<form method="get" action="${path('/staff')}" class="inline-form">${Object.entries(keep).filter(([, v]) => v).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}
-<label>Show warnings of (user ID)<input name="warnings" inputmode="numeric" maxlength="20" list="staff-members" value="${lookup?.userId || ''}"></label><button type="submit" class="secondary">Show</button></form>`;
+${memberField({ name: 'warnings', label: 'Show warnings of', value: lookup?.userId || '', pick: 'warnings', back: staffBack, anchor: 'staff-discipline', guild, inline: true, list: 'staff-members' })}<button type="submit" class="secondary">Show</button></form>`;
     const lookupBody = !lookup ? '' : lookup.rows === null
         ? html`<p class="muted">Warnings could not be loaded (database unavailable).</p>`
         : html`<h3>Staff warnings: ${lookup.name || lookup.userId}</h3>${lookup.rows.length ? html`<div class="scroll"><table><thead><tr><th>Status</th><th>Given</th><th>By</th><th>Reason</th></tr></thead><tbody>
@@ -599,7 +608,7 @@ ${removed.map((r) => html`<tr><td>${who(r.userId)}</td><td>${r.roleIds.map((id, 
 <td>${canWrite ? actionForm(csrf, '/staff/restore', '', { submit: 'Restore roles', hidden: { user: r.userId }, inline: true, confirm: 'Give these staff roles back?' }) : ''}</td></tr>`)}
 </tbody></table></div>`
             : html`<p class="muted">No removed staff roles are saved.</p>`;
-    const restoreById = actionForm(csrf, '/staff/restore', html`<label>Restore by user ID<input name="user" inputmode="numeric" maxlength="20" required></label>`, { submit: 'Restore roles', inline: true, enabled: canWrite, secondary: true });
+    const restoreById = actionForm(csrf, '/staff/restore', memberField({ name: 'user', label: 'Restore roles of', value: picked.restore || '', required: true, pick: 'restore_user', back: staffBack, anchor: 'staff-discipline', guild, inline: true }), { submit: 'Restore roles', inline: true, enabled: canWrite, secondary: true });
     return section('Staff discipline', html`<p class="muted">Staff warnings expire; at ${warnLimit} active warnings the staff roles are removed (the staff guard removes them too). The member is DMed and the mod log gets a line.</p>
 ${warnForm}
 ${lookupForm}
