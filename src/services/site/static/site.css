@@ -865,3 +865,68 @@ html:not([lang="en"]) :is(h1, h2, h3, .guide-title, .plan-card-name, th, td, dt,
 .consent, .form-stack, .form-field { min-width: 0; }
 .ladder-step { grid-template-columns: 96px minmax(0, 1fr) fit-content(45%); }
 @media (max-width: 760px) { .ladder-step { grid-template-columns: 80px minmax(0, 1fr); } }
+
+/* ── Phones and touch screens (2026-11-07) ──
+   Checked with a touch-phone emulation at 320–414px and 740×360 by scripts/site-layout-check.js
+   (tap targets, field text size, fixed bars); the key rules are guarded by tests/siteLayoutCss.test.js. */
+
+/* Mobile browsers: 100vh is the tallest viewport (toolbars hidden); dvh is the visible one. */
+body { min-height: 100dvh; }
+
+/* Form fields at 16px: iOS Safari zooms the whole page into any field with smaller text. */
+.form-field input, .redeem-row input, .gift-fields input, .gift-fields textarea, .withdraw-name { font-size: 16px; }
+.redeem-row input, .gift-fields input { min-height: 44px; }
+.withdraw-name { width: 100%; max-width: 480px; min-height: 44px; margin-top: 6px; padding: 8px 12px; border: 1px solid var(--border-control); border-radius: 8px; background: var(--bg-alt); color: var(--text); font-family: var(--sans); }
+.withdraw-name:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* The top bar stays in place on short screens (phones held sideways): two sticky rows would take a
+   quarter of the screen. Without a sticky bar, in-page links need no room above their target. */
+@media (max-height: 500px) {
+    .topbar { position: static; }
+}
+@media (max-width: 760px), (max-height: 500px) {
+    html { scroll-padding-top: 16px; }
+    .ref-group, .rule, .cmd-group { scroll-margin-top: 16px; }
+}
+
+/* Tap targets at least 44px high on phones and touch screens (Apple HIG, WCAG 2.5.5). Links that sit
+   on their own get the height as padding; where that would move the layout, a negative margin of the
+   same size keeps everything where it was. */
+@media (max-width: 760px), (pointer: coarse) {
+    .topnav a, .topbar-actions .button, .lang-chip, .account-chip { min-height: 44px; }
+    .lang-pop a, .account-pop a, .account-pop button { display: flex; align-items: center; min-height: 44px; }
+    .footer-links { gap: 0; }
+    .footer-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0; }
+    .footer-langs ul { gap: 0 16px; }
+    .footer-langs a { display: inline-flex; align-items: center; min-height: 44px; }
+    .jump a { min-height: 44px; }
+    .index a { display: inline-flex; align-items: center; min-height: 44px; }
+    .what-grid a { justify-self: start; display: inline-flex; align-items: center; min-height: 44px; margin-top: -4px; margin-bottom: -10px; }
+    .trust-rules a, .back-link, .crumbs a, .account-links a, .form-actions > a:not(.button) { display: inline-block; padding: 12px 0; margin-top: -12px; margin-bottom: -12px; }
+    .back-link { margin-bottom: 4px; }
+    .rule-num { display: inline-block; padding: 8px 0; margin: -8px 0; }
+    /* A link alone in a paragraph, note or table cell: a taller hit area, same layout (vertical padding
+       on an inline box does not move the lines). */
+    p > a:only-child:not(.button), .note > a:only-child, td > a:only-child { padding: 14px 0; }
+    /* Account tables scroll sideways inside their box instead of squeezing a column to one letter. */
+    .record-table { min-width: 640px; }
+    .record-table td { overflow-wrap: normal; }
+    .record-table a { white-space: nowrap; }
+    .lang-suggest p { padding: 0; }
+    .lang-suggest a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+/* Very narrow phones (320px): brand, picker and one button still fit on one row. The account chip
+   keeps the avatar; the name stays for screen readers. */
+@media (max-width: 374px) {
+    .topbar .topbar-inner { column-gap: 8px; }
+    .topbar-actions { gap: 4px; }
+    .topbar-actions .button { padding: 0 8px; }
+    .account-chip .account-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+
+/* Plan comparison on phones: the feature names stay on screen while the plan columns scroll. */
+@media (max-width: 760px) {
+    .compare thead th:first-child, .compare tbody th[scope="row"] { position: sticky; left: 0; z-index: 1; width: 42%; min-width: 136px; background: var(--raised); box-shadow: 1px 0 0 var(--border); }
+    .compare { min-width: 560px; }
+}

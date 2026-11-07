@@ -59,3 +59,35 @@ test('top bar markup: picker short code with the full name kept, short labels ar
     assert.match(en, /topbar-stack-1000/);
     assert.ok(en.includes('<a class="button" href="/dashboard">Dashboard</a>'));
 });
+
+// Phones (2026-11-07): the browser check (scripts/site-layout-check.js, touch emulation) measures tap
+// targets, field text and fixed bars; these guard the rules that make it pass.
+const block = (media) => {
+    const at = CSS.indexOf(`@media ${media} {`);
+    assert.ok(at > -1, `@media ${media}`);
+    return CSS.slice(at, CSS.indexOf('\n}', at));
+};
+
+test('phones: form fields at 16px (iOS zoom), 44px tap targets, no sticky bar on short screens', () => {
+    const fields = '.form-field input, .redeem-row input, .gift-fields input, .gift-fields textarea, .withdraw-name { font-size: 16px; }';
+    assert.ok(CSS.includes(fields), 'fields at 16px');
+    assert.ok(CSS.indexOf(fields) > CSS.indexOf('.form-field input { width: 100%'), 'the 16px rule comes after the base field rules');
+    const touch = block('(max-width: 760px), (pointer: coarse)');
+    for (const sel of ['.topnav a, .topbar-actions .button, .lang-chip, .account-chip', '.lang-pop a, .account-pop a, .account-pop button', '.footer-links a', '.footer-langs a', '.jump a', '.index a']) {
+        const at = touch.indexOf(`${sel} {`);
+        assert.ok(at > -1, sel);
+        assert.match(touch.slice(at, touch.indexOf('}', at)), /min-height: 44px/, sel);
+    }
+    assert.match(block('(max-height: 500px)'), /\.topbar \{ position: static; \}/);
+    assert.match(block('(max-width: 374px)'), /\.account-chip \.account-name \{ position: absolute;/);
+    assert.ok(CSS.includes('body { min-height: 100dvh; }'));
+});
+
+test('phones: the viewport tag lets people zoom; checkout and withdrawal fields have the right hints', () => {
+    const de = page('de');
+    assert.ok(de.includes('<meta name="viewport" content="width=device-width,initial-scale=1">'));
+    assert.doesNotMatch(de, /user-scalable|maximum-scale/);
+    const billing = readFileSync(new URL('../src/services/site/billing.js', import.meta.url), 'utf8');
+    assert.match(billing, /<input class="withdraw-name" id="w-name" name="name" required [^>]*autocomplete="name"/);
+    assert.match(billing, /id="gift-to" name="gift_to" [^>]*autocapitalize="none" spellcheck="false"/);
+});

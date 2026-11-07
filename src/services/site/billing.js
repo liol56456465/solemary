@@ -212,7 +212,7 @@ ${seg(t('billing.checkout.forLabel'), [
 ${effect?.kind === 'blocked' ? html`<p class="button button-disabled summary-pay" aria-disabled="true">${t('billing.checkout.blocked')}</p>`
         : html`<form method="post" action="/me/checkout"><input type="hidden" name="csrf" value="${session.csrf}">
 <input type="hidden" name="plan" value="${choice.planId}"><input type="hidden" name="period" value="${choice.period}"><input type="hidden" name="for" value="${choice.kind}"><input type="hidden" name="cur" value="${choice.currency}"><input type="hidden" name="lang" value="${lang}">
-${gift ? html`<div class="gift-fields"><label for="gift-to">${t('billing.checkout.giftTo')}</label><input id="gift-to" name="gift_to" maxlength="${GIFT_TO_MAX}" autocomplete="off" value="${values.giftTo || ''}" placeholder="${t('billing.checkout.giftToPlaceholder')}">
+${gift ? html`<div class="gift-fields"><label for="gift-to">${t('billing.checkout.giftTo')}</label><input id="gift-to" name="gift_to" maxlength="${GIFT_TO_MAX}" autocomplete="off" autocapitalize="none" spellcheck="false" value="${values.giftTo || ''}" placeholder="${t('billing.checkout.giftToPlaceholder')}">
 <label for="gift-message">${t('billing.checkout.giftMessage')}</label><textarea id="gift-message" name="gift_message" maxlength="${GIFT_MESSAGE_MAX}" rows="3" placeholder="${t('billing.checkout.giftMessagePlaceholder')}">${values.giftMessage || ''}</textarea></div>` : ''}
 <fieldset class="consent"><legend class="seg-label">${t('billing.consent.legend')}</legend>
 ${consentBox('consent_start', t(gift ? 'billing.consent.startNowGift' : 'billing.consent.startNow'), values.consent?.start)}
@@ -394,7 +394,7 @@ export function withdrawConfirmPage(ctx, { session, order, quote: wq, name = '',
 <h1>${t('billing.withdrawConfirm.heading', { id: order.id })}</h1>
 ${testBanner(t)}${notices({ error })}
 <form method="post" action="/me/billing/orders/${order.id}/withdraw"><input type="hidden" name="csrf" value="${session.csrf}">
-<p><label for="w-name">${t('billing.withdrawConfirm.name')}</label><br><input id="w-name" name="name" required maxlength="${WITHDRAWAL_NAME_MAX}" autocomplete="name" value="${name || session.username || ''}"></p>
+<p><label for="w-name">${t('billing.withdrawConfirm.name')}</label><br><input class="withdraw-name" id="w-name" name="name" required maxlength="${WITHDRAWAL_NAME_MAX}" autocomplete="name" value="${name || session.username || ''}"></p>
 <dl class="summary-rows">
 <div><dt>${t('billing.withdrawConfirm.contract')}</dt><dd>${ti(order.test ? 'billing.withdrawConfirm.contractValueTest' : 'billing.withdrawConfirm.contractValue', contract)}</dd></div>
 <div><dt>${t('billing.withdrawConfirm.account')}</dt><dd>${t('billing.withdrawConfirm.accountValue', { username: session.username })}</dd></div>
