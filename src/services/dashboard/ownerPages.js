@@ -5,7 +5,7 @@
 // styles or scripts (CSP).
 
 import { formatDate, html, layout, path, queryString, timeTag } from './html.js';
-import { actionForm } from './enforcementPages.js';
+import { actionForm, confirmButtons } from './enforcementPages.js';
 import { auditValue, isAllowedImageUrl } from './pages.js';
 import { kpi, tile } from './overview.js';
 import { ACTIVITY_TEXT_MAX, STATUSES } from '../owner/botStateService.js';
@@ -149,7 +149,7 @@ export function leaveConfirmPage({ session, access = null, moduleStates = {}, gu
 <section class="card confirm-card"><dl><dt>Server</dt><dd>${guild.name} <span class="muted">${guild.id}</span></dd><dt>Members</dt><dd>${guild.memberCount ?? '-'}</dd>
 <dt>Effect</dt><dd>The bot leaves the server now. Its settings and records stay in the database.</dd></dl>
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
-${actionForm(session.csrf, `/owner/servers/${guild.id}/leave`, html`<label class="check"><input type="checkbox" name="confirm" value="1" required> I want the bot to leave ${guild.name}</label>`, { submit: 'Leave server', hidden: { token, fh: hash }, danger: true })}</section>`;
+${confirmButtons(session.csrf, `/owner/servers/${guild.id}/leave`, { submit: `Leave ${guild.name}`, hidden: { token, fh: hash }, cancelHref: path(`/owner/servers/${guild.id}`) })}</section>`;
     return shell({ title: `Leave ${guild.name}`, active: 'owner/servers', session, access, moduleStates, body });
 }
 
@@ -399,7 +399,7 @@ export function registerConfirmPage({ session, access = null, moduleStates = {},
 <dt>On Discord now</dt><dd>${countText(state.registered)}</dd>
 <dt>Effect</dt><dd>The main server's command list is replaced by the bot's list in one request. Global and support-server commands stay as they are.</dd></dl>
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
-${actionForm(session.csrf, '/owner/commands/register', html`<label class="check"><input type="checkbox" name="confirm" value="1" required> Re-register the commands in the main server</label>`, { submit: 'Re-register commands', hidden: { token, fh: hash }, danger: true })}</section>`;
+${confirmButtons(session.csrf, '/owner/commands/register', { submit: 'Re-register commands', hidden: { token, fh: hash }, cancelHref: path('/owner/commands') })}</section>`;
     return shell({ title: 'Re-register commands', active: 'owner/commands', session, access, moduleStates, body });
 }
 
@@ -425,7 +425,7 @@ export function announceConfirmPage({ session, access = null, moduleStates = {},
 <h1>Confirm: announce to ${targets.sendable.length} server${targets.sendable.length === 1 ? '' : 's'}</h1>
 <section class="card confirm-card"><h2>Message</h2><blockquote>${message}</blockquote>
 <p class="muted">This confirmation works once and expires in 5 minutes.</p>
-${targets.sendable.length ? actionForm(session.csrf, '/owner/announce/send', html`<label class="check"><input type="checkbox" name="confirm" value="1" required> Send this to ${targets.sendable.length} server${targets.sendable.length === 1 ? '' : 's'}</label>`, { submit: 'Send announcement', hidden: { token, fh: hash }, danger: true }) : ''}</section>
+${targets.sendable.length ? confirmButtons(session.csrf, '/owner/announce/send', { submit: `Send to ${targets.sendable.length} server${targets.sendable.length === 1 ? '' : 's'}`, hidden: { token, fh: hash }, cancelHref: path('/owner/announce') }) : ''}</section>
 ${targetLists(targets)}`;
     return shell({ title: 'Confirm announcement', active: 'owner/announce', session, access, moduleStates, body });
 }

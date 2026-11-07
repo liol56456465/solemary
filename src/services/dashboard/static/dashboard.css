@@ -907,6 +907,9 @@ form.filters {
 .section-body form.filters { padding: 0; border: 0; background: none; }
 form.filters label { min-width: 150px; }
 .buttons { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+/* Confirm pages: [Confirm] [Cancel] side by side, the same height (Cancel is a link). */
+.confirm-form .buttons { align-items: stretch; }
+.confirm-form .buttons .btn { height: auto; min-height: 36px; font-weight: 500; }
 .panel-row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .panel-row p { margin: 0; }
 

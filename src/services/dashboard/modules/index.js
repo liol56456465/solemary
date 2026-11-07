@@ -32,12 +32,16 @@ export function getModule(key) {
     return BY_KEY.get(key) || null;
 }
 
-/** { run, admin, upload } for an action of a module, or null. Plain functions are open to every editor. */
+/** { run, admin, upload, confirm } for an action of a module, or null. Plain functions are open to every editor. */
 export function getAction(module, name) {
     if (!module?.actions || !Object.hasOwn(module.actions, name)) return null;
     const action = module.actions[name];
-    if (typeof action === 'function') return { run: action, admin: false, upload: false };
+    if (typeof action === 'function') return { run: action, admin: false, upload: false, confirm: null };
     // upload: the form sends one image as multipart/form-data (routes.js moduleUploadBody).
-    if (action && typeof action.run === 'function') return { run: action.run, admin: Boolean(action.admin), upload: Boolean(action.upload) };
+    // confirm(ctx, form): checks the form and describes what will happen ({ heading, rows, submit });
+    // the first POST then shows a confirm page and only its one-time token runs the action (routes.js).
+    if (action && typeof action.run === 'function') {
+        return { run: action.run, admin: Boolean(action.admin), upload: Boolean(action.upload), confirm: typeof action.confirm === 'function' ? action.confirm : null };
+    }
     return null;
 }

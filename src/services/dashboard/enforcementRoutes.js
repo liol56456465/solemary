@@ -57,7 +57,7 @@ import { caseActions as caseActionForms } from './enforcementPages.js';
 import { normalizeTags } from '../enforcement/caseNotesService.js';
 import { evidenceFileName, sniffImage } from './multipart.js';
 import {
-    actionConfirmPage, activitySection, appealConfirmPage, appealDetailPage, blocksSection, disciplineSection, bansPage, bulkJobPage, bulkPreviewPage, membersPage, coverageSection, noContactPage, userPage,
+    actionConfirmPage, activitySection, appealConfirmPage, confirmPage, appealDetailPage, blocksSection, disciplineSection, bansPage, bulkJobPage, bulkPreviewPage, membersPage, coverageSection, noContactPage, userPage,
 } from './enforcementPages.js';
 
 const SEARCH_LIMIT = 25;
@@ -127,6 +127,22 @@ export async function buildRecordFlow({ guild, moderator, moderatorId, targetUse
     if (fatal) throw new InputError(plainText(fatal), 403);
     if (error) throw new InputError(plainText(error));
     return Object.assign(flow, patch);
+}
+
+/** What voiding this case does, for the confirm page (same rules as voidCase). */
+export function voidEffect(record) {
+    const dm = 'The member gets a DM with your reason.';
+    if (record.is_test) return `Test case: only the record is marked as a mistake. ${dm}`;
+    if (!['active', 'appeal_pending'].includes(record.status)) {
+        return `${record.status === 'expired' ? 'It already ended' : 'It was already lifted'}, so nothing is lifted; the case is only marked as a mistake. ${dm}`;
+    }
+    const lift = {
+        ban: 'The member is unbanned (and gets an invite back).',
+        mute: 'The member is unmuted.',
+        warn: 'The warning stops counting on the warn ladder; a ban it caused is lifted.',
+        kick: 'There is nothing to lift for a kick; the case is marked as a mistake.',
+    }[record.type] || 'What is still in effect is lifted.';
+    return `${lift} ${dm}`;
 }
 
 /** A flow without the in-memory helpers, for the audit row. */
@@ -724,15 +740,36 @@ export function createEnforcementHandlers(core) {
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.edit' });
 
+    /**
+     * POST /cases/:code/void. Without a token: checks the case and the reason and shows the
+     * confirm page (nothing changes). With the page's one-time token: the stored reason is
+     * used, the case and the moderator are checked again, then the case is voided.
+     */
     const caseVoid = guardedPost(async (req, res) => {
         const record = await caseOf(req);
-        const reason = text(req.body, 'reason', 500);
-        if (!reason) throw new InputError('The reason cannot be empty.');
-        if (!text(req.body, 'confirm', 5)) throw new InputError('Tick the box to confirm voiding this case.');
+        if (!text(req.body, 'token', 100)) {
+            const reason = text(req.body, 'reason', 500);
+            if (!reason) throw new InputError('The reason cannot be empty.');
+            if (record.voided_at) throw new InputError(`Case ${record.case_code} is already voided.`);
+            await freshModerator(req);
+            const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: `void:${record.case_code}`, payload: { caseCode: record.case_code, reason } });
+            return sendHtml(res, 200, confirmPage({
+                ...shellOf(req), active: 'cases', title: `Void ${record.case_code}`, heading: `Confirm: void case ${record.case_code}`,
+                rows: [
+                    { label: 'Case', value: `${record.case_code} · ${record.type} · ${record.name}` },
+                    { label: 'Member', value: `${record.target_username} (${record.target_user_id})` },
+                    { label: 'Reason (shown to the member)', value: reason },
+                    { label: 'Effect', value: voidEffect(record) },
+                ],
+                actionPath: `/cases/${record.case_code}/void`, hidden: { token, fh: hash }, submit: 'Void case', cancelHref: path(`/cases/${record.case_code}`),
+            }));
+        }
+        const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: `void:${record.case_code}`, hash: text(req.body, 'fh', 100) });
+        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; void the case again.');
         const moderator = await freshModerator(req);
         const admin = { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username };
-        const { record: voided, notes, dmDelivered } = await e.voidCase(client, { guildId, caseCode: record.case_code, admin, reason });
-        await audit(req, 'cases', [{ key: `${record.case_code}.void`, old: null, new: reason }]);
+        const { record: voided, notes, dmDelivered } = await e.voidCase(client, { guildId, caseCode: record.case_code, admin, reason: payload.reason });
+        await audit(req, 'cases', [{ key: `${record.case_code}.void`, old: null, new: payload.reason }]);
         await flash(req, [`Case ${voided.case_code} voided.`, ...notes, `DM to the member: ${dmDelivered ? 'delivered' : 'not delivered'}.`].join(' '));
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.edit' });
@@ -784,9 +821,13 @@ export function createEnforcementHandlers(core) {
 
     /**
      * POST /cases/bulk: one action on the ticked cases of the Cases page. Add or remove a tag
-     * (up to 25 cases), or void (up to 10, with a reason and a confirm box: each one lifts what is
+     * (up to 25 cases), or void (up to 10, with a reason; a confirm page lists them first: each one lifts what is
      * still in effect and DMs the member, exactly like voiding one case). Audited per case.
      */
+    const bulkCasesError = (req, res, status, message) => sendHtml(res, status, layout({
+        ...shellOf(req), title: 'Cases', active: 'cases',
+        body: html`<header class="page-head"><h1>Nothing was changed</h1></header><p class="error" role="alert">${message}</p><p><a href="${path('/cases')}">Back to Cases</a></p>`,
+    }));
     const BULK_TAG_MAX = 25;
     const BULK_VOID_MAX = 10;
     const caseBulk = guardedPost(async (req, res) => {
@@ -807,21 +848,19 @@ export function createEnforcementHandlers(core) {
             if (records.length > BULK_VOID_MAX) throw new InputError(`Void at most ${BULK_VOID_MAX} cases at once.`);
             const reason = text(req.body, 'reason', 500);
             if (!reason) throw new InputError('Give a reason for voiding (the members see it).');
-            if (!text(req.body, 'confirm', 5)) throw new InputError('Tick the box to confirm voiding these cases.');
-            const moderator = await freshModerator(req);
-            const admin = { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username };
-            for (const record of records) {
-                if (record.voided_at) { skipped.push(`${record.case_code} (already voided)`); continue; }
-                try {
-                    await e.voidCase(client, { guildId, caseCode: record.case_code, admin, reason });
-                    await audit(req, 'cases', [{ key: `${record.case_code}.void`, old: null, new: reason }]);
-                    done.push(record.case_code);
-                } catch (error) {
-                    skipped.push(`${record.case_code} (${plainText(error.userMessage || 'not voided')})`);
-                }
-            }
-            await flash(req, `Voided: ${done.join(', ') || 'none'}.${skipped.length ? ` Skipped: ${skipped.join(', ')}.` : ''}`);
-            return res.redirect(303, path('/cases'));
+            await freshModerator(req);
+            const open = records.filter((r) => !r.voided_at);
+            if (!open.length) throw new InputError('Every ticked case is already voided.');
+            const payload = { codes: open.map((r) => r.case_code), reason };
+            const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'cases:void', payload });
+            const already = records.filter((r) => r.voided_at).map((r) => r.case_code);
+            return sendHtml(res, 200, confirmPage({
+                ...shellOf(req), active: 'cases', title: 'Void cases', heading: `Confirm: void ${open.length} case${open.length === 1 ? '' : 's'}`,
+                rows: [{ label: 'Reason (shown to the members)', value: reason }],
+                list: { title: `Will be voided (${open.length})`, items: open.map((r) => `${r.case_code} · ${r.type} · ${r.target_username} (${r.target_user_id}): ${voidEffect(r)}`) },
+                notes: already.length ? [`Skipped, already voided: ${already.join(', ')}.`] : [],
+                actionPath: '/cases/bulk/void', hidden: { token, fh: hash }, submit: `Void ${open.length} case${open.length === 1 ? '' : 's'}`, cancelHref: path('/cases'),
+            }));
         }
         if (records.length > BULK_TAG_MAX) throw new InputError(`Tag at most ${BULK_TAG_MAX} cases at once.`);
         let tag;
@@ -838,13 +877,31 @@ export function createEnforcementHandlers(core) {
         }
         await flash(req, `${action === 'tag-add' ? 'Tagged' : 'Untagged'} #${tag}: ${done.length} case${done.length === 1 ? '' : 's'}.${skipped.length ? ` Skipped: ${skipped.join(', ')}.` : ''}`);
         return res.redirect(303, path('/cases'));
-    }, {
-        rerender: (req, res, status, message) => sendHtml(res, status, layout({
-            ...shellOf(req), title: 'Cases', active: 'cases',
-            body: html`<header class="page-head"><h1>Nothing was changed</h1></header><p class="error" role="alert">${message}</p><p><a href="${path('/cases')}">Back to Cases</a></p>`,
-        })),
-        perm: 'case.edit',
-    });
+    }, { rerender: bulkCasesError, perm: 'case.edit' });
+
+    /** POST /cases/bulk/void: runs the bulk void the confirm page showed (one-time token). */
+    const caseBulkVoid = guardedPost(async (req, res) => {
+        const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: 'cases:void', hash: text(req.body, 'fh', 100) });
+        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; choose the cases again.');
+        const moderator = await freshModerator(req);
+        const admin = { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username };
+        const done = [];
+        const skipped = [];
+        for (const code of payload.codes) {
+            const record = await e.getCaseByCode(code);
+            if (!record || record.guild_id !== guildId) { skipped.push(`${code} (no longer exists)`); continue; }
+            if (record.voided_at) { skipped.push(`${code} (already voided)`); continue; }
+            try {
+                await e.voidCase(client, { guildId, caseCode: code, admin, reason: payload.reason });
+                await audit(req, 'cases', [{ key: `${code}.void`, old: null, new: payload.reason }]);
+                done.push(code);
+            } catch (error) {
+                skipped.push(`${code} (${plainText(error.userMessage || 'not voided')})`);
+            }
+        }
+        await flash(req, `Voided: ${done.join(', ') || 'none'}.${skipped.length ? ` Skipped: ${skipped.join(', ')}.` : ''}`);
+        return res.redirect(303, path('/cases'));
+    }, { rerender: bulkCasesError, perm: 'case.edit' });
 
     /** Notes and tags on a case (staff-only; caseNotesService.js). */
     const noteError = (error) => (error?.userMessage && !(error instanceof InputError) ? new InputError(error.userMessage) : error);
@@ -1119,7 +1176,7 @@ export function createEnforcementHandlers(core) {
 
     return {
         users, bans, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, unverify, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
-        caseEdit, caseVoid, caseBulk, evidenceAdd, evidenceUpload, evidenceRemove, caseNote, caseTags, caseActionForms: (args) => caseActionForms(args),
+        caseEdit, caseVoid, caseBulk, caseBulkVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseNote, caseTags, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd, watchlistEnd,
         staffSections, blockLift, staffWarn, staffRestore, canWrite,

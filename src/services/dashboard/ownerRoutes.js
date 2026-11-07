@@ -33,7 +33,7 @@
 // decision); anyone else gets the normal 404 page. POSTs also need: 30/min per session,
 // same origin + CSRF, DASHBOARD_EDIT_ENABLED, and a login younger than 12 hours. Every
 // change writes a dashboard_audit row (module 'owner'). Leaving a server, announcing and
-// re-registering commands and erasing a case need a one-time confirm token (5 minutes, this session) plus a tick-box.
+// re-registering commands and erasing a case need a one-time confirm token (5 minutes, this session) (the confirm page names what will happen; Confirm / Cancel).
 
 import { ChannelType, PermissionFlagsBits, SnowflakeUtil } from 'discord.js';
 import { readFileSync } from 'node:fs';
@@ -728,7 +728,6 @@ export function createOwnerHandlers(core) {
         if (!canLeaveGuild(id, protectedIds())) throw new InputError('The main and the support server cannot be left from here.', 403);
         const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: `leave:${id}`, hash: text(req.body, 'fh', 100) });
         if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; start again.');
-        if (text(req.body, 'confirm', 5) !== '1') throw new InputError('Tick the box to confirm. Nothing was done; start again.');
         const guild = guildParam(req);
         if (!guild) throw new InputError('The bot is not in a server with that ID.');
         const name = guild.name;
@@ -935,7 +934,6 @@ export function createOwnerHandlers(core) {
     const register = ownerPost(async (req, res) => {
         const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: 'commands:register', hash: text(req.body, 'fh', 100) });
         if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was registered; start again.');
-        if (text(req.body, 'confirm', 5) !== '1') throw new InputError('Tick the box to confirm. Nothing was registered; start again.');
         let result;
         try {
             result = await o.registerMainCommands(client);
@@ -994,7 +992,6 @@ export function createOwnerHandlers(core) {
     const announceSend = ownerPost(async (req, res) => {
         const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: 'announce', hash: text(req.body, 'fh', 100) });
         if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was sent; preview again.');
-        if (text(req.body, 'confirm', 5) !== '1') throw new InputError('Tick the box to confirm. Nothing was sent; preview again.');
         const result = { sent: [], failed: [], skipped: [...payload.targets.skipped] };
         for (const target of payload.targets.sendable) {
             const guild = client.guilds?.cache?.get?.(target.guildId);
@@ -1150,7 +1147,6 @@ export function createOwnerHandlers(core) {
         if (!code) throw new InputError('That is not a case code (5 to 7 letters and digits).');
         const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: `erase:${code}`, hash: text(req.body, 'fh', 100) });
         if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; start again.');
-        if (text(req.body, 'confirm', 5) !== '1') throw new InputError('Tick the box to confirm. Nothing was done; start again.');
         let result;
         try {
             result = await o.eraseCase(code);

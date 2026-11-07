@@ -4,7 +4,7 @@
 // itself: services/privacy/caseErase.js.
 
 import { formatDate, html, layout, path } from './html.js';
-import { actionForm } from './enforcementPages.js';
+import { actionForm, confirmButtons } from './enforcementPages.js';
 
 const ACTIVE = 'owner/erase';
 
@@ -44,6 +44,6 @@ export function eraseConfirmPage({ session, access = null, moduleStates = {}, pr
 <dt>Stored with it</dt><dd>${n.notes ?? 0} note(s), ${n.evidence ?? 0} evidence item(s), ${n.edits ?? 0} edit(s), ${n.appeals ?? 0} appeal(s) / report(s)</dd>
 <dt>Effect</dt><dd>${EFFECT[preview.mode]}</dd></dl>
 <p class="muted">This cannot be undone. This confirmation works once and expires in 5 minutes.</p>
-${actionForm(session.csrf, '/owner/erase', html`<label class="check"><input type="checkbox" name="confirm" value="1" required> Erase case ${preview.code}</label>`, { submit: preview.mode === 'anonymise' ? 'Anonymise the case' : 'Delete the case', hidden: { token, fh: hash, code: preview.code }, danger: true })}</section>`;
+${confirmButtons(session.csrf, '/owner/erase', { submit: preview.mode === 'anonymise' ? `Anonymise case ${preview.code} for good` : `Delete case ${preview.code} for good`, hidden: { token, fh: hash, code: preview.code }, cancelHref: path('/owner/erase') })}</section>`;
     return layout({ title: `Erase ${preview.code}`, active: ACTIVE, session, access, moduleStates, body });
 }

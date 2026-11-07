@@ -636,6 +636,17 @@ function post(h, module, action, form, { origin = ORIGIN, csrf = h.session.csrf,
     });
 }
 
+/** post; for an action with a confirm page, then Confirm with that page's one-time token. */
+async function postConfirmed(h, module, action, form, opts = {}) {
+    const first = await post(h, module, action, form, opts);
+    const token = /name="token" value="([^"]+)"/.exec(String(first.body || ''))?.[1];
+    if (first.statusCode !== 200 || !token) return first;
+    const fh = /name="fh" value="([^"]+)"/.exec(first.body)[1];
+    return post(h, module, action, { token, fh }, opts);
+}
+
+const tokenOf = (body) => ({ token: /name="token" value="([^"]+)"/.exec(body)?.[1], fh: /name="fh" value="([^"]+)"/.exec(body)?.[1] });
+
 // ── image uploads (Welcome & goodbye) ─────────────────────────────────────
 
 const BOUNDARY = '----mewvoWelcomeBoundary';
@@ -918,7 +929,7 @@ const CASES = {
             bad: { form: { roleId: ROLE_OK, name: 'Again' }, message: /already configured/ } },
         'role-update': { form: { roleId: ROLE_OK, name: 'Helpers', enabled: '1', logChannelId: TEXT, questions: 'Why join? [min:10]' }, service: 'updateApplicationRole',
             bad: { form: { roleId: ROLE_OK, name: 'Helpers', questions: 'a\nb\nc\nd\ne\nf' }, message: /At most 5 questions/ } },
-        'role-delete': { form: { roleId: ROLE_OK, confirm: '1' }, service: 'deleteApplicationRole', bad: { form: { roleId: ROLE_OK }, message: /Tick the box/ } },
+        'role-delete': { form: { roleId: ROLE_OK }, service: 'deleteApplicationRole', bad: { form: { roleId: MISSING }, message: /no longer exists/ } },
         enabled: { form: { enabled: 'true' }, service: 'updateApplicationSettings', bad: { form: { enabled: 'yes please' }, message: /on or off/ } },
         settings: { form: { logChannelId: TEXT, pendingDays: '30', reviewedDays: '14' }, service: 'updateApplicationSettings', bad: { form: { logChannelId: '', pendingDays: '0', reviewedDays: '14' }, message: /between 1 and 3650/ } },
         questions: { form: { questions: 'Why do you want to join?\nAge? [min:2]' }, service: 'updateApplicationSettings', bad: { form: { questions: 'a\nb\nc\nd\ne\nf' }, message: /At most 5 questions/ } },
@@ -949,8 +960,8 @@ const CASES = {
             bad: { form: { url: 'example.com' }, message: /Include http/ } },
     },
     channels: {
-        purge: { form: { channelId: TEXT, amount: '2', userId: '', reason: 'spam', confirm: '1' }, service: 'purgeChannelMessages', admin: true,
-            bad: { form: { channelId: TEXT, amount: '101', confirm: '1' }, message: /between 1 and 100/ } },
+        purge: { form: { channelId: TEXT, amount: '2', userId: '', reason: 'spam' }, service: 'purgeChannelMessages', admin: true,
+            bad: { form: { channelId: TEXT, amount: '101' }, message: /between 1 and 100/ } },
         lock: { form: { channelId: TEXT, reason: 'raid' }, service: 'lockChannel', admin: true,
             bad: { form: { channelId: VOICE }, message: /must be a text channel/ } },
         unlock: { seed: (s, guild) => { guild.channels.cache.get(TEXT).permissionOverwrites.edit(GUILD, { SendMessages: false }); }, form: { channelId: TEXT }, service: 'unlockChannel', admin: true,
@@ -1032,7 +1043,7 @@ test('every POST action: users without access are refused; admin-only actions re
             assert.equal(stranger.calls.length, 0);
             const owner = await setup({ userId: OWNER });
             c.seed?.(owner.state, owner.guild);
-            const asOwner = await post(owner, module.key, action, c.form);
+            const asOwner = await postConfirmed(owner, module.key, action, c.form);
             if (getAction(module, action).admin) {
                 assert.equal(asOwner.statusCode, 403, `${module.key}/${action} owner must be refused`);
                 assert.match(asOwner.body, /Administrator/);
@@ -1053,7 +1064,7 @@ test('owner override: an OWNER_IDS action without Administrator is logged with u
         const action = Object.keys(CASES[module.key]).find((a) => !getAction(module, a).admin);
         const owner = await setup({ userId: OWNER });
         CASES[module.key][action].seed?.(owner.state, owner.guild);
-        assert.equal((await post(owner, module.key, action, CASES[module.key][action].form)).statusCode, 303);
+        assert.equal((await postConfirmed(owner, module.key, action, CASES[module.key][action].form)).statusCode, 303);
         const line = warnings.find((w) => w.startsWith('Owner override:'));
         assert.ok(line, 'override logged');
         assert.ok(line.includes(OWNER), 'user id');
@@ -1062,7 +1073,7 @@ test('owner override: an OWNER_IDS action without Administrator is logged with u
         warnings.length = 0;
         const admin = await setup();
         CASES[module.key][action].seed?.(admin.state, admin.guild);
-        await post(admin, module.key, action, CASES[module.key][action].form);
+        await postConfirmed(admin, module.key, action, CASES[module.key][action].form);
         assert.equal(warnings.filter((w) => w.startsWith('Owner override:')).length, 0);
     } finally {
         logger.warn = realWarn;
@@ -1098,7 +1109,7 @@ test('every POST action with valid input: service called, audit row, one mod-log
         for (const [action, c] of Object.entries(CASES[module.key])) {
             const h = await setup();
             c.seed?.(h.state, h.guild);
-            const res = await post(h, module.key, action, c.form, { upload: c.upload });
+            const res = await postConfirmed(h, module.key, action, c.form, { upload: c.upload });
             assert.equal(res.statusCode, 303, `${module.key}/${action} → 303 (got ${res.statusCode}: ${String(res.body).match(/role="alert">([^<]*)/)?.[1] || ''})`);
             assert.equal(res.redirectedTo, `/dashboard/${module.key}`);
             assert.ok(h.calls.some((call) => call.name === c.service), `${module.key}/${action} calls ${c.service}`);
@@ -1670,21 +1681,23 @@ test('channel tools: refused clearly when the bot lacks Manage Messages / Manage
     assert.deepEqual([text.deletedIds, text.edits, h.state.logEvents, h.auditRows], [[], [], [], []]);
 });
 
-test('channel tools: purge limits (1–100), confirm box required, user filter, 14-day messages skipped', async () => {
+test('channel tools: purge limits (1–100), confirm page first, user filter, 14-day messages skipped', async () => {
     const h = await setup();
     for (const amount of ['0', '101', 'x']) {
-        const res = await post(h, 'channels', 'purge', { channelId: TEXT, amount, confirm: '1' });
+        const res = await post(h, 'channels', 'purge', { channelId: TEXT, amount });
         assert.equal(res.statusCode, 400, `amount ${amount}`);
     }
-    const noConfirm = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5' });
-    assert.equal(noConfirm.statusCode, 400);
-    assert.match(noConfirm.body, /Tick the box/);
-    const badUser = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: 'bob', confirm: '1' });
+    const badUser = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: 'bob' });
     assert.match(badUser.body, /that is not a user ID/);
     const text = h.guild.channels.cache.get(TEXT);
-    assert.deepEqual(text.deletedIds, [], 'nothing deleted by refused forms');
+    const page = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5' });
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /Confirm: delete messages in #general/);
+    assert.match(page.body, /The newest 5/);
+    assert.match(page.body, /deleted for good and cannot be brought back/);
+    assert.deepEqual(text.deletedIds, [], 'nothing deleted by refused forms or the first submit');
 
-    const res = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: MEMBER, reason: 'spam', confirm: '1' });
+    const res = await postConfirmed(h, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: MEMBER, reason: 'spam' });
     assert.equal(res.statusCode, 303);
     assert.deepEqual(text.deletedIds, ['800000000000000001', '800000000000000003'], 'only the member\'s recent messages');
     assert.match((await h.sessions.get(h.session.id)).flash, /Deleted 2 messages in #general\. 1 message was older than 14 days and skipped\./);
@@ -1693,9 +1706,79 @@ test('channel tools: purge limits (1–100), confirm box required, user filter, 
     assert.match(h.state.logEvents[0].event.reason, /Dashboard \(admin<b>\): spam/);
     assert.equal(h.auditRows[0].key, `purge.${TEXT}`);
 
-    const onlyOld = await post(h, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: MEMBER, confirm: '1' });
+    const onlyOld = await postConfirmed(h, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: MEMBER });
     assert.equal(onlyOld.statusCode, 400);
     assert.match(onlyOld.body, /older than 14 days/);
+});
+
+// ── Confirm pages instead of tick boxes (purge, delete an application) ─────
+
+const CONFIRM_FLOWS = [
+    {
+        name: 'channels/purge', module: 'channels', action: 'purge', form: { channelId: TEXT, amount: '5', reason: 'spam <b>' },
+        heading: /Confirm: delete messages in #general/, submit: '>Delete messages</button>',
+        changed: (h) => h.guild.channels.cache.get(TEXT).deletedIds.length > 0,
+    },
+    {
+        name: 'applications/role-delete', module: 'applications', action: 'role-delete', form: { roleId: ROLE_OK },
+        heading: /Confirm: delete the Helper &lt;b&gt; application/, submit: '>Delete application</button>',
+        changed: (h) => h.calls.some((c) => c.name === 'deleteApplicationRole'),
+    },
+];
+
+for (const flow of CONFIRM_FLOWS) {
+    test(`${flow.name}: first submit → confirm page (Confirm / Cancel); no / bad / reused / expired token → refused, nothing changed; valid → runs once`, async () => {
+        const h = await setup();
+        const settingsPage = await get(h, flow.module);
+        assert.ok(!new RegExp(`action="/dashboard/${flow.module}/${flow.action}"[^>]*data-confirm`).test(settingsPage.body), 'no script dialog on the form');
+
+        const page = await post(h, flow.module, flow.action, flow.form);
+        assert.equal(page.statusCode, 200);
+        assert.match(page.body, flow.heading);
+        assert.ok(page.body.includes(flow.submit), 'the Confirm button names the action');
+        assert.ok(page.body.includes(`<a class="btn" href="/dashboard/${flow.module}">Cancel</a>`), 'Cancel goes back to the module page');
+        assert.ok(!page.body.includes('type="checkbox"'), 'no tick box');
+        assert.match(page.body, /works once and expires in 5 minutes/);
+        assert.ok(!/<style|style=|<script(?! src)/.test(page.body.replace(ALLOWED_SCRIPT, '')), 'CSP: no inline style or script');
+        assert.equal(flow.changed(h), false, 'nothing changed by the first submit');
+        assert.equal(h.auditRows.length, 0);
+
+        const refused = async (form, why) => {
+            const res = await post(h, flow.module, flow.action, form);
+            assert.equal(res.statusCode, 400, why);
+            assert.match(res.body, /expired or was already used\. Nothing was done/, why);
+            assert.equal(flow.changed(h), false, `${why}: nothing changed`);
+        };
+        await refused({ token: 'x'.repeat(32), fh: 'y' }, 'unknown token');
+        await refused({ ...tokenOf(page.body), fh: 'wrong' }, 'wrong hash');
+        const expired = tokenOf((await post(h, flow.module, flow.action, flow.form)).body);
+        const realNow = Date.now;
+        Date.now = () => realNow() + 6 * 60 * 1000;
+        try { await refused(expired, 'expired'); } finally { Date.now = realNow; }
+        // A token of the other confirm flow does not work here (bound to the action).
+        const other = CONFIRM_FLOWS.find((f) => f !== flow);
+        await refused(tokenOf((await post(h, other.module, other.action, other.form)).body), 'token of another action');
+        assert.equal(h.auditRows.length, 0);
+
+        const t = tokenOf((await post(h, flow.module, flow.action, flow.form)).body);
+        const done = await post(h, flow.module, flow.action, t);
+        assert.equal(done.statusCode, 303);
+        assert.equal(done.redirectedTo, `/dashboard/${flow.module}`);
+        assert.equal(flow.changed(h), true);
+        assert.equal(h.auditRows.length, 1);
+        const reused = await post(h, flow.module, flow.action, t);
+        assert.equal(reused.statusCode, 400, 'a token works once');
+        assert.equal(h.auditRows.length, 1, 'ran once');
+    });
+}
+
+test('applications/role-delete confirm page counts the submitted applications that go with it', async () => {
+    const h = await setup();
+    h.state.submitted = [{ id: 'a1', roleId: ROLE_OK }, { id: 'a2', roleId: ROLE_OK }, { id: 'a3', roleId: ROLE_OK2 }];
+    const page = await post(h, 'applications', 'role-delete', { roleId: ROLE_OK });
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /<dt>Submitted applications<\/dt><dd>2<\/dd>/);
+    assert.match(page.body, /This cannot be undone/);
 });
 
 test('channel tools: lock then unlock round trip (overwrite, audit reason, log events, locked list)', async () => {

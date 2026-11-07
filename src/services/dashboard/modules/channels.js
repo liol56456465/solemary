@@ -1,14 +1,14 @@
 // channels.js — Channel tools: purge messages, lock and unlock a channel. Replaces /purge,
 // /lock and /unlock; the work is done by channelToolsService (same overwrite behaviour and
 // log events as those commands). Everything here is Administrator-only. Purge deletes for
-// good, so it needs a ticked confirm box (checked on the server) as well as the script's ask.
+// good, so the first submit shows a confirm page; only its one-time token deletes (routes.js).
 
 import { ChannelType } from 'discord.js';
-import { PURGE_MAX, PURGE_MIN, TOOL_PERMS, lockedChannels } from '../../channelToolsService.js';
+import { PURGE_MAX, PURGE_MIN, TOOL_PERMS, lockedChannels, missingBotPerms } from '../../channelToolsService.js';
 import { auditReason, REASON_MAX } from '../memberActions.js';
 import { html } from '../html.js';
 import {
-    InputError, channelField, channelPicker, checkbox, checkboxInput, intField, isSnowflake, numberInput, postForm, text, textInput,
+    InputError, channelField, channelPicker, intField, isSnowflake, numberInput, postForm, text, textInput,
 } from '../forms.js';
 import { section, table } from './common.js';
 
@@ -17,6 +17,15 @@ const TEXT_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
 function channelOf(ctx, form, label) {
     const id = channelField(ctx.guild, form, 'channelId', { optional: false, label });
     return ctx.guild.channels.cache.get(id);
+}
+
+/** The purge form, checked: { channel, amount, fromUserId, reason }. */
+function purgeForm(ctx, form) {
+    const channel = channelOf(ctx, form, 'Channel');
+    const amount = intField(form, 'amount', { min: PURGE_MIN, max: PURGE_MAX, label: 'Number of messages' });
+    const fromUserId = text(form, 'userId', 25) || null;
+    if (fromUserId && !isSnowflake(fromUserId)) throw new InputError('Only from this member: that is not a user ID. A user ID is a number with 17 to 20 digits.', 400, 'userId');
+    return { channel, amount, fromUserId, reason: text(form, 'reason', REASON_MAX) };
 }
 
 const moderatorOf = (ctx) => ({ id: ctx.actor.userId, tag: ctx.actor.username || ctx.actor.userId });
@@ -39,8 +48,8 @@ ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: TOOL_PERMS.purg
 ${numberInput('amount', 10, { label: 'Number of messages', min: PURGE_MIN, max: PURGE_MAX, help: `From ${PURGE_MIN} to ${PURGE_MAX}. The newest messages go first.` })}
 ${textInput('userId', '', { label: 'Only from this member (optional)', max: 20, help: 'Their user ID: the long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID. Only the newest 100 messages are searched.' })}
 ${textInput('reason', '', { label: 'Reason', max: REASON_MAX, help: 'Saved with the action, so other staff know why.' })}</div>
-${checkboxInput('confirm', false, { label: 'I understand that deleted messages cannot be brought back' })}`,
-        { submit: 'Delete messages', danger: true, canEdit: can, confirm: 'Delete these messages for good?' });
+<p class="muted">Nothing is deleted yet: the next page shows what will be deleted, and you confirm there.</p>`,
+        { submit: 'Delete messages…', danger: true, canEdit: can });
         const lock = postForm(ctx, 'channels', 'lock', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: TOOL_PERMS.lock, optional: false })}
 ${textInput('reason', '', { label: 'Reason', max: REASON_MAX, help: 'Saved with the action, so other staff know why.' })}</div>`, { submit: 'Lock channel', canEdit: can });
@@ -56,13 +65,24 @@ ${section(`Locked channels (${locked.length})`, table(['Channel', 'Category', ''
     actions: {
         purge: {
             admin: true,
+            async confirm(ctx, form) {
+                const { channel, amount, fromUserId, reason } = purgeForm(ctx, form);
+                const missing = missingBotPerms(ctx.guild, channel, TOOL_PERMS.purge);
+                if (missing.length) throw new InputError(`Mewvo is missing ${missing.join(', ')} in #${channel.name}, so it cannot delete messages there. Nothing was changed.`);
+                const who = fromUserId ? (ctx.guild.members?.cache?.get(fromUserId)?.user?.username || fromUserId) : null;
+                return {
+                    heading: `Confirm: delete messages in #${channel.name}`,
+                    rows: [
+                        { label: 'Channel', value: `#${channel.name}` },
+                        { label: 'Messages', value: fromUserId ? `Up to ${amount} of the newest messages from ${who} (only the newest 100 are searched)` : `The newest ${amount}` },
+                        { label: 'Reason', value: reason || '-' },
+                        { label: 'Effect', value: 'The messages are deleted for good and cannot be brought back. Messages older than 14 days are skipped.' },
+                    ],
+                    submit: 'Delete messages',
+                };
+            },
             async run(ctx, form) {
-                const channel = channelOf(ctx, form, 'Channel');
-                const amount = intField(form, 'amount', { min: PURGE_MIN, max: PURGE_MAX, label: 'Number of messages' });
-                const fromUserId = text(form, 'userId', 25) || null;
-                if (fromUserId && !isSnowflake(fromUserId)) throw new InputError('Only from this member: that is not a user ID. A user ID is a number with 17 to 20 digits.', 400, 'userId');
-                const reason = text(form, 'reason', REASON_MAX);
-                if (!checkbox(form, 'confirm')) throw new InputError('Tick the box to confirm. Deleted messages cannot be brought back.', 400, 'confirm');
+                const { channel, amount, fromUserId, reason } = purgeForm(ctx, form);
                 const result = await ctx.services.purgeChannelMessages({
                     client: ctx.client, guild: ctx.guild, channel, amount, fromUserId, moderator: moderatorOf(ctx), reason: auditReason(ctx.actor.username, reason),
                 });

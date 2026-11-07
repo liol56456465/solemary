@@ -31,6 +31,9 @@ import {
     formatPanelStatusField,
 } from '../../../utils/panelStatus.js';
 import { startDashboardSession } from '../../../utils/dashboardSession.js';
+import { randomBytes } from 'node:crypto';
+import { isBotOwner } from '../../../config/bot.js';
+import { getAdminRequiredMessage, hasAdministrator } from '../../../utils/commandGate.js';
 
 function buildButtonRow(guildConfig, guildId, disabled = false, panelStatus = null) {
     const dmEnabled = guildConfig.dmOnClose !== false;
@@ -849,46 +852,96 @@ async function handleRepostPanel(btnInteraction, rootInteraction, guildConfig, g
     await refreshDashboard(rootInteraction, guildConfig, guildId, client);
 }
 
+/** How long the Confirm / Cancel buttons of "Delete system" stay usable. */
+export const TICKET_DELETE_CONFIRM_MS = 60_000;
+
+const NO_MENTIONS = { parse: [] };
+
+/** Administrator in this server (the owner counts) or OWNER_IDS, checked on the click itself. */
+export function canDeleteTicketSystem(interaction) {
+    return isBotOwner(interaction.user.id)
+        || hasAdministrator({ guild: interaction.guild, userId: interaction.user.id, permissions: interaction.memberPermissions });
+}
+
+/**
+ * Asks "Delete the ticket system?" with [Delete ticket system] (danger) and [Cancel] in an
+ * ephemeral reply to the Delete system button. Only the same user's click counts; it is
+ * acknowledged at once (deferUpdate), then the permission is checked again. After timeoutMs
+ * the buttons are removed and the message says it expired.
+ * Resolves to { outcome: 'confirm' | 'cancel' | 'denied' | 'expired', interaction }; on
+ * 'confirm' the caller deletes and edits `interaction`'s reply with the result.
+ */
+export async function askTicketDeleteConfirm(btnInteraction, { timeoutMs = TICKET_DELETE_CONFIRM_MS, canDelete = canDeleteTicketSystem } = {}) {
+    const nonce = randomBytes(6).toString('hex');
+    const yesId = `ticket_delete_yes_${nonce}`;
+    const noId = `ticket_delete_no_${nonce}`;
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(yesId).setLabel('Delete ticket system').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(noId).setLabel('Cancel').setStyle(ButtonStyle.Secondary),
+    );
+    const seconds = Math.round(timeoutMs / 1000);
+    await btnInteraction.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setTitle('Delete the ticket system?')
+                .setDescription([
+                    'This removes the ticket panel message, every ticket record of this server and the ticket settings.',
+                    'Ticket channels themselves are not deleted.',
+                    'This cannot be undone. You can set it up again with `/ticket setup`.',
+                    `These buttons work for ${seconds} seconds.`,
+                ].join('\n\n'))
+                .setColor(getColor('error')),
+        ],
+        components: [row],
+        flags: MessageFlags.Ephemeral,
+        allowedMentions: NO_MENTIONS,
+    });
+    const prompt = await btnInteraction.fetchReply();
+    const click = await prompt.awaitMessageComponent({
+        componentType: ComponentType.Button,
+        filter: (i) => i.user.id === btnInteraction.user.id && (i.customId === yesId || i.customId === noId),
+        time: timeoutMs,
+    }).catch(() => null);
+
+    if (!click) {
+        await btnInteraction.editReply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle('Confirmation expired')
+                    .setDescription(`Nothing was deleted. The buttons only work for ${seconds} seconds; press **Delete system** again if you still want to delete it.`)
+                    .setColor(getColor('error')),
+            ],
+            components: [],
+            allowedMentions: NO_MENTIONS,
+        }).catch(() => {});
+        return { outcome: 'expired', interaction: null };
+    }
+
+    // Ack first (3-second limit), then check again: roles can change while the buttons wait.
+    await click.deferUpdate();
+    const done = (title, description) => click.editReply({
+        embeds: [new EmbedBuilder().setTitle(title).setDescription(description).setColor(getColor('error'))],
+        components: [],
+        allowedMentions: NO_MENTIONS,
+    }).catch(() => {});
+
+    if (click.customId === noId) {
+        await done('Cancelled', 'Nothing was deleted.');
+        return { outcome: 'cancel', interaction: click };
+    }
+    if (!canDelete(click)) {
+        await done('Not allowed', `${getAdminRequiredMessage()}\nNothing was deleted.`);
+        return { outcome: 'denied', interaction: click };
+    }
+    return { outcome: 'confirm', interaction: click };
+}
+
 async function handleDeleteSystem(btnInteraction, rootInteraction, guildConfig, guildId, client) {
-    const deleteModal = new ModalBuilder()
-        .setCustomId('ticket_delete_confirm_modal')
-        .setTitle('Delete ticket system')
-        .addComponents(
-            new ActionRowBuilder().addComponents(
-                new TextInputBuilder()
-                    .setCustomId('delete_confirmation')
-                    .setLabel('Type "DELETE" to confirm')
-                    .setStyle(TextInputStyle.Short)
-                    .setPlaceholder('DELETE')
-                    .setMaxLength(6)
-                    .setMinLength(6)
-                    .setRequired(true)
-            )
-        );
-
-    await btnInteraction.showModal(deleteModal);
-
-    const submitted = await btnInteraction
-        .awaitModalSubmit({
-            filter: i => i.customId === 'ticket_delete_confirm_modal' && i.user.id === btnInteraction.user.id,
-            time: 120_000,
-        })
-        .catch(() => null);
-
-    if (!submitted) {
+    const { outcome, interaction: confirmed } = await askTicketDeleteConfirm(btnInteraction);
+    if (outcome !== 'confirm') {
         await refreshDashboard(rootInteraction, guildConfig, guildId, client);
         return;
     }
-
-    const confirmation = submitted.fields.getTextInputValue('delete_confirmation').trim();
-
-    if (confirmation !== 'DELETE') {
-        await replyUserError(submitted, { type: ErrorTypes.UNKNOWN, message: 'You must type "DELETE" exactly to confirm deletion.' });
-        await refreshDashboard(rootInteraction, guildConfig, guildId, client);
-        return;
-    }
-
-    await submitted.deferUpdate();
 
     const keysToDelete = [
         'ticketPanelChannelId',
@@ -937,20 +990,37 @@ async function handleDeleteSystem(btnInteraction, rootInteraction, guildConfig, 
         logger.warn('Could not clear ticket records from database:', ticketDeleteError.message);
     }
 
+    try {
+        await clearTicketSettings(client, guildId, keysToDelete);
+    } catch (error) {
+        logger.error('Could not clear ticket settings:', error);
+        await confirmed.editReply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle('Delete not finished')
+                    .setDescription('The ticket settings could not be cleared (database not responding). The panel message and ticket records may already be gone. Press Delete system again in a moment to finish.')
+                    .setColor(getColor('error')),
+            ],
+            components: [],
+            allowedMentions: NO_MENTIONS,
+        }).catch(() => {});
+        await refreshDashboard(rootInteraction, guildConfig, guildId, client);
+        return;
+    }
     for (const key of keysToDelete) {
         delete guildConfig[key];
     }
-    await clearTicketSettings(client, guildId, keysToDelete);
 
-    await submitted.followUp({
+    await confirmed.editReply({
         embeds: [
             successEmbed(
                 'Ticket system deleted',
                 'All ticket system configuration has been cleared. Run `/ticket setup` to set it up again.',
             ),
         ],
-        flags: MessageFlags.Ephemeral,
-    });
+        components: [],
+        allowedMentions: NO_MENTIONS,
+    }).catch(() => {});
 
     await InteractionHelper.safeEditReply(rootInteraction, {
         embeds: [

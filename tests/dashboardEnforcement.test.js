@@ -502,7 +502,7 @@ const POSTS = [
     { name: 'note add', handler: 'noteAdd', params: { id: TARGET }, form: { note: 'watch them' }, bad: { note: '' }, service: 'addNote', audit: 'notes', modLog: true },
     { name: 'note remove', handler: 'noteRemove', params: { id: TARGET }, form: { note: '1700000000000' }, bad: { note: 'x' }, service: 'removeNote', audit: 'notes', modLog: true },
     { name: 'case edit', handler: 'caseEdit', params: { code: CODE }, form: { reason: 'better reason' }, bad: { reason: '', duration: 'soon' }, service: 'editCase', audit: 'cases' },
-    { name: 'case void', handler: 'caseVoid', params: { code: CODE }, form: { reason: 'mistake', confirm: '1' }, bad: { reason: 'mistake' }, service: 'voidCase', audit: 'cases' },
+    { name: 'case void (confirm page)', handler: 'caseVoid', params: { code: CODE }, form: { reason: 'mistake' }, bad: { reason: '' }, service: 'getCaseByCode', status: 200, badCallsService: true },
     { name: 'evidence add', handler: 'evidenceAdd', params: { code: CODE }, form: { link: 'https://x.example/1', note: 'n' }, bad: { link: 'not a link' }, service: 'addEvidence', audit: 'cases', modLog: true },
     { name: 'case bulk tag', handler: 'caseBulk', params: {}, form: { codes: CODE, action: 'tag-add', tag: 'Scam' }, bad: { codes: CODE, action: 'nope' }, service: 'setCaseTags', audit: 'cases' },
     { name: 'case note', handler: 'caseNote', params: { code: CODE }, form: { text: 'alt of a banned member' }, bad: { text: '  ' }, service: 'addCaseNote', audit: 'cases' },
@@ -1348,18 +1348,103 @@ test('member page: timeline section, escaped, newest first; a database error say
     assert.match(res.body, /timeline could not be loaded/);
 });
 
-test('bulk cases: void needs a reason and the confirm box, at most 10; already voided are skipped; tags at most 25', async () => {
+test('bulk cases: void needs a reason, at most 10, shows a confirm page; tags at most 25', async () => {
     const h = await setup();
     const call = (form) => post(h, h.d.enforcement.caseBulk, { params: {}, form });
-    const noReason = await call({ codes: CODE, action: 'void', confirm: '1' });
+    const noReason = await call({ codes: CODE, action: 'void' });
     assert.equal(noReason.statusCode, 400);
     assert.match(noReason.body, /Give a reason/);
-    const noConfirm = await call({ codes: CODE, action: 'void', reason: 'mistake' });
-    assert.match(noConfirm.body, /Tick the box/);
-    assert.equal(serviceCalls(h, ['voidCase']).length, 0);
-    const ok = await call({ codes: [CODE, CODE], action: 'void', reason: 'mistake', confirm: '1' });
-    assert.equal(ok.statusCode, 303);
-    assert.equal(serviceCalls(h, ['voidCase']).length, 1, 'duplicates count once');
+    const page = await call({ codes: [CODE, CODE], action: 'void', reason: 'mistake <b>' });
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /Confirm: void 1 case/, 'duplicates count once');
+    assert.match(page.body, /Will be voided \(1\)/);
+    assert.ok(page.body.includes(`${CODE} · ban · target (${TARGET}): The member is unbanned`), 'lists each case with its effect');
+    assert.ok(page.body.includes('mistake &lt;b&gt;'), 'escaped');
+    assert.ok(!page.body.includes('type="checkbox"'));
+    assert.ok(page.body.includes('<a class="btn" href="/dashboard/cases">Cancel</a>'));
+    assert.equal(serviceCalls(h, ['voidCase']).length, 0, 'nothing voided by the first submit');
     const many = await call({ codes: Array.from({ length: 30 }, (_, i) => `zz${String(i).padStart(3, '9')}`), action: 'tag-add', tag: 'x' });
     assert.ok([400, 404].includes(many.statusCode));
+});
+
+test('bulk void confirm: no / bad / reused / expired token → refused, nothing voided; valid → voids the listed cases once', async () => {
+    const h = await setup();
+    const run = (form) => post(h, h.d.enforcement.caseBulkVoid, { params: {}, form });
+    const preview = () => post(h, h.d.enforcement.caseBulk, { params: {}, form: { codes: CODE, action: 'void', reason: 'mistake' } });
+    for (const form of [{}, { token: 'x'.repeat(32), fh: 'y' }]) {
+        const res = await run(form);
+        assert.equal(res.statusCode, 400);
+        assert.match(res.body, /expired or was already used\. Nothing was done/);
+    }
+    // A token from a single-case void does not work here (bound to the action).
+    const single = tokenFrom((await post(h, h.d.enforcement.caseVoid, { params: { code: CODE }, form: { reason: 'x' } })).body);
+    assert.equal((await run(single)).statusCode, 400);
+    // Expired: 5 minutes later.
+    const old = tokenFrom((await preview()).body);
+    const realNow = Date.now;
+    Date.now = () => realNow() + 6 * 60 * 1000;
+    try { assert.equal((await run(old)).statusCode, 400); } finally { Date.now = realNow; }
+    assert.equal(serviceCalls(h, ['voidCase']).length, 0);
+    assert.equal(h.auditRows.length, 0);
+
+    const t = tokenFrom((await preview()).body);
+    const done = await run({ ...t, reason: 'changed on the way' });
+    assert.equal(done.statusCode, 303);
+    assert.equal(done.redirectedTo, '/dashboard/cases');
+    const voids = serviceCalls(h, ['voidCase']);
+    assert.equal(voids.length, 1);
+    assert.equal(voids[0].args[1].reason, 'mistake', 'the reason shown on the confirm page is used');
+    assert.equal(voids[0].args[1].admin.id, ADMIN);
+    assert.equal(h.auditRows.at(-1).key, `${CODE}.void`);
+    assert.equal((await run(t)).statusCode, 400, 'a token works once');
+    assert.equal(serviceCalls(h, ['voidCase']).length, 1);
+});
+
+test('case void: confirm page says what happens; no / bad / reused / expired token refused; valid → voids once with the shown reason', async () => {
+    const h = await setup();
+    const preview = (reason = 'mistake <b>') => post(h, h.d.enforcement.caseVoid, { params: { code: CODE }, form: { reason } });
+    const run = (form) => post(h, h.d.enforcement.caseVoid, { params: { code: CODE }, form });
+
+    const caseForm = await get(h, h.d.caseDetail, { params: { code: CODE } });
+    assert.ok(!/name="confirm"/.test(caseForm.body), 'no tick box on the case page');
+    assert.match(caseForm.body, /Void case…/);
+
+    const page = await preview();
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /Confirm: void case abc234x/);
+    assert.ok(page.body.includes('mistake &lt;b&gt;'), 'reason shown, escaped');
+    assert.match(page.body, /The member is unbanned/);
+    assert.match(page.body, /works once and expires in 5 minutes/);
+    assert.ok(page.body.includes(`<a class="btn" href="/dashboard/cases/${CODE}">Cancel</a>`));
+    assert.ok(!/<style|style=|<script/i.test(page.body.replace(ALLOWED_SCRIPT, '')), 'CSP: no inline style or script');
+    assert.equal(serviceCalls(h, ['voidCase']).length, 0, 'nothing voided by the first submit');
+
+    for (const form of [{ token: 'x'.repeat(32), fh: 'y' }, { ...tokenFrom((await preview()).body), fh: 'wrong' }]) {
+        const res = await run(form);
+        assert.equal(res.statusCode, 400);
+        assert.match(res.body, /expired or was already used\. Nothing was done/);
+    }
+    const old = tokenFrom((await preview()).body);
+    const realNow = Date.now;
+    Date.now = () => realNow() + 6 * 60 * 1000;
+    try { assert.equal((await run(old)).statusCode, 400, 'expired'); } finally { Date.now = realNow; }
+    assert.equal(serviceCalls(h, ['voidCase']).length, 0);
+    assert.equal(h.auditRows.length, 0);
+
+    // Another login of the same admin (another session) cannot use the token.
+    const s2 = await h.sessions.create({ userId: ADMIN, username: 'admin' });
+    const other = { ...h, session: s2, cookie: `${SESSION_COOKIE}=${encodeURIComponent(signValue(s2.id, SECRET))}` };
+    const t0 = tokenFrom((await preview()).body);
+    assert.equal((await post(other, h.d.enforcement.caseVoid, { params: { code: CODE }, form: t0 })).statusCode, 400, 'bound to the session that saw the page');
+
+    const t = tokenFrom((await preview('typo in the case')).body);
+    const done = await run({ ...t, reason: 'something else' });
+    assert.equal(done.statusCode, 303);
+    assert.equal(done.redirectedTo, `/dashboard/cases/${CODE}`);
+    const voids = serviceCalls(h, ['voidCase']);
+    assert.equal(voids.length, 1);
+    assert.equal(voids[0].args[1].reason, 'typo in the case');
+    assert.equal(h.auditRows.at(-1).new, 'typo in the case');
+    assert.equal((await run(t)).statusCode, 400, 'a token works once');
+    assert.equal(serviceCalls(h, ['voidCase']).length, 1);
 });
