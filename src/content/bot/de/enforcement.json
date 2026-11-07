@@ -33,6 +33,7 @@
             "noInvite": "Bitte ein Teammitglied im Support-Server um eine Einladung zurück."
         },
         "appealDenied": "**Einspruch abgelehnt.** Wenn du denkst, dass das ein Fehler ist, leg hier noch einmal Einspruch ein:\n{invite}",
+        "appealDeniedNoInvite": "**Einspruch abgelehnt.**",
         "banEnded": {
             "title": "**Dein Bann von {server} ist vorbei**",
             "early": "Ein Moderator hat ihn früher aufgehoben.",

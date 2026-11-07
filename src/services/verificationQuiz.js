@@ -24,7 +24,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { z } from 'zod';
 import { infoEmbed, warningEmbed } from '../utils/embeds.js';
 import { getGuildConfig } from './config/guildConfig.js';
-import { getSetting } from './settings/guildSettings.js';
+import { isHomeGuild, resolveSetting } from './settings/guildSettings.js';
 import { numberedRules } from './rules/serverRules.js';
 import { siteOrigin } from './site/shell.js';
 
@@ -276,17 +276,21 @@ export function questionPayload(attempt) {
 
 const minutesText = (minutes) => `${minutes} minute${minutes === 1 ? '' : 's'}`;
 
-/** Where to read the rules: the posted rules channel, else the /rules page, else plain words. */
+/**
+ * Where to read the rules: this server's posted rules channel, else the /rules page (it shows the
+ * main server's rules, so only for Mewvo's own servers), else plain words.
+ */
 export function rulesLocation(guild, env = process.env) {
     const guildId = guild?.id;
     try {
-        const posted = getSetting(guildId, 'rulesPost', env)?.posted;
+        const posted = resolveSetting(guildId, 'rulesPost', env)?.posted;
         if (posted?.channelId && (!guild?.channels?.cache || guild.channels.cache.has(posted.channelId))) return `<#${posted.channelId}>`;
-        const rules = numberedRules(getSetting(guildId, 'serverRules', env)).rules;
+        if (!isHomeGuild(guildId, env)) return 'the rules channel';
+        const rules = numberedRules(resolveSetting(guildId, 'serverRules', env)).rules;
         const origin = siteOrigin(env);
         if (rules.length && origin) return `<${origin}/rules>`;
     } catch {
-        // Settings not readable: fall through to the plain words (the message must still go out).
+        // Settings not readable (or no server): fall through to the plain words (the message must still go out).
     }
     return 'the rules channel';
 }

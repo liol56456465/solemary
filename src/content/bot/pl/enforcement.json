@@ -33,6 +33,7 @@
             "noInvite": "Poproś kogoś z ekipy na serwerze pomocy o zaproszenie z powrotem."
         },
         "appealDenied": "**Odwołanie odrzucone.** Jeśli uważasz, że to pomyłka, odwołaj się ponownie tutaj:\n{invite}",
+        "appealDeniedNoInvite": "**Odwołanie odrzucone.**",
         "banEnded": {
             "title": "**Twój ban na {server} się skończył**",
             "early": "Moderator zdjął go wcześniej.",

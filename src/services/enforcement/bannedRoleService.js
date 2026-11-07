@@ -10,6 +10,13 @@ import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from './db.js';
 import { getActiveCase, OPEN_STATUSES } from './caseService.js';
 
+/**
+ * Home-only by design (multi-server B0b): the Banned role lives in Mewvo's own Support server and
+ * mirrors bans in Mewvo's main server only. It is the support server's setting (registry
+ * guild 'support'); no other server ever has or reads one.
+ */
+const homeBannedRoleId = () => enforcementConfig.bannedRoleId;
+
 function supportGuild(client) {
     return client.guilds.cache.get(enforcementConfig.supportGuildId) || null;
 }
@@ -19,7 +26,7 @@ function supportGuild(client) {
  * reason fit for the log.
  */
 export async function getManageableBannedRole(client) {
-    const roleId = enforcementConfig.bannedRoleId;
+    const roleId = homeBannedRoleId();
     if (!roleId) return { role: null, problem: null };
 
     const guild = supportGuild(client);
@@ -47,7 +54,7 @@ async function hasActiveBan(userId) {
 
 /** Gives or removes the banned role for one user so it matches their ban state. */
 export async function syncBannedRole(client, userId) {
-    if (!enforcementConfig.bannedRoleId || !isEnforcementDbAvailable()) return;
+    if (!homeBannedRoleId() || !isEnforcementDbAvailable()) return;
 
     const { role, problem } = await getManageableBannedRole(client);
     if (!role) {
@@ -76,7 +83,7 @@ export function syncBannedRoleQuietly(client, userId) {
 
 /** Startup: every support-server member gets the role iff they have an active ban. */
 export async function reconcileBannedRoles(client) {
-    if (!enforcementConfig.bannedRoleId) return { skipped: 'BANNED_ROLE_ID is not set' };
+    if (!homeBannedRoleId()) return { skipped: 'BANNED_ROLE_ID is not set' };
     if (!isEnforcementDbAvailable()) return { skipped: 'the database is unavailable' };
 
     const { role, problem } = await getManageableBannedRole(client);

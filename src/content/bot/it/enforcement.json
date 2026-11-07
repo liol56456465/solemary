@@ -33,6 +33,7 @@
             "noInvite": "Chiedi a un membro dello staff nel server di supporto un invito per rientrare."
         },
         "appealDenied": "**Ricorso respinto.** Se pensi che sia un errore, fai di nuovo ricorso qui:\n{invite}",
+        "appealDeniedNoInvite": "**Ricorso respinto.**",
         "banEnded": {
             "title": "**Il tuo ban da {server} è finito**",
             "early": "Un moderatore l’ha tolto prima.",

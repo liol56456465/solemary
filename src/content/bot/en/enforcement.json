@@ -33,6 +33,7 @@
             "noInvite": "Ask a staff member in the support server for an invite back."
         },
         "appealDenied": "**Appeal denied.** If you think this is a mistake, appeal again here:\n{invite}",
+        "appealDeniedNoInvite": "**Appeal denied.**",
         "banEnded": {
             "title": "**Your ban from {server} has ended**",
             "early": "A moderator lifted it early.",

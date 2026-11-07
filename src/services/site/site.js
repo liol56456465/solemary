@@ -571,6 +571,9 @@ export function createSite({
     }
 }
 
+// Home-only by design (multi-server B0b): the website reports Mewvo's main server only, so both
+// switches below are the main server's settings until a per-server site exists.
+
 /** The real transparency source: the main server's dashboard setting and the cached report reader. */
 function defaultTransparency() {
     return {

@@ -33,6 +33,7 @@
             "noInvite": "Peça a alguém da equipe no servidor de suporte um convite para voltar."
         },
         "appealDenied": "**Apelação recusada.** Se você acha que é um engano, apele de novo aqui:\n{invite}",
+        "appealDeniedNoInvite": "**Apelação recusada.**",
         "banEnded": {
             "title": "**Seu banimento do {server} terminou**",
             "early": "Um moderador o retirou antes.",

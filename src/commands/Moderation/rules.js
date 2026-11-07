@@ -13,7 +13,7 @@ import { ChannelType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
-import { getConfiguredSetting, guildIdFor, isSettingsLoaded, updateSettings } from '../../services/settings/guildSettings.js';
+import { guildIdFor, isSettingsLoaded, resolveSetting, updateSettings } from '../../services/settings/guildSettings.js';
 import { numberedRules } from '../../services/rules/serverRules.js';
 import {
     postAndSaveRules, postRulesMessages, rulesMessagesFor, rulesPostDesign, serializedRules, updateAndSaveRules, updateRulesMessages,
@@ -24,7 +24,7 @@ const NO_MENTIONS = Object.freeze({ parse: [] });
 
 /** The services the command uses (tests replace them; nothing reaches Discord or the DB). */
 export const rulesCommandDeps = {
-    getConfiguredSetting, guildIdFor, isSettingsLoaded, updateSettings, resolveWelcomeImageUrl, postRulesMessages, updateRulesMessages,
+    guildIdFor, isSettingsLoaded, resolveSetting, updateSettings, resolveWelcomeImageUrl, postRulesMessages, updateRulesMessages,
 };
 
 const userError = (message, type = ErrorTypes.VALIDATION) => new TitanBotError(message, type, message, { expected: true });
@@ -52,8 +52,8 @@ function readState(interaction) {
     if (!mainId || interaction.guildId !== mainId) throw userError('The rules can only be posted from the main server.');
     // Settings not read from the database yet: never post the defaults instead of the saved design.
     if (!rulesCommandDeps.isSettingsLoaded()) throw userError('The saved settings are not loaded (database not responding). Nothing was changed.', ErrorTypes.DATABASE);
-    const { rules } = numberedRules(rulesCommandDeps.getConfiguredSetting('serverRules'));
-    const design = rulesPostDesign(rulesCommandDeps.getConfiguredSetting('rulesPost'));
+    const { rules } = numberedRules(rulesCommandDeps.resolveSetting(mainId, 'serverRules'));
+    const design = rulesPostDesign(rulesCommandDeps.resolveSetting(mainId, 'rulesPost'));
     return { mainId, rules, design };
 }
 
