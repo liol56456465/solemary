@@ -1,9 +1,10 @@
 // dashboard.js — small enhancements for the Mewvo web dashboard.
 //
 // Progressive enhancement only: every page and form works without this file (CSP
-// script-src 'self', no inline scripts). Nothing here talks to the network; it only
-// changes how the page behaves in the browser.
+// script-src 'self', no inline scripts). It changes how the page behaves in the browser;
+// its only network read is the member type-ahead below (same-origin GET, connect-src 'self').
 //
+//   input[data-member-search]  type-ahead for member fields (/dashboard/members/search.json)
 //   select[data-search]     a filter box above long channel / role lists
 //   form[data-confirm]      asks before a destructive submit (a <dialog>; red confirm for danger buttons)
 //   form submit             the button shows "Saving…" (aria-busy) and cannot be pressed twice
@@ -547,6 +548,114 @@
         });
     }
 
+    // ── Member type-ahead (input[data-member-search]) ────────────────────
+    // The only network read of this script: GET of the same-origin JSON endpoint named in the
+    // attribute (session cookie, Administrator checked per request, rate limited). Without this,
+    // the field still takes an ID or @mention and links to the server-rendered search page.
+    const MEMBER_SEARCH_PATH = /^\/dashboard\/members\/search\.json(\?bans=1)?$/;
+    let memberListCount = 0;
+
+    function setupMemberSearch(input) {
+        const url = input.dataset.memberSearch || '';
+        if (!MEMBER_SEARCH_PATH.test(url)) return;
+        input.removeAttribute('list'); // our list replaces a <datalist>
+        memberListCount += 1;
+        const list = document.createElement('ul');
+        list.id = `member-list-${memberListCount}`;
+        list.className = 'member-options';
+        list.setAttribute('role', 'listbox');
+        list.hidden = true;
+        const status = document.createElement('span');
+        status.className = 'sr';
+        status.setAttribute('role', 'status');
+        input.setAttribute('role', 'combobox');
+        input.setAttribute('aria-autocomplete', 'list');
+        input.setAttribute('aria-controls', list.id);
+        input.setAttribute('aria-expanded', 'false');
+        input.insertAdjacentElement('afterend', list);
+        list.insertAdjacentElement('afterend', status);
+        let timer = 0;
+        let seq = 0;
+        let active = -1;
+        const options = () => [...list.querySelectorAll('[role="option"]')];
+        const close = () => {
+            list.hidden = true;
+            input.setAttribute('aria-expanded', 'false');
+            input.removeAttribute('aria-activedescendant');
+            active = -1;
+        };
+        const mark = (index) => {
+            const all = options();
+            active = all.length ? (index + all.length) % all.length : -1;
+            all.forEach((opt, i) => opt.setAttribute('aria-selected', String(i === active)));
+            if (active >= 0) input.setAttribute('aria-activedescendant', all[active].id);
+        };
+        const choose = (opt) => {
+            input.value = opt.dataset.id;
+            status.textContent = say('memberPicked', 'Picked {name}.', { name: opt.dataset.name });
+            close();
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+        const show = (results) => {
+            list.replaceChildren();
+            results.forEach((r, i) => {
+                const opt = document.createElement('li');
+                opt.id = `${list.id}-${i}`;
+                opt.setAttribute('role', 'option');
+                opt.setAttribute('aria-selected', 'false');
+                opt.dataset.id = String(r.id);
+                opt.dataset.name = String(r.name);
+                const name = document.createElement('b');
+                name.textContent = String(r.name);
+                const extra = document.createElement('small');
+                extra.textContent = ` @${r.username} · ${r.id}${r.banned ? ` · ${say('memberBanned', 'banned')}` : ''}${r.bot ? ' · bot' : ''}`;
+                opt.append(name, extra);
+                opt.addEventListener('mousedown', (event) => { event.preventDefault(); choose(opt); });
+                list.appendChild(opt);
+            });
+            list.hidden = !results.length;
+            input.setAttribute('aria-expanded', String(results.length > 0));
+            status.textContent = results.length ? say('memberResults', '{count} members found.', { count: results.length }) : say('memberNone', 'No member found.');
+            active = -1;
+        };
+        const lookup = async (q) => {
+            const mine = ++seq;
+            try {
+                const response = await fetch(`${url}${url.includes('?') ? '&' : '?'}q=${encodeURIComponent(q)}`, {
+                    credentials: 'same-origin', headers: { Accept: 'application/json' }, redirect: 'error',
+                });
+                if (!response.ok) { if (mine === seq) { close(); status.textContent = say('memberSearchFailed', 'The search did not work. Use Find a member instead.'); } return; }
+                const body = await response.json();
+                if (mine === seq && document.activeElement === input) show(Array.isArray(body.results) ? body.results : []);
+            } catch {
+                if (mine === seq) close();
+            }
+        };
+        input.addEventListener('input', (event) => {
+            if (!event.isTrusted) return;
+            window.clearTimeout(timer);
+            const q = input.value.trim();
+            // An ID or mention needs no search; one letter is too little.
+            if (q.length < 2 || /^(<@!?)?\d{17,20}>?$/.test(q)) { close(); return; }
+            timer = window.setTimeout(() => lookup(q), 300);
+        });
+        input.addEventListener('keydown', (event) => {
+            if (list.hidden) return;
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                mark(active + (event.key === 'ArrowDown' ? 1 : -1));
+            } else if (event.key === 'Enter' && active >= 0) {
+                event.preventDefault();
+                choose(options()[active]);
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                close();
+            }
+        });
+        input.addEventListener('blur', () => window.setTimeout(close, 150));
+    }
+
     /** The word searched from the top bar stays visible in the search box (?q=). */
     function keepSearchWord() {
         const q = new URLSearchParams(window.location.search).get('q');
@@ -659,6 +768,7 @@
         openSectionFromHash();
         window.addEventListener('hashchange', openSectionFromHash);
         document.querySelectorAll('select[data-search]').forEach(enhanceSelect);
+        document.querySelectorAll('input[data-member-search]').forEach(setupMemberSearch);
         document.querySelectorAll('[data-copy]').forEach(addCopyButton);
         document.querySelectorAll('details[data-key]').forEach(rememberDetails);
         showFormError();

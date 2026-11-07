@@ -21,7 +21,9 @@ import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { getGuildConfig, setConfigValue } from '../../services/config/guildConfig.js';
 import ConfigService from '../../services/config/configService.js';
 import { logger } from '../../utils/logger.js';
-import { botConfig, getCommandPrefix } from '../../config/bot.js';
+import { botConfig, getCommandPrefix, isBotOwner } from '../../config/bot.js';
+import { hasAdministrator } from '../../utils/commandGate.js';
+import { randomBytes } from 'node:crypto';
 
 const DASHBOARD_CUSTOM_ID = 'config_select';
 const WIZARD_BUTTON_ID = 'config_wizard';
@@ -38,7 +40,7 @@ async function notifyWizardStarted(buttonInteraction) {
     await buttonInteraction.followUp({
         embeds: [infoEmbed(
             'Setup started',
-            'Check your DMs, the first question is there. Type `skip` to keep a current value.',
+            'Check your DMs, the first question is there. Press **Skip** under a question to keep its current value.',
         )],
         flags: MessageFlags.Ephemeral,
     }).catch(() => {});
@@ -186,37 +188,98 @@ function extractId(value) {
     return null;
 }
 
-async function askQuestion(dmChannel, userId, prompt, stepNumber, totalSteps) {
-    await dmChannel.send({
+// The DM questions: a typed answer, or the Skip / Stop setup buttons under the question
+// (`config_wizard_step:<skip|cancel>:<nonce>`; collector-managed, see utils/collectorComponents.js).
+export const STEP_BUTTON_PREFIX = 'config_wizard_step';
+export const QUESTION_TIMEOUT_MS = 180_000;
+const NO_PINGS = { parse: [] };
+
+/** The Skip / Stop setup buttons of one question. */
+export function stepButtons(nonce, { disabled = false } = {}) {
+    return new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`${STEP_BUTTON_PREFIX}:skip:${nonce}`).setLabel('Skip (keep current)').setStyle(ButtonStyle.Secondary).setDisabled(disabled),
+        new ButtonBuilder().setCustomId(`${STEP_BUTTON_PREFIX}:cancel:${nonce}`).setLabel('Stop setup').setStyle(ButtonStyle.Danger).setDisabled(disabled),
+    );
+}
+
+/**
+ * Waits for the first of: a DM from the user ({ text }), a press on this question's buttons
+ * ({ button: 'skip' | 'cancel' }, acknowledged at once), or the timeout (null).
+ */
+export function waitForAnswer({ dmChannel, message, userId, nonce, timeMs = QUESTION_TIMEOUT_MS }) {
+    return new Promise((resolve) => {
+        let done = false;
+        const collectors = [];
+        const finish = (value) => {
+            if (done) return;
+            done = true;
+            for (const collector of collectors) collector.stop('answered');
+            resolve(value);
+        };
+        const texts = dmChannel.createMessageCollector({
+            filter: (m) => m.author?.id === userId && !m.author?.bot, max: 1, time: timeMs,
+        });
+        collectors.push(texts);
+        texts.on('collect', (m) => finish({ text: String(m.content || '').trim() }));
+        texts.on('end', (collected, reason) => { if (reason === 'time') finish(null); });
+        if (typeof message?.createMessageComponentCollector === 'function') {
+            const buttons = message.createMessageComponentCollector({
+                filter: (i) => i.user?.id === userId && typeof i.customId === 'string' && i.customId.startsWith(`${STEP_BUTTON_PREFIX}:`) && i.customId.endsWith(`:${nonce}`),
+                max: 1, time: timeMs,
+            });
+            collectors.push(buttons);
+            buttons.on('collect', async (i) => {
+                const choice = i.customId.split(':')[1];
+                finish({ button: choice === 'cancel' ? 'cancel' : 'skip' });
+                await i.deferUpdate().catch(() => {});
+            });
+            buttons.on('end', (collected, reason) => { if (reason === 'time') finish(null); });
+        }
+    });
+}
+
+export async function askQuestion(dmChannel, userId, prompt, stepNumber, totalSteps, { nonce = randomBytes(4).toString('hex'), timeMs = QUESTION_TIMEOUT_MS } = {}) {
+    const message = await dmChannel.send({
         embeds: [createEmbed({
             title: `Setup question ${stepNumber}/${totalSteps}`,
             description: prompt,
             color: 'primary',
         })],
+        components: [stepButtons(nonce)],
+        allowedMentions: NO_PINGS,
     });
 
-    const collected = await dmChannel.awaitMessages({
-        filter: (message) => message.author.id === userId && !message.author.bot,
-        max: 1,
-        time: 180_000,
-    }).catch(() => null);
+    const result = await waitForAnswer({ dmChannel, message, userId, nonce, timeMs });
+    // The buttons only work for this question: grey them out once it is answered or expired.
+    await message?.edit?.({ components: [stepButtons(nonce, { disabled: true })] }).catch(() => {});
 
-    if (!collected || !collected.size) {
+    if (!result) {
         await dmChannel.send({
             embeds: [buildUserErrorEmbed(ErrorTypes.RATE_LIMIT, 'You did not answer in time. Run the setup wizard again when ready.')],
+            allowedMentions: NO_PINGS,
         });
         return null;
     }
 
-    const answer = collected.first().content.trim();
-    if (answer.toLowerCase() === 'cancel') {
+    // Typing skip / cancel still works (older habit); the buttons are what the question offers.
+    const typed = result.text?.toLowerCase();
+    if (result.button === 'cancel' || typed === 'cancel') {
         await dmChannel.send({
             embeds: [infoEmbed('Setup cancelled', 'Stopped. Anything you already answered is saved.')],
+            allowedMentions: NO_PINGS,
         });
         return { cancelled: true };
     }
+    if (result.button === 'skip' || typed === 'skip') return { skipped: true };
 
-    return { answer };
+    return { answer: result.text };
+}
+
+/** Still allowed to change this server's settings? Administrator (or the server owner), or OWNER_IDS. */
+export async function stillAllowed(guild, userId) {
+    if (isBotOwner(userId)) return true;
+    const member = guild?.members?.cache?.get?.(userId) || await guild?.members?.fetch?.(userId).catch(() => null);
+    return Boolean(member) && hasAdministrator({ guild, userId, permissions: member.permissions });
 }
 
 function formatSavedAck(key, value, guild) {
@@ -270,7 +333,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
 
     if (activeWizardSessions.has(user.id)) {
         await buttonInteraction.followUp({
-            embeds: [warningEmbed('Setup already running', 'You already have the setup open in your DMs. Reply there, or type `cancel` to stop it.')],
+            embeds: [warningEmbed('Setup already running', 'You already have the setup open in your DMs. Answer there, or press **Stop setup** under the question.')],
             flags: MessageFlags.Ephemeral,
         }).catch(() => {});
         return;
@@ -296,7 +359,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
         {
             key: 'prefix',
             skipMessage: 'Keeping the current server prefix.',
-            question: 'What command prefix should this server use?\nCurrent: `' + (config.prefix || getCommandPrefix()) + '`\nReply `skip` to keep it, or `cancel` to stop.',
+            question: 'What command prefix should this server use?\nCurrent: `' + (config.prefix || getCommandPrefix()) + '`\nType the new prefix, or press **Skip** to keep it.',
             parse: async (answer) => {
                 const normalized = answer.trim();
                 if (normalized.toLowerCase() === 'skip') return undefined;
@@ -309,7 +372,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
         {
             key: 'logChannelId',
             skipMessage: 'Keeping the current log channel.',
-            question: 'Which channel should receive bot logs?\nSend a channel mention, channel ID, `none` to clear, `skip` to keep the current value, or `cancel` to stop.',
+            question: 'Which channel should receive bot logs?\nSend a channel mention or channel ID, or `none` to clear it. Press **Skip** to keep the current one.',
             parse: async (answer) => {
                 const normalized = answer.trim();
                 if (normalized.toLowerCase() === 'skip') return undefined;
@@ -322,7 +385,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
         {
             key: 'modRole',
             skipMessage: 'Keeping the current moderator role.',
-            question: 'What role should moderators have?\nSend a role mention, role ID, `none` to clear, `skip` to keep the current value, or `cancel` to stop.',
+            question: 'What role should moderators have?\nSend a role mention or role ID, or `none` to clear it. Press **Skip** to keep the current one.',
             parse: async (answer) => {
                 const normalized = answer.trim();
                 if (normalized.toLowerCase() === 'skip') return undefined;
@@ -343,7 +406,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
             await dmChannel.send({
                 embeds: [createEmbed({
                     title: 'Setup',
-                    description: 'Answer each question here.\n\n• `skip` keeps the current value\n• `cancel` stops the setup',
+                    description: 'Answer each question here.\n\n• **Skip** keeps the current value\n• **Stop setup** stops the setup',
                     color: 'info',
                 })],
             });
@@ -381,7 +444,18 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
                 }
 
                 try {
-                    const value = await prompt.parse(result.answer);
+                    const value = result.skipped ? undefined : await prompt.parse(result.answer);
+
+                    // The wizard can run for minutes: re-check before every save (Administrator or OWNER_IDS).
+                    if (value !== undefined && !(await stillAllowed(guild, user.id))) {
+                        await dmChannel.send({
+                            embeds: [buildUserErrorEmbed(ErrorTypes.PERMISSION, `You no longer have the Administrator permission in ${guild.name}, so nothing more was saved. Setup stopped.`)],
+                            allowedMentions: NO_PINGS,
+                        });
+                        wizardCancelled = true;
+                        answered = true;
+                        break;
+                    }
 
                     if (value === undefined) {
                         await dmChannel.send({
@@ -406,7 +480,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
                 } catch (error) {
                     errors.push(`• ${prompt.key}: ${error.message}`);
                     await dmChannel.send({
-                        embeds: [buildUserErrorEmbed(ErrorTypes.VALIDATION, `${error.message}\n\nReply again, or send \`skip\` or \`cancel\`.`)],
+                        embeds: [buildUserErrorEmbed(ErrorTypes.VALIDATION, `${error.message}\n\nAnswer again, or press **Skip** or **Stop setup** under the new question.`)],
                     });
                 }
             }

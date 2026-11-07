@@ -3,7 +3,8 @@
 // through ticketSettingsService, modmailService and cannedService, as the commands do.
 
 import { CANNED_MAX_LENGTH, CANNED_NAME } from '../../cannedService.js';
-import { html } from '../html.js';
+import { html, path } from '../html.js';
+import { memberField, pickedFromQuery } from '../memberSearch.js';
 import {
     InputError, PERMS, buttonForm, channelField, channelName, channelPicker, channelWarnings, checkbox, switchInput, intField,
     multiline, numberInput, postForm, roleField, rolePicker, text, textArea, textInput, userIdField,
@@ -53,7 +54,7 @@ ${numberInput('maxTicketsPerUser', 3, { label: 'Open tickets per member', min: 1
 ${switchInput('dmOnClose', true, { label: 'Message the member when their ticket closes' })}
 ${textArea('panelMessage', 'Need help from staff? Press the button below to open a private ticket.', { label: 'Panel message', max: 2000 })}</div>`, { submit: 'Set up and post the panel', canEdit: canPost })}`;
         const blockForm = postForm(ctx, 'tickets', 'block', html`<div class="grid">
-${textInput('userId', '', { label: 'Member (user ID)', max: 25, help: 'The long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID.' })}
+${memberField({ name: 'userId', label: 'Member', value: pickedFromQuery(ctx.query, 'block_user'), required: true, pick: 'block_user', back: path('/tickets'), anchor: 'modmail-blocked-members', bans: true, guild: g })}
 ${textInput('reason', '', { label: 'Reason (optional)', max: 200, help: 'Only staff see it, in the dashboard history.' })}</div>`, { submit: 'Block from modmail', canEdit: ctx.canEdit && ctx.canAct, confirm: 'Block this member from modmail?' })
         const blockedRows = blocked.map((id) => [html`<code>${id}</code>`, buttonForm(ctx, 'tickets', 'unblock', 'Unblock', { userId: id }, { danger: false })]);
         const cannedRows = Object.entries(canned).sort((a, b) => a[0].localeCompare(b[0])).map(([name, body]) => [

@@ -115,6 +115,7 @@ import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
 import { createWebsiteHandlers, defaultWebsiteDeps } from './websiteRoutes.js';
 import { IMAGE_MAX_BYTES as SITE_IMAGE_MAX_BYTES } from '../site/siteImages.js';
 import { InputError, plainText } from './forms.js';
+import { createMemberSearch, memberSearchPage, searchJson, searchParams } from './memberSearch.js';
 import { MAX_UPLOAD_BYTES, MultipartError, parseMultipart } from './multipart.js';
 import { createPgSessionStore } from './sessionStore.js';
 import { query } from '../enforcement/db.js';
@@ -148,7 +149,8 @@ export const DEFAULT_LIMITS = {
 };
 
 export const SECURITY_HEADERS = {
-    'Content-Security-Policy': "default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' https://cdn.discordapp.com https://media.discordapp.net; "
+    // connect-src 'self': the member type-ahead (dashboard.js) reads /dashboard/members/search.json.
+    'Content-Security-Policy': "default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self' https://cdn.discordapp.com https://media.discordapp.net; "
         + "form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
@@ -261,6 +263,7 @@ export function createDashboard({
     enforcement = defaultEnforcement, confirms = createConfirmStore(), owner = defaultOwnerDeps,
     inbox = defaultInboxData, inboxBadge = false,
     memberTools = defaultMemberTools, incidents = defaultIncidents, website = defaultWebsiteDeps,
+    memberSearch = createMemberSearch(),
 }) {
     const secret = settings.sessionSecret;
     const guildId = settings.mainGuildId;
@@ -1030,7 +1033,42 @@ export function createDashboard({
         return failT(res, 404, 'notFound', 'noSuchPage', req);
     }
 
+    // ── Find a member (memberSearch.js): the no-JS results page and the type-ahead JSON ──
+    // Both are GETs behind requireUser (session + Administrator per request, permissions.js
+    // 'member.search'); a read only, so no CSRF token, but a cross-site request is refused and
+    // each user has their own limit (Discord's member search is rate limited too).
+    const crossSite = (req) => String(req.headers?.['sec-fetch-site'] || '') === 'cross-site';
+
+    async function memberSearchHtml(req, res) {
+        if (crossSite(req)) return failT(res, 403, 'notAllowed', 'csrf', req);
+        const params = searchParams(req.query || {}, safeBackPath);
+        let results = null;
+        let error = null;
+        if (params.q) {
+            if (!memberSearch.allow(req.dashboard.session.idHash)) {
+                res.set('Retry-After', '60');
+                return failT(res, 429, 'slowDown', 'tooManyRequests', req);
+            }
+            ({ results, error } = await memberSearch.search(client.guilds?.cache?.get(guildId) || null, params.q, { includeBans: params.bans }));
+        }
+        return sendHtml(res, 200, memberSearchPage({ ...shellOf(req), params, results, error }));
+    }
+
+    async function memberSearchJsonHandler(req, res) {
+        const send = (status, value) => res.status(status).type('application/json').send(searchJson(value));
+        if (crossSite(req)) return send(403, { error: 'Not allowed.' });
+        const q = str(req.query?.q, 100);
+        if (!q) return send(200, { results: [] });
+        if (!memberSearch.allow(req.dashboard.session.idHash)) {
+            res.set('Retry-After', '60');
+            return send(429, { error: 'Too many searches. Wait a minute.' });
+        }
+        const { results, error } = await memberSearch.search(client.guilds?.cache?.get(guildId) || null, q, { includeBans: str(req.query?.bans, 1) === '1' });
+        return send(200, { results: results.map(({ id, name, username, bot, banned }) => ({ id, name, username, bot, banned })), error });
+    }
+
     return {
+        memberSearch: memberSearchHtml, memberSearchJson: memberSearchJsonHandler,
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
         overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, setLanguage, help, setup,
         sessions, states, confirms, permissionFix: permissionFixHandlers, enforcement: enforcementHandlers, owner: ownerHandlers, website: websiteHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
@@ -1222,6 +1260,8 @@ export function dashboardRouter(d) {
     router.get('/users/bulk/:job', user, safe(en.bulkJob));
     router.get('/users/:id', user, safe(en.userPage));
     router.get('/nocontact', user, safe(en.noContact));
+    router.get('/members/search.json', user, safe(d.memberSearchJson));
+    router.get('/members/search', user, safe(d.memberSearch));
     router.get('/staff', user, safe(d.staff));
     router.get('/activity', user, safe(d.activity));
     router.get('/incidents', user, safe(d.incidents.list));

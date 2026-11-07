@@ -3571,3 +3571,66 @@ test('verification / rules quiz: "Suggest questions from my rules" fills drafts 
     const none = await run(empty, empty.d.modulePage, { method: 'GET', params: { module: 'verification' }, headers: { cookie: empty.cookie }, query: { quiz: 'suggest' } });
     assert.match(none.body, /no server rules to suggest from yet/);
 });
+
+// ── Member fields and open polls (no more typed IDs or pasted links) ─────
+
+test('member fields: Tickets block, Purge "only from" and Logging ignore search by name; Find a member fills the ID back in', async () => {
+    const h = await setup();
+    const pages = { tickets: ['userId', 'block_user', 'modmail-blocked-members', true], channels: ['userId', 'purge_user', 'purge-messages', true], logging: ['id', 'ignore_user', 'ignore-lists', false] };
+    for (const [module, [field, pick, anchor, bans]] of Object.entries(pages)) {
+        const page = await get(h, module);
+        assert.equal(page.statusCode, 200, module);
+        assert.ok(page.body.includes(`data-member-search="/dashboard/members/search.json${bans ? '?bans=1' : ''}"`), `${module}: type-ahead`);
+        assert.ok(page.body.includes(`href="/dashboard/members/search?for=${pick}&amp;back=%2Fdashboard%2F${module}&amp;at=${anchor}${bans ? '&amp;bans=1' : ''}"`), `${module}: Find link`);
+        assert.ok(!page.body.includes('Copy User ID'), `${module}: no Developer Mode instructions`);
+        const picked = await run(h, h.d.modulePage, { method: 'GET', params: { module }, headers: { cookie: h.cookie }, query: { [pick]: MEMBER } });
+        assert.ok(picked.body.includes(`name="${field}" value="${MEMBER}"`), `${module}: the picked ID is filled in`);
+        const junk = await run(h, h.d.modulePage, { method: 'GET', params: { module }, headers: { cookie: h.cookie }, query: { [pick]: '"><b>x' } });
+        assert.ok(!junk.body.includes('"><b>x') && !junk.body.includes('&quot;&gt;&lt;b&gt;x'), `${module}: only an ID is taken from the query`);
+    }
+});
+
+test('member fields: an @mention is accepted where a user ID was (tickets block, purge, logging ignore)', async () => {
+    const h = await setup();
+    assert.equal((await post(h, 'tickets', 'block', { userId: `<@${STRANGER}>` })).statusCode, 303);
+    assert.ok(h.calls.some((c) => c.name === 'setModmailBlocked' && c.args.includes(STRANGER)), 'blocked by the mentioned ID');
+    const p = await setup();
+    assert.equal((await post(p, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: `<@!${MEMBER}>`, confirm: '1' })).statusCode, 303);
+    assert.deepEqual(p.guild.channels.cache.get(TEXT).deletedIds, ['800000000000000001', '800000000000000003']);
+    const l = await setup();
+    assert.equal((await post(l, 'logging', 'ignore-add', { type: 'user', id: `<@${MEMBER}>` })).statusCode, 303);
+    assert.ok(l.calls.some((c) => c.name === 'updateIgnoreList' && JSON.stringify(c.args).includes(MEMBER)));
+    const bad = await post(await setup(), 'channels', 'purge', { channelId: TEXT, amount: '5', userId: 'bob', confirm: '1' });
+    assert.equal(bad.statusCode, 400);
+    assert.match(bad.body, /Find a member/);
+});
+
+test('End a poll: Mewvo\'s open polls listed (escaped) with an End button each; the button ends that poll; the link stays as a fallback', async () => {
+    const h = await setup();
+    h.svc.openPollsFor = async () => ({ partial: false, polls: [{ messageId: '710000000000000015', channelId: TEXT, channelName: 'general', question: 'Pizza <b>?', endsAt: Date.UTC(2026, 10, 9), url: null }] });
+    const page = await get(h, 'messages');
+    assert.equal(page.statusCode, 200);
+    assert.ok(page.body.includes('Pizza &lt;b&gt;?') && !page.body.includes('Pizza <b>?'));
+    assert.ok(page.body.includes('name="messageId" value="710000000000000015"'));
+    assert.ok(page.body.includes(`name="channelId" value="${TEXT}"`));
+    assert.match(page.body, /A poll is not in the list\? End it by its link/);
+    assert.ok(page.body.includes('name="link"'), 'link fallback kept');
+    const res = await post(h, 'messages', 'poll-end', { channelId: TEXT, messageId: '710000000000000015' });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'endPoll').args, [`https://discord.com/channels/${GUILD}/${TEXT}/710000000000000015`], 'always this server');
+    assert.deepEqual(h.auditRows.map((r) => r.key), ['poll.710000000000000015.ended']);
+    // Bad IDs fall back to the (empty) link and are refused before the service.
+    const bad = await setup();
+    const refused = await post(bad, 'messages', 'poll-end', { channelId: 'x', messageId: '710000000000000015' });
+    assert.equal(refused.statusCode, 400);
+    assert.ok(!bad.calls.some((c) => c.name === 'endPoll'));
+
+    const none = await setup();
+    none.svc.openPollsFor = async () => ({ partial: true, polls: [] });
+    const empty = await get(none, 'messages');
+    assert.match(empty.body, /Mewvo has no open polls in this server\./);
+    assert.match(empty.body, /some polls may be missing/);
+    const failing = await setup();
+    failing.svc.openPollsFor = async () => { throw new Error('db down'); };
+    assert.match((await get(failing, 'messages')).body, /The open polls could not be loaded/);
+});

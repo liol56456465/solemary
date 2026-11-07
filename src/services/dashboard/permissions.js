@@ -72,6 +72,7 @@ export const PERMISSIONS = Object.freeze({
     'member.unverify': ADMIN,
     'member.notes': ADMIN,
     'member.bulk': ADMIN,
+    'member.search': ADMIN, // Find a member (results page + type-ahead JSON) for the ID fields of Administrator forms
     // ── Records ──
     'case.edit': ADMIN, // edit / void
     'case.evidence': ADMIN,
@@ -159,6 +160,8 @@ export const ROUTES = [
     ['GET', '/users/insights', 'page:member-insights'],
     ['GET', '/users/:id', 'page:users'],
     ['GET', '/nocontact', 'page:nocontact'],
+    ['GET', '/members/search', 'member.search'],
+    ['GET', '/members/search.json', 'member.search'],
     ['GET', '/staff', 'page:staff'],
     ['GET', '/activity', 'page:activity'],
     ['GET', '/incidents', 'page:incidents'],
