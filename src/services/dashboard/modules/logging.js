@@ -87,6 +87,7 @@ ${section('Ignore lists', ignoreForms, 'Nothing is logged from these channels (a
             const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
             const changes = [];
             for (const destination of LOG_DESTINATIONS) {
+                if (form?.[destination] === undefined) continue; // absent from the form: unchanged
                 const value = channelField(ctx.guild, form, destination, { label: DESTINATION_LABEL[destination] });
                 const old = before.channels?.[destination] || null;
                 if (value === old) continue;

@@ -50,7 +50,7 @@
   "warn": {
     "channelGone": "le salon {id} n’existe plus",
     "cannotCheck": "impossible de vérifier mes permissions ici",
-    "missingPerms": "il me manque {perms} dans #{channel}",
+    "missingPerms": "il me manque {perms} dans #{channel}. Pour régler ça, autorisez-les pour le rôle de Mewvo dans Modifier le salon → Permissions, ou choisissez un autre salon",
     "roleGone": "le rôle {id} n’existe plus",
     "everyone": "@everyone ne peut pas être utilisé",
     "managed": "@{role} est géré par une intégration ou un bot",

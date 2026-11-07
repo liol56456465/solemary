@@ -179,7 +179,7 @@ ${channelPicker(g, 'channels', [], { label: `Channels (up to ${BACKTEST_MAX_CHAN
 ${selectInput('days', '7', BACKTEST_DAY_CHOICES.map((n) => [String(n), n === 1 ? 'Last day' : `Last ${n} days`]), { label: 'How far back', help: `At most ${number(MAX_MESSAGES)} messages in total, newest first.` })}
 ${textInput('draftName', '', { label: 'Draft rule name (optional)', max: CUSTOM_RULE_NAME_MAX, placeholder: 'Draft rule', help: 'Try a custom rule before you add it. It is not saved.' })}
 ${textArea('draftWords', '', { label: 'Draft rule words (optional)', rows: 3, max: 4000, help: `One word or phrase per line, up to ${CUSTOM_RULE_WORDS_MAX}. Matched like custom rules.` })}</div>`, { submit: 'Start test run', canEdit: canAct })}
-${canAct ? '' : html`<p class="muted">To start a test run you need the Administrator permission in the main server.</p>`}`;
+${canAct ? '' : html`<p class="muted">To start a test run you need the Administrator permission in this server.</p>`}`;
 }
 
 const STRICT_HELP = `"May be too strict" shows when a rule caught at least ${STRICT_MIN_HITS} messages, from at least ${STRICT_MIN_MEMBERS} different members, and at least ${STRICT_MIN_SHARE * 100}% of the checked messages. It is only a hint: members may really break that rule that often. Look at the examples and the matched words before you change anything.`;
@@ -430,7 +430,7 @@ ${table(['Rule', 'Actions', 'Undone', 'Changed', 'Undo rate'], rulesStats.map(([
             : lockdown?.active
                 ? html`<p class="warn"><b>A raid lockdown is active</b>${lockdown.startedAt ? html` since ${formatDate(lockdown.startedAt)}` : ''}, ${(lockdown.joinerIds || []).length} raid joiner${(lockdown.joinerIds || []).length === 1 ? '' : 's'}.</p>
 ${buttonForm(ctx, 'automod', 'lockdown-end', 'End lockdown', {}, { confirm: 'End the raid lockdown? The verification level goes back to what it was and paused invites and DMs resume.', canEdit: canAct })}
-${canAct ? '' : html`<p class="muted">To end a lockdown you need the Administrator permission in the main server.</p>`}
+${canAct ? '' : html`<p class="muted">To end a lockdown you need the Administrator permission in this server.</p>`}
 <p><a href="${path('/incidents')}">Follow it on the raid timeline</a></p>`
                 : html`<p class="muted">No lockdown right now. One starts by itself when many accounts join at once (a raid). Past raids are on the <a href="${path('/incidents')}">raid timeline</a>.</p>`;
         const reviews = data.reviews;
@@ -699,9 +699,10 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
         async channels(ctx, form) {
             const g = ctx.guild;
             const words = [...new Set(String(form?.extraBlockedWords ?? '').split(/[\n,]/).map((w) => w.trim().toLowerCase()).filter(Boolean))];
+            // A channel absent from the form stays unchanged (Setup step by step sends only one).
             const patch = changedOnly({
-                reviewChannelId: channelField(g, form, 'reviewChannelId', { label: 'Review channel' }),
-                alertsChannelId: channelField(g, form, 'alertsChannelId', { label: 'Alerts channel' }),
+                ...(form?.reviewChannelId !== undefined ? { reviewChannelId: channelField(g, form, 'reviewChannelId', { label: 'Review channel' }) } : {}),
+                ...(form?.alertsChannelId !== undefined ? { alertsChannelId: channelField(g, form, 'alertsChannelId', { label: 'Alerts channel' }) } : {}),
                 extraBlockedWords: typeof form?.extraBlockedWords === 'string' ? words : registryValue(ctx, 'extraBlockedWords'),
             }, {
                 reviewChannelId: registryValue(ctx, 'reviewChannelId'),

@@ -9,8 +9,17 @@ import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { getAppealsCategory } from './appealService.js';
+import { getFromDb, setInDb } from '../../utils/database.js';
 
 export const SUPPORT_PANEL_CHANNEL = 'appeals';
+
+/** Key-value store key of "the appeal panels were posted" (dashboard Getting started). */
+export const appealPanelKey = (guildId) => `appealPanels:posted:${guildId}`;
+
+/** { at, mainChannelId, supportChannelId } of the last posting, or null. A database error throws. */
+export async function getAppealPanelPosting(guildId) {
+    return getFromDb(appealPanelKey(guildId), null);
+}
 
 function configError(message) {
     return new TitanBotError(message, ErrorTypes.CONFIGURATION, message, { expected: true });
@@ -139,6 +148,9 @@ export async function postAppealPanels(client, mainGuild, mainChannel, { reason 
     await mainChannel.send(mainAppealPanel());
     await removeOldAppealPanels(supportChannel);
     await supportChannel.send(supportAppealPanel());
+    // Remembered for the dashboard checklist only: a failed write must not undo the posting.
+    await setInDb(appealPanelKey(mainGuild.id), { at: new Date().toISOString(), mainChannelId: mainChannel.id, supportChannelId: supportChannel.id })
+        .catch((error) => logger.warn(`Could not remember the appeal panel posting: ${error.message}`));
 
     return { mainChannel, supportChannel, created, category: appealsCategory };
 }

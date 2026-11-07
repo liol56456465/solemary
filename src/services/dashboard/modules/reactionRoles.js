@@ -47,7 +47,7 @@ ${table(['Role', 'Problems', ''], rows, 'No roles.')}
 ${buttonForm(ctx, 'reaction-roles', 'panel-delete', 'Delete panel', { messageId: panel.messageId }, { confirm: 'Delete this panel and its message in Discord?' })}</div>`;
             return section(`Panel ${panel.messageId}`, body);
         });
-        return html`${section('New panel', create, `You can also do this with /reactroles setup in Discord.${ctx.canAct ? '' : ' To post a panel you need the Administrator permission in the main server.'}`, { open: panels.length === 0 })}
+        return html`${section('New panel', create, `You can also do this with /reactroles setup in Discord.${ctx.canAct ? '' : ' To post a panel you need the Administrator permission in this server.'}`, { open: panels.length === 0 })}
 ${existing.length ? existing : section('Panels', html`<p class="muted">No reaction role panels yet.</p>`)}`;
     },
 

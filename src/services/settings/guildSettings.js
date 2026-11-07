@@ -98,6 +98,16 @@ export function getSetting(guildId, key, env = process.env) {
     return seedValue(entry, env);
 }
 
+/**
+ * Only what this guild stored itself (no env, no hardcoded default), or undefined. For values
+ * that must not borrow another server's fallback, like the main server's admin request channel.
+ */
+export function getStoredSetting(guildId, key) {
+    if (!getSettingEntry(key)) throw new Error(`Unknown setting "${key}"`);
+    const row = guildId ? cache.get(guildId) : null;
+    return row && Object.hasOwn(row.data, key) ? clone(row.data[key]) : undefined;
+}
+
 /** A setting of the server the registry assigns it to (main or support). */
 export function getConfiguredSetting(key, env = process.env) {
     const entry = getSettingEntry(key);

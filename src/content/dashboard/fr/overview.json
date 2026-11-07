@@ -97,7 +97,25 @@
     "setUpStep": "Configurer : {label}",
     "setUp": "Configurer",
     "failed": "Une partie de ces éléments n’a pas pu être chargée pour le moment. Recharge la page dans une minute.",
-    "empty": "Rien ne t’attend pour le moment. Les appels, les tickets et les alertes de raid apparaissent ici."
+    "empty": "Rien ne t’attend pour le moment. Les appels, les tickets et les alertes de raid apparaissent ici.",
+    "postFailed": {
+      "notSet": {
+        "modlog": "Mewvo n'a pas pu écrire dans le journal de modération : aucun salon n'est choisi",
+        "alerts": "Mewvo n'a pas pu publier une alerte pour l'équipe : aucun salon des alertes ni du journal de modération n'est choisi"
+      },
+      "missing": "Mewvo n'a pas pu publier dans #{channel} : le salon n'existe plus ou n'est pas un salon textuel",
+      "perms": "Mewvo n'a pas pu publier dans #{channel} : il manque {perms}",
+      "refused": "Mewvo n'a pas pu publier dans #{channel} : Discord a refusé le message",
+      "times": {
+        "one": "{count} fois aujourd'hui.",
+        "many": "{count} fois aujourd'hui.",
+        "other": "{count} fois aujourd'hui."
+      },
+      "fixChannel": "Choisissez un salon sur la page.",
+      "fixPerms": "Autorisez-les pour le rôle de Mewvo dans ce salon (Modifier le salon → Permissions), ou choisissez un autre salon.",
+      "fixOther": "Réessayez plus tard, ou choisissez un autre salon.",
+      "fixIt": "Régler"
+    }
   },
   "start": {
     "new": "Tu débutes ?",
@@ -173,6 +191,22 @@
     "bannedRole": {
       "label": "Rôle Banni sur le serveur d’assistance",
       "hint": "Les membres bannis reçoivent ce rôle sur ton serveur d’assistance, pour pouvoir quand même y faire appel."
+    },
+    "permissions": {
+      "label": "Les permissions de Mewvo",
+      "hint": "Mewvo a besoin de certaines permissions pour bannir, rendre muet, publier et tenir le journal. La liste montre ce qui manque et comment le régler."
+    },
+    "logChannel": {
+      "label": "Salon du journal principal",
+      "hint": "Mewvo y note les messages supprimés et modifiés, les arrivées, les départs et les changements de rôles."
+    },
+    "modRole": {
+      "label": "Rôle de modérateur",
+      "hint": "Les membres qui ont ce rôle peuvent utiliser les commandes de modération et ouvrir ce tableau de bord comme modérateurs. Ils ne peuvent ni bannir ni changer les réglages."
+    },
+    "appealPanel": {
+      "label": "Panneau d'appel publié",
+      "hint": "Un message avec un bouton Appel, pour que les membres sanctionnés puissent demander à l'équipe de lever la sanction. Un panneau va sur votre serveur, un autre sur le serveur d'assistance."
     }
   },
   "value": {
@@ -188,5 +222,47 @@
     "on": "activé",
     "off": "désactivé",
     "set": "défini"
+  },
+  "perms": {
+    "title": "Les permissions de Mewvo",
+    "intro": "Ce que le rôle de Mewvo peut faire sur tout le serveur, pour les fonctions activées. Cette page ne fait que les lire : on les change dans Discord. Un salon peut quand même bloquer Mewvo ; le choix du salon le signale.",
+    "allOk": "Mewvo a toutes les permissions dont il a besoin.",
+    "someMissing": "Il manque quelque chose ({count}). Tant que ce n'est pas réglé, certaines fonctions ne marchent pas.",
+    "showList": "Voir la liste",
+    "on": "oui",
+    "missing": "manquante",
+    "usedBy": "Utile pour : {list}.",
+    "fix": "Utile pour : {list}. Pour régler ça : Paramètres du serveur → Rôles → {role} → activez « {perm} ».",
+    "botRoleFallback": "le rôle de Mewvo",
+    "roleAbove": "Placez le rôle de Mewvo au-dessus de @{role}",
+    "roleAboveFix": "Mewvo ne peut donner et retirer que les rôles placés sous le sien. Dans Paramètres du serveur → Rôles, faites glisser {botRole} au-dessus de @{role}.",
+    "cannotCheck": "Impossible de vérifier les permissions de Mewvo pour l'instant. Rechargez la page dans une minute.",
+    "feature": {
+      "core": "publier des messages",
+      "enforcement": "sanctions",
+      "automod": "automod",
+      "logging": "journal",
+      "tickets": "tickets",
+      "verification": "vérification",
+      "leveling": "rôles de niveau",
+      "joinToCreate": "Join to create"
+    },
+    "perm": {
+      "ViewChannel": "Voir les salons",
+      "SendMessages": "Envoyer des messages",
+      "EmbedLinks": "Intégrer des liens",
+      "AttachFiles": "Joindre des fichiers",
+      "ReadMessageHistory": "Voir les anciens messages",
+      "BanMembers": "Bannir des membres",
+      "KickMembers": "Expulser des membres",
+      "ManageRoles": "Gérer les rôles",
+      "ManageChannels": "Gérer les salons",
+      "CreateInstantInvite": "Créer une invitation",
+      "MoveMembers": "Déplacer des membres",
+      "ModerateMembers": "Exclure temporairement des membres",
+      "ManageMessages": "Gérer les messages",
+      "ManageGuild": "Gérer le serveur",
+      "ViewAuditLog": "Voir les logs du serveur"
+    }
   }
 }

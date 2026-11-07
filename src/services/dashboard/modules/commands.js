@@ -165,9 +165,11 @@ ${table([t('list.command'), t('every.whatItDoes'), t('every.who'), t('every.onDa
         'bot-settings': {
             admin: true,
             async run(ctx, form) {
-                const prefix = prefixField(form);
+                // A field absent from the form stays unchanged (Setup step by step sends only the role).
+                const config0 = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
+                const prefix = form?.prefix !== undefined ? prefixField(form) : (config0.prefix || getCommandPrefix());
                 const tr = textFor(ctx);
-                const modRole = roleField(ctx.guild, form, 'modRole', { label: tr.t('commands.bot.modRole') });
+                const modRole = form?.modRole !== undefined ? roleField(ctx.guild, form, 'modRole', { label: tr.t('commands.bot.modRole') }) : roleIdOf(config0.modRole);
                 if (modRole) {
                     const where = (await autoAssignedRoles(ctx)).get(modRole);
                     if (where) throw new InputError(tr.t('commands.bot.modRoleAuto', { role: ctx.guild.roles.cache.get(modRole)?.name || modRole, where }), 400, 'modRole');

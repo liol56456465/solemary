@@ -49,7 +49,7 @@ ${numberInput('userLimit', 0, { label: 'Most people in a channel', min: 0, max: 
 ${numberInput('bitrateKbps', 64, { label: 'Sound quality (kbps)', min: 8, max: 384, help: BITRATE_HELP })}</div>`, { submit: 'Create trigger channel', canEdit: ctx.canEdit && ctx.canAct });
         return html`${section('Status', html`<p>Join to create is <span class="state ${config.enabled ? 'state-on' : 'state-off'}">${config.enabled ? 'on' : 'off'}</span> (it is on while there is a trigger channel).</p>`)}
 ${section('Triggers', table(['Trigger channel', 'Temporary channels', ''], rows, 'No triggers yet.'))}
-${section('New trigger', add, `Mewvo makes a voice channel called "Join to Create". You can also do this with /jointocreate setup in Discord.${ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.'}`, { open: triggers.length === 0 })}`;
+${section('New trigger', add, `Mewvo makes a voice channel called "Join to Create". You can also do this with /jointocreate setup in Discord.${ctx.canAct ? '' : ' You need the Administrator permission in this server for this.'}`, { open: triggers.length === 0 })}`;
     },
 
     actions: {

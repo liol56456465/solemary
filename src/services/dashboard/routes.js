@@ -90,6 +90,7 @@ import {
 import { languageCookie } from '../site/language.js';
 import { LANG_CODES } from '../site/i18n.js';
 import { glossaryPage, setupPage } from './helpPages.js';
+import { setupStepData } from './setupForms.js';
 import {
     appealsPage, auditPage, caseDetailPage, casesPage, moduleSettingsPage, statsPage,
 } from './pages.js';
@@ -920,9 +921,12 @@ export function createDashboard({
         }
         const message = [result?.message || textOfReq(req).t(changes.length ? 'errors.saved' : 'errors.nothingChanged'), ...(result?.warnings || [])].map(plainText).join(' ');
         await sessions.setFlash?.(session.id, message);
-        // `back`: the Modules page, the Overview or another module's page (only known names); else this module.
+        // `back`: the Modules page, the Overview, Setup step by step (with its step number or key) or
+        // another module's page (only known names); else this module.
         const back = typeof req.body?.back === 'string' ? req.body.back : '';
-        const target = back === 'modules' || back === 'overview' || (back && findModule(back)) ? `/${back}` : `/${module.key}`;
+        const step = str(req.body?.step, 20);
+        const target = back === 'setup' ? `/setup${/^[A-Za-z0-9]{1,20}$/.test(step) ? `?step=${step}` : ''}`
+            : back === 'modules' || back === 'overview' || (back && findModule(back)) ? `/${back}` : `/${module.key}`;
         return res.redirect(303, path(target));
     }
 
@@ -994,7 +998,10 @@ export function createDashboard({
 
     async function setup(req, res) {
         const steps = await collectChecklist({ client, guildId, data: data.overview || defaultOverviewData }).catch(() => null);
-        return sendHtml(res, 200, setupPage({ ...shellOf(req), steps, query: req.query }));
+        // The step's own small form posts to the module's existing save route (back=setup).
+        const ctx = contextFor(req);
+        const forms = steps ? await setupStepData(ctx).catch(() => null) : null;
+        return sendHtml(res, 200, setupPage({ ...shellOf(req), steps, query: req.query, ctx, forms, flash: req.dashboard.flash }));
     }
 
     function notFound(req, res) {

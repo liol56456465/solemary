@@ -41,10 +41,11 @@ ${rolePicker(g, 'roleId', b.roleId, { label: 'Birthday role', autoAssign: true, 
     actions: {
         async settings(ctx, form) {
             const current = await load(ctx);
+            // A field absent from the form stays unchanged (Setup step by step sends only the channel).
             const patch = changedOnly({
-                channelId: channelField(ctx.guild, form, 'channelId', { label: 'Announcement channel' }),
-                timezone: text(form, 'timezone', 64) || DEFAULT_TIMEZONE,
-                roleId: autoRoleField(ctx.guild, form, 'roleId', { label: 'Birthday role' }),
+                ...(form.channelId !== undefined ? { channelId: channelField(ctx.guild, form, 'channelId', { label: 'Announcement channel' }) } : {}),
+                ...(form.timezone !== undefined ? { timezone: text(form, 'timezone', 64) || DEFAULT_TIMEZONE } : {}),
+                ...(form.roleId !== undefined ? { roleId: autoRoleField(ctx.guild, form, 'roleId', { label: 'Birthday role' }) } : {}),
             }, current);
             if (!Object.keys(patch).length) return NOTHING;
             const { before, after } = await ctx.services.updateBirthdaySettings(ctx.client, ctx.guildId, patch);

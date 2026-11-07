@@ -22,12 +22,30 @@ import { enforcementConfig } from '../config/enforcement.js';
 import { isEveryoneCommand, isSupportServerCommand } from '../config/commands/commandAccess.js';
 import { adminCommandsRetired, isKeptAdminCommand, isOwnerKit, retiredMessage } from '../config/commands/retirement.js';
 import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
+import { getStoredSetting } from '../services/settings/guildSettings.js';
 
-export function getAdminRequiredMessage() {
-    const channelId = enforcementConfig.adminRequestChannelId;
-    return channelId
-        ? `You need the Administrator role to use this command. Request a mod/admin role here: <#${channelId}>`
-        : 'You need the Administrator role to use this command.';
+/**
+ * The refusal for a non-admin. The main server (or no server given) keeps its wording and its
+ * admin request channel. Any other server only names a request channel it stored itself, never
+ * the main server's channel (that link would lead nowhere there); otherwise a neutral line.
+ * `stored` is for tests.
+ */
+export function getAdminRequiredMessage(guildId = null, { stored = getStoredSetting } = {}) {
+    const isMain = !guildId || guildId === enforcementConfig.mainGuildId;
+    let channelId = null;
+    if (isMain) {
+        channelId = enforcementConfig.adminRequestChannelId;
+    } else {
+        try {
+            channelId = stored(guildId, 'adminRequestChannelId') || null;
+        } catch {
+            channelId = null;
+        }
+    }
+    if (channelId) return `You need the Administrator role to use this command. Request a mod/admin role here: <#${channelId}>`;
+    return isMain
+        ? 'You need the Administrator role to use this command.'
+        : 'You need the Administrator role to use this command. Ask an admin of this server if you need access.';
 }
 
 /** True when the command exists in this guild: all commands in the main server, the support list in the support server. */
@@ -88,5 +106,5 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
     }
     if (hasAdministrator({ guild, userId, permissions })) return { allowed: true };
     if (isBotOwner(userId)) return { allowed: true, ownerOverride: true };
-    return { allowed: false, message: getAdminRequiredMessage() };
+    return { allowed: false, message: getAdminRequiredMessage(guild.id) };
 }

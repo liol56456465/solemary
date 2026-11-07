@@ -311,7 +311,7 @@ function clock(seconds) {
 export default {
     key: 'messages',
     label: 'Messages',
-    help: 'Post a message as Mewvo: an announcement right now or later, a message that repeats, a poll, or a countdown. Text you type here never pings anyone. Everything here needs the Administrator permission in the main server.',
+    help: 'Post a message as Mewvo: an announcement right now or later, a message that repeats, a poll, or a countdown. Text you type here never pings anyone. Everything here needs the Administrator permission in this server.',
 
     async load(ctx) {
         const [config, scheduled] = await Promise.all([
@@ -325,7 +325,7 @@ export default {
         const g = ctx.guild;
         const scheduled = data.scheduled || [];
         const canPost = ctx.canEdit && ctx.canAct;
-        const adminNote = ctx.canAct ? '' : ' To post you need the Administrator permission in the main server.';
+        const adminNote = ctx.canAct ? '' : ' To post you need the Administrator permission in this server.';
         const chosen = chosenTemplate(ctx.query, g?.name);
         const prefill = chosen?.payload ? { payload: chosen.payload } : {};
         const send = postForm(ctx, 'messages', 'send', html`<div class="grid">${messageFields(g, prefill)}</div>`, { submit: 'Post message', canEdit: canPost });

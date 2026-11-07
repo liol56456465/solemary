@@ -1288,6 +1288,14 @@ form.filters select:not([multiple]) { min-width: 0; }
 .setup-start { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .setup-all a, .glossary a, .setup-start a:not(.btn) { text-decoration: underline; }
 .setup-nav .btn { margin: 0; }
+.setup-step .settings-form { margin: 8px 0; }
+
+/* Mewvo's permissions (overview.js permissionsList): one row per permission, mark + name + one line. */
+.perm-list .perm-row { align-items: flex-start; gap: 10px; padding: 8px 0; }
+.perm-row > .icon { flex: none; margin-top: 3px; }
+.perm-row.is-ok > .icon { color: var(--green); }
+.perm-row.is-missing > .icon { color: var(--red); }
+.perm-row .checklist-hint { display: block; overflow-wrap: anywhere; }
 
 /* Leveling → Server cat: the current picture next to its sentence. */
 .cat-now { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
