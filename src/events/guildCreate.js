@@ -1,6 +1,6 @@
 import { Events } from 'discord.js';
 import { logger } from '../utils/logger.js';
-import { getGuildConfig, setGuildConfig } from '../services/config/guildConfig.js';
+import { welcomeOnJoin } from '../services/setup/joinWelcome.js';
 
 export default {
   name: Events.GuildCreate,
@@ -13,8 +13,9 @@ export default {
         memberCount: guild.memberCount,
       });
 
-      const config = await getGuildConfig(client, guild.id);
-      await setGuildConfig(client, guild.id, config);
+      // Initialises the guild config (as before) and posts the welcome (services/setup/joinWelcome.js).
+      // Never throws; a send error is one log line.
+      await welcomeOnJoin(guild, client);
     } catch (error) {
       logger.error(`Error initializing guild ${guild?.id} on join:`, error);
     }

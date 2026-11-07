@@ -332,11 +332,11 @@ test('gate: only OWNER_IDS, only in the owner-tools server; Administrator is not
     assert.equal(isCommandAvailableInGuild(command, MAIN), false);
     assert.equal(isCommandAvailableInGuild(command, OWNER_GUILD), true);
     assert.equal(canUseOwnerTools({ guildId: OWNER_GUILD, userId: OWNER }), true);
-    // Other commands do not run in the owner-tools server.
-    assert.equal(isCommandAvailableInGuild({ data: { name: 'ping' } }, OWNER_GUILD), false);
+    // Other commands run in the owner-tools server like in any server (global commands, B2).
+    assert.equal(isCommandAvailableInGuild({ data: { name: 'ping' } }, OWNER_GUILD), true);
 }));
 
-test('registration: /database goes to the owner-tools server only; main and support lists unchanged', async () => {
+test('registration: /database goes to the owner-tools server only, never global', async () => {
     const client = { commands: new Map([
         ['ping', { data: { name: 'ping', toJSON: () => ({ name: 'ping', description: 'p' }) } }],
         ['test', { scope: 'main', data: { name: 'test', toJSON: () => ({ name: 'test', description: 't' }) } }],
@@ -345,9 +345,9 @@ test('registration: /database goes to the owner-tools server only; main and supp
     const { sets, totalSubcommands } = collectCommandPayloads(client);
     const withOwner = buildRegistrationBodies(sets, totalSubcommands, { quiet: true });
     const without = buildRegistrationBodies({ ...sets, owner: [] }, totalSubcommands, { quiet: true });
-    assert.deepEqual(withOwner.mainCommands, without.mainCommands, 'main list identical with or without /database');
-    assert.ok(!withOwner.mainCommands.some((c) => c.name === 'database'));
-    assert.ok(!withOwner.supportCommands.some((c) => c.name === 'database'));
+    assert.deepEqual(withOwner.globalCommands, without.globalCommands, 'global list identical with or without /database');
+    assert.ok(!withOwner.globalCommands.some((c) => c.name === 'database'));
+    assert.deepEqual(withOwner.globalCommands.map((c) => c.name), ['ping', 'test'], "scope 'main' commands are global now");
     assert.deepEqual(withOwner.ownerCommands.map((c) => c.name), ['database']);
     await withEnv({ RETIRE_ADMIN_COMMANDS: 'true' }, () => {
         assert.deepEqual(buildRegistrationBodies(sets, 0, { quiet: true }).ownerCommands.map((c) => c.name), ['database'], 'not retired');
@@ -355,15 +355,15 @@ test('registration: /database goes to the owner-tools server only; main and supp
 
     const puts = [];
     const rest = { put: async (route, { body }) => { puts.push({ route: String(route), names: body.map((c) => c.name) }); } };
-    await registerCommandSets(rest, '1600000000000000001', sets, totalSubcommands);
+    await registerCommandSets(rest, '1600000000000000001', sets, totalSubcommands, { schedule: () => {} });
     const withDatabase = puts.filter((p) => p.names.includes('database'));
     assert.equal(withDatabase.length, 1);
     assert.match(withDatabase[0].route, new RegExp(`/guilds/${OWNER_GUILD}/commands$`));
-    assert.deepEqual(puts.find((p) => p.route.endsWith('/applications/1600000000000000001/commands')).names, [], 'global stays empty');
+    assert.deepEqual(puts.find((p) => p.route.endsWith('/applications/1600000000000000001/commands')).names, ['ping', 'test'], 'global: everything but /database');
 
     // Pointed at the main server: owner tools are off and /database is registered nowhere.
     puts.length = 0;
-    await withEnv({ OWNER_TOOLS_GUILD_ID: MAIN }, () => registerCommandSets(rest, '1600000000000000001', sets, totalSubcommands));
+    await withEnv({ OWNER_TOOLS_GUILD_ID: MAIN }, () => registerCommandSets(rest, '1600000000000000001', sets, totalSubcommands, { schedule: () => {} }));
     assert.ok(!puts.some((p) => p.names.includes('database')));
 });
 

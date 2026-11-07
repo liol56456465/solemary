@@ -3,9 +3,10 @@
 //   npm run deploy:commands        uses .env
 //   npm run deploy:commands:test   uses ~/.config/mewvo/env.test (test mode: test guilds only, global untouched)
 //
-// Global commands go to the application; /enforcements and /background go to
-// MAIN_GUILD_ID, /appeals and /appeals-panel to SUPPORT_GUILD_ID. Each set is
-// replaced in full, so deleted commands are removed from Discord.
+// The same lists startup registers (commandLoader.js registerCommandSets): every command
+// globally, /database in OWNER_TOOLS_GUILD_ID only, the home servers' old guild lists emptied
+// once the global list is an hour old. Each set is replaced in full, so deleted commands are
+// removed from Discord.
 
 import '../src/config/loadEnv.js';
 import '../src/config/testMode.js';
@@ -27,7 +28,9 @@ try {
     await loadCommands(client);
     const { sets, totalSubcommands } = collectCommandPayloads(client);
     await registerCommandSets(new REST({ version: '10' }).setToken(token), clientId, sets, totalSubcommands);
-    logger.info('Command deploy finished.');
+    // The timer that empties the home servers' guild copies (first hour after the switch) does not
+    // survive this exit; the next bot start or deploy after the hour empties them.
+    logger.info('Command deploy finished. If the home servers got a guild copy (global list under an hour old), the next start or deploy after the hour removes it.');
     process.exit(0);
 } catch (error) {
     logger.error('Command deploy failed:', error);

@@ -312,4 +312,27 @@ Needs the bot in that server (invite it there with the `applications.commands` s
 | 22.10 | Wait 15 minutes, press Next | "This result expired, run /database again." |
 | 22.11 | Bot log (Replit console): find the lines for 22.2–22.7 | `Owner /database <subcommand> by <your ID>` with the query; no result rows in the log |
 
+
+## 23. Public bot: global commands, join welcome, `/setup` (multi-server B2)
+
+Needs a fresh test server you own (create one; Alt A as a plain member, Alt B with only **Manage Server**) and the
+Public Bot toggle on (see the deploy notes). Global commands can take up to an hour to show in every Discord client.
+
+| # | Do | Expected |
+|---|---|---|
+| 23.1 | After the restart, Replit console | `Registering N global commands` (N ≤ 100), `owner-tools-guild` with 1 command; first time also `home-guild (copy until the global list settles)` and "keep a guild copy for 60 more minute(s)" |
+| 23.2 | Main server right after the restart: type `/` | Every command still there (as a guild copy; some may show twice for up to an hour) |
+| 23.3 | Main server after an hour (or after the next restart past the hour): type `/` | Each command once; console `home-guild (emptied, global list settled)` |
+| 23.4 | Main server and Support: type `/database` | Not in the list. Owner's server `1564332751170044186`: `/database` is there, next to the global commands |
+| 23.5 | Add the bot to the fresh server with the install link (you as the adder) | In the system channel (or the first text channel the bot can write in): embed "Thanks for adding Mewvo! An admin can type **/setup** to get started." with "Open the dashboard" and "Mewvo support server" buttons; nobody pinged |
+| 23.6 | Your DMs | The same message as a DM ("You added Mewvo to **<server>**…") if the bot got View Audit Log; with the recommended permissions it does |
+| 23.7 | Remove the bot from the fresh server and add it again (within 24 h) | No second welcome post or DM |
+| 23.8 | Fresh server, you (owner): `/setup` | Ephemeral: dashboard button, checklist with ➖ for mod log, staff review channel, automod (if off), verification, welcome, tickets, bot language; "Appeals: … Mewvo support server …" ✅; leveling ✅ on |
+| 23.9 | Pick "Enforcement" in the select | The same message now lists the Enforcement commands, one line each, 🔒 on Administrator-only ones |
+| 23.10 | Alt B (Manage Server only): `/setup`, then the select | Works. Alt B: `/purge` | "You need the Administrator role to use this command. Ask an admin of this server…" |
+| 23.11 | Alt A (member): `/setup` | "You need the Manage Server or Administrator permission to use this command." (ephemeral) |
+| 23.12 | Fresh server, as owner: `/help`, `/rank`, `/enforcements user:Alt A` | All open (no "Commands only work in the Mewvo servers") |
+| 23.13 | Discord client set to Deutsch: `/setup` | Checklist in German |
+| 23.14 | Remove the bot from the fresh server | Console: `Bot left guild; its data is kept`. Nothing deleted (re-add: `/setup` shows the same settings) |
+
 When done: run the clean-up from "Before testing in Discord".

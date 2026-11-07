@@ -42,8 +42,10 @@ English: `banDm(record, { lang })`, `buildUserErrorEmbed(type, text, { lang })`,
 - Enforcement DMs (`src/services/enforcement/dmTemplates.js`): ban, kick, mute, warn, ban/mute ended
   (unban/unmute), case removed, appeal accepted/denied, durations (`durationIn`). `/test action` previews use
   the server language too (what the member would get). Keep-apart DMs and the "Contest this" button: still English.
-- Error replies (`errorHandler.js` built-in messages, `embeds.js` error titles) and the Administrator refusal
-  (`commandGate.js`). A custom `userMessage` written in code is still shown as written (English).
+- `/setup` (namespace `setup`, reply language) and the join welcome post and DM (`setup.welcome.*`, the server's
+  language; a new server is English until it picks one).
+- Error replies (`errorHandler.js` built-in messages, `embeds.js` error titles) and the Administrator and
+  Manage Server refusals (`commandGate.js`). A custom `userMessage` written in code is still shown as written (English).
 
 ## Translating a command (the later sweep)
 
