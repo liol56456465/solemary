@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Recent errors",
+    "help": "System errors members saw a Ref for, and errors in background tasks. Grouped by error code and source, newest first (at most 50 groups)."
+  },
+  "search": {
+    "label": "Ref, trace or error code",
+    "placeholder": "e.g. COMMAND_ERROR · int_ab12",
+    "submit": "Search",
+    "clear": "Clear"
+  },
+  "table": {
+    "error": "Error",
+    "source": "Source",
+    "count": "Count",
+    "lastSeen": "Last seen",
+    "sample": "Sample Ref",
+    "server": "Server",
+    "noServer": "No server (DM or task)",
+    "moreServers": "{count} servers in total"
+  },
+  "kept": "Errors kept: {count} (the newest {max} are kept; at most 30 are recorded per minute).",
+  "empty": "No errors recorded.",
+  "noMatch": "No errors match “{q}”.",
+  "privacy": "No user IDs and no text written by members are stored; IDs in error messages are masked.",
+  "unavailable": {
+    "title": "Database unavailable",
+    "text": "The error list could not be read because the database is not responding. Try again in a few minutes."
+  }
+}

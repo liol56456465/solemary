@@ -21,6 +21,7 @@ import { buildUserErrorEmbed } from './embeds.js';
 import { MessageFlags } from 'discord.js';
 import { getErrorMetadata, getDefaultErrorCodeByType, resolveErrorCode, ErrorCodes } from './errorRegistry.js';
 import { InteractionHelper, isAcknowledgedViaMessageUpdate } from './interactionHelper.js';
+import { interactionSource, recordErrorEvent } from './errorEvents.js';
 
 // Re-export so consumers only ever need to import from errorHandler.js
 export { ErrorCodes, getErrorMetadata, resolveErrorCode, getDefaultErrorCodeByType } from './errorRegistry.js';
@@ -376,6 +377,14 @@ export async function handleInteractionError(interaction, error, context = {}) {
         ? userMessage
         : `${userMessage}\n\n-# Ref: \`${buildErrorReference(resolvedErrorCode, traceId)}\``;
 
+    // Owner → Recent errors: one row per system error (fire and forget, never throws).
+    if (!isUserError) {
+        recordErrorEvent({
+            errorCode: resolvedErrorCode, errorType, source: interactionSource(interaction, context),
+            guildId: interaction?.guildId ?? null, traceId: traceId ? String(traceId).slice(0, 8) : null, message: error?.message,
+        });
+    }
+
     const embed = buildUserErrorEmbed(errorType, description);
     await sendErrorResponse(interaction, embed, { ...context, traceId });
 }
@@ -400,6 +409,11 @@ export function handleTaskError(taskName, error, context = {}) {
         error: error?.message || String(error),
         stack: error?.stack,
         context
+    });
+
+    recordErrorEvent({
+        errorCode: resolvedErrorCode || ErrorCodes.TASK_ERROR, errorType, source: taskName,
+        guildId: context?.guildId ?? null, traceId: context?.traceId ? String(context.traceId).slice(0, 8) : null, message: error?.message || String(error),
     });
 }
 

@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Letzte Fehler",
+    "help": "Systemfehler, bei denen Mitglieder eine Ref gesehen haben, und Fehler in Hintergrundaufgaben. Nach Fehlercode und Quelle gruppiert, neueste zuerst (höchstens 50 Gruppen)."
+  },
+  "search": {
+    "label": "Ref, Trace oder Fehlercode",
+    "placeholder": "z. B. COMMAND_ERROR · int_ab12",
+    "submit": "Suchen",
+    "clear": "Zurücksetzen"
+  },
+  "table": {
+    "error": "Fehler",
+    "source": "Quelle",
+    "count": "Anzahl",
+    "lastSeen": "Zuletzt",
+    "sample": "Beispiel-Ref",
+    "server": "Server",
+    "noServer": "Kein Server (DM oder Aufgabe)",
+    "moreServers": "{count} Server insgesamt"
+  },
+  "kept": "Gespeicherte Fehler: {count} (die neuesten {max} bleiben; höchstens 30 pro Minute werden erfasst).",
+  "empty": "Keine Fehler erfasst.",
+  "noMatch": "Keine Fehler passen zu „{q}“.",
+  "privacy": "Es werden keine Nutzer-IDs und kein von Mitgliedern geschriebener Text gespeichert; IDs in Fehlermeldungen sind unkenntlich gemacht.",
+  "unavailable": {
+    "title": "Datenbank nicht erreichbar",
+    "text": "Die Fehlerliste konnte nicht gelesen werden, weil die Datenbank nicht antwortet. Versuche es in ein paar Minuten noch einmal."
+  }
+}

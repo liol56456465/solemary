@@ -33,6 +33,7 @@
 //   /dashboard/owner/…              the Owner area (ownerRoutes.js): bot profile, servers, users,
 //                                   blacklist, health + maintenance, command sync, announce, and
 //                                   the Website editor (websiteRoutes.js: site text and images).
+//                                   Recent errors (ownerErrors.js: grouped error_events, read-only).
 //                                   OWNER_IDS only (checked live on every request; anyone else
 //                                   gets 404), POSTs also need a login younger than 12 h.
 //   /staff, /staff/*                → 301 /dashboard (the old read-only staff dashboard)
@@ -114,6 +115,7 @@ import { confirmPage } from './enforcementPages.js';
 import { createPermissionFixHandlers } from './permissionFixRoutes.js';
 import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
 import { createWebsiteHandlers, defaultWebsiteDeps } from './websiteRoutes.js';
+import { createOwnerErrorsHandlers, defaultErrorPageDeps } from './ownerErrors.js';
 import { IMAGE_MAX_BYTES as SITE_IMAGE_MAX_BYTES } from '../site/siteImages.js';
 import { InputError, plainText } from './forms.js';
 import { createMemberSearch, memberSearchPage, searchJson, searchParams } from './memberSearch.js';
@@ -264,7 +266,7 @@ export function createDashboard({
     enforcement = defaultEnforcement, confirms = createConfirmStore(), owner = defaultOwnerDeps,
     inbox = defaultInboxData, inboxBadge = false,
     memberTools = defaultMemberTools, incidents = defaultIncidents, website = defaultWebsiteDeps,
-    memberSearch = createMemberSearch(),
+    memberSearch = createMemberSearch(), ownerErrors = defaultErrorPageDeps,
 }) {
     const secret = settings.sessionSecret;
     const guildId = settings.mainGuildId;
@@ -985,6 +987,8 @@ export function createDashboard({
     });
     // Owner → Website (websiteRoutes.js): the same owner checks, through the owner helpers.
     const websiteHandlers = createWebsiteHandlers({ sendHtml, fail, helpers: ownerHandlers.helpers, website });
+    // Owner → Recent errors (ownerErrors.js): read-only, the same owner checks.
+    const ownerErrorsHandlers = createOwnerErrorsHandlers({ client, sendHtml, fail, helpers: ownerHandlers.helpers, errors: ownerErrors });
 
     async function logout(req, res) {
         if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'logoutCsrf', req);
@@ -1078,7 +1082,7 @@ export function createDashboard({
         memberSearch: memberSearchHtml, memberSearchJson: memberSearchJsonHandler,
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
         overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, setLanguage, help, setup,
-        sessions, states, confirms, permissionFix: permissionFixHandlers, enforcement: enforcementHandlers, owner: ownerHandlers, website: websiteHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
+        sessions, states, confirms, permissionFix: permissionFixHandlers, enforcement: enforcementHandlers, owner: ownerHandlers, website: websiteHandlers, ownerErrors: ownerErrorsHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
         incidents: createIncidentHandlers({ client, guildId, incidents, sendHtml, shellOf, notFound }),
     };
 }
@@ -1242,6 +1246,7 @@ export function dashboardRouter(d) {
     router.get('/owner/health', ...owner, safe(ow.health));
     router.get('/owner/commands', ...owner, safe(ow.commands));
     router.get('/owner/erase', ...owner, safe(ow.erase));
+    router.get('/owner/errors', ...owner, safe(d.ownerErrors.errors));
     router.get('/owner/website', ...owner, safe(wb.home));
     router.get('/owner/website/images', ...owner, safe(wb.images));
     router.get('/owner/website/ns/:ns', ...owner, safe(wb.namespace));

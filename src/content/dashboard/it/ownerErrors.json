@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Errori recenti",
+    "help": "Errori di sistema per cui i membri hanno visto un Ref, ed errori delle attività in background. Raggruppati per codice di errore e origine, dal più recente (al massimo 50 gruppi)."
+  },
+  "search": {
+    "label": "Ref, trace o codice di errore",
+    "placeholder": "es. COMMAND_ERROR · int_ab12",
+    "submit": "Cerca",
+    "clear": "Azzera"
+  },
+  "table": {
+    "error": "Errore",
+    "source": "Origine",
+    "count": "Quante volte",
+    "lastSeen": "Ultima volta",
+    "sample": "Ref di esempio",
+    "server": "Server",
+    "noServer": "Nessun server (DM o attività)",
+    "moreServers": "{count} server in totale"
+  },
+  "kept": "Errori conservati: {count} (si tengono i {max} più recenti; al massimo 30 registrati al minuto).",
+  "empty": "Nessun errore registrato.",
+  "noMatch": "Nessun errore corrisponde a “{q}”.",
+  "privacy": "Non vengono salvati ID utente né testi scritti dai membri; gli ID nei messaggi di errore sono nascosti.",
+  "unavailable": {
+    "title": "Database non disponibile",
+    "text": "Non è stato possibile leggere l’elenco degli errori perché il database non risponde. Riprova tra qualche minuto."
+  }
+}

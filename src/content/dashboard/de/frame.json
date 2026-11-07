@@ -64,6 +64,7 @@
       "owner_commands": "Befehle synchronisieren",
       "owner_announce": "Ankündigen",
       "owner_erase": "Fall löschen",
+      "owner_errors": "Letzte Fehler",
       "owner_website": "Website",
       "owner_activity": "Inhaber-Aktivität"
     }

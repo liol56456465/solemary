@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Errores recientes",
+    "help": "Errores del sistema para los que los miembros vieron una Ref, y errores de tareas en segundo plano. Agrupados por código de error y origen, los más recientes primero (como mucho 50 grupos)."
+  },
+  "search": {
+    "label": "Ref, trace o código de error",
+    "placeholder": "p. ej. COMMAND_ERROR · int_ab12",
+    "submit": "Buscar",
+    "clear": "Borrar"
+  },
+  "table": {
+    "error": "Error",
+    "source": "Origen",
+    "count": "Veces",
+    "lastSeen": "Última vez",
+    "sample": "Ref de ejemplo",
+    "server": "Servidor",
+    "noServer": "Sin servidor (MD o tarea)",
+    "moreServers": "{count} servidores en total"
+  },
+  "kept": "Errores guardados: {count} (se guardan los {max} más recientes; como mucho 30 por minuto).",
+  "empty": "No hay errores registrados.",
+  "noMatch": "Ningún error coincide con «{q}».",
+  "privacy": "No se guardan ID de usuarios ni textos escritos por miembros; los ID en los mensajes de error se ocultan.",
+  "unavailable": {
+    "title": "Base de datos no disponible",
+    "text": "No se pudo leer la lista de errores porque la base de datos no responde. Inténtalo de nuevo en unos minutos."
+  }
+}

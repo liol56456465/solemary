@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Erros recentes",
+    "help": "Erros do sistema para os quais membros viram uma Ref, e erros de tarefas em segundo plano. Agrupados por código de erro e origem, os mais novos primeiro (no máximo 50 grupos)."
+  },
+  "search": {
+    "label": "Ref, trace ou código de erro",
+    "placeholder": "ex.: COMMAND_ERROR · int_ab12",
+    "submit": "Buscar",
+    "clear": "Limpar"
+  },
+  "table": {
+    "error": "Erro",
+    "source": "Origem",
+    "count": "Vezes",
+    "lastSeen": "Última vez",
+    "sample": "Ref de exemplo",
+    "server": "Servidor",
+    "noServer": "Sem servidor (DM ou tarefa)",
+    "moreServers": "{count} servidores no total"
+  },
+  "kept": "Erros guardados: {count} (os {max} mais novos ficam; no máximo 30 por minuto são registrados).",
+  "empty": "Nenhum erro registrado.",
+  "noMatch": "Nenhum erro corresponde a “{q}”.",
+  "privacy": "Não guardamos IDs de usuários nem textos escritos por membros; IDs nas mensagens de erro ficam ocultos.",
+  "unavailable": {
+    "title": "Banco de dados indisponível",
+    "text": "Não foi possível ler a lista de erros porque o banco de dados não está respondendo. Tente de novo em alguns minutos."
+  }
+}

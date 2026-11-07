@@ -65,6 +65,7 @@
       "owner_commands": "Sincronizar comandos",
       "owner_announce": "Anuncios",
       "owner_erase": "Borrar un caso",
+      "owner_errors": "Errores recientes",
       "owner_website": "Sitio web",
       "owner_activity": "Actividad del propietario"
     }
