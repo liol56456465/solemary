@@ -1,6 +1,6 @@
 {
   "page": {
-    "helpText": "Witaj nowych członków wiadomością, gdy dołączają, żegnaj ich, gdy odchodzą, i automatycznie dawaj nowym członkom rolę. W wiadomościach możesz używać {user} (oznacza członka), {user.tag} (jego nazwa użytkownika, bez oznaczenia), {server} (nazwa serwera) i {memberCount} (ilu członków ma teraz serwer)."
+    "help": "Witaj nowych członków wiadomością, gdy dołączają, żegnaj ich, gdy odchodzą, i automatycznie dawaj nowym członkom rolę. W wiadomościach możesz używać {user} (oznacza członka), {user.tag} (jego nazwa użytkownika, bez oznaczenia), {server} (nazwa serwera) i {memberCount} (ilu członków ma teraz serwer)."
   },
   "join": {
     "topic": "Powitanie",

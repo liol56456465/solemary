@@ -429,7 +429,8 @@ ${warnings.length ? html`<ul class="warnings">${warnings.map((w) => html`<li>${w
     // when the module's catalog has it (docs/dashboard-i18n.md), else the module's own English line.
     const title = item.key && item.label === module.label ? navLabel(item, tr) : module.label;
     const helpKey = `${namespaceOf(module.key)}.page.help`;
-    const help = tr.has(helpKey) ? tr.t(helpKey) : module.help;
+    // helpParams: names a help line shows literally (Welcome's {user}, {server} …), mapped to themselves.
+    const help = tr.has(helpKey) ? tr.t(helpKey, module.helpParams) : module.help;
     const main = state === null ? '' : moduleSwitch({ csrf: session?.csrf, canEdit, module: module.key, action: item.toggle, enabled: state, label: title, lang: tr.lang });
     const head = html`<header class="module-header"><span class="module-icon" aria-hidden="true">${icon(module.key)}</span>
 <div class="module-title"><h1>${title}</h1>${help ? html`<p class="help">${help}</p>` : ''}</div>${main ? html`<div class="module-main">${main}</div>` : ''}</header>`;

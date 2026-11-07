@@ -1,6 +1,6 @@
 {
   "page": {
-    "helpText": "Saluda a los nuevos miembros con un mensaje cuando entran, despídete cuando se van y dales automáticamente un rol. En los mensajes puedes usar {user} (menciona al miembro), {user.tag} (su nombre de usuario, sin mención), {server} (el nombre del servidor) y {memberCount} (cuántos miembros tiene ahora el servidor)."
+    "help": "Saluda a los nuevos miembros con un mensaje cuando entran, despídete cuando se van y dales automáticamente un rol. En los mensajes puedes usar {user} (menciona al miembro), {user.tag} (su nombre de usuario, sin mención), {server} (el nombre del servidor) y {memberCount} (cuántos miembros tiene ahora el servidor)."
   },
   "join": {
     "topic": "Bienvenida",

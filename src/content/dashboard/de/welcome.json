@@ -1,6 +1,6 @@
 {
   "page": {
-    "helpText": "Begrüße neue Mitglieder mit einer Nachricht, wenn sie beitreten, verabschiede sie, wenn sie gehen, und gib neuen Mitgliedern automatisch eine Rolle. In den Nachrichten kannst du {user} (erwähnt das Mitglied), {user.tag} (der Nutzername, ohne Erwähnung), {server} (der Servername) und {memberCount} (wie viele Mitglieder der Server jetzt hat) verwenden."
+    "help": "Begrüße neue Mitglieder mit einer Nachricht, wenn sie beitreten, verabschiede sie, wenn sie gehen, und gib neuen Mitgliedern automatisch eine Rolle. In den Nachrichten kannst du {user} (erwähnt das Mitglied), {user.tag} (der Nutzername, ohne Erwähnung), {server} (der Servername) und {memberCount} (wie viele Mitglieder der Server jetzt hat) verwenden."
   },
   "join": {
     "topic": "Willkommen",

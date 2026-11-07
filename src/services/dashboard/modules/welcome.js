@@ -205,6 +205,7 @@ export default {
     key: 'welcome',
     label: 'Welcome & goodbye',
     state: 'welcome',
+    helpParams: { user: '{user}', server: '{server}', memberCount: '{memberCount}' },
     help: 'Greet new members with a message when they join, say goodbye when they leave, and give new members a role by themselves. In the messages you can use {user} (mentions the member), {user.tag} (their username, without a mention), {server} (the server name) and {memberCount} (how many members the server has now).',
 
     async load(ctx) {

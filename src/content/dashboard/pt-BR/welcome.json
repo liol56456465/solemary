@@ -1,6 +1,6 @@
 {
   "page": {
-    "helpText": "Receba novos membros com uma mensagem quando eles entram, se despeça quando saem e dê automaticamente um cargo aos novos membros. Nas mensagens você pode usar {user} (menciona o membro), {user.tag} (o nome de usuário dele, sem mencionar), {server} (o nome do servidor) e {memberCount} (quantos membros o servidor tem agora)."
+    "help": "Receba novos membros com uma mensagem quando eles entram, se despeça quando saem e dê automaticamente um cargo aos novos membros. Nas mensagens você pode usar {user} (menciona o membro), {user.tag} (o nome de usuário dele, sem mencionar), {server} (o nome do servidor) e {memberCount} (quantos membros o servidor tem agora)."
   },
   "join": {
     "topic": "Boas-vindas",

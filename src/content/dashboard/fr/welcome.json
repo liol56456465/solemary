@@ -1,6 +1,6 @@
 {
   "page": {
-    "helpText": "Accueille les nouveaux membres avec un message quand ils arrivent, dis au revoir quand ils partent, et donne automatiquement un rôle aux nouveaux membres. Dans les messages, tu peux utiliser {user} (mentionne le membre), {user.tag} (son nom d’utilisateur, sans mention), {server} (le nom du serveur) et {memberCount} (le nombre actuel de membres du serveur)."
+    "help": "Accueille les nouveaux membres avec un message quand ils arrivent, dis au revoir quand ils partent, et donne automatiquement un rôle aux nouveaux membres. Dans les messages, tu peux utiliser {user} (mentionne le membre), {user.tag} (son nom d’utilisateur, sans mention), {server} (le nom du serveur) et {memberCount} (le nombre actuel de membres du serveur)."
   },
   "join": {
     "topic": "Bienvenue",
