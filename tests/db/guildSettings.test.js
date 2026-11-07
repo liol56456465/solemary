@@ -17,6 +17,8 @@ const MAIN = `7${runId}00000001`;
 const SUPPORT = `7${runId}00000002`;
 const CH = (n) => `5${runId}000000${String(n).padStart(2, '0')}`;
 const ADMIN = `6${runId}00000003`;
+const OTHER = `7${runId}00000004`; // not a home server
+const MAIN2 = `7${runId}00000005`; // a main server whose row already has values before the seed
 
 const ENV = {
     NODE_ENV: 'test', MAIN_GUILD_ID: MAIN, SUPPORT_GUILD_ID: SUPPORT,
@@ -33,8 +35,8 @@ before(async () => {
 
 after(async () => {
     if (skip) return;
-    await pgDb.pool.query('DELETE FROM guild_settings WHERE guild_id = ANY($1)', [[MAIN, SUPPORT]]);
-    await pgDb.pool.query('DELETE FROM dashboard_audit WHERE guild_id = ANY($1)', [[MAIN, SUPPORT]]);
+    await pgDb.pool.query('DELETE FROM guild_settings WHERE guild_id = ANY($1)', [[MAIN, SUPPORT, OTHER, MAIN2]]);
+    await pgDb.pool.query('DELETE FROM dashboard_audit WHERE guild_id = ANY($1)', [[MAIN, SUPPORT, OTHER, MAIN2]]);
     gs.resetSettingsCacheForTests();
     await pgDb.disconnect();
 });
@@ -115,4 +117,31 @@ test('concurrent updates of the same row lose nothing (row lock)', { skip }, asy
     for (let i = 1; i < audit.length; i += 1) assert.equal(audit[i].old, audit[i - 1].new, 'each change starts from the previous value');
     const { rows: [after] } = await pgDb.pool.query('SELECT data FROM guild_settings WHERE guild_id = $1', [MAIN]);
     assert.equal(after.data.evidenceChannelId, audit[audit.length - 1].new);
+});
+
+test('seed is additive: a row with existing values (null included) keeps them; only missing keys are added', { skip }, async () => {
+    const before = { modLogChannelId: CH(30), evidenceChannelId: null, massActionLimit: 2, unknownFutureKey: 'kept' };
+    await pgDb.pool.query('INSERT INTO guild_settings (guild_id, data) VALUES ($1, $2::jsonb)', [MAIN2, JSON.stringify(before)]);
+    const env = { ...ENV, MAIN_GUILD_ID: MAIN2, MOD_LOG_CHANNEL_ID: CH(31), EVIDENCE_CHANNEL_ID: CH(32), MASS_ACTION_LIMIT: '8' };
+    const seeded = await gs.seedFromEnvOnce(env);
+    for (const key of Object.keys(before)) assert.ok(!seeded[MAIN2].includes(key), `${key} not re-seeded`);
+    const { rows: [row] } = await pgDb.pool.query('SELECT data, seeded_from_env FROM guild_settings WHERE guild_id = $1', [MAIN2]);
+    for (const [key, value] of Object.entries(before)) assert.deepEqual(row.data[key], value, `${key} unchanged`);
+    assert.equal(row.data.appealWindowMs, 30 * 86400000, 'missing key added');
+    assert.equal(row.seeded_from_env, true);
+    // The core returns the stored values for this home server too.
+    assert.equal(gs.resolveSetting(MAIN2, 'modLogChannelId', env), CH(30));
+    assert.equal(gs.resolveSetting(MAIN2, 'evidenceChannelId', env), null);
+});
+
+test('settings core: a non-home server reads only its own row, never env or production values', { skip }, async () => {
+    await pgDb.pool.query('INSERT INTO guild_settings (guild_id, data) VALUES ($1, $2::jsonb)', [OTHER, JSON.stringify({ massActionLimit: 4 })]);
+    const values = await gs.refreshGuildSettings(OTHER, ENV);
+    assert.equal(values.massActionLimit, 4);
+    assert.equal(values.modLogChannelId, null, 'env MOD_LOG_CHANNEL_ID not lent');
+    assert.equal(values.bannedRoleId, null);
+    const seeded = await gs.seedFromEnvOnce(ENV);
+    assert.equal(seeded[OTHER], undefined, 'the seed never touches other servers');
+    const { rows: [row] } = await pgDb.pool.query('SELECT data FROM guild_settings WHERE guild_id = $1', [OTHER]);
+    assert.deepEqual(row.data, { massActionLimit: 4 });
 });

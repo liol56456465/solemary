@@ -380,8 +380,29 @@ function csv(raw, lower = false) {
 
 /** The hardcoded default of an entry for this environment (prodOnly ones are null/empty in test mode). */
 export function defaultValue(entry, env = process.env) {
-    if (entry.prodOnly && isTestEnv(env)) return entry.prodFallbackEmpty !== undefined ? entry.prodFallbackEmpty : null;
-    return Array.isArray(entry.fallback) ? [...entry.fallback] : entry.fallback;
+    const value = entry.prodOnly && isTestEnv(env)
+        ? (entry.prodFallbackEmpty !== undefined ? entry.prodFallbackEmpty : null)
+        : entry.fallback;
+    // A copy, so a caller changing the result never changes (or trips over a frozen) default.
+    return value !== null && typeof value === 'object' ? structuredClone(value) : value;
+}
+
+// Kinds whose hardcoded fallback names a place in Mewvo's own servers (a channel, role,
+// category, list of them, or a link such as the main server's invite).
+const PLACE_KINDS = new Set(['channel', 'category', 'role', 'url']);
+
+/**
+ * The default for a server that is NOT one of Mewvo's home servers (main / support): no env
+ * value and no hardcoded production place ever applies there. IDs and links → null, lists → [],
+ * anything production-only → its empty form; generic defaults (numbers, durations, booleans,
+ * the cat name, empty JSON structures) stay as they are. A copy, never the frozen fallback.
+ */
+export function neutralValue(entry) {
+    if (entry.kind === 'list') return [];
+    if (PLACE_KINDS.has(entry.kind)) return null;
+    if (entry.prodOnly) return entry.prodFallbackEmpty !== undefined ? structuredClone(entry.prodFallbackEmpty) : null;
+    const value = entry.fallback;
+    return value !== null && typeof value === 'object' ? structuredClone(value) : value;
 }
 
 /**

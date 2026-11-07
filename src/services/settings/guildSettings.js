@@ -16,16 +16,25 @@
 // The config objects (config/enforcement.js, config/automod.js) expose these keys as
 // getters (bindSettingGetters), so existing callers keep reading them synchronously.
 //
+// Multi-server (B0a): resolveSetting(guildId, key) / settingsFor(guildId) /
+// refreshGuildSettings(guildId) are the per-guild reads. Env and hardcoded fallbacks apply
+// ONLY to the home servers (MAIN_GUILD_ID / SUPPORT_GUILD_ID); any other server gets what it
+// stored, else neutralValue(), and an error (never defaults) when its row could not be read.
+// Compatibility layer, unchanged: getConfiguredSetting(key) and the config getters still
+// return the main (or support) server's values; getSetting(guildId, key) keeps its old
+// any-server fallback until B0b moves its callers (docs/multi-server-b0.md).
+//
 // The database helpers are imported lazily so this module (imported by the config
 // files) never pulls the database layer into their import graph.
 
 import { logger } from '../../utils/logger.js';
 import {
-    entriesForGuild, getSettingEntry, seedValue, validatePatch, validateSetting,
+    entriesForGuild, getSettingEntry, neutralValue, seedValue, settingKeys, validatePatch, validateSetting,
 } from './settingsRegistry.js';
 
 const cache = new Map(); // guildId → { data: {key: value}, seeded: boolean, updatedAt }
 let loaded = false;
+let allRowsLoaded = false; // only loadAllSettings sets this (the seed reads just the home rows)
 
 let dbModule = null;
 async function dbHelpers() {
@@ -89,7 +98,11 @@ export function isSettingsLoaded() {
     return loaded;
 }
 
-/** A setting of a guild: stored value, else env, else default. Synchronous. */
+/**
+ * A setting of a guild: stored value, else env, else default. Synchronous.
+ * @deprecated for anything but the home servers: it lends env / production fallbacks to ANY
+ * guild. New code uses resolveSetting(guildId, key); B0b moves the existing callers.
+ */
 export function getSetting(guildId, key, env = process.env) {
     const entry = getSettingEntry(key);
     if (!entry) throw new Error(`Unknown setting "${key}"`);
@@ -134,6 +147,101 @@ export function getModuleSettings(guildId, module, env = process.env) {
     return out;
 }
 
+// ── Per-guild core (multi-server, phase B0a) ──────────────────────────────
+//
+// getSetting() above lets EVERY server fall back to env vars and the hardcoded production
+// IDs, so another server would silently use Mewvo's channels and roles. The functions below
+// are the multi-server-safe reads; B0b moves the callers listed in docs/multi-server-b0.md
+// onto them. For the home servers (MAIN_GUILD_ID / SUPPORT_GUILD_ID) they return exactly
+// what getSetting returns today (same sources, same order: stored → env → default, and env
+// while the database was down at boot — owner decision 1). Every other server gets only what
+// it stored itself, else neutralValue() (null / [] for places, generic defaults otherwise),
+// and an error instead of defaults when its settings could not be read.
+
+/** Thrown when a non-home server's settings are asked for but could not be read from the database. */
+export class SettingsUnavailableError extends Error {
+    constructor(guildId, cause) {
+        super(`Settings of guild ${guildId} are not loaded: database not responding`);
+        this.name = 'SettingsUnavailableError';
+        this.type = 'database'; // ErrorTypes.DATABASE (not imported: config files import this module)
+        this.userMessage = 'The database is not responding right now, so nothing was changed. Please try again in a minute.';
+        this.guildId = guildId;
+        if (cause) this.cause = cause;
+    }
+}
+
+const fetchedGuilds = new Set(); // non-home guilds read one by one by refreshGuildSettings()
+
+/** True for Mewvo's own servers (configured MAIN_GUILD_ID / SUPPORT_GUILD_ID). */
+export function isHomeGuild(guildId, env = process.env) {
+    return guildRole(guildId, env) !== null;
+}
+
+function requireGuildId(guildId) {
+    const id = typeof guildId === 'string' ? guildId.trim() : '';
+    if (!id) throw new TypeError('A guild id is required');
+    return id;
+}
+
+/**
+ * One setting of one guild. Home server: identical to getSetting(guildId, key). Any other
+ * server: its stored value, else neutralValue(entry); throws SettingsUnavailableError when the
+ * table was never read (database down at boot) and the guild was not refreshed since.
+ */
+export function resolveSetting(guildId, key, env = process.env) {
+    const entry = getSettingEntry(key);
+    if (!entry) throw new Error(`Unknown setting "${key}"`);
+    const id = requireGuildId(guildId);
+    if (isHomeGuild(id, env)) return getSetting(id, key, env);
+    const row = cache.get(id);
+    if (!row && !allRowsLoaded && !fetchedGuilds.has(id)) throw new SettingsUnavailableError(id);
+    if (row && Object.hasOwn(row.data, key)) return clone(row.data[key]);
+    return neutralValue(entry);
+}
+
+/** Where resolveSetting's value comes from: 'database' | 'env' | 'default' (non-home: never 'env'). */
+export function resolvedSource(guildId, key, env = process.env) {
+    const id = requireGuildId(guildId);
+    if (isHomeGuild(id, env)) return settingSource(id, key, env);
+    if (!getSettingEntry(key)) return null;
+    const row = cache.get(id);
+    if (!row && !allRowsLoaded && !fetchedGuilds.has(id)) throw new SettingsUnavailableError(id);
+    return row && Object.hasOwn(row.data, key) ? 'database' : 'default';
+}
+
+/**
+ * Every registry setting of one guild, resolved like resolveSetting: { key: value } (copies).
+ * Synchronous, from the cache. Throws like resolveSetting.
+ */
+export function settingsFor(guildId, env = process.env) {
+    const id = requireGuildId(guildId);
+    const out = {};
+    for (const key of settingKeys()) out[key] = resolveSetting(id, key, env);
+    return out;
+}
+
+/**
+ * Reads one guild's row from the database into the cache (or drops a stale cached row when
+ * there is none) and returns settingsFor(guildId). Throws SettingsUnavailableError when the
+ * database is down or the query fails; the cache is left as it was then.
+ */
+export async function refreshGuildSettings(guildId, env = process.env) {
+    const id = requireGuildId(guildId);
+    const db = await dbHelpers();
+    if (!db.isAvailable()) throw new SettingsUnavailableError(id);
+    let rows;
+    try {
+        ({ rows } = await db.query(
+            `SELECT guild_id, data, seeded_from_env, updated_at FROM ${db.settingsTable} WHERE guild_id = $1`, [id]));
+    } catch (error) {
+        throw new SettingsUnavailableError(id, error);
+    }
+    if (rows[0]) cacheRow(rows[0]);
+    else cache.delete(id);
+    if (!isHomeGuild(id, env)) fetchedGuilds.add(id);
+    return settingsFor(id, env);
+}
+
 /**
  * Defines getter/setter properties on a config object for the given setting keys.
  * Reading goes through getConfiguredSetting; assigning (tests only) pins a value
@@ -171,11 +279,31 @@ export async function loadAllSettings() {
         cache.clear();
         for (const row of rows) cacheRow(row);
         loaded = true;
+        allRowsLoaded = true;
         return rows.length;
     } catch (error) {
         logger.error(`Settings could not be loaded (running on env/default values): ${error.message}`);
         return null;
     }
+}
+
+/**
+ * The additive seed patch: { key: env/default value } for every entry the stored row `data`
+ * does NOT have yet. A key that is already stored (whatever its value, null included) is never
+ * in the patch, so applying it with `data || patch` can only add keys, never overwrite. Values
+ * that fail their schema are left out (logged); the bot keeps reading them from the env.
+ */
+export function missingSeedPatch(data, entries, env = process.env) {
+    const stored = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+    const missing = {};
+    for (const entry of entries) {
+        if (Object.hasOwn(stored, entry.key)) continue;
+        const value = seedValue(entry, env);
+        const check = validateSetting(entry.key, value);
+        if (check.ok) missing[entry.key] = check.value;
+        else logger.warn(`Settings seed: ${entry.env || entry.key} is not valid (${check.error}); not stored, the bot keeps using it from the environment`);
+    }
+    return missing;
 }
 
 /**
@@ -197,15 +325,7 @@ export async function seedFromEnvOnce(env = process.env) {
                 `INSERT INTO ${db.settingsTable} (guild_id) VALUES ($1) ON CONFLICT (guild_id) DO NOTHING`, [guildId]);
             const { rows: [current] } = await client.query(
                 `SELECT guild_id, data, seeded_from_env, updated_at FROM ${db.settingsTable} WHERE guild_id = $1 FOR UPDATE`, [guildId]);
-            const data = current.data && typeof current.data === 'object' ? current.data : {};
-            const missing = {};
-            for (const entry of entries) {
-                if (Object.hasOwn(data, entry.key)) continue;
-                const value = seedValue(entry, env);
-                const check = validateSetting(entry.key, value);
-                if (check.ok) missing[entry.key] = check.value;
-                else logger.warn(`Settings seed: ${entry.env || entry.key} is not valid (${check.error}); not stored, the bot keeps using it from the environment`);
-            }
+            const missing = missingSeedPatch(current.data, entries, env);
             seeded[guildId] = Object.keys(missing);
             if (!seeded[guildId].length && current.seeded_from_env) return current;
             const { rows: [updated] } = await client.query(
@@ -292,5 +412,12 @@ export function setSettingsCacheForTests(guildId, data) {
 /** For tests: forget everything that was loaded. */
 export function resetSettingsCacheForTests() {
     cache.clear();
+    fetchedGuilds.clear();
     loaded = false;
+    allRowsLoaded = false;
+}
+
+/** For tests: replace the lazily imported database helpers ({ query, withTransaction, isAvailable, settingsTable, auditTable }); null restores them. */
+export function setSettingsDbForTests(helpers) {
+    dbModule = helpers || null;
 }
