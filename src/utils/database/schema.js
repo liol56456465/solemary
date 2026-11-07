@@ -549,8 +549,16 @@ export const tableStatements = [
     )`,
     // Schema v11: existing databases still have the v10 CHECK (youtube only). One ALTER (atomic:
     // never a moment without the check) replaces it with the wider one; existing rows are untouched.
-    `ALTER TABLE ${t.feeds} DROP CONSTRAINT IF EXISTS ${t.feeds}_kind_check,
-        ADD CONSTRAINT ${t.feeds}_kind_check CHECK (kind IN ('youtube', 'twitch'))`,
+    // Runs only while the old check is there, so a normal startup takes no table lock.
+    `DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                       WHERE conname = '${t.feeds}_kind_check'
+                         AND conrelid = '${t.feeds}'::regclass
+                         AND pg_get_constraintdef(oid) LIKE '%twitch%') THEN
+            ALTER TABLE ${t.feeds} DROP CONSTRAINT IF EXISTS ${t.feeds}_kind_check,
+                ADD CONSTRAINT ${t.feeds}_kind_check CHECK (kind IN ('youtube', 'twitch'));
+        END IF;
+    END $$`,
 
     // Per-server settings edited from the dashboard (services/settings/guildSettings.js,
     // keys in settingsRegistry.js). Held in memory; env values seed missing keys once.
