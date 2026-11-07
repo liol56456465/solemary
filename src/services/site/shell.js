@@ -18,7 +18,7 @@ import {
 export const DASHBOARD_PATH = '/dashboard';
 
 export const SECURITY_HEADERS = {
-    'Content-Security-Policy': "default-src 'none'; style-src 'self'; script-src 'none'; img-src 'self'; "
+    'Content-Security-Policy': "default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; "
         + "form-action 'none'; frame-ancestors 'none'; base-uri 'none'",
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
@@ -95,6 +95,19 @@ function buildStylesheet() {
 }
 export const STYLESHEET = buildStylesheet();
 export const CSS_PATH = `/site.css?v=${createHash('sha256').update(STYLESHEET).digest('hex').slice(0, 10)}`;
+
+// The one script (static/site.js): closes the header menus on an outside tap or Escape, keeps one
+// open at a time, scrolls the phone menu to the current page. Optional: pages work without it.
+function buildScript() {
+    try {
+        return readFileSync(new URL('./static/site.js', import.meta.url), 'utf8');
+    } catch (error) {
+        logger.error(`Site script missing: ${error.message}`);
+        return '';
+    }
+}
+export const SCRIPT = buildScript();
+export const JS_PATH = `/site.js?v=${createHash('sha256').update(SCRIPT).digest('hex').slice(0, 10)}`;
 
 // The owner's logo (static/img/logo.png, 64×64: the white cat on a black tile). The ?v= hash
 // changes with the file, so the week-long /img cache never shows an old logo.
@@ -337,7 +350,7 @@ export function layout(ctx, { title, active = null, description = '', refresh = 
     return html`<!doctype html><html lang="${lang || 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark"><meta name="theme-color" content="#1e1f22">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
 <title>${fullTitle(ctx, title)}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path, image })}
-<link rel="icon" href="${FAVICON_PATH}" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"></head>
+<link rel="icon" href="${FAVICON_PATH}" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body><a class="skip" href="#main">${t('shell.header.skip')}</a>
 <header class="topbar ${bar.stack}"><div class="wrap topbar-inner"><a class="brand" href="${href('/')}"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>${brand}</span></a>
 <nav class="topnav" aria-label="${t('shell.header.navLabel')}"><ul>${navLinks(ctx, active)}</ul></nav>

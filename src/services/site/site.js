@@ -1,6 +1,6 @@
 // site.js — the front website at the site root. Server-rendered with the dashboard's `html`
-// template (every value escaped), no scripts at all and no inline styles
-// (CSP: style-src 'self', script-src 'none', img-src 'self').
+// template (every value escaped), no inline scripts or styles: one optional static script
+// (static/site.js, menus only; CSP: style-src 'self', script-src 'self', img-src 'self').
 //
 //   GET /             Home (pages/home.js)
 //   GET /features     the full feature reference (pages/features.js)
@@ -30,6 +30,7 @@
 //                     Images) is served from the database copy at the same path
 //   GET /favicon.png  the owner's logo (static/img/logo.png), also at /favicon.ico; site and dashboard link it
 //   GET /site.css     the site's tokens + layout, cached, ?v=<content hash>
+//   GET /site.js      the one script (header menus), cached, ?v=<content hash>
 //
 // NOT PUBLIC YET: PUBLIC_SITE_ENABLED=true (default off) shows the "Add to Discord" button
 // and lets search engines index the pages. While off, every response carries
@@ -53,7 +54,7 @@ import { createTransparencyReader } from '../enforcement/transparencyService.js'
 import { createTrustCardReader } from '../enforcement/trustCardService.js';
 import { logger } from '../../utils/logger.js';
 import {
-    FAVICON_PATH, LOGO_FILE, NOINDEX, SECURITY_HEADERS, STYLESHEET, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
+    FAVICON_PATH, LOGO_FILE, NOINDEX, SCRIPT, SECURITY_HEADERS, STYLESHEET, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
 } from './shell.js';
 import { homePage } from './pages/home.js';
 import { featuresPage } from './pages/features.js';
@@ -74,7 +75,7 @@ import { languageRouting, pickerHref, suggestedLanguage } from './language.js';
 import { readPublicRules } from '../rules/serverRules.js';
 
 export {
-    CSS_PATH, DASHBOARD_PATH, FAVICON_PATH, INSTALL_PERMISSIONS, LOGO, LOGO_PATH, NOINDEX, SECURITY_HEADERS, STYLESHEET, addButton,
+    CSS_PATH, DASHBOARD_PATH, FAVICON_PATH, INSTALL_PERMISSIONS, JS_PATH, LOGO, LOGO_PATH, NOINDEX, SCRIPT, SECURITY_HEADERS, STYLESHEET, addButton,
     installPermissionBits, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
 } from './shell.js';
 export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, rulesPage, changelogPage, GUIDES };
@@ -556,6 +557,10 @@ export function createSite({
     router.get('/site.css', (req, res) => {
         res.set('Cache-Control', 'public, max-age=3600');
         res.status(200).type('text/css').send(STYLESHEET);
+    });
+    router.get('/site.js', (req, res) => {
+        res.set('Cache-Control', 'public, max-age=3600');
+        res.status(200).type('text/javascript').send(SCRIPT);
     });
     // Last: any other GET is a plain 404 page (the API and dashboard routes are registered before).
     router.get(/.*/, notFound);

@@ -2,6 +2,7 @@
 // rows (empty months, the median total row), small-number masking, the cached reader, and the
 // /transparency page (off → 404 + no footer link, on → numbers only, DB error → 503).
 import { test } from 'node:test';
+import { JS_PATH } from '../src/services/site/shell.js';
 import assert from 'node:assert/strict';
 import express from 'express';
 import {
@@ -235,7 +236,7 @@ test('on: numbers only, small counts hidden, current month marked, footer link a
         const cells = [...tables.matchAll(/<td[^>]*>([^<]*)<\/td>/g)].map((m) => m[1]);
         assert.ok(cells.length > 50);
         for (const text of cells) assert.match(text, /^(\d[\d,]*|fewer than 3|at least [\d,]+|not enough decisions|under an hour|\d+ hours?|[\d.]+ days)$/, text);
-        assert.ok(!/style=|<script/i.test(body));
+        assert.ok(!/style=|<script/i.test(body.replace(`<script src="${JS_PATH}" defer></script>`, '')));
         assert.match(body, /<li><a href="\/transparency" aria-current="page">Transparency<\/a><\/li>/);
         assert.match((await site.get('/about')).body, /href="\/transparency"/);
         assert.match((await site.get('/sitemap.xml')).body, /<loc>https:\/\/mewvo\.example\/transparency<\/loc>/);

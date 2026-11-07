@@ -3,6 +3,7 @@
 // round), only the logged-in member's own record with member-safe fields, 503 on a
 // database error, CSRF + same origin on logout, 404 when switched off.
 import { test } from 'node:test';
+import { JS_PATH } from '../src/services/site/shell.js';
 import assert from 'node:assert/strict';
 import express from 'express';
 import {
@@ -174,8 +175,11 @@ test('enabled: "My record" in the top bar of the site; /me without a session is 
         assert.ok(page.body.includes('<a href="/me" aria-current="page">My record</a>'));
         assert.equal(calls.length, 0, 'no record is read without a session');
         for (const [name, value] of Object.entries(MEMBER_SECURITY_HEADERS)) assert.equal(page.headers.get(name), value, name);
-        assert.match(page.headers.get('content-security-policy'), /script-src 'none'/);
-        assert.ok(!/<script|\sstyle=|<style/i.test(page.body), 'no scripts or inline styles');
+        assert.equal(page.headers.get('content-security-policy'), "default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; "
+            + "form-action 'self' https://discord.com; frame-ancestors 'none'; base-uri 'none'");
+        assert.equal((page.body.match(/<script/gi) || []).length, 1, 'only the static site script');
+        assert.ok(page.body.includes('<script src="/site.js?v=') && page.body.includes(' defer></script>'), 'the static site script');
+        assert.ok(!/\sstyle=|<style/i.test(page.body), 'no inline styles');
     } finally {
         await app.close();
     }
@@ -332,7 +336,7 @@ test('the record: only the logged-in member, member-safe fields, test cases left
         for (const hidden of ['ttest2', 'SIMULATION-REASON', 'SECRET-VOID-NOTE', 'SECRET-REVOKE', '555555555555555555', 'xother', 'member warn 1']) {
             assert.ok(!body.includes(hidden), `hidden: ${hidden}`);
         }
-        assert.ok(!/<script|\sstyle=|<style/i.test(body));
+        assert.ok(!/<script|\sstyle=|<style/i.test(body.replace(`<script src="${JS_PATH}" defer></script>`, '')));
         assert.ok(body.includes('<form method="post" action="/me/logout">'));
     } finally {
         await app.close();

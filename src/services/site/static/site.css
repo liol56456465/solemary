@@ -660,6 +660,8 @@ button.button { cursor: pointer; }
 
 /* Tables sit in a raised box that scrolls sideways on phones. */
 .table-wrap { border: 1px solid var(--border); border-radius: 14px; background: var(--raised); overflow-x: auto; }
+/* site.js adds .can-scroll while a table has more columns to the right: a stronger right edge. */
+.table-wrap.can-scroll { border-right-color: var(--border-strong); }
 
 /* Footer: brand line, then link columns. */
 .footer { padding: 56px 0 32px; background: var(--bg-alt); border-top: 1px solid var(--border); }
