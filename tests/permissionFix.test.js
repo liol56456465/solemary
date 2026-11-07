@@ -83,7 +83,7 @@ test('channelPicker: marks channels before saving; the chosen one gets Fix permi
     assert.match(empty, /needs more permissions before this works there/);
     assert.doesNotMatch(empty, /fix-link/, 'nothing chosen: no link yet');
     const chosen = String(channelPicker(guild, 'channelId', TEXT, { label: 'Channel', perms: PERMS.post }));
-    assert.match(chosen, /class="field-warn">I am missing Send Messages, Embed Links in #general <a class="fix-link" href="\/dashboard\/fix-permissions\?channel=500000000000000001&amp;need=SendMessages%2CEmbedLinks">Fix permissions<\/a>/);
+    assert.match(chosen, /class="field-warn">I am missing Send Messages, Embed Links in #general\. To fix it, allow them for Mewvo&#39;s role in Edit Channel → Permissions, or pick another channel <a class="fix-link" href="\/dashboard\/fix-permissions\?channel=500000000000000001&amp;need=SendMessages%2CEmbedLinks">Fix permissions<\/a>/);
     const fine = String(channelPicker(guild, 'channelId', OK, { label: 'Channel', perms: PERMS.text }));
     assert.doesNotMatch(fine, /fix-link|field-warn/, 'the chosen channel is fine: no warning, no link');
     assert.match(fine, /<option value="500000000000000002" selected>#&lt;b&gt;ok<\/option>/);
