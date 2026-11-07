@@ -105,6 +105,8 @@ export function commandEntries(commands) {
         byKey.set(key, { key, description: description || '', access, page: staysCommand ? null : dashboardPageFor(key) });
     };
     for (const command of commands?.values?.() || []) {
+        // Owner tools (/database) live in the owner's own server, not in the main server's list.
+        if (command?.scope === 'owner') continue;
         const json = typeof command?.data?.toJSON === 'function' ? command.data.toJSON() : null;
         if (!json?.name) continue;
         const menu = json.type === 2 || json.type === 3;
