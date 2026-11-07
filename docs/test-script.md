@@ -293,4 +293,23 @@ answer 1), Q2 with 3 answers; wait 1 minute; save; turn the quiz on.
 | 21.4 | Owner: `/backup snapshots`, then `/backup changes` | The list's hint says `/backup changes`; changes since the latest snapshot shown. `diff` is gone |
 | 21.5 | `/test action:ban user:Alt A no_appeal:true` | DM preview to you says the ban cannot be appealed; no `unappealable` option |
 
+
+## 22. `/database` (owner only, in the owner's server `1564332751170044186`)
+
+Needs the bot in that server (invite it there with the `applications.commands` scope) and a restart, so the command is registered there.
+
+| # | Do | Expected |
+|---|---|---|
+| 22.1 | In the main server and in Support, type `/database` | Not in the command list (startup log: `Registering 1 owner-tools-guild commands`, main-server count unchanged) |
+| 22.2 | Owner, owner's server: `/database stats` | Ephemeral: rows per table, schema version 11, database size, oldest/newest rows. Footer "read-only · secrets are hidden" |
+| 22.3 | `/database user user:<Alt A's ID>` | Every section with a count (cases, ladder, appeals, watchlist, keep-apart, levels, modmail, verification, tickets, birthdays, website account, premium, …); most recent rows only. OAuth link shows `status: stored`, never a token |
+| 22.4 | `/database user user:<@Alt A>` | Same result as 22.3 |
+| 22.5 | `/database case code:<a real case code>` | The case, its edits, evidence (no image URL), staff notes and appeals; `reason_key` / `import_key` show `(hidden)` |
+| 22.6 | `/database server server_id:1527697154926182492` | Config fields, settings that are set (secret-named ones `(hidden)`), module states, non-empty table counts, open appeals |
+| 22.7 | `/database search text:%%` and `text:__` | Only rows that really contain `%%` / `__` (the wildcards are escaped), not everything |
+| 22.8 | A result with more than one page: Next, Previous | Pages change; Previous is disabled on page 1, Next on the last |
+| 22.9 | Alt A (or any non-owner) in the owner's server: `/database stats` | "This command is only for the bot owner." (ephemeral), nothing queried |
+| 22.10 | Wait 15 minutes, press Next | "This result expired, run /database again." |
+| 22.11 | Bot log (Replit console): find the lines for 22.2–22.7 | `Owner /database <subcommand> by <your ID>` with the query; no result rows in the log |
+
 When done: run the clean-up from "Before testing in Discord".

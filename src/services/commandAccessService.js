@@ -32,7 +32,8 @@ export function buildCommandRegistry(client) {
   const categories = new Map();
 
   for (const command of client.commands.values()) {
-    if (!command?.data?.name) {
+    // Owner tools (/database) are not main-server commands, so they have no toggle there.
+    if (!command?.data?.name || command.scope === 'owner') {
       continue;
     }
 

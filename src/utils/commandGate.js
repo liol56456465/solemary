@@ -9,6 +9,9 @@
 // Commands stay visible to everyone (no default_member_permissions), so
 // non-admins see this message instead of an empty command list.
 //
+// 3. Owner tools (scope 'owner', /database): only in OWNER_TOOLS_GUILD_ID (config/ownerTools.js)
+//    and only for OWNER_IDS. Stricter than Administrator; nothing else lets anyone in.
+//
 // 0. The global blacklist (dashboard Owner area) comes first: a blacklisted user gets
 //    "You can't use this bot."; a blacklisted server is ignored (silent: true, the caller
 //    sends nothing). OWNER_IDS are never blocked.
@@ -24,6 +27,17 @@ import { adminCommandsRetired, isKeptAdminCommand, isOwnerKit, retiredMessage } 
 import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
 import { getStoredSetting, isHomeGuild, resolveSetting } from '../services/settings/guildSettings.js';
 import { botText } from './botText.js';
+import { ownerToolsGuildId } from '../config/ownerTools.js';
+
+export const OWNER_TOOLS_REFUSAL = 'This command is only for the bot owner.';
+
+/**
+ * True when an owner-tools command may run: the user is in OWNER_IDS and it runs inside
+ * OWNER_TOOLS_GUILD_ID. `ownerGuildId` and `isOwner` are injectable for tests.
+ */
+export function canUseOwnerTools({ guildId, userId, ownerGuildId = ownerToolsGuildId(), isOwner = isBotOwner } = {}) {
+    return Boolean(ownerGuildId) && String(guildId || '') === ownerGuildId && Boolean(userId) && isOwner(String(userId));
+}
 
 /**
  * A server's own admin request channel. The support server (a home server, so resolveSetting
@@ -63,6 +77,8 @@ export function getAdminRequiredMessage(guildId = null, { stored = ownRequestCha
 /** True when the command exists in this guild: all commands in the main server, the support list in the support server. */
 export function isCommandAvailableInGuild(command, guildId) {
     if (!guildId) return false;
+    // Owner tools exist in the owner-tools server only (never in the main or support server).
+    if (command?.scope === 'owner') return guildId === ownerToolsGuildId();
     if (guildId === enforcementConfig.mainGuildId) return true;
     return guildId === enforcementConfig.supportGuildId && command?.scope !== 'main' && isSupportServerCommand(command?.data?.name);
 }
@@ -99,6 +115,11 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
     }
     if (!guild) {
         return { allowed: false, message: 'This bot only works in servers.' };
+    }
+    if (command?.scope === 'owner') {
+        return canUseOwnerTools({ guildId: guild.id, userId })
+            ? { allowed: true }
+            : { allowed: false, message: OWNER_TOOLS_REFUSAL };
     }
     if (!isCommandAvailableInGuild(command, guild.id)) {
         return {

@@ -7,6 +7,7 @@ import { logger } from '../../utils/logger.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { testMode } from '../../config/testMode.js';
 import { adminCommandsRetired, retireCommandJson } from '../../config/commands/retirement.js';
+import { ownerToolsGuildId, ownerToolsProblem } from '../../config/ownerTools.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -130,7 +131,9 @@ export async function loadCommands(client) {
  * out of DMs.
  */
 function collectCommandPayloads(client) {
-    const sets = { global: [], main: [], support: [] };
+    // owner: registered in OWNER_TOOLS_GUILD_ID only (config/ownerTools.js), never in the main
+    // server, the support server or globally.
+    const sets = { global: [], main: [], support: [], owner: [] };
     let totalSubcommands = 0;
     const registeredNames = new Set();
 
@@ -158,7 +161,9 @@ function collectCommandPayloads(client) {
         delete commandJson.dm_permission;
 
         const scope = command.scope || 'global';
-        if (!sets[scope]) {
+        if (scope === 'owner') {
+            sets.owner.push(commandJson);
+        } else if (!sets[scope]) {
             logger.warn(`Command ${commandName} has unknown scope "${scope}"; registering it globally`);
             sets.global.push(commandJson);
         } else {
@@ -276,6 +281,9 @@ async function putCommands(rest, route, commands, label) {
  */
 export function buildRegistrationBodies(sets, totalSubcommands = 0, { quiet = false } = {}) {
     const info = quiet ? () => {} : (message) => logger.info(message);
+    // Owner tools (/database): their own list for OWNER_TOOLS_GUILD_ID; never part of the main
+    // or support list, and not affected by RETIRE_ADMIN_COMMANDS.
+    const ownerCommands = [...(sets.owner || [])];
     let all = [...sets.global, ...sets.main, ...sets.support];
     // Admin commands retired (RETIRE_ADMIN_COMMANDS): only everyone-commands and the owner kit.
     if (adminCommandsRetired()) {
@@ -293,7 +301,8 @@ export function buildRegistrationBodies(sets, totalSubcommands = 0, { quiet = fa
     const mainCommands = prepareCommandsForRegistration(all, { quiet });
     const supportCommands = prepareCommandsForRegistration(
         [...sets.global, ...sets.support].filter((command) => isSupportServerCommand(command.name)), { quiet });
-    return { mainCommands, supportCommands };
+    validateCommands(ownerCommands);
+    return { mainCommands, supportCommands, ownerCommands };
 }
 
 export async function registerCommandSets(rest, clientId, sets, totalSubcommands = 0) {
@@ -304,14 +313,18 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
         throw new Error('Discord REST client is not available for slash command registration');
     }
 
-    const { mainCommands, supportCommands } = buildRegistrationBodies(sets, totalSubcommands);
+    const { mainCommands, supportCommands, ownerCommands } = buildRegistrationBodies(sets, totalSubcommands);
+    const ownerGuildId = ownerToolsGuildId();
+    if (!ownerGuildId) logger.warn(ownerToolsProblem());
 
     if (testMode.enabled) {
-        // Test mode never touches global commands; the test main guild plays the main server.
+        // Test mode never touches global commands; the test main guild plays the main server
+        // (and owner tools only reach OWNER_TOOLS_GUILD_ID when it is one of the test guilds).
         for (const guildId of testMode.guildIds) {
             const body = guildId === enforcementConfig.mainGuildId ? mainCommands
                 : guildId === enforcementConfig.supportGuildId ? supportCommands
-                    : [];
+                    : guildId === ownerGuildId ? ownerCommands
+                        : [];
             try {
                 await putCommands(rest, Routes.applicationGuildCommands(clientId, guildId), body, `test-guild ${guildId}`);
             } catch (error) {
@@ -336,6 +349,14 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
         } catch (error) {
             // 50001 Missing Access: the bot is not in that guild (or lacks applications.commands).
             logger.error(`Could not register support-guild commands in ${enforcementConfig.supportGuildId}: ${error.message}`);
+        }
+    }
+
+    if (ownerGuildId) {
+        try {
+            await putCommands(rest, Routes.applicationGuildCommands(clientId, ownerGuildId), ownerCommands, 'owner-tools-guild');
+        } catch (error) {
+            logger.error(`Could not register owner-tools commands in ${ownerGuildId}: ${error.message}`);
         }
     }
 }
