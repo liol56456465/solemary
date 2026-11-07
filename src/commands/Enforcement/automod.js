@@ -201,11 +201,11 @@ export default {
             .addRoleOption((option) => option.setName('role').setDescription('Trusted role'))
             .addIntegerOption((option) => option.setName('min_level').setDescription('Or at least this leveling level (0 = no level criterion)').setMinValue(0).setMaxValue(1000))
             .addBooleanOption((option) => option.setName('clear').setDescription('Remove the trusted role and level')))
-        .addSubcommand((sub) => sub.setName('secondchance').setDescription('Friendly notice for a first small offence in 30 days, instead of a warning')
+        .addSubcommand((sub) => sub.setName('friendlynotice').setDescription('Friendly notice for a first small offence in 30 days, instead of a warning')
             .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
         .addSubcommand((sub) => sub.setName('mood').setDescription('Calm-down note and brief slowmode when a channel heats up')
             .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
-        .addSubcommand((sub) => sub.setName('probation').setDescription('Show or end a member\'s extra-watch period after a ban (they rejoined)')
+        .addSubcommand((sub) => sub.setName('extrawatch').setDescription('Show or end a member\'s extra-watch period after a ban (they rejoined)')
             .addUserOption((option) => option.setName('user').setDescription('Member').setRequired(true))
             .addBooleanOption((option) => option.setName('end').setDescription('End the extra-watch period now')))
         .addSubcommand((sub) => sub.setName('exempt').setDescription('Add or remove a channel automod ignores completely (all rules)')
@@ -321,7 +321,7 @@ export default {
             return handleCustom(interaction, sub);
         }
 
-        if (sub === 'probation') {
+        if (sub === 'extrawatch') {
             const user = interaction.options.getUser('user');
             const end = interaction.options.getBoolean('end');
             const record = end ? await endProbation(guildId, user.id) : await getProbation(guildId, user.id);
@@ -377,7 +377,7 @@ export default {
             note = clear || (!saved.trusted.roleId && !saved.trusted.minLevel)
                 ? 'No trusted members: everyone is held to every rule.'
                 : `Trusted: ${trustedText(saved.trusted)}. They skip ${relaxedRuleLabels()}.`;
-        } else if (sub === 'secondchance') {
+        } else if (sub === 'friendlynotice') {
             const enabled = interaction.options.getBoolean('enabled');
             await setSecondChance(guildId, enabled);
             note = enabled

@@ -15,7 +15,7 @@ import { EVERYONE_COMMANDS } from './commandAccess.js';
 /** Owner-only emergency kit: moderation and recovery that must work when the website is down. */
 export const OWNER_KIT = new Set([
     'enforcements', 'automod panic', 'automod lockdown-end', 'staff restore',
-    'backup status', 'backup restore', 'backup snapshot', 'backup snapshots', 'backup diff', 'backup revert', 'backup rebuild',
+    'backup status', 'backup restore', 'backup snapshot', 'backup snapshots', 'backup changes', 'backup revert', 'backup rebuild',
 ]);
 
 /**

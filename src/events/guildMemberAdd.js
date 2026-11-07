@@ -82,7 +82,7 @@ export default {
                 });
                 if (gate === 'kicked') return;
                 await checkImpersonation(member);
-                // Back after a ban that ended recently: automod probation.
+                // Back after a ban that ended recently: automod extra-watch period (/automod extrawatch).
                 await startProbationOnJoin(member).catch((error) => logger.warn(`Probation check failed for ${member.id}: ${error.message}`));
                 // Role rules (dashboard Members): e.g. "days in the server: 0" gives its role now.
                 await applyRoleRulesToMember(member).catch((error) => logger.warn(`Role rules not applied to ${member.id}: ${error.message}`));

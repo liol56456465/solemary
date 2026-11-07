@@ -6,7 +6,7 @@
 // and refuses to run on the main server itself. Member-specific overwrites, managed
 // (bot/integration) roles, emojis, webhooks and messages are not part of a snapshot.
 //
-// Undo the nuke (/backup diff, /backup revert, "Show diff" on staff-guard alerts):
+// Undo the nuke (/backup changes, /backup revert, "Show diff" on staff-guard alerts):
 // diffStructure compares a snapshot with the live main server; revertToSnapshot
 // recreates deleted roles and channels (with their role overwrites, in order) and puts
 // back changed role permissions and channel overwrites. Roles and channels created

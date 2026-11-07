@@ -193,7 +193,7 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
         if (wasOpen) {
             notes.push(...await liftCase(client, record, admin, {
                 reason: `Removed (a mistake) by ${admin.username}: ${reason}`,
-                via: 'case void',
+                via: 'case remove',
             }));
         } else if (record.status === 'expired') {
             notes.push('It had already ended, so nothing was lifted.');

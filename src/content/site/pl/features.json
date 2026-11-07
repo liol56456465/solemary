@@ -42,7 +42,7 @@
         },
         "caseTools": {
           "term": "Narzędzia spraw",
-          "text": "/case edit, void (usunąć błędną sprawę) i history, dowody (linki do wiadomości z fragmentem albo obrazy), wyszukiwanie spraw i /background z pełną historią członka."
+          "text": "/case edit, remove (usunąć błędną sprawę) i history, dowody (linki do wiadomości z fragmentem albo obrazy), wyszukiwanie spraw i /background z pełną historią członka."
         },
         "warnForMessage": {
           "term": "Warn for this message",

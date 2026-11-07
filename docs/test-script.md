@@ -31,7 +31,7 @@ Accounts: **Admin** = you (Administrator in the main server). **Alt A**, **Alt B
 main server (Alt A also joins the support server when asked).
 
 Clean up afterwards: unban/unmute the alts, lift test cooldowns/timeouts, end watchlist entries, and void test cases with reason "test"
-(`/case void`) so they do not count on the alts' records.
+(`/case remove`) so they do not count on the alts' records.
 
 ## 1. Enforcement panel (`/enforcements user:<Alt A>`, as Admin)
 
@@ -66,7 +66,7 @@ Clean up afterwards: unban/unmute the alts, lift test cooldowns/timeouts, end wa
 | 3.2 | `/case edit code:<warn code> reason:"edited"` | Saved; `/case history code:…` shows old → new |
 | 3.3 | `/case evidence add code:… link:https://example.com note:test` then `… image:<png>` | Both listed by `/case evidence list`; image visible |
 | 3.4 | `/case evidence remove code:… id:<id>` | Removed from the list |
-| 3.5 | `/case void code:<a warn> reason:"mistake"` | Case voided; Alt A DM'd; ladder steps back (check `/background`) |
+| 3.5 | `/case remove code:<a warn> reason:"mistake"` | Case voided; Alt A DM'd; ladder steps back (check `/background`) |
 
 ## 4. Staff watchlist (`/case watch`)
 
@@ -78,7 +78,7 @@ Clean up afterwards: unban/unmute the alts, lift test cooldowns/timeouts, end wa
 | 4.4 | `/case watch list` | Alt B listed with entry number, reason and end time |
 | 4.5 | `/background user:Alt B` | Shows "On watchlist since … — test" |
 | 4.6 | Alt B leaves and rejoins; wait over a minute, then warn Alt B | One "watch" line in the mod log for the join and one for the new case (alerts are capped at one per member per minute); no pings |
-| 4.7 | Dashboard → No-contact page | Watchlist card lists Alt B; **End** works for Admin (audit log row) |
+| 4.7 | Dashboard → Keep apart page | Watchlist card lists Alt B; **End** works for Admin (audit log row) |
 | 4.8 | `/case watch end id:<n>` (or after 4.7) | "Watchlist entry #n ended"; Alt B rejoining no longer posts a watch line |
 
 ## 5. Appeals (support server)
@@ -281,5 +281,16 @@ answer 1), Q2 with 3 answers; wait 1 minute; save; turn the quiz on.
 | 20.7 | Alt A sends `f.u.c.k`, `ｎｉｇｇｅｒ`, `n i g g e r` (blocked list on) | Each caught; `class`, `cocktail`, `Dickens`, `Maine coon` are not |
 | 20.8 | Dashboard → change extra blocked words, then send one | Applies without a restart |
 | 20.9 | Website on a phone: sign-up / redeem fields, menu, pricing table sideways | No zoom on tap; table scrolls with the feature column fixed |
+
+
+## 21. Plain command names (after the commands are re-registered)
+
+| # | Do | Expected |
+|---|---|---|
+| 21.1 | Type `/case` and look at the list | `remove` and `keepapart add/list/end` are there; `void` and `nocontact` are gone |
+| 21.2 | `/case keepapart add user_a:Alt A user_b:Alt B days:1 reason:test`, then `/case keepapart list`, then `end` | Order started (both DM'd), listed, ended; the hints in the replies say `/case keepapart …` |
+| 21.3 | `/automod extrawatch user:Alt A` and `/automod friendlynotice enabled:true` | Extra-watch status shown; friendly notice turned on. `probation` and `secondchance` are gone |
+| 21.4 | Owner: `/backup snapshots`, then `/backup changes` | The list's hint says `/backup changes`; changes since the latest snapshot shown. `diff` is gone |
+| 21.5 | `/test action:ban user:Alt A no_appeal:true` | DM preview to you says the ban cannot be appealed; no `unappealable` option |
 
 When done: run the clean-up from "Before testing in Discord".

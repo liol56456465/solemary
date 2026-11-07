@@ -41,6 +41,49 @@ test('every everyone-key names a real command or subcommand', async () => {
     assert.deepEqual(unknown, []);
 });
 
+test('plain command names (owner, 2026-11-07): new keys exist, old jargon names are gone, no aliases', async () => {
+    const keys = await allAccessKeys();
+    for (const key of ['case remove', 'case keepapart add', 'case keepapart list', 'case keepapart end',
+        'automod extrawatch', 'automod friendlynotice', 'backup changes']) {
+        assert.ok(keys.has(key), key);
+    }
+    const old = [...keys].filter((key) => /^(case void|case nocontact|automod probation|automod secondchance|backup diff)\b/.test(key));
+    assert.deepEqual(old, []);
+    const { default: testCommand } = await import('../src/commands/Owner/test.js');
+    const testOptions = testCommand.data.toJSON().options.map((o) => o.name);
+    assert.ok(testOptions.includes('no_appeal'));
+    assert.ok(!testOptions.includes('unappealable'));
+});
+
+test('every owner-kit key names a real command or subcommand', async () => {
+    const { OWNER_KIT } = await import('../src/config/commands/retirement.js');
+    const keys = await allAccessKeys();
+    assert.deepEqual([...OWNER_KIT].filter((key) => !keys.has(key)), []);
+});
+
+test('Discord limits: at most 25 options per level, names and descriptions within 32/100 characters', async () => {
+    const root = path.resolve('src/commands');
+    const walk = (where, options = []) => {
+        assert.ok(options.length <= 25, `${where}: ${options.length} options`);
+        for (const o of options) {
+            assert.ok(o.name.length <= 32, `${where} ${o.name}: name too long`);
+            assert.ok((o.description || '').length <= 100, `${where} ${o.name}: description too long`);
+            if (o.options) walk(`${where} ${o.name}`, o.options);
+        }
+    };
+    for (const dir of await fs.readdir(root, { withFileTypes: true })) {
+        if (!dir.isDirectory()) continue;
+        for (const file of await fs.readdir(path.join(root, dir.name))) {
+            if (!file.endsWith('.js')) continue;
+            const mod = await import(pathToFileURL(path.join(root, dir.name, file)).href);
+            const json = mod.default?.data?.toJSON?.();
+            if (!json?.name || json.type === 2 || json.type === 3) continue;
+            assert.ok((json.description || '').length <= 100, `${json.name}: description too long`);
+            walk(json.name, json.options);
+        }
+    }
+});
+
 test('every support-server command exists', async () => {
     const names = new Set([...(await allAccessKeys())].map((key) => key.split(' ')[0]));
     assert.deepEqual([...SUPPORT_SERVER_COMMANDS].filter((name) => !names.has(name)), []);

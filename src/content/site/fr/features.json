@@ -42,7 +42,7 @@
         },
         "caseTools": {
           "term": "Outils de dossier",
-          "text": "/case edit, void (retirer un dossier erroné) et history, preuves (liens de messages avec extrait, ou images), recherche de dossiers, et /background pour l’historique complet d’un membre."
+          "text": "/case edit, remove (retirer un dossier erroné) et history, preuves (liens de messages avec extrait, ou images), recherche de dossiers, et /background pour l’historique complet d’un membre."
         },
         "warnForMessage": {
           "term": "Warn for this message",

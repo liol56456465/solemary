@@ -4,7 +4,7 @@
 // up to 25), and what the bot did (verification level, paused invites/DMs, join-gate
 // kicks, cases against raid joiners during the lockdown). Its "Release non-offenders"
 // button (administrators) lifts what is still held against raid joiners with no case
-// since the raid began: automod probation is ended and open join-gate flags are closed.
+// since the raid began: the automod extra-watch period is ended and open join-gate flags are closed.
 // The incident is stored (automod_raid_incidents) so the button works after a restart
 // and only once.
 

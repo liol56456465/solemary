@@ -4,7 +4,7 @@
 // While on probation (probationMs, stored in the key-value store with a TTL):
 // automod uses the next step of the rule's ladder, trusted-member relaxing and second
 // chances don't apply, and every review card says "on probation". A line goes to the
-// alerts channel when it starts; /automod probation ends it early.
+// alerts channel when it starts; /automod extrawatch ends it early.
 
 import { automodConfig } from '../../config/automod.js';
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -119,7 +119,7 @@ export async function startProbationOnJoin(member, now = Date.now()) {
         { name: 'Member', value: `<@${member.id}> ${member.user?.username || ''} (${member.id})` },
         { name: 'Ban', value: `\`${ban.endedBan.caseCode}\` (${ban.endedBan.how}, ended <t:${Math.floor(new Date(ban.endedBan.endedAt).getTime() / 1000)}:R>)` },
         { name: 'Until', value: `<t:${Math.floor(record.until / 1000)}:F>` },
-        { name: 'Effect', value: 'Automod uses the next step of the ladder for them; no friendly notice or trusted relaxing. End early with `/automod probation`.' },
+        { name: 'Effect', value: 'Automod uses the next step of the ladder for them; no friendly notice or trusted relaxing. End early with `/automod extrawatch`.' },
     ], { title: 'Extra-watch period after a ban started (they rejoined)' });
     return record;
 }

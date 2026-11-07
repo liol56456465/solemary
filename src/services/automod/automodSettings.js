@@ -23,7 +23,7 @@ const DEFAULT_SETTINGS = Object.freeze({
     // Trusted members skip the low-severity rules (/automod trusted): a role and/or a
     // minimum leveling level (0 = no level criterion).
     trusted: { roleId: null, minLevel: 0 },
-    // First small offence: a notice instead of a warning (/automod secondchance).
+    // First small offence: a notice instead of a warning (/automod friendlynotice).
     secondChance: true,
     // Heads-up first: rule key (or "custom" for all custom rules) → false to turn it off;
     // missing = on. Only the rules policy.js HEADS_UP_SETTING_KEYS lists; others are dropped.

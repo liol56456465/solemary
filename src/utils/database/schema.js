@@ -215,7 +215,7 @@ export const tableStatements = [
     // Sent once when the ban or mute ends (expiry or an early lift); never retried.
     `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS end_dm_delivered BOOLEAN`,
 
-    // /case void: the case was a mistake. It stays on record (status 'revoked') but
+    // /case remove: the case was a mistake. It stays on record (status 'revoked') but
     // no longer counts anywhere: ladder, offences, warn roles, staff stats.
     `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS voided_at TIMESTAMPTZ`,
     `ALTER TABLE ${t.mod_cases} ADD COLUMN IF NOT EXISTS voided_by VARCHAR(20)`,
@@ -390,7 +390,7 @@ export const tableStatements = [
         release_result JSONB
     )`,
 
-    // No-contact orders (/case nocontact): two members may not mention or reply to
+    // No-contact orders (/case keepapart): two members may not mention or reply to
     // each other until `until`. user_a < user_b (numerically), so a pair is stored
     // one way. ended_at is set when staff end it early or once it has expired.
     `CREATE TABLE IF NOT EXISTS ${t.no_contact_orders} (

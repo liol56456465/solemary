@@ -156,7 +156,7 @@ export default {
             .setDescription('Ban/mute length, e.g. 30m, 12h, 7d, 1mo (ban: empty = permanent)')
             .setMaxLength(20))
         .addBooleanOption((option) => option
-            .setName('unappealable')
+            .setName('no_appeal')
             .setDescription('Ban only: preview a ban they cannot appeal')),
 
     async execute(interaction) {
@@ -187,7 +187,7 @@ export default {
             target,
             reason: interaction.options.getString('reason')?.trim() || 'No reason given',
             durationMs,
-            unappealable: interaction.options.getBoolean('unappealable') ?? false,
+            unappealable: interaction.options.getBoolean('no_appeal') ?? false,
         });
 
         const delivered = await sendDm(interaction.user, content);

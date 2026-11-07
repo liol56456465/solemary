@@ -42,7 +42,7 @@
         },
         "caseTools": {
           "term": "Fallwerkzeuge",
-          "text": "/case edit, void (irrtümlichen Fall entfernen) und history, Beweise (Nachrichtenlinks mit Auszug oder Bilder), Fallsuche und /background für den vollständigen Verlauf eines Mitglieds."
+          "text": "/case edit, remove (irrtümlichen Fall entfernen) und history, Beweise (Nachrichtenlinks mit Auszug oder Bilder), Fallsuche und /background für den vollständigen Verlauf eines Mitglieds."
         },
         "warnForMessage": {
           "term": "Warn for this message",
