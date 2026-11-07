@@ -10,7 +10,12 @@
 
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import { getDangerousPermissions, getRoleAssignmentProblem } from '../../utils/roleSafety.js';
-import { html, path, raw } from './html.js';
+import { html, path, raw, unsavedAttr } from './html.js';
+import { currentText, textFor } from './language.js';
+
+// Words: src/content/dashboard/<lang>/forms.json. Helpers with a ctx use its language (textFor);
+// the parsing helpers and pickers have none and use the request's (currentText; English outside one).
+const ft = () => currentText();
 
 const SNOWFLAKE = /^\d{17,20}$/;
 
@@ -30,7 +35,7 @@ export function plainText(message) {
     return String(message ?? '').replace(/\*\*|__|`/g, '').replace(/<#(\d+)>/g, '#$1').replace(/<@&(\d+)>/g, '@$1')
         .replace(/<@!?(\d+)>/g, '@$1')
         // Discord timestamps (<t:1700000000:R>) → "2023-11-14 22:13 UTC".
-        .replace(/<t:(\d{1,12})(?::[a-zA-Z])?>/g, (match, seconds) => `${new Date(Number(seconds) * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC`);
+        .replace(/<t:(\d{1,12})(?::[a-zA-Z])?>/g, (match, seconds) => ft().fmtDateTime(new Date(Number(seconds) * 1000)));
 }
 
 // ── Parsing ───────────────────────────────────────────────────────────────
@@ -47,7 +52,7 @@ export function text(form, name, max = 2000) {
     if (typeof value !== 'string') return '';
     const trimmed = value.trim();
     // Never cut silently: a longer value is refused (the field is marked on the page).
-    if (trimmed.length > max) throw new InputError(`Too long: at most ${max} characters (${trimmed.length} entered).`, 400, name);
+    if (trimmed.length > max) throw new InputError(ft().t('forms.error.tooLong', { max: ft().fmtNumber(max), length: ft().fmtNumber(trimmed.length) }), 400, name);
     return trimmed;
 }
 
@@ -63,7 +68,7 @@ export function list(form, name, { max = 25, maxLength = 25 } = {}) {
 
 /** Several channel ids (multi-select), each checked like channelField. */
 export function channelListField(guild, form, name, { kinds = ['text', 'category'], label = name, max = 25 } = {}) {
-    return list(form, name, { max }).map((id, i) => channelField(guild, { [name]: id }, name, { kinds, optional: false, label: `${label} ${i + 1}` }));
+    return list(form, name, { max }).map((id, i) => channelField(guild, { [name]: id }, name, { kinds, optional: false, label: ft().t('forms.error.listItem', { label, number: i + 1 }) }));
 }
 
 /** A posted textarea, keeping inner line breaks (\r\n → \n). */
@@ -83,33 +88,33 @@ export function boolField(form, name, label = name) {
     const value = text(form, name, 10);
     if (value === 'true' || value === 'on') return true;
     if (value === 'false' || value === 'off') return false;
-    throw new InputError(`${label}: choose on or off.`, 400, name);
+    throw new InputError(ft().t('forms.error.onOff', { label }), 400, name);
 }
 
 /** A whole number in [min, max]; '' → fallback (or an error when no fallback). */
 export function intField(form, name, { min, max, label = name, fallback = undefined } = {}) {
     const raw = text(form, name, 20);
     if (raw === '' && fallback !== undefined) return fallback;
-    if (!/^-?\d+$/.test(raw)) throw new InputError(`${label} must be a whole number.`, 400, name);
+    if (!/^-?\d+$/.test(raw)) throw new InputError(ft().t('forms.error.wholeNumber', { label }), 400, name);
     const value = Number(raw);
-    if (value < min || value > max) throw new InputError(`${label} must be between ${min} and ${max}.`, 400, name);
+    if (value < min || value > max) throw new InputError(ft().t('forms.error.between', { label, min: ft().fmtNumber(min), max: ft().fmtNumber(max) }), 400, name);
     return value;
 }
 
 /** A number in [min, max] with at most `decimals` decimals (a comma counts as the point). */
 export function decimalField(form, name, { min, max, decimals = 1, label = name } = {}) {
     const raw = text(form, name, 20).replace(',', '.');
-    if (!/^\d+(\.\d+)?$/.test(raw)) throw new InputError(`${label} must be a number, like 1.5.`, 400, name);
-    if ((raw.split('.')[1] || '').length > decimals) throw new InputError(`${label}: use at most ${decimals} decimal${decimals === 1 ? '' : 's'}.`, 400, name);
+    if (!/^\d+(\.\d+)?$/.test(raw)) throw new InputError(ft().t('forms.error.number', { label }), 400, name);
+    if ((raw.split('.')[1] || '').length > decimals) throw new InputError(ft().tp('forms.error.decimals', decimals, { label }), 400, name);
     const value = Number(raw);
-    if (value < min || value > max) throw new InputError(`${label} must be between ${min} and ${max}.`, 400, name);
+    if (value < min || value > max) throw new InputError(ft().t('forms.error.between', { label, min: ft().fmtNumber(min), max: ft().fmtNumber(max) }), 400, name);
     return value;
 }
 
 /** One of `choices`; else an InputError. */
 export function choiceField(form, name, choices, label = name) {
     const value = text(form, name, 100);
-    if (!choices.includes(value)) throw new InputError(`${label}: unknown choice.`, 400, name);
+    if (!choices.includes(value)) throw new InputError(ft().t('forms.error.unknownChoice', { label }), 400, name);
     return value;
 }
 
@@ -128,7 +133,8 @@ function typesFor(kinds) {
     return kinds.flatMap((kind) => CHANNEL_KIND_TYPES[kind] || []);
 }
 
-const KIND_LABEL = { text: 'text channel', voice: 'voice channel', category: 'category', forum: 'forum' };
+const KINDS = new Set(['text', 'voice', 'category', 'forum']);
+const kindLabel = (kind) => (KINDS.has(kind) ? ft().t(`forms.kind.${kind}`) : kind);
 
 /**
  * A channel id from the form that exists in the guild and has one of `kinds`.
@@ -138,13 +144,13 @@ export function channelField(guild, form, name, { kinds = ['text'], optional = t
     const raw = text(form, name, 25);
     if (raw === '' || raw === 'none') {
         if (optional) return null;
-        throw new InputError(`${label}: pick a channel.`, 400, name);
+        throw new InputError(ft().t('forms.error.pickChannel', { label }), 400, name);
     }
-    if (!isSnowflake(raw)) throw new InputError(`${label}: not a channel ID.`, 400, name);
+    if (!isSnowflake(raw)) throw new InputError(ft().t('forms.error.notChannelId', { label }), 400, name);
     const channel = guild?.channels?.cache?.get(raw);
-    if (!channel) throw new InputError(`${label}: that channel is not in the server.`, 400, name);
+    if (!channel) throw new InputError(ft().t('forms.error.channelMissing', { label }), 400, name);
     if (!typesFor(kinds).includes(channel.type)) {
-        throw new InputError(`${label}: must be a ${kinds.map((k) => KIND_LABEL[k] || k).join(' or ')}.`, 400, name);
+        throw new InputError(ft().t('forms.error.channelKind', { label, kinds: kinds.map(kindLabel).join(ft().t('forms.or')) }), 400, name);
     }
     return raw;
 }
@@ -154,13 +160,13 @@ export function roleField(guild, form, name, { optional = true, label = name, al
     const raw = text(form, name, 25);
     if (raw === '' || raw === 'none') {
         if (optional) return null;
-        throw new InputError(`${label}: pick a role.`, 400, name);
+        throw new InputError(ft().t('forms.error.pickRole', { label }), 400, name);
     }
-    if (!isSnowflake(raw)) throw new InputError(`${label}: not a role ID.`, 400, name);
+    if (!isSnowflake(raw)) throw new InputError(ft().t('forms.error.notRoleId', { label }), 400, name);
     const role = guild?.roles?.cache?.get(raw);
-    if (!role) throw new InputError(`${label}: that role is not in the server.`, 400, name);
-    if (role.id === guild.id) throw new InputError(`${label}: @everyone cannot be used.`, 400, name);
-    if (role.managed && !allowManaged) throw new InputError(`${label}: ${role.name} is managed by an integration or bot.`, 400, name);
+    if (!role) throw new InputError(ft().t('forms.error.roleMissing', { label }), 400, name);
+    if (role.id === guild.id) throw new InputError(ft().t('forms.error.everyone', { label }), 400, name);
+    if (role.managed && !allowManaged) throw new InputError(ft().t('forms.error.managed', { label, role: role.name }), 400, name);
     return raw;
 }
 
@@ -169,14 +175,14 @@ export function autoRoleField(guild, form, name, { optional = true, label = name
     const id = roleField(guild, form, name, { optional, label, allowManaged: true });
     if (!id) return null;
     const problem = getRoleAssignmentProblem(guild.roles.cache.get(id), guild.members?.me);
-    if (problem) throw new InputError(`${label}: ${plainText(problem)}`, 400, name);
+    if (problem) throw new InputError(ft().t('forms.error.problem', { label, problem: plainText(problem) }), 400, name);
     return id;
 }
 
 /** A Discord user id typed in a form. */
 export function userIdField(form, name, label = name) {
     const raw = text(form, name, 25);
-    if (!isSnowflake(raw)) throw new InputError(`${label} must be a Discord user ID (17–20 digits).`, 400, name);
+    if (!isSnowflake(raw)) throw new InputError(ft().t('forms.error.userId', { label }), 400, name);
     return raw;
 }
 
@@ -193,38 +199,35 @@ export const PERMS = {
     voice: ['ViewChannel', 'Connect', 'ManageChannels', 'MoveMembers'],
 };
 
-const PERM_LABEL = {
-    ViewChannel: 'View Channel', SendMessages: 'Send Messages', EmbedLinks: 'Embed Links', AttachFiles: 'Attach Files',
-    ReadMessageHistory: 'Read Message History', ManageChannels: 'Manage Channels', Connect: 'Connect',
-    MoveMembers: 'Move Members', ManageMessages: 'Manage Messages', ManageRoles: 'Manage Roles', AddReactions: 'Add Reactions',
-    SendPolls: 'Send Polls',
-};
+const PERM_NAMES = new Set(['ViewChannel', 'SendMessages', 'EmbedLinks', 'AttachFiles', 'ReadMessageHistory', 'ManageChannels', 'Connect',
+    'MoveMembers', 'ManageMessages', 'ManageRoles', 'AddReactions', 'SendPolls']);
+const permLabel = (perm) => (PERM_NAMES.has(perm) ? ft().t(`forms.perm.${perm}`) : perm);
 
 /** Problems the bot has with a channel: missing, or permissions it lacks there. */
 export function channelWarnings(guild, channelId, perms = PERMS.post) {
     if (!channelId) return [];
     const channel = guild?.channels?.cache?.get(channelId);
-    if (!channel) return [`channel ${channelId} no longer exists`];
+    if (!channel) return [ft().t('forms.warn.channelGone', { id: channelId })];
     const me = guild.members?.me;
-    if (!me?.permissionsIn) return ['cannot check my permissions here'];
+    if (!me?.permissionsIn) return [ft().t('forms.warn.cannotCheck')];
     const granted = me.permissionsIn(channel);
     const missing = perms.filter((perm) => !granted?.has?.(PermissionFlagsBits[perm]));
-    return missing.length ? [`I am missing ${missing.map((p) => PERM_LABEL[p] || p).join(', ')} in #${channel.name}`] : [];
+    return missing.length ? [ft().t('forms.warn.missingPerms', { perms: missing.map(permLabel).join(', '), channel: channel.name })] : [];
 }
 
 /** Problems with a role: missing, @everyone, managed, not below my top role; staff permissions when auto-assigned. */
 export function roleWarnings(guild, roleId, { autoAssign = false, assign = true } = {}) {
     if (!roleId) return [];
     const role = guild?.roles?.cache?.get(roleId);
-    if (!role) return [`role ${roleId} no longer exists`];
+    if (!role) return [ft().t('forms.warn.roleGone', { id: roleId })];
     const warnings = [];
-    if (role.id === guild.id) warnings.push('@everyone cannot be used');
-    if (role.managed) warnings.push(`@${role.name} is managed by an integration or bot`);
+    if (role.id === guild.id) warnings.push(ft().t('forms.warn.everyone'));
+    if (role.managed) warnings.push(ft().t('forms.warn.managed', { role: role.name }));
     const top = guild.members?.me?.roles?.highest;
-    if (assign && (!top || role.position >= top.position)) warnings.push(`@${role.name} is not below my highest role, so I cannot assign it`);
+    if (assign && (!top || role.position >= top.position)) warnings.push(ft().t('forms.warn.notBelow', { role: role.name }));
     if (autoAssign) {
         const dangerous = getDangerousPermissions(role);
-        if (dangerous.length) warnings.push(`@${role.name} has staff permissions (${dangerous.join(', ')})`);
+        if (dangerous.length) warnings.push(ft().t('forms.warn.staffPerms', { role: role.name, perms: dangerous.join(', ') }));
     }
     return warnings;
 }
@@ -241,14 +244,14 @@ export function channelGroups(guild, kinds = ['text']) {
     const types = typesFor(kinds);
     const all = [...(guild?.channels?.cache?.values?.() || [])];
     if (kinds.length === 1 && kinds[0] === 'category') {
-        return [{ group: 'Categories', channels: all.filter((c) => types.includes(c.type)).sort(byName) }];
+        return [{ group: ft().t('forms.categories'), channels: all.filter((c) => types.includes(c.type)).sort(byName) }];
     }
     const groups = new Map();
     for (const channel of all) {
         if (!types.includes(channel.type)) continue;
         const parent = channel.parentId ? guild.channels.cache.get(channel.parentId) : null;
         const key = parent ? parent.id : '';
-        if (!groups.has(key)) groups.set(key, { group: parent ? parent.name : 'No category', position: parent ? parent.rawPosition ?? 0 : -1, channels: [] });
+        if (!groups.has(key)) groups.set(key, { group: parent ? parent.name : ft().t('forms.noCategory'), position: parent ? parent.rawPosition ?? 0 : -1, channels: [] });
         groups.get(key).channels.push(channel);
     }
     return [...groups.values()]
@@ -280,25 +283,25 @@ function selectAttrs(name, count, multiple) {
  * A labelled channel select. options: { label, kinds, perms, optional, help, noneLabel,
  * multiple } — with multiple, `value` is an array and several can be chosen.
  */
-export function channelPicker(guild, name, value, { label, kinds = ['text'], perms = PERMS.post, optional = true, help = '', noneLabel = 'not set', multiple = false } = {}) {
+export function channelPicker(guild, name, value, { label, kinds = ['text'], perms = PERMS.post, optional = true, help = '', noneLabel = ft().t('forms.notSet'), multiple = false } = {}) {
     const groups = channelGroups(guild, kinds);
     const values = multiple ? (Array.isArray(value) ? value : []) : [value].filter(Boolean);
     const missing = values.filter((id) => !guild?.channels?.cache?.get(id));
     const prefix = kinds.includes('category') && kinds.length === 1 ? '' : kinds.includes('text') ? '#' : '';
     const count = groups.reduce((n, g) => n + g.channels.length, 0);
     return html`<label>${label}<select ${selectAttrs(name, count, multiple)}>
-${optional && !multiple ? html`<option value=""${selected(!value)}>${noneLabel}</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${id} (missing)</option>`)}
+${optional && !multiple ? html`<option value=""${selected(!value)}>${noneLabel}</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${ft().t('forms.missing', { id })}</option>`)}
 ${groups.map((g) => html`<optgroup label="${g.group}">${g.channels.map((c) => html`<option value="${c.id}"${selected(values.includes(c.id))}>${prefix}${c.name}</option>`)}</optgroup>`)}
 </select>${help ? html`<span class="hint">${help}</span>` : ''}${warningList(values.flatMap((id) => channelWarnings(guild, id, perms)))}</label>`;
 }
 
 /** A labelled role select. options: { label, optional, autoAssign, assign, help, multiple }. */
-export function rolePicker(guild, name, value, { label, optional = true, autoAssign = false, assign = true, help = '', noneLabel = 'not set', includeManaged = false, multiple = false } = {}) {
+export function rolePicker(guild, name, value, { label, optional = true, autoAssign = false, assign = true, help = '', noneLabel = ft().t('forms.notSet'), includeManaged = false, multiple = false } = {}) {
     const roles = roleList(guild, { includeManaged });
     const values = multiple ? (Array.isArray(value) ? value : []) : [value].filter(Boolean);
     const missing = values.filter((id) => !guild?.roles?.cache?.get(id));
     return html`<label>${label}<select ${selectAttrs(name, roles.length, multiple)}>
-${optional && !multiple ? html`<option value=""${selected(!value)}>${noneLabel}</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${id} (missing)</option>`)}
+${optional && !multiple ? html`<option value=""${selected(!value)}>${noneLabel}</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${ft().t('forms.missing', { id })}</option>`)}
 ${roles.map((r) => html`<option value="${r.id}"${selected(values.includes(r.id))}>@${r.name}</option>`)}
 </select>${help ? html`<span class="hint">${help}</span>` : ''}${warningList(values.flatMap((id) => roleWarnings(guild, id, { autoAssign, assign })))}</label>`;
 }
@@ -321,7 +324,7 @@ export function textArea(name, value, { label, max = 2000, rows = 4, help = '' }
  * lists of choices stay checkboxes.
  */
 export function switchInput(name, checked, { label, help = '' } = {}) {
-    return html`<label class="switch-row"><span class="switch-label">${label}${help ? html`<span class="hint">${help}</span>` : ''}</span><span class="switch-control"><input type="checkbox" class="switch-input" role="switch" name="${name}" value="1"${checked ? raw(' checked') : ''}><span class="switch-track" aria-hidden="true"></span><span class="switch-word" aria-hidden="true"><span class="w-on">On</span><span class="w-off">Off</span></span></span></label>`;
+    return html`<label class="switch-row"><span class="switch-label">${label}${help ? html`<span class="hint">${help}</span>` : ''}</span><span class="switch-control"><input type="checkbox" class="switch-input" role="switch" name="${name}" value="1"${checked ? raw(' checked') : ''}><span class="switch-track" aria-hidden="true"></span><span class="switch-word" aria-hidden="true"><span class="w-on">${ft().t('forms.on')}</span><span class="w-off">${ft().t('forms.off')}</span></span></span></label>`;
 }
 
 export function checkboxInput(name, checked, { label, help = '' } = {}) {
@@ -341,8 +344,10 @@ export function selectInput(name, value, choices, { label, help = '' } = {}) {
  * options: { submit, hidden: {name: value}, danger, inline, canEdit, className }
  */
 export function postForm(ctx, module, action, fields, {
-    submit = 'Save changes', hidden = {}, danger = false, inline = false, canEdit = ctx.canEdit, className = '', confirm = '', secondary = false, multipart = false,
+    submit = null, hidden = {}, danger = false, inline = false, canEdit = ctx.canEdit, className = '', confirm = '', secondary = false, multipart = false, reset: withReset = null,
 } = {}) {
+    const tr = textFor(ctx);
+    const label = submit ?? tr.t('forms.save');
     const classes = [inline ? 'inline-form' : 'settings-form', className].filter(Boolean).join(' ');
     // data-confirm: the static script asks before submitting (destructive actions).
     // data-dirty: it warns before leaving the page with unsaved changes.
@@ -351,10 +356,14 @@ export function postForm(ctx, module, action, fields, {
     const attrs = html`${multipart ? raw(' enctype="multipart/form-data"') : ''}${confirm ? html` data-confirm="${confirm}"` : ''}${raw(' data-dirty')}`;
     const buttonClass = danger ? 'danger' : secondary ? 'secondary' : 'primary';
     // Settings forms (a "Save…" button) also get Reset: it puts back what was loaded (no request).
-    const reset = !inline && !danger && /^save/i.test(String(submit));
+    // A translated button ("Speichern") cannot be recognised by its word: the default button is a
+    // save button, and `reset: true` marks others (then the script also shows "Saving…" on it).
+    const isSave = submit == null || /^save/i.test(String(submit)) || withReset === true;
+    const reset = withReset === false ? false : !inline && !danger && isSave;
+    const saveMark = isSave && tr.lang !== 'en' ? raw(' data-save') : '';
     return html`<form method="post" action="${path(`/${module}/${action}`)}" class="${classes}"${attrs}><input type="hidden" name="csrf" value="${ctx.csrf}">
 ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}
-<fieldset${canEdit ? '' : raw(' disabled')}>${fields}${canEdit ? html`<div class="form-actions">${reset ? html`<button type="reset" class="secondary">Reset</button>` : ''}<button type="submit" class="${buttonClass}">${submit}</button></div>` : ''}</fieldset></form>`;
+<fieldset${canEdit ? '' : raw(' disabled')}>${fields}${canEdit ? html`<div class="form-actions"${unsavedAttr(tr)}>${reset ? html`<button type="reset" class="secondary">${tr.t('forms.reset')}</button>` : ''}<button type="submit" class="${buttonClass}"${saveMark}>${label}</button></div>` : ''}</fieldset></form>`;
 }
 
 /**
@@ -362,12 +371,13 @@ ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" v
  * button ("Turn on" / "Turn off"); the static script turns the row into a switch that
  * submits on click (with a confirm when turning off, if `confirmOff` is set).
  */
-export function toggleForm(ctx, module, action, enabled, { label = 'Module', canEdit = ctx.canEdit, hidden = {}, confirmOff = '' } = {}) {
+export function toggleForm(ctx, module, action, enabled, { label = textFor(ctx).t('forms.moduleLabel'), canEdit = ctx.canEdit, hidden = {}, confirmOff = '' } = {}) {
+    const tr = textFor(ctx);
     const confirm = enabled && confirmOff ? html` data-confirm="${confirmOff}"` : '';
     return html`<form method="post" action="${path(`/${module}/${action}`)}" class="toggle-row" data-toggle${confirm}><input type="hidden" name="csrf" value="${ctx.csrf}">
 ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}<input type="hidden" name="enabled" value="${enabled ? 'false' : 'true'}">
-<span class="toggle-label">${label}${canEdit ? html`<span class="hint">Saves right away.</span>` : ''}</span>
-<fieldset${canEdit ? '' : raw(' disabled')}>${canEdit ? html`<button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${label}: turn ${enabled ? 'off' : 'on'}"><span class="switch-text">${enabled ? 'Turn off' : 'Turn on'}</span></button>` : ''}</fieldset><span class="switch-word${enabled ? ' is-on' : ''}"${canEdit ? raw(' aria-hidden="true"') : ''}>${enabled ? 'On' : 'Off'}</span></form>`;
+<span class="toggle-label">${label}${canEdit ? html`<span class="hint">${tr.t('forms.savesRightAway')}</span>` : ''}</span>
+<fieldset${canEdit ? '' : raw(' disabled')}>${canEdit ? html`<button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${tr.t(enabled ? 'forms.turnOffLabel' : 'forms.turnOnLabel', { label })}"><span class="switch-text">${tr.t(enabled ? 'forms.turnOff' : 'forms.turnOn')}</span></button>` : ''}</fieldset><span class="switch-word${enabled ? ' is-on' : ''}"${canEdit ? raw(' aria-hidden="true"') : ''}>${tr.t(enabled ? 'forms.on' : 'forms.off')}</span></form>`;
 }
 
 /**
@@ -375,15 +385,16 @@ ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" v
  * toggleForm (enabled=true|false), compact. `back` ('modules' or a module key) is
  * where the save returns to instead of the form's own module page. Without edit rights it is the on/off pill only.
  */
-export function moduleSwitch({ csrf, canEdit, module, action, enabled, label, back = '', hidden = {} }) {
+export function moduleSwitch({ csrf, canEdit, module, action, enabled, label, back = '', hidden = {}, lang = null }) {
     if (!canEdit) return pill(enabled);
+    const tr = textFor({ lang });
     return html`<form method="post" action="${path(`/${module}/${action}`)}" class="switch-form"><input type="hidden" name="csrf" value="${csrf}">
 ${Object.entries(hidden).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}<input type="hidden" name="enabled" value="${enabled ? 'false' : 'true'}">${back ? html`<input type="hidden" name="back" value="${back}">` : ''}
-<button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${label}: turn ${enabled ? 'off' : 'on'}"><span class="switch-text">${enabled ? 'Turn off' : 'Turn on'}</span></button><span class="switch-word${enabled ? ' is-on' : ''}" aria-hidden="true">${enabled ? 'On' : 'Off'}</span></form>`;
+<button type="submit" class="switch${enabled ? ' is-on' : ''}" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${tr.t(enabled ? 'forms.turnOffLabel' : 'forms.turnOnLabel', { label })}"><span class="switch-text">${tr.t(enabled ? 'forms.turnOff' : 'forms.turnOn')}</span></button><span class="switch-word${enabled ? ' is-on' : ''}" aria-hidden="true">${tr.t(enabled ? 'forms.on' : 'forms.off')}</span></form>`;
 }
 
 /** A status pill: green "on", grey "off" (or custom text / tone: on, off, warn, bad). */
-export function pill(on, text = on ? 'on' : 'off', tone = on ? 'on' : 'off') {
+export function pill(on, text = ft().t(on ? 'forms.pillOn' : 'forms.pillOff'), tone = on ? 'on' : 'off') {
     return html`<span class="state state-${tone}">${text}</span>`;
 }
 
@@ -398,13 +409,13 @@ export function buttonForm(ctx, module, action, label, hidden = {}, { confirm = 
 
 /** Channel name for display: "#name" or the id marked missing. */
 export function channelName(guild, id) {
-    if (!id) return html`<span class="muted">not set</span>`;
+    if (!id) return html`<span class="muted">${ft().t('forms.notSet')}</span>`;
     const channel = guild?.channels?.cache?.get(id);
-    return channel ? html`#${channel.name}` : html`<span class="warn">${id} (missing)</span>`;
+    return channel ? html`#${channel.name}` : html`<span class="warn">${ft().t('forms.missing', { id })}</span>`;
 }
 
 export function roleName(guild, id) {
-    if (!id) return html`<span class="muted">not set</span>`;
+    if (!id) return html`<span class="muted">${ft().t('forms.notSet')}</span>`;
     const role = guild?.roles?.cache?.get(id);
-    return role ? html`@${role.name}` : html`<span class="warn">${id} (missing)</span>`;
+    return role ? html`@${role.name}` : html`<span class="warn">${ft().t('forms.missing', { id })}</span>`;
 }

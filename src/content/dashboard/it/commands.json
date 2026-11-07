@@ -1,0 +1,82 @@
+{
+  "page": {
+    "help": "Attiva o disattiva singoli comandi, o interi gruppi di comandi, per questo server. Un comando disattivato risponde solo con un breve avviso. /commands e /configwizard restano sempre attivi, così non puoi chiuderti fuori."
+  },
+  "bot": {
+    "title": "Impostazioni del bot",
+    "help": "Impostazioni di base su come funziona Mewvo in questo server. Puoi cambiarle anche con /configwizard su Discord.",
+    "prefix": "Prefisso per i comandi testuali",
+    "prefixHelp": "Alcuni comandi funzionano anche in un normale messaggio: scrivi questo segno e poi il nome del comando, invece di usare un comando slash. Da 1 a 10 caratteri, senza spazi.",
+    "modRole": "Ruolo di moderatore",
+    "modRoleHelp": "I membri con questo ruolo possono usare i comandi di moderazione. Possono anche accedere a questa dashboard come moderatori: vedono membri, casi e ricorsi, e possono avvertire, silenziare, togliere il silenziamento, espellere e dare timeout. Non possono bannare né cambiare impostazioni. Mewvo non assegna mai questo ruolo a nessuno da solo.",
+    "needsAdmin": "Per cambiare le impostazioni del bot e usare gli strumenti qui ti serve il permesso Amministratore nel server principale.",
+    "saved": "Impostazioni del bot salvate.",
+    "nothing": "Nessuna modifica.",
+    "prefixRule": "Il prefisso deve avere da 1 a 10 caratteri, senza spazi.",
+    "modRoleAuto": "Ruolo di moderatore: @{role} è {where}, quindi chiunque lo riceva diventerebbe moderatore. Scegli un ruolo riservato allo staff.",
+    "where": {
+      "autoRole": "il ruolo automatico assegnato all'ingresso",
+      "verification": "il ruolo di verifica",
+      "autoVerify": "il ruolo di verifica automatica",
+      "levelReward": "una ricompensa di livello",
+      "reactionRole": "un ruolo a reazione"
+    }
+  },
+  "utilities": {
+    "title": "Strumenti",
+    "help": "Accorcia un link con is.gd, come /shorten. Il link breve compare in cima a questa pagina.",
+    "url": "Link da accorciare",
+    "urlHelp": "Trasforma un link lungo in uno breve, più facile da condividere.",
+    "custom": "Finale personalizzato (facoltativo)",
+    "customHelp": "Scegli tu l'ultima parte del link breve. Solo lettere, numeri, _ e -.",
+    "submit": "Accorcia",
+    "result": "Link breve: {short} (per {url})"
+  },
+  "list": {
+    "title": "Comandi",
+    "notLoaded": "L'elenco dei comandi non è ancora caricato. Ricarica la pagina tra un attimo.",
+    "command": "Comando",
+    "description": "Descrizione",
+    "state": "Stato",
+    "on": "Attivo",
+    "protected": "protetto",
+    "categoryOff": "categoria disattivata",
+    "categoryIsOff": "la categoria {name} è disattivata",
+    "count": "{on}/{total} attivi.",
+    "turnCategoryOn": "Attiva la categoria",
+    "turnCategoryOff": "Disattiva la categoria",
+    "offSuffix": "{name} (disattivato)",
+    "moduleTitle": "Comandi ({count})",
+    "moduleHelp": "I comandi slash che appartengono a questa pagina. Un comando disattivato risponde solo con un breve avviso. La pagina Comandi elenca tutti i comandi.",
+    "topicLine": "I comandi slash che appartengono a questa pagina."
+  },
+  "every": {
+    "title": "Tutti i comandi ({count})",
+    "retired": "Ritirati",
+    "retiredText": "I comandi di amministrazione sono disattivati su Discord. Restano solo i comandi per tutti, gli strumenti di emergenza del proprietario del bot e {test}. Tutto il resto si fa qui nella dashboard.",
+    "notRetired": "Non ritirati",
+    "notRetiredText": "Tutti i comandi funzionano su Discord. Il proprietario del bot può disattivare i comandi di amministrazione, così restano solo i comandi per tutti, gli strumenti di emergenza e {test}, e tutto il resto si fa nella dashboard.",
+    "whatItDoes": "Cosa fa",
+    "who": "Chi può usarlo",
+    "onDashboard": "Nella dashboard",
+    "ifRetired": "Se i comandi di amministrazione sono disattivati",
+    "whoEveryone": "Tutti",
+    "whoOwnerKit": "Solo il proprietario del bot (strumenti di emergenza)",
+    "whoAdmin": "Amministratori",
+    "afterEveryone": "Resta un comando",
+    "afterOwnerKit": "Resta, solo per il proprietario del bot",
+    "afterAdmin": "Solo nella dashboard",
+    "support": "Anche nel server di supporto: {list}. Chi può usare quale comando è stabilito in Mewvo e non si può cambiare qui."
+  },
+  "action": {
+    "unknownCommand": "Comando sconosciuto: /{name}.",
+    "cannotDisable": "/{name} non si può disattivare.",
+    "commandOn": "/{name} ora è attivo.",
+    "commandOff": "/{name} ora è disattivato.",
+    "unknownCategory": "Categoria sconosciuta.",
+    "categoryOn": "{name} ora è attiva.",
+    "categoryOff": "{name} ora è disattivata.",
+    "commandLabel": "Comando",
+    "categoryLabel": "Categoria"
+  }
+}

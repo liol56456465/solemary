@@ -9,35 +9,10 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { ICON_SPRITE_MARKUP, hasIcon } from './icons.js';
 import { allows, levelLabel } from './permissions.js';
+import { html, raw } from './safeHtml.js';
+import { LANGUAGES, currentLanguage, currentText, dashboardText } from './language.js';
 
-const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' };
-
-export function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"'`]/g, (c) => ESCAPES[c]);
-}
-
-class SafeHtml {
-    constructor(text) { this.text = text; }
-    toString() { return this.text; }
-}
-
-/** Trusted markup (constants only — never user input). */
-export function raw(text) {
-    return new SafeHtml(String(text));
-}
-
-function render(value) {
-    if (value === null || value === undefined || value === false) return '';
-    if (value instanceof SafeHtml) return value.text;
-    if (Array.isArray(value)) return value.map(render).join('');
-    return escapeHtml(value);
-}
-
-export function html(strings, ...values) {
-    let out = strings[0];
-    for (let i = 0; i < values.length; i += 1) out += render(values[i]) + strings[i + 1];
-    return new SafeHtml(out);
-}
+export { escapeHtml, html, raw } from './safeHtml.js';
 
 /** Builds a query string from an object, skipping empty values (values are URL-encoded). */
 export function queryString(params) {
@@ -57,12 +32,15 @@ export function formatDate(value) {
     return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
 
-/** A <time> showing formatDate; the static script turns it into "5 min ago" (UTC stays in the tooltip). */
+/**
+ * A <time> showing formatDate (in the request's language: fmtDateTime); the static script turns it
+ * into "5 min ago" (UTC stays in the tooltip).
+ */
 export function timeTag(value) {
     if (!value) return '-';
     const date = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(date.getTime())) return '-';
-    return html`<time datetime="${date.toISOString()}" data-relative>${formatDate(date)}</time>`;
+    return html`<time datetime="${date.toISOString()}" data-relative>${currentText().fmtDateTime(date)}</time>`;
 }
 
 /** "3 d", "5 h", "12 min" since `value`. */
@@ -100,7 +78,8 @@ const ACTION_ICON = { ban: 'nocontact', kick: 'kick', mute: 'mute', warn: 'warn'
 /** An enforcement action badge: neutral outline + icon + the word; red only for ban. */
 export function typeBadge(type) {
     const name = String(type || '');
-    return html`<span class="type type-${name}">${ACTION_ICON[name] ? icon(ACTION_ICON[name]) : ''}${name ? name[0].toUpperCase() + name.slice(1) : ''}</span>`;
+    const word = ACTION_ICON[name] ? currentText().t(`frame.action.${name}`) : name ? name[0].toUpperCase() + name.slice(1) : '';
+    return html`<span class="type type-${name}">${ACTION_ICON[name] ? icon(ACTION_ICON[name]) : ''}${word}</span>`;
 }
 
 /** A decorative line icon from the sprite (icons.js); labels are always next to it. */
@@ -180,6 +159,22 @@ export const OWNER_NAV = { group: 'Owner', items: [
     { key: 'owner/activity', label: 'Owner activity', icon: 'audit' },
 ] };
 
+// The sidebar's English labels above stay the data (search keywords, audit, tests); pages show
+// them translated: navLabel(item, tr) → frame.nav.items.<key> ("owner/home" → owner_home),
+// groupLabel(group, tr) → frame.nav.groups.<key>.
+const GROUP_KEY = { Moderate: 'moderate', Community: 'community', 'Server setup': 'serverSetup', Bot: 'bot', Owner: 'owner' };
+
+/** A sidebar entry's label in the page's language (the English label when the catalog has none). */
+export function navLabel(item, tr = currentText()) {
+    return item?.key ? tr.t(`frame.nav.items.${String(item.key).replace(/\//g, '_')}`) : '';
+}
+
+/** A sidebar group's (section's) label in the page's language. */
+export function groupLabel(group, tr = currentText()) {
+    const name = typeof group === 'string' ? group : group?.group ?? group?.label;
+    return GROUP_KEY[name] ? tr.t(`frame.nav.groups.${GROUP_KEY[name]}`) : name;
+}
+
 /**
  * The sidebar groups for this page's viewer: NAV, plus the Owner group for bot owners.
  * With an access decision, only the pages its level may use (permissions.js); groups left
@@ -216,11 +211,11 @@ function hiddenCount(session, access, active) {
 }
 
 /** "Show all pages (12 more)" / "Show only the main pages": GET /dashboard/nav, no script needed. */
-function navSwitch(session, access, active, back) {
+function navSwitch(session, access, active, back, tr) {
     const all = navModeFrom(session?.navMode) === 'all';
     const hidden = hiddenCount(session, access, active);
     if (!all && !hidden) return '';
-    return html`<a class="nav-switch" href="${path(`/nav${queryString({ mode: all ? 'main' : 'all', next: back })}`)}">${all ? 'Show only the main pages' : `Show all pages (${hidden} more)`}</a>`;
+    return html`<a class="nav-switch" href="${path(`/nav${queryString({ mode: all ? 'main' : 'all', next: back })}`)}">${all ? tr.t('frame.nav.showMain') : tr.tp('frame.nav.showAll', hidden)}</a>`;
 }
 
 /** Every sidebar entry, flattened. */
@@ -256,45 +251,44 @@ function sectionOf(active, groups = NAV) {
 const BRAND_LOGO = raw('<img class="brand-mark" src="/favicon.png" width="32" height="32" alt="">');
 
 /** Desktop: the sidebar with every page by group; brand and server on top, account at the bottom. */
-function sideNav(active, moduleStates, theme, back, session, access) {
-    return html`<nav class="side-nav" aria-label="Dashboard"><a class="side-brand" href="${path('/overview')}">${BRAND_LOGO}Mewvo</a>
-${serverSwitch(session.server)}
-${visibleNavGroups(session, access, active).map((group) => html`<div class="side-group"><p class="side-group-label">${group.group}</p><ul class="side-list">${group.items.map((item) => {
+function sideNav(active, moduleStates, theme, back, session, access, tr) {
+    return html`<nav class="side-nav" aria-label="${tr.t('frame.nav.label')}"><a class="side-brand" href="${path('/overview')}">${BRAND_LOGO}Mewvo</a>
+${serverSwitch(session.server, tr)}
+${visibleNavGroups(session, access, active).map((group) => html`<div class="side-group"><p class="side-group-label">${groupLabel(group, tr)}</p><ul class="side-list">${group.items.map((item) => {
         const state = stateOf(item, moduleStates);
         const on = item.key === active;
         const badge = item.key === 'inbox' && session.inboxCount > 0
-            ? html`<span class="nav-badge">${session.inboxCount > 99 ? '99+' : session.inboxCount}<span class="sr"> waiting</span></span>` : '';
-        return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}><span class="side-text">${item.label}</span>${badge}${state === null ? ''
-            : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? 'on' : 'off'}</span></span>`}</a></li>`;
+            ? html`<span class="nav-badge">${session.inboxCount > 99 ? '99+' : tr.fmtNumber(session.inboxCount)}<span class="sr"> ${tr.t('frame.nav.waiting')}</span></span>` : '';
+        return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}><span class="side-text">${navLabel(item, tr)}</span>${badge}${state === null ? ''
+            : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? tr.t('frame.state.on') : tr.t('frame.state.off')}</span></span>`}</a></li>`;
     })}</ul></div>`)}
-${navSwitch(session, access, active, back)}
-<div class="side-bottom"><a class="side-site" href="/"><span class="side-text">Mewvo website</span></a>${userMenu(session, access, theme, back)}</div></nav>`;
+${navSwitch(session, access, active, back, tr)}
+<div class="side-bottom"><a class="side-site" href="/"><span class="side-text">${tr.t('frame.nav.website')}</span></a>${userMenu(session, access, theme, back, tr)}</div></nav>`;
 }
 
 /** "Moderate / Members": where the page sits (the group, then the page). */
-function crumbs(active, groups = NAV) {
+function crumbs(active, groups = NAV, tr = currentText()) {
     const sec = sectionOf(active, groups);
     const item = sec?.items.find((i) => i.key === active);
     if (!sec || !item) return '';
-    return html`<p class="crumbs"><span>${sec.label}</span><span aria-hidden="true">/</span><b>${item.label}</b></p>`;
+    return html`<p class="crumbs"><span>${groupLabel(sec.label, tr)}</span><span aria-hidden="true">/</span><b>${navLabel(item, tr)}</b></p>`;
 }
 
 /** Phones: a floating tab bar (the four groups); "More" is a sheet (details, no script) with every page. */
-function tabBar(active, theme, back, session, access) {
+function tabBar(active, theme, back, session, access, tr) {
     const groups = navGroups(session, access);
     const current = sectionOf(active, groups);
     const main = sections(groups).slice(0, 3);
-    return html`<nav class="tabbar" aria-label="Sections"><a href="${path('/overview')}"${active === 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon('overview')}<span>Home</span></a>${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key && active !== 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.label === 'Server setup' ? 'Setup' : sec.label}</span></a>`)}
-<details class="more menu-wrap"><summary${current && !main.some((sec) => sec.key === current.key) ? raw(' class="on"') : ''}>${icon('menu')}<span>More</span></summary><div class="more-sheet">
-${sections(visibleNavGroups(session, access, active)).map((sec) => html`<p class="more-group">${sec.label}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${item.label}</a>`)}`)}
-${navSwitch(session, access, active, back)}
-${themePicker(theme, back, 'sheet')}<div class="more-foot"><a href="/">${icon('home')}Website</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}Log out</button></form></div></div></details></nav>`;
+    return html`<nav class="tabbar" aria-label="${tr.t('frame.tabbar.label')}"><a href="${path('/overview')}"${active === 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon('overview')}<span>${tr.t('frame.tabbar.home')}</span></a>${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key && active !== 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.label === 'Server setup' ? tr.t('frame.tabbar.setup') : groupLabel(sec.label, tr)}</span></a>`)}
+<details class="more menu-wrap"><summary${current && !main.some((sec) => sec.key === current.key) ? raw(' class="on"') : ''}>${icon('menu')}<span>${tr.t('frame.tabbar.more')}</span></summary><div class="more-sheet">
+${sections(visibleNavGroups(session, access, active)).map((sec) => html`<p class="more-group">${groupLabel(sec.label, tr)}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${navLabel(item, tr)}</a>`)}`)}
+${navSwitch(session, access, active, back, tr)}
+${themePicker(theme, back, 'sheet', tr)}<div class="more-foot"><a href="/">${icon('home')}${tr.t('frame.tabbar.website')}</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}${tr.t('frame.user.logout')}</button></form></div></div></details></nav>`;
 }
 
 // Themes (same tokens and layout, ten palettes): "system" follows the device (Paper or Graphite).
 export const THEMES = ['system', 'light', 'dark', 'dim', 'contrast'];
 export const THEME_COOKIE = 'mewvo_theme';
-const THEME_LABEL = { system: 'Same as my device', light: 'Light', dark: 'Dark', dim: 'Dim', contrast: 'High contrast' };
 // Older theme names still in some cookies: the closest of the current ones (others: same as device).
 const OLD_THEMES = { paper: 'light', white: 'light', graphite: 'dark', gray: 'dark', black: 'dark', nebula: 'dark', gold: 'dark', ocean: 'dark', forest: 'dark', ember: 'dark', arctic: 'light', sakura: 'light', sunset: 'light', sand: 'light', sage: 'dark' };
 
@@ -309,10 +303,12 @@ export function themeFrom(value) {
  * back, so it works without JS; the static script switches in place). Each option shows a
  * swatch of its own theme. `id` keeps the label ids unique (account menu and phone sheet).
  */
-function themePicker(theme, back, id) {
-    return html`<div class="theme-picker"><p class="theme-picker-title" id="theme-${id}">Theme</p><div class="theme-list" role="radiogroup" aria-labelledby="theme-${id}">${THEMES.map((key) => {
+function themePicker(theme, back, id, tr) {
+    // "(in use)" after the current theme is CSS (::after); other languages give it their word.
+    const inUse = tr.lang === 'en' ? '' : html` data-in-use="${tr.t('frame.theme.inUse')}"`;
+    return html`<div class="theme-picker"><p class="theme-picker-title" id="theme-${id}">${tr.t('frame.theme.title')}</p><div class="theme-list" role="radiogroup" aria-labelledby="theme-${id}">${THEMES.map((key) => {
         const on = key === theme;
-        return html`<a class="theme-opt" href="${path(`/theme${queryString({ mode: key, next: back })}`)}" role="radio" aria-checked="${on ? 'true' : 'false'}" tabindex="${on ? '0' : '-1'}" data-theme-pick="${key}">${THEME_LABEL[key]}</a>`;
+        return html`<a class="theme-opt" href="${path(`/theme${queryString({ mode: key, next: back })}`)}" role="radio" aria-checked="${on ? 'true' : 'false'}" tabindex="${on ? '0' : '-1'}" data-theme-pick="${key}"${inUse}>${tr.t(`frame.theme.${key}`)}</a>`;
     })}</div></div>`;
 }
 
@@ -320,20 +316,34 @@ function themePicker(theme, back, id) {
  * The server switcher in the top bar. The dashboard manages one server for now (the login
  * asks Discord for `identify` only, so it cannot list other servers); the menu says so.
  */
-function serverSwitch(server) {
+function serverSwitch(server, tr) {
     if (!server) return '';
     const avatar = (size) => (server.iconUrl
         ? html`<img class="server-icon" src="${server.iconUrl}" alt="" width="${size}" height="${size}" referrerpolicy="no-referrer">`
         : '');
-    return html`<details class="server-switch menu-wrap"><summary aria-label="Server: ${server.name}">${avatar(24)}<span class="server-name">${server.name}</span>${icon('chevron', 'icon icon-down')}</summary>
-<div class="menu"><p class="menu-item is-current">${avatar(24)}<span class="server-text"><span class="server-name">${server.name}</span><span class="server-sub">Main server · managing now</span></span></p>
-<p class="menu-note">Only this server can be managed for now.</p></div></details>`;
+    return html`<details class="server-switch menu-wrap"><summary aria-label="${tr.t('frame.server.label', { name: server.name })}">${avatar(24)}<span class="server-name">${server.name}</span>${icon('chevron', 'icon icon-down')}</summary>
+<div class="menu"><p class="menu-item is-current">${avatar(24)}<span class="server-text"><span class="server-name">${server.name}</span><span class="server-sub">${tr.t('frame.server.sub')}</span></span></p>
+<p class="menu-note">${tr.t('frame.server.note')}</p></div></details>`;
 }
 
-function userMenu(session, access, theme = 'system', back = path('/overview')) {
-    return html`<details class="user-menu menu-wrap"><summary aria-label="Account: ${session.username}"><span class="user-name">${session.username}</span></summary>
-<div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${levelLabel(access)}</span></p>
-${themePicker(theme, back, 'menu')}<a class="menu-item menu-link" href="/">${icon('home')}Mewvo website</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}Log out</button></form></div></details>`;
+const LEVEL_KEY = { Moderator: 'moderator', 'View and settings (bot owner)': 'ownerView', Administrator: 'administrator' };
+
+function userMenu(session, access, theme = 'system', back = path('/overview'), tr = currentText()) {
+    const level = levelLabel(access);
+    return html`<details class="user-menu menu-wrap"><summary aria-label="${tr.t('frame.user.label', { name: session.username })}"><span class="user-name">${session.username}</span></summary>
+<div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${LEVEL_KEY[level] ? tr.t(`frame.user.level.${LEVEL_KEY[level]}`) : level}</span></p>
+${themePicker(theme, back, 'menu', tr)}<a class="menu-item menu-link" href="/">${icon('home')}${tr.t('frame.nav.website')}</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}${tr.t('frame.user.logout')}</button></form></div></details>`;
+}
+
+/**
+ * The language picker in the top bar: the 8 languages by their own names, plain links to
+ * GET /dashboard/lang?code=…&next=… (sets the mewvo_lang cookie, shared with the website, and comes
+ * back to this page; no script needed).
+ */
+function languagePicker(back, tr) {
+    const current = LANGUAGES.find((l) => l.code === tr.lang) || LANGUAGES[0];
+    return html`<details class="lang-switch menu-wrap"><summary class="icon-button lang-button" aria-label="${tr.t('frame.language.label', { name: current.name })}"><span class="lang-code" aria-hidden="true">${current.code.slice(0, 2).toUpperCase()}</span></summary>
+<div class="menu"><p class="menu-meta">${tr.t('frame.language.title')}</p>${LANGUAGES.map((l) => html`<a class="menu-item menu-link" href="${path(`/lang${queryString({ code: l.code, next: back })}`)}" lang="${l.code}" hreflang="${l.code}"${l.code === current.code ? raw(' aria-current="true"') : ''}>${l.name}</a>`)}</div></details>`;
 }
 
 /**
@@ -343,21 +353,31 @@ ${themePicker(theme, back, 'menu')}<a class="menu-item menu-link" href="/">${ico
  * `session` may carry display extras added by the routes: theme, server, path.
  * No inline styles or scripts (CSP); the one script is the static enhancement file.
  */
-export function layout({ title, active = null, session = null, access = null, moduleStates = {}, body, theme: pageTheme = 'system', refreshSeconds = 0 }) {
+export function layout({ title, active = null, session = null, access = null, moduleStates = {}, body, theme: pageTheme = 'system', refreshSeconds = 0, lang = null }) {
+    const tr = dashboardText(lang || session?.lang || currentLanguage());
     const theme = themeFrom(session?.theme ?? pageTheme);
     const back = typeof session?.path === 'string' ? session.path : path(active ? `/${active}` : '/overview');
     // "Find a setting" searches the Modules page: not shown to levels that cannot open it.
     const find = !access?.allowed || allows(access, 'page:modules')
-        ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="Find a setting">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">Find a setting</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="Find a setting…" maxlength="60" autocomplete="off" data-quick-find></form>` : '';
-    const top = session ? html`<header class="page-top">${crumbs(active, navGroups(session, access))}<span class="spacer"></span>
-${find}</header>`
-        : html`<header class="page-top bare-top"><a class="brand" href="/" aria-label="Mewvo website">${BRAND_LOGO}<span class="brand-name">Mewvo</span></a><span class="spacer"></span></header>`;
-    return html`<!doctype html><html lang="en"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark">${refreshSeconds > 0 ? html`<meta http-equiv="refresh" content="${refreshSeconds}">` : ''}<title>${title} · Mewvo dashboard</title><link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
-<body>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">Skip to content</a>
-<div class="${session ? 'app' : 'app bare'}">${session ? sideNav(active, moduleStates, theme, back, session, access) : ''}
+        ? html`<a class="icon-button find-link" href="${path('/modules')}" aria-label="${tr.t('frame.top.find')}">${icon('search')}</a><form class="quick-find" role="search" method="get" action="${path('/modules')}"><label class="sr" for="quick-find">${tr.t('frame.top.find')}</label>${icon('search')}<input id="quick-find" type="search" name="q" placeholder="${tr.t('frame.top.findPlaceholder')}" maxlength="60" autocomplete="off" data-quick-find></form>` : '';
+    const top = session ? html`<header class="page-top">${crumbs(active, navGroups(session, access), tr)}<span class="spacer"></span>
+${find}${languagePicker(back, tr)}</header>`
+        : html`<header class="page-top bare-top"><a class="brand" href="/" aria-label="${tr.t('frame.nav.website')}">${BRAND_LOGO}<span class="brand-name">Mewvo</span></a><span class="spacer"></span></header>`;
+    // The static script's own words (dialogs, "Saving…", relative times): English is built in.
+    const uiText = tr.lang === 'en' ? '' : html` data-ui-text="${JSON.stringify(scriptText(tr))}"`;
+    return html`<!doctype html><html lang="${tr.lang}"${theme === 'system' ? '' : html` data-theme="${theme}"`}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="same-origin"><meta name="color-scheme" content="light dark">${refreshSeconds > 0 ? html`<meta http-equiv="refresh" content="${refreshSeconds}">` : ''}<title>${tr.t('frame.title', { title })}</title><link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
+<body${uiText}>${raw(ICON_SPRITE_MARKUP)}<a class="skip" href="#main">${tr.t('frame.skip')}</a>
+<div class="${session ? 'app' : 'app bare'}">${session ? sideNav(active, moduleStates, theme, back, session, access, tr) : ''}
 <div class="page">${top}<main id="main" tabindex="-1">${body}</main></div></div>
-${session ? tabBar(active, theme, back, session, access) : ''}</body></html>`.text;
+${session ? tabBar(active, theme, back, session, access, tr) : ''}</body></html>`.text;
+}
+
+/** The words the static script shows (frame.script.*), for <body data-ui-text>. */
+const SCRIPT_KEYS = ['filter', 'filterLabel', 'cancel', 'continue', 'saving', 'copy', 'copyLabel', 'copied', 'copyFailed', 'justNow', 'underMinute',
+    'dismiss', 'unsaved', 'unsavedIn', 'discard', 'save', 'searchModules', 'noModule'];
+function scriptText(tr) {
+    return Object.fromEntries(SCRIPT_KEYS.map((key) => [key, tr.t(`frame.script.${key}`, { place: '{place}', name: '{name}' })]));
 }
 
 /** "Channel exceptions" → "channel-exceptions" (a stable key for remembering open sections). */
@@ -373,10 +393,19 @@ export function slug(text) {
 export function section(title, body, help = '', { open = true, collapsible = true, key = slug(title) } = {}) {
     const inner = html`${help ? html`<p class="muted section-help">${help}</p>` : ''}${body}`;
     if (!collapsible) return html`<section class="card"><h2>${title}</h2>${inner}</section>`;
-    return html`<details class="card section" id="s-${key}" data-key="${key}"${open ? raw(' open') : ''}><summary><h2>${title}</h2></summary><div class="section-body">${inner}</div></details>`;
+    return html`<details class="card section" id="s-${key}" data-key="${key}"${open ? raw(' open') : ''}><summary><h2${unsavedAttr()}>${title}</h2></summary><div class="section-body">${inner}</div></details>`;
 }
 
-/** A plain message page (errors, 403, …). */
+/**
+ * The "Unsaved changes" mark is CSS (::after / ::before with content); in other languages the
+ * element carries the word (data-unsaved) and the CSS shows that instead. '' in English.
+ */
+export function unsavedAttr(tr = currentText()) {
+    return tr.lang === 'en' ? '' : html` data-unsaved="${tr.t('frame.unsaved')}"`;
+}
+
+/** A plain message page (errors, 403, …). `title` and `message` come translated (or English). */
 export function messagePage(title, message, session = null, extra = {}) {
-    return layout({ title, session, ...extra, body: html`<div class="message card"><h1>${title}</h1><p>${message}</p><p class="message-actions">${session ? html`<a class="button-link" href="${path('/overview')}">Back to Overview</a>` : html`<a class="button-link" href="/">Back to the home page</a>`}</p></div>` });
+    const tr = dashboardText(extra.lang || session?.lang || currentLanguage());
+    return layout({ title, session, ...extra, lang: tr.lang, body: html`<div class="message card"><h1>${title}</h1><p>${message}</p><p class="message-actions">${session ? html`<a class="button-link" href="${path('/overview')}">${tr.t('frame.message.backOverview')}</a>` : html`<a class="button-link" href="/">${tr.t('frame.message.backHome')}</a>`}</p></div>` });
 }

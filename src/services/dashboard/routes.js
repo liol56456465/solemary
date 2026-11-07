@@ -84,6 +84,11 @@ import { getConfiguredSetting, listSettingsAudit } from '../settings/guildSettin
 import { createAccessChecker } from './access.js';
 import { OWNER_AREA, allows, routeKey } from './permissions.js';
 import { BASE, NAV_COOKIE, THEME_COOKIE, html, messagePage, navModeFrom, path, queryString, themeFrom } from './html.js';
+import {
+    currentLanguage, dashboardLanguage, dashboardText, languageContext, rememberDiscordLocale, setRequestLanguage,
+} from './language.js';
+import { languageCookie } from '../site/language.js';
+import { LANG_CODES } from '../site/i18n.js';
 import { glossaryPage, setupPage } from './helpPages.js';
 import {
     appealsPage, auditPage, caseDetailPage, casesPage, moduleSettingsPage, statsPage,
@@ -268,7 +273,15 @@ export function createDashboard({
     const badge = inboxBadge ? createInboxBadge({ load: async () => (await collectInbox({ client, guildId, inbox })).total }) : null;
 
     const sendHtml = (res, status, page) => res.status(status).type('html').send(page);
-    const fail = (res, status, title, message, req = null) => sendHtml(res, status, messagePage(title, message, req?.dashboard?.session || null, shellOf(req)));
+    // `lang`: the page's language when there is no req to read it from (login errors keep their old shell).
+    const fail = (res, status, title, message, req = null, lang = null) => sendHtml(res, status, messagePage(title, message, req?.dashboard?.session || null, { ...shellOf(req), ...(lang ? { lang } : {}) }));
+    /** The translator of a request: its resolved language (requireUser), else cookie / Accept-Language. */
+    const textOfReq = (req) => dashboardText(req?.dashboard?.lang || (req?.headers ? dashboardLanguage(req) : currentLanguage()));
+    /** fail() with catalog words: errors.<titleKey> / errors.<messageKey>. `from` reads the language without changing the shell. */
+    const failT = (res, status, titleKey, messageKey, req = null, params = {}, from = req) => {
+        const tr = textOfReq(from);
+        return fail(res, status, tr.t(`errors.${titleKey}`), tr.t(`errors.${messageKey}`, params), req, tr.lang);
+    };
 
     /** The server shown in the top bar: name and icon (Discord CDN, allowed by the CSP img-src). */
     function serverInfo() {
@@ -295,13 +308,14 @@ export function createDashboard({
 
     function shellOf(req) {
         const ctx = req?.dashboard;
-        if (!ctx) return req ? { session: null, theme: themeOf(req) } : {};
+        if (!ctx) return req ? { session: null, theme: themeOf(req), lang: dashboardLanguage(req) } : {};
         // A copy of the session with display-only extras for the page shell. isOwner (live
         // OWNER_IDS check) shows the Owner sidebar group.
         const session = {
             ...ctx.session, theme: themeOf(req), navMode: navModeFrom(parseCookies(req?.headers?.cookie)[NAV_COOKIE]), server: serverInfo(), path: safeBackPath(req.originalUrl || req.url),
             isOwner: Boolean((owner.isBotOwner || defaultOwnerDeps.isBotOwner)(ctx.session.userId)),
             inboxCount: badge ? badge.peek() : null,
+            lang: ctx.lang || dashboardLanguage(req, ctx.session.userId),
         };
         return { session, access: ctx.access, moduleStates: ctx.moduleStates || {} };
     }
@@ -343,7 +357,7 @@ export function createDashboard({
     function limitByIp(req, res, next) {
         if (!ipLimiter.allow(clientIp(req))) {
             res.set('Retry-After', '60');
-            return fail(res, 429, 'Slow down', 'Too many login attempts from your address. Wait a minute and try again.');
+            return failT(res, 429, 'slowDown', 'loginAttempts', null, {}, req);
         }
         return next();
     }
@@ -381,7 +395,7 @@ export function createDashboard({
             req.upload = { file };
         } catch (error) {
             if (!(error instanceof MultipartError)) throw error;
-            return fail(res, error.status, error.status === 413 ? 'Too large' : 'Upload refused', error.userMessage, req);
+            return fail(res, error.status, textOfReq(req).t(error.status === 413 ? 'errors.tooLarge' : 'errors.uploadRefused'), error.userMessage, req);
         }
         return next();
     }
@@ -407,10 +421,10 @@ export function createDashboard({
     async function callback(req, res) {
         const cookies = parseCookies(req.headers?.cookie);
         res.append('Set-Cookie', clearCookie(STATE_COOKIE, cookieOptions));
-        if (req.query?.error) return fail(res, 400, 'Login cancelled', `You did not authorize. Open ${BASE} again to log in.`);
+        if (req.query?.error) return failT(res, 400, 'loginCancelled', 'loginCancelledText', null, { base: BASE }, req);
         const code = str(req.query?.code, 200);
         if (!code || !states.consume(str(req.query?.state, 1000), cookies[STATE_COOKIE], secret)) {
-            return fail(res, 400, 'Login expired', `This login link is invalid, expired or already used. Open ${BASE} again.`);
+            return failT(res, 400, 'loginExpired', 'loginExpiredText', null, { base: BASE }, req);
         }
         let me;
         try {
@@ -428,14 +442,16 @@ export function createDashboard({
             me = await discordFetch(fetchImpl, ME_URL, { headers: { Authorization: `Bearer ${token.access_token}` } });
         } catch (error) {
             logger.warn(`Dashboard login failed: ${error.message}`);
-            return fail(res, 502, 'Login failed', 'Discord did not confirm the login. Try again.');
+            return failT(res, 502, 'loginFailed', 'loginNotConfirmed', null, {}, req);
         }
-        if (!isSnowflake(String(me?.id || ''))) return fail(res, 502, 'Login failed', 'Discord did not return a user.');
+        if (!isSnowflake(String(me?.id || ''))) return failT(res, 502, 'loginFailed', 'loginNoUser', null, {}, req);
+        // The Discord account's language (identify gives `locale`): used when no language cookie is set.
+        rememberDiscordLocale(me.id, me.locale);
         access.forget?.(me.id);
         const decision = await access.check(me.id);
         if (!decision.allowed) {
             logger.info(`Dashboard login refused for ${me.id}: ${decision.reason}`);
-            return fail(res, 403, 'No access', 'The dashboard is for administrators and moderators of the main server and the bot owners.');
+            return failT(res, 403, 'noAccess', 'noAccessLogin', null, {}, req);
         }
         // Rotation: whatever session this browser had is dropped; a fresh id is issued.
         const session = await sessions.rotate(cookieSessionId(req), {
@@ -453,25 +469,28 @@ export function createDashboard({
         const session = await readSession(req);
         if (!session) {
             if (req.method === 'GET') return res.redirect(302, BASE);
-            return fail(res, 401, 'Logged out', `Your session has ended. Open ${BASE} to log in again.`);
+            return failT(res, 401, 'loggedOut', 'loggedOutText', null, { base: BASE }, req);
         }
         if (!sessionLimiter.allow(session.idHash)) {
             res.set('Retry-After', '60');
-            return fail(res, 429, 'Slow down', 'Too many requests in the last minute. Wait a moment and reload.');
+            return failT(res, 429, 'slowDown', 'tooManyRequests', null, {}, req);
         }
         const decision = await access.check(session.userId);
         if (!decision.allowed) {
             await sessions.destroy(session.id);
             res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
-            return fail(res, 403, 'No access', 'You are no longer an administrator or moderator of the main server.');
+            return failT(res, 403, 'noAccess', 'noAccessLost', null, {}, req);
         }
-        req.dashboard = { session, access: decision, moduleStates: await moduleStates().catch(() => ({})), flash: null };
+        // The page language: cookie → the Discord account's language → Accept-Language → English.
+        const lang = dashboardLanguage(req, session.userId);
+        setRequestLanguage(lang);
+        req.dashboard = { session, access: decision, moduleStates: await moduleStates().catch(() => ({})), flash: null, lang };
         // The level's permissions (permissions.js): one table for every route; unknown paths are
         // Administrator-only. The Owner area keeps its own check (requireOwner, 404).
         const key = routeKey(req.method, req.path);
         if (key !== OWNER_AREA && !allows(decision, key)) {
             logger.info(`Dashboard ${req.method} ${req.path} refused for ${session.userId} (${decision.role}): ${key || 'unknown page'} needs Administrator`);
-            return fail(res, 403, 'Not allowed', 'This needs Administrator in the main server. As a moderator you can use Overview, Members, Banned, Cases, Appeals and No-contact, and warn, mute, unmute, time out or kick members.', req);
+            return failT(res, 403, 'notAllowed', 'moderatorOnly', req);
         }
         if (req.method === 'GET' && session.flash) {
             // One-shot message from the last saved form (POST → 303 → this GET).
@@ -508,10 +527,10 @@ export function createDashboard({
     const SEARCH_KEYS = ['member', 'moderator', 'type', 'status', 'text', 'from', 'to', 'tag'];
     const savedSearches = () => { try { return getConfiguredSetting('savedCaseSearches', env) || []; } catch { return []; } };
     function searchGuard(req, res) {
-        if (!postLimiter.allow(req.dashboard.session.idHash)) { res.set('Retry-After', '60'); return fail(res, 429, 'Slow down', 'Too many changes in the last minute. Wait a moment and try again.', req); }
-        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
-        if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
-        if (!allows(req.dashboard.access, 'case.searches')) return fail(res, 403, 'Not allowed', 'This needs a moderator or administrator role.', req);
+        if (!postLimiter.allow(req.dashboard.session.idHash)) { res.set('Retry-After', '60'); return failT(res, 429, 'slowDown', 'tooManyChanges', req); }
+        if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'csrf', req);
+        if (!settings.editEnabled) return failT(res, 403, 'editingOff', 'editingOffText', req);
+        if (!allows(req.dashboard.access, 'case.searches')) return failT(res, 403, 'notAllowed', 'needsStaffRole', req);
         return null;
     }
     const saveSearches = (req, list) => services.updateSettings(guildId, { savedCaseSearches: list },
@@ -550,15 +569,15 @@ export function createDashboard({
     /** POST /handover: the staff note on the Overview (moderators and admins); empty text clears it. */
     async function handover(req, res) {
         const session = req.dashboard.session;
-        if (!postLimiter.allow(session.idHash)) { res.set('Retry-After', '60'); return fail(res, 429, 'Slow down', 'Too many changes in the last minute. Wait a moment and try again.', req); }
-        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
-        if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
-        if (!allows(req.dashboard.access, 'staff.handover')) return fail(res, 403, 'Not allowed', 'This needs a moderator or administrator role.', req);
+        if (!postLimiter.allow(session.idHash)) { res.set('Retry-After', '60'); return failT(res, 429, 'slowDown', 'tooManyChanges', req); }
+        if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'csrf', req);
+        if (!settings.editEnabled) return failT(res, 403, 'editingOff', 'editingOffText', req);
+        if (!allows(req.dashboard.access, 'staff.handover')) return failT(res, 403, 'notAllowed', 'needsStaffRole', req);
         const text = str(req.body?.text, 1200).replace(/\r\n?/g, '\n').trim();
-        if (text.length > 1000) return fail(res, 400, 'Too long', 'Keep the note under 1000 characters.', req);
+        if (text.length > 1000) return failT(res, 400, 'tooLong', 'handoverTooLong', req);
         const value = text ? { text, by: session.userId, byName: String(session.username || '').slice(0, 100), at: new Date().toISOString() } : null;
         await services.updateSettings(guildId, { staffHandoverNote: value }, { userId: session.userId, username: session.username, module: 'staff' }, env);
-        await sessions.setFlash?.(session.id, text ? 'Handover note saved.' : 'Handover note cleared.');
+        await sessions.setFlash?.(session.id, textOfReq(req).t(text ? 'overview.handover.saved' : 'overview.handover.cleared'));
         return res.redirect(303, path('/overview'));
     }
 
@@ -676,10 +695,10 @@ export function createDashboard({
     const canWriteSettings = (req) => Boolean(settings.editEnabled && req.dashboard.access.canAct);
     /** The same checks as every settings form; returns an error page or null. */
     function backupGuard(req, res) {
-        if (!postLimiter.allow(req.dashboard.session.idHash)) { res.set('Retry-After', '60'); return fail(res, 429, 'Slow down', 'Too many changes in the last minute. Wait a moment and try again.', req); }
-        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
-        if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
-        if (!req.dashboard.access.canAct) return fail(res, 403, 'Not allowed', 'This needs Administrator in the main server.', req);
+        if (!postLimiter.allow(req.dashboard.session.idHash)) { res.set('Retry-After', '60'); return failT(res, 429, 'slowDown', 'tooManyChanges', req); }
+        if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'csrf', req);
+        if (!settings.editEnabled) return failT(res, 403, 'editingOff', 'editingOffText', req);
+        if (!req.dashboard.access.canAct) return failT(res, 403, 'notAllowed', 'needsAdmin', req);
         return null;
     }
 
@@ -762,7 +781,9 @@ export function createDashboard({
     /** What a module page / action sees: the guild, the services, who acts and what they may do. */
     function contextFor(req) {
         const { session, access: decision } = req.dashboard;
+        // lang + t / ti / tb / tp / tpi / tx / fmtNumber / fmtDate / fmtDateTime / weekday / has (language.js dashboardText).
         return {
+            ...textOfReq(req),
             client, guildId, env, services,
             guild: client.guilds?.cache?.get(guildId) || null,
             session, access: decision, csrf: session.csrf,
@@ -789,13 +810,14 @@ export function createDashboard({
         if (!/^multipart\/form-data/i.test(String(req.headers?.['content-type'] || ''))) return next();
         const module = findModule(str(req.params?.module, 40));
         const action = module ? getAction(module, str(req.params?.action, 40)) : null;
-        if (!module || !action) return fail(res, 404, 'Not found', 'There is no such form.', req);
-        if (!action.upload) return fail(res, 415, 'Upload refused', 'This form does not take files.', req);
+        if (!module || !action) return failT(res, 404, 'notFound', 'noSuchForm', req);
+        if (!action.upload) return failT(res, 415, 'uploadRefused', 'noFiles', req);
         const refuse = (status, message) => renderModule(req, res, module, status, { error: message, errorAction: str(req.params?.action, 40), errorField: 'image' });
         const parse = (error) => {
             if (error) {
                 const tooLarge = error.status === 413 || error.type === 'entity.too.large';
-                return refuse(tooLarge ? 413 : 400, tooLarge ? `The image is larger than ${Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024)} MB.` : 'The upload could not be read.');
+                const tr = textOfReq(req);
+                return refuse(tooLarge ? 413 : 400, tooLarge ? tr.t('errors.imageTooLarge', { max: `${Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024)} MB` }) : tr.t('errors.uploadUnreadable'));
             }
             try {
                 const { fields, file } = parseMultipart(Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0), req.headers?.['content-type']);
@@ -828,7 +850,7 @@ export function createDashboard({
         // A page grouped by topic gets its commands card as one more topic (each topic has its own grid).
         const rendered = module.render(ctx, data);
         const commandsPart = commandsSection && String(rendered).includes('<section class="topic"')
-            ? topic('Commands', 'The slash commands that belong to this page.', commandsSection, { key: 'commands' })
+            ? topic(ctx.t('commands.list.title'), ctx.t('commands.list.topicLine'), commandsSection, { key: 'commands' })
             : commandsSection;
         return sendHtml(res, status, moduleSettingsPage({
             ...shellOf(req), module, body: html`${rendered}${commandsPart}`,
@@ -858,19 +880,19 @@ export function createDashboard({
         const session = req.dashboard.session;
         if (!postLimiter.allow(session.idHash)) {
             res.set('Retry-After', '60');
-            return fail(res, 429, 'Slow down', 'Too many changes in the last minute. Wait a moment and try again.', req);
+            return failT(res, 429, 'slowDown', 'tooManyChanges', req);
         }
-        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
-        if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
+        if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'csrf', req);
+        if (!settings.editEnabled) return failT(res, 403, 'editingOff', 'editingOffText', req);
         const module = findModule(str(req.params?.module, 40));
         const action = module ? getAction(module, str(req.params?.action, 40)) : null;
-        if (!module || !action) return fail(res, 404, 'Not found', 'There is no such form.', req);
+        if (!module || !action) return failT(res, 404, 'notFound', 'noSuchForm', req);
         const decision = req.dashboard.access;
         if (!decision.canView || !allows(decision, 'settings.edit') || (action.admin && !decision.canAct)) {
-            return fail(res, 403, 'Not allowed', 'This needs Administrator in the main server.', req);
+            return failT(res, 403, 'notAllowed', 'needsAdmin', req);
         }
         const ctx = contextFor(req);
-        if (!ctx.guild) return fail(res, 503, 'Server unavailable', 'The bot cannot see the main server right now. Try again in a moment.', req);
+        if (!ctx.guild) return failT(res, 503, 'serverUnavailable', 'serverUnavailableText', req);
         let result;
         try {
             result = await action.run(ctx, req.body || {});
@@ -896,7 +918,7 @@ export function createDashboard({
             moduleStatesCache = { at: 0, value: {} };
             logger.info(`Dashboard change by ${session.userId} in ${module.key}: ${changes.map((c) => c.key).join(', ')}`);
         }
-        const message = [result?.message || (changes.length ? 'Saved.' : 'Nothing changed.'), ...(result?.warnings || [])].map(plainText).join(' ');
+        const message = [result?.message || textOfReq(req).t(changes.length ? 'errors.saved' : 'errors.nothingChanged'), ...(result?.warnings || [])].map(plainText).join(' ');
         await sessions.setFlash?.(session.id, message);
         // `back`: the Modules page, the Overview or another module's page (only known names); else this module.
         const back = typeof req.body?.back === 'string' ? req.body.back : '';
@@ -929,7 +951,7 @@ export function createDashboard({
     const websiteHandlers = createWebsiteHandlers({ sendHtml, fail, helpers: ownerHandlers.helpers, website });
 
     async function logout(req, res) {
-        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'The logout request did not come from this dashboard.', req);
+        if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'logoutCsrf', req);
         await sessions.destroy(req.dashboard.session.id);
         res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
         // To the website, not a dashboard page: one would start a new Discord login (often silent).
@@ -944,6 +966,18 @@ export function createDashboard({
     function setTheme(req, res) {
         const mode = themeFrom(str(req.query?.mode, 10));
         res.append('Set-Cookie', serializeCookie(THEME_COOKIE, mode, { ...cookieOptions, httpOnly: false, maxAgeMs: 365 * 24 * 3600 * 1000 }));
+        return res.redirect(303, safeBackPath(str(req.query?.next, 300)));
+    }
+
+    /**
+     * GET /dashboard/lang?code=de&next=/dashboard/… — the language picker: the mewvo_lang cookie
+     * (Path=/, shared with the website; the same Set-Cookie as the website's picker) and a redirect
+     * back to a dashboard path (safeBackPath: never another site). An unknown code changes nothing.
+     */
+    function setLanguage(req, res) {
+        const code = str(req.query?.code, 10);
+        if (LANG_CODES.includes(code)) res.append('Set-Cookie', languageCookie(code, { secure: Boolean(settings.secure) }));
+        res.set('Cache-Control', 'no-store');
         return res.redirect(303, safeBackPath(str(req.query?.next, 300)));
     }
 
@@ -964,12 +998,12 @@ export function createDashboard({
     }
 
     function notFound(req, res) {
-        return fail(res, 404, 'Not found', 'There is no such page.', req);
+        return failT(res, 404, 'notFound', 'noSuchPage', req);
     }
 
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
-        overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, help, setup,
+        overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, setLanguage, help, setup,
         sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, website: websiteHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
         incidents: createIncidentHandlers({ client, guildId, incidents, sendHtml, shellOf, notFound }),
     };
@@ -984,10 +1018,9 @@ function safe(handler) {
             logger.error(`Dashboard ${req.method} ${req.path} failed: ${error.message}`);
             if (res.headersSent) return undefined;
             // After a form, say what matters: the change may not be saved (never a silent failure).
-            const message = req.method === 'POST'
-                ? 'Your change may not have been saved. Reload the page to check, then try again.'
-                : 'The page could not be loaded. Try again in a moment.';
-            return res.status(500).type('html').send(messagePage('Something went wrong', message));
+            const tr = dashboardText(currentLanguage());
+            const message = tr.t(req.method === 'POST' ? 'errors.wrongPost' : 'errors.wrongGet');
+            return res.status(500).type('html').send(messagePage(tr.t('errors.wrong'), message));
         }
     };
 }
@@ -1002,7 +1035,7 @@ export function uploadBody(limitBytes, maxLabel = '8 MB') {
         if (!error) return next();
         const tooLarge = error.status === 413 || error.type === 'entity.too.large';
         return res.status(tooLarge ? 413 : 400).type('html')
-            .send(messagePage(tooLarge ? 'Too large' : 'Upload refused', tooLarge ? `The image is larger than ${maxLabel}.` : 'The upload could not be read.'));
+            .send(((tr) => messagePage(tr.t(tooLarge ? 'errors.tooLarge' : 'errors.uploadRefused'), tooLarge ? tr.t('errors.imageTooLarge', { max: maxLabel }) : tr.t('errors.uploadUnreadable')))(dashboardText(currentLanguage())));
     });
 }
 
@@ -1030,8 +1063,11 @@ export function dashboardRouter(d) {
     const router = express.Router();
     const user = safe(d.requireUser);
     router.use(d.securityHeaders);
+    // The request's language for helpers without a context (language.js); pages get it explicitly.
+    router.use(languageContext);
     router.get('/static/:file', d.staticFile);
     router.get('/theme', d.limitByIp, d.setTheme);
+    router.get('/lang', d.limitByIp, d.setLanguage);
     router.get('/nav', d.limitByIp, d.setNav);
     router.get('/', d.limitByIp, safe(d.index));
     router.get('/oauth/callback', d.limitByIp, safe(d.callback));

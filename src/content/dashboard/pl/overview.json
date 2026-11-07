@@ -1,0 +1,196 @@
+{
+  "unavailable": "niedostępne",
+  "yourServer": "twój serwer",
+  "status": {
+    "offline": "Mewvo jest offline: komendy i automoderacja teraz nie działają.",
+    "dbDown": "Mewvo jest online, ale jego baza danych nie odpowiada, więc część zmian się nie zapisze.",
+    "ok": "Mewvo jest online i działa.",
+    "automodOn": "Automoderacja jest włączona.",
+    "automodOff": "Automoderacja jest wyłączona.",
+    "lockdown": "Trwa blokada po rajdzie."
+  },
+  "stats": {
+    "members": "Członkowie",
+    "joined": "Nowi w tym tygodniu: {count}",
+    "banned": "Zbanowani teraz",
+    "muted": "Wyciszeni teraz: {count}",
+    "appeals": "Czekające odwołania",
+    "appealsOldest": "Najstarsze na górze w sekcji „Wymaga twojej uwagi”",
+    "appealsNone": "Nie ma nic do rozstrzygnięcia",
+    "tickets": "Otwarte tickety",
+    "ticketsWhere": "Odpowiedzi na ich kanałach na Discordzie"
+  },
+  "cards": {
+    "needs": "Wymaga twojej uwagi",
+    "note": "Notatka dla następnej zmiany",
+    "start": "Pierwsze kroki",
+    "goTo": "Przejdź do",
+    "week": "Moderacja z ostatnich 7 dni",
+    "latest": "Ostatnia moderacja",
+    "allCases": "Zobacz wszystkie sprawy",
+    "changes": "Ostatnie zmiany w panelu",
+    "fullAudit": "Cały dziennik zdarzeń"
+  },
+  "table": {
+    "when": "Kiedy",
+    "who": "Kto",
+    "page": "Strona",
+    "setting": "Ustawienie",
+    "old": "Było",
+    "new": "Jest",
+    "action": "Akcja",
+    "member": "Członek",
+    "by": "Przez",
+    "reason": "Powód",
+    "case": "Sprawa",
+    "someone": "ktoś",
+    "test": "(test)"
+  },
+  "changes": {
+    "failed": "Nie udało się teraz tego wczytać. Odśwież stronę za minutę.",
+    "empty": "Nie ma jeszcze zmian w panelu."
+  },
+  "chart": {
+    "failed": "Nie udało się teraz wczytać wykresu. Odśwież stronę za minutę.",
+    "label": "Kary dziennie: {summary}",
+    "today": "Dziś",
+    "total": {
+      "one": "{count} akcja w ciągu 7 dni (dni według UTC, sprawy z /test nie są liczone).",
+      "few": "{count} akcje w ciągu 7 dni (dni według UTC, sprawy z /test nie są liczone).",
+      "many": "{count} akcji w ciągu 7 dni (dni według UTC, sprawy z /test nie są liczone).",
+      "other": "{count} akcji w ciągu 7 dni (dni według UTC, sprawy z /test nie są liczone)."
+    }
+  },
+  "feed": {
+    "failed": "Nie udało się teraz wczytać ostatniej moderacji. Odśwież stronę za minutę.",
+    "empty": "Nie ma jeszcze żadnych kar. Pojawią się tutaj po pierwszym ostrzeżeniu, wyciszeniu, wyrzuceniu lub banie."
+  },
+  "needs": {
+    "endConfirm": "Zakończyć blokadę po rajdzie? Poziom weryfikacji wróci do poprzedniego, a wstrzymane zaproszenia i wiadomości prywatne znów zadziałają.",
+    "endLockdown": "Zakończ blokadę",
+    "lockdown": "Trwa blokada po rajdzie",
+    "since": "Od {date}",
+    "heldAtDoor": "Nowi członkowie czekają przy wejściu",
+    "appealFrom": "Odwołanie od {name}",
+    "typedAppealFrom": {
+      "ban": "Odwołanie od bana: {name}",
+      "kick": "Odwołanie od wyrzucenia: {name}",
+      "mute": "Odwołanie od wyciszenia: {name}",
+      "warn": "Odwołanie od ostrzeżenia: {name}"
+    },
+    "case": "Sprawa {code}",
+    "testCase": "sprawa testowa",
+    "review": "Sprawdź",
+    "reviewLabel": "odwołanie {code}",
+    "moreAppeals": {
+      "one": "Czeka jeszcze {count} odwołanie",
+      "few": "Czekają jeszcze {count} odwołania",
+      "many": "Czeka jeszcze {count} odwołań",
+      "other": "Czeka jeszcze {count} odwołania"
+    },
+    "allAppeals": "Wszystkie odwołania",
+    "openTickets": {
+      "one": "{count} otwarty ticket",
+      "few": "{count} otwarte tickety",
+      "many": "{count} otwartych ticketów",
+      "other": "{count} otwartego ticketu"
+    },
+    "ticketsWhere": "Odpowiedzi na ich kanałach na Discordzie",
+    "tickets": "Tickety",
+    "setUpStep": "Skonfiguruj: {label}",
+    "setUp": "Skonfiguruj",
+    "failed": "Części tego nie udało się teraz wczytać. Odśwież stronę za minutę.",
+    "empty": "Teraz nic na ciebie nie czeka. Tutaj pojawiają się odwołania, tickety i alarmy o rajdach."
+  },
+  "start": {
+    "new": "Zaczynasz?",
+    "button": "Skonfiguruj Mewvo krok po kroku",
+    "after": "Przeprowadzi cię przez poniższe kroki po kolei.",
+    "words": "Co znaczą te słowa?",
+    "oneStep": "Krok po kroku",
+    "progress": "Gotowe: {done} z {total}. Każdy krok zajmuje minutę; link otwiera właściwą stronę.",
+    "done": "Gotowe: {list}."
+  },
+  "handover": {
+    "writtenBy": "Napisał(a) {name}, {date}",
+    "empty": "Krótka wiadomość dla tego, kto moderuje następny, np. „miej dziś wieczorem oko na #general”. Cała ekipa widzi ją tutaj.",
+    "label": "Notatka",
+    "placeholder": "Miej dziś wieczorem oko na #general",
+    "save": "Zapisz notatkę",
+    "hint": "Aby usunąć notatkę, wyczyść pole i zapisz.",
+    "saved": "Notatka dla następnej zmiany zapisana.",
+    "cleared": "Notatka dla następnej zmiany usunięta."
+  },
+  "quick": {
+    "cases": "Każde ostrzeżenie, wyciszenie, wyrzucenie i ban",
+    "users": "Znajdź członka i działaj",
+    "appeals": "Prośby o zdjęcie kary",
+    "inbox": "Tickety, zgłoszenia i modmail",
+    "automod": "Spam, wulgaryzmy i rajdy",
+    "enforcement": "Jak działają kary",
+    "audit": "Kto zmienił które ustawienie",
+    "modules": "Wszystkie ustawienia, według modułów"
+  },
+  "setup": {
+    "fallback": "Dopóki go nie wybierzesz, używany jest dziennik moderacji.",
+    "modLog": {
+      "label": "Kanał dziennika moderacji",
+      "hint": "Mewvo zapisuje tam każde ostrzeżenie, wyciszenie, wyrzucenie i ban, aby ekipa mogła później do nich wrócić."
+    },
+    "review": {
+      "label": "Kanał przeglądu automoderacji",
+      "hint": "Gdy automoderacja usunie wiadomość, publikuje tam krótki raport, aby ekipa mogła ją zachować lub cofnąć akcję."
+    },
+    "alerts": {
+      "label": "Kanał alarmów",
+      "hint": "Na pilne ostrzeżenia, np. o rajdzie (wiele kont dołącza naraz)."
+    },
+    "muted": {
+      "label": "Rola Muted",
+      "hint": "Mewvo tworzy ją sam, gdy ktoś zostanie wyciszony po raz pierwszy. Możesz też wybrać własną rolę."
+    },
+    "appeals": {
+      "label": "Kategoria odwołań",
+      "hint": "Gdy ktoś prosi o zdjęcie kary, Mewvo otwiera dla tej prośby prywatny kanał w tej kategorii."
+    },
+    "ticketCategory": {
+      "label": "Kategoria ticketów",
+      "hint": "Tickety pozwalają członkom prywatnie porozmawiać z ekipą. Wybierz kategorię, w której pojawiają się ich kanały."
+    },
+    "ticketStaff": {
+      "label": "Rola ekipy ticketów",
+      "hint": "Rola, która widzi tickety i na nie odpowiada."
+    },
+    "welcome": {
+      "label": "Kanał powitań",
+      "hint": "Mewvo wita nowych członków na tym kanale."
+    },
+    "verification": {
+      "label": "Weryfikacja",
+      "hint": "Nowi członkowie naciskają przycisk, aby pokazać, że są prawdziwymi osobami, zanim będą mogli pisać."
+    },
+    "birthdays": {
+      "label": "Kanał urodzin",
+      "hint": "Mewvo składa tam członkom życzenia urodzinowe."
+    },
+    "bannedRole": {
+      "label": "Rola dla zbanowanych na serwerze wsparcia",
+      "hint": "Zbanowani członkowie dostają tę rolę na twoim serwerze wsparcia, aby nadal mogli się tam odwołać."
+    }
+  },
+  "value": {
+    "notFound": "{id} (nie znaleziono)",
+    "hidden": "ukryte",
+    "notSet": "nie ustawiono",
+    "none": "brak",
+    "words": {
+      "one": "{count} słowo",
+      "few": "{count} słowa",
+      "many": "{count} słów",
+      "other": "{count} słowa"
+    },
+    "on": "wł.",
+    "off": "wył.",
+    "set": "ustawiono"
+  }
+}

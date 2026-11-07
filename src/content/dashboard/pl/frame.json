@@ -1,0 +1,158 @@
+{
+  "title": "{title} · panel Mewvo",
+  "skip": "Przejdź do treści",
+  "unsaved": "Niezapisane zmiany",
+  "nav": {
+    "label": "Panel",
+    "website": "Strona Mewvo",
+    "waiting": "czeka",
+    "showMain": "Pokaż tylko główne strony",
+    "showAll": {
+      "one": "Pokaż wszystkie strony (jeszcze {count})",
+      "few": "Pokaż wszystkie strony (jeszcze {count})",
+      "many": "Pokaż wszystkie strony (jeszcze {count})",
+      "other": "Pokaż wszystkie strony (jeszcze {count})"
+    },
+    "groups": {
+      "moderate": "Moderacja",
+      "community": "Społeczność",
+      "serverSetup": "Konfiguracja serwera",
+      "bot": "Bot",
+      "owner": "Właściciel"
+    },
+    "items": {
+      "overview": "Przegląd",
+      "inbox": "Skrzynka",
+      "users": "Członkowie",
+      "bans": "Zbanowani",
+      "cases": "Sprawy",
+      "appeals": "Odwołania",
+      "nocontact": "Zakazy kontaktu",
+      "staff": "Ekipa",
+      "activity": "Aktywność",
+      "incidents": "Oś czasu rajdów",
+      "channels": "Narzędzia kanałów",
+      "tickets": "Tickety i modmail",
+      "welcome": "Powitania i pożegnania",
+      "leveling": "Poziomy",
+      "reaction-roles": "Role za reakcje",
+      "messages": "Wiadomości",
+      "giveaways": "Losowania",
+      "birthdays": "Urodziny",
+      "applications": "Podania",
+      "community": "Społeczność",
+      "join-to-create": "Join to create",
+      "automod": "Automoderacja",
+      "enforcement": "Kary i odwołania",
+      "logging": "Dzienniki",
+      "verification": "Weryfikacja",
+      "counters": "Liczniki",
+      "support": "Serwer wsparcia",
+      "rules": "Zasady",
+      "setup": "Konfiguracja krok po kroku",
+      "help": "Słowniczek",
+      "modules": "Wszystkie moduły",
+      "appearance": "Bot na tym serwerze",
+      "commands": "Komendy",
+      "audit": "Dziennik zdarzeń",
+      "backup": "Kopia ustawień",
+      "owner_home": "Przegląd właściciela",
+      "owner_profile": "Profil bota",
+      "owner_servers": "Serwery",
+      "owner_users": "Użytkownicy",
+      "owner_blacklist": "Czarna lista",
+      "owner_premium": "Klucze premium",
+      "owner_health": "Stan",
+      "owner_commands": "Synchronizacja komend",
+      "owner_announce": "Ogłoszenie",
+      "owner_erase": "Usuń sprawę",
+      "owner_website": "Strona",
+      "owner_activity": "Aktywność właściciela"
+    }
+  },
+  "state": {
+    "on": "wł.",
+    "off": "wył."
+  },
+  "action": {
+    "ban": "Ban",
+    "kick": "Wyrzucenie",
+    "mute": "Wyciszenie",
+    "warn": "Ostrzeżenie"
+  },
+  "tabbar": {
+    "label": "Sekcje",
+    "home": "Start",
+    "setup": "Ustawienia",
+    "more": "Więcej",
+    "website": "Strona"
+  },
+  "top": {
+    "find": "Znajdź ustawienie",
+    "findPlaceholder": "Znajdź ustawienie…"
+  },
+  "language": {
+    "title": "Język",
+    "label": "Język: {name}"
+  },
+  "theme": {
+    "title": "Motyw",
+    "inUse": "(w użyciu)",
+    "system": "Jak na moim urządzeniu",
+    "light": "Jasny",
+    "dark": "Ciemny",
+    "dim": "Przyciemniony",
+    "contrast": "Wysoki kontrast"
+  },
+  "server": {
+    "label": "Serwer: {name}",
+    "sub": "Główny serwer · zarządzasz nim teraz",
+    "note": "Na razie można zarządzać tylko tym serwerem."
+  },
+  "user": {
+    "label": "Konto: {name}",
+    "logout": "Wyloguj się",
+    "level": {
+      "moderator": "Moderator",
+      "ownerView": "Podgląd i ustawienia (właściciel bota)",
+      "administrator": "Administrator"
+    }
+  },
+  "message": {
+    "backOverview": "Wróć do przeglądu",
+    "backHome": "Wróć na stronę główną"
+  },
+  "module": {
+    "readOnly": "Tylko do odczytu: edytowanie w panelu jest wyłączone (DASHBOARD_EDIT_ENABLED nie ma wartości true). Użyj komend bota albo poproś właściciela, aby je włączył.",
+    "onThisPage": "Na tej stronie",
+    "notSaved": "Nie zapisano: {message}",
+    "more": "Więcej o tym",
+    "none": "Brak."
+  },
+  "pager": {
+    "label": "Strony",
+    "previous": "← Poprzednia",
+    "next": "Następna →",
+    "pageOf": "Strona {page} z {pages}"
+  },
+  "script": {
+    "filter": "Wpisz, aby filtrować…",
+    "filterLabel": "Filtruj listę poniżej",
+    "cancel": "Anuluj",
+    "continue": "Dalej",
+    "saving": "Zapisywanie…",
+    "copy": "Kopiuj",
+    "copyLabel": "Kopiuj {name}",
+    "copied": "Skopiowano",
+    "copyFailed": "Nie udało się skopiować",
+    "justNow": "przed chwilą",
+    "underMinute": "za mniej niż minutę",
+    "dismiss": "Zamknij",
+    "unsaved": "Niezapisane zmiany",
+    "unsavedIn": "Niezapisane zmiany: {place}",
+    "discard": "Odrzuć",
+    "save": "Zapisz zmiany",
+    "searchModules": "Szukaj modułów…",
+    "noModule": "Żaden moduł nie pasuje."
+  }
+}

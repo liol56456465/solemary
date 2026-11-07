@@ -1,0 +1,156 @@
+{
+  "title": "{title} · Mewvo dashboard",
+  "skip": "Skip to content",
+  "unsaved": "Unsaved changes",
+  "nav": {
+    "label": "Dashboard",
+    "website": "Mewvo website",
+    "waiting": "waiting",
+    "showMain": "Show only the main pages",
+    "showAll": {
+      "one": "Show all pages ({count} more)",
+      "other": "Show all pages ({count} more)"
+    },
+    "groups": {
+      "moderate": "Moderate",
+      "community": "Community",
+      "serverSetup": "Server setup",
+      "bot": "Bot",
+      "owner": "Owner"
+    },
+    "items": {
+      "overview": "Overview",
+      "inbox": "Inbox",
+      "users": "Members",
+      "bans": "Banned",
+      "cases": "Cases",
+      "appeals": "Appeals",
+      "nocontact": "No-contact",
+      "staff": "Staff",
+      "activity": "Activity",
+      "incidents": "Raid timeline",
+      "channels": "Channel tools",
+      "tickets": "Tickets & modmail",
+      "welcome": "Welcome & goodbye",
+      "leveling": "Leveling",
+      "reaction-roles": "Reaction roles",
+      "messages": "Messages",
+      "giveaways": "Giveaways",
+      "birthdays": "Birthdays",
+      "applications": "Applications",
+      "community": "Community",
+      "join-to-create": "Join to create",
+      "automod": "Automod",
+      "enforcement": "Enforcement & appeals",
+      "logging": "Logging",
+      "verification": "Verification",
+      "counters": "Counters",
+      "support": "Support server",
+      "rules": "Rules",
+      "setup": "Setup step by step",
+      "help": "Words explained",
+      "modules": "All modules",
+      "appearance": "Bot in this server",
+      "commands": "Commands",
+      "audit": "Audit log",
+      "backup": "Settings backup",
+      "owner_home": "Owner overview",
+      "owner_profile": "Bot profile",
+      "owner_servers": "Servers",
+      "owner_users": "Users",
+      "owner_blacklist": "Blacklist",
+      "owner_premium": "Premium keys",
+      "owner_health": "Health",
+      "owner_commands": "Command sync",
+      "owner_announce": "Announce",
+      "owner_erase": "Erase a case",
+      "owner_website": "Website",
+      "owner_activity": "Owner activity"
+    }
+  },
+  "state": {
+    "on": "on",
+    "off": "off"
+  },
+  "action": {
+    "ban": "Ban",
+    "kick": "Kick",
+    "mute": "Mute",
+    "warn": "Warn"
+  },
+  "tabbar": {
+    "label": "Sections",
+    "home": "Home",
+    "setup": "Setup",
+    "more": "More",
+    "website": "Website"
+  },
+  "top": {
+    "find": "Find a setting",
+    "findPlaceholder": "Find a setting…"
+  },
+  "language": {
+    "title": "Language",
+    "label": "Language: {name}"
+  },
+  "theme": {
+    "title": "Theme",
+    "inUse": "(in use)",
+    "system": "Same as my device",
+    "light": "Light",
+    "dark": "Dark",
+    "dim": "Dim",
+    "contrast": "High contrast"
+  },
+  "server": {
+    "label": "Server: {name}",
+    "sub": "Main server · managing now",
+    "note": "Only this server can be managed for now."
+  },
+  "user": {
+    "label": "Account: {name}",
+    "logout": "Log out",
+    "level": {
+      "moderator": "Moderator",
+      "ownerView": "View and settings (bot owner)",
+      "administrator": "Administrator"
+    }
+  },
+  "message": {
+    "backOverview": "Back to Overview",
+    "backHome": "Back to the home page"
+  },
+  "module": {
+    "readOnly": "Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true). Use the bot's commands, or ask the owner to turn it on.",
+    "onThisPage": "On this page",
+    "notSaved": "Not saved: {message}",
+    "more": "More about this",
+    "none": "None."
+  },
+  "pager": {
+    "label": "Pages",
+    "previous": "← Previous",
+    "next": "Next →",
+    "pageOf": "Page {page} of {pages}"
+  },
+  "script": {
+    "filter": "Type to filter…",
+    "filterLabel": "Filter the list below",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "saving": "Saving…",
+    "copy": "Copy",
+    "copyLabel": "Copy {name}",
+    "copied": "Copied",
+    "copyFailed": "Copy failed",
+    "justNow": "just now",
+    "underMinute": "in under a minute",
+    "dismiss": "Dismiss",
+    "unsaved": "Unsaved changes",
+    "unsavedIn": "Unsaved changes in {place}",
+    "discard": "Discard",
+    "save": "Save changes",
+    "searchModules": "Search modules…",
+    "noModule": "No module matches."
+  }
+}

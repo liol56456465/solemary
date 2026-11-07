@@ -1,0 +1,73 @@
+{
+  "save": "Save changes",
+  "reset": "Reset",
+  "on": "On",
+  "off": "Off",
+  "pillOn": "on",
+  "pillOff": "off",
+  "turnOn": "Turn on",
+  "turnOff": "Turn off",
+  "turnOnLabel": "{label}: turn on",
+  "turnOffLabel": "{label}: turn off",
+  "savesRightAway": "Saves right away.",
+  "moduleLabel": "Module",
+  "notSet": "not set",
+  "missing": "{id} (missing)",
+  "categories": "Categories",
+  "noCategory": "No category",
+  "kind": {
+    "text": "text channel",
+    "voice": "voice channel",
+    "category": "category",
+    "forum": "forum"
+  },
+  "or": " or ",
+  "error": {
+    "tooLong": "Too long: at most {max} characters ({length} entered).",
+    "onOff": "{label}: choose on or off.",
+    "wholeNumber": "{label} must be a whole number.",
+    "between": "{label} must be between {min} and {max}.",
+    "number": "{label} must be a number, like 1.5.",
+    "decimals": {
+      "one": "{label}: use at most {count} decimal.",
+      "other": "{label}: use at most {count} decimals."
+    },
+    "unknownChoice": "{label}: unknown choice.",
+    "pickChannel": "{label}: pick a channel.",
+    "notChannelId": "{label}: not a channel ID.",
+    "channelMissing": "{label}: that channel is not in the server.",
+    "channelKind": "{label}: must be a {kinds}.",
+    "pickRole": "{label}: pick a role.",
+    "notRoleId": "{label}: not a role ID.",
+    "roleMissing": "{label}: that role is not in the server.",
+    "everyone": "{label}: @everyone cannot be used.",
+    "managed": "{label}: {role} is managed by an integration or bot.",
+    "problem": "{label}: {problem}",
+    "userId": "{label} must be a Discord user ID (17–20 digits).",
+    "listItem": "{label} {number}"
+  },
+  "warn": {
+    "channelGone": "channel {id} no longer exists",
+    "cannotCheck": "cannot check my permissions here",
+    "missingPerms": "I am missing {perms} in #{channel}",
+    "roleGone": "role {id} no longer exists",
+    "everyone": "@everyone cannot be used",
+    "managed": "@{role} is managed by an integration or bot",
+    "notBelow": "@{role} is not below my highest role, so I cannot assign it",
+    "staffPerms": "@{role} has staff permissions ({perms})"
+  },
+  "perm": {
+    "ViewChannel": "View Channel",
+    "SendMessages": "Send Messages",
+    "EmbedLinks": "Embed Links",
+    "AttachFiles": "Attach Files",
+    "ReadMessageHistory": "Read Message History",
+    "ManageChannels": "Manage Channels",
+    "Connect": "Connect",
+    "MoveMembers": "Move Members",
+    "ManageMessages": "Manage Messages",
+    "ManageRoles": "Manage Roles",
+    "AddReactions": "Add Reactions",
+    "SendPolls": "Send Polls"
+  }
+}

@@ -4,7 +4,8 @@
 import { formatDuration } from '../enforcement/format.js';
 import { SEARCH_STATUSES, SEARCH_TYPES } from '../enforcement/caseSearchService.js';
 import { STATS_PERIODS } from '../staffActivityService.js';
-import { escapeHtml, formatAge, formatDate, html, icon, layout, navItems, path, queryString, raw, section, timeTag, typeBadge } from './html.js';
+import { escapeHtml, formatAge, formatDate, html, icon, layout, navItems, navLabel, path, queryString, raw, section, timeTag, typeBadge } from './html.js';
+import { currentText, dashboardText, namespaceOf } from './language.js';
 import { moduleSwitch } from './forms.js';
 
 const IMAGE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
@@ -249,13 +250,13 @@ ${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || 
  * list their topics (two or more); other pages list their cards (four or more). Titles
  * are read from the page's own markup (already escaped).
  */
-function sectionLinks(body) {
+function sectionLinks(body, tr = currentText()) {
     const text = String(body);
     const topics = [...text.matchAll(/<section class="topic" id="(g-[a-z0-9-]+)"><header class="topic-head"><h2>([^<]+)<\/h2>/g)];
-    const cards = [...text.matchAll(/<section class="tile-card[^"]*" id="(s-[a-z0-9-]+)"[^>]*><header class="card-top"><h[23] class="card-title">([^<]+)<\/h[23]>/g)];
+    const cards = [...text.matchAll(/<section class="tile-card[^"]*" id="(s-[a-z0-9-]+)"[^>]*><header class="card-top"><h[23] class="card-title"[^>]*>([^<]+)<\/h[23]>/g)];
     const found = topics.length >= 2 ? topics : cards.length >= 4 ? cards : [];
     if (!found.length) return '';
-    return html`<nav class="section-links" aria-label="On this page"><span class="section-links-label">On this page</span>${found.map(([, id, title]) => html`<a href="#${id}">${raw(title)}</a>`)}</nav>`;
+    return html`<nav class="section-links" aria-label="${tr.t('frame.module.onThisPage')}"><span class="section-links-label">${tr.t('frame.module.onThisPage')}</span>${found.map(([, id, title]) => html`<a href="#${id}">${raw(title)}</a>`)}</nav>`;
 }
 
 /**
@@ -264,7 +265,7 @@ function sectionLinks(body) {
  * is written into the page. null when the form is not on the page (the caller then shows
  * the error at the top).
  */
-export function placeFormError(body, { moduleKey, action, field, message }) {
+export function placeFormError(body, { moduleKey, action, field, message }, tr = currentText()) {
     const text = String(body);
     const marker = `action="${path(`/${moduleKey}/${action}`)}"`;
     const at = action ? text.indexOf(marker) : -1;
@@ -276,7 +277,7 @@ export function placeFormError(body, { moduleKey, action, field, message }) {
         const name = `name="${escapeHtml(field)}"`;
         if (form.includes(name)) form = form.replace(name, `${name} aria-invalid="true" aria-describedby="form-error"`);
     }
-    const note = html`<p class="error form-error" role="alert" id="form-error">Not saved: ${message}</p>`;
+    const note = html`<p class="error form-error" role="alert" id="form-error">${tr.t('frame.module.notSaved', { message })}</p>`;
     return raw(`${text.slice(0, open)}${note}${form}${close === -1 ? '' : text.slice(close)}`);
 }
 
@@ -286,25 +287,31 @@ export function placeFormError(body, { moduleKey, action, field, message }) {
  * be found, else at the top), then the module's body.
  */
 export function moduleSettingsPage({ session, access = null, moduleStates = {}, module, body, flash = null, error = null, errorAction = null, errorField = null, warnings = [], editEnabled = false }) {
-    const placed = error ? placeFormError(body, { moduleKey: module.key, action: errorAction, field: errorField, message: error }) : null;
+    const tr = dashboardText(session?.lang);
+    const placed = error ? placeFormError(body, { moduleKey: module.key, action: errorAction, field: errorField, message: error }, tr) : null;
     if (placed) {
         body = placed;
         error = null;
     }
-    const notices = html`${!editEnabled ? html`<p class="notice">Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true). Use the bot's commands, or ask the owner to turn it on.</p>` : ''}
+    const notices = html`${!editEnabled ? html`<p class="notice">${tr.tx('frame.module.readOnly')}</p>` : ''}
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
 ${warnings.length ? html`<ul class="warnings">${warnings.map((w) => html`<li>${w}</li>`)}</ul>` : ''}`;
     const item = navItems().find((i) => i.key === module.key) || {};
     const state = item.toggle && Object.hasOwn(moduleStates, item.state) ? moduleStates[item.state] : null;
     const canEdit = Boolean(editEnabled && session && access?.canView !== false);
-    const main = state === null ? '' : moduleSwitch({ csrf: session?.csrf, canEdit, module: module.key, action: item.toggle, enabled: state, label: module.label });
+    // Title: the sidebar's word for the page (same English label); help line: <namespace>.page.help
+    // when the module's catalog has it (docs/dashboard-i18n.md), else the module's own English line.
+    const title = item.key && item.label === module.label ? navLabel(item, tr) : module.label;
+    const helpKey = `${namespaceOf(module.key)}.page.help`;
+    const help = tr.has(helpKey) ? tr.t(helpKey) : module.help;
+    const main = state === null ? '' : moduleSwitch({ csrf: session?.csrf, canEdit, module: module.key, action: item.toggle, enabled: state, label: title, lang: tr.lang });
     const head = html`<header class="module-header"><span class="module-icon" aria-hidden="true">${icon(module.key)}</span>
-<div class="module-title"><h1>${module.label}</h1>${module.help ? html`<p class="help">${module.help}</p>` : ''}</div>${main ? html`<div class="module-main">${main}</div>` : ''}</header>`;
+<div class="module-title"><h1>${title}</h1>${help ? html`<p class="help">${help}</p>` : ''}</div>${main ? html`<div class="module-main">${main}</div>` : ''}</header>`;
     // v6: "On this page" as a row of jump links, then the cards in a grid (grouped by topic
     // on the busy pages: each topic has its own grid).
-    const links = sectionLinks(body);
+    const links = sectionLinks(body, tr);
     const grouped = String(body).includes('<section class="topic"');
     const page = html`${head}<div class="settings-layout">${links}<div class="settings-main">${notices}${grouped ? body : html`<div class="card-grid">${body}</div>`}</div></div>`;
-    return layout({ title: module.label, active: module.key, session, access, moduleStates, body: page });
+    return layout({ title, active: module.key, session, access, moduleStates, body: page, lang: tr.lang });
 }

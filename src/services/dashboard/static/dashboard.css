@@ -332,7 +332,7 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
 .side-brand:hover { text-decoration: none; }
 .side-brand .brand-mark { width: 30px; height: 30px; border-radius: 9px; }
 .side-group-label { margin: 0 0 4px; padding: 0 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--chrome-text); }
-.side-list { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; }
+.side-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px; margin: 0; padding: 0; list-style: none; }
 .side-list a {
     position: relative; display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 9px;
     color: var(--chrome-text); font-size: 14px; font-weight: 500;
@@ -341,7 +341,8 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
 .side-list a:hover { color: var(--text); background: var(--surface); text-decoration: none; }
 .side-list a[aria-current] { color: var(--text); background: var(--accent-soft); font-weight: 650; box-shadow: inset 3px 0 0 var(--accent); }
 .side-list a[aria-current] .icon { color: var(--accent); }
-.side-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Long labels (de "Schritt-für-Schritt-Einrichtung") wrap onto a second line instead of being cut. */
+.side-text { flex: 1; min-width: 0; overflow-wrap: break-word; }
 .side-bottom { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--chrome-border); }
 .side-site { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; padding: 7px 10px; border-radius: 9px; color: var(--chrome-text); font-size: 14px; font-weight: 500; }
 .side-site .icon { width: 16px; height: 16px; }
@@ -548,7 +549,7 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 .card-body { padding: 16px 18px; }
 .needs-you .card-body { padding: 0; }
 .needs-you .card-body > .empty, .needs-you .card-body > .error { margin: 16px 18px; }
-.queue > li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 12px 18px; border-top: 1px solid var(--line); }
+.queue > li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 12px 18px; border-top: 1px solid var(--line); }
 .queue > li:first-child { border-top: 0; }
 .queue .what b { display: block; font-size: 14px; }
 .queue .what small { display: block; color: var(--text-muted); font-size: 12px; }
@@ -604,7 +605,7 @@ a.kpi-num:hover { text-decoration: none; color: var(--accent); }
 .bar i { display: block; width: 100%; min-height: 4px; border-radius: 2px 2px 0 0; background: var(--chart); }
 .bar.today i { background: var(--accent); }
 .bar-count { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text-muted); }
-.bar-label { font-size: 12px; color: var(--text-muted); }
+.bar-label { font-size: 12px; color: var(--text-muted); max-width: 100%; overflow-wrap: anywhere; text-align: center; }
 .bar.today .bar-label { color: var(--text); font-weight: 600; }
 .h-0 { height: 0; } .h-1 { height: 10%; } .h-2 { height: 20%; } .h-3 { height: 30%; } .h-4 { height: 40%; } .h-5 { height: 50%; }
 .h-6 { height: 60%; } .h-7 { height: 70%; } .h-8 { height: 80%; } .h-9 { height: 90%; } .h-10 { height: 100%; }
@@ -1080,6 +1081,10 @@ form.filters .wide-filter { flex: 1 1 240px; }
         display: grid; place-items: center; gap: 2px; min-width: 56px; padding: 6px 8px; border-radius: 0;
         color: var(--chrome-text); font-size: 11px; font-weight: 600;
     }
+    /* Long tab words (ru "Сообщество", de "Einrichtung"): the tabs share the width, less side padding. */
+    .tabbar > a, .tabbar > .more { flex: 1 1 auto; min-width: 0; }
+    .tabbar > a, .tabbar .more > summary { min-width: 0; padding-inline: 2px; text-align: center; }
+    .tabbar > a > span, .tabbar .more > summary > span { white-space: nowrap; }
     .tabbar > a:hover { text-decoration: none; color: var(--feature-text); }
     .tabbar > a.on, .tabbar .more > summary.on, .tabbar .more[open] > summary { color: var(--text); box-shadow: inset 0 2px 0 var(--text); }
     .more-sheet {
@@ -1422,4 +1427,21 @@ a.stat-value:hover { color: var(--text); text-decoration: underline; text-underl
     .topic { margin-bottom: 32px; }
     .topic-head h2 { font-size: 18px; }
     .settings-layout > .section-links { margin-bottom: 16px; }
+}
+
+/* Language picker (top bar): a two-letter button, the 8 languages by their own names. */
+.lang-switch > summary.lang-button { width: auto; min-width: 40px; padding: 0 8px; border-color: var(--border); font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+.lang-switch .menu { min-width: 200px; }
+.lang-switch .menu-link[aria-current="true"] { font-weight: 700; }
+/* Words the stylesheet shows ("(in use)", "Unsaved changes"): other languages carry them in data attributes. */
+.theme-opt[data-in-use][aria-checked="true"]::after { content: " " attr(data-in-use); }
+form.is-dirty .form-actions[data-unsaved]::before { content: attr(data-unsaved); }
+details.section.is-changed > summary h2[data-unsaved]::after { content: attr(data-unsaved); }
+.tile-card.is-changed .card-title[data-unsaved]::after { content: attr(data-unsaved); }
+/* Phones: the "Needs you" rows put the age under the text (it was squeezed to nothing beside a long title). */
+@media (max-width: 639px) {
+    .queue > li { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+    .queue > li > .what { grid-column: 1; grid-row: 1; }
+    .queue > li > :nth-child(2):not(:last-child) { grid-column: 1; grid-row: 2; }
+    .queue > li > :last-child:not(.what) { grid-column: 2; grid-row: 1 / span 2; }
 }

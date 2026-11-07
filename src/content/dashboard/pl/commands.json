@@ -1,0 +1,82 @@
+{
+  "page": {
+    "help": "Włączaj i wyłączaj na tym serwerze pojedyncze komendy albo całe grupy komend. Wyłączona komenda odpowiada tylko krótką informacją. /commands i /configwizard są zawsze włączone, więc nie możesz zablokować samego siebie."
+  },
+  "bot": {
+    "title": "Ustawienia bota",
+    "help": "Podstawowe ustawienia działania Mewvo na tym serwerze. Możesz je też zmienić na Discordzie komendą /configwizard.",
+    "prefix": "Prefiks komend tekstowych",
+    "prefixHelp": "Niektóre komendy działają też w zwykłej wiadomości: wpisz ten znak, a po nim nazwę komendy, zamiast używać komendy z ukośnikiem. Od 1 do 10 znaków, bez spacji.",
+    "modRole": "Rola moderatora",
+    "modRoleHelp": "Członkowie z tą rolą mogą używać komend moderacyjnych. Mogą też logować się do tego panelu jako moderatorzy: widzą członków, sprawy i odwołania oraz mogą ostrzegać, wyciszać, cofać wyciszenie, wyrzucać i dawać przerwy (timeout). Nie mogą banować ani zmieniać ustawień. Mewvo nigdy sam nie nadaje nikomu tej roli.",
+    "needsAdmin": "Aby zmieniać ustawienia bota i korzystać z tutejszych narzędzi, potrzebujesz uprawnienia Administrator na głównym serwerze.",
+    "saved": "Ustawienia bota zapisane.",
+    "nothing": "Nic się nie zmieniło.",
+    "prefixRule": "Prefiks musi mieć od 1 do 10 znaków, bez spacji.",
+    "modRoleAuto": "Rola moderatora: @{role} to {where}, więc każdy, kto ją dostanie, zostałby moderatorem. Wybierz rolę tylko dla ekipy.",
+    "where": {
+      "autoRole": "rola nadawana automatycznie przy dołączeniu",
+      "verification": "rola weryfikacji",
+      "autoVerify": "rola automatycznej weryfikacji",
+      "levelReward": "rola-nagroda za poziom",
+      "reactionRole": "rola za reakcję"
+    }
+  },
+  "utilities": {
+    "title": "Narzędzia",
+    "help": "Skróć link przez is.gd, tak jak komendą /shorten. Krótki link pojawi się na górze tej strony.",
+    "url": "Link do skrócenia",
+    "urlHelp": "Zamienia długi link na krótki, którym łatwiej się podzielić.",
+    "custom": "Własna końcówka (opcjonalnie)",
+    "customHelp": "Sam wybierz ostatnią część krótkiego linku. Tylko litery, cyfry, _ i -.",
+    "submit": "Skróć",
+    "result": "Krótki link: {short} (dla {url})"
+  },
+  "list": {
+    "title": "Komendy",
+    "notLoaded": "Lista komend nie jest jeszcze wczytana. Odśwież stronę za chwilę.",
+    "command": "Komenda",
+    "description": "Opis",
+    "state": "Stan",
+    "on": "Wł.",
+    "protected": "chroniona",
+    "categoryOff": "kategoria wył.",
+    "categoryIsOff": "kategoria {name} jest wyłączona",
+    "count": "Włączone: {on}/{total}.",
+    "turnCategoryOn": "Włącz kategorię",
+    "turnCategoryOff": "Wyłącz kategorię",
+    "offSuffix": "{name} (wył.)",
+    "moduleTitle": "Komendy ({count})",
+    "moduleHelp": "Komendy z ukośnikiem, które należą do tej strony. Wyłączona komenda odpowiada tylko krótką informacją. Strona Komendy pokazuje wszystkie komendy.",
+    "topicLine": "Komendy z ukośnikiem, które należą do tej strony."
+  },
+  "every": {
+    "title": "Wszystkie komendy ({count})",
+    "retired": "Wycofane",
+    "retiredText": "Komendy administracyjne są wyłączone na Discordzie. Zostały tylko komendy dla wszystkich, narzędzia awaryjne właściciela bota i {test}. Wszystko inne robisz tutaj, w panelu.",
+    "notRetired": "Niewycofane",
+    "notRetiredText": "Wszystkie komendy działają na Discordzie. Właściciel bota może wyłączyć komendy administracyjne, tak aby zostały tylko komendy dla wszystkich, narzędzia awaryjne i {test}, a wszystko inne robiło się w panelu.",
+    "whatItDoes": "Co robi",
+    "who": "Kto może jej używać",
+    "onDashboard": "W panelu",
+    "ifRetired": "Gdy komendy administracyjne są wyłączone",
+    "whoEveryone": "Wszyscy",
+    "whoOwnerKit": "Tylko właściciel bota (narzędzia awaryjne)",
+    "whoAdmin": "Administratorzy",
+    "afterEveryone": "Zostaje komendą",
+    "afterOwnerKit": "Zostaje, tylko dla właściciela bota",
+    "afterAdmin": "Tylko w panelu",
+    "support": "Także na serwerze wsparcia: {list}. To, kto może używać której komendy, jest ustalone w Mewvo i nie da się tego tutaj zmienić."
+  },
+  "action": {
+    "unknownCommand": "Nieznana komenda: /{name}.",
+    "cannotDisable": "Nie można wyłączyć /{name}.",
+    "commandOn": "/{name} jest teraz włączona.",
+    "commandOff": "/{name} jest teraz wyłączona.",
+    "unknownCategory": "Nieznana kategoria.",
+    "categoryOn": "{name} jest teraz włączona.",
+    "categoryOff": "{name} jest teraz wyłączona.",
+    "commandLabel": "Komenda",
+    "categoryLabel": "Kategoria"
+  }
+}

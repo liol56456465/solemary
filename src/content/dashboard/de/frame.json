@@ -1,0 +1,156 @@
+{
+  "title": "{title} · Mewvo-Dashboard",
+  "skip": "Zum Inhalt springen",
+  "unsaved": "Ungespeicherte Änderungen",
+  "nav": {
+    "label": "Dashboard",
+    "website": "Mewvo-Website",
+    "waiting": "wartet",
+    "showMain": "Nur die wichtigsten Seiten zeigen",
+    "showAll": {
+      "one": "Alle Seiten zeigen ({count} weitere)",
+      "other": "Alle Seiten zeigen ({count} weitere)"
+    },
+    "groups": {
+      "moderate": "Moderation",
+      "community": "Community",
+      "serverSetup": "Server-Einrichtung",
+      "bot": "Bot",
+      "owner": "Inhaber"
+    },
+    "items": {
+      "overview": "Übersicht",
+      "inbox": "Posteingang",
+      "users": "Mitglieder",
+      "bans": "Gebannt",
+      "cases": "Fälle",
+      "appeals": "Einsprüche",
+      "nocontact": "Kontaktverbote",
+      "staff": "Team",
+      "activity": "Aktivität",
+      "incidents": "Raid-Verlauf",
+      "channels": "Kanalwerkzeuge",
+      "tickets": "Tickets & Modmail",
+      "welcome": "Willkommen & Abschied",
+      "leveling": "Level",
+      "reaction-roles": "Reaktionsrollen",
+      "messages": "Nachrichten",
+      "giveaways": "Gewinnspiele",
+      "birthdays": "Geburtstage",
+      "applications": "Bewerbungen",
+      "community": "Community",
+      "join-to-create": "Join-to-Create",
+      "automod": "Automod",
+      "enforcement": "Strafen & Einsprüche",
+      "logging": "Logs",
+      "verification": "Verifizierung",
+      "counters": "Zähler",
+      "support": "Support-Server",
+      "rules": "Regeln",
+      "setup": "Schritt-für-Schritt-Einrichtung",
+      "help": "Begriffe erklärt",
+      "modules": "Alle Module",
+      "appearance": "Bot auf diesem Server",
+      "commands": "Befehle",
+      "audit": "Audit-Log",
+      "backup": "Einstellungs-Backup",
+      "owner_home": "Inhaber-Übersicht",
+      "owner_profile": "Bot-Profil",
+      "owner_servers": "Server",
+      "owner_users": "Nutzer",
+      "owner_blacklist": "Sperrliste",
+      "owner_premium": "Premium-Keys",
+      "owner_health": "Zustand",
+      "owner_commands": "Befehle synchronisieren",
+      "owner_announce": "Ankündigen",
+      "owner_erase": "Fall löschen",
+      "owner_website": "Website",
+      "owner_activity": "Inhaber-Aktivität"
+    }
+  },
+  "state": {
+    "on": "an",
+    "off": "aus"
+  },
+  "action": {
+    "ban": "Bannen",
+    "kick": "Kicken",
+    "mute": "Stummschalten",
+    "warn": "Verwarnen"
+  },
+  "tabbar": {
+    "label": "Bereiche",
+    "home": "Start",
+    "setup": "Setup",
+    "more": "Mehr",
+    "website": "Website"
+  },
+  "top": {
+    "find": "Einstellung suchen",
+    "findPlaceholder": "Einstellung suchen…"
+  },
+  "language": {
+    "title": "Sprache",
+    "label": "Sprache: {name}"
+  },
+  "theme": {
+    "title": "Design",
+    "inUse": "(aktiv)",
+    "system": "Wie mein Gerät",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "dim": "Gedämpft",
+    "contrast": "Hoher Kontrast"
+  },
+  "server": {
+    "label": "Server: {name}",
+    "sub": "Hauptserver · wird gerade verwaltet",
+    "note": "Vorerst kann nur dieser Server verwaltet werden."
+  },
+  "user": {
+    "label": "Konto: {name}",
+    "logout": "Abmelden",
+    "level": {
+      "moderator": "Moderator",
+      "ownerView": "Ansicht und Einstellungen (Bot-Inhaber)",
+      "administrator": "Administrator"
+    }
+  },
+  "message": {
+    "backOverview": "Zurück zur Übersicht",
+    "backHome": "Zurück zur Startseite"
+  },
+  "module": {
+    "readOnly": "Nur lesen: Bearbeiten im Dashboard ist ausgeschaltet (DASHBOARD_EDIT_ENABLED ist nicht true). Nutze die Befehle des Bots oder bitte den Inhaber, es einzuschalten.",
+    "onThisPage": "Auf dieser Seite",
+    "notSaved": "Nicht gespeichert: {message}",
+    "more": "Mehr dazu",
+    "none": "Keine."
+  },
+  "pager": {
+    "label": "Seiten",
+    "previous": "← Zurück",
+    "next": "Weiter →",
+    "pageOf": "Seite {page} von {pages}"
+  },
+  "script": {
+    "filter": "Tippen zum Filtern…",
+    "filterLabel": "Die Liste unten filtern",
+    "cancel": "Abbrechen",
+    "continue": "Weiter",
+    "saving": "Wird gespeichert…",
+    "copy": "Kopieren",
+    "copyLabel": "{name} kopieren",
+    "copied": "Kopiert",
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "justNow": "gerade eben",
+    "underMinute": "in weniger als einer Minute",
+    "dismiss": "Schließen",
+    "unsaved": "Ungespeicherte Änderungen",
+    "unsavedIn": "Ungespeicherte Änderungen in {place}",
+    "discard": "Verwerfen",
+    "save": "Änderungen speichern",
+    "searchModules": "Module suchen…",
+    "noModule": "Kein Modul passt."
+  }
+}

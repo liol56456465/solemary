@@ -1,0 +1,73 @@
+{
+  "save": "Änderungen speichern",
+  "reset": "Zurücksetzen",
+  "on": "An",
+  "off": "Aus",
+  "pillOn": "an",
+  "pillOff": "aus",
+  "turnOn": "Einschalten",
+  "turnOff": "Ausschalten",
+  "turnOnLabel": "{label}: einschalten",
+  "turnOffLabel": "{label}: ausschalten",
+  "savesRightAway": "Wird sofort gespeichert.",
+  "moduleLabel": "Modul",
+  "notSet": "nicht festgelegt",
+  "missing": "{id} (fehlt)",
+  "categories": "Kategorien",
+  "noCategory": "Keine Kategorie",
+  "kind": {
+    "text": "Textkanal",
+    "voice": "Sprachkanal",
+    "category": "Kategorie",
+    "forum": "Forum"
+  },
+  "or": " oder ",
+  "error": {
+    "tooLong": "Zu lang: höchstens {max} Zeichen ({length} eingegeben).",
+    "onOff": "{label}: wähle an oder aus.",
+    "wholeNumber": "{label} muss eine ganze Zahl sein.",
+    "between": "{label} muss zwischen {min} und {max} liegen.",
+    "number": "{label} muss eine Zahl sein, etwa 1,5.",
+    "decimals": {
+      "one": "{label}: höchstens {count} Nachkommastelle.",
+      "other": "{label}: höchstens {count} Nachkommastellen."
+    },
+    "unknownChoice": "{label}: unbekannte Auswahl.",
+    "pickChannel": "{label}: wähle einen Kanal.",
+    "notChannelId": "{label}: keine Kanal-ID.",
+    "channelMissing": "{label}: dieser Kanal ist nicht auf dem Server.",
+    "channelKind": "{label}: erlaubt ist nur {kinds}.",
+    "pickRole": "{label}: wähle eine Rolle.",
+    "notRoleId": "{label}: keine Rollen-ID.",
+    "roleMissing": "{label}: diese Rolle ist nicht auf dem Server.",
+    "everyone": "{label}: @everyone kann nicht verwendet werden.",
+    "managed": "{label}: {role} wird von einer Integration oder einem Bot verwaltet.",
+    "problem": "{label}: {problem}",
+    "userId": "{label} muss eine Discord-Nutzer-ID sein (17–20 Ziffern).",
+    "listItem": "{label} {number}"
+  },
+  "warn": {
+    "channelGone": "Kanal {id} gibt es nicht mehr",
+    "cannotCheck": "ich kann meine Berechtigungen hier nicht prüfen",
+    "missingPerms": "mir fehlt in #{channel}: {perms}",
+    "roleGone": "Rolle {id} gibt es nicht mehr",
+    "everyone": "@everyone kann nicht verwendet werden",
+    "managed": "@{role} wird von einer Integration oder einem Bot verwaltet",
+    "notBelow": "@{role} ist nicht unter meiner höchsten Rolle, deshalb kann ich sie nicht vergeben",
+    "staffPerms": "@{role} hat Teamberechtigungen ({perms})"
+  },
+  "perm": {
+    "ViewChannel": "Kanäle ansehen",
+    "SendMessages": "Nachrichten senden",
+    "EmbedLinks": "Links einbetten",
+    "AttachFiles": "Dateien anhängen",
+    "ReadMessageHistory": "Nachrichtenverlauf anzeigen",
+    "ManageChannels": "Kanäle verwalten",
+    "Connect": "Verbinden",
+    "MoveMembers": "Mitglieder verschieben",
+    "ManageMessages": "Nachrichten verwalten",
+    "ManageRoles": "Rollen verwalten",
+    "AddReactions": "Reaktionen hinzufügen",
+    "SendPolls": "Umfragen erstellen"
+  }
+}

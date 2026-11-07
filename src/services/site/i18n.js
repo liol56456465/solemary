@@ -1,10 +1,13 @@
-// i18n.js — website text catalog, languages and a small safe markup.
+// i18n.js — text catalogs (website, dashboard), languages and a small safe markup.
 //
 // Text lives in src/content/site/<lang>/<namespace>.json (nested objects; key "home.hero.title" is
 // home.json → { "hero": { "title": "…" } }). English is complete; other languages fall back to
 // English key by key. The owner's Website editor (dashboard Owner → Website, siteContent.js) can
 // override any key per language through setContentOverrides(); overrides use the same markup, so
 // they are just as safe.
+//
+// The dashboard has its own catalog (src/content/dashboard/<lang>/<namespace>.json, same format and
+// functions, no owner edits): translator(lang, { catalog: 'dashboard' }). See docs/dashboard-i18n.md.
 //
 // Three ways to read a key (all escape everything; nothing in a catalog can inject HTML):
 //   t(key, params)   plain text (a string; html`` escapes it again, harmlessly)
@@ -17,7 +20,7 @@
 
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { escapeHtml, raw } from '../dashboard/html.js';
+import { escapeHtml, raw } from '../dashboard/safeHtml.js';
 import { logger } from '../../utils/logger.js';
 
 /** Website languages: code, URL prefix ('' = no prefix), the name shown in the picker. */
@@ -35,10 +38,7 @@ export const DEFAULT_LANG = 'en';
 export const LANG_CODES = Object.freeze(LANGUAGES.map((l) => l.code));
 
 const CONTENT_DIR = fileURLToPath(new URL('../../content/site/', import.meta.url));
-
-let catalogs = null;
-let overrides = null;
-
+const DASHBOARD_CONTENT_DIR = fileURLToPath(new URL('../../content/dashboard/', import.meta.url));
 function flatten(prefix, value, out) {
     if (typeof value === 'string') {
         out.set(prefix, value);
@@ -68,108 +68,16 @@ export function loadCatalogs(dir = CONTENT_DIR) {
     return result;
 }
 
-function catalogsNow() {
-    if (!catalogs) catalogs = loadCatalogs();
-    return catalogs;
-}
-
-/** For tests: replace the catalogs (null = reload from disk next time). */
-export function setCatalogsForTest(value) {
-    catalogs = value;
-}
-
-/** The owner's edits: fn(lang, key) → string | null. null clears. */
-export function setContentOverrides(fn) {
-    overrides = typeof fn === 'function' ? fn : null;
-}
-
 export function isLanguage(code) {
     return LANG_CODES.includes(code);
 }
-
-/**
- * The raw text for a key, first found of: owner edit in this language → catalog in this language →
- * owner edit in English → English catalog. (An English edit does not replace an existing translation;
- * the editor marks that translation "needs update" instead.) Unknown key throws.
- */
-export function lookup(lang, key) {
-    return lookupSource(lang, key).text;
-}
-
-/** lookup() plus whether the text is an owner edit: { text, edited }. */
-function lookupSource(lang, key) {
-    const code = isLanguage(lang) ? lang : DEFAULT_LANG;
-    const all = catalogsNow();
-    const edited = (c) => {
-        const value = overrides ? overrides(c, key) : null;
-        return typeof value === 'string' ? value : undefined;
-    };
-    const candidates = [[edited(code), true], [all.get(code)?.get(key), false], [edited(DEFAULT_LANG), true], [all.get(DEFAULT_LANG)?.get(key), false]];
-    const found = candidates.find(([text]) => text !== undefined);
-    if (!found) throw new Error(`i18n: missing key "${key}"`);
-    return { text: found[0], edited: found[1] };
-}
-
-/** The catalog text without owner edits (own language, else English). */
-function catalogFallback(lang, key) {
-    const code = isLanguage(lang) ? lang : DEFAULT_LANG;
-    const all = catalogsNow();
-    const text = all.get(code)?.get(key) ?? all.get(DEFAULT_LANG)?.get(key);
-    if (text === undefined) throw new Error(`i18n: missing key "${key}"`);
-    return text;
-}
-
-const brokenEdits = new Set();
-/**
- * Renders a key; when an owner edit cannot be rendered with the params the page passes (e.g. an
- * edit made before a code change removed a {param}), the catalog text is used instead, so a page
- * never breaks because of an edit. Logged once per language + key.
- */
-function renderSafely(lang, key, render) {
-    const { text, edited } = lookupSource(lang, key);
-    if (!edited) return render(text);
-    try {
-        return render(text);
-    } catch (error) {
-        const id = `${lang}|${key}`;
-        if (!brokenEdits.has(id)) {
-            brokenEdits.add(id);
-            logger.warn(`i18n: the owner's text for ${id} cannot be shown (${error.message}); using the catalog text`);
-        }
-        return render(catalogFallback(lang, key));
-    }
-}
-
 const TOKEN = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
 
 function paramText(params, name) {
     if (!params || !(name in params)) throw new Error(`i18n: missing param {${name}}`);
     return params[name];
 }
-
 export const PLURAL_CATEGORIES = Object.freeze(['zero', 'one', 'two', 'few', 'many', 'other']);
-
-/** True when the key exists for this language (catalog, owner edit or English fallback). */
-export function hasKey(lang, key) {
-    try { lookup(lang, key); return true; } catch { return false; }
-}
-
-/**
- * The plural form of a key for a number: "x.day" → "x.day.few" in Russian for 3, "x.day.one" in English
- * for 1; falls back to "<key>.other". The count is also available as {count}.
- */
-export function pluralKey(lang, key, count) {
-    const code = isLanguage(lang) ? lang : DEFAULT_LANG;
-    // An exact ".zero" form wins for 0 when a language has one (pt-BR says "0 dias", CLDR's "one" would give "0 dia").
-    if (Number(count) === 0 && hasKey(code, `${key}.zero`)) return `${key}.zero`;
-    const category = new Intl.PluralRules(code).select(Number(count));
-    return hasKey(code, `${key}.${category}`) ? `${key}.${category}` : `${key}.other`;
-}
-
-/** Plain text with {params} filled in (SafeHtml params are inserted as their text). */
-export function translate(lang, key, params) {
-    return renderSafely(lang, key, (text) => text.replace(TOKEN, (_, name) => String(paramText(params, name))));
-}
 
 /** True for hrefs a catalog may link to. */
 export function isSafeHref(href) {
@@ -217,12 +125,6 @@ function renderInline(escaped, params, key, rewrite = null) {
     // eslint-disable-next-line no-control-regex
     return s.replace(/\u0000(\d+)\u0000/g, (_, i) => stash[Number(i)]);
 }
-
-/** Inline markup → SafeHtml. */
-export function translateInline(lang, key, params, { rewrite = null } = {}) {
-    return raw(renderSafely(lang, key, (text) => renderInline(escapeHtml(text), params, key, rewrite)));
-}
-
 function renderBlock(text, params, key, rewrite) {
     const blocks = escapeHtml(text).replace(/\r\n/g, '\n').split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
     const out = blocks.map((block) => {
@@ -234,12 +136,6 @@ function renderBlock(text, params, key, rewrite) {
     });
     return out.join('\n');
 }
-
-/** Block markup (paragraphs, "- " lists, <br>) → SafeHtml. */
-export function translateBlock(lang, key, params, { rewrite = null } = {}) {
-    return raw(renderSafely(lang, key, (text) => renderBlock(text, params, key, rewrite)));
-}
-
 /**
  * The Website editor's preview: a text that is not saved yet, rendered with the block markup
  * (the widest of the three; inline-only keys look the same apart from paragraphs). Every
@@ -250,17 +146,6 @@ export function previewMarkup(text, key = 'preview') {
     const params = Object.fromEntries(placeholdersOf(text).map((name) => [name, `{${name}}`]));
     return raw(renderBlock(String(text), params, key, null));
 }
-
-/** The catalog file text of a key in one language (no owner edits), or undefined. */
-export function catalogText(lang, key) {
-    return catalogsNow().get(lang)?.get(key);
-}
-
-/** Every key of a language's catalog files (no owner edits), in file order. */
-export function catalogKeys(lang) {
-    return [...(catalogsNow().get(lang)?.keys() || [])];
-}
-
 // ── Language URLs ───────────────────────────────────────────────────────────
 // Every public page also answers under /<prefix>/… (site.js strips the prefix). Only these paths
 // get a prefix; /dashboard, /me, /oauth, /img, the stylesheet and external links never do.
@@ -342,35 +227,181 @@ export function formatNumberIn(lang, n, opts = {}) {
 const countText = (code, count) => (code === DEFAULT_LANG ? count : formatNumberIn(code, count, { maximumFractionDigits: 1 }));
 
 /**
- * The functions a page context carries for one language. `href` maps site paths for links
- * (default: the same language's prefix); catalog links ([text](/path)) go through it too, so a
- * translation never needs to write a prefix.
+ * One text catalog: its files (`dir`/<lang>/<namespace>.json), read once on first use, and the
+ * functions that read keys from it. `overridable`: the owner's Website edits apply (website only).
+ * The website catalog's functions are this module's named exports; the dashboard has its own
+ * catalog (src/content/dashboard/, DASHBOARD_CATALOG) through translator(lang, { catalog: 'dashboard' }).
  */
-export function translator(lang = DEFAULT_LANG, { href = null } = {}) {
-    const code = isLanguage(lang) ? lang : DEFAULT_LANG;
-    const link = typeof href === 'function' ? href : (path) => localizePath(code, path);
-    const options = { rewrite: link };
+export function createCatalog({ dir, overridable = false } = {}) {
+    let catalogs = null;
+    let overrides = null;
+    function catalogsNow() {
+        if (!catalogs) catalogs = loadCatalogs(dir);
+        return catalogs;
+    }
+
+    /** For tests: replace the catalogs (null = reload from disk next time). */
+    function setCatalogsForTest(value) {
+        catalogs = value;
+    }
+
+    /** The owner's edits: fn(lang, key) → string | null. null clears. */
+    function setContentOverrides(fn) {
+        overrides = typeof fn === 'function' ? fn : null;
+    }
+
+    /**
+     * The raw text for a key, first found of: owner edit in this language → catalog in this language →
+     * owner edit in English → English catalog. (An English edit does not replace an existing translation;
+     * the editor marks that translation "needs update" instead.) Unknown key throws.
+     */
+    function lookup(lang, key) {
+        return lookupSource(lang, key).text;
+    }
+
+    /** lookup() plus whether the text is an owner edit: { text, edited }. */
+    function lookupSource(lang, key) {
+        const code = isLanguage(lang) ? lang : DEFAULT_LANG;
+        const all = catalogsNow();
+        const edited = (c) => {
+            const value = overrides ? overrides(c, key) : null;
+            return typeof value === 'string' ? value : undefined;
+        };
+        const candidates = [[edited(code), true], [all.get(code)?.get(key), false], [edited(DEFAULT_LANG), true], [all.get(DEFAULT_LANG)?.get(key), false]];
+        const found = candidates.find(([text]) => text !== undefined);
+        if (!found) throw new Error(`i18n: missing key "${key}"`);
+        return { text: found[0], edited: found[1] };
+    }
+
+    /** The catalog text without owner edits (own language, else English). */
+    function catalogFallback(lang, key) {
+        const code = isLanguage(lang) ? lang : DEFAULT_LANG;
+        const all = catalogsNow();
+        const text = all.get(code)?.get(key) ?? all.get(DEFAULT_LANG)?.get(key);
+        if (text === undefined) throw new Error(`i18n: missing key "${key}"`);
+        return text;
+    }
+
+    const brokenEdits = new Set();
+    /**
+     * Renders a key; when an owner edit cannot be rendered with the params the page passes (e.g. an
+     * edit made before a code change removed a {param}), the catalog text is used instead, so a page
+     * never breaks because of an edit. Logged once per language + key.
+     */
+    function renderSafely(lang, key, render) {
+        const { text, edited } = lookupSource(lang, key);
+        if (!edited) return render(text);
+        try {
+            return render(text);
+        } catch (error) {
+            const id = `${lang}|${key}`;
+            if (!brokenEdits.has(id)) {
+                brokenEdits.add(id);
+                logger.warn(`i18n: the owner's text for ${id} cannot be shown (${error.message}); using the catalog text`);
+            }
+            return render(catalogFallback(lang, key));
+        }
+    }
+
+
+    /** True when the key exists for this language (catalog, owner edit or English fallback). */
+    function hasKey(lang, key) {
+        try { lookup(lang, key); return true; } catch { return false; }
+    }
+
+    /**
+     * The plural form of a key for a number: "x.day" → "x.day.few" in Russian for 3, "x.day.one" in English
+     * for 1; falls back to "<key>.other". The count is also available as {count}.
+     */
+    function pluralKey(lang, key, count) {
+        const code = isLanguage(lang) ? lang : DEFAULT_LANG;
+        // An exact ".zero" form wins for 0 when a language has one (pt-BR says "0 dias", CLDR's "one" would give "0 dia").
+        if (Number(count) === 0 && hasKey(code, `${key}.zero`)) return `${key}.zero`;
+        const category = new Intl.PluralRules(code).select(Number(count));
+        return hasKey(code, `${key}.${category}`) ? `${key}.${category}` : `${key}.other`;
+    }
+
+    /** Plain text with {params} filled in (SafeHtml params are inserted as their text). */
+    function translate(lang, key, params) {
+        return renderSafely(lang, key, (text) => text.replace(TOKEN, (_, name) => String(paramText(params, name))));
+    }
+
+    /** Inline markup → SafeHtml. */
+    function translateInline(lang, key, params, { rewrite = null } = {}) {
+        return raw(renderSafely(lang, key, (text) => renderInline(escapeHtml(text), params, key, rewrite)));
+    }
+
+    /** Block markup (paragraphs, "- " lists, <br>) → SafeHtml. */
+    function translateBlock(lang, key, params, { rewrite = null } = {}) {
+        return raw(renderSafely(lang, key, (text) => renderBlock(text, params, key, rewrite)));
+    }
+
+    /** The catalog file text of a key in one language (no owner edits), or undefined. */
+    function catalogText(lang, key) {
+        return catalogsNow().get(lang)?.get(key);
+    }
+
+    /** Every key of a language's catalog files (no owner edits), in file order. */
+    function catalogKeys(lang) {
+        return [...(catalogsNow().get(lang)?.keys() || [])];
+    }
+
+    /**
+     * The functions a page context carries for one language. `href` maps site paths for links
+     * (default: the same language's prefix); catalog links ([text](/path)) go through it too, so a
+     * translation never needs to write a prefix.
+     */
+    function translator(lang = DEFAULT_LANG, { href = null } = {}) {
+        const code = isLanguage(lang) ? lang : DEFAULT_LANG;
+        const link = typeof href === 'function' ? href : (path) => localizePath(code, path);
+        const options = { rewrite: link };
+        return {
+            lang: code,
+            t: (key, params) => translate(code, key, params),
+            ti: (key, params) => translateInline(code, key, params, options),
+            tb: (key, params) => translateBlock(code, key, params, options),
+            /** Plural plain text: tp('billing.common.day', 3) → "3 days" ({count} is filled in). */
+            tp: (key, count, params = {}) => translate(code, pluralKey(code, key, count), { count: countText(code, count), ...params }),
+            /** Plural inline markup → SafeHtml (like ti): tpi('billing.receipt.periodEnded', 14). */
+            tpi: (key, count, params = {}) => translateInline(code, pluralKey(code, key, count), { count: countText(code, count), ...params }, options),
+            /** A site link that keeps the page's language: href('/features') → '/de/features'. */
+            href: link,
+            fmtDate: (value, opts) => formatDateIn(code, value, opts),
+            fmtNumber: (n, opts) => formatNumberIn(code, n, opts),
+        };
+    }
+
+    /** True when this language itself has the key (its catalog or an owner edit), not only the English fallback. */
+    function translatedIn(lang, key) {
+        if (!isLanguage(lang)) return false;
+        const edited = overrides ? overrides(lang, key) : null;
+        return typeof edited === 'string' || catalogsNow().get(lang)?.has(key) === true;
+    }
+
     return {
-        lang: code,
-        t: (key, params) => translate(code, key, params),
-        ti: (key, params) => translateInline(code, key, params, options),
-        tb: (key, params) => translateBlock(code, key, params, options),
-        /** Plural plain text: tp('billing.common.day', 3) → "3 days" ({count} is filled in). */
-        tp: (key, count, params = {}) => translate(code, pluralKey(code, key, count), { count: countText(code, count), ...params }),
-        /** Plural inline markup → SafeHtml (like ti): tpi('billing.receipt.periodEnded', 14). */
-        tpi: (key, count, params = {}) => translateInline(code, pluralKey(code, key, count), { count: countText(code, count), ...params }, options),
-        /** A site link that keeps the page's language: href('/features') → '/de/features'. */
-        href: link,
-        fmtDate: (value, opts) => formatDateIn(code, value, opts),
-        fmtNumber: (n, opts) => formatNumberIn(code, n, opts),
+        dir, setCatalogsForTest, setContentOverrides: overridable ? setContentOverrides : () => {}, lookup, hasKey, pluralKey, translate,
+        translateInline, translateBlock, catalogText, catalogKeys, translator, translatedIn, loadCatalogs: () => loadCatalogs(dir),
     };
 }
 
-/** True when this language itself has the key (its catalog or an owner edit), not only the English fallback. */
-export function translatedIn(lang, key) {
-    if (!isLanguage(lang)) return false;
-    const edited = overrides ? overrides(lang, key) : null;
-    return typeof edited === 'string' || catalogsNow().get(lang)?.has(key) === true;
+const SITE_CATALOG = createCatalog({ dir: CONTENT_DIR, overridable: true });
+/** The dashboard's own catalog (src/content/dashboard/<lang>/*.json); no owner edits. */
+export const DASHBOARD_CATALOG = createCatalog({ dir: DASHBOARD_CONTENT_DIR });
+const CATALOGS = { site: SITE_CATALOG, dashboard: DASHBOARD_CATALOG };
+
+export const {
+    setCatalogsForTest, setContentOverrides, lookup, hasKey, pluralKey, translate, translateInline, translateBlock,
+    catalogText, catalogKeys, translatedIn,
+} = SITE_CATALOG;
+
+/**
+ * The functions a page context carries for one language (see the catalog's translator). `catalog`:
+ * 'site' (default) or 'dashboard'.
+ */
+export function translator(lang = DEFAULT_LANG, { href = null, catalog = 'site' } = {}) {
+    const source = CATALOGS[catalog];
+    if (!source) throw new Error(`i18n: unknown catalog "${catalog}"`);
+    return source.translator(lang, { href });
 }
 
 /** Every key in a catalog map, for tests (placeholders per key). */
