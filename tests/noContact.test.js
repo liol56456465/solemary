@@ -78,7 +78,7 @@ test('enforce: deletes, notifies only the author, leaves other messages alone', 
     assert.equal(bad.deleted, true);
     assert.equal(bad.sent.length, 1);
     assert.deepEqual(bad.sent[0].allowedMentions, { users: [A], parse: [] });
-    assert.match(bad.sent[0].content, new RegExp(`^<@${A}> you have a no-contact order with \\*\\*bob\\*\\*`));
+    assert.match(bad.sent[0].content, new RegExp(`^<@${A}> staff asked you to keep apart from \\*\\*bob\\*\\*`));
 
     const noOrder = fakeMessage({ authorId: C, mentions: [A] });
     assert.equal(await enforceNoContact(noOrder), false, 'C has no order');
@@ -89,10 +89,10 @@ test('panel summary and mod log line show no-contact orders', () => {
     assert.deepEqual(noContactLines(orders), [`with <@${B}> until <t:1893456000:f> (order #7)`]);
     const state = { member: null, banned: false, ladder: { level: 0, warns_since_level: 0 }, activeBan: null, activeMute: null, muted: false };
     const text = panelSummaryLines({ id: A, username: 'alice', createdAt: new Date(0) }, state, new Map(), orders).join('\n');
-    assert.match(text, /\*\*No-contact order:\*\* with <@30000000000000003>/);
+    assert.match(text, /\*\*Keep apart:\*\* with <@30000000000000003>/);
 
     assert.equal(
         formatModLogLine('nocontact', [{ name: 'User', value: 'alice (1)' }, { name: 'Note', value: 'message removed' }, { name: 'Order', value: '#7' }]),
-        '**No-contact** · alice (1) · message removed · Order: #7',
+        '**Keep apart** · alice (1) · message removed · Order: #7',
     );
 });

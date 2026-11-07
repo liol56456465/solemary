@@ -12,7 +12,7 @@
     "closed": "Encerrada"
   },
   "appeal": {
-    "voided": "Anulado: não há do que apelar",
+    "voided": "Removido (um engano): não há do que apelar",
     "lifted": "Já retirado",
     "unappealable": "Não é possível apelar",
     "ended": "Encerrado: não há do que apelar",
@@ -31,14 +31,14 @@
   },
   "status": {
     "imported": "só histórico (importado, não conta)",
-    "voided": "anulado: não conta mais",
+    "voided": "removido (um engano): não conta mais",
     "counts": "conta agora",
     "noLongerCounts": "registrado, não conta mais",
     "onRecord": "registrado",
     "case": {
       "liftedByAppeal": "retirado por apelação",
       "reversed": "revertido por um moderador",
-      "lifted": "retirado",
+      "lifted": "retirado antes do prazo",
       "appealPending": "apelação pendente",
       "expired": "expirado",
       "activeAppealDenied": "ativo, apelação negada",
@@ -46,7 +46,7 @@
     }
   },
   "login": {
-    "lead": "Veja o seu próprio histórico de moderação em {server}: suas advertências, o nível na escada de advertências, qualquer banimento ou silenciamento ativo, seus casos e suas apelações.",
+    "lead": "Veja o seu próprio histórico de moderação em {server}: suas advertências, a etapa de advertência, qualquer banimento ou silenciamento ativo, seus casos e suas apelações.",
     "withDiscord": "Entrar com o Discord",
     "withAccount": "Entrar com uma conta Mewvo",
     "note": "O Mewvo pede ao Discord apenas quem você é (a permissão identify): nenhum e-mail, nenhum servidor, nada mais. Você só vê o seu próprio histórico. O login dura uma hora.",
@@ -169,7 +169,7 @@
       "many": "Mais {count} depois dela significariam um banimento automático ({ban}).",
       "other": "Mais {count} depois dela significariam um banimento automático ({ban})."
     },
-    "limit": "Chegaria ao limite de advertências: um banimento automático ({ban}, nível {level} da escada).",
+    "limit": "Chegaria ao limite de advertências: um banimento automático ({ban}, etapa de advertência {level} de 3).",
     "permanent": "permanente"
   },
   "duration": {

@@ -173,7 +173,7 @@ export function formatStatsLine(row) {
     const { ban, kick, mute, warn } = row.actions;
     return `**${row.username}**: ${row.total} actions (${ban} bans · ${kick} kicks · ${mute} mutes · ${warn} warns)`
         + ` · appeals on their cases: ${row.appealsAccepted} accepted / ${row.appealsDenied} denied`
-        + (row.voided ? ` · ${row.voided} voided` : '');
+        + (row.voided ? ` · ${row.voided} removed` : '');
 }
 
 export function formatActivityLine(row) {

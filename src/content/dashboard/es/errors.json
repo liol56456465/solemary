@@ -21,7 +21,7 @@
   "loggedOut": "Sesión cerrada",
   "loggedOutText": "Tu sesión ha terminado. Abre {base} para volver a iniciar sesión.",
   "notAllowed": "No permitido",
-  "moderatorOnly": "Esto requiere Administrador en el servidor principal. Como moderador puedes usar Vista general, Miembros, Baneados, Casos, Apelaciones y Sin contacto, y advertir, silenciar, quitar el silencio, aislar temporalmente o expulsar a miembros.",
+  "moderatorOnly": "Esto requiere Administrador en el servidor principal. Como moderador puedes usar Vista general, Miembros, Baneados, Casos, Apelaciones y Mantener separados, y advertir, silenciar, quitar el silencio, aislar temporalmente o expulsar a miembros.",
   "csrf": "Este formulario no procede de este panel de control (el token de seguridad o el origen no coinciden). Recarga la página y vuelve a intentarlo.",
   "needsAdmin": "Esto requiere Administrador en el servidor principal.",
   "needsStaffRole": "Esto requiere un rol de moderador o de administrador.",

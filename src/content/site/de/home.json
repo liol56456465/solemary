@@ -29,7 +29,7 @@
     "items": {
       "enforcement": {
         "name": "Moderation",
-        "text": "Verwarnen, stummschalten, kicken und bannen über ein Panel, das zuerst den Verlauf des Mitglieds zeigt. Jede Aktion ist ein Fall mit kurzem Code, den das Team später bearbeiten, annullieren oder um Beweise ergänzen kann.",
+        "text": "Verwarnen, stummschalten, kicken und bannen über ein Panel, das zuerst den Verlauf des Mitglieds zeigt. Jede Aktion ist ein Fall mit kurzem Code, den das Team später bearbeiten, bei einem Fehler entfernen oder um Beweise ergänzen kann.",
         "link": "Erste Schritte"
       },
       "appeals": {

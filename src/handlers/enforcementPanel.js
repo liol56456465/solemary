@@ -39,7 +39,7 @@ import {
 import { warmPrecedent } from '../services/enforcement/precedentService.js';
 import { createFlow, getFlow, takeFlow, updateFlow, PANEL_EXPIRED_MESSAGE } from '../services/enforcement/panelState.js';
 import { MAX_LINKS_PER_FORM, messageExcerpt } from '../services/enforcement/evidenceService.js';
-import { dateStamp, stamp, truncate } from '../services/enforcement/format.js';
+import { dateStamp, ladderStageShort, stamp, truncate } from '../services/enforcement/format.js';
 import { getActiveOrdersFor, noContactLines } from '../services/enforcement/noContactService.js';
 import { templateLabel, templatePatch, usableTemplates } from '../services/enforcement/templateService.js';
 import { getConfiguredSetting } from '../services/settings/guildSettings.js';
@@ -119,7 +119,7 @@ export function panelSummaryLines(targetUser, state, appealStatuses = new Map(),
         member
             ? `**In server:** yes, joined ${member.joinedAt ? `${dateStamp(member.joinedAt)} (${relative(member.joinedAt)})` : 'at an unknown time'} · ${roleCount} role${roleCount === 1 ? '' : 's'}`
             : '**In server:** no',
-        `**Counted warns:** ${countedWarnsText(state.ladder)} · **Ladder level:** ${state.ladder.level}`,
+        `**Counted warns:** ${countedWarnsText(state.ladder)} · **Warning stage:** ${ladderStageShort(state.ladder.level)}`,
     ];
 
     const active = [];
@@ -140,7 +140,7 @@ export function panelSummaryLines(targetUser, state, appealStatuses = new Map(),
         lines.push(`**Pending appeal:** ${pendingAppeals.join(', ')} (decide in the appeal channel or with /appeals)`);
     }
     if (noContact.length) {
-        lines.push(`**No-contact order:** ${noContactLines(noContact).join('; ')}`);
+        lines.push(`**Keep apart:** ${noContactLines(noContact).join('; ')}`);
     }
     return lines;
 }
@@ -237,7 +237,7 @@ function reasonSelect(moderatorId, nonce, action) {
         ...ENFORCEMENT_REASONS.map((reason) => ({
             label: reason.label,
             value: reason.key,
-            description: action === 'ban' && reason.severe ? 'Severe: the ban is unappealable by default' : undefined,
+            description: action === 'ban' && reason.severe ? 'Severe: by default they cannot appeal the ban' : undefined,
         })),
         { label: 'Custom…', value: CUSTOM_REASON_KEY, description: 'Type your own reason' },
     ];
@@ -316,8 +316,8 @@ function detailsModal(flow, moderatorId, nonce) {
 
     if (flow.type === 'ban') {
         modal.addLabelComponents(new LabelBuilder()
-            .setLabel('Unappealable')
-            .setDescription('Checked: the user cannot appeal this ban.')
+            .setLabel('They cannot appeal this ban')
+            .setDescription('Can they appeal? Ticked: No. Not ticked: Yes.')
             .setCheckboxComponent(new CheckboxBuilder()
                 .setCustomId('unappealable')
                 .setDefault(Boolean(flow.unappealable))));

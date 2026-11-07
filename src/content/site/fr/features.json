@@ -14,7 +14,7 @@
       "items": {
         "enforcementsPanel": {
           "term": "Panneau /enforcements",
-          "text": "Affiche l’âge du compte du membre, son ancienneté sur le serveur, ses avertissements comptabilisés, son niveau sur l’échelle, ses sanctions en cours et ses trois derniers dossiers, puis ne propose que les actions pertinentes à ce moment (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
+          "text": "Affiche l’âge du compte du membre, son ancienneté sur le serveur, ses avertissements comptabilisés, son palier d’avertissement (0 à 3), ses sanctions en cours et ses trois derniers dossiers, puis ne propose que les actions pertinentes à ce moment (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
         },
         "reasons": {
           "term": "Raisons",
@@ -37,12 +37,12 @@
           "text": "Refuse d’agir contre le propriétaire du serveur, le bot, toi-même et toute personne ayant un rôle égal ou supérieur. Le rôle Administrateur est revérifié à chaque clic."
         },
         "massActionGuard": {
-          "term": "Protection contre les actions en masse",
+          "term": "Limite de sécurité : trop de bannissements ou d’expulsions en 10 minutes",
           "text": "Plus de 5 bannissements ou expulsions en 10 minutes par un même modérateur le bloquent pendant une heure et alertent le propriétaire. Les mises en sourdine ont leur propre limite de 10."
         },
         "caseTools": {
           "term": "Outils de dossier",
-          "text": "/case edit, void et history, preuves (liens de messages avec extrait, ou images), recherche de dossiers, et /background pour l’historique complet d’un membre."
+          "text": "/case edit, void (retirer un dossier erroné) et history, preuves (liens de messages avec extrait, ou images), recherche de dossiers, et /background pour l’historique complet d’un membre."
         },
         "warnForMessage": {
           "term": "Warn for this message",
@@ -53,7 +53,7 @@
           "text": "/test t’envoie exactement le message privé qu’un membre recevrait, sans rien exécuter."
         },
         "noContactOrders": {
-          "term": "Interdictions de contact",
+          "term": "Tenir à distance",
           "text": "Demande à deux membres de ne pas se contacter jusqu’à une date fixée. Ce n’est pas une sanction et cela ne compte pas comme un avertissement."
         }
       }
@@ -79,7 +79,7 @@
           "text": "On peut faire appel d’un bannissement définitif de l’échelle pendant 6 mois. Ensuite, ou après un appel refusé, l’appel n’est plus possible."
         },
         "myStanding": {
-          "term": "My standing",
+          "term": "My record",
           "text": "Les membres peuvent consulter leurs propres avertissements et ce qu’entraînerait le prochain, depuis le panneau d’appel ou la page Mon dossier."
         }
       }
@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Panneau d’appel",
-          "text": "/setappeal publie le panneau avec les boutons Appeal, My appeals et My standing, sur le serveur principal et sur le serveur d’assistance."
+          "text": "/setappeal publie le panneau avec les boutons Appeal, My appeals et My record, sur le serveur principal et sur le serveur d’assistance."
         },
         "appealForm": {
           "term": "Formulaire d’appel",
@@ -140,7 +140,7 @@
         },
         "modes": {
           "term": "Modes",
-          "text": "Chaque règle est activée, en surveillance (carte uniquement) ou désactivée, globalement ou par salon. Rôles de confiance et exceptions par salon."
+          "text": "Chaque règle est activée, en « signaler seulement (ne pas supprimer) » ou désactivée, globalement ou par salon. Rôles de confiance et exceptions par salon."
         },
         "hardToDodge": {
           "term": "Difficile à contourner",
@@ -196,7 +196,7 @@
         },
         "moderate": {
           "term": "Modérer",
-          "text": "Une vue d’ensemble de ce qui t’attend, une boîte de réception, les membres (filtres, rôles, pseudos, exclusions temporaires, actions groupées), les bannissements, les dossiers, les appels, les interdictions de contact et l’activité de l’équipe."
+          "text": "Une vue d’ensemble de ce qui t’attend, une boîte de réception, les membres (filtres, rôles, pseudos, exclusions temporaires, actions groupées), les bannissements, les dossiers, les appels, « Tenir à distance » et l’activité de l’équipe."
         },
         "settings": {
           "term": "Paramètres",

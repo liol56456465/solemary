@@ -24,7 +24,7 @@ import { generateTranscript } from '../ticket.js';
 import { removeMutedRole } from './muteService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { appealAcceptedDm, appealDeniedDm } from './dmTemplates.js';
-import { dateStamp, formatDuration, stamp, truncate } from './format.js';
+import { dateStamp, formatDuration, ladderStage, ladderStageShort, stamp, truncate } from './format.js';
 import { evidenceDisplay } from './evidenceService.js';
 import { checkAppealReviewer, needsSecondReviewer } from './appealReviewer.js';
 import { recordOwnerOverride } from '../ownerOverride.js';
@@ -163,7 +163,7 @@ const CASE_STATUS_LABELS = {
     active: 'Active',
     appeal_pending: 'Active, appeal pending',
     expired: 'Ended',
-    revoked: 'Lifted',
+    revoked: 'Lifted early',
 };
 
 const APPEAL_STATUS_LABELS = {
@@ -199,13 +199,13 @@ function caseDetailsLines(record) {
         lines.push(`**Appeal deadline:** ${dateStamp(record.appeal_deadline)}`);
     }
     if (record.unappealable) {
-        lines.push('**Unappealable:** yes');
+        lines.push('**Can they appeal?** No');
     }
     if (record.status === 'revoked' && record.revoked_at) {
-        lines.push(`**Lifted:** ${dateStamp(record.revoked_at)}${record.revoke_reason ? `, ${record.revoke_reason}` : ''}`);
+        lines.push(`**Lifted early:** ${dateStamp(record.revoked_at)}${record.revoke_reason ? `, ${record.revoke_reason}` : ''}`);
     }
     lines.push(`**DM delivered:** ${record.dm_delivered ? 'yes' : 'no'}`);
-    lines.push(`**Ladder level after:** ${record.ladder_level_after}`);
+    lines.push(`**Warning stage after:** ${ladderStageShort(record.ladder_level_after)}`);
     return lines;
 }
 
@@ -723,7 +723,7 @@ export async function liftCase(client, record, admin, { reason, via }) {
             extra: [
                 { name: 'Warning', value: `\`${record.case_code}\` · ${record.name}` },
                 ...extra,
-                ...(ladder ? [{ name: 'Counted warns now', value: `${ladder.warns_since_level} (ladder level ${ladder.level})` }] : []),
+                ...(ladder ? [{ name: 'Counted warns now', value: `${ladder.warns_since_level} (${ladderStage(ladder.level)})` }] : []),
             ],
         });
         notes.push('The warning was removed.');
@@ -862,7 +862,7 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
                     `**By:** ${admin.username}`,
                     note ? `**Note:** ${note}` : null,
                     `**DM to user:** ${dmDelivered ? 'delivered' : 'not delivered'}`,
-                    decision === 'deny' && record.is_auto && record.ladder_level_after === 3 ? 'This level-3 ladder ban is now unappealable.' : null,
+                    decision === 'deny' && record.is_auto && record.ladder_level_after === 3 ? 'This stage-3 warning ban can no longer be appealed.' : null,
                     ...notes,
                     '',
                     `-# This channel is deleted in ${APPEAL_CHANNEL_DELETE_DELAY_MS / 1000} seconds. The appeal stays in /appeals code:${record.case_code}.`,

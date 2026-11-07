@@ -26,9 +26,9 @@
       "note": "Aucun avertissement comptabilisé, pas en sourdine."
     },
     "headsUp": {
-      "label": "Corrigé après un rappel",
-      "noteWithRate": "Les membres ont corrigé eux-mêmes {rate} des messages signalés après un rappel.",
-      "noteNoRate": "À quelle fréquence les membres corrigent eux-mêmes un message signalé après un rappel."
+      "label": "Corrigé après un rappel privé",
+      "noteWithRate": "Les membres ont corrigé eux-mêmes {rate} des messages signalés après un rappel privé.",
+      "noteNoRate": "À quelle fréquence les membres corrigent eux-mêmes un message signalé après un rappel privé."
     }
   },
   "facts": {

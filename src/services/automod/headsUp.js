@@ -154,8 +154,8 @@ async function giveHeadsUpNow(message, hit, { card, deleteMessage = async () => 
 
     const how = delivered ? 'DM' : 'channel notice';
     const title = privacy
-        ? `Heads-up (${how}): personal info removed, no warning`
-        : `Heads-up sent (${how}), waiting ${graceMinutes()} minutes`;
+        ? `Warned privately (${how}): personal info removed, no warning`
+        : `Warned privately first (${how}), ${graceMinutes()} min to fix`;
     const cardMessage = await deps.postReviewCard({ ...card, note: { title }, deleted: privacy, noGroup: true })
         .catch((error) => {
             logger.warn(`Automod heads-up card failed: ${error.message}`);

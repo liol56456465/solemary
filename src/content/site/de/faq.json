@@ -39,8 +39,8 @@
     },
     "lostCode": {
       "q": "Ich habe meinen Fallcode verloren.",
-      "a": "Drück im Einspruchs-Panel auf **My standing**: Dort stehen deine Verwarnungen und jeder aktive Bann oder jede aktive Stummschaltung mit ihren Codes.",
-      "aPortal": "Drück im Einspruchs-Panel auf **My standing**: Dort stehen deine Verwarnungen und jeder aktive Bann oder jede aktive Stummschaltung mit ihren Codes. [Meine Akte](/me) auf dieser Website zeigt alle deine Fälle."
+      "a": "Drück im Einspruchs-Panel auf **My record**: Dort stehen deine Verwarnungen und jeder aktive Bann oder jede aktive Stummschaltung mit ihren Codes.",
+      "aPortal": "Drück im Einspruchs-Panel auf **My record**: Dort stehen deine Verwarnungen und jeder aktive Bann oder jede aktive Stummschaltung mit ihren Codes. [Meine Akte](/me) auf dieser Website zeigt alle deine Fälle."
     },
     "everyPunishment": {
       "q": "Kann man gegen jede Strafe Einspruch einlegen?",

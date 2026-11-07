@@ -31,7 +31,7 @@
       "bans": "Baneos",
       "ladderBans": "De los baneos: automáticos (escala de advertencias)",
       "automod": "Aplicadas por el automod",
-      "voided": "Anuladas por error"
+      "voided": "Quitadas por error"
     }
   },
   "appeals": {
@@ -55,11 +55,11 @@
     },
     "notCounted": {
       "question": "Qué no se cuenta",
-      "answer": "Las simulaciones de prueba (el staff ve la vista previa de un mensaje; a nadie le pasa nada), las advertencias importadas del bot anterior como historial y las denuncias sobre el staff. Los casos anulados por error quedan fuera de las columnas principales y se muestran aparte en la columna «Anuladas por error», en el mes en que se aplicaron."
+      "answer": "Las simulaciones de prueba (el staff ve la vista previa de un mensaje; a nadie le pasa nada), las advertencias importadas del bot anterior como historial y las denuncias sobre el staff. Los casos quitados por error quedan fuera de las columnas principales y se muestran aparte en la columna «Quitadas por error», en el mes en que se aplicaron."
     },
     "appeals": {
       "question": "Apelaciones",
-      "answer": "Las apelaciones se cuentan en el mes en que se enviaron, con su resultado a día de hoy. Una apelación sobre un caso que luego se anuló sigue contando: la apelación existió. Las apelaciones cerradas sin decisión solo se cuentan como recibidas. El tiempo mediano va desde el envío de la apelación hasta la decisión del staff, sobre las apelaciones aceptadas y denegadas de ese mes."
+      "answer": "Las apelaciones se cuentan en el mes en que se enviaron, con su resultado a día de hoy. Una apelación sobre un caso que luego se quitó por error sigue contando: la apelación existió. Las apelaciones cerradas sin decisión solo se cuentan como recibidas. El tiempo mediano va desde el envío de la apelación hasta la decisión del staff, sobre las apelaciones aceptadas y denegadas de ese mes."
     },
     "smallNumbers": {
       "question": "Cifras pequeñas",

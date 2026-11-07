@@ -29,7 +29,7 @@
     "items": {
       "enforcement": {
         "name": "Modération",
-        "text": "Avertir, mettre en sourdine, expulser et bannir depuis un panneau qui affiche d’abord l’historique du membre. Chaque action est un dossier avec un code court que l’équipe peut modifier, annuler ou compléter de preuves plus tard.",
+        "text": "Avertir, mettre en sourdine, expulser et bannir depuis un panneau qui affiche d’abord l’historique du membre. Chaque action est un dossier avec un code court que l’équipe peut modifier, retirer en cas d’erreur ou compléter de preuves plus tard.",
         "link": "Premiers pas"
       },
       "appeals": {

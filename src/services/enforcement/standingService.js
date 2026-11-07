@@ -11,7 +11,7 @@
 import { enforcementConfig } from '../../config/enforcement.js';
 import { getActiveCase, getCountedWarns, listUserAppeals } from './caseService.js';
 import { getLadder, previewWarn } from './enforcementService.js';
-import { formatDuration, truncate } from './format.js';
+import { formatDuration, ladderStageLabel, truncate } from './format.js';
 
 const day = (date) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:d>`;
 const relative = (date) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:R>`;
@@ -58,7 +58,7 @@ export function nextWarningText(ladder) {
             + `${step.left === 1 ? 'The one after it' : `${step.left} more after it`} would mean an automatic ban `
             + `(${banLength(step.banMs)}).`;
     }
-    return `It would reach the warning limit: an automatic ban (${banLength(step.banMs)}, ladder level ${step.nextLevel}).`;
+    return `It would reach the warning limit: an automatic ban (${banLength(step.banMs)}, warning stage ${step.nextLevel} of 3).`;
 }
 
 function banLength(ms) {
@@ -74,14 +74,14 @@ export function standingFields(standing) {
     if (warns.length > 10) warnLines.push(`…and ${warns.length - 10} more`);
     const warnsValue = [
         ladder.warns_since_level
-            ? `**${ladder.warns_since_level}** counted (limit at this level: ${threshold}).`
+            ? `**${ladder.warns_since_level}** counted (limit at this stage: ${threshold}).`
             : 'None counted right now.',
         ...warnLines,
-        '-# Warnings do not expire. One stops counting when staff remove it, it is lifted on appeal, or you reach the limit (then the count starts again at the next level).',
+        '-# Warnings do not expire. One stops counting when staff remove it, it is lifted on appeal, or you reach the limit (then the count starts again at the next stage).',
     ].join('\n');
 
     const ladderValue = [
-        `Level **${ladder.level}** of 3${ladder.level === 0 ? ' (no automatic bans yet)' : ''}.`,
+        `**${ladderStageLabel(ladder.level)}**.`,
         `**Your next warning:** ${nextWarningText(ladder)}`,
     ].join('\n');
 

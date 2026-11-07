@@ -114,7 +114,7 @@ async function showMyStanding(interaction) {
     const standing = await getMemberStanding(enforcementConfig.mainGuildId, interaction.user.id);
     return InteractionHelper.safeEditReply(interaction, {
         embeds: [createEmbed({
-            title: `My standing in ${enforcementConfig.serverName}`,
+            title: `My record in ${enforcementConfig.serverName}`,
             description: 'Only you can see this.',
             fields: standingFields(standing),
             color: standing.activeBan || standing.activeMute ? 'warning' : 'primary',

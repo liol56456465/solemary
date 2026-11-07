@@ -59,7 +59,7 @@ ${rows.map((row) => {
 
 const ACTION_LABELS = [
     ['ban', 'Bans'], ['kick', 'Kicks'], ['mute', 'Mutes'], ['warn', 'Warnings'],
-    ['gate_kick', 'Join gate kicks'], ['gate_flag', 'Join gate flags'], ['automod', 'Automod without a case'], ['mass_block', 'Mass-action blocks'],
+    ['gate_kick', 'Join gate kicks'], ['gate_flag', 'Join gate flags'], ['automod', 'Automod without a case'], ['mass_block', 'Safety limit blocks'],
 ];
 
 function fact(label, value) {
@@ -152,7 +152,7 @@ ${h.released ? html`<p class="facts-line"><b>Non-offenders released:</b> ${forma
 </section>
 <section class="card"><h2>Joins and actions <span class="muted">· ${timeline.chart.bucketMinutes === 1 ? 'per minute' : `per ${timeline.chart.bucketMinutes} minutes`}</span></h2>
 <p class="muted">Joins:</p>${minuteChart(timeline.chart, 'joins', 'Joins')}
-<p class="muted">Actions (cases, join gate, automod, mass-action guard):</p>${minuteChart(timeline.chart, 'actions', 'Actions')}</section>
+<p class="muted">Actions (cases, join gate, automod, safety limit blocks):</p>${minuteChart(timeline.chart, 'actions', 'Actions')}</section>
 <section class="card"><h2>Minute by minute <span class="muted">· ${plural(timeline.total, 'event')}</span></h2>
 ${minuteList(timeline.minutes, names)}</section>`;
     return layout({ title: 'Raid timeline', active: 'incidents', session, access, moduleStates, body });

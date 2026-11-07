@@ -28,9 +28,9 @@
       "note": "Nessun avvertimento conteggiato, non silenziati."
     },
     "headsUp": {
-      "label": "Corretti dopo un avviso",
-      "noteWithRate": "I membri hanno corretto da soli il {rate} dei messaggi segnalati dopo un avviso.",
-      "noteNoRate": "Quanto spesso i membri correggono da soli un messaggio segnalato dopo un avviso."
+      "label": "Corretti dopo un avviso privato",
+      "noteWithRate": "I membri hanno corretto da soli il {rate} dei messaggi segnalati dopo un avviso privato.",
+      "noteNoRate": "Quanto spesso i membri correggono da soli un messaggio segnalato dopo un avviso privato."
     }
   },
   "facts": {

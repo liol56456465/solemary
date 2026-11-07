@@ -86,7 +86,7 @@ export async function editCase(client, { guildId, caseCode, editor, reason, dura
     const result = await lockFor(guildId, found.target_user_id, () => withTransaction(async (db) => {
         const { rows: [row] } = await db.query(`SELECT * FROM ${T.cases} WHERE id = $1 FOR UPDATE`, [found.id]);
         if (!row) throw userError(`No case with code \`${caseCode}\` in this server.`);
-        if (row.voided_at) throw userError(`\`${caseCode}\` was voided and can no longer be edited.`);
+        if (row.voided_at) throw userError(`\`${caseCode}\` was removed (a mistake) and can no longer be edited.`);
 
         const changes = [];
         let newReason = row.reason;
@@ -103,7 +103,7 @@ export async function editCase(client, { guildId, caseCode, editor, reason, dura
                 throw userError(`Only bans and mutes have a duration; \`${caseCode}\` is a ${row.type}.`);
             }
             if (row.is_auto) {
-                throw userError('Automatic warn-ladder bans keep their ladder duration. Void the case or unban instead.');
+                throw userError('Automatic warn-ladder bans keep their ladder duration. Remove the case (if it was a mistake) or unban instead.');
             }
             if (row.is_imported) {
                 throw userError('Imported cases cannot change duration.');
@@ -176,7 +176,7 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
 
     return lockFor(guildId, found.target_user_id, async () => {
         let record = await loadCase(guildId, caseCode);
-        if (record.voided_at) throw userError(`\`${caseCode}\` is already voided.`);
+        if (record.voided_at) throw userError(`\`${caseCode}\` is already removed.`);
 
         // A ban/mute past its end that the expiry job has not reached yet: lift it the
         // normal way first, or the voided row would leave the user banned/muted.
@@ -192,7 +192,7 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
 
         if (wasOpen) {
             notes.push(...await liftCase(client, record, admin, {
-                reason: `Voided by ${admin.username}: ${reason}`,
+                reason: `Removed (a mistake) by ${admin.username}: ${reason}`,
                 via: 'case void',
             }));
         } else if (record.status === 'expired') {
@@ -208,9 +208,9 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
                  revoke_reason = COALESCE(revoke_reason, $4)
              WHERE id = $1 AND voided_at IS NULL
              RETURNING *`,
-            [record.id, admin.id, reason, `Voided by ${admin.username}: ${reason}`]
+            [record.id, admin.id, reason, `Removed (a mistake) by ${admin.username}: ${reason}`]
         );
-        if (!voided) throw userError(`\`${caseCode}\` is already voided.`);
+        if (!voided) throw userError(`\`${caseCode}\` is already removed.`);
 
         if (!record.is_test && mainGuild) {
             await syncWarnRolesQuietly(mainGuild, record.target_user_id);
@@ -218,7 +218,7 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
         if (!record.is_test) await syncBannedRoleQuietly(client, record.target_user_id);
 
         const unbanned = bannedBefore && !(await isBanned(mainGuild, record.target_user_id));
-        const invite = unbanned && mainGuild ? await createRejoinInvite(mainGuild, `Case ${caseCode} voided`) : null;
+        const invite = unbanned && mainGuild ? await createRejoinInvite(mainGuild, `Case ${caseCode} removed (a mistake)`) : null;
         const user = await client.users.fetch(record.target_user_id).catch(() => null);
         const dmDelivered = user ? await sendDm(user, caseVoidedDm(record, reason, invite)) : false;
         if (!dmDelivered) logger.info(`Void DM for ${caseCode} to ${record.target_user_id} not delivered`);
@@ -235,11 +235,11 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
             await postModLog(client, 'casevoid', [
                 { name: 'Case', value: `\`${record.case_code}\` · ${truncate(record.name, 200)} (${record.type})` },
                 { name: 'User', value: `${record.target_username} (${record.target_user_id})` },
-                { name: 'Voided by', value: `${admin.username} (${admin.id})` },
+                { name: 'Removed by', value: `${admin.username} (${admin.id})` },
                 { name: 'Reason', value: truncate(reason, 1024) },
                 ...(notes.length ? [{ name: 'Effect', value: truncate(notes.join('\n'), 1024) }] : []),
                 { name: 'DM', value: dmDelivered ? 'Delivered' : 'Not delivered' },
-            ], { title: 'Case voided' });
+            ], { title: 'Case removed (a mistake, it no longer counts)' });
         }
         return { record: voided, notes, dmDelivered };
     });

@@ -41,7 +41,7 @@ export function planBulk({ guild, members, action, role = null, timeoutKey = '',
         if (action === 'timeout' && !TIMEOUTS[timeoutKey]) { skip('no timeout length chosen'); continue; }
         if (action === 'timeout' && member.permissions?.has?.('Administrator')) { skip('has Administrator (Discord does not allow a timeout)'); continue; }
         if (action === 'kick' || action === 'ban') {
-            if (guarded >= guardLeft) { skip('mass-action guard: no more bans/kicks allowed in this 10-minute window'); continue; }
+            if (guarded >= guardLeft) { skip('safety limit: no more bans/kicks allowed in this 10-minute window'); continue; }
             guarded += 1;
         }
         run.push({ id, name });

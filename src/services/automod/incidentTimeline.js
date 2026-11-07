@@ -46,7 +46,7 @@ export const EVENT_KINDS = Object.freeze({
     gate_kick: { label: 'Join gate kick', group: 'actions', recorded: true },
     gate_flag: { label: 'Join gate flag', group: 'actions', recorded: true },
     automod: { label: 'Automod (no case)', group: 'actions', recorded: true },
-    mass_block: { label: 'Mass-action guard', group: 'actions', recorded: true },
+    mass_block: { label: 'Safety limit (bans/kicks)', group: 'actions', recorded: true },
     join: { label: 'Joined', group: 'joins', recorded: false },
     leave: { label: 'Left', group: 'leaves', recorded: false },
     case: { label: 'Case', group: 'actions', recorded: false },

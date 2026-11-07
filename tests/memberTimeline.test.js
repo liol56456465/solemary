@@ -14,7 +14,7 @@ test('timeline: merged, newest first, capped', async () => {
         return { rows: [{ action: 'verified', created_at: '2026-09-30T00:00:00Z' }] };
     };
     const list = await memberTimeline('1', '2', { query });
-    assert.deepEqual(list.map((e) => e.text), ['ban lifted', 'Appeal accepted by Bob', 'Appeal filed', 'ban by Ann: Raid', 'Joined the server', 'Verification: verified']);
+    assert.deepEqual(list.map((e) => e.text), ['ban lifted early', 'Appeal accepted by Bob', 'Appeal filed', 'ban by Ann: Raid', 'Joined the server', 'Verification: verified']);
     assert.ok(seen.some((t) => t.includes('is_test IS NOT TRUE')));
     assert.equal((await memberTimeline('1', '2', { query, limit: 2 })).length, 2);
 });

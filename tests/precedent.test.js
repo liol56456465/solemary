@@ -56,9 +56,9 @@ test('consistency hint: empty, capped at the newest 200, short enough for an emb
 });
 
 test('member line: level 0 counts towards 3; higher levels say the next warning bans', () => {
-    assert.equal(memberLadderLine({ level: 0, warns_since_level: 1 }), 'This member: 1 of 3 counted warnings, ladder level 0.');
-    assert.equal(memberLadderLine({ level: 2, warns_since_level: 0 }), 'This member: 0 counted warnings, ladder level 2 (the next warning bans).');
-    assert.equal(memberLadderLine(null), 'This member: 0 of 3 counted warnings, ladder level 0.');
+    assert.equal(memberLadderLine({ level: 0, warns_since_level: 1 }), 'This member: 1 of 3 counted warnings, warning stage 0 of 3 (no warning ban yet).');
+    assert.equal(memberLadderLine({ level: 2, warns_since_level: 0 }), 'This member: 0 counted warnings, warning stage 2 of 3 (30-day ban); the next warning bans.');
+    assert.equal(memberLadderLine(null), 'This member: 0 of 3 counted warnings, warning stage 0 of 3 (no warning ban yet).');
 });
 
 // ── query ────────────────────────────────────────────────────────────────────
@@ -107,8 +107,8 @@ test('hint: a database error or a slow query gives "unavailable right now", with
 
 test('member hint: uses the given ladder, else loads it; error/timeout → unavailable', async () => {
     const getLadder = async () => { throw new Error('must not load'); };
-    assert.equal(await memberLadderHint('g', 'u', { ladder: { level: 1, warns_since_level: 0 }, getLadder }), 'This member: 0 counted warnings, ladder level 1 (the next warning bans).');
-    assert.equal(await memberLadderHint('g', 'u', { getLadder: async () => ({ level: 0, warns_since_level: 2 }) }), 'This member: 2 of 3 counted warnings, ladder level 0.');
+    assert.equal(await memberLadderHint('g', 'u', { ladder: { level: 1, warns_since_level: 0 }, getLadder }), 'This member: 0 counted warnings, warning stage 1 of 3 (7-day ban); the next warning bans.');
+    assert.equal(await memberLadderHint('g', 'u', { getLadder: async () => ({ level: 0, warns_since_level: 2 }) }), 'This member: 2 of 3 counted warnings, warning stage 0 of 3 (no warning ban yet).');
     assert.equal(await memberLadderHint('g', 'u', { getLadder }), MEMBER_UNAVAILABLE);
     assert.equal(await memberLadderHint('g', 'u', { getLadder: () => new Promise(() => {}), timeoutMs: 20 }), MEMBER_UNAVAILABLE);
 });
@@ -140,9 +140,9 @@ test('panel confirm step: similar cases + the member line', async () => {
         precedentHint: (g, key, label) => precedentHint(g, key, label, { load: async () => [{ type: 'mute', duration_ms: HOUR, count: 2, overturned: 0 }] }),
     });
     assert.match(text, /-# Similar cases \(reason "Spam", last 180 days, 2 cases\): 2 mutes\. Most common: mute, usually 1 hour\./);
-    assert.match(text, /-# This member: 0 counted warnings, ladder level 1 \(the next warning bans\)\./, 'mute: ladder loaded with getLadder');
+    assert.match(text, /-# This member: 0 counted warnings, warning stage 1 of 3 \(7-day ban\); the next warning bans\./, 'mute: ladder loaded with getLadder');
     const warn = await panelConfirm('warn', 'spam', { precedentHint: async () => 'x' });
-    assert.match(warn, /This member: 1 of 3 counted warnings, ladder level 0\./, 'warn: the ladder from getTargetState');
+    assert.match(warn, /This member: 1 of 3 counted warnings, warning stage 0 of 3 \(no warning ban yet\)\./, 'warn: the ladder from getTargetState');
 });
 
 test('panel confirm step: custom reason says so; database error and timeout degrade to "unavailable", the action stays possible', async () => {

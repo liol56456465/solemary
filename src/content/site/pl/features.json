@@ -14,7 +14,7 @@
       "items": {
         "enforcementsPanel": {
           "term": "Panel /enforcements",
-          "text": "Pokazuje wiek konta członka, czas na serwerze, liczone ostrzeżenia, poziom na drabinie, aktywne kary i trzy ostatnie sprawy, a potem proponuje tylko te akcje, które mają teraz sens (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
+          "text": "Pokazuje wiek konta członka, czas na serwerze, liczone ostrzeżenia, etap ostrzeżeń (0–3), aktywne kary i trzy ostatnie sprawy, a potem proponuje tylko te akcje, które mają teraz sens (Ban, Kick, Mute, Warn, Unban, Unmute, Remove warn)."
         },
         "reasons": {
           "term": "Powody",
@@ -37,12 +37,12 @@
           "text": "Odmawia działania wobec właściciela serwera, bota, ciebie samego i każdego z równą lub wyższą rolą. Uprawnienie Administrator jest sprawdzane ponownie przy każdym kliknięciu."
         },
         "massActionGuard": {
-          "term": "Ochrona przed masowymi akcjami",
+          "term": "Limit bezpieczeństwa: zbyt wiele banów lub wyrzuceń w 10 minut",
           "text": "Więcej niż 5 banów lub wyrzuceń w ciągu 10 minut przez jednego moderatora blokuje go na godzinę i powiadamia właściciela. Wyciszenia mają własny limit: 10."
         },
         "caseTools": {
           "term": "Narzędzia spraw",
-          "text": "/case edit, void i history, dowody (linki do wiadomości z fragmentem albo obrazy), wyszukiwanie spraw i /background z pełną historią członka."
+          "text": "/case edit, void (usunąć błędną sprawę) i history, dowody (linki do wiadomości z fragmentem albo obrazy), wyszukiwanie spraw i /background z pełną historią członka."
         },
         "warnForMessage": {
           "term": "Warn for this message",
@@ -53,7 +53,7 @@
           "text": "/test wysyła ci dokładnie tę wiadomość prywatną, którą dostałby członek, niczego nie wykonując."
         },
         "noContactOrders": {
-          "term": "Zakazy kontaktu",
+          "term": "Rozdzielenie",
           "text": "Poproś dwóch członków, aby nie kontaktowali się ze sobą do ustalonego czasu. To nie jest kara i nie liczy się jako ostrzeżenie."
         }
       }
@@ -79,7 +79,7 @@
           "text": "Od bana na stałe z drabiny można się odwołać przez 6 miesięcy. Potem albo po odrzuconym odwołaniu nie można się już odwołać."
         },
         "myStanding": {
-          "term": "My standing",
+          "term": "My record",
           "text": "Członkowie mogą sprawdzić własne ostrzeżenia i to, co spowodowałoby następne, z panelu odwołań albo na stronie Moja historia."
         }
       }
@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Panel odwołań",
-          "text": "/setappeal publikuje panel z przyciskami Appeal, My appeals i My standing na głównym serwerze i na serwerze wsparcia."
+          "text": "/setappeal publikuje panel z przyciskami Appeal, My appeals i My record na głównym serwerze i na serwerze wsparcia."
         },
         "appealForm": {
           "term": "Formularz odwołania",
@@ -140,7 +140,7 @@
         },
         "modes": {
           "term": "Tryby",
-          "text": "Każda reguła jest włączona, w trybie obserwacji (tylko karta) albo wyłączona, globalnie lub dla kanału. Zaufane role i wyjątki dla kanałów."
+          "text": "Każda reguła jest włączona, w trybie „tylko zgłaszanie (bez usuwania)” albo wyłączona, globalnie lub dla kanału. Zaufane role i wyjątki dla kanałów."
         },
         "hardToDodge": {
           "term": "Trudno obejść",
@@ -196,7 +196,7 @@
         },
         "moderate": {
           "term": "Moderacja",
-          "text": "Przegląd tego, co wymaga twojej uwagi, skrzynka odbiorcza, członkowie (filtry, role, pseudonimy, przerwy, akcje zbiorcze), bany, sprawy, odwołania, zakazy kontaktu i aktywność ekipy."
+          "text": "Przegląd tego, co wymaga twojej uwagi, skrzynka odbiorcza, członkowie (filtry, role, pseudonimy, przerwy, akcje zbiorcze), bany, sprawy, odwołania, „Rozdzielenie” i aktywność ekipy."
         },
         "settings": {
           "term": "Ustawienia",

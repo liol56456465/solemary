@@ -136,22 +136,22 @@ export const SETTINGS = Object.freeze([
     },
     {
         key: 'massActionLimit', module: 'enforcement', kind: 'number', guild: 'main',
-        label: 'Mass-action guard: bans/kicks allowed in the window', env: 'MASS_ACTION_LIMIT',
+        label: 'Safety limit: bans/kicks allowed in the window', env: 'MASS_ACTION_LIMIT',
         fallback: 5, schema: int(1, 100),
     },
     {
         key: 'massMuteLimit', module: 'enforcement', kind: 'number', guild: 'main',
-        label: 'Mass-action guard: mutes allowed in the window', env: 'MASS_MUTE_LIMIT',
+        label: 'Safety limit: mutes allowed in the window', env: 'MASS_MUTE_LIMIT',
         fallback: 10, schema: int(1, 200),
     },
     {
         key: 'massActionWindowMs', module: 'enforcement', kind: 'duration', guild: 'main',
-        label: 'Mass-action guard: window', env: 'MASS_ACTION_WINDOW_MINUTES', envUnit: 'minutes',
+        label: 'Safety limit: window', env: 'MASS_ACTION_WINDOW_MINUTES', envUnit: 'minutes',
         fallback: 10 * MINUTE, schema: int(MINUTE, DAY),
     },
     {
         key: 'massActionBlockMs', module: 'enforcement', kind: 'duration', guild: 'main',
-        label: 'Mass-action guard: block length', env: 'MASS_ACTION_BLOCK_MINUTES', envUnit: 'minutes',
+        label: 'Safety limit: block length', env: 'MASS_ACTION_BLOCK_MINUTES', envUnit: 'minutes',
         fallback: 60 * MINUTE, schema: int(MINUTE, 7 * DAY),
     },
     // ── Appeals ──

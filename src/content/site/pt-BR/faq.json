@@ -39,8 +39,8 @@
     },
     "lostCode": {
       "q": "Perdi o código do meu caso.",
-      "a": "Clique em **My standing** (Minha situação) no painel de apelações: ele lista as suas advertências e qualquer banimento ou silenciamento ativo, com os códigos.",
-      "aPortal": "Clique em **My standing** (Minha situação) no painel de apelações: ele lista as suas advertências e qualquer banimento ou silenciamento ativo, com os códigos. [Meu histórico](/me) neste site mostra todos os seus casos."
+      "a": "Clique em **My record** (Meu histórico) no painel de apelações: ele lista as suas advertências e qualquer banimento ou silenciamento ativo, com os códigos.",
+      "aPortal": "Clique em **My record** (Meu histórico) no painel de apelações: ele lista as suas advertências e qualquer banimento ou silenciamento ativo, com os códigos. [Meu histórico](/me) neste site mostra todos os seus casos."
     },
     "everyPunishment": {
       "q": "É possível apelar de qualquer punição?",

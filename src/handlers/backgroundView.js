@@ -15,7 +15,7 @@ import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { caseStatusLabel, getAppealHistory, getLatestAppealStatuses, listCasesForUser } from '../services/enforcement/caseService.js';
 import { countCaseEdits } from '../services/enforcement/caseEditService.js';
 import { evidenceDisplay } from '../services/enforcement/evidenceService.js';
-import { dateStamp, formatDuration, stamp, truncate } from '../services/enforcement/format.js';
+import { dateStamp, formatDuration, ladderStageShort, stamp, truncate } from '../services/enforcement/format.js';
 import { getActiveOrdersFor, noContactLines } from '../services/enforcement/noContactService.js';
 import { getActiveWatchChecked, watchlistLine } from '../services/enforcement/watchlistService.js';
 
@@ -59,9 +59,9 @@ function statusLabel(row, appealStatus = null) {
 }
 
 function appealability(row) {
-    if (row.unappealable) return 'Unappealable';
-    if (row.appeal_deadline) return `Appealable until ${dateStamp(row.appeal_deadline)}`;
-    return 'Appealable';
+    if (row.unappealable) return 'No';
+    if (row.appeal_deadline) return `Yes, until ${dateStamp(row.appeal_deadline)}`;
+    return 'Yes';
 }
 
 /** `client` is used to re-fetch evidence images (their CDN URLs expire); optional. */
@@ -85,17 +85,17 @@ export async function buildRecordEmbed(row, { client = null } = {}) {
             : '**Duration:** Permanent');
     }
     lines.push(
-        `**Appeal:** ${appealability(row)}`,
-        `**Ladder level after:** ${row.ladder_level_after}`,
+        `**Can they appeal?** ${appealability(row)}`,
+        `**Warning stage after:** ${ladderStageShort(row.ladder_level_after)}`,
         `**DM delivered:** ${row.dm_delivered ? 'Yes' : 'No'}`,
         ...(row.end_dm_delivered == null ? [] : [`**"Ended" DM delivered:** ${row.end_dm_delivered ? 'Yes' : 'No'}`]),
         ...(edits ? [`**Edited:** ${edits} change(s): \`/case history code:${row.case_code}\``] : []),
         `**Status:** ${statusLabel(row, appeals[0]?.status)}`,
     );
     if (row.voided_at) {
-        lines.push(`**Voided:** ${dateStamp(row.voided_at)}${row.voided_by ? ` by \`${row.voided_by}\`` : ''}${row.void_reason ? `, ${row.void_reason}` : ''} (no longer counts)`);
+        lines.push(`**Removed (a mistake):** ${dateStamp(row.voided_at)}${row.voided_by ? ` by \`${row.voided_by}\`` : ''}${row.void_reason ? `, ${row.void_reason}` : ''} (no longer counts)`);
     } else if (row.status === 'revoked') {
-        lines.push(`**Revoked:** ${row.revoked_at ? dateStamp(row.revoked_at) : '-'}${row.revoked_by ? ` by \`${row.revoked_by}\`` : ''}${row.revoke_reason ? `, ${row.revoke_reason}` : ''}`);
+        lines.push(`**Lifted early:** ${row.revoked_at ? dateStamp(row.revoked_at) : '-'}${row.revoked_by ? ` by \`${row.revoked_by}\`` : ''}${row.revoke_reason ? `, ${row.revoke_reason}` : ''}`);
     }
 
     const history = appeals.length
@@ -133,7 +133,7 @@ export async function buildRecordList(guildId, viewerId, targetUser, page) {
 
     const noContact = getActiveOrdersFor(guildId, targetUser.id);
     const noContactField = noContact.length
-        ? [{ name: 'Active no-contact orders', value: truncate(noContactLines(noContact).join('\n'), 1024) }]
+        ? [{ name: 'Keep apart (active)', value: truncate(noContactLines(noContact).join('\n'), 1024) }]
         : [];
     // Reads the database when the cache never loaded; a database error throws (never "not watched").
     const watch = await getActiveWatchChecked(guildId, targetUser.id);

@@ -309,3 +309,44 @@ test('English output of the frame is unchanged: every frame word is the English 
     }
     assert.ok(page.includes('<title>X · Mewvo dashboard</title>'));
 });
+
+// tx() keeps the catalog's ' and " unescaped (so English pages stay byte-for-byte), which is only
+// safe in a text node. Rather than escaping quotes (that would change every English page that
+// shows an apostrophe), this test makes sure no dashboard code ever puts tx() in a tag.
+function txInAttribute(source) {
+    const problems = [];
+    source.split('\n').forEach((line, i) => {
+        if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
+        for (const match of line.matchAll(/\btx\(/g)) {
+            const open = line.lastIndexOf('${', match.index);
+            if (open === -1) {
+                // Not inside ${…} on this line: only fine when the line has no template markup at all.
+                if (/[<>]/.test(line)) problems.push(`${i + 1}: tx() outside \${…} on a line with markup`);
+                continue;
+            }
+            const before = line.slice(0, open);
+            const inTag = before.lastIndexOf('<') > before.lastIndexOf('>');
+            if (inTag || /=\s*["']?$/.test(before)) problems.push(`${i + 1}: tx() inside a tag or attribute`);
+        }
+    });
+    return problems;
+}
+
+test('tx() is never used inside an HTML tag or attribute value in src/services/dashboard', () => {
+    // The checker itself catches the cases it is for.
+    assert.equal(txInAttribute('html`<a title="${tr.tx(\'k\')}">x</a>`').length, 1, 'quoted attribute');
+    assert.equal(txInAttribute('html`<a title=${tx(\'k\')}>x</a>`').length, 1, 'unquoted attribute');
+    assert.equal(txInAttribute('html`<input ${tr.tx(\'k\')}>`').length, 1, 'inside a tag');
+    assert.equal(txInAttribute('html`<p class="muted">${tr.tx(\'k\')}</p>`').length, 0, 'text node is fine');
+    assert.equal(txInAttribute('// tx(): a key for a text node').length, 0, 'comments are skipped');
+
+    const dir = new URL('../src/services/dashboard/', import.meta.url);
+    const files = readdirSync(dir, { recursive: true }).filter((f) => String(f).endsWith('.js'));
+    let uses = 0;
+    for (const file of files) {
+        const source = readFileSync(new URL(String(file), dir), 'utf8');
+        uses += (source.match(/\btx\(/g) || []).length;
+        assert.deepEqual(txInAttribute(source), [], `src/services/dashboard/${file}`);
+    }
+    assert.ok(uses > 0, 'the scan found the tx() calls');
+});

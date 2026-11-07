@@ -39,12 +39,12 @@
     },
     "lostCode": {
       "q": "I lost my case code.",
-      "a": "Press **My standing** on the appeal panel: it lists your warnings and any active ban or mute with their codes.",
-      "aPortal": "Press **My standing** on the appeal panel: it lists your warnings and any active ban or mute with their codes. [My record](/me) on this site shows all your cases."
+      "a": "Press **My record** on the appeal panel: it lists your warnings and any active ban or mute with their codes.",
+      "aPortal": "Press **My record** on the appeal panel: it lists your warnings and any active ban or mute with their codes. The [My record](/me) page on this site shows all your cases."
     },
     "everyPunishment": {
       "q": "Can every punishment be appealed?",
-      "a": "Most can. Bans and mutes can be appealed while they last, warnings and kicks within 30 days. A permanent ladder ban stops being appealable after 6 months or after a denied appeal, and staff can mark a severe ban as unappealable. The DM always says which."
+      "a": "Most can. Bans and mutes can be appealed while they last, warnings and kicks within 30 days. A permanent ladder ban stops being appealable after 6 months or after a denied appeal, and staff can mark a severe ban as one that can’t be appealed. The DM always says which."
     }
   },
   "data": {

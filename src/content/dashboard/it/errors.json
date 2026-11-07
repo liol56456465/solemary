@@ -21,7 +21,7 @@
   "loggedOut": "Disconnesso",
   "loggedOutText": "La tua sessione è terminata. Apri {base} per accedere di nuovo.",
   "notAllowed": "Non consentito",
-  "moderatorOnly": "Serve il ruolo Amministratore nel server principale. Come moderatore puoi usare Panoramica, Membri, Bannati, Casi, Ricorsi e Nessun contatto, e avvertire, silenziare, togliere il silenziamento, dare timeout o espellere membri.",
+  "moderatorOnly": "Serve il ruolo Amministratore nel server principale. Come moderatore puoi usare Panoramica, Membri, Bannati, Casi, Ricorsi e Tenere separati, e avvertire, silenziare, togliere il silenziamento, dare timeout o espellere membri.",
   "csrf": "Questo modulo non proviene da questa dashboard (token di sicurezza o origine non corrispondenti). Ricarica la pagina e riprova.",
   "needsAdmin": "Serve il ruolo Amministratore nel server principale.",
   "needsStaffRole": "Serve un ruolo di moderatore o di amministratore.",

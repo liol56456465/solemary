@@ -297,7 +297,7 @@ test('pipeline, global monitor mode: only a card, nothing deleted, no case', asy
         assert.equal(card.monitor, true);
         assert.equal(card.deleted, false);
         const title = cardTitle(entryFrom(card));
-        assert.equal(title, action === 'warn' ? 'Monitor: would warn · Ads' : 'Monitor: would delete the message · Ads');
+        assert.equal(title, action === 'warn' ? "Report only (don't delete): would warn · Ads" : "Report only (don't delete): would delete the message · Ads");
     }
 });
 

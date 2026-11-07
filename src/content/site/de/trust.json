@@ -26,9 +26,9 @@
       "note": "Keine gezählte Verwarnung, nicht stummgeschaltet."
     },
     "headsUp": {
-      "label": "Nach einem Hinweis korrigiert",
-      "noteWithRate": "Mitglieder haben {rate} der markierten Nachrichten nach einem Hinweis selbst korrigiert.",
-      "noteNoRate": "Wie oft Mitglieder eine markierte Nachricht nach einem Hinweis selbst korrigieren."
+      "label": "Nach einem privaten Hinweis korrigiert",
+      "noteWithRate": "Mitglieder haben {rate} der markierten Nachrichten nach einem privaten Hinweis selbst korrigiert.",
+      "noteNoRate": "Wie oft Mitglieder eine markierte Nachricht nach einem privaten Hinweis selbst korrigieren."
     }
   },
   "facts": {

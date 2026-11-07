@@ -26,9 +26,9 @@
       "note": "No counted warning, not muted."
     },
     "headsUp": {
-      "label": "Fixed after a heads-up",
-      "noteWithRate": "Members fixed {rate} of flagged messages themselves after a heads-up.",
-      "noteNoRate": "How often members fix a flagged message themselves after a heads-up."
+      "label": "Fixed after a private warning",
+      "noteWithRate": "Members fixed {rate} of flagged messages themselves after a private warning.",
+      "noteNoRate": "How often members fix a flagged message themselves after a private warning."
     }
   },
   "facts": {

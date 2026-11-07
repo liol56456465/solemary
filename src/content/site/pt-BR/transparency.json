@@ -31,7 +31,7 @@
       "bans": "Banimentos",
       "ladderBans": "Dos banimentos: automáticos (escada de advertências)",
       "automod": "Aplicados pelo automod",
-      "voided": "Anulados por engano"
+      "voided": "Removidos por engano"
     }
   },
   "appeals": {
@@ -55,11 +55,11 @@
     },
     "notCounted": {
       "question": "O que não é contado",
-      "answer": "Simulações de teste (a equipe pré-visualizando uma mensagem; nada acontece com ninguém), advertências importadas do bot antigo como histórico e denúncias contra a equipe. Casos anulados por engano ficam fora das colunas principais e aparecem à parte na coluna “Anulados por engano”, pelo mês em que foram aplicados pela primeira vez."
+      "answer": "Simulações de teste (a equipe pré-visualizando uma mensagem; nada acontece com ninguém), advertências importadas do bot antigo como histórico e denúncias contra a equipe. Casos removidos por engano ficam fora das colunas principais e aparecem à parte na coluna “Removidos por engano”, pelo mês em que foram aplicados pela primeira vez."
     },
     "appeals": {
       "question": "Apelações",
-      "answer": "As apelações são contadas no mês em que foram enviadas, com o resultado de hoje. Uma apelação sobre um caso que depois foi anulado continua contando: a apelação aconteceu. Apelações encerradas sem decisão contam apenas como recebidas. O tempo mediano vai do envio da apelação até a decisão da equipe, considerando as apelações aceitas e negadas daquele mês."
+      "answer": "As apelações são contadas no mês em que foram enviadas, com o resultado de hoje. Uma apelação sobre um caso que depois foi removido por engano continua contando: a apelação aconteceu. Apelações encerradas sem decisão contam apenas como recebidas. O tempo mediano vai do envio da apelação até a decisão da equipe, considerando as apelações aceitas e negadas daquele mês."
     },
     "smallNumbers": {
       "question": "Números pequenos",

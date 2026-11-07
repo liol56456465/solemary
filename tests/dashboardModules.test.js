@@ -2364,7 +2364,7 @@ test('Automod heads-up first: a checkbox per eligible rule, 30-day counts, saved
         assert.ok(!page.body.includes(`name="headsup:${key}"`), key);
     }
     assert.ok(page.body.includes('name="headsup-form" value="1"'));
-    assert.match(page.body, /Heads-ups in the last 30 days: 7 sent, 5 fixed by the member, 2 acted on after the wait\./);
+    assert.match(page.body, /Private first warnings in the last 30 days: 7 sent, 5 fixed by the member, 2 acted on after the wait\./);
     assert.equal(h.state.headsUpDays, 30);
 
     // All boxes but harassment and custom posted: those two go off; nothing else changes.
@@ -2384,7 +2384,7 @@ test('Automod heads-up first: a checkbox per eligible rule, 30-day counts, saved
     assert.equal(h.calls.filter((c) => c.name === 'setHeadsUp').length, 0);
 
     h.state.headsUpStatsFail = true;
-    assert.match((await get(h, 'automod')).body, /Heads-up counts could not be read \(database\)\./);
+    assert.match((await get(h, 'automod')).body, /The private first warning counts could not be read \(database\)\./);
 });
 
 function getWithQuery(h, module, query) {
@@ -2398,7 +2398,7 @@ test('Automod page: review queue links to the cards (escaped, Discord links only
     assert.match(res.body, /Review queue \(2\)/);
     assert.ok(res.body.includes(`<a href="https://discord.com/channels/${GUILD}/${TEXT}/700000000000000010" rel="noopener noreferrer" target="_blank">Excessive caps &lt;b&gt;</a>`));
     assert.ok(!res.body.includes('javascript:'), 'a non-Discord URL is never a link');
-    assert.match(res.body, /Probation \(1\)/);
+    assert.match(res.body, /Extra-watch period after a ban \(1\)/);
     assert.ok(res.body.includes('action="/dashboard/automod/probation-end"'));
     assert.ok(res.body.includes(`name="user" value="${MEMBER}"`));
     assert.ok(res.body.includes('href="/dashboard/cases/abc234x"'));
@@ -2418,7 +2418,7 @@ test('Automod page: review queue links to the cards (escaped, Discord links only
     const broken = await get(h, 'automod');
     assert.equal(broken.statusCode, 200);
     assert.match(broken.body, /review queue could not be read/);
-    assert.match(broken.body, /Probations could not be read/);
+    assert.match(broken.body, /Extra-watch periods could not be read/);
 });
 
 test('Automod lockdown: active → shown first with End lockdown; ending calls endLockdown as the admin; none → 400; owner without Administrator → 403', async () => {
@@ -2458,10 +2458,10 @@ test('Automod probation end: ends it early (audited); a member not on probation 
     assert.equal(res.statusCode, 303);
     assert.equal(h.auditRows[0].key, `probation:${MEMBER}`);
     assert.equal(h.auditRows[0].old.caseCode, 'abc234x');
-    assert.match((await h.sessions.get(h.session.id)).flash, /Probation for .* ended early/);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Extra-watch period for .* ended early/);
     const again = await post(h, 'automod', 'probation-end', { user: MEMBER });
     assert.equal(again.statusCode, 400);
-    assert.match(again.body, /not on probation/);
+    assert.match(again.body, /not in an extra-watch period/);
     assert.equal(h.auditRows.length, 1);
     const owner = await setup({ userId: OWNER });
     assert.equal((await post(owner, 'automod', 'probation-end', { user: MEMBER })).statusCode, 403);
@@ -2533,7 +2533,7 @@ test('Automod test run: done shows per-rule counts, masked examples (escaped, Di
     assert.match(card, /Stopped at the limit of 2,000 messages\. Older messages in that time may not have been checked\./);
     assert.match(card, /Automod is off right now/);
     assert.match(card, /Not checked in a test run: Spam/);
-    assert.match(card, /<td>Inappropriate language<\/td><td>2<\/td><td>0<\/td><td>0\.1%<\/td><td>acts, watch only<\/td>/);
+    assert.match(card, /<td>Inappropriate language<\/td><td>2<\/td><td>0<\/td><td>0\.1%<\/td><td>acts, report only \(don&#39;t delete\)<\/td>/);
     assert.match(card, /<td>Draft: Promo<\/td><td>1<\/td><td>0<\/td><td>0\.1%<\/td><td>draft, not saved<\/td>/);
     assert.ok(card.includes('you f**k &lt;i&gt;'), 'excerpt escaped');
     assert.ok(card.includes('amy&lt;b&gt;'));
@@ -2582,7 +2582,7 @@ test('Automod test run fixes: members, share and a cautious "may be too strict" 
     seedFixableRun(h.state);
     const card = testRunCard((await get(h, 'automod')).body);
     assert.match(card, /<td>Inappropriate language<\/td><td>40<\/td><td>6<\/td><td>10%<\/td><td>acts<\/td><td><span class="warn">Catches a lot, may be too strict<\/span><\/td>/);
-    assert.match(card, /<td>Excessive caps<\/td><td>3<\/td><td>1<\/td><td>0\.8%<\/td><td>watch only<\/td><td><\/td>/);
+    assert.match(card, /<td>Excessive caps<\/td><td>3<\/td><td>1<\/td><td>0\.8%<\/td><td>report only \(don&#39;t delete\)<\/td><td><\/td>/);
     assert.match(card, /at least 10 messages, from at least 3 different members, and at least 2% of the checked messages\. It is only a hint/);
     assert.ok(!/false positive/i.test(card), 'never claims certainty');
     assert.ok(!/—/.test(card), 'no em dashes');
@@ -2627,7 +2627,7 @@ test('Automod test run fixes: test-run-rule re-checks the rule and mode, writes 
     assert.equal(h.state.automod.ruleModes.language, 'monitor');
     assert.deepEqual(h.calls.filter((c) => c.name === 'setRuleMode').map((c) => c.args), [['language', 'monitor']]);
     assert.deepEqual(h.auditRows.filter((r) => r.module === 'automod').map((r) => [r.key, r.old, r.new]), [['ruleModes.language', null, 'monitor']]);
-    assert.match((await h.sessions.get(h.session.id)).flash, /Inappropriate language is now watch only\./);
+    assert.match((await h.sessions.get(h.session.id)).flash, /Inappropriate language is now report only \(don't delete\)\./);
 
     // Same again: nothing written, nothing audited.
     const auditCount = h.auditRows.length;

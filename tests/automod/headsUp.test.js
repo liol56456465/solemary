@@ -157,7 +157,7 @@ test('first hit: a DM and a waiting record instead of the action; within 30 days
     assert.match(dm, /^Your message in #general \(Mewvo\) looked like disrespect or drama\. Edit or delete it within 2 minutes and nothing happens\./);
     assert.match(dm, /https:\/\/discord\.com\/channels\/1\/c1\/m1/);
     const card = h.calls[1].args[0];
-    assert.equal(card.note.title, 'Heads-up sent (DM), waiting 2 minutes');
+    assert.equal(card.note.title, 'Warned privately first (DM), 2 min to fix');
     assert.equal(card.noGroup, true);
     const pending = h.kv.store.get(`automod:headsup:pending:${GUILD}:m1`);
     assert.equal(pending.rule, 'disrespect');
@@ -188,7 +188,7 @@ test('DM fails: a notice in the channel that pings only the member', async () =>
     assert.equal(message.sent.length, 1);
     assert.match(message.sent[0].content, /^<@u1> Your message looked like disrespect or drama\. Edit or delete it within 2 minutes/);
     assert.deepEqual(message.sent[0].allowedMentions, { users: ['u1'] });
-    assert.equal(h.calls.find((c) => c.name === 'postReviewCard').args[0].note.title, 'Heads-up sent (channel notice), waiting 2 minutes');
+    assert.equal(h.calls.find((c) => c.name === 'postReviewCard').args[0].note.title, 'Warned privately first (channel notice), 2 min to fix');
 });
 
 test('personal info: deleted at once, a DM, no case and nothing waiting', async () => {

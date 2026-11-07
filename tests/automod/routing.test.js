@@ -67,7 +67,7 @@ test('digest: actions with undo rate, hits per rule, busiest channels, memory fo
     });
     assert.equal(digest.empty, false);
     assert.match(digest.fields[0].value, /\*\*Spam:\*\* 10 · 4 undone \(40%\) · \*\*often corrected\*\*/);
-    assert.match(digest.fields[1].value, /^Excessive caps: 2\nSpam: 1 \(1 in monitor mode\)$/);
+    assert.match(digest.fields[1].value, /^Excessive caps: 2\nSpam: 1 \(1 only reported, not deleted\)$/);
     assert.match(digest.fields[2].value, /^<#c1>: 2/);
     assert.match(digest.fields[3].value, /2 waiting/);
     assert.match(digest.footer, /since the bot started 3 h ago/);

@@ -41,7 +41,7 @@
       },
       "automod": {
         "title": "4. Controlla l'automod",
-        "text": "Nella pagina **Automod** scegli cosa fa l'automod. Se non sei ancora sicuro, scegli **Watch only** (solo osservazione): l'automod dice solo allo staff cosa avrebbe fatto, e a nessuno succede nulla finché un membro dello staff non è d'accordo. Passa ad **Act** quando ti fidi."
+        "text": "Nella pagina **Automod** scegli cosa fa l'automod. Se non sei ancora sicuro, scegli **Report only (don't delete)**: l'automod dice solo allo staff cosa avrebbe fatto, e a nessuno succede nulla finché un membro dello staff non è d'accordo. Passa ad **Act** quando ti fidi."
       },
       "try": {
         "title": "5. Provalo su di te",
@@ -62,7 +62,7 @@
       },
       "firstAction": {
         "title": "La tua prima azione",
-        "run": "Usa `/enforcements user:@member`. Il pannello mostra l'età dell'account del membro, da quanto è nel server, gli avvertimenti conteggiati, il livello nella scala, eventuali sanzioni attive e i suoi ultimi casi. Solo tu puoi vederlo.",
+        "run": "Usa `/enforcements user:@member`. Il pannello mostra l'età dell'account del membro, da quanto è nel server, gli avvertimenti conteggiati, la fase di avvertimento (da 0 a 3), eventuali sanzioni attive e i suoi ultimi casi. Solo tu puoi vederlo.",
         "action": "Premi l'azione: **Ban**, **Kick**, **Mute** o **Warn** (oppure **Unban**, **Unmute**, **Remove warn** quando servono).",
         "reason": "Scegli un motivo predefinito oppure **Custom…** e scrivine uno.",
         "duration": "Per un silenziamento, indica una durata come `30m`, `24h`, `7d` o `1mo`. Per un ban vale lo stesso, oppure lascia vuoto per un ban permanente.",
@@ -72,7 +72,7 @@
       "everyWeek": {
         "title": "I comandi che userai",
         "background": "Lo storico completo dei casi di un membro.",
-        "case": "Cerca casi, modifica un motivo o una durata, annulla un caso sbagliato, vedi la sua cronologia, allega prove.",
+        "case": "Cerca casi, modifica un motivo o una durata, rimuovi un caso sbagliato (smette di contare), vedi la sua cronologia, allega prove.",
         "appeals": "Accogli o respingi un ricorso tramite codice caso, con una nota.",
         "test": "Ti invia esattamente il messaggio diretto che riceverebbe un membro. A nessuno succede nulla.",
         "staff": "Attività e statistiche dello staff.",
@@ -104,19 +104,19 @@
         "appealText": "Abbassa il livello di uno, mai sotto 0.",
         "manualBan": "Un ban dato a mano",
         "manualBanText": "Non sposta la scala.",
-        "void": "Annullare un caso",
-        "voidText": "Il caso resta registrato ma non conta più.",
+        "void": "Rimuovere un caso",
+        "voidText": "Per un caso dato per errore. Il caso resta registrato ma non conta più.",
         "imported": "Vecchi avvertimenti importati",
         "importedText": "Mostrati solo come storico. Non contano."
       },
-      "standing": "I membri possono vedere a che punto sono con **My standing** sul pannello dei ricorsi."
+      "standing": "I membri possono vedere a che punto sono con **My record** sul pannello dei ricorsi."
     },
     "appeals": {
       "title": "Ricorsi: come funzionano",
       "summary": "Dove fare ricorso, cosa chiede il modulo, chi decide e quanto aspettare per riprovare.",
       "where": {
         "title": "Dove fare ricorso",
-        "text": "Ogni messaggio diretto di sanzione contiene il link per il ricorso, oppure dice che non si può fare ricorso. Il pannello dei ricorsi ha tre pulsanti: **Appeal**, **My appeals** e **My standing**. I membri silenziati o avvertiti usano il pannello nel server principale. I membri bannati usano quello nel {support}, che possono raggiungere anche dopo un ban."
+        "text": "Ogni messaggio diretto di sanzione contiene il link per il ricorso, oppure dice che non si può fare ricorso. Il pannello dei ricorsi ha tre pulsanti: **Appeal**, **My appeals** e **My record**. I membri silenziati o avvertiti usano il pannello nel server principale. I membri bannati usano quello nel {support}, che possono raggiungere anche dopo un ban."
       },
       "form": {
         "title": "Il modulo",
@@ -154,7 +154,7 @@
       "areas": {
         "title": "Le quattro aree",
         "moderate": "Moderazione",
-        "moderateText": "Panoramica (cosa ti serve per primo), Posta in arrivo, Membri, Bannati, Casi, Ricorsi, Nessun contatto, Staff e Strumenti dei canali.",
+        "moderateText": "Panoramica (cosa ti serve per primo), Posta in arrivo, Membri, Bannati, Casi, Ricorsi, Tenere separati, Staff e Strumenti dei canali.",
         "community": "Community",
         "communityText": "Ticket e modmail, Benvenuto e congedo, Livelli, Ruoli a reazione, Messaggi, Giveaway, Compleanni, Candidature, Community e Entra per creare.",
         "setup": "Configurazione del server",

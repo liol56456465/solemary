@@ -39,8 +39,8 @@
     },
     "lostCode": {
       "q": "Ho perso il mio codice caso.",
-      "a": "Premi **My standing** sul pannello dei ricorsi: elenca i tuoi avvertimenti e gli eventuali ban o silenziamenti attivi con i loro codici.",
-      "aPortal": "Premi **My standing** sul pannello dei ricorsi: elenca i tuoi avvertimenti e gli eventuali ban o silenziamenti attivi con i loro codici. [Il mio storico](/me) su questo sito mostra tutti i tuoi casi."
+      "a": "Premi **My record** sul pannello dei ricorsi: elenca i tuoi avvertimenti e gli eventuali ban o silenziamenti attivi con i loro codici.",
+      "aPortal": "Premi **My record** sul pannello dei ricorsi: elenca i tuoi avvertimenti e gli eventuali ban o silenziamenti attivi con i loro codici. [Il mio storico](/me) su questo sito mostra tutti i tuoi casi."
     },
     "everyPunishment": {
       "q": "Si può fare ricorso contro ogni sanzione?",

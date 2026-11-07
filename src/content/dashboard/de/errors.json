@@ -21,7 +21,7 @@
   "loggedOut": "Abgemeldet",
   "loggedOutText": "Deine Sitzung ist beendet. Öffne {base}, um dich erneut anzumelden.",
   "notAllowed": "Nicht erlaubt",
-  "moderatorOnly": "Dafür brauchst du Administrator auf dem Hauptserver. Als Moderator kannst du Übersicht, Mitglieder, Gebannt, Fälle, Einsprüche und Kontaktverbote nutzen sowie Mitglieder verwarnen, stummschalten, die Stummschaltung aufheben, ihnen einen Timeout geben oder sie kicken.",
+  "moderatorOnly": "Dafür brauchst du Administrator auf dem Hauptserver. Als Moderator kannst du Übersicht, Mitglieder, Gebannt, Fälle, Einsprüche und Auseinanderhalten nutzen sowie Mitglieder verwarnen, stummschalten, die Stummschaltung aufheben, ihnen einen Timeout geben oder sie kicken.",
   "csrf": "Dieses Formular kam nicht von diesem Dashboard (Sicherheitstoken oder Herkunft stimmt nicht). Lade die Seite neu und versuch es erneut.",
   "needsAdmin": "Dafür brauchst du Administrator auf dem Hauptserver.",
   "needsStaffRole": "Dafür brauchst du eine Moderator- oder Administratorrolle.",

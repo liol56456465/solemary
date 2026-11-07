@@ -29,7 +29,7 @@
     "items": {
       "enforcement": {
         "name": "Moderazione",
-        "text": "Avvertimenti, silenziamenti, espulsioni e ban da un unico pannello che mostra prima lo storico del membro. Ogni azione è un caso con un codice breve che lo staff può modificare, annullare o a cui può aggiungere prove in seguito.",
+        "text": "Avvertimenti, silenziamenti, espulsioni e ban da un unico pannello che mostra prima lo storico del membro. Ogni azione è un caso con un codice breve che lo staff può modificare, rimuovere se era un errore o a cui può aggiungere prove in seguito.",
         "link": "Per iniziare"
       },
       "appeals": {

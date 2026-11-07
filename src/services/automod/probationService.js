@@ -59,8 +59,8 @@ export async function findRecentBanEnd(guildId, userId, recentMs = automodConfig
     const endedBan = row ? {
         caseCode: row.case_code,
         endedAt: row.ended_at,
-        how: row.voided_at ? 'voided' : row.status === 'expired' ? 'expired'
-            : /^Appeal accepted/.test(row.revoke_reason || '') ? 'appeal accepted' : 'lifted',
+        how: row.voided_at ? 'removed as a mistake' : row.status === 'expired' ? 'expired'
+            : /^Appeal accepted/.test(row.revoke_reason || '') ? 'appeal accepted' : 'lifted early',
     } : null;
     return { endedBan, hasActiveBan: active.rows.length > 0 };
 }
@@ -98,10 +98,10 @@ export async function listProbations(guildId, now = Date.now()) {
     return out.sort((a, b) => Number(a.until) - Number(b.until));
 }
 
-/** "on probation (rejoined after ban, until <t:…:D>)" */
+/** "in an extra-watch period after a ban (rejoined, until <t:…:D>)" */
 export function probationLabel(record) {
     if (!record) return null;
-    return `on probation (rejoined after ban, until <t:${Math.floor(Number(record.until) / 1000)}:D>)`;
+    return `in an extra-watch period after a ban (rejoined, until <t:${Math.floor(Number(record.until) / 1000)}:D>)`;
 }
 
 /** guildMemberAdd in the main server: put a member back from a recent ban on probation. */
@@ -119,8 +119,8 @@ export async function startProbationOnJoin(member, now = Date.now()) {
         { name: 'Member', value: `<@${member.id}> ${member.user?.username || ''} (${member.id})` },
         { name: 'Ban', value: `\`${ban.endedBan.caseCode}\` (${ban.endedBan.how}, ended <t:${Math.floor(new Date(ban.endedBan.endedAt).getTime() / 1000)}:R>)` },
         { name: 'Until', value: `<t:${Math.floor(record.until / 1000)}:F>` },
-        { name: 'Effect', value: 'Automod uses the next step of the ladder for them; no second chance or trusted relaxing. End early with `/automod probation`.' },
-    ], { title: 'Probation started (rejoined after a ban)' });
+        { name: 'Effect', value: 'Automod uses the next step of the ladder for them; no friendly notice or trusted relaxing. End early with `/automod probation`.' },
+    ], { title: 'Extra-watch period after a ban started (they rejoined)' });
     return record;
 }
 

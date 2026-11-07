@@ -267,8 +267,8 @@ test('on: tiles, how it moderates, rules, cat, footer link, sitemap, cat share i
         assert.match(body, /First answer on an appeal<\/dt><dd class="trust-value">5 hours<\/dd>/);
         assert.match(body, /Appeals accepted<\/dt><dd class="trust-value">67%<\/dd>/);
         assert.match(body, /Members in good standing<\/dt><dd class="trust-value">97%<\/dd>/);
-        assert.match(body, /Fixed after a heads-up<\/dt><dd class="trust-value">80%<\/dd>/);
-        assert.match(body, /Members fixed 80% of flagged messages themselves after a heads-up\./);
+        assert.match(body, /Fixed after a private warning<\/dt><dd class="trust-value">80%<\/dd>/);
+        assert.match(body, /Members fixed 80% of flagged messages themselves after a private warning\./);
         assert.match(body, /Cases per 1,000 members<\/dt><dd>70<\/dd>/);
         assert.match(body, /the third warning brings a 7-day ban/);
         assert.match(body, /decided by a person/);
@@ -300,7 +300,7 @@ test('on: small numbers masked, rates and medians say not enough data', async ()
         assert.match(body, /Of fewer than 3 appeals decided\./);
         assert.match(body, /First answer on an appeal<\/dt><dd class="trust-value trust-none">Not enough data yet<\/dd>/);
         assert.match(body, /Appeals accepted<\/dt><dd class="trust-value trust-none">Not enough data yet/);
-        assert.match(body, /Fixed after a heads-up<\/dt><dd class="trust-value trust-none">Not enough data yet/);
+        assert.match(body, /Fixed after a private warning<\/dt><dd class="trust-value trust-none">Not enough data yet/);
         assert.match(body, /Cases per 1,000 members<\/dt><dd>Not enough data yet/);
         assert.ok(!/\b[12]%/.test(body));
     } finally { await site.close(); }

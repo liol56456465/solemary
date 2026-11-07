@@ -22,7 +22,7 @@ const blockKey = (guildId, moderatorId) => `enforcement:massguard:${guildId}:${m
 function blockedError(block) {
     const until = Math.floor(new Date(block.until).getTime() / 1000);
     return createError(`Moderator blocked by the mass-action guard until ${block.until}`, ErrorTypes.PERMISSION,
-        `You are blocked from the enforcement panel until <t:${until}:t> (<t:${until}:R>) after ${block.count} ${block.attempted === 'mute' ? 'mutes' : 'bans/kicks'} in a short time. The bot owners were alerted.`,
+        `Safety limit: you are blocked from the enforcement panel until <t:${until}:t> (<t:${until}:R>) after ${block.count} ${block.attempted === 'mute' ? 'mutes' : 'bans/kicks'} in a short time. The bot owners were alerted.`,
         { expected: true });
 }
 
@@ -114,8 +114,8 @@ async function blockModerator(guild, moderator, count, attempted) {
         { name: 'What happened', value: summary },
         { name: 'Blocked until', value: `<t:${Math.floor(Date.parse(until) / 1000)}:f>` },
         { name: 'Lift early', value: '`/staff restore`' },
-    ], { title: 'Mass-action guard: moderator blocked' });
-    await alertOwners(guild.client, `**Mass-action guard in ${guild.name}.** ${summary} Their panel access is blocked until <t:${Math.floor(Date.parse(until) / 1000)}:f>. Lift it early with \`/staff restore\`.`);
+    ], { title: `Safety limit: too many ${what} in ${windowMinutes} minutes, moderator blocked` });
+    await alertOwners(guild.client, `**Safety limit (too many ${what} in ${windowMinutes} minutes) in ${guild.name}.** ${summary} Their panel access is blocked until <t:${Math.floor(Date.parse(until) / 1000)}:f>. Lift it early with \`/staff restore\`.`);
     return block;
 }
 

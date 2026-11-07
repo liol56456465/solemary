@@ -27,7 +27,7 @@ function myAppealsButton() {
 
 // Shows the member their own warnings, ladder level and next step, privately.
 function myStandingButton() {
-    return new ButtonBuilder().setCustomId('appeal:standing').setLabel('My standing').setStyle(ButtonStyle.Secondary);
+    return new ButtonBuilder().setCustomId('appeal:standing').setLabel('My record').setStyle(ButtonStyle.Secondary);
 }
 
 export function mainAppealPanel() {
@@ -40,7 +40,7 @@ export function mainAppealPanel() {
                 '2. Your case code, from the DM you got',
                 '3. More info, if you want to add anything',
                 '',
-                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My standing** to see your warnings and what a next warning would do.',
+                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My record** to see your warnings and what a next warning would do.',
                 '',
                 '-# Banned? Appeal in the Mewvo Support server instead. The link is in your ban DM.',
             ].join('\n'),
@@ -60,7 +60,7 @@ export function supportAppealPanel() {
                 '2. Your case code, from the DM you got',
                 '3. More info, if you want to add anything',
                 '',
-                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My standing** to see your warnings and what a next warning would do.',
+                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My record** to see your warnings and what a next warning would do.',
                 '',
                 '**Report staff**: report a staff member who broke the rules. Only administrators can see reports.',
                 '',

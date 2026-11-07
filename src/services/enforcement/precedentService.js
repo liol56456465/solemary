@@ -14,7 +14,7 @@
 import { logger } from '../../utils/logger.js';
 import { query, T } from './db.js';
 import { CUSTOM_REASON_KEY, enforcementConfig } from '../../config/enforcement.js';
-import { formatDuration } from './format.js';
+import { formatDuration, ladderStage } from './format.js';
 
 export const PRECEDENT_DAYS = 180;
 export const PRECEDENT_MAX_CASES = 200;
@@ -142,14 +142,14 @@ export function warmPrecedent(guildId, reasonKey) {
     }
 }
 
-/** "This member: 1 of 3 counted warnings, ladder level 0." from a ladder row; pure. */
+/** "This member: 1 of 3 counted warnings, warning stage 0 of 3 (…)." from a ladder row; pure. */
 export function memberLadderLine(ladder) {
     const level = Number(ladder?.level) || 0;
     const warns = Number(ladder?.warns_since_level) || 0;
     if (level === 0) {
-        return `This member: ${warns} of ${enforcementConfig.warnsPerLevel} counted warning${enforcementConfig.warnsPerLevel === 1 ? '' : 's'}, ladder level 0.`;
+        return `This member: ${warns} of ${enforcementConfig.warnsPerLevel} counted warning${enforcementConfig.warnsPerLevel === 1 ? '' : 's'}, ${ladderStage(0)}.`;
     }
-    return `This member: ${warns} counted warning${warns === 1 ? '' : 's'}, ladder level ${level} (the next warning bans).`;
+    return `This member: ${warns} counted warning${warns === 1 ? '' : 's'}, ${ladderStage(level)}; the next warning bans.`;
 }
 
 /**

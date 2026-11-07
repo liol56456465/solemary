@@ -1,7 +1,7 @@
 // pages.js — the dashboard's records pages, the audit page and the module page frame. Pure: data in, HTML string out. Every value
 // goes through the escaping `html` template (html.js).
 
-import { formatDuration } from '../enforcement/format.js';
+import { formatDuration, ladderStageShort } from '../enforcement/format.js';
 import { SEARCH_STATUSES, SEARCH_TYPES } from '../enforcement/caseSearchService.js';
 import { STATS_PERIODS } from '../staffActivityService.js';
 import { escapeHtml, formatAge, formatDate, html, icon, layout, navItems, navLabel, path, queryString, raw, section, timeTag, typeBadge } from './html.js';
@@ -40,7 +40,7 @@ const caseLink = (code) => html`<a href="/dashboard/cases/${encodeURIComponent(c
 
 function statusClass(label) {
     if (/active|pending/.test(label)) return 'warn';
-    if (/voided|lifted|reversed/.test(label)) return 'muted';
+    if (/removed|lifted|reversed/.test(label)) return 'muted';
     return '';
 }
 
@@ -99,12 +99,12 @@ ${canSaveSearch && filtered ? html`<form method="post" action="/dashboard/cases/
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${error ? html`<p class="bad">${error}</p>` : ''}
 ${rows.length && canBulk ? html`<form method="post" action="/dashboard/cases/bulk" id="bulk-cases" class="filters bulk-cases"><input type="hidden" name="csrf" value="${session.csrf}">
-<label>With the ticked cases<select name="action"><option value="tag-add">Add a tag</option><option value="tag-remove">Remove a tag</option><option value="void">Void them</option></select></label>
+<label>With the ticked cases<select name="action"><option value="tag-add">Add a tag</option><option value="tag-remove">Remove a tag</option><option value="void">Remove them (a mistake, they stop counting)</option></select></label>
 <label>Tag<input name="tag" maxlength="21" placeholder="scam"></label>
-<label class="wide">Reason (for voiding; the members see it)<input name="reason" maxlength="500"></label>
-<label class="check"><input type="checkbox" name="confirm" value="1"> I want to void the ticked cases</label>
+<label class="wide">Reason (for removing; the members see it)<input name="reason" maxlength="500"></label>
+<label class="check"><input type="checkbox" name="confirm" value="1"> I want to remove the ticked cases</label>
 <button class="primary" type="submit">Apply</button></form>
-<p class="muted">Tags: up to 25 cases at once. Voiding: up to 10, and each member gets the usual DM.</p>` : ''}
+<p class="muted">Tags: up to 25 cases at once. Removing: up to 10, and each member gets the usual DM.</p>` : ''}
 ${rows.length ? html`<div class="scroll"><table><thead><tr>${canBulk ? html`<th><span class="sr">Select</span></th>` : ''}<th>Case</th><th>Type</th><th>Member</th><th>Moderator</th><th>Reason</th><th>Date</th><th>Status</th></tr></thead><tbody>
 ${rows.map((row) => {
         const label = statusLabel(row);
@@ -154,12 +154,12 @@ ${top}
 <dt>Duration</dt><dd>${durationText(r)}</dd>
 ${r.expires_at ? html`<dt>Ends</dt><dd>${formatDate(r.expires_at)}</dd>` : ''}
 ${r.appeal_deadline ? html`<dt>Appeal deadline</dt><dd>${formatDate(r.appeal_deadline)}</dd>` : ''}
-<dt>Appealable</dt><dd>${r.unappealable ? 'no' : 'yes'}</dd>
+<dt>Can they appeal?</dt><dd>${r.unappealable ? 'No' : 'Yes'}</dd>
 <dt>DM delivered</dt><dd>${r.dm_delivered ? 'yes' : 'no'}</dd>
-<dt>Ladder level after</dt><dd>${r.ladder_level_after ?? '-'}</dd>
+<dt>Warning stage after</dt><dd>${r.ladder_level_after == null ? '-' : ladderStageShort(r.ladder_level_after)}</dd>
 <dt>Tags</dt><dd>${r.tags?.length ? r.tags.map((t) => html`<a class="role-chip" href="/dashboard/cases${queryString({ tag: t })}">#${t}</a>`) : html`<span class="muted">none</span>`}</dd>
-${r.revoked_at ? html`<dt>Lifted</dt><dd>${formatDate(r.revoked_at)}${r.revoke_reason ? html`: ${r.revoke_reason}` : ''}</dd>` : ''}
-${r.voided_at ? html`<dt>Voided</dt><dd>${formatDate(r.voided_at)}${r.void_reason ? html`: ${r.void_reason}` : ''}</dd>` : ''}
+${r.revoked_at ? html`<dt>Lifted early</dt><dd>${formatDate(r.revoked_at)}${r.revoke_reason ? html`: ${r.revoke_reason}` : ''}</dd>` : ''}
+${r.voided_at ? html`<dt>Removed</dt><dd>${formatDate(r.voided_at)}${r.void_reason ? html`: ${r.void_reason}` : ''}</dd>` : ''}
 </dl></section>
 ${section(`History (${edits.length})`, html`${edits.length ? html`<div class="scroll"><table><thead><tr><th>When</th><th>By</th><th>Field</th><th>Old</th><th>New</th></tr></thead><tbody>
 ${edits.map((e) => html`<tr><td>${formatDate(e.edited_at)}</td><td>${e.edited_by_username}</td><td>${e.field}</td><td>${e.old_value ?? '-'}</td><td>${e.new_value ?? '-'}</td></tr>`)}
@@ -194,10 +194,10 @@ ${appeals.map((a) => {
 /** input: { session, period, rows (staffModerationStats) }. */
 export function statsPage({ session, access = null, moduleStates = {}, settingsRows = [], period = '30d', rows = [], sections = [], flash = null, error = null }) {
     const periodChips = html`<nav class="chips" aria-label="Period">${Object.keys(STATS_PERIODS).map((key) => html`<a class="chip${key === period ? ' is-active' : ''}" href="/dashboard/staff${queryString({ period: key })}"${key === period ? raw(' aria-current="page"') : ''}>${STATS_PERIODS[key].label}</a>`)}</nav>`;
-    const table = html`${rows.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Total</th><th>Bans</th><th>Kicks</th><th>Mutes</th><th>Warns</th><th>Appeals accepted</th><th>Appeals denied</th><th>Voided</th></tr></thead><tbody>
+    const table = html`${rows.length ? html`<div class="scroll"><table><thead><tr><th>Moderator</th><th>Total</th><th>Bans</th><th>Kicks</th><th>Mutes</th><th>Warns</th><th>Appeals accepted</th><th>Appeals denied</th><th>Removed</th></tr></thead><tbody>
 ${rows.map((r) => html`<tr><td><a href="/dashboard/cases${queryString({ moderator: r.moderatorId })}">${r.username}</a></td><td>${r.total}</td><td>${r.actions.ban}</td><td>${r.actions.kick}</td><td>${r.actions.mute}</td><td>${r.actions.warn}</td><td>${r.appealsAccepted}</td><td>${r.appealsDenied}</td><td>${r.voided}</td></tr>`)}
-</tbody></table></div><p class="muted">Automatic (bot) and test cases are left out; voided cases are not in the totals.</p>` : html`<p class="empty">No moderation actions in this period.</p>`}`;
-    const body = html`<header class="page-head"><h1>Staff</h1><p>Moderation per moderator, when the team is active, weekly activity, staff discipline and mass-action guard blocks.</p></header>
+</tbody></table></div><p class="muted">Automatic (bot) and test cases are left out; removed cases are not in the totals.</p>` : html`<p class="empty">No moderation actions in this period.</p>`}`;
+    const body = html`<header class="page-head"><h1>Staff</h1><p>Moderation per moderator, when the team is active, weekly activity, staff discipline and safety limit blocks (too many bans or kicks in 10 minutes).</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
 ${section(`Moderation stats · ${STATS_PERIODS[period]?.label || period}`, html`${periodChips}${table}`, '', { key: 'staff-stats' })}

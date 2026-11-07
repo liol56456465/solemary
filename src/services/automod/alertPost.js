@@ -25,6 +25,6 @@ export async function postAlert(client, kind, { title, description = null, field
 /** "Show diff" for a nuke alert: compares the last snapshot before `at` with the server now. */
 export function showDiffRow(at = Date.now()) {
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`nukediff:${Math.floor(at / 1000)}`).setLabel('Show diff').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`nukediff:${Math.floor(at / 1000)}`).setLabel('Show what changed').setStyle(ButtonStyle.Secondary),
     );
 }

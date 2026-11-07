@@ -13,7 +13,7 @@ import { query, withTransaction, T } from './db.js';
 import { insertCase, setDmDelivered, setEndDmDelivered, getActiveCase, nextDefaultName, OPEN_STATUSES } from './caseService.js';
 import { ensureMutedRole, addMutedRole, removeMutedRole, findMutedRole } from './muteService.js';
 import { banDm, banEndedDm, contestComponents, kickDm, muteDm, muteEndedDm, warnDm } from './dmTemplates.js';
-import { addMonths, formatDuration, dateStamp } from './format.js';
+import { addMonths, formatDuration, dateStamp, ladderStage, ladderStageShort } from './format.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { enforceMassActionGuard } from './massActionGuard.js';
@@ -167,14 +167,14 @@ const MOD_LOG_TITLES = {
     unban: ['Unban', 'success'],
     unmute: ['Unmute', 'success'],
     removewarn: ['Warning removed', 'success'],
-    nocontact: ['No-contact order', 'warning'],
+    nocontact: ['Keep apart', 'warning'],
     watch: ['Watchlist', 'warning'],
     caseedit: ['Case edited', 'secondary'],
-    casevoid: ['Case voided', 'secondary'],
+    casevoid: ['Case removed (a mistake)', 'secondary'],
     appeal: ['Appeal decided', 'primary'],
     raid: ['Join raid', 'error'],
     staff: ['Staff guard', 'error'],
-    massguard: ['Mass-action guard', 'error'],
+    massguard: ['Safety limit (too many bans, kicks or mutes)', 'error'],
     automod: ['Automod', 'primary'],
     'automod-report': ['Automod report', 'primary'],
     'server-digest': ['Weekly server digest', 'primary'],
@@ -575,10 +575,10 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
         });
         await setDmDelivered(warnRecord.id, ban.dm_delivered);
         record = { ...warnRecord, dm_delivered: ban.dm_delivered };
-        notes.push(`Warning limit reached: automatic ${ban.expires_at ? formatDuration(Number(ban.duration_ms)) : 'permanent'} ban \`${ban.case_code}\` (ladder level ${preview.nextLevel}).`);
+        notes.push(`Warning limit reached: automatic ${ban.expires_at ? formatDuration(Number(ban.duration_ms)) : 'permanent'} ban \`${ban.case_code}\`. Now at ${ladderStage(preview.nextLevel)}.`);
     } catch (error) {
         // banWithRecord removed the ban row; the warn and the ladder step stay recorded.
-        notes.push(`Warning limit reached, but the automatic ban failed: ${error.userMessage || error.message}. Ladder level is now ${preview.nextLevel}; ban manually.`);
+        notes.push(`Warning limit reached, but the automatic ban failed: ${error.userMessage || error.message}. The member is now at ${ladderStage(preview.nextLevel)}; ban manually.`);
         ban = null;
     }
 
@@ -588,7 +588,7 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
     if (ban) {
         await logEnforcement(guild.client, guild.id, 'ban', {
             record: ban, target: targetUser, moderatorLabel: `${botUser.username} (automatic, warn \`${warnRecord.case_code}\`)`,
-            extra: [{ name: 'Ladder level', value: String(preview.nextLevel) }],
+            extra: [{ name: 'Warning stage', value: ladderStageShort(preview.nextLevel) }],
         });
     }
     return { record, dmDelivered: record.dm_delivered, notes, warnNumber: preview.warnNumber, banRecord: ban };
@@ -759,7 +759,7 @@ async function doRemoveWarn({ guild, moderator, targetUser, flow }) {
         extra: [
             { name: 'Warning', value: `\`${result.case_code}\` · ${result.name}` },
             { name: 'Reason', value: flow.reason },
-            { name: 'Counted warns now', value: `${ladder.warns_since_level} (ladder level ${ladder.level})` },
+            { name: 'Counted warns now', value: `${ladder.warns_since_level} (${ladderStage(ladder.level)})` },
         ],
     });
     return { record: null, dmDelivered: null, notes: [`Removed \`${result.case_code}\`. Counted warns: ${ladder.warns_since_level}.`] };

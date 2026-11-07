@@ -31,7 +31,7 @@
       "bans": "Bans",
       "ladderBans": "Of the bans: automatic (warning ladder)",
       "automod": "Given by automod",
-      "voided": "Voided as mistakes"
+      "voided": "Removed as mistakes"
     }
   },
   "appeals": {
@@ -55,11 +55,11 @@
     },
     "notCounted": {
       "question": "What is not counted",
-      "answer": "Test simulations (staff previewing a message; nothing happens to anyone), warnings imported from the old bot as history, and staff reports. Cases voided as mistakes are left out of the main columns and shown on their own in the “Voided as mistakes” column, by the month they were first given."
+      "answer": "Test simulations (staff previewing a message; nothing happens to anyone), warnings imported from the old bot as history, and staff reports. Cases removed as mistakes are left out of the main columns and shown on their own in the “Removed as mistakes” column, by the month they were first given."
     },
     "appeals": {
       "question": "Appeals",
-      "answer": "Appeals are counted in the month they were sent, with their result today. An appeal on a case that was later voided still counts: the appeal happened. Appeals that were closed without a decision are counted as received only. The median time runs from sending the appeal to the staff decision, over the accepted and denied appeals of that month."
+      "answer": "Appeals are counted in the month they were sent, with their result today. An appeal on a case that was later removed as a mistake still counts: the appeal happened. Appeals that were closed without a decision are counted as received only. The median time runs from sending the appeal to the staff decision, over the accepted and denied appeals of that month."
     },
     "smallNumbers": {
       "question": "Small numbers",

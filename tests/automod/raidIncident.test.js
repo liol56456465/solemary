@@ -59,7 +59,7 @@ test('raid incident: report without panic mode or cases', () => {
 test('raid incident: release result and button', () => {
     assert.equal(
         formatReleaseResult({ clean: 8, offenders: 2, probationEnded: 1, flagsCleared: 3, notInServer: 1 }),
-        '**8** raid joiner(s) broke no rule; **2** with a case stay as they are.\nProbation ended: 1 · join-gate flags closed: 3 · no longer in the server: 1',
+        '**8** raid joiner(s) broke no rule; **2** with a case stay as they are.\nExtra-watch periods ended: 1 · join-gate flags closed: 3 · no longer in the server: 1',
     );
     assert.match(formatReleaseResult({ clean: 3, offenders: 0, probationEnded: 0, flagsCleared: 0, notInServer: 0 }), /Nothing else was held/);
     const row = releaseRow(42, true).toJSON();

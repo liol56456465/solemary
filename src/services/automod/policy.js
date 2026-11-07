@@ -231,10 +231,10 @@ export function tuningSuggestions(byRule, { settings, lastSuggested = {}, now = 
     return out.sort((a, b) => b.rate - a.rate);
 }
 
-/** "Excessive caps: 9 of 20 undone in 14 days — switch to monitor?" */
+/** "Excessive caps: 9 of 20 undone in 14 days, switch to report only (don't delete)?" */
 export function formatTuningSuggestion(s, days = automodConfig.tuningWindowDays) {
     const what = s.changed ? (s.undone ? 'undone or changed' : 'changed') : 'undone';
-    return `${AUTOMOD_RULES[s.rule]?.label || s.rule}: ${s.corrected} of ${s.actions} ${what} in ${days} days, switch to monitor?`;
+    return `${AUTOMOD_RULES[s.rule]?.label || s.rule}: ${s.corrected} of ${s.actions} ${what} in ${days} days, switch to report only (don't delete)?`;
 }
 
 /** settings.channelRules with one exception set ('off' | 'monitor') or removed ('default'). */

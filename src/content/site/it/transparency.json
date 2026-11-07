@@ -31,7 +31,7 @@
       "bans": "Ban",
       "ladderBans": "Dei ban: automatici (scala degli avvertimenti)",
       "automod": "Dati dall'automod",
-      "voided": "Annullati perché errati"
+      "voided": "Rimossi perché errati"
     }
   },
   "appeals": {
@@ -55,11 +55,11 @@
     },
     "notCounted": {
       "question": "Cosa non viene contato",
-      "answer": "Le simulazioni di prova (lo staff vede l'anteprima di un messaggio; a nessuno succede nulla), gli avvertimenti importati dal vecchio bot come storico e le segnalazioni sullo staff. I casi annullati perché errati sono esclusi dalle colonne principali e mostrati a parte nella colonna «Annullati perché errati», nel mese in cui erano stati dati."
+      "answer": "Le simulazioni di prova (lo staff vede l'anteprima di un messaggio; a nessuno succede nulla), gli avvertimenti importati dal vecchio bot come storico e le segnalazioni sullo staff. I casi rimossi perché errati sono esclusi dalle colonne principali e mostrati a parte nella colonna «Rimossi perché errati», nel mese in cui erano stati dati."
     },
     "appeals": {
       "question": "Ricorsi",
-      "answer": "I ricorsi vengono contati nel mese in cui sono stati inviati, con il loro esito a oggi. Un ricorso su un caso annullato in seguito conta comunque: il ricorso c'è stato. I ricorsi chiusi senza decisione vengono contati solo come ricevuti. Il tempo mediano va dall'invio del ricorso alla decisione dello staff, sui ricorsi accolti e respinti di quel mese."
+      "answer": "I ricorsi vengono contati nel mese in cui sono stati inviati, con il loro esito a oggi. Un ricorso su un caso rimosso in seguito come errore conta comunque: il ricorso c'è stato. I ricorsi chiusi senza decisione vengono contati solo come ricevuti. Il tempo mediano va dall'invio del ricorso alla decisione dello staff, sui ricorsi accolti e respinti di quel mese."
     },
     "smallNumbers": {
       "question": "Numeri piccoli",

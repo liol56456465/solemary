@@ -118,7 +118,7 @@ function makeEnforcement(overrides = {}) {
         removeNote: rec('removeNote', async (g, u, { id }) => (id === '1700000000000' ? { id: 1700000000000, content: 'gone' } : null)),
         precedentHint: rec('precedentHint', async () => 'Spam: 3 cases'),
         completeFlowDetails: rec('completeFlowDetails', (args) => completeFlowDetails({ ...args, deps: fakeDeps })),
-        executeAction: rec('executeAction', async ({ flow }) => ({ record: flow.type === 'warn' ? { case_code: 'new2345', name: 'target warn 2' } : null, dmDelivered: true, notes: ['Warning limit reached: automatic 1d ban `ban2345` (ladder level 1).'] })),
+        executeAction: rec('executeAction', async ({ flow }) => ({ record: flow.type === 'warn' ? { case_code: 'new2345', name: 'target warn 2' } : null, dmDelivered: true, notes: ['Warning limit reached: automatic 1d ban `ban2345`. Now at warning stage 1 of 3 (7-day ban).'] })),
         attachFlowEvidence: rec('attachFlowEvidence', async () => []),
         recentBanKickCount: rec('recentBanKickCount', async () => 4),
         activeBanCases: rec('activeBanCases', async () => new Map()),
@@ -316,7 +316,7 @@ test('consistency hints: the confirm page says "unavailable right now" when the 
     assert.equal(res.statusCode, 200, res.body);
     assert.match(res.body, /Confirm: Mute/);
     assert.match(res.body, /Similar cases: unavailable right now\./);
-    assert.match(res.body, /This member: 0 counted warnings, ladder level 2 \(the next warning bans\)\./);
+    assert.match(res.body, /This member: 0 counted warnings, warning stage 2 of 3 \(30-day ban\); the next warning bans\./);
     assert.ok(tokenFrom(res.body).token, 'the action can still be confirmed');
 
     const custom = await preview(h, { type: 'mute', reason: 'custom', custom_reason: 'rude', duration: '1h' });
@@ -371,7 +371,7 @@ test('warn: preview shows the ladder effect and precedent; execute runs executeA
     assert.match(res.body, /Confirm: Warn/);
     assert.match(res.body, /warning 2 of 3\./);
     assert.match(res.body, /Precedent for Spam/);
-    assert.match(res.body, /<p class="muted">This member: 1 of 3 counted warnings, ladder level 0\.<\/p>/);
+    assert.match(res.body, /<p class="muted">This member: 1 of 3 counted warnings, warning stage 0 of 3 \(no warning ban yet\)\.<\/p>/);
     assert.match(res.body, /someone: bad words/);
     assert.ok(!res.body.includes('<script>'), 'target name escaped');
     assert.equal(serviceCalls(h, ['executeAction']).length, 0, 'preview runs nothing');
@@ -615,9 +615,9 @@ test('member page: standing, no-contact, notes, cases, actions; everything escap
     const res = await get(h, h.d.enforcement.userPage, { params: { id: TARGET }, query: { reason: 'spam' } });
     assert.equal(res.statusCode, 200);
     assert.match(res.body, /<header class="member-header">/, 'header: who + standing at a glance');
-    assert.match(res.body, /<span class="label">Ladder level<\/span><span class="value">\d of 3<\/span>/);
+    assert.match(res.body, /<span class="label">Warning stage<\/span><span class="value">\d of 3 \([^)]+\)<\/span>/);
     assert.match(res.body, /<details class="card section" id="s-member-cases" data-key="member-cases"><summary>/, 'case history collapsed by default');
-    for (const text of ['Counted warns', '1 of 3', 'Next warning', 'Pending appeals', 'No-contact orders', 'Staff notes (1)', 'Case history (1)', 'Spam: 3 cases', '/action/preview', 'Account created', '@Member', 'cdn.discordapp.com']) {
+    for (const text of ['Counted warns', '1 of 3', 'Next warning', 'Pending appeals', 'Keep apart', 'Staff notes (1)', 'Case history (1)', 'Spam: 3 cases', '/action/preview', 'Account created', '@Member', 'cdn.discordapp.com']) {
         assert.ok(res.body.includes(text), text);
     }
     assert.ok(!res.body.includes('<img src=x>') && !res.body.includes('<i>') && !res.body.includes('<script>'));
@@ -759,7 +759,7 @@ test('staff page: coverage heatmap as a table with intensity classes and the mas
     assert.match(res.body, /class="heat"/);
     assert.match(res.body, /class="heat-4"/);
     assert.match(res.body, /class="heat-0"/);
-    assert.match(res.body, /Mass-action guard blocks \(1\)/);
+    assert.match(res.body, /Safety limit blocks \(1\)/);
     assert.ok(!res.body.includes('/staff/blocks/lift'), 'admins who are not owners cannot lift');
     assert.ok(!/style=/.test(res.body));
     assert.equal(serviceCalls(h, ['loadCoverageCounts'])[0].args[2], 30);
@@ -1202,7 +1202,7 @@ test('bulk: kicks/bans stop at the mass-action guard (4 of 5 used → 1 planned)
     const preview = await post(h, h.d.enforcement.bulkPreview, { form: { scope: 'selected', ids: [TARGET, OTHER], action: 'kick', reasonKey: 'spam' } });
     assert.equal(preview.statusCode, 200);
     assert.match(preview.body, /Kick: 1 member/);
-    assert.match(preview.body, /mass-action guard: no more bans\/kicks/);
+    assert.match(preview.body, /safety limit: no more bans\/kicks/);
     assert.match(preview.body, /allows 1 more ban\/kick/);
     assert.match(preview.body, /<p class="muted">Precedent for Spam: 3 cases<\/p>/, 'similar-cases hint for the chosen reason');
     assert.ok(!preview.body.includes('This member:'), 'no per-member ladder line on a bulk preview');
@@ -1308,7 +1308,7 @@ test('banned page: Discord bans joined with open cases; filters; escaped; Unban 
     assert.match(page.body, /3 banned in the main server/);
     assert.ok(page.body.includes('target&lt;script&gt;') && page.body.includes('spam &lt;b&gt;'), 'names and reasons escaped');
     assert.ok(page.body.indexOf('ban3456') < page.body.indexOf('ban2345'), 'newest case first');
-    assert.match(page.body, /Permanent <span class="muted">· warn ladder level 3<\/span>/);
+    assert.match(page.body, /Permanent <span class="muted">· Warning stage 3 of 3 \(permanent ban\)<\/span>/);
     assert.match(page.body, /appeal pending<\/a>/);
     assert.match(page.body, /no case \(banned outside the bot\)/);
     assert.ok(page.body.includes(`href="/dashboard/users/${TARGET}#s-member-actions">Unban…`));

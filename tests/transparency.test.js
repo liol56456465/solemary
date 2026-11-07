@@ -224,7 +224,7 @@ test('on: numbers only, small counts hidden, current month marked, footer link a
         assert.match(body, /30 hours/, 'May median');
         assert.match(body, /20 hours/, 'total median');
         assert.match(body, /not enough decisions/, 'October has one decision');
-        assert.match(body, /Voided as mistakes/);
+        assert.match(body, /Removed as mistakes/);
         assert.match(body, /Test simulations/);
         // No identities: no Discord IDs, no case-code-looking tokens in the tables, no inline style/script.
         // (The top bar's Add to Discord link carries the client ID; the report is in <main>.)

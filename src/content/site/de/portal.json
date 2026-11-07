@@ -12,7 +12,7 @@
     "closed": "Geschlossen"
   },
   "appeal": {
-    "voided": "Annulliert: kein Einspruch nötig",
+    "voided": "Entfernt (ein Fehler): kein Einspruch nötig",
     "lifted": "Bereits aufgehoben",
     "unappealable": "Kein Einspruch möglich",
     "ended": "Beendet: kein Einspruch nötig",
@@ -29,14 +29,14 @@
   },
   "status": {
     "imported": "nur Verlauf (importiert, zählt nicht)",
-    "voided": "annulliert: zählt nicht mehr",
+    "voided": "entfernt (ein Fehler): zählt nicht mehr",
     "counts": "zählt aktuell",
     "noLongerCounts": "in der Akte, zählt nicht mehr",
     "onRecord": "in der Akte",
     "case": {
       "liftedByAppeal": "per Einspruch aufgehoben",
       "reversed": "von einem Moderator rückgängig gemacht",
-      "lifted": "aufgehoben",
+      "lifted": "vorzeitig aufgehoben",
       "appealPending": "Einspruch ausstehend",
       "expired": "abgelaufen",
       "activeAppealDenied": "aktiv, Einspruch abgelehnt",
@@ -44,7 +44,7 @@
     }
   },
   "login": {
-    "lead": "Sieh deine eigene Moderationsakte auf {server}: deine Verwarnungen, deine Stufe auf der Verwarnungsleiter, aktive Banns oder Stummschaltungen, deine Fälle und deine Einsprüche.",
+    "lead": "Sieh deine eigene Moderationsakte auf {server}: deine Verwarnungen, deine Verwarnungsstufe, aktive Banns oder Stummschaltungen, deine Fälle und deine Einsprüche.",
     "withDiscord": "Mit Discord anmelden",
     "withAccount": "Mit einem Mewvo-Konto anmelden",
     "note": "Mewvo fragt bei Discord nur, wer du bist (die Berechtigung identify): keine E-Mail, keine Server, sonst nichts. Du siehst immer nur deine eigene Akte. Die Anmeldung gilt eine Stunde.",
@@ -163,7 +163,7 @@
       "one": "Noch {count} weitere danach würde einen automatischen Bann bedeuten ({ban}).",
       "other": "Noch {count} weitere danach würden einen automatischen Bann bedeuten ({ban})."
     },
-    "limit": "Damit wäre das Verwarnungslimit erreicht: ein automatischer Bann ({ban}, Leiterstufe {level}).",
+    "limit": "Damit wäre das Verwarnungslimit erreicht: ein automatischer Bann ({ban}, Verwarnungsstufe {level} von 3).",
     "permanent": "permanent"
   },
   "duration": {

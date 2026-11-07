@@ -12,7 +12,7 @@
     "closed": "Zamknięte"
   },
   "appeal": {
-    "voided": "Unieważniona: nie ma od czego się odwołać",
+    "voided": "Usunięta (pomyłka): nie ma od czego się odwołać",
     "lifted": "Już zdjęta",
     "unappealable": "Nie można się odwołać",
     "ended": "Zakończona: nie ma od czego się odwołać",
@@ -31,14 +31,14 @@
   },
   "status": {
     "imported": "tylko historia (zaimportowane, nie liczy się)",
-    "voided": "unieważniona: już się nie liczy",
+    "voided": "usunięta (pomyłka): już się nie liczy",
     "counts": "liczy się teraz",
     "noLongerCounts": "w historii, już się nie liczy",
     "onRecord": "w historii",
     "case": {
       "liftedByAppeal": "zdjęta po odwołaniu",
       "reversed": "cofnięta przez moderatora",
-      "lifted": "zdjęta",
+      "lifted": "zdjęta przed czasem",
       "appealPending": "odwołanie oczekuje",
       "expired": "wygasła",
       "activeAppealDenied": "aktywna, odwołanie odrzucone",
@@ -46,7 +46,7 @@
     }
   },
   "login": {
-    "lead": "Zobacz własną historię moderacji na {server}: swoje ostrzeżenia, poziom na drabinie ostrzeżeń, aktywny ban lub wyciszenie, swoje sprawy i odwołania.",
+    "lead": "Zobacz własną historię moderacji na {server}: swoje ostrzeżenia, etap ostrzeżeń, aktywny ban lub wyciszenie, swoje sprawy i odwołania.",
     "withDiscord": "Zaloguj się przez Discorda",
     "withAccount": "Zaloguj się kontem Mewvo",
     "note": "Mewvo pyta Discorda tylko o to, kim jesteś (uprawnienie identify): bez e-maila, bez serwerów, nic więcej. Widzisz zawsze tylko własną historię. Logowanie trwa godzinę.",
@@ -169,7 +169,7 @@
       "many": "Jeszcze {count} po nim oznaczałoby automatyczny ban ({ban}).",
       "other": "Jeszcze {count} po nim oznaczałoby automatyczny ban ({ban})."
     },
-    "limit": "Osiągnięto by limit ostrzeżeń: automatyczny ban ({ban}, poziom drabiny {level}).",
+    "limit": "Osiągnięto by limit ostrzeżeń: automatyczny ban ({ban}, etap ostrzeżeń {level} z 3).",
     "permanent": "na stałe"
   },
   "duration": {

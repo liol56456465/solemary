@@ -17,7 +17,7 @@ test('panel summary: member with roles, ladder and an active mute', () => {
     assert.match(text, /Account created:.*<t:1577836800:F>/);
     assert.match(text, /In server:\*\* yes, joined <t:1714521600:F>/);
     assert.match(text, /3 roles/);
-    assert.match(text, /Ladder level:\*\* 1/);
+    assert.match(text, /Warning stage:\*\* 1 of 3 \(7-day ban\)/);
     assert.match(text, /next warn bans/);
     assert.match(text, /Active punishment:\*\* mute `abcde`/);
     assert.match(text, /Pending appeal:\*\* `xyzab`/);
@@ -38,8 +38,8 @@ test('last cases: type, name, date, status, and a pointer to older ones', () => 
     ];
     const text = recentCasesText(rows, 5);
     assert.match(text, /`aaaaa` \*\*warn\*\* · kit warn 2 · <t:1735776000:d> · active/);
-    assert.match(text, /`bbbbb` \*\*ban\*\* · kit ban 1 · .* · voided/);
+    assert.match(text, /`bbbbb` \*\*ban\*\* · kit ban 1 · .* · removed \(a mistake\)/);
     assert.match(text, /3 older/);
     assert.equal(recentCasesText([], 0), 'None');
-    assert.equal(caseStatusLabel(rows[1]), 'voided');
+    assert.equal(caseStatusLabel(rows[1]), 'removed (a mistake)');
 });

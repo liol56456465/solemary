@@ -184,7 +184,7 @@ export async function completeFlowDetails({ guild, moderator, targetUser, flow, 
 export function warnEffectText(ladder) {
     const step = previewWarn(ladder);
     return step.escalates
-        ? `reaches the warning limit → automatic ${step.banDurationMs ? formatDuration(step.banDurationMs) : 'permanent'} ban (ladder level ${step.nextLevel}).`
+        ? `reaches the warning limit → automatic ${step.banDurationMs ? formatDuration(step.banDurationMs) : 'permanent'} ban (warning stage ${step.nextLevel} of 3).`
         : `warning ${step.warnNumber} of ${step.threshold}.`;
 }
 
@@ -202,7 +202,7 @@ export function flowSummary(flow) {
         rows.push({ label: 'Reason', value: flow.reason });
         if (flow.type === 'ban') {
             rows.push({ label: 'Duration', value: flow.durationMs ? formatDuration(flow.durationMs) : 'Permanent' });
-            rows.push({ label: 'Appealable', value: flow.unappealable ? 'No' : 'Yes' });
+            rows.push({ label: 'Can they appeal?', value: flow.unappealable ? 'No' : 'Yes' });
         }
         if (flow.type === 'mute') rows.push({ label: 'Duration', value: formatDuration(flow.durationMs) });
         rows.push({ label: 'Name', value: flow.nameIsDefault ? `${flow.name} (default)` : flow.name });
