@@ -42,7 +42,8 @@ import { postWeeklyDigest } from './services/stats/weeklyDigest.js';
 import { postDailyAutomodDigest } from './services/automod/automodDigest.js';
 import { liftCalmSlowmodes } from './services/automod/autoSlowmode.js';
 import { runHeadsUpChecks } from './services/automod/automodService.js';
-import { pollFeeds } from './services/community/feedService.js';
+import { pollFeeds, pollTwitchFeeds } from './services/community/feedService.js';
+import { isTwitchConfigured } from './services/community/twitchService.js';
 import { runDueScheduledMessages } from './services/scheduledMessageService.js';
 import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
@@ -412,6 +413,9 @@ class Mewvo extends Client {
     cron.schedule('* * * * *', exclusive('giveaway_check', () => checkGiveaways(this)));
     cron.schedule('*/15 * * * *', exclusive('counter_update', () => this.updateAllCounters()));
     cron.schedule('*/15 * * * *', exclusive('youtube_feeds', () => pollFeeds(this)));
+    // Twitch "went live" feeds: every 2 minutes. Off (no requests) without TWITCH_CLIENT_ID/SECRET.
+    if (isTwitchConfigured()) cron.schedule('*/2 * * * *', exclusive('twitch_feeds', () => pollTwitchFeeds(this)));
+    else logger.info('Twitch feeds are off: TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET are not set');
     cron.schedule('* * * * *', exclusive('enforcement_expiry', () => runEnforcementExpiry(this)));
     cron.schedule('* * * * *', exclusive('temp_role_expiry', () => runTempRoleExpiry(this)));
     // Plans: "ends in 3 days" / "has ended" DMs, the plan cache, supporter roles (premiumEffects.js).

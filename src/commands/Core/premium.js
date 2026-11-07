@@ -76,7 +76,7 @@ export function statusText(subscription, publicUrl = '') {
         return `You are on **Free**.${site ? ` Plans: ${site}` : ''}\nHave a key? Use \`/premium redeem\`.`;
     }
     const plan = PLANS.find((p) => p.id === subscription.plan_id);
-    const limits = plan?.limits ? `\nIn servers you own: ${plan.limits.tags} tags, ${plan.limits.stickies} sticky messages, ${plan.limits.feeds} YouTube feeds, ${plan.limits.scheduled} scheduled messages.` : '';
+    const limits = plan?.limits ? `\nIn servers you own: ${plan.limits.tags} tags, ${plan.limits.stickies} sticky messages, ${plan.limits.feeds} YouTube or Twitch feeds, ${plan.limits.scheduled} scheduled messages.` : '';
     return `**Mewvo ${planName(subscription.plan_id)}** until ${ts(subscription.expires_at, 'F')} (${ts(subscription.expires_at, 'R')}).${limits}`;
 }
 
