@@ -223,4 +223,63 @@ answer 1), Q2 with 3 answers; wait 1 minute; save; turn the quiz on.
 | 15.3 | With `CANONICAL_REDIRECT=true`: open an old Replit page link (e.g. `/leaderboard?page=2`) | Lands on the same page on `mewvo.com`; `https://www.mewvo.com/` lands on `https://mewvo.com/` |
 | 15.4 | Verify with Discord as Alt B on the new host | OAuth completes, role given |
 
+## 16. Channel permissions (dashboard; test channel `#t`)
+
+| # | Do | Expected |
+|---|---|---|
+| 16.1 | In Discord deny Send Messages for Mewvo's role in `#t`; open Dashboard → Messages | `#t (Mewvo lacks: Send Messages)` in the channel list, hint under the picker |
+| 16.2 | Post plain text (no box) where Mewvo lacks only Embed Links; then the same with a box title | Plain text posts; the box post is refused with "I am missing Embed Links…" and a **Fix permissions** link |
+| 16.3 | Click Fix permissions → "Give Mewvo these permissions" | Back on Messages: "Mewvo now has … in #…"; a Mewvo member entry in the channel's permissions; "Channel Permissions Fixed" in the mod log; a row in Dashboard → Audit |
+| 16.4 | Open the Fix link for a channel Mewvo can't see | No button; "Mewvo cannot see #…" plus the Discord steps |
+| 16.5 | Owner → Announce: pick another channel for the main server → Preview → Send | Posts there; empty picker = old default channel |
+| 16.6 | `/logging channel` with an announcement channel; `/welcome setup`, `/level setup` | Announcement channels offered and saved; logs arrive there (needs command re-register) |
+
+## 17. Confirm / Cancel (dashboard + `/ticket dashboard`)
+
+| # | Do | Expected |
+|---|---|---|
+| 17.1 | Cases → an active ban → reason → **Remove case…** | Confirm page: case, member, reason, effect ("The member is unbanned…"); nothing changed yet |
+| 17.2 | Cancel; then repeat and press Remove case | Cancel: still active. Confirm: removed, member DM'd |
+| 17.3 | Browser Back → press Remove case again | "expired or was already used. Nothing was done" |
+| 17.4 | Cases list: tick 2 cases (one already removed) → remove + reason → Apply → confirm | One listed, one "Skipped, already removed"; flash "Removed: …" |
+| 17.5 | Channel tools → Purge 3 messages; Applications → delete a test application | Confirm pages ("deleted for good" / number of submissions); Cancel deletes nothing; Confirm deletes |
+| 17.6 | Members → tick an alt → Ban → Preview | One page listing who will be banned, no extra pop-up |
+| 17.7 | `/ticket dashboard` → Delete system → Cancel; again and wait 60 s; again → Delete ticket system | "Cancelled. Nothing was deleted." / "Confirmation expired" / "Ticket system deleted" (then `/ticket setup` again) |
+
+## 18. First setup (dashboard Overview + Setup)
+
+| # | Do | Expected |
+|---|---|---|
+| 18.1 | Remove Ban Members from Mewvo's role → Overview | Permissions card on top: "Ban Members missing" + fix line; turn it back on → "Mewvo has every permission it needs." |
+| 18.2 | Drag the Muted role above Mewvo's role → reload | "Move Mewvo's role above @Muted"; put it back |
+| 18.3 | Deny Send Messages for Mewvo in #mod-log; warn Alt A | Overview: "Mewvo couldn't post to #mod-log: missing Send Messages · 1 time today" + Fix it; allow + warn again → line gone |
+| 18.4 | Setup step by step: save a main log channel on its step | Back on the same step, "Log channels saved."; other log channels unchanged |
+| 18.5 | Support server: non-admin runs an admin-only command | "…Ask an admin of this server if you need access." (main server: unchanged, with the channel link) |
+
+## 19. No typed IDs or links
+
+| # | Do | Expected |
+|---|---|---|
+| 19.1 | Keep apart: type "al" in First member | Matching members listed; picking fills the ID |
+| 19.2 | JS off: "Find a member by name" → Use (both members) | ID filled, "Picked: …" shown; first pick kept |
+| 19.3 | Paste `<@ID>` in a member field | Accepted |
+| 19.4 | Tickets → block, Purge "only from", Logging → ignore: search | Works; ticket block and purge also list banned users |
+| 19.5 | Messages: post a poll, reload → End poll → confirm | Listed under End a poll; closes in Discord, leaves the list |
+| 19.6 | `/jointocreate config` → Change user limit → 150, then 5 | Modal prefilled; 150 refused; 5 saved |
+| 19.7 | `/configwizard` → Skip, then Stop setup | "Skipped" / "Setup cancelled"; buttons grey out |
+
+## 20. Plain words and automod
+
+| # | Do | Expected |
+|---|---|---|
+| 20.1 | `/enforcements user:Alt A` | "Warning stage: 0 of 3 (no warning ban yet)" |
+| 20.2 | Warn Alt A 3 times | Last reply: "Now at warning stage 1 of 3 (7-day ban)." |
+| 20.3 | Appeal panel → **My record** | Embed "My record in Mewvo" with "Warning stage …" |
+| 20.4 | Dashboard → Automod | "Report only (don't delete)", "Warn privately first (2 min to fix)", "Friendly notice…", "Extra-watch period after a ban" |
+| 20.5 | Sidebar "Keep apart"; start an order | DM "Keep apart: an order in Mewvo" |
+| 20.6 | Dashboard → Words explained | All 13 new terms listed |
+| 20.7 | Alt A sends `f.u.c.k`, `ｎｉｇｇｅｒ`, `n i g g e r` (blocked list on) | Each caught; `class`, `cocktail`, `Dickens`, `Maine coon` are not |
+| 20.8 | Dashboard → change extra blocked words, then send one | Applies without a restart |
+| 20.9 | Website on a phone: sign-up / redeem fields, menu, pricing table sideways | No zoom on tap; table scrolls with the feature column fixed |
+
 When done: run the clean-up from "Before testing in Discord".
