@@ -14,9 +14,14 @@ import { registerDashboard } from '../src/services/dashboard/routes.js';
 import { createMemorySessionStore } from '../src/services/dashboard/sessionStore.js';
 import { SESSION_COOKIE, signValue } from '../src/services/dashboard/security.js';
 import { createSite } from '../src/services/site/site.js';
+import { SettingsUnavailableError, setSettingsCacheForTests } from '../src/services/settings/guildSettings.js';
 
 const SECRET = 'x'.repeat(64);
 const GUILD = '100000000000000001';
+// The fixtures' server is not a configured home server here (MAIN_GUILD_ID is only in the
+// router's env), so give it an empty settings row: each case then reads its own server's
+// appeal settings, the generic defaults (30-day window, 7-day cooldown).
+setSettingsCacheForTests(GUILD, {});
 const MEMBER = '200000000000000002';
 const OTHER = '300000000000000003';
 const ORIGIN = 'https://bot.example';
@@ -428,6 +433,27 @@ test('buildRecordView keeps only member-safe fields', () => {
     assert.equal(view.activeMute, null);
     const level2 = buildRecordView({ standing: { ...STANDING, ladder: { level: 2, warns_since_level: 0 } }, cases: [], appeals: [] });
     assert.deepEqual(level2.warnings, { count: 0, threshold: 1 });
+});
+
+test('appeal window and cooldown come from each case\'s own server (non-home server)', () => {
+    const NON_HOME = '100000000000000077';
+    const now = Date.now();
+    const kick = (guildId, days) => caseRow({ guild_id: guildId, type: 'kick', created_at: past(days) });
+    try {
+        // A non-home server that stored a 10-day window and a 1-day cooldown.
+        setSettingsCacheForTests(NON_HOME, { appealWindowMs: 10 * DAY, appealCooldownMs: DAY });
+        assert.equal(appealInfo(kick(NON_HOME, 15), null, { now }).appealable, false, 'its own 10-day window');
+        assert.equal(appealInfo(kick(GUILD, 15), null, { now }).appealable, true, 'the other server keeps the 30-day default');
+        const ban = caseRow({ guild_id: NON_HOME, type: 'ban', expires_at: future(30) });
+        assert.equal(appealInfo(ban, { status: 'denied', decided_at: past(2) }, { now }).appealable, true, 'its own 1-day cooldown');
+        const view = buildRecordView({ standing: STANDING, cases: [kick(NON_HOME, 15)], appeals: [], now });
+        assert.equal(view.cases[0].appeal.appealable, false);
+        // Settings never read (database down at boot): an error, never the main server's values.
+        setSettingsCacheForTests(NON_HOME, null);
+        assert.throws(() => appealInfo(kick(NON_HOME, 1), null, { now }), SettingsUnavailableError);
+    } finally {
+        setSettingsCacheForTests(NON_HOME, null);
+    }
 });
 
 // ── Download my data ───────────────────────────────────────────────────────

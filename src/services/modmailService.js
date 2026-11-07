@@ -27,6 +27,7 @@ import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
 import { linkModmailChannel, linkedChannelId, linkedUserId, unlinkModmailChannel } from './modmailLinks.js';
 import { withOpenChannelSlot } from './openChannelCap.js';
+import { resolveSetting } from './settings/guildSettings.js';
 import { privacyUrl } from '../utils/privacyNotice.js';
 
 const NOTE_PREFIX = '//';
@@ -218,7 +219,7 @@ export async function openModmail(client, user, dmChannel, messageId) {
         ];
         // Its own category (dashboard), else the /ticket category as before.
         const categoryOf = (id) => (id ? guild.channels.cache.get(id) : null);
-        const category = [categoryOf(enforcementConfig.modmailCategoryId), categoryOf(config.ticketCategoryId)]
+        const category = [categoryOf(resolveSetting(guild.id, 'modmailCategoryId')), categoryOf(config.ticketCategoryId)]
             .find((c) => c?.type === ChannelType.GuildCategory) || null;
         const safeName = user.username.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 80) || user.id;
 

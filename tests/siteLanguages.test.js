@@ -11,6 +11,7 @@ import {
 import { LANG_COOKIE, acceptLanguage, cookieLanguage, pickerHref, requestLanguage, suggestedLanguage } from '../src/services/site/language.js';
 import { rulesPage } from '../src/services/site/pages/rules.js';
 import { changelogPage } from '../src/services/site/pages/changelog.js';
+import { enforcementConfig } from '../src/config/enforcement.js';
 
 const ORIGIN = 'https://mewvo.example';
 
@@ -367,10 +368,10 @@ test('My record: case status and the next warning in the page\'s language; Engli
         { status: 'revoked', revoke_reason: 'Appeal accepted' }, { status: 'revoked', revoke_reason: 'Automod decision' }, { status: 'revoked' },
         { status: 'appeal_pending' }, { status: 'active', expires_at: new Date(Date.now() - 1000) }, { status: 'expired' },
     ].map((r, i) => ({ case_code: `c${i}`, type: 'ban', created_at: new Date(), reason: 'r', ...r }));
-    const view = (text, ladder = { level: 0, warns_since_level: 0 }) => portal.buildRecordView({ standing: { ladder, warns: [] }, cases: rows, appeals: [], text });
+    const view = (text, ladder = { level: 0, warns_since_level: 0 }) => portal.buildRecordView({ standing: { ladder, warns: [] }, cases: rows, appeals: [], text, config: enforcementConfig });
     assert.deepEqual(view(en).cases.map((c) => c.status), rows.map((r) => caseStatusLabel(r)));
     assert.deepEqual(view(ru).cases.map((c) => c.status), ['снято по апелляции', 'отменено модератором', 'снято досрочно', 'апелляция на рассмотрении', 'истекло', 'истекло']);
-    assert.equal(portal.buildRecordView({ standing: { warns: [] }, cases: [rows[0]], appeals: [{ case_code: 'c0', status: 'denied', type: 'ban', created_at: new Date() }], text: de }).cases[0].status, 'per Einspruch aufgehoben');
+    assert.equal(portal.buildRecordView({ standing: { warns: [] }, cases: [rows[0]], appeals: [{ case_code: 'c0', status: 'denied', type: 'ban', created_at: new Date() }], text: de, config: enforcementConfig }).cases[0].status, 'per Einspruch aufgehoben');
     for (const ladder of [{ level: 0, warns_since_level: 0 }, { level: 0, warns_since_level: 1 }, { level: 0, warns_since_level: 2 }, { level: 1, warns_since_level: 0 }, { level: 2, warns_since_level: 0 }, { level: 3, warns_since_level: 0 }]) {
         assert.equal(portal.nextWarningWords(ladder, en), nextWarningText(ladder));
     }
@@ -419,7 +420,7 @@ test('number + noun sentences are plural keys (pricing, trust, portal, account, 
     assert.match(trustDe, /Letzte 90 Tage, vom /);
     assert.match(String(trustPage(en, TRUST_CARD)), /<dd>5,000<\/dd>/);
     const old = { case_code: 'k', type: 'kick', status: 'active', created_at: new Date(Date.now() - 100 * DAY_MS), reason: 'r' };
-    const view = (text) => portal.buildRecordView({ standing: { warns: [] }, cases: Array.from({ length: 201 }, (_, i) => ({ ...old, case_code: `k${i}` })), appeals: [], text });
+    const view = (text) => portal.buildRecordView({ standing: { warns: [] }, cases: Array.from({ length: 201 }, (_, i) => ({ ...old, case_code: `k${i}` })), appeals: [], text, config: enforcementConfig });
     assert.equal(view(ru).cases[0].appeal.text, 'Срок подачи апелляции (30 дней) истёк');
     assert.equal(view(de).cases[0].appeal.text, 'Die Einspruchsfrist (30 Tage) ist abgelaufen');
     const session = { username: 'ana', csrf: 'c' };

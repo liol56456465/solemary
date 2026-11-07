@@ -10,11 +10,21 @@
 // Columns on mod_appeals (schema v6): claimed_by, claimed_by_username, claimed_at, reminded_at.
 
 import { logger } from '../../utils/logger.js';
-import { enforcementConfig } from '../../config/enforcement.js';
+import { SettingsUnavailableError, guildIdFor, isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
 import { query as defaultQuery, T } from './db.js';
 
 export const STALE_AFTER_MS = 2 * 24 * 60 * 60 * 1000;
-const staleAfter = () => (Number(enforcementConfig.staleAppealReminderMs) > 0 ? Number(enforcementConfig.staleAppealReminderMs) : STALE_AFTER_MS);
+
+/**
+ * The quiet time before a pending appeal of this server gets the "still open" DM. Home servers
+ * use the main server's setting (as before); any other server its own. Throws
+ * SettingsUnavailableError when another server's settings could not be read.
+ */
+export function staleAfter(guildId) {
+    const settingsGuild = isHomeGuild(guildId) ? guildIdFor('main') || guildId : guildId;
+    const ms = Number(resolveSetting(settingsGuild, 'staleAppealReminderMs'));
+    return ms > 0 ? ms : STALE_AFTER_MS;
+}
 
 /** The DM a member gets when someone on the staff team takes their appeal. */
 export function claimedDm(caseCode) {
@@ -58,22 +68,40 @@ export async function claimAppeal({ client, admin, caseCode, query = defaultQuer
     return { status: 'claimed', dmDelivered };
 }
 
-/** Hourly. Each stale appeal's member is told once (reminded_at set first). Never throws. */
+/**
+ * Hourly. Each stale appeal's member is told once (reminded_at set first), with each server's
+ * own quiet time. A server whose settings cannot be read is skipped this run. Never throws.
+ */
 export async function remindStaleAppeals(client, { query = defaultQuery, now = Date.now() } = {}) {
+    let guilds;
     try {
-        const { rows } = await query(
-            `UPDATE ${T.appeals} SET reminded_at = NOW()
-             WHERE id IN (
-                 SELECT id FROM ${T.appeals}
-                 WHERE kind = 'appeal' AND status = 'pending' AND reminded_at IS NULL AND created_at <= $1
-                 ORDER BY created_at LIMIT 25 FOR UPDATE SKIP LOCKED
-             ) RETURNING case_code, user_id`,
-            [new Date(now - staleAfter())],
-        );
-        for (const row of rows) await dm(client, row.user_id, stillOpenDm(row.case_code));
-        return rows.length;
+        ({ rows: guilds } = await query(
+            `SELECT DISTINCT guild_id FROM ${T.appeals}
+             WHERE kind = 'appeal' AND status = 'pending' AND reminded_at IS NULL`,
+        ));
     } catch (error) {
         logger.error(`Appeal reminders: ${error.message}`);
         return 0;
     }
+    let reminded = 0;
+    for (const { guild_id: guildId } of guilds) {
+        try {
+            const { rows } = await query(
+                `UPDATE ${T.appeals} SET reminded_at = NOW()
+                 WHERE id IN (
+                     SELECT id FROM ${T.appeals}
+                     WHERE kind = 'appeal' AND status = 'pending' AND reminded_at IS NULL AND created_at <= $1
+                       AND guild_id = $2
+                     ORDER BY created_at LIMIT 25 FOR UPDATE SKIP LOCKED
+                 ) RETURNING case_code, user_id`,
+                [new Date(now - staleAfter(guildId)), guildId],
+            );
+            for (const row of rows) await dm(client, row.user_id, stillOpenDm(row.case_code));
+            reminded += rows.length;
+        } catch (error) {
+            if (error instanceof SettingsUnavailableError) logger.warn(`Appeal reminders: skipped guild ${guildId} this run (${error.message})`);
+            else logger.error(`Appeal reminders (guild ${guildId}): ${error.message}`);
+        }
+    }
+    return reminded;
 }

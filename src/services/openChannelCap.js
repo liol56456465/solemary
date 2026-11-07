@@ -4,7 +4,7 @@
 // At the cap, new ones are refused with a clear message and staff get an alert (at most once
 // an hour). Appeals are never counted and never refused.
 
-import { enforcementConfig } from '../config/enforcement.js';
+import { resolveSetting } from './settings/guildSettings.js';
 import { Mutex } from '../utils/mutex.js';
 import { logger } from '../utils/logger.js';
 import { query, T } from './enforcement/db.js';
@@ -28,7 +28,7 @@ export async function countOpenStaffChannels(guild) {
  */
 export async function withOpenChannelSlot(guild, kind, open, { now = Date.now(), alert = alertStaff } = {}) {
     return Mutex.runExclusive(`open-staff-channel:${guild.id}`, async () => {
-        const cap = enforcementConfig.openChannelCap;
+        const cap = resolveSetting(guild.id, 'openChannelCap');
         const count = await countOpenStaffChannels(guild);
         if (count >= cap) {
             logger.warn(`Open-channel cap reached in ${guild.id}: ${count}/${cap}; a new ${kind} was refused`);
@@ -48,7 +48,7 @@ async function alertStaff(guild, kind, count, cap) {
         { name: 'Open staff reports + modmail', value: `${count} of ${cap}` },
         { name: 'Refused', value: `A new ${kind}. Members are told to try again later; appeals still open normally.` },
         { name: 'What to do', value: 'Close finished report and modmail channels, or raise the cap in the dashboard (Enforcement & appeals).' },
-    ], { title: 'Staff channel cap reached' });
+    ], { title: 'Staff channel cap reached', guildId: guild.id });
 }
 
 /** Tests only. */

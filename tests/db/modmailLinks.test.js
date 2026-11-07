@@ -13,7 +13,7 @@ const skip = isLocalDatabaseUrl(process.env.POSTGRES_URL || '') ? false : 'needs
 const runId = String(Date.now()).slice(-9);
 const guildId = `9${runId}00000009`;
 const id = (prefix, n) => `${prefix}${runId}${String(n).padStart(8, '0')}`;
-let pgDb, db, links, modmail, enforcementConfig;
+let pgDb, db, links, modmail, settings;
 
 before(async () => {
     if (skip) return;
@@ -21,8 +21,9 @@ before(async () => {
     ({ db } = await import('../../src/utils/database/wrapper.js'));
     await db.initialize();
     links = await import('../../src/services/modmailLinks.js');
-    ({ enforcementConfig } = await import('../../src/config/enforcement.js'));
-    enforcementConfig.modmailCategoryId = CATEGORY;
+    // A non-home server (guildId): its own modmail category, read per server.
+    settings = await import('../../src/services/settings/guildSettings.js');
+    settings.setSettingsCacheForTests(guildId, { modmailCategoryId: CATEGORY });
     modmail = await import('../../src/services/modmailService.js');
 });
 
@@ -30,7 +31,7 @@ after(async () => {
     if (skip) return;
     await pgDb.pool.query('DELETE FROM modmail_links WHERE guild_id = $1', [guildId]);
     await db.delete(`modmail:links:imported:${guildId}`).catch(() => {});
-    enforcementConfig.modmailCategoryId = undefined;
+    settings.setSettingsCacheForTests(guildId, null);
     await pgDb.disconnect();
 });
 

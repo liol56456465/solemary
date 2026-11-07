@@ -7,6 +7,7 @@ import { loadCatalogs } from '../src/services/site/i18n.js';
 import * as pages from '../src/services/site/accountPages.js';
 import { bonusText } from '../src/services/site/accountRoutes.js';
 import { buildRecordView, loginPage, recordPage } from '../src/services/site/memberPortal.js';
+import { enforcementConfig } from '../src/config/enforcement.js';
 
 const FILES = ['accountPages.js', 'accountRoutes.js', 'memberPortal.js'].map((f) => readFileSync(new URL(`../src/services/site/${f}`, import.meta.url), 'utf8'));
 const SOURCE = FILES.join('\n');
@@ -93,9 +94,10 @@ test('every account and portal page renders from the catalog', () => {
                 standing: { ladder: { level: 0, warns_since_level: 1 }, warns: [], activeBan: { case_code: 'b', expires_at: null }, activeMute: { case_code: 'm', expires_at: new Date(now + 1000) } },
                 cases: [{ case_code: 'w', type: 'warn', status: 'active', created_at: new Date(), reason: 'r' }],
                 appeals: [{ case_code: 'w', status: 'pending', type: 'warn', created_at: new Date() }],
+                config: enforcementConfig,
             }),
         }),
-        recordPage({ ...ctx, supportInvite: null }, { session, view: buildRecordView({ standing: { warns: [] }, cases: [], appeals: [] }) }),
+        recordPage({ ...ctx, supportInvite: null }, { session, view: buildRecordView({ standing: { warns: [] }, cases: [], appeals: [], config: enforcementConfig }) }),
     ].map(String);
     for (const page of out) {
         assert.ok(!/\{[a-zA-Z]+\}/.test(page), 'no unfilled {param}');
