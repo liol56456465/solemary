@@ -532,12 +532,13 @@ export const tableStatements = [
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
 
-    // Feeds (/community feed): new YouTube videos posted to a channel. Polled every
-    // 15 minutes from memory; last_item_id is written only when a new video is posted.
+    // Feeds (/community feed): new YouTube videos (and, from schema v11, Twitch streams) posted
+    // to a channel. Polled every 15 minutes from memory; last_item_id is written only when a
+    // new item is posted.
     `CREATE TABLE IF NOT EXISTS ${t.feeds} (
         id BIGSERIAL PRIMARY KEY,
         guild_id VARCHAR(20) NOT NULL,
-        kind VARCHAR(16) NOT NULL DEFAULT 'youtube' CHECK (kind IN ('youtube')),
+        kind VARCHAR(16) NOT NULL DEFAULT 'youtube' CHECK (kind IN ('youtube', 'twitch')),
         source_id VARCHAR(64) NOT NULL,
         channel_id VARCHAR(20) NOT NULL,
         message_template TEXT,
@@ -546,6 +547,10 @@ export const tableStatements = [
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         UNIQUE (guild_id, kind, source_id, channel_id)
     )`,
+    // Schema v11: existing databases still have the v10 CHECK (youtube only). One ALTER (atomic:
+    // never a moment without the check) replaces it with the wider one; existing rows are untouched.
+    `ALTER TABLE ${t.feeds} DROP CONSTRAINT IF EXISTS ${t.feeds}_kind_check,
+        ADD CONSTRAINT ${t.feeds}_kind_check CHECK (kind IN ('youtube', 'twitch'))`,
 
     // Per-server settings edited from the dashboard (services/settings/guildSettings.js,
     // keys in settingsRegistry.js). Held in memory; env values seed missing keys once.
@@ -853,6 +858,21 @@ export const tableStatements = [
         updated_by VARCHAR(20) NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+    // Recent errors (schema v11, dashboard Owner → Recent errors; utils/errorEvents.js): one row per
+    // system error a user saw a Ref for, and per background-task error. No user IDs and no text
+    // members wrote: source = command name / customId prefix / task name, message = the internal
+    // error message (IDs masked), cut to 300. trace_id = the 8 characters after the code in the Ref.
+    // At most 30 rows a minute; the newest 500 are kept (pruned on insert).
+    `CREATE TABLE IF NOT EXISTS ${t.error_events} (
+        id BIGSERIAL PRIMARY KEY,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        error_code VARCHAR(64) NOT NULL,
+        error_type VARCHAR(32) NOT NULL,
+        source VARCHAR(100) NOT NULL,
+        guild_id VARCHAR(20),
+        trace_id VARCHAR(16),
+        message VARCHAR(300) NOT NULL DEFAULT ''
+    )`,
 ];
 
 export const indexStatements = [
@@ -921,6 +941,7 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_premium_keys_created ON ${t.premium_keys}(created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_premium_subscriptions_expires ON ${t.premium_subscriptions}(expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_site_content_history_key ON ${t.site_content_history}(lang, key, changed_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_error_events_trace ON ${t.error_events}(trace_id)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

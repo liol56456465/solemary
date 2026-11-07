@@ -155,6 +155,7 @@ export const OWNER_NAV = { group: 'Owner', items: [
     { key: 'owner/commands', label: 'Command sync', icon: 'commands' },
     { key: 'owner/announce', label: 'Announce', icon: 'messages' },
     { key: 'owner/erase', label: 'Erase a case', icon: 'nocontact' },
+    { key: 'owner/errors', label: 'Recent errors', icon: 'warn' },
     { key: 'owner/website', label: 'Website', icon: 'home' },
     { key: 'owner/activity', label: 'Owner activity', icon: 'audit' },
 ] };

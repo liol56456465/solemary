@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Erreurs récentes",
+    "help": "Les erreurs système pour lesquelles des membres ont vu une Ref, et les erreurs des tâches en arrière-plan. Regroupées par code d’erreur et source, les plus récentes d’abord (50 groupes au plus)."
+  },
+  "search": {
+    "label": "Ref, trace ou code d’erreur",
+    "placeholder": "ex. COMMAND_ERROR · int_ab12",
+    "submit": "Rechercher",
+    "clear": "Effacer"
+  },
+  "table": {
+    "error": "Erreur",
+    "source": "Source",
+    "count": "Nombre",
+    "lastSeen": "Dernière fois",
+    "sample": "Exemple de Ref",
+    "server": "Serveur",
+    "noServer": "Aucun serveur (MP ou tâche)",
+    "moreServers": "{count} serveurs au total"
+  },
+  "kept": "Erreurs conservées : {count} (les {max} plus récentes sont gardées ; 30 au plus sont enregistrées par minute).",
+  "empty": "Aucune erreur enregistrée.",
+  "noMatch": "Aucune erreur ne correspond à « {q} ».",
+  "privacy": "Aucun ID d’utilisateur ni texte écrit par des membres n’est enregistré ; les ID dans les messages d’erreur sont masqués.",
+  "unavailable": {
+    "title": "Base de données indisponible",
+    "text": "La liste des erreurs n’a pas pu être lue car la base de données ne répond pas. Réessayez dans quelques minutes."
+  }
+}

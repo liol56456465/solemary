@@ -64,6 +64,7 @@
       "owner_commands": "Command sync",
       "owner_announce": "Announce",
       "owner_erase": "Erase a case",
+      "owner_errors": "Recent errors",
       "owner_website": "Website",
       "owner_activity": "Owner activity"
     }

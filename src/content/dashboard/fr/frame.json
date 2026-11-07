@@ -65,6 +65,7 @@
       "owner_commands": "Synchro des commandes",
       "owner_announce": "Annonce",
       "owner_erase": "Effacer un dossier",
+      "owner_errors": "Erreurs récentes",
       "owner_website": "Site web",
       "owner_activity": "Activité du propriétaire"
     }

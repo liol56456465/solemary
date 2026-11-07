@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Ostatnie błędy",
+    "help": "Błędy systemowe, przy których członkowie zobaczyli Ref, oraz błędy zadań w tle. Pogrupowane według kodu błędu i źródła, najnowsze na górze (najwyżej 50 grup)."
+  },
+  "search": {
+    "label": "Ref, trace lub kod błędu",
+    "placeholder": "np. COMMAND_ERROR · int_ab12",
+    "submit": "Szukaj",
+    "clear": "Wyczyść"
+  },
+  "table": {
+    "error": "Błąd",
+    "source": "Źródło",
+    "count": "Ile razy",
+    "lastSeen": "Ostatnio",
+    "sample": "Przykładowy Ref",
+    "server": "Serwer",
+    "noServer": "Bez serwera (DM lub zadanie)",
+    "moreServers": "Łącznie serwerów: {count}"
+  },
+  "kept": "Zapisane błędy: {count} (zostaje {max} najnowszych; najwyżej 30 zapisów na minutę).",
+  "empty": "Nie zapisano żadnych błędów.",
+  "noMatch": "Brak błędów pasujących do „{q}”.",
+  "privacy": "Nie zapisujemy ID użytkowników ani tekstu pisanego przez członków; ID w komunikatach błędów są ukryte.",
+  "unavailable": {
+    "title": "Baza danych niedostępna",
+    "text": "Nie udało się odczytać listy błędów, bo baza danych nie odpowiada. Spróbuj ponownie za kilka minut."
+  }
+}

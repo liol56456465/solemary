@@ -66,6 +66,7 @@
       "owner_commands": "Синхронизация команд",
       "owner_announce": "Объявления",
       "owner_erase": "Удалить дело",
+      "owner_errors": "Последние ошибки",
       "owner_website": "Сайт",
       "owner_activity": "Действия владельца"
     }
