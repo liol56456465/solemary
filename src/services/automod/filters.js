@@ -28,7 +28,9 @@ const NSFW_DOMAINS = [
 // spaces, stretched letters, common misspellings and hidden letters ("f*g"), while
 // ordinary words stay out ("class", "Scunthorpe", "Niger", "snigger"). Per word:
 //   suffixes: endings that still count ("niggers", "bitches"); only these, so "spicy" is not "spic".
-//   inside:   also matched inside a longer word ("youniggers"): distinctive words only.
+//   inside:   also matched inside a longer word ("youniggers") and split anywhere across words
+//             ("nigg er", "kill your self"): distinctive words only.
+//   notSplit: splits of an inside word that are ordinary words ("wet back").
 //   name:     what the finder returns (defaults to the word itself).
 
 // Slurs and severe insults.
@@ -38,16 +40,16 @@ const BLOCKED_WORDS = [
     { word: 'faggot', suffixes: ['s', 'ry'], inside: true },
     { word: 'fag', suffixes: ['s'] },
     { word: 'retard', suffixes: ['s', 'ed'] },
-    { word: 'tranny', suffixes: ['ies'], inside: true },
+    { word: 'tranny', suffixes: ['ies'], inside: true, notSplit: ['tran i'] }, // Tran: a common surname
     { word: 'chink', suffixes: ['s'] },
     { word: 'spic', suffixes: ['s'] },
     { word: 'kike', suffixes: ['s'] },
-    { word: 'wetback', suffixes: ['s'], inside: true },
+    { word: 'wetback', suffixes: ['s'], inside: true, notSplit: ['wet back', 'wet backs'] },
     { word: 'coon', suffixes: ['s'] },
     { word: 'gook', suffixes: ['s'] },
     { word: 'dyke', suffixes: ['s'] },
     { word: 'kys' },
-    { word: 'kill yourself', name: 'killyourself' },
+    { word: 'kill yourself', name: 'killyourself', inside: true },
     { word: 'cunt', suffixes: ['s'] },
     { word: 'whore', suffixes: ['s'] },
     { word: 'slut', suffixes: ['s', 'ty'] },

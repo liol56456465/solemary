@@ -33,7 +33,6 @@ const FINDERS = {
 const KNOWN_GAPS = new Map(Object.entries({
     // Split into two parts where a part is a common short word or 4+ letters: joining those
     // would turn ordinary pairs into hits ("sh it", "go ok", "worth less", "only fans").
-    'blocked|wetback|split in two': 'fragment of 4+ letters',
     'blocked|coon|split in two': '"co on": "on" is a common word',
     'blocked|gook|split in two': '"go ok": both common words',
     'blocked|whore|split in two': '"who re": both common words',
@@ -200,9 +199,92 @@ test('custom rules: same word in two rules, each its own hit; no allow list for 
     assert.equal(matchCompiled('peacock cocktail', cock), null);
 });
 
-// Idle: about 1-8 ms per 2000-character message for all five lists (typical chat is far
-// shorter). The 25 ms bound leaves room for the loaded full test run; anything super-linear
-// would take seconds.
+// ── Security review of 6b29416 ────────────────────────────────────────────
+
+test('padding does not use up the work for a later spelled-out slur', () => {
+    // Joinable fragments everywhere (the old shared budget of 400 windows ran out after ~40 of them).
+    for (const pad of ['a b c d e f g h i j k l m '.repeat(20), 'zx qv '.repeat(150), 'q w '.repeat(400)]) {
+        for (const slur of ['n i g g e r', 'ni gg er', 'k y s']) {
+            const text = `${pad}${slur}`;
+            assert.ok(text.length <= 4000);
+            assert.ok(findBlockedWord(text), `missed ${slur} after ${pad.length} characters of padding`);
+        }
+    }
+    assert.ok(matchCompiled(`${'s c '.repeat(300)} s c a m`, custom));
+});
+
+test('slash-command mentions keep their name; other mentions and timestamps are blanked', () => {
+    const [hit] = findListWords('use </nigger:123456789012345678> now');
+    assert.equal(hit?.match, 'nigger');
+    assert.equal(findInsult('</fuck you:1234>'), 'fuck you');
+    assert.equal(matchCompiled('try </scam:42>', custom)?.word, 'scam');
+    assert.equal(findListWords('</help:1> </ban user:2> <@1> <@!2> <@&3> <#4> <t:1730000000:R> <t:1730000000>').length, 0);
+});
+
+test('allow list: whole words only, no "starts with" escape', () => {
+    for (const text of ['snigger', 'sniggers', 'sniggering', 'sniggered', 'niggard', 'niggardly', 'niggardliness']) {
+        assert.equal(findBlockedWord(text), null, text);
+    }
+    for (const text of ['sniggernigger', 'SNIGGERNIGGERS', 'sniggerniggas', 'niggardlynigga', 'sniggerx', 'niggardnigga']) {
+        assert.ok(findBlockedWord(text), `should catch ${text}`);
+    }
+});
+
+test('distinctive words split across words (the old compact pass), without its false positives', () => {
+    // Inputs the old filters.js caught by stripping every non-letter (git show c8fca54).
+    for (const [text, word] of [
+        ['nigg er', 'nigger'], ['ni gger', 'nigger'], ['nigge r', 'nigger'], ['n1gg 3r', 'nigger'], ['nigg a', 'nigga'],
+        ['fa ggot', 'faggot'], ['kill your self', 'killyourself'], ['kil lyourself', 'killyourself'], ['killyour self', 'killyourself'],
+        ['go killyourselfnow', 'killyourself'], ['tran ny', 'tranny'], ['wetb ack', 'wetback'], ['nigg ers', 'nigger'],
+        ['k i l l y o u rself', 'killyourself'],
+    ]) {
+        assert.equal(findBlockedWord(text), word, text);
+    }
+    assert.ok(findBlockedWord('fagg ot'));
+    // Deliberate gap: a hit must start where a word starts ("younigg er" is missed; the old
+    // pass caught it, together with "skill yourself" and "snigger").
+    assert.equal(findBlockedWord('younigg er'), null);
+    // The old pass also flagged these.
+    for (const text of [
+        'skill yourself up', 'snigger', 'my wet back hurts', 'a wet backpack', 'Lightning gas', 'big ger', 'tran sit',
+        "Niger's capital is Niamey", 'Niger’s border', "my wet back's sore", 'Mr Tran I think so',
+    ]) {
+        assert.equal(findBlockedWord(text), null, text);
+    }
+});
+
+test('performance: many hidden-letter tokens against a large custom list', () => {
+    // Worst case for a length bucket: 100 rules x 50 words, all 6 letters (5000 words), and a
+    // message of ~300 distinct wildcard tokens of that length ("abc*ef"). Scanning the whole
+    // length bucket per token took ~80 ms per message when idle; indexed it is about 2 ms
+    // (bound 40 ms for the loaded full test run).
+    // 32-bit generator (Math.imul: a plain multiply loses precision and falls into a short
+    // cycle), high bits: repeated tokens would be served from the matcher's memo, not measured.
+    let x = 7;
+    const rand = (n) => { x = (Math.imul(x, 1103515245) + 12345) >>> 0; return (x >>> 16) % n; };
+    const letters = 'abcdefghijklmnopqrstuvwxyz';
+    const word = () => Array.from({ length: 6 }, () => letters[rand(26)]).join('');
+    const rules = Array.from({ length: 100 }, (_, i) => customRule(Array.from({ length: 50 }, word), `w${String(i).padStart(7, '0')}`));
+    const compiled = compileRules(rules);
+    const message = () => Array.from({ length: 300 }, () => { const w = word(); return `${w.slice(0, 3)}*${w.slice(4)}`; }).join(' ');
+    const rounds = [];
+    for (let r = 0; r < 3; r += 1) {
+        const start = performance.now();
+        for (let i = 0; i < 10; i += 1) matchCompiled(message(), compiled);
+        rounds.push((performance.now() - start) / 10);
+    }
+    assert.ok(Math.min(...rounds) < 40, `per message: ${rounds.map((ms) => ms.toFixed(2)).join(' / ')} ms`);
+    // Still found: a hidden-letter form of a listed word.
+    const listed = rules[42].words[7];
+    const hits = matchWords(`hey ${listed.slice(0, 2)}*${listed.slice(3)}`, compiled.words);
+    assert.ok(hits.some((hit) => hit.entry.index === 42), 'the hidden-letter form of a listed word');
+});
+
+// Idle: about 1-11 ms per 2000-character message for all five lists (typical chat is far
+// shorter); the slowest shapes are single letters and random symbols, where every window of
+// spaced-out letters is checked (no shared budget to run out, see the padding test). The
+// full test run loads the machine about 4x (single letters measured 47 ms there), so the bound
+// is 100 ms: it still catches anything super-linear, which takes seconds.
 test('performance: a 2000-character message against every list stays in the low milliseconds', () => {
     const swearingAndCustom = (text) => { matchCompiled(text, swearing); matchCompiled(text, custom); };
     const shapes = {
@@ -217,8 +299,8 @@ test('performance: a 2000-character message against every list stays in the low 
             let out = '';
             let x = i * 7919 + 1;
             while (out.length < 2000) {
-                x = (x * 1103515245 + 12345) % 2147483648;
-                out += 'abcdefghijklmnopqrstuvwxyz0123456789 .,!*_@$'[x % 44];
+                x = (Math.imul(x, 1103515245) + 12345) >>> 0;
+                out += 'abcdefghijklmnopqrstuvwxyz0123456789 .,!*_@$'[(x >>> 16) % 44];
             }
             return out;
         },
@@ -242,6 +324,6 @@ test('performance: a 2000-character message against every list stays in the low 
         }
         results.push([name, Math.min(...rounds)]);
     }
-    const slow = results.filter(([, ms]) => ms > 25).map(([name, ms]) => `${name}: ${ms.toFixed(2)} ms`);
+    const slow = results.filter(([, ms]) => ms > 100).map(([name, ms]) => `${name}: ${ms.toFixed(2)} ms`);
     assert.deepEqual(slow, [], `average per message: ${results.map(([name, ms]) => `${name} ${ms.toFixed(2)}`).join(', ')}`);
 });
