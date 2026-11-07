@@ -69,5 +69,10 @@
     "ManageRoles": "Manage Roles",
     "AddReactions": "Add Reactions",
     "SendPolls": "Send Polls"
+  },
+  "fixPerms": "Fix permissions",
+  "mark": {
+    "option": "{name} (Mewvo lacks: {perms})",
+    "hint": "A channel marked “Mewvo lacks …” needs more permissions before this works there."
   }
 }

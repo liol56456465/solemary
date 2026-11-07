@@ -37,8 +37,9 @@ export default {
         });
       }
 
-      if (!channel || channel.type !== ChannelType.GuildText) {
-        return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Pick a text channel.' });
+      // Announcement channels work too: the bot posts there like in a text channel.
+      if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
+        return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Pick a text or announcement channel.' });
       }
 
       const botPerms = channel.permissionsFor(interaction.guild.members.me);

@@ -355,7 +355,7 @@ async function handleWelcomeChannel(selectInteraction, rootInteraction, cfg, gui
     const channelSelect = new ChannelSelectMenuBuilder()
         .setCustomId('greet_cfg_welcome_channel')
         .setPlaceholder('Pick a text channel')
-        .addChannelTypes(ChannelType.GuildText)
+        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
         .setMaxValues(1);
 
     await sendEphemeralFollowUp(selectInteraction, {
@@ -594,7 +594,7 @@ async function handleGoodbyeChannel(selectInteraction, rootInteraction, cfg, gui
     const channelSelect = new ChannelSelectMenuBuilder()
         .setCustomId('greet_cfg_goodbye_channel')
         .setPlaceholder('Pick a text channel')
-        .addChannelTypes(ChannelType.GuildText)
+        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
         .setMaxValues(1);
 
     await sendEphemeralFollowUp(selectInteraction, {

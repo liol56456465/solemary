@@ -172,8 +172,11 @@ test('post: when one send fails the messages already sent are deleted again and 
 
 test('post: refuses (nothing sent) without the permissions; uploads also need Attach Files', async () => {
     const noEmbed = fakeGuild({ perms: (bit) => bit !== 1n << 14n });
-    await assert.rejects(postRulesMessages(noEmbed.guild, noEmbed.channel, [{ embeds: [], files: [] }]), (e) => /Embed Links/.test(e.userMessage));
+    await assert.rejects(postRulesMessages(noEmbed.guild, noEmbed.channel, [{ embeds: [{}], files: [] }]), (e) => /Embed Links/.test(e.userMessage));
     assert.equal(noEmbed.channel.sent.length, 0);
+    // Only what the post needs: a message without embeds does not ask for Embed Links.
+    await postRulesMessages(noEmbed.guild, noEmbed.channel, [{ embeds: [], files: [] }]);
+    assert.equal(noEmbed.channel.sent.length, 1);
     const noFiles = fakeGuild({ perms: (bit) => bit !== 1n << 15n });
     await assert.rejects(postRulesMessages(noFiles.guild, noFiles.channel, [{ embeds: [], files: [{ attachment: 'x', name: 'a.png' }] }]), (e) => /Attach Files/.test(e.userMessage));
     assert.equal(noFiles.channel.sent.length, 0);

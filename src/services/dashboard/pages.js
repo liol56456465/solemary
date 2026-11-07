@@ -6,7 +6,7 @@ import { SEARCH_STATUSES, SEARCH_TYPES } from '../enforcement/caseSearchService.
 import { STATS_PERIODS } from '../staffActivityService.js';
 import { escapeHtml, formatAge, formatDate, html, icon, layout, navItems, navLabel, path, queryString, raw, section, timeTag, typeBadge } from './html.js';
 import { currentText, dashboardText, namespaceOf } from './language.js';
-import { moduleSwitch } from './forms.js';
+import { fixPermissionsLink, moduleSwitch } from './forms.js';
 
 const IMAGE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
 
@@ -264,7 +264,14 @@ function sectionLinks(body, tr = currentText()) {
  * is written into the page. null when the form is not on the page (the caller then shows
  * the error at the top).
  */
-export function placeFormError(body, { moduleKey, action, field, message }, tr = currentText()) {
+/** " Fix permissions" after a refusal that carries { channelId, perms } (see forms.js fixPermissionsLink). */
+function fixLinkOf(fix) {
+    if (!fix || typeof fix !== 'object') return '';
+    const link = fixPermissionsLink(fix.channelId, fix.perms);
+    return link ? html` ${link}` : '';
+}
+
+export function placeFormError(body, { moduleKey, action, field, message, fix = null }, tr = currentText()) {
     const text = String(body);
     const marker = `action="${path(`/${moduleKey}/${action}`)}"`;
     const at = action ? text.indexOf(marker) : -1;
@@ -276,7 +283,7 @@ export function placeFormError(body, { moduleKey, action, field, message }, tr =
         const name = `name="${escapeHtml(field)}"`;
         if (form.includes(name)) form = form.replace(name, `${name} aria-invalid="true" aria-describedby="form-error"`);
     }
-    const note = html`<p class="error form-error" role="alert" id="form-error">${tr.t('frame.module.notSaved', { message })}</p>`;
+    const note = html`<p class="error form-error" role="alert" id="form-error">${tr.t('frame.module.notSaved', { message })}${fixLinkOf(fix)}</p>`;
     return raw(`${text.slice(0, open)}${note}${form}${close === -1 ? '' : text.slice(close)}`);
 }
 
@@ -285,16 +292,16 @@ export function placeFormError(body, { moduleKey, action, field, message }, tr =
  * flash message after a save, the error of a refused form (inside that form when it can
  * be found, else at the top), then the module's body.
  */
-export function moduleSettingsPage({ session, access = null, moduleStates = {}, module, body, flash = null, error = null, errorAction = null, errorField = null, warnings = [], editEnabled = false }) {
+export function moduleSettingsPage({ session, access = null, moduleStates = {}, module, body, flash = null, error = null, errorAction = null, errorField = null, errorFix = null, warnings = [], editEnabled = false }) {
     const tr = dashboardText(session?.lang);
-    const placed = error ? placeFormError(body, { moduleKey: module.key, action: errorAction, field: errorField, message: error }, tr) : null;
+    const placed = error ? placeFormError(body, { moduleKey: module.key, action: errorAction, field: errorField, message: error, fix: errorFix }, tr) : null;
     if (placed) {
         body = placed;
         error = null;
     }
     const notices = html`${!editEnabled ? html`<p class="notice">${tr.tx('frame.module.readOnly')}</p>` : ''}
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
-${error ? html`<p class="error" role="alert">${error}</p>` : ''}
+${error ? html`<p class="error" role="alert">${error}${fixLinkOf(errorFix)}</p>` : ''}
 ${warnings.length ? html`<ul class="warnings">${warnings.map((w) => html`<li>${w}</li>`)}</ul>` : ''}`;
     const item = navItems().find((i) => i.key === module.key) || {};
     const state = item.toggle && Object.hasOwn(moduleStates, item.state) ? moduleStates[item.state] : null;

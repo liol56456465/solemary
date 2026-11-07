@@ -41,7 +41,7 @@ export default {
             option
                 .setName("channel")
                 .setDescription("Where to post it (default: this channel)")
-                .addChannelTypes(ChannelType.GuildText)
+                .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                 .setRequired(false),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),

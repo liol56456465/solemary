@@ -3,11 +3,13 @@
 // to 100 recent messages (Discord skips messages older than 14 days), lock = deny SendMessages
 // for @everyone on the channel, unlock = clear that deny (the channel inherits again).
 // Same log events as the commands (utils/moderation.js logEvent → loggingService).
+// Fix permissions (the dashboard's /fix-permissions page): Mewvo gives itself the posting bits a
+// feature needs in one channel, only bits its own role has; otherwise the owner gets the Discord steps.
 //
 // Refusals throw an Error with `type` ('permission' / 'validation') and `userMessage`.
 // `log` can be replaced in tests.
 
-import { PermissionFlagsBits } from 'discord.js';
+import { OverwriteType, PermissionFlagsBits } from 'discord.js';
 import { logEvent } from '../utils/moderation.js';
 
 export const PURGE_MIN = 1;
@@ -140,4 +142,128 @@ export async function unlockChannel({ client, guild, channel, moderator, auditRe
         },
     });
     return { locked: false };
+}
+
+// ── Fix permissions: Mewvo gives itself what a feature needs in one channel ──
+
+const FIX_LABEL = {
+    ...PERM_LABEL, SendMessages: 'Send Messages', EmbedLinks: 'Embed Links', AttachFiles: 'Attach Files', AddReactions: 'Add Reactions',
+    SendPolls: 'Create Polls', Connect: 'Connect', MoveMembers: 'Move Members', ManageRoles: 'Manage Permissions',
+};
+const fixLabel = (p) => FIX_LABEL[p] || p;
+
+/**
+ * What the Fix permissions page may give Mewvo in a channel: posting and reading bits only,
+ * never management ones (Manage Channels / Manage Permissions stay the owner's choice).
+ */
+export const FIXABLE_PERMS = Object.freeze(['ViewChannel', 'SendMessages', 'EmbedLinks', 'AttachFiles', 'ReadMessageHistory',
+    'AddReactions', 'SendPolls', 'Connect', 'ManageMessages', 'MoveMembers']);
+
+/** Changing a channel's permission overwrites needs Manage Permissions (ManageRoles) in that channel. */
+export const FIX_EDIT_PERMS = Object.freeze(['ManageRoles']);
+
+/**
+ * Pure (reads the guild cache): which of `wanted` Mewvo lacks in `channel` and what it can do
+ * about it. Discord lets a bot allow only permissions it has itself in the server, so:
+ *   missing      the wanted bits Mewvo lacks in the channel
+ *   grantable    missing bits it can give itself with a channel overwrite (empty when it cannot edit)
+ *   notInServer  missing bits its server roles do not have (the owner must add them to Mewvo's role)
+ *   notFixable   missing management bits this page never gives
+ *   cannotEdit   what Mewvo lacks to edit the channel's permissions at all
+ *   blockedBy    null, 'hidden' (Mewvo cannot see the channel: Discord then gives it no other
+ *                permission there, so it cannot edit it either; discord.js does not apply that rule)
+ *                or 'thread' (threads have no permission overwrites; fix the parent channel)
+ * `checkable` false: the bot member is not in the cache (nothing can be said).
+ */
+export function planPermissionFix(guild, channel, wanted = []) {
+    const names = [...new Set((Array.isArray(wanted) ? wanted : []).filter((p) => PermissionFlagsBits[p] !== undefined))];
+    const me = guild?.members?.me;
+    const inChannel = channel && me?.permissionsIn ? me.permissionsIn(channel) : null;
+    if (!inChannel?.has) return { checkable: false, missing: names, grantable: [], notInServer: [], notFixable: [], cannotEdit: [], blockedBy: null };
+    const serverWide = me.permissions;
+    const inServer = (p) => Boolean(serverWide?.has?.(PermissionFlagsBits[p]));
+    const missing = names.filter((p) => !inChannel.has(PermissionFlagsBits[p]));
+    const fixable = missing.filter((p) => FIXABLE_PERMS.includes(p));
+    const cannotEdit = FIX_EDIT_PERMS.filter((p) => !inChannel.has(PermissionFlagsBits[p]));
+    const isThread = typeof channel.isThread === 'function' ? channel.isThread() : !channel.permissionOverwrites;
+    const blockedBy = isThread || !channel.permissionOverwrites ? 'thread' : !inChannel.has(PermissionFlagsBits.ViewChannel) ? 'hidden' : null;
+    return {
+        checkable: true,
+        missing,
+        grantable: cannotEdit.length || blockedBy ? [] : fixable.filter(inServer),
+        notInServer: fixable.filter((p) => !inServer(p)),
+        notFixable: missing.filter((p) => !FIXABLE_PERMS.includes(p)),
+        cannotEdit,
+        blockedBy,
+    };
+}
+
+/** Why Mewvo cannot fix it itself, in plain words ('' when it can try). */
+export function blockedReason(channel, plan) {
+    if (plan.blockedBy === 'thread') return 'This is a thread. Threads use the permissions of their channel, so fix the parent channel instead.';
+    if (plan.blockedBy === 'hidden') return `Mewvo cannot see #${channel?.name || 'this channel'}, so Discord does not let it change anything there.`;
+    if (plan.cannotEdit.length) return `It is missing ${permissionLabels(plan.cannotEdit).join(', ')} in this channel.`;
+    return '';
+}
+
+export const permissionLabels = (perms) => perms.map(fixLabel);
+
+/** The plain steps the server owner can take in Discord when Mewvo cannot fix it itself. */
+export function manualFixSteps(channel, plan) {
+    const steps = [];
+    const roleBits = [...new Set([...plan.notInServer, ...plan.cannotEdit])];
+    if (roleBits.length) {
+        // In the role settings Discord calls Manage Permissions "Manage Roles".
+        const roleLabels = roleBits.map((p) => (p === 'ManageRoles' ? 'Manage Roles' : fixLabel(p)));
+        steps.push(`In Discord, open Server Settings → Roles → Mewvo, turn on ${roleLabels.join(', ')}, then Save Changes.`);
+    }
+    if (plan.missing.length) {
+        steps.push(`${roleBits.length ? 'Or give' : 'You can also give'} it in this channel only: right-click #${plan.blockedBy === 'thread' ? 'the parent channel' : channel?.name || 'the channel'} → Edit Channel → Permissions → add Mewvo, turn on ${permissionLabels(plan.missing).join(', ')} (green check), then Save Changes.`);
+    }
+    return steps;
+}
+
+/**
+ * Adds a channel overwrite for Mewvo's own member that allows only the missing bits it may
+ * give itself (planPermissionFix). Refuses (type 'permission', nothing changed) when it cannot
+ * edit the channel's permissions or has none of the bits in the server; the message says what
+ * the owner must do in Discord. Logs "Channel Permissions Fixed" (mod log, via loggingService).
+ * Returns { granted, stillMissing } (labels) and grantedBits (names).
+ */
+export async function fixBotChannelPermissions({ client, guild, channel, wanted, moderator, auditReason, log = logEvent }) {
+    const plan = planPermissionFix(guild, channel, wanted);
+    if (!plan.checkable) throw refuse('Mewvo cannot check its own permissions right now. Try again in a minute. Nothing was changed.');
+    if (!plan.missing.length) throw refuse(`Mewvo already has what it needs in #${channel.name}. Nothing was changed.`);
+    const manual = manualFixSteps(channel, plan).join(' ');
+    if (plan.blockedBy || plan.cannotEdit.length) {
+        throw refuse(`Mewvo cannot change permissions in #${channel.name}. ${blockedReason(channel, plan)} Nothing was changed. ${manual}`, 'permission');
+    }
+    if (!plan.grantable.length) {
+        throw refuse(`Mewvo cannot give itself ${permissionLabels(plan.missing).join(', ')}: Discord only lets it give permissions its own role already has. Nothing was changed. ${manual}`, 'permission');
+    }
+    const me = guild.members.me;
+    try {
+        await channel.permissionOverwrites.edit(me, Object.fromEntries(plan.grantable.map((p) => [p, true])), { type: OverwriteType.Member, reason: auditReason });
+    } catch (error) {
+        // 50013 Missing Permissions / 50001 Missing Access: Discord said no; say what to do instead.
+        if (error?.code === 50013 || error?.code === 50001 || error?.status === 403) {
+            throw refuse(`Discord refused the change in #${channel.name}. Nothing was changed. ${manual}`, 'permission');
+        }
+        throw error;
+    }
+    const stillMissingBits = [...plan.notInServer, ...plan.notFixable];
+    const granted = permissionLabels(plan.grantable);
+    const stillMissing = permissionLabels(stillMissingBits);
+    await log({
+        client,
+        guild,
+        event: {
+            action: 'Channel Permissions Fixed',
+            target: channel.toString(),
+            executor: `${moderator.tag} (${moderator.id})`,
+            reason: `Mewvo gave itself ${granted.join(', ')} in #${channel.name}${stillMissing.length ? ` (still missing: ${stillMissing.join(', ')})` : ''}`,
+            metadata: { channelId: channel.id, granted: plan.grantable, stillMissing: stillMissingBits, moderatorId: moderator.id, via: 'dashboard' },
+        },
+    });
+    return { granted, stillMissing, grantedBits: plan.grantable };
 }

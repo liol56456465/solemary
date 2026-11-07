@@ -70,7 +70,7 @@ export default {
                     option
                         .setName('channel')
                         .setDescription('The text channel for announcements. Leave empty to disable.')
-                        .addChannelTypes(ChannelType.GuildText)
+                        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(false)
                 )
                 .addStringOption(option =>

@@ -1261,7 +1261,10 @@ test('pickers: grouped by category, sorted by name; warnings for missing permiss
     h.state.registry.modLogChannelId = TEXT;
     const page = await get(h, 'enforcement');
     assert.match(page.body, /class="field-warn">I am missing View Channel, Send Messages, Embed Links in #general/);
-    assert.match(page.body, /<optgroup label="Support"><option value="500000000000000001" selected>#general<\/option>/);
+    // The option itself says what is missing (before saving), and the warning offers Fix permissions.
+    assert.match(page.body, /<optgroup label="Support"><option value="500000000000000001" selected>#general \(Mewvo lacks: View Channel, Send Messages, Embed Links\)<\/option>/);
+    assert.match(page.body, /<a class="fix-link" href="\/dashboard\/fix-permissions\?channel=500000000000000001&amp;need=ViewChannel%2CSendMessages%2CEmbedLinks">Fix permissions<\/a>/);
+    assert.match(page.body, /needs more permissions before this works there/);
 });
 
 test('audit page: filters by user and module, paged; values escaped', async () => {
@@ -1968,10 +1971,14 @@ test('messages: a channel where the bot lacks a permission is refused clearly, n
     const { PermissionFlagsBits } = await import('discord.js');
     const h = await setup();
     h.guild.members.me.permissionsIn = () => ({ has: (p) => p !== PermissionFlagsBits.EmbedLinks });
-    const res = await post(h, 'messages', 'send', { channelId: TEXT, content: 'hi' });
+    // Plain text needs no Embed Links; a box (embed) does, and the refusal offers Fix permissions.
+    assert.equal((await post(h, 'messages', 'send', { channelId: TEXT, content: 'hi' })).statusCode, 303, 'plain text posts without Embed Links');
+    assert.equal(h.calls.filter((c) => c.name === 'postBotMessage').length, 1);
+    const res = await post(h, 'messages', 'send', { channelId: TEXT, content: 'hi', title: 'Box' });
     assert.equal(res.statusCode, 400);
     assert.match(res.body, /I am missing Embed Links in #general\. Nothing was posted\./);
-    assert.ok(!h.calls.some((c) => c.name === 'postBotMessage'));
+    assert.match(res.body, /href="\/dashboard\/fix-permissions\?channel=500000000000000001&amp;need=EmbedLinks">Fix permissions<\/a>/);
+    assert.equal(h.calls.filter((c) => c.name === 'postBotMessage').length, 1, 'the embed post was not sent');
 
     const p = await setup();
     p.guild.members.me.permissionsIn = () => ({ has: (perm) => perm !== PermissionFlagsBits.AddReactions });

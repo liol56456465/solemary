@@ -88,6 +88,7 @@ export const PERMISSIONS = Object.freeze({
     'staff.handover': MODERATOR, // the handover note on the Overview
     'case.searches': MODERATOR, // saved searches on the Cases page
     'settings.edit': ADMIN, // every module settings form
+    'permissions.fix': ADMIN, // Fix permissions: the confirm page and the change (Mewvo's own channel overwrite)
     // ── Session ──
     'session.logout': MODERATOR,
 });
@@ -123,6 +124,7 @@ export const ROUTES = [
     ['POST', '/cases/:code/evidence/upload', 'case.evidence'],
     ['POST', '/cases/:code/evidence/remove', 'case.evidence'],
     ['POST', '/handover', 'staff.handover'],
+    ['POST', '/fix-permissions', 'permissions.fix'],
     ['POST', '/backup/preview', 'settings.edit'],
     ['POST', '/backup/apply', 'settings.edit'],
     ['POST', '/cases/:code/notes', 'case.evidence'],
@@ -166,6 +168,7 @@ export const ROUTES = [
     ['GET', '/backup/download', 'page:backup'],
     ['GET', '/help', 'page:help'],
     ['GET', '/setup', 'page:setup'],
+    ['GET', '/fix-permissions', 'permissions.fix'],
     ['GET', '/:module', (params) => `page:${params.module}`],
 ];
 

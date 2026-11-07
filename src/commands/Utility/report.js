@@ -36,7 +36,7 @@ export default {
                     option
                         .setName('channel')
                         .setDescription('The text channel to receive reports.')
-                        .addChannelTypes(ChannelType.GuildText)
+                        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(true),
                 ),
         ),

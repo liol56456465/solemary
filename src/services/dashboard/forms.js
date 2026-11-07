@@ -189,6 +189,8 @@ export function userIdField(form, name, label = name) {
 // ── Warnings (shown next to a field; they never block) ────────────────────
 
 export const PERMS = {
+    /** A plain-text post (no embed, no file). */
+    text: ['ViewChannel', 'SendMessages'],
     post: ['ViewChannel', 'SendMessages', 'EmbedLinks'],
     postFiles: ['ViewChannel', 'SendMessages', 'EmbedLinks', 'AttachFiles'],
     poll: ['ViewChannel', 'SendMessages', 'EmbedLinks', 'AddReactions', 'ReadMessageHistory'],
@@ -203,16 +205,40 @@ const PERM_NAMES = new Set(['ViewChannel', 'SendMessages', 'EmbedLinks', 'Attach
     'MoveMembers', 'ManageMessages', 'ManageRoles', 'AddReactions', 'SendPolls']);
 const permLabel = (perm) => (PERM_NAMES.has(perm) ? ft().t(`forms.perm.${perm}`) : perm);
 
+/**
+ * The permissions of `perms` (names like 'SendMessages') the bot lacks in `channel`, or null
+ * when they cannot be checked (no bot member in the cache). Pure apart from the cache.
+ */
+export function missingChannelPerms(guild, channel, perms = PERMS.post) {
+    const me = guild?.members?.me;
+    if (!channel || !me?.permissionsIn) return null;
+    const granted = me.permissionsIn(channel);
+    if (!granted?.has) return null;
+    return perms.filter((perm) => PermissionFlagsBits[perm] !== undefined && !granted.has(PermissionFlagsBits[perm]));
+}
+
 /** Problems the bot has with a channel: missing, or permissions it lacks there. */
 export function channelWarnings(guild, channelId, perms = PERMS.post) {
     if (!channelId) return [];
     const channel = guild?.channels?.cache?.get(channelId);
     if (!channel) return [ft().t('forms.warn.channelGone', { id: channelId })];
-    const me = guild.members?.me;
-    if (!me?.permissionsIn) return [ft().t('forms.warn.cannotCheck')];
-    const granted = me.permissionsIn(channel);
-    const missing = perms.filter((perm) => !granted?.has?.(PermissionFlagsBits[perm]));
+    const missing = missingChannelPerms(guild, channel, perms);
+    if (missing === null) return [ft().t('forms.warn.cannotCheck')];
     return missing.length ? [ft().t('forms.warn.missingPerms', { perms: missing.map(permLabel).join(', '), channel: channel.name })] : [];
+}
+
+/** The page that lets Mewvo give itself missing permissions in one channel (permissionFixRoutes.js). */
+export const FIX_PERMISSIONS_PATH = '/fix-permissions';
+
+/**
+ * A "Fix permissions" link for `channelId` and the permissions a feature needs there. The
+ * page it opens shows what will change and asks to confirm; nothing changes on a GET.
+ */
+export function fixPermissionsLink(channelId, perms) {
+    const need = (Array.isArray(perms) ? perms : []).filter((p) => PERM_NAMES.has(p)).join(',');
+    if (!isSnowflake(String(channelId || '')) || !need) return '';
+    const href = `${path(FIX_PERMISSIONS_PATH)}?channel=${encodeURIComponent(channelId)}&need=${encodeURIComponent(need)}`;
+    return html`<a class="fix-link" href="${href}">${ft().t('forms.fixPerms')}</a>`;
 }
 
 /** Problems with a role: missing, @everyone, managed, not below my top role; staff permissions when auto-assigned. */
@@ -281,18 +307,36 @@ function selectAttrs(name, count, multiple) {
 
 /**
  * A labelled channel select. options: { label, kinds, perms, optional, help, noneLabel,
- * multiple } — with multiple, `value` is an array and several can be chosen.
+ * multiple, fixLink } — with multiple, `value` is an array and several can be chosen. fixLink false:
+ * no Fix permissions link (the fix page only works in the main server).
  */
-export function channelPicker(guild, name, value, { label, kinds = ['text'], perms = PERMS.post, optional = true, help = '', noneLabel = ft().t('forms.notSet'), multiple = false } = {}) {
+export function channelPicker(guild, name, value, { label, kinds = ['text'], perms = PERMS.post, optional = true, help = '', noneLabel = ft().t('forms.notSet'), multiple = false, fixLink = true } = {}) {
     const groups = channelGroups(guild, kinds);
     const values = multiple ? (Array.isArray(value) ? value : []) : [value].filter(Boolean);
     const missing = values.filter((id) => !guild?.channels?.cache?.get(id));
     const prefix = kinds.includes('category') && kinds.length === 1 ? '' : kinds.includes('text') ? '#' : '';
     const count = groups.reduce((n, g) => n + g.channels.length, 0);
+    // Every channel where Mewvo lacks what this feature needs is marked in the list itself, so
+    // the problem shows before saving (the option stays selectable; the services still refuse).
+    let marked = 0;
+    const optionOf = (c) => {
+        const lacks = missingChannelPerms(guild, c, perms) || [];
+        if (lacks.length) marked += 1;
+        const text = lacks.length ? ft().t('forms.mark.option', { name: `${prefix}${c.name}`, perms: lacks.map(permLabel).join(', ') }) : `${prefix}${c.name}`;
+        return html`<option value="${c.id}"${selected(values.includes(c.id))}>${text}</option>`;
+    };
+    const options = groups.map((g) => html`<optgroup label="${g.group}">${g.channels.map(optionOf)}</optgroup>`);
+    // Per chosen channel: its warnings, and a Fix permissions link when only permissions are missing.
+    const notes = values.map((id) => {
+        const warnings = channelWarnings(guild, id, perms);
+        if (!warnings.length) return '';
+        const lacks = missingChannelPerms(guild, guild?.channels?.cache?.get(id), perms) || [];
+        return html`<span class="field-warn">${warnings.map((w, i) => html`${i ? '; ' : ''}${w}`)}${lacks.length && fixLink ? html` ${fixPermissionsLink(id, lacks)}` : ''}</span>`;
+    });
     return html`<label>${label}<select ${selectAttrs(name, count, multiple)}>
 ${optional && !multiple ? html`<option value=""${selected(!value)}>${noneLabel}</option>` : ''}${missing.map((id) => html`<option value="${id}" selected>${ft().t('forms.missing', { id })}</option>`)}
-${groups.map((g) => html`<optgroup label="${g.group}">${g.channels.map((c) => html`<option value="${c.id}"${selected(values.includes(c.id))}>${prefix}${c.name}</option>`)}</optgroup>`)}
-</select>${help ? html`<span class="hint">${help}</span>` : ''}${warningList(values.flatMap((id) => channelWarnings(guild, id, perms)))}</label>`;
+${options}
+</select>${help ? html`<span class="hint">${help}</span>` : ''}${marked ? html`<span class="hint">${ft().t('forms.mark.hint')}</span>` : ''}${notes}</label>`;
 }
 
 /** A labelled role select. options: { label, optional, autoAssign, assign, help, multiple }. */

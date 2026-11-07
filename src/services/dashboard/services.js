@@ -65,7 +65,7 @@ import {
     disableCategory, disableCommand, enableCategory, enableCommand, getCommandAccessSnapshot, resolveCommandTarget, getCategoryRegistry,
 } from '../commandAccessService.js';
 // Channel tools (purge, lock, unlock)
-import { lockChannel, purgeChannelMessages, unlockChannel } from '../channelToolsService.js';
+import { fixBotChannelPermissions, lockChannel, purgeChannelMessages, unlockChannel } from '../channelToolsService.js';
 // Mod log
 import { postModLog } from '../enforcement/enforcementService.js';
 // Posting panels and creating things in Discord (shared with the commands)
@@ -117,7 +117,7 @@ export const defaultServices = {
     getServerCat, getCommunitySettings, updateCommunitySettings, starboardSettingsPatch, listStickies, removeSticky, setSticky,
     createTag, deleteTag, listTags, addFeed, listFeeds, removeFeed, listOpenSuggestions, getSuggestion, decideSuggestion,
     disableCategory, disableCommand, enableCategory, enableCommand, getCommandAccessSnapshot, resolveCommandTarget, getCategoryRegistry,
-    purgeChannelMessages, lockChannel, unlockChannel,
+    purgeChannelMessages, lockChannel, unlockChannel, fixBotChannelPermissions,
     postModLog,
     publishTicketPanel, setupTicketSystem, publishVerificationPanel, setupVerification, postAppealPanels,
     createReactionRolePanel, createGiveaway, deleteGiveawayNow, createServerCounter, setupJoinToCreate, editTag,

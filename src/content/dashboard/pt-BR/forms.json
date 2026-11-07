@@ -71,5 +71,10 @@
     "ManageRoles": "Gerenciar cargos",
     "AddReactions": "Adicionar reações",
     "SendPolls": "Criar enquetes"
+  },
+  "fixPerms": "Corrigir permissões",
+  "mark": {
+    "option": "{name} (falta ao Mewvo: {perms})",
+    "hint": "Em um canal marcado com “falta ao Mewvo …”, o Mewvo precisa primeiro de mais permissões."
   }
 }

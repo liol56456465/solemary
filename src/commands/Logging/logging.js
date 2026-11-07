@@ -36,8 +36,8 @@ export default {
                 .addChannelOption((option) =>
                     option
                         .setName('channel')
-                        .setDescription('The text channel for logs.')
-                        .addChannelTypes(ChannelType.GuildText)
+                        .setDescription('The text or announcement channel for logs.')
+                        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(false),
                 )
                 .addBooleanOption((option) =>
