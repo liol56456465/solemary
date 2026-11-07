@@ -3595,12 +3595,12 @@ test('member fields: an @mention is accepted where a user ID was (tickets block,
     assert.equal((await post(h, 'tickets', 'block', { userId: `<@${STRANGER}>` })).statusCode, 303);
     assert.ok(h.calls.some((c) => c.name === 'setModmailBlocked' && c.args.includes(STRANGER)), 'blocked by the mentioned ID');
     const p = await setup();
-    assert.equal((await post(p, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: `<@!${MEMBER}>`, confirm: '1' })).statusCode, 303);
+    assert.equal((await postConfirmed(p, 'channels', 'purge', { channelId: TEXT, amount: '5', userId: `<@!${MEMBER}>` })).statusCode, 303);
     assert.deepEqual(p.guild.channels.cache.get(TEXT).deletedIds, ['800000000000000001', '800000000000000003']);
     const l = await setup();
     assert.equal((await post(l, 'logging', 'ignore-add', { type: 'user', id: `<@${MEMBER}>` })).statusCode, 303);
     assert.ok(l.calls.some((c) => c.name === 'updateIgnoreList' && JSON.stringify(c.args).includes(MEMBER)));
-    const bad = await post(await setup(), 'channels', 'purge', { channelId: TEXT, amount: '5', userId: 'bob', confirm: '1' });
+    const bad = await post(await setup(), 'channels', 'purge', { channelId: TEXT, amount: '5', userId: 'bob' });
     assert.equal(bad.statusCode, 400);
     assert.match(bad.body, /Find a member/);
 });
