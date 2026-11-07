@@ -177,7 +177,7 @@ test('decision on a support appeal: the appellant sees no admin name or note; th
     const code = await insertCase('kick', user.id);
     const { channel, staffChannel } = await appeals.submitAppeal({ client: w.client, user, caseCode: code, answers: { reason: 'It was a misunderstanding, please' } });
     w.sent.length = 0;
-    await appeals.decideAppeal({ client: w.client, admin: { id: id('6', 998), username: 'secretadmin' }, caseCode: code, decision: 'deny', note: 'internal: repeat offender' });
+    await appeals.decideAppeal({ client: w.client, admin: { id: id('6', 998), username: 'secretadmin' }, caseCode: code, decision: 'deny', note: 'internal: repeat offender', callerGuildId: w.main.id });
     const inChannel = text(w.sent.filter((s) => s.where === channel).map((s) => s.payload));
     assert.match(inChannel, /denied/);
     assert.ok(!inChannel.includes('secretadmin') && !inChannel.includes('repeat offender'), 'no admin or note for the appellant');
@@ -250,6 +250,22 @@ test('non-home kick appeal with its own appeals category: staff channel in that 
     assert.equal(other.created.length, 1);
     const { rows: [row] } = await pgDb.pool.query(`SELECT guild_id, channel_guild_id, staff_channel_id FROM mod_appeals WHERE case_code = $1`, [code]);
     assert.deepEqual(row, { guild_id: OTHER_GUILD, channel_guild_id: OTHER_GUILD, staff_channel_id: null });
+    // /appeals is not registered there: the staff message names only the buttons.
+    const posted = w.sent.filter((s) => s.where === staffChannel).map((s) => s.payload.content || '').join('\n');
+    assert.match(posted, /Decide with the buttons below\./);
+    assert.ok(!posted.includes('/appeals'), posted);
+
+    // The main server cannot decide it; its own server can, and the closing note names no /appeals.
+    await assert.rejects(appeals.decideAppeal({ client: w.client, admin: { id: id('6', 998), username: 'admin' }, caseCode: code, decision: 'deny', note: null, callerGuildId: w.main.id }),
+        (error) => error.userMessage === 'That case belongs to another server.');
+    const { rows: [still] } = await pgDb.pool.query(`SELECT status FROM mod_appeals WHERE case_code = $1`, [code]);
+    assert.equal(still.status, 'pending', 'nothing decided from the main server');
+    w.sent.length = 0;
+    const result = await appeals.decideAppeal({ client: w.client, admin: { id: id('6', 998), username: 'admin' }, caseCode: code, decision: 'deny', note: null, callerGuildId: OTHER_GUILD });
+    assert.equal(result.label, 'denied');
+    const closing = text(w.sent.filter((s) => s.where === staffChannel).map((s) => s.payload));
+    assert.match(closing, /denied/);
+    assert.ok(!closing.includes('/appeals'), closing);
 });
 
 test('non-home appeal: its own appeal window, not the main server\'s', { skip }, async () => {

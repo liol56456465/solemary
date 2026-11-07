@@ -102,12 +102,12 @@ const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]{2,}/g;
  * Returns null when any term could not be found in the text to mask it (for example
  * letters spelled out one by one): then nothing of the text is shown.
  */
-export function maskExcerpt(text, terms = [], { hidePersonal = false } = {}) {
+export function maskExcerpt(text, terms = [], { hidePersonal = false, guildId = null } = {}) {
     let value = String(text || '').replace(/\s+/g, ' ').trim();
     // Blocked and sexual words of the whole text are always terms, whichever rule hit: a slur
     // spelled out ("n i g g e r") or split over words is not caught token by token below, and
     // must hide the excerpt even when the language rule is off and another rule (caps) hit.
-    const allTerms = [...terms, findBlockedWord(value), findSexualWord(value)];
+    const allTerms = [...terms, findBlockedWord(value, guildId), findSexualWord(value)];
     // Folded like findPersonalInfo (NFKC, invisible characters removed) and every digit
     // (\p{Nd}, not only 0-9), so a full-width phone number or an e-mail with a zero-width
     // space in it is hidden too.
@@ -135,7 +135,7 @@ export function maskExcerpt(text, terms = [], { hidePersonal = false } = {}) {
             }
         }
         if (matched && first < 0) first = i;
-        return matched || findBlockedWord(token) || findSexualWord(token) ? maskWord(token) : token;
+        return matched || findBlockedWord(token, guildId) || findSexualWord(token) ? maskWord(token) : token;
     });
     // Every matched word must be masked somewhere; one we cannot place hides the whole excerpt.
     if (wanted.some((term) => !term.found)) return null;
@@ -426,7 +426,7 @@ export function createBacktestRunner({ now = () => Date.now(), resultTtlMs = RES
                 url: message.url || null,
                 rules: labels,
                 // Personal info is hidden whenever the text has some, not only on a privacy hit.
-                excerpt: maskExcerpt(text, terms, { hidePersonal: Boolean(findPersonalInfo(text)) }),
+                excerpt: maskExcerpt(text, terms, { hidePersonal: Boolean(findPersonalInfo(text)), guildId: message.guildId }),
             });
         };
 

@@ -4,7 +4,7 @@ import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
-import { buildCaseDossier, decideAppeal, listPendingAppeals } from '../../services/enforcement/appealService.js';
+import { OTHER_SERVER_CASE, buildCaseDossier, decideAppeal, isCaseOfCallerServer, listPendingAppeals } from '../../services/enforcement/appealService.js';
 import { getCaseByCode } from '../../services/enforcement/caseService.js';
 import { dateStamp, normalizeCaseCode, truncate } from '../../services/enforcement/format.js';
 
@@ -77,6 +77,9 @@ export default {
                 throw new TitanBotError('Unknown case code', ErrorTypes.USER_INPUT,
                     `No case with code \`${caseCode}\`.`, { expected: true });
             }
+            if (!isCaseOfCallerServer(record, interaction.guildId)) {
+                throw new TitanBotError('Case of another server', ErrorTypes.PERMISSION, OTHER_SERVER_CASE, { expected: true });
+            }
             return InteractionHelper.safeEditReply(interaction, { embeds: await buildCaseDossier(record, { client }) });
         }
 
@@ -87,6 +90,7 @@ export default {
             decision,
             note: interaction.options.getString('note')?.trim() || null,
             via: 'slash',
+            callerGuildId: interaction.guildId,
         });
 
         await InteractionHelper.safeEditReply(interaction, {

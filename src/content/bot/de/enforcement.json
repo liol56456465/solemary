@@ -12,6 +12,7 @@
         "rejoin": "Wieder beitreten: {invite}",
         "record": "Deine ganze Akte: <{url}>",
         "privacy": "-# Datenschutz: <{url}>",
+        "thisServer": "dem Server",
         "ban": {
             "title": "**Von {server} gebannt**",
             "autoNote": "Ein Einspruch gegen diesen Code entfernt auch die Verwarnung, die diesen Bann ausgelöst hat.",

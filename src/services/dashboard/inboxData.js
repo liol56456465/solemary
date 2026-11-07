@@ -101,7 +101,7 @@ export async function collectInbox({ client, guildId, inbox = defaultInboxData }
         read(() => inbox.listOpenTickets(guildId)),
         read(() => inbox.listOpenModmail(guildId)),
         read(() => inbox.listOpenReports(guildId)),
-        read(() => inbox.collectOpenReviews(client)),
+        read(() => inbox.collectOpenReviews(client, guildId)),
     ]);
     const items = [
         ...appeals.value.map((a) => ({

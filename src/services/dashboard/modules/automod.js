@@ -401,7 +401,7 @@ export default {
             attempt(() => ctx.services.automodStats(ctx.guildId, days), { total: 0, byGroup: [] }),
             // undefined / null = could not be read (shown as such, never as "none").
             attempt(() => ctx.services.getLockdownState(ctx.guildId), undefined),
-            attempt(() => ctx.services.collectOpenReviews(ctx.client), null),
+            attempt(() => ctx.services.collectOpenReviews(ctx.client, ctx.guildId), null),
             attempt(() => ctx.services.listProbations(ctx.guildId), null),
             attempt(() => ctx.services.headsUpStats(ctx.guildId, { days: 30 }), null),
         ]);

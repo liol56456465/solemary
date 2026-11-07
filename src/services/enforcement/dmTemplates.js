@@ -5,7 +5,7 @@
 // Without it the DM is English, exactly as before. Text: src/content/bot/<lang>/enforcement.json
 // (dm.*, duration.*). The keep-apart DMs and the "Contest this" button are still English only.
 
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
 import { dateStamp, stamp } from './format.js';
@@ -38,6 +38,36 @@ export function appealInvite(guildId, env = process.env) {
 
 /** The guild a DM is about: options.guildId, else the case's guild. */
 const guildOf = (rec, guildId) => guildId ?? rec?.guild_id ?? null;
+
+/**
+ * A Discord server name made safe for a DM line: one line, at most 100 characters, markdown
+ * escaped (it sits inside **bold**; masked links too), and @ / < broken with a zero-width space so the name can
+ * never render as a mention. Empty or missing → ''.
+ */
+export function safeServerName(name) {
+    const flat = String(name ?? '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100);
+    if (!flat) return '';
+    return escapeMarkdown(flat, { maskedLink: true }).replace(/@/g, '@\u200b').replace(/</g, '<\u200b');
+}
+
+/**
+ * The server a DM names. Mewvo's own servers (and a caller that names no server) keep 'Mewvo',
+ * exactly as before. Any other server: its Discord name (`name`: callers pass guild.name, else
+ * the case's guild_name when a row carries one), made safe; unknown → `fallback` (a neutral
+ * "the server" in the DM's language).
+ */
+export function dmServerName(guildId, name, fallback = 'the server') {
+    if (!guildId || isHomeGuild(guildId)) return serverName;
+    return safeServerName(name) || fallback;
+}
+
+/** dmServerName for the translated templates: options.serverName, else rec.guild_name. */
+function serverFor(rec, { guildId, serverName: name } = {}, tr) {
+    const gid = guildOf(rec, guildId);
+    // Home: no catalog lookup at all, so Mewvo's DMs stay byte-for-byte as before.
+    if (!gid || isHomeGuild(gid)) return serverName;
+    return dmServerName(gid, name ?? rec?.guild_name, tr.t('enforcement.dm.thisServer'));
+}
 
 /** "Appeal here: <invite>", or null when this server has no invite to name. */
 function appealHere(tr, inviteUrl) {
@@ -117,7 +147,7 @@ function finish(lines, tr) {
 
 const record = (tr) => ({ optional: recordLine(process.env, { lang: tr.lang }) });
 
-function banDmText(rec, { lang, guildId } = {}) {
+function banDmText(rec, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     const duration = rec.expires_at
         ? tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) })
@@ -125,7 +155,7 @@ function banDmText(rec, { lang, guildId } = {}) {
     const inviteUrl = appealInvite(guildOf(rec, guildId));
     const lines = [
         appealLine(rec, tr, inviteUrl),
-        tr.t('enforcement.dm.ban.title', { server: serverName }),
+        tr.t('enforcement.dm.ban.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         duration,
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
@@ -141,11 +171,11 @@ function banDmText(rec, { lang, guildId } = {}) {
     return finish(lines, tr);
 }
 
-function kickDmText(rec, inviteUrl, { lang, guildId } = {}) {
+function kickDmText(rec, inviteUrl, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     return finish([
         appealHere(tr, appealInvite(guildOf(rec, guildId))),
-        tr.t('enforcement.dm.kick.title', { server: serverName }),
+        tr.t('enforcement.dm.kick.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
         inviteUrl ? tr.t('enforcement.dm.rejoin', { invite: inviteUrl }) : tr.t('enforcement.dm.kick.noInvite'),
@@ -153,11 +183,11 @@ function kickDmText(rec, inviteUrl, { lang, guildId } = {}) {
     ], tr);
 }
 
-function muteDmText(rec, { lang, guildId } = {}) {
+function muteDmText(rec, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     return finish([
         appealHere(tr, appealInvite(guildOf(rec, guildId))),
-        tr.t('enforcement.dm.mute.title', { server: serverName }),
+        tr.t('enforcement.dm.mute.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) }),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
@@ -165,12 +195,12 @@ function muteDmText(rec, { lang, guildId } = {}) {
     ], tr);
 }
 
-function warnDmText(rec, warnNumber, { lang, guildId } = {}) {
+function warnDmText(rec, warnNumber, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     const limit = enforcementConfig.warnsPerLevel;
     return finish([
         appealHere(tr, appealInvite(guildOf(rec, guildId))),
-        tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server: serverName }),
+        tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
         tr.t('enforcement.dm.warn.limit', { limit }),
@@ -199,7 +229,7 @@ function appealDeniedDmText({ lang, guildId } = {}) {
  * Sent when a ban ends: on expiry, or early when a moderator unbans.
  * `inviteUrl` is a one-time invite back to the server (null when none could be made).
  */
-function banEndedDmText(rec, inviteUrl, { early = false, lang, guildId } = {}) {
+function banEndedDmText(rec, inviteUrl, { early = false, lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     // "Ask for an invite in the support server": Mewvo's Support can only invite people back into
     // Mewvo's own servers, so another server names only its own invite here (else: ask staff).
@@ -207,7 +237,7 @@ function banEndedDmText(rec, inviteUrl, { early = false, lang, guildId } = {}) {
     const ownServerInvite = gid && !isHomeGuild(gid) && appealInvite(gid) !== enforcementConfig.supportServerInvite;
     const appealUrl = inviteUrl ? null : (!gid || isHomeGuild(gid) || ownServerInvite ? appealInvite(gid) : null);
     return withPrivacyLine([
-        tr.t('enforcement.dm.banEnded.title', { server: serverName }),
+        tr.t('enforcement.dm.banEnded.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         early ? tr.t('enforcement.dm.banEnded.early') : tr.t('enforcement.dm.banEnded.expired'),
         rec?.case_code ? tr.t('enforcement.dm.caseCode', { code: rec.case_code }) : null,
         inviteUrl ? tr.t('enforcement.dm.rejoin', { invite: inviteUrl })
@@ -216,10 +246,10 @@ function banEndedDmText(rec, inviteUrl, { early = false, lang, guildId } = {}) {
 }
 
 /** Sent when a mute ends: on expiry, or early when a moderator unmutes. */
-function muteEndedDmText(rec, { early = false, lang } = {}) {
+function muteEndedDmText(rec, { early = false, lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     return withPrivacyLine([
-        tr.t('enforcement.dm.muteEnded.title', { server: serverName }),
+        tr.t('enforcement.dm.muteEnded.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         early ? tr.t('enforcement.dm.muteEnded.early') : tr.t('enforcement.dm.muteEnded.expired'),
         rec?.case_code ? tr.t('enforcement.dm.caseCode', { code: rec.case_code }) : null,
     ].filter(Boolean).join('\n'), process.env, { lang: tr.lang });
@@ -231,11 +261,12 @@ const VOIDED_TYPES = new Set(['ban', 'kick', 'mute', 'warn']);
  * Sent when an admin voids a case (/case remove): the record no longer counts against
  * the user. `inviteUrl` is set when the void lifted a ban.
  */
-function caseVoidedDmText(rec, reason, inviteUrl = null, { lang } = {}) {
+function caseVoidedDmText(rec, reason, inviteUrl = null, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
+    const server = serverFor(rec, { guildId, serverName: name }, tr);
     const title = VOIDED_TYPES.has(rec.type)
-        ? tr.t(`enforcement.dm.voided.title.${rec.type}`, { server: serverName })
-        : tr.t('enforcement.dm.voided.title.generic', { type: rec.type, server: serverName });
+        ? tr.t(`enforcement.dm.voided.title.${rec.type}`, { server })
+        : tr.t('enforcement.dm.voided.title.generic', { type: rec.type, server });
     return withPrivacyLine([
         title,
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
@@ -245,11 +276,14 @@ function caseVoidedDmText(rec, reason, inviteUrl = null, { lang } = {}) {
     ].filter(Boolean).join('\n'), process.env, { lang: tr.lang });
 }
 
-/** Sent to both members when staff start a no-contact order. `other` is the other member (or null). */
-export function noContactStartedDm(order, other) {
+/**
+ * Sent to both members when staff start a no-contact order. `other` is the other member (or null);
+ * `options.serverName`: the order's server name (another server than Mewvo's is named by it).
+ */
+export function noContactStartedDm(order, other, { serverName: name } = {}) {
     const otherName = other ? `**${other.username}**` : 'another member';
     return withPrivacyLine([
-        `**Keep apart: an order in ${serverName}**`,
+        `**Keep apart: an order in ${dmServerName(order?.guild_id, name)}**`,
         `Staff have asked you and ${otherName} not to contact each other until ${stamp(order.until)}.`,
         'Until then, do not mention or reply to them in the server: those messages are removed.',
         `Reason: ${order.reason}`,
@@ -258,9 +292,9 @@ export function noContactStartedDm(order, other) {
 }
 
 /** Sent to both members when a no-contact order ends (early by staff, or it expired). */
-export function noContactEndedDm(order, other, { early = false } = {}) {
+export function noContactEndedDm(order, other, { early = false, serverName: name } = {}) {
     return withPrivacyLine([
-        `**Your keep-apart order in ${serverName} has ended**`,
+        `**Your keep-apart order in ${dmServerName(order?.guild_id, name)} has ended**`,
         `${early ? 'Staff ended it early.' : 'It expired.'} You may contact ${other ? `**${other.username}**` : 'the other member'} again.`,
     ].join('\n'));
 }

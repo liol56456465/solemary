@@ -12,6 +12,7 @@
         "rejoin": "Revenir : {invite}",
         "record": "Ton dossier complet : <{url}>",
         "privacy": "-# Confidentialité : <{url}>",
+        "thisServer": "ce serveur",
         "ban": {
             "title": "**Banni de {server}**",
             "autoNote": "Faire appel de ce code retire aussi l’avertissement qui a causé ce bannissement.",

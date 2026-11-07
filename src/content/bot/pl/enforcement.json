@@ -12,6 +12,7 @@
         "rejoin": "Dołącz ponownie: {invite}",
         "record": "Cała twoja historia: <{url}>",
         "privacy": "-# Prywatność: <{url}>",
+        "thisServer": "tym serwerze",
         "ban": {
             "title": "**Ban na {server}**",
             "autoNote": "Odwołanie od tego kodu usuwa też ostrzeżenie, które spowodowało ten ban.",

@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { pgConfig } from '../../config/database/postgres.js';
 import { query as defaultQuery } from '../enforcement/db.js';
 import { resolveSetting } from '../settings/guildSettings.js';
+import { isSettingsUnavailable, noteSettingsUnavailable } from '../settings/guildScoped.js';
 import { pendingMessages } from '../stats/activityService.js';
 import { logger } from '../../utils/logger.js';
 import {
@@ -207,7 +208,9 @@ export async function checkCatGrowth(client, deps = {}) {
         try {
             await checkGuildCatGrowth(guild, { client, getLevelingConfig, ...deps });
         } catch (error) {
-            logger.warn(`Server cat: growth check for ${guild.id} failed: ${error.message}`);
+            // Settings not readable (database down): skipped, logged at most once per server per 10 min.
+            if (isSettingsUnavailable(error)) noteSettingsUnavailable(guild.id, 'server cat');
+            else logger.warn(`Server cat: growth check for ${guild.id} failed: ${error.message}`);
         }
     }
 }

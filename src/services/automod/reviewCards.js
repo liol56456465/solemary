@@ -18,7 +18,6 @@
 // Grouping lives in memory: after a restart the next hit starts a new card.
 
 import { REVIEW_ACTIONS } from '../../config/automod.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { Mutex } from '../../utils/mutex.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -26,6 +25,7 @@ import { truncate } from '../enforcement/format.js';
 import { getCaseByCode } from '../enforcement/caseService.js';
 import { createRejoinInvite, executeAction, sendDm } from '../enforcement/enforcementService.js';
 import { liftCase } from '../enforcement/appealService.js';
+import { dmServerName } from '../enforcement/dmTemplates.js';
 import { fetchStaffChannel } from './channelRouting.js';
 import {
     CLOSE_STATUS, REPORT_RULE, buildCardPayload, cardTier, closedTitle, describeStep, stripLeadingEmoji,
@@ -270,7 +270,7 @@ async function dmReversal(client, record, invite, replacement = null) {
     const user = await client.users.fetch(record.target_user_id).catch(() => null);
     if (!user) return false;
     const lines = [
-        `**A moderator reviewed an automatic action against you in ${enforcementConfig.serverName}** (case ${record.case_code}).`,
+        `**A moderator reviewed an automatic action against you in ${dmServerName(record.guild_id, client.guilds?.cache?.get?.(record.guild_id)?.name)}** (case ${record.case_code}).`,
         replacement ? `It was changed to: ${replacement}.` : 'It was reversed.',
         invite ? `Rejoin: ${invite}` : null,
     ].filter(Boolean);

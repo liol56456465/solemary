@@ -161,7 +161,7 @@ test('decideAppeal: the issuer is refused before anything is read or written', a
     settingOn();
     await withPool({ record: humanCase(), appeal: pendingAppeal }, async (pool) => {
         await assert.rejects(
-            decideAppeal({ client: fakeClient(), admin: { id: ISSUER, username: 'issuer' }, caseCode: 'abc2345', decision: 'accept', note: null }),
+            decideAppeal({ client: fakeClient(), callerGuildId: GUILD, admin: { id: ISSUER, username: 'issuer' }, caseCode: 'abc2345', decision: 'accept', note: null }),
             (error) => error.userMessage === SECOND_REVIEWER_MESSAGE && error.context?.expected === true,
         );
         assert.equal(pool.queries.length, 1, 'only the case lookup ran');
@@ -172,7 +172,7 @@ test('decideAppeal: the issuer is refused before anything is read or written', a
 test('decideAppeal: another staff member decides (deny) normally', async () => {
     settingOn();
     await withPool({ record: humanCase(), appeal: pendingAppeal }, async (pool) => {
-        const result = await decideAppeal({ client: fakeClient(), admin: { id: OTHER, username: 'other' }, caseCode: 'abc2345', decision: 'deny', note: null, via: 'slash' });
+        const result = await decideAppeal({ client: fakeClient(), callerGuildId: GUILD, admin: { id: OTHER, username: 'other' }, caseCode: 'abc2345', decision: 'deny', note: null, via: 'slash' });
         assert.equal(result.label, 'denied');
         assert.equal(result.ownerOverride, false);
         assert.ok(pool.writes().some((q) => /UPDATE \S*mod_appeals\S* SET status = \$2, decided_by = \$3/.test(q)), 'the appeal row was decided');
@@ -185,7 +185,7 @@ test('decideAppeal: an owner deciding their own case is allowed and logged as an
     const warnings = captureWarnings();
     try {
         await withPool({ record: humanCase({ moderator_id: OWNER, moderator_username: 'owner' }), appeal: pendingAppeal }, async () => {
-            const result = await decideAppeal({ client: fakeClient(), admin: { id: OWNER, username: 'owner' }, caseCode: 'abc2345', decision: 'deny', note: null, via: 'button' });
+            const result = await decideAppeal({ client: fakeClient(), callerGuildId: GUILD, admin: { id: OWNER, username: 'owner' }, caseCode: 'abc2345', decision: 'deny', note: null, via: 'button' });
             assert.equal(result.label, 'denied');
             assert.equal(result.ownerOverride, true);
         });
@@ -204,7 +204,7 @@ test('decideAppeal: an owner deciding someone else\'s case is not an override (n
     const warnings = captureWarnings();
     try {
         await withPool({ record: humanCase(), appeal: pendingAppeal }, async () => {
-            const result = await decideAppeal({ client: fakeClient(), admin: { id: OWNER, username: 'owner' }, caseCode: 'abc2345', decision: 'deny', note: null });
+            const result = await decideAppeal({ client: fakeClient(), callerGuildId: GUILD, admin: { id: OWNER, username: 'owner' }, caseCode: 'abc2345', decision: 'deny', note: null });
             assert.equal(result.ownerOverride, false);
         });
     } finally {
@@ -217,7 +217,7 @@ test('decideAppeal: warn-ladder and automod cases are unaffected (the "issuer" i
     settingOn();
     for (const record of [ladderCase(), automodCase()]) {
         await withPool({ record, appeal: pendingAppeal }, async () => {
-            const result = await decideAppeal({ client: fakeClient(), admin: { id: BOT, username: 'Mewvo' }, caseCode: 'abc2345', decision: 'deny', note: null });
+            const result = await decideAppeal({ client: fakeClient(), callerGuildId: GUILD, admin: { id: BOT, username: 'Mewvo' }, caseCode: 'abc2345', decision: 'deny', note: null });
             assert.equal(result.label, 'denied');
         });
     }
@@ -227,7 +227,7 @@ test('decideAppeal: setting off → the issuer decides exactly as before', async
     for (const set of [settingOff, resetSettingsCacheForTests]) {
         set();
         await withPool({ record: humanCase(), appeal: pendingAppeal }, async (pool) => {
-            const result = await decideAppeal({ client: fakeClient(), admin: { id: ISSUER, username: 'issuer' }, caseCode: 'abc2345', decision: 'deny', note: null });
+            const result = await decideAppeal({ client: fakeClient(), callerGuildId: GUILD, admin: { id: ISSUER, username: 'issuer' }, caseCode: 'abc2345', decision: 'deny', note: null });
             assert.equal(result.label, 'denied');
             assert.equal(result.ownerOverride, false);
             assert.ok(pool.writes().length > 0);
@@ -235,7 +235,7 @@ test('decideAppeal: setting off → the issuer decides exactly as before', async
         // And the usual "no pending appeal" refusal is unchanged.
         await withPool({ record: humanCase(), appeal: null }, async () => {
             await assert.rejects(
-                decideAppeal({ client: fakeClient(), admin: { id: ISSUER, username: 'issuer' }, caseCode: 'abc2345', decision: 'accept', note: null }),
+                decideAppeal({ client: fakeClient(), callerGuildId: GUILD, admin: { id: ISSUER, username: 'issuer' }, caseCode: 'abc2345', decision: 'accept', note: null }),
                 (error) => /There is no pending appeal for `abc2345`/.test(error.userMessage),
             );
         });

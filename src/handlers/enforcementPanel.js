@@ -227,7 +227,7 @@ async function startTemplate(interaction, client, moderatorId, targetId, index) 
         return InteractionHelper.safeEditReply(interaction, { embeds: [stepEmbed(flow, fatal || error)], components: [] });
     }
     updateFlow(nonce, patch);
-    return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce));
+    return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce, { guildId: interaction.guildId }));
 }
 
 // ── Flow steps ─────────────────────────────────────────────────────────────
@@ -339,9 +339,9 @@ function liftModal(flow, moderatorId, nonce) {
                 .setRequired(false)));
 }
 
-/** The confirm step (exported for tests). */
-export function confirmationPayload(flow, moderatorId, nonce) {
-    const summary = flowSummary(flow);
+/** The confirm step (exported for tests). `guildId`: the server acting (its rule hint). */
+export function confirmationPayload(flow, moderatorId, nonce, { guildId = null } = {}) {
+    const summary = flowSummary(flow, { guildId });
     const lines = summary.rows.map((row) => (row.id
         ? `**${row.label}:** ${row.value} (\`${row.id}\`)`
         : `**${row.label}:** ${row.code ? `\`${row.value}\`` : row.value}`));
@@ -563,7 +563,7 @@ export async function handleEnforcementModal(interaction, client, args) {
 
     if (step === 'lift') {
         updateFlow(nonce, liftReasonPatch(flow, interaction.fields.getTextInputValue('reason')));
-        return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce));
+        return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce, { guildId: interaction.guildId }));
     }
 
     if (step !== 'details') return expired(interaction);
@@ -601,5 +601,5 @@ export async function handleEnforcementModal(interaction, client, args) {
     }
 
     updateFlow(nonce, patch);
-    return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce));
+    return InteractionHelper.safeEditReply(interaction, confirmationPayload(getFlow(nonce), moderatorId, nonce, { guildId: interaction.guildId }));
 }
