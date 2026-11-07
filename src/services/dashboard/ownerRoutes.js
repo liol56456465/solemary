@@ -47,9 +47,9 @@ import { blacklistStore } from '../owner/blacklistService.js';
 import {
     getStoredPresence, isMaintenanceOn, parsePresence, savePresence, setMaintenance,
 } from '../owner/botStateService.js';
-import { InputError, plainText, queryText, text } from './forms.js';
+import { InputError, PERMS, channelPicker, plainText, queryText, text } from './forms.js';
 import { MAX_UPLOAD_BYTES, sniffImage } from './multipart.js';
-import { path } from './html.js';
+import { html, path } from './html.js';
 import { isSnowflake } from './security.js';
 import { pinnedFetch } from '../owner/safeImageFetch.js';
 import { isBlacklistLoaded } from '../owner/blacklistCache.js';
@@ -952,27 +952,69 @@ export function createOwnerHandlers(core) {
 
     // ── Announce ─────────────────────────────────────────────────────────
 
-    /** Every server: its log channel when the bot can post there, else why it is skipped. */
-    async function announceTargets() {
+    /** The routed channel id of a server (alerts → mod log → logging channel), or null. */
+    const routedChannelId = (guild) => Promise.resolve().then(() => o.announceChannelId(client, guild)).catch(() => null);
+
+    /**
+     * Every server: its channel when the bot can post there, else why it is skipped. `choices`
+     * ({ guildId: channelId }, from the page's pickers) replaces the routed channel for a server.
+     */
+    async function announceTargets(choices = {}) {
         const sendable = [];
         const skipped = [];
         for (const guild of client.guilds?.cache?.values?.() || []) {
             const base = { guildId: guild.id, guildName: guild.name };
-            const channelId = await Promise.resolve().then(() => o.announceChannelId(client, guild)).catch(() => null);
+            const chosen = Object.hasOwn(choices, guild.id) ? choices[guild.id] : null;
+            const channelId = chosen || await routedChannelId(guild);
             if (!channelId) {
                 skipped.push({ ...base, why: 'no log channel configured' });
                 continue;
             }
             const channel = guild.channels?.cache?.get?.(channelId) || null;
-            if (!channel) skipped.push({ ...base, why: 'the log channel no longer exists' });
+            if (!channel) skipped.push({ ...base, why: chosen ? 'the chosen channel no longer exists' : 'the log channel no longer exists' });
             else if (!canPost(channel, guild.members?.me)) skipped.push({ ...base, why: `the bot cannot post in #${channel.name}` });
-            else sendable.push({ ...base, channelId: channel.id, channelName: channel.name });
+            else sendable.push({ ...base, channelId: channel.id, channelName: channel.name, chosen: Boolean(chosen) });
         }
         return { sendable, skipped };
     }
 
+    const ANNOUNCE_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
+    const announceField = (guild) => `ch_${guild.id}`;
+
+    /** The pickers' choices: { guildId: channelId } for every server where one was picked (else the routing). */
+    function announceChoices(form) {
+        const choices = {};
+        for (const guild of client.guilds?.cache?.values?.() || []) {
+            const id = text(form, announceField(guild), 25);
+            if (!id) continue;
+            const channel = isSnowflake(id) ? guild.channels?.cache?.get?.(id) : null;
+            if (!channel || !ANNOUNCE_TYPES.includes(channel.type)) throw new InputError(`${guild.name}: pick a text or announcement channel of that server, or leave it on the default.`);
+            choices[guild.id] = id;
+        }
+        return choices;
+    }
+
+    /** One channel picker per server (plain text: View Channel + Send Messages); empty = the routed channel. */
+    async function announcePickers(form = {}) {
+        const pickers = [];
+        for (const guild of client.guilds?.cache?.values?.() || []) {
+            const routed = await routedChannelId(guild);
+            const routedChannel = routed ? guild.channels?.cache?.get?.(routed) : null;
+            const value = text(form, announceField(guild), 25) || null;
+            pickers.push(channelPicker(guild, announceField(guild), value, {
+                label: guild.name, perms: PERMS.text, fixLink: guild.id === guildId,
+                noneLabel: routedChannel ? `Default: #${routedChannel.name}` : 'Default: no log channel (skipped)',
+            }));
+        }
+        return html`${pickers}`;
+    }
+
     async function renderAnnounce(req, res, status = 200, error = null) {
-        return sendHtml(res, status, announcePage({ ...page(req), targets: await announceTargets(), message: status === 200 ? '' : String(req.body?.message ?? '').slice(0, ANNOUNCE_MAX), error }));
+        const form = status === 200 ? {} : req.body || {};
+        return sendHtml(res, status, announcePage({
+            ...page(req), targets: await announceTargets(), pickers: await announcePickers(form),
+            message: status === 200 ? '' : String(req.body?.message ?? '').slice(0, ANNOUNCE_MAX), error,
+        }));
     }
     const announce = (req, res) => renderAnnounce(req, res);
     const rerenderAnnounce = (req, res, status, message) => renderAnnounce(req, res, status, message);
@@ -986,7 +1028,7 @@ export function createOwnerHandlers(core) {
 
     const announcePreview = ownerPost(async (req, res) => {
         const message = announceText(req.body);
-        const targets = await announceTargets();
+        const targets = await announceTargets(announceChoices(req.body));
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'announce', payload: { message, targets } });
         return sendHtml(res, 200, announceConfirmPage({ ...page(req), message, targets, token, hash }));
     }, { rerender: rerenderAnnounce });

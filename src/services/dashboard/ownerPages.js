@@ -412,10 +412,11 @@ function targetLists(targets) {
 ${targets.skipped.length ? html`<section class="card"><h2>Skipped (${targets.skipped.length})</h2><ul class="skip-list">${targets.skipped.map((t) => html`<li>${t.guildName} <span class="muted">${t.why}</span></li>`)}</ul></section>` : ''}`;
 }
 
-export function announcePage({ session, access = null, moduleStates = {}, targets, message = '', error = null, editEnabled = true }) {
+export function announcePage({ session, access = null, moduleStates = {}, targets, pickers = '', message = '', error = null, editEnabled = true }) {
     const body = html`<header class="page-head"><h1>Announce</h1><p class="muted">One plain-text message to every server's log channel (alerts or mod log in the main server, else the logging channel). Mentions never ping. You confirm on the next page.</p></header>
 ${notices({ error, editEnabled })}
-<section class="card"><h2>Message</h2>${actionForm(session.csrf, '/owner/announce/preview', html`<label class="wide">Text<textarea name="message" maxlength="${ANNOUNCE_MAX}" rows="6" required>${message}</textarea></label>`, { submit: 'Preview', enabled: editEnabled })}</section>
+<section class="card"><h2>Message</h2>${actionForm(session.csrf, '/owner/announce/preview', html`<label class="wide">Text<textarea name="message" maxlength="${ANNOUNCE_MAX}" rows="6" required>${message}</textarea></label>
+${pickers ? html`<fieldset class="wide"><legend>Where to post</legend><p class="hint">Leave a server on Default to use its log channel. Pick another channel to post there instead, this time only.</p><div class="grid">${pickers}</div></fieldset>` : ''}`, { submit: 'Preview', enabled: editEnabled })}</section>
 ${targetLists(targets)}`;
     return shell({ title: 'Announce', active: 'owner/announce', session, access, moduleStates, body });
 }

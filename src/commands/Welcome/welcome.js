@@ -19,7 +19,7 @@ export default {
                 .addChannelOption(option =>
                     option.setName('channel')
                         .setDescription('The channel to send welcome messages to')
-                        .addChannelTypes(ChannelType.GuildText)
+                        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(true))
                 .addStringOption(option =>
                     option.setName('message')

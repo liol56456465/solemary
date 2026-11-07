@@ -38,6 +38,8 @@ export const COUNTDOWN_TITLE_MAX = 200;
 
 /** Permissions the bot needs in the channel (names of PermissionFlagsBits). */
 export const POST_PERMISSIONS = ['ViewChannel', 'SendMessages', 'EmbedLinks'];
+/** A plain-text post (no embed, no file) needs no Embed Links. */
+export const TEXT_PERMISSIONS = ['ViewChannel', 'SendMessages'];
 export const POLL_PERMISSIONS = [...POST_PERMISSIONS, 'AddReactions', 'ReadMessageHistory'];
 /** A native poll needs Send Polls (no embed, no reactions). */
 export const NATIVE_POLL_PERMISSIONS = ['ViewChannel', 'SendMessages', 'SendPolls'];
@@ -101,24 +103,43 @@ export function colourFromKey(key) {
     return entry ? Number.parseInt(entry[2].replace('#', ''), 16) : null;
 }
 
-/** The permissions the bot lacks in `channel` (labels); threads need Send Messages in Threads. */
-export function missingPermissions(guild, channel, permissions = POST_PERMISSIONS) {
+const isThreadChannel = (channel) => (typeof channel?.isThread === 'function' ? channel.isThread() : false);
+
+/** The permission names of `permissions` the bot lacks in `channel`; threads need Send Messages in Threads. */
+function missingPermissionNames(guild, channel, permissions) {
     const me = guild?.members?.me;
     const granted = channel?.permissionsFor?.(me) ?? (me?.permissionsIn ? me.permissionsIn(channel) : null);
     const isThread = typeof channel?.isThread === 'function' ? channel.isThread() : false;
     const names = permissions.map((p) => (isThread && p === 'SendMessages' ? 'SendMessagesInThreads' : p));
-    if (!granted?.has) return names.map((p) => PERMISSION_LABELS[p] || p);
-    return names.filter((p) => !granted.has(PermissionFlagsBits[p])).map((p) => PERMISSION_LABELS[p] || p);
+    if (!granted?.has) return names;
+    return names.filter((p) => !granted.has(PermissionFlagsBits[p]));
 }
 
-/** Refuses (nothing posted) when the channel is not a text channel or a permission is missing. */
+/** The permissions the bot lacks in `channel` (labels); threads need Send Messages in Threads. */
+export function missingPermissions(guild, channel, permissions = POST_PERMISSIONS) {
+    return missingPermissionNames(guild, channel, permissions).map((p) => PERMISSION_LABELS[p] || p);
+}
+
+/**
+ * Refuses (nothing posted) when the channel is not a text channel or a permission is missing.
+ * The refusal carries `fix` ({ channelId, perms }) so the dashboard can offer Fix permissions.
+ */
 export function assertCanPost(guild, channel, permissions = POST_PERMISSIONS) {
     if (!channel || !POSTABLE_TYPES.has(channel.type)) throw validation('Pick a text or announcement channel.');
-    const missing = missingPermissions(guild, channel, permissions);
-    if (missing.length) {
+    const names = missingPermissionNames(guild, channel, permissions);
+    if (names.length) {
+        const missing = names.map((p) => PERMISSION_LABELS[p] || p);
         const text = `I am missing ${missing.join(', ')} in #${channel.name}. Nothing was posted.`;
-        throw createError(`Bot cannot post in ${channel.id}: ${missing.join(', ')}`, ErrorTypes.PERMISSION, text, { channelId: channel.id, expected: true });
+        const error = createError(`Bot cannot post in ${channel.id}: ${missing.join(', ')}`, ErrorTypes.PERMISSION, text, { channelId: channel.id, expected: true });
+        // A thread uses its channel's permissions: the fix goes to the parent channel.
+        const fixId = isThreadChannel(channel) ? channel.parentId : channel.id;
+        throw Object.assign(error, fixId ? { fix: { channelId: fixId, perms: names.map((p) => (p === 'SendMessagesInThreads' ? 'SendMessages' : p)) } } : {});
     }
+}
+
+/** What a post needs: Embed Links only with an embed, Attach Files only with a file. */
+export function permissionsForPost({ embeds = false, files = false } = {}) {
+    return [...TEXT_PERMISSIONS, ...(embeds ? ['EmbedLinks'] : []), ...(files ? ['AttachFiles'] : [])];
 }
 
 /**
@@ -155,7 +176,7 @@ export async function postBotMessage(guild, { channel, content = '', embed = nul
     if (text.length > MESSAGE_CONTENT_MAX) throw validation(`The message text is limited to ${MESSAGE_CONTENT_MAX} characters.`);
     const built = embed ? buildMessageEmbed(embed) : null;
     if (!text && !built) throw validation('Write a message or fill in the embed: there is nothing to post.');
-    assertCanPost(guild, channel, POST_PERMISSIONS);
+    assertCanPost(guild, channel, permissionsForPost({ embeds: Boolean(built) }));
     const message = await channel.send({
         ...(text ? { content: text } : {}),
         ...(built ? { embeds: [built] } : {}),

@@ -70,5 +70,10 @@
     "ManageRoles": "Gestisci ruoli",
     "AddReactions": "Aggiungi reazioni",
     "SendPolls": "Crea sondaggi"
+  },
+  "fixPerms": "Correggi i permessi",
+  "mark": {
+    "option": "{name} (a Mewvo manca: {perms})",
+    "hint": "In un canale segnato con «a Mewvo manca …» Mewvo ha prima bisogno di altri permessi."
   }
 }

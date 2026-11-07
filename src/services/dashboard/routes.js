@@ -27,6 +27,8 @@
 //   POST /dashboard/<module>/<act> with multipart/form-data: only actions marked `upload` (the
 //                                   Welcome & goodbye images); login first, then the 8 MB body,
 //                                   then the same checks as every settings form
+//   GET/POST /dashboard/fix-permissions  Mewvo gives itself missing permissions in one channel
+//                                   (permissionFixRoutes.js: confirm page, then Administrator-only POST)
 //   POST /dashboard/logout          CSRF token + same-origin check, then back to the website (/)
 //   /dashboard/owner/…              the Owner area (ownerRoutes.js): bot profile, servers, users,
 //                                   blacklist, health + maintenance, command sync, announce, and
@@ -107,6 +109,7 @@ import { collectInbox, defaultInboxData } from './inboxData.js';
 import { createMemberToolsHandlers, defaultMemberTools } from './memberToolsRoutes.js';
 import { createIncidentHandlers, defaultIncidents } from './incidentRoutes.js';
 import { createConfirmStore } from './confirmTokens.js';
+import { createPermissionFixHandlers } from './permissionFixRoutes.js';
 import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
 import { createWebsiteHandlers, defaultWebsiteDeps } from './websiteRoutes.js';
 import { IMAGE_MAX_BYTES as SITE_IMAGE_MAX_BYTES } from '../site/siteImages.js';
@@ -834,7 +837,7 @@ export function createDashboard({
         return moduleRawBody(req, res, (error) => Promise.resolve(parse(error)).catch(next));
     }
 
-    async function renderModule(req, res, module, status = 200, { error = null, errorAction = null, errorField = null, warnings = [] } = {}) {
+    async function renderModule(req, res, module, status = 200, { error = null, errorAction = null, errorField = null, errorFix = null, warnings = [] } = {}) {
         const ctx = contextFor(req);
         const data = await module.load(ctx);
         // The module's own commands with their switches (not on the Commands page itself).
@@ -854,7 +857,7 @@ export function createDashboard({
             : commandsSection;
         return sendHtml(res, status, moduleSettingsPage({
             ...shellOf(req), module, body: html`${rendered}${commandsPart}`,
-            flash: req.dashboard.flash, error, errorAction, errorField, warnings, editEnabled: settings.editEnabled,
+            flash: req.dashboard.flash, error, errorAction, errorField, errorFix, warnings, editEnabled: settings.editEnabled,
         }));
     }
 
@@ -902,6 +905,8 @@ export function createDashboard({
                 logger.info(`Dashboard ${module.key}/${req.params.action} refused for ${session.userId}: ${message}`);
                 return renderModule(req, res, module, error.status === 403 ? 403 : 400, {
                     error: message, errorAction: str(req.params?.action, 40), errorField: typeof error.field === 'string' ? error.field : null,
+                    // A refused post in a channel where Mewvo lacks permissions: a Fix permissions link next to the message.
+                    errorFix: error.fix && typeof error.fix === 'object' ? error.fix : null,
                 });
             }
             throw error;
@@ -946,6 +951,10 @@ export function createDashboard({
 
     const ownerHandlers = createOwnerHandlers({
         client, guildId, settings, sessions, audits, confirms, sendHtml, fail, shellOf, checkPost, postLimiter, owner,
+    });
+    // Fix permissions (permissionFixRoutes.js): Mewvo gives itself missing bits in one channel.
+    const permissionFixHandlers = createPermissionFixHandlers({
+        client, guildId, settings, services, confirms, sessions, audits, postLimiter, checkPost, sendHtml, fail, shellOf, recordDashboardChange,
     });
     // Owner → Website (websiteRoutes.js): the same owner checks, through the owner helpers.
     const websiteHandlers = createWebsiteHandlers({ sendHtml, fail, helpers: ownerHandlers.helpers, website });
@@ -1004,7 +1013,7 @@ export function createDashboard({
     return {
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
         overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, setLanguage, help, setup,
-        sessions, states, confirms, enforcement: enforcementHandlers, owner: ownerHandlers, website: websiteHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
+        sessions, states, confirms, permissionFix: permissionFixHandlers, enforcement: enforcementHandlers, owner: ownerHandlers, website: websiteHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
         incidents: createIncidentHandlers({ client, guildId, incidents, sendHtml, shellOf, notFound }),
     };
 }
@@ -1103,6 +1112,7 @@ export function dashboardRouter(d) {
     router.post('/backup/preview', user, uploadBody(BACKUP_MAX_BYTES + 16 * 1024), safe(d.parseUpload), safe(d.backupPreview));
     router.post('/backup/apply', form, user, safe(d.backupApply));
     router.post('/handover', form, user, safe(d.handover));
+    router.post('/fix-permissions', form, user, safe(d.permissionFix.apply));
     router.post('/cases/:code/evidence/remove', form, user, safe(en.evidenceRemove));
     router.post('/cases/:code/notes', form, user, safe(en.caseNote));
     router.post('/cases/:code/tags', form, user, safe(en.caseTags));
@@ -1200,6 +1210,7 @@ export function dashboardRouter(d) {
     router.get('/audit', user, safe(d.audit));
     router.get('/help', user, safe(d.help));
     router.get('/setup', user, safe(d.setup));
+    router.get('/fix-permissions', user, safe(d.permissionFix.page));
     router.get('/:module', user, safe(d.modulePage));
     router.use(user, d.notFound);
     return router;

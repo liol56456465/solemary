@@ -70,5 +70,10 @@
     "ManageRoles": "Gérer les rôles",
     "AddReactions": "Ajouter des réactions",
     "SendPolls": "Créer des sondages"
+  },
+  "fixPerms": "Corriger les permissions",
+  "mark": {
+    "option": "{name} (il manque à Mewvo : {perms})",
+    "hint": "Dans un salon marqué « il manque à Mewvo … », Mewvo a d’abord besoin de plus de permissions."
   }
 }

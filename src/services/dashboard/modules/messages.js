@@ -17,7 +17,7 @@
 import { html, path, raw, timeTag } from '../html.js';
 import { fillTemplate, messageTemplate, templatesByGroup } from '../../../config/messageTemplates.js';
 import {
-    InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, channelWarnings, checkbox, checkboxInput, choiceField, intField, numberInput,
+    InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, channelWarnings, checkbox, missingChannelPerms, checkboxInput, choiceField, intField, numberInput,
     pill, postForm, selectInput, switchInput, text, textArea, textInput,
 } from '../forms.js';
 import { section, table } from './common.js';
@@ -41,11 +41,17 @@ function longText(form, name, max, label) {
     return value;
 }
 
-/** The chosen channel, refused when the bot lacks one of `perms` there (nothing is posted). */
+/**
+ * The chosen channel, refused when the bot lacks one of `perms` there (nothing is posted). The
+ * refusal carries `fix` so the page shows a Fix permissions link next to it.
+ */
 function postChannel(guild, form, perms) {
     const channelId = channelField(guild, form, 'channelId', { optional: false, label: 'Channel' });
     const problems = channelWarnings(guild, channelId, perms);
-    if (problems.length) throw new InputError(`Channel: ${problems.join('; ')}. Nothing was posted.`, 400, 'channelId');
+    if (problems.length) {
+        const lacks = missingChannelPerms(guild, guild.channels.cache.get(channelId), perms) || [];
+        throw Object.assign(new InputError(`Channel: ${problems.join('; ')}. Nothing was posted.`, 400, 'channelId'), lacks.length ? { fix: { channelId, perms: lacks } } : {});
+    }
     return guild.channels.cache.get(channelId);
 }
 
@@ -81,7 +87,8 @@ function messageFields(g, { channelId = null, payload = null } = {}) {
     const e = payload?.embed || {};
     const hex = Number.isInteger(e.colour) ? `#${e.colour.toString(16).padStart(6, '0').toUpperCase()}` : '';
     const known = hex ? EMBED_COLOURS.find(([, , h]) => h.toUpperCase() === hex) : EMBED_COLOURS[0];
-    return html`${channelPicker(g, 'channelId', channelId, { label: 'Channel', perms: PERMS.post, optional: false })}
+    // A plain message needs no Embed Links; with a box filled in, the post itself checks it.
+    return html`${channelPicker(g, 'channelId', channelId, { label: 'Channel', perms: PERMS.text, optional: false })}
 ${textArea('content', payload?.content || '', { label: 'Message text', max: MESSAGE_CONTENT_MAX, rows: 4, help: `The normal text of the message. You can leave it empty if you fill in the box below. ${NO_PINGS}` })}
 ${textInput('title', e.title || '', { label: 'Box title', max: EMBED_TITLE_MAX, help: 'An embed is a message box with a coloured edge, a bold title and text. Fill in these fields to send one. Leave them empty for a plain message.' })}
 ${textArea('description', e.description || '', { label: 'Box text', max: EMBED_DESCRIPTION_MAX, rows: 6, help: `The main text inside the box. Discord formatting works, like **bold**. Title, text and footer together can be at most ${EMBED_TOTAL_MAX} characters.` })}
@@ -96,7 +103,6 @@ ${textInput('footer', e.footer || '', { label: 'Box footer', max: EMBED_FOOTER_M
  * empty message, a footer-only embed, a non-https image and a channel the bot cannot post in.
  */
 function messageFromForm(g, form) {
-    const channel = postChannel(g, form, PERMS.post);
     const content = longText(form, 'content', MESSAGE_CONTENT_MAX, 'Message text');
     const embed = {
         title: text(form, 'title', EMBED_TITLE_MAX),
@@ -108,6 +114,8 @@ function messageFromForm(g, form) {
         throw new InputError('Image link: it must start with https://. Other kinds of links are not accepted.', 400, 'imageUrl');
     }
     const hasEmbed = Boolean(embed.title || embed.description || embed.imageUrl || embed.footer);
+    // Embed Links only when a box is sent: plain text needs View Channel + Send Messages.
+    const channel = postChannel(g, form, hasEmbed ? PERMS.post : PERMS.text);
     if (!content && !hasEmbed) throw new InputError('There is nothing to post. Write a message or fill in the box.', 400, 'content');
     if (hasEmbed && !embed.title && !embed.description && !embed.imageUrl) {
         throw new InputError('Box: add a title, text or an image. A footer on its own is not shown.', 400, 'title');

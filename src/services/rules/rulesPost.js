@@ -19,7 +19,7 @@ import { EmbedBuilder } from 'discord.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { RULES_POST_DEFAULT, RULES_POST_LIMITS } from '../settings/settingsRegistry.js';
 import { isExpiredDiscordCdnUrl } from '../../utils/welcomeImageStore.js';
-import { POST_PERMISSIONS, assertCanPost, colourFromKey, noMentions } from '../botMessageService.js';
+import { assertCanPost, colourFromKey, noMentions, permissionsForPost } from '../botMessageService.js';
 
 export const DESCRIPTION_MAX = 4096;
 export const FIELD_NAME_MAX = 256;
@@ -176,8 +176,10 @@ export async function resolveRulesImages(client, guildId, design, resolve) {
     return { banner: await one(design.banner, 'banner'), thumbnail: await one(design.thumbnail, 'thumbnail') };
 }
 
-const POST_WITH_FILES = [...POST_PERMISSIONS, 'AttachFiles'];
-const permissionsFor = (messages, extra = []) => [...(messages.some((m) => m.files.length) ? POST_WITH_FILES : POST_PERMISSIONS), ...extra];
+// Only what the post needs: Embed Links when a message has embeds, Attach Files when it has files.
+const permissionsFor = (messages, extra = []) => [...permissionsForPost({
+    embeds: messages.some((m) => m.embeds?.length), files: messages.some((m) => m.files?.length),
+}), ...extra];
 
 /**
  * Posts the messages in `channel`. When one send fails, the ones already posted are

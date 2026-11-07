@@ -27,7 +27,7 @@ const levelCommand = mergeSubcommands(
                     option
                         .setName('channel')
                         .setDescription('Channel to send level-up notifications in')
-                        .addChannelTypes(ChannelType.GuildText)
+                        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(true),
                 )
                 .addIntegerOption((option) =>

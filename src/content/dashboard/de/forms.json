@@ -69,5 +69,10 @@
     "ManageRoles": "Rollen verwalten",
     "AddReactions": "Reaktionen hinzufügen",
     "SendPolls": "Umfragen erstellen"
+  },
+  "fixPerms": "Berechtigungen reparieren",
+  "mark": {
+    "option": "{name} (Mewvo fehlt: {perms})",
+    "hint": "In einem Kanal mit „Mewvo fehlt …“ braucht Mewvo erst mehr Berechtigungen."
   }
 }

@@ -72,10 +72,16 @@ test('hex colours', () => {
 test('permission check: missing View/Send/Embed refuses with a clear message and sends nothing; threads need Send Messages in Threads', async () => {
     for (const perm of ['ViewChannel', 'SendMessages', 'EmbedLinks']) {
         const channel = makeChannel({ denied: [perm] });
-        await assert.rejects(postBotMessage(guild, { channel, content: 'hi' }),
-            (e) => e.type === 'permission' && /I am missing .* in #general\. Nothing was posted\./.test(e.userMessage));
+        await assert.rejects(postBotMessage(guild, { channel, content: 'hi', embed: { title: 'Box' } }),
+            (e) => e.type === 'permission' && /I am missing .* in #general\. Nothing was posted\./.test(e.userMessage)
+                && e.fix?.channelId === channel.id && e.fix.perms.includes(perm));
         assert.equal(channel.sent.length, 0);
     }
+    // Plain text: Embed Links is not needed; View Channel and Send Messages still are.
+    const plain = makeChannel({ denied: ['EmbedLinks'] });
+    await postBotMessage(guild, { channel: plain, content: 'hi' });
+    assert.equal(plain.sent.length, 1);
+    await assert.rejects(postBotMessage(guild, { channel: makeChannel({ denied: ['SendMessages'] }), content: 'hi' }), (e) => e.type === 'permission');
     assert.throws(() => assertCanPost(guild, makeChannel({ type: ChannelType.GuildVoice })), /text or announcement channel/);
     const thread = makeChannel({ type: ChannelType.PublicThread, thread: true, denied: ['SendMessages'] });
     assert.doesNotThrow(() => assertCanPost(guild, thread), 'Send Messages is not what a thread needs');

@@ -444,6 +444,33 @@ test('announce: preview lists targets and skipped servers; send posts with menti
     assert.equal(empty.statusCode, 400);
 });
 
+test('announce: a channel picker per server; the routing stays the default, a picked channel is used for that server', async () => {
+    const h = await setup();
+    // An announcement channel in the support server (which has no routed log channel).
+    const support = h.guilds.get(SUPPORT);
+    const news = { ...support.channel, id: '100000000000000502', name: 'news', type: ChannelType.GuildAnnouncement, send: async (payload) => { news.sent.push(payload); return { id: '2' }; }, sent: [] };
+    support.channels.cache.set(news.id, news);
+    const pageRes = await get(h, h.ow.announce);
+    assert.match(pageRes.body, /Where to post/);
+    assert.match(pageRes.body, new RegExp(`name="ch_${MAIN}"`));
+    assert.match(pageRes.body, /Default: #mod-log/);
+    assert.match(pageRes.body, /Default: no log channel \(skipped\)/);
+
+    const preview = await post(h, h.ow.announcePreview, { form: { message: 'Hello', [`ch_${SUPPORT}`]: news.id } });
+    assert.equal(preview.statusCode, 200);
+    assert.doesNotMatch(preview.body, /Skipped \(/, 'the picked channel replaces the missing routing');
+    const { token, fh } = tokenOf(preview.body);
+    const sent = await post(h, h.ow.announceSend, { form: { token, fh, confirm: '1' } });
+    assert.match(sent.body, /Posted \(3\)/);
+    assert.deepEqual(news.sent, [{ content: 'Hello', allowedMentions: { parse: [] } }]);
+    assert.equal(h.guilds.get(MAIN).sent.length, 1, 'the main server still gets its routed channel');
+
+    // A channel that is not in that server is refused; nothing is previewed.
+    const wrong = await post(h, h.ow.announcePreview, { form: { message: 'Hello', [`ch_${SUPPORT}`]: '100000000000000999' } });
+    assert.equal(wrong.statusCode, 400);
+    assert.match(wrong.body, /pick a text or announcement channel of that server/);
+});
+
 // ── profile helpers ───────────────────────────────────────────────────────
 
 test('presence: parsed strictly and turned into discord.js presence data', () => {
