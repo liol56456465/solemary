@@ -180,13 +180,13 @@ test('no-contact: add (DMs both), duplicate refused, cache, list, end early, exp
     assert.deepEqual([order.user_a, order.user_b], nc.orderedPair(a, b));
     assert.deepEqual(delivered, [true, true]);
     assert.equal(dms.length, 2);
-    assert.match(dms[0].content, /No-contact order/);
+    assert.match(dms[0].content, /Keep apart: an order in Mewvo/);
     assert.ok(Math.abs(new Date(order.until).getTime() - (Date.now() + 3 * 86400000)) < 60000);
     assert.deepEqual(nc.getActiveOrdersFor(guildId, a).map((o) => o.otherId), [b], 'cache refreshed');
     assert.deepEqual(nc.getActiveOrdersFor(guildId, b).map((o) => o.otherId), [a]);
 
     await assert.rejects(nc.addNoContactOrder(client, { guildId, userA: b, userB: a, days: 1, reason: 'again', createdBy: admin }),
-        new RegExp(`already have an active no-contact order \\(#${order.id}\\)`));
+        new RegExp(`already have an active keep-apart order \\(#${order.id}\\)`));
     await assert.rejects(nc.addNoContactOrder(client, { guildId, userA: a, userB: a, days: 1, reason: 'x', createdBy: admin }), /two different/);
     await assert.rejects(nc.addNoContactOrder(client, { guildId, userA: a, userB: c, days: 0, reason: 'x', createdBy: admin }), /between 1 and/);
 

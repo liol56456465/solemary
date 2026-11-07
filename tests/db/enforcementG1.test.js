@@ -203,13 +203,13 @@ test('case void: an active warn is revoked, the ladder count drops, the user is 
     assert.ok(record.voided_at);
     assert.equal(record.voided_by, admin.id);
     assert.equal(record.void_reason, 'wrong person');
-    assert.equal(caseStatusLabel(record), 'voided');
+    assert.equal(caseStatusLabel(record), 'removed (a mistake)');
     assert.equal(dmDelivered, true);
-    assert.match(dms.at(-1)[1], /was voided/);
+    assert.match(dms.at(-1)[1], /was removed/);
     const { rows: [ladder] } = await pgDb.pool.query('SELECT warns_since_level FROM mod_ladder WHERE guild_id = $1 AND user_id = $2', [guildId, target]);
     assert.equal(ladder.warns_since_level, 1);
-    await assert.rejects(voidCase(client, { guildId, caseCode: warn.case_code, admin, reason: 'again' }), /already voided/);
-    await assert.rejects(editCase(null, { guildId, caseCode: warn.case_code, editor: admin, reason: 'x' }), /voided/);
+    await assert.rejects(voidCase(client, { guildId, caseCode: warn.case_code, admin, reason: 'again' }), /already removed/);
+    await assert.rejects(editCase(null, { guildId, caseCode: warn.case_code, editor: admin, reason: 'x' }), /removed \(a mistake\)/);
 });
 
 test('case void: an active ban is unbanned with an invite and its end DM recorded', { skip }, async () => {
