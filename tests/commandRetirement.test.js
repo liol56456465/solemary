@@ -7,7 +7,7 @@ import { adminCommandsRetired, dashboardPageFor, retireCommandJson, retiredMessa
 const { enforcementConfig } = await import('../src/config/enforcement.js');
 const { botConfig } = await import('../src/config/bot.js');
 const { checkCommandAccess } = await import('../src/utils/commandGate.js');
-const { expectedMainCommands, registerCommandSets, registerMainGuildCommands } = await import('../src/handlers/loaders/commandLoader.js');
+const { expectedGlobalCommands, registerAllCommands, registerCommandSets } = await import('../src/handlers/loaders/commandLoader.js');
 const { testMode } = await import('../src/config/testMode.js');
 
 const SUB = (name) => ({ type: 1, name, description: name });
@@ -81,15 +81,15 @@ test('registerCommandSets while retired registers the reduced lists', async () =
             global: [], support: [],
             main: [{ name: 'ping', description: 'p' }, { name: 'purge', description: 'p' }, { name: 'birthday', description: 'b', options: [SUB('set'), SUB('setchannel')] }],
         };
-        await withEnv({ RETIRE_ADMIN_COMMANDS: 'true' }, () => registerCommandSets(rest, '1600000000000000001', sets));
-        const main = puts.find((p) => String(p.route).includes('1700000000000000001'));
-        assert.deepEqual(main.names, ['ping', 'birthday']);
+        await withEnv({ RETIRE_ADMIN_COMMANDS: 'true' }, () => registerCommandSets(rest, '1600000000000000001', sets, 0, { schedule: () => {} }));
+        const global = puts.find((p) => String(p.route) === '/applications/1600000000000000001/commands');
+        assert.deepEqual(global.names, ['ping', 'birthday']);
     } finally {
         Object.assign(enforcementConfig, { mainGuildId: saved.main, supportGuildId: saved.support });
     }
 });
 
-test('registerMainGuildCommands: one PUT to the main guild with the startup list (retirement applied); global and support untouched', async () => {
+test('registerAllCommands (dashboard re-register): the startup registration, retirement applied; the comparison list registers nothing', async () => {
     const puts = [];
     const cmd = (json) => ({ data: { name: json.name, toJSON: () => json } });
     const client = {
@@ -103,19 +103,21 @@ test('registerMainGuildCommands: one PUT to the main guild with the startup list
     Object.assign(enforcementConfig, { mainGuildId: '1700000000000000001', supportGuildId: '1700000000000000002' });
     testMode.enabled = false;
     try {
-        const result = await withEnv({ RETIRE_ADMIN_COMMANDS: 'true' }, () => registerMainGuildCommands(client, { clientId: '1600000000000000001' }));
-        assert.deepEqual(result, { guildId: '1700000000000000001', count: 2 });
-        assert.equal(puts.length, 1, 'exactly one request');
-        assert.equal(puts[0].route, '/applications/1600000000000000001/guilds/1700000000000000001/commands');
-        assert.deepEqual(puts[0].names, ['ping', 'birthday']);
-        assert.deepEqual(withEnv({ RETIRE_ADMIN_COMMANDS: '' }, () => expectedMainCommands(client)).map((c) => c.name), ['ping', 'purge', 'birthday']);
-        assert.equal(puts.length, 1, 'the comparison list never registers anything');
+        const result = await withEnv({ RETIRE_ADMIN_COMMANDS: 'true', OWNER_TOOLS_GUILD_ID: '' }, () => registerAllCommands(client, { clientId: '1600000000000000001', schedule: () => {} }));
+        assert.deepEqual(result, { scope: 'global', count: 2 });
+        assert.deepEqual(puts.find((p) => p.route === '/applications/1600000000000000001/commands').names, ['ping', 'birthday'], 'one global PUT, retired');
+        assert.deepEqual(withEnv({ RETIRE_ADMIN_COMMANDS: '' }, () => expectedGlobalCommands(client)).map((c) => c.name), ['ping', 'purge', 'birthday']);
+        const count = puts.length;
+        withEnv({ RETIRE_ADMIN_COMMANDS: 'true' }, () => expectedGlobalCommands(client));
+        assert.equal(puts.length, count, 'the comparison list never registers anything');
 
-        await assert.rejects(registerMainGuildCommands(client, { clientId: '' }), /CLIENT_ID/);
+        await assert.rejects(registerAllCommands(client, { clientId: '' }), /CLIENT_ID/);
+        // Test mode: test guilds only, never global.
+        puts.length = 0;
         testMode.enabled = true;
         testMode.guildIds = new Set(['1700000000000000009']);
-        await assert.rejects(registerMainGuildCommands(client, { clientId: '1600000000000000001' }), /TEST_GUILD_IDS/);
-        assert.equal(puts.length, 1, 'refused without a request');
+        assert.deepEqual(await registerAllCommands(client, { clientId: '1600000000000000001' }), { scope: 'test', count: 3 });
+        assert.deepEqual(puts.map((p) => p.route), ['/applications/1600000000000000001/guilds/1700000000000000009/commands']);
     } finally {
         Object.assign(enforcementConfig, { mainGuildId: saved.main, supportGuildId: saved.support });
         testMode.enabled = saved.test;

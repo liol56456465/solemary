@@ -379,7 +379,7 @@ function diffList(title, rows, note) {
 }
 
 /**
- * state: { mainId, mainName, loaded, retired, expected: { slash, menus } | null, registered: { slash,
+ * state: { loaded, retired, expected: { slash, menus } | null, registered: { slash,
  * menus } | null, diff: { missing, extra, inSync } | null, expectedError, registeredError }.
  */
 export function commandsPage({ session, access = null, moduleStates = {}, state, flash = null, error = null, editEnabled = true }) {
@@ -396,13 +396,13 @@ ${diffList(tr.t('owner.commands.extra'), s.diff.extra, tr.t('owner.commands.extr
 ${notices({ flash, error, editEnabled })}
 ${s.expectedError ? html`<p class="error" role="alert">${s.expectedError}</p>` : ''}
 ${s.registeredError ? html`<p class="error" role="alert">${s.registeredError}</p>` : ''}
-<section class="card"><h2>${tr.t('owner.commands.mainServer')}${s.mainName ? html` · ${s.mainName}` : ''}</h2><dl>
+<section class="card"><h2>${tr.t('owner.commands.mainServer')}</h2><dl>
 <dt>${tr.t('owner.commands.loaded')}</dt><dd>${tr.tp('owner.commands.files', s.loaded)}</dd>
 <dt>${tr.t('owner.commands.startup')}</dt><dd>${countText(s.expected)}${s.retired ? html` <span class="muted">${tr.t('owner.commands.retiredNote')}</span>` : ''}</dd>
 <dt>${tr.t('owner.commands.onDiscord')}</dt><dd>${countText(s.registered)}</dd>
 </dl>${comparison}</section>
 <section class="card"><h2>${tr.t('owner.commands.reregister')}</h2><p class="muted">${tr.tx('owner.commands.reregisterHelp')}</p>
-${s.mainId ? actionForm(session.csrf, '/owner/commands/register/preview', '', { submit: tr.t('owner.commands.reregisterButton'), enabled: editEnabled && !s.expectedError }) : html`<p class="muted">${tr.t('owner.commands.noMain')}</p>`}</section>`;
+${actionForm(session.csrf, '/owner/commands/register/preview', '', { submit: tr.t('owner.commands.reregisterButton'), enabled: editEnabled && !s.expectedError })}</section>`;
     return shell({ title: tr.t('owner.commands.title'), active: 'owner/commands', session, access, moduleStates, body });
 }
 
@@ -410,7 +410,7 @@ export function registerConfirmPage({ session, access = null, moduleStates = {},
     const tr = dashboardText(session?.lang);
     const body = html`<p><a href="${path('/owner/commands')}">${tr.t('owner.common.backCancel')}</a></p>
 <h1>${tr.t('owner.commands.confirmTitle')}</h1>
-<section class="card confirm-card"><dl><dt>${tr.t('owner.common.server')}</dt><dd>${state.mainName || tr.t('owner.commands.mainServer')} <span class="muted">${state.mainId}</span></dd>
+<section class="card confirm-card"><dl><dt>${tr.t('owner.common.server')}</dt><dd>${tr.t('owner.commands.mainServer')}</dd>
 <dt>${tr.t('owner.commands.willRegister')}</dt><dd>${countText(state.expected)}${state.retired ? ` ${tr.t('owner.commands.retired')}` : ''}</dd>
 <dt>${tr.t('owner.commands.onDiscord')}</dt><dd>${countText(state.registered)}</dd>
 <dt>${tr.t('owner.common.effect')}</dt><dd>${tr.tx('owner.commands.confirmEffect')}</dd></dl>

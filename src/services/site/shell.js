@@ -84,6 +84,18 @@ export function siteOrigin(env = process.env) {
     }
 }
 
+/**
+ * The dashboard link for one server (/setup, the join welcome), or null without PUBLIC_URL.
+ * The one place that builds it: today every server shares `${PUBLIC_URL}/dashboard` (the
+ * dashboard serves Mewvo's own server); the per-server dashboard (multi-server B3) changes only
+ * this function, to `/dashboard/<guildId>`.
+ */
+export function dashboardUrlFor(guildId, env = process.env) {
+    void guildId; // B3: `${origin}${DASHBOARD_PATH}/${guildId}`
+    const origin = siteOrigin(env);
+    return origin ? `${origin}${DASHBOARD_PATH}` : null;
+}
+
 // The stylesheet: the site's own tokens and layout, one file, cached with a content hash.
 function buildStylesheet() {
     try {

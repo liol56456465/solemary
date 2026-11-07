@@ -89,7 +89,7 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
                     showAdmin
                         ? '• Commands marked 🔒 need the **Administrator** permission; the rest are for everyone.'
                         : '• This list shows the commands you can use.',
-                    '• Commands only work in the Mewvo servers.',
+                    ...(showAdmin ? ['• **/setup** shows what is set up in this server, with a link to the dashboard.'] : []),
                     ...(showAdmin ? ['• **/setappeal** posts the appeal panels; **/appeals** lists, shows and decides appeals.'] : []),
                 ].join('\n'),
                 inline: false,

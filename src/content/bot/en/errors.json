@@ -65,6 +65,7 @@
     "access": {
         "adminChannel": "You need the Administrator role to use this command. Request a mod/admin role here: <#{channelId}>",
         "admin": "You need the Administrator role to use this command.",
-        "adminOther": "You need the Administrator role to use this command. Ask an admin of this server if you need access."
+        "adminOther": "You need the Administrator role to use this command. Ask an admin of this server if you need access.",
+        "manageServer": "You need the Manage Server or Administrator permission to use this command."
     }
 }

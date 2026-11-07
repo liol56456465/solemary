@@ -1,0 +1,69 @@
+{
+    "title": "Mewvo in {server} einrichten",
+    "intro": "Was in diesem Server bisher eingerichtet ist. Die meisten Einstellungen findest du im Dashboard.",
+    "dashboardButton": "Dashboard öffnen",
+    "noDashboard": "Der Dashboard-Link ist für diesen Bot noch nicht verfügbar.",
+    "checklistTitle": "Checkliste",
+    "on": "an",
+    "off": "aus",
+    "item": {
+        "modLog": {
+            "label": "Mod-Log-Kanal",
+            "next": "Wähle im Dashboard einen Kanal (Durchsetzung)."
+        },
+        "staff": {
+            "label": "Team-Prüfkanal",
+            "next": "Wähle im Dashboard einen Kanal (Automod).",
+            "fallback": "Nicht gesetzt: Prüfungen gehen ins Mod-Log. Wähle im Dashboard einen Kanal (Automod)."
+        },
+        "appeals": {
+            "label": "Einsprüche",
+            "mewvo": "Mitglieder legen Einspruch im Mewvo-Support-Server ein.",
+            "mewvoChoice": "Mitglieder legen Einspruch im Mewvo-Support-Server ein. Du kannst stattdessen deinen eigenen Server nutzen (Dashboard).",
+            "own": "Mitglieder legen Einspruch in deinem eigenen Server ein: {invite}",
+            "ownMissing": "Dein eigener Server ist gewählt, aber es ist keine Einladung gesetzt. Füge im Dashboard eine hinzu (Durchsetzung)."
+        },
+        "automod": {
+            "label": "Automod",
+            "next": "Schalte es im Dashboard ein (Automod)."
+        },
+        "verification": {
+            "label": "Verifizierung",
+            "next": "Richte sie mit /verification oder im Dashboard ein."
+        },
+        "welcome": {
+            "label": "Willkommensnachrichten",
+            "next": "Richte sie mit /welcome oder im Dashboard ein."
+        },
+        "tickets": {
+            "label": "Tickets",
+            "next": "Richte sie mit /ticket oder im Dashboard ein."
+        },
+        "leveling": {
+            "label": "Level-System",
+            "next": "Schalte es mit /level oder im Dashboard ein."
+        },
+        "language": {
+            "label": "Bot-Sprache",
+            "default": "Englisch (Standard). Wähle die Sprache für Beiträge und DMs im Dashboard (Bot-Sprache)."
+        }
+    },
+    "commandsTitle": "Alle Befehle",
+    "commandsHint": "Wähle unten eine Kategorie, um ihre Befehle zu sehen. 🔒 = nur Administrator.",
+    "selectPlaceholder": "Kategorie wählen",
+    "categoryTitle": "Befehle: {category}",
+    "categoryEmpty": "Keine Befehle in dieser Kategorie.",
+    "more": {
+        "one": "…und {count} weiterer",
+        "other": "…und {count} weitere"
+    },
+    "notYours": "Dieses Menü gehört jemand anderem. Führe /setup aus, um dein eigenes zu bekommen.",
+    "welcome": {
+        "title": "Danke, dass du Mewvo hinzugefügt hast!",
+        "body": "Ein Admin kann **/setup** eingeben, um loszulegen.",
+        "help": "Gib **/help** ein, um die Befehle zu sehen. Fragen? Frag im Mewvo-Support-Server.",
+        "dm": "Du hast Mewvo zu **{server}** hinzugefügt. Ein Admin kann dort **/setup** eingeben, um loszulegen.",
+        "dashboardButton": "Dashboard öffnen",
+        "supportButton": "Mewvo-Support-Server"
+    }
+}

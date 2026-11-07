@@ -62,8 +62,22 @@ export const EVERYONE_COMMANDS = new Set([
 ]);
 
 /**
- * Commands registered in the support server (everything else exists only in the
- * main server). The appeal panels there are buttons and need no command.
+ * Access keys for Administrator OR Manage Server (not everyone, but more than Administrator):
+ * server setup helpers that change nothing themselves. OWNER_IDS are an override as usual.
+ */
+export const MANAGE_SERVER_COMMANDS = new Set([
+  'setup',
+]);
+
+/** True when Administrator or Manage Server may run this access key. */
+export function isManageServerCommand(accessKey) {
+  return Boolean(accessKey) && MANAGE_SERVER_COMMANDS.has(accessKey);
+}
+
+/**
+ * Before multi-server B2 (global commands): the commands registered in the support server.
+ * Registration and the gate no longer use it (every command is global and runs everywhere);
+ * only the dashboard's Commands page still lists it, until B3 updates that page.
  */
 export const SUPPORT_SERVER_COMMANDS = new Set([
   'help', 'ping', 'uptime',
