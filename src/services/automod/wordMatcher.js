@@ -45,10 +45,11 @@ import { foldIndexed } from './textFold.js';
 const MAX_TEXT = 4000;
 const MAX_WINDOW_UNITS = 12;
 const MAX_WINDOW_LETTERS = 20;
-const MAX_WINDOW_CHECKS = 400;
 const MAX_VARIANTS = 64;
 const MAX_KEYS_PER_WORD = 160;
 const SHORT_WORD = 3;
+const MAX_ACROSS_WORDS = 12; // distinctive words split across up to this many words (letters cap the work)
+const MAX_ACROSS_LETTERS = 24;
 const MEMO_MAX = 20000; // remembered readings / lookups per table, then cleared
 const MEMO_KEY_MAX = 64; // longer tokens (links, pasted junk) are rare repeats: not remembered
 
@@ -76,10 +77,12 @@ mm uh oi ha he ho no nah yep yup wow cya bye pls plz thx ty np lmao`.split(/\s+/
 // Real words (English and other languages) that a variant of a built-in word would hit.
 // Compared with the token as written (look-alikes folded, leetspeak read); a stretched token
 // ("kysssss") is never allowed.
-// A trailing * means "starts with".
 export const ALLOW = [
     'niger', 'nigers', // the country (and "niger" in Latin): nigger with one g
-    'snigger*', 'niggard*', // snigger, sniggering, niggardly: they contain the slur's letters
+    // snigger, niggardly: they contain the slur's letters. Every form is listed: a prefix rule
+    // ("snigger" + anything) would let "sniggernigger" through.
+    'snigger', 'sniggers', 'sniggered', 'sniggering', 'sniggeringly', 'sniggerer', 'sniggerers',
+    'niggard', 'niggards', 'niggardly', 'niggardliness',
     'dike', 'dikes', // embankment: dyke with i
     'kunt', // Dutch "kunt" (you can): cunt with k
     'dik', 'dic', // Dutch/Afrikaans "dik" (thick), "dic." (Spanish/Portuguese December)
@@ -101,12 +104,11 @@ export const ALLOW_CONTEXT = [
     /\bspic?k?[\s-]+(?:and|n|&)[\s-]+span\b/g,
 ];
 
-const allowExact = new Set(ALLOW.filter((w) => !w.endsWith('*')));
-const allowPrefix = ALLOW.filter((w) => w.endsWith('*')).map((w) => w.slice(0, -1));
+// Whole tokens only, no prefixes: a token is allowed when it IS one of these words.
+const allowExact = new Set(ALLOW);
 
 function isAllowedToken(plain) {
-    if (allowExact.has(plain)) return true;
-    return allowPrefix.some((prefix) => plain.startsWith(prefix));
+    return allowExact.has(plain);
 }
 
 // ── Forms ─────────────────────────────────────────────────────────────────
@@ -232,7 +234,7 @@ function pushTo(map, key, value) {
 function emptyCompiled(allow) {
     return {
         keys: new Map(), skeletons: new Map(), wildSkeletons: new Map(), patterns: new Map(),
-        inside: [], suffixes: [], allow, phrases: new Map(), parts: null, size: 0,
+        inside: [], insideKeys: new Map(), suffixes: [], allow, phrases: new Map(), parts: null, size: 0, minKey: Infinity,
     };
 }
 
@@ -248,7 +250,11 @@ function addWord(compiled, word, entry, { exact = false } = {}) {
         if (!short && !exact && variant === word) for (const doubled of vowelDoubled(variant)) keyed.add(keyForm(doubled));
         if (keyed.size >= MAX_KEYS_PER_WORD) break;
     }
-    for (const key of keyed) pushTo(compiled.keys, key, entry);
+    for (const key of keyed) {
+        pushTo(compiled.keys, key, entry);
+        compiled.minKey = Math.min(compiled.minKey, key.length);
+    }
+    if (entry.inside && !exact) for (const key of keyed) pushTo(compiled.insideKeys, key, entry);
     if (exact) return;
     const dropVowels = !short && consonantCount(word) >= 3;
     const patternsSeen = new Set(); // per entry: a bucket scan per pattern would be quadratic in big lists
@@ -257,15 +263,21 @@ function addWord(compiled, word, entry, { exact = false } = {}) {
         // Re-keyed: dropping vowels can bring equal consonants together ("braindead" -> "brndd" -> "brnd").
         const skeleton = keyForm(skeletonOf(form));
         if (skeleton.length >= 2 && skeleton !== form) {
-            if (dropVowels) pushTo(compiled.skeletons, skeleton, entry);
+            if (dropVowels) {
+                pushTo(compiled.skeletons, skeleton, entry);
+                compiled.minKey = Math.min(compiled.minKey, skeleton.length);
+            }
             pushTo(compiled.wildSkeletons, skeleton, entry);
         }
         for (const suffix of ['', ...entry.suffixes]) {
             const pattern = cap2(variant + suffix);
             if (patternsSeen.has(pattern)) continue;
             patternsSeen.add(pattern);
-            if (!compiled.patterns.has(pattern.length)) compiled.patterns.set(pattern.length, []);
-            compiled.patterns.get(pattern.length).push({ text: pattern, entry });
+            // Two indexes: length + first letter, and length + first two letters.
+            for (const bucket of [`${pattern.length}${pattern[0]}`, `${pattern.length}${pattern.slice(0, 2)}`]) {
+                if (!compiled.patterns.has(bucket)) compiled.patterns.set(bucket, []);
+                compiled.patterns.get(bucket).push({ text: pattern, entry });
+            }
         }
     }
     if (entry.inside) {
@@ -310,7 +322,10 @@ export function compileWords(words, { allow = false } = {}) {
         // uid: two rules may list the same word; each is its own hit.
         // plain: the word as listed (decoded), so a token that IS the listed word is never
         // dropped by the allow list (a server that lists "kunt" wants "kunt" caught).
-        const entry = { ...input, uid: compiled.size, plain: parsed.join(''), suffixes: new Set(input.suffixes || []) };
+        const entry = {
+            ...input, uid: compiled.size, plain: parsed.join(''), suffixes: new Set(input.suffixes || []),
+            notSplit: input.notSplit ? new Set(input.notSplit.map((split) => wordParts(split).join(' '))) : null,
+        };
         for (const suffix of entry.suffixes) suffixes.add(suffix);
         compiled.size += 1;
         if (parsed.length === 1) {
@@ -399,16 +414,18 @@ function analyzedPieceRaw(word, index) {
     return word.pieceRaw[word.pieces.indexOf(index)];
 }
 
-// Discord markup: mentions, channels, timestamps, slash-command mentions ("<#123>" would read
-// as "c*i"), blanked with spaces of the same length so positions stay. A custom emoji keeps
-// its name (":fuck:" is a word like any other).
-const MARKUP = /<(?:@[!&]?|#)\d+>|<t:-?\d+(?::\w)?>|<\/[\w -]+:\d+>|<a?:(\w+):\d+>/g;
+// Discord markup: user/role/channel mentions and timestamps ("<#123>" would read as "c*i")
+// are blanked with spaces of the same length so positions stay. Custom emoji and slash-command
+// mentions keep their name in place (":fuck:" and "</fuck you:1>" are words like any other).
+const MARKUP = /<(?:@[!&]?|#)\d+>|<t:-?\d+(?::\w)?>|<\/([\w -]+):\d+>|<a?:(\w+):\d+>/g;
 
 function blankMarkup(value) {
     if (!value.includes('<')) return value;
-    return value.replace(MARKUP, (whole, name) => {
+    return value.replace(MARKUP, (whole, command, emoji) => {
+        const name = command || emoji;
         if (!name) return ' '.repeat(whole.length);
-        const at = whole.indexOf(':') + 1; // the name stays in its place: "<a:" / "<:" become spaces
+        // "</" before a command, "<:" / "<a:" before an emoji become spaces.
+        const at = command ? 2 : whole.indexOf(':') + 1;
         return `${' '.repeat(at)}${name}${' '.repeat(whole.length - at - name.length)}`;
     });
 }
@@ -484,13 +501,14 @@ function allowedRangesOf(analysis) {
  */
 function lookupMemo(compiled, reading, mode, digits) {
     if (reading.length > MEMO_KEY_MAX) return lookup(compiled, reading, mode, { digits });
-    const memo = compiled.memo || (compiled.memo = new Map());
-    const key = `${mode === 'strict' ? 's' : 'f'}${digits ? 1 : 0}${reading}`;
-    let hits = memo.get(key);
+    // One map per mode and digit flag: no key string to build per lookup.
+    const memos = compiled.memo || (compiled.memo = [new Map(), new Map(), new Map(), new Map()]);
+    const memo = memos[(mode === 'strict' ? 2 : 0) + (digits ? 1 : 0)];
+    let hits = memo.get(reading);
     if (hits) return hits;
     hits = lookup(compiled, reading, mode, { digits });
-    if (memo.size >= MEMO_MAX) memo.clear();
-    memo.set(key, hits);
+    if (memo.size >= MEMO_MAX / 4) memo.clear(); // four maps share the per-table cap
+    memo.set(reading, hits);
     return hits;
 }
 
@@ -541,12 +559,31 @@ function wildLookup(compiled, reading) {
     if (!hasVowelAfterFirst(core)) {
         for (const entry of compiled.wildSkeletons.get(core) || []) if (!hits.includes(entry)) hits.push(entry);
     }
+    // Patterns are indexed by length and their first one or two letters (a wildcard token
+    // starts with a real letter), so a token is compared with a small bucket, not every word
+    // of a big list.
     const capped = cap2(reading);
-    for (const { text, entry } of compiled.patterns.get(capped.length) || []) {
+    const bucket = capped[1] === '*' ? `${capped.length}${capped[0]}` : `${capped.length}${capped.slice(0, 2)}`;
+    for (const { text, entry } of compiled.patterns.get(bucket) || []) {
         if (hits.includes(entry)) continue;
         let ok = true;
         for (let i = 0; ok && i < capped.length; i += 1) ok = capped[i] === '*' || capped[i] === text[i];
         if (ok) hits.push(entry);
+    }
+    return hits;
+}
+
+/** Inside entries a run of joined words spells (their keys and suffixes; no loose paths). */
+function acrossLookup(compiled, joined) {
+    const hits = [];
+    for (const form of formsOf(joined)) {
+        for (const entry of compiled.insideKeys.get(form) || []) if (!hits.includes(entry)) hits.push(entry);
+        for (const suffix of compiled.suffixes) {
+            if (form.length < suffix.length + 2 || !form.endsWith(suffix)) continue;
+            for (const entry of compiled.insideKeys.get(form.slice(0, -suffix.length)) || []) {
+                if (entry.suffixes.has(suffix) && !hits.includes(entry)) hits.push(entry);
+            }
+        }
     }
     return hits;
 }
@@ -619,19 +656,45 @@ export function matchWords(text, compiled, { first = false } = {}) {
             && (letters.length === 1 || !STOP.has(letters));
         return { word, joinable, single: letters.length === 1 };
     });
-    let checks = 0;
-    for (let i = 0; i < units.length && checks < MAX_WINDOW_CHECKS; i += 1) {
+    // No budget shared across the message (padding must not use it up before a later slur):
+    // each start position checks at most MAX_WINDOW_UNITS windows of at most
+    // MAX_WINDOW_LETTERS, so the work is linear in the message length.
+    for (let i = 0; i < units.length; i += 1) {
         if (!units[i].joinable) continue;
         let raw = units[i].word.raw;
         let singles = units[i].single;
-        for (let j = i + 1; j < units.length && j - i < MAX_WINDOW_UNITS && checks < MAX_WINDOW_CHECKS; j += 1) {
+        for (let j = i + 1; j < units.length && j - i < MAX_WINDOW_UNITS; j += 1) {
             if (!units[j].joinable) break;
             raw += units[j].word.raw;
             singles = singles && units[j].single;
             if (raw.length > MAX_WINDOW_LETTERS) break;
-            checks += 1;
+            if (raw.length < compiled.minKey) continue; // shorter than every listed word
             const mode = singles && j - i >= 2 ? 'full' : 'strict';
             if (check(raw, units[i].word.from, units[j].word.to, mode) && first) return found;
+        }
+    }
+
+    // Distinctive ("inside") words split anywhere across words: "nigg er", "fa ggot",
+    // "kill your self". The hit must start where a word starts and end where a word ends
+    // (or before one of its suffixes), so "skill yourself" and "snigger" stay out; spaces
+    // that make ordinary words ("wet back") are listed per word in `notSplit`.
+    if (compiled.insideKeys.size) {
+        const letters = analysis.words.map((word) => (decode(word.raw).includes('*') ? '' : decode(word.raw).replace(/[^a-z]/g, '')));
+        for (let i = 0; i < letters.length; i += 1) {
+            if (!letters[i]) continue;
+            let joined = letters[i];
+            for (let j = i + 1; j < letters.length && j - i < MAX_ACROSS_WORDS; j += 1) {
+                if (!letters[j]) break;
+                joined += letters[j];
+                if (joined.length > MAX_ACROSS_LETTERS) break;
+                const spaced = letters.slice(i, j + 1).join(' ');
+                // Without a trailing suffix word too: "wet back's" is "wet back" + "s".
+                const unsuffixed = letters.slice(i, j).join(' ');
+                const hits = acrossLookup(compiled, joined).filter((entry) => !entry.notSplit?.has(spaced)
+                    && !(entry.suffixes.has(letters[j]) && entry.notSplit?.has(unsuffixed)));
+                // The joined letters go through the allow list like a token ("Niger's" -> "nigers").
+                if (record(hits, analysis.words[i].from, analysis.words[j].to, [joined]) && first) return found;
+            }
         }
     }
 
