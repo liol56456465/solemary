@@ -26,6 +26,9 @@ import { JS_PATH } from '../src/services/dashboard/html.js';
 const ALLOWED_SCRIPT = `<script src="${JS_PATH}" defer></script>`;
 const SECRET = 'y'.repeat(64);
 const GUILD = '100000000000000001';
+// GUILD plays the main server: a home server, so a setting it has not stored falls back like before
+// (resolveSetting; a non-home server whose settings were never read would throw instead).
+process.env.MAIN_GUILD_ID ??= GUILD;
 const ADMIN = '200000000000000002';
 const OWNER = '200000000000000003';
 const TARGET = '300000000000000004';

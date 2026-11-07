@@ -112,7 +112,7 @@ async function handleEvidence(interaction, client, sub, code) {
             }));
         }
         if (image) {
-            added.push(await addImageEvidence(client, code, image, { note, addedBy }));
+            added.push(await addImageEvidence(client, code, image, { note, addedBy, guildId: interaction.guildId }));
         }
 
         const fresh = await resolveImageUrls(client, added);

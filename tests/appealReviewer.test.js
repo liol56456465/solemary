@@ -19,6 +19,9 @@ import appealsCommand from '../src/commands/Enforcement/appeals.js';
 import { handleInteractionError } from '../src/utils/errorHandler.js';
 
 const GUILD = '1700000000000000001';
+// GUILD plays the main server: a home server, so a setting it has not stored falls back like before
+// (resolveSetting; a non-home server whose settings were never read would throw instead).
+process.env.MAIN_GUILD_ID ??= GUILD;
 const BOT = '1700000000000000100';
 const ISSUER = '1700000000000000200';
 const OTHER = '1700000000000000300';

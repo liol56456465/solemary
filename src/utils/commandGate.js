@@ -22,19 +22,31 @@ import { enforcementConfig } from '../config/enforcement.js';
 import { isEveryoneCommand, isSupportServerCommand } from '../config/commands/commandAccess.js';
 import { adminCommandsRetired, isKeptAdminCommand, isOwnerKit, retiredMessage } from '../config/commands/retirement.js';
 import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
-import { getStoredSetting } from '../services/settings/guildSettings.js';
+import { getStoredSetting, isHomeGuild, resolveSetting } from '../services/settings/guildSettings.js';
 import { botText } from './botText.js';
 
 /**
+ * A server's own admin request channel. The support server (a home server, so resolveSetting
+ * would lend it the main server's env value) only uses what it stored itself; any other server
+ * goes through resolveSetting (its stored value, else null; never the main server's).
+ */
+function ownRequestChannel(guildId, key) {
+    return isHomeGuild(guildId) ? getStoredSetting(guildId, key) : resolveSetting(guildId, key);
+}
+
+/**
  * The refusal for a non-admin. The main server (or no server given) keeps its wording and its
- * admin request channel. Any other server only names a request channel it stored itself, never
+ * admin request channel. Any other server only names a request channel it set up itself, never
  * the main server's channel (that link would lead nowhere there); otherwise a neutral line.
+ * A read that fails (database down at boot: SettingsUnavailableError) also gives the neutral
+ * line: it is only the wording of a refusal, the command is refused either way.
  * `stored` is for tests. `lang`: the language of the person asking (utils/botText.js); English by default.
  */
-export function getAdminRequiredMessage(guildId = null, { stored = getStoredSetting, lang = 'en' } = {}) {
+export function getAdminRequiredMessage(guildId = null, { stored = ownRequestChannel, lang = 'en' } = {}) {
     const isMain = !guildId || guildId === enforcementConfig.mainGuildId;
     let channelId = null;
     if (isMain) {
+        // The main server's own value: the config getter is getConfiguredSetting, i.e. resolveSetting(MAIN_GUILD_ID).
         channelId = enforcementConfig.adminRequestChannelId;
     } else {
         try {

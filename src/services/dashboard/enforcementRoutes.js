@@ -849,7 +849,7 @@ export function createEnforcementHandlers(core) {
         const note = text(req.body, 'note', 300) || null;
         const row = await e.addImageEvidence(client, record.case_code, {
             data: file.data, name: evidenceFileName(record.case_code, image.ext), contentType: image.type,
-        }, { note, addedBy: { id: req.dashboard.session.userId, username: req.dashboard.session.username } });
+        }, { note, addedBy: { id: req.dashboard.session.userId, username: req.dashboard.session.username }, guildId: record.guild_id });
         await audit(req, 'cases', [{ key: `${record.case_code}.evidence`, old: null, new: `image #${row.id} (${image.type}, ${file.data.length} bytes)` }], { modLog: true, label: `Case ${record.case_code} evidence` });
         await flash(req, textOf(req).t('moderation.evidence.imageAdded', { id: row.id }));
         return res.redirect(303, path(`/cases/${record.case_code}`));

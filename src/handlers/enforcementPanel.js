@@ -42,7 +42,7 @@ import { MAX_LINKS_PER_FORM, messageExcerpt } from '../services/enforcement/evid
 import { dateStamp, ladderStageShort, stamp, truncate } from '../services/enforcement/format.js';
 import { getActiveOrdersFor, noContactLines } from '../services/enforcement/noContactService.js';
 import { templateLabel, templatePatch, usableTemplates } from '../services/enforcement/templateService.js';
-import { getConfiguredSetting } from '../services/settings/guildSettings.js';
+import { resolveSetting } from '../services/settings/guildSettings.js';
 import {
     ACTION_LABELS, RECORD_ACTIONS, attachFlowEvidence, availableActions, completeFlowDetails, countedWarnsText,
     flowSummary, liftReasonPatch, parseFlowInput, reasonPatch, startFlow,
@@ -179,7 +179,7 @@ export async function buildPanel(guild, moderatorId, targetUser) {
     for (let i = 0; i < buttons.length; i += 5) {
         rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
     }
-    const templates = usableTemplates(readTemplates(), availableActions(state));
+    const templates = usableTemplates(readTemplates(guild.id), availableActions(state));
     if (templates.length) {
         rows.push(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder()
             .setCustomId(`enfsel:tpl:${moderatorId}:${targetUser.id}`)
@@ -193,19 +193,19 @@ export async function buildPanel(guild, moderatorId, targetUser) {
     return { embeds: [embed], components: rows };
 }
 
-/** The saved templates (enforcementTemplates); none when the setting can't be read. */
-function readTemplates() {
-    try {
-        const list = getConfiguredSetting('enforcementTemplates');
-        return Array.isArray(list) ? list : [];
-    } catch {
-        return [];
-    }
+/**
+ * This server's saved templates (enforcementTemplates; resolveSetting, so never another
+ * server's). A non-home server whose settings could not be read throws
+ * SettingsUnavailableError, which reaches the interaction error handler.
+ */
+export function readTemplates(guildId) {
+    const list = resolveSetting(guildId, 'enforcementTemplates');
+    return Array.isArray(list) ? list : [];
 }
 
 /** A template from the panel: same flow as the buttons, with reason and duration filled in. */
 async function startTemplate(interaction, client, moderatorId, targetId, index) {
-    const template = readTemplates()[Number(index)];
+    const template = readTemplates(interaction.guildId)[Number(index)];
     await interaction.deferUpdate();
     const targetUser = await client.users.fetch(targetId).catch(() => null);
     const state = targetUser ? await getTargetState(interaction.guild, targetId) : null;

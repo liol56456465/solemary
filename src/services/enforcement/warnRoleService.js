@@ -1,4 +1,4 @@
-// warnRoleService.js — the "Warning 1/2/3" roles in the main server (WARN_ROLE_IDS).
+// warnRoleService.js — the "Warning 1/2/3" roles of a server (warnRoleIds; WARN_ROLE_IDS for the main server).
 //
 // A member has exactly one of these roles, matching how many active warnings they
 // have (capped at the last role), or none without active warnings. Test cases and
@@ -6,9 +6,9 @@
 // and is called after every warn, removed warn and accepted warn appeal, and when a
 // member rejoins.
 
-import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from './db.js';
+import { guildRole, resolveSetting } from '../settings/guildSettings.js';
 import { OPEN_STATUSES } from './caseService.js';
 
 export async function countActiveWarns(guildId, userId) {
@@ -21,10 +21,15 @@ export async function countActiveWarns(guildId, userId) {
     return rows[0]?.count || 0;
 }
 
-/** Gives the member the warning role for their active warn count and removes the others. */
+/**
+ * Gives the member the warning role for their active warn count and removes the others.
+ * Uses this server's own warnRoleIds (none set up: nothing to do). The support server has no
+ * warning roles (as before: its warns never touched roles).
+ */
 export async function syncWarnRoles(guild, userId) {
-    const roleIds = enforcementConfig.warnRoleIds;
-    if (!roleIds.length || guild?.id !== enforcementConfig.mainGuildId || !isEnforcementDbAvailable()) return;
+    if (!guild?.id || guildRole(guild.id) === 'support' || !isEnforcementDbAvailable()) return;
+    const roleIds = resolveSetting(guild.id, 'warnRoleIds');
+    if (!Array.isArray(roleIds) || !roleIds.length) return;
 
     const member = await guild.members.fetch(userId).catch(() => null);
     if (!member) return;

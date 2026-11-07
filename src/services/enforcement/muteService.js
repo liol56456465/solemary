@@ -3,6 +3,7 @@
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { query, T } from './db.js';
+import { resolveSetting } from '../settings/guildSettings.js';
 import { logger } from '../../utils/logger.js';
 
 const MUTED_DENY_NAMES = [
@@ -35,9 +36,13 @@ async function storeRoleId(guildId, roleId) {
     );
 }
 
-/** Returns the guild's muted role id without creating anything. */
+/**
+ * Returns the guild's muted role without creating anything: this server's configured
+ * mutedRoleId (resolveSetting: never the main server's role in another server), then the role
+ * the bot created and stored for it.
+ */
 export async function findMutedRole(guild) {
-    for (const roleId of [enforcementConfig.mutedRoleId, await getStoredRoleId(guild.id)]) {
+    for (const roleId of [resolveSetting(guild.id, 'mutedRoleId'), await getStoredRoleId(guild.id)]) {
         if (!roleId) continue;
         const role = guild.roles.cache.get(roleId) || await guild.roles.fetch(roleId).catch(() => null);
         if (role) return role;
