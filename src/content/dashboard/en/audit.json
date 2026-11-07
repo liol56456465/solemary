@@ -1,0 +1,17 @@
+{
+  "title": "Audit log",
+  "help": "Every change made from the dashboard: who, when, old value → new value. Each saved form is also posted to the mod log.",
+  "count": {
+    "one": "{count} change",
+    "other": "{count} changes"
+  },
+  "who": "Who",
+  "anyone": "anyone",
+  "module": "Module",
+  "filter": "Filter",
+  "setting": "Setting",
+  "noMatch": "No changes match these filters.",
+  "empty": "No changes yet. Every save from the dashboard is listed here.",
+  "none": "(none)",
+  "showAll": "Show all ({count} characters)"
+}

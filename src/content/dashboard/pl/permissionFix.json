@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "Napraw uprawnienia",
+    "heading": "Napraw uprawnienia Mewvo na #{channel}",
+    "back": "Wstecz (anuluj)",
+    "missing": "Brakuje",
+    "willGive": "Mewvo da sobie",
+    "cannotGive": "Mewvo nie może dać sobie",
+    "ownRole": "(jego własna rola ich nie ma)",
+    "notChanged": "Tu niezmieniane",
+    "onlyYou": "(tylko ty możesz je dać)",
+    "why": "Dlaczego Mewvo nie może tego naprawić",
+    "nothing": "Mewvo ma tu już wszystko, czego potrzebuje. Nie ma czego naprawiać.",
+    "editingOff": "Edycja w panelu jest wyłączona, więc niczego nie można tu zmienić.",
+    "adminOnly": "Tylko członkowie z uprawnieniem Administrator na serwerze głównym mogą to zrobić.",
+    "explain": "To dodaje uprawnienie tylko dla Mewvo na #{channel}. Uprawnienia nikogo innego się nie zmieniają. To potwierdzenie działa raz i wygasa po 5 minutach.",
+    "submit": "Daj Mewvo te uprawnienia",
+    "inDiscord": "Co zrobić w Discordzie",
+    "reload": "Potem odśwież tę stronę, żeby sprawdzić ponownie."
+  },
+  "route": {
+    "noServer": "Serwer niedostępny",
+    "noServerText": "Mewvo nie widzi teraz serwera głównego. Spróbuj ponownie za minutę.",
+    "noServerNothing": "Mewvo nie widzi teraz serwera głównego. Nic nie zmieniono.",
+    "noChannel": "Nie znaleziono kanału",
+    "noChannelText": "Tego kanału nie ma (już) na serwerze. Wróć i wybierz inny.",
+    "noChannelNothing": "Tego kanału nie ma (już) na serwerze. Nic nie zmieniono.",
+    "adminOnly": "Tylko członkowie z uprawnieniem Administrator na serwerze głównym mogą zmieniać uprawnienia Mewvo. Nic nie zmieniono.",
+    "expired": "To potwierdzenie wygasło albo zostało już użyte. Nic nie zmieniono. Sprawdź listę poniżej i potwierdź ponownie.",
+    "stillMissing": " Nadal brakuje: {perms}. Tylko właściciel serwera może je dać (zobacz kroki na stronie „Napraw uprawnienia”).",
+    "done": "Mewvo ma teraz {perms} na #{channel}."
+  }
+}

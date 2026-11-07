@@ -1,0 +1,163 @@
+{
+  "notice": {
+    "readOnly": "Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true).",
+    "viewOnly": "View only: you need Administrator in the main server to change role rules."
+  },
+  "trigger": {
+    "days_in_server": "Days in the server",
+    "level_reached": "Leveling level",
+    "has_role": "Has a role"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "e.g. Regulars after 30 days",
+    "when": "When",
+    "threshold": "Days or level",
+    "thresholdHint": "Days in the server (0 = on joining, up to {maxDays}) or the leveling level (1–{maxLevel}). Not used for \"Has a role\".",
+    "triggerRole": "Trigger role",
+    "triggerRoleNone": "Only for \"Has a role\"",
+    "give": "Give this role",
+    "choose": "Choose…",
+    "giveHint": "Only roles below Mewvo (and below your own top role), not managed, without staff permissions.",
+    "removeWhenFalse": "Take the role away again when the condition is no longer true",
+    "removeHelp": "Taking away also applies to members who got the role by hand; a member still matched by another enabled rule for the same role keeps it.",
+    "enabled": "Turn the rule on when saving",
+    "nothingYet": "Nothing changes yet: the next page shows how many members, and who, the rule would change.",
+    "dryRun": "Dry run"
+  },
+  "rules": {
+    "title": "Role rules",
+    "intro": "Roles Mewvo gives by itself: checked every 10 minutes (at most {limit} role changes per run, one at a time), and right away when a member joins, levels up or gets a role.",
+    "levelingOff": "Leveling is off: levels do not change, so level rules only use the levels already stored.",
+    "heading": "Rules ({count} of {max})",
+    "rule": "Rule",
+    "state": "State",
+    "none": "No role rules yet.",
+    "keepRoles": "Turning a rule off or deleting it keeps the roles it already gave.",
+    "editHeading": "Edit \"{name}\"",
+    "newRule": "New rule",
+    "full": "This server has {max} rules, the most allowed. Delete one first.",
+    "cancelEdit": "Cancel editing",
+    "onPaused": "On, paused",
+    "on": "On",
+    "off": "Off",
+    "lastRun": "Last run {date}: +{added} −{removed}",
+    "lastFailed": ", {count} failed",
+    "notRun": "Not run yet",
+    "turnOff": "Turn off",
+    "turnOn": "Turn on…",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete the rule \"{name}\"? Roles it already gave stay."
+  },
+  "andMore": "… and {count} more.",
+  "preview": {
+    "back": "← Role rules",
+    "title": "Dry run: {name}",
+    "nobody": "Nobody.",
+    "wouldChange": {
+      "one": "Would change {count} member now: give the role to {add}, take it from {remove}. Nothing has been changed yet.",
+      "other": "Would change {count} members now: give the role to {add}, take it from {remove}. Nothing has been changed yet."
+    },
+    "savedOff": {
+      "one": "Saved switched off: nothing changes until you turn it on. If it were on now, it would change {count} member.",
+      "other": "Saved switched off: nothing changes until you turn it on. If it were on now, it would change {count} members."
+    },
+    "partial": "Counted from {cached} of {total} members (the member list is still loading); the real run uses everyone.",
+    "gets": "Gets the role ({count})",
+    "loses": "Loses the role ({count})",
+    "nextRun": "Changes are made by the next run (within 10 minutes), at most {limit} per run.",
+    "savedOffShort": "The rule is saved switched off.",
+    "saveChanges": "Save changes",
+    "saveRule": "Save rule"
+  },
+  "chart": {
+    "label": {
+      "one": "Joins and leaves per day, last {count} days: {joins} joins, {leaves} leaves",
+      "other": "Joins and leaves per day, last {count} days: {joins} joins, {leaves} leaves"
+    },
+    "day": "{day}: {joins} joined, {leaves} left",
+    "joined": "Joined",
+    "left": "Left"
+  },
+  "insights": {
+    "title": "Member insights",
+    "intro": "Who comes and goes, who is stuck without a role, who keeps getting cases.",
+    "partial": "Based on {cached} of {total} members: the member list is still loading. Reload in a minute.",
+    "notLoaded": "Could not be loaded.",
+    "joinsTitle": {
+      "one": "Joins and leaves (last {count} days)",
+      "other": "Joins and leaves (last {count} days)"
+    },
+    "joinsTitleShort": "Joins and leaves",
+    "joinsSummary": "{joined} joined · {left} left · net {net}. Days in UTC.",
+    "countingSince": "Counting since {date}; earlier days show 0.",
+    "nothingYet": "Nothing counted yet: joins and leaves are recorded from now on.",
+    "kept": {
+      "one": "Kept {count} days.",
+      "other": "Kept {count} days."
+    },
+    "showTable": "Show as a table",
+    "day": "Day",
+    "noRolesTitle": "New members without a role after 24 hours",
+    "noRolesHelp": "Joined in the last 30 days, more than 24 hours ago, and still no role (bots left out). Often: never verified.",
+    "joinedAt": "joined {date}",
+    "none": "None.",
+    "noGuild": "The bot cannot see the main server right now.",
+    "offendersTitle": {
+      "one": "Repeat offenders (last {count} days)",
+      "other": "Repeat offenders (last {count} days)"
+    },
+    "offendersHelp": "Members with two or more cases (removed, imported and test cases left out).",
+    "member": "Member",
+    "cases": "Cases",
+    "last": "Last",
+    "warns": { "one": "{count} warn", "other": "{count} warns" },
+    "mutes": { "one": "{count} mute", "other": "{count} mutes" },
+    "kicks": { "one": "{count} kick", "other": "{count} kicks" },
+    "bans": { "one": "{count} ban", "other": "{count} bans" },
+    "noOffenders": {
+      "one": "Nobody has two or more cases in the last {count} days.",
+      "other": "Nobody has two or more cases in the last {count} days."
+    },
+    "inactiveTitle": {
+      "one": "Inactive members (no XP for {count}+ days)",
+      "other": "Inactive members (no XP for {count}+ days)"
+    },
+    "inactiveOff": "Not available: the only activity time Mewvo stores is the last time leveling gave a member XP, and leveling is off. Turn leveling on to start measuring; nothing is guessed here.",
+    "inactiveHelp": {
+      "one": "Activity = the last time leveling gave the member XP (messages that earn XP). Members in the server for less than {count} days and bots are left out.",
+      "other": "Activity = the last time leveling gave the member XP (messages that earn XP). Members in the server for less than {count} days and bots are left out."
+    },
+    "noRecord": {
+      "one": "{count} member has no leveling record at all (never earned XP, or before leveling was on) and is not listed.",
+      "other": "{count} members have no leveling record at all (never earned XP, or before leveling was on) and are not listed."
+    },
+    "lastXp": "last XP {date}",
+    "noInactive": {
+      "one": "Nobody with a leveling record has been quiet for {count} days.",
+      "other": "Nobody with a leveling record has been quiet for {count} days."
+    }
+  },
+  "route": {
+    "needName": "Give the rule a name.",
+    "needTrigger": "Choose when the rule applies.",
+    "needRole": "Choose the role to give.",
+    "needTriggerRole": "Choose the trigger role.",
+    "needLevel": "Give the level (a whole number).",
+    "needDays": "Give the number of days (a whole number).",
+    "notARule": "Not a rule.",
+    "loadError": "The role rules could not be loaded (database not responding). Nothing was changed; reload to try again.",
+    "gone": "That rule no longer exists.",
+    "goneNotSaved": "That rule no longer exists; nothing was saved.",
+    "full": "This server already has {max} rules, the most allowed.",
+    "dryRunExpired": "This dry run expired or was already used. Nothing was saved; run the dry run again.",
+    "savedOn": "Rule \"{name}\" saved; the next run (within 10 minutes) applies it.",
+    "savedOff": "Rule \"{name}\" saved, switched off.",
+    "createdOn": "Rule \"{name}\" created; the next run (within 10 minutes) applies it.",
+    "createdOff": "Rule \"{name}\" created, switched off.",
+    "turnedOff": "Rule \"{name}\" turned off. Roles it already gave stay.",
+    "deleted": "Rule \"{name}\" deleted. Roles it already gave stay.",
+    "partFailed": "Could not be loaded (database not responding). Reload to try again."
+  }
+}

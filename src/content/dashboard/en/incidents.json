@@ -1,0 +1,100 @@
+{
+  "list": {
+    "intro": "Every join-raid lockdown of the last {days} days, minute by minute: who joined and what Mewvo and staff did. Times are UTC. No message content is kept.",
+    "unreadable": "The incidents could not be loaded (database). Reload the page to try again.",
+    "empty": "No raids in the last {days} days. When many accounts join at once, Mewvo starts a lockdown by itself and its timeline appears here.",
+    "notKept": "(+{n} not kept)",
+    "open": "Open timeline"
+  },
+  "col": {
+    "started": "Started",
+    "ended": "Ended",
+    "duration": "Duration",
+    "trigger": "Trigger",
+    "events": "Events recorded",
+    "open": "Open"
+  },
+  "status": {
+    "running": "Still running",
+    "notRecorded": "Not recorded",
+    "unread": "Could not be read"
+  },
+  "span": {
+    "underMinute": "under a minute",
+    "days": "{n} d",
+    "hours": "{n} h",
+    "minutes": "{n} min"
+  },
+  "trigger": {
+    "join_raid": "Join raid (many accounts joined at once)"
+  },
+  "kind": {
+    "lockdown_start": "Lockdown started",
+    "lockdown_end": "Lockdown ended",
+    "verification": "Verification level",
+    "panic": "Invites and DMs",
+    "gate_kick": "Join gate kick",
+    "gate_flag": "Join gate flag",
+    "automod": "Automod (no case)",
+    "mass_block": "Safety limit (bans/kicks)",
+    "join": "Joined",
+    "leave": "Left",
+    "case": "Case",
+    "dashboard": "Dashboard change"
+  },
+  "actions": {
+    "ban": "Bans",
+    "kick": "Kicks",
+    "mute": "Mutes",
+    "warn": "Warnings",
+    "gate_kick": "Join gate kicks",
+    "gate_flag": "Join gate flags",
+    "automod": "Automod without a case",
+    "mass_block": "Safety limit blocks"
+  },
+  "chart": {
+    "ariaMinute": "{label} per minute: {total} in total over {bars} bars. The minute by minute list below has every event.",
+    "ariaMinutes": "{label} per {minutes} minutes: {total} in total over {bars} bars. The minute by minute list below has every event."
+  },
+  "item": {
+    "case": "case {code}",
+    "by": "by"
+  },
+  "count": {
+    "joins": { "one": "{count} join", "other": "{count} joins" },
+    "leaves": { "one": "{count} leave", "other": "{count} leaves" },
+    "actions": { "one": "{count} action", "other": "{count} actions" },
+    "steps": { "one": "{count} lockdown step", "other": "{count} lockdown steps" },
+    "quiet": { "one": "{count} quiet minute", "other": "{count} quiet minutes" },
+    "events": { "one": "{count} event", "other": "{count} events" }
+  },
+  "detail": {
+    "all": "All incidents",
+    "unreadable": "This incident could not be loaded (database). Reload the page to try again.",
+    "nothing": "Nothing was recorded for this incident.",
+    "dropped": "Only the first {max} lockdown, join gate and automod events were kept; {n} more happened.",
+    "truncated": "This incident is very large: only the first rows of joins and leaves, cases or dashboard changes are shown.",
+    "stateUnread": "Whether this lockdown is still running could not be read (database). Reload the page to try again.",
+    "endUnknown": "The end of this lockdown was not recorded (for example the bot restarted on an older version). The timeline ends with the last event.",
+    "title": "Raid on {date}",
+    "trigger": "{trigger}. Times are UTC.",
+    "soFar": "{span} so far",
+    "joined": "Joined",
+    "left": "Left",
+    "raidJoiners": "Raid joiners",
+    "endedBy": "Ended by",
+    "done": "What was done",
+    "verification": "Verification level:",
+    "panic": "Invites and DMs:",
+    "released": "Non-offenders released:",
+    "releasedAt": "{date} by",
+    "chartTitle": "Joins and actions",
+    "perMinute": "per minute",
+    "perMinutes": "per {minutes} minutes",
+    "joinsLabel": "Joins:",
+    "joins": "Joins",
+    "actionsLabel": "Actions (cases, join gate, automod, safety limit blocks):",
+    "actions": "Actions",
+    "minutes": "Minute by minute"
+  }
+}

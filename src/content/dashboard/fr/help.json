@@ -1,0 +1,225 @@
+{
+  "glossary": {
+    "title": "Lexique",
+    "intro": "Les mots qu’utilisent ce tableau de bord et Discord, expliqués simplement. Il manque quelque chose ? Demande sur le serveur d’assistance.",
+    "open": "Ouvrir"
+  },
+  "groups": {
+    "basics": "Les bases de Discord",
+    "safety": "Garder le serveur sûr",
+    "moderation": "Les mots de modération de Mewvo",
+    "members": "Parler avec les membres",
+    "fun": "Loisirs et communauté"
+  },
+  "words": {
+    "server": {
+      "term": "Serveur",
+      "text": "Ta communauté Discord. Mewvo fonctionne sur un serveur principal et un serveur d’assistance facultatif."
+    },
+    "channel": {
+      "term": "Salon",
+      "text": "Un endroit pour discuter dans le serveur, comme #general. Les salons textuels contiennent des messages, les salons vocaux des appels."
+    },
+    "category": {
+      "term": "Catégorie",
+      "text": "Un dossier qui regroupe des salons dans la liste des salons. Mewvo range les tickets et les appels dans leurs propres catégories."
+    },
+    "thread": {
+      "term": "Fil",
+      "text": "Une courte conversation à part, rattachée à un message d’un salon."
+    },
+    "role": {
+      "term": "Rôle",
+      "text": "Une étiquette que tu donnes aux membres, comme « Modérateur » ou « Niveau 10 ». Les rôles décident de ce que les membres voient et peuvent faire, et peuvent colorer un pseudo."
+    },
+    "permission": {
+      "term": "Permission",
+      "text": "Une chose qu’un rôle autorise, comme « Gérer les messages » ou « Bannir des membres ». Les salons peuvent changer les permissions d’un rôle."
+    },
+    "administrator": {
+      "term": "Administrateur",
+      "text": "La permission qui autorise tout. Dans Mewvo, seules les personnes qui l’ont peuvent modifier les paramètres ou sanctionner des membres."
+    },
+    "dm": {
+      "term": "MP",
+      "text": "Un message privé : une discussion entre deux personnes, ou entre un membre et Mewvo. Les membres peuvent désactiver les MP des serveurs."
+    },
+    "mention": {
+      "term": "Mention",
+      "text": "Un nom précédé de @, comme @Sam. La personne reçoit une notification. Mewvo ne mentionne jamais @everyone à partir d’un texte tapé par quelqu’un."
+    },
+    "slashCommand": {
+      "term": "Commande slash",
+      "text": "Une commande que tu lances en tapant / dans la zone de message, comme /rank. Discord affiche une liste pendant que tu tapes."
+    },
+    "embed": {
+      "term": "Embed",
+      "text": "Un encadré de message avec un bord coloré, un titre en gras et du texte. Les bots s’en servent pour des messages soignés."
+    },
+    "id": {
+      "term": "ID",
+      "text": "Un long nombre que Discord donne à chaque serveur, salon, rôle et personne. Active le mode développeur dans Discord (Paramètres, Avancés), puis fais un clic droit sur un élément et choisis « Copier l’identifiant »."
+    },
+    "warn": {
+      "term": "Avertissement",
+      "text": "Un avertissement écrit. Le membre reçoit un MP. Trois avertissements mènent tout seuls à un bannissement (voir l’échelle d’avertissements)."
+    },
+    "mute": {
+      "term": "Mise en sourdine",
+      "text": "Le membre reste sur le serveur mais ne peut ni écrire ni parler pendant un temps donné. Mewvo le fait avec un rôle « Muted »."
+    },
+    "timeout": {
+      "term": "Exclusion temporaire",
+      "text": "La courte mise en sourdine propre à Discord, 28 jours au plus. La mise en sourdine de Mewvo utilise un rôle à la place, elle peut donc durer plus longtemps."
+    },
+    "kick": {
+      "term": "Expulsion",
+      "text": "Retire le membre du serveur. Il peut revenir avec une invitation. Mewvo lui envoie une nouvelle invitation."
+    },
+    "ban": {
+      "term": "Bannissement",
+      "text": "Retire le membre et l’empêche de revenir, pour un temps donné ou pour toujours."
+    },
+    "case": {
+      "term": "Dossier",
+      "text": "La trace d’un avertissement, d’une mise en sourdine, d’une expulsion ou d’un bannissement : qui, pourquoi, quand et par qui."
+    },
+    "caseCode": {
+      "term": "Code du dossier",
+      "text": "Un code court comme « k7fq2 » qui désigne un dossier. Les membres l’utilisent quand ils font appel."
+    },
+    "warnLadder": {
+      "term": "Échelle d’avertissements",
+      "text": "Ce qui se passe quand les avertissements s’accumulent : le 3e avertissement donne un bannissement de 7 jours, le suivant 30 jours, puis un bannissement définitif."
+    },
+    "appeal": {
+      "term": "Appel",
+      "text": "Un membre demande à l’équipe de lever ou de réduire une sanction. L’équipe l’accepte ou le refuse."
+    },
+    "automod": {
+      "term": "Automod",
+      "text": "Mewvo vérifie les messages tout seul et supprime le spam, les gros mots, les liens d’invitation et les raids."
+    },
+    "reviewCard": {
+      "term": "Fiche de vérification",
+      "text": "Un court message que Mewvo publie pour l’équipe quand l’automod agit, avec des boutons pour garder ou annuler."
+    },
+    "raid": {
+      "term": "Raid",
+      "text": "Beaucoup de nouveaux comptes qui rejoignent en même temps pour spammer. Quand Mewvo en repère un, il peut rendre l’arrivée plus difficile pendant un moment (un verrouillage)."
+    },
+    "modLog": {
+      "term": "Journal de modération",
+      "text": "Un salon réservé à l’équipe où Mewvo note chaque sanction, pour que chacun puisse y revenir plus tard."
+    },
+    "auditLog": {
+      "term": "Journal d’audit",
+      "text": "La liste de chaque changement fait dans ce tableau de bord : qui a modifié quel paramètre, et quand."
+    },
+    "removeCase": {
+      "term": "Retirer le dossier",
+      "text": "Pour un dossier donné par erreur. Mewvo lève ce qui est encore actif, envoie un MP au membre, et le dossier ne compte plus. Il reste dans l’historique, marqué « Retiré ». (La commande slash est /case remove.)"
+    },
+    "liftedEarly": {
+      "term": "Levé plus tôt",
+      "text": "Un bannissement, une mise en sourdine ou un avertissement terminé avant son heure : l’équipe a utilisé Débannir, Rétablir la parole ou Retirer l’avertissement, ou a accepté un appel."
+    },
+    "warningStage": {
+      "term": "Palier d’avertissement",
+      "text": "La place d’un membre sur l’échelle d’avertissements : palier 0 sur 3 (pas encore de bannissement par avertissement), 1 sur 3 (7 jours), 2 sur 3 (30 jours), 3 sur 3 (bannissement définitif). Il ne redescend pas tout seul."
+    },
+    "canTheyAppeal": {
+      "term": "Appel possible ?",
+      "text": "Si le membre peut demander à l’équipe de lever une sanction. Oui pour presque tout. Non pour un bannissement grave que l’équipe a marqué ainsi, ni pour un bannissement du palier 3 après 6 mois ou après un appel refusé."
+    },
+    "whatStaffUsuallyGaveForThisReason": {
+      "term": "Ce que l’équipe donne d’habitude pour ce motif",
+      "text": "Une indication à côté d’une sanction : ce que l’équipe a donné pour le même motif ces 180 derniers jours, pour que les membres reçoivent des sanctions semblables pour des faits semblables."
+    },
+    "recordSoFar": {
+      "term": "Historique à ce jour",
+      "text": "Les avertissements comptés d’un membre, son palier, ses sanctions actives et ses appels, sur sa page de membre. Les membres voient le leur avec le bouton « My record » du panneau d’appel."
+    },
+    "extraWatchPeriodAfterABan": {
+      "term": "Surveillance renforcée après un bannissement",
+      "text": "Pendant 7 jours après le retour d’un membre banni, l’automod est plus stricte avec lui : elle commence un cran de sanction plus haut, sans rappel amical ni indulgence pour les membres de confiance. (La commande slash est /automod extrawatch.)"
+    },
+    "warnPrivatelyFirst2MinToFix": {
+      "term": "Avertir d’abord en privé (2 min pour corriger)",
+      "text": "Pour les petites règles d’automod : la première fois en 30 jours, le membre reçoit un message privé et 2 minutes pour modifier ou supprimer son message. S’il corrige, rien d’autre ne se passe."
+    },
+    "friendlyNoticeForAFirstSmallOffence": {
+      "term": "Rappel amical pour une première petite faute",
+      "text": "Le premier petit écart d’un membre en 30 jours (majuscules, caractères bizarres, anglais uniquement, langage léger) reçoit un court rappel au lieu d’un avertissement."
+    },
+    "reportOnlyDonTDelete": {
+      "term": "Signaler seulement (ne pas supprimer)",
+      "text": "Un mode de l’automod : l’équipe reçoit une fiche de vérification sur le message, mais rien n’est supprimé et personne n’est sanctionné tant que l’équipe ne l’applique pas. Pratique pour tester une règle."
+    },
+    "keepApart": {
+      "term": "Tenir à distance",
+      "text": "L’équipe demande à deux membres de se laisser tranquilles jusqu’à une date donnée. Les mentions et réponses entre eux sont supprimées. Ce n’est pas une sanction et cela ne compte pas comme un avertissement."
+    },
+    "safetyLimitTooManyBansOrKicksIn10Minutes": {
+      "term": "Limite de sécurité : trop de bannissements ou d’expulsions en 10 minutes",
+      "text": "Par défaut, si un modérateur bannit ou expulse plus de 5 membres en 10 minutes (mises en sourdine : 10), Mewvo l’arrête pendant une heure et prévient le propriétaire du bot. Les propriétaires peuvent changer ces nombres. Cela protège le serveur si un compte de modérateur est détourné."
+    },
+    "showWhatChanged": {
+      "term": "Voir ce qui a changé",
+      "text": "Un bouton sur une alerte de l’équipe après la suppression de nombreux salons ou rôles : il compare la dernière sauvegarde du serveur avec le serveur actuel, pour que tu puisses tout remettre avec /backup revert."
+    },
+    "ticket": {
+      "term": "Ticket",
+      "text": "Un salon privé où un membre parle avec l’équipe, ouvert avec un bouton."
+    },
+    "modmail": {
+      "term": "Modmail",
+      "text": "Un membre envoie un MP à Mewvo, et l’équipe répond dans un salon privé. Mewvo fait passer les messages dans les deux sens."
+    },
+    "supportServer": {
+      "term": "Serveur d’assistance",
+      "text": "Un deuxième petit serveur où les membres bannis peuvent quand même faire appel, puisqu’ils ne voient plus le serveur principal."
+    },
+    "inbox": {
+      "term": "Boîte de réception",
+      "text": "La liste de ce tableau de bord avec tout ce qui attend l’équipe : appels, tickets, modmail et vérifications de l’automod."
+    },
+    "xpAndLevels": {
+      "term": "XP et niveaux",
+      "text": "Les membres gagnent des points (XP) en discutant. Assez d’XP donne un nouveau niveau, et les niveaux peuvent donner des rôles."
+    },
+    "reactionRoles": {
+      "term": "Rôles par réaction",
+      "text": "Un message avec des boutons ou un menu où les membres choisissent eux-mêmes leurs rôles, comme « Gamer » ou « Actus »."
+    },
+    "verification": {
+      "term": "Vérification",
+      "text": "Les nouveaux membres appuient sur un bouton pour montrer qu’ils sont de vraies personnes avant de pouvoir discuter."
+    },
+    "plan": {
+      "term": "Formule",
+      "text": "Mewvo est gratuit. Les formules payantes (Normal, Pro, Max) augmentent certaines limites. C’est la formule du propriétaire du serveur qui compte pour le serveur."
+    }
+  },
+  "setup": {
+    "checkAgain": "Tu as changé quelque chose dans Discord ? [Vérifier à nouveau]({href}).",
+    "done": "Fait.",
+    "changeOnPage": "Tu peux le modifier sur sa page.",
+    "ownPage": "Pas encore configuré. Celui-ci a plusieurs paramètres, il ouvre donc sa propre page.",
+    "openSetting": "Ouvrir ce paramètre",
+    "setUp": "Configurer",
+    "changeHere": "Tu peux le modifier ici.",
+    "pickHere": "Pas encore configuré. Choisis-le ici et enregistre.",
+    "moreSettings": "Plus de paramètres : [ouvrir sa page]({href}).",
+    "unreadable": "Les étapes de configuration n’ont pas pu être chargées pour le moment. Recharge la page dans une minute.",
+    "progress": "{done} étapes faites sur {total}. Suis-les dans l’ordre, ou passe celles dont tu n’as pas besoin. Tu peux revenir ici à tout moment depuis la barre latérale.",
+    "stepOf": "Étape {n} sur {total}",
+    "back": "Retour",
+    "next": "Étape suivante",
+    "skip": "Passer pour l’instant",
+    "finish": "Terminer",
+    "allSteps": "Toutes les étapes",
+    "doneMark": " (fait)",
+    "newWords": "Ces mots sont nouveaux pour toi ? [Lexique]({href})."
+  }
+}

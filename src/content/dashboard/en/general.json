@@ -1,0 +1,42 @@
+{
+  "confirmExpired": "This confirmation expired or was already used. Nothing was done; fill in the form again.",
+  "search": {
+    "notSaved": "Not saved",
+    "nameTooLong": "Give the search a name of up to 40 characters.",
+    "filterFirst": "Filter the cases first, then save the search.",
+    "invalid": "Those filters are not valid.",
+    "full": "You can keep 20 saved searches. Delete one first.",
+    "saved": "Search \"{name}\" saved.",
+    "notDeleted": "Not deleted",
+    "gone": "That saved search is gone already.",
+    "deleted": "Search \"{name}\" deleted.",
+    "json": {
+      "notAllowed": "Not allowed.",
+      "tooMany": "Too many searches. Wait a minute."
+    }
+  },
+  "cases": {
+    "invalidFilter": "Invalid filter.",
+    "exportAdmin": "Exporting cases needs Administrator in the main server.",
+    "exportFree": "Not on the Free plan",
+    "exportFreeText": "Case export comes with Mewvo Normal (last 90 days) and Pro or Max (full history), on the plan of the server owner.",
+    "notFound": "Case not found",
+    "notFoundText": "There is no case with that code."
+  },
+  "auditModules": {
+    "appeals": "Appeals (registry)",
+    "logging": "Logging",
+    "actions": "Enforcement actions",
+    "cases": "Case changes",
+    "appeal-decisions": "Appeal decisions",
+    "notes": "Staff notes",
+    "nocontact": "Keep apart",
+    "watchlist": "Watchlist",
+    "massguard": "Safety limit (bans/kicks)",
+    "staff": "Staff discipline",
+    "owner": "Owner area",
+    "inbox": "Inbox (replies, closes)",
+    "members": "Members",
+    "rolerules": "Role rules"
+  }
+}

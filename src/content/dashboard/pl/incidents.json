@@ -1,0 +1,130 @@
+{
+  "list": {
+    "intro": "Każda blokada po rajdzie z ostatnich {days} dni, minuta po minucie: kto dołączył i co zrobili Mewvo i ekipa. Czas w UTC. Treść wiadomości nie jest zapisywana.",
+    "unreadable": "Nie udało się wczytać incydentów (baza danych). Odśwież stronę, żeby spróbować ponownie.",
+    "empty": "Brak rajdów w ostatnich {days} dniach. Gdy wiele kont dołącza naraz, Mewvo samo włącza blokadę, a jej oś czasu pojawia się tutaj.",
+    "notKept": "(+{n} niezapisanych)",
+    "open": "Otwórz oś czasu"
+  },
+  "col": {
+    "started": "Początek",
+    "ended": "Koniec",
+    "duration": "Czas trwania",
+    "trigger": "Przyczyna",
+    "events": "Zapisane zdarzenia",
+    "open": "Otwórz"
+  },
+  "status": {
+    "running": "Nadal trwa",
+    "notRecorded": "Nie zapisano",
+    "unread": "Nie udało się odczytać"
+  },
+  "span": {
+    "underMinute": "poniżej minuty",
+    "days": "{n} d",
+    "hours": "{n} godz.",
+    "minutes": "{n} min"
+  },
+  "trigger": {
+    "join_raid": "Rajd dołączeń (wiele kont dołączyło naraz)"
+  },
+  "kind": {
+    "lockdown_start": "Blokada włączona",
+    "lockdown_end": "Blokada zakończona",
+    "verification": "Poziom weryfikacji",
+    "panic": "Zaproszenia i DM",
+    "gate_kick": "Wyrzucenie przez bramkę dołączeń",
+    "gate_flag": "Oznaczenie przez bramkę dołączeń",
+    "automod": "Automoderacja (bez sprawy)",
+    "mass_block": "Limit bezpieczeństwa (bany/wyrzucenia)",
+    "join": "Dołączył",
+    "leave": "Wyszedł",
+    "case": "Sprawa",
+    "dashboard": "Zmiana w panelu"
+  },
+  "actions": {
+    "ban": "Bany",
+    "kick": "Wyrzucenia",
+    "mute": "Wyciszenia",
+    "warn": "Ostrzeżenia",
+    "gate_kick": "Wyrzucenia przez bramkę",
+    "gate_flag": "Oznaczenia przez bramkę",
+    "automod": "Automoderacja bez sprawy",
+    "mass_block": "Blokady limitu bezpieczeństwa"
+  },
+  "chart": {
+    "ariaMinute": "{label} na minutę: łącznie {total} na {bars} słupkach. Lista minuta po minucie poniżej ma każde zdarzenie.",
+    "ariaMinutes": "{label} na {minutes} minut: łącznie {total} na {bars} słupkach. Lista minuta po minucie poniżej ma każde zdarzenie."
+  },
+  "item": {
+    "case": "sprawa {code}",
+    "by": "przez"
+  },
+  "count": {
+    "joins": {
+      "one": "{count} dołączenie",
+      "few": "{count} dołączenia",
+      "many": "{count} dołączeń",
+      "other": "{count} dołączenia"
+    },
+    "leaves": {
+      "one": "{count} wyjście",
+      "few": "{count} wyjścia",
+      "many": "{count} wyjść",
+      "other": "{count} wyjścia"
+    },
+    "actions": {
+      "one": "{count} akcja",
+      "few": "{count} akcje",
+      "many": "{count} akcji",
+      "other": "{count} akcji"
+    },
+    "steps": {
+      "one": "{count} krok blokady",
+      "few": "{count} kroki blokady",
+      "many": "{count} kroków blokady",
+      "other": "{count} kroku blokady"
+    },
+    "quiet": {
+      "one": "{count} spokojna minuta",
+      "few": "{count} spokojne minuty",
+      "many": "{count} spokojnych minut",
+      "other": "{count} spokojnej minuty"
+    },
+    "events": {
+      "one": "{count} zdarzenie",
+      "few": "{count} zdarzenia",
+      "many": "{count} zdarzeń",
+      "other": "{count} zdarzenia"
+    }
+  },
+  "detail": {
+    "all": "Wszystkie incydenty",
+    "unreadable": "Nie udało się wczytać tego incydentu (baza danych). Odśwież stronę, żeby spróbować ponownie.",
+    "nothing": "Dla tego incydentu nic nie zapisano.",
+    "dropped": "Zapisano tylko pierwsze {max} zdarzeń blokady, bramki dołączeń i automoderacji; było ich jeszcze {n}.",
+    "truncated": "Ten incydent jest bardzo duży: widać tylko pierwsze wiersze dołączeń i wyjść, spraw lub zmian w panelu.",
+    "stateUnread": "Nie udało się odczytać, czy ta blokada nadal trwa (baza danych). Odśwież stronę, żeby spróbować ponownie.",
+    "endUnknown": "Koniec tej blokady nie został zapisany (na przykład bot uruchomił się ponownie w starszej wersji). Oś czasu kończy się na ostatnim zdarzeniu.",
+    "title": "Rajd z {date}",
+    "trigger": "{trigger}. Czas w UTC.",
+    "soFar": "{span} do teraz",
+    "joined": "Dołączyło",
+    "left": "Wyszło",
+    "raidJoiners": "Konta z rajdu",
+    "endedBy": "Zakończył(a)",
+    "done": "Co zrobiono",
+    "verification": "Poziom weryfikacji:",
+    "panic": "Zaproszenia i DM:",
+    "released": "Niewinni zwolnieni:",
+    "releasedAt": "{date} przez",
+    "chartTitle": "Dołączenia i akcje",
+    "perMinute": "na minutę",
+    "perMinutes": "na {minutes} min",
+    "joinsLabel": "Dołączenia:",
+    "joins": "Dołączenia",
+    "actionsLabel": "Akcje (sprawy, bramka dołączeń, automoderacja, blokady limitu bezpieczeństwa):",
+    "actions": "Akcje",
+    "minutes": "Minuta po minucie"
+  }
+}

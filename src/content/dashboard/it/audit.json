@@ -1,0 +1,18 @@
+{
+  "title": "Registro di controllo",
+  "help": "Ogni modifica fatta dalla dashboard: chi, quando, valore vecchio → valore nuovo. Ogni modulo salvato viene anche pubblicato nel registro di moderazione.",
+  "count": {
+    "one": "{count} modifica",
+    "other": "{count} modifiche",
+    "many": "{count} modifiche"
+  },
+  "who": "Chi",
+  "anyone": "chiunque",
+  "module": "Modulo",
+  "filter": "Filtra",
+  "setting": "Impostazione",
+  "noMatch": "Nessuna modifica corrisponde a questi filtri.",
+  "empty": "Ancora nessuna modifica. Ogni salvataggio dalla dashboard compare qui.",
+  "none": "(nessuno)",
+  "showAll": "Mostra tutto ({count} caratteri)"
+}

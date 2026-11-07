@@ -1,0 +1,310 @@
+{
+  "test": "(teste)",
+  "pager": {
+    "newer": "← Mais recentes",
+    "older": "Mais antigos →"
+  },
+  "list": {
+    "title": "Casos",
+    "help": "Todas as punições, as mais recentes primeiro. Filtre por membro, moderador, tipo, status, tag ou data.",
+    "count": {
+      "one": "{count} caso",
+      "other": "{count} casos",
+      "many": "{count} casos"
+    },
+    "exportPlan": "A exportação de casos (CSV) vem com o Mewvo Normal ou superior, no plano do dono do servidor. {plans}",
+    "plans": "Planos",
+    "download": "Baixar CSV",
+    "exportDays": {
+      "one": "O último {count} dia (Mewvo Normal).",
+      "other": "Os últimos {count} dias (Mewvo Normal).",
+      "many": "Os últimos {count} dias (Mewvo Normal)."
+    },
+    "exportAll": "Todo o histórico.",
+    "noMatch": "Nenhum caso corresponde a esses filtros.",
+    "clearFilters": "Limpar filtros",
+    "empty": "Ainda não há casos. Eles aparecem aqui depois da primeira advertência, silenciamento, expulsão ou banimento."
+  },
+  "filter": {
+    "member": "ID do membro",
+    "moderator": "ID do moderador",
+    "type": "Tipo",
+    "status": "Status",
+    "any": "qualquer",
+    "text": "Texto",
+    "tag": "Tag",
+    "tagPlaceholder": "ex.: scam",
+    "from": "De",
+    "to": "Até",
+    "search": "Buscar",
+    "clear": "Limpar"
+  },
+  "type": {
+    "ban": "banimento",
+    "kick": "expulsão",
+    "mute": "silenciamento",
+    "warn": "advertência"
+  },
+  "searchStatus": {
+    "active": "ativo",
+    "ended": "encerrado",
+    "revoked": "retirado",
+    "voided": "removido"
+  },
+  "saved": {
+    "label": "Salvas:",
+    "delete": "(excluir)",
+    "deleteLabel": "Excluir a busca salva {name}",
+    "saveAs": "Salvar esta busca como",
+    "namePlaceholder": "ex.: scam este mês",
+    "save": "Salvar"
+  },
+  "bulk": {
+    "with": "Com os casos marcados",
+    "tagAdd": "Adicionar uma tag",
+    "tagRemove": "Remover uma tag",
+    "void": "Removê-los (um engano, deixam de contar)",
+    "reason": "Motivo (para remover; os membros veem)",
+    "apply": "Aplicar",
+    "help": "Tags: até 25 casos de uma vez. Remover: até 10, e cada membro recebe a DM de sempre. Remover mostra antes uma página de confirmação."
+  },
+  "table": {
+    "select": "Selecionar",
+    "selectCase": "Selecionar o caso {code}",
+    "case": "Caso",
+    "type": "Tipo",
+    "member": "Membro",
+    "moderator": "Moderador",
+    "reason": "Motivo",
+    "date": "Data",
+    "status": "Status"
+  },
+  "status": {
+    "voided": "removido (um engano)",
+    "liftedByAppeal": "retirado por apelação",
+    "reversed": "revertido por um moderador",
+    "lifted": "retirado antes do prazo",
+    "appealPending": "apelação pendente",
+    "activeAppealDenied": "ativo, apelação negada",
+    "expired": "expirado",
+    "active": "ativo",
+    "ended": "encerrado"
+  },
+  "appealStatus": {
+    "pending": "pendente",
+    "accepted": "aceita",
+    "denied": "negada"
+  },
+  "action": {
+    "ban": "Banir",
+    "kick": "Expulsar",
+    "mute": "Silenciar",
+    "warn": "Advertir",
+    "unban": "Desbanir",
+    "unmute": "Tirar silenciamento",
+    "removewarn": "Remover advertência"
+  },
+  "actionVerb": {
+    "ban": "banir",
+    "kick": "expulsar",
+    "mute": "silenciar",
+    "warn": "advertir",
+    "unban": "desbanir",
+    "unmute": "tirar o silenciamento",
+    "removewarn": "remover advertências",
+    "timeout": "dar castigo (timeout)"
+  },
+  "stage": {
+    "none": "0 de 3 (ainda sem banimento por advertências)",
+    "permanent": "{n} de 3 (banimento permanente)",
+    "days": {
+      "one": "{n} de 3 (banimento de {count} dia)",
+      "other": "{n} de 3 (banimento de {count} dias)",
+      "many": "{n} de 3 (banimento de {count} dias)"
+    },
+    "label": "Etapa de advertências {stage}"
+  },
+  "duration": {
+    "permanent": "Permanente",
+    "permanentLower": "permanente",
+    "underMinute": "menos de um minuto",
+    "month": {
+      "one": "{count} mês",
+      "other": "{count} meses",
+      "many": "{count} meses"
+    },
+    "day": {
+      "one": "{count} dia",
+      "other": "{count} dias",
+      "many": "{count} dias"
+    },
+    "hour": {
+      "one": "{count} hora",
+      "other": "{count} horas",
+      "many": "{count} horas"
+    },
+    "minute": {
+      "one": "{count} minuto",
+      "other": "{count} minutos",
+      "many": "{count} minutos"
+    }
+  },
+  "age": {
+    "minutes": "{n} min",
+    "hours": "{n} h",
+    "days": "{n} d"
+  },
+  "warns": {
+    "of": "{n} de {max}",
+    "nextBans": "{n} (a próxima advertência bane)"
+  },
+  "next": {
+    "would": "Seria a advertência {n} de {max}.",
+    "oneAfter": "A seguinte significaria um banimento automático ({ban}).",
+    "moreAfter": {
+      "one": "Mais {count} depois significaria um banimento automático ({ban}).",
+      "other": "Mais {count} depois significariam um banimento automático ({ban}).",
+      "many": "Mais {count} depois significariam um banimento automático ({ban})."
+    },
+    "limit": "Atingiria o limite de advertências: um banimento automático ({ban}, etapa de advertências {stage} de 3)."
+  },
+  "settings": {
+    "title": "Configurações",
+    "setting": "Configuração",
+    "value": "Valor",
+    "source": {
+      "title": "Origem",
+      "database": "salvo",
+      "env": "do env (valor inicial)",
+      "default": "padrão embutido"
+    }
+  },
+  "evidence": {
+    "imageAlt": "Imagem de prova {id}",
+    "imageGone": "Imagem indisponível (a mensagem salva sumiu)."
+  },
+  "detail": {
+    "back": "← Casos",
+    "case": "Caso",
+    "title": "Caso {code}",
+    "name": "Nome",
+    "allTheirCases": "todos os casos dele",
+    "automatic": " (automático)",
+    "created": "Criado",
+    "duration": "Duração",
+    "ends": "Termina",
+    "appealDeadline": "Prazo de apelação",
+    "canAppeal": "Pode apelar?",
+    "yes": "Sim",
+    "no": "Não",
+    "yesLower": "sim",
+    "noLower": "não",
+    "dmDelivered": "DM entregue",
+    "stageAfter": "Etapa de advertências depois",
+    "tags": "Tags",
+    "none": "nenhuma",
+    "liftedEarly": "Retirado antes do prazo",
+    "removed": "Removido",
+    "history": "Histórico ({count})",
+    "when": "Quando",
+    "by": "Por",
+    "field": "Campo",
+    "old": "Antes",
+    "new": "Depois",
+    "neverEdited": "Nunca editado.",
+    "notes": "Notas da equipe ({count})",
+    "noNotes": "Sem notas. Só a equipe vê as notas.",
+    "evidence": "Provas ({count})",
+    "noEvidence": "Nenhuma prova anexada.",
+    "appeals": "Apelações ({count})",
+    "filed": "Enviada",
+    "decided": "Decidida",
+    "note": "Nota",
+    "noAppeals": "Sem apelações."
+  },
+  "appeals": {
+    "pageTitle": "Apelações",
+    "title": "Apelações pendentes ({count})",
+    "help": "Apelações esperando uma decisão, as mais antigas primeiro. Âmbar depois de um dia, vermelho depois de três.",
+    "waiting": "Esperando",
+    "secondReviewer": "Precisa de um segundo revisor",
+    "secondReviewerTitle": "Você aplicou esta punição, então outra pessoa da equipe precisa decidir esta apelação.",
+    "review": "Revisar e decidir",
+    "open": "Abrir",
+    "decideHere": "Decida aqui ou no Discord (Aceitar / Negar na mensagem da apelação): o efeito é o mesmo.",
+    "adminsDecide": "Os administradores decidem as apelações aqui (com a edição ativada) ou no Discord.",
+    "empty": "Nenhuma apelação pendente. As novas aparecem aqui e nos canais de apelação do Discord."
+  },
+  "change": {
+    "title": "Alterar este caso",
+    "removedNoEdit": "Casos removidos não podem mais ser editados.",
+    "edit": "Editar",
+    "newReason": "Novo motivo",
+    "newDuration": "Nova duração",
+    "unchanged": "sem mudança",
+    "durationHint": "Total desde que foi aplicado, ex.: 7d, 1mo.",
+    "durationHintBan": "Total desde que foi aplicado, ex.: 7d, 1mo, permanent.",
+    "save": "Salvar alterações",
+    "remove": "Remover caso",
+    "removeHelp": "Para um caso aplicado por engano: ele deixa de contar. Retira o que ainda está valendo (desbanimento, fim do silenciamento, advertência removida, etapa de advertências recuada) e manda o motivo ao membro por DM. O caso fica registrado, marcado como Removido.",
+    "removeReason": "Motivo (mostrado ao membro)",
+    "removeNext": "Nada acontece ainda: a próxima página mostra o que será retirado, e você confirma lá.",
+    "removeSubmit": "Remover caso…",
+    "link": "Link (ex.: um link de mensagem do Discord: o texto dela é salvo)",
+    "noteOptional": "Nota (opcional)",
+    "addEvidence": "Adicionar prova",
+    "image": "Imagem (PNG, JPEG, GIF ou WebP, até 8 MB)",
+    "upload": "Enviar imagem",
+    "rehosted": "As imagens são hospedadas de novo no canal de provas, como com /case evidence add.",
+    "removeEvidence": "Remover #{id}",
+    "removeEvidenceConfirm": "Remover a prova #{id}?",
+    "notesTags": "Notas e tags",
+    "staffOnly": "Só a equipe vê. O membro nunca.",
+    "newNote": "Nova nota",
+    "tagsHint": "Separadas por vírgula. Deixe vazio para remover todas.",
+    "saveTags": "Salvar tags"
+  },
+  "appeal": {
+    "back": "← Apelações",
+    "heading": "Apelação ·",
+    "title": "Apelação {code}",
+    "testCase": "(caso de teste)",
+    "testNotice": "Caso de teste criado com /test: nada foi executado, aceitar não muda nada.",
+    "givenBy": "Aplicado por",
+    "automatic": " (automático, escada de advertências)",
+    "review": "Revisão independente",
+    "reviewNeeded": "Aplicado por {name}, então precisa de um segundo revisor",
+    "ladder": "Escada de advertências",
+    "ladderValue": "{stage}, {count} advertência(s) contada(s)",
+    "appealHead": "Apelação ({status}) · enviada {date} · esperando há {age}",
+    "answers": "Respostas",
+    "noAppeal": "Nenhuma apelação neste caso.",
+    "imageGone": "Imagem indisponível.",
+    "earlier": "Apelações anteriores deste caso ({count})",
+    "byName": " por {name}",
+    "none": "Nenhuma.",
+    "others": "Outros casos ({count})",
+    "decide": "Decidir",
+    "ownerOverride": "Você aplicou esta punição. Como dono do bot você pode decidir mesmo assim; isso é registrado como exceção do dono.",
+    "note": "Nota (opcional, mostrada no canal da apelação e no registro)",
+    "accept": "Aceitar…",
+    "deny": "Negar…"
+  },
+  "appealConfirm": {
+    "effect": {
+      "test": "Caso de teste: só o registro é encerrado.",
+      "ban": "O membro é desbanido (se ainda estiver banido), recebe uma DM com um convite para voltar, e o caso é retirado.",
+      "mute": "O silenciamento do membro é tirado (se ainda estiver ativo), ele recebe uma DM, e o caso é retirado.",
+      "warn": "A advertência é removida (a contagem da escada cai; um banimento automático causado por ela é retirado) e o membro recebe uma DM.",
+      "lifted": "O caso é retirado e o membro recebe uma DM.",
+      "deny": "A punição continua. O membro recebe uma DM dizendo que a apelação foi negada."
+    },
+    "headingAccept": "Confirmar: aceitar a apelação de {code}",
+    "headingDeny": "Confirmar: negar a apelação de {code}",
+    "stage3": " Depois disso, este banimento por advertências da etapa 3 não poderá mais ser apelado.",
+    "channel": "O canal da apelação recebe a decisão e é apagado 10 segundos depois (a transcrição vai para o registro de moderação). Esta confirmação funciona uma vez e expira em 5 minutos.",
+    "accept": "Aceitar apelação",
+    "deny": "Negar apelação",
+    "title": "Confirmar apelação {code}"
+  }
+}

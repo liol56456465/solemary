@@ -1,0 +1,18 @@
+{
+  "title": "Registro de auditoria",
+  "help": "Toda alteração feita pelo painel: quem, quando, valor antigo → valor novo. Cada formulário salvo também é postado no registro de moderação.",
+  "count": {
+    "one": "{count} alteração",
+    "other": "{count} alterações",
+    "many": "{count} alterações"
+  },
+  "who": "Quem",
+  "anyone": "qualquer um",
+  "module": "Módulo",
+  "filter": "Filtrar",
+  "setting": "Configuração",
+  "noMatch": "Nenhuma alteração corresponde a esses filtros.",
+  "empty": "Ainda não há alterações. Cada salvamento pelo painel aparece aqui.",
+  "none": "(nenhum)",
+  "showAll": "Mostrar tudo ({count} caracteres)"
+}

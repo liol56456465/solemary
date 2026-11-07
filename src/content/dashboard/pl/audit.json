@@ -1,0 +1,19 @@
+{
+  "title": "Dziennik zdarzeń",
+  "help": "Każda zmiana z panelu: kto, kiedy, stara wartość → nowa wartość. Każdy zapisany formularz trafia też do dziennika moderacji.",
+  "count": {
+    "one": "{count} zmiana",
+    "other": "{count} zmiany",
+    "few": "{count} zmiany",
+    "many": "{count} zmian"
+  },
+  "who": "Kto",
+  "anyone": "każdy",
+  "module": "Moduł",
+  "filter": "Filtruj",
+  "setting": "Ustawienie",
+  "noMatch": "Żadne zmiany nie pasują do tych filtrów.",
+  "empty": "Nie ma jeszcze zmian. Tu pojawia się każdy zapis z panelu.",
+  "none": "(brak)",
+  "showAll": "Pokaż wszystko ({count} znaków)"
+}

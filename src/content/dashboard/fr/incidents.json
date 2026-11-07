@@ -1,0 +1,124 @@
+{
+  "list": {
+    "intro": "Chaque verrouillage anti-raid des {days} derniers jours, minute par minute : qui est arrivé et ce qu’ont fait Mewvo et l’équipe. Heures en UTC. Aucun contenu de message n’est gardé.",
+    "unreadable": "Les incidents n’ont pas pu être chargés (base de données). Recharge la page pour réessayer.",
+    "empty": "Aucun raid ces {days} derniers jours. Quand beaucoup de comptes arrivent en même temps, Mewvo lance un verrouillage tout seul et sa chronologie apparaît ici.",
+    "notKept": "(+{n} non gardés)",
+    "open": "Ouvrir la chronologie"
+  },
+  "col": {
+    "started": "Début",
+    "ended": "Fin",
+    "duration": "Durée",
+    "trigger": "Déclencheur",
+    "events": "Événements enregistrés",
+    "open": "Ouvrir"
+  },
+  "status": {
+    "running": "Toujours en cours",
+    "notRecorded": "Non enregistré",
+    "unread": "Illisible"
+  },
+  "span": {
+    "underMinute": "moins d’une minute",
+    "days": "{n} j",
+    "hours": "{n} h",
+    "minutes": "{n} min"
+  },
+  "trigger": {
+    "join_raid": "Raid d’arrivées (beaucoup de comptes ont rejoint en même temps)"
+  },
+  "kind": {
+    "lockdown_start": "Verrouillage lancé",
+    "lockdown_end": "Verrouillage terminé",
+    "verification": "Niveau de vérification",
+    "panic": "Invitations et MP",
+    "gate_kick": "Expulsion par le filtre d’arrivée",
+    "gate_flag": "Signalement par le filtre d’arrivée",
+    "automod": "Automod (sans dossier)",
+    "mass_block": "Limite de sécurité (bannissements/expulsions)",
+    "join": "Arrivé",
+    "leave": "Parti",
+    "case": "Dossier",
+    "dashboard": "Changement du tableau de bord"
+  },
+  "actions": {
+    "ban": "Bannissements",
+    "kick": "Expulsions",
+    "mute": "Mises en sourdine",
+    "warn": "Avertissements",
+    "gate_kick": "Expulsions par le filtre",
+    "gate_flag": "Signalements par le filtre",
+    "automod": "Automod sans dossier",
+    "mass_block": "Blocages par la limite de sécurité"
+  },
+  "chart": {
+    "ariaMinute": "{label} par minute : {total} au total sur {bars} barres. La liste minute par minute ci-dessous contient chaque événement.",
+    "ariaMinutes": "{label} par tranche de {minutes} minutes : {total} au total sur {bars} barres. La liste minute par minute ci-dessous contient chaque événement."
+  },
+  "item": {
+    "case": "dossier {code}",
+    "by": "par"
+  },
+  "count": {
+    "joins": {
+      "one": "{count} arrivée",
+      "many": "{count} arrivées",
+      "other": "{count} arrivées"
+    },
+    "leaves": {
+      "one": "{count} départ",
+      "many": "{count} départs",
+      "other": "{count} départs"
+    },
+    "actions": {
+      "one": "{count} action",
+      "many": "{count} actions",
+      "other": "{count} actions"
+    },
+    "steps": {
+      "one": "{count} étape de verrouillage",
+      "many": "{count} étapes de verrouillage",
+      "other": "{count} étapes de verrouillage"
+    },
+    "quiet": {
+      "one": "{count} minute calme",
+      "many": "{count} minutes calmes",
+      "other": "{count} minutes calmes"
+    },
+    "events": {
+      "one": "{count} événement",
+      "many": "{count} événements",
+      "other": "{count} événements"
+    }
+  },
+  "detail": {
+    "all": "Tous les incidents",
+    "unreadable": "Cet incident n’a pas pu être chargé (base de données). Recharge la page pour réessayer.",
+    "nothing": "Rien n’a été enregistré pour cet incident.",
+    "dropped": "Seuls les {max} premiers événements de verrouillage, de filtre d’arrivée et d’automod ont été gardés ; {n} autres ont eu lieu.",
+    "truncated": "Cet incident est très grand : seules les premières lignes d’arrivées et de départs, de dossiers ou de changements du tableau de bord sont affichées.",
+    "stateUnread": "Impossible de lire si ce verrouillage est toujours en cours (base de données). Recharge la page pour réessayer.",
+    "endUnknown": "La fin de ce verrouillage n’a pas été enregistrée (par exemple, le bot a redémarré sur une version plus ancienne). La chronologie s’arrête au dernier événement.",
+    "title": "Raid du {date}",
+    "trigger": "{trigger}. Heures en UTC.",
+    "soFar": "{span} jusqu’ici",
+    "joined": "Arrivés",
+    "left": "Partis",
+    "raidJoiners": "Comptes du raid",
+    "endedBy": "Terminé par",
+    "done": "Ce qui a été fait",
+    "verification": "Niveau de vérification :",
+    "panic": "Invitations et MP :",
+    "released": "Non-fautifs libérés :",
+    "releasedAt": "{date} par",
+    "chartTitle": "Arrivées et actions",
+    "perMinute": "par minute",
+    "perMinutes": "par tranche de {minutes} minutes",
+    "joinsLabel": "Arrivées :",
+    "joins": "Arrivées",
+    "actionsLabel": "Actions (dossiers, filtre d’arrivée, automod, blocages par la limite de sécurité) :",
+    "actions": "Actions",
+    "minutes": "Minute par minute"
+  }
+}

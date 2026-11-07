@@ -1,0 +1,225 @@
+{
+  "glossary": {
+    "title": "Słowniczek",
+    "intro": "Słowa, których używa ten panel i Discord, wyjaśnione prosto. Czegoś brakuje? Zapytaj na serwerze wsparcia.",
+    "open": "Otwórz"
+  },
+  "groups": {
+    "basics": "Podstawy Discorda",
+    "safety": "Bezpieczeństwo serwera",
+    "moderation": "Słowa moderacji w Mewvo",
+    "members": "Rozmowy z członkami",
+    "fun": "Zabawa i społeczność"
+  },
+  "words": {
+    "server": {
+      "term": "Serwer",
+      "text": "Twoja społeczność na Discordzie. Mewvo działa na jednym serwerze głównym i opcjonalnym serwerze wsparcia."
+    },
+    "channel": {
+      "term": "Kanał",
+      "text": "Miejsce do rozmów na serwerze, na przykład #general. Kanały tekstowe mają wiadomości, kanały głosowe rozmowy."
+    },
+    "category": {
+      "term": "Kategoria",
+      "text": "Folder, który grupuje kanały na liście kanałów. Mewvo umieszcza tickety i odwołania w osobnych kategoriach."
+    },
+    "thread": {
+      "term": "Wątek",
+      "text": "Krótka rozmowa poboczna, która wychodzi od jednej wiadomości na kanale."
+    },
+    "role": {
+      "term": "Rola",
+      "text": "Etykieta, którą dajesz członkom, na przykład „Moderator” albo „Poziom 10”. Role decydują, co członkowie widzą i mogą robić, i mogą dać kolor nazwy."
+    },
+    "permission": {
+      "term": "Uprawnienie",
+      "text": "Jedna rzecz, na którą pozwala rola, na przykład „Zarządzanie wiadomościami” albo „Banowanie członków”. Kanały mogą zmieniać uprawnienia roli."
+    },
+    "administrator": {
+      "term": "Administrator",
+      "text": "Uprawnienie, które pozwala na wszystko. W Mewvo tylko osoby z nim mogą zmieniać ustawienia i karać członków."
+    },
+    "dm": {
+      "term": "DM",
+      "text": "Wiadomość prywatna: rozmowa między dwiema osobami albo między członkiem a Mewvo. Członkowie mogą wyłączyć DM od serwerów."
+    },
+    "mention": {
+      "term": "Wzmianka",
+      "text": "Nazwa z @ przed nią, na przykład @Sam. Ta osoba dostaje powiadomienie. Mewvo nigdy nie oznacza @everyone z tekstu, który ktoś wpisał."
+    },
+    "slashCommand": {
+      "term": "Komenda z ukośnikiem",
+      "text": "Komenda, którą zaczynasz od wpisania / w polu wiadomości, na przykład /rank. Discord pokazuje listę podczas pisania."
+    },
+    "embed": {
+      "term": "Embed",
+      "text": "Ramka wiadomości z kolorową krawędzią, pogrubionym tytułem i tekstem. Boty używają jej do schludnych wiadomości."
+    },
+    "id": {
+      "term": "ID",
+      "text": "Długa liczba, którą Discord nadaje każdemu serwerowi, kanałowi, roli i osobie. Włącz w Discordzie tryb dewelopera (Ustawienia, Zaawansowane), potem kliknij coś prawym przyciskiem i wybierz „Kopiuj ID”."
+    },
+    "warn": {
+      "term": "Ostrzeżenie",
+      "text": "Pisemne ostrzeżenie. Członek dostaje DM. Trzy ostrzeżenia same prowadzą do bana (zobacz drabinę ostrzeżeń)."
+    },
+    "mute": {
+      "term": "Wyciszenie",
+      "text": "Członek zostaje na serwerze, ale przez ustalony czas nie może pisać ani mówić. Mewvo robi to rolą „Muted”."
+    },
+    "timeout": {
+      "term": "Przerwa (timeout)",
+      "text": "Własne krótkie wyciszenie Discorda, najwyżej 28 dni. Wyciszenie Mewvo używa zamiast tego roli, więc może trwać dłużej."
+    },
+    "kick": {
+      "term": "Wyrzucenie",
+      "text": "Usuwa członka z serwera. Może wrócić z zaproszeniem. Mewvo wysyła mu nowe zaproszenie."
+    },
+    "ban": {
+      "term": "Ban",
+      "text": "Usuwa członka i nie pozwala mu wrócić, na ustalony czas albo na stałe."
+    },
+    "case": {
+      "term": "Sprawa",
+      "text": "Zapis jednego ostrzeżenia, wyciszenia, wyrzucenia lub bana: kto, za co, kiedy i przez kogo."
+    },
+    "caseCode": {
+      "term": "Kod sprawy",
+      "text": "Krótki kod, na przykład „k7fq2”, który oznacza jedną sprawę. Członkowie podają go w odwołaniu."
+    },
+    "warnLadder": {
+      "term": "Drabina ostrzeżeń",
+      "text": "Co się dzieje, gdy ostrzeżeń przybywa: 3. ostrzeżenie to ban na 7 dni, następne po nim to 30 dni, a potem ban na stałe."
+    },
+    "appeal": {
+      "term": "Odwołanie",
+      "text": "Członek prosi ekipę o zdjęcie lub skrócenie kary. Ekipa je przyjmuje albo odrzuca."
+    },
+    "automod": {
+      "term": "Automoderacja",
+      "text": "Mewvo samo sprawdza wiadomości i usuwa spam, wulgaryzmy, linki z zaproszeniami i rajdy."
+    },
+    "reviewCard": {
+      "term": "Karta do sprawdzenia",
+      "text": "Krótka wiadomość, którą Mewvo publikuje dla ekipy, gdy automoderacja coś zrobi, z przyciskami, by to zostawić albo cofnąć."
+    },
+    "raid": {
+      "term": "Rajd",
+      "text": "Wiele nowych kont dołącza naraz, żeby spamować. Gdy Mewvo to zauważy, może na jakiś czas utrudnić dołączanie (blokada)."
+    },
+    "modLog": {
+      "term": "Dziennik moderacji",
+      "text": "Kanał tylko dla ekipy, na którym Mewvo zapisuje każdą karę, żeby każdy mógł później wrócić."
+    },
+    "auditLog": {
+      "term": "Dziennik zdarzeń",
+      "text": "Lista wszystkich zmian zrobionych w tym panelu: kto zmienił które ustawienie i kiedy."
+    },
+    "removeCase": {
+      "term": "Usuń sprawę",
+      "text": "Dla sprawy nadanej przez pomyłkę. Mewvo zdejmuje to, co nadal działa, wysyła członkowi DM, a sprawa przestaje się liczyć. Zostaje w historii z oznaczeniem „Usunięta”. (Komenda to /case remove.)"
+    },
+    "liftedEarly": {
+      "term": "Zdjęta wcześniej",
+      "text": "Ban, wyciszenie lub ostrzeżenie, które skończyło się przed czasem: ekipa użyła Odbanuj, Wyłącz wyciszenie albo Usuń ostrzeżenie lub przyjęła odwołanie."
+    },
+    "warningStage": {
+      "term": "Etap ostrzeżeń",
+      "text": "Gdzie członek jest na drabinie ostrzeżeń: etap 0 z 3 (jeszcze bez bana za ostrzeżenia), 1 z 3 (ban na 7 dni), 2 z 3 (ban na 30 dni), 3 z 3 (ban na stałe). Sam się nie cofa."
+    },
+    "canTheyAppeal": {
+      "term": "Czy można się odwołać?",
+      "text": "Czy członek może poprosić ekipę o zdjęcie kary. Tak, prawie zawsze. Nie przy ciężkim banie, który ekipa tak oznaczyła, ani przy banie z etapu 3 po 6 miesiącach albo po odrzuconym odwołaniu."
+    },
+    "whatStaffUsuallyGaveForThisReason": {
+      "term": "Co ekipa zwykle dawała za ten powód",
+      "text": "Podpowiedź przy karze: co ekipa dawała za ten sam powód w ostatnich 180 dniach, żeby członkowie dostawali podobne kary za podobne rzeczy."
+    },
+    "recordSoFar": {
+      "term": "Dotychczasowa historia",
+      "text": "Liczone ostrzeżenia członka, etap ostrzeżeń, aktywne kary i odwołania, widoczne na jego stronie członka. Członkowie widzą swoją przyciskiem „My record” w panelu odwołań."
+    },
+    "extraWatchPeriodAfterABan": {
+      "term": "Okres wzmożonej obserwacji po banie",
+      "text": "Przez 7 dni po powrocie członka z bana automoderacja jest dla niego surowsza: zaczyna o jeden stopień kary wyżej, bez przyjaznego upomnienia i bez łagodności dla zaufanych członków. (Komenda to /automod extrawatch.)"
+    },
+    "warnPrivatelyFirst2MinToFix": {
+      "term": "Najpierw ostrzeż prywatnie (2 min na poprawkę)",
+      "text": "Dla drobnych reguł automoderacji: za pierwszym razem w ciągu 30 dni członek dostaje prywatną wiadomość i 2 minuty na edycję lub usunięcie wiadomości. Jeśli to poprawi, nic więcej się nie dzieje."
+    },
+    "friendlyNoticeForAFirstSmallOffence": {
+      "term": "Przyjazne upomnienie za pierwsze drobne przewinienie",
+      "text": "Pierwsza drobna wpadka członka w ciągu 30 dni (wielkie litery, dziwne znaki, tylko angielski, łagodny język) dostaje krótkie upomnienie zamiast ostrzeżenia."
+    },
+    "reportOnlyDonTDelete": {
+      "term": "Tylko zgłaszaj (nie usuwaj)",
+      "text": "Tryb automoderacji: ekipa dostaje kartę do sprawdzenia o wiadomości, ale nic nie jest usuwane i nikt nie jest karany, dopóki ekipa tego nie zastosuje. Dobre do wypróbowania reguły."
+    },
+    "keepApart": {
+      "term": "Rozdzielenie",
+      "text": "Ekipa prosi dwóch członków, żeby zostawili się w spokoju do ustalonego czasu. Wzmianki i odpowiedzi między nimi są usuwane. To nie jest kara i nie liczy się jako ostrzeżenie."
+    },
+    "safetyLimitTooManyBansOrKicksIn10Minutes": {
+      "term": "Limit bezpieczeństwa: za dużo banów lub wyrzuceń w 10 minut",
+      "text": "Domyślnie, jeśli jeden moderator zbanuje lub wyrzuci więcej niż 5 członków w 10 minut (wyciszenia: 10), Mewvo zatrzymuje go na godzinę i informuje właściciela bota. Właściciele mogą zmienić te liczby. To chroni serwer, gdy konto moderatora zostanie użyte w złej wierze."
+    },
+    "showWhatChanged": {
+      "term": "Pokaż, co się zmieniło",
+      "text": "Przycisk przy alercie dla ekipy po usunięciu wielu kanałów lub ról: porównuje ostatnią kopię serwera z obecnym serwerem, żebyś mógł przywrócić rzeczy przez /backup revert."
+    },
+    "ticket": {
+      "term": "Ticket",
+      "text": "Prywatny kanał, w którym jeden członek rozmawia z ekipą, otwierany przyciskiem."
+    },
+    "modmail": {
+      "term": "Modmail",
+      "text": "Członek wysyła Mewvo DM, a ekipa odpowiada na prywatnym kanale. Mewvo przekazuje wiadomości w obie strony."
+    },
+    "supportServer": {
+      "term": "Serwer wsparcia",
+      "text": "Drugi, mały serwer, na którym zbanowani członkowie nadal mogą się odwołać, bo nie widzą głównego."
+    },
+    "inbox": {
+      "term": "Skrzynka",
+      "text": "Lista w tym panelu wszystkiego, co czeka na ekipę: odwołania, tickety, modmail i sprawdzenia automoderacji."
+    },
+    "xpAndLevels": {
+      "term": "XP i poziomy",
+      "text": "Członkowie zdobywają punkty (XP) za pisanie. Wystarczająco dużo XP to nowy poziom, a poziomy mogą dawać role."
+    },
+    "reactionRoles": {
+      "term": "Role za reakcje",
+      "text": "Wiadomość z przyciskami lub menu, w której członkowie sami wybierają role, na przykład „Gracz” albo „Nowości”."
+    },
+    "verification": {
+      "term": "Weryfikacja",
+      "text": "Nowi członkowie klikają przycisk, żeby pokazać, że są prawdziwymi ludźmi, zanim zaczną pisać."
+    },
+    "plan": {
+      "term": "Plan",
+      "text": "Mewvo jest darmowe. Płatne plany (Normal, Pro, Max) podnoszą niektóre limity. Dla serwera liczy się plan właściciela serwera."
+    }
+  },
+  "setup": {
+    "checkAgain": "Zmieniłeś coś w Discordzie? [Sprawdź ponownie]({href}).",
+    "done": "Gotowe.",
+    "changeOnPage": "Możesz to zmienić na jego stronie.",
+    "ownPage": "Jeszcze nieskonfigurowane. To ma kilka ustawień, więc otwiera własną stronę.",
+    "openSetting": "Otwórz to ustawienie",
+    "setUp": "Skonfiguruj",
+    "changeHere": "Możesz to zmienić tutaj.",
+    "pickHere": "Jeszcze nieskonfigurowane. Wybierz tutaj i zapisz.",
+    "moreSettings": "Więcej ustawień: [otwórz jego stronę]({href}).",
+    "unreadable": "Nie udało się teraz wczytać kroków konfiguracji. Odśwież stronę za minutę.",
+    "progress": "Gotowe kroki: {done} z {total}. Przejdź je po kolei albo pomiń te, których nie potrzebujesz. Możesz tu wrócić w każdej chwili z paska bocznego.",
+    "stepOf": "Krok {n} z {total}",
+    "back": "Wstecz",
+    "next": "Następny krok",
+    "skip": "Pomiń na razie",
+    "finish": "Zakończ",
+    "allSteps": "Wszystkie kroki",
+    "doneMark": " (gotowe)",
+    "newWords": "Nowe słowa? [Słowniczek]({href})."
+  }
+}

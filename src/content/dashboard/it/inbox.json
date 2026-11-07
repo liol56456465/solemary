@@ -1,0 +1,94 @@
+{
+  "kinds": {
+    "appeal": { "label": "Ricorsi", "single": "Ricorso" },
+    "ticket": { "label": "Ticket", "single": "Ticket" },
+    "modmail": { "label": "Modmail", "single": "Modmail" },
+    "report": { "label": "Segnalazioni sullo staff", "single": "Segnalazione sullo staff" },
+    "review": { "label": "Revisioni Automod", "single": "Revisione Automod" }
+  },
+  "action": {
+    "appeal": "Esamina il ricorso",
+    "ticket": "Apri la conversazione",
+    "modmail": "Apri la conversazione",
+    "report": "Apri in Discord",
+    "review": "Apri la scheda di revisione"
+  },
+  "list": {
+    "title": "Posta in arrivo",
+    "heading": "Posta in arrivo ({count})",
+    "intro": "Tutto ciò che aspetta lo staff, dal più vecchio: ricorsi, ticket, modmail, segnalazioni sullo staff e schede di revisione Automod. Arancione dopo un giorno, rosso dopo tre.",
+    "filterLabel": "Filtra per tipo",
+    "all": "Tutto",
+    "failed": "Non è stato possibile caricare ora: {kinds}. Questi numeri non sono completi; ricarica la pagina per riprovare.",
+    "kind": "Tipo",
+    "what": "Cosa",
+    "who": "Chi",
+    "waiting": "In attesa",
+    "opensDiscord": "(apre Discord)",
+    "empty": "Niente aspetta lo staff.",
+    "emptyKind": {
+      "appeal": "Nessun ricorso aperto.",
+      "ticket": "Nessun ticket aperto.",
+      "modmail": "Nessun modmail aperto.",
+      "report": "Nessuna segnalazione sullo staff aperta.",
+      "review": "Nessuna revisione Automod aperta."
+    }
+  },
+  "conversation": {
+    "titleModmail": "Modmail #{channel}",
+    "titleTicket": "Ticket #{channel}",
+    "headModmail": "Modmail · #{channel}",
+    "headTicket": "Ticket · #{channel}",
+    "back": "← Posta in arrivo",
+    "with": "Con {member} {id} · ",
+    "openDiscord": "Apri in Discord",
+    "bot": "bot",
+    "last": {
+      "one": "Ultimi messaggi ({count})",
+      "many": "Ultimi messaggi ({count})",
+      "other": "Ultimi messaggi ({count})"
+    },
+    "noMessages": "Ancora nessun messaggio.",
+    "reply": "Rispondi",
+    "helpModmail": "Inviato come bot, come se scrivessi nel canale Discord: il membro riceve un DM \"Nome del tuo server (staff): …\" e una copia viene pubblicata nel canale. Inizia con {prefix} per una nota interna (pubblicata solo nel canale, mai inviata al membro).",
+    "helpTicket": "Pubblicato come bot nel canale del ticket (il membro lo legge lì).",
+    "editingOff": "La modifica dalla dashboard è disattivata (DASHBOARD_EDIT_ENABLED): rispondi in Discord.",
+    "needsAdmin": "Per rispondere serve Amministratore nel server principale (i proprietari del bot senza questo permesso possono solo leggere).",
+    "message": "Messaggio",
+    "replyHint": "Fino a {max} caratteri; nessuno viene menzionato.",
+    "send": "Invia risposta",
+    "close": "Chiudi",
+    "closeHelpModmail": "Come il pulsante Chiudi: il membro viene avvisato via DM, la trascrizione va nel canale delle trascrizioni e il canale viene eliminato.",
+    "closeHelpTicket": "Come il pulsante Chiudi: il ticket viene chiuso (spostato nella categoria dei chiusi, se impostata), il membro riceve un DM se l'opzione è attiva, e la trascrizione viene archiviata.",
+    "reason": "Motivo (facoltativo)",
+    "closeButton": "Chiudi…"
+  },
+  "confirm": {
+    "title": "Conferma chiusura",
+    "back": "← Indietro (annulla)",
+    "headModmail": "Conferma: chiudi la conversazione modmail #{channel}",
+    "headTicket": "Conferma: chiudi il ticket #{channel}",
+    "member": "Membro",
+    "reason": "Motivo",
+    "effect": "Effetto",
+    "effectModmail": "Il membro riceve un DM che la conversazione è stata chiusa, la trascrizione viene archiviata e il canale eliminato.",
+    "effectTicket": "Il ticket viene chiuso per il membro (non può più scriverci), la trascrizione viene archiviata.",
+    "once": "Questa conferma funziona una volta e scade tra 5 minuti.",
+    "submit": "Chiudi ora"
+  },
+  "route": {
+    "gone": "Questa conversazione o questo ticket non è più aperto (o non è mai esistito). Forse è stato chiuso in Discord.",
+    "goneNothingSent": "Questa conversazione o questo ticket non è più aperto. Non è stato inviato nulla.",
+    "goneShort": "Questa conversazione o questo ticket non è più aperto.",
+    "readError": "Non è stato possibile caricare i messaggi da Discord. Ricarica la pagina per riprovare.",
+    "tooLong": "La risposta supera i {max} caratteri.",
+    "empty": "Scrivi prima una risposta.",
+    "notePosted": "Nota interna pubblicata nel canale (non inviata al membro).",
+    "ticketReplied": "Risposta pubblicata nel ticket.",
+    "dmSent": "Risposta inviata al membro via DM e copiata nel canale.",
+    "dmFailed": "La risposta è stata pubblicata nel canale, ma non è stato possibile consegnare il DM (il membro ha lasciato il server o ha chiuso i DM).",
+    "confirmExpired": "Questa conferma è scaduta o è già stata usata. Non è stato chiuso nulla; premi di nuovo Chiudi.",
+    "closedModmail": "Conversazione modmail #{channel} chiusa.",
+    "closedTicket": "Ticket #{channel} chiuso."
+  }
+}

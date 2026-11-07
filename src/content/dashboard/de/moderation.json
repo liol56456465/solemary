@@ -1,0 +1,239 @@
+{
+  "action": {
+    "ban": "Bannen",
+    "kick": "Kicken",
+    "mute": "Stummschalten",
+    "warn": "Verwarnen",
+    "unban": "Entbannen",
+    "unmute": "Stummschaltung aufheben",
+    "removewarn": "Verwarnung entfernen"
+  },
+  "length": {
+    "60s": "60 Sekunden",
+    "5m": "5 Minuten",
+    "10m": "10 Minuten",
+    "1h": "1 Stunde",
+    "1d": "1 Tag",
+    "3d": "3 Tage",
+    "7d": "7 Tage",
+    "1w": "1 Woche",
+    "28d": "28 Tage",
+    "30d": "30 Tage"
+  },
+  "flow": {
+    "chooseReason": "Wähle einen Grund.",
+    "unknownAppealChoice": "Einspruch möglich: unbekannte Auswahl."
+  },
+  "void": {
+    "dm": "Das Mitglied bekommt eine DM mit deinem Grund.",
+    "test": "Testfall: Nur der Eintrag wird als Fehler markiert. {dm}",
+    "alreadyEnded": "Er ist schon abgelaufen, also wird nichts aufgehoben; der Fall wird nur als Fehler markiert. {dm}",
+    "alreadyLifted": "Er wurde schon aufgehoben, also wird nichts aufgehoben; der Fall wird nur als Fehler markiert. {dm}",
+    "lift": {
+      "ban": "Das Mitglied wird entbannt (und bekommt eine Einladung zurück).",
+      "mute": "Die Stummschaltung des Mitglieds wird aufgehoben.",
+      "warn": "Die Verwarnung zählt nicht mehr für die Verwarnungsstufen; ein dadurch ausgelöster Bann wird aufgehoben.",
+      "kick": "Bei einem Kick gibt es nichts aufzuheben; der Fall wird als Fehler markiert.",
+      "fallback": "Was noch gilt, wird aufgehoben."
+    },
+    "effect": "{lift} {dm}"
+  },
+  "result": {
+    "done": "{action}: erledigt für {name}.",
+    "case": "Fall {code} ({name}).",
+    "dmFailed": "Die DM konnte nicht zugestellt werden (DMs geschlossen oder kein gemeinsamer Server); die Aktion wurde trotzdem ausgeführt.",
+    "dmDelivered": "DM zugestellt.",
+    "warning": "Achtung:"
+  },
+  "access": {
+    "needModRole": "Dafür brauchst du die Moderatorrolle oder Administrator auf dem Hauptserver (vielleicht wurde sie dir seit dem Login entzogen).",
+    "needAdmin": "Dafür brauchst du die Berechtigung Administrator auf dem Hauptserver.",
+    "actionNeedsAdmin": "{action} braucht Administrator auf dem Hauptserver.",
+    "thisAction": "Diese Aktion",
+    "ownerOnly": "Das können nur die Bot-Inhaber (wie /staff restore).",
+    "enforcementAdmin": "Strafaktionen brauchen Administrator auf dem Hauptserver (Bot-Inhaber ohne diese Berechtigung können nur ansehen)."
+  },
+  "expired": {
+    "action": "Diese Bestätigung ist abgelaufen oder wurde schon benutzt. Nichts wurde getan; sieh dir die Aktion noch einmal in der Vorschau an.",
+    "bulk": "Diese Bestätigung ist abgelaufen oder wurde schon benutzt. Nichts wurde getan; sieh dir die Sammelaktion noch einmal in der Vorschau an.",
+    "void": "Diese Bestätigung ist abgelaufen oder wurde schon benutzt. Nichts wurde getan; entferne den Fall noch einmal.",
+    "cases": "Diese Bestätigung ist abgelaufen oder wurde schon benutzt. Nichts wurde getan; wähle die Fälle noch einmal.",
+    "appeal": "Diese Bestätigung ist abgelaufen oder wurde schon benutzt. Nichts wurde getan; entscheide noch einmal."
+  },
+  "members": {
+    "bansFailed": "Die Bannliste konnte nicht geladen werden (Discord oder die Datenbank hat nicht geantwortet). Lade die Seite neu, um es noch einmal zu versuchen.",
+    "noUserWithId": "Es gibt keinen Discord-Nutzer mit der ID {id}.",
+    "noUser": "Es gibt keinen Discord-Nutzer mit dieser ID.",
+    "notUserId": "Keine Nutzer-ID.",
+    "unknownAction": "Unbekannte Aktion.",
+    "notAvailable": "{action} ist für {name} gerade nicht möglich (lade die Seite neu).",
+    "warnWouldBan": "Diese Verwarnung würde {name} automatisch bannen (Verwarnungsstufen), deshalb braucht sie einen Administrator.",
+    "chooseCountedWarn": "Wähle eine der gezählten Verwarnungen des Mitglieds.",
+    "actionFailed": "Etwas ist schiefgelaufen; vielleicht hat sich nichts geändert. Prüfe die Fälle des Mitglieds, bevor du es noch einmal versuchst.",
+    "alreadyHasRole": "{name} hat @{role} schon.",
+    "lacksRole": "{name} hat @{role} nicht.",
+    "chooseHowLong": "Wähle, wie lange.",
+    "roleFor": "@{role} für {length}",
+    "gaveRole": "{label} an {name} vergeben.",
+    "tookRole": "@{role} von {name} entfernt.",
+    "sameNickname": "Das ist schon der Nickname.",
+    "nicknameSet": "Nickname auf „{nick}“ gesetzt.",
+    "nicknameRemoved": "Nickname entfernt.",
+    "chooseTimeout": "Wähle eine Timeout-Dauer.",
+    "timeoutAdmin": "Discord erlaubt keinen Timeout für ein Mitglied mit Administrator.",
+    "notTimedOut": "{name} hat keinen Timeout.",
+    "timeoutRemoved": "Timeout von {name} aufgehoben.",
+    "timedOut": "{name} hat einen Timeout für {length}.",
+    "notVerified": "{name} hat die Verifiziert-Rolle nicht.",
+    "unverified": "Verifizierung von {name} entfernt."
+  },
+  "bulk": {
+    "action": {
+      "roleAdd": "Rolle geben",
+      "roleRemove": "Rolle nehmen",
+      "timeout": "Timeout",
+      "kick": "Kicken",
+      "ban": "Bannen"
+    },
+    "labelRole": "{label} @{role}",
+    "labelFor": "{label} für {length}",
+    "labelTimeout": "{label} ({length})",
+    "notDone": "Nicht erledigt",
+    "tooManyMatch": "{total} Mitglieder passen zu diesen Filtern; eine Sammelaktion kann höchstens {max} ändern. Grenze die Filter weiter ein.",
+    "tickMember": "Hake mindestens ein Mitglied an oder wähle „alle, die zu diesen Filtern passen“.",
+    "tooMany": "Eine Sammelaktion kann höchstens {max} Mitglieder ändern.",
+    "chooseAction": "Wähle, was passieren soll.",
+    "chooseRole": "Wähle eine Rolle.",
+    "blocked": "Du bist durch das Sicherheitslimit gesperrt (zu viele Banns oder Kicks in 10 Minuten); nichts wurde getan.",
+    "unknownJob": "Diese Sammelaktion ist nicht bekannt (vielleicht ist sie über eine Stunde alt oder der Bot wurde neu gestartet)."
+  },
+  "notes": {
+    "empty": "Die Notiz ist leer.",
+    "added": "Notiz hinzugefügt.",
+    "notNote": "Keine Notiz.",
+    "gone": "Diese Notiz gibt es nicht mehr.",
+    "removed": "Notiz entfernt."
+  },
+  "case": {
+    "noCase": "Es gibt keinen Fall mit diesem Code.",
+    "giveChange": "Gib einen neuen Grund oder eine neue Dauer an.",
+    "field": {
+      "reason": "Grund",
+      "duration": "Dauer"
+    },
+    "fieldsAnd": "{a} und {b}",
+    "edited": "Fall {code} bearbeitet: {fields}.",
+    "editedEnded": "Fall {code} bearbeitet: {fields}. Das neue Ende liegt schon in der Vergangenheit: Er wird innerhalb einer Minute aufgehoben.",
+    "reasonEmpty": "Der Grund darf nicht leer sein.",
+    "alreadyRemoved": "Fall {code} ist schon entfernt.",
+    "voidTitle": "{code} entfernen",
+    "voidHeading": "Bestätigen: Fall {code} entfernen",
+    "rowCase": "Fall",
+    "rowMember": "Mitglied",
+    "rowReason": "Grund (das Mitglied sieht ihn)",
+    "rowEffect": "Wirkung",
+    "removeSubmit": "Fall entfernen",
+    "removed": "Fall {code} entfernt (er zählt nicht mehr).",
+    "dmDelivered": "DM an das Mitglied: zugestellt.",
+    "dmNotDelivered": "DM an das Mitglied: nicht zugestellt.",
+    "noteAdded": "Notiz hinzugefügt. Nur das Team kann sie sehen.",
+    "tagsSaved": "Tags gespeichert: {tags}.",
+    "tagsRemoved": "Tags entfernt."
+  },
+  "evidence": {
+    "oneLink": "Gib einen http(s)-Link an, z. B. einen Link zu einer Discord-Nachricht.",
+    "added": "Beweis #{id} hinzugefügt.",
+    "addedLinkOnly": "Beweis #{id} hinzugefügt. Die Nachricht konnte nicht gelesen werden (anderer Server, kein Zugriff oder gelöscht), daher ist nur der Link gespeichert.",
+    "chooseImage": "Wähle ein Bild zum Hochladen.",
+    "notImage": "Diese Datei ist kein PNG-, JPEG-, GIF- oder WebP-Bild.",
+    "imageAdded": "Bildbeweis #{id} hinzugefügt (im Beweiskanal neu hochgeladen).",
+    "notNumber": "Keine Beweisnummer.",
+    "none": "Fall {code} hat keinen Beweis #{id}.",
+    "removed": "Beweis #{id} entfernt.",
+    "removedImage": "Beweis #{id} entfernt. Die Kopie im Beweiskanal bleibt erhalten."
+  },
+  "cases": {
+    "nothingChanged": "Nichts wurde geändert",
+    "backToCases": "Zurück zu den Fällen",
+    "tickCase": "Hake mindestens einen Fall an.",
+    "chooseAction": "Wähle, was mit den angehakten Fällen passieren soll.",
+    "noneExist": "Keiner der angehakten Fälle existiert noch auf diesem Server.",
+    "removeMax": "Entferne höchstens {max} Fälle auf einmal.",
+    "giveReason": "Gib einen Grund für das Entfernen an (die Mitglieder sehen ihn).",
+    "allRemoved": "Alle angehakten Fälle sind schon entfernt.",
+    "removeTitle": "Fälle entfernen",
+    "removeHeading": {
+      "one": "Bestätigen: {count} Fall entfernen",
+      "other": "Bestätigen: {count} Fälle entfernen"
+    },
+    "rowReason": "Grund (die Mitglieder sehen ihn)",
+    "willRemove": "Wird entfernt ({count})",
+    "skippedRemoved": "Übersprungen, schon entfernt: {codes}.",
+    "removeSubmit": {
+      "one": "{count} Fall entfernen",
+      "other": "{count} Fälle entfernen"
+    },
+    "tagMax": "Tagge höchstens {max} Fälle auf einmal.",
+    "giveTag": "Gib einen Tag an, z. B. scam.",
+    "tagLimit": "{code} (hat schon 10 Tags)",
+    "tagged": {
+      "one": "Getaggt mit #{tag}: {count} Fall.",
+      "other": "Getaggt mit #{tag}: {count} Fälle."
+    },
+    "untagged": {
+      "one": "Tag #{tag} entfernt: {count} Fall.",
+      "other": "Tag #{tag} entfernt: {count} Fälle."
+    },
+    "skipped": "Übersprungen: {list}.",
+    "goneItem": "{code} (existiert nicht mehr)",
+    "removedItem": "{code} (schon entfernt)",
+    "failedItem": "{code} ({error})",
+    "notRemoved": "nicht entfernt",
+    "removedList": "Entfernt: {list}.",
+    "none": "keine"
+  },
+  "appeal": {
+    "answers": "Antworten",
+    "unreadable": "(konnten nicht gelesen werden)",
+    "chooseDecision": "Wähle Annehmen oder Ablehnen.",
+    "noPending": "Es gibt keinen offenen Einspruch zu {code}.",
+    "accepted": "Einspruch zu {code} angenommen.",
+    "denied": "Einspruch zu {code} abgelehnt.",
+    "ownerOverride": "Du hast diese Strafe selbst verhängt: als Bot-Inhaber entschieden, als Inhaber-Übersteuerung protokolliert."
+  },
+  "keepApart": {
+    "pickBoth": "Wähle beide Mitglieder (Namen tippen und eines auswählen, oder „Mitglied finden“ nutzen) oder füge ihre Discord-Nutzer-IDs ein.",
+    "days": "Die Tage müssen zwischen 1 und {max} liegen.",
+    "reasonRequired": "Ein Grund ist nötig.",
+    "notUser": "Eine dieser IDs ist kein Discord-Nutzer.",
+    "noBots": "Auseinanderhalten gilt zwischen Mitgliedern, nicht für Bots.",
+    "started": "Auseinanderhalten #{id} zwischen {a} und {b} gestartet.",
+    "bothDmed": "Beide Mitglieder haben eine DM bekommen.",
+    "dmFailed": "Einem von beiden konnte keine DM zugestellt werden.",
+    "notOrder": "Keine Auftragsnummer.",
+    "noOrder": "Es gibt kein aktives Auseinanderhalten #{id}.",
+    "ended": "Auseinanderhalten #{id} beendet."
+  },
+  "watchlist": {
+    "notEntry": "Keine Nummer eines Beobachtungseintrags.",
+    "noEntry": "Es gibt keinen aktiven Beobachtungseintrag #{id}.",
+    "ended": "Beobachtungseintrag #{id} beendet."
+  },
+  "staff": {
+    "coverage": "Abdeckung",
+    "coverageFailed": "Die Abdeckung konnte nicht geladen werden (Datenbank nicht erreichbar).",
+    "activity": "Team-Aktivität",
+    "activityOwners": "Die wöchentliche Team-Aktivität sehen nur die Bot-Inhaber (wie /staff activity).",
+    "notBlocked": "Dieser Moderator ist nicht gesperrt.",
+    "blockLifted": "Sperre durch das Sicherheitslimit für {name} aufgehoben.",
+    "pickStaff": "Teammitglied: Wähle ein Mitglied (Namen tippen und eines auswählen, oder „Mitglied finden“ nutzen) oder füge seine Discord-Nutzer-ID ein.",
+    "reasonRule": "Ein Grund ist nötig (welche Admin-Regel verletzt wurde).",
+    "cannotWarn": "Du kannst den Inhaber oder einen Bot nicht verwarnen.",
+    "notInServer": "Dieser Nutzer ist nicht auf dem Server.",
+    "warned": "Team-Verwarnung an {name}: {active} von {limit} aktiv.",
+    "demoted": "Damit ist das Limit erreicht: Die Teamrollen wurden entfernt (unter „Entfernte Teamrollen“ wiederherstellen).",
+    "noSavedRoles": "Für diesen Nutzer sind keine entfernten Teamrollen gespeichert (oder er ist nicht auf dem Server).",
+    "rolesBack": "Teamrollen an {name} zurückgegeben: {roles}.",
+    "noneBack": "Keine der gespeicherten Rollen konnte {name} zurückgegeben werden (gelöscht oder über meiner Rolle)."
+  }
+}

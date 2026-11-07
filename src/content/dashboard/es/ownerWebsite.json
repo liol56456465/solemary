@@ -1,0 +1,108 @@
+{
+  "common": {
+    "readOnly": "Solo lectura: la edición desde el panel está desactivada (DASHBOARD_EDIT_ENABLED no es true).",
+    "clear": "Borrar"
+  },
+  "state": {
+    "translated": "Traducido",
+    "needs-update": "Por actualizar",
+    "missing": "Falta (se muestra en inglés)",
+    "edited": "Editado",
+    "default": "Predeterminado"
+  },
+  "filter": {
+    "all": "Todos",
+    "needs-update": "Por actualizar",
+    "missing": "Faltan",
+    "edited": "Editados"
+  },
+  "tabs": {
+    "label": "Editor del sitio",
+    "text": "Textos",
+    "images": "Imágenes"
+  },
+  "markup": {
+    "formatting": "Formato:",
+    "bold": "negrita",
+    "italic": "cursiva",
+    "code": "código",
+    "text": "texto",
+    "rest1": "para un enlace, una línea vacía para un párrafo nuevo, líneas que empiezan con",
+    "rest2": "para una lista. No se admite HTML (las etiquetas se ven tal cual). Las palabras entre llaves como",
+    "rest3": "las rellena el sitio: deja las mismas que en el texto en inglés."
+  },
+  "home": {
+    "title": "Sitio web",
+    "help": "Cambia los textos del sitio en cada idioma y reemplaza sus imágenes, sin código. Los cambios se publican en cuanto guardas. Cada grupo de textos es una parte del sitio; abre uno para ver y editar sus textos.",
+    "toUpdate": "{count} por actualizar",
+    "missing": "faltan {count}",
+    "byGroup": "Textos por grupo",
+    "byGroupHelp": "Por idioma: textos traducidos / todos los textos. **Por actualizar**: el texto en inglés cambió después de traducirlo. **Falta**: el sitio muestra inglés ahí. En inglés se ve cuántos textos editaste.",
+    "group": "Grupo",
+    "texts": "Textos",
+    "englishEdited": "Inglés editado",
+    "all": "Todos",
+    "notHere": "No se edita aquí",
+    "notHereHelp": "Las páginas legales (Política de privacidad, Términos, Aviso legal, Contacto, Desistimiento) son textos legales: se editan en el código y se revisan, no aquí. Solo existen en inglés."
+  },
+  "ns": {
+    "title": "Textos: {ns}",
+    "pageTitle": "Sitio web: {name}",
+    "help": "Cada texto de este grupo con el texto en inglés y el texto en {lang}. Abre un texto para editarlo.",
+    "language": "Idioma",
+    "show": "Mostrar",
+    "search": "Buscar",
+    "searchPlaceholder": "Clave o texto",
+    "showButton": "Mostrar",
+    "count": { "one": "{count} texto.", "many": "{count} textos.", "other": "{count} textos." },
+    "key": "Clave",
+    "english": "Inglés",
+    "state": "Estado",
+    "englishShown": "(se muestra en inglés)",
+    "noMatch": "Ningún texto coincide."
+  },
+  "key": {
+    "historyError": "No se pudo cargar el historial (base de datos). Recarga la página para volver a intentarlo.",
+    "noChanges": "Todavía no hay cambios.",
+    "history": "Historial ({count}{newest})",
+    "newest30": ", los 30 más recientes",
+    "when": "Cuándo",
+    "by": "Por",
+    "changedTo": "Cambiado a",
+    "reset": "Volver al predeterminado",
+    "restore": "Restaurar esta versión",
+    "fromEdit": "Tu edición",
+    "fromCatalog": "Texto predeterminado",
+    "fromEnglish": "No hay texto en este idioma: el sitio muestra inglés",
+    "savedBy": "guardado el {date} por {who}",
+    "previewNotSaved": "Vista previa (sin guardar):",
+    "textIn": "Texto ({lang})",
+    "preview": "Vista previa",
+    "save": "Guardar",
+    "resetConfirm": "¿Volver al texto predeterminado en {lang}?",
+    "help": "Un texto del sitio en cada idioma. Al guardar se publica enseguida; «Volver al predeterminado» recupera el texto original.",
+    "original": "Inglés (original)",
+    "englishEdited": "El sitio muestra en su lugar tu edición en inglés (abajo). Las traducciones hechas antes están marcadas «Por actualizar»."
+  },
+  "images": {
+    "title": "Imágenes del sitio",
+    "help": "Las imágenes que usa el sitio. Una subida se convierte (se quitan metadatos como la cámara o la ubicación) y se ajusta al tamaño del hueco: una imagen con otra forma se recorta por los bordes. Se publica enseguida; los navegadores pueden mostrar la imagen vieja hasta 5 minutos.",
+    "replaced": "Reemplazada",
+    "default": "Predeterminada",
+    "where": "{where}. Ruta `{path}`, {size}, {format}.",
+    "currentAlt": "Imagen actual: {label}",
+    "uploaded": "Subida el {date} por {who}, {size}",
+    "defaultFile": "El archivo predeterminado",
+    "replace": "Reemplazar (PNG, JPEG o WebP, hasta {mb} MB)",
+    "upload": "Subir",
+    "resetConfirm": "¿Volver a poner la imagen predeterminada «{label}»?"
+  },
+  "slot": {
+    "screen-overview-dark": { "label": "Captura del panel: vista general (oscuro)", "where": "Página de inicio, sección «El panel»" },
+    "screen-overview-light": { "label": "Captura del panel: vista general (claro)", "where": "Se sirve en su ruta; hoy ninguna página la muestra" },
+    "screen-cases-dark": { "label": "Captura del panel: casos (oscuro)", "where": "Documentación: «Usar el panel»" },
+    "screen-cases-light": { "label": "Captura del panel: casos (claro)", "where": "Se sirve en su ruta; hoy ninguna página la muestra" },
+    "og": { "label": "Imagen para compartir", "where": "Vistas previas de enlaces (Discord, redes sociales) de cada página" },
+    "logo": { "label": "Logo e icono de pestaña", "where": "Barra superior del sitio, favicon, barra lateral del panel" }
+  }
+}

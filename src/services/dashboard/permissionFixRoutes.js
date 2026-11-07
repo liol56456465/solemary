@@ -10,8 +10,9 @@
 //        from the page (same session, same channel, 5 minutes) → the overwrite → mod log line
 //        (loggingService) + dashboard audit rows → flash → 303 back to the page it came from.
 //
-// Both are Administrator-only in permissions.js ('permissions.fix'). The page text is English
-// (module-page text; docs/dashboard-i18n.md). Every value goes through the escaping `html`.
+// Both are Administrator-only in permissions.js ('permissions.fix'). Page words: permissionFix.json
+// (docs/dashboard-i18n.md); permission names and Discord steps come from channelToolsService (English).
+// Every value goes through the escaping `html`.
 
 import { PermissionFlagsBits } from 'discord.js';
 import { FIXABLE_PERMS, FIX_EDIT_PERMS, blockedReason, manualFixSteps, permissionLabels, planPermissionFix } from '../channelToolsService.js';
@@ -19,6 +20,7 @@ import { logger } from '../../utils/logger.js';
 import { actionForm } from './enforcementPages.js';
 import { FIX_PERMISSIONS_PATH, PERMS, isSnowflake, plainText, text } from './forms.js';
 import { html, layout, path } from './html.js';
+import { currentText, dashboardText } from './language.js';
 import { auditReason } from './memberActions.js';
 
 /** Bits the page accepts in ?need= (anything else is dropped): what pickers ask for. */
@@ -50,27 +52,28 @@ const list = (labels) => labels.join(', ');
 
 /** The confirm page. `canFix`: the form is shown (Administrator, editing on, something Mewvo can give). */
 export function fixPermissionsPage({ session, access = null, moduleStates = {}, channel, plan, need = [], back, token = null, hash = null, error = null, editEnabled = true, canAct = false }) {
+    const tr = dashboardText(session?.lang);
     const canFix = Boolean(editEnabled && canAct && plan.grantable.length && token);
     const steps = manualFixSteps(channel, plan);
     const needsOwner = plan.blockedBy || plan.cannotEdit.length || plan.notInServer.length || plan.notFixable.length || !plan.grantable.length;
     const facts = plan.missing.length ? html`<dl>
-<dt>Missing</dt><dd>${list(permissionLabels(plan.missing))}</dd>
-${plan.grantable.length ? html`<dt>Mewvo will give itself</dt><dd>${list(permissionLabels(plan.grantable))}</dd>` : ''}
-${plan.notInServer.length ? html`<dt>Mewvo can't give itself</dt><dd>${list(permissionLabels(plan.notInServer))} <span class="muted">(its own role does not have them)</span></dd>` : ''}
-${plan.notFixable.length ? html`<dt>Not changed here</dt><dd>${list(permissionLabels(plan.notFixable))} <span class="muted">(only you can give these)</span></dd>` : ''}
-${blockedReason(channel, plan) ? html`<dt>Why Mewvo can't fix it</dt><dd>${blockedReason(channel, plan)}</dd>` : ''}
-</dl>` : html`<p>Mewvo already has what it needs here. Nothing to fix.</p>`;
+<dt>${tr.t('permissionFix.page.missing')}</dt><dd>${list(permissionLabels(plan.missing))}</dd>
+${plan.grantable.length ? html`<dt>${tr.t('permissionFix.page.willGive')}</dt><dd>${list(permissionLabels(plan.grantable))}</dd>` : ''}
+${plan.notInServer.length ? html`<dt>${tr.tx('permissionFix.page.cannotGive')}</dt><dd>${list(permissionLabels(plan.notInServer))} <span class="muted">${tr.t('permissionFix.page.ownRole')}</span></dd>` : ''}
+${plan.notFixable.length ? html`<dt>${tr.t('permissionFix.page.notChanged')}</dt><dd>${list(permissionLabels(plan.notFixable))} <span class="muted">${tr.t('permissionFix.page.onlyYou')}</span></dd>` : ''}
+${blockedReason(channel, plan) ? html`<dt>${tr.tx('permissionFix.page.why')}</dt><dd>${blockedReason(channel, plan)}</dd>` : ''}
+</dl>` : html`<p>${tr.t('permissionFix.page.nothing')}</p>`;
     const notes = !plan.grantable.length ? '' : !editEnabled
-        ? html`<p class="notice">Editing from the dashboard is turned off, so nothing can be changed here.</p>`
-        : !canAct ? html`<p class="notice">Only members with the Administrator permission in the main server can do this.</p>` : '';
-    const form = canFix ? html`<p class="muted">This adds a permission just for Mewvo in #${channel.name}. Nobody else's permissions change. This confirmation works once and expires in 5 minutes.</p>
-${actionForm(session.csrf, FIX_PERMISSIONS_PATH, '', { submit: 'Give Mewvo these permissions', hidden: { token, fh: hash, channel: channel.id, need: need.join(','), back } })}` : '';
-    const body = html`<p><a href="${back}">← Back (cancel)</a></p>
-<h1>Fix Mewvo's permissions in #${channel.name}</h1>
+        ? html`<p class="notice">${tr.t('permissionFix.page.editingOff')}</p>`
+        : !canAct ? html`<p class="notice">${tr.t('permissionFix.page.adminOnly')}</p>` : '';
+    const form = canFix ? html`<p class="muted">${tr.tx('permissionFix.page.explain', { channel: channel.name })}</p>
+${actionForm(session.csrf, FIX_PERMISSIONS_PATH, '', { submit: tr.t('permissionFix.page.submit'), hidden: { token, fh: hash, channel: channel.id, need: need.join(','), back } })}` : '';
+    const body = html`<p><a href="${back}">← ${tr.t('permissionFix.page.back')}</a></p>
+<h1>${tr.tx('permissionFix.page.heading', { channel: channel.name })}</h1>
 <section class="card confirm-card">${error ? html`<p class="error" role="alert">${error}</p>` : ''}${facts}${notes}${form}</section>
-${plan.missing.length && needsOwner && steps.length ? html`<section class="card"><h2>What to do in Discord</h2><ol>${steps.map((s) => html`<li>${s}</li>`)}</ol>
-<p class="muted">Then reload this page to check again.</p></section>` : ''}`;
-    return layout({ title: 'Fix permissions', active: 'channels', session, access, moduleStates, body });
+${plan.missing.length && needsOwner && steps.length ? html`<section class="card"><h2>${tr.t('permissionFix.page.inDiscord')}</h2><ol>${steps.map((s) => html`<li>${s}</li>`)}</ol>
+<p class="muted">${tr.t('permissionFix.page.reload')}</p></section>` : ''}`;
+    return layout({ title: tr.t('permissionFix.page.title'), active: 'channels', session, access, moduleStates, body });
 }
 
 export function createPermissionFixHandlers({ client, guildId, settings, services, confirms, sessions, audits, postLimiter, checkPost, sendHtml, fail, shellOf, recordDashboardChange }) {
@@ -90,32 +93,34 @@ export function createPermissionFixHandlers({ client, guildId, settings, service
     /** GET: the confirm page for ?channel= and ?need=. */
     async function page(req, res) {
         const guild = guildOf();
-        if (!guild) return fail(res, 503, 'Server not available', 'Mewvo cannot see the main server right now. Try again in a minute.', req);
+        const tr = currentText();
+        if (!guild) return fail(res, 503, tr.t('permissionFix.route.noServer'), tr.t('permissionFix.route.noServerText'), req);
         const channelId = typeof req.query?.channel === 'string' ? req.query.channel.trim() : '';
         const channel = isSnowflake(channelId) ? guild.channels?.cache?.get(channelId) : null;
-        if (!channel) return fail(res, 404, 'Channel not found', 'That channel is not in the server (any more). Go back and pick another one.', req);
+        if (!channel) return fail(res, 404, tr.t('permissionFix.route.noChannel'), tr.t('permissionFix.route.noChannelText'), req);
         return render(req, res, 200, { channel, need: parseNeed(req.query?.need), back: backPathOf(req, settings.publicOrigin) });
     }
 
     /** POST: give Mewvo the missing bits (after the confirm page). */
     async function apply(req, res) {
         const session = req.dashboard.session;
+        const tr = currentText();
         if (!postLimiter.allow(session.idHash)) {
             res.set('Retry-After', '60');
-            return fail(res, 429, 'Slow down', 'Too many changes in the last minute. Wait a moment and try again.', req);
+            return fail(res, 429, tr.t('errors.slowDown'), tr.t('errors.tooManyChanges'), req);
         }
-        if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
-        if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
-        if (!req.dashboard.access.canAct) return fail(res, 403, 'Not allowed', 'Only members with the Administrator permission in the main server can change Mewvo\'s permissions. Nothing was changed.', req);
+        if (!checkPost(req)) return fail(res, 403, tr.t('errors.notAllowed'), tr.t('errors.csrf'), req);
+        if (!settings.editEnabled) return fail(res, 403, tr.t('errors.editingOff'), tr.t('errors.editingOffText'), req);
+        if (!req.dashboard.access.canAct) return fail(res, 403, tr.t('errors.notAllowed'), tr.t('permissionFix.route.adminOnly'), req);
         const guild = guildOf();
-        if (!guild) return fail(res, 503, 'Server not available', 'Mewvo cannot see the main server right now. Nothing was changed.', req);
+        if (!guild) return fail(res, 503, tr.t('permissionFix.route.noServer'), tr.t('permissionFix.route.noServerNothing'), req);
         const channelId = text(req.body, 'channel', 25);
         const channel = isSnowflake(channelId) ? guild.channels?.cache?.get(channelId) : null;
-        if (!channel) return fail(res, 404, 'Channel not found', 'That channel is not in the server (any more). Nothing was changed.', req);
+        if (!channel) return fail(res, 404, tr.t('permissionFix.route.noChannel'), tr.t('permissionFix.route.noChannelNothing'), req);
         const payload = confirms.consume(text(req.body, 'token', 100), { session: session.idHash, subject: SUBJECT(channel.id), hash: text(req.body, 'fh', 100) });
         if (!payload || payload.channelId !== channel.id) {
             const back = backPathOf({ query: { back: text(req.body, 'back', 300) }, headers: {} }, settings.publicOrigin);
-            return render(req, res, 400, { channel, need: parseNeed(text(req.body, 'need', 300)), back, error: 'This confirmation expired or was already used. Nothing was changed. Check the list below and confirm again.' });
+            return render(req, res, 400, { channel, need: parseNeed(text(req.body, 'need', 300)), back, error: tr.t('permissionFix.route.expired') });
         }
         const before = planPermissionFix(guild, channel, payload.need);
         let result;
@@ -137,8 +142,8 @@ export function createPermissionFixHandlers({ client, guildId, settings, service
             changes: [{ key: `permissions.${channel.id}`, old: { missing: before.missing }, new: { granted: result.grantedBits, stillMissing: result.stillMissing } }],
         });
         logger.info(`Dashboard fix-permissions by ${session.userId} in ${channel.id}: ${result.grantedBits.join(', ')}`);
-        const still = result.stillMissing.length ? ` Still missing: ${result.stillMissing.join(', ')}. Only the server owner can give those (see the steps on the Fix permissions page).` : '';
-        await sessions.setFlash?.(session.id, `Mewvo now has ${result.granted.join(', ')} in #${channel.name}.${still}`);
+        const still = result.stillMissing.length ? tr.t('permissionFix.route.stillMissing', { perms: result.stillMissing.join(', ') }) : '';
+        await sessions.setFlash?.(session.id, `${tr.t('permissionFix.route.done', { perms: result.granted.join(', '), channel: channel.name })}${still}`);
         return res.redirect(303, payload.back);
     }
 

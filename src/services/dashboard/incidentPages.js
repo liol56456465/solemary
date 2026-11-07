@@ -6,13 +6,30 @@
 // Server-rendered and escaped (html``); no inline styles or scripts (CSP): bar heights are
 // CSS classes, rows expand with <details>.
 
-import { html, layout, path, formatDate, typeBadge } from './html.js';
-import { EVENT_KINDS, MAX_EVENTS_PER_INCIDENT, RETENTION_DAYS, TRIGGERS, formatSpan } from '../automod/incidentTimeline.js';
+import { html, layout, path, typeBadge } from './html.js';
+import { currentText, dashboardText } from './language.js';
+import { EVENT_KINDS, MAX_EVENTS_PER_INCIDENT, RETENTION_DAYS, TRIGGERS } from '../automod/incidentTimeline.js';
 
 const MINUTE_MS = 60_000;
 const clock = (value) => new Date(value).toISOString().slice(11, 19);
 const hhmm = (value) => new Date(value).toISOString().slice(11, 16);
-const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+/** "2 h 5 min" / "under a minute" (the same steps as incidentTimeline.js formatSpan), in the page's language. */
+function span(ms, tr = currentText()) {
+    const minutes = Math.floor(ms / MINUTE_MS);
+    if (minutes < 1) return tr.t('incidents.span.underMinute');
+    const days = Math.floor(minutes / 1440);
+    const hours = Math.floor((minutes % 1440) / 60);
+    const rest = minutes % 60;
+    return [days ? tr.t('incidents.span.days', { n: tr.fmtNumber(days) }) : null, hours ? tr.t('incidents.span.hours', { n: tr.fmtNumber(hours) }) : null,
+        rest ? tr.t('incidents.span.minutes', { n: tr.fmtNumber(rest) }) : null].filter(Boolean).join(' ');
+}
+/** An event kind's label (incidentTimeline.js EVENT_KINDS) in the page's language. */
+const kindLabel = (kind, tr = currentText()) => (tr.has(`incidents.kind.${kind}`) ? tr.t(`incidents.kind.${kind}`) : EVENT_KINDS[kind]?.label || kind);
+/** A trigger (TRIGGERS key, or its English text from buildTimeline) in the page's language. */
+function triggerLabel(value, tr = currentText()) {
+    const kind = Object.hasOwn(TRIGGERS, value) ? value : Object.keys(TRIGGERS).find((k) => TRIGGERS[k] === value);
+    return kind && tr.has(`incidents.trigger.${kind}`) ? tr.t(`incidents.trigger.${kind}`) : TRIGGERS[value] || value;
+}
 
 /** A member: name (from the bot's cache) or the id, linked to the member page. */
 function person(id, names, fallback = null) {
@@ -21,11 +38,11 @@ function person(id, names, fallback = null) {
     return html`<a href="${path(`/users/${id}`)}">${name || id}</a>`;
 }
 
-function statusText(header) {
-    if (header.status === 'ongoing') return html`<span class="bad">Still running</span>`;
-    if (header.status === 'unknown') return 'Not recorded';
-    if (header.status === 'unread') return 'Could not be read';
-    return formatDate(header.ended);
+function statusText(header, tr = currentText()) {
+    if (header.status === 'ongoing') return html`<span class="bad">${tr.t('incidents.status.running')}</span>`;
+    if (header.status === 'unknown') return tr.t('incidents.status.notRecorded');
+    if (header.status === 'unread') return tr.t('incidents.status.unread');
+    return tr.fmtDateTime(header.ended);
 }
 
 // ── The list ─────────────────────────────────────────────────────────────
@@ -35,85 +52,86 @@ function statusText(header) {
  * running incident. stateUnread: the lockdown state could not be read.
  */
 export function incidentListPage({ session, access = null, moduleStates = {}, rows = null, activeId = null, stateUnread = false, now = Date.now() }) {
-    const head = html`<header class="page-head"><h1>Raid timeline</h1><p class="muted">Every join-raid lockdown of the last ${RETENTION_DAYS} days, minute by minute: who joined and what Mewvo and staff did. Times are UTC. No message content is kept.</p></header>`;
+    const tr = dashboardText(session?.lang);
+    const title = tr.t('frame.nav.items.incidents');
+    const head = html`<header class="page-head"><h1>${title}</h1><p class="muted">${tr.t('incidents.list.intro', { days: tr.fmtNumber(RETENTION_DAYS) })}</p></header>`;
     let body;
     if (rows === null) {
-        body = html`${head}<p class="error" role="alert">The incidents could not be loaded (database). Reload the page to try again.</p>`;
+        body = html`${head}<p class="error" role="alert">${tr.t('incidents.list.unreadable')}</p>`;
     } else if (!rows.length) {
-        body = html`${head}<p class="empty">No raids in the last ${RETENTION_DAYS} days. When many accounts join at once, Mewvo starts a lockdown by itself and its timeline appears here.</p>`;
+        body = html`${head}<p class="empty">${tr.t('incidents.list.empty', { days: tr.fmtNumber(RETENTION_DAYS) })}</p>`;
     } else {
-        body = html`${head}<div class="scroll"><table><thead><tr><th>Started</th><th>Ended</th><th>Duration</th><th>Trigger</th><th>Events recorded</th><th><span class="sr">Open</span></th></tr></thead><tbody>
+        body = html`${head}<div class="scroll"><table><thead><tr><th>${tr.t('incidents.col.started')}</th><th>${tr.t('incidents.col.ended')}</th><th>${tr.t('incidents.col.duration')}</th><th>${tr.t('incidents.col.trigger')}</th><th>${tr.t('incidents.col.events')}</th><th><span class="sr">${tr.t('incidents.col.open')}</span></th></tr></thead><tbody>
 ${rows.map((row) => {
         const running = !row.ended_at && activeId && String(row.id) === String(activeId);
         const unread = !row.ended_at && stateUnread;
         const end = row.ended_at ? new Date(row.ended_at).getTime() : running ? now : null;
-        return html`<tr><td>${formatDate(row.started_at)}</td><td>${row.ended_at ? formatDate(row.ended_at) : running ? html`<span class="bad">Still running</span>` : unread ? 'Could not be read' : 'Not recorded'}</td>
-<td>${end === null ? '-' : formatSpan(end - new Date(row.started_at).getTime())}</td><td>${TRIGGERS[row.trigger_kind] || row.trigger_kind}</td>
-<td>${row.event_count}${Number(row.dropped_events) ? html` <span class="muted">(+${row.dropped_events} not kept)</span>` : ''}</td><td><a href="${path(`/incidents/${row.id}`)}">Open timeline</a></td></tr>`;
+        return html`<tr><td>${tr.fmtDateTime(row.started_at)}</td><td>${row.ended_at ? tr.fmtDateTime(row.ended_at) : running ? html`<span class="bad">${tr.t('incidents.status.running')}</span>` : unread ? tr.t('incidents.status.unread') : tr.t('incidents.status.notRecorded')}</td>
+<td>${end === null ? '-' : span(end - new Date(row.started_at).getTime(), tr)}</td><td>${triggerLabel(row.trigger_kind, tr)}</td>
+<td>${tr.fmtNumber(row.event_count)}${Number(row.dropped_events) ? html` <span class="muted">${tr.t('incidents.list.notKept', { n: tr.fmtNumber(row.dropped_events) })}</span>` : ''}</td><td><a href="${path(`/incidents/${row.id}`)}">${tr.t('incidents.list.open')}</a></td></tr>`;
     })}</tbody></table></div>`;
     }
-    return layout({ title: 'Raid timeline', active: 'incidents', session, access, moduleStates, body });
+    return layout({ title, active: 'incidents', session, access, moduleStates, body });
 }
 
 // ── One incident ─────────────────────────────────────────────────────────
 
-const ACTION_LABELS = [
-    ['ban', 'Bans'], ['kick', 'Kicks'], ['mute', 'Mutes'], ['warn', 'Warnings'],
-    ['gate_kick', 'Join gate kicks'], ['gate_flag', 'Join gate flags'], ['automod', 'Automod without a case'], ['mass_block', 'Safety limit blocks'],
-];
+/** The "What was done" columns: header.actions keys (labels: incidents.actions.<key>). */
+const ACTION_KEYS = ['ban', 'kick', 'mute', 'warn', 'gate_kick', 'gate_flag', 'automod', 'mass_block'];
 
 function fact(label, value) {
     return html`<div class="fact"><dt>${label}</dt><dd><b>${value}</b></dd></div>`;
 }
 
 /** Bars for one field of the chart buckets (heights in 10 % steps), with a text alternative. */
-export function minuteChart(chart, field, label) {
+export function minuteChart(chart, field, label, tr = currentText()) {
     const { buckets, bucketMinutes } = chart;
     const max = Math.max(1, ...buckets.map((b) => b[field]));
     const total = buckets.reduce((sum, b) => sum + b[field], 0);
     const every = Math.max(1, Math.ceil(buckets.length / 6));
-    const step = bucketMinutes === 1 ? 'minute' : `${bucketMinutes} minutes`;
-    return html`<div class="chart chart-wide" role="img" aria-label="${label} per ${step}: ${total} in total over ${buckets.length} bars. The minute by minute list below has every event.">${buckets.map((b, i) => html`<div class="bar" title="${hhmm(b.start)} UTC: ${b[field]}"><i class="h-${Math.round((b[field] / max) * 10)}"></i><span class="bar-label">${i % every === 0 ? hhmm(b.start) : ''}</span></div>`)}</div>`;
+    const aria = bucketMinutes === 1
+        ? tr.t('incidents.chart.ariaMinute', { label, total: tr.fmtNumber(total), bars: tr.fmtNumber(buckets.length) })
+        : tr.t('incidents.chart.ariaMinutes', { label, minutes: tr.fmtNumber(bucketMinutes), total: tr.fmtNumber(total), bars: tr.fmtNumber(buckets.length) });
+    return html`<div class="chart chart-wide" role="img" aria-label="${aria}">${buckets.map((b, i) => html`<div class="bar" title="${hhmm(b.start)} UTC: ${b[field]}"><i class="h-${Math.round((b[field] / max) * 10)}"></i><span class="bar-label">${i % every === 0 ? hhmm(b.start) : ''}</span></div>`)}</div>`;
 }
 
-function itemRow(item, names) {
-    const kind = EVENT_KINDS[item.kind];
+function itemRow(item, names, tr = currentText()) {
     let what;
     if (item.kind === 'case') {
-        what = html`${typeBadge(item.caseType)} ${person(item.targetId, names, item.targetName)} <a href="${path(`/cases/${item.code}`)}">case ${item.code}</a>${item.detail ? html` <span class="muted">${item.detail}</span>` : ''}`;
+        what = html`${typeBadge(item.caseType)} ${person(item.targetId, names, item.targetName)} <a href="${path(`/cases/${item.code}`)}">${tr.t('incidents.item.case', { code: item.code })}</a>${item.detail ? html` <span class="muted">${item.detail}</span>` : ''}`;
     } else if (item.kind === 'join' || item.kind === 'leave') {
-        what = html`<b>${kind.label}</b> ${person(item.targetId, names)}${item.detail ? html` <span class="tag">${item.detail}</span>` : ''}`;
+        what = html`<b>${kindLabel(item.kind, tr)}</b> ${person(item.targetId, names)}${item.detail ? html` <span class="tag">${item.detail}</span>` : ''}`;
     } else {
         const target = item.targetId ? html` ${person(item.targetId, names)}` : '';
-        const actor = item.actorId && item.kind !== 'dashboard' ? html` <span class="muted">by</span> ${person(item.actorId, names)}` : '';
-        what = html`<b>${kind.label}</b>${target}${item.detail ? html`: ${item.detail}` : ''}${actor}`;
+        const actor = item.actorId && item.kind !== 'dashboard' ? html` <span class="muted">${tr.t('incidents.item.by')}</span> ${person(item.actorId, names)}` : '';
+        what = html`<b>${kindLabel(item.kind, tr)}</b>${target}${item.detail ? html`: ${item.detail}` : ''}${actor}`;
     }
     return html`<li class="tl-${item.kind}"><span class="muted">${clock(item.at)}</span> ${what}</li>`;
 }
 
-function minuteSummary(counts) {
+function minuteSummary(counts, tr = currentText()) {
     return [
-        counts.joins ? plural(counts.joins, 'join') : null,
-        counts.leaves ? plural(counts.leaves, 'leave') : null,
-        counts.actions ? plural(counts.actions, 'action') : null,
-        counts.steps ? plural(counts.steps, 'lockdown step') : null,
+        counts.joins ? tr.tp('incidents.count.joins', counts.joins) : null,
+        counts.leaves ? tr.tp('incidents.count.leaves', counts.leaves) : null,
+        counts.actions ? tr.tp('incidents.count.actions', counts.actions) : null,
+        counts.steps ? tr.tp('incidents.count.steps', counts.steps) : null,
     ].filter(Boolean).join(' · ');
 }
 
-function minuteList(minutes, names) {
-    if (!minutes.length) return html`<p class="empty">Nothing was recorded for this incident.</p>`;
+function minuteList(minutes, names, tr = currentText()) {
+    if (!minutes.length) return html`<p class="empty">${tr.t('incidents.detail.nothing')}</p>`;
     const open = minutes.length <= 5;
     const out = [];
     let previous = null;
     for (const minute of minutes) {
         if (previous !== null) {
             const gap = Math.round((minute.start - previous) / MINUTE_MS) - 1;
-            if (gap > 0) out.push(html`<li class="minute-gap muted">${plural(gap, 'quiet minute')}</li>`);
+            if (gap > 0) out.push(html`<li class="minute-gap muted">${tr.tp('incidents.count.quiet', gap)}</li>`);
         }
         const day = previous === null || new Date(previous).toISOString().slice(0, 10) !== new Date(minute.start).toISOString().slice(0, 10)
             ? `${new Date(minute.start).toISOString().slice(0, 10)} ` : '';
-        out.push(html`<li class="minute"><details${open ? html` open` : ''}><summary><b>${day}${hhmm(minute.start)} UTC</b> <span class="muted">${minuteSummary(minute.counts)}</span></summary>
-<ol class="timeline">${minute.items.map((item) => itemRow(item, names))}</ol></details></li>`);
+        out.push(html`<li class="minute"><details${open ? html` open` : ''}><summary><b>${day}${hhmm(minute.start)} UTC</b> <span class="muted">${minuteSummary(minute.counts, tr)}</span></summary>
+<ol class="timeline">${minute.items.map((item) => itemRow(item, names, tr))}</ol></details></li>`);
         previous = minute.start;
     }
     return html`<ol class="minutes">${out}</ol>`;
@@ -121,39 +139,43 @@ function minuteList(minutes, names) {
 
 /** timeline: buildTimeline() result, or null when it could not be read. names: Map id → name. */
 export function incidentDetailPage({ session, access = null, moduleStates = {}, timeline = null, names = new Map() }) {
-    const back = html`<p><a href="${path('/incidents')}">All incidents</a></p>`;
+    const tr = dashboardText(session?.lang);
+    const title = tr.t('frame.nav.items.incidents');
+    const back = html`<p><a href="${path('/incidents')}">${tr.t('incidents.detail.all')}</a></p>`;
     if (!timeline) {
-        const body = html`<header class="page-head">${back}<h1>Raid timeline</h1></header><p class="error" role="alert">This incident could not be loaded (database). Reload the page to try again.</p>`;
-        return layout({ title: 'Raid timeline', active: 'incidents', session, access, moduleStates, body });
+        const body = html`<header class="page-head">${back}<h1>${title}</h1></header><p class="error" role="alert">${tr.t('incidents.detail.unreadable')}</p>`;
+        return layout({ title, active: 'incidents', session, access, moduleStates, body });
     }
     const h = timeline.header;
+    const notRecorded = tr.t('incidents.status.notRecorded');
     const notes = [
-        h.dropped ? html`<p class="notice">Only the first ${MAX_EVENTS_PER_INCIDENT} lockdown, join gate and automod events were kept; ${h.dropped} more happened.</p>` : '',
-        h.truncated?.members || h.truncated?.cases || h.truncated?.audit ? html`<p class="notice">This incident is very large: only the first rows of joins and leaves, cases or dashboard changes are shown.</p>` : '',
-        h.status === 'unread' ? html`<p class="notice">Whether this lockdown is still running could not be read (database). Reload the page to try again.</p>` : '',
-        h.status === 'unknown' ? html`<p class="notice">The end of this lockdown was not recorded (for example the bot restarted on an older version). The timeline ends with the last event.</p>` : '',
+        h.dropped ? html`<p class="notice">${tr.t('incidents.detail.dropped', { max: tr.fmtNumber(MAX_EVENTS_PER_INCIDENT), n: tr.fmtNumber(h.dropped) })}</p>` : '',
+        h.truncated?.members || h.truncated?.cases || h.truncated?.audit ? html`<p class="notice">${tr.t('incidents.detail.truncated')}</p>` : '',
+        h.status === 'unread' ? html`<p class="notice">${tr.t('incidents.detail.stateUnread')}</p>` : '',
+        h.status === 'unknown' ? html`<p class="notice">${tr.t('incidents.detail.endUnknown')}</p>` : '',
     ];
-    const body = html`<header class="page-head">${back}<h1>Raid on ${formatDate(h.started)}</h1><p class="muted">${h.trigger}. Times are UTC.</p></header>
+    const duration = h.status === 'ongoing' ? tr.t('incidents.detail.soFar', { span: span(h.durationMs, tr) }) : span(h.durationMs, tr);
+    const body = html`<header class="page-head">${back}<h1>${tr.t('incidents.detail.title', { date: tr.fmtDateTime(h.started) })}</h1><p class="muted">${tr.t('incidents.detail.trigger', { trigger: triggerLabel(h.trigger, tr) })}</p></header>
 ${notes}
 <dl class="facts">
-${fact('Started', formatDate(h.started))}
-${fact('Ended', statusText(h))}
-${fact('Duration', `${formatSpan(h.durationMs)}${h.status === 'ongoing' ? ' so far' : ''}`)}
-${fact('Joined', h.joins)}
-${fact('Left', h.leaves)}
-${h.raidJoiners === null ? '' : fact('Raid joiners', h.raidJoiners)}
-${h.endedBy ? fact('Ended by', person(h.endedBy, names)) : ''}
+${fact(tr.t('incidents.col.started'), tr.fmtDateTime(h.started))}
+${fact(tr.t('incidents.col.ended'), statusText(h, tr))}
+${fact(tr.t('incidents.col.duration'), duration)}
+${fact(tr.t('incidents.detail.joined'), tr.fmtNumber(h.joins))}
+${fact(tr.t('incidents.detail.left'), tr.fmtNumber(h.leaves))}
+${h.raidJoiners === null ? '' : fact(tr.t('incidents.detail.raidJoiners'), tr.fmtNumber(h.raidJoiners))}
+${h.endedBy ? fact(tr.t('incidents.detail.endedBy'), person(h.endedBy, names)) : ''}
 </dl>
-<section class="card"><h2>What was done</h2>
-<div class="scroll"><table><thead><tr>${ACTION_LABELS.map(([, label]) => html`<th>${label}</th>`)}</tr></thead><tbody><tr>${ACTION_LABELS.map(([key]) => html`<td>${h.actions[key]}</td>`)}</tr></tbody></table></div>
-<p class="facts-line"><b>Verification level:</b> ${h.verification || 'Not recorded'}</p>
-<p class="facts-line"><b>Invites and DMs:</b> ${h.panic || 'Not recorded'}</p>
-${h.released ? html`<p class="facts-line"><b>Non-offenders released:</b> ${formatDate(h.released.at)} by ${person(h.released.by, names)}</p>` : ''}
+<section class="card"><h2>${tr.t('incidents.detail.done')}</h2>
+<div class="scroll"><table><thead><tr>${ACTION_KEYS.map((key) => html`<th>${tr.t(`incidents.actions.${key}`)}</th>`)}</tr></thead><tbody><tr>${ACTION_KEYS.map((key) => html`<td>${tr.fmtNumber(h.actions[key])}</td>`)}</tr></tbody></table></div>
+<p class="facts-line"><b>${tr.t('incidents.detail.verification')}</b> ${h.verification || notRecorded}</p>
+<p class="facts-line"><b>${tr.t('incidents.detail.panic')}</b> ${h.panic || notRecorded}</p>
+${h.released ? html`<p class="facts-line"><b>${tr.t('incidents.detail.released')}</b> ${tr.t('incidents.detail.releasedAt', { date: tr.fmtDateTime(h.released.at) })} ${person(h.released.by, names)}</p>` : ''}
 </section>
-<section class="card"><h2>Joins and actions <span class="muted">· ${timeline.chart.bucketMinutes === 1 ? 'per minute' : `per ${timeline.chart.bucketMinutes} minutes`}</span></h2>
-<p class="muted">Joins:</p>${minuteChart(timeline.chart, 'joins', 'Joins')}
-<p class="muted">Actions (cases, join gate, automod, safety limit blocks):</p>${minuteChart(timeline.chart, 'actions', 'Actions')}</section>
-<section class="card"><h2>Minute by minute <span class="muted">· ${plural(timeline.total, 'event')}</span></h2>
-${minuteList(timeline.minutes, names)}</section>`;
-    return layout({ title: 'Raid timeline', active: 'incidents', session, access, moduleStates, body });
+<section class="card"><h2>${tr.t('incidents.detail.chartTitle')} <span class="muted">· ${timeline.chart.bucketMinutes === 1 ? tr.t('incidents.detail.perMinute') : tr.t('incidents.detail.perMinutes', { minutes: tr.fmtNumber(timeline.chart.bucketMinutes) })}</span></h2>
+<p class="muted">${tr.t('incidents.detail.joinsLabel')}</p>${minuteChart(timeline.chart, 'joins', tr.t('incidents.detail.joins'), tr)}
+<p class="muted">${tr.t('incidents.detail.actionsLabel')}</p>${minuteChart(timeline.chart, 'actions', tr.t('incidents.detail.actions'), tr)}</section>
+<section class="card"><h2>${tr.t('incidents.detail.minutes')} <span class="muted">· ${tr.tp('incidents.count.events', timeline.total)}</span></h2>
+${minuteList(timeline.minutes, names, tr)}</section>`;
+    return layout({ title, active: 'incidents', session, access, moduleStates, body });
 }

@@ -1,0 +1,18 @@
+{
+  "title": "Registro de auditoría",
+  "help": "Cada cambio hecho desde el panel de control: quién, cuándo, valor anterior → valor nuevo. Cada formulario guardado también se publica en el registro de moderación.",
+  "count": {
+    "one": "{count} cambio",
+    "other": "{count} cambios",
+    "many": "{count} cambios"
+  },
+  "who": "Quién",
+  "anyone": "cualquiera",
+  "module": "Módulo",
+  "filter": "Filtrar",
+  "setting": "Ajuste",
+  "noMatch": "Ningún cambio coincide con estos filtros.",
+  "empty": "Aún no hay cambios. Cada guardado desde el panel de control aparece aquí.",
+  "none": "(nada)",
+  "showAll": "Mostrar todo ({count} caracteres)"
+}

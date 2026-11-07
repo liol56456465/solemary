@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "Module",
+    "intro": "Alle Teile von Mewvo an einem Ort. {on} von {total} Modulen mit An/Aus-Zustand sind an; öffne ein Modul, um seine Einstellungen zu ändern.",
+    "matches": {
+      "one": "{count} Modul passt",
+      "other": "{count} Module passen"
+    },
+    "showAll": "Alle zeigen",
+    "readOnly": "Nur lesen: Bearbeiten im Dashboard ist ausgeschaltet (DASHBOARD_EDIT_ENABLED ist nicht true).",
+    "noMatch": "Kein Modul passt. Versuch ein anderes Wort oder sieh dir alle Module an.",
+    "noneOn": "Keine Module sind an.",
+    "noneOff": "Keine Module sind aus."
+  },
+  "filter": {
+    "label": "Module filtern",
+    "all": "Alle",
+    "on": "An",
+    "off": "Aus"
+  },
+  "col": {
+    "module": "Modul",
+    "what": "Was es tut",
+    "state": "Zustand"
+  },
+  "state": {
+    "on": "An",
+    "off": "Aus",
+    "needsSetup": "Einrichtung nötig ({n})",
+    "setUp": "Eingerichtet"
+  },
+  "summary": {
+    "tickets": "Mitglieder bitten das Team in einem privaten Kanal um Hilfe.",
+    "welcome": "Neue Mitglieder begrüßen, verabschieden, eine Startrolle geben.",
+    "leveling": "Mitglieder steigen durchs Chatten im Level auf und bekommen dafür Rollen.",
+    "reaction-roles": "Menüs, in denen Mitglieder ihre Rollen selbst wählen.",
+    "messages": "Ankündigungen, Umfragen und Countdowns als Mewvo posten.",
+    "giveaways": "Preise an zufällige Mitglieder verlosen.",
+    "birthdays": "Mitgliedern zum Geburtstag gratulieren.",
+    "applications": "Mitglieder bewerben sich für eine Rolle, indem sie Fragen beantworten.",
+    "community": "Vorschläge, Starboard, Haftnotizen, gespeicherte Antworten, YouTube.",
+    "join-to-create": "Sprachkanäle, die bei Bedarf erscheinen und verschwinden, wenn sie leer sind.",
+    "automod": "Stoppt Spam, Schimpfwörter und Raids von selbst.",
+    "enforcement": "Wie Verwarnungen, Stummschaltungen und Banns funktionieren und wie Mitglieder Einspruch einlegen.",
+    "logging": "Ein Protokoll dessen, was auf dem Server passiert, für das Team.",
+    "verification": "Neue Mitglieder bestätigen, dass sie echt sind, bevor sie chatten können.",
+    "counters": "Live-Mitgliederzahlen und ein Zählspiel.",
+    "support": "Wo gebannte Mitglieder trotzdem Einspruch einlegen können.",
+    "rules": "Deine Serverregeln, auf einer Webseite und in Strafnachrichten.",
+    "appearance": "Gib Mewvo hier einen eigenen Namen und ein eigenes Bild (Pro und Max).",
+    "commands": "Einzelne Befehle oder Befehlsgruppen ein- oder ausschalten."
+  }
+}

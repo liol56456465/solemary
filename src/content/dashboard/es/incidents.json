@@ -1,0 +1,124 @@
+{
+  "list": {
+    "intro": "Cada bloqueo por raid de los últimos {days} días, minuto a minuto: quién entró y qué hicieron Mewvo y el staff. Horas en UTC. No se guarda el contenido de los mensajes.",
+    "unreadable": "No se pudieron cargar los incidentes (base de datos). Recarga la página para intentarlo de nuevo.",
+    "empty": "No hubo raids en los últimos {days} días. Cuando muchas cuentas entran a la vez, Mewvo inicia un bloqueo por sí mismo y su cronología aparece aquí.",
+    "notKept": "(+{n} no guardados)",
+    "open": "Abrir cronología"
+  },
+  "col": {
+    "started": "Inicio",
+    "ended": "Fin",
+    "duration": "Duración",
+    "trigger": "Causa",
+    "events": "Eventos registrados",
+    "open": "Abrir"
+  },
+  "status": {
+    "running": "Sigue en curso",
+    "notRecorded": "No registrado",
+    "unread": "No se pudo leer"
+  },
+  "span": {
+    "underMinute": "menos de un minuto",
+    "days": "{n} d",
+    "hours": "{n} h",
+    "minutes": "{n} min"
+  },
+  "trigger": {
+    "join_raid": "Raid de entradas (muchas cuentas entraron a la vez)"
+  },
+  "kind": {
+    "lockdown_start": "Bloqueo iniciado",
+    "lockdown_end": "Bloqueo terminado",
+    "verification": "Nivel de verificación",
+    "panic": "Invitaciones y MD",
+    "gate_kick": "Expulsión del filtro de entrada",
+    "gate_flag": "Marca del filtro de entrada",
+    "automod": "Automod (sin caso)",
+    "mass_block": "Límite de seguridad (baneos/expulsiones)",
+    "join": "Entró",
+    "leave": "Salió",
+    "case": "Caso",
+    "dashboard": "Cambio en el panel"
+  },
+  "actions": {
+    "ban": "Baneos",
+    "kick": "Expulsiones",
+    "mute": "Silencios",
+    "warn": "Advertencias",
+    "gate_kick": "Expulsiones del filtro",
+    "gate_flag": "Marcas del filtro",
+    "automod": "Automod sin caso",
+    "mass_block": "Bloqueos del límite de seguridad"
+  },
+  "chart": {
+    "ariaMinute": "{label} por minuto: {total} en total en {bars} barras. La lista minuto a minuto de abajo tiene cada evento.",
+    "ariaMinutes": "{label} cada {minutes} minutos: {total} en total en {bars} barras. La lista minuto a minuto de abajo tiene cada evento."
+  },
+  "item": {
+    "case": "caso {code}",
+    "by": "por"
+  },
+  "count": {
+    "joins": {
+      "one": "{count} entrada",
+      "many": "{count} entradas",
+      "other": "{count} entradas"
+    },
+    "leaves": {
+      "one": "{count} salida",
+      "many": "{count} salidas",
+      "other": "{count} salidas"
+    },
+    "actions": {
+      "one": "{count} acción",
+      "many": "{count} acciones",
+      "other": "{count} acciones"
+    },
+    "steps": {
+      "one": "{count} paso de bloqueo",
+      "many": "{count} pasos de bloqueo",
+      "other": "{count} pasos de bloqueo"
+    },
+    "quiet": {
+      "one": "{count} minuto tranquilo",
+      "many": "{count} minutos tranquilos",
+      "other": "{count} minutos tranquilos"
+    },
+    "events": {
+      "one": "{count} evento",
+      "many": "{count} eventos",
+      "other": "{count} eventos"
+    }
+  },
+  "detail": {
+    "all": "Todos los incidentes",
+    "unreadable": "No se pudo cargar este incidente (base de datos). Recarga la página para intentarlo de nuevo.",
+    "nothing": "No se registró nada para este incidente.",
+    "dropped": "Solo se guardaron los primeros {max} eventos de bloqueo, filtro de entrada y automod; hubo {n} más.",
+    "truncated": "Este incidente es muy grande: solo se muestran las primeras filas de entradas y salidas, casos o cambios en el panel.",
+    "stateUnread": "No se pudo leer si este bloqueo sigue en curso (base de datos). Recarga la página para intentarlo de nuevo.",
+    "endUnknown": "El final de este bloqueo no se registró (por ejemplo, el bot se reinició con una versión anterior). La cronología termina con el último evento.",
+    "title": "Raid del {date}",
+    "trigger": "{trigger}. Horas en UTC.",
+    "soFar": "{span} hasta ahora",
+    "joined": "Entraron",
+    "left": "Salieron",
+    "raidJoiners": "Cuentas del raid",
+    "endedBy": "Terminado por",
+    "done": "Qué se hizo",
+    "verification": "Nivel de verificación:",
+    "panic": "Invitaciones y MD:",
+    "released": "Ajenos liberados:",
+    "releasedAt": "{date} por",
+    "chartTitle": "Entradas y acciones",
+    "perMinute": "por minuto",
+    "perMinutes": "cada {minutes} minutos",
+    "joinsLabel": "Entradas:",
+    "joins": "Entradas",
+    "actionsLabel": "Acciones (casos, filtro de entrada, automod, bloqueos del límite de seguridad):",
+    "actions": "Acciones",
+    "minutes": "Minuto a minuto"
+  }
+}

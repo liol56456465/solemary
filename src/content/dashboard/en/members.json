@@ -1,0 +1,279 @@
+{
+  "back": "← Members",
+  "notice": {
+    "readOnly": "Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true). Use the bot's commands.",
+    "viewOnly": {
+      "actions": "View only: you need Administrator in the main server to take enforcement actions here.",
+      "cases": "View only: you need Administrator in the main server to change cases here.",
+      "appeals": "View only: you need Administrator in the main server to decide appeals here.",
+      "orders": "View only: you need Administrator in the main server to start or end orders here."
+    }
+  },
+  "form": {
+    "save": "Save",
+    "choose": "Choose…",
+    "for": "For",
+    "permanently": "Permanently",
+    "timeoutLength": "Timeout length",
+    "custom": "Custom…",
+    "customReason": "Custom reason",
+    "reasonAudit": "Reason (optional, Discord audit log)",
+    "preview": "Preview",
+    "remove": "Remove"
+  },
+  "confirm": {
+    "cancel": "Cancel",
+    "back": "← Back (cancel)",
+    "nothingYet": "Nothing has changed yet. This confirmation works once and expires in 5 minutes.",
+    "once": "This confirmation works once and expires in 5 minutes.",
+    "heading": "Confirm: {action}",
+    "title": "Confirm {action}",
+    "submit": "Confirm {action}",
+    "evidence": "Evidence",
+    "unreadable": "(message not readable, link only)",
+    "effect": "Effect",
+    "blocked": "You are blocked by the safety limit (too many bans or kicks in 10 minutes) until {date}; this will be refused."
+  },
+  "tabs": {
+    "label": "Members area",
+    "list": "Members",
+    "rules": "Role rules",
+    "insights": "Insights"
+  },
+  "list": {
+    "title": "Members",
+    "help": "open a member to change their roles or take an action.",
+    "count": {
+      "one": "{count} member",
+      "other": "{count} members"
+    },
+    "ofTotal": " of {total}",
+    "noRoles": "no roles",
+    "level": "level {n}",
+    "warns": {
+      "one": "{count} warn",
+      "other": "{count} warns"
+    },
+    "warnsOf": "{n} of 3",
+    "select": "Select {name}",
+    "selectAll": "Select everyone on this page",
+    "member": "Member",
+    "roles": "Roles",
+    "joined": "Joined",
+    "warnsHead": "Warns",
+    "state": "State",
+    "unknown": "unknown",
+    "muted": "Muted",
+    "noMatch": "No member matches these filters.",
+    "clearFilters": "Clear filters",
+    "empty": "No members to show yet. The list fills once the bot has loaded the main server.",
+    "show": "Show",
+    "stillLoading": "Showing {cached} of {total} members: the member list is still loading. Reload in a minute.",
+    "unavailable": "The member list is not available right now (the bot cannot see the main server).",
+    "search": "Search",
+    "searchPlaceholder": "Name, nickname or user ID",
+    "role": "Role",
+    "anyRole": "Any role",
+    "sort": "Sort",
+    "apply": "Apply",
+    "clear": "Clear"
+  },
+  "bulk": {
+    "summary": "Bulk action",
+    "summaryHint": " · tick members below, or use everyone matching the filters",
+    "which": "Which members",
+    "ticked": "The members ticked below",
+    "everyone": "Everyone matching these filters ({count})",
+    "tooMany": "more than {max}: narrow the filters",
+    "doThis": "Do this",
+    "customHint": "Only used with \"Custom…\". Each member gets the same DM and case as one-by-one.",
+    "banLength": "Ban length",
+    "banLengthPlaceholder": "e.g. 7d, 1mo, permanent",
+    "note": "Nothing happens yet: the next page shows exactly who will be changed and who is skipped, and why. At most {max} members; kicks and bans only as many as the safety limit (too many bans or kicks in 10 minutes) still allows.",
+    "forLength": " for {length}",
+    "verb": {
+      "roleAdd": "Give @{role} to {members}",
+      "roleRemove": "Take @{role} from {members}",
+      "timeout": "Time out {members}",
+      "kick": "Kick {members}",
+      "ban": "Ban {members}"
+    },
+    "check": "Check the list. Nothing has been changed yet.",
+    "guard": {
+      "one": "The safety limit (too many bans or kicks in 10 minutes) allows {count} more ban/kick in this 10-minute window; members beyond that are skipped.",
+      "other": "The safety limit (too many bans or kicks in 10 minutes) allows {count} more bans/kicks in this 10-minute window; members beyond that are skipped."
+    },
+    "willChange": "Will be changed ({count})",
+    "nobody": "Nobody: every selected member is skipped.",
+    "skipped": "Skipped ({count})",
+    "runs": "Runs one member at a time (Discord rate limits); you can leave the page and come back to the progress.",
+    "sameDm": "Every member gets the same DM and case as a single action.",
+    "title": "Bulk: {what}"
+  },
+  "job": {
+    "working": "Working… {done} of {total} done. This page updates itself.",
+    "finished": "Finished: {done} done, {failed} failed.",
+    "progress": "Progress",
+    "failed": "Failed ({count})",
+    "done": "Done ({count})"
+  },
+  "bans": {
+    "title": "Banned",
+    "noCase": "no case (banned outside the bot)",
+    "permanent": "Permanent",
+    "until": "Until {date}",
+    "ban": "Ban",
+    "noReason": "no reason given",
+    "appealPending": "appeal pending",
+    "by": "by {name}, {date}",
+    "unban": "Unban…",
+    "open": "Open",
+    "count": {
+      "one": "{count} ban",
+      "other": "{count} bans"
+    },
+    "noMatch": "No ban matches.",
+    "showAll": "Show everyone banned",
+    "empty": "Nobody is banned in the main server.",
+    "bannedCount": "{count} banned in the main server",
+    "help": "Unban opens the member page: you see the effect, then confirm. The member gets a DM with an invite back.",
+    "searchPlaceholder": "Name or user ID"
+  },
+  "standing": {
+    "banEnds": "ban {case}, ends {date}",
+    "banPermanent": "ban {case}, permanent",
+    "bannedOutside": "banned outside the bot (no record)",
+    "muteEnds": "mute {case}, ends {date}",
+    "mutedRole": "has the muted role (no record)",
+    "counted": "Counted warns",
+    "stage": "Warning stage",
+    "next": "Next warning",
+    "active": "Active punishment",
+    "pending": "Pending appeals",
+    "none": "none"
+  },
+  "header": {
+    "joined": "Joined {date}",
+    "inServer": "In the server",
+    "notInServer": "Not in the server",
+    "id": "ID {id}",
+    "active": "Active",
+    "none": "None",
+    "banned": "Banned",
+    "muted": "Muted"
+  },
+  "profile": {
+    "username": "Username",
+    "displayName": "Display name",
+    "nickname": "Nickname",
+    "created": "Account created",
+    "dateAgo": "{date} ({age} ago)",
+    "inServer": "In server",
+    "yesJoined": "yes, joined {date} ({age} ago)",
+    "yesUnknown": "yes, joined at an unknown time",
+    "no": "no",
+    "roles": "Roles ({count})"
+  },
+  "edit": {
+    "until": "until {date}",
+    "noRoles": "No roles.",
+    "needsAdminEditing": "Changing roles needs Administrator and editing turned on.",
+    "needsAdmin": "Changing roles needs Administrator.",
+    "giveRole": "Give a role",
+    "giveRoleHint": "Only roles below your highest role and Mewvo's; staff roles only for the server owner or bot owners.",
+    "timedHint": "Timed roles are taken off automatically, and given back if they rejoin before the end.",
+    "giveRoleSubmit": "Give role",
+    "noOtherRole": "There is no other role you can give.",
+    "nicknameHint": "Empty removes the nickname.",
+    "saveNickname": "Save nickname",
+    "timedOutUntil": "Timed out until {date}.",
+    "removeTimeout": "Remove timeout",
+    "timeoutHint": "Discord's own timeout (max 28 days): they can read but not write or talk. For longer, use Mute.",
+    "changeTimeout": "Change timeout",
+    "timeOut": "Time out",
+    "timeOutConfirm": "Time out {name}?",
+    "verification": "Verification",
+    "verified": "Verified (@{role}).",
+    "unverifyReason": "Reason (optional, Discord audit log and verification log)",
+    "unverify": "Unverify",
+    "unverifyConfirm": "Remove verification from {name}? They lose @{role} and must verify again.",
+    "timeout": "Timeout"
+  },
+  "notes": {
+    "note": "Note",
+    "empty": "No staff notes yet. Add one below; only staff can see them.",
+    "new": "New note (only staff can see it)",
+    "add": "Add note"
+  },
+  "cases": {
+    "all": {
+      "one": "All {count} cases →",
+      "other": "All {count} cases →"
+    },
+    "none": "No cases."
+  },
+  "keepApart": {
+    "item": "with {name} {id} until {date} (order #{order})",
+    "title": "Keep apart",
+    "heading": "Keep apart ({count})",
+    "help": "Keep two members apart: they may not mention or reply to each other; breaking messages are deleted and logged. Both members are DMed when an order starts and ends.",
+    "active": "Active orders ({count})",
+    "members": "Members",
+    "endNow": "End now",
+    "none": "No active orders.",
+    "start": "Start an order",
+    "first": "First member",
+    "second": "Second member",
+    "days": "Days",
+    "reason": "Reason (shown to both members)",
+    "startSubmit": "Start order"
+  },
+  "precedent": {
+    "question": "How was this reason handled before?",
+    "choose": "choose a reason",
+    "show": "Show",
+    "none": "No earlier cases with this reason to compare."
+  },
+  "action": {
+    "severe": " (severe: cannot be appealed by default)",
+    "customHint": "Only used with \"Custom…\".",
+    "banDurationHint": "e.g. 30m, 24h, 7d, 1mo. Blank = permanent.",
+    "muteDurationHint": "Required. e.g. 30m, 24h, 7d, 1mo.",
+    "appealDefault": "Default (severe reasons: No)",
+    "name": "Name (optional)",
+    "nameHint": "Default: {name} {type} <n>",
+    "evidence": "Evidence (message links, optional)",
+    "evidenceHint": "Up to {max} links, one per line. Their text is saved now. Images can be uploaded on the case page afterwards.",
+    "warning": "Warning",
+    "reasonOptional": "Reason (optional)"
+  },
+  "timeline": {
+    "error": "The timeline could not be loaded (database). Reload the page to try again.",
+    "empty": "Nothing recorded yet. Joins and leaves are kept 90 days.",
+    "note": "Newest first. Joins and leaves are kept 90 days."
+  },
+  "member": {
+    "moderatorCan": "Moderator: you can {actions} here. Ban, unban, roles, nickname and notes need Administrator.",
+    "profile": "Profile",
+    "record": "Record so far",
+    "roles": "Roles ({count}), nickname and timeout",
+    "keepApart": "Keep apart",
+    "actions": "Actions",
+    "blocked": "You are blocked by the safety limit (too many bans or kicks in 10 minutes) until {date}; actions will be refused.",
+    "sameActions": "Same actions, DMs, ladder and checks as /enforcements. Each one shows a confirmation first.",
+    "noActions": "No actions available.",
+    "available": "Available: {actions}.",
+    "precedent": "What staff usually gave for this reason",
+    "timeline": "Timeline",
+    "caseHistory": "Case history ({count})",
+    "staffNotes": "Staff notes ({count})"
+  },
+  "watch": {
+    "title": "Watchlist ({count})",
+    "help": "Staff only; the member is never told. Their joins, new cases and automod hits are posted in the mod log (at most once a minute). Add members with {command}.",
+    "since": "Since",
+    "until": "Until",
+    "noEnd": "No end date",
+    "empty": "Nobody is on the watchlist."
+  }
+}

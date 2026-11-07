@@ -1,0 +1,284 @@
+{
+  "back": "← Membri",
+  "notice": {
+    "readOnly": "Sola lettura: la modifica dalla dashboard è disattivata (DASHBOARD_EDIT_ENABLED non è true). Usa i comandi del bot.",
+    "viewOnly": {
+      "actions": "Solo visualizzazione: per sanzionare qui serve Amministratore nel server principale.",
+      "cases": "Solo visualizzazione: per modificare i casi qui serve Amministratore nel server principale.",
+      "appeals": "Solo visualizzazione: per decidere i ricorsi qui serve Amministratore nel server principale.",
+      "orders": "Solo visualizzazione: per avviare o terminare le separazioni qui serve Amministratore nel server principale."
+    }
+  },
+  "form": {
+    "save": "Salva",
+    "choose": "Scegli…",
+    "for": "Per",
+    "permanently": "Per sempre",
+    "timeoutLength": "Durata del timeout",
+    "custom": "Personalizzato…",
+    "customReason": "Motivo personalizzato",
+    "reasonAudit": "Motivo (facoltativo, registro di controllo di Discord)",
+    "preview": "Anteprima",
+    "remove": "Togli"
+  },
+  "confirm": {
+    "cancel": "Annulla",
+    "back": "← Indietro (annulla)",
+    "nothingYet": "Non è ancora cambiato niente. Questa conferma funziona una volta e scade in 5 minuti.",
+    "once": "Questa conferma funziona una volta e scade in 5 minuti.",
+    "heading": "Conferma: {action}",
+    "title": "Conferma: {action}",
+    "submit": "Conferma: {action}",
+    "evidence": "Prove",
+    "unreadable": "(messaggio non leggibile, solo link)",
+    "effect": "Effetto",
+    "blocked": "Sei bloccato dal limite di sicurezza (troppi ban o espulsioni in 10 minuti) fino al {date}; verrà rifiutato."
+  },
+  "tabs": {
+    "label": "Area membri",
+    "list": "Membri",
+    "rules": "Regole dei ruoli",
+    "insights": "Statistiche"
+  },
+  "list": {
+    "title": "Membri",
+    "help": "apri un membro per cambiargli i ruoli o intervenire.",
+    "count": {
+      "one": "{count} membro",
+      "other": "{count} membri",
+      "many": "{count} membri"
+    },
+    "ofTotal": " su {total}",
+    "noRoles": "nessun ruolo",
+    "level": "livello {n}",
+    "warns": {
+      "one": "{count} avvertimento",
+      "other": "{count} avvertimenti",
+      "many": "{count} avvertimenti"
+    },
+    "warnsOf": "{n} su 3",
+    "select": "Seleziona {name}",
+    "selectAll": "Seleziona tutti in questa pagina",
+    "member": "Membro",
+    "roles": "Ruoli",
+    "joined": "Entrato",
+    "warnsHead": "Avvertimenti",
+    "state": "Stato",
+    "unknown": "sconosciuto",
+    "muted": "Silenziato",
+    "noMatch": "Nessun membro corrisponde a questi filtri.",
+    "clearFilters": "Azzera i filtri",
+    "empty": "Ancora nessun membro da mostrare. La lista si riempie quando il bot ha caricato il server principale.",
+    "show": "Mostra",
+    "stillLoading": "Mostrati {cached} membri su {total}: la lista sta ancora caricando. Ricarica tra un minuto.",
+    "unavailable": "La lista dei membri non è disponibile ora (il bot non vede il server principale).",
+    "search": "Cerca",
+    "searchPlaceholder": "Nome, nickname o ID utente",
+    "role": "Ruolo",
+    "anyRole": "Qualsiasi ruolo",
+    "sort": "Ordina",
+    "apply": "Applica",
+    "clear": "Azzera"
+  },
+  "bulk": {
+    "summary": "Azione di gruppo",
+    "summaryHint": " · seleziona i membri qui sotto, o usa tutti quelli che corrispondono ai filtri",
+    "which": "Quali membri",
+    "ticked": "I membri selezionati qui sotto",
+    "everyone": "Tutti quelli che corrispondono a questi filtri ({count})",
+    "tooMany": "più di {max}: restringi i filtri",
+    "doThis": "Azione",
+    "customHint": "Usato solo con «Personalizzato…». Ogni membro riceve lo stesso DM e lo stesso caso che uno alla volta.",
+    "banLength": "Durata del ban",
+    "banLengthPlaceholder": "es. 7d, 1mo, permanent",
+    "note": "Non succede ancora niente: la pagina seguente mostra esattamente chi verrà cambiato, chi viene saltato e perché. Al massimo {max} membri; espulsioni e ban solo quanti ne permette ancora il limite di sicurezza (troppi ban o espulsioni in 10 minuti).",
+    "forLength": " per {length}",
+    "verb": {
+      "roleAdd": "Dai @{role} a {members}",
+      "roleRemove": "Togli @{role} a {members}",
+      "timeout": "Metti in timeout {members}",
+      "kick": "Espelli {members}",
+      "ban": "Banna {members}"
+    },
+    "check": "Controlla la lista. Non è stato ancora cambiato niente.",
+    "guard": {
+      "one": "Il limite di sicurezza (troppi ban o espulsioni in 10 minuti) permette ancora {count} ban/espulsione in questa finestra di 10 minuti; i membri oltre vengono saltati.",
+      "other": "Il limite di sicurezza (troppi ban o espulsioni in 10 minuti) permette ancora {count} ban/espulsioni in questa finestra di 10 minuti; i membri oltre vengono saltati.",
+      "many": "Il limite di sicurezza (troppi ban o espulsioni in 10 minuti) permette ancora {count} ban/espulsioni in questa finestra di 10 minuti; i membri oltre vengono saltati."
+    },
+    "willChange": "Verranno cambiati ({count})",
+    "nobody": "Nessuno: ogni membro selezionato viene saltato.",
+    "skipped": "Saltati ({count})",
+    "runs": "Procede un membro alla volta (limiti di Discord); puoi lasciare la pagina e tornare a vedere l’avanzamento.",
+    "sameDm": "Ogni membro riceve lo stesso DM e lo stesso caso di un’azione singola.",
+    "title": "Di gruppo: {what}"
+  },
+  "job": {
+    "working": "In corso… {done} su {total} fatti. Questa pagina si aggiorna da sola.",
+    "finished": "Finito: {done} fatti, {failed} non riusciti.",
+    "progress": "Avanzamento",
+    "failed": "Non riusciti ({count})",
+    "done": "Fatti ({count})"
+  },
+  "bans": {
+    "title": "Bannati",
+    "noCase": "nessun caso (bannato fuori dal bot)",
+    "permanent": "Permanente",
+    "until": "Fino al {date}",
+    "ban": "Ban",
+    "noReason": "nessun motivo indicato",
+    "appealPending": "ricorso in attesa",
+    "by": "da {name}, {date}",
+    "unban": "Togli il ban…",
+    "open": "Apri",
+    "count": {
+      "one": "{count} ban",
+      "other": "{count} ban",
+      "many": "{count} ban"
+    },
+    "noMatch": "Nessun ban corrisponde.",
+    "showAll": "Mostra tutti i bannati",
+    "empty": "Nessuno è bannato nel server principale.",
+    "bannedCount": "{count} bannati nel server principale",
+    "help": "Togli il ban apre la pagina del membro: vedi l’effetto, poi confermi. Il membro riceve un DM con un invito per tornare.",
+    "searchPlaceholder": "Nome o ID utente"
+  },
+  "standing": {
+    "banEnds": "ban {case}, termina il {date}",
+    "banPermanent": "ban {case}, permanente",
+    "bannedOutside": "bannato fuori dal bot (nessuna scheda)",
+    "muteEnds": "silenziamento {case}, termina il {date}",
+    "mutedRole": "ha il ruolo di silenziato (nessuna scheda)",
+    "counted": "Avvertimenti conteggiati",
+    "stage": "Livello di avvertimento",
+    "next": "Prossimo avvertimento",
+    "active": "Sanzione attiva",
+    "pending": "Ricorsi in attesa",
+    "none": "nessuna"
+  },
+  "header": {
+    "joined": "Entrato il {date}",
+    "inServer": "Nel server",
+    "notInServer": "Non nel server",
+    "id": "ID {id}",
+    "active": "Attivo",
+    "none": "Niente",
+    "banned": "Bannato",
+    "muted": "Silenziato"
+  },
+  "profile": {
+    "username": "Nome utente",
+    "displayName": "Nome visualizzato",
+    "nickname": "Nickname",
+    "created": "Account creato",
+    "dateAgo": "{date} ({age} fa)",
+    "inServer": "Nel server",
+    "yesJoined": "sì, entrato il {date} ({age} fa)",
+    "yesUnknown": "sì, entrato in un momento sconosciuto",
+    "no": "no",
+    "roles": "Ruoli ({count})"
+  },
+  "edit": {
+    "until": "fino al {date}",
+    "noRoles": "Nessun ruolo.",
+    "needsAdminEditing": "Per cambiare i ruoli serve Amministratore e la modifica attiva.",
+    "needsAdmin": "Per cambiare i ruoli serve Amministratore.",
+    "giveRole": "Dai un ruolo",
+    "giveRoleHint": "Solo ruoli sotto il tuo ruolo più alto e quello di Mewvo; i ruoli dello staff solo per il proprietario del server o i proprietari del bot.",
+    "timedHint": "I ruoli a tempo vengono tolti in automatico, e ridati se il membro rientra prima della fine.",
+    "giveRoleSubmit": "Dai il ruolo",
+    "noOtherRole": "Non c’è nessun altro ruolo che puoi dare.",
+    "nicknameHint": "Vuoto toglie il nickname.",
+    "saveNickname": "Salva il nickname",
+    "timedOutUntil": "In timeout fino al {date}.",
+    "removeTimeout": "Togli il timeout",
+    "timeoutHint": "Il timeout di Discord (massimo 28 giorni): può leggere ma non scrivere né parlare. Per più a lungo usa il silenziamento.",
+    "changeTimeout": "Cambia il timeout",
+    "timeOut": "Metti in timeout",
+    "timeOutConfirm": "Mettere in timeout {name}?",
+    "verification": "Verifica",
+    "verified": "Verificato (@{role}).",
+    "unverifyReason": "Motivo (facoltativo, registro di controllo di Discord e registro di verifica)",
+    "unverify": "Togli la verifica",
+    "unverifyConfirm": "Togliere la verifica a {name}? Perde @{role} e deve verificarsi di nuovo.",
+    "timeout": "Timeout"
+  },
+  "notes": {
+    "note": "Nota",
+    "empty": "Ancora nessuna nota dello staff. Aggiungine una qui sotto; le vede solo lo staff.",
+    "new": "Nuova nota (la vede solo lo staff)",
+    "add": "Aggiungi nota"
+  },
+  "cases": {
+    "all": {
+      "one": "Il caso ({count}) →",
+      "other": "Tutti i {count} casi →",
+      "many": "Tutti i {count} casi →"
+    },
+    "none": "Nessun caso."
+  },
+  "keepApart": {
+    "item": "con {name} {id} fino al {date} (ordine #{order})",
+    "title": "Tenere separati",
+    "heading": "Tenere separati ({count})",
+    "help": "Tieni separati due membri: non possono menzionarsi né rispondersi; i messaggi che violano vengono eliminati e registrati. Entrambi ricevono un DM quando un ordine inizia e finisce.",
+    "active": "Ordini attivi ({count})",
+    "members": "Membri",
+    "endNow": "Termina ora",
+    "none": "Nessun ordine attivo.",
+    "start": "Avvia un ordine",
+    "first": "Primo membro",
+    "second": "Secondo membro",
+    "days": "Giorni",
+    "reason": "Motivo (mostrato a entrambi i membri)",
+    "startSubmit": "Avvia l’ordine"
+  },
+  "precedent": {
+    "question": "Com’è stato gestito prima questo motivo?",
+    "choose": "scegli un motivo",
+    "show": "Mostra",
+    "none": "Nessun caso precedente con questo motivo da confrontare."
+  },
+  "action": {
+    "severe": " (grave: senza ricorso di base)",
+    "customHint": "Usato solo con «Personalizzato…».",
+    "banDurationHint": "es. 30m, 24h, 7d, 1mo. Vuoto = permanente.",
+    "muteDurationHint": "Obbligatorio. es. 30m, 24h, 7d, 1mo.",
+    "appealDefault": "Predefinito (motivi gravi: No)",
+    "name": "Nome (facoltativo)",
+    "nameHint": "Predefinito: {name} {type} <n>",
+    "evidence": "Prove (link a messaggi, facoltativo)",
+    "evidenceHint": "Fino a {max} link, uno per riga. Il loro testo viene salvato subito. Le immagini si caricano dopo sulla pagina del caso.",
+    "warning": "Avvertimento",
+    "reasonOptional": "Motivo (facoltativo)"
+  },
+  "timeline": {
+    "error": "Non è stato possibile caricare la cronologia (database). Ricarica la pagina per riprovare.",
+    "empty": "Ancora niente di registrato. Ingressi e uscite si tengono 90 giorni.",
+    "note": "Prima i più recenti. Ingressi e uscite si tengono 90 giorni."
+  },
+  "member": {
+    "moderatorCan": "Moderatore: qui puoi {actions}. Ban, togliere il ban, ruoli, nickname e note richiedono Amministratore.",
+    "profile": "Profilo",
+    "record": "Precedenti finora",
+    "roles": "Ruoli ({count}), nickname e timeout",
+    "keepApart": "Tenere separati",
+    "actions": "Azioni",
+    "blocked": "Sei bloccato dal limite di sicurezza (troppi ban o espulsioni in 10 minuti) fino al {date}; le azioni verranno rifiutate.",
+    "sameActions": "Stesse azioni, DM, scala e controlli di /enforcements. Ognuna mostra prima una conferma.",
+    "noActions": "Nessuna azione disponibile.",
+    "available": "Disponibili: {actions}.",
+    "precedent": "Cosa ha dato di solito lo staff per questo motivo",
+    "timeline": "Cronologia",
+    "caseHistory": "Storico dei casi ({count})",
+    "staffNotes": "Note dello staff ({count})"
+  },
+  "watch": {
+    "title": "Lista di osservazione ({count})",
+    "help": "Solo staff; il membro non lo sa mai. I suoi ingressi, nuovi casi e interventi dell’automod vengono pubblicati nel registro di moderazione (al massimo una volta al minuto). Aggiungi membri con {command}.",
+    "since": "Dal",
+    "until": "Fino al",
+    "noEnd": "Senza fine",
+    "empty": "Nessuno è nella lista di osservazione."
+  }
+}

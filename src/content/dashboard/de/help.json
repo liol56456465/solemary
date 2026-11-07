@@ -1,0 +1,225 @@
+{
+  "glossary": {
+    "title": "Begriffe erklärt",
+    "intro": "Die Wörter, die dieses Dashboard und Discord benutzen, in einfachen Worten. Fehlt etwas? Frag auf dem Support-Server.",
+    "open": "Öffnen"
+  },
+  "groups": {
+    "basics": "Discord-Grundlagen",
+    "safety": "Den Server sicher halten",
+    "moderation": "Mewvos Moderationsbegriffe",
+    "members": "Mit Mitgliedern reden",
+    "fun": "Spaß und Community"
+  },
+  "words": {
+    "server": {
+      "term": "Server",
+      "text": "Deine Discord-Community. Mewvo arbeitet auf einem Hauptserver und einem optionalen Support-Server."
+    },
+    "channel": {
+      "term": "Kanal",
+      "text": "Ein Ort zum Reden auf dem Server, zum Beispiel #general. Textkanäle enthalten Nachrichten, Sprachkanäle Anrufe."
+    },
+    "category": {
+      "term": "Kategorie",
+      "text": "Ein Ordner, der Kanäle in der Kanalliste gruppiert. Mewvo legt Tickets und Einsprüche in eigene Kategorien."
+    },
+    "thread": {
+      "term": "Thread",
+      "text": "Ein kurzes Nebengespräch, das an einer Nachricht in einem Kanal hängt."
+    },
+    "role": {
+      "term": "Rolle",
+      "text": "Ein Etikett für Mitglieder, zum Beispiel „Moderator“ oder „Level 10“. Rollen bestimmen, was Mitglieder sehen und tun dürfen, und können dem Namen eine Farbe geben."
+    },
+    "permission": {
+      "term": "Berechtigung",
+      "text": "Eine Sache, die eine Rolle erlaubt, zum Beispiel „Nachrichten verwalten“ oder „Mitglieder bannen“. Kanäle können die Berechtigungen einer Rolle ändern."
+    },
+    "administrator": {
+      "term": "Administrator",
+      "text": "Die Berechtigung, die alles erlaubt. In Mewvo können nur Leute damit Einstellungen ändern oder Mitglieder bestrafen."
+    },
+    "dm": {
+      "term": "DM",
+      "text": "Eine Direktnachricht: ein privater Chat zwischen zwei Personen oder zwischen einem Mitglied und Mewvo. Mitglieder können DMs von Servern ausschalten."
+    },
+    "mention": {
+      "term": "Erwähnung",
+      "text": "Ein Name mit @ davor, zum Beispiel @Sam. Die Person bekommt eine Benachrichtigung. Mewvo erwähnt nie @everyone aus Text, den jemand eintippt."
+    },
+    "slashCommand": {
+      "term": "Slash-Befehl",
+      "text": "Ein Befehl, den du mit / im Nachrichtenfeld startest, zum Beispiel /rank. Discord zeigt beim Tippen eine Liste."
+    },
+    "embed": {
+      "term": "Embed",
+      "text": "Ein Nachrichtenkasten mit farbigem Rand, fettem Titel und Text. Bots nutzen ihn für ordentliche Nachrichten."
+    },
+    "id": {
+      "term": "ID",
+      "text": "Eine lange Zahl, die Discord jedem Server, Kanal, jeder Rolle und Person gibt. Schalte in Discord den Entwicklermodus ein (Einstellungen, Erweitert), dann rechtsklicke etwas und wähle „ID kopieren“."
+    },
+    "warn": {
+      "term": "Verwarnung",
+      "text": "Eine schriftliche Verwarnung. Das Mitglied bekommt eine DM. Drei Verwarnungen führen von selbst zu einem Bann (siehe Verwarnungsleiter)."
+    },
+    "mute": {
+      "term": "Stummschaltung",
+      "text": "Das Mitglied bleibt auf dem Server, kann aber für eine bestimmte Zeit nicht schreiben oder sprechen. Mewvo macht das mit einer „Muted“-Rolle."
+    },
+    "timeout": {
+      "term": "Timeout",
+      "text": "Discords eigene kurze Stummschaltung, höchstens 28 Tage. Mewvos Stummschaltung nutzt stattdessen eine Rolle und kann deshalb länger dauern."
+    },
+    "kick": {
+      "term": "Kick",
+      "text": "Entfernt das Mitglied vom Server. Mit einer Einladung kann es zurückkommen. Mewvo schickt ihm eine neue Einladung."
+    },
+    "ban": {
+      "term": "Bann",
+      "text": "Entfernt das Mitglied und hindert es daran, zurückzukommen, für eine bestimmte Zeit oder für immer."
+    },
+    "case": {
+      "term": "Fall",
+      "text": "Der Eintrag zu einer Verwarnung, Stummschaltung, einem Kick oder Bann: wer, warum, wann und von wem."
+    },
+    "caseCode": {
+      "term": "Fallcode",
+      "text": "Ein kurzer Code wie „k7fq2“, der einen Fall benennt. Mitglieder geben ihn bei einem Einspruch an."
+    },
+    "warnLadder": {
+      "term": "Verwarnungsleiter",
+      "text": "Was passiert, wenn sich Verwarnungen summieren: die 3. Verwarnung bringt einen 7-Tage-Bann, die nächste danach 30 Tage, dann einen permanenten Bann."
+    },
+    "appeal": {
+      "term": "Einspruch",
+      "text": "Ein Mitglied bittet das Team, eine Strafe aufzuheben oder zu verkürzen. Das Team nimmt ihn an oder lehnt ihn ab."
+    },
+    "automod": {
+      "term": "Automod",
+      "text": "Mewvo prüft Nachrichten selbst und entfernt Spam, Schimpfwörter, Einladungslinks und Raids."
+    },
+    "reviewCard": {
+      "term": "Prüfkarte",
+      "text": "Eine kurze Nachricht, die Mewvo für das Team postet, wenn Automod etwas tut, mit Buttons zum Behalten oder Rückgängigmachen."
+    },
+    "raid": {
+      "term": "Raid",
+      "text": "Viele neue Accounts treten gleichzeitig bei, um zu spammen. Wenn Mewvo das bemerkt, kann es den Beitritt eine Weile erschweren (eine Sperre)."
+    },
+    "modLog": {
+      "term": "Mod-Log",
+      "text": "Ein Kanal nur für das Team, in dem Mewvo jede Strafe festhält, damit alle später nachsehen können."
+    },
+    "auditLog": {
+      "term": "Audit-Log",
+      "text": "Eine Liste aller Änderungen in diesem Dashboard: wer welche Einstellung wann geändert hat."
+    },
+    "removeCase": {
+      "term": "Fall entfernen",
+      "text": "Für einen Fall, der aus Versehen vergeben wurde. Mewvo hebt auf, was noch wirkt, schreibt dem Mitglied eine DM, und der Fall zählt nicht mehr. Er bleibt gespeichert, markiert als „Entfernt“. (Der Slash-Befehl ist /case remove.)"
+    },
+    "liftedEarly": {
+      "term": "Vorzeitig aufgehoben",
+      "text": "Ein Bann, eine Stummschaltung oder Verwarnung, die vor ihrer Zeit endete: das Team hat Entbannen, Stummschaltung aufheben oder Verwarnung entfernen benutzt oder einen Einspruch angenommen."
+    },
+    "warningStage": {
+      "term": "Verwarnungsstufe",
+      "text": "Wo ein Mitglied auf der Verwarnungsleiter steht: Stufe 0 von 3 (noch kein Verwarnungsbann), 1 von 3 (7-Tage-Bann), 2 von 3 (30-Tage-Bann), 3 von 3 (permanenter Bann). Sie geht nicht von selbst zurück."
+    },
+    "canTheyAppeal": {
+      "term": "Einspruch möglich?",
+      "text": "Ob das Mitglied das Team bitten darf, eine Strafe aufzuheben. Ja für fast alles. Nein für einen schweren Bann, den das Team so markiert hat, und für einen Bann der Stufe 3 nach 6 Monaten oder nach einem abgelehnten Einspruch."
+    },
+    "whatStaffUsuallyGaveForThisReason": {
+      "term": "Was das Team für diesen Grund meist gab",
+      "text": "Ein Hinweis neben einer Strafe: was das Team in den letzten 180 Tagen für denselben Grund gegeben hat, damit Mitglieder für Ähnliches ähnliche Strafen bekommen."
+    },
+    "recordSoFar": {
+      "term": "Bisherige Akte",
+      "text": "Die gezählten Verwarnungen, Verwarnungsstufe, aktiven Strafen und Einsprüche eines Mitglieds, auf seiner Mitgliederseite. Mitglieder sehen ihre eigene mit dem Button „My record“ im Einspruchs-Panel."
+    },
+    "extraWatchPeriodAfterABan": {
+      "term": "Extra-Beobachtung nach einem Bann",
+      "text": "7 Tage, nachdem ein Mitglied aus einem Bann zurückkommt, ist Automod strenger mit ihm: Es beginnt eine Strafstufe höher, ohne freundlichen Hinweis und ohne Nachsicht für vertraute Mitglieder. (Der Slash-Befehl ist /automod extrawatch.)"
+    },
+    "warnPrivatelyFirst2MinToFix": {
+      "term": "Erst privat warnen (2 Min. zum Beheben)",
+      "text": "Für kleine Automod-Regeln: Beim ersten Mal in 30 Tagen bekommt das Mitglied eine private Nachricht und 2 Minuten, um die Nachricht zu bearbeiten oder zu löschen. Behebt es das, passiert nichts weiter."
+    },
+    "friendlyNoticeForAFirstSmallOffence": {
+      "term": "Freundlicher Hinweis beim ersten kleinen Verstoß",
+      "text": "Der erste kleine Ausrutscher eines Mitglieds in 30 Tagen (Großbuchstaben, seltsame Zeichen, nur Englisch, milde Sprache) bekommt einen kurzen Hinweis statt einer Verwarnung."
+    },
+    "reportOnlyDonTDelete": {
+      "term": "Nur melden (nicht löschen)",
+      "text": "Ein Automod-Modus: Das Team bekommt eine Prüfkarte zur Nachricht, aber nichts wird gelöscht und niemand bestraft, bis das Team es anwendet. Gut, um eine Regel auszuprobieren."
+    },
+    "keepApart": {
+      "term": "Auseinanderhalten",
+      "text": "Das Team bittet zwei Mitglieder, sich bis zu einem festen Zeitpunkt in Ruhe zu lassen. Erwähnungen und Antworten zwischen ihnen werden entfernt. Es ist keine Strafe und zählt nicht als Verwarnung."
+    },
+    "safetyLimitTooManyBansOrKicksIn10Minutes": {
+      "term": "Sicherheitslimit: zu viele Banns oder Kicks in 10 Minuten",
+      "text": "Wenn ein Moderator mehr als 5 Mitglieder in 10 Minuten bannt oder kickt (Stummschaltungen: 10), stoppt Mewvo ihn standardmäßig für eine Stunde und informiert den Bot-Inhaber. Inhaber können diese Zahlen ändern. Das schützt den Server, wenn ein Moderator-Account missbraucht wird."
+    },
+    "showWhatChanged": {
+      "term": "Zeigen, was sich geändert hat",
+      "text": "Ein Button an einer Team-Warnung, nachdem viele Kanäle oder Rollen gelöscht wurden: Er vergleicht das letzte Server-Backup mit dem Server jetzt, damit du alles mit /backup revert zurückholen kannst."
+    },
+    "ticket": {
+      "term": "Ticket",
+      "text": "Ein privater Kanal, in dem ein Mitglied mit dem Team redet, geöffnet mit einem Button."
+    },
+    "modmail": {
+      "term": "Modmail",
+      "text": "Ein Mitglied schickt Mewvo eine DM, und das Team antwortet in einem privaten Kanal. Mewvo leitet die Nachrichten hin und her."
+    },
+    "supportServer": {
+      "term": "Support-Server",
+      "text": "Ein zweiter, kleiner Server, auf dem gebannte Mitglieder trotzdem Einspruch einlegen können, weil sie den Hauptserver nicht sehen."
+    },
+    "inbox": {
+      "term": "Posteingang",
+      "text": "Die Liste dieses Dashboards mit allem, was auf das Team wartet: Einsprüche, Tickets, Modmail und Automod-Prüfungen."
+    },
+    "xpAndLevels": {
+      "term": "XP und Level",
+      "text": "Mitglieder sammeln Punkte (XP) fürs Chatten. Genug XP ergibt ein neues Level, und Level können Rollen geben."
+    },
+    "reactionRoles": {
+      "term": "Reaktionsrollen",
+      "text": "Eine Nachricht mit Buttons oder einem Menü, in der Mitglieder sich selbst Rollen aussuchen, zum Beispiel „Gamer“ oder „News“."
+    },
+    "verification": {
+      "term": "Verifizierung",
+      "text": "Neue Mitglieder drücken einen Button, um zu zeigen, dass sie echte Menschen sind, bevor sie chatten können."
+    },
+    "plan": {
+      "term": "Tarif",
+      "text": "Mewvo ist kostenlos. Bezahlte Tarife (Normal, Pro, Max) erhöhen einige Limits. Es zählt der Tarif des Server-Inhabers."
+    }
+  },
+  "setup": {
+    "checkAgain": "In Discord etwas geändert? [Erneut prüfen]({href}).",
+    "done": "Erledigt.",
+    "changeOnPage": "Du kannst es auf seiner Seite ändern.",
+    "ownPage": "Noch nicht eingerichtet. Das hat mehrere Einstellungen und öffnet deshalb eine eigene Seite.",
+    "openSetting": "Einstellung öffnen",
+    "setUp": "Einrichten",
+    "changeHere": "Du kannst es hier ändern.",
+    "pickHere": "Noch nicht eingerichtet. Wähle es hier aus und speichere.",
+    "moreSettings": "Mehr Einstellungen dazu: [eigene Seite öffnen]({href}).",
+    "unreadable": "Die Einrichtungsschritte konnten gerade nicht geladen werden. Lade die Seite in einer Minute neu.",
+    "progress": "{done} von {total} Schritten erledigt. Geh sie der Reihe nach durch oder überspring, was du nicht brauchst. Über die Seitenleiste kommst du jederzeit hierher zurück.",
+    "stepOf": "Schritt {n} von {total}",
+    "back": "Zurück",
+    "next": "Nächster Schritt",
+    "skip": "Vorerst überspringen",
+    "finish": "Fertig",
+    "allSteps": "Alle Schritte",
+    "doneMark": " (erledigt)",
+    "newWords": "Neu bei diesen Begriffen? [Begriffe erklärt]({href})."
+  }
+}

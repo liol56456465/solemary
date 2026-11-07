@@ -1,0 +1,60 @@
+{
+  "joined": {
+    "any": "Qualquer momento",
+    "24h": "Últimas 24 horas",
+    "7d": "Últimos 7 dias",
+    "30d": "Últimos 30 dias",
+    "older": "Há mais de 30 dias"
+  },
+  "state": {
+    "any": "Todos",
+    "sanction": "Silenciados agora",
+    "warned": "Com advertências que contam",
+    "noroles": "Sem cargos",
+    "humans": "Só pessoas",
+    "bots": "Só bots"
+  },
+  "sort": {
+    "joined_desc": "Mais novos primeiro",
+    "joined_asc": "Mais antigos primeiro",
+    "name": "Nome A–Z"
+  },
+  "timeout": {
+    "60s": "60 segundos",
+    "5m": "5 minutos",
+    "10m": "10 minutos",
+    "1h": "1 hora",
+    "1d": "1 dia",
+    "1w": "1 semana",
+    "28d": "28 dias"
+  },
+  "bulk": {
+    "role-add": "Dar um cargo",
+    "role-remove": "Tirar um cargo",
+    "timeout": "Colocar de castigo",
+    "kick": "Expulsar",
+    "ban": "Banir"
+  },
+  "problem": {
+    "notInServer": "Esse usuário não está no servidor.",
+    "serverOwner": "O dono do servidor não pode ser mudado daqui.",
+    "itself": "O Mewvo não pode mudar a si mesmo.",
+    "yourself": "Você não pode mudar seus próprios cargos ou seu castigo daqui.",
+    "thisMember": "Este membro",
+    "aboveBot": "{name} tem um cargo igual ou acima do cargo mais alto do Mewvo, então o Discord não deixa o bot mudá-lo.",
+    "aboveYou": "{name} tem um cargo igual ou acima do seu cargo mais alto.",
+    "roleGone": "Esse cargo não existe mais.",
+    "everyone": "O cargo @everyone não pode ser dado nem tirado.",
+    "managed": "@{role} é gerenciado por uma integração ou bot; o Discord não permite mudá-lo à mão.",
+    "roleAboveBot": "@{role} não está abaixo do cargo mais alto do Mewvo, então o Discord não deixa o bot dá-lo ou tirá-lo.",
+    "roleAboveYou": "@{role} não está abaixo do seu cargo mais alto.",
+    "staffRole": "@{role} tem permissões de equipe ({permissions}); só o dono do servidor ou os donos do bot podem dá-lo ou tirá-lo aqui."
+  },
+  "skip": {
+    "hasRole": "já tem @{role}",
+    "lacksRole": "não tem @{role}",
+    "noLength": "nenhuma duração de castigo escolhida",
+    "admin": "tem Administrador (o Discord não permite castigo)",
+    "guard": "limite de segurança: não são permitidos mais banimentos/expulsões nesta janela de 10 minutos"
+  }
+}

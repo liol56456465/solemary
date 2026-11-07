@@ -1,0 +1,318 @@
+{
+  "test": "(test)",
+  "pager": {
+    "newer": "← Nowsze",
+    "older": "Starsze →"
+  },
+  "list": {
+    "title": "Sprawy",
+    "help": "Każda kara, najnowsze najpierw. Filtruj po członku, moderatorze, typie, statusie, tagu lub dacie.",
+    "count": {
+      "one": "{count} sprawa",
+      "other": "{count} sprawy",
+      "few": "{count} sprawy",
+      "many": "{count} spraw"
+    },
+    "exportPlan": "Eksport spraw (CSV) jest w Mewvo Normal i wyżej, w planie właściciela serwera. {plans}",
+    "plans": "Plany",
+    "download": "Pobierz CSV",
+    "exportDays": {
+      "one": "Ostatni {count} dzień (Mewvo Normal).",
+      "other": "Ostatnie {count} dni (Mewvo Normal).",
+      "few": "Ostatnie {count} dni (Mewvo Normal).",
+      "many": "Ostatnie {count} dni (Mewvo Normal)."
+    },
+    "exportAll": "Cała historia.",
+    "noMatch": "Żadna sprawa nie pasuje do tych filtrów.",
+    "clearFilters": "Wyczyść filtry",
+    "empty": "Nie ma jeszcze spraw. Pojawią się tu po pierwszym ostrzeżeniu, wyciszeniu, wyrzuceniu lub banie."
+  },
+  "filter": {
+    "member": "ID członka",
+    "moderator": "ID moderatora",
+    "type": "Typ",
+    "status": "Status",
+    "any": "dowolny",
+    "text": "Tekst",
+    "tag": "Tag",
+    "tagPlaceholder": "np. scam",
+    "from": "Od",
+    "to": "Do",
+    "search": "Szukaj",
+    "clear": "Wyczyść"
+  },
+  "type": {
+    "ban": "ban",
+    "kick": "wyrzucenie",
+    "mute": "wyciszenie",
+    "warn": "ostrzeżenie"
+  },
+  "searchStatus": {
+    "active": "aktywna",
+    "ended": "zakończona",
+    "revoked": "zdjęta",
+    "voided": "usunięta"
+  },
+  "saved": {
+    "label": "Zapisane:",
+    "delete": "(usuń)",
+    "deleteLabel": "Usuń zapisane wyszukiwanie {name}",
+    "saveAs": "Zapisz to wyszukiwanie jako",
+    "namePlaceholder": "np. scam w tym miesiącu",
+    "save": "Zapisz"
+  },
+  "bulk": {
+    "with": "Z zaznaczonymi sprawami",
+    "tagAdd": "Dodaj tag",
+    "tagRemove": "Usuń tag",
+    "void": "Usuń je (pomyłka, przestają się liczyć)",
+    "reason": "Powód (przy usuwaniu; członkowie go widzą)",
+    "apply": "Zastosuj",
+    "help": "Tagi: do 25 spraw naraz. Usuwanie: do 10, a każdy członek dostaje zwykłą wiadomość prywatną. Przed usunięciem pojawia się strona potwierdzenia."
+  },
+  "table": {
+    "select": "Zaznacz",
+    "selectCase": "Zaznacz sprawę {code}",
+    "case": "Sprawa",
+    "type": "Typ",
+    "member": "Członek",
+    "moderator": "Moderator",
+    "reason": "Powód",
+    "date": "Data",
+    "status": "Status"
+  },
+  "status": {
+    "voided": "usunięta (pomyłka)",
+    "liftedByAppeal": "zdjęta po odwołaniu",
+    "reversed": "cofnięta przez moderatora",
+    "lifted": "zdjęta przed czasem",
+    "appealPending": "odwołanie oczekuje",
+    "activeAppealDenied": "aktywna, odwołanie odrzucone",
+    "expired": "wygasła",
+    "active": "aktywna",
+    "ended": "zakończona"
+  },
+  "appealStatus": {
+    "pending": "oczekuje",
+    "accepted": "przyjęte",
+    "denied": "odrzucone"
+  },
+  "action": {
+    "ban": "Ban",
+    "kick": "Wyrzucenie",
+    "mute": "Wyciszenie",
+    "warn": "Ostrzeżenie",
+    "unban": "Odbanowanie",
+    "unmute": "Zdjęcie wyciszenia",
+    "removewarn": "Usunięcie ostrzeżenia"
+  },
+  "actionVerb": {
+    "ban": "banować",
+    "kick": "wyrzucać",
+    "mute": "wyciszać",
+    "warn": "ostrzegać",
+    "unban": "odbanowywać",
+    "unmute": "zdejmować wyciszenie",
+    "removewarn": "usuwać ostrzeżenia",
+    "timeout": "dawać przerwę (timeout)"
+  },
+  "stage": {
+    "none": "0 z 3 (jeszcze bez bana za ostrzeżenia)",
+    "permanent": "{n} z 3 (ban na stałe)",
+    "days": {
+      "one": "{n} z 3 (ban na {count} dzień)",
+      "other": "{n} z 3 (ban na {count} dni)",
+      "few": "{n} z 3 (ban na {count} dni)",
+      "many": "{n} z 3 (ban na {count} dni)"
+    },
+    "label": "Stopień ostrzeżeń {stage}"
+  },
+  "duration": {
+    "permanent": "Na stałe",
+    "permanentLower": "na stałe",
+    "underMinute": "mniej niż minuta",
+    "month": {
+      "one": "{count} miesiąc",
+      "other": "{count} miesiące",
+      "few": "{count} miesiące",
+      "many": "{count} miesięcy"
+    },
+    "day": {
+      "one": "{count} dzień",
+      "other": "{count} dni",
+      "few": "{count} dni",
+      "many": "{count} dni"
+    },
+    "hour": {
+      "one": "{count} godzina",
+      "other": "{count} godziny",
+      "few": "{count} godziny",
+      "many": "{count} godzin"
+    },
+    "minute": {
+      "one": "{count} minuta",
+      "other": "{count} minuty",
+      "few": "{count} minuty",
+      "many": "{count} minut"
+    }
+  },
+  "age": {
+    "minutes": "{n} min",
+    "hours": "{n} godz.",
+    "days": "{n} d."
+  },
+  "warns": {
+    "of": "{n} z {max}",
+    "nextBans": "{n} (następne ostrzeżenie to ban)"
+  },
+  "next": {
+    "would": "To byłoby ostrzeżenie {n} z {max}.",
+    "oneAfter": "Następne po nim oznacza automatyczny ban ({ban}).",
+    "moreAfter": {
+      "one": "Jeszcze {count} po nim oznacza automatyczny ban ({ban}).",
+      "other": "Jeszcze {count} po nim oznaczają automatyczny ban ({ban}).",
+      "few": "Jeszcze {count} po nim oznaczają automatyczny ban ({ban}).",
+      "many": "Jeszcze {count} po nim oznacza automatyczny ban ({ban})."
+    },
+    "limit": "To osiągnęłoby limit ostrzeżeń: automatyczny ban ({ban}, stopień ostrzeżeń {stage} z 3)."
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "setting": "Ustawienie",
+    "value": "Wartość",
+    "source": {
+      "title": "Źródło",
+      "database": "zapisane",
+      "env": "z env (wartość startowa)",
+      "default": "wbudowana domyślna"
+    }
+  },
+  "evidence": {
+    "imageAlt": "Obraz dowodu {id}",
+    "imageGone": "Obraz niedostępny (zapisana wiadomość zniknęła)."
+  },
+  "detail": {
+    "back": "← Sprawy",
+    "case": "Sprawa",
+    "title": "Sprawa {code}",
+    "name": "Nazwa",
+    "allTheirCases": "wszystkie jego sprawy",
+    "automatic": " (automatycznie)",
+    "created": "Utworzona",
+    "duration": "Czas trwania",
+    "ends": "Kończy się",
+    "appealDeadline": "Termin odwołania",
+    "canAppeal": "Czy można się odwołać?",
+    "yes": "Tak",
+    "no": "Nie",
+    "yesLower": "tak",
+    "noLower": "nie",
+    "dmDelivered": "Wiadomość prywatna dostarczona",
+    "stageAfter": "Stopień ostrzeżeń po",
+    "tags": "Tagi",
+    "none": "brak",
+    "liftedEarly": "Zdjęta przed czasem",
+    "removed": "Usunięta",
+    "history": "Historia ({count})",
+    "when": "Kiedy",
+    "by": "Kto",
+    "field": "Pole",
+    "old": "Było",
+    "new": "Jest",
+    "neverEdited": "Nigdy nie edytowano.",
+    "notes": "Notatki ekipy ({count})",
+    "noNotes": "Brak notatek. Notatki widzi tylko ekipa.",
+    "evidence": "Dowody ({count})",
+    "noEvidence": "Brak dołączonych dowodów.",
+    "appeals": "Odwołania ({count})",
+    "filed": "Złożone",
+    "decided": "Rozstrzygnięte",
+    "note": "Notatka",
+    "noAppeals": "Brak odwołań."
+  },
+  "appeals": {
+    "pageTitle": "Odwołania",
+    "title": "Oczekujące odwołania ({count})",
+    "help": "Odwołania czekające na decyzję, najstarsze najpierw. Żółte po dniu, czerwone po trzech.",
+    "waiting": "Czeka",
+    "secondReviewer": "Potrzebna druga osoba",
+    "secondReviewerTitle": "To ty nałożyłeś tę karę, więc o tym odwołaniu musi zdecydować ktoś inny z ekipy.",
+    "review": "Sprawdź i zdecyduj",
+    "open": "Otwórz",
+    "decideHere": "Decyduj tutaj albo w Discordzie (Przyjmij / Odrzuć przy wiadomości z odwołaniem): skutek jest ten sam.",
+    "adminsDecide": "Administratorzy decydują o odwołaniach tutaj (przy włączonej edycji) albo w Discordzie.",
+    "empty": "Brak oczekujących odwołań. Nowe pojawią się tutaj i na kanałach odwołań w Discordzie."
+  },
+  "change": {
+    "title": "Zmień tę sprawę",
+    "removedNoEdit": "Usuniętych spraw nie można już edytować.",
+    "edit": "Edytuj",
+    "newReason": "Nowy powód",
+    "newDuration": "Nowy czas trwania",
+    "unchanged": "bez zmian",
+    "durationHint": "Łącznie od nałożenia, np. 7d, 1mo.",
+    "durationHintBan": "Łącznie od nałożenia, np. 7d, 1mo, permanent.",
+    "save": "Zapisz zmiany",
+    "remove": "Usuń sprawę",
+    "removeHelp": "Dla sprawy nałożonej przez pomyłkę: przestaje się liczyć. Zdejmuje to, co jeszcze działa (odbanowanie, zdjęcie wyciszenia, usunięcie ostrzeżenia, cofnięcie stopnia ostrzeżeń), a członek dostaje powód w wiadomości prywatnej. Sprawa zostaje w historii, oznaczona jako Usunięta.",
+    "removeReason": "Powód (zobaczy go członek)",
+    "removeNext": "Jeszcze nic się nie dzieje: następna strona pokaże, co zostanie zdjęte, i tam potwierdzasz.",
+    "removeSubmit": "Usuń sprawę…",
+    "link": "Link (np. do wiadomości na Discordzie: jej tekst zostanie zapisany)",
+    "noteOptional": "Notatka (opcjonalnie)",
+    "addEvidence": "Dodaj dowód",
+    "image": "Obraz (PNG, JPEG, GIF lub WebP, do 8 MB)",
+    "upload": "Prześlij obraz",
+    "rehosted": "Obrazy są zapisywane ponownie na kanale dowodów, tak jak przy /case evidence add.",
+    "removeEvidence": "Usuń #{id}",
+    "removeEvidenceConfirm": "Usunąć dowód #{id}?",
+    "notesTags": "Notatki i tagi",
+    "staffOnly": "Widzi je tylko ekipa. Członek nigdy.",
+    "newNote": "Nowa notatka",
+    "tagsHint": "Rozdzielone przecinkami. Zostaw puste, aby usunąć wszystkie.",
+    "saveTags": "Zapisz tagi"
+  },
+  "appeal": {
+    "back": "← Odwołania",
+    "heading": "Odwołanie ·",
+    "title": "Odwołanie {code}",
+    "testCase": "(sprawa testowa)",
+    "testNotice": "Sprawa testowa utworzona przez /test: nic nie zostało wykonane, przyjęcie niczego nie zmienia.",
+    "givenBy": "Nałożył",
+    "automatic": " (automatycznie, drabina ostrzeżeń)",
+    "review": "Niezależna ocena",
+    "reviewNeeded": "Nałożył {name}, więc potrzebna jest druga osoba",
+    "ladder": "Drabina ostrzeżeń",
+    "ladderValue": "{stage}, liczone ostrzeżenia: {count}",
+    "appealHead": "Odwołanie ({status}) · złożone {date} · czeka {age}",
+    "answers": "Odpowiedzi",
+    "noAppeal": "Do tej sprawy nie ma odwołania.",
+    "imageGone": "Obraz niedostępny.",
+    "earlier": "Wcześniejsze odwołania w tej sprawie ({count})",
+    "byName": " – {name}",
+    "none": "Brak.",
+    "others": "Inne sprawy ({count})",
+    "decide": "Decyzja",
+    "ownerOverride": "To ty nałożyłeś tę karę. Jako właściciel bota możesz mimo to zdecydować; zostanie to zapisane jako wyjątek właściciela.",
+    "note": "Notatka (opcjonalnie, widoczna na kanale odwołania i w dzienniku)",
+    "accept": "Przyjmij…",
+    "deny": "Odrzuć…"
+  },
+  "appealConfirm": {
+    "effect": {
+      "test": "Sprawa testowa: zamykany jest tylko wpis.",
+      "ban": "Członek zostaje odbanowany (jeśli nadal ma bana), dostaje wiadomość prywatną z zaproszeniem z powrotem, a sprawa zostaje zdjęta.",
+      "mute": "Członkowi zostaje zdjęte wyciszenie (jeśli nadal trwa), dostaje wiadomość prywatną, a sprawa zostaje zdjęta.",
+      "warn": "Ostrzeżenie zostaje usunięte (licznik drabiny spada; automatyczny ban, który spowodowało, zostaje zdjęty), a członek dostaje wiadomość prywatną.",
+      "lifted": "Sprawa zostaje zdjęta, a członek dostaje wiadomość prywatną.",
+      "deny": "Kara zostaje. Członek dostaje wiadomość prywatną, że odwołanie odrzucono."
+    },
+    "headingAccept": "Potwierdź: przyjmij odwołanie w sprawie {code}",
+    "headingDeny": "Potwierdź: odrzuć odwołanie w sprawie {code}",
+    "stage3": " Od tego bana za ostrzeżenia 3. stopnia nie będzie już można się odwołać.",
+    "channel": "Kanał odwołania dostaje decyzję i jest usuwany 10 sekund później (jego zapis trafia do dziennika moderacji). To potwierdzenie działa raz i wygasa po 5 minutach.",
+    "accept": "Przyjmij odwołanie",
+    "deny": "Odrzuć odwołanie",
+    "title": "Potwierdź odwołanie {code}"
+  }
+}

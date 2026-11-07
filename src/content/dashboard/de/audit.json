@@ -1,0 +1,17 @@
+{
+  "title": "Audit-Log",
+  "help": "Jede Änderung über das Dashboard: wer, wann, alter Wert → neuer Wert. Jedes gespeicherte Formular wird auch ins Mod-Log gepostet.",
+  "count": {
+    "one": "{count} Änderung",
+    "other": "{count} Änderungen"
+  },
+  "who": "Wer",
+  "anyone": "alle",
+  "module": "Modul",
+  "filter": "Filtern",
+  "setting": "Einstellung",
+  "noMatch": "Keine Änderungen passen zu diesen Filtern.",
+  "empty": "Noch keine Änderungen. Jedes Speichern im Dashboard steht hier.",
+  "none": "(nichts)",
+  "showAll": "Alles zeigen ({count} Zeichen)"
+}

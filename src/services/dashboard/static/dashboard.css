@@ -788,6 +788,8 @@ dialog.confirm-dialog::backdrop { background: var(--scrim); }
 /* ── Tables ───────────────────────────────────────────────────────────── */
 /* Wide tables scroll inside their box at every width (the settings column is narrower than the page). */
 .scroll, .table-wrap { overflow-x: auto; }
+/* Screen-reader text in a far table column would otherwise widen the whole page on phones (its box is placed outside the scroller). */
+.scroll .sr, .table-wrap .sr { left: 0; }
 .scroll, .table-wrap { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--raised); }
 table { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
 th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }

@@ -1,0 +1,279 @@
+{
+  "back": "← Mitglieder",
+  "notice": {
+    "readOnly": "Nur lesen: Bearbeiten im Dashboard ist ausgeschaltet (DASHBOARD_EDIT_ENABLED ist nicht true). Nutze die Befehle des Bots.",
+    "viewOnly": {
+      "actions": "Nur ansehen: Um hier Strafen zu vergeben, brauchst du Administrator auf dem Hauptserver.",
+      "cases": "Nur ansehen: Um hier Fälle zu ändern, brauchst du Administrator auf dem Hauptserver.",
+      "appeals": "Nur ansehen: Um hier über Einsprüche zu entscheiden, brauchst du Administrator auf dem Hauptserver.",
+      "orders": "Nur ansehen: Um hier Anordnungen zu starten oder zu beenden, brauchst du Administrator auf dem Hauptserver."
+    }
+  },
+  "form": {
+    "save": "Speichern",
+    "choose": "Auswählen…",
+    "for": "Für",
+    "permanently": "Dauerhaft",
+    "timeoutLength": "Timeout-Dauer",
+    "custom": "Eigener…",
+    "customReason": "Eigener Grund",
+    "reasonAudit": "Grund (optional, Discord-Audit-Log)",
+    "preview": "Vorschau",
+    "remove": "Entfernen"
+  },
+  "confirm": {
+    "cancel": "Abbrechen",
+    "back": "← Zurück (abbrechen)",
+    "nothingYet": "Noch hat sich nichts geändert. Diese Bestätigung gilt einmal und läuft nach 5 Minuten ab.",
+    "once": "Diese Bestätigung gilt einmal und läuft nach 5 Minuten ab.",
+    "heading": "Bestätigen: {action}",
+    "title": "{action} bestätigen",
+    "submit": "Bestätigen: {action}",
+    "evidence": "Beweise",
+    "unreadable": "(Nachricht nicht lesbar, nur Link)",
+    "effect": "Wirkung",
+    "blocked": "Du bist durch das Sicherheitslimit (zu viele Banns oder Kicks in 10 Minuten) bis {date} gesperrt; das wird abgelehnt."
+  },
+  "tabs": {
+    "label": "Mitgliederbereich",
+    "list": "Mitglieder",
+    "rules": "Rollenregeln",
+    "insights": "Einblicke"
+  },
+  "list": {
+    "title": "Mitglieder",
+    "help": "öffne ein Mitglied, um seine Rollen zu ändern oder etwas zu unternehmen.",
+    "count": {
+      "one": "{count} Mitglied",
+      "other": "{count} Mitglieder"
+    },
+    "ofTotal": " von {total}",
+    "noRoles": "keine Rollen",
+    "level": "Stufe {n}",
+    "warns": {
+      "one": "{count} Verwarnung",
+      "other": "{count} Verwarnungen"
+    },
+    "warnsOf": "{n} von 3",
+    "select": "{name} auswählen",
+    "selectAll": "Alle auf dieser Seite auswählen",
+    "member": "Mitglied",
+    "roles": "Rollen",
+    "joined": "Beigetreten",
+    "warnsHead": "Verwarnungen",
+    "state": "Zustand",
+    "unknown": "unbekannt",
+    "muted": "Stumm",
+    "noMatch": "Kein Mitglied passt zu diesen Filtern.",
+    "clearFilters": "Filter zurücksetzen",
+    "empty": "Noch keine Mitglieder zu zeigen. Die Liste füllt sich, sobald der Bot den Hauptserver geladen hat.",
+    "show": "Zeigen",
+    "stillLoading": "{cached} von {total} Mitgliedern werden gezeigt: Die Mitgliederliste lädt noch. Lade in einer Minute neu.",
+    "unavailable": "Die Mitgliederliste ist gerade nicht verfügbar (der Bot sieht den Hauptserver nicht).",
+    "search": "Suche",
+    "searchPlaceholder": "Name, Nickname oder Nutzer-ID",
+    "role": "Rolle",
+    "anyRole": "Jede Rolle",
+    "sort": "Sortieren",
+    "apply": "Anwenden",
+    "clear": "Zurücksetzen"
+  },
+  "bulk": {
+    "summary": "Sammelaktion",
+    "summaryHint": " · Mitglieder unten markieren oder alle nehmen, die zu den Filtern passen",
+    "which": "Welche Mitglieder",
+    "ticked": "Die unten markierten Mitglieder",
+    "everyone": "Alle, die zu diesen Filtern passen ({count})",
+    "tooMany": "mehr als {max}: Filter enger stellen",
+    "doThis": "Das tun",
+    "customHint": "Nur bei „Eigener…“. Jedes Mitglied bekommt dieselbe DM und denselben Fall wie einzeln.",
+    "banLength": "Bann-Dauer",
+    "banLengthPlaceholder": "z. B. 7d, 1mo, permanent",
+    "note": "Noch passiert nichts: Die nächste Seite zeigt genau, wer geändert und wer übersprungen wird, und warum. Höchstens {max} Mitglieder; Kicks und Banns nur so viele, wie das Sicherheitslimit (zu viele Banns oder Kicks in 10 Minuten) noch erlaubt.",
+    "forLength": " für {length}",
+    "verb": {
+      "roleAdd": "@{role} an {members} geben",
+      "roleRemove": "@{role} von {members} nehmen",
+      "timeout": "{members} ein Timeout geben",
+      "kick": "{members} kicken",
+      "ban": "{members} bannen"
+    },
+    "check": "Prüfe die Liste. Es wurde noch nichts geändert.",
+    "guard": {
+      "one": "Das Sicherheitslimit (zu viele Banns oder Kicks in 10 Minuten) erlaubt in diesem 10-Minuten-Fenster noch {count} Bann/Kick; Mitglieder darüber hinaus werden übersprungen.",
+      "other": "Das Sicherheitslimit (zu viele Banns oder Kicks in 10 Minuten) erlaubt in diesem 10-Minuten-Fenster noch {count} Banns/Kicks; Mitglieder darüber hinaus werden übersprungen."
+    },
+    "willChange": "Wird geändert ({count})",
+    "nobody": "Niemand: Jedes ausgewählte Mitglied wird übersprungen.",
+    "skipped": "Übersprungen ({count})",
+    "runs": "Läuft ein Mitglied nach dem anderen (Discord-Ratenlimits); du kannst die Seite verlassen und später den Fortschritt ansehen.",
+    "sameDm": "Jedes Mitglied bekommt dieselbe DM und denselben Fall wie bei einer einzelnen Aktion.",
+    "title": "Sammelaktion: {what}"
+  },
+  "job": {
+    "working": "Läuft… {done} von {total} erledigt. Diese Seite aktualisiert sich selbst.",
+    "finished": "Fertig: {done} erledigt, {failed} fehlgeschlagen.",
+    "progress": "Fortschritt",
+    "failed": "Fehlgeschlagen ({count})",
+    "done": "Erledigt ({count})"
+  },
+  "bans": {
+    "title": "Gebannt",
+    "noCase": "kein Fall (außerhalb des Bots gebannt)",
+    "permanent": "Dauerhaft",
+    "until": "Bis {date}",
+    "ban": "Bann",
+    "noReason": "kein Grund angegeben",
+    "appealPending": "Einspruch ausstehend",
+    "by": "von {name}, {date}",
+    "unban": "Entbannen…",
+    "open": "Öffnen",
+    "count": {
+      "one": "{count} Bann",
+      "other": "{count} Banns"
+    },
+    "noMatch": "Kein Bann passt.",
+    "showAll": "Alle Gebannten zeigen",
+    "empty": "Auf dem Hauptserver ist niemand gebannt.",
+    "bannedCount": "{count} gebannt auf dem Hauptserver",
+    "help": "Entbannen öffnet die Mitgliedsseite: Du siehst die Wirkung und bestätigst dann. Das Mitglied bekommt eine DM mit einer Einladung zurück.",
+    "searchPlaceholder": "Name oder Nutzer-ID"
+  },
+  "standing": {
+    "banEnds": "Bann {case}, endet {date}",
+    "banPermanent": "Bann {case}, dauerhaft",
+    "bannedOutside": "außerhalb des Bots gebannt (kein Eintrag)",
+    "muteEnds": "Stummschaltung {case}, endet {date}",
+    "mutedRole": "hat die Stumm-Rolle (kein Eintrag)",
+    "counted": "Gezählte Verwarnungen",
+    "stage": "Verwarnungsstufe",
+    "next": "Nächste Verwarnung",
+    "active": "Aktive Strafe",
+    "pending": "Offene Einsprüche",
+    "none": "keine"
+  },
+  "header": {
+    "joined": "Beigetreten {date}",
+    "inServer": "Auf dem Server",
+    "notInServer": "Nicht auf dem Server",
+    "id": "ID {id}",
+    "active": "Aktiv",
+    "none": "Nichts",
+    "banned": "Gebannt",
+    "muted": "Stumm"
+  },
+  "profile": {
+    "username": "Nutzername",
+    "displayName": "Anzeigename",
+    "nickname": "Nickname",
+    "created": "Konto erstellt",
+    "dateAgo": "{date} (vor {age})",
+    "inServer": "Auf dem Server",
+    "yesJoined": "ja, beigetreten {date} (vor {age})",
+    "yesUnknown": "ja, Beitritt unbekannt",
+    "no": "nein",
+    "roles": "Rollen ({count})"
+  },
+  "edit": {
+    "until": "bis {date}",
+    "noRoles": "Keine Rollen.",
+    "needsAdminEditing": "Rollen ändern braucht Administrator und eingeschaltetes Bearbeiten.",
+    "needsAdmin": "Rollen ändern braucht Administrator.",
+    "giveRole": "Rolle geben",
+    "giveRoleHint": "Nur Rollen unter deiner höchsten Rolle und der von Mewvo; Teamrollen nur für den Serverinhaber oder die Bot-Inhaber.",
+    "timedHint": "Zeitlich begrenzte Rollen werden automatisch entfernt und zurückgegeben, wenn das Mitglied vor dem Ende wieder beitritt.",
+    "giveRoleSubmit": "Rolle geben",
+    "noOtherRole": "Es gibt keine andere Rolle, die du geben kannst.",
+    "nicknameHint": "Leer entfernt den Nickname.",
+    "saveNickname": "Nickname speichern",
+    "timedOutUntil": "Timeout bis {date}.",
+    "removeTimeout": "Timeout aufheben",
+    "timeoutHint": "Discords eigener Timeout (max. 28 Tage): Sie können lesen, aber nicht schreiben oder sprechen. Für länger nutze Stummschalten.",
+    "changeTimeout": "Timeout ändern",
+    "timeOut": "Timeout geben",
+    "timeOutConfirm": "{name} ein Timeout geben?",
+    "verification": "Verifizierung",
+    "verified": "Verifiziert (@{role}).",
+    "unverifyReason": "Grund (optional, Discord-Audit-Log und Verifizierungs-Log)",
+    "unverify": "Verifizierung entziehen",
+    "unverifyConfirm": "Verifizierung von {name} entfernen? Das Mitglied verliert @{role} und muss sich neu verifizieren.",
+    "timeout": "Timeout"
+  },
+  "notes": {
+    "note": "Notiz",
+    "empty": "Noch keine Teamnotizen. Füge unten eine hinzu; nur das Team sieht sie.",
+    "new": "Neue Notiz (nur das Team sieht sie)",
+    "add": "Notiz hinzufügen"
+  },
+  "cases": {
+    "all": {
+      "one": "Den {count} Fall →",
+      "other": "Alle {count} Fälle →"
+    },
+    "none": "Keine Fälle."
+  },
+  "keepApart": {
+    "item": "mit {name} {id} bis {date} (Anordnung #{order})",
+    "title": "Auseinanderhalten",
+    "heading": "Auseinanderhalten ({count})",
+    "help": "Zwei Mitglieder auseinanderhalten: Sie dürfen sich nicht erwähnen oder einander antworten; Nachrichten, die dagegen verstoßen, werden gelöscht und protokolliert. Beide bekommen eine DM, wenn eine Anordnung beginnt und endet.",
+    "active": "Aktive Anordnungen ({count})",
+    "members": "Mitglieder",
+    "endNow": "Jetzt beenden",
+    "none": "Keine aktiven Anordnungen.",
+    "start": "Anordnung starten",
+    "first": "Erstes Mitglied",
+    "second": "Zweites Mitglied",
+    "days": "Tage",
+    "reason": "Grund (beide Mitglieder sehen ihn)",
+    "startSubmit": "Anordnung starten"
+  },
+  "precedent": {
+    "question": "Wie wurde dieser Grund bisher behandelt?",
+    "choose": "Grund auswählen",
+    "show": "Zeigen",
+    "none": "Keine früheren Fälle mit diesem Grund zum Vergleichen."
+  },
+  "action": {
+    "severe": " (schwer: standardmäßig kein Einspruch möglich)",
+    "customHint": "Nur bei „Eigener…“.",
+    "banDurationHint": "z. B. 30m, 24h, 7d, 1mo. Leer = dauerhaft.",
+    "muteDurationHint": "Pflicht. z. B. 30m, 24h, 7d, 1mo.",
+    "appealDefault": "Standard (schwere Gründe: Nein)",
+    "name": "Name (optional)",
+    "nameHint": "Standard: {name} {type} <n>",
+    "evidence": "Beweise (Nachrichtenlinks, optional)",
+    "evidenceHint": "Bis zu {max} Links, einer pro Zeile. Ihr Text wird jetzt gespeichert. Bilder kannst du danach auf der Fallseite hochladen.",
+    "warning": "Verwarnung",
+    "reasonOptional": "Grund (optional)"
+  },
+  "timeline": {
+    "error": "Der Verlauf konnte nicht geladen werden (Datenbank). Lade die Seite neu, um es noch einmal zu versuchen.",
+    "empty": "Noch nichts erfasst. Beitritte und Austritte werden 90 Tage aufbewahrt.",
+    "note": "Neueste zuerst. Beitritte und Austritte werden 90 Tage aufbewahrt."
+  },
+  "member": {
+    "moderatorCan": "Moderator: Du kannst hier {actions}. Bannen, Entbannen, Rollen, Nickname und Notizen brauchen Administrator.",
+    "profile": "Profil",
+    "record": "Akte bisher",
+    "roles": "Rollen ({count}), Nickname und Timeout",
+    "keepApart": "Auseinanderhalten",
+    "actions": "Aktionen",
+    "blocked": "Du bist durch das Sicherheitslimit (zu viele Banns oder Kicks in 10 Minuten) bis {date} gesperrt; Aktionen werden abgelehnt.",
+    "sameActions": "Dieselben Aktionen, DMs, Leiter und Prüfungen wie /enforcements. Jede zeigt zuerst eine Bestätigung.",
+    "noActions": "Keine Aktionen verfügbar.",
+    "available": "Verfügbar: {actions}.",
+    "precedent": "Was das Team für diesen Grund meist vergeben hat",
+    "timeline": "Verlauf",
+    "caseHistory": "Fallverlauf ({count})",
+    "staffNotes": "Teamnotizen ({count})"
+  },
+  "watch": {
+    "title": "Beobachtungsliste ({count})",
+    "help": "Nur für das Team; das Mitglied erfährt es nie. Beitritte, neue Fälle und Automod-Treffer werden im Mod-Log gemeldet (höchstens einmal pro Minute). Mitglieder fügst du mit {command} hinzu.",
+    "since": "Seit",
+    "until": "Bis",
+    "noEnd": "Kein Enddatum",
+    "empty": "Niemand steht auf der Beobachtungsliste."
+  }
+}

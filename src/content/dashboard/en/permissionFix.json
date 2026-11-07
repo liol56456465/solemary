@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "Fix permissions",
+    "heading": "Fix Mewvo's permissions in #{channel}",
+    "back": "Back (cancel)",
+    "missing": "Missing",
+    "willGive": "Mewvo will give itself",
+    "cannotGive": "Mewvo can't give itself",
+    "ownRole": "(its own role does not have them)",
+    "notChanged": "Not changed here",
+    "onlyYou": "(only you can give these)",
+    "why": "Why Mewvo can't fix it",
+    "nothing": "Mewvo already has what it needs here. Nothing to fix.",
+    "editingOff": "Editing from the dashboard is turned off, so nothing can be changed here.",
+    "adminOnly": "Only members with the Administrator permission in the main server can do this.",
+    "explain": "This adds a permission just for Mewvo in #{channel}. Nobody else's permissions change. This confirmation works once and expires in 5 minutes.",
+    "submit": "Give Mewvo these permissions",
+    "inDiscord": "What to do in Discord",
+    "reload": "Then reload this page to check again."
+  },
+  "route": {
+    "noServer": "Server not available",
+    "noServerText": "Mewvo cannot see the main server right now. Try again in a minute.",
+    "noServerNothing": "Mewvo cannot see the main server right now. Nothing was changed.",
+    "noChannel": "Channel not found",
+    "noChannelText": "That channel is not in the server (any more). Go back and pick another one.",
+    "noChannelNothing": "That channel is not in the server (any more). Nothing was changed.",
+    "adminOnly": "Only members with the Administrator permission in the main server can change Mewvo's permissions. Nothing was changed.",
+    "expired": "This confirmation expired or was already used. Nothing was changed. Check the list below and confirm again.",
+    "stillMissing": " Still missing: {perms}. Only the server owner can give those (see the steps on the Fix permissions page).",
+    "done": "Mewvo now has {perms} in #{channel}."
+  }
+}

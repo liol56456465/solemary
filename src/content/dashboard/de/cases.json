@@ -1,0 +1,302 @@
+{
+  "test": "(Test)",
+  "pager": {
+    "newer": "← Neuere",
+    "older": "Ältere →"
+  },
+  "list": {
+    "title": "Fälle",
+    "help": "Jede Strafe, die neueste zuerst. Filtere nach Mitglied, Moderator, Art, Status, Tag oder Datum.",
+    "count": {
+      "one": "{count} Fall",
+      "other": "{count} Fälle"
+    },
+    "exportPlan": "Der Fall-Export (CSV) gibt es ab Mewvo Normal, im Tarif des Serverinhabers. {plans}",
+    "plans": "Tarife",
+    "download": "CSV herunterladen",
+    "exportDays": {
+      "one": "Der letzte Tag (Mewvo Normal): {count}.",
+      "other": "Die letzten {count} Tage (Mewvo Normal)."
+    },
+    "exportAll": "Der ganze Verlauf.",
+    "noMatch": "Keine Fälle passen zu diesen Filtern.",
+    "clearFilters": "Filter zurücksetzen",
+    "empty": "Noch keine Fälle. Sie erscheinen hier nach der ersten Verwarnung, Stummschaltung, dem ersten Kick oder Bann."
+  },
+  "filter": {
+    "member": "Mitglieds-ID",
+    "moderator": "Moderator-ID",
+    "type": "Art",
+    "status": "Status",
+    "any": "alle",
+    "text": "Text",
+    "tag": "Tag",
+    "tagPlaceholder": "z. B. scam",
+    "from": "Von",
+    "to": "Bis",
+    "search": "Suchen",
+    "clear": "Zurücksetzen"
+  },
+  "type": {
+    "ban": "Bann",
+    "kick": "Kick",
+    "mute": "Stummschaltung",
+    "warn": "Verwarnung"
+  },
+  "searchStatus": {
+    "active": "aktiv",
+    "ended": "beendet",
+    "revoked": "aufgehoben",
+    "voided": "entfernt"
+  },
+  "saved": {
+    "label": "Gespeichert:",
+    "delete": "(löschen)",
+    "deleteLabel": "Gespeicherte Suche {name} löschen",
+    "saveAs": "Diese Suche speichern als",
+    "namePlaceholder": "z. B. scam diesen Monat",
+    "save": "Speichern"
+  },
+  "bulk": {
+    "with": "Mit den markierten Fällen",
+    "tagAdd": "Tag hinzufügen",
+    "tagRemove": "Tag entfernen",
+    "void": "Entfernen (ein Fehler, sie zählen nicht mehr)",
+    "reason": "Grund (zum Entfernen; die Mitglieder sehen ihn)",
+    "apply": "Anwenden",
+    "help": "Tags: bis zu 25 Fälle auf einmal. Entfernen: bis zu 10, und jedes Mitglied bekommt die übliche DM. Vor dem Entfernen kommt eine Bestätigungsseite."
+  },
+  "table": {
+    "select": "Auswählen",
+    "selectCase": "Fall {code} auswählen",
+    "case": "Fall",
+    "type": "Art",
+    "member": "Mitglied",
+    "moderator": "Moderator",
+    "reason": "Grund",
+    "date": "Datum",
+    "status": "Status"
+  },
+  "status": {
+    "voided": "entfernt (ein Fehler)",
+    "liftedByAppeal": "per Einspruch aufgehoben",
+    "reversed": "von einem Moderator rückgängig gemacht",
+    "lifted": "vorzeitig aufgehoben",
+    "appealPending": "Einspruch ausstehend",
+    "activeAppealDenied": "aktiv, Einspruch abgelehnt",
+    "expired": "abgelaufen",
+    "active": "aktiv",
+    "ended": "beendet"
+  },
+  "appealStatus": {
+    "pending": "ausstehend",
+    "accepted": "angenommen",
+    "denied": "abgelehnt"
+  },
+  "action": {
+    "ban": "Bannen",
+    "kick": "Kicken",
+    "mute": "Stummschalten",
+    "warn": "Verwarnen",
+    "unban": "Entbannen",
+    "unmute": "Stummschaltung aufheben",
+    "removewarn": "Verwarnung entfernen"
+  },
+  "actionVerb": {
+    "ban": "bannen",
+    "kick": "kicken",
+    "mute": "stummschalten",
+    "warn": "verwarnen",
+    "unban": "entbannen",
+    "unmute": "Stummschaltung aufheben",
+    "removewarn": "Verwarnung entfernen",
+    "timeout": "Timeout geben"
+  },
+  "stage": {
+    "none": "0 von 3 (noch kein Verwarnungsbann)",
+    "permanent": "{n} von 3 (dauerhafter Bann)",
+    "days": {
+      "one": "{n} von 3 ({count} Tag Bann)",
+      "other": "{n} von 3 ({count} Tage Bann)"
+    },
+    "label": "Verwarnungsstufe {stage}"
+  },
+  "duration": {
+    "permanent": "Dauerhaft",
+    "permanentLower": "dauerhaft",
+    "underMinute": "weniger als eine Minute",
+    "month": {
+      "one": "{count} Monat",
+      "other": "{count} Monate"
+    },
+    "day": {
+      "one": "{count} Tag",
+      "other": "{count} Tage"
+    },
+    "hour": {
+      "one": "{count} Stunde",
+      "other": "{count} Stunden"
+    },
+    "minute": {
+      "one": "{count} Minute",
+      "other": "{count} Minuten"
+    }
+  },
+  "age": {
+    "minutes": "{n} Min.",
+    "hours": "{n} Std.",
+    "days": "{n} T."
+  },
+  "warns": {
+    "of": "{n} von {max}",
+    "nextBans": "{n} (die nächste Verwarnung bannt)"
+  },
+  "next": {
+    "would": "Es wäre Verwarnung {n} von {max}.",
+    "oneAfter": "Die danach würde einen automatischen Bann bedeuten ({ban}).",
+    "moreAfter": {
+      "one": "Noch {count} danach würde einen automatischen Bann bedeuten ({ban}).",
+      "other": "Noch {count} danach würden einen automatischen Bann bedeuten ({ban})."
+    },
+    "limit": "Damit wäre das Verwarnungslimit erreicht: ein automatischer Bann ({ban}, Verwarnungsstufe {stage} von 3)."
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "setting": "Einstellung",
+    "value": "Wert",
+    "source": {
+      "title": "Quelle",
+      "database": "gespeichert",
+      "env": "aus env (Startwert)",
+      "default": "eingebauter Standard"
+    }
+  },
+  "evidence": {
+    "imageAlt": "Beweisbild {id}",
+    "imageGone": "Bild nicht verfügbar (die gespeicherte Nachricht ist weg)."
+  },
+  "detail": {
+    "back": "← Fälle",
+    "case": "Fall",
+    "title": "Fall {code}",
+    "name": "Name",
+    "allTheirCases": "alle Fälle dieses Mitglieds",
+    "automatic": " (automatisch)",
+    "created": "Erstellt",
+    "duration": "Dauer",
+    "ends": "Endet",
+    "appealDeadline": "Einspruchsfrist",
+    "canAppeal": "Einspruch möglich?",
+    "yes": "Ja",
+    "no": "Nein",
+    "yesLower": "ja",
+    "noLower": "nein",
+    "dmDelivered": "DM zugestellt",
+    "stageAfter": "Verwarnungsstufe danach",
+    "tags": "Tags",
+    "none": "keine",
+    "liftedEarly": "Vorzeitig aufgehoben",
+    "removed": "Entfernt",
+    "history": "Verlauf ({count})",
+    "when": "Wann",
+    "by": "Von",
+    "field": "Feld",
+    "old": "Alt",
+    "new": "Neu",
+    "neverEdited": "Nie bearbeitet.",
+    "notes": "Teamnotizen ({count})",
+    "noNotes": "Keine Notizen. Nur das Team sieht Notizen.",
+    "evidence": "Beweise ({count})",
+    "noEvidence": "Keine Beweise angehängt.",
+    "appeals": "Einsprüche ({count})",
+    "filed": "Eingereicht",
+    "decided": "Entschieden",
+    "note": "Notiz",
+    "noAppeals": "Keine Einsprüche."
+  },
+  "appeals": {
+    "pageTitle": "Einsprüche",
+    "title": "Offene Einsprüche ({count})",
+    "help": "Einsprüche, die auf eine Entscheidung warten, die ältesten zuerst. Gelb nach einem Tag, rot nach drei.",
+    "waiting": "Wartet seit",
+    "secondReviewer": "Braucht zweite Prüfung",
+    "secondReviewerTitle": "Du hast diese Strafe verhängt, also muss jemand anderes aus dem Team über diesen Einspruch entscheiden.",
+    "review": "Prüfen und entscheiden",
+    "open": "Öffnen",
+    "decideHere": "Entscheide hier oder in Discord (Annehmen / Ablehnen an der Einspruchsnachricht): Die Wirkung ist dieselbe.",
+    "adminsDecide": "Administratoren entscheiden Einsprüche hier (bei eingeschaltetem Bearbeiten) oder in Discord.",
+    "empty": "Keine offenen Einsprüche. Neue Einsprüche erscheinen hier und in den Einspruchskanälen in Discord."
+  },
+  "change": {
+    "title": "Diesen Fall ändern",
+    "removedNoEdit": "Entfernte Fälle können nicht mehr bearbeitet werden.",
+    "edit": "Bearbeiten",
+    "newReason": "Neuer Grund",
+    "newDuration": "Neue Dauer",
+    "unchanged": "unverändert",
+    "durationHint": "Gesamtdauer ab der Vergabe, z. B. 7d, 1mo.",
+    "durationHintBan": "Gesamtdauer ab der Vergabe, z. B. 7d, 1mo, permanent.",
+    "save": "Änderungen speichern",
+    "remove": "Fall entfernen",
+    "removeHelp": "Für einen Fall, der aus Versehen vergeben wurde: Er zählt nicht mehr. Was noch wirkt, wird aufgehoben (Entbannen, Stummschaltung aufheben, Verwarnung entfernt, Verwarnungsstufe zurück) und das Mitglied bekommt den Grund per DM. Der Fall bleibt in der Akte, markiert als Entfernt.",
+    "removeReason": "Grund (das Mitglied sieht ihn)",
+    "removeNext": "Noch passiert nichts: Die nächste Seite zeigt, was aufgehoben wird, und dort bestätigst du.",
+    "removeSubmit": "Fall entfernen…",
+    "link": "Link (z. B. ein Discord-Nachrichtenlink: sein Text wird gespeichert)",
+    "noteOptional": "Notiz (optional)",
+    "addEvidence": "Beweis hinzufügen",
+    "image": "Bild (PNG, JPEG, GIF oder WebP, bis 8 MB)",
+    "upload": "Bild hochladen",
+    "rehosted": "Bilder werden im Beweiskanal neu gespeichert, wie bei /case evidence add.",
+    "removeEvidence": "#{id} entfernen",
+    "removeEvidenceConfirm": "Beweis #{id} entfernen?",
+    "notesTags": "Notizen und Tags",
+    "staffOnly": "Nur das Team sieht sie. Das Mitglied nie.",
+    "newNote": "Neue Notiz",
+    "tagsHint": "Durch Kommas getrennt. Leer lassen, um alle zu entfernen.",
+    "saveTags": "Tags speichern"
+  },
+  "appeal": {
+    "back": "← Einsprüche",
+    "heading": "Einspruch ·",
+    "title": "Einspruch {code}",
+    "testCase": "(Testfall)",
+    "testNotice": "Testfall, erstellt mit /test: Es wurde nichts ausgeführt, Annehmen ändert nichts.",
+    "givenBy": "Vergeben von",
+    "automatic": " (automatisch, Verwarnungsleiter)",
+    "review": "Unabhängige Prüfung",
+    "reviewNeeded": "Verhängt von {name}, daher braucht es eine zweite Prüfung",
+    "ladder": "Verwarnungsleiter",
+    "ladderValue": "{stage}, {count} gezählte Verwarnung(en)",
+    "appealHead": "Einspruch ({status}) · eingereicht {date} · wartet seit {age}",
+    "answers": "Antworten",
+    "noAppeal": "Kein Einspruch zu diesem Fall.",
+    "imageGone": "Bild nicht verfügbar.",
+    "earlier": "Frühere Einsprüche zu diesem Fall ({count})",
+    "byName": " von {name}",
+    "none": "Keine.",
+    "others": "Andere Fälle ({count})",
+    "decide": "Entscheiden",
+    "ownerOverride": "Du hast diese Strafe verhängt. Als Bot-Inhaber darfst du trotzdem entscheiden; das wird als Inhaber-Ausnahme protokolliert.",
+    "note": "Notiz (optional, erscheint im Einspruchskanal und im Log)",
+    "accept": "Annehmen…",
+    "deny": "Ablehnen…"
+  },
+  "appealConfirm": {
+    "effect": {
+      "test": "Testfall: Nur der Eintrag wird geschlossen.",
+      "ban": "Das Mitglied wird entbannt (falls noch gebannt), bekommt eine DM mit einer Einladung zurück, und der Fall wird aufgehoben.",
+      "mute": "Die Stummschaltung des Mitglieds wird aufgehoben (falls noch aktiv), es bekommt eine DM, und der Fall wird aufgehoben.",
+      "warn": "Die Verwarnung wird entfernt (der Zähler der Leiter sinkt; ein dadurch ausgelöster automatischer Bann wird aufgehoben) und das Mitglied bekommt eine DM.",
+      "lifted": "Der Fall wird aufgehoben und das Mitglied bekommt eine DM.",
+      "deny": "Die Strafe bleibt. Das Mitglied bekommt per DM, dass der Einspruch abgelehnt wurde."
+    },
+    "headingAccept": "Bestätigen: Einspruch zu {code} annehmen",
+    "headingDeny": "Bestätigen: Einspruch zu {code} ablehnen",
+    "stage3": " Gegen diesen Verwarnungsbann der Stufe 3 ist danach kein Einspruch mehr möglich.",
+    "channel": "Der Einspruchskanal bekommt die Entscheidung und wird 10 Sekunden später gelöscht (sein Verlauf geht ins Mod-Log). Diese Bestätigung gilt einmal und läuft nach 5 Minuten ab.",
+    "accept": "Einspruch annehmen",
+    "deny": "Einspruch ablehnen",
+    "title": "Einspruch {code} bestätigen"
+  }
+}

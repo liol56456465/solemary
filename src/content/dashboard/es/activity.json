@@ -1,0 +1,44 @@
+{
+  "chart": {
+    "aria": "{label} por día durante {days} días, {total} en total. La tabla de abajo tiene cada día."
+  },
+  "page": {
+    "unreadable": "No se pudieron cargar los números (base de datos). Recarga la página para intentarlo de nuevo.",
+    "intro": "Los últimos {days} días en este servidor (UTC). Los mensajes se cuentan desde hoy: solo un número por día, no quién los escribió ni qué.",
+    "inDays": "{sum} en {days} días",
+    "messages": "Mensajes",
+    "joinsLeaves": "Entradas y salidas",
+    "joinedLeft": "{joins} entraron, {leaves} salieron",
+    "joins": "Entradas",
+    "leaves": "Salidas",
+    "leavesLabel": "Salidas:",
+    "cases": "Casos",
+    "table": "Cada día en una tabla"
+  },
+  "col": {
+    "day": "Día",
+    "moderator": "Moderador",
+    "total": "Total",
+    "bans": "Baneos",
+    "kicks": "Expulsiones",
+    "mutes": "Silencios",
+    "warns": "Advertencias",
+    "removed": "Quitados",
+    "rule": "Regla",
+    "actions": "Acciones",
+    "undone": "Deshechas",
+    "undoneShare": "Porcentaje deshecho"
+  },
+  "analytics": {
+    "title": "Staff y automod",
+    "locked": "Los casos por moderador y la frecuencia con que se deshace cada regla del automod vienen con Mewvo Pro y Max, según el plan del propietario del servidor.",
+    "plans": "Planes",
+    "unreadable": "No se pudieron cargar estos números (base de datos). Recarga la página para intentarlo de nuevo.",
+    "perModerator": "Casos por moderador",
+    "lastDays": "últimos {days} días",
+    "noCases": "No hubo casos de personas en este tiempo.",
+    "rules": "Reglas del automod",
+    "tooStrict": "Una regla que se deshace a menudo puede ser demasiado estricta: considera «Solo avisar (no borrar)» para ella.",
+    "noAutomod": "El automod no hizo nada en este tiempo."
+  }
+}

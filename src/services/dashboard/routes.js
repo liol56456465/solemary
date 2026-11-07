@@ -549,17 +549,18 @@ export function createDashboard({
         if (refused) return refused;
         const name = str(req.body?.name, 60).replace(/\s+/g, ' ').trim();
         const query = Object.fromEntries(SEARCH_KEYS.map((k) => [k, str(req.body?.[k], 100)]).filter(([, v]) => v));
-        if (!name || name.length > 40) return fail(res, 400, 'Not saved', 'Give the search a name of up to 40 characters.', req);
-        if (!Object.keys(query).length) return fail(res, 400, 'Not saved', 'Filter the cases first, then save the search.', req);
+        const tr = textOfReq(req);
+        if (!name || name.length > 40) return fail(res, 400, tr.t('general.search.notSaved'), tr.t('general.search.nameTooLong'), req);
+        if (!Object.keys(query).length) return fail(res, 400, tr.t('general.search.notSaved'), tr.t('general.search.filterFirst'), req);
         try {
             normalizeSearchFilters({ memberId: query.member, moderatorId: query.moderator, type: query.type, status: query.status, text: query.text, from: query.from, to: query.to, tag: query.tag });
         } catch (error) {
-            return fail(res, 400, 'Not saved', error.userMessage || 'Those filters are not valid.', req);
+            return fail(res, 400, tr.t('general.search.notSaved'), error.userMessage || tr.t('general.search.invalid'), req);
         }
         const list = savedSearches().filter((s) => s.name.toLowerCase() !== name.toLowerCase());
-        if (list.length >= 20) return fail(res, 400, 'Not saved', 'You can keep 20 saved searches. Delete one first.', req);
+        if (list.length >= 20) return fail(res, 400, tr.t('general.search.notSaved'), tr.t('general.search.full'), req);
         await saveSearches(req, [...list, { name, query }]);
-        await sessions.setFlash?.(req.dashboard.session.id, `Search "${name}" saved.`);
+        await sessions.setFlash?.(req.dashboard.session.id, tr.t('general.search.saved', { name }));
         return res.redirect(303, path(`/cases${queryString(query)}`));
     }
 
@@ -568,9 +569,10 @@ export function createDashboard({
         if (refused) return refused;
         const name = str(req.body?.name, 60);
         const list = savedSearches();
-        if (!list.some((s) => s.name === name)) return fail(res, 400, 'Not deleted', 'That saved search is gone already.', req);
+        const tr = textOfReq(req);
+        if (!list.some((s) => s.name === name)) return fail(res, 400, tr.t('general.search.notDeleted'), tr.t('general.search.gone'), req);
         await saveSearches(req, list.filter((s) => s.name !== name));
-        await sessions.setFlash?.(req.dashboard.session.id, `Search "${name}" deleted.`);
+        await sessions.setFlash?.(req.dashboard.session.id, tr.t('general.search.deleted', { name }));
         return res.redirect(303, path('/cases'));
     }
 
@@ -611,7 +613,7 @@ export function createDashboard({
                 text: query.text, from: query.from, to: query.to, tag: query.tag,
             });
         } catch (error) {
-            return sendHtml(res, 400, casesPage({ ...shellOf(req), query, error: error.userMessage || 'Invalid filter.' }));
+            return sendHtml(res, 400, casesPage({ ...shellOf(req), query, error: error.userMessage || textOfReq(req).t('general.cases.invalidFilter') }));
         }
         const { rows, total } = await data.searchCaseRecords(guildId, filters, { page, pageSize: CASES_PAGE_SIZE });
         const appealStatuses = await data.getLatestAppealStatusesForCases(rows.map((row) => row.case_code));
@@ -627,11 +629,11 @@ export function createDashboard({
     /** GET /cases/export.csv: a paid perk, by the server owner's plan (caseExport.js). */
     async function casesExport(req, res) {
         // The route gate already maps this path to case.export; checked again here (defence in depth).
-        if (!allows(req.dashboard.access, 'case.export')) return fail(res, 403, 'Not allowed', 'Exporting cases needs Administrator in the main server.', req);
+        if (!allows(req.dashboard.access, 'case.export')) return fail(res, 403, textOfReq(req).t('errors.notAllowed'), textOfReq(req).t('general.cases.exportAdmin'), req);
         const planId = data.guildPlan ? data.guildPlan(guildId) : 'free';
         const rows = await data.exportCases(guildId, planId);
         if (rows === null) {
-            return fail(res, 403, 'Not on the Free plan', 'Case export comes with Mewvo Normal (last 90 days) and Pro or Max (full history), on the plan of the server owner.', req);
+            return fail(res, 403, textOfReq(req).t('general.cases.exportFree'), textOfReq(req).t('general.cases.exportFreeText'), req);
         }
         logger.info(`Dashboard case export by ${req.dashboard.session.userId}: ${rows.length} case(s), plan ${planId}`);
         await audits.writeRows(guildId, { userId: req.dashboard.session.userId, username: req.dashboard.session.username }, 'cases',
@@ -645,7 +647,7 @@ export function createDashboard({
     async function renderCase(req, res, status = 200, { error = null } = {}) {
         const code = normalizeCaseCode(str(req.params?.code, 10));
         const record = code ? await data.getCaseByCode(code) : null;
-        if (!record || record.guild_id !== guildId) return fail(res, 404, 'Case not found', 'There is no case with that code.', req);
+        if (!record || record.guild_id !== guildId) return fail(res, 404, textOfReq(req).t('general.cases.notFound'), textOfReq(req).t('general.cases.notFoundText'), req);
         const [edits, evidenceRows, appeals, notes] = await Promise.all([
             data.getCaseEdits(code, 50),
             data.listEvidence(code),
@@ -725,7 +727,7 @@ export function createDashboard({
         const refused = backupGuard(req, res);
         if (refused) return refused;
         const file = req.upload?.file;
-        if (!file) return backup(req, res, 400, 'Choose a backup file.');
+        if (!file) return backup(req, res, 400, textOfReq(req).t('backups.route.chooseFile'));
         const plan = planBackup(file.data.toString('utf8'), { env });
         if (!plan.ok) return backup(req, res, 400, plan.error);
         const now = Date.now();
@@ -742,12 +744,12 @@ export function createDashboard({
         const entry = backupPlans.get(token);
         backupPlans.delete(token);
         if (!entry || entry.userId !== req.dashboard.session.userId || Date.now() - entry.at > BACKUP_PLAN_TTL_MS) {
-            return backup(req, res, 400, 'That check expired or was already used. Load the file again.');
+            return backup(req, res, 400, textOfReq(req).t('backups.route.expired'));
         }
         const changed = await applyBackup(entry.plan, { userId: req.dashboard.session.userId, username: req.dashboard.session.username }, { env });
         moduleStatesCache = { at: 0, value: {} };
         logger.info(`Dashboard settings backup applied by ${req.dashboard.session.userId}: ${changed} change(s)`);
-        await sessions.setFlash?.(req.dashboard.session.id, `Backup applied: ${changed} setting${changed === 1 ? '' : 's'} changed. They are in the audit log.`);
+        await sessions.setFlash?.(req.dashboard.session.id, textOfReq(req).tp('backups.route.applied', changed));
         return res.redirect(303, path('/backup'));
     }
 
@@ -780,9 +782,16 @@ export function createDashboard({
             audits.list(guildId, { userId: filters.user || null, module: filters.module || null, excludeModules: hiddenAuditModules(req), page, pageSize: AUDIT_PAGE_SIZE }),
             audits.users(guildId).catch(() => []),
         ]);
+        const tr = textOfReq(req);
+        const auditLabel = (m) => {
+            if (tr.lang === 'en') return m.label;
+            if (tr.has(`general.auditModules.${m.key}`)) return tr.t(`general.auditModules.${m.key}`);
+            return tr.has(`frame.nav.items.${m.key}`) ? tr.t(`frame.nav.items.${m.key}`) : m.label;
+        };
         const moduleChoices = [...moduleList.map((m) => ({ key: m.key, label: m.label })), { key: 'appeals', label: 'Appeals (registry)' }, { key: 'logging', label: 'Logging' },
             ...ENFORCEMENT_AUDIT_MODULES]
-            .filter((m, i, all) => all.findIndex((x) => x.key === m.key) === i);
+            .filter((m, i, all) => all.findIndex((x) => x.key === m.key) === i)
+            .map((m) => ({ ...m, label: auditLabel(m) }));
         return sendHtml(res, 200, auditPage({ ...shellOf(req), rows, total, page, pageSize: AUDIT_PAGE_SIZE, filters, users, modules: moduleChoices }));
     }
 
@@ -920,7 +929,7 @@ export function createDashboard({
                     }));
                 }
                 form = confirms.consume(str(form.token, 100), { session: session.idHash, subject, hash: str(form.fh, 100) });
-                if (!form) throw new InputError('This confirmation expired or was already used. Nothing was done; fill in the form again.');
+                if (!form) throw new InputError(textOfReq(req).t('general.confirmExpired'));
             }
             result = await action.run(ctx, form);
         } catch (error) {
@@ -1063,12 +1072,12 @@ export function createDashboard({
 
     async function memberSearchJsonHandler(req, res) {
         const send = (status, value) => res.status(status).type('application/json').send(searchJson(value));
-        if (crossSite(req)) return send(403, { error: 'Not allowed.' });
+        if (crossSite(req)) return send(403, { error: textOfReq(req).t('general.search.json.notAllowed') });
         const q = str(req.query?.q, 100);
         if (!q) return send(200, { results: [] });
         if (!memberSearch.allow(req.dashboard.session.idHash)) {
             res.set('Retry-After', '60');
-            return send(429, { error: 'Too many searches. Wait a minute.' });
+            return send(429, { error: textOfReq(req).t('general.search.json.tooMany') });
         }
         const { results, error } = await memberSearch.search(client.guilds?.cache?.get(guildId) || null, q, { includeBans: str(req.query?.bans, 1) === '1' });
         return send(200, { results: results.map(({ id, name, username, bot, banned }) => ({ id, name, username, bot, banned })), error });

@@ -1,0 +1,42 @@
+{
+  "confirmExpired": "To potwierdzenie wygasło albo zostało już użyte. Nic nie zrobiono; wypełnij formularz ponownie.",
+  "search": {
+    "notSaved": "Nie zapisano",
+    "nameTooLong": "Nazwij wyszukiwanie, najwyżej 40 znaków.",
+    "filterFirst": "Najpierw przefiltruj sprawy, potem zapisz wyszukiwanie.",
+    "invalid": "Te filtry są nieprawidłowe.",
+    "full": "Możesz mieć 20 zapisanych wyszukiwań. Najpierw usuń jedno.",
+    "saved": "Zapisano wyszukiwanie „{name}”.",
+    "notDeleted": "Nie usunięto",
+    "gone": "Tego zapisanego wyszukiwania już nie ma.",
+    "deleted": "Usunięto wyszukiwanie „{name}”.",
+    "json": {
+      "notAllowed": "Niedozwolone.",
+      "tooMany": "Za dużo wyszukiwań. Poczekaj minutę."
+    }
+  },
+  "cases": {
+    "invalidFilter": "Nieprawidłowy filtr.",
+    "exportAdmin": "Eksport spraw wymaga Administratora na serwerze głównym.",
+    "exportFree": "Niedostępne w planie Free",
+    "exportFreeText": "Eksport spraw jest w Mewvo Normal (ostatnie 90 dni) oraz Pro i Max (cała historia), w planie właściciela serwera.",
+    "notFound": "Nie znaleziono sprawy",
+    "notFoundText": "Nie ma sprawy z tym kodem."
+  },
+  "auditModules": {
+    "appeals": "Odwołania (rejestr)",
+    "logging": "Dzienniki",
+    "actions": "Działania moderacyjne",
+    "cases": "Zmiany spraw",
+    "appeal-decisions": "Decyzje w odwołaniach",
+    "notes": "Notatki ekipy",
+    "nocontact": "Rozdzielenie",
+    "watchlist": "Lista obserwowanych",
+    "massguard": "Limit bezpieczeństwa (bany/wyrzucenia)",
+    "staff": "Dyscyplina ekipy",
+    "owner": "Strefa właściciela",
+    "inbox": "Skrzynka (odpowiedzi, zamknięcia)",
+    "members": "Członkowie",
+    "rolerules": "Reguły ról"
+  }
+}

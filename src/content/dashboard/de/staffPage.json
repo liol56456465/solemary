@@ -1,0 +1,101 @@
+{
+  "title": "Team",
+  "help": "Moderation pro Moderator, wann das Team aktiv ist, Wochenaktivität, Team-Disziplin und Sperren durch das Sicherheitslimit (zu viele Banns oder Kicks in 10 Minuten).",
+  "settings": "Einstellungen für Strafen",
+  "period": {
+    "7d": "letzte 7 Tage",
+    "30d": "letzte 30 Tage",
+    "90d": "letzte 90 Tage",
+    "all": "gesamte Zeit"
+  },
+  "stats": {
+    "period": "Zeitraum",
+    "title": "Moderationsstatistik · {period}",
+    "moderator": "Moderator",
+    "total": "Gesamt",
+    "bans": "Banns",
+    "kicks": "Kicks",
+    "mutes": "Stummschaltungen",
+    "warns": "Verwarnungen",
+    "accepted": "Einsprüche angenommen",
+    "denied": "Einsprüche abgelehnt",
+    "removed": "Entfernt",
+    "note": "Automatische (Bot-) und Testfälle sind nicht dabei; entfernte Fälle zählen nicht zu den Summen.",
+    "empty": "Keine Moderationsaktionen in diesem Zeitraum."
+  },
+  "coverage": {
+    "period": "Abdeckungszeitraum",
+    "days": {
+      "one": "{count} Tag",
+      "other": "{count} Tage"
+    },
+    "title": {
+      "one": "Abdeckung · letzter {count} Tag ({zone})",
+      "other": "Abdeckung · letzte {count} Tage ({zone})"
+    },
+    "incidents": "Vorfälle (erstellte Fälle, automatische eingeschlossen): {count}",
+    "staff": "Teamaktivität (Fälle von menschlichen Moderatoren + entschiedene Einsprüche): {count}",
+    "note": "Dunkler = mehr los, in Vierteln bis zur geschäftigsten Stunde. Spalten sind die Stunden 0–23 in {zone} (die Geburtstags-Zeitzone des Servers, unter Geburtstage eingestellt; UTC, wenn keine gesetzt ist).",
+    "gaps": "Am schlechtesten abgedeckte Zeiten",
+    "incidentCount": {
+      "one": "{count} Vorfall",
+      "other": "{count} Vorfälle"
+    },
+    "actionCount": {
+      "one": "{count} Teamaktion",
+      "other": "{count} Teamaktionen"
+    },
+    "none": "Keine Vorfälle in diesem Zeitraum."
+  },
+  "blocks": {
+    "title": "Sperren durch das Sicherheitslimit ({count})",
+    "until": "Gesperrt bis",
+    "count": "Banns/Kicks",
+    "lift": "Sperre aufheben",
+    "ownersOnly": "Nur die Bot-Inhaber können eine Sperre aufheben (wie /staff restore).",
+    "none": "Niemand ist gesperrt."
+  },
+  "activity": {
+    "week": "Woche",
+    "weeks": {
+      "this": "Diese Woche",
+      "last": "Letzte Woche"
+    },
+    "error": "Die Aktivität konnte nicht geladen werden (Datenbank nicht erreichbar).",
+    "member": "Teammitglied",
+    "messages": "Nachrichten",
+    "actions": "Aktionen",
+    "appeals": "Einsprüche",
+    "reviews": "Prüfungen",
+    "tickets": "Tickets",
+    "owner": "Inhaber",
+    "inactive": "Inaktiv",
+    "warnings": "Verwarnungen",
+    "note": "Inaktiv = keine Moderationsarbeit und unter 20 Nachrichten. Aktionen sind von ihnen erstellte Fälle; Prüfungen sind Automod- und Verifizierungskarten.",
+    "none": "Kein Team gefunden.",
+    "title": "Teamaktivität · Woche ab {start}"
+  },
+  "discipline": {
+    "title": "Team-Disziplin",
+    "ownersOnly": "Nur die Bot-Inhaber können Teammitglieder verwarnen, ihre Team-Verwarnungen sehen oder entfernte Teamrollen zurückgeben (wie /staff warn, warnings und restore).",
+    "reason": "Grund: gegen welche Admin-Regel verstoßen wurde (wird ihnen geschickt)",
+    "give": "Team-Verwarnung geben",
+    "giveConfirm": "Diesem Teammitglied eine Verwarnung geben? Bei {limit} aktiven Verwarnungen werden die Teamrollen entfernt.",
+    "showOf": "Verwarnungen zeigen von",
+    "warningsError": "Die Verwarnungen konnten nicht geladen werden (Datenbank nicht erreichbar).",
+    "warningsOf": "Team-Verwarnungen: {name}",
+    "given": "Vergeben",
+    "active": "aktiv",
+    "expired": "abgelaufen",
+    "removedError": "Entfernte Teamrollen konnten nicht geladen werden (Datenbank nicht erreichbar).",
+    "removedRoles": "Entfernte Rollen",
+    "why": "Warum",
+    "restore": "Rollen zurückgeben",
+    "restoreConfirm": "Diese Teamrollen zurückgeben?",
+    "noneSaved": "Keine entfernten Teamrollen gespeichert.",
+    "restoreOf": "Rollen zurückgeben an",
+    "help": "Team-Verwarnungen laufen ab; bei {limit} aktiven Verwarnungen werden die Teamrollen entfernt (der Team-Schutz entfernt sie ebenfalls). Das Mitglied bekommt eine DM und das Mod-Log eine Zeile.",
+    "removedTitle": "Entfernte Teamrollen",
+    "restoreNote": "Beim Zurückgeben kommen die gespeicherten Rollen zurück, die der Bot noch verwalten kann. Eine Sperre durch das Sicherheitslimit (zu viele Banns oder Kicks in 10 Minuten) wird getrennt aufgehoben (Sperren durch das Sicherheitslimit)."
+  }
+}

@@ -89,7 +89,10 @@ test('the catalog files are the same namespaces in every language', () => {
 });
 
 test('every catalog key the frame code names exists in English', () => {
-    const files = ['html.js', 'forms.js', 'overview.js', 'pages.js', 'routes.js', 'modules/commands.js', 'modules/common.js'];
+    const files = ['html.js', 'forms.js', 'overview.js', 'pages.js', 'routes.js', 'modules/commands.js', 'modules/common.js',
+        'enforcementPages.js', 'enforcementRoutes.js', 'inboxPages.js', 'inboxRoutes.js', 'memberToolsPages.js', 'memberToolsRoutes.js',
+        'membersData.js', 'memberActions.js', 'bulkActions.js', 'helpPages.js', 'incidentPages.js', 'backupPages.js', 'activityPage.js',
+        'modulesPage.js', 'permissionFixRoutes.js', 'ownerPages.js', 'ownerErasePages.js', 'websitePages.js'];
     const prefixes = NAMESPACES.join('|');
     const found = new Set();
     for (const file of files) {
@@ -97,6 +100,8 @@ test('every catalog key the frame code names exists in English', () => {
         for (const m of code.matchAll(new RegExp(`['\`]((?:${prefixes})\\.[A-Za-z0-9_.-]+)['\`]`, 'g'))) found.add(m[1]);
     }
     assert.ok(found.size > 100, `${found.size} keys found in the code`);
+    // Strings that look like catalog keys but are not (owner activity / audit keys).
+    for (const notKey of ['commands.register']) found.delete(notKey);
     for (const key of found) {
         assert.ok(DASHBOARD_CATALOG.hasKey('en', key) || DASHBOARD_CATALOG.hasKey('en', `${key}.other`), `missing in English: ${key}`);
     }

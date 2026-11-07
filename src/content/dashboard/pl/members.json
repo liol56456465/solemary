@@ -1,0 +1,289 @@
+{
+  "back": "← Członkowie",
+  "notice": {
+    "readOnly": "Tylko do odczytu: edytowanie w panelu jest wyłączone (DASHBOARD_EDIT_ENABLED nie ma wartości true). Użyj komend bota.",
+    "viewOnly": {
+      "actions": "Tylko podgląd: aby nakładać tu kary, potrzebujesz uprawnienia Administrator na głównym serwerze.",
+      "cases": "Tylko podgląd: aby zmieniać tu sprawy, potrzebujesz uprawnienia Administrator na głównym serwerze.",
+      "appeals": "Tylko podgląd: aby decydować tu o odwołaniach, potrzebujesz uprawnienia Administrator na głównym serwerze.",
+      "orders": "Tylko podgląd: aby zaczynać lub kończyć tu rozdzielenia, potrzebujesz uprawnienia Administrator na głównym serwerze."
+    }
+  },
+  "form": {
+    "save": "Zapisz",
+    "choose": "Wybierz…",
+    "for": "Na",
+    "permanently": "Na stałe",
+    "timeoutLength": "Długość przerwy",
+    "custom": "Własny…",
+    "customReason": "Własny powód",
+    "reasonAudit": "Powód (opcjonalnie, dziennik audytu Discorda)",
+    "preview": "Podgląd",
+    "remove": "Usuń"
+  },
+  "confirm": {
+    "cancel": "Anuluj",
+    "back": "← Wstecz (anuluj)",
+    "nothingYet": "Jeszcze nic się nie zmieniło. To potwierdzenie działa raz i wygasa po 5 minutach.",
+    "once": "To potwierdzenie działa raz i wygasa po 5 minutach.",
+    "heading": "Potwierdź: {action}",
+    "title": "Potwierdź: {action}",
+    "submit": "Potwierdź: {action}",
+    "evidence": "Dowody",
+    "unreadable": "(wiadomości nie da się odczytać, tylko link)",
+    "effect": "Skutek",
+    "blocked": "Blokuje cię limit bezpieczeństwa (za dużo banów lub wyrzuceń w 10 minut) do {date}; to zostanie odrzucone."
+  },
+  "tabs": {
+    "label": "Sekcja członków",
+    "list": "Członkowie",
+    "rules": "Reguły ról",
+    "insights": "Statystyki"
+  },
+  "list": {
+    "title": "Członkowie",
+    "help": "otwórz członka, aby zmienić jego role lub coś zrobić.",
+    "count": {
+      "one": "{count} członek",
+      "other": "{count} członków",
+      "few": "{count} członków",
+      "many": "{count} członków"
+    },
+    "ofTotal": " z {total}",
+    "noRoles": "brak ról",
+    "level": "stopień {n}",
+    "warns": {
+      "one": "{count} ostrzeżenie",
+      "other": "{count} ostrzeżenia",
+      "few": "{count} ostrzeżenia",
+      "many": "{count} ostrzeżeń"
+    },
+    "warnsOf": "{n} z 3",
+    "select": "Zaznacz {name}",
+    "selectAll": "Zaznacz wszystkich na tej stronie",
+    "member": "Członek",
+    "roles": "Role",
+    "joined": "Dołączył",
+    "warnsHead": "Ostrzeżenia",
+    "state": "Stan",
+    "unknown": "nieznane",
+    "muted": "Wyciszony",
+    "noMatch": "Żaden członek nie pasuje do tych filtrów.",
+    "clearFilters": "Wyczyść filtry",
+    "empty": "Nie ma jeszcze kogo pokazać. Lista wypełni się, gdy bot wczyta główny serwer.",
+    "show": "Pokaż",
+    "stillLoading": "Pokazano {cached} z {total}: lista członków jeszcze się wczytuje. Odśwież za minutę.",
+    "unavailable": "Lista członków jest teraz niedostępna (bot nie widzi głównego serwera).",
+    "search": "Szukaj",
+    "searchPlaceholder": "Nazwa, pseudonim lub ID użytkownika",
+    "role": "Rola",
+    "anyRole": "Dowolna rola",
+    "sort": "Sortuj",
+    "apply": "Zastosuj",
+    "clear": "Wyczyść"
+  },
+  "bulk": {
+    "summary": "Akcja zbiorcza",
+    "summaryHint": " · zaznacz członków poniżej albo weź wszystkich pasujących do filtrów",
+    "which": "Którzy członkowie",
+    "ticked": "Zaznaczeni poniżej",
+    "everyone": "Wszyscy pasujący do tych filtrów ({count})",
+    "tooMany": "więcej niż {max}: zawęź filtry",
+    "doThis": "Co zrobić",
+    "customHint": "Tylko z „Własny…”. Każdy członek dostaje tę samą wiadomość prywatną i sprawę, co pojedynczo.",
+    "banLength": "Długość bana",
+    "banLengthPlaceholder": "np. 7d, 1mo, permanent",
+    "note": "Jeszcze nic się nie dzieje: następna strona pokaże dokładnie, kto zostanie zmieniony, kto pominięty i dlaczego. Najwyżej {max} członków; wyrzuceń i banów tylko tyle, ile jeszcze pozwala limit bezpieczeństwa (za dużo banów lub wyrzuceń w 10 minut).",
+    "forLength": " na {length}",
+    "verb": {
+      "roleAdd": "Daj @{role}: {members}",
+      "roleRemove": "Zabierz @{role}: {members}",
+      "timeout": "Przerwa (timeout): {members}",
+      "kick": "Wyrzuć: {members}",
+      "ban": "Zbanuj: {members}"
+    },
+    "check": "Sprawdź listę. Jeszcze nic nie zmieniono.",
+    "guard": {
+      "one": "Limit bezpieczeństwa (za dużo banów lub wyrzuceń w 10 minut) pozwala w tym 10-minutowym oknie jeszcze na {count} ban/wyrzucenie; kolejni członkowie zostaną pominięci.",
+      "other": "Limit bezpieczeństwa (za dużo banów lub wyrzuceń w 10 minut) pozwala w tym 10-minutowym oknie jeszcze na {count} bany/wyrzucenia; kolejni członkowie zostaną pominięci.",
+      "few": "Limit bezpieczeństwa (za dużo banów lub wyrzuceń w 10 minut) pozwala w tym 10-minutowym oknie jeszcze na {count} bany/wyrzucenia; kolejni członkowie zostaną pominięci.",
+      "many": "Limit bezpieczeństwa (za dużo banów lub wyrzuceń w 10 minut) pozwala w tym 10-minutowym oknie jeszcze na {count} banów/wyrzuceń; kolejni członkowie zostaną pominięci."
+    },
+    "willChange": "Zostaną zmienieni ({count})",
+    "nobody": "Nikt: wszyscy zaznaczeni członkowie są pomijani.",
+    "skipped": "Pominięci ({count})",
+    "runs": "Działa po jednym członku (limity Discorda); możesz opuścić stronę i wrócić, by zobaczyć postęp.",
+    "sameDm": "Każdy członek dostaje tę samą wiadomość prywatną i sprawę, co przy pojedynczej akcji.",
+    "title": "Zbiorczo: {what}"
+  },
+  "job": {
+    "working": "Trwa… gotowe {done} z {total}. Strona odświeża się sama.",
+    "finished": "Koniec: gotowe {done}, nieudane {failed}.",
+    "progress": "Postęp",
+    "failed": "Nieudane ({count})",
+    "done": "Gotowe ({count})"
+  },
+  "bans": {
+    "title": "Zbanowani",
+    "noCase": "brak sprawy (zbanowany poza botem)",
+    "permanent": "Na stałe",
+    "until": "Do {date}",
+    "ban": "Ban",
+    "noReason": "nie podano powodu",
+    "appealPending": "odwołanie oczekuje",
+    "by": "{name}, {date}",
+    "unban": "Odbanuj…",
+    "open": "Otwórz",
+    "count": {
+      "one": "{count} ban",
+      "other": "{count} bany",
+      "few": "{count} bany",
+      "many": "{count} banów"
+    },
+    "noMatch": "Żaden ban nie pasuje.",
+    "showAll": "Pokaż wszystkich zbanowanych",
+    "empty": "Na głównym serwerze nikt nie jest zbanowany.",
+    "bannedCount": "Zbanowani na głównym serwerze: {count}",
+    "help": "Odbanowanie otwiera stronę członka: widzisz skutek, potem potwierdzasz. Członek dostaje wiadomość prywatną z zaproszeniem z powrotem.",
+    "searchPlaceholder": "Nazwa lub ID użytkownika"
+  },
+  "standing": {
+    "banEnds": "ban {case}, kończy się {date}",
+    "banPermanent": "ban {case}, na stałe",
+    "bannedOutside": "zbanowany poza botem (brak wpisu)",
+    "muteEnds": "wyciszenie {case}, kończy się {date}",
+    "mutedRole": "ma rolę wyciszenia (brak wpisu)",
+    "counted": "Liczone ostrzeżenia",
+    "stage": "Stopień ostrzeżeń",
+    "next": "Następne ostrzeżenie",
+    "active": "Aktywna kara",
+    "pending": "Oczekujące odwołania",
+    "none": "brak"
+  },
+  "header": {
+    "joined": "Dołączył {date}",
+    "inServer": "Na serwerze",
+    "notInServer": "Poza serwerem",
+    "id": "ID {id}",
+    "active": "Aktywne",
+    "none": "Brak",
+    "banned": "Zbanowany",
+    "muted": "Wyciszony"
+  },
+  "profile": {
+    "username": "Nazwa użytkownika",
+    "displayName": "Wyświetlana nazwa",
+    "nickname": "Pseudonim",
+    "created": "Konto utworzone",
+    "dateAgo": "{date} ({age} temu)",
+    "inServer": "Na serwerze",
+    "yesJoined": "tak, dołączył {date} ({age} temu)",
+    "yesUnknown": "tak, nie wiadomo kiedy dołączył",
+    "no": "nie",
+    "roles": "Role ({count})"
+  },
+  "edit": {
+    "until": "do {date}",
+    "noRoles": "Brak ról.",
+    "needsAdminEditing": "Zmiana ról wymaga uprawnienia Administrator i włączonej edycji.",
+    "needsAdmin": "Zmiana ról wymaga uprawnienia Administrator.",
+    "giveRole": "Daj rolę",
+    "giveRoleHint": "Tylko role poniżej twojej najwyższej roli i roli Mewvo; role ekipy tylko dla właściciela serwera lub właścicieli bota.",
+    "timedHint": "Role czasowe są zdejmowane automatycznie i oddawane, jeśli członek wróci przed końcem.",
+    "giveRoleSubmit": "Daj rolę",
+    "noOtherRole": "Nie ma innej roli, którą możesz dać.",
+    "nicknameHint": "Puste usuwa pseudonim.",
+    "saveNickname": "Zapisz pseudonim",
+    "timedOutUntil": "Przerwa do {date}.",
+    "removeTimeout": "Zdejmij przerwę",
+    "timeoutHint": "Przerwa samego Discorda (maks. 28 dni): może czytać, ale nie pisać ani mówić. Na dłużej użyj wyciszenia.",
+    "changeTimeout": "Zmień przerwę",
+    "timeOut": "Daj przerwę",
+    "timeOutConfirm": "Dać przerwę: {name}?",
+    "verification": "Weryfikacja",
+    "verified": "Zweryfikowany (@{role}).",
+    "unverifyReason": "Powód (opcjonalnie, dziennik audytu Discorda i dziennik weryfikacji)",
+    "unverify": "Cofnij weryfikację",
+    "unverifyConfirm": "Cofnąć weryfikację: {name}? Straci @{role} i musi zweryfikować się ponownie.",
+    "timeout": "Przerwa (timeout)"
+  },
+  "notes": {
+    "note": "Notatka",
+    "empty": "Nie ma jeszcze notatek ekipy. Dodaj jedną poniżej; widzi je tylko ekipa.",
+    "new": "Nowa notatka (widzi ją tylko ekipa)",
+    "add": "Dodaj notatkę"
+  },
+  "cases": {
+    "all": {
+      "one": "Wszystkie sprawy ({count}) →",
+      "other": "Wszystkie sprawy ({count}) →",
+      "few": "Wszystkie sprawy ({count}) →",
+      "many": "Wszystkie sprawy ({count}) →"
+    },
+    "none": "Brak spraw."
+  },
+  "keepApart": {
+    "item": "z {name} {id} do {date} (rozdzielenie #{order})",
+    "title": "Rozdzielenie",
+    "heading": "Rozdzielenie ({count})",
+    "help": "Rozdziel dwóch członków: nie mogą się wzajemnie oznaczać ani sobie odpowiadać; naruszające wiadomości są usuwane i zapisywane. Obaj dostają wiadomość prywatną, gdy rozdzielenie się zaczyna i kończy.",
+    "active": "Aktywne rozdzielenia ({count})",
+    "members": "Członkowie",
+    "endNow": "Zakończ teraz",
+    "none": "Brak aktywnych rozdzieleń.",
+    "start": "Zacznij rozdzielenie",
+    "first": "Pierwszy członek",
+    "second": "Drugi członek",
+    "days": "Dni",
+    "reason": "Powód (zobaczą go obaj członkowie)",
+    "startSubmit": "Zacznij rozdzielenie"
+  },
+  "precedent": {
+    "question": "Jak wcześniej traktowano ten powód?",
+    "choose": "wybierz powód",
+    "show": "Pokaż",
+    "none": "Brak wcześniejszych spraw z tym powodem do porównania."
+  },
+  "action": {
+    "severe": " (poważny: domyślnie bez odwołania)",
+    "customHint": "Tylko z „Własny…”.",
+    "banDurationHint": "np. 30m, 24h, 7d, 1mo. Puste = na stałe.",
+    "muteDurationHint": "Wymagane. Np. 30m, 24h, 7d, 1mo.",
+    "appealDefault": "Domyślnie (poważne powody: Nie)",
+    "name": "Nazwa (opcjonalnie)",
+    "nameHint": "Domyślnie: {name} {type} <n>",
+    "evidence": "Dowody (linki do wiadomości, opcjonalnie)",
+    "evidenceHint": "Do {max} linków, jeden w wierszu. Ich tekst zapisuje się teraz. Obrazy możesz potem przesłać na stronie sprawy.",
+    "warning": "Ostrzeżenie",
+    "reasonOptional": "Powód (opcjonalnie)"
+  },
+  "timeline": {
+    "error": "Nie udało się wczytać osi czasu (baza danych). Odśwież stronę, aby spróbować ponownie.",
+    "empty": "Nic jeszcze nie zapisano. Dołączenia i wyjścia są przechowywane 90 dni.",
+    "note": "Najnowsze najpierw. Dołączenia i wyjścia są przechowywane 90 dni."
+  },
+  "member": {
+    "moderatorCan": "Moderator: możesz tu {actions}. Ban, odbanowanie, role, pseudonim i notatki wymagają uprawnienia Administrator.",
+    "profile": "Profil",
+    "record": "Dotychczasowa historia",
+    "roles": "Role ({count}), pseudonim i przerwa",
+    "keepApart": "Rozdzielenie",
+    "actions": "Akcje",
+    "blocked": "Blokuje cię limit bezpieczeństwa (za dużo banów lub wyrzuceń w 10 minut) do {date}; akcje zostaną odrzucone.",
+    "sameActions": "Te same akcje, wiadomości prywatne, drabina i sprawdzenia co w /enforcements. Każda najpierw pokazuje potwierdzenie.",
+    "noActions": "Brak dostępnych akcji.",
+    "available": "Dostępne: {actions}.",
+    "precedent": "Co ekipa zwykle dawała za ten powód",
+    "timeline": "Oś czasu",
+    "caseHistory": "Historia spraw ({count})",
+    "staffNotes": "Notatki ekipy ({count})"
+  },
+  "watch": {
+    "title": "Lista obserwacji ({count})",
+    "help": "Tylko dla ekipy; członek nigdy się nie dowie. Jego dołączenia, nowe sprawy i trafienia automoderacji trafiają do dziennika moderacji (najwyżej raz na minutę). Członków dodajesz przez {command}.",
+    "since": "Od",
+    "until": "Do",
+    "noEnd": "Bez daty końca",
+    "empty": "Nikogo nie ma na liście obserwacji."
+  }
+}

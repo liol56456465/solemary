@@ -1,0 +1,225 @@
+{
+  "glossary": {
+    "title": "Glossário",
+    "intro": "As palavras que este painel e o Discord usam, explicadas de forma simples. Falta alguma coisa? Pergunte no servidor de suporte.",
+    "open": "Abrir"
+  },
+  "groups": {
+    "basics": "O básico do Discord",
+    "safety": "Manter o servidor seguro",
+    "moderation": "Palavras de moderação do Mewvo",
+    "members": "Falar com os membros",
+    "fun": "Diversão e comunidade"
+  },
+  "words": {
+    "server": {
+      "term": "Servidor",
+      "text": "Sua comunidade no Discord. O Mewvo funciona em um servidor principal e em um servidor de suporte opcional."
+    },
+    "channel": {
+      "term": "Canal",
+      "text": "Um lugar para conversar dentro do servidor, como #general. Canais de texto têm mensagens, canais de voz têm chamadas."
+    },
+    "category": {
+      "term": "Categoria",
+      "text": "Uma pasta que agrupa canais na lista de canais. O Mewvo coloca tickets e apelações em categorias próprias."
+    },
+    "thread": {
+      "term": "Tópico",
+      "text": "Uma conversa curta à parte, presa a uma mensagem de um canal."
+    },
+    "role": {
+      "term": "Cargo",
+      "text": "Uma etiqueta que você dá aos membros, como \"Moderador\" ou \"Nível 10\". Os cargos decidem o que os membros veem e podem fazer, e podem dar cor ao nome."
+    },
+    "permission": {
+      "term": "Permissão",
+      "text": "Uma coisa que um cargo permite, como \"Gerenciar mensagens\" ou \"Banir membros\". Os canais podem mudar as permissões de um cargo."
+    },
+    "administrator": {
+      "term": "Administrador",
+      "text": "A permissão que permite tudo. No Mewvo, só quem a tem pode mudar configurações ou punir membros."
+    },
+    "dm": {
+      "term": "DM",
+      "text": "Uma mensagem direta: um chat privado entre duas pessoas, ou entre um membro e o Mewvo. Os membros podem desativar DMs de servidores."
+    },
+    "mention": {
+      "term": "Menção",
+      "text": "Um nome com @ na frente, como @Sam. A pessoa recebe uma notificação. O Mewvo nunca menciona @everyone a partir de texto que alguém digita."
+    },
+    "slashCommand": {
+      "term": "Comando de barra",
+      "text": "Um comando que você começa digitando / na caixa de mensagem, como /rank. O Discord mostra uma lista enquanto você digita."
+    },
+    "embed": {
+      "term": "Embed",
+      "text": "Uma caixa de mensagem com borda colorida, título em negrito e texto. Os bots usam para mensagens organizadas."
+    },
+    "id": {
+      "term": "ID",
+      "text": "Um número longo que o Discord dá a cada servidor, canal, cargo e pessoa. Ative o Modo desenvolvedor no Discord (Configurações, Avançado), depois clique com o botão direito em algo e escolha \"Copiar ID\"."
+    },
+    "warn": {
+      "term": "Advertência",
+      "text": "Uma advertência por escrito. O membro recebe uma DM. Três advertências levam sozinhas a um banimento (veja a escada de advertências)."
+    },
+    "mute": {
+      "term": "Silenciamento",
+      "text": "O membro continua no servidor, mas não pode escrever nem falar por um tempo. O Mewvo faz isso com um cargo \"Muted\"."
+    },
+    "timeout": {
+      "term": "Castigo (timeout)",
+      "text": "O silenciamento curto do próprio Discord, de no máximo 28 dias. O silenciamento do Mewvo usa um cargo, então pode durar mais."
+    },
+    "kick": {
+      "term": "Expulsão",
+      "text": "Remove o membro do servidor. Ele pode voltar com um convite. O Mewvo envia um convite novo."
+    },
+    "ban": {
+      "term": "Banimento",
+      "text": "Remove o membro e impede que ele volte, por um tempo ou para sempre."
+    },
+    "case": {
+      "term": "Caso",
+      "text": "O registro de uma advertência, silenciamento, expulsão ou banimento: quem, por quê, quando e por quem."
+    },
+    "caseCode": {
+      "term": "Código do caso",
+      "text": "Um código curto como \"k7fq2\" que identifica um caso. Os membros usam ao apelar."
+    },
+    "warnLadder": {
+      "term": "Escada de advertências",
+      "text": "O que acontece quando as advertências se somam: a 3ª advertência é um banimento de 7 dias, a próxima depois dela 30 dias, e então um banimento permanente."
+    },
+    "appeal": {
+      "term": "Apelação",
+      "text": "Um membro pede à equipe para tirar ou encurtar uma punição. A equipe aceita ou nega."
+    },
+    "automod": {
+      "term": "Automod",
+      "text": "O Mewvo confere as mensagens sozinho e remove spam, palavrões, links de convite e raids."
+    },
+    "reviewCard": {
+      "term": "Cartão de revisão",
+      "text": "Uma mensagem curta que o Mewvo posta para a equipe quando o automod faz algo, com botões para manter ou desfazer."
+    },
+    "raid": {
+      "term": "Raid",
+      "text": "Muitas contas novas entrando ao mesmo tempo para fazer spam. Quando o Mewvo percebe um, pode dificultar a entrada por um tempo (um bloqueio)."
+    },
+    "modLog": {
+      "term": "Registro de moderação",
+      "text": "Um canal só da equipe onde o Mewvo anota cada punição, para todos poderem conferir depois."
+    },
+    "auditLog": {
+      "term": "Registro de auditoria",
+      "text": "Uma lista de cada mudança feita neste painel: quem mudou qual configuração, e quando."
+    },
+    "removeCase": {
+      "term": "Remover caso",
+      "text": "Para um caso dado por engano. O Mewvo tira o que ainda está valendo, manda uma DM ao membro, e o caso deixa de contar. Ele continua no histórico, marcado como \"Removido\". (O comando de barra é /case remove.)"
+    },
+    "liftedEarly": {
+      "term": "Retirado antes do prazo",
+      "text": "Um banimento, silenciamento ou advertência que acabou antes da hora: a equipe usou Desbanir, Tirar silêncio ou Remover advertência, ou aceitou uma apelação."
+    },
+    "warningStage": {
+      "term": "Etapa de advertência",
+      "text": "Onde o membro está na escada de advertências: etapa 0 de 3 (ainda sem banimento por advertência), 1 de 3 (banimento de 7 dias), 2 de 3 (banimento de 30 dias), 3 de 3 (banimento permanente). Ela não volta sozinha."
+    },
+    "canTheyAppeal": {
+      "term": "Pode apelar?",
+      "text": "Se o membro pode pedir à equipe para tirar uma punição. Sim para quase tudo. Não para um banimento grave que a equipe marcou assim, nem para um banimento da etapa 3 depois de 6 meses ou depois de uma apelação negada."
+    },
+    "whatStaffUsuallyGaveForThisReason": {
+      "term": "O que a equipe costuma dar por este motivo",
+      "text": "Uma dica ao lado de uma punição: o que a equipe deu pelo mesmo motivo nos últimos 180 dias, para que os membros recebam punições parecidas por coisas parecidas."
+    },
+    "recordSoFar": {
+      "term": "Histórico até agora",
+      "text": "As advertências contadas de um membro, a etapa de advertência, punições ativas e apelações, na página do membro. Os membros veem o seu com o botão \"My record\" no painel de apelação."
+    },
+    "extraWatchPeriodAfterABan": {
+      "term": "Vigilância extra depois de um banimento",
+      "text": "Por 7 dias depois que um membro volta de um banimento, o automod fica mais rígido com ele: começa um degrau de punição acima, sem aviso amigável e sem tolerância para membros de confiança. (O comando de barra é /automod extrawatch.)"
+    },
+    "warnPrivatelyFirst2MinToFix": {
+      "term": "Avisar em particular primeiro (2 min para corrigir)",
+      "text": "Para regras pequenas do automod: na primeira vez em 30 dias, o membro recebe uma mensagem privada e 2 minutos para editar ou apagar a mensagem. Se corrigir, nada mais acontece."
+    },
+    "friendlyNoticeForAFirstSmallOffence": {
+      "term": "Aviso amigável para uma primeira falta leve",
+      "text": "O primeiro deslize leve de um membro em 30 dias (maiúsculas, caracteres estranhos, só inglês, linguagem leve) recebe um aviso curto em vez de uma advertência."
+    },
+    "reportOnlyDonTDelete": {
+      "term": "Só avisar (não apagar)",
+      "text": "Um modo do automod: a equipe recebe um cartão de revisão sobre a mensagem, mas nada é apagado e ninguém é punido até a equipe aplicar. Bom para testar uma regra."
+    },
+    "keepApart": {
+      "term": "Manter separados",
+      "text": "A equipe pede a dois membros que se deixem em paz até uma data. Menções e respostas entre eles são removidas. Não é uma punição e não conta como advertência."
+    },
+    "safetyLimitTooManyBansOrKicksIn10Minutes": {
+      "term": "Limite de segurança: banimentos ou expulsões demais em 10 minutos",
+      "text": "Por padrão, se um moderador banir ou expulsar mais de 5 membros em 10 minutos (silenciamentos: 10), o Mewvo o bloqueia por uma hora e avisa o dono do bot. Os donos podem mudar esses números. Isso protege o servidor se uma conta de moderador for mal usada."
+    },
+    "showWhatChanged": {
+      "term": "Mostrar o que mudou",
+      "text": "Um botão num alerta da equipe depois que muitos canais ou cargos foram apagados: compara o último backup do servidor com o servidor agora, para você poder restaurar com /backup revert."
+    },
+    "ticket": {
+      "term": "Ticket",
+      "text": "Um canal privado onde um membro conversa com a equipe, aberto com um botão."
+    },
+    "modmail": {
+      "term": "Modmail",
+      "text": "Um membro manda uma DM ao Mewvo, e a equipe responde num canal privado. O Mewvo passa as mensagens de um lado para o outro."
+    },
+    "supportServer": {
+      "term": "Servidor de suporte",
+      "text": "Um segundo servidor pequeno onde membros banidos ainda podem apelar, já que não veem o principal."
+    },
+    "inbox": {
+      "term": "Caixa de entrada",
+      "text": "A lista deste painel com tudo o que espera a equipe: apelações, tickets, modmail e revisões do automod."
+    },
+    "xpAndLevels": {
+      "term": "XP e níveis",
+      "text": "Os membros ganham pontos (XP) por conversar. XP suficiente é um novo nível, e os níveis podem dar cargos."
+    },
+    "reactionRoles": {
+      "term": "Cargos por reação",
+      "text": "Uma mensagem com botões ou um menu onde os membros escolhem os próprios cargos, como \"Gamer\" ou \"Novidades\"."
+    },
+    "verification": {
+      "term": "Verificação",
+      "text": "Membros novos apertam um botão para mostrar que são pessoas de verdade antes de poder conversar."
+    },
+    "plan": {
+      "term": "Plano",
+      "text": "O Mewvo é grátis. Planos pagos (Normal, Pro, Max) aumentam alguns limites. Para o servidor vale o plano do dono do servidor."
+    }
+  },
+  "setup": {
+    "checkAgain": "Mudou algo no Discord? [Verificar de novo]({href}).",
+    "done": "Pronto.",
+    "changeOnPage": "Você pode mudar isso na página dele.",
+    "ownPage": "Ainda não configurado. Este tem várias configurações, por isso abre uma página própria.",
+    "openSetting": "Abrir esta configuração",
+    "setUp": "Configurar",
+    "changeHere": "Você pode mudar isso aqui.",
+    "pickHere": "Ainda não configurado. Escolha aqui e salve.",
+    "moreSettings": "Mais configurações: [abra a página dele]({href}).",
+    "unreadable": "Não foi possível carregar as etapas de configuração agora. Recarregue a página em um minuto.",
+    "progress": "{done} de {total} etapas feitas. Siga na ordem, ou pule as que você não precisa. Você pode voltar aqui a qualquer momento pela barra lateral.",
+    "stepOf": "Etapa {n} de {total}",
+    "back": "Voltar",
+    "next": "Próxima etapa",
+    "skip": "Pular por enquanto",
+    "finish": "Concluir",
+    "allSteps": "Todas as etapas",
+    "doneMark": " (feito)",
+    "newWords": "Palavras novas? [Glossário]({href})."
+  }
+}

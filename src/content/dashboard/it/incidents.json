@@ -1,0 +1,124 @@
+{
+  "list": {
+    "intro": "Ogni blocco per raid degli ultimi {days} giorni, minuto per minuto: chi è entrato e cosa hanno fatto Mewvo e lo staff. Orari in UTC. Il contenuto dei messaggi non viene conservato.",
+    "unreadable": "Non è stato possibile caricare gli incidenti (database). Ricarica la pagina per riprovare.",
+    "empty": "Nessun raid negli ultimi {days} giorni. Quando molti account entrano insieme, Mewvo avvia da solo un blocco e la sua cronologia compare qui.",
+    "notKept": "(+{n} non conservati)",
+    "open": "Apri la cronologia"
+  },
+  "col": {
+    "started": "Inizio",
+    "ended": "Fine",
+    "duration": "Durata",
+    "trigger": "Causa",
+    "events": "Eventi registrati",
+    "open": "Apri"
+  },
+  "status": {
+    "running": "Ancora in corso",
+    "notRecorded": "Non registrato",
+    "unread": "Non leggibile"
+  },
+  "span": {
+    "underMinute": "meno di un minuto",
+    "days": "{n} g",
+    "hours": "{n} h",
+    "minutes": "{n} min"
+  },
+  "trigger": {
+    "join_raid": "Raid di ingressi (molti account entrati insieme)"
+  },
+  "kind": {
+    "lockdown_start": "Blocco avviato",
+    "lockdown_end": "Blocco terminato",
+    "verification": "Livello di verifica",
+    "panic": "Inviti e DM",
+    "gate_kick": "Espulsione dal filtro ingressi",
+    "gate_flag": "Segnalazione dal filtro ingressi",
+    "automod": "Automod (senza caso)",
+    "mass_block": "Limite di sicurezza (ban/espulsioni)",
+    "join": "Entrato",
+    "leave": "Uscito",
+    "case": "Caso",
+    "dashboard": "Modifica dalla dashboard"
+  },
+  "actions": {
+    "ban": "Ban",
+    "kick": "Espulsioni",
+    "mute": "Silenziamenti",
+    "warn": "Avvertimenti",
+    "gate_kick": "Espulsioni dal filtro",
+    "gate_flag": "Segnalazioni dal filtro",
+    "automod": "Automod senza caso",
+    "mass_block": "Blocchi del limite di sicurezza"
+  },
+  "chart": {
+    "ariaMinute": "{label} al minuto: {total} in totale su {bars} barre. L’elenco minuto per minuto qui sotto ha ogni evento.",
+    "ariaMinutes": "{label} ogni {minutes} minuti: {total} in totale su {bars} barre. L’elenco minuto per minuto qui sotto ha ogni evento."
+  },
+  "item": {
+    "case": "caso {code}",
+    "by": "da"
+  },
+  "count": {
+    "joins": {
+      "one": "{count} ingresso",
+      "many": "{count} ingressi",
+      "other": "{count} ingressi"
+    },
+    "leaves": {
+      "one": "{count} uscita",
+      "many": "{count} uscite",
+      "other": "{count} uscite"
+    },
+    "actions": {
+      "one": "{count} azione",
+      "many": "{count} azioni",
+      "other": "{count} azioni"
+    },
+    "steps": {
+      "one": "{count} passaggio del blocco",
+      "many": "{count} passaggi del blocco",
+      "other": "{count} passaggi del blocco"
+    },
+    "quiet": {
+      "one": "{count} minuto tranquillo",
+      "many": "{count} minuti tranquilli",
+      "other": "{count} minuti tranquilli"
+    },
+    "events": {
+      "one": "{count} evento",
+      "many": "{count} eventi",
+      "other": "{count} eventi"
+    }
+  },
+  "detail": {
+    "all": "Tutti gli incidenti",
+    "unreadable": "Non è stato possibile caricare questo incidente (database). Ricarica la pagina per riprovare.",
+    "nothing": "Per questo incidente non è stato registrato nulla.",
+    "dropped": "Sono stati conservati solo i primi {max} eventi di blocco, filtro ingressi e automod; ne sono avvenuti altri {n}.",
+    "truncated": "Questo incidente è molto grande: vengono mostrate solo le prime righe di ingressi e uscite, casi o modifiche dalla dashboard.",
+    "stateUnread": "Non è stato possibile leggere se questo blocco è ancora in corso (database). Ricarica la pagina per riprovare.",
+    "endUnknown": "La fine di questo blocco non è stata registrata (per esempio il bot si è riavviato con una versione più vecchia). La cronologia finisce con l’ultimo evento.",
+    "title": "Raid del {date}",
+    "trigger": "{trigger}. Orari in UTC.",
+    "soFar": "{span} finora",
+    "joined": "Entrati",
+    "left": "Usciti",
+    "raidJoiners": "Account del raid",
+    "endedBy": "Terminato da",
+    "done": "Cosa è stato fatto",
+    "verification": "Livello di verifica:",
+    "panic": "Inviti e DM:",
+    "released": "Estranei rilasciati:",
+    "releasedAt": "{date} da",
+    "chartTitle": "Ingressi e azioni",
+    "perMinute": "al minuto",
+    "perMinutes": "ogni {minutes} minuti",
+    "joinsLabel": "Ingressi:",
+    "joins": "Ingressi",
+    "actionsLabel": "Azioni (casi, filtro ingressi, automod, blocchi del limite di sicurezza):",
+    "actions": "Azioni",
+    "minutes": "Minuto per minuto"
+  }
+}

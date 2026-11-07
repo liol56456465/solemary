@@ -1,0 +1,55 @@
+{
+  "page": {
+    "title": "Moduły",
+    "intro": "Wszystkie części Mewvo w jednym miejscu. Włączone: {on} z {total} modułów, które można włączać i wyłączać; otwórz moduł, żeby zmienić jego ustawienia.",
+    "matches": {
+      "one": "Pasuje {count} moduł",
+      "few": "Pasują {count} moduły",
+      "many": "Pasuje {count} modułów",
+      "other": "Pasuje {count} modułu"
+    },
+    "showAll": "Pokaż wszystkie",
+    "readOnly": "Tylko do odczytu: edycja w panelu jest wyłączona (DASHBOARD_EDIT_ENABLED nie jest true).",
+    "noMatch": "Żaden moduł nie pasuje. Spróbuj innego słowa albo przejrzyj wszystkie moduły.",
+    "noneOn": "Żaden moduł nie jest włączony.",
+    "noneOff": "Żaden moduł nie jest wyłączony."
+  },
+  "filter": {
+    "label": "Filtruj moduły",
+    "all": "Wszystkie",
+    "on": "Wł.",
+    "off": "Wył."
+  },
+  "col": {
+    "module": "Moduł",
+    "what": "Co robi",
+    "state": "Stan"
+  },
+  "state": {
+    "on": "Wł.",
+    "off": "Wył.",
+    "needsSetup": "do skonfigurowania ({n})",
+    "setUp": "Skonfigurowane"
+  },
+  "summary": {
+    "tickets": "Członkowie proszą ekipę o pomoc na prywatnym kanale.",
+    "welcome": "Witaj nowych członków, żegnaj odchodzących, daj rolę na start.",
+    "leveling": "Członkowie zdobywają poziomy za pisanie i dostają za nie role.",
+    "reaction-roles": "Menu, w których członkowie sami wybierają role.",
+    "messages": "Publikuj ogłoszenia, ankiety i odliczania jako Mewvo.",
+    "giveaways": "Rozdawaj nagrody losowym członkom.",
+    "birthdays": "Składaj członkom życzenia urodzinowe.",
+    "applications": "Członkowie składają podanie o rolę, odpowiadając na pytania.",
+    "community": "Propozycje, starboard, przypięte notatki, zapisane odpowiedzi, YouTube.",
+    "join-to-create": "Kanały głosowe, które pojawiają się w razie potrzeby i znikają, gdy są puste.",
+    "automod": "Sam zatrzymuje spam, wulgaryzmy i rajdy.",
+    "enforcement": "Jak działają ostrzeżenia, wyciszenia i bany oraz jak członkowie się odwołują.",
+    "logging": "Zapis tego, co dzieje się na serwerze, dla ekipy.",
+    "verification": "Nowi członkowie potwierdzają, że są prawdziwi, zanim zaczną pisać.",
+    "counters": "Liczniki członków na żywo i gra w liczenie.",
+    "support": "Gdzie zbanowani członkowie nadal mogą się odwołać.",
+    "rules": "Zasady serwera, na stronie internetowej i w wiadomościach o karach.",
+    "appearance": "Daj tu Mewvo własną nazwę i obrazek (Pro i Max).",
+    "commands": "Włączaj i wyłączaj pojedyncze komendy lub grupy komend."
+  }
+}

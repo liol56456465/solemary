@@ -1,0 +1,32 @@
+{
+  "none": "(none)",
+  "page": {
+    "intro": "Every dashboard setting of the main and the support server in one file. Use it before big changes, or to move to a new host. Secrets are never in it.",
+    "download": "Download",
+    "downloadButton": "Download settings (.json)",
+    "load": "Load a backup",
+    "loadHelp": "Nothing changes yet: you first see every setting the file would change, then choose to apply it.",
+    "loadNeedsAdmin": "Loading a backup needs Administrator and editing turned on.",
+    "file": "Backup file (.json)",
+    "check": "Check this file"
+  },
+  "preview": {
+    "title": "Check the backup",
+    "wouldChange": { "one": "{count} setting would change", "other": "{count} settings would change" },
+    "server": "Server",
+    "setting": "Setting",
+    "now": "Now",
+    "fromFile": "From the file",
+    "confirm": { "one": "Apply {count} change from the backup?", "other": "Apply {count} changes from the backup?" },
+    "apply": "Apply these changes",
+    "cancel": "Cancel",
+    "once": "This works once and expires in 10 minutes. Every change goes to the audit log.",
+    "same": "The file matches the current settings. Nothing would change.",
+    "skipped": "Skipped ({n})"
+  },
+  "route": {
+    "chooseFile": "Choose a backup file.",
+    "expired": "That check expired or was already used. Load the file again.",
+    "applied": { "one": "Backup applied: {count} setting changed. They are in the audit log.", "other": "Backup applied: {count} settings changed. They are in the audit log." }
+  }
+}

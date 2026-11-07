@@ -1,0 +1,60 @@
+{
+  "joined": {
+    "any": "Jederzeit",
+    "24h": "Letzte 24 Stunden",
+    "7d": "Letzte 7 Tage",
+    "30d": "Letzte 30 Tage",
+    "older": "Vor mehr als 30 Tagen"
+  },
+  "state": {
+    "any": "Alle",
+    "sanction": "Gerade stummgeschaltet",
+    "warned": "Hat zählende Verwarnungen",
+    "noroles": "Keine Rollen",
+    "humans": "Nur Menschen",
+    "bots": "Nur Bots"
+  },
+  "sort": {
+    "joined_desc": "Neueste zuerst",
+    "joined_asc": "Älteste zuerst",
+    "name": "Name A–Z"
+  },
+  "timeout": {
+    "60s": "60 Sekunden",
+    "5m": "5 Minuten",
+    "10m": "10 Minuten",
+    "1h": "1 Stunde",
+    "1d": "1 Tag",
+    "1w": "1 Woche",
+    "28d": "28 Tage"
+  },
+  "bulk": {
+    "role-add": "Eine Rolle geben",
+    "role-remove": "Eine Rolle wegnehmen",
+    "timeout": "Timeout geben",
+    "kick": "Kicken",
+    "ban": "Bannen"
+  },
+  "problem": {
+    "notInServer": "Dieser Nutzer ist nicht auf dem Server.",
+    "serverOwner": "Der Serverinhaber kann von hier aus nicht geändert werden.",
+    "itself": "Mewvo kann sich nicht selbst ändern.",
+    "yourself": "Deine eigenen Rollen oder deinen Timeout kannst du von hier aus nicht ändern.",
+    "thisMember": "Dieses Mitglied",
+    "aboveBot": "{name} hat eine Rolle auf oder über Mewvos höchster Rolle, deshalb lässt Discord den Bot dieses Mitglied nicht ändern.",
+    "aboveYou": "{name} hat eine Rolle auf oder über deiner höchsten Rolle.",
+    "roleGone": "Diese Rolle gibt es nicht mehr.",
+    "everyone": "Die Rolle @everyone kann nicht gegeben oder weggenommen werden.",
+    "managed": "@{role} wird von einer Integration oder einem Bot verwaltet; Discord erlaubt nicht, sie von Hand zu ändern.",
+    "roleAboveBot": "@{role} ist nicht unter Mewvos höchster Rolle, deshalb lässt Discord den Bot sie nicht geben oder wegnehmen.",
+    "roleAboveYou": "@{role} ist nicht unter deiner höchsten Rolle.",
+    "staffRole": "@{role} hat Team-Berechtigungen ({permissions}); nur der Serverinhaber oder die Bot-Inhaber können sie hier geben oder wegnehmen."
+  },
+  "skip": {
+    "hasRole": "hat @{role} schon",
+    "lacksRole": "hat @{role} nicht",
+    "noLength": "keine Timeout-Dauer gewählt",
+    "admin": "hat Administrator (Discord erlaubt keinen Timeout)",
+    "guard": "Sicherheitsgrenze: In diesem 10-Minuten-Fenster sind keine weiteren Banns/Kicks erlaubt"
+  }
+}

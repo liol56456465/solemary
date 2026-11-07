@@ -1,0 +1,54 @@
+{
+  "page": {
+    "title": "Modules",
+    "intro": "Toutes les parties de Mewvo au même endroit. {on} modules sur {total} avec un état activé/désactivé sont activés ; ouvre un module pour modifier ses paramètres.",
+    "matches": {
+      "one": "{count} module correspond",
+      "many": "{count} modules correspondent",
+      "other": "{count} modules correspondent"
+    },
+    "showAll": "Tout afficher",
+    "readOnly": "Lecture seule : l’édition depuis le tableau de bord est désactivée (DASHBOARD_EDIT_ENABLED n’est pas true).",
+    "noMatch": "Aucun module ne correspond. Essaie un autre mot, ou parcours tous les modules.",
+    "noneOn": "Aucun module n’est activé.",
+    "noneOff": "Aucun module n’est désactivé."
+  },
+  "filter": {
+    "label": "Filtrer les modules",
+    "all": "Tous",
+    "on": "Activés",
+    "off": "Désactivés"
+  },
+  "col": {
+    "module": "Module",
+    "what": "Ce qu’il fait",
+    "state": "État"
+  },
+  "state": {
+    "on": "Activé",
+    "off": "Désactivé",
+    "needsSetup": "à configurer ({n})",
+    "setUp": "Configuré"
+  },
+  "summary": {
+    "tickets": "Les membres demandent de l’aide à l’équipe dans un salon privé.",
+    "welcome": "Accueillir les nouveaux, dire au revoir, donner un rôle de départ.",
+    "leveling": "Les membres gagnent des niveaux en discutant et reçoivent des rôles.",
+    "reaction-roles": "Des menus où les membres choisissent leurs propres rôles.",
+    "messages": "Publier des annonces, sondages et comptes à rebours au nom de Mewvo.",
+    "giveaways": "Faire gagner des lots à des membres tirés au sort.",
+    "birthdays": "Souhaiter un joyeux anniversaire aux membres.",
+    "applications": "Les membres postulent à un rôle en répondant à des questions.",
+    "community": "Suggestions, starboard, notes épinglées, réponses enregistrées, YouTube.",
+    "join-to-create": "Des salons vocaux qui apparaissent au besoin et disparaissent quand ils sont vides.",
+    "automod": "Arrête tout seul le spam, les gros mots et les raids.",
+    "enforcement": "Comment marchent les avertissements, sourdines et bannissements, et comment les membres font appel.",
+    "logging": "Une trace de ce qui se passe sur le serveur, pour l’équipe.",
+    "verification": "Les nouveaux membres confirment qu’ils sont réels avant de pouvoir discuter.",
+    "counters": "Des compteurs de membres en direct et un jeu de comptage.",
+    "support": "Là où les membres bannis peuvent quand même faire appel.",
+    "rules": "Les règles de ton serveur, sur une page web et dans les messages de sanction.",
+    "appearance": "Donne ici à Mewvo son propre nom et sa propre image (Pro et Max).",
+    "commands": "Activer ou désactiver des commandes seules ou des groupes de commandes."
+  }
+}

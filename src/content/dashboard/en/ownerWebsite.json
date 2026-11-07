@@ -1,0 +1,108 @@
+{
+  "common": {
+    "readOnly": "Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true).",
+    "clear": "Clear"
+  },
+  "state": {
+    "translated": "Translated",
+    "needs-update": "Needs update",
+    "missing": "Missing (English shown)",
+    "edited": "Edited",
+    "default": "Default"
+  },
+  "filter": {
+    "all": "All",
+    "needs-update": "Needs update",
+    "missing": "Missing",
+    "edited": "Edited"
+  },
+  "tabs": {
+    "label": "Website editor",
+    "text": "Text",
+    "images": "Images"
+  },
+  "markup": {
+    "formatting": "Formatting:",
+    "bold": "bold",
+    "italic": "italic",
+    "code": "code",
+    "text": "text",
+    "rest1": "for a link, a blank line for a new paragraph, lines starting with",
+    "rest2": "for a list. HTML is not supported (tags show as typed text). Words in braces like",
+    "rest3": "are filled in by the website: keep the same ones as the English text."
+  },
+  "home": {
+    "title": "Website",
+    "help": "Change the website's text in every language and replace its images, without code. Changes are live as soon as you save. Each text group is one part of the site; open one to see and edit its texts.",
+    "toUpdate": "{count} to update",
+    "missing": "{count} missing",
+    "byGroup": "Texts by group",
+    "byGroupHelp": "Per language: texts translated / all texts. **To update**: the English text changed after the translation was made. **Missing**: the website shows English there. English shows how many texts you edited.",
+    "group": "Group",
+    "texts": "Texts",
+    "englishEdited": "English edited",
+    "all": "All",
+    "notHere": "Not edited here",
+    "notHereHelp": "The legal pages (Privacy Policy, Terms, Legal notice, Contact, Withdrawal) are legal texts: they are edited in code and reviewed, not here. They exist in English only."
+  },
+  "ns": {
+    "title": "Texts: {ns}",
+    "pageTitle": "Website: {name}",
+    "help": "Every text in this group with the English text and the {lang} text. Open a text to edit it.",
+    "language": "Language",
+    "show": "Show",
+    "search": "Search",
+    "searchPlaceholder": "Key or text",
+    "showButton": "Show",
+    "count": { "one": "{count} text.", "other": "{count} texts." },
+    "key": "Key",
+    "english": "English",
+    "state": "State",
+    "englishShown": "(English shown)",
+    "noMatch": "No texts match."
+  },
+  "key": {
+    "historyError": "The history could not be loaded (database). Reload the page to try again.",
+    "noChanges": "No changes yet.",
+    "history": "History ({count}{newest})",
+    "newest30": ", newest 30",
+    "when": "When",
+    "by": "By",
+    "changedTo": "Changed to",
+    "reset": "Reset to default",
+    "restore": "Restore this version",
+    "fromEdit": "Your edit",
+    "fromCatalog": "Default text",
+    "fromEnglish": "No text in this language: the website shows English",
+    "savedBy": "saved {date} by {who}",
+    "previewNotSaved": "Preview (not saved):",
+    "textIn": "Text ({lang})",
+    "preview": "Preview",
+    "save": "Save",
+    "resetConfirm": "Reset the {lang} text to the default?",
+    "help": "One text of the website in every language. Saving makes it live right away; \"Reset to default\" brings back the original text.",
+    "original": "English (original)",
+    "englishEdited": "The website shows your English edit instead (below). Translations made before it are marked \"Needs update\"."
+  },
+  "images": {
+    "title": "Website images",
+    "help": "The images the website uses. An upload is converted (metadata such as camera or location data is removed) and fitted to the slot's size: an image in another shape is cropped at the edges. Live right away; browsers may show the old image for up to 5 minutes.",
+    "replaced": "Replaced",
+    "default": "Default",
+    "where": "{where}. Path `{path}`, {size}, {format}.",
+    "currentAlt": "Current image: {label}",
+    "uploaded": "Uploaded {date} by {who}, {size}",
+    "defaultFile": "The default file",
+    "replace": "Replace (PNG, JPEG or WebP, up to {mb} MB)",
+    "upload": "Upload",
+    "resetConfirm": "Put the default {label} back?"
+  },
+  "slot": {
+    "screen-overview-dark": { "label": "Dashboard screenshot: overview (dark)", "where": "Front page, \"The dashboard\" section" },
+    "screen-overview-light": { "label": "Dashboard screenshot: overview (light)", "where": "Served at its path; no page shows it today" },
+    "screen-cases-dark": { "label": "Dashboard screenshot: cases (dark)", "where": "Docs: \"Using the dashboard\"" },
+    "screen-cases-light": { "label": "Dashboard screenshot: cases (light)", "where": "Served at its path; no page shows it today" },
+    "og": { "label": "Share image", "where": "Link previews (Discord, social media) of every page" },
+    "logo": { "label": "Logo and browser-tab icon", "where": "Top bar of the site, favicon, dashboard sidebar" }
+  }
+}

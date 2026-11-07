@@ -3,13 +3,29 @@
 // paged. listMembers is pure (no Discord or database calls), so it is tested directly.
 
 import { query, T } from '../enforcement/db.js';
+import { currentText } from './language.js';
+
+/**
+ * Filter / sort labels: the keys are the values the forms send; each label is read in the
+ * request's language (memberActions.<group>.<key>, '' → "any"; English as written here).
+ */
+function labels(group, english) {
+    return Object.freeze(Object.defineProperties({}, Object.fromEntries(Object.entries(english).map(([key, text]) => [key, {
+        enumerable: true,
+        get() {
+            const tr = currentText();
+            const k = `memberActions.${group}.${key || 'any'}`;
+            return tr.lang !== 'en' && tr.has(k) ? tr.t(k) : text;
+        },
+    }]))));
+}
 
 export const MEMBERS_PAGE_SIZE = 50;
-export const JOINED_FILTERS = { '': 'Any time', '24h': 'Last 24 hours', '7d': 'Last 7 days', '30d': 'Last 30 days', older: 'Over 30 days ago' };
-export const STATE_FILTERS = {
+export const JOINED_FILTERS = labels('joined', { '': 'Any time', '24h': 'Last 24 hours', '7d': 'Last 7 days', '30d': 'Last 30 days', older: 'Over 30 days ago' });
+export const STATE_FILTERS = labels('state', {
     '': 'Everyone', sanction: 'Muted now', warned: 'Has counted warns', noroles: 'No roles', humans: 'People only', bots: 'Bots only',
-};
-export const SORTS = { joined_desc: 'Newest first', joined_asc: 'Oldest first', name: 'Name A–Z' };
+});
+export const SORTS = labels('sort', { joined_desc: 'Newest first', joined_asc: 'Oldest first', name: 'Name A–Z' });
 const JOINED_MS = { '24h': 864e5, '7d': 7 * 864e5, '30d': 30 * 864e5 };
 
 /**

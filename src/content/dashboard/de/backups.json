@@ -1,0 +1,41 @@
+{
+  "none": "(keiner)",
+  "page": {
+    "intro": "Alle Dashboard-Einstellungen des Haupt- und des Support-Servers in einer Datei. Nutze sie vor großen Änderungen oder für einen Umzug zu einem neuen Host. Geheimnisse sind nie darin.",
+    "download": "Herunterladen",
+    "downloadButton": "Einstellungen herunterladen (.json)",
+    "load": "Backup laden",
+    "loadHelp": "Noch ändert sich nichts: Du siehst zuerst jede Einstellung, die die Datei ändern würde, und entscheidest dann, ob du sie anwendest.",
+    "loadNeedsAdmin": "Ein Backup zu laden braucht Administrator und eingeschaltetes Bearbeiten.",
+    "file": "Backup-Datei (.json)",
+    "check": "Diese Datei prüfen"
+  },
+  "preview": {
+    "title": "Backup prüfen",
+    "wouldChange": {
+      "one": "{count} Einstellung würde sich ändern",
+      "other": "{count} Einstellungen würden sich ändern"
+    },
+    "server": "Server",
+    "setting": "Einstellung",
+    "now": "Jetzt",
+    "fromFile": "Aus der Datei",
+    "confirm": {
+      "one": "{count} Änderung aus dem Backup anwenden?",
+      "other": "{count} Änderungen aus dem Backup anwenden?"
+    },
+    "apply": "Diese Änderungen anwenden",
+    "cancel": "Abbrechen",
+    "once": "Das funktioniert einmal und läuft nach 10 Minuten ab. Jede Änderung kommt ins Audit-Log.",
+    "same": "Die Datei entspricht den aktuellen Einstellungen. Nichts würde sich ändern.",
+    "skipped": "Übersprungen ({n})"
+  },
+  "route": {
+    "chooseFile": "Wähle eine Backup-Datei.",
+    "expired": "Diese Prüfung ist abgelaufen oder wurde schon benutzt. Lade die Datei noch einmal.",
+    "applied": {
+      "one": "Backup angewendet: {count} Einstellung geändert. Sie steht im Audit-Log.",
+      "other": "Backup angewendet: {count} Einstellungen geändert. Sie stehen im Audit-Log."
+    }
+  }
+}

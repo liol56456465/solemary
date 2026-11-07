@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "Corrigir permissões",
+    "heading": "Corrigir as permissões do Mewvo em #{channel}",
+    "back": "Voltar (cancelar)",
+    "missing": "Faltando",
+    "willGive": "O Mewvo vai se dar",
+    "cannotGive": "O Mewvo não pode se dar",
+    "ownRole": "(o próprio cargo dele não tem)",
+    "notChanged": "Não mudadas aqui",
+    "onlyYou": "(só você pode dar)",
+    "why": "Por que o Mewvo não consegue corrigir",
+    "nothing": "O Mewvo já tem o que precisa aqui. Nada a corrigir.",
+    "editingOff": "A edição pelo painel está desativada, então nada pode ser mudado aqui.",
+    "adminOnly": "Só membros com a permissão Administrador no servidor principal podem fazer isso.",
+    "explain": "Isto adiciona uma permissão só para o Mewvo em #{channel}. As permissões de mais ninguém mudam. Esta confirmação funciona uma vez e expira em 5 minutos.",
+    "submit": "Dar estas permissões ao Mewvo",
+    "inDiscord": "O que fazer no Discord",
+    "reload": "Depois recarregue esta página para verificar de novo."
+  },
+  "route": {
+    "noServer": "Servidor indisponível",
+    "noServerText": "O Mewvo não consegue ver o servidor principal agora. Tente de novo em um minuto.",
+    "noServerNothing": "O Mewvo não consegue ver o servidor principal agora. Nada foi mudado.",
+    "noChannel": "Canal não encontrado",
+    "noChannelText": "Esse canal não está (mais) no servidor. Volte e escolha outro.",
+    "noChannelNothing": "Esse canal não está (mais) no servidor. Nada foi mudado.",
+    "adminOnly": "Só membros com a permissão Administrador no servidor principal podem mudar as permissões do Mewvo. Nada foi mudado.",
+    "expired": "Esta confirmação expirou ou já foi usada. Nada foi mudado. Confira a lista abaixo e confirme de novo.",
+    "stillMissing": " Ainda faltam: {perms}. Só o dono do servidor pode dar essas (veja as etapas na página Corrigir permissões).",
+    "done": "O Mewvo agora tem {perms} em #{channel}."
+  }
+}

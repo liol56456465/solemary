@@ -1,0 +1,105 @@
+{
+  "title": "Equipe",
+  "help": "Moderação por moderador, quando a equipe está ativa, atividade semanal, disciplina da equipe e bloqueios do limite de segurança (banimentos ou expulsões demais em 10 minutos).",
+  "settings": "Configurações de punições",
+  "period": {
+    "7d": "últimos 7 dias",
+    "30d": "últimos 30 dias",
+    "90d": "últimos 90 dias",
+    "all": "desde sempre"
+  },
+  "stats": {
+    "period": "Período",
+    "title": "Estatísticas de moderação · {period}",
+    "moderator": "Moderador",
+    "total": "Total",
+    "bans": "Banimentos",
+    "kicks": "Expulsões",
+    "mutes": "Silenciamentos",
+    "warns": "Advertências",
+    "accepted": "Apelações aceitas",
+    "denied": "Apelações negadas",
+    "removed": "Removidos",
+    "note": "Casos automáticos (bot) e de teste ficam de fora; casos removidos não entram nos totais.",
+    "empty": "Nenhuma ação de moderação neste período."
+  },
+  "coverage": {
+    "period": "Período de cobertura",
+    "days": {
+      "one": "{count} dia",
+      "other": "{count} dias",
+      "many": "{count} dias"
+    },
+    "title": {
+      "one": "Cobertura · último {count} dia ({zone})",
+      "other": "Cobertura · últimos {count} dias ({zone})",
+      "many": "Cobertura · últimos {count} dias ({zone})"
+    },
+    "incidents": "Incidentes (casos criados, incluindo automáticos): {count}",
+    "staff": "Atividade da equipe (casos de moderadores humanos + apelações decididas): {count}",
+    "note": "Mais escuro = mais movimento, em quartos até a hora mais cheia. As colunas são as horas 0–23 em {zone} (o fuso de aniversários do servidor, definido em Aniversários; UTC quando não há nenhum).",
+    "gaps": "Horários menos cobertos",
+    "incidentCount": {
+      "one": "{count} incidente",
+      "other": "{count} incidentes",
+      "many": "{count} incidentes"
+    },
+    "actionCount": {
+      "one": "{count} ação da equipe",
+      "other": "{count} ações da equipe",
+      "many": "{count} ações da equipe"
+    },
+    "none": "Nenhum incidente neste período."
+  },
+  "blocks": {
+    "title": "Bloqueios do limite de segurança ({count})",
+    "until": "Bloqueado até",
+    "count": "Banimentos/expulsões",
+    "lift": "Tirar bloqueio",
+    "ownersOnly": "Só os donos do bot podem tirar um bloqueio (como /staff restore).",
+    "none": "Ninguém está bloqueado."
+  },
+  "activity": {
+    "week": "Semana",
+    "weeks": {
+      "this": "Esta semana",
+      "last": "Semana passada"
+    },
+    "error": "Não foi possível carregar a atividade (banco de dados indisponível).",
+    "member": "Membro da equipe",
+    "messages": "Mensagens",
+    "actions": "Ações",
+    "appeals": "Apelações",
+    "reviews": "Revisões",
+    "tickets": "Tickets",
+    "owner": "dono",
+    "inactive": "Inativo",
+    "warnings": "Advertências",
+    "note": "Inativo = nenhum trabalho de moderação e menos de 20 mensagens. Ações são os casos que criou; revisões são cartões do automod e da verificação.",
+    "none": "Nenhum membro da equipe encontrado.",
+    "title": "Atividade da equipe · semana de {start}"
+  },
+  "discipline": {
+    "title": "Disciplina da equipe",
+    "ownersOnly": "Só os donos do bot podem advertir membros da equipe, ver as advertências de equipe deles ou devolver cargos de equipe removidos (como /staff warn, warnings e restore).",
+    "reason": "Motivo: qual regra de admin foi quebrada (enviado à pessoa)",
+    "give": "Dar advertência de equipe",
+    "giveConfirm": "Dar uma advertência a este membro da equipe? Com {limit} advertências ativas, os cargos de equipe são removidos.",
+    "showOf": "Mostrar advertências de",
+    "warningsError": "Não foi possível carregar as advertências (banco de dados indisponível).",
+    "warningsOf": "Advertências de equipe: {name}",
+    "given": "Aplicada",
+    "active": "ativa",
+    "expired": "expirada",
+    "removedError": "Não foi possível carregar os cargos de equipe removidos (banco de dados indisponível).",
+    "removedRoles": "Cargos removidos",
+    "why": "Por quê",
+    "restore": "Devolver cargos",
+    "restoreConfirm": "Devolver estes cargos de equipe?",
+    "noneSaved": "Nenhum cargo de equipe removido está salvo.",
+    "restoreOf": "Devolver cargos de",
+    "help": "As advertências de equipe expiram; com {limit} advertências ativas, os cargos de equipe são removidos (a proteção da equipe também os remove). O membro recebe uma DM e o registro de moderação uma linha.",
+    "removedTitle": "Cargos de equipe removidos",
+    "restoreNote": "Devolver dá de volta os cargos salvos que o bot ainda consegue gerenciar. Um bloqueio do limite de segurança (banimentos ou expulsões demais em 10 minutos) é tirado à parte (Bloqueios do limite de segurança)."
+  }
+}

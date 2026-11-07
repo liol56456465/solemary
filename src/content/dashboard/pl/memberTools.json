@@ -1,0 +1,185 @@
+{
+  "notice": {
+    "readOnly": "Tylko do odczytu: edycja z panelu jest wyłączona (DASHBOARD_EDIT_ENABLED nie jest ustawione na true).",
+    "viewOnly": "Tylko podgląd: do zmiany reguł ról potrzebujesz uprawnienia Administrator na głównym serwerze."
+  },
+  "trigger": {
+    "days_in_server": "Dni na serwerze",
+    "level_reached": "Poziom",
+    "has_role": "Ma rolę"
+  },
+  "form": {
+    "name": "Nazwa",
+    "namePlaceholder": "np. Stali bywalcy po 30 dniach",
+    "when": "Kiedy",
+    "threshold": "Dni lub poziom",
+    "thresholdHint": "Dni na serwerze (0 = od razu po dołączeniu, do {maxDays}) albo poziom (1–{maxLevel}). Nie dotyczy „Ma rolę”.",
+    "triggerRole": "Rola warunku",
+    "triggerRoleNone": "Tylko dla „Ma rolę”",
+    "give": "Nadaj tę rolę",
+    "choose": "Wybierz…",
+    "giveHint": "Tylko role poniżej Mewvo (i poniżej twojej najwyższej roli), niezarządzane, bez uprawnień ekipy.",
+    "removeWhenFalse": "Odbierz rolę, gdy warunek przestanie być spełniony",
+    "removeHelp": "Odbieranie dotyczy też członków, którzy dostali rolę ręcznie; kto nadal pasuje do innej włączonej reguły dla tej samej roli, zachowuje ją.",
+    "enabled": "Włącz regułę przy zapisie",
+    "nothingYet": "Na razie nic się nie zmienia: następna strona pokaże, ilu członków i kogo reguła by zmieniła.",
+    "dryRun": "Próbne uruchomienie"
+  },
+  "rules": {
+    "title": "Reguły ról",
+    "intro": "Role, które Mewvo nadaje sam: sprawdzane co 10 minut (najwyżej {limit} zmian ról na uruchomienie, po kolei) i od razu, gdy członek dołącza, zdobywa poziom lub dostaje rolę.",
+    "levelingOff": "Poziomy są wyłączone: poziomy się nie zmieniają, więc reguły poziomów używają tylko już zapisanych poziomów.",
+    "heading": "Reguły ({count} z {max})",
+    "rule": "Reguła",
+    "state": "Stan",
+    "none": "Nie ma jeszcze reguł ról.",
+    "keepRoles": "Wyłączenie lub usunięcie reguły zostawia role, które już nadała.",
+    "editHeading": "Edytuj „{name}”",
+    "newRule": "Nowa reguła",
+    "full": "Ten serwer ma {max} reguł, więcej nie można. Najpierw usuń jedną.",
+    "cancelEdit": "Anuluj edycję",
+    "onPaused": "Włączona, wstrzymana",
+    "on": "Włączona",
+    "off": "Wyłączona",
+    "lastRun": "Ostatnie uruchomienie {date}: +{added} −{removed}",
+    "lastFailed": ", nieudane: {count}",
+    "notRun": "Jeszcze nie uruchomiona",
+    "turnOff": "Wyłącz",
+    "turnOn": "Włącz…",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "deleteConfirm": "Usunąć regułę „{name}”? Role, które już nadała, zostaną."
+  },
+  "andMore": "… i jeszcze {count}.",
+  "preview": {
+    "back": "← Reguły ról",
+    "title": "Próbne uruchomienie: {name}",
+    "nobody": "Nikt.",
+    "wouldChange": {
+      "one": "Teraz zmieniłaby {count} członka: nada rolę {add}, odbierze {remove}. Nic jeszcze nie zostało zmienione.",
+      "few": "Teraz zmieniłaby {count} członków: nada rolę {add}, odbierze {remove}. Nic jeszcze nie zostało zmienione.",
+      "many": "Teraz zmieniłaby {count} członków: nada rolę {add}, odbierze {remove}. Nic jeszcze nie zostało zmienione.",
+      "other": "Teraz zmieniłaby {count} członka: nada rolę {add}, odbierze {remove}. Nic jeszcze nie zostało zmienione."
+    },
+    "savedOff": {
+      "one": "Zapisana jako wyłączona: nic się nie zmieni, dopóki jej nie włączysz. Gdyby była teraz włączona, zmieniłaby {count} członka.",
+      "few": "Zapisana jako wyłączona: nic się nie zmieni, dopóki jej nie włączysz. Gdyby była teraz włączona, zmieniłaby {count} członków.",
+      "many": "Zapisana jako wyłączona: nic się nie zmieni, dopóki jej nie włączysz. Gdyby była teraz włączona, zmieniłaby {count} członków.",
+      "other": "Zapisana jako wyłączona: nic się nie zmieni, dopóki jej nie włączysz. Gdyby była teraz włączona, zmieniłaby {count} członka."
+    },
+    "partial": "Policzone z {cached} z {total} członków (lista członków jeszcze się wczytuje); prawdziwe uruchomienie obejmie wszystkich.",
+    "gets": "Dostaną rolę ({count})",
+    "loses": "Stracą rolę ({count})",
+    "nextRun": "Zmiany wprowadzi następne uruchomienie (w ciągu 10 minut), najwyżej {limit} na uruchomienie.",
+    "savedOffShort": "Reguła zostanie zapisana jako wyłączona.",
+    "saveChanges": "Zapisz zmiany",
+    "saveRule": "Zapisz regułę"
+  },
+  "chart": {
+    "label": {
+      "one": "Dołączenia i odejścia dziennie, ostatni {count} dzień: dołączenia {joins}, odejścia {leaves}",
+      "few": "Dołączenia i odejścia dziennie, ostatnie {count} dni: dołączenia {joins}, odejścia {leaves}",
+      "many": "Dołączenia i odejścia dziennie, ostatnie {count} dni: dołączenia {joins}, odejścia {leaves}",
+      "other": "Dołączenia i odejścia dziennie, ostatnie {count} dnia: dołączenia {joins}, odejścia {leaves}"
+    },
+    "day": "{day}: dołączyło {joins}, odeszło {leaves}",
+    "joined": "Dołączyli",
+    "left": "Odeszli"
+  },
+  "insights": {
+    "title": "Statystyki członków",
+    "intro": "Kto przychodzi i odchodzi, kto utknął bez roli, kto wciąż dostaje sprawy.",
+    "partial": "Na podstawie {cached} z {total} członków: lista członków jeszcze się wczytuje. Odśwież stronę za minutę.",
+    "notLoaded": "Nie udało się wczytać.",
+    "joinsTitle": {
+      "one": "Dołączenia i odejścia (ostatni {count} dzień)",
+      "few": "Dołączenia i odejścia (ostatnie {count} dni)",
+      "many": "Dołączenia i odejścia (ostatnie {count} dni)",
+      "other": "Dołączenia i odejścia (ostatnie {count} dnia)"
+    },
+    "joinsTitleShort": "Dołączenia i odejścia",
+    "joinsSummary": "Dołączyło: {joined} · odeszło: {left} · bilans {net}. Dni według UTC.",
+    "countingSince": "Liczone od {date}; wcześniejsze dni pokazują 0.",
+    "nothingYet": "Nic jeszcze nie policzono: dołączenia i odejścia są zapisywane od teraz.",
+    "kept": {
+      "one": "Przechowywane {count} dzień.",
+      "few": "Przechowywane {count} dni.",
+      "many": "Przechowywane {count} dni.",
+      "other": "Przechowywane {count} dnia."
+    },
+    "showTable": "Pokaż jako tabelę",
+    "day": "Dzień",
+    "noRolesTitle": "Nowi członkowie bez roli po 24 godzinach",
+    "noRolesHelp": "Dołączyli w ciągu ostatnich 30 dni, ponad 24 godziny temu, i nadal nie mają roli (bez botów). Często: nigdy się nie zweryfikowali.",
+    "joinedAt": "dołączył(a) {date}",
+    "none": "Brak.",
+    "noGuild": "Bot nie widzi teraz głównego serwera.",
+    "offendersTitle": {
+      "one": "Recydywiści (ostatni {count} dzień)",
+      "few": "Recydywiści (ostatnie {count} dni)",
+      "many": "Recydywiści (ostatnie {count} dni)",
+      "other": "Recydywiści (ostatnie {count} dnia)"
+    },
+    "offendersHelp": "Członkowie z co najmniej dwiema sprawami (bez usuniętych, zaimportowanych i testowych).",
+    "member": "Członek",
+    "cases": "Sprawy",
+    "last": "Ostatnia",
+    "warns": { "one": "{count} ostrzeżenie", "few": "{count} ostrzeżenia", "many": "{count} ostrzeżeń", "other": "{count} ostrzeżenia" },
+    "mutes": { "one": "{count} wyciszenie", "few": "{count} wyciszenia", "many": "{count} wyciszeń", "other": "{count} wyciszenia" },
+    "kicks": { "one": "{count} wyrzucenie", "few": "{count} wyrzucenia", "many": "{count} wyrzuceń", "other": "{count} wyrzucenia" },
+    "bans": { "one": "{count} ban", "few": "{count} bany", "many": "{count} banów", "other": "{count} bana" },
+    "noOffenders": {
+      "one": "Nikt nie ma co najmniej dwóch spraw z ostatniego {count} dnia.",
+      "few": "Nikt nie ma co najmniej dwóch spraw z ostatnich {count} dni.",
+      "many": "Nikt nie ma co najmniej dwóch spraw z ostatnich {count} dni.",
+      "other": "Nikt nie ma co najmniej dwóch spraw z ostatnich {count} dnia."
+    },
+    "inactiveTitle": {
+      "one": "Nieaktywni członkowie (bez XP od {count}+ dnia)",
+      "few": "Nieaktywni członkowie (bez XP od {count}+ dni)",
+      "many": "Nieaktywni członkowie (bez XP od {count}+ dni)",
+      "other": "Nieaktywni członkowie (bez XP od {count}+ dnia)"
+    },
+    "inactiveOff": "Niedostępne: jedyny czas aktywności, jaki Mewvo zapisuje, to ostatni raz, gdy system poziomów dał członkowi XP, a poziomy są wyłączone. Włącz poziomy, aby zacząć mierzyć; nic tu nie jest zgadywane.",
+    "inactiveHelp": {
+      "one": "Aktywność = ostatni raz, gdy system poziomów dał członkowi XP (za wiadomości dające XP). Członkowie, którzy są na serwerze krócej niż {count} dzień, i boty są pominięci.",
+      "few": "Aktywność = ostatni raz, gdy system poziomów dał członkowi XP (za wiadomości dające XP). Członkowie, którzy są na serwerze krócej niż {count} dni, i boty są pominięci.",
+      "many": "Aktywność = ostatni raz, gdy system poziomów dał członkowi XP (za wiadomości dające XP). Członkowie, którzy są na serwerze krócej niż {count} dni, i boty są pominięci.",
+      "other": "Aktywność = ostatni raz, gdy system poziomów dał członkowi XP (za wiadomości dające XP). Członkowie, którzy są na serwerze krócej niż {count} dnia, i boty są pominięci."
+    },
+    "noRecord": {
+      "one": "{count} członek nie ma żadnego wpisu poziomu (nigdy nie zdobył XP albo było to przed włączeniem poziomów) i nie jest na liście.",
+      "few": "{count} członków nie ma żadnego wpisu poziomu (nigdy nie zdobyli XP albo było to przed włączeniem poziomów) i nie są na liście.",
+      "many": "{count} członków nie ma żadnego wpisu poziomu (nigdy nie zdobyli XP albo było to przed włączeniem poziomów) i nie są na liście.",
+      "other": "{count} członka nie ma żadnego wpisu poziomu (nigdy nie zdobyli XP albo było to przed włączeniem poziomów) i nie są na liście."
+    },
+    "lastXp": "ostatnie XP {date}",
+    "noInactive": {
+      "one": "Nikt z wpisem poziomu nie milczał przez {count} dzień.",
+      "few": "Nikt z wpisem poziomu nie milczał przez {count} dni.",
+      "many": "Nikt z wpisem poziomu nie milczał przez {count} dni.",
+      "other": "Nikt z wpisem poziomu nie milczał przez {count} dnia."
+    }
+  },
+  "route": {
+    "needName": "Nadaj regule nazwę.",
+    "needTrigger": "Wybierz, kiedy reguła działa.",
+    "needRole": "Wybierz rolę do nadania.",
+    "needTriggerRole": "Wybierz rolę warunku.",
+    "needLevel": "Podaj poziom (liczba całkowita).",
+    "needDays": "Podaj liczbę dni (liczba całkowita).",
+    "notARule": "To nie jest reguła.",
+    "loadError": "Nie udało się wczytać reguł ról (baza danych nie odpowiada). Nic nie zostało zmienione; odśwież stronę, aby spróbować ponownie.",
+    "gone": "Ta reguła już nie istnieje.",
+    "goneNotSaved": "Ta reguła już nie istnieje; nic nie zostało zapisane.",
+    "full": "Ten serwer ma już {max} reguł, więcej nie można.",
+    "dryRunExpired": "To próbne uruchomienie wygasło lub zostało już użyte. Nic nie zostało zapisane; uruchom próbę jeszcze raz.",
+    "savedOn": "Reguła „{name}” zapisana; następne uruchomienie (w ciągu 10 minut) ją zastosuje.",
+    "savedOff": "Reguła „{name}” zapisana, wyłączona.",
+    "createdOn": "Reguła „{name}” utworzona; następne uruchomienie (w ciągu 10 minut) ją zastosuje.",
+    "createdOff": "Reguła „{name}” utworzona, wyłączona.",
+    "turnedOff": "Reguła „{name}” wyłączona. Role, które już nadała, zostają.",
+    "deleted": "Reguła „{name}” usunięta. Role, które już nadała, zostają.",
+    "partFailed": "Nie udało się wczytać (baza danych nie odpowiada). Odśwież stronę, aby spróbować ponownie."
+  }
+}

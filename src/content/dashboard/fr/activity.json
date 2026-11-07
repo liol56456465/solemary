@@ -1,0 +1,44 @@
+{
+  "chart": {
+    "aria": "{label} par jour sur {days} jours, {total} au total. Le tableau ci-dessous contient chaque jour."
+  },
+  "page": {
+    "unreadable": "Les chiffres n’ont pas pu être chargés (base de données). Recharge la page pour réessayer.",
+    "intro": "Les {days} derniers jours sur ce serveur (UTC). Les messages sont comptés à partir d’aujourd’hui : seulement un nombre par jour, pas qui les a écrits ni quoi.",
+    "inDays": "{sum} en {days} jours",
+    "messages": "Messages",
+    "joinsLeaves": "Arrivées et départs",
+    "joinedLeft": "{joins} arrivés, {leaves} partis",
+    "joins": "Arrivées",
+    "leaves": "Départs",
+    "leavesLabel": "Départs :",
+    "cases": "Dossiers",
+    "table": "Chaque jour en tableau"
+  },
+  "col": {
+    "day": "Jour",
+    "moderator": "Modérateur",
+    "total": "Total",
+    "bans": "Bannissements",
+    "kicks": "Expulsions",
+    "mutes": "Sourdines",
+    "warns": "Avertissements",
+    "removed": "Retirés",
+    "rule": "Règle",
+    "actions": "Actions",
+    "undone": "Annulées",
+    "undoneShare": "Part annulée"
+  },
+  "analytics": {
+    "title": "Équipe et automod",
+    "locked": "Les dossiers par modérateur et la fréquence d’annulation de chaque règle d’automod sont inclus dans Mewvo Pro et Max, selon la formule du propriétaire du serveur.",
+    "plans": "Formules",
+    "unreadable": "Ces chiffres n’ont pas pu être chargés (base de données). Recharge la page pour réessayer.",
+    "perModerator": "Dossiers par modérateur",
+    "lastDays": "{days} derniers jours",
+    "noCases": "Aucun dossier ouvert par une personne sur cette période.",
+    "rules": "Règles d’automod",
+    "tooStrict": "Une règle souvent annulée est peut-être trop stricte : pense à « Signaler seulement (ne pas supprimer) » pour elle.",
+    "noAutomod": "L’automod n’a rien fait sur cette période."
+  }
+}

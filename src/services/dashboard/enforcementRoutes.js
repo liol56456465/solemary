@@ -51,6 +51,7 @@ import { BAN_FILTERS, listBans } from './bansData.js';
 import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
 import { html, layout, path, queryString } from './html.js';
 import { isSnowflake } from './security.js';
+import { currentLanguage, currentText, dashboardText } from './language.js';
 import { parseUserRef } from './memberSearch.js';
 import { MODERATOR, mayRun, moderatorActionTypes, requiredLevel } from './permissions.js';
 import { memberHasConfiguredModeratorRole } from '../../utils/permissionGuard.js';
@@ -62,6 +63,34 @@ import {
 } from './enforcementPages.js';
 
 const SEARCH_LIMIT = 25;
+
+// The words of this file: src/content/dashboard/<lang>/moderation.json. Route handlers use the
+// request's language (req.dashboard.lang, else the running request's); the exported helpers use
+// currentText() (English outside a request, e.g. in tests). Audit rows and logs stay English.
+const textOf = (req) => dashboardText(req?.dashboard?.lang || currentLanguage());
+const ACTION_KEYS = {
+    ban: 'moderation.action.ban', kick: 'moderation.action.kick', mute: 'moderation.action.mute', warn: 'moderation.action.warn',
+    unban: 'moderation.action.unban', unmute: 'moderation.action.unmute', removewarn: 'moderation.action.removewarn',
+};
+const TIMEOUT_KEYS = {
+    '60s': 'moderation.length.60s', '5m': 'moderation.length.5m', '10m': 'moderation.length.10m', '1h': 'moderation.length.1h',
+    '1d': 'moderation.length.1d', '1w': 'moderation.length.1w', '28d': 'moderation.length.28d', '3d': 'moderation.length.3d',
+    '7d': 'moderation.length.7d', '30d': 'moderation.length.30d',
+};
+const BULK_KEYS = {
+    'role-add': 'moderation.bulk.action.roleAdd', 'role-remove': 'moderation.bulk.action.roleRemove', timeout: 'moderation.bulk.action.timeout',
+    kick: 'moderation.bulk.action.kick', ban: 'moderation.bulk.action.ban',
+};
+/** An action's label ("Ban") in a language; unknown types keep their English label. */
+const actionLabel = (tr, type) => (ACTION_KEYS[type] ? tr.t(ACTION_KEYS[type]) : ACTION_LABELS[type]);
+/** A timeout / temporary-role length ("1 hour") in a language; `fallback` is the English label. */
+const lengthLabel = (tr, key, fallback) => (TIMEOUT_KEYS[key] ? tr.t(TIMEOUT_KEYS[key]) : fallback);
+const bulkLabel = (tr, action) => (BULK_KEYS[action] ? tr.t(BULK_KEYS[action]) : BULK_ACTIONS[action]);
+/** "reason and duration": the changed fields of a case edit. */
+function fieldList(tr, fields) {
+    const label = (f) => (f === 'reason' ? tr.t('moderation.case.field.reason') : f === 'duration' ? tr.t('moderation.case.field.duration') : f);
+    return fields.map(label).reduce((a, b) => tr.t('moderation.case.fieldsAnd', { a, b }));
+}
 const RECENT_CASES = 10;
 
 /** Expected service errors carry a message for the moderator (createError(..., { expected: true })). */
@@ -111,10 +140,10 @@ export function searchMembers(guild, q, limit = SEARCH_LIMIT) {
 export async function buildRecordFlow({ guild, moderator, moderatorId, targetUser, type, form, completeFlowDetails }) {
     const flow = startFlow({ type, moderatorId, targetUser });
     const reasonKey = text(form, 'reason', 50);
-    if (!isKnownReasonKey(reasonKey)) throw new InputError('Choose a reason.');
+    if (!isKnownReasonKey(reasonKey)) throw new InputError(currentText().t('moderation.flow.chooseReason'));
     Object.assign(flow, reasonPatch(flow, reasonKey));
     const choice = text(form, 'unappealable', 10) || 'default';
-    if (!['default', 'yes', 'no'].includes(choice)) throw new InputError('Can they appeal: unknown choice.');
+    if (!['default', 'yes', 'no'].includes(choice)) throw new InputError(currentText().t('moderation.flow.unknownAppealChoice'));
     const parsed = parseFlowInput(flow, {
         customReason: reasonKey === CUSTOM_REASON_KEY ? text(form, 'custom_reason', 500) : '',
         durationInput: text(form, 'duration', 20),
@@ -132,18 +161,19 @@ export async function buildRecordFlow({ guild, moderator, moderatorId, targetUse
 
 /** What voiding this case does, for the confirm page (same rules as voidCase). */
 export function voidEffect(record) {
-    const dm = 'The member gets a DM with your reason.';
-    if (record.is_test) return `Test case: only the record is marked as a mistake. ${dm}`;
+    const tr = currentText();
+    const dm = tr.t('moderation.void.dm');
+    if (record.is_test) return tr.t('moderation.void.test', { dm });
     if (!['active', 'appeal_pending'].includes(record.status)) {
-        return `${record.status === 'expired' ? 'It already ended' : 'It was already lifted'}, so nothing is lifted; the case is only marked as a mistake. ${dm}`;
+        return tr.t(record.status === 'expired' ? 'moderation.void.alreadyEnded' : 'moderation.void.alreadyLifted', { dm });
     }
     const lift = {
-        ban: 'The member is unbanned (and gets an invite back).',
-        mute: 'The member is unmuted.',
-        warn: 'The warning stops counting toward the warning stages; a ban it caused is lifted.',
-        kick: 'There is nothing to lift for a kick; the case is marked as a mistake.',
-    }[record.type] || 'What is still in effect is lifted.';
-    return `${lift} ${dm}`;
+        ban: 'moderation.void.lift.ban',
+        mute: 'moderation.void.lift.mute',
+        warn: 'moderation.void.lift.warn',
+        kick: 'moderation.void.lift.kick',
+    }[record.type] || 'moderation.void.lift.fallback';
+    return tr.t('moderation.void.effect', { lift: tr.t(lift), dm });
 }
 
 /** A flow without the in-memory helpers, for the audit row. */
@@ -162,12 +192,14 @@ function auditFlow(flow, result) {
 
 /** The result of an action as one flash line. */
 export function resultMessage(flow, result) {
-    const parts = [`${ACTION_LABELS[flow.type]} done for ${flow.targetUsername}.`];
-    if (result.record) parts.push(`Case ${result.record.case_code} (${result.record.name}).`);
-    if (result.dmDelivered === false) parts.push('The DM could not be delivered (DMs closed or no shared server); the action still ran.');
-    else if (result.dmDelivered === true) parts.push('DM delivered.');
+    const tr = currentText();
+    const parts = [tr.t('moderation.result.done', { action: actionLabel(tr, flow.type), name: flow.targetUsername })];
+    if (result.record) parts.push(tr.t('moderation.result.case', { code: result.record.case_code, name: result.record.name }));
+    if (result.dmDelivered === false) parts.push(tr.t('moderation.result.dmFailed'));
+    else if (result.dmDelivered === true) parts.push(tr.t('moderation.result.dmDelivered'));
     parts.push(...(result.notes || []));
-    return parts.map((p) => plainText(p).replace(/⚠️\s*/g, 'Warning: ')).join(' ');
+    const warning = `${tr.t('moderation.result.warning')} `;
+    return parts.map((p) => plainText(p).replace(/⚠️\s*/g, warning)).join(' ');
 }
 
 export function createEnforcementHandlers(core) {
@@ -220,9 +252,9 @@ export function createEnforcementHandlers(core) {
                 req.dashboard.fresh = { level: MODERATOR, roleId };
                 return member;
             }
-            throw new InputError('You need the moderator role or Administrator in the main server to do this (it may have been removed since you logged in).', 403);
+            throw new InputError(textOf(req).t('moderation.access.needModRole'), 403);
         }
-        throw new InputError('You need the Administrator permission in the main server to do this.', 403);
+        throw new InputError(textOf(req).t('moderation.access.needAdmin'), 403);
     }
 
     /** What executeAction needs for a moderator (the service re-checks role + action type). */
@@ -232,7 +264,8 @@ export function createEnforcementHandlers(core) {
     /** Refuses an enforcement type the level may not run (ban, unban, remove warn for moderators). */
     function assertActionAllowed(req, type) {
         if (!mayRun(req.dashboard.access, `action:${type}`)) {
-            throw new InputError(`${ACTION_LABELS[type] || 'This action'} needs Administrator in the main server.`, 403);
+            const tr = textOf(req);
+            throw new InputError(tr.t('moderation.access.actionNeedsAdmin', { action: actionLabel(tr, type) || tr.t('moderation.access.thisAction') }), 403);
         }
     }
 
@@ -249,20 +282,21 @@ export function createEnforcementHandlers(core) {
     function guardedPost(run, { rerender, need = 'act', perm = null }) {
         return async (req, res) => {
             const session = req.dashboard.session;
+            const tr = textOf(req);
             if (!postLimiter.allow(session.idHash)) {
                 res.set('Retry-After', '60');
-                return fail(res, 429, 'Slow down', 'Too many changes in the last minute. Wait a moment and try again.', req);
+                return fail(res, 429, tr.t('errors.slowDown'), tr.t('errors.tooManyChanges'), req);
             }
-            if (!checkPost(req)) return fail(res, 403, 'Not allowed', 'This form did not come from this dashboard (security token or origin mismatch). Reload the page and try again.', req);
-            if (!settings.editEnabled) return fail(res, 403, 'Editing is off', 'Editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED). Nothing was changed.', req);
+            if (!checkPost(req)) return fail(res, 403, tr.t('errors.notAllowed'), tr.t('errors.csrf'), req);
+            if (!settings.editEnabled) return fail(res, 403, tr.t('errors.editingOff'), tr.t('errors.editingOffText'), req);
             // perm: the permissions.js key; null → Administrator only (canAct), as before.
             const allowed = need === 'owner' ? isOwner(req) : mayRun(req.dashboard.access, perm);
             if (!allowed) {
-                return fail(res, 403, 'Not allowed', need === 'owner'
-                    ? 'Only the bot owners can do this (like /staff restore).'
-                    : 'Enforcement actions need Administrator in the main server (bot owners without it can view only).', req);
+                return fail(res, 403, tr.t('errors.notAllowed'), need === 'owner'
+                    ? tr.t('moderation.access.ownerOnly')
+                    : tr.t('moderation.access.enforcementAdmin'), req);
             }
-            if (!guildOf()) return fail(res, 503, 'Server unavailable', 'The bot cannot see the main server right now. Try again in a moment.', req);
+            if (!guildOf()) return fail(res, 503, tr.t('errors.serverUnavailable'), tr.t('errors.serverUnavailableText'), req);
             req.dashboard.perm = perm;
             try {
                 const result = await run(req, res);
@@ -300,7 +334,7 @@ export function createEnforcementHandlers(core) {
         let list = null;
         let error = null;
         if (!guild) {
-            error = 'The bot cannot see the main server right now. Try again in a moment.';
+            error = textOf(req).t('errors.serverUnavailableText');
         } else {
             try {
                 const [banned, cases] = await Promise.all([
@@ -314,7 +348,7 @@ export function createEnforcementHandlers(core) {
                 list = listBans(plain, cases, { ...filters, page });
             } catch (err) {
                 logger.warn(`Dashboard bans list failed: ${err.message}`);
-                error = 'The ban list could not be loaded (Discord or the database did not answer). Reload the page to try again.';
+                error = textOf(req).t('moderation.members.bansFailed');
             }
         }
         return sendHtml(res, error && !list ? 503 : 200, bansPage({ ...shellOf(req), list, filters, error, canAct: req.dashboard.access.canAct }));
@@ -339,7 +373,7 @@ export function createEnforcementHandlers(core) {
             // Not in the server: still open the page when the user exists (cases, bans, notes).
             const user = await client.users.fetch(filters.q).catch(() => null);
             if (user) return res.redirect(302, path(`/users/${filters.q}`));
-            return render(404, { roles, error: `No Discord user with ID ${filters.q} exists.` });
+            return render(404, { roles, error: textOf(req).t('moderation.members.noUserWithId', { id: filters.q }) });
         }
         if (isSnowflake(filters.q)) return res.redirect(302, path(`/users/${filters.q}`));
         await completeMemberCache(guild);
@@ -411,7 +445,7 @@ export function createEnforcementHandlers(core) {
     async function renderUser(req, res, status = 200, { error = null, values = {} } = {}) {
         const userId = userIdParam(req);
         const view = userId ? await loadUserView(req, userId, { precedentReason: queryText(req.query, 'reason', 50) }) : null;
-        if (!view) return fail(res, 404, 'Not found', 'There is no Discord user with that ID.', req);
+        if (!view) return fail(res, 404, textOf(req).t('errors.notFound'), textOf(req).t('moderation.members.noUser'), req);
         return sendHtml(res, status, userPage({
             ...shellOf(req), view, canAct: req.dashboard.access.canAct, editEnabled: settings.editEnabled,
             allow: (key) => mayRun(req.dashboard.access, key),
@@ -424,21 +458,21 @@ export function createEnforcementHandlers(core) {
 
     const actionPreview = guardedPost(async (req, res) => {
         const userId = userIdParam(req);
-        if (!userId) throw new InputError('Not a user ID.');
+        if (!userId) throw new InputError(textOf(req).t('moderation.members.notUserId'));
         const type = text(req.body, 'type', 20);
-        if (!ACTION_TYPES.includes(type)) throw new InputError('Unknown action.');
+        if (!ACTION_TYPES.includes(type)) throw new InputError(textOf(req).t('moderation.members.unknownAction'));
         assertActionAllowed(req, type);
         const guild = guildOf();
         const targetUser = await client.users.fetch(userId).catch(() => null);
-        if (!targetUser) throw new InputError('There is no Discord user with that ID.');
+        if (!targetUser) throw new InputError(textOf(req).t('moderation.members.noUser'));
         const state = await e.getTargetState(guild, userId);
         if (!availableActions(state).includes(type)) {
-            throw new InputError(`${ACTION_LABELS[type]} is not available for ${targetUser.username} right now (reload the page).`);
+            throw new InputError(textOf(req).t('moderation.members.notAvailable', { action: actionLabel(textOf(req), type), name: targetUser.username }));
         }
         const moderator = await freshModerator(req, `action:${type}`);
         // A dashboard moderator cannot ban, so not through the warn ladder either (executeAction checks again under the lock).
         if (type === 'warn' && req.dashboard.fresh?.level === MODERATOR && !isAdministrator(moderator) && previewWarn(state.ladder).escalates) {
-            throw new InputError(`This warning would automatically ban ${targetUser.username} (warn ladder), so it needs an Administrator.`, 403);
+            throw new InputError(textOf(req).t('moderation.members.warnWouldBan', { name: targetUser.username }), 403);
         }
         const moderatorId = req.dashboard.session.userId;
         let flow;
@@ -449,7 +483,7 @@ export function createEnforcementHandlers(core) {
             if (type === 'removewarn') {
                 const warnCode = normalizeCaseCode(text(req.body, 'warn', 10));
                 const counted = await e.getCountedWarns(guildId, userId, state.ladder.level);
-                if (!warnCode || !counted.some((w) => w.case_code === warnCode)) throw new InputError('Choose one of the member\'s counted warnings.');
+                if (!warnCode || !counted.some((w) => w.case_code === warnCode)) throw new InputError(textOf(req).t('moderation.members.chooseCountedWarn'));
                 flow.warnCode = warnCode;
             }
             Object.assign(flow, liftReasonPatch(flow, text(req.body, 'reason', 500), 'the dashboard'));
@@ -461,22 +495,22 @@ export function createEnforcementHandlers(core) {
 
     const actionExecute = guardedPost(async (req, res) => {
         const userId = userIdParam(req);
-        if (!userId) throw new InputError('Not a user ID.');
+        if (!userId) throw new InputError(textOf(req).t('moderation.members.notUserId'));
         const flow = confirms.consume(text(req.body, 'token', 100), {
             session: req.dashboard.session.idHash, subject: `user:${userId}`, hash: text(req.body, 'fh', 100),
         });
-        if (!flow) throw new InputError('This confirmation expired or was already used. Nothing was done; preview the action again.');
+        if (!flow) throw new InputError(textOf(req).t('moderation.expired.action'));
         assertActionAllowed(req, flow.type);
         const moderator = await freshModerator(req, `action:${flow.type}`);
         const targetUser = await client.users.fetch(userId).catch(() => null);
-        if (!targetUser) throw new InputError('There is no Discord user with that ID.');
+        if (!targetUser) throw new InputError(textOf(req).t('moderation.members.noUser'));
         let result;
         try {
             result = await e.executeAction({ guild: guildOf(), moderator, targetUser, flow, staffRole: staffRoleOf(req) });
         } catch (error) {
             if (isExpectedError(error)) throw error;
             logger.error('Dashboard enforcement action failed', { action: flow.type, targetId: flow.targetId, error });
-            throw new InputError('Something went wrong; nothing may have changed. Check the member\'s cases before retrying.', 500);
+            throw new InputError(textOf(req).t('moderation.members.actionFailed'), 500);
         }
         result.notes = [...(result.notes || []), ...await e.attachFlowEvidence(flow, result.record, moderator.user || { id: moderator.id, username: req.dashboard.session.username })];
         await audit(req, 'actions', [{ key: flow.type, old: null, new: auditFlow(flow, result) }]);
@@ -490,7 +524,7 @@ export function createEnforcementHandlers(core) {
     /** The member of the URL, the moderator as a member, and whether they may change them. */
     async function memberContext(req) {
         const userId = userIdParam(req);
-        if (!userId) throw new InputError('Not a user ID.');
+        if (!userId) throw new InputError(textOf(req).t('moderation.members.notUserId'));
         const guild = guildOf();
         // The moderator is fetched fresh and must still be an Administrator, or a moderator for
         // what that level may do (the access check on the request can be up to a minute old).
@@ -511,12 +545,13 @@ export function createEnforcementHandlers(core) {
         const problem = roleProblem({ ...ctx, role });
         if (problem) throw new InputError(problem);
         const has = ctx.target.roles.cache.has(role.id);
-        if (mode === 'add' && has && !text(req.body, 'for', 4)) throw new InputError(`${ctx.target.user.username} already has @${role.name}.`);
-        if (mode === 'remove' && !has) throw new InputError(`${ctx.target.user.username} does not have @${role.name}.`);
+        const tr = textOf(req);
+        if (mode === 'add' && has && !text(req.body, 'for', 4)) throw new InputError(tr.t('moderation.members.alreadyHasRole', { name: ctx.target.user.username, role: role.name }));
+        if (mode === 'remove' && !has) throw new InputError(tr.t('moderation.members.lacksRole', { name: ctx.target.user.username, role: role.name }));
         const typed = text(req.body, 'reason', REASON_MAX);
         const reason = auditReason(req.dashboard.session.username, typed);
         const forKey = mode === 'add' ? text(req.body, 'for', 4) : '';
-        if (forKey && !Object.hasOwn(TEMP_ROLE_LENGTHS, forKey)) throw new InputError('Choose how long.', 400, 'for');
+        if (forKey && !Object.hasOwn(TEMP_ROLE_LENGTHS, forKey)) throw new InputError(tr.t('moderation.members.chooseHowLong'), 400, 'for');
         let until = null;
         if (mode === 'add' && forKey) {
             until = await e.addTempRole({ guildId, member: ctx.target, role, ms: TEMP_ROLE_LENGTHS[forKey].ms, by: { id: req.dashboard.session.userId, username: req.dashboard.session.username }, reason: typed || null, auditReason: reason });
@@ -529,7 +564,8 @@ export function createEnforcementHandlers(core) {
         const label = `@${role.name}${forKey ? ` for ${TEMP_ROLE_LENGTHS[forKey].label}` : ''}`;
         await audit(req, 'members', [{ key: `role:${ctx.userId}`, old: mode === 'add' ? null : `@${role.name}`, new: mode === 'add' ? label : null }],
             { modLog: true, label: 'Members' });
-        await flash(req, mode === 'add' ? `Gave ${label} to ${ctx.target.user.username}.` : `Took @${role.name} from ${ctx.target.user.username}.`);
+        const shown = forKey ? tr.t('moderation.members.roleFor', { role: role.name, length: lengthLabel(tr, forKey, TEMP_ROLE_LENGTHS[forKey].label) }) : `@${role.name}`;
+        await flash(req, mode === 'add' ? tr.t('moderation.members.gaveRole', { label: shown, name: ctx.target.user.username }) : tr.t('moderation.members.tookRole', { role: role.name, name: ctx.target.user.username }));
         return res.redirect(303, path(`/users/${ctx.userId}`));
     }, { rerender: rerenderUser, perm: 'member.roles' });
     const roleAdd = roleChange('add');
@@ -539,10 +575,10 @@ export function createEnforcementHandlers(core) {
         const ctx = await memberContext(req);
         const nick = text(req.body, 'nickname', NICKNAME_MAX);
         const before = ctx.target.nickname || null;
-        if ((nick || null) === before) throw new InputError('That is already their nickname.');
+        if ((nick || null) === before) throw new InputError(textOf(req).t('moderation.members.sameNickname'));
         await ctx.target.setNickname(nick || null, auditReason(req.dashboard.session.username, text(req.body, 'reason', REASON_MAX)));
         await audit(req, 'members', [{ key: `nickname:${ctx.userId}`, old: before, new: nick || null }], { modLog: true, label: 'Members' });
-        await flash(req, nick ? `Nickname set to "${nick}".` : 'Nickname removed.');
+        await flash(req, nick ? textOf(req).t('moderation.members.nicknameSet', { nick }) : textOf(req).t('moderation.members.nicknameRemoved'));
         return res.redirect(303, path(`/users/${ctx.userId}`));
     }, { rerender: rerenderUser, perm: 'member.nickname' });
 
@@ -550,17 +586,18 @@ export function createEnforcementHandlers(core) {
         const ctx = await memberContext(req);
         const choice = text(req.body, 'duration', 5);
         const lift = choice === 'off';
-        if (!lift && !Object.hasOwn(TIMEOUTS, choice)) throw new InputError('Choose a timeout length.', 400, 'duration');
+        const tr = textOf(req);
+        if (!lift && !Object.hasOwn(TIMEOUTS, choice)) throw new InputError(tr.t('moderation.members.chooseTimeout'), 400, 'duration');
         if (!lift && ctx.target.permissions?.has?.(PermissionFlagsBits.Administrator)) {
-            throw new InputError('Discord does not allow timing out a member with Administrator.');
+            throw new InputError(tr.t('moderation.members.timeoutAdmin'));
         }
         const until = ctx.target.communicationDisabledUntilTimestamp;
-        if (lift && !(until > Date.now())) throw new InputError(`${ctx.target.user.username} is not timed out.`);
+        if (lift && !(until > Date.now())) throw new InputError(tr.t('moderation.members.notTimedOut', { name: ctx.target.user.username }));
         const reason = auditReason(req.dashboard.session.username, text(req.body, 'reason', REASON_MAX));
         await ctx.target.timeout(lift ? null : TIMEOUTS[choice].ms, reason);
         await audit(req, 'members', [{ key: `timeout:${ctx.userId}`, old: until > Date.now() ? new Date(until).toISOString() : null, new: lift ? null : TIMEOUTS[choice].label }],
             { modLog: true, label: 'Members' });
-        await flash(req, lift ? `Timeout of ${ctx.target.user.username} removed.` : `${ctx.target.user.username} is timed out for ${TIMEOUTS[choice].label}.`);
+        await flash(req, lift ? tr.t('moderation.members.timeoutRemoved', { name: ctx.target.user.username }) : tr.t('moderation.members.timedOut', { name: ctx.target.user.username, length: lengthLabel(tr, choice, TIMEOUTS[choice].label) }));
         return res.redirect(303, path(`/users/${ctx.userId}`));
     }, { rerender: rerenderUser, perm: 'member.timeout' });
 
@@ -569,10 +606,10 @@ export function createEnforcementHandlers(core) {
         const ctx = await memberContext(req);
         const typed = text(req.body, 'reason', REASON_MAX);
         const result = await e.removeVerification(client, guildId, ctx.userId, { moderatorId: req.dashboard.session.userId, reason: typed || 'admin_removal' });
-        if (result?.status === 'not_verified') throw new InputError(`${ctx.target.user.username} does not have the verified role.`);
+        if (result?.status === 'not_verified') throw new InputError(textOf(req).t('moderation.members.notVerified', { name: ctx.target.user.username }));
         await audit(req, 'members', [{ key: `verification:${ctx.userId}`, old: 'verified', new: typed ? { verified: false, reason: typed } : null }],
             { modLog: true, label: 'Members' });
-        await flash(req, `Verification removed from ${ctx.target.user.username}.`);
+        await flash(req, textOf(req).t('moderation.members.unverified', { name: ctx.target.user.username }));
         return res.redirect(303, path(`/users/${ctx.userId}`));
     }, { rerender: rerenderUser, perm: 'member.unverify' });
 
@@ -587,7 +624,7 @@ export function createEnforcementHandlers(core) {
         if (!isSnowflake(f.role)) f.role = '';
         return f;
     };
-    const bulkBack = (req, res, status, message) => fail(res, status, 'Not done', message, req);
+    const bulkBack = (req, res, status, message) => fail(res, status, textOf(req).t('moderation.bulk.notDone'), message, req);
 
     /** The members the form points at: ticked ones, or everyone matching the list filters (max BULK_LIMIT). */
     async function bulkTargets(req, guild) {
@@ -595,13 +632,13 @@ export function createEnforcementHandlers(core) {
             const filters = listFilters(req.body);
             const standings = await e.memberStandings(guildId);
             const all = listMembers(guild, standings, { ...filters, page: 0, pageSize: BULK_LIMIT + 1 });
-            if (all.total > BULK_LIMIT) throw new InputError(`${all.total} members match these filters; one bulk action can change at most ${BULK_LIMIT}. Narrow the filters.`);
+            if (all.total > BULK_LIMIT) throw new InputError(textOf(req).t('moderation.bulk.tooManyMatch', { total: textOf(req).fmtNumber(all.total), max: textOf(req).fmtNumber(BULK_LIMIT) }));
             return all.rows.map((row) => guild.members.cache.get(row.id)).filter(Boolean);
         }
         const raw = req.body?.ids;
         const ids = [...new Set((Array.isArray(raw) ? raw : raw ? [raw] : []).filter((id) => isSnowflake(String(id))))];
-        if (!ids.length) throw new InputError('Tick at least one member, or choose "everyone matching these filters".');
-        if (ids.length > BULK_LIMIT) throw new InputError(`One bulk action can change at most ${BULK_LIMIT} members.`);
+        if (!ids.length) throw new InputError(textOf(req).t('moderation.bulk.tickMember'));
+        if (ids.length > BULK_LIMIT) throw new InputError(textOf(req).t('moderation.bulk.tooMany', { max: textOf(req).fmtNumber(BULK_LIMIT) }));
         const members = await Promise.all(ids.map((id) => guild.members.fetch({ user: id }).catch(() => null)));
         return members.filter(Boolean);
     }
@@ -609,18 +646,18 @@ export function createEnforcementHandlers(core) {
     const bulkPreview = guardedPost(async (req, res) => {
         const guild = guildOf();
         const action = text(req.body, 'action', 12);
-        if (!Object.hasOwn(BULK_ACTIONS, action)) throw new InputError('Choose what to do.');
+        if (!Object.hasOwn(BULK_ACTIONS, action)) throw new InputError(textOf(req).t('moderation.bulk.chooseAction'));
         const moderator = await freshModerator(req);
         const roleId = text(req.body, 'roleId', 20);
         const role = action.startsWith('role-') ? (isSnowflake(roleId) ? guild.roles.cache.get(roleId) : null) : null;
-        if (action.startsWith('role-') && !role) throw new InputError('Choose a role.');
+        if (action.startsWith('role-') && !role) throw new InputError(textOf(req).t('moderation.bulk.chooseRole'));
         const timeoutKey = text(req.body, 'timeout', 5);
-        if (action === 'timeout' && !Object.hasOwn(TIMEOUTS, timeoutKey)) throw new InputError('Choose a timeout length.');
+        if (action === 'timeout' && !Object.hasOwn(TIMEOUTS, timeoutKey)) throw new InputError(textOf(req).t('moderation.members.chooseTimeout'));
         const members = await bulkTargets(req, guild);
         const owner = e.isBotOwner(req.dashboard.session.userId);
         let guardLeft = Infinity;
         if ((action === 'kick' || action === 'ban') && !owner) {
-            if (await e.getMassActionBlock(guildId, req.dashboard.session.userId)) throw new InputError('You are blocked by the safety limit (too many bans or kicks in 10 minutes); nothing was done.');
+            if (await e.getMassActionBlock(guildId, req.dashboard.session.userId)) throw new InputError(textOf(req).t('moderation.bulk.blocked'));
             guardLeft = Math.max(0, enforcementConfig.massActionLimit - await e.recentBanKickCount(guildId, req.dashboard.session.userId));
         }
         const plan = planBulk({ guild, members, action, role, timeoutKey, actorId: req.dashboard.session.userId, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me, guardLeft });
@@ -633,7 +670,7 @@ export function createEnforcementHandlers(core) {
             ({ precedent = null } = await buildRecordFlow({ guild, moderator, moderatorId: moderator.id, targetUser: first, type: action, form: recordForm, completeFlowDetails: e.completeFlowDetails }));
         }
         const forKey = action === 'role-add' ? text(req.body, 'for', 4) : '';
-        if (forKey && !Object.hasOwn(TEMP_ROLE_LENGTHS, forKey)) throw new InputError('Choose how long.');
+        if (forKey && !Object.hasOwn(TEMP_ROLE_LENGTHS, forKey)) throw new InputError(textOf(req).t('moderation.members.chooseHowLong'));
         const payload = { action, roleId: role?.id || null, timeoutKey, forKey, reason: text(req.body, 'reason', REASON_MAX), recordForm, run: plan.run };
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'bulk', payload });
         return sendHtml(res, 200, bulkPreviewPage({ ...shellOf(req), action, label: BULK_ACTIONS[action], role, timeout: TIMEOUTS[timeoutKey] || TEMP_ROLE_LENGTHS[forKey] || null, plan, token, hash, guardLeft, precedent }));
@@ -641,13 +678,19 @@ export function createEnforcementHandlers(core) {
 
     const bulkExecute = guardedPost(async (req, res) => {
         const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: 'bulk', hash: text(req.body, 'fh', 100) });
-        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; preview the bulk action again.');
+        if (!payload) throw new InputError(textOf(req).t('moderation.expired.bulk'));
         const guild = guildOf();
         const moderator = await freshModerator(req);
         const session = req.dashboard.session;
         const role = payload.roleId ? guild.roles.cache.get(payload.roleId) : null;
         const reason = auditReason(session.username, payload.reason);
         const label = `${BULK_ACTIONS[payload.action]}${role ? ` @${role.name}` : ''}${payload.forKey ? ` for ${TEMP_ROLE_LENGTHS[payload.forKey].label}` : ''}${payload.action === 'timeout' ? ` (${TIMEOUTS[payload.timeoutKey].label})` : ''}`;
+        // The job page shows the label in the moderator's language; the audit row keeps the English one.
+        const tr = textOf(req);
+        let shownLabel = bulkLabel(tr, payload.action);
+        if (role) shownLabel = tr.t('moderation.bulk.labelRole', { label: shownLabel, role: role.name });
+        if (payload.forKey) shownLabel = tr.t('moderation.bulk.labelFor', { label: shownLabel, length: lengthLabel(tr, payload.forKey, TEMP_ROLE_LENGTHS[payload.forKey].label) });
+        if (payload.action === 'timeout') shownLabel = tr.t('moderation.bulk.labelTimeout', { label: shownLabel, length: lengthLabel(tr, payload.timeoutKey, TIMEOUTS[payload.timeoutKey].label) });
         // The moderator must still be an Administrator for every member; once that fails, the
         // rest of the job stops without touching Discord.
         let revoked = null;
@@ -672,7 +715,7 @@ export function createEnforcementHandlers(core) {
             return e.executeAction({ guild, moderator, targetUser: member.user, flow });
         };
         const job = jobs.start({
-            session: session.idHash, label, items: payload.run, work,
+            session: session.idHash, label: shownLabel, items: payload.run, work,
             onDone: async (finished) => {
                 await audit(req, 'members', [{ key: `bulk:${payload.action}`, old: null, new: `${label}: ${finished.done.length} done, ${finished.failed.length} failed` }],
                     { modLog: true, label: 'Members (bulk)' });
@@ -686,30 +729,30 @@ export function createEnforcementHandlers(core) {
     async function bulkJob(req, res) {
         const id = typeof req.params?.job === 'string' ? req.params.job.slice(0, 40) : '';
         const job = jobs.get(id, req.dashboard.session.idHash);
-        if (!job) return fail(res, 404, 'Not found', 'This bulk action is not known (it may be over an hour old, or the bot restarted).', req);
+        if (!job) return fail(res, 404, textOf(req).t('errors.notFound'), textOf(req).t('moderation.bulk.unknownJob'), req);
         return sendHtml(res, 200, bulkJobPage({ ...shellOf(req), job }));
     }
 
     const noteAdd = guardedPost(async (req, res) => {
         const userId = userIdParam(req);
-        if (!userId) throw new InputError('Not a user ID.');
+        if (!userId) throw new InputError(textOf(req).t('moderation.members.notUserId'));
         const content = multiline(req.body, 'note', 1000);
-        if (!content) throw new InputError('The note is empty.');
+        if (!content) throw new InputError(textOf(req).t('moderation.notes.empty'));
         const note = await e.addNote(guildId, userId, content, { id: req.dashboard.session.userId, tag: req.dashboard.session.username });
         await audit(req, 'notes', [{ key: `note:${userId}`, old: null, new: note?.content ?? content }], { modLog: true, label: 'Staff notes' });
-        await flash(req, 'Note added.');
+        await flash(req, textOf(req).t('moderation.notes.added'));
         return res.redirect(303, path(`/users/${userId}`));
     }, { rerender: rerenderUser, perm: 'member.notes' });
 
     const noteRemove = guardedPost(async (req, res) => {
         const userId = userIdParam(req);
-        if (!userId) throw new InputError('Not a user ID.');
+        if (!userId) throw new InputError(textOf(req).t('moderation.members.notUserId'));
         const noteId = text(req.body, 'note', 20);
-        if (!/^\d{1,16}$/.test(noteId)) throw new InputError('Not a note.');
+        if (!/^\d{1,16}$/.test(noteId)) throw new InputError(textOf(req).t('moderation.notes.notNote'));
         const removed = await e.removeNote(guildId, userId, { id: noteId });
-        if (!removed) throw new InputError('That note no longer exists.');
+        if (!removed) throw new InputError(textOf(req).t('moderation.notes.gone'));
         await audit(req, 'notes', [{ key: `note:${userId}`, old: removed.content, new: null }], { modLog: true, label: 'Staff notes' });
-        await flash(req, 'Note removed.');
+        await flash(req, textOf(req).t('moderation.notes.removed'));
         return res.redirect(303, path(`/users/${userId}`));
     }, { rerender: rerenderUser, perm: 'member.notes' });
 
@@ -719,7 +762,7 @@ export function createEnforcementHandlers(core) {
     async function caseOf(req) {
         const code = caseCodeParam(req);
         const record = code ? await e.getCaseByCode(code) : null;
-        if (!record || record.guild_id !== guildId) throw new InputError('There is no case with that code.', 404);
+        if (!record || record.guild_id !== guildId) throw new InputError(textOf(req).t('moderation.case.noCase'), 404);
         return record;
     }
 
@@ -730,14 +773,15 @@ export function createEnforcementHandlers(core) {
         const reasonRaw = text(req.body, 'reason', 500);
         const reason = reasonRaw && reasonRaw !== record.reason ? reasonRaw : undefined;
         const durationMs = parseEditDuration(text(req.body, 'duration', 20));
-        if (reason === undefined && durationMs === undefined) throw new InputError('Give a new reason or a new duration.');
+        if (reason === undefined && durationMs === undefined) throw new InputError(textOf(req).t('moderation.case.giveChange'));
         const moderator = await freshModerator(req);
         const { after, changes } = await e.editCase(client, {
             guildId, caseCode: record.case_code, editor: { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username }, reason, durationMs,
         });
         await audit(req, 'cases', changes.map((c) => ({ key: `${record.case_code}.${c.field}`, old: c.oldValue, new: c.newValue })));
         const ended = changes.some((c) => c.field === 'duration') && after.expires_at && new Date(after.expires_at) <= new Date();
-        await flash(req, `Case ${record.case_code} edited: ${changes.map((c) => c.field).join(' and ')}.${ended ? ' The new end is already past: it will be lifted within a minute.' : ''}`);
+        const tr = textOf(req);
+        await flash(req, tr.t(ended ? 'moderation.case.editedEnded' : 'moderation.case.edited', { code: record.case_code, fields: fieldList(tr, changes.map((c) => c.field)) }));
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.edit' });
 
@@ -749,36 +793,38 @@ export function createEnforcementHandlers(core) {
     const caseVoid = guardedPost(async (req, res) => {
         const record = await caseOf(req);
         if (!text(req.body, 'token', 100)) {
+            const tr = textOf(req);
             const reason = text(req.body, 'reason', 500);
-            if (!reason) throw new InputError('The reason cannot be empty.');
-            if (record.voided_at) throw new InputError(`Case ${record.case_code} is already removed.`);
+            if (!reason) throw new InputError(tr.t('moderation.case.reasonEmpty'));
+            if (record.voided_at) throw new InputError(tr.t('moderation.case.alreadyRemoved', { code: record.case_code }));
             await freshModerator(req);
             const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: `void:${record.case_code}`, payload: { caseCode: record.case_code, reason } });
             return sendHtml(res, 200, confirmPage({
-                ...shellOf(req), active: 'cases', title: `Remove ${record.case_code}`, heading: `Confirm: remove case ${record.case_code}`,
+                ...shellOf(req), active: 'cases', title: tr.t('moderation.case.voidTitle', { code: record.case_code }), heading: tr.t('moderation.case.voidHeading', { code: record.case_code }),
                 rows: [
-                    { label: 'Case', value: `${record.case_code} · ${record.type} · ${record.name}` },
-                    { label: 'Member', value: `${record.target_username} (${record.target_user_id})` },
-                    { label: 'Reason (shown to the member)', value: reason },
-                    { label: 'Effect', value: voidEffect(record) },
+                    { label: tr.t('moderation.case.rowCase'), value: `${record.case_code} · ${record.type} · ${record.name}` },
+                    { label: tr.t('moderation.case.rowMember'), value: `${record.target_username} (${record.target_user_id})` },
+                    { label: tr.t('moderation.case.rowReason'), value: reason },
+                    { label: tr.t('moderation.case.rowEffect'), value: voidEffect(record) },
                 ],
-                actionPath: `/cases/${record.case_code}/void`, hidden: { token, fh: hash }, submit: 'Remove case', cancelHref: path(`/cases/${record.case_code}`),
+                actionPath: `/cases/${record.case_code}/void`, hidden: { token, fh: hash }, submit: tr.t('moderation.case.removeSubmit'), cancelHref: path(`/cases/${record.case_code}`),
             }));
         }
         const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: `void:${record.case_code}`, hash: text(req.body, 'fh', 100) });
-        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; remove the case again.');
+        if (!payload) throw new InputError(textOf(req).t('moderation.expired.void'));
         const moderator = await freshModerator(req);
         const admin = { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username };
         const { record: voided, notes, dmDelivered } = await e.voidCase(client, { guildId, caseCode: record.case_code, admin, reason: payload.reason });
         await audit(req, 'cases', [{ key: `${record.case_code}.void`, old: null, new: payload.reason }]);
-        await flash(req, [`Case ${voided.case_code} removed (it no longer counts).`, ...notes, `DM to the member: ${dmDelivered ? 'delivered' : 'not delivered'}.`].join(' '));
+        const tr = textOf(req);
+        await flash(req, [tr.t('moderation.case.removed', { code: voided.case_code }), ...notes, tr.t(dmDelivered ? 'moderation.case.dmDelivered' : 'moderation.case.dmNotDelivered')].join(' '));
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.edit' });
 
     const evidenceAdd = guardedPost(async (req, res) => {
         const record = await caseOf(req);
         const entries = parseEvidenceUrls(text(req.body, 'link', 500));
-        if (entries.length !== 1) throw new InputError('Give one http(s) link, e.g. a Discord message link.');
+        if (entries.length !== 1) throw new InputError(textOf(req).t('moderation.evidence.oneLink'));
         const note = text(req.body, 'note', 300) || null;
         const [entry] = await e.captureLinks(guildOf(), entries);
         const row = await e.addEvidence(record.case_code, {
@@ -786,7 +832,7 @@ export function createEnforcementHandlers(core) {
             addedBy: { id: req.dashboard.session.userId, username: req.dashboard.session.username },
         });
         await audit(req, 'cases', [{ key: `${record.case_code}.evidence`, old: null, new: entry.url }], { modLog: true, label: `Case ${record.case_code} evidence` });
-        await flash(req, `Evidence #${row.id} added.${entry.sourceMessageUrl && !entry.excerpt ? ' The message could not be read (other server, no access or deleted), so only the link is saved.' : ''}`);
+        await flash(req, textOf(req).t(entry.sourceMessageUrl && !entry.excerpt ? 'moderation.evidence.addedLinkOnly' : 'moderation.evidence.added', { id: row.id }));
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.evidence' });
 
@@ -797,26 +843,26 @@ export function createEnforcementHandlers(core) {
     const evidenceUpload = guardedPost(async (req, res) => {
         const record = await caseOf(req);
         const file = req.upload?.file || null;
-        if (!file) throw new InputError('Choose an image to upload.');
+        if (!file) throw new InputError(textOf(req).t('moderation.evidence.chooseImage'));
         const image = sniffImage(file.data);
-        if (!image) throw new InputError('That file is not a PNG, JPEG, GIF or WebP image.');
+        if (!image) throw new InputError(textOf(req).t('moderation.evidence.notImage'));
         const note = text(req.body, 'note', 300) || null;
         const row = await e.addImageEvidence(client, record.case_code, {
             data: file.data, name: evidenceFileName(record.case_code, image.ext), contentType: image.type,
         }, { note, addedBy: { id: req.dashboard.session.userId, username: req.dashboard.session.username } });
         await audit(req, 'cases', [{ key: `${record.case_code}.evidence`, old: null, new: `image #${row.id} (${image.type}, ${file.data.length} bytes)` }], { modLog: true, label: `Case ${record.case_code} evidence` });
-        await flash(req, `Image evidence #${row.id} added (re-hosted in the evidence channel).`);
+        await flash(req, textOf(req).t('moderation.evidence.imageAdded', { id: row.id }));
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.evidence' });
 
     const evidenceRemove = guardedPost(async (req, res) => {
         const record = await caseOf(req);
         const id = text(req.body, 'id', 12);
-        if (!/^\d{1,12}$/.test(id)) throw new InputError('Not an evidence number.');
+        if (!/^\d{1,12}$/.test(id)) throw new InputError(textOf(req).t('moderation.evidence.notNumber'));
         const removed = await e.removeEvidence(record.case_code, Number(id));
-        if (!removed) throw new InputError(`Case ${record.case_code} has no evidence #${id}.`);
+        if (!removed) throw new InputError(textOf(req).t('moderation.evidence.none', { code: record.case_code, id }));
         await audit(req, 'cases', [{ key: `${record.case_code}.evidence`, old: removed.url || `image #${id}`, new: null }], { modLog: true, label: `Case ${record.case_code} evidence` });
-        await flash(req, `Evidence #${id} removed.${removed.kind === 'image' ? ' Its copy in the evidence channel is kept.' : ''}`);
+        await flash(req, textOf(req).t(removed.kind === 'image' ? 'moderation.evidence.removedImage' : 'moderation.evidence.removed', { id }));
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.evidence' });
 
@@ -825,82 +871,89 @@ export function createEnforcementHandlers(core) {
      * (up to 25 cases), or void (up to 10, with a reason; a confirm page lists them first: each one lifts what is
      * still in effect and DMs the member, exactly like voiding one case). Audited per case.
      */
-    const bulkCasesError = (req, res, status, message) => sendHtml(res, status, layout({
-        ...shellOf(req), title: 'Cases', active: 'cases',
-        body: html`<header class="page-head"><h1>Nothing was changed</h1></header><p class="error" role="alert">${message}</p><p><a href="${path('/cases')}">Back to Cases</a></p>`,
-    }));
+    const bulkCasesError = (req, res, status, message) => {
+        const tr = textOf(req);
+        return sendHtml(res, status, layout({
+            ...shellOf(req), title: tr.t('frame.nav.items.cases'), active: 'cases',
+            body: html`<header class="page-head"><h1>${tr.t('moderation.cases.nothingChanged')}</h1></header><p class="error" role="alert">${message}</p><p><a href="${path('/cases')}">${tr.t('moderation.cases.backToCases')}</a></p>`,
+        }));
+    };
     const BULK_TAG_MAX = 25;
     const BULK_VOID_MAX = 10;
     const caseBulk = guardedPost(async (req, res) => {
         const raw = req.body?.codes;
         const codes = [...new Set((Array.isArray(raw) ? raw : [raw]).map((c) => normalizeCaseCode(String(c || ''))).filter(Boolean))];
         const action = text(req.body, 'action', 20);
-        if (!codes.length) throw new InputError('Tick at least one case.');
-        if (!['tag-add', 'tag-remove', 'void'].includes(action)) throw new InputError('Choose what to do with the ticked cases.');
+        const tr = textOf(req);
+        if (!codes.length) throw new InputError(tr.t('moderation.cases.tickCase'));
+        if (!['tag-add', 'tag-remove', 'void'].includes(action)) throw new InputError(tr.t('moderation.cases.chooseAction'));
         const records = [];
         for (const code of codes) {
             const record = await e.getCaseByCode(code);
             if (record && record.guild_id === guildId) records.push(record);
         }
-        if (!records.length) throw new InputError('None of the ticked cases exist in this server any more.');
+        if (!records.length) throw new InputError(tr.t('moderation.cases.noneExist'));
         const done = [];
         const skipped = [];
         if (action === 'void') {
-            if (records.length > BULK_VOID_MAX) throw new InputError(`Remove at most ${BULK_VOID_MAX} cases at once.`);
+            if (records.length > BULK_VOID_MAX) throw new InputError(tr.t('moderation.cases.removeMax', { max: BULK_VOID_MAX }));
             const reason = text(req.body, 'reason', 500);
-            if (!reason) throw new InputError('Give a reason for removing them (the members see it).');
+            if (!reason) throw new InputError(tr.t('moderation.cases.giveReason'));
             await freshModerator(req);
             const open = records.filter((r) => !r.voided_at);
-            if (!open.length) throw new InputError('Every ticked case is already removed.');
+            if (!open.length) throw new InputError(tr.t('moderation.cases.allRemoved'));
             const payload = { codes: open.map((r) => r.case_code), reason };
             const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'cases:void', payload });
             const already = records.filter((r) => r.voided_at).map((r) => r.case_code);
             return sendHtml(res, 200, confirmPage({
-                ...shellOf(req), active: 'cases', title: 'Remove cases', heading: `Confirm: remove ${open.length} case${open.length === 1 ? '' : 's'}`,
-                rows: [{ label: 'Reason (shown to the members)', value: reason }],
-                list: { title: `Will be removed (${open.length})`, items: open.map((r) => `${r.case_code} · ${r.type} · ${r.target_username} (${r.target_user_id}): ${voidEffect(r)}`) },
-                notes: already.length ? [`Skipped, already removed: ${already.join(', ')}.`] : [],
-                actionPath: '/cases/bulk/void', hidden: { token, fh: hash }, submit: `Remove ${open.length} case${open.length === 1 ? '' : 's'}`, cancelHref: path('/cases'),
+                ...shellOf(req), active: 'cases', title: tr.t('moderation.cases.removeTitle'), heading: tr.tp('moderation.cases.removeHeading', open.length),
+                rows: [{ label: tr.t('moderation.cases.rowReason'), value: reason }],
+                list: { title: tr.t('moderation.cases.willRemove', { count: tr.fmtNumber(open.length) }), items: open.map((r) => `${r.case_code} · ${r.type} · ${r.target_username} (${r.target_user_id}): ${voidEffect(r)}`) },
+                notes: already.length ? [tr.t('moderation.cases.skippedRemoved', { codes: already.join(', ') })] : [],
+                actionPath: '/cases/bulk/void', hidden: { token, fh: hash }, submit: tr.tp('moderation.cases.removeSubmit', open.length), cancelHref: path('/cases'),
             }));
         }
-        if (records.length > BULK_TAG_MAX) throw new InputError(`Tag at most ${BULK_TAG_MAX} cases at once.`);
+        if (records.length > BULK_TAG_MAX) throw new InputError(tr.t('moderation.cases.tagMax', { max: BULK_TAG_MAX }));
         let tag;
         try { [tag] = normalizeTags(text(req.body, 'tag', 21)); } catch (error) { throw new InputError(error.userMessage); }
-        if (!tag) throw new InputError('Give a tag, like scam.');
+        if (!tag) throw new InputError(tr.t('moderation.cases.giveTag'));
         for (const record of records) {
             const before = record.tags || [];
             const next = action === 'tag-add' ? [...new Set([...before, tag])].sort() : before.filter((t) => t !== tag);
             if (next.length === before.length && next.every((t, i) => t === before[i])) continue;
-            if (next.length > 10) { skipped.push(`${record.case_code} (already 10 tags)`); continue; }
+            if (next.length > 10) { skipped.push(tr.t('moderation.cases.tagLimit', { code: record.case_code })); continue; }
             await e.setCaseTags(guildId, record.case_code, next);
             await audit(req, 'cases', [{ key: `${record.case_code}.tags`, old: before.join(', ') || null, new: next.join(', ') || null }]);
             done.push(record.case_code);
         }
-        await flash(req, `${action === 'tag-add' ? 'Tagged' : 'Untagged'} #${tag}: ${done.length} case${done.length === 1 ? '' : 's'}.${skipped.length ? ` Skipped: ${skipped.join(', ')}.` : ''}`);
+        await flash(req, [tr.tp(action === 'tag-add' ? 'moderation.cases.tagged' : 'moderation.cases.untagged', done.length, { tag }),
+            ...(skipped.length ? [tr.t('moderation.cases.skipped', { list: skipped.join(', ') })] : [])].join(' '));
         return res.redirect(303, path('/cases'));
     }, { rerender: bulkCasesError, perm: 'case.edit' });
 
     /** POST /cases/bulk/void: runs the bulk void the confirm page showed (one-time token). */
     const caseBulkVoid = guardedPost(async (req, res) => {
         const payload = confirms.consume(text(req.body, 'token', 100), { session: req.dashboard.session.idHash, subject: 'cases:void', hash: text(req.body, 'fh', 100) });
-        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; choose the cases again.');
+        if (!payload) throw new InputError(textOf(req).t('moderation.expired.cases'));
         const moderator = await freshModerator(req);
         const admin = { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username };
         const done = [];
         const skipped = [];
+        const tr = textOf(req);
         for (const code of payload.codes) {
             const record = await e.getCaseByCode(code);
-            if (!record || record.guild_id !== guildId) { skipped.push(`${code} (no longer exists)`); continue; }
-            if (record.voided_at) { skipped.push(`${code} (already removed)`); continue; }
+            if (!record || record.guild_id !== guildId) { skipped.push(tr.t('moderation.cases.goneItem', { code })); continue; }
+            if (record.voided_at) { skipped.push(tr.t('moderation.cases.removedItem', { code })); continue; }
             try {
                 await e.voidCase(client, { guildId, caseCode: code, admin, reason: payload.reason });
                 await audit(req, 'cases', [{ key: `${code}.void`, old: null, new: payload.reason }]);
                 done.push(code);
             } catch (error) {
-                skipped.push(`${code} (${plainText(error.userMessage || 'not removed')})`);
+                skipped.push(tr.t('moderation.cases.failedItem', { code, error: plainText(error.userMessage || tr.t('moderation.cases.notRemoved')) }));
             }
         }
-        await flash(req, `Removed: ${done.join(', ') || 'none'}.${skipped.length ? ` Skipped: ${skipped.join(', ')}.` : ''}`);
+        await flash(req, [tr.t('moderation.cases.removedList', { list: done.join(', ') || tr.t('moderation.cases.none') }),
+            ...(skipped.length ? [tr.t('moderation.cases.skipped', { list: skipped.join(', ') })] : [])].join(' '));
         return res.redirect(303, path('/cases'));
     }, { rerender: bulkCasesError, perm: 'case.edit' });
 
@@ -909,12 +962,12 @@ export function createEnforcementHandlers(core) {
     const caseNote = guardedPost(async (req, res) => {
         const record = await caseOf(req);
         const note = text(req.body, 'text', 1000).trim();
-        if (!note) throw new InputError('The note is empty.');
+        if (!note) throw new InputError(textOf(req).t('moderation.notes.empty'));
         try {
             await e.addCaseNote(guildId, record.case_code, { id: req.dashboard.session.userId, username: req.dashboard.session.username }, note);
         } catch (error) { throw noteError(error); }
         await audit(req, 'cases', [{ key: `${record.case_code}.note`, old: null, new: 'added' }]);
-        await flash(req, 'Note added. Only staff can see it.');
+        await flash(req, textOf(req).t('moderation.case.noteAdded'));
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.evidence' });
 
@@ -925,7 +978,7 @@ export function createEnforcementHandlers(core) {
             result = await e.setCaseTags(guildId, record.case_code, normalizeTags(text(req.body, 'tags', 250)));
         } catch (error) { throw noteError(error); }
         await audit(req, 'cases', [{ key: `${record.case_code}.tags`, old: result.before.join(', ') || null, new: result.after.join(', ') || null }]);
-        await flash(req, result.after.length ? `Tags saved: ${result.after.map((t) => `#${t}`).join(' ')}.` : 'Tags removed.');
+        await flash(req, result.after.length ? textOf(req).t('moderation.case.tagsSaved', { tags: result.after.map((t) => `#${t}`).join(' ') }) : textOf(req).t('moderation.case.tagsRemoved'));
         return res.redirect(303, path(`/cases/${record.case_code}`));
     }, { rerender: rerenderCase, perm: 'case.evidence' });
 
@@ -942,7 +995,7 @@ export function createEnforcementHandlers(core) {
     async function renderAppeal(req, res, status = 200, { error = null } = {}) {
         const code = caseCodeParam(req);
         const record = code ? await e.getCaseByCode(code) : null;
-        if (!record || record.guild_id !== guildId) return fail(res, 404, 'Not found', 'There is no case with that code.', req);
+        if (!record || record.guild_id !== guildId) return fail(res, 404, textOf(req).t('errors.notFound'), textOf(req).t('moderation.case.noCase'), req);
         const [appeals, { rows: otherRows, total }, ladder, evidenceRows] = await Promise.all([
             e.getAppealHistory(code),
             e.listCasesForUser(guildId, record.target_user_id, { limit: 16 }),
@@ -955,7 +1008,7 @@ export function createEnforcementHandlers(core) {
         try {
             answers = appeal ? appealAnswers(appeal.body) : [];
         } catch {
-            answers = [{ label: 'Answers', value: '(could not be read)' }];
+            answers = [{ label: textOf(req).t('moderation.appeal.answers'), value: textOf(req).t('moderation.appeal.unreadable') }];
         }
         const data = {
             record, appeal, answers,
@@ -978,11 +1031,11 @@ export function createEnforcementHandlers(core) {
     const appealPreview = guardedPost(async (req, res) => {
         const code = caseCodeParam(req);
         const record = code ? await e.getCaseByCode(code) : null;
-        if (!record || record.guild_id !== guildId) throw new InputError('There is no case with that code.', 404);
+        if (!record || record.guild_id !== guildId) throw new InputError(textOf(req).t('moderation.case.noCase'), 404);
         const decision = text(req.body, 'decision', 10);
-        if (decision !== 'accept' && decision !== 'deny') throw new InputError('Choose Accept or Deny.');
+        if (decision !== 'accept' && decision !== 'deny') throw new InputError(textOf(req).t('moderation.appeal.chooseDecision'));
         const appeals = await e.getAppealHistory(code);
-        if (!appeals.some((a) => a.status === 'pending')) throw new InputError(`There is no pending appeal for ${code}.`);
+        if (!appeals.some((a) => a.status === 'pending')) throw new InputError(textOf(req).t('moderation.appeal.noPending', { code }));
         const moderator = await freshModerator(req);
         // Independent appeal review: refuse before the confirm step (decideAppeal checks again).
         assertAppealReviewer(record, moderator.id || req.dashboard.session.userId, { client, isOwner: e.isBotOwner });
@@ -994,17 +1047,20 @@ export function createEnforcementHandlers(core) {
 
     const appealDecide = guardedPost(async (req, res) => {
         const code = caseCodeParam(req);
-        if (!code) throw new InputError('There is no case with that code.', 404);
+        if (!code) throw new InputError(textOf(req).t('moderation.case.noCase'), 404);
         const payload = confirms.consume(text(req.body, 'token', 100), {
             session: req.dashboard.session.idHash, subject: `appeal:${code}`, hash: text(req.body, 'fh', 100),
         });
-        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was done; decide again.');
+        if (!payload) throw new InputError(textOf(req).t('moderation.expired.appeal'));
         const moderator = await freshModerator(req);
         const admin = moderator.user || { id: moderator.id, username: req.dashboard.session.username };
         const result = await e.decideAppeal({ client, admin, caseCode: code, decision: payload.decision, note: payload.note || null, via: 'dashboard' });
         await audit(req, 'appeal-decisions', [{ key: code, old: 'pending', new: { decision: result.label, note: payload.note || null, dmDelivered: result.dmDelivered } }]);
-        await flash(req, [`Appeal on ${code} ${result.label}.`, `DM to the member: ${result.dmDelivered ? 'delivered' : 'not delivered'}.`, ...(result.notes || []),
-            ...(result.ownerOverride ? ['You issued this punishment: decided as a bot owner, logged as an owner override.'] : [])].join(' '));
+        const tr = textOf(req);
+        const decided = result.label === 'accepted' ? tr.t('moderation.appeal.accepted', { code })
+            : result.label === 'denied' ? tr.t('moderation.appeal.denied', { code }) : `Appeal on ${code} ${result.label}.`;
+        await flash(req, [decided, tr.t(result.dmDelivered ? 'moderation.case.dmDelivered' : 'moderation.case.dmNotDelivered'), ...(result.notes || []),
+            ...(result.ownerOverride ? [tr.t('moderation.appeal.ownerOverride')] : [])].join(' '));
         return res.redirect(303, path('/appeals'));
     }, { rerender: rerenderAppeal, perm: 'appeal.decide' });
 
@@ -1032,31 +1088,31 @@ export function createEnforcementHandlers(core) {
         // A picked member (ID), a pasted ID or an @mention.
         const userA = parseUserRef(text(req.body, 'user_a', 40));
         const userB = parseUserRef(text(req.body, 'user_b', 40));
-        if (!userA || !userB) throw new InputError('Pick both members (type a name and choose one, or use Find a member), or paste their Discord user IDs.');
+        if (!userA || !userB) throw new InputError(textOf(req).t('moderation.keepApart.pickBoth'));
         const days = Number(text(req.body, 'days', 4));
-        if (!Number.isInteger(days) || days < 1 || days > NO_CONTACT_MAX_DAYS) throw new InputError(`Days must be between 1 and ${NO_CONTACT_MAX_DAYS}.`);
+        if (!Number.isInteger(days) || days < 1 || days > NO_CONTACT_MAX_DAYS) throw new InputError(textOf(req).t('moderation.keepApart.days', { max: NO_CONTACT_MAX_DAYS }));
         const reason = text(req.body, 'reason', 500);
-        if (!reason) throw new InputError('A reason is required.');
+        if (!reason) throw new InputError(textOf(req).t('moderation.keepApart.reasonRequired'));
         const [a, b] = await Promise.all([client.users.fetch(userA).catch(() => null), client.users.fetch(userB).catch(() => null)]);
-        if (!a || !b) throw new InputError('One of those IDs is not a Discord user.');
-        if (a.bot || b.bot) throw new InputError('Keep-apart orders are between members, not bots.');
+        if (!a || !b) throw new InputError(textOf(req).t('moderation.keepApart.notUser'));
+        if (a.bot || b.bot) throw new InputError(textOf(req).t('moderation.keepApart.noBots'));
         const moderator = await freshModerator(req);
         const { order, delivered } = await e.addNoContactOrder(client, {
             guildId, userA, userB, days, reason, createdBy: { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username },
         });
         await audit(req, 'nocontact', [{ key: `order:${order.id}`, old: null, new: { userA, userB, days, reason } }]);
-        await flash(req, `Keep-apart order #${order.id} started between ${a.username} and ${b.username}. ${delivered.every(Boolean) ? 'Both members were DMed.' : 'A DM could not be delivered to one of them.'}`);
+        await flash(req, [textOf(req).t('moderation.keepApart.started', { id: order.id, a: a.username, b: b.username }), textOf(req).t(delivered.every(Boolean) ? 'moderation.keepApart.bothDmed' : 'moderation.keepApart.dmFailed')].join(' '));
         return res.redirect(303, path('/nocontact'));
     }, { rerender: rerenderNoContact, perm: 'nocontact.edit' });
 
     const noContactEnd = guardedPost(async (req, res) => {
         const id = text(req.body, 'id', 12);
-        if (!/^\d{1,12}$/.test(id)) throw new InputError('Not an order number.');
+        if (!/^\d{1,12}$/.test(id)) throw new InputError(textOf(req).t('moderation.keepApart.notOrder'));
         const moderator = await freshModerator(req);
         const result = await e.endNoContactOrder(client, { guildId, id: Number(id), endedBy: { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username } });
-        if (!result) throw new InputError(`There is no active keep-apart order #${id}.`);
+        if (!result) throw new InputError(textOf(req).t('moderation.keepApart.noOrder', { id }));
         await audit(req, 'nocontact', [{ key: `order:${id}`, old: 'active', new: 'ended' }]);
-        await flash(req, `Keep-apart order #${id} ended. ${result.delivered.every(Boolean) ? 'Both members were DMed.' : 'A DM could not be delivered to one of them.'}`);
+        await flash(req, [textOf(req).t('moderation.keepApart.ended', { id }), textOf(req).t(result.delivered.every(Boolean) ? 'moderation.keepApart.bothDmed' : 'moderation.keepApart.dmFailed')].join(' '));
         return res.redirect(303, path('/nocontact'));
     }, { rerender: rerenderNoContact, perm: 'nocontact.edit' });
 
@@ -1064,12 +1120,12 @@ export function createEnforcementHandlers(core) {
 
     const watchlistEnd = guardedPost(async (req, res) => {
         const id = text(req.body, 'id', 12);
-        if (!/^\d{1,12}$/.test(id)) throw new InputError('Not a watchlist entry number.');
+        if (!/^\d{1,12}$/.test(id)) throw new InputError(textOf(req).t('moderation.watchlist.notEntry'));
         const moderator = await freshModerator(req);
         const row = await e.endWatch(client, { guildId, id: Number(id), endedBy: { id: moderator.id, username: moderator.user?.username || req.dashboard.session.username } });
-        if (!row) throw new InputError(`There is no active watchlist entry #${id}.`);
+        if (!row) throw new InputError(textOf(req).t('moderation.watchlist.noEntry', { id }));
         await audit(req, 'watchlist', [{ key: `watch:${id}`, old: 'active', new: 'ended' }]);
-        await flash(req, `Watchlist entry #${id} ended.`);
+        await flash(req, textOf(req).t('moderation.watchlist.ended', { id }));
         return res.redirect(303, path('/nocontact'));
     }, { rerender: rerenderNoContact, perm: 'watchlist.edit' });
 
@@ -1113,11 +1169,12 @@ export function createEnforcementHandlers(core) {
         const removedNames = new Map((removed || []).map((r) => [r.userId, userName(r.userId)]));
         const roleNames = new Map((removed || []).flatMap((r) => r.roleIds).map((id) => [id, guild?.roles?.cache?.get?.(id)?.name || null]).filter(([, n]) => n));
         const keep = { period: statsPeriod, coverage: period === '7d' ? undefined : period };
+        const tr = textOf(req);
         return [
             counts ? coverageSection({ report: buildCoverageReport(counts, config?.birthdayTimezone || 'UTC'), period, periods: COVERAGE_PERIODS, statsPeriod })
-                : html`<h2>Coverage</h2><p class="muted">Coverage could not be loaded (database unavailable).</p>`,
+                : html`<h2>${tr.t('moderation.staff.coverage')}</h2><p class="muted">${tr.t('moderation.staff.coverageFailed')}</p>`,
             owner ? activitySection({ rows: activity, week, start, keep, warningsLink: owner })
-                : html`<h2>Staff activity</h2><p class="muted">Weekly staff activity is shown to the bot owners only (like /staff activity).</p>`,
+                : html`<h2>${tr.t('moderation.staff.activity')}</h2><p class="muted">${tr.t('moderation.staff.activityOwners')}</p>`,
             disciplineSection({
                 isOwner: owner, csrf: req.dashboard.session.csrf, editEnabled: settings.editEnabled,
                 staff: (activity || []).map((r) => ({ userId: r.userId, username: r.username })),
@@ -1133,12 +1190,12 @@ export function createEnforcementHandlers(core) {
 
     const blockLift = guardedPost(async (req, res) => {
         const moderatorId = text(req.body, 'moderator', 25);
-        if (!isSnowflake(moderatorId)) throw new InputError('Not a user ID.');
+        if (!isSnowflake(moderatorId)) throw new InputError(textOf(req).t('moderation.members.notUserId'));
         const block = await e.getMassActionBlock(guildId, moderatorId);
-        if (!block) throw new InputError('That moderator is not blocked.');
+        if (!block) throw new InputError(textOf(req).t('moderation.staff.notBlocked'));
         await e.clearMassActionBlock(guildId, moderatorId);
         await audit(req, 'massguard', [{ key: `block:${moderatorId}`, old: block.until, new: null }], { modLog: true, label: 'Safety limit (bans/kicks)' });
-        await flash(req, `Safety limit block lifted for ${client.users.cache?.get?.(moderatorId)?.username || moderatorId}.`);
+        await flash(req, textOf(req).t('moderation.staff.blockLifted', { name: client.users.cache?.get?.(moderatorId)?.username || moderatorId }));
         return res.redirect(303, path('/staff'));
     }, { rerender: rerenderStaff, need: 'owner', perm: 'staff.manage' });
 
@@ -1149,19 +1206,19 @@ export function createEnforcementHandlers(core) {
     // mod-log line and removes the staff roles at the limit; here only the audit row.
     const staffWarn = guardedPost(async (req, res) => {
         const userId = parseUserRef(text(req.body, 'user', 40)) || '';
-        if (!isSnowflake(userId)) throw new InputError('Staff member: pick a member (type a name and choose one, or use Find a member), or paste their Discord user ID.');
+        if (!isSnowflake(userId)) throw new InputError(textOf(req).t('moderation.staff.pickStaff'));
         const reason = text(req.body, 'reason', 500);
-        if (!reason) throw new InputError('A reason is required (which admin rule they broke).');
+        if (!reason) throw new InputError(textOf(req).t('moderation.staff.reasonRule'));
         const guild = guildOf();
-        if (userId === guild.ownerId) throw new InputError('You cannot warn the owner or a bot.');
+        if (userId === guild.ownerId) throw new InputError(textOf(req).t('moderation.staff.cannotWarn'));
         const member = await guild.members.fetch(userId).catch(() => null);
-        if (!member) throw new InputError('That user is not in the server.');
-        if (member.user?.bot) throw new InputError('You cannot warn the owner or a bot.');
+        if (!member) throw new InputError(textOf(req).t('moderation.staff.notInServer'));
+        if (member.user?.bot) throw new InputError(textOf(req).t('moderation.staff.cannotWarn'));
         const { active, demoted } = await e.giveStaffWarning(guild, member, ownerActor(req), reason);
         await audit(req, 'staff', [{ key: `warning:${userId}`, old: null, new: { reason, active, demoted: Boolean(demoted) } }]);
         await flash(req, [
-            `Staff warning given to ${member.user?.username || userId}: ${active} of ${automodConfig.staffWarnLimit} active.`,
-            demoted ? 'That reached the limit: their staff roles were removed (restore them under Removed staff roles).' : null,
+            textOf(req).t('moderation.staff.warned', { name: member.user?.username || userId, active, limit: automodConfig.staffWarnLimit }),
+            demoted ? textOf(req).t('moderation.staff.demoted') : null,
         ].filter(Boolean).join(' '));
         return res.redirect(303, path(`/staff${queryString({ warnings: userId })}`));
     }, { rerender: rerenderStaff, need: 'owner', perm: 'staff.manage' });
@@ -1169,14 +1226,14 @@ export function createEnforcementHandlers(core) {
     // /staff restore (the roles part; a mass-action block is lifted with blockLift). OWNER_IDS only.
     const staffRestore = guardedPost(async (req, res) => {
         const userId = parseUserRef(text(req.body, 'user', 40)) || '';
-        if (!isSnowflake(userId)) throw new InputError('Staff member: pick a member (type a name and choose one, or use Find a member), or paste their Discord user ID.');
+        if (!isSnowflake(userId)) throw new InputError(textOf(req).t('moderation.staff.pickStaff'));
         const roles = await e.restoreStaffRoles(guildOf(), userId, ownerActor(req));
-        if (!roles) throw new InputError('No removed staff roles are saved for that user (or they are not in the server).');
+        if (!roles) throw new InputError(textOf(req).t('moderation.staff.noSavedRoles'));
         await audit(req, 'staff', [{ key: `roles:${userId}`, old: 'removed', new: roles.map((role) => role.name) }]);
         const name = guildOf()?.members?.cache?.get?.(userId)?.user?.username || userId;
         await flash(req, roles.length
-            ? `Staff roles given back to ${name}: ${roles.map((role) => role.name).join(', ')}.`
-            : `None of the saved roles could be given back to ${name} (deleted or above my role).`);
+            ? textOf(req).t('moderation.staff.rolesBack', { name, roles: roles.map((role) => role.name).join(', ') })
+            : textOf(req).t('moderation.staff.noneBack', { name }));
         return res.redirect(303, path('/staff'));
     }, { rerender: rerenderStaff, need: 'owner', perm: 'staff.manage' });
 

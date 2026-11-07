@@ -1,0 +1,42 @@
+{
+  "confirmExpired": "Esta confirmación caducó o ya se usó. No se hizo nada; vuelve a rellenar el formulario.",
+  "search": {
+    "notSaved": "No guardada",
+    "nameTooLong": "Ponle a la búsqueda un nombre de hasta 40 caracteres.",
+    "filterFirst": "Primero filtra los casos y luego guarda la búsqueda.",
+    "invalid": "Esos filtros no son válidos.",
+    "full": "Puedes guardar 20 búsquedas. Borra una primero.",
+    "saved": "Búsqueda «{name}» guardada.",
+    "notDeleted": "No borrada",
+    "gone": "Esa búsqueda guardada ya no existe.",
+    "deleted": "Búsqueda «{name}» borrada.",
+    "json": {
+      "notAllowed": "No permitido.",
+      "tooMany": "Demasiadas búsquedas. Espera un minuto."
+    }
+  },
+  "cases": {
+    "invalidFilter": "Filtro no válido.",
+    "exportAdmin": "Exportar casos requiere Administrador en el servidor principal.",
+    "exportFree": "No incluido en el plan Free",
+    "exportFreeText": "La exportación de casos viene con Mewvo Normal (últimos 90 días) y Pro o Max (todo el historial), según el plan del propietario del servidor.",
+    "notFound": "Caso no encontrado",
+    "notFoundText": "No hay ningún caso con ese código."
+  },
+  "auditModules": {
+    "appeals": "Apelaciones (registro)",
+    "logging": "Registros",
+    "actions": "Acciones de sanción",
+    "cases": "Cambios de casos",
+    "appeal-decisions": "Decisiones de apelación",
+    "notes": "Notas del staff",
+    "nocontact": "Mantener separados",
+    "watchlist": "Lista de vigilancia",
+    "massguard": "Límite de seguridad (baneos/expulsiones)",
+    "staff": "Disciplina del staff",
+    "owner": "Zona del propietario",
+    "inbox": "Bandeja de entrada (respuestas, cierres)",
+    "members": "Miembros",
+    "rolerules": "Reglas de roles"
+  }
+}

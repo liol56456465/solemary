@@ -6,6 +6,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { TIMEOUTS, roleProblem, targetProblem } from './memberActions.js';
+import { currentText } from './language.js';
 
 export const BULK_LIMIT = 100;
 export const BULK_ACTIONS = {
@@ -16,6 +17,12 @@ export const BULK_ACTIONS = {
     ban: 'Ban',
 };
 
+/** An action's word for a page: BULK_ACTIONS (English, also used in the audit log) or memberActions.bulk.<key>. */
+export function bulkActionLabel(key, tr = currentText()) {
+    const k = `memberActions.bulk.${key}`;
+    return tr.lang !== 'en' && tr.has(k) ? tr.t(k) : BULK_ACTIONS[key];
+}
+
 /**
  * Who will be changed and who is skipped.
  * input: { guild, members: [GuildMember], action, role, timeoutKey, actorId, actorMember, actorIsOwner,
@@ -23,6 +30,7 @@ export const BULK_ACTIONS = {
  * → { run: [{ id, name }], skipped: [{ id, name, why }] }
  */
 export function planBulk({ guild, members, action, role = null, timeoutKey = '', actorId, actorMember, actorIsOwner = false, botMember, guardLeft = Infinity }) {
+    const tr = currentText();
     const run = [];
     const skipped = [];
     const base = { guild, actorId, actorMember, actorIsOwner, botMember };
@@ -36,12 +44,12 @@ export function planBulk({ guild, members, action, role = null, timeoutKey = '',
         if (problem) { skip(problem); continue; }
         if (rolesProblem) { skip(rolesProblem); continue; }
         const has = role ? member.roles?.cache?.has?.(role.id) : false;
-        if (action === 'role-add' && has) { skip(`already has @${role.name}`); continue; }
-        if (action === 'role-remove' && !has) { skip(`does not have @${role.name}`); continue; }
-        if (action === 'timeout' && !TIMEOUTS[timeoutKey]) { skip('no timeout length chosen'); continue; }
-        if (action === 'timeout' && member.permissions?.has?.('Administrator')) { skip('has Administrator (Discord does not allow a timeout)'); continue; }
+        if (action === 'role-add' && has) { skip(tr.t('memberActions.skip.hasRole', { role: role.name })); continue; }
+        if (action === 'role-remove' && !has) { skip(tr.t('memberActions.skip.lacksRole', { role: role.name })); continue; }
+        if (action === 'timeout' && !TIMEOUTS[timeoutKey]) { skip(tr.t('memberActions.skip.noLength')); continue; }
+        if (action === 'timeout' && member.permissions?.has?.('Administrator')) { skip(tr.t('memberActions.skip.admin')); continue; }
         if (action === 'kick' || action === 'ban') {
-            if (guarded >= guardLeft) { skip('safety limit: no more bans/kicks allowed in this 10-minute window'); continue; }
+            if (guarded >= guardLeft) { skip(tr.t('memberActions.skip.guard')); continue; }
             guarded += 1;
         }
         run.push({ id, name });

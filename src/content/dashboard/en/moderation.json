@@ -1,0 +1,239 @@
+{
+  "action": {
+    "ban": "Ban",
+    "kick": "Kick",
+    "mute": "Mute",
+    "warn": "Warn",
+    "unban": "Unban",
+    "unmute": "Unmute",
+    "removewarn": "Remove warn"
+  },
+  "length": {
+    "60s": "60 seconds",
+    "5m": "5 minutes",
+    "10m": "10 minutes",
+    "1h": "1 hour",
+    "1d": "1 day",
+    "3d": "3 days",
+    "7d": "7 days",
+    "1w": "1 week",
+    "28d": "28 days",
+    "30d": "30 days"
+  },
+  "flow": {
+    "chooseReason": "Choose a reason.",
+    "unknownAppealChoice": "Can they appeal: unknown choice."
+  },
+  "void": {
+    "dm": "The member gets a DM with your reason.",
+    "test": "Test case: only the record is marked as a mistake. {dm}",
+    "alreadyEnded": "It already ended, so nothing is lifted; the case is only marked as a mistake. {dm}",
+    "alreadyLifted": "It was already lifted, so nothing is lifted; the case is only marked as a mistake. {dm}",
+    "lift": {
+      "ban": "The member is unbanned (and gets an invite back).",
+      "mute": "The member is unmuted.",
+      "warn": "The warning stops counting toward the warning stages; a ban it caused is lifted.",
+      "kick": "There is nothing to lift for a kick; the case is marked as a mistake.",
+      "fallback": "What is still in effect is lifted."
+    },
+    "effect": "{lift} {dm}"
+  },
+  "result": {
+    "done": "{action} done for {name}.",
+    "case": "Case {code} ({name}).",
+    "dmFailed": "The DM could not be delivered (DMs closed or no shared server); the action still ran.",
+    "dmDelivered": "DM delivered.",
+    "warning": "Warning:"
+  },
+  "access": {
+    "needModRole": "You need the moderator role or Administrator in the main server to do this (it may have been removed since you logged in).",
+    "needAdmin": "You need the Administrator permission in the main server to do this.",
+    "actionNeedsAdmin": "{action} needs Administrator in the main server.",
+    "thisAction": "This action",
+    "ownerOnly": "Only the bot owners can do this (like /staff restore).",
+    "enforcementAdmin": "Enforcement actions need Administrator in the main server (bot owners without it can view only)."
+  },
+  "expired": {
+    "action": "This confirmation expired or was already used. Nothing was done; preview the action again.",
+    "bulk": "This confirmation expired or was already used. Nothing was done; preview the bulk action again.",
+    "void": "This confirmation expired or was already used. Nothing was done; remove the case again.",
+    "cases": "This confirmation expired or was already used. Nothing was done; choose the cases again.",
+    "appeal": "This confirmation expired or was already used. Nothing was done; decide again."
+  },
+  "members": {
+    "bansFailed": "The ban list could not be loaded (Discord or the database did not answer). Reload the page to try again.",
+    "noUserWithId": "No Discord user with ID {id} exists.",
+    "noUser": "There is no Discord user with that ID.",
+    "notUserId": "Not a user ID.",
+    "unknownAction": "Unknown action.",
+    "notAvailable": "{action} is not available for {name} right now (reload the page).",
+    "warnWouldBan": "This warning would automatically ban {name} (warn ladder), so it needs an Administrator.",
+    "chooseCountedWarn": "Choose one of the member's counted warnings.",
+    "actionFailed": "Something went wrong; nothing may have changed. Check the member's cases before retrying.",
+    "alreadyHasRole": "{name} already has @{role}.",
+    "lacksRole": "{name} does not have @{role}.",
+    "chooseHowLong": "Choose how long.",
+    "roleFor": "@{role} for {length}",
+    "gaveRole": "Gave {label} to {name}.",
+    "tookRole": "Took @{role} from {name}.",
+    "sameNickname": "That is already their nickname.",
+    "nicknameSet": "Nickname set to \"{nick}\".",
+    "nicknameRemoved": "Nickname removed.",
+    "chooseTimeout": "Choose a timeout length.",
+    "timeoutAdmin": "Discord does not allow timing out a member with Administrator.",
+    "notTimedOut": "{name} is not timed out.",
+    "timeoutRemoved": "Timeout of {name} removed.",
+    "timedOut": "{name} is timed out for {length}.",
+    "notVerified": "{name} does not have the verified role.",
+    "unverified": "Verification removed from {name}."
+  },
+  "bulk": {
+    "action": {
+      "roleAdd": "Give a role",
+      "roleRemove": "Take a role",
+      "timeout": "Time out",
+      "kick": "Kick",
+      "ban": "Ban"
+    },
+    "labelRole": "{label} @{role}",
+    "labelFor": "{label} for {length}",
+    "labelTimeout": "{label} ({length})",
+    "notDone": "Not done",
+    "tooManyMatch": "{total} members match these filters; one bulk action can change at most {max}. Narrow the filters.",
+    "tickMember": "Tick at least one member, or choose \"everyone matching these filters\".",
+    "tooMany": "One bulk action can change at most {max} members.",
+    "chooseAction": "Choose what to do.",
+    "chooseRole": "Choose a role.",
+    "blocked": "You are blocked by the safety limit (too many bans or kicks in 10 minutes); nothing was done.",
+    "unknownJob": "This bulk action is not known (it may be over an hour old, or the bot restarted)."
+  },
+  "notes": {
+    "empty": "The note is empty.",
+    "added": "Note added.",
+    "notNote": "Not a note.",
+    "gone": "That note no longer exists.",
+    "removed": "Note removed."
+  },
+  "case": {
+    "noCase": "There is no case with that code.",
+    "giveChange": "Give a new reason or a new duration.",
+    "field": {
+      "reason": "reason",
+      "duration": "duration"
+    },
+    "fieldsAnd": "{a} and {b}",
+    "edited": "Case {code} edited: {fields}.",
+    "editedEnded": "Case {code} edited: {fields}. The new end is already past: it will be lifted within a minute.",
+    "reasonEmpty": "The reason cannot be empty.",
+    "alreadyRemoved": "Case {code} is already removed.",
+    "voidTitle": "Remove {code}",
+    "voidHeading": "Confirm: remove case {code}",
+    "rowCase": "Case",
+    "rowMember": "Member",
+    "rowReason": "Reason (shown to the member)",
+    "rowEffect": "Effect",
+    "removeSubmit": "Remove case",
+    "removed": "Case {code} removed (it no longer counts).",
+    "dmDelivered": "DM to the member: delivered.",
+    "dmNotDelivered": "DM to the member: not delivered.",
+    "noteAdded": "Note added. Only staff can see it.",
+    "tagsSaved": "Tags saved: {tags}.",
+    "tagsRemoved": "Tags removed."
+  },
+  "evidence": {
+    "oneLink": "Give one http(s) link, e.g. a Discord message link.",
+    "added": "Evidence #{id} added.",
+    "addedLinkOnly": "Evidence #{id} added. The message could not be read (other server, no access or deleted), so only the link is saved.",
+    "chooseImage": "Choose an image to upload.",
+    "notImage": "That file is not a PNG, JPEG, GIF or WebP image.",
+    "imageAdded": "Image evidence #{id} added (re-hosted in the evidence channel).",
+    "notNumber": "Not an evidence number.",
+    "none": "Case {code} has no evidence #{id}.",
+    "removed": "Evidence #{id} removed.",
+    "removedImage": "Evidence #{id} removed. Its copy in the evidence channel is kept."
+  },
+  "cases": {
+    "nothingChanged": "Nothing was changed",
+    "backToCases": "Back to Cases",
+    "tickCase": "Tick at least one case.",
+    "chooseAction": "Choose what to do with the ticked cases.",
+    "noneExist": "None of the ticked cases exist in this server any more.",
+    "removeMax": "Remove at most {max} cases at once.",
+    "giveReason": "Give a reason for removing them (the members see it).",
+    "allRemoved": "Every ticked case is already removed.",
+    "removeTitle": "Remove cases",
+    "removeHeading": {
+      "one": "Confirm: remove {count} case",
+      "other": "Confirm: remove {count} cases"
+    },
+    "rowReason": "Reason (shown to the members)",
+    "willRemove": "Will be removed ({count})",
+    "skippedRemoved": "Skipped, already removed: {codes}.",
+    "removeSubmit": {
+      "one": "Remove {count} case",
+      "other": "Remove {count} cases"
+    },
+    "tagMax": "Tag at most {max} cases at once.",
+    "giveTag": "Give a tag, like scam.",
+    "tagLimit": "{code} (already 10 tags)",
+    "tagged": {
+      "one": "Tagged #{tag}: {count} case.",
+      "other": "Tagged #{tag}: {count} cases."
+    },
+    "untagged": {
+      "one": "Untagged #{tag}: {count} case.",
+      "other": "Untagged #{tag}: {count} cases."
+    },
+    "skipped": "Skipped: {list}.",
+    "goneItem": "{code} (no longer exists)",
+    "removedItem": "{code} (already removed)",
+    "failedItem": "{code} ({error})",
+    "notRemoved": "not removed",
+    "removedList": "Removed: {list}.",
+    "none": "none"
+  },
+  "appeal": {
+    "answers": "Answers",
+    "unreadable": "(could not be read)",
+    "chooseDecision": "Choose Accept or Deny.",
+    "noPending": "There is no pending appeal for {code}.",
+    "accepted": "Appeal on {code} accepted.",
+    "denied": "Appeal on {code} denied.",
+    "ownerOverride": "You issued this punishment: decided as a bot owner, logged as an owner override."
+  },
+  "keepApart": {
+    "pickBoth": "Pick both members (type a name and choose one, or use Find a member), or paste their Discord user IDs.",
+    "days": "Days must be between 1 and {max}.",
+    "reasonRequired": "A reason is required.",
+    "notUser": "One of those IDs is not a Discord user.",
+    "noBots": "Keep-apart orders are between members, not bots.",
+    "started": "Keep-apart order #{id} started between {a} and {b}.",
+    "bothDmed": "Both members were DMed.",
+    "dmFailed": "A DM could not be delivered to one of them.",
+    "notOrder": "Not an order number.",
+    "noOrder": "There is no active keep-apart order #{id}.",
+    "ended": "Keep-apart order #{id} ended."
+  },
+  "watchlist": {
+    "notEntry": "Not a watchlist entry number.",
+    "noEntry": "There is no active watchlist entry #{id}.",
+    "ended": "Watchlist entry #{id} ended."
+  },
+  "staff": {
+    "coverage": "Coverage",
+    "coverageFailed": "Coverage could not be loaded (database unavailable).",
+    "activity": "Staff activity",
+    "activityOwners": "Weekly staff activity is shown to the bot owners only (like /staff activity).",
+    "notBlocked": "That moderator is not blocked.",
+    "blockLifted": "Safety limit block lifted for {name}.",
+    "pickStaff": "Staff member: pick a member (type a name and choose one, or use Find a member), or paste their Discord user ID.",
+    "reasonRule": "A reason is required (which admin rule they broke).",
+    "cannotWarn": "You cannot warn the owner or a bot.",
+    "notInServer": "That user is not in the server.",
+    "warned": "Staff warning given to {name}: {active} of {limit} active.",
+    "demoted": "That reached the limit: their staff roles were removed (restore them under Removed staff roles).",
+    "noSavedRoles": "No removed staff roles are saved for that user (or they are not in the server).",
+    "rolesBack": "Staff roles given back to {name}: {roles}.",
+    "noneBack": "None of the saved roles could be given back to {name} (deleted or above my role)."
+  }
+}

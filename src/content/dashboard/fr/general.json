@@ -1,0 +1,42 @@
+{
+  "confirmExpired": "Cette confirmation a expiré ou a déjà servi. Rien n’a été fait ; remplis le formulaire à nouveau.",
+  "search": {
+    "notSaved": "Non enregistrée",
+    "nameTooLong": "Donne à la recherche un nom de 40 caractères au plus.",
+    "filterFirst": "Filtre d’abord les dossiers, puis enregistre la recherche.",
+    "invalid": "Ces filtres ne sont pas valides.",
+    "full": "Tu peux garder 20 recherches enregistrées. Supprimes-en une d’abord.",
+    "saved": "Recherche « {name} » enregistrée.",
+    "notDeleted": "Non supprimée",
+    "gone": "Cette recherche enregistrée n’existe déjà plus.",
+    "deleted": "Recherche « {name} » supprimée.",
+    "json": {
+      "notAllowed": "Non autorisé.",
+      "tooMany": "Trop de recherches. Attends une minute."
+    }
+  },
+  "cases": {
+    "invalidFilter": "Filtre invalide.",
+    "exportAdmin": "Exporter les dossiers demande Administrateur sur le serveur principal.",
+    "exportFree": "Pas dans la formule Free",
+    "exportFreeText": "L’export des dossiers est inclus dans Mewvo Normal (90 derniers jours) et Pro ou Max (tout l’historique), selon la formule du propriétaire du serveur.",
+    "notFound": "Dossier introuvable",
+    "notFoundText": "Il n’y a aucun dossier avec ce code."
+  },
+  "auditModules": {
+    "appeals": "Appels (registre)",
+    "logging": "Journalisation",
+    "actions": "Sanctions",
+    "cases": "Modifications de dossiers",
+    "appeal-decisions": "Décisions d’appel",
+    "notes": "Notes de l’équipe",
+    "nocontact": "Tenir à distance",
+    "watchlist": "Liste de surveillance",
+    "massguard": "Limite de sécurité (bannissements/expulsions)",
+    "staff": "Discipline de l’équipe",
+    "owner": "Espace propriétaire",
+    "inbox": "Boîte de réception (réponses, fermetures)",
+    "members": "Membres",
+    "rolerules": "Règles de rôles"
+  }
+}

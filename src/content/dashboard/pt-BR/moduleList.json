@@ -1,0 +1,54 @@
+{
+  "page": {
+    "title": "Módulos",
+    "intro": "Todas as partes do Mewvo em um só lugar. {on} de {total} módulos com estado ligado/desligado estão ligados; abra um módulo para mudar as configurações dele.",
+    "matches": {
+      "one": "{count} módulo corresponde",
+      "many": "{count} módulos correspondem",
+      "other": "{count} módulos correspondem"
+    },
+    "showAll": "Mostrar todos",
+    "readOnly": "Somente leitura: a edição pelo painel está desativada (DASHBOARD_EDIT_ENABLED não é true).",
+    "noMatch": "Nenhum módulo corresponde. Tente outra palavra ou veja todos os módulos.",
+    "noneOn": "Nenhum módulo está ligado.",
+    "noneOff": "Nenhum módulo está desligado."
+  },
+  "filter": {
+    "label": "Filtrar módulos",
+    "all": "Todos",
+    "on": "Ligados",
+    "off": "Desligados"
+  },
+  "col": {
+    "module": "Módulo",
+    "what": "O que faz",
+    "state": "Estado"
+  },
+  "state": {
+    "on": "Ligado",
+    "off": "Desligado",
+    "needsSetup": "falta configurar ({n})",
+    "setUp": "Configurado"
+  },
+  "summary": {
+    "tickets": "Os membros pedem ajuda à equipe em um canal privado.",
+    "welcome": "Receba novos membros, despeça-se de quem sai, dê um cargo inicial.",
+    "leveling": "Os membros sobem de nível conversando e ganham cargos por isso.",
+    "reaction-roles": "Menus onde os membros escolhem os próprios cargos.",
+    "messages": "Poste anúncios, enquetes e contagens regressivas como o Mewvo.",
+    "giveaways": "Sorteie prêmios entre membros aleatórios.",
+    "birthdays": "Deseje feliz aniversário aos membros.",
+    "applications": "Os membros se candidatam a um cargo respondendo perguntas.",
+    "community": "Sugestões, starboard, notas fixas, respostas salvas, YouTube.",
+    "join-to-create": "Canais de voz que aparecem quando preciso e somem quando ficam vazios.",
+    "automod": "Para spam, palavrões e raids sozinho.",
+    "enforcement": "Como funcionam advertências, silenciamentos e banimentos, e como os membros apelam.",
+    "logging": "Um registro do que acontece no servidor, para a equipe.",
+    "verification": "Membros novos confirmam que são reais antes de poder conversar.",
+    "counters": "Contagens de membros ao vivo e um jogo de contar.",
+    "support": "Onde membros banidos ainda podem apelar.",
+    "rules": "As regras do seu servidor, em uma página web e nas mensagens de punição.",
+    "appearance": "Dê ao Mewvo nome e imagem próprios aqui (Pro e Max).",
+    "commands": "Ligue ou desligue comandos avulsos ou grupos de comandos."
+  }
+}

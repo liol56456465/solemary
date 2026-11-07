@@ -1,0 +1,243 @@
+{
+  "action": {
+    "ban": "Bannir",
+    "kick": "Expulser",
+    "mute": "Mettre en sourdine",
+    "warn": "Avertir",
+    "unban": "Débannir",
+    "unmute": "Retirer la sourdine",
+    "removewarn": "Retirer un avertissement"
+  },
+  "length": {
+    "60s": "60 secondes",
+    "5m": "5 minutes",
+    "10m": "10 minutes",
+    "1h": "1 heure",
+    "1d": "1 jour",
+    "3d": "3 jours",
+    "7d": "7 jours",
+    "1w": "1 semaine",
+    "28d": "28 jours",
+    "30d": "30 jours"
+  },
+  "flow": {
+    "chooseReason": "Choisis une raison.",
+    "unknownAppealChoice": "Appel possible : choix inconnu."
+  },
+  "void": {
+    "dm": "Le membre reçoit un MP avec ta raison.",
+    "test": "Dossier de test : seule la fiche est marquée comme une erreur. {dm}",
+    "alreadyEnded": "La sanction est déjà terminée, donc rien n’est levé ; le dossier est seulement marqué comme une erreur. {dm}",
+    "alreadyLifted": "La sanction a déjà été levée, donc rien n’est levé ; le dossier est seulement marqué comme une erreur. {dm}",
+    "lift": {
+      "ban": "Le membre est débanni (et reçoit une invitation pour revenir).",
+      "mute": "La sourdine du membre est retirée.",
+      "warn": "L’avertissement ne compte plus pour les paliers d’avertissement ; un bannissement qu’il a causé est levé.",
+      "kick": "Il n’y a rien à lever pour une expulsion ; le dossier est marqué comme une erreur.",
+      "fallback": "Ce qui est encore en vigueur est levé."
+    },
+    "effect": "{lift} {dm}"
+  },
+  "result": {
+    "done": "{action} : fait pour {name}.",
+    "case": "Dossier {code} ({name}).",
+    "dmFailed": "Le MP n’a pas pu être délivré (MP fermés ou aucun serveur en commun) ; l’action a quand même été faite.",
+    "dmDelivered": "MP délivré.",
+    "warning": "Attention :"
+  },
+  "access": {
+    "needModRole": "Il te faut le rôle de modérateur ou la permission Administrateur sur le serveur principal pour faire ça (il t’a peut-être été retiré depuis ta connexion).",
+    "needAdmin": "Il te faut la permission Administrateur sur le serveur principal pour faire ça.",
+    "actionNeedsAdmin": "« {action} » demande la permission Administrateur sur le serveur principal.",
+    "thisAction": "Cette action",
+    "ownerOnly": "Seuls les propriétaires du bot peuvent faire ça (comme /staff restore).",
+    "enforcementAdmin": "Les sanctions demandent la permission Administrateur sur le serveur principal (les propriétaires du bot sans elle peuvent seulement consulter)."
+  },
+  "expired": {
+    "action": "Cette confirmation a expiré ou a déjà été utilisée. Rien n’a été fait ; prévisualise l’action à nouveau.",
+    "bulk": "Cette confirmation a expiré ou a déjà été utilisée. Rien n’a été fait ; prévisualise l’action groupée à nouveau.",
+    "void": "Cette confirmation a expiré ou a déjà été utilisée. Rien n’a été fait ; retire le dossier à nouveau.",
+    "cases": "Cette confirmation a expiré ou a déjà été utilisée. Rien n’a été fait ; choisis les dossiers à nouveau.",
+    "appeal": "Cette confirmation a expiré ou a déjà été utilisée. Rien n’a été fait ; décide à nouveau."
+  },
+  "members": {
+    "bansFailed": "La liste des bannis n’a pas pu être chargée (Discord ou la base de données n’a pas répondu). Recharge la page pour réessayer.",
+    "noUserWithId": "Aucun utilisateur Discord n’a l’ID {id}.",
+    "noUser": "Aucun utilisateur Discord n’a cet ID.",
+    "notUserId": "Ce n’est pas un ID d’utilisateur.",
+    "unknownAction": "Action inconnue.",
+    "notAvailable": "« {action} » n’est pas possible pour {name} en ce moment (recharge la page).",
+    "warnWouldBan": "Cet avertissement bannirait automatiquement {name} (paliers d’avertissement), il faut donc un administrateur.",
+    "chooseCountedWarn": "Choisis un des avertissements comptés du membre.",
+    "actionFailed": "Quelque chose s’est mal passé ; rien n’a peut-être changé. Vérifie les dossiers du membre avant de réessayer.",
+    "alreadyHasRole": "{name} a déjà @{role}.",
+    "lacksRole": "{name} n’a pas @{role}.",
+    "chooseHowLong": "Choisis pour combien de temps.",
+    "roleFor": "@{role} pour {length}",
+    "gaveRole": "{label} donné à {name}.",
+    "tookRole": "@{role} retiré à {name}.",
+    "sameNickname": "C’est déjà son pseudo.",
+    "nicknameSet": "Pseudo changé en « {nick} ».",
+    "nicknameRemoved": "Pseudo retiré.",
+    "chooseTimeout": "Choisis une durée d’exclusion temporaire.",
+    "timeoutAdmin": "Discord ne permet pas d’exclure temporairement un membre qui a la permission Administrateur.",
+    "notTimedOut": "{name} n’est pas exclu temporairement.",
+    "timeoutRemoved": "Exclusion temporaire de {name} retirée.",
+    "timedOut": "{name} est exclu temporairement pour {length}.",
+    "notVerified": "{name} n’a pas le rôle de vérification.",
+    "unverified": "Vérification retirée à {name}."
+  },
+  "bulk": {
+    "action": {
+      "roleAdd": "Donner un rôle",
+      "roleRemove": "Retirer un rôle",
+      "timeout": "Exclure temporairement",
+      "kick": "Expulser",
+      "ban": "Bannir"
+    },
+    "labelRole": "{label} @{role}",
+    "labelFor": "{label} pour {length}",
+    "labelTimeout": "{label} ({length})",
+    "notDone": "Pas fait",
+    "tooManyMatch": "{total} membres correspondent à ces filtres ; une action groupée peut en changer {max} au plus. Affine les filtres.",
+    "tickMember": "Coche au moins un membre, ou choisis « tous ceux qui correspondent à ces filtres ».",
+    "tooMany": "Une action groupée peut changer {max} membres au plus.",
+    "chooseAction": "Choisis quoi faire.",
+    "chooseRole": "Choisis un rôle.",
+    "blocked": "Tu es bloqué par la limite de sécurité (trop de bannissements ou d’expulsions en 10 minutes) ; rien n’a été fait.",
+    "unknownJob": "Cette action groupée est inconnue (elle a peut-être plus d’une heure, ou le bot a redémarré)."
+  },
+  "notes": {
+    "empty": "La note est vide.",
+    "added": "Note ajoutée.",
+    "notNote": "Ce n’est pas une note.",
+    "gone": "Cette note n’existe plus.",
+    "removed": "Note supprimée."
+  },
+  "case": {
+    "noCase": "Aucun dossier n’a ce code.",
+    "giveChange": "Donne une nouvelle raison ou une nouvelle durée.",
+    "field": {
+      "reason": "raison",
+      "duration": "durée"
+    },
+    "fieldsAnd": "{a} et {b}",
+    "edited": "Dossier {code} modifié : {fields}.",
+    "editedEnded": "Dossier {code} modifié : {fields}. La nouvelle fin est déjà passée : la sanction sera levée d’ici une minute.",
+    "reasonEmpty": "La raison ne peut pas être vide.",
+    "alreadyRemoved": "Le dossier {code} est déjà retiré.",
+    "voidTitle": "Retirer {code}",
+    "voidHeading": "Confirmer : retirer le dossier {code}",
+    "rowCase": "Dossier",
+    "rowMember": "Membre",
+    "rowReason": "Raison (le membre la voit)",
+    "rowEffect": "Effet",
+    "removeSubmit": "Retirer le dossier",
+    "removed": "Dossier {code} retiré (il ne compte plus).",
+    "dmDelivered": "MP au membre : délivré.",
+    "dmNotDelivered": "MP au membre : non délivré.",
+    "noteAdded": "Note ajoutée. Seule l’équipe peut la voir.",
+    "tagsSaved": "Tags enregistrés : {tags}.",
+    "tagsRemoved": "Tags retirés."
+  },
+  "evidence": {
+    "oneLink": "Donne un seul lien http(s), par ex. un lien vers un message Discord.",
+    "added": "Preuve #{id} ajoutée.",
+    "addedLinkOnly": "Preuve #{id} ajoutée. Le message n’a pas pu être lu (autre serveur, pas d’accès ou supprimé), donc seul le lien est enregistré.",
+    "chooseImage": "Choisis une image à envoyer.",
+    "notImage": "Ce fichier n’est pas une image PNG, JPEG, GIF ou WebP.",
+    "imageAdded": "Preuve image #{id} ajoutée (rehébergée dans le salon des preuves).",
+    "notNumber": "Ce n’est pas un numéro de preuve.",
+    "none": "Le dossier {code} n’a pas de preuve #{id}.",
+    "removed": "Preuve #{id} supprimée.",
+    "removedImage": "Preuve #{id} supprimée. Sa copie dans le salon des preuves est gardée."
+  },
+  "cases": {
+    "nothingChanged": "Rien n’a été changé",
+    "backToCases": "Retour aux dossiers",
+    "tickCase": "Coche au moins un dossier.",
+    "chooseAction": "Choisis quoi faire des dossiers cochés.",
+    "noneExist": "Aucun des dossiers cochés n’existe encore sur ce serveur.",
+    "removeMax": "Retire au plus {max} dossiers à la fois.",
+    "giveReason": "Donne une raison pour les retirer (les membres la voient).",
+    "allRemoved": "Tous les dossiers cochés sont déjà retirés.",
+    "removeTitle": "Retirer des dossiers",
+    "removeHeading": {
+      "one": "Confirmer : retirer {count} dossier",
+      "many": "Confirmer : retirer {count} dossiers",
+      "other": "Confirmer : retirer {count} dossiers"
+    },
+    "rowReason": "Raison (les membres la voient)",
+    "willRemove": "Seront retirés ({count})",
+    "skippedRemoved": "Ignorés, déjà retirés : {codes}.",
+    "removeSubmit": {
+      "one": "Retirer {count} dossier",
+      "many": "Retirer {count} dossiers",
+      "other": "Retirer {count} dossiers"
+    },
+    "tagMax": "Tague au plus {max} dossiers à la fois.",
+    "giveTag": "Donne un tag, comme scam.",
+    "tagLimit": "{code} (déjà 10 tags)",
+    "tagged": {
+      "one": "Tag #{tag} ajouté : {count} dossier.",
+      "many": "Tag #{tag} ajouté : {count} dossiers.",
+      "other": "Tag #{tag} ajouté : {count} dossiers."
+    },
+    "untagged": {
+      "one": "Tag #{tag} retiré : {count} dossier.",
+      "many": "Tag #{tag} retiré : {count} dossiers.",
+      "other": "Tag #{tag} retiré : {count} dossiers."
+    },
+    "skipped": "Ignorés : {list}.",
+    "goneItem": "{code} (n’existe plus)",
+    "removedItem": "{code} (déjà retiré)",
+    "failedItem": "{code} ({error})",
+    "notRemoved": "non retiré",
+    "removedList": "Retirés : {list}.",
+    "none": "aucun"
+  },
+  "appeal": {
+    "answers": "Réponses",
+    "unreadable": "(illisibles)",
+    "chooseDecision": "Choisis Accepter ou Refuser.",
+    "noPending": "Il n’y a pas d’appel en attente pour {code}.",
+    "accepted": "Appel sur {code} accepté.",
+    "denied": "Appel sur {code} refusé.",
+    "ownerOverride": "Tu as donné cette sanction toi-même : décidé en tant que propriétaire du bot, enregistré comme passe-droit du propriétaire."
+  },
+  "keepApart": {
+    "pickBoth": "Choisis les deux membres (tape un nom et choisis-en un, ou utilise « Trouver un membre »), ou colle leurs ID d’utilisateur Discord.",
+    "days": "Le nombre de jours doit être entre 1 et {max}.",
+    "reasonRequired": "Une raison est obligatoire.",
+    "notUser": "Un de ces ID n’est pas un utilisateur Discord.",
+    "noBots": "« Tenir à distance » concerne des membres, pas des bots.",
+    "started": "« Tenir à distance » #{id} lancé entre {a} et {b}.",
+    "bothDmed": "Les deux membres ont reçu un MP.",
+    "dmFailed": "Un MP n’a pas pu être délivré à l’un d’eux.",
+    "notOrder": "Ce n’est pas un numéro de mesure.",
+    "noOrder": "Il n’y a pas de « Tenir à distance » #{id} actif.",
+    "ended": "« Tenir à distance » #{id} terminé."
+  },
+  "watchlist": {
+    "notEntry": "Ce n’est pas un numéro d’entrée de la liste de surveillance.",
+    "noEntry": "Il n’y a pas d’entrée active #{id} dans la liste de surveillance.",
+    "ended": "Entrée #{id} de la liste de surveillance terminée."
+  },
+  "staff": {
+    "coverage": "Couverture",
+    "coverageFailed": "La couverture n’a pas pu être chargée (base de données indisponible).",
+    "activity": "Activité de l’équipe",
+    "activityOwners": "L’activité hebdomadaire de l’équipe n’est montrée qu’aux propriétaires du bot (comme /staff activity).",
+    "notBlocked": "Ce modérateur n’est pas bloqué.",
+    "blockLifted": "Blocage de la limite de sécurité levé pour {name}.",
+    "pickStaff": "Membre de l’équipe : choisis un membre (tape un nom et choisis-en un, ou utilise « Trouver un membre »), ou colle son ID d’utilisateur Discord.",
+    "reasonRule": "Une raison est obligatoire (quelle règle d’admin a été enfreinte).",
+    "cannotWarn": "Tu ne peux pas avertir le propriétaire ou un bot.",
+    "notInServer": "Cet utilisateur n’est pas sur le serveur.",
+    "warned": "Avertissement d’équipe donné à {name} : {active} sur {limit} actifs.",
+    "demoted": "La limite est atteinte : ses rôles d’équipe ont été retirés (rétablis-les sous « Rôles d’équipe retirés »).",
+    "noSavedRoles": "Aucun rôle d’équipe retiré n’est enregistré pour cet utilisateur (ou il n’est pas sur le serveur).",
+    "rolesBack": "Rôles d’équipe rendus à {name} : {roles}.",
+    "noneBack": "Aucun des rôles enregistrés n’a pu être rendu à {name} (supprimés ou au-dessus de mon rôle)."
+  }
+}

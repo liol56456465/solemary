@@ -1,0 +1,44 @@
+{
+  "none": "(nenhum)",
+  "page": {
+    "intro": "Todas as configurações do painel do servidor principal e do de suporte em um único arquivo. Use antes de grandes mudanças, ou para mudar de hospedagem. Nunca há segredos nele.",
+    "download": "Baixar",
+    "downloadButton": "Baixar configurações (.json)",
+    "load": "Carregar um backup",
+    "loadHelp": "Nada muda ainda: primeiro você vê cada configuração que o arquivo mudaria, depois escolhe se quer aplicar.",
+    "loadNeedsAdmin": "Carregar um backup exige Administrador e edição ativada.",
+    "file": "Arquivo de backup (.json)",
+    "check": "Conferir este arquivo"
+  },
+  "preview": {
+    "title": "Conferir o backup",
+    "wouldChange": {
+      "one": "{count} configuração mudaria",
+      "many": "{count} configurações mudariam",
+      "other": "{count} configurações mudariam"
+    },
+    "server": "Servidor",
+    "setting": "Configuração",
+    "now": "Agora",
+    "fromFile": "Do arquivo",
+    "confirm": {
+      "one": "Aplicar {count} mudança do backup?",
+      "many": "Aplicar {count} mudanças do backup?",
+      "other": "Aplicar {count} mudanças do backup?"
+    },
+    "apply": "Aplicar estas mudanças",
+    "cancel": "Cancelar",
+    "once": "Isto funciona uma vez e expira em 10 minutos. Cada mudança vai para o registro de auditoria.",
+    "same": "O arquivo é igual às configurações atuais. Nada mudaria.",
+    "skipped": "Ignorados ({n})"
+  },
+  "route": {
+    "chooseFile": "Escolha um arquivo de backup.",
+    "expired": "Essa conferência expirou ou já foi usada. Carregue o arquivo de novo.",
+    "applied": {
+      "one": "Backup aplicado: {count} configuração mudou. Ela está no registro de auditoria.",
+      "many": "Backup aplicado: {count} configurações mudaram. Elas estão no registro de auditoria.",
+      "other": "Backup aplicado: {count} configurações mudaram. Elas estão no registro de auditoria."
+    }
+  }
+}

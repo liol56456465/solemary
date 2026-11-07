@@ -20,6 +20,7 @@ import { path, queryString } from './html.js';
 import {
     CONVERSATION_KINDS, INBOX_KINDS, REPLY_MAX, closeConversation, collectInbox, defaultInboxData, findConversation, recentMessages, replyText, sendReply, inboxForModerator } from './inboxData.js';
 import { closeConfirmPage, conversationPage, inboxPage } from './inboxPages.js';
+import { currentText } from './language.js';
 
 export const BADGE_TTL_MS = 60 * 1000;
 
@@ -92,7 +93,7 @@ export function createInboxHandlers(core) {
         url: `https://discord.com/channels/${guildId}/${conversation.channel.id}`,
     });
 
-    const gone = (res, req) => fail(res, 404, 'Not found', 'This conversation or ticket is not open any more (or never existed). It may have been closed in Discord.', req);
+    const gone = (res, req) => fail(res, 404, currentText().t('errors.notFound'), currentText().t('inbox.route.gone'), req);
 
     async function renderConversation(req, res, status = 200, { error = null, values = {} } = {}) {
         const conversation = await load(req);
@@ -103,7 +104,7 @@ export function createInboxHandlers(core) {
             messages = await recentMessages(conversation.channel);
         } catch (err) {
             logger.warn(`Dashboard inbox: messages of ${conversation.channel.id} not read: ${err.message}`);
-            readError = 'The messages could not be loaded from Discord. Reload to try again.';
+            readError = currentText().t('inbox.route.readError');
         }
         return sendHtml(res, status, conversationPage({
             ...shellOf(req), kind: conversation.kind, channel: channelView(conversation), member: memberOf(conversation), messages,
@@ -120,15 +121,16 @@ export function createInboxHandlers(core) {
     /** The open conversation for a POST, or an InputError (404). */
     async function requireConversation(req) {
         const found = await load(req);
-        if (!found) throw new InputError('This conversation or ticket is not open any more. Nothing was sent.', 404);
+        if (!found) throw new InputError(currentText().t('inbox.route.goneNothingSent'), 404);
         return found;
     }
 
     const reply = guardedPost(async (req, res) => {
         const found = await requireConversation(req);
         const message = replyText(req.body?.text);
-        if (message === null) throw new InputError(`The reply is longer than ${REPLY_MAX} characters.`);
-        if (!message) throw new InputError('Write a reply first.');
+        const tr = currentText();
+        if (message === null) throw new InputError(tr.t('inbox.route.tooLong', { max: tr.fmtNumber(REPLY_MAX) }));
+        if (!message) throw new InputError(tr.t('inbox.route.empty'));
         const moderator = await freshModerator(req);
         const staffName = moderator.displayName || moderator.user?.globalName || moderator.user?.username || req.dashboard.session.username;
         const result = await sendReply({ conversation: found, staffName, text: message, inbox });
@@ -136,10 +138,10 @@ export function createInboxHandlers(core) {
             key: `${found.kind}:${found.channel.id}`, old: null,
             new: { reply: message.slice(0, 500), note: result.note, ...(result.delivered === null ? {} : { dmDelivered: result.delivered }) },
         }]);
-        await flash(req, result.note ? 'Internal note posted in the channel (not sent to the member).'
-            : found.kind === 'ticket' ? 'Reply posted in the ticket.'
-                : result.delivered ? 'Reply sent to the member by DM and copied to the channel.'
-                    : 'The reply was posted in the channel, but the DM could not be delivered (they left the server or closed their DMs).');
+        await flash(req, tr.t(result.note ? 'inbox.route.notePosted'
+            : found.kind === 'ticket' ? 'inbox.route.ticketReplied'
+                : result.delivered ? 'inbox.route.dmSent'
+                    : 'inbox.route.dmFailed'));
         return res.redirect(303, path(`/inbox/${found.kind}/${found.channel.id}`));
     }, { rerender });
 
@@ -154,18 +156,19 @@ export function createInboxHandlers(core) {
 
     const close = guardedPost(async (req, res) => {
         const t = target(req);
-        if (!t) throw new InputError('This conversation or ticket is not open any more.', 404);
+        const tr = currentText();
+        if (!t) throw new InputError(tr.t('inbox.route.goneShort'), 404);
         const payload = confirms.consume(text(req.body, 'token', 100), {
             session: req.dashboard.session.idHash, subject: `inbox-close:${t.kind}:${t.id}`, hash: text(req.body, 'fh', 100),
         });
-        if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was closed; press Close again.');
+        if (!payload) throw new InputError(tr.t('inbox.route.confirmExpired'));
         const found = await requireConversation(req);
         const moderator = await freshModerator(req);
         const closer = moderator.user || { id: moderator.id, username: req.dashboard.session.username };
         await closeConversation({ conversation: found, closer, reason: payload.reason || '', inbox });
         await audit(req, 'inbox', [{ key: `${found.kind}:${found.channel.id}`, old: 'open', new: { closed: true, reason: payload.reason || null } }]);
         badge?.invalidate();
-        await flash(req, `${found.kind === 'modmail' ? 'Modmail conversation' : 'Ticket'} #${plainText(found.channel.name || found.channel.id)} closed.`);
+        await flash(req, tr.t(found.kind === 'modmail' ? 'inbox.route.closedModmail' : 'inbox.route.closedTicket', { channel: plainText(found.channel.name || found.channel.id) }));
         return res.redirect(303, path(`/inbox${queryString({ kind: found.kind })}`));
     }, { rerender });
 

@@ -1,0 +1,42 @@
+{
+  "confirmExpired": "Diese Bestätigung ist abgelaufen oder wurde schon benutzt. Nichts wurde getan; füll das Formular noch einmal aus.",
+  "search": {
+    "notSaved": "Nicht gespeichert",
+    "nameTooLong": "Gib der Suche einen Namen mit höchstens 40 Zeichen.",
+    "filterFirst": "Filtere zuerst die Fälle und speichere dann die Suche.",
+    "invalid": "Diese Filter sind nicht gültig.",
+    "full": "Du kannst 20 Suchen speichern. Lösche zuerst eine.",
+    "saved": "Suche „{name}“ gespeichert.",
+    "notDeleted": "Nicht gelöscht",
+    "gone": "Diese gespeicherte Suche ist schon weg.",
+    "deleted": "Suche „{name}“ gelöscht.",
+    "json": {
+      "notAllowed": "Nicht erlaubt.",
+      "tooMany": "Zu viele Suchen. Warte eine Minute."
+    }
+  },
+  "cases": {
+    "invalidFilter": "Ungültiger Filter.",
+    "exportAdmin": "Fälle zu exportieren braucht Administrator auf dem Hauptserver.",
+    "exportFree": "Nicht im Free-Tarif",
+    "exportFreeText": "Der Fall-Export gehört zu Mewvo Normal (letzte 90 Tage) und Pro oder Max (ganze Geschichte), im Tarif des Server-Inhabers.",
+    "notFound": "Fall nicht gefunden",
+    "notFoundText": "Es gibt keinen Fall mit diesem Code."
+  },
+  "auditModules": {
+    "appeals": "Einsprüche (Registry)",
+    "logging": "Logs",
+    "actions": "Strafaktionen",
+    "cases": "Fall-Änderungen",
+    "appeal-decisions": "Einspruchsentscheidungen",
+    "notes": "Team-Notizen",
+    "nocontact": "Auseinanderhalten",
+    "watchlist": "Beobachtungsliste",
+    "massguard": "Sicherheitslimit (Banns/Kicks)",
+    "staff": "Team-Disziplin",
+    "owner": "Inhaber-Bereich",
+    "inbox": "Posteingang (Antworten, Schließen)",
+    "members": "Mitglieder",
+    "rolerules": "Rollenregeln"
+  }
+}
