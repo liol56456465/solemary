@@ -3,6 +3,8 @@
 
 import { detectAll } from 'tinyld';
 import { automodConfig } from '../../config/automod.js';
+import { HOMOGLYPHS, INVISIBLE_PATTERN, foldText } from './textFold.js';
+import { compileWords, matchWords } from './wordMatcher.js';
 
 // Also matches invites broken up with spaces or brackets: "discord . gg / x", "discord(.)gg/x", "discord dot gg/x".
 const INVITE_PATTERN = /(?:discord(?:app)?\s*(?:\.|\(\.\)|\[\.\]|\bdot\b)\s*com\s*\/\s*invite|discord\s*(?:\.|\(\.\)|\[\.\]|\bdot\b)\s*gg|dsc\s*\.\s*gg)\s*\/\s*([\w-]{2,32})/gi;
@@ -21,56 +23,56 @@ const NSFW_DOMAINS = [
     'hentaihaven.xxx', 'erome.com', 'motherless.com', 'stripchat.com', 'cam4.com',
 ];
 
-// Slurs and severe insults. Matched as whole words after normalizing look-alike characters.
+// The built-in word lists. Matched by wordMatcher.js, which reads through look-alike
+// letters, fancy fonts, leetspeak, separators between letters, letters spelled out across
+// spaces, stretched letters, common misspellings and hidden letters ("f*g"), while
+// ordinary words stay out ("class", "Scunthorpe", "Niger", "snigger"). Per word:
+//   suffixes: endings that still count ("niggers", "bitches"); only these, so "spicy" is not "spic".
+//   inside:   also matched inside a longer word ("youniggers"): distinctive words only.
+//   name:     what the finder returns (defaults to the word itself).
+
+// Slurs and severe insults.
 const BLOCKED_WORDS = [
-    'nigger', 'nigga', 'faggot', 'fag', 'retard', 'tranny', 'chink', 'spic', 'kike', 'wetback', 'coon',
-    'gook', 'dyke', 'kys', 'killyourself', 'cunt', 'whore', 'slut',
+    { word: 'nigger', suffixes: ['s'], inside: true },
+    { word: 'nigga', suffixes: ['s', 'z', 'h', 'hs'], inside: true },
+    { word: 'faggot', suffixes: ['s', 'ry'], inside: true },
+    { word: 'fag', suffixes: ['s'] },
+    { word: 'retard', suffixes: ['s', 'ed'] },
+    { word: 'tranny', suffixes: ['ies'], inside: true },
+    { word: 'chink', suffixes: ['s'] },
+    { word: 'spic', suffixes: ['s'] },
+    { word: 'kike', suffixes: ['s'] },
+    { word: 'wetback', suffixes: ['s'], inside: true },
+    { word: 'coon', suffixes: ['s'] },
+    { word: 'gook', suffixes: ['s'] },
+    { word: 'dyke', suffixes: ['s'] },
+    { word: 'kys' },
+    { word: 'kill yourself', name: 'killyourself' },
+    { word: 'cunt', suffixes: ['s'] },
+    { word: 'whore', suffixes: ['s'] },
+    { word: 'slut', suffixes: ['s', 'ty'] },
 ];
 
 // Insults that count as disrespect when aimed at someone (a mention or a reply).
 const INSULT_WORDS = [
-    'idiot', 'stupid', 'dumb', 'dumbass', 'loser', 'ugly', 'shut up', 'stfu', 'trash', 'pathetic', 'moron',
-    'clown', 'braindead', 'bitch', 'bastard', 'asshole', 'dickhead', 'fuck you', 'fuck off', 'screw you',
-    'nobody likes you', 'go die', 'hate you', 'worthless', 'cringe',
+    { word: 'idiot', suffixes: ['s'] }, { word: 'stupid' }, { word: 'dumb' }, { word: 'dumbass' }, { word: 'loser', suffixes: ['s'] },
+    { word: 'ugly' }, { word: 'shut up' }, { word: 'stfu' }, { word: 'trash' }, { word: 'pathetic' }, { word: 'moron', suffixes: ['s'] },
+    { word: 'clown', suffixes: ['s'] }, { word: 'braindead' }, { word: 'bitch', suffixes: ['es'] }, { word: 'bastard', suffixes: ['s'] },
+    { word: 'asshole', suffixes: ['s'] }, { word: 'dickhead', suffixes: ['s'] }, { word: 'dick head', name: 'dickhead' }, { word: 'fuck you' }, { word: 'fuck off' },
+    { word: 'screw you' }, { word: 'nobody likes you' }, { word: 'go die' }, { word: 'hate you' }, { word: 'worthless' }, { word: 'cringe' },
 ];
 
 // Sexual words; counted as sexual harassment only when aimed at someone.
 const SEXUAL_WORDS = [
-    'sex', 'sexy', 'nude', 'nudes', 'horny', 'dick', 'cock', 'pussy', 'boobs', 'tits', 'porn', 'onlyfans',
-    'send pics', 'blowjob', 'cum', 'naked', 'suck my', 'rape',
+    { word: 'sex' }, { word: 'sexy' }, { word: 'nude' }, { word: 'nudes' }, { word: 'horny' }, { word: 'dick', suffixes: ['s'] },
+    { word: 'cock', suffixes: ['s'] }, { word: 'pussy', suffixes: ['ies'] }, { word: 'boobs' }, { word: 'tits' }, { word: 'porn', suffixes: ['o'] },
+    { word: 'onlyfans' }, { word: 'send pics' }, { word: 'blowjob', suffixes: ['s'] }, { word: 'blow job', name: 'blowjob' }, { word: 'cum' }, { word: 'naked' },
+    { word: 'suck my' }, { word: 'rape', suffixes: ['d', 's'] },
 ];
 
 const LEET = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '@': 'a', '$': 's', '!': 'i', '|': 'i' };
 
-// Characters that render as nothing (or as a blank) and are used to break up words.
-export const INVISIBLE_PATTERN = /[­͏؜ᅟᅠ឴឵᠋-᠏​-‏‪-‮⁠-⁯ㅤ︀-️﻿ﾠ\u{E0000}-\u{E007F}]/gu;
-
-// Look-alike letters NFKD does not fold: Cyrillic, Greek, small capitals, IPA and others.
-const HOMOGLYPHS = {
-    а: 'a', в: 'b', е: 'e', ё: 'e', к: 'k', м: 'm', н: 'h', о: 'o', р: 'p', с: 'c', т: 't', у: 'y', х: 'x',
-    ѕ: 's', і: 'i', ї: 'i', ј: 'j', ԁ: 'd', ԛ: 'q', ԝ: 'w', ɡ: 'g', ɩ: 'i', ʏ: 'y', ʀ: 'r', ɴ: 'n', ʟ: 'l',
-    ʜ: 'h', ɢ: 'g', ɪ: 'i', ʙ: 'b', ᴀ: 'a', ᴄ: 'c', ᴅ: 'd', ᴇ: 'e', ꜰ: 'f', ᴊ: 'j', ᴋ: 'k', ᴍ: 'm',
-    ᴏ: 'o', ᴘ: 'p', ǫ: 'q', ꜱ: 's', ᴛ: 't', ᴜ: 'u', ᴠ: 'v', ᴡ: 'w', ᴢ: 'z',
-    α: 'a', β: 'b', ε: 'e', η: 'n', ι: 'i', κ: 'k', ν: 'v', ο: 'o', ρ: 'p', τ: 't', υ: 'u', χ: 'x', ω: 'w',
-    ɑ: 'a', ɛ: 'e', ɔ: 'o', ɵ: 'o', ø: 'o', ł: 'l', đ: 'd', ħ: 'h', ı: 'i', ȷ: 'j', ß: 'ss', æ: 'ae', œ: 'oe',
-};
-
-/**
- * Turns styled or disguised text back into plain lower-case Latin letters: fancy fonts
- * (𝓱𝓮𝓵𝓵𝓸, ｈｅｌｌｏ, ⓗⓔⓛⓛⓞ, ʜᴇʟʟᴏ), look-alike Cyrillic/Greek letters, accents and
- * zalgo marks, regional-indicator letters, and invisible characters.
- */
-export function foldText(text) {
-    return String(text || '')
-        .replace(INVISIBLE_PATTERN, '')
-        .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, (c) => String.fromCharCode(c.codePointAt(0) - 0x1F1E6 + 97))
-        // Squared and negative circled/squared letters (🄷, 🅗, 🅷) have no compatibility mapping.
-        .replace(/[\u{1F130}-\u{1F149}\u{1F150}-\u{1F169}\u{1F170}-\u{1F189}]/gu, (c) => String.fromCharCode(((c.codePointAt(0) - 0x1F130) % 32) + 97))
-        .normalize('NFKD')
-        .replace(/\p{M}/gu, '')
-        .toLowerCase()
-        .replace(/./gu, (c) => HOMOGLYPHS[c] || c);
-}
+export { INVISIBLE_PATTERN, foldText };
 
 export function normalizeText(text) {
     return foldText(text)
@@ -81,24 +83,49 @@ export function normalizeText(text) {
 /**
  * Letters spelled out one by one to dodge filters ("n i g g e r", "n.i.g.g.e.r"):
  * every run of 3+ single letters split by spaces or punctuation, joined back up.
+ * (The word lists use wordMatcher.js, which does this itself; kept for other callers.)
  */
 export function joinSpelledOutLetters(text) {
     const runs = normalizeText(text).match(/(?:(?<![a-z])[a-z](?![a-z])[\s.\-_*,|/\\~+'"`:;]*){3,}/g) || [];
     return runs.map((run) => run.replace(/[^a-z]/g, ''));
 }
 
-// Blocked words long and distinctive enough to match even inside other text once all
-// separators are removed ("nig.ger", "f-a-g-g-o-t").
-const COMPACT_BLOCKED = ['nigger', 'nigga', 'faggot', 'killyourself', 'wetback', 'tranny'];
-
-function wordRegex(words) {
-    const escaped = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+'));
-    return new RegExp(`(?:^|[^a-z])(${escaped.join('|')})(?:$|[^a-z])`, 'i');
+const INSULT_LIST = compileWords(INSULT_WORDS, { allow: true });
+const SEXUAL_LIST = compileWords(SEXUAL_WORDS, { allow: true });
+// The blocked list includes the server's extra words (a setting that can change at any
+// time): recompiled only when that setting's value changes.
+let blockedList = null;
+let blockedExtraKey = null;
+let blockedExtraRef = null;
+function blockedCompiled() {
+    const extra = Array.isArray(automodConfig.extraBlockedWords) ? automodConfig.extraBlockedWords : [];
+    if (blockedList && extra === blockedExtraRef) return blockedList;
+    blockedExtraRef = extra;
+    const key = JSON.stringify(extra);
+    if (!blockedList || key !== blockedExtraKey) {
+        const extraEntries = extra.map((word) => String(word ?? '').trim().toLowerCase()).filter(Boolean).map((word) => ({ word }));
+        blockedList = compileWords([...BLOCKED_WORDS, ...extraEntries], { allow: true });
+        blockedExtraKey = key;
+    }
+    return blockedList;
 }
 
-const BLOCKED_REGEX = wordRegex([...BLOCKED_WORDS, ...automodConfig.extraBlockedWords]);
-const INSULT_REGEX = wordRegex(INSULT_WORDS);
-const SEXUAL_REGEX = wordRegex(SEXUAL_WORDS);
+/** The name of the first word of a compiled list in the text, or null. */
+function firstListWord(text, compiled) {
+    const [hit] = matchWords(text, compiled, { first: true });
+    return hit ? (hit.entry.name || hit.word) : null;
+}
+
+/**
+ * Every hit of the built-in word lists: [{ list: 'blocked' | 'insult' | 'sexual', word, start, end, match }],
+ * start/end index the original text (for masking).
+ */
+export function findListWords(text) {
+    const lists = [['blocked', blockedCompiled()], ['insult', INSULT_LIST], ['sexual', SEXUAL_LIST]];
+    return lists.flatMap(([list, compiled]) => matchWords(text, compiled)
+        .map((hit) => ({ list, word: hit.entry.name || hit.word, start: hit.start, end: hit.end, match: hit.match })))
+        .sort((a, b) => a.start - b.start || b.end - a.end);
+}
 
 export function extractUrls(text) {
     // Folded, so full-width dots and look-alike letters in links are seen for what they are.
@@ -124,24 +151,15 @@ export function findInviteCodes(text) {
 }
 
 export function findBlockedWord(text) {
-    const match = normalizeText(text).match(BLOCKED_REGEX);
-    if (match) return match[1];
-    for (const joined of joinSpelledOutLetters(text)) {
-        const spelled = ` ${joined} `.match(BLOCKED_REGEX);
-        if (spelled) return spelled[1];
-    }
-    const compact = normalizeText(text).replace(/[^a-z]/g, '');
-    return COMPACT_BLOCKED.find((word) => compact.includes(word)) || null;
+    return firstListWord(text, blockedCompiled());
 }
 
 export function findInsult(text) {
-    const match = normalizeText(text).match(INSULT_REGEX);
-    return match ? match[1] : null;
+    return firstListWord(text, INSULT_LIST);
 }
 
 export function findSexualWord(text) {
-    const match = normalizeText(text).match(SEXUAL_REGEX);
-    return match ? match[1] : null;
+    return firstListWord(text, SEXUAL_LIST);
 }
 
 /**
