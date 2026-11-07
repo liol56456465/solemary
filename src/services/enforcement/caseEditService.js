@@ -156,7 +156,7 @@ export async function editCase(client, { guildId, caseCode, editor, reason, dura
                     ? `${change.oldValue} → ${change.newValue}`
                     : `${describeDuration(change.oldValue)} → ${describeDuration(change.newValue)}${result.after.expires_at ? ` (ends ${dateStamp(result.after.expires_at)})` : ''}`, 1024),
             })),
-        ], { title: 'Case edited' });
+        ], { guildId: result.after.guild_id, title: 'Case edited' });
     }
     return result;
 }
@@ -240,7 +240,7 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
                 { name: 'Reason', value: truncate(reason, 1024) },
                 ...(notes.length ? [{ name: 'Effect', value: truncate(notes.join('\n'), 1024) }] : []),
                 { name: 'DM', value: dmDelivered ? 'Delivered' : 'Not delivered' },
-            ], { title: 'Case removed (a mistake, it no longer counts)' });
+            ], { guildId: record.guild_id, title: 'Case removed (a mistake, it no longer counts)' });
         }
         return { record: voided, notes, dmDelivered };
     });

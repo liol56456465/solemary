@@ -374,7 +374,7 @@ export function createBacktestRunner({ now = () => Date.now(), resultTtlMs = RES
             const authorId = message.author?.id || null;
             // The matched word(s) of word based rules, per hit.
             const wordsOf = (hit) => {
-                if (hit.rule === 'language') return [hit.slur ? findBlockedWord(text) : findSexualWord(text)].filter(Boolean);
+                if (hit.rule === 'language') return [hit.slur ? findBlockedWord(text, message.guildId) : findSexualWord(text)].filter(Boolean);
                 if (hit.rule === 'sexual') return [findSexualWord(text)].filter(Boolean);
                 if (hit.rule === 'disrespect') return [findInsult(text)].filter(Boolean);
                 if (hit.ruleLabel) return [customWord].filter(Boolean);
@@ -411,7 +411,7 @@ export function createBacktestRunner({ now = () => Date.now(), resultTtlMs = RES
             if (result.examples.length >= MAX_EXAMPLES) return;
             const rules = new Set(hits.map((hit) => hit.rule));
             const terms = [
-                rules.has('language') ? findBlockedWord(text) : null,
+                rules.has('language') ? findBlockedWord(text, message.guildId) : null,
                 rules.has('language') || rules.has('sexual') ? findSexualWord(text) : null,
                 rules.has('disrespect') ? findInsult(text) : null,
                 hits.some((hit) => hit.ruleLabel) ? customWord : null,

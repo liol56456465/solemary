@@ -65,7 +65,7 @@ export async function postWeeklyDigest(client, { post = postModLog } = {}) {
     try {
         if (!isEnforcementDbAvailable() || !client.guilds.cache.has(enforcementConfig.mainGuildId)) return false;
         const data = await digestData(enforcementConfig.mainGuildId);
-        await post(client, 'server-digest', digestFields(data), { title: 'This week in the server' });
+        await post(client, 'server-digest', digestFields(data), { guildId: enforcementConfig.mainGuildId, title: 'This week in the server' });
         return true;
     } catch (error) {
         logger.error(`Weekly digest: ${error.message}`);

@@ -17,6 +17,7 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
 import { enforcementConfig } from '../../config/enforcement.js';
+import { isSettingsUnavailable, noteSettingsUnavailable } from '../settings/guildScoped.js';
 import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction, isAdministrator } from '../enforcement/enforcementService.js';
@@ -209,7 +210,7 @@ async function collectHits(message, member, { isForeignInvite, matchCustom, timi
     const personal = findPersonalInfo(text);
     if (personal) hits.push({ rule: 'privacy', evidence: reasons.privacyReason(personal), detail: `contains ${personal}` });
 
-    const blocked = findBlockedWord(text);
+    const blocked = findBlockedWord(text, message.guildId);
     if (blocked) hits.push({ rule: 'language', evidence: reasons.blockedWordReason(), detail: `blocked word "${blocked}"`, slur: true });
 
     const sexual = findSexualWord(text);
@@ -630,6 +631,11 @@ export async function moderateMessage(message, { edited = false } = {}) {
         if (edited || isStaff(member)) return false;
         return await applyNewMemberLimits(message, member, now);
     } catch (error) {
+        // Another server whose settings could not be read: skipped, logged once in a while.
+        if (isSettingsUnavailable(error)) {
+            noteSettingsUnavailable(message?.guild?.id, 'automod');
+            return false;
+        }
         logger.error(`Automod failed on message ${message?.id}: ${error.message}`, { error });
         return false;
     }
@@ -677,7 +683,7 @@ export async function recheckHeadsUp(message, record) {
         return findInsult(text) && (await targetsOf(message)).length ? stored : null;
     }
     if (rule === 'sexual') return findSexualWord(text) ? stored : null;
-    if (rule === 'language') return findSexualWord(text) || findBlockedWord(text) ? stored : null;
+    if (rule === 'language') return findSexualWord(text) || findBlockedWord(text, message.guildId) ? stored : null;
     return null;
 }
 

@@ -27,6 +27,7 @@ import { parseDuration } from '../enforcement/format.js';
 import { planLimit } from '../billing/premiumEffects.js';
 import { foldText, normalizeText } from './filters.js';
 import { compileWords, matchWords } from './wordMatcher.js';
+import { guildSetting, isSettingsUnavailable, noteSettingsUnavailable } from '../settings/guildScoped.js';
 
 export const CUSTOM_RULE_ACTIONS = ['delete', 'warn', 'mute'];
 export const CUSTOM_RULES_MAX = 100;        // the highest plan limit; the setting's schema allows this many
@@ -207,29 +208,33 @@ export function customRuleDefinition(rule) {
     };
 }
 
-/** The stored rules (all of them, also those over the limit or turned off). */
-export function storedCustomRules() {
-    const value = automodConfig.automodCustomRules;
+/**
+ * The stored rules of a server (all of them, also those over the limit or turned off). Home
+ * servers (or no guild): the main server's list, as before; any other server: only its own.
+ * Throws SettingsUnavailableError for another server whose settings could not be read.
+ */
+export function storedCustomRules(guildId = null) {
+    const value = guildSetting(guildId, 'automodCustomRules', automodConfig);
     return Array.isArray(value) ? value : [];
 }
 
 /**
  * Any automod rule key → its definition: a built-in rule, a custom rule (looked up in the
- * stored rules; a removed rule keeps a generic label), or null.
+ * stored rules of `guildId`; a removed rule keeps a generic label), or null.
  */
-export function ruleDefinition(key, rules = null) {
+export function ruleDefinition(key, rules = null, guildId = null) {
     if (Object.hasOwn(AUTOMOD_RULES, key)) return AUTOMOD_RULES[key];
     const id = customRuleIdOf(key);
     if (!id) return null;
-    const rule = (rules || storedCustomRules()).find((r) => r.id === id);
+    const rule = (rules || storedCustomRules(guildId)).find((r) => r.id === id);
     return customRuleDefinition(rule || { id, name: 'Custom rule', action: 'delete' });
 }
 
 /** "custom:<id>" (the case group) → the rule's name, or null. */
-export function customGroupLabel(group, rules = null) {
+export function customGroupLabel(group, rules = null, guildId = null) {
     const match = /^custom:(.+)$/.exec(String(group || ''));
     if (!match) return null;
-    const rule = (rules || storedCustomRules()).find((r) => r.id === match[1]);
+    const rule = (rules || storedCustomRules(guildId)).find((r) => r.id === match[1]);
     return rule ? rule.name : 'Custom rule (removed)';
 }
 
@@ -298,8 +303,11 @@ export function compiledForGuild(guildId, now = Date.now()) {
     if (cached && now - cached.at < CACHE_MS) return cached.compiled;
     let running = [];
     try {
-        running = runningRules(storedCustomRules(), customRuleLimit(guildId));
-    } catch {
+        running = runningRules(storedCustomRules(guildId), customRuleLimit(guildId));
+    } catch (error) {
+        // Settings not readable (database down at boot): no custom rules for this server until
+        // the next refresh (CACHE_MS). Never another server's rules.
+        if (isSettingsUnavailable(error)) noteSettingsUnavailable(guildId, 'custom automod rules');
         running = [];
     }
     // Compiling a big list takes a moment: only redo it when the running rules changed.

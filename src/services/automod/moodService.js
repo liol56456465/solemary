@@ -52,7 +52,7 @@ async function calmChannel(channel, heat) {
         { name: 'Channel', value: `<#${channel.id}>` },
         { name: 'Why', value: `heat ${heat.score} from ${heat.members} members in ${Math.round(automodConfig.moodWindowMs / 60000)} min (insults, harassment, caps floods)` },
         { name: 'Done', value: slowmode ? `calm-down note posted; slowmode ${AUTO_SLOWMODE_SECONDS}s, lifted after a few quiet minutes` : 'calm-down note posted; slowmode was already set by a moderator or could not be set' },
-    ], { title: 'Heated channel' });
+    ], { guildId: channel.guildId, title: 'Heated channel' });
 }
 
 function prune(now) {

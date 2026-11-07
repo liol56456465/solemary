@@ -98,7 +98,7 @@ export async function restoreStaffRoles(guild, userId, restoredBy) {
         { name: 'Staff member', value: `<@${userId}> ${member.user.username} (\`${userId}\`)` },
         { name: 'Restored by', value: `${restoredBy.username} (${restoredBy.id})` },
         { name: 'Roles', value: roles.map((role) => role.name).join(', ') || 'None could be restored' },
-    ], { title: 'Staff roles restored' });
+    ], { guildId: guild.id, title: 'Staff roles restored' });
     return roles;
 }
 
@@ -136,14 +136,14 @@ async function demote(guild, member, why, { nuke = false } = {}) {
         ...(kept.length ? [{ name: 'Could not remove (above my role)', value: kept.map((role) => role.name).join(', ') }] : []),
         { name: 'Restore', value: nuke ? '`/staff restore` · damage: **Show what changed**, then `/backup revert`' : '`/staff restore`' },
     ];
-    if (nuke) await postAlert(guild.client, 'staff', { title: 'Staff roles removed', fields, components: [showDiffRow()] });
-    else await postModLog(guild.client, 'staff', fields, { title: 'Staff roles removed' });
+    if (nuke) await postAlert(guild.client, 'staff', { guildId: guild.id, title: 'Staff roles removed', fields, components: [showDiffRow()] });
+    else await postModLog(guild.client, 'staff', fields, { guildId: guild.id, title: 'Staff roles removed' });
     await alertOwner(guild, `**Staff guard in ${guild.name}**\n${summary}`);
     logger.warn(`Staff guard removed roles from ${member.id}: ${why}`);
 }
 
 async function alertNuke(guild, title, fields) {
-    await postAlert(guild.client, 'staff', { title, fields, components: [showDiffRow()] });
+    await postAlert(guild.client, 'staff', { guildId: guild.id, title, fields, components: [showDiffRow()] });
     await alertOwner(guild, `**${title} in ${guild.name}**\n${fields.map((f) => `**${f.name}:** ${f.value}`).join('\n')}`);
 }
 
@@ -282,7 +282,7 @@ export async function giveStaffWarning(guild, member, giver, reason) {
         { name: 'Reason', value: reason },
         { name: 'Active staff warnings', value: `${active} of ${automodConfig.staffWarnLimit}`, inline: true },
         { name: 'Expires', value: dateStamp(expiresAt), inline: true },
-    ], { title: 'Staff warning' });
+    ], { guildId: guild.id, title: 'Staff warning' });
     await member.send({
         content: [
             `**Staff warning in ${guild.name}** (${active} of ${automodConfig.staffWarnLimit})`,

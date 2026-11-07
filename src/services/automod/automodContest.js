@@ -112,7 +112,7 @@ export function findCardForCase(record) {
         userId: record.target_user_id,
         group: caseGroup(record),
         at: record.created_at ? new Date(record.created_at).getTime() : null,
-        ruleGroup: (rule) => ruleDefinition(rule)?.group,
+        ruleGroup: (rule) => ruleDefinition(rule, null, record.guild_id)?.group,
     });
 }
 
@@ -134,7 +134,7 @@ export async function markReviewCard(client, record, contest) {
             });
         if (edited) return 'card';
     }
-    const channel = await fetchStaffChannel(client, 'review');
+    const channel = await fetchStaffChannel(client, record.guild_id, 'review');
     if (!channel) {
         logger.warn(`Automod contest for ${record.case_code} not posted (no review channel)`);
         return 'none';

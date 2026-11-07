@@ -98,5 +98,5 @@ async function postDigest(client) {
         now,
     });
     if (digest.empty) return;
-    await postModLog(client, 'digest', digest.fields, { footer: { text: digest.footer } });
+    await postModLog(client, 'digest', digest.fields, { guildId: enforcementConfig.mainGuildId, footer: { text: digest.footer } });
 }

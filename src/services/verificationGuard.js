@@ -130,7 +130,7 @@ export async function assessVerification(userId, ip) {
 
 /** Posts the Approve / Deny card for a held verification. */
 export async function postVerificationHold(client, guildId, user, reasons) {
-    const channel = await reviewChannel(client);
+    const channel = await reviewChannel(client, guildId);
     if (!channel) {
         logger.warn(`Verification of ${user.id} held, but there is no review channel to ask staff in`);
         return false;

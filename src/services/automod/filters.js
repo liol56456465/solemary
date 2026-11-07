@@ -3,6 +3,7 @@
 
 import { detectAll } from 'tinyld';
 import { automodConfig } from '../../config/automod.js';
+import { guildSetting, usesHomeValues } from '../settings/guildScoped.js';
 import { HOMOGLYPHS, INVISIBLE_PATTERN, foldText } from './textFold.js';
 import { compileWords, matchWords } from './wordMatcher.js';
 
@@ -94,22 +95,56 @@ export function joinSpelledOutLetters(text) {
 
 const INSULT_LIST = compileWords(INSULT_WORDS, { allow: true });
 const SEXUAL_LIST = compileWords(SEXUAL_WORDS, { allow: true });
-// The blocked list includes the server's extra words (a setting that can change at any
-// time): recompiled only when that setting's value changes.
-let blockedList = null;
-let blockedExtraKey = null;
-let blockedExtraRef = null;
-function blockedCompiled() {
-    const extra = Array.isArray(automodConfig.extraBlockedWords) ? automodConfig.extraBlockedWords : [];
-    if (blockedList && extra === blockedExtraRef) return blockedList;
-    blockedExtraRef = extra;
-    const key = JSON.stringify(extra);
-    if (!blockedList || key !== blockedExtraKey) {
-        const extraEntries = extra.map((word) => String(word ?? '').trim().toLowerCase()).filter(Boolean).map((word) => ({ word }));
-        blockedList = compileWords([...BLOCKED_WORDS, ...extraEntries], { allow: true });
-        blockedExtraKey = key;
+// The blocked list includes the server's extra words (extraBlockedWords, a per-server setting
+// that can change at any time). Compiled per server and cached: recompiled only when that
+// server's value changes. Servers without extra words share one compiled built-in list.
+// Home servers (main + support, or no guild) use the main server's words, as before; any other
+// server only its own. The cache is bounded (least recently used server dropped first).
+export const BLOCKED_CACHE_MAX = 200;
+const blockedByGuild = new Map(); // guild key → { key: JSON of the extra words, list }
+let builtInBlocked = null;
+
+function compileBlocked(extra) {
+    const extraEntries = extra.map((word) => String(word ?? '').trim().toLowerCase()).filter(Boolean).map((word) => ({ word }));
+    if (!extraEntries.length) {
+        builtInBlocked ??= compileWords(BLOCKED_WORDS, { allow: true });
+        return builtInBlocked;
     }
-    return blockedList;
+    return compileWords([...BLOCKED_WORDS, ...extraEntries], { allow: true });
+}
+
+/**
+ * The compiled blocked list of a server. Throws SettingsUnavailableError for another server
+ * whose settings could not be read (the caller skips that server; never another's words).
+ */
+function blockedCompiled(guildId = null) {
+    const value = guildSetting(guildId, 'extraBlockedWords', automodConfig);
+    const extra = Array.isArray(value) ? value : [];
+    const cacheKey = usesHomeValues(guildId) ? '' : guildId; // the home servers share the main list
+    const key = extra.length ? JSON.stringify(extra) : '';
+    const cached = blockedByGuild.get(cacheKey);
+    if (cached && cached.key === key) {
+        // Least recently used order: a hit moves the server to the end.
+        if (blockedByGuild.size > 1) {
+            blockedByGuild.delete(cacheKey);
+            blockedByGuild.set(cacheKey, cached);
+        }
+        return cached.list;
+    }
+    const list = compileBlocked(extra);
+    blockedByGuild.delete(cacheKey);
+    while (blockedByGuild.size >= BLOCKED_CACHE_MAX) blockedByGuild.delete(blockedByGuild.keys().next().value);
+    blockedByGuild.set(cacheKey, { key, list });
+    return list;
+}
+
+/** For tests: how many servers have a compiled blocked list cached. */
+export function blockedCacheSize() {
+    return blockedByGuild.size;
+}
+
+export function resetBlockedCache() {
+    blockedByGuild.clear();
 }
 
 /** The name of the first word of a compiled list in the text, or null. */
@@ -120,10 +155,10 @@ function firstListWord(text, compiled) {
 
 /**
  * Every hit of the built-in word lists: [{ list: 'blocked' | 'insult' | 'sexual', word, start, end, match }],
- * start/end index the original text (for masking).
+ * start/end index the original text (for masking). `guildId`: whose extra blocked words count.
  */
-export function findListWords(text) {
-    const lists = [['blocked', blockedCompiled()], ['insult', INSULT_LIST], ['sexual', SEXUAL_LIST]];
+export function findListWords(text, guildId = null) {
+    const lists = [['blocked', blockedCompiled(guildId)], ['insult', INSULT_LIST], ['sexual', SEXUAL_LIST]];
     return lists.flatMap(([list, compiled]) => matchWords(text, compiled)
         .map((hit) => ({ list, word: hit.entry.name || hit.word, start: hit.start, end: hit.end, match: hit.match })))
         .sort((a, b) => a.start - b.start || b.end - a.end);
@@ -152,8 +187,9 @@ export function findInviteCodes(text) {
     return [...foldText(text).matchAll(INVITE_PATTERN)].map((match) => match[1]);
 }
 
-export function findBlockedWord(text) {
-    return firstListWord(text, blockedCompiled());
+/** The first blocked word (built-in list plus the server's extra words) in the text, or null. */
+export function findBlockedWord(text, guildId = null) {
+    return firstListWord(text, blockedCompiled(guildId));
 }
 
 export function findInsult(text) {

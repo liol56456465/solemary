@@ -140,7 +140,7 @@ export function gateButtons(userId) {
 }
 
 async function postGateLine(member, hits, outcome, color, withButtons) {
-    const channel = await reviewChannel(member.client);
+    const channel = await reviewChannel(member.client, member.guild.id);
     if (!channel) {
         logger.warn(`Join gate ${outcome} ${member.id}, but there is no review channel`);
         return null;

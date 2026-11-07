@@ -64,8 +64,7 @@ async function claimSuggestion(guildId, rule, now) {
 }
 
 /** Posts this run's suggestions in the alerts channel. Returns how many were posted. */
-export async function postTuningSuggestions(client, now = Date.now()) {
-    const guildId = enforcementConfig.mainGuildId;
+export async function postTuningSuggestions(client, now = Date.now(), guildId = enforcementConfig.mainGuildId) {
     const [byRule, settings, lastSuggested] = await Promise.all([
         automodRuleStats(guildId),
         getAutomodSettings(guildId),
@@ -73,7 +72,7 @@ export async function postTuningSuggestions(client, now = Date.now()) {
     ]);
     const suggestions = tuningSuggestions(byRule, { settings, lastSuggested, now });
     if (!suggestions.length) return 0;
-    const channel = await fetchStaffChannel(client, 'alerts');
+    const channel = await fetchStaffChannel(client, guildId, 'alerts');
     if (!channel) {
         logger.warn(`Automod tuning: ${suggestions.length} suggestion(s) not posted (no alerts channel)`);
         return 0;

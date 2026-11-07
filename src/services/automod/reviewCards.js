@@ -46,9 +46,12 @@ function userError(message) {
     return createError(message, ErrorTypes.VALIDATION, message, { expected: true });
 }
 
-/** The staff channel for review cards: AUTOMOD_REVIEW_CHANNEL_ID, else the mod log channel. */
-export async function reviewChannel(client) {
-    return fetchStaffChannel(client, 'review');
+/**
+ * The staff channel for review cards of a server: AUTOMOD_REVIEW_CHANNEL_ID, else the mod log
+ * channel (home servers: the main server's; others: their own, null when not set).
+ */
+export async function reviewChannel(client, guildId) {
+    return fetchStaffChannel(client, guildId, 'review');
 }
 
 /** One automatic action as the card keeps it. */
@@ -62,14 +65,14 @@ function actionFrom(p) {
         // Kept so a contested case that staff undo can have its message restored (automodContest.js).
         content: p.content ?? null,
         channelId: p.channelId || null,
-        deleted: Boolean(p.deleted ?? ruleDefinition(p.rule)?.deleteMessage),
+        deleted: Boolean(p.deleted ?? ruleDefinition(p.rule, null, p.guild?.id)?.deleteMessage),
     };
 }
 
 /** Card parameters (see postReviewCard) → the card's state. */
 export function entryFrom(p, now = Date.now()) {
     const kind = p.report ? 'report' : p.note ? 'note' : p.monitor ? 'monitor' : 'action';
-    const rule = ruleDefinition(p.rule);
+    const rule = ruleDefinition(p.rule, null, p.guild?.id);
     const deleted = p.deleted ?? (kind === 'report' ? Boolean(p.report.removed) : kind === 'action' && Boolean(rule?.deleteMessage));
     const entry = {
         rule: p.rule,
@@ -170,7 +173,7 @@ export async function postReviewCard(p) {
             scheduleRender(open);
             return open.message;
         }
-        const channel = await reviewChannel(p.guild.client);
+        const channel = await reviewChannel(p.guild.client, p.guild.id);
         if (!channel) {
             logger.warn(`Automod review card not posted (no review channel): ${p.rule} on ${p.targetUser.id}`);
             return null;
@@ -428,7 +431,7 @@ export async function handleReviewAction(interaction, args) {
         if (!choice) throw userError('Pick a punishment from the list.');
         const targetUser = await client.users.fetch(userId).catch(() => null);
         if (!targetUser) throw userError('That user no longer exists.');
-        const definition = ruleDefinition(rule);
+        const definition = ruleDefinition(rule, null, guild?.id);
         const label = definition?.label;
         const result = await executeAction({
             guild,

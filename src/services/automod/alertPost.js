@@ -6,19 +6,32 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { enforcementConfig } from '../../config/enforcement.js';
-import { channelPurposeFor, fetchStaffChannel, resolveChannelId } from './channelRouting.js';
+import { channelPurposeFor, fetchStaffChannel, resolveChannelId, staffGuildId } from './channelRouting.js';
+import { isSettingsUnavailable } from '../settings/guildScoped.js';
 import { clearPostFailures, recordPostFailure, recordSendError } from './postFailures.js';
 
-/** Posts an embed with components to the channel for `kind`. Returns the message or null. */
-export async function postAlert(client, kind, { title, description = null, fields = [], color = 'error', components = [] }) {
+/**
+ * Posts an embed with components to the channel for `kind`. Returns the message or null.
+ * `guildId`: the server the alert is about (home servers: the main server's channels; any
+ * other server: only its own, skipped when not set).
+ */
+export async function postAlert(client, kind, {
+    title, description = null, fields = [], color = 'error', components = [], guildId: sourceGuildId = enforcementConfig.mainGuildId,
+}) {
     const purpose = channelPurposeFor(kind);
-    const guildId = enforcementConfig.mainGuildId;
-    const channel = await fetchStaffChannel(client, purpose);
+    const guildId = staffGuildId(sourceGuildId);
+    const channel = await fetchStaffChannel(client, sourceGuildId, purpose);
     if (!channel) {
         // Recorded for the dashboard Overview (postFailures.js): not set, or gone / not text.
-        // Main server not in the cache (startup): not a channel problem, nothing to record.
+        // Server not in the cache (startup): not a channel problem, nothing to record.
         if (!client.guilds?.cache?.get(guildId)) return null;
-        const channelId = resolveChannelId(purpose);
+        let channelId;
+        try {
+            channelId = resolveChannelId(sourceGuildId, purpose);
+        } catch (error) {
+            if (isSettingsUnavailable(error)) return null; // fetchStaffChannel logged it
+            throw error;
+        }
         recordPostFailure({ guildId, purpose, channelId, reason: channelId ? 'missing' : 'notSet' });
         return null;
     }

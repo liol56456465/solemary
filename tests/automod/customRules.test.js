@@ -23,7 +23,8 @@ const { PLANS, COMPARISON } = await import('../../src/config/site/plans.js');
 const { translator } = await import('../../src/services/site/i18n.js');
 
 const DAY = 24 * 3600 * 1000;
-const GUILD = 'g-custom';
+// The main server: the rules below are pinned on the main-server config (automodConfig.automodCustomRules).
+const GUILD = process.env.MAIN_GUILD_ID;
 const OWNER = '200000000000000009';
 const rule = (fields = {}) => ({ id: 'abcd2345', name: 'Ads', words: ['free nitro'], action: 'warn', muteDuration: null, enabled: true, ...fields });
 

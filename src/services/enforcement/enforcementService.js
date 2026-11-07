@@ -19,7 +19,8 @@ import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { enforceMassActionGuard } from './massActionGuard.js';
 import { endTempRoles } from '../members/tempRoleService.js';
 import { createEmbed } from '../../utils/embeds.js';
-import { ACTION_KINDS, channelPurposeFor, formatModLogLine, resolveChannelId } from '../automod/channelRouting.js';
+import { ACTION_KINDS, channelPurposeFor, formatModLogLine, resolveChannelId, staffGuildId } from '../automod/channelRouting.js';
+import { guildSetting, isSettingsUnavailable, noteSettingsUnavailable } from '../settings/guildScoped.js';
 import { alertWatched } from './watchlistService.js';
 import { clearPostFailures, recordPostFailure, recordSendError } from '../automod/postFailures.js';
 import { resolveBotLanguage } from '../../utils/botText.js';
@@ -113,7 +114,7 @@ export async function createRejoinInvite(guild, reason) {
     try {
         const invite = await guild.invites.create(channel, {
             maxUses: 1,
-            maxAge: enforcementConfig.rejoinInviteMaxAgeSeconds,
+            maxAge: guildSetting(guild.id, 'rejoinInviteMaxAgeSeconds', enforcementConfig),
             unique: true,
             reason,
         });
@@ -194,11 +195,23 @@ const MOD_LOG_TITLES = {
  * Posts one staff log entry. Routed by kind (services/automod/channelRouting.js):
  * enforcement actions go to the mod log as one line; raids, staff guard, slowmode,
  * digests and reports go to the alerts channel (falls back to the mod log).
+ * `guildId`: the server the entry is about. Home servers (main + support) post in the main
+ * server's channels, as before; any other server only in its own (not set: recorded, skipped).
+ * Its settings not readable (database down at boot): skipped, logged once in a while.
  */
-export async function postModLog(client, action, fields, { title = null, files = [], description = null, footer = null } = {}) {
+export async function postModLog(client, action, fields, {
+    title = null, files = [], description = null, footer = null, guildId: sourceGuildId = enforcementConfig.mainGuildId,
+} = {}) {
     const purpose = channelPurposeFor(action);
-    const channelId = resolveChannelId(purpose);
-    const guildId = enforcementConfig.mainGuildId;
+    let channelId;
+    try {
+        channelId = resolveChannelId(sourceGuildId, purpose);
+    } catch (error) {
+        if (!isSettingsUnavailable(error)) throw error;
+        noteSettingsUnavailable(sourceGuildId, `staff ${purpose} post (${action})`);
+        return;
+    }
+    const guildId = staffGuildId(sourceGuildId);
     // Not posting is recorded (postFailures.js), so the dashboard Overview can show it.
     if (!channelId) {
         recordPostFailure({ guildId, purpose, reason: 'notSet' });
@@ -207,7 +220,7 @@ export async function postModLog(client, action, fields, { title = null, files =
     const guild = client.guilds.cache.get(guildId);
     const channel = guild && (guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null));
     if (!channel?.isTextBased?.()) {
-        logger.warn(`Staff ${purpose} channel ${channelId} is not a text channel in the main server`);
+        logger.warn(`Staff ${purpose} channel ${channelId} is not a text channel in guild ${guildId}`);
         if (guild) recordPostFailure({ guildId, purpose, channelId, reason: 'missing' });
         return;
     }
@@ -256,7 +269,7 @@ export async function logEnforcement(client, guildId, action, { record = null, t
         data: { userId: target.id, fields },
     }).catch((error) => logger.warn(`Enforcement log failed: ${error.message}`));
     if (record?.is_test) return;
-    await postModLog(client, action, fields);
+    await postModLog(client, action, fields, { guildId });
 }
 
 function moderatorFields(moderator) {
