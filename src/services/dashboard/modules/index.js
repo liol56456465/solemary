@@ -20,10 +20,11 @@ import support from './support.js';
 import channels from './channels.js';
 import rules from './rules.js';
 import appearance from './appearance.js';
+import botLanguage from './botLanguage.js';
 
 export const MODULES = [
     enforcement, automod, logging, welcome, tickets, leveling, verification, reactionRoles, messages, giveaways, birthdays,
-    counters, joinToCreate, applications, community, commands, support, channels, rules, appearance,
+    counters, joinToCreate, applications, community, commands, support, channels, rules, appearance, botLanguage,
 ];
 
 const BY_KEY = new Map(MODULES.map((m) => [m.key, m]));

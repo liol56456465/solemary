@@ -51,6 +51,7 @@
       "help": "Words explained",
       "modules": "All modules",
       "appearance": "Bot in this server",
+      "bot-language": "Bot language",
       "commands": "Commands",
       "audit": "Audit log",
       "backup": "Settings backup",

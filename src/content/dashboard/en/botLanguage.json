@@ -1,0 +1,22 @@
+{
+  "page": {
+    "help": "The language Mewvo uses in this server for posts and for DMs to members. Answers only one person sees follow that person's own Discord language."
+  },
+  "card": {
+    "title": "Language",
+    "help": "Pick the language for everything Mewvo posts in channels and sends to members by DM here. English is the default."
+  },
+  "form": {
+    "label": "Language for posts and DMs",
+    "help": "Members get punishment and appeal DMs in this language."
+  },
+  "rule": {
+    "title": "Who sees which language",
+    "public": "Posts in channels and DMs to members: the language you pick here.",
+    "private": "Answers only one person sees (like error messages after a command): that person's own Discord language.",
+    "done": "Translated so far: punishment, unban/unmute and appeal DMs, and error messages. Everything else still shows in English for now."
+  },
+  "saved": {
+    "done": "Mewvo now uses {language} for posts and DMs in this server."
+  }
+}

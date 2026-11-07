@@ -53,6 +53,7 @@
       "help": "Słowniczek",
       "modules": "Wszystkie moduły",
       "appearance": "Bot na tym serwerze",
+      "bot-language": "Język bota",
       "commands": "Komendy",
       "audit": "Dziennik zdarzeń",
       "backup": "Kopia ustawień",

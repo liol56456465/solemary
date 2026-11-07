@@ -114,6 +114,9 @@ export const RULES_POST_DEFAULT = Object.freeze({
     banner: null, thumbnail: null, posted: null,
 });
 
+// The bot's languages (the same 8 as the website; registry stays free of the i18n module).
+export const BOT_LANGUAGE_CODES = Object.freeze(['en', 'ru', 'de', 'fr', 'it', 'pl', 'es', 'pt-BR']);
+
 export const SETTING_KINDS = ['channel', 'category', 'role', 'number', 'duration', 'string', 'url', 'boolean', 'list', 'json'];
 
 /** @type {ReadonlyArray<object>} */
@@ -327,6 +330,13 @@ export const SETTINGS = Object.freeze([
     {
         key: 'catAnnounce', module: 'leveling', kind: 'boolean', guild: 'main',
         label: 'Announce when the server cat grows', env: null, fallback: true, schema: z.boolean(),
+    },
+    // ── Bot language (utils/botText.js; Dashboard → Bot language) ──
+    // The language of the bot's public posts and member DMs in this server. Replies to one person
+    // follow that person's Discord language instead. Same 8 codes as site/i18n.js LANG_CODES (a test checks).
+    {
+        key: 'botLanguage', module: 'botLanguage', kind: 'string', guild: 'main', label: 'Bot language', env: null,
+        fallback: 'en', schema: z.enum(BOT_LANGUAGE_CODES),
     },
     // ── Server rules ──
     {

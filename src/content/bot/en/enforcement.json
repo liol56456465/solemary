@@ -1,0 +1,80 @@
+{
+    "dm": {
+        "appealHere": "**Appeal here:** {invite}",
+        "cannotAppeal": "This ban cannot be appealed.",
+        "by": "By: {name}",
+        "reason": "Reason: {reason}",
+        "rule": "Rule",
+        "date": "Date: {date}",
+        "duration": "Duration: {duration}, ends {end}",
+        "durationPermanent": "Duration: Permanent",
+        "caseCode": "Case code: {code}",
+        "rejoin": "Rejoin: {invite}",
+        "record": "Your full record: <{url}>",
+        "privacy": "-# Privacy: <{url}>",
+        "ban": {
+            "title": "**Banned from {server}**",
+            "autoNote": "Appealing this code also removes the warning that caused this ban.",
+            "appealUntil": "You can appeal until {date}."
+        },
+        "kick": {
+            "title": "**Kicked from {server}**",
+            "noInvite": "Rejoin: ask a staff member for an invite"
+        },
+        "mute": {
+            "title": "**Muted in {server}**"
+        },
+        "warn": {
+            "title": "**Warning {number} of {limit} in {server}**",
+            "limit": "At {limit} warnings you will be banned."
+        },
+        "appealAccepted": {
+            "title": "**Appeal accepted**",
+            "noInvite": "Ask a staff member in the support server for an invite back."
+        },
+        "appealDenied": "**Appeal denied.** If you think this is a mistake, appeal again here:\n{invite}",
+        "banEnded": {
+            "title": "**Your ban from {server} has ended**",
+            "early": "A moderator lifted it early.",
+            "expired": "It expired.",
+            "noInvite": "Rejoin: ask for an invite in the support server: {invite}"
+        },
+        "muteEnded": {
+            "title": "**Your mute in {server} has ended**",
+            "early": "A moderator lifted it early. You can talk again.",
+            "expired": "It expired. You can talk again."
+        },
+        "voided": {
+            "title": {
+                "ban": "**A ban on your record in {server} was removed**",
+                "kick": "**A kick on your record in {server} was removed**",
+                "mute": "**A mute on your record in {server} was removed**",
+                "warn": "**A warn on your record in {server} was removed**",
+                "generic": "**A {type} on your record in {server} was removed**"
+            },
+            "reason": "Reason: {reason}",
+            "mistake": "Staff removed it as a mistake. It no longer counts against you.",
+            "unbanned": "You were unbanned. Rejoin: {invite}"
+        }
+    },
+    "duration": {
+        "permanent": "Permanent",
+        "lessThanMinute": "less than a minute",
+        "month": {
+            "one": "{count} month",
+            "other": "{count} months"
+        },
+        "day": {
+            "one": "{count} day",
+            "other": "{count} days"
+        },
+        "hour": {
+            "one": "{count} hour",
+            "other": "{count} hours"
+        },
+        "minute": {
+            "one": "{count} minute",
+            "other": "{count} minutes"
+        }
+    }
+}

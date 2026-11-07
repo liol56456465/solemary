@@ -20,6 +20,7 @@ import { isCollectorManagedComponent } from '../utils/collectorComponents.js';
 import { ResponseCoordinator } from '../utils/responseCoordinator.js';
 import { enforceDefaultCommandPermissions } from '../utils/permissionGuard.js';
 import { checkCommandAccess } from '../utils/commandGate.js';
+import { resolveBotLanguage } from '../utils/botText.js';
 import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { skipIfArrivedTooLate, noticeIfHandlerMissedDeadline } from '../utils/lateInteractionNotice.js';
@@ -130,6 +131,8 @@ export default {
               guild: interaction.guild,
               userId: interaction.user.id,
               permissions: interaction.memberPermissions,
+              // An ephemeral refusal: the user's Discord language.
+              lang: resolveBotLanguage({ interaction, guildId: interaction.guildId, member: interaction.member, userId: interaction.user.id, purpose: 'reply' }),
             });
             if (!access.allowed) {
               // A blacklisted server is ignored (no answer at all).
@@ -246,6 +249,7 @@ export default {
               guild: interaction.guild,
               userId: interaction.user.id,
               permissions: interaction.memberPermissions,
+              lang: resolveBotLanguage({ interaction, guildId: interaction.guildId, member: interaction.member, userId: interaction.user.id, purpose: 'reply' }),
             });
             if (!access.allowed) {
               if (access.silent) return;

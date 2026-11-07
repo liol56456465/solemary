@@ -1,32 +1,61 @@
 // dmTemplates.js: the DM layouts sent to punished users.
+//
+// Language: the server's (owner's "mixed" rule). Every translated template takes `{ lang }` last;
+// callers get it from resolveBotLanguage({ guildId, userId, purpose: 'dm' }) (utils/botText.js).
+// Without it the DM is English, exactly as before. Text: src/content/bot/<lang>/enforcement.json
+// (dm.*, duration.*). The keep-apart DMs and the "Contest this" button are still English only.
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
-import { dateStamp, formatDuration, stamp } from './format.js';
+import { dateStamp, stamp } from './format.js';
 import { ruleLineFor } from '../rules/serverRules.js';
 import { privacyUrl } from '../../utils/privacyNotice.js';
+import { botText } from '../../utils/botText.js';
 
 const { serverName } = enforcementConfig;
 // Read on every use: a per-server setting that can change at runtime.
 const invite = () => enforcementConfig.supportServerInvite;
+const textOf = (lang) => botText(lang || 'en');
 
-function appealLine(record) {
+function appealLine(record, tr) {
     return record.unappealable
-        ? 'This ban cannot be appealed.'
-        : `**Appeal here:** ${invite()}`;
+        ? tr.t('enforcement.dm.cannotAppeal')
+        : tr.t('enforcement.dm.appealHere', { invite: invite() });
 }
 
 // Discord's message content limit: the rule line is dropped rather than going over it.
 const DM_MAX = 2000;
 
+const MINUTE = 60 * 1000;
+const DURATION_UNITS = [['month', 30 * 24 * 60 * MINUTE], ['day', 24 * 60 * MINUTE], ['hour', 60 * MINUTE], ['minute', MINUTE]];
+
+/**
+ * A duration in words in a language, the same shape as format.js formatDuration (at most two
+ * units: "1 day 12 hours"). English is identical to formatDuration (a test checks).
+ */
+export function durationIn(ms, lang = 'en') {
+    const tr = textOf(lang);
+    if (ms == null) return tr.t('enforcement.duration.permanent');
+    const parts = [];
+    let rest = ms;
+    for (const [unit, size] of DURATION_UNITS) {
+        const count = Math.floor(rest / size);
+        if (count > 0) {
+            parts.push(tr.tp(`enforcement.duration.${unit}`, count));
+            rest -= count * size;
+        }
+    }
+    return parts.slice(0, 2).join(' ') || tr.t('enforcement.duration.lessThanMinute');
+}
+
 /**
  * Adds "Privacy: <PUBLIC_URL/privacy>" as the last line when PUBLIC_URL is set and the
  * DM still fits the limit; otherwise the DM is returned unchanged.
  */
-export function withPrivacyLine(text, env = process.env) {
+export function withPrivacyLine(text, env = process.env, { lang = 'en' } = {}) {
     const url = privacyUrl(env);
     if (!url) return text;
-    const out = `${text}\n-# Privacy: <${url}>`;
+    const out = `${text}\n${textOf(lang).t('enforcement.dm.privacy', { url })}`;
     return out.length <= DM_MAX ? out : text;
 }
 
@@ -34,131 +63,148 @@ export function withPrivacyLine(text, env = process.env) {
  * "Your full record: <https://…/me>" when the website's My record page is on
  * (MEMBER_PORTAL_ENABLED + an http(s) PUBLIC_URL); otherwise nothing. Optional like the rule line.
  */
-export function recordLine(env = process.env) {
+export function recordLine(env = process.env, { lang = 'en' } = {}) {
     if (!/^(1|true|yes|on)$/i.test(String(env.MEMBER_PORTAL_ENABLED || '').trim())) return null;
     const origin = String(env.PUBLIC_URL || '').trim().replace(/\/+$/, '');
     if (!/^https?:\/\/[^\s<>]+$/.test(origin)) return null;
-    return `Your full record: <${origin}/me>`;
+    return textOf(lang).t('enforcement.dm.record', { url: `${origin}/me` });
 }
 
-function common(record) {
+function common(record, tr) {
     return [
-        `By: ${record.moderator_username}`,
-        `Reason: ${record.reason}`,
+        tr.t('enforcement.dm.by', { name: record.moderator_username }),
+        tr.t('enforcement.dm.reason', { reason: record.reason }),
         // "Rule 3: No spam — <link>" when the prebuilt reason is linked to a server rule.
-        { ruleLine: ruleLineFor(record) },
-        `Date: ${dateStamp(record.created_at)}`,
+        { ruleLine: ruleLineFor(record, process.env, { word: tr.t('enforcement.dm.rule') }) },
+        tr.t('enforcement.dm.date', { date: dateStamp(record.created_at) }),
     ];
 }
 
 /** Joins DM lines; the rule line placeholder is kept only while the DM fits the limit. */
-function finish(lines) {
+function finish(lines, tr) {
     const plain = lines.filter((line) => typeof line === 'string');
     const withRule = lines.map((line) => (typeof line === 'string' ? line : line?.ruleLine || line?.optional || null)).filter(Boolean);
     const text = withRule.join('\n');
-    return withPrivacyLine(text.length <= DM_MAX ? text : plain.join('\n'));
+    return withPrivacyLine(text.length <= DM_MAX ? text : plain.join('\n'), process.env, { lang: tr.lang });
 }
 
-export function banDm(record) {
-    const duration = record.expires_at
-        ? `Duration: ${formatDuration(Number(record.duration_ms))}, ends ${stamp(record.expires_at)}`
-        : 'Duration: Permanent';
+const record = (tr) => ({ optional: recordLine(process.env, { lang: tr.lang }) });
+
+export function banDm(rec, { lang } = {}) {
+    const tr = textOf(lang);
+    const duration = rec.expires_at
+        ? tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) })
+        : tr.t('enforcement.dm.durationPermanent');
     const lines = [
-        appealLine(record),
-        `**Banned from ${serverName}**`,
-        ...common(record),
+        appealLine(rec, tr),
+        tr.t('enforcement.dm.ban.title', { server: serverName }),
+        ...common(rec, tr),
         duration,
-        `Case code: ${record.case_code}`,
-        { optional: recordLine() },
+        tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
+        record(tr),
     ];
-    if (record.is_auto && !record.unappealable) {
-        lines.push('Appealing this code also removes the warning that caused this ban.');
+    if (rec.is_auto && !rec.unappealable) {
+        lines.push(tr.t('enforcement.dm.ban.autoNote'));
     }
-    if (record.ladder_level_after === 3 && record.is_auto && record.appeal_deadline && !record.unappealable) {
-        lines.push(`You can appeal until ${dateStamp(record.appeal_deadline)}.`);
+    if (rec.ladder_level_after === 3 && rec.is_auto && rec.appeal_deadline && !rec.unappealable) {
+        lines.push(tr.t('enforcement.dm.ban.appealUntil', { date: dateStamp(rec.appeal_deadline) }));
     }
-    return finish(lines);
+    return finish(lines, tr);
 }
 
-export function kickDm(record, inviteUrl) {
+export function kickDm(rec, inviteUrl, { lang } = {}) {
+    const tr = textOf(lang);
     return finish([
-        `**Appeal here:** ${invite()}`,
-        `**Kicked from ${serverName}**`,
-        ...common(record),
-        `Case code: ${record.case_code}`,
-        `Rejoin: ${inviteUrl || 'ask a staff member for an invite'}`,
-        { optional: recordLine() },
-    ]);
+        tr.t('enforcement.dm.appealHere', { invite: invite() }),
+        tr.t('enforcement.dm.kick.title', { server: serverName }),
+        ...common(rec, tr),
+        tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
+        inviteUrl ? tr.t('enforcement.dm.rejoin', { invite: inviteUrl }) : tr.t('enforcement.dm.kick.noInvite'),
+        record(tr),
+    ], tr);
 }
 
-export function muteDm(record) {
+export function muteDm(rec, { lang } = {}) {
+    const tr = textOf(lang);
     return finish([
-        `**Appeal here:** ${invite()}`,
-        `**Muted in ${serverName}**`,
-        ...common(record),
-        `Duration: ${formatDuration(Number(record.duration_ms))}, ends ${stamp(record.expires_at)}`,
-        `Case code: ${record.case_code}`,
-        { optional: recordLine() },
-    ]);
+        tr.t('enforcement.dm.appealHere', { invite: invite() }),
+        tr.t('enforcement.dm.mute.title', { server: serverName }),
+        ...common(rec, tr),
+        tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) }),
+        tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
+        record(tr),
+    ], tr);
 }
 
-export function warnDm(record, warnNumber) {
+export function warnDm(rec, warnNumber, { lang } = {}) {
+    const tr = textOf(lang);
+    const limit = enforcementConfig.warnsPerLevel;
     return finish([
-        `**Appeal here:** ${invite()}`,
-        `**Warning ${warnNumber} of ${enforcementConfig.warnsPerLevel} in ${serverName}**`,
-        ...common(record),
-        `Case code: ${record.case_code}`,
-        `At ${enforcementConfig.warnsPerLevel} warnings you will be banned.`,
-        { optional: recordLine() },
-    ]);
+        tr.t('enforcement.dm.appealHere', { invite: invite() }),
+        tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server: serverName }),
+        ...common(rec, tr),
+        tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
+        tr.t('enforcement.dm.warn.limit', { limit }),
+        record(tr),
+    ], tr);
 }
 
-export function appealAcceptedDm(adminUsername, inviteUrl) {
+export function appealAcceptedDm(adminUsername, inviteUrl, { lang } = {}) {
+    const tr = textOf(lang);
     return withPrivacyLine([
-        '**Appeal accepted**',
-        `By: ${adminUsername}`,
-        inviteUrl || 'Ask a staff member in the support server for an invite back.',
-    ].join('\n'));
+        tr.t('enforcement.dm.appealAccepted.title'),
+        tr.t('enforcement.dm.by', { name: adminUsername }),
+        inviteUrl || tr.t('enforcement.dm.appealAccepted.noInvite'),
+    ].join('\n'), process.env, { lang: tr.lang });
 }
 
-export function appealDeniedDm() {
-    return withPrivacyLine(`**Appeal denied.** If you think this is a mistake, appeal again here:\n${invite()}`);
+export function appealDeniedDm({ lang } = {}) {
+    const tr = textOf(lang);
+    return withPrivacyLine(tr.t('enforcement.dm.appealDenied', { invite: invite() }), process.env, { lang: tr.lang });
 }
 
 /**
  * Sent when a ban ends: on expiry, or early when a moderator unbans.
  * `inviteUrl` is a one-time invite back to the server (null when none could be made).
  */
-export function banEndedDm(record, inviteUrl, { early = false } = {}) {
+export function banEndedDm(rec, inviteUrl, { early = false, lang } = {}) {
+    const tr = textOf(lang);
     return withPrivacyLine([
-        `**Your ban from ${serverName} has ended**`,
-        early ? 'A moderator lifted it early.' : 'It expired.',
-        record?.case_code ? `Case code: ${record.case_code}` : null,
-        `Rejoin: ${inviteUrl || `ask for an invite in the support server: ${invite()}`}`,
-    ].filter(Boolean).join('\n'));
+        tr.t('enforcement.dm.banEnded.title', { server: serverName }),
+        early ? tr.t('enforcement.dm.banEnded.early') : tr.t('enforcement.dm.banEnded.expired'),
+        rec?.case_code ? tr.t('enforcement.dm.caseCode', { code: rec.case_code }) : null,
+        inviteUrl ? tr.t('enforcement.dm.rejoin', { invite: inviteUrl }) : tr.t('enforcement.dm.banEnded.noInvite', { invite: invite() }),
+    ].filter(Boolean).join('\n'), process.env, { lang: tr.lang });
 }
 
 /** Sent when a mute ends: on expiry, or early when a moderator unmutes. */
-export function muteEndedDm(record, { early = false } = {}) {
+export function muteEndedDm(rec, { early = false, lang } = {}) {
+    const tr = textOf(lang);
     return withPrivacyLine([
-        `**Your mute in ${serverName} has ended**`,
-        early ? 'A moderator lifted it early. You can talk again.' : 'It expired. You can talk again.',
-        record?.case_code ? `Case code: ${record.case_code}` : null,
-    ].filter(Boolean).join('\n'));
+        tr.t('enforcement.dm.muteEnded.title', { server: serverName }),
+        early ? tr.t('enforcement.dm.muteEnded.early') : tr.t('enforcement.dm.muteEnded.expired'),
+        rec?.case_code ? tr.t('enforcement.dm.caseCode', { code: rec.case_code }) : null,
+    ].filter(Boolean).join('\n'), process.env, { lang: tr.lang });
 }
+
+const VOIDED_TYPES = new Set(['ban', 'kick', 'mute', 'warn']);
 
 /**
  * Sent when an admin voids a case (/case remove): the record no longer counts against
  * the user. `inviteUrl` is set when the void lifted a ban.
  */
-export function caseVoidedDm(record, reason, inviteUrl = null) {
+export function caseVoidedDm(rec, reason, inviteUrl = null, { lang } = {}) {
+    const tr = textOf(lang);
+    const title = VOIDED_TYPES.has(rec.type)
+        ? tr.t(`enforcement.dm.voided.title.${rec.type}`, { server: serverName })
+        : tr.t('enforcement.dm.voided.title.generic', { type: rec.type, server: serverName });
     return withPrivacyLine([
-        `**A ${record.type} on your record in ${serverName} was removed**`,
-        `Case code: ${record.case_code}`,
-        `Reason: ${reason}`,
-        'Staff removed it as a mistake. It no longer counts against you.',
-        inviteUrl ? `You were unbanned. Rejoin: ${inviteUrl}` : null,
-    ].filter(Boolean).join('\n'));
+        title,
+        tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
+        tr.t('enforcement.dm.voided.reason', { reason }),
+        tr.t('enforcement.dm.voided.mistake'),
+        inviteUrl ? tr.t('enforcement.dm.voided.unbanned', { invite: inviteUrl }) : null,
+    ].filter(Boolean).join('\n'), process.env, { lang: tr.lang });
 }
 
 /** Sent to both members when staff start a no-contact order. `other` is the other member (or null). */

@@ -1,5 +1,5 @@
 {
-  "_comment": "Resolved settings of the home servers with no database row and no env overrides, captured from getSetting() at a607e88 (before B0a). resolveSetting/settingsFor must return exactly these.",
+  "_comment": "Resolved settings of the home servers with no database row and no env overrides, captured from getSetting() at a607e88 (before B0a). resolveSetting/settingsFor must return exactly these. Keys added later (botLanguage) carry their registry fallback.",
   "production": {
     "main": {
       "adminRequestChannelId": "1527697155643408442",
@@ -45,6 +45,7 @@
       "staffHandoverNote": null,
       "enforcementTemplates": [],
       "catName": "Mewvo",
+      "botLanguage": "en",
       "catAnnounce": true,
       "serverRules": {
         "rules": [],
@@ -107,6 +108,7 @@
       "staffHandoverNote": null,
       "enforcementTemplates": [],
       "catName": "Mewvo",
+      "botLanguage": "en",
       "catAnnounce": true,
       "serverRules": {
         "rules": [],
@@ -167,6 +169,7 @@
       "staffHandoverNote": null,
       "enforcementTemplates": [],
       "catName": "Mewvo",
+      "botLanguage": "en",
       "catAnnounce": true,
       "serverRules": {
         "rules": [],
@@ -225,6 +228,7 @@
       "staffHandoverNote": null,
       "enforcementTemplates": [],
       "catName": "Mewvo",
+      "botLanguage": "en",
       "catAnnounce": true,
       "serverRules": {
         "rules": [],

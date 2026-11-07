@@ -1,0 +1,70 @@
+{
+    "title": {
+        "validation": "Dati non validi",
+        "permission": "Permesso negato",
+        "configuration": "Errore di configurazione",
+        "database": "Errore del database",
+        "network": "Errore di rete",
+        "discord_api": "Errore di Discord",
+        "user_input": "Errore di inserimento",
+        "rate_limit": "Troppo veloce",
+        "unknown": "Qualcosa è andato storto"
+    },
+    "message": {
+        "validation": {
+            "default": "Controlla i dati inseriti e riprova.",
+            "missing_required": "Mancano alcune informazioni obbligatorie. Controlla le opzioni del comando e riprova.",
+            "invalid_format": "Il formato non è corretto. Controlla come si usa il comando e riprova."
+        },
+        "permission": {
+            "default": "Non hai il permesso di farlo.",
+            "user_permission": "Non hai il permesso di usare questo comando.",
+            "bot_permission": "Non ho i permessi necessari per farlo in questo canale."
+        },
+        "configuration": {
+            "default": "Questa funzione non è ancora configurata. Chiedi a un amministratore del server di configurarla.",
+            "missing_config": "Questa funzione non è ancora stata configurata. Chiedi a un amministratore del server di configurarla.",
+            "invalid_config": "La configurazione di questa funzione non è valida. Chiedi a un amministratore del server di controllarla."
+        },
+        "database": {
+            "default": "Qualcosa è andato storto durante il salvataggio. Riprova tra un momento.",
+            "connection_failed": "Non sono riuscito a raggiungere il database. Riprova più tardi.",
+            "timeout": "Ci è voluto troppo tempo. Riprova."
+        },
+        "network": {
+            "default": "Non sono riuscito a raggiungere un servizio esterno. Riprova tra un momento.",
+            "timeout": "La richiesta è scaduta. Riprova.",
+            "unreachable": "Il servizio non è disponibile al momento. Riprova più tardi."
+        },
+        "discord_api": {
+            "default": "Discord ha rifiutato la richiesta. Riprova tra un momento.",
+            "rate_limit": "Stai andando troppo veloce. Aspetta un momento e riprova.",
+            "forbidden": "Qui non posso farlo. Controlla i permessi del mio ruolo."
+        },
+        "user_input": {
+            "default": "C’è un problema con la tua richiesta. Controlla i dati inseriti e riprova.",
+            "invalid_user": "Non ho trovato quell’utente. Controlla la menzione o l’ID e riprova.",
+            "invalid_channel": "Non ho trovato quel canale. Controlla la menzione o l’ID e riprova."
+        },
+        "rate_limit": {
+            "default": "Stai andando troppo veloce. Aspetta un momento e riprova.",
+            "command_cooldown": "Questo comando è in pausa. Aspetta prima di usarlo di nuovo.",
+            "global_rate_limit": "Discord sta limitando le richieste. Aspetta un momento e riprova."
+        },
+        "unknown": {
+            "default": "Qualcosa è andato storto. Riprova tra un momento.",
+            "unexpected": "Si è verificato un errore imprevisto. Riprova più tardi.",
+            "warn_failed": "Non sono riuscito ad avvertire quel membro. Controlla i miei permessi e l’ordine dei ruoli, poi riprova.",
+            "kick_failed": "Non sono riuscito a espellere quel membro. Controlla i miei permessi e l’ordine dei ruoli, poi riprova.",
+            "ban_failed": "Non sono riuscito a bannare quel membro. Controlla i miei permessi e l’ordine dei ruoli, poi riprova.",
+            "unban_failed": "Non sono riuscito a sbannare quell’utente. Controlla i miei permessi e riprova.",
+            "timeout_failed": "Non sono riuscito a mettere in timeout quel membro. Controlla i miei permessi e l’ordine dei ruoli, poi riprova.",
+            "untimeout_failed": "Non sono riuscito a togliere il timeout. Controlla i miei permessi e riprova."
+        }
+    },
+    "access": {
+        "adminChannel": "Ti serve il ruolo Amministratore per usare questo comando. Chiedi un ruolo da mod o admin qui: <#{channelId}>",
+        "admin": "Ti serve il ruolo Amministratore per usare questo comando.",
+        "adminOther": "Ti serve il ruolo Amministratore per usare questo comando. Chiedi a un admin di questo server se ti serve l’accesso."
+    }
+}

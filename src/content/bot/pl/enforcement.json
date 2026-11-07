@@ -1,0 +1,88 @@
+{
+    "dm": {
+        "appealHere": "**Odwołaj się tutaj:** {invite}",
+        "cannotAppeal": "Od tego bana nie można się odwołać.",
+        "by": "Wystawił: {name}",
+        "reason": "Powód: {reason}",
+        "rule": "Zasada",
+        "date": "Data: {date}",
+        "duration": "Czas trwania: {duration}, kończy się {end}",
+        "durationPermanent": "Czas trwania: na stałe",
+        "caseCode": "Kod sprawy: {code}",
+        "rejoin": "Dołącz ponownie: {invite}",
+        "record": "Cała twoja historia: <{url}>",
+        "privacy": "-# Prywatność: <{url}>",
+        "ban": {
+            "title": "**Ban na {server}**",
+            "autoNote": "Odwołanie od tego kodu usuwa też ostrzeżenie, które spowodowało ten ban.",
+            "appealUntil": "Możesz się odwołać do {date}."
+        },
+        "kick": {
+            "title": "**Wyrzucono cię z {server}**",
+            "noInvite": "Dołącz ponownie: poproś kogoś z ekipy o zaproszenie"
+        },
+        "mute": {
+            "title": "**Wyciszenie na {server}**"
+        },
+        "warn": {
+            "title": "**Ostrzeżenie {number} z {limit} na {server}**",
+            "limit": "Przy {limit} ostrzeżeniach dostaniesz bana."
+        },
+        "appealAccepted": {
+            "title": "**Odwołanie przyjęte**",
+            "noInvite": "Poproś kogoś z ekipy na serwerze pomocy o zaproszenie z powrotem."
+        },
+        "appealDenied": "**Odwołanie odrzucone.** Jeśli uważasz, że to pomyłka, odwołaj się ponownie tutaj:\n{invite}",
+        "banEnded": {
+            "title": "**Twój ban na {server} się skończył**",
+            "early": "Moderator zdjął go wcześniej.",
+            "expired": "Wygasł.",
+            "noInvite": "Dołącz ponownie: poproś o zaproszenie na serwerze pomocy: {invite}"
+        },
+        "muteEnded": {
+            "title": "**Twoje wyciszenie na {server} się skończyło**",
+            "early": "Moderator zdjął je wcześniej. Znowu możesz pisać.",
+            "expired": "Wygasło. Znowu możesz pisać."
+        },
+        "voided": {
+            "title": {
+                "ban": "**Ban w twojej historii na {server} został usunięty**",
+                "kick": "**Wyrzucenie w twojej historii na {server} zostało usunięte**",
+                "mute": "**Wyciszenie w twojej historii na {server} zostało usunięte**",
+                "warn": "**Ostrzeżenie w twojej historii na {server} zostało usunięte**",
+                "generic": "**Wpis ({type}) w twojej historii na {server} został usunięty**"
+            },
+            "reason": "Powód: {reason}",
+            "mistake": "Ekipa usunęła go jako pomyłkę. Nie liczy się już przeciwko tobie.",
+            "unbanned": "Twój ban został zdjęty. Dołącz ponownie: {invite}"
+        }
+    },
+    "duration": {
+        "permanent": "Na stałe",
+        "lessThanMinute": "mniej niż minuta",
+        "month": {
+            "one": "{count} miesiąc",
+            "few": "{count} miesiące",
+            "many": "{count} miesięcy",
+            "other": "{count} miesiąca"
+        },
+        "day": {
+            "one": "{count} dzień",
+            "few": "{count} dni",
+            "many": "{count} dni",
+            "other": "{count} dnia"
+        },
+        "hour": {
+            "one": "{count} godzina",
+            "few": "{count} godziny",
+            "many": "{count} godzin",
+            "other": "{count} godziny"
+        },
+        "minute": {
+            "one": "{count} minuta",
+            "few": "{count} minuty",
+            "many": "{count} minut",
+            "other": "{count} minuty"
+        }
+    }
+}

@@ -1,0 +1,70 @@
+{
+    "title": {
+        "validation": "Invalid Input",
+        "permission": "Permission Denied",
+        "configuration": "Configuration Error",
+        "database": "Database Error",
+        "network": "Network Error",
+        "discord_api": "Discord API Error",
+        "user_input": "Input Error",
+        "rate_limit": "Too Fast",
+        "unknown": "Something Went Wrong"
+    },
+    "message": {
+        "validation": {
+            "default": "Please check your input and try again.",
+            "missing_required": "You're missing some required information. Check the command options and try again.",
+            "invalid_format": "The format you provided is incorrect. Check the command usage and try again."
+        },
+        "permission": {
+            "default": "You don't have permission to do that.",
+            "user_permission": "You don't have permission to use this command.",
+            "bot_permission": "I don't have the permissions needed to do that in this channel."
+        },
+        "configuration": {
+            "default": "This feature is not set up yet. Ask a server administrator to configure it.",
+            "missing_config": "This feature has not been configured yet. Ask a server administrator to set it up.",
+            "invalid_config": "The server configuration for this feature is invalid. Ask a server administrator to review it."
+        },
+        "database": {
+            "default": "Something went wrong while saving data. Please try again in a moment.",
+            "connection_failed": "I could not reach the database. Please try again later.",
+            "timeout": "That took too long to complete. Please try again."
+        },
+        "network": {
+            "default": "I could not reach an external service. Please try again in a moment.",
+            "timeout": "The request timed out. Please try again.",
+            "unreachable": "The service is unavailable right now. Please try again later."
+        },
+        "discord_api": {
+            "default": "Discord rejected that request. Please try again in a moment.",
+            "rate_limit": "You're doing that too quickly. Wait a moment and try again.",
+            "forbidden": "I'm not allowed to do that here. Check my role permissions."
+        },
+        "user_input": {
+            "default": "There was a problem with your request. Check your input and try again.",
+            "invalid_user": "I could not find that user. Check the mention or ID and try again.",
+            "invalid_channel": "I could not find that channel. Check the mention or ID and try again."
+        },
+        "rate_limit": {
+            "default": "You're doing that too quickly. Wait a moment and try again.",
+            "command_cooldown": "This command is on cooldown. Wait before using it again.",
+            "global_rate_limit": "Discord is rate limiting requests. Wait a moment and try again."
+        },
+        "unknown": {
+            "default": "Something went wrong. Please try again in a moment.",
+            "unexpected": "An unexpected error occurred. Please try again later.",
+            "warn_failed": "I could not warn that member. Check my permissions and role hierarchy, then try again.",
+            "kick_failed": "I could not kick that member. Check my permissions and role hierarchy, then try again.",
+            "ban_failed": "I could not ban that member. Check my permissions and role hierarchy, then try again.",
+            "unban_failed": "I could not unban that user. Check my permissions and try again.",
+            "timeout_failed": "I could not timeout that member. Check my permissions and role hierarchy, then try again.",
+            "untimeout_failed": "I could not remove the timeout. Check my permissions and try again."
+        }
+    },
+    "access": {
+        "adminChannel": "You need the Administrator role to use this command. Request a mod/admin role here: <#{channelId}>",
+        "admin": "You need the Administrator role to use this command.",
+        "adminOther": "You need the Administrator role to use this command. Ask an admin of this server if you need access."
+    }
+}

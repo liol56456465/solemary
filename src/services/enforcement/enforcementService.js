@@ -22,6 +22,10 @@ import { createEmbed } from '../../utils/embeds.js';
 import { ACTION_KINDS, channelPurposeFor, formatModLogLine, resolveChannelId } from '../automod/channelRouting.js';
 import { alertWatched } from './watchlistService.js';
 import { clearPostFailures, recordPostFailure, recordSendError } from '../automod/postFailures.js';
+import { resolveBotLanguage } from '../../utils/botText.js';
+
+/** The language of a member DM: the server's (utils/botText.js; never throws, English on error). */
+const dmLanguage = (guildId, userId) => resolveBotLanguage({ guildId, userId, purpose: 'dm' });
 
 export const REQUIRED_BOT_PERMISSIONS = [
     ['BanMembers', 'Ban Members'],
@@ -134,9 +138,9 @@ export async function notifyPunishmentEnded(client, guild, { type, userId, recor
         if (user) {
             if (type === 'ban') {
                 const invite = guild ? await createRejoinInvite(guild, `Ban ended${record ? ` (${record.case_code})` : ''}`) : null;
-                delivered = await sendDm(user, banEndedDm(record, invite, { early }));
+                delivered = await sendDm(user, banEndedDm(record, invite, { early, lang: dmLanguage(guild?.id ?? record?.guild_id, userId) }));
             } else {
-                delivered = await sendDm(user, muteEndedDm(record, { early }));
+                delivered = await sendDm(user, muteEndedDm(record, { early, lang: dmLanguage(guild?.id ?? record?.guild_id, userId) }));
             }
         }
         if (!delivered) {
@@ -370,7 +374,7 @@ function dmComponentsFor(flow, record) {
 
 /** Records the case, DMs first, then bans. Rolls the case back if the ban fails. */
 async function banWithRecord({ guild, targetUser, record, auditReason, dmComponents = null }) {
-    const dmDelivered = await sendDm(targetUser, banDm(record), dmComponents);
+    const dmDelivered = await sendDm(targetUser, banDm(record, { lang: dmLanguage(guild.id, targetUser.id) }), dmComponents);
     try {
         await guild.members.ban(targetUser.id, { reason: auditReason.slice(0, 512) });
     } catch (error) {
@@ -419,7 +423,7 @@ async function doKick({ guild, moderator, targetUser, targetMember, flow }) {
     });
 
     const invite = await createRejoinInvite(guild, `Rejoin invite for kick ${record.case_code}`);
-    const dmDelivered = await sendDm(targetUser, kickDm(record, invite), dmComponentsFor(flow, record));
+    const dmDelivered = await sendDm(targetUser, kickDm(record, invite, { lang: dmLanguage(guild.id, targetUser.id) }), dmComponentsFor(flow, record));
 
     try {
         await targetMember.kick(`${record.case_code}: ${record.reason} (by ${moderator.user.username})`.slice(0, 512));
@@ -464,7 +468,7 @@ async function doMute({ guild, moderator, targetUser, targetMember, flow }) {
             `Could not add the muted role: ${error.message}`, { expected: true });
     }
 
-    const dmDelivered = await sendDm(targetUser, muteDm(record), dmComponentsFor(flow, record));
+    const dmDelivered = await sendDm(targetUser, muteDm(record, { lang: dmLanguage(guild.id, targetUser.id) }), dmComponentsFor(flow, record));
     await setDmDelivered(record.id, dmDelivered);
     record = { ...record, dm_delivered: dmDelivered };
     await logEnforcement(guild.client, guild.id, 'mute', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator) });
@@ -565,7 +569,7 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
     const notes = [];
 
     if (!banRecord) {
-        const dmDelivered = await sendDm(targetUser, warnDm(warnRecord, preview.warnNumber), dmComponentsFor(flow, warnRecord));
+        const dmDelivered = await sendDm(targetUser, warnDm(warnRecord, preview.warnNumber, { lang: dmLanguage(guild.id, targetUser.id) }), dmComponentsFor(flow, warnRecord));
         await setDmDelivered(warnRecord.id, dmDelivered);
         const record = { ...warnRecord, dm_delivered: dmDelivered };
         await syncWarnRolesQuietly(guild, targetUser.id);

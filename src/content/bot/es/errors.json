@@ -1,0 +1,70 @@
+{
+    "title": {
+        "validation": "Datos no válidos",
+        "permission": "Permiso denegado",
+        "configuration": "Error de configuración",
+        "database": "Error de base de datos",
+        "network": "Error de red",
+        "discord_api": "Error de Discord",
+        "user_input": "Error en los datos",
+        "rate_limit": "Demasiado rápido",
+        "unknown": "Algo salió mal"
+    },
+    "message": {
+        "validation": {
+            "default": "Revisa lo que escribiste e inténtalo de nuevo.",
+            "missing_required": "Falta información obligatoria. Revisa las opciones del comando e inténtalo de nuevo.",
+            "invalid_format": "El formato no es correcto. Revisa cómo se usa el comando e inténtalo de nuevo."
+        },
+        "permission": {
+            "default": "No tienes permiso para hacer eso.",
+            "user_permission": "No tienes permiso para usar este comando.",
+            "bot_permission": "No tengo los permisos necesarios para hacer eso en este canal."
+        },
+        "configuration": {
+            "default": "Esta función aún no está configurada. Pide a un administrador del servidor que la configure.",
+            "missing_config": "Esta función aún no se ha configurado. Pide a un administrador del servidor que la configure.",
+            "invalid_config": "La configuración de esta función no es válida. Pide a un administrador del servidor que la revise."
+        },
+        "database": {
+            "default": "Algo salió mal al guardar los datos. Inténtalo de nuevo en un momento.",
+            "connection_failed": "No pude conectar con la base de datos. Inténtalo más tarde.",
+            "timeout": "Eso tardó demasiado. Inténtalo de nuevo."
+        },
+        "network": {
+            "default": "No pude conectar con un servicio externo. Inténtalo de nuevo en un momento.",
+            "timeout": "La solicitud tardó demasiado. Inténtalo de nuevo.",
+            "unreachable": "El servicio no está disponible ahora. Inténtalo más tarde."
+        },
+        "discord_api": {
+            "default": "Discord rechazó la solicitud. Inténtalo de nuevo en un momento.",
+            "rate_limit": "Vas demasiado rápido. Espera un momento e inténtalo de nuevo.",
+            "forbidden": "No puedo hacer eso aquí. Revisa los permisos de mi rol."
+        },
+        "user_input": {
+            "default": "Hay un problema con tu solicitud. Revisa lo que escribiste e inténtalo de nuevo.",
+            "invalid_user": "No encontré a ese usuario. Revisa la mención o el ID e inténtalo de nuevo.",
+            "invalid_channel": "No encontré ese canal. Revisa la mención o el ID e inténtalo de nuevo."
+        },
+        "rate_limit": {
+            "default": "Vas demasiado rápido. Espera un momento e inténtalo de nuevo.",
+            "command_cooldown": "Este comando está en pausa. Espera antes de usarlo otra vez.",
+            "global_rate_limit": "Discord está limitando las solicitudes. Espera un momento e inténtalo de nuevo."
+        },
+        "unknown": {
+            "default": "Algo salió mal. Inténtalo de nuevo en un momento.",
+            "unexpected": "Ocurrió un error inesperado. Inténtalo más tarde.",
+            "warn_failed": "No pude advertir a ese miembro. Revisa mis permisos y el orden de los roles, y vuelve a intentarlo.",
+            "kick_failed": "No pude expulsar a ese miembro. Revisa mis permisos y el orden de los roles, y vuelve a intentarlo.",
+            "ban_failed": "No pude banear a ese miembro. Revisa mis permisos y el orden de los roles, y vuelve a intentarlo.",
+            "unban_failed": "No pude desbanear a ese usuario. Revisa mis permisos e inténtalo de nuevo.",
+            "timeout_failed": "No pude aislar temporalmente a ese miembro. Revisa mis permisos y el orden de los roles, y vuelve a intentarlo.",
+            "untimeout_failed": "No pude quitar el aislamiento temporal. Revisa mis permisos e inténtalo de nuevo."
+        }
+    },
+    "access": {
+        "adminChannel": "Necesitas el rol de Administrador para usar este comando. Pide un rol de mod o admin aquí: <#{channelId}>",
+        "admin": "Necesitas el rol de Administrador para usar este comando.",
+        "adminOther": "Necesitas el rol de Administrador para usar este comando. Pide acceso a un admin de este servidor si lo necesitas."
+    }
+}

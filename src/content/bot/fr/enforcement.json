@@ -1,0 +1,84 @@
+{
+    "dm": {
+        "appealHere": "**Faire appel ici :** {invite}",
+        "cannotAppeal": "Ce bannissement ne peut pas faire l’objet d’un appel.",
+        "by": "Par : {name}",
+        "reason": "Raison : {reason}",
+        "rule": "Règle",
+        "date": "Date : {date}",
+        "duration": "Durée : {duration}, se termine le {end}",
+        "durationPermanent": "Durée : définitive",
+        "caseCode": "Code du dossier : {code}",
+        "rejoin": "Revenir : {invite}",
+        "record": "Ton dossier complet : <{url}>",
+        "privacy": "-# Confidentialité : <{url}>",
+        "ban": {
+            "title": "**Banni de {server}**",
+            "autoNote": "Faire appel de ce code retire aussi l’avertissement qui a causé ce bannissement.",
+            "appealUntil": "Tu peux faire appel jusqu’au {date}."
+        },
+        "kick": {
+            "title": "**Expulsé de {server}**",
+            "noInvite": "Revenir : demande une invitation à un membre de l’équipe"
+        },
+        "mute": {
+            "title": "**Rendu muet dans {server}**"
+        },
+        "warn": {
+            "title": "**Avertissement {number} sur {limit} dans {server}**",
+            "limit": "À {limit} avertissements, tu seras banni."
+        },
+        "appealAccepted": {
+            "title": "**Appel accepté**",
+            "noInvite": "Demande une invitation pour revenir à un membre de l’équipe sur le serveur d’aide."
+        },
+        "appealDenied": "**Appel refusé.** Si tu penses que c’est une erreur, fais appel à nouveau ici :\n{invite}",
+        "banEnded": {
+            "title": "**Ton bannissement de {server} est terminé**",
+            "early": "Un modérateur l’a levé plus tôt.",
+            "expired": "Il a expiré.",
+            "noInvite": "Revenir : demande une invitation sur le serveur d’aide : {invite}"
+        },
+        "muteEnded": {
+            "title": "**Ton mute dans {server} est terminé**",
+            "early": "Un modérateur l’a levé plus tôt. Tu peux de nouveau écrire.",
+            "expired": "Il a expiré. Tu peux de nouveau écrire."
+        },
+        "voided": {
+            "title": {
+                "ban": "**Un bannissement a été retiré de ton dossier dans {server}**",
+                "kick": "**Une expulsion a été retirée de ton dossier dans {server}**",
+                "mute": "**Un mute a été retiré de ton dossier dans {server}**",
+                "warn": "**Un avertissement a été retiré de ton dossier dans {server}**",
+                "generic": "**Une entrée ({type}) a été retirée de ton dossier dans {server}**"
+            },
+            "reason": "Raison : {reason}",
+            "mistake": "L’équipe l’a retiré car c’était une erreur. Il ne compte plus contre toi.",
+            "unbanned": "Tu as été débanni. Revenir : {invite}"
+        }
+    },
+    "duration": {
+        "permanent": "Définitif",
+        "lessThanMinute": "moins d’une minute",
+        "month": {
+            "one": "{count} mois",
+            "many": "{count} mois",
+            "other": "{count} mois"
+        },
+        "day": {
+            "one": "{count} jour",
+            "many": "{count} jours",
+            "other": "{count} jours"
+        },
+        "hour": {
+            "one": "{count} heure",
+            "many": "{count} heures",
+            "other": "{count} heures"
+        },
+        "minute": {
+            "one": "{count} minute",
+            "many": "{count} minutes",
+            "other": "{count} minutes"
+        }
+    }
+}

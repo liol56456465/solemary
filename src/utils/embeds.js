@@ -2,6 +2,7 @@
 
 import { EmbedBuilder } from 'discord.js';
 import { getColor, botConfig } from '../config/bot.js';
+import { botText } from './botText.js';
 
 // No global EmbedBuilder patches: an earlier version stripped every emoji from
 // titles, fields and descriptions and silently dropped footers and timestamps.
@@ -172,11 +173,14 @@ const USER_ERROR_COLORS = {
  * Build a consistent user-facing error embed.
  * @param {string} errorType - Error category key (e.g. validation, permission)
  * @param {string} [description] - Specific, actionable message for the user
- * @param {{ titleOverride?: string }} [options]
+ * @param {{ titleOverride?: string, lang?: string }} [options]  lang: the title's language
+ *   (utils/botText.js; src/content/bot/<lang>/errors.json title.*). English = USER_ERROR_TITLES.
  */
 export function buildUserErrorEmbed(errorType, description = '', options = {}) {
   const type = errorType || 'unknown';
-  const title = options.titleOverride || USER_ERROR_TITLES[type] || USER_ERROR_TITLES.unknown;
+  const titleKey = Object.hasOwn(USER_ERROR_TITLES, type) ? type : 'unknown';
+  const title = options.titleOverride
+    || (options.lang && options.lang !== 'en' ? botText(options.lang).t(`errors.title.${titleKey}`) : USER_ERROR_TITLES[titleKey]);
   const color = USER_ERROR_COLORS[type] || 'error';
   const body = description ? String(description).trim() : undefined;
 

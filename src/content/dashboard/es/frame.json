@@ -52,6 +52,7 @@
       "help": "Glosario",
       "modules": "Todos los módulos",
       "appearance": "El bot en este servidor",
+      "bot-language": "Idioma del bot",
       "commands": "Comandos",
       "audit": "Registro de auditoría",
       "backup": "Copia de seguridad de ajustes",
