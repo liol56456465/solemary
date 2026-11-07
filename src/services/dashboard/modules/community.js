@@ -9,13 +9,16 @@ import { STICKY_MAX_LENGTH } from '../../community/stickyService.js';
 import { TAG_CONTENT_MAX, TRIGGER_KINDS } from '../../community/tagService.js';
 import { SUGGESTION_REASON_MAX, SUGGESTION_STATUSES } from '../../community/suggestionService.js';
 import { FEED_TEMPLATE_MAX } from '../../community/feedService.js';
-import { formatDate, html } from '../html.js';
+import { html } from '../html.js';
 import {
     InputError, PERMS, buttonForm, channelField, channelListField, channelName, channelPicker, choiceField, intField, multiline, numberInput, postForm,
     selectInput, text, textArea, textInput,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { section, table } from './common.js';
+import { textFor } from '../language.js';
+
+// Words: src/content/dashboard/<lang>/community.json (trigger kinds and statuses stay codes in the form values).
 
 const clip = (value, max = 120) => {
     const t = String(value ?? '').replace(/\s+/g, ' ');
@@ -23,29 +26,41 @@ const clip = (value, max = 120) => {
 };
 
 const OPEN_SUGGESTIONS_SHOWN = 25;
-const TRIGGER_HELP = 'none: only posted with /tag show. word: replies when a message contains the word or phrase below. regex: replies when a message matches a pattern (for advanced users).';
-const STATUS_CHOICES = { approved: 'Approve', denied: 'Deny', considering: 'Under consideration' };
-const STATUS_TEXT = { pending: 'open for votes', considering: 'under consideration', approved: 'approved', denied: 'denied' };
+
+/** The words for the trigger kinds (TRIGGER_KINDS), the decisions and the suggestion states. */
+function words(tr) {
+    return {
+        kind: { none: tr.t('community.tag.kind.none'), word: tr.t('community.tag.kind.word'), regex: tr.t('community.tag.kind.regex') },
+        choice: { approved: tr.t('community.open.choice.approved'), denied: tr.t('community.open.choice.denied'), considering: tr.t('community.open.choice.considering') },
+        status: { pending: tr.t('community.open.status.pending'), considering: tr.t('community.open.status.considering'), approved: tr.t('community.open.status.approved'), denied: tr.t('community.open.status.denied') },
+    };
+}
 
 function openSuggestionsSection(ctx, open) {
+    const tr = textFor(ctx);
+    const w = words(tr);
     const canDecide = ctx.canEdit && ctx.canAct;
-    if (!open.length) return html`<p class="muted">No open suggestions.</p>`;
-    const blocks = open.map((row) => html`<details class="sub" data-key="suggestion-${row.id}"><summary>#${row.id} · ${clip(row.content, 80)} · ${row.upvotes ?? 0} up, ${row.downvotes ?? 0} down · ${STATUS_TEXT[row.status] || row.status}</summary>
+    if (!open.length) return html`<p class="muted">${tr.tx('community.open.empty')}</p>`;
+    const blocks = open.map((row) => html`<details class="sub" data-key="suggestion-${row.id}"><summary>#${row.id} · ${clip(row.content, 80)} · ${tr.tx('community.open.votes', { up: tr.fmtNumber(row.upvotes ?? 0), down: tr.fmtNumber(row.downvotes ?? 0) })} · ${w.status[row.status] || row.status}</summary>
 <p class="value">${row.content}</p>
-<p class="muted">By ${ctx.client?.users?.cache?.get?.(row.user_id)?.username || row.user_id}${row.created_at ? html` on ${formatDate(row.created_at)}` : ''}${row.channel_id ? html` in ${channelName(ctx.guild, row.channel_id)}` : ''}.</p>
+<p class="muted">${tr.tx('community.open.by', {
+        user: ctx.client?.users?.cache?.get?.(row.user_id)?.username || row.user_id,
+        date: row.created_at ? tr.tx('community.open.onDate', { date: tr.fmtDateTime(row.created_at) }) : '',
+        channel: row.channel_id ? tr.tx('community.open.inChannel', { channel: channelName(ctx.guild, row.channel_id) }) : '',
+    })}</p>
 ${postForm(ctx, 'community', 'suggestion-status', html`<div class="grid">
-${selectInput('status', 'approved', SUGGESTION_STATUSES.map((st) => [st, STATUS_CHOICES[st] || st]), { label: 'Decision' })}
-${textArea('reason', row.status_reason || '', { label: 'Reason', max: SUGGESTION_REASON_MAX, rows: 2, help: 'Shown on the suggestion and sent to the member who made it.' })}</div>`,
-        { submit: 'Send decision', hidden: { id: row.id }, canEdit: canDecide })}</details>`);
-    return html`${open.length >= OPEN_SUGGESTIONS_SHOWN ? html`<p class="muted">Newest ${OPEN_SUGGESTIONS_SHOWN} shown.</p>` : ''}${blocks}
-${canDecide ? '' : html`<p class="muted">To decide suggestions you need the Administrator permission in this server.</p>`}`;
+${selectInput('status', 'approved', SUGGESTION_STATUSES.map((st) => [st, w.choice[st] || st]), { label: tr.t('community.open.decision') })}
+${textArea('reason', row.status_reason || '', { label: tr.t('community.open.reason'), max: SUGGESTION_REASON_MAX, rows: 2, help: tr.t('community.open.reasonHelp') })}</div>`,
+        { submit: tr.t('community.open.submit'), hidden: { id: row.id }, canEdit: canDecide })}</details>`);
+    return html`${open.length >= OPEN_SUGGESTIONS_SHOWN ? html`<p class="muted">${tr.tx('community.open.newestShown', { count: tr.fmtNumber(OPEN_SUGGESTIONS_SHOWN) })}</p>` : ''}${blocks}
+${canDecide ? '' : html`<p class="muted">${tr.tx('community.open.needsAdmin')}</p>`}`;
 }
 
 async function updateSettings(ctx, patch, message) {
     const before = ctx.services.getCommunitySettings(ctx.guildId);
     const after = await ctx.services.updateCommunitySettings(ctx.guildId, patch, ctx.actor.userId);
     const changes = diffSnapshots(before, after, Object.keys(patch), 'community.');
-    return { changes, message: changes.length ? message : 'Nothing changed.' };
+    return { changes, message: changes.length ? message : textFor(ctx).t('community.action.nothing') };
 }
 
 export default {
@@ -65,98 +80,110 @@ export default {
 
     render(ctx, { settings: s, stickies, tags, feeds, openSuggestions = [] }) {
         const g = ctx.guild;
-        const suggestions = postForm(ctx, 'community', 'suggestions', html`<div class="grid">${channelPicker(g, 'channelId', s.suggestionsChannelId, { label: 'Suggestions channel', perms: PERMS.post, noneLabel: 'off', help: 'Where new suggestions are posted for members to vote on.' })}</div>`);
+        const tr = textFor(ctx);
+        const w = words(tr);
+        const kinds = TRIGGER_KINDS.map((k) => [k, w.kind[k] || k]);
+        const triggerHelp = tr.t('community.tag.triggerHelp');
+        const suggestions = postForm(ctx, 'community', 'suggestions', html`<div class="grid">${channelPicker(g, 'channelId', s.suggestionsChannelId, { label: tr.t('community.suggestions.channel'), perms: PERMS.post, noneLabel: tr.t('community.suggestions.off'), help: tr.t('community.suggestions.channelHelp') })}</div>`);
+        // `reset`: a translated "Save" is not recognised by its word (forms.js postForm).
         const starboard = html`${postForm(ctx, 'community', 'starboard', html`<div class="grid">
-${channelPicker(g, 'channelId', s.starboardChannelId, { label: 'Starboard channel', perms: PERMS.post, optional: false, help: 'Where the popular messages are copied to.' })}
-${textInput('emoji', s.starboardEmoji, { label: 'Emoji', max: 64, help: 'The reaction that counts, for example ⭐.' })}
-${numberInput('threshold', s.starboardThreshold, { label: 'Reactions needed', min: 1, max: STARBOARD_MAX_THRESHOLD, help: 'How many of those reactions a message needs before it is copied.' })}</div>`, { submit: s.starboardChannelId ? 'Save' : 'Turn on' })}
-${s.starboardChannelId ? buttonForm(ctx, 'community', 'starboard-off', 'Turn starboard off') : html`<p class="muted">Starboard is off.</p>`}`;
-        const stickyRows = stickies.map((st) => [channelName(g, st.channelId), clip(st.content), buttonForm(ctx, 'community', 'sticky-remove', 'Remove', { channelId: st.channelId }, { confirm: 'Remove this sticky message?' })]);
-        const stickyEdits = stickies.map((st) => html`<details class="sub" data-key="sticky-${st.channelId}"><summary>Edit the sticky in ${channelName(g, st.channelId)}</summary>
-${postForm(ctx, 'community', 'sticky-set', textArea('content', st.content, { label: 'Sticky message', max: STICKY_MAX_LENGTH, rows: 3 }), { submit: 'Save sticky', hidden: { channelId: st.channelId } })}</details>`);
-        const sticky = html`${table(['Channel', 'Message', ''], stickyRows, 'No sticky messages.')}${stickyEdits}
-<h3>New sticky</h3>
-${postForm(ctx, 'community', 'sticky-set', html`<div class="grid">${channelPicker(g, 'channelId', null, { label: 'Channel', perms: [...PERMS.post, 'ManageMessages'], optional: false, help: 'Mewvo needs the Manage Messages permission here to remove its old copy.' })}
-${textArea('content', '', { label: 'Sticky message', max: STICKY_MAX_LENGTH, rows: 3, help: 'If the channel already has a sticky message, this replaces it.' })}</div>`, { submit: 'Set sticky' })}`;
-        const tagRows = tags.map((t) => [html`<code>${t.name}</code>`, clip(t.content), t.triggerKind === 'none' ? '-' : `${t.triggerKind}: ${clip(t.trigger, 40)}`,
-            buttonForm(ctx, 'community', 'tag-delete', 'Delete', { name: t.name }, { confirm: `Delete the tag "${t.name}"?` })]);
-        const tagEdits = tags.map((t) => html`<details class="sub" data-key="tag-${t.name}"><summary>Edit <code>${t.name}</code></summary>
+${channelPicker(g, 'channelId', s.starboardChannelId, { label: tr.t('community.starboard.channel'), perms: PERMS.post, optional: false, help: tr.t('community.starboard.channelHelp') })}
+${textInput('emoji', s.starboardEmoji, { label: tr.t('community.starboard.emoji'), max: 64, help: tr.t('community.starboard.emojiHelp') })}
+${numberInput('threshold', s.starboardThreshold, { label: tr.t('community.starboard.threshold'), min: 1, max: STARBOARD_MAX_THRESHOLD, help: tr.t('community.starboard.thresholdHelp') })}</div>`, { submit: s.starboardChannelId ? tr.t('community.starboard.save') : tr.t('community.starboard.turnOn'), reset: Boolean(s.starboardChannelId) })}
+${s.starboardChannelId ? buttonForm(ctx, 'community', 'starboard-off', tr.t('community.starboard.turnOff')) : html`<p class="muted">${tr.tx('community.starboard.isOff')}</p>`}`;
+        const stickyRows = stickies.map((st) => [channelName(g, st.channelId), clip(st.content), buttonForm(ctx, 'community', 'sticky-remove', tr.t('community.remove'), { channelId: st.channelId }, { confirm: tr.t('community.sticky.removeConfirm') })]);
+        const stickyEdits = stickies.map((st) => html`<details class="sub" data-key="sticky-${st.channelId}"><summary>${tr.tx('community.sticky.editIn', { channel: channelName(g, st.channelId) })}</summary>
+${postForm(ctx, 'community', 'sticky-set', textArea('content', st.content, { label: tr.t('community.sticky.message'), max: STICKY_MAX_LENGTH, rows: 3 }), { submit: tr.t('community.sticky.save'), reset: true, hidden: { channelId: st.channelId } })}</details>`);
+        const sticky = html`${table([tr.t('community.sticky.channel'), tr.t('community.sticky.messageColumn'), ''], stickyRows, tr.t('community.sticky.empty'))}${stickyEdits}
+<h3>${tr.tx('community.sticky.new')}</h3>
+${postForm(ctx, 'community', 'sticky-set', html`<div class="grid">${channelPicker(g, 'channelId', null, { label: tr.t('community.sticky.channel'), perms: [...PERMS.post, 'ManageMessages'], optional: false, help: tr.t('community.sticky.channelHelp') })}
+${textArea('content', '', { label: tr.t('community.sticky.message'), max: STICKY_MAX_LENGTH, rows: 3, help: tr.t('community.sticky.messageHelp') })}</div>`, { submit: tr.t('community.sticky.set') })}`;
+        const tagRows = tags.map((t) => [html`<code>${t.name}</code>`, clip(t.content), t.triggerKind === 'none' ? '-' : tr.t('community.tag.triggerCell', { kind: w.kind[t.triggerKind] || t.triggerKind, trigger: clip(t.trigger, 40) }),
+            buttonForm(ctx, 'community', 'tag-delete', tr.t('community.tag.delete'), { name: t.name }, { confirm: tr.t('community.tag.deleteConfirm', { name: t.name }) })]);
+        const tagEdits = tags.map((t) => html`<details class="sub" data-key="tag-${t.name}"><summary>${tr.tx('community.tag.edit', { name: html`<code>${t.name}</code>` })}</summary>
 ${postForm(ctx, 'community', 'tag-edit', html`<div class="grid">
-${selectInput('triggerKind', t.triggerKind || 'none', TRIGGER_KINDS.map((k) => [k, k]), { label: 'Reply by itself', help: TRIGGER_HELP })}
-${textInput('trigger', t.trigger || '', { label: 'Word or pattern', max: 200 })}
-${numberInput('cooldownS', t.cooldownS ?? '', { label: 'Wait between replies (seconds)', min: 0, max: 86400, help: 'After replying in a channel, the tag waits this long before it replies there again.' })}
-${channelPicker(g, 'allowChannels', t.allowChannels || [], { label: 'Only in these channels', kinds: ['text', 'category'], perms: PERMS.post, multiple: true, help: 'Pick none to allow every channel.' })}
-${channelPicker(g, 'denyChannels', t.denyChannels || [], { label: 'Never in these channels', kinds: ['text', 'category'], perms: [], multiple: true })}
-${textArea('content', t.content, { label: 'Text', max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: 'Save tag', hidden: { name: t.name } })}</details>`);
-        const tagForms = html`${table(['Name', 'Content', 'Trigger', ''], tagRows, 'No tags.')}${tagEdits}
-<h3>New tag</h3>
-${postForm(ctx, 'community', 'tag-create', html`<div class="grid">${textInput('name', '', { label: 'Name', max: 32, help: 'Members post the tag with /tag show and this name. Small letters, numbers, - and _ only, like rules or how-to-join.' })}
-${selectInput('triggerKind', 'none', TRIGGER_KINDS.map((k) => [k, k]), { label: 'Reply by itself', help: TRIGGER_HELP })}
-${textInput('trigger', '', { label: 'Word or pattern', max: 200 })}
-${numberInput('cooldownS', '', { label: 'Wait between replies (seconds)', min: 0, max: 86400, help: 'After replying in a channel, the tag waits this long before it replies there again. Leave empty for the default.' })}
-${textArea('content', '', { label: 'Text', max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: 'Create tag' })}`;
-        const feedRows = feeds.map((f) => [`#${f.id}`, html`<code>${f.sourceId}</code>`, channelName(g, f.channelId), clip(f.template || 'default message', 60),
-            buttonForm(ctx, 'community', 'feed-remove', 'Remove', { id: f.id }, { confirm: 'Remove this feed?' })]);
-        const feedForms = html`${table(['Feed', 'YouTube channel', 'Posts in', 'Message', ''], feedRows, 'No feeds.')}
-${postForm(ctx, 'community', 'feed-add', html`<div class="grid">${textInput('source', '', { label: 'YouTube channel', max: 200, help: 'The link to the YouTube channel, or its channel ID (it starts with UC).' })}
-${channelPicker(g, 'channelId', null, { label: 'Post in', perms: PERMS.post, optional: false, help: 'Where new videos are announced.' })}
-${textArea('template', '', { label: 'Message', max: FEED_TEMPLATE_MAX, rows: 2, help: 'Leave empty for the default message. You can use {author} (the channel name), {title} (the video title) and {url} (the link to the video).' })}</div>`, { submit: 'Add feed' })}`;
-        return html`${section('Suggestions', suggestions, 'Members share ideas with /suggest new in Discord. Each idea is posted in this channel, and members vote with the buttons under it.')}
-${section(`Open suggestions (${openSuggestions.length})`, openSuggestionsSection(ctx, openSuggestions), 'Approving or denying ends the voting. The suggestion message is updated and the member who made it gets a private message (DM). You can also do this with /suggest status in Discord.', { key: 'open-suggestions' })}
-${section('Starboard', starboard, 'When a message gets enough of one reaction, Mewvo copies it to the starboard channel, so the best moments are easy to find.')}${section('Sticky messages', sticky, 'A sticky message stays at the bottom of a channel. When members write, Mewvo posts it again under their messages, so rules or notes are always easy to see.')}${section('Tags', tagForms, 'Saved answers members can post with /tag show. A tag can also reply by itself when someone writes a certain word.')}${section('YouTube feeds', feedForms, 'Mewvo announces new videos from a YouTube channel. It checks every 15 minutes.')}`;
+${selectInput('triggerKind', t.triggerKind || 'none', kinds, { label: tr.t('community.tag.replyByItself'), help: triggerHelp })}
+${textInput('trigger', t.trigger || '', { label: tr.t('community.tag.trigger'), max: 200 })}
+${numberInput('cooldownS', t.cooldownS ?? '', { label: tr.t('community.tag.cooldown'), min: 0, max: 86400, help: tr.t('community.tag.cooldownHelp') })}
+${channelPicker(g, 'allowChannels', t.allowChannels || [], { label: tr.t('community.tag.allowChannels'), kinds: ['text', 'category'], perms: PERMS.post, multiple: true, help: tr.t('community.tag.allowChannelsHelp') })}
+${channelPicker(g, 'denyChannels', t.denyChannels || [], { label: tr.t('community.tag.denyChannels'), kinds: ['text', 'category'], perms: [], multiple: true })}
+${textArea('content', t.content, { label: tr.t('community.tag.text'), max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: tr.t('community.tag.save'), reset: true, hidden: { name: t.name } })}</details>`);
+        const tagForms = html`${table([tr.t('community.tag.name'), tr.t('community.tag.content'), tr.t('community.tag.triggerColumn'), ''], tagRows, tr.t('community.tag.empty'))}${tagEdits}
+<h3>${tr.tx('community.tag.new')}</h3>
+${postForm(ctx, 'community', 'tag-create', html`<div class="grid">${textInput('name', '', { label: tr.t('community.tag.name'), max: 32, help: tr.t('community.tag.nameHelp') })}
+${selectInput('triggerKind', 'none', kinds, { label: tr.t('community.tag.replyByItself'), help: triggerHelp })}
+${textInput('trigger', '', { label: tr.t('community.tag.trigger'), max: 200 })}
+${numberInput('cooldownS', '', { label: tr.t('community.tag.cooldown'), min: 0, max: 86400, help: tr.t('community.tag.cooldownNewHelp') })}
+${textArea('content', '', { label: tr.t('community.tag.text'), max: TAG_CONTENT_MAX, rows: 3 })}</div>`, { submit: tr.t('community.tag.create') })}`;
+        const feedRows = feeds.map((f) => [`#${f.id}`, html`<code>${f.sourceId}</code>`, channelName(g, f.channelId), clip(f.template || tr.t('community.feed.defaultMessage'), 60),
+            buttonForm(ctx, 'community', 'feed-remove', tr.t('community.remove'), { id: f.id }, { confirm: tr.t('community.feed.removeConfirm') })]);
+        const feedForms = html`${table([tr.t('community.feed.feed'), tr.t('community.feed.source'), tr.t('community.feed.postsIn'), tr.t('community.feed.message'), ''], feedRows, tr.t('community.feed.empty'))}
+${postForm(ctx, 'community', 'feed-add', html`<div class="grid">${textInput('source', '', { label: tr.t('community.feed.source'), max: 200, help: tr.t('community.feed.sourceHelp') })}
+${channelPicker(g, 'channelId', null, { label: tr.t('community.feed.postIn'), perms: PERMS.post, optional: false, help: tr.t('community.feed.postInHelp') })}
+${textArea('template', '', { label: tr.t('community.feed.message'), max: FEED_TEMPLATE_MAX, rows: 2, help: tr.t('community.feed.messageHelp', { author: '{author}', title: '{title}', url: '{url}' }) })}</div>`, { submit: tr.t('community.feed.add') })}`;
+        // Explicit keys: the card ids stay the English slugs in every language.
+        return html`${section(tr.t('community.suggestions.title'), suggestions, tr.t('community.suggestions.help'), { key: 'suggestions' })}
+${section(tr.t('community.open.title', { count: tr.fmtNumber(openSuggestions.length) }), openSuggestionsSection(ctx, openSuggestions), tr.t('community.open.help'), { key: 'open-suggestions' })}
+${section(tr.t('community.starboard.title'), starboard, tr.t('community.starboard.help'), { key: 'starboard' })}${section(tr.t('community.sticky.title'), sticky, tr.t('community.sticky.help'), { key: 'sticky-messages' })}${section(tr.t('community.tag.title'), tagForms, tr.t('community.tag.help'), { key: 'tags' })}${section(tr.t('community.feed.title'), feedForms, tr.t('community.feed.help'), { key: 'youtube-feeds' })}`;
     },
 
     actions: {
         'suggestion-status': {
             admin: true,
             async run(ctx, form) {
-                const id = intField(form, 'id', { min: 1, max: 2147483647, label: 'Suggestion' });
-                const status = choiceField(form, 'status', SUGGESTION_STATUSES, 'Decision');
+                const tr = textFor(ctx);
+                const id = intField(form, 'id', { min: 1, max: 2147483647, label: tr.t('community.action.suggestion') });
+                const status = choiceField(form, 'status', SUGGESTION_STATUSES, tr.t('community.open.decision'));
                 const reason = multiline(form, 'reason', SUGGESTION_REASON_MAX + 1);
-                if (reason.length > SUGGESTION_REASON_MAX) throw new InputError(`The reason is limited to ${SUGGESTION_REASON_MAX} characters.`, 400, 'reason');
+                if (reason.length > SUGGESTION_REASON_MAX) throw new InputError(tr.t('community.action.reasonTooLong', { max: tr.fmtNumber(SUGGESTION_REASON_MAX) }), 400, 'reason');
                 const before = await ctx.services.getSuggestion(ctx.guildId, id);
-                if (!before) throw new InputError(`There is no suggestion #${id} in this server.`);
+                if (!before) throw new InputError(tr.t('community.action.noSuggestion', { id }));
                 const decided = await ctx.services.decideSuggestion({ client: ctx.client, guild: ctx.guild, suggestionId: id, status, reason, decidedBy: ctx.actor.userId });
-                if (!decided) throw new InputError(`There is no suggestion #${id} in this server.`);
+                if (!decided) throw new InputError(tr.t('community.action.noSuggestion', { id }));
                 const { row, edited, dmed } = decided;
                 const warnings = [];
-                if (!edited) warnings.push('The suggestion message could not be updated (deleted or no access).');
-                if (!dmed) warnings.push('The author could not be DMed.');
+                if (!edited) warnings.push(tr.t('community.action.notUpdated'));
+                if (!dmed) warnings.push(tr.t('community.action.notDmed'));
+                const state = words(tr).status[row.status] || row.status;
                 return {
                     changes: [{ key: `suggestion.${id}`, old: { status: before.status, reason: before.status_reason ?? null }, new: { status: row.status, reason: row.status_reason ?? null } }],
-                    message: `Suggestion #${id}: ${STATUS_TEXT[row.status] || row.status}.${dmed ? ' The author was told by DM.' : ''}`,
+                    message: tr.t(dmed ? 'community.action.decidedDm' : 'community.action.decided', { id, status: state }),
                     warnings,
                 };
             },
         },
         async suggestions(ctx, form) {
-            const channelId = channelField(ctx.guild, form, 'channelId', { label: 'Suggestions channel' });
-            return updateSettings(ctx, { suggestionsChannelId: channelId }, channelId ? 'Suggestions channel saved.' : 'Suggestions are off.');
+            const tr = textFor(ctx);
+            const channelId = channelField(ctx.guild, form, 'channelId', { label: tr.t('community.suggestions.channel') });
+            return updateSettings(ctx, { suggestionsChannelId: channelId }, tr.t(channelId ? 'community.action.suggestionsSaved' : 'community.action.suggestionsOff'));
         },
         async starboard(ctx, form) {
-            const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: 'Starboard channel' });
-            const threshold = intField(form, 'threshold', { min: 1, max: STARBOARD_MAX_THRESHOLD, label: 'Reactions needed' });
+            const tr = textFor(ctx);
+            const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: tr.t('community.starboard.channel') });
+            const threshold = intField(form, 'threshold', { min: 1, max: STARBOARD_MAX_THRESHOLD, label: tr.t('community.starboard.threshold') });
             const patch = ctx.services.starboardSettingsPatch({ channelId, emoji: text(form, 'emoji', 64) || null, threshold });
-            return updateSettings(ctx, patch, 'Starboard saved.');
+            return updateSettings(ctx, patch, tr.t('community.action.starboardSaved'));
         },
         async 'starboard-off'(ctx) {
-            return updateSettings(ctx, { starboardChannelId: null }, 'Starboard is off. Existing starboard posts stay.');
+            return updateSettings(ctx, { starboardChannelId: null }, textFor(ctx).t('community.action.starboardOff'));
         },
         async 'sticky-set'(ctx, form) {
-            const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: 'Channel' });
+            const tr = textFor(ctx);
+            const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: tr.t('community.sticky.channel') });
             const content = multiline(form, 'content', STICKY_MAX_LENGTH + 1);
             const before = ctx.services.listStickies(ctx.guildId).find((st) => st.channelId === channelId)?.content ?? null;
             const { posted } = await ctx.services.setSticky({ guildId: ctx.guildId, channel: ctx.guild.channels.cache.get(channelId), content, updatedBy: ctx.actor.userId });
-            const result = { changes: before === content.trim() ? [] : [{ key: `sticky.${channelId}`, old: before, new: content.trim() }], message: 'Sticky message saved.' };
-            if (!posted) result.warnings = ['It could not be posted right now (check my permissions there); it will be posted after the next message.'];
+            const result = { changes: before === content.trim() ? [] : [{ key: `sticky.${channelId}`, old: before, new: content.trim() }], message: tr.t('community.action.stickySaved') };
+            if (!posted) result.warnings = [tr.t('community.action.stickyNotPosted')];
             return result;
         },
         async 'sticky-remove'(ctx, form) {
+            const tr = textFor(ctx);
             const channelId = text(form, 'channelId', 25);
             const before = ctx.services.listStickies(ctx.guildId).find((st) => st.channelId === channelId);
-            if (!before) throw new InputError('That channel has no sticky message.');
+            if (!before) throw new InputError(tr.t('community.action.noSticky'));
             await ctx.services.removeSticky({ channelId, channel: ctx.guild?.channels?.cache?.get(channelId) || null });
-            return { changes: [{ key: `sticky.${channelId}`, old: before.content, new: null }], message: 'Sticky message removed.' };
+            return { changes: [{ key: `sticky.${channelId}`, old: before.content, new: null }], message: tr.t('community.action.stickyRemoved') };
         },
         async 'tag-create'(ctx, form) {
             const triggerKind = text(form, 'triggerKind', 10) || 'none';
@@ -166,59 +193,62 @@ ${section('Starboard', starboard, 'When a message gets enough of one reaction, M
                 content: multiline(form, 'content', TAG_CONTENT_MAX + 1),
                 triggerKind,
                 trigger: triggerKind === 'none' ? null : text(form, 'trigger', 200),
-                cooldownS: intField(form, 'cooldownS', { min: 0, max: 86400, label: 'Wait between replies', fallback: null }),
+                cooldownS: intField(form, 'cooldownS', { min: 0, max: 86400, label: textFor(ctx).t('community.action.cooldownLabel'), fallback: null }),
                 createdBy: ctx.actor.userId,
             });
-            return { changes: [{ key: `tag.${tag?.name}`, old: null, new: tag?.content ?? null }], message: `Tag "${tag?.name}" created.` };
+            return { changes: [{ key: `tag.${tag?.name}`, old: null, new: tag?.content ?? null }], message: textFor(ctx).t('community.action.tagCreated', { name: tag?.name }) };
         },
         async 'tag-edit'(ctx, form) {
+            const tr = textFor(ctx);
             const name = text(form, 'name', 40).toLowerCase();
             const before = ctx.services.listTags(ctx.guildId).find((t) => t.name === name);
-            if (!before) throw new InputError('There is no such tag.');
-            const triggerKind = choiceField(form, 'triggerKind', TRIGGER_KINDS, 'Trigger');
+            if (!before) throw new InputError(tr.t('community.action.noTag'));
+            const triggerKind = choiceField(form, 'triggerKind', TRIGGER_KINDS, tr.t('community.tag.triggerColumn'));
             const content = multiline(form, 'content', TAG_CONTENT_MAX + 1);
-            if (!content) throw new InputError('The tag text cannot be empty.');
+            if (!content) throw new InputError(tr.t('community.action.emptyTag'));
             const next = {
                 content,
                 triggerKind,
                 trigger: triggerKind === 'none' ? null : text(form, 'trigger', 200),
-                cooldownS: intField(form, 'cooldownS', { min: 0, max: 86400, label: 'Wait between replies', fallback: before.cooldownS ?? null }),
-                allowChannels: channelListField(ctx.guild, form, 'allowChannels', { label: 'Only in these channels' }),
-                denyChannels: channelListField(ctx.guild, form, 'denyChannels', { label: 'Never in these channels' }),
+                cooldownS: intField(form, 'cooldownS', { min: 0, max: 86400, label: tr.t('community.action.cooldownLabel'), fallback: before.cooldownS ?? null }),
+                allowChannels: channelListField(ctx.guild, form, 'allowChannels', { label: tr.t('community.tag.allowChannels') }),
+                denyChannels: channelListField(ctx.guild, form, 'denyChannels', { label: tr.t('community.tag.denyChannels') }),
             };
             const current = { content: before.content, triggerKind: before.triggerKind || 'none', trigger: before.trigger ?? null, cooldownS: before.cooldownS ?? null, allowChannels: before.allowChannels || [], denyChannels: before.denyChannels || [] };
             const changed = Object.fromEntries(Object.entries(next).filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(current[k])));
-            if (!Object.keys(changed).length) return { changes: [], message: 'Nothing changed.' };
+            if (!Object.keys(changed).length) return { changes: [], message: tr.t('community.action.nothing') };
             // A trigger change always sends the kind with it (the service validates the pair).
             if (Object.hasOwn(changed, 'trigger') || Object.hasOwn(changed, 'triggerKind')) Object.assign(changed, { triggerKind, trigger: next.trigger });
             const tag = await ctx.services.editTag({ guildId: ctx.guildId, name, ...changed });
-            if (!tag) throw new InputError('There is no such tag.');
+            if (!tag) throw new InputError(tr.t('community.action.noTag'));
             return {
                 changes: Object.keys(changed).map((key) => ({ key: `tag.${name}.${key}`, old: current[key] ?? null, new: next[key] ?? null })),
-                message: `Tag "${name}" saved.`,
+                message: tr.t('community.action.tagSaved', { name }),
             };
         },
         async 'tag-delete'(ctx, form) {
+            const tr = textFor(ctx);
             const name = text(form, 'name', 40).toLowerCase();
             const before = ctx.services.listTags(ctx.guildId).find((t) => t.name === name);
             const removed = await ctx.services.deleteTag(ctx.guildId, name);
-            if (!removed) throw new InputError('There is no such tag.');
-            return { changes: [{ key: `tag.${name}`, old: before?.content ?? null, new: null }], message: `Tag "${name}" deleted.` };
+            if (!removed) throw new InputError(tr.t('community.action.noTag'));
+            return { changes: [{ key: `tag.${name}`, old: before?.content ?? null, new: null }], message: tr.t('community.action.tagDeleted', { name }) };
         },
         async 'feed-add'(ctx, form) {
-            const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: 'Post in' });
+            const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: textFor(ctx).t('community.feed.postIn') });
             const { feed } = await ctx.services.addFeed({
                 guildId: ctx.guildId, sourceInput: text(form, 'source', 200), channelId,
                 template: multiline(form, 'template', FEED_TEMPLATE_MAX + 1) || null, createdBy: ctx.actor.userId,
             });
-            return { changes: [{ key: `feed.${feed.id}`, old: null, new: { source: feed.sourceId, channelId } }], message: `Feed #${feed.id} added.` };
+            return { changes: [{ key: `feed.${feed.id}`, old: null, new: { source: feed.sourceId, channelId } }], message: textFor(ctx).t('community.action.feedAdded', { id: feed.id }) };
         },
         async 'feed-remove'(ctx, form) {
-            const id = intField(form, 'id', { min: 1, max: 2147483647, label: 'Feed' });
+            const tr = textFor(ctx);
+            const id = intField(form, 'id', { min: 1, max: 2147483647, label: tr.t('community.feed.feed') });
             const before = ctx.services.listFeeds(ctx.guildId).find((f) => f.id === id);
             const removed = await ctx.services.removeFeed(ctx.guildId, id);
-            if (!removed) throw new InputError(`There is no feed #${id}.`);
-            return { changes: [{ key: `feed.${id}`, old: before ? { source: before.sourceId, channelId: before.channelId } : null, new: null }], message: `Feed #${id} removed.` };
+            if (!removed) throw new InputError(tr.t('community.action.noFeed', { id }));
+            return { changes: [{ key: `feed.${id}`, old: before ? { source: before.sourceId, channelId: before.channelId } : null, new: null }], message: tr.t('community.action.feedRemoved', { id }) };
         },
     },
 };

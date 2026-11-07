@@ -1,0 +1,56 @@
+{
+  "page": {
+    "help": "Les compteurs sont des salons dont le nom affiche un nombre en direct, comme « Members: 1234 ». Mewvo les met à jour toutes les 15 minutes. Le jeu de comptage est un salon où les membres comptent ensemble, un nombre par message."
+  },
+  "list": {
+    "title": "Compteurs de statistiques du serveur",
+    "help": "Mewvo crée le salon pour toi. Tu peux aussi le faire avec /serverstats create dans Discord.",
+    "helpNoAdmin": "Mewvo crée le salon pour toi. Tu peux aussi le faire avec /serverstats create dans Discord. Pour créer des salons, il te faut la permission Administrateur sur ce serveur.",
+    "id": "ID",
+    "channel": "Salon",
+    "type": "Type",
+    "empty": "Aucun compteur pour l’instant.",
+    "change": "Modifier",
+    "delete": "Supprimer le compteur et son salon",
+    "deleteConfirm": "Supprimer ce compteur et son salon ?"
+  },
+  "create": {
+    "title": "Nouveau compteur",
+    "counts": "Ce qu’il compte",
+    "channelType": "Type de salon",
+    "channelTypeHelp": "Un salon vocal est le choix habituel : il reste dans la liste et affiche le nombre.",
+    "voice": "Salon vocal (affiche seulement le nom)",
+    "text": "Salon textuel",
+    "category": "Dans la catégorie",
+    "categoryHelp": "Une catégorie est un dossier de salons. Le salon du compteur y est créé.",
+    "submit": "Créer le compteur",
+    "allUsed": "Chaque type de compteur est déjà utilisé. Tu peux en avoir un de chaque."
+  },
+  "counting": {
+    "title": "Jeu de comptage",
+    "help": "Les membres écrivent tour à tour le nombre suivant. Lancer ou relancer le jeu ici remet le compte et le classement à zéro. Tu peux aussi le faire avec /count setup dans Discord.",
+    "label": "Jeu de comptage :",
+    "details": "dans {channel} · {system} · prochain nombre {next} · meilleure série {best}",
+    "channel": "Salon de comptage",
+    "channelHelp": "Utilise un salon réservé au comptage.",
+    "system": "Système de nombres",
+    "systemHelp": "Comment les nombres sont écrits. Décimal (nombres normaux) est le choix habituel.",
+    "restart": "Recommencer dans ce salon (retour à 1)",
+    "reset": "Remettre le compte à 1",
+    "resetConfirm": "Remettre le jeu de comptage à 1 ?"
+  },
+  "action": {
+    "unknown": "Compteur inconnu.",
+    "countsLabel": "Compte",
+    "channelKindLabel": "Type de salon",
+    "created": "Compteur créé : {channel}.",
+    "renameLater": "Le nom du salon sera mis à jour au prochain passage prévu.",
+    "updated": "Compteur mis à jour.",
+    "renameFailed": "Le salon n’a pas pu être renommé maintenant ; il sera mis à jour au prochain passage prévu.",
+    "deleted": "Compteur supprimé.",
+    "deleteFailed": "Le salon du compteur n’a pas pu être supprimé (permissions ?).",
+    "started": "Jeu de comptage lancé à 1.",
+    "reset": "Le compte repart de 1.",
+    "off": "Le jeu de comptage est désactivé."
+  }
+}

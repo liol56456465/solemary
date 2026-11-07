@@ -1,0 +1,130 @@
+{
+  "page": {
+    "helpText": "Accogli i nuovi membri con un messaggio quando entrano, saluta chi se ne va e dai automaticamente un ruolo ai nuovi membri. Nei messaggi puoi usare {user} (menziona il membro), {user.tag} (il suo nome utente, senza menzione), {server} (il nome del server) e {memberCount} (quanti membri ha ora il server)."
+  },
+  "join": {
+    "topic": "Benvenuto",
+    "topicLine": "Cosa pubblica Mewvo quando qualcuno entra.",
+    "title": "Benvenuto",
+    "help": "Il messaggio di benvenuto, dove viene pubblicato e un messaggio privato facoltativo.",
+    "toggle": "Messaggi di benvenuto",
+    "channel": "Canale di benvenuto",
+    "channelHelp": "Dove viene pubblicato il messaggio di benvenuto.",
+    "ping": "Menziona il membro",
+    "pingHelp": "Lo menziona così riceve una notifica.",
+    "message": "Messaggio di benvenuto",
+    "messageHelp": "Per esempio: Benvenuto su {server}, {user}. Sei il membro numero {memberCount}.",
+    "dm": "Messaggio privato al nuovo membro",
+    "dmHelp": "Inviato direttamente al membro (un DM). Lascia vuoto per non inviare nulla."
+  },
+  "leave": {
+    "topic": "Congedo",
+    "topicLine": "Cosa pubblica Mewvo quando qualcuno se ne va.",
+    "title": "Congedo",
+    "help": "Il messaggio di congedo e dove viene pubblicato.",
+    "toggle": "Messaggi di congedo",
+    "channel": "Canale di congedo",
+    "channelHelp": "Dove viene pubblicato il messaggio di congedo.",
+    "ping": "Menziona il membro",
+    "pingHelp": "Lo menziona per nome nel messaggio.",
+    "message": "Messaggio di congedo",
+    "messageHelp": "Per esempio: {user.tag} ha lasciato il server."
+  },
+  "embed": {
+    "welcomeTitle": "Embed e immagine di benvenuto",
+    "goodbyeTitle": "Embed e immagine di congedo",
+    "help": "Il riquadro attorno al messaggio: titolo, colore e un'immagine facoltativa.",
+    "helpMore": "Il messaggio viene inviato dentro un riquadro (un embed) con titolo, colore e un'immagine facoltativa. Il testo del messaggio qui sopra va dentro il riquadro. Se Mewvo non ha il permesso Incorpora link in quel canale, viene inviato solo il testo.",
+    "title": "Titolo del riquadro",
+    "titleHelp": "La riga in grassetto in cima al riquadro. Lascia vuoto per \"{title}\". Le stesse parole tra parentesi graffe del messaggio funzionano anche qui.",
+    "colour": "Colore del riquadro",
+    "colourHelp": "La striscia colorata a sinistra del riquadro, come codice colore: # e sei lettere o cifre, ad esempio #57F287 per il verde. Lascia vuoto per il colore predefinito.",
+    "footer": "Piè di pagina del riquadro",
+    "footerHelp": "Testo piccolo in fondo al riquadro. Lascia vuoto per il nome del server. Le stesse parole tra parentesi graffe del messaggio funzionano anche qui.",
+    "image": "Link dell'immagine",
+    "imageHelp": "Un link che inizia con https:// e apre un'immagine PNG, JPG, GIF o WebP. Appare grande in fondo al riquadro. Lascia vuoto per nessuna immagine. Per usare un'immagine dal tuo computer, usa Carica un'immagine qui sotto.",
+    "welcomeImage": "Immagine di benvenuto",
+    "goodbyeImage": "Immagine di congedo",
+    "embedColour": "Colore dell'embed"
+  },
+  "image": {
+    "none": "Nessuna immagine.",
+    "welcomeAlt": "Immagine di benvenuto attuale",
+    "goodbyeAlt": "Immagine di congedo attuale",
+    "current": "Immagine attuale: {link}",
+    "onlyDiscord": "(qui si possono mostrare solo immagini salvate su Discord)",
+    "channelId": "il canale {id}",
+    "welcomeStored": "File caricato: una copia è conservata in {where}. Non eliminare quel messaggio, perché il messaggio di benvenuto carica l'immagine da lì.",
+    "goodbyeStored": "File caricato: una copia è conservata in {where}. Non eliminare quel messaggio, perché il messaggio di congedo carica l'immagine da lì.",
+    "uploadLabel": "Carica un'immagine (PNG, JPEG, GIF o WebP, fino a {mb} MB)",
+    "uploadHint": "Sostituisce il link dell'immagine qui sopra. Mewvo pubblica il file nel tuo canale log principale e lo usa da lì, così l'immagine continua a funzionare. /greet in Discord fa lo stesso.",
+    "upload": "Carica immagine",
+    "remove": "Rimuovi immagine",
+    "welcomeConfirm": "Rimuovere l'immagine di benvenuto?",
+    "goodbyeConfirm": "Rimuovere l'immagine di congedo?"
+  },
+  "members": {
+    "topic": "Nuovi membri",
+    "topicLine": "Un ruolo iniziale e un registro di entrate e uscite per lo staff."
+  },
+  "autoRole": {
+    "title": "Ruolo automatico",
+    "help": "Ogni nuovo membro riceve questo ruolo automaticamente. Puoi averne uno: impostarne uno nuovo sostituisce il vecchio. Mewvo può dare solo ruoli sotto il proprio nell'elenco dei ruoli e non dà ruoli con poteri da staff. Puoi farlo anche con /autorole in Discord.",
+    "role": "Ruolo",
+    "problems": "Problemi",
+    "ok": "ok",
+    "remove": "Rimuovi",
+    "none": "Nessun ruolo viene dato all'ingresso.",
+    "pick": "Ruolo per i nuovi membri",
+    "set": "Imposta",
+    "delay": "Attesa prima di dare il ruolo (secondi)",
+    "delayLabel": "Attesa prima di dare il ruolo",
+    "delayHelp": "Quanto aspetta Mewvo dopo che qualcuno entra. 0 lo dà subito."
+  },
+  "logs": {
+    "title": "Log di entrate e uscite",
+    "help": "Un registro per lo staff di chi è entrato e chi è uscito, separato dai messaggi pubblici.",
+    "joins": "Registra le entrate",
+    "joinsHelp": "Pubblica una riga breve per lo staff ogni volta che qualcuno entra.",
+    "joinChannel": "Canale log delle entrate",
+    "leaves": "Registra le uscite",
+    "leavesHelp": "Pubblica una riga breve per lo staff ogni volta che qualcuno esce.",
+    "leaveChannel": "Canale log delle uscite"
+  },
+  "action": {
+    "welcomeOn": "I messaggi di benvenuto sono attivi.",
+    "welcomeOff": "I messaggi di benvenuto sono disattivati.",
+    "goodbyeOn": "I messaggi di congedo sono attivi.",
+    "goodbyeOff": "I messaggi di congedo sono disattivati.",
+    "welcomeSaved": "Impostazioni di benvenuto salvate.",
+    "goodbyeSaved": "Impostazioni di congedo salvate.",
+    "welcomeEmbedSaved": "Embed di benvenuto salvato.",
+    "goodbyeEmbedSaved": "Embed di congedo salvato.",
+    "welcomeUploaded": "Immagine di benvenuto caricata.",
+    "goodbyeUploaded": "Immagine di congedo caricata.",
+    "welcomeUploadedNote": "Immagine di benvenuto caricata. Una copia è conservata in {where}; non eliminare quel messaggio, il messaggio di benvenuto carica l'immagine da lì.",
+    "goodbyeUploadedNote": "Immagine di congedo caricata. Una copia è conservata in {where}; non eliminare quel messaggio, il messaggio di congedo carica l'immagine da lì.",
+    "auditChannel": "il canale del registro di controllo",
+    "welcomeImageRemoved": "Immagine di benvenuto rimossa.",
+    "goodbyeImageRemoved": "Immagine di congedo rimossa.",
+    "autoRoleAlready": "Quel ruolo viene già dato all'ingresso.",
+    "autoRoleSet": "Ruolo automatico impostato.",
+    "autoRoleNotSet": "Quel ruolo non era un ruolo automatico.",
+    "autoRoleRemoved": "Ruolo automatico rimosso.",
+    "delaySaved": "Attesa del ruolo automatico salvata.",
+    "logsSaved": "Log di entrate e uscite salvati."
+  },
+  "error": {
+    "colour": "{label} deve essere un colore esadecimale come #57F287.",
+    "badLink": "{label}: non è un link valido.",
+    "https": "{label} deve iniziare con https://.",
+    "expiredLink": "{label}: quel link di allegato Discord è scaduto. Carica invece il file dell'immagine qui sotto, oppure usa un link permanente.",
+    "chooseFile": "Scegli un file immagine da caricare.",
+    "notImage": "Quel file non è un'immagine PNG, JPEG, GIF o WebP.",
+    "noLogChannel": "{label}: non è impostato nessun canale log principale, quindi l'immagine caricata non ha dove essere conservata. Impostane uno nella pagina Log, oppure usa un link all'immagine. Non è stato cambiato nulla.",
+    "cannotPost": "{label}: Mewvo non è riuscito a pubblicare l'immagine nel canale log principale ({channel}). Lì Mewvo ha bisogno dei permessi Visualizza canali, Invia messaggi e Allega file. Non è stato cambiato nulla."
+  },
+  "warn": {
+    "discordLink": "{label}: i link degli allegati Discord smettono di funzionare dopo circa un giorno. Per un'immagine duratura, carica il file qui sotto (Carica immagine) o usa un hosting di immagini permanente."
+  }
+}

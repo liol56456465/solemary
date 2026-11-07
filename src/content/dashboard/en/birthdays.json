@@ -1,0 +1,26 @@
+{
+  "page": {
+    "help": "Mewvo wishes members a happy birthday in a channel on their birthday, and can give them a special role for that day. Members add their own birthday with /birthday set in Discord."
+  },
+  "status": {
+    "title": "Status",
+    "on": "Announcements are {state}.",
+    "off": "Announcements are {state}. Pick a channel below to turn them on.",
+    "turnOff": "Turn off (clear the channel)"
+  },
+  "settings": {
+    "title": "Settings",
+    "channel": "Announcement channel",
+    "channelNone": "off",
+    "channelHelp": "Where the birthday message is posted.",
+    "timezone": "Time zone",
+    "timezoneHelp": "Birthdays start at midnight in this time zone. Write it as region and city, like Europe/London or America/New_York.",
+    "role": "Birthday role",
+    "roleNone": "none",
+    "roleHelp": "Given on the birthday and taken away the next day."
+  },
+  "action": {
+    "saved": "Birthday settings saved.",
+    "off": "Birthday announcements are off."
+  }
+}

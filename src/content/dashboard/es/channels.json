@@ -1,0 +1,68 @@
+{
+  "page": {
+    "help": "Limpia un canal borrando muchos mensajes recientes de una vez, o bloquea un canal para que los miembros no puedan escribir en él durante un rato, por ejemplo durante una oleada de spam."
+  },
+  "adminNote": " Para usar estas herramientas necesitas el permiso de Administrador en este servidor.",
+  "field": {
+    "channel": "Canal",
+    "reason": "Motivo",
+    "reasonHelp": "Se guarda con la acción, para que el resto del equipo sepa por qué."
+  },
+  "purge": {
+    "title": "Borrar mensajes",
+    "help": "Borra muchos mensajes recientes de una vez. Discord no lo permite con mensajes de más de 14 días, así que esos se omiten.",
+    "amount": "Número de mensajes",
+    "amountHelp": "De {min} a {max}. Primero van los mensajes más nuevos.",
+    "fromUser": "Solo de este miembro (opcional)",
+    "fromUserHelp": "Solo se buscan los 100 mensajes más nuevos.",
+    "nothingYet": "Todavía no se borra nada: la página siguiente muestra lo que se borrará, y allí confirmas.",
+    "submit": "Borrar mensajes…",
+    "badUser": "Solo de este miembro: eso no es un ID de usuario. Escribe un nombre y elige un miembro, usa «Buscar un miembro» o pega un ID de usuario (de 17 a 20 dígitos).",
+    "missingPerms": "A Mewvo le falta {perms} en #{channel}, así que no puede borrar mensajes allí. No se cambió nada."
+  },
+  "lock": {
+    "title": "Bloquear un canal",
+    "help": "Los miembros todavía pueden leer el canal, pero ya no pueden escribir en él. Los roles que tienen su propio permiso en ese canal, como el equipo, todavía pueden. Desbloquear lo deshace: el canal vuelve a los permisos de su categoría (la carpeta en la que está).",
+    "submit": "Bloquear canal"
+  },
+  "locked": {
+    "title": "Canales bloqueados ({count})",
+    "category": "Categoría",
+    "noCategory": "ninguna",
+    "reasonPlaceholder": "Motivo (opcional)",
+    "unlock": "Desbloquear",
+    "empty": "No hay ningún canal bloqueado.",
+    "help": "Canales en los que los miembros no pueden escribir ahora mismo porque el propio canal está bloqueado."
+  },
+  "confirm": {
+    "heading": "Confirmar: borrar mensajes en #{channel}",
+    "messages": "Mensajes",
+    "fromUser": {
+      "one": "Hasta {count} de los mensajes más nuevos de {who} (solo se buscan los 100 más nuevos)",
+      "many": "Hasta {count} de los mensajes más nuevos de {who} (solo se buscan los 100 más nuevos)",
+      "other": "Hasta {count} de los mensajes más nuevos de {who} (solo se buscan los 100 más nuevos)"
+    },
+    "newest": {
+      "one": "El más nuevo ({count})",
+      "many": "Los {count} más nuevos",
+      "other": "Los {count} más nuevos"
+    },
+    "effect": "Efecto",
+    "effectText": "Los mensajes se borran para siempre y no se pueden recuperar. Los mensajes de más de 14 días se omiten.",
+    "submit": "Borrar mensajes"
+  },
+  "action": {
+    "skippedOld": {
+      "one": "{count} mensaje tenía más de 14 días y se omitió.",
+      "many": "{count} mensajes tenían más de 14 días y se omitieron.",
+      "other": "{count} mensajes tenían más de 14 días y se omitieron."
+    },
+    "deleted": {
+      "one": "Se borró {count} mensaje en #{channel}.",
+      "many": "Se borraron {count} mensajes en #{channel}.",
+      "other": "Se borraron {count} mensajes en #{channel}."
+    },
+    "locked": "#{channel} está bloqueado.",
+    "unlocked": "#{channel} está desbloqueado."
+  }
+}

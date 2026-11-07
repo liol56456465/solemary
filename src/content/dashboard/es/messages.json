@@ -1,0 +1,228 @@
+{
+  "page": {
+    "help": "Publica un mensaje como Mewvo: un anuncio ahora o más tarde, un mensaje que se repite, una encuesta o una cuenta atrás. El texto que escribes aquí nunca menciona a nadie. Todo lo de aquí necesita el permiso Administrador en este servidor."
+  },
+  "adminNote": "Para publicar necesitas el permiso Administrador en este servidor.",
+  "fields": {
+    "channel": "Canal",
+    "content": "Texto del mensaje",
+    "contentHelp": "El texto normal del mensaje. Puedes dejarlo vacío si rellenas el recuadro de abajo. Las menciones se ven como nombres pero nunca notifican a nadie. @everyone, @here, los roles y los miembros no reciben notificación.",
+    "title": "Título del recuadro",
+    "titleHelp": "Un embed es un recuadro de mensaje con un borde de color, un título en negrita y texto. Rellena estos campos para enviar uno. Déjalos vacíos para un mensaje normal.",
+    "description": "Texto del recuadro",
+    "descriptionHelp": "El texto principal dentro del recuadro. El formato de Discord funciona, como **negrita**. Título, texto y pie juntos pueden tener como máximo {max} caracteres.",
+    "embedDescription": "Descripción del embed",
+    "colour": "Color del recuadro",
+    "hex": "O un código de color",
+    "hexHelp": "Un # y seis letras o números. Si lo rellenas, se usa en lugar del color de arriba.",
+    "imageUrl": "Enlace de imagen",
+    "imageUrlHelp": "Opcional. Un enlace que empieza por https:// y abre una imagen. Se ve grande en el recuadro.",
+    "footer": "Pie del recuadro",
+    "footerHelp": "Texto pequeño opcional al final del recuadro."
+  },
+  "colour": {
+    "primary": "Azul Mewvo",
+    "purple": "Morado",
+    "blurple": "Blurple de Discord",
+    "green": "Verde",
+    "yellow": "Amarillo",
+    "red": "Rojo",
+    "grey": "Gris"
+  },
+  "template": {
+    "title": "Empezar con una plantilla",
+    "help": "Elige un anuncio ya hecho, como cómo apelar o un aviso de estafas. Rellena los formularios de abajo para que puedas editarlo antes de publicarlo.",
+    "unknown": "Esa plantilla no existe (o ya no existe). Elige una de la lista.",
+    "filled": "La plantilla \"{name}\" está rellenada abajo, en Enviar un mensaje y en Programar un mensaje. Cambia las partes entre [corchetes], revisa el texto y luego publícalo o prográmalo. No se publica nada hasta que pulses el botón.",
+    "label": "Plantilla",
+    "hint": "Textos ya hechos para anuncios frecuentes. Donde un texto nombra el servidor, se pone el nombre de este servidor. Las partes entre [corchetes] las rellenas tú.",
+    "use": "Usar esta plantilla"
+  },
+  "send": {
+    "title": "Enviar un mensaje",
+    "help": "Mewvo publica tu texto, tu recuadro o ambos en el canal al momento.",
+    "submit": "Publicar mensaje"
+  },
+  "repeat": {
+    "once": "Una vez",
+    "daily": "Cada día",
+    "weekdays": "Los días elegidos",
+    "hours": "Cada pocas horas"
+  },
+  "when": {
+    "once": "Una vez el {date} a las {time}",
+    "daily": "Cada día a las {time}",
+    "weekdays": "{days} a las {time}",
+    "interval": {
+      "one": "Cada {count} hora desde el {date} {time}",
+      "many": "Cada {count} horas desde el {date} {time}",
+      "other": "Cada {count} horas desde el {date} {time}"
+    },
+    "unknown": "Programación desconocida"
+  },
+  "schedule": {
+    "title": "Programar un mensaje",
+    "help": {
+      "one": "Escribe un mensaje ahora y deja que Mewvo lo publique más tarde: una vez, cada día, los días de la semana que elijas o cada pocas horas. Si la publicación falla {count} vez seguida, por ejemplo porque Mewvo perdió el acceso al canal, se pausa y se avisa al staff en el canal de alertas. Un servidor puede tener hasta {limit}, según el plan del dueño del servidor.",
+      "many": "Escribe un mensaje ahora y deja que Mewvo lo publique más tarde: una vez, cada día, los días de la semana que elijas o cada pocas horas. Si la publicación falla {count} veces seguidas, por ejemplo porque Mewvo perdió el acceso al canal, se pausa y se avisa al staff en el canal de alertas. Un servidor puede tener hasta {limit}, según el plan del dueño del servidor.",
+      "other": "Escribe un mensaje ahora y deja que Mewvo lo publique más tarde: una vez, cada día, los días de la semana que elijas o cada pocas horas. Si la publicación falla {count} veces seguidas, por ejemplo porque Mewvo perdió el acceso al canal, se pausa y se avisa al staff en el canal de alertas. Un servidor puede tener hasta {limit}, según el plan del dueño del servidor."
+    },
+    "submit": "Programar mensaje",
+    "repeat": "Repetir",
+    "date": "Fecha",
+    "dateHelp": "Para Una vez, el día en que se publica. Para Cada pocas horas, el día de la primera publicación.",
+    "time": "Hora (formato 24 h)",
+    "hours": "Horas entre publicaciones",
+    "hoursHelp": "Solo para Cada pocas horas. De 1 a {max}.",
+    "timezone": "Zona horaria",
+    "timezoneHelp": "Región y ciudad, como Europe/Madrid, o UTC. Los cambios de horario de verano e invierno se tienen en cuenta solos.",
+    "weekdays": "Días de la semana (solo para Los días elegidos)"
+  },
+  "scheduled": {
+    "title": "Mensajes programados",
+    "help": "La hora de la próxima publicación se muestra en la zona horaria de cada mensaje.",
+    "count": {
+      "one": "{used} de {count} mensaje programado.",
+      "many": "{used} de {count} mensajes programados.",
+      "other": "{used} de {count} mensajes programados."
+    },
+    "colMessage": "Mensaje",
+    "colChannel": "Canal",
+    "colNext": "Próxima vez",
+    "colRepeat": "Repetir",
+    "colLast": "Último resultado",
+    "colStatus": "Estado",
+    "empty": "No hay mensajes programados.",
+    "imageOnly": "(imagen)",
+    "pillPaused": "en pausa",
+    "pillDone": "terminado",
+    "pillActive": "activo",
+    "failures": {
+      "one": "({failed} de {count} fallo)",
+      "many": "({failed} de {count} fallos)",
+      "other": "({failed} de {count} fallos)"
+    },
+    "posted": "Publicado {time}",
+    "notRun": "Aún no se ha ejecutado",
+    "resume": "Reanudar",
+    "pause": "Pausar",
+    "runNow": "Publicar ya",
+    "runConfirm": "¿Publicar este mensaje ahora?",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Eliminar el mensaje programado #{id}? No se puede deshacer.",
+    "editSummary": "Vista previa y edición #{id} · {schedule}",
+    "nextPosts": "Próximas publicaciones: {times}",
+    "pausedNote": "En pausa: no se publicará hasta que lo reanudes.",
+    "doneNote": "No se volverá a publicar.",
+    "test": "Enviarme una prueba",
+    "testNote": "Te lo envía solo a ti por mensaje privado (MD), para que lo revises antes de que se publique.",
+    "save": "Guardar mensaje programado",
+    "idLabel": "Mensaje programado",
+    "pausedLabel": "En pausa"
+  },
+  "preview": {
+    "title": "Vista previa",
+    "image": "Imagen: {url}",
+    "note": "Se muestra tal como lo escribiste. Al publicar, Discord convierte **negrita**, los enlaces y las menciones en formato. Las menciones nunca notifican."
+  },
+  "poll": {
+    "title": "Crear una encuesta",
+    "help": "Haz una pregunta a los miembros y deja que voten con una encuesta de Discord. Mewvo necesita el permiso Crear encuestas en el canal (Añadir reacciones para una encuesta anónima).",
+    "question": "Pregunta",
+    "options": "Opciones",
+    "optionsHelp": "Las respuestas que los miembros pueden votar, cada una en su propia línea. De 2 a {max}, cada una de hasta {answerMax} caracteres (hasta {anonymousMax} en una encuesta anónima).",
+    "hours": "Abierta durante (horas)",
+    "hoursHelp": "De {min} a {max} horas (7 días). Discord cierra la encuesta y muestra los resultados cuando se acaba el tiempo.",
+    "multiSelect": "Permitir más de una respuesta",
+    "multiSelectHelp": "Los miembros pueden elegir varias opciones en lugar de una.",
+    "anonymous": "Encuesta anónima",
+    "anonymousHelp": "Una encuesta de Discord muestra a todos quién votó qué. Activa esto para publicar en su lugar una encuesta con reacciones de números: no hay nombres en la encuesta, pero cualquiera puede abrir las reacciones y ver quién reaccionó. No tiene límite de tiempo, no se puede terminar antes y no tiene en cuenta los dos ajustes de arriba.",
+    "submit": "Publicar encuesta"
+  },
+  "endPoll": {
+    "title": "Terminar una encuesta",
+    "help": "Cierra ahora una de las encuestas de Discord de Mewvo, antes de que se acabe su tiempo, y muestra los resultados finales. Discord solo deja a Mewvo terminar las encuestas que publicó él mismo.",
+    "loadFailed": "No se pudieron cargar las encuestas abiertas. Aun así puedes terminar una encuesta con su enlace abajo.",
+    "noQuestion": "(sin pregunta)",
+    "end": "Terminar",
+    "confirm": "¿Terminar esta encuesta ahora? Se muestran los resultados finales y nadie podrá votar más.",
+    "colQuestion": "Pregunta",
+    "colChannel": "Canal",
+    "colCloses": "Cierra",
+    "empty": "Mewvo no tiene encuestas abiertas en este servidor.",
+    "note": "Muestra las encuestas publicadas desde el panel en los últimos 7 días y las publicadas con /poll desde el último reinicio de Mewvo.",
+    "notePartial": "Muestra las encuestas publicadas desde el panel en los últimos 7 días y las publicadas con /poll desde el último reinicio de Mewvo. Ahora mismo no se pudo leer el historial del panel, así que pueden faltar algunas encuestas.",
+    "byLink": "¿Una encuesta no está en la lista? Termínala con su enlace",
+    "link": "Enlace del mensaje de la encuesta",
+    "linkHelp": "En Discord, haz clic derecho en la encuesta (o mantenla pulsada en el móvil), elige Copiar enlace del mensaje y pégalo aquí.",
+    "submit": "Terminar ahora"
+  },
+  "countdown": {
+    "sectionTitle": "Iniciar una cuenta atrás",
+    "help": "Publica un temporizador que cuenta hacia atrás en el canal, hasta 24 horas. Los administradores tienen botones de Pausar y Cancelar en él. Si el bot se reinicia, las cuentas atrás en curso se detienen.",
+    "title": "Título",
+    "placeholder": "Cuenta atrás",
+    "titleHelp": "Para qué es la cuenta atrás.",
+    "minutes": "Minutos",
+    "minutesHelp": "De 0 a {max} (24 horas).",
+    "seconds": "Segundos",
+    "secondsHelp": "De 0 a 59.",
+    "submit": "Iniciar cuenta atrás"
+  },
+  "clock": {
+    "hours": "{n} h",
+    "minutes": "{n} min",
+    "seconds": "{n} s"
+  },
+  "error": {
+    "tooLong": "{label}: como máximo {max} caracteres (escribiste {length}).",
+    "channel": "Canal: {problems}. No se publicó nada.",
+    "colourCode": "Color: escribe un código de color como #9B59B6, o déjalo vacío y elige de la lista.",
+    "colourChoice": "Color: opción desconocida.",
+    "optionsFew": "Opciones: una encuesta necesita al menos 2 opciones, cada una en su propia línea.",
+    "optionsMany": {
+      "one": "Opciones: una encuesta puede tener como máximo {count} opción (escribiste {written}).",
+      "many": "Opciones: una encuesta puede tener como máximo {count} opciones (escribiste {written}).",
+      "other": "Opciones: una encuesta puede tener como máximo {count} opciones (escribiste {written})."
+    },
+    "optionLong": "Opciones: cada opción tiene un límite de {max} caracteres. \"{start}...\" tiene {length}.",
+    "optionLongNative": "Opciones: en una encuesta de Discord cada opción tiene un límite de {max} caracteres. Acórtala o activa Encuesta anónima (hasta 100 caracteres). \"{start}...\" tiene {length}.",
+    "imageUrl": "Enlace de imagen: debe empezar por https://. No se aceptan otros tipos de enlace.",
+    "empty": "No hay nada que publicar. Escribe un mensaje o rellena el recuadro.",
+    "footerOnly": "Recuadro: añade un título, texto o una imagen. Un pie solo no se muestra.",
+    "boxTooLong": "Recuadro: título, texto y pie juntos pueden tener como máximo {max} caracteres.",
+    "timezone": "Zona horaria: esa zona horaria no se conoce. Escribe región y ciudad, como Europe/Madrid, o UTC.",
+    "past": "Esa hora ya ha pasado. Elige una hora en el futuro.",
+    "noScheduled": "No hay ningún mensaje programado #{id}.",
+    "testEmpty": "Este mensaje está vacío, así que no hay nada que enviar.",
+    "testNoUser": "Mewvo no encontró tu cuenta de Discord.",
+    "testDmClosed": "Tus mensajes privados (MD) están cerrados para Mewvo, así que no se pudo enviar la prueba. En Discord, permite los mensajes directos de miembros del servidor y vuelve a intentarlo.",
+    "noQuestion": "Pregunta: la encuesta necesita una pregunta.",
+    "pollLink": "Enlace del mensaje de la encuesta: pega el enlace de Copiar enlace del mensaje en Discord, como https://discord.com/channels/...",
+    "pollOtherServer": "Enlace del mensaje de la encuesta: ese mensaje está en otro servidor.",
+    "countdownShort": "Duración: la cuenta atrás necesita al menos 1 segundo.",
+    "countdownLong": "Duración: una cuenta atrás no puede durar más de 24 horas."
+  },
+  "action": {
+    "posted": "Publicado en #{channel}.",
+    "scheduled": "Mensaje programado #{id} guardado para #{channel}: {schedule} ({zone}). Primera publicación {time}.",
+    "edited": "Mensaje programado #{id} guardado. Próxima publicación {time} ({zone}).",
+    "editedPaused": "Mensaje programado #{id} guardado. Próxima publicación al reanudarlo.",
+    "alreadyPaused": "El mensaje programado #{id} ya está en pausa.",
+    "alreadyRunning": "El mensaje programado #{id} ya está activo.",
+    "paused": "Mensaje programado #{id} en pausa.",
+    "resumed": "Mensaje programado #{id} reanudado. Próxima publicación {time} ({zone}).",
+    "ran": "Mensaje programado #{id} publicado en #{channel}.",
+    "tested": "El mensaje programado #{id} se te envió por MD como prueba. No se publicó nada en el servidor.",
+    "deleted": "Mensaje programado #{id} eliminado.",
+    "anonymousPosted": "Encuesta anónima con reacciones publicada en #{channel}.",
+    "reactionsMissing": {
+      "one": "Solo se pudo añadir {added} de {count} reacción de voto: añade el resto a mano en Discord.",
+      "many": "Solo se pudieron añadir {added} de {count} reacciones de voto: añade el resto a mano en Discord.",
+      "other": "Solo se pudieron añadir {added} de {count} reacciones de voto: añade el resto a mano en Discord."
+    },
+    "pollPosted": "Encuesta publicada en #{channel}. Se cierra el {time}.",
+    "pollEnded": "Encuesta terminada en #{channel}. Ahora muestra los resultados finales.",
+    "countdownStarted": "Cuenta atrás iniciada en #{channel}: {duration}."
+  }
+}

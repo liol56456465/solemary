@@ -1,0 +1,53 @@
+{
+  "page": {
+    "help": "Lass Mitglieder ihre Rollen selbst wählen, etwa Farben, Pronomen oder Spiele. Mewvo postet eine Nachricht (ein Panel) mit einem Menü, und Mitglieder wählen darin die Rollen, die sie möchten. Mewvo bietet nur Rollen an, die in der Rollenliste unter seiner eigenen Rolle stehen, nie Rollen mit Team-Rechten und nie Rollen, die zu einem anderen Bot oder einer App gehören."
+  },
+  "create": {
+    "title": "Neues Panel",
+    "help": "Das geht auch mit /reactroles setup in Discord.",
+    "needsAdmin": " Um ein Panel zu posten, brauchst du die Berechtigung Administrator auf diesem Server.",
+    "max": "Dieser Server hat schon die höchstens möglichen {count} Panels. Lösch eins, um ein neues zu erstellen.",
+    "postIn": "Posten in",
+    "postInHelp": "Der Kanal, in dem das Panel gepostet wird.",
+    "titleLabel": "Titel",
+    "titleHelp": "Zum Beispiel: Wähl deine Farbe.",
+    "description": "Beschreibung",
+    "descriptionHelp": "Ein paar Worte unter dem Titel, wofür die Rollen sind.",
+    "roles": "Rollen",
+    "rolesHelp": "Bis zu 25. Um mehrere zu wählen, halte beim Klicken Strg (Cmd auf dem Mac) gedrückt.",
+    "submit": "Panel erstellen und posten"
+  },
+  "panel": {
+    "title": "Panel {id}",
+    "info": "In {channel} · Nachricht {message} · {count}/25 Rollen",
+    "ok": "ok",
+    "remove": "Entfernen",
+    "role": "Rolle",
+    "problems": "Probleme",
+    "noRoles": "Keine Rollen.",
+    "addRole": "Rolle hinzufügen",
+    "add": "Hinzufügen",
+    "delete": "Panel löschen",
+    "deleteConfirm": "Dieses Panel und seine Nachricht in Discord löschen?"
+  },
+  "panels": {
+    "title": "Panels",
+    "empty": "Noch keine Reaktionsrollen-Panels."
+  },
+  "action": {
+    "unknownPanel": "Unbekanntes Panel.",
+    "chooseRole": "Wähle mindestens eine Rolle.",
+    "posted": {
+      "one": "Panel mit {count} Rolle gepostet.",
+      "other": "Panel mit {count} Rollen gepostet."
+    },
+    "skipped": "Übersprungen: {list}",
+    "roleMissing": "Rolle: Diese Rolle ist nicht auf dem Server.",
+    "roleAdded": "Rolle zum Panel hinzugefügt.",
+    "unknownRole": "Unbekannte Rolle.",
+    "lastRole": "Das war die letzte Rolle: Das Panel wurde gelöscht.",
+    "roleRemoved": "Rolle aus dem Panel entfernt.",
+    "panelGone": "Dieses Panel gibt es nicht mehr.",
+    "panelDeleted": "Panel gelöscht."
+  }
+}

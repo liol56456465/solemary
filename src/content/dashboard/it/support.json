@@ -1,0 +1,16 @@
+{
+  "page": {
+    "help": "Un secondo server Discord in cui i membri bannati possono ancora entrare. Lì chiedono di togliere il ban (ricorso), perché non possono raggiungere il tuo server principale. Il link d'invito si imposta in Sanzioni e ricorsi."
+  },
+  "title": "Server di supporto",
+  "titleNamed": "Server di supporto · {name}",
+  "notConnected": "Non è ancora collegato nessun server di supporto. Prima il proprietario del bot deve configurarne uno.",
+  "bannedRole": "Ruolo dei bannati (server di supporto)",
+  "bannedRoleShort": "Ruolo dei bannati",
+  "bannedRoleHelp": "I membri bannati dal server principale ricevono questo ruolo nel server di supporto. Mewvo lo toglie quando il ban finisce.",
+  "cannotSee": "Al momento Mewvo non vede il server di supporto, quindi non si possono elencare i suoi ruoli. Controlla che Mewvo ne sia membro.",
+  "appealsCategory": "Categoria dei ricorsi per ban ed espulsioni",
+  "appealsCategoryHelp": "Una categoria è una cartella di canali. Ogni ricorso contro un ban o un'espulsione ha qui un canale dove il membro può parlare con lo staff. Lo staff decide in un canale riservato nel server principale. Non impostata: i ricorsi si aprono nel server principale, visibili solo allo staff.",
+  "invite": "Link d'invito inviato ai membri bannati: {invite}. Puoi {change}.",
+  "changeLink": "cambiarlo in Sanzioni e ricorsi"
+}

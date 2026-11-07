@@ -1,0 +1,228 @@
+{
+  "page": {
+    "help": "Publie un message en tant que Mewvo : une annonce maintenant ou plus tard, un message qui se répète, un sondage ou un compte à rebours. Le texte que tu tapes ici ne mentionne jamais personne. Tout ici demande la permission Administrateur sur ce serveur."
+  },
+  "adminNote": "Pour publier, il te faut la permission Administrateur sur ce serveur.",
+  "fields": {
+    "channel": "Salon",
+    "content": "Texte du message",
+    "contentHelp": "Le texte normal du message. Tu peux le laisser vide si tu remplis l’encadré ci-dessous. Les mentions s’affichent comme des noms mais ne notifient personne. @everyone, @here, les rôles et les membres ne reçoivent aucune notification.",
+    "title": "Titre de l’encadré",
+    "titleHelp": "Un embed est un encadré de message avec un bord coloré, un titre en gras et du texte. Remplis ces champs pour en envoyer un. Laisse-les vides pour un message simple.",
+    "description": "Texte de l’encadré",
+    "descriptionHelp": "Le texte principal dans l’encadré. La mise en forme Discord fonctionne, comme **gras**. Titre, texte et pied de page ensemble peuvent faire {max} caractères au plus.",
+    "embedDescription": "Description de l’embed",
+    "colour": "Couleur de l’encadré",
+    "hex": "Ou un code couleur",
+    "hexHelp": "Un # et six lettres ou chiffres. S’il est rempli, il remplace la couleur ci-dessus.",
+    "imageUrl": "Lien de l’image",
+    "imageUrlHelp": "Facultatif. Un lien qui commence par https:// et ouvre une image. Elle s’affiche en grand dans l’encadré.",
+    "footer": "Pied de l’encadré",
+    "footerHelp": "Petit texte facultatif en bas de l’encadré."
+  },
+  "colour": {
+    "primary": "Bleu Mewvo",
+    "purple": "Violet",
+    "blurple": "Blurple Discord",
+    "green": "Vert",
+    "yellow": "Jaune",
+    "red": "Rouge",
+    "grey": "Gris"
+  },
+  "template": {
+    "title": "Partir d’un modèle",
+    "help": "Choisis une annonce toute prête, comme la façon de faire appel ou une alerte aux arnaques. Elle remplit les formulaires ci-dessous pour que tu puisses la modifier avant de publier.",
+    "unknown": "Ce modèle n’existe pas (ou plus). Choisis-en un dans la liste.",
+    "filled": "Le modèle « {name} » est rempli ci-dessous, dans « Envoyer un message » et dans « Programmer un message ». Remplace les parties entre [crochets], vérifie le texte, puis publie-le ou programme-le. Rien n’est publié tant que tu n’as pas appuyé sur le bouton.",
+    "label": "Modèle",
+    "hint": "Des textes tout prêts pour les annonces courantes. Quand un texte nomme le serveur, le nom de ce serveur y est mis. Les parties entre [crochets] sont à remplir par toi.",
+    "use": "Utiliser ce modèle"
+  },
+  "send": {
+    "title": "Envoyer un message",
+    "help": "Mewvo publie ton texte, ton encadré ou les deux dans le salon tout de suite.",
+    "submit": "Publier le message"
+  },
+  "repeat": {
+    "once": "Une fois",
+    "daily": "Tous les jours",
+    "weekdays": "Les jours choisis",
+    "hours": "Toutes les quelques heures"
+  },
+  "when": {
+    "once": "Une fois le {date} à {time}",
+    "daily": "Tous les jours à {time}",
+    "weekdays": "{days} à {time}",
+    "interval": {
+      "one": "Toutes les {count} h à partir du {date} {time}",
+      "many": "Toutes les {count} h à partir du {date} {time}",
+      "other": "Toutes les {count} h à partir du {date} {time}"
+    },
+    "unknown": "Programmation inconnue"
+  },
+  "schedule": {
+    "title": "Programmer un message",
+    "help": {
+      "one": "Écris un message maintenant et laisse Mewvo le publier plus tard : une fois, tous les jours, les jours de la semaine choisis ou toutes les quelques heures. Si la publication échoue {count} fois de suite, par exemple parce que Mewvo a perdu l’accès au salon, il est mis en pause et l’équipe est prévenue dans le salon des alertes. Un serveur peut en avoir jusqu’à {limit}, selon l’offre du propriétaire du serveur.",
+      "many": "Écris un message maintenant et laisse Mewvo le publier plus tard : une fois, tous les jours, les jours de la semaine choisis ou toutes les quelques heures. Si la publication échoue {count} fois de suite, par exemple parce que Mewvo a perdu l’accès au salon, il est mis en pause et l’équipe est prévenue dans le salon des alertes. Un serveur peut en avoir jusqu’à {limit}, selon l’offre du propriétaire du serveur.",
+      "other": "Écris un message maintenant et laisse Mewvo le publier plus tard : une fois, tous les jours, les jours de la semaine choisis ou toutes les quelques heures. Si la publication échoue {count} fois de suite, par exemple parce que Mewvo a perdu l’accès au salon, il est mis en pause et l’équipe est prévenue dans le salon des alertes. Un serveur peut en avoir jusqu’à {limit}, selon l’offre du propriétaire du serveur."
+    },
+    "submit": "Programmer le message",
+    "repeat": "Répétition",
+    "date": "Date",
+    "dateHelp": "Pour « Une fois », le jour de la publication. Pour « Toutes les quelques heures », le jour de la première publication.",
+    "time": "Heure (sur 24 h)",
+    "hours": "Heures entre les publications",
+    "hoursHelp": "Seulement pour « Toutes les quelques heures ». De 1 à {max}.",
+    "timezone": "Fuseau horaire",
+    "timezoneHelp": "Région et ville, comme Europe/Paris, ou UTC. Les changements d’heure d’été et d’hiver sont gérés pour toi.",
+    "weekdays": "Jours de la semaine (seulement pour « Les jours choisis »)"
+  },
+  "scheduled": {
+    "title": "Messages programmés",
+    "help": "L’heure de la prochaine publication est affichée dans le fuseau horaire propre à chaque message.",
+    "count": {
+      "one": "{used} sur {count} message programmé.",
+      "many": "{used} sur {count} messages programmés.",
+      "other": "{used} sur {count} messages programmés."
+    },
+    "colMessage": "Message",
+    "colChannel": "Salon",
+    "colNext": "Prochaine publication",
+    "colRepeat": "Répétition",
+    "colLast": "Dernier résultat",
+    "colStatus": "État",
+    "empty": "Aucun message programmé.",
+    "imageOnly": "(image)",
+    "pillPaused": "en pause",
+    "pillDone": "terminé",
+    "pillActive": "actif",
+    "failures": {
+      "one": "({failed} échec sur {count})",
+      "many": "({failed} échecs sur {count})",
+      "other": "({failed} échecs sur {count})"
+    },
+    "posted": "Publié {time}",
+    "notRun": "Pas encore exécuté",
+    "resume": "Reprendre",
+    "pause": "Pause",
+    "runNow": "Publier maintenant",
+    "runConfirm": "Publier ce message maintenant ?",
+    "delete": "Supprimer",
+    "deleteConfirm": "Supprimer le message programmé #{id} ? C’est définitif.",
+    "editSummary": "Aperçu et modification #{id} · {schedule}",
+    "nextPosts": "Prochaines publications : {times}",
+    "pausedNote": "En pause : il ne sera pas publié tant que tu ne le reprends pas.",
+    "doneNote": "Il ne sera plus publié.",
+    "test": "M’envoyer un test",
+    "testNote": "L’envoie seulement à toi en message privé (MP), pour que tu puisses le vérifier avant qu’il soit publié.",
+    "save": "Enregistrer le message programmé",
+    "idLabel": "Message programmé",
+    "pausedLabel": "En pause"
+  },
+  "preview": {
+    "title": "Aperçu",
+    "image": "Image : {url}",
+    "note": "Affiché tel que tu l’as tapé. Discord transforme **gras**, les liens et les mentions en mise en forme à la publication. Les mentions ne notifient jamais."
+  },
+  "poll": {
+    "title": "Lancer un sondage",
+    "help": "Pose une question aux membres et laisse-les voter avec un sondage Discord. Mewvo a besoin de la permission Créer des sondages dans le salon (Ajouter des réactions pour un sondage anonyme).",
+    "question": "Question",
+    "options": "Réponses",
+    "optionsHelp": "Les réponses pour lesquelles les membres peuvent voter, une par ligne. De 2 à {max}, chacune jusqu’à {answerMax} caractères (jusqu’à {anonymousMax} pour un sondage anonyme).",
+    "hours": "Ouvert pendant (heures)",
+    "hoursHelp": "De {min} à {max} heures (7 jours). Discord ferme le sondage et affiche les résultats quand le temps est écoulé.",
+    "multiSelect": "Autoriser plusieurs réponses",
+    "multiSelectHelp": "Les membres peuvent choisir plusieurs réponses au lieu d’une.",
+    "anonymous": "Sondage anonyme",
+    "anonymousHelp": "Un sondage Discord montre à tout le monde qui a voté pour quoi. Active ceci pour publier à la place un sondage par réactions numérotées : aucun nom sur le sondage lui-même, mais n’importe qui peut ouvrir les réactions et voir qui a réagi. Il n’a pas de limite de temps, ne peut pas être terminé plus tôt et ignore les deux réglages ci-dessus.",
+    "submit": "Publier le sondage"
+  },
+  "endPoll": {
+    "title": "Terminer un sondage",
+    "help": "Ferme maintenant un des sondages Discord de Mewvo, avant la fin de son temps, et affiche les résultats finaux. Discord ne laisse Mewvo terminer que les sondages qu’il a publiés lui-même.",
+    "loadFailed": "Les sondages ouverts n’ont pas pu être chargés. Tu peux quand même terminer un sondage par son lien ci-dessous.",
+    "noQuestion": "(pas de question)",
+    "end": "Terminer",
+    "confirm": "Terminer ce sondage maintenant ? Les résultats finaux sont affichés et plus personne ne peut voter.",
+    "colQuestion": "Question",
+    "colChannel": "Salon",
+    "colCloses": "Fin",
+    "empty": "Mewvo n’a aucun sondage ouvert sur ce serveur.",
+    "note": "Liste les sondages publiés depuis le tableau de bord ces 7 derniers jours et ceux publiés avec /poll depuis le dernier redémarrage de Mewvo.",
+    "notePartial": "Liste les sondages publiés depuis le tableau de bord ces 7 derniers jours et ceux publiés avec /poll depuis le dernier redémarrage de Mewvo. L’historique du tableau de bord n’a pas pu être lu pour l’instant, il peut donc manquer des sondages.",
+    "byLink": "Un sondage n’est pas dans la liste ? Termine-le par son lien",
+    "link": "Lien du message du sondage",
+    "linkHelp": "Sur Discord, fais un clic droit sur le sondage (ou un appui long sur téléphone), choisis Copier le lien du message et colle-le ici.",
+    "submit": "Terminer maintenant"
+  },
+  "countdown": {
+    "sectionTitle": "Lancer un compte à rebours",
+    "help": "Publie un minuteur qui décompte dans le salon, jusqu’à 24 heures. Les administrateurs ont des boutons Pause et Annuler dessus. Si le bot redémarre, les comptes à rebours en cours s’arrêtent.",
+    "title": "Titre",
+    "placeholder": "Compte à rebours",
+    "titleHelp": "Ce que tu décomptes.",
+    "minutes": "Minutes",
+    "minutesHelp": "De 0 à {max} (24 heures).",
+    "seconds": "Secondes",
+    "secondsHelp": "De 0 à 59.",
+    "submit": "Lancer"
+  },
+  "clock": {
+    "hours": "{n} h",
+    "minutes": "{n} min",
+    "seconds": "{n} s"
+  },
+  "error": {
+    "tooLong": "{label} : {max} caractères au plus (tu en as écrit {length}).",
+    "channel": "Salon : {problems}. Rien n’a été publié.",
+    "colourCode": "Couleur : écris un code couleur comme #9B59B6, ou laisse vide et choisis dans la liste.",
+    "colourChoice": "Couleur : choix inconnu.",
+    "optionsFew": "Réponses : un sondage a besoin d’au moins 2 réponses, chacune sur sa propre ligne.",
+    "optionsMany": {
+      "one": "Réponses : un sondage peut avoir {count} réponse au plus (tu en as écrit {written}).",
+      "many": "Réponses : un sondage peut avoir {count} réponses au plus (tu en as écrit {written}).",
+      "other": "Réponses : un sondage peut avoir {count} réponses au plus (tu en as écrit {written})."
+    },
+    "optionLong": "Réponses : chaque réponse est limitée à {max} caractères. « {start}... » en a {length}.",
+    "optionLongNative": "Réponses : dans un sondage Discord, chaque réponse est limitée à {max} caractères. Raccourcis-la ou active Sondage anonyme (jusqu’à 100 caractères). « {start}... » en a {length}.",
+    "imageUrl": "Lien de l’image : il doit commencer par https://. Les autres liens ne sont pas acceptés.",
+    "empty": "Il n’y a rien à publier. Écris un message ou remplis l’encadré.",
+    "footerOnly": "Encadré : ajoute un titre, du texte ou une image. Un pied de page seul n’est pas affiché.",
+    "boxTooLong": "Encadré : titre, texte et pied de page ensemble peuvent faire {max} caractères au plus.",
+    "timezone": "Fuseau horaire : ce fuseau horaire est inconnu. Écris région et ville, comme Europe/Paris, ou UTC.",
+    "past": "Cette heure est déjà passée. Choisis une heure dans le futur.",
+    "noScheduled": "Il n’y a pas de message programmé #{id}.",
+    "testEmpty": "Ce message est vide, il n’y a donc rien à envoyer.",
+    "testNoUser": "Mewvo n’a pas trouvé ton compte Discord.",
+    "testDmClosed": "Tes messages privés (MP) sont fermés pour Mewvo, le test n’a donc pas pu être envoyé. Sur Discord, autorise les messages privés des membres du serveur et réessaie.",
+    "noQuestion": "Question : le sondage a besoin d’une question.",
+    "pollLink": "Lien du message du sondage : colle le lien obtenu avec Copier le lien du message sur Discord, comme https://discord.com/channels/...",
+    "pollOtherServer": "Lien du message du sondage : ce message est sur un autre serveur.",
+    "countdownShort": "Durée : le compte à rebours doit durer au moins 1 seconde.",
+    "countdownLong": "Durée : un compte à rebours ne peut pas durer plus de 24 heures."
+  },
+  "action": {
+    "posted": "Publié dans #{channel}.",
+    "scheduled": "Message programmé #{id} enregistré pour #{channel} : {schedule} ({zone}). Première publication {time}.",
+    "edited": "Message programmé #{id} enregistré. Prochaine publication {time} ({zone}).",
+    "editedPaused": "Message programmé #{id} enregistré. Prochaine publication à la reprise.",
+    "alreadyPaused": "Le message programmé #{id} est déjà en pause.",
+    "alreadyRunning": "Le message programmé #{id} est déjà actif.",
+    "paused": "Message programmé #{id} mis en pause.",
+    "resumed": "Message programmé #{id} repris. Prochaine publication {time} ({zone}).",
+    "ran": "Message programmé #{id} publié dans #{channel}.",
+    "tested": "Le message programmé #{id} t’a été envoyé en MP comme test. Rien n’a été publié sur le serveur.",
+    "deleted": "Message programmé #{id} supprimé.",
+    "anonymousPosted": "Sondage anonyme par réactions publié dans #{channel}.",
+    "reactionsMissing": {
+      "one": "Seulement {added} réaction de vote sur {count} a pu être ajoutée : ajoute le reste à la main sur Discord.",
+      "many": "Seulement {added} réactions de vote sur {count} ont pu être ajoutées : ajoute le reste à la main sur Discord.",
+      "other": "Seulement {added} réactions de vote sur {count} ont pu être ajoutées : ajoute le reste à la main sur Discord."
+    },
+    "pollPosted": "Sondage publié dans #{channel}. Il se ferme le {time}.",
+    "pollEnded": "Sondage terminé dans #{channel}. Les résultats finaux y sont maintenant affichés.",
+    "countdownStarted": "Compte à rebours lancé dans #{channel} : {duration}."
+  }
+}

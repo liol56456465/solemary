@@ -1,0 +1,457 @@
+{
+  "page": {
+    "help": "Automoderacja obserwuje wiadomości i dołączenia na głównym serwerze i sama reaguje na spam, wulgaryzmy, niechciane linki i rajdy, żeby ekipa nie musiała wszystkiego wyłapywać. Możesz to też zmienić komendą /automod na Discordzie."
+  },
+  "ruleNames": {
+    "scam": "Link oszustów lub phishing",
+    "nsfw": "Treści NSFW",
+    "sexual": "Molestowanie lub aluzje seksualne",
+    "harassment": "Nękanie",
+    "privacy": "Udostępnianie danych osobowych",
+    "advertising": "Reklama bez zgody",
+    "impersonation": "Podszywanie się lub oszustwo",
+    "language": "Niestosowne słownictwo",
+    "disrespect": "Brak szacunku lub drama",
+    "mentions": "Masowe oznaczenia",
+    "spam": "Spam",
+    "caps": "Nadmiar wielkich liter",
+    "characters": "Znaki spoza angielskiego lub ozdobne czcionki",
+    "english": "Tylko angielski"
+  },
+  "common": {
+    "rule": "Reguła",
+    "mode": "Tryb",
+    "remove": "Usuń",
+    "open": "Otwórz"
+  },
+  "mode": {
+    "on": "wł.",
+    "monitor": "tylko zgłaszanie (bez usuwania)",
+    "off": "wył."
+  },
+  "period": {
+    "lastDay": "Ostatni dzień",
+    "lastDays": {
+      "one": "Ostatni {count} dzień",
+      "few": "Ostatnie {count} dni",
+      "many": "Ostatnie {count} dni",
+      "other": "Ostatnie {count} dnia"
+    },
+    "theLastDay": "ostatni dzień",
+    "inLastDay": "z ostatniego dnia",
+    "inLastDays": {
+      "one": "z ostatniego {count} dnia",
+      "few": "z ostatnich {count} dni",
+      "many": "z ostatnich {count} dni",
+      "other": "z ostatnich {count} dnia"
+    },
+    "oneDay": "1 dzień",
+    "days": {
+      "one": "{count} dzień",
+      "few": "{count} dni",
+      "many": "{count} dni",
+      "other": "{count} dnia"
+    }
+  },
+  "topics": {
+    "now": "W tej chwili",
+    "nowLine": "Co teraz czeka na ekipę.",
+    "rules": "Reguły",
+    "rulesLine": "Co sprawdza automoderacja i co robi, gdy reguła zostanie złamana.",
+    "leniency": "Wyjątki i pobłażliwość",
+    "leniencyLine": "Gdzie automoderacja nie patrzy i kto ma łagodniejszy start.",
+    "raids": "Rajdy i nowi członkowie",
+    "raidsLine": "Kontrole przy wejściu i co się dzieje, gdy wiele kont dołącza naraz.",
+    "results": "Wyniki",
+    "resultsLine": "Jak często automoderacja działała i jak często ekipa to cofała."
+  },
+  "global": {
+    "title": "Tryb ogólny",
+    "help": "Co robi każda reguła, jeśli nie zmienisz tego niżej.",
+    "label": "Co robi automoderacja",
+    "labelHelp": "Ekipa dostaje kartę przeglądu: wiadomość na kanale przeglądu z przyciskami, aby zostawić lub cofnąć to, co zrobiła automoderacja. W trybie „tylko zgłaszanie (bez usuwania)” karta ma zamiast tego przycisk Apply.",
+    "enforce": "Działaj: usuń lub ostrzeż, potem powiadom ekipę",
+    "monitor": "Tylko zgłaszanie (bez usuwania): powiadom ekipę, nic więcej"
+  },
+  "channels": {
+    "title": "Kanały i słowa",
+    "help": "Gdzie automoderacja pisze do ekipy, i Twoje własne zablokowane słowa.",
+    "review": "Kanał przeglądu",
+    "reviewHelp": "Tu ekipa widzi karty przeglądu, zgłoszenia członków i weryfikacje czekające na sprawdzenie. Nie ustawiono: kanał dziennika moderacji.",
+    "alerts": "Kanał alertów",
+    "alertsHelp": "Tu Mewvo ostrzega ekipę przed rajdami i innymi pilnymi sprawami oraz publikuje podsumowania. Nie ustawiono: kanał dziennika moderacji.",
+    "words": "Dodatkowe zablokowane słowa",
+    "wordsHelp": "Dodawane do wbudowanej listy wulgaryzmów. Każde słowo w osobnej linii. Podobne litery, symbole i odstępy też są wykrywane."
+  },
+  "rules": {
+    "title": "Tryby reguł",
+    "help": "Zmień pojedyncze reguły. default: robi to, co ustawienie główne powyżej. wł.: działa. tylko zgłaszanie (bez usuwania): tylko powiadamia ekipę. wył.: reguła nie jest sprawdzana. Najpierw ostrzeż prywatnie (2 min na poprawę): za pierwszym razem w ciągu 30 dni członek dostaje prywatną wiadomość i 2 minuty na edycję lub usunięcie wiadomości, i nic więcej się nie dzieje. Dane osobowe są usuwane od razu, bez ostrzeżenia. Oszustwa, NSFW, reklamy, masowe oznaczenia, spam, rajdy i obelgi zawsze działają od razu.",
+    "headsUp": "Najpierw ostrzeż prywatnie (2 min na poprawę)",
+    "actsAtOnce": "działa od razu",
+    "defaultOption": "default ({mode})",
+    "customAll": "Własne reguły (wszystkie)",
+    "seeCustom": "zob. Własne reguły",
+    "save": "Zapisz reguły",
+    "headsUpUnreadable": "Nie udało się odczytać liczby pierwszych prywatnych ostrzeżeń (baza danych).",
+    "headsUpCounts": "Pierwsze prywatne ostrzeżenia w ostatnich 30 dniach: wysłane {sent}, poprawione przez członka {fixed}, ukarane po czasie {acted}."
+  },
+  "custom": {
+    "title": "Własne reguły",
+    "help": "Twoje własne listy słów i fraz do blokowania. Tak jak wbudowane reguły wykrywają całe słowa, ignorują wielkość liter i łapią podobne litery (np. 0 zamiast o). Dopasowanie usuwa wiadomość i publikuje kartę przeglądu. Ostrzeżenie i wyciszenie dodają je też do historii członka (sprawa). Działają według ustawienia głównego automoderacji i pomijają ignorowane kanały. Ile możesz ich mieć, zależy od planu właściciela serwera.",
+    "seePlans": "Zobacz plany",
+    "noPlan": "Własne reguły są w planach Normal, Pro i Max. Liczy się plan właściciela serwera. Ten serwer ma plan {plan}. {pricing}",
+    "stateOn": "wł.",
+    "stateOff": "wył.",
+    "overLimit": "nie działa (ponad limit planu)",
+    "colName": "Nazwa",
+    "colWords": "Słowa",
+    "colAction": "Akcja",
+    "colState": "Stan",
+    "actionDelete": "Usunięcie",
+    "actionWarn": "Ostrzeżenie",
+    "actionMute": "Wyciszenie {duration}",
+    "removeConfirm": "Usunąć własną regułę „{name}”?",
+    "empty": "Nie ma jeszcze własnych reguł.",
+    "running": {
+      "one": "Działa {running} z {count} własnej reguły w planie {plan}.",
+      "few": "Działa {running} z {count} własnych reguł w planie {plan}.",
+      "many": "Działa {running} z {count} własnych reguł w planie {plan}.",
+      "other": "Działa {running} z {count} własnej reguły w planie {plan}."
+    },
+    "overLimitCount": {
+      "one": "{count} włączona reguła ponad limit nie działa. Wyłącz lub usuń część reguł albo przejdź na wyższy plan.",
+      "few": "{count} włączone reguły ponad limit nie działają. Wyłącz lub usuń część reguł albo przejdź na wyższy plan.",
+      "many": "{count} włączonych reguł ponad limit nie działa. Wyłącz lub usuń część reguł albo przejdź na wyższy plan.",
+      "other": "{count} włączonej reguły ponad limit nie działa. Wyłącz lub usuń część reguł albo przejdź na wyższy plan."
+    },
+    "atLimit": {
+      "one": "Ten serwer ma {count} własną regułę, najwięcej, ile pozwala plan {plan}.",
+      "few": "Ten serwer ma {count} własne reguły, najwięcej, ile pozwala plan {plan}.",
+      "many": "Ten serwer ma {count} własnych reguł, najwięcej, ile pozwala plan {plan}.",
+      "other": "Ten serwer ma {count} własnej reguły, najwięcej, ile pozwala plan {plan}."
+    },
+    "name": "Nazwa",
+    "namePlaceholder": "Inne serwery",
+    "nameHelp": "Nazwa, żeby odróżnić swoje reguły.",
+    "whatToDo": "Co zrobić",
+    "do": {
+      "delete": "Usuń wiadomość",
+      "warn": "Usuń i ostrzeż",
+      "mute": "Usuń i wycisz"
+    },
+    "muteFor": "Wycisz na",
+    "muteForHelp": "Tylko dla wyciszeń. Na przykład 30m (30 minut), 1h (godzina) lub 1d (dzień). Najwyżej 28d.",
+    "muteForHelpShort": "Tylko dla wyciszeń, np. 30m, 1h lub 1d.",
+    "words": "Słowa lub frazy",
+    "wordsHelp": "Każde słowo lub frazę wpisz w osobnej linii. Do {lines} linii, każda do {chars} znaków.",
+    "wordsHelpEdit": "Jedno w linii. To zastępuje starą listę.",
+    "add": "Dodaj regułę",
+    "changeTitle": "Zmień regułę",
+    "changeRule": "Zmień „{name}”",
+    "ruleLabel": "Własna reguła",
+    "invalid": "Ta własna reguła jest nieprawidłowa.",
+    "gone": "Tej własnej reguły już nie ma. Odśwież stronę."
+  },
+  "native": {
+    "title": "AutoMod Discorda",
+    "help": "Discord ma własny wbudowany AutoMod. Gdy jedna z jego reguł zablokuje wiadomość, Mewvo może też to zapisać w dzienniku lub ostrzec członka.",
+    "unreadable": "Nie udało się odczytać reguł AutoMod Discorda. Mewvo potrzebuje do tego uprawnienia „Zarządzanie serwerem”.",
+    "rule": "Reguła Discorda",
+    "policy": "Co robi Mewvo",
+    "policyLabel": "Zachowanie",
+    "once": "Najwyżej raz na członka co",
+    "minutes": "{count} min",
+    "empty": "Ten serwer nie ma reguł AutoMod Discorda. Tworzysz je na Discordzie w Ustawieniach serwera, AutoMod.",
+    "policyHelp": "ignoruj: nic. dziennik: krótka linia na kanale przeglądu. ostrzeż: ostrzeżenie i karta przeglądu.",
+    "dedupe": "Działaj raz na członka co (minuty)",
+    "dedupeHelp": "Kolejne blokady tego samego członka w tym czasie są tylko liczone. Zostaw puste, aby zachować obecną wartość.",
+    "submit": "Ustaw zachowanie",
+    "policies": {
+      "ignore": "ignoruj",
+      "log": "dziennik",
+      "warn": "ostrzeż"
+    }
+  },
+  "secondChance": {
+    "title": "Przyjazna uwaga za pierwsze drobne przewinienie",
+    "help": "Łagodnie przy pierwszej drobnej wpadce.",
+    "label": "Przyjazna uwaga za pierwsze drobne przewinienie: krótka uwaga zamiast ostrzeżenia"
+  },
+  "mood": {
+    "title": "Nastrój",
+    "help": "Tryb powolny każe członkom czekać kilka sekund między wiadomościami.",
+    "label": "Alerty nastroju: gdy na kanale robi się gorąco, opublikuj uspokajającą wiadomość i na chwilę spowolnij czat",
+    "alerts": "Alerty nastroju"
+  },
+  "trusted": {
+    "title": "Zaufani członkowie",
+    "help": "Zaufani członkowie omijają reguły dotyczące drobiazgów. Poważne reguły nadal obowiązują. Aby to wyłączyć, wybierz brak i ustaw poziom na 0.",
+    "role": "Zaufana rola",
+    "none": "brak",
+    "roleHelp": "Członkowie z tą rolą są zaufani.",
+    "minLevel": "Lub od poziomu",
+    "minLevelHelp": "Członkowie z tym poziomem lub wyższym też są zaufani. 0 to wyłącza."
+  },
+  "exceptions": {
+    "title": "Wyjątki dla kanałów",
+    "help": "Wyłącz jedną regułę albo ustaw ją na „tylko zgłaszanie (bez usuwania)” na jednym kanale. Na przykład pozwól na linki na kanale z linkami.",
+    "channel": "Kanał lub kategoria",
+    "channelHelp": "Kategoria to folder kanałów. Wybranie jej obejmuje każdy kanał w środku.",
+    "empty": "Brak wyjątków reguł dla kanałów.",
+    "modeThere": "Tryb tam",
+    "modeThereHelp": "wył.: reguła jest tam pomijana. tylko zgłaszanie (bez usuwania): ekipa dostaje powiadomienie, nic nie jest usuwane.",
+    "add": "Dodaj wyjątek"
+  },
+  "exempt": {
+    "title": "Ignorowane kanały",
+    "help": "Kanały, na których automoderacja nic nie sprawdza.",
+    "channel": "Kanał",
+    "empty": "Automoderacja sprawdza każdy kanał.",
+    "ignore": "Ignoruj ten kanał",
+    "ignoreHelp": "Automoderacja nie sprawdza tu żadnych wiadomości.",
+    "add": "Dodaj",
+    "alsoIgnored": "Też ignorowane (ustawione przez właściciela bota poza panelem): {channels}"
+  },
+  "gate": {
+    "title": "Bramka przy dołączaniu",
+    "help": "Sprawdza nowych członków przy dołączaniu. Dla każdej kontroli: wył. nic nie robi; oznacz powiadamia ekipę na kanale przeglądu, z przyciskami Kick i Dismiss; wyrzuć usuwa ich i wysyła prywatną wiadomość, jak wrócić.",
+    "ageDays": "Nowe konto to młodsze niż (dni)",
+    "checks": {
+      "avatar": "Brak zdjęcia profilowego",
+      "links": "Link lub zaproszenie w nazwie",
+      "botname": "Nazwa użytkownika wygląda na wygenerowaną",
+      "age": "Nowe konto"
+    },
+    "actions": {
+      "off": "wył.",
+      "flag": "oznacz",
+      "kick": "wyrzuć"
+    }
+  },
+  "panic": {
+    "title": "Panika",
+    "help": "Blokada rajdowa włącza się sama, gdy wiele kont dołącza naraz. Tryb paniki utrudnia rajdowcom rozprzestrzenianie się.",
+    "label": "Tryb paniki: wstrzymaj nowe zaproszenia i prywatne wiadomości między członkami, gdy zaczyna się blokada rajdowa",
+    "hours": "Wstrzymaj na (godziny)"
+  },
+  "stats": {
+    "period": "Okres statystyk",
+    "total": {
+      "one": "{count} automatyczna akcja za {period}.",
+      "few": "{count} automatyczne akcje za {period}.",
+      "many": "{count} automatycznych akcji za {period}.",
+      "other": "{count} automatycznej akcji za {period}."
+    },
+    "undoHint": "Jeśli ekipa cofa 30% lub więcej akcji reguły, reguła jest pewnie zbyt surowa.",
+    "actions": "Akcje",
+    "undone": "Cofnięte",
+    "changed": "Zmienione",
+    "undoRate": "Odsetek cofnięć",
+    "empty": "Brak akcji automoderacji."
+  },
+  "lockdown": {
+    "title": "Blokada rajdowa",
+    "help": "Blokada włącza się sama, gdy wiele kont dołącza naraz.",
+    "unreadable": "Nie udało się odczytać stanu blokady (baza danych). Odśwież stronę, aby spróbować ponownie.",
+    "active": "Trwa blokada rajdowa",
+    "since": "od {date}",
+    "joiners": {
+      "one": "{count} uczestnik rajdu",
+      "few": "{count} uczestników rajdu",
+      "many": "{count} uczestników rajdu",
+      "other": "{count} uczestnika rajdu"
+    },
+    "end": "Zakończ blokadę",
+    "endConfirm": "Zakończyć blokadę rajdową? Poziom weryfikacji wróci do poprzedniego, a wstrzymane zaproszenia i wiadomości prywatne znów zadziałają.",
+    "needsAdmin": "Aby zakończyć blokadę, potrzebujesz uprawnienia Administrator na tym serwerze.",
+    "follow": "Śledź na osi czasu rajdów",
+    "none": "Teraz nie ma blokady. Włącza się sama, gdy wiele kont dołącza naraz (rajd). Poprzednie rajdy są na {timeline}.",
+    "timelineLink": "osi czasu rajdów"
+  },
+  "queue": {
+    "title": "Kolejka przeglądu",
+    "titleCount": "Kolejka przeglądu ({count})",
+    "unreadable": "Nie udało się odczytać kolejki przeglądu (kanał przeglądu niedostępny).",
+    "colCard": "Karta",
+    "colSince": "Od",
+    "colMessages": "Wiadomości",
+    "card": "Karta przeglądu",
+    "empty": "Nic nie czeka na przegląd.",
+    "more": "…i jeszcze {count}.",
+    "help": "Karty przeglądu czekające na ekipę: opublikowane od ostatniego uruchomienia bota i ostatnie 50 wiadomości na kanale przeglądu, które wciąż mają przyciski. Krótkie linie o drobiazgach nie są tu pokazane. O każdej karcie decydujesz na Discordzie jej przyciskami (Keep, Undo, Change, Dismiss)."
+  },
+  "probation": {
+    "title": "Wzmożona obserwacja po banie",
+    "titleCount": "Wzmożona obserwacja po banie ({count})",
+    "help": "Członkowie, którzy wrócili po zakończeniu bana. Automoderacja jest wobec nich przez jakiś czas surowsza: od razu przechodzą do następnego stopnia kary i nie dostają przyjaznej uwagi ani pobłażliwości dla zaufanych członków.",
+    "unreadable": "Nie udało się odczytać okresów wzmożonej obserwacji (baza danych). Odśwież stronę, aby spróbować ponownie.",
+    "colMember": "Członek",
+    "colUntil": "Do",
+    "colBan": "Ban",
+    "end": "Zakończ obserwację",
+    "endConfirm": "Zakończyć teraz tę wzmożoną obserwację?",
+    "empty": "Nikt nie jest pod wzmożoną obserwacją po banie."
+  },
+  "testRun": {
+    "title": "Test",
+    "help": "Sprawdź ostatnie wiadomości z obecnymi ustawieniami automoderacji, bez żadnych działań. Nic nie jest usuwane, nikt nie dostaje wiadomości, nic nie jest zapisywane ani logowane. Działają tylko kontrole, które patrzą na jedną wiadomość naraz. Spam, ten sam tekst na wielu kanałach i powtarzane z czasem obelgi są pomijane, bo zależą od czasu. Pobłażliwość dla zaufanych członków nie jest stosowana, a administratorzy są pomijani tak jak przez automoderację. Wiadomości osób, które opuściły serwer, też są sprawdzane.",
+    "channels": "Kanały (do {max})",
+    "channelsHelp": "Mewvo potrzebuje na każdym z nich uprawnień „Wyświetlanie kanałów” i „Czytanie historii wiadomości”.",
+    "howFarBack": "Jak daleko wstecz",
+    "howFarBackHelp": "Łącznie najwyżej {max} wiadomości, najpierw najnowsze.",
+    "draftName": "Nazwa szkicu reguły (opcjonalnie)",
+    "draftDefault": "Szkic reguły",
+    "draftNameHelp": "Wypróbuj własną regułę, zanim ją dodasz. Nie jest zapisywana.",
+    "draftWordsLabel": "Słowa szkicu reguły (opcjonalnie)",
+    "draftWordsHelp": "Jedno słowo lub fraza w linii, do {max}. Wykrywane jak we własnych regułach.",
+    "start": "Uruchom test",
+    "needsAdmin": "Aby uruchomić test, potrzebujesz uprawnienia Administrator na tym serwerze.",
+    "strictHelp": "„Może być zbyt surowa” pojawia się, gdy reguła złapała co najmniej {hits} wiadomości od co najmniej {members} różnych członków i co najmniej {share}% sprawdzonych wiadomości. To tylko wskazówka: członkowie mogą naprawdę tak często łamać tę regułę. Przejrzyj przykłady i wykryte słowa, zanim cokolwiek zmienisz.",
+    "fixHelp": "Przyciski od razu zmieniają regułę dla całego serwera, tak jak formularz Tryby reguł, a zmiana trafia do dziennika. Tylko zgłaszanie (bez usuwania): ekipa dostaje powiadomienie, nic nie jest usuwane. Włącz: reguła działa według ustawienia głównego. Wyjątki dla kanałów nadal obowiązują na swoich kanałach.",
+    "skippedChecks": "W teście nie są sprawdzane: spam, wzorzec bota reklamowego (ten sam tekst na wielu kanałach z nowego konta) i nękanie rozłożone w czasie. Obelga skierowana do kogoś liczy się tu jako brak szacunku.",
+    "strictNote": "Łapie dużo, może być zbyt surowa",
+    "moreWords": "i jeszcze {more}",
+    "draftTitle": "Szkic reguły",
+    "draftLabel": "Szkic: {name}",
+    "draftWords": {
+      "one": "{count} słowo lub fraza",
+      "few": "{count} słowa lub frazy",
+      "many": "{count} słów lub fraz",
+      "other": "{count} słowa lub frazy"
+    },
+    "draftHead": "„{name}”, {words}. Jeszcze niezapisany.",
+    "draftNoPlan": "Własne reguły są w planach Normal, Pro i Max.",
+    "draftAtLimit": {
+      "one": "Ten serwer ma już {count} własną regułę, najwięcej, ile pozwala jego plan. Najpierw usuń jedną w sekcji Własne reguły.",
+      "few": "Ten serwer ma już {count} własne reguły, najwięcej, ile pozwala jego plan. Najpierw usuń jedną w sekcji Własne reguły.",
+      "many": "Ten serwer ma już {count} własnych reguł, najwięcej, ile pozwala jego plan. Najpierw usuń jedną w sekcji Własne reguły.",
+      "other": "Ten serwer ma już {count} własnej reguły, najwięcej, ile pozwala jego plan. Najpierw usuń jedną w sekcji Własne reguły."
+    },
+    "draftAdd": "Dodaj tę regułę",
+    "draftAddConfirm": "Dodać własną regułę „{name}”? Od razu zacznie usuwać pasujące wiadomości. Co robi, możesz zmienić w sekcji Własne reguły.",
+    "draftAddNote": "Dodana jako własna reguła, która usuwa wiadomość. W sekcji Własne reguły możesz zmienić ją na ostrzeżenie lub wyciszenie.",
+    "modeDraft": "szkic, niezapisany",
+    "modeActs": "działa",
+    "offSuffix": "{rule} (wył.)",
+    "excerptHidden": "ukryte (dopasowania nie dało się bezpiecznie zamaskować)",
+    "noText": "brak tekstu",
+    "summary": "{read} {from} {period}: sprawdzone {checked}, pominięte od botów {bots}, pominięte od administratorów {admins}. {hits}",
+    "readMessages": {
+      "one": "Przeczytano {count} wiadomość",
+      "few": "Przeczytano {count} wiadomości",
+      "many": "Przeczytano {count} wiadomości",
+      "other": "Przeczytano {count} wiadomości"
+    },
+    "fromChannels": {
+      "one": "z {count} kanału",
+      "few": "z {count} kanałów",
+      "many": "z {count} kanałów",
+      "other": "z {count} kanału"
+    },
+    "hitMessages": {
+      "one": "{count} wiadomość złamała regułę.",
+      "few": "{count} wiadomości złamały regułę.",
+      "many": "{count} wiadomości złamało regułę.",
+      "other": "{count} wiadomości złamało regułę."
+    },
+    "capped": "Zatrzymano na limicie {max} wiadomości. Starsze wiadomości z tego okresu mogły nie zostać sprawdzone.",
+    "automodOff": "Automoderacja jest teraz wyłączona. To pokazuje, co złapałaby z tymi ustawieniami.",
+    "invitesUnchecked": {
+      "one": "{count} link z zaproszeniem nie został sprawdzony (osiągnięto limit zapytań), więc nie jest liczony.",
+      "few": "{count} linki z zaproszeniami nie zostały sprawdzone (osiągnięto limit zapytań), więc nie są liczone.",
+      "many": "{count} linków z zaproszeniami nie zostało sprawdzonych (osiągnięto limit zapytań), więc nie są liczone.",
+      "other": "{count} linku z zaproszeniem nie sprawdzono (osiągnięto limit zapytań), więc nie są liczone."
+    },
+    "colRule": "Reguła",
+    "colMessages": "Wiadomości",
+    "colMembers": "Członkowie",
+    "colShare": "Udział w sprawdzonych",
+    "colMode": "Tryb",
+    "colNote": "Uwaga",
+    "colFix": "Sugerowana poprawka",
+    "noHits": "Żadna wiadomość nie złamała reguły.",
+    "offTitle": "Wyłączone, ale złapałyby wiadomości",
+    "wordsTitle": "Wykryte słowa",
+    "wordsHelp": "Jak często wykryto każde słowo lub frazę, częściowo ukryte jak w przykładach.",
+    "colWords": "Słowa",
+    "examplesTitle": "Przykłady (do {max})",
+    "colWhen": "Kiedy",
+    "colMember": "Członek",
+    "colChannel": "Kanał",
+    "colExcerpt": "Fragment",
+    "reload": "Odśwież tę stronę",
+    "stateUnreadable": "Nie udało się odczytać stanu testu. {reload}, aby spróbować ponownie.",
+    "inProgress": "Test w toku.",
+    "progress": "Przeczytano dotąd {read} z najwyżej {max} wiadomości, start {started}. {reload}, aby zobaczyć postęp.",
+    "failed": "Ostatni test się nie udał: {error}",
+    "unknownError": "nieznany błąd.",
+    "readBeforeStop": {
+      "one": "Przed zatrzymaniem przeczytano {count} wiadomość.",
+      "few": "Przed zatrzymaniem przeczytano {count} wiadomości.",
+      "many": "Przed zatrzymaniem przeczytano {count} wiadomości.",
+      "other": "Przed zatrzymaniem przeczytano {count} wiadomości."
+    },
+    "newTitle": "Uruchom nowy test",
+    "newHelp": "Nowy test zastąpi ten wynik. Wyniki są przechowywane przez 30 minut."
+  },
+  "fix": {
+    "offNow": "teraz wył.",
+    "onNow": "teraz wł.",
+    "removedSince": "już usunięta",
+    "setMonitor": "Tylko zgłaszaj",
+    "confirmOff": "Wyłączyć regułę {rule} dla całego serwera?",
+    "confirmMonitor": "Ustawić regułę {rule} na „tylko zgłaszanie (bez usuwania)” dla całego serwera?",
+    "confirmOn": "Włączyć regułę {rule} dla całego serwera? Będzie działać według ustawienia głównego.",
+    "confirmCustomOff": "Wyłączyć własną regułę „{name}”?"
+  },
+  "error": {
+    "unknownMode": "{rule}: nieznany tryb.",
+    "customAtLimit": {
+      "one": "Ten serwer ma już {count} własną regułę, najwięcej, ile pozwala plan {plan}. Najpierw usuń jedną.",
+      "few": "Ten serwer ma już {count} własne reguły, najwięcej, ile pozwala plan {plan}. Najpierw usuń jedną.",
+      "many": "Ten serwer ma już {count} własnych reguł, najwięcej, ile pozwala plan {plan}. Najpierw usuń jedną.",
+      "other": "Ten serwer ma już {count} własnej reguły, najwięcej, ile pozwala plan {plan}. Najpierw usuń jedną."
+    },
+    "customNoPlan": "Własne reguły są częścią planów Normal, Pro i Max, według planu właściciela serwera.",
+    "pickNative": "Wybierz z listy regułę AutoMod Discorda.",
+    "nativeGone": "Ta reguła AutoMod Discorda już nie istnieje.",
+    "noLockdown": "Teraz nie ma blokady.",
+    "noProbation": "Ten członek nie jest pod wzmożoną obserwacją.",
+    "pickChannel": "Wybierz co najmniej jeden kanał.",
+    "tooManyChannels": "Wybierz najwyżej {max} kanałów (wybrano {picked}).",
+    "ignoredChannel": "Automoderacja ignoruje #{channel}, więc test nic tam nie znajdzie. Wybierz inny kanał."
+  },
+  "action": {
+    "automodOn": "Automoderacja jest teraz włączona.",
+    "automodOff": "Automoderacja jest teraz wyłączona.",
+    "modeEnforce": "Tryb ogólny: działaj.",
+    "modeMonitor": "Tryb ogólny: tylko zgłaszanie (bez usuwania).",
+    "rulesSaved": "Reguły zapisane.",
+    "quickOn": "Reguła {rule} jest włączona. Działa według ustawienia głównego.",
+    "quickMonitor": "Reguła {rule} jest teraz w trybie „tylko zgłaszanie (bez usuwania)”.",
+    "quickOff": "Reguła {rule} jest teraz wyłączona.",
+    "customAdded": "Dodano własną regułę.",
+    "customAddedName": "Dodano własną regułę „{name}”.",
+    "customSaved": "Zapisano własną regułę „{name}”.",
+    "customOn": "Własna reguła „{name}” jest włączona.",
+    "customOff": "Własna reguła „{name}” jest wyłączona.",
+    "customRemoved": "Usunięto własną regułę „{name}”.",
+    "exceptionSaved": "Zapisano wyjątek dla kanału.",
+    "exceptionRemoved": "Usunięto wyjątek dla kanału.",
+    "exemptAdded": "Automoderacja ignoruje teraz ten kanał.",
+    "exemptRemoved": "Automoderacja znów sprawdza ten kanał.",
+    "trustedSaved": "Zapisano zaufanych członków.",
+    "secondChanceOn": "Przyjazna uwaga za pierwsze drobne przewinienie jest włączona.",
+    "secondChanceOff": "Przyjazna uwaga za pierwsze drobne przewinienie jest wyłączona.",
+    "moodOn": "Alerty nastroju są włączone.",
+    "moodOff": "Alerty nastroju są wyłączone.",
+    "panicOn": "Tryb paniki jest włączony.",
+    "panicOff": "Tryb paniki jest wyłączony.",
+    "panicNoPerm": "Nie mam uprawnienia „Zarządzanie serwerem”, więc wstrzymanie zaproszeń i wiadomości prywatnych się nie uda, dopóki go nie dostanę.",
+    "gateSaved": "Zapisano bramkę przy dołączaniu.",
+    "nativeSaved": "Zaktualizowano regułę Discorda „{name}”.",
+    "lockdownEnded": "Blokada zakończona. Poziom weryfikacji wrócił do poprzedniego, a wstrzymane zaproszenia i wiadomości prywatne znów działają.",
+    "probationEnded": "Wzmożona obserwacja dla {member} zakończona wcześniej.",
+    "testRunStarted": "Test uruchomiony. Odśwież stronę za chwilę, aby zobaczyć postęp."
+  }
+}

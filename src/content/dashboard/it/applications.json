@@ -1,0 +1,138 @@
+{
+  "page": {
+    "help": "Lascia che i membri si candidino per un ruolo, come moderatore, rispondendo ad alcune domande con /apply su Discord. Lo staff legge le risposte e approva o rifiuta. Approvare assegna il ruolo."
+  },
+  "submitted": {
+    "title": {
+      "one": "Candidature ricevute ({count} in attesa)",
+      "many": "Candidature ricevute ({count} in attesa)",
+      "other": "Candidature ricevute ({count} in attesa)"
+    },
+    "help": "Le candidature in attesa di una decisione. Approvare assegna il ruolo. In ogni caso il membro riceve un messaggio privato (DM) con il risultato, e il messaggio di log dello staff viene aggiornato. Puoi farlo anche con /app-admin review su Discord.",
+    "unknownUser": "utente sconosciuto",
+    "unknownRole": "Ruolo sconosciuto",
+    "unknownDate": "data sconosciuta",
+    "appliedFor": "{who} si è candidato per {role}.",
+    "id": "ID {id}",
+    "question": "D{number}: {question}",
+    "noAnswer": "Nessuna risposta",
+    "noAnswers": "Nessuna risposta.",
+    "approve": "Approva (assegna il ruolo)",
+    "deny": "Rifiuta",
+    "decision": "Decisione",
+    "note": "Nota per il candidato (facoltativa)",
+    "noteHelp": "Inviata insieme alla decisione, per esempio per spiegare il perché.",
+    "submit": "Invia decisione",
+    "confirm": "Inviare questa decisione a {name}? Riceverà un messaggio privato (DM).",
+    "approved": "approvata",
+    "denied": "rifiutata",
+    "waiting": {
+      "one": "{count} in attesa.",
+      "many": "{count} in attesa.",
+      "other": "{count} in attesa."
+    },
+    "waitingShown": {
+      "one": "{count} in attesa (mostrate le {shown} più recenti).",
+      "many": "{count} in attesa (mostrate le {shown} più recenti).",
+      "other": "{count} in attesa (mostrate le {shown} più recenti)."
+    },
+    "none": "Nessuna candidatura in attesa di revisione.",
+    "needsAdmin": "Per esaminare le candidature qui ti serve il permesso Amministratore in questo server.",
+    "recent": "Esaminate di recente",
+    "application": "Candidatura",
+    "member": "Membro",
+    "noteColumn": "Nota",
+    "reviewed": "Esaminata",
+    "nothingReviewed": "Ancora niente di esaminato."
+  },
+  "roles": {
+    "title": "Candidature ({count})",
+    "help": "I ruoli per cui i membri possono candidarsi con /apply. Ognuno ha le sue domande, oppure usa le domande predefinite qui sotto.",
+    "empty": "Ancora nessuna candidatura.",
+    "new": "Nuova candidatura",
+    "name": "Nome",
+    "nameHelp": "Cosa vedono i membri in /apply, per esempio Moderator.",
+    "open": "Candidature aperte",
+    "openHelp": "Disattivato: al momento i membri non possono candidarsi per questo ruolo.",
+    "logChannel": "Canale di log per questo ruolo",
+    "logChannelNone": "il canale di log delle candidature",
+    "logChannelHelp": "Dove le nuove candidature per questo ruolo vengono pubblicate per lo staff.",
+    "questions": "Domande",
+    "questionsHelp": "Una domanda per riga, fino a {max}. Lascia vuoto per usare le domande predefinite. Aggiungi [min:10] alla fine di una domanda per chiedere una risposta di almeno 10 caratteri.",
+    "save": "Salva candidatura",
+    "deleteText": "L’eliminazione rimuove anche tutte le candidature inviate dai membri per {name}. La pagina successiva mostra quante sono, e lì confermi.",
+    "delete": "Elimina candidatura…",
+    "role": "Ruolo per cui ci si candida",
+    "roleHelp": "I membri approvati ricevono questo ruolo.",
+    "add": "Aggiungi candidatura"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "help": "Impostare qui il canale di log cambia anche il canale di log delle candidature nella pagina Log, e viceversa.",
+    "logChannel": "Canale di log delle candidature",
+    "logChannelHelp": "Dove vengono pubblicate le nuove candidature da esaminare per lo staff.",
+    "pendingDays": "Conserva le candidature in attesa (giorni)",
+    "pendingDaysHelp": "Le candidature su cui nessuno ha deciso vengono eliminate dopo questo tempo.",
+    "reviewedDays": "Conserva le candidature decise (giorni)",
+    "reviewedDaysHelp": "Le candidature approvate e rifiutate vengono eliminate dopo questo tempo."
+  },
+  "questions": {
+    "title": "Domande predefinite",
+    "help": "Usate per ogni ruolo che non ha domande proprie.",
+    "label": "Domande predefinite",
+    "labelHelp": "Una domanda per riga, fino a {max}. Aggiungi [min:10] alla fine di una domanda per chiedere una risposta di almeno 10 caratteri."
+  },
+  "managers": {
+    "title": "Ruoli gestori",
+    "help": "I membri con questi ruoli possono leggere le candidature e decidere, senza essere amministratori.",
+    "role": "Ruolo",
+    "remove": "Rimuovi",
+    "empty": "Nessun ruolo gestore.",
+    "addLabel": "Aggiungi un ruolo gestore",
+    "add": "Aggiungi"
+  },
+  "confirm": {
+    "heading": "Conferma: elimina la candidatura {name}",
+    "application": "Candidatura",
+    "applicationValue": "{name} (ruolo @{role})",
+    "submitted": "Candidature ricevute",
+    "effect": "Effetto",
+    "effectText": "La candidatura viene rimossa da /apply e ogni candidatura inviata dai membri viene eliminata. Non si può annullare. Il ruolo resta.",
+    "submit": "Elimina candidatura"
+  },
+  "action": {
+    "unknown": "Candidatura sconosciuta.",
+    "noteTooLong": "La nota può avere al massimo {max} caratteri.",
+    "theApplicant": "il candidato",
+    "theRole": "il ruolo",
+    "notDmed": "Non è stato possibile inviare un DM a {name}.",
+    "roleNotGiven": "Non è stato possibile assegnare il ruolo (controlla il mio permesso Gestisci ruoli e l’ordine dei ruoli).",
+    "statusApproved": "approvata",
+    "statusDenied": "rifiutata",
+    "reviewed": "Candidatura di {name} per {role} {status}.",
+    "reviewedGiven": "Candidatura di {name} per {role} {status}. Il ruolo è stato assegnato.",
+    "roleLabel": "Ruolo",
+    "added": "Candidatura «{name}» aggiunta.",
+    "emptyName": "Il nome della candidatura non può essere vuoto.",
+    "roleGone": "Quel ruolo di candidatura non esiste più.",
+    "logChannelLabel": "Canale di log",
+    "saved": "Candidatura «{name}» salvata.",
+    "deleted": {
+      "one": "Candidatura «{name}» eliminata insieme a {count} candidatura ricevuta.",
+      "many": "Candidatura «{name}» eliminata insieme a {count} candidature ricevute.",
+      "other": "Candidatura «{name}» eliminata insieme a {count} candidature ricevute."
+    },
+    "moduleLabel": "Candidature",
+    "nowOn": "Le candidature ora sono attive.",
+    "nowOff": "Le candidature ora sono disattivate.",
+    "pendingDaysLabel": "Conserva le candidature in attesa",
+    "reviewedDaysLabel": "Conserva le candidature decise",
+    "settingsSaved": "Impostazioni delle candidature salvate.",
+    "questionsSaved": "Domande predefinite salvate.",
+    "managerLabel": "Ruolo gestore",
+    "alreadyManager": "È già un ruolo gestore.",
+    "managerAdded": "Ruolo gestore aggiunto.",
+    "notManager": "Quel ruolo non è un ruolo gestore.",
+    "managerRemoved": "Ruolo gestore rimosso."
+  }
+}

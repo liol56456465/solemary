@@ -1,0 +1,26 @@
+{
+  "page": {
+    "help": "Mewvo gratuliert Mitgliedern an ihrem Geburtstag in einem Kanal und kann ihnen für diesen Tag eine besondere Rolle geben. Mitglieder tragen ihren Geburtstag selbst mit /birthday set in Discord ein."
+  },
+  "status": {
+    "title": "Status",
+    "on": "Ankündigungen sind {state}.",
+    "off": "Ankündigungen sind {state}. Wähle unten einen Kanal, um sie einzuschalten.",
+    "turnOff": "Ausschalten (Kanal leeren)"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "channel": "Ankündigungskanal",
+    "channelNone": "aus",
+    "channelHelp": "Wo die Geburtstagsnachricht gepostet wird.",
+    "timezone": "Zeitzone",
+    "timezoneHelp": "Geburtstage beginnen um Mitternacht in dieser Zeitzone. Schreib sie als Region und Stadt, etwa Europe/Berlin oder America/New_York.",
+    "role": "Geburtstagsrolle",
+    "roleNone": "keine",
+    "roleHelp": "Wird am Geburtstag vergeben und am nächsten Tag wieder entfernt."
+  },
+  "action": {
+    "saved": "Geburtstagseinstellungen gespeichert.",
+    "off": "Geburtstagsankündigungen sind aus."
+  }
+}

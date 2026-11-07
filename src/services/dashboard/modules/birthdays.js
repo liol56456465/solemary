@@ -7,7 +7,10 @@ import { html } from '../html.js';
 import { PERMS, autoRoleField, buttonForm, channelField, channelPicker, postForm, rolePicker, text, textInput } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { DEFAULT_TIMEZONE } from '../../../utils/timezone.js';
-import { NOTHING, changedOnly, section } from './common.js';
+import { changedOnly, section } from './common.js';
+import { textFor } from '../language.js';
+
+// Words: src/content/dashboard/<lang>/birthdays.json.
 
 async function load(ctx) {
     const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
@@ -28,34 +31,37 @@ export default {
 
     render(ctx, b) {
         const g = ctx.guild;
+        const tr = textFor(ctx);
         const status = b.channelId
-            ? html`<p>Announcements are <span class="state state-on">on</span>.</p>${buttonForm(ctx, 'birthdays', 'off', 'Turn off (clear the channel)')}`
-            : html`<p>Announcements are <span class="state state-off">off</span>. Pick a channel below to turn them on.</p>`;
+            ? html`<p>${tr.tx('birthdays.status.on', { state: html`<span class="state state-on">${tr.t('forms.pillOn')}</span>` })}</p>${buttonForm(ctx, 'birthdays', 'off', tr.t('birthdays.status.turnOff'))}`
+            : html`<p>${tr.tx('birthdays.status.off', { state: html`<span class="state state-off">${tr.t('forms.pillOff')}</span>` })}</p>`;
         const form = postForm(ctx, 'birthdays', 'settings', html`<div class="grid">
-${channelPicker(g, 'channelId', b.channelId, { label: 'Announcement channel', perms: PERMS.post, noneLabel: 'off', help: 'Where the birthday message is posted.' })}
-${textInput('timezone', b.timezone, { label: 'Time zone', max: 64, help: 'Birthdays start at midnight in this time zone. Write it as region and city, like Europe/London or America/New_York.' })}
-${rolePicker(g, 'roleId', b.roleId, { label: 'Birthday role', autoAssign: true, noneLabel: 'none', help: 'Given on the birthday and taken away the next day.' })}</div>`);
-        return html`${section('Status', status)}${section('Settings', form)}`;
+${channelPicker(g, 'channelId', b.channelId, { label: tr.t('birthdays.settings.channel'), perms: PERMS.post, noneLabel: tr.t('birthdays.settings.channelNone'), help: tr.t('birthdays.settings.channelHelp') })}
+${textInput('timezone', b.timezone, { label: tr.t('birthdays.settings.timezone'), max: 64, help: tr.t('birthdays.settings.timezoneHelp') })}
+${rolePicker(g, 'roleId', b.roleId, { label: tr.t('birthdays.settings.role'), autoAssign: true, noneLabel: tr.t('birthdays.settings.roleNone'), help: tr.t('birthdays.settings.roleHelp') })}</div>`);
+        return html`${section(tr.t('birthdays.status.title'), status, '', { key: 'status' })}${section(tr.t('birthdays.settings.title'), form, '', { key: 'settings' })}`;
     },
 
     actions: {
         async settings(ctx, form) {
+            const tr = textFor(ctx);
             const current = await load(ctx);
             // A field absent from the form stays unchanged (Setup step by step sends only the channel).
             const patch = changedOnly({
-                ...(form.channelId !== undefined ? { channelId: channelField(ctx.guild, form, 'channelId', { label: 'Announcement channel' }) } : {}),
+                ...(form.channelId !== undefined ? { channelId: channelField(ctx.guild, form, 'channelId', { label: tr.t('birthdays.settings.channel') }) } : {}),
                 ...(form.timezone !== undefined ? { timezone: text(form, 'timezone', 64) || DEFAULT_TIMEZONE } : {}),
-                ...(form.roleId !== undefined ? { roleId: autoRoleField(ctx.guild, form, 'roleId', { label: 'Birthday role' }) } : {}),
+                ...(form.roleId !== undefined ? { roleId: autoRoleField(ctx.guild, form, 'roleId', { label: tr.t('birthdays.settings.role') }) } : {}),
             }, current);
-            if (!Object.keys(patch).length) return NOTHING;
+            if (!Object.keys(patch).length) return { changes: [], message: tr.t('errors.nothingChanged') };
             const { before, after } = await ctx.services.updateBirthdaySettings(ctx.client, ctx.guildId, patch);
             const changes = diffSnapshots(before, after);
-            return { changes, message: changes.length ? 'Birthday settings saved.' : 'Nothing changed.' };
+            return { changes, message: tr.t(changes.length ? 'birthdays.action.saved' : 'errors.nothingChanged') };
         },
         async off(ctx) {
             const { before, after } = await ctx.services.updateBirthdaySettings(ctx.client, ctx.guildId, { channelId: null });
             const changes = diffSnapshots(before, after);
-            return { changes, message: 'Birthday announcements are off.' };
+            return { changes, message: textFor(ctx).t('birthdays.action.off') };
+
         },
     },
 };

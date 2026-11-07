@@ -1,0 +1,16 @@
+{
+  "page": {
+    "help": "Um segundo servidor do Discord em que membros banidos ainda podem entrar. Lá eles pedem que o banimento seja retirado (apelação), porque não conseguem acessar o seu servidor principal. O link de convite para ele é definido em Punições e apelações."
+  },
+  "title": "Servidor de suporte",
+  "titleNamed": "Servidor de suporte · {name}",
+  "notConnected": "Nenhum servidor de suporte está conectado ainda. O dono do bot precisa configurar um primeiro.",
+  "bannedRole": "Cargo de banidos (servidor de suporte)",
+  "bannedRoleShort": "Cargo de banidos",
+  "bannedRoleHelp": "Membros banidos do servidor principal recebem este cargo no servidor de suporte. O Mewvo tira o cargo quando o banimento termina.",
+  "cannotSee": "O Mewvo não consegue ver o servidor de suporte agora, então os cargos dele não podem ser listados. Confira se o Mewvo é membro de lá.",
+  "appealsCategory": "Categoria de apelações de banimento e expulsão",
+  "appealsCategoryHelp": "Uma categoria é uma pasta de canais. Cada apelação de banimento ou expulsão ganha aqui um canal onde o membro pode falar com a equipe. A equipe decide em um canal só da equipe no servidor principal. Não definida: as apelações abrem no servidor principal, só para a equipe.",
+  "invite": "Link de convite enviado aos membros banidos: {invite}. Você pode {change}.",
+  "changeLink": "mudar isso em Punições e apelações"
+}

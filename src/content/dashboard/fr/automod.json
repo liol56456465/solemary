@@ -1,0 +1,441 @@
+{
+  "page": {
+    "help": "Automod surveille les messages et les arrivées sur le serveur principal et agit seul contre le spam, les gros mots, les liens indésirables et les raids, pour que l’équipe n’ait pas à tout repérer. Tu peux aussi modifier ces réglages avec /automod dans Discord."
+  },
+  "ruleNames": {
+    "scam": "Lien d’arnaque ou d’hameçonnage",
+    "nsfw": "Contenu NSFW",
+    "sexual": "Harcèlement ou allusions sexuels",
+    "harassment": "Harcèlement",
+    "privacy": "Partage d’informations personnelles",
+    "advertising": "Publicité non autorisée",
+    "impersonation": "Usurpation d’identité ou tromperie",
+    "language": "Langage inapproprié",
+    "disrespect": "Manque de respect ou drama",
+    "mentions": "Mentions en masse",
+    "spam": "Spam",
+    "caps": "Trop de majuscules",
+    "characters": "Caractères non anglais ou polices fantaisie",
+    "english": "Anglais uniquement"
+  },
+  "common": {
+    "rule": "Règle",
+    "mode": "Mode",
+    "remove": "Retirer",
+    "open": "Ouvrir"
+  },
+  "mode": {
+    "on": "activée",
+    "monitor": "signaler seulement (ne pas supprimer)",
+    "off": "désactivée"
+  },
+  "period": {
+    "lastDay": "Dernier jour",
+    "lastDays": {
+      "one": "Dernier {count} jour",
+      "many": "{count} derniers jours",
+      "other": "{count} derniers jours"
+    },
+    "theLastDay": "le dernier jour",
+    "inLastDay": "sur le dernier jour",
+    "inLastDays": {
+      "one": "sur le dernier {count} jour",
+      "many": "sur les {count} derniers jours",
+      "other": "sur les {count} derniers jours"
+    },
+    "oneDay": "1 jour",
+    "days": {
+      "one": "{count} jour",
+      "many": "{count} jours",
+      "other": "{count} jours"
+    }
+  },
+  "topics": {
+    "now": "En ce moment",
+    "nowLine": "Ce qui attend l’équipe à cet instant.",
+    "rules": "Règles",
+    "rulesLine": "Ce qu’Automod vérifie, et ce qu’il fait quand une règle est enfreinte.",
+    "leniency": "Exceptions et indulgence",
+    "leniencyLine": "Où Automod ferme les yeux, et qui a droit à un départ plus doux.",
+    "raids": "Raids et nouveaux membres",
+    "raidsLine": "Les contrôles à l’entrée et ce qui se passe quand beaucoup de comptes arrivent en même temps.",
+    "results": "Résultats",
+    "resultsLine": "À quelle fréquence Automod a agi, et à quelle fréquence l’équipe l’a annulé."
+  },
+  "global": {
+    "title": "Mode global",
+    "help": "Ce que fait chaque règle, sauf si tu le changes plus bas.",
+    "label": "Ce que fait Automod",
+    "labelHelp": "L’équipe est prévenue par une carte de vérification : un message dans le salon de vérification avec des boutons pour garder ou annuler ce qu’Automod a fait. En mode « signaler seulement (ne pas supprimer) », la carte a un bouton Apply à la place.",
+    "enforce": "Agir : supprimer ou avertir, puis prévenir l’équipe",
+    "monitor": "Signaler seulement (ne pas supprimer) : prévenir l’équipe, rien d’autre"
+  },
+  "channels": {
+    "title": "Salons et mots",
+    "help": "Où Automod parle à l’équipe, et tes propres mots bloqués.",
+    "review": "Salon de vérification",
+    "reviewHelp": "Là où l’équipe voit les cartes de vérification, les signalements des membres et les vérifications en attente. Non défini : le salon de journal de modération.",
+    "alerts": "Salon d’alertes",
+    "alertsHelp": "Là où Mewvo prévient l’équipe des raids et autres urgences, et publie des résumés. Non défini : le salon de journal de modération.",
+    "words": "Mots bloqués en plus",
+    "wordsHelp": "Ajoutés à la liste intégrée de gros mots. Mets chaque mot sur sa propre ligne. Les lettres ressemblantes, les symboles et les espaces sont aussi détectés."
+  },
+  "rules": {
+    "title": "Modes des règles",
+    "help": "Modifie des règles une par une. default : fait ce que dit le réglage principal ci-dessus. activée : agit. signaler seulement (ne pas supprimer) : prévient seulement l’équipe. désactivée : la règle n’est pas vérifiée. Avertir d’abord en privé (2 min pour corriger) : la première fois en 30 jours, le membre reçoit un message privé et 2 minutes pour modifier ou supprimer son message, et rien d’autre ne se passe. Les informations personnelles sont retirées tout de suite, sans avertissement. Arnaque, NSFW, pub, mentions en masse, spam, raids et insultes agissent toujours tout de suite.",
+    "headsUp": "Avertir d’abord en privé (2 min pour corriger)",
+    "actsAtOnce": "agit tout de suite",
+    "defaultOption": "default ({mode})",
+    "customAll": "Règles personnalisées (toutes)",
+    "seeCustom": "voir Règles personnalisées",
+    "save": "Enregistrer les règles",
+    "headsUpUnreadable": "Impossible de lire le nombre de premiers avertissements privés (base de données).",
+    "headsUpCounts": "Premiers avertissements privés sur les 30 derniers jours : {sent} envoyés, {fixed} corrigés par le membre, {acted} sanctionnés après le délai."
+  },
+  "custom": {
+    "title": "Règles personnalisées",
+    "help": "Tes propres listes de mots et d’expressions à bloquer. Comme les règles intégrées, elles reconnaissent des mots entiers, ignorent les majuscules et détectent les lettres ressemblantes (comme 0 pour o). Une correspondance supprime le message et publie une carte de vérification. Avertir et mettre en sourdine l’ajoutent aussi à l’historique du membre (un dossier). Elles suivent le réglage principal d’Automod et ignorent les salons ignorés. Leur nombre dépend de la formule du propriétaire du serveur.",
+    "seePlans": "Voir les formules",
+    "noPlan": "Les règles personnalisées viennent avec les formules Normal, Pro et Max. C’est la formule du propriétaire du serveur qui compte. Ce serveur est en {plan}. {pricing}",
+    "stateOn": "activée",
+    "stateOff": "désactivée",
+    "overLimit": "ne tourne pas (au-delà de la limite de la formule)",
+    "colName": "Nom",
+    "colWords": "Mots",
+    "colAction": "Action",
+    "colState": "État",
+    "actionDelete": "Supprimer",
+    "actionWarn": "Avertir",
+    "actionMute": "Sourdine {duration}",
+    "removeConfirm": "Retirer la règle personnalisée « {name} » ?",
+    "empty": "Pas encore de règles personnalisées.",
+    "running": {
+      "one": "{running} règle personnalisée sur {count} tourne avec la formule {plan}.",
+      "many": "{running} règles personnalisées sur {count} tournent avec la formule {plan}.",
+      "other": "{running} règles personnalisées sur {count} tournent avec la formule {plan}."
+    },
+    "overLimitCount": {
+      "one": "{count} règle activée au-delà de la limite ne tourne pas. Désactives-en ou retire-en, ou passe à une formule supérieure.",
+      "many": "{count} règles activées au-delà de la limite ne tournent pas. Désactives-en ou retire-en, ou passe à une formule supérieure.",
+      "other": "{count} règles activées au-delà de la limite ne tournent pas. Désactives-en ou retire-en, ou passe à une formule supérieure."
+    },
+    "atLimit": {
+      "one": "Ce serveur a {count} règle personnalisée, le maximum de la formule {plan}.",
+      "many": "Ce serveur a {count} règles personnalisées, le maximum de la formule {plan}.",
+      "other": "Ce serveur a {count} règles personnalisées, le maximum de la formule {plan}."
+    },
+    "name": "Nom",
+    "namePlaceholder": "Autres serveurs",
+    "nameHelp": "Un nom pour distinguer tes règles.",
+    "whatToDo": "Que faire",
+    "do": {
+      "delete": "Supprimer le message",
+      "warn": "Supprimer et avertir",
+      "mute": "Supprimer et mettre en sourdine"
+    },
+    "muteFor": "Sourdine pendant",
+    "muteForHelp": "Seulement pour les sourdines. Par exemple 30m (30 minutes), 1h (une heure) ou 1d (un jour). 28d au maximum.",
+    "muteForHelpShort": "Seulement pour les sourdines, comme 30m, 1h ou 1d.",
+    "words": "Mots ou expressions",
+    "wordsHelp": "Mets chaque mot ou expression sur sa propre ligne. Jusqu’à {lines} lignes, chacune de {chars} caractères au plus.",
+    "wordsHelpEdit": "Un par ligne. Cela remplace l’ancienne liste.",
+    "add": "Ajouter la règle",
+    "changeTitle": "Modifier une règle",
+    "changeRule": "Modifier « {name} »",
+    "ruleLabel": "Règle personnalisée",
+    "invalid": "Cette règle personnalisée n’est pas valide.",
+    "gone": "Cette règle personnalisée n’existe plus. Recharge la page."
+  },
+  "native": {
+    "title": "AutoMod de Discord",
+    "help": "Discord a son propre AutoMod intégré. Quand une de ses règles bloque un message, Mewvo peut aussi l’enregistrer ou avertir le membre.",
+    "unreadable": "Impossible de lire les règles AutoMod de Discord. Mewvo a besoin de la permission « Gérer le serveur » pour ça.",
+    "rule": "Règle Discord",
+    "policy": "Ce que fait Mewvo",
+    "policyLabel": "Comportement",
+    "once": "Au plus une fois par membre toutes les",
+    "minutes": "{count} min",
+    "empty": "Ce serveur n’a aucune règle AutoMod de Discord. Tu les crées dans Discord, dans Paramètres du serveur, AutoMod.",
+    "policyHelp": "ignorer : rien. journal : une courte ligne dans le salon de vérification. avertir : un avertissement et une carte de vérification.",
+    "dedupe": "Agir une fois par membre toutes les (minutes)",
+    "dedupeHelp": "Les autres blocages du même membre pendant ce temps sont seulement comptés. Laisse vide pour garder la valeur actuelle.",
+    "submit": "Définir le comportement",
+    "policies": {
+      "ignore": "ignorer",
+      "log": "journal",
+      "warn": "avertir"
+    }
+  },
+  "secondChance": {
+    "title": "Petit rappel amical pour une première petite faute",
+    "help": "Sois indulgent pour un premier petit écart.",
+    "label": "Petit rappel amical pour une première petite faute : un court rappel au lieu d’un avertissement"
+  },
+  "mood": {
+    "title": "Ambiance",
+    "help": "Le mode lent fait attendre les membres quelques secondes entre deux messages.",
+    "label": "Alertes d’ambiance : quand un salon s’échauffe, publier un message d’apaisement et ralentir le chat un court moment",
+    "alerts": "Alertes d’ambiance"
+  },
+  "trusted": {
+    "title": "Membres de confiance",
+    "help": "Les membres de confiance échappent aux règles pour les petites choses. Les règles sérieuses s’appliquent toujours. Pour désactiver, choisis aucun et mets le niveau à 0.",
+    "role": "Rôle de confiance",
+    "none": "aucun",
+    "roleHelp": "Les membres qui ont ce rôle sont de confiance.",
+    "minLevel": "Ou à partir du niveau",
+    "minLevelHelp": "Les membres à ce niveau ou au-dessus sont aussi de confiance. 0 désactive cette option."
+  },
+  "exceptions": {
+    "title": "Exceptions par salon",
+    "help": "Désactive une règle, ou passe-la en « signaler seulement (ne pas supprimer) », dans un salon. Par exemple, autorise les liens dans un salon de liens.",
+    "channel": "Salon ou catégorie",
+    "channelHelp": "Une catégorie est un dossier de salons. En choisir une couvre tous les salons qu’elle contient.",
+    "empty": "Aucune exception de règle par salon.",
+    "modeThere": "Mode dans ce salon",
+    "modeThereHelp": "désactivée : la règle y est ignorée. signaler seulement (ne pas supprimer) : l’équipe est prévenue, rien n’est supprimé.",
+    "add": "Ajouter l’exception"
+  },
+  "exempt": {
+    "title": "Salons ignorés",
+    "help": "Les salons où Automod ne vérifie rien du tout.",
+    "channel": "Salon",
+    "empty": "Automod vérifie tous les salons.",
+    "ignore": "Ignorer ce salon",
+    "ignoreHelp": "Automod ne vérifie aucun message ici.",
+    "add": "Ajouter",
+    "alsoIgnored": "Aussi ignorés (définis par le propriétaire du bot hors du tableau de bord) : {channels}"
+  },
+  "gate": {
+    "title": "Filtre d’arrivée",
+    "help": "Contrôle les nouveaux membres à leur arrivée. Pour chaque contrôle : désactivé ne fait rien ; signaler prévient l’équipe dans le salon de vérification, avec les boutons Kick et Dismiss ; expulser les retire et leur envoie un message privé qui explique comment revenir.",
+    "ageDays": "Compte récent = plus jeune que (jours)",
+    "checks": {
+      "avatar": "Pas de photo de profil",
+      "links": "Lien ou invitation dans le nom",
+      "botname": "Nom d’utilisateur qui semble généré",
+      "age": "Compte récent"
+    },
+    "actions": {
+      "off": "désactivé",
+      "flag": "signaler",
+      "kick": "expulser"
+    }
+  },
+  "panic": {
+    "title": "Panique",
+    "help": "Un verrouillage anti-raid démarre seul quand beaucoup de comptes arrivent en même temps. Le mode panique empêche les raideurs de se répandre.",
+    "label": "Mode panique : bloquer les nouvelles invitations et les messages privés entre membres quand un verrouillage anti-raid démarre",
+    "hours": "Les bloquer pendant (heures)"
+  },
+  "stats": {
+    "period": "Période des statistiques",
+    "total": {
+      "one": "{count} action automatique sur {period}.",
+      "many": "{count} actions automatiques sur {period}.",
+      "other": "{count} actions automatiques sur {period}."
+    },
+    "undoHint": "Si l’équipe annule 30 % ou plus des actions d’une règle, la règle est sans doute trop stricte.",
+    "actions": "Actions",
+    "undone": "Annulées",
+    "changed": "Modifiées",
+    "undoRate": "Taux d’annulation",
+    "empty": "Aucune action d’Automod."
+  },
+  "lockdown": {
+    "title": "Verrouillage anti-raid",
+    "help": "Un verrouillage démarre seul quand beaucoup de comptes arrivent en même temps.",
+    "unreadable": "Impossible de lire l’état du verrouillage (base de données). Recharge la page pour réessayer.",
+    "active": "Un verrouillage anti-raid est actif",
+    "since": "depuis le {date}",
+    "joiners": {
+      "one": "{count} arrivée du raid",
+      "many": "{count} arrivées du raid",
+      "other": "{count} arrivées du raid"
+    },
+    "end": "Lever le verrouillage",
+    "endConfirm": "Lever le verrouillage anti-raid ? Le niveau de vérification revient à ce qu’il était, et les invitations et messages privés suspendus reprennent.",
+    "needsAdmin": "Pour lever un verrouillage, tu as besoin de la permission Administrateur sur ce serveur.",
+    "follow": "Le suivre sur la chronologie des raids",
+    "none": "Aucun verrouillage en ce moment. Il démarre seul quand beaucoup de comptes arrivent en même temps (un raid). Les raids passés sont sur la {timeline}.",
+    "timelineLink": "chronologie des raids"
+  },
+  "queue": {
+    "title": "File de vérification",
+    "titleCount": "File de vérification ({count})",
+    "unreadable": "Impossible de lire la file de vérification (salon de vérification indisponible).",
+    "colCard": "Carte",
+    "colSince": "Depuis",
+    "colMessages": "Messages",
+    "card": "Carte de vérification",
+    "empty": "Rien n’attend de vérification.",
+    "more": "…et {count} de plus.",
+    "help": "Les cartes de vérification qui attendent l’équipe : celles publiées depuis le dernier démarrage du bot, et les 50 derniers messages du salon de vérification qui ont encore des boutons. Les lignes courtes pour les petites choses ne sont pas listées. Tu décides de chaque carte dans Discord avec ses boutons (Keep, Undo, Change, Dismiss)."
+  },
+  "probation": {
+    "title": "Surveillance renforcée après un bannissement",
+    "titleCount": "Surveillance renforcée après un bannissement ({count})",
+    "help": "Les membres revenus après la fin d’un bannissement. Automod est plus strict avec eux pendant un temps : ils passent directement à l’étape de sanction suivante, sans petit rappel amical ni indulgence de membre de confiance.",
+    "unreadable": "Impossible de lire les périodes de surveillance renforcée (base de données). Recharge la page pour réessayer.",
+    "colMember": "Membre",
+    "colUntil": "Jusqu’au",
+    "colBan": "Bannissement",
+    "end": "Arrêter la surveillance",
+    "endConfirm": "Arrêter cette surveillance renforcée maintenant ?",
+    "empty": "Personne n’est en surveillance renforcée après un bannissement."
+  },
+  "testRun": {
+    "title": "Essai",
+    "help": "Vérifie les messages récents avec tes réglages Automod actuels, sans rien faire. Rien n’est supprimé, personne ne reçoit de message, rien n’est enregistré ni journalisé. Seuls les contrôles qui regardent un message à la fois tournent. Le spam, le même texte posté dans plusieurs salons et les insultes répétées dans le temps sont ignorés, parce qu’ils dépendent du rythme. L’indulgence pour les membres de confiance ne s’applique pas, et les administrateurs sont ignorés comme le fait Automod. Les messages des personnes qui ont quitté le serveur sont quand même vérifiés.",
+    "channels": "Salons (jusqu’à {max})",
+    "channelsHelp": "Mewvo a besoin de « Voir les salons » et « Voir les anciens messages » dans chacun d’eux.",
+    "howFarBack": "Jusqu’à quand remonter",
+    "howFarBackHelp": "{max} messages au plus en tout, les plus récents d’abord.",
+    "draftName": "Nom de la règle brouillon (facultatif)",
+    "draftDefault": "Règle brouillon",
+    "draftNameHelp": "Essaie une règle personnalisée avant de l’ajouter. Elle n’est pas enregistrée.",
+    "draftWordsLabel": "Mots de la règle brouillon (facultatif)",
+    "draftWordsHelp": "Un mot ou une expression par ligne, jusqu’à {max}. Détectés comme pour les règles personnalisées.",
+    "start": "Lancer l’essai",
+    "needsAdmin": "Pour lancer un essai, tu as besoin de la permission Administrateur sur ce serveur.",
+    "strictHelp": "« Peut-être trop stricte » apparaît quand une règle a attrapé au moins {hits} messages, d’au moins {members} membres différents, et au moins {share} % des messages vérifiés. Ce n’est qu’un indice : les membres enfreignent peut-être vraiment cette règle aussi souvent. Regarde les exemples et les mots trouvés avant de changer quoi que ce soit.",
+    "fixHelp": "Les boutons changent la règle pour tout le serveur tout de suite, comme le formulaire Modes des règles, et le changement est journalisé. Signaler seulement (ne pas supprimer) : l’équipe est prévenue, rien n’est supprimé. Activer : la règle suit le réglage principal. Les exceptions par salon s’appliquent toujours dans leurs salons.",
+    "skippedChecks": "Non vérifiés dans un essai : le spam, le schéma des bots de pub (le même texte dans plusieurs salons depuis un compte récent) et le harcèlement dans le temps. Une insulte visant quelqu’un compte ici comme un manque de respect.",
+    "strictNote": "Attrape beaucoup, peut-être trop stricte",
+    "moreWords": "et {more} de plus",
+    "draftTitle": "Règle brouillon",
+    "draftLabel": "Brouillon : {name}",
+    "draftWords": {
+      "one": "{count} mot ou expression",
+      "many": "{count} mots ou expressions",
+      "other": "{count} mots ou expressions"
+    },
+    "draftHead": "« {name} », {words}. Pas encore enregistrée.",
+    "draftNoPlan": "Les règles personnalisées viennent avec les formules Normal, Pro et Max.",
+    "draftAtLimit": {
+      "one": "Ce serveur a déjà {count} règle personnalisée, le maximum de sa formule. Retires-en une dans Règles personnalisées d’abord.",
+      "many": "Ce serveur a déjà {count} règles personnalisées, le maximum de sa formule. Retires-en une dans Règles personnalisées d’abord.",
+      "other": "Ce serveur a déjà {count} règles personnalisées, le maximum de sa formule. Retires-en une dans Règles personnalisées d’abord."
+    },
+    "draftAdd": "Ajouter cette règle",
+    "draftAddConfirm": "Ajouter la règle personnalisée « {name} » ? Elle commence tout de suite à supprimer les messages qui correspondent. Tu peux changer ce qu’elle fait dans Règles personnalisées.",
+    "draftAddNote": "Ajoutée comme règle personnalisée qui supprime le message. Passe-la en avertissement ou en sourdine dans Règles personnalisées.",
+    "modeDraft": "brouillon, non enregistré",
+    "modeActs": "agit",
+    "offSuffix": "{rule} (désactivée)",
+    "excerptHidden": "masqué (la correspondance n’a pas pu être cachée sans risque)",
+    "noText": "pas de texte",
+    "summary": "{read} {from} {period} : {checked} vérifiés, {bots} de bots ignorés, {admins} d’administrateurs ignorés. {hits}",
+    "readMessages": {
+      "one": "{count} message lu",
+      "many": "{count} messages lus",
+      "other": "{count} messages lus"
+    },
+    "fromChannels": {
+      "one": "dans {count} salon",
+      "many": "dans {count} salons",
+      "other": "dans {count} salons"
+    },
+    "hitMessages": {
+      "one": "{count} message a enfreint une règle.",
+      "many": "{count} messages ont enfreint une règle.",
+      "other": "{count} messages ont enfreint une règle."
+    },
+    "capped": "Arrêté à la limite de {max} messages. Des messages plus anciens de cette période n’ont peut-être pas été vérifiés.",
+    "automodOff": "Automod est désactivé en ce moment. Ceci montre ce qu’il attraperait avec ces réglages.",
+    "invitesUnchecked": {
+      "one": "{count} lien d’invitation n’a pas été vérifié (limite de recherche atteinte), il n’est donc pas compté.",
+      "many": "{count} liens d’invitation n’ont pas été vérifiés (limite de recherche atteinte), ils ne sont donc pas comptés.",
+      "other": "{count} liens d’invitation n’ont pas été vérifiés (limite de recherche atteinte), ils ne sont donc pas comptés."
+    },
+    "colRule": "Règle",
+    "colMessages": "Messages",
+    "colMembers": "Membres",
+    "colShare": "Part des vérifiés",
+    "colMode": "Mode",
+    "colNote": "Remarque",
+    "colFix": "Correction proposée",
+    "noHits": "Aucun message n’a enfreint de règle.",
+    "offTitle": "Désactivées, mais auraient attrapé des messages",
+    "wordsTitle": "Mots trouvés",
+    "wordsHelp": "Combien de fois chaque mot ou expression a été trouvé, en partie masqué comme les exemples.",
+    "colWords": "Mots",
+    "examplesTitle": "Exemples (jusqu’à {max})",
+    "colWhen": "Quand",
+    "colMember": "Membre",
+    "colChannel": "Salon",
+    "colExcerpt": "Extrait",
+    "reload": "Recharge cette page",
+    "stateUnreadable": "Impossible de lire l’état de l’essai. {reload} pour réessayer.",
+    "inProgress": "Essai en cours.",
+    "progress": "{read} messages lus sur {max} au plus pour l’instant, lancé {started}. {reload} pour voir l’avancement.",
+    "failed": "Le dernier essai a échoué : {error}",
+    "unknownError": "erreur inconnue.",
+    "readBeforeStop": {
+      "one": "{count} message a été lu avant l’arrêt.",
+      "many": "{count} messages ont été lus avant l’arrêt.",
+      "other": "{count} messages ont été lus avant l’arrêt."
+    },
+    "newTitle": "Lancer un nouvel essai",
+    "newHelp": "Un nouvel essai remplace ce résultat. Les résultats sont gardés 30 minutes."
+  },
+  "fix": {
+    "offNow": "désactivée",
+    "onNow": "activée",
+    "removedSince": "retirée depuis",
+    "setMonitor": "Signaler seulement",
+    "confirmOff": "Désactiver {rule} pour tout le serveur ?",
+    "confirmMonitor": "Passer {rule} en « signaler seulement (ne pas supprimer) » pour tout le serveur ?",
+    "confirmOn": "Activer {rule} pour tout le serveur ? Elle suit le réglage principal.",
+    "confirmCustomOff": "Désactiver la règle personnalisée « {name} » ?"
+  },
+  "error": {
+    "unknownMode": "{rule} : mode inconnu.",
+    "customAtLimit": {
+      "one": "Ce serveur a déjà {count} règle personnalisée, le maximum de la formule {plan}. Retires-en une d’abord.",
+      "many": "Ce serveur a déjà {count} règles personnalisées, le maximum de la formule {plan}. Retires-en une d’abord.",
+      "other": "Ce serveur a déjà {count} règles personnalisées, le maximum de la formule {plan}. Retires-en une d’abord."
+    },
+    "customNoPlan": "Les règles personnalisées font partie des formules Normal, Pro et Max, selon la formule du propriétaire du serveur.",
+    "pickNative": "Choisis une règle AutoMod de Discord dans la liste.",
+    "nativeGone": "Cette règle AutoMod de Discord n’existe plus.",
+    "noLockdown": "Il n’y a pas de verrouillage en ce moment.",
+    "noProbation": "Ce membre n’est pas en surveillance renforcée.",
+    "pickChannel": "Choisis au moins un salon.",
+    "tooManyChannels": "Choisis {max} salons au plus ({picked} choisis).",
+    "ignoredChannel": "Automod ignore #{channel}, donc un essai n’y trouvera rien. Choisis un autre salon."
+  },
+  "action": {
+    "automodOn": "Automod est maintenant activé.",
+    "automodOff": "Automod est maintenant désactivé.",
+    "modeEnforce": "Mode global : agir.",
+    "modeMonitor": "Mode global : signaler seulement (ne pas supprimer).",
+    "rulesSaved": "Règles enregistrées.",
+    "quickOn": "{rule} est activée. Elle suit le réglage principal.",
+    "quickMonitor": "{rule} est maintenant en signaler seulement (ne pas supprimer).",
+    "quickOff": "{rule} est maintenant désactivée.",
+    "customAdded": "Règle personnalisée ajoutée.",
+    "customAddedName": "Règle personnalisée « {name} » ajoutée.",
+    "customSaved": "Règle personnalisée « {name} » enregistrée.",
+    "customOn": "La règle personnalisée « {name} » est activée.",
+    "customOff": "La règle personnalisée « {name} » est désactivée.",
+    "customRemoved": "Règle personnalisée « {name} » retirée.",
+    "exceptionSaved": "Exception de salon enregistrée.",
+    "exceptionRemoved": "Exception de salon retirée.",
+    "exemptAdded": "Automod ignore maintenant ce salon.",
+    "exemptRemoved": "Automod vérifie de nouveau ce salon.",
+    "trustedSaved": "Membres de confiance enregistrés.",
+    "secondChanceOn": "Le petit rappel amical pour une première petite faute est activé.",
+    "secondChanceOff": "Le petit rappel amical pour une première petite faute est désactivé.",
+    "moodOn": "Les alertes d’ambiance sont activées.",
+    "moodOff": "Les alertes d’ambiance sont désactivées.",
+    "panicOn": "Le mode panique est activé.",
+    "panicOff": "Le mode panique est désactivé.",
+    "panicNoPerm": "Je n’ai pas « Gérer le serveur », donc la suspension des invitations et des messages privés échouera tant que je ne l’ai pas.",
+    "gateSaved": "Filtre d’arrivée enregistré.",
+    "nativeSaved": "Règle Discord « {name} » mise à jour.",
+    "lockdownEnded": "Verrouillage levé. Le niveau de vérification est revenu à ce qu’il était, et les invitations et messages privés suspendus ont repris.",
+    "probationEnded": "Surveillance renforcée de {member} arrêtée plus tôt.",
+    "testRunStarted": "Essai lancé. Recharge la page dans un moment pour voir l’avancement."
+  }
+}

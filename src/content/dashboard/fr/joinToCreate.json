@@ -1,0 +1,45 @@
+{
+  "page": {
+    "help": "Les membres ont leur propre salon vocal quand ils en ont besoin. Quand quelqu’un rejoint le salon déclencheur, Mewvo crée un nouveau salon vocal pour lui et l’y déplace. Le salon est supprimé dès qu’il est vide."
+  },
+  "status": {
+    "title": "État",
+    "text": "Salons vocaux automatiques : {state} (actif tant qu’il y a un salon déclencheur)."
+  },
+  "triggers": {
+    "title": "Déclencheurs",
+    "channel": "Salon déclencheur",
+    "temporary": "Salons temporaires",
+    "empty": "Pas encore de déclencheur.",
+    "remove": "Retirer le déclencheur",
+    "removeConfirm": "Ne plus utiliser ce salon comme déclencheur ? Le salon lui-même est conservé."
+  },
+  "add": {
+    "title": "Nouveau déclencheur",
+    "help": "Mewvo crée un salon vocal nommé « Join to Create ». Tu peux aussi le faire avec /jointocreate setup sur Discord.",
+    "helpNoAdmin": "Mewvo crée un salon vocal nommé « Join to Create ». Tu peux aussi le faire avec /jointocreate setup sur Discord. Il te faut pour cela la permission Administrateur sur ce serveur.",
+    "oneOnly": "Un serveur peut avoir un seul salon déclencheur. Retire l’actuel pour en créer un nouveau.",
+    "submit": "Créer le salon déclencheur"
+  },
+  "fields": {
+    "name": "Nom du salon",
+    "nameHelp": "Le nom de chaque nouveau salon. Tu peux utiliser {username} (le nom d’utilisateur du membre), {displayName} (son nom sur ce serveur), {guildName} (le nom du serveur) et {channelName} (le nom du salon déclencheur).",
+    "userLimit": "Nombre maximum de personnes",
+    "userLimitHelp": "0 veut dire sans limite.",
+    "bitrate": "Qualité du son (kbps)",
+    "bitrateShort": "Qualité du son",
+    "bitrateHelp": "La qualité du son dans le salon vocal. Plus elle est haute, meilleur est le son, mais il faut une connexion plus rapide. 64 est normal. Les serveurs boostés permettent des valeurs plus hautes.",
+    "category": "Catégorie",
+    "categoryNone": "aucune catégorie",
+    "categoryHelp": "Une catégorie est un dossier de salons. Le salon déclencheur y est créé."
+  },
+  "error": {
+    "unknownTrigger": "Salon déclencheur inconnu.",
+    "nameEmpty": "Le nom du salon ne peut pas être vide."
+  },
+  "action": {
+    "created": "Salon déclencheur « {name} » créé.",
+    "saved": "Paramètres du déclencheur enregistrés.",
+    "removed": "Déclencheur retiré (le salon vocal lui-même est conservé)."
+  }
+}

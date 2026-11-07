@@ -1,0 +1,26 @@
+{
+  "page": {
+    "help": "Mewvo felicita a los miembros en un canal el día de su cumpleaños y puede darles un rol especial para ese día. Los miembros añaden su propio cumpleaños con /birthday set en Discord."
+  },
+  "status": {
+    "title": "Estado",
+    "on": "Anuncios: {state}.",
+    "off": "Anuncios: {state}. Elige un canal abajo para activarlos.",
+    "turnOff": "Desactivar (quitar el canal)"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "channel": "Canal de anuncios",
+    "channelNone": "desactivado",
+    "channelHelp": "Dónde se publica el mensaje de cumpleaños.",
+    "timezone": "Zona horaria",
+    "timezoneHelp": "Los cumpleaños empiezan a medianoche en esta zona horaria. Escríbela como región y ciudad, como Europe/Madrid o America/New_York.",
+    "role": "Rol de cumpleaños",
+    "roleNone": "ninguno",
+    "roleHelp": "Se da el día del cumpleaños y se quita al día siguiente."
+  },
+  "action": {
+    "saved": "Ajustes de cumpleaños guardados.",
+    "off": "Los anuncios de cumpleaños están desactivados."
+  }
+}

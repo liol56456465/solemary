@@ -25,15 +25,15 @@ import {
 } from '../../automod/policy.js';
 import { JOIN_GATE_ACTIONS, JOIN_GATE_CHECKS, normalizeJoinGate } from '../../automod/joinGate.js';
 import { NATIVE_POLICIES, policyFor } from '../../automod/nativeBridge.js';
-import { formatDate, html, path, queryString, raw, timeTag } from '../html.js';
+import { html, path, queryString, raw, timeTag } from '../html.js';
 import {
     InputError, PERMS, boolField, buttonForm, channelField, channelListField, channelName, channelPicker, checkbox, checkboxInput, switchInput, choiceField,
     intField, list, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
-import { NOTHING, changedOnly, registryValue, saveRegistry, section, table, topic } from './common.js';
+import { changedOnly, registryValue, saveRegistry, section, table, topic } from './common.js';
 import {
-    CUSTOM_RULE_ACTIONS, CUSTOM_RULE_NAME_MAX, CUSTOM_RULE_WORDS_MAX, CUSTOM_RULE_WORD_MAX, actionLabel, cleanCustomRules,
+    CUSTOM_RULE_ACTIONS, CUSTOM_RULE_NAME_MAX, CUSTOM_RULE_WORDS_MAX, CUSTOM_RULE_WORD_MAX, cleanCustomRules,
     limitForPlan, overLimitIds, resetCustomRulesCache, runningRules,
 } from '../../automod/customRules.js';
 import { editRule } from '../../automod/customRuleEdits.js';
@@ -43,9 +43,48 @@ import {
 } from '../../automod/backtest.js';
 import { guildPlan as defaultGuildPlan } from '../../billing/premiumEffects.js';
 import { planName } from '../../billing/premiumService.js';
+import { textFor } from '../language.js';
+
+// Words: src/content/dashboard/<lang>/automod.json. English rule, join-gate check and policy names
+// come from config/automod.js, joinGate.js and nativeBridge.js as before; other languages take
+// automod.ruleNames / automod.gate / automod.native.policies. Messages from the automod services
+// (custom rule validation, test run refusals, trusted role problems) stay as those services word them.
 
 /** The server owner's plan (ctx.services.guildPlan in tests). */
 const planOfGuild = (ctx) => (typeof ctx.services?.guildPlan === 'function' ? ctx.services.guildPlan(ctx.guildId) : defaultGuildPlan(ctx.guildId));
+
+const isEnglish = (tr) => tr.lang === 'en';
+
+/** A built-in rule's name: config/automod.js in English, automod.ruleNames.<key> otherwise. */
+function ruleName(tr, key) {
+    const own = `automod.ruleNames.${key}`;
+    if (!isEnglish(tr) && AUTOMOD_RULES[key] && tr.has(own)) return tr.t(own);
+    return AUTOMOD_RULES[key]?.label || key;
+}
+
+const LABEL_KEYS = new Map(Object.entries(AUTOMOD_RULES).map(([key, rule]) => [rule.label, key]));
+/** A rule label as a test run stored it (built-in name or "Draft: …"), in the page language. */
+function storedLabel(tr, label) {
+    if (isEnglish(tr) || typeof label !== 'string') return label;
+    if (LABEL_KEYS.has(label)) return ruleName(tr, LABEL_KEYS.get(label));
+    if (label.startsWith('Draft: ')) return tr.t('automod.testRun.draftLabel', { name: label.slice(7) });
+    return label;
+}
+
+/** A join gate check's name (joinGate.js in English). */
+function gateCheckName(tr, check) {
+    const own = `automod.gate.checks.${check}`;
+    return !isEnglish(tr) && tr.has(own) ? tr.t(own) : JOIN_GATE_CHECKS[check]?.label || check;
+}
+
+/** What people see for a join gate action / native policy value (the values stay). */
+function valueWord(tr, group, value) {
+    const own = `automod.${group}.${value}`;
+    return !isEnglish(tr) && tr.has(own) ? tr.t(own) : value;
+}
+
+/** "Nothing changed." in the page language. */
+const nothing = (tr) => ({ changes: [], message: tr.t('errors.nothingChanged') });
 
 function storedCustomRules(ctx) {
     const value = registryValue(ctx, 'automodCustomRules');
@@ -58,7 +97,7 @@ async function saveCustomRules(ctx, next, message) {
     try {
         clean = cleanCustomRules(next);
     } catch (error) {
-        throw new InputError(error.userMessage || 'That custom rule is not valid.');
+        throw new InputError(error.userMessage || textFor(ctx).t('automod.custom.invalid'));
     }
     const result = await saveRegistry(ctx, { automodCustomRules: clean }, 'automod');
     resetCustomRulesCache();
@@ -68,44 +107,53 @@ async function saveCustomRules(ctx, next, message) {
 function customRuleById(ctx, form) {
     const id = text(form, 'id', 20);
     const rule = storedCustomRules(ctx).find((r) => r.id === id);
-    if (!rule) throw new InputError('That custom rule is gone already. Reload the page.');
+    if (!rule) throw new InputError(textFor(ctx).t('automod.custom.gone'));
     return rule;
 }
 
+/** A custom rule's action for the list (customRules.js actionLabel, in the page language). */
+function customActionLabel(tr, rule) {
+    if (rule.action === 'mute') return tr.t('automod.custom.actionMute', { duration: rule.muteDuration });
+    return rule.action === 'warn' ? tr.t('automod.custom.actionWarn') : tr.t('automod.custom.actionDelete');
+}
+
+const customActionChoices = (tr) => CUSTOM_RULE_ACTIONS.map((a) => [a, a === 'delete' ? tr.t('automod.custom.do.delete') : a === 'warn' ? tr.t('automod.custom.do.warn') : tr.t('automod.custom.do.mute')]);
+
 function customRulesSection(ctx, data) {
+    const tr = textFor(ctx);
     const { rules, limit, planId } = data.custom;
     const plan = planId === 'free' ? 'Free' : planName(planId);
-    const pricing = html`<a href="/pricing">See the plans</a>.`;
+    const pricing = html`<a href="/pricing">${tr.t('automod.custom.seePlans')}</a>.`;
     if (!limit && !rules.length) {
-        return html`<p>Custom rules come with the Normal, Pro and Max plans. The server owner's plan counts. This server is on ${plan}. ${pricing}</p>`;
+        return html`<p>${tr.tx('automod.custom.noPlan', { plan, pricing })}</p>`;
     }
     const over = new Set(overLimitIds(rules, limit));
     const running = runningRules(rules, limit).length;
     const state = (rule) => {
-        if (rule.enabled === false) return 'off';
-        return over.has(rule.id) ? html`<span class="warn">not running (over the plan's limit)</span>` : 'on';
+        if (rule.enabled === false) return tr.t('automod.custom.stateOff');
+        return over.has(rule.id) ? html`<span class="warn">${tr.tx('automod.custom.overLimit')}</span>` : tr.t('automod.custom.stateOn');
     };
-    const list = table(['Name', 'Words', 'Action', 'State', '', ''], rules.map((rule) => [
+    const list = table([tr.t('automod.custom.colName'), tr.t('automod.custom.colWords'), tr.t('automod.custom.colAction'), tr.t('automod.custom.colState'), '', ''], rules.map((rule) => [
         rule.name,
-        String(rule.words.length),
-        actionLabel(rule),
+        tr.fmtNumber(rule.words.length),
+        customActionLabel(tr, rule),
         state(rule),
-        buttonForm(ctx, 'automod', 'custom-toggle', rule.enabled === false ? 'Turn on' : 'Turn off', { id: rule.id, enabled: rule.enabled === false ? 'true' : 'false' }),
-        buttonForm(ctx, 'automod', 'custom-remove', 'Remove', { id: rule.id }, { confirm: `Remove the custom rule "${rule.name}"?` }),
-    ]), 'No custom rules yet.');
-    const summary = html`<p>${running} of ${limit} custom rule${limit === 1 ? '' : 's'} run on the ${plan} plan.${over.size ? html` ${over.size} turned-on rule${over.size === 1 ? '' : 's'} over the limit ${over.size === 1 ? 'does' : 'do'} not run. Turn some off or remove them, or move to a higher plan. ${pricing}` : ''}</p>`;
+        buttonForm(ctx, 'automod', 'custom-toggle', tr.t(rule.enabled === false ? 'forms.turnOn' : 'forms.turnOff'), { id: rule.id, enabled: rule.enabled === false ? 'true' : 'false' }),
+        buttonForm(ctx, 'automod', 'custom-remove', tr.t('automod.common.remove'), { id: rule.id }, { confirm: tr.t('automod.custom.removeConfirm', { name: rule.name }) }),
+    ]), tr.t('automod.custom.empty'));
+    const summary = html`<p>${tr.tp('automod.custom.running', limit, { running: tr.fmtNumber(running), plan })}${over.size ? html` ${tr.tp('automod.custom.overLimitCount', over.size)} ${pricing}` : ''}</p>`;
     const add = rules.length >= limit
-        ? html`<p class="muted">This server has ${rules.length} custom rule${rules.length === 1 ? '' : 's'}, the most the ${plan} plan allows. ${limit < 100 ? pricing : ''}</p>`
+        ? html`<p class="muted">${tr.tp('automod.custom.atLimit', rules.length, { plan })} ${limit < 100 ? pricing : ''}</p>`
         : postForm(ctx, 'automod', 'custom-add', html`<div class="grid">
-${textInput('name', '', { label: 'Name', max: CUSTOM_RULE_NAME_MAX, placeholder: 'Other servers', help: 'A name so you can tell your rules apart.' })}
-${selectInput('action', 'delete', CUSTOM_RULE_ACTIONS.map((a) => [a, a === 'delete' ? 'Delete the message' : a === 'warn' ? 'Delete and warn' : 'Delete and mute']), { label: 'What to do' })}
-${textInput('muteDuration', '', { label: 'Mute for', max: 20, placeholder: '1h', help: 'Only used for mutes. For example 30m (30 minutes), 1h (one hour) or 1d (one day). At most 28d.' })}
-${textArea('words', '', { label: 'Words or phrases', rows: 5, max: 4000, help: `Put each word or phrase on its own line. Up to ${CUSTOM_RULE_WORDS_MAX} lines, each up to ${CUSTOM_RULE_WORD_MAX} characters.` })}</div>`, { submit: 'Add rule' });
-    const edit = rules.length ? html`<h3>Change a rule</h3>${rules.map((rule) => html`<details class="rule-edit"><summary>Change "${rule.name}"</summary>
+${textInput('name', '', { label: tr.t('automod.custom.name'), max: CUSTOM_RULE_NAME_MAX, placeholder: tr.t('automod.custom.namePlaceholder'), help: tr.t('automod.custom.nameHelp') })}
+${selectInput('action', 'delete', customActionChoices(tr), { label: tr.t('automod.custom.whatToDo') })}
+${textInput('muteDuration', '', { label: tr.t('automod.custom.muteFor'), max: 20, placeholder: '1h', help: tr.t('automod.custom.muteForHelp') })}
+${textArea('words', '', { label: tr.t('automod.custom.words'), rows: 5, max: 4000, help: tr.t('automod.custom.wordsHelp', { lines: tr.fmtNumber(CUSTOM_RULE_WORDS_MAX), chars: tr.fmtNumber(CUSTOM_RULE_WORD_MAX) }) })}</div>`, { submit: tr.t('automod.custom.add') });
+    const edit = rules.length ? html`<h3>${tr.t('automod.custom.changeTitle')}</h3>${rules.map((rule) => html`<details class="rule-edit"><summary>${tr.tx('automod.custom.changeRule', { name: rule.name })}</summary>
 ${postForm(ctx, 'automod', 'custom-edit', html`<input type="hidden" name="id" value="${rule.id}"><div class="grid">
-${selectInput('action', rule.action, CUSTOM_RULE_ACTIONS.map((a) => [a, a === 'delete' ? 'Delete the message' : a === 'warn' ? 'Delete and warn' : 'Delete and mute']), { label: 'What to do' })}
-${textInput('muteDuration', rule.muteDuration || '', { label: 'Mute for', max: 20, placeholder: '1h', help: 'Only used for mutes, like 30m, 1h or 1d.' })}
-${textArea('words', rule.words.join('\n'), { label: 'Words or phrases', rows: 5, max: 4000, help: 'One per line. This replaces the old list.' })}</div>`, { submit: 'Save changes' })}</details>`)}` : '';
+${selectInput('action', rule.action, customActionChoices(tr), { label: tr.t('automod.custom.whatToDo') })}
+${textInput('muteDuration', rule.muteDuration || '', { label: tr.t('automod.custom.muteFor'), max: 20, placeholder: '1h', help: tr.t('automod.custom.muteForHelpShort') })}
+${textArea('words', rule.words.join('\n'), { label: tr.t('automod.custom.words'), rows: 5, max: 4000, help: tr.t('automod.custom.wordsHelpEdit') })}</div>`, { submit: tr.t('forms.save') })}</details>`)}` : '';
     return html`${summary}${list}${edit}${add}`;
 }
 
@@ -150,7 +198,7 @@ async function change(ctx, keys, run, message) {
     const result = await run();
     const after = result?.settings || result;
     const changes = settingsChanges(before, after, keys);
-    return { changes, message: changes.length ? message : 'Nothing changed.' };
+    return { changes, message: changes.length ? message : textFor(ctx).t('errors.nothingChanged') };
 }
 
 /** Heads-up first on/off per setting key (policy.js HEADS_UP_SETTING_KEYS), for the audit diff. */
@@ -158,158 +206,175 @@ function headsUpSnapshot(settings) {
     return Object.fromEntries(HEADS_UP_SETTING_KEYS.map((key) => [key, settings?.headsUp?.[key] !== false]));
 }
 
-const HEADS_UP_HELP = 'Warn privately first (2 min to fix): the first time in 30 days, the member gets a private message and 2 minutes to edit or delete the message, and nothing else happens. Personal info is removed at once without a warning. Scam, NSFW, ads, mass mentions, spam, raids and slurs always act at once.';
-
-function headsUpLine(stats) {
-    if (stats === null) return html`<p class="muted">The private first warning counts could not be read (database).</p>`;
-    return html`<p>Private first warnings in the last 30 days: ${stats.sent} sent, ${stats.fixed} fixed by the member, ${stats.acted} acted on after the wait.</p>`;
+function headsUpLine(tr, stats) {
+    if (stats === null) return html`<p class="muted">${tr.t('automod.rules.headsUpUnreadable')}</p>`;
+    return html`<p>${tr.t('automod.rules.headsUpCounts', { sent: tr.fmtNumber(stats.sent), fixed: tr.fmtNumber(stats.fixed), acted: tr.fmtNumber(stats.acted) })}</p>`;
 }
 
 // ── Test run ──────────────────────────────────────────────────────────────
 
-const TEST_RUN_HELP = 'Check recent messages against your current automod settings without acting on anything. Nothing is deleted, nobody gets a message, nothing is saved or logged. Only checks that look at one message at a time run. Spam, the same text posted in many channels, and repeated insults over time are skipped, because they depend on timing. Trusted member leniency is not applied, and administrators are skipped like automod does. Messages from people who have left the server are still checked.';
-const SKIPPED_CHECKS = 'Not checked in a test run: Spam, the ad bot pattern (the same text in many channels from a new account), and harassment over time. An insult aimed at someone counts as Disrespect here.';
-
 const number = (n) => Number(n || 0).toLocaleString('en-US');
+/** A count in text: English keeps "2,000" (en-US grouping, as the page always showed); others their own. */
+const num = (tr, n) => (isEnglish(tr) ? number(n) : tr.fmtNumber(Number(n || 0)));
+
+/** "Last day" / "Last 7 days" (titles, choices). */
+const lastDays = (tr, n) => (n === 1 ? tr.t('automod.period.lastDay') : tr.tp('automod.period.lastDays', n));
 
 function testRunForm(ctx, canAct) {
+    const tr = textFor(ctx);
     const g = ctx.guild;
     return html`${postForm(ctx, 'automod', 'test-run', html`<div class="grid">
-${channelPicker(g, 'channels', [], { label: `Channels (up to ${BACKTEST_MAX_CHANNELS})`, kinds: ['text'], perms: PERMS.read, multiple: true, optional: false, help: 'Mewvo needs View Channel and Read Message History in each one.' })}
-${selectInput('days', '7', BACKTEST_DAY_CHOICES.map((n) => [String(n), n === 1 ? 'Last day' : `Last ${n} days`]), { label: 'How far back', help: `At most ${number(MAX_MESSAGES)} messages in total, newest first.` })}
-${textInput('draftName', '', { label: 'Draft rule name (optional)', max: CUSTOM_RULE_NAME_MAX, placeholder: 'Draft rule', help: 'Try a custom rule before you add it. It is not saved.' })}
-${textArea('draftWords', '', { label: 'Draft rule words (optional)', rows: 3, max: 4000, help: `One word or phrase per line, up to ${CUSTOM_RULE_WORDS_MAX}. Matched like custom rules.` })}</div>`, { submit: 'Start test run', canEdit: canAct })}
-${canAct ? '' : html`<p class="muted">To start a test run you need the Administrator permission in this server.</p>`}`;
+${channelPicker(g, 'channels', [], { label: tr.t('automod.testRun.channels', { max: tr.fmtNumber(BACKTEST_MAX_CHANNELS) }), kinds: ['text'], perms: PERMS.read, multiple: true, optional: false, help: tr.t('automod.testRun.channelsHelp') })}
+${selectInput('days', '7', BACKTEST_DAY_CHOICES.map((n) => [String(n), lastDays(tr, n)]), { label: tr.t('automod.testRun.howFarBack'), help: tr.t('automod.testRun.howFarBackHelp', { max: num(tr, MAX_MESSAGES) }) })}
+${textInput('draftName', '', { label: tr.t('automod.testRun.draftName'), max: CUSTOM_RULE_NAME_MAX, placeholder: tr.t('automod.testRun.draftDefault'), help: tr.t('automod.testRun.draftNameHelp') })}
+${textArea('draftWords', '', { label: tr.t('automod.testRun.draftWordsLabel'), rows: 3, max: 4000, help: tr.t('automod.testRun.draftWordsHelp', { max: tr.fmtNumber(CUSTOM_RULE_WORDS_MAX) }) })}</div>`, { submit: tr.t('automod.testRun.start'), canEdit: canAct })}
+${canAct ? '' : html`<p class="muted">${tr.t('automod.testRun.needsAdmin')}</p>`}`;
 }
 
-const STRICT_HELP = `"May be too strict" shows when a rule caught at least ${STRICT_MIN_HITS} messages, from at least ${STRICT_MIN_MEMBERS} different members, and at least ${STRICT_MIN_SHARE * 100}% of the checked messages. It is only a hint: members may really break that rule that often. Look at the examples and the matched words before you change anything.`;
-const FIX_HELP = 'The buttons change the rule for the whole server right away, the same as the Rule modes form, and the change is logged. Report only (don\'t delete): staff are told, nothing is deleted. Turn on: the rule follows the main setting. Channel exceptions still apply in their channels.';
 // The modes the one-click buttons may set (test-run-rule).
 const QUICK_MODES = { monitor: "report only (don't delete)", off: 'off', default: 'on' };
 // What people see for a rule mode value (the values stay: policy.js RULE_MODES, CHANNEL_RULE_MODES).
-const MODE_WORDS = { on: 'on', monitor: "report only (don't delete)", off: 'off' };
-const modeWord = (mode) => MODE_WORDS[mode] || mode;
+const MODE_KEYS = { on: 'automod.mode.on', monitor: 'automod.mode.monitor', off: 'automod.mode.off' };
+const modeWord = (tr, mode) => (MODE_KEYS[mode] ? tr.t(MODE_KEYS[mode]) : mode);
 
-function sharePct(count, checked) {
+function sharePct(tr, count, checked) {
     if (!checked) return '-';
     const value = (count / checked) * 100;
-    return `${value < 10 ? value.toFixed(1) : Math.round(value)}%`;
+    if (isEnglish(tr)) return `${value < 10 ? value.toFixed(1) : Math.round(value)}%`;
+    return `${tr.fmtNumber(value < 10 ? Math.round(value * 10) / 10 : Math.round(value), { maximumFractionDigits: 1 })}%`;
 }
 
-const strictNote = (entry) => (entry.mayBeTooStrict ? html`<span class="warn">Catches a lot, may be too strict</span>` : '');
+const strictNote = (tr, entry) => (entry.mayBeTooStrict ? html`<span class="warn">${tr.t('automod.testRun.strictNote')}</span>` : '');
 
 /** A test-run-rule button: the rule key and mode are checked again on the server. */
 function quickRuleButton(ctx, key, mode, label) {
-    const ruleLabel = AUTOMOD_RULES[key].label;
-    const confirm = mode === 'off' ? `Turn off ${ruleLabel} for the whole server?`
-        : mode === 'monitor' ? `Set ${ruleLabel} to report only (don't delete) for the whole server?`
-            : `Turn on ${ruleLabel} for the whole server? It follows the main setting.`;
+    const tr = textFor(ctx);
+    const rule = ruleName(tr, key);
+    const confirm = mode === 'off' ? tr.t('automod.fix.confirmOff', { rule })
+        : mode === 'monitor' ? tr.t('automod.fix.confirmMonitor', { rule })
+            : tr.t('automod.fix.confirmOn', { rule });
     return buttonForm(ctx, 'automod', 'test-run-rule', label, { rule: key, mode }, { confirm, danger: mode === 'off' });
 }
 
 /** The fix buttons for one result row, from the CURRENT settings (no button for a no-op). */
 function fixButtons(ctx, key, entry, settings, customRules) {
+    const tr = textFor(ctx);
     if (AUTOMOD_RULES[key]) {
         const now = ruleMode(settings, key);
-        if (now === 'off') return html`<span class="muted">off now</span>`;
-        return html`${entry.on && now !== 'monitor' ? quickRuleButton(ctx, key, 'monitor', "Set to report only (don't delete)") : ''}${quickRuleButton(ctx, key, 'off', 'Turn off')}`;
+        if (now === 'off') return html`<span class="muted">${tr.t('automod.fix.offNow')}</span>`;
+        return html`${entry.on && now !== 'monitor' ? quickRuleButton(ctx, key, 'monitor', tr.t('automod.fix.setMonitor')) : ''}${quickRuleButton(ctx, key, 'off', tr.t('forms.turnOff'))}`;
     }
     if (key.startsWith('custom-')) {
         const rule = customRules.find((r) => `custom-${r.id}` === key);
-        if (!rule) return html`<span class="muted">removed since</span>`;
-        if (rule.enabled === false) return html`<span class="muted">off now</span>`;
-        return buttonForm(ctx, 'automod', 'custom-toggle', 'Turn off', { id: rule.id, enabled: 'false' }, { confirm: `Turn off the custom rule "${rule.name}"?` });
+        if (!rule) return html`<span class="muted">${tr.t('automod.fix.removedSince')}</span>`;
+        if (rule.enabled === false) return html`<span class="muted">${tr.t('automod.fix.offNow')}</span>`;
+        return buttonForm(ctx, 'automod', 'custom-toggle', tr.t('forms.turnOff'), { id: rule.id, enabled: 'false' }, { confirm: tr.t('automod.fix.confirmCustomOff', { name: rule.name }) });
     }
     return '';
 }
 
-function wordsCell(entry) {
-    const words = (entry.words || []).map((w, i) => html`${i ? ', ' : ''}<code>${w.word}</code> ${number(w.count)}`);
-    return html`${words}${entry.moreWords ? html` <span class="muted">and ${number(entry.moreWords)} more</span>` : ''}`;
+function wordsCell(tr, entry) {
+    const words = (entry.words || []).map((w, i) => html`${i ? ', ' : ''}<code>${w.word}</code> ${num(tr, w.count)}`);
+    return html`${words}${entry.moreWords ? html` <span class="muted">${tr.t('automod.testRun.moreWords', { more: num(tr, entry.moreWords) })}</span>` : ''}`;
 }
 
 /** "Add this rule" for the draft: posts the cleaned draft to custom-add (same checks and plan limit). */
 function draftAdd(ctx, draft, custom) {
     if (!draft?.list?.length) return '';
-    const name = String(draft.name || 'Draft rule');
+    const tr = textFor(ctx);
+    const name = String(draft.name || tr.t('automod.testRun.draftDefault'));
     const limit = custom?.limit ?? 0;
     const count = custom?.rules?.length ?? 0;
-    const head = html`<h3>Draft rule</h3><p>"${name}", ${number(draft.list.length)} word${draft.list.length === 1 ? '' : 's'} or phrase${draft.list.length === 1 ? '' : 's'}. It is not saved yet.</p>`;
-    if (!limit) return html`${head}<p class="muted">Custom rules come with the Normal, Pro and Max plans. <a href="/pricing">See the plans</a>.</p>`;
-    if (count >= limit) return html`${head}<p class="muted">This server already has ${count} custom rule${count === 1 ? '' : 's'}, the most its plan allows. Remove one under Custom rules first.</p>`;
-    return html`${head}${buttonForm(ctx, 'automod', 'custom-add', 'Add this rule', { name, action: 'delete', muteDuration: '', words: draft.list.join('\n') }, { confirm: `Add the custom rule "${name}"? It starts deleting matching messages right away. You can change what it does under Custom rules.`, danger: false })}
-<p class="muted">Added as a custom rule that deletes the message. Change it to warn or mute under Custom rules.</p>`;
+    const words = tr.tp('automod.testRun.draftWords', draft.list.length, { count: num(tr, draft.list.length) });
+    const head = html`<h3>${tr.t('automod.testRun.draftTitle')}</h3><p>${tr.tx('automod.testRun.draftHead', { name, words })}</p>`;
+    if (!limit) return html`${head}<p class="muted">${tr.t('automod.testRun.draftNoPlan')} <a href="/pricing">${tr.t('automod.custom.seePlans')}</a>.</p>`;
+    if (count >= limit) return html`${head}<p class="muted">${tr.tp('automod.testRun.draftAtLimit', count)}</p>`;
+    return html`${head}${buttonForm(ctx, 'automod', 'custom-add', tr.t('automod.testRun.draftAdd'), { name, action: 'delete', muteDuration: '', words: draft.list.join('\n') }, { confirm: tr.t('automod.testRun.draftAddConfirm', { name }), danger: false })}
+<p class="muted">${tr.t('automod.testRun.draftAddNote')}</p>`;
 }
 
 function testRunResult(ctx, job, data = {}) {
+    const tr = textFor(ctx);
     const r = job.result || {};
     const p = job.params || {};
     const settings = data.settings || {};
     const customRules = data.custom?.rules || [];
-    const days = p.days === 1 ? 'the last day' : `the last ${p.days} days`;
+    const period = p.days === 1 ? tr.t('automod.period.inLastDay') : tr.tp('automod.period.inLastDays', p.days);
     const channels = (p.channelIds || []).length;
     const rows = Object.entries(r.byRule || {}).sort((a, b) => b[1].count - a[1].count).map(([key, entry]) => {
-        let mode = 'draft, not saved';
-        if (key !== DRAFT_KEY) mode = [entry.on ? 'acts' : '', entry.monitor ? "report only (don't delete)" : ''].filter(Boolean).join(', ');
-        return [entry.label, number(entry.count), number(entry.members), sharePct(entry.count, r.checked), mode, strictNote(entry), fixButtons(ctx, key, entry, settings, customRules)];
+        let mode = tr.t('automod.testRun.modeDraft');
+        if (key !== DRAFT_KEY) mode = [entry.on ? tr.t('automod.testRun.modeActs') : '', entry.monitor ? tr.t('automod.mode.monitor') : ''].filter(Boolean).join(', ');
+        return [storedLabel(tr, entry.label), num(tr, entry.count), num(tr, entry.members), sharePct(tr, entry.count, r.checked), mode, strictNote(tr, entry), fixButtons(ctx, key, entry, settings, customRules)];
     });
     const offRows = Object.entries(r.offRules || {}).filter(([key]) => AUTOMOD_RULES[key]).sort((a, b) => b[1].count - a[1].count).map(([key, entry]) => [
-        entry.label, number(entry.count), number(entry.members), sharePct(entry.count, r.checked), strictNote(entry),
-        ruleMode(settings, key) === 'off' ? quickRuleButton(ctx, key, 'default', 'Turn on') : html`<span class="muted">on now</span>`,
+        storedLabel(tr, entry.label), num(tr, entry.count), num(tr, entry.members), sharePct(tr, entry.count, r.checked), strictNote(tr, entry),
+        ruleMode(settings, key) === 'off' ? quickRuleButton(ctx, key, 'default', tr.t('forms.turnOn')) : html`<span class="muted">${tr.t('automod.fix.onNow')}</span>`,
     ]);
     const wordRows = [
-        ...Object.values(r.byRule || {}),
-        ...Object.values(r.offRules || {}).map((entry) => ({ ...entry, label: `${entry.label} (off)` })),
-    ].filter((entry) => entry.words?.length).map((entry) => [entry.label, wordsCell(entry)]);
+        ...Object.values(r.byRule || {}).map((entry) => ({ ...entry, label: storedLabel(tr, entry.label) })),
+        ...Object.values(r.offRules || {}).map((entry) => ({ ...entry, label: tr.t('automod.testRun.offSuffix', { rule: storedLabel(tr, entry.label) }) })),
+    ].filter((entry) => entry.words?.length).map((entry) => [entry.label, wordsCell(tr, entry)]);
     const examples = (r.examples || []).map((ex) => [
         ex.at ? timeTag(new Date(ex.at)) : '-',
         html`${ex.author || ex.authorId} <span class="muted">${ex.authorId || ''}</span>`,
         `#${ex.channelName}`,
-        (ex.rules || []).join(', '),
-        ex.excerpt === null ? html`<span class="muted">hidden (the match could not be masked safely)</span>` : (ex.excerpt || html`<span class="muted">no text</span>`),
-        isDiscordUrl(ex.url) ? html`<a href="${ex.url}" rel="noopener noreferrer" target="_blank">Open</a>` : '',
+        (ex.rules || []).map((label) => storedLabel(tr, label)).join(', '),
+        ex.excerpt === null ? html`<span class="muted">${tr.t('automod.testRun.excerptHidden')}</span>` : (ex.excerpt || html`<span class="muted">${tr.t('automod.testRun.noText')}</span>`),
+        isDiscordUrl(ex.url) ? html`<a href="${ex.url}" rel="noopener noreferrer" target="_blank">${tr.t('automod.common.open')}</a>` : '',
     ]);
-    return html`<p>Read ${number(r.read)} message${r.read === 1 ? '' : 's'} from ${channels} channel${channels === 1 ? '' : 's'} in ${days}: ${number(r.checked)} checked, ${number(r.skippedBots)} from bots skipped, ${number(r.skippedAdmins)} from administrators skipped. ${number(r.hitMessages)} message${r.hitMessages === 1 ? '' : 's'} broke a rule.</p>
-${r.capped ? html`<p class="warn">Stopped at the limit of ${number(MAX_MESSAGES)} messages. Older messages in that time may not have been checked.</p>` : ''}
-${p.automodEnabled ? '' : html`<p class="warn">Automod is off right now. This shows what it would catch with these settings.</p>`}
-${r.invitesUnchecked ? html`<p class="muted">${number(r.invitesUnchecked)} invite link${r.invitesUnchecked === 1 ? ' was' : 's were'} not looked up (lookup limit reached), so they are not counted.</p>` : ''}
-<p class="muted">${SKIPPED_CHECKS}</p>
-${table(['Rule', 'Messages', 'Members', 'Share of checked', 'Mode', 'Note', 'Suggested fix'], rows, 'No message broke a rule.')}
-${offRows.length ? html`<h3>Turned off, but would have caught messages</h3>${table(['Rule', 'Messages', 'Members', 'Share of checked', 'Note', 'Suggested fix'], offRows, '')}` : ''}
-<p class="muted">${STRICT_HELP}</p>
-${rows.length || offRows.length ? html`<p class="muted">${FIX_HELP}</p>` : ''}
-${wordRows.length ? html`<h3>Matched words</h3><p class="muted">How often each word or phrase matched, partly hidden like the examples.</p>${table(['Rule', 'Words'], wordRows, '')}` : ''}
+    const ruleCol = tr.t('automod.testRun.colRule');
+    const summary = tr.t('automod.testRun.summary', {
+        read: tr.tp('automod.testRun.readMessages', r.read, { count: num(tr, r.read) }),
+        from: tr.tp('automod.testRun.fromChannels', channels),
+        period,
+        checked: num(tr, r.checked),
+        bots: num(tr, r.skippedBots),
+        admins: num(tr, r.skippedAdmins),
+        hits: tr.tp('automod.testRun.hitMessages', r.hitMessages, { count: num(tr, r.hitMessages) }),
+    });
+    return html`<p>${summary}</p>
+${r.capped ? html`<p class="warn">${tr.t('automod.testRun.capped', { max: num(tr, MAX_MESSAGES) })}</p>` : ''}
+${p.automodEnabled ? '' : html`<p class="warn">${tr.t('automod.testRun.automodOff')}</p>`}
+${r.invitesUnchecked ? html`<p class="muted">${tr.tp('automod.testRun.invitesUnchecked', r.invitesUnchecked, { count: num(tr, r.invitesUnchecked) })}</p>` : ''}
+<p class="muted">${tr.t('automod.testRun.skippedChecks')}</p>
+${table([ruleCol, tr.t('automod.testRun.colMessages'), tr.t('automod.testRun.colMembers'), tr.t('automod.testRun.colShare'), tr.t('automod.testRun.colMode'), tr.t('automod.testRun.colNote'), tr.t('automod.testRun.colFix')], rows, tr.t('automod.testRun.noHits'))}
+${offRows.length ? html`<h3>${tr.t('automod.testRun.offTitle')}</h3>${table([ruleCol, tr.t('automod.testRun.colMessages'), tr.t('automod.testRun.colMembers'), tr.t('automod.testRun.colShare'), tr.t('automod.testRun.colNote'), tr.t('automod.testRun.colFix')], offRows, '')}` : ''}
+<p class="muted">${tr.t('automod.testRun.strictHelp', { hits: tr.fmtNumber(STRICT_MIN_HITS), members: tr.fmtNumber(STRICT_MIN_MEMBERS), share: tr.fmtNumber(STRICT_MIN_SHARE * 100) })}</p>
+${rows.length || offRows.length ? html`<p class="muted">${tr.t('automod.testRun.fixHelp')}</p>` : ''}
+${wordRows.length ? html`<h3>${tr.t('automod.testRun.wordsTitle')}</h3><p class="muted">${tr.t('automod.testRun.wordsHelp')}</p>${table([ruleCol, tr.t('automod.testRun.colWords')], wordRows, '')}` : ''}
 ${draftAdd(ctx, p.draft, data.custom)}
-${examples.length ? html`<h3>Examples (up to ${MAX_EXAMPLES})</h3>${table(['When', 'Member', 'Channel', 'Rule', 'Excerpt', ''], examples, '')}` : ''}`;
+${examples.length ? html`<h3>${tr.t('automod.testRun.examplesTitle', { max: tr.fmtNumber(MAX_EXAMPLES) })}</h3>${table([tr.t('automod.testRun.colWhen'), tr.t('automod.testRun.colMember'), tr.t('automod.testRun.colChannel'), ruleCol, tr.t('automod.testRun.colExcerpt'), ''], examples, '')}` : ''}`;
 }
 
 /** The Test run card: idle / running / done / failed, then the form (not while running). */
 function testRunSection(ctx, job, data) {
+    const tr = textFor(ctx);
     const canAct = Boolean(ctx.canEdit && ctx.canAct);
-    const reload = html`<a href="${path('/automod')}#s-test-run">Reload this page</a>`;
+    const reload = html`<a href="${path('/automod')}#s-test-run">${tr.t('automod.testRun.reload')}</a>`;
     if (job === undefined) {
-        return html`<p class="error" role="alert">The test run state could not be read. ${reload} to try again.</p>`;
+        return html`<p class="error" role="alert">${tr.tx('automod.testRun.stateUnreadable', { reload })}</p>`;
     }
     if (job?.status === 'running') {
-        return html`<p role="status"><b>Test run in progress.</b> ${number(job.progress?.read)} of at most ${number(MAX_MESSAGES)} messages read so far, started ${timeTag(new Date(job.startedAt))}. ${reload} to see the progress.</p>`;
+        return html`<p role="status"><b>${tr.t('automod.testRun.inProgress')}</b> ${tr.tx('automod.testRun.progress', { read: num(tr, job.progress?.read), max: num(tr, MAX_MESSAGES), started: timeTag(new Date(job.startedAt)), reload })}</p>`;
     }
     if (job?.status === 'failed') {
-        return html`<p class="error" role="alert">The last test run failed: ${job.error || 'unknown error.'}</p>
-${job.result?.read ? html`<p class="muted">${number(job.result.read)} messages were read before it stopped.</p>` : ''}
+        return html`<p class="error" role="alert">${tr.tx('automod.testRun.failed', { error: job.error || tr.t('automod.testRun.unknownError') })}</p>
+${job.result?.read ? html`<p class="muted">${tr.tp('automod.testRun.readBeforeStop', job.result.read, { count: num(tr, job.result.read) })}</p>` : ''}
 ${testRunForm(ctx, canAct)}`;
     }
     if (job?.status === 'done') {
         return html`${testRunResult(ctx, job, data)}
-<h3>Start a new test run</h3><p class="muted">A new run replaces this result. Results are kept for 30 minutes.</p>
+<h3>${tr.t('automod.testRun.newTitle')}</h3><p class="muted">${tr.t('automod.testRun.newHelp')}</p>
 ${testRunForm(ctx, canAct)}`;
     }
     return testRunForm(ctx, canAct);
 }
 
 function nativeRows(ctx, rules, policies) {
+    const tr = textFor(ctx);
     return rules.map((rule) => {
         const policy = policyFor(policies, rule.id);
-        return [rule.name, policy.policy, `${policy.dedupeMinutes} min`];
+        return [rule.name, valueWord(tr, 'native.policies', policy.policy), tr.t('automod.native.minutes', { count: tr.fmtNumber(policy.dedupeMinutes) })];
     });
 }
 
@@ -361,139 +426,154 @@ export default {
     },
 
     render(ctx, data) {
+        const tr = textFor(ctx);
         const g = ctx.guild;
         const s = data.settings;
         const gate = normalizeJoinGate(s.joinGate);
         const ruleKeys = Object.keys(AUTOMOD_RULES);
+        const remove = tr.t('automod.common.remove');
+        const ruleCol = tr.t('automod.common.rule');
+        const modeCol = tr.t('automod.common.mode');
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
-        const top = html`${postForm(ctx, 'automod', 'mode', html`<div class="grid grid-wide">${selectInput('mode', s.mode, [['enforce', 'Act: delete or warn, then tell staff'], ['monitor', "Report only (don't delete): tell staff, do nothing"]], { label: 'What automod does', help: 'Staff are told with a review card: a message in the review channel with buttons to keep or undo what automod did. In report only (don\'t delete) mode the card has an Apply button instead.' })}</div>`)}`;
+        const top = html`${postForm(ctx, 'automod', 'mode', html`<div class="grid grid-wide">${selectInput('mode', s.mode, [['enforce', tr.t('automod.global.enforce')], ['monitor', tr.t('automod.global.monitor')]], { label: tr.t('automod.global.label'), help: tr.t('automod.global.labelHelp') })}</div>`)}`;
         // Heads-up first: a checkbox on the rules that offer it (policy.js); "headsup-form" marks
         // that the column was on the page, so a missing checkbox means off.
+        const headsUpLabel = tr.t('automod.rules.headsUp');
         const headsUpCell = (key) => (headsUpSettingKey(key)
-            ? checkboxInput(`headsup:${headsUpSettingKey(key)}`, headsUpEnabled(s, key), { label: 'Warn privately first (2 min to fix)' })
-            : html`<span class="muted">acts at once</span>`);
-        const rules = html`${postForm(ctx, 'automod', 'rules', html`<input type="hidden" name="headsup-form" value="1">${table(['Rule', 'Mode', 'Warn privately first (2 min to fix)'], [
+            ? checkboxInput(`headsup:${headsUpSettingKey(key)}`, headsUpEnabled(s, key), { label: headsUpLabel })
+            : html`<span class="muted">${tr.t('automod.rules.actsAtOnce')}</span>`);
+        const rules = html`${postForm(ctx, 'automod', 'rules', html`<input type="hidden" name="headsup-form" value="1">${table([ruleCol, modeCol, headsUpLabel], [
             ...ruleKeys.map((key) => [
-                AUTOMOD_RULES[key].label,
-                selectInput(`rule:${key}`, s.ruleModes[key] || 'default', [['default', `default (${modeWord(s.mode === 'monitor' ? 'monitor' : 'on')})`], ...RULE_MODES.map((m) => [m, modeWord(m)])], { label: '' }),
+                ruleName(tr, key),
+                selectInput(`rule:${key}`, s.ruleModes[key] || 'default', [['default', tr.t('automod.rules.defaultOption', { mode: modeWord(tr, s.mode === 'monitor' ? 'monitor' : 'on') })], ...RULE_MODES.map((m) => [m, modeWord(tr, m)])], { label: '' }),
                 headsUpCell(key),
             ]),
-            ['Custom rules (all)', html`<span class="muted">see Custom rules</span>`, headsUpCell(HEADS_UP_CUSTOM_KEY)],
-        ])}`, { submit: 'Save rules' })}
-${headsUpLine(data.headsUp)}`;
+            [tr.t('automod.rules.customAll'), html`<span class="muted">${tr.t('automod.rules.seeCustom')}</span>`, headsUpCell(HEADS_UP_CUSTOM_KEY)],
+        ])}`, { submit: tr.t('automod.rules.save') })}
+${headsUpLine(tr, data.headsUp)}`;
         const exceptionRows = [];
         for (const [channelId, overrides] of Object.entries(s.channelRules)) {
             for (const [rule, mode] of Object.entries(overrides)) {
-                exceptionRows.push([channelName(g, channelId), AUTOMOD_RULES[rule]?.label || rule, modeWord(mode),
-                    buttonForm(ctx, 'automod', 'channel-remove', 'Remove', { channel: channelId, rule })]);
+                exceptionRows.push([channelName(g, channelId), ruleName(tr, rule), modeWord(tr, mode),
+                    buttonForm(ctx, 'automod', 'channel-remove', remove, { channel: channelId, rule })]);
             }
         }
-        const exceptions = html`${table(['Channel or category', 'Rule', 'Mode', ''], exceptionRows, 'No per-channel rule exceptions.')}
-${postForm(ctx, 'automod', 'channel-add', html`<div class="grid">${channelPicker(g, 'channel', null, { label: 'Channel or category', kinds: ['text', 'category'], perms: PERMS.read, optional: false, help: 'A category is a folder of channels. Picking one covers every channel in it.' })}
-${selectInput('rule', ruleKeys[0], ruleKeys.map((k) => [k, AUTOMOD_RULES[k].label]), { label: 'Rule' })}
-${selectInput('mode', 'off', CHANNEL_RULE_MODES.map((m) => [m, modeWord(m)]), { label: 'Mode there', help: "off: the rule is skipped there. report only (don't delete): staff are told, nothing is deleted." })}</div>`, { submit: 'Add exception' })}`;
-        const exempt = html`${table(['Channel', ''], s.exemptChannelIds.map((id) => [channelName(g, id), buttonForm(ctx, 'automod', 'exempt-remove', 'Remove', { channel: id })]), 'Automod checks every channel.')}
-${postForm(ctx, 'automod', 'exempt-add', channelPicker(g, 'channel', null, { label: 'Ignore this channel', kinds: ['text', 'category'], perms: PERMS.read, optional: false, help: 'Automod does not check any messages here.' }), { submit: 'Add', inline: true })}
-${data.registry.exemptChannelIds.length ? html`<p class="muted">Also ignored (set by the bot owner outside the dashboard): ${data.registry.exemptChannelIds.map((id, i) => html`${i ? ', ' : ''}${channelName(g, id)}`)}</p>` : ''}`;
+        const channelOrCategory = tr.t('automod.exceptions.channel');
+        const exceptions = html`${table([channelOrCategory, ruleCol, modeCol, ''], exceptionRows, tr.t('automod.exceptions.empty'))}
+${postForm(ctx, 'automod', 'channel-add', html`<div class="grid">${channelPicker(g, 'channel', null, { label: channelOrCategory, kinds: ['text', 'category'], perms: PERMS.read, optional: false, help: tr.t('automod.exceptions.channelHelp') })}
+${selectInput('rule', ruleKeys[0], ruleKeys.map((k) => [k, ruleName(tr, k)]), { label: ruleCol })}
+${selectInput('mode', 'off', CHANNEL_RULE_MODES.map((m) => [m, modeWord(tr, m)]), { label: tr.t('automod.exceptions.modeThere'), help: tr.t('automod.exceptions.modeThereHelp') })}</div>`, { submit: tr.t('automod.exceptions.add') })}`;
+        const exempt = html`${table([tr.t('automod.exempt.channel'), ''], s.exemptChannelIds.map((id) => [channelName(g, id), buttonForm(ctx, 'automod', 'exempt-remove', remove, { channel: id })]), tr.t('automod.exempt.empty'))}
+${postForm(ctx, 'automod', 'exempt-add', channelPicker(g, 'channel', null, { label: tr.t('automod.exempt.ignore'), kinds: ['text', 'category'], perms: PERMS.read, optional: false, help: tr.t('automod.exempt.ignoreHelp') }), { submit: tr.t('automod.exempt.add'), inline: true })}
+${data.registry.exemptChannelIds.length ? html`<p class="muted">${tr.tx('automod.exempt.alsoIgnored', { channels: html`${data.registry.exemptChannelIds.map((id, i) => html`${i ? ', ' : ''}${channelName(g, id)}`)}` })}</p>` : ''}`;
         const trusted = postForm(ctx, 'automod', 'trusted', html`<div class="grid">
-${rolePicker(g, 'roleId', s.trusted.roleId, { label: 'Trusted role', assign: false, noneLabel: 'none', help: 'Members with this role are trusted.' })}
-${numberInput('minLevel', s.trusted.minLevel, { label: 'Or from level', min: 0, max: 1000, help: 'Members at this leveling level or higher are trusted too. 0 turns this off.' })}</div>`);
-        const secondChance = html`${toggleForm(ctx, 'automod', 'second-chance', s.secondChance, { label: 'Friendly notice for a first small offence: a short notice instead of a warning' })}
+${rolePicker(g, 'roleId', s.trusted.roleId, { label: tr.t('automod.trusted.role'), assign: false, noneLabel: tr.t('automod.trusted.none'), help: tr.t('automod.trusted.roleHelp') })}
+${numberInput('minLevel', s.trusted.minLevel, { label: tr.t('automod.trusted.minLevel'), min: 0, max: 1000, help: tr.t('automod.trusted.minLevelHelp') })}</div>`);
+        const secondChance = html`${toggleForm(ctx, 'automod', 'second-chance', s.secondChance, { label: tr.t('automod.secondChance.label') })}
 `;
-        const mood = toggleForm(ctx, 'automod', 'mood', s.moodAlerts, { label: 'Mood alerts: when a channel gets heated, post a calm-down note and slow the chat for a short time' });
+        const mood = toggleForm(ctx, 'automod', 'mood', s.moodAlerts, { label: tr.t('automod.mood.label') });
         const panic = html`
-${postForm(ctx, 'automod', 'panic', html`<div class="grid">${switchInput('enabled', s.panic.enabled, { label: 'Panic mode: stop new invites and private messages between members when a raid lockdown starts' })}
-${numberInput('hours', s.panic.hours, { label: 'Stop them for (hours)', min: 1, max: 24 })}</div>`)}`;
+${postForm(ctx, 'automod', 'panic', html`<div class="grid">${switchInput('enabled', s.panic.enabled, { label: tr.t('automod.panic.label') })}
+${numberInput('hours', s.panic.hours, { label: tr.t('automod.panic.hours'), min: 1, max: 24 })}</div>`)}`;
         const joinGate = postForm(ctx, 'automod', 'join-gate', html`<div class="grid">
-${Object.entries(JOIN_GATE_CHECKS).map(([check, { label }]) => selectInput(`gate:${check}`, gate[check], JOIN_GATE_ACTIONS.map((a) => [a, a]), { label }))}
-${numberInput('ageDays', gate.ageDays, { label: 'New account means younger than (days)', min: 1, max: 365 })}</div>`);
+${Object.keys(JOIN_GATE_CHECKS).map((check) => selectInput(`gate:${check}`, gate[check], JOIN_GATE_ACTIONS.map((a) => [a, valueWord(tr, 'gate.actions', a)]), { label: gateCheckName(tr, check) }))}
+${numberInput('ageDays', gate.ageDays, { label: tr.t('automod.gate.ageDays'), min: 1, max: 365 })}</div>`);
+        const discordRule = tr.t('automod.native.rule');
+        const whatMewvoDoes = tr.t('automod.native.policy');
         const native = data.nativeRules === null
-            ? html`<p class="warn">Could not read Discord's own AutoMod rules. Mewvo needs the Manage Server permission for that.</p>`
-            : html`${table(['Discord rule', 'What Mewvo does', 'At most once per member every'], nativeRows(ctx, data.nativeRules, data.policies), 'This server has no Discord AutoMod rules. You make them in Discord under Server Settings, AutoMod.')}
-${data.nativeRules.length ? postForm(ctx, 'automod', 'native', html`<div class="grid">${selectInput('ruleId', data.nativeRules[0].id, data.nativeRules.map((r) => [r.id, r.name]), { label: 'Discord rule' })}
-${selectInput('policy', 'log', NATIVE_POLICIES.map((p) => [p, p]), { label: 'What Mewvo does', help: 'ignore: nothing. log: a short line in the review channel. warn: a warning and a review card.' })}
-${numberInput('dedupeMinutes', '', { label: 'Act once per member every (minutes)', min: 1, max: 1440, help: 'More blocks by the same member in this time are only counted. Leave empty to keep the current value.' })}</div>`, { submit: 'Set policy' }) : ''}`;
+            ? html`<p class="warn">${tr.tx('automod.native.unreadable')}</p>`
+            : html`${table([discordRule, whatMewvoDoes, tr.t('automod.native.once')], nativeRows(ctx, data.nativeRules, data.policies), tr.t('automod.native.empty'))}
+${data.nativeRules.length ? postForm(ctx, 'automod', 'native', html`<div class="grid">${selectInput('ruleId', data.nativeRules[0].id, data.nativeRules.map((r) => [r.id, r.name]), { label: discordRule })}
+${selectInput('policy', 'log', NATIVE_POLICIES.map((p) => [p, valueWord(tr, 'native.policies', p)]), { label: whatMewvoDoes, help: tr.t('automod.native.policyHelp') })}
+${numberInput('dedupeMinutes', '', { label: tr.t('automod.native.dedupe'), min: 1, max: 1440, help: tr.t('automod.native.dedupeHelp') })}</div>`, { submit: tr.t('automod.native.submit') }) : ''}`;
         const channels = postForm(ctx, 'automod', 'channels', html`<div class="grid">
-${channelPicker(g, 'reviewChannelId', data.registry.reviewChannelId, { label: 'Review channel', help: 'Where staff see review cards, member reports and verifications waiting for a check. Not set: the mod log channel.' })}
-${channelPicker(g, 'alertsChannelId', data.registry.alertsChannelId, { label: 'Alerts channel', help: 'Where Mewvo warns staff about raids and other urgent things, and posts summaries. Not set: the mod log channel.' })}
-${textArea('extraBlockedWords', data.registry.extraBlockedWords.join('\n'), { label: 'Extra blocked words', rows: 4, max: 20000, help: 'Added to the built-in bad word list. Put each word on its own line. Look-alike letters, symbols and spacing are caught too.' })}</div>`);
+${channelPicker(g, 'reviewChannelId', data.registry.reviewChannelId, { label: tr.t('automod.channels.review'), help: tr.t('automod.channels.reviewHelp') })}
+${channelPicker(g, 'alertsChannelId', data.registry.alertsChannelId, { label: tr.t('automod.channels.alerts'), help: tr.t('automod.channels.alertsHelp') })}
+${textArea('extraBlockedWords', data.registry.extraBlockedWords.join('\n'), { label: tr.t('automod.channels.words'), rows: 4, max: 20000, help: tr.t('automod.channels.wordsHelp') })}</div>`);
         const rulesStats = Object.entries(data.byRule).sort((a, b) => b[1].actions - a[1].actions);
         const days = data.days || DEFAULT_STATS_DAYS;
-        const dayChips = html`<nav class="chips" aria-label="Stats period">${STATS_DAY_CHOICES.map((n) => html`<a class="chip${n === days ? ' is-active' : ''}" href="${path(`/automod${queryString({ days: n })}`)}"${n === days ? raw(' aria-current="page"') : ''}>${n === 1 ? '1 day' : `${n} days`}</a>`)}</nav>`;
-        const stats = html`${dayChips}<p>${data.stats.total} automatic action${data.stats.total === 1 ? '' : 's'} in ${days === 1 ? 'the last day' : `${days} days`}. <span class="muted">If staff undo 30% or more of a rule's actions, the rule is probably too strict.</span></p>
-${table(['Rule', 'Actions', 'Undone', 'Changed', 'Undo rate'], rulesStats.map(([rule, t]) => {
+        const dayChips = html`<nav class="chips" aria-label="${tr.t('automod.stats.period')}">${STATS_DAY_CHOICES.map((n) => html`<a class="chip${n === days ? ' is-active' : ''}" href="${path(`/automod${queryString({ days: n })}`)}"${n === days ? raw(' aria-current="page"') : ''}>${n === 1 ? tr.t('automod.period.oneDay') : tr.tp('automod.period.days', n)}</a>`)}</nav>`;
+        const statsPeriod = days === 1 ? tr.t('automod.period.theLastDay') : tr.tp('automod.period.days', days);
+        const stats = html`${dayChips}<p>${tr.tp('automod.stats.total', data.stats.total, { period: statsPeriod })} <span class="muted">${tr.tx('automod.stats.undoHint')}</span></p>
+${table([ruleCol, tr.t('automod.stats.actions'), tr.t('automod.stats.undone'), tr.t('automod.stats.changed'), tr.t('automod.stats.undoRate')], rulesStats.map(([rule, t]) => {
         const rate = pct(t.undone + t.changed, t.actions);
-        return [AUTOMOD_RULES[rule]?.label || rule, t.actions, t.undone, t.changed, html`<span class="${rate >= 30 ? 'bad' : ''}">${rate}%</span>`];
-    }), 'No automod actions.')}`;
+        return [ruleName(tr, rule), t.actions, t.undone, t.changed, html`<span class="${rate >= 30 ? 'bad' : ''}">${rate}%</span>`];
+    }), tr.t('automod.stats.empty'))}`;
         // Live operations (admins act; OWNER_IDS without Administrator view them).
         const canAct = Boolean(ctx.canEdit && ctx.canAct);
         const lockdown = data.lockdown;
+        const timeline = html`<a href="${path('/incidents')}">${tr.t('automod.lockdown.timelineLink')}</a>`;
+        const joiners = (lockdown?.joinerIds || []).length;
         const lockdownBody = lockdown === undefined
-            ? html`<p class="error" role="alert">The lockdown state could not be read (database). Reload the page to try again.</p>`
+            ? html`<p class="error" role="alert">${tr.t('automod.lockdown.unreadable')}</p>`
             : lockdown?.active
-                ? html`<p class="warn"><b>A raid lockdown is active</b>${lockdown.startedAt ? html` since ${formatDate(lockdown.startedAt)}` : ''}, ${(lockdown.joinerIds || []).length} raid joiner${(lockdown.joinerIds || []).length === 1 ? '' : 's'}.</p>
-${buttonForm(ctx, 'automod', 'lockdown-end', 'End lockdown', {}, { confirm: 'End the raid lockdown? The verification level goes back to what it was and paused invites and DMs resume.', canEdit: canAct })}
-${canAct ? '' : html`<p class="muted">To end a lockdown you need the Administrator permission in this server.</p>`}
-<p><a href="${path('/incidents')}">Follow it on the raid timeline</a></p>`
-                : html`<p class="muted">No lockdown right now. One starts by itself when many accounts join at once (a raid). Past raids are on the <a href="${path('/incidents')}">raid timeline</a>.</p>`;
+                ? html`<p class="warn"><b>${tr.t('automod.lockdown.active')}</b>${lockdown.startedAt ? html` ${tr.t('automod.lockdown.since', { date: tr.fmtDateTime(lockdown.startedAt) })}` : ''}, ${tr.tp('automod.lockdown.joiners', joiners)}.</p>
+${buttonForm(ctx, 'automod', 'lockdown-end', tr.t('automod.lockdown.end'), {}, { confirm: tr.t('automod.lockdown.endConfirm'), canEdit: canAct })}
+${canAct ? '' : html`<p class="muted">${tr.t('automod.lockdown.needsAdmin')}</p>`}
+<p><a href="${path('/incidents')}">${tr.t('automod.lockdown.follow')}</a></p>`
+                : html`<p class="muted">${tr.tx('automod.lockdown.none', { timeline })}</p>`;
         const reviews = data.reviews;
+        const reviewCard = tr.t('automod.queue.card');
         const queue = reviews === null
-            ? html`<p class="error" role="alert">The review queue could not be read (review channel unavailable).</p>`
-            : html`${table(['Card', 'Since', 'Messages'], reviews.slice(0, QUEUE_LISTED).map((item) => [
-                isDiscordUrl(item.url) ? html`<a href="${item.url}" rel="noopener noreferrer" target="_blank">${item.title || 'Review card'}</a>` : (item.title || 'Review card'),
+            ? html`<p class="error" role="alert">${tr.t('automod.queue.unreadable')}</p>`
+            : html`${table([tr.t('automod.queue.colCard'), tr.t('automod.queue.colSince'), tr.t('automod.queue.colMessages')], reviews.slice(0, QUEUE_LISTED).map((item) => [
+                isDiscordUrl(item.url) ? html`<a href="${item.url}" rel="noopener noreferrer" target="_blank">${item.title || reviewCard}</a>` : (item.title || reviewCard),
                 item.at ? timeTag(new Date(item.at)) : '-',
                 item.count || 1,
-            ]), 'Nothing is waiting for review.')}
-${reviews.length > QUEUE_LISTED ? html`<p class="muted">…and ${reviews.length - QUEUE_LISTED} more.</p>` : ''}
-<p class="muted">Review cards waiting for staff: the ones posted since the bot last started, and the last 50 messages in the review channel that still have buttons. Short lines for small things are not listed. You decide on each card in Discord with its buttons (Keep, Undo, Change, Dismiss).</p>`;
+            ]), tr.t('automod.queue.empty'))}
+${reviews.length > QUEUE_LISTED ? html`<p class="muted">${tr.t('automod.queue.more', { count: tr.fmtNumber(reviews.length - QUEUE_LISTED) })}</p>` : ''}
+<p class="muted">${tr.t('automod.queue.help')}</p>`;
         const probations = data.probations;
         const probation = probations === null
-            ? html`<p class="error" role="alert">Extra-watch periods could not be read (database). Reload the page to try again.</p>`
-            : table(['Member', 'Until', 'Ban', ''], probations.map((p) => [
+            ? html`<p class="error" role="alert">${tr.t('automod.probation.unreadable')}</p>`
+            : table([tr.t('automod.probation.colMember'), tr.t('automod.probation.colUntil'), tr.t('automod.probation.colBan'), ''], probations.map((p) => [
                 html`<a href="${path(`/users/${encodeURIComponent(p.userId)}`)}">${memberName(g, p.userId) || p.userId}</a> <span class="muted">${p.userId}</span>`,
-                formatDate(new Date(Number(p.until))),
+                tr.fmtDateTime(new Date(Number(p.until))),
                 p.caseCode ? html`<a href="${path(`/cases/${encodeURIComponent(p.caseCode)}`)}"><code>${p.caseCode}</code></a>${p.how ? ` (${p.how})` : ''}` : '-',
-                buttonForm(ctx, 'automod', 'probation-end', 'End extra-watch period', { user: p.userId }, { confirm: 'End this extra-watch period now?', canEdit: canAct }),
-            ]), 'Nobody is in an extra-watch period after a ban.');
-        // v6: cards grouped by topic (common.js topic/section).
-        const lockdownCard = section('Raid lockdown', lockdownBody, 'A lockdown starts by itself when many accounts join at once.', { size: 'full' });
-        const live = topic('Right now', 'What is waiting for staff at this moment.', html`${lockdown?.active ? lockdownCard : ''}
-${section(`Review queue${reviews ? ` (${reviews.length})` : ''}`, queue, '', { key: 'review-queue' })}
-${section(`Extra-watch period after a ban${probations ? ` (${probations.length})` : ''}`, probation, 'Members who came back after a ban ended. Automod is stricter with them for a while: they skip straight to the next punishment step, and get no friendly notice or trusted-member leniency.', { key: 'probation' })}`);
-        const ruleCards = topic('Rules', 'What automod checks, and what it does when a rule is broken.', html`${section('Global mode', top, 'What every rule does unless you change it below.')}
-${section('Channels and words', channels, 'Where automod talks to staff, and your own blocked words.')}
-${section('Rule modes', rules, `Change single rules. default: does what the main setting above says. on: acts. report only (don't delete): only tells staff. off: the rule is not checked. ${HEADS_UP_HELP}`, { size: 'full' })}
-${section('Custom rules', customRulesSection(ctx, data), 'Your own lists of words and phrases to block. Like the built-in rules, they match whole words, do not care about capital letters, and catch look-alike letters (like 0 for o). A match deletes the message and posts a review card. Warn and mute also add it to the member\'s record (a case). They follow the main automod setting and skip ignored channels. How many you can have depends on the server owner\'s plan.', { size: 'full' })}
-${section('Discord AutoMod', native, 'Discord has its own AutoMod built in. When one of its rules blocks a message, Mewvo can also log it or warn the member.', { size: 'full' })}`);
+                buttonForm(ctx, 'automod', 'probation-end', tr.t('automod.probation.end'), { user: p.userId }, { confirm: tr.t('automod.probation.endConfirm'), canEdit: canAct }),
+            ]), tr.t('automod.probation.empty'));
+        // v6: cards grouped by topic (common.js topic/section). Keys: the slugs of the English titles.
+        const lockdownCard = section(tr.t('automod.lockdown.title'), lockdownBody, tr.t('automod.lockdown.help'), { key: 'raid-lockdown', size: 'full' });
+        const live = topic(tr.t('automod.topics.now'), tr.t('automod.topics.nowLine'), html`${lockdown?.active ? lockdownCard : ''}
+${section(reviews ? tr.t('automod.queue.titleCount', { count: tr.fmtNumber(reviews.length) }) : tr.t('automod.queue.title'), queue, '', { key: 'review-queue' })}
+${section(probations ? tr.t('automod.probation.titleCount', { count: tr.fmtNumber(probations.length) }) : tr.t('automod.probation.title'), probation, tr.t('automod.probation.help'), { key: 'probation' })}`, { key: 'right-now' });
+        const ruleCards = topic(tr.t('automod.topics.rules'), tr.t('automod.topics.rulesLine'), html`${section(tr.t('automod.global.title'), top, tr.t('automod.global.help'), { key: 'global-mode' })}
+${section(tr.t('automod.channels.title'), channels, tr.t('automod.channels.help'), { key: 'channels-and-words' })}
+${section(tr.t('automod.rules.title'), rules, tr.t('automod.rules.help'), { key: 'rule-modes', size: 'full' })}
+${section(tr.t('automod.custom.title'), customRulesSection(ctx, data), tr.t('automod.custom.help'), { key: 'custom-rules', size: 'full' })}
+${section(tr.t('automod.native.title'), native, tr.t('automod.native.help'), { key: 'discord-automod', size: 'full' })}`, { key: 'rules' });
         // Small switch cards side by side, then the two forms side by side, then the list.
-        const leniency = topic('Exceptions and leniency', 'Where automod looks away, and who gets a softer start.', html`${section('Friendly notice for a first small offence', secondChance, 'Go easy on a first small slip.')}
-${section('Mood', mood, 'Slowmode makes members wait a few seconds between messages.')}
-${section('Trusted members', trusted, 'Trusted members skip the rules for small things. Serious rules still apply. To turn this off, pick none and set the level to 0.')}
-${section('Channel exceptions', exceptions, "Turn one rule off, or to report only (don't delete), in one channel. For example, allow links in a links channel.")}
-${section('Ignored channels', exempt, 'Channels where automod checks nothing at all.')}`);
-        const raids = topic('Raids and new members', 'Checks at the door and what happens when many accounts join at once.', html`${section('Join gate', joinGate, 'Checks new members as they join. For each check: off does nothing; flag tells staff in the review channel, with Kick and Dismiss buttons; kick removes them and sends a private message saying how to come back.')}
-${section('Panic', panic, 'A raid lockdown starts by itself when many accounts join at once. Panic mode makes it harder for raiders to spread.')}
-${lockdown?.active ? '' : lockdownCard}`);
-        const results = topic('Results', 'How often automod acted, and how often staff undid it.', html`${section(days === 1 ? 'Last day' : `Last ${days} days`, stats, '', { key: 'automod-stats', size: 'full' })}
-${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, { key: 'test-run', size: 'full' })}`);
+        const leniency = topic(tr.t('automod.topics.leniency'), tr.t('automod.topics.leniencyLine'), html`${section(tr.t('automod.secondChance.title'), secondChance, tr.t('automod.secondChance.help'), { key: 'friendly-notice-for-a-first-small-offence' })}
+${section(tr.t('automod.mood.title'), mood, tr.t('automod.mood.help'), { key: 'mood' })}
+${section(tr.t('automod.trusted.title'), trusted, tr.t('automod.trusted.help'), { key: 'trusted-members' })}
+${section(tr.t('automod.exceptions.title'), exceptions, tr.t('automod.exceptions.help'), { key: 'channel-exceptions' })}
+${section(tr.t('automod.exempt.title'), exempt, tr.t('automod.exempt.help'), { key: 'ignored-channels' })}`, { key: 'exceptions-and-leniency' });
+        const raids = topic(tr.t('automod.topics.raids'), tr.t('automod.topics.raidsLine'), html`${section(tr.t('automod.gate.title'), joinGate, tr.t('automod.gate.help'), { key: 'join-gate' })}
+${section(tr.t('automod.panic.title'), panic, tr.t('automod.panic.help'), { key: 'panic' })}
+${lockdown?.active ? '' : lockdownCard}`, { key: 'raids-and-new-members' });
+        const results = topic(tr.t('automod.topics.results'), tr.t('automod.topics.resultsLine'), html`${section(lastDays(tr, days), stats, '', { key: 'automod-stats', size: 'full' })}
+${section(tr.t('automod.testRun.title'), testRunSection(ctx, data.backtest, data), tr.t('automod.testRun.help'), { key: 'test-run', size: 'full' })}`, { key: 'results' });
         return html`${live}${ruleCards}${leniency}${raids}${results}`;
     },
 
     actions: {
         async enabled(ctx, form) {
-            const enabled = boolField(form, 'enabled', 'Automod');
-            return change(ctx, ['enabled'], () => ctx.services.setAutomodEnabled(ctx.guildId, enabled), `Automod is now ${enabled ? 'on' : 'off'}.`);
+            const tr = textFor(ctx);
+            const enabled = boolField(form, 'enabled', tr.t('frame.nav.items.automod'));
+            return change(ctx, ['enabled'], () => ctx.services.setAutomodEnabled(ctx.guildId, enabled), tr.t(enabled ? 'automod.action.automodOn' : 'automod.action.automodOff'));
         },
         async mode(ctx, form) {
-            const mode = choiceField(form, 'mode', ['enforce', 'monitor'], 'Mode');
-            return change(ctx, ['mode'], () => ctx.services.setAutomodMode(ctx.guildId, mode), `Global mode: ${mode === 'monitor' ? "Report only (don't delete)" : 'Act'}.`);
+            const tr = textFor(ctx);
+            const mode = choiceField(form, 'mode', ['enforce', 'monitor'], tr.t('automod.common.mode'));
+            return change(ctx, ['mode'], () => ctx.services.setAutomodMode(ctx.guildId, mode), tr.t(mode === 'monitor' ? 'automod.action.modeMonitor' : 'automod.action.modeEnforce'));
         },
         async rules(ctx, form) {
+            const tr = textFor(ctx);
             const before = await ctx.services.getAutomodSettings(ctx.guildId);
             const wanted = {};
             for (const key of Object.keys(AUTOMOD_RULES)) {
                 const value = text(form, `rule:${key}`, 20) || 'default';
-                if (value !== 'default' && !RULE_MODES.includes(value)) throw new InputError(`${AUTOMOD_RULES[key].label}: unknown mode.`);
+                if (value !== 'default' && !RULE_MODES.includes(value)) throw new InputError(tr.t('automod.error.unknownMode', { rule: ruleName(tr, key) }));
                 if ((before.ruleModes[key] || 'default') !== value) wanted[key] = value;
             }
             let after = await saveRuleModes(ctx, before, wanted);
@@ -508,30 +588,33 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
                 ...diffSnapshots(before.ruleModes, after.ruleModes, null, 'ruleModes.'),
                 ...diffSnapshots(headsUpSnapshot(before), headsUpSnapshot(after), null, 'headsUp.'),
             ];
-            return { changes, message: changes.length ? 'Rules saved.' : 'Nothing changed.' };
+            return { changes, message: tr.t(changes.length ? 'automod.action.rulesSaved' : 'errors.nothingChanged') };
         },
         // A one-click fix on the test run result: one rule to watch only, off, or on (default).
         // The rule key and mode are checked here again, never taken from the stored result.
         async 'test-run-rule'(ctx, form) {
-            const rule = choiceField(form, 'rule', Object.keys(AUTOMOD_RULES), 'Rule');
-            const mode = choiceField(form, 'mode', Object.keys(QUICK_MODES), 'Mode');
+            const tr = textFor(ctx);
+            const rule = choiceField(form, 'rule', Object.keys(AUTOMOD_RULES), tr.t('automod.common.rule'));
+            const mode = choiceField(form, 'mode', Object.keys(QUICK_MODES), tr.t('automod.common.mode'));
             const before = await ctx.services.getAutomodSettings(ctx.guildId);
             const wanted = (before.ruleModes[rule] || 'default') === mode ? {} : { [rule]: mode };
             const after = await saveRuleModes(ctx, before, wanted);
             const changes = diffSnapshots(before.ruleModes, after.ruleModes, null, 'ruleModes.');
-            const label = AUTOMOD_RULES[rule].label;
-            const message = mode === 'default' ? `${label} is on. It follows the main setting.` : `${label} is now ${QUICK_MODES[mode]}.`;
-            return { changes, message: changes.length ? message : 'Nothing changed.' };
+            const label = ruleName(tr, rule);
+            const message = mode === 'default' ? tr.t('automod.action.quickOn', { rule: label })
+                : mode === 'monitor' ? tr.t('automod.action.quickMonitor', { rule: label }) : tr.t('automod.action.quickOff', { rule: label });
+            return { changes, message: changes.length ? message : tr.t('errors.nothingChanged') };
         },
         async 'custom-add'(ctx, form) {
+            const tr = textFor(ctx);
             const list = storedCustomRules(ctx);
             const planId = planOfGuild(ctx);
             const limit = limitForPlan(planId);
             if (list.length >= limit) {
                 const plan = planId === 'free' ? 'Free' : planName(planId);
                 throw new InputError(limit
-                    ? `This server already has ${list.length} custom rules, the most the ${plan} plan allows. Remove one first.`
-                    : 'Custom rules are part of the Normal, Pro and Max plans, on the server owner\'s plan.');
+                    ? tr.tp('automod.error.customAtLimit', list.length, { plan })
+                    : tr.t('automod.error.customNoPlan'));
             }
             const rule = {
                 name: text(form, 'name', CUSTOM_RULE_NAME_MAX + 20),
@@ -540,10 +623,11 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
                 words: String(form?.words ?? '').slice(0, 5000),
                 enabled: true,
             };
-            const result = await saveCustomRules(ctx, [...list, rule], 'Custom rule added.');
-            return { ...result, message: `Custom rule "${rule.name.replace(/\s+/g, ' ').trim()}" added.` };
+            const result = await saveCustomRules(ctx, [...list, rule], tr.t('automod.action.customAdded'));
+            return { ...result, message: tr.t('automod.action.customAddedName', { name: rule.name.replace(/\s+/g, ' ').trim() }) };
         },
         async 'custom-edit'(ctx, form) {
+            const tr = textFor(ctx);
             const rule = customRuleById(ctx, form);
             let next;
             try {
@@ -553,106 +637,118 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
                     muteDuration: text(form, 'muteDuration', 20),
                 }));
             } catch (error) {
-                throw new InputError(error.userMessage || 'That custom rule is not valid.');
+                throw new InputError(error.userMessage || tr.t('automod.custom.invalid'));
             }
-            return saveCustomRules(ctx, next, `Custom rule "${rule.name}" saved.`);
+            return saveCustomRules(ctx, next, tr.t('automod.action.customSaved', { name: rule.name }));
         },
         async 'custom-toggle'(ctx, form) {
+            const tr = textFor(ctx);
             const rule = customRuleById(ctx, form);
-            const enabled = boolField(form, 'enabled', 'Custom rule');
-            if ((rule.enabled !== false) === enabled) return NOTHING;
+            const enabled = boolField(form, 'enabled', tr.t('automod.custom.ruleLabel'));
+            if ((rule.enabled !== false) === enabled) return nothing(tr);
             const next = storedCustomRules(ctx).map((r) => (r.id === rule.id ? { ...r, enabled } : r));
-            return saveCustomRules(ctx, next, `Custom rule "${rule.name}" is ${enabled ? 'on' : 'off'}.`);
+            return saveCustomRules(ctx, next, tr.t(enabled ? 'automod.action.customOn' : 'automod.action.customOff', { name: rule.name }));
         },
         async 'custom-remove'(ctx, form) {
             const rule = customRuleById(ctx, form);
             const next = storedCustomRules(ctx).filter((r) => r.id !== rule.id);
-            return saveCustomRules(ctx, next, `Custom rule "${rule.name}" removed.`);
+            return saveCustomRules(ctx, next, textFor(ctx).t('automod.action.customRemoved', { name: rule.name }));
         },
         async 'channel-add'(ctx, form) {
-            const channelId = channelField(ctx.guild, form, 'channel', { kinds: ['text', 'category'], optional: false, label: 'Channel or category' });
-            const rule = choiceField(form, 'rule', Object.keys(AUTOMOD_RULES), 'Rule');
-            const mode = choiceField(form, 'mode', CHANNEL_RULE_MODES, 'Mode');
-            return change(ctx, ['channelRules'], () => ctx.services.setChannelRuleMode(ctx.guildId, channelId, rule, mode), 'Channel exception saved.');
+            const tr = textFor(ctx);
+            const channelId = channelField(ctx.guild, form, 'channel', { kinds: ['text', 'category'], optional: false, label: tr.t('automod.exceptions.channel') });
+            const rule = choiceField(form, 'rule', Object.keys(AUTOMOD_RULES), tr.t('automod.common.rule'));
+            const mode = choiceField(form, 'mode', CHANNEL_RULE_MODES, tr.t('automod.common.mode'));
+            return change(ctx, ['channelRules'], () => ctx.services.setChannelRuleMode(ctx.guildId, channelId, rule, mode), tr.t('automod.action.exceptionSaved'));
         },
         async 'channel-remove'(ctx, form) {
+            const tr = textFor(ctx);
             const channelId = text(form, 'channel', 25);
-            const rule = choiceField(form, 'rule', Object.keys(AUTOMOD_RULES), 'Rule');
-            if (!/^\d{17,20}$/.test(channelId)) throw new InputError('Channel: not a channel ID.');
-            return change(ctx, ['channelRules'], () => ctx.services.setChannelRuleMode(ctx.guildId, channelId, rule, 'default'), 'Channel exception removed.');
+            const rule = choiceField(form, 'rule', Object.keys(AUTOMOD_RULES), tr.t('automod.common.rule'));
+            if (!/^\d{17,20}$/.test(channelId)) throw new InputError(tr.t('forms.error.notChannelId', { label: tr.t('automod.exempt.channel') }));
+            return change(ctx, ['channelRules'], () => ctx.services.setChannelRuleMode(ctx.guildId, channelId, rule, 'default'), tr.t('automod.action.exceptionRemoved'));
         },
         async 'exempt-add'(ctx, form) {
-            const channelId = channelField(ctx.guild, form, 'channel', { kinds: ['text', 'category'], optional: false, label: 'Ignore this channel' });
-            return change(ctx, ['exemptChannelIds'], () => ctx.services.setExemptChannel(ctx.guildId, channelId, true), 'Automod now ignores that channel.');
+            const tr = textFor(ctx);
+            const channelId = channelField(ctx.guild, form, 'channel', { kinds: ['text', 'category'], optional: false, label: tr.t('automod.exempt.ignore') });
+            return change(ctx, ['exemptChannelIds'], () => ctx.services.setExemptChannel(ctx.guildId, channelId, true), tr.t('automod.action.exemptAdded'));
         },
         async 'exempt-remove'(ctx, form) {
+            const tr = textFor(ctx);
             const channelId = text(form, 'channel', 25);
-            if (!/^\d{17,20}$/.test(channelId)) throw new InputError('Channel: not a channel ID.');
-            return change(ctx, ['exemptChannelIds'], () => ctx.services.setExemptChannel(ctx.guildId, channelId, false), 'Automod checks that channel again.');
+            if (!/^\d{17,20}$/.test(channelId)) throw new InputError(tr.t('forms.error.notChannelId', { label: tr.t('automod.exempt.channel') }));
+            return change(ctx, ['exemptChannelIds'], () => ctx.services.setExemptChannel(ctx.guildId, channelId, false), tr.t('automod.action.exemptRemoved'));
         },
         async trusted(ctx, form) {
-            const roleId = roleField(ctx.guild, form, 'roleId', { label: 'Trusted role' });
+            const tr = textFor(ctx);
+            const roleId = roleField(ctx.guild, form, 'roleId', { label: tr.t('automod.trusted.role') });
             if (roleId) {
                 const problem = ctx.services.getTrustedRoleProblem(ctx.guild, ctx.guild.roles.cache.get(roleId));
                 if (problem) throw new InputError(plainText(problem));
             }
-            const minLevel = intField(form, 'minLevel', { min: 0, max: 1000, label: 'Or from level', fallback: 0 });
+            const minLevel = intField(form, 'minLevel', { min: 0, max: 1000, label: tr.t('automod.trusted.minLevel'), fallback: 0 });
             const clear = !roleId && minLevel === 0;
-            return change(ctx, ['trusted'], () => ctx.services.setTrusted(ctx.guildId, clear ? { clear: true } : { roleId, minLevel }), 'Trusted members saved.');
+            return change(ctx, ['trusted'], () => ctx.services.setTrusted(ctx.guildId, clear ? { clear: true } : { roleId, minLevel }), tr.t('automod.action.trustedSaved'));
         },
         async 'second-chance'(ctx, form) {
-            const enabled = boolField(form, 'enabled', 'Friendly notice for a first small offence');
-            return change(ctx, ['secondChance'], () => ctx.services.setSecondChance(ctx.guildId, enabled), `Friendly notice for a first small offence is ${enabled ? 'on' : 'off'}.`);
+            const tr = textFor(ctx);
+            const enabled = boolField(form, 'enabled', tr.t('automod.secondChance.title'));
+            return change(ctx, ['secondChance'], () => ctx.services.setSecondChance(ctx.guildId, enabled), tr.t(enabled ? 'automod.action.secondChanceOn' : 'automod.action.secondChanceOff'));
         },
         async mood(ctx, form) {
-            const enabled = boolField(form, 'enabled', 'Mood alerts');
-            return change(ctx, ['moodAlerts'], () => ctx.services.setMoodAlerts(ctx.guildId, enabled), `Mood alerts are ${enabled ? 'on' : 'off'}.`);
+            const tr = textFor(ctx);
+            const enabled = boolField(form, 'enabled', tr.t('automod.mood.alerts'));
+            return change(ctx, ['moodAlerts'], () => ctx.services.setMoodAlerts(ctx.guildId, enabled), tr.t(enabled ? 'automod.action.moodOn' : 'automod.action.moodOff'));
         },
         async panic(ctx, form) {
+            const tr = textFor(ctx);
             const enabled = checkbox(form, 'enabled');
-            const hours = intField(form, 'hours', { min: 1, max: 24, label: 'Stop them for (hours)' });
-            const result = await change(ctx, ['panic'], () => ctx.services.setPanic(ctx.guildId, { enabled, hours }), `Panic mode is ${enabled ? 'on' : 'off'}.`);
+            const hours = intField(form, 'hours', { min: 1, max: 24, label: tr.t('automod.panic.hours') });
+            const result = await change(ctx, ['panic'], () => ctx.services.setPanic(ctx.guildId, { enabled, hours }), tr.t(enabled ? 'automod.action.panicOn' : 'automod.action.panicOff'));
             const canPause = ctx.guild?.members?.me?.permissions?.has?.('ManageGuild');
-            if (enabled && canPause === false) result.warnings = ['I don\'t have Manage Server, so pausing invites and DMs will fail until I get it.'];
+            if (enabled && canPause === false) result.warnings = [tr.t('automod.action.panicNoPerm')];
             return result;
         },
         async 'join-gate'(ctx, form) {
+            const tr = textFor(ctx);
             const before = await ctx.services.getAutomodSettings(ctx.guildId);
             const gate = normalizeJoinGate(before.joinGate);
-            const ageDays = intField(form, 'ageDays', { min: 1, max: 365, label: 'New account means younger than (days)' });
+            const ageDays = intField(form, 'ageDays', { min: 1, max: 365, label: tr.t('automod.gate.ageDays') });
             let after = before;
             for (const check of Object.keys(JOIN_GATE_CHECKS)) {
-                const action = choiceField(form, `gate:${check}`, JOIN_GATE_ACTIONS, JOIN_GATE_CHECKS[check].label);
+                const action = choiceField(form, `gate:${check}`, JOIN_GATE_ACTIONS, gateCheckName(tr, check));
                 const days = check === 'age' && ageDays !== gate.ageDays ? ageDays : null;
                 if (action !== gate[check] || days) after = await ctx.services.setJoinGateCheck(ctx.guildId, check, action, days);
             }
             const changes = diffSnapshots(normalizeJoinGate(before.joinGate), normalizeJoinGate(after.joinGate), null, 'joinGate.');
-            return { changes, message: changes.length ? 'Join gate saved.' : 'Nothing changed.' };
+            return { changes, message: tr.t(changes.length ? 'automod.action.gateSaved' : 'errors.nothingChanged') };
         },
         async native(ctx, form) {
+            const tr = textFor(ctx);
             const ruleId = text(form, 'ruleId', 25);
-            if (!/^\d{17,20}$/.test(ruleId)) throw new InputError('Pick a Discord AutoMod rule from the list.');
-            const policy = choiceField(form, 'policy', NATIVE_POLICIES, 'Policy');
-            const dedupeMinutes = intField(form, 'dedupeMinutes', { min: 1, max: 1440, label: 'Act once per member every (minutes)', fallback: null });
+            if (!/^\d{17,20}$/.test(ruleId)) throw new InputError(tr.t('automod.error.pickNative'));
+            const policy = choiceField(form, 'policy', NATIVE_POLICIES, tr.t('automod.native.policyLabel'));
+            const dedupeMinutes = intField(form, 'dedupeMinutes', { min: 1, max: 1440, label: tr.t('automod.native.dedupe'), fallback: null });
             const rule = await ctx.guild?.autoModerationRules?.fetch?.(ruleId).catch(() => null);
-            if (!rule) throw new InputError('That Discord AutoMod rule no longer exists.');
+            if (!rule) throw new InputError(tr.t('automod.error.nativeGone'));
             const before = policyFor(await ctx.services.loadNativePolicies(ctx.guildId), ruleId);
             await ctx.services.setNativePolicy(ctx.guildId, ruleId, policy, dedupeMinutes, ctx.actor.userId);
             const after = policyFor(await ctx.services.loadNativePolicies(ctx.guildId), ruleId);
             const changes = diffSnapshots(before, after, null, `native.${ruleId}.`);
-            return { changes, message: changes.length ? `Discord rule "${rule.name}" updated.` : 'Nothing changed.' };
+            return { changes, message: changes.length ? tr.t('automod.action.nativeSaved', { name: rule.name }) : tr.t('errors.nothingChanged') };
         },
         // /automod lockdown-end: restores the verification level, resumes invites and DMs, posts the incident report.
         'lockdown-end': {
             admin: true,
             async run(ctx) {
+                const tr = textFor(ctx);
                 const state = await ctx.services.getLockdownState(ctx.guildId);
-                if (!state?.active) throw new InputError('There is no lockdown right now.');
+                if (!state?.active) throw new InputError(tr.t('automod.error.noLockdown'));
                 const ended = await ctx.services.endLockdown(ctx.guild, { id: ctx.actor.userId, username: ctx.actor.username });
-                if (!ended) throw new InputError('There is no lockdown right now.');
+                if (!ended) throw new InputError(tr.t('automod.error.noLockdown'));
                 return {
                     changes: [{ key: 'lockdown', old: { active: true, startedAt: state.startedAt || null, joiners: (state.joinerIds || []).length }, new: null }],
-                    message: 'Lockdown ended. The verification level is back to what it was, and paused invites and DMs are resumed.',
+                    message: tr.t('automod.action.lockdownEnded'),
                 };
             },
         },
@@ -660,12 +756,13 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
         'probation-end': {
             admin: true,
             async run(ctx, form) {
-                const userId = userIdField(form, 'user', 'Member');
+                const tr = textFor(ctx);
+                const userId = userIdField(form, 'user', tr.t('automod.probation.colMember'));
                 const record = await ctx.services.endProbation(ctx.guildId, userId);
-                if (!record) throw new InputError('That member is not in an extra-watch period.');
+                if (!record) throw new InputError(tr.t('automod.error.noProbation'));
                 return {
                     changes: [{ key: `probation:${userId}`, old: { until: new Date(Number(record.until)).toISOString(), caseCode: record.caseCode || null }, new: null }],
-                    message: `Extra-watch period for ${memberName(ctx.guild, userId) || userId} ended early.`,
+                    message: tr.t('automod.action.probationEnded', { member: memberName(ctx.guild, userId) || userId }),
                 };
             },
         },
@@ -673,18 +770,19 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
         'test-run': {
             admin: true,
             async run(ctx, form) {
+                const tr = textFor(ctx);
                 const picked = list(form, 'channels', { max: 100 });
-                if (!picked.length) throw new InputError('Pick at least one channel.', 400, 'channels');
-                if (picked.length > BACKTEST_MAX_CHANNELS) throw new InputError(`Pick at most ${BACKTEST_MAX_CHANNELS} channels (${picked.length} picked).`, 400, 'channels');
-                const channelIds = channelListField(ctx.guild, form, 'channels', { kinds: ['text'], label: 'Channel', max: BACKTEST_MAX_CHANNELS });
-                const days = Number(choiceField(form, 'days', BACKTEST_DAY_CHOICES.map(String), 'How far back'));
+                if (!picked.length) throw new InputError(tr.t('automod.error.pickChannel'), 400, 'channels');
+                if (picked.length > BACKTEST_MAX_CHANNELS) throw new InputError(tr.t('automod.error.tooManyChannels', { max: tr.fmtNumber(BACKTEST_MAX_CHANNELS), picked: tr.fmtNumber(picked.length) }), 400, 'channels');
+                const channelIds = channelListField(ctx.guild, form, 'channels', { kinds: ['text'], label: tr.t('automod.exempt.channel'), max: BACKTEST_MAX_CHANNELS });
+                const days = Number(choiceField(form, 'days', BACKTEST_DAY_CHOICES.map(String), tr.t('automod.testRun.howFarBack')));
                 const draftName = text(form, 'draftName', CUSTOM_RULE_NAME_MAX + 20);
                 const draftWords = String(form?.draftWords ?? '').slice(0, 5000);
                 const settings = await ctx.services.getAutomodSettings(ctx.guildId);
                 // Automod checks nothing in ignored channels (automodSettings.isChannelExempt).
                 const ignored = new Set([...(settings.exemptChannelIds || []), ...(registryValue(ctx, 'exemptChannelIds') || [])]);
                 const skipped = channelIds.find((id) => ignored.has(id));
-                if (skipped) throw new InputError(`Automod ignores #${ctx.guild.channels.cache.get(skipped)?.name || skipped}, so a test run there finds nothing. Pick another channel.`, 400, 'channels');
+                if (skipped) throw new InputError(tr.t('automod.error.ignoredChannel', { channel: ctx.guild.channels.cache.get(skipped)?.name || skipped }), 400, 'channels');
                 const customRules = runningRules(storedCustomRules(ctx), limitForPlan(planOfGuild(ctx)));
                 try {
                     ctx.services.startAutomodBacktest({
@@ -696,25 +794,25 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
                     if (error instanceof BacktestError || error?.name === 'BacktestError') throw new InputError(error.userMessage || error.message, 400, 'channels');
                     throw error;
                 }
-                return { changes: [], message: 'Test run started. Reload the page in a moment to see the progress.' };
+                return { changes: [], message: tr.t('automod.action.testRunStarted') };
             },
         },
         async channels(ctx, form) {
+            const tr = textFor(ctx);
             const g = ctx.guild;
             const words = [...new Set(String(form?.extraBlockedWords ?? '').split(/[\n,]/).map((w) => w.trim().toLowerCase()).filter(Boolean))];
             // A channel absent from the form stays unchanged (Setup step by step sends only one).
             const patch = changedOnly({
-                ...(form?.reviewChannelId !== undefined ? { reviewChannelId: channelField(g, form, 'reviewChannelId', { label: 'Review channel' }) } : {}),
-                ...(form?.alertsChannelId !== undefined ? { alertsChannelId: channelField(g, form, 'alertsChannelId', { label: 'Alerts channel' }) } : {}),
+                ...(form?.reviewChannelId !== undefined ? { reviewChannelId: channelField(g, form, 'reviewChannelId', { label: tr.t('automod.channels.review') }) } : {}),
+                ...(form?.alertsChannelId !== undefined ? { alertsChannelId: channelField(g, form, 'alertsChannelId', { label: tr.t('automod.channels.alerts') }) } : {}),
                 extraBlockedWords: typeof form?.extraBlockedWords === 'string' ? words : registryValue(ctx, 'extraBlockedWords'),
             }, {
                 reviewChannelId: registryValue(ctx, 'reviewChannelId'),
                 alertsChannelId: registryValue(ctx, 'alertsChannelId'),
                 extraBlockedWords: registryValue(ctx, 'extraBlockedWords'),
             });
-            if (!Object.keys(patch).length) return NOTHING;
+            if (!Object.keys(patch).length) return nothing(tr);
             return saveRegistry(ctx, patch, 'automod');
         },
     },
 };
-

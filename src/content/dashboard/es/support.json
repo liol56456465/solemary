@@ -1,0 +1,16 @@
+{
+  "page": {
+    "help": "Un segundo servidor de Discord al que los miembros baneados aún pueden entrar. Allí piden que se levante su baneo (apelación), porque no pueden llegar a tu servidor principal. El enlace de invitación se configura en Sanciones y apelaciones."
+  },
+  "title": "Servidor de soporte",
+  "titleNamed": "Servidor de soporte · {name}",
+  "notConnected": "Todavía no hay ningún servidor de soporte conectado. Primero el propietario del bot tiene que configurar uno.",
+  "bannedRole": "Rol de baneados (servidor de soporte)",
+  "bannedRoleShort": "Rol de baneados",
+  "bannedRoleHelp": "Los miembros baneados del servidor principal reciben este rol en el servidor de soporte. Mewvo se lo quita cuando termina el baneo.",
+  "cannotSee": "Mewvo no puede ver el servidor de soporte ahora mismo, así que no se pueden listar sus roles. Comprueba que Mewvo sea miembro allí.",
+  "appealsCategory": "Categoría de apelaciones de baneo y expulsión",
+  "appealsCategoryHelp": "Una categoría es una carpeta de canales. Cada apelación de baneo o expulsión recibe aquí un canal donde el miembro puede hablar con el staff. El staff decide en un canal solo para el staff en el servidor principal. Sin configurar: las apelaciones se abren en el servidor principal, solo para el staff.",
+  "invite": "Enlace de invitación que se envía a los baneados: {invite}. Puedes {change}.",
+  "changeLink": "cambiarlo en Sanciones y apelaciones"
+}

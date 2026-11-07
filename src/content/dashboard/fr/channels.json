@@ -1,0 +1,68 @@
+{
+  "page": {
+    "help": "Nettoie un salon en supprimant d’un coup beaucoup de messages récents, ou verrouille un salon pour que les membres ne puissent plus y écrire pendant un moment, par exemple pendant une vague de spam."
+  },
+  "adminNote": " Pour utiliser ces outils, il te faut la permission Administrateur sur ce serveur.",
+  "field": {
+    "channel": "Salon",
+    "reason": "Raison",
+    "reasonHelp": "Enregistrée avec l’action, pour que le reste de l’équipe sache pourquoi."
+  },
+  "purge": {
+    "title": "Supprimer des messages",
+    "help": "Supprime d’un coup beaucoup de messages récents. Discord ne le permet pas pour les messages de plus de 14 jours : ils sont donc ignorés.",
+    "amount": "Nombre de messages",
+    "amountHelp": "De {min} à {max}. Les messages les plus récents partent en premier.",
+    "fromUser": "Seulement de ce membre (facultatif)",
+    "fromUserHelp": "Seuls les 100 messages les plus récents sont parcourus.",
+    "nothingYet": "Rien n’est encore supprimé : la page suivante montre ce qui sera supprimé, et tu confirmes là-bas.",
+    "submit": "Supprimer les messages…",
+    "badUser": "Seulement de ce membre : ce n’est pas un ID d’utilisateur. Tape un nom et choisis un membre, utilise « Trouver un membre » ou colle un ID d’utilisateur (17 à 20 chiffres).",
+    "missingPerms": "Il manque à Mewvo {perms} dans #{channel}, il ne peut donc pas y supprimer de messages. Rien n’a été modifié."
+  },
+  "lock": {
+    "title": "Verrouiller un salon",
+    "help": "Les membres peuvent toujours lire le salon mais ne peuvent plus y écrire. Les rôles qui ont leur propre permission dans ce salon, comme l’équipe, le peuvent encore. Le déverrouillage annule cela : le salon reprend les permissions de sa catégorie (le dossier où il se trouve).",
+    "submit": "Verrouiller le salon"
+  },
+  "locked": {
+    "title": "Salons verrouillés ({count})",
+    "category": "Catégorie",
+    "noCategory": "aucune",
+    "reasonPlaceholder": "Raison (facultatif)",
+    "unlock": "Déverrouiller",
+    "empty": "Aucun salon n’est verrouillé.",
+    "help": "Les salons où les membres ne peuvent pas écrire en ce moment, parce que le salon lui-même est verrouillé."
+  },
+  "confirm": {
+    "heading": "Confirmer : supprimer des messages dans #{channel}",
+    "messages": "Messages",
+    "fromUser": {
+      "one": "Jusqu’à {count} des messages les plus récents de {who} (seuls les 100 plus récents sont parcourus)",
+      "many": "Jusqu’à {count} des messages les plus récents de {who} (seuls les 100 plus récents sont parcourus)",
+      "other": "Jusqu’à {count} des messages les plus récents de {who} (seuls les 100 plus récents sont parcourus)"
+    },
+    "newest": {
+      "one": "Le plus récent ({count})",
+      "many": "Les {count} plus récents",
+      "other": "Les {count} plus récents"
+    },
+    "effect": "Effet",
+    "effectText": "Les messages sont supprimés définitivement et ne peuvent pas être récupérés. Les messages de plus de 14 jours sont ignorés.",
+    "submit": "Supprimer les messages"
+  },
+  "action": {
+    "skippedOld": {
+      "one": "{count} message avait plus de 14 jours et a été ignoré.",
+      "many": "{count} messages avaient plus de 14 jours et ont été ignorés.",
+      "other": "{count} messages avaient plus de 14 jours et ont été ignorés."
+    },
+    "deleted": {
+      "one": "{count} message supprimé dans #{channel}.",
+      "many": "{count} messages supprimés dans #{channel}.",
+      "other": "{count} messages supprimés dans #{channel}."
+    },
+    "locked": "#{channel} est verrouillé.",
+    "unlocked": "#{channel} est déverrouillé."
+  }
+}

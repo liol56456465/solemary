@@ -1,0 +1,176 @@
+{
+  "page": {
+    "help": "Los miembros ganan puntos (XP) por chatear y suben de nivel a medida que acumulan más. Puedes publicar un mensaje cuando alguien sube de nivel y dar roles en ciertos niveles. También puedes cambiar esto con /level dashboard en Discord."
+  },
+  "topic": {
+    "earning": "Ganar XP",
+    "earningLine": "Lo rápido que suben de nivel los miembros y lo que Mewvo publica cuando pasa.",
+    "rewards": "Recompensas y niveles",
+    "rewardsLine": "Roles por alcanzar un nivel, y cambiar un nivel a mano.",
+    "cat": "Gato del servidor",
+    "catLine": "Un gato que crece mientras los miembros chatean, de Kitten a Legend."
+  },
+  "add": "Añadir",
+  "remove": "Quitar",
+  "type": {
+    "channel": "canal",
+    "role": "rol"
+  },
+  "colours": {
+    "primary": "Azul Mewvo",
+    "purple": "Morado",
+    "blurple": "Blurple de Discord",
+    "green": "Verde",
+    "yellow": "Amarillo",
+    "red": "Rojo",
+    "grey": "Gris"
+  },
+  "xp": {
+    "title": "XP y mensajes",
+    "help": "La XP por mensaje, la espera entre XP y el mensaje de subida de nivel.",
+    "min": "XP mínima por mensaje",
+    "minHelp": "Cada mensaje da una cantidad aleatoria de XP entre estos dos números.",
+    "max": "XP máxima por mensaje",
+    "cooldown": "Espera entre XP",
+    "cooldownHelp": "Un miembro recibe XP por un mensaje como mucho con esta frecuencia, así que hacer spam no le hace subir más rápido. En segundos.",
+    "channel": "Canal de subidas de nivel",
+    "channelNone": "donde escribió el miembro",
+    "channelHelp": "Dónde se publica el mensaje de subida de nivel.",
+    "announce": "Anunciar subidas de nivel",
+    "announceHelp": "Desactivado: los miembros siguen subiendo de nivel, pero no se publica ningún mensaje.",
+    "message": "Mensaje de subida de nivel",
+    "messageHelp": "Puedes usar {user} (menciona al miembro) y {level} (su nuevo nivel)."
+  },
+  "card": {
+    "title": "Tarjeta de nivel",
+    "help": "Una imagen junto al mensaje de subida de nivel.",
+    "more": "Los miembros también pueden ver la misma tarjeta con /rank card:True. Mewvo necesita el permiso Adjuntar archivos en el canal de subidas de nivel; sin él solo se publica el texto.",
+    "toggle": "Añadir una tarjeta con imagen a los mensajes de subida de nivel",
+    "toggleHelp": "La tarjeta muestra la foto y el nombre del miembro, el nuevo nivel, una barra hasta el siguiente nivel y el nombre del servidor. Desactivado: solo se publica el mensaje de texto. Si no se puede crear la tarjeta, el mensaje de texto se publica solo.",
+    "colour": "Color de la tarjeta",
+    "colourHelp": "Se usa para el anillo alrededor de la foto, el nivel y la barra.",
+    "hex": "O un código de color",
+    "hexHelp": "Un # y seis letras o números. Si lo rellenas, se usa en lugar del color de arriba."
+  },
+  "boosts": {
+    "title": "Multiplicadores de XP",
+    "help": "Más XP en algunos canales o para algunos roles, de x{min} a x{max}.",
+    "more": "Un hilo cuenta como su canal. Si un miembro tiene varios roles con multiplicador, solo cuenta el más alto. El multiplicador del canal por el del rol nunca pasa de x{cap}.",
+    "boost": "Multiplicador",
+    "boostHelp": "De {min} a {max}, por ejemplo {example}.",
+    "boosted": "Para",
+    "empty": "No hay multiplicadores. Todos los canales y roles dan la XP normal.",
+    "channel": "Canal",
+    "role": "Rol",
+    "addChannel": "Añadir a un canal",
+    "addRole": "Añadir a un rol"
+  },
+  "ignored": {
+    "title": "Sin XP en",
+    "help": "Los miembros no ganan XP en estos canales, y los miembros con estos roles no ganan nada. Útil para canales de bots o de spam.",
+    "type": "Tipo",
+    "noXpFor": "Sin XP para",
+    "empty": "Los miembros ganan XP en todos los canales.",
+    "addChannel": "Sin XP en este canal",
+    "addRole": "Sin XP para este rol"
+  },
+  "rewards": {
+    "title": "Roles de recompensa",
+    "help": "Los miembros reciben estos roles solos cuando alcanzan el nivel. Mewvo solo puede dar roles que estén por debajo del suyo en la lista de roles, y no da roles con poderes de staff.",
+    "level": "Nivel",
+    "role": "Rol",
+    "problems": "Problemas",
+    "ok": "ok",
+    "empty": "No hay roles de recompensa.",
+    "atLevel": "En el nivel",
+    "giveRole": "Dar este rol",
+    "rewardRole": "Rol de recompensa",
+    "add": "Añadir recompensa",
+    "modeLabel": "Roles de recompensa que conserva un miembro",
+    "modeHelp": "Conservar todos: los miembros conservan cada rol de recompensa que alcanzaron. Solo el más alto: cuando un miembro alcanza una nueva recompensa, Mewvo le da ese rol y le quita los roles de recompensa más bajos.",
+    "mode": {
+      "keep": "Conservar todos los roles de recompensa",
+      "highest": "Solo el rol de recompensa más alto"
+    },
+    "modeSubmit": "Guardar"
+  },
+  "member": {
+    "title": "Niveles de los miembros",
+    "help": "Cambia a mano el nivel de un miembro. También puedes hacerlo con /level add, /level remove y /level set en Discord.",
+    "userId": "Miembro (ID de usuario)",
+    "userIdHelp": "El número largo que identifica a un miembro. En Discord, activa el Modo desarrollador, haz clic derecho en el miembro y elige Copiar ID de usuario.",
+    "opLabel": "Qué hacer",
+    "op": {
+      "add": "Añadir niveles",
+      "remove": "Quitar niveles",
+      "set": "Fijar nivel"
+    },
+    "levels": "Niveles",
+    "apply": "Aplicar",
+    "needsAdmin": "Para cambiar el nivel de un miembro necesitas el permiso de Administrador en este servidor.",
+    "memberId": "ID del miembro",
+    "actionLabel": "Acción"
+  },
+  "cat": {
+    "title": "Gato del servidor",
+    "help": "Su nombre, y si Mewvo publica algo cuando crece.",
+    "more": "Los miembros lo ven con /cat view y en la clasificación de la web. Cuando crece, Mewvo publica una vez en el canal de subidas de nivel (si hay uno).",
+    "alt": "{name}, etapa {stage}, ánimo: {mood}",
+    "now": {
+      "one": "{sentence} Etapa: {stage}. {total} mensaje contado.",
+      "many": "{sentence} Etapa: {stage}. {total} de mensajes contados.",
+      "other": "{sentence} Etapa: {stage}. {total} mensajes contados."
+    },
+    "notLoaded": "No se pudo cargar el gato ahora mismo (la base de datos no responde). Recarga para volver a intentarlo.",
+    "name": "Nombre",
+    "nameHelp": "Letras, números y espacios. Los demás caracteres se quitan.",
+    "saveName": "Guardar nombre",
+    "announce": "Publicar en el canal de subidas de nivel cuando el gato crezca",
+    "needsAdmin": "Necesitas el permiso de Administrador en este servidor para cambiar el gato."
+  },
+  "error": {
+    "cardHex": "Color de la tarjeta: escribe un código de color como #9B59B6, o déjalo vacío y elige de la lista.",
+    "cardColour": "Color de la tarjeta: opción desconocida.",
+    "minMax": "La XP mínima por mensaje no puede ser mayor que la XP máxima por mensaje.",
+    "roleMissing": "Rol: ese rol no está en el servidor.",
+    "maxChannelBoosts": {
+      "one": "Como máximo {count} multiplicador de canal.",
+      "many": "Como máximo {count} de multiplicadores de canal.",
+      "other": "Como máximo {count} multiplicadores de canal."
+    },
+    "maxRoleBoosts": {
+      "one": "Como máximo {count} multiplicador de rol.",
+      "many": "Como máximo {count} de multiplicadores de rol.",
+      "other": "Como máximo {count} multiplicadores de rol."
+    },
+    "memberMissing": "Ese miembro no está en el servidor.",
+    "catName": "Nombre: usa letras, números y espacios."
+  },
+  "action": {
+    "nothing": "No ha cambiado nada.",
+    "catNamed": "El gato del servidor ahora se llama {name}.",
+    "catAnnounceLabel": "Aviso de crecimiento del gato",
+    "catPostsOn": "Los avisos de crecimiento del gato están activados.",
+    "catPostsOff": "Los avisos de crecimiento del gato están desactivados.",
+    "enabledLabel": "Niveles",
+    "enabledOn": "Los niveles ahora están activados.",
+    "enabledOff": "Los niveles ahora están desactivados.",
+    "settingsSaved": "Ajustes de niveles guardados.",
+    "cardSaved": "Ajustes de la tarjeta de nivel guardados.",
+    "alreadyListed": "Ya está en la lista.",
+    "ignoreAdded": "A partir de ahora no hay XP ahí.",
+    "notListed": "No estaba en la lista.",
+    "removed": "Quitado.",
+    "boostSame": "Ese multiplicador ya está puesto.",
+    "channelBoostSet": "Ese canal ahora da {boost} XP.",
+    "roleBoostSet": "Ese rol ahora da {boost} XP.",
+    "noBoost": "No había ningún multiplicador para eso.",
+    "boostRemoved": "Multiplicador quitado.",
+    "modeHighest": "Ahora los miembros solo conservan su rol de recompensa más alto. Se aplica a cada miembro cuando sube de nivel, y a todos la próxima vez que Mewvo se reinicie.",
+    "modeKeep": "Ahora los miembros conservan todos sus roles de recompensa.",
+    "rewardAdded": "El nivel {level} ahora da ese rol.",
+    "rewardRemoved": "Recompensa del nivel {level} quitada.",
+    "noReward": "No había ninguna recompensa para ese nivel.",
+    "memberDone": "{name} ahora es nivel {level}."
+  }
+}

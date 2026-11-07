@@ -1,0 +1,68 @@
+{
+  "page": {
+    "help": "Verlose einen Preis an zufällige Mitglieder. Mewvo postet eine Gewinnspiel-Nachricht mit einem Button, Mitglieder drücken ihn, um teilzunehmen, und wenn die Zeit um ist, wählt Mewvo die Gewinner. Neu auslosen wählt neue Gewinner. Für alles hier brauchst du die Berechtigung Administrator auf diesem Server."
+  },
+  "needsAdmin": "Um Gewinnspiele durchzuführen, brauchst du die Berechtigung Administrator auf diesem Server.",
+  "create": {
+    "title": "Gewinnspiel starten",
+    "help": "Mewvo postet die Gewinnspiel-Nachricht im gewählten Kanal. Das geht auch mit /giveaway create in Discord.",
+    "channel": "Kanal",
+    "channelHelp": "Wo die Gewinnspiel-Nachricht gepostet wird.",
+    "prize": "Preis",
+    "prizeHelp": "Was die Gewinner bekommen, zum Beispiel Nitro für einen Monat.",
+    "duration": "Dauer",
+    "durationHelp": "Wie lange Mitglieder teilnehmen können. Eine Zahl und ein Buchstabe: s (Sekunden), m (Minuten), h (Stunden) oder d (Tage). Von 10 Sekunden bis 30 Tage.",
+    "winners": "Gewinner",
+    "winnersHelp": "Wie viele Mitglieder gewinnen. Von {min} bis {max}.",
+    "submit": "Gewinnspiel starten"
+  },
+  "active": {
+    "title": "Laufend",
+    "empty": "Keine laufenden Gewinnspiele."
+  },
+  "ended": {
+    "title": "Beendet (die letzten 25)",
+    "empty": "Keine beendeten Gewinnspiele."
+  },
+  "list": {
+    "prize": "Preis",
+    "channel": "Kanal",
+    "ends": "Endet",
+    "ended": "Beendet",
+    "entries": "Teilnahmen",
+    "winners": "Gewinner",
+    "endNow": "Jetzt beenden",
+    "endConfirm": "Dieses Gewinnspiel jetzt beenden und die Gewinner wählen?",
+    "reroll": "Neu auslosen",
+    "delete": "Löschen",
+    "deleteConfirm": "Das Gewinnspiel „{prize}“ und seine Nachricht löschen?",
+    "giveawayWord": "Gewinnspiel"
+  },
+  "random": {
+    "title": "Zufälliges Mitglied wählen",
+    "help": "Wählt ein zufälliges Mitglied, zum Beispiel für eine schnelle Auslosung. Das Ergebnis erscheint oben auf dieser Seite und wird im Dashboard-Verlauf gespeichert. In Discord wird nichts gepostet. Das geht auch mit /tools randomuser in Discord.",
+    "role": "Nur Mitglieder mit dieser Rolle",
+    "roleLabel": "Rolle",
+    "anyone": "alle",
+    "bots": "Bots einbeziehen",
+    "botsHelp": "Aus: Bot-Konten werden nie gewählt.",
+    "online": "Nur Mitglieder, die online sind",
+    "onlineHelp": "Mitglieder überspringen, die gerade als offline angezeigt werden.",
+    "submit": "Mitglied wählen"
+  },
+  "error": {
+    "unknown": "Unbekanntes Gewinnspiel."
+  },
+  "action": {
+    "picked": {
+      "one": "@{name} ({id}) aus {count} passenden Mitglied gewählt.",
+      "other": "@{name} ({id}) aus {count} passenden Mitgliedern gewählt."
+    },
+    "started": "Gewinnspiel um „{prize}“ gestartet; es endet in {duration}.",
+    "ended": "Gewinnspiel beendet: {winners} Gewinner aus {entries} Teilnahmen.",
+    "rerolled": "Neu ausgelost: {winners} neue Gewinner.",
+    "channelGone": "Der Kanal ist weg, deshalb wurde nichts angekündigt.",
+    "deletedWithMessage": "Gewinnspiel „{prize}“ samt Nachricht gelöscht.",
+    "deletedMessageGone": "Gewinnspiel „{prize}“ gelöscht (die Nachricht war schon weg)."
+  }
+}

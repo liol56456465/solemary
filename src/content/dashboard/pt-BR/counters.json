@@ -1,0 +1,56 @@
+{
+  "page": {
+    "help": "Contadores são canais cujo nome mostra um número ao vivo, como \"Members: 1234\". O Mewvo atualiza eles a cada 15 minutos. O jogo de contagem é um canal onde os membros contam juntos, um número por mensagem."
+  },
+  "list": {
+    "title": "Contadores de estatísticas do servidor",
+    "help": "O Mewvo cria o canal para você. Você também pode fazer isso com /serverstats create no Discord.",
+    "helpNoAdmin": "O Mewvo cria o canal para você. Você também pode fazer isso com /serverstats create no Discord. Para criar canais, você precisa da permissão de Administrador neste servidor.",
+    "id": "ID",
+    "channel": "Canal",
+    "type": "Tipo",
+    "empty": "Ainda não há contadores.",
+    "change": "Mudar",
+    "delete": "Apagar contador e canal",
+    "deleteConfirm": "Apagar este contador e o canal dele?"
+  },
+  "create": {
+    "title": "Novo contador",
+    "counts": "O que ele conta",
+    "channelType": "Tipo de canal",
+    "channelTypeHelp": "Um canal de voz é a escolha comum: ele fica na lista e mostra o número.",
+    "voice": "Canal de voz (mostra só o nome)",
+    "text": "Canal de texto",
+    "category": "Na categoria",
+    "categoryHelp": "Uma categoria é uma pasta de canais. O canal do contador é criado nela.",
+    "submit": "Criar contador",
+    "allUsed": "Todos os tipos de contador já estão em uso. Você pode ter um de cada."
+  },
+  "counting": {
+    "title": "Jogo de contagem",
+    "help": "Os membros escrevem o próximo número, um de cada vez. Iniciar ou reiniciar o jogo aqui zera a contagem e o ranking. Você também pode fazer isso com /count setup no Discord.",
+    "label": "Jogo de contagem:",
+    "details": "em {channel} · {system} · próximo número {next} · melhor sequência {best}",
+    "channel": "Canal de contagem",
+    "channelHelp": "Use um canal só para contar.",
+    "system": "Sistema numérico",
+    "systemHelp": "Como os números são escritos. Decimal (números normais) é a escolha comum.",
+    "restart": "Recomeçar neste canal (volta para 1)",
+    "reset": "Voltar a contagem para 1",
+    "resetConfirm": "Voltar o jogo de contagem para 1?"
+  },
+  "action": {
+    "unknown": "Contador desconhecido.",
+    "countsLabel": "Conta",
+    "channelKindLabel": "Tipo de canal",
+    "created": "Contador criado: {channel}.",
+    "renameLater": "O nome do canal é atualizado na próxima execução agendada.",
+    "updated": "Contador atualizado.",
+    "renameFailed": "Não foi possível renomear o canal agora; ele é atualizado na próxima execução agendada.",
+    "deleted": "Contador apagado.",
+    "deleteFailed": "Não foi possível apagar o canal do contador (permissões?).",
+    "started": "Jogo de contagem iniciado em 1.",
+    "reset": "A contagem recomeça em 1.",
+    "off": "O jogo de contagem está desligado."
+  }
+}

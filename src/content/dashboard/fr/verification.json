@@ -1,0 +1,129 @@
+{
+  "page": {
+    "help": "La vérification tient les bots et les raiders à l’écart. Les nouveaux membres ne voient le reste du serveur qu’une fois qu’ils ont le rôle vérifié. Ils l’obtiennent en appuyant sur un bouton du panneau de vérification (un message publié par Mewvo) ou en se connectant avec Discord. La vérification automatique donne plutôt le rôle dès l’arrivée. Tu peux utiliser l’une ou l’autre, pas les deux."
+  },
+  "panel": {
+    "title": "Panneau de vérification",
+    "toggle": "Vérification",
+    "in": "Panneau dans {channel}.",
+    "publish": "Mettre à jour ou republier le panneau",
+    "none": "Pas encore de panneau de vérification.",
+    "channel": "Publier le panneau dans",
+    "channelHelp": "Choisis un salon que les nouveaux membres voient avant d’être vérifiés.",
+    "role": "Rôle vérifié",
+    "roleSetupHelp": "Le rôle que les membres reçoivent une fois vérifiés. Règle tes salons pour que seul ce rôle puisse les voir.",
+    "roleHelp": "Le rôle que les membres reçoivent une fois vérifiés.",
+    "buttonText": "Texte du bouton",
+    "message": "Message du panneau",
+    "messageHelp": "Le texte au-dessus du bouton.",
+    "setup": "Configurer et publier le panneau",
+    "savingNote": "Enregistrer ne modifie pas le message déjà publié dans Discord. Appuie sur « Mettre à jour ou republier le panneau » pour afficher le nouveau texte."
+  },
+  "quiz": {
+    "title": "Quiz sur les règles",
+    "help": {
+      "one": "Avant d’être vérifiés, les membres répondent à {count} question au maximum sur tes règles. Toutes les réponses doivent être justes ; après une erreur, ils attendent avant de réessayer, et on ne leur dit pas quelle réponse était fausse. Ceux qui réussissent passent à l’étape de vérification normale. Désactivé par défaut.",
+      "many": "Avant d’être vérifiés, les membres répondent à {count} questions au maximum sur tes règles. Toutes les réponses doivent être justes ; après une erreur, ils attendent avant de réessayer, et on ne leur dit pas quelle réponse était fausse. Ceux qui réussissent passent à l’étape de vérification normale. Désactivé par défaut.",
+      "other": "Avant d’être vérifiés, les membres répondent à {count} questions au maximum sur tes règles. Toutes les réponses doivent être justes ; après une erreur, ils attendent avant de réessayer, et on ne leur dit pas quelle réponse était fausse. Ceux qui réussissent passent à l’étape de vérification normale. Désactivé par défaut."
+    },
+    "toggle": "Quiz sur les règles",
+    "questionN": "Question {n}",
+    "question": "Question",
+    "placeholder": "Laquelle de ces phrases est une règle ici ?",
+    "answerN": "Réponse {n}",
+    "answerOptional": "Réponse {n} (facultative)",
+    "correct": "Bonne réponse",
+    "rightAnswer": "Bonne réponse : {answer}",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "remove": "Retirer",
+    "empty": "Pas encore de questions.",
+    "suggest": "Proposer des questions à partir de mes règles",
+    "cooldown": "Attente après une erreur (minutes)",
+    "cooldownHelp": {
+      "one": "De {min} à {count} minute.",
+      "many": "De {min} à {count} minutes.",
+      "other": "De {min} à {count} minutes."
+    },
+    "submit": "Enregistrer les questions",
+    "slotsNote": "Les emplacements vides sont ignorés ; vide un emplacement pour retirer sa question. Les réponses sont affichées dans un ordre aléatoire à chaque fois.",
+    "warnNoQuestions": "Le quiz est activé mais n’a aucune question valide, il est donc considéré comme désactivé : on ne demande rien aux membres. Ajoute une question ci-dessous.",
+    "warnInvalid": {
+      "one": "{count} question enregistrée n’est pas valide et est ignorée. Enregistre à nouveau les questions pour corriger cela.",
+      "many": "{count} questions enregistrées ne sont pas valides et sont ignorées. Enregistre à nouveau les questions pour corriger cela.",
+      "other": "{count} questions enregistrées ne sont pas valides et sont ignorées. Enregistre à nouveau les questions pour corriger cela."
+    },
+    "warnPanelOff": "Le panneau de vérification est désactivé, donc personne ne reçoit le quiz tant qu’il n’est pas activé.",
+    "suggestFull": {
+      "one": "La {count} question est utilisée. Retires-en une pour obtenir une suggestion.",
+      "many": "Les {count} questions sont toutes utilisées. Retires-en une pour obtenir une suggestion.",
+      "other": "Les {count} questions sont toutes utilisées. Retires-en une pour obtenir une suggestion."
+    },
+    "suggestNoRules": "Il n’y a pas encore de règles du serveur à partir desquelles proposer. Ajoute-les d’abord sur la page Règles.",
+    "suggested": {
+      "one": "{count} question proposée est remplie ci-dessous. Rien n’est encore enregistré : vérifie-la, modifie-la, puis appuie sur Enregistrer les questions.",
+      "many": "{count} questions proposées sont remplies ci-dessous. Rien n’est encore enregistré : vérifie-les, modifie-les, puis appuie sur Enregistrer les questions.",
+      "other": "{count} questions proposées sont remplies ci-dessous. Rien n’est encore enregistré : vérifie-les, modifie-les, puis appuie sur Enregistrer les questions."
+    }
+  },
+  "auto": {
+    "title": "Vérification automatique",
+    "toggle": "Vérification automatique",
+    "criteria": "Qui est vérifié automatiquement",
+    "criteriaHelp": "Les membres qui ne correspondent pas doivent toujours utiliser le panneau.",
+    "criteriaNone": "Tout le monde",
+    "criteriaAge": "Les comptes plus anciens que le nombre de jours ci-dessous",
+    "criteriaSmall": "Tout le monde, tant que le serveur est encore petit",
+    "criteriaLabel": "Critère",
+    "age": "Compte plus ancien que (jours)",
+    "ageHelp": "Utilisé seulement si tu choisis les comptes plus anciens que le nombre de jours ci-dessous. Les nouveaux comptes sont plus souvent des bots.",
+    "role": "Rôle donné",
+    "roleNone": "le rôle vérifié",
+    "roleHelp": "Le rôle que reçoivent les membres vérifiés automatiquement.",
+    "roleLabel": "Rôle de vérification automatique"
+  },
+  "web": {
+    "title": "Vérification web",
+    "help": "Les membres peuvent aussi se vérifier sur une page web en se connectant avec leur compte Discord.",
+    "page": "Page après « Vérifier avec Discord »",
+    "pageHelp": "La page web où arrivent les membres après s’être vérifiés en se connectant avec Discord. Laisse vide pour la page par défaut."
+  },
+  "action": {
+    "setUp": "Vérification configurée : le panneau est publié et la vérification est activée.",
+    "posted": "Le panneau manquait : un nouveau est publié.",
+    "updated": "Le panneau en ligne affiche maintenant le texte enregistré.",
+    "on": "La vérification est maintenant activée.",
+    "off": "La vérification est maintenant désactivée.",
+    "toggleNote": "Activer ou désactiver ne publie ni ne retire le message du panneau. Utilise « Mettre à jour ou republier le panneau » pour cela.",
+    "saved": "Paramètres de vérification enregistrés.",
+    "autoOn": "La vérification automatique est maintenant activée.",
+    "autoOff": "La vérification automatique est maintenant désactivée.",
+    "autoSaved": "Paramètres de vérification automatique enregistrés.",
+    "quizOn": "Le quiz sur les règles est maintenant activé.",
+    "quizOff": "Le quiz sur les règles est maintenant désactivé.",
+    "quizEmpty": "Il n’a pas encore de questions, il est donc considéré comme désactivé jusqu’à ce que tu en ajoutes une.",
+    "quizSaved": "Quiz sur les règles enregistré.",
+    "quizNowEmpty": "Le quiz est activé mais n’a plus de questions, il est donc considéré comme désactivé.",
+    "directionLabel": "Direction",
+    "movedUp": "Question montée.",
+    "movedDown": "Question descendue.",
+    "removed": "Question retirée."
+  },
+  "error": {
+    "noQuestion": "{label} : écris la question, ou vide ses réponses pour la retirer.",
+    "answerCount": "{label} : donne entre {min} et {max} réponses.",
+    "correctLabel": "{label} : bonne réponse",
+    "correctEmpty": "{label} : la bonne réponse (réponse {answer}) est vide.",
+    "quizChanged": "Les questions du quiz ont changé entre-temps. Recharge la page et réessaie.",
+    "alreadySetUp": "Le panneau de vérification est déjà configuré. Utilise plutôt « Mettre à jour ou republier le panneau ».",
+    "autoIsOn": "La vérification automatique est activée. Désactive-la avant d’activer le panneau de vérification.",
+    "notSetUp": "Le panneau de vérification n’est pas encore configuré. Configure-le d’abord.",
+    "buttonEmpty": "Le texte du bouton ne peut pas être vide.",
+    "messageEmpty": "Le message du panneau ne peut pas être vide.",
+    "blockPanel": "le panneau de vérification est activé",
+    "blockAutoRoles": "des rôles automatiques sont configurés (Bienvenue et au revoir)",
+    "blocked": "Pour activer la vérification automatique, désactive d’abord : {list}.",
+    "atTop": "Cette question est déjà tout en haut.",
+    "atBottom": "Cette question est déjà tout en bas."
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "page": {
+    "help": "Como as punições (avisos, silenciamentos, expulsões e banimentos) funcionam neste servidor: onde são registradas, quais cargos mostram que alguém está silenciado ou avisado, e como os membros podem pedir que uma punição seja retirada (uma apelação). /enforcements no Discord usa essas configurações."
+  },
+  "adminOnly": " Para isso, você precisa da permissão de Administrador neste servidor.",
+  "action": {
+    "warn": "aviso",
+    "mute": "silenciamento",
+    "kick": "expulsão",
+    "ban": "banimento"
+  },
+  "unit": {
+    "month": {
+      "one": "{count} mês",
+      "many": "{count} meses",
+      "other": "{count} meses"
+    },
+    "day": {
+      "one": "{count} dia",
+      "many": "{count} dias",
+      "other": "{count} dias"
+    },
+    "hour": {
+      "one": "{count} hora",
+      "many": "{count} horas",
+      "other": "{count} horas"
+    },
+    "minute": {
+      "one": "{count} minuto",
+      "many": "{count} minutos",
+      "other": "{count} minutos"
+    },
+    "lessThanMinute": "menos de um minuto"
+  },
+  "topic": {
+    "where": "Canais e cargos",
+    "whereLine": "Onde o Mewvo escreve sobre punições, e os cargos que ele usa.",
+    "appeals": "Apelações",
+    "appealsLine": "Como os membros pedem à equipe para retirar uma punição.",
+    "safety": "Ferramentas de moderação e segurança",
+    "safetyLine": "Atalhos para moderadores e um freio caso uma conta de moderador seja mal usada.",
+    "pages": "Páginas públicas",
+    "pagesLine": "Números sobre este servidor no site do Mewvo. As duas ficam desativadas por padrão.",
+    "rules": "Como as punições se acumulam",
+    "rulesLine": "Embutido. Ainda não dá para mudar isso aqui."
+  },
+  "channels": {
+    "title": "Canais",
+    "help": "Registros, provas e as categorias para apelações, denúncias e modmail.",
+    "modLog": "Canal do registro de moderação",
+    "modLogHelp": "O Mewvo publica aqui uma linha para cada aviso, silenciamento, expulsão e banimento. Os alertas da equipe também vêm para cá quando nenhum outro canal está definido.",
+    "evidence": "Canal de provas",
+    "evidenceHelp": "Capturas de tela adicionadas a um caso são salvas aqui, para que fiquem mesmo se a mensagem original for apagada. Não definido: o canal do registro de moderação.",
+    "adminRequest": "Canal de pedidos aos admins",
+    "adminRequestHelp": "Onde os moderadores pedem a um administrador algo que eles mesmos não podem fazer.",
+    "appealsCategory": "Categoria de apelações",
+    "appealsCategoryHelp": "Uma categoria é uma pasta de canais. Cada apelação contra um silenciamento ou aviso ganha nela um canal próprio. Não definida: a categoria de tickets.",
+    "reportsCategory": "Categoria de denúncias da equipe",
+    "reportsCategoryHelp": "Cada denúncia sobre um membro da equipe ganha aqui um canal próprio. Não definida: a categoria de tickets.",
+    "modmailCategory": "Categoria de modmail",
+    "modmailCategoryHelp": "Quando um membro manda mensagem privada ao Mewvo e envia para a equipe, a conversa ganha um canal aqui. Não definida: a categoria de tickets.",
+    "openCap": "Máximo de denúncias e modmails abertos",
+    "openCapHelp": "Quantos canais de denúncia da equipe e de modmail podem ficar abertos ao mesmo tempo. Quando o limite é atingido, os novos são recusados e a equipe recebe um alerta. Apelações nunca são recusadas.",
+    "invite": "Convite do servidor de suporte",
+    "inviteHelp": "Um link para o seu servidor de suporte. Membros banidos o recebem para ainda poderem apelar."
+  },
+  "roles": {
+    "title": "Cargos",
+    "help": "Os cargos de aviso mostram quantos avisos ativos um membro tem. O Mewvo os dá e remove sozinho.",
+    "muted": "Cargo de silenciado",
+    "mutedHelp": "O cargo que impede um membro silenciado de falar. Se você deixar vazio, o Mewvo cria um na primeira vez que alguém for silenciado.",
+    "warn1": "Cargo com 1 aviso",
+    "warn2": "Cargo com 2 avisos",
+    "warn3": "Cargo com 3 ou mais avisos",
+    "warnRoleN": "Cargo de aviso {number}"
+  },
+  "timings": {
+    "title": "Apelações e denúncias",
+    "help": "Uma apelação é um membro pedindo à equipe para retirar uma punição.",
+    "window": "Prazo para apelar (dias)",
+    "windowLabel": "Prazo para apelar",
+    "windowHelp": "Por quanto tempo depois de uma punição um membro ainda pode pedir que ela seja retirada.",
+    "cooldown": "Espera após apelação recusada (dias)",
+    "cooldownLabel": "Espera após apelação recusada",
+    "cooldownHelp": "Se a equipe recusar uma apelação, o membro precisa esperar esse tempo antes de apelar de novo. 0 significa sem espera.",
+    "rejoin": "Duração do link de volta (horas)",
+    "rejoinLabel": "Duração do link de volta",
+    "rejoinHelp": "Membros expulsos e membros com apelação aceita recebem um link de convite de uso único. Esse é o tempo que ele funciona.",
+    "staleReport": "Fechar denúncias paradas após (dias)",
+    "staleReportLabel": "Fechar denúncias paradas após",
+    "staleReportHelp": "Um canal de denúncia em que ninguém escreveu por esse tempo é fechado.",
+    "staleAppeal": "Lembrar de apelações paradas após (dias)",
+    "staleAppealLabel": "Lembrar de apelações paradas após",
+    "staleAppealHelp": "Se uma apelação ficar esse tempo sem decisão e sem mensagens novas, a equipe recebe um lembrete e o membro é avisado de que ela ainda está aberta."
+  },
+  "review": {
+    "title": "Análise independente de apelações",
+    "help": "Desativada por padrão, então qualquer membro da equipe que cuida de apelações pode decidir qualquer apelação.",
+    "label": "Um moderador diferente decide cada apelação",
+    "labelHelp": "O moderador que deu a punição não pode aceitar nem recusar a apelação contra ela. Outra pessoa da equipe precisa fazer isso. O dono do bot ainda pode decidir em uma emergência, e isso fica registrado. Punições que o Mewvo deu sozinho (banimentos automáticos por aviso, automod) não são afetadas."
+  },
+  "mass": {
+    "title": "Limite de segurança: banimentos ou expulsões demais em pouco tempo",
+    "help": "Protege o servidor se uma conta de moderador for mal usada (padrão: mais de 5 banimentos ou expulsões em 10 minutos). Um moderador que pune membros demais em pouco tempo é parado por um tempo, e o dono do bot recebe uma mensagem privada (DM).",
+    "limit": "Banimentos e expulsões permitidos",
+    "limitHelp": "Quantos um moderador pode fazer dentro do tempo abaixo.",
+    "muteLimit": "Silenciamentos permitidos",
+    "muteLimitHelp": "Contados separadamente de banimentos e expulsões.",
+    "window": "Dentro de (minutos)",
+    "block": "Bloqueado por (minutos)",
+    "blockHelp": "Por quanto tempo um moderador que passa do limite não pode punir ninguém."
+  },
+  "templates": {
+    "title": "Modelos",
+    "help": "Punições prontas para /enforcements, como “Spam: silenciamento 1h”. Elas aparecem como um menu embaixo dos botões. Escolher uma pula direto para a última etapa, onde você confirma.",
+    "name": "Nome",
+    "whatItDoes": "O que faz",
+    "reason": "Motivo",
+    "remove": "Remover",
+    "removeConfirm": "Remover o modelo “{name}”?",
+    "empty": "Ainda não há modelos.",
+    "max": "Você já tem o máximo de {count} modelos.",
+    "namePlaceholder": "Spam: silenciamento curto",
+    "nameHint": "O nome que a equipe vê no menu.",
+    "action": "Ação",
+    "duration": "Duração",
+    "durationPlaceholder": "1h, 7d ou vazio",
+    "durationHint": "Quanto tempo dura, por exemplo 1h (uma hora) ou 7d (sete dias). Um silenciamento precisa de uma. Um banimento sem duração é permanente. Avisos e expulsões a ignoram.",
+    "add": "Adicionar modelo",
+    "muteFor": "silenciamento {duration}",
+    "banFor": "banimento {duration}",
+    "banPermanent": "banimento permanente"
+  },
+  "panels": {
+    "title": "Painéis de apelação",
+    "help": "Publica o painel de apelação aqui e no servidor de suporte, e remove os antigos. Você também pode fazer isso com /setappeal no Discord.",
+    "channel": "Canal do painel de apelação",
+    "channelHelp": "O painel de apelação é uma mensagem com um botão que os membros apertam para apelar. Um segundo painel vai para #appeals no servidor de suporte, que o Mewvo cria se não existir.",
+    "submit": "Publicar os painéis de apelação",
+    "confirm": "Publicar os painéis de apelação agora? Os painéis anteriores nesses canais serão substituídos."
+  },
+  "pages": {
+    "transparencyTitle": "Relatório de transparência",
+    "transparencyHelp": "Uma contagem mensal de avisos, silenciamentos, expulsões, banimentos e apelações em /transparency.",
+    "transparencyMore": "Mostra só números. Nada de nomes, IDs, códigos de caso, motivos ou moderadores. Uma contagem de 1 ou 2 aparece como “menos de 3”.",
+    "transparencyToggle": "Publicar um relatório de transparência mensal no site",
+    "transparencyOff": "Tirar o relatório de transparência do site?",
+    "trustTitle": "Cartão de confiança",
+    "trustHelp": "Um resumo dos últimos 90 dias em /trust.",
+    "trustMore": "Com que rapidez as apelações recebem uma primeira resposta, quantas são aceitas, quantos membros estão em dia e com que frequência os membros corrigem eles mesmos uma mensagem depois que o automod os avisa primeiro em privado. Só números. Contagens de 1 ou 2 e taxas baseadas em menos de 3 ficam ocultas.",
+    "trustToggle": "Publicar o cartão de confiança",
+    "trustOff": "Tirar o cartão de confiança do site?",
+    "trustPublic": "Ele está público em {link}."
+  },
+  "rules": {
+    "ladderTitle": "Escada de avisos",
+    "ladderHelp": "Quando os avisos viram um banimento.",
+    "ladderText": "Um membro sem banimento anterior é banido ao chegar a {count} avisos. Depois disso, cada novo aviso o bane de novo, por mais tempo a cada vez.",
+    "level": "Nível",
+    "banLength": "Duração do banimento",
+    "permanent": "permanente",
+    "reasonsTitle": "Motivos",
+    "reasonsHelp": "Os motivos que os moderadores podem escolher.",
+    "reasonsMore": "Ainda não podem ser alterados aqui, porque cada caso salva o código do seu motivo.",
+    "code": "Código",
+    "reason": "Motivo",
+    "serious": "Grave",
+    "yes": "sim",
+    "no": "não",
+    "stepsTitle": "Etapas do automod",
+    "stepsHelp": "O que o automod faz quando alguém quebra a mesma regra de novo.",
+    "rule": "Regra",
+    "whatHappens": "O que acontece (1ª, 2ª, 3ª vez e seguintes)",
+    "stepPermanent": "{type} (permanente)",
+    "stepFor": "{type} {duration}"
+  },
+  "result": {
+    "panelsPosted": "Painéis de apelação publicados em #{main} e em #{support} do servidor de suporte.",
+    "panelsPostedCreated": "Painéis de apelação publicados em #{main} e em #{support} do servidor de suporte (criado).",
+    "templateInvalid": "Esse modelo não é válido.",
+    "templateAdded": "Modelo “{name}” adicionado.",
+    "templateGone": "Esse modelo já não existe. Recarregue a página.",
+    "templateRemoved": "Modelo “{name}” removido.",
+    "transparencyOn": "O relatório de transparência está ativado: /transparency é público.",
+    "transparencyOff": "O relatório de transparência está desativado: /transparency saiu do site.",
+    "trustOn": "O cartão de confiança está ativado: /trust é público.",
+    "trustOff": "O cartão de confiança está desativado: /trust saiu do site."
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "page": {
+    "help": "Members get their own voice channel when they need one. When someone joins the trigger channel, Mewvo makes a new voice channel for them and moves them into it. The channel is deleted again once it is empty."
+  },
+  "status": {
+    "title": "Status",
+    "text": "Join to create is {state} (it is on while there is a trigger channel)."
+  },
+  "triggers": {
+    "title": "Triggers",
+    "channel": "Trigger channel",
+    "temporary": "Temporary channels",
+    "empty": "No triggers yet.",
+    "remove": "Remove trigger",
+    "removeConfirm": "Stop using this channel as a trigger? The channel itself is kept."
+  },
+  "add": {
+    "title": "New trigger",
+    "help": "Mewvo makes a voice channel called \"Join to Create\". You can also do this with /jointocreate setup in Discord.",
+    "helpNoAdmin": "Mewvo makes a voice channel called \"Join to Create\". You can also do this with /jointocreate setup in Discord. You need the Administrator permission in this server for this.",
+    "oneOnly": "A server can have one trigger channel. Remove the current one to make a new one.",
+    "submit": "Create trigger channel"
+  },
+  "fields": {
+    "name": "Channel name",
+    "nameHelp": "The name of each new channel. You can use {username} (the member's username), {displayName} (their name in this server), {guildName} (the server name) and {channelName} (the trigger channel's name).",
+    "userLimit": "Most people in a channel",
+    "userLimitHelp": "0 means no limit.",
+    "bitrate": "Sound quality (kbps)",
+    "bitrateShort": "Sound quality",
+    "bitrateHelp": "Sound quality in the voice channel. Higher sounds better but needs a faster connection. 64 is normal. Boosted servers allow higher values.",
+    "category": "Category",
+    "categoryNone": "no category",
+    "categoryHelp": "A category is a folder of channels. The trigger channel is made in it."
+  },
+  "error": {
+    "unknownTrigger": "Unknown trigger channel.",
+    "nameEmpty": "Channel name cannot be empty."
+  },
+  "action": {
+    "created": "Trigger channel \"{name}\" created.",
+    "saved": "Trigger settings saved.",
+    "removed": "Trigger removed (the voice channel itself is kept)."
+  }
+}

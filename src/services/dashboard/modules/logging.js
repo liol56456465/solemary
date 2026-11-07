@@ -1,6 +1,7 @@
 // logging.js — Logging: on/off, a channel per log category (audit, applications,
 // reports), event toggles and the ignore lists. Writes go through loggingService
 // (the functions /logging uses).
+// Words: src/content/dashboard/<lang>/logging.json (event and category names stay as the bot names them).
 
 import { EVENT_TYPES, LOG_DESTINATIONS } from '../../loggingService.js';
 import { html, path } from '../html.js';
@@ -10,10 +11,16 @@ import {
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { memberField, pickedFromQuery } from '../memberSearch.js';
-import { NOTHING, registryValue, section, table } from './common.js';
+import { textFor } from '../language.js';
+import { registryValue, section, table } from './common.js';
 
-const DESTINATION_LABEL = { audit: 'Main log channel (everything else)', applications: 'Applications', reports: 'Reports' };
+const DESTINATION_LABEL = { audit: 'logging.channels.audit', applications: 'logging.channels.applications', reports: 'logging.channels.reports' };
 const IGNORE_TYPES = { channel: 'channels', role: 'roles', user: 'users' };
+const IGNORE_TYPE_LABEL = { channel: 'logging.ignore.typeChannel', role: 'logging.ignore.typeRole', user: 'logging.ignore.typeUser' };
+const IGNORING = { channel: 'logging.action.ignoringChannel', role: 'logging.action.ignoringRole', user: 'logging.action.ignoringUser' };
+
+/** The label of a log destination in the request's language (the destination key when unknown). */
+const destinationLabel = (tr, d) => (DESTINATION_LABEL[d] ? tr.t(DESTINATION_LABEL[d]) : d);
 
 /** Event types (strings) grouped by their category prefix. */
 export function eventCategories() {
@@ -34,6 +41,11 @@ function failIfFalse(ok) {
     if (ok === false) throw new Error('The logging service could not save the change');
 }
 
+/** "Nothing changed." in the request's language. */
+function nothing(ctx) {
+    return { changes: [], message: textFor(ctx).t('errors.nothingChanged') };
+}
+
 export default {
     key: 'logging',
     label: 'Logging',
@@ -46,57 +58,67 @@ export default {
     },
 
     render(ctx, { status, modLogChannelId }) {
+        const tr = textFor(ctx);
         const g = ctx.guild;
         const events = status.enabledEvents || {};
         const channels = postForm(ctx, 'logging', 'channels', html`<div class="grid">
-${LOG_DESTINATIONS.map((d) => channelPicker(g, d, status.channels?.[d] || null, { label: DESTINATION_LABEL[d] || d, perms: PERMS.post }))}</div>`,
-        { submit: 'Save channels' });
+${LOG_DESTINATIONS.map((d) => channelPicker(g, d, status.channels?.[d] || null, { label: destinationLabel(tr, d), perms: PERMS.post }))}</div>`,
+        { submit: tr.t('logging.channels.submit'), reset: true });
         // One collapsible group per category (closed by default; the browser remembers which were open).
         const toggles = postForm(ctx, 'logging', 'events', html`${eventCategories().map(([category, types]) => {
             const on = types.filter((type) => events[type] !== false).length;
             const whole = events[`${category}.*`] !== false;
-            return html`<details class="sub" data-key="log-${category}"><summary>${category} <span class="muted">${whole ? `${on}/${types.length} events on` : 'category off'}</span></summary>
-<fieldset class="events">${checkboxInput(categoryField(category), whole, { label: `${category} (whole category)` })}
+            return html`<details class="sub" data-key="log-${category}"><summary>${category} <span class="muted">${whole ? tr.t('logging.events.count', { on: tr.fmtNumber(on), total: tr.fmtNumber(types.length) }) : tr.t('logging.events.categoryOff')}</span></summary>
+<fieldset class="events">${checkboxInput(categoryField(category), whole, { label: tr.t('logging.events.whole', { category }) })}
 ${types.map((type) => checkboxInput(fieldName(type), events[type] !== false, { label: type.split('.')[1] }))}</fieldset></details>`;
-        })}`, { submit: 'Save events' });
+        })}`, { submit: tr.t('logging.events.submit'), reset: true });
         const ignore = status.ignore || { channels: [], roles: [], users: [] };
+        const remove = tr.t('logging.ignore.remove');
         const ignoreRows = [
-            ...ignore.channels.map((id) => ['channel', channelName(g, id), buttonForm(ctx, 'logging', 'ignore-remove', 'Remove', { type: 'channel', id })]),
-            ...ignore.roles.map((id) => ['role', roleName(g, id), buttonForm(ctx, 'logging', 'ignore-remove', 'Remove', { type: 'role', id })]),
-            ...ignore.users.map((id) => ['user', html`<code>${id}</code>`, buttonForm(ctx, 'logging', 'ignore-remove', 'Remove', { type: 'user', id })]),
+            ...ignore.channels.map((id) => [tr.t(IGNORE_TYPE_LABEL.channel), channelName(g, id), buttonForm(ctx, 'logging', 'ignore-remove', remove, { type: 'channel', id })]),
+            ...ignore.roles.map((id) => [tr.t(IGNORE_TYPE_LABEL.role), roleName(g, id), buttonForm(ctx, 'logging', 'ignore-remove', remove, { type: 'role', id })]),
+            ...ignore.users.map((id) => [tr.t(IGNORE_TYPE_LABEL.user), html`<code>${id}</code>`, buttonForm(ctx, 'logging', 'ignore-remove', remove, { type: 'user', id })]),
         ];
-        const ignoreForms = html`${table(['Type', 'Ignored', ''], ignoreRows, 'Nothing is ignored.')}
-<div class="grid">${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: 'Ignore a channel', kinds: ['text', 'voice', 'category', 'forum'], perms: [], optional: false })}`, { submit: 'Add', inline: true })}
-${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="role"><label>Ignore a role<select name="id">${roleList(g, { includeManaged: true }).map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>`, { submit: 'Add', inline: true })}
-${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="user">${memberField({ name: 'id', label: 'Ignore a member', value: pickedFromQuery(ctx.query, 'ignore_user'), required: true, pick: 'ignore_user', back: path('/logging'), anchor: 'ignore-lists', guild: g })}`, { submit: 'Add', inline: true })}</div>`;
-        // The on/off switch is in the page header (pages.js moduleSettingsPage).
-        return html`${section('Mod log', html`<p class="muted">The mod log lists every warn, mute, kick and ban. It goes to ${channelName(g, modLogChannelId)}. You can <a href="${path('/enforcement')}">change it on Enforcement &amp; appeals</a>. Ticket logs are set on <a href="${path('/tickets')}">Tickets</a>.</p>`)}
-${section('Channels', channels, 'Where each kind of log goes. Picking a channel turns logging on.')}
-${section('Events', toggles, 'Pick which things get logged. Open a group to see its events. Unticking the whole group turns every event in it off.', { size: 'full' })}
-${section('Ignore lists', ignoreForms, 'Nothing is logged from these channels (and their threads), from members with these roles, or from these members. Useful for bot channels or staff areas.', { size: 'full' })}`;
+        const add = tr.t('logging.ignore.add');
+        const ignoreForms = html`${table([tr.t('logging.ignore.type'), tr.t('logging.ignore.ignored'), ''], ignoreRows, tr.t('logging.ignore.empty'))}
+<div class="grid">${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: tr.t('logging.ignore.channel'), kinds: ['text', 'voice', 'category', 'forum'], perms: [], optional: false })}`, { submit: add, inline: true })}
+${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="role"><label>${tr.t('logging.ignore.role')}<select name="id">${roleList(g, { includeManaged: true }).map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>`, { submit: add, inline: true })}
+${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="user">${memberField({ name: 'id', label: tr.t('logging.ignore.member'), value: pickedFromQuery(ctx.query, 'ignore_user'), required: true, pick: 'ignore_user', back: path('/logging'), anchor: 'ignore-lists', guild: g })}`, { submit: add, inline: true })}</div>`;
+        // The on/off switch is in the page header (pages.js moduleSettingsPage). Keys: the English titles' slugs.
+        const modLog = tr.tx('logging.modLog.text', {
+            channel: channelName(g, modLogChannelId),
+            change: html`<a href="${path('/enforcement')}">${tr.t('logging.modLog.change')}</a>`,
+            tickets: html`<a href="${path('/tickets')}">${tr.t('logging.modLog.tickets')}</a>`,
+        });
+        return html`${section(tr.t('logging.modLog.title'), html`<p class="muted">${modLog}</p>`, '', { key: 'mod-log' })}
+${section(tr.t('logging.channels.title'), channels, tr.t('logging.channels.help'), { key: 'channels' })}
+${section(tr.t('logging.events.title'), toggles, tr.t('logging.events.help'), { key: 'events', size: 'full' })}
+${section(tr.t('logging.ignore.title'), ignoreForms, tr.t('logging.ignore.help'), { key: 'ignore-lists', size: 'full' })}`;
     },
 
     actions: {
         async enabled(ctx, form) {
-            const enabled = boolField(form, 'enabled', 'Logging');
+            const tr = textFor(ctx);
+            const enabled = boolField(form, 'enabled', tr.t('logging.action.label'));
             const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
             failIfFalse(await ctx.services.setLoggingEnabled(ctx.client, ctx.guildId, enabled));
             const changes = diffSnapshots({ enabled: before.enabled }, { enabled }, null, 'logging.');
-            return { changes, message: `Logging is now ${enabled ? 'on' : 'off'}.` };
+            return { changes, message: tr.t(enabled ? 'logging.action.on' : 'logging.action.off') };
         },
         async channels(ctx, form) {
+            const tr = textFor(ctx);
             const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
             const changes = [];
             for (const destination of LOG_DESTINATIONS) {
                 if (form?.[destination] === undefined) continue; // absent from the form: unchanged
-                const value = channelField(ctx.guild, form, destination, { label: DESTINATION_LABEL[destination] });
+                const value = channelField(ctx.guild, form, destination, { label: destinationLabel(tr, destination) });
                 const old = before.channels?.[destination] || null;
                 if (value === old) continue;
                 failIfFalse(await ctx.services.setLogChannel(ctx.client, ctx.guildId, destination, value));
                 changes.push({ key: `logging.channels.${destination}`, old, new: value });
             }
-            if (!changes.length) return NOTHING;
-            return { changes, message: 'Log channels saved.' };
+            if (!changes.length) return nothing(ctx);
+            return { changes, message: tr.t('logging.action.channelsSaved') };
         },
         async events(ctx, form) {
             const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
@@ -121,33 +143,34 @@ ${section('Ignore lists', ignoreForms, 'Nothing is logged from these channels (a
                 for (const type of on) changes.push({ key: `logging.events.${type}`, old: false, new: true });
                 for (const type of off) changes.push({ key: `logging.events.${type}`, old: true, new: false });
             }
-            if (!changes.length) return NOTHING;
-            return { changes, message: 'Event logging saved.' };
+            if (!changes.length) return nothing(ctx);
+            return { changes, message: textFor(ctx).t('logging.action.eventsSaved') };
         },
         async 'ignore-add'(ctx, form) {
-            const type = choiceField(form, 'type', Object.keys(IGNORE_TYPES), 'Type');
+            const tr = textFor(ctx);
+            const type = choiceField(form, 'type', Object.keys(IGNORE_TYPES), tr.t('logging.ignore.type'));
             let id;
-            if (type === 'channel') id = channelField(ctx.guild, form, 'id', { kinds: ['text', 'voice', 'category', 'forum'], optional: false, label: 'Channel' });
+            if (type === 'channel') id = channelField(ctx.guild, form, 'id', { kinds: ['text', 'voice', 'category', 'forum'], optional: false, label: tr.t('logging.action.channelLabel') });
             else if (type === 'role') {
                 id = text(form, 'id', 25);
-                if (!ctx.guild?.roles?.cache?.get(id)) throw new InputError('Role: that role is not in the server.');
-            } else id = userIdField(form, 'id', 'User ID');
+                if (!ctx.guild?.roles?.cache?.get(id)) throw new InputError(tr.t('logging.action.roleMissing'));
+            } else id = userIdField(form, 'id', tr.t('logging.action.userIdLabel'));
             const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
             const list = before.ignore?.[IGNORE_TYPES[type]] || [];
-            if (list.includes(id)) return { changes: [], message: 'Already ignored.' };
+            if (list.includes(id)) return { changes: [], message: tr.t('logging.action.already') };
             failIfFalse(await ctx.services.updateIgnoreList(ctx.client, ctx.guildId, { action: 'add', type, id }));
-            return { changes: [{ key: `logging.ignore.${IGNORE_TYPES[type]}`, old: list, new: [...list, id] }], message: `Ignoring that ${type} in the logs.` };
+            return { changes: [{ key: `logging.ignore.${IGNORE_TYPES[type]}`, old: list, new: [...list, id] }], message: tr.t(IGNORING[type]) };
         },
         async 'ignore-remove'(ctx, form) {
-            const type = choiceField(form, 'type', Object.keys(IGNORE_TYPES), 'Type');
+            const tr = textFor(ctx);
+            const type = choiceField(form, 'type', Object.keys(IGNORE_TYPES), tr.t('logging.ignore.type'));
             const id = text(form, 'id', 25);
-            if (!/^\d{17,20}$/.test(id)) throw new InputError('That is not a valid ID (a long number).');
+            if (!/^\d{17,20}$/.test(id)) throw new InputError(tr.t('logging.action.badId'));
             const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
             const list = before.ignore?.[IGNORE_TYPES[type]] || [];
-            if (!list.includes(id)) return { changes: [], message: 'It was not on the list.' };
+            if (!list.includes(id)) return { changes: [], message: tr.t('logging.action.notListed') };
             failIfFalse(await ctx.services.updateIgnoreList(ctx.client, ctx.guildId, { action: 'remove', type, id }));
-            return { changes: [{ key: `logging.ignore.${IGNORE_TYPES[type]}`, old: list, new: list.filter((x) => x !== id) }], message: 'Removed from the ignore list.' };
+            return { changes: [{ key: `logging.ignore.${IGNORE_TYPES[type]}`, old: list, new: list.filter((x) => x !== id) }], message: tr.t('logging.action.removed') };
         },
     },
 };
-

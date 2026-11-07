@@ -1,0 +1,35 @@
+{
+  "page": {
+    "help": "Dai a Mewvo un nome e un'immagine del profilo (avatar) tutti suoi in questo server, così si adatta al tuo server. Gli altri server continuano a vedere quelli normali."
+  },
+  "title": "Il bot in questo server",
+  "locked": "Un nickname e un avatar personalizzati per Mewvo in questo server sono inclusi in Mewvo Pro e Max, secondo il piano del proprietario del server.",
+  "plans": "Piani",
+  "nickname": {
+    "title": "Nickname",
+    "label": "Nickname",
+    "help": "Il nome che Mewvo mostra in questo server. Lascia vuoto per il nome normale."
+  },
+  "avatar": {
+    "title": "Avatar",
+    "label": "Avatar (immagine PNG, JPEG, GIF o WebP)",
+    "upload": "Carica avatar",
+    "reset": "Usa l'avatar normale",
+    "resetConfirm": "Tornare all'avatar normale in questo server?",
+    "own": "Ora questo server ha un avatar tutto suo.",
+    "normal": "Questo server usa l'avatar normale."
+  },
+  "error": {
+    "plan": "Un nome e un avatar del bot personalizzati nel tuo server sono inclusi in Mewvo Pro e Max, secondo il piano del proprietario del server.",
+    "tooLong": "I nickname hanno al massimo {max} caratteri.",
+    "choose": "Scegli un'immagine da caricare.",
+    "tooLarge": "L'immagine è troppo grande. Prova con un file più piccolo.",
+    "notImage": "Questo file non è un'immagine PNG, JPEG, GIF o WebP."
+  },
+  "action": {
+    "renamed": "Ora qui Mewvo si chiama «{nick}».",
+    "normalName": "Qui Mewvo usa di nuovo il suo nome normale.",
+    "avatarSet": "Ora Mewvo ha un avatar tutto suo in questo server. Discord può metterci un minuto a mostrarlo.",
+    "avatarReset": "Qui Mewvo usa di nuovo il suo avatar normale."
+  }
+}

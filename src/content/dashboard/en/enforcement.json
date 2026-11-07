@@ -1,0 +1,185 @@
+{
+  "page": {
+    "help": "How punishments (warns, mutes, kicks and bans) work in this server: where they are written down, which roles show that someone is muted or warned, and how members can ask for a punishment to be lifted (an appeal). /enforcements in Discord uses these settings."
+  },
+  "adminOnly": " You need the Administrator permission in this server for this.",
+  "action": {
+    "warn": "warn",
+    "mute": "mute",
+    "kick": "kick",
+    "ban": "ban"
+  },
+  "unit": {
+    "month": {
+      "one": "{count} month",
+      "other": "{count} months"
+    },
+    "day": {
+      "one": "{count} day",
+      "other": "{count} days"
+    },
+    "hour": {
+      "one": "{count} hour",
+      "other": "{count} hours"
+    },
+    "minute": {
+      "one": "{count} minute",
+      "other": "{count} minutes"
+    },
+    "lessThanMinute": "less than a minute"
+  },
+  "topic": {
+    "where": "Channels and roles",
+    "whereLine": "Where Mewvo writes about punishments, and the roles it uses.",
+    "appeals": "Appeals",
+    "appealsLine": "How members ask staff to lift a punishment.",
+    "safety": "Moderator tools and safety",
+    "safetyLine": "Shortcuts for moderators, and a brake if a moderator account is misused.",
+    "pages": "Public pages",
+    "pagesLine": "Numbers about this server on the Mewvo website. Both are off by default.",
+    "rules": "How punishments add up",
+    "rulesLine": "Built in. You cannot change these here yet."
+  },
+  "channels": {
+    "title": "Channels",
+    "help": "Logs, evidence and the categories for appeals, reports and modmail.",
+    "modLog": "Mod log channel",
+    "modLogHelp": "Mewvo posts one line here for every warn, mute, kick and ban. Staff alerts also go here when no other channel is set.",
+    "evidence": "Evidence channel",
+    "evidenceHelp": "Screenshots added to a case are saved here, so they stay even if the original message is deleted. Not set: the mod log channel.",
+    "adminRequest": "Admin request channel",
+    "adminRequestHelp": "Where moderators ask an administrator to do something they cannot do themselves.",
+    "appealsCategory": "Appeals category",
+    "appealsCategoryHelp": "A category is a folder of channels. Each mute or warn appeal gets its own channel in it. Not set: the ticket category.",
+    "reportsCategory": "Staff reports category",
+    "reportsCategoryHelp": "Each report about a staff member gets its own channel here. Not set: the ticket category.",
+    "modmailCategory": "Modmail category",
+    "modmailCategoryHelp": "When a member messages Mewvo privately and sends it to staff, the chat gets a channel here. Not set: the ticket category.",
+    "openCap": "Most open reports and modmail",
+    "openCapHelp": "How many staff report and modmail channels can be open at the same time. When the limit is reached, new ones are turned away and staff get an alert. Appeals are never turned away.",
+    "invite": "Support server invite",
+    "inviteHelp": "A link to your support server. Banned members get it so they can still appeal."
+  },
+  "roles": {
+    "title": "Roles",
+    "help": "Warning roles show how many active warnings a member has. Mewvo gives and removes them by itself.",
+    "muted": "Muted role",
+    "mutedHelp": "The role that stops a muted member from talking. If you leave this empty, Mewvo makes one the first time someone is muted.",
+    "warn1": "Role at 1 warning",
+    "warn2": "Role at 2 warnings",
+    "warn3": "Role at 3 or more warnings",
+    "warnRoleN": "Warning role {number}"
+  },
+  "timings": {
+    "title": "Appeals and reports",
+    "help": "An appeal is a member asking staff to lift a punishment.",
+    "window": "Time to appeal (days)",
+    "windowLabel": "Time to appeal",
+    "windowHelp": "How long after a punishment a member can still ask for it to be lifted.",
+    "cooldown": "Wait after a denied appeal (days)",
+    "cooldownLabel": "Wait after a denied appeal",
+    "cooldownHelp": "If staff say no to an appeal, the member has to wait this long before appealing again. 0 means no wait.",
+    "rejoin": "Rejoin link lasts (hours)",
+    "rejoinLabel": "Rejoin link lasts",
+    "rejoinHelp": "Kicked members and members whose appeal was accepted get a one-time invite link back. This is how long it works.",
+    "staleReport": "Close quiet reports after (days)",
+    "staleReportLabel": "Close quiet reports after",
+    "staleReportHelp": "A report channel where nobody has written for this long is closed.",
+    "staleAppeal": "Remind about quiet appeals after (days)",
+    "staleAppealLabel": "Remind about quiet appeals after",
+    "staleAppealHelp": "If an appeal has no decision and no new messages for this long, staff get a reminder and the member is told it is still open."
+  },
+  "review": {
+    "title": "Independent appeal review",
+    "help": "Off by default, so any staff member who handles appeals can decide any appeal.",
+    "label": "A different moderator decides each appeal",
+    "labelHelp": "The moderator who gave the punishment cannot accept or deny the appeal against it. Someone else on the staff has to. The bot owner can still decide in an emergency, and that is logged. Punishments Mewvo gave by itself (automatic warn bans, automod) are not affected."
+  },
+  "mass": {
+    "title": "Safety limit: too many bans or kicks in a short time",
+    "help": "Protects the server if a moderator account is misused (default: more than 5 bans or kicks in 10 minutes). A moderator who punishes too many members in a short time is stopped for a while, and the bot owner gets a private message (DM).",
+    "limit": "Bans and kicks allowed",
+    "limitHelp": "How many one moderator can do within the time below.",
+    "muteLimit": "Mutes allowed",
+    "muteLimitHelp": "Counted separately from bans and kicks.",
+    "window": "Within (minutes)",
+    "block": "Blocked for (minutes)",
+    "blockHelp": "How long a moderator who goes over the limit cannot punish anyone."
+  },
+  "templates": {
+    "title": "Templates",
+    "help": "Ready-made punishments for /enforcements, like \"Spam: 1h mute\". They show as a menu under the buttons. Picking one skips straight to the last step, where you confirm.",
+    "name": "Name",
+    "whatItDoes": "What it does",
+    "reason": "Reason",
+    "remove": "Remove",
+    "removeConfirm": "Remove the template \"{name}\"?",
+    "empty": "No templates yet.",
+    "max": "You have the maximum of {count} templates.",
+    "namePlaceholder": "Spam: short mute",
+    "nameHint": "The name staff see in the menu.",
+    "action": "Action",
+    "duration": "Duration",
+    "durationPlaceholder": "1h, 7d, or empty",
+    "durationHint": "How long it lasts, for example 1h (one hour) or 7d (seven days). A mute needs one. A ban with no duration is permanent. Warns and kicks ignore it.",
+    "add": "Add template",
+    "muteFor": "{duration} mute",
+    "banFor": "{duration} ban",
+    "banPermanent": "permanent ban"
+  },
+  "panels": {
+    "title": "Appeal panels",
+    "help": "Posts the appeal panel here and in the support server, and removes the old ones. You can also do this with /setappeal in Discord.",
+    "channel": "Channel for the appeal panel",
+    "channelHelp": "The appeal panel is a message with a button members press to appeal. A second panel goes to #appeals in the support server, which Mewvo creates if it does not exist.",
+    "submit": "Post the appeal panels",
+    "confirm": "Post the appeal panels now? Earlier appeal panels in these channels are replaced."
+  },
+  "pages": {
+    "transparencyTitle": "Transparency report",
+    "transparencyHelp": "A monthly count of warnings, mutes, kicks, bans and appeals at /transparency.",
+    "transparencyMore": "It shows numbers only. No names, IDs, case codes, reasons or moderators. A count of 1 or 2 shows as “fewer than 3”.",
+    "transparencyToggle": "Publish a monthly transparency report on the website",
+    "transparencyOff": "Take the transparency report off the website?",
+    "trustTitle": "Trust card",
+    "trustHelp": "A summary of the last 90 days at /trust.",
+    "trustMore": "How fast appeals get a first answer, how many are accepted, how many members are in good standing, and how often members fix a message themselves after automod warns them privately first. Numbers only. Counts of 1 or 2 and rates based on fewer than 3 are hidden.",
+    "trustToggle": "Publish trust card",
+    "trustOff": "Take the trust card off the website?",
+    "trustPublic": "It is public at {link}."
+  },
+  "rules": {
+    "ladderTitle": "Warn ladder",
+    "ladderHelp": "When warnings turn into a ban.",
+    "ladderText": "A member with no earlier ban is banned at {count} warnings. After that, each new warning bans them again, for longer each time.",
+    "level": "Level",
+    "banLength": "Ban length",
+    "permanent": "permanent",
+    "reasonsTitle": "Reasons",
+    "reasonsHelp": "The reasons moderators can pick from.",
+    "reasonsMore": "They cannot be changed here yet, because each case saves the code of its reason.",
+    "code": "Code",
+    "reason": "Reason",
+    "serious": "Serious",
+    "yes": "yes",
+    "no": "no",
+    "stepsTitle": "Automod steps",
+    "stepsHelp": "What automod does when someone breaks the same rule again.",
+    "rule": "Rule",
+    "whatHappens": "What happens (1st, 2nd, 3rd and later time)",
+    "stepPermanent": "{type} (permanent)",
+    "stepFor": "{type} {duration}"
+  },
+  "result": {
+    "panelsPosted": "Appeal panels posted in #{main} and in #{support} of the support server.",
+    "panelsPostedCreated": "Appeal panels posted in #{main} and in #{support} of the support server (created).",
+    "templateInvalid": "That template is not valid.",
+    "templateAdded": "Template \"{name}\" added.",
+    "templateGone": "That template is gone already. Reload the page.",
+    "templateRemoved": "Template \"{name}\" removed.",
+    "transparencyOn": "The transparency report is on: /transparency is public.",
+    "transparencyOff": "The transparency report is off: /transparency is gone from the website.",
+    "trustOn": "The trust card is on: /trust is public.",
+    "trustOff": "The trust card is off: /trust is gone from the website."
+  }
+}

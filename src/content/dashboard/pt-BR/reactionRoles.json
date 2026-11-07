@@ -1,0 +1,54 @@
+{
+  "page": {
+    "help": "Deixe os membros escolherem os próprios cargos, como cores, pronomes ou jogos. O Mewvo publica uma mensagem (um painel) com um menu, e os membros escolhem nele os cargos que querem. O Mewvo só oferece cargos abaixo do próprio cargo na lista de cargos, nunca cargos com poderes de equipe e nunca cargos que pertencem a outro bot ou aplicativo."
+  },
+  "create": {
+    "title": "Novo painel",
+    "help": "Você também pode fazer isso com /reactroles setup no Discord.",
+    "needsAdmin": " Para publicar um painel, você precisa da permissão de Administrador neste servidor.",
+    "max": "Este servidor já tem o máximo de {count} painéis. Apague um para criar outro.",
+    "postIn": "Publicar em",
+    "postInHelp": "O canal onde o painel é publicado.",
+    "titleLabel": "Título",
+    "titleHelp": "Por exemplo: Escolha sua cor.",
+    "description": "Descrição",
+    "descriptionHelp": "Algumas palavras abaixo do título sobre para que servem os cargos.",
+    "roles": "Cargos",
+    "rolesHelp": "Até 25. Para escolher mais de um, segure Ctrl (Cmd no Mac) enquanto clica.",
+    "submit": "Criar e publicar o painel"
+  },
+  "panel": {
+    "title": "Painel {id}",
+    "info": "Em {channel} · mensagem {message} · {count}/25 cargos",
+    "ok": "ok",
+    "remove": "Remover",
+    "role": "Cargo",
+    "problems": "Problemas",
+    "noRoles": "Nenhum cargo.",
+    "addRole": "Adicionar cargo",
+    "add": "Adicionar",
+    "delete": "Apagar painel",
+    "deleteConfirm": "Apagar este painel e a mensagem dele no Discord?"
+  },
+  "panels": {
+    "title": "Painéis",
+    "empty": "Ainda não há painéis de cargos por reação."
+  },
+  "action": {
+    "unknownPanel": "Painel desconhecido.",
+    "chooseRole": "Escolha pelo menos um cargo.",
+    "posted": {
+      "one": "Painel publicado com {count} cargo.",
+      "many": "Painel publicado com {count} cargos.",
+      "other": "Painel publicado com {count} cargos."
+    },
+    "skipped": "Ignorados: {list}",
+    "roleMissing": "Cargo: esse cargo não está no servidor.",
+    "roleAdded": "Cargo adicionado ao painel.",
+    "unknownRole": "Cargo desconhecido.",
+    "lastRole": "Era o último cargo: o painel foi apagado.",
+    "roleRemoved": "Cargo removido do painel.",
+    "panelGone": "Esse painel não existe mais.",
+    "panelDeleted": "Painel apagado."
+  }
+}

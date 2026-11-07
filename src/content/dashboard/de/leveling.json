@@ -1,0 +1,173 @@
+{
+  "page": {
+    "help": "Mitglieder sammeln Punkte (XP) fürs Chatten und steigen im Level auf, je mehr sie sammeln. Du kannst eine Nachricht posten, wenn jemand aufsteigt, und bei bestimmten Levels Rollen vergeben. Das kannst du auch mit /level dashboard in Discord ändern."
+  },
+  "topic": {
+    "earning": "XP sammeln",
+    "earningLine": "Wie schnell Mitglieder aufsteigen und was Mewvo dann postet.",
+    "rewards": "Belohnungen und Levels",
+    "rewardsLine": "Rollen für ein erreichtes Level und Levels von Hand ändern.",
+    "cat": "Server-Katze",
+    "catLine": "Eine Katze, die wächst, während Mitglieder chatten, von Kitten bis Legend."
+  },
+  "add": "Hinzufügen",
+  "remove": "Entfernen",
+  "type": {
+    "channel": "Kanal",
+    "role": "Rolle"
+  },
+  "colours": {
+    "primary": "Mewvo-Blau",
+    "purple": "Lila",
+    "blurple": "Discord-Blurple",
+    "green": "Grün",
+    "yellow": "Gelb",
+    "red": "Rot",
+    "grey": "Grau"
+  },
+  "xp": {
+    "title": "XP und Nachrichten",
+    "help": "XP pro Nachricht, die Wartezeit zwischen XP und die Level-Up-Nachricht.",
+    "min": "Wenigste XP pro Nachricht",
+    "minHelp": "Jede Nachricht gibt eine zufällige Menge XP zwischen diesen beiden Zahlen.",
+    "max": "Meiste XP pro Nachricht",
+    "cooldown": "Wartezeit zwischen XP",
+    "cooldownHelp": "Ein Mitglied bekommt höchstens so oft XP für eine Nachricht, damit Spammen nicht schneller aufsteigen lässt. In Sekunden.",
+    "channel": "Level-Up-Kanal",
+    "channelNone": "wo das Mitglied geschrieben hat",
+    "channelHelp": "Wo die Level-Up-Nachricht gepostet wird.",
+    "announce": "Level-Ups ankündigen",
+    "announceHelp": "Aus: Mitglieder steigen trotzdem auf, aber es wird keine Nachricht gepostet.",
+    "message": "Level-Up-Nachricht",
+    "messageHelp": "Du kannst {user} (erwähnt das Mitglied) und {level} (das neue Level) verwenden."
+  },
+  "card": {
+    "title": "Level-Up-Karte",
+    "help": "Ein Bild zur Level-Up-Nachricht.",
+    "more": "Mitglieder sehen dieselbe Karte auch mit /rank card:True. Mewvo braucht die Berechtigung Dateien anhängen im Level-Up-Kanal; ohne sie wird nur der Text gepostet.",
+    "toggle": "Level-Up-Nachrichten eine Bildkarte hinzufügen",
+    "toggleHelp": "Die Karte zeigt Bild und Namen des Mitglieds, das neue Level, einen Balken bis zum nächsten Level und den Servernamen. Aus: nur die Textnachricht wird gepostet. Wenn die Karte nicht erstellt werden kann, wird die Textnachricht allein gepostet.",
+    "colour": "Kartenfarbe",
+    "colourHelp": "Für den Ring um das Bild, das Level und den Balken.",
+    "hex": "Oder ein Farbcode",
+    "hexHelp": "Ein # und sechs Buchstaben oder Ziffern. Wenn ausgefüllt, wird er statt der Farbe oben verwendet."
+  },
+  "boosts": {
+    "title": "XP-Boosts",
+    "help": "Mehr XP in manchen Kanälen oder für manche Rollen, von x{min} bis x{max}.",
+    "more": "Ein Thread zählt wie sein Kanal. Hat ein Mitglied mehrere Rollen mit Boost, zählt nur der höchste Rollen-Boost. Kanal-Boost mal Rollen-Boost ist nie mehr als x{cap}.",
+    "boost": "Boost",
+    "boostHelp": "Von {min} bis {max}, zum Beispiel {example}.",
+    "boosted": "Für",
+    "empty": "Keine Boosts. Jeder Kanal und jede Rolle bringt normale XP.",
+    "channel": "Kanal",
+    "role": "Rolle",
+    "addChannel": "Kanal-Boost hinzufügen",
+    "addRole": "Rollen-Boost hinzufügen"
+  },
+  "ignored": {
+    "title": "Keine XP in",
+    "help": "In diesen Kanälen gibt es keine XP, und Mitglieder mit diesen Rollen bekommen gar keine. Praktisch für Bot- oder Spam-Kanäle.",
+    "type": "Art",
+    "noXpFor": "Keine XP für",
+    "empty": "Mitglieder bekommen in jedem Kanal XP.",
+    "addChannel": "Keine XP in diesem Kanal",
+    "addRole": "Keine XP für diese Rolle"
+  },
+  "rewards": {
+    "title": "Rollenbelohnungen",
+    "help": "Mitglieder bekommen diese Rollen von selbst, wenn sie das Level erreichen. Mewvo kann nur Rollen unter der eigenen Rolle in der Rollenliste vergeben und vergibt keine Rollen mit Team-Rechten.",
+    "level": "Level",
+    "role": "Rolle",
+    "problems": "Probleme",
+    "ok": "ok",
+    "empty": "Keine Rollenbelohnungen.",
+    "atLevel": "Ab Level",
+    "giveRole": "Diese Rolle geben",
+    "rewardRole": "Belohnungsrolle",
+    "add": "Belohnung hinzufügen",
+    "modeLabel": "Welche Belohnungsrollen ein Mitglied behält",
+    "modeHelp": "Alle behalten: Mitglieder behalten jede erreichte Belohnungsrolle. Nur die höchste: Erreicht ein Mitglied eine neue Belohnung, gibt Mewvo diese Rolle und nimmt die niedrigeren Belohnungsrollen weg.",
+    "mode": {
+      "keep": "Alle Belohnungsrollen behalten",
+      "highest": "Nur die höchste Belohnungsrolle"
+    },
+    "modeSubmit": "Speichern"
+  },
+  "member": {
+    "title": "Level der Mitglieder",
+    "help": "Ändere das Level eines Mitglieds von Hand. Das geht auch mit /level add, /level remove und /level set in Discord.",
+    "userId": "Mitglied (Benutzer-ID)",
+    "userIdHelp": "Die lange Zahl, die ein Mitglied kennzeichnet. Schalte in Discord den Entwicklermodus ein, klicke mit rechts auf das Mitglied und wähle Benutzer-ID kopieren.",
+    "opLabel": "Was tun",
+    "op": {
+      "add": "Levels hinzufügen",
+      "remove": "Levels abziehen",
+      "set": "Level festlegen"
+    },
+    "levels": "Levels",
+    "apply": "Anwenden",
+    "needsAdmin": "Um das Level eines Mitglieds zu ändern, brauchst du die Berechtigung Administrator auf diesem Server.",
+    "memberId": "Mitglieds-ID",
+    "actionLabel": "Aktion"
+  },
+  "cat": {
+    "title": "Server-Katze",
+    "help": "Ihr Name und ob Mewvo postet, wenn sie wächst.",
+    "more": "Mitglieder sehen sie mit /cat view und in der Bestenliste auf der Website. Wenn sie wächst, postet Mewvo einmal im Level-Up-Kanal (falls einer festgelegt ist).",
+    "alt": "{name}, Stufe {stage}, Stimmung: {mood}",
+    "now": {
+      "one": "{sentence} Stufe: {stage}. {total} Nachricht gezählt.",
+      "other": "{sentence} Stufe: {stage}. {total} Nachrichten gezählt."
+    },
+    "notLoaded": "Die Katze konnte gerade nicht geladen werden (die Datenbank antwortet nicht). Lade die Seite neu, um es noch einmal zu versuchen.",
+    "name": "Name",
+    "nameHelp": "Buchstaben, Ziffern und Leerzeichen. Andere Zeichen werden weggelassen.",
+    "saveName": "Name speichern",
+    "announce": "Im Level-Up-Kanal posten, wenn die Katze wächst",
+    "needsAdmin": "Um die Katze zu ändern, brauchst du die Berechtigung Administrator auf diesem Server."
+  },
+  "error": {
+    "cardHex": "Kartenfarbe: Schreib einen Farbcode wie #9B59B6 oder lass das Feld leer und wähle aus der Liste.",
+    "cardColour": "Kartenfarbe: unbekannte Auswahl.",
+    "minMax": "Wenigste XP pro Nachricht darf nicht größer sein als Meiste XP pro Nachricht.",
+    "roleMissing": "Rolle: Diese Rolle gibt es auf dem Server nicht.",
+    "maxChannelBoosts": {
+      "one": "Höchstens {count} Kanal-Boost.",
+      "other": "Höchstens {count} Kanal-Boosts."
+    },
+    "maxRoleBoosts": {
+      "one": "Höchstens {count} Rollen-Boost.",
+      "other": "Höchstens {count} Rollen-Boosts."
+    },
+    "memberMissing": "Dieses Mitglied ist nicht auf dem Server.",
+    "catName": "Name: Verwende Buchstaben, Ziffern und Leerzeichen."
+  },
+  "action": {
+    "nothing": "Nichts geändert.",
+    "catNamed": "Die Server-Katze heißt jetzt {name}.",
+    "catAnnounceLabel": "Ankündigung, wenn die Katze wächst",
+    "catPostsOn": "Posts, wenn die Katze wächst, sind an.",
+    "catPostsOff": "Posts, wenn die Katze wächst, sind aus.",
+    "enabledLabel": "Level",
+    "enabledOn": "Level ist jetzt an.",
+    "enabledOff": "Level ist jetzt aus.",
+    "settingsSaved": "Level-Einstellungen gespeichert.",
+    "cardSaved": "Einstellungen der Level-Up-Karte gespeichert.",
+    "alreadyListed": "Steht schon auf der Liste.",
+    "ignoreAdded": "Ab jetzt gibt es dort keine XP.",
+    "notListed": "Das stand nicht auf der Liste.",
+    "removed": "Entfernt.",
+    "boostSame": "Dieser Boost ist schon festgelegt.",
+    "channelBoostSet": "Dieser Kanal gibt jetzt {boost} XP.",
+    "roleBoostSet": "Diese Rolle gibt jetzt {boost} XP.",
+    "noBoost": "Dafür gab es keinen Boost.",
+    "boostRemoved": "Boost entfernt.",
+    "modeHighest": "Mitglieder behalten jetzt nur ihre höchste Belohnungsrolle. Das gilt für jedes Mitglied beim nächsten Aufstieg und für alle beim nächsten Neustart von Mewvo.",
+    "modeKeep": "Mitglieder behalten jetzt alle ihre Belohnungsrollen.",
+    "rewardAdded": "Level {level} gibt jetzt diese Rolle.",
+    "rewardRemoved": "Die Belohnung für Level {level} wurde entfernt.",
+    "noReward": "Für dieses Level gab es keine Belohnung.",
+    "memberDone": "{name} ist jetzt Level {level}."
+  }
+}

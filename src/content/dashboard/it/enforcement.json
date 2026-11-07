@@ -1,0 +1,189 @@
+{
+  "page": {
+    "help": "Come funzionano le sanzioni (avvertimenti, mute, espulsioni e ban) in questo server: dove vengono registrate, quali ruoli mostrano che qualcuno è mutato o avvertito, e come i membri possono chiedere di togliere una sanzione (un ricorso). /enforcements su Discord usa queste impostazioni."
+  },
+  "adminOnly": " Per questo ti serve il permesso Amministratore in questo server.",
+  "action": {
+    "warn": "avvertimento",
+    "mute": "mute",
+    "kick": "espulsione",
+    "ban": "ban"
+  },
+  "unit": {
+    "month": {
+      "one": "{count} mese",
+      "many": "{count} mesi",
+      "other": "{count} mesi"
+    },
+    "day": {
+      "one": "{count} giorno",
+      "many": "{count} giorni",
+      "other": "{count} giorni"
+    },
+    "hour": {
+      "one": "{count} ora",
+      "many": "{count} ore",
+      "other": "{count} ore"
+    },
+    "minute": {
+      "one": "{count} minuto",
+      "many": "{count} minuti",
+      "other": "{count} minuti"
+    },
+    "lessThanMinute": "meno di un minuto"
+  },
+  "topic": {
+    "where": "Canali e ruoli",
+    "whereLine": "Dove Mewvo scrive delle sanzioni, e i ruoli che usa.",
+    "appeals": "Ricorsi",
+    "appealsLine": "Come i membri chiedono allo staff di togliere una sanzione.",
+    "safety": "Strumenti per moderatori e sicurezza",
+    "safetyLine": "Scorciatoie per i moderatori e un freno se un account da moderatore viene usato male.",
+    "pages": "Pagine pubbliche",
+    "pagesLine": "Numeri su questo server sul sito di Mewvo. Entrambe sono disattivate per impostazione predefinita.",
+    "rules": "Come si sommano le sanzioni",
+    "rulesLine": "Integrato. Qui non puoi ancora cambiarlo."
+  },
+  "channels": {
+    "title": "Canali",
+    "help": "Log, prove e le categorie per ricorsi, segnalazioni e modmail.",
+    "modLog": "Canale del log di moderazione",
+    "modLogHelp": "Mewvo pubblica qui una riga per ogni avvertimento, mute, espulsione e ban. Anche gli avvisi per lo staff arrivano qui se non è impostato un altro canale.",
+    "evidence": "Canale delle prove",
+    "evidenceHelp": "Gli screenshot aggiunti a un caso vengono salvati qui, così restano anche se il messaggio originale viene eliminato. Non impostato: il canale del log di moderazione.",
+    "adminRequest": "Canale delle richieste agli admin",
+    "adminRequestHelp": "Dove i moderatori chiedono a un amministratore di fare qualcosa che non possono fare da soli.",
+    "appealsCategory": "Categoria dei ricorsi",
+    "appealsCategoryHelp": "Una categoria è una cartella di canali. Ogni ricorso contro un mute o un avvertimento ha un proprio canale lì dentro. Non impostata: la categoria dei ticket.",
+    "reportsCategory": "Categoria delle segnalazioni sullo staff",
+    "reportsCategoryHelp": "Ogni segnalazione su un membro dello staff ha qui un proprio canale. Non impostata: la categoria dei ticket.",
+    "modmailCategory": "Categoria del modmail",
+    "modmailCategoryHelp": "Quando un membro scrive a Mewvo in privato e lo invia allo staff, la chat ha un canale qui. Non impostata: la categoria dei ticket.",
+    "openCap": "Massimo di segnalazioni e modmail aperti",
+    "openCapHelp": "Quanti canali di segnalazione sullo staff e di modmail possono essere aperti insieme. Raggiunto il limite, i nuovi vengono rifiutati e lo staff riceve un avviso. I ricorsi non vengono mai rifiutati.",
+    "invite": "Invito al server di supporto",
+    "inviteHelp": "Un link al tuo server di supporto. I membri bannati lo ricevono così possono comunque fare ricorso."
+  },
+  "roles": {
+    "title": "Ruoli",
+    "help": "I ruoli di avvertimento mostrano quanti avvertimenti attivi ha un membro. Mewvo li assegna e li toglie da solo.",
+    "muted": "Ruolo mutato",
+    "mutedHelp": "Il ruolo che impedisce a un membro mutato di parlare. Se lo lasci vuoto, Mewvo ne crea uno la prima volta che qualcuno viene mutato.",
+    "warn1": "Ruolo a 1 avvertimento",
+    "warn2": "Ruolo a 2 avvertimenti",
+    "warn3": "Ruolo a 3 o più avvertimenti",
+    "warnRoleN": "Ruolo di avvertimento {number}"
+  },
+  "timings": {
+    "title": "Ricorsi e segnalazioni",
+    "help": "Un ricorso è un membro che chiede allo staff di togliere una sanzione.",
+    "window": "Tempo per il ricorso (giorni)",
+    "windowLabel": "Tempo per il ricorso",
+    "windowHelp": "Per quanto tempo dopo una sanzione un membro può ancora chiedere di toglierla.",
+    "cooldown": "Attesa dopo un ricorso rifiutato (giorni)",
+    "cooldownLabel": "Attesa dopo un ricorso rifiutato",
+    "cooldownHelp": "Se lo staff rifiuta un ricorso, il membro deve aspettare questo tempo prima di farne un altro. 0 significa nessuna attesa.",
+    "rejoin": "Durata del link per rientrare (ore)",
+    "rejoinLabel": "Durata del link per rientrare",
+    "rejoinHelp": "I membri espulsi e quelli con un ricorso accettato ricevono un link di invito monouso. Questo è quanto dura.",
+    "staleReport": "Chiudi le segnalazioni inattive dopo (giorni)",
+    "staleReportLabel": "Chiudi le segnalazioni inattive dopo",
+    "staleReportHelp": "Un canale di segnalazione in cui nessuno scrive da questo tempo viene chiuso.",
+    "staleAppeal": "Promemoria per ricorsi inattivi dopo (giorni)",
+    "staleAppealLabel": "Promemoria per ricorsi inattivi dopo",
+    "staleAppealHelp": "Se un ricorso non ha decisione né nuovi messaggi da questo tempo, lo staff riceve un promemoria e al membro viene detto che è ancora aperto."
+  },
+  "review": {
+    "title": "Revisione indipendente dei ricorsi",
+    "help": "Disattivata per impostazione predefinita, così chiunque nello staff gestisca i ricorsi può decidere qualsiasi ricorso.",
+    "label": "Un moderatore diverso decide ogni ricorso",
+    "labelHelp": "Il moderatore che ha dato la sanzione non può accettare né rifiutare il ricorso contro di essa. Deve farlo qualcun altro dello staff. Il proprietario del bot può comunque decidere in caso di emergenza, e la cosa viene registrata. Le sanzioni date da Mewvo da solo (ban automatici per avvertimenti, automod) non sono interessate."
+  },
+  "mass": {
+    "title": "Limite di sicurezza: troppi ban o espulsioni in poco tempo",
+    "help": "Protegge il server se un account da moderatore viene usato male (predefinito: più di 5 ban o espulsioni in 10 minuti). Un moderatore che sanziona troppi membri in poco tempo viene fermato per un po’, e il proprietario del bot riceve un messaggio privato (DM).",
+    "limit": "Ban ed espulsioni consentiti",
+    "limitHelp": "Quanti ne può fare un moderatore nel tempo qui sotto.",
+    "muteLimit": "Mute consentiti",
+    "muteLimitHelp": "Contati separatamente da ban ed espulsioni.",
+    "window": "Entro (minuti)",
+    "block": "Bloccato per (minuti)",
+    "blockHelp": "Per quanto tempo un moderatore che supera il limite non può sanzionare nessuno."
+  },
+  "templates": {
+    "title": "Modelli",
+    "help": "Sanzioni già pronte per /enforcements, come «Spam: mute 1h». Compaiono come menu sotto i pulsanti. Sceglierne una porta direttamente all’ultimo passaggio, dove confermi.",
+    "name": "Nome",
+    "whatItDoes": "Cosa fa",
+    "reason": "Motivo",
+    "remove": "Rimuovi",
+    "removeConfirm": "Rimuovere il modello «{name}»?",
+    "empty": "Ancora nessun modello.",
+    "max": "Hai già il massimo di {count} modelli.",
+    "namePlaceholder": "Spam: mute breve",
+    "nameHint": "Il nome che lo staff vede nel menu.",
+    "action": "Azione",
+    "duration": "Durata",
+    "durationPlaceholder": "1h, 7d o vuoto",
+    "durationHint": "Quanto dura, per esempio 1h (un’ora) o 7d (sette giorni). Un mute ne ha bisogno. Un ban senza durata è permanente. Avvertimenti ed espulsioni la ignorano.",
+    "add": "Aggiungi modello",
+    "muteFor": "mute {duration}",
+    "banFor": "ban {duration}",
+    "banPermanent": "ban permanente"
+  },
+  "panels": {
+    "title": "Pannelli di ricorso",
+    "help": "Pubblica il pannello di ricorso qui e nel server di supporto, e rimuove quelli vecchi. Puoi farlo anche con /setappeal su Discord.",
+    "channel": "Canale per il pannello di ricorso",
+    "channelHelp": "Il pannello di ricorso è un messaggio con un pulsante che i membri premono per fare ricorso. Un secondo pannello va in #appeals nel server di supporto, che Mewvo crea se non esiste.",
+    "submit": "Pubblica i pannelli di ricorso",
+    "confirm": "Pubblicare ora i pannelli di ricorso? I pannelli precedenti in questi canali vengono sostituiti."
+  },
+  "pages": {
+    "transparencyTitle": "Rapporto di trasparenza",
+    "transparencyHelp": "Un conteggio mensile di avvertimenti, mute, espulsioni, ban e ricorsi su /transparency.",
+    "transparencyMore": "Mostra solo numeri. Niente nomi, ID, codici dei casi, motivi o moderatori. Un conteggio di 1 o 2 appare come «meno di 3».",
+    "transparencyToggle": "Pubblica un rapporto di trasparenza mensile sul sito",
+    "transparencyOff": "Togliere il rapporto di trasparenza dal sito?",
+    "trustTitle": "Scheda di fiducia",
+    "trustHelp": "Un riepilogo degli ultimi 90 giorni su /trust.",
+    "trustMore": "Quanto velocemente i ricorsi ricevono una prima risposta, quanti vengono accettati, quanti membri sono in regola e quanto spesso i membri correggono da soli un messaggio dopo che l’automod li ha avvisati prima in privato. Solo numeri. I conteggi di 1 o 2 e le percentuali basate su meno di 3 sono nascosti.",
+    "trustToggle": "Pubblica la scheda di fiducia",
+    "trustOff": "Togliere la scheda di fiducia dal sito?",
+    "trustPublic": "È pubblica su {link}."
+  },
+  "rules": {
+    "ladderTitle": "Scala degli avvertimenti",
+    "ladderHelp": "Quando gli avvertimenti diventano un ban.",
+    "ladderText": "Un membro senza ban precedenti viene bannato a {count} avvertimenti. Dopo, ogni nuovo avvertimento lo banna di nuovo, ogni volta più a lungo.",
+    "level": "Livello",
+    "banLength": "Durata del ban",
+    "permanent": "permanente",
+    "reasonsTitle": "Motivi",
+    "reasonsHelp": "I motivi tra cui i moderatori possono scegliere.",
+    "reasonsMore": "Qui non si possono ancora cambiare, perché ogni caso salva il codice del suo motivo.",
+    "code": "Codice",
+    "reason": "Motivo",
+    "serious": "Grave",
+    "yes": "sì",
+    "no": "no",
+    "stepsTitle": "Passaggi dell’automod",
+    "stepsHelp": "Cosa fa l’automod quando qualcuno infrange di nuovo la stessa regola.",
+    "rule": "Regola",
+    "whatHappens": "Cosa succede (1ª, 2ª, 3ª volta e successive)",
+    "stepPermanent": "{type} (permanente)",
+    "stepFor": "{type} {duration}"
+  },
+  "result": {
+    "panelsPosted": "Pannelli di ricorso pubblicati in #{main} e in #{support} nel server di supporto.",
+    "panelsPostedCreated": "Pannelli di ricorso pubblicati in #{main} e in #{support} nel server di supporto (creato).",
+    "templateInvalid": "Questo modello non è valido.",
+    "templateAdded": "Modello «{name}» aggiunto.",
+    "templateGone": "Questo modello non c’è più. Ricarica la pagina.",
+    "templateRemoved": "Modello «{name}» rimosso.",
+    "transparencyOn": "Il rapporto di trasparenza è attivo: /transparency è pubblico.",
+    "transparencyOff": "Il rapporto di trasparenza è disattivato: /transparency non è più sul sito.",
+    "trustOn": "La scheda di fiducia è attiva: /trust è pubblica.",
+    "trustOff": "La scheda di fiducia è disattivata: /trust non è più sul sito."
+  }
+}

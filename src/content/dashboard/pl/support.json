@@ -1,0 +1,16 @@
+{
+  "page": {
+    "help": "Drugi serwer Discord, do którego zbanowani członkowie wciąż mogą dołączyć. Tam proszą o zdjęcie bana (odwołanie), bo nie mają dostępu do Twojego głównego serwera. Link z zaproszeniem ustawia się w sekcji Kary i odwołania."
+  },
+  "title": "Serwer wsparcia",
+  "titleNamed": "Serwer wsparcia · {name}",
+  "notConnected": "Nie połączono jeszcze serwera wsparcia. Najpierw musi go skonfigurować właściciel bota.",
+  "bannedRole": "Rola zbanowanych (serwer wsparcia)",
+  "bannedRoleShort": "Rola zbanowanych",
+  "bannedRoleHelp": "Członkowie zbanowani na głównym serwerze dostają tę rolę na serwerze wsparcia. Mewvo zabiera ją, gdy ban się kończy.",
+  "cannotSee": "Mewvo nie widzi teraz serwera wsparcia, więc nie da się wyświetlić jego ról. Sprawdź, czy Mewvo jest tam członkiem.",
+  "appealsCategory": "Kategoria odwołań od bana i wyrzucenia",
+  "appealsCategoryHelp": "Kategoria to folder kanałów. Każde odwołanie od bana lub wyrzucenia dostaje tu kanał, na którym członek może porozmawiać z ekipą. Ekipa decyduje na kanale tylko dla ekipy na głównym serwerze. Nie ustawiono: odwołania otwierają się na głównym serwerze, widoczne tylko dla ekipy.",
+  "invite": "Link z zaproszeniem wysyłany zbanowanym: {invite}. Możesz go {change}.",
+  "changeLink": "zmienić w sekcji Kary i odwołania"
+}

@@ -1,0 +1,59 @@
+{
+  "page": {
+    "help": "Mewvo zapisuje w kanale dziennika, co dzieje się na serwerze: usunięte i edytowane wiadomości, dołączenia i odejścia członków, zmiany ról i więcej. Ekipa może później to przejrzeć. Możesz to też zmienić komendą /logging w Discordzie. Lista kar (dziennik moderacji) ustawiana jest na stronie Kary i odwołania."
+  },
+  "modLog": {
+    "title": "Dziennik moderacji",
+    "text": "Dziennik moderacji zawiera każde ostrzeżenie, wyciszenie, kick i ban. Trafia do {channel}. Możesz {change}. Dzienniki ticketów ustawia się na stronie {tickets}.",
+    "change": "zmienić to na stronie Kary i odwołania",
+    "tickets": "Tickety i modmail"
+  },
+  "channels": {
+    "title": "Kanały",
+    "help": "Gdzie trafia każdy rodzaj dziennika. Wybranie kanału włącza zapisywanie.",
+    "audit": "Główny kanał dziennika (wszystko inne)",
+    "applications": "Podania",
+    "reports": "Zgłoszenia",
+    "submit": "Zapisz kanały"
+  },
+  "events": {
+    "title": "Zdarzenia",
+    "help": "Wybierz, co ma być zapisywane. Otwórz grupę, żeby zobaczyć jej zdarzenia. Odznaczenie całej grupy wyłącza wszystkie jej zdarzenia.",
+    "count": "włączone zdarzenia: {on}/{total}",
+    "categoryOff": "kategoria wyłączona",
+    "whole": "{category} (cała kategoria)",
+    "submit": "Zapisz zdarzenia"
+  },
+  "ignore": {
+    "title": "Listy wyjątków",
+    "help": "Nic nie jest zapisywane z tych kanałów (i ich wątków), od członków z tymi rolami ani od tych członków. Przydatne dla kanałów botów lub stref ekipy.",
+    "type": "Typ",
+    "ignored": "Pomijane",
+    "empty": "Nic nie jest pomijane.",
+    "typeChannel": "kanał",
+    "typeRole": "rola",
+    "typeUser": "użytkownik",
+    "remove": "Usuń",
+    "add": "Dodaj",
+    "channel": "Pomiń kanał",
+    "role": "Pomiń rolę",
+    "member": "Pomiń członka"
+  },
+  "action": {
+    "label": "Dzienniki",
+    "on": "Dzienniki są teraz włączone.",
+    "off": "Dzienniki są teraz wyłączone.",
+    "channelsSaved": "Zapisano kanały dziennika.",
+    "eventsSaved": "Zapisano zdarzenia dziennika.",
+    "channelLabel": "Kanał",
+    "userIdLabel": "ID użytkownika",
+    "roleMissing": "Rola: tej roli nie ma na serwerze.",
+    "already": "Już pomijane.",
+    "ignoringChannel": "Ten kanał jest teraz pomijany w dziennikach.",
+    "ignoringRole": "Ta rola jest teraz pomijana w dziennikach.",
+    "ignoringUser": "Ten użytkownik jest teraz pomijany w dziennikach.",
+    "badId": "To nie jest prawidłowe ID (długa liczba).",
+    "notListed": "Tego nie było na liście.",
+    "removed": "Usunięto z listy wyjątków."
+  }
+}

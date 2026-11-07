@@ -1,0 +1,59 @@
+{
+  "page": {
+    "help": "Mewvo writes down what happens in the server in a log channel: deleted and edited messages, members joining and leaving, role changes and more. Staff can look back later. You can also change these with /logging in Discord. The list of punishments (the mod log) is set on Enforcement & appeals."
+  },
+  "modLog": {
+    "title": "Mod log",
+    "text": "The mod log lists every warn, mute, kick and ban. It goes to {channel}. You can {change}. Ticket logs are set on {tickets}.",
+    "change": "change it on Enforcement & appeals",
+    "tickets": "Tickets"
+  },
+  "channels": {
+    "title": "Channels",
+    "help": "Where each kind of log goes. Picking a channel turns logging on.",
+    "audit": "Main log channel (everything else)",
+    "applications": "Applications",
+    "reports": "Reports",
+    "submit": "Save channels"
+  },
+  "events": {
+    "title": "Events",
+    "help": "Pick which things get logged. Open a group to see its events. Unticking the whole group turns every event in it off.",
+    "count": "{on}/{total} events on",
+    "categoryOff": "category off",
+    "whole": "{category} (whole category)",
+    "submit": "Save events"
+  },
+  "ignore": {
+    "title": "Ignore lists",
+    "help": "Nothing is logged from these channels (and their threads), from members with these roles, or from these members. Useful for bot channels or staff areas.",
+    "type": "Type",
+    "ignored": "Ignored",
+    "empty": "Nothing is ignored.",
+    "typeChannel": "channel",
+    "typeRole": "role",
+    "typeUser": "user",
+    "remove": "Remove",
+    "add": "Add",
+    "channel": "Ignore a channel",
+    "role": "Ignore a role",
+    "member": "Ignore a member"
+  },
+  "action": {
+    "label": "Logging",
+    "on": "Logging is now on.",
+    "off": "Logging is now off.",
+    "channelsSaved": "Log channels saved.",
+    "eventsSaved": "Event logging saved.",
+    "channelLabel": "Channel",
+    "userIdLabel": "User ID",
+    "roleMissing": "Role: that role is not in the server.",
+    "already": "Already ignored.",
+    "ignoringChannel": "Ignoring that channel in the logs.",
+    "ignoringRole": "Ignoring that role in the logs.",
+    "ignoringUser": "Ignoring that user in the logs.",
+    "badId": "That is not a valid ID (a long number).",
+    "notListed": "It was not on the list.",
+    "removed": "Removed from the ignore list."
+  }
+}

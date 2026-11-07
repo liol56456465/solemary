@@ -1,0 +1,70 @@
+{
+  "page": {
+    "help": "Rozlosuj nagrodę wśród losowych członków. Mewvo publikuje wiadomość o losowaniu z przyciskiem, członkowie klikają go, aby wziąć udział, a gdy czas minie, Mewvo wybiera zwycięzców. Losuj ponownie wybiera nowych zwycięzców. Wszystko tutaj wymaga uprawnienia Administrator na tym serwerze."
+  },
+  "needsAdmin": "Aby prowadzić losowania, potrzebujesz uprawnienia Administrator na tym serwerze.",
+  "create": {
+    "title": "Rozpocznij losowanie",
+    "help": "Mewvo publikuje wiadomość o losowaniu w wybranym kanale. Możesz to też zrobić komendą /giveaway create w Discordzie.",
+    "channel": "Kanał",
+    "channelHelp": "Gdzie publikowana jest wiadomość o losowaniu.",
+    "prize": "Nagroda",
+    "prizeHelp": "Co dostaną zwycięzcy, np. Nitro na miesiąc.",
+    "duration": "Czas trwania",
+    "durationHelp": "Jak długo członkowie mogą się zgłaszać. Liczba i litera: s (sekundy), m (minuty), h (godziny) lub d (dni). Od 10 sekund do 30 dni.",
+    "winners": "Zwycięzcy",
+    "winnersHelp": "Ilu członków wygrywa. Od {min} do {max}.",
+    "submit": "Rozpocznij"
+  },
+  "active": {
+    "title": "Trwające",
+    "empty": "Brak trwających losowań."
+  },
+  "ended": {
+    "title": "Zakończone (ostatnie 25)",
+    "empty": "Brak zakończonych losowań."
+  },
+  "list": {
+    "prize": "Nagroda",
+    "channel": "Kanał",
+    "ends": "Koniec",
+    "ended": "Zakończono",
+    "entries": "Zgłoszenia",
+    "winners": "Zwycięzcy",
+    "endNow": "Zakończ",
+    "endConfirm": "Zakończyć to losowanie teraz i wybrać zwycięzców?",
+    "reroll": "Losuj ponownie",
+    "delete": "Usuń",
+    "deleteConfirm": "Usunąć losowanie „{prize}” i jego wiadomość?",
+    "giveawayWord": "losowanie"
+  },
+  "random": {
+    "title": "Wylosuj członka",
+    "help": "Losuje jednego członka, np. do szybkiego losowania. Wynik pojawi się na górze tej strony i zostanie zapisany w historii panelu. Na Discordzie nic nie jest publikowane. Możesz to też zrobić komendą /tools randomuser w Discordzie.",
+    "role": "Tylko członkowie z tą rolą",
+    "roleLabel": "Rola",
+    "anyone": "każdy",
+    "bots": "Uwzględnij boty",
+    "botsHelp": "Wyłączone: konta botów nigdy nie są wybierane.",
+    "online": "Tylko członkowie online",
+    "onlineHelp": "Pomijaj członków, którzy są teraz offline.",
+    "submit": "Wylosuj"
+  },
+  "error": {
+    "unknown": "Nieznane losowanie."
+  },
+  "action": {
+    "picked": {
+      "one": "Wylosowano @{name} ({id}) spośród {count} pasującego członka.",
+      "few": "Wylosowano @{name} ({id}) spośród {count} pasujących członków.",
+      "many": "Wylosowano @{name} ({id}) spośród {count} pasujących członków.",
+      "other": "Wylosowano @{name} ({id}) spośród {count} pasującego członka."
+    },
+    "started": "Losowanie „{prize}” rozpoczęte; kończy się za {duration}.",
+    "ended": "Losowanie zakończone. Zwycięzcy: {winners}, zgłoszenia: {entries}.",
+    "rerolled": "Wylosowano ponownie. Nowi zwycięzcy: {winners}.",
+    "channelGone": "Kanału już nie ma, więc nic nie zostało ogłoszone.",
+    "deletedWithMessage": "Usunięto losowanie „{prize}” razem z wiadomością.",
+    "deletedMessageGone": "Usunięto losowanie „{prize}” (jego wiadomości już nie było)."
+  }
+}

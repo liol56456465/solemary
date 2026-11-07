@@ -1,0 +1,16 @@
+{
+  "page": {
+    "help": "A second Discord server that banned members can still join. They ask for their ban to be lifted (appeal) there, because they cannot reach your main server. The invite link to it is set on Enforcement & appeals."
+  },
+  "title": "Support server",
+  "titleNamed": "Support server · {name}",
+  "notConnected": "No support server is connected yet. The bot owner has to set one up first.",
+  "bannedRole": "Banned role (support server)",
+  "bannedRoleShort": "Banned role",
+  "bannedRoleHelp": "Members who are banned from the main server get this role in the support server. Mewvo takes it away when the ban ends.",
+  "cannotSee": "Mewvo cannot see the support server right now, so its roles cannot be listed. Check that Mewvo is a member there.",
+  "appealsCategory": "Ban and kick appeals category",
+  "appealsCategoryHelp": "A category is a folder of channels. Each ban or kick appeal gets a channel here where the member can talk to staff. Staff decide in a staff-only channel in the main server. Not set: appeals open staff-only in the main server.",
+  "invite": "Invite link sent to banned members: {invite}. You can {change}.",
+  "changeLink": "change it on Enforcement & appeals"
+}

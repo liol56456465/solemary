@@ -1,0 +1,45 @@
+{
+  "page": {
+    "help": "Los miembros tienen su propio canal de voz cuando lo necesitan. Cuando alguien entra al canal disparador, Mewvo crea un canal de voz nuevo para esa persona y la mueve a él. El canal se elimina otra vez cuando queda vacío."
+  },
+  "status": {
+    "title": "Estado",
+    "text": "Entrar para crear: {state} (está activado mientras haya un canal disparador)."
+  },
+  "triggers": {
+    "title": "Disparadores",
+    "channel": "Canal disparador",
+    "temporary": "Canales temporales",
+    "empty": "Aún no hay disparadores.",
+    "remove": "Quitar disparador",
+    "removeConfirm": "¿Dejar de usar este canal como disparador? El canal en sí se conserva."
+  },
+  "add": {
+    "title": "Nuevo disparador",
+    "help": "Mewvo crea un canal de voz llamado \"Join to Create\". También puedes hacerlo con /jointocreate setup en Discord.",
+    "helpNoAdmin": "Mewvo crea un canal de voz llamado \"Join to Create\". También puedes hacerlo con /jointocreate setup en Discord. Para esto necesitas el permiso Administrador en este servidor.",
+    "oneOnly": "Un servidor puede tener un solo canal disparador. Quita el actual para crear uno nuevo.",
+    "submit": "Crear canal disparador"
+  },
+  "fields": {
+    "name": "Nombre del canal",
+    "nameHelp": "El nombre de cada canal nuevo. Puedes usar {username} (el nombre de usuario del miembro), {displayName} (su nombre en este servidor), {guildName} (el nombre del servidor) y {channelName} (el nombre del canal disparador).",
+    "userLimit": "Máximo de personas por canal",
+    "userLimitHelp": "0 significa sin límite.",
+    "bitrate": "Calidad de sonido (kbps)",
+    "bitrateShort": "Calidad de sonido",
+    "bitrateHelp": "La calidad de sonido en el canal de voz. Más alta suena mejor, pero necesita una conexión más rápida. 64 es lo normal. Los servidores con mejoras permiten valores más altos.",
+    "category": "Categoría",
+    "categoryNone": "sin categoría",
+    "categoryHelp": "Una categoría es una carpeta de canales. El canal disparador se crea en ella."
+  },
+  "error": {
+    "unknownTrigger": "Canal disparador desconocido.",
+    "nameEmpty": "El nombre del canal no puede estar vacío."
+  },
+  "action": {
+    "created": "Canal disparador \"{name}\" creado.",
+    "saved": "Ajustes del disparador guardados.",
+    "removed": "Disparador quitado (el canal de voz en sí se conserva)."
+  }
+}

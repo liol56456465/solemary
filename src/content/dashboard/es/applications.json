@@ -1,0 +1,138 @@
+{
+  "page": {
+    "help": "Deja que los miembros soliciten un rol, como moderador, respondiendo unas preguntas con /apply en Discord. El equipo lee las respuestas y aprueba o rechaza. Aprobar da el rol."
+  },
+  "submitted": {
+    "title": {
+      "one": "Solicitudes recibidas ({count} en espera)",
+      "many": "Solicitudes recibidas ({count} en espera)",
+      "other": "Solicitudes recibidas ({count} en espera)"
+    },
+    "help": "Solicitudes que esperan una decisión. Aprobar da el rol. En cualquier caso, el miembro recibe un mensaje privado (MD) con el resultado y se actualiza el mensaje del registro del equipo. También puedes hacerlo con /app-admin review en Discord.",
+    "unknownUser": "usuario desconocido",
+    "unknownRole": "Rol desconocido",
+    "unknownDate": "fecha desconocida",
+    "appliedFor": "{who} solicitó {role}.",
+    "id": "ID {id}",
+    "question": "P{number}: {question}",
+    "noAnswer": "Sin respuesta",
+    "noAnswers": "Sin respuestas.",
+    "approve": "Aprobar (da el rol)",
+    "deny": "Rechazar",
+    "decision": "Decisión",
+    "note": "Nota para el solicitante (opcional)",
+    "noteHelp": "Se le envía con la decisión, por ejemplo el porqué.",
+    "submit": "Enviar decisión",
+    "confirm": "¿Enviar esta decisión a {name}? Recibirá un mensaje privado (MD).",
+    "approved": "aprobada",
+    "denied": "rechazada",
+    "waiting": {
+      "one": "{count} en espera.",
+      "many": "{count} en espera.",
+      "other": "{count} en espera."
+    },
+    "waitingShown": {
+      "one": "{count} en espera (se muestran las {shown} más recientes).",
+      "many": "{count} en espera (se muestran las {shown} más recientes).",
+      "other": "{count} en espera (se muestran las {shown} más recientes)."
+    },
+    "none": "No hay solicitudes esperando revisión.",
+    "needsAdmin": "Para revisar solicitudes aquí necesitas el permiso de Administrador en este servidor.",
+    "recent": "Revisadas recientemente",
+    "application": "Solicitud",
+    "member": "Miembro",
+    "noteColumn": "Nota",
+    "reviewed": "Revisada",
+    "nothingReviewed": "Todavía no se ha revisado nada."
+  },
+  "roles": {
+    "title": "Solicitudes ({count})",
+    "help": "Los roles que los miembros pueden solicitar con /apply. Cada uno tiene sus propias preguntas o usa las preguntas predeterminadas de abajo.",
+    "empty": "Todavía no hay solicitudes.",
+    "new": "Nueva solicitud",
+    "name": "Nombre",
+    "nameHelp": "Lo que ven los miembros en /apply, por ejemplo Moderator.",
+    "open": "Abierta a solicitudes",
+    "openHelp": "Desactivado: ahora mismo los miembros no pueden solicitar este rol.",
+    "logChannel": "Canal de registro para este rol",
+    "logChannelNone": "el canal de registro de solicitudes",
+    "logChannelHelp": "Dónde se publican para el equipo las solicitudes nuevas de este rol.",
+    "questions": "Preguntas",
+    "questionsHelp": "Una pregunta por línea, hasta {max}. Déjalo vacío para usar las preguntas predeterminadas. Añade [min:10] al final de una pregunta para pedir una respuesta de al menos 10 caracteres.",
+    "save": "Guardar solicitud",
+    "deleteText": "Al borrarla también se eliminan todas las solicitudes que los miembros enviaron para {name}. La página siguiente muestra cuántas, y allí confirmas.",
+    "delete": "Borrar solicitud…",
+    "role": "Rol que solicitan los miembros",
+    "roleHelp": "Los miembros aprobados reciben este rol.",
+    "add": "Añadir solicitud"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "help": "Configurar aquí el canal de registro también cambia el canal de registro de solicitudes en la página Registros, y al revés.",
+    "logChannel": "Canal de registro de solicitudes",
+    "logChannelHelp": "Dónde se publican las solicitudes nuevas para que el equipo las revise.",
+    "pendingDays": "Guardar solicitudes en espera (días)",
+    "pendingDaysHelp": "Las solicitudes sobre las que nadie ha decidido se borran pasado este tiempo.",
+    "reviewedDays": "Guardar solicitudes decididas (días)",
+    "reviewedDaysHelp": "Las solicitudes aprobadas y rechazadas se borran pasado este tiempo."
+  },
+  "questions": {
+    "title": "Preguntas predeterminadas",
+    "help": "Se usan para cada rol que no tiene preguntas propias.",
+    "label": "Preguntas predeterminadas",
+    "labelHelp": "Una pregunta por línea, hasta {max}. Añade [min:10] al final de una pregunta para pedir una respuesta de al menos 10 caracteres."
+  },
+  "managers": {
+    "title": "Roles gestores",
+    "help": "Los miembros con estos roles pueden leer y decidir solicitudes sin ser administradores.",
+    "role": "Rol",
+    "remove": "Quitar",
+    "empty": "No hay roles gestores.",
+    "addLabel": "Añadir un rol gestor",
+    "add": "Añadir"
+  },
+  "confirm": {
+    "heading": "Confirmar: borrar la solicitud {name}",
+    "application": "Solicitud",
+    "applicationValue": "{name} (rol @{role})",
+    "submitted": "Solicitudes recibidas",
+    "effect": "Efecto",
+    "effectText": "La solicitud se quita de /apply y se borran todas las solicitudes que los miembros enviaron para ella. No se puede deshacer. El rol en sí se queda.",
+    "submit": "Borrar solicitud"
+  },
+  "action": {
+    "unknown": "Solicitud desconocida.",
+    "noteTooLong": "La nota puede tener como máximo {max} caracteres.",
+    "theApplicant": "el solicitante",
+    "theRole": "el rol",
+    "notDmed": "No se pudo enviar un MD a {name}.",
+    "roleNotGiven": "No se pudo dar el rol (revisa mi permiso Gestionar roles y el orden de los roles).",
+    "statusApproved": "aprobada",
+    "statusDenied": "rechazada",
+    "reviewed": "Solicitud de {name} para {role}: {status}.",
+    "reviewedGiven": "Solicitud de {name} para {role}: {status}. Se dio el rol.",
+    "roleLabel": "Rol",
+    "added": "Solicitud «{name}» añadida.",
+    "emptyName": "El nombre de la solicitud no puede estar vacío.",
+    "roleGone": "Ese rol de solicitud ya no existe.",
+    "logChannelLabel": "Canal de registro",
+    "saved": "Solicitud «{name}» guardada.",
+    "deleted": {
+      "one": "Solicitud «{name}» borrada junto con {count} solicitud recibida.",
+      "many": "Solicitud «{name}» borrada junto con {count} solicitudes recibidas.",
+      "other": "Solicitud «{name}» borrada junto con {count} solicitudes recibidas."
+    },
+    "moduleLabel": "Solicitudes",
+    "nowOn": "Las solicitudes ahora están activadas.",
+    "nowOff": "Las solicitudes ahora están desactivadas.",
+    "pendingDaysLabel": "Guardar solicitudes en espera",
+    "reviewedDaysLabel": "Guardar solicitudes decididas",
+    "settingsSaved": "Ajustes de solicitudes guardados.",
+    "questionsSaved": "Preguntas predeterminadas guardadas.",
+    "managerLabel": "Rol gestor",
+    "alreadyManager": "Ya es un rol gestor.",
+    "managerAdded": "Rol gestor añadido.",
+    "notManager": "Ese rol no es un rol gestor.",
+    "managerRemoved": "Rol gestor quitado."
+  }
+}

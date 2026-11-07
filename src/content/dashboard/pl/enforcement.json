@@ -1,0 +1,193 @@
+{
+  "page": {
+    "help": "Jak działają kary (ostrzeżenia, wyciszenia, wyrzucenia i bany) na tym serwerze: gdzie są zapisywane, które role pokazują, że ktoś jest wyciszony lub ostrzeżony, i jak członkowie mogą poprosić o zdjęcie kary (odwołanie). /enforcements w Discordzie korzysta z tych ustawień."
+  },
+  "adminOnly": " Do tego potrzebujesz uprawnienia Administrator na tym serwerze.",
+  "action": {
+    "warn": "ostrzeżenie",
+    "mute": "wyciszenie",
+    "kick": "wyrzucenie",
+    "ban": "ban"
+  },
+  "unit": {
+    "month": {
+      "one": "{count} miesiąc",
+      "few": "{count} miesiące",
+      "many": "{count} miesięcy",
+      "other": "{count} miesiąca"
+    },
+    "day": {
+      "one": "{count} dzień",
+      "few": "{count} dni",
+      "many": "{count} dni",
+      "other": "{count} dnia"
+    },
+    "hour": {
+      "one": "{count} godzina",
+      "few": "{count} godziny",
+      "many": "{count} godzin",
+      "other": "{count} godziny"
+    },
+    "minute": {
+      "one": "{count} minuta",
+      "few": "{count} minuty",
+      "many": "{count} minut",
+      "other": "{count} minuty"
+    },
+    "lessThanMinute": "mniej niż minuta"
+  },
+  "topic": {
+    "where": "Kanały i role",
+    "whereLine": "Gdzie Mewvo pisze o karach i jakich ról używa.",
+    "appeals": "Odwołania",
+    "appealsLine": "Jak członkowie proszą ekipę o zdjęcie kary.",
+    "safety": "Narzędzia moderatorów i bezpieczeństwo",
+    "safetyLine": "Skróty dla moderatorów i hamulec na wypadek nadużycia konta moderatora.",
+    "pages": "Strony publiczne",
+    "pagesLine": "Liczby o tym serwerze na stronie Mewvo. Obie są domyślnie wyłączone.",
+    "rules": "Jak sumują się kary",
+    "rulesLine": "Wbudowane. Tutaj nie można tego jeszcze zmienić."
+  },
+  "channels": {
+    "title": "Kanały",
+    "help": "Dzienniki, dowody i kategorie dla odwołań, zgłoszeń i modmaila.",
+    "modLog": "Kanał dziennika moderacji",
+    "modLogHelp": "Mewvo publikuje tu jedną linię o każdym ostrzeżeniu, wyciszeniu, wyrzuceniu i banie. Alerty dla ekipy też trafiają tutaj, jeśli nie ustawiono innego kanału.",
+    "evidence": "Kanał dowodów",
+    "evidenceHelp": "Zrzuty ekranu dodane do sprawy są tu zapisywane, żeby zostały, nawet gdy oryginalna wiadomość zostanie usunięta. Nie ustawiono: kanał dziennika moderacji.",
+    "adminRequest": "Kanał próśb do adminów",
+    "adminRequestHelp": "Gdzie moderatorzy proszą administratora o coś, czego sami nie mogą zrobić.",
+    "appealsCategory": "Kategoria odwołań",
+    "appealsCategoryHelp": "Kategoria to folder kanałów. Każde odwołanie od wyciszenia lub ostrzeżenia dostaje w niej własny kanał. Nie ustawiono: kategoria ticketów.",
+    "reportsCategory": "Kategoria zgłoszeń na ekipę",
+    "reportsCategoryHelp": "Każde zgłoszenie dotyczące członka ekipy dostaje tu własny kanał. Nie ustawiono: kategoria ticketów.",
+    "modmailCategory": "Kategoria modmaila",
+    "modmailCategoryHelp": "Gdy członek napisze do Mewvo prywatnie i wyśle to do ekipy, rozmowa dostaje tu kanał. Nie ustawiono: kategoria ticketów.",
+    "openCap": "Maks. otwartych zgłoszeń i modmaili",
+    "openCapHelp": "Ile kanałów zgłoszeń na ekipę i modmaila może być otwartych jednocześnie. Po osiągnięciu limitu nowe są odrzucane, a ekipa dostaje alert. Odwołania nigdy nie są odrzucane.",
+    "invite": "Zaproszenie na serwer wsparcia",
+    "inviteHelp": "Link do twojego serwera wsparcia. Zbanowani członkowie go dostają, żeby mimo to mogli się odwołać."
+  },
+  "roles": {
+    "title": "Role",
+    "help": "Role ostrzeżeń pokazują, ile aktywnych ostrzeżeń ma członek. Mewvo sam je nadaje i zdejmuje.",
+    "muted": "Rola wyciszenia",
+    "mutedHelp": "Rola, która nie pozwala wyciszonemu członkowi mówić. Jeśli zostawisz to puste, Mewvo utworzy ją, gdy ktoś zostanie wyciszony po raz pierwszy.",
+    "warn1": "Rola przy 1 ostrzeżeniu",
+    "warn2": "Rola przy 2 ostrzeżeniach",
+    "warn3": "Rola przy 3 i więcej ostrzeżeniach",
+    "warnRoleN": "Rola ostrzeżenia {number}"
+  },
+  "timings": {
+    "title": "Odwołania i zgłoszenia",
+    "help": "Odwołanie to prośba członka do ekipy o zdjęcie kary.",
+    "window": "Czas na odwołanie (dni)",
+    "windowLabel": "Czas na odwołanie",
+    "windowHelp": "Jak długo po karze członek może jeszcze poprosić o jej zdjęcie.",
+    "cooldown": "Przerwa po odrzuconym odwołaniu (dni)",
+    "cooldownLabel": "Przerwa po odrzuconym odwołaniu",
+    "cooldownHelp": "Jeśli ekipa odrzuci odwołanie, członek musi odczekać tyle czasu, zanim odwoła się ponownie. 0 oznacza brak przerwy.",
+    "rejoin": "Link powrotu działa (godziny)",
+    "rejoinLabel": "Link powrotu działa",
+    "rejoinHelp": "Wyrzuceni członkowie i ci, których odwołanie przyjęto, dostają jednorazowy link z zaproszeniem. Tyle czasu działa.",
+    "staleReport": "Zamykaj ciche zgłoszenia po (dniach)",
+    "staleReportLabel": "Zamykaj ciche zgłoszenia po",
+    "staleReportHelp": "Kanał zgłoszenia, w którym nikt nie pisał przez ten czas, zostaje zamknięty.",
+    "staleAppeal": "Przypominaj o cichych odwołaniach po (dniach)",
+    "staleAppealLabel": "Przypominaj o cichych odwołaniach po",
+    "staleAppealHelp": "Jeśli odwołanie przez ten czas nie ma decyzji ani nowych wiadomości, ekipa dostaje przypomnienie, a członek informację, że nadal jest otwarte."
+  },
+  "review": {
+    "title": "Niezależne rozpatrywanie odwołań",
+    "help": "Domyślnie wyłączone, więc każdy z ekipy, kto zajmuje się odwołaniami, może rozstrzygnąć każde odwołanie.",
+    "label": "Każde odwołanie rozstrzyga inny moderator",
+    "labelHelp": "Moderator, który nałożył karę, nie może przyjąć ani odrzucić odwołania od niej. Musi to zrobić ktoś inny z ekipy. Właściciel bota nadal może zdecydować w nagłym wypadku, i jest to zapisywane. Nie dotyczy to kar nałożonych przez Mewvo samodzielnie (automatyczne bany za ostrzeżenia, automod)."
+  },
+  "mass": {
+    "title": "Limit bezpieczeństwa: za dużo banów lub wyrzuceń w krótkim czasie",
+    "help": "Chroni serwer, gdy konto moderatora zostanie nadużyte (domyślnie: więcej niż 5 banów lub wyrzuceń w 10 minut). Moderator, który ukarze zbyt wielu członków w krótkim czasie, zostaje na jakiś czas zatrzymany, a właściciel bota dostaje prywatną wiadomość (DM).",
+    "limit": "Dozwolone bany i wyrzucenia",
+    "limitHelp": "Ile może ich wykonać jeden moderator w czasie poniżej.",
+    "muteLimit": "Dozwolone wyciszenia",
+    "muteLimitHelp": "Liczone osobno od banów i wyrzuceń.",
+    "window": "W ciągu (minut)",
+    "block": "Blokada na (minut)",
+    "blockHelp": "Jak długo moderator, który przekroczy limit, nie może nikogo karać."
+  },
+  "templates": {
+    "title": "Szablony",
+    "help": "Gotowe kary dla /enforcements, np. „Spam: wyciszenie 1h”. Pokazują się jako menu pod przyciskami. Wybranie jednego przenosi od razu do ostatniego kroku, gdzie potwierdzasz.",
+    "name": "Nazwa",
+    "whatItDoes": "Co robi",
+    "reason": "Powód",
+    "remove": "Usuń",
+    "removeConfirm": "Usunąć szablon „{name}”?",
+    "empty": "Nie ma jeszcze szablonów.",
+    "max": "Masz już maksymalną liczbę szablonów ({count}).",
+    "namePlaceholder": "Spam: krótkie wyciszenie",
+    "nameHint": "Nazwa, którą ekipa widzi w menu.",
+    "action": "Akcja",
+    "duration": "Czas trwania",
+    "durationPlaceholder": "1h, 7d albo puste",
+    "durationHint": "Jak długo trwa, np. 1h (godzina) albo 7d (siedem dni). Wyciszenie go wymaga. Ban bez czasu trwania jest na zawsze. Ostrzeżenia i wyrzucenia go pomijają.",
+    "add": "Dodaj szablon",
+    "muteFor": "wyciszenie {duration}",
+    "banFor": "ban {duration}",
+    "banPermanent": "ban na zawsze"
+  },
+  "panels": {
+    "title": "Panele odwołań",
+    "help": "Publikuje panel odwołań tutaj i na serwerze wsparcia oraz usuwa stare. Możesz to też zrobić przez /setappeal w Discordzie.",
+    "channel": "Kanał na panel odwołań",
+    "channelHelp": "Panel odwołań to wiadomość z przyciskiem, który członkowie naciskają, żeby się odwołać. Drugi panel trafia do #appeals na serwerze wsparcia; Mewvo tworzy ten kanał, jeśli nie istnieje.",
+    "submit": "Opublikuj panele",
+    "confirm": "Opublikować teraz panele odwołań? Wcześniejsze panele w tych kanałach zostaną zastąpione."
+  },
+  "pages": {
+    "transparencyTitle": "Raport przejrzystości",
+    "transparencyHelp": "Miesięczne zestawienie ostrzeżeń, wyciszeń, wyrzuceń, banów i odwołań pod /transparency.",
+    "transparencyMore": "Pokazuje tylko liczby. Żadnych nazw, ID, kodów spraw, powodów ani moderatorów. Liczba 1 lub 2 jest pokazywana jako „mniej niż 3”.",
+    "transparencyToggle": "Publikuj miesięczny raport przejrzystości na stronie",
+    "transparencyOff": "Zdjąć raport przejrzystości ze strony?",
+    "trustTitle": "Karta zaufania",
+    "trustHelp": "Podsumowanie ostatnich 90 dni pod /trust.",
+    "trustMore": "Jak szybko odwołania dostają pierwszą odpowiedź, ile z nich jest przyjmowanych, ilu członków ma czystą kartę i jak często członkowie sami poprawiają wiadomość po tym, jak automod najpierw prywatnie ich ostrzegł. Tylko liczby. Liczby 1 lub 2 i odsetki oparte na mniej niż 3 są ukryte.",
+    "trustToggle": "Publikuj kartę zaufania",
+    "trustOff": "Zdjąć kartę zaufania ze strony?",
+    "trustPublic": "Jest publiczna pod {link}."
+  },
+  "rules": {
+    "ladderTitle": "Drabina ostrzeżeń",
+    "ladderHelp": "Kiedy ostrzeżenia zamieniają się w bana.",
+    "ladderText": "Członek bez wcześniejszego bana dostaje bana przy {count} ostrzeżeniach. Potem każde nowe ostrzeżenie znów go banuje, za każdym razem na dłużej.",
+    "level": "Poziom",
+    "banLength": "Długość bana",
+    "permanent": "na zawsze",
+    "reasonsTitle": "Powody",
+    "reasonsHelp": "Powody, spośród których mogą wybierać moderatorzy.",
+    "reasonsMore": "Nie można ich tu jeszcze zmienić, bo każda sprawa zapisuje kod swojego powodu.",
+    "code": "Kod",
+    "reason": "Powód",
+    "serious": "Poważny",
+    "yes": "tak",
+    "no": "nie",
+    "stepsTitle": "Kroki automoda",
+    "stepsHelp": "Co robi automod, gdy ktoś znów złamie tę samą zasadę.",
+    "rule": "Zasada",
+    "whatHappens": "Co się dzieje (1., 2., 3. i kolejny raz)",
+    "stepPermanent": "{type} (na zawsze)",
+    "stepFor": "{type} {duration}"
+  },
+  "result": {
+    "panelsPosted": "Panele odwołań opublikowane w #{main} i w #{support} na serwerze wsparcia.",
+    "panelsPostedCreated": "Panele odwołań opublikowane w #{main} i w #{support} na serwerze wsparcia (utworzony).",
+    "templateInvalid": "Ten szablon jest nieprawidłowy.",
+    "templateAdded": "Dodano szablon „{name}”.",
+    "templateGone": "Tego szablonu już nie ma. Odśwież stronę.",
+    "templateRemoved": "Usunięto szablon „{name}”.",
+    "transparencyOn": "Raport przejrzystości jest włączony: /transparency jest publiczny.",
+    "transparencyOff": "Raport przejrzystości jest wyłączony: /transparency zniknął ze strony.",
+    "trustOn": "Karta zaufania jest włączona: /trust jest publiczna.",
+    "trustOff": "Karta zaufania jest wyłączona: /trust zniknęła ze strony."
+  }
+}

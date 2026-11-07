@@ -1,0 +1,16 @@
+{
+  "page": {
+    "help": "Ein zweiter Discord-Server, dem gebannte Mitglieder weiterhin beitreten können. Dort bitten sie darum, dass ihr Bann aufgehoben wird (Einspruch), weil sie deinen Hauptserver nicht erreichen. Der Einladungslink dorthin wird unter Strafen & Einsprüche gesetzt."
+  },
+  "title": "Support-Server",
+  "titleNamed": "Support-Server · {name}",
+  "notConnected": "Noch ist kein Support-Server verbunden. Der Bot-Inhaber muss zuerst einen einrichten.",
+  "bannedRole": "Bann-Rolle (Support-Server)",
+  "bannedRoleShort": "Bann-Rolle",
+  "bannedRoleHelp": "Mitglieder, die im Hauptserver gebannt sind, bekommen diese Rolle im Support-Server. Mewvo nimmt sie wieder weg, wenn der Bann endet.",
+  "cannotSee": "Mewvo kann den Support-Server gerade nicht sehen, deshalb lassen sich seine Rollen nicht anzeigen. Prüf, ob Mewvo dort Mitglied ist.",
+  "appealsCategory": "Kategorie für Einsprüche gegen Bann und Kick",
+  "appealsCategoryHelp": "Eine Kategorie ist ein Ordner mit Kanälen. Jeder Einspruch gegen einen Bann oder Kick bekommt hier einen Kanal, in dem das Mitglied mit dem Team sprechen kann. Das Team entscheidet in einem Team-Kanal im Hauptserver. Nicht gesetzt: Einsprüche werden nur fürs Team im Hauptserver geöffnet.",
+  "invite": "Einladungslink für gebannte Mitglieder: {invite}. Du kannst ihn {change}.",
+  "changeLink": "unter Strafen & Einsprüche ändern"
+}

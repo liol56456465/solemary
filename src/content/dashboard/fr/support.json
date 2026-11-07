@@ -1,0 +1,16 @@
+{
+  "page": {
+    "help": "Un deuxième serveur Discord que les membres bannis peuvent encore rejoindre. Ils y demandent la levée de leur bannissement (appel), parce qu’ils ne peuvent pas atteindre ton serveur principal. Le lien d’invitation vers ce serveur se règle dans Sanctions et appels."
+  },
+  "title": "Serveur d’assistance",
+  "titleNamed": "Serveur d’assistance · {name}",
+  "notConnected": "Aucun serveur d’assistance n’est encore connecté. Le propriétaire du bot doit d’abord en configurer un.",
+  "bannedRole": "Rôle des bannis (serveur d’assistance)",
+  "bannedRoleShort": "Rôle des bannis",
+  "bannedRoleHelp": "Les membres bannis du serveur principal reçoivent ce rôle sur le serveur d’assistance. Mewvo le retire quand le bannissement se termine.",
+  "cannotSee": "Mewvo ne voit pas le serveur d’assistance pour le moment, donc ses rôles ne peuvent pas être listés. Vérifie que Mewvo en est membre.",
+  "appealsCategory": "Catégorie des appels de bannissement et d’expulsion",
+  "appealsCategoryHelp": "Une catégorie est un dossier de salons. Chaque appel de bannissement ou d’expulsion y reçoit un salon où le membre peut parler à l’équipe. L’équipe décide dans un salon réservé à l’équipe sur le serveur principal. Non défini : les appels s’ouvrent sur le serveur principal, visibles par l’équipe seulement.",
+  "invite": "Lien d’invitation envoyé aux membres bannis : {invite}. Tu peux le {change}.",
+  "changeLink": "modifier dans Sanctions et appels"
+}

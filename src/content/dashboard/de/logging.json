@@ -1,0 +1,59 @@
+{
+  "page": {
+    "help": "Mewvo schreibt in einem Log-Kanal auf, was auf dem Server passiert: gelöschte und bearbeitete Nachrichten, Beitritte und Abgänge, Rollenänderungen und mehr. Das Team kann später nachsehen. Du kannst das auch mit /logging in Discord ändern. Die Liste der Strafen (das Mod-Log) wird unter Strafen & Einsprüche festgelegt."
+  },
+  "modLog": {
+    "title": "Mod-Log",
+    "text": "Das Mod-Log listet jede Verwarnung, Stummschaltung, jeden Kick und Bann. Es geht nach {channel}. Du kannst es {change}. Ticket-Logs werden unter {tickets} festgelegt.",
+    "change": "unter Strafen & Einsprüche ändern",
+    "tickets": "Tickets & Modmail"
+  },
+  "channels": {
+    "title": "Kanäle",
+    "help": "Wohin jede Art von Log geht. Wenn du einen Kanal wählst, wird das Logging eingeschaltet.",
+    "audit": "Haupt-Log-Kanal (alles andere)",
+    "applications": "Bewerbungen",
+    "reports": "Meldungen",
+    "submit": "Kanäle speichern"
+  },
+  "events": {
+    "title": "Ereignisse",
+    "help": "Wähle, was geloggt wird. Öffne eine Gruppe, um ihre Ereignisse zu sehen. Wenn du die ganze Gruppe abwählst, werden alle Ereignisse darin ausgeschaltet.",
+    "count": "{on}/{total} Ereignisse an",
+    "categoryOff": "Kategorie aus",
+    "whole": "{category} (ganze Kategorie)",
+    "submit": "Ereignisse speichern"
+  },
+  "ignore": {
+    "title": "Ignorierlisten",
+    "help": "Aus diesen Kanälen (und ihren Threads), von Mitgliedern mit diesen Rollen und von diesen Mitgliedern wird nichts geloggt. Praktisch für Bot-Kanäle oder Teambereiche.",
+    "type": "Art",
+    "ignored": "Ignoriert",
+    "empty": "Nichts wird ignoriert.",
+    "typeChannel": "Kanal",
+    "typeRole": "Rolle",
+    "typeUser": "Nutzer",
+    "remove": "Entfernen",
+    "add": "Hinzufügen",
+    "channel": "Kanal ignorieren",
+    "role": "Rolle ignorieren",
+    "member": "Mitglied ignorieren"
+  },
+  "action": {
+    "label": "Logging",
+    "on": "Logging ist jetzt an.",
+    "off": "Logging ist jetzt aus.",
+    "channelsSaved": "Log-Kanäle gespeichert.",
+    "eventsSaved": "Ereignis-Logging gespeichert.",
+    "channelLabel": "Kanal",
+    "userIdLabel": "Nutzer-ID",
+    "roleMissing": "Rolle: Diese Rolle ist nicht auf dem Server.",
+    "already": "Wird schon ignoriert.",
+    "ignoringChannel": "Dieser Kanal wird in den Logs jetzt ignoriert.",
+    "ignoringRole": "Diese Rolle wird in den Logs jetzt ignoriert.",
+    "ignoringUser": "Dieser Nutzer wird in den Logs jetzt ignoriert.",
+    "badId": "Das ist keine gültige ID (eine lange Zahl).",
+    "notListed": "Das stand nicht auf der Liste.",
+    "removed": "Von der Ignorierliste entfernt."
+  }
+}

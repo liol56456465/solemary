@@ -1,0 +1,59 @@
+{
+  "page": {
+    "help": "O Mewvo anota num canal de registro o que acontece no servidor: mensagens apagadas e editadas, membros entrando e saindo, mudanças de cargos e mais. A equipe pode consultar depois. Você também pode mudar isso com /logging no Discord. A lista de punições (o registro de moderação) é definida em Punições e apelações."
+  },
+  "modLog": {
+    "title": "Registro de moderação",
+    "text": "O registro de moderação lista cada advertência, silenciamento, expulsão e banimento. Ele vai para {channel}. Você pode {change}. Os registros de tickets são definidos em {tickets}.",
+    "change": "mudar isso em Punições e apelações",
+    "tickets": "Tickets e modmail"
+  },
+  "channels": {
+    "title": "Canais",
+    "help": "Para onde vai cada tipo de registro. Escolher um canal liga o registro.",
+    "audit": "Canal de registro principal (todo o resto)",
+    "applications": "Candidaturas",
+    "reports": "Denúncias",
+    "submit": "Salvar canais"
+  },
+  "events": {
+    "title": "Eventos",
+    "help": "Escolha o que é registrado. Abra um grupo para ver os eventos dele. Desmarcar o grupo inteiro desliga todos os eventos dele.",
+    "count": "{on}/{total} eventos ligados",
+    "categoryOff": "categoria desligada",
+    "whole": "{category} (categoria inteira)",
+    "submit": "Salvar eventos"
+  },
+  "ignore": {
+    "title": "Listas de exclusão",
+    "help": "Nada é registrado destes canais (e dos tópicos deles), de membros com estes cargos ou destes membros. Útil para canais de bots ou áreas da equipe.",
+    "type": "Tipo",
+    "ignored": "Excluído",
+    "empty": "Nada está excluído.",
+    "typeChannel": "canal",
+    "typeRole": "cargo",
+    "typeUser": "usuário",
+    "remove": "Remover",
+    "add": "Adicionar",
+    "channel": "Excluir um canal",
+    "role": "Excluir um cargo",
+    "member": "Excluir um membro"
+  },
+  "action": {
+    "label": "Registro",
+    "on": "O registro agora está ligado.",
+    "off": "O registro agora está desligado.",
+    "channelsSaved": "Canais de registro salvos.",
+    "eventsSaved": "Registro de eventos salvo.",
+    "channelLabel": "Canal",
+    "userIdLabel": "ID de usuário",
+    "roleMissing": "Cargo: esse cargo não está no servidor.",
+    "already": "Já está excluído.",
+    "ignoringChannel": "Esse canal agora fica fora dos registros.",
+    "ignoringRole": "Esse cargo agora fica fora dos registros.",
+    "ignoringUser": "Esse usuário agora fica fora dos registros.",
+    "badId": "Isso não é um ID válido (um número longo).",
+    "notListed": "Não estava na lista.",
+    "removed": "Removido da lista de exclusão."
+  }
+}

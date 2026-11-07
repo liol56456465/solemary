@@ -1,0 +1,129 @@
+{
+  "page": {
+    "help": "La verifica tiene lontani bot e raider. I nuovi membri vedono il resto del server solo dopo aver ricevuto il ruolo verificato. Lo ottengono premendo un pulsante sul pannello di verifica (un messaggio pubblicato da Mewvo) o accedendo con Discord. La verifica automatica invece dà il ruolo appena entrano. Puoi usare l'una o l'altra, non entrambe."
+  },
+  "panel": {
+    "title": "Pannello di verifica",
+    "toggle": "Verifica",
+    "in": "Pannello in {channel}.",
+    "publish": "Aggiorna o ripubblica il pannello",
+    "none": "Ancora nessun pannello di verifica.",
+    "channel": "Pubblica il pannello in",
+    "channelHelp": "Scegli un canale che i nuovi membri vedono prima di essere verificati.",
+    "role": "Ruolo verificato",
+    "roleSetupHelp": "Il ruolo che i membri ricevono una volta verificati. Imposta i canali in modo che solo questo ruolo possa vederli.",
+    "roleHelp": "Il ruolo che i membri ricevono una volta verificati.",
+    "buttonText": "Testo del pulsante",
+    "message": "Messaggio del pannello",
+    "messageHelp": "Il testo sopra il pulsante.",
+    "setup": "Configura e pubblica il pannello",
+    "savingNote": "Salvare non cambia il messaggio già presente in Discord. Premi \"Aggiorna o ripubblica il pannello\" per mostrare il nuovo testo."
+  },
+  "quiz": {
+    "title": "Quiz sulle regole",
+    "help": {
+      "one": "Prima di essere verificati, i membri rispondono a {count} domanda al massimo sulle tue regole. Devono rispondere bene a tutto; dopo un errore aspettano prima di riprovare e non viene detto quale risposta era sbagliata. Chi supera il quiz passa al normale passaggio di verifica. Disattivato di default.",
+      "many": "Prima di essere verificati, i membri rispondono fino a {count} domande sulle tue regole. Devono rispondere bene a tutto; dopo un errore aspettano prima di riprovare e non viene detto quale risposta era sbagliata. Chi supera il quiz passa al normale passaggio di verifica. Disattivato di default.",
+      "other": "Prima di essere verificati, i membri rispondono fino a {count} domande sulle tue regole. Devono rispondere bene a tutto; dopo un errore aspettano prima di riprovare e non viene detto quale risposta era sbagliata. Chi supera il quiz passa al normale passaggio di verifica. Disattivato di default."
+    },
+    "toggle": "Quiz sulle regole",
+    "questionN": "Domanda {n}",
+    "question": "Domanda",
+    "placeholder": "Quale di queste è una regola qui?",
+    "answerN": "Risposta {n}",
+    "answerOptional": "Risposta {n} (facoltativa)",
+    "correct": "Risposta giusta",
+    "rightAnswer": "Risposta giusta: {answer}",
+    "moveUp": "Sposta su",
+    "moveDown": "Sposta giù",
+    "remove": "Rimuovi",
+    "empty": "Ancora nessuna domanda.",
+    "suggest": "Suggerisci domande dalle mie regole",
+    "cooldown": "Attesa dopo un errore (minuti)",
+    "cooldownHelp": {
+      "one": "Da {min} a {count} minuto.",
+      "many": "Da {min} a {count} minuti.",
+      "other": "Da {min} a {count} minuti."
+    },
+    "submit": "Salva le domande",
+    "slotsNote": "Gli spazi vuoti vengono saltati; svuota uno spazio per rimuovere quella domanda. Le risposte vengono mostrate ogni volta in ordine casuale.",
+    "warnNoQuestions": "Il quiz è attivo ma non ha domande valide, quindi è considerato disattivato: ai membri non viene chiesto nulla. Aggiungi una domanda qui sotto.",
+    "warnInvalid": {
+      "one": "{count} domanda salvata non è valida e viene saltata. Salva di nuovo le domande per sistemare.",
+      "many": "{count} domande salvate non sono valide e vengono saltate. Salva di nuovo le domande per sistemare.",
+      "other": "{count} domande salvate non sono valide e vengono saltate. Salva di nuovo le domande per sistemare."
+    },
+    "warnPanelOff": "Il pannello di verifica è disattivato, quindi nessuno riceve il quiz finché non è attivo.",
+    "suggestFull": {
+      "one": "La {count} domanda è già usata. Rimuovila per avere un suggerimento.",
+      "many": "Tutte le {count} domande sono usate. Rimuovine una per avere un suggerimento.",
+      "other": "Tutte le {count} domande sono usate. Rimuovine una per avere un suggerimento."
+    },
+    "suggestNoRules": "Non ci sono ancora regole del server da cui suggerire. Aggiungile prima nella pagina Regole.",
+    "suggested": {
+      "one": "{count} domanda suggerita è compilata qui sotto. Non è ancora salvato nulla: controllala, modificala, poi premi Salva le domande.",
+      "many": "{count} domande suggerite sono compilate qui sotto. Non è ancora salvato nulla: controllale, modificale, poi premi Salva le domande.",
+      "other": "{count} domande suggerite sono compilate qui sotto. Non è ancora salvato nulla: controllale, modificale, poi premi Salva le domande."
+    }
+  },
+  "auto": {
+    "title": "Verifica automatica",
+    "toggle": "Verifica automatica",
+    "criteria": "Chi viene verificato automaticamente",
+    "criteriaHelp": "Chi non corrisponde deve comunque usare il pannello.",
+    "criteriaNone": "Tutti",
+    "criteriaAge": "Account più vecchi dei giorni qui sotto",
+    "criteriaSmall": "Tutti, finché il server è ancora piccolo",
+    "criteriaLabel": "Criterio",
+    "age": "Account più vecchio di (giorni)",
+    "ageHelp": "Usato solo se scegli gli account più vecchi dei giorni qui sotto. Gli account nuovi sono più spesso bot.",
+    "role": "Ruolo dato",
+    "roleNone": "il ruolo verificato",
+    "roleHelp": "Il ruolo che ricevono i membri verificati automaticamente.",
+    "roleLabel": "Ruolo di verifica automatica"
+  },
+  "web": {
+    "title": "Verifica web",
+    "help": "I membri possono anche verificarsi su una pagina web accedendo con il loro account Discord.",
+    "page": "Pagina dopo \"Verifica con Discord\"",
+    "pageHelp": "La pagina web su cui arrivano i membri dopo essersi verificati accedendo con Discord. Lascia vuoto per la pagina predefinita."
+  },
+  "action": {
+    "setUp": "Verifica configurata: il pannello è pubblicato e la verifica è attiva.",
+    "posted": "Il pannello mancava: ne è stato pubblicato uno nuovo.",
+    "updated": "Il pannello pubblicato ora mostra il testo salvato.",
+    "on": "La verifica ora è attiva.",
+    "off": "La verifica ora è disattivata.",
+    "toggleNote": "Attivarla o disattivarla non pubblica né rimuove il messaggio del pannello. Per quello usa \"Aggiorna o ripubblica il pannello\".",
+    "saved": "Impostazioni di verifica salvate.",
+    "autoOn": "La verifica automatica ora è attiva.",
+    "autoOff": "La verifica automatica ora è disattivata.",
+    "autoSaved": "Impostazioni della verifica automatica salvate.",
+    "quizOn": "Il quiz sulle regole ora è attivo.",
+    "quizOff": "Il quiz sulle regole ora è disattivato.",
+    "quizEmpty": "Non ha ancora domande, quindi è considerato disattivato finché non ne aggiungi una.",
+    "quizSaved": "Quiz sulle regole salvato.",
+    "quizNowEmpty": "Il quiz è attivo ma ora non ha domande, quindi è considerato disattivato.",
+    "directionLabel": "Direzione",
+    "movedUp": "Domanda spostata su.",
+    "movedDown": "Domanda spostata giù.",
+    "removed": "Domanda rimossa."
+  },
+  "error": {
+    "noQuestion": "{label}: scrivi la domanda, oppure svuota le sue risposte per rimuoverla.",
+    "answerCount": "{label}: dai da {min} a {max} risposte.",
+    "correctLabel": "{label}: risposta giusta",
+    "correctEmpty": "{label}: la risposta giusta (risposta {answer}) è vuota.",
+    "quizChanged": "Nel frattempo le domande del quiz sono cambiate. Ricarica la pagina e riprova.",
+    "alreadySetUp": "Il pannello di verifica è già configurato. Usa invece \"Aggiorna o ripubblica il pannello\".",
+    "autoIsOn": "La verifica automatica è attiva. Disattivala prima di attivare il pannello di verifica.",
+    "notSetUp": "Il pannello di verifica non è ancora configurato. Configuralo prima.",
+    "buttonEmpty": "Il testo del pulsante non può essere vuoto.",
+    "messageEmpty": "Il messaggio del pannello non può essere vuoto.",
+    "blockPanel": "il pannello di verifica è attivo",
+    "blockAutoRoles": "sono configurati ruoli automatici (Benvenuto e congedo)",
+    "blocked": "Per attivare la verifica automatica, disattiva prima: {list}.",
+    "atTop": "Quella domanda è già in cima.",
+    "atBottom": "Quella domanda è già in fondo."
+  }
+}

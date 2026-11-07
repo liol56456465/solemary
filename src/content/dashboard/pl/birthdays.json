@@ -1,0 +1,26 @@
+{
+  "page": {
+    "help": "Mewvo składa członkom życzenia na kanale w dniu ich urodzin i może dać im na ten dzień specjalną rolę. Członkowie sami dodają swoje urodziny na Discordzie komendą /birthday set."
+  },
+  "status": {
+    "title": "Stan",
+    "on": "Życzenia: {state}.",
+    "off": "Życzenia: {state}. Wybierz kanał poniżej, aby je włączyć.",
+    "turnOff": "Wyłącz (usuń kanał)"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "channel": "Kanał życzeń",
+    "channelNone": "wył.",
+    "channelHelp": "Gdzie publikowane są życzenia urodzinowe.",
+    "timezone": "Strefa czasowa",
+    "timezoneHelp": "Urodziny zaczynają się o północy w tej strefie czasowej. Wpisz ją jako region i miasto, np. Europe/Warsaw lub America/New_York.",
+    "role": "Rola urodzinowa",
+    "roleNone": "brak",
+    "roleHelp": "Nadawana w dniu urodzin i zabierana następnego dnia."
+  },
+  "action": {
+    "saved": "Ustawienia urodzin zapisane.",
+    "off": "Życzenia urodzinowe są wyłączone."
+  }
+}

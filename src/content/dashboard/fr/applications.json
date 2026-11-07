@@ -1,0 +1,138 @@
+{
+  "page": {
+    "help": "Laisse les membres postuler à un rôle, comme modérateur, en répondant à quelques questions avec /apply dans Discord. L’équipe lit les réponses et accepte ou refuse. Accepter donne le rôle."
+  },
+  "submitted": {
+    "title": {
+      "one": "Candidatures reçues ({count} en attente)",
+      "many": "Candidatures reçues ({count} en attente)",
+      "other": "Candidatures reçues ({count} en attente)"
+    },
+    "help": "Les candidatures qui attendent une décision. Accepter donne le rôle. Dans les deux cas, le membre reçoit un message privé (MP) avec le résultat, et le message de journal de l’équipe est mis à jour. Tu peux aussi le faire avec /app-admin review dans Discord.",
+    "unknownUser": "utilisateur inconnu",
+    "unknownRole": "Rôle inconnu",
+    "unknownDate": "date inconnue",
+    "appliedFor": "{who} a postulé pour {role}.",
+    "id": "ID {id}",
+    "question": "Q{number} : {question}",
+    "noAnswer": "Pas de réponse",
+    "noAnswers": "Aucune réponse.",
+    "approve": "Accepter (donne le rôle)",
+    "deny": "Refuser",
+    "decision": "Décision",
+    "note": "Note pour le candidat (facultatif)",
+    "noteHelp": "Envoyée avec la décision, par exemple pour dire pourquoi.",
+    "submit": "Envoyer la décision",
+    "confirm": "Envoyer cette décision à {name} ? La personne reçoit un message privé (MP).",
+    "approved": "acceptée",
+    "denied": "refusée",
+    "waiting": {
+      "one": "{count} en attente.",
+      "many": "{count} en attente.",
+      "other": "{count} en attente."
+    },
+    "waitingShown": {
+      "one": "{count} en attente (les {shown} plus récentes sont affichées).",
+      "many": "{count} en attente (les {shown} plus récentes sont affichées).",
+      "other": "{count} en attente (les {shown} plus récentes sont affichées)."
+    },
+    "none": "Aucune candidature n’attend d’examen.",
+    "needsAdmin": "Pour examiner les candidatures ici, il te faut la permission Administrateur sur ce serveur.",
+    "recent": "Examinées récemment",
+    "application": "Candidature",
+    "member": "Membre",
+    "noteColumn": "Note",
+    "reviewed": "Examinée",
+    "nothingReviewed": "Rien n’a encore été examiné."
+  },
+  "roles": {
+    "title": "Candidatures ({count})",
+    "help": "Les rôles auxquels les membres peuvent postuler avec /apply. Chacun a ses propres questions, ou utilise les questions par défaut ci-dessous.",
+    "empty": "Aucune candidature pour l’instant.",
+    "new": "Nouvelle candidature",
+    "name": "Nom",
+    "nameHelp": "Ce que les membres voient dans /apply, par exemple Moderator.",
+    "open": "Ouverte aux candidatures",
+    "openHelp": "Désactivé : les membres ne peuvent pas postuler à ce rôle pour le moment.",
+    "logChannel": "Salon de journal pour ce rôle",
+    "logChannelNone": "le salon de journal des candidatures",
+    "logChannelHelp": "Où les nouvelles candidatures pour ce rôle sont publiées pour l’équipe.",
+    "questions": "Questions",
+    "questionsHelp": "Une question par ligne, jusqu’à {max}. Laisse vide pour utiliser les questions par défaut. Ajoute [min:10] à la fin d’une question pour demander une réponse d’au moins 10 caractères.",
+    "save": "Enregistrer la candidature",
+    "deleteText": "La suppression retire aussi toutes les candidatures que les membres ont envoyées pour {name}. La page suivante montre combien, et tu confirmes là-bas.",
+    "delete": "Supprimer la candidature…",
+    "role": "Rôle auquel les membres postulent",
+    "roleHelp": "Les membres acceptés reçoivent ce rôle.",
+    "add": "Ajouter la candidature"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "help": "Définir le salon de journal ici change aussi le salon de journal des candidatures sur la page Journaux, et inversement.",
+    "logChannel": "Salon de journal des candidatures",
+    "logChannelHelp": "Où les nouvelles candidatures sont publiées pour que l’équipe les examine.",
+    "pendingDays": "Garder les candidatures en attente (jours)",
+    "pendingDaysHelp": "Les candidatures sur lesquelles personne n’a décidé sont supprimées après ce délai.",
+    "reviewedDays": "Garder les candidatures décidées (jours)",
+    "reviewedDaysHelp": "Les candidatures acceptées et refusées sont supprimées après ce délai."
+  },
+  "questions": {
+    "title": "Questions par défaut",
+    "help": "Utilisées pour chaque rôle qui n’a pas ses propres questions.",
+    "label": "Questions par défaut",
+    "labelHelp": "Une question par ligne, jusqu’à {max}. Ajoute [min:10] à la fin d’une question pour demander une réponse d’au moins 10 caractères."
+  },
+  "managers": {
+    "title": "Rôles gestionnaires",
+    "help": "Les membres avec ces rôles peuvent lire les candidatures et en décider, sans être administrateurs.",
+    "role": "Rôle",
+    "remove": "Retirer",
+    "empty": "Aucun rôle gestionnaire.",
+    "addLabel": "Ajouter un rôle gestionnaire",
+    "add": "Ajouter"
+  },
+  "confirm": {
+    "heading": "Confirmer : supprimer la candidature {name}",
+    "application": "Candidature",
+    "applicationValue": "{name} (rôle @{role})",
+    "submitted": "Candidatures reçues",
+    "effect": "Effet",
+    "effectText": "La candidature est retirée de /apply et toutes les candidatures envoyées par les membres pour elle sont supprimées. C’est irréversible. Le rôle lui-même reste.",
+    "submit": "Supprimer la candidature"
+  },
+  "action": {
+    "unknown": "Candidature inconnue.",
+    "noteTooLong": "La note est limitée à {max} caractères.",
+    "theApplicant": "le candidat",
+    "theRole": "le rôle",
+    "notDmed": "{name} n’a pas pu recevoir de MP.",
+    "roleNotGiven": "Le rôle n’a pas pu être donné (vérifie ma permission Gérer les rôles et l’ordre des rôles).",
+    "statusApproved": "acceptée",
+    "statusDenied": "refusée",
+    "reviewed": "Candidature de {name} pour {role} {status}.",
+    "reviewedGiven": "Candidature de {name} pour {role} {status}. Le rôle a été donné.",
+    "roleLabel": "Rôle",
+    "added": "Candidature « {name} » ajoutée.",
+    "emptyName": "Le nom de la candidature ne peut pas être vide.",
+    "roleGone": "Ce rôle de candidature n’existe plus.",
+    "logChannelLabel": "Salon de journal",
+    "saved": "Candidature « {name} » enregistrée.",
+    "deleted": {
+      "one": "Candidature « {name} » supprimée avec {count} candidature reçue.",
+      "many": "Candidature « {name} » supprimée avec {count} candidatures reçues.",
+      "other": "Candidature « {name} » supprimée avec {count} candidatures reçues."
+    },
+    "moduleLabel": "Candidatures",
+    "nowOn": "Les candidatures sont maintenant activées.",
+    "nowOff": "Les candidatures sont maintenant désactivées.",
+    "pendingDaysLabel": "Garder les candidatures en attente",
+    "reviewedDaysLabel": "Garder les candidatures décidées",
+    "settingsSaved": "Paramètres des candidatures enregistrés.",
+    "questionsSaved": "Questions par défaut enregistrées.",
+    "managerLabel": "Rôle gestionnaire",
+    "alreadyManager": "C’est déjà un rôle gestionnaire.",
+    "managerAdded": "Rôle gestionnaire ajouté.",
+    "notManager": "Ce rôle n’est pas un rôle gestionnaire.",
+    "managerRemoved": "Rôle gestionnaire retiré."
+  }
+}

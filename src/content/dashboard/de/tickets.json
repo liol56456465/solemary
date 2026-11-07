@@ -1,0 +1,94 @@
+{
+  "page": {
+    "help": "Mit Tickets können Mitglieder das Team in einem privaten Kanal um Hilfe bitten. Sie drücken einen Button im Ticket-Panel (eine Nachricht, die Mewvo postet) und bekommen einen eigenen Kanal, den nur sie und das Team sehen. Modmail ist dasselbe über eine private Nachricht an Mewvo. Du kannst das auch mit /ticket setup in Discord einrichten."
+  },
+  "topic": {
+    "tickets": "Tickets",
+    "ticketsLine": "Der Button, mit dem Mitglieder ein Ticket öffnen, und wohin Tickets kommen.",
+    "modmail": "Modmail und gespeicherte Antworten",
+    "modmailLine": "Wer dem Team nicht schreiben darf, und Antworten, die das Team oft postet."
+  },
+  "panel": {
+    "title": "Ticket-Panel",
+    "help": "Die Nachricht mit dem Button, den Mitglieder drücken.",
+    "helpNoAdmin": "Die Nachricht mit dem Button, den Mitglieder drücken. Um das Panel zu posten, brauchst du die Berechtigung Administrator auf diesem Server.",
+    "postedIn": "Panel in {channel}{warnings}.",
+    "republish": "Panel aktualisieren oder neu posten",
+    "textNote": "Wenn du den Panel-Text unten speicherst, ändert sich die Nachricht in Discord noch nicht. Aktualisiere das Panel, um den neuen Text zu zeigen.",
+    "none": "Noch kein Ticket-Panel. Fülle das hier aus, um eins zu posten.",
+    "postIn": "Panel posten in",
+    "postInHelp": "Wähle einen Kanal, den jedes Mitglied sehen kann.",
+    "newCategory": "eine neue Kategorie „Tickets“",
+    "submit": "Einrichten und Panel posten"
+  },
+  "settings": {
+    "title": "Ticket-Einstellungen",
+    "help": "Kategorien, die Teamrolle, Logs und der Panel-Text.",
+    "openCategory": "Kategorie für offene Tickets",
+    "openCategoryHelp": "Eine Kategorie ist ein Ordner für Kanäle. Neue Ticket-Kanäle werden darin erstellt.",
+    "closedCategory": "Kategorie für geschlossene Tickets",
+    "closedCategoryHelp": "Geschlossene Tickets werden hierhin verschoben.",
+    "staffRole": "Ticket-Teamrolle",
+    "staffRoleHelp": "Mitglieder mit dieser Rolle sehen und beantworten alle Tickets.",
+    "maxPerUser": "Offene Tickets pro Mitglied",
+    "maxPerUserHelp": "Wie viele Tickets ein Mitglied gleichzeitig offen haben kann. Von 1 bis 10.",
+    "maxRange": "Von 1 bis 10.",
+    "dmOnClose": "Dem Mitglied schreiben, wenn sein Ticket geschlossen wird",
+    "dmOnCloseHelp": "Wird privat an das Mitglied geschickt (als DM).",
+    "logChannel": "Ticket-Log-Kanal",
+    "logChannelHelp": "Das Team bekommt hier eine kurze Zeile, wenn ein Ticket geöffnet, übernommen, geschlossen oder gelöscht wird.",
+    "transcriptChannel": "Transkript-Kanal",
+    "transcriptChannelHelp": "Ein Transkript ist eine Datei mit allen Nachrichten eines Tickets. Mewvo postet sie hier, wenn das Ticket geschlossen wird.",
+    "buttonText": "Button-Text",
+    "buttonTextHelp": "Die Worte auf dem Button, mit dem Mitglieder ein Ticket öffnen.",
+    "panelMessage": "Panel-Nachricht",
+    "panelMessageHelp": "Der Text über dem Button. Sag den Mitgliedern, wofür Tickets da sind."
+  },
+  "blocked": {
+    "title": "Für Modmail gesperrte Mitglieder",
+    "help": "Gesperrte Mitglieder können keinen Modmail-Chat mit dem Team starten. Ein schon offener Chat bleibt, bis das Team ihn schließt. Das geht auch mit /modmail block in Discord.",
+    "userId": "Nutzer-ID",
+    "empty": "Niemand ist für Modmail gesperrt.",
+    "heading": "Mitglied sperren",
+    "member": "Mitglied",
+    "reason": "Grund (optional)",
+    "reasonHelp": "Nur das Team sieht ihn, im Dashboard-Verlauf.",
+    "submit": "Für Modmail sperren",
+    "confirm": "Dieses Mitglied für Modmail sperren?",
+    "unblock": "Entsperren"
+  },
+  "canned": {
+    "title": "Gespeicherte Antworten",
+    "help": "Gespeicherte Antworten auf Fragen, die das Team oft bekommt. Das Team postet eine im Ticket mit /canned send. Die eingebauten Antworten kannst du nicht löschen, aber du kannst ihren Text ändern, indem du eine Antwort mit demselben Namen speicherst.",
+    "name": "Name",
+    "text": "Text",
+    "builtIn": "(eingebaut)",
+    "delete": "Löschen",
+    "confirmDelete": "Die gespeicherte Antwort „{name}“ löschen?",
+    "nameHelp": "Das Team tippt diesen Namen, um die Antwort zu posten. Nur Kleinbuchstaben, Ziffern und -, etwa refund-policy.",
+    "answer": "Antwort",
+    "answerHelp": "Der Text, den Mewvo postet.",
+    "submit": "Antwort speichern",
+    "saved": "„{name}“ gespeichert.",
+    "deleted": "„{name}“ gelöscht.",
+    "error": {
+      "name": "Namen dürfen nur Kleinbuchstaben, Ziffern und - enthalten, höchstens 32 Zeichen.",
+      "empty": "Die Antwort darf nicht leer sein.",
+      "tooLong": "Antworten dürfen höchstens {max} Zeichen lang sein.",
+      "unknown": "Unbekannte Antwort.",
+      "builtIn": "„{name}“ ist eingebaut und kann nicht gelöscht werden. Um den Text zu ändern, speichere eine Antwort mit demselben Namen.",
+      "noSuch": "Es gibt keine gespeicherte Antwort namens „{name}“."
+    }
+  },
+  "action": {
+    "setUp": "Ticket-System eingerichtet: Das Panel ist gepostet.",
+    "panelReposted": "Das Panel fehlte: Ein neues ist gepostet.",
+    "panelUpdated": "Das Panel in Discord zeigt jetzt den gespeicherten Text.",
+    "settingsSaved": "Ticket-Einstellungen gespeichert.",
+    "alreadyBlocked": "Dieses Mitglied ist schon für Modmail gesperrt.",
+    "blocked": "{user} kann Modmail nicht mehr nutzen.",
+    "blockedOpen": "{user} kann Modmail nicht mehr nutzen. Das offene Gespräch #{channel} bleibt, bis du es schließt.",
+    "notBlocked": "Dieses Mitglied war nicht gesperrt.",
+    "unblocked": "Für Modmail entsperrt."
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "page": {
+    "help": "Weryfikacja trzyma z daleka boty i rajdowców. Nowi członkowie widzą resztę serwera dopiero po otrzymaniu roli zweryfikowanego. Dostają ją, naciskając przycisk na panelu weryfikacji (wiadomości publikowanej przez Mewvo) albo logując się przez Discorda. Autoweryfikacja zamiast tego daje rolę od razu po dołączeniu. Możesz używać jednego albo drugiego, nie obu."
+  },
+  "panel": {
+    "title": "Panel weryfikacji",
+    "toggle": "Weryfikacja",
+    "in": "Panel w {channel}.",
+    "publish": "Zaktualizuj lub opublikuj panel ponownie",
+    "none": "Nie ma jeszcze panelu weryfikacji.",
+    "channel": "Opublikuj panel w",
+    "channelHelp": "Wybierz kanał, który nowi członkowie widzą przed weryfikacją.",
+    "role": "Rola zweryfikowanego",
+    "roleSetupHelp": "Rola, którą członkowie dostają po weryfikacji. Ustaw kanały tak, żeby widziała je tylko ta rola.",
+    "roleHelp": "Rola, którą członkowie dostają po weryfikacji.",
+    "buttonText": "Tekst przycisku",
+    "message": "Wiadomość panelu",
+    "messageHelp": "Tekst nad przyciskiem.",
+    "setup": "Skonfiguruj i opublikuj panel",
+    "savingNote": "Zapisanie nie zmienia wiadomości, która już jest w Discordzie. Naciśnij „Zaktualizuj lub opublikuj panel ponownie”, żeby pokazać nowy tekst."
+  },
+  "quiz": {
+    "title": "Quiz z zasad",
+    "help": {
+      "one": "Zanim członkowie zostaną zweryfikowani, odpowiadają na maksymalnie {count} pytanie o twoje zasady. Wszystkie odpowiedzi muszą być dobre; po błędzie czekają przed kolejną próbą i nie dowiadują się, która odpowiedź była zła. Kto zda, przechodzi do zwykłej weryfikacji. Domyślnie wyłączony.",
+      "few": "Zanim członkowie zostaną zweryfikowani, odpowiadają na maksymalnie {count} pytania o twoje zasady. Wszystkie odpowiedzi muszą być dobre; po błędzie czekają przed kolejną próbą i nie dowiadują się, która odpowiedź była zła. Kto zda, przechodzi do zwykłej weryfikacji. Domyślnie wyłączony.",
+      "many": "Zanim członkowie zostaną zweryfikowani, odpowiadają na maksymalnie {count} pytań o twoje zasady. Wszystkie odpowiedzi muszą być dobre; po błędzie czekają przed kolejną próbą i nie dowiadują się, która odpowiedź była zła. Kto zda, przechodzi do zwykłej weryfikacji. Domyślnie wyłączony.",
+      "other": "Zanim członkowie zostaną zweryfikowani, odpowiadają na maksymalnie {count} pytania o twoje zasady. Wszystkie odpowiedzi muszą być dobre; po błędzie czekają przed kolejną próbą i nie dowiadują się, która odpowiedź była zła. Kto zda, przechodzi do zwykłej weryfikacji. Domyślnie wyłączony."
+    },
+    "toggle": "Quiz z zasad",
+    "questionN": "Pytanie {n}",
+    "question": "Pytanie",
+    "placeholder": "Która z tych rzeczy jest tu zasadą?",
+    "answerN": "Odpowiedź {n}",
+    "answerOptional": "Odpowiedź {n} (opcjonalna)",
+    "correct": "Dobra odpowiedź",
+    "rightAnswer": "Dobra odpowiedź: {answer}",
+    "moveUp": "W górę",
+    "moveDown": "W dół",
+    "remove": "Usuń",
+    "empty": "Nie ma jeszcze pytań.",
+    "suggest": "Zaproponuj pytania z moich zasad",
+    "cooldown": "Czekanie po błędzie (minuty)",
+    "cooldownHelp": {
+      "one": "Od {min} do {count} minuty.",
+      "few": "Od {min} do {count} minut.",
+      "many": "Od {min} do {count} minut.",
+      "other": "Od {min} do {count} minuty."
+    },
+    "submit": "Zapisz pytania",
+    "slotsNote": "Puste miejsca na pytania są pomijane; wyczyść miejsce, żeby usunąć pytanie. Odpowiedzi za każdym razem są pokazywane w losowej kolejności.",
+    "warnNoQuestions": "Quiz jest włączony, ale nie ma prawidłowych pytań, więc działa jak wyłączony: członkowie nie dostają pytań. Dodaj pytanie poniżej.",
+    "warnInvalid": {
+      "one": "{count} zapisane pytanie jest nieprawidłowe i pomijane. Zapisz pytania ponownie, żeby to uporządkować.",
+      "few": "{count} zapisane pytania są nieprawidłowe i pomijane. Zapisz pytania ponownie, żeby to uporządkować.",
+      "many": "{count} zapisanych pytań jest nieprawidłowych i pomijanych. Zapisz pytania ponownie, żeby to uporządkować.",
+      "other": "{count} zapisanego pytania jest nieprawidłowe i pomijane. Zapisz pytania ponownie, żeby to uporządkować."
+    },
+    "warnPanelOff": "Panel weryfikacji jest wyłączony, więc nikt nie dostanie quizu, dopóki go nie włączysz.",
+    "suggestFull": {
+      "one": "{count} pytanie jest już zajęte. Usuń je, żeby dostać propozycję.",
+      "few": "Wszystkie {count} pytania są zajęte. Usuń jedno, żeby dostać propozycję.",
+      "many": "Wszystkie {count} pytań jest zajętych. Usuń jedno, żeby dostać propozycję.",
+      "other": "Wszystkie {count} pytania są zajęte. Usuń jedno, żeby dostać propozycję."
+    },
+    "suggestNoRules": "Nie ma jeszcze zasad serwera, z których można proponować. Najpierw dodaj je na stronie Zasady.",
+    "suggested": {
+      "one": "Poniżej wpisano {count} proponowane pytanie. Nic nie jest jeszcze zapisane: sprawdź je, popraw i naciśnij Zapisz pytania.",
+      "few": "Poniżej wpisano {count} proponowane pytania. Nic nie jest jeszcze zapisane: sprawdź je, popraw i naciśnij Zapisz pytania.",
+      "many": "Poniżej wpisano {count} proponowanych pytań. Nic nie jest jeszcze zapisane: sprawdź je, popraw i naciśnij Zapisz pytania.",
+      "other": "Poniżej wpisano {count} proponowanego pytania. Nic nie jest jeszcze zapisane: sprawdź je, popraw i naciśnij Zapisz pytania."
+    }
+  },
+  "auto": {
+    "title": "Autoweryfikacja",
+    "toggle": "Autoweryfikacja",
+    "criteria": "Kto jest weryfikowany automatycznie",
+    "criteriaHelp": "Pozostali nadal muszą użyć panelu.",
+    "criteriaNone": "Wszyscy",
+    "criteriaAge": "Konta starsze niż liczba dni poniżej",
+    "criteriaSmall": "Wszyscy, dopóki serwer jest jeszcze mały",
+    "criteriaLabel": "Kryterium",
+    "age": "Konto starsze niż (dni)",
+    "ageHelp": "Używane tylko, gdy wybierzesz konta starsze niż liczba dni poniżej. Nowe konta częściej są botami.",
+    "role": "Dawana rola",
+    "roleNone": "rola zweryfikowanego",
+    "roleHelp": "Rola, którą dostają automatycznie zweryfikowani członkowie.",
+    "roleLabel": "Rola autoweryfikacji"
+  },
+  "web": {
+    "title": "Weryfikacja przez stronę",
+    "help": "Członkowie mogą też zweryfikować się na stronie internetowej, logując się kontem Discord.",
+    "page": "Strona po „Zweryfikuj przez Discorda”",
+    "pageHelp": "Strona, na którą trafiają członkowie po weryfikacji przez logowanie do Discorda. Zostaw puste dla strony domyślnej."
+  },
+  "action": {
+    "setUp": "Skonfigurowano weryfikację: panel jest opublikowany, a weryfikacja włączona.",
+    "posted": "Brakowało panelu: opublikowano nowy.",
+    "updated": "Opublikowany panel pokazuje teraz zapisany tekst.",
+    "on": "Weryfikacja jest teraz włączona.",
+    "off": "Weryfikacja jest teraz wyłączona.",
+    "toggleNote": "Włączenie lub wyłączenie nie publikuje ani nie usuwa wiadomości panelu. Do tego użyj „Zaktualizuj lub opublikuj panel ponownie”.",
+    "saved": "Zapisano ustawienia weryfikacji.",
+    "autoOn": "Autoweryfikacja jest teraz włączona.",
+    "autoOff": "Autoweryfikacja jest teraz wyłączona.",
+    "autoSaved": "Zapisano ustawienia autoweryfikacji.",
+    "quizOn": "Quiz z zasad jest teraz włączony.",
+    "quizOff": "Quiz z zasad jest teraz wyłączony.",
+    "quizEmpty": "Nie ma jeszcze pytań, więc działa jak wyłączony, dopóki nie dodasz pytania.",
+    "quizSaved": "Zapisano quiz z zasad.",
+    "quizNowEmpty": "Quiz jest włączony, ale teraz nie ma pytań, więc działa jak wyłączony.",
+    "directionLabel": "Kierunek",
+    "movedUp": "Przesunięto pytanie w górę.",
+    "movedDown": "Przesunięto pytanie w dół.",
+    "removed": "Usunięto pytanie."
+  },
+  "error": {
+    "noQuestion": "{label}: wpisz pytanie albo wyczyść jego odpowiedzi, żeby je usunąć.",
+    "answerCount": "{label}: podaj od {min} do {max} odpowiedzi.",
+    "correctLabel": "{label}: dobra odpowiedź",
+    "correctEmpty": "{label}: dobra odpowiedź (odpowiedź {answer}) jest pusta.",
+    "quizChanged": "Pytania quizu w międzyczasie się zmieniły. Odśwież stronę i spróbuj ponownie.",
+    "alreadySetUp": "Panel weryfikacji jest już skonfigurowany. Użyj zamiast tego „Zaktualizuj lub opublikuj panel ponownie”.",
+    "autoIsOn": "Autoweryfikacja jest włączona. Wyłącz ją, zanim włączysz panel weryfikacji.",
+    "notSetUp": "Panel weryfikacji nie jest jeszcze skonfigurowany. Najpierw go skonfiguruj.",
+    "buttonEmpty": "Tekst przycisku nie może być pusty.",
+    "messageEmpty": "Wiadomość panelu nie może być pusta.",
+    "blockPanel": "panel weryfikacji jest włączony",
+    "blockAutoRoles": "ustawiono autorole (Powitania i pożegnania)",
+    "blocked": "Aby włączyć autoweryfikację, najpierw wyłącz: {list}.",
+    "atTop": "To pytanie jest już na samej górze.",
+    "atBottom": "To pytanie jest już na samym dole."
+  }
+}

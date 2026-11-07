@@ -1,0 +1,26 @@
+{
+  "page": {
+    "help": "O Mewvo dá parabéns aos membros em um canal no dia do aniversário deles e pode dar a eles um cargo especial nesse dia. Os membros adicionam o próprio aniversário com /birthday set no Discord."
+  },
+  "status": {
+    "title": "Status",
+    "on": "Anúncios: {state}.",
+    "off": "Anúncios: {state}. Escolha um canal abaixo para ativá-los.",
+    "turnOff": "Desativar (limpar o canal)"
+  },
+  "settings": {
+    "title": "Configurações",
+    "channel": "Canal de anúncios",
+    "channelNone": "desativado",
+    "channelHelp": "Onde a mensagem de aniversário é publicada.",
+    "timezone": "Fuso horário",
+    "timezoneHelp": "Os aniversários começam à meia-noite neste fuso horário. Escreva como região e cidade, como America/Sao_Paulo ou America/New_York.",
+    "role": "Cargo de aniversário",
+    "roleNone": "nenhum",
+    "roleHelp": "Dado no dia do aniversário e retirado no dia seguinte."
+  },
+  "action": {
+    "saved": "Configurações de aniversário salvas.",
+    "off": "Os anúncios de aniversário estão desativados."
+  }
+}

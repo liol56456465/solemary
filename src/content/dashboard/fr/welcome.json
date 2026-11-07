@@ -1,0 +1,130 @@
+{
+  "page": {
+    "helpText": "Accueille les nouveaux membres avec un message quand ils arrivent, dis au revoir quand ils partent, et donne automatiquement un rôle aux nouveaux membres. Dans les messages, tu peux utiliser {user} (mentionne le membre), {user.tag} (son nom d’utilisateur, sans mention), {server} (le nom du serveur) et {memberCount} (le nombre actuel de membres du serveur)."
+  },
+  "join": {
+    "topic": "Bienvenue",
+    "topicLine": "Ce que Mewvo publie quand quelqu’un arrive.",
+    "title": "Bienvenue",
+    "help": "Le message de bienvenue, où il est publié, et un message privé facultatif.",
+    "toggle": "Messages de bienvenue",
+    "channel": "Salon de bienvenue",
+    "channelHelp": "Où le message de bienvenue est publié.",
+    "ping": "Mentionner le membre",
+    "pingHelp": "Le mentionne pour qu’il reçoive une notification.",
+    "message": "Message de bienvenue",
+    "messageHelp": "Par exemple : Bienvenue sur {server}, {user}. Tu es le membre numéro {memberCount}.",
+    "dm": "Message privé au nouveau membre",
+    "dmHelp": "Envoyé directement au membre (un MP). Laisse vide pour ne rien envoyer."
+  },
+  "leave": {
+    "topic": "Au revoir",
+    "topicLine": "Ce que Mewvo publie quand quelqu’un part.",
+    "title": "Au revoir",
+    "help": "Le message d’au revoir et où il est publié.",
+    "toggle": "Messages d’au revoir",
+    "channel": "Salon d’au revoir",
+    "channelHelp": "Où le message d’au revoir est publié.",
+    "ping": "Mentionner le membre",
+    "pingHelp": "Le mentionne par son nom dans le message.",
+    "message": "Message d’au revoir",
+    "messageHelp": "Par exemple : {user.tag} a quitté le serveur."
+  },
+  "embed": {
+    "welcomeTitle": "Embed et image de bienvenue",
+    "goodbyeTitle": "Embed et image d’au revoir",
+    "help": "Le cadre autour du message : titre, couleur et image facultative.",
+    "helpMore": "Le message est envoyé dans un cadre (un embed) avec un titre, une couleur et une image facultative. Le texte du message ci-dessus va dans le cadre. Si Mewvo n’a pas la permission Intégrer des liens dans ce salon, seul le texte est envoyé.",
+    "title": "Titre du cadre",
+    "titleHelp": "La ligne en gras en haut du cadre. Laisse vide pour « {title} ». Les mêmes mots entre accolades que dans le message fonctionnent aussi ici.",
+    "colour": "Couleur du cadre",
+    "colourHelp": "La bande colorée à gauche du cadre, sous forme de code couleur : # et six lettres ou chiffres, comme #57F287 pour le vert. Laisse vide pour la couleur par défaut.",
+    "footer": "Pied du cadre",
+    "footerHelp": "Petit texte en bas du cadre. Laisse vide pour le nom du serveur. Les mêmes mots entre accolades que dans le message fonctionnent aussi ici.",
+    "image": "Lien de l’image",
+    "imageHelp": "Un lien qui commence par https:// et ouvre une image PNG, JPG, GIF ou WebP. Elle s’affiche en grand en bas du cadre. Laisse vide pour ne pas avoir d’image. Pour utiliser une image de ton ordinateur, utilise « Envoyer une image » ci-dessous.",
+    "welcomeImage": "Image de bienvenue",
+    "goodbyeImage": "Image d’au revoir",
+    "embedColour": "Couleur de l’embed"
+  },
+  "image": {
+    "none": "Aucune image.",
+    "welcomeAlt": "Image de bienvenue actuelle",
+    "goodbyeAlt": "Image d’au revoir actuelle",
+    "current": "Image actuelle : {link}",
+    "onlyDiscord": "(seules les images stockées sur Discord peuvent s’afficher ici)",
+    "channelId": "le salon {id}",
+    "welcomeStored": "Fichier envoyé : une copie est conservée dans {where}. Ne supprime pas ce message, car le message de bienvenue y charge l’image.",
+    "goodbyeStored": "Fichier envoyé : une copie est conservée dans {where}. Ne supprime pas ce message, car le message d’au revoir y charge l’image.",
+    "uploadLabel": "Envoyer une image (PNG, JPEG, GIF ou WebP, jusqu’à {mb} Mo)",
+    "uploadHint": "Remplace le lien de l’image ci-dessus. Mewvo publie le fichier dans ton salon de journal principal et l’utilise depuis là, pour que l’image continue de fonctionner. /greet dans Discord fait la même chose.",
+    "upload": "Envoyer l’image",
+    "remove": "Retirer l’image",
+    "welcomeConfirm": "Retirer l’image de bienvenue ?",
+    "goodbyeConfirm": "Retirer l’image d’au revoir ?"
+  },
+  "members": {
+    "topic": "Nouveaux membres",
+    "topicLine": "Un rôle de départ, et un relevé des arrivées et des départs pour l’équipe."
+  },
+  "autoRole": {
+    "title": "Rôle automatique",
+    "help": "Chaque nouveau membre reçoit ce rôle automatiquement. Tu peux en avoir un : en définir un nouveau remplace l’ancien. Mewvo ne peut donner que des rôles situés sous son propre rôle dans la liste des rôles, et il ne donne pas de rôles avec des pouvoirs de modération. Tu peux aussi le faire avec /autorole dans Discord.",
+    "role": "Rôle",
+    "problems": "Problèmes",
+    "ok": "ok",
+    "remove": "Retirer",
+    "none": "Aucun rôle n’est donné à l’arrivée.",
+    "pick": "Rôle pour les nouveaux membres",
+    "set": "Définir",
+    "delay": "Attente avant de donner le rôle (secondes)",
+    "delayLabel": "Attente avant de donner le rôle",
+    "delayHelp": "Combien de temps Mewvo attend après une arrivée. 0 le donne tout de suite."
+  },
+  "logs": {
+    "title": "Journaux d’arrivées et de départs",
+    "help": "Un relevé pour l’équipe de qui est arrivé et qui est parti, séparé des messages publics.",
+    "joins": "Journaliser les arrivées",
+    "joinsHelp": "Publier une courte ligne pour l’équipe à chaque arrivée.",
+    "joinChannel": "Salon du journal des arrivées",
+    "leaves": "Journaliser les départs",
+    "leavesHelp": "Publier une courte ligne pour l’équipe à chaque départ.",
+    "leaveChannel": "Salon du journal des départs"
+  },
+  "action": {
+    "welcomeOn": "Les messages de bienvenue sont activés.",
+    "welcomeOff": "Les messages de bienvenue sont désactivés.",
+    "goodbyeOn": "Les messages d’au revoir sont activés.",
+    "goodbyeOff": "Les messages d’au revoir sont désactivés.",
+    "welcomeSaved": "Paramètres de bienvenue enregistrés.",
+    "goodbyeSaved": "Paramètres d’au revoir enregistrés.",
+    "welcomeEmbedSaved": "Embed de bienvenue enregistré.",
+    "goodbyeEmbedSaved": "Embed d’au revoir enregistré.",
+    "welcomeUploaded": "Image de bienvenue envoyée.",
+    "goodbyeUploaded": "Image d’au revoir envoyée.",
+    "welcomeUploadedNote": "Image de bienvenue envoyée. Une copie est conservée dans {where} ; ne supprime pas ce message, le message de bienvenue y charge l’image.",
+    "goodbyeUploadedNote": "Image d’au revoir envoyée. Une copie est conservée dans {where} ; ne supprime pas ce message, le message d’au revoir y charge l’image.",
+    "auditChannel": "le salon du journal d’audit",
+    "welcomeImageRemoved": "Image de bienvenue retirée.",
+    "goodbyeImageRemoved": "Image d’au revoir retirée.",
+    "autoRoleAlready": "Ce rôle est déjà donné à l’arrivée.",
+    "autoRoleSet": "Rôle automatique défini.",
+    "autoRoleNotSet": "Ce rôle n’était pas un rôle automatique.",
+    "autoRoleRemoved": "Rôle automatique retiré.",
+    "delaySaved": "Délai du rôle automatique enregistré.",
+    "logsSaved": "Journaux d’arrivées et de départs enregistrés."
+  },
+  "error": {
+    "colour": "{label} doit être une couleur hexadécimale comme #57F287.",
+    "badLink": "{label} : ce n’est pas un lien valide.",
+    "https": "{label} doit commencer par https://.",
+    "expiredLink": "{label} : ce lien de pièce jointe Discord a expiré. Envoie plutôt le fichier image ci-dessous, ou utilise un lien d’image permanent.",
+    "chooseFile": "Choisis un fichier image à envoyer.",
+    "notImage": "Ce fichier n’est pas une image PNG, JPEG, GIF ou WebP.",
+    "noLogChannel": "{label} : aucun salon de journal principal n’est défini, donc l’image envoyée ne peut être conservée nulle part. Définis-en un sur la page Journaux, ou utilise plutôt un lien d’image. Rien n’a été modifié.",
+    "cannotPost": "{label} : Mewvo n’a pas pu publier l’image dans le salon de journal principal ({channel}). Mewvo y a besoin des permissions Voir les salons, Envoyer des messages et Joindre des fichiers. Rien n’a été modifié."
+  },
+  "warn": {
+    "discordLink": "{label} : les liens de pièces jointes Discord cessent de fonctionner après environ un jour. Pour une image durable, envoie le fichier ci-dessous (Envoyer l’image) ou utilise un hébergeur d’images permanent."
+  }
+}

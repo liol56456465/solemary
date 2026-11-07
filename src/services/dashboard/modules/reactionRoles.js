@@ -10,10 +10,13 @@ import {
 } from '../forms.js';
 import { section, table } from './common.js';
 import { MAX_PANELS_PER_GUILD, PANEL_DESCRIPTION_MAX, PANEL_TITLE_MAX } from '../../reactionRoleService.js';
+import { textFor } from '../language.js';
 
-function messageIdField(form) {
+// Words: src/content/dashboard/<lang>/reactionRoles.json.
+
+function messageIdField(ctx, form) {
     const id = text(form, 'messageId', 25);
-    if (!isSnowflake(id)) throw new InputError('Unknown panel.');
+    if (!isSnowflake(id)) throw new InputError(textFor(ctx).t('reactionRoles.action.unknownPanel'));
     return id;
 }
 
@@ -28,27 +31,29 @@ export default {
 
     render(ctx, { panels }) {
         const g = ctx.guild;
+        const tr = textFor(ctx);
         const canPost = ctx.canEdit && ctx.canAct;
         const create = panels.length >= MAX_PANELS_PER_GUILD
-            ? html`<p class="muted">This server has the maximum of ${MAX_PANELS_PER_GUILD} panels. Delete one to create another.</p>`
+            ? html`<p class="muted">${tr.tx('reactionRoles.create.max', { count: tr.fmtNumber(MAX_PANELS_PER_GUILD) })}</p>`
             : postForm(ctx, 'reaction-roles', 'panel-create', html`<div class="grid">
-${channelPicker(g, 'channelId', null, { label: 'Post in', perms: PERMS.post, optional: false, help: 'The channel where the panel is posted.' })}
-${textInput('title', '', { label: 'Title', max: PANEL_TITLE_MAX, help: 'For example: Pick your colour.' })}
-${textArea('description', '', { label: 'Description', max: PANEL_DESCRIPTION_MAX, rows: 3, help: 'A few words under the title about what the roles are for.' })}
-${rolePicker(g, 'roleIds', [], { label: 'Roles', autoAssign: true, multiple: true, help: 'Up to 25. To pick more than one, hold Ctrl (Cmd on a Mac) while you click.' })}</div>`,
-            { submit: 'Create and post the panel', canEdit: canPost });
+${channelPicker(g, 'channelId', null, { label: tr.t('reactionRoles.create.postIn'), perms: PERMS.post, optional: false, help: tr.t('reactionRoles.create.postInHelp') })}
+${textInput('title', '', { label: tr.t('reactionRoles.create.titleLabel'), max: PANEL_TITLE_MAX, help: tr.t('reactionRoles.create.titleHelp') })}
+${textArea('description', '', { label: tr.t('reactionRoles.create.description'), max: PANEL_DESCRIPTION_MAX, rows: 3, help: tr.t('reactionRoles.create.descriptionHelp') })}
+${rolePicker(g, 'roleIds', [], { label: tr.t('reactionRoles.create.roles'), autoAssign: true, multiple: true, help: tr.t('reactionRoles.create.rolesHelp') })}</div>`,
+            { submit: tr.t('reactionRoles.create.submit'), canEdit: canPost });
         const existing = panels.map((panel) => {
             const roles = Array.isArray(panel.roles) ? panel.roles : Object.values(panel.roles || {});
-            const rows = roles.map((roleId) => [roleName(g, roleId), roleWarnings(g, roleId, { autoAssign: true }).join('; ') || html`<span class="ok">ok</span>`,
-                buttonForm(ctx, 'reaction-roles', 'role-remove', 'Remove', { messageId: panel.messageId, roleId })]);
-            const body = html`<p>In ${channelName(g, panel.channelId)} · message <code>${panel.messageId}</code> · ${roles.length}/25 roles</p>
-${table(['Role', 'Problems', ''], rows, 'No roles.')}
-<div class="row-actions">${postForm(ctx, 'reaction-roles', 'role-add', rolePicker(g, 'roleId', null, { label: 'Add role', optional: false, autoAssign: true }), { submit: 'Add', inline: true, hidden: { messageId: panel.messageId } })}
-${buttonForm(ctx, 'reaction-roles', 'panel-delete', 'Delete panel', { messageId: panel.messageId }, { confirm: 'Delete this panel and its message in Discord?' })}</div>`;
-            return section(`Panel ${panel.messageId}`, body);
+            const rows = roles.map((roleId) => [roleName(g, roleId), roleWarnings(g, roleId, { autoAssign: true }).join('; ') || html`<span class="ok">${tr.t('reactionRoles.panel.ok')}</span>`,
+                buttonForm(ctx, 'reaction-roles', 'role-remove', tr.t('reactionRoles.panel.remove'), { messageId: panel.messageId, roleId })]);
+            const body = html`<p>${tr.tx('reactionRoles.panel.info', { channel: channelName(g, panel.channelId), message: html`<code>${panel.messageId}</code>`, count: tr.fmtNumber(roles.length) })}</p>
+${table([tr.t('reactionRoles.panel.role'), tr.t('reactionRoles.panel.problems'), ''], rows, tr.t('reactionRoles.panel.noRoles'))}
+<div class="row-actions">${postForm(ctx, 'reaction-roles', 'role-add', rolePicker(g, 'roleId', null, { label: tr.t('reactionRoles.panel.addRole'), optional: false, autoAssign: true }), { submit: tr.t('reactionRoles.panel.add'), inline: true, hidden: { messageId: panel.messageId } })}
+${buttonForm(ctx, 'reaction-roles', 'panel-delete', tr.t('reactionRoles.panel.delete'), { messageId: panel.messageId }, { confirm: tr.t('reactionRoles.panel.deleteConfirm') })}</div>`;
+            // Explicit keys: the card ids stay the English slugs in every language.
+            return section(tr.t('reactionRoles.panel.title', { id: panel.messageId }), body, '', { key: `panel-${panel.messageId}` });
         });
-        return html`${section('New panel', create, `You can also do this with /reactroles setup in Discord.${ctx.canAct ? '' : ' To post a panel you need the Administrator permission in this server.'}`, { open: panels.length === 0 })}
-${existing.length ? existing : section('Panels', html`<p class="muted">No reaction role panels yet.</p>`)}`;
+        return html`${section(tr.t('reactionRoles.create.title'), create, `${tr.t('reactionRoles.create.help')}${ctx.canAct ? '' : tr.t('reactionRoles.create.needsAdmin')}`, { key: 'new-panel' })}
+${existing.length ? existing : section(tr.t('reactionRoles.panels.title'), html`<p class="muted">${tr.tx('reactionRoles.panels.empty')}</p>`, '', { key: 'panels' })}`;
     },
 
     actions: {
@@ -56,9 +61,10 @@ ${existing.length ? existing : section('Panels', html`<p class="muted">No reacti
             admin: true,
             async run(ctx, form) {
                 const g = ctx.guild;
-                const channelId = channelField(g, form, 'channelId', { optional: false, label: 'Post in' });
+                const tr = textFor(ctx);
+                const channelId = channelField(g, form, 'channelId', { optional: false, label: tr.t('reactionRoles.create.postIn') });
                 const roleIds = list(form, 'roleIds', { max: 25 }).filter(isSnowflake);
-                if (!roleIds.length) throw new InputError('Choose at least one role.');
+                if (!roleIds.length) throw new InputError(tr.t('reactionRoles.action.chooseRole'));
                 const { message, roles, rejected } = await ctx.services.createReactionRolePanel(ctx.client, g, {
                     channel: g.channels.cache.get(channelId), title: text(form, 'title', PANEL_TITLE_MAX + 1),
                     description: text(form, 'description', PANEL_DESCRIPTION_MAX + 1), roleIds,
@@ -66,35 +72,38 @@ ${existing.length ? existing : section('Panels', html`<p class="muted">No reacti
                 });
                 return {
                     changes: [{ key: `panel.${message.id}`, old: null, new: { channelId, roles: roles.map((r) => r.id) } }],
-                    message: `Panel posted with ${roles.length} role(s).`,
-                    warnings: rejected.length ? [`Skipped: ${rejected.join('; ')}`] : [],
+                    message: tr.tp('reactionRoles.action.posted', roles.length),
+                    warnings: rejected.length ? [tr.t('reactionRoles.action.skipped', { list: rejected.join('; ') })] : [],
                 };
             },
         },
         async 'role-add'(ctx, form) {
-            const messageId = messageIdField(form);
+            const tr = textFor(ctx);
+            const messageId = messageIdField(ctx, form);
             const roleId = text(form, 'roleId', 25);
-            if (!isSnowflake(roleId) || !ctx.guild?.roles?.cache?.get(roleId)) throw new InputError('Role: that role is not in the server.');
+            if (!isSnowflake(roleId) || !ctx.guild?.roles?.cache?.get(roleId)) throw new InputError(tr.t('reactionRoles.action.roleMissing'));
             const before = await ctx.services.getAllReactionRoleMessages(ctx.client, ctx.guildId).then((p) => p.find((x) => x.messageId === messageId));
             const { panel } = await ctx.services.addPanelRole(ctx.client, ctx.guildId, messageId, roleId);
-            return { changes: [{ key: `panel.${messageId}.roles`, old: before?.roles || [], new: panel.roles }], message: 'Role added to the panel.' };
+            return { changes: [{ key: `panel.${messageId}.roles`, old: before?.roles || [], new: panel.roles }], message: tr.t('reactionRoles.action.roleAdded') };
         },
         async 'role-remove'(ctx, form) {
-            const messageId = messageIdField(form);
+            const tr = textFor(ctx);
+            const messageId = messageIdField(ctx, form);
             const roleId = text(form, 'roleId', 25);
-            if (!isSnowflake(roleId)) throw new InputError('Unknown role.');
+            if (!isSnowflake(roleId)) throw new InputError(tr.t('reactionRoles.action.unknownRole'));
             const { panel, deletedPanel } = await ctx.services.removePanelRole(ctx.client, ctx.guildId, messageId, roleId);
             const old = [...(panel?.roles || []), roleId];
             return {
                 changes: [{ key: `panel.${messageId}.roles`, old, new: deletedPanel ? null : panel.roles }],
-                message: deletedPanel ? 'That was the last role: the panel was deleted.' : 'Role removed from the panel.',
+                message: tr.t(deletedPanel ? 'reactionRoles.action.lastRole' : 'reactionRoles.action.roleRemoved'),
             };
         },
         async 'panel-delete'(ctx, form) {
-            const messageId = messageIdField(form);
+            const tr = textFor(ctx);
+            const messageId = messageIdField(ctx, form);
             const { deleted, panel } = await ctx.services.deletePanel(ctx.client, ctx.guildId, messageId, { actorId: ctx.actor.userId, actorTag: `${ctx.actor.username} (dashboard)` });
-            if (!deleted) throw new InputError('That panel no longer exists.');
-            return { changes: [{ key: `panel.${messageId}`, old: panel?.roles || null, new: null }], message: 'Panel deleted.' };
+            if (!deleted) throw new InputError(tr.t('reactionRoles.action.panelGone'));
+            return { changes: [{ key: `panel.${messageId}`, old: panel?.roles || null, new: null }], message: tr.t('reactionRoles.action.panelDeleted') };
         },
     },
 };

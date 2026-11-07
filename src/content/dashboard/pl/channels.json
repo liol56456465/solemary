@@ -1,0 +1,72 @@
+{
+  "page": {
+    "help": "Posprzątaj kanał, usuwając naraz wiele ostatnich wiadomości, albo zablokuj kanał, żeby członkowie przez jakiś czas nie mogli w nim pisać, na przykład podczas fali spamu."
+  },
+  "adminNote": " Aby korzystać z tych narzędzi, potrzebujesz uprawnienia Administrator na tym serwerze.",
+  "field": {
+    "channel": "Kanał",
+    "reason": "Powód",
+    "reasonHelp": "Zapisywany razem z akcją, żeby reszta ekipy wiedziała dlaczego."
+  },
+  "purge": {
+    "title": "Usuń wiadomości",
+    "help": "Usuwa naraz wiele ostatnich wiadomości. Discord nie pozwala na to dla wiadomości starszych niż 14 dni, więc są one pomijane.",
+    "amount": "Liczba wiadomości",
+    "amountHelp": "Od {min} do {max}. Najpierw najnowsze wiadomości.",
+    "fromUser": "Tylko od tego członka (opcjonalnie)",
+    "fromUserHelp": "Przeszukiwanych jest tylko 100 najnowszych wiadomości.",
+    "nothingYet": "Nic nie jest jeszcze usuwane: następna strona pokazuje, co zostanie usunięte, i tam potwierdzasz.",
+    "submit": "Usuń wiadomości…",
+    "badUser": "Tylko od tego członka: to nie jest ID użytkownika. Wpisz nazwę i wybierz członka, użyj „Znajdź członka” albo wklej ID użytkownika (od 17 do 20 cyfr).",
+    "missingPerms": "Mewvo nie ma uprawnień {perms} w #{channel}, więc nie może tam usuwać wiadomości. Nic nie zostało zmienione."
+  },
+  "lock": {
+    "title": "Zablokuj kanał",
+    "help": "Członkowie nadal mogą czytać kanał, ale nie mogą już w nim pisać. Role, które mają własne uprawnienie w tym kanale, na przykład ekipa, nadal mogą. Odblokowanie to cofa: kanał wraca do uprawnień swojej kategorii (folderu, w którym jest).",
+    "submit": "Zablokuj"
+  },
+  "locked": {
+    "title": "Zablokowane kanały ({count})",
+    "category": "Kategoria",
+    "noCategory": "brak",
+    "reasonPlaceholder": "Powód (opcjonalnie)",
+    "unlock": "Odblokuj",
+    "empty": "Żaden kanał nie jest zablokowany.",
+    "help": "Kanały, w których członkowie nie mogą teraz pisać, bo zablokowany jest sam kanał."
+  },
+  "confirm": {
+    "heading": "Potwierdź: usuń wiadomości w #{channel}",
+    "messages": "Wiadomości",
+    "fromUser": {
+      "one": "Do {count} najnowszej wiadomości od {who} (przeszukiwanych jest tylko 100 najnowszych)",
+      "few": "Do {count} najnowszych wiadomości od {who} (przeszukiwanych jest tylko 100 najnowszych)",
+      "many": "Do {count} najnowszych wiadomości od {who} (przeszukiwanych jest tylko 100 najnowszych)",
+      "other": "Do {count} najnowszych wiadomości od {who} (przeszukiwanych jest tylko 100 najnowszych)"
+    },
+    "newest": {
+      "one": "{count} najnowsza",
+      "few": "{count} najnowsze",
+      "many": "{count} najnowszych",
+      "other": "{count} najnowszych"
+    },
+    "effect": "Skutek",
+    "effectText": "Wiadomości są usuwane na zawsze i nie da się ich przywrócić. Wiadomości starsze niż 14 dni są pomijane.",
+    "submit": "Usuń wiadomości"
+  },
+  "action": {
+    "skippedOld": {
+      "one": "{count} wiadomość była starsza niż 14 dni i została pominięta.",
+      "few": "{count} wiadomości były starsze niż 14 dni i zostały pominięte.",
+      "many": "{count} wiadomości było starszych niż 14 dni i zostało pominiętych.",
+      "other": "{count} wiadomości było starszych niż 14 dni i zostało pominiętych."
+    },
+    "deleted": {
+      "one": "Usunięto {count} wiadomość w #{channel}.",
+      "few": "Usunięto {count} wiadomości w #{channel}.",
+      "many": "Usunięto {count} wiadomości w #{channel}.",
+      "other": "Usunięto {count} wiadomości w #{channel}."
+    },
+    "locked": "#{channel} jest zablokowany.",
+    "unlocked": "#{channel} jest odblokowany."
+  }
+}

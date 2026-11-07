@@ -1,0 +1,59 @@
+{
+  "page": {
+    "help": "Mewvo annota in un canale log quello che succede nel server: messaggi eliminati e modificati, membri che entrano ed escono, modifiche ai ruoli e altro. Lo staff può ricontrollare più tardi. Puoi cambiarlo anche con /logging in Discord. L'elenco delle sanzioni (il log di moderazione) si imposta in Sanzioni e ricorsi."
+  },
+  "modLog": {
+    "title": "Log di moderazione",
+    "text": "Il log di moderazione elenca ogni avvertimento, mute, kick e ban. Va in {channel}. Puoi {change}. I log dei ticket si impostano in {tickets}.",
+    "change": "cambiarlo in Sanzioni e ricorsi",
+    "tickets": "Ticket e modmail"
+  },
+  "channels": {
+    "title": "Canali",
+    "help": "Dove va ogni tipo di log. Scegliere un canale attiva il logging.",
+    "audit": "Canale log principale (tutto il resto)",
+    "applications": "Candidature",
+    "reports": "Segnalazioni",
+    "submit": "Salva i canali"
+  },
+  "events": {
+    "title": "Eventi",
+    "help": "Scegli cosa registrare. Apri un gruppo per vederne gli eventi. Togliendo la spunta all'intero gruppo si disattivano tutti i suoi eventi.",
+    "count": "{on}/{total} eventi attivi",
+    "categoryOff": "categoria disattivata",
+    "whole": "{category} (intera categoria)",
+    "submit": "Salva gli eventi"
+  },
+  "ignore": {
+    "title": "Liste di esclusione",
+    "help": "Non viene registrato nulla da questi canali (e dai loro thread), dai membri con questi ruoli o da questi membri. Utile per i canali dei bot o le aree dello staff.",
+    "type": "Tipo",
+    "ignored": "Escluso",
+    "empty": "Non è escluso nulla.",
+    "typeChannel": "canale",
+    "typeRole": "ruolo",
+    "typeUser": "utente",
+    "remove": "Rimuovi",
+    "add": "Aggiungi",
+    "channel": "Escludi un canale",
+    "role": "Escludi un ruolo",
+    "member": "Escludi un membro"
+  },
+  "action": {
+    "label": "Logging",
+    "on": "Il logging ora è attivo.",
+    "off": "Il logging ora è disattivato.",
+    "channelsSaved": "Canali log salvati.",
+    "eventsSaved": "Logging degli eventi salvato.",
+    "channelLabel": "Canale",
+    "userIdLabel": "ID utente",
+    "roleMissing": "Ruolo: quel ruolo non è nel server.",
+    "already": "Già escluso.",
+    "ignoringChannel": "Quel canale ora è escluso dai log.",
+    "ignoringRole": "Quel ruolo ora è escluso dai log.",
+    "ignoringUser": "Quell'utente ora è escluso dai log.",
+    "badId": "Non è un ID valido (un numero lungo).",
+    "notListed": "Non era nell'elenco.",
+    "removed": "Rimosso dall'elenco di esclusione."
+  }
+}
