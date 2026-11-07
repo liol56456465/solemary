@@ -49,7 +49,7 @@
   "warn": {
     "channelGone": "channel {id} no longer exists",
     "cannotCheck": "cannot check my permissions here",
-    "missingPerms": "I am missing {perms} in #{channel}",
+    "missingPerms": "I am missing {perms} in #{channel}. To fix it, allow them for Mewvo's role in Edit Channel → Permissions, or pick another channel",
     "roleGone": "role {id} no longer exists",
     "everyone": "@everyone cannot be used",
     "managed": "@{role} is managed by an integration or bot",

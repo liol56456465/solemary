@@ -1,8 +1,12 @@
 // helpPages.js: two pages for people new to running a Discord server.
 //   /dashboard/help   "Words explained": the Discord and Mewvo words the dashboard uses.
-//   /dashboard/setup  the Getting started steps (overview.js gettingStarted), one at a time.
+//   /dashboard/setup  the Getting started steps (overview.js gettingStarted), one at a time, each
+//                     with its state and a small form for its one setting (setupForms.js).
 
 import { html, layout, path, raw } from './html.js';
+import { textFor } from './language.js';
+import { permissionsList } from './overview.js';
+import { setupStepForm } from './setupForms.js';
 
 /** The words, in the order someone new meets them. [term, explanation, optional page link]. */
 export const GLOSSARY = Object.freeze([
@@ -61,16 +65,41 @@ ${GLOSSARY.map((g) => html`<section class="plain-section"><h2>${g.group}</h2><dl
     return layout({ title: 'Words explained', active: 'help', session, access, moduleStates, body });
 }
 
-/** The step to show: 1-based ?step=, else the first open one, else 1. */
+/** The step to show: 1-based ?step= or a step key (?step=permissions), else the first open one, else 1. */
 export function stepNumber(query, steps) {
-    const n = Number.parseInt(String(query?.step ?? ''), 10);
+    const raw = String(query?.step ?? '');
+    const byKey = steps.findIndex((s) => s.key && s.key === raw);
+    if (byKey !== -1) return byKey + 1;
+    const n = /^\d{1,3}$/.test(raw) ? Number.parseInt(raw, 10) : NaN;
     if (Number.isInteger(n) && n >= 1 && n <= steps.length) return n;
     const open = steps.findIndex((s) => !s.done);
     return open === -1 ? 1 : open + 1;
 }
 
-/** One setup step at a time; `steps` is the Getting started checklist, or null when unreadable. */
-export function setupPage({ session, access = null, moduleStates = {}, steps, query = {} }) {
+/**
+ * The step's own part: the permission list (read-only), or a small form for its one setting
+ * (setupForms.js, posting to the module's save route), or only the link to its page.
+ */
+function stepBody(step, { ctx, forms }) {
+    if (step.key === 'permissions') {
+        return html`${permissionsList(step.report || null, textFor(ctx || {}))}
+<p class="muted">Changed something in Discord? <a href="${path('/setup?step=permissions')}">Check again</a>.</p>`;
+    }
+    const form = ctx ? setupStepForm(ctx, step, forms) : null;
+    if (!form) {
+        return html`<p>${step.done ? html`<b class="ok-text">Done.</b> You can change it on its page.` : 'Not set up yet. This one has a few settings, so it opens its own page.'}</p>
+<p><a class="btn primary" href="${step.href}">${step.done ? 'Open this setting' : 'Set this up'}</a></p>`;
+    }
+    return html`<p>${step.done ? html`<b class="ok-text">Done.</b> You can change it here.` : 'Not set up yet. Pick it here and save.'}</p>
+${form}
+<p class="muted">More settings for this: <a href="${step.href}">open its page</a>.</p>`;
+}
+
+/**
+ * One setup step at a time; `steps` is the Getting started checklist, or null when unreadable.
+ * `ctx` + `forms` (routes.js: the module context and setupStepData) give the step its form.
+ */
+export function setupPage({ session, access = null, moduleStates = {}, steps, query = {}, ctx = null, forms = null, flash = null }) {
     if (!steps) {
         const body = html`<header class="page-head"><h1>Setup step by step</h1></header><p class="error" role="alert">The setup steps could not be loaded just now. Reload the page in a minute.</p>`;
         return layout({ title: 'Setup step by step', active: 'setup', session, access, moduleStates, body });
@@ -81,9 +110,10 @@ export function setupPage({ session, access = null, moduleStates = {}, steps, qu
     const link = (k, text) => html`<a class="btn" href="${path(`/setup?step=${k}`)}">${text}</a>`;
     const body = html`<header class="page-head"><h1>Setup step by step</h1>
 <p>${done} of ${steps.length} steps done. Go through them in order, or skip any you do not need. You can come back here at any time from the sidebar.</p></header>
+${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 <section class="plain-section setup-step"><p class="muted">Step ${n} of ${steps.length}</p><h2>${step.label}</h2><p>${step.hint}</p>
-<p>${step.done ? html`<b class="ok-text">Done.</b> You can change it on its page.` : 'Not set up yet.'}</p>
-<p class="setup-nav">${n > 1 ? link(n - 1, 'Back') : ''} <a class="btn primary" href="${step.href}">${step.done ? 'Open this setting' : 'Set this up'}</a> ${n < steps.length ? link(n + 1, step.done ? 'Next step' : 'Skip for now') : html`<a class="btn" href="${path('/overview')}">Finish</a>`}</p></section>
+${stepBody(step, { ctx, forms })}
+<p class="setup-nav">${n > 1 ? link(n - 1, 'Back') : ''} ${n < steps.length ? link(n + 1, step.done ? 'Next step' : 'Skip for now') : html`<a class="btn" href="${path('/overview')}">Finish</a>`}</p></section>
 <section class="plain-section"><h2>All steps</h2><ol class="setup-all">${steps.map((s, i) => html`<li><a href="${path(`/setup?step=${i + 1}`)}"${i + 1 === n ? raw(' aria-current="step"') : ''}>${s.label}</a>${s.done ? ' (done)' : ''}</li>`)}</ol>
 <p class="muted">New to these words? <a href="${path('/help')}">Words explained</a>.</p></section>`;
     return layout({ title: 'Setup step by step', active: 'setup', session, access, moduleStates, body });

@@ -50,7 +50,7 @@
   "warn": {
     "channelGone": "el canal {id} ya no existe",
     "cannotCheck": "no puedo comprobar mis permisos aquí",
-    "missingPerms": "me falta {perms} en #{channel}",
+    "missingPerms": "me falta {perms} en #{channel}. Para arreglarlo, permíteselos al rol de Mewvo en Editar canal → Permisos, o elige otro canal",
     "roleGone": "el rol {id} ya no existe",
     "everyone": "no se puede usar @everyone",
     "managed": "@{role} lo gestiona una integración o un bot",

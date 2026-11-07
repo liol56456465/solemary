@@ -1667,7 +1667,7 @@ test('channel tools: every action is Administrator-only; an OWNER_IDS user witho
     }
     const owner = await setup({ userId: OWNER });
     const page = await get(owner, 'channels');
-    assert.match(page.body, /need the Administrator permission in the main server/);
+    assert.match(page.body, /need the Administrator permission in this server/);
     assert.ok(!page.body.includes('>Delete messages<'), 'no purge button for an owner');
 });
 
@@ -1976,7 +1976,7 @@ test('messages: a channel where the bot lacks a permission is refused clearly, n
     assert.equal(h.calls.filter((c) => c.name === 'postBotMessage').length, 1);
     const res = await post(h, 'messages', 'send', { channelId: TEXT, content: 'hi', title: 'Box' });
     assert.equal(res.statusCode, 400);
-    assert.match(res.body, /I am missing Embed Links in #general\. Nothing was posted\./);
+    assert.match(res.body, /I am missing Embed Links in #general\.[^<]*Nothing was posted\./);
     assert.match(res.body, /href="\/dashboard\/fix-permissions\?channel=500000000000000001&amp;need=EmbedLinks">Fix permissions<\/a>/);
     assert.equal(h.calls.filter((c) => c.name === 'postBotMessage').length, 1, 'the embed post was not sent');
 
@@ -3633,4 +3633,28 @@ test('End a poll: Mewvo\'s open polls listed (escaped) with an End button each; 
     const failing = await setup();
     failing.svc.openPollsFor = async () => { throw new Error('db down'); };
     assert.match((await get(failing, 'messages')).body, /The open polls could not be loaded/);
+});
+
+test('setup step forms: the module save route returns to the step (back=setup&step=key); a bad step key is dropped', async () => {
+    const h = await setup();
+    const res = await post(h, 'automod', 'channels', { reviewChannelId: TEXT, alertsChannelId: '', back: 'setup', step: 'review' });
+    assert.equal(res.redirectedTo, '/dashboard/setup?step=review');
+    const odd = await post(h, 'automod', 'channels', { reviewChannelId: TEXT, alertsChannelId: '', back: 'setup', step: '../owner' });
+    assert.equal(odd.redirectedTo, '/dashboard/setup');
+    const page = await run(h, h.d.setup, { method: 'GET', headers: { cookie: h.cookie }, query: { step: 'review' } });
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /action="\/dashboard\/automod\/channels"/, 'the review step has its form');
+
+    // A one-field post (what the setup step sends) changes only that field; the rest stays as stored.
+    const p = await setup();
+    const patches = () => p.calls.filter((c) => c.name === 'updateSettings').map((c) => Object.keys(c.args[1]));
+    assert.equal((await post(p, 'enforcement', 'channels', { modLogChannelId: TEXT, back: 'setup', step: 'modLog' })).redirectedTo, '/dashboard/setup?step=modLog');
+    assert.equal((await post(p, 'automod', 'channels', { alertsChannelId: TEXT, back: 'setup', step: 'alerts' })).redirectedTo, '/dashboard/setup?step=alerts');
+    assert.equal((await post(p, 'enforcement', 'roles', { mutedRoleId: '', back: 'setup', step: 'muted' })).statusCode, 303);
+    for (const keys of patches()) assert.ok(keys.length === 1 && ['modLogChannelId', 'alertsChannelId', 'mutedRoleId'].includes(keys[0]) || keys.length === 0, `only the sent field: ${keys}`);
+    assert.ok(!patches().flat().includes('warnRoleIds') && !patches().flat().includes('evidenceChannelId') && !patches().flat().includes('reviewChannelId'));
+    assert.equal((await post(p, 'logging', 'channels', { audit: TEXT })).statusCode, 303);
+    assert.deepEqual(p.calls.filter((c) => c.name === 'setLogChannel').map((c) => c.args[0]), ['audit'], 'the other log channels are not touched');
+    assert.equal((await post(p, 'birthdays', 'settings', { channelId: TEXT })).statusCode, 303);
+    assert.deepEqual(Object.keys(p.calls.find((c) => c.name === 'updateBirthdaySettings').args[0]), ['channelId']);
 });

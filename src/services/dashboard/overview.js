@@ -19,6 +19,9 @@ import { currentText, dashboardText } from './language.js';
 import { moduleEntries, setupByModule } from './modulesPage.js';
 import { valueText } from './audit.js';
 import { allows } from './permissions.js';
+import { botPermissionReport, rolesToCheck } from './botPermissions.js';
+import { listPostFailures } from '../automod/postFailures.js';
+import { getAppealPanelPosting } from '../enforcement/appealPanelService.js';
 
 const PENDING_APPEALS_CAP = 100;
 
@@ -73,6 +76,8 @@ export const defaultOverviewData = {
     findMutedRole,
     getGuildConfig: (client, guildId) => getGuildConfig(client, guildId),
     getWelcomeConfig: (client, guildId) => getWelcomeConfig(client, guildId),
+    getAppealPanelPosting,
+    listPostFailures: (guildId, now) => listPostFailures(guildId, now),
 };
 
 /** undefined when the source failed (shown as "unavailable"). */
@@ -106,36 +111,68 @@ export function moduleStatesFrom(config, welcome, extra = {}) {
 }
 
 /**
+ * True when this is the home (main) server and a support server is configured: only then do
+ * the support-server steps (banned role, appeal panels) apply.
+ */
+export function hasSupportServer(guildId, env = process.env) {
+    const main = guildIdFor('main', env);
+    return Boolean(guildId && main && guildId === main && guildIdFor('support', env));
+}
+
+/** The moderator role id from the guild config (an id, or { id } from older configs). */
+const modRoleIdOf = (value) => (value && typeof value === 'object' ? value.id || null : value || null);
+
+/**
  * The checklist of things not set up yet: [{ key, label, done, href, hint }], label and hint in the
  * request's language (overview.setup.<key>; `tr` overrides).
+ *   permissions   botPermissionReport() result; null/undefined (not checkable) leaves the step out
+ *   appealPanel   the last appeal panel posting, null = never; undefined (unreadable) leaves it out
+ *   supportServer hasSupportServer(): without it the banned role and appeal panel steps are left out
  */
-export function gettingStarted({ config, welcome, settings, mutedRole }, tr = currentText()) {
+export function gettingStarted({ config, welcome, settings, mutedRole, permissions, appealPanel, supportServer = false }, tr = currentText()) {
     const fallback = settings.modLogChannelId ? ` ${tr.t('overview.setup.fallback')}` : '';
     const steps = [
+        ...(permissions ? [['permissions', Boolean(permissions.ok), '/setup?step=permissions']] : []),
         ['modLog', Boolean(settings.modLogChannelId), '/enforcement'],
+        ['logChannel', Boolean(config?.logging?.channels?.audit), '/logging'],
+        ['modRole', Boolean(modRoleIdOf(config?.modRole)), '/commands'],
         ['review', Boolean(settings.reviewChannelId), '/automod', fallback],
         ['alerts', Boolean(settings.alertsChannelId), '/automod', fallback],
         ['muted', Boolean(settings.mutedRoleId || mutedRole), '/enforcement'],
         ['appeals', Boolean(settings.appealsCategoryId || config?.ticketCategoryId), '/enforcement'],
+        ...(supportServer && appealPanel !== undefined ? [['appealPanel', Boolean(appealPanel), '/enforcement']] : []),
         ['ticketCategory', Boolean(config?.ticketCategoryId), '/tickets'],
         ['ticketStaff', Boolean(config?.ticketStaffRoleId), '/tickets'],
         ['welcome', Boolean(welcome?.enabled && welcome?.channelId), '/welcome'],
         ['verification', Boolean(config?.verification?.enabled), '/verification'],
         ['birthdays', Boolean(config?.birthdayChannelId), '/birthdays'],
-        ['bannedRole', Boolean(settings.bannedRoleId), '/support'],
+        ...(supportServer ? [['bannedRole', Boolean(settings.bannedRoleId), '/support']] : []),
     ];
     return steps.map(([key, done, href, more = '']) => ({
         key, label: tr.t(`overview.setup.${key}.label`), done, href: path(href), hint: `${tr.t(`overview.setup.${key}.hint`)}${more}`,
+        ...(key === 'permissions' ? { report: permissions } : {}),
     }));
 }
 
-/** The guild settings the checklist looks at (mod log, review, alerts, muted role, appeals category, banned role). */
+/** The guild settings the checklist looks at (mod log, review, alerts, muted role, appeals category, banned role, warning roles). */
 function setupSettings() {
     const settings = {};
-    for (const key of ['modLogChannelId', 'reviewChannelId', 'alertsChannelId', 'mutedRoleId', 'appealsCategoryId', 'bannedRoleId']) {
+    for (const key of ['modLogChannelId', 'reviewChannelId', 'alertsChannelId', 'mutedRoleId', 'appealsCategoryId', 'bannedRoleId', 'warnRoleIds']) {
         settings[key] = getSetting(guildIdFor(SETTINGS.find((e) => e.key === key).guild), key);
     }
     return settings;
+}
+
+/** Mewvo's permissions for the features that are on (botPermissions.js); null = cannot be checked. */
+function permissionsFor(guild, { config, welcome, settings, mutedRole }) {
+    try {
+        return botPermissionReport(guild, {
+            moduleStates: config ? moduleStatesFrom(config, welcome) : {},
+            roles: rolesToCheck(guild, { mutedRoleId: settings.mutedRoleId, mutedRole, warnRoleIds: settings.warnRoleIds }),
+        });
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -144,20 +181,23 @@ function setupSettings() {
  */
 export async function collectChecklist({ client, guildId, data = defaultOverviewData }) {
     const guild = client.guilds?.cache?.get(guildId) || null;
-    const [config, welcome, mutedRole] = await Promise.all([
+    const [config, welcome, mutedRole, appealPanel] = await Promise.all([
         attempt(() => data.getGuildConfig(client, guildId)),
         attempt(() => data.getWelcomeConfig(client, guildId)),
         attempt(() => (guild ? data.findMutedRole(guild) : null)),
+        attempt(() => data.getAppealPanelPosting(guildId)),
     ]);
     if (config === undefined) return null;
-    return gettingStarted({ config, welcome, settings: setupSettings(), mutedRole });
+    const settings = setupSettings();
+    const permissions = permissionsFor(guild, { config, welcome, settings, mutedRole });
+    return gettingStarted({ config, welcome, settings, mutedRole, permissions, appealPanel, supportServer: hasSupportServer(guildId) });
 }
 
 /** Everything the Overview page shows. `data` is injectable for tests. */
 export async function collectOverview({ client, guildId, data = defaultOverviewData, now = Date.now() }) {
     const guild = client.guilds?.cache?.get(guildId) || null;
     const dbStatus = client.db?.getStatus?.() || null;
-    const [config, welcome, openTickets, sanctions, pending, recent, lockdown, mutedRole, perDay] = await Promise.all([
+    const [config, welcome, openTickets, sanctions, pending, recent, lockdown, mutedRole, perDay, appealPanel] = await Promise.all([
         attempt(() => data.getGuildConfig(client, guildId)),
         attempt(() => data.getWelcomeConfig(client, guildId)),
         attempt(() => data.countOpenTickets(guildId)),
@@ -167,7 +207,9 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
         attempt(() => data.getLockdownState(guildId)),
         attempt(() => (guild ? data.findMutedRole(guild) : null)),
         attempt(() => data.casesPerDay(guildId, 7)),
+        attempt(() => data.getAppealPanelPosting(guildId)),
     ]);
+    const postFailures = (await attempt(() => data.listPostFailures(guildId, now))) || [];
     // Joined this week: only when the member cache holds (nearly) everyone; otherwise unknown.
     const members = guild?.members?.cache;
     const joinedThisWeek = members && guild.memberCount && members.size >= guild.memberCount * 0.9
@@ -178,6 +220,7 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
         ? [...presences.values()].filter((p) => p.status && p.status !== 'offline').length
         : null;
     const settings = setupSettings();
+    const permissions = permissionsFor(guild, { config, welcome, settings, mutedRole });
     return {
         now,
         bot: { ready: Boolean(client.isReady?.()), ping: Number.isFinite(client.ws?.ping) && client.ws.ping >= 0 ? Math.round(client.ws.ping) : null },
@@ -192,7 +235,11 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
         pendingList: pending === undefined ? undefined : pending.slice(0, 5),
         lockdown: lockdown === undefined ? undefined : { active: Boolean(lockdown?.active), since: lockdown?.startedAt || lockdown?.since || null },
         recent: recent?.rows,
-        checklist: gettingStarted({ config, welcome, settings, mutedRole }),
+        checklist: gettingStarted({ config, welcome, settings, mutedRole, permissions, appealPanel, supportServer: hasSupportServer(guildId) }),
+        permissions,
+        postFailures: Array.isArray(postFailures)
+            ? postFailures.map((f) => ({ ...f, channelName: guild?.channels?.cache?.get(f.channelId)?.name || f.channelName || null }))
+            : [],
         moduleStates: moduleStatesFrom(config, welcome),
     };
 }
@@ -246,6 +293,53 @@ function recentFeed(recent, tr) {
 }
 
 /**
+ * "Mewvo's permissions" (botPermissions.js report): every server permission the features that are on
+ * need, ✓ or missing with one line on how to fix it, then the roles Mewvo must sit above.
+ * Read-only. Also the first step of Setup step by step (helpPages.js).
+ */
+export function permissionsList(report, tr = currentText()) {
+    const t = (key, params) => tr.t(`overview.perms.${key}`, params);
+    if (!report) return html`<p class="muted">${t('cannotCheck')}</p>`;
+    const botRole = report.botRole || t('botRoleFallback');
+    const name = (perm) => t(`perm.${perm}`);
+    const features = (keys) => keys.map((key) => t(`feature.${key}`)).join(', ');
+    const missing = report.permissions.filter((p) => !p.ok);
+    const granted = report.permissions.filter((p) => p.ok);
+    const roleRows = report.roles.map((r) => html`<li class="perm-row is-missing">${icon('warn')}<span class="checklist-text"><b>${t('roleAbove', { role: r.name })}</b><span class="checklist-hint">${t('roleAboveFix', { botRole, role: r.name })}</span></span></li>`);
+    const row = (p) => html`<li class="perm-row${p.ok ? ' is-ok' : ' is-missing'}">${icon(p.ok ? 'check' : 'warn')}<span class="checklist-text"><b>${name(p.name)}</b> <span class="${p.ok ? 'ok-text' : 'bad'}">${t(p.ok ? 'on' : 'missing')}</span><span class="checklist-hint">${p.ok
+        ? t('usedBy', { list: features(p.features) })
+        : t('fix', { role: botRole, perm: name(p.name), list: features(p.features) })}</span></span></li>`;
+    const summary = report.ok
+        ? html`<p class="ok-text">${t('allOk')}</p>`
+        : html`<p class="bad">${t('someMissing', { count: tr.fmtNumber(missing.length + report.roles.length) })}</p>`;
+    const intro = html`<p class="muted">${t('intro')}</p>`;
+    // The problems stay in view; what is already on folds away.
+    const fine = granted.length
+        ? html`<details class="sub" data-key="bot-perms"><summary>${t('showList')}</summary>${report.ok ? intro : ''}<ul class="checklist perm-list">${granted.map(row)}</ul></details>`
+        : '';
+    return report.ok ? html`${summary}${fine}` : html`${summary}${intro}<ul class="checklist perm-list">${roleRows}${missing.map(row)}</ul>${fine}`;
+}
+
+/** The fix page for a failed staff post's purpose (where its channel is picked). */
+const FAILURE_PAGE = { modlog: '/enforcement', alerts: '/automod', review: '/automod' };
+
+/** "Mewvo couldn't post to #mod-log: missing Send Messages (3 times today)" lines for Needs you. */
+function postFailureItems(failures, tr) {
+    const t = (key, params) => tr.t(`overview.needs.postFailed.${key}`, params);
+    return (failures || []).slice(0, 5).map((f) => {
+        const purpose = f.purpose === 'alerts' ? 'alerts' : 'modlog';
+        const channel = f.channelName || f.channelId || '';
+        const perms = (f.missing || []).map((perm) => tr.t(`overview.perms.perm.${perm}`)).join(', ');
+        const title = f.reason === 'notSet' ? t(`notSet.${purpose}`)
+            : f.reason === 'missing' ? t('missing', { channel })
+                : f.reason === 'perms' && perms ? t('perms', { channel, perms })
+                    : t('refused', { channel });
+        const fix = f.reason === 'perms' ? t('fixPerms') : f.reason === 'other' ? t('fixOther') : t('fixChannel');
+        return html`<li><span class="what"><b>${title}</b><small>${tr.tp('overview.needs.postFailed.times', f.count)} ${fix}</small></span><span></span><a class="btn small" href="${path(FAILURE_PAGE[f.purpose] || '/enforcement')}">${t('fixIt')}<span class="sr"> ${title}</span></a></li>`;
+    });
+}
+
+/**
  * "Needs you": what waits for an admin, oldest first, each with one button: pending appeals,
  * open tickets, an active raid lockdown, and the next open setup steps.
  */
@@ -259,6 +353,8 @@ function needsYou(o, { csrf = '', canEndLockdown = false, limited = false, setup
             : limited ? '' : html`<a class="btn primary small" href="${path('/automod')}">${navLabel({ key: 'automod' }, tr)}</a>`;
         items.push(html`<li><span class="what"><b>${t('lockdown')}</b><small>${o.lockdown.since ? t('since', { date: tr.fmtDateTime(o.lockdown.since) }) : t('heldAtDoor')}</small></span><span></span>${endButton}</li>`);
     }
+    // Staff posts Mewvo could not make today (postFailures.js); fixing them is Administrator work.
+    if (!limited) items.push(...postFailureItems(o.postFailures, tr));
     const TYPED = new Set(['ban', 'kick', 'mute', 'warn']);
     for (const appeal of o.pendingList || []) {
         const title = TYPED.has(appeal.type) ? t(`typedAppealFrom.${appeal.type}`, { name: appeal.username }) : t('appealFrom', { name: appeal.username });
@@ -309,7 +405,8 @@ export function overviewPage({ session, access = null, moduleStates = {}, overvi
     const pendingText = o.pendingAppeals >= PENDING_APPEALS_CAP ? `${tr.fmtNumber(PENDING_APPEALS_CAP)}+` : tr.fmtNumber(o.pendingAppeals);
     const server = session?.server;
     const name = o.guild?.name || server?.name || t('yourServer');
-    const waiting = (o.pendingAppeals || 0) + (o.openTickets || 0) + (o.lockdown?.active ? 1 : 0);
+    const failures = limited ? 0 : Math.min(5, (o.postFailures || []).length);
+    const waiting = (o.pendingAppeals || 0) + (o.openTickets || 0) + (o.lockdown?.active ? 1 : 0) + failures;
     const healthy = o.bot.ready && (!o.database || o.database.connected);
     const status = !o.bot.ready ? t('status.offline')
         : o.database && !o.database.connected ? t('status.dbDown')
@@ -345,14 +442,21 @@ ${done.length ? html`<p class="muted">${t('start.done', { list: done.map((item) 
     const quick = html`<ul class="quick-links">${links.map((item) => html`<li><a href="${path(`/${item.key}`)}">${navLabel(item, tr)}</a><span>${t(`quick.${item.key}`)}</span></li>`)}</ul>`;
     // Rows pair cards of similar height: Needs you + the note, Getting started + the links, the chart + the
     // latest cases. The grid fills holes (dense), so narrow cards still pair up on two columns.
+    // Mewvo's permissions (Administrator levels only: moderators cannot change roles): first when
+    // something is missing, else further down.
+    const permsMissing = o.permissions ? o.permissions.missing.length + o.permissions.roles.length : 0;
+    const permsCard = limited || o.permissions === undefined ? ''
+        : card(t('perms.title'), permissionsList(o.permissions, tr), { note: permsMissing ? tr.fmtNumber(permsMissing) : null, className: 'ov-wide bot-perms' });
     const body = html`${head}
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${stats}
 <div class="ov-grid">
+${permsMissing ? permsCard : ''}
 ${card(t('cards.needs'), needsYou(o, { csrf: session?.csrf, canEndLockdown: Boolean(editEnabled && access?.canAct), limited, setupSteps: false }, tr), { note: waiting ? tr.fmtNumber(waiting) : null, className: 'ov-wide needs-you' })}
 ${card(t('cards.note'), html`${note}${noteForm}`)}
 ${limited || !todo.length ? '' : card(t('cards.start'), steps, { className: 'ov-wide getting-started' })}
 ${links.length ? card(t('cards.goTo'), quick, { className: 'ov-links' }) : ''}
+${permsMissing ? '' : permsCard}
 ${card(t('cards.week'), weekChart(o.week, tr))}
 ${card(t('cards.latest'), recentFeed(o.recent, tr), { link: { href: path('/cases'), text: t('cards.allCases') }, className: 'ov-wide' })}
 ${limited ? '' : recentChangesSection(recentChanges, tr)}

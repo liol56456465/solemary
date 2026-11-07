@@ -21,6 +21,7 @@ import { endTempRoles } from '../members/tempRoleService.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { ACTION_KINDS, channelPurposeFor, formatModLogLine, resolveChannelId } from '../automod/channelRouting.js';
 import { alertWatched } from './watchlistService.js';
+import { clearPostFailures, recordPostFailure, recordSendError } from '../automod/postFailures.js';
 
 export const REQUIRED_BOT_PERMISSIONS = [
     ['BanMembers', 'Ban Members'],
@@ -193,11 +194,17 @@ const MOD_LOG_TITLES = {
 export async function postModLog(client, action, fields, { title = null, files = [], description = null, footer = null } = {}) {
     const purpose = channelPurposeFor(action);
     const channelId = resolveChannelId(purpose);
-    if (!channelId) return;
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
+    const guildId = enforcementConfig.mainGuildId;
+    // Not posting is recorded (postFailures.js), so the dashboard Overview can show it.
+    if (!channelId) {
+        recordPostFailure({ guildId, purpose, reason: 'notSet' });
+        return;
+    }
+    const guild = client.guilds.cache.get(guildId);
     const channel = guild && (guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null));
     if (!channel?.isTextBased?.()) {
         logger.warn(`Staff ${purpose} channel ${channelId} is not a text channel in the main server`);
+        if (guild) recordPostFailure({ guildId, purpose, channelId, reason: 'missing' });
         return;
     }
     const [defaultTitle, color] = MOD_LOG_TITLES[action] || [action, 'primary'];
@@ -208,7 +215,10 @@ export async function postModLog(client, action, fields, { title = null, files =
         embeds: [embed],
         files,
         allowedMentions: { parse: [] },
-    }).catch((error) => logger.warn(`Staff ${purpose} post failed: ${error.message}`));
+    }).then(() => clearPostFailures(guildId, purpose), (error) => {
+        logger.warn(`Staff ${purpose} post failed: ${error.message}`);
+        recordSendError({ guildId, purpose, channel, error, files: files.length > 0 });
+    });
 }
 
 export async function logEnforcement(client, guildId, action, { record = null, target, moderatorLabel, extra = [] }) {

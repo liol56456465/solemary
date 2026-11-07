@@ -50,7 +50,7 @@ ${channelPicker(g, 'categoryId', null, { label: 'In category', kinds: ['category
             { submit: 'Create counter', canEdit: ctx.canEdit && ctx.canAct })
             : html`<p class="muted">Every kind of counter is already in use. You can have one of each.</p>`;
         return html`${section('Server stats counters', html`${table(['ID', 'Channel', 'Type', ''], rows, 'No counters yet.')}
-<h3>New counter</h3>${create}`, `Mewvo makes the channel for you. You can also do this with /serverstats create in Discord.${ctx.canAct ? '' : ' To create channels you need the Administrator permission in the main server.'}`)}
+<h3>New counter</h3>${create}`, `Mewvo makes the channel for you. You can also do this with /serverstats create in Discord.${ctx.canAct ? '' : ' To create channels you need the Administrator permission in this server.'}`)}
 ${section('Counting game', countingBody, 'Members take turns writing the next number. Starting or restarting the game here resets the count and the leaderboard. You can also do this with /count setup in Discord.')}`;
     },
 

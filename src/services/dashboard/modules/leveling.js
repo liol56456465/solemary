@@ -109,7 +109,7 @@ ${postForm(ctx, 'leveling', 'reward-mode', selectInput('rewardMode', rewardModeO
             ? postForm(ctx, 'leveling', 'member', html`<div class="grid">${html`<label>Member (user ID)<input name="userId" inputmode="numeric" maxlength="20"><span class="hint">The long number that identifies a member. In Discord, turn on Developer Mode, right-click the member and pick Copy User ID.</span></label>`}
 ${selectInput('op', 'add', [['add', 'Add levels'], ['remove', 'Remove levels'], ['set', 'Set level']], { label: 'What to do' })}
 ${numberInput('levels', '', { label: 'Levels', min: 0, max: MAX_LEVEL })}</div>`, { submit: 'Apply', canEdit: ctx.canEdit && ctx.canAct })
-            : html`<p class="muted">To change a member's level you need the Administrator permission in the main server.</p>`;
+            : html`<p class="muted">To change a member's level you need the Administrator permission in this server.</p>`;
         const catEdit = ctx.canEdit && ctx.canAct;
         const catNow = cat
             ? html`<div class="cat-now"><img src="/img/cat/${cat.image}" width="96" height="96" alt="${cat.name}, a ${cat.stage.name.toLowerCase()}, looking ${cat.mood}"><p>${cat.sentence} Stage: ${cat.stage.name}. ${Number(cat.total).toLocaleString('en-US')} messages counted.</p></div>`
@@ -120,7 +120,7 @@ ${numberInput('levels', '', { label: 'Levels', min: 0, max: MAX_LEVEL })}</div>`
         const catAnnounce = toggleForm(ctx, 'leveling', 'cat-announce', registryValue(ctx, 'catAnnounce') !== false, {
             label: 'Post in the level-up channel when the cat grows', canEdit: catEdit,
         });
-        const catPart = html`${catNow}${catName}${catAnnounce}${ctx.canAct ? '' : html`<p class="muted">You need the Administrator permission in the main server to change the cat.</p>`}`;
+        const catPart = html`${catNow}${catName}${catAnnounce}${ctx.canAct ? '' : html`<p class="muted">You need the Administrator permission in this server to change the cat.</p>`}`;
         // The on/off switch is in the page header (pages.js moduleSettingsPage).
         // v6: cards grouped by topic (common.js topic/section).
         return html`${topic('Earning XP', 'How fast members level up, and what Mewvo posts when they do.', html`${section('XP and messages', settings, 'XP per message, the wait between XP, and the level-up message.')}

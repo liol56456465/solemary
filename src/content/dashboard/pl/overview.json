@@ -100,7 +100,26 @@
     "setUpStep": "Skonfiguruj: {label}",
     "setUp": "Skonfiguruj",
     "failed": "Części tego nie udało się teraz wczytać. Odśwież stronę za minutę.",
-    "empty": "Teraz nic na ciebie nie czeka. Tutaj pojawiają się odwołania, tickety i alarmy o rajdach."
+    "empty": "Teraz nic na ciebie nie czeka. Tutaj pojawiają się odwołania, tickety i alarmy o rajdach.",
+    "postFailed": {
+      "notSet": {
+        "modlog": "Mewvo nie mógł zapisać w dzienniku moderacji: nie wybrano kanału dziennika moderacji",
+        "alerts": "Mewvo nie mógł wysłać alarmu dla ekipy: nie wybrano kanału alarmów ani dziennika moderacji"
+      },
+      "missing": "Mewvo nie mógł napisać na #{channel}: kanału już nie ma albo nie jest tekstowy",
+      "perms": "Mewvo nie mógł napisać na #{channel}: brakuje uprawnień {perms}",
+      "refused": "Mewvo nie mógł napisać na #{channel}: Discord odrzucił wiadomość",
+      "times": {
+        "one": "Dziś {count} raz.",
+        "few": "Dziś {count} razy.",
+        "many": "Dziś {count} razy.",
+        "other": "Dziś {count} razy."
+      },
+      "fixChannel": "Wybierz kanał na stronie.",
+      "fixPerms": "Zezwól na nie roli Mewvo na tym kanale (Edytuj kanał → Uprawnienia) albo wybierz inny kanał.",
+      "fixOther": "Spróbuj później albo wybierz inny kanał.",
+      "fixIt": "Napraw"
+    }
   },
   "start": {
     "new": "Zaczynasz?",
@@ -176,6 +195,22 @@
     "bannedRole": {
       "label": "Rola dla zbanowanych na serwerze wsparcia",
       "hint": "Zbanowani członkowie dostają tę rolę na twoim serwerze wsparcia, aby nadal mogli się tam odwołać."
+    },
+    "permissions": {
+      "label": "Uprawnienia Mewvo",
+      "hint": "Mewvo potrzebuje kilku uprawnień, żeby banować, wyciszać, pisać i prowadzić dziennik. Lista pokazuje, czego brakuje i jak to naprawić."
+    },
+    "logChannel": {
+      "label": "Główny kanał dziennika",
+      "hint": "Mewvo zapisuje tam usunięte i edytowane wiadomości, wejścia, wyjścia i zmiany ról."
+    },
+    "modRole": {
+      "label": "Rola moderatora",
+      "hint": "Członkowie z tą rolą mogą używać komend moderacji i otwierać ten panel jako moderatorzy. Nie mogą banować ani zmieniać ustawień."
+    },
+    "appealPanel": {
+      "label": "Panel odwołań opublikowany",
+      "hint": "Wiadomość z przyciskiem Odwołanie, żeby ukarani członkowie mogli poprosić ekipę o zdjęcie kary. Jeden panel trafia na twój serwer, drugi na serwer wsparcia."
     }
   },
   "value": {
@@ -192,5 +227,47 @@
     "on": "wł.",
     "off": "wył.",
     "set": "ustawiono"
+  },
+  "perms": {
+    "title": "Uprawnienia Mewvo",
+    "intro": "Co rola Mewvo może robić na całym serwerze, dla włączonych funkcji. Tutaj tylko je widać: zmienia się je w Discordzie. Pojedynczy kanał i tak może zablokować Mewvo; wybór kanału o tym ostrzega.",
+    "allOk": "Mewvo ma wszystkie potrzebne uprawnienia.",
+    "someMissing": "Czegoś brakuje ({count}). Dopóki tego nie naprawisz, część funkcji nie działa.",
+    "showList": "Pokaż listę",
+    "on": "jest",
+    "missing": "brak",
+    "usedBy": "Potrzebne do: {list}.",
+    "fix": "Potrzebne do: {list}. Jak to naprawić: Ustawienia serwera → Role → {role} → włącz „{perm}”.",
+    "botRoleFallback": "rola Mewvo",
+    "roleAbove": "Przesuń rolę Mewvo nad @{role}",
+    "roleAboveFix": "Mewvo może dawać i zabierać tylko role poniżej własnej. W Ustawieniach serwera → Role przeciągnij {botRole} nad @{role}.",
+    "cannotCheck": "Nie udało się teraz sprawdzić uprawnień Mewvo. Odśwież stronę za minutę.",
+    "feature": {
+      "core": "wysyłanie wiadomości",
+      "enforcement": "kary",
+      "automod": "automod",
+      "logging": "dziennik",
+      "tickets": "tickety",
+      "verification": "weryfikacja",
+      "leveling": "role za poziomy",
+      "joinToCreate": "Join to create"
+    },
+    "perm": {
+      "ViewChannel": "Wyświetlanie kanałów",
+      "SendMessages": "Wysyłanie wiadomości",
+      "EmbedLinks": "Osadzanie linków",
+      "AttachFiles": "Załączanie plików",
+      "ReadMessageHistory": "Czytanie historii wiadomości",
+      "BanMembers": "Banowanie członków",
+      "KickMembers": "Wyrzucanie członków",
+      "ManageRoles": "Zarządzanie rolami",
+      "ManageChannels": "Zarządzanie kanałami",
+      "CreateInstantInvite": "Tworzenie zaproszeń",
+      "MoveMembers": "Przenoszenie członków",
+      "ModerateMembers": "Wyciszanie członków (przerwa)",
+      "ManageMessages": "Zarządzanie wiadomościami",
+      "ManageGuild": "Zarządzanie serwerem",
+      "ViewAuditLog": "Wyświetlanie dziennika zdarzeń"
+    }
   }
 }

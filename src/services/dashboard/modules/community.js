@@ -38,7 +38,7 @@ ${selectInput('status', 'approved', SUGGESTION_STATUSES.map((st) => [st, STATUS_
 ${textArea('reason', row.status_reason || '', { label: 'Reason', max: SUGGESTION_REASON_MAX, rows: 2, help: 'Shown on the suggestion and sent to the member who made it.' })}</div>`,
         { submit: 'Send decision', hidden: { id: row.id }, canEdit: canDecide })}</details>`);
     return html`${open.length >= OPEN_SUGGESTIONS_SHOWN ? html`<p class="muted">Newest ${OPEN_SUGGESTIONS_SHOWN} shown.</p>` : ''}${blocks}
-${canDecide ? '' : html`<p class="muted">To decide suggestions you need the Administrator permission in the main server.</p>`}`;
+${canDecide ? '' : html`<p class="muted">To decide suggestions you need the Administrator permission in this server.</p>`}`;
 }
 
 async function updateSettings(ctx, patch, message) {

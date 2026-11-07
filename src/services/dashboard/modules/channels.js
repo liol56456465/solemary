@@ -44,7 +44,7 @@ export default {
     render(ctx) {
         const g = ctx.guild;
         const can = ctx.canEdit && ctx.canAct;
-        const adminNote = ctx.canAct ? '' : ' To use these tools you need the Administrator permission in the main server.';
+        const adminNote = ctx.canAct ? '' : ' To use these tools you need the Administrator permission in this server.';
         const purge = postForm(ctx, 'channels', 'purge', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: 'Channel', perms: TOOL_PERMS.purge, optional: false })}
 ${numberInput('amount', 10, { label: 'Number of messages', min: PURGE_MIN, max: PURGE_MAX, help: `From ${PURGE_MIN} to ${PURGE_MAX}. The newest messages go first.` })}

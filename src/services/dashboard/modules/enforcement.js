@@ -103,7 +103,7 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
             confirmOff: 'Take the trust card off the website?',
         })}${trustOn ? html`<p class="muted">It is public at <a href="/trust">/trust</a>.</p>` : ''}`;
         // v6: cards grouped by topic (common.js topic/section).
-        const adminOnly = ctx.canAct ? '' : ' You need the Administrator permission in the main server for this.';
+        const adminOnly = ctx.canAct ? '' : ' You need the Administrator permission in this server for this.';
         const where = topic('Channels and roles', 'Where Mewvo writes about punishments, and the roles it uses.', html`${section('Channels', channels, 'Logs, evidence and the categories for appeals, reports and modmail.', { size: 'wide' })}
 ${section('Roles', roles, 'Warning roles show how many active warnings a member has. Mewvo gives and removes them by itself.', { size: 'full' })}`);
         const appeals = topic('Appeals', 'How members ask staff to lift a punishment.', html`${section('Appeal panels', appealPanels, `Posts the appeal panel here and in the support server, and removes the old ones. You can also do this with /setappeal in Discord.${adminOnly}`)}
@@ -173,14 +173,15 @@ ${section('Automod steps', steps, 'What automod does when someone breaks the sam
         async channels(ctx, form) {
             const g = ctx.guild;
             const invite = text(form, 'supportServerInvite', 100);
+            // A field absent from the form stays unchanged (Setup step by step sends only its one field).
+            const sent = (name, opts) => (form[name] !== undefined ? { [name]: channelField(g, form, name, opts) } : {});
             const patch = changedOnly({
-                modLogChannelId: channelField(g, form, 'modLogChannelId', { label: 'Mod log channel' }),
-                evidenceChannelId: channelField(g, form, 'evidenceChannelId', { label: 'Evidence channel' }),
-                adminRequestChannelId: channelField(g, form, 'adminRequestChannelId', { label: 'Admin request channel' }),
-                appealsCategoryId: channelField(g, form, 'appealsCategoryId', { kinds: ['category'], label: 'Appeals category' }),
-                reportsCategoryId: channelField(g, form, 'reportsCategoryId', { kinds: ['category'], label: 'Staff reports category' }),
-                modmailCategoryId: channelField(g, form, 'modmailCategoryId', { kinds: ['category'], label: 'Modmail category' }),
-                // Absent from the form: unchanged (like the other fields of this form).
+                ...sent('modLogChannelId', { label: 'Mod log channel' }),
+                ...sent('evidenceChannelId', { label: 'Evidence channel' }),
+                ...sent('adminRequestChannelId', { label: 'Admin request channel' }),
+                ...sent('appealsCategoryId', { kinds: ['category'], label: 'Appeals category' }),
+                ...sent('reportsCategoryId', { kinds: ['category'], label: 'Staff reports category' }),
+                ...sent('modmailCategoryId', { kinds: ['category'], label: 'Modmail category' }),
                 ...(form.openChannelCap !== undefined ? { openChannelCap: durationField(form, 'openChannelCap', 1, { min: 1, max: 45, label: 'Most open reports and modmail' }) } : {}),
                 ...(invite ? { supportServerInvite: invite } : {}),
             }, current(ctx));
@@ -189,10 +190,13 @@ ${section('Automod steps', steps, 'What automod does when someone breaks the sam
         },
         async roles(ctx, form) {
             const g = ctx.guild;
-            const warn = ['warnRole1', 'warnRole2', 'warnRole3'].map((name, i) => roleField(g, form, name, { label: `Warning role ${i + 1}` })).filter(Boolean);
+            // Absent from the form: unchanged (Setup step by step sends only the Muted role).
+            const warnNames = ['warnRole1', 'warnRole2', 'warnRole3'];
+            const warnSent = warnNames.some((name) => form[name] !== undefined);
+            const warn = warnSent ? warnNames.map((name, i) => roleField(g, form, name, { label: `Warning role ${i + 1}` })).filter(Boolean) : null;
             const patch = changedOnly({
-                mutedRoleId: roleField(g, form, 'mutedRoleId', { label: 'Muted role' }),
-                warnRoleIds: warn,
+                ...(form.mutedRoleId !== undefined ? { mutedRoleId: roleField(g, form, 'mutedRoleId', { label: 'Muted role' }) } : {}),
+                ...(warnSent ? { warnRoleIds: warn } : {}),
             }, current(ctx));
             if (!Object.keys(patch).length) return NOTHING;
             return saveRegistry(ctx, patch, 'enforcement');

@@ -97,7 +97,25 @@
     "setUpStep": "Configurar: {label}",
     "setUp": "Configurar",
     "failed": "Parte de esto no se ha podido cargar ahora mismo. Recarga la página dentro de un minuto.",
-    "empty": "Ahora mismo nada requiere tu atención. Aquí aparecen las apelaciones, los tickets y las alertas de raid."
+    "empty": "Ahora mismo nada requiere tu atención. Aquí aparecen las apelaciones, los tickets y las alertas de raid.",
+    "postFailed": {
+      "notSet": {
+        "modlog": "Mewvo no pudo escribir en el registro de moderación: no hay canal elegido",
+        "alerts": "Mewvo no pudo publicar una alerta para el equipo: no hay canal de alertas ni de registro de moderación"
+      },
+      "missing": "Mewvo no pudo publicar en #{channel}: el canal ya no existe o no es de texto",
+      "perms": "Mewvo no pudo publicar en #{channel}: falta {perms}",
+      "refused": "Mewvo no pudo publicar en #{channel}: Discord rechazó el mensaje",
+      "times": {
+        "one": "{count} vez hoy.",
+        "many": "{count} veces hoy.",
+        "other": "{count} veces hoy."
+      },
+      "fixChannel": "Elige un canal en la página.",
+      "fixPerms": "Permíteselos al rol de Mewvo en ese canal (Editar canal → Permisos), o elige otro canal.",
+      "fixOther": "Vuelve a intentarlo más tarde, o elige otro canal.",
+      "fixIt": "Arreglar"
+    }
   },
   "start": {
     "new": "¿Es tu primera vez?",
@@ -173,6 +191,22 @@
     "bannedRole": {
       "label": "Rol de baneados en el servidor de soporte",
       "hint": "Los miembros baneados reciben este rol en tu servidor de soporte, para que puedan seguir apelando allí."
+    },
+    "permissions": {
+      "label": "Los permisos de Mewvo",
+      "hint": "Mewvo necesita algunos permisos para banear, silenciar, publicar y llevar el registro. La lista muestra lo que falta y cómo arreglarlo."
+    },
+    "logChannel": {
+      "label": "Canal del registro principal",
+      "hint": "Mewvo apunta ahí los mensajes borrados y editados, las entradas, las salidas y los cambios de roles."
+    },
+    "modRole": {
+      "label": "Rol de moderador",
+      "hint": "Los miembros con este rol pueden usar los comandos de moderación y abrir este panel como moderadores. No pueden banear ni cambiar ajustes."
+    },
+    "appealPanel": {
+      "label": "Panel de apelaciones publicado",
+      "hint": "Un mensaje con un botón Apelar, para que los miembros sancionados puedan pedir al equipo que quite la sanción. Uno va en tu servidor y otro en el servidor de soporte."
     }
   },
   "value": {
@@ -188,5 +222,47 @@
     "on": "activado",
     "off": "desactivado",
     "set": "configurado"
+  },
+  "perms": {
+    "title": "Los permisos de Mewvo",
+    "intro": "Lo que el rol de Mewvo puede hacer en todo el servidor, para las funciones activadas. Aquí solo se leen: se cambian en Discord. Un canal concreto aún puede bloquear a Mewvo; el selector de canal te avisa.",
+    "allOk": "Mewvo tiene todos los permisos que necesita.",
+    "someMissing": "Falta algo ({count}). Hasta que se arregle, algunas funciones no van.",
+    "showList": "Ver la lista",
+    "on": "sí",
+    "missing": "falta",
+    "usedBy": "Se usa para: {list}.",
+    "fix": "Se usa para: {list}. Cómo arreglarlo: Ajustes del servidor → Roles → {role} → activa «{perm}».",
+    "botRoleFallback": "el rol de Mewvo",
+    "roleAbove": "Sube el rol de Mewvo por encima de @{role}",
+    "roleAboveFix": "Mewvo solo puede dar y quitar roles que estén por debajo del suyo. En Ajustes del servidor → Roles, arrastra {botRole} por encima de @{role}.",
+    "cannotCheck": "Ahora mismo no se pudieron comprobar los permisos de Mewvo. Recarga la página en un minuto.",
+    "feature": {
+      "core": "publicar mensajes",
+      "enforcement": "sanciones",
+      "automod": "automod",
+      "logging": "registro",
+      "tickets": "tickets",
+      "verification": "verificación",
+      "leveling": "roles de nivel",
+      "joinToCreate": "Join to create"
+    },
+    "perm": {
+      "ViewChannel": "Ver canal",
+      "SendMessages": "Enviar mensajes",
+      "EmbedLinks": "Insertar enlaces",
+      "AttachFiles": "Adjuntar archivos",
+      "ReadMessageHistory": "Leer el historial de mensajes",
+      "BanMembers": "Banear miembros",
+      "KickMembers": "Expulsar miembros",
+      "ManageRoles": "Gestionar roles",
+      "ManageChannels": "Gestionar canales",
+      "CreateInstantInvite": "Crear invitación",
+      "MoveMembers": "Mover miembros",
+      "ModerateMembers": "Aislar temporalmente a miembros",
+      "ManageMessages": "Gestionar mensajes",
+      "ManageGuild": "Gestionar servidor",
+      "ViewAuditLog": "Ver registro de auditoría"
+    }
   }
 }

@@ -49,7 +49,7 @@ ${textArea('note', '', { label: 'Note to the applicant (optional)', max: REVIEW_
     const reviewedRows = reviewed.map((a) => [a.roleName || 'Unknown role', who(a), pill(a.status === 'approved', a.status === 'approved' ? 'approved' : 'denied', a.status === 'approved' ? 'on' : 'off'),
         a.reviewMessage || '-', a.reviewedAt ? formatDate(a.reviewedAt) : '-']);
     return html`${pendingTotal ? html`<p>${pendingTotal} waiting${pendingTotal > pending.length ? html` (newest ${pending.length} shown)` : ''}.</p>${pendingBlocks}` : html`<p class="muted">No applications are waiting for review.</p>`}
-${canReview ? '' : html`<p class="muted">To review applications here you need the Administrator permission in the main server.</p>`}
+${canReview ? '' : html`<p class="muted">To review applications here you need the Administrator permission in this server.</p>`}
 <h3>Recently reviewed</h3>${table(['Application', 'Member', 'Decision', 'Note', 'Reviewed'], reviewedRows, 'Nothing reviewed yet.')}`;
 }
 

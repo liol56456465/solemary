@@ -94,7 +94,24 @@
     "setUpStep": "Set up: {label}",
     "setUp": "Set up",
     "failed": "Some of this could not be loaded just now. Reload the page in a minute.",
-    "empty": "Nothing needs you right now. Appeals, tickets and raid alerts show up here."
+    "empty": "Nothing needs you right now. Appeals, tickets and raid alerts show up here.",
+    "postFailed": {
+      "notSet": {
+        "modlog": "Mewvo couldn't write to the mod log: no mod log channel is set",
+        "alerts": "Mewvo couldn't post a staff alert: no alerts or mod log channel is set"
+      },
+      "missing": "Mewvo couldn't post to #{channel}: the channel is gone or is not a text channel",
+      "perms": "Mewvo couldn't post to #{channel}: missing {perms}",
+      "refused": "Mewvo couldn't post to #{channel}: Discord refused the message",
+      "times": {
+        "one": "{count} time today.",
+        "other": "{count} times today."
+      },
+      "fixChannel": "Pick a channel on the page.",
+      "fixPerms": "Allow these for Mewvo's role in that channel (Edit Channel → Permissions), or pick another channel.",
+      "fixOther": "Try again later, or pick another channel.",
+      "fixIt": "Fix it"
+    }
   },
   "start": {
     "new": "New to this?",
@@ -170,6 +187,22 @@
     "bannedRole": {
       "label": "Banned role in the support server",
       "hint": "Banned members get this role in your support server, so they can still appeal there."
+    },
+    "permissions": {
+      "label": "Mewvo's permissions",
+      "hint": "Mewvo needs some permissions to ban, mute, post and log. The list shows what is missing and how to fix it."
+    },
+    "logChannel": {
+      "label": "Main log channel",
+      "hint": "Mewvo writes down deleted and edited messages, joins, leaves and role changes there."
+    },
+    "modRole": {
+      "label": "Moderator role",
+      "hint": "Members with this role can use moderation commands and open this dashboard as moderators. They cannot ban or change settings."
+    },
+    "appealPanel": {
+      "label": "Appeal panel posted",
+      "hint": "A message with an Appeal button, so punished members can ask staff to lift it. One goes in your server, one in the support server."
     }
   },
   "value": {
@@ -184,5 +217,47 @@
     "on": "on",
     "off": "off",
     "set": "set"
+  },
+  "perms": {
+    "title": "Mewvo's permissions",
+    "intro": "What Mewvo's role may do in the whole server, for the features that are on. This only reads them: you change them in Discord. A single channel can still block Mewvo; the channel pickers warn about that.",
+    "allOk": "Mewvo has every permission it needs.",
+    "someMissing": "Something is missing ({count}). Until it is fixed, some features do not work.",
+    "showList": "Show the list",
+    "on": "on",
+    "missing": "missing",
+    "usedBy": "Needed for: {list}.",
+    "fix": "Needed for: {list}. To fix it: Server Settings → Roles → {role} → turn on {perm}.",
+    "botRoleFallback": "Mewvo's role",
+    "roleAbove": "Move Mewvo's role above @{role}",
+    "roleAboveFix": "Mewvo can only give and take roles below its own. In Server Settings → Roles, drag {botRole} above @{role}.",
+    "cannotCheck": "Mewvo's permissions could not be checked just now. Reload the page in a minute.",
+    "feature": {
+      "core": "posting messages",
+      "enforcement": "punishments",
+      "automod": "automod",
+      "logging": "logging",
+      "tickets": "tickets",
+      "verification": "verification",
+      "leveling": "level roles",
+      "joinToCreate": "join to create"
+    },
+    "perm": {
+      "ViewChannel": "View Channels",
+      "SendMessages": "Send Messages",
+      "EmbedLinks": "Embed Links",
+      "AttachFiles": "Attach Files",
+      "ReadMessageHistory": "Read Message History",
+      "BanMembers": "Ban Members",
+      "KickMembers": "Kick Members",
+      "ManageRoles": "Manage Roles",
+      "ManageChannels": "Manage Channels",
+      "CreateInstantInvite": "Create Invite",
+      "MoveMembers": "Move Members",
+      "ModerateMembers": "Timeout Members",
+      "ManageMessages": "Manage Messages",
+      "ManageGuild": "Manage Server",
+      "ViewAuditLog": "View Audit Log"
+    }
   }
 }

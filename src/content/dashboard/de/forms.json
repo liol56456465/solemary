@@ -49,7 +49,7 @@
   "warn": {
     "channelGone": "Kanal {id} gibt es nicht mehr",
     "cannotCheck": "ich kann meine Berechtigungen hier nicht prüfen",
-    "missingPerms": "mir fehlt in #{channel}: {perms}",
+    "missingPerms": "mir fehlt {perms} in #{channel}. Zum Beheben erlaube das für Mewvos Rolle unter Kanal bearbeiten → Berechtigungen oder wähle einen anderen Kanal",
     "roleGone": "Rolle {id} gibt es nicht mehr",
     "everyone": "@everyone kann nicht verwendet werden",
     "managed": "@{role} wird von einer Integration oder einem Bot verwaltet",

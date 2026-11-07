@@ -120,6 +120,8 @@ export const SETTING_KINDS = ['channel', 'category', 'role', 'number', 'duration
 export const SETTINGS = Object.freeze([
     // ── Enforcement ──
     {
+        // The fallback is the main server's channel: the admin refusal (commandGate.js) uses it in
+        // the main server only; other servers name only a channel they stored themselves.
         key: 'adminRequestChannelId', module: 'enforcement', kind: 'channel', guild: 'main',
         label: 'Admin request channel', env: 'ADMIN_REQUEST_CHANNEL_ID',
         fallback: '1527697155643408442', prodOnly: true, schema: optionalId,
