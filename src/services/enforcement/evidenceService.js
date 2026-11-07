@@ -15,6 +15,7 @@ import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { query, T } from './db.js';
 import { isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
+import { staffGuildId } from '../automod/channelRouting.js';
 import { dateStamp, fitWholeLines, truncate } from './format.js';
 
 export const EXCERPT_MAX = 500;
@@ -188,8 +189,12 @@ export async function captureLinks(guild, entries, { prefetched = new Map() } = 
     }));
 }
 
-/** The case server's evidence channel (else its mod log); null when it has none or it is gone. */
-async function evidenceChannel(client, guildId) {
+/**
+ * The case server's evidence channel (else its mod log); null when it has none or it is gone.
+ * Home cases (main or support server) use the main server's channel, as channelRouting does.
+ */
+async function evidenceChannel(client, caseGuildId) {
+    const guildId = staffGuildId(caseGuildId);
     const channelId = resolveSetting(guildId, 'evidenceChannelId') || resolveSetting(guildId, 'modLogChannelId');
     if (!channelId) return null;
     const guild = client.guilds.cache.get(guildId);

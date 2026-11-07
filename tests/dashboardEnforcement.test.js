@@ -580,6 +580,7 @@ test('appeal: preview → confirm page → decide runs decideAppeal once with th
     assert.equal(call.args[0].admin.id, ADMIN);
     assert.equal(call.args[0].decision, 'deny');
     assert.equal(call.args[0].note, 'no <b>');
+    assert.equal(call.args[0].callerGuildId, GUILD, 'the dashboard\'s server: decideAppeal refuses another server\'s case');
     assert.equal(h.auditRows[0].module, 'appeal-decisions');
     const replay = await post(h, h.d.enforcement.appealDecide, { params: { code: CODE }, form: { token, fh } });
     assert.equal(replay.statusCode, 400);

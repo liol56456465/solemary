@@ -144,9 +144,11 @@ async function dmBoth(client, row, build) {
         client.users.fetch(row.user_a).catch(() => null),
         client.users.fetch(row.user_b).catch(() => null),
     ]);
+    // The order's server by its Discord name in the DM (Mewvo's own servers stay "Mewvo").
+    const serverName = client.guilds?.cache?.get?.(row.guild_id)?.name;
     const results = await Promise.all([
-        a ? sendDm(a, build(row, b)) : false,
-        b ? sendDm(b, build(row, a)) : false,
+        a ? sendDm(a, build(row, b, { serverName })) : false,
+        b ? sendDm(b, build(row, a, { serverName })) : false,
     ]);
     return { a, b, delivered: results };
 }
@@ -209,7 +211,7 @@ export async function endNoContactOrder(client, { guildId, id, endedBy }) {
     );
     if (!row) return null;
     await refreshQuietly();
-    const { a, b, delivered } = await dmBoth(client, row, (order, other) => noContactEndedDm(order, other, { early: true }));
+    const { a, b, delivered } = await dmBoth(client, row, (order, other, opts) => noContactEndedDm(order, other, { ...opts, early: true }));
     await postModLog(client, 'nocontact', [
         { name: 'User', value: pairLabel(a, b, row) },
         { name: 'Moderator', value: `${endedBy.username} (${endedBy.id})` },
@@ -229,7 +231,7 @@ export async function expireNoContactOrders(client) {
     if (!rows.length) return 0;
     await refreshQuietly();
     for (const row of rows) {
-        const { a, b } = await dmBoth(client, row, (order, other) => noContactEndedDm(order, other, { early: false }));
+        const { a, b } = await dmBoth(client, row, (order, other, opts) => noContactEndedDm(order, other, { ...opts, early: false }));
         if (row.guild_id === enforcementConfig.mainGuildId) {
             await postModLog(client, 'nocontact', [
                 { name: 'User', value: pairLabel(a, b, row) },

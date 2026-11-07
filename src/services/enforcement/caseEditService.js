@@ -221,7 +221,7 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
         const unbanned = bannedBefore && !(await isBanned(mainGuild, record.target_user_id));
         const invite = unbanned && mainGuild ? await createRejoinInvite(mainGuild, `Case ${caseCode} removed (a mistake)`) : null;
         const user = await client.users.fetch(record.target_user_id).catch(() => null);
-        const dmDelivered = user ? await sendDm(user, caseVoidedDm(record, reason, invite, { lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }) })) : false;
+        const dmDelivered = user ? await sendDm(user, caseVoidedDm(record, reason, invite, { guildId: record.guild_id, serverName: mainGuild?.name, lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }) })) : false;
         if (!dmDelivered) logger.info(`Void DM for ${caseCode} to ${record.target_user_id} not delivered`);
 
         // The void DM is also the "ban/mute ended" notice when it lifted one.

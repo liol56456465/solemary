@@ -490,7 +490,7 @@ export function createEnforcementHandlers(core) {
         }
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: `user:${userId}`, payload: flow });
         const block = await e.getMassActionBlock(guildId, moderatorId).catch(() => null);
-        return sendHtml(res, 200, actionConfirmPage({ ...shellOf(req), userId, type, summary: flowSummary(flow), token, hash, block }));
+        return sendHtml(res, 200, actionConfirmPage({ ...shellOf(req), userId, type, summary: flowSummary(flow, { guildId }), token, hash, block }));
     }, { rerender: rerenderUser, perm: 'member.action' });
 
     const actionExecute = guardedPost(async (req, res) => {
@@ -1054,7 +1054,7 @@ export function createEnforcementHandlers(core) {
         if (!payload) throw new InputError(textOf(req).t('moderation.expired.appeal'));
         const moderator = await freshModerator(req);
         const admin = moderator.user || { id: moderator.id, username: req.dashboard.session.username };
-        const result = await e.decideAppeal({ client, admin, caseCode: code, decision: payload.decision, note: payload.note || null, via: 'dashboard' });
+        const result = await e.decideAppeal({ client, admin, caseCode: code, decision: payload.decision, note: payload.note || null, via: 'dashboard', callerGuildId: guildId });
         await audit(req, 'appeal-decisions', [{ key: code, old: 'pending', new: { decision: result.label, note: payload.note || null, dmDelivered: result.dmDelivered } }]);
         const tr = textOf(req);
         const decided = result.label === 'accepted' ? tr.t('moderation.appeal.accepted', { code })

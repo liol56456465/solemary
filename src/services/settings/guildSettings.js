@@ -63,6 +63,14 @@ export function guildIdFor(guild, env = process.env) {
     return String(env[name] || '').trim() || null;
 }
 
+/**
+ * The server whose settings apply to something of `guildId` that home servers share (appeals):
+ * the main server for either home server, the server itself otherwise.
+ */
+export function homeSettingsGuild(guildId, env = process.env) {
+    return isHomeGuild(guildId, env) ? guildIdFor('main', env) || guildId : guildId;
+}
+
 /** 'main' | 'support' | null for a guild id. */
 export function guildRole(guildId, env = process.env) {
     if (!guildId) return null;

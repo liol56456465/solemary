@@ -12,6 +12,7 @@
         "rejoin": "Voltar: {invite}",
         "record": "Seu histórico completo: <{url}>",
         "privacy": "-# Privacidade: <{url}>",
+        "thisServer": "servidor",
         "ban": {
             "title": "**Banido do {server}**",
             "autoNote": "Apelar deste código também remove a advertência que causou este banimento.",

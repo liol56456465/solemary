@@ -60,7 +60,8 @@ async function remindStaff(client, guild, channel, row, reminderMs) {
     const staffRoleId = config.ticketStaffRoleId;
     const days = Math.round(reminderMs / 86400000);
     await channel.send({
-        content: `${staffRoleId ? `<@&${staffRoleId}> ` : ''}This appeal (\`${row.case_code}\`) has had no activity for ${days} days and is still waiting for a decision. Use the Accept / Deny buttons above or \`/appeals\`.`,
+        // /appeals exists in the main server only; another server decides with the buttons.
+        content: `${staffRoleId ? `<@&${staffRoleId}> ` : ''}This appeal (\`${row.case_code}\`) has had no activity for ${days} days and is still waiting for a decision. ${isHomeGuild(guild.id) ? 'Use the Accept / Deny buttons above or `/appeals`.' : 'Use the Accept / Deny buttons above.'}`,
         allowedMentions: { roles: staffRoleId ? [staffRoleId] : [] },
     });
     await db.set(reminderKey(row.id), { at: new Date().toISOString() });

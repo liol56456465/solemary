@@ -12,6 +12,7 @@
         "rejoin": "Rejoin: {invite}",
         "record": "Your full record: <{url}>",
         "privacy": "-# Privacy: <{url}>",
+        "thisServer": "the server",
         "ban": {
             "title": "**Banned from {server}**",
             "autoNote": "Appealing this code also removes the warning that caused this ban.",

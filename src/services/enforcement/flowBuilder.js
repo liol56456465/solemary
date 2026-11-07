@@ -193,7 +193,7 @@ export function warnEffectText(ladder) {
  * the dashboard (HTML) render: { rows: [{ label, value, code }], evidence: [{ url,
  * excerpt, unreadable }], effect, notes: [text], precedent, memberHint }. Pure.
  */
-export function flowSummary(flow) {
+export function flowSummary(flow, { guildId = null } = {}) {
     const rows = [{ label: 'User', value: flow.targetUsername, id: flow.targetId }];
     const notes = [];
     let evidence = [];
@@ -223,7 +223,8 @@ export function flowSummary(flow) {
         precedent: record ? flow.precedent || null : null,
         memberHint: record ? flow.memberHint || null : null,
         // The server rule the prebuilt reason is linked to, and its listed consequence (text only).
-        ruleHint: record && flow.reasonKey ? ruleHintFor(flow.reasonKey) : null,
+        // guildId: the server acting (its own rules; none named / home: the main server's, as before).
+        ruleHint: record && flow.reasonKey ? ruleHintFor(flow.reasonKey, process.env, guildId) : null,
     };
 }
 

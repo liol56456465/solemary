@@ -21,8 +21,11 @@ import { createEmbed, successEmbed } from '../utils/embeds.js';
 import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { normalizeCaseCode } from '../services/enforcement/format.js';
-import { listUserAppeals } from '../services/enforcement/caseService.js';
-import { decideAppeal, submitAppeal, submitStaffReport } from '../services/enforcement/appealService.js';
+import { getCaseByCode, listUserAppeals } from '../services/enforcement/caseService.js';
+import {
+    OTHER_SERVER_CASE, appealStaffGuildId, decideAppeal, isCaseOfCallerServer, submitAppeal, submitStaffReport,
+} from '../services/enforcement/appealService.js';
+import { isHomeGuild } from '../services/settings/guildSettings.js';
 import { claimAppeal } from '../services/enforcement/appealStatusService.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { getMemberStanding, standingFields } from '../services/enforcement/standingService.js';
@@ -206,23 +209,28 @@ export async function handleAppealModal(interaction, client, args) {
     }
 }
 
-// ── Accept / Deny on an appeal (admins, main server) ───────────────────────
+// ── Accept / Deny on an appeal (admins of the case's staff server) ──────────
 //   appealdecide:<accept|deny>:<code>   buttons on the appeal message; each decides
 //   only the appeal for that case code, straight away.
 
 const DECISIONS = new Set(['accept', 'deny']);
 
 /**
- * Who may press Accept / Deny: Administrators of the main server. In the main server that is
- * the clicking member; ban/kick appeals sit in the support server (staff thread), where the
- * clicker's main-server membership is fetched fresh.
+ * Who may press Accept / Deny / Claim: Administrators of the main server for Mewvo's own cases.
+ * In the main server that is the clicking member; in the support server the clicker's
+ * main-server membership is fetched fresh. In any other server: that server's Administrators,
+ * and only for that server's own case (`record`, loaded by the code in the customId); without a
+ * record nobody there may decide.
  */
-export async function canDecideAppeals(interaction, client) {
+export async function canDecideAppeals(interaction, client, record = null) {
     if (interaction.guildId === enforcementConfig.mainGuildId) return isAdministrator(interaction.member);
-    if (interaction.guildId !== enforcementConfig.supportGuildId) return false;
-    const mainGuild = client.guilds.cache.get(enforcementConfig.mainGuildId);
-    const mainMember = await mainGuild?.members.fetch({ user: interaction.user.id, force: true }).catch(() => null);
-    return isAdministrator(mainMember);
+    if (interaction.guildId === enforcementConfig.supportGuildId) {
+        const mainGuild = client.guilds.cache.get(enforcementConfig.mainGuildId);
+        const mainMember = await mainGuild?.members.fetch({ user: interaction.user.id, force: true }).catch(() => null);
+        return isAdministrator(mainMember);
+    }
+    if (!interaction.guildId || isHomeGuild(interaction.guildId)) return false;
+    return Boolean(record) && appealStaffGuildId(record) === interaction.guildId && isAdministrator(interaction.member);
 }
 
 /** "I'm looking at it": records the reviewer once, DMs the member, tells the staff channel. */
@@ -243,18 +251,23 @@ async function handleClaim(interaction, client, caseCode) {
 export async function handleAppealDecisionButton(interaction, client, args) {
     // Deferred first: the support-server check fetches the main-server member.
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
-    if (!(await canDecideAppeals(interaction, client))) {
-        return replyUserError(interaction, {
-            type: ErrorTypes.PERMISSION,
-            message: 'Only administrators in the main server can decide appeals.',
-        });
-    }
     const [decision, rawCode] = args;
     const caseCode = normalizeCaseCode(rawCode || '');
+    // The case decides which server's staff may act on it (also for Claim).
+    const record = caseCode ? await getCaseByCode(caseCode) : null;
+    const refuse = (message) => replyUserError(interaction, { type: ErrorTypes.PERMISSION, message });
+    if (record && !isCaseOfCallerServer(record, interaction.guildId)) return refuse(OTHER_SERVER_CASE);
+    if (!(await canDecideAppeals(interaction, client, record))) {
+        return refuse(isHomeGuild(interaction.guildId)
+            ? 'Only administrators in the main server can decide appeals.'
+            : 'Only administrators of this server can decide its appeals.');
+    }
     if (decision === 'claim' && caseCode) return handleClaim(interaction, client, caseCode);
     if (!DECISIONS.has(decision) || !caseCode) return;
 
-    const result = await decideAppeal({ client, admin: interaction.user, caseCode, decision, note: null, via: 'button' });
+    const result = await decideAppeal({
+        client, admin: interaction.user, caseCode, decision, note: null, via: 'button', callerGuildId: interaction.guildId,
+    });
     return InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
             `Appeal ${result.label}`,

@@ -180,7 +180,8 @@ test('no-contact: add (DMs both), duplicate refused, cache, list, end early, exp
     assert.deepEqual([order.user_a, order.user_b], nc.orderedPair(a, b));
     assert.deepEqual(delivered, [true, true]);
     assert.equal(dms.length, 2);
-    assert.match(dms[0].content, /Keep apart: an order in Mewvo/);
+    // A test guild that is not one of Mewvo's servers, and the bot is not in it: the neutral name.
+    assert.match(dms[0].content, /Keep apart: an order in the server\*\*/);
     assert.ok(Math.abs(new Date(order.until).getTime() - (Date.now() + 3 * 86400000)) < 60000);
     assert.deepEqual(nc.getActiveOrdersFor(guildId, a).map((o) => o.otherId), [b], 'cache refreshed');
     assert.deepEqual(nc.getActiveOrdersFor(guildId, b).map((o) => o.otherId), [a]);

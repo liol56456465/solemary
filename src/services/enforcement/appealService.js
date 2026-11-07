@@ -29,7 +29,7 @@ import { dateStamp, formatDuration, ladderStage, ladderStageShort, stamp, trunca
 import { evidenceDisplay } from './evidenceService.js';
 import { checkAppealReviewer, needsSecondReviewer } from './appealReviewer.js';
 import { recordOwnerOverride } from '../ownerOverride.js';
-import { guildIdFor, isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
+import { homeSettingsGuild, isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
 
 const UNKNOWN_BAN = 10026;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -43,8 +43,8 @@ function userError(message) {
  * the main server's settings, exactly as before multi-server; any other server reads its own
  * (resolveSetting: its stored value or the neutral default, never Mewvo's).
  */
-function appealSettingsGuild(guildId) {
-    return isHomeGuild(guildId) ? guildIdFor('main') || guildId : guildId;
+export function appealSettingsGuild(guildId) {
+    return homeSettingsGuild(guildId);
 }
 
 /**
@@ -53,6 +53,25 @@ function appealSettingsGuild(guildId) {
  */
 export function appealStaffGuildId(record) {
     return isHomeGuild(record.guild_id) ? enforcementConfig.mainGuildId : record.guild_id;
+}
+
+/**
+ * Whether staff working in `callerGuildId` may see or decide this case's appeal: the caller's
+ * server must be the case's appeal staff server. Mewvo's two servers count as one (the main
+ * server), so home behaviour is unchanged; any other server only its own cases. No owner
+ * exception: OWNER_IDS act from the case's own server like everyone else.
+ */
+export function isCaseOfCallerServer(record, callerGuildId) {
+    if (!record || !callerGuildId) return false;
+    const callerStaff = isHomeGuild(callerGuildId) ? enforcementConfig.mainGuildId : callerGuildId;
+    return appealStaffGuildId(record) === callerStaff;
+}
+
+export const OTHER_SERVER_CASE = 'That case belongs to another server.';
+
+/** Throws the plain "belongs to another server" user error when the caller's server may not act on it. */
+export function assertCaseOfCallerServer(record, callerGuildId) {
+    if (!isCaseOfCallerServer(record, callerGuildId)) throw userError(OTHER_SERVER_CASE);
 }
 
 function isStillInEffect(record) {
@@ -588,7 +607,8 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
                 })];
             });
         await staffChannel.send({
-            content: `New appeal from ${user.username} for \`${record.case_code}\`. Decide with the buttons below or \`/appeals\`.`
+            // /appeals is registered in the main server only: other servers decide with the buttons.
+            content: `New appeal from ${user.username} for \`${record.case_code}\`. ${home ? 'Decide with the buttons below or `/appeals`.' : 'Decide with the buttons below.'}`
                 + (inSupport ? ` To talk with the appellant: <#${channel.id}> in the support server (they see only their own summary there).` : ''),
             embeds,
             components: [appealDecisionRow(record.case_code)],
@@ -842,11 +862,18 @@ export function assertAppealReviewer(record, deciderId, { client = null, ...opti
     return { ownerOverride: Boolean(check.ownerOverride) };
 }
 
-export async function decideAppeal({ client, admin, caseCode, decision, note, via = 'unknown' }) {
+/**
+ * `callerGuildId` (required): the server the decision is made from (the slash command's or
+ * button's guild, the dashboard's server). Another server's case is refused before anything is
+ * read or changed, so no server can lift a punishment of another one.
+ */
+export async function decideAppeal({ client, admin, caseCode, decision, note, via = 'unknown', callerGuildId }) {
+    if (!callerGuildId) throw new Error('decideAppeal: callerGuildId is required');
     const record = await getCaseByCode(caseCode);
     if (!record) {
         throw userError(`No case with code \`${caseCode}\`.`);
     }
+    assertCaseOfCallerServer(record, callerGuildId);
     // Before anything changes: the issuing moderator may not decide (when the setting is on).
     const { ownerOverride } = assertAppealReviewer(record, admin.id, { client });
 
@@ -937,7 +964,7 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
                     decision === 'deny' && record.is_auto && record.ladder_level_after === 3 ? 'This stage-3 warning ban can no longer be appealed.' : null,
                     ...notes,
                     '',
-                    `-# This channel is deleted in ${APPEAL_CHANNEL_DELETE_DELAY_MS / 1000} seconds. The appeal stays in /appeals code:${record.case_code}.`,
+                    `-# This channel is deleted in ${APPEAL_CHANNEL_DELETE_DELAY_MS / 1000} seconds.${isHomeGuild(record.guild_id) ? ` The appeal stays in /appeals code:${record.case_code}.` : ''}`,
                 ].filter((line) => line !== null).join('\n'), 4096),
                 color: decision === 'accept' ? 'success' : 'error',
             })],
@@ -964,8 +991,6 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
             await postModLog(client, 'appeal', logFields, {
                 title: `Appeal ${label}${record.is_test ? ' (test case)' : ''}`,
                 // The main server for home cases (as before), the case's own server otherwise.
-                // postModLog reads this option once multi-server batch 2 is merged; until then it
-                // still posts to the main server's mod log.
                 guildId: appealStaffGuildId(record),
                 files: [
                     ...(transcript ? [new AttachmentBuilder(transcript.buffer, { name: `appeal-${record.case_code}.html` })] : []),

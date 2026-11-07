@@ -37,7 +37,7 @@
 
 import express from 'express';
 import { enforcementConfig } from '../../config/enforcement.js';
-import { resolveSetting } from '../settings/guildSettings.js';
+import { homeSettingsGuild, resolveSetting } from '../settings/guildSettings.js';
 import { pgConfig } from '../../config/database/postgres.js';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { logger } from '../../utils/logger.js';
@@ -177,13 +177,14 @@ export function memberAccountsOn(env = process.env) {
 
 /**
  * The appeal settings of the server a case belongs to (multi-server B0b): its appeal window and
- * cooldown via resolveSetting. The website only shows the main server's cases, so this is the
- * main server's values today; another server would get its own, never the main server's.
+ * cooldown via resolveSetting, with the bot's mapping (appealService.appealSettingsGuild): a
+ * home case (main or support server) reads the main server's values, another server its own.
  */
 export function appealConfigFor(guildId) {
+    const settingsGuild = homeSettingsGuild(guildId);
     return {
-        appealWindowMs: resolveSetting(guildId, 'appealWindowMs'),
-        appealCooldownMs: resolveSetting(guildId, 'appealCooldownMs'),
+        appealWindowMs: resolveSetting(settingsGuild, 'appealWindowMs'),
+        appealCooldownMs: resolveSetting(settingsGuild, 'appealCooldownMs'),
     };
 }
 

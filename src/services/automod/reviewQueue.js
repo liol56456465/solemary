@@ -6,15 +6,21 @@
 import { cardTitle } from './reviewFormat.js';
 import { getCard, openCards } from './reviewRegistry.js';
 import { reviewChannel } from './reviewCards.js';
+import { staffGuildId } from './channelRouting.js';
 import { truncate } from '../enforcement/format.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 
 const SCAN_LIMIT = 50;
 const MAX_LISTED = 20;
 
-/** [{ title, url, at, count }] newest first. `guildId`: whose review channel is scanned (default: main). */
+/**
+ * [{ title, url, at, count }] newest first. `guildId`: whose review channel is scanned (default:
+ * main). Only that server's cards are listed: the home servers share the main server's review
+ * channel (as before), any other server sees only its own.
+ */
 export async function collectOpenReviews(client, guildId = enforcementConfig.mainGuildId) {
-    const items = openCards().map((entry) => ({ title: cardTitle(entry), url: entry.url, at: entry.firstAt, count: entry.count }));
+    const staff = staffGuildId(guildId);
+    const items = openCards().filter((entry) => staffGuildId(entry.guildId) === staff).map((entry) => ({ title: cardTitle(entry), url: entry.url, at: entry.firstAt, count: entry.count }));
     const channel = await reviewChannel(client, guildId).catch(() => null);
     const recent = channel ? await channel.messages.fetch({ limit: SCAN_LIMIT }).catch(() => null) : null;
     for (const message of recent?.values() || []) {

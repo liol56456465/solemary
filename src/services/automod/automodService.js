@@ -280,9 +280,12 @@ export function customHit({ rule, word }) {
     };
 }
 
-/** The rule a hit belongs to: a built-in rule, or the custom rule the hit carries. */
-function definitionOf(hit) {
-    return hit.definition || ruleDefinition(hit.rule);
+/**
+ * The rule a hit belongs to: a built-in rule, or the custom rule the hit carries. `guildId`: the
+ * message's server, so a custom-rule key without a carried definition is looked up there.
+ */
+function definitionOf(hit, guildId = null) {
+    return hit.definition || ruleDefinition(hit.rule, null, guildId);
 }
 
 /** In how many channels the newest text was posted within the ad-bot window. */
@@ -420,8 +423,8 @@ function noteIncident(guildId, userId, detail) {
  * so an edit is checked again. `skipHeadsUp`: the per-minute check acting after the wait.
  */
 export async function actOn(message, member, hit, settings, probation = null, { skipHeadsUp = false } = {}) {
-    const rule = definitionOf(hit);
     const { guild } = message;
+    const rule = definitionOf(hit, guild?.id);
     const targetUser = message.author;
     const group = rule.group;
     const cooldownKey = `${guild.id}:${targetUser.id}:${group}`;
@@ -565,15 +568,15 @@ async function isTrusted(member, trusted) {
  * (personal info never stays up, and the other rule is never downgraded or forgotten).
  * Otherwise a heads-up only when every hit allows one and the message had none yet.
  */
-export function headsUpPlan(hits, settings, { probation = false, hadHeadsUp = false } = {}) {
+export function headsUpPlan(hits, settings, { probation = false, hadHeadsUp = false, guildId = null } = {}) {
     const rules = new Set(hits.map((hit) => hit.rule));
-    if (rules.has('privacy') && rules.size > 1) return { hit: worstHit(hits), skipHeadsUp: true, deleteFirst: true };
+    if (rules.has('privacy') && rules.size > 1) return { hit: worstHit(hits, guildId), skipHeadsUp: true, deleteFirst: true };
     const skipHeadsUp = hadHeadsUp || !headsUpAllowedFor(hits, settings, Boolean(probation));
-    return { hit: worstHit(hits), skipHeadsUp, deleteFirst: false };
+    return { hit: worstHit(hits, guildId), skipHeadsUp, deleteFirst: false };
 }
 
-export function worstHit(hits) {
-    return hits.reduce((a, b) => (definitionOf(b).severity > definitionOf(a).severity ? b : a));
+export function worstHit(hits, guildId = null) {
+    return hits.reduce((a, b) => (definitionOf(b, guildId).severity > definitionOf(a, guildId).severity ? b : a));
 }
 
 /**
@@ -624,7 +627,7 @@ export async function moderateMessage(message, { edited = false } = {}) {
         }
         if (hits.length) {
             handledMessages.add(message.id);
-            const plan = headsUpPlan(hits, settings, { probation, hadHeadsUp });
+            const plan = headsUpPlan(hits, settings, { probation, hadHeadsUp, guildId: message.guild?.id });
             if (plan.deleteFirst) await deps.deleteQuietly(message);
             return await actOn(message, member, plan.hit, settings, probation, { skipHeadsUp: plan.skipHeadsUp });
         }
