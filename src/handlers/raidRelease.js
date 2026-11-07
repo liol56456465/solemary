@@ -1,6 +1,6 @@
 // raidRelease.js — "Release non-offenders" on a raid incident report (raidrelease:<incidentId>).
 // Administrators in the main server only; works once per incident.
-// For every raid joiner with no case since the raid began: automod probation is ended
+// For every raid joiner with no case since the raid began: the automod extra-watch period is ended
 // and an open join-gate flag line is closed as released. The result is posted to the
 // alerts channel and the button is disabled.
 

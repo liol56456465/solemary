@@ -1,4 +1,4 @@
-// noContactService.js — no-contact orders (/case nocontact add | list | end).
+// noContactService.js — no-contact orders (/case keepapart add | list | end).
 //
 // While an order is active, neither member may mention or reply to the other:
 // such a message is deleted, the author gets a short notice that deletes itself,

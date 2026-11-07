@@ -148,7 +148,7 @@ export function muteEndedDm(record, { early = false } = {}) {
 }
 
 /**
- * Sent when an admin voids a case (/case void): the record no longer counts against
+ * Sent when an admin voids a case (/case remove): the record no longer counts against
  * the user. `inviteUrl` is set when the void lifted a ban.
  */
 export function caseVoidedDm(record, reason, inviteUrl = null) {

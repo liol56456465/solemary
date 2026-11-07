@@ -42,7 +42,7 @@
         },
         "caseTools": {
           "term": "Case tools",
-          "text": "/case edit, void (remove a case given by mistake) and history, evidence (message links with an excerpt, or images), case search, and /background for a member’s full history."
+          "text": "/case edit, remove (remove a case given by mistake) and history, evidence (message links with an excerpt, or images), case search, and /background for a member’s full history."
         },
         "warnForMessage": {
           "term": "Warn for this message",

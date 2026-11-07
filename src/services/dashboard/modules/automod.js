@@ -2,7 +2,7 @@
 // trusted members, second chance, mood alerts, panic mode, join gate, native AutoMod
 // policies, review/alerts channels — plus the stats (1/7/30 days, ?days=), and the live
 // operations of /automod: the review queue (/automod queue), members on probation
-// (/automod probation end) and ending a raid lockdown (/automod lockdown-end). Every
+// (/automod extrawatch end) and ending a raid lockdown (/automod lockdown-end). Every
 // change goes through the same services /automod uses (automodSettings.js is row-locked).
 //
 // Test run (backtest.js): an Administrator picks up to 20 text channels and 1, 3 or 7 days
@@ -656,7 +656,7 @@ ${section('Test run', testRunSection(ctx, data.backtest, data), TEST_RUN_HELP, {
                 };
             },
         },
-        // /automod probation user end:true
+        // /automod extrawatch user end:true
         'probation-end': {
             admin: true,
             async run(ctx, form) {

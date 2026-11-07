@@ -30,7 +30,7 @@ async function handleStructure(interaction, client, sub) {
         const row = await takeSnapshot(main);
         return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Snapshot saved', `#${row.id}: ${row.summary}`)] });
     }
-    if (sub === 'diff' || sub === 'revert') {
+    if (sub === 'changes' || sub === 'revert') {
         // Undo the nuke: compare a snapshot with the live main server; revert asks to confirm first.
         const main = client.guilds.cache.get(mainId);
         if (!main) throw userError('I cannot reach the main server.');
@@ -48,7 +48,7 @@ async function handleStructure(interaction, client, sub) {
             embeds: [createEmbed({
                 title: 'Server snapshots',
                 description: rows.length
-                    ? `${rows.map((row) => `**#${row.id}** · ${dateStamp(row.created_at)} · ${row.summary}`).join('\n')}\n\nCompare with the server now: \`/backup diff snapshot:<number>\` · undo a nuke: \`/backup revert\` · rebuild elsewhere: \`/backup rebuild server_id:<id> snapshot:<number>\`.`
+                    ? `${rows.map((row) => `**#${row.id}** · ${dateStamp(row.created_at)} · ${row.summary}`).join('\n')}\n\nCompare with the server now: \`/backup changes snapshot:<number>\` · undo a nuke: \`/backup revert\` · rebuild elsewhere: \`/backup rebuild server_id:<id> snapshot:<number>\`.`
                     : 'No snapshots yet. One is taken every day, or now with `/backup snapshot`.',
                 color: 'primary',
             })],
@@ -91,7 +91,7 @@ export default {
             .addStringOption((option) => option.setName('server_id').setDescription('ID of the server to add them to').setRequired(true).setMinLength(17).setMaxLength(20)))
         .addSubcommand((sub) => sub.setName('snapshot').setDescription('Save the main server\'s roles and channels now (also done daily)'))
         .addSubcommand((sub) => sub.setName('snapshots').setDescription('List saved snapshots of the main server'))
-        .addSubcommand((sub) => sub.setName('diff').setDescription('What changed in the main server since a snapshot (deleted roles/channels, permissions)')
+        .addSubcommand((sub) => sub.setName('changes').setDescription('What changed in the main server since a snapshot (deleted roles/channels, permissions)')
             .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setMinValue(1)))
         .addSubcommand((sub) => sub.setName('revert').setDescription('Undo a nuke: restore deleted roles/channels and permissions from a snapshot')
             .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setMinValue(1)))
@@ -107,7 +107,7 @@ export default {
         if (!deferred) return;
 
         const sub = interaction.options.getSubcommand();
-        if (['snapshot', 'snapshots', 'rebuild', 'diff', 'revert'].includes(sub)) {
+        if (['snapshot', 'snapshots', 'rebuild', 'changes', 'revert'].includes(sub)) {
             return handleStructure(interaction, client, sub);
         }
 

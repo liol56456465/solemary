@@ -156,7 +156,7 @@ async function handleEvidence(interaction, client, sub, code) {
 const unixOf = (date) => Math.floor(new Date(date).getTime() / 1000);
 const dmNote = ([a, b]) => (a && b ? 'Both members were DMed.' : `DM not delivered to ${[!a && 'the first member', !b && 'the second member'].filter(Boolean).join(' or ')}.`);
 
-/** /case nocontact add | list | end */
+/** /case keepapart add | list | end */
 async function handleNoContact(interaction, client, sub) {
     const admin = { id: interaction.user.id, username: interaction.user.username };
 
@@ -187,7 +187,7 @@ async function handleNoContact(interaction, client, sub) {
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
                 title: `Keep apart: active orders (${rows.length})`,
-                description: lines.length ? fitWholeLines(lines) : 'None. Start one with `/case nocontact add`.',
+                description: lines.length ? fitWholeLines(lines) : 'None. Start one with `/case keepapart add`.',
                 color: 'primary',
             })],
         });
@@ -196,7 +196,7 @@ async function handleNoContact(interaction, client, sub) {
     if (sub === 'end') {
         const id = interaction.options.getInteger('id', true);
         const result = await endNoContactOrder(client, { guildId: interaction.guildId, id, endedBy: admin });
-        if (!result) throw userError(`There is no active keep-apart order #${id}. See \`/case nocontact list\`.`);
+        if (!result) throw userError(`There is no active keep-apart order #${id}. See \`/case keepapart list\`.`);
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [successEmbed(`Keep-apart order #${id} ended`, [
                 `<@${result.order.user_a}> and <@${result.order.user_b}> may contact each other again.`,
@@ -278,7 +278,7 @@ export default {
             .addStringOption((option) => option.setName('duration')
                 .setDescription('New total duration from when it was given, e.g. 7d, 1mo, permanent (open bans/mutes only)')
                 .setMaxLength(20)))
-        .addSubcommand((sub) => sub.setName('void').setDescription('Mark a case as a mistake: lift it and stop it counting')
+        .addSubcommand((sub) => sub.setName('remove').setDescription('Mark a case as a mistake: lift it and stop it counting')
             .addStringOption(codeOption)
             .addStringOption((option) => option.setName('reason').setDescription('Why it is removed as a mistake (shown to the user)')
                 .setRequired(true).setMaxLength(500)))
@@ -307,7 +307,7 @@ export default {
                 .addStringOption(codeOption)
                 .addIntegerOption((option) => option.setName('id').setDescription('Evidence number (#) from /case evidence list')
                     .setRequired(true).setMinValue(1))))
-        .addSubcommandGroup((group) => group.setName('nocontact').setDescription('Keep apart: two members may not mention or reply to each other')
+        .addSubcommandGroup((group) => group.setName('keepapart').setDescription('Keep apart: two members may not mention or reply to each other')
             .addSubcommand((sub) => sub.setName('add').setDescription('Keep two members apart: start an order (both are DMed)')
                 .addUserOption((option) => option.setName('user_a').setDescription('First member').setRequired(true))
                 .addUserOption((option) => option.setName('user_b').setDescription('Second member').setRequired(true))
@@ -317,7 +317,7 @@ export default {
                     .setRequired(true).setMaxLength(500)))
             .addSubcommand((sub) => sub.setName('list').setDescription('List active keep-apart orders'))
             .addSubcommand((sub) => sub.setName('end').setDescription('End a keep-apart order early (both are DMed)')
-                .addIntegerOption((option) => option.setName('id').setDescription('Order number (#) from /case nocontact list')
+                .addIntegerOption((option) => option.setName('id').setDescription('Order number (#) from /case keepapart list')
                     .setRequired(true).setMinValue(1))))
         .addSubcommandGroup((group) => group.setName('watch').setDescription('Staff watchlist: joins, new cases and automod hits go to the mod log')
             .addSubcommand((sub) => sub.setName('add').setDescription('Put a member on the watchlist (they are not told)')
@@ -359,7 +359,7 @@ export default {
             return InteractionHelper.safeEditReply(interaction, await buildSearchView(interaction.guildId, interaction.user.id, filters, 0));
         }
 
-        if (group === 'nocontact') {
+        if (group === 'keepapart') {
             return handleNoContact(interaction, client, sub);
         }
 
@@ -401,7 +401,7 @@ export default {
             });
         }
 
-        if (sub === 'void') {
+        if (!group && sub === 'remove') {
             const reason = interaction.options.getString('reason', true).trim();
             if (!reason) throw userError('The reason cannot be empty.');
             const { record, notes, dmDelivered } = await voidCase(client, {

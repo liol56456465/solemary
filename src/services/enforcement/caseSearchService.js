@@ -111,7 +111,7 @@ function escapeLike(text) {
  *   active  open (active / appeal pending), not voided, not past its end
  *   ended   expired, or still marked active but past its end
  *   revoked lifted early (unban/unmute, accepted appeal, removed warn), not voided
- *   voided  marked as a mistake with /case void
+ *   voided  marked as a mistake with /case remove
  */
 export function buildSearchWhere(guildId, filters = {}, now = new Date()) {
     const params = [guildId];

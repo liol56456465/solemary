@@ -8,7 +8,7 @@
 // What is counted (mod_cases of the main server, by created_at):
 //   - is_test = FALSE      /test simulations are real rows but never acted on
 //   - is_imported = FALSE  legacy warns imported as history are not counted anywhere
-//   - voided_at IS NULL    /case void: a mistake; it no longer counts. Voided cases are
+//   - voided_at IS NULL    /case remove: a mistake; it no longer counts. Voided cases are
 //                          shown in a separate "voided" column instead, so mistakes stay visible.
 //   - bans: is_auto marks the automatic warn-ladder bans (enforcementService.js isAuto),
 //     shown as "of which automatic"; automod cases have reason_key 'automod:…'.

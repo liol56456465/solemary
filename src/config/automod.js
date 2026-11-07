@@ -115,7 +115,7 @@ export const automodConfig = {
     trustedRelaxMaxSeverity: 20,
     // A member's level is read at most this often (only when a relaxable rule was hit).
     trustedLevelCacheMs: 5 * 60 * 1000,
-    // Second chance (/automod secondchance): a member's first offence in a rule group
+    // Second chance (/automod friendlynotice): a member's first offence in a rule group
     // within secondChanceWindowMs, on a rule at or below secondChanceMaxSeverity (caps,
     // characters, English only) or in secondChanceRules (Inappropriate language, only
     // when no blocked word / slur was used), gets a short notice instead of a warning.
