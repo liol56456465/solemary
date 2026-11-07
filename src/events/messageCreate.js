@@ -18,6 +18,7 @@ import { enforceAbuseProtection, formatCooldownDuration } from '../utils/abusePr
 import { createEmbed } from '../utils/embeds.js';
 import { isCommandEnabled } from '../services/commandAccessService.js';
 import { checkCommandAccess } from '../utils/commandGate.js';
+import { resolveBotLanguage } from '../utils/botText.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { handleModmailDm, handleModmailStaffMessage, isModmailStaff, modmailUserId } from '../services/modmailService.js';
 import { enforcementConfig } from '../config/enforcement.js';
@@ -121,6 +122,8 @@ async function handlePrefixCommand(message, client) {
       guild: message.guild,
       userId: message.author.id,
       permissions: message.member?.permissions,
+      // A prefix command's refusal is a public reply in the channel: the server's language.
+      lang: resolveBotLanguage({ guildId: message.guildId, member: message.member, userId: message.author.id, purpose: 'public' }),
     });
     if (!access.allowed) {
       // A blacklisted server is ignored (no answer at all).

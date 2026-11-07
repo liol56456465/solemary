@@ -1,0 +1,22 @@
+{
+  "page": {
+    "help": "La lingua che Mewvo usa in questo server per i messaggi nei canali e per i DM ai membri. Le risposte che vede una sola persona seguono la lingua di Discord di quella persona."
+  },
+  "card": {
+    "title": "Lingua",
+    "help": "Scegli la lingua di tutto quello che Mewvo pubblica qui nei canali e manda ai membri in DM. L’inglese è la lingua predefinita."
+  },
+  "form": {
+    "label": "Lingua per messaggi e DM",
+    "help": "I membri ricevono in questa lingua i DM su sanzioni e ricorsi."
+  },
+  "rule": {
+    "title": "Chi vede quale lingua",
+    "public": "Messaggi nei canali e DM ai membri: la lingua che scegli qui.",
+    "private": "Risposte che vede una sola persona (come i messaggi di errore dopo un comando): la lingua di Discord di quella persona.",
+    "done": "Già tradotto: i DM su sanzioni, fine di ban e silenziamenti e ricorsi, e i messaggi di errore. Il resto per ora è ancora in inglese."
+  },
+  "saved": {
+    "done": "Ora Mewvo usa {language} per messaggi e DM in questo server."
+  }
+}

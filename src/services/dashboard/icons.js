@@ -40,6 +40,7 @@ const PATHS = {
     rules: '<path d="M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8.5 8h.01M11 8h5M8.5 12h.01M11 12h5M8.5 16h.01M11 16h5"/>',
     audit: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
     appearance: '<circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+    'bot-language': '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.3 2.3 3.5 5.2 3.5 8.5s-1.2 6.2-3.5 8.5c-2.3-2.3-3.5-5.2-3.5-8.5s1.2-6.2 3.5-8.5z"/>',
     backup: '<path d="M12 4v10"/><path d="M8 10l4 4 4-4"/><path d="M5 18h14"/>',
     activity: '<path d="M4 4v16h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/>',
     check: '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9"/>',

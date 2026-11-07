@@ -21,6 +21,7 @@ import { buildUserErrorEmbed } from './embeds.js';
 import { MessageFlags } from 'discord.js';
 import { getErrorMetadata, getDefaultErrorCodeByType, resolveErrorCode, ErrorCodes } from './errorRegistry.js';
 import { InteractionHelper, isAcknowledgedViaMessageUpdate } from './interactionHelper.js';
+import { botText, resolveBotLanguage } from './botText.js';
 
 // Re-export so consumers only ever need to import from errorHandler.js
 export { ErrorCodes, getErrorMetadata, resolveErrorCode, getDefaultErrorCodeByType } from './errorRegistry.js';
@@ -168,23 +169,49 @@ const UserMessages = {
     }
 };
 
+// UserMessages above is the English text; the other languages are in src/content/bot/<lang>/errors.json
+// (message.<type>.<subtype>, same keys). A custom error.userMessage is shown as written (English).
+
+/**
+ * The user-facing text of an error. `context.lang` (optional, one of the 8 bot languages; see
+ * utils/botText.js) picks the language of the built-in messages; without it, English as before.
+ */
 export function getUserMessage(error, context = {}) {
     const type = categorizeError(error);
-    const messages = UserMessages[type] || UserMessages[ErrorTypes.UNKNOWN];
+    const known = Object.hasOwn(UserMessages, type) ? type : ErrorTypes.UNKNOWN;
+    const messages = UserMessages[known];
+    const lang = context.lang && context.lang !== 'en' ? context.lang : null;
+    const text = (msgType, subtype) => (lang ? botText(lang).t(`errors.message.${msgType}.${subtype}`) : UserMessages[msgType][subtype]);
 
     if (error.userMessage) {
         return error.userMessage;
     }
 
-    if (context.subtype && messages[context.subtype]) {
-        return messages[context.subtype];
+    if (context.subtype && Object.hasOwn(messages, context.subtype)) {
+        return text(known, context.subtype);
     }
 
-    if (context.subtype && UserMessages[ErrorTypes.UNKNOWN][context.subtype]) {
-        return UserMessages[ErrorTypes.UNKNOWN][context.subtype];
+    if (context.subtype && Object.hasOwn(UserMessages[ErrorTypes.UNKNOWN], context.subtype)) {
+        return text(ErrorTypes.UNKNOWN, context.subtype);
     }
 
-    return messages.default;
+    return text(known, 'default');
+}
+
+/**
+ * The language of an error answer: the user's Discord language for an ephemeral reply (the
+ * default); the server's when the answer is public (context.ephemeral === false, or a prefix
+ * command, which replies in the channel).
+ * Never throws (botText.js falls back to English).
+ */
+function errorLanguage(interaction, context = {}) {
+    if (context.lang) return context.lang;
+    try {
+        return resolveBotLanguage({ interaction, guildId: interaction?.guildId ?? null, member: interaction?.member ?? null,
+            userId: interaction?.user?.id ?? null, purpose: context.ephemeral === false || interaction?._isPrefixCommand ? 'public' : 'reply' });
+    } catch {
+        return 'en';
+    }
 }
 
 function buildErrorLogData(interaction, error, errorType, context = {}) {
@@ -338,7 +365,8 @@ export async function replyUserError(interaction, {
         ? createError('User error', errorType, message, { expected: true, ...context })
         : createError('User error', errorType, null, { expected: true, ...context });
 
-    const userMessage = getUserMessage(syntheticError, { subtype, ...context });
+    const lang = errorLanguage(interaction, { ...context, ephemeral });
+    const userMessage = getUserMessage(syntheticError, { subtype, ...context, lang });
     const { logData, traceId } = buildErrorLogData(interaction, syntheticError, errorType, {
         ...context,
         subtype,
@@ -347,7 +375,7 @@ export async function replyUserError(interaction, {
 
     logInteractionError(syntheticError, errorType, logData);
 
-    const embed = buildUserErrorEmbed(errorType, userMessage);
+    const embed = buildUserErrorEmbed(errorType, userMessage, { lang });
     return sendErrorResponse(interaction, embed, { ...context, traceId, ephemeral, subtype });
 }
 
@@ -365,7 +393,8 @@ function buildErrorReference(resolvedErrorCode, traceId) {
 
 export async function handleInteractionError(interaction, error, context = {}) {
     const errorType = categorizeError(error);
-    const userMessage = getUserMessage(error, context);
+    const lang = errorLanguage(interaction, context);
+    const userMessage = getUserMessage(error, { ...context, lang });
     const { logData, traceId, resolvedErrorCode } = buildErrorLogData(interaction, error, errorType, context);
 
     logInteractionError(error, errorType, logData);
@@ -376,7 +405,7 @@ export async function handleInteractionError(interaction, error, context = {}) {
         ? userMessage
         : `${userMessage}\n\n-# Ref: \`${buildErrorReference(resolvedErrorCode, traceId)}\``;
 
-    const embed = buildUserErrorEmbed(errorType, description);
+    const embed = buildUserErrorEmbed(errorType, description, { lang });
     await sendErrorResponse(interaction, embed, { ...context, traceId });
 }
 

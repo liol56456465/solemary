@@ -1,0 +1,22 @@
+{
+  "page": {
+    "help": "O idioma que o Mewvo usa neste servidor para as mensagens nos canais e as DMs aos membros. Respostas que só uma pessoa vê seguem o idioma do Discord dessa pessoa."
+  },
+  "card": {
+    "title": "Idioma",
+    "help": "Escolha o idioma de tudo o que o Mewvo publica aqui nos canais e envia aos membros por DM. O inglês é o padrão."
+  },
+  "form": {
+    "label": "Idioma das mensagens e DMs",
+    "help": "Os membros recebem neste idioma as DMs de punições e apelações."
+  },
+  "rule": {
+    "title": "Quem vê qual idioma",
+    "public": "Mensagens nos canais e DMs aos membros: o idioma que você escolher aqui.",
+    "private": "Respostas que só uma pessoa vê (como mensagens de erro depois de um comando): o idioma do Discord dessa pessoa.",
+    "done": "Já traduzido: DMs de punições, fim de banimento e silenciamento e apelações, e as mensagens de erro. O resto ainda aparece em inglês por enquanto."
+  },
+  "saved": {
+    "done": "Agora o Mewvo usa {language} para mensagens e DMs neste servidor."
+  }
+}

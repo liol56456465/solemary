@@ -1,0 +1,22 @@
+{
+  "page": {
+    "help": "Die Sprache, die Mewvo auf diesem Server für Beiträge und für DMs an Mitglieder benutzt. Antworten, die nur eine Person sieht, folgen deren eigener Discord-Sprache."
+  },
+  "card": {
+    "title": "Sprache",
+    "help": "Wähle die Sprache für alles, was Mewvo hier in Kanälen postet und Mitgliedern per DM schickt. Standard ist Englisch."
+  },
+  "form": {
+    "label": "Sprache für Beiträge und DMs",
+    "help": "Mitglieder bekommen DMs zu Strafen und Einsprüchen in dieser Sprache."
+  },
+  "rule": {
+    "title": "Wer welche Sprache sieht",
+    "public": "Beiträge in Kanälen und DMs an Mitglieder: die Sprache, die du hier wählst.",
+    "private": "Antworten, die nur eine Person sieht (z. B. Fehlermeldungen nach einem Befehl): die eigene Discord-Sprache dieser Person.",
+    "done": "Bisher übersetzt: DMs zu Strafen, aufgehobenen Banns und Stummschaltungen und Einsprüchen sowie Fehlermeldungen. Alles andere ist vorerst noch Englisch."
+  },
+  "saved": {
+    "done": "Mewvo benutzt auf diesem Server jetzt {language} für Beiträge und DMs."
+  }
+}

@@ -1,0 +1,70 @@
+{
+    "title": {
+        "validation": "Saisie invalide",
+        "permission": "Accès refusé",
+        "configuration": "Erreur de configuration",
+        "database": "Erreur de base de données",
+        "network": "Erreur réseau",
+        "discord_api": "Erreur Discord",
+        "user_input": "Erreur de saisie",
+        "rate_limit": "Trop rapide",
+        "unknown": "Un problème est survenu"
+    },
+    "message": {
+        "validation": {
+            "default": "Vérifie ta saisie et réessaie.",
+            "missing_required": "Il manque des informations obligatoires. Vérifie les options de la commande et réessaie.",
+            "invalid_format": "Le format n’est pas bon. Vérifie comment utiliser la commande et réessaie."
+        },
+        "permission": {
+            "default": "Tu n’as pas la permission de faire ça.",
+            "user_permission": "Tu n’as pas la permission d’utiliser cette commande.",
+            "bot_permission": "Il me manque les permissions nécessaires dans ce salon."
+        },
+        "configuration": {
+            "default": "Cette fonction n’est pas encore configurée. Demande à un administrateur du serveur de la configurer.",
+            "missing_config": "Cette fonction n’a pas encore été configurée. Demande à un administrateur du serveur de la configurer.",
+            "invalid_config": "La configuration de cette fonction n’est pas valide. Demande à un administrateur du serveur de la vérifier."
+        },
+        "database": {
+            "default": "Un problème est survenu pendant l’enregistrement. Réessaie dans un instant.",
+            "connection_failed": "Je n’ai pas pu joindre la base de données. Réessaie plus tard.",
+            "timeout": "Cela a pris trop de temps. Réessaie."
+        },
+        "network": {
+            "default": "Je n’ai pas pu joindre un service externe. Réessaie dans un instant.",
+            "timeout": "La requête a pris trop de temps. Réessaie.",
+            "unreachable": "Le service n’est pas disponible pour le moment. Réessaie plus tard."
+        },
+        "discord_api": {
+            "default": "Discord a refusé la requête. Réessaie dans un instant.",
+            "rate_limit": "Tu vas trop vite. Attends un instant et réessaie.",
+            "forbidden": "Je n’ai pas le droit de faire ça ici. Vérifie les permissions de mon rôle."
+        },
+        "user_input": {
+            "default": "Il y a un problème avec ta demande. Vérifie ta saisie et réessaie.",
+            "invalid_user": "Je n’ai pas trouvé cet utilisateur. Vérifie la mention ou l’ID et réessaie.",
+            "invalid_channel": "Je n’ai pas trouvé ce salon. Vérifie la mention ou l’ID et réessaie."
+        },
+        "rate_limit": {
+            "default": "Tu vas trop vite. Attends un instant et réessaie.",
+            "command_cooldown": "Cette commande est en pause. Attends avant de l’utiliser à nouveau.",
+            "global_rate_limit": "Discord limite les requêtes. Attends un instant et réessaie."
+        },
+        "unknown": {
+            "default": "Un problème est survenu. Réessaie dans un instant.",
+            "unexpected": "Une erreur inattendue s’est produite. Réessaie plus tard.",
+            "warn_failed": "Je n’ai pas pu avertir ce membre. Vérifie mes permissions et l’ordre des rôles, puis réessaie.",
+            "kick_failed": "Je n’ai pas pu expulser ce membre. Vérifie mes permissions et l’ordre des rôles, puis réessaie.",
+            "ban_failed": "Je n’ai pas pu bannir ce membre. Vérifie mes permissions et l’ordre des rôles, puis réessaie.",
+            "unban_failed": "Je n’ai pas pu débannir cet utilisateur. Vérifie mes permissions et réessaie.",
+            "timeout_failed": "Je n’ai pas pu exclure temporairement ce membre. Vérifie mes permissions et l’ordre des rôles, puis réessaie.",
+            "untimeout_failed": "Je n’ai pas pu retirer l’exclusion temporaire. Vérifie mes permissions et réessaie."
+        }
+    },
+    "access": {
+        "adminChannel": "Tu as besoin du rôle Administrateur pour utiliser cette commande. Demande un rôle de modo ou d’admin ici : <#{channelId}>",
+        "admin": "Tu as besoin du rôle Administrateur pour utiliser cette commande.",
+        "adminOther": "Tu as besoin du rôle Administrateur pour utiliser cette commande. Demande à un admin de ce serveur si tu as besoin d’accès."
+    }
+}

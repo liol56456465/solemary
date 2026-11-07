@@ -90,8 +90,9 @@ export function setRuleLookupForTests(fn) {
  * The DM line for a case whose prebuilt reason is linked to a rule: "Rule 3: No spam" plus
  * the link when the public page exists. Never throws: a failed lookup is logged and the DM
  * goes out without the line (the punishment is never blocked or delayed by it).
+ * `word`: "Rule" in the DM's language (dmTemplates passes the bot catalog's word).
  */
-export function ruleLineFor(record, env = process.env) {
+export function ruleLineFor(record, env = process.env, { word = 'Rule' } = {}) {
     try {
         const reasonKey = record?.reason_key ?? record?.reasonKey;
         if (!reasonKey) return null;
@@ -100,7 +101,7 @@ export function ruleLineFor(record, env = process.env) {
         const title = String(rule.title).replace(/\s+/g, ' ').trim();
         const url = rulesPageUrl(rule.number, env);
         // <link> keeps Discord from adding a preview card under the DM.
-        return `Rule ${rule.number}: ${title}${url ? `, <${url}>` : ''}`;
+        return `${word} ${rule.number}: ${title}${url ? `, <${url}>` : ''}`;
     } catch (error) {
         logger.warn(`Rule lookup for a punishment DM failed (sent without the rule line): ${error.message}`);
         return null;

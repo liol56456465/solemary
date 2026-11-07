@@ -1,0 +1,84 @@
+{
+    "dm": {
+        "appealHere": "**Apela aquí:** {invite}",
+        "cannotAppeal": "Este baneo no se puede apelar.",
+        "by": "Por: {name}",
+        "reason": "Motivo: {reason}",
+        "rule": "Regla",
+        "date": "Fecha: {date}",
+        "duration": "Duración: {duration}, termina el {end}",
+        "durationPermanent": "Duración: permanente",
+        "caseCode": "Código del caso: {code}",
+        "rejoin": "Volver a unirte: {invite}",
+        "record": "Tu historial completo: <{url}>",
+        "privacy": "-# Privacidad: <{url}>",
+        "ban": {
+            "title": "**Baneado de {server}**",
+            "autoNote": "Apelar este código también elimina la advertencia que causó este baneo.",
+            "appealUntil": "Puedes apelar hasta el {date}."
+        },
+        "kick": {
+            "title": "**Expulsado de {server}**",
+            "noInvite": "Volver a unirte: pide una invitación a alguien del equipo"
+        },
+        "mute": {
+            "title": "**Silenciado en {server}**"
+        },
+        "warn": {
+            "title": "**Advertencia {number} de {limit} en {server}**",
+            "limit": "Con {limit} advertencias serás baneado."
+        },
+        "appealAccepted": {
+            "title": "**Apelación aceptada**",
+            "noInvite": "Pide a alguien del equipo en el servidor de soporte una invitación para volver."
+        },
+        "appealDenied": "**Apelación rechazada.** Si crees que es un error, vuelve a apelar aquí:\n{invite}",
+        "banEnded": {
+            "title": "**Tu baneo de {server} ha terminado**",
+            "early": "Un moderador lo quitó antes de tiempo.",
+            "expired": "Ha caducado.",
+            "noInvite": "Volver a unirte: pide una invitación en el servidor de soporte: {invite}"
+        },
+        "muteEnded": {
+            "title": "**Tu silencio en {server} ha terminado**",
+            "early": "Un moderador lo quitó antes de tiempo. Ya puedes volver a escribir.",
+            "expired": "Ha caducado. Ya puedes volver a escribir."
+        },
+        "voided": {
+            "title": {
+                "ban": "**Se eliminó un baneo de tu historial en {server}**",
+                "kick": "**Se eliminó una expulsión de tu historial en {server}**",
+                "mute": "**Se eliminó un silencio de tu historial en {server}**",
+                "warn": "**Se eliminó una advertencia de tu historial en {server}**",
+                "generic": "**Se eliminó una entrada ({type}) de tu historial en {server}**"
+            },
+            "reason": "Motivo: {reason}",
+            "mistake": "El equipo la eliminó por ser un error. Ya no cuenta en tu contra.",
+            "unbanned": "Se quitó tu baneo. Volver a unirte: {invite}"
+        }
+    },
+    "duration": {
+        "permanent": "Permanente",
+        "lessThanMinute": "menos de un minuto",
+        "month": {
+            "one": "{count} mes",
+            "many": "{count} meses",
+            "other": "{count} meses"
+        },
+        "day": {
+            "one": "{count} día",
+            "many": "{count} días",
+            "other": "{count} días"
+        },
+        "hour": {
+            "one": "{count} hora",
+            "many": "{count} horas",
+            "other": "{count} horas"
+        },
+        "minute": {
+            "one": "{count} minuto",
+            "many": "{count} minutos",
+            "other": "{count} minutos"
+        }
+    }
+}

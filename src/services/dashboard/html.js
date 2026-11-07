@@ -133,6 +133,7 @@ export const NAV = [
         { key: 'help', main: true, label: 'Words explained' },
         { key: 'modules', main: true, label: 'All modules' },
         { key: 'appearance', label: 'Bot in this server', keywords: 'nickname, avatar, bot name, profile, custom bot', summary: 'Give Mewvo its own name and picture here (Pro and Max).' },
+        { key: 'bot-language', label: 'Bot language', keywords: 'language, translation, translate, locale, dm language, russian, german, french, italian, polish, spanish, portuguese', summary: 'The language Mewvo uses for posts and DMs here.' },
         { key: 'commands', main: true, label: 'Commands', keywords: 'disable command, enable command, categories, permissions, prefix, moderator role, mod role, shorten, short link', summary: 'Turn single commands or groups of commands on or off.' },
         { key: 'audit', label: 'Audit log' },
         { key: 'backup', label: 'Settings backup' },

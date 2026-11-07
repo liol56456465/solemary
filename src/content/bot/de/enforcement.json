@@ -1,0 +1,80 @@
+{
+    "dm": {
+        "appealHere": "**Hier Einspruch einlegen:** {invite}",
+        "cannotAppeal": "Gegen diesen Bann ist kein Einspruch möglich.",
+        "by": "Von: {name}",
+        "reason": "Grund: {reason}",
+        "rule": "Regel",
+        "date": "Datum: {date}",
+        "duration": "Dauer: {duration}, endet {end}",
+        "durationPermanent": "Dauer: dauerhaft",
+        "caseCode": "Fallcode: {code}",
+        "rejoin": "Wieder beitreten: {invite}",
+        "record": "Deine ganze Akte: <{url}>",
+        "privacy": "-# Datenschutz: <{url}>",
+        "ban": {
+            "title": "**Von {server} gebannt**",
+            "autoNote": "Ein Einspruch gegen diesen Code entfernt auch die Verwarnung, die diesen Bann ausgelöst hat.",
+            "appealUntil": "Du kannst bis {date} Einspruch einlegen."
+        },
+        "kick": {
+            "title": "**Von {server} gekickt**",
+            "noInvite": "Wieder beitreten: Bitte ein Teammitglied um eine Einladung"
+        },
+        "mute": {
+            "title": "**In {server} stummgeschaltet**"
+        },
+        "warn": {
+            "title": "**Verwarnung {number} von {limit} in {server}**",
+            "limit": "Bei {limit} Verwarnungen wirst du gebannt."
+        },
+        "appealAccepted": {
+            "title": "**Einspruch angenommen**",
+            "noInvite": "Bitte ein Teammitglied im Support-Server um eine Einladung zurück."
+        },
+        "appealDenied": "**Einspruch abgelehnt.** Wenn du denkst, dass das ein Fehler ist, leg hier noch einmal Einspruch ein:\n{invite}",
+        "banEnded": {
+            "title": "**Dein Bann von {server} ist vorbei**",
+            "early": "Ein Moderator hat ihn früher aufgehoben.",
+            "expired": "Er ist abgelaufen.",
+            "noInvite": "Wieder beitreten: Frag im Support-Server nach einer Einladung: {invite}"
+        },
+        "muteEnded": {
+            "title": "**Deine Stummschaltung in {server} ist vorbei**",
+            "early": "Ein Moderator hat sie früher aufgehoben. Du kannst wieder schreiben.",
+            "expired": "Sie ist abgelaufen. Du kannst wieder schreiben."
+        },
+        "voided": {
+            "title": {
+                "ban": "**Ein Bann in deiner Akte in {server} wurde entfernt**",
+                "kick": "**Ein Kick in deiner Akte in {server} wurde entfernt**",
+                "mute": "**Eine Stummschaltung in deiner Akte in {server} wurde entfernt**",
+                "warn": "**Eine Verwarnung in deiner Akte in {server} wurde entfernt**",
+                "generic": "**Ein Eintrag ({type}) in deiner Akte in {server} wurde entfernt**"
+            },
+            "reason": "Grund: {reason}",
+            "mistake": "Das Team hat ihn als Fehler entfernt. Er zählt nicht mehr gegen dich.",
+            "unbanned": "Dein Bann wurde aufgehoben. Wieder beitreten: {invite}"
+        }
+    },
+    "duration": {
+        "permanent": "Dauerhaft",
+        "lessThanMinute": "weniger als eine Minute",
+        "month": {
+            "one": "{count} Monat",
+            "other": "{count} Monate"
+        },
+        "day": {
+            "one": "{count} Tag",
+            "other": "{count} Tage"
+        },
+        "hour": {
+            "one": "{count} Stunde",
+            "other": "{count} Stunden"
+        },
+        "minute": {
+            "one": "{count} Minute",
+            "other": "{count} Minuten"
+        }
+    }
+}

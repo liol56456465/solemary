@@ -1,0 +1,22 @@
+{
+  "page": {
+    "help": "La langue que Mewvo utilise sur ce serveur pour les messages publics et les MP aux membres. Les réponses qu’une seule personne voit suivent la langue Discord de cette personne."
+  },
+  "card": {
+    "title": "Langue",
+    "help": "Choisis la langue de tout ce que Mewvo publie ici dans les salons et envoie aux membres en MP. L’anglais est la langue par défaut."
+  },
+  "form": {
+    "label": "Langue des messages et des MP",
+    "help": "Les membres reçoivent les MP de sanction et d’appel dans cette langue."
+  },
+  "rule": {
+    "title": "Qui voit quelle langue",
+    "public": "Messages dans les salons et MP aux membres : la langue choisie ici.",
+    "private": "Réponses qu’une seule personne voit (comme les messages d’erreur après une commande) : la langue Discord de cette personne.",
+    "done": "Déjà traduit : les MP de sanction, de levée de ban ou de mute et d’appel, et les messages d’erreur. Le reste s’affiche encore en anglais pour l’instant."
+  },
+  "saved": {
+    "done": "Mewvo utilise maintenant {language} pour les messages et les MP sur ce serveur."
+  }
+}

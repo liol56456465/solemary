@@ -1,0 +1,70 @@
+{
+    "title": {
+        "validation": "Ungültige Eingabe",
+        "permission": "Keine Berechtigung",
+        "configuration": "Einrichtungsfehler",
+        "database": "Datenbankfehler",
+        "network": "Netzwerkfehler",
+        "discord_api": "Discord-Fehler",
+        "user_input": "Eingabefehler",
+        "rate_limit": "Zu schnell",
+        "unknown": "Etwas ist schiefgelaufen"
+    },
+    "message": {
+        "validation": {
+            "default": "Bitte prüfe deine Eingabe und versuche es noch einmal.",
+            "missing_required": "Es fehlen nötige Angaben. Prüfe die Optionen des Befehls und versuche es noch einmal.",
+            "invalid_format": "Das Format stimmt nicht. Prüfe, wie der Befehl benutzt wird, und versuche es noch einmal."
+        },
+        "permission": {
+            "default": "Dafür hast du keine Berechtigung.",
+            "user_permission": "Du darfst diesen Befehl nicht benutzen.",
+            "bot_permission": "Mir fehlen in diesem Kanal die nötigen Berechtigungen dafür."
+        },
+        "configuration": {
+            "default": "Diese Funktion ist noch nicht eingerichtet. Bitte einen Server-Admin, sie einzurichten.",
+            "missing_config": "Diese Funktion wurde noch nicht eingerichtet. Bitte einen Server-Admin, sie einzurichten.",
+            "invalid_config": "Die Einstellungen für diese Funktion sind ungültig. Bitte einen Server-Admin, sie zu prüfen."
+        },
+        "database": {
+            "default": "Beim Speichern ist etwas schiefgelaufen. Bitte versuche es gleich noch einmal.",
+            "connection_failed": "Ich konnte die Datenbank nicht erreichen. Bitte versuche es später noch einmal.",
+            "timeout": "Das hat zu lange gedauert. Bitte versuche es noch einmal."
+        },
+        "network": {
+            "default": "Ich konnte einen externen Dienst nicht erreichen. Bitte versuche es gleich noch einmal.",
+            "timeout": "Die Anfrage hat zu lange gedauert. Bitte versuche es noch einmal.",
+            "unreachable": "Der Dienst ist gerade nicht erreichbar. Bitte versuche es später noch einmal."
+        },
+        "discord_api": {
+            "default": "Discord hat die Anfrage abgelehnt. Bitte versuche es gleich noch einmal.",
+            "rate_limit": "Du machst das zu schnell. Warte kurz und versuche es noch einmal.",
+            "forbidden": "Das darf ich hier nicht. Prüfe die Berechtigungen meiner Rolle."
+        },
+        "user_input": {
+            "default": "Mit deiner Anfrage stimmt etwas nicht. Prüfe deine Eingabe und versuche es noch einmal.",
+            "invalid_user": "Ich konnte diesen Benutzer nicht finden. Prüfe die Erwähnung oder ID und versuche es noch einmal.",
+            "invalid_channel": "Ich konnte diesen Kanal nicht finden. Prüfe die Erwähnung oder ID und versuche es noch einmal."
+        },
+        "rate_limit": {
+            "default": "Du machst das zu schnell. Warte kurz und versuche es noch einmal.",
+            "command_cooldown": "Dieser Befehl hat gerade eine Pause. Warte, bevor du ihn wieder benutzt.",
+            "global_rate_limit": "Discord bremst gerade die Anfragen. Warte kurz und versuche es noch einmal."
+        },
+        "unknown": {
+            "default": "Etwas ist schiefgelaufen. Bitte versuche es gleich noch einmal.",
+            "unexpected": "Ein unerwarteter Fehler ist passiert. Bitte versuche es später noch einmal.",
+            "warn_failed": "Ich konnte dieses Mitglied nicht verwarnen. Prüfe meine Berechtigungen und die Rollenreihenfolge und versuche es dann noch einmal.",
+            "kick_failed": "Ich konnte dieses Mitglied nicht kicken. Prüfe meine Berechtigungen und die Rollenreihenfolge und versuche es dann noch einmal.",
+            "ban_failed": "Ich konnte dieses Mitglied nicht bannen. Prüfe meine Berechtigungen und die Rollenreihenfolge und versuche es dann noch einmal.",
+            "unban_failed": "Ich konnte den Bann dieses Benutzers nicht aufheben. Prüfe meine Berechtigungen und versuche es noch einmal.",
+            "timeout_failed": "Ich konnte dieses Mitglied nicht in den Timeout schicken. Prüfe meine Berechtigungen und die Rollenreihenfolge und versuche es dann noch einmal.",
+            "untimeout_failed": "Ich konnte den Timeout nicht aufheben. Prüfe meine Berechtigungen und versuche es noch einmal."
+        }
+    },
+    "access": {
+        "adminChannel": "Für diesen Befehl brauchst du die Administrator-Rolle. Eine Mod- oder Admin-Rolle kannst du hier anfragen: <#{channelId}>",
+        "admin": "Für diesen Befehl brauchst du die Administrator-Rolle.",
+        "adminOther": "Für diesen Befehl brauchst du die Administrator-Rolle. Frag einen Admin dieses Servers, wenn du Zugriff brauchst."
+    }
+}

@@ -757,6 +757,9 @@ const CASES = {
             bad: { form: {}, message: /Choose a picture to upload/ } },
         'avatar-reset': { form: {}, service: 'setBotAvatar', admin: true },
     },
+    'bot-language': {
+        language: { form: { botLanguage: 'de' }, service: 'updateSettings', bad: { form: { botLanguage: 'xx' }, message: /Language for posts and DMs/ } },
+    },
     automod: {
         enabled: { form: { enabled: 'false' }, service: 'setAutomodEnabled', bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
         mode: { form: { mode: 'monitor' }, service: 'setAutomodMode', bad: { form: { mode: 'chaos' }, message: /unknown choice/ } },

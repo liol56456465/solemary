@@ -1,0 +1,70 @@
+{
+    "title": {
+        "validation": "Nieprawidłowe dane",
+        "permission": "Brak uprawnień",
+        "configuration": "Błąd konfiguracji",
+        "database": "Błąd bazy danych",
+        "network": "Błąd sieci",
+        "discord_api": "Błąd Discorda",
+        "user_input": "Błąd danych",
+        "rate_limit": "Za szybko",
+        "unknown": "Coś poszło nie tak"
+    },
+    "message": {
+        "validation": {
+            "default": "Sprawdź wpisane dane i spróbuj ponownie.",
+            "missing_required": "Brakuje wymaganych informacji. Sprawdź opcje komendy i spróbuj ponownie.",
+            "invalid_format": "Format jest nieprawidłowy. Sprawdź, jak używać komendy, i spróbuj ponownie."
+        },
+        "permission": {
+            "default": "Nie masz uprawnień, żeby to zrobić.",
+            "user_permission": "Nie masz uprawnień do tej komendy.",
+            "bot_permission": "Nie mam potrzebnych uprawnień na tym kanale."
+        },
+        "configuration": {
+            "default": "Ta funkcja nie jest jeszcze ustawiona. Poproś administratora serwera, żeby ją ustawił.",
+            "missing_config": "Ta funkcja nie została jeszcze ustawiona. Poproś administratora serwera, żeby ją ustawił.",
+            "invalid_config": "Ustawienia tej funkcji są nieprawidłowe. Poproś administratora serwera, żeby je sprawdził."
+        },
+        "database": {
+            "default": "Coś poszło nie tak podczas zapisywania. Spróbuj ponownie za chwilę.",
+            "connection_failed": "Nie mogę połączyć się z bazą danych. Spróbuj ponownie później.",
+            "timeout": "Trwało to za długo. Spróbuj ponownie."
+        },
+        "network": {
+            "default": "Nie mogę połączyć się z zewnętrzną usługą. Spróbuj ponownie za chwilę.",
+            "timeout": "Czas na odpowiedź minął. Spróbuj ponownie.",
+            "unreachable": "Usługa jest teraz niedostępna. Spróbuj ponownie później."
+        },
+        "discord_api": {
+            "default": "Discord odrzucił to żądanie. Spróbuj ponownie za chwilę.",
+            "rate_limit": "Robisz to za szybko. Poczekaj chwilę i spróbuj ponownie.",
+            "forbidden": "Nie mogę tego tutaj zrobić. Sprawdź uprawnienia mojej roli."
+        },
+        "user_input": {
+            "default": "Z twoim żądaniem jest problem. Sprawdź wpisane dane i spróbuj ponownie.",
+            "invalid_user": "Nie mogę znaleźć tego użytkownika. Sprawdź wzmiankę lub ID i spróbuj ponownie.",
+            "invalid_channel": "Nie mogę znaleźć tego kanału. Sprawdź wzmiankę lub ID i spróbuj ponownie."
+        },
+        "rate_limit": {
+            "default": "Robisz to za szybko. Poczekaj chwilę i spróbuj ponownie.",
+            "command_cooldown": "Tej komendy nie można jeszcze użyć ponownie. Poczekaj chwilę.",
+            "global_rate_limit": "Discord ogranicza żądania. Poczekaj chwilę i spróbuj ponownie."
+        },
+        "unknown": {
+            "default": "Coś poszło nie tak. Spróbuj ponownie za chwilę.",
+            "unexpected": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.",
+            "warn_failed": "Nie mogę dać ostrzeżenia temu członkowi. Sprawdź moje uprawnienia i kolejność ról, a potem spróbuj ponownie.",
+            "kick_failed": "Nie mogę wyrzucić tego członka. Sprawdź moje uprawnienia i kolejność ról, a potem spróbuj ponownie.",
+            "ban_failed": "Nie mogę zbanować tego członka. Sprawdź moje uprawnienia i kolejność ról, a potem spróbuj ponownie.",
+            "unban_failed": "Nie mogę odbanować tego użytkownika. Sprawdź moje uprawnienia i spróbuj ponownie.",
+            "timeout_failed": "Nie mogę dać przerwy (timeout) temu członkowi. Sprawdź moje uprawnienia i kolejność ról, a potem spróbuj ponownie.",
+            "untimeout_failed": "Nie mogę zdjąć przerwy (timeout). Sprawdź moje uprawnienia i spróbuj ponownie."
+        }
+    },
+    "access": {
+        "adminChannel": "Do tej komendy potrzebujesz roli Administrator. Poproś o rolę moda lub admina tutaj: <#{channelId}>",
+        "admin": "Do tej komendy potrzebujesz roli Administrator.",
+        "adminOther": "Do tej komendy potrzebujesz roli Administrator. Jeśli potrzebujesz dostępu, zapytaj admina tego serwera."
+    }
+}

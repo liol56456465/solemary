@@ -23,14 +23,15 @@ import { isEveryoneCommand, isSupportServerCommand } from '../config/commands/co
 import { adminCommandsRetired, isKeptAdminCommand, isOwnerKit, retiredMessage } from '../config/commands/retirement.js';
 import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
 import { getStoredSetting } from '../services/settings/guildSettings.js';
+import { botText } from './botText.js';
 
 /**
  * The refusal for a non-admin. The main server (or no server given) keeps its wording and its
  * admin request channel. Any other server only names a request channel it stored itself, never
  * the main server's channel (that link would lead nowhere there); otherwise a neutral line.
- * `stored` is for tests.
+ * `stored` is for tests. `lang`: the language of the person asking (utils/botText.js); English by default.
  */
-export function getAdminRequiredMessage(guildId = null, { stored = getStoredSetting } = {}) {
+export function getAdminRequiredMessage(guildId = null, { stored = getStoredSetting, lang = 'en' } = {}) {
     const isMain = !guildId || guildId === enforcementConfig.mainGuildId;
     let channelId = null;
     if (isMain) {
@@ -42,10 +43,9 @@ export function getAdminRequiredMessage(guildId = null, { stored = getStoredSett
             channelId = null;
         }
     }
-    if (channelId) return `You need the Administrator role to use this command. Request a mod/admin role here: <#${channelId}>`;
-    return isMain
-        ? 'You need the Administrator role to use this command.'
-        : 'You need the Administrator role to use this command. Ask an admin of this server if you need access.';
+    const tr = botText(lang);
+    if (channelId) return tr.t('errors.access.adminChannel', { channelId });
+    return isMain ? tr.t('errors.access.admin') : tr.t('errors.access.adminOther');
 }
 
 /** True when the command exists in this guild: all commands in the main server, the support list in the support server. */
@@ -73,11 +73,12 @@ export function canSeeAdminCommands(interaction) {
  * @param {object|null} p.guild
  * @param {string} p.userId
  * @param {object|null} p.permissions  PermissionsBitField of the member in this guild
+ * @param {string} [p.lang]  language of the refusal (utils/botText.js resolveBotLanguage); English by default
  * @returns {{ allowed: true, ownerOverride?: true } | { allowed: false, message: string, silent?: true }}
  *   ownerOverride: allowed only because the user is in OWNER_IDS (the caller records it).
  *   silent: a blacklisted server; the caller does not answer at all.
  */
-export function checkCommandAccess({ command, accessKey, guild, userId, permissions }) {
+export function checkCommandAccess({ command, accessKey, guild, userId, permissions, lang = 'en' }) {
     const blocked = blacklistHit({ userId, guildId: guild?.id || null });
     if (blocked) {
         return blocked.kind === 'guild'
@@ -106,5 +107,5 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
     }
     if (hasAdministrator({ guild, userId, permissions })) return { allowed: true };
     if (isBotOwner(userId)) return { allowed: true, ownerOverride: true };
-    return { allowed: false, message: getAdminRequiredMessage(guild.id) };
+    return { allowed: false, message: getAdminRequiredMessage(guild.id, { lang }) };
 }

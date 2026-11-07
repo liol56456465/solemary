@@ -1,0 +1,84 @@
+{
+    "dm": {
+        "appealHere": "**Apele aqui:** {invite}",
+        "cannotAppeal": "Não é possível apelar deste banimento.",
+        "by": "Por: {name}",
+        "reason": "Motivo: {reason}",
+        "rule": "Regra",
+        "date": "Data: {date}",
+        "duration": "Duração: {duration}, termina em {end}",
+        "durationPermanent": "Duração: permanente",
+        "caseCode": "Código do caso: {code}",
+        "rejoin": "Voltar: {invite}",
+        "record": "Seu histórico completo: <{url}>",
+        "privacy": "-# Privacidade: <{url}>",
+        "ban": {
+            "title": "**Banido do {server}**",
+            "autoNote": "Apelar deste código também remove a advertência que causou este banimento.",
+            "appealUntil": "Você pode apelar até {date}."
+        },
+        "kick": {
+            "title": "**Expulso do {server}**",
+            "noInvite": "Voltar: peça um convite a alguém da equipe"
+        },
+        "mute": {
+            "title": "**Silenciado no {server}**"
+        },
+        "warn": {
+            "title": "**Advertência {number} de {limit} no {server}**",
+            "limit": "Com {limit} advertências, você será banido."
+        },
+        "appealAccepted": {
+            "title": "**Apelação aceita**",
+            "noInvite": "Peça a alguém da equipe no servidor de suporte um convite para voltar."
+        },
+        "appealDenied": "**Apelação recusada.** Se você acha que é um engano, apele de novo aqui:\n{invite}",
+        "banEnded": {
+            "title": "**Seu banimento do {server} terminou**",
+            "early": "Um moderador o retirou antes.",
+            "expired": "Ele expirou.",
+            "noInvite": "Voltar: peça um convite no servidor de suporte: {invite}"
+        },
+        "muteEnded": {
+            "title": "**Seu silenciamento no {server} terminou**",
+            "early": "Um moderador o retirou antes. Você já pode falar de novo.",
+            "expired": "Ele expirou. Você já pode falar de novo."
+        },
+        "voided": {
+            "title": {
+                "ban": "**Um banimento foi removido do seu histórico no {server}**",
+                "kick": "**Uma expulsão foi removida do seu histórico no {server}**",
+                "mute": "**Um silenciamento foi removido do seu histórico no {server}**",
+                "warn": "**Uma advertência foi removida do seu histórico no {server}**",
+                "generic": "**Um registro ({type}) foi removido do seu histórico no {server}**"
+            },
+            "reason": "Motivo: {reason}",
+            "mistake": "A equipe o removeu por ter sido um engano. Ele não conta mais contra você.",
+            "unbanned": "Seu banimento foi retirado. Voltar: {invite}"
+        }
+    },
+    "duration": {
+        "permanent": "Permanente",
+        "lessThanMinute": "menos de um minuto",
+        "month": {
+            "one": "{count} mês",
+            "many": "{count} meses",
+            "other": "{count} meses"
+        },
+        "day": {
+            "one": "{count} dia",
+            "many": "{count} dias",
+            "other": "{count} dias"
+        },
+        "hour": {
+            "one": "{count} hora",
+            "many": "{count} horas",
+            "other": "{count} horas"
+        },
+        "minute": {
+            "one": "{count} minuto",
+            "many": "{count} minutos",
+            "other": "{count} minutos"
+        }
+    }
+}

@@ -24,6 +24,7 @@ import { generateTranscript } from '../ticket.js';
 import { removeMutedRole } from './muteService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { appealAcceptedDm, appealDeniedDm } from './dmTemplates.js';
+import { resolveBotLanguage } from '../../utils/botText.js';
 import { dateStamp, formatDuration, ladderStage, ladderStageShort, stamp, truncate } from './format.js';
 import { evidenceDisplay } from './evidenceService.js';
 import { checkAppealReviewer, needsSecondReviewer } from './appealReviewer.js';
@@ -812,7 +813,7 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
                 via: `appeal \`${record.case_code}\``,
             });
             const invite = mainGuild ? await createRejoinInvite(mainGuild, `Appeal accepted for ${caseCode}`) : null;
-            if (appellant) dmDelivered = await sendDm(appellant, appealAcceptedDm(admin.username, invite));
+            if (appellant) dmDelivered = await sendDm(appellant, appealAcceptedDm(admin.username, invite, { lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }) }));
             // The acceptance DM is also the "ban/mute ended" notice: no second DM.
             if (!record.is_test && (record.type === 'ban' || record.type === 'mute') && isStillInEffect(record)) {
                 await setEndDmDelivered([record.id], dmDelivered).catch((error) =>
@@ -825,7 +826,7 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
                     await db.query(`UPDATE ${T.cases} SET unappealable = TRUE WHERE id = $1`, [record.id]);
                 }
             });
-            if (appellant) dmDelivered = await sendDm(appellant, appealDeniedDm());
+            if (appellant) dmDelivered = await sendDm(appellant, appealDeniedDm({ lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }) }));
         }
 
         await query(

@@ -19,6 +19,7 @@ import { isEnforcementDbAvailable } from '../../services/enforcement/db.js';
 import { insertCase, setDmDelivered } from '../../services/enforcement/caseService.js';
 import { appealAcceptedDm, appealDeniedDm, banDm, kickDm, muteDm, warnDm } from '../../services/enforcement/dmTemplates.js';
 import { addMonths, parseDuration } from '../../services/enforcement/format.js';
+import { resolveBotLanguage } from '../../utils/botText.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -59,13 +60,13 @@ export function prebuiltReasonFields(reason) {
 }
 
 /** The warn DM, or — when this warn would hit the ladder limit — the automatic ban DM that replaces it. */
-async function warnPreview({ invoker, target, reason, ladder }) {
+async function warnPreview({ invoker, target, reason, ladder, lang }) {
     const step = previewWarn(ladder);
     const warn = await saveTestCase({
         moderator: invoker, target, type: 'warn', reason, ladderLevel: step.nextLevel, extra: prebuiltReasonFields(reason),
     });
     if (!step.escalates) {
-        return { content: warnDm(warn, step.warnNumber), record: warn, note: `warn ${step.warnNumber} of ${step.threshold}` };
+        return { content: warnDm(warn, step.warnNumber, { lang }), record: warn, note: `warn ${step.warnNumber} of ${step.threshold}` };
     }
     const ban = await saveTestCase({
         moderator: { id: invoker.client.user.id, username: invoker.client.user.username },
@@ -80,13 +81,13 @@ async function warnPreview({ invoker, target, reason, ladder }) {
         },
     });
     return {
-        content: banDm(ban),
+        content: banDm(ban, { lang }),
         record: ban,
         note: `this warn reaches the limit, so they'd get the automatic ladder-level-${step.nextLevel} ban DM instead (warn \`${warn.case_code}\` was saved too)`,
     };
 }
 
-async function buildPreview({ action, guild, invoker, target, reason, durationMs, unappealable }) {
+async function buildPreview({ action, guild, invoker, target, reason, durationMs, unappealable, lang = 'en' }) {
     if (!action.startsWith('appeal-') && !isEnforcementDbAvailable()) {
         throw userError('The database is unavailable, so no test case can be saved. Try again later.');
     }
@@ -100,26 +101,26 @@ async function buildPreview({ action, guild, invoker, target, reason, durationMs
     switch (action) {
         case 'ban': {
             const record = await save('ban', { durationMs, unappealable });
-            return { content: banDm(record), record };
+            return { content: banDm(record, { lang }), record };
         }
         case 'kick': {
             const record = await save('kick');
             const invite = await createRejoinInvite(guild, `Rejoin invite for kick ${record.case_code} (/test)`);
-            return { content: kickDm(record, invite), record, invite };
+            return { content: kickDm(record, invite, { lang }), record, invite };
         }
         case 'mute': {
             if (!durationMs) throw userError('A mute needs a duration, e.g. `duration:1h`.');
             const record = await save('mute', { durationMs });
-            return { content: muteDm(record), record };
+            return { content: muteDm(record, { lang }), record };
         }
         case 'warn':
-            return warnPreview({ invoker, target, reason, ladder });
+            return warnPreview({ invoker, target, reason, ladder, lang });
         case 'appeal-accepted': {
             const invite = await createRejoinInvite(guild, 'Appeal accepted (/test)');
-            return { content: appealAcceptedDm(invoker.username, invite), invite };
+            return { content: appealAcceptedDm(invoker.username, invite, { lang }), invite };
         }
         case 'appeal-denied':
-            return { content: appealDeniedDm() };
+            return { content: appealDeniedDm({ lang }) };
         default:
             throw userError(`Unknown action: ${action}`);
     }
@@ -188,6 +189,8 @@ export default {
             reason: interaction.options.getString('reason')?.trim() || 'No reason given',
             durationMs,
             unappealable: interaction.options.getBoolean('no_appeal') ?? false,
+            // The language the member would get: the server's (a DM), not the invoker's.
+            lang: resolveBotLanguage({ guildId: interaction.guildId, userId: target.id, purpose: 'dm' }),
         });
 
         const delivered = await sendDm(interaction.user, content);

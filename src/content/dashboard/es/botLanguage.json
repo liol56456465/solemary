@@ -1,0 +1,22 @@
+{
+  "page": {
+    "help": "El idioma que Mewvo usa en este servidor para las publicaciones y los MD a los miembros. Las respuestas que ve una sola persona siguen el idioma de Discord de esa persona."
+  },
+  "card": {
+    "title": "Idioma",
+    "help": "Elige el idioma de todo lo que Mewvo publica aquí en los canales y envía a los miembros por MD. El inglés es el idioma predeterminado."
+  },
+  "form": {
+    "label": "Idioma de publicaciones y MD",
+    "help": "Los miembros reciben en este idioma los MD de sanciones y apelaciones."
+  },
+  "rule": {
+    "title": "Quién ve qué idioma",
+    "public": "Publicaciones en canales y MD a miembros: el idioma que elijas aquí.",
+    "private": "Respuestas que ve una sola persona (como los mensajes de error tras un comando): el idioma de Discord de esa persona.",
+    "done": "Traducido hasta ahora: los MD de sanciones, fin de baneos y silencios y apelaciones, y los mensajes de error. Lo demás sigue en inglés por ahora."
+  },
+  "saved": {
+    "done": "Mewvo ahora usa {language} para publicaciones y MD en este servidor."
+  }
+}

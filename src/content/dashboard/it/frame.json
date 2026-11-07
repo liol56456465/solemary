@@ -52,6 +52,7 @@
       "help": "Parole spiegate",
       "modules": "Tutti i moduli",
       "appearance": "Il bot in questo server",
+      "bot-language": "Lingua del bot",
       "commands": "Comandi",
       "audit": "Registro di controllo",
       "backup": "Backup delle impostazioni",
