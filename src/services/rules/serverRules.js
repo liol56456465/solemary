@@ -9,7 +9,7 @@
 // the database. Writes go through the settings service (row lock + dashboard_audit rows).
 
 import { randomBytes } from 'node:crypto';
-import { getConfiguredSetting, isSettingsLoaded } from '../settings/guildSettings.js';
+import { getConfiguredSetting, isHomeGuild, isSettingsLoaded, resolveSetting } from '../settings/guildSettings.js';
 import { RULES_LIMITS } from '../settings/settingsRegistry.js';
 import { siteOrigin } from '../site/shell.js';
 import { logger } from '../../utils/logger.js';
@@ -27,14 +27,25 @@ export function numberedRules(value) {
     };
 }
 
-/** The rules as stored now (from the settings cache). */
-export function readServerRules(env = process.env) {
-    return numberedRules(getConfiguredSetting('serverRules', env));
+/**
+ * A rules setting of a server. No server named, or one of Mewvo's own: the main server's value,
+ * exactly as before (the public /rules page, the home DMs). Any other server: only what it stored
+ * (resolveSetting; empty rules / no links by default), and SettingsUnavailableError when its
+ * settings could not be read.
+ */
+function rulesSetting(key, guildId, env) {
+    if (!guildId || isHomeGuild(guildId, env)) return getConfiguredSetting(key, env);
+    return resolveSetting(guildId, key, env);
 }
 
-/** The reason → rule id links as stored now. */
-export function readReasonLinks(env = process.env) {
-    const links = getConfiguredSetting('reasonRuleLinks', env);
+/** The rules as stored now (from the settings cache), of `guildId` (default: the main server). */
+export function readServerRules(env = process.env, guildId = null) {
+    return numberedRules(rulesSetting('serverRules', guildId, env));
+}
+
+/** The reason → rule id links as stored now, of `guildId` (default: the main server). */
+export function readReasonLinks(env = process.env, guildId = null) {
+    const links = rulesSetting('reasonRuleLinks', guildId, env);
     return links && typeof links === 'object' ? { ...links } : {};
 }
 
@@ -47,12 +58,12 @@ export function readPublicRules(env = process.env) {
     return readServerRules(env);
 }
 
-/** The rule a prebuilt reason is linked to ({ id, number, title }), or null. */
-export function ruleForReason(reasonKey, env = process.env) {
+/** The rule a prebuilt reason is linked to in `guildId` (default: the main server) ({ id, number, title }), or null. */
+export function ruleForReason(reasonKey, env = process.env, guildId = null) {
     if (!reasonKey) return null;
-    const ruleId = readReasonLinks(env)[reasonKey];
+    const ruleId = readReasonLinks(env, guildId)[reasonKey];
     if (!ruleId) return null;
-    const rule = readServerRules(env).rules.find((r) => r.id === ruleId);
+    const rule = readServerRules(env, guildId).rules.find((r) => r.id === ruleId);
     return rule ? { id: rule.id, number: rule.number, title: rule.title, consequence: rule.consequence } : null;
 }
 
@@ -61,9 +72,9 @@ export function ruleForReason(reasonKey, env = process.env) {
  * Listed consequence: 1-hour mute." (or without the second part). Null when the reason is
  * not linked. Never throws: a hint must not block a punishment.
  */
-export function ruleHintFor(reasonKey, env = process.env) {
+export function ruleHintFor(reasonKey, env = process.env, guildId = null) {
     try {
-        const rule = lookup(reasonKey, env);
+        const rule = lookup(reasonKey, env, guildId);
         if (!rule) return null;
         const title = String(rule.title).replace(/\s+/g, ' ').trim();
         return `Rule ${rule.number}: ${title}.${rule.consequence ? ` Listed consequence: ${rule.consequence}.` : ''}`;
@@ -91,15 +102,18 @@ export function setRuleLookupForTests(fn) {
  * the link when the public page exists. Never throws: a failed lookup is logged and the DM
  * goes out without the line (the punishment is never blocked or delayed by it).
  * `word`: "Rule" in the DM's language (dmTemplates passes the bot catalog's word).
+ * The rule comes from the case's server (`record.guild_id`; none: the main server). The /rules page
+ * shows the main server's rules, so only a home server's line links to it.
  */
 export function ruleLineFor(record, env = process.env, { word = 'Rule' } = {}) {
     try {
         const reasonKey = record?.reason_key ?? record?.reasonKey;
         if (!reasonKey) return null;
-        const rule = lookup(reasonKey, env);
+        const guildId = record?.guild_id ?? record?.guildId ?? null;
+        const rule = lookup(reasonKey, env, guildId);
         if (!rule) return null;
         const title = String(rule.title).replace(/\s+/g, ' ').trim();
-        const url = rulesPageUrl(rule.number, env);
+        const url = !guildId || isHomeGuild(guildId, env) ? rulesPageUrl(rule.number, env) : null;
         // <link> keeps Discord from adding a preview card under the DM.
         return `${word} ${rule.number}: ${title}${url ? `, <${url}>` : ''}`;
     } catch (error) {

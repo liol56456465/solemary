@@ -17,7 +17,7 @@ import { AttachmentBuilder, EmbedBuilder, PermissionFlagsBits } from 'discord.js
 import { fileURLToPath } from 'node:url';
 import { pgConfig } from '../../config/database/postgres.js';
 import { query as defaultQuery } from '../enforcement/db.js';
-import { getSetting } from '../settings/guildSettings.js';
+import { resolveSetting } from '../settings/guildSettings.js';
 import { pendingMessages } from '../stats/activityService.js';
 import { logger } from '../../utils/logger.js';
 import {
@@ -56,10 +56,13 @@ async function defaultLockdown(guildId) {
     return isLockdownActive(guildId);
 }
 
-/** The cat's name and announcement switch (settings registry; synchronous, from the cache). */
+/**
+ * The cat's name and announcement switch of this server (settings registry; synchronous, from the
+ * cache). Throws SettingsUnavailableError when another server's settings could not be read.
+ */
 export function catSettings(guildId, env = process.env) {
-    const name = sanitizeCatName(getSetting(guildId, 'catName', env)) || CAT_DEFAULT_NAME;
-    return { name, announce: getSetting(guildId, 'catAnnounce', env) !== false };
+    const name = sanitizeCatName(resolveSetting(guildId, 'catName', env)) || CAT_DEFAULT_NAME;
+    return { name, announce: resolveSetting(guildId, 'catAnnounce', env) !== false };
 }
 
 /**

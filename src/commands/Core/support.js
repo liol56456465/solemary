@@ -6,7 +6,9 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { inviteOrNull, siteOrigin } from '../../services/site/shell.js';
 
-// The same invite the website and the DMs use (setting supportServerInvite, dashboard-editable).
+// The same invite the website and the home servers' DMs use (setting supportServerInvite of Mewvo's
+// main server, dashboard-editable). Home-only by design (owner, 2026-11-07): /support is the bot's
+// help server in every server; a server's own appeal invite is appealsInvite (dmTemplates.js).
 const FALLBACK_INVITE = 'https://discord.gg/7Ckv9Bt577';
 /** Privacy Policy and Terms links on the website (PUBLIC_URL), or [] when it is not set. */
 export function legalLinks(env = process.env) {

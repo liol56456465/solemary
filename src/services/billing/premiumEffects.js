@@ -88,7 +88,10 @@ export function limitMessage(guildId, kind, noun) {
 
 // ── Roles ─────────────────────────────────────────────────────────────────
 
-/** The configured tier roles: { normal, pro, max } (ids or null). */
+/**
+ * The configured tier roles: { normal, pro, max } (ids or null). Home-only by design (multi-server
+ * B0b): supporter roles live in Mewvo's main server, whatever server the subscription is for.
+ */
 export function tierRoles(read = () => getConfiguredSetting('premiumRoleIds')) {
     let value = null;
     try { value = read(); } catch { value = null; }

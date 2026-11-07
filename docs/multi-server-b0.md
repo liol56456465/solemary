@@ -148,6 +148,13 @@ plus the dashboard list (B3) and the home-only sites to keep. Batch 2 is the lar
 | src/services/site/site.js:572 | transparencyReportEnabled | the website reports the main server only. Keep home until a per-server site exists |
 | src/services/site/site.js:580 | trustCardEnabled | same |
 
+Batch 4 done (owner decisions 2026-11-07): new registry keys `appealsHome` ('mewvo' | 'own', default 'mewvo') and
+`appealsInvite` (invite or null). `dmTemplates.appealInvite(guildId)`: home servers (and no server named) keep
+`supportServerInvite`; others get it for 'mewvo', their own invite for 'own', no invite line for 'own' without one.
+`/support` and the website stay Mewvo's Support server. The dashboard choice is B3 work (the dashboard edits home
+servers only, which ignore it). Batch 3 still has to pass `{ guildId: record.guild_id }` to `appealDeniedDm`
+(appealService.js:829); until then it sends the home invite, as before.
+
 ### Dashboard (B3, not B0b: needs `/dashboard/:guildId` first)
 
 The pages always read the main/support server through one chokepoint plus a few direct reads:

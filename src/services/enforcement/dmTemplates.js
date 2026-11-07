@@ -7,6 +7,7 @@
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
+import { isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
 import { dateStamp, stamp } from './format.js';
 import { ruleLineFor } from '../rules/serverRules.js';
 import { privacyUrl } from '../../utils/privacyNotice.js';
@@ -14,14 +15,39 @@ import { botText } from '../../utils/botText.js';
 import { logger } from '../../utils/logger.js';
 
 const { serverName } = enforcementConfig;
-// Read on every use: a per-server setting that can change at runtime.
-const invite = () => enforcementConfig.supportServerInvite;
 const textOf = (lang) => botText(lang || 'en');
 
-function appealLine(record, tr) {
+/**
+ * The appeal invite a punishment DM of this server names (read on every use: settings change at
+ * runtime). Mewvo's own servers (and a caller that names no server) keep Mewvo's Support invite,
+ * exactly as before. Any other server: Mewvo's Support invite when its appealsHome is 'mewvo'
+ * (the default), its own appealsInvite when it chose 'own', and null (no invite line) when it
+ * chose 'own' without setting one. Never throws: when that server's settings cannot be read
+ * (database down at boot) the DM goes out without the line instead of stopping the action.
+ */
+export function appealInvite(guildId, env = process.env) {
+    if (!guildId || isHomeGuild(guildId, env)) return enforcementConfig.supportServerInvite;
+    try {
+        if (resolveSetting(guildId, 'appealsHome', env) === 'own') return resolveSetting(guildId, 'appealsInvite', env) || null;
+        return enforcementConfig.supportServerInvite || null;
+    } catch (error) {
+        logger.warn(`Appeal invite of guild ${guildId} not readable (${error?.message || error}); DM sent without it.`);
+        return null;
+    }
+}
+
+/** The guild a DM is about: options.guildId, else the case's guild. */
+const guildOf = (rec, guildId) => guildId ?? rec?.guild_id ?? null;
+
+/** "Appeal here: <invite>", or null when this server has no invite to name. */
+function appealHere(tr, inviteUrl) {
+    return inviteUrl ? tr.t('enforcement.dm.appealHere', { invite: inviteUrl }) : null;
+}
+
+function appealLine(record, tr, inviteUrl) {
     return record.unappealable
         ? tr.t('enforcement.dm.cannotAppeal')
-        : tr.t('enforcement.dm.appealHere', { invite: invite() });
+        : appealHere(tr, inviteUrl);
 }
 
 // Discord's message content limit: the rule line is dropped rather than going over it.
@@ -91,32 +117,34 @@ function finish(lines, tr) {
 
 const record = (tr) => ({ optional: recordLine(process.env, { lang: tr.lang }) });
 
-function banDmText(rec, { lang } = {}) {
+function banDmText(rec, { lang, guildId } = {}) {
     const tr = textOf(lang);
     const duration = rec.expires_at
         ? tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) })
         : tr.t('enforcement.dm.durationPermanent');
+    const inviteUrl = appealInvite(guildOf(rec, guildId));
     const lines = [
-        appealLine(rec, tr),
+        appealLine(rec, tr, inviteUrl),
         tr.t('enforcement.dm.ban.title', { server: serverName }),
         ...common(rec, tr),
         duration,
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
         record(tr),
     ];
-    if (rec.is_auto && !rec.unappealable) {
+    // The appeal notes only when the DM says where to appeal (a server with no invite: neither).
+    if (rec.is_auto && !rec.unappealable && inviteUrl) {
         lines.push(tr.t('enforcement.dm.ban.autoNote'));
     }
-    if (rec.ladder_level_after === 3 && rec.is_auto && rec.appeal_deadline && !rec.unappealable) {
+    if (rec.ladder_level_after === 3 && rec.is_auto && rec.appeal_deadline && !rec.unappealable && inviteUrl) {
         lines.push(tr.t('enforcement.dm.ban.appealUntil', { date: dateStamp(rec.appeal_deadline) }));
     }
     return finish(lines, tr);
 }
 
-function kickDmText(rec, inviteUrl, { lang } = {}) {
+function kickDmText(rec, inviteUrl, { lang, guildId } = {}) {
     const tr = textOf(lang);
     return finish([
-        tr.t('enforcement.dm.appealHere', { invite: invite() }),
+        appealHere(tr, appealInvite(guildOf(rec, guildId))),
         tr.t('enforcement.dm.kick.title', { server: serverName }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
@@ -125,10 +153,10 @@ function kickDmText(rec, inviteUrl, { lang } = {}) {
     ], tr);
 }
 
-function muteDmText(rec, { lang } = {}) {
+function muteDmText(rec, { lang, guildId } = {}) {
     const tr = textOf(lang);
     return finish([
-        tr.t('enforcement.dm.appealHere', { invite: invite() }),
+        appealHere(tr, appealInvite(guildOf(rec, guildId))),
         tr.t('enforcement.dm.mute.title', { server: serverName }),
         ...common(rec, tr),
         tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) }),
@@ -137,11 +165,11 @@ function muteDmText(rec, { lang } = {}) {
     ], tr);
 }
 
-function warnDmText(rec, warnNumber, { lang } = {}) {
+function warnDmText(rec, warnNumber, { lang, guildId } = {}) {
     const tr = textOf(lang);
     const limit = enforcementConfig.warnsPerLevel;
     return finish([
-        tr.t('enforcement.dm.appealHere', { invite: invite() }),
+        appealHere(tr, appealInvite(guildOf(rec, guildId))),
         tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server: serverName }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
@@ -159,22 +187,31 @@ function appealAcceptedDmText(adminUsername, inviteUrl, { lang } = {}) {
     ].join('\n'), process.env, { lang: tr.lang });
 }
 
-function appealDeniedDmText({ lang } = {}) {
+/** `guildId`: the server of the denied appeal's case (none named: Mewvo's Support invite, as before). */
+function appealDeniedDmText({ lang, guildId } = {}) {
     const tr = textOf(lang);
-    return withPrivacyLine(tr.t('enforcement.dm.appealDenied', { invite: invite() }), process.env, { lang: tr.lang });
+    const inviteUrl = appealInvite(guildId);
+    const text = inviteUrl ? tr.t('enforcement.dm.appealDenied', { invite: inviteUrl }) : tr.t('enforcement.dm.appealDeniedNoInvite');
+    return withPrivacyLine(text, process.env, { lang: tr.lang });
 }
 
 /**
  * Sent when a ban ends: on expiry, or early when a moderator unbans.
  * `inviteUrl` is a one-time invite back to the server (null when none could be made).
  */
-function banEndedDmText(rec, inviteUrl, { early = false, lang } = {}) {
+function banEndedDmText(rec, inviteUrl, { early = false, lang, guildId } = {}) {
     const tr = textOf(lang);
+    // "Ask for an invite in the support server": Mewvo's Support can only invite people back into
+    // Mewvo's own servers, so another server names only its own invite here (else: ask staff).
+    const gid = guildOf(rec, guildId);
+    const ownServerInvite = gid && !isHomeGuild(gid) && appealInvite(gid) !== enforcementConfig.supportServerInvite;
+    const appealUrl = inviteUrl ? null : (!gid || isHomeGuild(gid) || ownServerInvite ? appealInvite(gid) : null);
     return withPrivacyLine([
         tr.t('enforcement.dm.banEnded.title', { server: serverName }),
         early ? tr.t('enforcement.dm.banEnded.early') : tr.t('enforcement.dm.banEnded.expired'),
         rec?.case_code ? tr.t('enforcement.dm.caseCode', { code: rec.case_code }) : null,
-        inviteUrl ? tr.t('enforcement.dm.rejoin', { invite: inviteUrl }) : tr.t('enforcement.dm.banEnded.noInvite', { invite: invite() }),
+        inviteUrl ? tr.t('enforcement.dm.rejoin', { invite: inviteUrl })
+            : appealUrl ? tr.t('enforcement.dm.banEnded.noInvite', { invite: appealUrl }) : tr.t('enforcement.dm.kick.noInvite'),
     ].filter(Boolean).join('\n'), process.env, { lang: tr.lang });
 }
 

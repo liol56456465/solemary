@@ -6,7 +6,8 @@
 // GET /oauth/callback; the bot exchanges the code, checks the authorizing account is
 // the one that pressed Verify, gives the verified role, stores the OAuth tokens
 // encrypted (AES-256-GCM with OAUTH_TOKEN_KEY) so guilds.join can be used later, and
-// sends the browser on to the Mewvo invite (VERIFY_SUCCESS_REDIRECT). Accounts under
+// sends the browser on to the Mewvo invite (VERIFY_SUCCESS_REDIRECT; another server: only the
+// link it stored, else a "You are verified" page — successRedirectFor). Accounts under
 // 7 days old and likely ban-evasion alts are held for staff approval instead
 // (see verificationGuard.js).
 //
@@ -21,14 +22,15 @@ import { getFromDb, setInDb, deleteFromDb, db } from '../utils/database.js';
 import { verifyUser } from './verificationService.js';
 import { assessVerification, postVerificationHold } from './verificationGuard.js';
 import { getGuildConfig } from './config/guildConfig.js';
-import { getConfiguredSetting } from './settings/guildSettings.js';
+import { getConfiguredSetting, isHomeGuild, resolveSetting } from './settings/guildSettings.js';
 import { oauthVerifyPrivacyNote, privacyUrl } from '../utils/privacyNotice.js';
 
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
 const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
 const ME_URL = 'https://discord.com/api/v10/users/@me';
 const SCOPES = ['identify', 'guilds.join'];
-// Where the browser goes after a successful verification: the main Mewvo server's invite.
+// Where the browser goes after a successful verification in one of Mewvo's own servers: the main
+// Mewvo server's invite. Never used for any other server (successRedirectFor).
 const DEFAULT_SUCCESS_REDIRECT = 'https://discord.gg/WyceK9YENP';
 const STATE_TTL_MS = 10 * 60 * 1000;
 const HTTP_TIMEOUT_MS = 10000;
@@ -88,6 +90,18 @@ function readState(state) {
     }
     usedStates.set(data.n, data.e);
     return { guildId: data.g, userId: data.u };
+}
+
+/**
+ * Where the browser goes after verifying in `guildId` (the guild named in the signed state), or
+ * null for "show the verified page". Mewvo's own servers: VERIFY_SUCCESS_REDIRECT / the stored
+ * value, else the main Mewvo invite, exactly as before. Any other server: only the link it stored
+ * itself; never Mewvo's invite. Throws SettingsUnavailableError when that server's settings
+ * cannot be read (the callback asks this before it changes anything).
+ */
+export function successRedirectFor(guildId, env = process.env) {
+    if (isHomeGuild(guildId, env)) return getConfiguredSetting('verifySuccessRedirect', env) || DEFAULT_SUCCESS_REDIRECT;
+    return resolveSetting(guildId, 'verifySuccessRedirect', env) || null;
 }
 
 /** The Discord authorize link for this user to verify in this guild. */
@@ -222,6 +236,8 @@ export function registerOAuthRoutes(app, client) {
         }
 
         try {
+            // Read first: a server whose settings cannot be read fails here, before anything changed.
+            const redirect = successRedirectFor(state.guildId);
             const token = await exchangeCode(req.query.code);
             const me = await discordFetch(ME_URL, { headers: { Authorization: `Bearer ${token.access_token}` } });
             if (me.id !== state.userId) {
@@ -241,7 +257,9 @@ export function registerOAuthRoutes(app, client) {
             }
 
             await verifyUser(client, state.guildId, me.id, { source: 'oauth', moderatorId: null });
-            return res.redirect(303, getConfiguredSetting('verifySuccessRedirect') || DEFAULT_SUCCESS_REDIRECT);
+            if (redirect) return res.redirect(303, redirect);
+            return send(200, 'You are verified', 'Thanks. You can close this page and go back to Discord.', '#57f287',
+                { note: privacyNoteHtml() });
         } catch (error) {
             logger.error(`OAuth verification failed for state user ${state.userId}: ${error.message}`);
             const message = (error.userMessage || 'Something went wrong. Go back to Discord and press Verify again.').replace(/[<>&"]/g, '');

@@ -336,6 +336,7 @@ class Mewvo extends Client {
     // "My record" (/me): members see their own moderation record (MEMBER_PORTAL_ENABLED, off by default).
     // Plans (test checkout): changes made on the website reach Discord through this client
     // (role + DM); a server's limits follow its owner's plan.
+    // supportInvite: Mewvo's own Support server (the website is Mewvo's; home-only by design, B0b).
     setPremiumClient(this);
     setGuildOwnerResolver((guildId) => this.guilds.cache.get(guildId)?.ownerId || null);
     const memberPortalEnabled = registerMemberPortal(app, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite });

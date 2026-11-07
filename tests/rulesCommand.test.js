@@ -28,7 +28,7 @@ beforeEach(() => {
     Object.assign(rulesCommandDeps, {
         guildIdFor: (which) => (which === 'main' ? MAIN : null),
         isSettingsLoaded: () => state.loaded,
-        getConfiguredSetting: (key) => structuredClone(state.settings[key]),
+        resolveSetting: (guildId, key) => { assert.equal(guildId, MAIN, 'reads the server it posts in'); return structuredClone(state.settings[key]); },
         updateSettings: async (guildId, patch, actor) => {
             if (state.saveFails) throw new Error('database not responding');
             state.saves.push({ guildId, patch, actor });

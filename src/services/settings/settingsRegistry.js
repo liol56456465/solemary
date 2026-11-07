@@ -269,6 +269,20 @@ export const SETTINGS = Object.freeze([
         fallback: 'https://discord.gg/7Ckv9Bt577', schema: invite,
     },
     {
+        // Where this server's members appeal (multi-server B0b, owner decision 2026-11-07): 'mewvo' =
+        // Mewvo's own Support server (supportServerInvite of the home servers), 'own' = the server's
+        // own invite (appealsInvite). Read for servers other than Mewvo's own: the home servers keep
+        // supportServerInvite in their punishment DMs whatever this says (dmTemplates.js appealInvite).
+        key: 'appealsHome', module: 'appeals', kind: 'string', guild: 'main',
+        label: 'Where members appeal (Mewvo support or our own server)', env: null,
+        fallback: 'mewvo', schema: z.enum(['mewvo', 'own']),
+    },
+    {
+        // The invite punishment DMs name when appealsHome is 'own'. Not set: the DM has no invite line.
+        key: 'appealsInvite', module: 'appeals', kind: 'url', guild: 'main',
+        label: 'Appeal invite of our own server', env: null, fallback: null, schema: invite.nullable(),
+    },
+    {
         key: 'supportAppealsCategoryId', module: 'support', kind: 'category', guild: 'support',
         label: 'Ban/kick appeals category (support server)', env: 'APPEALS_CATEGORY_ID', fallback: null, schema: optionalId,
     },
