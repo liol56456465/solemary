@@ -24,7 +24,7 @@ function userError(message) {
 }
 
 async function loadCase(guildId, caseCode) {
-    const record = await getCaseByCode(caseCode);
+    const record = await getCaseByCode(caseCode, guildId);
     if (!record || record.guild_id !== guildId) {
         throw userError(`No case with code \`${caseCode}\` in this server.`);
     }

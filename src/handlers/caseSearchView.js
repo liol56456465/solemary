@@ -124,7 +124,7 @@ export async function handleCaseSearchSelect(interaction, client, args) {
     }
     const code = normalizeCaseCode(interaction.values[0]);
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
-    const record = code ? await getCaseByCode(code) : null;
+    const record = code && interaction.guildId ? await getCaseByCode(code, interaction.guildId) : null;
     if (!record || record.guild_id !== interaction.guildId) {
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({ title: 'Not found', description: 'That case no longer exists.', color: 'error' })],
