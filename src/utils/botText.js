@@ -44,18 +44,19 @@ export function resetBotLanguageLogForTests() {
  * The one place where a default on a database error is fine: the language is cosmetic, and a
  * punishment DM or an error reply must still go out when the settings cannot be read. So any
  * error here (database down at boot, an unknown server, a bad stored value) gives English and is
- * logged once per process, not on every message. Everywhere else the data-layer rule stands:
+ * logged once per failing stretch (the next good read resets it), not on every message. Everywhere else the data-layer rule stands:
  * reads throw on a database error, never return defaults (CLAUDE.md "Data layer rules").
  */
 export function serverLanguage(guildId, { resolve = resolveSetting } = {}) {
     if (!guildId) return DEFAULT_LANG;
     try {
         const value = resolve(String(guildId), BOT_LANGUAGE_KEY);
+        languageReadFailed = false; // a later failure (e.g. a real outage) is logged again
         return LANG_CODES.includes(value) ? value : DEFAULT_LANG;
     } catch (error) {
         if (!languageReadFailed) {
             languageReadFailed = true;
-            logger.warn(`Bot language of server ${guildId} could not be read (${error?.message || error}); using English. Logged once.`);
+            logger.warn(`Bot language of server ${guildId} could not be read (${error?.message || error}); using English. Logged once until a read works again.`);
         }
         return DEFAULT_LANG;
     }

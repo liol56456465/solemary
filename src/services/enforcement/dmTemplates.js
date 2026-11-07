@@ -11,6 +11,7 @@ import { dateStamp, stamp } from './format.js';
 import { ruleLineFor } from '../rules/serverRules.js';
 import { privacyUrl } from '../../utils/privacyNotice.js';
 import { botText } from '../../utils/botText.js';
+import { logger } from '../../utils/logger.js';
 
 const { serverName } = enforcementConfig;
 // Read on every use: a per-server setting that can change at runtime.
@@ -90,7 +91,7 @@ function finish(lines, tr) {
 
 const record = (tr) => ({ optional: recordLine(process.env, { lang: tr.lang }) });
 
-export function banDm(rec, { lang } = {}) {
+function banDmText(rec, { lang } = {}) {
     const tr = textOf(lang);
     const duration = rec.expires_at
         ? tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) })
@@ -112,7 +113,7 @@ export function banDm(rec, { lang } = {}) {
     return finish(lines, tr);
 }
 
-export function kickDm(rec, inviteUrl, { lang } = {}) {
+function kickDmText(rec, inviteUrl, { lang } = {}) {
     const tr = textOf(lang);
     return finish([
         tr.t('enforcement.dm.appealHere', { invite: invite() }),
@@ -124,7 +125,7 @@ export function kickDm(rec, inviteUrl, { lang } = {}) {
     ], tr);
 }
 
-export function muteDm(rec, { lang } = {}) {
+function muteDmText(rec, { lang } = {}) {
     const tr = textOf(lang);
     return finish([
         tr.t('enforcement.dm.appealHere', { invite: invite() }),
@@ -136,7 +137,7 @@ export function muteDm(rec, { lang } = {}) {
     ], tr);
 }
 
-export function warnDm(rec, warnNumber, { lang } = {}) {
+function warnDmText(rec, warnNumber, { lang } = {}) {
     const tr = textOf(lang);
     const limit = enforcementConfig.warnsPerLevel;
     return finish([
@@ -149,7 +150,7 @@ export function warnDm(rec, warnNumber, { lang } = {}) {
     ], tr);
 }
 
-export function appealAcceptedDm(adminUsername, inviteUrl, { lang } = {}) {
+function appealAcceptedDmText(adminUsername, inviteUrl, { lang } = {}) {
     const tr = textOf(lang);
     return withPrivacyLine([
         tr.t('enforcement.dm.appealAccepted.title'),
@@ -158,7 +159,7 @@ export function appealAcceptedDm(adminUsername, inviteUrl, { lang } = {}) {
     ].join('\n'), process.env, { lang: tr.lang });
 }
 
-export function appealDeniedDm({ lang } = {}) {
+function appealDeniedDmText({ lang } = {}) {
     const tr = textOf(lang);
     return withPrivacyLine(tr.t('enforcement.dm.appealDenied', { invite: invite() }), process.env, { lang: tr.lang });
 }
@@ -167,7 +168,7 @@ export function appealDeniedDm({ lang } = {}) {
  * Sent when a ban ends: on expiry, or early when a moderator unbans.
  * `inviteUrl` is a one-time invite back to the server (null when none could be made).
  */
-export function banEndedDm(rec, inviteUrl, { early = false, lang } = {}) {
+function banEndedDmText(rec, inviteUrl, { early = false, lang } = {}) {
     const tr = textOf(lang);
     return withPrivacyLine([
         tr.t('enforcement.dm.banEnded.title', { server: serverName }),
@@ -178,7 +179,7 @@ export function banEndedDm(rec, inviteUrl, { early = false, lang } = {}) {
 }
 
 /** Sent when a mute ends: on expiry, or early when a moderator unmutes. */
-export function muteEndedDm(rec, { early = false, lang } = {}) {
+function muteEndedDmText(rec, { early = false, lang } = {}) {
     const tr = textOf(lang);
     return withPrivacyLine([
         tr.t('enforcement.dm.muteEnded.title', { server: serverName }),
@@ -193,7 +194,7 @@ const VOIDED_TYPES = new Set(['ban', 'kick', 'mute', 'warn']);
  * Sent when an admin voids a case (/case remove): the record no longer counts against
  * the user. `inviteUrl` is set when the void lifted a ban.
  */
-export function caseVoidedDm(rec, reason, inviteUrl = null, { lang } = {}) {
+function caseVoidedDmText(rec, reason, inviteUrl = null, { lang } = {}) {
     const tr = textOf(lang);
     const title = VOIDED_TYPES.has(rec.type)
         ? tr.t(`enforcement.dm.voided.title.${rec.type}`, { server: serverName })
@@ -238,3 +239,32 @@ export function contestComponents(caseCode) {
         new ButtonBuilder().setCustomId(`amcontest:open:${caseCode}`).setLabel('Contest this').setStyle(ButtonStyle.Secondary),
     )];
 }
+
+/**
+ * A translated DM must never stop an action halfway: the text is built before sendDm's own
+ * try/catch, so a broken catalog entry (missing key or {placeholder}, bad JSON) would abort a ban
+ * or mute after the case row is written. On any error in a non-English template, log it and send
+ * the English text instead. English failing is a code bug and still throws (tests cover it).
+ */
+export function englishOnError(name, render) {
+    return (...parts) => {
+        try {
+            return render(...parts);
+        } catch (error) {
+            const options = parts.at(-1);
+            if (!options || typeof options !== 'object' || !options.lang || options.lang === 'en') throw error;
+            logger.warn(`DM template ${name} failed in ${options.lang} (${error?.message || error}); sent in English.`);
+            return render(...parts.slice(0, -1), { ...options, lang: 'en' });
+        }
+    };
+}
+
+export const banDm = englishOnError('banDm', banDmText);
+export const kickDm = englishOnError('kickDm', kickDmText);
+export const muteDm = englishOnError('muteDm', muteDmText);
+export const warnDm = englishOnError('warnDm', warnDmText);
+export const appealAcceptedDm = englishOnError('appealAcceptedDm', appealAcceptedDmText);
+export const appealDeniedDm = englishOnError('appealDeniedDm', appealDeniedDmText);
+export const banEndedDm = englishOnError('banEndedDm', banEndedDmText);
+export const muteEndedDm = englishOnError('muteEndedDm', muteEndedDmText);
+export const caseVoidedDm = englishOnError('caseVoidedDm', caseVoidedDmText);
